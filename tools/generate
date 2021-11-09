@@ -5,15 +5,12 @@ const fs = require('fs');
 const path = require('path');
 const fetch = require('node-fetch');
 
-const {execFileSync} = require('child_process');
 const {Dex} = require('@pkmn/dex');
 const {Generations} = require('@pkmn/data');
 
 const pret = 'https://raw.githubusercontent.com/pret/pokered/master/';
 const out = path.resolve(__dirname, '../src/data');
 
-// TODO: replace with general Zig formatting step
-const zigfmt = f => execFileSync('zig', ['fmt', f], {stdio: 'inherit'});
 const toEnum = s => s.replace(/[^A-Za-z0-9]+/g, '');
 
 const UPDATE = process.argv.length > 2;
@@ -122,7 +119,6 @@ pub const TypeChart = [${TYPES.length}][${TYPES.length}]u8{
 `;
 
 fs.writeFileSync(path.join(out, 'types.zig'), types);
-zigfmt(path.join(out, 'types.zig'));
 
 const MOVE_IDS = await moveIDs(GEN1);
 const MOVES = [];
@@ -165,9 +161,6 @@ const MOVES = [_]Move{ ${MOVES.join(', ')} };
 `;
 
 fs.writeFileSync(path.join(out, 'moves.zig'), moves);
-zigfmt(path.join(out, 'moves.zig'));
-
-// TODO species
 
 const SPECIES_IDS = await speciesIDs(GEN1);
 const SPECIES = [];
@@ -218,7 +211,6 @@ const SPECIES = [_]Specie{ ${SPECIES.join(', ')} };
 `;
 
 fs.writeFileSync(path.join(out, 'species.zig'), species);
-zigfmt(path.join(out, 'species.zig'));
 })().catch(err => {
   console.error(err);
   process.exit(1);
