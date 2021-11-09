@@ -5,6 +5,7 @@
 
 const std = @import("std");
 const data = @import("./data.zig");
+const util = @import("./util.zig");
 
 const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
@@ -16,6 +17,8 @@ const Boosts = data.Boosts;
 const Moves = data.Moves;
 const Species = data.Species;
 const Type = data.Type;
+
+const bit = util.bit;
 
 // battle_struct::Moves (pret) & Pokemon#moveSlot (PS)
 const MoveSlot = packed struct {
@@ -98,28 +101,14 @@ const Status = enum(u8) {
     FRZ = 5,
     PAR = 6,
 
-    pub inline fn slp(status: u8) bool {
-        return Status.duration(status) > 0;
-    }
-
-    pub inline fn psn(status: u8) bool {
-        return status & (1 << @enumToInt(Status.PSN)) > 0;
-    }
-
-    pub inline fn brn(status: u8) bool {
-        return status & (1 << @enumToInt(Status.BRN)) > 0;
-    }
-
-    pub inline fn frz(status: u8) bool {
-        return status & (1 << @enumToInt(Status.FRZ)) > 0;
-    }
-
-    pub inline fn par(status: u8) bool {
-        return status & (1 << @enumToInt(Status.PAR)) > 0;
+    pub inline fn is(num: u8, status: Status) bool {
+        if (status == Status.SLP) return Status.duration(num) > 0;
+        return bit.isSet(u8, num, @intCast(u3, @enumToInt(status)));
     }
 
     pub inline fn init(status: Status) u8 {
-        return @as(u8, 1) << @intCast(u3, @enumToInt(status));
+        assert(status != Status.SLP);
+        return bit.set(u8, 0, @intCast(u3, @enumToInt(status)));
     }
 
     pub inline fn sleep(dur: u3) u8 {
@@ -127,20 +116,20 @@ const Status = enum(u8) {
         return @as(u8, dur);
     }
 
-    pub inline fn duration(status: u8) u3 {
-        return @intCast(u3, status & @enumToInt(Status.SLP));
+    pub inline fn duration(num: u8) u3 {
+        return @intCast(u3, num & @enumToInt(Status.SLP));
     }
 };
 
 test "Status" {
-    try expect(!Status.slp(0));
-    try expect(Status.slp(Status.sleep(5)));
+    try expect(!Status.is(0, Status.SLP));
+    try expect(Status.is(Status.sleep(5), Status.SLP));
     try expectEqual(@as(u3, 5), Status.duration(Status.sleep(5)));
-    try expect(Status.psn(Status.init(Status.PSN)));
-    try expect(!Status.par(Status.init(Status.PSN)));
-    try expect(Status.brn(Status.init(Status.BRN)));
-    try expect(!Status.slp(Status.init(Status.FRZ)));
-    try expect(Status.frz(Status.init(Status.FRZ)));
+    try expect(Status.is(Status.init(Status.PSN), Status.PSN));
+    try expect(!Status.is(Status.init(Status.PSN), Status.PAR));
+    try expect(Status.is(Status.init(Status.BRN), Status.BRN));
+    try expect(!Status.is(Status.init(Status.FRZ), Status.SLP));
+    try expect(Status.is(Status.init(Status.FRZ), Status.FRZ));
 }
 
 // w{Battle,Enemy}Mon battle_struct (pret) & Pokemon (PS)
