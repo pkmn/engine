@@ -1,3 +1,9 @@
+# Mac
+.DS_Store
+Thumbs.db
+.vscode
+
+# Zig
 zig-cache/
 zig-out/
 /release/
@@ -5,3 +11,11 @@ zig-out/
 /build/
 /build-*/
 /docgen_tmp/
+
+# JS
+node_modules/
+dist/
+*package-lock.json
+*npm-debug.log
+.eslintcache
+.tsbuildinfo

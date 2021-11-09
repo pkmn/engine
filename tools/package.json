@@ -1,0 +1,7 @@
+{
+	"dependencies": {
+		"@pkmn/data": "^0.4.21",
+		"@pkmn/dex": "^0.4.21",
+		"node-fetch": "2.6.1"
+	}
+}

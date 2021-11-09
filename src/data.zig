@@ -63,7 +63,7 @@ pub fn Boosts(comptime T: type) type {
 }
 
 test "Boosts" {
-    try expectEqual(3,@sizeOf(Boosts(i4)));
+    try expectEqual(3, @sizeOf(Boosts(i4)));
     const boosts = Boosts(i4){ .spc = -6 };
     try expectEqual(0, boosts.atk);
     try expectEqual(-6, boosts.spc);
@@ -117,6 +117,6 @@ pub const Efffectiveness = types.Efffectiveness;
 pub const TypeChart = types.TypeChart;
 
 test "Types" {
-    try expectEqual(15, @enumToInt(Type.Dragon));
+    try expectEqual(14, @enumToInt(Type.Dragon));
     try expectEqual(20, @enumToInt(Efffectiveness.Super));
 }
