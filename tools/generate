@@ -9,7 +9,7 @@ const {Dex} = require('@pkmn/dex');
 const {Generations} = require('@pkmn/data');
 
 const pret = 'https://raw.githubusercontent.com/pret/pokered/master/';
-const out = path.resolve(__dirname, '../src/data');
+const out = path.resolve(__dirname, '../lib/data');
 
 const toEnum = s => s.replace(/[^A-Za-z0-9]+/g, '');
 
