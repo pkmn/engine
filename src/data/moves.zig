@@ -8,7 +8,13 @@ const assert = std.debug.assert;
 const Move = data.Move;
 const Type = data.Type;
 
-/// https://pkmn.cc/pokered/constants/move_constants.asm
+/// Move constants representing all legal moves, plus the sentinel `None`.
+/// The sentinal value is guaranteed to be bit-equivalent to `0` and can be
+/// used to represent a null-pointer equivalent without using the additional
+/// byte that `?Moves` would entail.
+///
+/// *See:* https://pkmn.cc/pokered/constants/move_constants.asm
+///
 pub const Moves = enum(u8) {
     None,
     Pound,
@@ -187,7 +193,18 @@ pub const Moves = enum(u8) {
     }
 };
 
-// https://pkmn.cc/pokered/data/moves/moves.asm
+// TODO: add effect handler data
+/// Basic raw move data - names and descriptions are handled elswhere.
+///
+/// **NOTE:** this data differs from Pokémon Showdown:
+///
+///   - Bide has `Normal`-type instead of `???`-type
+///   - moves which always hit have `accuracy` of `100` instead of `true`
+///   - numerous fields (volatiles, multihit, etc) are handled differently and
+///     thus do not appear in the data definitions below
+///
+/// *See:* https://pkmn.cc/pokered/data/moves/moves.asm
+///
 const MOVES = [_]Move{ Move{
     .id = Moves.Pound,
     .bp = 40,

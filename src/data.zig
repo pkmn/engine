@@ -1,3 +1,7 @@
+//! Fundamental Pokémon data types required for battle simulation.
+//! Data not strictly required for battles is elided at this layer.
+//! **NOTE**: code in `data/` is generated and re-exported below.
+
 const std = @import("std");
 
 const assert = std.debug.assert;
@@ -7,8 +11,12 @@ const types = @import("data/types.zig");
 const moves = @import("data/moves.zig");
 const species = @import("data/species.zig");
 
+/// The name of each stat (cf. Pokémon Showdown's `StatName`).
+///
+/// *See:* https://pkmn.cc/pokered/constants/battle_constants.asm#L5-L12
+///
 pub const Stat = enum {
-    HP,
+    hp,
     atk,
     def,
     spe,
@@ -19,7 +27,7 @@ pub const Stat = enum {
     }
 };
 
-// https://pkmn.cc/pokered/constants/battle_constants.asm#L5-L12
+/// A structure for storing information for each `Stat` (cf. Pokémon Showdown's `StatTable`).
 pub fn Stats(comptime T: type) type {
     return packed struct {
         hp: T = 0,
@@ -37,6 +45,10 @@ test "Stats" {
     try expectEqual(0, stats.def);
 }
 
+/// The name of each boost/mod (cf. Pokémon Showdown's `BoostName`).
+///
+/// *See:* https://pkmn.cc/pokered/constants/battle_constants.asm#L14-L23
+///
 pub const Boost = enum {
     atk,
     def,
@@ -50,7 +62,8 @@ pub const Boost = enum {
     }
 };
 
-// https://pkmn.cc/pokered/constants/battle_constants.asm#L14-L23
+/// A structure for storing information for each `Boost` (cf. Pokémon Showdown's `BoostTable`).
+/// **NOTE**: `Boost(i4)` should likely always be used, as boosts should always range from -6...6.
 pub fn Boosts(comptime T: type) type {
     return packed struct {
         atk: T = 0,
@@ -71,7 +84,7 @@ test "Boosts" {
 
 pub const Moves = moves.Moves;
 
-// https://pkmn.cc/pokered/data/moves/moves.asm
+/// *See:* https://pkmn.cc/pokered/data/moves/moves.asm
 pub const Move = struct {
     id: Moves,
     bp: u8,
@@ -92,7 +105,7 @@ test "Moves" {
 
 pub const Species = species.Species;
 
-// https://pkmn.cc/bulba/Pokémon_species_data_structure_(Generation_I)
+/// *See:* https://pkmn.cc/bulba/Pok%c3%a9mon_species_data_structure_(Generation_I)
 pub const Specie = struct {
     id: Species,
     stats: Stats(u8),

@@ -1,3 +1,5 @@
+//! Index of common utilities.
+
 const std = @import("std");
 
 pub const bit = @import("./util/bit.zig");

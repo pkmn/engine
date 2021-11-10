@@ -104,7 +104,13 @@ const std = @import("std");
 
 const assert = std.debug.assert;
 
-// https://pkmn.cc/pokered/constants/type_constants.asm
+/// Type constants representing all non-glitch types.
+///
+/// **NOTE**: these do *not* match the in-game values (eg. there is no gap between
+/// the Physical and Special types).
+///
+/// *See:* https://pkmn.cc/pokered/constants/type_constants.asm
+///
 pub const Type = enum(u4) {
     ${TYPES.join(',\n    ')},
 
@@ -117,7 +123,10 @@ pub const Type = enum(u4) {
     }
 };
 
-// https://pkmn.cc/pokered/constants/battle_constants.asm#L52-L57
+/// Type effectiveness factors, scaled by 10 to avoid having to use floating points.
+///
+/// *See:* https://pkmn.cc/pokered/constants/battle_constants.asm#L52-L57
+///
 pub const Efffectiveness = enum(u8) {
     Super = 20,
     Neutral = 10,
@@ -134,7 +143,15 @@ const N = Efffectiveness.Neutral;
 const R = Efffectiveness.Resisted;
 const I = Efffectiveness.Immune;
 
-// https://pkmn.cc/pokered/data/types/type_matchups.asm
+/// Type chart, organizated in terms of damage-dealt like on the cartridge. However,
+/// unlike in-game we store the entire table as a multidimensional array for faster
+/// queries (the cartridge's approach of only listing non-neutral matchups saves memory
+/// but requires linear scanning for lookups).
+///
+/// **NOTE**: Pokémon Showdown stores its type chart in the reverse order (ie. damage-dealt).
+///
+/// *See:* ttps://pkmn.cc/pokered/data/types/type_matchups.asm
+///
 const TYPE_CHART = [${TYPES.length}][${TYPES.length}]Efffectiveness{
     ${EFFECTIVENESS.join('\n    ')}
 };
@@ -163,7 +180,13 @@ const assert = std.debug.assert;
 const Move = data.Move;
 const Type = data.Type;
 
-/// https://pkmn.cc/pokered/constants/move_constants.asm
+/// Move constants representing all legal moves, plus the sentinel \`None\`.
+/// The sentinal value is guaranteed to be bit-equivalent to \`0\` and can be
+/// used to represent a null-pointer equivalent without using the additional
+/// byte that \`?Moves\` would entail.
+///
+/// *See:* https://pkmn.cc/pokered/constants/move_constants.asm
+///
 pub const Moves = enum(u8) {
     None,
     ${MOVE_IDS.join(',\n    ')},
@@ -178,7 +201,18 @@ pub const Moves = enum(u8) {
     }
 };
 
-// https://pkmn.cc/pokered/data/moves/moves.asm
+// TODO: add effect handler data
+/// Basic raw move data - names and descriptions are handled elswhere.
+///
+/// **NOTE:** this data differs from Pokémon Showdown:
+///
+///   - Bide has \`Normal\`-type instead of \`???\`-type
+///   - moves which always hit have \`accuracy\` of \`100\` instead of \`true\`
+///   - numerous fields (volatiles, multihit, etc) are handled differently and
+///     thus do not appear in the data definitions below
+///
+/// *See:* https://pkmn.cc/pokered/data/moves/moves.asm
+///
 const MOVES = [_]Move{ ${MOVES.join(', ')} };
 `;
 
@@ -213,7 +247,13 @@ const Specie = data.Specie;
 const Stats = data.Stats;
 const Type = data.Type;
 
-// https://pkmn.cc/pokered/constants/pokedex_constants.asm
+/// Species constants representing all legal moves, plus the sentinel \`None\`.
+/// The sentinal value is guaranteed to be bit-equivalent to \`0\` and can be
+/// used to represent a null-pointer equivalent without using the additional
+/// byte that \`?Species\` would entail.
+///
+/// *See:* https://pkmn.cc/pokered/constants/pokedex_constants.asm
+///
 pub const Species = enum(u8) {
     None,
     ${SPECIES_IDS.join(',\n    ')},
@@ -228,7 +268,15 @@ pub const Species = enum(u8) {
     }
 };
 
-// https://pkmn.cc/pokered/data/pokemon/base_stats
+/// Basic raw species data - names and descriptions are handled elswhere.
+///
+/// **NOTE:** just like in-game, each Pokémon has two types (Pokémon Showdown
+/// elides the second type if its redundant, but dealing with variable length
+/// and alignment arrays is more trouble and more often than not amounts to the
+/// same space requirements).
+///
+/// *See:* https://pkmn.cc/pokered/data/pokemon/base_stats
+///
 const SPECIES = [_]Specie{ ${SPECIES.join(', ')} };
 `;
 

@@ -1,8 +1,3 @@
-// References:
-//  - https://pkmn.cc/bulba/Pokémon_data_structure_(Generation_I)
-//  - https://pkmn.cc/PKHeX/PKHeX.Core/PKM/PK1.cs
-//  - https://pkmn.cc/pokered/macros/wram.asm
-
 const std = @import("std");
 const data = @import("./data.zig");
 const util = @import("./util.zig");
@@ -20,10 +15,14 @@ const Type = data.Type;
 
 const bit = util.bit;
 
-// battle_struct::Moves (pret) & Pokemon#moveSlot (PS)
+/// A data-type for a `(move, pp)` pair. A pared down version of Pokémon Showdown's
+/// `Pokemon#moveSlot`, it also stores data from the cartridge's `battle_struct::Move`
+/// macro and can be used to replace the `w{Player,Enemy}Move*` data. Move PP is stored
+/// in the same way as on the cartridge (`battle_struct::PP`), with 6 bits for current
+/// PP and the remaining 2 bits used to store the number of applied PP Ups.
 const MoveSlot = packed struct {
-    id_: u8 = 0, // w{Player,Enemy}Move* (pret)
-    pp: u6 = 0, // battle_struct::PP (pret)
+    id_: u8 = 0,
+    pp: u6 = 0,
     pp_ups: u2 = 0,
 
     comptime {
@@ -44,7 +43,7 @@ const MoveSlot = packed struct {
         return @intToEnum(Moves, self.id_);
     }
 
-    // https://pkmn.cc/pokered/engine/items/item_effects.asm AddBonusPP
+    // `AddBonusPP`: https://pkmn.cc/pokered/engine/items/item_effects.asm
     pub inline fn maxpp(self: *const MoveSlot) u8 {
         const pp = Moves.get(self.id()).pp;
         return self.pp_ups * @maximum(pp / 5, 7) + pp;
@@ -59,6 +58,8 @@ test "MoveSlot" {
     try expectEqual(@as(u16, 0), @bitCast(u16, MoveSlot.init(Moves.None)));
 }
 
+/// Bitfield respresentation of a Pokémon's DVs, stored as a 16-bit integer like on cartridge
+/// with the HP DV being computered by taking the least-signficant bit of each of the other DVs.
 const DVs = packed struct {
     atk: u4 = 15,
     def: u4 = 15,
@@ -92,8 +93,16 @@ test "DVs" {
     try expectEqual(@as(u4, 13), dvs.hp());
 }
 
-const NICKNAME_LENGTH = 18; // NAME_LEN = 11 (pret) & Pokemon#getName = 18 (PS)
-
+/// Bitfield representation of a Pokémon's major status condition, mirroring how it is stored on
+/// the cartridge. A value of `0x00` means that the Pokémon is not affected by any major status,
+/// otherwise the lower 3 bits represent the remaining duration for SLP. Other status are denoted
+/// by the presence of individual bits - at most one status should be set at any given time.
+///
+/// **NOTE:** in Generation 1, the "badly poisoned" status (TOX) is volatile and gets dropped
+/// upon switching out - see `Volatiles` below.
+///
+/// *See:* https://pkmn.cc/pokered/constants/battle_constants.asm#L60-L65
+///
 const Status = enum(u8) {
     SLP = 0b111,
     PSN = 3,
@@ -124,6 +133,7 @@ const Status = enum(u8) {
 test "Status" {
     try expect(!Status.is(0, Status.SLP));
     try expect(Status.is(Status.sleep(5), Status.SLP));
+    try expect(!Status.is(Status.sleep(7), Status.PSN));
     try expectEqual(@as(u3, 5), Status.duration(Status.sleep(5)));
     try expect(Status.is(Status.init(Status.PSN), Status.PSN));
     try expect(!Status.is(Status.init(Status.PSN), Status.PAR));
@@ -132,84 +142,139 @@ test "Status" {
     try expect(Status.is(Status.init(Status.FRZ), Status.FRZ));
 }
 
-// w{Battle,Enemy}Mon battle_struct (pret) & Pokemon (PS)
+/// The core representation of a Pokémon in a battle. Comparable to Pokémon Showdown's `Pokemon`
+/// type, this struct stores the data stored in the cartridge's `battle_struct` information stored
+/// in `w{Battle,Enemy}Mon` as well as parts of the `party_struct` in the `stored` field. The fields
+/// map to the following types:
+///
+/// | pkmn                            | Pokémon Red                            | Pokémon Showdown                |
+/// |---------------------------------|----------------------------------------|---------------------------------|
+/// |                                 | `w{Battle,Enemy}MonNick`               | `Pokemon#name`                  |
+/// | `stored.level`                  | `w{Player,Enemy}MonUnmodifiedLevel`    | `Pokemon#level`                 |
+/// | `stored.stats`                  | `w{Player,Enemy}MonUnmodified*`        | `Pokemon#storedStats`           |
+/// | `stored.moves`                  |                                        | `Pokemon#baseMoveSlots`         |
+/// | `stored.dvs`                    |                                        |                                 |
+/// | `stored.evs`                    |                                        |                                 |
+/// | `boosts`                        | `w{Player,Enemy}Mon*Mod`               | `Pokemon#boosts`                |
+/// | `volatiles`                     | `w{Player,Enemy}BattleStatus{1,2,3}`   | `Pokemon#volatiles`             |
+/// | `volatiles_data.bide`           | `w{Player,Enemy}BideAccumulatedDamage` | `volatiles.bide.totalDamage`    |
+/// | `volatiles_data.confusion`      | `w{Player,Enemy}ConfusedCounter`       | `volatiles.confusion.duration`  |
+/// | `volatiles_data.toxic`          | `w{Player,Enemy}ToxicCounter`          | `volatiles.residualdmg.counter` |
+/// | `volatiles_data.substitute`     | `w{Player,Enemy}SubstituteHP`          | `volatiles.substitute.hp`       |
+/// | `volatiles_data.multihit.hits`  | `w{Player,Enemy}NumHits`               |                                 |
+/// | `volatiles_data.multihits.left` | `w{Player,Enemy}NumAttacksLeft`        |                                 |
+/// | `disabled`                      | `w{Player,Enemy}DisabledMove`          | `MoveSlot#disabled`             |
+///
+///   - in most places the data representation defaults to the same as the cartridge, with the
+///     notable exception that `boosts` range from `-6...6` like in Pokémon Showdown instead of
+///     `1..13`
+///   - nicknames are not handled within the engine and are expected to instead be managed by
+///     whatever is driving the engine code
+///
+/// **References:**
+///
+///  - https://pkmn.cc/bulba/Pok%c3%a9mon_species_data_structure_(Generation_I)
+///  - https://pkmn.cc/PKHeX/PKHeX.Core/PKM/PK1.cs
+///  - https://pkmn.cc/pokered/macros/wram.asm
+///
 const Pokemon = struct {
-    // TODO: disable nicknames = always just the species (can implement at higher layer)?
-    // name: *const [NICKNAME_LENGTH:0]u8, // w{Battle,Enemy}MonNick (pret) & Pokemon#name (PS)
     species: Species,
     types: [2]Type,
     stored: struct {
-        level: u8, // w{Player,Enemy}MonUnmodifiedLevel / battle_struct::Level (pret) && Pokemon#level (PS)
-        stats: Stats(u16), // w{Player,Enemy}MonUnmodified* (pret) & Pokemon#storedStats (PS)
-        moves: [4]MoveSlot, // Pokemon#baseMoveSlots (PS)
+        level: u8,
+        stats: Stats(u16),
+        moves: [4]MoveSlot,
         dvs: DVs,
-        evs: Stats(u16), // TODO
+        evs: Stats(u16),
     },
     stats: Stats(u16),
-    // // w{Player,Enemy}Mon*Mod (pret) & Pokemon#boosts (PS)
-    boosts: Boosts(i4), // -6 <-> 6 (NOTE: pret = 1 <-> 13)
+    boosts: Boosts(i4),
     hp: u16,
-    status: Status, // Status
-    volatiles: Volatile, // w{Player,Enemy}BattleStatus* (pret) & Pokemon#volatiles (PS)
+    status: Status,
+    volatiles: Volatile,
     volatiles_data: struct {
-        bide: u16, // w{Player,Enemy}BideAccumulatedDamage (pret) & volatiles.bide.totalDamage (PS)
-        confusion: u8, // w{Player,Enemy}ConfusedCounter (pret) & volatiles.confusion.duration (PS)
-        toxic: u8, // w{Player,Enemy}ToxicCounter (pret) & volatiles.residualdmg.counter (PS)
-        substitute: u8, // w{Player,Enemy}SubstituteHP (pret) & volatiles.substitute.hp (PS)
+        bide: u16,
+        confusion: u8,
+        toxic: u8,
+        substitute: u8,
         multihit: packed struct {
-            hits: u4, // w{Player,Enemy}NumHits (pret)
-            left: u4, // w{Player,Enemy}NumAttacksLeft (pret)
+            hits: u4,
+            left: u4,
         },
     },
     moves: [4]MoveSlot,
-    // w{Player,Enemy}DisabledMove (pret) & MoveSlot#disabled
     disabled: packed struct {
         move: u4,
         duration: u4,
     },
+    // FIXME: `wMove{Missed,DidntMiss}` ???
 
     pub inline fn level(self: *const Pokemon) u8 {
         return self.stored.level;
     }
-
-    // TODO pub fn dv(self: *Pokemon, stat: Stat) u4 {}
 };
 
 test "Pokemon" {
+    // NOTE: if `Pokemon` were `packed` it would be 68 bytes, but is more due to alignment
     try expectEqual(70, @sizeOf(Pokemon));
     try expectEqual(72, @sizeOf(?Pokemon));
 }
 
-// https://pkmn.cc/pokered/constants/battle_constants.asm#L73
+/// Bitfield for the various non-major statuses that Pokémon can have, commonly
+/// known as 'volatile' statuses as they disappear upon switching out. In pret/pokered
+/// these are referred to as 'battle status' bits.
+///
+/// | Pokémon Red                | Pokémon Showdown   |
+/// |----------------------------|--------------------|
+/// | `STORING_ENERGY`           | `bide`             |
+/// | `TRASHING_ABOUT`           | `lockedmove`       |
+/// | `ATTACKING_MULTIPLE_TIMES` | `Move#multihit`    |
+/// | `FLINCHED`                 | `flinch`           |
+/// | `CHARGING_UP`              | `twoturnmove`      |
+/// | `USING_TRAPPING_MOVE`      | `partiallytrapped` |
+/// | `INVULNERABLE`             | `Move#onLockMove`  |
+/// | `CONFUSED`                 | `confusion`        |
+/// | `PROTECTED_BY_MIST`        | `mist`             |
+/// | `GETTING_PUMPED`           | `focusenergy`      |
+/// | `HAS_SUBSTITUTE_UP`        | `substitute`       |
+/// | `NEEDS_TO_RECHARGE`        | `mustrecharge`     |
+/// | `USING_RAGE`               | `rage`             |
+/// | `SEEDED`                   | `leechseed`        |
+/// | `BADLY_POISONED`           | `toxic`            |
+/// | `HAS_LIGHT_SCREEN_UP`      | `lightscreen`      |
+/// | `HAS_REFLECT_UP`           | `reflect`          |
+/// | `TRANSFORMED`              | `transform`        |
+///
+/// **NOTE:** all of the bits are packed into an 18 byte bitfield which uses up 3 bytes
+/// after taking into consideration alignment. This is the same as on cartrige, though
+/// there the bits are split over three distinct bytes (`w{Player,Enemy}BattleStatus{1,2,3}`).
+/// We dont attempt to match the same bit locations, and `USING_X_ACCURACY` is dropped as
+/// in-battle item-use is not supported in link battles.
+///
+/// *See:* https://pkmn.cc/pokered/constants/battle_constants.asm#L73
+///
 const Volatile = packed struct {
-    Bide: bool, //  STORING_ENERGY (pret) & bide (PS)
-    Locked: bool, //  TRASHING_ABOUT           / lockedmove
-    MultiHit: bool, //  ATTACKING_MULTIPLE_TIMES / Move#multihit
-    Flinch: bool, //  FLINCHED                 / flinched
-    Charging: bool, //  CHARGING_UP              / twoturnmove
-    PartialTrap: bool, //  USING_TRAPPING_MOVE      / partiallytrapped & partialtrappinglock
-    Invulnerable: bool, //  INVULNERABLE             / Move#onLockMove
-    Confusion: bool, //  CONFUSED                 / confusion
-    Mist: bool, //  PROTECTED_BY_MIST        / mist
-    FocusEnergy: bool, //  GETTING_PUMPED           / focusenergy
-    Substitute: bool, //  HAS_SUBSTITUTE_UP        / substitute
-    Recharging: bool, //  NEEDS_TO_RECHARGE        / mustrecharge & recharege
-    Rage: bool, //  USING_RAGE               / rage
-    LeechSeed: bool, //  SEEDED                   / leechseed
-    Toxic: bool, //  BADLY_POISONED           / toxic
-    LightScreen: bool, //  HAS_LIGHT_SCREEN_UP      / lightscreen
-    Reflect: bool, //  HAS_REFLECT_UP           / reflect
-    Transform: bool, //  TRANSFORMED              / transform
+    Bide: bool,
+    Locked: bool,
+    MultiHit: bool,
+    Flinch: bool,
+    Charging: bool,
+    PartialTrap: bool,
+    Invulnerable: bool,
+    Confusion: bool,
+    Mist: bool,
+    FocusEnergy: bool,
+    Substitute: bool,
+    Recharging: bool,
+    Rage: bool,
+    LeechSeed: bool,
+    Toxic: bool,
+    LightScreen: bool,
+    Reflect: bool,
+    Transform: bool,
 
     comptime {
         assert(@bitSizeOf(Volatile) == 18);
         assert(@sizeOf(Volatile) == 3);
     }
 };
-
-// FIXME ???
-// wPlayerMonNumber: u8 ; index in party of currently battling mon
-// wMoveDidntMiss / wMoveMissed: u8
-// wBattleMonSpecies2 / wEnemyMonSpecies2: u8  ???
-// wPlayerMoveListIndex / wEnemyMoveListIndex: u8
-

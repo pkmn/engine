@@ -9,7 +9,13 @@ const Specie = data.Specie;
 const Stats = data.Stats;
 const Type = data.Type;
 
-// https://pkmn.cc/pokered/constants/pokedex_constants.asm
+/// Species constants representing all legal moves, plus the sentinel `None`.
+/// The sentinal value is guaranteed to be bit-equivalent to `0` and can be
+/// used to represent a null-pointer equivalent without using the additional
+/// byte that `?Species` would entail.
+///
+/// *See:* https://pkmn.cc/pokered/constants/pokedex_constants.asm
+///
 pub const Species = enum(u8) {
     None,
     Bulbasaur,
@@ -174,7 +180,15 @@ pub const Species = enum(u8) {
     }
 };
 
-// https://pkmn.cc/pokered/data/pokemon/base_stats
+/// Basic raw species data - names and descriptions are handled elswhere.
+///
+/// **NOTE:** just like in-game, each Pokémon has two types (Pokémon Showdown
+/// elides the second type if its redundant, but dealing with variable length
+/// and alignment arrays is more trouble and more often than not amounts to the
+/// same space requirements).
+///
+/// *See:* https://pkmn.cc/pokered/data/pokemon/base_stats
+///
 const SPECIES = [_]Specie{ Specie{
     .id = Species.Bulbasaur,
     .stats = Stats(u8){

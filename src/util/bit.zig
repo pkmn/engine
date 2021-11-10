@@ -1,4 +1,6 @@
-// https://github.com/TM35-Metronome/metronome/blob/master/src/common/bit.zig
+//! Utilities for dealing with bitfields.
+//! Lifted from Jimmi Holst Christensen's MIT-licensed TM35-Metronome/metronome:
+//! https://github.com/TM35-Metronome/metronome/blob/master/src/common/bit.zig
 
 const std = @import("std");
 

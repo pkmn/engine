@@ -4,7 +4,13 @@ const std = @import("std");
 
 const assert = std.debug.assert;
 
-// https://pkmn.cc/pokered/constants/type_constants.asm
+/// Type constants representing all non-glitch types.
+///
+/// **NOTE**: these do *not* match the in-game values (eg. there is no gap between
+/// the Physical and Special types).
+///
+/// *See:* https://pkmn.cc/pokered/constants/type_constants.asm
+///
 pub const Type = enum(u4) {
     Normal,
     Fighting,
@@ -31,7 +37,10 @@ pub const Type = enum(u4) {
     }
 };
 
-// https://pkmn.cc/pokered/constants/battle_constants.asm#L52-L57
+/// Type effectiveness factors, scaled by 10 to avoid having to use floating points.
+///
+/// *See:* https://pkmn.cc/pokered/constants/battle_constants.asm#L52-L57
+///
 pub const Efffectiveness = enum(u8) {
     Super = 20,
     Neutral = 10,
@@ -48,7 +57,15 @@ const N = Efffectiveness.Neutral;
 const R = Efffectiveness.Resisted;
 const I = Efffectiveness.Immune;
 
-// https://pkmn.cc/pokered/data/types/type_matchups.asm
+/// Type chart, organizated in terms of damage-dealt like on the cartridge. However,
+/// unlike in-game we store the entire table as a multidimensional array for faster
+/// queries (the cartridge's approach of only listing non-neutral matchups saves memory
+/// but requires linear scanning for lookups).
+///
+/// **NOTE**: Pokémon Showdown stores its type chart in the reverse order (ie. damage-dealt).
+///
+/// *See:* ttps://pkmn.cc/pokered/data/types/type_matchups.asm
+///
 const TYPE_CHART = [15][15]Efffectiveness{
     [_]Efffectiveness{ N, N, N, N, N, R, N, I, N, N, N, N, N, N, N }, // Normal
     [_]Efffectiveness{ S, N, R, R, N, S, R, I, N, N, N, N, R, S, N }, // Fighting
