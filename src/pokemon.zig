@@ -173,7 +173,7 @@ test "Status" {
 ///
 /// **References:**
 ///
-///  - https://pkmn.cc/bulba/Pok%c3%a9mon_species_data_structure_(Generation_I)
+///  - https://pkmn.cc/bulba/Pok%c3%a9mon_species_data_structure_%28Generation_I%29
 ///  - https://pkmn.cc/PKHeX/PKHeX.Core/PKM/PK1.cs
 ///  - https://pkmn.cc/pokered/macros/wram.asm
 ///

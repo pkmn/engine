@@ -105,7 +105,7 @@ test "Moves" {
 
 pub const Species = species.Species;
 
-/// *See:* https://pkmn.cc/bulba/Pok%c3%a9mon_species_data_structure_(Generation_I)
+/// *See:* https://pkmn.cc/bulba/Pok%c3%a9mon_species_data_structure_%28Generation_I%29
 pub const Specie = struct {
     id: Species,
     stats: Stats(u8),
