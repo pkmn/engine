@@ -18,9 +18,12 @@ jobs:
       - uses: goto-bus-stop/setup-zig@v1
         with:
           version: master
+      - run: npm install
+      - run: npm test
       - run: zig build test
       - run: zig build test -Drelease-fast
       - run: zig build
+
   lint:
     runs-on: ubuntu-latest
     steps:

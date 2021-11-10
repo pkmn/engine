@@ -1,0 +1,45 @@
+{
+  "name": "@pkmn/engine",
+  "version": "0.1.0",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "repository": "github:pkmn/engine",
+  "license": "MIT",
+  "devDependencies": {
+    "@pkmn/data": "^0.4.21",
+    "@pkmn/dex": "^0.4.21",
+    "@pkmn/eslint-config": "^1.10.0",
+    "@types/jest": "^27.0.2",
+    "@types/node": "^16.11.7",
+    "@typescript-eslint/eslint-plugin": "^5.3.1",
+    "@typescript-eslint/parser": "^5.3.1",
+    "eslint-plugin-import": "^2.25.3",
+    "eslint-plugin-jest": "^25.2.4",
+    "eslint": "^8.2.0",
+    "jest": "^27.3.1",
+    "node-fetch": "2.6.1",
+    "ts-jest": "^27.0.7",
+    "typescript": "^4.4.4"
+  },
+  "scripts": {
+    "lint": "eslint --cache src --ext ts",
+    "fix": "eslint --fix src --ext ts",
+    "compile": "tsc -p .",
+    "build": "npm run compile",
+    "test": "jest",
+    "pretest": "npm run build",
+    "posttest": "npm run lint"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testPathIgnorePatterns": [
+      "lib/",
+      "node_modules/",
+      "build/"
+    ]
+  },
+  "eslintConfig": {
+    "extends": "@pkmn"
+  }
+}
