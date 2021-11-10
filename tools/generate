@@ -80,7 +80,25 @@ const TYPES = [
   'Normal', 'Fighting', 'Flying', 'Poison', 'Ground', 'Rock', 'Bug', 'Ghost',
   'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Ice', 'Dragon'
 ];
-
+const EFFECTIVENESS = []; {
+  for (const t1 of TYPES) {
+    const type1 = GEN1.types.get(t1);
+    const effectiveness = [];
+    for (const t2 of TYPES) {
+      const e = type1.effectiveness[t2];
+      if (e === 2) {
+        effectiveness.push('S');
+      } else if (e == 1) {
+        effectiveness.push('N');
+      } else  if (e === 0.5) {
+        effectiveness.push('R');
+      } else {
+        effectiveness.push('I');
+      }
+    }
+    EFFECTIVENESS.push(`[_]Efffectiveness{ ${effectiveness.join(', ')} }, // ${t1}`);
+  }
+}
 const types = `${PREAMBLE}
 const std = @import("std");
 
@@ -92,6 +110,10 @@ pub const Type = enum(u4) {
 
     comptime {
         assert(@sizeOf(Type) == 1);
+    }
+
+    pub inline fn effectiveness(t1: Type, t2: Type) Efffectiveness {
+        return TYPE_CHART[@enumToInt(t1)][@enumToInt(t2)];
     }
 };
 
@@ -107,14 +129,14 @@ pub const Efffectiveness = enum(u8) {
     }
 };
 
-const SUPER = Efffectiveness.Super;
-const NEUTRAL = Efffectiveness.Neutral;
-const RESISTED = Efffectiveness.Resisted;
-const IMMUNE = Efffectiveness.Immune;
+const S = Efffectiveness.Super;
+const N = Efffectiveness.Neutral;
+const R = Efffectiveness.Resisted;
+const I = Efffectiveness.Immune;
 
 // https://pkmn.cc/pokered/data/types/type_matchups.asm
-pub const TypeChart = [${TYPES.length}][${TYPES.length}]u8{
-    // TODO ...
+const TYPE_CHART = [${TYPES.length}][${TYPES.length}]Efffectiveness{
+    ${EFFECTIVENESS.join('\n    ')}
 };
 `;
 

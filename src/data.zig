@@ -114,9 +114,12 @@ test "Species" {
 
 pub const Type = types.Type;
 pub const Efffectiveness = types.Efffectiveness;
-pub const TypeChart = types.TypeChart;
 
 test "Types" {
     try expectEqual(14, @enumToInt(Type.Dragon));
     try expectEqual(20, @enumToInt(Efffectiveness.Super));
+    try expectEqual(Efffectiveness.Immune, Type.effectiveness(Type.Ghost, Type.Psychic));
+    try expectEqual(Efffectiveness.Super, Type.effectiveness(Type.Water, Type.Fire));
+    try expectEqual(Efffectiveness.Resisted, Type.effectiveness(Type.Fire, Type.Water));
+    try expectEqual(Efffectiveness.Neutral, Type.effectiveness(Type.Normal, Type.Grass));
 }

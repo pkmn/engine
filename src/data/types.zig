@@ -25,6 +25,10 @@ pub const Type = enum(u4) {
     comptime {
         assert(@sizeOf(Type) == 1);
     }
+
+    pub inline fn effectiveness(t1: Type, t2: Type) Efffectiveness {
+        return TYPE_CHART[@enumToInt(t1)][@enumToInt(t2)];
+    }
 };
 
 // https://pkmn.cc/pokered/constants/battle_constants.asm#L52-L57
@@ -39,12 +43,26 @@ pub const Efffectiveness = enum(u8) {
     }
 };
 
-const SUPER = Efffectiveness.Super;
-const NEUTRAL = Efffectiveness.Neutral;
-const RESISTED = Efffectiveness.Resisted;
-const IMMUNE = Efffectiveness.Immune;
+const S = Efffectiveness.Super;
+const N = Efffectiveness.Neutral;
+const R = Efffectiveness.Resisted;
+const I = Efffectiveness.Immune;
 
 // https://pkmn.cc/pokered/data/types/type_matchups.asm
-pub const TypeChart = [15][15]u8{
-    // TODO ...
+const TYPE_CHART = [15][15]Efffectiveness{
+    [_]Efffectiveness{ N, N, N, N, N, R, N, I, N, N, N, N, N, N, N }, // Normal
+    [_]Efffectiveness{ S, N, R, R, N, S, R, I, N, N, N, N, R, S, N }, // Fighting
+    [_]Efffectiveness{ N, S, N, N, N, R, S, N, N, N, S, R, N, N, N }, // Flying
+    [_]Efffectiveness{ N, N, N, R, R, R, S, R, N, N, S, N, N, N, N }, // Poison
+    [_]Efffectiveness{ N, N, I, S, N, S, R, N, S, N, R, S, N, N, N }, // Ground
+    [_]Efffectiveness{ N, R, S, N, R, N, S, N, S, N, N, N, N, S, N }, // Rock
+    [_]Efffectiveness{ N, R, R, S, N, N, N, R, R, N, S, N, S, N, N }, // Bug
+    [_]Efffectiveness{ I, N, N, N, N, N, N, S, N, N, N, N, I, N, N }, // Ghost
+    [_]Efffectiveness{ N, N, N, N, N, R, S, N, R, R, S, N, N, S, R }, // Fire
+    [_]Efffectiveness{ N, N, N, N, S, S, N, N, S, R, R, N, N, N, R }, // Water
+    [_]Efffectiveness{ N, N, R, R, S, S, R, N, R, S, R, N, N, N, R }, // Grass
+    [_]Efffectiveness{ N, N, S, N, I, N, N, N, N, S, R, R, N, N, R }, // Electric
+    [_]Efffectiveness{ N, S, N, S, N, N, N, N, N, N, N, N, R, N, N }, // Psychic
+    [_]Efffectiveness{ N, N, S, N, S, N, N, N, N, R, S, N, N, R, S }, // Ice
+    [_]Efffectiveness{ N, N, N, N, N, N, N, N, N, N, N, N, N, N, S }, // Dragon
 };
