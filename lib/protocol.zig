@@ -71,12 +71,10 @@ pub const Protocol = union(ArgType) {
     }
 
     fn writeBytes(comptime T: type, val: T, buf: *std.ArrayList(u8)) !void {
-        const bits = @typeInfo(T).Int.bits;
+        comptime var bits: usize = @typeInfo(T).Int.bits;
         if (bits == 0 or bits % 8 != 0) @compileError("must be divisible by 8");
-
-        comptime var i = bits >> 4;
-        inline while (i >= 0) : (i -= 1) {
-            try buf.append(@intCast(u8, (val >> (i * 8)) & 0xFF));
+        inline while (!@subWithOverflow(usize, bits, 8, &bits)) {
+            try buf.append(@intCast(u8, (val >> bits) & 0xFF));
         }
     }
 };
