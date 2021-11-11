@@ -164,9 +164,9 @@ const MOVES = [];
 for (const name of MOVE_IDS) {
   const move = GEN1.moves.get(name);
   MOVES.push(`Move{
-    .id = Moves.${name},
+    .id = .${name},
     .bp = ${move.basePower},
-    .type = Type.${move.type === '???' ? 'Normal' : move.type},
+    .type = .${move.type === '???' ? 'Normal' : move.type},
     .accuracy = ${move.accuracy === true ? '100' : move.accuracy},
     .pp = ${move.pp},
 }`);
@@ -225,7 +225,7 @@ for (const name of SPECIES_IDS) {
   const types = species.types.length === 1
     ? [species.types[0], species.types[0]] : species.types;
   SPECIES.push(`Specie{
-    .id = Species.${name},
+    .id = .${name},
     .stats = Stats(u8){
         .hp = ${species.baseStats.hp},
         .atk = ${species.baseStats.atk},
@@ -233,7 +233,7 @@ for (const name of SPECIES_IDS) {
         .spe = ${species.baseStats.spe},
         .spc = ${species.baseStats.spa},
     },
-    .types = [_]Type{ Type.${types[0]}, Type.${types[1]} },
+    .types = [_]Type{ .${types[0]}, .${types[1]} },
 }`);
 }
 

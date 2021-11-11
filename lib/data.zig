@@ -99,7 +99,7 @@ pub const Move = struct {
 
 test "Moves" {
     try expectEqual(2, @enumToInt(Moves.KarateChop));
-    const move = Moves.get(Moves.Pound);
+    const move = Moves.get(.Pound);
     try expectEqual(@as(u8, 35), move.pp);
 }
 
@@ -122,7 +122,7 @@ pub const Specie = struct {
 
 test "Species" {
     try expectEqual(2, @enumToInt(Species.Ivysaur));
-    try expectEqual(@as(u8, 100), Species.get(Species.Mew).stats.def);
+    try expectEqual(@as(u8, 100), Species.get(.Mew).stats.def);
 }
 
 pub const Type = types.Type;
@@ -131,8 +131,8 @@ pub const Efffectiveness = types.Efffectiveness;
 test "Types" {
     try expectEqual(14, @enumToInt(Type.Dragon));
     try expectEqual(20, @enumToInt(Efffectiveness.Super));
-    try expectEqual(Efffectiveness.Immune, Type.effectiveness(Type.Ghost, Type.Psychic));
-    try expectEqual(Efffectiveness.Super, Type.effectiveness(Type.Water, Type.Fire));
-    try expectEqual(Efffectiveness.Resisted, Type.effectiveness(Type.Fire, Type.Water));
-    try expectEqual(Efffectiveness.Neutral, Type.effectiveness(Type.Normal, Type.Grass));
+    try expectEqual(Efffectiveness.Immune, Type.effectiveness(.Ghost, .Psychic));
+    try expectEqual(Efffectiveness.Super, Type.effectiveness(.Water, .Fire));
+    try expectEqual(Efffectiveness.Resisted, Type.effectiveness(.Fire, .Water));
+    try expectEqual(Efffectiveness.Neutral, Type.effectiveness(.Normal, .Grass));
 }

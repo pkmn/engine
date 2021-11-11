@@ -23,7 +23,7 @@ pub const Side = struct {
         return self.pokemon[self.active - 1];
     }
 
-    pub inline fn fainted_last_turn(self: *Side) ?*Pokemon {
+    pub inline fn faintedLastTurn(self: *Side) ?*Pokemon {
         if (self.fainted_last_turn == 0) return null;
         return self.pokemon[self.fainted_last_turn - 1];
     }

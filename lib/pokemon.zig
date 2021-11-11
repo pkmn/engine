@@ -21,7 +21,7 @@ const bit = util.bit;
 /// in the same way as on the cartridge (`battle_struct::PP`), with 6 bits for current
 /// PP and the remaining 2 bits used to store the number of applied PP Ups.
 const MoveSlot = packed struct {
-    id_: u8 = 0,
+    id: Moves = .None,
     pp: u6 = 0,
     pp_ups: u2 = 0,
 
@@ -29,33 +29,29 @@ const MoveSlot = packed struct {
         assert(@sizeOf(MoveSlot) == @sizeOf(u16));
     }
 
-    pub fn init(mid: Moves) MoveSlot {
-        if (mid == Moves.None) return MoveSlot{};
-        const move = Moves.get(mid);
+    pub fn init(id: Moves) MoveSlot {
+        if (id == .None) return MoveSlot{};
+        const move = Moves.get(id);
         return MoveSlot{
-            .id_ = @enumToInt(move.id),
+            .id = move.id,
             .pp = move.pp,
             .pp_ups = 3,
         };
     }
 
-    pub inline fn id(self: *const MoveSlot) Moves {
-        return @intToEnum(Moves, self.id_);
-    }
-
     // `AddBonusPP`: https://pkmn.cc/pokered/engine/items/item_effects.asm
     pub inline fn maxpp(self: *const MoveSlot) u8 {
-        const pp = Moves.get(self.id()).pp;
+        const pp = Moves.get(self.id).pp;
         return self.pp_ups * @maximum(pp / 5, 7) + pp;
     }
 };
 
 test "MoveSlot" {
-    const ms = MoveSlot.init(Moves.Pound);
+    const ms = MoveSlot.init(.Pound);
     try expectEqual(@as(u6, 35), ms.pp);
     try expectEqual(@as(u8, 56), ms.maxpp());
-    try expectEqual(Moves.Pound, ms.id());
-    try expectEqual(@as(u16, 0), @bitCast(u16, MoveSlot.init(Moves.None)));
+    try expectEqual(Moves.Pound, ms.id);
+    try expectEqual(@as(u16, 0), @bitCast(u16, MoveSlot.init(.None)));
 }
 
 /// Bitfield respresentation of a Pokémon's DVs, stored as a 16-bit integer like on cartridge
@@ -111,12 +107,12 @@ const Status = enum(u8) {
     PAR = 6,
 
     pub inline fn is(num: u8, status: Status) bool {
-        if (status == Status.SLP) return Status.duration(num) > 0;
+        if (status == .SLP) return Status.duration(num) > 0;
         return bit.isSet(u8, num, @intCast(u3, @enumToInt(status)));
     }
 
     pub inline fn init(status: Status) u8 {
-        assert(status != Status.SLP);
+        assert(status != .SLP);
         return bit.set(u8, 0, @intCast(u3, @enumToInt(status)));
     }
 
@@ -131,15 +127,15 @@ const Status = enum(u8) {
 };
 
 test "Status" {
-    try expect(!Status.is(0, Status.SLP));
-    try expect(Status.is(Status.sleep(5), Status.SLP));
-    try expect(!Status.is(Status.sleep(7), Status.PSN));
+    try expect(!Status.is(0, .SLP));
+    try expect(Status.is(Status.sleep(5), .SLP));
+    try expect(!Status.is(Status.sleep(7), .PSN));
     try expectEqual(@as(u3, 5), Status.duration(Status.sleep(5)));
-    try expect(Status.is(Status.init(Status.PSN), Status.PSN));
-    try expect(!Status.is(Status.init(Status.PSN), Status.PAR));
-    try expect(Status.is(Status.init(Status.BRN), Status.BRN));
-    try expect(!Status.is(Status.init(Status.FRZ), Status.SLP));
-    try expect(Status.is(Status.init(Status.FRZ), Status.FRZ));
+    try expect(Status.is(Status.init(.PSN), .PSN));
+    try expect(!Status.is(Status.init(.PSN), .PAR));
+    try expect(Status.is(Status.init(.BRN), .BRN));
+    try expect(!Status.is(Status.init(.FRZ), .SLP));
+    try expect(Status.is(Status.init(.FRZ), .FRZ));
 }
 
 /// The core representation of a Pokémon in a battle. Comparable to Pokémon Showdown's `Pokemon`
@@ -254,23 +250,23 @@ test "Pokemon" {
 /// *See:* https://pkmn.cc/pokered/constants/battle_constants.asm#L73
 ///
 const Volatile = packed struct {
-    Bide: bool,
-    Locked: bool,
-    MultiHit: bool,
-    Flinch: bool,
-    Charging: bool,
-    PartialTrap: bool,
-    Invulnerable: bool,
-    Confusion: bool,
-    Mist: bool,
-    FocusEnergy: bool,
-    Substitute: bool,
-    Recharging: bool,
-    Rage: bool,
-    LeechSeed: bool,
-    Toxic: bool,
-    LightScreen: bool,
-    Reflect: bool,
+    Bide: bool = false,
+    Locked: bool = false,
+    MultiHit: bool = false,
+    Flinch: bool = false,
+    Charging: bool = false,
+    PartialTrap: bool = false,
+    Invulnerable: bool = false,
+    Confusion: bool = false,
+    Mist: bool = false,
+    FocusEnergy: bool = false,
+    Substitute: bool = false,
+    Recharging: bool = false,
+    Rage: bool = false,
+    LeechSeed: bool = false,
+    Toxic: bool = false,
+    LightScreen: bool = false,
+    Reflect: bool = false,
     Transform: bool,
 
     comptime {
