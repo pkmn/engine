@@ -2,8 +2,8 @@ const std = @import("std");
 const mem = std.mem;
 
 const assert = std.debug.assert;
-const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
+const expectEqualSlices = std.testing.expectEqualSlices;
 
 pub const Protocol = union(ArgType) {
     Upkeep: Upkeep,
@@ -256,8 +256,7 @@ test "Protocol" {
     defer trace.deinit();
 
     try Protocol.log(&p, &trace);
-    try Protocol.log(&Protocol{ .Win = Win.init(1) }, &trace);
     try Protocol.log(&Protocol{ .Upkeep = Upkeep.init() }, &trace);
     try Protocol.log(&Protocol{ .Transform = Transform.init(3, 4) }, &trace);
-    try expect(mem.eql(u8, trace.items, &[_]u8{ 0x01, 0x00, 0x05, 0x02, 0x01, 0x00, 0x0B, 0x03, 0x04 }));
+    try expectEqualSlices(u8, trace.items, &[_]u8{ 0x01, 0x00, 0x05, 0x00, 0x0B, 0x03, 0x04 });
 }
