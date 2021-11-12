@@ -5,6 +5,7 @@ const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
+// FIXME not all exist in latest gen, could be made smaller
 pub const Protocol = union(ArgType) {
     Upkeep: Upkeep,
     Turn: Turn,
@@ -34,6 +35,7 @@ pub const Protocol = union(ArgType) {
     }
 
     fn write(p: *const Protocol, buf: *std.ArrayList(u8)) !void {
+        // FIXME add type bit for length
         try buf.append(@enumToInt(@as(ArgType, p.*)));
         switch (p.*) {
             .Upkeep => undefined,
@@ -181,6 +183,51 @@ pub const KWArgType = enum(u8) {
     ZEffect,
 };
 
+// FIXME not all exist in current gen, could be made smaller
+pub const KWArgs = struct {
+    // Broken: bool = false,
+    // Consumed: bool = false,
+    // Damage: bool = false,
+    // Eat: bool = false,
+    // Fail: bool = false,
+    // Fatigue: bool = false,
+    // Forme: bool = false,
+    // Silent: bool = false,
+
+    foo: u8 = 0,
+
+    // Still: bool = false,
+    // Thaw: bool = false,
+    // Upkeep: bool = false,
+    // Weak: bool = false,
+    // Weaken: bool = false,
+    // NoTarget: bool = false,
+    // Heavy: bool = false,
+    // Miss: bool = false,
+
+    bar: u8 = 0,
+
+    // OHKO: bool = false,
+    // ZEffect: bool = false,
+
+    baz: u8 = 0,
+
+    Ability: AbilityName = 0,
+    Ability2: AbilityName = 0,
+    Block: MoveName = 0,
+    From: EffectName = 0,
+    Item: ItemName = 0,
+    Move: MoveName = 0,
+    Name: PokemonIdent = 0,
+    Number: u8 = 0,
+    Of: PokemonIdent = 0,
+    Wisher: PokemonIdent = 0,
+}; // TOD Spread,
+
+test "KWArgs" {
+    try expectEqual(14, @sizeOf(KWArgs));
+}
+
 fn Arg0() type {
     return packed struct {
         const Self = @This();
@@ -217,6 +264,16 @@ fn Arg2(comptime T1: type, comptime T2: type) type {
 
 const Player = u8;
 const PokemonIdent = u8;
+
+// TODO: varies
+const AbilityName = u8;
+const EffectName = packed struct {
+    kind: u2, // pure, move, item, ability
+    name: u14,
+};
+const ItemName = u8;
+const MoveName = u8;
+const SpeciesName = u8;
 
 pub const Upkeep = Arg0();
 pub const Turn = Arg1(u16);
