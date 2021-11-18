@@ -119,6 +119,10 @@
 
 ### rsbot/gsbot
 
+## Other
+
+### [Technical Machine](https://github.com/davidstone/technical-machine)
+
 ## Appendix
 
 ### RNG

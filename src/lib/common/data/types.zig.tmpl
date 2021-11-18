@@ -18,22 +18,12 @@ pub const Type = enum({{ Type_type }}) {
         // NOTE: must be cmov to avoid branches
         return if (e == 3) 20 else num * 5;
     }
+
+    // FIXME conditionally add hiddenPower for approriate gens (3 different formulas, DVs, IVs, gen 6+)
+    // https://bulbapedia.bulbagarden.net/wiki/Hidden_Power_(move)/Calculation
 };
 
-/// Type effectiveness factors, scaled by 10 to avoid having to use floating points. TODO fix
-///
-/// {{ Efffectiveness_comment }}
-///
-pub const Efffectiveness = enum(u2) {
-    Super = 3,
-    Neutral = 2,
-    Resisted = 1,
-    Immune = 0,
-
-    comptime {
-        assert(@bitSizeOf(Efffectiveness) == 2);
-    }
-};
+// FIXME Types
 
 const S = Efffectiveness.Super;
 const N = Efffectiveness.Neutral;

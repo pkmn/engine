@@ -3,15 +3,16 @@
 //! **NOTE**: code in `data/` is generated and re-exported below.
 
 const std = @import("std");
+
 const util = @import("../common/util.zig");
+
+const moves = @import("data/moves.zig");
+const species = @import("data/species.zig");
+const types = @import("data/types.zig");
 
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 const expect = std.testing.expect;
-
-const types = @import("data/types.zig");
-const moves = @import("data/moves.zig");
-const species = @import("data/species.zig");
 
 const bit = util.bit;
 
@@ -25,11 +26,11 @@ pub const Stat = enum(u3) {
     def,
     spe,
     spc,
-};
 
-test "State" {
-    try expectEqual(3, @bitSizeOf(Stat));
-}
+    comptime {
+        assert(@bitSizeOf(Stat) == 3);
+    }
+};
 
 /// A structure for storing information for each `Stat` (cf. Pokémon Showdown's `StatTable`).
 pub fn Stats(comptime T: type) type {
@@ -86,9 +87,114 @@ test "Boosts" {
     try expectEqual(-6, boosts.spc);
 }
 
-pub const Moves = moves.Moves;
+/// Bitfield respresentation of a Pokémon's DVs, stored as a 16-bit integer like on cartridge
+/// with the HP DV being computered by taking the least-signficant bit of each of the other DVs.
+pub const DVs = packed struct {
+    atk: u4 = 15,
+    def: u4 = 15,
+    spe: u4 = 15,
+    spc: u4 = 15,
+
+    comptime {
+        assert(@bitSizeOf(DVs) == 2 * 8);
+    }
+
+    pub fn hp(self: *const DVs) u4 {
+        return (self.atk & 1) << 3 | (self.def & 1) << 2 | (self.spe & 1) << 1 | (self.spc & 1);
+    }
+};
+
+test "DVs" {
+    var dvs = DVs{ .spc = 15, .spe = 15 };
+    try expectEqual(@as(u4, 15), dvs.hp());
+    dvs = DVs{
+        .atk = 5,
+        .def = 15,
+        .spe = 13,
+        .spc = 13,
+    };
+    try expectEqual(@as(u4, 15), dvs.hp());
+    dvs = DVs{
+        .def = 3,
+        .spe = 10,
+        .spc = 11,
+    };
+    try expectEqual(@as(u4, 13), dvs.hp());
+}
+
+
+
+/// Bitfield representation of a Pokémon's major status condition, mirroring how it is stored on
+/// the cartridge. A value of `0x00` means that the Pokémon is not affected by any major status,
+/// otherwise the lower 3 bits represent the remaining duration for SLP. Other status are denoted
+/// by the presence of individual bits - at most one status should be set at any given time.
+///
+/// **NOTE:** in Generation 1 and 2, the "badly poisoned" status (TOX) is volatile and gets dropped
+/// upon switching out - see the respective `Volatiles` structs.
+///
+const SLP = 0b111;
+const PSN = 0b10001000;
+pub const Status = enum(u8) {
+    // 0 and 1 bits are also used for SLP
+    SLP = 2,
+    PSN = 3,
+    BRN = 4,
+    FRZ = 5,
+    PAR = 6,
+    TOX = 7,
+
+    pub fn is(num: u8, status: Status) bool {
+        if (status == .SLP) return Status.duration(num) > 0;
+        return bit.isSet(u8, num, @intCast(u3, @enumToInt(status)));
+    }
+
+    pub fn init(status: Status) u8 {
+        assert(status != .SLP);
+        return bit.set(u8, 0, @intCast(u3, @enumToInt(status)));
+    }
+
+    pub fn slp(dur: u3) u8 {
+        assert(dur > 0);
+        return @as(u8, dur);
+    }
+
+    pub fn duration(num: u8) u3 {
+        return @intCast(u3, num & SLP);
+    }
+
+    pub fn psn(num: u8) bool {
+        return num & PSN != 0;
+    }
+
+    pub fn any(num: u8) bool {
+        return num > 0;
+    }
+};
+
+test "Status" {
+    try expect(Status.is(Status.init(.PSN), .PSN));
+    try expect(!Status.is(Status.init(.PSN), .PAR));
+    try expect(Status.is(Status.init(.BRN), .BRN));
+    try expect(!Status.is(Status.init(.FRZ), .SLP));
+    try expect(Status.is(Status.init(.FRZ), .FRZ));
+    try expect(Status.is(Status.init(.TOX), .TOX));
+
+    try expect(!Status.is(0, .SLP));
+    try expect(Status.is(Status.slp(5), .SLP));
+    try expect(!Status.is(Status.slp(7), .PSN));
+    try expectEqual(@as(u3, 5), Status.duration(Status.slp(5)));
+
+    try expect(!Status.psn(Status.init(.BRN)));
+    try expect(Status.psn(Status.init(.PSN)));
+    try expect(Status.psn(Status.init(.TOX)));
+
+    try expect(!Status.any(0));
+    try expect(Status.any(Status.init(.TOX)));
+}
+
 
 /// *See:* https://pkmn.cc/pokered/data/moves/moves.asm
+pub const Moves = moves.Moves;
 pub const Move = packed struct {
     bp: u8,
     accuracy: u8,
@@ -106,9 +212,8 @@ test "Moves" {
     try expectEqual(@as(u8, 35 / 5), move.pp);
 }
 
-pub const Species = species.Species;
-
 /// *See:* https://pkmn.cc/bulba/Pok%c3%a9mon_species_data_structure_%28Generation_I%29
+pub const Species = species.Species;
 pub const Specie = packed struct {
     types: Types,
     stats: Stats(u8),
@@ -125,15 +230,26 @@ test "Species" {
 
 pub const Type = types.Type;
 pub const Types = types.Types;
-pub const Efffectiveness = types.Efffectiveness;
+
+/// TODO
+pub const Effectiveness = enum(u2) {
+    Super = 3,
+    Neutral = 2,
+    Resisted = 1,
+    Immune = 0,
+
+    comptime {
+        assert(@bitSizeOf(Effectiveness) == 2);
+    }
+};
 
 test "Types" {
     try expectEqual(14, @enumToInt(Type.Dragon));
-    try expectEqual(20, @enumToInt(Efffectiveness.Super));
-    try expectEqual(Efffectiveness.Immune, Type.effectiveness(.Ghost, .Psychic));
-    try expectEqual(Efffectiveness.Super, Type.effectiveness(.Water, .Fire));
-    try expectEqual(Efffectiveness.Resisted, Type.effectiveness(.Fire, .Water));
-    try expectEqual(Efffectiveness.Neutral, Type.effectiveness(.Normal, .Grass));
+    try expectEqual(3, @enumToInt(Effectiveness.Super));
+    try expectEqual(Effectiveness.Immune, Type.effectiveness(.Ghost, .Psychic));
+    try expectEqual(Effectiveness.Super, Type.effectiveness(.Water, .Fire));
+    try expectEqual(Effectiveness.Resisted, Type.effectiveness(.Fire, .Water));
+    try expectEqual(Effectiveness.Neutral, Type.effectiveness(.Normal, .Grass));
 }
 
 /// A data-type for a `(move, pp)` pair. A pared down version of Pokémon Showdown's
@@ -175,90 +291,6 @@ test "MoveSlot" {
     try expectEqual(@as(u16, 0), @bitCast(u16, MoveSlot.init(.None)));
 }
 
-/// Bitfield respresentation of a Pokémon's DVs, stored as a 16-bit integer like on cartridge
-/// with the HP DV being computered by taking the least-signficant bit of each of the other DVs.
-const DVs = packed struct {
-    atk: u4 = 15,
-    def: u4 = 15,
-    spe: u4 = 15,
-    spc: u4 = 15,
-
-    comptime {
-        assert(@sizeOf(DVs) == @sizeOf(u16));
-    }
-
-    pub fn hp(self: *const DVs) u4 {
-        return (self.atk & 1) << 3 | (self.def & 1) << 2 | (self.spe & 1) << 1 | (self.spc & 1);
-    }
-};
-
-test "DVs" {
-    var dvs = DVs{ .spc = 15, .spe = 15 };
-    try expectEqual(@as(u4, 15), dvs.hp());
-    dvs = DVs{
-        .atk = 5,
-        .def = 15,
-        .spe = 13,
-        .spc = 13,
-    };
-    try expectEqual(@as(u4, 15), dvs.hp());
-    dvs = DVs{
-        .def = 3,
-        .spe = 10,
-        .spc = 11,
-    };
-    try expectEqual(@as(u4, 13), dvs.hp());
-}
-
-/// Bitfield representation of a Pokémon's major status condition, mirroring how it is stored on
-/// the cartridge. A value of `0x00` means that the Pokémon is not affected by any major status,
-/// otherwise the lower 3 bits represent the remaining duration for SLP. Other status are denoted
-/// by the presence of individual bits - at most one status should be set at any given time.
-///
-/// **NOTE:** in Generation 1, the "badly poisoned" status (TOX) is volatile and gets dropped
-/// upon switching out - see `Volatiles` below.
-///
-/// *See:* https://pkmn.cc/pokered/constants/battle_constants.asm#L60-L65
-///
-const Status = enum(u8) {
-    SLP = 0b111,
-    PSN = 3,
-    BRN = 4,
-    FRZ = 5,
-    PAR = 6,
-
-    pub fn is(num: u8, status: Status) bool {
-        if (status == .SLP) return Status.duration(num) > 0;
-        return bit.isSet(u8, num, @intCast(u3, @enumToInt(status)));
-    }
-
-    pub fn init(status: Status) u8 {
-        assert(status != .SLP);
-        return bit.set(u8, 0, @intCast(u3, @enumToInt(status)));
-    }
-
-    pub fn sleep(dur: u3) u8 {
-        assert(dur > 0);
-        return @as(u8, dur);
-    }
-
-    pub fn duration(num: u8) u3 {
-        return @intCast(u3, num & @enumToInt(Status.SLP));
-    }
-};
-
-test "Status" {
-    try expect(!Status.is(0, .SLP));
-    try expect(Status.is(Status.sleep(5), .SLP));
-    try expect(!Status.is(Status.sleep(7), .PSN));
-    try expectEqual(@as(u3, 5), Status.duration(Status.sleep(5)));
-    try expect(Status.is(Status.init(.PSN), .PSN));
-    try expect(!Status.is(Status.init(.PSN), .PAR));
-    try expect(Status.is(Status.init(.BRN), .BRN));
-    try expect(!Status.is(Status.init(.FRZ), .SLP));
-    try expect(Status.is(Status.init(.FRZ), .FRZ));
-}
-
 /// The core representation of a Pokémon in a battle. Comparable to Pokémon Showdown's `Pokemon`
 /// type, this struct stores the data stored in the cartridge's `battle_struct` information stored
 /// in `w{Battle,Enemy}Mon` as well as parts of the `party_struct` in the `stored` field. The fields
@@ -272,7 +304,7 @@ test "Status" {
 ///
 /// **References:**
 ///
-///  - https://pkmn.cc/bulba/Pok%c3%a9mon_species_data_structure_%28Generation_I%29
+///  - https://pkmn.cc/bulba/Pok%c3%a9mon_data_structure_%28Generation_I%29
 ///  - https://pkmn.cc/PKHeX/PKHeX.Core/PKM/PK1.cs
 ///  - https://pkmn.cc/pokered/macros/wram.asm
 ///
@@ -293,7 +325,7 @@ const Pokemon = packed struct {
         multihit: packed struct {
             hits: u4,
             left: u4,
-        },
+        }
     },
     volatiles: Volatile,
     boosts: Boosts(i4),
@@ -378,8 +410,7 @@ const Side = packed struct {
     }
 };
 
-
-// // TODO
+// TODO
 const Battle = packed struct {
     seed: u8,
     turn: u8,

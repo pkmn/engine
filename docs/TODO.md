@@ -68,3 +68,8 @@
   - [ ] disclaimer (Pokémon Showdown comparison - link to `DESIGN.md` for differences with PS)
 - [ ] add big-endian architecture to CI tests (eg. [using
   `qemu-mips`](https://github.com/google/flatbuffers/blob/master/tests/RustTest.sh#L18-L22))
+
+## Design
+
+- [ ] definition goes in the first gen it was relevant, subsequent gens forward definition (eg. Gen
+  5 imports Gen 2's `Type`/`Types`)
