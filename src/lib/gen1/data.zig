@@ -308,13 +308,8 @@ test "MoveSlot" {
 ///  - https://pkmn.cc/PKHeX/PKHeX.Core/PKM/PK1.cs
 ///  - https://pkmn.cc/pokered/macros/wram.asm
 ///
-const Pokemon = packed struct {
-    stored: packed struct {
-        level: u8,
-        stats: Stats(u16),
-        moves: [4]MoveSlot,
-        dvs: DVs,
-    },
+const ActivePokemon = packed struct {
+    // TODO: level/hp/types/status are all technically the same as in party...
     stats: Stats(u16),
     moves: [4]MoveSlot,
     volatiles_data: packed struct {
@@ -333,18 +328,28 @@ const Pokemon = packed struct {
     status: Status,
     species: Species,
     types: Types,
+    level: u8,
     disabled: packed struct {
         move: u4,
         duration: u4,
     },
-    _pad: u64,
 
     comptime {
-        assert(@bitSizeOf(Pokemon) == 64 * 8);
+        assert(@bitSizeOf(ActivePokemon) == 36 * 8);
     }
+};
 
-     pub fn level(self: *const Pokemon) u8 {
-        return self.stored.level;
+const Pokemon = packed struct {
+    stats: Stats(u16), // 80
+    moves: [4]MoveSlot, // 64
+    dvs: DVs, // 16
+    hp: u16, // 16
+    status: Status, // 8
+    species: Species, // 8
+    level: u8, // 8
+
+    comptime {
+        assert(@bitSizeOf(Pokemon) == 25 * 8);
     }
 };
 
@@ -386,38 +391,49 @@ const Volatile = packed struct {
     }
 };
 
+
+pub const Slot = enum(u4) {
+    None,
+    One,
+    Two,
+    Three,
+    Four,
+    Five,
+    Six,
+};
+
 // TODO
 // wPlayerMonNumber (pret) & Side#active[0] (PS)
 // wInHandlePlayerMonFainted (pret) & Side#faintedThisTurn (PS)
 // w{Player,Enemy}UsedMove (pret) & Side#lastMove (PS)
 // w{Player,Enemy}SelectedMove (pret) & Side#lastSelectedMove (PS)
 const Side = packed struct {
-    pokemon: [6]Pokemon,
-
-    active: u4,
-    fainted_last_turn: u4,
-
+    pokemon: ActivePokemon,
+    team: [6]Pokemon,
+    active: Slot = .None,
+    fainted_last_turn: Slot = .None,
     last_used_move: Moves,
     last_selected_move: Moves,
-
-    // pub fn get(self: *Side, pokemon: u4) *Pokemon {
-    //     assert(pokemon >= 1 and pokemon <= 7);
-    //     return self.pokemon[pokemon - 1];
-    // }
+    _pad: u24,
 
     comptime {
-        assert(@bitSizeOf(Side) == 387 * 8);
+        assert(@bitSizeOf(Side) == 192 * 8);
+    }
+
+    pub fn get(self: *Side, slot: Slot) *Pokemon {
+        assert(slot != .None);
+        return self.pokemon[slot - 1];
     }
 };
 
 // TODO
 const Battle = packed struct {
+    sides: [2]Side,
     seed: u8,
     turn: u8,
-    sides: [2]Side,
 
     comptime {
-        assert(@bitSizeOf(Battle) == 776 * 8);
+        assert(@bitSizeOf(Battle) == 386 * 8);
     }
 
     pub fn p1(self: *Battle) *Side {
