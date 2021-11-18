@@ -1,0 +1,54 @@
+const std = @import("std");
+
+const assert = std.debug.assert;
+
+/// Type constants representing all non-glitch types.
+///
+/// {{ Type_comment }}
+///
+pub const Type = enum({{ Type_type }}) {
+    {{ Type }}
+
+    comptime {
+        assert(@bitSizeOf(Type) == {{ Type_size }});
+    }
+
+    pub fn effectiveness(t1: Type, t2: Type) Efffectiveness {
+        var e = @enumToInt(TYPE_CHART[@enumToInt(t1)][@enumToInt(t2)]);
+        // NOTE: must be cmov to avoid branches
+        return if (e == 3) 20 else num * 5;
+    }
+};
+
+/// Type effectiveness factors, scaled by 10 to avoid having to use floating points. TODO fix
+///
+/// {{ Efffectiveness_comment }}
+///
+pub const Efffectiveness = enum(u2) {
+    Super = 3,
+    Neutral = 2,
+    Resisted = 1,
+    Immune = 0,
+
+    comptime {
+        assert(@bitSizeOf(Efffectiveness) == 2);
+    }
+};
+
+const S = Efffectiveness.Super;
+const N = Efffectiveness.Neutral;
+const R = Efffectiveness.Resisted;
+const I = Efffectiveness.Immune;
+
+/// Type chart, organizated in terms of damage-dealt like on the cartridge. However,
+/// unlike in-game we store the entire table as a multidimensional array for faster
+/// queries (the cartridge's approach of only listing non-neutral matchups saves memory
+/// but requires linear scanning for lookups).
+///
+/// **NOTE**: Pokémon Showdown stores its type chart in the reverse order (ie. damage-dealt).
+///
+/// {{ TYPE_CHART_comment }}
+///
+const TYPE_CHART = [{{ NUM_TYPES }}][{{ NUM_TYPES }}]Efffectiveness{
+    {{ TYPE_CHART }}
+};

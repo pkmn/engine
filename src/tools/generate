@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 
+// TODO: could alternatively use Makefile for checking changes to templates
+
 const fs = require('fs');
 const path = require('path');
 const fetch = require('node-fetch');
@@ -9,7 +11,7 @@ const {Dex} = require('@pkmn/dex');
 const {Generations} = require('@pkmn/data');
 
 const pret = 'https://raw.githubusercontent.com/pret/pokered/master/';
-const out = path.resolve(__dirname, '../lib/data');
+const out = path.resolve(__dirname, '../lib/gen1/data');
 
 const toEnum = s => s.replace(/[^A-Za-z0-9]+/g, '');
 
@@ -71,7 +73,6 @@ async function speciesIDs(gen) {
   return species;
 }
 
-
 (async () => {
 const gens = new Generations(Dex);
 const GEN1 = gens.get(1);
@@ -115,11 +116,21 @@ pub const Type = enum(u4) {
     ${TYPES.join(',\n    ')},
 
     comptime {
-        assert(@sizeOf(Type) == 1);
+        assert(@bitSizeOf(Type) == 4);
     }
 
-    pub inline fn effectiveness(t1: Type, t2: Type) Efffectiveness {
+    pub fn effectiveness(t1: Type, t2: Type) Efffectiveness {
         return TYPE_CHART[@enumToInt(t1)][@enumToInt(t2)];
+    }
+};
+
+// TODO: [2]Type
+pub const Types = packed struct {
+    type1: Type,
+    type2: Type,
+
+    comptime {
+        assert(@bitSizeOf(Types) == 8);
     }
 };
 
@@ -134,7 +145,7 @@ pub const Efffectiveness = enum(u8) {
     Immune = 0,
 
     comptime {
-        assert(@sizeOf(Efffectiveness) == 1);
+        assert(@bitSizeOf(Efffectiveness) == 8);
     }
 };
 
@@ -164,11 +175,11 @@ const MOVES = [];
 for (const name of MOVE_IDS) {
   const move = GEN1.moves.get(name);
   MOVES.push(`Move{
-    .id = .${name},
+    // ${name}
     .bp = ${move.basePower},
     .type = .${move.type === '???' ? 'Normal' : move.type},
     .accuracy = ${move.accuracy === true ? '100' : move.accuracy},
-    .pp = ${move.pp},
+    .pp = ${move.pp / 5}, // * 5 = ${move.pp}
 }`);
 }
 const moves = `${PREAMBLE}
@@ -192,7 +203,7 @@ pub const Moves = enum(u8) {
     ${MOVE_IDS.join(',\n    ')},
 
     comptime {
-        assert(@sizeOf(Moves) == 1);
+        assert(@bitSizeOf(Moves) == 8);
     }
 
     pub fn get(id: Moves) *const Move {
@@ -225,7 +236,7 @@ for (const name of SPECIES_IDS) {
   const types = species.types.length === 1
     ? [species.types[0], species.types[0]] : species.types;
   SPECIES.push(`Specie{
-    .id = .${name},
+    // ${name},
     .stats = Stats(u8){
         .hp = ${species.baseStats.hp},
         .atk = ${species.baseStats.atk},
@@ -233,7 +244,7 @@ for (const name of SPECIES_IDS) {
         .spe = ${species.baseStats.spe},
         .spc = ${species.baseStats.spa},
     },
-    .types = [_]Type{ .${types[0]}, .${types[1]} },
+    .types = Types{ .type1 = .${types[0]}, .type2 = .${types[1]} },
 }`);
 }
 
@@ -245,7 +256,7 @@ const assert = std.debug.assert;
 
 const Specie = data.Specie;
 const Stats = data.Stats;
-const Type = data.Type;
+const Types = data.Types;
 
 /// Species constants representing all legal moves, plus the sentinel \`None\`.
 /// The sentinal value is guaranteed to be bit-equivalent to \`0\` and can be
@@ -259,10 +270,10 @@ pub const Species = enum(u8) {
     ${SPECIES_IDS.join(',\n    ')},
 
     comptime {
-        assert(@sizeOf(Species) == 1);
+        assert(@bitSizeOf(Species) == 8);
     }
 
-    pub inline fn get(id: Species) *const Specie {
+    pub fn get(id: Species) *const Specie {
         assert(id != .None);
         return &SPECIES[@enumToInt(id) - 1];
     }

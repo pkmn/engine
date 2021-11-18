@@ -29,11 +29,21 @@ pub const Type = enum(u4) {
     Dragon,
 
     comptime {
-        assert(@sizeOf(Type) == 1);
+        assert(@bitSizeOf(Type) == 4);
     }
 
-    pub inline fn effectiveness(t1: Type, t2: Type) Efffectiveness {
+    pub fn effectiveness(t1: Type, t2: Type) Efffectiveness {
         return TYPE_CHART[@enumToInt(t1)][@enumToInt(t2)];
+    }
+};
+
+// TODO: [2]Type
+pub const Types = packed struct {
+    type1: Type,
+    type2: Type,
+
+    comptime {
+        assert(@bitSizeOf(Types) == 8);
     }
 };
 
@@ -48,7 +58,7 @@ pub const Efffectiveness = enum(u8) {
     Immune = 0,
 
     comptime {
-        assert(@sizeOf(Efffectiveness) == 1);
+        assert(@bitSizeOf(Efffectiveness) == 8);
     }
 };
 

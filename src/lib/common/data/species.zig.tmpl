@@ -1,0 +1,42 @@
+const std = @import("std");
+const data = @import("../data.zig");
+
+const assert = std.debug.assert;
+
+const Specie = data.Specie;
+const Stats = data.Stats;
+const Type = data.Type;
+
+/// Species constants representing all legal moves, plus the sentinel \`None\`.
+/// The sentinel value is guaranteed to be bit-equivalent to \`0\` and can be
+/// used to represent a null-pointer equivalent without using the additional
+/// byte that \`?Species\` would entail.
+///
+/// {{ Species_comment }}
+///
+pub const Species = enum({{ Species_type }}) {
+    None,
+    {{ Species }}
+
+    comptime {
+        assert(@bitSizeOf(Species) == {{ Species_size }});
+    }
+
+    pub fn get(id: Species) *const Specie {
+        assert(id != .None);
+        return &SPECIES[@enumToInt(id) - 1];
+    }
+};
+
+/// Basic raw species data - names and descriptions are handled elswhere.
+///
+/// **NOTE:** just like in-game, each Pokémon has two types (Pokémon Showdown
+/// elides the second type if its redundant, but dealing with variable length
+/// and alignment arrays is more trouble and more often than not amounts to the
+/// same space requirements).
+///
+/// {{ SPECIES_COMMENT }}
+///
+const SPECIES = [_]Specie{
+    {{ SPECIES }}
+};

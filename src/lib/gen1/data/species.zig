@@ -7,7 +7,7 @@ const assert = std.debug.assert;
 
 const Specie = data.Specie;
 const Stats = data.Stats;
-const Type = data.Type;
+const Types = data.Types;
 
 /// Species constants representing all legal moves, plus the sentinel `None`.
 /// The sentinal value is guaranteed to be bit-equivalent to `0` and can be
@@ -171,10 +171,10 @@ pub const Species = enum(u8) {
     Mew,
 
     comptime {
-        assert(@sizeOf(Species) == 1);
+        assert(@bitSizeOf(Species) == 8);
     }
 
-    pub inline fn get(id: Species) *const Specie {
+    pub fn get(id: Species) *const Specie {
         assert(id != .None);
         return &SPECIES[@enumToInt(id) - 1];
     }
@@ -190,7 +190,7 @@ pub const Species = enum(u8) {
 /// *See:* https://pkmn.cc/pokered/data/pokemon/base_stats
 ///
 const SPECIES = [_]Specie{ Specie{
-    .id = .Bulbasaur,
+    // Bulbasaur,
     .stats = Stats(u8){
         .hp = 45,
         .atk = 49,
@@ -198,9 +198,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 45,
         .spc = 65,
     },
-    .types = [_]Type{ .Grass, .Poison },
+    .types = Types{ .type1 = .Grass, .type2 = .Poison },
 }, Specie{
-    .id = .Ivysaur,
+    // Ivysaur,
     .stats = Stats(u8){
         .hp = 60,
         .atk = 62,
@@ -208,9 +208,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 60,
         .spc = 80,
     },
-    .types = [_]Type{ .Grass, .Poison },
+    .types = Types{ .type1 = .Grass, .type2 = .Poison },
 }, Specie{
-    .id = .Venusaur,
+    // Venusaur,
     .stats = Stats(u8){
         .hp = 80,
         .atk = 82,
@@ -218,9 +218,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 80,
         .spc = 100,
     },
-    .types = [_]Type{ .Grass, .Poison },
+    .types = Types{ .type1 = .Grass, .type2 = .Poison },
 }, Specie{
-    .id = .Charmander,
+    // Charmander,
     .stats = Stats(u8){
         .hp = 39,
         .atk = 52,
@@ -228,9 +228,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 65,
         .spc = 50,
     },
-    .types = [_]Type{ .Fire, .Fire },
+    .types = Types{ .type1 = .Fire, .type2 = .Fire },
 }, Specie{
-    .id = .Charmeleon,
+    // Charmeleon,
     .stats = Stats(u8){
         .hp = 58,
         .atk = 64,
@@ -238,9 +238,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 80,
         .spc = 65,
     },
-    .types = [_]Type{ .Fire, .Fire },
+    .types = Types{ .type1 = .Fire, .type2 = .Fire },
 }, Specie{
-    .id = .Charizard,
+    // Charizard,
     .stats = Stats(u8){
         .hp = 78,
         .atk = 84,
@@ -248,9 +248,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 100,
         .spc = 85,
     },
-    .types = [_]Type{ .Fire, .Flying },
+    .types = Types{ .type1 = .Fire, .type2 = .Flying },
 }, Specie{
-    .id = .Squirtle,
+    // Squirtle,
     .stats = Stats(u8){
         .hp = 44,
         .atk = 48,
@@ -258,9 +258,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 43,
         .spc = 50,
     },
-    .types = [_]Type{ .Water, .Water },
+    .types = Types{ .type1 = .Water, .type2 = .Water },
 }, Specie{
-    .id = .Wartortle,
+    // Wartortle,
     .stats = Stats(u8){
         .hp = 59,
         .atk = 63,
@@ -268,9 +268,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 58,
         .spc = 65,
     },
-    .types = [_]Type{ .Water, .Water },
+    .types = Types{ .type1 = .Water, .type2 = .Water },
 }, Specie{
-    .id = .Blastoise,
+    // Blastoise,
     .stats = Stats(u8){
         .hp = 79,
         .atk = 83,
@@ -278,9 +278,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 78,
         .spc = 85,
     },
-    .types = [_]Type{ .Water, .Water },
+    .types = Types{ .type1 = .Water, .type2 = .Water },
 }, Specie{
-    .id = .Caterpie,
+    // Caterpie,
     .stats = Stats(u8){
         .hp = 45,
         .atk = 30,
@@ -288,9 +288,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 45,
         .spc = 20,
     },
-    .types = [_]Type{ .Bug, .Bug },
+    .types = Types{ .type1 = .Bug, .type2 = .Bug },
 }, Specie{
-    .id = .Metapod,
+    // Metapod,
     .stats = Stats(u8){
         .hp = 50,
         .atk = 20,
@@ -298,9 +298,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 30,
         .spc = 25,
     },
-    .types = [_]Type{ .Bug, .Bug },
+    .types = Types{ .type1 = .Bug, .type2 = .Bug },
 }, Specie{
-    .id = .Butterfree,
+    // Butterfree,
     .stats = Stats(u8){
         .hp = 60,
         .atk = 45,
@@ -308,9 +308,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 70,
         .spc = 80,
     },
-    .types = [_]Type{ .Bug, .Flying },
+    .types = Types{ .type1 = .Bug, .type2 = .Flying },
 }, Specie{
-    .id = .Weedle,
+    // Weedle,
     .stats = Stats(u8){
         .hp = 40,
         .atk = 35,
@@ -318,9 +318,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 50,
         .spc = 20,
     },
-    .types = [_]Type{ .Bug, .Poison },
+    .types = Types{ .type1 = .Bug, .type2 = .Poison },
 }, Specie{
-    .id = .Kakuna,
+    // Kakuna,
     .stats = Stats(u8){
         .hp = 45,
         .atk = 25,
@@ -328,9 +328,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 35,
         .spc = 25,
     },
-    .types = [_]Type{ .Bug, .Poison },
+    .types = Types{ .type1 = .Bug, .type2 = .Poison },
 }, Specie{
-    .id = .Beedrill,
+    // Beedrill,
     .stats = Stats(u8){
         .hp = 65,
         .atk = 80,
@@ -338,9 +338,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 75,
         .spc = 45,
     },
-    .types = [_]Type{ .Bug, .Poison },
+    .types = Types{ .type1 = .Bug, .type2 = .Poison },
 }, Specie{
-    .id = .Pidgey,
+    // Pidgey,
     .stats = Stats(u8){
         .hp = 40,
         .atk = 45,
@@ -348,9 +348,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 56,
         .spc = 35,
     },
-    .types = [_]Type{ .Normal, .Flying },
+    .types = Types{ .type1 = .Normal, .type2 = .Flying },
 }, Specie{
-    .id = .Pidgeotto,
+    // Pidgeotto,
     .stats = Stats(u8){
         .hp = 63,
         .atk = 60,
@@ -358,9 +358,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 71,
         .spc = 50,
     },
-    .types = [_]Type{ .Normal, .Flying },
+    .types = Types{ .type1 = .Normal, .type2 = .Flying },
 }, Specie{
-    .id = .Pidgeot,
+    // Pidgeot,
     .stats = Stats(u8){
         .hp = 83,
         .atk = 80,
@@ -368,9 +368,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 91,
         .spc = 70,
     },
-    .types = [_]Type{ .Normal, .Flying },
+    .types = Types{ .type1 = .Normal, .type2 = .Flying },
 }, Specie{
-    .id = .Rattata,
+    // Rattata,
     .stats = Stats(u8){
         .hp = 30,
         .atk = 56,
@@ -378,9 +378,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 72,
         .spc = 25,
     },
-    .types = [_]Type{ .Normal, .Normal },
+    .types = Types{ .type1 = .Normal, .type2 = .Normal },
 }, Specie{
-    .id = .Raticate,
+    // Raticate,
     .stats = Stats(u8){
         .hp = 55,
         .atk = 81,
@@ -388,9 +388,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 97,
         .spc = 50,
     },
-    .types = [_]Type{ .Normal, .Normal },
+    .types = Types{ .type1 = .Normal, .type2 = .Normal },
 }, Specie{
-    .id = .Spearow,
+    // Spearow,
     .stats = Stats(u8){
         .hp = 40,
         .atk = 60,
@@ -398,9 +398,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 70,
         .spc = 31,
     },
-    .types = [_]Type{ .Normal, .Flying },
+    .types = Types{ .type1 = .Normal, .type2 = .Flying },
 }, Specie{
-    .id = .Fearow,
+    // Fearow,
     .stats = Stats(u8){
         .hp = 65,
         .atk = 90,
@@ -408,9 +408,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 100,
         .spc = 61,
     },
-    .types = [_]Type{ .Normal, .Flying },
+    .types = Types{ .type1 = .Normal, .type2 = .Flying },
 }, Specie{
-    .id = .Ekans,
+    // Ekans,
     .stats = Stats(u8){
         .hp = 35,
         .atk = 60,
@@ -418,9 +418,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 55,
         .spc = 40,
     },
-    .types = [_]Type{ .Poison, .Poison },
+    .types = Types{ .type1 = .Poison, .type2 = .Poison },
 }, Specie{
-    .id = .Arbok,
+    // Arbok,
     .stats = Stats(u8){
         .hp = 60,
         .atk = 85,
@@ -428,9 +428,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 80,
         .spc = 65,
     },
-    .types = [_]Type{ .Poison, .Poison },
+    .types = Types{ .type1 = .Poison, .type2 = .Poison },
 }, Specie{
-    .id = .Pikachu,
+    // Pikachu,
     .stats = Stats(u8){
         .hp = 35,
         .atk = 55,
@@ -438,9 +438,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 90,
         .spc = 50,
     },
-    .types = [_]Type{ .Electric, .Electric },
+    .types = Types{ .type1 = .Electric, .type2 = .Electric },
 }, Specie{
-    .id = .Raichu,
+    // Raichu,
     .stats = Stats(u8){
         .hp = 60,
         .atk = 90,
@@ -448,9 +448,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 100,
         .spc = 90,
     },
-    .types = [_]Type{ .Electric, .Electric },
+    .types = Types{ .type1 = .Electric, .type2 = .Electric },
 }, Specie{
-    .id = .Sandshrew,
+    // Sandshrew,
     .stats = Stats(u8){
         .hp = 50,
         .atk = 75,
@@ -458,9 +458,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 40,
         .spc = 30,
     },
-    .types = [_]Type{ .Ground, .Ground },
+    .types = Types{ .type1 = .Ground, .type2 = .Ground },
 }, Specie{
-    .id = .Sandslash,
+    // Sandslash,
     .stats = Stats(u8){
         .hp = 75,
         .atk = 100,
@@ -468,9 +468,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 65,
         .spc = 55,
     },
-    .types = [_]Type{ .Ground, .Ground },
+    .types = Types{ .type1 = .Ground, .type2 = .Ground },
 }, Specie{
-    .id = .NidoranF,
+    // NidoranF,
     .stats = Stats(u8){
         .hp = 55,
         .atk = 47,
@@ -478,9 +478,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 41,
         .spc = 40,
     },
-    .types = [_]Type{ .Poison, .Poison },
+    .types = Types{ .type1 = .Poison, .type2 = .Poison },
 }, Specie{
-    .id = .Nidorina,
+    // Nidorina,
     .stats = Stats(u8){
         .hp = 70,
         .atk = 62,
@@ -488,9 +488,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 56,
         .spc = 55,
     },
-    .types = [_]Type{ .Poison, .Poison },
+    .types = Types{ .type1 = .Poison, .type2 = .Poison },
 }, Specie{
-    .id = .Nidoqueen,
+    // Nidoqueen,
     .stats = Stats(u8){
         .hp = 90,
         .atk = 82,
@@ -498,9 +498,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 76,
         .spc = 75,
     },
-    .types = [_]Type{ .Poison, .Ground },
+    .types = Types{ .type1 = .Poison, .type2 = .Ground },
 }, Specie{
-    .id = .NidoranM,
+    // NidoranM,
     .stats = Stats(u8){
         .hp = 46,
         .atk = 57,
@@ -508,9 +508,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 50,
         .spc = 40,
     },
-    .types = [_]Type{ .Poison, .Poison },
+    .types = Types{ .type1 = .Poison, .type2 = .Poison },
 }, Specie{
-    .id = .Nidorino,
+    // Nidorino,
     .stats = Stats(u8){
         .hp = 61,
         .atk = 72,
@@ -518,9 +518,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 65,
         .spc = 55,
     },
-    .types = [_]Type{ .Poison, .Poison },
+    .types = Types{ .type1 = .Poison, .type2 = .Poison },
 }, Specie{
-    .id = .Nidoking,
+    // Nidoking,
     .stats = Stats(u8){
         .hp = 81,
         .atk = 92,
@@ -528,9 +528,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 85,
         .spc = 75,
     },
-    .types = [_]Type{ .Poison, .Ground },
+    .types = Types{ .type1 = .Poison, .type2 = .Ground },
 }, Specie{
-    .id = .Clefairy,
+    // Clefairy,
     .stats = Stats(u8){
         .hp = 70,
         .atk = 45,
@@ -538,9 +538,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 35,
         .spc = 60,
     },
-    .types = [_]Type{ .Normal, .Normal },
+    .types = Types{ .type1 = .Normal, .type2 = .Normal },
 }, Specie{
-    .id = .Clefable,
+    // Clefable,
     .stats = Stats(u8){
         .hp = 95,
         .atk = 70,
@@ -548,9 +548,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 60,
         .spc = 85,
     },
-    .types = [_]Type{ .Normal, .Normal },
+    .types = Types{ .type1 = .Normal, .type2 = .Normal },
 }, Specie{
-    .id = .Vulpix,
+    // Vulpix,
     .stats = Stats(u8){
         .hp = 38,
         .atk = 41,
@@ -558,9 +558,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 65,
         .spc = 65,
     },
-    .types = [_]Type{ .Fire, .Fire },
+    .types = Types{ .type1 = .Fire, .type2 = .Fire },
 }, Specie{
-    .id = .Ninetales,
+    // Ninetales,
     .stats = Stats(u8){
         .hp = 73,
         .atk = 76,
@@ -568,9 +568,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 100,
         .spc = 100,
     },
-    .types = [_]Type{ .Fire, .Fire },
+    .types = Types{ .type1 = .Fire, .type2 = .Fire },
 }, Specie{
-    .id = .Jigglypuff,
+    // Jigglypuff,
     .stats = Stats(u8){
         .hp = 115,
         .atk = 45,
@@ -578,9 +578,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 20,
         .spc = 25,
     },
-    .types = [_]Type{ .Normal, .Normal },
+    .types = Types{ .type1 = .Normal, .type2 = .Normal },
 }, Specie{
-    .id = .Wigglytuff,
+    // Wigglytuff,
     .stats = Stats(u8){
         .hp = 140,
         .atk = 70,
@@ -588,9 +588,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 45,
         .spc = 50,
     },
-    .types = [_]Type{ .Normal, .Normal },
+    .types = Types{ .type1 = .Normal, .type2 = .Normal },
 }, Specie{
-    .id = .Zubat,
+    // Zubat,
     .stats = Stats(u8){
         .hp = 40,
         .atk = 45,
@@ -598,9 +598,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 55,
         .spc = 40,
     },
-    .types = [_]Type{ .Poison, .Flying },
+    .types = Types{ .type1 = .Poison, .type2 = .Flying },
 }, Specie{
-    .id = .Golbat,
+    // Golbat,
     .stats = Stats(u8){
         .hp = 75,
         .atk = 80,
@@ -608,9 +608,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 90,
         .spc = 75,
     },
-    .types = [_]Type{ .Poison, .Flying },
+    .types = Types{ .type1 = .Poison, .type2 = .Flying },
 }, Specie{
-    .id = .Oddish,
+    // Oddish,
     .stats = Stats(u8){
         .hp = 45,
         .atk = 50,
@@ -618,9 +618,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 30,
         .spc = 75,
     },
-    .types = [_]Type{ .Grass, .Poison },
+    .types = Types{ .type1 = .Grass, .type2 = .Poison },
 }, Specie{
-    .id = .Gloom,
+    // Gloom,
     .stats = Stats(u8){
         .hp = 60,
         .atk = 65,
@@ -628,9 +628,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 40,
         .spc = 85,
     },
-    .types = [_]Type{ .Grass, .Poison },
+    .types = Types{ .type1 = .Grass, .type2 = .Poison },
 }, Specie{
-    .id = .Vileplume,
+    // Vileplume,
     .stats = Stats(u8){
         .hp = 75,
         .atk = 80,
@@ -638,9 +638,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 50,
         .spc = 100,
     },
-    .types = [_]Type{ .Grass, .Poison },
+    .types = Types{ .type1 = .Grass, .type2 = .Poison },
 }, Specie{
-    .id = .Paras,
+    // Paras,
     .stats = Stats(u8){
         .hp = 35,
         .atk = 70,
@@ -648,9 +648,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 25,
         .spc = 55,
     },
-    .types = [_]Type{ .Bug, .Grass },
+    .types = Types{ .type1 = .Bug, .type2 = .Grass },
 }, Specie{
-    .id = .Parasect,
+    // Parasect,
     .stats = Stats(u8){
         .hp = 60,
         .atk = 95,
@@ -658,9 +658,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 30,
         .spc = 80,
     },
-    .types = [_]Type{ .Bug, .Grass },
+    .types = Types{ .type1 = .Bug, .type2 = .Grass },
 }, Specie{
-    .id = .Venonat,
+    // Venonat,
     .stats = Stats(u8){
         .hp = 60,
         .atk = 55,
@@ -668,9 +668,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 45,
         .spc = 40,
     },
-    .types = [_]Type{ .Bug, .Poison },
+    .types = Types{ .type1 = .Bug, .type2 = .Poison },
 }, Specie{
-    .id = .Venomoth,
+    // Venomoth,
     .stats = Stats(u8){
         .hp = 70,
         .atk = 65,
@@ -678,9 +678,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 90,
         .spc = 90,
     },
-    .types = [_]Type{ .Bug, .Poison },
+    .types = Types{ .type1 = .Bug, .type2 = .Poison },
 }, Specie{
-    .id = .Diglett,
+    // Diglett,
     .stats = Stats(u8){
         .hp = 10,
         .atk = 55,
@@ -688,9 +688,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 95,
         .spc = 45,
     },
-    .types = [_]Type{ .Ground, .Ground },
+    .types = Types{ .type1 = .Ground, .type2 = .Ground },
 }, Specie{
-    .id = .Dugtrio,
+    // Dugtrio,
     .stats = Stats(u8){
         .hp = 35,
         .atk = 80,
@@ -698,9 +698,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 120,
         .spc = 70,
     },
-    .types = [_]Type{ .Ground, .Ground },
+    .types = Types{ .type1 = .Ground, .type2 = .Ground },
 }, Specie{
-    .id = .Meowth,
+    // Meowth,
     .stats = Stats(u8){
         .hp = 40,
         .atk = 45,
@@ -708,9 +708,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 90,
         .spc = 40,
     },
-    .types = [_]Type{ .Normal, .Normal },
+    .types = Types{ .type1 = .Normal, .type2 = .Normal },
 }, Specie{
-    .id = .Persian,
+    // Persian,
     .stats = Stats(u8){
         .hp = 65,
         .atk = 70,
@@ -718,9 +718,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 115,
         .spc = 65,
     },
-    .types = [_]Type{ .Normal, .Normal },
+    .types = Types{ .type1 = .Normal, .type2 = .Normal },
 }, Specie{
-    .id = .Psyduck,
+    // Psyduck,
     .stats = Stats(u8){
         .hp = 50,
         .atk = 52,
@@ -728,9 +728,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 55,
         .spc = 50,
     },
-    .types = [_]Type{ .Water, .Water },
+    .types = Types{ .type1 = .Water, .type2 = .Water },
 }, Specie{
-    .id = .Golduck,
+    // Golduck,
     .stats = Stats(u8){
         .hp = 80,
         .atk = 82,
@@ -738,9 +738,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 85,
         .spc = 80,
     },
-    .types = [_]Type{ .Water, .Water },
+    .types = Types{ .type1 = .Water, .type2 = .Water },
 }, Specie{
-    .id = .Mankey,
+    // Mankey,
     .stats = Stats(u8){
         .hp = 40,
         .atk = 80,
@@ -748,9 +748,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 70,
         .spc = 35,
     },
-    .types = [_]Type{ .Fighting, .Fighting },
+    .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
 }, Specie{
-    .id = .Primeape,
+    // Primeape,
     .stats = Stats(u8){
         .hp = 65,
         .atk = 105,
@@ -758,9 +758,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 95,
         .spc = 60,
     },
-    .types = [_]Type{ .Fighting, .Fighting },
+    .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
 }, Specie{
-    .id = .Growlithe,
+    // Growlithe,
     .stats = Stats(u8){
         .hp = 55,
         .atk = 70,
@@ -768,9 +768,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 60,
         .spc = 50,
     },
-    .types = [_]Type{ .Fire, .Fire },
+    .types = Types{ .type1 = .Fire, .type2 = .Fire },
 }, Specie{
-    .id = .Arcanine,
+    // Arcanine,
     .stats = Stats(u8){
         .hp = 90,
         .atk = 110,
@@ -778,9 +778,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 95,
         .spc = 80,
     },
-    .types = [_]Type{ .Fire, .Fire },
+    .types = Types{ .type1 = .Fire, .type2 = .Fire },
 }, Specie{
-    .id = .Poliwag,
+    // Poliwag,
     .stats = Stats(u8){
         .hp = 40,
         .atk = 50,
@@ -788,9 +788,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 90,
         .spc = 40,
     },
-    .types = [_]Type{ .Water, .Water },
+    .types = Types{ .type1 = .Water, .type2 = .Water },
 }, Specie{
-    .id = .Poliwhirl,
+    // Poliwhirl,
     .stats = Stats(u8){
         .hp = 65,
         .atk = 65,
@@ -798,9 +798,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 90,
         .spc = 50,
     },
-    .types = [_]Type{ .Water, .Water },
+    .types = Types{ .type1 = .Water, .type2 = .Water },
 }, Specie{
-    .id = .Poliwrath,
+    // Poliwrath,
     .stats = Stats(u8){
         .hp = 90,
         .atk = 85,
@@ -808,9 +808,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 70,
         .spc = 70,
     },
-    .types = [_]Type{ .Water, .Fighting },
+    .types = Types{ .type1 = .Water, .type2 = .Fighting },
 }, Specie{
-    .id = .Abra,
+    // Abra,
     .stats = Stats(u8){
         .hp = 25,
         .atk = 20,
@@ -818,9 +818,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 90,
         .spc = 105,
     },
-    .types = [_]Type{ .Psychic, .Psychic },
+    .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
 }, Specie{
-    .id = .Kadabra,
+    // Kadabra,
     .stats = Stats(u8){
         .hp = 40,
         .atk = 35,
@@ -828,9 +828,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 105,
         .spc = 120,
     },
-    .types = [_]Type{ .Psychic, .Psychic },
+    .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
 }, Specie{
-    .id = .Alakazam,
+    // Alakazam,
     .stats = Stats(u8){
         .hp = 55,
         .atk = 50,
@@ -838,9 +838,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 120,
         .spc = 135,
     },
-    .types = [_]Type{ .Psychic, .Psychic },
+    .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
 }, Specie{
-    .id = .Machop,
+    // Machop,
     .stats = Stats(u8){
         .hp = 70,
         .atk = 80,
@@ -848,9 +848,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 35,
         .spc = 35,
     },
-    .types = [_]Type{ .Fighting, .Fighting },
+    .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
 }, Specie{
-    .id = .Machoke,
+    // Machoke,
     .stats = Stats(u8){
         .hp = 80,
         .atk = 100,
@@ -858,9 +858,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 45,
         .spc = 50,
     },
-    .types = [_]Type{ .Fighting, .Fighting },
+    .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
 }, Specie{
-    .id = .Machamp,
+    // Machamp,
     .stats = Stats(u8){
         .hp = 90,
         .atk = 130,
@@ -868,9 +868,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 55,
         .spc = 65,
     },
-    .types = [_]Type{ .Fighting, .Fighting },
+    .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
 }, Specie{
-    .id = .Bellsprout,
+    // Bellsprout,
     .stats = Stats(u8){
         .hp = 50,
         .atk = 75,
@@ -878,9 +878,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 40,
         .spc = 70,
     },
-    .types = [_]Type{ .Grass, .Poison },
+    .types = Types{ .type1 = .Grass, .type2 = .Poison },
 }, Specie{
-    .id = .Weepinbell,
+    // Weepinbell,
     .stats = Stats(u8){
         .hp = 65,
         .atk = 90,
@@ -888,9 +888,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 55,
         .spc = 85,
     },
-    .types = [_]Type{ .Grass, .Poison },
+    .types = Types{ .type1 = .Grass, .type2 = .Poison },
 }, Specie{
-    .id = .Victreebel,
+    // Victreebel,
     .stats = Stats(u8){
         .hp = 80,
         .atk = 105,
@@ -898,9 +898,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 70,
         .spc = 100,
     },
-    .types = [_]Type{ .Grass, .Poison },
+    .types = Types{ .type1 = .Grass, .type2 = .Poison },
 }, Specie{
-    .id = .Tentacool,
+    // Tentacool,
     .stats = Stats(u8){
         .hp = 40,
         .atk = 40,
@@ -908,9 +908,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 70,
         .spc = 100,
     },
-    .types = [_]Type{ .Water, .Poison },
+    .types = Types{ .type1 = .Water, .type2 = .Poison },
 }, Specie{
-    .id = .Tentacruel,
+    // Tentacruel,
     .stats = Stats(u8){
         .hp = 80,
         .atk = 70,
@@ -918,9 +918,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 100,
         .spc = 120,
     },
-    .types = [_]Type{ .Water, .Poison },
+    .types = Types{ .type1 = .Water, .type2 = .Poison },
 }, Specie{
-    .id = .Geodude,
+    // Geodude,
     .stats = Stats(u8){
         .hp = 40,
         .atk = 80,
@@ -928,9 +928,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 20,
         .spc = 30,
     },
-    .types = [_]Type{ .Rock, .Ground },
+    .types = Types{ .type1 = .Rock, .type2 = .Ground },
 }, Specie{
-    .id = .Graveler,
+    // Graveler,
     .stats = Stats(u8){
         .hp = 55,
         .atk = 95,
@@ -938,9 +938,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 35,
         .spc = 45,
     },
-    .types = [_]Type{ .Rock, .Ground },
+    .types = Types{ .type1 = .Rock, .type2 = .Ground },
 }, Specie{
-    .id = .Golem,
+    // Golem,
     .stats = Stats(u8){
         .hp = 80,
         .atk = 110,
@@ -948,9 +948,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 45,
         .spc = 55,
     },
-    .types = [_]Type{ .Rock, .Ground },
+    .types = Types{ .type1 = .Rock, .type2 = .Ground },
 }, Specie{
-    .id = .Ponyta,
+    // Ponyta,
     .stats = Stats(u8){
         .hp = 50,
         .atk = 85,
@@ -958,9 +958,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 90,
         .spc = 65,
     },
-    .types = [_]Type{ .Fire, .Fire },
+    .types = Types{ .type1 = .Fire, .type2 = .Fire },
 }, Specie{
-    .id = .Rapidash,
+    // Rapidash,
     .stats = Stats(u8){
         .hp = 65,
         .atk = 100,
@@ -968,9 +968,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 105,
         .spc = 80,
     },
-    .types = [_]Type{ .Fire, .Fire },
+    .types = Types{ .type1 = .Fire, .type2 = .Fire },
 }, Specie{
-    .id = .Slowpoke,
+    // Slowpoke,
     .stats = Stats(u8){
         .hp = 90,
         .atk = 65,
@@ -978,9 +978,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 15,
         .spc = 40,
     },
-    .types = [_]Type{ .Water, .Psychic },
+    .types = Types{ .type1 = .Water, .type2 = .Psychic },
 }, Specie{
-    .id = .Slowbro,
+    // Slowbro,
     .stats = Stats(u8){
         .hp = 95,
         .atk = 75,
@@ -988,9 +988,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 30,
         .spc = 80,
     },
-    .types = [_]Type{ .Water, .Psychic },
+    .types = Types{ .type1 = .Water, .type2 = .Psychic },
 }, Specie{
-    .id = .Magnemite,
+    // Magnemite,
     .stats = Stats(u8){
         .hp = 25,
         .atk = 35,
@@ -998,9 +998,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 45,
         .spc = 95,
     },
-    .types = [_]Type{ .Electric, .Electric },
+    .types = Types{ .type1 = .Electric, .type2 = .Electric },
 }, Specie{
-    .id = .Magneton,
+    // Magneton,
     .stats = Stats(u8){
         .hp = 50,
         .atk = 60,
@@ -1008,9 +1008,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 70,
         .spc = 120,
     },
-    .types = [_]Type{ .Electric, .Electric },
+    .types = Types{ .type1 = .Electric, .type2 = .Electric },
 }, Specie{
-    .id = .Farfetchd,
+    // Farfetchd,
     .stats = Stats(u8){
         .hp = 52,
         .atk = 65,
@@ -1018,9 +1018,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 60,
         .spc = 58,
     },
-    .types = [_]Type{ .Normal, .Flying },
+    .types = Types{ .type1 = .Normal, .type2 = .Flying },
 }, Specie{
-    .id = .Doduo,
+    // Doduo,
     .stats = Stats(u8){
         .hp = 35,
         .atk = 85,
@@ -1028,9 +1028,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 75,
         .spc = 35,
     },
-    .types = [_]Type{ .Normal, .Flying },
+    .types = Types{ .type1 = .Normal, .type2 = .Flying },
 }, Specie{
-    .id = .Dodrio,
+    // Dodrio,
     .stats = Stats(u8){
         .hp = 60,
         .atk = 110,
@@ -1038,9 +1038,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 100,
         .spc = 60,
     },
-    .types = [_]Type{ .Normal, .Flying },
+    .types = Types{ .type1 = .Normal, .type2 = .Flying },
 }, Specie{
-    .id = .Seel,
+    // Seel,
     .stats = Stats(u8){
         .hp = 65,
         .atk = 45,
@@ -1048,9 +1048,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 45,
         .spc = 70,
     },
-    .types = [_]Type{ .Water, .Water },
+    .types = Types{ .type1 = .Water, .type2 = .Water },
 }, Specie{
-    .id = .Dewgong,
+    // Dewgong,
     .stats = Stats(u8){
         .hp = 90,
         .atk = 70,
@@ -1058,9 +1058,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 70,
         .spc = 95,
     },
-    .types = [_]Type{ .Water, .Ice },
+    .types = Types{ .type1 = .Water, .type2 = .Ice },
 }, Specie{
-    .id = .Grimer,
+    // Grimer,
     .stats = Stats(u8){
         .hp = 80,
         .atk = 80,
@@ -1068,9 +1068,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 25,
         .spc = 40,
     },
-    .types = [_]Type{ .Poison, .Poison },
+    .types = Types{ .type1 = .Poison, .type2 = .Poison },
 }, Specie{
-    .id = .Muk,
+    // Muk,
     .stats = Stats(u8){
         .hp = 105,
         .atk = 105,
@@ -1078,9 +1078,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 50,
         .spc = 65,
     },
-    .types = [_]Type{ .Poison, .Poison },
+    .types = Types{ .type1 = .Poison, .type2 = .Poison },
 }, Specie{
-    .id = .Shellder,
+    // Shellder,
     .stats = Stats(u8){
         .hp = 30,
         .atk = 65,
@@ -1088,9 +1088,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 40,
         .spc = 45,
     },
-    .types = [_]Type{ .Water, .Water },
+    .types = Types{ .type1 = .Water, .type2 = .Water },
 }, Specie{
-    .id = .Cloyster,
+    // Cloyster,
     .stats = Stats(u8){
         .hp = 50,
         .atk = 95,
@@ -1098,9 +1098,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 70,
         .spc = 85,
     },
-    .types = [_]Type{ .Water, .Ice },
+    .types = Types{ .type1 = .Water, .type2 = .Ice },
 }, Specie{
-    .id = .Gastly,
+    // Gastly,
     .stats = Stats(u8){
         .hp = 30,
         .atk = 35,
@@ -1108,9 +1108,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 80,
         .spc = 100,
     },
-    .types = [_]Type{ .Ghost, .Poison },
+    .types = Types{ .type1 = .Ghost, .type2 = .Poison },
 }, Specie{
-    .id = .Haunter,
+    // Haunter,
     .stats = Stats(u8){
         .hp = 45,
         .atk = 50,
@@ -1118,9 +1118,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 95,
         .spc = 115,
     },
-    .types = [_]Type{ .Ghost, .Poison },
+    .types = Types{ .type1 = .Ghost, .type2 = .Poison },
 }, Specie{
-    .id = .Gengar,
+    // Gengar,
     .stats = Stats(u8){
         .hp = 60,
         .atk = 65,
@@ -1128,9 +1128,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 110,
         .spc = 130,
     },
-    .types = [_]Type{ .Ghost, .Poison },
+    .types = Types{ .type1 = .Ghost, .type2 = .Poison },
 }, Specie{
-    .id = .Onix,
+    // Onix,
     .stats = Stats(u8){
         .hp = 35,
         .atk = 45,
@@ -1138,9 +1138,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 70,
         .spc = 30,
     },
-    .types = [_]Type{ .Rock, .Ground },
+    .types = Types{ .type1 = .Rock, .type2 = .Ground },
 }, Specie{
-    .id = .Drowzee,
+    // Drowzee,
     .stats = Stats(u8){
         .hp = 60,
         .atk = 48,
@@ -1148,9 +1148,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 42,
         .spc = 90,
     },
-    .types = [_]Type{ .Psychic, .Psychic },
+    .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
 }, Specie{
-    .id = .Hypno,
+    // Hypno,
     .stats = Stats(u8){
         .hp = 85,
         .atk = 73,
@@ -1158,9 +1158,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 67,
         .spc = 115,
     },
-    .types = [_]Type{ .Psychic, .Psychic },
+    .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
 }, Specie{
-    .id = .Krabby,
+    // Krabby,
     .stats = Stats(u8){
         .hp = 30,
         .atk = 105,
@@ -1168,9 +1168,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 50,
         .spc = 25,
     },
-    .types = [_]Type{ .Water, .Water },
+    .types = Types{ .type1 = .Water, .type2 = .Water },
 }, Specie{
-    .id = .Kingler,
+    // Kingler,
     .stats = Stats(u8){
         .hp = 55,
         .atk = 130,
@@ -1178,9 +1178,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 75,
         .spc = 50,
     },
-    .types = [_]Type{ .Water, .Water },
+    .types = Types{ .type1 = .Water, .type2 = .Water },
 }, Specie{
-    .id = .Voltorb,
+    // Voltorb,
     .stats = Stats(u8){
         .hp = 40,
         .atk = 30,
@@ -1188,9 +1188,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 100,
         .spc = 55,
     },
-    .types = [_]Type{ .Electric, .Electric },
+    .types = Types{ .type1 = .Electric, .type2 = .Electric },
 }, Specie{
-    .id = .Electrode,
+    // Electrode,
     .stats = Stats(u8){
         .hp = 60,
         .atk = 50,
@@ -1198,9 +1198,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 140,
         .spc = 80,
     },
-    .types = [_]Type{ .Electric, .Electric },
+    .types = Types{ .type1 = .Electric, .type2 = .Electric },
 }, Specie{
-    .id = .Exeggcute,
+    // Exeggcute,
     .stats = Stats(u8){
         .hp = 60,
         .atk = 40,
@@ -1208,9 +1208,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 40,
         .spc = 60,
     },
-    .types = [_]Type{ .Grass, .Psychic },
+    .types = Types{ .type1 = .Grass, .type2 = .Psychic },
 }, Specie{
-    .id = .Exeggutor,
+    // Exeggutor,
     .stats = Stats(u8){
         .hp = 95,
         .atk = 95,
@@ -1218,9 +1218,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 55,
         .spc = 125,
     },
-    .types = [_]Type{ .Grass, .Psychic },
+    .types = Types{ .type1 = .Grass, .type2 = .Psychic },
 }, Specie{
-    .id = .Cubone,
+    // Cubone,
     .stats = Stats(u8){
         .hp = 50,
         .atk = 50,
@@ -1228,9 +1228,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 35,
         .spc = 40,
     },
-    .types = [_]Type{ .Ground, .Ground },
+    .types = Types{ .type1 = .Ground, .type2 = .Ground },
 }, Specie{
-    .id = .Marowak,
+    // Marowak,
     .stats = Stats(u8){
         .hp = 60,
         .atk = 80,
@@ -1238,9 +1238,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 45,
         .spc = 50,
     },
-    .types = [_]Type{ .Ground, .Ground },
+    .types = Types{ .type1 = .Ground, .type2 = .Ground },
 }, Specie{
-    .id = .Hitmonlee,
+    // Hitmonlee,
     .stats = Stats(u8){
         .hp = 50,
         .atk = 120,
@@ -1248,9 +1248,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 87,
         .spc = 35,
     },
-    .types = [_]Type{ .Fighting, .Fighting },
+    .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
 }, Specie{
-    .id = .Hitmonchan,
+    // Hitmonchan,
     .stats = Stats(u8){
         .hp = 50,
         .atk = 105,
@@ -1258,9 +1258,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 76,
         .spc = 35,
     },
-    .types = [_]Type{ .Fighting, .Fighting },
+    .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
 }, Specie{
-    .id = .Lickitung,
+    // Lickitung,
     .stats = Stats(u8){
         .hp = 90,
         .atk = 55,
@@ -1268,9 +1268,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 30,
         .spc = 60,
     },
-    .types = [_]Type{ .Normal, .Normal },
+    .types = Types{ .type1 = .Normal, .type2 = .Normal },
 }, Specie{
-    .id = .Koffing,
+    // Koffing,
     .stats = Stats(u8){
         .hp = 40,
         .atk = 65,
@@ -1278,9 +1278,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 35,
         .spc = 60,
     },
-    .types = [_]Type{ .Poison, .Poison },
+    .types = Types{ .type1 = .Poison, .type2 = .Poison },
 }, Specie{
-    .id = .Weezing,
+    // Weezing,
     .stats = Stats(u8){
         .hp = 65,
         .atk = 90,
@@ -1288,9 +1288,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 60,
         .spc = 85,
     },
-    .types = [_]Type{ .Poison, .Poison },
+    .types = Types{ .type1 = .Poison, .type2 = .Poison },
 }, Specie{
-    .id = .Rhyhorn,
+    // Rhyhorn,
     .stats = Stats(u8){
         .hp = 80,
         .atk = 85,
@@ -1298,9 +1298,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 25,
         .spc = 30,
     },
-    .types = [_]Type{ .Ground, .Rock },
+    .types = Types{ .type1 = .Ground, .type2 = .Rock },
 }, Specie{
-    .id = .Rhydon,
+    // Rhydon,
     .stats = Stats(u8){
         .hp = 105,
         .atk = 130,
@@ -1308,9 +1308,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 40,
         .spc = 45,
     },
-    .types = [_]Type{ .Ground, .Rock },
+    .types = Types{ .type1 = .Ground, .type2 = .Rock },
 }, Specie{
-    .id = .Chansey,
+    // Chansey,
     .stats = Stats(u8){
         .hp = 250,
         .atk = 5,
@@ -1318,9 +1318,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 50,
         .spc = 105,
     },
-    .types = [_]Type{ .Normal, .Normal },
+    .types = Types{ .type1 = .Normal, .type2 = .Normal },
 }, Specie{
-    .id = .Tangela,
+    // Tangela,
     .stats = Stats(u8){
         .hp = 65,
         .atk = 55,
@@ -1328,9 +1328,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 60,
         .spc = 100,
     },
-    .types = [_]Type{ .Grass, .Grass },
+    .types = Types{ .type1 = .Grass, .type2 = .Grass },
 }, Specie{
-    .id = .Kangaskhan,
+    // Kangaskhan,
     .stats = Stats(u8){
         .hp = 105,
         .atk = 95,
@@ -1338,9 +1338,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 90,
         .spc = 40,
     },
-    .types = [_]Type{ .Normal, .Normal },
+    .types = Types{ .type1 = .Normal, .type2 = .Normal },
 }, Specie{
-    .id = .Horsea,
+    // Horsea,
     .stats = Stats(u8){
         .hp = 30,
         .atk = 40,
@@ -1348,9 +1348,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 60,
         .spc = 70,
     },
-    .types = [_]Type{ .Water, .Water },
+    .types = Types{ .type1 = .Water, .type2 = .Water },
 }, Specie{
-    .id = .Seadra,
+    // Seadra,
     .stats = Stats(u8){
         .hp = 55,
         .atk = 65,
@@ -1358,9 +1358,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 85,
         .spc = 95,
     },
-    .types = [_]Type{ .Water, .Water },
+    .types = Types{ .type1 = .Water, .type2 = .Water },
 }, Specie{
-    .id = .Goldeen,
+    // Goldeen,
     .stats = Stats(u8){
         .hp = 45,
         .atk = 67,
@@ -1368,9 +1368,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 63,
         .spc = 50,
     },
-    .types = [_]Type{ .Water, .Water },
+    .types = Types{ .type1 = .Water, .type2 = .Water },
 }, Specie{
-    .id = .Seaking,
+    // Seaking,
     .stats = Stats(u8){
         .hp = 80,
         .atk = 92,
@@ -1378,9 +1378,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 68,
         .spc = 80,
     },
-    .types = [_]Type{ .Water, .Water },
+    .types = Types{ .type1 = .Water, .type2 = .Water },
 }, Specie{
-    .id = .Staryu,
+    // Staryu,
     .stats = Stats(u8){
         .hp = 30,
         .atk = 45,
@@ -1388,9 +1388,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 85,
         .spc = 70,
     },
-    .types = [_]Type{ .Water, .Water },
+    .types = Types{ .type1 = .Water, .type2 = .Water },
 }, Specie{
-    .id = .Starmie,
+    // Starmie,
     .stats = Stats(u8){
         .hp = 60,
         .atk = 75,
@@ -1398,9 +1398,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 115,
         .spc = 100,
     },
-    .types = [_]Type{ .Water, .Psychic },
+    .types = Types{ .type1 = .Water, .type2 = .Psychic },
 }, Specie{
-    .id = .MrMime,
+    // MrMime,
     .stats = Stats(u8){
         .hp = 40,
         .atk = 45,
@@ -1408,9 +1408,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 90,
         .spc = 100,
     },
-    .types = [_]Type{ .Psychic, .Psychic },
+    .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
 }, Specie{
-    .id = .Scyther,
+    // Scyther,
     .stats = Stats(u8){
         .hp = 70,
         .atk = 110,
@@ -1418,9 +1418,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 105,
         .spc = 55,
     },
-    .types = [_]Type{ .Bug, .Flying },
+    .types = Types{ .type1 = .Bug, .type2 = .Flying },
 }, Specie{
-    .id = .Jynx,
+    // Jynx,
     .stats = Stats(u8){
         .hp = 65,
         .atk = 50,
@@ -1428,9 +1428,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 95,
         .spc = 95,
     },
-    .types = [_]Type{ .Ice, .Psychic },
+    .types = Types{ .type1 = .Ice, .type2 = .Psychic },
 }, Specie{
-    .id = .Electabuzz,
+    // Electabuzz,
     .stats = Stats(u8){
         .hp = 65,
         .atk = 83,
@@ -1438,9 +1438,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 105,
         .spc = 85,
     },
-    .types = [_]Type{ .Electric, .Electric },
+    .types = Types{ .type1 = .Electric, .type2 = .Electric },
 }, Specie{
-    .id = .Magmar,
+    // Magmar,
     .stats = Stats(u8){
         .hp = 65,
         .atk = 95,
@@ -1448,9 +1448,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 93,
         .spc = 85,
     },
-    .types = [_]Type{ .Fire, .Fire },
+    .types = Types{ .type1 = .Fire, .type2 = .Fire },
 }, Specie{
-    .id = .Pinsir,
+    // Pinsir,
     .stats = Stats(u8){
         .hp = 65,
         .atk = 125,
@@ -1458,9 +1458,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 85,
         .spc = 55,
     },
-    .types = [_]Type{ .Bug, .Bug },
+    .types = Types{ .type1 = .Bug, .type2 = .Bug },
 }, Specie{
-    .id = .Tauros,
+    // Tauros,
     .stats = Stats(u8){
         .hp = 75,
         .atk = 100,
@@ -1468,9 +1468,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 110,
         .spc = 70,
     },
-    .types = [_]Type{ .Normal, .Normal },
+    .types = Types{ .type1 = .Normal, .type2 = .Normal },
 }, Specie{
-    .id = .Magikarp,
+    // Magikarp,
     .stats = Stats(u8){
         .hp = 20,
         .atk = 10,
@@ -1478,9 +1478,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 80,
         .spc = 20,
     },
-    .types = [_]Type{ .Water, .Water },
+    .types = Types{ .type1 = .Water, .type2 = .Water },
 }, Specie{
-    .id = .Gyarados,
+    // Gyarados,
     .stats = Stats(u8){
         .hp = 95,
         .atk = 125,
@@ -1488,9 +1488,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 81,
         .spc = 100,
     },
-    .types = [_]Type{ .Water, .Flying },
+    .types = Types{ .type1 = .Water, .type2 = .Flying },
 }, Specie{
-    .id = .Lapras,
+    // Lapras,
     .stats = Stats(u8){
         .hp = 130,
         .atk = 85,
@@ -1498,9 +1498,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 60,
         .spc = 95,
     },
-    .types = [_]Type{ .Water, .Ice },
+    .types = Types{ .type1 = .Water, .type2 = .Ice },
 }, Specie{
-    .id = .Ditto,
+    // Ditto,
     .stats = Stats(u8){
         .hp = 48,
         .atk = 48,
@@ -1508,9 +1508,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 48,
         .spc = 48,
     },
-    .types = [_]Type{ .Normal, .Normal },
+    .types = Types{ .type1 = .Normal, .type2 = .Normal },
 }, Specie{
-    .id = .Eevee,
+    // Eevee,
     .stats = Stats(u8){
         .hp = 55,
         .atk = 55,
@@ -1518,9 +1518,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 55,
         .spc = 65,
     },
-    .types = [_]Type{ .Normal, .Normal },
+    .types = Types{ .type1 = .Normal, .type2 = .Normal },
 }, Specie{
-    .id = .Vaporeon,
+    // Vaporeon,
     .stats = Stats(u8){
         .hp = 130,
         .atk = 65,
@@ -1528,9 +1528,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 65,
         .spc = 110,
     },
-    .types = [_]Type{ .Water, .Water },
+    .types = Types{ .type1 = .Water, .type2 = .Water },
 }, Specie{
-    .id = .Jolteon,
+    // Jolteon,
     .stats = Stats(u8){
         .hp = 65,
         .atk = 65,
@@ -1538,9 +1538,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 130,
         .spc = 110,
     },
-    .types = [_]Type{ .Electric, .Electric },
+    .types = Types{ .type1 = .Electric, .type2 = .Electric },
 }, Specie{
-    .id = .Flareon,
+    // Flareon,
     .stats = Stats(u8){
         .hp = 65,
         .atk = 130,
@@ -1548,9 +1548,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 65,
         .spc = 110,
     },
-    .types = [_]Type{ .Fire, .Fire },
+    .types = Types{ .type1 = .Fire, .type2 = .Fire },
 }, Specie{
-    .id = .Porygon,
+    // Porygon,
     .stats = Stats(u8){
         .hp = 65,
         .atk = 60,
@@ -1558,9 +1558,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 40,
         .spc = 75,
     },
-    .types = [_]Type{ .Normal, .Normal },
+    .types = Types{ .type1 = .Normal, .type2 = .Normal },
 }, Specie{
-    .id = .Omanyte,
+    // Omanyte,
     .stats = Stats(u8){
         .hp = 35,
         .atk = 40,
@@ -1568,9 +1568,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 35,
         .spc = 90,
     },
-    .types = [_]Type{ .Rock, .Water },
+    .types = Types{ .type1 = .Rock, .type2 = .Water },
 }, Specie{
-    .id = .Omastar,
+    // Omastar,
     .stats = Stats(u8){
         .hp = 70,
         .atk = 60,
@@ -1578,9 +1578,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 55,
         .spc = 115,
     },
-    .types = [_]Type{ .Rock, .Water },
+    .types = Types{ .type1 = .Rock, .type2 = .Water },
 }, Specie{
-    .id = .Kabuto,
+    // Kabuto,
     .stats = Stats(u8){
         .hp = 30,
         .atk = 80,
@@ -1588,9 +1588,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 55,
         .spc = 45,
     },
-    .types = [_]Type{ .Rock, .Water },
+    .types = Types{ .type1 = .Rock, .type2 = .Water },
 }, Specie{
-    .id = .Kabutops,
+    // Kabutops,
     .stats = Stats(u8){
         .hp = 60,
         .atk = 115,
@@ -1598,9 +1598,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 80,
         .spc = 70,
     },
-    .types = [_]Type{ .Rock, .Water },
+    .types = Types{ .type1 = .Rock, .type2 = .Water },
 }, Specie{
-    .id = .Aerodactyl,
+    // Aerodactyl,
     .stats = Stats(u8){
         .hp = 80,
         .atk = 105,
@@ -1608,9 +1608,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 130,
         .spc = 60,
     },
-    .types = [_]Type{ .Rock, .Flying },
+    .types = Types{ .type1 = .Rock, .type2 = .Flying },
 }, Specie{
-    .id = .Snorlax,
+    // Snorlax,
     .stats = Stats(u8){
         .hp = 160,
         .atk = 110,
@@ -1618,9 +1618,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 30,
         .spc = 65,
     },
-    .types = [_]Type{ .Normal, .Normal },
+    .types = Types{ .type1 = .Normal, .type2 = .Normal },
 }, Specie{
-    .id = .Articuno,
+    // Articuno,
     .stats = Stats(u8){
         .hp = 90,
         .atk = 85,
@@ -1628,9 +1628,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 85,
         .spc = 125,
     },
-    .types = [_]Type{ .Ice, .Flying },
+    .types = Types{ .type1 = .Ice, .type2 = .Flying },
 }, Specie{
-    .id = .Zapdos,
+    // Zapdos,
     .stats = Stats(u8){
         .hp = 90,
         .atk = 90,
@@ -1638,9 +1638,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 100,
         .spc = 125,
     },
-    .types = [_]Type{ .Electric, .Flying },
+    .types = Types{ .type1 = .Electric, .type2 = .Flying },
 }, Specie{
-    .id = .Moltres,
+    // Moltres,
     .stats = Stats(u8){
         .hp = 90,
         .atk = 100,
@@ -1648,9 +1648,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 90,
         .spc = 125,
     },
-    .types = [_]Type{ .Fire, .Flying },
+    .types = Types{ .type1 = .Fire, .type2 = .Flying },
 }, Specie{
-    .id = .Dratini,
+    // Dratini,
     .stats = Stats(u8){
         .hp = 41,
         .atk = 64,
@@ -1658,9 +1658,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 50,
         .spc = 50,
     },
-    .types = [_]Type{ .Dragon, .Dragon },
+    .types = Types{ .type1 = .Dragon, .type2 = .Dragon },
 }, Specie{
-    .id = .Dragonair,
+    // Dragonair,
     .stats = Stats(u8){
         .hp = 61,
         .atk = 84,
@@ -1668,9 +1668,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 70,
         .spc = 70,
     },
-    .types = [_]Type{ .Dragon, .Dragon },
+    .types = Types{ .type1 = .Dragon, .type2 = .Dragon },
 }, Specie{
-    .id = .Dragonite,
+    // Dragonite,
     .stats = Stats(u8){
         .hp = 91,
         .atk = 134,
@@ -1678,9 +1678,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 80,
         .spc = 100,
     },
-    .types = [_]Type{ .Dragon, .Flying },
+    .types = Types{ .type1 = .Dragon, .type2 = .Flying },
 }, Specie{
-    .id = .Mewtwo,
+    // Mewtwo,
     .stats = Stats(u8){
         .hp = 106,
         .atk = 110,
@@ -1688,9 +1688,9 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 130,
         .spc = 154,
     },
-    .types = [_]Type{ .Psychic, .Psychic },
+    .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
 }, Specie{
-    .id = .Mew,
+    // Mew,
     .stats = Stats(u8){
         .hp = 100,
         .atk = 100,
@@ -1698,5 +1698,5 @@ const SPECIES = [_]Specie{ Specie{
         .spe = 100,
         .spc = 100,
     },
-    .types = [_]Type{ .Psychic, .Psychic },
+    .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
 } };

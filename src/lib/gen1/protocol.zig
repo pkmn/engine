@@ -75,7 +75,7 @@ pub const Protocol = union(ArgType) {
     fn writeBytes(comptime T: type, val: T, buf: *std.ArrayList(u8)) !void {
         comptime var bits: usize = @typeInfo(T).Int.bits;
         if (bits == 0 or bits % 8 != 0) @compileError("must be divisible by 8");
-        inline while (!@subWithOverflow(usize, bits, 8, &bits)) {
+        while (!@subWithOverflow(usize, bits, 8, &bits)) {
             try buf.append(@intCast(u8, (val >> bits) & 0xFF));
         }
     }
@@ -231,7 +231,7 @@ test "KWArgs" {
 fn Arg0() type {
     return packed struct {
         const Self = @This();
-        pub inline fn init() Self {
+        pub fn init() Self {
             return Self{};
         }
     };
@@ -243,7 +243,7 @@ fn Arg1(comptime T: type) type {
 
         val: T,
 
-        pub inline fn init(val: T) Self {
+        pub fn init(val: T) Self {
             return Self{ .val = val };
         }
     };
@@ -256,7 +256,7 @@ fn Arg2(comptime T1: type, comptime T2: type) type {
         val1: T1,
         val2: T2,
 
-        pub inline fn init(val1: T1, val2: T2) Self {
+        pub fn init(val1: T1, val2: T2) Self {
             return Self{ .val1 = val1, .val2 = val2 };
         }
     };

@@ -1,29 +1,150 @@
+//! Fundamental Pokémon data types required for battle simulation.
+//! Data not strictly required for battles is elided at this layer.
+//! **NOTE**: code in `data/` is generated and re-exported below.
+
 const std = @import("std");
-const data = @import("./data.zig");
-const util = @import("./util.zig");
+const util = @import("../common/util.zig");
 
-const expect = std.testing.expect;
-const expectEqual = std.testing.expectEqual;
 const assert = std.debug.assert;
+const expectEqual = std.testing.expectEqual;
+const expect = std.testing.expect;
 
-const Stat = data.Stat;
-const Stats = data.Stats;
-const Boosts = data.Boosts;
-const Moves = data.Moves;
-const Species = data.Species;
-const Type = data.Type;
+const types = @import("data/types.zig");
+const moves = @import("data/moves.zig");
+const species = @import("data/species.zig");
 
 const bit = util.bit;
+
+/// The name of each stat (cf. Pokémon Showdown's `StatName`).
+///
+/// *See:* https://pkmn.cc/pokered/constants/battle_constants.asm#L5-L12
+///
+pub const Stat = enum(u3) {
+    hp,
+    atk,
+    def,
+    spe,
+    spc,
+};
+
+test "State" {
+    try expectEqual(3, @bitSizeOf(Stat));
+}
+
+/// A structure for storing information for each `Stat` (cf. Pokémon Showdown's `StatTable`).
+pub fn Stats(comptime T: type) type {
+    return packed struct {
+        hp: T = 0,
+        atk: T = 0,
+        def: T = 0,
+        spe: T = 0,
+        spc: T = 0,
+    };
+}
+
+test "Stats" {
+    try expectEqual(5 * 8, @bitSizeOf(Stats(u8)));
+    const stats = Stats(u4){ .atk = 2, .spe = 3 };
+    try expectEqual(2, stats.atk);
+    try expectEqual(0, stats.def);
+}
+
+/// The name of each boost/mod (cf. Pokémon Showdown's `BoostName`).
+///
+/// *See:* https://pkmn.cc/pokered/constants/battle_constants.asm#L14-L23
+///
+pub const Boost = enum(u3) {
+    atk,
+    def,
+    spe,
+    spc,
+    accuracy,
+    evasion,
+
+    comptime {
+        assert(@bitSizeOf(Boost) == 3);
+    }
+};
+
+/// A structure for storing information for each `Boost` (cf. Pokémon Showdown's `BoostTable`).
+/// **NOTE**: `Boost(i4)` should likely always be used, as boosts should always range from -6...6.
+pub fn Boosts(comptime T: type) type {
+    return packed struct {
+        atk: T = 0,
+        def: T = 0,
+        spe: T = 0,
+        spc: T = 0,
+        accuracy: T = 0,
+        evasion: T = 0,
+    };
+}
+
+test "Boosts" {
+    try expectEqual(3 * 8, @bitSizeOf(Boosts(i4)));
+    const boosts = Boosts(i4){ .spc = -6 };
+    try expectEqual(0, boosts.atk);
+    try expectEqual(-6, boosts.spc);
+}
+
+pub const Moves = moves.Moves;
+
+/// *See:* https://pkmn.cc/pokered/data/moves/moves.asm
+pub const Move = packed struct {
+    bp: u8,
+    accuracy: u8,
+    type: Type,
+    pp: u4, // = pp / 5
+
+    comptime {
+        assert(@bitSizeOf(Move) == 3 * 8);
+    }
+};
+
+test "Moves" {
+    try expectEqual(2, @enumToInt(Moves.KarateChop));
+    const move = Moves.get(.Pound);
+    try expectEqual(@as(u8, 35 / 5), move.pp);
+}
+
+pub const Species = species.Species;
+
+/// *See:* https://pkmn.cc/bulba/Pok%c3%a9mon_species_data_structure_%28Generation_I%29
+pub const Specie = packed struct {
+    types: Types,
+    stats: Stats(u8),
+
+    comptime {
+        assert(@bitSizeOf(Specie) == 6 * 8);
+    }
+};
+
+test "Species" {
+    try expectEqual(2, @enumToInt(Species.Ivysaur));
+    try expectEqual(@as(u8, 100), Species.get(.Mew).stats.def);
+}
+
+pub const Type = types.Type;
+pub const Types = types.Types;
+pub const Efffectiveness = types.Efffectiveness;
+
+test "Types" {
+    try expectEqual(14, @enumToInt(Type.Dragon));
+    try expectEqual(20, @enumToInt(Efffectiveness.Super));
+    try expectEqual(Efffectiveness.Immune, Type.effectiveness(.Ghost, .Psychic));
+    try expectEqual(Efffectiveness.Super, Type.effectiveness(.Water, .Fire));
+    try expectEqual(Efffectiveness.Resisted, Type.effectiveness(.Fire, .Water));
+    try expectEqual(Efffectiveness.Neutral, Type.effectiveness(.Normal, .Grass));
+}
 
 /// A data-type for a `(move, pp)` pair. A pared down version of Pokémon Showdown's
 /// `Pokemon#moveSlot`, it also stores data from the cartridge's `battle_struct::Move`
 /// macro and can be used to replace the `w{Player,Enemy}Move*` data. Move PP is stored
 /// in the same way as on the cartridge (`battle_struct::PP`), with 6 bits for current
-/// PP and the remaining 2 bits used to store the number of applied PP Ups.
+/// PP and the remaining 2 bits used to store the number of applied PP Ups. TODO
 const MoveSlot = packed struct {
     id: Moves = .None,
-    pp: u6 = 0,
-    pp_ups: u2 = 0,
+    pp: u4 = 0,
+    pp_ups: u4 = 0,
 
     comptime {
         assert(@sizeOf(MoveSlot) == @sizeOf(u16));
@@ -33,22 +154,22 @@ const MoveSlot = packed struct {
         if (id == .None) return MoveSlot{};
         const move = Moves.get(id);
         return MoveSlot{
-            .id = move.id,
+            .id = id,
             .pp = move.pp,
             .pp_ups = 3,
         };
     }
 
     // `AddBonusPP`: https://pkmn.cc/pokered/engine/items/item_effects.asm
-    pub inline fn maxpp(self: *const MoveSlot) u8 {
+    pub fn maxpp(self: *const MoveSlot) u8 {
         const pp = Moves.get(self.id).pp;
-        return self.pp_ups * @maximum(pp / 5, 7) + pp;
+        return self.pp_ups * @as(u8, @maximum(pp, 7)) + (@as(u8, pp) * 5);
     }
 };
 
 test "MoveSlot" {
     const ms = MoveSlot.init(.Pound);
-    try expectEqual(@as(u6, 35), ms.pp);
+    try expectEqual(@as(u6, 35 / 5), ms.pp);
     try expectEqual(@as(u8, 56), ms.maxpp());
     try expectEqual(Moves.Pound, ms.id);
     try expectEqual(@as(u16, 0), @bitCast(u16, MoveSlot.init(.None)));
@@ -66,7 +187,7 @@ const DVs = packed struct {
         assert(@sizeOf(DVs) == @sizeOf(u16));
     }
 
-    pub inline fn hp(self: *const DVs) u4 {
+    pub fn hp(self: *const DVs) u4 {
         return (self.atk & 1) << 3 | (self.def & 1) << 2 | (self.spe & 1) << 1 | (self.spc & 1);
     }
 };
@@ -106,22 +227,22 @@ const Status = enum(u8) {
     FRZ = 5,
     PAR = 6,
 
-    pub inline fn is(num: u8, status: Status) bool {
+    pub fn is(num: u8, status: Status) bool {
         if (status == .SLP) return Status.duration(num) > 0;
         return bit.isSet(u8, num, @intCast(u3, @enumToInt(status)));
     }
 
-    pub inline fn init(status: Status) u8 {
+    pub fn init(status: Status) u8 {
         assert(status != .SLP);
         return bit.set(u8, 0, @intCast(u3, @enumToInt(status)));
     }
 
-    pub inline fn sleep(dur: u3) u8 {
+    pub fn sleep(dur: u3) u8 {
         assert(dur > 0);
         return @as(u8, dur);
     }
 
-    pub inline fn duration(num: u8) u3 {
+    pub fn duration(num: u8) u3 {
         return @intCast(u3, num & @enumToInt(Status.SLP));
     }
 };
@@ -143,24 +264,6 @@ test "Status" {
 /// in `w{Battle,Enemy}Mon` as well as parts of the `party_struct` in the `stored` field. The fields
 /// map to the following types:
 ///
-/// | pkmn                            | Pokémon Red                            | Pokémon Showdown                |
-/// |---------------------------------|----------------------------------------|---------------------------------|
-/// |                                 | `w{Battle,Enemy}MonNick`               | `Pokemon#name`                  |
-/// | `stored.level`                  | `w{Player,Enemy}MonUnmodifiedLevel`    | `Pokemon#level`                 |
-/// | `stored.stats`                  | `w{Player,Enemy}MonUnmodified*`        | `Pokemon#storedStats`           |
-/// | `stored.moves`                  |                                        | `Pokemon#baseMoveSlots`         |
-/// | `stored.dvs`                    |                                        |                                 |
-/// | `stored.evs`                    |                                        |                                 |
-/// | `boosts`                        | `w{Player,Enemy}Mon*Mod`               | `Pokemon#boosts`                |
-/// | `volatiles`                     | `w{Player,Enemy}BattleStatus{1,2,3}`   | `Pokemon#volatiles`             |
-/// | `volatiles_data.bide`           | `w{Player,Enemy}BideAccumulatedDamage` | `volatiles.bide.totalDamage`    |
-/// | `volatiles_data.confusion`      | `w{Player,Enemy}ConfusedCounter`       | `volatiles.confusion.duration`  |
-/// | `volatiles_data.toxic`          | `w{Player,Enemy}ToxicCounter`          | `volatiles.residualdmg.counter` |
-/// | `volatiles_data.substitute`     | `w{Player,Enemy}SubstituteHP`          | `volatiles.substitute.hp`       |
-/// | `volatiles_data.multihit.hits`  | `w{Player,Enemy}NumHits`               |                                 |
-/// | `volatiles_data.multihits.left` | `w{Player,Enemy}NumAttacksLeft`        |                                 |
-/// | `disabled`                      | `w{Player,Enemy}DisabledMove`          | `MoveSlot#disabled`             |
-///
 ///   - in most places the data representation defaults to the same as the cartridge, with the
 ///     notable exception that `boosts` range from `-6...6` like in Pokémon Showdown instead of
 ///     `1..13`
@@ -173,76 +276,52 @@ test "Status" {
 ///  - https://pkmn.cc/PKHeX/PKHeX.Core/PKM/PK1.cs
 ///  - https://pkmn.cc/pokered/macros/wram.asm
 ///
-const Pokemon = struct {
-    species: Species,
-    types: [2]Type,
-    stored: struct {
+const Pokemon = packed struct {
+    stored: packed struct {
         level: u8,
         stats: Stats(u16),
         moves: [4]MoveSlot,
         dvs: DVs,
-        evs: Stats(u16),
     },
     stats: Stats(u16),
-    boosts: Boosts(i4),
-    hp: u16,
-    status: Status,
-    volatiles: Volatile,
-    volatiles_data: struct {
+    moves: [4]MoveSlot,
+    volatiles_data: packed struct {
         bide: u16,
-        confusion: u8,
-        toxic: u8,
         substitute: u8,
+        confusion: u4,
+        toxic: u4,
         multihit: packed struct {
             hits: u4,
             left: u4,
         },
     },
-    moves: [4]MoveSlot,
+    volatiles: Volatile,
+    boosts: Boosts(i4),
+    hp: u16,
+    status: Status,
+    species: Species,
+    types: Types,
     disabled: packed struct {
         move: u4,
         duration: u4,
     },
-    // FIXME: `wMove{Missed,DidntMiss}` ???
+    _pad: u64,
 
-    pub inline fn level(self: *const Pokemon) u8 {
+    comptime {
+        assert(@bitSizeOf(Pokemon) == 64 * 8);
+    }
+
+     pub fn level(self: *const Pokemon) u8 {
         return self.stored.level;
     }
 };
-
-test "Pokemon" {
-    // NOTE: if `Pokemon` were `packed` it would be 68 bytes, but is more due to alignment
-    try expectEqual(70, @sizeOf(Pokemon));
-    try expectEqual(72, @sizeOf(?Pokemon));
-}
 
 /// Bitfield for the various non-major statuses that Pokémon can have, commonly
 /// known as 'volatile' statuses as they disappear upon switching out. In pret/pokered
 /// these are referred to as 'battle status' bits.
 ///
-/// | Pokémon Red                | Pokémon Showdown   |
-/// |----------------------------|--------------------|
-/// | `STORING_ENERGY`           | `bide`             |
-/// | `TRASHING_ABOUT`           | `lockedmove`       |
-/// | `ATTACKING_MULTIPLE_TIMES` | `Move#multihit`    |
-/// | `FLINCHED`                 | `flinch`           |
-/// | `CHARGING_UP`              | `twoturnmove`      |
-/// | `USING_TRAPPING_MOVE`      | `partiallytrapped` |
-/// | `INVULNERABLE`             | `Move#onLockMove`  |
-/// | `CONFUSED`                 | `confusion`        |
-/// | `PROTECTED_BY_MIST`        | `mist`             |
-/// | `GETTING_PUMPED`           | `focusenergy`      |
-/// | `HAS_SUBSTITUTE_UP`        | `substitute`       |
-/// | `NEEDS_TO_RECHARGE`        | `mustrecharge`     |
-/// | `USING_RAGE`               | `rage`             |
-/// | `SEEDED`                   | `leechseed`        |
-/// | `BADLY_POISONED`           | `toxic`            |
-/// | `HAS_LIGHT_SCREEN_UP`      | `lightscreen`      |
-/// | `HAS_REFLECT_UP`           | `reflect`          |
-/// | `TRANSFORMED`              | `transform`        |
-///
 /// **NOTE:** all of the bits are packed into an 18 byte bitfield which uses up 3 bytes
-/// after taking into consideration alignment. This is the same as on cartrige, though
+/// after taking into consideration alignment. This is the same as on cartridge, though
 /// there the bits are split over three distinct bytes (`w{Player,Enemy}BattleStatus{1,2,3}`).
 /// We dont attempt to match the same bit locations, and `USING_X_ACCURACY` is dropped as
 /// in-battle item-use is not supported in link battles.
@@ -268,9 +347,58 @@ const Volatile = packed struct {
     LightScreen: bool = false,
     Reflect: bool = false,
     Transform: bool,
+    _pad: u6 = 0,
 
     comptime {
-        assert(@bitSizeOf(Volatile) == 18);
-        assert(@sizeOf(Volatile) == 3);
+        assert(@bitSizeOf(Volatile) == 24);
     }
 };
+
+// TODO
+// wPlayerMonNumber (pret) & Side#active[0] (PS)
+// wInHandlePlayerMonFainted (pret) & Side#faintedThisTurn (PS)
+// w{Player,Enemy}UsedMove (pret) & Side#lastMove (PS)
+// w{Player,Enemy}SelectedMove (pret) & Side#lastSelectedMove (PS)
+const Side = packed struct {
+    pokemon: [6]Pokemon,
+
+    active: u4,
+    fainted_last_turn: u4,
+
+    last_used_move: Moves,
+    last_selected_move: Moves,
+
+    // pub fn get(self: *Side, pokemon: u4) *Pokemon {
+    //     assert(pokemon >= 1 and pokemon <= 7);
+    //     return self.pokemon[pokemon - 1];
+    // }
+
+    comptime {
+        assert(@bitSizeOf(Side) == 387 * 8);
+    }
+};
+
+
+// // TODO
+const Battle = packed struct {
+    seed: u8,
+    turn: u8,
+    sides: [2]Side,
+
+    comptime {
+        assert(@bitSizeOf(Battle) == 776 * 8);
+    }
+
+    pub fn p1(self: *Battle) *Side {
+        return &self.sides[0];
+    }
+
+    pub fn p2(self: *Battle) *Side {
+        return &self.sides[1];
+    }
+};
+
+// TODO
+comptime {
+    std.testing.refAllDecls(@This());
+}

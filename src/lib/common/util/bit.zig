@@ -21,7 +21,7 @@ test "setTo" {
     try expectEqual(@as(u8, 0b00), setTo(u8, v, 1, false));
 }
 
-pub inline fn set(comptime Int: type, num: Int, bit: math.Log2Int(Int)) Int {
+pub fn set(comptime Int: type, num: Int, bit: math.Log2Int(Int)) Int {
     return num | (@as(Int, 1) << bit);
 }
 
@@ -31,7 +31,7 @@ test "set" {
     try expectEqual(@as(u8, 0b10), set(u8, v, 1));
 }
 
-pub inline fn clear(comptime Int: type, num: Int, bit: math.Log2Int(Int)) Int {
+pub fn clear(comptime Int: type, num: Int, bit: math.Log2Int(Int)) Int {
     return num & ~(@as(Int, 1) << bit);
 }
 
@@ -41,7 +41,7 @@ test "clear" {
     try expectEqual(@as(u8, 0b00), clear(u8, v, 1));
 }
 
-pub inline fn isSet(comptime Int: type, num: Int, bit: math.Log2Int(Int)) bool {
+pub fn isSet(comptime Int: type, num: Int, bit: math.Log2Int(Int)) bool {
     return ((num >> bit) & 1) != 0;
 }
 
@@ -51,7 +51,7 @@ test "isSet" {
     try expect(isSet(u8, v, 1));
 }
 
-pub inline fn toggle(comptime Int: type, num: Int, bit: math.Log2Int(Int)) Int {
+pub fn toggle(comptime Int: type, num: Int, bit: math.Log2Int(Int)) Int {
     return num ^ (@as(Int, 1) << bit);
 }
 
@@ -61,7 +61,7 @@ test "toggle" {
     try expectEqual(@as(u8, 0b00), toggle(u8, v, 1));
 }
 
-pub inline fn count(comptime Int: type, num: Int) usize {
+pub fn count(comptime Int: type, num: Int) usize {
     var tmp = num;
     var res: usize = 0;
     while (tmp != 0) : (res += 1)
