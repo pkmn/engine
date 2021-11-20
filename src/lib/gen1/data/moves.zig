@@ -184,7 +184,7 @@ pub const Moves = enum(u8) {
     Struggle,
 
     comptime {
-        assert(@bitSizeOf(Moves) == 8);
+        assert(@sizeOf(Moves) == 1);
     }
 
     pub fn get(id: Moves) *const Move {

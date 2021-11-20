@@ -42,7 +42,7 @@ pub const Types = packed struct {
     type2: Type,
 
     comptime {
-        assert(@bitSizeOf(Types) == 8);
+        assert(@sizeOf(Types) == 1);
     }
 };
 

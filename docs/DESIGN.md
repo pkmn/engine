@@ -59,6 +59,9 @@ also have pure MCTS random playout function - naive (not heavy) playouts, focuse
 Battle update(u16, ?[BUF]trace) -> info about win or lose and requesttype for either player. if trace is provided will output trace protocol lines (null separated? protocol type plus args plus etc - is chunk and line bounded? run PS a while and figure out chunk arg lenghts and kwargs)  
 ```
 
+todo: can turn basepower/accuracy/effect chance into enums because sparse (requires another table lookup then) - alternatively can at least drop 0 from accuracy and make u4 instead of u8, pp is 2*pp%10 as well 
+
+
 ### Resources
 
 - [Handles vs. Pointers][handles]

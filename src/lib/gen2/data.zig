@@ -15,154 +15,50 @@ const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 
 
-/// The name of each stat (cf. Pokémon Showdown's `StatName`).
-///
-/// *See:* https://pkmn.cc/pokecrystal/constants/battle_constants.asm#L54-L67
-///
-pub const Stat = enum(u3) {
-    hp,
-    atk,
-    def,
-    spe,
-    spa,
-    spd,
+const Battle = packed struct {
+    // weather
+    // weather duration
 
-    comptime {
-        assert(@bitSizeOf(Stat) == 3);
-    }
+// wWhichMonFaintedFirst:: db
 };
 
-/// A structure for storing information for each `Stat` (cf. Pokémon Showdown's `StatTable`).
-pub fn Stats(comptime T: type) type {
-    return packed struct {
-        hp: T = 0,
-        atk: T = 0,
-        def: T = 0,
-        spe: T = 0,
-        spa: T = 0,
-        spd: T = 0,
-    };
-}
-
-test "Stats" {
-    try expectEqual(6 * 8, @bitSizeOf(Stats(u8)));
-    const stats = Stats(u4){ .spd = 2, .spe = 3 };
-    try expectEqual(2, stats.spd);
-    try expectEqual(0, stats.def);
-}
-
-
-/// The name of each boost/mod (cf. Pokémon Showdown's `BoostName`).
-///
-/// *See:* https://pkmn.cc/pokecrystal/constants/battle_constants.asm#L30-L39
-///
-pub const Boost = enum(u3) {
-    atk,
-    def,
-    spe,
-    spa,
-    spd,
-    accuracy,
-    evasion,
-
-    comptime {
-        assert(@bitSizeOf(Boost) == 3);
-    }
+const Field = packed struct {
+    weather: Weather,
 };
 
-/// A structure for storing information for each `Boost` (cf. Pokémon Showdown's `BoostTable`).
-/// **NOTE**: `Boost(i4)` should likely always be used, as boosts should always range from -6...6.
-pub fn Boosts(comptime T: type) type {
-    return packed struct {
-        atk: T = 0,
-        def: T = 0,
-        spe: T = 0,
-        spa: T = 0,
-        spd: T = 0,
-        accuracy: T = 0,
-        evasion: T = 0,
-    };
-}
-
-test "Boosts" {
-    try expectEqual(3 * 8 + 4,  @bitSizeOf(Boosts(i4)));
-    const boosts = Boosts(i4){ .spd = -6 };
-    try expectEqual(0, boosts.atk);
-    try expectEqual(-6, boosts.spd);
-}
-
-// TODO
-pub const IVs = packed struct {
-    hp: u5 = 31,
-    atk: u5 = 31,
-    def: u5 = 31,
-    spe: u5 = 31,
-    spa: u5 = 31,
-    spd: u5 = 31,
-    _pad: 2 = 0,
-
-    comptime {
-        assert(@bitSizeOf(DVs) == 4 * 8);
-    }
+const Weather = enum(u2) {
+    None,
+    Rain,
+    Sun,
+    Sandstorm,
 };
 
-/// *See:* https://pkmn.cc/pokecrystal/data/moves/moves.asm
-pub const Moves = moves.Moves;
-pub const Move = packed struct {
-    bp: u8,
-    accuracy: u8,
-    type: Type,
-    pp: u4, // pp / 5
-    chance: u4, // chance / 10
+const Side = packed struct {
 
-    comptime {
-        assert(@bitSizeOf(Move) == 4 * 8);
-    }
+    condition: SideCondition,
+    // wPlayerDamageTaken:: dw
+    // wPlayerTurnsTaken:: db???
+    // wLastPlayerCounterMove
+
+// wPlayerSafeguardCount:: db
+// wPlayerLightScreenCount:: db
+// wPlayerReflectCount:: db
+// wPlayerIsSwitching:: db
 };
 
-test "Moves" {
-    try expectEqual(240, @enumToInt(Moves.BeatUp));
-    const move = Moves.get(.LockOn);
-    try expectEqual(@as(u8, 5), move.pp);
-}
-
-/// *See:* https://pkmn.cc/bulba/Pok%c3%a9mon_species_data_structure_%28Generation_II%29
-pub const Species = species.Species;
-pub const Specie = packed struct {
-    types: Types,
-    stats: Stats(u8),
-
-    comptime {
-        assert(@bitSizeOf(Specie) == 8 * 8);
-    }
+const SideCondition = packed struct {
+    Spikes: bool = false,
+    Safeguard: bool = false,
+    LightScreen: bool = false,
+    Reflect: bool = false,
 };
-
-test "Species" {
-    try expectEqual(152, @enumToInt(Species.Chikorita));
-    try expectEqual(@as(u8, 100), Species.get(.Celebi).stats.def);
-}
-
-pub const Type = types.Type;
-pub const Types = types.Types;
-pub const Efffectiveness = gen1.Efffectiveness;
-
-test "Types" {
-    try expectEqual(14, @enumToInt(Type.Electric));
-    try expectEqual(20, @enumToInt(Efffectiveness.Super));
-    try expectEqual(Efffectiveness.Super, Type.effectiveness(.Ghost, .Psychic));
-    try expectEqual(Efffectiveness.Super, Type.effectiveness(.Water, .Fire));
-    try expectEqual(Efffectiveness.Resisted, Type.effectiveness(.Fire, .Water));
-    try expectEqual(Efffectiveness.Neutral, Type.effectiveness(.Normal, .Grass));
-    try expectEqual(Efffectiveness.Immune, Type.effectiveness(.Poison, .Steel));
-}
-
 
 
 ///  - https://pkmn.cc/bulba/Pok%c3%a9mon_data_structure_%28Generation_II%29
 ///  - https://pkmn.cc/PKHeX/PKHeX.Core/PKM/PK2.cs
 ///  - https://pkmn.cc/pokecrystal/macros/wram.asm
 ///
-const Pokemon = packed struct {
+const ActivePokemon = packed struct {
     // TODO item Items
     // TODO extra 2*Stats+1 Boosts byte = 24
     // TODO happiness u8
@@ -187,21 +83,66 @@ const Pokemon = packed struct {
 // wPlayerJustGotFrozen:: db
 };
 
+// TODO
+const Pokemon = packed struct {
+};
+
+// TODO copy
+const MoveSlot = packed struct {
+};
+
+
+/// *See:* https://pkmn.cc/pokecrystal/data/moves/moves.asm
+pub const Moves = moves.Moves;
+pub const Move = packed struct {
+    bp: u8,
+    accuracy: u8,
+    type: Type,
+    pp: u4, // pp / 5
+    chance: u4, // chance / 10
+
+    comptime {
+        assert(@sizeOf(Move) == 4);
+    }
+};
+
+test "Moves" {
+    try expectEqual(240, @enumToInt(Moves.BeatUp));
+    const move = Moves.get(.LockOn);
+    try expectEqual(@as(u8, 5), move.pp);
+}
+
+/// *See:* https://pkmn.cc/bulba/Pok%c3%a9mon_species_data_structure_%28Generation_II%29
+pub const Species = species.Species;
+
+test "Species" {
+    try expectEqual(152, @enumToInt(Species.Chikorita));
+}
+
+pub const Type = types.Type;
+pub const Types = types.Types;
+pub const Efffectiveness = gen1.Efffectiveness;
+
+test "Types" {
+    try expectEqual(14, @enumToInt(Type.Electric));
+    try expectEqual(20, @enumToInt(Efffectiveness.Super));
+    try expectEqual(Efffectiveness.Super, Type.effectiveness(.Ghost, .Psychic));
+    try expectEqual(Efffectiveness.Super, Type.effectiveness(.Water, .Fire));
+    try expectEqual(Efffectiveness.Resisted, Type.effectiveness(.Fire, .Water));
+    try expectEqual(Efffectiveness.Neutral, Type.effectiveness(.Normal, .Grass));
+    try expectEqual(Efffectiveness.Immune, Type.effectiveness(.Poison, .Steel));
+}
+
+pub const Status = gen1.Status;
+
+// TODO
 const Volatile = packed struct {
-    Nightmare: bool = false,
-    Cure: bool = false,
-    Protect: bool = false,
-    Identified: bool = false,
-    PerishSong: bool = false,
-    Endure: bool = false,
-    Rollout: bool = false,
-    Attract: bool = false,
-    DefenseCurl: bool = false,
     Bide: bool = false,
-    Rampage: bool = false,
-    InLoop: bool = false,
+    Locked: bool = false,
+    // MultiHit
     Flinch: bool = false,
     Charging: bool = false,
+    // PartialTrap
     Underground: bool = false,
     Flying: bool = false,
     Confusion: bool = false,
@@ -213,46 +154,115 @@ const Volatile = packed struct {
     LeechSeed: bool = false,
     Toxic: bool = false,
     Transform: bool = false,
+
+    Nightmare: bool = false,
+    Cure: bool = false,
+    Protect: bool = false,
+    Foresight: bool = false,
+    PerishSong: bool = false,
+    Endure: bool = false,
+    Rollout: bool = false,
+    Attract: bool = false,
+    DefenseCurl: bool = false,
     Encore: bool = false,
     LockOn: bool = false,
     DestinyBond: bool = false,
-    Trapped: bool = false,
-    _pad: u3 = 0,
+    BeatUp: bool = false,
+
+    _pad: u4 = 0,
 
     comptime {
-        assert(@bitSizeOf(Volatile) == 32);
+        assert(@sizeOf(Volatile) == 32);
     }
 };
 
-const Side = packed struct {
+// FIXME store gender bit in here as well?
+const HiddenPower = packed struct {
+    power: u8, // technically need u6
+    type: Type, // technically only need u5
 
-    condition: SideCondition,
-    // wPlayerDamageTaken:: dw
-    // wPlayerTurnsTaken:: db???
-    // wLastPlayerCounterMove
+    pub fn init(p: u8, t: Type) HiddenPower {
+        assert(p >= 31 and p <= 70);
+        assert(t != .Normal and t != .@"???");
+        return HiddenPower{.power = p, .type = t};
+    }
 
-// wPlayerSafeguardCount:: db
-// wPlayerLightScreenCount:: db
-// wPlayerReflectCount:: db
-// wPlayerIsSwitching:: db
+    comptime {
+        assert(@bitSizeOf(HiddenPower) == 2);
+    }
 };
 
-const Battle = packed struct {
-    // weather
-    // weather duration
+/// A structure for storing information for each `Stat` (cf. Pokémon Showdown's `StatTable`).
+pub fn Stats(comptime T: type) type {
+    return packed struct {
+        hp: T = 0,
+        atk: T = 0,
+        def: T = 0,
+        spe: T = 0,
+        spa: T = 0,
+        spd: T = 0,
+    };
+}
 
-// wWhichMonFaintedFirst:: db
-};
-const SideCondition = packed struct {
-    Spikes: bool = false,
-    Safeguard: bool = false,
-    LightScreen: bool = false,
-    Reflect: bool = false,
+test "Stats" {
+    try expectEqual(6 * 8, @sizeOf(Stats(u8)));
+    const stats = Stats(u4){ .spd = 2, .spe = 3 };
+    try expectEqual(2, stats.spd);
+    try expectEqual(0, stats.def);
+}
+
+/// The name of each stat (cf. Pokémon Showdown's `StatName`).
+///
+/// *See:* https://pkmn.cc/pokecrystal/constants/battle_constants.asm#L54-L67
+///
+pub const Stat = enum(u3) {
+    hp,
+    atk,
+    def,
+    spe,
+    spa,
+    spd,
+
+    comptime {
+        assert(@bitSizeOf(Stat) == 3);
+    }
 };
 
-const Weather = enum(u2) {
-    None,
-    Rain,
-    Sun,
-    Sandstorm,
+/// A structure for storing information for each `Boost` (cf. Pokémon Showdown's `BoostTable`).
+/// **NOTE**: `Boost(i4)` should likely always be used, as boosts should always range from -6...6.
+pub fn Boosts(comptime T: type) type {
+    return packed struct {
+        atk: T = 0,
+        def: T = 0,
+        spe: T = 0,
+        spa: T = 0,
+        spd: T = 0,
+        accuracy: T = 0,
+        evasion: T = 0,
+    };
+}
+
+test "Boosts" {
+    try expectEqual(3 * 8 + 4,  @sizeOf(Boosts(i4)));
+    const boosts = Boosts(i4){ .spd = -6 };
+    try expectEqual(0, boosts.atk);
+    try expectEqual(-6, boosts.spd);
+}
+
+/// The name of each boost/mod (cf. Pokémon Showdown's `BoostName`).
+///
+/// *See:* https://pkmn.cc/pokecrystal/constants/battle_constants.asm#L30-L39
+///
+pub const Boost = enum(u3) {
+    atk,
+    def,
+    spe,
+    spa,
+    spd,
+    accuracy,
+    evasion,
+
+    comptime {
+        assert(@bitSizeOf(Boost) == 3);
+    }
 };

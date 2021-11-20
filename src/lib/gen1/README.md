@@ -1,20 +1,20 @@
-| pkmn                            | Pokémon Red                            | Pokémon Showdown                |
-| ------------------------------- | -------------------------------------- | ------------------------------- |
-|                                 | `w{Battle,Enemy}MonNick`               | `Pokemon#name`                  |
-| `stored.level`                  | `w{Player,Enemy}MonUnmodifiedLevel`    | `Pokemon#level`                 |
-| `stored.stats`                  | `w{Player,Enemy}MonUnmodified*`        | `Pokemon#storedStats`           |
-| `stored.moves`                  |                                        | `Pokemon#baseMoveSlots`         |
-| `stored.dvs`                    |                                        |                                 |
-| `stored.evs`                    |                                        |                                 |
-| `boosts`                        | `w{Player,Enemy}Mon*Mod`               | `Pokemon#boosts`                |
-| `volatiles`                     | `w{Player,Enemy}BattleStatus{1,2,3}`   | `Pokemon#volatiles`             |
-| `volatiles_data.bide`           | `w{Player,Enemy}BideAccumulatedDamage` | `volatiles.bide.totalDamage`    |
-| `volatiles_data.confusion`      | `w{Player,Enemy}ConfusedCounter`       | `volatiles.confusion.duration`  |
-| `volatiles_data.toxic`          | `w{Player,Enemy}ToxicCounter`          | `volatiles.residualdmg.counter` |
-| `volatiles_data.substitute`     | `w{Player,Enemy}SubstituteHP`          | `volatiles.substitute.hp`       |
-| `volatiles_data.multihit.hits`  | `w{Player,Enemy}NumHits`               |                                 |
-| `volatiles_data.multihits.left` | `w{Player,Enemy}NumAttacksLeft`        |                                 |
-| `disabled`                      | `w{Player,Enemy}DisabledMove`          | `MoveSlot#disabled`             |
+| pkmn                            | Pokémon Red                    | Pokémon Showdown                |
+| ------------------------------- | ------------------------------ | ------------------------------- |
+|                                 | `wBattleMonNick`               | `Pokemon#name`                  |
+| `stored.level`                  | `wPlayerMonUnmodifiedLevel`    | `Pokemon#level`                 |
+| `stored.stats`                  | `wPlayerMonUnmodified*`        | `Pokemon#storedStats`           |
+| `stored.moves`                  |                                | `Pokemon#baseMoveSlots`         |
+| `stored.dvs`                    |                                |                                 |
+| `stored.evs`                    |                                |                                 |
+| `boosts`                        | `wPlayerMon*Mod`               | `Pokemon#boosts`                |
+| `volatiles`                     | `wPlayerBattleStatus{1,2,3}`   | `Pokemon#volatiles`             |
+| `volatiles_data.bide`           | `wPlayerBideAccumulatedDamage` | `volatiles.bide.totalDamage`    |
+| `volatiles_data.confusion`      | `wPlayerConfusedCounter`       | `volatiles.confusion.duration`  |
+| `volatiles_data.toxic`          | `wPlayerToxicCounter`          | `volatiles.residualdmg.counter` |
+| `volatiles_data.substitute`     | `wPlayerSubstituteHP`          | `volatiles.substitute.hp`       |
+| `volatiles_data.multihit.hits`  | `wPlayerNumHits`               |                                 |
+| `volatiles_data.multihits.left` | `wPlayerNumAttacksLeft`        |                                 |
+| `disabled`                      | `wPlayerDisabledMove`          | `MoveSlot#disabled`             |
 
 | Pokémon Red                | Pokémon Showdown   |
 | -------------------------- | ------------------ |

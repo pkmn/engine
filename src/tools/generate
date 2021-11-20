@@ -129,7 +129,7 @@ pub const Types = packed struct {
     type2: Type,
 
     comptime {
-        assert(@bitSizeOf(Types) == 8);
+        assert(@sizeOf(Types) == 1);
     }
 };
 
@@ -187,7 +187,7 @@ pub const Moves = enum(u8) {
     ${MOVE_IDS.join(',\n    ')},
 
     comptime {
-        assert(@bitSizeOf(Moves) == 8);
+        assert(@sizeOf(Moves) == 1);
     }
 
     pub fn get(id: Moves) *const Move {
@@ -214,23 +214,6 @@ const MOVES = [_]Move{ ${MOVES.join(', ')} };
 fs.writeFileSync(path.join(out, 'moves.zig'), moves);
 
 const SPECIES_IDS = await speciesIDs(GEN1);
-const SPECIES = [];
-for (const name of SPECIES_IDS) {
-  const species = GEN1.species.get(name);
-  const types = species.types.length === 1
-    ? [species.types[0], species.types[0]] : species.types;
-  SPECIES.push(`Specie{
-    // ${name},
-    .stats = Stats(u8){
-        .hp = ${species.baseStats.hp},
-        .atk = ${species.baseStats.atk},
-        .def = ${species.baseStats.def},
-        .spe = ${species.baseStats.spe},
-        .spc = ${species.baseStats.spa},
-    },
-    .types = Types{ .type1 = .${types[0]}, .type2 = .${types[1]} },
-}`);
-}
 
 const species = `${PREAMBLE}
 const std = @import("std");
@@ -254,25 +237,9 @@ pub const Species = enum(u8) {
     ${SPECIES_IDS.join(',\n    ')},
 
     comptime {
-        assert(@bitSizeOf(Species) == 8);
-    }
-
-    pub fn get(id: Species) *const Specie {
-        assert(id != .None);
-        return &SPECIES[@enumToInt(id) - 1];
+        assert(@sizeOf(Species) == 1);
     }
 };
-
-/// Basic raw species data - names and descriptions are handled elswhere.
-///
-/// **NOTE:** just like in-game, each Pokémon has two types (Pokémon Showdown
-/// elides the second type if its redundant, but dealing with variable length
-/// and alignment arrays is more trouble and more often than not amounts to the
-/// same space requirements).
-///
-/// *See:* https://pkmn.cc/pokered/data/pokemon/base_stats
-///
-const SPECIES = [_]Specie{ ${SPECIES.join(', ')} };
 `;
 
 fs.writeFileSync(path.join(out, 'species.zig'), species);
