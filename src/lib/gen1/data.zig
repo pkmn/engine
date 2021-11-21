@@ -302,13 +302,17 @@ pub const Type = types.Type;
 pub const Types = types.Types;
 
 pub const Effectiveness = enum(u2) {
-    Super = 3,
-    Neutral = 2,
-    Resisted = 1,
-    Immune = 0,
+    Immune,
+    Resisted,
+    Neutral,
+    Super,
 
     comptime {
         assert(@bitSizeOf(Effectiveness) == 2);
+    }
+
+    pub fn modifier(e: Effectiveness) u8 {
+        return if (e == .Super) 20 else @enumToInt(e) * @as(u8, 5);
     }
 };
 
@@ -319,6 +323,8 @@ test "Types" {
     try expectEqual(Effectiveness.Super, Type.effectiveness(.Water, .Fire));
     try expectEqual(Effectiveness.Resisted, Type.effectiveness(.Fire, .Water));
     try expectEqual(Effectiveness.Neutral, Type.effectiveness(.Normal, .Grass));
+    try expectEqual(@as(u8, 20), Effectiveness.modifier(.Super));
+    try expectEqual(@as(u8, 5), Effectiveness.modifier(.Resisted));
 }
 
 // TODO DEBUG

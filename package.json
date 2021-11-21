@@ -1,30 +1,32 @@
 {
   "name": "@pkmn/engine",
   "version": "0.1.0",
+  "type": "module",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "description": "A minimal, complete Pokémon battle simulation engine optimized for performance",
   "repository": "github:pkmn/engine",
   "license": "MIT",
   "dependencies": {
-    "@pkmn/data": "^0.4.21"
+    "@pkmn/data": "^0.4.23"
   },
   "devDependencies": {
-    "@pkmn/eslint-config": "^1.10.0",
-    "@pkmn/sim": "^0.4.21",
-    "@types/jest": "^27.0.2",
+    "@pkmn/eslint-config": "^2.0.0",
+    "@pkmn/sim": "^0.4.23",
+    "@types/jest": "^27.0.3",
     "@types/mustache": "^4.1.2",
-    "@types/node": "^16.11.7",
-    "@typescript-eslint/eslint-plugin": "^5.3.1",
-    "@typescript-eslint/parser": "^5.3.1",
+    "@types/node": "^16.11.9",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-jest": "^25.2.4",
     "eslint": "^8.2.0",
     "jest": "^27.3.1",
     "mustache": "^4.2.0",
-    "trakr": "^0.2.0",
+    "node-fetch": "^3.1.0",
+    "source-map-support": "^0.5.21",
     "ts-jest": "^27.0.7",
-    "typescript": "^4.4.4"
+    "typescript": "^4.5.2"
   },
   "scripts": {
     "lint": "eslint --cache src --ext ts,js",
@@ -32,6 +34,7 @@
     "compile": "tsc -p .",
     "build": "npm run compile",
     "test": "jest",
+    "generate": "npm run compile && node --experimental-specifier-resolution=node build/tools/generate",
     "test:integration": "npm run test",
     "pretest": "npm run build",
     "posttest": "npm run lint"
