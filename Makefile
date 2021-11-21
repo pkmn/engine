@@ -9,7 +9,7 @@ build:
 install:
 	npm install
 
-uninstall
+uninstall:
 	rm -rf node_modules
 
 generate:

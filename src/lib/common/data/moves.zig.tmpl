@@ -21,9 +21,9 @@ pub const Moves = enum({{ Moves_type }}) {
         assert(@bitSizeOf(Moves) == {{ Moves_size }});
     }
 
-    pub fn get(id: Moves) *const Move {
+    pub fn get(id: Moves) Move {
         assert(id != .None);
-        return &MOVES[@enumToInt(id) - 1];
+        return MOVES[@enumToInt(id) - 1];
     }
 };
 

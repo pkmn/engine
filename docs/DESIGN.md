@@ -59,8 +59,21 @@ also have pure MCTS random playout function - naive (not heavy) playouts, focuse
 Battle update(u16, ?[BUF]trace) -> info about win or lose and requesttype for either player. if trace is provided will output trace protocol lines (null separated? protocol type plus args plus etc - is chunk and line bounded? run PS a while and figure out chunk arg lenghts and kwargs)  
 ```
 
-todo: can turn basepower/accuracy/effect chance into enums because sparse (requires another table lookup then) - alternatively can at least drop 0 from accuracy and make u4 instead of u8, pp is 2*pp%10 as well 
+todo: can turn basepower/accuracy/effect chance into enums because sparse (requires another table lookup then) - alternatively can at least drop 0 from accuracy and make u4 instead of u8, pp is 2*pp%10 as well
 
+PROTOCOL
+
+auto build json string as ascii in Int8Array? vs string concat vs json?
+if manually building ascii why not just make the protocol text to begin with? zig text is already the same thing that could be accomplished? text should only be for things which require trace, mcts doesn t require trace so could just as easily use datastrucute and return value!
+
+what data is required to unpack? can just unpack? mods rules formats etc - need some predefined headers via format. no validation
+binary protocol - less bytes written at
+
+text munging separable from actual engine - high level concerned with munging? problem - names
+
+DRIVER
+
+ensure monomorphic (can do decode function on certain bytes to populate field, then a toJSON), though decode should auto pull out to toJSON representation to save space? any additional details can be saved on a second field (ie. if necessary toJSON returns json field immediately) - can we just build the decode into Battle and do the whole thing at once instead of making separate classes?
 
 ### Resources
 

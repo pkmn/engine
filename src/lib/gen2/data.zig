@@ -1,7 +1,3 @@
-//! Fundamental Pokémon data types required for battle simulation.
-//! Data not strictly required for battles is elided at this layer.
-//! **NOTE**: code in `data/` is generated and re-exported below.
-
 const std = @import("std");
 
 const gen1 = @import("../gen1/data.zig");
@@ -54,10 +50,7 @@ const SideCondition = packed struct {
 };
 
 
-///  - https://pkmn.cc/bulba/Pok%c3%a9mon_data_structure_%28Generation_II%29
-///  - https://pkmn.cc/PKHeX/PKHeX.Core/PKM/PK2.cs
-///  - https://pkmn.cc/pokecrystal/macros/wram.asm
-///
+
 const ActivePokemon = packed struct {
     // TODO item Items
     // TODO extra 2*Stats+1 Boosts byte = 24
@@ -112,7 +105,6 @@ test "Moves" {
     try expectEqual(@as(u8, 5), move.pp);
 }
 
-/// *See:* https://pkmn.cc/bulba/Pok%c3%a9mon_species_data_structure_%28Generation_II%29
 pub const Species = species.Species;
 
 test "Species" {
@@ -192,7 +184,6 @@ const HiddenPower = packed struct {
     }
 };
 
-/// A structure for storing information for each `Stat` (cf. Pokémon Showdown's `StatTable`).
 pub fn Stats(comptime T: type) type {
     return packed struct {
         hp: T = 0,
@@ -211,25 +202,6 @@ test "Stats" {
     try expectEqual(0, stats.def);
 }
 
-/// The name of each stat (cf. Pokémon Showdown's `StatName`).
-///
-/// *See:* https://pkmn.cc/pokecrystal/constants/battle_constants.asm#L54-L67
-///
-pub const Stat = enum(u3) {
-    hp,
-    atk,
-    def,
-    spe,
-    spa,
-    spd,
-
-    comptime {
-        assert(@bitSizeOf(Stat) == 3);
-    }
-};
-
-/// A structure for storing information for each `Boost` (cf. Pokémon Showdown's `BoostTable`).
-/// **NOTE**: `Boost(i4)` should likely always be used, as boosts should always range from -6...6.
 pub fn Boosts(comptime T: type) type {
     return packed struct {
         atk: T = 0,
@@ -248,21 +220,3 @@ test "Boosts" {
     try expectEqual(0, boosts.atk);
     try expectEqual(-6, boosts.spd);
 }
-
-/// The name of each boost/mod (cf. Pokémon Showdown's `BoostName`).
-///
-/// *See:* https://pkmn.cc/pokecrystal/constants/battle_constants.asm#L30-L39
-///
-pub const Boost = enum(u3) {
-    atk,
-    def,
-    spe,
-    spa,
-    spd,
-    accuracy,
-    evasion,
-
-    comptime {
-        assert(@bitSizeOf(Boost) == 3);
-    }
-};

@@ -98,6 +98,8 @@
 
 - Simulator Documentation: [New](https://gist.github.com/scheibo/c9ef943ef6e01e350940c8429c378e3b)/[Current](https://raw.githubusercontent.com/smogon/pokemon-showdown/master/simulator-doc.txt)/[Old](https://raw.githubusercontent.com/smogon/pokemon-showdown/master/old-simulator-doc.txt)
 
+Stream flow:
+
 - `Battle.sendUpdates`: sends and update with current `log`, possibly sends `end` if ended
   - `Battle.send`: hooked up in `BattleStream` to send updates to stream updates
 - `Battle.setPlayer`: creates a `Side` or updates a player, writes to `log`/`inputLog`, starts

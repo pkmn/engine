@@ -15,7 +15,7 @@
 | `SUBSTATUS_LEECH_SEED`   | `leechseed`      |
 | `SUBSTATUS_TOXIC`        | `toxic`          |
 | `SUBSTATUS_TRANSFORMED`  | `transform`      |
-| -------------------      | ---------------  |
+|                          |                  |
 | `SUBSTATUS_NIGHTMARE`    | `nightmare`      |
 | `SUBSTATUS_CURSE`        | `curse`          |
 | `SUBSTATUS_PROTECT`      | `protect`        |
@@ -29,5 +29,20 @@
 | `SUBSTATUS_LOCK_ON`      | `lockon`         |
 | `SUBSTATUS_DESTINY_BOND` | `destinybond`    |
 | `SUBSTATUS_IN_LOOP`      |                  |
-| -------------------      | ---------------  |
+|                          |                  |
 |                          | `Move#multihit`  |
+
+```txt
+///  - https://pkmn.cc/bulba/Pok%c3%a9mon_data_structure_%28Generation_II%29
+///  - https://pkmn.cc/PKHeX/PKHeX.Core/PKM/PK2.cs
+///  - https://pkmn.cc/pokecrystal/macros/wram.asm
+///
+
+
+/// *See:* https://pkmn.cc/bulba/Pok%c3%a9mon_species_data_structure_%28Generation_II%29
+
+/// The name of each stat (cf. Pokémon Showdown's `StatName`).
+///
+/// *See:* https://pkmn.cc/pokecrystal/constants/battle_constants.asm#L54-L67
+///
+```

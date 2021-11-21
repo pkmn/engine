@@ -190,9 +190,9 @@ pub const Moves = enum(u8) {
         assert(@sizeOf(Moves) == 1);
     }
 
-    pub fn get(id: Moves) *const Move {
+    pub fn get(id: Moves) Move {
         assert(id != .None);
-        return &MOVES[@enumToInt(id) - 1];
+        return MOVES[@enumToInt(id) - 1];
     }
 };
 
