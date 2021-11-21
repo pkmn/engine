@@ -35,48 +35,75 @@
 | `HAS_REFLECT_UP`           | `reflect`          |
 | `TRANSFORMED`              | `transform`        |
 
-| Field         | Values   | Bits |
+| Data          | Range    | Bits |
 | ------------- | -------- | ---- |
-| seed          | 256      | 8    |
-| turn          | 1000     | 7    |
-| team index    | 6 + 1    | 3    |
-| move index    | 4        | 2    |
-| species       | 151 + 1  | 8    |
-| move          | 165 + 1  | 8    |
-| stat          | 999      | 10   |
-| boost         | 13       | 4    |
-| level         | 100      | 7    |
-| volatiles     | 18       | 18   |
-| bide          | 2..1406  | 11   |
-| substitute    | 4..179   | 8    |
-| confusion     | 2..5 + 3 | 4    |
-| toxic         | 1..16    | 4    |
-| multi hits    | 2..5 + 3 | 4    |
-| base power    | 0..40    | 6    |
-| base PP       | 8        | 3    |
-| PP Ups        | 4        | 2    |
-| used PP       | 64       | 8    |
-| HP            | 13..704  | 10   |
-| status        | 11       | 4    |
-| effectiveness | 4        | 2    |
-| type          | 15       | 4    |
-| accuracy      | 6..20    | 4    |
-| disabled      | 0..7     | 3    |
+| seed          | 0 - 255  | 8    |
+| turn          | 1 - 1000 | 7    |
+| team index    | 1 - 6    | 3    |
+| move index    | 1 - 4    | 2    |
+| species       | 1 - 151  | 8    |
+| move          | 1 - 165  | 8    |
+| stat          | 1 - 999  | 10   |
+| boost         | 0 - 13   | 4    |
+| level         | 1 - 100  | 7    |
+| volatiles     | 17       | 18   |
+| bide          | 2 - 1406 | 11   |
+| substitute    | 4 - 179  | 8    |
+| confusion     | 2 - 5    | 3    |
+| toxic         | 1 - 16   | 4    |
+| multi hits    | 2 - 5    | 3    |
+| base power    | 0 - 40   | 6    |
+| base PP       | 1 - 8    | 3    |
+| PP Ups        | 0 - 3    | 2    |
+| used PP       | 0 - 63   | 8    |
+| HP            | 13 - 704 | 10   |
+| status        | 0 - 10   | 4    |
+| effectiveness | 0 - 3    | 2    |
+| type          | 0 - 15   | 4    |
+| accuracy      | 6 - 20   | 4    |
+| disabled      | 0 - 7    | 3    |
+
+| Data            | Actual | Minimum | Overhead |
+| --------------- | ------ | ------- | -------- |
+| `Battle`        | 2960   | 2171    | 36.4%    |
+| `Side`          | 1472   | 1078    | 36.5%    |
+| `ActivePokemon` | 288    | 198     | 45.4%    |
+| `Pokemon`       | 192    | 143     | 34.3%    |
 
 ```txt
 Pokemon = stats * 5 + move slot * 4 + hp + status + species + level
         = 50 + 64 + 10 + 4 + 8 + 7
         = 143
 Active  = stats * 5 + move slot * 4 + volatiles_data + volatiles + boosts * 6 + species (transform) + disabled (index + duration)
-        = 50 + 64 + (11 + 8 + 4 + 4 + 4) + 18 + 24 + 8 + (2 + 3)
-        = 200
+        = 50 + 64 + (11 + 8 + 3 + 3 + 4) + 18 + 24 + 8 + (2 + 3)
+        = 198
 Side    = Active + Pokemon * 6 + active + fainted + last_used + last_selected
         = 200 + 858 + 3 + 3 + 8 + 8
-        = 1080
+        = 1078
 Battle  = Side * 2 + turn + seed
         = 2160 + 7 + 8
-        = 2175
+        = 2171
 ```
+
+## `Battle`
+
+## `Side`
+
+## `Pokemon` / `ActivePokemon`
+
+### `MoveSlot`
+
+### `Status`
+
+### `Volatiles` / `VolatileData`
+
+### `Stats` / `Boosts`
+
+## `Move` / `Moves`
+
+## `Species`
+
+## `Type` / `Types` / `Effectiveness`
 
 ```txt
 // wPlayerMonNumber (pret) & Side#active[0] (PS)
@@ -90,8 +117,8 @@ Battle  = Side * 2 + turn + seed
 /// map to the following types:
 ///
 ///   - in most places the data representation defaults to the same as the cartridge, with the
-///     notable exception that `boosts` range from `-6...6` like in Pokémon Showdown instead of
-///     `1..13`
+///     notable exception that `boosts` range from `-6 - .6` like in Pokémon Showdown instead of
+///     `1 - 13`
 ///   - nicknames are not handled within the engine and are expected to instead be managed by
 ///     whatever is driving the engine code
 ///
@@ -141,7 +168,7 @@ Battle  = Side * 2 + turn + seed
 ///
 
 /// A structure for storing information for each `Boost` (cf. Pokémon Showdown's `BoostTable`).
-/// **NOTE**: `Boost(i4)` should likely always be used, as boosts should always range from -6...6.
+/// **NOTE**: `Boost(i4)` should likely always be used, as boosts should always range from -6 - .6.
 
 /// The name of each boost/mod (cf. Pokémon Showdown's `BoostName`).
 ///

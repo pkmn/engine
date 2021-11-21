@@ -41,8 +41,8 @@
 
 /// *See:* https://pkmn.cc/bulba/Pok%c3%a9mon_species_data_structure_%28Generation_II%29
 
-/// The name of each stat (cf. Pokémon Showdown's `StatName`).
-///
-/// *See:* https://pkmn.cc/pokecrystal/constants/battle_constants.asm#L54-L67
-///
+
+
+/// A structure for storing information for each `Boost` (cf. Pokémon Showdown's `BoostTable`).
+/// **NOTE**: `Boost(i4)` should likely always be used, as boosts should always range from -6...6.
 ```

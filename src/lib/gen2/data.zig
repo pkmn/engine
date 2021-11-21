@@ -10,12 +10,11 @@ const types = @import("data/types.zig");
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 
-
 const Battle = packed struct {
     // weather
     // weather duration
 
-// wWhichMonFaintedFirst:: db
+    // wWhichMonFaintedFirst:: db
 };
 
 const Field = packed struct {
@@ -30,16 +29,15 @@ const Weather = enum(u2) {
 };
 
 const Side = packed struct {
-
     condition: SideCondition,
     // wPlayerDamageTaken:: dw
     // wPlayerTurnsTaken:: db???
     // wLastPlayerCounterMove
 
-// wPlayerSafeguardCount:: db
-// wPlayerLightScreenCount:: db
-// wPlayerReflectCount:: db
-// wPlayerIsSwitching:: db
+    // wPlayerSafeguardCount:: db
+    // wPlayerLightScreenCount:: db
+    // wPlayerReflectCount:: db
+    // wPlayerIsSwitching:: db
 };
 
 const SideCondition = packed struct {
@@ -49,8 +47,6 @@ const SideCondition = packed struct {
     Reflect: bool = false,
 };
 
-
-
 const ActivePokemon = packed struct {
     // TODO item Items
     // TODO extra 2*Stats+1 Boosts byte = 24
@@ -58,32 +54,29 @@ const ActivePokemon = packed struct {
     // TODO volatile size change + 8
     // = total 48, 16 padding left
 
-// NOTE: could move volatiles_data to Side... lots of space?
+    // NOTE: could move volatiles_data to Side... lots of space?
 
-// TODO: some of these could be u3/u4
-// wPlayerRolloutCount:: db
-// wPlayerConfuseCount:: db
-// wPlayerToxicCount:: db
-// wPlayerDisableCount:: db
-// wPlayerEncoreCount:: db
-// wPlayerPerishCount:: db
-// wPlayerFuryCutterCount:: db
-// wPlayerProtectCount:: db
-// wPlayerFutureSightCount:: db
-// wPlayerRageCounter:: db
-// wPlayerWrapCount:: db
-// wPlayerCharging:: db
-// wPlayerJustGotFrozen:: db
+    // TODO: some of these could be u3/u4
+    // wPlayerRolloutCount:: db
+    // wPlayerConfuseCount:: db
+    // wPlayerToxicCount:: db
+    // wPlayerDisableCount:: db
+    // wPlayerEncoreCount:: db
+    // wPlayerPerishCount:: db
+    // wPlayerFuryCutterCount:: db
+    // wPlayerProtectCount:: db
+    // wPlayerFutureSightCount:: db
+    // wPlayerRageCounter:: db
+    // wPlayerWrapCount:: db
+    // wPlayerCharging:: db
+    // wPlayerJustGotFrozen:: db
 };
 
 // TODO
-const Pokemon = packed struct {
-};
+const Pokemon = packed struct {};
 
 // TODO copy
-const MoveSlot = packed struct {
-};
-
+const MoveSlot = packed struct {};
 
 /// *See:* https://pkmn.cc/pokecrystal/data/moves/moves.asm
 pub const Moves = moves.Moves;
@@ -176,7 +169,7 @@ const HiddenPower = packed struct {
     pub fn init(p: u8, t: Type) HiddenPower {
         assert(p >= 31 and p <= 70);
         assert(t != .Normal and t != .@"???");
-        return HiddenPower{.power = p, .type = t};
+        return HiddenPower{ .power = p, .type = t };
     }
 
     comptime {
@@ -215,7 +208,7 @@ pub fn Boosts(comptime T: type) type {
 }
 
 test "Boosts" {
-    try expectEqual(3 * 8 + 4,  @sizeOf(Boosts(i4)));
+    try expectEqual(3 * 8 + 4, @sizeOf(Boosts(i4)));
     const boosts = Boosts(i4){ .spd = -6 };
     try expectEqual(0, boosts.atk);
     try expectEqual(-6, boosts.spd);

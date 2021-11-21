@@ -66,7 +66,7 @@ const Side = packed struct {
         self.pokemon.hp = active.hp;
         self.pokemon.status = active.status;
         self.pokemon.types = active.types;
-        self.pokemon.disabled = .{.moves = 0, .duration = 0};
+        self.pokemon.disabled = .{ .moves = 0, .duration = 0 };
         self.active = slot;
     }
 };
@@ -126,7 +126,6 @@ const MoveSlot = packed struct {
         };
     }
 
-
     pub fn maxpp(self: *const MoveSlot) u8 {
         const pp = Moves.get(self.id).pp;
         return self.pp_ups * @as(u8, @maximum(pp, 7)) + (@as(u8, pp) * 5);
@@ -139,54 +138,6 @@ test "MoveSlot" {
     try expectEqual(@as(u8, 56), ms.maxpp());
     try expectEqual(Moves.Pound, ms.id);
     try expectEqual(@as(u16, 0), @bitCast(u16, MoveSlot.init(.None)));
-}
-
-pub const Moves = moves.Moves;
-pub const Move = packed struct {
-    bp: u8,
-    accuracy: u8,
-    type: Type,
-    pp: u4, // = pp / 5
-
-    comptime {
-        assert(@sizeOf(Move) == 3);
-    }
-};
-
-test "Moves" {
-    try expectEqual(2, @enumToInt(Moves.KarateChop));
-    const move = Moves.get(.Pound);
-    try expectEqual(@as(u8, 35 / 5), move.pp);
-    try expectEqual(Type.Normal, move.type);
-}
-
-pub const Species = species.Species;
-
-test "Species" {
-    try expectEqual(2, @enumToInt(Species.Ivysaur));
-}
-
-pub const Type = types.Type;
-pub const Types = types.Types;
-
-pub const Effectiveness = enum(u2) {
-    Super = 3,
-    Neutral = 2,
-    Resisted = 1,
-    Immune = 0,
-
-    comptime {
-        assert(@bitSizeOf(Effectiveness) == 2);
-    }
-};
-
-test "Types" {
-    try expectEqual(14, @enumToInt(Type.Dragon));
-    try expectEqual(3, @enumToInt(Effectiveness.Super));
-    try expectEqual(Effectiveness.Immune, Type.effectiveness(.Ghost, .Psychic));
-    try expectEqual(Effectiveness.Super, Type.effectiveness(.Water, .Fire));
-    try expectEqual(Effectiveness.Resisted, Type.effectiveness(.Fire, .Water));
-    try expectEqual(Effectiveness.Neutral, Type.effectiveness(.Normal, .Grass));
 }
 
 pub const Status = enum(u8) {
@@ -320,6 +271,54 @@ test "Boosts" {
     const boosts = Boosts(i4){ .spc = -6 };
     try expectEqual(0, boosts.atk);
     try expectEqual(-6, boosts.spc);
+}
+
+pub const Moves = moves.Moves;
+pub const Move = packed struct {
+    bp: u8,
+    accuracy: u8,
+    type: Type,
+    pp: u4, // = pp / 5
+
+    comptime {
+        assert(@sizeOf(Move) == 3);
+    }
+};
+
+test "Moves" {
+    try expectEqual(2, @enumToInt(Moves.KarateChop));
+    const move = Moves.get(.Pound);
+    try expectEqual(@as(u8, 35 / 5), move.pp);
+    try expectEqual(Type.Normal, move.type);
+}
+
+pub const Species = species.Species;
+
+test "Species" {
+    try expectEqual(2, @enumToInt(Species.Ivysaur));
+}
+
+pub const Type = types.Type;
+pub const Types = types.Types;
+
+pub const Effectiveness = enum(u2) {
+    Super = 3,
+    Neutral = 2,
+    Resisted = 1,
+    Immune = 0,
+
+    comptime {
+        assert(@bitSizeOf(Effectiveness) == 2);
+    }
+};
+
+test "Types" {
+    try expectEqual(14, @enumToInt(Type.Dragon));
+    try expectEqual(3, @enumToInt(Effectiveness.Super));
+    try expectEqual(Effectiveness.Immune, Type.effectiveness(.Ghost, .Psychic));
+    try expectEqual(Effectiveness.Super, Type.effectiveness(.Water, .Fire));
+    try expectEqual(Effectiveness.Resisted, Type.effectiveness(.Fire, .Water));
+    try expectEqual(Effectiveness.Neutral, Type.effectiveness(.Normal, .Grass));
 }
 
 // TODO DEBUG
