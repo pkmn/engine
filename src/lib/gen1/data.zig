@@ -33,22 +33,23 @@ const Battle = packed struct {
 const Side = packed struct {
     pokemon: ActivePokemon,
     team: [6]Pokemon,
-    active: u4 = 0,
-    fainted_last_turn: u4 = 0,
+    active: u8 = 0,
+    fainted_last_turn: u8 = 0,
     last_used_move: Moves = .None,
     last_selected_move: Moves = .None,
-    _: u8 = 0,
 
     comptime {
         assert(@sizeOf(Side) == 184);
     }
 
-    pub fn get(self: *const Side, slot: u4) *Pokemon {
-        assert(slot != .None);
-        return self.pokemon[u4 - 1];
+    pub fn get(self: *const Side, slot: u8) *Pokemon {
+        assert(slot > 0 and slot < 7);
+        return self.pokemon[slot - 1];
     }
 
-    pub fn switchIn(self: *Side, slot: u4) void {
+    pub fn switchIn(self: *Side, slot: u8) void {
+        assert(slot != self.active);
+
         const active = self.get(slot);
         inline for (std.meta.fieldNames(Stats(u16))) |stat| {
             @field(self.pokemon.stats, stat) = @field(active.stats, stat);
@@ -78,6 +79,7 @@ const ActivePokemon = packed struct {
     volatiles: Volatile,
     boosts: Boosts(i4),
     level: u8,
+    _: u8 = 0,
     hp: u16,
     status: Status,
     species: Species,
@@ -86,7 +88,6 @@ const ActivePokemon = packed struct {
         move: u4,
         duration: u4,
     },
-    _: u8 = 0,
 
     comptime {
         assert(@sizeOf(ActivePokemon) == 36);
