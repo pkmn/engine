@@ -47,19 +47,19 @@ const R = Effectiveness.Resisted;
 const I = Effectiveness.Immune;
 
 const TYPE_CHART = [15][15]Effectiveness{
-    [_]Effectiveness{ N, N, N, N, N, R, N, I, N, N, N, N, N, N, N }, // Normal,
-    [_]Effectiveness{ S, N, R, R, N, S, R, I, N, N, N, N, R, S, N }, // Fighting,
-    [_]Effectiveness{ N, S, N, N, N, R, S, N, N, N, S, R, N, N, N }, // Flying,
-    [_]Effectiveness{ N, N, N, R, R, R, S, R, N, N, S, N, N, N, N }, // Poison,
-    [_]Effectiveness{ N, N, I, S, N, S, R, N, S, N, R, S, N, N, N }, // Ground,
-    [_]Effectiveness{ N, R, S, N, R, N, S, N, S, N, N, N, N, S, N }, // Rock,
-    [_]Effectiveness{ N, R, R, S, N, N, N, R, R, N, S, N, S, N, N }, // Bug,
-    [_]Effectiveness{ I, N, N, N, N, N, N, S, N, N, N, N, I, N, N }, // Ghost,
-    [_]Effectiveness{ N, N, N, N, N, R, S, N, R, R, S, N, N, S, R }, // Fire,
-    [_]Effectiveness{ N, N, N, N, S, S, N, N, S, R, R, N, N, N, R }, // Water,
-    [_]Effectiveness{ N, N, R, R, S, S, R, N, R, S, R, N, N, N, R }, // Grass,
-    [_]Effectiveness{ N, N, S, N, I, N, N, N, N, S, R, R, N, N, R }, // Electric,
-    [_]Effectiveness{ N, S, N, S, N, N, N, N, N, N, N, N, R, N, N }, // Psychic,
-    [_]Effectiveness{ N, N, S, N, S, N, N, N, N, R, S, N, N, R, S }, // Ice,
+    [_]Effectiveness{ N, N, N, N, N, R, N, I, N, N, N, N, N, N, N }, // Normal
+    [_]Effectiveness{ S, N, R, R, N, S, R, I, N, N, N, N, R, S, N }, // Fighting
+    [_]Effectiveness{ N, S, N, N, N, R, S, N, N, N, S, R, N, N, N }, // Flying
+    [_]Effectiveness{ N, N, N, R, R, R, S, R, N, N, S, N, N, N, N }, // Poison
+    [_]Effectiveness{ N, N, I, S, N, S, R, N, S, N, R, S, N, N, N }, // Ground
+    [_]Effectiveness{ N, R, S, N, R, N, S, N, S, N, N, N, N, S, N }, // Rock
+    [_]Effectiveness{ N, R, R, S, N, N, N, R, R, N, S, N, S, N, N }, // Bug
+    [_]Effectiveness{ I, N, N, N, N, N, N, S, N, N, N, N, I, N, N }, // Ghost
+    [_]Effectiveness{ N, N, N, N, N, R, S, N, R, R, S, N, N, S, R }, // Fire
+    [_]Effectiveness{ N, N, N, N, S, S, N, N, S, R, R, N, N, N, R }, // Water
+    [_]Effectiveness{ N, N, R, R, S, S, R, N, R, S, R, N, N, N, R }, // Grass
+    [_]Effectiveness{ N, N, S, N, I, N, N, N, N, S, R, R, N, N, R }, // Electric
+    [_]Effectiveness{ N, S, N, S, N, N, N, N, N, N, N, N, R, N, N }, // Psychic
+    [_]Effectiveness{ N, N, S, N, S, N, N, N, N, R, S, N, N, R, S }, // Ice
     [_]Effectiveness{ N, N, N, N, N, N, N, N, N, N, N, N, N, N, S }, // Dragon
 };

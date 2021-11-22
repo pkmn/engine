@@ -28,6 +28,10 @@ releases. yes for WASM, embedded, minimax, damage calc
 
 TODO
 
+<p align="center">
+  <img src="https://gist.githubusercontent.com/scheibo/1edecb6e76dd9176691e50819d90e841/raw/a2655aeb58dd385d84049331bf826191c696d026/benchmark.svg" alt="Bar chart with benchmark results">
+</p>
+
 ## Installation
 
 The driver code can be installed from [npm](https://www.npmjs.com/package/@pkmn/engine):

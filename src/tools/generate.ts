@@ -2,13 +2,13 @@ import 'source-map-support/register';
 
 import * as fs from 'fs';
 import * as path from 'path';
-import {fileURLToPath} from 'url';
+import { fileURLToPath } from 'url';
 
 import fetch from 'node-fetch';
 import Mustache from 'mustache';
 
-import {Generations, Generation, GenerationNum, TypeName} from '@pkmn/data';
-import {Dex} from '@pkmn/sim';
+import { Generations, Generation, GenerationNum, TypeName } from '@pkmn/data';
+import { Dex } from '@pkmn/sim';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..', '..');
@@ -57,46 +57,48 @@ const getTypeChart = (gen: Generation, types: TypeName[]) => {
   return chart;
 };
 const getOrUpdate = async (
-  file: string, dir: string, url: string | false, fn: (line: string) => string | false
+  file: string, dir: string, url: string, update: boolean, fn: (line: string) => string | undefined
 ) => {
   const cache = path.resolve(dir, `${file}.txt`);
-
-  if (url) {
+  const cached = (() => {
     try {
-      const result: string[] = [];
-      const text = await (await fetch(url)).text();
-      for (const line of text.split('\n')) {
-        const val = fn(line);
-        if (val !== false) result.push(val);
-      }
-      fs.writeFileSync(cache, result.join('\n') + '\n');
-      return result;
-    } catch (err) {
-      console.error(err);
+      return fs.readFileSync(cache, 'utf8');
+    } catch (err: any) {
+      if (err.code !== 'ENOENT') throw err;
+      return undefined;
     }
+  })();
+
+  if (!cached || update) {
+    const result: string[] = [];
+    const text = await (await fetch(url)).text();
+    for (const line of text.split('\n')) {
+      const val = fn(line);
+      if (val !== undefined) result.push(val);
+    }
+    fs.writeFileSync(cache, result.join('\n') + '\n');
+    return result;
   }
 
   const result: string[] = [];
-  for (const line of fs.readFileSync(cache, 'utf8').split('\n')) {
+  for (const line of cached.split('\n')) {
     if (line) result.push(line.trim());
   }
   return result;
 };
 
 type GenerateFn =
-  (gen: Generation, dirs: {out: string; cache: string}, update: boolean) => Promise<void>;
-const GEN: {[gen in GenerationNum]?: GenerateFn} = {
+  (gen: Generation, dirs: { out: string; cache: string }, update: boolean) => Promise<void>;
+const GEN: { [gen in GenerationNum]?: GenerateFn } = {
   1: async (gen, dirs, update) => {
     const pret = 'https://raw.githubusercontent.com/pret/pokered/master/';
     // Moves
     let url = `${pret}/data/moves/moves.asm`;
-    const moves = await getOrUpdate('moves', dirs.cache, update && url, line => {
+    const moves = await getOrUpdate('moves', dirs.cache, url, update, line => {
       const match = /move (\w+),/.exec(line);
-      if (match) {
-        const token = match[1] === 'PSYCHIC_M' ? 'PSYCHIC' : match[1];
-        return toEnum(gen.moves.get(token)!.name);
-      }
-      return false;
+      if (!match) return undefined;
+      const token = match[1] === 'PSYCHIC_M' ? 'PSYCHIC' : match[1];
+      return toEnum(gen.moves.get(token)!.name);
     });
     const MOVES: string[] = [];
     for (const name of moves) {
@@ -121,9 +123,9 @@ const GEN: {[gen in GenerationNum]?: GenerateFn} = {
 
     // Species
     url = `${pret}/constants/pokedex_constants.asm`;
-    const species = await getOrUpdate('species', dirs.cache, update && url, line => {
+    const species = await getOrUpdate('species', dirs.cache, url, update, line => {
       const match = /const DEX_(\w+)/.exec(line);
-      return match ? toEnum(gen.species.get(match[1])!.name) : false;
+      return match ? toEnum(gen.species.get(match[1])!.name) : undefined;
     });
     template('species', dirs.out, {
       Species: {
@@ -147,15 +149,80 @@ const GEN: {[gen in GenerationNum]?: GenerateFn} = {
       },
       Types: {
         num: types.length,
-        chart: getTypeChart(gen, types).join(',\n    '),
+        chart: getTypeChart(gen, types).join('\n    '),
         bitSize: 8,
       },
     });
   },
-  // 2: async (gen, dirs, update) => {
-  //   const pret = 'https://raw.githubusercontent.com/pret/pokecrystal/master/';
+  2: async (gen, dirs, update) => {
+    const pret = 'https://raw.githubusercontent.com/pret/pokecrystal/master/';
+    // Moves
+    let url = `${pret}/data/moves/moves.asm`;
+    const moves = await getOrUpdate('moves', dirs.cache, url, update, line => {
+      const match = /move (\w+),/.exec(line);
+      if (!match) return undefined;
+      const token = match[1] === 'PSYCHIC_M' ? 'PSYCHIC' : match[1];
+      return toEnum(gen.moves.get(token)!.name);
+    });
+    const MOVES: string[] = [];
+    for (const name of moves) {
+      const move = gen.moves.get(name)!;
+      const chance = move.secondary?.chance
+        ? `${move.secondary.chance / 10}, // * 10 = ${move.secondary.chance}`
+        : '0,';
+      MOVES.push('Move{\n' +
+        `        // ${name}\n` +
+        `        .bp = ${move.basePower},\n` +
+        `        .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
+        `        .accuracy = ${move.accuracy === true ? '100' : move.accuracy},\n` +
+        `        .pp = ${move.pp / 5}, // * 5 = ${move.pp}\n` +
+        `        .chance = ${chance}\n` +
+        '    }');
+    }
+    template('moves', dirs.out, {
+      gen: gen.num,
+      Moves: {
+        type: 'u8',
+        values: moves.join(',\n    '),
+        size: 1,
+      },
+      MOVES: MOVES.join(',\n    '),
+    });
 
-  // },
+    // Species
+    url = `${pret}/constants/pokemon_constants.asm`;
+    const species = await getOrUpdate('species', dirs.cache, url, update, line => {
+      const match = /const (\w+)/.exec(line);
+      if (!match || match[1] === 'EGG' || match[1].startsWith('UNOWN_')) return undefined;
+      return toEnum(gen.species.get(match[1])!.name);
+    });
+    template('species', dirs.out, {
+      Species: {
+        type: 'u8',
+        values: species.join(',\n    '),
+        size: 1,
+      },
+    });
+
+    // Types
+    const types = [
+      'Normal', 'Fighting', 'Flying', 'Poison', 'Ground', 'Rock', 'Bug', 'Ghost', 'Steel',
+      '???', 'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Ice', 'Dragon', 'Dark',
+    ] as TypeName[];
+
+    template('types', dirs.out, {
+      Type: {
+        type: 'u8',
+        values: types.map(t => t === '???' ? '@"???"' : t).join(',\n    '),
+        bitSize: 8,
+      },
+      Types: {
+        num: types.length,
+        chart: getTypeChart(gen, types).join('\n    '),
+        bitSize: 16,
+      },
+    });
+  },
 };
 
 (async () => {
@@ -174,7 +241,7 @@ const GEN: {[gen in GenerationNum]?: GenerateFn} = {
     if (mkdir(out)) update = true;
     if (mkdir(cache)) update = true;
 
-    await GEN[gen.num]!(gen, {out, cache}, update);
+    await GEN[gen.num]!(gen, { out, cache }, update);
   }
 })().catch((err: any) => {
   console.error(err);
