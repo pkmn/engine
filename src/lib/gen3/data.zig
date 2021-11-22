@@ -10,6 +10,37 @@ const species = @import("data/species.zig");
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 
+pub const GameType = enum {
+    Singles,
+    Doubles,
+};
+
+pub fn Battle(comptime game_type: GameType) type {
+    return packed struct {
+        sides: [2]Side,
+        seed: u32,
+        turn: u8 = 0,
+
+        pub fn p1(self: *Battle) *Side {
+            return &self.sides[0];
+        }
+
+        pub fn p2(self: *Battle) *Side {
+            return &self.sides[1];
+        }
+    };
+}
+
+pub fn Side(comptime game_type: GameType) type {
+    const N = @enumToInt(game_type);
+    return packed struct {
+        pokemon: [N]ActivePokemon,
+        team: [6]Pokemon,
+        active: [N]u8,
+        // TODO
+    };
+}
+
 // pub const Items = items.Items;
 
 // test "Items" {
