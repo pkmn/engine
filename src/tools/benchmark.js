@@ -27,8 +27,6 @@ const SCALE = (STRIDE * (DIVIDERS - 1)) / max;
 const UNPADDED = ROW * Object.keys(DATA).length;
 const height = UNPADDED + PADDING.h * 2 - (BAR.h + BAR.pad);
 
-console.error(height, UNPADDED, ROW);
-
 const HEADER =
 `<svg xmlns="http://www.w3.org/2000/svg"
   font-family="Roboto, Helvetica, Arial, sans-serif"
@@ -58,7 +56,7 @@ for (const gen in DATA) {
   let width = pkmn * SCALE;
 
   y += BAR.pad;
-  out.push(` <rect x="${PADDING.w}" y="${y}" width="${width}" height="${BAR.h}" fill="#1976D2"/>`);
+  out.push(` <rect x="${PADDING.w}" y="${y}" width="${width}" height="${BAR.h}" fill="#446BB4"/>`);
   out.push(` <text x="${width + PADDING.w + PADDING.text}" y="${y + (BAR.h / 2)}" dominant-baseline="middle">${pkmn}s</text>`);
   y += BAR.h;
 
@@ -67,7 +65,7 @@ for (const gen in DATA) {
   width = ps * SCALE;
 
   y += 2;
-  out.push(` <rect x="${PADDING.w}" y="${y}" width="${width}" height="${BAR.h}" fill="#D32F2F"/>`);
+  out.push(` <rect x="${PADDING.w}" y="${y}" width="${width}" height="${BAR.h}" fill="#FAE059"/>`);
   out.push(` <text x="${width + PADDING.w + PADDING.text}" y="${y + (BAR.h / 2)}" dominant-baseline="middle">${ps}s</text>`);
   y += BAR.h;
 }

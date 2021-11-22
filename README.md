@@ -29,7 +29,7 @@ releases. yes for WASM, embedded, minimax, damage calc
 TODO
 
 <p align="center">
-  <img src="https://gist.githubusercontent.com/scheibo/1edecb6e76dd9176691e50819d90e841/raw/a2655aeb58dd385d84049331bf826191c696d026/benchmark.svg" alt="Bar chart with benchmark results">
+  <img src="https://gist.githubusercontent.com/scheibo/1edecb6e76dd9176691e50819d90e841/raw/f15db8b25ae5a64d3f712fba79416d65c0c9b0e2/benchmark.svg" alt="Bar chart with benchmark results">
 </p>
 
 ## Installation
