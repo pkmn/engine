@@ -9,6 +9,7 @@ const types = @import("data/types.zig");
 
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
+const expect = std.testing.expect;
 
 const Battle = packed struct {
     // weather
@@ -75,48 +76,29 @@ const ActivePokemon = packed struct {
 // TODO
 const Pokemon = packed struct {};
 
-// TODO copy
-const MoveSlot = packed struct {};
+pub const Gender = enum(u1) {
+    Male,
+    Female,
+};
 
-/// *See:* https://pkmn.cc/pokecrystal/data/moves/moves.asm
-pub const Moves = moves.Moves;
-pub const Move = packed struct {
-    bp: u8,
-    accuracy: u8,
+const IVs = packed struct {
+    gender: Gender,
+    power: u7,
     type: Type,
-    pp: u4, // pp / 5
-    chance: u4, // chance / 10
+
+    pub fn init(g: Gender, p: u7, t: Type) IVs {
+        assert(p >= 31 and p <= 70);
+        assert(t != .Normal and t != .@"???");
+        return IVs{ .gender = g, .power = p, .type = t };
+    }
 
     comptime {
-        assert(@sizeOf(Move) == 4);
+        assert(@sizeOf(IVs) == 2);
     }
 };
 
-test "Moves" {
-    try expectEqual(240, @enumToInt(Moves.BeatUp));
-    const move = Moves.get(.LockOn);
-    try expectEqual(@as(u8, 5), move.pp);
-}
-
-pub const Species = species.Species;
-
-test "Species" {
-    try expectEqual(152, @enumToInt(Species.Chikorita));
-}
-
-pub const Type = types.Type;
-pub const Types = types.Types;
-pub const Efffectiveness = gen1.Efffectiveness;
-
-test "Types" {
-    try expectEqual(14, @enumToInt(Type.Electric));
-    try expectEqual(20, @enumToInt(Efffectiveness.Super));
-    try expectEqual(Efffectiveness.Super, Type.effectiveness(.Ghost, .Psychic));
-    try expectEqual(Efffectiveness.Super, Type.effectiveness(.Water, .Fire));
-    try expectEqual(Efffectiveness.Resisted, Type.effectiveness(.Fire, .Water));
-    try expectEqual(Efffectiveness.Neutral, Type.effectiveness(.Normal, .Grass));
-    try expectEqual(Efffectiveness.Immune, Type.effectiveness(.Poison, .Steel));
-}
+// TODO copy
+const MoveSlot = packed struct {};
 
 pub const Status = gen1.Status;
 
@@ -157,25 +139,11 @@ const Volatile = packed struct {
     _pad: u4 = 0,
 
     comptime {
-        assert(@sizeOf(Volatile) == 32);
+        assert(@sizeOf(Volatile) == 4);
     }
 };
 
-// FIXME store gender bit in here as well?
-const HiddenPower = packed struct {
-    power: u8, // technically need u6
-    type: Type, // technically only need u5
-
-    pub fn init(p: u8, t: Type) HiddenPower {
-        assert(p >= 31 and p <= 70);
-        assert(t != .Normal and t != .@"???");
-        return HiddenPower{ .power = p, .type = t };
-    }
-
-    comptime {
-        assert(@bitSizeOf(HiddenPower) == 2);
-    }
-};
+const VolatileData = packed struct {};
 
 pub fn Stats(comptime T: type) type {
     return packed struct {
@@ -189,7 +157,7 @@ pub fn Stats(comptime T: type) type {
 }
 
 test "Stats" {
-    try expectEqual(6 * 8, @sizeOf(Stats(u8)));
+    try expectEqual(12, @sizeOf(Stats(u16)));
     const stats = Stats(u4){ .spd = 2, .spe = 3 };
     try expectEqual(2, stats.spd);
     try expectEqual(0, stats.def);
@@ -208,8 +176,65 @@ pub fn Boosts(comptime T: type) type {
 }
 
 test "Boosts" {
-    try expectEqual(3 * 8 + 4, @sizeOf(Boosts(i4)));
+    try expectEqual(3 * 8 + 4, @bitSizeOf(Boosts(i4)));
     const boosts = Boosts(i4){ .spd = -6 };
     try expectEqual(0, boosts.atk);
     try expectEqual(-6, boosts.spd);
+}
+
+pub const Items = items.Items;
+
+test "Items" {
+    try expect(Items.boost(.MasterBall) == null);
+    try expectEqual(Type.Normal, Items.boost(.PinkBow).?);
+    try expectEqual(Type.Normal, Items.boost(.PolkadotBow).?);
+    try expectEqual(Type.Dark, Items.boost(.BlackGlasses).?);
+
+    try expect(!Items.berry(.TM50));
+    try expect(Items.berry(.PSNCureBerry));
+    try expect(Items.berry(.GoldBerry));
+}
+
+pub const Moves = moves.Moves;
+pub const Move = packed struct {
+    bp: u8,
+    accuracy: u8,
+    type: Type,
+    pp: u4, // pp / 5
+    chance: u4, // chance / 10
+
+    comptime {
+        assert(@sizeOf(Move) == 4);
+    }
+};
+
+test "Moves" {
+    try expectEqual(251, @enumToInt(Moves.BeatUp));
+    const move = Moves.get(.LockOn);
+    try expectEqual(@as(u8, 1), move.pp);
+}
+
+pub const Species = species.Species;
+
+test "Species" {
+    try expectEqual(152, @enumToInt(Species.Chikorita));
+}
+
+pub const Type = types.Type;
+pub const Types = types.Types;
+pub const Effectiveness = gen1.Effectiveness;
+
+test "Types" {
+    try expectEqual(13, @enumToInt(Type.Electric));
+    try expectEqual(3, @enumToInt(Effectiveness.Super));
+    try expectEqual(Effectiveness.Super, Type.effectiveness(.Ghost, .Psychic));
+    try expectEqual(Effectiveness.Super, Type.effectiveness(.Water, .Fire));
+    try expectEqual(Effectiveness.Resisted, Type.effectiveness(.Fire, .Water));
+    try expectEqual(Effectiveness.Neutral, Type.effectiveness(.Normal, .Grass));
+    try expectEqual(Effectiveness.Immune, Type.effectiveness(.Poison, .Steel));
+}
+
+// TODO DEBUG
+comptime {
+    std.testing.refAllDecls(@This());
 }

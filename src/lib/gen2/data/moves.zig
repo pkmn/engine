@@ -1590,7 +1590,7 @@ const MOVES = [_]Move{
         .bp = 50,
         .type = .Normal,
         .accuracy = 100,
-        .pp = 0.2, // * 5 = 1
+        .pp = 0, // = 1
         .chance = 0,
     },
     Move{
@@ -1598,7 +1598,7 @@ const MOVES = [_]Move{
         .bp = 0,
         .type = .Normal,
         .accuracy = 100,
-        .pp = 0.2, // * 5 = 1
+        .pp = 0, // = 1
         .chance = 0,
     },
     Move{

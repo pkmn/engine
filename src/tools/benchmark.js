@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 const DATA = {
   'RBY': [0.21, 32.10],
   'GSC': [0.32, 33.23],
