@@ -190,7 +190,11 @@ test "Items" {
     try expectEqual(Type.Normal, Items.boost(.PolkadotBow).?);
     try expectEqual(Type.Dark, Items.boost(.BlackGlasses).?);
 
-    try expect(!Items.berry(.TM50));
+    try expect(!Items.mail(.TM50));
+    try expect(Items.mail(.FlowerMail));
+    try expect(Items.mail(.MirageMail));
+
+    try expect(!Items.berry(.MirageMail));
     try expect(Items.berry(.PSNCureBerry));
     try expect(Items.berry(.GoldBerry));
 }

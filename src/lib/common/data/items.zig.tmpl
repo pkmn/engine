@@ -21,6 +21,11 @@ pub const Items = enum({{{ Items.type }}}) {
         return if (@enumToInt(item) <= {{{ Items.boosts }}}) @intToEnum(Type, @enumToInt(item) - 1) else null;
     }
 
+    pub fn mail(item: Items) bool {
+        assert(item != .None);
+        return @enumToInt(item) > {{{ Items.mail }}} and @enumToInt(item) <= {{{ Items.berry }}};
+    }
+
     pub fn berry(item: Items) bool {
         assert(item != .None);
         return @enumToInt(item) > {{{ Items.berry }}};

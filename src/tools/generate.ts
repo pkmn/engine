@@ -233,12 +233,17 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       return `${name} ${held}`;
     });
     const values: string[] = [];
+    const mail: string[] = [];
     const berries: string[] = [];
     const boosts: [string, TypeName][] = [];
     for (const item of items) {
       const [name, held] = item.split(' ');
       if (held === 'NONE') {
-        values.push(`${name},`);
+        if (name.endsWith('Mail')) {
+          mail.push(`${name},`);
+        } else {
+          values.push(`${name},`);
+        }
         continue;
       }
       const s = `${name}, // ${held}`;
@@ -262,7 +267,12 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
       }
     }
-    const berry = values.length;
+    const offset = {mail: 0, berries: 0};
+    offset.mail = values.length;
+    for (const s of mail) {
+      values.push(s);
+    }
+    offset.berries = values.length;
     for (const s of berries) {
       values.push(s);
     }
@@ -273,7 +283,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         values: values.join('\n    '),
         size: 1,
         boosts: boosts.length,
-        berry,
+        mail: offset.mail,
+        berry: offset.berries,
       },
     });
 

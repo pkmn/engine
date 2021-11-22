@@ -121,7 +121,6 @@ pub const Items = enum(u8) {
     BerserkGene,
     SacredAsh,
     HeavyBall,
-    FlowerMail,
     LevelBall,
     LureBall,
     FastBall,
@@ -135,15 +134,6 @@ pub const Items = enum(u8) {
     UpGrade,
     ParkBall,
     BrickPiece,
-    SurfMail,
-    LightBlueMail,
-    PortrailMail,
-    LovelyMail,
-    EonMail,
-    MorphMail,
-    BlueSkyMail,
-    MusicMail,
-    MirageMail,
     TM01,
     TM02,
     TM03,
@@ -194,6 +184,16 @@ pub const Items = enum(u8) {
     TM48,
     TM49,
     TM50,
+    FlowerMail,
+    SurfMail,
+    LightBlueMail,
+    PortrailMail,
+    LovelyMail,
+    EonMail,
+    MorphMail,
+    BlueSkyMail,
+    MusicMail,
+    MirageMail,
     PSNCureBerry, // HEAL_POISON
     PRZCureBerry, // HEAL_PARALYZE
     BurntBerry, // HEAL_FREEZE
@@ -213,6 +213,11 @@ pub const Items = enum(u8) {
         assert(item != .None);
         if (item == .PolkadotBow) return .Normal;
         return if (@enumToInt(item) <= 18) @intToEnum(Type, @enumToInt(item) - 1) else null;
+    }
+
+    pub fn mail(item: Items) bool {
+        assert(item != .None);
+        return @enumToInt(item) > 175 and @enumToInt(item) <= 185;
     }
 
     pub fn berry(item: Items) bool {
