@@ -61,7 +61,6 @@ Results
 - per gen or average battles across all (supported) gens?
 - normalize to turns per second vs. battles per second? (both)
 
-```txt
-
-
-```
+<p align="center">
+  <img src="https://gist.githubusercontent.com/scheibo/1edecb6e76dd9176691e50819d90e841/raw/f15db8b25ae5a64d3f712fba79416d65c0c9b0e2/benchmark.svg" alt="Bar chart with benchmark results">
+</p>

@@ -24,14 +24,6 @@ TODO Features
 goals/non-goals disclaimer: not intended to replace PS etc, support mods, arbitrary pokemon
 releases. yes for WASM, embedded, minimax, damage calc
 
-## Benchmarks
-
-TODO
-
-<p align="center">
-  <img src="https://gist.githubusercontent.com/scheibo/1edecb6e76dd9176691e50819d90e841/raw/f15db8b25ae5a64d3f712fba79416d65c0c9b0e2/benchmark.svg" alt="Bar chart with benchmark results">
-</p>
-
 ## Installation
 
 The driver code can be installed from [npm](https://www.npmjs.com/package/@pkmn/engine):
