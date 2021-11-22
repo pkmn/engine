@@ -65,6 +65,15 @@ pub const MoveTarget = enum(u8) { // u6 / u4
     OpponentsField = (1 << 6), // foeSide
 };
 
+pub const MoveFlags = enum(u8) { // u6
+    Contact = (1 << 0),
+    Protect = (1 << 1),
+    MagicCoat = (1 << 2),
+    Snatch = (1 << 3),
+    MirrorMove = (1 << 4),
+    KingsRock = (1 << 5),
+};
+
 pub const Moves = moves.Moves;
 pub const Move = packed struct {
     bp: u8,
