@@ -279,7 +279,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 7, // * 5 = 35
-        .chance = 0,
     },
     Move{
         // KarateChop
@@ -287,7 +286,6 @@ const MOVES = [_]Move{
         .type = .Fighting,
         .accuracy = 100,
         .pp = 5, // * 5 = 25
-        .chance = 0,
     },
     Move{
         // DoubleSlap
@@ -295,7 +293,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 85,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // CometPunch
@@ -303,7 +300,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 85,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // MegaPunch
@@ -311,7 +307,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 85,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // PayDay
@@ -319,7 +314,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // FirePunch
@@ -351,7 +345,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 7, // * 5 = 35
-        .chance = 0,
     },
     Move{
         // ViseGrip
@@ -359,7 +352,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 6, // * 5 = 30
-        .chance = 0,
     },
     Move{
         // Guillotine
@@ -367,7 +359,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 30,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // RazorWind
@@ -375,7 +366,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 75,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // SwordsDance
@@ -383,7 +373,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 6, // * 5 = 30
-        .chance = 0,
     },
     Move{
         // Cut
@@ -391,7 +380,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 95,
         .pp = 6, // * 5 = 30
-        .chance = 0,
     },
     Move{
         // Gust
@@ -399,7 +387,6 @@ const MOVES = [_]Move{
         .type = .Flying,
         .accuracy = 100,
         .pp = 7, // * 5 = 35
-        .chance = 0,
     },
     Move{
         // WingAttack
@@ -407,7 +394,6 @@ const MOVES = [_]Move{
         .type = .Flying,
         .accuracy = 100,
         .pp = 7, // * 5 = 35
-        .chance = 0,
     },
     Move{
         // Whirlwind
@@ -415,7 +401,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // Fly
@@ -423,7 +408,6 @@ const MOVES = [_]Move{
         .type = .Flying,
         .accuracy = 95,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // Bind
@@ -431,7 +415,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 75,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // Slam
@@ -439,7 +422,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 75,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // VineWhip
@@ -447,7 +429,6 @@ const MOVES = [_]Move{
         .type = .Grass,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // Stomp
@@ -463,7 +444,6 @@ const MOVES = [_]Move{
         .type = .Fighting,
         .accuracy = 100,
         .pp = 6, // * 5 = 30
-        .chance = 0,
     },
     Move{
         // MegaKick
@@ -471,7 +451,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 75,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // JumpKick
@@ -479,7 +458,6 @@ const MOVES = [_]Move{
         .type = .Fighting,
         .accuracy = 95,
         .pp = 5, // * 5 = 25
-        .chance = 0,
     },
     Move{
         // RollingKick
@@ -495,7 +473,6 @@ const MOVES = [_]Move{
         .type = .Ground,
         .accuracy = 100,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // Headbutt
@@ -511,7 +488,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 5, // * 5 = 25
-        .chance = 0,
     },
     Move{
         // FuryAttack
@@ -519,7 +495,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 85,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // HornDrill
@@ -527,7 +502,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 30,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // Tackle
@@ -535,7 +509,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 95,
         .pp = 7, // * 5 = 35
-        .chance = 0,
     },
     Move{
         // BodySlam
@@ -551,7 +524,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 85,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // TakeDown
@@ -559,7 +531,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 85,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // Thrash
@@ -567,7 +538,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // DoubleEdge
@@ -575,7 +545,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // TailWhip
@@ -583,7 +552,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 6, // * 5 = 30
-        .chance = 0,
     },
     Move{
         // PoisonSting
@@ -607,7 +575,6 @@ const MOVES = [_]Move{
         .type = .Bug,
         .accuracy = 85,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // Leer
@@ -615,7 +582,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 6, // * 5 = 30
-        .chance = 0,
     },
     Move{
         // Bite
@@ -631,7 +597,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 8, // * 5 = 40
-        .chance = 0,
     },
     Move{
         // Roar
@@ -639,7 +604,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // Sing
@@ -647,7 +611,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 55,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // Supersonic
@@ -655,7 +618,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 55,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // SonicBoom
@@ -663,7 +625,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 90,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // Disable
@@ -671,7 +632,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 55,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // Acid
@@ -703,7 +663,6 @@ const MOVES = [_]Move{
         .type = .Ice,
         .accuracy = 100,
         .pp = 6, // * 5 = 30
-        .chance = 0,
     },
     Move{
         // WaterGun
@@ -711,7 +670,6 @@ const MOVES = [_]Move{
         .type = .Water,
         .accuracy = 100,
         .pp = 5, // * 5 = 25
-        .chance = 0,
     },
     Move{
         // HydroPump
@@ -719,7 +677,6 @@ const MOVES = [_]Move{
         .type = .Water,
         .accuracy = 80,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // Surf
@@ -727,7 +684,6 @@ const MOVES = [_]Move{
         .type = .Water,
         .accuracy = 100,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // IceBeam
@@ -775,7 +731,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 90,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // Peck
@@ -783,7 +738,6 @@ const MOVES = [_]Move{
         .type = .Flying,
         .accuracy = 100,
         .pp = 7, // * 5 = 35
-        .chance = 0,
     },
     Move{
         // DrillPeck
@@ -791,7 +745,6 @@ const MOVES = [_]Move{
         .type = .Flying,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // Submission
@@ -799,7 +752,6 @@ const MOVES = [_]Move{
         .type = .Fighting,
         .accuracy = 80,
         .pp = 5, // * 5 = 25
-        .chance = 0,
     },
     Move{
         // LowKick
@@ -815,7 +767,6 @@ const MOVES = [_]Move{
         .type = .Fighting,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // SeismicToss
@@ -823,7 +774,6 @@ const MOVES = [_]Move{
         .type = .Fighting,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // Strength
@@ -831,7 +781,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // Absorb
@@ -839,7 +788,6 @@ const MOVES = [_]Move{
         .type = .Grass,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // MegaDrain
@@ -847,7 +795,6 @@ const MOVES = [_]Move{
         .type = .Grass,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // LeechSeed
@@ -855,7 +802,6 @@ const MOVES = [_]Move{
         .type = .Grass,
         .accuracy = 90,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // Growth
@@ -863,7 +809,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 8, // * 5 = 40
-        .chance = 0,
     },
     Move{
         // RazorLeaf
@@ -871,7 +816,6 @@ const MOVES = [_]Move{
         .type = .Grass,
         .accuracy = 95,
         .pp = 5, // * 5 = 25
-        .chance = 0,
     },
     Move{
         // SolarBeam
@@ -879,7 +823,6 @@ const MOVES = [_]Move{
         .type = .Grass,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // PoisonPowder
@@ -887,7 +830,6 @@ const MOVES = [_]Move{
         .type = .Poison,
         .accuracy = 75,
         .pp = 7, // * 5 = 35
-        .chance = 0,
     },
     Move{
         // StunSpore
@@ -895,7 +837,6 @@ const MOVES = [_]Move{
         .type = .Grass,
         .accuracy = 75,
         .pp = 6, // * 5 = 30
-        .chance = 0,
     },
     Move{
         // SleepPowder
@@ -903,7 +844,6 @@ const MOVES = [_]Move{
         .type = .Grass,
         .accuracy = 75,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // PetalDance
@@ -911,7 +851,6 @@ const MOVES = [_]Move{
         .type = .Grass,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // StringShot
@@ -919,7 +858,6 @@ const MOVES = [_]Move{
         .type = .Bug,
         .accuracy = 95,
         .pp = 8, // * 5 = 40
-        .chance = 0,
     },
     Move{
         // DragonRage
@@ -927,7 +865,6 @@ const MOVES = [_]Move{
         .type = .Dragon,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // FireSpin
@@ -935,7 +872,6 @@ const MOVES = [_]Move{
         .type = .Fire,
         .accuracy = 70,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // ThunderShock
@@ -959,7 +895,6 @@ const MOVES = [_]Move{
         .type = .Electric,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // Thunder
@@ -975,7 +910,6 @@ const MOVES = [_]Move{
         .type = .Rock,
         .accuracy = 90,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // Earthquake
@@ -983,7 +917,6 @@ const MOVES = [_]Move{
         .type = .Ground,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // Fissure
@@ -991,7 +924,6 @@ const MOVES = [_]Move{
         .type = .Ground,
         .accuracy = 30,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // Dig
@@ -999,7 +931,6 @@ const MOVES = [_]Move{
         .type = .Ground,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // Toxic
@@ -1007,7 +938,6 @@ const MOVES = [_]Move{
         .type = .Poison,
         .accuracy = 85,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // Confusion
@@ -1031,7 +961,6 @@ const MOVES = [_]Move{
         .type = .Psychic,
         .accuracy = 60,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // Meditate
@@ -1039,7 +968,6 @@ const MOVES = [_]Move{
         .type = .Psychic,
         .accuracy = 100,
         .pp = 8, // * 5 = 40
-        .chance = 0,
     },
     Move{
         // Agility
@@ -1047,7 +975,6 @@ const MOVES = [_]Move{
         .type = .Psychic,
         .accuracy = 100,
         .pp = 6, // * 5 = 30
-        .chance = 0,
     },
     Move{
         // QuickAttack
@@ -1055,7 +982,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 6, // * 5 = 30
-        .chance = 0,
     },
     Move{
         // Rage
@@ -1063,7 +989,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // Teleport
@@ -1071,7 +996,6 @@ const MOVES = [_]Move{
         .type = .Psychic,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // NightShade
@@ -1079,7 +1003,6 @@ const MOVES = [_]Move{
         .type = .Ghost,
         .accuracy = 100,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // Mimic
@@ -1087,7 +1010,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // Screech
@@ -1095,7 +1017,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 85,
         .pp = 8, // * 5 = 40
-        .chance = 0,
     },
     Move{
         // DoubleTeam
@@ -1103,7 +1024,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // Recover
@@ -1111,7 +1031,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // Harden
@@ -1119,7 +1038,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 6, // * 5 = 30
-        .chance = 0,
     },
     Move{
         // Minimize
@@ -1127,7 +1045,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // Smokescreen
@@ -1135,7 +1052,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // ConfuseRay
@@ -1143,7 +1059,6 @@ const MOVES = [_]Move{
         .type = .Ghost,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // Withdraw
@@ -1151,7 +1066,6 @@ const MOVES = [_]Move{
         .type = .Water,
         .accuracy = 100,
         .pp = 8, // * 5 = 40
-        .chance = 0,
     },
     Move{
         // DefenseCurl
@@ -1159,7 +1073,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 8, // * 5 = 40
-        .chance = 0,
     },
     Move{
         // Barrier
@@ -1167,7 +1080,6 @@ const MOVES = [_]Move{
         .type = .Psychic,
         .accuracy = 100,
         .pp = 6, // * 5 = 30
-        .chance = 0,
     },
     Move{
         // LightScreen
@@ -1175,7 +1087,6 @@ const MOVES = [_]Move{
         .type = .Psychic,
         .accuracy = 100,
         .pp = 6, // * 5 = 30
-        .chance = 0,
     },
     Move{
         // Haze
@@ -1183,7 +1094,6 @@ const MOVES = [_]Move{
         .type = .Ice,
         .accuracy = 100,
         .pp = 6, // * 5 = 30
-        .chance = 0,
     },
     Move{
         // Reflect
@@ -1191,7 +1101,6 @@ const MOVES = [_]Move{
         .type = .Psychic,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // FocusEnergy
@@ -1199,7 +1108,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 6, // * 5 = 30
-        .chance = 0,
     },
     Move{
         // Bide
@@ -1207,7 +1115,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // Metronome
@@ -1215,7 +1122,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // MirrorMove
@@ -1223,7 +1129,6 @@ const MOVES = [_]Move{
         .type = .Flying,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // SelfDestruct
@@ -1231,7 +1136,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // EggBomb
@@ -1239,7 +1143,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 75,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // Lick
@@ -1287,7 +1190,6 @@ const MOVES = [_]Move{
         .type = .Water,
         .accuracy = 100,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // Clamp
@@ -1295,7 +1197,6 @@ const MOVES = [_]Move{
         .type = .Water,
         .accuracy = 75,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // Swift
@@ -1303,7 +1204,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // SkullBash
@@ -1311,7 +1211,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // SpikeCannon
@@ -1319,7 +1218,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // Constrict
@@ -1335,7 +1233,6 @@ const MOVES = [_]Move{
         .type = .Psychic,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // Kinesis
@@ -1343,7 +1240,6 @@ const MOVES = [_]Move{
         .type = .Psychic,
         .accuracy = 80,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // SoftBoiled
@@ -1351,7 +1247,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // HighJumpKick
@@ -1359,7 +1254,6 @@ const MOVES = [_]Move{
         .type = .Fighting,
         .accuracy = 90,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // Glare
@@ -1367,7 +1261,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 75,
         .pp = 6, // * 5 = 30
-        .chance = 0,
     },
     Move{
         // DreamEater
@@ -1375,7 +1268,6 @@ const MOVES = [_]Move{
         .type = .Psychic,
         .accuracy = 100,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // PoisonGas
@@ -1383,7 +1275,6 @@ const MOVES = [_]Move{
         .type = .Poison,
         .accuracy = 55,
         .pp = 8, // * 5 = 40
-        .chance = 0,
     },
     Move{
         // Barrage
@@ -1391,7 +1282,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 85,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // LeechLife
@@ -1399,7 +1289,6 @@ const MOVES = [_]Move{
         .type = .Bug,
         .accuracy = 100,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // LovelyKiss
@@ -1407,7 +1296,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 75,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // SkyAttack
@@ -1415,7 +1303,6 @@ const MOVES = [_]Move{
         .type = .Flying,
         .accuracy = 90,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // Transform
@@ -1423,7 +1310,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // Bubble
@@ -1447,7 +1333,6 @@ const MOVES = [_]Move{
         .type = .Grass,
         .accuracy = 100,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // Flash
@@ -1455,7 +1340,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 70,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // Psywave
@@ -1463,7 +1347,6 @@ const MOVES = [_]Move{
         .type = .Psychic,
         .accuracy = 80,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // Splash
@@ -1471,7 +1354,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 8, // * 5 = 40
-        .chance = 0,
     },
     Move{
         // AcidArmor
@@ -1479,7 +1361,6 @@ const MOVES = [_]Move{
         .type = .Poison,
         .accuracy = 100,
         .pp = 8, // * 5 = 40
-        .chance = 0,
     },
     Move{
         // Crabhammer
@@ -1487,7 +1368,6 @@ const MOVES = [_]Move{
         .type = .Water,
         .accuracy = 85,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // Explosion
@@ -1495,7 +1375,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // FurySwipes
@@ -1503,7 +1382,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 80,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // Bonemerang
@@ -1511,7 +1389,6 @@ const MOVES = [_]Move{
         .type = .Ground,
         .accuracy = 90,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // Rest
@@ -1519,7 +1396,6 @@ const MOVES = [_]Move{
         .type = .Psychic,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // RockSlide
@@ -1543,7 +1419,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 6, // * 5 = 30
-        .chance = 0,
     },
     Move{
         // Conversion
@@ -1551,7 +1426,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 6, // * 5 = 30
-        .chance = 0,
     },
     Move{
         // TriAttack
@@ -1567,7 +1441,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 90,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // Slash
@@ -1575,7 +1448,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // Substitute
@@ -1583,7 +1455,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // Struggle
@@ -1591,7 +1462,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 0, // = 1
-        .chance = 0,
     },
     Move{
         // Sketch
@@ -1599,7 +1469,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 0, // = 1
-        .chance = 0,
     },
     Move{
         // TripleKick
@@ -1607,7 +1476,6 @@ const MOVES = [_]Move{
         .type = .Fighting,
         .accuracy = 90,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // Thief
@@ -1623,7 +1491,6 @@ const MOVES = [_]Move{
         .type = .Bug,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // MindReader
@@ -1631,7 +1498,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // Nightmare
@@ -1639,7 +1505,6 @@ const MOVES = [_]Move{
         .type = .Ghost,
         .accuracy = 100,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // FlameWheel
@@ -1663,7 +1528,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // Flail
@@ -1671,7 +1535,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // Conversion2
@@ -1679,7 +1542,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 6, // * 5 = 30
-        .chance = 0,
     },
     Move{
         // Aeroblast
@@ -1687,7 +1549,6 @@ const MOVES = [_]Move{
         .type = .Flying,
         .accuracy = 95,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // CottonSpore
@@ -1695,7 +1556,6 @@ const MOVES = [_]Move{
         .type = .Grass,
         .accuracy = 85,
         .pp = 8, // * 5 = 40
-        .chance = 0,
     },
     Move{
         // Reversal
@@ -1703,7 +1563,6 @@ const MOVES = [_]Move{
         .type = .Fighting,
         .accuracy = 100,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // Spite
@@ -1711,7 +1570,6 @@ const MOVES = [_]Move{
         .type = .Ghost,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // PowderSnow
@@ -1727,7 +1585,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // MachPunch
@@ -1735,7 +1592,6 @@ const MOVES = [_]Move{
         .type = .Fighting,
         .accuracy = 100,
         .pp = 6, // * 5 = 30
-        .chance = 0,
     },
     Move{
         // ScaryFace
@@ -1743,7 +1599,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 90,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // FeintAttack
@@ -1751,7 +1606,6 @@ const MOVES = [_]Move{
         .type = .Dark,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // SweetKiss
@@ -1759,7 +1613,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 75,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // BellyDrum
@@ -1767,7 +1620,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // SludgeBomb
@@ -1799,7 +1651,6 @@ const MOVES = [_]Move{
         .type = .Ground,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // ZapCannon
@@ -1815,7 +1666,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 8, // * 5 = 40
-        .chance = 0,
     },
     Move{
         // DestinyBond
@@ -1823,7 +1673,6 @@ const MOVES = [_]Move{
         .type = .Ghost,
         .accuracy = 100,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // PerishSong
@@ -1831,7 +1680,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // IcyWind
@@ -1847,7 +1695,6 @@ const MOVES = [_]Move{
         .type = .Fighting,
         .accuracy = 100,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // BoneRush
@@ -1855,7 +1702,6 @@ const MOVES = [_]Move{
         .type = .Ground,
         .accuracy = 80,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // LockOn
@@ -1863,7 +1709,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // Outrage
@@ -1871,7 +1716,6 @@ const MOVES = [_]Move{
         .type = .Dragon,
         .accuracy = 100,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // Sandstorm
@@ -1879,7 +1723,6 @@ const MOVES = [_]Move{
         .type = .Rock,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // GigaDrain
@@ -1887,7 +1730,6 @@ const MOVES = [_]Move{
         .type = .Grass,
         .accuracy = 100,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // Endure
@@ -1895,7 +1737,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // Charm
@@ -1903,7 +1744,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // Rollout
@@ -1911,7 +1751,6 @@ const MOVES = [_]Move{
         .type = .Rock,
         .accuracy = 90,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // FalseSwipe
@@ -1919,7 +1758,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 8, // * 5 = 40
-        .chance = 0,
     },
     Move{
         // Swagger
@@ -1927,7 +1765,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 90,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // MilkDrink
@@ -1935,7 +1772,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // Spark
@@ -1951,7 +1787,6 @@ const MOVES = [_]Move{
         .type = .Bug,
         .accuracy = 95,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // SteelWing
@@ -1967,7 +1802,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // Attract
@@ -1975,7 +1809,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // SleepTalk
@@ -1983,7 +1816,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // HealBell
@@ -1991,7 +1823,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // Return
@@ -1999,7 +1830,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // Present
@@ -2007,7 +1837,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 90,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // Frustration
@@ -2015,7 +1844,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // Safeguard
@@ -2023,7 +1851,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 5, // * 5 = 25
-        .chance = 0,
     },
     Move{
         // PainSplit
@@ -2031,7 +1858,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // SacredFire
@@ -2047,7 +1873,6 @@ const MOVES = [_]Move{
         .type = .Ground,
         .accuracy = 100,
         .pp = 6, // * 5 = 30
-        .chance = 0,
     },
     Move{
         // DynamicPunch
@@ -2063,7 +1888,6 @@ const MOVES = [_]Move{
         .type = .Bug,
         .accuracy = 85,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // DragonBreath
@@ -2079,7 +1903,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 8, // * 5 = 40
-        .chance = 0,
     },
     Move{
         // Encore
@@ -2087,7 +1910,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // Pursuit
@@ -2095,7 +1917,6 @@ const MOVES = [_]Move{
         .type = .Dark,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // RapidSpin
@@ -2103,7 +1924,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 8, // * 5 = 40
-        .chance = 0,
     },
     Move{
         // SweetScent
@@ -2111,7 +1931,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // IronTail
@@ -2135,7 +1954,6 @@ const MOVES = [_]Move{
         .type = .Fighting,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // MorningSun
@@ -2143,7 +1961,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // Synthesis
@@ -2151,7 +1968,6 @@ const MOVES = [_]Move{
         .type = .Grass,
         .accuracy = 100,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // Moonlight
@@ -2159,7 +1975,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // HiddenPower
@@ -2167,7 +1982,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // CrossChop
@@ -2175,7 +1989,6 @@ const MOVES = [_]Move{
         .type = .Fighting,
         .accuracy = 80,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // Twister
@@ -2191,7 +2004,6 @@ const MOVES = [_]Move{
         .type = .Water,
         .accuracy = 100,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // SunnyDay
@@ -2199,7 +2011,6 @@ const MOVES = [_]Move{
         .type = .Fire,
         .accuracy = 100,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // Crunch
@@ -2215,7 +2026,6 @@ const MOVES = [_]Move{
         .type = .Psychic,
         .accuracy = 100,
         .pp = 4, // * 5 = 20
-        .chance = 0,
     },
     Move{
         // PsychUp
@@ -2223,7 +2033,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
     Move{
         // ExtremeSpeed
@@ -2231,7 +2040,6 @@ const MOVES = [_]Move{
         .type = .Normal,
         .accuracy = 100,
         .pp = 1, // * 5 = 5
-        .chance = 0,
     },
     Move{
         // AncientPower
@@ -2255,7 +2063,6 @@ const MOVES = [_]Move{
         .type = .Psychic,
         .accuracy = 90,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // RockSmash
@@ -2271,7 +2078,6 @@ const MOVES = [_]Move{
         .type = .Water,
         .accuracy = 70,
         .pp = 3, // * 5 = 15
-        .chance = 0,
     },
     Move{
         // BeatUp
@@ -2279,6 +2085,5 @@ const MOVES = [_]Move{
         .type = .Dark,
         .accuracy = 100,
         .pp = 2, // * 5 = 10
-        .chance = 0,
     },
 };

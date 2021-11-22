@@ -302,14 +302,14 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       const pp = move.pp === 1 ? '0, // = 1' : `${move.pp / 5}, // * 5 = ${move.pp}`;
       const chance = move.secondary?.chance
         ? `${move.secondary.chance / 10}, // * 10 = ${move.secondary.chance}`
-        : '0,';
+        : '';
       MOVES.push('Move{\n' +
         `        // ${name}\n` +
         `        .bp = ${move.basePower},\n` +
         `        .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
         `        .accuracy = ${move.accuracy === true ? '100' : move.accuracy},\n` +
         `        .pp = ${pp}\n` +
-        `        .chance = ${chance}\n` +
+        (chance ? `        .chance = ${chance}\n` : '') +
         '    }');
     }
     template('moves', dirs.out, {

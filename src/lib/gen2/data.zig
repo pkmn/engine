@@ -205,7 +205,7 @@ pub const Move = packed struct {
     accuracy: u8,
     type: Type,
     pp: u4, // pp / 5
-    chance: u4, // chance / 10
+    chance: u4 = 0, // chance / 10
 
     comptime {
         assert(@sizeOf(Move) == 4);
