@@ -30,5 +30,38 @@ PERFORMANCE
 
 PATTERN
 
--  BattlePlayer.receiveLine to skip logging
+- BattlePlayer.receiveLine to skip logging
 - get rid of battle.destroy() as its unnecessary
+
+----
+
+4 AIs:
+
+- random player (all choices) for traditional PS
+- random player (all choices) for direct PS (JS)
+- random player (all choices) for engine and 0 ERROR select (zig)
+- random player (fastpath abort) for 0 ERROR playout (zig)
+
+Phase 1:
+
+- traditional (stream) PS vs. stripped down (direct) PS
+  - use correct RNG for gen
+  - use correct AIs
+  - direct queries `Battle` directly and turns off `log` where possible? (just reset `.log = []`? or override `add` to do nothing? etc)
+  - don't include `encode` (ie. `pack`) time in total
+
+Phase 2:
+
+- engine vs. direct PS
+
+----
+
+Results
+
+- per gen or average battles across all (supported) gens?
+- normalize to turns per second vs. battles per second? (both)
+
+```txt
+
+
+```

@@ -75,6 +75,45 @@ DRIVER
 
 ensure monomorphic (can do decode function on certain bytes to populate field, then a toJSON), though decode should auto pull out to toJSON representation to save space? any additional details can be saved on a second field (ie. if necessary toJSON returns json field immediately) - can we just build the decode into Battle and do the whole thing at once instead of making separate classes?
 
+JS - just napi to expose Engine.init and Engine.update. engine = binary protocol so languages dont need to string parse
+js = wrap with napi and expose binary directly, but also implement code to turn into json/text and be fully comparable etc. will NOT implement a stream (also for reasons of speed) - how to handle clients using synchronously? clients need to say ahead of time which streams theyre interested in and will receive updates automically.
+
+NOT actually json, skip parsig entirely and just return protocol?
+just do protocol.deepequals but ignore order of keys, filter out unsupported
+
+```ts
+import * as engine from pkmn/engine
+const engine = new Engine(gen, p1, p2); // need to specify whether doubles or not
+
+let result; // requestState (or win/end/tie etc)
+while (result = engine.update(choice)) {
+  choice = ...
+}
+```
+
+TESTING - exhaustive runner
+
+parse directly to @protocol (no json), though allow for protocol to be stringified (though wont match). add logic to compare protocol directly (order insenstivie), filter out fields which arent implement like break or rules
+
+run PS in battle stream and run through protocol parser. run engine synchronously and gather all converted update/sideupdate data, compare
+
+BENCHMARK - custom multi random runner
+checksum = final seed pkus sum of turns
+
+generate teams for each (not included in timing)
+dont include team packing time for PS, dont include team encoding time for JS (though optionally can)
+play out exact same battle using random ai, only disable trace output for engine and use a binary random ai that makes same decisions as ps but purely off the data it reads directly out of the casted bytes of the engines Battle instance
+
+js
+
+- binary trace and state dump to @pkmn/protocol
+- stringify and deepequals for protocol
+- randomplayer ai which works purely on binary (can optionally pull on 0 error random player ai and implement it in zig instead…., need to compare the js version with ps to zig version. use fast random generator LCRNG)
+
+need to have both libs loaded, with and without? alternative just provide command in package.json to let the user switch engines to untraced! engine code can detect if its available for use and try to use the faster lib if trace is false, falling back to slow lib (we ship zig with the package and just provide a different install option)
+
+alternatively - dont ship zig or binary at all (no postinstall). instead provide binary that can be USED to install(ie. let users choose to set up a postinstall or not, where they can run the install-pkmn-engine binary)
+
 ### Resources
 
 - [Handles vs. Pointers][handles]

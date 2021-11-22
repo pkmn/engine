@@ -8,7 +8,8 @@
   "repository": "github:pkmn/engine",
   "license": "MIT",
   "dependencies": {
-    "@pkmn/data": "^0.4.23"
+    "@pkmn/data": "^0.4.23",
+    "@pkmn/protocol": "^0.3.4"
   },
   "devDependencies": {
     "@pkmn/eslint-config": "^2.0.0",
@@ -18,9 +19,9 @@
     "@types/node": "^16.11.9",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
+    "eslint": "^8.2.0",
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-jest": "^25.2.4",
-    "eslint": "^8.2.0",
     "jest": "^27.3.1",
     "mustache": "^4.2.0",
     "node-fetch": "^3.1.0",
