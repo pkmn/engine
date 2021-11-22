@@ -15,7 +15,8 @@ const ROOT = path.resolve(__dirname, '..', '..');
 const TEMPLATES = path.join(ROOT, 'src', 'lib', 'common', 'data');
 const CACHE = path.join(ROOT, '.cache');
 
-const ITEMS: {[constant: string]: string} = {
+const NAMES: {[constant: string]: string} = {
+  // Items
   BLACKBELT_I: 'BlackBelt',
   BLACKGLASSES: 'BlackGlasses',
   BLK_APRICORN: 'BlackApricorn',
@@ -45,6 +46,8 @@ const ITEMS: {[constant: string]: string} = {
   TWISTEDSPOON: 'TwistedSpoon',
   WHT_APRICORN: 'WhiteApricorn',
   YLW_APRICORN: 'YellowApricorn',
+  // Moves
+  SMELLING_SALT: 'SmellingSalts',
 };
 
 const nameToEnum = (s: string) => s.replace(/[^A-Za-z0-9]+/g, '');
@@ -226,7 +229,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       const held = /HELD_(\w+),/.exec(line)![1];
       const name = match[1].startsWith('TM')
         ? `${match[1]}`
-        : (ITEMS[match[1]] || constToEnum(match[1]));
+        : (NAMES[match[1]] || constToEnum(match[1]));
       return `${name} ${held}`;
     });
     const values: string[] = [];
@@ -320,6 +323,54 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         type: 'u8',
         values: species.join(',\n    '),
         size: 1,
+      },
+    });
+  },
+  3: async (gen, dirs, update) => {
+    const pret = 'https://raw.githubusercontent.com/pret/pokeemerald/master/';
+
+    // Moves
+    let url = `${pret}/include/constants/moves.h`;
+    const moves = await getOrUpdate('moves', dirs.cache, url, update, line => {
+      const match = /#define MOVE_(\w+)/.exec(line);
+      if (!match || match[1] === 'NONE') return undefined;
+      console.debug(match[1]);
+      return NAMES[match[1]] || nameToEnum(gen.moves.get(match[1])!.name);
+    });
+    // const MOVES: string[] = [];
+    // for (const name of moves) {
+    //   const move = gen.moves.get(name)!;
+    //   MOVES.push('Move{\n' +
+    //     `        // ${name}\n` +
+    //     `        .bp = ${move.basePower},\n` +
+    //     `        .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
+    //     `        .accuracy = ${move.accuracy === true ? '100' : move.accuracy},\n` +
+    //     `        .pp = ${move.pp / 5}, // * 5 = ${move.pp}\n` +
+    //     '    }');
+    // }
+    template('moves', dirs.out, {
+      gen: gen.num,
+      Moves: {
+        type: 'u16',
+        values: moves.join(',\n    '),
+        size: 2,
+      },
+      MOVES: '//', // MOVES.join(',\n    '),
+    });
+
+
+    // Species
+    url = `${pret}/include/constants/species.h`;
+    const species = await getOrUpdate('species', dirs.cache, url, update, line => {
+      const match = /#define NATIONAL_DEX_(\w+)\s+\d+/.exec(line);
+      if (!match || match[1] === 'NONE' || match[1].startsWith('OLD_UNOWN')) return undefined;
+      return nameToEnum(gen.species.get(match[1])!.name);
+    });
+    template('species', dirs.out, {
+      Species: {
+        type: 'u16',
+        values: species.join(',\n    '),
+        size: 2,
       },
     });
   },
