@@ -65,10 +65,10 @@
 
 | Data            | Actual | Minimum | Overhead |
 | --------------- | ------ | ------- | -------- |
-| `Battle`        | 2960   | 2171    | 36.4%    |
-| `Side`          | 1472   | 1078    | 36.5%    |
+| `Battle`        | 2768   | 2171    | 21.5%    |
+| `Side`          | 1376   | 1078    | 21.6%    |
 | `ActivePokemon` | 288    | 198     | 45.4%    |
-| `Pokemon`       | 192    | 143     | 34.3%    |
+| `Pokemon`       | 176    | 143     | 18.8%    |
 
 ```txt
 Pokemon = stats * 5 + move slot * 4 + hp + status + species + level

@@ -18,7 +18,7 @@ const Battle = packed struct {
     turn: u8 = 0,
 
     comptime {
-        assert(@sizeOf(Battle) == 370);
+        assert(@sizeOf(Battle) == 346);
     }
 
     pub fn p1(self: *Battle) *Side {
@@ -33,13 +33,14 @@ const Battle = packed struct {
 const Side = packed struct {
     pokemon: ActivePokemon,
     team: [6]Pokemon,
+
     active: u8 = 0,
     fainted_last_turn: u8 = 0,
     last_used_move: Moves = .None,
     last_selected_move: Moves = .None,
 
     comptime {
-        assert(@sizeOf(Side) == 184);
+        assert(@sizeOf(Side) == 172);
     }
 
     pub fn get(self: *const Side, slot: u8) *Pokemon {
@@ -48,6 +49,7 @@ const Side = packed struct {
     }
 
     pub fn switchIn(self: *Side, slot: u8) void {
+        // TODO handle positions
         assert(slot != self.active);
 
         const active = self.get(slot);
@@ -95,7 +97,8 @@ const ActivePokemon = packed struct {
 };
 
 const Pokemon = packed struct {
-    stats: Stats(u16),
+    stats: Stats(u12),
+    position: u4,
     moves: [4]MoveSlot,
     hp: u16,
     status: Status,
@@ -103,8 +106,9 @@ const Pokemon = packed struct {
     types: Types,
     level: u8,
 
+
     comptime {
-        assert(@sizeOf(Pokemon) == 24);
+        assert(@sizeOf(Pokemon) == 22);
     }
 };
 
