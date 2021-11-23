@@ -48,31 +48,55 @@ The following information is required to simulate a Generation I Pokémon battle
 
 ## Data Structures
 
-### `Battle`
+### `Battle` / `Side`
 
-TODO
-
-### `Side`
-
-TODO
+`Battle` and `Side` are analogous to the classes of the
+[same](https://github.com/smogon/pokemon-showdown/blob/master/sim/battle.ts)
+[name](https://github.com/smogon/pokemon-showdown/blob/master/sim/name.ts) in Pokémon Showdown and
+store general information about the battle. Unlike in Pokémon Showdown there is a distinction
+between the data structure for the "active" Pokémon and its party members (see below).
 
 ### `Pokemon` / `ActivePokemon`
 
-TODO
+Similar to the cartridge, in order to save space different information is stored depending on
+whether a [Pokémon](https://pkmn.cc/bulba/Pok%c3%a9mon_data_structure_%28Generation_I%29) is
+actively participating in battle vs. is switched out (pret's [`battle_struct` vs.
+`party_struct`](https://pkmn.cc/pokered/macros/wram.asm)). In Pokémon Showdown, all the Pokemon are
+represented by the same
+[`Pokemon`](https://github.com/smogon/pokemon-showdown/blob/master/sim/pokemon.ts) class, and static
+party information is saved in fields beginning with "`stored`" or "`base`".
+
+For ergonomics and for performance ([locality of
+reference](https://en.wikipedia.org/wiki/Locality_of_reference)), the level, type, HP, and status
+from `Pokemon` are redundantly stored `ActivePokemon` and synchronized during switches.
 
 #### `MoveSlot`
 
-TODO
+A `MoveSlot` is a data-type for a `(move, current pp)` pair. A pared down version of Pokémon
+Showdown's `Pokemon#moveSlot`, it also stores data from the cartridge's `battle_struct::Move` macro
+and can be used to replace the `PlayerMove*` data. Move PP is stored in the same way as on the
+cartridge (`battle_struct::PP`), with 6 bits for current PP and the remaining 2 bits used to store
+the number of applied PP Ups. PP Ups bits do not actually need to be stored on move slot as max PP
+is never relevant in Generation I, but since those two bits would need to be padded anyway and since
+max PP is necessary in certain cirmcumstances (eg. PP increasing berries) it is preserved.
 
 #### `Status`
 
-TODO
+Bitfield representation of a Pokémon's major [status
+condition](https://pkmn.cc/bulba/Status_condition), mirroring how it is stored on the cartridge. A
+value of `0x00` means that the Pokémon is not affected by any major status, otherwise the lower 3
+bits represent the remaining duration for Sleep. Other status are denoted by the presence of
+individual bits - at most one status should be set at any given time.
 
-#### `Volatiles` / `VolatileData`
+In Generation I & II, the "badly poisoned" status (Toxic) is instead treated as a volatile (see
+below).
+
+#### `Volatile` / `VolatileData`
 
 Active Pokémon can have have ["volatile" status
-conditions](https://pkmn.cc/bulba/Status_condition#Volatile_status), all of which are boolean flags
-that are cleared when the Pokémon faints or switches out:
+conditions](https://pkmn.cc/bulba/Status_condition#Volatile_status) (called ['battle
+status'](https://pkmn.cc/pokered/constants/battle_constants.asm#L73) bits in pret), all of which are
+boolean flags that are cleared when the Pokémon faints or switches out:
 
 | pkmn           | Pokémon Red (pret)         | Pokémon Showdown   |
 | -------------- | -------------------------- | ------------------ |
@@ -95,23 +119,48 @@ that are cleared when the Pokémon faints or switches out:
 | `Reflect`      | `HAS_REFLECT_UP`           | `reflect`          |
 | `Transform`    | `TRANSFORMED`              | `transform`        |
 
-TODO
+[Bide](https://pkmn.cc/bulba/Bide_(move)) (damage),
+[Substitute](https://pkmn.cc/bulba/Substitute_(move)) (substitute HP),
+[Confusion](https://pkmn.cc/bulba/Confusion_(status_condition)) (duration), and
+[Toxic](https://pkmn.cc/bulba/Toxic_(move)) (counter) all require additional information to be
+stored by the `VolatileData` structure.
 
 #### `Stats` / `Boosts`
 
-TODO
-
+[Stats](https://pkmn.cc/bulba/Stat) and [boosts (stat
+modifiers)](https://pkmn.cc/bulba/Stat#Stat_modifiers) are stored logically, with the exception that
+boosts should always range from `-6`...`6` instead of `1`...`13` as on the cartridge. Furthermore,
+only 12 bits are allocated for each `Stat` in `Pokemon` compared to 16 in `ActivePokemon` - in
+Generation I the maximum stat value is 999 so only 10 bits are required, but 16 bit values are more
+efficient for the computer to deal with. 12 bits are used in `Pokemon` as it results in space
+savings and minimizes padding required as the only time the `Pokemon` structure's stats are touched
+is when they are copied during switch-in meaning slightly inefficient access is less punishing
+performance-wise.
+  
 ### `Move` / `Moves`
 
-TODO
+`Moves` serves as an identifier for a unique [Pokémon move](https://pkmn.cc/bulba/Move) that can be
+used to retrieve a `Move` with information regarding base power, accuracy and type. As covered
+above, PP information isn't strictly necessary in Generation I, but fits neatly into the 4 bits of
+padding after noticing that all PP values are multiples of 5. `Moves.None` exists as a special
+sentinel value to indicate `null`.
 
 ### `Species`
 
-TODO
+`Species` just serves as an identifier for a unique [Pokémon
+species](https://pkmn.cc/bulba/Pok%C3%A9mon_species_data_structure_(Generation_I)) as the base stats
+of a species are already accounted for in the computed stats in the `Pokemon` structure and nothing
+in battle requires these to be recomputed. Similarly, Type is unnecessary to include as it is also
+already present in the `Pokemon` struct. `Species.None` exists as a special sentinel value to
+indicate `null`.
 
 ### `Type` / `Types` / `Effectiveness`
 
-TODO
+The [Pokémon types](https://pkmn.cc/bulba/Type) are enumerated by `Type`. `Types` represents a tuple
+of 2 types, but due to limitations in Zig this can't be represented as a `[2]Type` array and thus
+instead takes the form of a packed struct. `Effectiveness` serves as an enum for tracking a moves
+effectiveness - the cartridge stores effectivess as `0`, `5`, `10`, and `20`, but instead we store
+these as a 2-bit value which then can be expanded out by `Effectiveness.modifier`.
 
 ## Information
 
@@ -120,20 +169,19 @@ entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as foll
 
 | Data           | Range    | Bits |     | Data              | Range    | Bits |
 | -------------- | -------- | ---- | --- | ----------------- | -------- | ---- |
-| **seed**       | 0 - 255  | 8    |     | **turn**          | 1 - 1000 | 7    |
-| **team index** | 1 - 6    | 3    |     | **move index**    | 1 - 4    | 2    |
-| **species**    | 1 - 151  | 8    |     | **move**          | 1 - 165  | 8    |
-| **stat**       | 1 - 999  | 10   |     | **boost**         | 0 - 13   | 4    |
-| **level**      | 1 - 100  | 7    |     | **volatiles**     | 17       | 18   |
-| **bide**       | 2 - 1406 | 11   |     | **substitute**    | 4 - 179  | 8    |
-| **confusion**  | 2 - 5    | 3    |     | **toxic**         | 1 - 16   | 4    |
-| **multi hits** | 2 - 5    | 3    |     | **base power**    | 0 - 40   | 6    |
-| **base PP**    | 1 - 8    | 3    |     | **PP Ups**        | 0 - 3    | 2    |
-| **used PP**    | 0 - 63   | 8    |     | **HP / damage**   | 13 - 704 | 10   |
-| **status**     | 0 - 10   | 4    |     | **effectiveness** | 0 - 3    | 2    |
-| **type**       | 0 - 15   | 4    |     | **accuracy**      | 6 - 20   | 4    |
-| **disabled**   | 0 - 7    | 3    |     | **DVs**           | 0 - 15   | 4    |
-
+| **seed**       | 0...255  | 8    |     | **turn**          | 1...1000 | 7    |
+| **team index** | 1...6    | 3    |     | **move index**    | 1...4    | 2    |
+| **species**    | 1...151  | 8    |     | **move**          | 1...165  | 8    |
+| **stat**       | 1...999  | 10   |     | **boost**         | 0...13   | 4    |
+| **level**      | 1...100  | 7    |     | **volatiles**     | 17       | 18   |
+| **bide**       | 2...1406 | 11   |     | **substitute**    | 4...179  | 8    |
+| **confusion**  | 2...5    | 3    |     | **toxic**         | 1...16   | 4    |
+| **multi hits** | 2...5    | 3    |     | **base power**    | 0...40   | 6    |
+| **base PP**    | 1...8    | 3    |     | **PP Ups**        | 0...3    | 2    |
+| **used PP**    | 0...63   | 8    |     | **HP / damage**   | 13...704 | 10   |
+| **status**     | 0...10   | 4    |     | **effectiveness** | 0...3    | 2    |
+| **type**       | 0...15   | 4    |     | **accuracy**      | 6...20   | 4    |
+| **disabled**   | 0...7    | 3    |     | **DVs**           | 0...15   | 4    |
 
 From this we can determine the minimum bits required to store each data structure to determine how
 much overhead the representations above have after taking into consideration [alignment &
@@ -142,7 +190,6 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 
 - **`Pokemon`**: 5× stats (`50`) + 4× move slot (`56`) + HP (`10`) + status (`4`) + species (`8`) +
   level (`7`)
-  - PP Ups bits do not need to be stored on move slot as max PP is never relevant in battle
   - position does not need to be stored as the party can always be rearranged as switches occur
   - `type` can be computed from the base `Species` information
 - **`ActivePokemon`**: 5× stats (`50`) + 4× move slot (`56`) + 6× boosts (`24`) + volatile data
@@ -160,75 +207,3 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 | `ActivePokemon` | 288         | 190          | 51.6%    |
 | `Side`          | 1376        | 1078         | 35.0%    |
 | `Battle`        | 2768        | 2181         | 34.2%    |
-
-----
-```txt
-// wPlayerMonNumber (pret) & Side#active[0] (PS)
-// wInHandlePlayerMonFainted (pret) & Side#faintedThisTurn (PS)
-// wPlayerUsedMove (pret) & Side#lastMove (PS)
-// wPlayerSelectedMove (pret) & Side#lastSelectedMove (PS)
-
-/// The core representation of a Pokémon in a  Comparable to Pokémon Showdown's `Pokemon`
-/// type, this struct stores the data stored in the cartridge's `battle_struct` information stored
-/// in `w{Battle,Enemy}Mon` as well as parts of the `party_struct` in the `stored` field. The fields
-/// map to the following types:
-///
-///   - in most places the data representation defaults to the same as the cartridge, with the
-///     notable exception that `boosts` range from `-6 - .6` like in Pokémon Showdown instead of
-///     `1 - 13`
-///   - nicknames are not handled within the engine and are expected to instead be managed by
-///     whatever is driving the engine code
-///
-/// **References:**
-///
-///  - https://pkmn.cc/bulba/Pok%c3%a9mon_data_structure_%28Generation_I%29
-///  - https://pkmn.cc/PKHeX/PKHeX.Core/PKM/PK1.cs
-///  - https://pkmn.cc/pokered/macros/wram.asm
-///
-
-/// A data-type for a `(move, pp)` pair. A pared down version of Pokémon Showdown's
-/// `Pokemon#moveSlot`, it also stores data from the cartridge's `battle_struct::Move`
-/// macro and can be used to replace the `wPlayerMove*` data. Move PP is stored
-/// in the same way as on the cartridge (`battle_struct::PP`), with 6 bits for current
-/// PP and the remaining 2 bits used to store the number of applied PP Ups.
-
-// `AddBonusPP`: https://pkmn.cc/pokered/engine/items/item_effects.asm
-
-/// *See:* https://pkmn.cc/pokered/data/moves/moves.asm
-/// *See:* https://pkmn.cc/bulba/Pok%c3%a9mon_species_data_structure_%28Generation_I%29
-
-/// Bitfield representation of a Pokémon's major status condition, mirroring how it is stored on
-/// the cartridge. A value of `0x00` means that the Pokémon is not affected by any major status,
-/// otherwise the lower 3 bits represent the remaining duration for SLP. Other status are denoted
-/// by the presence of individual bits - at most one status should be set at any given time.
-///
-/// **NOTE:** in Generation 1 and 2, the "badly poisoned" status (TOX) is volatile and gets dropped
-/// upon switching out - see the respective `Volatiles` structs.
-///
-
-/// Bitfield for the various non-major statuses that Pokémon can have, commonly
-/// known as 'volatile' statuses as they disappear upon switching out. In pret/pokered
-/// these are referred to as 'battle status' bits.
-///
-/// **NOTE:** all of the bits are packed into an 18 byte bitfield which uses up 3 bytes
-/// after taking into consideration alignment. This is the same as on cartridge, though
-/// there the bits are split over three distinct bytes (`wPlayerBattleStatus{1,2,3}`).
-/// We dont attempt to match the same bit locations, and `USING_X_ACCURACY` is dropped as
-/// in-battle item-use is not supported in link battles.
-///
-/// *See:* https://pkmn.cc/pokered/constants/battle_constants.asm#L73
-///
-
-/// The name of each stat (cf. Pokémon Showdown's `StatName`).
-///
-/// *See:* https://pkmn.cc/pokered/constants/battle_constants.asm#L5-L12
-///
-
-/// A structure for storing information for each `Boost` (cf. Pokémon Showdown's `BoostTable`).
-/// **NOTE**: `Boost(i4)` should likely always be used, as boosts should always range from -6 - .6.
-
-/// The name of each boost/mod (cf. Pokémon Showdown's `BoostName`).
-///
-/// *See:* https://pkmn.cc/pokered/constants/battle_constants.asm#L14-L23
-///
-```
