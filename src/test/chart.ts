@@ -12,7 +12,7 @@ const DATA = {
 
 let max = 0;
 for (const gen in DATA) {
-  const [pkmn, ps] = DATA[gen];
+  const [pkmn, ps] = DATA[gen as keyof typeof DATA];
   max = Math.max(max, pkmn, ps);
 }
 max = Math.floor(max / 10) * 10;
@@ -51,7 +51,7 @@ for (let i = 0; i < DIVIDERS; i++) {
 
 let y = (BAR.h + BAR.pad) - (BAR.pad / 2);
 for (const gen in DATA) {
-  const [pkmn, ps] = DATA[gen];
+  const [pkmn, ps] = DATA[gen as keyof typeof DATA];
 
   let width = pkmn * SCALE;
 
