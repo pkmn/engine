@@ -34,7 +34,7 @@ export class GBARNG extends PRNG {
 
   next(from?: number, to?: number): number {
     this.seed[3] = (this.seed[3] = this.advance(this.seed[3]));
-    const result = this.seed[3] >>> 16; // why?
+    const result = this.seed[3] >>> 16;
     if (from) from = Math.floor(from);
     if (to) to = Math.floor(to);
     if (from === undefined) {

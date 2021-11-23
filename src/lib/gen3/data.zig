@@ -31,9 +31,9 @@ pub fn Battle(comptime game_type: GameType) type {
             return &self.sides[1];
         }
 
-        pub fn random(self: *Battle) u32 {
+        pub fn random(self: *Battle) u16 {
             self.seed = rng.gba(self.seed);
-            return self.seed;
+            return self.seed >> 16;
         }
     };
 }
