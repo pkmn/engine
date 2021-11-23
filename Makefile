@@ -13,8 +13,7 @@ uninstall:
 	rm -rf node_modules
 
 generate:
-	npm run compile
-	@echo "generate TODO"
+	npm run generate
 
 lint:
 	npm run lint
