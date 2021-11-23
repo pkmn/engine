@@ -113,7 +113,7 @@ const getTypeChart = (gen: Generation, types: TypeName[]) => {
 
 const getOrUpdate = async (
   file: string, dir: string, url: string, update: boolean,
-  fn: (line: string, last: string) => string | undefined
+  fn: (line: string, last: string, i: number) => string | undefined
 ) => {
   const cache = path.resolve(dir, `${file}.txt`);
   const cached = (() => {
@@ -128,10 +128,9 @@ const getOrUpdate = async (
   if (!cached || update) {
     const result: string[] = [];
     const text = await fetch(url);
-    console.log(text);
     let last = '';
     for (const line of text.split('\n')) {
-      const val = fn(line, last);
+      const val = fn(line, last, result.length);
       if (val !== undefined) result.push(val);
       last = line;
     }
@@ -182,9 +181,14 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
     // Species
     url = `${pret}/constants/pokedex_constants.asm`;
-    const species = await getOrUpdate('species', dirs.cache, url, update, line => {
+    const species = await getOrUpdate('species', dirs.cache, url, update, (line, _, i) => {
       const match = /const DEX_(\w+)/.exec(line);
-      return match ? nameToEnum(gen.species.get(match[1])!.name) : undefined;
+      if (!match) return undefined;
+      const specie = gen.species.get(match[1])!;
+      if (specie.num !== i + 1) {
+        throw new Error(`Expected ${specie.num} for ${specie.name} and received ${i + 1}`);
+      }
+      return nameToEnum(specie.name);
     });
     template('species', dirs.out, {
       Species: {
@@ -340,10 +344,14 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
     // Species
     url = `${pret}/constants/pokemon_constants.asm`;
-    const species = await getOrUpdate('species', dirs.cache, url, update, line => {
+    const species = await getOrUpdate('species', dirs.cache, url, update, (line, _, i) => {
       const match = /const (\w+)/.exec(line);
       if (!match || match[1] === 'EGG' || match[1].startsWith('UNOWN_')) return undefined;
-      return nameToEnum(gen.species.get(match[1])!.name);
+      const specie = gen.species.get(match[1])!;
+      if (specie.num !== i + 1) {
+        throw new Error(`Expected ${specie.num} for ${specie.name} and received ${i + 1}`);
+      }
+      return nameToEnum(specie.name);
     });
     template('species', dirs.out, {
       Species: {
@@ -361,7 +369,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const moves = await getOrUpdate('moves', dirs.cache, url, update, line => {
       const match = /#define MOVE_(\w+)/.exec(line);
       if (!match || match[1] === 'NONE') return undefined;
-      console.debug(match[1]);
       return NAMES[match[1]] || nameToEnum(gen.moves.get(match[1])!.name);
     });
     // const MOVES: string[] = [];
@@ -388,10 +395,15 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
     // Species
     url = `${pret}/include/constants/species.h`;
-    const species = await getOrUpdate('species', dirs.cache, url, update, line => {
+    const species = await getOrUpdate('species', dirs.cache, url, update, (line, _, i) => {
       const match = /#define NATIONAL_DEX_(\w+)\s+\d+/.exec(line);
       if (!match || match[1] === 'NONE' || match[1].startsWith('OLD_UNOWN')) return undefined;
-      return nameToEnum(gen.species.get(match[1])!.name);
+      if (!match || match[1] === 'EGG' || match[1].startsWith('UNOWN_')) return undefined;
+      const specie = gen.species.get(match[1])!;
+      if (specie.num !== i + 1) {
+        throw new Error(`Expected ${specie.num} for ${specie.name} and received ${i + 1}`);
+      }
+      return nameToEnum(specie.name);
     });
     template('species', dirs.out, {
       Species: {
