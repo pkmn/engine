@@ -1,10 +1,12 @@
 const std = @import("std");
 
+const rng = @import("../common/rng.zig");
+
 const gen1 = @import("../gen1/data.zig");
 const gen2 = @import("../gen2/data.zig");
 
 // const items = @import("data/items.zig");
-// const moves = @import("data/moves.zig");
+const moves = @import("data/moves.zig");
 const species = @import("data/species.zig");
 
 const assert = std.debug.assert;
@@ -17,7 +19,7 @@ pub const GameType = enum {
 
 pub fn Battle(comptime game_type: GameType) type {
     return packed struct {
-        sides: [2]Side,
+        sides: [2]Side(game_type),
         seed: u32,
         turn: u8 = 0,
 
@@ -27,6 +29,11 @@ pub fn Battle(comptime game_type: GameType) type {
 
         pub fn p2(self: *Battle) *Side {
             return &self.sides[1];
+        }
+
+        pub fn random(self: *Battle) u32 {
+            self.seed = rng.gba(self.seed);
+            return self.seed;
         }
     };
 }
@@ -40,6 +47,10 @@ pub fn Side(comptime game_type: GameType) type {
         // TODO
     };
 }
+
+pub const ActivePokemon = packed struct {};
+
+pub const Pokemon = packed struct {};
 
 // pub const Items = items.Items;
 
@@ -85,15 +96,15 @@ pub const Move = packed struct {
     // FIXME flags
 
     comptime {
-        assert(@sizeOf(Move) == 4);
+        assert(@sizeOf(Move) == 5);
     }
 };
 
-test "Moves" {
-    try expectEqual(251, @enumToInt(Moves.BeatUp));
-    const move = Moves.get(.LockOn);
-    try expectEqual(@as(u8, 1), move.pp);
-}
+// test "Moves" {
+//     try expectEqual(251, @enumToInt(Moves.BeatUp));
+//     const move = Moves.get(.LockOn);
+//     try expectEqual(@as(u8, 1), move.pp);
+// }
 
 pub const Species = species.Species;
 

@@ -1,5 +1,6 @@
 const std = @import("std");
 
+const rng = @import("../common/rng.zig");
 const util = @import("../common/util.zig");
 
 const moves = @import("data/moves.zig");
@@ -28,6 +29,11 @@ const Battle = packed struct {
 
     pub fn p2(self: *Battle) *Side {
         return &self.sides[1];
+    }
+
+    pub fn random(self: *Battle) u32 {
+        self.seed = rng.gb(self.seed);
+        return self.seed;
     }
 };
 
