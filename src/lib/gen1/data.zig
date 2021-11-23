@@ -13,10 +13,10 @@ const expect = std.testing.expect;
 const bit = util.bit;
 
 const Battle = packed struct {
-    sides: [2]Side,
     seed: u8,
     turn: u8 = 0,
     last_damage: u16 = 0,
+    sides: [2]Side,
 
     comptime {
         assert(@sizeOf(Battle) == 348);
@@ -32,9 +32,8 @@ const Battle = packed struct {
 };
 
 const Side = packed struct {
-    pokemon: ActivePokemon,
     team: [6]Pokemon,
-
+    pokemon: ActivePokemon,
     active: u8 = 0,
     last_used_move: Moves = .None,
     last_selected_move: Moves = .None,
@@ -84,15 +83,15 @@ const ActivePokemon = packed struct {
     volatiles_data: VolatileData,
     volatiles: Volatile,
     boosts: Boosts(i4),
-    level: u8,
+    level: u8 = 100,
     _: u8 = 0,
     hp: u16,
-    status: Status,
+    status: Status = .Healthy,
     species: Species,
     types: Types,
     disabled: packed struct {
-        move: u4,
-        duration: u4,
+        move: u4 = .None,
+        duration: u4 = 0,
     },
 
     comptime {
@@ -105,10 +104,10 @@ const Pokemon = packed struct {
     position: u4,
     moves: [4]MoveSlot,
     hp: u16,
-    status: Status,
+    status: Status = .Healthy,
     species: Species,
     types: Types,
-    level: u8,
+    level: u8 = 100,
 
     comptime {
         assert(@sizeOf(Pokemon) == 22);
@@ -126,6 +125,7 @@ const MoveSlot = packed struct {
 };
 
 pub const Status = enum(u8) {
+    Healthy = 0,
     // 0 and 1 bits are also used for SLP
     SLP = 2,
     PSN = 3,
