@@ -97,8 +97,38 @@ const IVs = packed struct {
     }
 };
 
-// TODO copy
-const MoveSlot = packed struct {};
+const MoveSlot = packed struct {
+    id: Moves = .None,
+    pp: u6 = 0,
+    pp_ups: u2 = 0,
+
+    comptime {
+        assert(@sizeOf(MoveSlot) == @sizeOf(u16));
+    }
+
+    pub fn init(id: Moves) MoveSlot {
+        if (id == .None) return MoveSlot{};
+        const move = Moves.get(id);
+        return MoveSlot{
+            .id = id,
+            .pp = move.pp,
+            .pp_ups = 3,
+        };
+    }
+
+    pub fn maxpp(self: *const MoveSlot) u8 {
+        const pp = Moves.get(self.id).pp;
+        return self.pp_ups * @as(u8, @maximum(pp, 7)) + (@as(u8, pp) * 5);
+    }
+};
+
+test "MoveSlot" {
+    const ms = MoveSlot.init(.Pound);
+    try expectEqual(@as(u6, 35 / 5), ms.pp);
+    try expectEqual(@as(u8, 56), ms.maxpp());
+    try expectEqual(Moves.Pound, ms.id);
+    try expectEqual(@as(u16, 0), @bitCast(u16, MoveSlot.init(.None)));
+}
 
 pub const Status = gen1.Status;
 
@@ -214,8 +244,9 @@ pub const Move = packed struct {
 
 test "Moves" {
     try expectEqual(251, @enumToInt(Moves.BeatUp));
-    const move = Moves.get(.LockOn);
-    try expectEqual(@as(u8, 1), move.pp);
+    const move = Moves.get(.DynamicPunch);
+    try expectEqual(@as(u8, 50), move.accuracy);
+    try expectEqual(@as(u8, 5), move.pp * 5);
 }
 
 pub const Species = species.Species;
@@ -230,7 +261,6 @@ pub const Effectiveness = gen1.Effectiveness;
 
 test "Types" {
     try expectEqual(13, @enumToInt(Type.Electric));
-    try expectEqual(3, @enumToInt(Effectiveness.Super));
     try expectEqual(Effectiveness.Super, Type.effectiveness(.Ghost, .Psychic));
     try expectEqual(Effectiveness.Super, Type.effectiveness(.Water, .Fire));
     try expectEqual(Effectiveness.Resisted, Type.effectiveness(.Fire, .Water));

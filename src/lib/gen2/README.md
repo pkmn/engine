@@ -44,3 +44,11 @@
 /// A structure for storing information for each `Boost` (cf. Pokémon Showdown's `BoostTable`).
 /// **NOTE**: `Boost(i4)` should likely always be used, as boosts should always range from -6...6.
 ```
+
+## `Move` / `Moves`
+
+`Moves` serves as an identifier for a unique [Pokémon move](https://pkmn.cc/bulba/Move) that can be
+used to retrieve a `Move` with information regarding base power, accuracy and type. As covered
+above, PP information isn't strictly necessary in Generation I, but fits neatly into the 4 bits of
+padding after noticing that all PP values are multiples of 5. `Moves.None` exists as a special
+sentinel value to indicate `null`.

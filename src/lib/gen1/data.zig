@@ -120,30 +120,7 @@ const MoveSlot = packed struct {
     comptime {
         assert(@sizeOf(MoveSlot) == @sizeOf(u16));
     }
-
-    pub fn init(id: Moves) MoveSlot {
-        if (id == .None) return MoveSlot{};
-        const move = Moves.get(id);
-        return MoveSlot{
-            .id = id,
-            .pp = move.pp,
-            .pp_ups = 3,
-        };
-    }
-
-    pub fn maxpp(self: *const MoveSlot) u8 {
-        const pp = Moves.get(self.id).pp;
-        return self.pp_ups * @as(u8, @maximum(pp, 7)) + (@as(u8, pp) * 5);
-    }
 };
-
-test "MoveSlot" {
-    const ms = MoveSlot.init(.Pound);
-    try expectEqual(@as(u6, 35 / 5), ms.pp);
-    try expectEqual(@as(u8, 56), ms.maxpp());
-    try expectEqual(Moves.Pound, ms.id);
-    try expectEqual(@as(u16, 0), @bitCast(u16, MoveSlot.init(.None)));
-}
 
 pub const Status = enum(u8) {
     // 0 and 1 bits are also used for SLP
@@ -281,20 +258,23 @@ test "Boosts" {
 pub const Moves = moves.Moves;
 pub const Move = packed struct {
     bp: u8,
-    accuracy: u8,
+    acc: u4,
     type: Type,
-    pp: u4, // = pp / 5
 
     comptime {
-        assert(@sizeOf(Move) == 3);
+        assert(@sizeOf(Move) == 2);
+    }
+
+    pub fn accuracy(self: *const Move) u8 {
+        return (@as(u8, self.acc) + 6) * 5;
     }
 };
 
 test "Moves" {
     try expectEqual(2, @enumToInt(Moves.KarateChop));
-    const move = Moves.get(.Pound);
-    try expectEqual(@as(u8, 35 / 5), move.pp);
-    try expectEqual(Type.Normal, move.type);
+    const move = Moves.get(.Fissure);
+    try expectEqual(@as(u8, 30), move.accuracy());
+    try expectEqual(Type.Ground, move.type);
 }
 
 pub const Species = species.Species;
@@ -306,30 +286,24 @@ test "Species" {
 pub const Type = types.Type;
 pub const Types = types.Types;
 
-pub const Effectiveness = enum(u2) {
-    Immune,
-    Resisted,
-    Neutral,
-    Super,
+pub const Effectiveness = enum(u8) {
+    Immune = 0,
+    Resisted = 5,
+    Neutral = 10,
+    Super = 20,
 
     comptime {
-        assert(@bitSizeOf(Effectiveness) == 2);
-    }
-
-    pub fn modifier(e: Effectiveness) u8 {
-        return if (e == .Super) 20 else @enumToInt(e) * @as(u8, 5);
+        assert(@bitSizeOf(Effectiveness) == 8);
     }
 };
 
 test "Types" {
     try expectEqual(14, @enumToInt(Type.Dragon));
-    try expectEqual(3, @enumToInt(Effectiveness.Super));
+    try expectEqual(20, @enumToInt(Effectiveness.Super));
     try expectEqual(Effectiveness.Immune, Type.effectiveness(.Ghost, .Psychic));
     try expectEqual(Effectiveness.Super, Type.effectiveness(.Water, .Fire));
     try expectEqual(Effectiveness.Resisted, Type.effectiveness(.Fire, .Water));
     try expectEqual(Effectiveness.Neutral, Type.effectiveness(.Normal, .Grass));
-    try expectEqual(@as(u8, 20), Effectiveness.modifier(.Super));
-    try expectEqual(@as(u8, 5), Effectiveness.modifier(.Resisted));
 }
 
 // TODO DEBUG

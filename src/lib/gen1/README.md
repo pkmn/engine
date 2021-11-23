@@ -78,7 +78,8 @@ and can be used to replace the `PlayerMove*` data. Move PP is stored in the same
 cartridge (`battle_struct::PP`), with 6 bits for current PP and the remaining 2 bits used to store
 the number of applied PP Ups. PP Ups bits do not actually need to be stored on move slot as max PP
 is never relevant in Generation I, but since those two bits would need to be padded anyway and since
-max PP is necessary in certain cirmcumstances (eg. PP increasing berries) it is preserved.
+max PP is necessary in certain cirmcumstances in future Generations (eg. PP increasing berries) it
+is preserved.
 
 #### `Status`
 
@@ -141,9 +142,8 @@ performance-wise.
 
 `Moves` serves as an identifier for a unique [Pokémon move](https://pkmn.cc/bulba/Move) that can be
 used to retrieve a `Move` with information regarding base power, accuracy and type. As covered
-above, PP information isn't strictly necessary in Generation I, but fits neatly into the 4 bits of
-padding after noticing that all PP values are multiples of 5. `Moves.None` exists as a special
-sentinel value to indicate `null`.
+above, PP information isn't strictly necessary in Generation I so is dropped. `Moves.None` exists as
+a special sentinel value to indicate `null`.
 
 ### `Species`
 
@@ -159,8 +159,9 @@ indicate `null`.
 The [Pokémon types](https://pkmn.cc/bulba/Type) are enumerated by `Type`. `Types` represents a tuple
 of 2 types, but due to limitations in Zig this can't be represented as a `[2]Type` array and thus
 instead takes the form of a packed struct. `Effectiveness` serves as an enum for tracking a moves
-effectiveness - the cartridge stores effectivess as `0`, `5`, `10`, and `20`, but instead we store
-these as a 2-bit value which then can be expanded out by `Effectiveness.modifier`.
+effectiveness - like the cartridge, effectiveness is stored as as `0`, `5`, `10`, and `20`
+(technically only a 2-bit value is required, but as with `Types` Zig only allows a mininum of a byte
+to be stored at each address of an array).
 
 ## Information
 
@@ -200,6 +201,8 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 - **`Side`**: `ActivePokemon` + 6× `Pokemon` + active (`3`) + lasted used (`8`) + last selected
   (`8`)
 - **`Battle`**: 6× `Side` + seed (`8`) + turn (`7`) + last damage (`10`)
+- **`Type.chart`**: attacking types (`15`) × defending types (`15`) × effectiveness (`2`)[^1]
+- **`Moves`**: 164× base power (`6`) + accuracy (`4`) + type: (`4`)
 
 | Data            | Actual bits | Minimum bits | Overhead |
 | --------------- | ----------- | ------------ | -------- |
@@ -207,3 +210,19 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 | `ActivePokemon` | 288         | 190          | 51.6%    |
 | `Side`          | 1376        | 1078         | 35.0%    |
 | `Battle`        | 2768        | 2181         | 34.2%    |
+| `Type.chart`    | 1800        | 450          | 300.0%   |
+| `Moves.data`    | 2640        | 2296         | 15.0%    |
+
+In the case of `Type.chart` and `Moves.data`, technically only the values which are used by any
+given simulation are required, which could be as low as 1 in both circumstances (eg. all Normal
+Pokémon each only using the single move Tackle), though taking into consideration the worst case all
+Pokémon types are required and 48 moves. The `Moves.data` array could be eliminated and instead the
+`Move` data actually required by each `Pokemon` could be placed beside the `MoveSlot`, though this
+is both less general and adds unnecessary complexity.
+
+[^1]: Instead of storing as a sparse multi-dimensional array the type chart could instead only
+[store values which are not normal
+effectiveness](https://github.com/pret/pokered/blob/master/data/types/type_matchups.asm) in 820 bits
+as 82× attacking type (`4`) + defending type (`4`) + non-Normal effectiveness (`2`). This would
+avoid having to do two memory lookups, but the second lookup should already be fast due to locality
+of reference meaning it will likely already be in the cache.

@@ -6,15 +6,25 @@ const gen1 = @import("../../gen1/data.zig");
 const assert = std.debug.assert;
 const Effectiveness = gen1.Effectiveness;
 
+const S = Effectiveness.Super;
+const N = Effectiveness.Neutral;
+const R = Effectiveness.Resisted;
+const I = Effectiveness.Immune;
+
 pub const Type = enum({{{ Type.type }}}) {
     {{{ Type.values }}},
 
+    const chart = [{{{ Type.num }}}][{{{ Type.num }}}]Effectiveness{
+        {{{ Type.chart }}}
+    };
+
     comptime {
         assert(@bitSizeOf(Type) == {{{ Type.bitSize }}});
+        assert(@sizeOf(@TypeOf(chart)) == {{{ Type.chartSize }}});
     }
 
     pub fn effectiveness(t1: Type, t2: Type) Effectiveness {
-        return TYPE_CHART[@enumToInt(t1)][@enumToInt(t2)];
+        return chart[@enumToInt(t1)][@enumToInt(t2)];
     }
 };
 
@@ -25,13 +35,4 @@ pub const Types = packed struct {
     comptime {
         assert(@bitSizeOf(Types) == {{{ Types.bitSize }}});
     }
-};
-
-const S = Effectiveness.Super;
-const N = Effectiveness.Neutral;
-const R = Effectiveness.Resisted;
-const I = Effectiveness.Immune;
-
-const TYPE_CHART = [{{{ Types.num }}}][{{{ Types.num }}}]Effectiveness{
-    {{{ Types.chart }}}
 };

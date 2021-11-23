@@ -162,12 +162,11 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     for (const name of moves) {
       const move = gen.moves.get(name)!;
       MOVES.push('Move{\n' +
-        `        // ${name}\n` +
-        `        .bp = ${move.basePower},\n` +
-        `        .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
-        `        .accuracy = ${move.accuracy === true ? '100' : move.accuracy},\n` +
-        `        .pp = ${move.pp / 5}, // * 5 = ${move.pp}\n` +
-        '    }');
+        `            // ${name}\n` +
+        `            .bp = ${move.basePower},\n` +
+        `            .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
+        `            .acc = ${move.accuracy === true ? '14' : move.accuracy / 5 - 6},\n` +
+        '        }');
     }
     template('moves', dirs.out, {
       gen: gen.num,
@@ -175,8 +174,9 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         type: 'u8',
         values: moves.join(',\n    '),
         size: 1,
+        data: MOVES.join(',\n        '),
+        dataSize: MOVES.length * 2,
       },
-      MOVES: MOVES.join(',\n    '),
     });
 
     // Species
@@ -209,10 +209,11 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         type: 'u4',
         values: types.join(',\n    '),
         bitSize: 4,
+        num: types.length,
+        chart: getTypeChart(gen, types).join('\n        '),
+        chartSize: types.length * types.length,
       },
       Types: {
-        num: types.length,
-        chart: getTypeChart(gen, types).join('\n    '),
         bitSize: 8,
       },
     });
@@ -231,10 +232,11 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         type: 'u8',
         values: types.map(t => t === '???' ? '@"???"' : t).join(',\n    '),
         bitSize: 8,
+        num: types.length,
+        chart: getTypeChart(gen, types).join('\n        '),
+        chartSize: types.length * types.length,
       },
       Types: {
-        num: types.length,
-        chart: getTypeChart(gen, types).join('\n    '),
         bitSize: 16,
       },
     });
@@ -324,13 +326,13 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         ? `${move.secondary.chance / 10}, // * 10 = ${move.secondary.chance}`
         : '';
       MOVES.push('Move{\n' +
-        `        // ${name}\n` +
-        `        .bp = ${move.basePower},\n` +
-        `        .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
-        `        .accuracy = ${move.accuracy === true ? '100' : move.accuracy},\n` +
-        `        .pp = ${pp}\n` +
-        (chance ? `        .chance = ${chance}\n` : '') +
-        '    }');
+        `            // ${name}\n` +
+        `            .bp = ${move.basePower},\n` +
+        `            .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
+        `            .accuracy = ${move.accuracy === true ? '100' : move.accuracy},\n` +
+        `            .pp = ${pp}\n` +
+        (chance ? `            .chance = ${chance}\n` : '') +
+        '        }');
     }
     template('moves', dirs.out, {
       gen: gen.num,
@@ -338,8 +340,9 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         type: 'u8',
         values: moves.join(',\n    '),
         size: 1,
+        data: MOVES.join(',\n        '),
+        dataSize: MOVES.length * 4,
       },
-      MOVES: MOVES.join(',\n    '),
     });
 
     // Species
@@ -375,12 +378,12 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     // for (const name of moves) {
     //   const move = gen.moves.get(name)!;
     //   MOVES.push('Move{\n' +
-    //     `        // ${name}\n` +
-    //     `        .bp = ${move.basePower},\n` +
-    //     `        .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
-    //     `        .accuracy = ${move.accuracy === true ? '100' : move.accuracy},\n` +
-    //     `        .pp = ${move.pp / 5}, // * 5 = ${move.pp}\n` +
-    //     '    }');
+    //     `            // ${name}\n` +
+    //     `            .bp = ${move.basePower},\n` +
+    //     `            .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
+    //     `            .accuracy = ${move.accuracy === true ? '100' : move.accuracy},\n` +
+    //     `            .pp = ${move.pp / 5}, // * 5 = ${move.pp}\n` +
+    //     '        }');
     // }
     template('moves', dirs.out, {
       gen: gen.num,
@@ -388,8 +391,9 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         type: 'u16',
         values: moves.join(',\n    '),
         size: 2,
+        data: '//', // MOVES.join(',\n        '),
+        dataSize: 0,
       },
-      MOVES: '//', // MOVES.join(',\n    '),
     });
 
 
