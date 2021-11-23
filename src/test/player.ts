@@ -283,20 +283,20 @@ export function choices(request: Request): string[] { // DEBUG
 
 // https://en.wikipedia.org/wiki/Heap%27s_algorithm
 // TODO: write as non recursive
-function permutations<T>(k: number, arr: T[], results: [T[]]) {
-  if (k == 1) {
-    results.push(arr);
-  } else {
-    permutations(k - 1, arr, results);
-    for (var i = 0; i < k; i+= 1) {
-      if (k % 2 == 0) {
-        [arr[i], arr[k -1]] = [arr[k - 1], arr[i]];
-      } else {
-        [arr[0], arr[k -1]] = [arr[k - 1], arr[0]];
-      }
-      permutations(k - 1, arr, results);
-    }
-  }
-  return results;
-}
-//https://alistairisrael.wordpress.com/2009/09/22/simple-efficient-pnk-algorithm/
+// function permutations<T>(k: number, arr: T[], results: [T[]]) {
+//   if (k === 1) {
+//     results.push(arr);
+//   } else {
+//     permutations(k - 1, arr, results);
+//     for (let i = 0; i < k; i += 1) {
+//       if (k % 2 === 0) {
+//         [arr[i], arr[k - 1]] = [arr[k - 1], arr[i]];
+//       } else {
+//         [arr[0], arr[k - 1]] = [arr[k - 1], arr[0]];
+//       }
+//       permutations(k - 1, arr, results);
+//     }
+//   }
+//   return results;
+// }
+// https://alistairisrael.wordpress.com/2009/09/22/simple-efficient-pnk-algorithm/
