@@ -16,9 +16,10 @@ const Battle = packed struct {
     sides: [2]Side,
     seed: u8,
     turn: u8 = 0,
+    last_damage: u16 = 0,
 
     comptime {
-        assert(@sizeOf(Battle) == 346);
+        assert(@sizeOf(Battle) == 348);
     }
 
     pub fn p1(self: *Battle) *Side {
@@ -35,9 +36,9 @@ const Side = packed struct {
     team: [6]Pokemon,
 
     active: u8 = 0,
-    fainted_last_turn: u8 = 0,
     last_used_move: Moves = .None,
     last_selected_move: Moves = .None,
+    _: u8 = 0,
 
     comptime {
         assert(@sizeOf(Side) == 172);

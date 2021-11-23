@@ -97,8 +97,8 @@ Currently, the work being done in stage 0 is intended to lay a foundation:
 - [documentation](docs) about design, research, methodology, etc
 - definition and implementation of the [protocol](docs/PROTOCOL.md) that will be used by the engine
 
-Stage 1 will see the implementation of the actual generation 1 & 2 battle engines, followed by
-generations 3 & 4 in stage 2. The implementation of further Pokémon generations is in scope for the
+Stage 1 will see the implementation of the actual Generation I & II battle engines, followed by
+Generation III & IV in stage 2. The implementation of further Pokémon generations is in scope for the
 project but should not be considered as part of the immediate roadmap (ie. exploring the options for
 broadening support for old generation APIs will be given higher priority than implementing current
 generations).
