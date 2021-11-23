@@ -50,10 +50,13 @@ const Side = packed struct {
     }
 
     pub fn switchIn(self: *Side, slot: u8) void {
-        // TODO handle positions
         assert(slot != self.active);
+        assert(self.team[self.active - 1].position == 1);
 
         const active = self.get(slot);
+        self.team[self.active - 1].position = active.position;
+        active.position = 1;
+
         inline for (std.meta.fieldNames(Stats(u16))) |stat| {
             @field(self.pokemon.stats, stat) = @field(active.stats, stat);
         }
