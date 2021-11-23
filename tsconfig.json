@@ -1,22 +1,24 @@
 {
   "include": ["src"],
   "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "declaration": true,
     "forceConsistentCasingInFileNames": true,
     "incremental": true,
     "lib": ["es2020"],
-    "module": "es2020",
-    "moduleResolution": "node",
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,
+    "module": "commonjs",
     "noImplicitReturns": true,
     "outDir": "build",
     "sourceMap": true,
     "strict": true,
     "target": "esnext",
-    "tsBuildInfoFile": ".tsbuildinfo"
+    "tsBuildInfoFile": ".tsbuildinfo",
+    "baseUrl": ".",
+    "paths": {
+      "@pkmn/sim/*": ["node_modules/@pkmn/sim/build/sim/*"]
+    },
   }
 }

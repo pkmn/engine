@@ -2,15 +2,13 @@ import 'source-map-support/register';
 
 import * as fs from 'fs';
 import * as path from 'path';
-import {fileURLToPath} from 'url';
+import * as https from 'https';
 
-import fetch from 'node-fetch';
-import Mustache from 'mustache';
+import * as mustache from 'mustache';
 
 import {Generations, Generation, GenerationNum, TypeName} from '@pkmn/data';
 import {Dex} from '@pkmn/sim';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..', '..');
 const TEMPLATES = path.join(ROOT, 'src', 'lib', 'common', 'data');
 const CACHE = path.join(ROOT, '.cache');
@@ -67,12 +65,29 @@ const mkdir = (dir: string) => {
 const template = (file: string, dir: string, data: any, tmpl?: string) => {
   fs.writeFileSync(
     path.join(dir, `${file}.zig`),
-    Mustache.render(
+    mustache.render(
       fs.readFileSync(path.join(TEMPLATES, `${tmpl || file}.zig.tmpl`), 'utf8'),
       data
     )
   );
 };
+
+const fetch = (url: string): Promise<string> => new Promise((resolve, reject) => {
+  let buf = '';
+  const req = https.request(url, res => {
+    if (res.statusCode === 301 || res.statusCode === 302) {
+      return resolve(fetch(res.headers.location!));
+    } else if (res.statusCode !== 200) {
+      return reject(new Error(`HTTP ${res.statusCode!}`));
+    }
+    res.on('data', d => {
+      buf += d;
+    });
+    res.on('end', () => resolve(buf));
+  });
+  req.on('error', reject);
+  req.end();
+});
 
 const getTypeChart = (gen: Generation, types: TypeName[]) => {
   const chart = [];
@@ -112,7 +127,8 @@ const getOrUpdate = async (
 
   if (!cached || update) {
     const result: string[] = [];
-    const text = await (await fetch(url)).text();
+    const text = await fetch(url);
+    console.log(text);
     let last = '';
     for (const line of text.split('\n')) {
       const val = fn(line, last);
@@ -134,7 +150,7 @@ type GenerateFn =
   (gen: Generation, dirs: { out: string; cache: string }, update: boolean) => Promise<void>;
 const GEN: { [gen in GenerationNum]?: GenerateFn } = {
   1: async (gen, dirs, update) => {
-    const pret = 'https://raw.githubusercontent.com/pret/pokered/master/';
+    const pret = 'https://raw.githubusercontent.com/pret/pokered/master';
     // Moves
     let url = `${pret}/data/moves/moves.asm`;
     const moves = await getOrUpdate('moves', dirs.cache, url, update, line => {
@@ -198,7 +214,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     });
   },
   2: async (gen, dirs, update) => {
-    const pret = 'https://raw.githubusercontent.com/pret/pokecrystal/master/';
+    const pret = 'https://raw.githubusercontent.com/pret/pokecrystal/master';
 
     // Types
     const types = [
@@ -338,7 +354,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     });
   },
   3: async (gen, dirs, update) => {
-    const pret = 'https://raw.githubusercontent.com/pret/pokeemerald/master/';
+    const pret = 'https://raw.githubusercontent.com/pret/pokeemerald/master';
 
     // Moves
     let url = `${pret}/include/constants/moves.h`;

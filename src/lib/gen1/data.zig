@@ -106,7 +106,6 @@ const Pokemon = packed struct {
     types: Types,
     level: u8,
 
-
     comptime {
         assert(@sizeOf(Pokemon) == 22);
     }

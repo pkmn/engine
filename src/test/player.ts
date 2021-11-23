@@ -79,7 +79,7 @@ export namespace Request {
   }
 }
 
-export type Choice = MoveChoice | SwitchChoice | TeamChoice;
+export type Choice = MoveChoice | SwitchChoice | TeamChoice | ShiftChoice;
 
 interface MoveChoice {
   type: 'move';
@@ -96,6 +96,10 @@ interface SwitchChoice {
 interface TeamChoice {
   type: 'team';
   slot: number;
+}
+
+interface ShiftChoice {
+  choiceType: 'shift';
 }
 
 export function choices(request: Request): string[] { // DEBUG
