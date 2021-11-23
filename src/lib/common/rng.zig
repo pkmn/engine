@@ -29,7 +29,7 @@ pub inline fn gba(seed: u32) u32 {
 // https://github.com/Admiral-Fish/PokeFinder/blob/master/Source/Tests/RNG/LCRNGTest.cpp
 test "GBA" {
     const data = [_][3]u32{
-        .{ 0x0000000, 5, 0x8E425287 },  .{ 0x0000000, 10, 0xEF2CF4B2 },
+        .{ 0x00000000, 5, 0x8E425287 }, .{ 0x00000000, 10, 0xEF2CF4B2 },
         .{ 0x80000000, 5, 0x0E425287 }, .{ 0x80000000, 10, 0x6F2CF4B2 },
     };
     for (data) |d| {

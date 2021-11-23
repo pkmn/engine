@@ -1,12 +1,12 @@
 import {PRNG, PRNGSeed} from '@pkmn/sim';
 
-export class Gen12PRNG extends PRNG {
+export class GBRNG extends PRNG {
   constructor(seed: PRNGSeed) {
     super([0, 0, 0, (Math.floor(seed[3]) & 0xFF) >>> 0]);
   }
 
   next(from?: number, to?: number): number {
-    const result = (this.seed[3] = (this.seed[3] * 5 + 1) & 0xFF);
+    const result = (this.seed[3] = this.advance(this.seed[3]));
     if (from) from = Math.floor(from);
     if (to) to = Math.floor(to);
     if (from === undefined) {
@@ -17,16 +17,24 @@ export class Gen12PRNG extends PRNG {
       return Math.floor(result * (to - from) / 0x100) + from;
     }
   }
+
+  advance(seed: number, n = 1) {
+    for (let i = 0; i < n; i++) {
+      seed = (5 * seed) & 0xFF;
+      seed = (seed + 1) & 0xFF;
+    }
+    return seed;
+  }
 }
 
-export class Gen34PRNG extends PRNG {
+export class GBARNG extends PRNG {
   constructor(seed: PRNGSeed) {
     super([0, 0, 0, (seed[2] << 16 >>> 0) + seed[3]]);
   }
 
   next(from?: number, to?: number): number {
-    this.seed[3] = (this.seed[3] * 0x41C64E6D + 0x6073) >>> 0;
-    const result = this.seed[3] >>> 16;
+    this.seed[3] = (this.seed[3] = this.advance(this.seed[3]));
+    const result = this.seed[3] >>> 16; // why?
     if (from) from = Math.floor(from);
     if (to) to = Math.floor(to);
     if (from === undefined) {
@@ -36,5 +44,12 @@ export class Gen34PRNG extends PRNG {
     } else {
       return Math.floor(result * (to - from) / 0x1000) + from;
     }
+  }
+
+  advance(seed: number, n = 1) {
+    for (let i = 0; i < n; i++) {
+      seed = (Math.imul(0x41C64E6D, seed) + 0x00006073) >>> 0;
+    }
+    return seed;
   }
 }

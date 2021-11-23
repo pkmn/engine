@@ -1,7 +1,7 @@
 import {PRNG, PRNGSeed, BattleStreams} from '@pkmn/sim';
 import {ExhaustiveRunner, ExhaustiveRunnerOptions, RunnerOptions, AIOptions} from '@pkmn/sim/tools';
 
-import {Gen12PRNG} from './prng';
+import {GBRNG} from './rng';
 
 class Runner {
   private readonly format: string;
@@ -86,7 +86,7 @@ class RawBattleStream extends BattleStreams.BattleStream {
       switch (this.format) {
       case 'gen1customgame':
       case 'gen2customgame':
-        this.battle!.prng = new Gen12PRNG(this.battle!.prng.seed);
+        this.battle!.prng = new GBRNG(this.battle!.prng.seed);
         break;
       default:
         throw new Error(`Unsupported format: ${this.format}`);
@@ -105,7 +105,6 @@ const FORMATS = [
   // 'gen7customgame', 'gen7doublescustomgame',
   // 'gen8customgame', 'gen8doublescustomgame',
 ];
-
 
 describe('integration', () => {
   it('test', async () => {
