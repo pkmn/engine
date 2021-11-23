@@ -1,6 +1,6 @@
-import {PRNG, BattleStreams} from '@pkmn/sim';
-import {PRNGSeed} from '@pkmn/sim/build/sim/prng';
+import {PRNG, PRNGSeed, BattleStreams} from '@pkmn/sim';
 import {ExhaustiveRunner, ExhaustiveRunnerOptions, RunnerOptions, AIOptions} from '@pkmn/sim/tools';
+
 import {Gen12PRNG} from './prng';
 
 class Runner {
@@ -47,9 +47,10 @@ class Runner {
       // TODO: feed input from rawBattleStream.rawInputLog into @pkmn/engine
       // TODO: compare to @pkmn/engine data
       // TODO: add buf to output if doesn't compare
+      // TODO: verify binary protocol round trip
     }
 
-    // FIXME: streams.p2.writeEnd ?
+    // BUG: streams.p2.writeEnd ?
   }
 
   // Same as PRNG#generatedSeed, only deterministic.
