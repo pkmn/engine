@@ -1,22 +1,17 @@
 import {ID, TypeName} from '@pkmn/data';
+import json from './ids.json';
 
-// FIXME only where not equal to @pkmn/dex.num!!!
 export interface IDs {
-  '1': {
-    moves: ID[];
-    species: ID[];
+  1: {
     types: TypeName[];
-
   };
-  '2': {
+  2: {
     items: ID[];
-    moves: ID[];
-    species: ID[];
     types: TypeName[];
-
   };
-  '3': {
-    species: ID[];
-    moves: ID[];
+  3: {
+    items: ID[];
   };
 }
+
+export const IDS = json as IDs;

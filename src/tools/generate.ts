@@ -7,11 +7,32 @@ import * as https from 'https';
 import * as mustache from 'mustache';
 
 import {Generations, Generation, GenerationNum, TypeName} from '@pkmn/data';
-import {Dex} from '@pkmn/sim';
+import {Dex, toID} from '@pkmn/sim';
+
+import type {IDs} from '..';
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const TEMPLATES = path.join(ROOT, 'src', 'lib', 'common', 'data');
 const CACHE = path.join(ROOT, '.cache');
+
+const IDS: IDs = {
+  1: {
+    types: [
+      'Normal', 'Fighting', 'Flying', 'Poison', 'Ground', 'Rock', 'Bug', 'Ghost',
+      'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Ice', 'Dragon',
+    ] as TypeName[],
+  },
+  2: {
+    types: [
+      'Normal', 'Fighting', 'Flying', 'Poison', 'Ground', 'Rock', 'Bug', 'Ghost', 'Steel',
+      '???', 'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Ice', 'Dragon', 'Dark',
+    ] as TypeName[],
+    items: [],
+  },
+  3: {
+    items: [],
+  },
+};
 
 const NAMES: {[constant: string]: string} = {
   // Items
@@ -152,11 +173,14 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const pret = 'https://raw.githubusercontent.com/pret/pokered/master';
     // Moves
     let url = `${pret}/data/moves/moves.asm`;
-    const moves = await getOrUpdate('moves', dirs.cache, url, update, line => {
+    const moves = await getOrUpdate('moves', dirs.cache, url, update, (line, _, i) => {
       const match = /move (\w+),/.exec(line);
       if (!match) return undefined;
-      const token = match[1] === 'PSYCHIC_M' ? 'PSYCHIC' : match[1];
-      return nameToEnum(gen.moves.get(token)!.name);
+      const move = gen.moves.get(match[1] === 'PSYCHIC_M' ? 'PSYCHIC' : match[1])!;
+      if (move.num !== i + 1) {
+        throw new Error(`Expected ${move.num} for ${move.name} and received ${i + 1}`);
+      }
+      return nameToEnum(move.name);
     });
     const MOVES: string[] = [];
     for (const name of moves) {
@@ -199,11 +223,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     });
 
     // Types
-    const types = [
-      'Normal', 'Fighting', 'Flying', 'Poison', 'Ground', 'Rock', 'Bug', 'Ghost',
-      'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Ice', 'Dragon',
-    ] as TypeName[];
-
+    const types = IDS[1].types;
     template('types', dirs.out, {
       Type: {
         type: 'u4',
@@ -222,11 +242,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const pret = 'https://raw.githubusercontent.com/pret/pokecrystal/master';
 
     // Types
-    const types = [
-      'Normal', 'Fighting', 'Flying', 'Poison', 'Ground', 'Rock', 'Bug', 'Ghost', 'Steel',
-      '???', 'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Ice', 'Dragon', 'Dark',
-    ] as TypeName[];
-
+    const types = IDS[2].types;
     template('types', dirs.out, {
       Type: {
         type: 'u8',
@@ -298,6 +314,9 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     for (const s of berries) {
       values.push(s);
     }
+    for (const value of values) {
+      IDS[2].items.push(toID(value.split(' ')[0]));
+    }
     template('items', dirs.out, {
       gen: gen.num,
       Items: {
@@ -312,11 +331,14 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
     // Moves
     url = `${pret}/data/moves/moves.asm`;
-    const moves = await getOrUpdate('moves', dirs.cache, url, update, line => {
+    const moves = await getOrUpdate('moves', dirs.cache, url, update, (line, _, i) => {
       const match = /move (\w+),/.exec(line);
       if (!match) return undefined;
-      const token = match[1] === 'PSYCHIC_M' ? 'PSYCHIC' : match[1];
-      return nameToEnum(gen.moves.get(token)!.name);
+      const move = gen.moves.get(match[1] === 'PSYCHIC_M' ? 'PSYCHIC' : match[1])!;
+      if (move.num !== i + 1) {
+        throw new Error(`Expected ${move.num} for ${move.name} and received ${i + 1}`);
+      }
+      return nameToEnum(move.name);
     });
     const MOVES: string[] = [];
     for (const name of moves) {
@@ -369,10 +391,14 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
     // Moves
     let url = `${pret}/include/constants/moves.h`;
-    const moves = await getOrUpdate('moves', dirs.cache, url, update, line => {
+    const moves = await getOrUpdate('moves', dirs.cache, url, update, (line, _, i) => {
       const match = /#define MOVE_(\w+)/.exec(line);
       if (!match || match[1] === 'NONE') return undefined;
-      return NAMES[match[1]] || nameToEnum(gen.moves.get(match[1])!.name);
+      const move = gen.moves.get(NAMES[match[1]] || match[1])!;
+      if (move.num !== i + 1) {
+        throw new Error(`Expected ${move.num} for ${move.name} and received ${i + 1}`);
+      }
+      return nameToEnum(move.name);
     });
     // const MOVES: string[] = [];
     // for (const name of moves) {
@@ -437,6 +463,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
     await GEN[gen.num]!(gen, {out, cache}, update);
   }
+
+  fs.writeFileSync(path.join(ROOT, 'src', 'ids.json'), JSON.stringify(IDS));
 })().catch((err: any) => {
   console.error(err);
   process.exit(1);

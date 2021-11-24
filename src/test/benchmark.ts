@@ -5,7 +5,7 @@ import {ID, BattleStreams, RandomPlayerAI, Teams, PRNG, PRNGSeed} from '@pkmn/si
 import {TeamGenerators} from '@pkmn/randoms';
 
 import {Stats, Tracker} from 'trakr';
-import * as minimist from 'minimist';
+import minimist from 'minimist';
 
 import {GBRNG, GBARNG} from './rng';
 
