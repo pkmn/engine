@@ -32,7 +32,7 @@ const Battle = packed struct {
     }
 
     pub fn random(self: *Battle) u32 {
-        self.seed = rng.gb(self.seed);
+        self.seed = rng.gen12(self.seed);
         return self.seed;
     }
 };

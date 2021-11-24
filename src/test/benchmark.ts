@@ -7,18 +7,18 @@ import {TeamGenerators} from '@pkmn/randoms';
 import {Stats, Tracker} from 'trakr';
 import minimist from 'minimist';
 
-import {Gen12RNG, Gen34RNG} from './rng';
+import {Gen12RNG, Gen34RNG, Gen56RNG} from './rng';
 
 Teams.setGeneratorFactory(TeamGenerators);
 
 const TAG = 'time';
 const FORMATS = [
-  'gen1randombattle',
+  // 'gen1randombattle',
   // 'gen2randombattle',
   // 'gen3randombattle',
   // 'gen4randombattle',
   // 'gen5randombattle',
-  // 'gen6randombattle',
+  'gen6randombattle',
   // 'gen7randombattle', 'gen7randomdoublesbattle',
   // 'gen8randombattle', 'gen8randomdoublesbattle',
 ] as ID[];
@@ -28,7 +28,7 @@ argv.seed = argv.seed
   ? argv.seed.split(',').map((s: string) => Number(s))
   : [1, 2, 3, 4];
 
-const getPRNGs = (format: ID) => {
+const getPRNGs = (format: ID, big: boolean) => {
   const prng = new PRNG(argv.seed.slice());
   const p1 = new PRNG([
     Math.floor(prng.next() * 0x10000),
@@ -45,10 +45,13 @@ const getPRNGs = (format: ID) => {
   switch (format) {
   case 'gen1randombattle':
   case 'gen2randombattle':
-    return {p1, p2, battle: new Gen12RNG(argv.seed.slice())};
+    return {p1, p2, battle: Gen12RNG.fromPRNGSeed(argv.seed)};
   case 'gen3randombattle':
   case 'gen4randombattle':
-    return {p1, p2, battle: new Gen34RNG(argv.seed.slice())};
+    return {p1, p2, battle: Gen34RNG.fromPRNGSeed(argv.seed)};
+  case 'gen5randombattle':
+  case 'gen6randombattle':
+    return {p1, p2, battle: Gen56RNG.fromPRNGSeed(argv.seed)};
   default:
     // TODO: add correct implementations of PRNG for other gens
     return {p1, p2, battle: new PRNG(argv.seed.slice())};
@@ -91,8 +94,7 @@ const ps = async (format: ID, prng: {battle: PRNG; p1: PRNG; p2: PRNG}, tracker?
 };
 
 const pkmn = async (format: ID, prng: {battle: PRNG; p1: PRNG; p2: PRNG}, tracker?: Tracker) =>
-  ps(format, prng, tracker) // TODO
-;
+  ps(format, prng, tracker); // TODO
 
 const pct = (a: number, b: number) => `${(-(b - a) * 100 / b).toFixed(2)}%`;
 
@@ -137,7 +139,7 @@ class PRNGOverrideBattleStream extends BattleStreams.BattleStream {
     trackers[format] = {};
 
     for (const [name, engine] of [['Pokémon Showdown!', ps], ['@pkmn/engine', pkmn]] as const) {
-      const prngs = getPRNGs(format);
+      const prngs = getPRNGs(format, name === '@pkmn/engine');
       let turns = 0;
       for (let i = 0; i < argv.warmup; i++) {
         turns += await engine(format, prngs);
