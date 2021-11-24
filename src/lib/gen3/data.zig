@@ -32,7 +32,7 @@ pub fn Battle(comptime game_type: GameType) type {
         }
 
         pub fn random(self: *Battle) u16 {
-            self.seed = rng.gba(self.seed);
+            self.seed = rng.gen34(self.seed);
             return self.seed >> 16;
         }
     };

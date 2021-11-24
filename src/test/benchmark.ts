@@ -7,7 +7,7 @@ import {TeamGenerators} from '@pkmn/randoms';
 import {Stats, Tracker} from 'trakr';
 import minimist from 'minimist';
 
-import {GBRNG, GBARNG} from './rng';
+import {Gen12RNG, Gen34RNG} from './rng';
 
 Teams.setGeneratorFactory(TeamGenerators);
 
@@ -45,10 +45,10 @@ const getPRNGs = (format: ID) => {
   switch (format) {
   case 'gen1randombattle':
   case 'gen2randombattle':
-    return {p1, p2, battle: new GBRNG(argv.seed.slice())};
+    return {p1, p2, battle: new Gen12RNG(argv.seed.slice())};
   case 'gen3randombattle':
   case 'gen4randombattle':
-    return {p1, p2, battle: new GBARNG(argv.seed.slice())};
+    return {p1, p2, battle: new Gen34RNG(argv.seed.slice())};
   default:
     // TODO: add correct implementations of PRNG for other gens
     return {p1, p2, battle: new PRNG(argv.seed.slice())};

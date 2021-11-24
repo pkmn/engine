@@ -1,6 +1,6 @@
 import {PRNG, PRNGSeed} from '@pkmn/sim';
 
-export class GBRNG extends PRNG {
+export class Gen12RNG extends PRNG {
   constructor(seed: PRNGSeed) {
     super([0, 0, 0, (Math.floor(seed[3]) & 0xFF) >>> 0]);
   }
@@ -27,7 +27,7 @@ export class GBRNG extends PRNG {
   }
 }
 
-export class GBARNG extends PRNG {
+export class Gen34RNG extends PRNG {
   constructor(seed: PRNGSeed) {
     super([0, 0, 0, (seed[2] << 16 >>> 0) + seed[3]]);
   }

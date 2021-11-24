@@ -27,7 +27,7 @@ test:
 	npm run test
 	zig build test
 
-check: test list
+check: test lint
 
 integration:
 	npm run test:integration
