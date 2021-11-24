@@ -31,7 +31,7 @@ The following information is required to simulate a Generation I Pokémon battle
   different
 - `battle.turn` only needs to be tracked in order to be compatible with the Pokémon Showdown
   protocol
-- Battle results (win, lose, draw) or request states are communiccated via the return code of
+- Battle results (win, lose, draw) or request states are communicated via the return code of
   `Battle.update`
 - Nicknames (`BattleMonNick`/`pokemon.name`) are not handled by the pkmn engine as they are expected
   to be handled by driver code if required
@@ -79,7 +79,7 @@ cartridge (`battle_struct::PP`), with 6 bits for current PP and the remaining 2 
 the number of applied PP Ups. PP Ups bits do not actually need to be stored on move slot as max PP
 is never relevant in Generation I, but since those two bits would need to be padded anyway and since
 max PP is necessary in certain cirmcumstances in future Generations (eg. PP increasing berries) it
-is preserved.
+is preserved for reasons of symmetry.
 
 #### `Status`
 

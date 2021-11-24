@@ -2,6 +2,8 @@ const std = @import("std");
 
 const expectEqual = std.testing.expectEqual;
 
+// https://pkmn.cc/pokered/engine/math/random.asm
+// https://pkmn.cc/pokecrystal/engine/math/random.asm
 pub inline fn gb(seed: u8) u8 {
     return 5 *% seed +% 1;
 }
@@ -22,11 +24,12 @@ test "GB" {
     }
 }
 
+// https://pkmn.cc/pokeemerald/src/random.c
 pub inline fn gba(seed: u32) u32 {
     return 0x41C64E6D *% seed +% 0x00006073;
 }
 
-// https://github.com/Admiral-Fish/PokeFinder/blob/master/Source/Tests/RNG/LCRNGTest.cpp
+// https://pkmn.cc/PokeFinder/Source/Tests/RNG/LCRNGTest.cpp
 test "GBA" {
     const data = [_][3]u32{
         .{ 0x00000000, 5, 0x8E425287 }, .{ 0x00000000, 10, 0xEF2CF4B2 },

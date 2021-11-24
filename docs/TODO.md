@@ -23,7 +23,7 @@
   optional piece of the engine)~~
 - [ ] **integration tests**: run streams in lockstep (like `@pkmn/sim`) and compare output *and*
   ensure binary protocol roundtrips
-  - [ ] override PS `PRNG` to match `@pkmn/engine` for the specific gens!
+  - [x] override PS `PRNG` to match `@pkmn/engine` for the specific gens!
 
 ## Engine
 
