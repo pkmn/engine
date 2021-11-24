@@ -1,7 +1,7 @@
 import {PRNG, PRNGSeed, BattleStreams} from '@pkmn/sim';
 import {ExhaustiveRunner, ExhaustiveRunnerOptions, RunnerOptions, AIOptions} from '@pkmn/sim/tools';
 
-import {Gen12RNG, Gen34RNG, Gen56RNG} from './rng';
+import {Gen12RNG, Gen34RNG} from './rng';
 
 class Runner {
   private readonly format: string;
@@ -86,15 +86,11 @@ class RawBattleStream extends BattleStreams.BattleStream {
       switch (this.format) {
       case 'gen1customgame':
       case 'gen2customgame':
-        this.battle!.prng = Gen12RNG.fromPRNGSeed(this.battle!.prng.seed);
+        this.battle!.prng = new Gen12RNG(this.battle!.prng.seed);
         break;
       case 'gen3customgame':
       case 'gen4customgame':
-        this.battle!.prng = Gen34RNG.fromPRNGSeed(this.battle!.prng.seed);
-        break;
-      case 'gen5customgame':
-      case 'gen6customgame':
-        this.battle!.prng = Gen56RNG.fromPRNGSeed(this.battle!.prng.seed);
+        this.battle!.prng = new Gen34RNG(this.battle!.prng.seed);
         break;
       default:
         throw new Error(`Unsupported format: ${this.format}`);

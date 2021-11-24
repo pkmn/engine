@@ -27,7 +27,6 @@ test "Generation I & II" {
 // https://pkmn.cc/pokeemerald/src/random.c
 // https://pkmn.cc/pokediamond/arm9/src/math_util.c#L624-L630
 pub inline fn gen34(seed: u32) u32 {
-    // NOTE: only the upper 16 bits of the seed returned should be used
     return 0x41C64E6D *% seed +% 0x00006073;
 }
 
@@ -48,7 +47,6 @@ test "Generation III & IV" {
 }
 
 pub inline fn gen56(seed: u64) u64 {
-    // NOTE: only the upper 32 bits of the returned seed should be used
     return 0x5D588B656C078965 *% seed +% 0x0000000000269EC3;
 }
 
