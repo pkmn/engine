@@ -6,7 +6,7 @@ export class Gen12RNG extends PRNG {
   }
 
   next(from?: number, to?: number): number {
-    const result = (this.seed[3] = this.advance(this.seed[3]));
+    const result = (this.seed[3] = Gen12RNG.advance(this.seed[3]));
     if (from) from = Math.floor(from);
     if (to) to = Math.floor(to);
     if (from === undefined) {
@@ -18,7 +18,7 @@ export class Gen12RNG extends PRNG {
     }
   }
 
-  advance(seed: number, n = 1) {
+  static advance(seed: number, n = 1) {
     for (let i = 0; i < n; i++) {
       seed = (5 * seed) & 0xFF;
       seed = (seed + 1) & 0xFF;
@@ -33,8 +33,8 @@ export class Gen34RNG extends PRNG {
   }
 
   next(from?: number, to?: number): number {
-    this.seed[3] = (this.seed[3] = this.advance(this.seed[3]));
-    const result = this.seed[3] >>> 16;
+    this.seed[3] = (this.seed[3] = Gen34RNG.advance(this.seed[3]));
+    const result = this.seed[3] >>> 16; // Use the upper 16 bits
     if (from) from = Math.floor(from);
     if (to) to = Math.floor(to);
     if (from === undefined) {
@@ -46,10 +46,12 @@ export class Gen34RNG extends PRNG {
     }
   }
 
-  advance(seed: number, n = 1) {
+  static advance(seed: number, n = 1) {
     for (let i = 0; i < n; i++) {
       seed = (Math.imul(0x41C64E6D, seed) + 0x00006073) >>> 0;
     }
     return seed;
   }
 }
+
+export const Gen56RNG = PRNG;
