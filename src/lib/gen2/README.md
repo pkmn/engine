@@ -1,5 +1,7 @@
 # Pokémon Generation II: GSC
 
+## Data Structures
+
 The following information is required to simulate a Generation II Pokémon battle:
 
 ==**TODO**==
@@ -52,8 +54,6 @@ The following information is required to simulate a Generation II Pokémon battl
   to be handled by driver code if required
 
 ==**TODO**==
-
-## Data Structures
 
 ### `Battle` / `Side`
 
@@ -195,10 +195,9 @@ entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as foll
 |                |          |      |     |                   |          |      |
 | **rollout**    | 0...5    | 3    |     | **fury cutter**   | 0..4     | 3    |
 | **confusion**  | 0...5    | 3    |     | **toxic**         | 1...16   | 4    |
-| **encore**     | 0...6    | 3    || **future sight**          | 0...2    | 2    |
-| **protect**    | 1...9    | 4    |     | **TODO**          | 0...0    | 0    |
-| **TODO**       | 0...0    | 0    |     | **TODO**          | 0...0    | 0    |
-
+| **encore**     | 0...6    | 3    |     | **future sight**  | 0...2    | 2    |
+| **protect**    | 1...9    | 4    |     | **TODO rage**     | 0...0    | 0    |
+| **wrap**       | 0...5    | 3    |     | **TODO**          | 0...0    | 0    |
 
 From this we can determine the minimum bits required to store each data structure to determine how
 much overhead the representations above have after taking into consideration [alignment &
@@ -206,3 +205,7 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 [denormalization](https://en.wikipedia.org/wiki/Denormalization):
 
 ==**TODO**==
+
+## Protocol
+
+TODO

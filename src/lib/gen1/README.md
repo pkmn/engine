@@ -1,5 +1,7 @@
 # Pokémon Generation I: RBY
 
+## Data Structures
+
 The following information is required to simulate a Generation I Pokémon battle:
 
 | pkmn                        | Pokémon Red (pret)            | Pokémon Showdown                |
@@ -45,8 +47,6 @@ The following information is required to simulate a Generation I Pokémon battle
 - Pokémon Red's `PlayerStatsToDouble`/`PlayerStatsToHalve` are constants which are always 0
 - pkmn does not store the DVs/stat experience of Pokémon as they are expected to already be
   accounted for in the `Pokemon` `stats` and never need to be referenced in-battle
-
-## Data Structures
 
 ### `Battle` / `Side`
 
@@ -226,3 +226,7 @@ effectiveness](https://github.com/pret/pokered/blob/master/data/types/type_match
 as 82× attacking type (`4`) + defending type (`4`) + non-Normal effectiveness (`2`). This would
 avoid having to do two memory lookups, but the second lookup should already be fast due to locality
 of reference meaning it will likely already be in the cache.
+
+## Protocol
+
+TODO

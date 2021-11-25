@@ -27,7 +27,7 @@ Teams.setGeneratorFactory(TeamGenerators);
 
 const TAG = 'time';
 const FORMATS = [
-  // 'gen1randombattle',
+  'gen1randombattle',
   // 'gen2randombattle',
   // 'gen3randombattle',
   // 'gen4randombattle',
@@ -35,7 +35,7 @@ const FORMATS = [
   // 'gen6randombattle',
   // 'gen7randombattle',
   // 'gen7randomdoublesbattle',
-  'gen8randombattle',
+  // 'gen8randombattle',
   // 'gen8randomdoublesbattle',
 ] as ID[];
 
@@ -166,6 +166,45 @@ class DirectBattle extends Battle {
   add(...parts: (any | (() => {side: SideID; secret: string; shared: string}))[]) {}
   addMove(...args: any[]) {}
   retargetLastMove(newTarget: Pokemon) {}
+
+  // Override to avoid wasted |update| and |end| work
+  sendUpdates() {
+    this.sentLogPos = this.log.length;
+    if (!this.sentEnd && this.ended) {
+      this.sentEnd = true;
+    }
+  }
+
+  // Override to not call Side#emitRequest to avoid wasted |sideupdate| work
+  makeRequest(type?: 'teampreview' | 'move' | 'switch' | '') {
+    if (type) {
+      this.requestState = type;
+      for (const side of this.sides) {
+        side.clearChoice();
+      }
+    } else {
+      type = this.requestState;
+    }
+
+    for (const side of this.sides) {
+      side.activeRequest = null;
+    }
+
+    if (type === 'teampreview') {
+      const pickedTeamSize = this.ruleTable.pickedTeamSize;
+      this.add('teampreview' + (pickedTeamSize ? '|' + pickedTeamSize : ''));
+    }
+
+    const requests = this.getRequests(type);
+    for (let i = 0; i < this.sides.length; i++) {
+      // NOTE: avoiding needlessly stringifying the |sideupdate|
+      this.sides[i].activeRequest = requests[i];
+    }
+
+    if (this.sides.every(side => side.isChoiceDone())) {
+      throw new Error(`Choices are done immediately after a request`);
+    }
+  }
 }
 
 const pct = (a: number, b: number) => `${(-(a - b) * 100 / a).toFixed(2)}%`;
