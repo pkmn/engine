@@ -69,8 +69,7 @@ const Side = packed struct {
         while (i < 4) : (i += 1) {
             self.pokemon.moves[i] = active.pokemon.moves[i];
         }
-        self.pokemon.volatiles = Volatile{};
-        self.pokemon.volatiles_data = VolatileData{};
+        self.pokemon.volatiles.zero();
         inline for (std.meta.fieldNames(Boosts(i4))) |boost| {
             @field(self.pokemon.boosts, boost) = @field(active.boosts, boost);
         }
@@ -78,7 +77,6 @@ const Side = packed struct {
         self.pokemon.hp = active.hp;
         self.pokemon.status = active.status;
         self.pokemon.types = active.types;
-        self.pokemon.disabled = .{ .moves = 0, .duration = 0 };
         self.active = slot;
     }
 };
@@ -86,8 +84,8 @@ const Side = packed struct {
 const ActivePokemon = packed struct {
     stats: Stats(u16),
     moves: [4]MoveSlot,
-    volatiles: Volatile,
-    boosts: Boosts(i4),
+    volatiles: Volatile = Volatile{},
+    boosts: Boosts(i4) = Boosts(i4){},
     level: u8 = 100,
     hp: u16,
     status: Status = .Healthy,
@@ -188,7 +186,7 @@ test "Status" {
 }
 
 const Volatile = packed struct {
-    data: VolatileData,
+    data: VolatileData = VolatileData{},
     _: u6 = 0,
     Bide: bool = false,
     Locked: bool = false,
