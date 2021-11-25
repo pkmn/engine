@@ -1,8 +1,22 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import 'source-map-support/register';
+
 import {Buffer} from 'buffer';
 import {performance} from 'perf_hooks';
 
-import {ID, BattleStreams, RandomPlayerAI, Teams, PRNG, PRNGSeed} from '@pkmn/sim';
 import {TeamGenerators} from '@pkmn/randoms';
+import {
+  Battle,
+  BattleStreams,
+  ID,
+  Pokemon,
+  PRNG,
+  PRNGSeed,
+  RandomPlayerAI,
+  Side,
+  SideID,
+  Teams,
+} from '@pkmn/sim';
 
 import {Stats, Tracker} from 'trakr';
 import minimist from 'minimist';
@@ -13,14 +27,16 @@ Teams.setGeneratorFactory(TeamGenerators);
 
 const TAG = 'time';
 const FORMATS = [
-  'gen1randombattle',
+  // 'gen1randombattle',
   // 'gen2randombattle',
   // 'gen3randombattle',
   // 'gen4randombattle',
   // 'gen5randombattle',
   // 'gen6randombattle',
-  // 'gen7randombattle', 'gen7randomdoublesbattle',
-  // 'gen8randombattle', 'gen8randomdoublesbattle',
+  // 'gen7randombattle',
+  // 'gen7randomdoublesbattle',
+  'gen8randombattle',
+  // 'gen8randomdoublesbattle',
 ] as ID[];
 
 const argv = minimist(process.argv.slice(2), {default: {warmup: 100, iterations: 1000}});
@@ -62,8 +78,11 @@ const ps = async (format: ID, prng: {battle: PRNG; p1: PRNG; p2: PRNG}, tracker?
   const seed = prng.battle.seed;
   const battleStream = new PRNGOverrideBattleStream(prng.battle);
   const streams = BattleStreams.getPlayerStreams(battleStream);
-  const spec = {formatid: format, seed};
 
+  const p1 = (new RandomPlayerAI(streams.p1, {seed: prng.p1})).start();
+  const p2 = (new RandomPlayerAI(streams.p2, {seed: prng.p2})).start();
+
+  const spec = {formatid: format, seed};
   const p1spec = {
     name: 'Bot 1',
     team: Teams.pack(Teams.generate(format, {seed: prng.p1.seed.slice() as PRNGSeed})),
@@ -72,13 +91,10 @@ const ps = async (format: ID, prng: {battle: PRNG; p1: PRNG; p2: PRNG}, tracker?
     name: 'Bot 2',
     team: Teams.pack(Teams.generate(format, {seed: prng.p2.seed.slice() as PRNGSeed})),
   };
-  const start =
-    `>start ${JSON.stringify(spec)}\n` +
+
+  const start = `>start ${JSON.stringify(spec)}\n` +
     `>player p1 ${JSON.stringify(p1spec)}\n` +
     `>player p2 ${JSON.stringify(p2spec)}`;
-
-  const p1 = (new RandomPlayerAI(streams.p1, {seed: prng.p1})).start();
-  const p2 = (new RandomPlayerAI(streams.p2, {seed: prng.p1})).start();
 
   const begin = performance.now();
   try {
@@ -93,10 +109,66 @@ const ps = async (format: ID, prng: {battle: PRNG; p1: PRNG; p2: PRNG}, tracker?
   }
 };
 
-const pkmn = async (format: ID, prng: {battle: PRNG; p1: PRNG; p2: PRNG}, tracker?: Tracker) =>
-  ps(format, prng, tracker); // TODO
+class PRNGOverrideBattleStream extends BattleStreams.BattleStream {
+  readonly prng: PRNG;
 
-const pct = (a: number, b: number) => `${(-(b - a) * 100 / b).toFixed(2)}%`;
+  constructor(prng: PRNG) {
+    super();
+    this.prng = prng;
+  }
+
+  _writeLine(type: string, message: string) {
+    super._writeLine(type, message);
+    if (type === 'start') this.battle!.prng = this.prng;
+  }
+}
+
+// TODO: make this the PS implementation and actually implement a @pkmn/engine function
+const pkmn = (format: ID, prng: {battle: PRNG; p1: PRNG; p2: PRNG}, tracker?: Tracker) => {
+  const battle = new DirectBattle({formatid: format, seed: prng.battle.seed}, prng.battle);
+  const p1 = new RandomPlayerAI(null!, {seed: prng.p1});
+  p1.choose = choice => battle.choose('p1', choice);
+  const p2 = new RandomPlayerAI(null!, {seed: prng.p2});
+  p2.choose = choice => battle.choose('p2', choice);
+
+  const p1spec = {
+    name: 'Bot 1',
+    team: Teams.generate(format, {seed: prng.p1.seed.slice() as PRNGSeed}),
+  };
+  const p2spec = {
+    name: 'Bot 2',
+    team: Teams.generate(format, {seed: prng.p2.seed.slice() as PRNGSeed}),
+  };
+
+  battle.setPlayer('p1', p1spec);
+  const begin = performance.now();
+  try {
+    battle.setPlayer('p2', p2spec);
+    while (!battle.ended) {
+      if (battle.p1.activeRequest) p1.receiveRequest(battle.p1.activeRequest);
+      if (battle.p2.activeRequest) p2.receiveRequest(battle.p2.activeRequest);
+    }
+    return battle.turn;
+  } finally {
+    if (tracker) tracker.add(TAG, performance.now() - begin);
+  }
+};
+
+class DirectBattle extends Battle {
+  constructor(options: any, prng: PRNG) {
+    super(options);
+    this.prng = prng;
+  }
+
+  // Drop logs to minimize overhead
+  hint(hint: string, once?: boolean, side?: Side) {}
+  addSplit(side: SideID, secret: any[], shared?: any[]) {}
+  add(...parts: (any | (() => {side: SideID; secret: string; shared: string}))[]) {}
+  addMove(...args: any[]) {}
+  retargetLastMove(newTarget: Pokemon) {}
+}
+
+const pct = (a: number, b: number) => `${(-(a - b) * 100 / a).toFixed(2)}%`;
 
 const dec = (n: number) => {
   const abs = Math.abs(n);
@@ -116,20 +188,6 @@ const report = (a: Stats, b: Stats, turns: number) => {
   console.log(`p95: ${dec(a.p95)} vs ${dec(b.p95)} (${pct(a.p95, b.p95)})`);
 };
 
-class PRNGOverrideBattleStream extends BattleStreams.BattleStream {
-  readonly prng: PRNG;
-
-  constructor(prng: PRNG) {
-    super();
-    this.prng = prng;
-  }
-
-  _writeLine(type: string, message: string) {
-    super._writeLine(type, message);
-    if (type === 'start') this.battle!.prng = this.prng;
-  }
-}
-
 (async () => {
   const totals: {[format: string]: number} = {};
   const trackers: {[format: string]: {[name: string]: Tracker}} = {};
@@ -145,7 +203,7 @@ class PRNGOverrideBattleStream extends BattleStreams.BattleStream {
         turns += await engine(format, prngs);
       }
       // @ts-ignore
-      if (global.gc()) global.gc();
+      if (global.gc) global.gc();
 
       const tracker = (trackers[format][name] =
           Tracker.create({buf: Buffer.alloc(argv.iterations * (8 + 1))}));
