@@ -21,11 +21,11 @@ The following information is required to simulate a Generation I Pokémon battle
 | `active.stats`              | `party_struct.Stats`          | `pokemon.storedStats`           |
 | `active.boosts`             | `PlayerMon*Mod`               | `pokemon.boosts`                |
 | `active.volatiles`          | `PlayerBattleStatus{1,2,3}`   | `pokemon.volatiles`             |
-| `volatiles_data.bide`       | `PlayerBideAccumulatedDamage` | `volatiles.bide.totalDamage`    |
-| `volatiles_data.confusion`  | `PlayerConfusedCounter`       | `volatiles.confusion.duration`  |
-| `volatiles_data.toxic`      | `PlayerToxicCounter`          | `volatiles.residualdmg.counter` |
-| `volatiles_data.substitute` | `PlayerSubstituteHP`          | `volatiles.substitute.hp`       |
-| `active.disabled`           | `PlayerDisabledMove{,Number}` | `moveSlots.disabled`            |
+| `volatiles.data.bide`       | `PlayerBideAccumulatedDamage` | `volatiles.bide.totalDamage`    |
+| `volatiles.data.confusion`  | `PlayerConfusedCounter`       | `volatiles.confusion.duration`  |
+| `volatiles.data.toxic`      | `PlayerToxicCounter`          | `volatiles.residualdmg.counter` |
+| `volatiles.data.substitute` | `PlayerSubstituteHP`          | `volatiles.substitute.hp`       |
+| `volatiles.data.disabled`   | `PlayerDisabledMove{,Number}` | `moveSlots.disabled`            |
 
 - Pokémon Showdown does not implement the correct Generation I RNG and as such its `seed` is
   different
@@ -176,8 +176,8 @@ entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as foll
 | **stat**       | 1...999  | 10   |     | **boost**         | 0...13   | 4    |
 | **level**      | 1...100  | 7    |     | **volatiles**     | 17       | 18   |
 | **bide**       | 2...1406 | 11   |     | **substitute**    | 4...179  | 8    |
-| **confusion**  | 2...5    | 3    |     | **toxic**         | 1...16   | 4    |
-| **multi hits** | 2...5    | 3    |     | **base power**    | 0...40   | 6    |
+| **confusion**  | 0...5    | 3    |     | **toxic**         | 1...16   | 4    |
+| **multi hits** | 0...5    | 3    |     | **base power**    | 0...40   | 6    |
 | **base PP**    | 1...8    | 3    |     | **PP Ups**        | 0...3    | 2    |
 | **used PP**    | 0...63   | 8    |     | **HP / damage**   | 13...704 | 10   |
 | **status**     | 0...10   | 4    |     | **effectiveness** | 0...3    | 2    |

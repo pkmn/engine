@@ -55,22 +55,6 @@ const ActivePokemon = packed struct {
     // TODO volatile size change + 8
     // = total 48, 16 padding left
 
-    // NOTE: could move volatiles_data to Side... lots of space?
-
-    // TODO: some of these could be u3/u4
-    // wPlayerRolloutCount:: db
-    // wPlayerConfuseCount:: db
-    // wPlayerToxicCount:: db
-    // wPlayerDisableCount:: db
-    // wPlayerEncoreCount:: db
-    // wPlayerPerishCount:: db
-    // wPlayerFuryCutterCount:: db
-    // wPlayerProtectCount:: db
-    // wPlayerFutureSightCount:: db
-    // wPlayerRageCounter:: db
-    // wPlayerWrapCount:: db
-    // wPlayerCharging:: db
-    // wPlayerJustGotFrozen:: db
 };
 
 // TODO
@@ -168,12 +152,36 @@ const Volatile = packed struct {
 
     _pad: u4 = 0,
 
-    comptime {
-        assert(@sizeOf(Volatile) == 4);
-    }
+    data: VolatileData,
+
+    // comptime {
+    //     assert(@sizeOf(Volatile) == 4);
+    // }
 };
 
-const VolatileData = packed struct {};
+const VolatileData = packed struct {
+    // bide: u16 = 0,
+    // substitute: u8 = 0,
+
+    confusion: u4 = 0,
+    toxic: u4 = 0,
+    disabled: packed struct {
+        move: u4 = .None,
+        duration: u4 = 0,
+    },
+    encore: u4 = 0,
+    perish_song: u4 = 0,
+    rollout: u4 = 0,
+    fury_cutter: u4 = 0,
+    protect: u4 = 0,
+    future_sight: u4 = 0,
+    wrap: u4 = 0,
+    _: u4 = 0, // TODO 7 bytes
+    rage: u8 = 0,
+
+    // wPlayerCharging:: db
+    // wPlayerJustGotFrozen:: db
+};
 
 pub fn Stats(comptime T: type) type {
     return packed struct {

@@ -86,19 +86,14 @@ const Side = packed struct {
 const ActivePokemon = packed struct {
     stats: Stats(u16),
     moves: [4]MoveSlot,
-    volatiles_data: VolatileData,
     volatiles: Volatile,
     boosts: Boosts(i4),
     level: u8 = 100,
-    _: u8 = 0,
     hp: u16,
     status: Status = .Healthy,
     species: Species,
     types: Types,
-    disabled: packed struct {
-        move: u4 = .None,
-        duration: u4 = 0,
-    },
+     _: u8 = 0,
 
     comptime {
         assert(@sizeOf(ActivePokemon) == 36);
@@ -193,6 +188,8 @@ test "Status" {
 }
 
 const Volatile = packed struct {
+    data: VolatileData,
+    _: u6 = 0,
     Bide: bool = false,
     Locked: bool = false,
     MultiHit: bool = false,
@@ -211,10 +208,9 @@ const Volatile = packed struct {
     LightScreen: bool = false,
     Reflect: bool = false,
     Transform: bool,
-    _: u6 = 0,
 
     comptime {
-        assert(@sizeOf(Volatile) == 3);
+        assert(@sizeOf(Volatile) == 8);
     }
 };
 
@@ -223,9 +219,13 @@ const VolatileData = packed struct {
     substitute: u8 = 0,
     confusion: u4 = 0,
     toxic: u4 = 0,
+    disabled: packed struct {
+        move: u4 = .None,
+        duration: u4 = 0,
+    },
 
     comptime {
-        assert(@sizeOf(VolatileData) == 4);
+        assert(@sizeOf(VolatileData) == 5);
     }
 };
 

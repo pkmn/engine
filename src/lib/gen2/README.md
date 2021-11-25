@@ -4,30 +4,43 @@ The following information is required to simulate a Generation II Pokémon battl
 
 ==**TODO**==
 
-| pkmn                        | Pokémon Red (pret)            | Pokémon Showdown                |
-| --------------------------- | ----------------------------- | ------------------------------- |
-| `battle.seed`               | `Random{Add,Sub}`             | `battle.seed`                   |
-| `battle.last_damage`        | `Damage`                      | `battle.lastDamage`             |
-| `side.{active,pokemon}`     | `PlayerMonNumber`/`BattleMon` | `side.active`                   |
-| `side.team`                 | `PartyMons`                   | `side.pokemon`                  |
-| `side.last_used_move`       | `PlayerUsedMove`              | `side.lastMove`                 |
-| `side.last_selected_move`   | `PlayerSelectedMove`          | `side.lastSelectedMove`         |
-| `pokemon.stats`             | `PlayerMonUnmodified*`        | `pokemon.baseStoredStats`       |
-| `pokemon.position`          | `battle_struct.PartyPos`      | `pokemon.position`              |
-| `pokemon.moves`             | `party_struct.{Moves,PP}`     | `pokemon.baseMoveSlots`         |
-| `{pokemon,active}.hp`       | `battle_struct.HP`            | `pokemon.hp`                    |
-| `{pokemon,active}.status`   | `battle_struct.Status`        | `pokemon.status`                |
-| `{pokemon,active}.level`    | `PlayerMonUnmodifiedLevel`    | `pokemon.level`                 |
-| `pokemon.species`           | `party_struct.Species`        | `pokemon.baseSpecies`           |
-| `active.species`            | `battle_struct.Species`       | `pokemon.species`               |
-| `active.stats`              | `party_struct.Stats`          | `pokemon.storedStats`           |
-| `active.boosts`             | `PlayerMon*Mod`               | `pokemon.boosts`                |
-| `active.volatiles`          | `PlayerBattleStatus{1,2,3}`   | `pokemon.volatiles`             |
-| `volatiles_data.bide`       | `PlayerBideAccumulatedDamage` | `volatiles.bide.totalDamage`    |
-| `volatiles_data.confusion`  | `PlayerConfusedCounter`       | `volatiles.confusion.duration`  |
-| `volatiles_data.toxic`      | `PlayerToxicCounter`          | `volatiles.residualdmg.counter` |
-| `volatiles_data.substitute` | `PlayerSubstituteHP`          | `volatiles.substitute.hp`       |
-| `active.disabled`           | `PlayerDisabledMove{,Number}` | `moveSlots.disabled`            |
+| pkmn                          | Pokémon Red (pret)            | Pokémon Showdown                |
+| ----------------------------- | ----------------------------- | ------------------------------- |
+| `battle.seed`                 | `Random{Add,Sub}`             | `battle.seed`                   |
+| `battle.last_damage`          | `Damage`                      | `battle.lastDamage`             |
+| `side.{active,pokemon}`       | `PlayerMonNumber`/`BattleMon` | `side.active`                   |
+| `side.team`                   | `PartyMons`                   | `side.pokemon`                  |
+| `side.last_used_move`         | `PlayerUsedMove`              | `side.lastMove`                 |
+| `side.last_selected_move`     | `PlayerSelectedMove`          | `side.lastSelectedMove`         |
+| `pokemon.stats`               | `PlayerMonUnmodified*`        | `pokemon.baseStoredStats`       |
+| `pokemon.position`            | `battle_struct.PartyPos`      | `pokemon.position`              |
+| `pokemon.moves`               | `party_struct.{Moves,PP}`     | `pokemon.baseMoveSlots`         |
+| `{pokemon,active}.hp`         | `battle_struct.HP`            | `pokemon.hp`                    |
+| `{pokemon,active}.status`     | `battle_struct.Status`        | `pokemon.status`                |
+| `{pokemon,active}.level`      | `PlayerMonUnmodifiedLevel`    | `pokemon.level`                 |
+| `pokemon.species`             | `party_struct.Species`        | `pokemon.baseSpecies`           |
+| `active.species`              | `battle_struct.Species`       | `pokemon.species`               |
+| `active.stats`                | `party_struct.Stats`          | `pokemon.storedStats`           |
+| `active.boosts`               | `PlayerMon*Mod`               | `pokemon.boosts`                |
+| `active.volatiles`            | `PlayerBattleStatus{1,2,3}`   | `pokemon.volatiles`             |
+| `volatiles.data.bide`         | `PlayerBideAccumulatedDamage` | `volatiles.bide.totalDamage`    |
+| `volatiles.data.substitute`   | `PlayerSubstituteHP`          | `volatiles.substitute.hp`       |
+|                               |                               |                                 |
+| `volatiles.data.rollout`      | `PlayerRolloutCount`          |                                 |
+| `volatiles.data.confusion`    | `PlayerConfuseCount`          | `volatiles.confusion.duration`  |
+| `volatiles.data.toxic`        | `PlayerToxicCount`            | `volatiles.residualdmg.counter` |
+| `volatiles.data.disabled`     | `PlayerDisableCount`          | `moveSlots.disabled`            |
+| `volatiles.data.encore`       | `PlayerEncoreCount`           |                                 |
+| `volatiles.data.perish_song`  | `PlayerPerishCount`           |                                 |
+| `volatiles.data.fury_cutter`  | `PlayerFuryCutterCount`       |                                 |
+| `volatiles.data.protect`      | `PlayerProtectCount`          |                                 |
+| `volatiles.data.future_sight` | `PlayerFutureSightCount`      |                                 |
+| `volatiles.data.rage`         | `PlayerRageCounter`           |                                 |
+| `volatiles.data.wrap`         | `PlayerWrapCount`             |                                 |
+|                               | `PlayerCharging`              |                                 |
+|                               | `PlayerJustGotFrozen`         |                                 |
+
+
 
 - Pokémon Showdown does not implement the correct Generation II RNG and as such its `seed` is
   different
@@ -173,13 +186,19 @@ entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as foll
 | **stat**       | 1...999  | 10   |     | **boost**         | 0...13   | 4    |
 | **level**      | 1...100  | 7    |     | **volatiles**     | 17       | 18   |
 | **bide**       | 2...1406 | 11   |     | **substitute**    | 4...179  | 8    |
-| **confusion**  | 2...5    | 3    |     | **toxic**         | 1...16   | 4    |
-| **multi hits** | 2...5    | 3    |     | **base power**    | 0...40   | 6    |
+| **multi hits** | 0...5    | 3    |     | **base power**    | 0...40   | 6    |
 | **base PP**    | 1...8    | 3    |     | **PP Ups**        | 0...3    | 2    |
 | **used PP**    | 0...63   | 8    |     | **HP / damage**   | 13...704 | 10   |
 | **status**     | 0...10   | 4    |     | **effectiveness** | 0...3    | 2    |
 | **type**       | 0...15   | 4    |     | **accuracy**      | 6...20   | 4    |
 | **disabled**   | 0...7    | 3    |     | **DVs**           | 0...15   | 4    |
+|                |          |      |     |                   |          |      |
+| **rollout**    | 0...5    | 3    |     | **fury cutter**   | 0..4     | 3    |
+| **confusion**  | 0...5    | 3    |     | **toxic**         | 1...16   | 4    |
+| **encore**     | 0...6    | 3    || **future sight**          | 0...2    | 2    |
+| **protect**    | 1...9    | 4    |     | **TODO**          | 0...0    | 0    |
+| **TODO**       | 0...0    | 0    |     | **TODO**          | 0...0    | 0    |
+
 
 From this we can determine the minimum bits required to store each data structure to determine how
 much overhead the representations above have after taking into consideration [alignment &
