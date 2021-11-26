@@ -2,8 +2,8 @@ const std = @import("std");
 
 const expectEqual = std.testing.expectEqual;
 
-// https://pkmn.cc/pokered/engine/math/random.asm
-// https://pkmn.cc/pokecrystal/engine/math/random.asm
+// https://pkmn.cc/pokered/engine/battle/core.asm#L6644-L6693
+// https://pkmn.cc/pokecrystal/engine/battle/core.asm#L6922-L6938
 pub inline fn gen12(seed: u8) u8 {
     return 5 *% seed +% 1;
 }

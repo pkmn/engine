@@ -32,7 +32,7 @@ const Battle = packed struct {
     }
 
     pub fn random(self: *Battle) u32 {
-        self.seed = rng.gb(self.seed);
+        self.seed = rng.gen12(self.seed);
         return self.seed;
     }
 };
@@ -54,6 +54,7 @@ const Side = packed struct {
         return self.pokemon[slot - 1];
     }
 
+    // FIXME: move to mechanics (need to also apply burn/paralyze etc)
     pub fn switchIn(self: *Side, slot: u8) void {
         assert(slot != self.active);
         assert(self.team[self.active - 1].position == 1);

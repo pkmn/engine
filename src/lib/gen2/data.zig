@@ -1,5 +1,6 @@
 const std = @import("std");
 
+const rng = @import("../common/rng.zig");
 const gen1 = @import("../gen1/data.zig");
 
 const items = @import("data/items.zig");
@@ -12,10 +13,16 @@ const expectEqual = std.testing.expectEqual;
 const expect = std.testing.expect;
 
 const Battle = packed struct {
+    seed: u8,
     // weather
     // weather duration
 
     // wWhichMonFaintedFirst:: db
+
+     pub fn random(self: *Battle) u32 {
+        self.seed = rng.gen12(self.seed);
+        return self.seed;
+    }
 };
 
 const Field = packed struct {
