@@ -39,7 +39,7 @@ pub fn Battle(comptime game_type: GameType) type {
 }
 
 pub fn Side(comptime game_type: GameType) type {
-    const N = @enumToInt(game_type);
+    const N = @enumToInt(game_type) + 1;
     return packed struct {
         pokemon: [N]ActivePokemon,
         team: [6]Pokemon,
@@ -65,24 +65,27 @@ pub const Pokemon = packed struct {};
 //     try expect(Items.berry(.GoldBerry));
 // }
 
-pub const MoveTarget = enum(u8) { // u6 / u4
-    Selected = 0, // normal
-    Depends = (1 << 0), // scripted
-    // UserOrSelected = (1 << 1),
-    Random = (1 << 2), // randomNormal
-    Both = (1 << 3), // allAdjacentFoes
-    User = (1 << 4), // self
-    FoesAndAlly = (1 << 5), // allAdjacent
-    OpponentsField = (1 << 6), // foeSide
+pub const MoveTarget = packed struct {
+    Depends: bool = false,
+    Random: bool = false,
+    Both: bool = false,
+    User: bool = false,
+    FoesAndAlly: bool = false,
+    OpponentsField: bool = false,
+    _: u2 = 0,
 };
 
-pub const MoveFlags = enum(u8) { // u6
-    Contact = (1 << 0),
-    Protect = (1 << 1),
-    MagicCoat = (1 << 2),
-    Snatch = (1 << 3),
-    MirrorMove = (1 << 4),
-    KingsRock = (1 << 5),
+const a = MoveTarget{.Depends = true};
+const b = MoveFlags{.Snatch = true, .Contact = true};
+
+pub const MoveFlags = packed struct{
+    Contact: bool = false, // contact
+    Protect: bool = false, // protect
+    MagicCoat: bool = false, // reflectable
+    Snatch: bool = false, // snatch
+    MirrorMove: bool = false, // mirror
+    KingsRock: bool = false, // TODO
+    _: u2 = 0,
 };
 
 pub const Moves = moves.Moves;

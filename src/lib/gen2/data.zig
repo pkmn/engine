@@ -244,6 +244,7 @@ pub const Move = packed struct {
     type: Type,
     pp: u4, // pp / 5
     chance: u4 = 0, // chance / 10
+    // TODO effect and parameter?
 
     comptime {
         assert(@sizeOf(Move) == 4);

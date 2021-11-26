@@ -109,7 +109,7 @@ which are boolean flags that are cleared when the Pokémon faints or switches ou
 | `Bide`        | `BIDE`                  | `bide`           |
 | `Locked`      | `RAMPAGE`               | `lockedmove`     |
 | `Flinch`      | `FLINCHED`              | `flinch`         |
-| `Charging`    | `CHARGED`               | `twoturnmove`    |
+| `Charging`    | `CHARGED`  k             | `twoturnmove`    |
 | `Underground` | `UNDERGROUND`           | `dig`            |
 | `Flying`      | `FLYING`                | `fly`            |
 | `Confusion`   | `CONFUSED`              | `confusion`      |

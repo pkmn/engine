@@ -1,123 +1,123 @@
 ## Games
 
-### [Gen 1](https://github.com/pret/pokered)
+### [Gen 1](https://github.com/pret/pokered/)
 
 - `constants/`
-  - [`battle_constants.asm`](https://pkmn.cc/pokeredconstants/battle_constants.asm)
-    - ["battle status" (volatiles)](https://pkmn.cc/pokeredconstants/battle_constants.asm#L73-L100)
-  - [`move_constants.asm`](https://pkmn.cc/pokeredconstants/move_constants.asm) /
-    [`move_effect_constants.asm`](https://pkmn.cc/pokeredconstants/move_effect_constants.asm)
+  - [`battle_constants.asm`](https://pkmn.cc/pokered/constants/battle_constants.asm)
+    - ["battle status" (volatiles)](https://pkmn.cc/pokered/constants/battle_constants.asm#L73-L100)
+  - [`move_constants.asm`](https://pkmn.cc/pokered/constants/move_constants.asm) /
+    [`move_effect_constants.asm`](https://pkmn.cc/pokered/constants/move_effect_constants.asm)
     (pointers to "handlers" for moves)
-  - [`pokedex_constants.asm`](https://pkmn.cc/pokeredconstants/pokedex_constants.asm) /
-    [`pokemon_data_constants.asm`](https://pkmn.cc/pokeredconstants/pokemon_data_constants.asm)
-  - [`type_constants.asm`](https://pkmn.cc/pokeredconstants/type_constants.asm)
+  - [`pokedex_constants.asm`](https://pkmn.cc/pokered/constants/pokedex_constants.asm) /
+    [`pokemon_data_constants.asm`](https://pkmn.cc/pokered/constants/pokemon_data_constants.asm)
+  - [`type_constants.asm`](https://pkmn.cc/pokered/constants/type_constants.asm)
 - `data/`
   - [`battle/`](https://github.com/pret/pokered/tree/master/data/battle)
-    - [`stat_modifiers.asm`](https://pkmn.cc/pokereddata/battle/stat_modifiers.asm)
+    - [`stat_modifiers.asm`](https://pkmn.cc/pokered/data/battle/stat_modifiers.asm)
     - "special" moves:
-      [`residual_effects_1.asm`](https://pkmn.cc/pokereddata/battle/residual_effects_1.asm),
-      [`residual_effects_2.asm`](https://pkmn.cc/pokereddata/battle/residual_effects_2.asm)
+      [`residual_effects_1.asm`](https://pkmn.cc/pokered/data/battle/residual_effects_1.asm),
+      [`residual_effects_2.asm`](https://pkmn.cc/pokered/data/battle/residual_effects_2.asm)
   - [`moves/`](https://github.com/pret/pokered/tree/master/data/moves)
-    - [move data](https://pkmn.cc/pokereddata/moves/moves.asm)
+    - [move data](https://pkmn.cc/pokered/data/moves/moves.asm)
   - [`pokemon/`](https://github.com/pret/pokered/tree/master/data/pokemon)
     - [species data](https://github.com/pret/pokered/tree/master/data/pokemon/base_stats)
-    - [learnsets](https://pkmn.cc/pokereddata/pokemon/evos_moves.asm)
+    - [learnsets](https://pkmn.cc/pokered/data/pokemon/evos_moves.asm)
   - [`types/`](https://github.com/pret/pokered/tree/master/data/types)
-    - [`type_matchups.asm`](https://pkmn.cc/pokereddata/types/type_matchups.asm)
+    - [`type_matchups.asm`](https://pkmn.cc/pokered/data/types/type_matchups.asm)
       - typechart, [linear scan to
-        lookup](https://pkmn.cc/pokeredengine/battle/core.asm#L5230-L5289)
-- [`engine/battle/`](https://pkmn.cc/pokeredengine/battle)
+        lookup](https://pkmn.cc/pokered/engine/battle/core.asm#L5230-L5289)
+- [`engine/battle/`](https://pkmn.cc/pokered/engine/battle)
   - [`move_effects/`](https://github.com/pret/pokered/tree/master/engine/battle/move_effects) -
     special handlers (like PS `statuses` / `scripts`)
-  - [**`core.asm`**](https://pkmn.cc/pokeredengine/battle/core.asm)
-  - [`decrement_pp.asm`](https://pkmn.cc/pokeredengine/battle/decrement_pp.asm)
-  - [`effects.asm`](https://pkmn.cc/pokeredengine/battle/effects.asm)
+  - [**`core.asm`**](https://pkmn.cc/pokered/engine/battle/core.asm)
+  - [`decrement_pp.asm`](https://pkmn.cc/pokered/engine/battle/decrement_pp.asm)
+  - [`effects.asm`](https://pkmn.cc/pokered/engine/battle/effects.asm)
 - `wram.asm`
-  - [macros](https://pkmn.cc/pokeredmacros/wram.asm)
-  - [unmodified stats and mods](https://pkmn.cc/pokeredwram.asm#L525)
-  - [active move](https://pkmn.cc/pokeredwram.asm#L1156)
-  - [battle data](https://pkmn.cc/pokeredwram.asm#L1232)
-    - ["battle status" (volatiles)](https://pkmn.cc/pokeredwram.asm#L1261-L1284)
+  - [macros](https://pkmn.cc/pokered/macros/wram.asm)
+  - [unmodified stats and mods](https://pkmn.cc/pokered/wram.asm#L525)
+  - [active move](https://pkmn.cc/pokered/wram.asm#L1156)
+  - [battle data](https://pkmn.cc/pokered/wram.asm#L1232)
+    - ["battle status" (volatiles)](https://pkmn.cc/pokered/wram.asm#L1261-L1284)
 
-### [Gen 2](https://github.com/pret/pokecrystal)
+### [Gen 2](https://github.com/pret/pokecrystal/)
 
 - `constants/`
-  - [`battle_constants.asm`](https://pkmn.cc/pokecrystalconstants/battle_constants.asm)
-  - [`item_constants.asm`](https://pkmn.cc/pokecrystalconstants/item_constants.asm) /
-    [`item_data_constants.asm`](https://pkmn.cc/pokecrystalconstants/item_data_constants.asm#L61-L135)
-  - [`move_constants.asm`](https://pkmn.cc/pokecrystalconstants/move_constants.asm) /
-    [`move_effect_constants.asm`](https://pkmn.cc/pokecrystalconstants/move_effect_constants.asm)
-  - [`pokemon_constants.asm`](https://pkmn.cc/pokecrystalconstants/pokemon_constants.asm)
-  - [`type_constants.asm`](https://pkmn.cc/pokecrystalconstants/type_constants.asm)
+  - [`battle_constants.asm`](https://pkmn.cc/pokecrystal/constants/battle_constants.asm)
+  - [`item_constants.asm`](https://pkmn.cc/pokecrystal/constants/item_constants.asm) /
+    [`item_data_constants.asm`](https://pkmn.cc/pokecrystal/constants/item_data_constants.asm#L61-L135)
+  - [`move_constants.asm`](https://pkmn.cc/pokecrystal/constants/move_constants.asm) /
+    [`move_effect_constants.asm`](https://pkmn.cc/pokecrystal/constants/move_effect_constants.asm)
+  - [`pokemon_constants.asm`](https://pkmn.cc/pokecrystal/constants/pokemon_constants.asm)
+  - [`type_constants.asm`](https://pkmn.cc/pokecrystal/constants/type_constants.asm)
 - `data/`
   - [`battle/`](https://github.com/pret/pokecrystal/tree/master/data/battle)
-    - [Accuracy](https://pkmn.cc/pokecrystaldata/battle/accuracy_multipliers.asm) / [Critical
-      Hits](https://pkmn.cc/pokecrystaldata/battle/critical_hit_chances.asm) / [Stat
-      Modifiers](https://pkmn.cc/pokecrystaldata/battle/stat_multipliers.asm) /
-      [Weather](https://pkmn.cc/pokecrystaldata/battle/weather_modifiers.asm)
+    - [Accuracy](https://pkmn.cc/pokecrystal/data/battle/accuracy_multipliers.asm) / [Critical
+      Hits](https://pkmn.cc/pokecrystal/data/battle/critical_hit_chances.asm) / [Stat
+      Modifiers](https://pkmn.cc/pokecrystal/data/battle/stat_multipliers.asm) /
+      [Weather](https://pkmn.cc/pokecrystal/data/battle/weather_modifiers.asm)
   - [`items/`](https://github.com/pret/pokecrystal/tree/master/data/items)
-    - [`attributes`](https://pkmn.cc/pokecrystaldata/items/attributes.asm)
+    - [`attributes`](https://pkmn.cc/pokecrystal/data/items/attributes.asm)
   - [`moves/`](https://github.com/pret/pokecrystal/tree/master/data/moves)
-    - [move data](https://pkmn.cc/pokecrystaldata/moves/moves.asm)
-    - [**effects**](https://pkmn.cc/pokecrystaldata/moves/effects.asm)
-      ([pointers](https://pkmn.cc/pokecrystaldata/moves/effects_pointers.asm),
-      [priorities](https://pkmn.cc/pokecrystaldata/moves/effects_priorities.asm))
-    - [Flail](https://pkmn.cc/pokecrystaldata/moves/flail_reversal_power.asm) /
-      [Magnitude](https://pkmn.cc/pokecrystaldata/moves/magnitude_power.asm) /
-      [Present](https://pkmn.cc/pokecrystaldata/moves/present_power.asm) /
-      [Metronome](https://pkmn.cc/pokecrystaldata/moves/metronome_exception_moves.asm) / [Hidden
-      Power](https://pkmn.cc/pokecrystalengine/battle/hidden_power.asm)
+    - [move data](https://pkmn.cc/pokecrystal/data/moves/moves.asm)
+    - [**effects**](https://pkmn.cc/pokecrystal/data/moves/effects.asm)
+      ([pointers](https://pkmn.cc/pokecrystal/data/moves/effects_pointers.asm),
+      [priorities](https://pkmn.cc/pokecrystal/data/moves/effects_priorities.asm))
+    - [Flail](https://pkmn.cc/pokecrystal/data/moves/flail_reversal_power.asm) /
+      [Magnitude](https://pkmn.cc/pokecrystal/data/moves/magnitude_power.asm) /
+      [Present](https://pkmn.cc/pokecrystal/data/moves/present_power.asm) /
+      [Metronome](https://pkmn.cc/pokecrystal/data/moves/metronome_exception_moves.asm) / [Hidden
+      Power](https://pkmn.cc/pokecrystal/engine/battle/hidden_power.asm)
   - [`pokemon/`](https://github.com/pret/pokecrystal/tree/master/data/pokemon)
     - [species data](https://github.com/pret/pokecrystal/tree/master/data/pokemon/base_stats)
-    - learnset [level up](https://pkmn.cc/pokecrystaldata/pokemon/evos_attacks.asm) /
-      [egg](https://pkmn.cc/pokecrystaldata/pokemon/egg_moves.asm)
+    - learnset [level up](https://pkmn.cc/pokecrystal/data/pokemon/evos_attacks.asm) /
+      [egg](https://pkmn.cc/pokecrystal/data/pokemon/egg_moves.asm)
   - [`types/`](https://github.com/pret/pokecrystal/tree/master/data/types)
-    - [`type_matchups.asm`](https://pkmn.cc/pokecrystaldata/types/type_matchups.asm)
-    - [`type_boost_items.asm`](https://pkmn.cc/pokecrystaldata/types/type_boost_items.asm)
+    - [`type_matchups.asm`](https://pkmn.cc/pokecrystal/data/types/type_matchups.asm)
+    - [`type_boost_items.asm`](https://pkmn.cc/pokecrystal/data/types/type_boost_items.asm)
 - `engine/battle/`
   - [`move_effects/`](https://github.com/pret/pokecrystal/tree/master/engine/battle/move_effects) -
     handlers
   - [**`core.asm`**](https://github.com/pret/pokecrystal/tree/master/engine/battle/core.asm)
-  - [`effect_commands.asm`](https://pkmn.cc/pokecrystalengine/battle/effect_commands.asm)
-  - [`/home/battle_vars.asm`](https://pkmn.cc/pokecrystalhome/battle_vars.asm)
+  - [`effect_commands.asm`](https://pkmn.cc/pokecrystal/engine/battle/effect_commands.asm)
+  - [`/home/battle_vars.asm`](https://pkmn.cc/pokecrystal/home/battle_vars.asm)
 - `wram.asm`
-  - [battle data](https://pkmn.cc/pokecrystalwram.asm#L352-L621),
-    [macros](https://pkmn.cc/pokecrystalmacros/wram.asm)
-- random ([`Random`](https://pkmn.cc/pokecrystalhome/random.asm),
-  [`BattleRandom`](https://pkmn.cc/pokecrystalengine/battle/core.asm#L6881-L6947))
+  - [battle data](https://pkmn.cc/pokecrystal/wram.asm#L352-L621),
+    [macros](https://pkmn.cc/pokecrystal/macros/wram.asm)
+- random ([`Random`](https://pkmn.cc/pokecrystal/home/random.asm),
+  [`BattleRandom`](https://pkmn.cc/pokecrystal/engine/battle/core.asm#L6881-L6947))
 
-### [Gen 3](https://github.com/pret/pokeemerald)
+### [Gen 3](https://github.com/pret/pokeemerald/)
 
 - `include/`
-  - [battle](https://pkmn.cc/pokeemeraldinclude/battle.h)
-    ([util](https://pkmn.cc/pokeemeraldinclude/battle_util.h) /
-    [scripts](https://pkmn.cc/pokeemeraldinclude/battle_scripts.h) /
-    [main](https://pkmn.cc/pokeemeraldinclude/battle_main.h))
-  - [random](https://pkmn.cc/pokeemeraldinclude/random.h)
-  - [pokemon](https://pkmn.cc/pokeemeraldinclude/pokemon.h#L160-L241)
-  - [item](https://pkmn.cc/pokeemeraldinclude/item.h)
+  - [battle](https://pkmn.cc/pokeemerald/include/battle.h)
+    ([util](https://pkmn.cc/pokeemerald/include/battle_util.h) /
+    [scripts](https://pkmn.cc/pokeemerald/include/battle_scripts.h) /
+    [main](https://pkmn.cc/pokeemerald/include/battle_main.h))
+  - [random](https://pkmn.cc/pokeemerald/include/random.h)
+  - [pokemon](https://pkmn.cc/pokeemerald/include/pokemon.h#L160-L241)
+  - [item](https://pkmn.cc/pokeemerald/include/item.h)
 - `include/constants/`
-  - [abilities](https://pkmn.cc/pokeemeraldinclude/constants/abilities.h)
-  - [species](https://pkmn.cc/pokeemeraldinclude/constants/species.h)
-  - [types / nature](https://pkmn.cc/pokeemeraldinclude/constants/pokemon.h)
-  - [moves](https://pkmn.cc/pokeemeraldinclude/constants/moves.h)/[move
-    effects](https://pkmn.cc/pokeemeraldinclude/constants/battle_move_effects.h)
-  - [held item effects](https://pkmn.cc/pokeemeraldinclude/constants/hold_effects.h)
-  - [battle](https://pkmn.cc/pokeemeraldinclude/constants/battle.h) /
-    [misc](https://pkmn.cc/pokeemeraldinclude/constants/battle_script_commands.h)
+  - [abilities](https://pkmn.cc/pokeemerald/include/constants/abilities.h)
+  - [species](https://pkmn.cc/pokeemerald/include/constants/species.h)
+  - [types / nature](https://pkmn.cc/pokeemerald/include/constants/pokemon.h)
+  - [moves](https://pkmn.cc/pokeemerald/include/constants/moves.h) / [move
+    effects](https://pkmn.cc/pokeemerald/include/constants/battle_move_effects.h)
+  - [held item effects](https://pkmn.cc/pokeemerald/include/constants/hold_effects.h)
+  - [battle](https://pkmn.cc/pokeemerald/include/constants/battle.h) /
+    [misc](https://pkmn.cc/pokeemerald/include/constants/battle_script_commands.h)
 - `src/data/`
-  - [species data](https://pkmn.cc/pokeemeraldsrc/data/pokemon/base_stats.h)
-    - [evolutions](https://pkmn.cc/pokeemeraldsrc/data/pokemon/evolution.h)/[egg
-      moves](https://pkmn.cc/pokeemeraldsrc/data/pokemon/egg_moves.h)/[level
-      up](https://pkmn.cc/pokeemeraldsrc/data/pokemon/level_up_learnsets.h)
-  - [move data](https://pkmn.cc/pokeemeraldsrc/data/battle_moves.h)
-  - [item data](https://pkmn.cc/pokeemeraldsrc/data/items.h)
+  - [species data](https://pkmn.cc/pokeemerald/src/data/pokemon/base_stats.h)
+    - [evolutions](https://pkmn.cc/pokeemerald/src/data/pokemon/evolution.h) / [egg
+      moves](https://pkmn.cc/pokeemerald/src/data/pokemon/egg_moves.h) / [level
+      up](https://pkmn.cc/pokeemerald/src/data/pokemon/level_up_learnsets.h)
+  - [move data](https://pkmn.cc/pokeemerald/src/data/battle_moves.h)
+  - [item data](https://pkmn.cc/pokeemerald/src/data/items.h)
 - `src/`
-  - battle: [main](https://pkmn.cc/pokeemeraldsrc/battle_main.c) /
-    [util](https://pkmn.cc/pokeemeraldsrc/battle_util.c)
-  - [pokemon](https://pkmn.cc/pokeemeraldsrc/pokemon.c)
-  - [random](https://pkmn.cc/pokeemeraldsrc/random.c)
-- [`data/battle_scripts_1.s`](https://pkmn.cc/pokeemeralddata/battle_scripts_1.s)
+  - battle: [main](https://pkmn.cc/pokeemerald/src/battle_main.c) /
+    [util](https://pkmn.cc/pokeemerald/src/battle_util.c)
+  - [pokemon](https://pkmn.cc/pokeemerald/src/pokemon.c)
+  - [random](https://pkmn.cc/pokeemerald/src/random.c)
+- [`data/battle_scripts_1.s`](https://pkmn.cc/pokeemerald/data/battle_scripts_1.s)
 
 ### [Gen 4](https://github.com/pret/pokediamond)
 
@@ -153,7 +153,7 @@ TODO
 
 - [List of glitches (Generation
   I)](https://bulbapedia.bulbagarden.net/wiki/List_of_glitches_(Generation_I))
-- [Pokémon Crystal - Bugs & Glitches](https://pkmn.cc/pokecrystaldocs/bugs_and_glitches.md)
+- [Pokémon Crystal - Bugs & Glitches](https://pkmn.cc/pokecrystal/docs/bugs_and_glitches.md)
 
 ### Other
 
