@@ -202,7 +202,7 @@ class DirectBattle extends Battle {
     }
 
     if (this.sides.every(side => side.isChoiceDone())) {
-      throw new Error(`Choices are done immediately after a request`);
+      throw new Error('Choices are done immediately after a request');
     }
   }
 }

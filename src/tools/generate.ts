@@ -6,10 +6,10 @@ import * as https from 'https';
 
 import * as mustache from 'mustache';
 
-import { Generations, Generation, GenerationNum, TypeName, Specie } from '@pkmn/data';
-import { Dex, toID } from '@pkmn/sim';
+import {Generations, Generation, GenerationNum, TypeName, Specie} from '@pkmn/data';
+import {Dex, toID} from '@pkmn/sim';
 
-import type { IDs } from '..';
+import type {IDs} from '..';
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const TEMPLATES = path.join(ROOT, 'src', 'lib', 'common', 'data');
@@ -133,16 +133,16 @@ const getTypeChart = (gen: Generation, types: TypeName[]) => {
 };
 
 const convertGenderRatio = (species: Specie) => {
-  if (species.gender === 'N') return `0xFF, // N`;
+  if (species.gender === 'N') return '0xFF, // N';
   switch (species.genderRatio.F) {
-  case 0: return `0x00, // 0.00% F`;
-  case 0.125: return `0x1F, // 12.5% F`
-  case 0.25: return `0x3F, // 25.0% F`
-  case 0.5: return `0x7F, // 50.0% F`
-  case 0.75: return `0xBF, // 75.0% F`
-  case 1: return `0xFE, // 100% F`;
+  case 0: return '0x00, // 0.00% F';
+  case 0.125: return '0x1F, // 12.5% F';
+  case 0.25: return '0x3F, // 25.0% F';
+  case 0.5: return '0x7F, // 50.0% F';
+  case 0.75: return '0xBF, // 75.0% F';
+  case 1: return '0xFE, // 100% F';
   default:
-      throw new Error(`Invalid gender ratio: '${species.genderRatio}' for ${species.name}`);
+    throw new Error(`Invalid gender ratio for ${species.name}`);
   }
 };
 
@@ -233,17 +233,17 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     });
     const SPECIES = [];
     for (const name of species) {
-      const species = gen.species.get(name)!;
-      const types = species.types.length === 1
-        ? [species.types[0], species.types[0]] : species.types;
+      const s = gen.species.get(name)!;
+      const types = s.types.length === 1
+        ? [s.types[0], s.types[0]] : s.types;
       SPECIES.push('Specie{\n' +
         `            // ${name},\n` +
         '            .stats = Stats(u8){\n' +
-        `                .hp = ${species.baseStats.hp},\n` +
-        `                .atk = ${species.baseStats.atk},\n` +
-        `                .def = ${species.baseStats.def},\n` +
-        `                .spe = ${species.baseStats.spe},\n` +
-        `                .spc = ${species.baseStats.spa},\n` +
+        `                .hp = ${s.baseStats.hp},\n` +
+        `                .atk = ${s.baseStats.atk},\n` +
+        `                .def = ${s.baseStats.def},\n` +
+        `                .spe = ${s.baseStats.spe},\n` +
+        `                .spc = ${s.baseStats.spa},\n` +
         '            },\n' +
         `            .types = Types{ .type1 = .${types[0]}, .type2 = .${types[1]} },\n` +
         '        }');
@@ -341,7 +341,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
       }
     }
-    const offset = { mail: 0, berries: 0 };
+    const offset = {mail: 0, berries: 0};
     offset.mail = values.length;
     for (const s of mail) {
       values.push(s);
@@ -392,7 +392,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .pp = ${pp}\n` +
         (chance ? `            .chance = ${chance}\n` : '') +
         '        }');
-        PP.push(`${move.pp}, // ${name}`);
+      PP.push(`${move.pp}, // ${name}`);
     }
     template('moves', dirs.out, {
       gen: gen.num,
@@ -419,21 +419,21 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     });
     const SPECIES = [];
     for (const name of species) {
-      const species = gen.species.get(name)!;
-      const types = species.types.length === 1
-        ? [species.types[0], species.types[0]] : species.types;
+      const s = gen.species.get(name)!;
+      const t = s.types.length === 1
+        ? [s.types[0], s.types[0]] : s.types;
       SPECIES.push('Specie{\n' +
         `            // ${name},\n` +
         '            .stats = Stats(u8){\n' +
-        `                .hp = ${species.baseStats.hp},\n` +
-        `                .atk = ${species.baseStats.atk},\n` +
-        `                .def = ${species.baseStats.def},\n` +
-        `                .spe = ${species.baseStats.spe},\n` +
-        `                .spa = ${species.baseStats.spa},\n` +
-        `                .spd = ${species.baseStats.spd},\n` +
+        `                .hp = ${s.baseStats.hp},\n` +
+        `                .atk = ${s.baseStats.atk},\n` +
+        `                .def = ${s.baseStats.def},\n` +
+        `                .spe = ${s.baseStats.spe},\n` +
+        `                .spa = ${s.baseStats.spa},\n` +
+        `                .spd = ${s.baseStats.spd},\n` +
         '            },\n' +
-        `            .types = Types{ .type1 = .${types[0]}, .type2 = .${types[1]} },\n` +
-        `            .ratio = ${convertGenderRatio(species)}\n` +
+        `            .types = Types{ .type1 = .${t[0]}, .type2 = .${t[1]} },\n` +
+        `            .ratio = ${convertGenderRatio(s)}\n` +
         '        }');
     }
     template('species', dirs.out, {
@@ -499,22 +499,22 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     });
     const SPECIES = [];
     for (const name of species) {
-      const species = gen.species.get(name)!;
-      const types = species.types.length === 1
-        ? [species.types[0], species.types[0]] : species.types;
+      const s = gen.species.get(name)!;
+      const types = s.types.length === 1
+        ? [s.types[0], s.types[0]] : s.types;
       // FIXME abilities
       SPECIES.push('Specie{\n' +
         `            // ${name},\n` +
         '            .stats = Stats(u8){\n' +
-        `                .hp = ${species.baseStats.hp},\n` +
-        `                .atk = ${species.baseStats.atk},\n` +
-        `                .def = ${species.baseStats.def},\n` +
-        `                .spe = ${species.baseStats.spe},\n` +
-        `                .spa = ${species.baseStats.spa},\n` +
-        `                .spd = ${species.baseStats.spd},\n` +
+        `                .hp = ${s.baseStats.hp},\n` +
+        `                .atk = ${s.baseStats.atk},\n` +
+        `                .def = ${s.baseStats.def},\n` +
+        `                .spe = ${s.baseStats.spe},\n` +
+        `                .spa = ${s.baseStats.spa},\n` +
+        `                .spd = ${s.baseStats.spd},\n` +
         '            },\n' +
         `            .types = Types{ .type1 = .${types[0]}, .type2 = .${types[1]} },\n` +
-        `            .ratio = ${convertGenderRatio(species)}\n` +
+        `            .ratio = ${convertGenderRatio(s)}\n` +
         '        }');
     }
     template('species', dirs.out, {
@@ -545,7 +545,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     if (mkdir(out)) update = true;
     if (mkdir(cache)) update = true;
 
-    await GEN[gen.num]!(gen, { out, cache }, update);
+    await GEN[gen.num]!(gen, {out, cache}, update);
   }
 
   fs.writeFileSync(path.join(ROOT, 'src', 'ids.json'), JSON.stringify(IDS));

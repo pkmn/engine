@@ -89,7 +89,7 @@ const ActivePokemon = packed struct {
     boosts: Boosts(i4) = Boosts(i4){},
     level: u8 = 100,
     hp: u16,
-    status: Status = .Healthy,
+    status: u8 = 0,
     species: Species,
     types: Types,
     _: u8 = 0,
@@ -104,7 +104,7 @@ const Pokemon = packed struct {
     position: u4,
     moves: [4]MoveSlot,
     hp: u16,
-    status: Status = .Healthy,
+    status: u8 = 0,
     species: Species,
     types: Types,
     level: u8 = 100,
@@ -112,12 +112,60 @@ const Pokemon = packed struct {
     comptime {
         assert(@sizeOf(Pokemon) == 22);
     }
+
+    // @test-only
+    pub fn init(s: Species, ms: []const Moves) Pokemon {
+        assert(ms.len > 0 and ms.len <= 4);
+        const specie = Species.get(s);
+        const stats = Stats(u12){
+            .hp = Stats(u12).calc(.hp, specie.stats.hp, 0xF, 0xFFFF, 100),
+            .atk = Stats(u12).calc(.atk, specie.stats.atk, 0xF, 0xFFFF, 100),
+            .def = Stats(u12).calc(.def, specie.stats.def, 0xF, 0xFFFF, 100),
+            .spe = Stats(u12).calc(.spe, specie.stats.spe, 0xF, 0xFFFF, 100),
+            .spc = Stats(u12).calc(.spc, specie.stats.spc, 0xF, 0xFFFF, 100),
+        };
+
+        var slots = [4]MoveSlot{ MoveSlot{}, MoveSlot{}, MoveSlot{}, MoveSlot{} };
+        var i: usize = 0;
+        while (i < ms.len) : (i += 1) {
+            slots[i].id = ms[i];
+            slots[i].pp = @truncate(u6, Moves.pp(ms[i]) / 5 * 8);
+        }
+
+        return Pokemon{
+            .stats = stats,
+            .position = 1,
+            .moves = slots,
+            .hp = stats.hp,
+            .species = s,
+            .types = specie.types,
+        };
+    }
+
+    // @test-only
+    pub fn format(self: Pokemon, comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
+        _ = fmt;
+        _ = options;
+        // 1. Gengar (LV 100) 323/OK (323/228/218/358/318): Absorb (32/32), Pound (56/56), DreamEater (24/24), Psychic (16/16)
+        try writer.print("{d}. {s} (LV {d}) {d}/{s}", .{ self.position, @tagName(self.species), self.level, self.hp, Status.name(self.status) });
+        try writer.print(" ({d}/{d}/{d}/{d}/{d}):", .{ self.stats.hp, self.stats.atk, self.stats.def, self.stats.spc, self.stats.spe });
+        for (self.moves) |m, i| {
+            const max = Moves.pp(m.id) / 5 * (5 + @as(u8, m.pp_ups));
+            try writer.print(" {s} ({d}/{d})", .{ @tagName(m.id), m.pp, max });
+            if (i < self.moves.len - 1) try writer.print(",", .{});
+        }
+    }
 };
+
+test "Pokemon" {
+    const pokemon = Pokemon.init(Species.Gengar, &[_]Moves{ .Absorb, .Pound, .DreamEater, .Psychic });
+    try expect(!Status.any(pokemon.status));
+}
 
 const MoveSlot = packed struct {
     id: Moves = .None,
     pp: u6 = 0,
-    pp_ups: u2 = 0,
+    pp_ups: u2 = 3,
 
     comptime {
         assert(@sizeOf(MoveSlot) == @sizeOf(u16));
@@ -125,7 +173,6 @@ const MoveSlot = packed struct {
 };
 
 pub const Status = enum(u8) {
-    Healthy = 0,
     // 0 and 1 bits are also used for SLP
     SLP = 2,
     PSN = 3,
@@ -162,6 +209,17 @@ pub const Status = enum(u8) {
 
     pub fn any(num: u8) bool {
         return num > 0;
+    }
+
+    // @test-only
+    pub fn name(num: u8) []const u8 {
+        if (Status.is(num, .SLP)) return "SLP";
+        if (Status.is(num, .PSN)) return "PSN";
+        if (Status.is(num, .BRN)) return "BRN";
+        if (Status.is(num, .FRZ)) return "FRZ";
+        if (Status.is(num, .PAR)) return "PAR";
+        if (Status.is(num, .TOX)) return "TOX";
+        return "OK";
     }
 };
 
@@ -228,6 +286,9 @@ const VolatileData = packed struct {
     }
 };
 
+// @test-only
+pub const Stat = enum { hp, atk, def, spe, spc };
+
 pub fn Stats(comptime T: type) type {
     return packed struct {
         hp: T = 0,
@@ -235,6 +296,13 @@ pub fn Stats(comptime T: type) type {
         def: T = 0,
         spe: T = 0,
         spc: T = 0,
+
+        // @test-only
+        pub fn calc(stat: Stat, base: T, dv: u4, exp: u16, level: u8) T {
+            assert(level > 0 and level <= 100);
+            const factor = if (stat == .hp) level + 10 else 5;
+            return @truncate(T, (@as(u16, base) + dv) * 2 + @as(u16, (std.math.sqrt(exp) / 4)) * level / 100 + factor);
+        }
     };
 }
 
