@@ -125,7 +125,7 @@ const Pokemon = packed struct {
             .spc = Stats(u12).calc(.spc, specie.stats.spc, 0xF, 0xFFFF, 100),
         };
 
-        var slots = [4]MoveSlot{ MoveSlot{}, MoveSlot{}, MoveSlot{}, MoveSlot{} };
+        var slots = [_]MoveSlot{MoveSlot{}} ** 4;
         var i: usize = 0;
         while (i < ms.len) : (i += 1) {
             slots[i].id = ms[i];
