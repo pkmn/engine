@@ -38,7 +38,7 @@ $ zig build --prefix .
 
 The Zig website has [installation instructions](https://ziglang.org/learn/getting-started/) which
 walk through how to install Zig on each platform - the engine code currently is being built and
-tested against the latest Zig nightly development builds (`>= 0.9.0-dev.1583+a7d215759`).
+tested against the latest Zig nightly development builds (`>= 0.9.0-dev.1795+aa61e03f2`).
 
 ### `@pkmn/engine`
 

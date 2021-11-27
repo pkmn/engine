@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        zig: [0.9.0-dev.1583+a7d215759, master]
+        zig: [0.9.0-dev.1795+aa61e03f2, master]
     runs-on: ${{matrix.os}}
     steps:
       - uses: actions/checkout@v2
