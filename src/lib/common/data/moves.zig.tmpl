@@ -16,6 +16,11 @@ pub const Moves = enum({{{ Moves.type }}}) {
         {{{ Moves.data }}},
     };
 
+    // @test-only
+    const pp_data = [_]u8{
+        {{{ Moves.ppData }}},
+    };
+
     comptime {
         assert(@sizeOf(Moves) == {{{ Moves.size }}});
         assert(@sizeOf(@TypeOf(data)) == {{{ Moves.dataSize }}});
@@ -24,5 +29,11 @@ pub const Moves = enum({{{ Moves.type }}}) {
     pub fn get(id: Moves) Move {
         assert(id != .None);
         return data[@enumToInt(id) - 1];
+    }
+
+    // @test-only
+    pub fn pp(id: Moves) u8 {
+        assert(id != .None);
+        return pp_data[@enumToInt(id) - 1];
     }
 };

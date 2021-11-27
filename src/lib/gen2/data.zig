@@ -19,7 +19,7 @@ const Battle = packed struct {
 
     // wWhichMonFaintedFirst:: db
 
-     pub fn random(self: *Battle) u32 {
+    pub fn random(self: *Battle) u32 {
         self.seed = rng.gen12(self.seed);
         return self.seed;
     }
@@ -266,9 +266,16 @@ test "Moves" {
 }
 
 pub const Species = species.Species;
+// @test-only
+pub const Specie = struct {
+    stats: Stats(u8),
+    types: Types,
+    ratio: u8,
+};
 
 test "Species" {
     try expectEqual(152, @enumToInt(Species.Chikorita));
+    try expectEqual(@as(u8, 100), Species.get(.Celebi).stats.spd);
 }
 
 pub const Type = types.Type;

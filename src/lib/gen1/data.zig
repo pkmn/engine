@@ -92,7 +92,7 @@ const ActivePokemon = packed struct {
     status: Status = .Healthy,
     species: Species,
     types: Types,
-     _: u8 = 0,
+    _: u8 = 0,
 
     comptime {
         assert(@sizeOf(ActivePokemon) == 36);
@@ -286,9 +286,15 @@ test "Moves" {
 }
 
 pub const Species = species.Species;
+// @test-only
+pub const Specie = struct {
+    stats: Stats(u8),
+    types: Types,
+};
 
 test "Species" {
     try expectEqual(2, @enumToInt(Species.Ivysaur));
+    try expectEqual(@as(u8, 100), Species.get(.Mew).stats.def);
 }
 
 pub const Type = types.Type;

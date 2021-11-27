@@ -75,10 +75,10 @@ pub const MoveTarget = packed struct {
     _: u2 = 0,
 };
 
-const a = MoveTarget{.Depends = true};
-const b = MoveFlags{.Snatch = true, .Contact = true};
+const a = MoveTarget{ .Depends = true };
+const b = MoveFlags{ .Snatch = true, .Contact = true };
 
-pub const MoveFlags = packed struct{
+pub const MoveFlags = packed struct {
     Contact: bool = false, // contact
     Protect: bool = false, // protect
     MagicCoat: bool = false, // reflectable

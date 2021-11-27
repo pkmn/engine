@@ -1169,6 +1169,175 @@ pub const Moves = enum(u8) {
         },
     };
 
+    // @test-only
+    const pp_data = [_]u8{
+        35, // Pound
+        25, // KarateChop
+        10, // DoubleSlap
+        15, // CometPunch
+        20, // MegaPunch
+        20, // PayDay
+        15, // FirePunch
+        15, // IcePunch
+        15, // ThunderPunch
+        35, // Scratch
+        30, // ViseGrip
+        5, // Guillotine
+        10, // RazorWind
+        30, // SwordsDance
+        30, // Cut
+        35, // Gust
+        35, // WingAttack
+        20, // Whirlwind
+        15, // Fly
+        20, // Bind
+        20, // Slam
+        10, // VineWhip
+        20, // Stomp
+        30, // DoubleKick
+        5, // MegaKick
+        25, // JumpKick
+        15, // RollingKick
+        15, // SandAttack
+        15, // Headbutt
+        25, // HornAttack
+        20, // FuryAttack
+        5, // HornDrill
+        35, // Tackle
+        15, // BodySlam
+        20, // Wrap
+        20, // TakeDown
+        20, // Thrash
+        15, // DoubleEdge
+        30, // TailWhip
+        35, // PoisonSting
+        20, // Twineedle
+        20, // PinMissile
+        30, // Leer
+        25, // Bite
+        40, // Growl
+        20, // Roar
+        15, // Sing
+        20, // Supersonic
+        20, // SonicBoom
+        20, // Disable
+        30, // Acid
+        25, // Ember
+        15, // Flamethrower
+        30, // Mist
+        25, // WaterGun
+        5, // HydroPump
+        15, // Surf
+        10, // IceBeam
+        5, // Blizzard
+        20, // Psybeam
+        20, // BubbleBeam
+        20, // AuroraBeam
+        5, // HyperBeam
+        35, // Peck
+        20, // DrillPeck
+        25, // Submission
+        20, // LowKick
+        20, // Counter
+        20, // SeismicToss
+        15, // Strength
+        20, // Absorb
+        10, // MegaDrain
+        10, // LeechSeed
+        40, // Growth
+        25, // RazorLeaf
+        10, // SolarBeam
+        35, // PoisonPowder
+        30, // StunSpore
+        15, // SleepPowder
+        20, // PetalDance
+        40, // StringShot
+        10, // DragonRage
+        15, // FireSpin
+        30, // ThunderShock
+        15, // Thunderbolt
+        20, // ThunderWave
+        10, // Thunder
+        15, // RockThrow
+        10, // Earthquake
+        5, // Fissure
+        10, // Dig
+        10, // Toxic
+        25, // Confusion
+        10, // Psychic
+        20, // Hypnosis
+        40, // Meditate
+        30, // Agility
+        30, // QuickAttack
+        20, // Rage
+        20, // Teleport
+        15, // NightShade
+        10, // Mimic
+        40, // Screech
+        15, // DoubleTeam
+        20, // Recover
+        30, // Harden
+        20, // Minimize
+        20, // Smokescreen
+        10, // ConfuseRay
+        40, // Withdraw
+        40, // DefenseCurl
+        30, // Barrier
+        30, // LightScreen
+        30, // Haze
+        20, // Reflect
+        30, // FocusEnergy
+        10, // Bide
+        10, // Metronome
+        20, // MirrorMove
+        5, // SelfDestruct
+        10, // EggBomb
+        30, // Lick
+        20, // Smog
+        20, // Sludge
+        20, // BoneClub
+        5, // FireBlast
+        15, // Waterfall
+        10, // Clamp
+        20, // Swift
+        15, // SkullBash
+        15, // SpikeCannon
+        35, // Constrict
+        20, // Amnesia
+        15, // Kinesis
+        10, // SoftBoiled
+        20, // HighJumpKick
+        30, // Glare
+        15, // DreamEater
+        40, // PoisonGas
+        20, // Barrage
+        15, // LeechLife
+        10, // LovelyKiss
+        5, // SkyAttack
+        10, // Transform
+        30, // Bubble
+        10, // DizzyPunch
+        15, // Spore
+        20, // Flash
+        15, // Psywave
+        40, // Splash
+        40, // AcidArmor
+        10, // Crabhammer
+        5, // Explosion
+        15, // FurySwipes
+        10, // Bonemerang
+        10, // Rest
+        10, // RockSlide
+        15, // HyperFang
+        30, // Sharpen
+        30, // Conversion
+        10, // TriAttack
+        10, // SuperFang
+        20, // Slash
+        10, // Substitute
+        10, // Struggle,
+    };
+
     comptime {
         assert(@sizeOf(Moves) == 1);
         assert(@sizeOf(@TypeOf(data)) == 330);
@@ -1177,5 +1346,11 @@ pub const Moves = enum(u8) {
     pub fn get(id: Moves) Move {
         assert(id != .None);
         return data[@enumToInt(id) - 1];
+    }
+
+    // @test-only
+    pub fn pp(id: Moves) u8 {
+        assert(id != .None);
+        return pp_data[@enumToInt(id) - 1];
     }
 };

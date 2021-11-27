@@ -6,10 +6,10 @@ import * as https from 'https';
 
 import * as mustache from 'mustache';
 
-import {Generations, Generation, GenerationNum, TypeName} from '@pkmn/data';
-import {Dex, toID} from '@pkmn/sim';
+import { Generations, Generation, GenerationNum, TypeName, Specie } from '@pkmn/data';
+import { Dex, toID } from '@pkmn/sim';
 
-import type {IDs} from '..';
+import type { IDs } from '..';
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const TEMPLATES = path.join(ROOT, 'src', 'lib', 'common', 'data');
@@ -34,7 +34,7 @@ const IDS: IDs = {
   },
 };
 
-const NAMES: {[constant: string]: string} = {
+const NAMES: { [constant: string]: string } = {
   // Items
   BLACKBELT_I: 'BlackBelt',
   BLACKGLASSES: 'BlackGlasses',
@@ -132,6 +132,20 @@ const getTypeChart = (gen: Generation, types: TypeName[]) => {
   return chart;
 };
 
+const convertGenderRatio = (species: Specie) => {
+  if (species.gender === 'N') return `0xFF, // N`;
+  switch (species.genderRatio.F) {
+  case 0: return `0x00, // 0.00% F`;
+  case 0.125: return `0x1F, // 12.5% F`
+  case 0.25: return `0x3F, // 25.0% F`
+  case 0.5: return `0x7F, // 50.0% F`
+  case 0.75: return `0xBF, // 75.0% F`
+  case 1: return `0xFE, // 100% F`;
+  default:
+      throw new Error(`Invalid gender ratio: '${species.genderRatio}' for ${species.name}`);
+  }
+};
+
 const getOrUpdate = async (
   file: string, dir: string, url: string, update: boolean,
   fn: (line: string, last: string, i: number) => string | undefined
@@ -183,6 +197,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       return nameToEnum(move.name);
     });
     const MOVES: string[] = [];
+    const PP: string[] = [];
     for (const name of moves) {
       const move = gen.moves.get(name)!;
       MOVES.push('Move{\n' +
@@ -191,6 +206,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
         `            .acc = ${move.accuracy === true ? '14' : move.accuracy / 5 - 6},\n` +
         '        }');
+      PP.push(`${move.pp}, // ${name}`);
     }
     template('moves', dirs.out, {
       gen: gen.num,
@@ -200,6 +216,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         size: 1,
         data: MOVES.join(',\n        '),
         dataSize: MOVES.length * 2,
+        ppData: PP.join('\n        '),
       },
     });
 
@@ -214,11 +231,30 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       }
       return nameToEnum(specie.name);
     });
+    const SPECIES = [];
+    for (const name of species) {
+      const species = gen.species.get(name)!;
+      const types = species.types.length === 1
+        ? [species.types[0], species.types[0]] : species.types;
+      SPECIES.push('Specie{\n' +
+        `            // ${name},\n` +
+        '            .stats = Stats(u8){\n' +
+        `                .hp = ${species.baseStats.hp},\n` +
+        `                .atk = ${species.baseStats.atk},\n` +
+        `                .def = ${species.baseStats.def},\n` +
+        `                .spe = ${species.baseStats.spe},\n` +
+        `                .spc = ${species.baseStats.spa},\n` +
+        '            },\n' +
+        `            .types = Types{ .type1 = .${types[0]}, .type2 = .${types[1]} },\n` +
+        '        }');
+    }
     template('species', dirs.out, {
+      gen: gen.num,
       Species: {
         type: 'u8',
         values: species.join(',\n    '),
         size: 1,
+        data: SPECIES.join(',\n        '),
       },
     });
 
@@ -305,7 +341,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
       }
     }
-    const offset = {mail: 0, berries: 0};
+    const offset = { mail: 0, berries: 0 };
     offset.mail = values.length;
     for (const s of mail) {
       values.push(s);
@@ -341,6 +377,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       return nameToEnum(move.name);
     });
     const MOVES: string[] = [];
+    const PP: string[] = [];
     for (const name of moves) {
       const move = gen.moves.get(name)!;
       const pp = move.pp === 1 ? '0, // = 1' : `${move.pp / 5}, // * 5 = ${move.pp}`;
@@ -355,6 +392,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .pp = ${pp}\n` +
         (chance ? `            .chance = ${chance}\n` : '') +
         '        }');
+        PP.push(`${move.pp}, // ${name}`);
     }
     template('moves', dirs.out, {
       gen: gen.num,
@@ -364,6 +402,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         size: 1,
         data: MOVES.join(',\n        '),
         dataSize: MOVES.length * 4,
+        ppData: PP.join('\n        '),
       },
     });
 
@@ -378,11 +417,32 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       }
       return nameToEnum(specie.name);
     });
+    const SPECIES = [];
+    for (const name of species) {
+      const species = gen.species.get(name)!;
+      const types = species.types.length === 1
+        ? [species.types[0], species.types[0]] : species.types;
+      SPECIES.push('Specie{\n' +
+        `            // ${name},\n` +
+        '            .stats = Stats(u8){\n' +
+        `                .hp = ${species.baseStats.hp},\n` +
+        `                .atk = ${species.baseStats.atk},\n` +
+        `                .def = ${species.baseStats.def},\n` +
+        `                .spe = ${species.baseStats.spe},\n` +
+        `                .spa = ${species.baseStats.spa},\n` +
+        `                .spd = ${species.baseStats.spd},\n` +
+        '            },\n' +
+        `            .types = Types{ .type1 = .${types[0]}, .type2 = .${types[1]} },\n` +
+        `            .ratio = ${convertGenderRatio(species)}\n` +
+        '        }');
+    }
     template('species', dirs.out, {
+      gen: gen.num,
       Species: {
         type: 'u8',
         values: species.join(',\n    '),
         size: 1,
+        data: SPECIES.join(',\n        '),
       },
     });
   },
@@ -401,6 +461,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       return nameToEnum(move.name);
     });
     // const MOVES: string[] = [];
+    // const PP: string[] = [];
     // for (const name of moves) {
     //   const move = gen.moves.get(name)!;
     //   MOVES.push('Move{\n' +
@@ -410,6 +471,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     //     `            .accuracy = ${move.accuracy === true ? '100' : move.accuracy},\n` +
     //     `            .pp = ${move.pp / 5}, // * 5 = ${move.pp}\n` +
     //     '        }');
+    // PP.push(`${move.pp}, // ${name}`);
     // }
     template('moves', dirs.out, {
       gen: gen.num,
@@ -419,9 +481,9 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         size: 2,
         data: '//', // MOVES.join(',\n        '),
         dataSize: 0,
+        ppData: '//', // PP.join('\n        '),
       },
     });
-
 
     // Species
     url = `${pret}/include/constants/species.h`;
@@ -435,11 +497,33 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       }
       return nameToEnum(specie.name);
     });
+    const SPECIES = [];
+    for (const name of species) {
+      const species = gen.species.get(name)!;
+      const types = species.types.length === 1
+        ? [species.types[0], species.types[0]] : species.types;
+      // FIXME abilities
+      SPECIES.push('Specie{\n' +
+        `            // ${name},\n` +
+        '            .stats = Stats(u8){\n' +
+        `                .hp = ${species.baseStats.hp},\n` +
+        `                .atk = ${species.baseStats.atk},\n` +
+        `                .def = ${species.baseStats.def},\n` +
+        `                .spe = ${species.baseStats.spe},\n` +
+        `                .spa = ${species.baseStats.spa},\n` +
+        `                .spd = ${species.baseStats.spd},\n` +
+        '            },\n' +
+        `            .types = Types{ .type1 = .${types[0]}, .type2 = .${types[1]} },\n` +
+        `            .ratio = ${convertGenderRatio(species)}\n` +
+        '        }');
+    }
     template('species', dirs.out, {
+      gen: gen.num,
       Species: {
         type: 'u16',
         values: species.join(',\n    '),
         size: 2,
+        data: SPECIES.join(',\n        '),
       },
     });
   },
@@ -461,7 +545,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     if (mkdir(out)) update = true;
     if (mkdir(cache)) update = true;
 
-    await GEN[gen.num]!(gen, {out, cache}, update);
+    await GEN[gen.num]!(gen, { out, cache }, update);
   }
 
   fs.writeFileSync(path.join(ROOT, 'src', 'ids.json'), JSON.stringify(IDS));
