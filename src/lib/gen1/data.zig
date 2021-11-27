@@ -14,7 +14,7 @@ const expect = std.testing.expect;
 const bit = util.bit;
 
 const Battle = packed struct {
-    seed: u8,
+    rng: rng.Gen12,
     turn: u8 = 0,
     last_damage: u16 = 0,
     sides: [2]Side,
@@ -29,11 +29,6 @@ const Battle = packed struct {
 
     pub fn p2(self: *Battle) *Side {
         return &self.sides[1];
-    }
-
-    pub fn random(self: *Battle) u32 {
-        self.seed = rng.gen12(self.seed);
-        return self.seed;
     }
 };
 

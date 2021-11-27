@@ -20,7 +20,7 @@ pub const GameType = enum {
 pub fn Battle(comptime game_type: GameType) type {
     return packed struct {
         sides: [2]Side(game_type),
-        seed: u32,
+        rng: rng.Gen34,
         turn: u8 = 0,
 
         pub fn p1(self: *Battle) *Side {
@@ -29,11 +29,6 @@ pub fn Battle(comptime game_type: GameType) type {
 
         pub fn p2(self: *Battle) *Side {
             return &self.sides[1];
-        }
-
-        pub fn random(self: *Battle) u16 {
-            self.seed = rng.gen34(self.seed);
-            return self.seed >> 16;
         }
     };
 }
