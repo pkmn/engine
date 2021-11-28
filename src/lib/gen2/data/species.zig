@@ -265,9 +265,9 @@ pub const Species = enum(u8) {
 
     // @test-only
     const data = [_]Specie{
-        Specie{
-            // Bulbasaur,
-            .stats = Stats(u8){
+        // Bulbasaur
+        .{
+            .stats = .{
                 .hp = 45,
                 .atk = 49,
                 .def = 49,
@@ -275,12 +275,12 @@ pub const Species = enum(u8) {
                 .spa = 65,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Poison },
+            .types = .{ .type1 = .Grass, .type2 = .Poison },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Ivysaur,
-            .stats = Stats(u8){
+        // Ivysaur
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 62,
                 .def = 63,
@@ -288,12 +288,12 @@ pub const Species = enum(u8) {
                 .spa = 80,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Poison },
+            .types = .{ .type1 = .Grass, .type2 = .Poison },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Venusaur,
-            .stats = Stats(u8){
+        // Venusaur
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 82,
                 .def = 83,
@@ -301,12 +301,12 @@ pub const Species = enum(u8) {
                 .spa = 100,
                 .spd = 100,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Poison },
+            .types = .{ .type1 = .Grass, .type2 = .Poison },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Charmander,
-            .stats = Stats(u8){
+        // Charmander
+        .{
+            .stats = .{
                 .hp = 39,
                 .atk = 52,
                 .def = 43,
@@ -314,12 +314,12 @@ pub const Species = enum(u8) {
                 .spa = 60,
                 .spd = 50,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Charmeleon,
-            .stats = Stats(u8){
+        // Charmeleon
+        .{
+            .stats = .{
                 .hp = 58,
                 .atk = 64,
                 .def = 58,
@@ -327,12 +327,12 @@ pub const Species = enum(u8) {
                 .spa = 80,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Charizard,
-            .stats = Stats(u8){
+        // Charizard
+        .{
+            .stats = .{
                 .hp = 78,
                 .atk = 84,
                 .def = 78,
@@ -340,12 +340,12 @@ pub const Species = enum(u8) {
                 .spa = 109,
                 .spd = 85,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Flying },
+            .types = .{ .type1 = .Fire, .type2 = .Flying },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Squirtle,
-            .stats = Stats(u8){
+        // Squirtle
+        .{
+            .stats = .{
                 .hp = 44,
                 .atk = 48,
                 .def = 65,
@@ -353,12 +353,12 @@ pub const Species = enum(u8) {
                 .spa = 50,
                 .spd = 64,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Wartortle,
-            .stats = Stats(u8){
+        // Wartortle
+        .{
+            .stats = .{
                 .hp = 59,
                 .atk = 63,
                 .def = 80,
@@ -366,12 +366,12 @@ pub const Species = enum(u8) {
                 .spa = 65,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Blastoise,
-            .stats = Stats(u8){
+        // Blastoise
+        .{
+            .stats = .{
                 .hp = 79,
                 .atk = 83,
                 .def = 100,
@@ -379,12 +379,12 @@ pub const Species = enum(u8) {
                 .spa = 85,
                 .spd = 105,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Caterpie,
-            .stats = Stats(u8){
+        // Caterpie
+        .{
+            .stats = .{
                 .hp = 45,
                 .atk = 30,
                 .def = 35,
@@ -392,12 +392,12 @@ pub const Species = enum(u8) {
                 .spa = 20,
                 .spd = 20,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Bug },
+            .types = .{ .type1 = .Bug, .type2 = .Bug },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Metapod,
-            .stats = Stats(u8){
+        // Metapod
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 20,
                 .def = 55,
@@ -405,12 +405,12 @@ pub const Species = enum(u8) {
                 .spa = 25,
                 .spd = 25,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Bug },
+            .types = .{ .type1 = .Bug, .type2 = .Bug },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Butterfree,
-            .stats = Stats(u8){
+        // Butterfree
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 45,
                 .def = 50,
@@ -418,12 +418,12 @@ pub const Species = enum(u8) {
                 .spa = 80,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Flying },
+            .types = .{ .type1 = .Bug, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Weedle,
-            .stats = Stats(u8){
+        // Weedle
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 35,
                 .def = 30,
@@ -431,12 +431,12 @@ pub const Species = enum(u8) {
                 .spa = 20,
                 .spd = 20,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Poison },
+            .types = .{ .type1 = .Bug, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Kakuna,
-            .stats = Stats(u8){
+        // Kakuna
+        .{
+            .stats = .{
                 .hp = 45,
                 .atk = 25,
                 .def = 50,
@@ -444,12 +444,12 @@ pub const Species = enum(u8) {
                 .spa = 25,
                 .spd = 25,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Poison },
+            .types = .{ .type1 = .Bug, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Beedrill,
-            .stats = Stats(u8){
+        // Beedrill
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 80,
                 .def = 40,
@@ -457,12 +457,12 @@ pub const Species = enum(u8) {
                 .spa = 45,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Poison },
+            .types = .{ .type1 = .Bug, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Pidgey,
-            .stats = Stats(u8){
+        // Pidgey
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 45,
                 .def = 40,
@@ -470,12 +470,12 @@ pub const Species = enum(u8) {
                 .spa = 35,
                 .spd = 35,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Flying },
+            .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Pidgeotto,
-            .stats = Stats(u8){
+        // Pidgeotto
+        .{
+            .stats = .{
                 .hp = 63,
                 .atk = 60,
                 .def = 55,
@@ -483,12 +483,12 @@ pub const Species = enum(u8) {
                 .spa = 50,
                 .spd = 50,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Flying },
+            .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Pidgeot,
-            .stats = Stats(u8){
+        // Pidgeot
+        .{
+            .stats = .{
                 .hp = 83,
                 .atk = 80,
                 .def = 75,
@@ -496,12 +496,12 @@ pub const Species = enum(u8) {
                 .spa = 70,
                 .spd = 70,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Flying },
+            .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Rattata,
-            .stats = Stats(u8){
+        // Rattata
+        .{
+            .stats = .{
                 .hp = 30,
                 .atk = 56,
                 .def = 35,
@@ -509,12 +509,12 @@ pub const Species = enum(u8) {
                 .spa = 25,
                 .spd = 35,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Raticate,
-            .stats = Stats(u8){
+        // Raticate
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 81,
                 .def = 60,
@@ -522,12 +522,12 @@ pub const Species = enum(u8) {
                 .spa = 50,
                 .spd = 70,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Spearow,
-            .stats = Stats(u8){
+        // Spearow
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 60,
                 .def = 30,
@@ -535,12 +535,12 @@ pub const Species = enum(u8) {
                 .spa = 31,
                 .spd = 31,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Flying },
+            .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Fearow,
-            .stats = Stats(u8){
+        // Fearow
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 90,
                 .def = 65,
@@ -548,12 +548,12 @@ pub const Species = enum(u8) {
                 .spa = 61,
                 .spd = 61,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Flying },
+            .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Ekans,
-            .stats = Stats(u8){
+        // Ekans
+        .{
+            .stats = .{
                 .hp = 35,
                 .atk = 60,
                 .def = 44,
@@ -561,12 +561,12 @@ pub const Species = enum(u8) {
                 .spa = 40,
                 .spd = 54,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Poison },
+            .types = .{ .type1 = .Poison, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Arbok,
-            .stats = Stats(u8){
+        // Arbok
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 85,
                 .def = 69,
@@ -574,12 +574,12 @@ pub const Species = enum(u8) {
                 .spa = 65,
                 .spd = 79,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Poison },
+            .types = .{ .type1 = .Poison, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Pikachu,
-            .stats = Stats(u8){
+        // Pikachu
+        .{
+            .stats = .{
                 .hp = 35,
                 .atk = 55,
                 .def = 30,
@@ -587,12 +587,12 @@ pub const Species = enum(u8) {
                 .spa = 50,
                 .spd = 40,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Electric },
+            .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Raichu,
-            .stats = Stats(u8){
+        // Raichu
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 90,
                 .def = 55,
@@ -600,12 +600,12 @@ pub const Species = enum(u8) {
                 .spa = 90,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Electric },
+            .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Sandshrew,
-            .stats = Stats(u8){
+        // Sandshrew
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 75,
                 .def = 85,
@@ -613,12 +613,12 @@ pub const Species = enum(u8) {
                 .spa = 20,
                 .spd = 30,
             },
-            .types = Types{ .type1 = .Ground, .type2 = .Ground },
+            .types = .{ .type1 = .Ground, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Sandslash,
-            .stats = Stats(u8){
+        // Sandslash
+        .{
+            .stats = .{
                 .hp = 75,
                 .atk = 100,
                 .def = 110,
@@ -626,12 +626,12 @@ pub const Species = enum(u8) {
                 .spa = 45,
                 .spd = 55,
             },
-            .types = Types{ .type1 = .Ground, .type2 = .Ground },
+            .types = .{ .type1 = .Ground, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // NidoranF,
-            .stats = Stats(u8){
+        // NidoranF
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 47,
                 .def = 52,
@@ -639,12 +639,12 @@ pub const Species = enum(u8) {
                 .spa = 40,
                 .spd = 40,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Poison },
+            .types = .{ .type1 = .Poison, .type2 = .Poison },
             .ratio = 0xFE, // 100% F
         },
-        Specie{
-            // Nidorina,
-            .stats = Stats(u8){
+        // Nidorina
+        .{
+            .stats = .{
                 .hp = 70,
                 .atk = 62,
                 .def = 67,
@@ -652,12 +652,12 @@ pub const Species = enum(u8) {
                 .spa = 55,
                 .spd = 55,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Poison },
+            .types = .{ .type1 = .Poison, .type2 = .Poison },
             .ratio = 0xFE, // 100% F
         },
-        Specie{
-            // Nidoqueen,
-            .stats = Stats(u8){
+        // Nidoqueen
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 82,
                 .def = 87,
@@ -665,12 +665,12 @@ pub const Species = enum(u8) {
                 .spa = 75,
                 .spd = 85,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Ground },
+            .types = .{ .type1 = .Poison, .type2 = .Ground },
             .ratio = 0xFE, // 100% F
         },
-        Specie{
-            // NidoranM,
-            .stats = Stats(u8){
+        // NidoranM
+        .{
+            .stats = .{
                 .hp = 46,
                 .atk = 57,
                 .def = 40,
@@ -678,12 +678,12 @@ pub const Species = enum(u8) {
                 .spa = 40,
                 .spd = 40,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Poison },
+            .types = .{ .type1 = .Poison, .type2 = .Poison },
             .ratio = 0x00, // 0.00% F
         },
-        Specie{
-            // Nidorino,
-            .stats = Stats(u8){
+        // Nidorino
+        .{
+            .stats = .{
                 .hp = 61,
                 .atk = 72,
                 .def = 57,
@@ -691,12 +691,12 @@ pub const Species = enum(u8) {
                 .spa = 55,
                 .spd = 55,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Poison },
+            .types = .{ .type1 = .Poison, .type2 = .Poison },
             .ratio = 0x00, // 0.00% F
         },
-        Specie{
-            // Nidoking,
-            .stats = Stats(u8){
+        // Nidoking
+        .{
+            .stats = .{
                 .hp = 81,
                 .atk = 92,
                 .def = 77,
@@ -704,12 +704,12 @@ pub const Species = enum(u8) {
                 .spa = 85,
                 .spd = 75,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Ground },
+            .types = .{ .type1 = .Poison, .type2 = .Ground },
             .ratio = 0x00, // 0.00% F
         },
-        Specie{
-            // Clefairy,
-            .stats = Stats(u8){
+        // Clefairy
+        .{
+            .stats = .{
                 .hp = 70,
                 .atk = 45,
                 .def = 48,
@@ -717,12 +717,12 @@ pub const Species = enum(u8) {
                 .spa = 60,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xBF, // 75.0% F
         },
-        Specie{
-            // Clefable,
-            .stats = Stats(u8){
+        // Clefable
+        .{
+            .stats = .{
                 .hp = 95,
                 .atk = 70,
                 .def = 73,
@@ -730,12 +730,12 @@ pub const Species = enum(u8) {
                 .spa = 85,
                 .spd = 90,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xBF, // 75.0% F
         },
-        Specie{
-            // Vulpix,
-            .stats = Stats(u8){
+        // Vulpix
+        .{
+            .stats = .{
                 .hp = 38,
                 .atk = 41,
                 .def = 40,
@@ -743,12 +743,12 @@ pub const Species = enum(u8) {
                 .spa = 50,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0xBF, // 75.0% F
         },
-        Specie{
-            // Ninetales,
-            .stats = Stats(u8){
+        // Ninetales
+        .{
+            .stats = .{
                 .hp = 73,
                 .atk = 76,
                 .def = 75,
@@ -756,12 +756,12 @@ pub const Species = enum(u8) {
                 .spa = 81,
                 .spd = 100,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0xBF, // 75.0% F
         },
-        Specie{
-            // Jigglypuff,
-            .stats = Stats(u8){
+        // Jigglypuff
+        .{
+            .stats = .{
                 .hp = 115,
                 .atk = 45,
                 .def = 20,
@@ -769,12 +769,12 @@ pub const Species = enum(u8) {
                 .spa = 45,
                 .spd = 25,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xBF, // 75.0% F
         },
-        Specie{
-            // Wigglytuff,
-            .stats = Stats(u8){
+        // Wigglytuff
+        .{
+            .stats = .{
                 .hp = 140,
                 .atk = 70,
                 .def = 45,
@@ -782,12 +782,12 @@ pub const Species = enum(u8) {
                 .spa = 75,
                 .spd = 50,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xBF, // 75.0% F
         },
-        Specie{
-            // Zubat,
-            .stats = Stats(u8){
+        // Zubat
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 45,
                 .def = 35,
@@ -795,12 +795,12 @@ pub const Species = enum(u8) {
                 .spa = 30,
                 .spd = 40,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Flying },
+            .types = .{ .type1 = .Poison, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Golbat,
-            .stats = Stats(u8){
+        // Golbat
+        .{
+            .stats = .{
                 .hp = 75,
                 .atk = 80,
                 .def = 70,
@@ -808,12 +808,12 @@ pub const Species = enum(u8) {
                 .spa = 65,
                 .spd = 75,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Flying },
+            .types = .{ .type1 = .Poison, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Oddish,
-            .stats = Stats(u8){
+        // Oddish
+        .{
+            .stats = .{
                 .hp = 45,
                 .atk = 50,
                 .def = 55,
@@ -821,12 +821,12 @@ pub const Species = enum(u8) {
                 .spa = 75,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Poison },
+            .types = .{ .type1 = .Grass, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Gloom,
-            .stats = Stats(u8){
+        // Gloom
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 65,
                 .def = 70,
@@ -834,12 +834,12 @@ pub const Species = enum(u8) {
                 .spa = 85,
                 .spd = 75,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Poison },
+            .types = .{ .type1 = .Grass, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Vileplume,
-            .stats = Stats(u8){
+        // Vileplume
+        .{
+            .stats = .{
                 .hp = 75,
                 .atk = 80,
                 .def = 85,
@@ -847,12 +847,12 @@ pub const Species = enum(u8) {
                 .spa = 100,
                 .spd = 90,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Poison },
+            .types = .{ .type1 = .Grass, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Paras,
-            .stats = Stats(u8){
+        // Paras
+        .{
+            .stats = .{
                 .hp = 35,
                 .atk = 70,
                 .def = 55,
@@ -860,12 +860,12 @@ pub const Species = enum(u8) {
                 .spa = 45,
                 .spd = 55,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Grass },
+            .types = .{ .type1 = .Bug, .type2 = .Grass },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Parasect,
-            .stats = Stats(u8){
+        // Parasect
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 95,
                 .def = 80,
@@ -873,12 +873,12 @@ pub const Species = enum(u8) {
                 .spa = 60,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Grass },
+            .types = .{ .type1 = .Bug, .type2 = .Grass },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Venonat,
-            .stats = Stats(u8){
+        // Venonat
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 55,
                 .def = 50,
@@ -886,12 +886,12 @@ pub const Species = enum(u8) {
                 .spa = 40,
                 .spd = 55,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Poison },
+            .types = .{ .type1 = .Bug, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Venomoth,
-            .stats = Stats(u8){
+        // Venomoth
+        .{
+            .stats = .{
                 .hp = 70,
                 .atk = 65,
                 .def = 60,
@@ -899,12 +899,12 @@ pub const Species = enum(u8) {
                 .spa = 90,
                 .spd = 75,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Poison },
+            .types = .{ .type1 = .Bug, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Diglett,
-            .stats = Stats(u8){
+        // Diglett
+        .{
+            .stats = .{
                 .hp = 10,
                 .atk = 55,
                 .def = 25,
@@ -912,12 +912,12 @@ pub const Species = enum(u8) {
                 .spa = 35,
                 .spd = 45,
             },
-            .types = Types{ .type1 = .Ground, .type2 = .Ground },
+            .types = .{ .type1 = .Ground, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Dugtrio,
-            .stats = Stats(u8){
+        // Dugtrio
+        .{
+            .stats = .{
                 .hp = 35,
                 .atk = 80,
                 .def = 50,
@@ -925,12 +925,12 @@ pub const Species = enum(u8) {
                 .spa = 50,
                 .spd = 70,
             },
-            .types = Types{ .type1 = .Ground, .type2 = .Ground },
+            .types = .{ .type1 = .Ground, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Meowth,
-            .stats = Stats(u8){
+        // Meowth
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 45,
                 .def = 35,
@@ -938,12 +938,12 @@ pub const Species = enum(u8) {
                 .spa = 40,
                 .spd = 40,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Persian,
-            .stats = Stats(u8){
+        // Persian
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 70,
                 .def = 60,
@@ -951,12 +951,12 @@ pub const Species = enum(u8) {
                 .spa = 65,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Psyduck,
-            .stats = Stats(u8){
+        // Psyduck
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 52,
                 .def = 48,
@@ -964,12 +964,12 @@ pub const Species = enum(u8) {
                 .spa = 65,
                 .spd = 50,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Golduck,
-            .stats = Stats(u8){
+        // Golduck
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 82,
                 .def = 78,
@@ -977,12 +977,12 @@ pub const Species = enum(u8) {
                 .spa = 95,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Mankey,
-            .stats = Stats(u8){
+        // Mankey
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 80,
                 .def = 35,
@@ -990,12 +990,12 @@ pub const Species = enum(u8) {
                 .spa = 35,
                 .spd = 45,
             },
-            .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
+            .types = .{ .type1 = .Fighting, .type2 = .Fighting },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Primeape,
-            .stats = Stats(u8){
+        // Primeape
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 105,
                 .def = 60,
@@ -1003,12 +1003,12 @@ pub const Species = enum(u8) {
                 .spa = 60,
                 .spd = 70,
             },
-            .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
+            .types = .{ .type1 = .Fighting, .type2 = .Fighting },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Growlithe,
-            .stats = Stats(u8){
+        // Growlithe
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 70,
                 .def = 45,
@@ -1016,12 +1016,12 @@ pub const Species = enum(u8) {
                 .spa = 70,
                 .spd = 50,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x3F, // 25.0% F
         },
-        Specie{
-            // Arcanine,
-            .stats = Stats(u8){
+        // Arcanine
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 110,
                 .def = 80,
@@ -1029,12 +1029,12 @@ pub const Species = enum(u8) {
                 .spa = 100,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x3F, // 25.0% F
         },
-        Specie{
-            // Poliwag,
-            .stats = Stats(u8){
+        // Poliwag
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 50,
                 .def = 40,
@@ -1042,12 +1042,12 @@ pub const Species = enum(u8) {
                 .spa = 40,
                 .spd = 40,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Poliwhirl,
-            .stats = Stats(u8){
+        // Poliwhirl
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 65,
                 .def = 65,
@@ -1055,12 +1055,12 @@ pub const Species = enum(u8) {
                 .spa = 50,
                 .spd = 50,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Poliwrath,
-            .stats = Stats(u8){
+        // Poliwrath
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 85,
                 .def = 95,
@@ -1068,12 +1068,12 @@ pub const Species = enum(u8) {
                 .spa = 70,
                 .spd = 90,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Fighting },
+            .types = .{ .type1 = .Water, .type2 = .Fighting },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Abra,
-            .stats = Stats(u8){
+        // Abra
+        .{
+            .stats = .{
                 .hp = 25,
                 .atk = 20,
                 .def = 15,
@@ -1081,12 +1081,12 @@ pub const Species = enum(u8) {
                 .spa = 105,
                 .spd = 55,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
+            .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0x3F, // 25.0% F
         },
-        Specie{
-            // Kadabra,
-            .stats = Stats(u8){
+        // Kadabra
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 35,
                 .def = 30,
@@ -1094,12 +1094,12 @@ pub const Species = enum(u8) {
                 .spa = 120,
                 .spd = 70,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
+            .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0x3F, // 25.0% F
         },
-        Specie{
-            // Alakazam,
-            .stats = Stats(u8){
+        // Alakazam
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 50,
                 .def = 45,
@@ -1107,12 +1107,12 @@ pub const Species = enum(u8) {
                 .spa = 135,
                 .spd = 85,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
+            .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0x3F, // 25.0% F
         },
-        Specie{
-            // Machop,
-            .stats = Stats(u8){
+        // Machop
+        .{
+            .stats = .{
                 .hp = 70,
                 .atk = 80,
                 .def = 50,
@@ -1120,12 +1120,12 @@ pub const Species = enum(u8) {
                 .spa = 35,
                 .spd = 35,
             },
-            .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
+            .types = .{ .type1 = .Fighting, .type2 = .Fighting },
             .ratio = 0x3F, // 25.0% F
         },
-        Specie{
-            // Machoke,
-            .stats = Stats(u8){
+        // Machoke
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 100,
                 .def = 70,
@@ -1133,12 +1133,12 @@ pub const Species = enum(u8) {
                 .spa = 50,
                 .spd = 60,
             },
-            .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
+            .types = .{ .type1 = .Fighting, .type2 = .Fighting },
             .ratio = 0x3F, // 25.0% F
         },
-        Specie{
-            // Machamp,
-            .stats = Stats(u8){
+        // Machamp
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 130,
                 .def = 80,
@@ -1146,12 +1146,12 @@ pub const Species = enum(u8) {
                 .spa = 65,
                 .spd = 85,
             },
-            .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
+            .types = .{ .type1 = .Fighting, .type2 = .Fighting },
             .ratio = 0x3F, // 25.0% F
         },
-        Specie{
-            // Bellsprout,
-            .stats = Stats(u8){
+        // Bellsprout
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 75,
                 .def = 35,
@@ -1159,12 +1159,12 @@ pub const Species = enum(u8) {
                 .spa = 70,
                 .spd = 30,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Poison },
+            .types = .{ .type1 = .Grass, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Weepinbell,
-            .stats = Stats(u8){
+        // Weepinbell
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 90,
                 .def = 50,
@@ -1172,12 +1172,12 @@ pub const Species = enum(u8) {
                 .spa = 85,
                 .spd = 45,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Poison },
+            .types = .{ .type1 = .Grass, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Victreebel,
-            .stats = Stats(u8){
+        // Victreebel
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 105,
                 .def = 65,
@@ -1185,12 +1185,12 @@ pub const Species = enum(u8) {
                 .spa = 100,
                 .spd = 60,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Poison },
+            .types = .{ .type1 = .Grass, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Tentacool,
-            .stats = Stats(u8){
+        // Tentacool
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 40,
                 .def = 35,
@@ -1198,12 +1198,12 @@ pub const Species = enum(u8) {
                 .spa = 50,
                 .spd = 100,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Poison },
+            .types = .{ .type1 = .Water, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Tentacruel,
-            .stats = Stats(u8){
+        // Tentacruel
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 70,
                 .def = 65,
@@ -1211,12 +1211,12 @@ pub const Species = enum(u8) {
                 .spa = 80,
                 .spd = 120,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Poison },
+            .types = .{ .type1 = .Water, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Geodude,
-            .stats = Stats(u8){
+        // Geodude
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 80,
                 .def = 100,
@@ -1224,12 +1224,12 @@ pub const Species = enum(u8) {
                 .spa = 30,
                 .spd = 30,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Ground },
+            .types = .{ .type1 = .Rock, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Graveler,
-            .stats = Stats(u8){
+        // Graveler
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 95,
                 .def = 115,
@@ -1237,12 +1237,12 @@ pub const Species = enum(u8) {
                 .spa = 45,
                 .spd = 45,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Ground },
+            .types = .{ .type1 = .Rock, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Golem,
-            .stats = Stats(u8){
+        // Golem
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 110,
                 .def = 130,
@@ -1250,12 +1250,12 @@ pub const Species = enum(u8) {
                 .spa = 55,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Ground },
+            .types = .{ .type1 = .Rock, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Ponyta,
-            .stats = Stats(u8){
+        // Ponyta
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 85,
                 .def = 55,
@@ -1263,12 +1263,12 @@ pub const Species = enum(u8) {
                 .spa = 65,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Rapidash,
-            .stats = Stats(u8){
+        // Rapidash
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 100,
                 .def = 70,
@@ -1276,12 +1276,12 @@ pub const Species = enum(u8) {
                 .spa = 80,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Slowpoke,
-            .stats = Stats(u8){
+        // Slowpoke
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 65,
                 .def = 65,
@@ -1289,12 +1289,12 @@ pub const Species = enum(u8) {
                 .spa = 40,
                 .spd = 40,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Psychic },
+            .types = .{ .type1 = .Water, .type2 = .Psychic },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Slowbro,
-            .stats = Stats(u8){
+        // Slowbro
+        .{
+            .stats = .{
                 .hp = 95,
                 .atk = 75,
                 .def = 110,
@@ -1302,12 +1302,12 @@ pub const Species = enum(u8) {
                 .spa = 100,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Psychic },
+            .types = .{ .type1 = .Water, .type2 = .Psychic },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Magnemite,
-            .stats = Stats(u8){
+        // Magnemite
+        .{
+            .stats = .{
                 .hp = 25,
                 .atk = 35,
                 .def = 70,
@@ -1315,12 +1315,12 @@ pub const Species = enum(u8) {
                 .spa = 95,
                 .spd = 55,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Steel },
+            .types = .{ .type1 = .Electric, .type2 = .Steel },
             .ratio = 0xFF, // N
         },
-        Specie{
-            // Magneton,
-            .stats = Stats(u8){
+        // Magneton
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 60,
                 .def = 95,
@@ -1328,12 +1328,12 @@ pub const Species = enum(u8) {
                 .spa = 120,
                 .spd = 70,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Steel },
+            .types = .{ .type1 = .Electric, .type2 = .Steel },
             .ratio = 0xFF, // N
         },
-        Specie{
-            // Farfetchd,
-            .stats = Stats(u8){
+        // Farfetchd
+        .{
+            .stats = .{
                 .hp = 52,
                 .atk = 65,
                 .def = 55,
@@ -1341,12 +1341,12 @@ pub const Species = enum(u8) {
                 .spa = 58,
                 .spd = 62,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Flying },
+            .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Doduo,
-            .stats = Stats(u8){
+        // Doduo
+        .{
+            .stats = .{
                 .hp = 35,
                 .atk = 85,
                 .def = 45,
@@ -1354,12 +1354,12 @@ pub const Species = enum(u8) {
                 .spa = 35,
                 .spd = 35,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Flying },
+            .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Dodrio,
-            .stats = Stats(u8){
+        // Dodrio
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 110,
                 .def = 70,
@@ -1367,12 +1367,12 @@ pub const Species = enum(u8) {
                 .spa = 60,
                 .spd = 60,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Flying },
+            .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Seel,
-            .stats = Stats(u8){
+        // Seel
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 45,
                 .def = 55,
@@ -1380,12 +1380,12 @@ pub const Species = enum(u8) {
                 .spa = 45,
                 .spd = 70,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Dewgong,
-            .stats = Stats(u8){
+        // Dewgong
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 70,
                 .def = 80,
@@ -1393,12 +1393,12 @@ pub const Species = enum(u8) {
                 .spa = 70,
                 .spd = 95,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Ice },
+            .types = .{ .type1 = .Water, .type2 = .Ice },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Grimer,
-            .stats = Stats(u8){
+        // Grimer
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 80,
                 .def = 50,
@@ -1406,12 +1406,12 @@ pub const Species = enum(u8) {
                 .spa = 40,
                 .spd = 50,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Poison },
+            .types = .{ .type1 = .Poison, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Muk,
-            .stats = Stats(u8){
+        // Muk
+        .{
+            .stats = .{
                 .hp = 105,
                 .atk = 105,
                 .def = 75,
@@ -1419,12 +1419,12 @@ pub const Species = enum(u8) {
                 .spa = 65,
                 .spd = 100,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Poison },
+            .types = .{ .type1 = .Poison, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Shellder,
-            .stats = Stats(u8){
+        // Shellder
+        .{
+            .stats = .{
                 .hp = 30,
                 .atk = 65,
                 .def = 100,
@@ -1432,12 +1432,12 @@ pub const Species = enum(u8) {
                 .spa = 45,
                 .spd = 25,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Cloyster,
-            .stats = Stats(u8){
+        // Cloyster
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 95,
                 .def = 180,
@@ -1445,12 +1445,12 @@ pub const Species = enum(u8) {
                 .spa = 85,
                 .spd = 45,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Ice },
+            .types = .{ .type1 = .Water, .type2 = .Ice },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Gastly,
-            .stats = Stats(u8){
+        // Gastly
+        .{
+            .stats = .{
                 .hp = 30,
                 .atk = 35,
                 .def = 30,
@@ -1458,12 +1458,12 @@ pub const Species = enum(u8) {
                 .spa = 100,
                 .spd = 35,
             },
-            .types = Types{ .type1 = .Ghost, .type2 = .Poison },
+            .types = .{ .type1 = .Ghost, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Haunter,
-            .stats = Stats(u8){
+        // Haunter
+        .{
+            .stats = .{
                 .hp = 45,
                 .atk = 50,
                 .def = 45,
@@ -1471,12 +1471,12 @@ pub const Species = enum(u8) {
                 .spa = 115,
                 .spd = 55,
             },
-            .types = Types{ .type1 = .Ghost, .type2 = .Poison },
+            .types = .{ .type1 = .Ghost, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Gengar,
-            .stats = Stats(u8){
+        // Gengar
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 65,
                 .def = 60,
@@ -1484,12 +1484,12 @@ pub const Species = enum(u8) {
                 .spa = 130,
                 .spd = 75,
             },
-            .types = Types{ .type1 = .Ghost, .type2 = .Poison },
+            .types = .{ .type1 = .Ghost, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Onix,
-            .stats = Stats(u8){
+        // Onix
+        .{
+            .stats = .{
                 .hp = 35,
                 .atk = 45,
                 .def = 160,
@@ -1497,12 +1497,12 @@ pub const Species = enum(u8) {
                 .spa = 30,
                 .spd = 45,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Ground },
+            .types = .{ .type1 = .Rock, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Drowzee,
-            .stats = Stats(u8){
+        // Drowzee
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 48,
                 .def = 45,
@@ -1510,12 +1510,12 @@ pub const Species = enum(u8) {
                 .spa = 43,
                 .spd = 90,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
+            .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Hypno,
-            .stats = Stats(u8){
+        // Hypno
+        .{
+            .stats = .{
                 .hp = 85,
                 .atk = 73,
                 .def = 70,
@@ -1523,12 +1523,12 @@ pub const Species = enum(u8) {
                 .spa = 73,
                 .spd = 115,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
+            .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Krabby,
-            .stats = Stats(u8){
+        // Krabby
+        .{
+            .stats = .{
                 .hp = 30,
                 .atk = 105,
                 .def = 90,
@@ -1536,12 +1536,12 @@ pub const Species = enum(u8) {
                 .spa = 25,
                 .spd = 25,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Kingler,
-            .stats = Stats(u8){
+        // Kingler
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 130,
                 .def = 115,
@@ -1549,12 +1549,12 @@ pub const Species = enum(u8) {
                 .spa = 50,
                 .spd = 50,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Voltorb,
-            .stats = Stats(u8){
+        // Voltorb
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 30,
                 .def = 50,
@@ -1562,12 +1562,12 @@ pub const Species = enum(u8) {
                 .spa = 55,
                 .spd = 55,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Electric },
+            .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0xFF, // N
         },
-        Specie{
-            // Electrode,
-            .stats = Stats(u8){
+        // Electrode
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 50,
                 .def = 70,
@@ -1575,12 +1575,12 @@ pub const Species = enum(u8) {
                 .spa = 80,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Electric },
+            .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0xFF, // N
         },
-        Specie{
-            // Exeggcute,
-            .stats = Stats(u8){
+        // Exeggcute
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 40,
                 .def = 80,
@@ -1588,12 +1588,12 @@ pub const Species = enum(u8) {
                 .spa = 60,
                 .spd = 45,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Psychic },
+            .types = .{ .type1 = .Grass, .type2 = .Psychic },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Exeggutor,
-            .stats = Stats(u8){
+        // Exeggutor
+        .{
+            .stats = .{
                 .hp = 95,
                 .atk = 95,
                 .def = 85,
@@ -1601,12 +1601,12 @@ pub const Species = enum(u8) {
                 .spa = 125,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Psychic },
+            .types = .{ .type1 = .Grass, .type2 = .Psychic },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Cubone,
-            .stats = Stats(u8){
+        // Cubone
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 50,
                 .def = 95,
@@ -1614,12 +1614,12 @@ pub const Species = enum(u8) {
                 .spa = 40,
                 .spd = 50,
             },
-            .types = Types{ .type1 = .Ground, .type2 = .Ground },
+            .types = .{ .type1 = .Ground, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Marowak,
-            .stats = Stats(u8){
+        // Marowak
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 80,
                 .def = 110,
@@ -1627,12 +1627,12 @@ pub const Species = enum(u8) {
                 .spa = 50,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Ground, .type2 = .Ground },
+            .types = .{ .type1 = .Ground, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Hitmonlee,
-            .stats = Stats(u8){
+        // Hitmonlee
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 120,
                 .def = 53,
@@ -1640,12 +1640,12 @@ pub const Species = enum(u8) {
                 .spa = 35,
                 .spd = 110,
             },
-            .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
+            .types = .{ .type1 = .Fighting, .type2 = .Fighting },
             .ratio = 0x00, // 0.00% F
         },
-        Specie{
-            // Hitmonchan,
-            .stats = Stats(u8){
+        // Hitmonchan
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 105,
                 .def = 79,
@@ -1653,12 +1653,12 @@ pub const Species = enum(u8) {
                 .spa = 35,
                 .spd = 110,
             },
-            .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
+            .types = .{ .type1 = .Fighting, .type2 = .Fighting },
             .ratio = 0x00, // 0.00% F
         },
-        Specie{
-            // Lickitung,
-            .stats = Stats(u8){
+        // Lickitung
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 55,
                 .def = 75,
@@ -1666,12 +1666,12 @@ pub const Species = enum(u8) {
                 .spa = 60,
                 .spd = 75,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Koffing,
-            .stats = Stats(u8){
+        // Koffing
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 65,
                 .def = 95,
@@ -1679,12 +1679,12 @@ pub const Species = enum(u8) {
                 .spa = 60,
                 .spd = 45,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Poison },
+            .types = .{ .type1 = .Poison, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Weezing,
-            .stats = Stats(u8){
+        // Weezing
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 90,
                 .def = 120,
@@ -1692,12 +1692,12 @@ pub const Species = enum(u8) {
                 .spa = 85,
                 .spd = 70,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Poison },
+            .types = .{ .type1 = .Poison, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Rhyhorn,
-            .stats = Stats(u8){
+        // Rhyhorn
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 85,
                 .def = 95,
@@ -1705,12 +1705,12 @@ pub const Species = enum(u8) {
                 .spa = 30,
                 .spd = 30,
             },
-            .types = Types{ .type1 = .Ground, .type2 = .Rock },
+            .types = .{ .type1 = .Ground, .type2 = .Rock },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Rhydon,
-            .stats = Stats(u8){
+        // Rhydon
+        .{
+            .stats = .{
                 .hp = 105,
                 .atk = 130,
                 .def = 120,
@@ -1718,12 +1718,12 @@ pub const Species = enum(u8) {
                 .spa = 45,
                 .spd = 45,
             },
-            .types = Types{ .type1 = .Ground, .type2 = .Rock },
+            .types = .{ .type1 = .Ground, .type2 = .Rock },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Chansey,
-            .stats = Stats(u8){
+        // Chansey
+        .{
+            .stats = .{
                 .hp = 250,
                 .atk = 5,
                 .def = 5,
@@ -1731,12 +1731,12 @@ pub const Species = enum(u8) {
                 .spa = 35,
                 .spd = 105,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xFE, // 100% F
         },
-        Specie{
-            // Tangela,
-            .stats = Stats(u8){
+        // Tangela
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 55,
                 .def = 115,
@@ -1744,12 +1744,12 @@ pub const Species = enum(u8) {
                 .spa = 100,
                 .spd = 40,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Grass },
+            .types = .{ .type1 = .Grass, .type2 = .Grass },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Kangaskhan,
-            .stats = Stats(u8){
+        // Kangaskhan
+        .{
+            .stats = .{
                 .hp = 105,
                 .atk = 95,
                 .def = 80,
@@ -1757,12 +1757,12 @@ pub const Species = enum(u8) {
                 .spa = 40,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xFE, // 100% F
         },
-        Specie{
-            // Horsea,
-            .stats = Stats(u8){
+        // Horsea
+        .{
+            .stats = .{
                 .hp = 30,
                 .atk = 40,
                 .def = 70,
@@ -1770,12 +1770,12 @@ pub const Species = enum(u8) {
                 .spa = 70,
                 .spd = 25,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Seadra,
-            .stats = Stats(u8){
+        // Seadra
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 65,
                 .def = 95,
@@ -1783,12 +1783,12 @@ pub const Species = enum(u8) {
                 .spa = 95,
                 .spd = 45,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Goldeen,
-            .stats = Stats(u8){
+        // Goldeen
+        .{
+            .stats = .{
                 .hp = 45,
                 .atk = 67,
                 .def = 60,
@@ -1796,12 +1796,12 @@ pub const Species = enum(u8) {
                 .spa = 35,
                 .spd = 50,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Seaking,
-            .stats = Stats(u8){
+        // Seaking
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 92,
                 .def = 65,
@@ -1809,12 +1809,12 @@ pub const Species = enum(u8) {
                 .spa = 65,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Staryu,
-            .stats = Stats(u8){
+        // Staryu
+        .{
+            .stats = .{
                 .hp = 30,
                 .atk = 45,
                 .def = 55,
@@ -1822,12 +1822,12 @@ pub const Species = enum(u8) {
                 .spa = 70,
                 .spd = 55,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0xFF, // N
         },
-        Specie{
-            // Starmie,
-            .stats = Stats(u8){
+        // Starmie
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 75,
                 .def = 85,
@@ -1835,12 +1835,12 @@ pub const Species = enum(u8) {
                 .spa = 100,
                 .spd = 85,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Psychic },
+            .types = .{ .type1 = .Water, .type2 = .Psychic },
             .ratio = 0xFF, // N
         },
-        Specie{
-            // MrMime,
-            .stats = Stats(u8){
+        // MrMime
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 45,
                 .def = 65,
@@ -1848,12 +1848,12 @@ pub const Species = enum(u8) {
                 .spa = 100,
                 .spd = 120,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
+            .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Scyther,
-            .stats = Stats(u8){
+        // Scyther
+        .{
+            .stats = .{
                 .hp = 70,
                 .atk = 110,
                 .def = 80,
@@ -1861,12 +1861,12 @@ pub const Species = enum(u8) {
                 .spa = 55,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Flying },
+            .types = .{ .type1 = .Bug, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Jynx,
-            .stats = Stats(u8){
+        // Jynx
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 50,
                 .def = 35,
@@ -1874,12 +1874,12 @@ pub const Species = enum(u8) {
                 .spa = 115,
                 .spd = 95,
             },
-            .types = Types{ .type1 = .Ice, .type2 = .Psychic },
+            .types = .{ .type1 = .Ice, .type2 = .Psychic },
             .ratio = 0xFE, // 100% F
         },
-        Specie{
-            // Electabuzz,
-            .stats = Stats(u8){
+        // Electabuzz
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 83,
                 .def = 57,
@@ -1887,12 +1887,12 @@ pub const Species = enum(u8) {
                 .spa = 95,
                 .spd = 85,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Electric },
+            .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0x3F, // 25.0% F
         },
-        Specie{
-            // Magmar,
-            .stats = Stats(u8){
+        // Magmar
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 95,
                 .def = 57,
@@ -1900,12 +1900,12 @@ pub const Species = enum(u8) {
                 .spa = 100,
                 .spd = 85,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x3F, // 25.0% F
         },
-        Specie{
-            // Pinsir,
-            .stats = Stats(u8){
+        // Pinsir
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 125,
                 .def = 100,
@@ -1913,12 +1913,12 @@ pub const Species = enum(u8) {
                 .spa = 55,
                 .spd = 70,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Bug },
+            .types = .{ .type1 = .Bug, .type2 = .Bug },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Tauros,
-            .stats = Stats(u8){
+        // Tauros
+        .{
+            .stats = .{
                 .hp = 75,
                 .atk = 100,
                 .def = 95,
@@ -1926,12 +1926,12 @@ pub const Species = enum(u8) {
                 .spa = 40,
                 .spd = 70,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x00, // 0.00% F
         },
-        Specie{
-            // Magikarp,
-            .stats = Stats(u8){
+        // Magikarp
+        .{
+            .stats = .{
                 .hp = 20,
                 .atk = 10,
                 .def = 55,
@@ -1939,12 +1939,12 @@ pub const Species = enum(u8) {
                 .spa = 15,
                 .spd = 20,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Gyarados,
-            .stats = Stats(u8){
+        // Gyarados
+        .{
+            .stats = .{
                 .hp = 95,
                 .atk = 125,
                 .def = 79,
@@ -1952,12 +1952,12 @@ pub const Species = enum(u8) {
                 .spa = 60,
                 .spd = 100,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Flying },
+            .types = .{ .type1 = .Water, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Lapras,
-            .stats = Stats(u8){
+        // Lapras
+        .{
+            .stats = .{
                 .hp = 130,
                 .atk = 85,
                 .def = 80,
@@ -1965,12 +1965,12 @@ pub const Species = enum(u8) {
                 .spa = 85,
                 .spd = 95,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Ice },
+            .types = .{ .type1 = .Water, .type2 = .Ice },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Ditto,
-            .stats = Stats(u8){
+        // Ditto
+        .{
+            .stats = .{
                 .hp = 48,
                 .atk = 48,
                 .def = 48,
@@ -1978,12 +1978,12 @@ pub const Species = enum(u8) {
                 .spa = 48,
                 .spd = 48,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xFF, // N
         },
-        Specie{
-            // Eevee,
-            .stats = Stats(u8){
+        // Eevee
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 55,
                 .def = 50,
@@ -1991,12 +1991,12 @@ pub const Species = enum(u8) {
                 .spa = 45,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Vaporeon,
-            .stats = Stats(u8){
+        // Vaporeon
+        .{
+            .stats = .{
                 .hp = 130,
                 .atk = 65,
                 .def = 60,
@@ -2004,12 +2004,12 @@ pub const Species = enum(u8) {
                 .spa = 110,
                 .spd = 95,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Jolteon,
-            .stats = Stats(u8){
+        // Jolteon
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 65,
                 .def = 60,
@@ -2017,12 +2017,12 @@ pub const Species = enum(u8) {
                 .spa = 110,
                 .spd = 95,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Electric },
+            .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Flareon,
-            .stats = Stats(u8){
+        // Flareon
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 130,
                 .def = 60,
@@ -2030,12 +2030,12 @@ pub const Species = enum(u8) {
                 .spa = 95,
                 .spd = 110,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Porygon,
-            .stats = Stats(u8){
+        // Porygon
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 60,
                 .def = 70,
@@ -2043,12 +2043,12 @@ pub const Species = enum(u8) {
                 .spa = 85,
                 .spd = 75,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xFF, // N
         },
-        Specie{
-            // Omanyte,
-            .stats = Stats(u8){
+        // Omanyte
+        .{
+            .stats = .{
                 .hp = 35,
                 .atk = 40,
                 .def = 100,
@@ -2056,12 +2056,12 @@ pub const Species = enum(u8) {
                 .spa = 90,
                 .spd = 55,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Water },
+            .types = .{ .type1 = .Rock, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Omastar,
-            .stats = Stats(u8){
+        // Omastar
+        .{
+            .stats = .{
                 .hp = 70,
                 .atk = 60,
                 .def = 125,
@@ -2069,12 +2069,12 @@ pub const Species = enum(u8) {
                 .spa = 115,
                 .spd = 70,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Water },
+            .types = .{ .type1 = .Rock, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Kabuto,
-            .stats = Stats(u8){
+        // Kabuto
+        .{
+            .stats = .{
                 .hp = 30,
                 .atk = 80,
                 .def = 90,
@@ -2082,12 +2082,12 @@ pub const Species = enum(u8) {
                 .spa = 55,
                 .spd = 45,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Water },
+            .types = .{ .type1 = .Rock, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Kabutops,
-            .stats = Stats(u8){
+        // Kabutops
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 115,
                 .def = 105,
@@ -2095,12 +2095,12 @@ pub const Species = enum(u8) {
                 .spa = 65,
                 .spd = 70,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Water },
+            .types = .{ .type1 = .Rock, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Aerodactyl,
-            .stats = Stats(u8){
+        // Aerodactyl
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 105,
                 .def = 65,
@@ -2108,12 +2108,12 @@ pub const Species = enum(u8) {
                 .spa = 60,
                 .spd = 75,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Flying },
+            .types = .{ .type1 = .Rock, .type2 = .Flying },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Snorlax,
-            .stats = Stats(u8){
+        // Snorlax
+        .{
+            .stats = .{
                 .hp = 160,
                 .atk = 110,
                 .def = 65,
@@ -2121,12 +2121,12 @@ pub const Species = enum(u8) {
                 .spa = 65,
                 .spd = 110,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Articuno,
-            .stats = Stats(u8){
+        // Articuno
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 85,
                 .def = 100,
@@ -2134,12 +2134,12 @@ pub const Species = enum(u8) {
                 .spa = 95,
                 .spd = 125,
             },
-            .types = Types{ .type1 = .Ice, .type2 = .Flying },
+            .types = .{ .type1 = .Ice, .type2 = .Flying },
             .ratio = 0xFF, // N
         },
-        Specie{
-            // Zapdos,
-            .stats = Stats(u8){
+        // Zapdos
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 90,
                 .def = 85,
@@ -2147,12 +2147,12 @@ pub const Species = enum(u8) {
                 .spa = 125,
                 .spd = 90,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Flying },
+            .types = .{ .type1 = .Electric, .type2 = .Flying },
             .ratio = 0xFF, // N
         },
-        Specie{
-            // Moltres,
-            .stats = Stats(u8){
+        // Moltres
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 100,
                 .def = 90,
@@ -2160,12 +2160,12 @@ pub const Species = enum(u8) {
                 .spa = 125,
                 .spd = 85,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Flying },
+            .types = .{ .type1 = .Fire, .type2 = .Flying },
             .ratio = 0xFF, // N
         },
-        Specie{
-            // Dratini,
-            .stats = Stats(u8){
+        // Dratini
+        .{
+            .stats = .{
                 .hp = 41,
                 .atk = 64,
                 .def = 45,
@@ -2173,12 +2173,12 @@ pub const Species = enum(u8) {
                 .spa = 50,
                 .spd = 50,
             },
-            .types = Types{ .type1 = .Dragon, .type2 = .Dragon },
+            .types = .{ .type1 = .Dragon, .type2 = .Dragon },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Dragonair,
-            .stats = Stats(u8){
+        // Dragonair
+        .{
+            .stats = .{
                 .hp = 61,
                 .atk = 84,
                 .def = 65,
@@ -2186,12 +2186,12 @@ pub const Species = enum(u8) {
                 .spa = 70,
                 .spd = 70,
             },
-            .types = Types{ .type1 = .Dragon, .type2 = .Dragon },
+            .types = .{ .type1 = .Dragon, .type2 = .Dragon },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Dragonite,
-            .stats = Stats(u8){
+        // Dragonite
+        .{
+            .stats = .{
                 .hp = 91,
                 .atk = 134,
                 .def = 95,
@@ -2199,12 +2199,12 @@ pub const Species = enum(u8) {
                 .spa = 100,
                 .spd = 100,
             },
-            .types = Types{ .type1 = .Dragon, .type2 = .Flying },
+            .types = .{ .type1 = .Dragon, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Mewtwo,
-            .stats = Stats(u8){
+        // Mewtwo
+        .{
+            .stats = .{
                 .hp = 106,
                 .atk = 110,
                 .def = 90,
@@ -2212,12 +2212,12 @@ pub const Species = enum(u8) {
                 .spa = 154,
                 .spd = 90,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
+            .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0xFF, // N
         },
-        Specie{
-            // Mew,
-            .stats = Stats(u8){
+        // Mew
+        .{
+            .stats = .{
                 .hp = 100,
                 .atk = 100,
                 .def = 100,
@@ -2225,12 +2225,12 @@ pub const Species = enum(u8) {
                 .spa = 100,
                 .spd = 100,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
+            .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0xFF, // N
         },
-        Specie{
-            // Chikorita,
-            .stats = Stats(u8){
+        // Chikorita
+        .{
+            .stats = .{
                 .hp = 45,
                 .atk = 49,
                 .def = 65,
@@ -2238,12 +2238,12 @@ pub const Species = enum(u8) {
                 .spa = 49,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Grass },
+            .types = .{ .type1 = .Grass, .type2 = .Grass },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Bayleef,
-            .stats = Stats(u8){
+        // Bayleef
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 62,
                 .def = 80,
@@ -2251,12 +2251,12 @@ pub const Species = enum(u8) {
                 .spa = 63,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Grass },
+            .types = .{ .type1 = .Grass, .type2 = .Grass },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Meganium,
-            .stats = Stats(u8){
+        // Meganium
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 82,
                 .def = 100,
@@ -2264,12 +2264,12 @@ pub const Species = enum(u8) {
                 .spa = 83,
                 .spd = 100,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Grass },
+            .types = .{ .type1 = .Grass, .type2 = .Grass },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Cyndaquil,
-            .stats = Stats(u8){
+        // Cyndaquil
+        .{
+            .stats = .{
                 .hp = 39,
                 .atk = 52,
                 .def = 43,
@@ -2277,12 +2277,12 @@ pub const Species = enum(u8) {
                 .spa = 60,
                 .spd = 50,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Quilava,
-            .stats = Stats(u8){
+        // Quilava
+        .{
+            .stats = .{
                 .hp = 58,
                 .atk = 64,
                 .def = 58,
@@ -2290,12 +2290,12 @@ pub const Species = enum(u8) {
                 .spa = 80,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Typhlosion,
-            .stats = Stats(u8){
+        // Typhlosion
+        .{
+            .stats = .{
                 .hp = 78,
                 .atk = 84,
                 .def = 78,
@@ -2303,12 +2303,12 @@ pub const Species = enum(u8) {
                 .spa = 109,
                 .spd = 85,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Totodile,
-            .stats = Stats(u8){
+        // Totodile
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 65,
                 .def = 64,
@@ -2316,12 +2316,12 @@ pub const Species = enum(u8) {
                 .spa = 44,
                 .spd = 48,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Croconaw,
-            .stats = Stats(u8){
+        // Croconaw
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 80,
                 .def = 80,
@@ -2329,12 +2329,12 @@ pub const Species = enum(u8) {
                 .spa = 59,
                 .spd = 63,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Feraligatr,
-            .stats = Stats(u8){
+        // Feraligatr
+        .{
+            .stats = .{
                 .hp = 85,
                 .atk = 105,
                 .def = 100,
@@ -2342,12 +2342,12 @@ pub const Species = enum(u8) {
                 .spa = 79,
                 .spd = 83,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Sentret,
-            .stats = Stats(u8){
+        // Sentret
+        .{
+            .stats = .{
                 .hp = 35,
                 .atk = 46,
                 .def = 34,
@@ -2355,12 +2355,12 @@ pub const Species = enum(u8) {
                 .spa = 35,
                 .spd = 45,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Furret,
-            .stats = Stats(u8){
+        // Furret
+        .{
+            .stats = .{
                 .hp = 85,
                 .atk = 76,
                 .def = 64,
@@ -2368,12 +2368,12 @@ pub const Species = enum(u8) {
                 .spa = 45,
                 .spd = 55,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Hoothoot,
-            .stats = Stats(u8){
+        // Hoothoot
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 30,
                 .def = 30,
@@ -2381,12 +2381,12 @@ pub const Species = enum(u8) {
                 .spa = 36,
                 .spd = 56,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Flying },
+            .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Noctowl,
-            .stats = Stats(u8){
+        // Noctowl
+        .{
+            .stats = .{
                 .hp = 100,
                 .atk = 50,
                 .def = 50,
@@ -2394,12 +2394,12 @@ pub const Species = enum(u8) {
                 .spa = 76,
                 .spd = 96,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Flying },
+            .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Ledyba,
-            .stats = Stats(u8){
+        // Ledyba
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 20,
                 .def = 30,
@@ -2407,12 +2407,12 @@ pub const Species = enum(u8) {
                 .spa = 40,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Flying },
+            .types = .{ .type1 = .Bug, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Ledian,
-            .stats = Stats(u8){
+        // Ledian
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 35,
                 .def = 50,
@@ -2420,12 +2420,12 @@ pub const Species = enum(u8) {
                 .spa = 55,
                 .spd = 110,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Flying },
+            .types = .{ .type1 = .Bug, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Spinarak,
-            .stats = Stats(u8){
+        // Spinarak
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 60,
                 .def = 40,
@@ -2433,12 +2433,12 @@ pub const Species = enum(u8) {
                 .spa = 40,
                 .spd = 40,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Poison },
+            .types = .{ .type1 = .Bug, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Ariados,
-            .stats = Stats(u8){
+        // Ariados
+        .{
+            .stats = .{
                 .hp = 70,
                 .atk = 90,
                 .def = 70,
@@ -2446,12 +2446,12 @@ pub const Species = enum(u8) {
                 .spa = 60,
                 .spd = 60,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Poison },
+            .types = .{ .type1 = .Bug, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Crobat,
-            .stats = Stats(u8){
+        // Crobat
+        .{
+            .stats = .{
                 .hp = 85,
                 .atk = 90,
                 .def = 80,
@@ -2459,12 +2459,12 @@ pub const Species = enum(u8) {
                 .spa = 70,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Flying },
+            .types = .{ .type1 = .Poison, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Chinchou,
-            .stats = Stats(u8){
+        // Chinchou
+        .{
+            .stats = .{
                 .hp = 75,
                 .atk = 38,
                 .def = 38,
@@ -2472,12 +2472,12 @@ pub const Species = enum(u8) {
                 .spa = 56,
                 .spd = 56,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Electric },
+            .types = .{ .type1 = .Water, .type2 = .Electric },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Lanturn,
-            .stats = Stats(u8){
+        // Lanturn
+        .{
+            .stats = .{
                 .hp = 125,
                 .atk = 58,
                 .def = 58,
@@ -2485,12 +2485,12 @@ pub const Species = enum(u8) {
                 .spa = 76,
                 .spd = 76,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Electric },
+            .types = .{ .type1 = .Water, .type2 = .Electric },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Pichu,
-            .stats = Stats(u8){
+        // Pichu
+        .{
+            .stats = .{
                 .hp = 20,
                 .atk = 40,
                 .def = 15,
@@ -2498,12 +2498,12 @@ pub const Species = enum(u8) {
                 .spa = 35,
                 .spd = 35,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Electric },
+            .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Cleffa,
-            .stats = Stats(u8){
+        // Cleffa
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 25,
                 .def = 28,
@@ -2511,12 +2511,12 @@ pub const Species = enum(u8) {
                 .spa = 45,
                 .spd = 55,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xBF, // 75.0% F
         },
-        Specie{
-            // Igglybuff,
-            .stats = Stats(u8){
+        // Igglybuff
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 30,
                 .def = 15,
@@ -2524,12 +2524,12 @@ pub const Species = enum(u8) {
                 .spa = 40,
                 .spd = 20,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xBF, // 75.0% F
         },
-        Specie{
-            // Togepi,
-            .stats = Stats(u8){
+        // Togepi
+        .{
+            .stats = .{
                 .hp = 35,
                 .atk = 20,
                 .def = 65,
@@ -2537,12 +2537,12 @@ pub const Species = enum(u8) {
                 .spa = 40,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Togetic,
-            .stats = Stats(u8){
+        // Togetic
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 40,
                 .def = 85,
@@ -2550,12 +2550,12 @@ pub const Species = enum(u8) {
                 .spa = 80,
                 .spd = 105,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Flying },
+            .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Natu,
-            .stats = Stats(u8){
+        // Natu
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 50,
                 .def = 45,
@@ -2563,12 +2563,12 @@ pub const Species = enum(u8) {
                 .spa = 70,
                 .spd = 45,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Flying },
+            .types = .{ .type1 = .Psychic, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Xatu,
-            .stats = Stats(u8){
+        // Xatu
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 75,
                 .def = 70,
@@ -2576,12 +2576,12 @@ pub const Species = enum(u8) {
                 .spa = 95,
                 .spd = 70,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Flying },
+            .types = .{ .type1 = .Psychic, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Mareep,
-            .stats = Stats(u8){
+        // Mareep
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 40,
                 .def = 40,
@@ -2589,12 +2589,12 @@ pub const Species = enum(u8) {
                 .spa = 65,
                 .spd = 45,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Electric },
+            .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Flaaffy,
-            .stats = Stats(u8){
+        // Flaaffy
+        .{
+            .stats = .{
                 .hp = 70,
                 .atk = 55,
                 .def = 55,
@@ -2602,12 +2602,12 @@ pub const Species = enum(u8) {
                 .spa = 80,
                 .spd = 60,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Electric },
+            .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Ampharos,
-            .stats = Stats(u8){
+        // Ampharos
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 75,
                 .def = 75,
@@ -2615,12 +2615,12 @@ pub const Species = enum(u8) {
                 .spa = 115,
                 .spd = 90,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Electric },
+            .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Bellossom,
-            .stats = Stats(u8){
+        // Bellossom
+        .{
+            .stats = .{
                 .hp = 75,
                 .atk = 80,
                 .def = 85,
@@ -2628,12 +2628,12 @@ pub const Species = enum(u8) {
                 .spa = 90,
                 .spd = 100,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Grass },
+            .types = .{ .type1 = .Grass, .type2 = .Grass },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Marill,
-            .stats = Stats(u8){
+        // Marill
+        .{
+            .stats = .{
                 .hp = 70,
                 .atk = 20,
                 .def = 50,
@@ -2641,12 +2641,12 @@ pub const Species = enum(u8) {
                 .spa = 20,
                 .spd = 50,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Azumarill,
-            .stats = Stats(u8){
+        // Azumarill
+        .{
+            .stats = .{
                 .hp = 100,
                 .atk = 50,
                 .def = 80,
@@ -2654,12 +2654,12 @@ pub const Species = enum(u8) {
                 .spa = 50,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Sudowoodo,
-            .stats = Stats(u8){
+        // Sudowoodo
+        .{
+            .stats = .{
                 .hp = 70,
                 .atk = 100,
                 .def = 115,
@@ -2667,12 +2667,12 @@ pub const Species = enum(u8) {
                 .spa = 30,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Rock },
+            .types = .{ .type1 = .Rock, .type2 = .Rock },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Politoed,
-            .stats = Stats(u8){
+        // Politoed
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 75,
                 .def = 75,
@@ -2680,12 +2680,12 @@ pub const Species = enum(u8) {
                 .spa = 90,
                 .spd = 100,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Hoppip,
-            .stats = Stats(u8){
+        // Hoppip
+        .{
+            .stats = .{
                 .hp = 35,
                 .atk = 35,
                 .def = 40,
@@ -2693,12 +2693,12 @@ pub const Species = enum(u8) {
                 .spa = 35,
                 .spd = 55,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Flying },
+            .types = .{ .type1 = .Grass, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Skiploom,
-            .stats = Stats(u8){
+        // Skiploom
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 45,
                 .def = 50,
@@ -2706,12 +2706,12 @@ pub const Species = enum(u8) {
                 .spa = 45,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Flying },
+            .types = .{ .type1 = .Grass, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Jumpluff,
-            .stats = Stats(u8){
+        // Jumpluff
+        .{
+            .stats = .{
                 .hp = 75,
                 .atk = 55,
                 .def = 70,
@@ -2719,12 +2719,12 @@ pub const Species = enum(u8) {
                 .spa = 55,
                 .spd = 85,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Flying },
+            .types = .{ .type1 = .Grass, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Aipom,
-            .stats = Stats(u8){
+        // Aipom
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 70,
                 .def = 55,
@@ -2732,12 +2732,12 @@ pub const Species = enum(u8) {
                 .spa = 40,
                 .spd = 55,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Sunkern,
-            .stats = Stats(u8){
+        // Sunkern
+        .{
+            .stats = .{
                 .hp = 30,
                 .atk = 30,
                 .def = 30,
@@ -2745,12 +2745,12 @@ pub const Species = enum(u8) {
                 .spa = 30,
                 .spd = 30,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Grass },
+            .types = .{ .type1 = .Grass, .type2 = .Grass },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Sunflora,
-            .stats = Stats(u8){
+        // Sunflora
+        .{
+            .stats = .{
                 .hp = 75,
                 .atk = 75,
                 .def = 55,
@@ -2758,12 +2758,12 @@ pub const Species = enum(u8) {
                 .spa = 105,
                 .spd = 85,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Grass },
+            .types = .{ .type1 = .Grass, .type2 = .Grass },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Yanma,
-            .stats = Stats(u8){
+        // Yanma
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 65,
                 .def = 45,
@@ -2771,12 +2771,12 @@ pub const Species = enum(u8) {
                 .spa = 75,
                 .spd = 45,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Flying },
+            .types = .{ .type1 = .Bug, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Wooper,
-            .stats = Stats(u8){
+        // Wooper
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 45,
                 .def = 45,
@@ -2784,12 +2784,12 @@ pub const Species = enum(u8) {
                 .spa = 25,
                 .spd = 25,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Ground },
+            .types = .{ .type1 = .Water, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Quagsire,
-            .stats = Stats(u8){
+        // Quagsire
+        .{
+            .stats = .{
                 .hp = 95,
                 .atk = 85,
                 .def = 85,
@@ -2797,12 +2797,12 @@ pub const Species = enum(u8) {
                 .spa = 65,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Ground },
+            .types = .{ .type1 = .Water, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Espeon,
-            .stats = Stats(u8){
+        // Espeon
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 65,
                 .def = 60,
@@ -2810,12 +2810,12 @@ pub const Species = enum(u8) {
                 .spa = 130,
                 .spd = 95,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
+            .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Umbreon,
-            .stats = Stats(u8){
+        // Umbreon
+        .{
+            .stats = .{
                 .hp = 95,
                 .atk = 65,
                 .def = 110,
@@ -2823,12 +2823,12 @@ pub const Species = enum(u8) {
                 .spa = 60,
                 .spd = 130,
             },
-            .types = Types{ .type1 = .Dark, .type2 = .Dark },
+            .types = .{ .type1 = .Dark, .type2 = .Dark },
             .ratio = 0x1F, // 12.5% F
         },
-        Specie{
-            // Murkrow,
-            .stats = Stats(u8){
+        // Murkrow
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 85,
                 .def = 42,
@@ -2836,12 +2836,12 @@ pub const Species = enum(u8) {
                 .spa = 85,
                 .spd = 42,
             },
-            .types = Types{ .type1 = .Dark, .type2 = .Flying },
+            .types = .{ .type1 = .Dark, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Slowking,
-            .stats = Stats(u8){
+        // Slowking
+        .{
+            .stats = .{
                 .hp = 95,
                 .atk = 75,
                 .def = 80,
@@ -2849,12 +2849,12 @@ pub const Species = enum(u8) {
                 .spa = 100,
                 .spd = 110,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Psychic },
+            .types = .{ .type1 = .Water, .type2 = .Psychic },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Misdreavus,
-            .stats = Stats(u8){
+        // Misdreavus
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 60,
                 .def = 60,
@@ -2862,12 +2862,12 @@ pub const Species = enum(u8) {
                 .spa = 85,
                 .spd = 85,
             },
-            .types = Types{ .type1 = .Ghost, .type2 = .Ghost },
+            .types = .{ .type1 = .Ghost, .type2 = .Ghost },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Unown,
-            .stats = Stats(u8){
+        // Unown
+        .{
+            .stats = .{
                 .hp = 48,
                 .atk = 72,
                 .def = 48,
@@ -2875,12 +2875,12 @@ pub const Species = enum(u8) {
                 .spa = 72,
                 .spd = 48,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
+            .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0xFF, // N
         },
-        Specie{
-            // Wobbuffet,
-            .stats = Stats(u8){
+        // Wobbuffet
+        .{
+            .stats = .{
                 .hp = 190,
                 .atk = 33,
                 .def = 58,
@@ -2888,12 +2888,12 @@ pub const Species = enum(u8) {
                 .spa = 33,
                 .spd = 58,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
+            .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Girafarig,
-            .stats = Stats(u8){
+        // Girafarig
+        .{
+            .stats = .{
                 .hp = 70,
                 .atk = 80,
                 .def = 65,
@@ -2901,12 +2901,12 @@ pub const Species = enum(u8) {
                 .spa = 90,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Psychic },
+            .types = .{ .type1 = .Normal, .type2 = .Psychic },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Pineco,
-            .stats = Stats(u8){
+        // Pineco
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 65,
                 .def = 90,
@@ -2914,12 +2914,12 @@ pub const Species = enum(u8) {
                 .spa = 35,
                 .spd = 35,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Bug },
+            .types = .{ .type1 = .Bug, .type2 = .Bug },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Forretress,
-            .stats = Stats(u8){
+        // Forretress
+        .{
+            .stats = .{
                 .hp = 75,
                 .atk = 90,
                 .def = 140,
@@ -2927,12 +2927,12 @@ pub const Species = enum(u8) {
                 .spa = 60,
                 .spd = 60,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Steel },
+            .types = .{ .type1 = .Bug, .type2 = .Steel },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Dunsparce,
-            .stats = Stats(u8){
+        // Dunsparce
+        .{
+            .stats = .{
                 .hp = 100,
                 .atk = 70,
                 .def = 70,
@@ -2940,12 +2940,12 @@ pub const Species = enum(u8) {
                 .spa = 65,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Gligar,
-            .stats = Stats(u8){
+        // Gligar
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 75,
                 .def = 105,
@@ -2953,12 +2953,12 @@ pub const Species = enum(u8) {
                 .spa = 35,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Ground, .type2 = .Flying },
+            .types = .{ .type1 = .Ground, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Steelix,
-            .stats = Stats(u8){
+        // Steelix
+        .{
+            .stats = .{
                 .hp = 75,
                 .atk = 85,
                 .def = 200,
@@ -2966,12 +2966,12 @@ pub const Species = enum(u8) {
                 .spa = 55,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Steel, .type2 = .Ground },
+            .types = .{ .type1 = .Steel, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Snubbull,
-            .stats = Stats(u8){
+        // Snubbull
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 80,
                 .def = 50,
@@ -2979,12 +2979,12 @@ pub const Species = enum(u8) {
                 .spa = 40,
                 .spd = 40,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xBF, // 75.0% F
         },
-        Specie{
-            // Granbull,
-            .stats = Stats(u8){
+        // Granbull
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 120,
                 .def = 75,
@@ -2992,12 +2992,12 @@ pub const Species = enum(u8) {
                 .spa = 60,
                 .spd = 60,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xBF, // 75.0% F
         },
-        Specie{
-            // Qwilfish,
-            .stats = Stats(u8){
+        // Qwilfish
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 95,
                 .def = 75,
@@ -3005,12 +3005,12 @@ pub const Species = enum(u8) {
                 .spa = 55,
                 .spd = 55,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Poison },
+            .types = .{ .type1 = .Water, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Scizor,
-            .stats = Stats(u8){
+        // Scizor
+        .{
+            .stats = .{
                 .hp = 70,
                 .atk = 130,
                 .def = 100,
@@ -3018,12 +3018,12 @@ pub const Species = enum(u8) {
                 .spa = 55,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Steel },
+            .types = .{ .type1 = .Bug, .type2 = .Steel },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Shuckle,
-            .stats = Stats(u8){
+        // Shuckle
+        .{
+            .stats = .{
                 .hp = 20,
                 .atk = 10,
                 .def = 230,
@@ -3031,12 +3031,12 @@ pub const Species = enum(u8) {
                 .spa = 10,
                 .spd = 230,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Rock },
+            .types = .{ .type1 = .Bug, .type2 = .Rock },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Heracross,
-            .stats = Stats(u8){
+        // Heracross
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 125,
                 .def = 75,
@@ -3044,12 +3044,12 @@ pub const Species = enum(u8) {
                 .spa = 40,
                 .spd = 95,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Fighting },
+            .types = .{ .type1 = .Bug, .type2 = .Fighting },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Sneasel,
-            .stats = Stats(u8){
+        // Sneasel
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 95,
                 .def = 55,
@@ -3057,12 +3057,12 @@ pub const Species = enum(u8) {
                 .spa = 35,
                 .spd = 75,
             },
-            .types = Types{ .type1 = .Dark, .type2 = .Ice },
+            .types = .{ .type1 = .Dark, .type2 = .Ice },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Teddiursa,
-            .stats = Stats(u8){
+        // Teddiursa
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 80,
                 .def = 50,
@@ -3070,12 +3070,12 @@ pub const Species = enum(u8) {
                 .spa = 50,
                 .spd = 50,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Ursaring,
-            .stats = Stats(u8){
+        // Ursaring
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 130,
                 .def = 75,
@@ -3083,12 +3083,12 @@ pub const Species = enum(u8) {
                 .spa = 75,
                 .spd = 75,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Slugma,
-            .stats = Stats(u8){
+        // Slugma
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 40,
                 .def = 40,
@@ -3096,12 +3096,12 @@ pub const Species = enum(u8) {
                 .spa = 70,
                 .spd = 40,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Magcargo,
-            .stats = Stats(u8){
+        // Magcargo
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 50,
                 .def = 120,
@@ -3109,12 +3109,12 @@ pub const Species = enum(u8) {
                 .spa = 80,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Rock },
+            .types = .{ .type1 = .Fire, .type2 = .Rock },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Swinub,
-            .stats = Stats(u8){
+        // Swinub
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 50,
                 .def = 40,
@@ -3122,12 +3122,12 @@ pub const Species = enum(u8) {
                 .spa = 30,
                 .spd = 30,
             },
-            .types = Types{ .type1 = .Ice, .type2 = .Ground },
+            .types = .{ .type1 = .Ice, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Piloswine,
-            .stats = Stats(u8){
+        // Piloswine
+        .{
+            .stats = .{
                 .hp = 100,
                 .atk = 100,
                 .def = 80,
@@ -3135,12 +3135,12 @@ pub const Species = enum(u8) {
                 .spa = 60,
                 .spd = 60,
             },
-            .types = Types{ .type1 = .Ice, .type2 = .Ground },
+            .types = .{ .type1 = .Ice, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Corsola,
-            .stats = Stats(u8){
+        // Corsola
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 55,
                 .def = 85,
@@ -3148,12 +3148,12 @@ pub const Species = enum(u8) {
                 .spa = 65,
                 .spd = 85,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Rock },
+            .types = .{ .type1 = .Water, .type2 = .Rock },
             .ratio = 0xBF, // 75.0% F
         },
-        Specie{
-            // Remoraid,
-            .stats = Stats(u8){
+        // Remoraid
+        .{
+            .stats = .{
                 .hp = 35,
                 .atk = 65,
                 .def = 35,
@@ -3161,12 +3161,12 @@ pub const Species = enum(u8) {
                 .spa = 65,
                 .spd = 35,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Octillery,
-            .stats = Stats(u8){
+        // Octillery
+        .{
+            .stats = .{
                 .hp = 75,
                 .atk = 105,
                 .def = 75,
@@ -3174,12 +3174,12 @@ pub const Species = enum(u8) {
                 .spa = 105,
                 .spd = 75,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Delibird,
-            .stats = Stats(u8){
+        // Delibird
+        .{
+            .stats = .{
                 .hp = 45,
                 .atk = 55,
                 .def = 45,
@@ -3187,12 +3187,12 @@ pub const Species = enum(u8) {
                 .spa = 65,
                 .spd = 45,
             },
-            .types = Types{ .type1 = .Ice, .type2 = .Flying },
+            .types = .{ .type1 = .Ice, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Mantine,
-            .stats = Stats(u8){
+        // Mantine
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 40,
                 .def = 70,
@@ -3200,12 +3200,12 @@ pub const Species = enum(u8) {
                 .spa = 80,
                 .spd = 140,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Flying },
+            .types = .{ .type1 = .Water, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Skarmory,
-            .stats = Stats(u8){
+        // Skarmory
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 80,
                 .def = 140,
@@ -3213,12 +3213,12 @@ pub const Species = enum(u8) {
                 .spa = 40,
                 .spd = 70,
             },
-            .types = Types{ .type1 = .Steel, .type2 = .Flying },
+            .types = .{ .type1 = .Steel, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Houndour,
-            .stats = Stats(u8){
+        // Houndour
+        .{
+            .stats = .{
                 .hp = 45,
                 .atk = 60,
                 .def = 30,
@@ -3226,12 +3226,12 @@ pub const Species = enum(u8) {
                 .spa = 80,
                 .spd = 50,
             },
-            .types = Types{ .type1 = .Dark, .type2 = .Fire },
+            .types = .{ .type1 = .Dark, .type2 = .Fire },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Houndoom,
-            .stats = Stats(u8){
+        // Houndoom
+        .{
+            .stats = .{
                 .hp = 75,
                 .atk = 90,
                 .def = 50,
@@ -3239,12 +3239,12 @@ pub const Species = enum(u8) {
                 .spa = 110,
                 .spd = 80,
             },
-            .types = Types{ .type1 = .Dark, .type2 = .Fire },
+            .types = .{ .type1 = .Dark, .type2 = .Fire },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Kingdra,
-            .stats = Stats(u8){
+        // Kingdra
+        .{
+            .stats = .{
                 .hp = 75,
                 .atk = 95,
                 .def = 95,
@@ -3252,12 +3252,12 @@ pub const Species = enum(u8) {
                 .spa = 95,
                 .spd = 95,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Dragon },
+            .types = .{ .type1 = .Water, .type2 = .Dragon },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Phanpy,
-            .stats = Stats(u8){
+        // Phanpy
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 60,
                 .def = 60,
@@ -3265,12 +3265,12 @@ pub const Species = enum(u8) {
                 .spa = 40,
                 .spd = 40,
             },
-            .types = Types{ .type1 = .Ground, .type2 = .Ground },
+            .types = .{ .type1 = .Ground, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Donphan,
-            .stats = Stats(u8){
+        // Donphan
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 120,
                 .def = 120,
@@ -3278,12 +3278,12 @@ pub const Species = enum(u8) {
                 .spa = 60,
                 .spd = 60,
             },
-            .types = Types{ .type1 = .Ground, .type2 = .Ground },
+            .types = .{ .type1 = .Ground, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Porygon2,
-            .stats = Stats(u8){
+        // Porygon2
+        .{
+            .stats = .{
                 .hp = 85,
                 .atk = 80,
                 .def = 90,
@@ -3291,12 +3291,12 @@ pub const Species = enum(u8) {
                 .spa = 105,
                 .spd = 95,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xFF, // N
         },
-        Specie{
-            // Stantler,
-            .stats = Stats(u8){
+        // Stantler
+        .{
+            .stats = .{
                 .hp = 73,
                 .atk = 95,
                 .def = 62,
@@ -3304,12 +3304,12 @@ pub const Species = enum(u8) {
                 .spa = 85,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Smeargle,
-            .stats = Stats(u8){
+        // Smeargle
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 20,
                 .def = 35,
@@ -3317,12 +3317,12 @@ pub const Species = enum(u8) {
                 .spa = 20,
                 .spd = 45,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Tyrogue,
-            .stats = Stats(u8){
+        // Tyrogue
+        .{
+            .stats = .{
                 .hp = 35,
                 .atk = 35,
                 .def = 35,
@@ -3330,12 +3330,12 @@ pub const Species = enum(u8) {
                 .spa = 35,
                 .spd = 35,
             },
-            .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
+            .types = .{ .type1 = .Fighting, .type2 = .Fighting },
             .ratio = 0x00, // 0.00% F
         },
-        Specie{
-            // Hitmontop,
-            .stats = Stats(u8){
+        // Hitmontop
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 95,
                 .def = 95,
@@ -3343,12 +3343,12 @@ pub const Species = enum(u8) {
                 .spa = 35,
                 .spd = 110,
             },
-            .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
+            .types = .{ .type1 = .Fighting, .type2 = .Fighting },
             .ratio = 0x00, // 0.00% F
         },
-        Specie{
-            // Smoochum,
-            .stats = Stats(u8){
+        // Smoochum
+        .{
+            .stats = .{
                 .hp = 45,
                 .atk = 30,
                 .def = 15,
@@ -3356,12 +3356,12 @@ pub const Species = enum(u8) {
                 .spa = 85,
                 .spd = 65,
             },
-            .types = Types{ .type1 = .Ice, .type2 = .Psychic },
+            .types = .{ .type1 = .Ice, .type2 = .Psychic },
             .ratio = 0xFE, // 100% F
         },
-        Specie{
-            // Elekid,
-            .stats = Stats(u8){
+        // Elekid
+        .{
+            .stats = .{
                 .hp = 45,
                 .atk = 63,
                 .def = 37,
@@ -3369,12 +3369,12 @@ pub const Species = enum(u8) {
                 .spa = 65,
                 .spd = 55,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Electric },
+            .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0x3F, // 25.0% F
         },
-        Specie{
-            // Magby,
-            .stats = Stats(u8){
+        // Magby
+        .{
+            .stats = .{
                 .hp = 45,
                 .atk = 75,
                 .def = 37,
@@ -3382,12 +3382,12 @@ pub const Species = enum(u8) {
                 .spa = 70,
                 .spd = 55,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x3F, // 25.0% F
         },
-        Specie{
-            // Miltank,
-            .stats = Stats(u8){
+        // Miltank
+        .{
+            .stats = .{
                 .hp = 95,
                 .atk = 80,
                 .def = 105,
@@ -3395,12 +3395,12 @@ pub const Species = enum(u8) {
                 .spa = 40,
                 .spd = 70,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xFE, // 100% F
         },
-        Specie{
-            // Blissey,
-            .stats = Stats(u8){
+        // Blissey
+        .{
+            .stats = .{
                 .hp = 255,
                 .atk = 10,
                 .def = 10,
@@ -3408,12 +3408,12 @@ pub const Species = enum(u8) {
                 .spa = 75,
                 .spd = 135,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xFE, // 100% F
         },
-        Specie{
-            // Raikou,
-            .stats = Stats(u8){
+        // Raikou
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 85,
                 .def = 75,
@@ -3421,12 +3421,12 @@ pub const Species = enum(u8) {
                 .spa = 115,
                 .spd = 100,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Electric },
+            .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0xFF, // N
         },
-        Specie{
-            // Entei,
-            .stats = Stats(u8){
+        // Entei
+        .{
+            .stats = .{
                 .hp = 115,
                 .atk = 115,
                 .def = 85,
@@ -3434,12 +3434,12 @@ pub const Species = enum(u8) {
                 .spa = 90,
                 .spd = 75,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0xFF, // N
         },
-        Specie{
-            // Suicune,
-            .stats = Stats(u8){
+        // Suicune
+        .{
+            .stats = .{
                 .hp = 100,
                 .atk = 75,
                 .def = 115,
@@ -3447,12 +3447,12 @@ pub const Species = enum(u8) {
                 .spa = 90,
                 .spd = 115,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0xFF, // N
         },
-        Specie{
-            // Larvitar,
-            .stats = Stats(u8){
+        // Larvitar
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 64,
                 .def = 50,
@@ -3460,12 +3460,12 @@ pub const Species = enum(u8) {
                 .spa = 45,
                 .spd = 50,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Ground },
+            .types = .{ .type1 = .Rock, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Pupitar,
-            .stats = Stats(u8){
+        // Pupitar
+        .{
+            .stats = .{
                 .hp = 70,
                 .atk = 84,
                 .def = 70,
@@ -3473,12 +3473,12 @@ pub const Species = enum(u8) {
                 .spa = 65,
                 .spd = 70,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Ground },
+            .types = .{ .type1 = .Rock, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Tyranitar,
-            .stats = Stats(u8){
+        // Tyranitar
+        .{
+            .stats = .{
                 .hp = 100,
                 .atk = 134,
                 .def = 110,
@@ -3486,12 +3486,12 @@ pub const Species = enum(u8) {
                 .spa = 95,
                 .spd = 100,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Dark },
+            .types = .{ .type1 = .Rock, .type2 = .Dark },
             .ratio = 0x7F, // 50.0% F
         },
-        Specie{
-            // Lugia,
-            .stats = Stats(u8){
+        // Lugia
+        .{
+            .stats = .{
                 .hp = 106,
                 .atk = 90,
                 .def = 130,
@@ -3499,12 +3499,12 @@ pub const Species = enum(u8) {
                 .spa = 90,
                 .spd = 154,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Flying },
+            .types = .{ .type1 = .Psychic, .type2 = .Flying },
             .ratio = 0xFF, // N
         },
-        Specie{
-            // HoOh,
-            .stats = Stats(u8){
+        // HoOh
+        .{
+            .stats = .{
                 .hp = 106,
                 .atk = 130,
                 .def = 90,
@@ -3512,12 +3512,12 @@ pub const Species = enum(u8) {
                 .spa = 110,
                 .spd = 154,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Flying },
+            .types = .{ .type1 = .Fire, .type2 = .Flying },
             .ratio = 0xFF, // N
         },
-        Specie{
-            // Celebi,
-            .stats = Stats(u8){
+        // Celebi
+        .{
+            .stats = .{
                 .hp = 100,
                 .atk = 100,
                 .def = 100,
@@ -3525,7 +3525,7 @@ pub const Species = enum(u8) {
                 .spa = 100,
                 .spd = 100,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Grass },
+            .types = .{ .type1 = .Psychic, .type2 = .Grass },
             .ratio = 0xFF, // N
         },
     };

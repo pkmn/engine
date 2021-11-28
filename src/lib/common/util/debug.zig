@@ -16,6 +16,7 @@ const Ais = AutoIndentingStream(std.fs.File.Writer);
 pub fn inspectN(value: anytype, ais: *Ais, max_depth: usize) !void {
     const T = @TypeOf(value);
     const options = std.fmt.FormatOptions{ .alignment = .Left };
+
     switch (@typeInfo(T)) {
         .ComptimeInt, .Int, .ComptimeFloat, .Float, .Bool => {
             try ais.writer().writeAll(YELLOW);
@@ -31,12 +32,28 @@ pub fn inspectN(value: anytype, ais: *Ais, max_depth: usize) !void {
                 try ais.writer().writeAll(RESET);
             }
         },
+        .EnumLiteral => {
+            const buffer = [_]u8{'.'} ++ @tagName(value);
+            try ais.writer().writeAll(GREEN);
+            try std.fmt.formatBuf(buffer, options, ais.writer());
+            try ais.writer().writeAll(RESET);
+        },
+        .Null => {
+            try ais.writer().writeAll(BOLD);
+            try std.fmt.formatBuf("null", options, ais.writer());
+            try ais.writer().writeAll(RESET);
+        },
         .ErrorUnion => {
             if (value) |payload| {
                 try inspectN(payload, ais, max_depth);
             } else |err| {
                 try inspectN(err, ais, max_depth);
             }
+        },
+        .Type => {
+            try ais.writer().writeAll(DIM);
+            try std.fmt.formatBuf(@typeName(value), options, ais.writer());
+            try ais.writer().writeAll(RESET);
         },
         .Enum => |enumInfo| {
             try ais.writer().writeAll(GREEN);
@@ -169,9 +186,64 @@ pub fn inspectN(value: anytype, ais: *Ais, max_depth: usize) !void {
                 try ais.writer().writeAll("}");
             }
         },
-        else => {
-            try std.fmt.formatType(value, "any", options, ais.writer(), max_depth);
+        .Pointer => |ptr_info| switch (ptr_info.size) {
+            .One => switch (@typeInfo(ptr_info.child)) {
+                .Array => |info| {
+                    if (info.child == u8) {
+                        try ais.writer().writeAll(GREEN);
+                        try std.fmt.formatText(value, "s", options, ais.writer());
+                        try ais.writer().writeAll(RESET);
+                        return;
+                    }
+                    if (comptime std.meta.trait.isZigString(info.child)) {
+                        for (value) |item, i| {
+                            if (i != 0) try std.fmt.formatText(", ", "s", options, ais.writer());
+                            try std.fmt.formatText(item, "s", options, ais.writer());
+                        }
+                        return;
+                    }
+                    @compileError("Unable to format '" ++ @typeName(T) ++ "'");
+                },
+                .Enum, .Union, .Struct => {
+                    return inspectN(value.*, ais, max_depth);
+                },
+                else => return std.fmt.format(ais.writer(), "{s}@{x}", .{ @typeName(ptr_info.child), @ptrToInt(value) }),
+            },
+            .Many, .C => {
+                if (ptr_info.sentinel) |_| {
+                    return inspectN(std.mem.span(value), ais, max_depth);
+                }
+                if (ptr_info.child == u8) {
+                    try ais.writer().writeAll(GREEN);
+                    try std.fmt.formatText(std.mem.span(value), "s", options, ais.writer());
+                    try ais.writer().writeAll(RESET);
+                    return;
+                }
+                @compileError("Unable to format '" ++ @typeName(T) ++ "'");
+            },
+            .Slice => {
+                if (max_depth == 0) return ais.writer().writeAll("{ ... }");
+                if (ptr_info.child == u8) {
+                    try ais.writer().writeAll(GREEN);
+                    try std.fmt.formatText(value, "s", options, ais.writer());
+                    try ais.writer().writeAll(RESET);
+                    return;
+                }
+                // TODO compact
+                try ais.writer().writeAll("{ ");
+                for (value) |elem, i| {
+                    try inspectN(elem, ais, max_depth - 1);
+                    if (i != value.len - 1) {
+                        try ais.writer().writeAll(", ");
+                    }
+                }
+                try ais.writer().writeAll(" }");
+            },
         },
+        else => @compileError("Unable to format type '" ++ @typeName(T) ++ "'"),
+        // else => {
+        //     try std.fmt.formatType(value, "any", options, ais.writer(), max_depth);
+        // },
     }
 }
 

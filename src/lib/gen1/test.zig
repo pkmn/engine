@@ -1,65 +1,104 @@
-// @test-only
-// pub fn init(s: Species, ms: []const Moves) Pokemon {
-//     assert(ms.len > 0 and ms.len <= 4);
-//     const specie = Species.get(s);
-//     const stats = Stats(u12){
-//         .hp = Stats(u12).calc(.hp, specie.stats.hp, 0xF, 0xFFFF, 100),
-//         .atk = Stats(u12).calc(.atk, specie.stats.atk, 0xF, 0xFFFF, 100),
-//         .def = Stats(u12).calc(.def, specie.stats.def, 0xF, 0xFFFF, 100),
-//         .spe = Stats(u12).calc(.spe, specie.stats.spe, 0xF, 0xFFFF, 100),
-//         .spc = Stats(u12).calc(.spc, specie.stats.spc, 0xF, 0xFFFF, 100),
-//     };
+const std = @import("std");
 
-//     var slots = [_]MoveSlot{MoveSlot{}} ** 4;
-//     var i: usize = 0;
-//     while (i < ms.len) : (i += 1) {
-//         slots[i].id = ms[i];
-//         slots[i].pp = @truncate(u6, Moves.pp(ms[i]) / 5 * 8);
-//     }
+const rng = @import("../common/rng.zig");
+const util = @import("../common/util.zig"); // DEBUG
 
-//     return Pokemon{
-//         .stats = stats,
-//         .position = 1,
-//         .moves = slots,
-//         .hp = stats.hp,
-//         .species = s,
-//         .types = specie.types,
-//     };
-// }
+const data = @import("data.zig");
 
-// test "Pokemon" {
-//     const pokemon = Pokemon.init(Species.Gengar, &[_]Moves{ .Absorb, .Pound, .DreamEater, .Psychic });
-//     try expect(!Status.any(pokemon.status));
-//     // std.debug.print("{s}", .{pokemon});
-//     util.debug(pokemon);
-// }
+const assert = std.debug.assert;
 
-// FIXME: move to mechanics (need to also apply burn/paralyze etc)
-// pub fn switchIn(self: *Side, slot: u8) void {
-//     assert(slot != self.active);
-//     assert(self.team[self.active - 1].position == 1);
+const Species = data.Species;
+const Stats = data.Stats;
+const Moves = data.Moves;
+const MoveSlot = data.MoveSlot;
 
-//     const active = self.get(slot);
-//     self.team[self.active - 1].position = active.position;
-//     active.position = 1;
+pub const Battle = struct {
+    pub fn init(seed: u8, p1: []const Pokemon, p2: []const Pokemon) data.Battle {
+        return .{
+            .rng = rng.Gen12{ .seed = seed },
+            .sides = .{ Side.init(p1), Side.init(p2) },
+        };
+    }
 
-//     inline for (std.meta.fieldNames(Stats(u16))) |stat| {
-//         @field(self.pokemon.stats, stat) = @field(active.stats, stat);
-//     }
-//     var i = 0;
-//     while (i < 4) : (i += 1) {
-//         self.pokemon.moves[i] = active.pokemon.moves[i];
-//     }
-//     self.pokemon.volatiles.zero();
-//     inline for (std.meta.fieldNames(Boosts(i4))) |boost| {
-//         @field(self.pokemon.boosts, boost) = @field(active.boosts, boost);
-//     }
-//     self.pokemon.level = active.level;
-//     self.pokemon.hp = active.hp;
-//     self.pokemon.status = active.status;
-//     self.pokemon.types = active.types;
-//     self.active = slot;
-// }
+    // pub fn random(seed: u8) data.Battle {
+    //     const r = rng.Gen12(seed);
+    //     return .{
+    //         .rng = r,
+    //         .turn = 0, // TODO 0 - 1000
+    //         .last_damage = 0, //TODO  1...704
+    //         .sides = .{ Side.random(r.next()), Side.random(r.next()) },
+    //     };
+    // }
+};
+
+pub const Side = struct {
+    pub fn init(ps: []const Pokemon) data.Side {
+        assert(ps.len > 0 and ps.len <= 6);
+        var side = data.Side{};
+
+        var i: u4 = 0;
+        while (i < ps.len) : (i += 1) {
+            const p = ps[i];
+            var pokemon = &side.team[i];
+            pokemon.species = p.species;
+            const specie = Species.get(p.species);
+            inline for (comptime std.meta.fieldNames(@TypeOf(pokemon.stats))) |name| {
+                @field(pokemon.stats, name) =
+                    Stats(u12).calc(name, @field(specie.stats, name), 0xF, 0xFFFF, p.level);
+            }
+            pokemon.position = i + 1;
+            assert(p.moves.len > 0 and p.moves.len <= 4);
+            for (p.moves) |move, j| {
+                pokemon.moves[j].id = move;
+                pokemon.moves[j].pp = @truncate(u6, Moves.pp(move) / 5 * 8);
+                pokemon.moves[j].pp_ups = 3;
+            }
+            if (p.hp) |hp| pokemon.hp = hp;
+            pokemon.status = p.status;
+            pokemon.types = specie.types;
+            pokemon.level = p.level;
+            if (i == 0) {
+                var active = &side.pokemon;
+                inline for (comptime std.meta.fieldNames(@TypeOf(active.stats))) |name| {
+                    @field(active.stats, name) = @field(pokemon.stats, name);
+                }
+                active.level = pokemon.level;
+                active.hp = pokemon.hp;
+                active.status = pokemon.status;
+                active.species = pokemon.species;
+                active.types = pokemon.types;
+                for (pokemon.moves) |move, j| {
+                    active.moves[j] = move;
+                }
+            }
+        }
+        while (i < side.team.len) : (i += 1) {
+            side.team[i].position = i + 1;
+        }
+        return side;
+    }
+
+    // pub fn random(seed: u8) data.Side {
+    //     const r = rng.Gen12(seed);
+    //     // TODO
+    // }
+};
+
+pub const Pokemon = struct {
+    species: Species,
+    moves: []const Moves,
+    hp: ?u16 = null,
+    status: u8 = 0,
+    level: u8 = 100,
+};
+
+test "Battle" {
+    const p1 = &.{.{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } }};
+    const p2 = &.{.{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } }};
+    _ = Battle.init(0, p1, p2);
+    // std.debug.print("{s}", .{battle});
+    // util.debug(battle);
+}
 
 comptime {
     _ = @import("data.zig");

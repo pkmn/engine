@@ -13,7 +13,7 @@ const expect = std.testing.expect;
 
 const bit = util.bit;
 
-const Battle = packed struct {
+pub const Battle = extern struct {
     rng: rng.Gen12,
     turn: u8 = 0,
     last_damage: u16 = 0,
@@ -32,9 +32,9 @@ const Battle = packed struct {
     }
 };
 
-const Side = packed struct {
-    team: [6]Pokemon,
-    pokemon: ActivePokemon,
+pub const Side = extern struct {
+    team: [6]Pokemon = [_]Pokemon{.{}} ** 6,
+    pokemon: ActivePokemon = .{},
     active: u8 = 0,
     last_used_move: Moves = .None,
     last_selected_move: Moves = .None,
@@ -50,16 +50,16 @@ const Side = packed struct {
     }
 };
 
-const ActivePokemon = packed struct {
-    stats: Stats(u16),
-    moves: [4]MoveSlot,
-    volatiles: Volatile = Volatile{},
-    boosts: Boosts(i4) = Boosts(i4){},
-    level: u8 = 100,
-    hp: u16,
+pub const ActivePokemon = extern struct {
+    stats: Stats(u16) = .{},
+    moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
+    volatiles: Volatile = .{},
+    boosts: Boosts(i4) = .{},
+    level: u8 = 0,
+    hp: u16 = 0,
     status: u8 = 0,
-    species: Species,
-    types: Types,
+    species: Species = .None,
+    types: Types = .{},
     _: u8 = 0,
 
     comptime {
@@ -67,25 +67,25 @@ const ActivePokemon = packed struct {
     }
 };
 
-const Pokemon = packed struct {
-    stats: Stats(u12),
-    position: u4,
-    moves: [4]MoveSlot,
-    hp: u16,
+pub const Pokemon = packed struct {
+    stats: Stats(u12) = .{},
+    position: u4 = 0,
+    moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
+    hp: u16 = 0,
     status: u8 = 0,
-    species: Species,
-    types: Types,
-    level: u8 = 100,
+    species: Species = .None,
+    types: Types = .{},
+    level: u8 = 0,
 
     comptime {
         assert(@sizeOf(Pokemon) == 22);
     }
 };
 
-const MoveSlot = packed struct {
+pub const MoveSlot = packed struct {
     id: Moves = .None,
     pp: u6 = 0,
-    pp_ups: u2 = 3,
+    pp_ups: u2 = 0,
 
     comptime {
         assert(@sizeOf(MoveSlot) == @sizeOf(u16));
@@ -164,7 +164,7 @@ test "Status" {
     try expect(Status.any(Status.init(.TOX)));
 }
 
-const Volatile = packed struct {
+pub const Volatile = packed struct {
     data: VolatileData = VolatileData{},
     _: u6 = 0,
     Bide: bool = false,
@@ -184,22 +184,22 @@ const Volatile = packed struct {
     Toxic: bool = false,
     LightScreen: bool = false,
     Reflect: bool = false,
-    Transform: bool,
+    Transform: bool = false,
 
     comptime {
         assert(@sizeOf(Volatile) == 8);
     }
 };
 
-const VolatileData = packed struct {
+pub const VolatileData = packed struct {
     bide: u16 = 0,
     substitute: u8 = 0,
     confusion: u4 = 0,
     toxic: u4 = 0,
     disabled: packed struct {
-        move: u4 = .None,
+        move: u4 = 0,
         duration: u4 = 0,
-    },
+    } = .{},
 
     comptime {
         assert(@sizeOf(VolatileData) == 5);
@@ -218,9 +218,9 @@ pub fn Stats(comptime T: type) type {
         spc: T = 0,
 
         // @test-only
-        pub fn calc(stat: Stat, base: T, dv: u4, exp: u16, level: u8) T {
+        pub fn calc(comptime stat: []const u8, base: T, dv: u4, exp: u16, level: u8) T {
             assert(level > 0 and level <= 100);
-            const factor = if (stat == .hp) level + 10 else 5;
+            const factor = if (std.mem.eql(u8, stat, "hp")) level + 10 else 5;
             return @truncate(T, (@as(u16, base) + dv) * 2 + @as(u16, (std.math.sqrt(exp) / 4)) * level / 100 + factor);
         }
     };

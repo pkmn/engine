@@ -1,5 +1,7 @@
 # Pokémon Generation I: RBY
 
+TODO cover `@test-only` data and code
+
 ## Data Structures
 
 The following information is required to simulate a Generation I Pokémon battle:

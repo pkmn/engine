@@ -15,6 +15,9 @@
 
 ## Performance
 
+- [ ] switch everything back to `packed struct` once bugs are fixed
+- [ ] ensure volatiles which are queried together are logically within the same byte
+
 ## Driver
 
 - [ ] support both stdio (reading and writing buffers across stdio) and Node-API

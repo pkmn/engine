@@ -6,10 +6,10 @@ import * as https from 'https';
 
 import * as mustache from 'mustache';
 
-import {Generations, Generation, GenerationNum, TypeName, Specie} from '@pkmn/data';
-import {Dex, toID} from '@pkmn/sim';
+import { Generations, Generation, GenerationNum, TypeName, Specie } from '@pkmn/data';
+import { Dex, toID } from '@pkmn/sim';
 
-import type {IDs} from '..';
+import type { IDs } from '..';
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const TEMPLATES = path.join(ROOT, 'src', 'lib', 'common', 'data');
@@ -135,14 +135,14 @@ const getTypeChart = (gen: Generation, types: TypeName[]) => {
 const convertGenderRatio = (species: Specie) => {
   if (species.gender === 'N') return '0xFF, // N';
   switch (species.genderRatio.F) {
-  case 0: return '0x00, // 0.00% F';
-  case 0.125: return '0x1F, // 12.5% F';
-  case 0.25: return '0x3F, // 25.0% F';
-  case 0.5: return '0x7F, // 50.0% F';
-  case 0.75: return '0xBF, // 75.0% F';
-  case 1: return '0xFE, // 100% F';
-  default:
-    throw new Error(`Invalid gender ratio for ${species.name}`);
+    case 0: return '0x00, // 0.00% F';
+    case 0.125: return '0x1F, // 12.5% F';
+    case 0.25: return '0x3F, // 25.0% F';
+    case 0.5: return '0x7F, // 50.0% F';
+    case 0.75: return '0xBF, // 75.0% F';
+    case 1: return '0xFE, // 100% F';
+    default:
+      throw new Error(`Invalid gender ratio for ${species.name}`);
   }
 };
 
@@ -200,8 +200,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const PP: string[] = [];
     for (const name of moves) {
       const move = gen.moves.get(name)!;
-      MOVES.push('Move{\n' +
-        `            // ${name}\n` +
+      MOVES.push(`// ${name}\n` +
+        '        .{\n' +
         `            .bp = ${move.basePower},\n` +
         `            .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
         `            .acc = ${move.accuracy === true ? '14' : move.accuracy / 5 - 6},\n` +
@@ -236,16 +236,16 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       const s = gen.species.get(name)!;
       const types = s.types.length === 1
         ? [s.types[0], s.types[0]] : s.types;
-      SPECIES.push('Specie{\n' +
-        `            // ${name},\n` +
-        '            .stats = Stats(u8){\n' +
+      SPECIES.push(`// ${name}\n` +
+        '        .{\n' +
+        '            .stats = .{\n' +
         `                .hp = ${s.baseStats.hp},\n` +
         `                .atk = ${s.baseStats.atk},\n` +
         `                .def = ${s.baseStats.def},\n` +
         `                .spe = ${s.baseStats.spe},\n` +
         `                .spc = ${s.baseStats.spa},\n` +
         '            },\n' +
-        `            .types = Types{ .type1 = .${types[0]}, .type2 = .${types[1]} },\n` +
+        `            .types = .{ .type1 = .${types[0]}, .type2 = .${types[1]} },\n` +
         '        }');
     }
     template('species', dirs.out, {
@@ -341,7 +341,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
       }
     }
-    const offset = {mail: 0, berries: 0};
+    const offset = { mail: 0, berries: 0 };
     offset.mail = values.length;
     for (const s of mail) {
       values.push(s);
@@ -384,8 +384,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       const chance = move.secondary?.chance
         ? `${move.secondary.chance / 10}, // * 10 = ${move.secondary.chance}`
         : '';
-      MOVES.push('Move{\n' +
-        `            // ${name}\n` +
+      MOVES.push(`// ${name}\n` +
+        '        .{\n' +
         `            .bp = ${move.basePower},\n` +
         `            .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
         `            .accuracy = ${move.accuracy === true ? '100' : move.accuracy},\n` +
@@ -422,9 +422,9 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       const s = gen.species.get(name)!;
       const t = s.types.length === 1
         ? [s.types[0], s.types[0]] : s.types;
-      SPECIES.push('Specie{\n' +
-        `            // ${name},\n` +
-        '            .stats = Stats(u8){\n' +
+      SPECIES.push(`// ${name}\n` +
+        '        .{\n' +
+        '            .stats = .{\n' +
         `                .hp = ${s.baseStats.hp},\n` +
         `                .atk = ${s.baseStats.atk},\n` +
         `                .def = ${s.baseStats.def},\n` +
@@ -432,7 +432,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `                .spa = ${s.baseStats.spa},\n` +
         `                .spd = ${s.baseStats.spd},\n` +
         '            },\n' +
-        `            .types = Types{ .type1 = .${t[0]}, .type2 = .${t[1]} },\n` +
+        `            .types = .{ .type1 = .${t[0]}, .type2 = .${t[1]} },\n` +
         `            .ratio = ${convertGenderRatio(s)}\n` +
         '        }');
     }
@@ -464,14 +464,14 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     // const PP: string[] = [];
     // for (const name of moves) {
     //   const move = gen.moves.get(name)!;
-    //   MOVES.push('Move{\n' +
-    //     `            // ${name}\n` +
+    //   MOVES.push(`// ${name}\n` +
+    //     '        .{\n' +
     //     `            .bp = ${move.basePower},\n` +
     //     `            .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
     //     `            .accuracy = ${move.accuracy === true ? '100' : move.accuracy},\n` +
     //     `            .pp = ${move.pp / 5}, // * 5 = ${move.pp}\n` +
     //     '        }');
-    // PP.push(`${move.pp}, // ${name}`);
+    //   PP.push(`${move.pp}, // ${name}`);
     // }
     template('moves', dirs.out, {
       gen: gen.num,
@@ -503,9 +503,9 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       const types = s.types.length === 1
         ? [s.types[0], s.types[0]] : s.types;
       // FIXME abilities
-      SPECIES.push('Specie{\n' +
-        `            // ${name},\n` +
-        '            .stats = Stats(u8){\n' +
+      SPECIES.push(`// ${name}\n` +
+        '        .{\n' +
+        '            .stats = .{\n' +
         `                .hp = ${s.baseStats.hp},\n` +
         `                .atk = ${s.baseStats.atk},\n` +
         `                .def = ${s.baseStats.def},\n` +
@@ -513,7 +513,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `                .spa = ${s.baseStats.spa},\n` +
         `                .spd = ${s.baseStats.spd},\n` +
         '            },\n' +
-        `            .types = Types{ .type1 = .${types[0]}, .type2 = .${types[1]} },\n` +
+        `            .types = .{ .type1 = .${types[0]}, .type2 = .${types[1]} },\n` +
         `            .ratio = ${convertGenderRatio(s)}\n` +
         '        }');
     }
@@ -545,7 +545,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     if (mkdir(out)) update = true;
     if (mkdir(cache)) update = true;
 
-    await GEN[gen.num]!(gen, {out, cache}, update);
+    await GEN[gen.num]!(gen, { out, cache }, update);
   }
 
   fs.writeFileSync(path.join(ROOT, 'src', 'ids.json'), JSON.stringify(IDS));

@@ -165,1666 +165,1666 @@ pub const Species = enum(u8) {
 
     // @test-only
     const data = [_]Specie{
-        Specie{
-            // Bulbasaur,
-            .stats = Stats(u8){
+        // Bulbasaur
+        .{
+            .stats = .{
                 .hp = 45,
                 .atk = 49,
                 .def = 49,
                 .spe = 45,
                 .spc = 65,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Poison },
+            .types = .{ .type1 = .Grass, .type2 = .Poison },
         },
-        Specie{
-            // Ivysaur,
-            .stats = Stats(u8){
+        // Ivysaur
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 62,
                 .def = 63,
                 .spe = 60,
                 .spc = 80,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Poison },
+            .types = .{ .type1 = .Grass, .type2 = .Poison },
         },
-        Specie{
-            // Venusaur,
-            .stats = Stats(u8){
+        // Venusaur
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 82,
                 .def = 83,
                 .spe = 80,
                 .spc = 100,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Poison },
+            .types = .{ .type1 = .Grass, .type2 = .Poison },
         },
-        Specie{
-            // Charmander,
-            .stats = Stats(u8){
+        // Charmander
+        .{
+            .stats = .{
                 .hp = 39,
                 .atk = 52,
                 .def = 43,
                 .spe = 65,
                 .spc = 50,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
         },
-        Specie{
-            // Charmeleon,
-            .stats = Stats(u8){
+        // Charmeleon
+        .{
+            .stats = .{
                 .hp = 58,
                 .atk = 64,
                 .def = 58,
                 .spe = 80,
                 .spc = 65,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
         },
-        Specie{
-            // Charizard,
-            .stats = Stats(u8){
+        // Charizard
+        .{
+            .stats = .{
                 .hp = 78,
                 .atk = 84,
                 .def = 78,
                 .spe = 100,
                 .spc = 85,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Flying },
+            .types = .{ .type1 = .Fire, .type2 = .Flying },
         },
-        Specie{
-            // Squirtle,
-            .stats = Stats(u8){
+        // Squirtle
+        .{
+            .stats = .{
                 .hp = 44,
                 .atk = 48,
                 .def = 65,
                 .spe = 43,
                 .spc = 50,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
         },
-        Specie{
-            // Wartortle,
-            .stats = Stats(u8){
+        // Wartortle
+        .{
+            .stats = .{
                 .hp = 59,
                 .atk = 63,
                 .def = 80,
                 .spe = 58,
                 .spc = 65,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
         },
-        Specie{
-            // Blastoise,
-            .stats = Stats(u8){
+        // Blastoise
+        .{
+            .stats = .{
                 .hp = 79,
                 .atk = 83,
                 .def = 100,
                 .spe = 78,
                 .spc = 85,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
         },
-        Specie{
-            // Caterpie,
-            .stats = Stats(u8){
+        // Caterpie
+        .{
+            .stats = .{
                 .hp = 45,
                 .atk = 30,
                 .def = 35,
                 .spe = 45,
                 .spc = 20,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Bug },
+            .types = .{ .type1 = .Bug, .type2 = .Bug },
         },
-        Specie{
-            // Metapod,
-            .stats = Stats(u8){
+        // Metapod
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 20,
                 .def = 55,
                 .spe = 30,
                 .spc = 25,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Bug },
+            .types = .{ .type1 = .Bug, .type2 = .Bug },
         },
-        Specie{
-            // Butterfree,
-            .stats = Stats(u8){
+        // Butterfree
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 45,
                 .def = 50,
                 .spe = 70,
                 .spc = 80,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Flying },
+            .types = .{ .type1 = .Bug, .type2 = .Flying },
         },
-        Specie{
-            // Weedle,
-            .stats = Stats(u8){
+        // Weedle
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 35,
                 .def = 30,
                 .spe = 50,
                 .spc = 20,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Poison },
+            .types = .{ .type1 = .Bug, .type2 = .Poison },
         },
-        Specie{
-            // Kakuna,
-            .stats = Stats(u8){
+        // Kakuna
+        .{
+            .stats = .{
                 .hp = 45,
                 .atk = 25,
                 .def = 50,
                 .spe = 35,
                 .spc = 25,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Poison },
+            .types = .{ .type1 = .Bug, .type2 = .Poison },
         },
-        Specie{
-            // Beedrill,
-            .stats = Stats(u8){
+        // Beedrill
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 80,
                 .def = 40,
                 .spe = 75,
                 .spc = 45,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Poison },
+            .types = .{ .type1 = .Bug, .type2 = .Poison },
         },
-        Specie{
-            // Pidgey,
-            .stats = Stats(u8){
+        // Pidgey
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 45,
                 .def = 40,
                 .spe = 56,
                 .spc = 35,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Flying },
+            .types = .{ .type1 = .Normal, .type2 = .Flying },
         },
-        Specie{
-            // Pidgeotto,
-            .stats = Stats(u8){
+        // Pidgeotto
+        .{
+            .stats = .{
                 .hp = 63,
                 .atk = 60,
                 .def = 55,
                 .spe = 71,
                 .spc = 50,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Flying },
+            .types = .{ .type1 = .Normal, .type2 = .Flying },
         },
-        Specie{
-            // Pidgeot,
-            .stats = Stats(u8){
+        // Pidgeot
+        .{
+            .stats = .{
                 .hp = 83,
                 .atk = 80,
                 .def = 75,
                 .spe = 91,
                 .spc = 70,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Flying },
+            .types = .{ .type1 = .Normal, .type2 = .Flying },
         },
-        Specie{
-            // Rattata,
-            .stats = Stats(u8){
+        // Rattata
+        .{
+            .stats = .{
                 .hp = 30,
                 .atk = 56,
                 .def = 35,
                 .spe = 72,
                 .spc = 25,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
         },
-        Specie{
-            // Raticate,
-            .stats = Stats(u8){
+        // Raticate
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 81,
                 .def = 60,
                 .spe = 97,
                 .spc = 50,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
         },
-        Specie{
-            // Spearow,
-            .stats = Stats(u8){
+        // Spearow
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 60,
                 .def = 30,
                 .spe = 70,
                 .spc = 31,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Flying },
+            .types = .{ .type1 = .Normal, .type2 = .Flying },
         },
-        Specie{
-            // Fearow,
-            .stats = Stats(u8){
+        // Fearow
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 90,
                 .def = 65,
                 .spe = 100,
                 .spc = 61,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Flying },
+            .types = .{ .type1 = .Normal, .type2 = .Flying },
         },
-        Specie{
-            // Ekans,
-            .stats = Stats(u8){
+        // Ekans
+        .{
+            .stats = .{
                 .hp = 35,
                 .atk = 60,
                 .def = 44,
                 .spe = 55,
                 .spc = 40,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Poison },
+            .types = .{ .type1 = .Poison, .type2 = .Poison },
         },
-        Specie{
-            // Arbok,
-            .stats = Stats(u8){
+        // Arbok
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 85,
                 .def = 69,
                 .spe = 80,
                 .spc = 65,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Poison },
+            .types = .{ .type1 = .Poison, .type2 = .Poison },
         },
-        Specie{
-            // Pikachu,
-            .stats = Stats(u8){
+        // Pikachu
+        .{
+            .stats = .{
                 .hp = 35,
                 .atk = 55,
                 .def = 30,
                 .spe = 90,
                 .spc = 50,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Electric },
+            .types = .{ .type1 = .Electric, .type2 = .Electric },
         },
-        Specie{
-            // Raichu,
-            .stats = Stats(u8){
+        // Raichu
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 90,
                 .def = 55,
                 .spe = 100,
                 .spc = 90,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Electric },
+            .types = .{ .type1 = .Electric, .type2 = .Electric },
         },
-        Specie{
-            // Sandshrew,
-            .stats = Stats(u8){
+        // Sandshrew
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 75,
                 .def = 85,
                 .spe = 40,
                 .spc = 30,
             },
-            .types = Types{ .type1 = .Ground, .type2 = .Ground },
+            .types = .{ .type1 = .Ground, .type2 = .Ground },
         },
-        Specie{
-            // Sandslash,
-            .stats = Stats(u8){
+        // Sandslash
+        .{
+            .stats = .{
                 .hp = 75,
                 .atk = 100,
                 .def = 110,
                 .spe = 65,
                 .spc = 55,
             },
-            .types = Types{ .type1 = .Ground, .type2 = .Ground },
+            .types = .{ .type1 = .Ground, .type2 = .Ground },
         },
-        Specie{
-            // NidoranF,
-            .stats = Stats(u8){
+        // NidoranF
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 47,
                 .def = 52,
                 .spe = 41,
                 .spc = 40,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Poison },
+            .types = .{ .type1 = .Poison, .type2 = .Poison },
         },
-        Specie{
-            // Nidorina,
-            .stats = Stats(u8){
+        // Nidorina
+        .{
+            .stats = .{
                 .hp = 70,
                 .atk = 62,
                 .def = 67,
                 .spe = 56,
                 .spc = 55,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Poison },
+            .types = .{ .type1 = .Poison, .type2 = .Poison },
         },
-        Specie{
-            // Nidoqueen,
-            .stats = Stats(u8){
+        // Nidoqueen
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 82,
                 .def = 87,
                 .spe = 76,
                 .spc = 75,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Ground },
+            .types = .{ .type1 = .Poison, .type2 = .Ground },
         },
-        Specie{
-            // NidoranM,
-            .stats = Stats(u8){
+        // NidoranM
+        .{
+            .stats = .{
                 .hp = 46,
                 .atk = 57,
                 .def = 40,
                 .spe = 50,
                 .spc = 40,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Poison },
+            .types = .{ .type1 = .Poison, .type2 = .Poison },
         },
-        Specie{
-            // Nidorino,
-            .stats = Stats(u8){
+        // Nidorino
+        .{
+            .stats = .{
                 .hp = 61,
                 .atk = 72,
                 .def = 57,
                 .spe = 65,
                 .spc = 55,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Poison },
+            .types = .{ .type1 = .Poison, .type2 = .Poison },
         },
-        Specie{
-            // Nidoking,
-            .stats = Stats(u8){
+        // Nidoking
+        .{
+            .stats = .{
                 .hp = 81,
                 .atk = 92,
                 .def = 77,
                 .spe = 85,
                 .spc = 75,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Ground },
+            .types = .{ .type1 = .Poison, .type2 = .Ground },
         },
-        Specie{
-            // Clefairy,
-            .stats = Stats(u8){
+        // Clefairy
+        .{
+            .stats = .{
                 .hp = 70,
                 .atk = 45,
                 .def = 48,
                 .spe = 35,
                 .spc = 60,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
         },
-        Specie{
-            // Clefable,
-            .stats = Stats(u8){
+        // Clefable
+        .{
+            .stats = .{
                 .hp = 95,
                 .atk = 70,
                 .def = 73,
                 .spe = 60,
                 .spc = 85,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
         },
-        Specie{
-            // Vulpix,
-            .stats = Stats(u8){
+        // Vulpix
+        .{
+            .stats = .{
                 .hp = 38,
                 .atk = 41,
                 .def = 40,
                 .spe = 65,
                 .spc = 65,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
         },
-        Specie{
-            // Ninetales,
-            .stats = Stats(u8){
+        // Ninetales
+        .{
+            .stats = .{
                 .hp = 73,
                 .atk = 76,
                 .def = 75,
                 .spe = 100,
                 .spc = 100,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
         },
-        Specie{
-            // Jigglypuff,
-            .stats = Stats(u8){
+        // Jigglypuff
+        .{
+            .stats = .{
                 .hp = 115,
                 .atk = 45,
                 .def = 20,
                 .spe = 20,
                 .spc = 25,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
         },
-        Specie{
-            // Wigglytuff,
-            .stats = Stats(u8){
+        // Wigglytuff
+        .{
+            .stats = .{
                 .hp = 140,
                 .atk = 70,
                 .def = 45,
                 .spe = 45,
                 .spc = 50,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
         },
-        Specie{
-            // Zubat,
-            .stats = Stats(u8){
+        // Zubat
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 45,
                 .def = 35,
                 .spe = 55,
                 .spc = 40,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Flying },
+            .types = .{ .type1 = .Poison, .type2 = .Flying },
         },
-        Specie{
-            // Golbat,
-            .stats = Stats(u8){
+        // Golbat
+        .{
+            .stats = .{
                 .hp = 75,
                 .atk = 80,
                 .def = 70,
                 .spe = 90,
                 .spc = 75,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Flying },
+            .types = .{ .type1 = .Poison, .type2 = .Flying },
         },
-        Specie{
-            // Oddish,
-            .stats = Stats(u8){
+        // Oddish
+        .{
+            .stats = .{
                 .hp = 45,
                 .atk = 50,
                 .def = 55,
                 .spe = 30,
                 .spc = 75,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Poison },
+            .types = .{ .type1 = .Grass, .type2 = .Poison },
         },
-        Specie{
-            // Gloom,
-            .stats = Stats(u8){
+        // Gloom
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 65,
                 .def = 70,
                 .spe = 40,
                 .spc = 85,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Poison },
+            .types = .{ .type1 = .Grass, .type2 = .Poison },
         },
-        Specie{
-            // Vileplume,
-            .stats = Stats(u8){
+        // Vileplume
+        .{
+            .stats = .{
                 .hp = 75,
                 .atk = 80,
                 .def = 85,
                 .spe = 50,
                 .spc = 100,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Poison },
+            .types = .{ .type1 = .Grass, .type2 = .Poison },
         },
-        Specie{
-            // Paras,
-            .stats = Stats(u8){
+        // Paras
+        .{
+            .stats = .{
                 .hp = 35,
                 .atk = 70,
                 .def = 55,
                 .spe = 25,
                 .spc = 55,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Grass },
+            .types = .{ .type1 = .Bug, .type2 = .Grass },
         },
-        Specie{
-            // Parasect,
-            .stats = Stats(u8){
+        // Parasect
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 95,
                 .def = 80,
                 .spe = 30,
                 .spc = 80,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Grass },
+            .types = .{ .type1 = .Bug, .type2 = .Grass },
         },
-        Specie{
-            // Venonat,
-            .stats = Stats(u8){
+        // Venonat
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 55,
                 .def = 50,
                 .spe = 45,
                 .spc = 40,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Poison },
+            .types = .{ .type1 = .Bug, .type2 = .Poison },
         },
-        Specie{
-            // Venomoth,
-            .stats = Stats(u8){
+        // Venomoth
+        .{
+            .stats = .{
                 .hp = 70,
                 .atk = 65,
                 .def = 60,
                 .spe = 90,
                 .spc = 90,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Poison },
+            .types = .{ .type1 = .Bug, .type2 = .Poison },
         },
-        Specie{
-            // Diglett,
-            .stats = Stats(u8){
+        // Diglett
+        .{
+            .stats = .{
                 .hp = 10,
                 .atk = 55,
                 .def = 25,
                 .spe = 95,
                 .spc = 45,
             },
-            .types = Types{ .type1 = .Ground, .type2 = .Ground },
+            .types = .{ .type1 = .Ground, .type2 = .Ground },
         },
-        Specie{
-            // Dugtrio,
-            .stats = Stats(u8){
+        // Dugtrio
+        .{
+            .stats = .{
                 .hp = 35,
                 .atk = 80,
                 .def = 50,
                 .spe = 120,
                 .spc = 70,
             },
-            .types = Types{ .type1 = .Ground, .type2 = .Ground },
+            .types = .{ .type1 = .Ground, .type2 = .Ground },
         },
-        Specie{
-            // Meowth,
-            .stats = Stats(u8){
+        // Meowth
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 45,
                 .def = 35,
                 .spe = 90,
                 .spc = 40,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
         },
-        Specie{
-            // Persian,
-            .stats = Stats(u8){
+        // Persian
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 70,
                 .def = 60,
                 .spe = 115,
                 .spc = 65,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
         },
-        Specie{
-            // Psyduck,
-            .stats = Stats(u8){
+        // Psyduck
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 52,
                 .def = 48,
                 .spe = 55,
                 .spc = 50,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
         },
-        Specie{
-            // Golduck,
-            .stats = Stats(u8){
+        // Golduck
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 82,
                 .def = 78,
                 .spe = 85,
                 .spc = 80,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
         },
-        Specie{
-            // Mankey,
-            .stats = Stats(u8){
+        // Mankey
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 80,
                 .def = 35,
                 .spe = 70,
                 .spc = 35,
             },
-            .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
+            .types = .{ .type1 = .Fighting, .type2 = .Fighting },
         },
-        Specie{
-            // Primeape,
-            .stats = Stats(u8){
+        // Primeape
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 105,
                 .def = 60,
                 .spe = 95,
                 .spc = 60,
             },
-            .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
+            .types = .{ .type1 = .Fighting, .type2 = .Fighting },
         },
-        Specie{
-            // Growlithe,
-            .stats = Stats(u8){
+        // Growlithe
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 70,
                 .def = 45,
                 .spe = 60,
                 .spc = 50,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
         },
-        Specie{
-            // Arcanine,
-            .stats = Stats(u8){
+        // Arcanine
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 110,
                 .def = 80,
                 .spe = 95,
                 .spc = 80,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
         },
-        Specie{
-            // Poliwag,
-            .stats = Stats(u8){
+        // Poliwag
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 50,
                 .def = 40,
                 .spe = 90,
                 .spc = 40,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
         },
-        Specie{
-            // Poliwhirl,
-            .stats = Stats(u8){
+        // Poliwhirl
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 65,
                 .def = 65,
                 .spe = 90,
                 .spc = 50,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
         },
-        Specie{
-            // Poliwrath,
-            .stats = Stats(u8){
+        // Poliwrath
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 85,
                 .def = 95,
                 .spe = 70,
                 .spc = 70,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Fighting },
+            .types = .{ .type1 = .Water, .type2 = .Fighting },
         },
-        Specie{
-            // Abra,
-            .stats = Stats(u8){
+        // Abra
+        .{
+            .stats = .{
                 .hp = 25,
                 .atk = 20,
                 .def = 15,
                 .spe = 90,
                 .spc = 105,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
+            .types = .{ .type1 = .Psychic, .type2 = .Psychic },
         },
-        Specie{
-            // Kadabra,
-            .stats = Stats(u8){
+        // Kadabra
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 35,
                 .def = 30,
                 .spe = 105,
                 .spc = 120,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
+            .types = .{ .type1 = .Psychic, .type2 = .Psychic },
         },
-        Specie{
-            // Alakazam,
-            .stats = Stats(u8){
+        // Alakazam
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 50,
                 .def = 45,
                 .spe = 120,
                 .spc = 135,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
+            .types = .{ .type1 = .Psychic, .type2 = .Psychic },
         },
-        Specie{
-            // Machop,
-            .stats = Stats(u8){
+        // Machop
+        .{
+            .stats = .{
                 .hp = 70,
                 .atk = 80,
                 .def = 50,
                 .spe = 35,
                 .spc = 35,
             },
-            .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
+            .types = .{ .type1 = .Fighting, .type2 = .Fighting },
         },
-        Specie{
-            // Machoke,
-            .stats = Stats(u8){
+        // Machoke
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 100,
                 .def = 70,
                 .spe = 45,
                 .spc = 50,
             },
-            .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
+            .types = .{ .type1 = .Fighting, .type2 = .Fighting },
         },
-        Specie{
-            // Machamp,
-            .stats = Stats(u8){
+        // Machamp
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 130,
                 .def = 80,
                 .spe = 55,
                 .spc = 65,
             },
-            .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
+            .types = .{ .type1 = .Fighting, .type2 = .Fighting },
         },
-        Specie{
-            // Bellsprout,
-            .stats = Stats(u8){
+        // Bellsprout
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 75,
                 .def = 35,
                 .spe = 40,
                 .spc = 70,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Poison },
+            .types = .{ .type1 = .Grass, .type2 = .Poison },
         },
-        Specie{
-            // Weepinbell,
-            .stats = Stats(u8){
+        // Weepinbell
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 90,
                 .def = 50,
                 .spe = 55,
                 .spc = 85,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Poison },
+            .types = .{ .type1 = .Grass, .type2 = .Poison },
         },
-        Specie{
-            // Victreebel,
-            .stats = Stats(u8){
+        // Victreebel
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 105,
                 .def = 65,
                 .spe = 70,
                 .spc = 100,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Poison },
+            .types = .{ .type1 = .Grass, .type2 = .Poison },
         },
-        Specie{
-            // Tentacool,
-            .stats = Stats(u8){
+        // Tentacool
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 40,
                 .def = 35,
                 .spe = 70,
                 .spc = 100,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Poison },
+            .types = .{ .type1 = .Water, .type2 = .Poison },
         },
-        Specie{
-            // Tentacruel,
-            .stats = Stats(u8){
+        // Tentacruel
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 70,
                 .def = 65,
                 .spe = 100,
                 .spc = 120,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Poison },
+            .types = .{ .type1 = .Water, .type2 = .Poison },
         },
-        Specie{
-            // Geodude,
-            .stats = Stats(u8){
+        // Geodude
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 80,
                 .def = 100,
                 .spe = 20,
                 .spc = 30,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Ground },
+            .types = .{ .type1 = .Rock, .type2 = .Ground },
         },
-        Specie{
-            // Graveler,
-            .stats = Stats(u8){
+        // Graveler
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 95,
                 .def = 115,
                 .spe = 35,
                 .spc = 45,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Ground },
+            .types = .{ .type1 = .Rock, .type2 = .Ground },
         },
-        Specie{
-            // Golem,
-            .stats = Stats(u8){
+        // Golem
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 110,
                 .def = 130,
                 .spe = 45,
                 .spc = 55,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Ground },
+            .types = .{ .type1 = .Rock, .type2 = .Ground },
         },
-        Specie{
-            // Ponyta,
-            .stats = Stats(u8){
+        // Ponyta
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 85,
                 .def = 55,
                 .spe = 90,
                 .spc = 65,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
         },
-        Specie{
-            // Rapidash,
-            .stats = Stats(u8){
+        // Rapidash
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 100,
                 .def = 70,
                 .spe = 105,
                 .spc = 80,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
         },
-        Specie{
-            // Slowpoke,
-            .stats = Stats(u8){
+        // Slowpoke
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 65,
                 .def = 65,
                 .spe = 15,
                 .spc = 40,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Psychic },
+            .types = .{ .type1 = .Water, .type2 = .Psychic },
         },
-        Specie{
-            // Slowbro,
-            .stats = Stats(u8){
+        // Slowbro
+        .{
+            .stats = .{
                 .hp = 95,
                 .atk = 75,
                 .def = 110,
                 .spe = 30,
                 .spc = 80,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Psychic },
+            .types = .{ .type1 = .Water, .type2 = .Psychic },
         },
-        Specie{
-            // Magnemite,
-            .stats = Stats(u8){
+        // Magnemite
+        .{
+            .stats = .{
                 .hp = 25,
                 .atk = 35,
                 .def = 70,
                 .spe = 45,
                 .spc = 95,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Electric },
+            .types = .{ .type1 = .Electric, .type2 = .Electric },
         },
-        Specie{
-            // Magneton,
-            .stats = Stats(u8){
+        // Magneton
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 60,
                 .def = 95,
                 .spe = 70,
                 .spc = 120,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Electric },
+            .types = .{ .type1 = .Electric, .type2 = .Electric },
         },
-        Specie{
-            // Farfetchd,
-            .stats = Stats(u8){
+        // Farfetchd
+        .{
+            .stats = .{
                 .hp = 52,
                 .atk = 65,
                 .def = 55,
                 .spe = 60,
                 .spc = 58,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Flying },
+            .types = .{ .type1 = .Normal, .type2 = .Flying },
         },
-        Specie{
-            // Doduo,
-            .stats = Stats(u8){
+        // Doduo
+        .{
+            .stats = .{
                 .hp = 35,
                 .atk = 85,
                 .def = 45,
                 .spe = 75,
                 .spc = 35,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Flying },
+            .types = .{ .type1 = .Normal, .type2 = .Flying },
         },
-        Specie{
-            // Dodrio,
-            .stats = Stats(u8){
+        // Dodrio
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 110,
                 .def = 70,
                 .spe = 100,
                 .spc = 60,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Flying },
+            .types = .{ .type1 = .Normal, .type2 = .Flying },
         },
-        Specie{
-            // Seel,
-            .stats = Stats(u8){
+        // Seel
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 45,
                 .def = 55,
                 .spe = 45,
                 .spc = 70,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
         },
-        Specie{
-            // Dewgong,
-            .stats = Stats(u8){
+        // Dewgong
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 70,
                 .def = 80,
                 .spe = 70,
                 .spc = 95,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Ice },
+            .types = .{ .type1 = .Water, .type2 = .Ice },
         },
-        Specie{
-            // Grimer,
-            .stats = Stats(u8){
+        // Grimer
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 80,
                 .def = 50,
                 .spe = 25,
                 .spc = 40,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Poison },
+            .types = .{ .type1 = .Poison, .type2 = .Poison },
         },
-        Specie{
-            // Muk,
-            .stats = Stats(u8){
+        // Muk
+        .{
+            .stats = .{
                 .hp = 105,
                 .atk = 105,
                 .def = 75,
                 .spe = 50,
                 .spc = 65,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Poison },
+            .types = .{ .type1 = .Poison, .type2 = .Poison },
         },
-        Specie{
-            // Shellder,
-            .stats = Stats(u8){
+        // Shellder
+        .{
+            .stats = .{
                 .hp = 30,
                 .atk = 65,
                 .def = 100,
                 .spe = 40,
                 .spc = 45,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
         },
-        Specie{
-            // Cloyster,
-            .stats = Stats(u8){
+        // Cloyster
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 95,
                 .def = 180,
                 .spe = 70,
                 .spc = 85,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Ice },
+            .types = .{ .type1 = .Water, .type2 = .Ice },
         },
-        Specie{
-            // Gastly,
-            .stats = Stats(u8){
+        // Gastly
+        .{
+            .stats = .{
                 .hp = 30,
                 .atk = 35,
                 .def = 30,
                 .spe = 80,
                 .spc = 100,
             },
-            .types = Types{ .type1 = .Ghost, .type2 = .Poison },
+            .types = .{ .type1 = .Ghost, .type2 = .Poison },
         },
-        Specie{
-            // Haunter,
-            .stats = Stats(u8){
+        // Haunter
+        .{
+            .stats = .{
                 .hp = 45,
                 .atk = 50,
                 .def = 45,
                 .spe = 95,
                 .spc = 115,
             },
-            .types = Types{ .type1 = .Ghost, .type2 = .Poison },
+            .types = .{ .type1 = .Ghost, .type2 = .Poison },
         },
-        Specie{
-            // Gengar,
-            .stats = Stats(u8){
+        // Gengar
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 65,
                 .def = 60,
                 .spe = 110,
                 .spc = 130,
             },
-            .types = Types{ .type1 = .Ghost, .type2 = .Poison },
+            .types = .{ .type1 = .Ghost, .type2 = .Poison },
         },
-        Specie{
-            // Onix,
-            .stats = Stats(u8){
+        // Onix
+        .{
+            .stats = .{
                 .hp = 35,
                 .atk = 45,
                 .def = 160,
                 .spe = 70,
                 .spc = 30,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Ground },
+            .types = .{ .type1 = .Rock, .type2 = .Ground },
         },
-        Specie{
-            // Drowzee,
-            .stats = Stats(u8){
+        // Drowzee
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 48,
                 .def = 45,
                 .spe = 42,
                 .spc = 90,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
+            .types = .{ .type1 = .Psychic, .type2 = .Psychic },
         },
-        Specie{
-            // Hypno,
-            .stats = Stats(u8){
+        // Hypno
+        .{
+            .stats = .{
                 .hp = 85,
                 .atk = 73,
                 .def = 70,
                 .spe = 67,
                 .spc = 115,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
+            .types = .{ .type1 = .Psychic, .type2 = .Psychic },
         },
-        Specie{
-            // Krabby,
-            .stats = Stats(u8){
+        // Krabby
+        .{
+            .stats = .{
                 .hp = 30,
                 .atk = 105,
                 .def = 90,
                 .spe = 50,
                 .spc = 25,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
         },
-        Specie{
-            // Kingler,
-            .stats = Stats(u8){
+        // Kingler
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 130,
                 .def = 115,
                 .spe = 75,
                 .spc = 50,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
         },
-        Specie{
-            // Voltorb,
-            .stats = Stats(u8){
+        // Voltorb
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 30,
                 .def = 50,
                 .spe = 100,
                 .spc = 55,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Electric },
+            .types = .{ .type1 = .Electric, .type2 = .Electric },
         },
-        Specie{
-            // Electrode,
-            .stats = Stats(u8){
+        // Electrode
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 50,
                 .def = 70,
                 .spe = 140,
                 .spc = 80,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Electric },
+            .types = .{ .type1 = .Electric, .type2 = .Electric },
         },
-        Specie{
-            // Exeggcute,
-            .stats = Stats(u8){
+        // Exeggcute
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 40,
                 .def = 80,
                 .spe = 40,
                 .spc = 60,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Psychic },
+            .types = .{ .type1 = .Grass, .type2 = .Psychic },
         },
-        Specie{
-            // Exeggutor,
-            .stats = Stats(u8){
+        // Exeggutor
+        .{
+            .stats = .{
                 .hp = 95,
                 .atk = 95,
                 .def = 85,
                 .spe = 55,
                 .spc = 125,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Psychic },
+            .types = .{ .type1 = .Grass, .type2 = .Psychic },
         },
-        Specie{
-            // Cubone,
-            .stats = Stats(u8){
+        // Cubone
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 50,
                 .def = 95,
                 .spe = 35,
                 .spc = 40,
             },
-            .types = Types{ .type1 = .Ground, .type2 = .Ground },
+            .types = .{ .type1 = .Ground, .type2 = .Ground },
         },
-        Specie{
-            // Marowak,
-            .stats = Stats(u8){
+        // Marowak
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 80,
                 .def = 110,
                 .spe = 45,
                 .spc = 50,
             },
-            .types = Types{ .type1 = .Ground, .type2 = .Ground },
+            .types = .{ .type1 = .Ground, .type2 = .Ground },
         },
-        Specie{
-            // Hitmonlee,
-            .stats = Stats(u8){
+        // Hitmonlee
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 120,
                 .def = 53,
                 .spe = 87,
                 .spc = 35,
             },
-            .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
+            .types = .{ .type1 = .Fighting, .type2 = .Fighting },
         },
-        Specie{
-            // Hitmonchan,
-            .stats = Stats(u8){
+        // Hitmonchan
+        .{
+            .stats = .{
                 .hp = 50,
                 .atk = 105,
                 .def = 79,
                 .spe = 76,
                 .spc = 35,
             },
-            .types = Types{ .type1 = .Fighting, .type2 = .Fighting },
+            .types = .{ .type1 = .Fighting, .type2 = .Fighting },
         },
-        Specie{
-            // Lickitung,
-            .stats = Stats(u8){
+        // Lickitung
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 55,
                 .def = 75,
                 .spe = 30,
                 .spc = 60,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
         },
-        Specie{
-            // Koffing,
-            .stats = Stats(u8){
+        // Koffing
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 65,
                 .def = 95,
                 .spe = 35,
                 .spc = 60,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Poison },
+            .types = .{ .type1 = .Poison, .type2 = .Poison },
         },
-        Specie{
-            // Weezing,
-            .stats = Stats(u8){
+        // Weezing
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 90,
                 .def = 120,
                 .spe = 60,
                 .spc = 85,
             },
-            .types = Types{ .type1 = .Poison, .type2 = .Poison },
+            .types = .{ .type1 = .Poison, .type2 = .Poison },
         },
-        Specie{
-            // Rhyhorn,
-            .stats = Stats(u8){
+        // Rhyhorn
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 85,
                 .def = 95,
                 .spe = 25,
                 .spc = 30,
             },
-            .types = Types{ .type1 = .Ground, .type2 = .Rock },
+            .types = .{ .type1 = .Ground, .type2 = .Rock },
         },
-        Specie{
-            // Rhydon,
-            .stats = Stats(u8){
+        // Rhydon
+        .{
+            .stats = .{
                 .hp = 105,
                 .atk = 130,
                 .def = 120,
                 .spe = 40,
                 .spc = 45,
             },
-            .types = Types{ .type1 = .Ground, .type2 = .Rock },
+            .types = .{ .type1 = .Ground, .type2 = .Rock },
         },
-        Specie{
-            // Chansey,
-            .stats = Stats(u8){
+        // Chansey
+        .{
+            .stats = .{
                 .hp = 250,
                 .atk = 5,
                 .def = 5,
                 .spe = 50,
                 .spc = 105,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
         },
-        Specie{
-            // Tangela,
-            .stats = Stats(u8){
+        // Tangela
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 55,
                 .def = 115,
                 .spe = 60,
                 .spc = 100,
             },
-            .types = Types{ .type1 = .Grass, .type2 = .Grass },
+            .types = .{ .type1 = .Grass, .type2 = .Grass },
         },
-        Specie{
-            // Kangaskhan,
-            .stats = Stats(u8){
+        // Kangaskhan
+        .{
+            .stats = .{
                 .hp = 105,
                 .atk = 95,
                 .def = 80,
                 .spe = 90,
                 .spc = 40,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
         },
-        Specie{
-            // Horsea,
-            .stats = Stats(u8){
+        // Horsea
+        .{
+            .stats = .{
                 .hp = 30,
                 .atk = 40,
                 .def = 70,
                 .spe = 60,
                 .spc = 70,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
         },
-        Specie{
-            // Seadra,
-            .stats = Stats(u8){
+        // Seadra
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 65,
                 .def = 95,
                 .spe = 85,
                 .spc = 95,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
         },
-        Specie{
-            // Goldeen,
-            .stats = Stats(u8){
+        // Goldeen
+        .{
+            .stats = .{
                 .hp = 45,
                 .atk = 67,
                 .def = 60,
                 .spe = 63,
                 .spc = 50,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
         },
-        Specie{
-            // Seaking,
-            .stats = Stats(u8){
+        // Seaking
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 92,
                 .def = 65,
                 .spe = 68,
                 .spc = 80,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
         },
-        Specie{
-            // Staryu,
-            .stats = Stats(u8){
+        // Staryu
+        .{
+            .stats = .{
                 .hp = 30,
                 .atk = 45,
                 .def = 55,
                 .spe = 85,
                 .spc = 70,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
         },
-        Specie{
-            // Starmie,
-            .stats = Stats(u8){
+        // Starmie
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 75,
                 .def = 85,
                 .spe = 115,
                 .spc = 100,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Psychic },
+            .types = .{ .type1 = .Water, .type2 = .Psychic },
         },
-        Specie{
-            // MrMime,
-            .stats = Stats(u8){
+        // MrMime
+        .{
+            .stats = .{
                 .hp = 40,
                 .atk = 45,
                 .def = 65,
                 .spe = 90,
                 .spc = 100,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
+            .types = .{ .type1 = .Psychic, .type2 = .Psychic },
         },
-        Specie{
-            // Scyther,
-            .stats = Stats(u8){
+        // Scyther
+        .{
+            .stats = .{
                 .hp = 70,
                 .atk = 110,
                 .def = 80,
                 .spe = 105,
                 .spc = 55,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Flying },
+            .types = .{ .type1 = .Bug, .type2 = .Flying },
         },
-        Specie{
-            // Jynx,
-            .stats = Stats(u8){
+        // Jynx
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 50,
                 .def = 35,
                 .spe = 95,
                 .spc = 95,
             },
-            .types = Types{ .type1 = .Ice, .type2 = .Psychic },
+            .types = .{ .type1 = .Ice, .type2 = .Psychic },
         },
-        Specie{
-            // Electabuzz,
-            .stats = Stats(u8){
+        // Electabuzz
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 83,
                 .def = 57,
                 .spe = 105,
                 .spc = 85,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Electric },
+            .types = .{ .type1 = .Electric, .type2 = .Electric },
         },
-        Specie{
-            // Magmar,
-            .stats = Stats(u8){
+        // Magmar
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 95,
                 .def = 57,
                 .spe = 93,
                 .spc = 85,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
         },
-        Specie{
-            // Pinsir,
-            .stats = Stats(u8){
+        // Pinsir
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 125,
                 .def = 100,
                 .spe = 85,
                 .spc = 55,
             },
-            .types = Types{ .type1 = .Bug, .type2 = .Bug },
+            .types = .{ .type1 = .Bug, .type2 = .Bug },
         },
-        Specie{
-            // Tauros,
-            .stats = Stats(u8){
+        // Tauros
+        .{
+            .stats = .{
                 .hp = 75,
                 .atk = 100,
                 .def = 95,
                 .spe = 110,
                 .spc = 70,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
         },
-        Specie{
-            // Magikarp,
-            .stats = Stats(u8){
+        // Magikarp
+        .{
+            .stats = .{
                 .hp = 20,
                 .atk = 10,
                 .def = 55,
                 .spe = 80,
                 .spc = 20,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
         },
-        Specie{
-            // Gyarados,
-            .stats = Stats(u8){
+        // Gyarados
+        .{
+            .stats = .{
                 .hp = 95,
                 .atk = 125,
                 .def = 79,
                 .spe = 81,
                 .spc = 100,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Flying },
+            .types = .{ .type1 = .Water, .type2 = .Flying },
         },
-        Specie{
-            // Lapras,
-            .stats = Stats(u8){
+        // Lapras
+        .{
+            .stats = .{
                 .hp = 130,
                 .atk = 85,
                 .def = 80,
                 .spe = 60,
                 .spc = 95,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Ice },
+            .types = .{ .type1 = .Water, .type2 = .Ice },
         },
-        Specie{
-            // Ditto,
-            .stats = Stats(u8){
+        // Ditto
+        .{
+            .stats = .{
                 .hp = 48,
                 .atk = 48,
                 .def = 48,
                 .spe = 48,
                 .spc = 48,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
         },
-        Specie{
-            // Eevee,
-            .stats = Stats(u8){
+        // Eevee
+        .{
+            .stats = .{
                 .hp = 55,
                 .atk = 55,
                 .def = 50,
                 .spe = 55,
                 .spc = 65,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
         },
-        Specie{
-            // Vaporeon,
-            .stats = Stats(u8){
+        // Vaporeon
+        .{
+            .stats = .{
                 .hp = 130,
                 .atk = 65,
                 .def = 60,
                 .spe = 65,
                 .spc = 110,
             },
-            .types = Types{ .type1 = .Water, .type2 = .Water },
+            .types = .{ .type1 = .Water, .type2 = .Water },
         },
-        Specie{
-            // Jolteon,
-            .stats = Stats(u8){
+        // Jolteon
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 65,
                 .def = 60,
                 .spe = 130,
                 .spc = 110,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Electric },
+            .types = .{ .type1 = .Electric, .type2 = .Electric },
         },
-        Specie{
-            // Flareon,
-            .stats = Stats(u8){
+        // Flareon
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 130,
                 .def = 60,
                 .spe = 65,
                 .spc = 110,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Fire },
+            .types = .{ .type1 = .Fire, .type2 = .Fire },
         },
-        Specie{
-            // Porygon,
-            .stats = Stats(u8){
+        // Porygon
+        .{
+            .stats = .{
                 .hp = 65,
                 .atk = 60,
                 .def = 70,
                 .spe = 40,
                 .spc = 75,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
         },
-        Specie{
-            // Omanyte,
-            .stats = Stats(u8){
+        // Omanyte
+        .{
+            .stats = .{
                 .hp = 35,
                 .atk = 40,
                 .def = 100,
                 .spe = 35,
                 .spc = 90,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Water },
+            .types = .{ .type1 = .Rock, .type2 = .Water },
         },
-        Specie{
-            // Omastar,
-            .stats = Stats(u8){
+        // Omastar
+        .{
+            .stats = .{
                 .hp = 70,
                 .atk = 60,
                 .def = 125,
                 .spe = 55,
                 .spc = 115,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Water },
+            .types = .{ .type1 = .Rock, .type2 = .Water },
         },
-        Specie{
-            // Kabuto,
-            .stats = Stats(u8){
+        // Kabuto
+        .{
+            .stats = .{
                 .hp = 30,
                 .atk = 80,
                 .def = 90,
                 .spe = 55,
                 .spc = 45,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Water },
+            .types = .{ .type1 = .Rock, .type2 = .Water },
         },
-        Specie{
-            // Kabutops,
-            .stats = Stats(u8){
+        // Kabutops
+        .{
+            .stats = .{
                 .hp = 60,
                 .atk = 115,
                 .def = 105,
                 .spe = 80,
                 .spc = 70,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Water },
+            .types = .{ .type1 = .Rock, .type2 = .Water },
         },
-        Specie{
-            // Aerodactyl,
-            .stats = Stats(u8){
+        // Aerodactyl
+        .{
+            .stats = .{
                 .hp = 80,
                 .atk = 105,
                 .def = 65,
                 .spe = 130,
                 .spc = 60,
             },
-            .types = Types{ .type1 = .Rock, .type2 = .Flying },
+            .types = .{ .type1 = .Rock, .type2 = .Flying },
         },
-        Specie{
-            // Snorlax,
-            .stats = Stats(u8){
+        // Snorlax
+        .{
+            .stats = .{
                 .hp = 160,
                 .atk = 110,
                 .def = 65,
                 .spe = 30,
                 .spc = 65,
             },
-            .types = Types{ .type1 = .Normal, .type2 = .Normal },
+            .types = .{ .type1 = .Normal, .type2 = .Normal },
         },
-        Specie{
-            // Articuno,
-            .stats = Stats(u8){
+        // Articuno
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 85,
                 .def = 100,
                 .spe = 85,
                 .spc = 125,
             },
-            .types = Types{ .type1 = .Ice, .type2 = .Flying },
+            .types = .{ .type1 = .Ice, .type2 = .Flying },
         },
-        Specie{
-            // Zapdos,
-            .stats = Stats(u8){
+        // Zapdos
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 90,
                 .def = 85,
                 .spe = 100,
                 .spc = 125,
             },
-            .types = Types{ .type1 = .Electric, .type2 = .Flying },
+            .types = .{ .type1 = .Electric, .type2 = .Flying },
         },
-        Specie{
-            // Moltres,
-            .stats = Stats(u8){
+        // Moltres
+        .{
+            .stats = .{
                 .hp = 90,
                 .atk = 100,
                 .def = 90,
                 .spe = 90,
                 .spc = 125,
             },
-            .types = Types{ .type1 = .Fire, .type2 = .Flying },
+            .types = .{ .type1 = .Fire, .type2 = .Flying },
         },
-        Specie{
-            // Dratini,
-            .stats = Stats(u8){
+        // Dratini
+        .{
+            .stats = .{
                 .hp = 41,
                 .atk = 64,
                 .def = 45,
                 .spe = 50,
                 .spc = 50,
             },
-            .types = Types{ .type1 = .Dragon, .type2 = .Dragon },
+            .types = .{ .type1 = .Dragon, .type2 = .Dragon },
         },
-        Specie{
-            // Dragonair,
-            .stats = Stats(u8){
+        // Dragonair
+        .{
+            .stats = .{
                 .hp = 61,
                 .atk = 84,
                 .def = 65,
                 .spe = 70,
                 .spc = 70,
             },
-            .types = Types{ .type1 = .Dragon, .type2 = .Dragon },
+            .types = .{ .type1 = .Dragon, .type2 = .Dragon },
         },
-        Specie{
-            // Dragonite,
-            .stats = Stats(u8){
+        // Dragonite
+        .{
+            .stats = .{
                 .hp = 91,
                 .atk = 134,
                 .def = 95,
                 .spe = 80,
                 .spc = 100,
             },
-            .types = Types{ .type1 = .Dragon, .type2 = .Flying },
+            .types = .{ .type1 = .Dragon, .type2 = .Flying },
         },
-        Specie{
-            // Mewtwo,
-            .stats = Stats(u8){
+        // Mewtwo
+        .{
+            .stats = .{
                 .hp = 106,
                 .atk = 110,
                 .def = 90,
                 .spe = 130,
                 .spc = 154,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
+            .types = .{ .type1 = .Psychic, .type2 = .Psychic },
         },
-        Specie{
-            // Mew,
-            .stats = Stats(u8){
+        // Mew
+        .{
+            .stats = .{
                 .hp = 100,
                 .atk = 100,
                 .def = 100,
                 .spe = 100,
                 .spc = 100,
             },
-            .types = Types{ .type1 = .Psychic, .type2 = .Psychic },
+            .types = .{ .type1 = .Psychic, .type2 = .Psychic },
         },
     };
 

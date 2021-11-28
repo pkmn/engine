@@ -57,8 +57,8 @@ pub const Type = enum(u4) {
 };
 
 pub const Types = packed struct {
-    type1: Type,
-    type2: Type,
+    type1: Type = .Normal,
+    type2: Type = .Normal,
 
     comptime {
         assert(@bitSizeOf(Types) == 8);

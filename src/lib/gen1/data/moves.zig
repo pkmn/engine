@@ -177,992 +177,992 @@ pub const Moves = enum(u8) {
     Struggle,
 
     const data = [_]Move{
-        Move{
-            // Pound
+        // Pound
+        .{
             .bp = 40,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // KarateChop
+        // KarateChop
+        .{
             .bp = 50,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // DoubleSlap
+        // DoubleSlap
+        .{
             .bp = 15,
             .type = .Normal,
             .acc = 11,
         },
-        Move{
-            // CometPunch
+        // CometPunch
+        .{
             .bp = 18,
             .type = .Normal,
             .acc = 11,
         },
-        Move{
-            // MegaPunch
+        // MegaPunch
+        .{
             .bp = 80,
             .type = .Normal,
             .acc = 11,
         },
-        Move{
-            // PayDay
+        // PayDay
+        .{
             .bp = 40,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // FirePunch
+        // FirePunch
+        .{
             .bp = 75,
             .type = .Fire,
             .acc = 14,
         },
-        Move{
-            // IcePunch
+        // IcePunch
+        .{
             .bp = 75,
             .type = .Ice,
             .acc = 14,
         },
-        Move{
-            // ThunderPunch
+        // ThunderPunch
+        .{
             .bp = 75,
             .type = .Electric,
             .acc = 14,
         },
-        Move{
-            // Scratch
+        // Scratch
+        .{
             .bp = 40,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // ViseGrip
+        // ViseGrip
+        .{
             .bp = 55,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Guillotine
+        // Guillotine
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 0,
         },
-        Move{
-            // RazorWind
+        // RazorWind
+        .{
             .bp = 80,
             .type = .Normal,
             .acc = 9,
         },
-        Move{
-            // SwordsDance
+        // SwordsDance
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Cut
+        // Cut
+        .{
             .bp = 50,
             .type = .Normal,
             .acc = 13,
         },
-        Move{
-            // Gust
+        // Gust
+        .{
             .bp = 40,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // WingAttack
+        // WingAttack
+        .{
             .bp = 35,
             .type = .Flying,
             .acc = 14,
         },
-        Move{
-            // Whirlwind
+        // Whirlwind
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 11,
         },
-        Move{
-            // Fly
+        // Fly
+        .{
             .bp = 70,
             .type = .Flying,
             .acc = 13,
         },
-        Move{
-            // Bind
+        // Bind
+        .{
             .bp = 15,
             .type = .Normal,
             .acc = 9,
         },
-        Move{
-            // Slam
+        // Slam
+        .{
             .bp = 80,
             .type = .Normal,
             .acc = 9,
         },
-        Move{
-            // VineWhip
+        // VineWhip
+        .{
             .bp = 35,
             .type = .Grass,
             .acc = 14,
         },
-        Move{
-            // Stomp
+        // Stomp
+        .{
             .bp = 65,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // DoubleKick
+        // DoubleKick
+        .{
             .bp = 30,
             .type = .Fighting,
             .acc = 14,
         },
-        Move{
-            // MegaKick
+        // MegaKick
+        .{
             .bp = 120,
             .type = .Normal,
             .acc = 9,
         },
-        Move{
-            // JumpKick
+        // JumpKick
+        .{
             .bp = 70,
             .type = .Fighting,
             .acc = 13,
         },
-        Move{
-            // RollingKick
+        // RollingKick
+        .{
             .bp = 60,
             .type = .Fighting,
             .acc = 11,
         },
-        Move{
-            // SandAttack
+        // SandAttack
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Headbutt
+        // Headbutt
+        .{
             .bp = 70,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // HornAttack
+        // HornAttack
+        .{
             .bp = 65,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // FuryAttack
+        // FuryAttack
+        .{
             .bp = 15,
             .type = .Normal,
             .acc = 11,
         },
-        Move{
-            // HornDrill
+        // HornDrill
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 0,
         },
-        Move{
-            // Tackle
+        // Tackle
+        .{
             .bp = 35,
             .type = .Normal,
             .acc = 13,
         },
-        Move{
-            // BodySlam
+        // BodySlam
+        .{
             .bp = 85,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Wrap
+        // Wrap
+        .{
             .bp = 15,
             .type = .Normal,
             .acc = 11,
         },
-        Move{
-            // TakeDown
+        // TakeDown
+        .{
             .bp = 90,
             .type = .Normal,
             .acc = 11,
         },
-        Move{
-            // Thrash
+        // Thrash
+        .{
             .bp = 90,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // DoubleEdge
+        // DoubleEdge
+        .{
             .bp = 100,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // TailWhip
+        // TailWhip
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // PoisonSting
+        // PoisonSting
+        .{
             .bp = 15,
             .type = .Poison,
             .acc = 14,
         },
-        Move{
-            // Twineedle
+        // Twineedle
+        .{
             .bp = 25,
             .type = .Bug,
             .acc = 14,
         },
-        Move{
-            // PinMissile
+        // PinMissile
+        .{
             .bp = 14,
             .type = .Bug,
             .acc = 11,
         },
-        Move{
-            // Leer
+        // Leer
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Bite
+        // Bite
+        .{
             .bp = 60,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Growl
+        // Growl
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Roar
+        // Roar
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Sing
+        // Sing
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 5,
         },
-        Move{
-            // Supersonic
+        // Supersonic
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 5,
         },
-        Move{
-            // SonicBoom
+        // SonicBoom
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 12,
         },
-        Move{
-            // Disable
+        // Disable
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 5,
         },
-        Move{
-            // Acid
+        // Acid
+        .{
             .bp = 40,
             .type = .Poison,
             .acc = 14,
         },
-        Move{
-            // Ember
+        // Ember
+        .{
             .bp = 40,
             .type = .Fire,
             .acc = 14,
         },
-        Move{
-            // Flamethrower
+        // Flamethrower
+        .{
             .bp = 95,
             .type = .Fire,
             .acc = 14,
         },
-        Move{
-            // Mist
+        // Mist
+        .{
             .bp = 0,
             .type = .Ice,
             .acc = 14,
         },
-        Move{
-            // WaterGun
+        // WaterGun
+        .{
             .bp = 40,
             .type = .Water,
             .acc = 14,
         },
-        Move{
-            // HydroPump
+        // HydroPump
+        .{
             .bp = 120,
             .type = .Water,
             .acc = 10,
         },
-        Move{
-            // Surf
+        // Surf
+        .{
             .bp = 95,
             .type = .Water,
             .acc = 14,
         },
-        Move{
-            // IceBeam
+        // IceBeam
+        .{
             .bp = 95,
             .type = .Ice,
             .acc = 14,
         },
-        Move{
-            // Blizzard
+        // Blizzard
+        .{
             .bp = 120,
             .type = .Ice,
             .acc = 12,
         },
-        Move{
-            // Psybeam
+        // Psybeam
+        .{
             .bp = 65,
             .type = .Psychic,
             .acc = 14,
         },
-        Move{
-            // BubbleBeam
+        // BubbleBeam
+        .{
             .bp = 65,
             .type = .Water,
             .acc = 14,
         },
-        Move{
-            // AuroraBeam
+        // AuroraBeam
+        .{
             .bp = 65,
             .type = .Ice,
             .acc = 14,
         },
-        Move{
-            // HyperBeam
+        // HyperBeam
+        .{
             .bp = 150,
             .type = .Normal,
             .acc = 12,
         },
-        Move{
-            // Peck
+        // Peck
+        .{
             .bp = 35,
             .type = .Flying,
             .acc = 14,
         },
-        Move{
-            // DrillPeck
+        // DrillPeck
+        .{
             .bp = 80,
             .type = .Flying,
             .acc = 14,
         },
-        Move{
-            // Submission
+        // Submission
+        .{
             .bp = 80,
             .type = .Fighting,
             .acc = 10,
         },
-        Move{
-            // LowKick
+        // LowKick
+        .{
             .bp = 50,
             .type = .Fighting,
             .acc = 12,
         },
-        Move{
-            // Counter
+        // Counter
+        .{
             .bp = 1,
             .type = .Fighting,
             .acc = 14,
         },
-        Move{
-            // SeismicToss
+        // SeismicToss
+        .{
             .bp = 1,
             .type = .Fighting,
             .acc = 14,
         },
-        Move{
-            // Strength
+        // Strength
+        .{
             .bp = 80,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Absorb
+        // Absorb
+        .{
             .bp = 20,
             .type = .Grass,
             .acc = 14,
         },
-        Move{
-            // MegaDrain
+        // MegaDrain
+        .{
             .bp = 40,
             .type = .Grass,
             .acc = 14,
         },
-        Move{
-            // LeechSeed
+        // LeechSeed
+        .{
             .bp = 0,
             .type = .Grass,
             .acc = 12,
         },
-        Move{
-            // Growth
+        // Growth
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // RazorLeaf
+        // RazorLeaf
+        .{
             .bp = 55,
             .type = .Grass,
             .acc = 13,
         },
-        Move{
-            // SolarBeam
+        // SolarBeam
+        .{
             .bp = 120,
             .type = .Grass,
             .acc = 14,
         },
-        Move{
-            // PoisonPowder
+        // PoisonPowder
+        .{
             .bp = 0,
             .type = .Poison,
             .acc = 9,
         },
-        Move{
-            // StunSpore
+        // StunSpore
+        .{
             .bp = 0,
             .type = .Grass,
             .acc = 9,
         },
-        Move{
-            // SleepPowder
+        // SleepPowder
+        .{
             .bp = 0,
             .type = .Grass,
             .acc = 9,
         },
-        Move{
-            // PetalDance
+        // PetalDance
+        .{
             .bp = 70,
             .type = .Grass,
             .acc = 14,
         },
-        Move{
-            // StringShot
+        // StringShot
+        .{
             .bp = 0,
             .type = .Bug,
             .acc = 13,
         },
-        Move{
-            // DragonRage
+        // DragonRage
+        .{
             .bp = 1,
             .type = .Dragon,
             .acc = 14,
         },
-        Move{
-            // FireSpin
+        // FireSpin
+        .{
             .bp = 15,
             .type = .Fire,
             .acc = 8,
         },
-        Move{
-            // ThunderShock
+        // ThunderShock
+        .{
             .bp = 40,
             .type = .Electric,
             .acc = 14,
         },
-        Move{
-            // Thunderbolt
+        // Thunderbolt
+        .{
             .bp = 95,
             .type = .Electric,
             .acc = 14,
         },
-        Move{
-            // ThunderWave
+        // ThunderWave
+        .{
             .bp = 0,
             .type = .Electric,
             .acc = 14,
         },
-        Move{
-            // Thunder
+        // Thunder
+        .{
             .bp = 120,
             .type = .Electric,
             .acc = 8,
         },
-        Move{
-            // RockThrow
+        // RockThrow
+        .{
             .bp = 50,
             .type = .Rock,
             .acc = 7,
         },
-        Move{
-            // Earthquake
+        // Earthquake
+        .{
             .bp = 100,
             .type = .Ground,
             .acc = 14,
         },
-        Move{
-            // Fissure
+        // Fissure
+        .{
             .bp = 0,
             .type = .Ground,
             .acc = 0,
         },
-        Move{
-            // Dig
+        // Dig
+        .{
             .bp = 100,
             .type = .Ground,
             .acc = 14,
         },
-        Move{
-            // Toxic
+        // Toxic
+        .{
             .bp = 0,
             .type = .Poison,
             .acc = 11,
         },
-        Move{
-            // Confusion
+        // Confusion
+        .{
             .bp = 50,
             .type = .Psychic,
             .acc = 14,
         },
-        Move{
-            // Psychic
+        // Psychic
+        .{
             .bp = 90,
             .type = .Psychic,
             .acc = 14,
         },
-        Move{
-            // Hypnosis
+        // Hypnosis
+        .{
             .bp = 0,
             .type = .Psychic,
             .acc = 6,
         },
-        Move{
-            // Meditate
+        // Meditate
+        .{
             .bp = 0,
             .type = .Psychic,
             .acc = 14,
         },
-        Move{
-            // Agility
+        // Agility
+        .{
             .bp = 0,
             .type = .Psychic,
             .acc = 14,
         },
-        Move{
-            // QuickAttack
+        // QuickAttack
+        .{
             .bp = 40,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Rage
+        // Rage
+        .{
             .bp = 20,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Teleport
+        // Teleport
+        .{
             .bp = 0,
             .type = .Psychic,
             .acc = 14,
         },
-        Move{
-            // NightShade
+        // NightShade
+        .{
             .bp = 1,
             .type = .Ghost,
             .acc = 14,
         },
-        Move{
-            // Mimic
+        // Mimic
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Screech
+        // Screech
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 11,
         },
-        Move{
-            // DoubleTeam
+        // DoubleTeam
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Recover
+        // Recover
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Harden
+        // Harden
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Minimize
+        // Minimize
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Smokescreen
+        // Smokescreen
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // ConfuseRay
+        // ConfuseRay
+        .{
             .bp = 0,
             .type = .Ghost,
             .acc = 14,
         },
-        Move{
-            // Withdraw
+        // Withdraw
+        .{
             .bp = 0,
             .type = .Water,
             .acc = 14,
         },
-        Move{
-            // DefenseCurl
+        // DefenseCurl
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Barrier
+        // Barrier
+        .{
             .bp = 0,
             .type = .Psychic,
             .acc = 14,
         },
-        Move{
-            // LightScreen
+        // LightScreen
+        .{
             .bp = 0,
             .type = .Psychic,
             .acc = 14,
         },
-        Move{
-            // Haze
+        // Haze
+        .{
             .bp = 0,
             .type = .Ice,
             .acc = 14,
         },
-        Move{
-            // Reflect
+        // Reflect
+        .{
             .bp = 0,
             .type = .Psychic,
             .acc = 14,
         },
-        Move{
-            // FocusEnergy
+        // FocusEnergy
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Bide
+        // Bide
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Metronome
+        // Metronome
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // MirrorMove
+        // MirrorMove
+        .{
             .bp = 0,
             .type = .Flying,
             .acc = 14,
         },
-        Move{
-            // SelfDestruct
+        // SelfDestruct
+        .{
             .bp = 130,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // EggBomb
+        // EggBomb
+        .{
             .bp = 100,
             .type = .Normal,
             .acc = 9,
         },
-        Move{
-            // Lick
+        // Lick
+        .{
             .bp = 20,
             .type = .Ghost,
             .acc = 14,
         },
-        Move{
-            // Smog
+        // Smog
+        .{
             .bp = 20,
             .type = .Poison,
             .acc = 8,
         },
-        Move{
-            // Sludge
+        // Sludge
+        .{
             .bp = 65,
             .type = .Poison,
             .acc = 14,
         },
-        Move{
-            // BoneClub
+        // BoneClub
+        .{
             .bp = 65,
             .type = .Ground,
             .acc = 11,
         },
-        Move{
-            // FireBlast
+        // FireBlast
+        .{
             .bp = 120,
             .type = .Fire,
             .acc = 11,
         },
-        Move{
-            // Waterfall
+        // Waterfall
+        .{
             .bp = 80,
             .type = .Water,
             .acc = 14,
         },
-        Move{
-            // Clamp
+        // Clamp
+        .{
             .bp = 35,
             .type = .Water,
             .acc = 9,
         },
-        Move{
-            // Swift
+        // Swift
+        .{
             .bp = 60,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // SkullBash
+        // SkullBash
+        .{
             .bp = 100,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // SpikeCannon
+        // SpikeCannon
+        .{
             .bp = 20,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Constrict
+        // Constrict
+        .{
             .bp = 10,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Amnesia
+        // Amnesia
+        .{
             .bp = 0,
             .type = .Psychic,
             .acc = 14,
         },
-        Move{
-            // Kinesis
+        // Kinesis
+        .{
             .bp = 0,
             .type = .Psychic,
             .acc = 10,
         },
-        Move{
-            // SoftBoiled
+        // SoftBoiled
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // HighJumpKick
+        // HighJumpKick
+        .{
             .bp = 85,
             .type = .Fighting,
             .acc = 12,
         },
-        Move{
-            // Glare
+        // Glare
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 9,
         },
-        Move{
-            // DreamEater
+        // DreamEater
+        .{
             .bp = 100,
             .type = .Psychic,
             .acc = 14,
         },
-        Move{
-            // PoisonGas
+        // PoisonGas
+        .{
             .bp = 0,
             .type = .Poison,
             .acc = 5,
         },
-        Move{
-            // Barrage
+        // Barrage
+        .{
             .bp = 15,
             .type = .Normal,
             .acc = 11,
         },
-        Move{
-            // LeechLife
+        // LeechLife
+        .{
             .bp = 20,
             .type = .Bug,
             .acc = 14,
         },
-        Move{
-            // LovelyKiss
+        // LovelyKiss
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 9,
         },
-        Move{
-            // SkyAttack
+        // SkyAttack
+        .{
             .bp = 140,
             .type = .Flying,
             .acc = 12,
         },
-        Move{
-            // Transform
+        // Transform
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Bubble
+        // Bubble
+        .{
             .bp = 20,
             .type = .Water,
             .acc = 14,
         },
-        Move{
-            // DizzyPunch
+        // DizzyPunch
+        .{
             .bp = 70,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Spore
+        // Spore
+        .{
             .bp = 0,
             .type = .Grass,
             .acc = 14,
         },
-        Move{
-            // Flash
+        // Flash
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 8,
         },
-        Move{
-            // Psywave
+        // Psywave
+        .{
             .bp = 1,
             .type = .Psychic,
             .acc = 10,
         },
-        Move{
-            // Splash
+        // Splash
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // AcidArmor
+        // AcidArmor
+        .{
             .bp = 0,
             .type = .Poison,
             .acc = 14,
         },
-        Move{
-            // Crabhammer
+        // Crabhammer
+        .{
             .bp = 90,
             .type = .Water,
             .acc = 11,
         },
-        Move{
-            // Explosion
+        // Explosion
+        .{
             .bp = 170,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // FurySwipes
+        // FurySwipes
+        .{
             .bp = 18,
             .type = .Normal,
             .acc = 10,
         },
-        Move{
-            // Bonemerang
+        // Bonemerang
+        .{
             .bp = 50,
             .type = .Ground,
             .acc = 12,
         },
-        Move{
-            // Rest
+        // Rest
+        .{
             .bp = 0,
             .type = .Psychic,
             .acc = 14,
         },
-        Move{
-            // RockSlide
+        // RockSlide
+        .{
             .bp = 75,
             .type = .Rock,
             .acc = 12,
         },
-        Move{
-            // HyperFang
+        // HyperFang
+        .{
             .bp = 80,
             .type = .Normal,
             .acc = 12,
         },
-        Move{
-            // Sharpen
+        // Sharpen
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Conversion
+        // Conversion
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // TriAttack
+        // TriAttack
+        .{
             .bp = 80,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // SuperFang
+        // SuperFang
+        .{
             .bp = 1,
             .type = .Normal,
             .acc = 12,
         },
-        Move{
-            // Slash
+        // Slash
+        .{
             .bp = 70,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Substitute
+        // Substitute
+        .{
             .bp = 0,
             .type = .Normal,
             .acc = 14,
         },
-        Move{
-            // Struggle
+        // Struggle
+        .{
             .bp = 50,
             .type = .Normal,
             .acc = 14,

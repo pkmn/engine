@@ -263,1814 +263,1814 @@ pub const Moves = enum(u8) {
     BeatUp,
 
     const data = [_]Move{
-        Move{
-            // Pound
+        // Pound
+        .{
             .bp = 40,
             .type = .Normal,
             .accuracy = 100,
             .pp = 7, // * 5 = 35
         },
-        Move{
-            // KarateChop
+        // KarateChop
+        .{
             .bp = 50,
             .type = .Fighting,
             .accuracy = 100,
             .pp = 5, // * 5 = 25
         },
-        Move{
-            // DoubleSlap
+        // DoubleSlap
+        .{
             .bp = 15,
             .type = .Normal,
             .accuracy = 85,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // CometPunch
+        // CometPunch
+        .{
             .bp = 18,
             .type = .Normal,
             .accuracy = 85,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // MegaPunch
+        // MegaPunch
+        .{
             .bp = 80,
             .type = .Normal,
             .accuracy = 85,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // PayDay
+        // PayDay
+        .{
             .bp = 40,
             .type = .Normal,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // FirePunch
+        // FirePunch
+        .{
             .bp = 75,
             .type = .Fire,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // IcePunch
+        // IcePunch
+        .{
             .bp = 75,
             .type = .Ice,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // ThunderPunch
+        // ThunderPunch
+        .{
             .bp = 75,
             .type = .Electric,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // Scratch
+        // Scratch
+        .{
             .bp = 40,
             .type = .Normal,
             .accuracy = 100,
             .pp = 7, // * 5 = 35
         },
-        Move{
-            // ViseGrip
+        // ViseGrip
+        .{
             .bp = 55,
             .type = .Normal,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
         },
-        Move{
-            // Guillotine
+        // Guillotine
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 30,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // RazorWind
+        // RazorWind
+        .{
             .bp = 80,
             .type = .Normal,
             .accuracy = 75,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // SwordsDance
+        // SwordsDance
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
         },
-        Move{
-            // Cut
+        // Cut
+        .{
             .bp = 50,
             .type = .Normal,
             .accuracy = 95,
             .pp = 6, // * 5 = 30
         },
-        Move{
-            // Gust
+        // Gust
+        .{
             .bp = 40,
             .type = .Flying,
             .accuracy = 100,
             .pp = 7, // * 5 = 35
         },
-        Move{
-            // WingAttack
+        // WingAttack
+        .{
             .bp = 60,
             .type = .Flying,
             .accuracy = 100,
             .pp = 7, // * 5 = 35
         },
-        Move{
-            // Whirlwind
+        // Whirlwind
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // Fly
+        // Fly
+        .{
             .bp = 70,
             .type = .Flying,
             .accuracy = 95,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // Bind
+        // Bind
+        .{
             .bp = 15,
             .type = .Normal,
             .accuracy = 75,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // Slam
+        // Slam
+        .{
             .bp = 80,
             .type = .Normal,
             .accuracy = 75,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // VineWhip
+        // VineWhip
+        .{
             .bp = 35,
             .type = .Grass,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // Stomp
+        // Stomp
+        .{
             .bp = 65,
             .type = .Normal,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
             .chance = 3, // * 10 = 30
         },
-        Move{
-            // DoubleKick
+        // DoubleKick
+        .{
             .bp = 30,
             .type = .Fighting,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
         },
-        Move{
-            // MegaKick
+        // MegaKick
+        .{
             .bp = 120,
             .type = .Normal,
             .accuracy = 75,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // JumpKick
+        // JumpKick
+        .{
             .bp = 70,
             .type = .Fighting,
             .accuracy = 95,
             .pp = 5, // * 5 = 25
         },
-        Move{
-            // RollingKick
+        // RollingKick
+        .{
             .bp = 60,
             .type = .Fighting,
             .accuracy = 85,
             .pp = 3, // * 5 = 15
             .chance = 3, // * 10 = 30
         },
-        Move{
-            // SandAttack
+        // SandAttack
+        .{
             .bp = 0,
             .type = .Ground,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // Headbutt
+        // Headbutt
+        .{
             .bp = 70,
             .type = .Normal,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
             .chance = 3, // * 10 = 30
         },
-        Move{
-            // HornAttack
+        // HornAttack
+        .{
             .bp = 65,
             .type = .Normal,
             .accuracy = 100,
             .pp = 5, // * 5 = 25
         },
-        Move{
-            // FuryAttack
+        // FuryAttack
+        .{
             .bp = 15,
             .type = .Normal,
             .accuracy = 85,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // HornDrill
+        // HornDrill
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 30,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // Tackle
+        // Tackle
+        .{
             .bp = 35,
             .type = .Normal,
             .accuracy = 95,
             .pp = 7, // * 5 = 35
         },
-        Move{
-            // BodySlam
+        // BodySlam
+        .{
             .bp = 85,
             .type = .Normal,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
             .chance = 3, // * 10 = 30
         },
-        Move{
-            // Wrap
+        // Wrap
+        .{
             .bp = 15,
             .type = .Normal,
             .accuracy = 85,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // TakeDown
+        // TakeDown
+        .{
             .bp = 90,
             .type = .Normal,
             .accuracy = 85,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // Thrash
+        // Thrash
+        .{
             .bp = 90,
             .type = .Normal,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // DoubleEdge
+        // DoubleEdge
+        .{
             .bp = 120,
             .type = .Normal,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // TailWhip
+        // TailWhip
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
         },
-        Move{
-            // PoisonSting
+        // PoisonSting
+        .{
             .bp = 15,
             .type = .Poison,
             .accuracy = 100,
             .pp = 7, // * 5 = 35
             .chance = 3, // * 10 = 30
         },
-        Move{
-            // Twineedle
+        // Twineedle
+        .{
             .bp = 25,
             .type = .Bug,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
             .chance = 2, // * 10 = 20
         },
-        Move{
-            // PinMissile
+        // PinMissile
+        .{
             .bp = 14,
             .type = .Bug,
             .accuracy = 85,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // Leer
+        // Leer
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
         },
-        Move{
-            // Bite
+        // Bite
+        .{
             .bp = 60,
             .type = .Dark,
             .accuracy = 100,
             .pp = 5, // * 5 = 25
             .chance = 3, // * 10 = 30
         },
-        Move{
-            // Growl
+        // Growl
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 8, // * 5 = 40
         },
-        Move{
-            // Roar
+        // Roar
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // Sing
+        // Sing
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 55,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // Supersonic
+        // Supersonic
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 55,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // SonicBoom
+        // SonicBoom
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 90,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // Disable
+        // Disable
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 55,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // Acid
+        // Acid
+        .{
             .bp = 40,
             .type = .Poison,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // Ember
+        // Ember
+        .{
             .bp = 40,
             .type = .Fire,
             .accuracy = 100,
             .pp = 5, // * 5 = 25
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // Flamethrower
+        // Flamethrower
+        .{
             .bp = 95,
             .type = .Fire,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // Mist
+        // Mist
+        .{
             .bp = 0,
             .type = .Ice,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
         },
-        Move{
-            // WaterGun
+        // WaterGun
+        .{
             .bp = 40,
             .type = .Water,
             .accuracy = 100,
             .pp = 5, // * 5 = 25
         },
-        Move{
-            // HydroPump
+        // HydroPump
+        .{
             .bp = 120,
             .type = .Water,
             .accuracy = 80,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // Surf
+        // Surf
+        .{
             .bp = 95,
             .type = .Water,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // IceBeam
+        // IceBeam
+        .{
             .bp = 95,
             .type = .Ice,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // Blizzard
+        // Blizzard
+        .{
             .bp = 120,
             .type = .Ice,
             .accuracy = 70,
             .pp = 1, // * 5 = 5
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // Psybeam
+        // Psybeam
+        .{
             .bp = 65,
             .type = .Psychic,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // BubbleBeam
+        // BubbleBeam
+        .{
             .bp = 65,
             .type = .Water,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // AuroraBeam
+        // AuroraBeam
+        .{
             .bp = 65,
             .type = .Ice,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // HyperBeam
+        // HyperBeam
+        .{
             .bp = 150,
             .type = .Normal,
             .accuracy = 90,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // Peck
+        // Peck
+        .{
             .bp = 35,
             .type = .Flying,
             .accuracy = 100,
             .pp = 7, // * 5 = 35
         },
-        Move{
-            // DrillPeck
+        // DrillPeck
+        .{
             .bp = 80,
             .type = .Flying,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // Submission
+        // Submission
+        .{
             .bp = 80,
             .type = .Fighting,
             .accuracy = 80,
             .pp = 5, // * 5 = 25
         },
-        Move{
-            // LowKick
+        // LowKick
+        .{
             .bp = 50,
             .type = .Fighting,
             .accuracy = 90,
             .pp = 4, // * 5 = 20
             .chance = 3, // * 10 = 30
         },
-        Move{
-            // Counter
+        // Counter
+        .{
             .bp = 0,
             .type = .Fighting,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // SeismicToss
+        // SeismicToss
+        .{
             .bp = 0,
             .type = .Fighting,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // Strength
+        // Strength
+        .{
             .bp = 80,
             .type = .Normal,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // Absorb
+        // Absorb
+        .{
             .bp = 20,
             .type = .Grass,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // MegaDrain
+        // MegaDrain
+        .{
             .bp = 40,
             .type = .Grass,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // LeechSeed
+        // LeechSeed
+        .{
             .bp = 0,
             .type = .Grass,
             .accuracy = 90,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // Growth
+        // Growth
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 8, // * 5 = 40
         },
-        Move{
-            // RazorLeaf
+        // RazorLeaf
+        .{
             .bp = 55,
             .type = .Grass,
             .accuracy = 95,
             .pp = 5, // * 5 = 25
         },
-        Move{
-            // SolarBeam
+        // SolarBeam
+        .{
             .bp = 120,
             .type = .Grass,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // PoisonPowder
+        // PoisonPowder
+        .{
             .bp = 0,
             .type = .Poison,
             .accuracy = 75,
             .pp = 7, // * 5 = 35
         },
-        Move{
-            // StunSpore
+        // StunSpore
+        .{
             .bp = 0,
             .type = .Grass,
             .accuracy = 75,
             .pp = 6, // * 5 = 30
         },
-        Move{
-            // SleepPowder
+        // SleepPowder
+        .{
             .bp = 0,
             .type = .Grass,
             .accuracy = 75,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // PetalDance
+        // PetalDance
+        .{
             .bp = 70,
             .type = .Grass,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // StringShot
+        // StringShot
+        .{
             .bp = 0,
             .type = .Bug,
             .accuracy = 95,
             .pp = 8, // * 5 = 40
         },
-        Move{
-            // DragonRage
+        // DragonRage
+        .{
             .bp = 0,
             .type = .Dragon,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // FireSpin
+        // FireSpin
+        .{
             .bp = 15,
             .type = .Fire,
             .accuracy = 70,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // ThunderShock
+        // ThunderShock
+        .{
             .bp = 40,
             .type = .Electric,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // Thunderbolt
+        // Thunderbolt
+        .{
             .bp = 95,
             .type = .Electric,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // ThunderWave
+        // ThunderWave
+        .{
             .bp = 0,
             .type = .Electric,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // Thunder
+        // Thunder
+        .{
             .bp = 120,
             .type = .Electric,
             .accuracy = 70,
             .pp = 2, // * 5 = 10
             .chance = 3, // * 10 = 30
         },
-        Move{
-            // RockThrow
+        // RockThrow
+        .{
             .bp = 50,
             .type = .Rock,
             .accuracy = 90,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // Earthquake
+        // Earthquake
+        .{
             .bp = 100,
             .type = .Ground,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // Fissure
+        // Fissure
+        .{
             .bp = 0,
             .type = .Ground,
             .accuracy = 30,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // Dig
+        // Dig
+        .{
             .bp = 60,
             .type = .Ground,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // Toxic
+        // Toxic
+        .{
             .bp = 0,
             .type = .Poison,
             .accuracy = 85,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // Confusion
+        // Confusion
+        .{
             .bp = 50,
             .type = .Psychic,
             .accuracy = 100,
             .pp = 5, // * 5 = 25
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // Psychic
+        // Psychic
+        .{
             .bp = 90,
             .type = .Psychic,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // Hypnosis
+        // Hypnosis
+        .{
             .bp = 0,
             .type = .Psychic,
             .accuracy = 60,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // Meditate
+        // Meditate
+        .{
             .bp = 0,
             .type = .Psychic,
             .accuracy = 100,
             .pp = 8, // * 5 = 40
         },
-        Move{
-            // Agility
+        // Agility
+        .{
             .bp = 0,
             .type = .Psychic,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
         },
-        Move{
-            // QuickAttack
+        // QuickAttack
+        .{
             .bp = 40,
             .type = .Normal,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
         },
-        Move{
-            // Rage
+        // Rage
+        .{
             .bp = 20,
             .type = .Normal,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // Teleport
+        // Teleport
+        .{
             .bp = 0,
             .type = .Psychic,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // NightShade
+        // NightShade
+        .{
             .bp = 0,
             .type = .Ghost,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // Mimic
+        // Mimic
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // Screech
+        // Screech
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 85,
             .pp = 8, // * 5 = 40
         },
-        Move{
-            // DoubleTeam
+        // DoubleTeam
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // Recover
+        // Recover
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // Harden
+        // Harden
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
         },
-        Move{
-            // Minimize
+        // Minimize
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // Smokescreen
+        // Smokescreen
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // ConfuseRay
+        // ConfuseRay
+        .{
             .bp = 0,
             .type = .Ghost,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // Withdraw
+        // Withdraw
+        .{
             .bp = 0,
             .type = .Water,
             .accuracy = 100,
             .pp = 8, // * 5 = 40
         },
-        Move{
-            // DefenseCurl
+        // DefenseCurl
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 8, // * 5 = 40
         },
-        Move{
-            // Barrier
+        // Barrier
+        .{
             .bp = 0,
             .type = .Psychic,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
         },
-        Move{
-            // LightScreen
+        // LightScreen
+        .{
             .bp = 0,
             .type = .Psychic,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
         },
-        Move{
-            // Haze
+        // Haze
+        .{
             .bp = 0,
             .type = .Ice,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
         },
-        Move{
-            // Reflect
+        // Reflect
+        .{
             .bp = 0,
             .type = .Psychic,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // FocusEnergy
+        // FocusEnergy
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
         },
-        Move{
-            // Bide
+        // Bide
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // Metronome
+        // Metronome
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // MirrorMove
+        // MirrorMove
+        .{
             .bp = 0,
             .type = .Flying,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // SelfDestruct
+        // SelfDestruct
+        .{
             .bp = 200,
             .type = .Normal,
             .accuracy = 100,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // EggBomb
+        // EggBomb
+        .{
             .bp = 100,
             .type = .Normal,
             .accuracy = 75,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // Lick
+        // Lick
+        .{
             .bp = 20,
             .type = .Ghost,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
             .chance = 3, // * 10 = 30
         },
-        Move{
-            // Smog
+        // Smog
+        .{
             .bp = 20,
             .type = .Poison,
             .accuracy = 70,
             .pp = 4, // * 5 = 20
             .chance = 4, // * 10 = 40
         },
-        Move{
-            // Sludge
+        // Sludge
+        .{
             .bp = 65,
             .type = .Poison,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
             .chance = 3, // * 10 = 30
         },
-        Move{
-            // BoneClub
+        // BoneClub
+        .{
             .bp = 65,
             .type = .Ground,
             .accuracy = 85,
             .pp = 4, // * 5 = 20
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // FireBlast
+        // FireBlast
+        .{
             .bp = 120,
             .type = .Fire,
             .accuracy = 85,
             .pp = 1, // * 5 = 5
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // Waterfall
+        // Waterfall
+        .{
             .bp = 80,
             .type = .Water,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // Clamp
+        // Clamp
+        .{
             .bp = 35,
             .type = .Water,
             .accuracy = 75,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // Swift
+        // Swift
+        .{
             .bp = 60,
             .type = .Normal,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // SkullBash
+        // SkullBash
+        .{
             .bp = 100,
             .type = .Normal,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // SpikeCannon
+        // SpikeCannon
+        .{
             .bp = 20,
             .type = .Normal,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // Constrict
+        // Constrict
+        .{
             .bp = 10,
             .type = .Normal,
             .accuracy = 100,
             .pp = 7, // * 5 = 35
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // Amnesia
+        // Amnesia
+        .{
             .bp = 0,
             .type = .Psychic,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // Kinesis
+        // Kinesis
+        .{
             .bp = 0,
             .type = .Psychic,
             .accuracy = 80,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // SoftBoiled
+        // SoftBoiled
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // HighJumpKick
+        // HighJumpKick
+        .{
             .bp = 85,
             .type = .Fighting,
             .accuracy = 90,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // Glare
+        // Glare
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 75,
             .pp = 6, // * 5 = 30
         },
-        Move{
-            // DreamEater
+        // DreamEater
+        .{
             .bp = 100,
             .type = .Psychic,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // PoisonGas
+        // PoisonGas
+        .{
             .bp = 0,
             .type = .Poison,
             .accuracy = 55,
             .pp = 8, // * 5 = 40
         },
-        Move{
-            // Barrage
+        // Barrage
+        .{
             .bp = 15,
             .type = .Normal,
             .accuracy = 85,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // LeechLife
+        // LeechLife
+        .{
             .bp = 20,
             .type = .Bug,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // LovelyKiss
+        // LovelyKiss
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 75,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // SkyAttack
+        // SkyAttack
+        .{
             .bp = 140,
             .type = .Flying,
             .accuracy = 90,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // Transform
+        // Transform
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // Bubble
+        // Bubble
+        .{
             .bp = 20,
             .type = .Water,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // DizzyPunch
+        // DizzyPunch
+        .{
             .bp = 70,
             .type = .Normal,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
             .chance = 2, // * 10 = 20
         },
-        Move{
-            // Spore
+        // Spore
+        .{
             .bp = 0,
             .type = .Grass,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // Flash
+        // Flash
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 70,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // Psywave
+        // Psywave
+        .{
             .bp = 0,
             .type = .Psychic,
             .accuracy = 80,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // Splash
+        // Splash
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 8, // * 5 = 40
         },
-        Move{
-            // AcidArmor
+        // AcidArmor
+        .{
             .bp = 0,
             .type = .Poison,
             .accuracy = 100,
             .pp = 8, // * 5 = 40
         },
-        Move{
-            // Crabhammer
+        // Crabhammer
+        .{
             .bp = 90,
             .type = .Water,
             .accuracy = 85,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // Explosion
+        // Explosion
+        .{
             .bp = 250,
             .type = .Normal,
             .accuracy = 100,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // FurySwipes
+        // FurySwipes
+        .{
             .bp = 18,
             .type = .Normal,
             .accuracy = 80,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // Bonemerang
+        // Bonemerang
+        .{
             .bp = 50,
             .type = .Ground,
             .accuracy = 90,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // Rest
+        // Rest
+        .{
             .bp = 0,
             .type = .Psychic,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // RockSlide
+        // RockSlide
+        .{
             .bp = 75,
             .type = .Rock,
             .accuracy = 90,
             .pp = 2, // * 5 = 10
             .chance = 3, // * 10 = 30
         },
-        Move{
-            // HyperFang
+        // HyperFang
+        .{
             .bp = 80,
             .type = .Normal,
             .accuracy = 90,
             .pp = 3, // * 5 = 15
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // Sharpen
+        // Sharpen
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
         },
-        Move{
-            // Conversion
+        // Conversion
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
         },
-        Move{
-            // TriAttack
+        // TriAttack
+        .{
             .bp = 80,
             .type = .Normal,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
             .chance = 2, // * 10 = 20
         },
-        Move{
-            // SuperFang
+        // SuperFang
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 90,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // Slash
+        // Slash
+        .{
             .bp = 70,
             .type = .Normal,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // Substitute
+        // Substitute
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // Struggle
+        // Struggle
+        .{
             .bp = 50,
             .type = .Normal,
             .accuracy = 100,
             .pp = 0, // = 1
         },
-        Move{
-            // Sketch
+        // Sketch
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 0, // = 1
         },
-        Move{
-            // TripleKick
+        // TripleKick
+        .{
             .bp = 10,
             .type = .Fighting,
             .accuracy = 90,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // Thief
+        // Thief
+        .{
             .bp = 40,
             .type = .Dark,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
             .chance = 10, // * 10 = 100
         },
-        Move{
-            // SpiderWeb
+        // SpiderWeb
+        .{
             .bp = 0,
             .type = .Bug,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // MindReader
+        // MindReader
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // Nightmare
+        // Nightmare
+        .{
             .bp = 0,
             .type = .Ghost,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // FlameWheel
+        // FlameWheel
+        .{
             .bp = 60,
             .type = .Fire,
             .accuracy = 100,
             .pp = 5, // * 5 = 25
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // Snore
+        // Snore
+        .{
             .bp = 40,
             .type = .Normal,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
             .chance = 3, // * 10 = 30
         },
-        Move{
-            // Curse
+        // Curse
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // Flail
+        // Flail
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // Conversion2
+        // Conversion2
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
         },
-        Move{
-            // Aeroblast
+        // Aeroblast
+        .{
             .bp = 100,
             .type = .Flying,
             .accuracy = 95,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // CottonSpore
+        // CottonSpore
+        .{
             .bp = 0,
             .type = .Grass,
             .accuracy = 85,
             .pp = 8, // * 5 = 40
         },
-        Move{
-            // Reversal
+        // Reversal
+        .{
             .bp = 0,
             .type = .Fighting,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // Spite
+        // Spite
+        .{
             .bp = 0,
             .type = .Ghost,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // PowderSnow
+        // PowderSnow
+        .{
             .bp = 40,
             .type = .Ice,
             .accuracy = 100,
             .pp = 5, // * 5 = 25
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // Protect
+        // Protect
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // MachPunch
+        // MachPunch
+        .{
             .bp = 40,
             .type = .Fighting,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
         },
-        Move{
-            // ScaryFace
+        // ScaryFace
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 90,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // FeintAttack
+        // FeintAttack
+        .{
             .bp = 60,
             .type = .Dark,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // SweetKiss
+        // SweetKiss
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 75,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // BellyDrum
+        // BellyDrum
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // SludgeBomb
+        // SludgeBomb
+        .{
             .bp = 90,
             .type = .Poison,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
             .chance = 3, // * 10 = 30
         },
-        Move{
-            // MudSlap
+        // MudSlap
+        .{
             .bp = 20,
             .type = .Ground,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
             .chance = 10, // * 10 = 100
         },
-        Move{
-            // Octazooka
+        // Octazooka
+        .{
             .bp = 65,
             .type = .Water,
             .accuracy = 85,
             .pp = 2, // * 5 = 10
             .chance = 5, // * 10 = 50
         },
-        Move{
-            // Spikes
+        // Spikes
+        .{
             .bp = 0,
             .type = .Ground,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // ZapCannon
+        // ZapCannon
+        .{
             .bp = 100,
             .type = .Electric,
             .accuracy = 50,
             .pp = 1, // * 5 = 5
             .chance = 10, // * 10 = 100
         },
-        Move{
-            // Foresight
+        // Foresight
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 8, // * 5 = 40
         },
-        Move{
-            // DestinyBond
+        // DestinyBond
+        .{
             .bp = 0,
             .type = .Ghost,
             .accuracy = 100,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // PerishSong
+        // PerishSong
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // IcyWind
+        // IcyWind
+        .{
             .bp = 55,
             .type = .Ice,
             .accuracy = 95,
             .pp = 3, // * 5 = 15
             .chance = 10, // * 10 = 100
         },
-        Move{
-            // Detect
+        // Detect
+        .{
             .bp = 0,
             .type = .Fighting,
             .accuracy = 100,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // BoneRush
+        // BoneRush
+        .{
             .bp = 25,
             .type = .Ground,
             .accuracy = 80,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // LockOn
+        // LockOn
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // Outrage
+        // Outrage
+        .{
             .bp = 90,
             .type = .Dragon,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // Sandstorm
+        // Sandstorm
+        .{
             .bp = 0,
             .type = .Rock,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // GigaDrain
+        // GigaDrain
+        .{
             .bp = 60,
             .type = .Grass,
             .accuracy = 100,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // Endure
+        // Endure
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // Charm
+        // Charm
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // Rollout
+        // Rollout
+        .{
             .bp = 30,
             .type = .Rock,
             .accuracy = 90,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // FalseSwipe
+        // FalseSwipe
+        .{
             .bp = 40,
             .type = .Normal,
             .accuracy = 100,
             .pp = 8, // * 5 = 40
         },
-        Move{
-            // Swagger
+        // Swagger
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 90,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // MilkDrink
+        // MilkDrink
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // Spark
+        // Spark
+        .{
             .bp = 65,
             .type = .Electric,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
             .chance = 3, // * 10 = 30
         },
-        Move{
-            // FuryCutter
+        // FuryCutter
+        .{
             .bp = 10,
             .type = .Bug,
             .accuracy = 95,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // SteelWing
+        // SteelWing
+        .{
             .bp = 70,
             .type = .Steel,
             .accuracy = 90,
             .pp = 5, // * 5 = 25
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // MeanLook
+        // MeanLook
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // Attract
+        // Attract
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // SleepTalk
+        // SleepTalk
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // HealBell
+        // HealBell
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // Return
+        // Return
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // Present
+        // Present
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 90,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // Frustration
+        // Frustration
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // Safeguard
+        // Safeguard
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 5, // * 5 = 25
         },
-        Move{
-            // PainSplit
+        // PainSplit
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // SacredFire
+        // SacredFire
+        .{
             .bp = 100,
             .type = .Fire,
             .accuracy = 95,
             .pp = 1, // * 5 = 5
             .chance = 5, // * 10 = 50
         },
-        Move{
-            // Magnitude
+        // Magnitude
+        .{
             .bp = 0,
             .type = .Ground,
             .accuracy = 100,
             .pp = 6, // * 5 = 30
         },
-        Move{
-            // DynamicPunch
+        // DynamicPunch
+        .{
             .bp = 100,
             .type = .Fighting,
             .accuracy = 50,
             .pp = 1, // * 5 = 5
             .chance = 10, // * 10 = 100
         },
-        Move{
-            // Megahorn
+        // Megahorn
+        .{
             .bp = 120,
             .type = .Bug,
             .accuracy = 85,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // DragonBreath
+        // DragonBreath
+        .{
             .bp = 60,
             .type = .Dragon,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
             .chance = 3, // * 10 = 30
         },
-        Move{
-            // BatonPass
+        // BatonPass
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 8, // * 5 = 40
         },
-        Move{
-            // Encore
+        // Encore
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // Pursuit
+        // Pursuit
+        .{
             .bp = 40,
             .type = .Dark,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // RapidSpin
+        // RapidSpin
+        .{
             .bp = 20,
             .type = .Normal,
             .accuracy = 100,
             .pp = 8, // * 5 = 40
         },
-        Move{
-            // SweetScent
+        // SweetScent
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // IronTail
+        // IronTail
+        .{
             .bp = 100,
             .type = .Steel,
             .accuracy = 75,
             .pp = 3, // * 5 = 15
             .chance = 3, // * 10 = 30
         },
-        Move{
-            // MetalClaw
+        // MetalClaw
+        .{
             .bp = 50,
             .type = .Steel,
             .accuracy = 95,
             .pp = 7, // * 5 = 35
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // VitalThrow
+        // VitalThrow
+        .{
             .bp = 70,
             .type = .Fighting,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // MorningSun
+        // MorningSun
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // Synthesis
+        // Synthesis
+        .{
             .bp = 0,
             .type = .Grass,
             .accuracy = 100,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // Moonlight
+        // Moonlight
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // HiddenPower
+        // HiddenPower
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // CrossChop
+        // CrossChop
+        .{
             .bp = 100,
             .type = .Fighting,
             .accuracy = 80,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // Twister
+        // Twister
+        .{
             .bp = 40,
             .type = .Dragon,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
             .chance = 2, // * 10 = 20
         },
-        Move{
-            // RainDance
+        // RainDance
+        .{
             .bp = 0,
             .type = .Water,
             .accuracy = 100,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // SunnyDay
+        // SunnyDay
+        .{
             .bp = 0,
             .type = .Fire,
             .accuracy = 100,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // Crunch
+        // Crunch
+        .{
             .bp = 80,
             .type = .Dark,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
             .chance = 2, // * 10 = 20
         },
-        Move{
-            // MirrorCoat
+        // MirrorCoat
+        .{
             .bp = 0,
             .type = .Psychic,
             .accuracy = 100,
             .pp = 4, // * 5 = 20
         },
-        Move{
-            // PsychUp
+        // PsychUp
+        .{
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
             .pp = 2, // * 5 = 10
         },
-        Move{
-            // ExtremeSpeed
+        // ExtremeSpeed
+        .{
             .bp = 80,
             .type = .Normal,
             .accuracy = 100,
             .pp = 1, // * 5 = 5
         },
-        Move{
-            // AncientPower
+        // AncientPower
+        .{
             .bp = 60,
             .type = .Rock,
             .accuracy = 100,
             .pp = 1, // * 5 = 5
             .chance = 1, // * 10 = 10
         },
-        Move{
-            // ShadowBall
+        // ShadowBall
+        .{
             .bp = 80,
             .type = .Ghost,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
             .chance = 2, // * 10 = 20
         },
-        Move{
-            // FutureSight
+        // FutureSight
+        .{
             .bp = 80,
             .type = .Psychic,
             .accuracy = 90,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // RockSmash
+        // RockSmash
+        .{
             .bp = 20,
             .type = .Fighting,
             .accuracy = 100,
             .pp = 3, // * 5 = 15
             .chance = 5, // * 10 = 50
         },
-        Move{
-            // Whirlpool
+        // Whirlpool
+        .{
             .bp = 15,
             .type = .Water,
             .accuracy = 70,
             .pp = 3, // * 5 = 15
         },
-        Move{
-            // BeatUp
+        // BeatUp
+        .{
             .bp = 10,
             .type = .Dark,
             .accuracy = 100,
