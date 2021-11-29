@@ -1,72 +1,16 @@
 const std = @import("std");
 
 const rng = @import("../common/rng.zig");
-const util = @import("../common/util.zig");
+const util = @import("../common/util.zig"); // DEBUG
 
 const data = @import("data.zig");
 
 const assert = std.debug.assert;
 
-const Escapes = util.Escapes;
-
 const Species = data.Species;
 const Stats = data.Stats;
 const Moves = data.Moves;
 const MoveSlot = data.MoveSlot;
-
-pub fn debug(value: anytype) void {
-    std.debug.getStderrMutex().lock();
-    defer std.debug.getStderrMutex().unlock();
-    const stderr = std.io.getStdErr().writer();
-    nosuspend stderr.writeByte('\n') catch return;
-    nosuspend format(value, stderr) catch return;
-}
-
-fn format(value: anytype, writer: anytype) !void {
-    const indent = " " ** 4;
-    const T = @TypeOf(value);
-    switch (T) {
-        data.Battle => {
-            try formatType(T, writer);
-            try writer.writeAll("{\n");
-            try writer.writeAll(indent ++ ".seed = ");
-            try format(value.rng, writer);
-            try writer.writeAll(",\n" ++ indent ++ ".turn = ");
-            try formatNumber(value.turn, writer);
-            if (value.last_damage != 0) {
-                try writer.writeAll(",\n" ++ indent ++ ".last_damage = ");
-                try formatNumber(value.last_damage, writer);
-            }
-            try writer.writeAll(",\n" ++ indent ++ ".sides = {\n");
-            try format(value.sides[0], writer); // FIXME indent...
-
-            // TODO sides
-            // try format(value.sides, writer);
-
-            try writer.writeAll(indent ++ "}\n}");
-
-        },
-        rng.Gen12 => {
-            try formatType(T, writer);
-            try writer.writeAll("{ .seed = ");
-            try formatNumber(value.seed, writer);
-            try writer.writeAll(" }");
-        },
-        else => try std.fmt.formatType(value, "any", .{}, writer, 10),
-    }
-}
-
-fn formatType(comptime T: type, writer: anytype) !void {
-    try writer.writeAll(Escapes.Dim);
-    try writer.writeAll(@typeName(T));
-    try writer.writeAll(Escapes.Reset);
-}
-
-fn formatNumber(value: anytype, writer: anytype) !void {
-    try writer.writeAll(Escapes.Yellow);
-    try std.fmt.format(writer, "{d}", .{value});
-    try writer.writeAll(Escapes.Reset);
-}
 
 pub const Battle = struct {
     pub fn init(seed: u8, p1: []const Pokemon, p2: []const Pokemon) data.Battle {
@@ -151,8 +95,9 @@ pub const Pokemon = struct {
 test "Battle" {
     const p1 = &.{.{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } }};
     const p2 = &.{.{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } }};
-    const battle = Battle.init(0, p1, p2);
-    debug(battle);
+    _ = Battle.init(0, p1, p2);
+    // std.debug.print("{s}", .{battle});
+    // util.debug(battle);
 }
 
 comptime {
