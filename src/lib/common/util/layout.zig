@@ -12,7 +12,16 @@ pub fn print(comptime T: type) !void {
             try stdout.print("*** PADDING *** ({d} bits)\n", .{offset - last});
         }
         const aligned = offset % @alignOf(field.field_type) * 8 == 0;
-        try stdout.print("{s}.{s}: {s} = {d}-{d} ({d} bits, {s}aligned to {d} bytes)\n", .{ @typeName(T), field.name, field.field_type, offset, offset + size, size, if (aligned) "" else "NOT ", @alignOf(field.field_type) });
+        try stdout.print("{s}.{s}: {s} = {d}-{d} ({d} bits, {s}aligned to {d} bytes)\n", .{
+            @typeName(T),
+            field.name,
+            field.field_type,
+            offset,
+            offset + size,
+            size,
+            if (aligned) "" else "NOT ",
+            @alignOf(field.field_type),
+        });
         last = offset + size;
     }
     if (last < @sizeOf(T) * 8) {
