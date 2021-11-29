@@ -79,6 +79,8 @@ pub const Pokemon = packed struct {
 
     comptime {
         assert(@sizeOf(Pokemon) == 22);
+        // TODO: Safety check workaround for ziglang/zig#2627
+        assert(@bitSizeOf(Pokemon) == @sizeOf(Pokemon) * 8);
     }
 };
 
@@ -89,6 +91,8 @@ pub const MoveSlot = packed struct {
 
     comptime {
         assert(@sizeOf(MoveSlot) == @sizeOf(u16));
+        // TODO: Safety check workaround for ziglang/zig#2627
+        assert(@bitSizeOf(MoveSlot) == @sizeOf(MoveSlot) * 8);
     }
 };
 
@@ -188,6 +192,8 @@ pub const Volatile = packed struct {
 
     comptime {
         assert(@sizeOf(Volatile) == 8);
+        // TODO: Safety check workaround for ziglang/zig#2627
+        assert(@bitSizeOf(Volatile) == @sizeOf(Volatile) * 8);
     }
 };
 
@@ -203,6 +209,8 @@ pub const VolatileData = packed struct {
 
     comptime {
         assert(@sizeOf(VolatileData) == 5);
+        // TODO: Safety check workaround for ziglang/zig#2627
+        assert(@bitSizeOf(VolatileData) == @sizeOf(VolatileData) * 8);
     }
 };
 
@@ -259,6 +267,8 @@ pub const Move = packed struct {
 
     comptime {
         assert(@sizeOf(Move) == 2);
+        // TODO: Safety check workaround for ziglang/zig#2627
+        assert(@bitSizeOf(Move) == @sizeOf(Move) * 8);
     }
 
     pub fn accuracy(self: *const Move) u8 {
@@ -296,6 +306,8 @@ pub const Effectiveness = enum(u8) {
 
     comptime {
         assert(@bitSizeOf(Effectiveness) == 8);
+        // TODO: Safety check workaround for ziglang/zig#2627
+        assert(@bitSizeOf(Effectiveness) == @sizeOf(Effectiveness) * 8);
     }
 };
 

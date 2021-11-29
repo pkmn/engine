@@ -42,8 +42,6 @@ The following information is required to simulate a Generation II Pokémon battl
 |                               | `PlayerCharging`              |                                 |
 |                               | `PlayerJustGotFrozen`         |                                 |
 
-
-
 - Pokémon Showdown does not implement the correct Generation II RNG and as such its `seed` is
   different
 - `battle.turn` only needs to be tracked in order to be compatible with the Pokémon Showdown

@@ -12,7 +12,7 @@ const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 const expect = std.testing.expect;
 
-const Battle = packed struct {
+const Battle = extern struct {
     rng: rng.Gen12,
     // weather
     // weather duration
@@ -31,7 +31,7 @@ const Weather = enum(u2) {
     Sandstorm,
 };
 
-const Side = packed struct {
+const Side = extern struct {
     condition: SideCondition,
     // wPlayerDamageTaken:: dw
     // wPlayerTurnsTaken:: db???
@@ -50,7 +50,7 @@ const SideCondition = packed struct {
     Reflect: bool = false,
 };
 
-const ActivePokemon = packed struct {
+const ActivePokemon = extern struct {
     // TODO item Items
     // TODO extra 2*Stats+1 Boosts byte = 24
     // TODO happiness u8
@@ -80,6 +80,8 @@ const IVs = packed struct {
 
     comptime {
         assert(@sizeOf(IVs) == 2);
+        // TODO: Safety check workaround for ziglang/zig#2627
+        assert(@bitSizeOf(IVs) == @sizeOf(IVs) * 8);
     }
 };
 
@@ -90,6 +92,8 @@ const MoveSlot = packed struct {
 
     comptime {
         assert(@sizeOf(MoveSlot) == @sizeOf(u16));
+        // TODO: Safety check workaround for ziglang/zig#2627
+        assert(@bitSizeOf(MoveSlot) == @sizeOf(MoveSlot) * 8);
     }
 
     pub fn init(id: Moves) MoveSlot {
@@ -250,6 +254,8 @@ pub const Move = packed struct {
 
     comptime {
         assert(@sizeOf(Move) == 4);
+        // TODO: Safety check workaround for ziglang/zig#2627
+        assert(@bitSizeOf(Move) == @sizeOf(Move) * 8);
     }
 };
 

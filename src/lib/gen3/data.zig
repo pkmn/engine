@@ -18,7 +18,7 @@ pub const GameType = enum {
 };
 
 pub fn Battle(comptime game_type: GameType) type {
-    return packed struct {
+    return extern struct {
         sides: [2]Side(game_type),
         rng: rng.Gen34,
         turn: u8 = 0,
@@ -35,7 +35,7 @@ pub fn Battle(comptime game_type: GameType) type {
 
 pub fn Side(comptime game_type: GameType) type {
     const N = @enumToInt(game_type) + 1;
-    return packed struct {
+    return extern struct {
         pokemon: [N]ActivePokemon,
         team: [6]Pokemon,
         active: [N]u8,
@@ -68,6 +68,11 @@ pub const MoveTarget = packed struct {
     FoesAndAlly: bool = false,
     OpponentsField: bool = false,
     _: u2 = 0,
+
+    comptime {
+        // TODO: Safety check workaround for ziglang/zig#2627
+        assert(@bitSizeOf(MoveTarget) == @sizeOf(MoveTarget) * 8);
+    }
 };
 
 const a = MoveTarget{ .Depends = true };
@@ -81,6 +86,11 @@ pub const MoveFlags = packed struct {
     MirrorMove: bool = false, // mirror
     KingsRock: bool = false, // TODO
     _: u2 = 0,
+
+    comptime {
+        // TODO: Safety check workaround for ziglang/zig#2627
+        assert(@bitSizeOf(MoveFlags) == @sizeOf(MoveFlags) * 8);
+    }
 };
 
 pub const Moves = moves.Moves;
@@ -95,6 +105,9 @@ pub const Move = packed struct {
 
     comptime {
         assert(@sizeOf(Move) == 5);
+
+        // TODO: Safety check workaround for ziglang/zig#2627
+        assert(@bitSizeOf(Move) == @sizeOf(Move) * 8);
     }
 };
 
