@@ -96,8 +96,7 @@ test "Battle" {
     const p1 = &.{.{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } }};
     const p2 = &.{.{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } }};
     _ = Battle.init(0, p1, p2);
-    // std.debug.print("{s}", .{battle});
-    // util.debug(battle);
+    // util.debug.print(battle);
 }
 
 comptime {
