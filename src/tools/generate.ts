@@ -6,10 +6,10 @@ import * as https from 'https';
 
 import * as mustache from 'mustache';
 
-import { Generations, Generation, GenerationNum, TypeName, Specie } from '@pkmn/data';
-import { Dex, toID } from '@pkmn/sim';
+import {Generations, Generation, GenerationNum, TypeName, Specie} from '@pkmn/data';
+import {Dex, toID} from '@pkmn/sim';
 
-import type { IDs } from '..';
+import type {IDs} from '..';
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const TEMPLATES = path.join(ROOT, 'src', 'lib', 'common', 'data');
@@ -135,14 +135,14 @@ const getTypeChart = (gen: Generation, types: TypeName[]) => {
 const convertGenderRatio = (species: Specie) => {
   if (species.gender === 'N') return '0xFF, // N';
   switch (species.genderRatio.F) {
-    case 0: return '0x00, // 0.00% F';
-    case 0.125: return '0x1F, // 12.5% F';
-    case 0.25: return '0x3F, // 25.0% F';
-    case 0.5: return '0x7F, // 50.0% F';
-    case 0.75: return '0xBF, // 75.0% F';
-    case 1: return '0xFE, // 100% F';
-    default:
-      throw new Error(`Invalid gender ratio for ${species.name}`);
+  case 0: return '0x00, // 0.00% F';
+  case 0.125: return '0x1F, // 12.5% F';
+  case 0.25: return '0x3F, // 25.0% F';
+  case 0.5: return '0x7F, // 50.0% F';
+  case 0.75: return '0xBF, // 75.0% F';
+  case 1: return '0xFE, // 100% F';
+  default:
+    throw new Error(`Invalid gender ratio for ${species.name}`);
   }
 };
 
@@ -341,7 +341,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
       }
     }
-    const offset = { mail: 0, berries: 0 };
+    const offset = {mail: 0, berries: 0};
     offset.mail = values.length;
     for (const s of mail) {
       values.push(s);
@@ -545,7 +545,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     if (mkdir(out)) update = true;
     if (mkdir(cache)) update = true;
 
-    await GEN[gen.num]!(gen, { out, cache }, update);
+    await GEN[gen.num]!(gen, {out, cache}, update);
   }
 
   fs.writeFileSync(path.join(ROOT, 'src', 'ids.json'), JSON.stringify(IDS));
