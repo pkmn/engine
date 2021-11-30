@@ -55,7 +55,7 @@ pub const ActivePokemon = extern struct {
     moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
     volatiles: Volatile = .{},
     boosts: Boosts(i4) = .{},
-    level: u8 = 0,
+    level: u8 = 100,
     hp: u16 = 0,
     status: u8 = 0,
     species: Species = .None,
@@ -75,7 +75,7 @@ pub const Pokemon = packed struct {
     status: u8 = 0,
     species: Species = .None,
     types: Types = .{},
-    level: u8 = 0,
+    level: u8 = 100,
 
     comptime {
         assert(@sizeOf(Pokemon) == 22);
@@ -87,7 +87,7 @@ pub const Pokemon = packed struct {
 pub const MoveSlot = packed struct {
     id: Moves = .None,
     pp: u6 = 0,
-    pp_ups: u2 = 0,
+    pp_ups: u2 = 3,
 
     comptime {
         assert(@sizeOf(MoveSlot) == @sizeOf(u16));

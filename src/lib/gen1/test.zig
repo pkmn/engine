@@ -51,7 +51,6 @@ pub const Side = struct {
             for (p.moves) |move, j| {
                 pokemon.moves[j].id = move;
                 pokemon.moves[j].pp = @truncate(u6, Moves.pp(move) / 5 * 8);
-                pokemon.moves[j].pp_ups = 3;
             }
             if (p.hp) |hp| pokemon.hp = hp;
             pokemon.status = p.status;
@@ -84,6 +83,8 @@ pub const Side = struct {
     // }
 };
 
+
+
 pub const Pokemon = struct {
     species: Species,
     moves: []const Moves,
@@ -95,8 +96,8 @@ pub const Pokemon = struct {
 test "Battle" {
     const p1 = &.{.{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } }};
     const p2 = &.{.{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } }};
-    _ = Battle.init(0, p1, p2);
-    // util.debug.print(battle);
+    const battle = Battle.init(0, p1, p2);
+    util.debug.print(battle);
 }
 
 comptime {
