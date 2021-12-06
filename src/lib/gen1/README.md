@@ -170,21 +170,21 @@ to be stored at each address of an array).
 The information of each field (in terms of [bits of
 entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as follows:
 
-| Data           | Range    | Bits |     | Data              | Range    | Bits |
-| -------------- | -------- | ---- | --- | ----------------- | -------- | ---- |
-| **seed**       | 0...255  | 8    |     | **turn**          | 1...1000 | 7    |
-| **team index** | 1...6    | 3    |     | **move index**    | 1...4    | 2    |
-| **species**    | 1...151  | 8    |     | **move**          | 1...165  | 8    |
-| **stat**       | 1...999  | 10   |     | **boost**         | 0...13   | 4    |
-| **level**      | 1...100  | 7    |     | **volatiles**     | 17       | 18   |
-| **bide**       | 2...1406 | 11   |     | **substitute**    | 4...179  | 8    |
-| **confusion**  | 0...5    | 3    |     | **toxic**         | 1...16   | 4    |
-| **multi hits** | 0...5    | 3    |     | **base power**    | 0...40   | 6    |
-| **base PP**    | 1...8    | 3    |     | **PP Ups**        | 0...3    | 2    |
-| **used PP**    | 0...63   | 8    |     | **HP / damage**   | 13...704 | 10   |
-| **status**     | 0...10   | 4    |     | **effectiveness** | 0...3    | 2    |
-| **type**       | 0...15   | 4    |     | **accuracy**      | 6...20   | 4    |
-| **disabled**   | 0...7    | 3    |     | **DVs**           | 0...15   | 4    |
+| Data           | Range   | Bits |     | Data              | Range    | Bits |
+| -------------- | ------- | ---- | --- | ----------------- | -------- | ---- |
+| **seed**       | 0...255 | 8    |     | **turn**          | 1...1000 | 10   |
+| **team index** | 1...6   | 3    |     | **move index**    | 1...4    | 2    |
+| **species**    | 1...151 | 8    |     | **move**          | 1...165  | 8    |
+| **stat**       | 1...999 | 10   |     | **boost**         | 0...13   | 4    |
+| **level**      | 1...100 | 7    |     | **volatiles**     | 17       | 18   |
+| **bide**       | 1...703 | 11   |     | **substitute**    | 4...179  | 8    |
+| **confusion**  | 0...5   | 3    |     | **toxic**         | 1...16   | 4    |
+| **multi hits** | 0...5   | 3    |     | **base power**    | 0...40   | 6    |
+| **base PP**    | 1...8   | 3    |     | **PP Ups**        | 0...3    | 2    |
+| **used PP**    | 0...63  | 8    |     | **HP / damage**   | 13...704 | 10   |
+| **status**     | 0...10  | 4    |     | **effectiveness** | 0...3    | 2    |
+| **type**       | 0...15  | 4    |     | **accuracy**      | 6...20   | 4    |
+| **disabled**   | 0...7   | 3    |     | **DVs**           | 0...15   | 4    |
 
 From this we can determine the minimum bits required to store each data structure to determine how
 much overhead the representations above have after taking into consideration [alignment &
@@ -202,7 +202,7 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
     types can be computed from its species
 - **`Side`**: `ActivePokemon` + 6× `Pokemon` + active (`3`) + lasted used (`8`) + last selected
   (`8`)
-- **`Battle`**: 6× `Side` + seed (`8`) + turn (`7`) + last damage (`10`)
+- **`Battle`**: 6× `Side` + seed (`8`) + turn (`10`) + last damage (`10`)
 - **`Type.chart`**: attacking types (`15`) × defending types (`15`) × effectiveness (`2`)[^1]
 - **`Moves`**: 164× base power (`6`) + accuracy (`4`) + type: (`4`)
 
@@ -210,8 +210,8 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 | --------------- | ----------- | ------------ | -------- |
 | `Pokemon`       | 176         | 135          | 30.4%    |
 | `ActivePokemon` | 288         | 190          | 51.6%    |
-| `Side`          | 1376        | 1078         | 35.0%    |
-| `Battle`        | 2768        | 2181         | 34.2%    |
+| `Side`          | 1376        | 1019         | 35.0%    |
+| `Battle`        | 2800        | 2066         | 35.5%    |
 | `Type.chart`    | 1800        | 450          | 300.0%   |
 | `Moves.data`    | 2640        | 2296         | 15.0%    |
 

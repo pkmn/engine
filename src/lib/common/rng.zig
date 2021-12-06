@@ -113,3 +113,25 @@ test "Generation V & VI" {
         try expectEqual(d[2], rng.seed);
     }
 }
+
+// @test-only
+pub const Random = struct {
+    prng: std.rand.DefaultPrng,
+
+    pub fn init(seed: u64) Random {
+        return .{ .prng = std.rand.DefaultPrng.init(seed) };
+    }
+
+    pub fn int(self: *Random, comptime T: type) T {
+        return self.prng.random().int(T);
+    }
+
+    pub fn chance(self: *Random, numerator: u16, denominator: u16) bool {
+        assert(denominator > 0);
+        return self.prng.random().uintLessThan(u16, denominator) < numerator;
+    }
+
+    pub fn range(self: *Random, comptime T: type, min: T, max: T) T {
+        return self.prng.random().intRangeAtMostBiased(T, min, max);
+    }
+};

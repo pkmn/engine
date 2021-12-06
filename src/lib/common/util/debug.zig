@@ -14,7 +14,7 @@ const RESET = "\x1b[0m";
 const COMPACT = 8;
 const Ais = AutoIndentingStream(std.fs.File.Writer);
 
-pub fn foo(value: anytype) bool {
+pub fn elide(value: anytype) bool {
     return switch (@TypeOf(value)) {
         gen1.MoveSlot => value.id != .None,
         gen1.Pokemon => value.species != .None,
@@ -216,7 +216,7 @@ pub fn inspectN(value: anytype, ais: *Ais, max_depth: usize) !void {
                 ais.pushIndent();
             }
             for (value) |elem, i| {
-                if (!foo(elem)) continue;
+                if (!elide(elem)) continue;
                 try inspectN(elem, ais, max_depth - 1);
                 if (i < value.len - 1) {
                     try ais.writer().writeAll(",");

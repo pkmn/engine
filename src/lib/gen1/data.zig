@@ -15,12 +15,12 @@ const bit = util.bit;
 
 pub const Battle = extern struct {
     rng: rng.Gen12,
-    turn: u8 = 0,
+    turn: u16 = 0,
     last_damage: u16 = 0,
     sides: [2]Side,
 
     comptime {
-        assert(@sizeOf(Battle) == 348);
+        assert(@sizeOf(Battle) == 350);
     }
 
     pub fn p1(self: *Battle) *Side {
