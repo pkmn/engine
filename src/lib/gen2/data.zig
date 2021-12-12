@@ -32,7 +32,7 @@ const Battle = extern struct {
 };
 
 const Field = packed struct {
-    weather: Weather = .{},
+    weather: Weather.Data = .{},
 
     comptime {
         assert(@sizeOf(Field) == 1);
@@ -41,23 +41,23 @@ const Field = packed struct {
     }
 };
 
-const Weathers = enum(u2) {
+const Weather = enum(u2) {
     None,
     Rain,
     Sun,
     Sandstorm,
-};
 
-const Weather = packed struct {
-    id: Weathers = .None,
-    _: u2 = 0,
-    duration: u4 = 0,
+    const Data = packed struct {
+        id: Weather = .None,
+        _: u2 = 0,
+        duration: u4 = 0,
 
-    comptime {
-        assert(@sizeOf(Weather) == 1);
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(Weather) == @sizeOf(Weather) * 8);
-    }
+        comptime {
+            assert(@sizeOf(Data) == 1);
+            // TODO: Safety check workaround for ziglang/zig#2627
+            assert(@bitSizeOf(Data) == @sizeOf(Data) * 8);
+        }
+    };
 };
 
 const Side = extern struct {
