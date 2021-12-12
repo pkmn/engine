@@ -127,28 +127,17 @@ pub const Side = struct {
                     if (field.field_type != bool) continue;
                     if (rand.chance(1, 18)) {
                         @field(active.volatiles, field.name) = true;
-                        switch (field.name[0]) {
-                            'B' => {
-                                active.volatiles.data.bide =
-                                    rand.range(u16, 1, active.stats.hp - 1);
-                            },
-                            'C' => {
-                                if (std.mem.eql(u8, field.name, "Confusion")) {
-                                    active.volatiles.data.confusion = rand.range(u4, 1, 5);
-                                }
-                            },
-                            'T' => {
-                                if (std.mem.eql(u8, field.name, "Toxic")) {
-                                    active.status = Status.init(Status.PSN);
-                                    pokemon.status = active.status;
-                                    active.volatiles.data.toxic = rand.range(u4, 1, 15);
-                                }
-                            },
-                            'S' => {
-                                active.volatiles.data.substitute =
-                                    rand.range(u8, 1, @truncate(u8, active.stats.hp / 4));
-                            },
-                            else => {},
+                        if (std.mem.eql(u8, field.name, "Bide")) {
+                            active.volatiles.data.bide = rand.range(u16, 1, active.stats.hp - 1);
+                        } else if (std.mem.eql(u8, field.name, "Confusion")) {
+                            active.volatiles.data.confusion = rand.range(u4, 1, 5);
+                        } else if (std.mem.eql(u8, field.name, "Toxic")) {
+                            active.status = Status.init(Status.PSN);
+                            pokemon.status = active.status;
+                            active.volatiles.data.toxic = rand.range(u4, 1, 15);
+                        } else if (std.mem.eql(u8, field.name, "Substitute")) {
+                            active.volatiles.data.substitute =
+                                rand.range(u8, 1, @truncate(u8, active.stats.hp / 4));
                         }
                     }
                 }
