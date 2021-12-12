@@ -274,11 +274,6 @@ test "Move" {
 }
 
 pub const Species = species.Species;
-// @test-only
-pub const Specie = struct {
-    stats: Stats(u8),
-    types: Types,
-};
 
 test "Species" {
     try expectEqual(2, @enumToInt(Species.Ivysaur));
@@ -308,6 +303,45 @@ test "Types" {
     try expectEqual(Effectiveness.Super, Type.effectiveness(.Water, .Fire));
     try expectEqual(Effectiveness.Resisted, Type.effectiveness(.Fire, .Water));
     try expectEqual(Effectiveness.Neutral, Type.effectiveness(.Normal, .Grass));
+}
+
+// @test-only
+const DVs = struct {
+    atk: u4 = 15,
+    def: u4 = 15,
+    spe: u4 = 15,
+    spc: u4 = 15,
+
+    pub fn hp(self: *const DVs) u4 {
+        return (self.atk & 1) << 3 | (self.def & 1) << 2 | (self.spe & 1) << 1 | (self.spc & 1);
+    }
+
+    pub fn random(rand: *rng.Random) DVs {
+        return .{
+            .atk = if (rand.chance(1, 5)) rand.range(u4, 1, 15) else 15,
+            .def = if (rand.chance(1, 5)) rand.range(u4, 1, 15) else 15,
+            .spe = if (rand.chance(1, 5)) rand.range(u4, 1, 15) else 15,
+            .spc = if (rand.chance(1, 5)) rand.range(u4, 1, 15) else 15,
+        };
+    }
+};
+
+test "DVs" {
+    var dvs = DVs{ .spc = 15, .spe = 15 };
+    try expectEqual(@as(u4, 15), dvs.hp());
+    dvs = DVs{
+        .atk = 5,
+        .def = 15,
+        .spe = 13,
+        .spc = 13,
+    };
+    try expectEqual(@as(u4, 15), dvs.hp());
+    dvs = DVs{
+        .def = 3,
+        .spe = 10,
+        .spc = 11,
+    };
+    try expectEqual(@as(u4, 13), dvs.hp());
 }
 
 // TODO DEBUG

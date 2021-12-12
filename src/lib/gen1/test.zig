@@ -10,11 +10,12 @@ const expectEqual = std.testing.expectEqual;
 
 const Random = rng.Random;
 
+const DVs = data.DVs;
+const Move = data.Move;
+const MoveSlot = data.MoveSlot;
 const Species = data.Species;
 const Stats = data.Stats;
 const Status = data.Status;
-const Move = data.Move;
-const MoveSlot = data.MoveSlot;
 
 pub const Battle = struct {
     pub fn init(seed: u8, p1: []const Pokemon, p2: []const Pokemon) data.Battle {
@@ -214,52 +215,18 @@ pub const Pokemon = struct {
     }
 };
 
-const DVs = struct {
-    atk: u4 = 15,
-    def: u4 = 15,
-    spe: u4 = 15,
-    spc: u4 = 15,
+// test "Battle" {
+//     const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
+//     const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
+//     const battle = Battle.init(0, &.{p1}, &.{p2});
+//     util.debug.print(battle);
+//     var r = std.rand.DefaultPrng.init(5);
+//     util.debug.print(Battle.random(Random.init(r.random())));
+//     util.debug.print(Battle.random(&Random.init(5)));
+// }
 
-    pub fn hp(self: *const DVs) u4 {
-        return (self.atk & 1) << 3 | (self.def & 1) << 2 | (self.spe & 1) << 1 | (self.spc & 1);
-    }
-
-    pub fn random(rand: *Random) DVs {
-        return .{
-            .atk = if (rand.chance(1, 5)) rand.range(u4, 1, 15) else 15,
-            .def = if (rand.chance(1, 5)) rand.range(u4, 1, 15) else 15,
-            .spe = if (rand.chance(1, 5)) rand.range(u4, 1, 15) else 15,
-            .spc = if (rand.chance(1, 5)) rand.range(u4, 1, 15) else 15,
-        };
-    }
-};
-
-test "DVs" {
-    var dvs = DVs{ .spc = 15, .spe = 15 };
-    try expectEqual(@as(u4, 15), dvs.hp());
-    dvs = DVs{
-        .atk = 5,
-        .def = 15,
-        .spe = 13,
-        .spc = 13,
-    };
-    try expectEqual(@as(u4, 15), dvs.hp());
-    dvs = DVs{
-        .def = 3,
-        .spe = 10,
-        .spc = 11,
-    };
-    try expectEqual(@as(u4, 13), dvs.hp());
-}
-
-test "Battle" {
-    // const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
-    // const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
-    // const battle = Battle.init(0, &.{p1}, &.{p2});
-    // util.debug.print(battle);
-    // var r = std.rand.DefaultPrng.init(5);
-    // util.debug.print(Battle.random(Random.init(r.random())));
-    util.debug.print(Battle.random(&Random.init(5)));
+test "this will be skipped" {
+    return error.SkipZigTest;
 }
 
 comptime {
