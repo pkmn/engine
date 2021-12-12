@@ -5,10 +5,9 @@ const gen1 = @import("../../gen1/data.zig");
 
 const assert = std.debug.assert;
 
-const Move = gen1.Move;
 const Type = gen1.Type;
 
-pub const Moves = enum(u8) {
+pub const Move = enum(u8) {
     None,
     Pound,
     KarateChop,
@@ -176,7 +175,23 @@ pub const Moves = enum(u8) {
     Substitute,
     Struggle,
 
-    const data = [_]Move{
+    pub const Data = packed struct {
+        bp: u8,
+        acc: u4,
+        type: Type,
+
+        comptime {
+            assert(@sizeOf(Data) == 2);
+            // TODO: Safety check workaround for ziglang/zig#2627
+            assert(@bitSizeOf(Data) == @sizeOf(Data) * 8);
+        }
+
+        pub fn accuracy(self: *const Data) u8 {
+            return (@as(u8, self.acc) + 6) * 5;
+        }
+    };
+
+    const data = [_]Data{
         // Pound
         .{
             .bp = 40,
@@ -1339,17 +1354,17 @@ pub const Moves = enum(u8) {
     };
 
     comptime {
-        assert(@sizeOf(Moves) == 1);
+        assert(@sizeOf(Move) == 1);
         assert(@sizeOf(@TypeOf(data)) == 330);
     }
 
-    pub fn get(id: Moves) Move {
+    pub fn get(id: Move) Data {
         assert(id != .None);
         return data[@enumToInt(id) - 1];
     }
 
     // @test-only
-    pub fn pp(id: Moves) u8 {
+    pub fn pp(id: Move) u8 {
         assert(id != .None);
         return pp_data[@enumToInt(id) - 1];
     }

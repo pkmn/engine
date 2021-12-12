@@ -5,34 +5,35 @@ const gen{{{ gen }}} = @import("../../gen{{{ gen }}}/data.zig");
 
 const assert = std.debug.assert;
 
-const Move = gen{{{ gen }}}.Move;
 const Type = gen{{{ gen }}}.Type;
 
-pub const Moves = enum({{{ Moves.type }}}) {
+pub const Move = enum({{{ Move.type }}}) {
     None,
-    {{{ Moves.values }}},
+    {{{ Move.values }}},
 
-    const data = [_]Move{
-        {{{ Moves.data }}},
+    {{{ Move.Data }}}
+
+    const data = [_]Data{
+        {{{ Move.data }}},
     };
 
     // @test-only
     const pp_data = [_]u8{
-        {{{ Moves.ppData }}},
+        {{{ Move.ppData }}},
     };
 
     comptime {
-        assert(@sizeOf(Moves) == {{{ Moves.size }}});
-        assert(@sizeOf(@TypeOf(data)) == {{{ Moves.dataSize }}});
+        assert(@sizeOf(Move) == {{{ Move.size }}});
+        assert(@sizeOf(@TypeOf(data)) == {{{ Move.dataSize }}});
     }
 
-    pub fn get(id: Moves) Move {
+    pub fn get(id: Move) Data {
         assert(id != .None);
         return data[@enumToInt(id) - 1];
     }
 
     // @test-only
-    pub fn pp(id: Moves) u8 {
+    pub fn pp(id: Move) u8 {
         assert(id != .None);
         return pp_data[@enumToInt(id) - 1];
     }

@@ -7,7 +7,7 @@ const assert = std.debug.assert;
 
 const Type = data.Type;
 
-pub const Items = enum(u8) {
+pub const Item = enum(u8) {
     None,
     PinkBow, // Normal
     BlackBelt, // Fighting
@@ -206,21 +206,21 @@ pub const Items = enum(u8) {
     GoldBerry, // BERRY
 
     comptime {
-        assert(@sizeOf(Items) == 1);
+        assert(@sizeOf(Item) == 1);
     }
 
-    pub fn boost(item: Items) ?Type {
+    pub fn boost(item: Item) ?Type {
         assert(item != .None);
         if (item == .PolkadotBow) return .Normal;
         return if (@enumToInt(item) <= 18) @intToEnum(Type, @enumToInt(item) - 1) else null;
     }
 
-    pub fn mail(item: Items) bool {
+    pub fn mail(item: Item) bool {
         assert(item != .None);
         return @enumToInt(item) > 175 and @enumToInt(item) <= 185;
     }
 
-    pub fn berry(item: Items) bool {
+    pub fn berry(item: Item) bool {
         assert(item != .None);
         return @enumToInt(item) > 185;
     }

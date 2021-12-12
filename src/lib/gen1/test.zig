@@ -13,7 +13,7 @@ const Random = rng.Random;
 const Species = data.Species;
 const Stats = data.Stats;
 const Status = data.Status;
-const Moves = data.Moves;
+const Move = data.Move;
 const MoveSlot = data.MoveSlot;
 
 pub const Battle = struct {
@@ -58,7 +58,7 @@ pub const Side = struct {
             assert(p.moves.len > 0 and p.moves.len <= 4);
             for (p.moves) |move, j| {
                 pokemon.moves[j].id = move;
-                pokemon.moves[j].pp = @truncate(u6, Moves.pp(move) / 5 * 8);
+                pokemon.moves[j].pp = @truncate(u6, Move.pp(move) / 5 * 8);
             }
             if (p.hp) |hp| {
                 pokemon.hp = hp;
@@ -170,7 +170,7 @@ pub const Side = struct {
 
 pub const Pokemon = struct {
     species: Species,
-    moves: []const Moves,
+    moves: []const Move,
     hp: ?u16 = null,
     status: u8 = 0,
     level: u8 = 100,
@@ -195,9 +195,9 @@ pub const Pokemon = struct {
         var i: u4 = 0;
         const n = if (rand.chance(1, 100)) rand.range(u4, 1, 3) else 4;
         while (i < n) : (i += 1) {
-            var move: Moves = .None;
+            var move: Move = .None;
             sample: while (true) {
-                move = @intToEnum(Moves, rand.range(u8, 1, 165));
+                move = @intToEnum(Move, rand.range(u8, 1, 165));
                 var j: u4 = 0;
                 while (j < i) : (j += 1) {
                     if (ms[j].id == move) continue :sample;
@@ -205,7 +205,7 @@ pub const Pokemon = struct {
                 break;
             }
             const pp_ups = if (rand.chance(1, 10)) rand.range(u2, 0, 2) else 3;
-            const max_pp = @truncate(u6, Moves.pp(move) / 5 * (5 + @as(u8, pp_ups)));
+            const max_pp = @truncate(u6, Move.pp(move) / 5 * (5 + @as(u8, pp_ups)));
             ms[i] = .{
                 .id = move,
                 .pp = rand.range(u6, 0, max_pp),

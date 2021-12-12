@@ -5,10 +5,9 @@ const gen3 = @import("../../gen3/data.zig");
 
 const assert = std.debug.assert;
 
-const Move = gen3.Move;
 const Type = gen3.Type;
 
-pub const Moves = enum(u16) {
+pub const Move = enum(u16) {
     None,
     Pound,
     KarateChop,
@@ -365,7 +364,24 @@ pub const Moves = enum(u16) {
     DoomDesire,
     PsychoBoost,
 
-    const data = [_]Move{
+    pub const Move = packed struct {
+        bp: u8,
+        accuracy: u8,
+        type: Type,
+        pp: u4, // pp / 5
+        chance: u4, // chance / 10
+        target: MoveTarget,
+        // FIXME flags
+
+        comptime {
+            assert(@sizeOf(Move) == 5);
+
+            // TODO: Safety check workaround for ziglang/zig#2627
+            assert(@bitSizeOf(Move) == @sizeOf(Move) * 8);
+        }
+    };
+
+    const data = [_]Data{
         //,
     };
 
@@ -375,17 +391,17 @@ pub const Moves = enum(u16) {
     };
 
     comptime {
-        assert(@sizeOf(Moves) == 2);
+        assert(@sizeOf(Move) == 2);
         assert(@sizeOf(@TypeOf(data)) == 0);
     }
 
-    pub fn get(id: Moves) Move {
+    pub fn get(id: Move) Data {
         assert(id != .None);
         return data[@enumToInt(id) - 1];
     }
 
     // @test-only
-    pub fn pp(id: Moves) u8 {
+    pub fn pp(id: Move) u8 {
         assert(id != .None);
         return pp_data[@enumToInt(id) - 1];
     }

@@ -208,12 +208,28 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         '        }');
       PP.push(`${move.pp}, // ${name}`);
     }
+    let Data = `pub const Data = packed struct {
+        bp: u8,
+        acc: u4,
+        type: Type,
+
+        comptime {
+            assert(@sizeOf(Data) == 2);
+            // TODO: Safety check workaround for ziglang/zig#2627
+            assert(@bitSizeOf(Data) == @sizeOf(Data) * 8);
+        }
+
+        pub fn accuracy(self: *const Data) u8 {
+            return (@as(u8, self.acc) + 6) * 5;
+        }
+    };`;
     template('moves', dirs.out, {
       gen: gen.num,
-      Moves: {
+      Move: {
         type: 'u8',
         values: moves.join(',\n    '),
         size: 1,
+        Data,
         data: MOVES.join(',\n        '),
         dataSize: MOVES.length * 2,
         ppData: PP.join('\n        '),
@@ -248,12 +264,18 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .types = .{ .type1 = .${types[0]}, .type2 = .${types[1]} },\n` +
         '        }');
     }
+    Data = `// @test-only
+    pub const Data = struct {
+        stats: Stats(u8),
+        types: Types,
+    };`;
     template('species', dirs.out, {
       gen: gen.num,
       Species: {
         type: 'u8',
         values: species.join(',\n    '),
         size: 1,
+        Data,
         data: SPECIES.join(',\n        '),
       },
     });
@@ -355,7 +377,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     }
     template('items', dirs.out, {
       gen: gen.num,
-      Items: {
+      Item: {
         type: 'u8',
         values: values.join('\n    '),
         size: 1,
@@ -394,12 +416,27 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         '        }');
       PP.push(`${move.pp}, // ${name}`);
     }
+    let Data = `pub const Data = packed struct {
+        bp: u8,
+        accuracy: u8,
+        type: Type,
+        pp: u4, // pp / 5
+        chance: u4 = 0, // chance / 10
+        // TODO effect and parameter?
+
+        comptime {
+            assert(@sizeOf(Data) == 4);
+            // TODO: Safety check workaround for ziglang/zig#2627
+            assert(@bitSizeOf(Data) == @sizeOf(Data) * 8);
+        }
+    };`;
     template('moves', dirs.out, {
       gen: gen.num,
-      Moves: {
+      Move: {
         type: 'u8',
         values: moves.join(',\n    '),
         size: 1,
+        Data,
         data: MOVES.join(',\n        '),
         dataSize: MOVES.length * 4,
         ppData: PP.join('\n        '),
@@ -436,12 +473,19 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .ratio = ${convertGenderRatio(s)}\n` +
         '        }');
     }
+    Data = `// @test-only
+    pub const Data = struct {
+        stats: Stats(u8),
+        types: Types,
+        ratio: u8,
+    };`;
     template('species', dirs.out, {
       gen: gen.num,
       Species: {
         type: 'u8',
         values: species.join(',\n    '),
         size: 1,
+        Data,
         data: SPECIES.join(',\n        '),
       },
     });
@@ -473,12 +517,29 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     //     '        }');
     //   PP.push(`${move.pp}, // ${name}`);
     // }
+    let Data = `pub const Move = packed struct {
+        bp: u8,
+        accuracy: u8,
+        type: Type,
+        pp: u4, // pp / 5
+        chance: u4, // chance / 10
+        target: MoveTarget,
+        // FIXME flags
+
+        comptime {
+            assert(@sizeOf(Move) == 5);
+
+            // TODO: Safety check workaround for ziglang/zig#2627
+            assert(@bitSizeOf(Move) == @sizeOf(Move) * 8);
+        }
+    };`;
     template('moves', dirs.out, {
       gen: gen.num,
-      Moves: {
+      Move: {
         type: 'u16',
         values: moves.join(',\n    '),
         size: 2,
+        Data,
         data: '//', // MOVES.join(',\n        '),
         dataSize: 0,
         ppData: '//', // PP.join('\n        '),
@@ -517,12 +578,19 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .ratio = ${convertGenderRatio(s)}\n` +
         '        }');
     }
+    Data = `// @test-only
+    pub const Data = struct {
+        stats: Stats(u8),
+        types: Types,
+        ratio: u8,
+    };`;
     template('species', dirs.out, {
       gen: gen.num,
       Species: {
         type: 'u16',
         values: species.join(',\n    '),
         size: 2,
+        Data,
         data: SPECIES.join(',\n        '),
       },
     });

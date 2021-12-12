@@ -5,7 +5,6 @@ const gen{{{ gen }}} = @import("../../gen{{{ gen }}}/data.zig");
 
 const assert = std.debug.assert;
 
-const Specie = gen{{{ gen }}}.Specie;
 const Stats = gen{{{ gen }}}.Stats;
 const Types = gen{{{ gen }}}.Types;
 
@@ -13,8 +12,10 @@ pub const Species = enum({{{ Species.type }}}) {
     None,
     {{{ Species.values }}},
 
+    {{{ Species.Data }}}
+
     // @test-only
-    const data = [_]Specie{
+    const data = [_]Data{
         {{{ Species.data }}},
     };
 
@@ -23,7 +24,7 @@ pub const Species = enum({{{ Species.type }}}) {
     }
 
     // @test-only
-    pub fn get(id: Species) Specie {
+    pub fn get(id: Species) Data {
         assert(id != .None);
         return data[@enumToInt(id) - 1];
     }

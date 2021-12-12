@@ -68,5 +68,7 @@ pub const Types = packed struct {
 
     comptime {
         assert(@bitSizeOf(Types) == 16);
+        // TODO: Safety check workaround for ziglang/zig#2627
+        assert(@bitSizeOf(Types) == @sizeOf(Types) * 8);
     }
 };

@@ -93,27 +93,11 @@ pub const MoveFlags = packed struct {
     }
 };
 
-pub const Moves = moves.Moves;
-pub const Move = packed struct {
-    bp: u8,
-    accuracy: u8,
-    type: Type,
-    pp: u4, // pp / 5
-    chance: u4, // chance / 10
-    target: MoveTarget,
-    // FIXME flags
-
-    comptime {
-        assert(@sizeOf(Move) == 5);
-
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(Move) == @sizeOf(Move) * 8);
-    }
-};
+pub const Move = moves.Move;
 
 // test "Moves" {
-//     try expectEqual(251, @enumToInt(Moves.BeatUp));
-//     const move = Moves.get(.LockOn);
+//     try expectEqual(251, @enumToInt(Move.BeatUp));
+//     const move = Move.get(.LockOn);
 //     try expectEqual(@as(u8, 1), move.pp);
 // }
 

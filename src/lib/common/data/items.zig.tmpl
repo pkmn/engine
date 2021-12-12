@@ -7,27 +7,27 @@ const assert = std.debug.assert;
 
 const Type = data.Type;
 
-pub const Items = enum({{{ Items.type }}}) {
+pub const Item = enum({{{ Item.type }}}) {
     None,
-    {{{ Items.values }}}
+    {{{ Item.values }}}
 
     comptime {
-        assert(@sizeOf(Items) == {{{ Items.size }}});
+        assert(@sizeOf(Item) == {{{ Item.size }}});
     }
 
-    pub fn boost(item: Items) ?Type {
+    pub fn boost(item: Item) ?Type {
         assert(item != .None);
         if (item == .PolkadotBow) return .Normal;
-        return if (@enumToInt(item) <= {{{ Items.boosts }}}) @intToEnum(Type, @enumToInt(item) - 1) else null;
+        return if (@enumToInt(item) <= {{{ Item.boosts }}}) @intToEnum(Type, @enumToInt(item) - 1) else null;
     }
 
-    pub fn mail(item: Items) bool {
+    pub fn mail(item: Item) bool {
         assert(item != .None);
-        return @enumToInt(item) > {{{ Items.mail }}} and @enumToInt(item) <= {{{ Items.berry }}};
+        return @enumToInt(item) > {{{ Item.mail }}} and @enumToInt(item) <= {{{ Item.berry }}};
     }
 
-    pub fn berry(item: Items) bool {
+    pub fn berry(item: Item) bool {
         assert(item != .None);
-        return @enumToInt(item) > {{{ Items.berry }}};
+        return @enumToInt(item) > {{{ Item.berry }}};
     }
 };

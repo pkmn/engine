@@ -36,8 +36,8 @@ pub const Side = extern struct {
     team: [6]Pokemon = [_]Pokemon{.{}} ** 6,
     pokemon: ActivePokemon = .{},
     active: u8 = 0,
-    last_used_move: Moves = .None,
-    last_selected_move: Moves = .None,
+    last_used_move: Move = .None,
+    last_selected_move: Move = .None,
     _: u8 = 0,
 
     comptime {
@@ -85,7 +85,7 @@ pub const Pokemon = packed struct {
 };
 
 pub const MoveSlot = packed struct {
-    id: Moves = .None,
+    id: Move = .None,
     pp: u6 = 0,
     pp_ups: u2 = 3,
 
@@ -261,26 +261,11 @@ test "Boosts" {
     try expectEqual(-6, boosts.spc);
 }
 
-pub const Moves = moves.Moves;
-pub const Move = packed struct {
-    bp: u8,
-    acc: u4,
-    type: Type,
+pub const Move = moves.Move;
 
-    comptime {
-        assert(@sizeOf(Move) == 2);
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(Move) == @sizeOf(Move) * 8);
-    }
-
-    pub fn accuracy(self: *const Move) u8 {
-        return (@as(u8, self.acc) + 6) * 5;
-    }
-};
-
-test "Moves" {
-    try expectEqual(2, @enumToInt(Moves.KarateChop));
-    const move = Moves.get(.Fissure);
+test "Move" {
+    try expectEqual(2, @enumToInt(Move.KarateChop));
+    const move = Move.get(.Fissure);
     try expectEqual(@as(u8, 30), move.accuracy());
     try expectEqual(Type.Ground, move.type);
 }

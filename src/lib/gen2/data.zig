@@ -112,7 +112,7 @@ const ActivePokemon = extern struct {
     level: u8 = 100,
     status: u8 = 0,
     species: Species = .None,
-    item: Items = .None,
+    item: Item = .None,
     // NOTE: IVs (Gender & Hidden Power) and Happiness are stored only in Pokemon
 
     // FIXME move to volatiles?
@@ -120,7 +120,7 @@ const ActivePokemon = extern struct {
     // switching: bool = false,
 
     // FIXME store on Side or Volatiles.Data
-    // last_move: Moves = .None,
+    // last_move: Move = .None,
 
     comptime {
         assert(@sizeOf(ActivePokemon) == 48);
@@ -136,7 +136,7 @@ const Pokemon = packed struct {
     species: Species = .None,
     types: Types = .{},
     level: u8 = 100,
-    item: Items = .None,
+    item: Item = .None,
     ivs: IVs = .{},
     happiness: u8 = 255,
 
@@ -171,7 +171,7 @@ const IVs = packed struct {
 };
 
 const MoveSlot = packed struct {
-    id: Moves = .None,
+    id: Move = .None,
     pp: u6 = 0,
     pp_ups: u2 = 0,
 
@@ -181,9 +181,9 @@ const MoveSlot = packed struct {
         assert(@bitSizeOf(MoveSlot) == @sizeOf(MoveSlot) * 8);
     }
 
-    pub fn init(id: Moves) MoveSlot {
+    pub fn init(id: Move) MoveSlot {
         if (id == .None) return MoveSlot{};
-        const move = Moves.get(id);
+        const move = Move.get(id);
         return MoveSlot{
             .id = id,
             .pp = move.pp,
@@ -192,7 +192,7 @@ const MoveSlot = packed struct {
     }
 
     pub fn maxpp(self: *const MoveSlot) u8 {
-        const pp = Moves.get(self.id).pp;
+        const pp = Move.get(self.id).pp;
         return self.pp_ups * @as(u8, @maximum(pp, 7)) + (@as(u8, pp) * 5);
     }
 };
@@ -201,7 +201,7 @@ test "MoveSlot" {
     const ms = MoveSlot.init(.Pound);
     try expectEqual(@as(u6, 35 / 5), ms.pp);
     try expectEqual(@as(u8, 56), ms.maxpp());
-    try expectEqual(Moves.Pound, ms.id);
+    try expectEqual(Move.Pound, ms.id);
     try expectEqual(@as(u16, 0), @bitCast(u16, MoveSlot.init(.None)));
 }
 
@@ -317,53 +317,33 @@ test "Boosts" {
     try expectEqual(-6, boosts.spd);
 }
 
-pub const Items = items.Items;
+pub const Item = items.Item;
 
-test "Items" {
-    try expect(Items.boost(.MasterBall) == null);
-    try expectEqual(Type.Normal, Items.boost(.PinkBow).?);
-    try expectEqual(Type.Normal, Items.boost(.PolkadotBow).?);
-    try expectEqual(Type.Dark, Items.boost(.BlackGlasses).?);
+test "Item" {
+    try expect(Item.boost(.MasterBall) == null);
+    try expectEqual(Type.Normal, Item.boost(.PinkBow).?);
+    try expectEqual(Type.Normal, Item.boost(.PolkadotBow).?);
+    try expectEqual(Type.Dark, Item.boost(.BlackGlasses).?);
 
-    try expect(!Items.mail(.TM50));
-    try expect(Items.mail(.FlowerMail));
-    try expect(Items.mail(.MirageMail));
+    try expect(!Item.mail(.TM50));
+    try expect(Item.mail(.FlowerMail));
+    try expect(Item.mail(.MirageMail));
 
-    try expect(!Items.berry(.MirageMail));
-    try expect(Items.berry(.PSNCureBerry));
-    try expect(Items.berry(.GoldBerry));
+    try expect(!Item.berry(.MirageMail));
+    try expect(Item.berry(.PSNCureBerry));
+    try expect(Item.berry(.GoldBerry));
 }
 
-pub const Moves = moves.Moves;
-pub const Move = packed struct {
-    bp: u8,
-    accuracy: u8,
-    type: Type,
-    pp: u4, // pp / 5
-    chance: u4 = 0, // chance / 10
-    // TODO effect and parameter?
-
-    comptime {
-        assert(@sizeOf(Move) == 4);
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(Move) == @sizeOf(Move) * 8);
-    }
-};
+pub const Move = moves.Move;
 
 test "Moves" {
-    try expectEqual(251, @enumToInt(Moves.BeatUp));
-    const move = Moves.get(.DynamicPunch);
+    try expectEqual(251, @enumToInt(Move.BeatUp));
+    const move = Move.get(.DynamicPunch);
     try expectEqual(@as(u8, 50), move.accuracy);
     try expectEqual(@as(u8, 5), move.pp * 5);
 }
 
 pub const Species = species.Species;
-// @test-only
-pub const Specie = struct {
-    stats: Stats(u8),
-    types: Types,
-    ratio: u8,
-};
 
 test "Species" {
     try expectEqual(152, @enumToInt(Species.Chikorita));

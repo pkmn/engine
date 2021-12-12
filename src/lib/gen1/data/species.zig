@@ -5,7 +5,6 @@ const gen1 = @import("../../gen1/data.zig");
 
 const assert = std.debug.assert;
 
-const Specie = gen1.Specie;
 const Stats = gen1.Stats;
 const Types = gen1.Types;
 
@@ -164,7 +163,13 @@ pub const Species = enum(u8) {
     Mew,
 
     // @test-only
-    const data = [_]Specie{
+    pub const Data = struct {
+        stats: Stats(u8),
+        types: Types,
+    };
+
+    // @test-only
+    const data = [_]Data{
         // Bulbasaur
         .{
             .stats = .{
@@ -1833,7 +1838,7 @@ pub const Species = enum(u8) {
     }
 
     // @test-only
-    pub fn get(id: Species) Specie {
+    pub fn get(id: Species) Data {
         assert(id != .None);
         return data[@enumToInt(id) - 1];
     }
