@@ -106,7 +106,7 @@ const ActivePokemon = extern struct {
     volatiles: Volatile = .{},
     stats: Stats(u16) = .{},
     moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
-    boosts: Boosts(i4) = .{},
+    boosts: Boosts = .{},
     hp: u16 = 0,
     types: Types = .{},
     level: u8 = 100,
@@ -298,21 +298,25 @@ test "Stats" {
     try expectEqual(0, stats.def);
 }
 
-pub fn Boosts(comptime T: type) type {
-    return packed struct {
-        atk: T = 0,
-        def: T = 0,
-        spe: T = 0,
-        spa: T = 0,
-        spd: T = 0,
-        accuracy: T = 0,
-        evasion: T = 0,
-    };
-}
+pub const Boosts = packed struct {
+    atk: i4 = 0,
+    def: i4 = 0,
+    spe: i4 = 0,
+    spa: i4 = 0,
+    spd: i4 = 0,
+    accuracy: i4 = 0,
+    evasion: i4 = 0,
+    _: i4 = 0,
+
+    comptime {
+        assert(@sizeOf(Boosts) == 4);
+        // TODO: Safety check workaround for ziglang/zig#2627
+        assert(@bitSizeOf(Boosts) == @sizeOf(Boosts) * 8);
+    }
+};
 
 test "Boosts" {
-    try expectEqual(3 * 8 + 4, @bitSizeOf(Boosts(i4)));
-    const boosts = Boosts(i4){ .spd = -6 };
+    const boosts = Boosts{ .spd = -6 };
     try expectEqual(0, boosts.atk);
     try expectEqual(-6, boosts.spd);
 }
