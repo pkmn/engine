@@ -13,54 +13,139 @@ const expectEqual = std.testing.expectEqual;
 const expect = std.testing.expect;
 
 const Battle = extern struct {
+    turn: u16 = 0,
     rng: rng.Gen12,
-    // weather
-    // weather duration
+    field: Field = .{},
+    sides: [2]Side,
 
-    // wWhichMonFaintedFirst:: db
+    comptime {
+        assert(@sizeOf(Battle) == 432);
+    }
+
+    pub fn p1(self: *Battle) *Side {
+        return &self.sides[0];
+    }
+
+    pub fn p2(self: *Battle) *Side {
+        return &self.sides[1];
+    }
 };
 
 const Field = packed struct {
-    weather: Weather,
+    weather: Weather = .{},
+
+    comptime {
+        assert(@sizeOf(Field) == 1);
+        // TODO: Safety check workaround for ziglang/zig#2627
+        assert(@bitSizeOf(Field) == @sizeOf(Field) * 8);
+    }
 };
 
-const Weather = enum(u2) {
+const Weathers = enum(u2) {
     None,
     Rain,
     Sun,
     Sandstorm,
 };
 
-const Side = extern struct {
-    condition: SideCondition,
-    // wPlayerDamageTaken:: dw
-    // wPlayerTurnsTaken:: db???
-    // wLastPlayerCounterMove
+const Weather = packed struct {
+    id: Weathers = .None,
+    _: u2 = 0,
+    duration: u4 = 0,
 
-    // wPlayerSafeguardCount:: db
-    // wPlayerLightScreenCount:: db
-    // wPlayerReflectCount:: db
-    // wPlayerIsSwitching:: db
+    comptime {
+        assert(@sizeOf(Weather) == 1);
+        // TODO: Safety check workaround for ziglang/zig#2627
+        assert(@bitSizeOf(Weather) == @sizeOf(Weather) * 8);
+    }
 };
 
-const SideCondition = packed struct {
+const Side = extern struct {
+    team: [6]Pokemon = [_]Pokemon{.{}} ** 6,
+    pokemon: ActivePokemon = .{},
+    conditions: SideConditions,
+    active: u8 = 0,
+    _: u8 = 0,
+
+    comptime {
+        assert(@sizeOf(Side) == 214);
+    }
+
+    pub fn get(self: *const Side, slot: u8) *Pokemon {
+        assert(slot > 0 and slot < 7);
+        return self.pokemon[slot - 1];
+    }
+};
+
+// // BUG: ziglang/zig#2627
+const SideConditions = packed struct {
+    data: Data = .{},
     Spikes: bool = false,
     Safeguard: bool = false,
     LightScreen: bool = false,
     Reflect: bool = false,
+
+    const Data = packed struct {
+        safeguard: u4 = 0,
+        light_screen: u4 = 0,
+        reflect: u4 = 0,
+
+        comptime {
+            assert(@bitSizeOf(Data) == 12);
+        }
+    };
+
+    comptime {
+        assert(@sizeOf(SideConditions) == 2);
+        // TODO: Safety check workaround for ziglang/zig#2627
+        assert(@bitSizeOf(SideConditions) == @sizeOf(SideConditions) * 8);
+    }
 };
 
 const ActivePokemon = extern struct {
-    // TODO item Items
-    // TODO extra 2*Stats+1 Boosts byte = 24
-    // TODO happiness u8
-    // TODO volatile size change + 8
-    // = total 48, 16 padding left
+    volatiles: Volatile = .{},
+    stats: Stats(u16) = .{},
+    moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
+    boosts: Boosts(i4) = .{},
+    hp: u16 = 0,
+    types: Types = .{},
+    level: u8 = 100,
+    status: u8 = 0,
+    species: Species = .None,
+    item: Items = .None,
+    // NOTE: IVs (Gender & Hidden Power) and Happiness are stored only in Pokemon
 
+    // FIXME move to volatiles?
+    // trapped: bool = false,
+    // switching: bool = false,
+
+    // FIXME store on Side or Volatiles.Data
+    // last_move: Moves = .None,
+
+    comptime {
+        assert(@sizeOf(ActivePokemon) == 48);
+    }
 };
 
-// TODO
-const Pokemon = packed struct {};
+const Pokemon = packed struct {
+    stats: Stats(u10) = .{},
+    position: u4 = 0,
+    moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
+    hp: u16 = 0,
+    status: u8 = 0,
+    species: Species = .None,
+    types: Types = .{},
+    level: u8 = 100,
+    item: Items = .None,
+    ivs: IVs = .{},
+    happiness: u8 = 255,
+
+    comptime {
+        assert(@sizeOf(Pokemon) == 27);
+        // TODO: Safety check workaround for ziglang/zig#2627
+        assert(@bitSizeOf(Pokemon) == @sizeOf(Pokemon) * 8);
+    }
+};
 
 pub const Gender = enum(u1) {
     Male,
@@ -68,9 +153,9 @@ pub const Gender = enum(u1) {
 };
 
 const IVs = packed struct {
-    gender: Gender,
-    power: u7,
-    type: Type,
+    gender: Gender = .Male,
+    power: u7 = 70,
+    type: Type = .Dark,
 
     pub fn init(g: Gender, p: u7, t: Type) IVs {
         assert(p >= 31 and p <= 70);
@@ -122,14 +207,12 @@ test "MoveSlot" {
 
 pub const Status = gen1.Status;
 
-// TODO
 const Volatile = packed struct {
+    data: Data,
     Bide: bool = false,
     Locked: bool = false,
-    // MultiHit
     Flinch: bool = false,
     Charging: bool = false,
-    // PartialTrap
     Underground: bool = false,
     Flying: bool = false,
     Confusion: bool = false,
@@ -155,38 +238,46 @@ const Volatile = packed struct {
     LockOn: bool = false,
     DestinyBond: bool = false,
     BeatUp: bool = false,
+    _: u4 = 0,
 
-    _pad: u4 = 0,
+    const Data = packed struct {
+        future_sight: FutureSight = .{},
+        bide: u16 = 0,
+        disabled: Disabled = .{},
+        rage: u8 = 0,
+        substitute: u8 = 0,
+        confusion: u4 = 0,
+        encore: u4 = 0,
+        fury_cutter: u4 = 0,
+        perish_song: u4 = 0,
+        protect: u4 = 0,
+        rollout: u4 = 0,
+        toxic: u4 = 0,
+        wrap: u4 = 0,
+        _: u8 = 0,
 
-    data: VolatileData,
+        const Disabled = packed struct {
+            move: u4 = 0,
+            duration: u4 = 0,
+        };
 
-    // comptime {
-    //     assert(@sizeOf(Volatile) == 4);
-    // }
-};
+        const FutureSight = packed struct {
+            damage: u12 = 0,
+            count: u4 = 0,
+        };
 
-const VolatileData = packed struct {
-    // bide: u16 = 0,
-    // substitute: u8 = 0,
+        comptime {
+            assert(@sizeOf(Data) == 12);
+            // TODO: Safety check workaround for ziglang/zig#2627
+            assert(@bitSizeOf(Data) == @sizeOf(Data) * 8);
+        }
+    };
 
-    confusion: u4 = 0,
-    toxic: u4 = 0,
-    disabled: packed struct {
-        move: u4 = .None,
-        duration: u4 = 0,
-    },
-    encore: u4 = 0,
-    perish_song: u4 = 0,
-    rollout: u4 = 0,
-    fury_cutter: u4 = 0,
-    protect: u4 = 0,
-    future_sight: u4 = 0,
-    wrap: u4 = 0,
-    _: u4 = 0, // TODO 7 bytes
-    rage: u8 = 0,
-
-    // wPlayerCharging:: db
-    // wPlayerJustGotFrozen:: db
+    comptime {
+        assert(@sizeOf(Volatile) == 16);
+        // TODO: Safety check workaround for ziglang/zig#2627
+        assert(@bitSizeOf(Volatile) == @sizeOf(Volatile) * 8);
+    }
 };
 
 pub fn Stats(comptime T: type) type {

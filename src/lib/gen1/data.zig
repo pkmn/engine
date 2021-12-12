@@ -169,7 +169,7 @@ test "Status" {
 }
 
 pub const Volatile = packed struct {
-    data: VolatileData = VolatileData{},
+    data: Data = Data{},
     _: u6 = 0,
     Bide: bool = false,
     Locked: bool = false,
@@ -190,27 +190,29 @@ pub const Volatile = packed struct {
     Reflect: bool = false,
     Transform: bool = false,
 
+    pub const Data = packed struct {
+        bide: u16 = 0,
+        substitute: u8 = 0,
+        confusion: u4 = 0,
+        toxic: u4 = 0,
+        disabled: Disabled = .{},
+
+        const Disabled = packed struct {
+            move: u4 = 0,
+            duration: u4 = 0,
+        };
+
+        comptime {
+            assert(@sizeOf(Data) == 5);
+            // TODO: Safety check workaround for ziglang/zig#2627
+            assert(@bitSizeOf(Data) == @sizeOf(Data) * 8);
+        }
+    };
+
     comptime {
         assert(@sizeOf(Volatile) == 8);
         // TODO: Safety check workaround for ziglang/zig#2627
         assert(@bitSizeOf(Volatile) == @sizeOf(Volatile) * 8);
-    }
-};
-
-pub const VolatileData = packed struct {
-    bide: u16 = 0,
-    substitute: u8 = 0,
-    confusion: u4 = 0,
-    toxic: u4 = 0,
-    disabled: packed struct {
-        move: u4 = 0,
-        duration: u4 = 0,
-    } = .{},
-
-    comptime {
-        assert(@sizeOf(VolatileData) == 5);
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(VolatileData) == @sizeOf(VolatileData) * 8);
     }
 };
 

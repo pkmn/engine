@@ -27,7 +27,7 @@ pub const Battle = struct {
     pub fn random(rand: *Random) data.Battle {
         return .{
             .rng = .{ .seed = rand.int(u8) },
-            .turn = rand.range(u16, 0, 1000),
+            .turn = rand.range(u16, 1, 1000),
             .last_damage = rand.range(u16, 1, 704),
             .sides = .{ Side.random(rand), Side.random(rand) },
         };

@@ -6,41 +6,53 @@ The following information is required to simulate a Generation II Pokémon battl
 
 ==**TODO**==
 
-| pkmn                          | Pokémon Red (pret)            | Pokémon Showdown                |
-| ----------------------------- | ----------------------------- | ------------------------------- |
-| `battle.seed`                 | `Random{Add,Sub}`             | `battle.seed`                   |
-| `battle.last_damage`          | `Damage`                      | `battle.lastDamage`             |
-| `side.{active,pokemon}`       | `PlayerMonNumber`/`BattleMon` | `side.active`                   |
-| `side.team`                   | `PartyMons`                   | `side.pokemon`                  |
-| `side.last_used_move`         | `PlayerUsedMove`              | `side.lastMove`                 |
-| `side.last_selected_move`     | `PlayerSelectedMove`          | `side.lastSelectedMove`         |
-| `pokemon.stats`               | `PlayerMonUnmodified*`        | `pokemon.baseStoredStats`       |
-| `pokemon.position`            | `battle_struct.PartyPos`      | `pokemon.position`              |
-| `pokemon.moves`               | `party_struct.{Moves,PP}`     | `pokemon.baseMoveSlots`         |
-| `{pokemon,active}.hp`         | `battle_struct.HP`            | `pokemon.hp`                    |
-| `{pokemon,active}.status`     | `battle_struct.Status`        | `pokemon.status`                |
-| `{pokemon,active}.level`      | `PlayerMonUnmodifiedLevel`    | `pokemon.level`                 |
-| `pokemon.species`             | `party_struct.Species`        | `pokemon.baseSpecies`           |
-| `active.species`              | `battle_struct.Species`       | `pokemon.species`               |
-| `active.stats`                | `party_struct.Stats`          | `pokemon.storedStats`           |
-| `active.boosts`               | `PlayerMon*Mod`               | `pokemon.boosts`                |
-| `active.volatiles`            | `PlayerBattleStatus{1,2,3}`   | `pokemon.volatiles`             |
-| `volatiles.data.bide`         | `PlayerBideAccumulatedDamage` | `volatiles.bide.totalDamage`    |
-| `volatiles.data.substitute`   | `PlayerSubstituteHP`          | `volatiles.substitute.hp`       |
-|                               |                               |                                 |
-| `volatiles.data.rollout`      | `PlayerRolloutCount`          |                                 |
-| `volatiles.data.confusion`    | `PlayerConfuseCount`          | `volatiles.confusion.duration`  |
-| `volatiles.data.toxic`        | `PlayerToxicCount`            | `volatiles.residualdmg.counter` |
-| `volatiles.data.disabled`     | `PlayerDisableCount`          | `moveSlots.disabled`            |
-| `volatiles.data.encore`       | `PlayerEncoreCount`           |                                 |
-| `volatiles.data.perish_song`  | `PlayerPerishCount`           |                                 |
-| `volatiles.data.fury_cutter`  | `PlayerFuryCutterCount`       |                                 |
-| `volatiles.data.protect`      | `PlayerProtectCount`          |                                 |
-| `volatiles.data.future_sight` | `PlayerFutureSightCount`      |                                 |
-| `volatiles.data.rage`         | `PlayerRageCounter`           |                                 |
-| `volatiles.data.wrap`         | `PlayerWrapCount`             |                                 |
-|                               | `PlayerCharging`              |                                 |
-|                               | `PlayerJustGotFrozen`         |                                 |
+| pkmn                           | Pokémon Crystal (pret)            | Pokémon Showdown                      |
+| ------------------------------ | --------------------------------- | ------------------------------------- |
+| `battle.seed`                  | `Random{Add,Sub}`                 | `battle.seed`                         |
+| `battle.turn`                  |                                   | `battle.turn`                         |
+| `field.weather.id`             | `BattleWeather`                   | `field.weather`                       |
+| `field.weather.duration`       | `WeatherCount`                    | `field.weatherState.duration`         |
+| `side.{active,pokemon}`        | `BattleMon`                       | `side.active`                         |
+| `side.team`                    | `PartyMons`/`PartySpecies`        | `side.pokemon`                        |
+| `side.conditions`              | `PlayerScreens`                   | `side.sideConditions`                 |
+| `conditions.data.safeguard`    | `PlayerSafeguardCount`            | `sideConditions.safeguard.duration`   |
+| `conditions.data.light_screen` | `PlayerLightScreenCount`          | `sideConditions.lightscreen.duration` |
+| `conditions.data.reflect`      | `PlayerReflectCount`              | `sideConditions.reflect.duration`     |
+| `pokemon.stats`                | `TODO unmodified`                 | `pokemon.baseStoredStats`             |
+| `pokemon.position`             | `TODO`                            | `pokemon.position`                    |
+| `pokemon.moves`                | `party_struct.{Moves,PP}`         | `pokemon.baseMoveSlots`               |
+| `{pokemon,active}.hp`          | `{party,battle}_struct.HP`        | `pokemon.hp`                          |
+| `{pokemon,active}.status`      | `{party,battle}_struct.Status`    | `pokemon.status`                      |
+| `{pokemon,active}.level`       | `TODO unmodified`                 | `pokemon.level`                       |
+| `{pokemon,active}.happiness`   | `{box,battle}_struct.Happiness`   | `pokemon.happiness`                   |
+| `{pokemon,active}.ivs.gender`  | `{box,battle}_struct.DVs`         | `pokemon.gender`                      |
+| `{pokemon,active}.ivs.type`    | `{box,battle}_struct.DVs`         | `pokemon.hpType`                      |
+| `{pokemon,active}.ivs.power`   | `{box,battle}_struct.DVs`         | `pokemon.hpPower`                     |
+| `{pokemon,active}.item`        | `{box,battle}_struct.Item`        | `pokemon.item`                        |
+| `pokemon.species`              | `party_struct.Species`            | `pokemon.baseSpecies`                 |
+| `active.species`               | `battle_struct.Species`           | `pokemon.species`                     |
+| `active.stats`                 | `TODO modified`                   | `pokemon.storedStats`                 |
+| `active.trapped`               | `PlayerTrappingMove`              | `pokemon.trapped`                     |
+| `active.switching`             | `PlayerIsSwitching`               | `pokemon.switchFlag`                  |
+| `active.boosts`                | `PlayerStatLevels`                | `pokemon.boosts`                      |
+| `active.volatiles`             | `PlayerBattleStatus{1,2,3}`       | `pokemon.volatiles`                   |
+| `volatiles.data.bide`          | `PlayerDamageTaken`               | `volatiles.bide.totalDamage`          |
+| `volatiles.data.substitute`    | `PlayerSubstituteHP`              | `volatiles.substitute.hp`             |
+| `volatiles.data.rollout`       | `PlayerRolloutCount`              | `volatiles.rollout.hitCount`          |
+| `volatiles.data.confusion`     | `PlayerConfuseCount`              | `volatiles.confusion.duration`        |
+| `volatiles.data.toxic`         | `PlayerToxicCount`                | `volatiles.residualdmg.counter`       |
+| `volatiles.data.disabled`      | `PlayerDisableCount`              | `moveSlots.disabled`                  |
+| `volatiles.data.encore`        | `PlayerEncoreCount`               | `volatiles.encore.duration`           |
+| `volatiles.data.perish_song`   | `PlayerPerishCount`               | `volatiles.perishsong.duration`       |
+| `volatiles.data.fury_cutter`   | `PlayerFuryCutterCount`           | `volatiles.furycutter.multiplier`     |
+| `volatiles.data.protect`       | `PlayerProtectCount`              | `volatiles.stall.counter`             |
+| `volatiles.data.future_sight`  | `PlayerFutureSight{Damage,Count}` | `slotConditions[i].futuremove`        |
+| `volatiles.data.rage`          | `PlayerRageCounter`               | **BUG**                               |
+| `volatiles.data.wrap`          | `PlayerWrapCount`                 | `volatiles.partiallytrapped.duration` |
+|                                | `PlayerCharging`                  |                                       |
+|                                | `PlayerJustGotFrozen`             |                                       |
+|                                |                                   |                                       |
+| `active.last_used_move`        | `PlayerUsedMove`                  | `side.lastMove`                       |
 
 - Pokémon Showdown does not implement the correct Generation II RNG and as such its `seed` is
   different
@@ -52,6 +64,8 @@ The following information is required to simulate a Generation II Pokémon battl
   to be handled by driver code if required
 
 ==**TODO**==
+
+wPlayerMinimized
 
 ### `Battle` / `Side`
 
@@ -107,7 +121,7 @@ which are boolean flags that are cleared when the Pokémon faints or switches ou
 | `Bide`        | `BIDE`                  | `bide`           |
 | `Locked`      | `RAMPAGE`               | `lockedmove`     |
 | `Flinch`      | `FLINCHED`              | `flinch`         |
-| `Charging`    | `CHARGED`  k             | `twoturnmove`    |
+| `Charging`    | `CHARGED`               | `twoturnmove`    |
 | `Underground` | `UNDERGROUND`           | `dig`            |
 | `Flying`      | `FLYING`                | `fly`            |
 | `Confusion`   | `CONFUSED`              | `confusion`      |
@@ -131,10 +145,11 @@ which are boolean flags that are cleared when the Pokémon faints or switches ou
 | `DefenseCurl` | `CURLED`                | `defensecurl`    |
 | `Encore`      | `ENCORED`               | `encore`         |
 | `LockOn`      | `LOCK_ON`               | `lockon`         |
-| `DestinyBond` | `DESTINY_BOND`          | `destinybond`    |
-| `BeatUp`      | `IN_LOOP`               |                  |
+| `DestinyBond` | `DESTINY_BOND`          | `destinybond`    |  |
 
 ==**TODO**==
+
+- `IN_LOOP` (beatup)
 
 #### `Stats` / `Boosts`
 
@@ -176,26 +191,26 @@ entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as foll
 
 ==**TODO**==
 
-| Data           | Range    | Bits |     | Data              | Range    | Bits |
-| -------------- | -------- | ---- | --- | ----------------- | -------- | ---- |
-| **seed**       | 0...255  | 8    |     | **turn**          | 1...1000 | 7    |
-| **team index** | 1...6    | 3    |     | **move index**    | 1...4    | 2    |
-| **species**    | 1...151  | 8    |     | **move**          | 1...165  | 8    |
-| **stat**       | 1...999  | 10   |     | **boost**         | 0...13   | 4    |
-| **level**      | 1...100  | 7    |     | **volatiles**     | 17       | 18   |
-| **bide**       | 2...1406 | 11   |     | **substitute**    | 4...179  | 8    |
-| **multi hits** | 0...5    | 3    |     | **base power**    | 0...40   | 6    |
-| **base PP**    | 1...8    | 3    |     | **PP Ups**        | 0...3    | 2    |
-| **used PP**    | 0...63   | 8    |     | **HP / damage**   | 13...704 | 10   |
-| **status**     | 0...10   | 4    |     | **effectiveness** | 0...3    | 2    |
-| **type**       | 0...15   | 4    |     | **accuracy**      | 6...20   | 4    |
-| **disabled**   | 0...7    | 3    |     | **DVs**           | 0...15   | 4    |
-|                |          |      |     |                   |          |      |
-| **rollout**    | 0...5    | 3    |     | **fury cutter**   | 0..4     | 3    |
-| **confusion**  | 0...5    | 3    |     | **toxic**         | 1...16   | 4    |
-| **encore**     | 0...6    | 3    |     | **future sight**  | 0...2    | 2    |
-| **protect**    | 1...9    | 4    |     | **TODO rage**     | 0...0    | 0    |
-| **wrap**       | 0...5    | 3    |     | **TODO**          | 0...0    | 0    |
+| Data           | Range   | Bits |     | Data              | Range    | Bits |
+| -------------- | ------- | ---- | --- | ----------------- | -------- | ---- |
+| **seed**       | 0...255 | 8    |     | **turn**          | 1...1000 | 7    |
+| **team index** | 1...6   | 3    |     | **move index**    | 1...4    | 2    |
+| **species**    | 1...251 | 8    |     | **move**          | 1...251  | 8    |
+| **stat**       | 1...999 | 10   |     | **boost**         | 0...13   | 4    |
+| **level**      | 1...100 | 7    |     | **volatiles**     | *27*     | 27   |
+| **bide**       | 0...703 | 11   |     | **substitute**    | 0...179  | 8    |
+| **multi hits** | 0...5   | 3    |     | **base power**    | 0...50   | 6    |
+| **base PP**    | 1...8   | 3    |     | **PP Ups**        | 0...3    | 2    |
+| **PP**         | 0...64  | 7    |     | **HP / damage**   | 0...704  | 10   |
+| **status**     | 0...10  | 4    |     | **effectiveness** | 0...3    | 2    |
+| **type**       | 0...18  | 5    |     | **accuracy**      | 6...20   | 4    |
+| **disabled**   | 0...7   | 3    |     | **DVs**           | 0...15   | 4    |
+|                |         |      |     |                   |          |      |
+| **rollout**    | 0...5   | 3    |     | **fury cutter**   | 0..4     | 3    |
+| **confusion**  | 0...5   | 3    |     | **toxic**         | 0...15   | 4    |
+| **encore**     | 0...6   | 3    |     | **future sight**  | 0...2    | 2    |
+| **protect**    | 0...9   | 4    |     | **rage**          | 0...255  | 8    |
+| **wrap**       | 0...5   | 3    |     | **perish song**   | 0...4    | 3    |
 
 From this we can determine the minimum bits required to store each data structure to determine how
 much overhead the representations above have after taking into consideration [alignment &

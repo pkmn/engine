@@ -6,30 +6,32 @@ TODO cover `@test-only` data and code
 
 The following information is required to simulate a Generation I Pokémon battle:
 
-| pkmn                        | Pokémon Red (pret)            | Pokémon Showdown                |
-| --------------------------- | ----------------------------- | ------------------------------- |
-| `battle.seed`               | `Random{Add,Sub}`             | `battle.seed`                   |
-| `battle.last_damage`        | `Damage`                      | `battle.lastDamage`             |
-| `side.{active,pokemon}`     | `PlayerMonNumber`/`BattleMon` | `side.active`                   |
-| `side.team`                 | `PartyMons`                   | `side.pokemon`                  |
-| `side.last_used_move`       | `PlayerUsedMove`              | `side.lastMove`                 |
-| `side.last_selected_move`   | `PlayerSelectedMove`          | `side.lastSelectedMove`         |
-| `pokemon.stats`             | `PlayerMonUnmodified*`        | `pokemon.baseStoredStats`       |
-| `pokemon.position`          | `battle_struct.PartyPos`      | `pokemon.position`              |
-| `pokemon.moves`             | `party_struct.{Moves,PP}`     | `pokemon.baseMoveSlots`         |
-| `{pokemon,active}.hp`       | `battle_struct.HP`            | `pokemon.hp`                    |
-| `{pokemon,active}.status`   | `battle_struct.Status`        | `pokemon.status`                |
-| `{pokemon,active}.level`    | `PlayerMonUnmodifiedLevel`    | `pokemon.level`                 |
-| `pokemon.species`           | `party_struct.Species`        | `pokemon.baseSpecies`           |
-| `active.species`            | `battle_struct.Species`       | `pokemon.species`               |
-| `active.stats`              | `party_struct.Stats`          | `pokemon.storedStats`           |
-| `active.boosts`             | `PlayerMon*Mod`               | `pokemon.boosts`                |
-| `active.volatiles`          | `PlayerBattleStatus{1,2,3}`   | `pokemon.volatiles`             |
-| `volatiles.data.bide`       | `PlayerBideAccumulatedDamage` | `volatiles.bide.totalDamage`    |
-| `volatiles.data.confusion`  | `PlayerConfusedCounter`       | `volatiles.confusion.duration`  |
-| `volatiles.data.toxic`      | `PlayerToxicCounter`          | `volatiles.residualdmg.counter` |
-| `volatiles.data.substitute` | `PlayerSubstituteHP`          | `volatiles.substitute.hp`       |
-| `volatiles.data.disabled`   | `PlayerDisabledMove{,Number}` | `moveSlots.disabled`            |
+| pkmn                        | Pokémon Red (pret)                 | Pokémon Showdown                    |
+| --------------------------- | ---------------------------------- | ----------------------------------- |
+| `battle.seed`               | `Random{Add,Sub}`                  | `battle.seed`                       |
+| `battle.turn`               |                                    | `battle.turn`                       |
+| `battle.last_damage`        | `Damage`                           | `battle.lastDamage`                 |
+| `side.{active,pokemon}`     | `PlayerMonNumber`/`BattleMon`      | `side.active`                       |
+| `side.team`                 | `PartyMons`                        | `side.pokemon`                      |
+| `side.last_used_move`       | `PlayerUsedMove`                   | `side.lastMove`                     |
+| `side.last_selected_move`   | `PlayerSelectedMove`               | `side.lastSelectedMove`             |
+| `pokemon.position`          | `TODO`                             | `pokemon.position`                  |
+| `{pokemon,active}.moves`    | `{party,battle}_struct.{Moves,PP}` | `pokemon.{baseMoveSlots,moveSlots}` |
+| `{pokemon,active}.hp`       | `{party,battle}_struct.HP`         | `pokemon.hp`                        |
+| `{pokemon,active}.status`   | `{party,battle}_struct.Status`     | `pokemon.status`                    |
+| `{pokemon,active}.level`    | `PlayerMonUnmodifiedLevel`         | `pokemon.level`                     |
+| `pokemon.species`           | `party_struct.Species`             | `pokemon.baseSpecies`               |
+| `pokemon.stats`             | `PlayerMonUnmodified*`             | `pokemon.baseStoredStats`           |
+| `active.stats`              | `battle_struct.Stats`              | `pokemon.storedStats`               |
+| `active.species`            | `battle_struct.Species`            | `pokemon.species`                   |
+| `{pokemon,active}.types`    | `{party,battle}_struct.Type`       | `pokemon.types`                     |
+| `active.boosts`             | `PlayerMon*Mod`                    | `pokemon.boosts`                    |
+| `active.volatiles`          | `PlayerBattleStatus{1,2,3}`        | `pokemon.volatiles`                 |
+| `volatiles.data.bide`       | `PlayerBideAccumulatedDamage`      | `volatiles.bide.totalDamage`        |
+| `volatiles.data.confusion`  | `PlayerConfusedCounter`            | `volatiles.confusion.duration`      |
+| `volatiles.data.toxic`      | `PlayerToxicCounter`               | `volatiles.residualdmg.counter`     |
+| `volatiles.data.substitute` | `PlayerSubstituteHP`               | `volatiles.substitute.hp`           |
+| `volatiles.data.disabled`   | `PlayerDisabledMove{,Number}`      | `moveSlots.disabled`                |
 
 - Pokémon Showdown does not implement the correct Generation I RNG and as such its `seed` is
   different
@@ -94,7 +96,7 @@ individual bits - at most one status should be set at any given time.
 In Generation I & II, the "badly poisoned" status (Toxic) is instead treated as a volatile (see
 below).
 
-#### `Volatile` / `VolatileData`
+#### `Volatile` / `Volatiles.Data`
 
 Active Pokémon can have have ["volatile" status
 conditions](https://pkmn.cc/bulba/Status_condition#Volatile_status) (called ['battle
@@ -126,7 +128,7 @@ boolean flags that are cleared when the Pokémon faints or switches out:
 [Substitute](https://pkmn.cc/bulba/Substitute_(move)) (substitute HP),
 [Confusion](https://pkmn.cc/bulba/Confusion_(status_condition)) (duration), and
 [Toxic](https://pkmn.cc/bulba/Toxic_(move)) (counter) all require additional information to be
-stored by the `VolatileData` structure.
+stored by the `Volatiles.Data` structure.
 
 #### `Stats` / `Boosts`
 
@@ -176,12 +178,12 @@ entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as foll
 | **team index** | 1...6   | 3    |     | **move index**    | 1...4    | 2    |
 | **species**    | 1...151 | 8    |     | **move**          | 1...165  | 8    |
 | **stat**       | 1...999 | 10   |     | **boost**         | 0...13   | 4    |
-| **level**      | 1...100 | 7    |     | **volatiles**     | 17       | 18   |
-| **bide**       | 1...703 | 11   |     | **substitute**    | 4...179  | 8    |
-| **confusion**  | 0...5   | 3    |     | **toxic**         | 1...16   | 4    |
+| **level**      | 1...100 | 7    |     | **volatiles**     | *18*     | 18   |
+| **bide**       | 0...703 | 11   |     | **substitute**    | 0...179  | 8    |
+| **confusion**  | 0...5   | 3    |     | **toxic**         | 0...15   | 4    |
 | **multi hits** | 0...5   | 3    |     | **base power**    | 0...40   | 6    |
 | **base PP**    | 1...8   | 3    |     | **PP Ups**        | 0...3    | 2    |
-| **used PP**    | 0...63  | 8    |     | **HP / damage**   | 13...704 | 10   |
+| **PP**         | 0...64  | 7    |     | **HP / damage**   | 0...704  | 10   |
 | **status**     | 0...10  | 4    |     | **effectiveness** | 0...3    | 2    |
 | **type**       | 0...15  | 4    |     | **accuracy**      | 6...20   | 4    |
 | **disabled**   | 0...7   | 3    |     | **DVs**           | 0...15   | 4    |
@@ -191,11 +193,11 @@ much overhead the representations above have after taking into consideration [al
 padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 [denormalization](https://en.wikipedia.org/wiki/Denormalization):
 
-- **`Pokemon`**: 5× stats (`50`) + 4× move slot (`56`) + HP (`10`) + status (`4`) + species (`8`) +
+- **`Pokemon`**: 5× stats (`50`) + 4× move slot (`60`) + HP (`10`) + status (`4`) + species (`8`) +
   level (`7`)
   - position does not need to be stored as the party can always be rearranged as switches occur
   - `type` can be computed from the base `Species` information
-- **`ActivePokemon`**: 5× stats (`50`) + 4× move slot (`56`) + 6× boosts (`24`) + volatile data
+- **`ActivePokemon`**: 5× stats (`50`) + 4× move slot (`60`) + 6× boosts (`24`) + volatile data
   (`29`) + volatiles (`18`) + species (`8`) + disabled (`5`)
   - the active Pokémon's stats/species/move slots may change in the case of Transform
   - the active Pokémon's level and current HP can always be referred to the `Pokemon` struct, and
@@ -208,10 +210,10 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 
 | Data            | Actual bits | Minimum bits | Overhead |
 | --------------- | ----------- | ------------ | -------- |
-| `Pokemon`       | 176         | 135          | 30.4%    |
-| `ActivePokemon` | 288         | 190          | 51.6%    |
-| `Side`          | 1376        | 1019         | 35.0%    |
-| `Battle`        | 2800        | 2066         | 35.5%    |
+| `Pokemon`       | 176         | 139          | 36.6%    |
+| `ActivePokemon` | 288         | 194          | 48.5%    |
+| `Side`          | 1376        | 1047         | 31.4%    |
+| `Battle`        | 2800        | 2122         | 32.0%    |
 | `Type.chart`    | 1800        | 450          | 300.0%   |
 | `Moves.data`    | 2640        | 2296         | 15.0%    |
 
