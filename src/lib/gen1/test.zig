@@ -227,87 +227,15 @@ pub const Pokemon = struct {
 
 // Moves
 
-test "Move.KarateChop" {
+test "Move.{KarateChop,RazorLeaf,Crabhammer,Slash}" {
     // Has a higher chance for a critical hit.
     return error.SkipZigTest;
 }
 
-test "Move.DoubleSlap" {
+test "Move.{DoubleSlap,CometPunch,FuryAttack,PinMissile,SpikeCannon,Barrage,FurySwipes}" {
     // Hits two to five times. Has a 3/8 chance to hit two or three times, and a 1/8 chance to hit
     // four or five times. Damage is calculated once for the first hit and used for every hit. If
     // one of the hits breaks the target's substitute, the move ends.
-    return error.SkipZigTest;
-}
-
-test "Move.CometPunch" {
-    // Hits two to five times. Has a 3/8 chance to hit two or three times, and a 1/8 chance to hit
-    // four or five times. Damage is calculated once for the first hit and used for every hit. If
-    // one of the hits breaks the target's substitute, the move ends.
-    return error.SkipZigTest;
-}
-
-test "Move.PayDay" {
-    // No additional effect.
-    return error.SkipZigTest;
-}
-
-test "Move.FirePunch" {
-    // Has a 10% chance to burn the target.
-    return error.SkipZigTest;
-}
-
-test "Move.IcePunch" {
-    // Has a 10% chance to freeze the target.
-    return error.SkipZigTest;
-}
-
-test "Move.ThunderPunch" {
-    // Has a 10% chance to paralyze the target.
-    return error.SkipZigTest;
-}
-
-test "Move.Guillotine" {
-    // Deals 65535 damage to the target. Fails if the target's Speed is greater than the user's.
-    return error.SkipZigTest;
-}
-
-test "Move.RazorWind" {
-    // This attack charges on the first turn and executes on the second.
-    return error.SkipZigTest;
-}
-
-test "Move.SwordsDance" {
-    // Raises the user's Attack by 2 stages.
-    return error.SkipZigTest;
-}
-
-test "Move.Whirlwind" {
-    // No competitive use.
-    return error.SkipZigTest;
-}
-
-test "Move.Fly" {
-    // This attack charges on the first turn and executes on the second. On the first turn, the user
-    // avoids all attacks other than Bide, Swift, and Transform. If the user is fully paralyzed on
-    // the second turn, it continues avoiding attacks until it switches out or successfully executes
-    // the second turn of this move or Dig.
-    return error.SkipZigTest;
-}
-
-test "Move.Bind" {
-    // The user spends two to five turns using this move. Has a 3/8 chance to last two or three
-    // turns, and a 1/8 chance to last four or five turns. The damage calculated for the first turn
-    // is used for every other turn. The user cannot select a move and the target cannot execute a
-    // move during the effect, but both may switch out. If the user switches out, the target remains
-    // unable to execute a move during that turn. If the target switches out, the user uses this
-    // move again automatically, and if it had 0 PP at the time, it becomes 63. If the user or the
-    // target switch out, or the user is prevented from moving, the effect ends. This move can
-    // prevent the target from moving even if it has type immunity, but will not deal damage.
-    return error.SkipZigTest;
-}
-
-test "Move.Stomp" {
-    // Has a 30% chance to make the target flinch.
     return error.SkipZigTest;
 }
 
@@ -317,46 +245,83 @@ test "Move.DoubleKick" {
     return error.SkipZigTest;
 }
 
-test "Move.JumpKick" {
-    // If this attack misses the target, the user takes 1 HP of crash damage. If the user has a
-    // substitute, the crash damage is dealt to the target's substitute if it has one, otherwise no
-    // crash damage is dealt.
+// Move.{FirePunch,Ember,Flamethrower}
+// Move.{IcePunch,IceBeam,Blizzard}
+// Move.{ThunderPunch,ThunderShock,Thunderbolt,Thunder}
+// Move.{Bite,BoneClub,HyperFang}
+// Move.{Psybeam,Confusion}
+test "Move.<10 percent secondary>" {
+    // Has a 10% chance to X the target.
     return error.SkipZigTest;
 }
 
-test "Move.RollingKick" {
-    // Has a 30% chance to make the target flinch.
+// Move.{Stomp,RollingKick,Headbutt,LowKick}
+// Move.{BodySlam,Lick}
+// Move.FireBlast
+test "Move.<30 percent secondary>" {
+    // Has a 30% chance to X the target
     return error.SkipZigTest;
 }
 
-test "Move.SandAttack" {
-    // Lowers the target's accuracy by 1 stage.
+// Move.Acid
+// Move.{BubbleBeam,Constrict,Bubble}
+// Move.AuroraBeam
+// Move.Psychic
+test "Move.<33 percent secondary>" {
+    // Has a 33% chance to lower the target's X by 1 stage.
     return error.SkipZigTest;
 }
 
-test "Move.Headbutt" {
-    // Has a 30% chance to make the target flinch.
-    return error.SkipZigTest;
+// Move.{SandAttack,Smokescreen,Kinesis,Flash}
+// Move.{TailWhip,Leer}
+// Move.Growl
+// Move.StringShot
+// Move.Screech (2)
+test "Move.<status lower>" {
+    // Lowers the target's X by Y stage(s).
 }
 
-test "Move.FuryAttack" {
-    // Hits two to five times. Has a 3/8 chance to hit two or three times, and a 1/8 chance to hit
-    // four or five times. Damage is calculated once for the first hit and used for every hit. If
-    // one of the hits breaks the target's substitute, the move ends.
-    return error.SkipZigTest;
+// Move.{Harden,Withdraw,DefenseCurl}
+// Move.Growth
+// "Move.{Meditate,Sharpen}
+// Move.{DoubleTeam,Minimize}
+// Move.SwordsDance (2)
+// Move.Amnesia (2)
+// Move.Agility (2)
+// Move.{Barrier,AcidArmor} (2)
+test "Move.<status upper>" {
+    // Raises the target's X by Y stage(s).
 }
 
-test "Move.HornDrill" {
+test "Move.{Guillotine,HornDrill,Fissure}" {
     // Deals 65535 damage to the target. Fails if the target's Speed is greater than the user's.
     return error.SkipZigTest;
 }
 
-test "Move.BodySlam" {
-    // Has a 30% chance to paralyze the target.
+test "Move.{RazorWind,SolarBeam,SkullBash,SkyAttack}" {
+    // This attack charges on the first turn and executes on the second.
     return error.SkipZigTest;
 }
 
-test "Move.Wrap" {
+test "Move.{Whirlwind,Roar,Splash}" {
+    // No competitive use.
+    return error.SkipZigTest;
+}
+
+test "Move.Teleport" {
+    // Fails when used.
+    return error.SkipZigTest;
+}
+
+test "Move.{Fly,Dig}" {
+    // This attack charges on the first turn and executes on the second. On the first turn, the user
+    // avoids all attacks other than Bide, Swift, and Transform. If the user is fully paralyzed on
+    // the second turn, it continues avoiding attacks until it switches out or successfully executes
+    // the second turn of this move or {Fly,Dig}.
+    return error.SkipZigTest;
+}
+
+test "Move.{Bind,Wrap,FireSpin,Clamp}" {
     // The user spends two to five turns using this move. Has a 3/8 chance to last two or three
     // turns, and a 1/8 chance to last four or five turns. The damage calculated for the first turn
     // is used for every other turn. The user cannot select a move and the target cannot execute a
@@ -368,14 +333,21 @@ test "Move.Wrap" {
     return error.SkipZigTest;
 }
 
-test "Move.TakeDown" {
+test "Move.{JumpKick,HighJumpKick}" {
+    // If this attack misses the target, the user takes 1 HP of crash damage. If the user has a
+    // substitute, the crash damage is dealt to the target's substitute if it has one, otherwise no
+    // crash damage is dealt.
+    return error.SkipZigTest;
+}
+
+test "Move.{TakeDown,DoubleEdge,Submission}" {
     // If the target lost HP, the user takes recoil damage equal to 1/4 the HP lost by the target,
     // rounded down, but not less than 1 HP. If this move breaks the target's substitute, the user
     // does not take any recoil damage.
     return error.SkipZigTest;
 }
 
-test "Move.Thrash" {
+test "Move.{Thrash,PetalDance}" {
     // Whether or not this move is successful, the user spends three or four turns locked into this
     // move and becomes confused immediately after its move on the last turn of the effect, even if
     // it is already confused. If the user is prevented from moving, the effect ends without causing
@@ -385,20 +357,13 @@ test "Move.Thrash" {
     return error.SkipZigTest;
 }
 
-test "Move.DoubleEdge" {
-    // If the target lost HP, the user takes recoil damage equal to 1/4 the HP lost by the target,
-    // rounded down, but not less than 1 HP. If this move breaks the target's substitute, the user
-    // does not take any recoil damage.
-    return error.SkipZigTest;
-}
-
-test "Move.TailWhip" {
-    // Lowers the target's Defense by 1 stage.
-    return error.SkipZigTest;
-}
-
 test "Move.PoisonSting" {
     // Has a 20% chance to poison the target.
+    return error.SkipZigTest;
+}
+
+test "Move.{Smog,Sludge}" {
+    // Has a 40% chance to poison the target.
     return error.SkipZigTest;
 }
 
@@ -408,45 +373,15 @@ test "Move.Twineedle" {
     return error.SkipZigTest;
 }
 
-test "Move.PinMissile" {
-    // Hits two to five times. Has a 3/8 chance to hit two or three times, and a 1/8 chance to hit
-    // four or five times. Damage is calculated once for the first hit and used for every hit. If
-    // one of the hits breaks the target's substitute, the move ends.
+// Move.SonicBoom
+// Move.DragonRage
+test "Move.<fixed damage" {
+    // Deals X HP of damage to the target. This move ignores type immunity.
     return error.SkipZigTest;
 }
 
-test "Move.Leer" {
-    // Lowers the target's Defense by 1 stage.
-    return error.SkipZigTest;
-}
-
-test "Move.Bite" {
-    // Has a 10% chance to make the target flinch.
-    return error.SkipZigTest;
-}
-
-test "Move.Growl" {
-    // Lowers the target's Attack by 1 stage.
-    return error.SkipZigTest;
-}
-
-test "Move.Roar" {
-    // No competitive use.
-    return error.SkipZigTest;
-}
-
-test "Move.Sing" {
-    // Causes the target to fall asleep.
-    return error.SkipZigTest;
-}
-
-test "Move.Supersonic" {
-    // Causes the target to become confused.
-    return error.SkipZigTest;
-}
-
-test "Move.SonicBoom" {
-    // Deals 20 HP of damage to the target. This move ignores type immunity.
+test "Move.{SeismicToss,NightShade}" {
+    // Deals damage to the target equal to the user's level. This move ignores type immunity.
     return error.SkipZigTest;
 }
 
@@ -459,21 +394,6 @@ test "Move.Disable" {
     return error.SkipZigTest;
 }
 
-test "Move.Acid" {
-    // Has a 33% chance to lower the target's Defense by 1 stage.
-    return error.SkipZigTest;
-}
-
-test "Move.Ember" {
-    // Has a 10% chance to burn the target.
-    return error.SkipZigTest;
-}
-
-test "Move.Flamethrower" {
-    // Has a 10% chance to burn the target.
-    return error.SkipZigTest;
-}
-
 test "Move.Mist" {
     // While the user remains active, it is protected from having its stat stages lowered by other
     // Pokemon, unless caused by the secondary effect of a move. Fails if the user already has the
@@ -481,46 +401,11 @@ test "Move.Mist" {
     return error.SkipZigTest;
 }
 
-test "Move.IceBeam" {
-    // Has a 10% chance to freeze the target.
-    return error.SkipZigTest;
-}
-
-test "Move.Blizzard" {
-    // Has a 10% chance to freeze the target.
-    return error.SkipZigTest;
-}
-
-test "Move.Psybeam" {
-    // Has a 10% chance to confuse the target.
-    return error.SkipZigTest;
-}
-
-test "Move.BubbleBeam" {
-    // Has a 33% chance to lower the target's Speed by 1 stage.
-    return error.SkipZigTest;
-}
-
-test "Move.AuroraBeam" {
-    // Has a 33% chance to lower the target's Attack by 1 stage.
-    return error.SkipZigTest;
-}
-
+// TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Hyper_Beam_.2B_Freeze_permanent_helplessness
+// TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Hyper_Beam_.2B_Sleep_move_glitch
 test "Move.HyperBeam" {
     // If this move is successful, the user must recharge on the following turn and cannot select a
     // move, unless the target or its substitute was knocked out by this move.
-    return error.SkipZigTest;
-}
-
-test "Move.Submission" {
-    // If the target lost HP, the user takes recoil damage equal to 1/4 the HP lost by the target,
-    // rounded down, but not less than 1 HP. If this move breaks the target's substitute, the user
-    // does not take any recoil damage.
-    return error.SkipZigTest;
-}
-
-test "Move.LowKick" {
-    // Has a 30% chance to make the target flinch.
     return error.SkipZigTest;
 }
 
@@ -535,19 +420,21 @@ test "Move.Counter" {
     return error.SkipZigTest;
 }
 
-test "Move.SeismicToss" {
-    // Deals damage to the target equal to the user's level. This move ignores type immunity.
-    return error.SkipZigTest;
-}
-
 test "Move.Absorb" {
     // The user recovers 1/2 the HP lost by the target, rounded down. If this move breaks the
-    // target's substitute, the user does not recover any HP.
+    // target's substitute, the user does not recover any HP. TODO(wtf?)
     return error.SkipZigTest;
 }
 
-test "Move.MegaDrain" {
+test "Move.{MegaDrain,LeechLife}" {
     // The user recovers 1/2 the HP lost by the target, rounded down.
+    return error.SkipZigTest;
+}
+
+test "Move.DreamEater" {
+    // The target is unaffected by this move unless it is asleep. The user recovers 1/2 the HP lost
+    // by the target, rounded down, but not less than 1 HP. If this move breaks the target's
+    // substitute, the user does not recover any HP.
     return error.SkipZigTest;
 }
 
@@ -560,75 +447,23 @@ test "Move.LeechSeed" {
     return error.SkipZigTest;
 }
 
-test "Move.Growth" {
-    // Raises the user's Special by 1 stage.
-    return error.SkipZigTest;
-}
-
-test "Move.RazorLeaf" {
-    // Has a higher chance for a critical hit.
-    return error.SkipZigTest;
-}
-
-test "Move.SolarBeam" {
-    // This attack charges on the first turn and executes on the second.
-    return error.SkipZigTest;
-}
-
-test "Move.PoisonPowder" {
-    // Poisons the target.
-    return error.SkipZigTest;
-}
-
-test "Move.StunSpore" {
-    // Paralyzes the target.
-    return error.SkipZigTest;
-}
-
-test "Move.SleepPowder" {
+test "Move.{Sing,SleepPowder,Hypnosis,LovelyKiss,Spore}" {
     // Causes the target to fall asleep.
     return error.SkipZigTest;
 }
 
-test "Move.PetalDance" {
-    // Whether or not this move is successful, the user spends three or four turns locked into this
-    // move and becomes confused immediately after its move on the last turn of the effect, even if
-    // it is already confused. If the user is prevented from moving, the effect ends without causing
-    // confusion. During the effect, this move's accuracy is overwritten every turn with the current
-    // calculated accuracy including stat stage changes, but not to less than 1/256 or more than
-    // 255/256.
+test "Move.{Supersonic,ConfuseRay}" {
+    // Causes the target to become confused.
     return error.SkipZigTest;
 }
 
-test "Move.StringShot" {
-    // Lowers the target's Speed by 1 stage.
+test "Move.{PoisonPowder,PoisonGas}" {
+    // Poisons the target.
     return error.SkipZigTest;
 }
 
-test "Move.DragonRage" {
-    // Deals 40 HP of damage to the target.
-    return error.SkipZigTest;
-}
-
-test "Move.FireSpin" {
-    // The user spends two to five turns using this move. Has a 3/8 chance to last two or three
-    // turns, and a 1/8 chance to last four or five turns. The damage calculated for the first turn
-    // is used for every other turn. The user cannot select a move and the target cannot execute a
-    // move during the effect, but both may switch out. If the user switches out, the target remains
-    // unable to execute a move during that turn. If the target switches out, the user uses this
-    // move again automatically, and if it had 0 PP at the time, it becomes 63. If the user or the
-    // target switch out, or the user is prevented from moving, the effect ends. This move can
-    // prevent the target from moving even if it has type immunity, but will not deal damage.
-    return error.SkipZigTest;
-}
-
-test "Move.ThunderShock" {
-    // Has a 10% chance to paralyze the target.
-    return error.SkipZigTest;
-}
-
-test "Move.Thunderbolt" {
-    // Has a 10% chance to paralyze the target.
+test "Move.{StunSpore,Glare}" {
+    // Paralyzes the target.
     return error.SkipZigTest;
 }
 
@@ -637,56 +472,9 @@ test "Move.ThunderWave" {
     return error.SkipZigTest;
 }
 
-test "Move.Thunder" {
-    // Has a 10% chance to paralyze the target.
-    return error.SkipZigTest;
-}
-
-test "Move.Fissure" {
-    // Deals 65535 damage to the target. Fails if the target's Speed is greater than the user's.
-    return error.SkipZigTest;
-}
-
-test "Move.Dig" {
-    // This attack charges on the first turn and executes on the second. On the first turn, the user
-    // avoids all attacks other than Bide, Swift, and Transform. If the user is fully paralyzed on
-    // the second turn, it continues avoiding attacks until it switches out or successfully executes
-    // the second turn of this move or Fly.
-    return error.SkipZigTest;
-}
-
+// TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Toxic_counter_glitches
 test "Move.Toxic" {
     // Badly poisons the target.
-    return error.SkipZigTest;
-}
-
-test "Move.Confusion" {
-    // Has a 10% chance to confuse the target.
-    return error.SkipZigTest;
-}
-
-test "Move.Psychic" {
-    // Has a 33% chance to lower the target's Special by 1 stage.
-    return error.SkipZigTest;
-}
-
-test "Move.Hypnosis" {
-    // Causes the target to fall asleep.
-    return error.SkipZigTest;
-}
-
-test "Move.Meditate" {
-    // Raises the user's Attack by 1 stage.
-    return error.SkipZigTest;
-}
-
-test "Move.Agility" {
-    // Raises the user's Speed by 2 stages.
-    return error.SkipZigTest;
-}
-
-test "Move.QuickAttack" {
-    // No additional effect.
     return error.SkipZigTest;
 }
 
@@ -699,16 +487,6 @@ test "Move.Rage" {
     return error.SkipZigTest;
 }
 
-test "Move.Teleport" {
-    // Fails when used.
-    return error.SkipZigTest;
-}
-
-test "Move.NightShade" {
-    // Deals damage to the target equal to the user's level. This move ignores type immunity.
-    return error.SkipZigTest;
-}
-
 test "Move.Mimic" {
     // While the user remains active, this move is replaced by a random move known by the target,
     // even if the user already knows that move. The copied move keeps the remaining PP for this
@@ -717,60 +495,22 @@ test "Move.Mimic" {
     return error.SkipZigTest;
 }
 
-test "Move.Screech" {
-    // Lowers the target's Defense by 2 stages.
-    return error.SkipZigTest;
-}
-
-test "Move.DoubleTeam" {
-    // Raises the user's evasiveness by 1 stage.
-    return error.SkipZigTest;
-}
-
-test "Move.Recover" {
+// TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#HP_recovery_move_failure
+test "Move.{Recover,SoftBoiled}" {
     // The user restores 1/2 of its maximum HP, rounded down. Fails if (user's maximum HP - user's
     // current HP + 1) is divisible by 256.
-    return error.SkipZigTest;
-}
-
-test "Move.Harden" {
-    // Raises the user's Defense by 1 stage.
-    return error.SkipZigTest;
-}
-
-test "Move.Minimize" {
-    // Raises the user's evasiveness by 1 stage.
-    return error.SkipZigTest;
-}
-
-test "Move.Smokescreen" {
-    // Lowers the target's accuracy by 1 stage.
-    return error.SkipZigTest;
-}
-
-test "Move.ConfuseRay" {
-    // Causes the target to become confused.
-    return error.SkipZigTest;
-}
-
-test "Move.Withdraw" {
-    // Raises the user's Defense by 1 stage.
-    return error.SkipZigTest;
-}
-
-test "Move.DefenseCurl" {
-    // Raises the user's Defense by 1 stage.
-    return error.SkipZigTest;
-}
-
-test "Move.Barrier" {
-    // Raises the user's Defense by 2 stages.
     return error.SkipZigTest;
 }
 
 test "Move.LightScreen" {
     // While the user remains active, its Special is doubled when taking damage. Critical hits
     // ignore this effect. If any Pokemon uses Haze, this effect ends.
+    return error.SkipZigTest;
+}
+
+test "Move.Reflect" {
+    // While the user remains active, its Defense is doubled when taking damage. Critical hits
+    // ignore this protection. This effect can be removed by Haze.
     return error.SkipZigTest;
 }
 
@@ -782,18 +522,14 @@ test "Move.Haze" {
     return error.SkipZigTest;
 }
 
-test "Move.Reflect" {
-    // While the user remains active, its Defense is doubled when taking damage. Critical hits
-    // ignore this protection. This effect can be removed by Haze.
-    return error.SkipZigTest;
-}
-
+// TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Critical_hit_ratio_error
 test "Move.FocusEnergy" {
     // While the user remains active, its chance for a critical hit is quartered. Fails if the user
     // already has the effect. If any Pokemon uses Haze, this effect ends.
     return error.SkipZigTest;
 }
 
+// TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Bide_errors
 test "Move.Bide" {
     // The user spends two or three turns locked into this move and then, on the second or third
     // turn after using this move, the user attacks the opponent, inflicting double the damage in HP
@@ -812,6 +548,7 @@ test "Move.Metronome" {
     return error.SkipZigTest;
 }
 
+// TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Mirror_Move_glitch
 test "Move.MirrorMove" {
     // The user uses the last move used by the target. Fails if the target has not made a move, or
     // if the last move used was Mirror Move.
@@ -824,127 +561,12 @@ test "Move.SelfDestruct" {
     return error.SkipZigTest;
 }
 
-test "Move.Lick" {
-    // Has a 30% chance to paralyze the target.
-    return error.SkipZigTest;
-}
-
-test "Move.Smog" {
-    // Has a 40% chance to poison the target.
-    return error.SkipZigTest;
-}
-
-test "Move.Sludge" {
-    // Has a 40% chance to poison the target.
-    return error.SkipZigTest;
-}
-
-test "Move.BoneClub" {
-    // Has a 10% chance to make the target flinch.
-    return error.SkipZigTest;
-}
-
-test "Move.FireBlast" {
-    // Has a 30% chance to burn the target.
-    return error.SkipZigTest;
-}
-
-test "Move.Clamp" {
-    // The user spends two to five turns using this move. Has a 3/8 chance to last two or three
-    // turns, and a 1/8 chance to last four or five turns. The damage calculated for the first turn
-    // is used for every other turn. The user cannot select a move and the target cannot execute a
-    // move during the effect, but both may switch out. If the user switches out, the target remains
-    // unable to execute a move during that turn. If the target switches out, the user uses this
-    // move again automatically, and if it had 0 PP at the time, it becomes 63. If the user or the
-    // target switch out, or the user is prevented from moving, the effect ends. This move can
-    // prevent the target from moving even if it has type immunity, but will not deal damage.
-    return error.SkipZigTest;
-}
-
 test "Move.Swift" {
     // This move does not check accuracy and hits even if the target is using Dig or Fly.
     return error.SkipZigTest;
 }
 
-test "Move.SkullBash" {
-    // This attack charges on the first turn and executes on the second.
-    return error.SkipZigTest;
-}
-
-test "Move.SpikeCannon" {
-    // Hits two to five times. Has a 3/8 chance to hit two or three times, and a 1/8 chance to hit
-    // four or five times. Damage is calculated once for the first hit and used for every hit. If
-    // one of the hits breaks the target's substitute, the move ends.
-    return error.SkipZigTest;
-}
-
-test "Move.Constrict" {
-    // Has a 33% chance to lower the target's Speed by 1 stage.
-    return error.SkipZigTest;
-}
-
-test "Move.Amnesia" {
-    // Raises the user's Special by 2 stages.
-    return error.SkipZigTest;
-}
-
-test "Move.Kinesis" {
-    // Lowers the target's accuracy by 1 stage.
-    return error.SkipZigTest;
-}
-
-test "Move.SoftBoiled" {
-    // The user restores 1/2 of its maximum HP, rounded down. Fails if (user's maximum HP - user's
-    // current HP + 1) is divisible by 256.
-    return error.SkipZigTest;
-}
-
-test "Move.HighJumpKick" {
-    // If this attack misses the target, the user takes 1 HP of crash damage. If the user has a
-    // substitute, the crash damage is dealt to the target's substitute if it has one, otherwise no
-    // crash damage is dealt.
-    return error.SkipZigTest;
-}
-
-test "Move.Glare" {
-    // Paralyzes the target.
-    return error.SkipZigTest;
-}
-
-test "Move.DreamEater" {
-    // The target is unaffected by this move unless it is asleep. The user recovers 1/2 the HP lost
-    // by the target, rounded down, but not less than 1 HP. If this move breaks the target's
-    // substitute, the user does not recover any HP.
-    return error.SkipZigTest;
-}
-
-test "Move.PoisonGas" {
-    // Poisons the target.
-    return error.SkipZigTest;
-}
-
-test "Move.Barrage" {
-    // Hits two to five times. Has a 3/8 chance to hit two or three times, and a 1/8 chance to hit
-    // four or five times. Damage is calculated once for the first hit and used for every hit. If
-    // one of the hits breaks the target's substitute, the move ends.
-    return error.SkipZigTest;
-}
-
-test "Move.LeechLife" {
-    // The user recovers 1/2 the HP lost by the target, rounded down.
-    return error.SkipZigTest;
-}
-
-test "Move.LovelyKiss" {
-    // Causes the target to fall asleep.
-    return error.SkipZigTest;
-}
-
-test "Move.SkyAttack" {
-    // This attack charges on the first turn and executes on the second.
-    return error.SkipZigTest;
-}
-
+// TODO: https://pkmn.cc/bulba/Transform_glitches
 test "Move.Transform" {
     // The user transforms into the target. The target's current stats, stat stages, types, moves,
     // DVs, species, and sprite are copied. The user's level and HP remain the same and each copied
@@ -952,52 +574,16 @@ test "Move.Transform" {
     return error.SkipZigTest;
 }
 
-test "Move.Bubble" {
-    // Has a 33% chance to lower the target's Speed by 1 stage.
-    return error.SkipZigTest;
-}
-
-test "Move.Spore" {
-    // Causes the target to fall asleep.
-    return error.SkipZigTest;
-}
-
-test "Move.Flash" {
-    // Lowers the target's accuracy by 1 stage.
-    return error.SkipZigTest;
-}
-
+// TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Psywave_glitches
 test "Move.Psywave" {
     // Deals damage to the target equal to a random number from 1 to (user's level * 1.5 - 1),
     // rounded down, but not less than 1 HP.
     return error.SkipZigTest;
 }
 
-test "Move.Splash" {
-    // No competitive use.
-    return error.SkipZigTest;
-}
-
-test "Move.AcidArmor" {
-    // Raises the user's Defense by 2 stages.
-    return error.SkipZigTest;
-}
-
-test "Move.Crabhammer" {
-    // Has a higher chance for a critical hit.
-    return error.SkipZigTest;
-}
-
 test "Move.Explosion" {
     // The user faints after using this move, unless this move broke the target's substitute. The
     // target's Defense is halved during damage calculation.
-    return error.SkipZigTest;
-}
-
-test "Move.FurySwipes" {
-    // Hits two to five times. Has a 3/8 chance to hit two or three times, and a 1/8 chance to hit
-    // four or five times. Damage is calculated once for the first hit and used for every hit. If
-    // one of the hits breaks the target's substitute, the move ends.
     return error.SkipZigTest;
 }
 
@@ -1013,16 +599,6 @@ test "Move.Rest" {
     return error.SkipZigTest;
 }
 
-test "Move.HyperFang" {
-    // Has a 10% chance to make the target flinch.
-    return error.SkipZigTest;
-}
-
-test "Move.Sharpen" {
-    // Raises the user's Attack by 1 stage.
-    return error.SkipZigTest;
-}
-
 test "Move.Conversion" {
     // Causes the user's types to become the same as the current types of the target.
     return error.SkipZigTest;
@@ -1034,11 +610,8 @@ test "Move.SuperFang" {
     return error.SkipZigTest;
 }
 
-test "Move.Slash" {
-    // Has a higher chance for a critical hit.
-    return error.SkipZigTest;
-}
-
+// TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Substitute_HP_drain_bug
+// TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Substitute_.2B_Confusion_glitch
 test "Move.Substitute" {
     // The user takes 1/4 of its maximum HP, rounded down, and puts it into a substitute to take its
     // place in battle. The substitute has 1 HP plus the HP used to create it, and is removed once
@@ -1061,6 +634,51 @@ test "Move.Struggle" {
     // if none of the user's known moves can be selected.
     return error.SkipZigTest;
 }
+
+// Glitches
+
+test "0 damage glitch" {
+    // https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#0_damage_glitch
+    return error.SkipZigTest;
+}
+
+test "1/256 miss glitch" {
+    // https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#1.2F256_miss_glitch
+    return error.SkipZigTest;
+}
+
+test "Defrost move forcing" {
+    // https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Defrost_move_forcing
+    return error.SkipZigTest;
+}
+
+test "Division by 0" {
+    // https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Division_by_0
+    return error.SkipZigTest;
+}
+
+test "Invulnerability glitch" {
+    // https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Invulnerability_glitch
+    return error.SkipZigTest;
+}
+
+test "Stat modification errors" {
+    // https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Stat_modification_errors
+    return error.SkipZigTest;
+}
+
+test "Struggle bypassing" {
+    // https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Struggle_bypassing
+    return error.SkipZigTest;
+}
+
+test "Trapping sleep glitch" {
+    // https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Trapping_sleep_glitch
+    return error.SkipZigTest;
+}
+
+// BUG: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Dual-type_damage_misinformation
+// BUG: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Poison.2FBurn_animation_with_0_HP
 
 comptime {
     _ = @import("data.zig");

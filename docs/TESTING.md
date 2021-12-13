@@ -110,3 +110,11 @@ Results
 - per gen or average battles across all (supported) gens?
 - normalize to turns per second vs. battles per second? (both)
 ```
+
+Stochastic:
+  - multi-hit: rolls of 2 and 5
+  - two rolls, one without secondary and one with (just to prove it can proc, not which rates)
+
+Can't test: increased rates of already inconsistent things
+  - accuracy - could show roll before using increased accuracy does work, doesnt after? (implies accuracy changed)
+  - critical hits

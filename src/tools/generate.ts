@@ -180,22 +180,47 @@ const getOrUpdate = async (
   return result;
 };
 
+const NO_EFFECT = 'No additional effect.';
+
 const moveTests = (gen: Generation, moves: string[]) => {
-  console.log(moves.map(name => {
+  const effects: {[name: string]: string[]} = {};
+  for (const name of moves) {
     const move = gen.moves.get(name)!;
-    if (move.shortDesc === 'No additional effect.') return false;
-    return `test "Move.${name}" {\n    // ${move.desc}\n    return error.SkipZigTest;\n}\n`;
-  }).filter(Boolean).join('\n'))
-}
+    if ([move.shortDesc, move.desc].includes(NO_EFFECT)) continue;
+    effects[move.desc] = effects[move.desc] || [];
+    effects[move.desc].push(name);
+  }
+
+  const buf = [];
+  for (const desc in effects) {
+    const key = effects[desc].length === 1 ? effects[desc][0] : `{${effects[desc].join(',')}}`;
+    buf.push(`test "Move.${key}" {\n    // ${desc}\n    return error.SkipZigTest;\n}\n`);
+  }
+  console.log(buf.join('\n'));
+};
 
 const itemTests = (gen: Generation, items: string[]) => {
-    console.log(items.map(value => {
-      const [name, held] = value.split(' ');
-      const item = gen.items.get(name);
-      if (!item || held === 'NONE') return false;
-      return `test "Item.${name}" {\n    // ${item.desc}\n return error.SkipZigTest;\n}\n`;
-    }).filter(Boolean).join('\n'))
-}
+  const effects: {[name: string]: string[]} = {};
+  for (const value of items) {
+    const [name, held] = value.split(' ');
+    const item = gen.items.get(name);
+    if (name.endsWith('Mail')) {
+      effects.Mail = effects.Mail || [];
+      effects.Mail.push(name);
+      continue;
+    }
+    if (!item || held === 'NONE') continue;
+    effects[item.desc] = effects[item.desc] || [];
+    effects[item.desc].push(name);
+  }
+
+  const buf = [];
+  for (const desc in effects) {
+    const key = effects[desc].length === 1 ? effects[desc][0] : `{${effects[desc].join(',')}}`;
+    buf.push(`test "Item.${key}" {\n    // ${desc}\n    return error.SkipZigTest;\n}\n`);
+  }
+  console.log(buf.join('\n'));
+};
 
 type GenerateFn = (
   gen: Generation, dirs: { out: string; cache: string }, update: boolean, tests: boolean
@@ -641,7 +666,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     if (mkdir(out)) update = true;
     if (mkdir(cache)) update = true;
 
-    await GEN[gen.num]!(gen, {out, cache}, update, tests == gen.num);
+    await GEN[gen.num]!(gen, {out, cache}, update, tests === gen.num);
   }
 
   fs.writeFileSync(path.join(ROOT, 'src', 'ids.json'), JSON.stringify(IDS));
