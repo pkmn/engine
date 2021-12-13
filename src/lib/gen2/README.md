@@ -205,12 +205,12 @@ entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as foll
 | **status**     | 0...10  | 4    |     | **effectiveness** | 0...3    | 2    |
 | **type**       | 0...18  | 5    |     | **accuracy**      | 6...20   | 4    |
 | **disabled**   | 0...7   | 3    |     | **DVs**           | 0...15   | 4    |
-|                |         |      |     |                   |          |      |
 | **rollout**    | 0...5   | 3    |     | **fury cutter**   | 0..4     | 3    |
 | **confusion**  | 0...5   | 3    |     | **toxic**         | 0...15   | 4    |
 | **encore**     | 0...6   | 3    |     | **future sight**  | 0...2    | 2    |
 | **protect**    | 0...9   | 4    |     | **rage**          | 0...255  | 8    |
 | **wrap**       | 0...5   | 3    |     | **perish song**   | 0...4    | 3    |
+| **item**       | TODO    | 5?   |     |                   |          |      |
 
 From this we can determine the minimum bits required to store each data structure to determine how
 much overhead the representations above have after taking into consideration [alignment &

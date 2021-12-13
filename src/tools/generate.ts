@@ -180,10 +180,28 @@ const getOrUpdate = async (
   return result;
 };
 
-type GenerateFn =
-  (gen: Generation, dirs: { out: string; cache: string }, update: boolean) => Promise<void>;
+const moveTests = (gen: Generation, moves: string[]) => {
+  console.log(moves.map(name => {
+    const move = gen.moves.get(name)!;
+    if (move.shortDesc === 'No additional effect.') return false;
+    return `test "Move.${name}" {\n    // ${move.desc}\n    return error.SkipZigTest;\n}\n`;
+  }).filter(Boolean).join('\n'))
+}
+
+const itemTests = (gen: Generation, items: string[]) => {
+    console.log(items.map(value => {
+      const [name, held] = value.split(' ');
+      const item = gen.items.get(name);
+      if (!item || held === 'NONE') return false;
+      return `test "Item.${name}" {\n    // ${item.desc}\n return error.SkipZigTest;\n}\n`;
+    }).filter(Boolean).join('\n'))
+}
+
+type GenerateFn = (
+  gen: Generation, dirs: { out: string; cache: string }, update: boolean, tests: boolean
+) => Promise<void>;
 const GEN: { [gen in GenerationNum]?: GenerateFn } = {
-  1: async (gen, dirs, update) => {
+  1: async (gen, dirs, update, tests) => {
     const pret = 'https://raw.githubusercontent.com/pret/pokered/master';
     // Moves
     let url = `${pret}/data/moves/moves.asm`;
@@ -235,6 +253,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         ppData: PP.join('\n        '),
       },
     });
+
+    if (tests) moveTests(gen, moves);
 
     // Species
     url = `${pret}/constants/pokedex_constants.asm`;
@@ -296,7 +316,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       },
     });
   },
-  2: async (gen, dirs, update) => {
+  2: async (gen, dirs, update, tests) => {
     const pret = 'https://raw.githubusercontent.com/pret/pokecrystal/master';
 
     // Types
@@ -387,6 +407,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       },
     });
 
+    if (tests) itemTests(gen, items);
+
     // Moves
     url = `${pret}/data/moves/moves.asm`;
     const moves = await getOrUpdate('moves', dirs.cache, url, update, (line, _, i) => {
@@ -443,6 +465,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       },
     });
 
+    if (tests) moveTests(gen, moves);
+
     // Species
     url = `${pret}/constants/pokemon_constants.asm`;
     const species = await getOrUpdate('species', dirs.cache, url, update, (line, _, i) => {
@@ -490,7 +514,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       },
     });
   },
-  3: async (gen, dirs, update) => {
+  3: async (gen, dirs, update, tests) => {
     const pret = 'https://raw.githubusercontent.com/pret/pokeemerald/master';
 
     // Moves
@@ -546,6 +570,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       },
     });
 
+    if (tests) moveTests(gen, moves);
+
     // Species
     url = `${pret}/include/constants/species.h`;
     const species = await getOrUpdate('species', dirs.cache, url, update, (line, _, i) => {
@@ -600,7 +626,9 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 (async () => {
   const gens = new Generations(Dex as any);
 
-  let UPDATE = process.argv[2] === '--force';
+  const tests = process.argv[2] === 'tests' && +process.argv[3];
+
+  let UPDATE = process.argv.includes('--force');
   if (mkdir(CACHE)) UPDATE = true;
 
   for (const n in GEN) {
@@ -613,7 +641,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     if (mkdir(out)) update = true;
     if (mkdir(cache)) update = true;
 
-    await GEN[gen.num]!(gen, {out, cache}, update);
+    await GEN[gen.num]!(gen, {out, cache}, update, tests == gen.num);
   }
 
   fs.writeFileSync(path.join(ROOT, 'src', 'ids.json'), JSON.stringify(IDS));
