@@ -20,7 +20,7 @@ pub const Battle = extern struct {
     sides: [2]Side,
 
     comptime {
-        assert(@sizeOf(Battle) == 350);
+        assert(@sizeOf(Battle) == 349 + @sizeOf(rng.Gen12));
     }
 
     pub fn p1(self: *Battle) *Side {

@@ -14,6 +14,10 @@ pub const Gen12 = packed struct {
         assert(@bitSizeOf(Gen12) == @sizeOf(Gen12) * 8);
     }
 
+    pub fn percent(comptime p: comptime_int) u8 {
+        return (p * 0xFF) / 100;
+    }
+
     pub fn next(self: *Gen12) u8 {
         self.advance();
         return self.seed;
@@ -38,6 +42,10 @@ test "Generation I & II" {
         }
         try expectEqual(d[2], rng.seed);
     }
+
+    try expectEqual(@as(u8, 16), Gen12.percent(6) + 1);
+    try expectEqual(@as(u8, 16), Gen12.percent(7) - 1);
+    try expectEqual(@as(u8, 128), Gen12.percent(50) + 1);
 }
 
 // https://pkmn.cc/pokeemerald/src/random.c
