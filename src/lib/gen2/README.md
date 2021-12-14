@@ -210,7 +210,7 @@ entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as foll
 | **encore**     | 0...6   | 3    |     | **future sight**  | 0...2    | 2    |
 | **protect**    | 0...9   | 4    |     | **rage**          | 0...255  | 8    |
 | **wrap**       | 0...5   | 3    |     | **perish song**   | 0...4    | 3    |
-| **item**       | TODO    | 5?   |     |                   |          |      |
+| **item**       | TODO    | 5?   |     | **gender**        | 0..1     | 1    |
 
 From this we can determine the minimum bits required to store each data structure to determine how
 much overhead the representations above have after taking into consideration [alignment &

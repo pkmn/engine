@@ -281,6 +281,7 @@ test "Move.<33 percent secondary>" {
 // Move.Screech: DEFENSE_DOWN2_EFFECT
 test "Move.<status lower>" {
     // Lowers the target's X by Y stage(s).
+    return error.SkipZigTest;
 }
 
 // Move.{Harden,Withdraw,DefenseCurl}: DEFENSE_UP1_EFFECT
@@ -293,6 +294,7 @@ test "Move.<status lower>" {
 // Move.{Barrier,AcidArmor}: DEFENSE_UP2_EFFECT
 test "Move.<status upper>" {
     // Raises the target's X by Y stage(s).
+    return error.SkipZigTest;
 }
 
 // OHKO_EFFECT

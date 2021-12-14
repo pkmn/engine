@@ -65,8 +65,8 @@ const Side = extern struct {
     pokemon: ActivePokemon = .{},
     conditions: SideConditions,
     active: u8 = 0,
-    _: u8 = 0,
 
+    _: u8 = 0,
     comptime {
         assert(@sizeOf(Side) == 214);
     }
@@ -77,9 +77,10 @@ const Side = extern struct {
     }
 };
 
-// // BUG: ziglang/zig#2627
+// BUG: ziglang/zig#2627
 const SideConditions = packed struct {
     data: Data = .{},
+
     Spikes: bool = false,
     Safeguard: bool = false,
     LightScreen: bool = false,
@@ -102,6 +103,7 @@ const SideConditions = packed struct {
     }
 };
 
+// NOTE: IVs (Gender & Hidden Power) and Happiness are stored only in Pokemon
 const ActivePokemon = extern struct {
     volatiles: Volatile = .{},
     stats: Stats(u16) = .{},
@@ -113,7 +115,6 @@ const ActivePokemon = extern struct {
     status: u8 = 0,
     species: Species = .None,
     item: Item = .None,
-    // NOTE: IVs (Gender & Hidden Power) and Happiness are stored only in Pokemon
 
     // FIXME move to volatiles?
     // trapped: bool = false,

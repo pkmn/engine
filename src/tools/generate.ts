@@ -266,6 +266,16 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
             return (@as(u8, self.acc) + 6) * 5;
         }
     };`;
+    const ppData = `
+
+    // @test-only
+    const pp_data = [_]u8{
+        ${PP.join('\n        ')},
+    };`;
+    const ppFn = `pub fn pp(id: Move) u8 {
+        assert(id != .None);
+        return pp_data[@enumToInt(id) - 1];
+    }`;
     template('moves', dirs.out, {
       gen: gen.num,
       Move: {
@@ -275,7 +285,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         Data,
         data: MOVES.join(',\n        '),
         dataSize: MOVES.length * 2,
-        ppData: PP.join('\n        '),
+        ppData,
+        ppFn,
       },
     });
 
@@ -446,7 +457,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       return nameToEnum(move.name);
     });
     const MOVES: string[] = [];
-    const PP: string[] = [];
     for (const name of moves) {
       const move = gen.moves.get(name)!;
       const pp = move.pp === 1 ? '0, // = 1' : `${move.pp / 5}, // * 5 = ${move.pp}`;
@@ -461,7 +471,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .pp = ${pp}\n` +
         (chance ? `            .chance = ${chance}\n` : '') +
         '        }');
-      PP.push(`${move.pp}, // ${name}`);
     }
     let Data = `pub const Data = packed struct {
         bp: u8,
@@ -477,6 +486,9 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
             assert(@bitSizeOf(Data) == @sizeOf(Data) * 8);
         }
     };`;
+    const ppFn = `pub fn pp(id: Move) u8 {
+        return Move.get(id).pp * 5;
+    }`;
     template('moves', dirs.out, {
       gen: gen.num,
       Move: {
@@ -486,7 +498,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         Data,
         data: MOVES.join(',\n        '),
         dataSize: MOVES.length * 4,
-        ppData: PP.join('\n        '),
+        ppFn,
       },
     });
 
@@ -554,7 +566,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       return nameToEnum(move.name);
     });
     // const MOVES: string[] = [];
-    // const PP: string[] = [];
     // for (const name of moves) {
     //   const move = gen.moves.get(name)!;
     //   MOVES.push(`// ${name}\n` +
@@ -564,7 +575,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     //     `            .accuracy = ${move.accuracy === true ? '100' : move.accuracy},\n` +
     //     `            .pp = ${move.pp / 5}, // * 5 = ${move.pp}\n` +
     //     '        }');
-    //   PP.push(`${move.pp}, // ${name}`);
     // }
     let Data = `pub const Move = packed struct {
         bp: u8,
@@ -582,6 +592,9 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
             assert(@bitSizeOf(Move) == @sizeOf(Move) * 8);
         }
     };`;
+    const ppFn = `pub fn pp(id: Move) u8 {
+        return Move.get(id).pp * 5;
+    }`;
     template('moves', dirs.out, {
       gen: gen.num,
       Move: {
@@ -591,7 +604,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         Data,
         data: '//', // MOVES.join(',\n        '),
         dataSize: 0,
-        ppData: '//', // PP.join('\n        '),
+        ppFn,
       },
     });
 

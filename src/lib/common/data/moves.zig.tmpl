@@ -15,12 +15,7 @@ pub const Move = enum({{{ Move.type }}}) {
 
     const data = [_]Data{
         {{{ Move.data }}},
-    };
-
-    // @test-only
-    const pp_data = [_]u8{
-        {{{ Move.ppData }}},
-    };
+    };{{{ Move.ppData }}}
 
     comptime {
         assert(@sizeOf(Move) == {{{ Move.size }}});
@@ -33,8 +28,5 @@ pub const Move = enum({{{ Move.type }}}) {
     }
 
     // @test-only
-    pub fn pp(id: Move) u8 {
-        assert(id != .None);
-        return pp_data[@enumToInt(id) - 1];
-    }
+    {{{ Move.ppFn }}}
 };

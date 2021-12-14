@@ -114,6 +114,21 @@ need to have both libs loaded, with and without? alternative just provide comman
 
 alternatively - dont ship zig or binary at all (no postinstall). instead provide binary that can be USED to install(ie. let users choose to set up a postinstall or not, where they can run the install-pkmn-engine binary)
 
+Gamefreak:
+
+- implement wild/trainer + link battles
+- implement experience, catching (safari zone), in-battle item use
+- targetting Z80: limited memory and instruction set, eg. poor Muliply/Divide
+- don't know what theyre implementing + under time pressure to ship vs. fully defined closed solution
+
+Pokemon Showdown:
+
+- JS
+- looking to easy moddability
+- easy to write/extend by amateur coders
+- target quick iteration, implementing features as fast as possible (quantity vs. quality)
+- generic solution, looking to minimize code ("one engine") vs. multi specific engines
+
 ### Resources
 
 - [Handles vs. Pointers][handles]
@@ -123,10 +138,10 @@ alternatively - dont ship zig or binary at all (no postinstall). instead provide
 - [Latency Numbers Reference][numbers]
 - [Operation Costs in CPU Clock Cycles][costs]
 
-  [dod]: https://github.com/dbartolini/data-oriented-design
-  [dodbook]: https://www.dataorienteddesign.com/dodbook/
-  [handles]: https://floooh.github.io/2018/06/17/handles-vs-pointers.html
-  [packing]: http://www.catb.org/esr/structure-packing/
-  [limits]: https://travisdowns.github.io/blog/2019/06/11/speed-limits.html
-  [numbers]: https://github.com/sirupsen/napkin-math#numbers
-  [costs]: http://ithare.com/infographics-operation-costs-in-cpu-clock-cycles/
+[dod]: https://github.com/dbartolini/data-oriented-design
+[dodbook]: https://www.dataorienteddesign.com/dodbook/
+[handles]: https://floooh.github.io/2018/06/17/handles-vs-pointers.html
+[packing]: http://www.catb.org/esr/structure-packing/
+[limits]: https://travisdowns.github.io/blog/2019/06/11/speed-limits.html
+[numbers]: https://github.com/sirupsen/napkin-math#numbers
+[costs]: http://ithare.com/infographics-operation-costs-in-cpu-clock-cycles/

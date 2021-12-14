@@ -1,7 +1,5 @@
 # Pokémon Generation I: RBY
 
-TODO cover `@test-only` data and code
-
 ## Data Structures
 
 The following information is required to simulate a Generation I Pokémon battle:
@@ -50,7 +48,8 @@ The following information is required to simulate a Generation I Pokémon battle
   other means in pkmn and Pokémon Showdown
 - Pokémon Red's `PlayerStatsToDouble`/`PlayerStatsToHalve` are constants which are always 0
 - pkmn does not store the DVs/stat experience of Pokémon as they are expected to already be
-  accounted for in the `Pokemon` `stats` and never need to be referenced in-battle
+  accounted for in the `Pokemon` `stats` and never need to be referenced in-battle (though the `DVs`
+  struct exists to simplify generating legal test data)
 
 ### `Battle` / `Side`
 
@@ -96,7 +95,7 @@ individual bits - at most one status should be set at any given time.
 In Generation I & II, the "badly poisoned" status (Toxic) is instead treated as a volatile (see
 below).
 
-#### `Volatile` / `Volatiles.Data`
+#### `Volatiles` / `Volatiles.Data`
 
 Active Pokémon can have have ["volatile" status
 conditions](https://pkmn.cc/bulba/Status_condition#Volatile_status) (called ['battle
@@ -142,21 +141,23 @@ savings and minimizes padding required as the only time the `Pokemon` structure'
 is when they are copied during switch-in meaning slightly inefficient access is less punishing
 performance-wise.
   
-### `Move` / `Moves`
+### `Move` / `Move.Data`
 
-`Moves` serves as an identifier for a unique [Pokémon move](https://pkmn.cc/bulba/Move) that can be
-used to retrieve a `Move` with information regarding base power, accuracy and type. As covered
-above, PP information isn't strictly necessary in Generation I so is dropped. `Moves.None` exists as
-a special sentinel value to indicate `null`.
+`Move` serves as an identifier for a unique [Pokémon move](https://pkmn.cc/bulba/Move) that can be
+used to retrieve `Move.Data` with information regarding base power, accuracy and type. As covered
+above, PP information isn't strictly necessary in Generation I so is dropped. `Move.None` exists as
+a special sentinel value to indicate `null`. Move PP data is only included for testing and is not
+necessary for the actual engine implementation.
 
-### `Species`
+### `Species` / `Species.Data`
 
 `Species` just serves as an identifier for a unique [Pokémon
 species](https://pkmn.cc/bulba/Pok%C3%A9mon_species_data_structure_(Generation_I)) as the base stats
 of a species are already accounted for in the computed stats in the `Pokemon` structure and nothing
 in battle requires these to be recomputed. Similarly, Type is unnecessary to include as it is also
-already present in the `Pokemon` struct. `Species.None` exists as a special sentinel value to
-indicate `null`.
+already present in the `Pokemon` struct. `Specie.None` exists as a special sentinel value to
+indicate `null`. `Species.Data` is only included for testing and is not necessary for the actual
+engine implementation.
 
 ### `Type` / `Types` / `Effectiveness`
 

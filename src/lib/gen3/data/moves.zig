@@ -385,11 +385,6 @@ pub const Move = enum(u16) {
         //,
     };
 
-    // @test-only
-    const pp_data = [_]u8{
-        //,
-    };
-
     comptime {
         assert(@sizeOf(Move) == 2);
         assert(@sizeOf(@TypeOf(data)) == 0);
@@ -402,7 +397,6 @@ pub const Move = enum(u16) {
 
     // @test-only
     pub fn pp(id: Move) u8 {
-        assert(id != .None);
-        return pp_data[@enumToInt(id) - 1];
+        return Move.get(id).pp * 5;
     }
 };

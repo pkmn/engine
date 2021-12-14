@@ -38,8 +38,8 @@ pub const Side = extern struct {
     active: u8 = 0,
     last_used_move: Move = .None,
     last_selected_move: Move = .None,
-    _: u8 = 0,
 
+    _: u8 = 0,
     comptime {
         assert(@sizeOf(Side) == 172);
     }
@@ -53,15 +53,15 @@ pub const Side = extern struct {
 pub const ActivePokemon = extern struct {
     stats: Stats(u16) = .{},
     moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
-    volatiles: Volatile = .{},
+    volatiles: Volatiles = .{},
     boosts: Boosts = .{},
     level: u8 = 100,
     hp: u16 = 0,
     status: u8 = 0,
     species: Species = .None,
     types: Types = .{},
-    _: u8 = 0,
 
+    _: u8 = 0,
     comptime {
         assert(@sizeOf(ActivePokemon) == 36);
     }
@@ -168,8 +168,9 @@ test "Status" {
     try expect(Status.any(Status.init(.TOX)));
 }
 
-pub const Volatile = packed struct {
+pub const Volatiles = packed struct {
     data: Data = Data{},
+
     _: u6 = 0,
     Bide: bool = false,
     Locked: bool = false,
@@ -210,9 +211,9 @@ pub const Volatile = packed struct {
     };
 
     comptime {
-        assert(@sizeOf(Volatile) == 8);
+        assert(@sizeOf(Volatiles) == 8);
         // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(Volatile) == @sizeOf(Volatile) * 8);
+        assert(@bitSizeOf(Volatiles) == @sizeOf(Volatiles) * 8);
     }
 };
 
