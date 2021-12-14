@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 
 const rng = @import("../common/rng.zig");
 const util = @import("../common/util.zig");
@@ -137,6 +138,7 @@ pub const Status = enum(u8) {
 
     // @test-only
     pub fn name(num: u8) []const u8 {
+        assert(builtin.is_test);
         if (Status.is(num, .SLP)) return "SLP";
         if (Status.is(num, .PSN)) return "PSN";
         if (Status.is(num, .BRN)) return "BRN";
@@ -230,6 +232,7 @@ pub fn Stats(comptime T: type) type {
 
         // @test-only
         pub fn calc(comptime stat: []const u8, base: T, dv: u4, exp: u16, level: u8) T {
+            assert(builtin.is_test);
             assert(level > 0 and level <= 100);
             const factor = if (std.mem.eql(u8, stat, "hp")) level + 10 else 5;
             return @truncate(T, (@as(u16, base) + dv) * 2 + @as(u16, (std.math.sqrt(exp) / 4)) * level / 100 + factor);
@@ -307,17 +310,19 @@ test "Types" {
 }
 
 // @test-only
-const DVs = struct {
+pub const DVs = struct {
     atk: u4 = 15,
     def: u4 = 15,
     spe: u4 = 15,
     spc: u4 = 15,
 
     pub fn hp(self: *const DVs) u4 {
+        assert(builtin.is_test);
         return (self.atk & 1) << 3 | (self.def & 1) << 2 | (self.spe & 1) << 1 | (self.spc & 1);
     }
 
     pub fn random(rand: *rng.Random) DVs {
+        assert(builtin.is_test);
         return .{
             .atk = if (rand.chance(1, 5)) rand.range(u4, 1, 15) else 15,
             .def = if (rand.chance(1, 5)) rand.range(u4, 1, 15) else 15,

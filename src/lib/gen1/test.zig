@@ -215,15 +215,13 @@ pub const Pokemon = struct {
     }
 };
 
-// test "Battle" {
-//     const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
-//     const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
-//     const battle = Battle.init(0, &.{p1}, &.{p2});
-//     util.debug.print(battle);
-//     var r = std.rand.DefaultPrng.init(5);
-//     util.debug.print(Battle.random(Random.init(r.random())));
-//     util.debug.print(Battle.random(&Random.init(5)));
-// }
+test "Battle" {
+    const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
+    const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
+    const battle = Battle.init(0, &.{p1}, &.{p2});
+    util.debug.print(battle);
+    util.debug.print(Battle.random(&Random.init(5)));
+}
 
 // Moves
 
