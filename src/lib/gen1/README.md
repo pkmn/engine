@@ -173,21 +173,22 @@ to be stored at each address of an array).
 The information of each field (in terms of [bits of
 entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as follows:
 
-| Data           | Range   | Bits |     | Data              | Range    | Bits |
-| -------------- | ------- | ---- | --- | ----------------- | -------- | ---- |
-| **seed**       | 0...255 | 8    |     | **turn**          | 1...1000 | 10   |
-| **team index** | 1...6   | 3    |     | **move index**    | 1...4    | 2    |
-| **species**    | 1...151 | 8    |     | **move**          | 1...165  | 8    |
-| **stat**       | 1...999 | 10   |     | **boost**         | 0...13   | 4    |
-| **level**      | 1...100 | 7    |     | **volatiles**     | *18*     | 18   |
-| **bide**       | 0...703 | 11   |     | **substitute**    | 0...179  | 8    |
-| **confusion**  | 0...5   | 3    |     | **toxic**         | 0...15   | 4    |
-| **multi hits** | 0...5   | 3    |     | **base power**    | 0...40   | 6    |
-| **base PP**    | 1...8   | 3    |     | **PP Ups**        | 0...3    | 2    |
-| **PP**         | 0...64  | 7    |     | **HP / damage**   | 0...704  | 10   |
-| **status**     | 0...10  | 4    |     | **effectiveness** | 0...3    | 2    |
-| **type**       | 0...15  | 4    |     | **accuracy**      | 6...20   | 4    |
-| **disabled**   | 0...7   | 3    |     | **DVs**           | 0...15   | 4    |
+| Data            | Range   | Bits |     | Data              | Range    | Bits |
+| --------------- | ------- | ---- | --- | ----------------- | -------- | ---- |
+| **seed**        | 0...255 | 8    |     | **turn**          | 1...1000 | 10   |
+| **team index**  | 1...6   | 3    |     | **move index**    | 1...4    | 2    |
+| **species**     | 1...151 | 8    |     | **move**          | 1...165  | 8    |
+| **stat**        | 1...999 | 10   |     | **boost**         | 0...13   | 4    |
+| **level**       | 1...100 | 7    |     | **volatiles**     | *18*     | 18   |
+| **bide**        | 0...703 | 11   |     | **substitute**    | 0...179  | 8    |
+| **confusion**   | 0...5   | 3    |     | **toxic**         | 0...15   | 4    |
+| **multi hits**  | 0...5   | 3    |     | **base power**    | 0...40   | 6    |
+| **base PP**     | 1...8   | 3    |     | **PP Ups**        | 0...3    | 2    |
+| **PP**          | 0...64  | 7    |     | **HP / damage**   | 0...704  | 10   |
+| **status**      | 0...10  | 4    |     | **effectiveness** | 0...3    | 2    |
+| **type**        | 0...15  | 4    |     | **accuracy**      | 6...20   | 4    |
+| **disabled**    | 0...7   | 3    |     | **DVs**           | 0...15   | 4    |
+| **move effect** | 0..67   | 7    |     |                   |          |      |
 
 From this we can determine the minimum bits required to store each data structure to determine how
 much overhead the representations above have after taking into consideration [alignment &
@@ -207,7 +208,7 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
   (`8`)
 - **`Battle`**: 6× `Side` + seed (`8`) + turn (`10`) + last damage (`10`)
 - **`Type.chart`**: attacking types (`15`) × defending types (`15`) × effectiveness (`2`)[^1]
-- **`Moves`**: 164× base power (`6`) + accuracy (`4`) + type: (`4`)
+- **`Moves`**: 164× base power (`6`) + effect (`7`) + accuracy (`4`) + type: (`4`)
 
 | Data            | Actual bits | Minimum bits | Overhead |
 | --------------- | ----------- | ------------ | -------- |
@@ -216,7 +217,7 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 | `Side`          | 1376        | 1047         | 31.4%    |
 | `Battle`        | 2800        | 2122         | 32.0%    |
 | `Type.chart`    | 1800        | 450          | 300.0%   |
-| `Moves.data`    | 2640        | 2296         | 15.0%    |
+| `Moves.data`    | 2640        | 3444         | 14.3%    |
 
 In the case of `Type.chart` and `Moves.data`, technically only the values which are used by any
 given simulation are required, which could be as low as 1 in both circumstances (eg. all Normal

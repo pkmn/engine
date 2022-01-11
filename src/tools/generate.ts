@@ -67,7 +67,50 @@ const NAMES: { [constant: string]: string } = {
   YLW_APRICORN: 'YellowApricorn',
   // Moves
   SMELLING_SALT: 'SmellingSalts',
+  // Effects
+  NO_ADDITIONAL_EFFECT: 'None',
+  EFFECT_NORMAL_HIT: 'None',
+  TWO_TO_FIVE_ATTACKS_EFFECT: 'MultiHit',
+  ATTACK_TWICE_EFFECT: 'DoubleHit',
+  OHKO_EFFECT: 'OHKO',
+  EFFECT_OHKO: 'OHKO',
+  DRAIN_HP_EFFECT: 'DrainHP',
+  EFFECT_LEECH_HIT: 'DrainHP',
+  EFFECT_ACCURACY_DOWN_HIT: 'AccuracyDownChance',
+  EFFECT_ACCURACY_DOWN: 'AccuracyDown1',
+  EFFECT_ALL_UP_HIT: 'BoostAllChance',
+  EFFECT_ATTACK_DOWN_HIT: 'AttackDownChance',
+  EFFECT_ATTACK_DOWN: 'AttackDown1',
+  EFFECT_ATTACK_UP_HIT: 'AttackDownChance',
+  EFFECT_ATTACK_UP: 'AttackUp1',
+  EFFECT_BURN_HIT: 'BurnChance',
+  EFFECT_CONFUSE_HIT: 'ConfusionChance',
+  EFFECT_CONFUSE: 'Confusion',
+  EFFECT_DEFENSE_DOWN_HIT: 'DefenseDownChance',
+  EFFECT_DEFENSE_DOWN: 'DefenseDown1',
+  EFFECT_DEFENSE_UP_HIT: 'DefenseUpChance',
+  EFFECT_DEFENSE_UP: 'DefenseUp1',
+  EFFECT_EVASION_DOWN: 'EvasionDown1',
+  EFFECT_EVASION_UP: 'EvasionUp1',
+  EFFECT_FLINCH_HIT: 'FlinchChance',
+  EFFECT_FREEZE_HIT: 'FreezeChance',
+  EFFECT_PARALYZE_HIT: 'ParalyzeChance',
+  EFFECT_POISON_HIT: 'PoisonChance',
+  EFFECT_POISON_MULTI_HIT: 'Twineedle',
+  EFFECT_PRIORITY_HIT: 'Priority',
+  EFFECT_RAMPAGE: 'Locking',
+  EFFECT_RECOILD_HIT: 'Recoil',
+  THRASH_PETAL_DANCE_EFFECT: 'Locking',
+  EFFECT_SELF_DESTRUCT: 'Explode',
+  EFFECT_SP_ATK_UP: 'SpAtkUp1',
+  EFFECT_SP_DEF_DOWN_HIT: 'SpDefDownChance',
+  EFFECT_SPEED_DOWN: 'SpeedDown1',
+  EFFECT_SPEED_DOWN_HIT: 'SpeedDownChance',
+  EFFECT_TRAP_TARGET: 'Trapping',
 };
+
+const constToEffectEnum = (s: string) =>
+  NAMES[s] || constToEnum(s).replace('SideEffect', 'Chance').replace('Effect', '');
 
 const nameToEnum = (s: string) => s.replace(/[^A-Za-z0-9]+/g, '');
 const constToEnum = (s: string) =>
@@ -184,7 +227,8 @@ const NO_EFFECT = 'No additional effect.';
 
 const moveTests = (gen: Generation, moves: string[]) => {
   const effects: {[name: string]: string[]} = {};
-  for (const name of moves) {
+  for (const m of moves) {
+    const name = m.split(' ')[0];
     const move = gen.moves.get(name)!;
     if ([move.shortDesc, move.desc].includes(NO_EFFECT)) continue;
     effects[move.desc] = effects[move.desc] || [];
@@ -229,35 +273,43 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
   1: async (gen, dirs, update, tests) => {
     const pret = 'https://raw.githubusercontent.com/pret/pokered/master';
     // Moves
+    const HIGH_CRIT = ['KARATE_CHOP', 'RAZOR_LEAF', 'CRABHAMMER', 'SLASH'];
     let url = `${pret}/data/moves/moves.asm`;
     const moves = await getOrUpdate('moves', dirs.cache, url, update, (line, _, i) => {
-      const match = /move (\w+),/.exec(line);
+      const match = /move (\w+),\W+(\w+),/.exec(line);
       if (!match) return undefined;
       const move = gen.moves.get(match[1] === 'PSYCHIC_M' ? 'PSYCHIC' : match[1])!;
+      const effect = HIGH_CRIT.includes(match[1]) ? 'HIGH_CRITICAL_EFFECT' : match[2];
       if (move.num !== i + 1) {
         throw new Error(`Expected ${move.num} for ${move.name} and received ${i + 1}`);
       }
-      return nameToEnum(move.name);
+      return `${nameToEnum(move.name)} ${constToEffectEnum(effect)}`;
     });
     const MOVES: string[] = [];
     const PP: string[] = [];
-    for (const name of moves) {
+    const EFFECTS = new Set<string>();
+    for (const m of moves) {
+      const [name, effect] = m.split(' ');
+      if (effect !== 'None') EFFECTS.add(effect);
       const move = gen.moves.get(name)!;
+      const acc = move.accuracy === true ? 100 : move.accuracy;
       MOVES.push(`// ${name}\n` +
         '        .{\n' +
+        `            .effect = .${effect},\n` +
         `            .bp = ${move.basePower},\n` +
         `            .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
-        `            .acc = ${move.accuracy === true ? '14' : move.accuracy / 5 - 6},\n` +
+        `            .acc = ${acc / 5 - 6}, // ${acc}%\n` +
         '        }');
       PP.push(`${move.pp}, // ${name}`);
     }
     let Data = `pub const Data = packed struct {
+        effect: MoveEffect,
         bp: u8,
-        acc: u4,
+        acc: u4, // accuracy / 5 - 6
         type: Type,
 
         comptime {
-            assert(@sizeOf(Data) == 2);
+            assert(@sizeOf(Data) == 3);
             // TODO: Safety check workaround for ziglang/zig#2627
             assert(@bitSizeOf(Data) == @sizeOf(Data) * 8);
         }
@@ -266,6 +318,15 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
             return (@as(u8, self.acc) + 6) * 5;
         }
     };`;
+
+    const MoveEffect = `\npub const MoveEffect = enum(u8) {
+    None,
+    ${Array.from(EFFECTS).sort().join(',\n    ')},
+
+    comptime {
+        assert(@sizeOf(MoveEffect) == 1);
+    }\n` + '};\n';
+
     const ppData = `
 
     // @test-only
@@ -279,13 +340,14 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     }`;
     template('moves', dirs.out, {
       gen: gen.num,
+      MoveEffect,
       Move: {
         type: 'u8',
-        values: moves.join(',\n    '),
+        values: moves.map(m => m.split(' ')[0]).join(',\n    '),
         size: 1,
         Data,
         data: MOVES.join(',\n        '),
-        dataSize: MOVES.length * 2,
+        dataSize: MOVES.length * 3,
         ppData,
         ppFn,
       },
@@ -447,18 +509,24 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     if (tests) itemTests(gen, items);
 
     // Moves
+    const HIGH_CRIT = // NOTE: RAZOR_WIND is also high critical hit ratio...
+      ['KARATE_CHOP', 'RAZOR_LEAF', 'CRABHAMMER', 'SLASH', 'AEROBLAST', 'CROSS_CHOP'];
     url = `${pret}/data/moves/moves.asm`;
     const moves = await getOrUpdate('moves', dirs.cache, url, update, (line, _, i) => {
-      const match = /move (\w+),/.exec(line);
+      const match = /move (\w+),\W+(\w+),/.exec(line);
       if (!match) return undefined;
       const move = gen.moves.get(match[1] === 'PSYCHIC_M' ? 'PSYCHIC' : match[1])!;
+      const effect = HIGH_CRIT.includes(match[1]) ? 'HIGH_CRITICAL_EFFECT' : match[2];
       if (move.num !== i + 1) {
         throw new Error(`Expected ${move.num} for ${move.name} and received ${i + 1}`);
       }
-      return nameToEnum(move.name);
+      return `${nameToEnum(move.name)} ${constToEffectEnum(effect)}`;
     });
     const MOVES: string[] = [];
-    for (const name of moves) {
+    const EFFECTS = new Set<string>();
+    for (const m of moves) {
+      const [name, effect] = m.split(' ');
+      if (effect !== 'None') EFFECTS.add(effect);
       const move = gen.moves.get(name)!;
       const pp = move.pp === 1 ? '0, // = 1' : `${move.pp / 5}, // * 5 = ${move.pp}`;
       const chance = move.secondary?.chance
@@ -466,6 +534,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         : '';
       MOVES.push(`// ${name}\n` +
         '        .{\n' +
+        `            .effect = .${effect},\n` +
         `            .bp = ${move.basePower},\n` +
         `            .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
         `            .accuracy = ${move.accuracy === true ? '100' : move.accuracy},\n` +
@@ -474,32 +543,42 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         '        }');
     }
     let Data = `pub const Data = packed struct {
+        effect: MoveEffect,
         bp: u8,
         accuracy: u8,
         type: Type,
         pp: u4, // pp / 5
         chance: u4 = 0, // chance / 10
-        // TODO effect and parameter?
 
         comptime {
-            assert(@sizeOf(Data) == 4);
+            assert(@sizeOf(Data) == 5);
             // TODO: Safety check workaround for ziglang/zig#2627
             assert(@bitSizeOf(Data) == @sizeOf(Data) * 8);
         }
     };`;
+
+    const MoveEffect = `\npub const MoveEffect = enum(u8) {
+    None,
+    ${Array.from(EFFECTS).sort().join(',\n    ')},
+
+    comptime {
+        assert(@sizeOf(MoveEffect) == 1);
+    }\n` + '};\n';
+
     const ppFn = `pub fn pp(id: Move) u8 {
         assert(builtin.is_test);
         return Move.get(id).pp * 5;
     }`;
     template('moves', dirs.out, {
       gen: gen.num,
+      MoveEffect,
       Move: {
         type: 'u8',
-        values: moves.join(',\n    '),
+        values: moves.map(m => m.split(' ')[0]).join(',\n    '),
         size: 1,
         Data,
         data: MOVES.join(',\n        '),
-        dataSize: MOVES.length * 4,
+        dataSize: MOVES.length * 5,
         ppFn,
       },
     });
@@ -614,9 +693,9 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     if (tests) moveTests(gen, moves);
 
     // Species
-    url = `${pret}/include/constants/species.h`;
+    url = `${pret}/include/constants/pokedex.h`;
     const species = await getOrUpdate('species', dirs.cache, url, update, (line, _, i) => {
-      const match = /#define NATIONAL_DEX_(\w+)\s+\d+/.exec(line);
+      const match = /NATIONAL_DEX_(\w+),/.exec(line);
       if (!match || match[1] === 'NONE' || match[1].startsWith('OLD_UNOWN')) return undefined;
       if (!match || match[1] === 'EGG' || match[1].startsWith('UNOWN_')) return undefined;
       const specie = gen.species.get(match[1])!;

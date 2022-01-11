@@ -8,6 +8,82 @@ const assert = std.debug.assert;
 
 const Type = gen1.Type;
 
+pub const MoveEffect = enum(u8) {
+    None,
+    AccuracyDown1,
+    AttackDown1,
+    AttackDownChance,
+    AttackUp1,
+    AttackUp2,
+    Bide,
+    BurnChance1,
+    BurnChance2,
+    Charge,
+    Confusion,
+    ConfusionChance,
+    Conversion,
+    DefenseDown1,
+    DefenseDown2,
+    DefenseDownChance,
+    DefenseUp1,
+    DefenseUp2,
+    Disable,
+    DoubleHit,
+    DrainHP,
+    DreamEater,
+    EvasionUp1,
+    Explode,
+    FlinchChance1,
+    FlinchChance2,
+    Fly,
+    FocusEnergy,
+    FreezeChance,
+    Haze,
+    Heal,
+    HighCritical,
+    HyperBeam,
+    JumpKick,
+    LeechSeed,
+    LightScreen,
+    Locking,
+    Metronome,
+    Mimic,
+    MirrorMove,
+    Mist,
+    MultiHit,
+    OHKO,
+    Paralyze,
+    ParalyzeChance1,
+    ParalyzeChance2,
+    PayDay,
+    Poison,
+    PoisonChance1,
+    PoisonChance2,
+    Rage,
+    Recoil,
+    Reflect,
+    Sleep,
+    SpecialDamage,
+    SpecialDownChance,
+    SpecialUp1,
+    SpecialUp2,
+    SpeedDown1,
+    SpeedDownChance,
+    SpeedUp2,
+    Splash,
+    Substitute,
+    SuperFang,
+    Swift,
+    SwitchAndTeleport,
+    Transform,
+    Trapping,
+    Twineedle,
+
+    comptime {
+        assert(@sizeOf(MoveEffect) == 1);
+    }
+};
+
 pub const Move = enum(u8) {
     None,
     Pound,
@@ -177,12 +253,13 @@ pub const Move = enum(u8) {
     Struggle,
 
     pub const Data = packed struct {
+        effect: MoveEffect,
         bp: u8,
-        acc: u4,
+        acc: u4, // accuracy / 5 - 6
         type: Type,
 
         comptime {
-            assert(@sizeOf(Data) == 2);
+            assert(@sizeOf(Data) == 3);
             // TODO: Safety check workaround for ziglang/zig#2627
             assert(@bitSizeOf(Data) == @sizeOf(Data) * 8);
         }
@@ -195,993 +272,1158 @@ pub const Move = enum(u8) {
     const data = [_]Data{
         // Pound
         .{
+            .effect = .None,
             .bp = 40,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // KarateChop
         .{
+            .effect = .HighCritical,
             .bp = 50,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // DoubleSlap
         .{
+            .effect = .MultiHit,
             .bp = 15,
             .type = .Normal,
-            .acc = 11,
+            .acc = 11, // 85%
         },
         // CometPunch
         .{
+            .effect = .MultiHit,
             .bp = 18,
             .type = .Normal,
-            .acc = 11,
+            .acc = 11, // 85%
         },
         // MegaPunch
         .{
+            .effect = .None,
             .bp = 80,
             .type = .Normal,
-            .acc = 11,
+            .acc = 11, // 85%
         },
         // PayDay
         .{
+            .effect = .PayDay,
             .bp = 40,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // FirePunch
         .{
+            .effect = .BurnChance1,
             .bp = 75,
             .type = .Fire,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // IcePunch
         .{
+            .effect = .FreezeChance,
             .bp = 75,
             .type = .Ice,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // ThunderPunch
         .{
+            .effect = .ParalyzeChance1,
             .bp = 75,
             .type = .Electric,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Scratch
         .{
+            .effect = .None,
             .bp = 40,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // ViseGrip
         .{
+            .effect = .None,
             .bp = 55,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Guillotine
         .{
+            .effect = .OHKO,
             .bp = 0,
             .type = .Normal,
-            .acc = 0,
+            .acc = 0, // 30%
         },
         // RazorWind
         .{
+            .effect = .Charge,
             .bp = 80,
             .type = .Normal,
-            .acc = 9,
+            .acc = 9, // 75%
         },
         // SwordsDance
         .{
+            .effect = .AttackUp2,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Cut
         .{
+            .effect = .None,
             .bp = 50,
             .type = .Normal,
-            .acc = 13,
+            .acc = 13, // 95%
         },
         // Gust
         .{
+            .effect = .None,
             .bp = 40,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // WingAttack
         .{
+            .effect = .None,
             .bp = 35,
             .type = .Flying,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Whirlwind
         .{
+            .effect = .SwitchAndTeleport,
             .bp = 0,
             .type = .Normal,
-            .acc = 11,
+            .acc = 11, // 85%
         },
         // Fly
         .{
+            .effect = .Fly,
             .bp = 70,
             .type = .Flying,
-            .acc = 13,
+            .acc = 13, // 95%
         },
         // Bind
         .{
+            .effect = .Trapping,
             .bp = 15,
             .type = .Normal,
-            .acc = 9,
+            .acc = 9, // 75%
         },
         // Slam
         .{
+            .effect = .None,
             .bp = 80,
             .type = .Normal,
-            .acc = 9,
+            .acc = 9, // 75%
         },
         // VineWhip
         .{
+            .effect = .None,
             .bp = 35,
             .type = .Grass,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Stomp
         .{
+            .effect = .FlinchChance2,
             .bp = 65,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // DoubleKick
         .{
+            .effect = .DoubleHit,
             .bp = 30,
             .type = .Fighting,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // MegaKick
         .{
+            .effect = .None,
             .bp = 120,
             .type = .Normal,
-            .acc = 9,
+            .acc = 9, // 75%
         },
         // JumpKick
         .{
+            .effect = .JumpKick,
             .bp = 70,
             .type = .Fighting,
-            .acc = 13,
+            .acc = 13, // 95%
         },
         // RollingKick
         .{
+            .effect = .FlinchChance2,
             .bp = 60,
             .type = .Fighting,
-            .acc = 11,
+            .acc = 11, // 85%
         },
         // SandAttack
         .{
+            .effect = .AccuracyDown1,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Headbutt
         .{
+            .effect = .FlinchChance2,
             .bp = 70,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // HornAttack
         .{
+            .effect = .None,
             .bp = 65,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // FuryAttack
         .{
+            .effect = .MultiHit,
             .bp = 15,
             .type = .Normal,
-            .acc = 11,
+            .acc = 11, // 85%
         },
         // HornDrill
         .{
+            .effect = .OHKO,
             .bp = 0,
             .type = .Normal,
-            .acc = 0,
+            .acc = 0, // 30%
         },
         // Tackle
         .{
+            .effect = .None,
             .bp = 35,
             .type = .Normal,
-            .acc = 13,
+            .acc = 13, // 95%
         },
         // BodySlam
         .{
+            .effect = .ParalyzeChance2,
             .bp = 85,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Wrap
         .{
+            .effect = .Trapping,
             .bp = 15,
             .type = .Normal,
-            .acc = 11,
+            .acc = 11, // 85%
         },
         // TakeDown
         .{
+            .effect = .Recoil,
             .bp = 90,
             .type = .Normal,
-            .acc = 11,
+            .acc = 11, // 85%
         },
         // Thrash
         .{
+            .effect = .Locking,
             .bp = 90,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // DoubleEdge
         .{
+            .effect = .Recoil,
             .bp = 100,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // TailWhip
         .{
+            .effect = .DefenseDown1,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // PoisonSting
         .{
+            .effect = .PoisonChance1,
             .bp = 15,
             .type = .Poison,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Twineedle
         .{
+            .effect = .Twineedle,
             .bp = 25,
             .type = .Bug,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // PinMissile
         .{
+            .effect = .MultiHit,
             .bp = 14,
             .type = .Bug,
-            .acc = 11,
+            .acc = 11, // 85%
         },
         // Leer
         .{
+            .effect = .DefenseDown1,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Bite
         .{
+            .effect = .FlinchChance1,
             .bp = 60,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Growl
         .{
+            .effect = .AttackDown1,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Roar
         .{
+            .effect = .SwitchAndTeleport,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Sing
         .{
+            .effect = .Sleep,
             .bp = 0,
             .type = .Normal,
-            .acc = 5,
+            .acc = 5, // 55%
         },
         // Supersonic
         .{
+            .effect = .Confusion,
             .bp = 0,
             .type = .Normal,
-            .acc = 5,
+            .acc = 5, // 55%
         },
         // SonicBoom
         .{
+            .effect = .SpecialDamage,
             .bp = 0,
             .type = .Normal,
-            .acc = 12,
+            .acc = 12, // 90%
         },
         // Disable
         .{
+            .effect = .Disable,
             .bp = 0,
             .type = .Normal,
-            .acc = 5,
+            .acc = 5, // 55%
         },
         // Acid
         .{
+            .effect = .DefenseDownChance,
             .bp = 40,
             .type = .Poison,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Ember
         .{
+            .effect = .BurnChance1,
             .bp = 40,
             .type = .Fire,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Flamethrower
         .{
+            .effect = .BurnChance1,
             .bp = 95,
             .type = .Fire,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Mist
         .{
+            .effect = .Mist,
             .bp = 0,
             .type = .Ice,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // WaterGun
         .{
+            .effect = .None,
             .bp = 40,
             .type = .Water,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // HydroPump
         .{
+            .effect = .None,
             .bp = 120,
             .type = .Water,
-            .acc = 10,
+            .acc = 10, // 80%
         },
         // Surf
         .{
+            .effect = .None,
             .bp = 95,
             .type = .Water,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // IceBeam
         .{
+            .effect = .FreezeChance,
             .bp = 95,
             .type = .Ice,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Blizzard
         .{
+            .effect = .FreezeChance,
             .bp = 120,
             .type = .Ice,
-            .acc = 12,
+            .acc = 12, // 90%
         },
         // Psybeam
         .{
+            .effect = .ConfusionChance,
             .bp = 65,
             .type = .Psychic,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // BubbleBeam
         .{
+            .effect = .SpeedDownChance,
             .bp = 65,
             .type = .Water,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // AuroraBeam
         .{
+            .effect = .AttackDownChance,
             .bp = 65,
             .type = .Ice,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // HyperBeam
         .{
+            .effect = .HyperBeam,
             .bp = 150,
             .type = .Normal,
-            .acc = 12,
+            .acc = 12, // 90%
         },
         // Peck
         .{
+            .effect = .None,
             .bp = 35,
             .type = .Flying,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // DrillPeck
         .{
+            .effect = .None,
             .bp = 80,
             .type = .Flying,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Submission
         .{
+            .effect = .Recoil,
             .bp = 80,
             .type = .Fighting,
-            .acc = 10,
+            .acc = 10, // 80%
         },
         // LowKick
         .{
+            .effect = .FlinchChance2,
             .bp = 50,
             .type = .Fighting,
-            .acc = 12,
+            .acc = 12, // 90%
         },
         // Counter
         .{
+            .effect = .None,
             .bp = 1,
             .type = .Fighting,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // SeismicToss
         .{
+            .effect = .SpecialDamage,
             .bp = 1,
             .type = .Fighting,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Strength
         .{
+            .effect = .None,
             .bp = 80,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Absorb
         .{
+            .effect = .DrainHP,
             .bp = 20,
             .type = .Grass,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // MegaDrain
         .{
+            .effect = .DrainHP,
             .bp = 40,
             .type = .Grass,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // LeechSeed
         .{
+            .effect = .LeechSeed,
             .bp = 0,
             .type = .Grass,
-            .acc = 12,
+            .acc = 12, // 90%
         },
         // Growth
         .{
+            .effect = .SpecialUp1,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // RazorLeaf
         .{
+            .effect = .HighCritical,
             .bp = 55,
             .type = .Grass,
-            .acc = 13,
+            .acc = 13, // 95%
         },
         // SolarBeam
         .{
+            .effect = .Charge,
             .bp = 120,
             .type = .Grass,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // PoisonPowder
         .{
+            .effect = .Poison,
             .bp = 0,
             .type = .Poison,
-            .acc = 9,
+            .acc = 9, // 75%
         },
         // StunSpore
         .{
+            .effect = .Paralyze,
             .bp = 0,
             .type = .Grass,
-            .acc = 9,
+            .acc = 9, // 75%
         },
         // SleepPowder
         .{
+            .effect = .Sleep,
             .bp = 0,
             .type = .Grass,
-            .acc = 9,
+            .acc = 9, // 75%
         },
         // PetalDance
         .{
+            .effect = .Locking,
             .bp = 70,
             .type = .Grass,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // StringShot
         .{
+            .effect = .SpeedDown1,
             .bp = 0,
             .type = .Bug,
-            .acc = 13,
+            .acc = 13, // 95%
         },
         // DragonRage
         .{
+            .effect = .SpecialDamage,
             .bp = 1,
             .type = .Dragon,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // FireSpin
         .{
+            .effect = .Trapping,
             .bp = 15,
             .type = .Fire,
-            .acc = 8,
+            .acc = 8, // 70%
         },
         // ThunderShock
         .{
+            .effect = .ParalyzeChance1,
             .bp = 40,
             .type = .Electric,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Thunderbolt
         .{
+            .effect = .ParalyzeChance1,
             .bp = 95,
             .type = .Electric,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // ThunderWave
         .{
+            .effect = .Paralyze,
             .bp = 0,
             .type = .Electric,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Thunder
         .{
+            .effect = .ParalyzeChance1,
             .bp = 120,
             .type = .Electric,
-            .acc = 8,
+            .acc = 8, // 70%
         },
         // RockThrow
         .{
+            .effect = .None,
             .bp = 50,
             .type = .Rock,
-            .acc = 7,
+            .acc = 7, // 65%
         },
         // Earthquake
         .{
+            .effect = .None,
             .bp = 100,
             .type = .Ground,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Fissure
         .{
+            .effect = .OHKO,
             .bp = 0,
             .type = .Ground,
-            .acc = 0,
+            .acc = 0, // 30%
         },
         // Dig
         .{
+            .effect = .Charge,
             .bp = 100,
             .type = .Ground,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Toxic
         .{
+            .effect = .Poison,
             .bp = 0,
             .type = .Poison,
-            .acc = 11,
+            .acc = 11, // 85%
         },
         // Confusion
         .{
+            .effect = .ConfusionChance,
             .bp = 50,
             .type = .Psychic,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Psychic
         .{
+            .effect = .SpecialDownChance,
             .bp = 90,
             .type = .Psychic,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Hypnosis
         .{
+            .effect = .Sleep,
             .bp = 0,
             .type = .Psychic,
-            .acc = 6,
+            .acc = 6, // 60%
         },
         // Meditate
         .{
+            .effect = .AttackUp1,
             .bp = 0,
             .type = .Psychic,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Agility
         .{
+            .effect = .SpeedUp2,
             .bp = 0,
             .type = .Psychic,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // QuickAttack
         .{
+            .effect = .None,
             .bp = 40,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Rage
         .{
+            .effect = .Rage,
             .bp = 20,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Teleport
         .{
+            .effect = .SwitchAndTeleport,
             .bp = 0,
             .type = .Psychic,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // NightShade
         .{
+            .effect = .SpecialDamage,
             .bp = 1,
             .type = .Ghost,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Mimic
         .{
+            .effect = .Mimic,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Screech
         .{
+            .effect = .DefenseDown2,
             .bp = 0,
             .type = .Normal,
-            .acc = 11,
+            .acc = 11, // 85%
         },
         // DoubleTeam
         .{
+            .effect = .EvasionUp1,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Recover
         .{
+            .effect = .Heal,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Harden
         .{
+            .effect = .DefenseUp1,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Minimize
         .{
+            .effect = .EvasionUp1,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Smokescreen
         .{
+            .effect = .AccuracyDown1,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // ConfuseRay
         .{
+            .effect = .Confusion,
             .bp = 0,
             .type = .Ghost,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Withdraw
         .{
+            .effect = .DefenseUp1,
             .bp = 0,
             .type = .Water,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // DefenseCurl
         .{
+            .effect = .DefenseUp1,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Barrier
         .{
+            .effect = .DefenseUp2,
             .bp = 0,
             .type = .Psychic,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // LightScreen
         .{
+            .effect = .LightScreen,
             .bp = 0,
             .type = .Psychic,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Haze
         .{
+            .effect = .Haze,
             .bp = 0,
             .type = .Ice,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Reflect
         .{
+            .effect = .Reflect,
             .bp = 0,
             .type = .Psychic,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // FocusEnergy
         .{
+            .effect = .FocusEnergy,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Bide
         .{
+            .effect = .Bide,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Metronome
         .{
+            .effect = .Metronome,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // MirrorMove
         .{
+            .effect = .MirrorMove,
             .bp = 0,
             .type = .Flying,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // SelfDestruct
         .{
+            .effect = .Explode,
             .bp = 130,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // EggBomb
         .{
+            .effect = .None,
             .bp = 100,
             .type = .Normal,
-            .acc = 9,
+            .acc = 9, // 75%
         },
         // Lick
         .{
+            .effect = .ParalyzeChance2,
             .bp = 20,
             .type = .Ghost,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Smog
         .{
+            .effect = .PoisonChance2,
             .bp = 20,
             .type = .Poison,
-            .acc = 8,
+            .acc = 8, // 70%
         },
         // Sludge
         .{
+            .effect = .PoisonChance2,
             .bp = 65,
             .type = .Poison,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // BoneClub
         .{
+            .effect = .FlinchChance1,
             .bp = 65,
             .type = .Ground,
-            .acc = 11,
+            .acc = 11, // 85%
         },
         // FireBlast
         .{
+            .effect = .BurnChance2,
             .bp = 120,
             .type = .Fire,
-            .acc = 11,
+            .acc = 11, // 85%
         },
         // Waterfall
         .{
+            .effect = .None,
             .bp = 80,
             .type = .Water,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Clamp
         .{
+            .effect = .Trapping,
             .bp = 35,
             .type = .Water,
-            .acc = 9,
+            .acc = 9, // 75%
         },
         // Swift
         .{
+            .effect = .Swift,
             .bp = 60,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // SkullBash
         .{
+            .effect = .Charge,
             .bp = 100,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // SpikeCannon
         .{
+            .effect = .MultiHit,
             .bp = 20,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Constrict
         .{
+            .effect = .SpeedDownChance,
             .bp = 10,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Amnesia
         .{
+            .effect = .SpecialUp2,
             .bp = 0,
             .type = .Psychic,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Kinesis
         .{
+            .effect = .AccuracyDown1,
             .bp = 0,
             .type = .Psychic,
-            .acc = 10,
+            .acc = 10, // 80%
         },
         // SoftBoiled
         .{
+            .effect = .Heal,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // HighJumpKick
         .{
+            .effect = .JumpKick,
             .bp = 85,
             .type = .Fighting,
-            .acc = 12,
+            .acc = 12, // 90%
         },
         // Glare
         .{
+            .effect = .Paralyze,
             .bp = 0,
             .type = .Normal,
-            .acc = 9,
+            .acc = 9, // 75%
         },
         // DreamEater
         .{
+            .effect = .DreamEater,
             .bp = 100,
             .type = .Psychic,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // PoisonGas
         .{
+            .effect = .Poison,
             .bp = 0,
             .type = .Poison,
-            .acc = 5,
+            .acc = 5, // 55%
         },
         // Barrage
         .{
+            .effect = .MultiHit,
             .bp = 15,
             .type = .Normal,
-            .acc = 11,
+            .acc = 11, // 85%
         },
         // LeechLife
         .{
+            .effect = .DrainHP,
             .bp = 20,
             .type = .Bug,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // LovelyKiss
         .{
+            .effect = .Sleep,
             .bp = 0,
             .type = .Normal,
-            .acc = 9,
+            .acc = 9, // 75%
         },
         // SkyAttack
         .{
+            .effect = .Charge,
             .bp = 140,
             .type = .Flying,
-            .acc = 12,
+            .acc = 12, // 90%
         },
         // Transform
         .{
+            .effect = .Transform,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Bubble
         .{
+            .effect = .SpeedDownChance,
             .bp = 20,
             .type = .Water,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // DizzyPunch
         .{
+            .effect = .None,
             .bp = 70,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Spore
         .{
+            .effect = .Sleep,
             .bp = 0,
             .type = .Grass,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Flash
         .{
+            .effect = .AccuracyDown1,
             .bp = 0,
             .type = .Normal,
-            .acc = 8,
+            .acc = 8, // 70%
         },
         // Psywave
         .{
+            .effect = .SpecialDamage,
             .bp = 1,
             .type = .Psychic,
-            .acc = 10,
+            .acc = 10, // 80%
         },
         // Splash
         .{
+            .effect = .Splash,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // AcidArmor
         .{
+            .effect = .DefenseUp2,
             .bp = 0,
             .type = .Poison,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Crabhammer
         .{
+            .effect = .HighCritical,
             .bp = 90,
             .type = .Water,
-            .acc = 11,
+            .acc = 11, // 85%
         },
         // Explosion
         .{
+            .effect = .Explode,
             .bp = 170,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // FurySwipes
         .{
+            .effect = .MultiHit,
             .bp = 18,
             .type = .Normal,
-            .acc = 10,
+            .acc = 10, // 80%
         },
         // Bonemerang
         .{
+            .effect = .DoubleHit,
             .bp = 50,
             .type = .Ground,
-            .acc = 12,
+            .acc = 12, // 90%
         },
         // Rest
         .{
+            .effect = .Heal,
             .bp = 0,
             .type = .Psychic,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // RockSlide
         .{
+            .effect = .None,
             .bp = 75,
             .type = .Rock,
-            .acc = 12,
+            .acc = 12, // 90%
         },
         // HyperFang
         .{
+            .effect = .FlinchChance1,
             .bp = 80,
             .type = .Normal,
-            .acc = 12,
+            .acc = 12, // 90%
         },
         // Sharpen
         .{
+            .effect = .AttackUp1,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Conversion
         .{
+            .effect = .Conversion,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // TriAttack
         .{
+            .effect = .None,
             .bp = 80,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // SuperFang
         .{
+            .effect = .SuperFang,
             .bp = 1,
             .type = .Normal,
-            .acc = 12,
+            .acc = 12, // 90%
         },
         // Slash
         .{
+            .effect = .HighCritical,
             .bp = 70,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Substitute
         .{
+            .effect = .Substitute,
             .bp = 0,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
         // Struggle
         .{
+            .effect = .Recoil,
             .bp = 50,
             .type = .Normal,
-            .acc = 14,
+            .acc = 14, // 100%
         },
     };
 
@@ -1356,7 +1598,7 @@ pub const Move = enum(u8) {
 
     comptime {
         assert(@sizeOf(Move) == 1);
-        assert(@sizeOf(@TypeOf(data)) == 330);
+        assert(@sizeOf(@TypeOf(data)) == 495);
     }
 
     pub fn get(id: Move) Data {

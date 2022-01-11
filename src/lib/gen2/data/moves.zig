@@ -8,6 +8,148 @@ const assert = std.debug.assert;
 
 const Type = gen2.Type;
 
+pub const MoveEffect = enum(u8) {
+    None,
+    AccuracyDown1,
+    AccuracyDownChance,
+    AlwaysHit,
+    AttackDown1,
+    AttackDown2,
+    AttackDownChance,
+    AttackUp1,
+    AttackUp2,
+    Attract,
+    BatonPass,
+    BeatUp,
+    BellyDrum,
+    Bide,
+    BoostAllChance,
+    BurnChance,
+    Confusion,
+    ConfusionChance,
+    Conversion,
+    Conversion2,
+    Counter,
+    Curse,
+    DefenseCurl,
+    DefenseDown1,
+    DefenseDown2,
+    DefenseDownChance,
+    DefenseUp1,
+    DefenseUp2,
+    DefenseUpChance,
+    DestinyBond,
+    Disable,
+    DoubleHit,
+    DrainHP,
+    DreamEater,
+    Earthquake,
+    Encore,
+    Endure,
+    EvasionDown1,
+    EvasionUp1,
+    FalseSwipe,
+    FlameWheel,
+    FlinchChance,
+    Fly,
+    FocusEnergy,
+    ForceSwitch,
+    Foresight,
+    FreezeChance,
+    Frustration,
+    FuryCutter,
+    FutureSight,
+    Gust,
+    Heal,
+    HealBell,
+    HiddenPower,
+    HighCritical,
+    HyperBeam,
+    JumpKick,
+    LeechSeed,
+    LevelDamage,
+    LightScreen,
+    LockOn,
+    Locking,
+    Magnitude,
+    MeanLook,
+    Metronome,
+    Mimic,
+    MirrorCoat,
+    MirrorMove,
+    Mist,
+    Moonlight,
+    MorningSun,
+    MultiHit,
+    Nightmare,
+    OHKO,
+    PainSplit,
+    Paralyze,
+    ParalyzeChance,
+    PayDay,
+    PerishSong,
+    Poison,
+    PoisonChance,
+    Present,
+    Priority,
+    Protect,
+    PsychUp,
+    Psywave,
+    Pursuit,
+    Rage,
+    RainDance,
+    RapidSpin,
+    RazorWind,
+    RecoilHit,
+    Reflect,
+    ResetStats,
+    Return,
+    Reversal,
+    Rollout,
+    SacredFire,
+    Safeguard,
+    Sandstorm,
+    Selfdestruct,
+    Sketch,
+    SkullBash,
+    SkyAttack,
+    Sleep,
+    SleepTalk,
+    Snore,
+    Solarbeam,
+    SpAtkUp1,
+    SpDefDownChance,
+    SpDefUp2,
+    SpeedDown1,
+    SpeedDown2,
+    SpeedDownChance,
+    SpeedUp2,
+    Spikes,
+    Spite,
+    Splash,
+    StaticDamage,
+    Stomp,
+    Substitute,
+    SunnyDay,
+    SuperFang,
+    Swagger,
+    Synthesis,
+    Teleport,
+    Thief,
+    Thunder,
+    Toxic,
+    Transform,
+    Trapping,
+    TriAttack,
+    TripleKick,
+    Twineedle,
+    Twister,
+
+    comptime {
+        assert(@sizeOf(MoveEffect) == 1);
+    }
+};
+
 pub const Move = enum(u8) {
     None,
     Pound,
@@ -263,15 +405,15 @@ pub const Move = enum(u8) {
     BeatUp,
 
     pub const Data = packed struct {
+        effect: MoveEffect,
         bp: u8,
         accuracy: u8,
         type: Type,
         pp: u4, // pp / 5
         chance: u4 = 0, // chance / 10
-        // TODO effect and parameter?
 
         comptime {
-            assert(@sizeOf(Data) == 4);
+            assert(@sizeOf(Data) == 5);
             // TODO: Safety check workaround for ziglang/zig#2627
             assert(@bitSizeOf(Data) == @sizeOf(Data) * 8);
         }
@@ -280,6 +422,7 @@ pub const Move = enum(u8) {
     const data = [_]Data{
         // Pound
         .{
+            .effect = .None,
             .bp = 40,
             .type = .Normal,
             .accuracy = 100,
@@ -287,6 +430,7 @@ pub const Move = enum(u8) {
         },
         // KarateChop
         .{
+            .effect = .HighCritical,
             .bp = 50,
             .type = .Fighting,
             .accuracy = 100,
@@ -294,6 +438,7 @@ pub const Move = enum(u8) {
         },
         // DoubleSlap
         .{
+            .effect = .MultiHit,
             .bp = 15,
             .type = .Normal,
             .accuracy = 85,
@@ -301,6 +446,7 @@ pub const Move = enum(u8) {
         },
         // CometPunch
         .{
+            .effect = .MultiHit,
             .bp = 18,
             .type = .Normal,
             .accuracy = 85,
@@ -308,6 +454,7 @@ pub const Move = enum(u8) {
         },
         // MegaPunch
         .{
+            .effect = .None,
             .bp = 80,
             .type = .Normal,
             .accuracy = 85,
@@ -315,6 +462,7 @@ pub const Move = enum(u8) {
         },
         // PayDay
         .{
+            .effect = .PayDay,
             .bp = 40,
             .type = .Normal,
             .accuracy = 100,
@@ -322,6 +470,7 @@ pub const Move = enum(u8) {
         },
         // FirePunch
         .{
+            .effect = .BurnChance,
             .bp = 75,
             .type = .Fire,
             .accuracy = 100,
@@ -330,6 +479,7 @@ pub const Move = enum(u8) {
         },
         // IcePunch
         .{
+            .effect = .FreezeChance,
             .bp = 75,
             .type = .Ice,
             .accuracy = 100,
@@ -338,6 +488,7 @@ pub const Move = enum(u8) {
         },
         // ThunderPunch
         .{
+            .effect = .ParalyzeChance,
             .bp = 75,
             .type = .Electric,
             .accuracy = 100,
@@ -346,6 +497,7 @@ pub const Move = enum(u8) {
         },
         // Scratch
         .{
+            .effect = .None,
             .bp = 40,
             .type = .Normal,
             .accuracy = 100,
@@ -353,6 +505,7 @@ pub const Move = enum(u8) {
         },
         // ViseGrip
         .{
+            .effect = .None,
             .bp = 55,
             .type = .Normal,
             .accuracy = 100,
@@ -360,6 +513,7 @@ pub const Move = enum(u8) {
         },
         // Guillotine
         .{
+            .effect = .OHKO,
             .bp = 0,
             .type = .Normal,
             .accuracy = 30,
@@ -367,6 +521,7 @@ pub const Move = enum(u8) {
         },
         // RazorWind
         .{
+            .effect = .RazorWind,
             .bp = 80,
             .type = .Normal,
             .accuracy = 75,
@@ -374,6 +529,7 @@ pub const Move = enum(u8) {
         },
         // SwordsDance
         .{
+            .effect = .AttackUp2,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -381,6 +537,7 @@ pub const Move = enum(u8) {
         },
         // Cut
         .{
+            .effect = .None,
             .bp = 50,
             .type = .Normal,
             .accuracy = 95,
@@ -388,6 +545,7 @@ pub const Move = enum(u8) {
         },
         // Gust
         .{
+            .effect = .Gust,
             .bp = 40,
             .type = .Flying,
             .accuracy = 100,
@@ -395,6 +553,7 @@ pub const Move = enum(u8) {
         },
         // WingAttack
         .{
+            .effect = .None,
             .bp = 60,
             .type = .Flying,
             .accuracy = 100,
@@ -402,6 +561,7 @@ pub const Move = enum(u8) {
         },
         // Whirlwind
         .{
+            .effect = .ForceSwitch,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -409,6 +569,7 @@ pub const Move = enum(u8) {
         },
         // Fly
         .{
+            .effect = .Fly,
             .bp = 70,
             .type = .Flying,
             .accuracy = 95,
@@ -416,6 +577,7 @@ pub const Move = enum(u8) {
         },
         // Bind
         .{
+            .effect = .Trapping,
             .bp = 15,
             .type = .Normal,
             .accuracy = 75,
@@ -423,6 +585,7 @@ pub const Move = enum(u8) {
         },
         // Slam
         .{
+            .effect = .None,
             .bp = 80,
             .type = .Normal,
             .accuracy = 75,
@@ -430,6 +593,7 @@ pub const Move = enum(u8) {
         },
         // VineWhip
         .{
+            .effect = .None,
             .bp = 35,
             .type = .Grass,
             .accuracy = 100,
@@ -437,6 +601,7 @@ pub const Move = enum(u8) {
         },
         // Stomp
         .{
+            .effect = .Stomp,
             .bp = 65,
             .type = .Normal,
             .accuracy = 100,
@@ -445,6 +610,7 @@ pub const Move = enum(u8) {
         },
         // DoubleKick
         .{
+            .effect = .DoubleHit,
             .bp = 30,
             .type = .Fighting,
             .accuracy = 100,
@@ -452,6 +618,7 @@ pub const Move = enum(u8) {
         },
         // MegaKick
         .{
+            .effect = .None,
             .bp = 120,
             .type = .Normal,
             .accuracy = 75,
@@ -459,6 +626,7 @@ pub const Move = enum(u8) {
         },
         // JumpKick
         .{
+            .effect = .JumpKick,
             .bp = 70,
             .type = .Fighting,
             .accuracy = 95,
@@ -466,6 +634,7 @@ pub const Move = enum(u8) {
         },
         // RollingKick
         .{
+            .effect = .FlinchChance,
             .bp = 60,
             .type = .Fighting,
             .accuracy = 85,
@@ -474,6 +643,7 @@ pub const Move = enum(u8) {
         },
         // SandAttack
         .{
+            .effect = .AccuracyDown1,
             .bp = 0,
             .type = .Ground,
             .accuracy = 100,
@@ -481,6 +651,7 @@ pub const Move = enum(u8) {
         },
         // Headbutt
         .{
+            .effect = .FlinchChance,
             .bp = 70,
             .type = .Normal,
             .accuracy = 100,
@@ -489,6 +660,7 @@ pub const Move = enum(u8) {
         },
         // HornAttack
         .{
+            .effect = .None,
             .bp = 65,
             .type = .Normal,
             .accuracy = 100,
@@ -496,6 +668,7 @@ pub const Move = enum(u8) {
         },
         // FuryAttack
         .{
+            .effect = .MultiHit,
             .bp = 15,
             .type = .Normal,
             .accuracy = 85,
@@ -503,6 +676,7 @@ pub const Move = enum(u8) {
         },
         // HornDrill
         .{
+            .effect = .OHKO,
             .bp = 0,
             .type = .Normal,
             .accuracy = 30,
@@ -510,6 +684,7 @@ pub const Move = enum(u8) {
         },
         // Tackle
         .{
+            .effect = .None,
             .bp = 35,
             .type = .Normal,
             .accuracy = 95,
@@ -517,6 +692,7 @@ pub const Move = enum(u8) {
         },
         // BodySlam
         .{
+            .effect = .ParalyzeChance,
             .bp = 85,
             .type = .Normal,
             .accuracy = 100,
@@ -525,6 +701,7 @@ pub const Move = enum(u8) {
         },
         // Wrap
         .{
+            .effect = .Trapping,
             .bp = 15,
             .type = .Normal,
             .accuracy = 85,
@@ -532,6 +709,7 @@ pub const Move = enum(u8) {
         },
         // TakeDown
         .{
+            .effect = .RecoilHit,
             .bp = 90,
             .type = .Normal,
             .accuracy = 85,
@@ -539,6 +717,7 @@ pub const Move = enum(u8) {
         },
         // Thrash
         .{
+            .effect = .Locking,
             .bp = 90,
             .type = .Normal,
             .accuracy = 100,
@@ -546,6 +725,7 @@ pub const Move = enum(u8) {
         },
         // DoubleEdge
         .{
+            .effect = .RecoilHit,
             .bp = 120,
             .type = .Normal,
             .accuracy = 100,
@@ -553,6 +733,7 @@ pub const Move = enum(u8) {
         },
         // TailWhip
         .{
+            .effect = .DefenseDown1,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -560,6 +741,7 @@ pub const Move = enum(u8) {
         },
         // PoisonSting
         .{
+            .effect = .PoisonChance,
             .bp = 15,
             .type = .Poison,
             .accuracy = 100,
@@ -568,6 +750,7 @@ pub const Move = enum(u8) {
         },
         // Twineedle
         .{
+            .effect = .Twineedle,
             .bp = 25,
             .type = .Bug,
             .accuracy = 100,
@@ -576,6 +759,7 @@ pub const Move = enum(u8) {
         },
         // PinMissile
         .{
+            .effect = .MultiHit,
             .bp = 14,
             .type = .Bug,
             .accuracy = 85,
@@ -583,6 +767,7 @@ pub const Move = enum(u8) {
         },
         // Leer
         .{
+            .effect = .DefenseDown1,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -590,6 +775,7 @@ pub const Move = enum(u8) {
         },
         // Bite
         .{
+            .effect = .FlinchChance,
             .bp = 60,
             .type = .Dark,
             .accuracy = 100,
@@ -598,6 +784,7 @@ pub const Move = enum(u8) {
         },
         // Growl
         .{
+            .effect = .AttackDown1,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -605,6 +792,7 @@ pub const Move = enum(u8) {
         },
         // Roar
         .{
+            .effect = .ForceSwitch,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -612,6 +800,7 @@ pub const Move = enum(u8) {
         },
         // Sing
         .{
+            .effect = .Sleep,
             .bp = 0,
             .type = .Normal,
             .accuracy = 55,
@@ -619,6 +808,7 @@ pub const Move = enum(u8) {
         },
         // Supersonic
         .{
+            .effect = .Confusion,
             .bp = 0,
             .type = .Normal,
             .accuracy = 55,
@@ -626,6 +816,7 @@ pub const Move = enum(u8) {
         },
         // SonicBoom
         .{
+            .effect = .StaticDamage,
             .bp = 0,
             .type = .Normal,
             .accuracy = 90,
@@ -633,6 +824,7 @@ pub const Move = enum(u8) {
         },
         // Disable
         .{
+            .effect = .Disable,
             .bp = 0,
             .type = .Normal,
             .accuracy = 55,
@@ -640,6 +832,7 @@ pub const Move = enum(u8) {
         },
         // Acid
         .{
+            .effect = .DefenseDownChance,
             .bp = 40,
             .type = .Poison,
             .accuracy = 100,
@@ -648,6 +841,7 @@ pub const Move = enum(u8) {
         },
         // Ember
         .{
+            .effect = .BurnChance,
             .bp = 40,
             .type = .Fire,
             .accuracy = 100,
@@ -656,6 +850,7 @@ pub const Move = enum(u8) {
         },
         // Flamethrower
         .{
+            .effect = .BurnChance,
             .bp = 95,
             .type = .Fire,
             .accuracy = 100,
@@ -664,6 +859,7 @@ pub const Move = enum(u8) {
         },
         // Mist
         .{
+            .effect = .Mist,
             .bp = 0,
             .type = .Ice,
             .accuracy = 100,
@@ -671,6 +867,7 @@ pub const Move = enum(u8) {
         },
         // WaterGun
         .{
+            .effect = .None,
             .bp = 40,
             .type = .Water,
             .accuracy = 100,
@@ -678,6 +875,7 @@ pub const Move = enum(u8) {
         },
         // HydroPump
         .{
+            .effect = .None,
             .bp = 120,
             .type = .Water,
             .accuracy = 80,
@@ -685,6 +883,7 @@ pub const Move = enum(u8) {
         },
         // Surf
         .{
+            .effect = .None,
             .bp = 95,
             .type = .Water,
             .accuracy = 100,
@@ -692,6 +891,7 @@ pub const Move = enum(u8) {
         },
         // IceBeam
         .{
+            .effect = .FreezeChance,
             .bp = 95,
             .type = .Ice,
             .accuracy = 100,
@@ -700,6 +900,7 @@ pub const Move = enum(u8) {
         },
         // Blizzard
         .{
+            .effect = .FreezeChance,
             .bp = 120,
             .type = .Ice,
             .accuracy = 70,
@@ -708,6 +909,7 @@ pub const Move = enum(u8) {
         },
         // Psybeam
         .{
+            .effect = .ConfusionChance,
             .bp = 65,
             .type = .Psychic,
             .accuracy = 100,
@@ -716,6 +918,7 @@ pub const Move = enum(u8) {
         },
         // BubbleBeam
         .{
+            .effect = .SpeedDownChance,
             .bp = 65,
             .type = .Water,
             .accuracy = 100,
@@ -724,6 +927,7 @@ pub const Move = enum(u8) {
         },
         // AuroraBeam
         .{
+            .effect = .AttackDownChance,
             .bp = 65,
             .type = .Ice,
             .accuracy = 100,
@@ -732,6 +936,7 @@ pub const Move = enum(u8) {
         },
         // HyperBeam
         .{
+            .effect = .HyperBeam,
             .bp = 150,
             .type = .Normal,
             .accuracy = 90,
@@ -739,6 +944,7 @@ pub const Move = enum(u8) {
         },
         // Peck
         .{
+            .effect = .None,
             .bp = 35,
             .type = .Flying,
             .accuracy = 100,
@@ -746,6 +952,7 @@ pub const Move = enum(u8) {
         },
         // DrillPeck
         .{
+            .effect = .None,
             .bp = 80,
             .type = .Flying,
             .accuracy = 100,
@@ -753,6 +960,7 @@ pub const Move = enum(u8) {
         },
         // Submission
         .{
+            .effect = .RecoilHit,
             .bp = 80,
             .type = .Fighting,
             .accuracy = 80,
@@ -760,6 +968,7 @@ pub const Move = enum(u8) {
         },
         // LowKick
         .{
+            .effect = .FlinchChance,
             .bp = 50,
             .type = .Fighting,
             .accuracy = 90,
@@ -768,6 +977,7 @@ pub const Move = enum(u8) {
         },
         // Counter
         .{
+            .effect = .Counter,
             .bp = 0,
             .type = .Fighting,
             .accuracy = 100,
@@ -775,6 +985,7 @@ pub const Move = enum(u8) {
         },
         // SeismicToss
         .{
+            .effect = .LevelDamage,
             .bp = 0,
             .type = .Fighting,
             .accuracy = 100,
@@ -782,6 +993,7 @@ pub const Move = enum(u8) {
         },
         // Strength
         .{
+            .effect = .None,
             .bp = 80,
             .type = .Normal,
             .accuracy = 100,
@@ -789,6 +1001,7 @@ pub const Move = enum(u8) {
         },
         // Absorb
         .{
+            .effect = .DrainHP,
             .bp = 20,
             .type = .Grass,
             .accuracy = 100,
@@ -796,6 +1009,7 @@ pub const Move = enum(u8) {
         },
         // MegaDrain
         .{
+            .effect = .DrainHP,
             .bp = 40,
             .type = .Grass,
             .accuracy = 100,
@@ -803,6 +1017,7 @@ pub const Move = enum(u8) {
         },
         // LeechSeed
         .{
+            .effect = .LeechSeed,
             .bp = 0,
             .type = .Grass,
             .accuracy = 90,
@@ -810,6 +1025,7 @@ pub const Move = enum(u8) {
         },
         // Growth
         .{
+            .effect = .SpAtkUp1,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -817,6 +1033,7 @@ pub const Move = enum(u8) {
         },
         // RazorLeaf
         .{
+            .effect = .HighCritical,
             .bp = 55,
             .type = .Grass,
             .accuracy = 95,
@@ -824,6 +1041,7 @@ pub const Move = enum(u8) {
         },
         // SolarBeam
         .{
+            .effect = .Solarbeam,
             .bp = 120,
             .type = .Grass,
             .accuracy = 100,
@@ -831,6 +1049,7 @@ pub const Move = enum(u8) {
         },
         // PoisonPowder
         .{
+            .effect = .Poison,
             .bp = 0,
             .type = .Poison,
             .accuracy = 75,
@@ -838,6 +1057,7 @@ pub const Move = enum(u8) {
         },
         // StunSpore
         .{
+            .effect = .Paralyze,
             .bp = 0,
             .type = .Grass,
             .accuracy = 75,
@@ -845,6 +1065,7 @@ pub const Move = enum(u8) {
         },
         // SleepPowder
         .{
+            .effect = .Sleep,
             .bp = 0,
             .type = .Grass,
             .accuracy = 75,
@@ -852,6 +1073,7 @@ pub const Move = enum(u8) {
         },
         // PetalDance
         .{
+            .effect = .Locking,
             .bp = 70,
             .type = .Grass,
             .accuracy = 100,
@@ -859,6 +1081,7 @@ pub const Move = enum(u8) {
         },
         // StringShot
         .{
+            .effect = .SpeedDown1,
             .bp = 0,
             .type = .Bug,
             .accuracy = 95,
@@ -866,6 +1089,7 @@ pub const Move = enum(u8) {
         },
         // DragonRage
         .{
+            .effect = .StaticDamage,
             .bp = 0,
             .type = .Dragon,
             .accuracy = 100,
@@ -873,6 +1097,7 @@ pub const Move = enum(u8) {
         },
         // FireSpin
         .{
+            .effect = .Trapping,
             .bp = 15,
             .type = .Fire,
             .accuracy = 70,
@@ -880,6 +1105,7 @@ pub const Move = enum(u8) {
         },
         // ThunderShock
         .{
+            .effect = .ParalyzeChance,
             .bp = 40,
             .type = .Electric,
             .accuracy = 100,
@@ -888,6 +1114,7 @@ pub const Move = enum(u8) {
         },
         // Thunderbolt
         .{
+            .effect = .ParalyzeChance,
             .bp = 95,
             .type = .Electric,
             .accuracy = 100,
@@ -896,6 +1123,7 @@ pub const Move = enum(u8) {
         },
         // ThunderWave
         .{
+            .effect = .Paralyze,
             .bp = 0,
             .type = .Electric,
             .accuracy = 100,
@@ -903,6 +1131,7 @@ pub const Move = enum(u8) {
         },
         // Thunder
         .{
+            .effect = .Thunder,
             .bp = 120,
             .type = .Electric,
             .accuracy = 70,
@@ -911,6 +1140,7 @@ pub const Move = enum(u8) {
         },
         // RockThrow
         .{
+            .effect = .None,
             .bp = 50,
             .type = .Rock,
             .accuracy = 90,
@@ -918,6 +1148,7 @@ pub const Move = enum(u8) {
         },
         // Earthquake
         .{
+            .effect = .Earthquake,
             .bp = 100,
             .type = .Ground,
             .accuracy = 100,
@@ -925,6 +1156,7 @@ pub const Move = enum(u8) {
         },
         // Fissure
         .{
+            .effect = .OHKO,
             .bp = 0,
             .type = .Ground,
             .accuracy = 30,
@@ -932,6 +1164,7 @@ pub const Move = enum(u8) {
         },
         // Dig
         .{
+            .effect = .Fly,
             .bp = 60,
             .type = .Ground,
             .accuracy = 100,
@@ -939,6 +1172,7 @@ pub const Move = enum(u8) {
         },
         // Toxic
         .{
+            .effect = .Toxic,
             .bp = 0,
             .type = .Poison,
             .accuracy = 85,
@@ -946,6 +1180,7 @@ pub const Move = enum(u8) {
         },
         // Confusion
         .{
+            .effect = .ConfusionChance,
             .bp = 50,
             .type = .Psychic,
             .accuracy = 100,
@@ -954,6 +1189,7 @@ pub const Move = enum(u8) {
         },
         // Psychic
         .{
+            .effect = .SpDefDownChance,
             .bp = 90,
             .type = .Psychic,
             .accuracy = 100,
@@ -962,6 +1198,7 @@ pub const Move = enum(u8) {
         },
         // Hypnosis
         .{
+            .effect = .Sleep,
             .bp = 0,
             .type = .Psychic,
             .accuracy = 60,
@@ -969,6 +1206,7 @@ pub const Move = enum(u8) {
         },
         // Meditate
         .{
+            .effect = .AttackUp1,
             .bp = 0,
             .type = .Psychic,
             .accuracy = 100,
@@ -976,6 +1214,7 @@ pub const Move = enum(u8) {
         },
         // Agility
         .{
+            .effect = .SpeedUp2,
             .bp = 0,
             .type = .Psychic,
             .accuracy = 100,
@@ -983,6 +1222,7 @@ pub const Move = enum(u8) {
         },
         // QuickAttack
         .{
+            .effect = .Priority,
             .bp = 40,
             .type = .Normal,
             .accuracy = 100,
@@ -990,6 +1230,7 @@ pub const Move = enum(u8) {
         },
         // Rage
         .{
+            .effect = .Rage,
             .bp = 20,
             .type = .Normal,
             .accuracy = 100,
@@ -997,6 +1238,7 @@ pub const Move = enum(u8) {
         },
         // Teleport
         .{
+            .effect = .Teleport,
             .bp = 0,
             .type = .Psychic,
             .accuracy = 100,
@@ -1004,6 +1246,7 @@ pub const Move = enum(u8) {
         },
         // NightShade
         .{
+            .effect = .LevelDamage,
             .bp = 0,
             .type = .Ghost,
             .accuracy = 100,
@@ -1011,6 +1254,7 @@ pub const Move = enum(u8) {
         },
         // Mimic
         .{
+            .effect = .Mimic,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1018,6 +1262,7 @@ pub const Move = enum(u8) {
         },
         // Screech
         .{
+            .effect = .DefenseDown2,
             .bp = 0,
             .type = .Normal,
             .accuracy = 85,
@@ -1025,6 +1270,7 @@ pub const Move = enum(u8) {
         },
         // DoubleTeam
         .{
+            .effect = .EvasionUp1,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1032,6 +1278,7 @@ pub const Move = enum(u8) {
         },
         // Recover
         .{
+            .effect = .Heal,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1039,6 +1286,7 @@ pub const Move = enum(u8) {
         },
         // Harden
         .{
+            .effect = .DefenseUp1,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1046,6 +1294,7 @@ pub const Move = enum(u8) {
         },
         // Minimize
         .{
+            .effect = .EvasionUp1,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1053,6 +1302,7 @@ pub const Move = enum(u8) {
         },
         // Smokescreen
         .{
+            .effect = .AccuracyDown1,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1060,6 +1310,7 @@ pub const Move = enum(u8) {
         },
         // ConfuseRay
         .{
+            .effect = .Confusion,
             .bp = 0,
             .type = .Ghost,
             .accuracy = 100,
@@ -1067,6 +1318,7 @@ pub const Move = enum(u8) {
         },
         // Withdraw
         .{
+            .effect = .DefenseUp1,
             .bp = 0,
             .type = .Water,
             .accuracy = 100,
@@ -1074,6 +1326,7 @@ pub const Move = enum(u8) {
         },
         // DefenseCurl
         .{
+            .effect = .DefenseCurl,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1081,6 +1334,7 @@ pub const Move = enum(u8) {
         },
         // Barrier
         .{
+            .effect = .DefenseUp2,
             .bp = 0,
             .type = .Psychic,
             .accuracy = 100,
@@ -1088,6 +1342,7 @@ pub const Move = enum(u8) {
         },
         // LightScreen
         .{
+            .effect = .LightScreen,
             .bp = 0,
             .type = .Psychic,
             .accuracy = 100,
@@ -1095,6 +1350,7 @@ pub const Move = enum(u8) {
         },
         // Haze
         .{
+            .effect = .ResetStats,
             .bp = 0,
             .type = .Ice,
             .accuracy = 100,
@@ -1102,6 +1358,7 @@ pub const Move = enum(u8) {
         },
         // Reflect
         .{
+            .effect = .Reflect,
             .bp = 0,
             .type = .Psychic,
             .accuracy = 100,
@@ -1109,6 +1366,7 @@ pub const Move = enum(u8) {
         },
         // FocusEnergy
         .{
+            .effect = .FocusEnergy,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1116,6 +1374,7 @@ pub const Move = enum(u8) {
         },
         // Bide
         .{
+            .effect = .Bide,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1123,6 +1382,7 @@ pub const Move = enum(u8) {
         },
         // Metronome
         .{
+            .effect = .Metronome,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1130,6 +1390,7 @@ pub const Move = enum(u8) {
         },
         // MirrorMove
         .{
+            .effect = .MirrorMove,
             .bp = 0,
             .type = .Flying,
             .accuracy = 100,
@@ -1137,6 +1398,7 @@ pub const Move = enum(u8) {
         },
         // SelfDestruct
         .{
+            .effect = .Selfdestruct,
             .bp = 200,
             .type = .Normal,
             .accuracy = 100,
@@ -1144,6 +1406,7 @@ pub const Move = enum(u8) {
         },
         // EggBomb
         .{
+            .effect = .None,
             .bp = 100,
             .type = .Normal,
             .accuracy = 75,
@@ -1151,6 +1414,7 @@ pub const Move = enum(u8) {
         },
         // Lick
         .{
+            .effect = .ParalyzeChance,
             .bp = 20,
             .type = .Ghost,
             .accuracy = 100,
@@ -1159,6 +1423,7 @@ pub const Move = enum(u8) {
         },
         // Smog
         .{
+            .effect = .PoisonChance,
             .bp = 20,
             .type = .Poison,
             .accuracy = 70,
@@ -1167,6 +1432,7 @@ pub const Move = enum(u8) {
         },
         // Sludge
         .{
+            .effect = .PoisonChance,
             .bp = 65,
             .type = .Poison,
             .accuracy = 100,
@@ -1175,6 +1441,7 @@ pub const Move = enum(u8) {
         },
         // BoneClub
         .{
+            .effect = .FlinchChance,
             .bp = 65,
             .type = .Ground,
             .accuracy = 85,
@@ -1183,6 +1450,7 @@ pub const Move = enum(u8) {
         },
         // FireBlast
         .{
+            .effect = .BurnChance,
             .bp = 120,
             .type = .Fire,
             .accuracy = 85,
@@ -1191,6 +1459,7 @@ pub const Move = enum(u8) {
         },
         // Waterfall
         .{
+            .effect = .None,
             .bp = 80,
             .type = .Water,
             .accuracy = 100,
@@ -1198,6 +1467,7 @@ pub const Move = enum(u8) {
         },
         // Clamp
         .{
+            .effect = .Trapping,
             .bp = 35,
             .type = .Water,
             .accuracy = 75,
@@ -1205,6 +1475,7 @@ pub const Move = enum(u8) {
         },
         // Swift
         .{
+            .effect = .AlwaysHit,
             .bp = 60,
             .type = .Normal,
             .accuracy = 100,
@@ -1212,6 +1483,7 @@ pub const Move = enum(u8) {
         },
         // SkullBash
         .{
+            .effect = .SkullBash,
             .bp = 100,
             .type = .Normal,
             .accuracy = 100,
@@ -1219,6 +1491,7 @@ pub const Move = enum(u8) {
         },
         // SpikeCannon
         .{
+            .effect = .MultiHit,
             .bp = 20,
             .type = .Normal,
             .accuracy = 100,
@@ -1226,6 +1499,7 @@ pub const Move = enum(u8) {
         },
         // Constrict
         .{
+            .effect = .SpeedDownChance,
             .bp = 10,
             .type = .Normal,
             .accuracy = 100,
@@ -1234,6 +1508,7 @@ pub const Move = enum(u8) {
         },
         // Amnesia
         .{
+            .effect = .SpDefUp2,
             .bp = 0,
             .type = .Psychic,
             .accuracy = 100,
@@ -1241,6 +1516,7 @@ pub const Move = enum(u8) {
         },
         // Kinesis
         .{
+            .effect = .AccuracyDown1,
             .bp = 0,
             .type = .Psychic,
             .accuracy = 80,
@@ -1248,6 +1524,7 @@ pub const Move = enum(u8) {
         },
         // SoftBoiled
         .{
+            .effect = .Heal,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1255,6 +1532,7 @@ pub const Move = enum(u8) {
         },
         // HighJumpKick
         .{
+            .effect = .JumpKick,
             .bp = 85,
             .type = .Fighting,
             .accuracy = 90,
@@ -1262,6 +1540,7 @@ pub const Move = enum(u8) {
         },
         // Glare
         .{
+            .effect = .Paralyze,
             .bp = 0,
             .type = .Normal,
             .accuracy = 75,
@@ -1269,6 +1548,7 @@ pub const Move = enum(u8) {
         },
         // DreamEater
         .{
+            .effect = .DreamEater,
             .bp = 100,
             .type = .Psychic,
             .accuracy = 100,
@@ -1276,6 +1556,7 @@ pub const Move = enum(u8) {
         },
         // PoisonGas
         .{
+            .effect = .Poison,
             .bp = 0,
             .type = .Poison,
             .accuracy = 55,
@@ -1283,6 +1564,7 @@ pub const Move = enum(u8) {
         },
         // Barrage
         .{
+            .effect = .MultiHit,
             .bp = 15,
             .type = .Normal,
             .accuracy = 85,
@@ -1290,6 +1572,7 @@ pub const Move = enum(u8) {
         },
         // LeechLife
         .{
+            .effect = .DrainHP,
             .bp = 20,
             .type = .Bug,
             .accuracy = 100,
@@ -1297,6 +1580,7 @@ pub const Move = enum(u8) {
         },
         // LovelyKiss
         .{
+            .effect = .Sleep,
             .bp = 0,
             .type = .Normal,
             .accuracy = 75,
@@ -1304,6 +1588,7 @@ pub const Move = enum(u8) {
         },
         // SkyAttack
         .{
+            .effect = .SkyAttack,
             .bp = 140,
             .type = .Flying,
             .accuracy = 90,
@@ -1311,6 +1596,7 @@ pub const Move = enum(u8) {
         },
         // Transform
         .{
+            .effect = .Transform,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1318,6 +1604,7 @@ pub const Move = enum(u8) {
         },
         // Bubble
         .{
+            .effect = .SpeedDownChance,
             .bp = 20,
             .type = .Water,
             .accuracy = 100,
@@ -1326,6 +1613,7 @@ pub const Move = enum(u8) {
         },
         // DizzyPunch
         .{
+            .effect = .ConfusionChance,
             .bp = 70,
             .type = .Normal,
             .accuracy = 100,
@@ -1334,6 +1622,7 @@ pub const Move = enum(u8) {
         },
         // Spore
         .{
+            .effect = .Sleep,
             .bp = 0,
             .type = .Grass,
             .accuracy = 100,
@@ -1341,6 +1630,7 @@ pub const Move = enum(u8) {
         },
         // Flash
         .{
+            .effect = .AccuracyDown1,
             .bp = 0,
             .type = .Normal,
             .accuracy = 70,
@@ -1348,6 +1638,7 @@ pub const Move = enum(u8) {
         },
         // Psywave
         .{
+            .effect = .Psywave,
             .bp = 0,
             .type = .Psychic,
             .accuracy = 80,
@@ -1355,6 +1646,7 @@ pub const Move = enum(u8) {
         },
         // Splash
         .{
+            .effect = .Splash,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1362,6 +1654,7 @@ pub const Move = enum(u8) {
         },
         // AcidArmor
         .{
+            .effect = .DefenseUp2,
             .bp = 0,
             .type = .Poison,
             .accuracy = 100,
@@ -1369,6 +1662,7 @@ pub const Move = enum(u8) {
         },
         // Crabhammer
         .{
+            .effect = .HighCritical,
             .bp = 90,
             .type = .Water,
             .accuracy = 85,
@@ -1376,6 +1670,7 @@ pub const Move = enum(u8) {
         },
         // Explosion
         .{
+            .effect = .Selfdestruct,
             .bp = 250,
             .type = .Normal,
             .accuracy = 100,
@@ -1383,6 +1678,7 @@ pub const Move = enum(u8) {
         },
         // FurySwipes
         .{
+            .effect = .MultiHit,
             .bp = 18,
             .type = .Normal,
             .accuracy = 80,
@@ -1390,6 +1686,7 @@ pub const Move = enum(u8) {
         },
         // Bonemerang
         .{
+            .effect = .DoubleHit,
             .bp = 50,
             .type = .Ground,
             .accuracy = 90,
@@ -1397,6 +1694,7 @@ pub const Move = enum(u8) {
         },
         // Rest
         .{
+            .effect = .Heal,
             .bp = 0,
             .type = .Psychic,
             .accuracy = 100,
@@ -1404,6 +1702,7 @@ pub const Move = enum(u8) {
         },
         // RockSlide
         .{
+            .effect = .FlinchChance,
             .bp = 75,
             .type = .Rock,
             .accuracy = 90,
@@ -1412,6 +1711,7 @@ pub const Move = enum(u8) {
         },
         // HyperFang
         .{
+            .effect = .FlinchChance,
             .bp = 80,
             .type = .Normal,
             .accuracy = 90,
@@ -1420,6 +1720,7 @@ pub const Move = enum(u8) {
         },
         // Sharpen
         .{
+            .effect = .AttackUp1,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1427,6 +1728,7 @@ pub const Move = enum(u8) {
         },
         // Conversion
         .{
+            .effect = .Conversion,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1434,6 +1736,7 @@ pub const Move = enum(u8) {
         },
         // TriAttack
         .{
+            .effect = .TriAttack,
             .bp = 80,
             .type = .Normal,
             .accuracy = 100,
@@ -1442,6 +1745,7 @@ pub const Move = enum(u8) {
         },
         // SuperFang
         .{
+            .effect = .SuperFang,
             .bp = 0,
             .type = .Normal,
             .accuracy = 90,
@@ -1449,6 +1753,7 @@ pub const Move = enum(u8) {
         },
         // Slash
         .{
+            .effect = .HighCritical,
             .bp = 70,
             .type = .Normal,
             .accuracy = 100,
@@ -1456,6 +1761,7 @@ pub const Move = enum(u8) {
         },
         // Substitute
         .{
+            .effect = .Substitute,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1463,6 +1769,7 @@ pub const Move = enum(u8) {
         },
         // Struggle
         .{
+            .effect = .RecoilHit,
             .bp = 50,
             .type = .Normal,
             .accuracy = 100,
@@ -1470,6 +1777,7 @@ pub const Move = enum(u8) {
         },
         // Sketch
         .{
+            .effect = .Sketch,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1477,6 +1785,7 @@ pub const Move = enum(u8) {
         },
         // TripleKick
         .{
+            .effect = .TripleKick,
             .bp = 10,
             .type = .Fighting,
             .accuracy = 90,
@@ -1484,6 +1793,7 @@ pub const Move = enum(u8) {
         },
         // Thief
         .{
+            .effect = .Thief,
             .bp = 40,
             .type = .Dark,
             .accuracy = 100,
@@ -1492,6 +1802,7 @@ pub const Move = enum(u8) {
         },
         // SpiderWeb
         .{
+            .effect = .MeanLook,
             .bp = 0,
             .type = .Bug,
             .accuracy = 100,
@@ -1499,6 +1810,7 @@ pub const Move = enum(u8) {
         },
         // MindReader
         .{
+            .effect = .LockOn,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1506,6 +1818,7 @@ pub const Move = enum(u8) {
         },
         // Nightmare
         .{
+            .effect = .Nightmare,
             .bp = 0,
             .type = .Ghost,
             .accuracy = 100,
@@ -1513,6 +1826,7 @@ pub const Move = enum(u8) {
         },
         // FlameWheel
         .{
+            .effect = .FlameWheel,
             .bp = 60,
             .type = .Fire,
             .accuracy = 100,
@@ -1521,6 +1835,7 @@ pub const Move = enum(u8) {
         },
         // Snore
         .{
+            .effect = .Snore,
             .bp = 40,
             .type = .Normal,
             .accuracy = 100,
@@ -1529,6 +1844,7 @@ pub const Move = enum(u8) {
         },
         // Curse
         .{
+            .effect = .Curse,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1536,6 +1852,7 @@ pub const Move = enum(u8) {
         },
         // Flail
         .{
+            .effect = .Reversal,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1543,6 +1860,7 @@ pub const Move = enum(u8) {
         },
         // Conversion2
         .{
+            .effect = .Conversion2,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1550,6 +1868,7 @@ pub const Move = enum(u8) {
         },
         // Aeroblast
         .{
+            .effect = .HighCritical,
             .bp = 100,
             .type = .Flying,
             .accuracy = 95,
@@ -1557,6 +1876,7 @@ pub const Move = enum(u8) {
         },
         // CottonSpore
         .{
+            .effect = .SpeedDown2,
             .bp = 0,
             .type = .Grass,
             .accuracy = 85,
@@ -1564,6 +1884,7 @@ pub const Move = enum(u8) {
         },
         // Reversal
         .{
+            .effect = .Reversal,
             .bp = 0,
             .type = .Fighting,
             .accuracy = 100,
@@ -1571,6 +1892,7 @@ pub const Move = enum(u8) {
         },
         // Spite
         .{
+            .effect = .Spite,
             .bp = 0,
             .type = .Ghost,
             .accuracy = 100,
@@ -1578,6 +1900,7 @@ pub const Move = enum(u8) {
         },
         // PowderSnow
         .{
+            .effect = .FreezeChance,
             .bp = 40,
             .type = .Ice,
             .accuracy = 100,
@@ -1586,6 +1909,7 @@ pub const Move = enum(u8) {
         },
         // Protect
         .{
+            .effect = .Protect,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1593,6 +1917,7 @@ pub const Move = enum(u8) {
         },
         // MachPunch
         .{
+            .effect = .Priority,
             .bp = 40,
             .type = .Fighting,
             .accuracy = 100,
@@ -1600,6 +1925,7 @@ pub const Move = enum(u8) {
         },
         // ScaryFace
         .{
+            .effect = .SpeedDown2,
             .bp = 0,
             .type = .Normal,
             .accuracy = 90,
@@ -1607,6 +1933,7 @@ pub const Move = enum(u8) {
         },
         // FeintAttack
         .{
+            .effect = .AlwaysHit,
             .bp = 60,
             .type = .Dark,
             .accuracy = 100,
@@ -1614,6 +1941,7 @@ pub const Move = enum(u8) {
         },
         // SweetKiss
         .{
+            .effect = .Confusion,
             .bp = 0,
             .type = .Normal,
             .accuracy = 75,
@@ -1621,6 +1949,7 @@ pub const Move = enum(u8) {
         },
         // BellyDrum
         .{
+            .effect = .BellyDrum,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1628,6 +1957,7 @@ pub const Move = enum(u8) {
         },
         // SludgeBomb
         .{
+            .effect = .PoisonChance,
             .bp = 90,
             .type = .Poison,
             .accuracy = 100,
@@ -1636,6 +1966,7 @@ pub const Move = enum(u8) {
         },
         // MudSlap
         .{
+            .effect = .AccuracyDownChance,
             .bp = 20,
             .type = .Ground,
             .accuracy = 100,
@@ -1644,6 +1975,7 @@ pub const Move = enum(u8) {
         },
         // Octazooka
         .{
+            .effect = .AccuracyDownChance,
             .bp = 65,
             .type = .Water,
             .accuracy = 85,
@@ -1652,6 +1984,7 @@ pub const Move = enum(u8) {
         },
         // Spikes
         .{
+            .effect = .Spikes,
             .bp = 0,
             .type = .Ground,
             .accuracy = 100,
@@ -1659,6 +1992,7 @@ pub const Move = enum(u8) {
         },
         // ZapCannon
         .{
+            .effect = .ParalyzeChance,
             .bp = 100,
             .type = .Electric,
             .accuracy = 50,
@@ -1667,6 +2001,7 @@ pub const Move = enum(u8) {
         },
         // Foresight
         .{
+            .effect = .Foresight,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1674,6 +2009,7 @@ pub const Move = enum(u8) {
         },
         // DestinyBond
         .{
+            .effect = .DestinyBond,
             .bp = 0,
             .type = .Ghost,
             .accuracy = 100,
@@ -1681,6 +2017,7 @@ pub const Move = enum(u8) {
         },
         // PerishSong
         .{
+            .effect = .PerishSong,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1688,6 +2025,7 @@ pub const Move = enum(u8) {
         },
         // IcyWind
         .{
+            .effect = .SpeedDownChance,
             .bp = 55,
             .type = .Ice,
             .accuracy = 95,
@@ -1696,6 +2034,7 @@ pub const Move = enum(u8) {
         },
         // Detect
         .{
+            .effect = .Protect,
             .bp = 0,
             .type = .Fighting,
             .accuracy = 100,
@@ -1703,6 +2042,7 @@ pub const Move = enum(u8) {
         },
         // BoneRush
         .{
+            .effect = .MultiHit,
             .bp = 25,
             .type = .Ground,
             .accuracy = 80,
@@ -1710,6 +2050,7 @@ pub const Move = enum(u8) {
         },
         // LockOn
         .{
+            .effect = .LockOn,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1717,6 +2058,7 @@ pub const Move = enum(u8) {
         },
         // Outrage
         .{
+            .effect = .Locking,
             .bp = 90,
             .type = .Dragon,
             .accuracy = 100,
@@ -1724,6 +2066,7 @@ pub const Move = enum(u8) {
         },
         // Sandstorm
         .{
+            .effect = .Sandstorm,
             .bp = 0,
             .type = .Rock,
             .accuracy = 100,
@@ -1731,6 +2074,7 @@ pub const Move = enum(u8) {
         },
         // GigaDrain
         .{
+            .effect = .DrainHP,
             .bp = 60,
             .type = .Grass,
             .accuracy = 100,
@@ -1738,6 +2082,7 @@ pub const Move = enum(u8) {
         },
         // Endure
         .{
+            .effect = .Endure,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1745,6 +2090,7 @@ pub const Move = enum(u8) {
         },
         // Charm
         .{
+            .effect = .AttackDown2,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1752,6 +2098,7 @@ pub const Move = enum(u8) {
         },
         // Rollout
         .{
+            .effect = .Rollout,
             .bp = 30,
             .type = .Rock,
             .accuracy = 90,
@@ -1759,6 +2106,7 @@ pub const Move = enum(u8) {
         },
         // FalseSwipe
         .{
+            .effect = .FalseSwipe,
             .bp = 40,
             .type = .Normal,
             .accuracy = 100,
@@ -1766,6 +2114,7 @@ pub const Move = enum(u8) {
         },
         // Swagger
         .{
+            .effect = .Swagger,
             .bp = 0,
             .type = .Normal,
             .accuracy = 90,
@@ -1773,6 +2122,7 @@ pub const Move = enum(u8) {
         },
         // MilkDrink
         .{
+            .effect = .Heal,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1780,6 +2130,7 @@ pub const Move = enum(u8) {
         },
         // Spark
         .{
+            .effect = .ParalyzeChance,
             .bp = 65,
             .type = .Electric,
             .accuracy = 100,
@@ -1788,6 +2139,7 @@ pub const Move = enum(u8) {
         },
         // FuryCutter
         .{
+            .effect = .FuryCutter,
             .bp = 10,
             .type = .Bug,
             .accuracy = 95,
@@ -1795,6 +2147,7 @@ pub const Move = enum(u8) {
         },
         // SteelWing
         .{
+            .effect = .DefenseUpChance,
             .bp = 70,
             .type = .Steel,
             .accuracy = 90,
@@ -1803,6 +2156,7 @@ pub const Move = enum(u8) {
         },
         // MeanLook
         .{
+            .effect = .MeanLook,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1810,6 +2164,7 @@ pub const Move = enum(u8) {
         },
         // Attract
         .{
+            .effect = .Attract,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1817,6 +2172,7 @@ pub const Move = enum(u8) {
         },
         // SleepTalk
         .{
+            .effect = .SleepTalk,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1824,6 +2180,7 @@ pub const Move = enum(u8) {
         },
         // HealBell
         .{
+            .effect = .HealBell,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1831,6 +2188,7 @@ pub const Move = enum(u8) {
         },
         // Return
         .{
+            .effect = .Return,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1838,6 +2196,7 @@ pub const Move = enum(u8) {
         },
         // Present
         .{
+            .effect = .Present,
             .bp = 0,
             .type = .Normal,
             .accuracy = 90,
@@ -1845,6 +2204,7 @@ pub const Move = enum(u8) {
         },
         // Frustration
         .{
+            .effect = .Frustration,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1852,6 +2212,7 @@ pub const Move = enum(u8) {
         },
         // Safeguard
         .{
+            .effect = .Safeguard,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1859,6 +2220,7 @@ pub const Move = enum(u8) {
         },
         // PainSplit
         .{
+            .effect = .PainSplit,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1866,6 +2228,7 @@ pub const Move = enum(u8) {
         },
         // SacredFire
         .{
+            .effect = .SacredFire,
             .bp = 100,
             .type = .Fire,
             .accuracy = 95,
@@ -1874,6 +2237,7 @@ pub const Move = enum(u8) {
         },
         // Magnitude
         .{
+            .effect = .Magnitude,
             .bp = 0,
             .type = .Ground,
             .accuracy = 100,
@@ -1881,6 +2245,7 @@ pub const Move = enum(u8) {
         },
         // DynamicPunch
         .{
+            .effect = .ConfusionChance,
             .bp = 100,
             .type = .Fighting,
             .accuracy = 50,
@@ -1889,6 +2254,7 @@ pub const Move = enum(u8) {
         },
         // Megahorn
         .{
+            .effect = .None,
             .bp = 120,
             .type = .Bug,
             .accuracy = 85,
@@ -1896,6 +2262,7 @@ pub const Move = enum(u8) {
         },
         // DragonBreath
         .{
+            .effect = .ParalyzeChance,
             .bp = 60,
             .type = .Dragon,
             .accuracy = 100,
@@ -1904,6 +2271,7 @@ pub const Move = enum(u8) {
         },
         // BatonPass
         .{
+            .effect = .BatonPass,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1911,6 +2279,7 @@ pub const Move = enum(u8) {
         },
         // Encore
         .{
+            .effect = .Encore,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1918,6 +2287,7 @@ pub const Move = enum(u8) {
         },
         // Pursuit
         .{
+            .effect = .Pursuit,
             .bp = 40,
             .type = .Dark,
             .accuracy = 100,
@@ -1925,6 +2295,7 @@ pub const Move = enum(u8) {
         },
         // RapidSpin
         .{
+            .effect = .RapidSpin,
             .bp = 20,
             .type = .Normal,
             .accuracy = 100,
@@ -1932,6 +2303,7 @@ pub const Move = enum(u8) {
         },
         // SweetScent
         .{
+            .effect = .EvasionDown1,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1939,6 +2311,7 @@ pub const Move = enum(u8) {
         },
         // IronTail
         .{
+            .effect = .DefenseDownChance,
             .bp = 100,
             .type = .Steel,
             .accuracy = 75,
@@ -1947,6 +2320,7 @@ pub const Move = enum(u8) {
         },
         // MetalClaw
         .{
+            .effect = .AttackDownChance,
             .bp = 50,
             .type = .Steel,
             .accuracy = 95,
@@ -1955,6 +2329,7 @@ pub const Move = enum(u8) {
         },
         // VitalThrow
         .{
+            .effect = .AlwaysHit,
             .bp = 70,
             .type = .Fighting,
             .accuracy = 100,
@@ -1962,6 +2337,7 @@ pub const Move = enum(u8) {
         },
         // MorningSun
         .{
+            .effect = .MorningSun,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1969,6 +2345,7 @@ pub const Move = enum(u8) {
         },
         // Synthesis
         .{
+            .effect = .Synthesis,
             .bp = 0,
             .type = .Grass,
             .accuracy = 100,
@@ -1976,6 +2353,7 @@ pub const Move = enum(u8) {
         },
         // Moonlight
         .{
+            .effect = .Moonlight,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1983,6 +2361,7 @@ pub const Move = enum(u8) {
         },
         // HiddenPower
         .{
+            .effect = .HiddenPower,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -1990,6 +2369,7 @@ pub const Move = enum(u8) {
         },
         // CrossChop
         .{
+            .effect = .HighCritical,
             .bp = 100,
             .type = .Fighting,
             .accuracy = 80,
@@ -1997,6 +2377,7 @@ pub const Move = enum(u8) {
         },
         // Twister
         .{
+            .effect = .Twister,
             .bp = 40,
             .type = .Dragon,
             .accuracy = 100,
@@ -2005,6 +2386,7 @@ pub const Move = enum(u8) {
         },
         // RainDance
         .{
+            .effect = .RainDance,
             .bp = 0,
             .type = .Water,
             .accuracy = 100,
@@ -2012,6 +2394,7 @@ pub const Move = enum(u8) {
         },
         // SunnyDay
         .{
+            .effect = .SunnyDay,
             .bp = 0,
             .type = .Fire,
             .accuracy = 100,
@@ -2019,6 +2402,7 @@ pub const Move = enum(u8) {
         },
         // Crunch
         .{
+            .effect = .SpDefDownChance,
             .bp = 80,
             .type = .Dark,
             .accuracy = 100,
@@ -2027,6 +2411,7 @@ pub const Move = enum(u8) {
         },
         // MirrorCoat
         .{
+            .effect = .MirrorCoat,
             .bp = 0,
             .type = .Psychic,
             .accuracy = 100,
@@ -2034,6 +2419,7 @@ pub const Move = enum(u8) {
         },
         // PsychUp
         .{
+            .effect = .PsychUp,
             .bp = 0,
             .type = .Normal,
             .accuracy = 100,
@@ -2041,6 +2427,7 @@ pub const Move = enum(u8) {
         },
         // ExtremeSpeed
         .{
+            .effect = .Priority,
             .bp = 80,
             .type = .Normal,
             .accuracy = 100,
@@ -2048,6 +2435,7 @@ pub const Move = enum(u8) {
         },
         // AncientPower
         .{
+            .effect = .BoostAllChance,
             .bp = 60,
             .type = .Rock,
             .accuracy = 100,
@@ -2056,6 +2444,7 @@ pub const Move = enum(u8) {
         },
         // ShadowBall
         .{
+            .effect = .SpDefDownChance,
             .bp = 80,
             .type = .Ghost,
             .accuracy = 100,
@@ -2064,6 +2453,7 @@ pub const Move = enum(u8) {
         },
         // FutureSight
         .{
+            .effect = .FutureSight,
             .bp = 80,
             .type = .Psychic,
             .accuracy = 90,
@@ -2071,6 +2461,7 @@ pub const Move = enum(u8) {
         },
         // RockSmash
         .{
+            .effect = .DefenseDownChance,
             .bp = 20,
             .type = .Fighting,
             .accuracy = 100,
@@ -2079,6 +2470,7 @@ pub const Move = enum(u8) {
         },
         // Whirlpool
         .{
+            .effect = .Trapping,
             .bp = 15,
             .type = .Water,
             .accuracy = 70,
@@ -2086,6 +2478,7 @@ pub const Move = enum(u8) {
         },
         // BeatUp
         .{
+            .effect = .BeatUp,
             .bp = 10,
             .type = .Dark,
             .accuracy = 100,
@@ -2095,7 +2488,7 @@ pub const Move = enum(u8) {
 
     comptime {
         assert(@sizeOf(Move) == 1);
-        assert(@sizeOf(@TypeOf(data)) == 1004);
+        assert(@sizeOf(@TypeOf(data)) == 1255);
     }
 
     pub fn get(id: Move) Data {

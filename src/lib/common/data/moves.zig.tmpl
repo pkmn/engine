@@ -7,7 +7,7 @@ const gen{{{ gen }}} = @import("../../gen{{{ gen }}}/data.zig");
 const assert = std.debug.assert;
 
 const Type = gen{{{ gen }}}.Type;
-
+{{{ MoveEffect }}}
 pub const Move = enum({{{ Move.type }}}) {
     None,
     {{{ Move.values }}},
