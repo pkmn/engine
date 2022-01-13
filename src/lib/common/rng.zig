@@ -1,15 +1,110 @@
 const std = @import("std");
+const build_options = @import("build_options");
 
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 
+pub fn FixedRNG(comptime gen: comptime_int, comptime len: usize) type {
+    const Output = switch (gen) {
+        1, 2 => u8,
+        3, 4 => u16,
+        5, 6 => u32,
+        else => unreachable,
+    };
+
+    const divisor = switch (gen) {
+        1, 2 => 0x100,
+        3, 4 => 0x10000,
+        5, 6 => 0x100000000,
+        else => unreachable,
+    };
+
+    return extern struct {
+        const Self = @This();
+
+        rolls: [len]Output,
+        index: usize = 0,
+
+        pub fn next(self: *Self) Output {
+            if (self.index > self.rolls.len) @panic("Insufficient number of rolls provided");
+            const roll = @truncate(Output, self.rolls[self.index]);
+            self.index += 1;
+            return roll;
+        }
+
+        pub fn range(self: *Gen12, from: comptime_int, to: comptime_int) Output {
+            const Cast = std.math.IntFittingRange(from, to);
+            return @truncate(Output, @as(Cast, self.next()) * (to - from) / divisor + from);
+        }
+    };
+}
+
+test "FixedRNG" {
+    const expected = [_]u8{ 42, 255, 0 };
+    var rng = FixedRNG(1, expected.len){ .rolls = expected };
+    for (expected) |e| {
+        try expectEqual(e, rng.next());
+    }
+}
+
+pub fn PRNG(comptime gen: comptime_int) type {
+    const Output = switch (gen) {
+        1, 2 => u8,
+        3, 4 => u16,
+        5, 6 => u32,
+        else => unreachable,
+    };
+
+    const divisor = switch (gen) {
+        1, 2 => 0x100,
+        3, 4 => 0x10000,
+        5, 6 => 0x100000000,
+        else => unreachable,
+    };
+
+    if (build_options.showdown) {
+        return extern struct {
+            const Self = @This();
+
+            src: Gen56,
+
+            pub fn next(self: *Self) Output {
+                return @truncate(Output, self.src.next());
+            }
+
+            pub fn range(self: *Gen12, from: comptime_int, to: comptime_int) Output {
+                const Cast = std.math.IntFittingRange(from, to);
+                return @truncate(Output, @as(Cast, self.next()) * (to - from) / divisor + from);
+            }
+        };
+    } else {
+        const Source = switch (gen) {
+            1, 2 => Gen12,
+            3, 4 => Gen34,
+            5, 6 => Gen56,
+            else => unreachable,
+        };
+
+        return extern struct {
+            const Self = @This();
+
+            src: Source,
+
+            pub fn next(self: *Self) Output {
+                return @truncate(Output, self.src.next());
+            }
+        };
+    }
+}
+
 // https://pkmn.cc/pokered/engine/battle/core.asm#L6644-L6693
 // https://pkmn.cc/pokecrystal/engine/battle/core.asm#L6922-L6938
-pub const Gen12 = packed struct {
-    seed: u8,
+pub const Gen12 = extern struct {
+    seed: [10]u8,
+    index: u8 = 0,
 
     comptime {
-        assert(@sizeOf(Gen12) == 1);
+        assert(@sizeOf(Gen12) == 11);
         // TODO: Safety check workaround for ziglang/zig#2627
         assert(@bitSizeOf(Gen12) == @sizeOf(Gen12) * 8);
     }
@@ -19,28 +114,18 @@ pub const Gen12 = packed struct {
     }
 
     pub fn next(self: *Gen12) u8 {
-        self.advance();
-        return self.seed;
-    }
-
-    fn advance(self: *Gen12) void {
-        self.seed = 5 *% self.seed +% 1;
+        const val = 5 *% self.seed[self.index] +% 1;
+        self.seed[self.index] = val;
+        self.index = (self.index + 1) % 10;
+        return val;
     }
 };
 
 test "Generation I & II" {
-    const data = [_][3]u8{
-        .{ 1, 1, 6 },   .{ 2, 3, 25 },
-        .{ 3, 5, 172 }, .{ 4, 7, 255 },
-        .{ 5, 9, 82 },  .{ 6, 11, 229 },
-    };
-    for (data) |d| {
-        var rng = Gen12{ .seed = d[0] };
-        var i: usize = 0;
-        while (i < d[1]) : (i += 1) {
-            _ = rng.next();
-        }
-        try expectEqual(d[2], rng.seed);
+    const expected = [_]u8{ 6, 11, 16, 21, 26, 31, 36, 41, 46, 51, 31, 56, 81 };
+    var rng = Gen12{ .seed = .{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 } };
+    for (expected) |e| {
+        try expectEqual(e, rng.next());
     }
 
     try expectEqual(@as(u8, 16), Gen12.percent(6) + 1);

@@ -26,6 +26,7 @@ fix:
 test:
 	npm run test
 	zig build test
+	zig build -Dshowdown
 
 check: test lint
 

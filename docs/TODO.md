@@ -58,10 +58,3 @@
   - [ ] disclaimer (Pokémon Showdown comparison - link to `DESIGN.md` for differences with PS)
 - [ ] add big-endian architecture to CI tests (eg. [using
   `qemu-mips`](https://github.com/google/flatbuffers/blob/master/tests/RustTest.sh#L18-L22))
-
-## RNG
-
-- [ ] determine whether PS `prng.randomChance(1, 2);` is compatible with `rng.next() >=
-  Gen12.percent(50) + 1;` (exhaustively test all 256 seeds)
-- [ ] design common API for `randomChance`, `shuffle`, `sample` as necessary, export `Random`
-  class that returns correct class based on `showdown` build option

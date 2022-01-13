@@ -17,10 +17,10 @@ pub const GameType = enum {
     Doubles,
 };
 
-pub fn Battle(comptime game_type: GameType) type {
+pub fn Battle(comptime PRNG: anytype, comptime game_type: GameType) type {
     return extern struct {
         sides: [2]Side(game_type),
-        rng: rng.Gen34,
+        rng: PRNG,
         turn: u8 = 0,
 
         pub fn p1(self: *Battle) *Side {

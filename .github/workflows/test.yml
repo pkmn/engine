@@ -12,6 +12,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+        options: ['-Dshowdown', '']
         zig: [0.9.0, master]
     runs-on: ${{matrix.os}}
     steps:
@@ -21,7 +22,7 @@ jobs:
           version: ${{matrix.zig}}
       - run: npm install
       - run: npm test
-      - run: zig build test
-      - run: zig build test -Drelease-fast
-      - run: zig build
+      - run: zig build test ${{matrix.options}}
+      - run: zig build test ${{matrix.options}} -Drelease-fast
+      - run: zig build ${{matrix.options}}
       - run: zig fmt --check .

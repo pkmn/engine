@@ -1,4 +1,5 @@
 const std = @import("std");
+const build_options = @import("build_options");
 
 const rng = @import("../common/rng.zig");
 const util = @import("../common/util.zig"); // DEBUG
@@ -18,22 +19,33 @@ const Stats = data.Stats;
 const Status = data.Status;
 
 pub const Battle = struct {
-    pub fn init(seed: u8, p1: []const Pokemon, p2: []const Pokemon) data.Battle {
+    pub fn init(
+        comptime rolls: anytype,
+        p1: []const Pokemon,
+        p2: []const Pokemon,
+    ) data.Battle(rng.FixedRNG(1, rolls.len)) {
         return .{
-            .rng = rng.Gen12{ .seed = seed },
+            .rng = .{ .rolls = rolls },
             .sides = .{ Side.init(p1), Side.init(p2) },
         };
     }
 
-    pub fn random(rand: *Random) data.Battle {
+    pub fn random(rand: *Random) data.Battle(rng.PRNG(1)) {
         return .{
-            .rng = .{ .seed = rand.int(u8) },
+            .rng = prng(rand),
             .turn = rand.range(u16, 1, 1000),
             .last_damage = rand.range(u16, 1, 704),
             .sides = .{ Side.random(rand), Side.random(rand) },
         };
     }
 };
+
+pub fn prng(rand: *Random) rng.PRNG(1) {
+    return .{ .src = .{ .seed = if (build_options.showdown) rand.int(u64) else .{
+        rand.int(u8), rand.int(u8), rand.int(u8), rand.int(u8), rand.int(u8),
+        rand.int(u8), rand.int(u8), rand.int(u8), rand.int(u8), rand.int(u8),
+    } } };
+}
 
 pub const Side = struct {
     pub fn init(ps: []const Pokemon) data.Side {
@@ -218,7 +230,7 @@ pub const Pokemon = struct {
 test "Battle" {
     const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
     const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
-    const battle = Battle.init(0, &.{p1}, &.{p2});
+    const battle = Battle.init(.{42}, &.{p1}, &.{p2});
     util.debug.print(battle);
     util.debug.print(Battle.random(&Random.init(5)));
 }

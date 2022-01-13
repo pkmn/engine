@@ -1,4 +1,5 @@
 const std = @import("std");
+const build_options = @import("build_options");
 
 const rng = @import("../common/rng.zig");
 const gen1 = @import("../gen1/data.zig");
@@ -12,24 +13,26 @@ const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 const expect = std.testing.expect;
 
-const Battle = extern struct {
-    turn: u16 = 0,
-    rng: rng.Gen12,
-    field: Field = .{},
-    sides: [2]Side,
+pub fn Battle(comptime PRNG: anytype) type {
+    return extern struct {
+        turn: u16 = 0,
+        rng: PRNG,
+        field: Field = .{},
+        sides: [2]Side,
 
-    comptime {
-        assert(@sizeOf(Battle) == 432);
-    }
+        pub fn p1(self: *Battle) *Side {
+            return &self.sides[0];
+        }
 
-    pub fn p1(self: *Battle) *Side {
-        return &self.sides[0];
-    }
+        pub fn p2(self: *Battle) *Side {
+            return &self.sides[1];
+        }
+    };
+}
 
-    pub fn p2(self: *Battle) *Side {
-        return &self.sides[1];
-    }
-};
+test "Battle" {
+    try expectEqual(if (build_options.showdown) 440 else 442, @sizeOf(Battle(rng.PRNG(2))));
+}
 
 const Field = packed struct {
     weather: Weather.Data = .{},

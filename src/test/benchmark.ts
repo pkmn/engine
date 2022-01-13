@@ -21,8 +21,6 @@ import {
 import {Stats, Tracker} from 'trakr';
 import minimist from 'minimist';
 
-import {Gen12RNG, Gen34RNG, Gen56RNG} from './rng';
-
 Teams.setGeneratorFactory(TeamGenerators);
 
 const TAG = 'time';
@@ -44,37 +42,21 @@ argv.seed = argv.seed
   ? argv.seed.split(',').map((s: string) => Number(s))
   : [1, 2, 3, 4];
 
-const getPRNGs = (format: ID) => {
+const newSeed = (prng: PRNG) => [
+  Math.floor(prng.next() * 0x10000),
+  Math.floor(prng.next() * 0x10000),
+  Math.floor(prng.next() * 0x10000),
+  Math.floor(prng.next() * 0x10000),
+] as PRNGSeed;
+
+const getPRNGs = () => {
   const prng = new PRNG(argv.seed.slice());
-  const p1 = new PRNG([
-    Math.floor(prng.next() * 0x10000),
-    Math.floor(prng.next() * 0x10000),
-    Math.floor(prng.next() * 0x10000),
-    Math.floor(prng.next() * 0x10000),
-  ]);
-  const p2 = new PRNG([
-    Math.floor(prng.next() * 0x10000),
-    Math.floor(prng.next() * 0x10000),
-    Math.floor(prng.next() * 0x10000),
-    Math.floor(prng.next() * 0x10000),
-  ]);
-  switch (format) {
-  case 'gen1randombattle':
-  case 'gen2randombattle':
-    return {p1, p2, battle: new Gen12RNG(argv.seed)};
-  case 'gen3randombattle':
-  case 'gen4randombattle':
-    return {p1, p2, battle: new Gen34RNG(argv.seed)};
-  case 'gen5randombattle':
-  case 'gen6randombattle':
-    return {p1, p2, battle: new Gen56RNG(argv.seed)};
-  default:
-    // TODO: add correct implementations of PRNG for other gens
-    return {p1, p2, battle: new PRNG(argv.seed)};
-  }
+  const p1 = new PRNG(newSeed(prng));
+  const p2 = new PRNG(newSeed(prng));
+  return {p1, p2, battle: new PRNG(argv.seed)};
 };
 
-const ps = async (format: ID, prng: {battle: PRNG; p1: PRNG; p2: PRNG}, tracker?: Tracker) => {
+const ps = async (format: ID, prng: { battle: PRNG; p1: PRNG; p2: PRNG }, tracker?: Tracker) => {
   const seed = prng.battle.seed;
   const battleStream = new PRNGOverrideBattleStream(prng.battle);
   const streams = BattleStreams.getPlayerStreams(battleStream);
@@ -124,7 +106,7 @@ class PRNGOverrideBattleStream extends BattleStreams.BattleStream {
 }
 
 // TODO: make this the PS implementation and actually implement a @pkmn/engine function
-const pkmn = (format: ID, prng: {battle: PRNG; p1: PRNG; p2: PRNG}, tracker?: Tracker) => {
+const pkmn = (format: ID, prng: { battle: PRNG; p1: PRNG; p2: PRNG }, tracker?: Tracker) => {
   const battle = new DirectBattle({formatid: format, seed: prng.battle.seed}, prng.battle);
   const p1 = new RandomPlayerAI(null!, {seed: prng.p1});
   p1.choose = choice => battle.choose('p1', choice);
@@ -161,11 +143,11 @@ class DirectBattle extends Battle {
   }
 
   // Drop logs to minimize overhead
-  hint(hint: string, once?: boolean, side?: Side) {}
-  addSplit(side: SideID, secret: any[], shared?: any[]) {}
-  add(...parts: (any | (() => {side: SideID; secret: string; shared: string}))[]) {}
-  addMove(...args: any[]) {}
-  retargetLastMove(newTarget: Pokemon) {}
+  hint(hint: string, once?: boolean, side?: Side) { }
+  addSplit(side: SideID, secret: any[], shared?: any[]) { }
+  add(...parts: (any | (() => { side: SideID; secret: string; shared: string }))[]) { }
+  addMove(...args: any[]) { }
+  retargetLastMove(newTarget: Pokemon) { }
 
   // Override to avoid wasted |update| and |end| work
   sendUpdates() {
@@ -228,15 +210,15 @@ const report = (a: Stats, b: Stats, turns: number) => {
 };
 
 (async () => {
-  const totals: {[format: string]: number} = {};
-  const trackers: {[format: string]: {[name: string]: Tracker}} = {};
+  const totals: { [format: string]: number } = {};
+  const trackers: { [format: string]: { [name: string]: Tracker } } = {};
 
   for (const format of FORMATS) {
     const control = {turns: 0, seed: [0, 0, 0, 0]};
     trackers[format] = {};
 
     for (const [name, engine] of [['Pokémon Showdown!', ps], ['@pkmn/engine', pkmn]] as const) {
-      const prngs = getPRNGs(format);
+      const prngs = getPRNGs();
       let turns = 0;
       for (let i = 0; i < argv.warmup; i++) {
         turns += await engine(format, prngs);
@@ -245,7 +227,7 @@ const report = (a: Stats, b: Stats, turns: number) => {
       if (global.gc) global.gc();
 
       const tracker = (trackers[format][name] =
-          Tracker.create({buf: Buffer.alloc(argv.iterations * (8 + 1))}));
+        Tracker.create({buf: Buffer.alloc(argv.iterations * (8 + 1))}));
       for (let i = 0; i < argv.iterations; i++) {
         turns += await engine(format, prngs, tracker);
       }

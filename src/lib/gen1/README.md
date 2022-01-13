@@ -206,7 +206,7 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
     types can be computed from its species
 - **`Side`**: `ActivePokemon` + 6× `Pokemon` + active (`3`) + lasted used (`8`) + last selected
   (`8`)
-- **`Battle`**: 6× `Side` + seed (`8`) + turn (`10`) + last damage (`10`)
+- **`Battle`**: 6× `Side` + seed (10× `8` + `4`) + turn (`10`) + last damage (`10`)
 - **`Type.chart`**: attacking types (`15`) × defending types (`15`) × effectiveness (`2`)[^1]
 - **`Moves`**: 164× base power (`6`) + effect (`7`) + accuracy (`4`) + type: (`4`)
 
@@ -215,7 +215,7 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 | `Pokemon`       | 176         | 139          | 36.6%    |
 | `ActivePokemon` | 288         | 194          | 48.5%    |
 | `Side`          | 1376        | 1047         | 31.4%    |
-| `Battle`        | 2800        | 2122         | 32.0%    |
+| `Battle`        | 2800        | 2198         | 31.0%    |
 | `Type.chart`    | 1800        | 450          | 300.0%   |
 | `Moves.data`    | 2640        | 3444         | 14.3%    |
 

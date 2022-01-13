@@ -1,4 +1,5 @@
 const std = @import("std");
+const build_options = @import("build_options");
 const builtin = @import("builtin");
 
 const rng = @import("../common/rng.zig");
@@ -14,24 +15,26 @@ const expect = std.testing.expect;
 
 const bit = util.bit;
 
-pub const Battle = extern struct {
-    rng: rng.Gen12,
-    turn: u16 = 0,
-    last_damage: u16 = 0,
-    sides: [2]Side,
+pub fn Battle(comptime PRNG: anytype) type {
+    return extern struct {
+        rng: PRNG,
+        turn: u16 = 0,
+        last_damage: u16 = 0,
+        sides: [2]Side,
 
-    comptime {
-        assert(@sizeOf(Battle) == 349 + @sizeOf(rng.Gen12));
-    }
+        pub fn p1(self: *Battle) *Side {
+            return &self.sides[0];
+        }
 
-    pub fn p1(self: *Battle) *Side {
-        return &self.sides[0];
-    }
+        pub fn p2(self: *Battle) *Side {
+            return &self.sides[1];
+        }
+    };
+}
 
-    pub fn p2(self: *Battle) *Side {
-        return &self.sides[1];
-    }
-};
+test "Battle" {
+    try expectEqual(if (build_options.showdown) 356 else 360, @sizeOf(Battle(rng.PRNG(1))));
+}
 
 pub const Side = extern struct {
     team: [6]Pokemon = [_]Pokemon{.{}} ** 6,
