@@ -1,66 +1,13 @@
 const std = @import("std");
 const build_options = @import("build_options");
+const builtin = @import("builtin");
 
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 
-pub fn FixedRNG(comptime gen: comptime_int, comptime len: usize) type {
-    const Output = switch (gen) {
-        1, 2 => u8,
-        3, 4 => u16,
-        5, 6 => u32,
-        else => unreachable,
-    };
-
-    const divisor = switch (gen) {
-        1, 2 => 0x100,
-        3, 4 => 0x10000,
-        5, 6 => 0x100000000,
-        else => unreachable,
-    };
-
-    return extern struct {
-        const Self = @This();
-
-        rolls: [len]Output,
-        index: usize = 0,
-
-        pub fn next(self: *Self) Output {
-            if (self.index > self.rolls.len) @panic("Insufficient number of rolls provided");
-            const roll = @truncate(Output, self.rolls[self.index]);
-            self.index += 1;
-            return roll;
-        }
-
-        pub fn range(self: *Gen12, from: comptime_int, to: comptime_int) Output {
-            const Cast = std.math.IntFittingRange(from, to);
-            return @truncate(Output, @as(Cast, self.next()) * (to - from) / divisor + from);
-        }
-    };
-}
-
-test "FixedRNG" {
-    const expected = [_]u8{ 42, 255, 0 };
-    var rng = FixedRNG(1, expected.len){ .rolls = expected };
-    for (expected) |e| {
-        try expectEqual(e, rng.next());
-    }
-}
-
 pub fn PRNG(comptime gen: comptime_int) type {
-    const Output = switch (gen) {
-        1, 2 => u8,
-        3, 4 => u16,
-        5, 6 => u32,
-        else => unreachable,
-    };
-
-    const divisor = switch (gen) {
-        1, 2 => 0x100,
-        3, 4 => 0x10000,
-        5, 6 => 0x100000000,
-        else => unreachable,
-    };
+    const Output = getOutputSize(gen);
+    const divisor = getRangeDivisor(gen);
 
     if (build_options.showdown) {
         return extern struct {
@@ -207,11 +154,65 @@ test "Generation V & VI" {
     }
 }
 
+fn getOutputSize(comptime gen: comptime_int) type {
+    return switch (gen) {
+        1, 2 => u8,
+        3, 4 => u16,
+        5, 6 => u32,
+        else => unreachable,
+    };
+}
+
+fn getRangeDivisor(comptime gen: comptime_int) comptime_int {
+    return switch (gen) {
+        1, 2 => 0x100,
+        3, 4 => 0x10000,
+        5, 6 => 0x100000000,
+        else => unreachable,
+    };
+}
+
+// @test-only
+pub fn FixedRNG(comptime gen: comptime_int, comptime len: usize) type {
+    assert(builtin.is_test);
+
+    const Output = getOutputSize(gen);
+    const divisor = getRangeDivisor(gen);
+
+    return extern struct {
+        const Self = @This();
+
+        rolls: [len]Output,
+        index: usize = 0,
+
+        pub fn next(self: *Self) Output {
+            if (self.index > self.rolls.len) @panic("Insufficient number of rolls provided");
+            const roll = @truncate(Output, self.rolls[self.index]);
+            self.index += 1;
+            return roll;
+        }
+
+        pub fn range(self: *Gen12, from: comptime_int, to: comptime_int) Output {
+            const Cast = std.math.IntFittingRange(from, to);
+            return @truncate(Output, @as(Cast, self.next()) * (to - from) / divisor + from);
+        }
+    };
+}
+
+test "FixedRNG" {
+    const expected = [_]u8{ 42, 255, 0 };
+    var rng = FixedRNG(1, expected.len){ .rolls = expected };
+    for (expected) |e| {
+        try expectEqual(e, rng.next());
+    }
+}
+
 // @test-only
 pub const Random = struct {
     prng: std.rand.DefaultPrng,
 
     pub fn init(seed: u64) Random {
+        assert(builtin.is_test);
         return .{ .prng = std.rand.DefaultPrng.init(seed) };
     }
 
