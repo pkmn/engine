@@ -108,6 +108,7 @@ class PRNGOverrideBattleStream extends BattleStreams.BattleStream {
 // TODO: make this the PS implementation and actually implement a @pkmn/engine function
 const pkmn = (format: ID, prng: { battle: PRNG; p1: PRNG; p2: PRNG }, tracker?: Tracker) => {
   const battle = new DirectBattle({formatid: format, seed: prng.battle.seed}, prng.battle);
+  // TODO: can we skip choice parsing entirely?
   const p1 = new RandomPlayerAI(null!, {seed: prng.p1});
   p1.choose = choice => battle.choose('p1', choice);
   const p2 = new RandomPlayerAI(null!, {seed: prng.p2});

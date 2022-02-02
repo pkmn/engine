@@ -1,3 +1,5 @@
+EBC, desync, random number generator, mods
+
 explain difference between engine and simulator (engine: just subset of Battle. no battle stream (driver), no team validator/format awareness etc. minimal protocol support (not full protocol).)
 
 how the engine can be used for the damage calc
@@ -145,3 +147,60 @@ Pokemon Showdown:
 [limits]: https://travisdowns.github.io/blog/2019/06/11/speed-limits.html
 [numbers]: https://github.com/sirupsen/napkin-math#numbers
 [costs]: http://ithare.com/infographics-operation-costs-in-cpu-clock-cycles/
+
+---
+
+TODO: need separate start battle from update? or do start code in `init`?
+
+### `init`
+
+- iterate through p2 pokemon to find first unfainted (hp != 0)
+- iterate through p1 pokemon, blackout if no pokemon alive, otherwise send out first mon
+
+### `update` (MainInBattleLoop)
+
+- check if p1 hp is 0, handle mon fainted if so
+- check if p2 hp is 0, handle mon fainted if so
+- (volatiles/pre select)
+  - check p1 Recharge/Rage, jump to p2 move if so
+  - reset p2 and p1 flinched
+  - check p1 thrashing about/charging up, jump to p2 move if so
+  - check p1 frozen/sleep, jump to p2 if so
+  - check p1 bide/using wrap, jump to p2 if so
+  - check if p2 using wrap, player cannot execut move, select enemy move
+  - check if player already switched this turn, if so jump to p2 move
+- p2 select move
+  - check if enemy is struggling/, switched
+  - check if p1 is using wrap or metronome (should check mirorr move)
+  - switch enemy mon
+    - copy hp/number/status to roster, send out new mon
+- check p1 quick attack, p2 quick attack
+  - if p1 used quick attack and enemy didnt go first, otherwise if p2 did enemey goes first, otherwise perform same check for Counter
+  - if speed tie, compare speed, do 50% roll for player vs. enemry (PROBLEM: PS speed tie vs. game)
+
+---
+
+- `MainInBattleLoop`
+  - `Handle{Player,Enemy}MonFainted`
+  - check volatiles
+  - `select{Player,Enemy}Move`
+  - check for wrap/metronome
+  - check for quick attack/counter, determine order
+  - `Execute{Enemy,Player}Move`
+    - TODO
+  - `Handle{Player,Enemy}MonFainted`
+  - `HandlePoisonBurnLeechSeed`
+    - check for BRN/PSN, call `HandlePoisonBurnLeechSeed_DecreaseOwnHP`
+    - check for Leechseed, do decrease on opponent -> increase on self
+  - `Handle{Enemy,Player}MonFainted`
+    - `RemoveFaintedPlayerMon`
+    - `AnyPartyAlive`
+    - `HandlePlayerBlackOut`
+    - `FaintEnemyPokemon`
+    - `AnyEnemyPokemonAliveCheck`
+    - `TrainerBattleVictory`
+    - `ChooseNextMon`
+    - `ReplaceFaintedEnemyMon`
+  - `CheckNumAttacksLeft` (check for wrap, clear status if num attacks left is 0)
+  - `MainInBattleLoop` (again)
+  

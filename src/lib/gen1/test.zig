@@ -230,7 +230,8 @@ pub const Pokemon = struct {
 test "Battle" {
     const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
     const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
-    const battle = Battle.init(.{42}, &.{p1}, &.{p2});
+    var battle = Battle.init(.{42}, &.{p1}, &.{p2});
+    _ = battle.update(.{ .type = .Move, .data = 4 }, .{ .type = .Switch, .data = 1 });
     util.debug.print(battle);
     util.debug.print(Battle.random(&Random.init(5)));
 }

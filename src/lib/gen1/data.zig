@@ -17,17 +17,27 @@ const bit = util.bit;
 
 pub fn Battle(comptime PRNG: anytype) type {
     return extern struct {
+        const Self = @This();
+
         rng: PRNG,
         turn: u16 = 0,
         last_damage: u16 = 0,
         sides: [2]Side,
 
-        pub fn p1(self: *Battle) *Side {
+        pub fn p1(self: *Self) *Side {
             return &self.sides[0];
         }
 
-        pub fn p2(self: *Battle) *Side {
+        pub fn p2(self: *Self) *Side {
             return &self.sides[1];
+        }
+
+        pub fn update(self: *Self, c1: Choice, c2: Choice) Result {
+            _ = self;
+            _ = c1;
+            _ = c2;
+            // TODO
+            return .None;
         }
     };
 }
@@ -355,7 +365,7 @@ test "DVs" {
     try expectEqual(@as(u4, 13), dvs.hp());
 }
 
-const Choice = packed struct {
+pub const Choice = packed struct {
     type: Choice.Type = .Pass,
     data: u4 = 0,
 
@@ -372,25 +382,22 @@ const Choice = packed struct {
     }
 };
 
-const Choices = packed struct {
-    p1: Choice = .{},
-    p2: Choice = .{},
-
-    comptime {
-        assert(@sizeOf(Choices) == 2);
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(Choices) == @sizeOf(Choices) * 8);
-    }
-};
-
-test "Choices" {
+test "Choice" {
     const p1: Choice = .{ .type = .Move, .data = 4 };
     const p2: Choice = .{ .type = .Switch, .data = 5 };
-    const choices = Choices{ .p1 = p1, .p2 = p2 };
-    try expectEqual(5, choices.p2.data);
-    try expectEqual(Choice.Type.Move, choices.p1.type);
-    try expectEqual(0b0101_0010_0100_0001, @bitCast(u16, choices));
+    try expectEqual(5, p2.data);
+    try expectEqual(Choice.Type.Move, p1.type);
+    try expectEqual(0b0100_0001, @bitCast(u8, p1));
+    try expectEqual(0b0101_0010, @bitCast(u8, p2));
 }
+
+pub const Result = enum(u3) {
+    None,
+    Win,
+    Lose,
+    Tie,
+    Error, // Desync, EBC, etc.
+};
 
 // TODO DEBUG
 comptime {

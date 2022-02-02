@@ -19,9 +19,12 @@ pub fn PRNG(comptime gen: comptime_int) type {
                 return @truncate(Output, self.src.next());
             }
 
-            pub fn range(self: *Gen12, from: comptime_int, to: comptime_int) Output {
-                const Cast = std.math.IntFittingRange(from, to);
-                return @truncate(Output, @as(Cast, self.next()) * (to - from) / divisor + from);
+            pub fn range(
+                self: *Self,
+                comptime from: comptime_int,
+                comptime to: comptime_int,
+            ) Output {
+                return @truncate(Output, @as(u64, self.src.next()) * (to - from) / divisor + from);
             }
         };
     } else {
@@ -42,6 +45,12 @@ pub fn PRNG(comptime gen: comptime_int) type {
             }
         };
     }
+}
+
+test "PRNG" {
+    if (!build_options.showdown) return error.SkipZigTest;
+    var prng = PRNG(1){ .src = .{ .seed = 0x1234 } };
+    try expectEqual(@as(u8, 191), prng.range(0, 255));
 }
 
 // https://pkmn.cc/pokered/engine/battle/core.asm#L6644-L6693

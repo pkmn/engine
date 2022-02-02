@@ -131,8 +131,9 @@ TODO
   ([new](https://gist.github.com/scheibo/c9ef943ef6e01e350940c8429c378e3b) /
   [current](https://raw.githubusercontent.com/smogon/pokemon-showdown/master/simulator-doc.txt) /
   [old](https://raw.githubusercontent.com/smogon/pokemon-showdown/master/old-simulator-doc.txt))
+- [PokemonBattleEngine](https://github.com/Kermalis/PokemonBattleEngine)
 - [pokebattle](https://github.com/sarenji/pokebattle-sim)
-- [Pokemon Online](https://github.com/po-devs/pokemon-online)
+- [Pokemon Online](https://github.com/po-devs/pokemon-online) documentation ([RBY](https://raw.githubusercontent.com/po-devs/pokemon-online/master/bin/database/rby-stuff.txt))
 - [PokemonLab/Shoddy Battle](https://github.com/cathyjf/PokemonLab)
 
 ### RNG
@@ -158,6 +159,7 @@ TODO
 ### Other
 
 - [Technical Machine](https://github.com/davidstone/technical-machine)
+- [Gen I & II](https://www.smogon.com/forums/threads/past-gens-research-thread.3506992/#post-5878612)
 
 ### Benchmarks
 
