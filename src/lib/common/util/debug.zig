@@ -144,7 +144,12 @@ pub fn inspectN(value: anytype, ais: *Ais, max_depth: usize) !void {
                 ais.pushIndent();
             }
             inline for (info.fields) |f, i| {
-                if (f.default_value) |default_value| {
+                if (f.default_value) |dv| {
+                    // TODO: workaround for ziglang/zig#10766 removing anytype fields
+                    const default_value = if (@hasField(@import("std").zig.Ast.Node.Tag, "anytype"))
+                        dv
+                    else
+                        @ptrCast(*const f.field_type, @alignCast(@alignOf(f.field_type), dv)).*;
                     switch (@typeInfo(f.field_type)) {
                         .ComptimeInt, .Int, .ComptimeFloat, .Float, .Bool, .Optional, .ErrorUnion, .Enum => {
                             if (@field(value, f.name) != default_value) {
