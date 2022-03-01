@@ -9,6 +9,8 @@ const moves = @import("data/moves.zig");
 const species = @import("data/species.zig");
 const types = @import("data/types.zig");
 
+const mechanics = @import("./mechanics.zig");
+
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 const expect = std.testing.expect;
@@ -33,11 +35,7 @@ pub fn Battle(comptime PRNG: anytype) type {
         }
 
         pub fn update(self: *Self, c1: Choice, c2: Choice) Result {
-            _ = self;
-            _ = c1;
-            _ = c2;
-            // TODO
-            return .None;
+            return mechanics.execute(self, c1, c2);
         }
     };
 }
