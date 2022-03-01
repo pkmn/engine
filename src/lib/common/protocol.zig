@@ -1,0 +1,165 @@
+const std = @import("std");
+const build_options = @import("build_options");
+
+const expectEqualSlices = std.testing.expectEqualSlices;
+
+const trace = build_options.trace;
+
+pub fn expectTrace(expected: []const u8, actual: []const u8) !void {
+    if (trace) try expectEqualSlices(u8, expected, actual);
+}
+
+// FIXME order by appearance in gen
+pub const ArgType = enum(u8) {
+    Upkeep,
+    Turn,
+    Win,
+    Tie,
+    Timestamp,
+    Move,
+    Switch,
+    Drag,
+    DetailsChange,
+    Replace,
+    Swap,
+    Cant,
+    Faint,
+    FormeChange,
+    Fail,
+    Block,
+    NoTarget,
+    Miss,
+    Damage,
+    Heal,
+    SetHP,
+    Status,
+    CureStatus,
+    CureTeam,
+    Boost,
+    Unboost,
+    SetBoot,
+    SwapBoost,
+    InvertBoost,
+    ClearBoost,
+    ClearAllBoost,
+    ClearPositiveBoost,
+    ClearNegativeBoost,
+    Weather,
+    FieldStart,
+    FieldEnd,
+    SideStart,
+    SideEnd,
+    SwapSideConditions,
+    Start,
+    End,
+    Crit,
+    SuperEffective,
+    Resisted,
+    Immune,
+    Item,
+    EndItem,
+    Ability,
+    // Gen 7+
+    EndAbility,
+    Transform,
+    Mega,
+    Primal,
+    Burst,
+    ZPower,
+    ZBroken,
+    Activate,
+    Center,
+    Combine,
+    Waiting,
+    Prepare,
+    MustRecharge,
+    HitCount,
+    SingleMove,
+    SingleTurn,
+    OHKO,
+    CanDynamax,
+};
+
+// FIXME order by appearance in gen
+pub const KWArgType = enum(u8) {
+    Ability,
+    Ability2,
+    Block,
+    Broken,
+    Consumed,
+    Damaged,
+    Eat,
+    Fail,
+    Fatigue,
+    Forme,
+    From,
+    Heavy,
+    Item,
+    Miss,
+    Move,
+    Message,
+    Name,
+    NoTarget,
+    Number,
+    Of,
+    OHKO,
+    Silent,
+    Spread,
+    Still,
+    Thaw,
+    Upkeep,
+    Weak,
+    Weaken,
+    Wisher,
+    ZEffect,
+};
+
+pub const Cant = enum(u8) {
+    Sleep,
+    Freeze,
+    PartialTrap,
+    Flinch,
+    Recharging,
+};
+
+// // FIXME not all exist in current gen, could be made smaller
+// pub const KWArgs = struct {
+//     // Broken: bool = false,
+//     // Consumed: bool = false,
+//     // Damage: bool = false,
+//     // Eat: bool = false,
+//     // Fail: bool = false,
+//     // Fatigue: bool = false,
+//     // Forme: bool = false,
+//     // Silent: bool = false,
+
+//     foo: u8 = 0,
+
+//     // Still: bool = false,
+//     // Thaw: bool = false,
+//     // Upkeep: bool = false,
+//     // Weak: bool = false,
+//     // Weaken: bool = false,
+//     // NoTarget: bool = false,
+//     // Heavy: bool = false,
+//     // Miss: bool = false,
+
+//     bar: u8 = 0,
+
+//     // OHKO: bool = false,
+//     // ZEffect: bool = false,
+
+//     baz: u8 = 0,
+
+//     Ability: AbilityName = 0,
+//     Ability2: AbilityName = 0,
+//     Block: MoveName = 0,
+//     From: EffectName = 0,
+//     Item: ItemName = 0,
+//     Move: MoveName = 0,
+//     Name: PokemonIdent = 0,
+//     Number: u8 = 0,
+//     Of: PokemonIdent = 0,
+//     Wisher: PokemonIdent = 0,
+// }; // TOD Spread,
+

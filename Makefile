@@ -4,7 +4,7 @@
 
 build:
 	npm run compile
-	zig build
+	zig build -Dshowdown -Dtrace
 
 install:
 	npm install
@@ -25,8 +25,8 @@ fix:
 
 test:
 	npm run test
+	zig build -Dshowdown -Dtrace test
 	zig build test
-	zig build -Dshowdown
 
 check: test lint
 
@@ -41,4 +41,4 @@ release:
 
 .DEFAULT: build
 
-.PHONY: build install uninstall run generate lint fix test clean
+.PHONY: build install uninstall run generate lint fix test cleank

@@ -7,6 +7,8 @@ const Choice = data.Choice;
 const Result = data.Result;
 const Status = data.Status;
 
+const protocol = @import("./protocol.zig");
+
 const assert = std.debug.assert;
 
 pub fn start(battle: anytype, c1: Choice, c2: Choice) Result {
@@ -20,10 +22,11 @@ pub fn start(battle: anytype, c1: Choice, c2: Choice) Result {
     return .None;
 }
 
-pub fn execute(battle: anytype, c1: Choice, c2: Choice) Result {
+pub fn execute(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     _ = battle;
     _ = c1;
     _ = c2;
+    _ = log;
 
     // Start
     if (battle.turn == 0) {
@@ -40,7 +43,7 @@ pub fn execute(battle: anytype, c1: Choice, c2: Choice) Result {
     return .None;
 }
 
-fn findFirstAlive(side: *const Side) u8 {
+pub fn findFirstAlive(side: *const Side) u8 {
     var i: u8 = 0;
     while (i < side.team.len) : (i += 1) {
         if (side.team[i].hp > 0) {
@@ -50,33 +53,33 @@ fn findFirstAlive(side: *const Side) u8 {
     return 0;
 }
 
-fn beforeMove(p1: *Side, p2: *const Side) bool {
+pub fn beforeMove(p1: *Side, p2: *const Side, log: anytype) !bool {
     if (Status.is(p1.pokemon.status, .SLP)) {
         p1.pokemon.status -= 1;
-        if (!Status.any(p1.pokemon.status)) {
-            // TODO: |cant|POKEMON|slp
-        }
+        if (!Status.any(p1.pokemon.status)) try log.cant(p1.active, .Sleep);
         return false;
     } else if (Status.is(p1.pokemon.status, .FRZ)) {
-        // TODO: |cant|POKEMON|frz
+        try log.cant(p1.active, .Freeze);
         return false;
     } else if (p2.pokemon.volatiles.PartialTrap) {
-        // TODO: |cant|POKEMON|partiallytrapped
+        try log.cant(p1.active, .PartialTrap);
         return false;
     } else if (p1.pokemon.volatiles.Flinch) {
         p1.pokemon.volatiles.Flinch = false;
-        // TODO: |cant|POKEMON|flinched
+        try log.cant(p1.active, .Flinch);
         return false;
     } else if (p1.pokemon.volatiles.Recharging) {
         p1.pokemon.volatiles.Recharging = false;
-        // TODO: |cant|POKEMON|recharge
+        try log.cant(p1.active, .Recharging);
         return false;
         // FIXME: disabled
     }
+
+    return true;
 }
 
 // LoadBattleMonFromParty & SendOutMon
-fn switchIn(side: *const Side, slot: u8) void {
+pub fn switchIn(side: *const Side, slot: u8) void {
     assert(slot != 0);
     _ = side;
 
@@ -118,3 +121,8 @@ fn switchIn(side: *const Side, slot: u8) void {
 //     self.pokemon.types = active.types;
 //     self.active = slot;
 // }
+
+// TODO DEBUG
+comptime {
+    std.testing.refAllDecls(@This());
+}

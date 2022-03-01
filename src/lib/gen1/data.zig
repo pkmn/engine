@@ -34,8 +34,8 @@ pub fn Battle(comptime PRNG: anytype) type {
             return &self.sides[1];
         }
 
-        pub fn update(self: *Self, c1: Choice, c2: Choice) Result {
-            return mechanics.execute(self, c1, c2);
+        pub fn update(self: *Self, c1: Choice, c2: Choice, log: anytype) !Result {
+            return mechanics.execute(self, c1, c2, log);
         }
     };
 }

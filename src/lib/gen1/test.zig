@@ -5,9 +5,12 @@ const rng = @import("../common/rng.zig");
 const util = @import("../common/util.zig"); // DEBUG
 
 const data = @import("data.zig");
+const protocol = @import("protocol.zig");
 
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
+
+const trace = build_options.trace;
 
 const Random = rng.Random;
 
@@ -17,6 +20,9 @@ const MoveSlot = data.MoveSlot;
 const Species = data.Species;
 const Stats = data.Stats;
 const Status = data.Status;
+
+const Log = protocol.Log(std.io.FixedBufferStream([]u8).Writer);
+const expectTrace = protocol.expectTrace;
 
 pub const Battle = struct {
     pub fn init(
@@ -50,7 +56,7 @@ pub fn prng(rand: *Random) rng.PRNG(1) {
 pub const Side = struct {
     pub fn init(ps: []const Pokemon) data.Side {
         assert(ps.len > 0 and ps.len <= 6);
-        var side = data.Side{};
+        var side = data.Side{ .active = 1 };
 
         var i: u4 = 0;
         while (i < ps.len) : (i += 1) {
@@ -222,9 +228,15 @@ test "Battle" {
     const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
     const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
     var battle = Battle.init(.{42}, &.{p1}, &.{p2});
-    _ = battle.update(.{ .type = .Move, .data = 4 }, .{ .type = .Switch, .data = 1 });
+
+    var buf = [_]u8{0} ** 0;
+    var log: Log = .{ .writer = std.io.fixedBufferStream(&buf).writer() };
+
+    _ = try battle.update(.{ .type = .Move, .data = 4 }, .{ .type = .Switch, .data = 1 }, &log);
+    try expectTrace(&[_]u8{}, &buf);
+
     util.debug.print(battle);
-    util.debug.print(Battle.random(&Random.init(5)));
+    // util.debug.print(Battle.random(&Random.init(5)));
 }
 
 // Moves

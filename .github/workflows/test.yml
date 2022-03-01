@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        options: ['-Dshowdown', '']
+        options: ['-Dshowdown', '-Dshowdown -Dtrace', '']
         zig: [0.9.0, master]
     runs-on: ${{matrix.os}}
     steps:
