@@ -31,7 +31,7 @@ pub fn Battle(comptime PRNG: anytype) type {
 }
 
 test "Battle" {
-    try expectEqual(if (build_options.showdown) 440 else 442, @sizeOf(Battle(rng.PRNG(2))));
+    try expectEqual(if (build_options.showdown) 428 else 430, @sizeOf(Battle(rng.PRNG(2))));
 }
 
 const Field = packed struct {
@@ -66,12 +66,13 @@ const Weather = enum(u2) {
 const Side = extern struct {
     team: [6]Pokemon = [_]Pokemon{.{}} ** 6,
     pokemon: ActivePokemon = .{},
+
     conditions: SideConditions,
     active: u8 = 0,
-
     _: u8 = 0,
+
     comptime {
-        assert(@sizeOf(Side) == 214);
+        assert(@sizeOf(Side) == 208);
     }
 
     pub fn get(self: *const Side, slot: u8) *Pokemon {
@@ -112,10 +113,6 @@ const ActivePokemon = extern struct {
     stats: Stats(u16) = .{},
     moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
     boosts: Boosts = .{},
-    hp: u16 = 0,
-    types: Types = .{},
-    level: u8 = 100,
-    status: u8 = 0,
     species: Species = .None,
     item: Item = .None,
 
@@ -127,7 +124,7 @@ const ActivePokemon = extern struct {
     // last_move: Move = .None,
 
     comptime {
-        assert(@sizeOf(ActivePokemon) == 48);
+        assert(@sizeOf(ActivePokemon) == 42);
     }
 };
 

@@ -41,7 +41,7 @@ pub fn Battle(comptime PRNG: anytype) type {
 }
 
 test "Battle" {
-    try expectEqual(if (build_options.showdown) 356 else 360, @sizeOf(Battle(rng.PRNG(1))));
+    try expectEqual(if (build_options.showdown) 342 else 346, @sizeOf(Battle(rng.PRNG(1))));
 }
 
 pub const Side = extern struct {
@@ -51,9 +51,8 @@ pub const Side = extern struct {
     last_used_move: Move = .None,
     last_selected_move: Move = .None,
 
-    _: u8 = 0,
     comptime {
-        assert(@sizeOf(Side) == 172);
+        assert(@sizeOf(Side) == 165);
     }
 
     pub fn get(self: *const Side, slot: u8) *Pokemon {
@@ -67,15 +66,10 @@ pub const ActivePokemon = extern struct {
     moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
     volatiles: Volatiles = .{},
     boosts: Boosts = .{},
-    level: u8 = 100,
-    hp: u16 = 0,
-    status: u8 = 0,
     species: Species = .None,
-    types: Types = .{},
 
-    _: u8 = 0,
     comptime {
-        assert(@sizeOf(ActivePokemon) == 36);
+        assert(@sizeOf(ActivePokemon) == 30);
     }
 };
 

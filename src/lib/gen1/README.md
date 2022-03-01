@@ -69,10 +69,6 @@ represented by the same
 [`Pokemon`](https://github.com/smogon/pokemon-showdown/blob/master/sim/pokemon.ts) class, and static
 party information is saved in fields beginning with "`stored`" or "`base`".
 
-For ergonomics and for performance ([locality of
-reference](https://en.wikipedia.org/wiki/Locality_of_reference)), the level, type, HP, and status
-from `Pokemon` are redundantly stored `ActivePokemon` and synchronized during switches.
-
 #### `MoveSlot`
 
 A `MoveSlot` is a data-type for a `(move, current pp)` pair. A pared down version of Pokémon
@@ -213,9 +209,9 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 | Data            | Actual bits | Minimum bits | Overhead |
 | --------------- | ----------- | ------------ | -------- |
 | `Pokemon`       | 176         | 139          | 36.6%    |
-| `ActivePokemon` | 288         | 194          | 48.5%    |
-| `Side`          | 1376        | 1047         | 31.4%    |
-| `Battle`        | 2800        | 2198         | 31.0%    |
+| `ActivePokemon` | 240         | 194          | 23.7%    |
+| `Side`          | 1320        | 1047         | 26.1%    |
+| `Battle`        | 2768        | 2198         | 25.9%    |
 | `Type.chart`    | 1800        | 450          | 300.0%   |
 | `Moves.data`    | 2640        | 3444         | 14.3%    |
 

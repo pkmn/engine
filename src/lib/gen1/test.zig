@@ -86,11 +86,7 @@ pub const Side = struct {
                 inline for (std.meta.fields(@TypeOf(active.stats))) |field| {
                     @field(active.stats, field.name) = @field(pokemon.stats, field.name);
                 }
-                active.level = pokemon.level;
-                active.hp = pokemon.hp;
-                active.status = pokemon.status;
                 active.species = pokemon.species;
-                active.types = pokemon.types;
                 for (pokemon.moves) |move, j| {
                     active.moves[j] = move;
                 }
@@ -128,11 +124,7 @@ pub const Side = struct {
                         @field(active.boosts, field.name) = rand.range(i4, -6, 6);
                     }
                 }
-                active.level = pokemon.level;
-                active.hp = pokemon.hp;
-                active.status = pokemon.status;
                 active.species = pokemon.species;
-                active.types = pokemon.types;
                 for (pokemon.moves) |move, k| {
                     active.moves[k] = move;
                 }
@@ -145,8 +137,7 @@ pub const Side = struct {
                         } else if (std.mem.eql(u8, field.name, "Confusion")) {
                             active.volatiles.data.confusion = rand.range(u4, 1, 5);
                         } else if (std.mem.eql(u8, field.name, "Toxic")) {
-                            active.status = Status.init(Status.PSN);
-                            pokemon.status = active.status;
+                            pokemon.status = Status.init(Status.PSN);
                             active.volatiles.data.toxic = rand.range(u4, 1, 15);
                         } else if (std.mem.eql(u8, field.name, "Substitute")) {
                             active.volatiles.data.substitute =
