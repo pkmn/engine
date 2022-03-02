@@ -35,7 +35,7 @@ pub fn Battle(comptime PRNG: anytype) type {
         }
 
         pub fn update(self: *Self, c1: Choice, c2: Choice, log: anytype) !Result {
-            return mechanics.execute(self, c1, c2, log);
+            return mechanics.update(self, c1, c2, log);
         }
     };
 }
@@ -56,7 +56,7 @@ pub const Side = extern struct {
     }
 
     pub fn get(self: *const Side, slot: u8) *Pokemon {
-        assert(slot > 0 and slot < 7);
+        assert(slot > 0 and slot <= 6);
         return self.pokemon[slot - 1];
     }
 };
@@ -177,8 +177,6 @@ test "Status" {
 
 pub const Volatiles = packed struct {
     data: Data = Data{},
-
-    _: u6 = 0,
     Bide: bool = false,
     Locked: bool = false,
     MultiHit: bool = false,
@@ -197,6 +195,7 @@ pub const Volatiles = packed struct {
     LightScreen: bool = false,
     Reflect: bool = false,
     Transform: bool = false,
+    _: u6 = 0,
 
     pub const Data = packed struct {
         bide: u16 = 0,

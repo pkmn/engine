@@ -144,12 +144,22 @@ pub const KWArgType = enum(u8) {
     ZEffect,
 };
 
-pub const Reason = enum(u8) {
+pub const Cant = enum(u8) {
     Sleep,
     Freeze,
     Paralysis,
     PartialTrap,
     Flinch,
+    Disable,
     Recharging,
     PP,
+};
+
+pub const Activate = enum(u8) {
+    Confusion,
+};
+
+pub const End = enum(u8) {
+    Disable,
+    Confusion,
 };

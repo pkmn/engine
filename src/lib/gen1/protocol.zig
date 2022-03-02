@@ -6,7 +6,9 @@ const protocol = @import("../common/protocol.zig");
 const trace = build_options.trace;
 
 pub const ArgType = protocol.ArgType;
-pub const Reason = protocol.Reason;
+pub const Activate = protocol.Activate;
+pub const Cant = protocol.Cant;
+pub const End = protocol.End;
 
 pub const expectTrace = protocol.expectTrace;
 
@@ -16,9 +18,33 @@ pub fn Log(comptime Writer: type) type {
 
         writer: Writer,
 
-        pub fn cant(self: *Self, slot: u8, reason: Reason) !void {
+        pub fn cant(self: *Self, slot: u8, reason: Cant) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Cant), slot, @enumToInt(reason) });
+        }
+
+        pub fn disabled(self: *Self, slot: u8, mslot: u8) !void {
+            if (!trace) return;
+            try self.writer.writeAll(&[_]u8{
+                @enumToInt(ArgType.Cant),
+                slot,
+                @enumToInt(Cant.Disable),
+                mslot,
+            });
+        }
+
+        pub fn activate(self: *Self, slot: u8, reason: Activate) !void {
+            if (!trace) return;
+            try self.writer.writeAll(&[_]u8{
+                @enumToInt(ArgType.Activate),
+                slot,
+                @enumToInt(reason),
+            });
+        }
+
+        pub fn end(self: *Self, slot: u8, reason: End) !void {
+            if (!trace) return;
+            try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.End), slot, @enumToInt(reason) });
         }
     };
 }
@@ -32,7 +58,7 @@ test "Log" {
     try log.cant(1, .PartialTrap);
 
     try expectTrace(
-        &[_]u8{ @enumToInt(ArgType.Cant), 1, @enumToInt(Reason.PartialTrap) },
+        &[_]u8{ @enumToInt(ArgType.Cant), 1, @enumToInt(Cant.PartialTrap) },
         &buf,
     );
 }
