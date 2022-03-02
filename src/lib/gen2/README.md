@@ -222,3 +222,62 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 ## Protocol
 
 TODO
+
+```txt
+-activate: _, damage, move, name, number, of
+-anim: _
+-block: _
+-boost: _, from, silent
+-clearallboost: _
+-copyboost: from
+-crit: _
+-curestatus: msg
+-cureteam: from
+-damage: _, from, of, partiallytrapped
+-end: _, from, of, partiallytrapped, silent
+-enditem: _, eat
+-fail: _, block, weak
+-fieldactivate: _
+-heal: _, from, of, silent
+-hint: _
+-hitcount: _
+-immune: _, ohko
+-item: from, of
+-miss: _
+-mustrecharge: _
+-ohko: _
+-prepare: _
+-resisted: _
+-setboost: from
+-sethp: from, silent
+-sideend: _, from, of
+-sidestart: _
+-singlemove: _
+-singleturn: _
+-start: _, of, silent
+-status: _, from, silent
+-supereffective: _
+-transform: _
+-unboost: _
+-weather: _, upkeep
+cant: _
+debug: _
+done: _
+drag: _
+faint: _
+gametype: _
+gen: _
+move: _, from, miss, still
+player: _
+request: _
+rule: _
+start: _
+switch: _, from
+t:: _
+teamsize: _
+tie: _
+tier: _
+turn: _
+upkeep: _
+win: _
+```

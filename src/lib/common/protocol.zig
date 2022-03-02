@@ -9,157 +9,147 @@ pub fn expectTrace(expected: []const u8, actual: []const u8) !void {
     if (trace) try expectEqualSlices(u8, expected, actual);
 }
 
-// FIXME order by appearance in gen
 pub const ArgType = enum(u8) {
-    Upkeep,
-    Turn,
-    Win,
-    Tie,
-    Timestamp,
+    // Gen 1
     Move,
     Switch,
-    Drag,
-    DetailsChange,
-    Replace,
-    Swap,
     Cant,
     Faint,
-    FormeChange,
-    Fail,
-    Block,
-    NoTarget,
-    Miss,
+    Turn,
+    Upkeep,
+    Win,
+    Tie,
     Damage,
     Heal,
-    SetHP,
     Status,
     CureStatus,
-    CureTeam,
     Boost,
     Unboost,
-    SetBoot,
-    SwapBoost,
-    InvertBoost,
-    ClearBoost,
     ClearAllBoost,
-    ClearPositiveBoost,
-    ClearNegativeBoost,
-    Weather,
-    FieldStart,
-    FieldEnd,
-    SideStart,
-    SideEnd,
-    SwapSideConditions,
+    Fail,
+    Block,
+    Miss,
+    HitCount,
+    Prepare,
+    MustRecharge,
+    Activate,
+    FieldActivate,
     Start,
     End,
+    OHKO,
     Crit,
     SuperEffective,
     Resisted,
     Immune,
+    Transform,
+
+    // Gen 2
+    Drag,
     Item,
     EndItem,
-    Ability,
-    // Gen 7+
-    EndAbility,
-    Transform,
-    Mega,
-    Primal,
-    Burst,
-    ZPower,
-    ZBroken,
-    Activate,
-    Center,
-    Combine,
-    Waiting,
-    Prepare,
-    MustRecharge,
-    HitCount,
+    CureTeam,
+    SetHP,
+    SetBoost,
+    CopyBoost,
+    SideStart,
+    SideEnd,
     SingleMove,
     SingleTurn,
-    OHKO,
+    Weather,
+
+    // Gen 3
+    Ability,
+    EndAbility,
+    ClearNegativeBoost,
+    FormeChange,
+    NoTarget,
+
+    // Gen 4
+    SwapBoost,
+    FieldStart,
+    FieldEnd,
+    DetailsChange,
+
+    // Gen 5
+    ClearPoke,
+    Poke,
+    TeamPreview,
+    Center,
+    Swap,
+    Combine,
+    Waiting,
+    Replace,
+    ClearBoost,
+
+    // Gen 6
+    Mega,
+    Primal,
+    InvertBoost,
+
+    // Gen 7
+    ZBroken,
+    ZPower,
+    Burst,
+    ClearPositiveBoost,
+
+    // Gen 8
     CanDynamax,
+    SwapSideConditions,
 };
 
-// FIXME order by appearance in gen
 pub const KWArgType = enum(u8) {
+    // Gen 1
+    From,
+    Of,
+    Damage,
+    Silent,
+    Message,
+    Weak,
+    OHKO,
+    Miss,
+    Still,
+
+    // Gen 2
+    Move,
+    Name,
+    Number,
+    PartiallyTrapped,
+    Upkeep,
+    Block,
+
+    // Gen 3
     Ability,
     Ability2,
-    Block,
-    Broken,
     Consumed,
-    Damaged,
     Eat,
-    Fail,
     Fatigue,
-    Forme,
-    From,
-    Heavy,
-    Item,
-    Miss,
-    Move,
-    Message,
-    Name,
-    NoTarget,
-    Number,
-    Of,
-    OHKO,
-    Silent,
-    Spread,
-    Still,
-    Thaw,
-    Upkeep,
-    Weak,
-    Weaken,
     Wisher,
+    NoTarget,
+    Spread,
+
+    // Gen 4
+    Weaken,
+    Broken,
+
+    // Gen 5
+    Interrupt,
+    Heavy,
+
+    // Gen 6
+    Fail,
+    Forme,
+    Item,
+
+    // Gen 7
     ZEffect,
 };
 
-pub const Cant = enum(u8) {
+pub const Reason = enum(u8) {
     Sleep,
     Freeze,
+    Paralysis,
     PartialTrap,
     Flinch,
     Recharging,
+    PP,
 };
-
-// // FIXME not all exist in current gen, could be made smaller
-// pub const KWArgs = struct {
-//     // Broken: bool = false,
-//     // Consumed: bool = false,
-//     // Damage: bool = false,
-//     // Eat: bool = false,
-//     // Fail: bool = false,
-//     // Fatigue: bool = false,
-//     // Forme: bool = false,
-//     // Silent: bool = false,
-
-//     foo: u8 = 0,
-
-//     // Still: bool = false,
-//     // Thaw: bool = false,
-//     // Upkeep: bool = false,
-//     // Weak: bool = false,
-//     // Weaken: bool = false,
-//     // NoTarget: bool = false,
-//     // Heavy: bool = false,
-//     // Miss: bool = false,
-
-//     bar: u8 = 0,
-
-//     // OHKO: bool = false,
-//     // ZEffect: bool = false,
-
-//     baz: u8 = 0,
-
-//     Ability: AbilityName = 0,
-//     Ability2: AbilityName = 0,
-//     Block: MoveName = 0,
-//     From: EffectName = 0,
-//     Item: ItemName = 0,
-//     Move: MoveName = 0,
-//     Name: PokemonIdent = 0,
-//     Number: u8 = 0,
-//     Of: PokemonIdent = 0,
-//     Wisher: PokemonIdent = 0,
-// }; // TOD Spread,
-

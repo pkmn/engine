@@ -3,7 +3,7 @@
 ## Experiments
 
 - [ ] bit shuffling stdio between Zig and JS (can JS spawn engine and communicate with it)?
-- [ ] determine domain/range in each gen of possible protocol `Args` and `KWArgs`
+- [x] determine domain/range in each gen of possible protocol `Args` and `KWArgs`
 - [ ] `zig-napi-example` based on [`Tigerbeetle-node`](https://github.com/coilhq/tigerbeetle-node)
   - [ ] run on Linus/macOS/Windows
   - [ ] do postinstall of Zig if required (pinned) version is not present + download node headers
