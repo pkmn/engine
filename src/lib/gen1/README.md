@@ -208,10 +208,10 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 
 | Data            | Actual bits | Minimum bits | Overhead |
 | --------------- | ----------- | ------------ | -------- |
-| `Pokemon`       | 176         | 139          | 36.6%    |
+| `Pokemon`       | 192         | 139          | 38.1%    |
 | `ActivePokemon` | 240         | 194          | 23.7%    |
-| `Side`          | 1320        | 1047         | 26.1%    |
-| `Battle`        | 2768        | 2198         | 25.9%    |
+| `Side`          | 1424        | 1047         | 36.0%    |
+| `Battle`        | 2976        | 2198         | 35.4%    |
 | `Type.chart`    | 1800        | 450          | 300.0%   |
 | `Moves.data`    | 2640        | 3444         | 14.3%    |
 

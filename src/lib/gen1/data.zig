@@ -41,7 +41,7 @@ pub fn Battle(comptime PRNG: anytype) type {
 }
 
 test "Battle" {
-    try expectEqual(if (build_options.showdown) 342 else 346, @sizeOf(Battle(rng.PRNG(1))));
+    try expectEqual(if (build_options.showdown) 368 else 372, @sizeOf(Battle(rng.PRNG(1))));
 }
 
 pub const Side = extern struct {
@@ -50,9 +50,10 @@ pub const Side = extern struct {
     active: u8 = 0,
     last_used_move: Move = .None,
     last_selected_move: Move = .None,
+    // 8 bits trailing
 
     comptime {
-        assert(@sizeOf(Side) == 165);
+        assert(@sizeOf(Side) == 178);
     }
 
     pub fn get(self: *const Side, slot: u8) *Pokemon {
@@ -73,20 +74,20 @@ pub const ActivePokemon = extern struct {
     }
 };
 
-pub const Pokemon = packed struct {
+pub const Pokemon = extern struct {
     stats: Stats(u12) = .{},
-    position: u4 = 0,
+    // 4 bits trailing
     moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
     hp: u16 = 0,
     status: u8 = 0,
     species: Species = .None,
     types: Types = .{},
     level: u8 = 100,
+    position: u8 = 0,
+    // 8 bits trailing
 
     comptime {
-        assert(@sizeOf(Pokemon) == 22);
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(Pokemon) == @sizeOf(Pokemon) * 8);
+        assert(@sizeOf(Pokemon) == 24);
     }
 };
 
