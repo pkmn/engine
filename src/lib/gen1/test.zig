@@ -725,4 +725,6 @@ test "Trapping sleep glitch" {
 
 comptime {
     _ = @import("data.zig");
+    _ = @import("mechanics.zig");
+    _ = @import("protocol.zig");
 }

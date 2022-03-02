@@ -4,32 +4,33 @@
 
 The following information is required to simulate a Generation I Pokémon battle:
 
-| pkmn                        | Pokémon Red (pret)                 | Pokémon Showdown                    |
-| --------------------------- | ---------------------------------- | ----------------------------------- |
-| `battle.seed`               | `Random{Add,Sub}`                  | `battle.seed`                       |
-| `battle.turn`               |                                    | `battle.turn`                       |
-| `battle.last_damage`        | `Damage`                           | `battle.lastDamage`                 |
-| `side.{active,pokemon}`     | `PlayerMonNumber`/`BattleMon`      | `side.active`                       |
-| `side.team`                 | `PartyMons`                        | `side.pokemon`                      |
-| `side.last_used_move`       | `PlayerUsedMove`                   | `side.lastMove`                     |
-| `side.last_selected_move`   | `PlayerSelectedMove`               | `side.lastSelectedMove`             |
-| `pokemon.position`          | `TODO`                             | `pokemon.position`                  |
-| `{pokemon,active}.moves`    | `{party,battle}_struct.{Moves,PP}` | `pokemon.{baseMoveSlots,moveSlots}` |
-| `{pokemon,active}.hp`       | `{party,battle}_struct.HP`         | `pokemon.hp`                        |
-| `{pokemon,active}.status`   | `{party,battle}_struct.Status`     | `pokemon.status`                    |
-| `{pokemon,active}.level`    | `PlayerMonUnmodifiedLevel`         | `pokemon.level`                     |
-| `pokemon.species`           | `party_struct.Species`             | `pokemon.baseSpecies`               |
-| `pokemon.stats`             | `PlayerMonUnmodified*`             | `pokemon.baseStoredStats`           |
-| `active.stats`              | `battle_struct.Stats`              | `pokemon.storedStats`               |
-| `active.species`            | `battle_struct.Species`            | `pokemon.species`                   |
-| `{pokemon,active}.types`    | `{party,battle}_struct.Type`       | `pokemon.types`                     |
-| `active.boosts`             | `PlayerMon*Mod`                    | `pokemon.boosts`                    |
-| `active.volatiles`          | `PlayerBattleStatus{1,2,3}`        | `pokemon.volatiles`                 |
-| `volatiles.data.bide`       | `PlayerBideAccumulatedDamage`      | `volatiles.bide.totalDamage`        |
-| `volatiles.data.confusion`  | `PlayerConfusedCounter`            | `volatiles.confusion.duration`      |
-| `volatiles.data.toxic`      | `PlayerToxicCounter`               | `volatiles.residualdmg.counter`     |
-| `volatiles.data.substitute` | `PlayerSubstituteHP`               | `volatiles.substitute.hp`           |
-| `volatiles.data.disabled`   | `PlayerDisabledMove{,Number}`      | `moveSlots.disabled`                |
+| pkmn                        | Pokémon Red (pret)                 | Pokémon Showdown                       |
+| --------------------------- | ---------------------------------- | -------------------------------------- |
+| `battle.seed`               | `Random{Add,Sub}`                  | `battle.seed`                          |
+| `battle.turn`               |                                    | `battle.turn`                          |
+| `battle.last_damage`        | `Damage`                           | `battle.lastDamage`                    |
+| `side.{active,pokemon}`     | `PlayerMonNumber`/`BattleMon`      | `side.active`                          |
+| `side.team`                 | `PartyMons`                        | `side.pokemon`                         |
+| `side.last_used_move`       | `PlayerUsedMove`                   | `side.lastMove`                        |
+| `side.last_selected_move`   | `PlayerSelectedMove`               | `side.lastSelectedMove`                |
+| `pokemon.position`          | `TODO`                             | `pokemon.position`                     |
+| `{pokemon,active}.moves`    | `{party,battle}_struct.{Moves,PP}` | `pokemon.{baseMoveSlots,moveSlots}`    |
+| `{pokemon,active}.hp`       | `{party,battle}_struct.HP`         | `pokemon.hp`                           |
+| `{pokemon,active}.status`   | `{party,battle}_struct.Status`     | `pokemon.status`                       |
+| `{pokemon,active}.level`    | `PlayerMonUnmodifiedLevel`         | `pokemon.level`                        |
+| `pokemon.species`           | `party_struct.Species`             | `pokemon.baseSpecies`                  |
+| `pokemon.stats`             | `PlayerMonUnmodified*`             | `pokemon.baseStoredStats`              |
+| `active.stats`              | `battle_struct.Stats`              | `pokemon.storedStats`                  |
+| `active.species`            | `battle_struct.Species`            | `pokemon.species`                      |
+| `{pokemon,active}.types`    | `{party,battle}_struct.Type`       | `pokemon.types`                        |
+| `active.boosts`             | `PlayerMon*Mod`                    | `pokemon.boosts`                       |
+| `active.volatiles`          | `PlayerBattleStatus{1,2,3}`        | `pokemon.volatiles`                    |
+| `volatiles.data.bide`       | `PlayerBideAccumulatedDamage`      | `volatiles.bide.totalDamage`           |
+| `volatiles.data.attacks`    | `PlayerNumAttacksLeft`             | `volatiles.{bide,lockedmove}.duration` |
+| `volatiles.data.confusion`  | `PlayerConfusedCounter`            | `volatiles.confusion.duration`         |
+| `volatiles.data.toxic`      | `PlayerToxicCounter`               | `volatiles.residualdmg.counter`        |
+| `volatiles.data.substitute` | `PlayerSubstituteHP`               | `volatiles.substitute.hp`              |
+| `volatiles.data.disabled`   | `PlayerDisabledMove{,Number}`      | `moveSlots.disabled`                   |
 
 - Pokémon Showdown does not implement the correct Generation I RNG and as such its `seed` is
   different
@@ -44,8 +45,6 @@ The following information is required to simulate a Generation I Pokémon battle
 - Pokémon Red's `TransformedEnemyMonOriginalDVs` is only relevant for the [Transform DV manipulation
   glitch](https://pkmn.cc/bulba/Transform_glitches#Transform_DV_manipulation_glitch)
 - Pokémon Red's `PlayerMove*` tracks information that is stored in the `Move` class
-- Pokémon Red's `PlayerNumAttacksLeft` is used to implement the multi-hit loop which is handled by
-  other means in pkmn and Pokémon Showdown
 - Pokémon Red's `PlayerStatsToDouble`/`PlayerStatsToHalve` are constants which are always 0
 - pkmn does not store the DVs/stat experience of Pokémon as they are expected to already be
   accounted for in the `Pokemon` `stats` and never need to be referenced in-battle (though the `DVs`

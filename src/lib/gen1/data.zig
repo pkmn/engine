@@ -62,12 +62,11 @@ pub const Side = extern struct {
 
 pub const ActivePokemon = extern struct {
     stats: Stats(u16) = .{},
-    moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
     volatiles: Volatiles = .{},
+    moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
     boosts: Boosts = .{},
     species: Species = .None,
     position: u8 = 0,
-    _: u8 = 0,
 
     comptime {
         assert(@sizeOf(ActivePokemon) == 32);
@@ -203,9 +202,12 @@ pub const Volatiles = packed struct {
     pub const Data = packed struct {
         bide: u16 = 0,
         substitute: u8 = 0,
+        disabled: Disabled = .{},
         confusion: u4 = 0,
         toxic: u4 = 0,
-        disabled: Disabled = .{},
+        attacks: u4 = 0,
+
+        _: u4 = 0,
 
         const Disabled = packed struct {
             move: u4 = 0,
@@ -213,14 +215,14 @@ pub const Volatiles = packed struct {
         };
 
         comptime {
-            assert(@sizeOf(Data) == 5);
+            assert(@sizeOf(Data) == 6);
             // TODO: Safety check workaround for ziglang/zig#2627
             assert(@bitSizeOf(Data) == @sizeOf(Data) * 8);
         }
     };
 
     comptime {
-        assert(@sizeOf(Volatiles) == 8);
+        assert(@sizeOf(Volatiles) == 9);
         // TODO: Safety check workaround for ziglang/zig#2627
         assert(@bitSizeOf(Volatiles) == @sizeOf(Volatiles) * 8);
     }
