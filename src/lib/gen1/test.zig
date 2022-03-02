@@ -10,6 +10,7 @@ const protocol = @import("protocol.zig");
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 
+const showdown = build_options.showdown;
 const trace = build_options.trace;
 
 const Random = rng.Random;
@@ -227,7 +228,7 @@ pub const Pokemon = struct {
 test "Battle" {
     const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
     const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
-    var battle = Battle.init(.{42}, &.{p1}, &.{p2});
+    var battle = Battle.init(.{ 42, if (showdown) 5 else 3 }, &.{p1}, &.{p2});
 
     var buf = [_]u8{0} ** 0;
     var log: Log = .{ .writer = std.io.fixedBufferStream(&buf).writer() };

@@ -2,6 +2,7 @@ const std = @import("std");
 const build_options = @import("build_options");
 
 const rng = @import("../common/rng.zig");
+const Gen12 = rng.Gen12;
 
 const data = @import("./data.zig");
 const Side = data.Side;
@@ -13,6 +14,8 @@ const Move = data.Move;
 const protocol = @import("./protocol.zig");
 
 const assert = std.debug.assert;
+
+const showdown = build_options.showdown;
 
 // FIXME need to prompt c1 and c2 for new choices...? = should be able to tell choice from state?
 pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
@@ -91,8 +94,13 @@ pub fn beforeMove(battle: anytype, mslot: u8, log: anytype) !bool {
             try log.end(p1.active, .Confusion);
         } else {
             try log.activate(p1.active, .Confusion);
-            // FIXME implement random 50%
-            if (false) {
+            const confused = if (showdown) {
+                !battle.rng.chance(128, 256);
+            } else {
+                battle.rng.next() >= Gen12.percent(50) + 1;
+            };
+            if (confused) {
+                // FIXME: implement self hit
                 p1.pokemon.volatiles.Bide = false;
                 p1.pokemon.volatiles.Locked = false;
                 p1.pokemon.volatiles.MultiHit = false;
@@ -109,8 +117,12 @@ pub fn beforeMove(battle: anytype, mslot: u8, log: anytype) !bool {
         return false;
     }
     if (Status.is(p1.pokemon.status, .PAR)) {
-        // FIXME: implement random 25%
-        if (false) {
+        const paralyzed = if (showdown) {
+            battle.rng.chance(63, 256);
+        } else {
+            battle.rng.next() < Gen12.percent(25);
+        };
+        if (paralyzed) {
             p1.pokemon.volatiles.Bide = false;
             p1.pokemon.volatiles.Locked = false;
             p1.pokemon.volatiles.Charging = false;
@@ -125,6 +137,13 @@ pub fn beforeMove(battle: anytype, mslot: u8, log: anytype) !bool {
     }
     if (p1.pokemon.volatiles.Locked) {
         // TODO
+        p1.pokemon.volatiles.Confusion = true;
+        // NOTE: these values will diverge
+        p1.pokemon.volatiles.data.confusion = if (showdown) {
+            battle.rng.range(3, 5);
+        } else {
+            (battle.rng.next() & 3) + 2;
+        };
     }
     if (p1.pokemon.volatiles.PartialTrap) {
         // TODO

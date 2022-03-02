@@ -5,11 +5,13 @@ const builtin = @import("builtin");
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 
+const showdown = build_options.showdown;
+
 pub fn PRNG(comptime gen: comptime_int) type {
     const Output = getOutputSize(gen);
     const divisor = getRangeDivisor(gen);
 
-    if (build_options.showdown) {
+    if (showdown) {
         return extern struct {
             const Self = @This();
 
@@ -25,6 +27,15 @@ pub fn PRNG(comptime gen: comptime_int) type {
                 comptime to: comptime_int,
             ) Output {
                 return @truncate(Output, @as(u64, self.src.next()) * (to - from) / divisor + from);
+            }
+
+            pub fn chance(
+                self: *Self,
+                comptime numerator: comptime_int,
+                comptime denominator: comptime_int,
+            ) bool {
+                assert(denominator > 0);
+                return self.range(0, denominator) < numerator;
             }
         };
     } else {
@@ -48,9 +59,10 @@ pub fn PRNG(comptime gen: comptime_int) type {
 }
 
 test "PRNG" {
-    if (!build_options.showdown) return error.SkipZigTest;
+    if (!showdown) return error.SkipZigTest;
     var prng = PRNG(1){ .src = .{ .seed = 0x1234 } };
-    try expectEqual(@as(u8, 191), prng.range(0, 255));
+    try expectEqual(@as(u8, 50), prng.range(0, 256));
+    try expectEqual(true, prng.chance(128, 256)); // 76 < 128
 }
 
 // https://pkmn.cc/pokered/engine/battle/core.asm#L6644-L6693
@@ -201,9 +213,22 @@ pub fn FixedRNG(comptime gen: comptime_int, comptime len: usize) type {
             return roll;
         }
 
-        pub fn range(self: *Gen12, from: comptime_int, to: comptime_int) Output {
-            const Cast = std.math.IntFittingRange(from, to);
+        pub fn range(
+            self: *Self,
+            comptime from: comptime_int,
+            comptime to: comptime_int,
+        ) Output {
+            const Cast = std.math.IntFittingRange(from, std.math.max(divisor, to * to));
             return @truncate(Output, @as(Cast, self.next()) * (to - from) / divisor + from);
+        }
+
+        pub fn chance(
+            self: *Self,
+            comptime numerator: comptime_int,
+            comptime denominator: comptime_int,
+        ) bool {
+            assert(denominator > 0);
+            return self.range(0, denominator) < numerator;
         }
     };
 }
@@ -238,3 +263,30 @@ pub const Random = struct {
         return self.prng.random().intRangeAtMostBiased(T, min, max);
     }
 };
+
+// const util = @import("../common/util.zig"); // DEBUG
+
+// test "DEBUG TODO" {
+//     var expected: [256]u8 = undefined;
+//     var i: usize = 0;
+//     while (i < expected.len) : (i += 1) {
+//         expected[i] = @truncate(u8, i);
+//     }
+//     var rng1 = FixedRNG(1, expected.len){ .rolls = expected };
+//     var rng2 = FixedRNG(1, expected.len){ .rolls = expected };
+//     i = 0;
+//     while (i < expected.len) : (i += 1) {
+//         // util.debug.print(i);
+
+//         // const a = rng1.chance(63, 256);
+//         // const b = rng2.next() < Gen12.percent(25);
+
+//         // const a = !rng1.chance(128, 256);
+//         // const b = rng2.next() >= Gen12.percent(50) + 1;
+
+//         const a = rng1.range(3, 5);
+//         const b = (rng2.next() & 3) + 2;
+
+//         try expectEqual(a, b);
+//     }
+// }

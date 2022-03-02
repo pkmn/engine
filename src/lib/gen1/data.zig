@@ -177,6 +177,7 @@ test "Status" {
 
 pub const Volatiles = packed struct {
     data: Data = Data{},
+
     Bide: bool = false,
     Locked: bool = false,
     MultiHit: bool = false,
@@ -195,6 +196,7 @@ pub const Volatiles = packed struct {
     LightScreen: bool = false,
     Reflect: bool = false,
     Transform: bool = false,
+
     _: u6 = 0,
 
     pub const Data = packed struct {
