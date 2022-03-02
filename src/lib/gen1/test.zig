@@ -57,12 +57,13 @@ pub fn prng(rand: *Random) rng.PRNG(1) {
 pub const Side = struct {
     pub fn init(ps: []const Pokemon) data.Side {
         assert(ps.len > 0 and ps.len <= 6);
-        var side = data.Side{ .active = 1 };
+        var side = data.Side{};
+        side.active.position = 1;
 
         var i: u4 = 0;
         while (i < ps.len) : (i += 1) {
             const p = ps[i];
-            var pokemon = &side.team[i];
+            var pokemon = &side.pokemon[i];
             pokemon.species = p.species;
             const specie = Species.get(p.species);
             inline for (std.meta.fields(@TypeOf(pokemon.stats))) |field| {
@@ -89,7 +90,7 @@ pub const Side = struct {
             pokemon.types = specie.types;
             pokemon.level = p.level;
             if (i == 0) {
-                var active = &side.pokemon;
+                var active = &side.active;
                 inline for (std.meta.fields(@TypeOf(active.stats))) |field| {
                     @field(active.stats, field.name) = @field(pokemon.stats, field.name);
                 }
@@ -104,25 +105,26 @@ pub const Side = struct {
 
     pub fn random(rand: *Random) data.Side {
         const n = if (rand.chance(1, 100)) rand.range(u4, 1, 5) else 6;
-        var side = data.Side{ .active = 1 };
+        var side = data.Side{};
+        side.active.position = 1;
 
         var i: u4 = 0;
         while (i < n) : (i += 1) {
-            side.team[i] = Pokemon.random(rand);
-            const pokemon = &side.team[i];
+            side.pokemon[i] = Pokemon.random(rand);
+            const pokemon = &side.pokemon[i];
             pokemon.position = i + 1;
             var j: u4 = 0;
             while (j < 4) : (j += 1) {
                 if (rand.chance(1, 5 + (@as(u8, i) * 2))) {
-                    side.last_selected_move = side.team[i].moves[j].id;
+                    side.last_selected_move = side.pokemon[i].moves[j].id;
                 }
                 if (rand.chance(1, 5 + (@as(u8, i) * 2))) {
-                    side.last_used_move = side.team[i].moves[j].id;
+                    side.last_used_move = side.pokemon[i].moves[j].id;
                 }
             }
             if (i == 0) {
-                side.active = 1;
-                var active = &side.pokemon;
+                var active = &side.active;
+                active.position = 1;
                 inline for (std.meta.fields(@TypeOf(active.stats))) |field| {
                     @field(active.stats, field.name) = @field(pokemon.stats, field.name);
                 }
@@ -237,7 +239,7 @@ test "Battle" {
     try expectTrace(&[_]u8{}, &buf);
 
     util.debug.print(battle);
-    // util.debug.print(Battle.random(&Random.init(5)));
+    util.debug.print(Battle.random(&Random.init(5)));
 }
 
 // Moves

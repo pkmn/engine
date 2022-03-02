@@ -31,7 +31,7 @@ pub fn Battle(comptime PRNG: anytype) type {
 }
 
 test "Battle" {
-    try expectEqual(if (build_options.showdown) 428 else 430, @sizeOf(Battle(rng.PRNG(2))));
+    try expectEqual(if (build_options.showdown) 440 else 442, @sizeOf(Battle(rng.PRNG(2))));
 }
 
 const Field = packed struct {
@@ -64,15 +64,12 @@ const Weather = enum(u2) {
 };
 
 const Side = extern struct {
-    team: [6]Pokemon = [_]Pokemon{.{}} ** 6,
-    pokemon: ActivePokemon = .{},
-
+    pokemon: [6]Pokemon = [_]Pokemon{.{}} ** 6,
+    active: ActivePokemon = .{},
     conditions: SideConditions,
-    active: u8 = 0,
-    _: u8 = 0,
 
     comptime {
-        assert(@sizeOf(Side) == 208);
+        assert(@sizeOf(Side) == 214);
     }
 
     pub fn get(self: *const Side, slot: u8) *Pokemon {
@@ -115,36 +112,34 @@ const ActivePokemon = extern struct {
     boosts: Boosts = .{},
     species: Species = .None,
     item: Item = .None,
+    last_move: Move = .None,
+    position: u8 = 0,
 
     // FIXME move to volatiles?
     // trapped: bool = false,
     // switching: bool = false,
 
-    // FIXME store on Side or Volatiles.Data
-    // last_move: Move = .None,
-
     comptime {
-        assert(@sizeOf(ActivePokemon) == 42);
+        assert(@sizeOf(ActivePokemon) == 44);
     }
 };
 
-const Pokemon = packed struct {
+const Pokemon = extern struct {
     stats: Stats(u10) = .{},
-    position: u4 = 0,
+    // 4 bits trailing
     moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
+    types: Types = .{},
+    ivs: IVs = .{},
     hp: u16 = 0,
     status: u8 = 0,
     species: Species = .None,
-    types: Types = .{},
     level: u8 = 100,
     item: Item = .None,
-    ivs: IVs = .{},
     happiness: u8 = 255,
+    position: u8 = 0,
 
     comptime {
-        assert(@sizeOf(Pokemon) == 27);
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(Pokemon) == @sizeOf(Pokemon) * 8);
+        assert(@sizeOf(Pokemon) == 28);
     }
 };
 
@@ -210,6 +205,7 @@ pub const Status = gen1.Status;
 
 const Volatile = packed struct {
     data: Data,
+
     Bide: bool = false,
     Locked: bool = false,
     Flinch: bool = false,
@@ -239,6 +235,7 @@ const Volatile = packed struct {
     LockOn: bool = false,
     DestinyBond: bool = false,
     BeatUp: bool = false,
+
     _: u4 = 0,
 
     const Data = packed struct {

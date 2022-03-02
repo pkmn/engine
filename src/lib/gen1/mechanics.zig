@@ -42,8 +42,8 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
 
 pub fn findFirstAlive(side: *const Side) u4 {
     var i: u4 = 0;
-    while (i < side.team.len) : (i += 1) {
-        if (side.team[i].hp > 0) {
+    while (i < side.pokemon.len) : (i += 1) {
+        if (side.pokemon[i].hp > 0) {
             return i + 1; // index -> slot
         }
     }
@@ -57,43 +57,44 @@ pub fn beforeMove(battle: anytype, mslot: u8, log: anytype) !bool {
     assert(mslot > 0 and mslot <= 4);
     assert(p1.active.moves[mslot - 1].id != .None);
 
-    if (Status.is(p1.pokemon.status, .SLP)) {
-        p1.pokemon.status -= 1;
-        if (!Status.any(p1.pokemon.status)) try log.cant(p1.active, .Sleep);
+    const stored = p1.pokemon[p1.active.position - 1];
+    if (Status.is(stored.status, .SLP)) {
+        stored.status -= 1;
+        if (!Status.any(stored.status)) try log.cant(p1.active.position, .Sleep);
         return false;
     }
-    if (Status.is(p1.pokemon.status, .FRZ)) {
-        try log.cant(p1.active, .Freeze);
+    if (Status.is(stored.status, .FRZ)) {
+        try log.cant(p1.active.position, .Freeze);
         return false;
     }
-    if (p2.pokemon.volatiles.PartialTrap) {
-        try log.cant(p1.active, .PartialTrap);
+    if (p2.active.volatiles.PartialTrap) {
+        try log.cant(p1.active.position, .PartialTrap);
         return false;
     }
-    if (p1.pokemon.volatiles.Flinch) {
-        p1.pokemon.volatiles.Flinch = false;
-        try log.cant(p1.active, .Flinch);
+    if (p1.active.volatiles.Flinch) {
+        p1.active.volatiles.Flinch = false;
+        try log.cant(p1.active.position, .Flinch);
         return false;
     }
-    if (p1.pokemon.volatiles.Recharging) {
-        p1.pokemon.volatiles.Recharging = false;
-        try log.cant(p1.active, .Recharging);
+    if (p1.active.volatiles.Recharging) {
+        p1.active.volatiles.Recharging = false;
+        try log.cant(p1.active.position, .Recharging);
         return false;
     }
-    if (p1.pokemon.volatiles.data.disabled.duration > 0) {
-        p1.pokemon.volatiles.data.disabled.duration -= 1;
-        if (p1.pokemon.volatiles.data.disabled.duration == 0) {
-            p1.pokemon.volatiles.data.disabled.move = 0;
-            try log.end(p1.active, .Disable);
+    if (p1.active.volatiles.data.disabled.duration > 0) {
+        p1.active.volatiles.data.disabled.duration -= 1;
+        if (p1.active.volatiles.data.disabled.duration == 0) {
+            p1.active.volatiles.data.disabled.move = 0;
+            try log.end(p1.active.position, .Disable);
         }
     }
-    if (p1.pokemon.volatiles.Confusion) {
-        p1.pokemon.volatiles.data.confusion -= 1;
-        if (p1.pokemon.volatiles.data.confusion == 0) {
-            p1.pokemon.volatiles.Confusion = false;
-            try log.end(p1.active, .Confusion);
+    if (p1.active.volatiles.Confusion) {
+        p1.active.volatiles.data.confusion -= 1;
+        if (p1.active.volatiles.data.confusion == 0) {
+            p1.active.volatiles.Confusion = false;
+            try log.end(p1.active.position, .Confusion);
         } else {
-            try log.activate(p1.active, .Confusion);
+            try log.activate(p1.active.position, .Confusion);
             const confused = if (showdown) {
                 !battle.rng.chance(128, 256);
             } else {
@@ -101,54 +102,54 @@ pub fn beforeMove(battle: anytype, mslot: u8, log: anytype) !bool {
             };
             if (confused) {
                 // FIXME: implement self hit
-                p1.pokemon.volatiles.Bide = false;
-                p1.pokemon.volatiles.Locked = false;
-                p1.pokemon.volatiles.MultiHit = false;
-                p1.pokemon.volatiles.Flinch = false;
-                p1.pokemon.volatiles.Charging = false;
-                p1.pokemon.volatiles.PartialTrap = false;
-                p1.pokemon.volatiles.Invulnerable = false;
+                p1.active.volatiles.Bide = false;
+                p1.active.volatiles.Locked = false;
+                p1.active.volatiles.MultiHit = false;
+                p1.active.volatiles.Flinch = false;
+                p1.active.volatiles.Charging = false;
+                p1.active.volatiles.PartialTrap = false;
+                p1.active.volatiles.Invulnerable = false;
                 return false;
             }
         }
     }
-    if (p1.pokemon.volatiles.data.disabled.move == mslot) {
-        try log.disabled(p1.active, p1.pokemon.volatiles.data.disabled.move);
+    if (p1.active.volatiles.data.disabled.move == mslot) {
+        try log.disabled(p1.active.position, p1.active.volatiles.data.disabled.move);
         return false;
     }
-    if (Status.is(p1.pokemon.status, .PAR)) {
+    if (Status.is(stored.status, .PAR)) {
         const paralyzed = if (showdown) {
             battle.rng.chance(63, 256);
         } else {
             battle.rng.next() < Gen12.percent(25);
         };
         if (paralyzed) {
-            p1.pokemon.volatiles.Bide = false;
-            p1.pokemon.volatiles.Locked = false;
-            p1.pokemon.volatiles.Charging = false;
-            p1.pokemon.volatiles.PartialTrap = false;
+            p1.active.volatiles.Bide = false;
+            p1.active.volatiles.Locked = false;
+            p1.active.volatiles.Charging = false;
+            p1.active.volatiles.PartialTrap = false;
             // BUG: Invulnerable is not cleared, resulting in the Fly/Dig glitch
-            try log.cant(p1.active, .Paralysis);
+            try log.cant(p1.active.position, .Paralysis);
             return false;
         }
     }
-    if (p1.pokemon.volatiles.Bide) {
+    if (p1.active.volatiles.Bide) {
         // TODO
     }
-    if (p1.pokemon.volatiles.Locked) {
+    if (p1.active.volatiles.Locked) {
         // TODO
-        p1.pokemon.volatiles.Confusion = true;
+        p1.active.volatiles.Confusion = true;
         // NOTE: these values will diverge
-        p1.pokemon.volatiles.data.confusion = if (showdown) {
+        p1.active.volatiles.data.confusion = if (showdown) {
             battle.rng.range(3, 5);
         } else {
             (battle.rng.next() & 3) + 2;
         };
     }
-    if (p1.pokemon.volatiles.PartialTrap) {
+    if (p1.active.volatiles.PartialTrap) {
         // TODO
     }
-    if (p1.pokemon.volatiles.Rage) {
+    if (p1.active.volatiles.Rage) {
         // TODO
     }
 
@@ -156,8 +157,22 @@ pub fn beforeMove(battle: anytype, mslot: u8, log: anytype) !bool {
 }
 
 // LoadBattleMonFromParty & SendOutMon
-pub fn switchIn(side: *const Side, slot: u8) void {
+pub fn switchIn(side: *Side, slot: u8) void {
     assert(slot != 0);
+    assert(side.active.position != 0);
+    assert(side.pokemon[side.active.position - 1].position == 1);
+    // FIXME: assert(slot != side.active.position);
+
+    // TODO: what about pre start - need to apply burn/paralysis
+
+    // const active = side.get(slot);
+    // side.pokemon[side.active - 1].position = active.position;
+    // active.position = 1;
+
+    // inline for (std.meta.fieldNames(Stats(u16))) |stat| {
+    //     @field(side.pokemon.stats, stat) = @field(active.stats, stat);
+    // }
+
     _ = side;
 
     // make slot active pokemon, clear active pokemons fields (move current active back...)

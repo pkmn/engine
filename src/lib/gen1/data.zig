@@ -45,12 +45,10 @@ test "Battle" {
 }
 
 pub const Side = extern struct {
-    team: [6]Pokemon = [_]Pokemon{.{}} ** 6,
-    pokemon: ActivePokemon = .{},
-    active: u8 = 0,
+    pokemon: [6]Pokemon = [_]Pokemon{.{}} ** 6,
+    active: ActivePokemon = .{},
     last_used_move: Move = .None,
     last_selected_move: Move = .None,
-    // 8 bits trailing
 
     comptime {
         assert(@sizeOf(Side) == 178);
@@ -68,9 +66,11 @@ pub const ActivePokemon = extern struct {
     volatiles: Volatiles = .{},
     boosts: Boosts = .{},
     species: Species = .None,
+    position: u8 = 0,
+    _: u8 = 0,
 
     comptime {
-        assert(@sizeOf(ActivePokemon) == 30);
+        assert(@sizeOf(ActivePokemon) == 32);
     }
 };
 
@@ -84,7 +84,7 @@ pub const Pokemon = extern struct {
     types: Types = .{},
     level: u8 = 100,
     position: u8 = 0,
-    // 8 bits trailing
+    _: u8 = 0,
 
     comptime {
         assert(@sizeOf(Pokemon) == 24);
