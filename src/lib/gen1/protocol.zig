@@ -8,6 +8,7 @@ const trace = build_options.trace;
 pub const ArgType = protocol.ArgType;
 pub const Activate = protocol.Activate;
 pub const Cant = protocol.Cant;
+pub const Start = protocol.Start;
 pub const End = protocol.End;
 
 pub const expectTrace = protocol.expectTrace;
@@ -42,9 +43,24 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
+        pub fn start(self: *Self, slot: u8, reason: Start, silent: bool) !void {
+            if (!trace) return;
+            try self.writer.writeAll(&[_]u8{
+                @enumToInt(ArgType.Start),
+                slot,
+                @enumToInt(reason),
+                @boolToInt(silent),
+            });
+        }
+
         pub fn end(self: *Self, slot: u8, reason: End) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.End), slot, @enumToInt(reason) });
+        }
+
+        pub fn fail(self: *Self, slot: u8) !void {
+            if (!trace) return;
+            try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Fail), slot });
         }
     };
 }

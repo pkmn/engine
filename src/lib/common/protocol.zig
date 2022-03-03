@@ -157,9 +157,16 @@ pub const Cant = enum(u8) {
 
 pub const Activate = enum(u8) {
     Confusion,
+    Bide,
+};
+
+pub const Start = enum(u8) {
+    Confusion,
+    Bide,
 };
 
 pub const End = enum(u8) {
     Disable,
     Confusion,
+    Bide,
 };

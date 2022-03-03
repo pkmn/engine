@@ -50,51 +50,56 @@ pub fn findFirstAlive(side: *const Side) u4 {
     return 0;
 }
 
+// TODO return an enum instead of bool to handle multiple cases
 pub fn beforeMove(battle: anytype, mslot: u8, log: anytype) !bool {
     var p1 = battle.p1();
     const p2 = battle.p2();
+    var active = &p1.active;
+    const slot = active.position;
+    var stored = p1.pokemon[slot - 1];
+    var volatiles = &active.volatiles;
 
     assert(mslot > 0 and mslot <= 4);
     assert(p1.active.moves[mslot - 1].id != .None);
 
-    const stored = p1.pokemon[p1.active.position - 1];
     if (Status.is(stored.status, .SLP)) {
         stored.status -= 1;
-        if (!Status.any(stored.status)) try log.cant(p1.active.position, .Sleep);
+        if (!Status.any(stored.status)) try log.cant(slot, .Sleep);
         return false;
     }
     if (Status.is(stored.status, .FRZ)) {
-        try log.cant(p1.active.position, .Freeze);
+        try log.cant(slot, .Freeze);
         return false;
     }
     if (p2.active.volatiles.PartialTrap) {
-        try log.cant(p1.active.position, .PartialTrap);
+        try log.cant(slot, .PartialTrap);
         return false;
     }
-    if (p1.active.volatiles.Flinch) {
-        p1.active.volatiles.Flinch = false;
-        try log.cant(p1.active.position, .Flinch);
+    if (volatiles.Flinch) {
+        volatiles.Flinch = false;
+        try log.cant(slot, .Flinch);
         return false;
     }
-    if (p1.active.volatiles.Recharging) {
-        p1.active.volatiles.Recharging = false;
-        try log.cant(p1.active.position, .Recharging);
+    if (volatiles.Recharging) {
+        volatiles.Recharging = false;
+        try log.cant(slot, .Recharging);
         return false;
     }
-    if (p1.active.volatiles.data.disabled.duration > 0) {
-        p1.active.volatiles.data.disabled.duration -= 1;
-        if (p1.active.volatiles.data.disabled.duration == 0) {
-            p1.active.volatiles.data.disabled.move = 0;
-            try log.end(p1.active.position, .Disable);
+    if (volatiles.data.disabled.duration > 0) {
+        volatiles.data.disabled.duration -= 1;
+        if (volatiles.data.disabled.duration == 0) {
+            volatiles.data.disabled.move = 0;
+            try log.end(slot, .Disable);
         }
     }
-    if (p1.active.volatiles.Confusion) {
-        p1.active.volatiles.data.confusion -= 1;
-        if (p1.active.volatiles.data.confusion == 0) {
-            p1.active.volatiles.Confusion = false;
-            try log.end(p1.active.position, .Confusion);
+    if (volatiles.Confusion) {
+        assert(volatiles.data.confusion > 0);
+        volatiles.data.confusion -= 1;
+        if (volatiles.data.confusion == 0) {
+            volatiles.Confusion = false;
+            try log.end(slot, .Confusion);
         } else {
-            try log.activate(p1.active.position, .Confusion);
+            try log.activate(slot, .Confusion);
             const confused = if (showdown) {
                 !battle.rng.chance(128, 256);
             } else {
@@ -102,19 +107,19 @@ pub fn beforeMove(battle: anytype, mslot: u8, log: anytype) !bool {
             };
             if (confused) {
                 // FIXME: implement self hit
-                p1.active.volatiles.Bide = false;
-                p1.active.volatiles.Locked = false;
-                p1.active.volatiles.MultiHit = false;
-                p1.active.volatiles.Flinch = false;
-                p1.active.volatiles.Charging = false;
-                p1.active.volatiles.PartialTrap = false;
-                p1.active.volatiles.Invulnerable = false;
+                volatiles.Bide = false;
+                volatiles.Locked = false;
+                volatiles.MultiHit = false;
+                volatiles.Flinch = false;
+                volatiles.Charging = false;
+                volatiles.PartialTrap = false;
+                volatiles.Invulnerable = false;
                 return false;
             }
         }
     }
-    if (p1.active.volatiles.data.disabled.move == mslot) {
-        try log.disabled(p1.active.position, p1.active.volatiles.data.disabled.move);
+    if (volatiles.data.disabled.move == mslot) {
+        try log.disabled(slot, volatiles.data.disabled.move);
         return false;
     }
     if (Status.is(stored.status, .PAR)) {
@@ -124,33 +129,58 @@ pub fn beforeMove(battle: anytype, mslot: u8, log: anytype) !bool {
             battle.rng.next() < Gen12.percent(25);
         };
         if (paralyzed) {
-            p1.active.volatiles.Bide = false;
-            p1.active.volatiles.Locked = false;
-            p1.active.volatiles.Charging = false;
-            p1.active.volatiles.PartialTrap = false;
+            volatiles.Bide = false;
+            volatiles.Locked = false;
+            volatiles.Charging = false;
+            volatiles.PartialTrap = false;
             // BUG: Invulnerable is not cleared, resulting in the Fly/Dig glitch
-            try log.cant(p1.active.position, .Paralysis);
+            try log.cant(slot, .Paralysis);
             return false;
         }
     }
-    if (p1.active.volatiles.Bide) {
-        // TODO
+    if (volatiles.Bide) {
+        // TODO accumulate? overflow?
+        volatiles.data.bide += battle.last_damage;
+        try log.activate(slot, .Bide);
+
+        assert(volatiles.data.attacks > 0);
+        volatiles.data.attacks -= 1;
+        if (volatiles.data.attacks != 0) return false;
+
+        volatiles.Bide = false;
+        try log.end(slot, .Bide);
+        if (volatiles.data.bide > 0) {
+            try log.fail(slot);
+            return false;
+        }
+        // TODO unleash energy
     }
-    if (p1.active.volatiles.Locked) {
-        // TODO
-        p1.active.volatiles.Confusion = true;
-        // NOTE: these values will diverge
-        p1.active.volatiles.data.confusion = if (showdown) {
-            battle.rng.range(3, 5);
-        } else {
-            (battle.rng.next() & 3) + 2;
-        };
+    if (volatiles.Locked) {
+        assert(volatiles.data.attacks > 0);
+        volatiles.data.attacks -= 1;
+        // TODO PlayerMoveNum = THRASH
+        if (volatiles.data.attacks == 0) {
+            volatiles.Locked = false;
+            volatiles.Confusion = true;
+            // NOTE: these values will diverge
+            volatiles.data.confusion = if (showdown) {
+                battle.rng.range(3, 5);
+            } else {
+                (battle.rng.next() & 3) + 2;
+            };
+            try log.start(slot, .Confusion, true);
+        }
+        // TODO: skip DecrementPP, call PlayerCalcMoveDamage directly
     }
-    if (p1.active.volatiles.PartialTrap) {
-        // TODO
+    if (volatiles.PartialTrap) {
+        assert(volatiles.data.attacks > 0);
+        volatiles.data.attacks -= 1;
+        if (volatiles.data.attacks == 0) {
+            // TODO skip DamageCalc/DecrementPP/MoveHitTest
+        }
     }
-    if (p1.active.volatiles.Rage) {
-        // TODO
+    if (volatiles.Rage) {
+        // TODO skip DecrementPP, go to PlayerCanExecuteMove
     }
 
     return true;
