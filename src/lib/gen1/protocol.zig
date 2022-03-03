@@ -5,12 +5,11 @@ const protocol = @import("../common/protocol.zig");
 
 const trace = build_options.trace;
 
-pub const ArgType = protocol.ArgType;
 pub const Activate = protocol.Activate;
+pub const ArgType = protocol.ArgType;
 pub const Cant = protocol.Cant;
-pub const Start = protocol.Start;
 pub const End = protocol.End;
-
+pub const Start = protocol.Start;
 pub const expectTrace = protocol.expectTrace;
 
 // FIXME

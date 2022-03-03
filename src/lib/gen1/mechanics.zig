@@ -2,21 +2,22 @@ const std = @import("std");
 const build_options = @import("build_options");
 
 const rng = @import("../common/rng.zig");
-const Gen12 = rng.Gen12;
 
 const data = @import("./data.zig");
+const protocol = @import("./protocol.zig");
+
+const assert = std.debug.assert;
+
+const showdown = build_options.showdown;
+
+const Gen12 = rng.Gen12;
+
 const Side = data.Side;
 const Choice = data.Choice;
 const Result = data.Result;
 const Status = data.Status;
 const Move = data.Move;
 const Stats = data.Stats;
-
-const protocol = @import("./protocol.zig");
-
-const assert = std.debug.assert;
-
-const showdown = build_options.showdown;
 
 // FIXME: https://www.smogon.com/forums/threads/self-ko-clause-gens-1-4.3653037/
 // FIXME need to prompt c1 and c2 for new choices...? = should be able to tell choice from state?

@@ -2,6 +2,7 @@
 
 const std = @import("std");
 const builtin = @import("builtin");
+
 const gen1 = @import("../../gen1/data.zig");
 
 const assert = std.debug.assert;
