@@ -54,9 +54,9 @@ pub const Side = extern struct {
         assert(@sizeOf(Side) == 178);
     }
 
-    pub fn get(self: *const Side, slot: u8) *Pokemon {
+    pub fn get(self: *Side, slot: u8) *Pokemon {
         assert(slot > 0 and slot <= 6);
-        return self.pokemon[slot - 1];
+        return &self.pokemon[slot - 1];
     }
 };
 

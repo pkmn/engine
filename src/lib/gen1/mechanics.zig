@@ -10,6 +10,7 @@ const Choice = data.Choice;
 const Result = data.Result;
 const Status = data.Status;
 const Move = data.Move;
+const Stats = data.Stats;
 
 const protocol = @import("./protocol.zig");
 
@@ -17,46 +18,80 @@ const assert = std.debug.assert;
 
 const showdown = build_options.showdown;
 
+// FIXME: https://www.smogon.com/forums/threads/self-ko-clause-gens-1-4.3653037/
 // FIXME need to prompt c1 and c2 for new choices...? = should be able to tell choice from state?
 pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
-    _ = battle;
     _ = c1;
     _ = c2;
-    _ = log;
 
-    // Start find first alive mon and send out for both sides, if either dead then game over
-    // turn = 0, p1.active = 0, p2.active = 0, positions = index
     if (battle.turn == 0) {
         var slot = findFirstAlive(battle.p2());
-        // FIXME: https://www.smogon.com/forums/threads/self-ko-clause-gens-1-4.3653037/
         if (slot == 0) return if (findFirstAlive(battle.p1()) == 0) .Tie else .Win;
-        switchIn(battle.p2(), slot); // TODO
+        try switchIn(battle.p2(), slot, log);
 
         slot = findFirstAlive(battle.p1());
         if (slot == 0) return .Lose;
-        switchIn(battle.p1(), slot); // TODO
-    } else {}
+        try switchIn(battle.p1(), slot, log);
+
+        battle.turn = 1;
+        try log.turn(1);
+        return .None;
+    }
+
+    // TODO
 
     return .None;
 }
 
-pub fn findFirstAlive(side: *const Side) u4 {
-    var i: u4 = 0;
-    while (i < side.pokemon.len) : (i += 1) {
-        if (side.pokemon[i].hp > 0) {
-            return i + 1; // index -> slot
-        }
+pub fn findFirstAlive(side: *const Side) u8 {
+    for (side.pokemon) |pokemon, i| {
+        if (pokemon.hp > 0) return @truncate(u8, i + 1); // index -> slot
     }
     return 0;
 }
 
+pub fn switchIn(side: *Side, slot: u8, log: anytype) !void {
+    var active = &side.active;
+
+    assert(slot != 0);
+    assert(slot != active.position);
+    assert(active.position == 0 or side.get(active.position).position == 1);
+
+    const incoming = side.get(slot);
+    if (active.position != 0) side.get(active.position).position = incoming.position;
+    incoming.position = 1;
+
+    inline for (std.meta.fields(@TypeOf(active.stats))) |field| {
+        @field(active.stats, field.name) = @field(incoming.stats, field.name);
+    }
+    active.volatiles = .{};
+    for (incoming.moves) |move, j| {
+        active.moves[j] = move;
+    }
+    active.boosts = .{};
+    active.species = incoming.species;
+    active.position = slot;
+
+    if (Status.is(incoming.status, .PAR)) {
+        active.stats.spe /= 4;
+        if (active.stats.spe == 0) active.stats.spe = 1;
+    } else if (Status.is(incoming.status, .BRN)) {
+        active.stats.atk /= 2;
+        if (active.stats.atk == 0) active.stats.atk = 1;
+    }
+    // TODO: ld hl, wEnemyBattleStatus1; res USING_TRAPPING_MOVE, [hl]
+
+    const ident = active.position; // FIXME set upper bit of ident to indicate side from perspective
+    try log.switched(ident);
+}
+
 // TODO return an enum instead of bool to handle multiple cases
 pub fn beforeMove(battle: anytype, mslot: u8, log: anytype) !bool {
-    var p1 = battle.p1();
+    var p1 = battle.p1(); // FIXME need perspective to know which side!
     const p2 = battle.p2();
     var active = &p1.active;
-    const slot = active.position;
-    var stored = p1.pokemon[slot - 1];
+    const ident = active.position; // FIXME set upper bit of ident to indicate side from perspective
+    var stored = p1.get(active.position);
     var volatiles = &active.volatiles;
 
     assert(mslot > 0 and mslot <= 4);
@@ -64,32 +99,32 @@ pub fn beforeMove(battle: anytype, mslot: u8, log: anytype) !bool {
 
     if (Status.is(stored.status, .SLP)) {
         stored.status -= 1;
-        if (!Status.any(stored.status)) try log.cant(slot, .Sleep);
+        if (!Status.any(stored.status)) try log.cant(ident, .Sleep);
         return false;
     }
     if (Status.is(stored.status, .FRZ)) {
-        try log.cant(slot, .Freeze);
+        try log.cant(ident, .Freeze);
         return false;
     }
     if (p2.active.volatiles.PartialTrap) {
-        try log.cant(slot, .PartialTrap);
+        try log.cant(ident, .PartialTrap);
         return false;
     }
     if (volatiles.Flinch) {
         volatiles.Flinch = false;
-        try log.cant(slot, .Flinch);
+        try log.cant(ident, .Flinch);
         return false;
     }
     if (volatiles.Recharging) {
         volatiles.Recharging = false;
-        try log.cant(slot, .Recharging);
+        try log.cant(ident, .Recharging);
         return false;
     }
     if (volatiles.data.disabled.duration > 0) {
         volatiles.data.disabled.duration -= 1;
         if (volatiles.data.disabled.duration == 0) {
             volatiles.data.disabled.move = 0;
-            try log.end(slot, .Disable);
+            try log.end(ident, .Disable);
         }
     }
     if (volatiles.Confusion) {
@@ -97,9 +132,9 @@ pub fn beforeMove(battle: anytype, mslot: u8, log: anytype) !bool {
         volatiles.data.confusion -= 1;
         if (volatiles.data.confusion == 0) {
             volatiles.Confusion = false;
-            try log.end(slot, .Confusion);
+            try log.end(ident, .Confusion);
         } else {
-            try log.activate(slot, .Confusion);
+            try log.activate(ident, .Confusion);
             const confused = if (showdown) {
                 !battle.rng.chance(128, 256);
             } else {
@@ -119,7 +154,8 @@ pub fn beforeMove(battle: anytype, mslot: u8, log: anytype) !bool {
         }
     }
     if (volatiles.data.disabled.move == mslot) {
-        try log.disabled(slot, volatiles.data.disabled.move);
+        volatiles.Charging = false;
+        try log.disabled(ident, volatiles.data.disabled.move);
         return false;
     }
     if (Status.is(stored.status, .PAR)) {
@@ -133,24 +169,24 @@ pub fn beforeMove(battle: anytype, mslot: u8, log: anytype) !bool {
             volatiles.Locked = false;
             volatiles.Charging = false;
             volatiles.PartialTrap = false;
-            // BUG: Invulnerable is not cleared, resulting in the Fly/Dig glitch
-            try log.cant(slot, .Paralysis);
+            // NB: Invulnerable is not cleared, resulting in the Fly/Dig glitch
+            try log.cant(ident, .Paralysis);
             return false;
         }
     }
     if (volatiles.Bide) {
         // TODO accumulate? overflow?
         volatiles.data.bide += battle.last_damage;
-        try log.activate(slot, .Bide);
+        try log.activate(ident, .Bide);
 
         assert(volatiles.data.attacks > 0);
         volatiles.data.attacks -= 1;
         if (volatiles.data.attacks != 0) return false;
 
         volatiles.Bide = false;
-        try log.end(slot, .Bide);
+        try log.end(ident, .Bide);
         if (volatiles.data.bide > 0) {
-            try log.fail(slot);
+            try log.fail(ident);
             return false;
         }
         // TODO unleash energy
@@ -168,7 +204,7 @@ pub fn beforeMove(battle: anytype, mslot: u8, log: anytype) !bool {
             } else {
                 (battle.rng.next() & 3) + 2;
             };
-            try log.start(slot, .Confusion, true);
+            try log.start(ident, .Confusion, true);
         }
         // TODO: skip DecrementPP, call PlayerCalcMoveDamage directly
     }
@@ -185,64 +221,6 @@ pub fn beforeMove(battle: anytype, mslot: u8, log: anytype) !bool {
 
     return true;
 }
-
-// LoadBattleMonFromParty & SendOutMon
-pub fn switchIn(side: *Side, slot: u8) void {
-    assert(slot != 0);
-    assert(side.active.position != 0);
-    assert(side.pokemon[side.active.position - 1].position == 1);
-    // FIXME: assert(slot != side.active.position);
-
-    // TODO: what about pre start - need to apply burn/paralysis
-
-    // const active = side.get(slot);
-    // side.pokemon[side.active - 1].position = active.position;
-    // active.position = 1;
-
-    // inline for (std.meta.fieldNames(Stats(u16))) |stat| {
-    //     @field(side.pokemon.stats, stat) = @field(active.stats, stat);
-    // }
-
-    _ = side;
-
-    // make slot active pokemon, clear active pokemons fields (move current active back...)
-
-    // clear stats
-    // clear disabled move/move number
-    // clear minimized
-    // clear player used move
-
-    // 	call ApplyBurnAndParalysisPenaltiesToPlayer
-    // QuarterSpeedDueToParalysis
-    // HalveAttackDueToBurn
-
-}
-
-//  pub fn switchIn(self: *Side, slot: u8) void {
-//     assert(slot != self.active);
-//     assert(self.team[self.active - 1].position == 1);
-
-//     const active = self.get(slot);
-//     self.team[self.active - 1].position = active.position;
-//     active.position = 1;
-
-//     inline for (std.meta.fieldNames(Stats(u16))) |stat| {
-//         @field(self.pokemon.stats, stat) = @field(active.stats, stat);
-//     }
-//     var i = 0;
-//     while (i < 4) : (i += 1) {
-//         self.pokemon.moves[i] = active.pokemon.moves[i];
-//     }
-//     self.pokemon.volatiles.zero();
-//     inline for (std.meta.fieldNames(Boosts(i4))) |boost| {
-//         @field(self.pokemon.boosts, boost) = @field(active.boosts, boost);
-//     }
-//     self.pokemon.level = active.level;
-//     self.pokemon.hp = active.hp;
-//     self.pokemon.status = active.status;
-//     self.pokemon.types = active.types;
-//     self.active = slot;
-// }
 
 // TODO DEBUG
 comptime {

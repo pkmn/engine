@@ -22,6 +22,7 @@ const Species = data.Species;
 const Stats = data.Stats;
 const Status = data.Status;
 
+const ArgType = protocol.ArgType;
 const Log = protocol.Log(std.io.FixedBufferStream([]u8).Writer);
 const expectTrace = protocol.expectTrace;
 
@@ -58,7 +59,7 @@ pub const Side = struct {
     pub fn init(ps: []const Pokemon) data.Side {
         assert(ps.len > 0 and ps.len <= 6);
         var side = data.Side{};
-        side.active.position = 1;
+        // side.active.position = 1;
 
         var i: u4 = 0;
         while (i < ps.len) : (i += 1) {
@@ -89,16 +90,16 @@ pub const Side = struct {
             pokemon.status = p.status;
             pokemon.types = specie.types;
             pokemon.level = p.level;
-            if (i == 0) {
-                var active = &side.active;
-                inline for (std.meta.fields(@TypeOf(active.stats))) |field| {
-                    @field(active.stats, field.name) = @field(pokemon.stats, field.name);
-                }
-                active.species = pokemon.species;
-                for (pokemon.moves) |move, j| {
-                    active.moves[j] = move;
-                }
-            }
+            // if (i == 0) {
+            //     var active = &side.active;
+            //     inline for (std.meta.fields(@TypeOf(active.stats))) |field| {
+            //         @field(active.stats, field.name) = @field(pokemon.stats, field.name);
+            //     }
+            //     active.species = pokemon.species;
+            //     for (pokemon.moves) |move, j| {
+            //         active.moves[j] = move;
+            //     }
+            // }
         }
         return side;
     }
@@ -111,15 +112,15 @@ pub const Side = struct {
         var i: u4 = 0;
         while (i < n) : (i += 1) {
             side.pokemon[i] = Pokemon.random(rand);
-            const pokemon = &side.pokemon[i];
+            var pokemon = &side.pokemon[i];
             pokemon.position = i + 1;
             var j: u4 = 0;
             while (j < 4) : (j += 1) {
                 if (rand.chance(1, 5 + (@as(u8, i) * 2))) {
-                    side.last_selected_move = side.pokemon[i].moves[j].id;
+                    side.last_selected_move = pokemon.moves[j].id;
                 }
                 if (rand.chance(1, 5 + (@as(u8, i) * 2))) {
-                    side.last_used_move = side.pokemon[i].moves[j].id;
+                    side.last_used_move = pokemon.moves[j].id;
                 }
             }
             if (i == 0) {
@@ -232,11 +233,15 @@ test "Battle" {
     const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
     var battle = Battle.init(.{ 42, if (showdown) 5 else 3 }, &.{p1}, &.{p2});
 
-    var buf = [_]u8{0} ** 0;
+    var buf = [_]u8{0} ** 6;
     var log: Log = .{ .writer = std.io.fixedBufferStream(&buf).writer() };
 
     _ = try battle.update(.{ .type = .Move, .data = 4 }, .{ .type = .Switch, .data = 1 }, &log);
-    try expectTrace(&[_]u8{}, &buf);
+    try expectTrace(&[_]u8{
+        @enumToInt(ArgType.Switch), 1,
+        @enumToInt(ArgType.Switch), 1,
+        @enumToInt(ArgType.Turn),   1,
+    }, &buf);
 
     util.debug.print(battle);
     util.debug.print(Battle.random(&Random.init(5)));
