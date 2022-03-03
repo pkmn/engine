@@ -18,6 +18,7 @@ const Random = rng.Random;
 const DVs = data.DVs;
 const Move = data.Move;
 const MoveSlot = data.MoveSlot;
+const Player = data.Player;
 const Species = data.Species;
 const Stats = data.Stats;
 const Status = data.Status;
@@ -59,7 +60,6 @@ pub const Side = struct {
     pub fn init(ps: []const Pokemon) data.Side {
         assert(ps.len > 0 and ps.len <= 6);
         var side = data.Side{};
-        // side.active.position = 1;
 
         var i: u4 = 0;
         while (i < ps.len) : (i += 1) {
@@ -76,7 +76,8 @@ pub const Side = struct {
                     p.level,
                 );
             }
-            pokemon.position = i + 1;
+            pokemon.id = i + 1;
+            pokemon.position = pokemon.id;
             assert(p.moves.len > 0 and p.moves.len <= 4);
             for (p.moves) |move, j| {
                 pokemon.moves[j].id = move;
@@ -90,16 +91,6 @@ pub const Side = struct {
             pokemon.status = p.status;
             pokemon.types = specie.types;
             pokemon.level = p.level;
-            // if (i == 0) {
-            //     var active = &side.active;
-            //     inline for (std.meta.fields(@TypeOf(active.stats))) |field| {
-            //         @field(active.stats, field.name) = @field(pokemon.stats, field.name);
-            //     }
-            //     active.species = pokemon.species;
-            //     for (pokemon.moves) |move, j| {
-            //         active.moves[j] = move;
-            //     }
-            // }
         }
         return side;
     }
@@ -107,13 +98,13 @@ pub const Side = struct {
     pub fn random(rand: *Random) data.Side {
         const n = if (rand.chance(1, 100)) rand.range(u4, 1, 5) else 6;
         var side = data.Side{};
-        side.active.position = 1;
 
         var i: u4 = 0;
         while (i < n) : (i += 1) {
             side.pokemon[i] = Pokemon.random(rand);
             var pokemon = &side.pokemon[i];
-            pokemon.position = i + 1;
+            pokemon.id = i + 1;
+            pokemon.position = pokemon.id;
             var j: u4 = 0;
             while (j < 4) : (j += 1) {
                 if (rand.chance(1, 5 + (@as(u8, i) * 2))) {
@@ -238,8 +229,8 @@ test "Battle" {
 
     _ = try battle.update(.{ .type = .Move, .data = 4 }, .{ .type = .Switch, .data = 1 }, &log);
     try expectTrace(&[_]u8{
-        @enumToInt(ArgType.Switch), 1,
-        @enumToInt(ArgType.Switch), 1,
+        @enumToInt(ArgType.Switch), Player.P1.ident(1),
+        @enumToInt(ArgType.Switch), Player.P2.ident(1),
         @enumToInt(ArgType.Turn),   1,
     }, &buf);
 

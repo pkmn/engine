@@ -12,12 +12,13 @@ const showdown = build_options.showdown;
 
 const Gen12 = rng.Gen12;
 
-const Side = data.Side;
 const Choice = data.Choice;
-const Result = data.Result;
-const Status = data.Status;
 const Move = data.Move;
+const Player = data.Player;
+const Result = data.Result;
+const Side = data.Side;
 const Stats = data.Stats;
+const Status = data.Status;
 
 // FIXME: https://www.smogon.com/forums/threads/self-ko-clause-gens-1-4.3653037/
 // FIXME need to prompt c1 and c2 for new choices...? = should be able to tell choice from state?
@@ -26,13 +27,16 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     _ = c2;
 
     if (battle.turn == 0) {
-        var slot = findFirstAlive(battle.p2());
-        if (slot == 0) return if (findFirstAlive(battle.p1()) == 0) .Tie else .Win;
-        try switchIn(battle.p2(), slot, log);
+        var p1 = battle.get(.P1);
+        var p2 = battle.get(.P2);
 
-        slot = findFirstAlive(battle.p1());
-        if (slot == 0) return .Lose;
-        try switchIn(battle.p1(), slot, log);
+        var slot = findFirstAlive(p1);
+        if (slot == 0) return if (findFirstAlive(p2) == 0) .Tie else .Lose;
+        try switchIn(p1, .P1, slot, log);
+
+        slot = findFirstAlive(p2);
+        if (slot == 0) return .Win;
+        try switchIn(p2, .P2, slot, log);
 
         battle.turn = 1;
         try log.turn(1);
@@ -51,7 +55,7 @@ pub fn findFirstAlive(side: *const Side) u8 {
     return 0;
 }
 
-pub fn switchIn(side: *Side, slot: u8, log: anytype) !void {
+pub fn switchIn(side: *Side, player: Player, slot: u8, log: anytype) !void {
     var active = &side.active;
 
     assert(slot != 0);
@@ -74,29 +78,26 @@ pub fn switchIn(side: *Side, slot: u8, log: anytype) !void {
     active.position = slot;
 
     if (Status.is(incoming.status, .PAR)) {
-        active.stats.spe /= 4;
-        if (active.stats.spe == 0) active.stats.spe = 1;
+        active.stats.spe = @maximum(active.stats.spe / 4, 1);
     } else if (Status.is(incoming.status, .BRN)) {
-        active.stats.atk /= 2;
-        if (active.stats.atk == 0) active.stats.atk = 1;
+        active.stats.atk = @maximum(active.stats.atk / 2, 1);
     }
     // TODO: ld hl, wEnemyBattleStatus1; res USING_TRAPPING_MOVE, [hl]
 
-    const ident = active.position; // FIXME set upper bit of ident to indicate side from perspective
-    try log.switched(ident);
+    try log.switched(player.ident(side.get(slot).id));
 }
 
 // TODO return an enum instead of bool to handle multiple cases
-pub fn beforeMove(battle: anytype, mslot: u8, log: anytype) !bool {
-    var p1 = battle.p1(); // FIXME need perspective to know which side!
-    const p2 = battle.p2();
-    var active = &p1.active;
-    const ident = active.position; // FIXME set upper bit of ident to indicate side from perspective
-    var stored = p1.get(active.position);
+pub fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
+    var side = battle.get(player);
+    const foe = battle.foe(player);
+    var active = &side.active;
+    var stored = side.get(active.position);
+    const ident = player.ident(stored.id);
     var volatiles = &active.volatiles;
 
     assert(mslot > 0 and mslot <= 4);
-    assert(p1.active.moves[mslot - 1].id != .None);
+    assert(active.moves[mslot - 1].id != .None);
 
     if (Status.is(stored.status, .SLP)) {
         stored.status -= 1;
@@ -107,7 +108,7 @@ pub fn beforeMove(battle: anytype, mslot: u8, log: anytype) !bool {
         try log.cant(ident, .Freeze);
         return false;
     }
-    if (p2.active.volatiles.PartialTrap) {
+    if (foe.active.volatiles.PartialTrap) {
         try log.cant(ident, .PartialTrap);
         return false;
     }

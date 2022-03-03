@@ -26,12 +26,12 @@ pub fn Battle(comptime PRNG: anytype) type {
         last_damage: u16 = 0,
         sides: [2]Side,
 
-        pub fn p1(self: *Self) *Side {
-            return &self.sides[0];
+        pub fn get(self: *Self, player: Player) *Side {
+            return &self.sides[@enumToInt(player)];
         }
 
-        pub fn p2(self: *Self) *Side {
-            return &self.sides[1];
+        pub fn foe(self: *Self, player: Player) *Side {
+            return &self.sides[~@enumToInt(player)];
         }
 
         pub fn update(self: *Self, c1: Choice, c2: Choice, log: anytype) !Result {
@@ -42,6 +42,21 @@ pub fn Battle(comptime PRNG: anytype) type {
 
 test "Battle" {
     try expectEqual(if (build_options.showdown) 368 else 372, @sizeOf(Battle(rng.PRNG(1))));
+}
+
+pub const Player = enum(u1) {
+    P1,
+    P2,
+
+    pub fn ident(self: Player, slot: u8) u8 {
+        assert(slot > 0 and slot <= 6);
+        return (@as(u8, @enumToInt(self)) << 7) | slot;
+    }
+};
+
+test "Player" {
+    try expectEqual(@as(u8, 0b0000_0001), Player.P1.ident(1));
+    try expectEqual(@as(u8, 0b1000_0101), Player.P2.ident(5));
 }
 
 pub const Side = extern struct {
@@ -83,7 +98,7 @@ pub const Pokemon = extern struct {
     types: Types = .{},
     level: u8 = 100,
     position: u8 = 0,
-    _: u8 = 0,
+    id: u8 = 0, // TODO
 
     comptime {
         assert(@sizeOf(Pokemon) == 24);
