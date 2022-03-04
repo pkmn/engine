@@ -224,15 +224,17 @@ test "Battle" {
     const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
     var battle = Battle.init(.{ 42, if (showdown) 5 else 3 }, &.{p1}, &.{p2});
 
-    var buf = [_]u8{0} ** 6;
+    var buf = [_]u8{0} ** 7;
     var log: Log = .{ .writer = std.io.fixedBufferStream(&buf).writer() };
 
     _ = try battle.update(.{ .type = .Move, .data = 4 }, .{ .type = .Switch, .data = 1 }, &log);
+    // zig fmt: off
     try expectTrace(&[_]u8{
         @enumToInt(ArgType.Switch), Player.P1.ident(1),
         @enumToInt(ArgType.Switch), Player.P2.ident(1),
-        @enumToInt(ArgType.Turn),   1,
+        @enumToInt(ArgType.Turn), 1, 0,
     }, &buf);
+    // zig fmt: on
 
     util.debug.print(battle);
     util.debug.print(Battle.random(&Random.init(5)));

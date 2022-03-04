@@ -68,9 +68,10 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Switch), ident });
         }
 
-        pub fn turn(self: *Self, num: u8) !void {
+        pub fn turn(self: *Self, num: u16) !void {
             if (!trace) return;
-            try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Turn), num });
+            try self.writer.writeByte(@enumToInt(ArgType.Turn));
+            try self.writer.writeIntNative(u16, num);
         }
     };
 }

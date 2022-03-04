@@ -38,24 +38,67 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
         if (slot == 0) return .Win;
         try switchIn(p2, .P2, slot, log);
 
-        battle.turn = 1;
-        try log.turn(1);
-        return .None;
+        return try endTurn(battle, log);
     }
 
-    // TODO
+    // XXX
+    // if (active.volatiles.Recharging or active.volatiles.Rage) {}
+    // p1.active.volatiles.Flinch = false;
+    // p2.active.volatiles.Flinch = false;
+    // if (active.volatiles.Locked or active.volatiles.Charging) {}
+    // if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP)) {}
+    // if (active.volatiles.Bide or active.volatiles.PartialTrap) {}
+    // if (foe.active.volatiles.PartialTrap) {}
+    // if (active.volatiles.PartialTrap) {}
+    // XXX
 
     return .None;
 }
 
-pub fn findFirstAlive(side: *const Side) u8 {
+fn determineTurnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
+    if ((c1.type == .Switch) != (c2.type == .Switch)) return if (c1.type == .Switch) .P1 else .P2;
+    const m1 = getMove(battle, .P1, c1);
+    const m2 = getMove(battle, .P2, c2);
+    if ((m1 == .QuickAttack) != (m2 == .QuickAttack)) return if (m1 == .QuickAttack) .P1 else .P2;
+    if ((m1 == .Counter) != (m2 == .Counter)) return if (m1 == .Counter) .P2 else .P1;
+    // NB: https://www.smogon.com/forums/threads/adv-switch-priority.3622189/
+    if (!showdown and c1.type == .Switch and c2.type == .Switch) return .P1;
+
+    const spe1 = battle.get(.P1).active.stats.spe;
+    const spe2 = battle.get(.P2).active.stats.spe;
+    if (spe1 == spe2) {
+        const p1 = if (showdown) {
+            // TODO: confirm this does the same thing as PS Battle.speedSort
+            battle.rng.range(0, 2) != 0;
+        } else {
+            battle.rng.next() < Gen12.percent(50) + 1;
+        };
+        return if (p1) .P1 else .P2;
+    }
+    return if (spe1 > spe2) .P1 else .P2;
+}
+
+fn getMove(battle: anytype, player: Player, choice: Choice) Move {
+    if (choice.type != .Move or choice.data == 0) return .None;
+
+    assert(choice.data <= 4);
+    const side = battle.get(player);
+    assert(side.active.position != 0);
+    const stored = side.get(side.active.position);
+    const move = stored.moves[choice.data];
+    assert(move.pp != 0); // FIXME: wrap underflow?
+
+    return move.id;
+}
+
+fn findFirstAlive(side: *const Side) u8 {
     for (side.pokemon) |pokemon, i| {
         if (pokemon.hp > 0) return @truncate(u8, i + 1); // index -> slot
     }
     return 0;
 }
 
-pub fn switchIn(side: *Side, player: Player, slot: u8, log: anytype) !void {
+fn switchIn(side: *Side, player: Player, slot: u8, log: anytype) !void {
     var active = &side.active;
 
     assert(slot != 0);
@@ -88,7 +131,7 @@ pub fn switchIn(side: *Side, player: Player, slot: u8, log: anytype) !void {
 }
 
 // TODO return an enum instead of bool to handle multiple cases
-pub fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
+fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
     var side = battle.get(player);
     const foe = battle.foe(player);
     var active = &side.active;
@@ -200,7 +243,7 @@ pub fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !boo
         if (volatiles.data.attacks == 0) {
             volatiles.Locked = false;
             volatiles.Confusion = true;
-            // NOTE: these values will diverge
+            // NB: these values will diverge
             volatiles.data.confusion = if (showdown) {
                 battle.rng.range(3, 5);
             } else {
@@ -222,6 +265,12 @@ pub fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !boo
     }
 
     return true;
+}
+
+fn endTurn(battle: anytype, log: anytype) !Result {
+    battle.turn += 1;
+    try log.turn(battle.turn);
+    return .None;
 }
 
 // TODO DEBUG
