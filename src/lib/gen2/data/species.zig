@@ -275,3264 +275,1507 @@ pub const Species = enum(u8) {
     const data = [_]Data{
         // Bulbasaur
         .{
-            .stats = .{
-                .hp = 45,
-                .atk = 49,
-                .def = 49,
-                .spe = 45,
-                .spa = 65,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 45, .atk = 49, .def = 49, .spe = 45, .spa = 65, .spd = 65 },
             .types = .{ .type1 = .Grass, .type2 = .Poison },
             .ratio = 0x1F, // 12.5% F
         },
         // Ivysaur
         .{
-            .stats = .{
-                .hp = 60,
-                .atk = 62,
-                .def = 63,
-                .spe = 60,
-                .spa = 80,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 60, .atk = 62, .def = 63, .spe = 60, .spa = 80, .spd = 80 },
             .types = .{ .type1 = .Grass, .type2 = .Poison },
             .ratio = 0x1F, // 12.5% F
         },
         // Venusaur
         .{
-            .stats = .{
-                .hp = 80,
-                .atk = 82,
-                .def = 83,
-                .spe = 80,
-                .spa = 100,
-                .spd = 100,
-            },
+            .stats = .{ .hp = 80, .atk = 82, .def = 83, .spe = 80, .spa = 100, .spd = 100 },
             .types = .{ .type1 = .Grass, .type2 = .Poison },
             .ratio = 0x1F, // 12.5% F
         },
         // Charmander
         .{
-            .stats = .{
-                .hp = 39,
-                .atk = 52,
-                .def = 43,
-                .spe = 65,
-                .spa = 60,
-                .spd = 50,
-            },
+            .stats = .{ .hp = 39, .atk = 52, .def = 43, .spe = 65, .spa = 60, .spd = 50 },
             .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x1F, // 12.5% F
         },
         // Charmeleon
         .{
-            .stats = .{
-                .hp = 58,
-                .atk = 64,
-                .def = 58,
-                .spe = 80,
-                .spa = 80,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 58, .atk = 64, .def = 58, .spe = 80, .spa = 80, .spd = 65 },
             .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x1F, // 12.5% F
         },
         // Charizard
         .{
-            .stats = .{
-                .hp = 78,
-                .atk = 84,
-                .def = 78,
-                .spe = 100,
-                .spa = 109,
-                .spd = 85,
-            },
+            .stats = .{ .hp = 78, .atk = 84, .def = 78, .spe = 100, .spa = 109, .spd = 85 },
             .types = .{ .type1 = .Fire, .type2 = .Flying },
             .ratio = 0x1F, // 12.5% F
         },
         // Squirtle
         .{
-            .stats = .{
-                .hp = 44,
-                .atk = 48,
-                .def = 65,
-                .spe = 43,
-                .spa = 50,
-                .spd = 64,
-            },
+            .stats = .{ .hp = 44, .atk = 48, .def = 65, .spe = 43, .spa = 50, .spd = 64 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
         // Wartortle
         .{
-            .stats = .{
-                .hp = 59,
-                .atk = 63,
-                .def = 80,
-                .spe = 58,
-                .spa = 65,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 59, .atk = 63, .def = 80, .spe = 58, .spa = 65, .spd = 80 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
         // Blastoise
         .{
-            .stats = .{
-                .hp = 79,
-                .atk = 83,
-                .def = 100,
-                .spe = 78,
-                .spa = 85,
-                .spd = 105,
-            },
+            .stats = .{ .hp = 79, .atk = 83, .def = 100, .spe = 78, .spa = 85, .spd = 105 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
         // Caterpie
         .{
-            .stats = .{
-                .hp = 45,
-                .atk = 30,
-                .def = 35,
-                .spe = 45,
-                .spa = 20,
-                .spd = 20,
-            },
+            .stats = .{ .hp = 45, .atk = 30, .def = 35, .spe = 45, .spa = 20, .spd = 20 },
             .types = .{ .type1 = .Bug, .type2 = .Bug },
             .ratio = 0x7F, // 50.0% F
         },
         // Metapod
         .{
-            .stats = .{
-                .hp = 50,
-                .atk = 20,
-                .def = 55,
-                .spe = 30,
-                .spa = 25,
-                .spd = 25,
-            },
+            .stats = .{ .hp = 50, .atk = 20, .def = 55, .spe = 30, .spa = 25, .spd = 25 },
             .types = .{ .type1 = .Bug, .type2 = .Bug },
             .ratio = 0x7F, // 50.0% F
         },
         // Butterfree
         .{
-            .stats = .{
-                .hp = 60,
-                .atk = 45,
-                .def = 50,
-                .spe = 70,
-                .spa = 80,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 60, .atk = 45, .def = 50, .spe = 70, .spa = 80, .spd = 80 },
             .types = .{ .type1 = .Bug, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Weedle
         .{
-            .stats = .{
-                .hp = 40,
-                .atk = 35,
-                .def = 30,
-                .spe = 50,
-                .spa = 20,
-                .spd = 20,
-            },
+            .stats = .{ .hp = 40, .atk = 35, .def = 30, .spe = 50, .spa = 20, .spd = 20 },
             .types = .{ .type1 = .Bug, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Kakuna
         .{
-            .stats = .{
-                .hp = 45,
-                .atk = 25,
-                .def = 50,
-                .spe = 35,
-                .spa = 25,
-                .spd = 25,
-            },
+            .stats = .{ .hp = 45, .atk = 25, .def = 50, .spe = 35, .spa = 25, .spd = 25 },
             .types = .{ .type1 = .Bug, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Beedrill
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 80,
-                .def = 40,
-                .spe = 75,
-                .spa = 45,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 65, .atk = 80, .def = 40, .spe = 75, .spa = 45, .spd = 80 },
             .types = .{ .type1 = .Bug, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Pidgey
         .{
-            .stats = .{
-                .hp = 40,
-                .atk = 45,
-                .def = 40,
-                .spe = 56,
-                .spa = 35,
-                .spd = 35,
-            },
+            .stats = .{ .hp = 40, .atk = 45, .def = 40, .spe = 56, .spa = 35, .spd = 35 },
             .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Pidgeotto
         .{
-            .stats = .{
-                .hp = 63,
-                .atk = 60,
-                .def = 55,
-                .spe = 71,
-                .spa = 50,
-                .spd = 50,
-            },
+            .stats = .{ .hp = 63, .atk = 60, .def = 55, .spe = 71, .spa = 50, .spd = 50 },
             .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Pidgeot
         .{
-            .stats = .{
-                .hp = 83,
-                .atk = 80,
-                .def = 75,
-                .spe = 91,
-                .spa = 70,
-                .spd = 70,
-            },
+            .stats = .{ .hp = 83, .atk = 80, .def = 75, .spe = 91, .spa = 70, .spd = 70 },
             .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Rattata
         .{
-            .stats = .{
-                .hp = 30,
-                .atk = 56,
-                .def = 35,
-                .spe = 72,
-                .spa = 25,
-                .spd = 35,
-            },
+            .stats = .{ .hp = 30, .atk = 56, .def = 35, .spe = 72, .spa = 25, .spd = 35 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
         // Raticate
         .{
-            .stats = .{
-                .hp = 55,
-                .atk = 81,
-                .def = 60,
-                .spe = 97,
-                .spa = 50,
-                .spd = 70,
-            },
+            .stats = .{ .hp = 55, .atk = 81, .def = 60, .spe = 97, .spa = 50, .spd = 70 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
         // Spearow
         .{
-            .stats = .{
-                .hp = 40,
-                .atk = 60,
-                .def = 30,
-                .spe = 70,
-                .spa = 31,
-                .spd = 31,
-            },
+            .stats = .{ .hp = 40, .atk = 60, .def = 30, .spe = 70, .spa = 31, .spd = 31 },
             .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Fearow
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 90,
-                .def = 65,
-                .spe = 100,
-                .spa = 61,
-                .spd = 61,
-            },
+            .stats = .{ .hp = 65, .atk = 90, .def = 65, .spe = 100, .spa = 61, .spd = 61 },
             .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Ekans
         .{
-            .stats = .{
-                .hp = 35,
-                .atk = 60,
-                .def = 44,
-                .spe = 55,
-                .spa = 40,
-                .spd = 54,
-            },
+            .stats = .{ .hp = 35, .atk = 60, .def = 44, .spe = 55, .spa = 40, .spd = 54 },
             .types = .{ .type1 = .Poison, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Arbok
         .{
-            .stats = .{
-                .hp = 60,
-                .atk = 85,
-                .def = 69,
-                .spe = 80,
-                .spa = 65,
-                .spd = 79,
-            },
+            .stats = .{ .hp = 60, .atk = 85, .def = 69, .spe = 80, .spa = 65, .spd = 79 },
             .types = .{ .type1 = .Poison, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Pikachu
         .{
-            .stats = .{
-                .hp = 35,
-                .atk = 55,
-                .def = 30,
-                .spe = 90,
-                .spa = 50,
-                .spd = 40,
-            },
+            .stats = .{ .hp = 35, .atk = 55, .def = 30, .spe = 90, .spa = 50, .spd = 40 },
             .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0x7F, // 50.0% F
         },
         // Raichu
         .{
-            .stats = .{
-                .hp = 60,
-                .atk = 90,
-                .def = 55,
-                .spe = 100,
-                .spa = 90,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 60, .atk = 90, .def = 55, .spe = 100, .spa = 90, .spd = 80 },
             .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0x7F, // 50.0% F
         },
         // Sandshrew
         .{
-            .stats = .{
-                .hp = 50,
-                .atk = 75,
-                .def = 85,
-                .spe = 40,
-                .spa = 20,
-                .spd = 30,
-            },
+            .stats = .{ .hp = 50, .atk = 75, .def = 85, .spe = 40, .spa = 20, .spd = 30 },
             .types = .{ .type1 = .Ground, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
         // Sandslash
         .{
-            .stats = .{
-                .hp = 75,
-                .atk = 100,
-                .def = 110,
-                .spe = 65,
-                .spa = 45,
-                .spd = 55,
-            },
+            .stats = .{ .hp = 75, .atk = 100, .def = 110, .spe = 65, .spa = 45, .spd = 55 },
             .types = .{ .type1 = .Ground, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
         // NidoranF
         .{
-            .stats = .{
-                .hp = 55,
-                .atk = 47,
-                .def = 52,
-                .spe = 41,
-                .spa = 40,
-                .spd = 40,
-            },
+            .stats = .{ .hp = 55, .atk = 47, .def = 52, .spe = 41, .spa = 40, .spd = 40 },
             .types = .{ .type1 = .Poison, .type2 = .Poison },
             .ratio = 0xFE, // 100% F
         },
         // Nidorina
         .{
-            .stats = .{
-                .hp = 70,
-                .atk = 62,
-                .def = 67,
-                .spe = 56,
-                .spa = 55,
-                .spd = 55,
-            },
+            .stats = .{ .hp = 70, .atk = 62, .def = 67, .spe = 56, .spa = 55, .spd = 55 },
             .types = .{ .type1 = .Poison, .type2 = .Poison },
             .ratio = 0xFE, // 100% F
         },
         // Nidoqueen
         .{
-            .stats = .{
-                .hp = 90,
-                .atk = 82,
-                .def = 87,
-                .spe = 76,
-                .spa = 75,
-                .spd = 85,
-            },
+            .stats = .{ .hp = 90, .atk = 82, .def = 87, .spe = 76, .spa = 75, .spd = 85 },
             .types = .{ .type1 = .Poison, .type2 = .Ground },
             .ratio = 0xFE, // 100% F
         },
         // NidoranM
         .{
-            .stats = .{
-                .hp = 46,
-                .atk = 57,
-                .def = 40,
-                .spe = 50,
-                .spa = 40,
-                .spd = 40,
-            },
+            .stats = .{ .hp = 46, .atk = 57, .def = 40, .spe = 50, .spa = 40, .spd = 40 },
             .types = .{ .type1 = .Poison, .type2 = .Poison },
             .ratio = 0x00, // 0.00% F
         },
         // Nidorino
         .{
-            .stats = .{
-                .hp = 61,
-                .atk = 72,
-                .def = 57,
-                .spe = 65,
-                .spa = 55,
-                .spd = 55,
-            },
+            .stats = .{ .hp = 61, .atk = 72, .def = 57, .spe = 65, .spa = 55, .spd = 55 },
             .types = .{ .type1 = .Poison, .type2 = .Poison },
             .ratio = 0x00, // 0.00% F
         },
         // Nidoking
         .{
-            .stats = .{
-                .hp = 81,
-                .atk = 92,
-                .def = 77,
-                .spe = 85,
-                .spa = 85,
-                .spd = 75,
-            },
+            .stats = .{ .hp = 81, .atk = 92, .def = 77, .spe = 85, .spa = 85, .spd = 75 },
             .types = .{ .type1 = .Poison, .type2 = .Ground },
             .ratio = 0x00, // 0.00% F
         },
         // Clefairy
         .{
-            .stats = .{
-                .hp = 70,
-                .atk = 45,
-                .def = 48,
-                .spe = 35,
-                .spa = 60,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 70, .atk = 45, .def = 48, .spe = 35, .spa = 60, .spd = 65 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xBF, // 75.0% F
         },
         // Clefable
         .{
-            .stats = .{
-                .hp = 95,
-                .atk = 70,
-                .def = 73,
-                .spe = 60,
-                .spa = 85,
-                .spd = 90,
-            },
+            .stats = .{ .hp = 95, .atk = 70, .def = 73, .spe = 60, .spa = 85, .spd = 90 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xBF, // 75.0% F
         },
         // Vulpix
         .{
-            .stats = .{
-                .hp = 38,
-                .atk = 41,
-                .def = 40,
-                .spe = 65,
-                .spa = 50,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 38, .atk = 41, .def = 40, .spe = 65, .spa = 50, .spd = 65 },
             .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0xBF, // 75.0% F
         },
         // Ninetales
         .{
-            .stats = .{
-                .hp = 73,
-                .atk = 76,
-                .def = 75,
-                .spe = 100,
-                .spa = 81,
-                .spd = 100,
-            },
+            .stats = .{ .hp = 73, .atk = 76, .def = 75, .spe = 100, .spa = 81, .spd = 100 },
             .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0xBF, // 75.0% F
         },
         // Jigglypuff
         .{
-            .stats = .{
-                .hp = 115,
-                .atk = 45,
-                .def = 20,
-                .spe = 20,
-                .spa = 45,
-                .spd = 25,
-            },
+            .stats = .{ .hp = 115, .atk = 45, .def = 20, .spe = 20, .spa = 45, .spd = 25 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xBF, // 75.0% F
         },
         // Wigglytuff
         .{
-            .stats = .{
-                .hp = 140,
-                .atk = 70,
-                .def = 45,
-                .spe = 45,
-                .spa = 75,
-                .spd = 50,
-            },
+            .stats = .{ .hp = 140, .atk = 70, .def = 45, .spe = 45, .spa = 75, .spd = 50 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xBF, // 75.0% F
         },
         // Zubat
         .{
-            .stats = .{
-                .hp = 40,
-                .atk = 45,
-                .def = 35,
-                .spe = 55,
-                .spa = 30,
-                .spd = 40,
-            },
+            .stats = .{ .hp = 40, .atk = 45, .def = 35, .spe = 55, .spa = 30, .spd = 40 },
             .types = .{ .type1 = .Poison, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Golbat
         .{
-            .stats = .{
-                .hp = 75,
-                .atk = 80,
-                .def = 70,
-                .spe = 90,
-                .spa = 65,
-                .spd = 75,
-            },
+            .stats = .{ .hp = 75, .atk = 80, .def = 70, .spe = 90, .spa = 65, .spd = 75 },
             .types = .{ .type1 = .Poison, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Oddish
         .{
-            .stats = .{
-                .hp = 45,
-                .atk = 50,
-                .def = 55,
-                .spe = 30,
-                .spa = 75,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 45, .atk = 50, .def = 55, .spe = 30, .spa = 75, .spd = 65 },
             .types = .{ .type1 = .Grass, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Gloom
         .{
-            .stats = .{
-                .hp = 60,
-                .atk = 65,
-                .def = 70,
-                .spe = 40,
-                .spa = 85,
-                .spd = 75,
-            },
+            .stats = .{ .hp = 60, .atk = 65, .def = 70, .spe = 40, .spa = 85, .spd = 75 },
             .types = .{ .type1 = .Grass, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Vileplume
         .{
-            .stats = .{
-                .hp = 75,
-                .atk = 80,
-                .def = 85,
-                .spe = 50,
-                .spa = 100,
-                .spd = 90,
-            },
+            .stats = .{ .hp = 75, .atk = 80, .def = 85, .spe = 50, .spa = 100, .spd = 90 },
             .types = .{ .type1 = .Grass, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Paras
         .{
-            .stats = .{
-                .hp = 35,
-                .atk = 70,
-                .def = 55,
-                .spe = 25,
-                .spa = 45,
-                .spd = 55,
-            },
+            .stats = .{ .hp = 35, .atk = 70, .def = 55, .spe = 25, .spa = 45, .spd = 55 },
             .types = .{ .type1 = .Bug, .type2 = .Grass },
             .ratio = 0x7F, // 50.0% F
         },
         // Parasect
         .{
-            .stats = .{
-                .hp = 60,
-                .atk = 95,
-                .def = 80,
-                .spe = 30,
-                .spa = 60,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 60, .atk = 95, .def = 80, .spe = 30, .spa = 60, .spd = 80 },
             .types = .{ .type1 = .Bug, .type2 = .Grass },
             .ratio = 0x7F, // 50.0% F
         },
         // Venonat
         .{
-            .stats = .{
-                .hp = 60,
-                .atk = 55,
-                .def = 50,
-                .spe = 45,
-                .spa = 40,
-                .spd = 55,
-            },
+            .stats = .{ .hp = 60, .atk = 55, .def = 50, .spe = 45, .spa = 40, .spd = 55 },
             .types = .{ .type1 = .Bug, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Venomoth
         .{
-            .stats = .{
-                .hp = 70,
-                .atk = 65,
-                .def = 60,
-                .spe = 90,
-                .spa = 90,
-                .spd = 75,
-            },
+            .stats = .{ .hp = 70, .atk = 65, .def = 60, .spe = 90, .spa = 90, .spd = 75 },
             .types = .{ .type1 = .Bug, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Diglett
         .{
-            .stats = .{
-                .hp = 10,
-                .atk = 55,
-                .def = 25,
-                .spe = 95,
-                .spa = 35,
-                .spd = 45,
-            },
+            .stats = .{ .hp = 10, .atk = 55, .def = 25, .spe = 95, .spa = 35, .spd = 45 },
             .types = .{ .type1 = .Ground, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
         // Dugtrio
         .{
-            .stats = .{
-                .hp = 35,
-                .atk = 80,
-                .def = 50,
-                .spe = 120,
-                .spa = 50,
-                .spd = 70,
-            },
+            .stats = .{ .hp = 35, .atk = 80, .def = 50, .spe = 120, .spa = 50, .spd = 70 },
             .types = .{ .type1 = .Ground, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
         // Meowth
         .{
-            .stats = .{
-                .hp = 40,
-                .atk = 45,
-                .def = 35,
-                .spe = 90,
-                .spa = 40,
-                .spd = 40,
-            },
+            .stats = .{ .hp = 40, .atk = 45, .def = 35, .spe = 90, .spa = 40, .spd = 40 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
         // Persian
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 70,
-                .def = 60,
-                .spe = 115,
-                .spa = 65,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 65, .atk = 70, .def = 60, .spe = 115, .spa = 65, .spd = 65 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
         // Psyduck
         .{
-            .stats = .{
-                .hp = 50,
-                .atk = 52,
-                .def = 48,
-                .spe = 55,
-                .spa = 65,
-                .spd = 50,
-            },
+            .stats = .{ .hp = 50, .atk = 52, .def = 48, .spe = 55, .spa = 65, .spd = 50 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
         // Golduck
         .{
-            .stats = .{
-                .hp = 80,
-                .atk = 82,
-                .def = 78,
-                .spe = 85,
-                .spa = 95,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 80, .atk = 82, .def = 78, .spe = 85, .spa = 95, .spd = 80 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
         // Mankey
         .{
-            .stats = .{
-                .hp = 40,
-                .atk = 80,
-                .def = 35,
-                .spe = 70,
-                .spa = 35,
-                .spd = 45,
-            },
+            .stats = .{ .hp = 40, .atk = 80, .def = 35, .spe = 70, .spa = 35, .spd = 45 },
             .types = .{ .type1 = .Fighting, .type2 = .Fighting },
             .ratio = 0x7F, // 50.0% F
         },
         // Primeape
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 105,
-                .def = 60,
-                .spe = 95,
-                .spa = 60,
-                .spd = 70,
-            },
+            .stats = .{ .hp = 65, .atk = 105, .def = 60, .spe = 95, .spa = 60, .spd = 70 },
             .types = .{ .type1 = .Fighting, .type2 = .Fighting },
             .ratio = 0x7F, // 50.0% F
         },
         // Growlithe
         .{
-            .stats = .{
-                .hp = 55,
-                .atk = 70,
-                .def = 45,
-                .spe = 60,
-                .spa = 70,
-                .spd = 50,
-            },
+            .stats = .{ .hp = 55, .atk = 70, .def = 45, .spe = 60, .spa = 70, .spd = 50 },
             .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x3F, // 25.0% F
         },
         // Arcanine
         .{
-            .stats = .{
-                .hp = 90,
-                .atk = 110,
-                .def = 80,
-                .spe = 95,
-                .spa = 100,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 90, .atk = 110, .def = 80, .spe = 95, .spa = 100, .spd = 80 },
             .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x3F, // 25.0% F
         },
         // Poliwag
         .{
-            .stats = .{
-                .hp = 40,
-                .atk = 50,
-                .def = 40,
-                .spe = 90,
-                .spa = 40,
-                .spd = 40,
-            },
+            .stats = .{ .hp = 40, .atk = 50, .def = 40, .spe = 90, .spa = 40, .spd = 40 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
         // Poliwhirl
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 65,
-                .def = 65,
-                .spe = 90,
-                .spa = 50,
-                .spd = 50,
-            },
+            .stats = .{ .hp = 65, .atk = 65, .def = 65, .spe = 90, .spa = 50, .spd = 50 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
         // Poliwrath
         .{
-            .stats = .{
-                .hp = 90,
-                .atk = 85,
-                .def = 95,
-                .spe = 70,
-                .spa = 70,
-                .spd = 90,
-            },
+            .stats = .{ .hp = 90, .atk = 85, .def = 95, .spe = 70, .spa = 70, .spd = 90 },
             .types = .{ .type1 = .Water, .type2 = .Fighting },
             .ratio = 0x7F, // 50.0% F
         },
         // Abra
         .{
-            .stats = .{
-                .hp = 25,
-                .atk = 20,
-                .def = 15,
-                .spe = 90,
-                .spa = 105,
-                .spd = 55,
-            },
+            .stats = .{ .hp = 25, .atk = 20, .def = 15, .spe = 90, .spa = 105, .spd = 55 },
             .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0x3F, // 25.0% F
         },
         // Kadabra
         .{
-            .stats = .{
-                .hp = 40,
-                .atk = 35,
-                .def = 30,
-                .spe = 105,
-                .spa = 120,
-                .spd = 70,
-            },
+            .stats = .{ .hp = 40, .atk = 35, .def = 30, .spe = 105, .spa = 120, .spd = 70 },
             .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0x3F, // 25.0% F
         },
         // Alakazam
         .{
-            .stats = .{
-                .hp = 55,
-                .atk = 50,
-                .def = 45,
-                .spe = 120,
-                .spa = 135,
-                .spd = 85,
-            },
+            .stats = .{ .hp = 55, .atk = 50, .def = 45, .spe = 120, .spa = 135, .spd = 85 },
             .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0x3F, // 25.0% F
         },
         // Machop
         .{
-            .stats = .{
-                .hp = 70,
-                .atk = 80,
-                .def = 50,
-                .spe = 35,
-                .spa = 35,
-                .spd = 35,
-            },
+            .stats = .{ .hp = 70, .atk = 80, .def = 50, .spe = 35, .spa = 35, .spd = 35 },
             .types = .{ .type1 = .Fighting, .type2 = .Fighting },
             .ratio = 0x3F, // 25.0% F
         },
         // Machoke
         .{
-            .stats = .{
-                .hp = 80,
-                .atk = 100,
-                .def = 70,
-                .spe = 45,
-                .spa = 50,
-                .spd = 60,
-            },
+            .stats = .{ .hp = 80, .atk = 100, .def = 70, .spe = 45, .spa = 50, .spd = 60 },
             .types = .{ .type1 = .Fighting, .type2 = .Fighting },
             .ratio = 0x3F, // 25.0% F
         },
         // Machamp
         .{
-            .stats = .{
-                .hp = 90,
-                .atk = 130,
-                .def = 80,
-                .spe = 55,
-                .spa = 65,
-                .spd = 85,
-            },
+            .stats = .{ .hp = 90, .atk = 130, .def = 80, .spe = 55, .spa = 65, .spd = 85 },
             .types = .{ .type1 = .Fighting, .type2 = .Fighting },
             .ratio = 0x3F, // 25.0% F
         },
         // Bellsprout
         .{
-            .stats = .{
-                .hp = 50,
-                .atk = 75,
-                .def = 35,
-                .spe = 40,
-                .spa = 70,
-                .spd = 30,
-            },
+            .stats = .{ .hp = 50, .atk = 75, .def = 35, .spe = 40, .spa = 70, .spd = 30 },
             .types = .{ .type1 = .Grass, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Weepinbell
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 90,
-                .def = 50,
-                .spe = 55,
-                .spa = 85,
-                .spd = 45,
-            },
+            .stats = .{ .hp = 65, .atk = 90, .def = 50, .spe = 55, .spa = 85, .spd = 45 },
             .types = .{ .type1 = .Grass, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Victreebel
         .{
-            .stats = .{
-                .hp = 80,
-                .atk = 105,
-                .def = 65,
-                .spe = 70,
-                .spa = 100,
-                .spd = 60,
-            },
+            .stats = .{ .hp = 80, .atk = 105, .def = 65, .spe = 70, .spa = 100, .spd = 60 },
             .types = .{ .type1 = .Grass, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Tentacool
         .{
-            .stats = .{
-                .hp = 40,
-                .atk = 40,
-                .def = 35,
-                .spe = 70,
-                .spa = 50,
-                .spd = 100,
-            },
+            .stats = .{ .hp = 40, .atk = 40, .def = 35, .spe = 70, .spa = 50, .spd = 100 },
             .types = .{ .type1 = .Water, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Tentacruel
         .{
-            .stats = .{
-                .hp = 80,
-                .atk = 70,
-                .def = 65,
-                .spe = 100,
-                .spa = 80,
-                .spd = 120,
-            },
+            .stats = .{ .hp = 80, .atk = 70, .def = 65, .spe = 100, .spa = 80, .spd = 120 },
             .types = .{ .type1 = .Water, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Geodude
         .{
-            .stats = .{
-                .hp = 40,
-                .atk = 80,
-                .def = 100,
-                .spe = 20,
-                .spa = 30,
-                .spd = 30,
-            },
+            .stats = .{ .hp = 40, .atk = 80, .def = 100, .spe = 20, .spa = 30, .spd = 30 },
             .types = .{ .type1 = .Rock, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
         // Graveler
         .{
-            .stats = .{
-                .hp = 55,
-                .atk = 95,
-                .def = 115,
-                .spe = 35,
-                .spa = 45,
-                .spd = 45,
-            },
+            .stats = .{ .hp = 55, .atk = 95, .def = 115, .spe = 35, .spa = 45, .spd = 45 },
             .types = .{ .type1 = .Rock, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
         // Golem
         .{
-            .stats = .{
-                .hp = 80,
-                .atk = 110,
-                .def = 130,
-                .spe = 45,
-                .spa = 55,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 80, .atk = 110, .def = 130, .spe = 45, .spa = 55, .spd = 65 },
             .types = .{ .type1 = .Rock, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
         // Ponyta
         .{
-            .stats = .{
-                .hp = 50,
-                .atk = 85,
-                .def = 55,
-                .spe = 90,
-                .spa = 65,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 50, .atk = 85, .def = 55, .spe = 90, .spa = 65, .spd = 65 },
             .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x7F, // 50.0% F
         },
         // Rapidash
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 100,
-                .def = 70,
-                .spe = 105,
-                .spa = 80,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 65, .atk = 100, .def = 70, .spe = 105, .spa = 80, .spd = 80 },
             .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x7F, // 50.0% F
         },
         // Slowpoke
         .{
-            .stats = .{
-                .hp = 90,
-                .atk = 65,
-                .def = 65,
-                .spe = 15,
-                .spa = 40,
-                .spd = 40,
-            },
+            .stats = .{ .hp = 90, .atk = 65, .def = 65, .spe = 15, .spa = 40, .spd = 40 },
             .types = .{ .type1 = .Water, .type2 = .Psychic },
             .ratio = 0x7F, // 50.0% F
         },
         // Slowbro
         .{
-            .stats = .{
-                .hp = 95,
-                .atk = 75,
-                .def = 110,
-                .spe = 30,
-                .spa = 100,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 95, .atk = 75, .def = 110, .spe = 30, .spa = 100, .spd = 80 },
             .types = .{ .type1 = .Water, .type2 = .Psychic },
             .ratio = 0x7F, // 50.0% F
         },
         // Magnemite
         .{
-            .stats = .{
-                .hp = 25,
-                .atk = 35,
-                .def = 70,
-                .spe = 45,
-                .spa = 95,
-                .spd = 55,
-            },
+            .stats = .{ .hp = 25, .atk = 35, .def = 70, .spe = 45, .spa = 95, .spd = 55 },
             .types = .{ .type1 = .Electric, .type2 = .Steel },
             .ratio = 0xFF, // N
         },
         // Magneton
         .{
-            .stats = .{
-                .hp = 50,
-                .atk = 60,
-                .def = 95,
-                .spe = 70,
-                .spa = 120,
-                .spd = 70,
-            },
+            .stats = .{ .hp = 50, .atk = 60, .def = 95, .spe = 70, .spa = 120, .spd = 70 },
             .types = .{ .type1 = .Electric, .type2 = .Steel },
             .ratio = 0xFF, // N
         },
         // Farfetchd
         .{
-            .stats = .{
-                .hp = 52,
-                .atk = 65,
-                .def = 55,
-                .spe = 60,
-                .spa = 58,
-                .spd = 62,
-            },
+            .stats = .{ .hp = 52, .atk = 65, .def = 55, .spe = 60, .spa = 58, .spd = 62 },
             .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Doduo
         .{
-            .stats = .{
-                .hp = 35,
-                .atk = 85,
-                .def = 45,
-                .spe = 75,
-                .spa = 35,
-                .spd = 35,
-            },
+            .stats = .{ .hp = 35, .atk = 85, .def = 45, .spe = 75, .spa = 35, .spd = 35 },
             .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Dodrio
         .{
-            .stats = .{
-                .hp = 60,
-                .atk = 110,
-                .def = 70,
-                .spe = 100,
-                .spa = 60,
-                .spd = 60,
-            },
+            .stats = .{ .hp = 60, .atk = 110, .def = 70, .spe = 100, .spa = 60, .spd = 60 },
             .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Seel
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 45,
-                .def = 55,
-                .spe = 45,
-                .spa = 45,
-                .spd = 70,
-            },
+            .stats = .{ .hp = 65, .atk = 45, .def = 55, .spe = 45, .spa = 45, .spd = 70 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
         // Dewgong
         .{
-            .stats = .{
-                .hp = 90,
-                .atk = 70,
-                .def = 80,
-                .spe = 70,
-                .spa = 70,
-                .spd = 95,
-            },
+            .stats = .{ .hp = 90, .atk = 70, .def = 80, .spe = 70, .spa = 70, .spd = 95 },
             .types = .{ .type1 = .Water, .type2 = .Ice },
             .ratio = 0x7F, // 50.0% F
         },
         // Grimer
         .{
-            .stats = .{
-                .hp = 80,
-                .atk = 80,
-                .def = 50,
-                .spe = 25,
-                .spa = 40,
-                .spd = 50,
-            },
+            .stats = .{ .hp = 80, .atk = 80, .def = 50, .spe = 25, .spa = 40, .spd = 50 },
             .types = .{ .type1 = .Poison, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Muk
         .{
-            .stats = .{
-                .hp = 105,
-                .atk = 105,
-                .def = 75,
-                .spe = 50,
-                .spa = 65,
-                .spd = 100,
-            },
+            .stats = .{ .hp = 105, .atk = 105, .def = 75, .spe = 50, .spa = 65, .spd = 100 },
             .types = .{ .type1 = .Poison, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Shellder
         .{
-            .stats = .{
-                .hp = 30,
-                .atk = 65,
-                .def = 100,
-                .spe = 40,
-                .spa = 45,
-                .spd = 25,
-            },
+            .stats = .{ .hp = 30, .atk = 65, .def = 100, .spe = 40, .spa = 45, .spd = 25 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
         // Cloyster
         .{
-            .stats = .{
-                .hp = 50,
-                .atk = 95,
-                .def = 180,
-                .spe = 70,
-                .spa = 85,
-                .spd = 45,
-            },
+            .stats = .{ .hp = 50, .atk = 95, .def = 180, .spe = 70, .spa = 85, .spd = 45 },
             .types = .{ .type1 = .Water, .type2 = .Ice },
             .ratio = 0x7F, // 50.0% F
         },
         // Gastly
         .{
-            .stats = .{
-                .hp = 30,
-                .atk = 35,
-                .def = 30,
-                .spe = 80,
-                .spa = 100,
-                .spd = 35,
-            },
+            .stats = .{ .hp = 30, .atk = 35, .def = 30, .spe = 80, .spa = 100, .spd = 35 },
             .types = .{ .type1 = .Ghost, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Haunter
         .{
-            .stats = .{
-                .hp = 45,
-                .atk = 50,
-                .def = 45,
-                .spe = 95,
-                .spa = 115,
-                .spd = 55,
-            },
+            .stats = .{ .hp = 45, .atk = 50, .def = 45, .spe = 95, .spa = 115, .spd = 55 },
             .types = .{ .type1 = .Ghost, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Gengar
         .{
-            .stats = .{
-                .hp = 60,
-                .atk = 65,
-                .def = 60,
-                .spe = 110,
-                .spa = 130,
-                .spd = 75,
-            },
+            .stats = .{ .hp = 60, .atk = 65, .def = 60, .spe = 110, .spa = 130, .spd = 75 },
             .types = .{ .type1 = .Ghost, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Onix
         .{
-            .stats = .{
-                .hp = 35,
-                .atk = 45,
-                .def = 160,
-                .spe = 70,
-                .spa = 30,
-                .spd = 45,
-            },
+            .stats = .{ .hp = 35, .atk = 45, .def = 160, .spe = 70, .spa = 30, .spd = 45 },
             .types = .{ .type1 = .Rock, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
         // Drowzee
         .{
-            .stats = .{
-                .hp = 60,
-                .atk = 48,
-                .def = 45,
-                .spe = 42,
-                .spa = 43,
-                .spd = 90,
-            },
+            .stats = .{ .hp = 60, .atk = 48, .def = 45, .spe = 42, .spa = 43, .spd = 90 },
             .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0x7F, // 50.0% F
         },
         // Hypno
         .{
-            .stats = .{
-                .hp = 85,
-                .atk = 73,
-                .def = 70,
-                .spe = 67,
-                .spa = 73,
-                .spd = 115,
-            },
+            .stats = .{ .hp = 85, .atk = 73, .def = 70, .spe = 67, .spa = 73, .spd = 115 },
             .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0x7F, // 50.0% F
         },
         // Krabby
         .{
-            .stats = .{
-                .hp = 30,
-                .atk = 105,
-                .def = 90,
-                .spe = 50,
-                .spa = 25,
-                .spd = 25,
-            },
+            .stats = .{ .hp = 30, .atk = 105, .def = 90, .spe = 50, .spa = 25, .spd = 25 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
         // Kingler
         .{
-            .stats = .{
-                .hp = 55,
-                .atk = 130,
-                .def = 115,
-                .spe = 75,
-                .spa = 50,
-                .spd = 50,
-            },
+            .stats = .{ .hp = 55, .atk = 130, .def = 115, .spe = 75, .spa = 50, .spd = 50 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
         // Voltorb
         .{
-            .stats = .{
-                .hp = 40,
-                .atk = 30,
-                .def = 50,
-                .spe = 100,
-                .spa = 55,
-                .spd = 55,
-            },
+            .stats = .{ .hp = 40, .atk = 30, .def = 50, .spe = 100, .spa = 55, .spd = 55 },
             .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0xFF, // N
         },
         // Electrode
         .{
-            .stats = .{
-                .hp = 60,
-                .atk = 50,
-                .def = 70,
-                .spe = 140,
-                .spa = 80,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 60, .atk = 50, .def = 70, .spe = 140, .spa = 80, .spd = 80 },
             .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0xFF, // N
         },
         // Exeggcute
         .{
-            .stats = .{
-                .hp = 60,
-                .atk = 40,
-                .def = 80,
-                .spe = 40,
-                .spa = 60,
-                .spd = 45,
-            },
+            .stats = .{ .hp = 60, .atk = 40, .def = 80, .spe = 40, .spa = 60, .spd = 45 },
             .types = .{ .type1 = .Grass, .type2 = .Psychic },
             .ratio = 0x7F, // 50.0% F
         },
         // Exeggutor
         .{
-            .stats = .{
-                .hp = 95,
-                .atk = 95,
-                .def = 85,
-                .spe = 55,
-                .spa = 125,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 95, .atk = 95, .def = 85, .spe = 55, .spa = 125, .spd = 65 },
             .types = .{ .type1 = .Grass, .type2 = .Psychic },
             .ratio = 0x7F, // 50.0% F
         },
         // Cubone
         .{
-            .stats = .{
-                .hp = 50,
-                .atk = 50,
-                .def = 95,
-                .spe = 35,
-                .spa = 40,
-                .spd = 50,
-            },
+            .stats = .{ .hp = 50, .atk = 50, .def = 95, .spe = 35, .spa = 40, .spd = 50 },
             .types = .{ .type1 = .Ground, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
         // Marowak
         .{
-            .stats = .{
-                .hp = 60,
-                .atk = 80,
-                .def = 110,
-                .spe = 45,
-                .spa = 50,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 60, .atk = 80, .def = 110, .spe = 45, .spa = 50, .spd = 80 },
             .types = .{ .type1 = .Ground, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
         // Hitmonlee
         .{
-            .stats = .{
-                .hp = 50,
-                .atk = 120,
-                .def = 53,
-                .spe = 87,
-                .spa = 35,
-                .spd = 110,
-            },
+            .stats = .{ .hp = 50, .atk = 120, .def = 53, .spe = 87, .spa = 35, .spd = 110 },
             .types = .{ .type1 = .Fighting, .type2 = .Fighting },
             .ratio = 0x00, // 0.00% F
         },
         // Hitmonchan
         .{
-            .stats = .{
-                .hp = 50,
-                .atk = 105,
-                .def = 79,
-                .spe = 76,
-                .spa = 35,
-                .spd = 110,
-            },
+            .stats = .{ .hp = 50, .atk = 105, .def = 79, .spe = 76, .spa = 35, .spd = 110 },
             .types = .{ .type1 = .Fighting, .type2 = .Fighting },
             .ratio = 0x00, // 0.00% F
         },
         // Lickitung
         .{
-            .stats = .{
-                .hp = 90,
-                .atk = 55,
-                .def = 75,
-                .spe = 30,
-                .spa = 60,
-                .spd = 75,
-            },
+            .stats = .{ .hp = 90, .atk = 55, .def = 75, .spe = 30, .spa = 60, .spd = 75 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
         // Koffing
         .{
-            .stats = .{
-                .hp = 40,
-                .atk = 65,
-                .def = 95,
-                .spe = 35,
-                .spa = 60,
-                .spd = 45,
-            },
+            .stats = .{ .hp = 40, .atk = 65, .def = 95, .spe = 35, .spa = 60, .spd = 45 },
             .types = .{ .type1 = .Poison, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Weezing
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 90,
-                .def = 120,
-                .spe = 60,
-                .spa = 85,
-                .spd = 70,
-            },
+            .stats = .{ .hp = 65, .atk = 90, .def = 120, .spe = 60, .spa = 85, .spd = 70 },
             .types = .{ .type1 = .Poison, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Rhyhorn
         .{
-            .stats = .{
-                .hp = 80,
-                .atk = 85,
-                .def = 95,
-                .spe = 25,
-                .spa = 30,
-                .spd = 30,
-            },
+            .stats = .{ .hp = 80, .atk = 85, .def = 95, .spe = 25, .spa = 30, .spd = 30 },
             .types = .{ .type1 = .Ground, .type2 = .Rock },
             .ratio = 0x7F, // 50.0% F
         },
         // Rhydon
         .{
-            .stats = .{
-                .hp = 105,
-                .atk = 130,
-                .def = 120,
-                .spe = 40,
-                .spa = 45,
-                .spd = 45,
-            },
+            .stats = .{ .hp = 105, .atk = 130, .def = 120, .spe = 40, .spa = 45, .spd = 45 },
             .types = .{ .type1 = .Ground, .type2 = .Rock },
             .ratio = 0x7F, // 50.0% F
         },
         // Chansey
         .{
-            .stats = .{
-                .hp = 250,
-                .atk = 5,
-                .def = 5,
-                .spe = 50,
-                .spa = 35,
-                .spd = 105,
-            },
+            .stats = .{ .hp = 250, .atk = 5, .def = 5, .spe = 50, .spa = 35, .spd = 105 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xFE, // 100% F
         },
         // Tangela
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 55,
-                .def = 115,
-                .spe = 60,
-                .spa = 100,
-                .spd = 40,
-            },
+            .stats = .{ .hp = 65, .atk = 55, .def = 115, .spe = 60, .spa = 100, .spd = 40 },
             .types = .{ .type1 = .Grass, .type2 = .Grass },
             .ratio = 0x7F, // 50.0% F
         },
         // Kangaskhan
         .{
-            .stats = .{
-                .hp = 105,
-                .atk = 95,
-                .def = 80,
-                .spe = 90,
-                .spa = 40,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 105, .atk = 95, .def = 80, .spe = 90, .spa = 40, .spd = 80 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xFE, // 100% F
         },
         // Horsea
         .{
-            .stats = .{
-                .hp = 30,
-                .atk = 40,
-                .def = 70,
-                .spe = 60,
-                .spa = 70,
-                .spd = 25,
-            },
+            .stats = .{ .hp = 30, .atk = 40, .def = 70, .spe = 60, .spa = 70, .spd = 25 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
         // Seadra
         .{
-            .stats = .{
-                .hp = 55,
-                .atk = 65,
-                .def = 95,
-                .spe = 85,
-                .spa = 95,
-                .spd = 45,
-            },
+            .stats = .{ .hp = 55, .atk = 65, .def = 95, .spe = 85, .spa = 95, .spd = 45 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
         // Goldeen
         .{
-            .stats = .{
-                .hp = 45,
-                .atk = 67,
-                .def = 60,
-                .spe = 63,
-                .spa = 35,
-                .spd = 50,
-            },
+            .stats = .{ .hp = 45, .atk = 67, .def = 60, .spe = 63, .spa = 35, .spd = 50 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
         // Seaking
         .{
-            .stats = .{
-                .hp = 80,
-                .atk = 92,
-                .def = 65,
-                .spe = 68,
-                .spa = 65,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 80, .atk = 92, .def = 65, .spe = 68, .spa = 65, .spd = 80 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
         // Staryu
         .{
-            .stats = .{
-                .hp = 30,
-                .atk = 45,
-                .def = 55,
-                .spe = 85,
-                .spa = 70,
-                .spd = 55,
-            },
+            .stats = .{ .hp = 30, .atk = 45, .def = 55, .spe = 85, .spa = 70, .spd = 55 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0xFF, // N
         },
         // Starmie
         .{
-            .stats = .{
-                .hp = 60,
-                .atk = 75,
-                .def = 85,
-                .spe = 115,
-                .spa = 100,
-                .spd = 85,
-            },
+            .stats = .{ .hp = 60, .atk = 75, .def = 85, .spe = 115, .spa = 100, .spd = 85 },
             .types = .{ .type1 = .Water, .type2 = .Psychic },
             .ratio = 0xFF, // N
         },
         // MrMime
         .{
-            .stats = .{
-                .hp = 40,
-                .atk = 45,
-                .def = 65,
-                .spe = 90,
-                .spa = 100,
-                .spd = 120,
-            },
+            .stats = .{ .hp = 40, .atk = 45, .def = 65, .spe = 90, .spa = 100, .spd = 120 },
             .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0x7F, // 50.0% F
         },
         // Scyther
         .{
-            .stats = .{
-                .hp = 70,
-                .atk = 110,
-                .def = 80,
-                .spe = 105,
-                .spa = 55,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 70, .atk = 110, .def = 80, .spe = 105, .spa = 55, .spd = 80 },
             .types = .{ .type1 = .Bug, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Jynx
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 50,
-                .def = 35,
-                .spe = 95,
-                .spa = 115,
-                .spd = 95,
-            },
+            .stats = .{ .hp = 65, .atk = 50, .def = 35, .spe = 95, .spa = 115, .spd = 95 },
             .types = .{ .type1 = .Ice, .type2 = .Psychic },
             .ratio = 0xFE, // 100% F
         },
         // Electabuzz
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 83,
-                .def = 57,
-                .spe = 105,
-                .spa = 95,
-                .spd = 85,
-            },
+            .stats = .{ .hp = 65, .atk = 83, .def = 57, .spe = 105, .spa = 95, .spd = 85 },
             .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0x3F, // 25.0% F
         },
         // Magmar
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 95,
-                .def = 57,
-                .spe = 93,
-                .spa = 100,
-                .spd = 85,
-            },
+            .stats = .{ .hp = 65, .atk = 95, .def = 57, .spe = 93, .spa = 100, .spd = 85 },
             .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x3F, // 25.0% F
         },
         // Pinsir
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 125,
-                .def = 100,
-                .spe = 85,
-                .spa = 55,
-                .spd = 70,
-            },
+            .stats = .{ .hp = 65, .atk = 125, .def = 100, .spe = 85, .spa = 55, .spd = 70 },
             .types = .{ .type1 = .Bug, .type2 = .Bug },
             .ratio = 0x7F, // 50.0% F
         },
         // Tauros
         .{
-            .stats = .{
-                .hp = 75,
-                .atk = 100,
-                .def = 95,
-                .spe = 110,
-                .spa = 40,
-                .spd = 70,
-            },
+            .stats = .{ .hp = 75, .atk = 100, .def = 95, .spe = 110, .spa = 40, .spd = 70 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x00, // 0.00% F
         },
         // Magikarp
         .{
-            .stats = .{
-                .hp = 20,
-                .atk = 10,
-                .def = 55,
-                .spe = 80,
-                .spa = 15,
-                .spd = 20,
-            },
+            .stats = .{ .hp = 20, .atk = 10, .def = 55, .spe = 80, .spa = 15, .spd = 20 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
         // Gyarados
         .{
-            .stats = .{
-                .hp = 95,
-                .atk = 125,
-                .def = 79,
-                .spe = 81,
-                .spa = 60,
-                .spd = 100,
-            },
+            .stats = .{ .hp = 95, .atk = 125, .def = 79, .spe = 81, .spa = 60, .spd = 100 },
             .types = .{ .type1 = .Water, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Lapras
         .{
-            .stats = .{
-                .hp = 130,
-                .atk = 85,
-                .def = 80,
-                .spe = 60,
-                .spa = 85,
-                .spd = 95,
-            },
+            .stats = .{ .hp = 130, .atk = 85, .def = 80, .spe = 60, .spa = 85, .spd = 95 },
             .types = .{ .type1 = .Water, .type2 = .Ice },
             .ratio = 0x7F, // 50.0% F
         },
         // Ditto
         .{
-            .stats = .{
-                .hp = 48,
-                .atk = 48,
-                .def = 48,
-                .spe = 48,
-                .spa = 48,
-                .spd = 48,
-            },
+            .stats = .{ .hp = 48, .atk = 48, .def = 48, .spe = 48, .spa = 48, .spd = 48 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xFF, // N
         },
         // Eevee
         .{
-            .stats = .{
-                .hp = 55,
-                .atk = 55,
-                .def = 50,
-                .spe = 55,
-                .spa = 45,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 55, .atk = 55, .def = 50, .spe = 55, .spa = 45, .spd = 65 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x1F, // 12.5% F
         },
         // Vaporeon
         .{
-            .stats = .{
-                .hp = 130,
-                .atk = 65,
-                .def = 60,
-                .spe = 65,
-                .spa = 110,
-                .spd = 95,
-            },
+            .stats = .{ .hp = 130, .atk = 65, .def = 60, .spe = 65, .spa = 110, .spd = 95 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
         // Jolteon
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 65,
-                .def = 60,
-                .spe = 130,
-                .spa = 110,
-                .spd = 95,
-            },
+            .stats = .{ .hp = 65, .atk = 65, .def = 60, .spe = 130, .spa = 110, .spd = 95 },
             .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0x1F, // 12.5% F
         },
         // Flareon
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 130,
-                .def = 60,
-                .spe = 65,
-                .spa = 95,
-                .spd = 110,
-            },
+            .stats = .{ .hp = 65, .atk = 130, .def = 60, .spe = 65, .spa = 95, .spd = 110 },
             .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x1F, // 12.5% F
         },
         // Porygon
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 60,
-                .def = 70,
-                .spe = 40,
-                .spa = 85,
-                .spd = 75,
-            },
+            .stats = .{ .hp = 65, .atk = 60, .def = 70, .spe = 40, .spa = 85, .spd = 75 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xFF, // N
         },
         // Omanyte
         .{
-            .stats = .{
-                .hp = 35,
-                .atk = 40,
-                .def = 100,
-                .spe = 35,
-                .spa = 90,
-                .spd = 55,
-            },
+            .stats = .{ .hp = 35, .atk = 40, .def = 100, .spe = 35, .spa = 90, .spd = 55 },
             .types = .{ .type1 = .Rock, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
         // Omastar
         .{
-            .stats = .{
-                .hp = 70,
-                .atk = 60,
-                .def = 125,
-                .spe = 55,
-                .spa = 115,
-                .spd = 70,
-            },
+            .stats = .{ .hp = 70, .atk = 60, .def = 125, .spe = 55, .spa = 115, .spd = 70 },
             .types = .{ .type1 = .Rock, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
         // Kabuto
         .{
-            .stats = .{
-                .hp = 30,
-                .atk = 80,
-                .def = 90,
-                .spe = 55,
-                .spa = 55,
-                .spd = 45,
-            },
+            .stats = .{ .hp = 30, .atk = 80, .def = 90, .spe = 55, .spa = 55, .spd = 45 },
             .types = .{ .type1 = .Rock, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
         // Kabutops
         .{
-            .stats = .{
-                .hp = 60,
-                .atk = 115,
-                .def = 105,
-                .spe = 80,
-                .spa = 65,
-                .spd = 70,
-            },
+            .stats = .{ .hp = 60, .atk = 115, .def = 105, .spe = 80, .spa = 65, .spd = 70 },
             .types = .{ .type1 = .Rock, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
         // Aerodactyl
         .{
-            .stats = .{
-                .hp = 80,
-                .atk = 105,
-                .def = 65,
-                .spe = 130,
-                .spa = 60,
-                .spd = 75,
-            },
+            .stats = .{ .hp = 80, .atk = 105, .def = 65, .spe = 130, .spa = 60, .spd = 75 },
             .types = .{ .type1 = .Rock, .type2 = .Flying },
             .ratio = 0x1F, // 12.5% F
         },
         // Snorlax
         .{
-            .stats = .{
-                .hp = 160,
-                .atk = 110,
-                .def = 65,
-                .spe = 30,
-                .spa = 65,
-                .spd = 110,
-            },
+            .stats = .{ .hp = 160, .atk = 110, .def = 65, .spe = 30, .spa = 65, .spd = 110 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x1F, // 12.5% F
         },
         // Articuno
         .{
-            .stats = .{
-                .hp = 90,
-                .atk = 85,
-                .def = 100,
-                .spe = 85,
-                .spa = 95,
-                .spd = 125,
-            },
+            .stats = .{ .hp = 90, .atk = 85, .def = 100, .spe = 85, .spa = 95, .spd = 125 },
             .types = .{ .type1 = .Ice, .type2 = .Flying },
             .ratio = 0xFF, // N
         },
         // Zapdos
         .{
-            .stats = .{
-                .hp = 90,
-                .atk = 90,
-                .def = 85,
-                .spe = 100,
-                .spa = 125,
-                .spd = 90,
-            },
+            .stats = .{ .hp = 90, .atk = 90, .def = 85, .spe = 100, .spa = 125, .spd = 90 },
             .types = .{ .type1 = .Electric, .type2 = .Flying },
             .ratio = 0xFF, // N
         },
         // Moltres
         .{
-            .stats = .{
-                .hp = 90,
-                .atk = 100,
-                .def = 90,
-                .spe = 90,
-                .spa = 125,
-                .spd = 85,
-            },
+            .stats = .{ .hp = 90, .atk = 100, .def = 90, .spe = 90, .spa = 125, .spd = 85 },
             .types = .{ .type1 = .Fire, .type2 = .Flying },
             .ratio = 0xFF, // N
         },
         // Dratini
         .{
-            .stats = .{
-                .hp = 41,
-                .atk = 64,
-                .def = 45,
-                .spe = 50,
-                .spa = 50,
-                .spd = 50,
-            },
+            .stats = .{ .hp = 41, .atk = 64, .def = 45, .spe = 50, .spa = 50, .spd = 50 },
             .types = .{ .type1 = .Dragon, .type2 = .Dragon },
             .ratio = 0x7F, // 50.0% F
         },
         // Dragonair
         .{
-            .stats = .{
-                .hp = 61,
-                .atk = 84,
-                .def = 65,
-                .spe = 70,
-                .spa = 70,
-                .spd = 70,
-            },
+            .stats = .{ .hp = 61, .atk = 84, .def = 65, .spe = 70, .spa = 70, .spd = 70 },
             .types = .{ .type1 = .Dragon, .type2 = .Dragon },
             .ratio = 0x7F, // 50.0% F
         },
         // Dragonite
         .{
-            .stats = .{
-                .hp = 91,
-                .atk = 134,
-                .def = 95,
-                .spe = 80,
-                .spa = 100,
-                .spd = 100,
-            },
+            .stats = .{ .hp = 91, .atk = 134, .def = 95, .spe = 80, .spa = 100, .spd = 100 },
             .types = .{ .type1 = .Dragon, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Mewtwo
         .{
-            .stats = .{
-                .hp = 106,
-                .atk = 110,
-                .def = 90,
-                .spe = 130,
-                .spa = 154,
-                .spd = 90,
-            },
+            .stats = .{ .hp = 106, .atk = 110, .def = 90, .spe = 130, .spa = 154, .spd = 90 },
             .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0xFF, // N
         },
         // Mew
         .{
-            .stats = .{
-                .hp = 100,
-                .atk = 100,
-                .def = 100,
-                .spe = 100,
-                .spa = 100,
-                .spd = 100,
-            },
+            .stats = .{ .hp = 100, .atk = 100, .def = 100, .spe = 100, .spa = 100, .spd = 100 },
             .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0xFF, // N
         },
         // Chikorita
         .{
-            .stats = .{
-                .hp = 45,
-                .atk = 49,
-                .def = 65,
-                .spe = 45,
-                .spa = 49,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 45, .atk = 49, .def = 65, .spe = 45, .spa = 49, .spd = 65 },
             .types = .{ .type1 = .Grass, .type2 = .Grass },
             .ratio = 0x1F, // 12.5% F
         },
         // Bayleef
         .{
-            .stats = .{
-                .hp = 60,
-                .atk = 62,
-                .def = 80,
-                .spe = 60,
-                .spa = 63,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 60, .atk = 62, .def = 80, .spe = 60, .spa = 63, .spd = 80 },
             .types = .{ .type1 = .Grass, .type2 = .Grass },
             .ratio = 0x1F, // 12.5% F
         },
         // Meganium
         .{
-            .stats = .{
-                .hp = 80,
-                .atk = 82,
-                .def = 100,
-                .spe = 80,
-                .spa = 83,
-                .spd = 100,
-            },
+            .stats = .{ .hp = 80, .atk = 82, .def = 100, .spe = 80, .spa = 83, .spd = 100 },
             .types = .{ .type1 = .Grass, .type2 = .Grass },
             .ratio = 0x1F, // 12.5% F
         },
         // Cyndaquil
         .{
-            .stats = .{
-                .hp = 39,
-                .atk = 52,
-                .def = 43,
-                .spe = 65,
-                .spa = 60,
-                .spd = 50,
-            },
+            .stats = .{ .hp = 39, .atk = 52, .def = 43, .spe = 65, .spa = 60, .spd = 50 },
             .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x1F, // 12.5% F
         },
         // Quilava
         .{
-            .stats = .{
-                .hp = 58,
-                .atk = 64,
-                .def = 58,
-                .spe = 80,
-                .spa = 80,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 58, .atk = 64, .def = 58, .spe = 80, .spa = 80, .spd = 65 },
             .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x1F, // 12.5% F
         },
         // Typhlosion
         .{
-            .stats = .{
-                .hp = 78,
-                .atk = 84,
-                .def = 78,
-                .spe = 100,
-                .spa = 109,
-                .spd = 85,
-            },
+            .stats = .{ .hp = 78, .atk = 84, .def = 78, .spe = 100, .spa = 109, .spd = 85 },
             .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x1F, // 12.5% F
         },
         // Totodile
         .{
-            .stats = .{
-                .hp = 50,
-                .atk = 65,
-                .def = 64,
-                .spe = 43,
-                .spa = 44,
-                .spd = 48,
-            },
+            .stats = .{ .hp = 50, .atk = 65, .def = 64, .spe = 43, .spa = 44, .spd = 48 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
         // Croconaw
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 80,
-                .def = 80,
-                .spe = 58,
-                .spa = 59,
-                .spd = 63,
-            },
+            .stats = .{ .hp = 65, .atk = 80, .def = 80, .spe = 58, .spa = 59, .spd = 63 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
         // Feraligatr
         .{
-            .stats = .{
-                .hp = 85,
-                .atk = 105,
-                .def = 100,
-                .spe = 78,
-                .spa = 79,
-                .spd = 83,
-            },
+            .stats = .{ .hp = 85, .atk = 105, .def = 100, .spe = 78, .spa = 79, .spd = 83 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x1F, // 12.5% F
         },
         // Sentret
         .{
-            .stats = .{
-                .hp = 35,
-                .atk = 46,
-                .def = 34,
-                .spe = 20,
-                .spa = 35,
-                .spd = 45,
-            },
+            .stats = .{ .hp = 35, .atk = 46, .def = 34, .spe = 20, .spa = 35, .spd = 45 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
         // Furret
         .{
-            .stats = .{
-                .hp = 85,
-                .atk = 76,
-                .def = 64,
-                .spe = 90,
-                .spa = 45,
-                .spd = 55,
-            },
+            .stats = .{ .hp = 85, .atk = 76, .def = 64, .spe = 90, .spa = 45, .spd = 55 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
         // Hoothoot
         .{
-            .stats = .{
-                .hp = 60,
-                .atk = 30,
-                .def = 30,
-                .spe = 50,
-                .spa = 36,
-                .spd = 56,
-            },
+            .stats = .{ .hp = 60, .atk = 30, .def = 30, .spe = 50, .spa = 36, .spd = 56 },
             .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Noctowl
         .{
-            .stats = .{
-                .hp = 100,
-                .atk = 50,
-                .def = 50,
-                .spe = 70,
-                .spa = 76,
-                .spd = 96,
-            },
+            .stats = .{ .hp = 100, .atk = 50, .def = 50, .spe = 70, .spa = 76, .spd = 96 },
             .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Ledyba
         .{
-            .stats = .{
-                .hp = 40,
-                .atk = 20,
-                .def = 30,
-                .spe = 55,
-                .spa = 40,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 40, .atk = 20, .def = 30, .spe = 55, .spa = 40, .spd = 80 },
             .types = .{ .type1 = .Bug, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Ledian
         .{
-            .stats = .{
-                .hp = 55,
-                .atk = 35,
-                .def = 50,
-                .spe = 85,
-                .spa = 55,
-                .spd = 110,
-            },
+            .stats = .{ .hp = 55, .atk = 35, .def = 50, .spe = 85, .spa = 55, .spd = 110 },
             .types = .{ .type1 = .Bug, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Spinarak
         .{
-            .stats = .{
-                .hp = 40,
-                .atk = 60,
-                .def = 40,
-                .spe = 30,
-                .spa = 40,
-                .spd = 40,
-            },
+            .stats = .{ .hp = 40, .atk = 60, .def = 40, .spe = 30, .spa = 40, .spd = 40 },
             .types = .{ .type1 = .Bug, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Ariados
         .{
-            .stats = .{
-                .hp = 70,
-                .atk = 90,
-                .def = 70,
-                .spe = 40,
-                .spa = 60,
-                .spd = 60,
-            },
+            .stats = .{ .hp = 70, .atk = 90, .def = 70, .spe = 40, .spa = 60, .spd = 60 },
             .types = .{ .type1 = .Bug, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Crobat
         .{
-            .stats = .{
-                .hp = 85,
-                .atk = 90,
-                .def = 80,
-                .spe = 130,
-                .spa = 70,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 85, .atk = 90, .def = 80, .spe = 130, .spa = 70, .spd = 80 },
             .types = .{ .type1 = .Poison, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Chinchou
         .{
-            .stats = .{
-                .hp = 75,
-                .atk = 38,
-                .def = 38,
-                .spe = 67,
-                .spa = 56,
-                .spd = 56,
-            },
+            .stats = .{ .hp = 75, .atk = 38, .def = 38, .spe = 67, .spa = 56, .spd = 56 },
             .types = .{ .type1 = .Water, .type2 = .Electric },
             .ratio = 0x7F, // 50.0% F
         },
         // Lanturn
         .{
-            .stats = .{
-                .hp = 125,
-                .atk = 58,
-                .def = 58,
-                .spe = 67,
-                .spa = 76,
-                .spd = 76,
-            },
+            .stats = .{ .hp = 125, .atk = 58, .def = 58, .spe = 67, .spa = 76, .spd = 76 },
             .types = .{ .type1 = .Water, .type2 = .Electric },
             .ratio = 0x7F, // 50.0% F
         },
         // Pichu
         .{
-            .stats = .{
-                .hp = 20,
-                .atk = 40,
-                .def = 15,
-                .spe = 60,
-                .spa = 35,
-                .spd = 35,
-            },
+            .stats = .{ .hp = 20, .atk = 40, .def = 15, .spe = 60, .spa = 35, .spd = 35 },
             .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0x7F, // 50.0% F
         },
         // Cleffa
         .{
-            .stats = .{
-                .hp = 50,
-                .atk = 25,
-                .def = 28,
-                .spe = 15,
-                .spa = 45,
-                .spd = 55,
-            },
+            .stats = .{ .hp = 50, .atk = 25, .def = 28, .spe = 15, .spa = 45, .spd = 55 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xBF, // 75.0% F
         },
         // Igglybuff
         .{
-            .stats = .{
-                .hp = 90,
-                .atk = 30,
-                .def = 15,
-                .spe = 15,
-                .spa = 40,
-                .spd = 20,
-            },
+            .stats = .{ .hp = 90, .atk = 30, .def = 15, .spe = 15, .spa = 40, .spd = 20 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xBF, // 75.0% F
         },
         // Togepi
         .{
-            .stats = .{
-                .hp = 35,
-                .atk = 20,
-                .def = 65,
-                .spe = 20,
-                .spa = 40,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 35, .atk = 20, .def = 65, .spe = 20, .spa = 40, .spd = 65 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x1F, // 12.5% F
         },
         // Togetic
         .{
-            .stats = .{
-                .hp = 55,
-                .atk = 40,
-                .def = 85,
-                .spe = 40,
-                .spa = 80,
-                .spd = 105,
-            },
+            .stats = .{ .hp = 55, .atk = 40, .def = 85, .spe = 40, .spa = 80, .spd = 105 },
             .types = .{ .type1 = .Normal, .type2 = .Flying },
             .ratio = 0x1F, // 12.5% F
         },
         // Natu
         .{
-            .stats = .{
-                .hp = 40,
-                .atk = 50,
-                .def = 45,
-                .spe = 70,
-                .spa = 70,
-                .spd = 45,
-            },
+            .stats = .{ .hp = 40, .atk = 50, .def = 45, .spe = 70, .spa = 70, .spd = 45 },
             .types = .{ .type1 = .Psychic, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Xatu
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 75,
-                .def = 70,
-                .spe = 95,
-                .spa = 95,
-                .spd = 70,
-            },
+            .stats = .{ .hp = 65, .atk = 75, .def = 70, .spe = 95, .spa = 95, .spd = 70 },
             .types = .{ .type1 = .Psychic, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Mareep
         .{
-            .stats = .{
-                .hp = 55,
-                .atk = 40,
-                .def = 40,
-                .spe = 35,
-                .spa = 65,
-                .spd = 45,
-            },
+            .stats = .{ .hp = 55, .atk = 40, .def = 40, .spe = 35, .spa = 65, .spd = 45 },
             .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0x7F, // 50.0% F
         },
         // Flaaffy
         .{
-            .stats = .{
-                .hp = 70,
-                .atk = 55,
-                .def = 55,
-                .spe = 45,
-                .spa = 80,
-                .spd = 60,
-            },
+            .stats = .{ .hp = 70, .atk = 55, .def = 55, .spe = 45, .spa = 80, .spd = 60 },
             .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0x7F, // 50.0% F
         },
         // Ampharos
         .{
-            .stats = .{
-                .hp = 90,
-                .atk = 75,
-                .def = 75,
-                .spe = 55,
-                .spa = 115,
-                .spd = 90,
-            },
+            .stats = .{ .hp = 90, .atk = 75, .def = 75, .spe = 55, .spa = 115, .spd = 90 },
             .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0x7F, // 50.0% F
         },
         // Bellossom
         .{
-            .stats = .{
-                .hp = 75,
-                .atk = 80,
-                .def = 85,
-                .spe = 50,
-                .spa = 90,
-                .spd = 100,
-            },
+            .stats = .{ .hp = 75, .atk = 80, .def = 85, .spe = 50, .spa = 90, .spd = 100 },
             .types = .{ .type1 = .Grass, .type2 = .Grass },
             .ratio = 0x7F, // 50.0% F
         },
         // Marill
         .{
-            .stats = .{
-                .hp = 70,
-                .atk = 20,
-                .def = 50,
-                .spe = 40,
-                .spa = 20,
-                .spd = 50,
-            },
+            .stats = .{ .hp = 70, .atk = 20, .def = 50, .spe = 40, .spa = 20, .spd = 50 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
         // Azumarill
         .{
-            .stats = .{
-                .hp = 100,
-                .atk = 50,
-                .def = 80,
-                .spe = 50,
-                .spa = 50,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 100, .atk = 50, .def = 80, .spe = 50, .spa = 50, .spd = 80 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
         // Sudowoodo
         .{
-            .stats = .{
-                .hp = 70,
-                .atk = 100,
-                .def = 115,
-                .spe = 30,
-                .spa = 30,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 70, .atk = 100, .def = 115, .spe = 30, .spa = 30, .spd = 65 },
             .types = .{ .type1 = .Rock, .type2 = .Rock },
             .ratio = 0x7F, // 50.0% F
         },
         // Politoed
         .{
-            .stats = .{
-                .hp = 90,
-                .atk = 75,
-                .def = 75,
-                .spe = 70,
-                .spa = 90,
-                .spd = 100,
-            },
+            .stats = .{ .hp = 90, .atk = 75, .def = 75, .spe = 70, .spa = 90, .spd = 100 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
         // Hoppip
         .{
-            .stats = .{
-                .hp = 35,
-                .atk = 35,
-                .def = 40,
-                .spe = 50,
-                .spa = 35,
-                .spd = 55,
-            },
+            .stats = .{ .hp = 35, .atk = 35, .def = 40, .spe = 50, .spa = 35, .spd = 55 },
             .types = .{ .type1 = .Grass, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Skiploom
         .{
-            .stats = .{
-                .hp = 55,
-                .atk = 45,
-                .def = 50,
-                .spe = 80,
-                .spa = 45,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 55, .atk = 45, .def = 50, .spe = 80, .spa = 45, .spd = 65 },
             .types = .{ .type1 = .Grass, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Jumpluff
         .{
-            .stats = .{
-                .hp = 75,
-                .atk = 55,
-                .def = 70,
-                .spe = 110,
-                .spa = 55,
-                .spd = 85,
-            },
+            .stats = .{ .hp = 75, .atk = 55, .def = 70, .spe = 110, .spa = 55, .spd = 85 },
             .types = .{ .type1 = .Grass, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Aipom
         .{
-            .stats = .{
-                .hp = 55,
-                .atk = 70,
-                .def = 55,
-                .spe = 85,
-                .spa = 40,
-                .spd = 55,
-            },
+            .stats = .{ .hp = 55, .atk = 70, .def = 55, .spe = 85, .spa = 40, .spd = 55 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
         // Sunkern
         .{
-            .stats = .{
-                .hp = 30,
-                .atk = 30,
-                .def = 30,
-                .spe = 30,
-                .spa = 30,
-                .spd = 30,
-            },
+            .stats = .{ .hp = 30, .atk = 30, .def = 30, .spe = 30, .spa = 30, .spd = 30 },
             .types = .{ .type1 = .Grass, .type2 = .Grass },
             .ratio = 0x7F, // 50.0% F
         },
         // Sunflora
         .{
-            .stats = .{
-                .hp = 75,
-                .atk = 75,
-                .def = 55,
-                .spe = 30,
-                .spa = 105,
-                .spd = 85,
-            },
+            .stats = .{ .hp = 75, .atk = 75, .def = 55, .spe = 30, .spa = 105, .spd = 85 },
             .types = .{ .type1 = .Grass, .type2 = .Grass },
             .ratio = 0x7F, // 50.0% F
         },
         // Yanma
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 65,
-                .def = 45,
-                .spe = 95,
-                .spa = 75,
-                .spd = 45,
-            },
+            .stats = .{ .hp = 65, .atk = 65, .def = 45, .spe = 95, .spa = 75, .spd = 45 },
             .types = .{ .type1 = .Bug, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Wooper
         .{
-            .stats = .{
-                .hp = 55,
-                .atk = 45,
-                .def = 45,
-                .spe = 15,
-                .spa = 25,
-                .spd = 25,
-            },
+            .stats = .{ .hp = 55, .atk = 45, .def = 45, .spe = 15, .spa = 25, .spd = 25 },
             .types = .{ .type1 = .Water, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
         // Quagsire
         .{
-            .stats = .{
-                .hp = 95,
-                .atk = 85,
-                .def = 85,
-                .spe = 35,
-                .spa = 65,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 95, .atk = 85, .def = 85, .spe = 35, .spa = 65, .spd = 65 },
             .types = .{ .type1 = .Water, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
         // Espeon
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 65,
-                .def = 60,
-                .spe = 110,
-                .spa = 130,
-                .spd = 95,
-            },
+            .stats = .{ .hp = 65, .atk = 65, .def = 60, .spe = 110, .spa = 130, .spd = 95 },
             .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0x1F, // 12.5% F
         },
         // Umbreon
         .{
-            .stats = .{
-                .hp = 95,
-                .atk = 65,
-                .def = 110,
-                .spe = 65,
-                .spa = 60,
-                .spd = 130,
-            },
+            .stats = .{ .hp = 95, .atk = 65, .def = 110, .spe = 65, .spa = 60, .spd = 130 },
             .types = .{ .type1 = .Dark, .type2 = .Dark },
             .ratio = 0x1F, // 12.5% F
         },
         // Murkrow
         .{
-            .stats = .{
-                .hp = 60,
-                .atk = 85,
-                .def = 42,
-                .spe = 91,
-                .spa = 85,
-                .spd = 42,
-            },
+            .stats = .{ .hp = 60, .atk = 85, .def = 42, .spe = 91, .spa = 85, .spd = 42 },
             .types = .{ .type1 = .Dark, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Slowking
         .{
-            .stats = .{
-                .hp = 95,
-                .atk = 75,
-                .def = 80,
-                .spe = 30,
-                .spa = 100,
-                .spd = 110,
-            },
+            .stats = .{ .hp = 95, .atk = 75, .def = 80, .spe = 30, .spa = 100, .spd = 110 },
             .types = .{ .type1 = .Water, .type2 = .Psychic },
             .ratio = 0x7F, // 50.0% F
         },
         // Misdreavus
         .{
-            .stats = .{
-                .hp = 60,
-                .atk = 60,
-                .def = 60,
-                .spe = 85,
-                .spa = 85,
-                .spd = 85,
-            },
+            .stats = .{ .hp = 60, .atk = 60, .def = 60, .spe = 85, .spa = 85, .spd = 85 },
             .types = .{ .type1 = .Ghost, .type2 = .Ghost },
             .ratio = 0x7F, // 50.0% F
         },
         // Unown
         .{
-            .stats = .{
-                .hp = 48,
-                .atk = 72,
-                .def = 48,
-                .spe = 48,
-                .spa = 72,
-                .spd = 48,
-            },
+            .stats = .{ .hp = 48, .atk = 72, .def = 48, .spe = 48, .spa = 72, .spd = 48 },
             .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0xFF, // N
         },
         // Wobbuffet
         .{
-            .stats = .{
-                .hp = 190,
-                .atk = 33,
-                .def = 58,
-                .spe = 33,
-                .spa = 33,
-                .spd = 58,
-            },
+            .stats = .{ .hp = 190, .atk = 33, .def = 58, .spe = 33, .spa = 33, .spd = 58 },
             .types = .{ .type1 = .Psychic, .type2 = .Psychic },
             .ratio = 0x7F, // 50.0% F
         },
         // Girafarig
         .{
-            .stats = .{
-                .hp = 70,
-                .atk = 80,
-                .def = 65,
-                .spe = 85,
-                .spa = 90,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 70, .atk = 80, .def = 65, .spe = 85, .spa = 90, .spd = 65 },
             .types = .{ .type1 = .Normal, .type2 = .Psychic },
             .ratio = 0x7F, // 50.0% F
         },
         // Pineco
         .{
-            .stats = .{
-                .hp = 50,
-                .atk = 65,
-                .def = 90,
-                .spe = 15,
-                .spa = 35,
-                .spd = 35,
-            },
+            .stats = .{ .hp = 50, .atk = 65, .def = 90, .spe = 15, .spa = 35, .spd = 35 },
             .types = .{ .type1 = .Bug, .type2 = .Bug },
             .ratio = 0x7F, // 50.0% F
         },
         // Forretress
         .{
-            .stats = .{
-                .hp = 75,
-                .atk = 90,
-                .def = 140,
-                .spe = 40,
-                .spa = 60,
-                .spd = 60,
-            },
+            .stats = .{ .hp = 75, .atk = 90, .def = 140, .spe = 40, .spa = 60, .spd = 60 },
             .types = .{ .type1 = .Bug, .type2 = .Steel },
             .ratio = 0x7F, // 50.0% F
         },
         // Dunsparce
         .{
-            .stats = .{
-                .hp = 100,
-                .atk = 70,
-                .def = 70,
-                .spe = 45,
-                .spa = 65,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 100, .atk = 70, .def = 70, .spe = 45, .spa = 65, .spd = 65 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
         // Gligar
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 75,
-                .def = 105,
-                .spe = 85,
-                .spa = 35,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 65, .atk = 75, .def = 105, .spe = 85, .spa = 35, .spd = 65 },
             .types = .{ .type1 = .Ground, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Steelix
         .{
-            .stats = .{
-                .hp = 75,
-                .atk = 85,
-                .def = 200,
-                .spe = 30,
-                .spa = 55,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 75, .atk = 85, .def = 200, .spe = 30, .spa = 55, .spd = 65 },
             .types = .{ .type1 = .Steel, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
         // Snubbull
         .{
-            .stats = .{
-                .hp = 60,
-                .atk = 80,
-                .def = 50,
-                .spe = 30,
-                .spa = 40,
-                .spd = 40,
-            },
+            .stats = .{ .hp = 60, .atk = 80, .def = 50, .spe = 30, .spa = 40, .spd = 40 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xBF, // 75.0% F
         },
         // Granbull
         .{
-            .stats = .{
-                .hp = 90,
-                .atk = 120,
-                .def = 75,
-                .spe = 45,
-                .spa = 60,
-                .spd = 60,
-            },
+            .stats = .{ .hp = 90, .atk = 120, .def = 75, .spe = 45, .spa = 60, .spd = 60 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xBF, // 75.0% F
         },
         // Qwilfish
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 95,
-                .def = 75,
-                .spe = 85,
-                .spa = 55,
-                .spd = 55,
-            },
+            .stats = .{ .hp = 65, .atk = 95, .def = 75, .spe = 85, .spa = 55, .spd = 55 },
             .types = .{ .type1 = .Water, .type2 = .Poison },
             .ratio = 0x7F, // 50.0% F
         },
         // Scizor
         .{
-            .stats = .{
-                .hp = 70,
-                .atk = 130,
-                .def = 100,
-                .spe = 65,
-                .spa = 55,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 70, .atk = 130, .def = 100, .spe = 65, .spa = 55, .spd = 80 },
             .types = .{ .type1 = .Bug, .type2 = .Steel },
             .ratio = 0x7F, // 50.0% F
         },
         // Shuckle
         .{
-            .stats = .{
-                .hp = 20,
-                .atk = 10,
-                .def = 230,
-                .spe = 5,
-                .spa = 10,
-                .spd = 230,
-            },
+            .stats = .{ .hp = 20, .atk = 10, .def = 230, .spe = 5, .spa = 10, .spd = 230 },
             .types = .{ .type1 = .Bug, .type2 = .Rock },
             .ratio = 0x7F, // 50.0% F
         },
         // Heracross
         .{
-            .stats = .{
-                .hp = 80,
-                .atk = 125,
-                .def = 75,
-                .spe = 85,
-                .spa = 40,
-                .spd = 95,
-            },
+            .stats = .{ .hp = 80, .atk = 125, .def = 75, .spe = 85, .spa = 40, .spd = 95 },
             .types = .{ .type1 = .Bug, .type2 = .Fighting },
             .ratio = 0x7F, // 50.0% F
         },
         // Sneasel
         .{
-            .stats = .{
-                .hp = 55,
-                .atk = 95,
-                .def = 55,
-                .spe = 115,
-                .spa = 35,
-                .spd = 75,
-            },
+            .stats = .{ .hp = 55, .atk = 95, .def = 55, .spe = 115, .spa = 35, .spd = 75 },
             .types = .{ .type1 = .Dark, .type2 = .Ice },
             .ratio = 0x7F, // 50.0% F
         },
         // Teddiursa
         .{
-            .stats = .{
-                .hp = 60,
-                .atk = 80,
-                .def = 50,
-                .spe = 40,
-                .spa = 50,
-                .spd = 50,
-            },
+            .stats = .{ .hp = 60, .atk = 80, .def = 50, .spe = 40, .spa = 50, .spd = 50 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
         // Ursaring
         .{
-            .stats = .{
-                .hp = 90,
-                .atk = 130,
-                .def = 75,
-                .spe = 55,
-                .spa = 75,
-                .spd = 75,
-            },
+            .stats = .{ .hp = 90, .atk = 130, .def = 75, .spe = 55, .spa = 75, .spd = 75 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
         // Slugma
         .{
-            .stats = .{
-                .hp = 40,
-                .atk = 40,
-                .def = 40,
-                .spe = 20,
-                .spa = 70,
-                .spd = 40,
-            },
+            .stats = .{ .hp = 40, .atk = 40, .def = 40, .spe = 20, .spa = 70, .spd = 40 },
             .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x7F, // 50.0% F
         },
         // Magcargo
         .{
-            .stats = .{
-                .hp = 50,
-                .atk = 50,
-                .def = 120,
-                .spe = 30,
-                .spa = 80,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 50, .atk = 50, .def = 120, .spe = 30, .spa = 80, .spd = 80 },
             .types = .{ .type1 = .Fire, .type2 = .Rock },
             .ratio = 0x7F, // 50.0% F
         },
         // Swinub
         .{
-            .stats = .{
-                .hp = 50,
-                .atk = 50,
-                .def = 40,
-                .spe = 50,
-                .spa = 30,
-                .spd = 30,
-            },
+            .stats = .{ .hp = 50, .atk = 50, .def = 40, .spe = 50, .spa = 30, .spd = 30 },
             .types = .{ .type1 = .Ice, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
         // Piloswine
         .{
-            .stats = .{
-                .hp = 100,
-                .atk = 100,
-                .def = 80,
-                .spe = 50,
-                .spa = 60,
-                .spd = 60,
-            },
+            .stats = .{ .hp = 100, .atk = 100, .def = 80, .spe = 50, .spa = 60, .spd = 60 },
             .types = .{ .type1 = .Ice, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
         // Corsola
         .{
-            .stats = .{
-                .hp = 55,
-                .atk = 55,
-                .def = 85,
-                .spe = 35,
-                .spa = 65,
-                .spd = 85,
-            },
+            .stats = .{ .hp = 55, .atk = 55, .def = 85, .spe = 35, .spa = 65, .spd = 85 },
             .types = .{ .type1 = .Water, .type2 = .Rock },
             .ratio = 0xBF, // 75.0% F
         },
         // Remoraid
         .{
-            .stats = .{
-                .hp = 35,
-                .atk = 65,
-                .def = 35,
-                .spe = 65,
-                .spa = 65,
-                .spd = 35,
-            },
+            .stats = .{ .hp = 35, .atk = 65, .def = 35, .spe = 65, .spa = 65, .spd = 35 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
         // Octillery
         .{
-            .stats = .{
-                .hp = 75,
-                .atk = 105,
-                .def = 75,
-                .spe = 45,
-                .spa = 105,
-                .spd = 75,
-            },
+            .stats = .{ .hp = 75, .atk = 105, .def = 75, .spe = 45, .spa = 105, .spd = 75 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0x7F, // 50.0% F
         },
         // Delibird
         .{
-            .stats = .{
-                .hp = 45,
-                .atk = 55,
-                .def = 45,
-                .spe = 75,
-                .spa = 65,
-                .spd = 45,
-            },
+            .stats = .{ .hp = 45, .atk = 55, .def = 45, .spe = 75, .spa = 65, .spd = 45 },
             .types = .{ .type1 = .Ice, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Mantine
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 40,
-                .def = 70,
-                .spe = 70,
-                .spa = 80,
-                .spd = 140,
-            },
+            .stats = .{ .hp = 65, .atk = 40, .def = 70, .spe = 70, .spa = 80, .spd = 140 },
             .types = .{ .type1 = .Water, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Skarmory
         .{
-            .stats = .{
-                .hp = 65,
-                .atk = 80,
-                .def = 140,
-                .spe = 70,
-                .spa = 40,
-                .spd = 70,
-            },
+            .stats = .{ .hp = 65, .atk = 80, .def = 140, .spe = 70, .spa = 40, .spd = 70 },
             .types = .{ .type1 = .Steel, .type2 = .Flying },
             .ratio = 0x7F, // 50.0% F
         },
         // Houndour
         .{
-            .stats = .{
-                .hp = 45,
-                .atk = 60,
-                .def = 30,
-                .spe = 65,
-                .spa = 80,
-                .spd = 50,
-            },
+            .stats = .{ .hp = 45, .atk = 60, .def = 30, .spe = 65, .spa = 80, .spd = 50 },
             .types = .{ .type1 = .Dark, .type2 = .Fire },
             .ratio = 0x7F, // 50.0% F
         },
         // Houndoom
         .{
-            .stats = .{
-                .hp = 75,
-                .atk = 90,
-                .def = 50,
-                .spe = 95,
-                .spa = 110,
-                .spd = 80,
-            },
+            .stats = .{ .hp = 75, .atk = 90, .def = 50, .spe = 95, .spa = 110, .spd = 80 },
             .types = .{ .type1 = .Dark, .type2 = .Fire },
             .ratio = 0x7F, // 50.0% F
         },
         // Kingdra
         .{
-            .stats = .{
-                .hp = 75,
-                .atk = 95,
-                .def = 95,
-                .spe = 85,
-                .spa = 95,
-                .spd = 95,
-            },
+            .stats = .{ .hp = 75, .atk = 95, .def = 95, .spe = 85, .spa = 95, .spd = 95 },
             .types = .{ .type1 = .Water, .type2 = .Dragon },
             .ratio = 0x7F, // 50.0% F
         },
         // Phanpy
         .{
-            .stats = .{
-                .hp = 90,
-                .atk = 60,
-                .def = 60,
-                .spe = 40,
-                .spa = 40,
-                .spd = 40,
-            },
+            .stats = .{ .hp = 90, .atk = 60, .def = 60, .spe = 40, .spa = 40, .spd = 40 },
             .types = .{ .type1 = .Ground, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
         // Donphan
         .{
-            .stats = .{
-                .hp = 90,
-                .atk = 120,
-                .def = 120,
-                .spe = 50,
-                .spa = 60,
-                .spd = 60,
-            },
+            .stats = .{ .hp = 90, .atk = 120, .def = 120, .spe = 50, .spa = 60, .spd = 60 },
             .types = .{ .type1 = .Ground, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
         // Porygon2
         .{
-            .stats = .{
-                .hp = 85,
-                .atk = 80,
-                .def = 90,
-                .spe = 60,
-                .spa = 105,
-                .spd = 95,
-            },
+            .stats = .{ .hp = 85, .atk = 80, .def = 90, .spe = 60, .spa = 105, .spd = 95 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xFF, // N
         },
         // Stantler
         .{
-            .stats = .{
-                .hp = 73,
-                .atk = 95,
-                .def = 62,
-                .spe = 85,
-                .spa = 85,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 73, .atk = 95, .def = 62, .spe = 85, .spa = 85, .spd = 65 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
         // Smeargle
         .{
-            .stats = .{
-                .hp = 55,
-                .atk = 20,
-                .def = 35,
-                .spe = 75,
-                .spa = 20,
-                .spd = 45,
-            },
+            .stats = .{ .hp = 55, .atk = 20, .def = 35, .spe = 75, .spa = 20, .spd = 45 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0x7F, // 50.0% F
         },
         // Tyrogue
         .{
-            .stats = .{
-                .hp = 35,
-                .atk = 35,
-                .def = 35,
-                .spe = 35,
-                .spa = 35,
-                .spd = 35,
-            },
+            .stats = .{ .hp = 35, .atk = 35, .def = 35, .spe = 35, .spa = 35, .spd = 35 },
             .types = .{ .type1 = .Fighting, .type2 = .Fighting },
             .ratio = 0x00, // 0.00% F
         },
         // Hitmontop
         .{
-            .stats = .{
-                .hp = 50,
-                .atk = 95,
-                .def = 95,
-                .spe = 70,
-                .spa = 35,
-                .spd = 110,
-            },
+            .stats = .{ .hp = 50, .atk = 95, .def = 95, .spe = 70, .spa = 35, .spd = 110 },
             .types = .{ .type1 = .Fighting, .type2 = .Fighting },
             .ratio = 0x00, // 0.00% F
         },
         // Smoochum
         .{
-            .stats = .{
-                .hp = 45,
-                .atk = 30,
-                .def = 15,
-                .spe = 65,
-                .spa = 85,
-                .spd = 65,
-            },
+            .stats = .{ .hp = 45, .atk = 30, .def = 15, .spe = 65, .spa = 85, .spd = 65 },
             .types = .{ .type1 = .Ice, .type2 = .Psychic },
             .ratio = 0xFE, // 100% F
         },
         // Elekid
         .{
-            .stats = .{
-                .hp = 45,
-                .atk = 63,
-                .def = 37,
-                .spe = 95,
-                .spa = 65,
-                .spd = 55,
-            },
+            .stats = .{ .hp = 45, .atk = 63, .def = 37, .spe = 95, .spa = 65, .spd = 55 },
             .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0x3F, // 25.0% F
         },
         // Magby
         .{
-            .stats = .{
-                .hp = 45,
-                .atk = 75,
-                .def = 37,
-                .spe = 83,
-                .spa = 70,
-                .spd = 55,
-            },
+            .stats = .{ .hp = 45, .atk = 75, .def = 37, .spe = 83, .spa = 70, .spd = 55 },
             .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0x3F, // 25.0% F
         },
         // Miltank
         .{
-            .stats = .{
-                .hp = 95,
-                .atk = 80,
-                .def = 105,
-                .spe = 100,
-                .spa = 40,
-                .spd = 70,
-            },
+            .stats = .{ .hp = 95, .atk = 80, .def = 105, .spe = 100, .spa = 40, .spd = 70 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xFE, // 100% F
         },
         // Blissey
         .{
-            .stats = .{
-                .hp = 255,
-                .atk = 10,
-                .def = 10,
-                .spe = 55,
-                .spa = 75,
-                .spd = 135,
-            },
+            .stats = .{ .hp = 255, .atk = 10, .def = 10, .spe = 55, .spa = 75, .spd = 135 },
             .types = .{ .type1 = .Normal, .type2 = .Normal },
             .ratio = 0xFE, // 100% F
         },
         // Raikou
         .{
-            .stats = .{
-                .hp = 90,
-                .atk = 85,
-                .def = 75,
-                .spe = 115,
-                .spa = 115,
-                .spd = 100,
-            },
+            .stats = .{ .hp = 90, .atk = 85, .def = 75, .spe = 115, .spa = 115, .spd = 100 },
             .types = .{ .type1 = .Electric, .type2 = .Electric },
             .ratio = 0xFF, // N
         },
         // Entei
         .{
-            .stats = .{
-                .hp = 115,
-                .atk = 115,
-                .def = 85,
-                .spe = 100,
-                .spa = 90,
-                .spd = 75,
-            },
+            .stats = .{ .hp = 115, .atk = 115, .def = 85, .spe = 100, .spa = 90, .spd = 75 },
             .types = .{ .type1 = .Fire, .type2 = .Fire },
             .ratio = 0xFF, // N
         },
         // Suicune
         .{
-            .stats = .{
-                .hp = 100,
-                .atk = 75,
-                .def = 115,
-                .spe = 85,
-                .spa = 90,
-                .spd = 115,
-            },
+            .stats = .{ .hp = 100, .atk = 75, .def = 115, .spe = 85, .spa = 90, .spd = 115 },
             .types = .{ .type1 = .Water, .type2 = .Water },
             .ratio = 0xFF, // N
         },
         // Larvitar
         .{
-            .stats = .{
-                .hp = 50,
-                .atk = 64,
-                .def = 50,
-                .spe = 41,
-                .spa = 45,
-                .spd = 50,
-            },
+            .stats = .{ .hp = 50, .atk = 64, .def = 50, .spe = 41, .spa = 45, .spd = 50 },
             .types = .{ .type1 = .Rock, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
         // Pupitar
         .{
-            .stats = .{
-                .hp = 70,
-                .atk = 84,
-                .def = 70,
-                .spe = 51,
-                .spa = 65,
-                .spd = 70,
-            },
+            .stats = .{ .hp = 70, .atk = 84, .def = 70, .spe = 51, .spa = 65, .spd = 70 },
             .types = .{ .type1 = .Rock, .type2 = .Ground },
             .ratio = 0x7F, // 50.0% F
         },
         // Tyranitar
         .{
-            .stats = .{
-                .hp = 100,
-                .atk = 134,
-                .def = 110,
-                .spe = 61,
-                .spa = 95,
-                .spd = 100,
-            },
+            .stats = .{ .hp = 100, .atk = 134, .def = 110, .spe = 61, .spa = 95, .spd = 100 },
             .types = .{ .type1 = .Rock, .type2 = .Dark },
             .ratio = 0x7F, // 50.0% F
         },
         // Lugia
         .{
-            .stats = .{
-                .hp = 106,
-                .atk = 90,
-                .def = 130,
-                .spe = 110,
-                .spa = 90,
-                .spd = 154,
-            },
+            .stats = .{ .hp = 106, .atk = 90, .def = 130, .spe = 110, .spa = 90, .spd = 154 },
             .types = .{ .type1 = .Psychic, .type2 = .Flying },
             .ratio = 0xFF, // N
         },
         // HoOh
         .{
-            .stats = .{
-                .hp = 106,
-                .atk = 130,
-                .def = 90,
-                .spe = 90,
-                .spa = 110,
-                .spd = 154,
-            },
+            .stats = .{ .hp = 106, .atk = 130, .def = 90, .spe = 90, .spa = 110, .spd = 154 },
             .types = .{ .type1 = .Fire, .type2 = .Flying },
             .ratio = 0xFF, // N
         },
         // Celebi
         .{
-            .stats = .{
-                .hp = 100,
-                .atk = 100,
-                .def = 100,
-                .spe = 100,
-                .spa = 100,
-                .spd = 100,
-            },
+            .stats = .{ .hp = 100, .atk = 100, .def = 100, .spe = 100, .spa = 100, .spd = 100 },
             .types = .{ .type1 = .Psychic, .type2 = .Grass },
             .ratio = 0xFF, // N
         },

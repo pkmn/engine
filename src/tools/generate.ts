@@ -373,13 +373,13 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         ? [s.types[0], s.types[0]] : s.types;
       SPECIES.push(`// ${name}\n` +
         '        .{\n' +
-        '            .stats = .{\n' +
-        `                .hp = ${s.baseStats.hp},\n` +
-        `                .atk = ${s.baseStats.atk},\n` +
-        `                .def = ${s.baseStats.def},\n` +
-        `                .spe = ${s.baseStats.spe},\n` +
-        `                .spc = ${s.baseStats.spa},\n` +
-        '            },\n' +
+        '            .stats = .{ ' +
+                        `.hp = ${s.baseStats.hp}, ` +
+                        `.atk = ${s.baseStats.atk}, ` +
+                        `.def = ${s.baseStats.def}, ` +
+                        `.spe = ${s.baseStats.spe}, ` +
+                        `.spc = ${s.baseStats.spa}` +
+                      ' },\n' +
         `            .types = .{ .type1 = .${types[0]}, .type2 = .${types[1]} },\n` +
         '        }');
     }
@@ -603,14 +603,14 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         ? [s.types[0], s.types[0]] : s.types;
       SPECIES.push(`// ${name}\n` +
         '        .{\n' +
-        '            .stats = .{\n' +
-        `                .hp = ${s.baseStats.hp},\n` +
-        `                .atk = ${s.baseStats.atk},\n` +
-        `                .def = ${s.baseStats.def},\n` +
-        `                .spe = ${s.baseStats.spe},\n` +
-        `                .spa = ${s.baseStats.spa},\n` +
-        `                .spd = ${s.baseStats.spd},\n` +
-        '            },\n' +
+        '            .stats = .{ ' +
+                        `.hp = ${s.baseStats.hp}, ` +
+                        `.atk = ${s.baseStats.atk}, ` +
+                        `.def = ${s.baseStats.def}, ` +
+                        `.spe = ${s.baseStats.spe}, ` +
+                        `.spa = ${s.baseStats.spa}, ` +
+                        `.spd = ${s.baseStats.spd}` +
+                      ' },\n' +
         `            .types = .{ .type1 = .${t[0]}, .type2 = .${t[1]} },\n` +
         `            .ratio = ${convertGenderRatio(s)}\n` +
         '        }');
@@ -712,14 +712,14 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       // FIXME abilities
       SPECIES.push(`// ${name}\n` +
         '        .{\n' +
-        '            .stats = .{\n' +
-        `                .hp = ${s.baseStats.hp},\n` +
-        `                .atk = ${s.baseStats.atk},\n` +
-        `                .def = ${s.baseStats.def},\n` +
-        `                .spe = ${s.baseStats.spe},\n` +
-        `                .spa = ${s.baseStats.spa},\n` +
-        `                .spd = ${s.baseStats.spd},\n` +
-        '            },\n' +
+        '            .stats = .{ ' +
+                        `.hp = ${s.baseStats.hp}, ` +
+                        `.atk = ${s.baseStats.atk}, ` +
+                        `.def = ${s.baseStats.def}, ` +
+                        `.spe = ${s.baseStats.spe}, ` +
+                        `.spa = ${s.baseStats.spa}, ` +
+                        `.spd = ${s.baseStats.spd}` +
+                      ' },\n' +
         `            .types = .{ .type1 = .${types[0]}, .type2 = .${types[1]} },\n` +
         `            .ratio = ${convertGenderRatio(s)}\n` +
         '        }');
