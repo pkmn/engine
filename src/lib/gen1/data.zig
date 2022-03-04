@@ -98,7 +98,7 @@ pub const Pokemon = extern struct {
     types: Types = .{},
     level: u8 = 100,
     position: u8 = 0,
-    id: u8 = 0, // TODO
+    id: u8 = 0,
 
     comptime {
         assert(@sizeOf(Pokemon) == 24);

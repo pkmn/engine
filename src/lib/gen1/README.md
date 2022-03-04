@@ -68,6 +68,8 @@ represented by the same
 [`Pokemon`](https://github.com/smogon/pokemon-showdown/blob/master/sim/pokemon.ts) class, and static
 party information is saved in fields beginning with "`stored`" or "`base`".
 
+TODO: id vs, position
+
 #### `MoveSlot`
 
 A `MoveSlot` is a data-type for a `(move, current pp)` pair. A pared down version of Pokémon
