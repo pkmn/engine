@@ -12,6 +12,7 @@ const showdown = build_options.showdown;
 
 const Gen12 = rng.Gen12;
 
+const ActivePokemon = data.ActivePokemon;
 const Choice = data.Choice;
 const Move = data.Move;
 const Player = data.Player;
@@ -84,11 +85,30 @@ fn getMove(battle: anytype, player: Player, choice: Choice) Move {
     assert(choice.data <= 4);
     const side = battle.get(player);
     assert(side.active.position != 0);
-    const stored = side.get(side.active.position);
-    const move = stored.moves[choice.data];
+    const move = side.active.moves[choice.data - 1];
     assert(move.pp != 0); // FIXME: wrap underflow?
 
     return move.id;
+}
+
+// TODO: struggle bypass/wrap underflow
+fn decrementPP(side: *Side, choice: Choice) void {
+    assert(choice.type == .Move);
+    assert(choice.data <= 4);
+
+    if (choice.data == 0) return; // Struggle
+
+    var active = &side.active;
+    assert(active.position != 0);
+
+    const volatiles = active.volatiles;
+    if (volatiles.Bide or volatiles.Locked or volatiles.MultiHit or volatiles.Rage) return;
+
+    active.moves[choice.data - 1].pp -= 1;
+    if (volatiles.Transform) return;
+
+    var stored = side.get(active.position);
+    stored.moves[choice.data - 1].pp -= 1;
 }
 
 fn findFirstAlive(side: *const Side) u8 {
@@ -118,6 +138,7 @@ fn switchIn(side: *Side, player: Player, slot: u8, log: anytype) !void {
     }
     active.boosts = .{};
     active.species = incoming.species;
+    active.types = incoming.types;
     active.position = slot;
 
     if (Status.is(incoming.status, .PAR)) {
@@ -169,7 +190,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
         volatiles.data.disabled.duration -= 1;
         if (volatiles.data.disabled.duration == 0) {
             volatiles.data.disabled.move = 0;
-            try log.end(ident, .Disable);
+            try log.end(ident, .Disable, false);
         }
     }
     if (volatiles.Confusion) {
@@ -177,7 +198,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
         volatiles.data.confusion -= 1;
         if (volatiles.data.confusion == 0) {
             volatiles.Confusion = false;
-            try log.end(ident, .Confusion);
+            try log.end(ident, .Confusion, false);
         } else {
             try log.activate(ident, .Confusion);
             const confused = if (showdown) {
@@ -229,7 +250,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
         if (volatiles.data.attacks != 0) return false;
 
         volatiles.Bide = false;
-        try log.end(ident, .Bide);
+        try log.end(ident, .Bide, false);
         if (volatiles.data.bide > 0) {
             try log.fail(ident);
             return false;
@@ -271,6 +292,102 @@ fn endTurn(battle: anytype, log: anytype) !Result {
     battle.turn += 1;
     try log.turn(battle.turn);
     return .None;
+}
+
+fn moveEffect(battle: anytype, player: Player, move: Move, log: anytype) !void {
+    return switch (move.effect) {
+        .Conversion => Effects.conversion(battle, player, log),
+        .Haze => Effects.haze(battle, player, log),
+        .PayDay => Effects.payDay(log),
+        else => unreachable,
+    };
+}
+
+const Effects = struct {
+    fn conversion(battle: anytype, player: Player, log: anytype) !void {
+        var side = battle.get(player);
+        const foe = battle.foe(player);
+
+        const ident = player.ident(side.active.id);
+        if (foe.active.volatiles.Invulnerability) {
+            return try log.miss(ident, player.foe().ident(foe.active.id));
+        }
+        side.active.types = foe.active.types;
+        try log.typechange(ident, @bitCast(u8, foe.active.types));
+    }
+
+    fn payDay(log: anytype) !void {
+        try log.fieldactivate();
+    }
+
+    fn haze(battle: anytype, player: Player, log: anytype) !void {
+        var side = battle.get(player);
+        var foe = battle.foe(player);
+
+        var sp = side.get(side.active.position);
+        var sf = foe.get(foe.active.position);
+
+        const pid = player.ident(sp.id);
+        const fid = player.foe().ident(sf.id);
+
+        side.active.boosts = .{};
+        foe.active.boosts = .{};
+        inline for (std.meta.fields(@TypeOf(side.active.stats))) |field| {
+            @field(side.active.stats, field.name) = @field(sp.stats, field.name);
+            @field(foe.active.stats, field.name) = @field(sf.stats, field.name);
+        }
+        try log.activate(pid, .Haze);
+
+        if (Status.any(sf.status)) {
+            if (Status.frzOrSlp(sf.status)) {
+                // TODO prevent from executing a move by using special case move $FF!!!
+            }
+            try log.curestatus(fid, sf.status, true);
+            Status.clear(sf.status);
+        }
+
+        try clearVolatiles(&side.active, pid, log);
+        try clearVolatiles(&foe.active, fid, log);
+    }
+};
+
+fn clearVolatiles(active: *ActivePokemon, ident: u8, log: anytype) !void {
+    var volatiles = &active.volatiles;
+    if (volatiles.data.disabled.move != 0) {
+        volatiles.data.disabled = .{};
+        try log.end(ident, .Disable, true);
+    }
+    if (volatiles.Confusion) {
+        // NB: leave volatiles.data.confusion unchanged
+        volatiles.Confusion = false;
+        try log.end(ident, .Confusion, true);
+    }
+    if (volatiles.Mist) {
+        volatiles.Mist = false;
+        try log.end(ident, .Mist, true);
+    }
+    if (volatiles.FocusEnergy) {
+        volatiles.FocusEnergy = false;
+        try log.end(ident, .FocusEnergy, true);
+    }
+    if (volatiles.LeechSeed) {
+        volatiles.LeechSeed = false;
+        try log.end(ident, .LeechSeed, true);
+    }
+    // TODO: make sure we only check Status.psn and only look at Toxic counter if Toxic bit set
+    if (volatiles.Toxic) {
+        // NB: leave volatiles.data.toxic unchanged
+        volatiles.Toxic = false;
+        try log.end(ident, .Toxic, true);
+    }
+    if (volatiles.LightScreen) {
+        volatiles.LightScreen = false;
+        try log.end(ident, .LightScreen, true);
+    }
+    if (volatiles.Reflect) {
+        volatiles.Reflect = false;
+        try log.end(ident, .Reflect, true);
+    }
 }
 
 // TODO DEBUG

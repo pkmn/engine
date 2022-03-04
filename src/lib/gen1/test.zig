@@ -463,7 +463,7 @@ test "Battle" {
 // }
 
 // // Move.HyperBeam
-// // TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Hyper_Beam_.2B_Freeze_permanent_helplessness
+// // TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Hyper_Beam_.2B_Freeze_permanent_helplessness FIXME haze
 // // TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Hyper_Beam_.2B_Sleep_move_glitch
 // test "HyperBeam" {
 //     // If this move is successful, the user must recharge on the following turn and cannot select a

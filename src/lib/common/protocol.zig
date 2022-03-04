@@ -158,6 +158,7 @@ pub const Cant = enum(u8) {
 pub const Activate = enum(u8) {
     Confusion,
     Bide,
+    Haze,
 };
 
 pub const Start = enum(u8) {
@@ -169,4 +170,10 @@ pub const End = enum(u8) {
     Disable,
     Confusion,
     Bide,
+    Mist,
+    FocusEnergy,
+    LeechSeed,
+    Toxic,
+    LightScreen,
+    Reflect,
 };

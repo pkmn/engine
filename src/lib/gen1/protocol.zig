@@ -43,6 +43,11 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
+        pub fn fieldactivate(self: *Self) !void {
+            if (!trace) return;
+            try self.writer.writeAll(&[_]u8{@enumToInt(ArgType.FieldActivate)});
+        }
+
         pub fn start(self: *Self, ident: u8, reason: Start, silent: bool) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{
@@ -53,9 +58,14 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn end(self: *Self, ident: u8, reason: End) !void {
+        pub fn end(self: *Self, ident: u8, reason: End, silent: bool) !void {
             if (!trace) return;
-            try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.End), ident, @enumToInt(reason) });
+            try self.writer.writeAll(&[_]u8{
+                @enumToInt(ArgType.End),
+                ident,
+                @enumToInt(reason),
+                @boolToInt(silent),
+            });
         }
 
         pub fn fail(self: *Self, ident: u8) !void {
@@ -72,6 +82,26 @@ pub fn Log(comptime Writer: type) type {
             if (!trace) return;
             try self.writer.writeByte(@enumToInt(ArgType.Turn));
             try self.writer.writeIntNative(u16, num);
+        }
+
+        pub fn miss(self: *Self, source: u8, target: u8) !void {
+            if (!trace) return;
+            try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Miss), source, target });
+        }
+
+        pub fn typechange(self: *Self, ident: u8, types: u8) !void {
+            if (!trace) return;
+            try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Start), ident, types });
+        }
+
+        pub fn curestatus(self: *Self, ident: u8, status: u8, silent: bool) !void {
+            if (!trace) return;
+            try self.writer.writeAll(&[_]u8{
+                @enumToInt(ArgType.CureStatus),
+                ident,
+                status,
+                @boolToInt(silent),
+            });
         }
     };
 }

@@ -31,7 +31,7 @@ pub fn Battle(comptime PRNG: anytype) type {
         }
 
         pub fn foe(self: *Self, player: Player) *Side {
-            return &self.sides[~@enumToInt(player)];
+            return &self.sides[player.foe()];
         }
 
         pub fn update(self: *Self, c1: Choice, c2: Choice, log: anytype) !Result {
@@ -48,6 +48,10 @@ pub const Player = enum(u1) {
     P1,
     P2,
 
+    pub fn foe(self: Player) Player {
+        return @intToEnum(Player, ~@enumToInt(self));
+    }
+
     pub fn ident(self: Player, slot: u8) u8 {
         assert(slot > 0 and slot <= 6);
         return (@as(u8, @enumToInt(self)) << 7) | slot;
@@ -55,6 +59,7 @@ pub const Player = enum(u1) {
 };
 
 test "Player" {
+    try expectEqual(Player.P2, Player.P1.foe());
     try expectEqual(@as(u8, 0b0000_0001), Player.P1.ident(1));
     try expectEqual(@as(u8, 0b1000_0101), Player.P2.ident(5));
 }
@@ -76,12 +81,15 @@ pub const Side = extern struct {
 };
 
 pub const ActivePokemon = extern struct {
-    stats: Stats(u16) = .{},
     volatiles: Volatiles = .{},
+    stats: Stats(u12) = .{},
+    // 4 bit trailling
     moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
     boosts: Boosts = .{},
     species: Species = .None,
+    types: Types = .{}, // TODO document required
     position: u8 = 0,
+    _: u8 = 0,
 
     comptime {
         assert(@sizeOf(ActivePokemon) == 32);

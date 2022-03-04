@@ -197,11 +197,12 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
   - position does not need to be stored as the party can always be rearranged as switches occur
   - `type` can be computed from the base `Species` information
 - **`ActivePokemon`**: 5× stats (`50`) + 4× move slot (`60`) + 6× boosts (`24`) + volatile data
-  (`29`) + volatiles (`18`) + species (`8`) + disabled (`5`)
-  - the active Pokémon's stats/species/move slots may change in the case of Transform
+  (`29`) + volatiles (`18`) + species (`8`) + types (`8`) + disabled (`5`)
+  - the active Pokémon's stats/species/move slots/types may change in the case of Transform
+  - the active Pokémon's types may change due to Conversion
   - the active Pokémon's level and current HP can always be referred to the `Pokemon` struct, and
     types can be computed from its species
-- **`Side`**: `ActivePokemon` + 6× `Pokemon` + active (`3`) + lasted used (`8`) + last selected
+- **`Side`**: `ActivePokemon` + 6× `Pokemon` + active (`3`) + last used (`8`) + last selected
   (`8`)
 - **`Battle`**: 6× `Side` + seed (10× `8` + `4`) + turn (`10`) + last damage (`10`)
 - **`Type.chart`**: attacking types (`15`) × defending types (`15`) × effectiveness (`2`)[^1]
@@ -210,7 +211,7 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 | Data            | Actual bits | Minimum bits | Overhead |
 | --------------- | ----------- | ------------ | -------- |
 | `Pokemon`       | 192         | 139          | 38.1%    |
-| `ActivePokemon` | 240         | 194          | 23.7%    |
+| `ActivePokemon` | 256         | 202          | 26.7%    |
 | `Side`          | 1424        | 1047         | 36.0%    |
 | `Battle`        | 2976        | 2198         | 35.4%    |
 | `Type.chart`    | 1800        | 450          | 300.0%   |
