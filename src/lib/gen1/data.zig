@@ -293,12 +293,11 @@ test "Boosts" {
 }
 
 pub const Move = moves.Move;
-pub const MoveEffect = moves.MoveEffect;
 
 test "Move" {
     try expectEqual(2, @enumToInt(Move.KarateChop));
     const move = Move.get(.Fissure);
-    try expectEqual(MoveEffect.OHKO, move.effect);
+    try expectEqual(Move.Effect.OHKO, move.effect);
     try expectEqual(@as(u8, 30), move.accuracy());
     try expectEqual(Type.Ground, move.type);
 }

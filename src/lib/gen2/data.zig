@@ -341,6 +341,7 @@ pub const Move = moves.Move;
 test "Moves" {
     try expectEqual(251, @enumToInt(Move.BeatUp));
     const move = Move.get(.DynamicPunch);
+    try expectEqual(Move.Effect.ConfusionChance, move.effect);
     try expectEqual(@as(u8, 50), move.accuracy);
     try expectEqual(@as(u8, 5), move.pp * 5);
 }

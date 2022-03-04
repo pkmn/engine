@@ -8,7 +8,7 @@ const gen{{{ gen }}} = @import("../../gen{{{ gen }}}/data.zig");
 const assert = std.debug.assert;
 
 const Type = gen{{{ gen }}}.Type;
-{{{ MoveEffect }}}
+
 pub const Move = enum({{{ Move.type }}}) {
     None,
     {{{ Move.values }}},
@@ -17,8 +17,8 @@ pub const Move = enum({{{ Move.type }}}) {
 
     const data = [_]Data{
         {{{ Move.data }}},
-    };{{{ Move.ppData }}}
-
+    };
+{{{ Move.Effect }}}{{{ Move.ppData }}}
     comptime {
         assert(@sizeOf(Move) == {{{ Move.size }}});
         assert(@sizeOf(@TypeOf(data)) == {{{ Move.dataSize }}});

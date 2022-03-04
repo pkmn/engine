@@ -303,7 +303,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       PP.push(`${move.pp}, // ${name}`);
     }
     let Data = `pub const Data = packed struct {
-        effect: MoveEffect,
+        effect: Effect,
         bp: u8,
         acc: u4, // accuracy / 5 - 6
         type: Type,
@@ -319,20 +319,19 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
     };`;
 
-    const MoveEffect = `\npub const MoveEffect = enum(u8) {
-    None,
-    ${Array.from(EFFECTS).sort().join(',\n    ')},
+    const Effect = `\n    pub const Effect = enum(u8) {
+        None,
+        ${Array.from(EFFECTS).sort().join(',\n        ')},
 
-    comptime {
-        assert(@sizeOf(MoveEffect) == 1);
-    }\n` + '};\n';
+        comptime {
+            assert(@sizeOf(Effect) == 1);
+        }\n` + '    };\n';
 
     const ppData = `
-
     // @test-only
     const pp_data = [_]u8{
         ${PP.join('\n        ')},
-    };`;
+    };\n`;
     const ppFn = `pub fn pp(id: Move) u8 {
         assert(builtin.is_test);
         assert(id != .None);
@@ -340,7 +339,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     }`;
     template('moves', dirs.out, {
       gen: gen.num,
-      MoveEffect,
       Move: {
         type: 'u8',
         values: moves.map(m => m.split(' ')[0]).join(',\n    '),
@@ -348,6 +346,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         Data,
         data: MOVES.join(',\n        '),
         dataSize: MOVES.length * 3,
+        Effect,
         ppData,
         ppFn,
       },
@@ -543,7 +542,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         '        }');
     }
     let Data = `pub const Data = packed struct {
-        effect: MoveEffect,
+        effect: Effect,
         bp: u8,
         accuracy: u8,
         type: Type,
@@ -557,13 +556,13 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
     };`;
 
-    const MoveEffect = `\npub const MoveEffect = enum(u8) {
-    None,
-    ${Array.from(EFFECTS).sort().join(',\n    ')},
+    const Effect = `\n    pub const Effect = enum(u8) {
+        None,
+        ${Array.from(EFFECTS).sort().join(',\n        ')},
 
-    comptime {
-        assert(@sizeOf(MoveEffect) == 1);
-    }\n` + '};\n';
+        comptime {
+            assert(@sizeOf(Effect) == 1);
+        }\n` + '    };\n';
 
     const ppFn = `pub fn pp(id: Move) u8 {
         assert(builtin.is_test);
@@ -571,7 +570,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     }`;
     template('moves', dirs.out, {
       gen: gen.num,
-      MoveEffect,
       Move: {
         type: 'u8',
         values: moves.map(m => m.split(' ')[0]).join(',\n    '),
@@ -579,6 +577,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         Data,
         data: MOVES.join(',\n        '),
         dataSize: MOVES.length * 5,
+        Effect,
         ppFn,
       },
     });
