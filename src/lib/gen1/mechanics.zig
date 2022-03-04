@@ -46,7 +46,7 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     // p1.active.volatiles.Flinch = false;
     // p2.active.volatiles.Flinch = false;
     // if (active.volatiles.Locked or active.volatiles.Charging) {}
-    // if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP)) {}
+    // if (Status.frzOrSlp(stored.status)) {}
     // if (active.volatiles.Bide or active.volatiles.PartialTrap) {}
     // if (foe.active.volatiles.PartialTrap) {}
     // if (active.volatiles.PartialTrap) {}

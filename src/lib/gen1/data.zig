@@ -128,6 +128,7 @@ pub const Status = enum(u8) {
 
     const SLP = 0b111;
     const PSN = 0b10001000;
+    const FRZ_SLP = (1 << @enumToInt(Status.FRZ)) | SLP;
 
     pub fn is(num: u8, status: Status) bool {
         if (status == .SLP) return Status.duration(num) > 0;
@@ -150,6 +151,10 @@ pub const Status = enum(u8) {
 
     pub fn psn(num: u8) bool {
         return num & PSN != 0;
+    }
+
+    pub fn frzOrSlp(num: u8) bool {
+        return num & FRZ_SLP != 0;
     }
 
     pub fn any(num: u8) bool {
@@ -185,6 +190,10 @@ test "Status" {
     try expect(!Status.psn(Status.init(.BRN)));
     try expect(Status.psn(Status.init(.PSN)));
     try expect(Status.psn(Status.init(.TOX)));
+
+    try expect(!Status.frzOrSlp(Status.init(.PSN)));
+    try expect(Status.frzOrSlp(Status.init(.FRZ)));
+    try expect(Status.frzOrSlp(Status.slp(1)));
 
     try expect(!Status.any(0));
     try expect(Status.any(Status.init(.TOX)));
