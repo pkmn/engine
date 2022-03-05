@@ -5,7 +5,7 @@ const expectEqualSlices = std.testing.expectEqualSlices;
 
 const trace = build_options.trace;
 
-pub fn expectTrace(expected: []const u8, actual: []const u8) !void {
+pub fn expectLog(expected: []const u8, actual: []const u8) !void {
     if (trace) try expectEqualSlices(u8, expected, actual);
 }
 

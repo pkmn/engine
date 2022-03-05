@@ -298,6 +298,7 @@ fn moveEffect(battle: anytype, player: Player, move: Move, log: anytype) !void {
     return switch (move.effect) {
         .Conversion => Effects.conversion(battle, player, log),
         .Haze => Effects.haze(battle, player, log),
+        .Heal => Effects.heal(battle, player, log),
         .PayDay => Effects.payDay(log),
         else => unreachable,
     };
@@ -343,11 +344,18 @@ const Effects = struct {
                 // TODO prevent from executing a move by using special case move $FF!!!
             }
             try log.curestatus(fid, sf.status, true);
-            Status.clear(sf.status);
+            sf.status = 0;
         }
 
         try clearVolatiles(&side.active, pid, log);
         try clearVolatiles(&foe.active, fid, log);
+    }
+
+    fn heal(battle: anytype, player: Player, log: anytype) !void {
+        _ = battle;
+        _ = player;
+        _ = log;
+        // TODO
     }
 };
 
@@ -374,9 +382,8 @@ fn clearVolatiles(active: *ActivePokemon, ident: u8, log: anytype) !void {
         volatiles.LeechSeed = false;
         try log.end(ident, .LeechSeed, true);
     }
-    // TODO: make sure we only check Status.psn and only look at Toxic counter if Toxic bit set
     if (volatiles.Toxic) {
-        // NB: leave volatiles.data.toxic unchanged
+        // NB: volatiles.data.toxic is left unchanged
         volatiles.Toxic = false;
         try log.end(ident, .Toxic, true);
     }

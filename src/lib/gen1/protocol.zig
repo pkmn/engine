@@ -10,7 +10,7 @@ pub const ArgType = protocol.ArgType;
 pub const Cant = protocol.Cant;
 pub const End = protocol.End;
 pub const Start = protocol.Start;
-pub const expectTrace = protocol.expectTrace;
+pub const expectLog = protocol.expectLog;
 
 // FIXME
 pub fn Log(comptime Writer: type) type {
@@ -114,7 +114,7 @@ test "Log" {
 
     try log.cant(1, .PartialTrap);
 
-    try expectTrace(
+    try expectLog(
         &[_]u8{ @enumToInt(ArgType.Cant), 1, @enumToInt(Cant.PartialTrap) },
         &buf,
     );

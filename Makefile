@@ -41,4 +41,4 @@ release:
 
 .DEFAULT: build
 
-.PHONY: build install uninstall run generate lint fix test cleank
+.PHONY: build install uninstall run generate lint fix test clean

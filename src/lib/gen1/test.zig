@@ -2,7 +2,6 @@ const std = @import("std");
 const build_options = @import("build_options");
 
 const rng = @import("../common/rng.zig");
-const util = @import("../common/util.zig"); // DEBUG
 
 const data = @import("data.zig");
 const protocol = @import("protocol.zig");
@@ -27,7 +26,7 @@ const Status = data.Status;
 
 const ArgType = protocol.ArgType;
 const Log = protocol.Log(std.io.FixedBufferStream([]u8).Writer);
-const expectTrace = protocol.expectTrace;
+const expectLog = protocol.expectLog;
 
 pub const Battle = struct {
     pub fn init(
@@ -246,10 +245,7 @@ test "Battle" {
 // var log: Log = .{ .writer = std.io.fixedBufferStream(&buf).writer() };
 
 // _ = try battle.update(.{ .type = .Move, .data = 4 }, .{ .type = .Switch, .data = 1 }, &log);
-// try expectTrace(&(START ++ [_]u8{}), &buf);
-
-// util.debug.print(battle);
-// util.debug.print(Battle.random(&Random.init(5)));
+// try expectLog(&(START ++ [_]u8{}), &buf);
 
 // // Moves
 

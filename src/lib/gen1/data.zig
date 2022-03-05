@@ -3,7 +3,6 @@ const build_options = @import("build_options");
 const builtin = @import("builtin");
 
 const rng = @import("../common/rng.zig");
-const util = @import("../common/util.zig");
 
 const moves = @import("data/moves.zig");
 const species = @import("data/species.zig");
@@ -14,8 +13,6 @@ const mechanics = @import("./mechanics.zig");
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 const expect = std.testing.expect;
-
-const bit = util.bit;
 
 pub fn Battle(comptime PRNG: anytype) type {
     return extern struct {
@@ -132,6 +129,7 @@ pub const Status = enum(u8) {
     BRN = 4,
     FRZ = 5,
     PAR = 6,
+    // NB: Gen 1 uses Volatiles.Toxic instead
     TOX = 7,
 
     const SLP = 0b111;
@@ -140,12 +138,12 @@ pub const Status = enum(u8) {
 
     pub fn is(num: u8, status: Status) bool {
         if (status == .SLP) return Status.duration(num) > 0;
-        return bit.isSet(u8, num, @intCast(u3, @enumToInt(status)));
+        return ((num >> @intCast(u3, @enumToInt(status))) & 1) != 0;
     }
 
     pub fn init(status: Status) u8 {
         assert(status != .SLP);
-        return bit.set(u8, 0, @intCast(u3, @enumToInt(status)));
+        return @as(u8, 1) << @intCast(u3, @enumToInt(status));
     }
 
     pub fn slp(dur: u3) u8 {
