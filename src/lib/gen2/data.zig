@@ -44,7 +44,7 @@ const Field = packed struct {
     }
 };
 
-const Weather = enum(u2) {
+const Weather = enum(u4) {
     None,
     Rain,
     Sun,
@@ -52,7 +52,6 @@ const Weather = enum(u2) {
 
     const Data = packed struct {
         id: Weather = .None,
-        _: u2 = 0,
         duration: u4 = 0,
 
         comptime {

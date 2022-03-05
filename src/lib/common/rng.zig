@@ -8,7 +8,6 @@ const expectEqual = std.testing.expectEqual;
 const showdown = build_options.showdown;
 
 pub fn PRNG(comptime gen: comptime_int) type {
-    const Output = getOutputSize(gen);
     const divisor = getRangeDivisor(gen);
 
     if (showdown) {
@@ -17,16 +16,19 @@ pub fn PRNG(comptime gen: comptime_int) type {
 
             src: Gen56,
 
-            pub fn next(self: *Self) Output {
-                return @truncate(Output, self.src.next());
+            pub fn next(self: *Self) Output(gen) {
+                return @truncate(Output(gen), self.src.next());
             }
 
             pub fn range(
                 self: *Self,
                 comptime from: comptime_int,
                 comptime to: comptime_int,
-            ) Output {
-                return @truncate(Output, @as(u64, self.src.next()) * (to - from) / divisor + from);
+            ) Output(gen) {
+                return @truncate(
+                    Output(gen),
+                    @as(u64, self.src.next()) * (to - from) / divisor + from,
+                );
             }
 
             pub fn chance(
@@ -51,8 +53,8 @@ pub fn PRNG(comptime gen: comptime_int) type {
 
             src: Source,
 
-            pub fn next(self: *Self) Output {
-                return @truncate(Output, self.src.next());
+            pub fn next(self: *Self) Output(gen) {
+                return @truncate(Output(gen), self.src.next());
             }
         };
     }
@@ -175,7 +177,7 @@ test "Generation V & VI" {
     }
 }
 
-fn getOutputSize(comptime gen: comptime_int) type {
+fn Output(comptime gen: comptime_int) type {
     return switch (gen) {
         1, 2 => u8,
         3, 4 => u16,
@@ -197,18 +199,17 @@ fn getRangeDivisor(comptime gen: comptime_int) comptime_int {
 pub fn FixedRNG(comptime gen: comptime_int, comptime len: usize) type {
     assert(builtin.is_test);
 
-    const Output = getOutputSize(gen);
     const divisor = getRangeDivisor(gen);
 
     return extern struct {
         const Self = @This();
 
-        rolls: [len]Output,
+        rolls: [len]Output(gen),
         index: usize = 0,
 
-        pub fn next(self: *Self) Output {
+        pub fn next(self: *Self) Output(gen) {
             if (self.index > self.rolls.len) @panic("Insufficient number of rolls provided");
-            const roll = @truncate(Output, self.rolls[self.index]);
+            const roll = @truncate(Output(gen), self.rolls[self.index]);
             self.index += 1;
             return roll;
         }
@@ -217,9 +218,9 @@ pub fn FixedRNG(comptime gen: comptime_int, comptime len: usize) type {
             self: *Self,
             comptime from: comptime_int,
             comptime to: comptime_int,
-        ) Output {
+        ) Output(gen) {
             const Cast = std.math.IntFittingRange(from, std.math.max(divisor, to * to));
-            return @truncate(Output, @as(Cast, self.next()) * (to - from) / divisor + from);
+            return @truncate(Output(gen), @as(Cast, self.next()) * (to - from) / divisor + from);
         }
 
         pub fn chance(
@@ -264,8 +265,6 @@ pub const Random = struct {
     }
 };
 
-// const util = @import("../common/util.zig"); // DEBUG
-
 // test "DEBUG TODO" {
 //     var expected: [256]u8 = undefined;
 //     var i: usize = 0;
@@ -276,16 +275,17 @@ pub const Random = struct {
 //     var rng2 = FixedRNG(1, expected.len){ .rolls = expected };
 //     i = 0;
 //     while (i < expected.len) : (i += 1) {
-//         // util.debug.print(i);
+//         const a = rng1.chance(63, 256);
+//         const b = rng2.next() < Gen12.percent(25);
 
-//         // const a = rng1.chance(63, 256);
-//         // const b = rng2.next() < Gen12.percent(25);
-
-//         // const a = !rng1.chance(128, 256);
-//         // const b = rng2.next() >= Gen12.percent(50) + 1;
+//         const a = !rng1.chance(128, 256);
+//         const b = rng2.next() >= Gen12.percent(50) + 1;
 
 //         const a = rng1.range(3, 5);
 //         const b = (rng2.next() & 3) + 2;
+
+//         const a = rng1.range(0, 2) == 0;
+//         const b = rng2.next() < Gen12.percent(50) + 1;
 
 //         try expectEqual(a, b);
 //     }

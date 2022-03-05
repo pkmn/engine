@@ -47,7 +47,7 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     // p1.active.volatiles.Flinch = false;
     // p2.active.volatiles.Flinch = false;
     // if (active.volatiles.Locked or active.volatiles.Charging) {}
-    // if (Status.frzOrSlp(stored.status)) {}
+    // if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP)) {}
     // if (active.volatiles.Bide or active.volatiles.PartialTrap) {}
     // if (foe.active.volatiles.PartialTrap) {}
     // if (active.volatiles.PartialTrap) {}
@@ -69,8 +69,7 @@ pub fn determineTurnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     const spe2 = battle.get(.P2).active.stats.spe;
     if (spe1 == spe2) {
         const p1 = if (showdown) {
-            // TODO: confirm this does the same thing as PS Battle.speedSort
-            battle.rng.range(0, 2) != 0;
+            battle.rng.range(0, 2) == 0;
         } else {
             battle.rng.next() < Gen12.percent(50) + 1;
         };
@@ -338,7 +337,7 @@ pub const Effects = struct {
         try log.activate(player_ident, .Haze);
 
         if (Status.any(foe_stored.status)) {
-            if (Status.frzOrSlp(foe_stored.status)) {
+            if (Status.is(foe_stored.status, .FRZ) or Status.is(foe_stored.status, .SLP)) {
                 // TODO prevent from executing a move by using special case move $FF!!!
             }
             try log.curestatus(foe_ident, foe_stored.status, true);
