@@ -72,10 +72,10 @@ should notify you with these options when you attempt to install the package.
 ```ts
 import {Dex} from '@pkmn/dex';
 import {Generations} from '@pkmn/data';
-import {Engine} from `@pkmn/engine`;
+import {Battle} from `@pkmn/engine`;
 
 const gens = new Generations(Dex);
-const engine = new Engine(gens.get(1), team1, team2);
+const battle = new Battle(gens.get(1), team1, team2);
 
 
 // TODO ...
@@ -89,8 +89,8 @@ The simulation engine is currently expected to be developed over multiple stages
 | ------- | ----------------------------------------------- |
 | **0**   | documentation, integration, benchmark, protocol |
 | **1**   | RBY & GSC                                       |
-| **2**   | ADV & DPP                            |
-| _**3**_ | _BW & XY & SM & SS_                         |
+| **2**   | ADV & DPP                                       |
+| _**3**_ | _BW & XY & SM & SS & SV_                        |
 
 Currently, the work being done in stage 0 is intended to lay a foundation:
   
@@ -101,8 +101,7 @@ Currently, the work being done in stage 0 is intended to lay a foundation:
 Stage 1 will see the implementation of the actual Generation I & II battle engines, followed by
 Generation III & IV in stage 2. The implementation of further Pokémon generations is in scope for the
 project but should not be considered as part of the immediate roadmap (ie. exploring the options for
-broadening support for old generation APIs will be given higher priority than implementing current
-generations).
+broadening support for old generation APIs will be given higher priority than implementing more modern generations).
 
 Certain features will always be deemed **out of scope**:
 
