@@ -68,9 +68,9 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn fail(self: *Self, ident: u8) !void {
+        pub fn fail(self: *Self, ident: u8, still: bool) !void {
             if (!trace) return;
-            try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Fail), ident });
+            try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Fail), ident, still });
         }
 
         pub fn switched(self: *Self, ident: u8) !void {

@@ -56,7 +56,7 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     return .None;
 }
 
-fn determineTurnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
+pub fn determineTurnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     if ((c1.type == .Switch) != (c2.type == .Switch)) return if (c1.type == .Switch) .P1 else .P2;
     const m1 = getMove(battle, .P1, c1);
     const m2 = getMove(battle, .P2, c2);
@@ -79,7 +79,7 @@ fn determineTurnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     return if (spe1 > spe2) .P1 else .P2;
 }
 
-fn getMove(battle: anytype, player: Player, choice: Choice) Move {
+pub fn getMove(battle: anytype, player: Player, choice: Choice) Move {
     if (choice.type != .Move or choice.data == 0) return .None;
 
     assert(choice.data <= 4);
@@ -92,7 +92,7 @@ fn getMove(battle: anytype, player: Player, choice: Choice) Move {
 }
 
 // TODO: struggle bypass/wrap underflow
-fn decrementPP(side: *Side, choice: Choice) void {
+pub fn decrementPP(side: *Side, choice: Choice) void {
     assert(choice.type == .Move);
     assert(choice.data <= 4);
 
@@ -111,14 +111,14 @@ fn decrementPP(side: *Side, choice: Choice) void {
     stored.moves[choice.data - 1].pp -= 1;
 }
 
-fn findFirstAlive(side: *const Side) u8 {
+pub fn findFirstAlive(side: *const Side) u8 {
     for (side.pokemon) |pokemon, i| {
         if (pokemon.hp > 0) return @truncate(u8, i + 1); // index -> slot
     }
     return 0;
 }
 
-fn switchIn(side: *Side, player: Player, slot: u8, log: anytype) !void {
+pub fn switchIn(side: *Side, player: Player, slot: u8, log: anytype) !void {
     var active = &side.active;
 
     assert(slot != 0);
@@ -152,7 +152,7 @@ fn switchIn(side: *Side, player: Player, slot: u8, log: anytype) !void {
 }
 
 // TODO return an enum instead of bool to handle multiple cases
-fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
+pub fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
     var side = battle.get(player);
     const foe = battle.foe(player);
     var active = &side.active;
@@ -252,7 +252,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
         volatiles.Bide = false;
         try log.end(ident, .Bide, false);
         if (volatiles.data.bide > 0) {
-            try log.fail(ident);
+            try log.fail(ident, false);
             return false;
         }
         // TODO unleash energy
@@ -288,28 +288,30 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
     return true;
 }
 
-fn endTurn(battle: anytype, log: anytype) !Result {
+pub fn endTurn(battle: anytype, log: anytype) !Result {
     battle.turn += 1;
     try log.turn(battle.turn);
     return .None;
 }
 
-fn moveEffect(battle: anytype, player: Player, move: Move, log: anytype) !void {
+pub fn moveEffect(battle: anytype, player: Player, move: Move, log: anytype) !void {
     return switch (move.effect) {
         .Conversion => Effects.conversion(battle, player, log),
         .Haze => Effects.haze(battle, player, log),
         .Heal => Effects.heal(battle, player, log),
+        .LightScreen => Effects.lightScreen(battle, player, log),
         .PayDay => Effects.payDay(log),
+        .Reflect => Effects.reflect(battle, player, log),
         else => unreachable,
     };
 }
 
-const Effects = struct {
-    fn conversion(battle: anytype, player: Player, log: anytype) !void {
+pub const Effects = struct {
+    pub fn conversion(battle: anytype, player: Player, log: anytype) !void {
         var side = battle.get(player);
         const foe = battle.foe(player);
 
-        const ident = player.ident(side.active.id);
+        const ident = player.ident(side.get(side.active.position).id);
         if (foe.active.volatiles.Invulnerability) {
             return try log.miss(ident, player.foe().ident(foe.active.id));
         }
@@ -317,49 +319,71 @@ const Effects = struct {
         try log.typechange(ident, @bitCast(u8, foe.active.types));
     }
 
-    fn payDay(log: anytype) !void {
-        try log.fieldactivate();
-    }
-
-    fn haze(battle: anytype, player: Player, log: anytype) !void {
+    pub fn haze(battle: anytype, player: Player, log: anytype) !void {
         var side = battle.get(player);
         var foe = battle.foe(player);
 
-        var sp = side.get(side.active.position);
-        var sf = foe.get(foe.active.position);
+        var side_stored = side.get(side.active.position);
+        var foe_stored = foe.get(foe.active.position);
 
-        const pid = player.ident(sp.id);
-        const fid = player.foe().ident(sf.id);
+        const player_ident = player.ident(side_stored.id);
+        const foe_ident = player.foe().ident(foe_stored.id);
 
         side.active.boosts = .{};
         foe.active.boosts = .{};
         inline for (std.meta.fields(@TypeOf(side.active.stats))) |field| {
-            @field(side.active.stats, field.name) = @field(sp.stats, field.name);
-            @field(foe.active.stats, field.name) = @field(sf.stats, field.name);
+            @field(side.active.stats, field.name) = @field(side_stored.stats, field.name);
+            @field(foe.active.stats, field.name) = @field(foe_stored.stats, field.name);
         }
-        try log.activate(pid, .Haze);
+        try log.activate(player_ident, .Haze);
 
-        if (Status.any(sf.status)) {
-            if (Status.frzOrSlp(sf.status)) {
+        if (Status.any(foe_stored.status)) {
+            if (Status.frzOrSlp(foe_stored.status)) {
                 // TODO prevent from executing a move by using special case move $FF!!!
             }
-            try log.curestatus(fid, sf.status, true);
-            sf.status = 0;
+            try log.curestatus(foe_ident, foe_stored.status, true);
+            foe_stored.status = 0;
         }
 
-        try clearVolatiles(&side.active, pid, log);
-        try clearVolatiles(&foe.active, fid, log);
+        try clearVolatiles(&side.active, player_ident, log);
+        try clearVolatiles(&foe.active, foe_ident, log);
     }
 
-    fn heal(battle: anytype, player: Player, log: anytype) !void {
+    pub fn heal(battle: anytype, player: Player, log: anytype) !void {
         _ = battle;
         _ = player;
         _ = log;
         // TODO
     }
+
+    pub fn lightScreen(battle: anytype, player: Player, log: anytype) !void {
+        var side = battle.get(player);
+        const ident = player.ident(side.get(side.active.position).id);
+        if (side.active.volatiles.LightScreen) {
+            try log.fail(ident, true);
+            return;
+        }
+        side.active.volatiles.LightScreen = true;
+        try log.start(ident, .LightScreen, false);
+    }
+
+    pub fn payDay(log: anytype) !void {
+        try log.fieldactivate();
+    }
+
+    pub fn reflect(battle: anytype, player: Player, log: anytype) !void {
+        var side = battle.get(player);
+        const ident = player.ident(side.get(side.active.position).id);
+        if (side.active.volatiles.Reflect) {
+            try log.fail(ident, true);
+            return;
+        }
+        side.active.volatiles.Reflect = true;
+        try log.start(ident, .Reflect, false);
+    }
 };
 
-fn clearVolatiles(active: *ActivePokemon, ident: u8, log: anytype) !void {
+pub fn clearVolatiles(active: *ActivePokemon, ident: u8, log: anytype) !void {
     var volatiles = &active.volatiles;
     if (volatiles.data.disabled.move != 0) {
         volatiles.data.disabled = .{};
@@ -397,7 +421,7 @@ fn clearVolatiles(active: *ActivePokemon, ident: u8, log: anytype) !void {
     }
 }
 
-// TODO DEBUG
+// TODO DEBUG audit pub usage
 comptime {
     std.testing.refAllDecls(@This());
 }

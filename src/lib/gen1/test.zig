@@ -130,19 +130,20 @@ pub const Side = struct {
                 for (pokemon.moves) |move, k| {
                     active.moves[k] = move;
                 }
-                inline for (std.meta.fields(@TypeOf(active.volatiles))) |field| {
+                var volatiles = &active.volatiles;
+                inline for (std.meta.fields(@TypeOf(volatiles))) |field| {
                     if (field.field_type != bool) continue;
                     if (rand.chance(1, 18)) {
-                        @field(active.volatiles, field.name) = true;
+                        @field(volatiles, field.name) = true;
                         if (std.mem.eql(u8, field.name, "Bide")) {
-                            active.volatiles.data.bide = rand.range(u16, 1, active.stats.hp - 1);
+                            volatiles.data.bide = rand.range(u16, 1, active.stats.hp - 1);
                         } else if (std.mem.eql(u8, field.name, "Confusion")) {
-                            active.volatiles.data.confusion = rand.range(u4, 1, 5);
+                            volatiles.data.confusion = rand.range(u4, 1, 5);
                         } else if (std.mem.eql(u8, field.name, "Toxic")) {
                             pokemon.status = Status.init(Status.PSN);
-                            active.volatiles.data.toxic = rand.range(u4, 1, 15);
+                            volatiles.data.toxic = rand.range(u4, 1, 15);
                         } else if (std.mem.eql(u8, field.name, "Substitute")) {
-                            active.volatiles.data.substitute =
+                            volatiles.data.substitute =
                                 rand.range(u8, 1, @truncate(u8, active.stats.hp / 4));
                         }
                     }
@@ -150,7 +151,7 @@ pub const Side = struct {
                 if (rand.chance(1, 20)) {
                     const m = rand.range(u4, 1, 4);
                     if (active.moves[m].id != .None) {
-                        active.volatiles.data.disabled = .{
+                        volatiles.data.disabled = .{
                             .move = m,
                             .duration = rand.range(u4, 1, 5),
                         };

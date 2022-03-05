@@ -164,6 +164,8 @@ pub const Activate = enum(u8) {
 pub const Start = enum(u8) {
     Confusion,
     Bide,
+    LightScreen,
+    Reflect,
 };
 
 pub const End = enum(u8) {
