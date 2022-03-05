@@ -66,4 +66,8 @@ pub const Types = packed struct {
         // TODO: Safety check workaround for ziglang/zig#2627
         assert(@bitSizeOf(Types) == @sizeOf(Types) * 8);
     }
+
+    pub fn immune(self: Types, t: Type) bool {
+        return t.effectiveness(self.type1) == I or t.effectiveness(self.type2) == I;
+    }
 };

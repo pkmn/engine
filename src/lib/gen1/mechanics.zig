@@ -300,6 +300,7 @@ pub fn moveEffect(battle: anytype, player: Player, move: Move, log: anytype) !vo
         .Heal => Effects.heal(battle, player, log),
         .LightScreen => Effects.lightScreen(battle, player, log),
         .PayDay => Effects.payDay(log),
+        .Paralyze => Effects.paralyze(battle, player, move, log),
         .Reflect => Effects.reflect(battle, player, log),
         else => unreachable,
     };
@@ -364,6 +365,25 @@ pub const Effects = struct {
         }
         side.active.volatiles.LightScreen = true;
         try log.start(ident, .LightScreen, false);
+    }
+
+    pub fn paralyze(battle: anytype, player: Player, move: Move, log: anytype) !void {
+        var side = battle.get(player);
+        var active = &side.active;
+        var stored = side.get(active.position);
+        const ident = player.ident(stored.id);
+
+        if (Status.any(stored.status)) {
+            try log.fail(ident, false); // FIXME: ?
+            return;
+        }
+        const m = Move.get(move.id);
+        if (active.types.immune(m.type)) {
+            try log.immune(ident);
+            return;
+        }
+        // TODO MoveHitTest, log
+        active.stats.spe = @maximum(active.stats.spe / 4, 1);
     }
 
     pub fn payDay(log: anytype) !void {

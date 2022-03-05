@@ -334,10 +334,15 @@ pub const Effectiveness = enum(u8) {
 test "Types" {
     try expectEqual(14, @enumToInt(Type.Dragon));
     try expectEqual(20, @enumToInt(Effectiveness.Super));
+
     try expectEqual(Effectiveness.Immune, Type.effectiveness(.Ghost, .Psychic));
-    try expectEqual(Effectiveness.Super, Type.effectiveness(.Water, .Fire));
+    try expectEqual(Effectiveness.Super, Type.Water.effectiveness(.Fire));
     try expectEqual(Effectiveness.Resisted, Type.effectiveness(.Fire, .Water));
     try expectEqual(Effectiveness.Neutral, Type.effectiveness(.Normal, .Grass));
+
+    const t: Types = .{ .type1 = .Rock, .type2 = .Ground };
+    try expect(!t.immune(.Grass));
+    try expect(t.immune(.Electric));
 }
 
 // @test-only

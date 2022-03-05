@@ -73,6 +73,11 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Fail), ident, still });
         }
 
+        pub fn immune(self: *Self, ident: u8) !void {
+            if (!trace) return;
+            try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Immune), ident });
+        }
+
         pub fn switched(self: *Self, ident: u8) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Switch), ident });
