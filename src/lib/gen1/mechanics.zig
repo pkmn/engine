@@ -28,19 +28,26 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     _ = c2;
 
     if (battle.turn == 0) {
-        var p1 = battle.get(.P1);
-        var p2 = battle.get(.P2);
+        var p1 = battle.side(.P1);
+        var p2 = battle.side(.P2);
 
         var slot = findFirstAlive(p1);
         if (slot == 0) return if (findFirstAlive(p2) == 0) .Tie else .Lose;
-        try switchIn(p1, .P1, slot, log);
+        try switchIn(p1, .P1, slot, true, log);
 
         slot = findFirstAlive(p2);
         if (slot == 0) return .Win;
-        try switchIn(p2, .P2, slot, log);
+        try switchIn(p2, .P2, slot, true, log);
 
         return try endTurn(battle, log);
     }
+
+    // FIXME
+    assert(c1.type == .Switch);
+    try switchIn(battle.side(.P1), .P1, c1.data, false, log);
+
+    assert(c2.type == .Switch);
+    try switchIn(battle.side(.P2), .P2, c2.data, false, log);
 
     // XXX
     // if (active.volatiles.Recharging or active.volatiles.Rage) {}
@@ -56,6 +63,48 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     return .None;
 }
 
+pub fn findFirstAlive(side: *const Side) u8 {
+    for (side.pokemon) |pokemon, i| {
+        if (pokemon.hp > 0) return side.order[i];
+    }
+    return 0;
+}
+
+pub fn switchIn(side: *Side, player: Player, slot: u8, initial: bool, log: anytype) !void {
+    var active = &side.active;
+    const incoming = side.get(slot);
+    assert(incoming.hp != 0);
+
+    assert(slot != 1 or initial);
+    const out = side.order[0];
+    side.order[0] = side.order[slot - 1];
+    side.order[slot - 1] = out;
+
+    active.stats = incoming.stats;
+    active.volatiles = .{};
+    for (incoming.moves) |move, j| {
+        active.moves[j] = move;
+    }
+    active.boosts = .{};
+    active.species = incoming.species;
+    active.types = incoming.types;
+
+    if (Status.is(incoming.status, .PAR)) {
+        active.stats.spe = @maximum(active.stats.spe / 4, 1);
+    } else if (Status.is(incoming.status, .BRN)) {
+        active.stats.atk = @maximum(active.stats.atk / 2, 1);
+    }
+    // TODO: ld hl, wEnemyBattleStatus1; res USING_TRAPPING_MOVE, [hl]
+
+    try log.switched(active.ident(side, player), incoming);
+}
+
+pub fn endTurn(battle: anytype, log: anytype) !Result {
+    battle.turn += 1;
+    try log.turn(battle.turn);
+    return .None;
+}
+
 pub fn determineTurnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     if ((c1.type == .Switch) != (c2.type == .Switch)) return if (c1.type == .Switch) .P1 else .P2;
     const m1 = getMove(battle, .P1, c1);
@@ -65,8 +114,8 @@ pub fn determineTurnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     // NB: https://www.smogon.com/forums/threads/adv-switch-priority.3622189/
     if (!showdown and c1.type == .Switch and c2.type == .Switch) return .P1;
 
-    const spe1 = battle.get(.P1).active.stats.spe;
-    const spe2 = battle.get(.P2).active.stats.spe;
+    const spe1 = battle.side(.P1).active.stats.spe;
+    const spe2 = battle.side(.P2).active.stats.spe;
     if (spe1 == spe2) {
         const p1 = if (showdown) {
             battle.rng.range(0, 2) == 0;
@@ -82,85 +131,23 @@ pub fn getMove(battle: anytype, player: Player, choice: Choice) Move {
     if (choice.type != .Move or choice.data == 0) return .None;
 
     assert(choice.data <= 4);
-    const side = battle.get(player);
-    assert(side.active.position != 0);
+    const side = battle.side(player);
     const move = side.active.moves[choice.data - 1];
     assert(move.pp != 0); // FIXME: wrap underflow?
 
     return move.id;
 }
 
-// TODO: struggle bypass/wrap underflow
-pub fn decrementPP(side: *Side, choice: Choice) void {
-    assert(choice.type == .Move);
-    assert(choice.data <= 4);
-
-    if (choice.data == 0) return; // Struggle
-
-    var active = &side.active;
-    assert(active.position != 0);
-
-    const volatiles = active.volatiles;
-    if (volatiles.Bide or volatiles.Locked or volatiles.MultiHit or volatiles.Rage) return;
-
-    active.moves[choice.data - 1].pp -= 1;
-    if (volatiles.Transform) return;
-
-    var stored = side.get(active.position);
-    stored.moves[choice.data - 1].pp -= 1;
-}
-
-pub fn findFirstAlive(side: *const Side) u4 {
-    for (side.pokemon) |pokemon, i| {
-        if (pokemon.hp > 0) return @truncate(u4, i + 1); // index -> slot
-    }
-    return 0;
-}
-
-pub fn switchIn(side: *Side, player: Player, slot: u4, log: anytype) !void {
-    var active = &side.active;
-
-    assert(slot != 0);
-    assert(slot != active.position);
-    assert(active.position == 0 or side.get(active.position).position == 1);
-
-    const incoming = side.get(slot);
-    if (active.position != 0) side.get(active.position).position = incoming.position;
-    incoming.position = 1;
-
-    inline for (std.meta.fields(@TypeOf(active.stats))) |field| {
-        @field(active.stats, field.name) = @field(incoming.stats, field.name);
-    }
-    active.volatiles = .{};
-    for (incoming.moves) |move, j| {
-        active.moves[j] = move;
-    }
-    active.boosts = .{};
-    active.species = incoming.species;
-    active.types = incoming.types;
-    active.position = slot;
-
-    if (Status.is(incoming.status, .PAR)) {
-        active.stats.spe = @maximum(active.stats.spe / 4, 1);
-    } else if (Status.is(incoming.status, .BRN)) {
-        active.stats.atk = @maximum(active.stats.atk / 2, 1);
-    }
-    // TODO: ld hl, wEnemyBattleStatus1; res USING_TRAPPING_MOVE, [hl]
-
-    try log.switched(player.ident(side.get(slot).id), incoming);
-}
-
 // TODO return an enum instead of bool to handle multiple cases
 pub fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
-    var side = battle.get(player);
+    var side = battle.side(player);
     const foe = battle.foe(player);
     var active = &side.active;
-    var stored = side.get(active.position);
-    const ident = player.ident(stored.id);
+    var stored = side.stored();
+    const ident = active.ident(side, player);
     var volatiles = &active.volatiles;
 
-    assert(mslot > 0 and mslot <= 4);
-    assert(active.moves[mslot - 1].id != .None);
+    assert(active.move(mslot).id != .None);
 
     if (Status.is(stored.status, .SLP)) {
         stored.status -= 1;
@@ -287,10 +274,22 @@ pub fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !boo
     return true;
 }
 
-pub fn endTurn(battle: anytype, log: anytype) !Result {
-    battle.turn += 1;
-    try log.turn(battle.turn);
-    return .None;
+// TODO: struggle bypass/wrap underflow
+pub fn decrementPP(side: *Side, choice: Choice) void {
+    assert(choice.type == .Move);
+    assert(choice.data <= 4);
+
+    if (choice.data == 0) return; // Struggle
+
+    var active = &side.active;
+
+    const volatiles = active.volatiles;
+    if (volatiles.Bide or volatiles.Locked or volatiles.MultiHit or volatiles.Rage) return;
+
+    active.move(choice.data).pp -= 1;
+    if (volatiles.Transform) return;
+
+    side.stored().move(choice.data).pp -= 1;
 }
 
 pub fn moveEffect(battle: anytype, player: Player, move: Move, log: anytype) !void {
@@ -308,33 +307,32 @@ pub fn moveEffect(battle: anytype, player: Player, move: Move, log: anytype) !vo
 
 pub const Effects = struct {
     pub fn conversion(battle: anytype, player: Player, log: anytype) !void {
-        var side = battle.get(player);
+        var side = battle.side(player);
         const foe = battle.foe(player);
 
-        const ident = player.ident(side.get(side.active.position).id);
+        const ident = side.active.ident(side, player);
         if (foe.active.volatiles.Invulnerability) {
-            return try log.miss(ident, player.foe().ident(foe.active.id));
+            return try log.miss(ident, foe.active.ident(foe, player.foe()));
         }
         side.active.types = foe.active.types;
         try log.typechange(ident, @bitCast(u8, foe.active.types));
     }
 
     pub fn haze(battle: anytype, player: Player, log: anytype) !void {
-        var side = battle.get(player);
+        var side = battle.side(player);
         var foe = battle.foe(player);
 
-        var side_stored = side.get(side.active.position);
-        var foe_stored = foe.get(foe.active.position);
+        var side_stored = side.stored();
+        var foe_stored = foe.stored();
 
-        const player_ident = player.ident(side_stored.id);
-        const foe_ident = player.foe().ident(foe_stored.id);
+        const player_ident = side.active.ident(side, player);
+        const foe_ident = foe.active.ident(foe, player.foe());
 
         side.active.boosts = .{};
         foe.active.boosts = .{};
-        inline for (std.meta.fields(@TypeOf(side.active.stats))) |field| {
-            @field(side.active.stats, field.name) = @field(side_stored.stats, field.name);
-            @field(foe.active.stats, field.name) = @field(foe_stored.stats, field.name);
-        }
+
+        side.active.stats = side_stored.stats;
+        foe.active.stats = foe_stored.stats;
         try log.activate(player_ident, .Haze);
         try log.clearallboost();
 
@@ -358,43 +356,40 @@ pub const Effects = struct {
     }
 
     pub fn lightScreen(battle: anytype, player: Player, log: anytype) !void {
-        var side = battle.get(player);
-        const ident = player.ident(side.get(side.active.position).id);
+        var side = battle.side(player);
+        const ident = side.active.ident(side, player);
         if (side.active.volatiles.LightScreen) {
             try log.fail(ident, .None);
             return;
         }
         side.active.volatiles.LightScreen = true;
-        try log.start(ident, .LightScreen, false);
+        try log.start(ident, .LightScreen);
     }
 
     pub fn mist(battle: anytype, player: Player, log: anytype) !void {
-        var side = battle.get(player);
-        const ident = player.ident(side.get(side.active.position).id);
+        var side = battle.side(player);
+        const ident = side.active.ident(side, player);
         if (side.active.volatiles.Mist) {
             try log.fail(ident, .None);
             return;
         }
-        try log.start(ident, .Mist, false);
+        try log.start(ident, .Mist);
     }
 
     pub fn paralyze(battle: anytype, player: Player, move: Move, log: anytype) !void {
-        var side = battle.get(player);
-        var active = &side.active;
-        var stored = side.get(active.position);
-        const ident = player.ident(stored.id);
-
-        if (Status.any(stored.status)) {
+        var side = battle.side(player);
+        const ident = side.active.ident(side, player);
+        if (Status.any(side.stored().status)) {
             try log.fail(ident, .Paralysis); // FIXME: ???
             return;
         }
         const m = Move.get(move.id);
-        if (active.types.immune(m.type)) {
+        if (side.active.types.immune(m.type)) {
             try log.immune(ident, .None);
             return;
         }
         // TODO MoveHitTest, log
-        active.stats.spe = @maximum(active.stats.spe / 4, 1);
+        side.active.stats.spe = @maximum(side.active.stats.spe / 4, 1);
     }
 
     pub fn payDay(log: anytype) !void {
@@ -402,15 +397,14 @@ pub const Effects = struct {
     }
 
     pub fn reflect(battle: anytype, player: Player, log: anytype) !void {
-        var side = battle.get(player);
-        const ident = player.ident(side.get(side.active.position).id);
+        var side = battle.side(player);
+        const ident = side.active.ident(side, player);
         if (side.active.volatiles.Reflect) {
             try log.fail(ident, .None);
-            try log.still();
             return;
         }
         side.active.volatiles.Reflect = true;
-        try log.start(ident, .Reflect, false);
+        try log.start(ident, .Reflect);
     }
 };
 
@@ -427,28 +421,28 @@ pub fn clearVolatiles(active: *ActivePokemon, ident: u8, log: anytype) !void {
     }
     if (volatiles.Mist) {
         volatiles.Mist = false;
-        try log.end(ident, .Mist, true);
+        try log.end(ident, .Mist);
     }
     if (volatiles.FocusEnergy) {
         volatiles.FocusEnergy = false;
-        try log.end(ident, .FocusEnergy, true);
+        try log.end(ident, .FocusEnergy);
     }
     if (volatiles.LeechSeed) {
         volatiles.LeechSeed = false;
-        try log.end(ident, .LeechSeed, true);
+        try log.end(ident, .LeechSeed);
     }
     if (volatiles.Toxic) {
         // NB: volatiles.data.toxic is left unchanged
         volatiles.Toxic = false;
-        try log.end(ident, .Toxic, true);
+        try log.end(ident, .Toxic);
     }
     if (volatiles.LightScreen) {
         volatiles.LightScreen = false;
-        try log.end(ident, .LightScreen, true);
+        try log.end(ident, .LightScreen);
     }
     if (volatiles.Reflect) {
         volatiles.Reflect = false;
-        try log.end(ident, .Reflect, true);
+        try log.end(ident, .Reflect);
     }
 }
 

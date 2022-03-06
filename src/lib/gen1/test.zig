@@ -8,6 +8,7 @@ const protocol = @import("protocol.zig");
 
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
+const expectEqualSlices = std.testing.expectEqualSlices;
 
 const showdown = build_options.showdown;
 const trace = build_options.trace;
@@ -27,6 +28,8 @@ const Status = data.Status;
 const ArgType = protocol.ArgType;
 const Log = protocol.Log(std.io.FixedBufferStream([]u8).Writer);
 const expectLog = protocol.expectLog;
+
+const SEED = 0x12345678;
 
 pub const Battle = struct {
     pub fn init(
@@ -65,11 +68,12 @@ pub const Side = struct {
         var i: u4 = 0;
         while (i < ps.len) : (i += 1) {
             const p = ps[i];
+            side.order[i] = i + 1;
             var pokemon = &side.pokemon[i];
             pokemon.species = p.species;
             const specie = Species.get(p.species);
             inline for (std.meta.fields(@TypeOf(pokemon.stats))) |field| {
-                @field(pokemon.stats, field.name) = Stats(u12).calc(
+                @field(pokemon.stats, field.name) = Stats(u16).calc(
                     field.name,
                     @field(specie.stats, field.name),
                     0xF,
@@ -77,8 +81,6 @@ pub const Side = struct {
                     p.level,
                 );
             }
-            pokemon.id = i + 1;
-            pokemon.position = pokemon.id;
             assert(p.moves.len > 0 and p.moves.len <= 4);
             for (p.moves) |move, j| {
                 pokemon.moves[j].id = move;
@@ -103,9 +105,8 @@ pub const Side = struct {
         var i: u4 = 0;
         while (i < n) : (i += 1) {
             side.pokemon[i] = Pokemon.random(rand);
+            side.order[i] = i + 1;
             var pokemon = &side.pokemon[i];
-            pokemon.id = i + 1;
-            pokemon.position = pokemon.id;
             var j: u4 = 0;
             while (j < 4) : (j += 1) {
                 if (rand.chance(1, 5 + (@as(u8, i) * 2))) {
@@ -117,10 +118,7 @@ pub const Side = struct {
             }
             if (i == 0) {
                 var active = &side.active;
-                active.position = 1;
-                inline for (std.meta.fields(@TypeOf(active.stats))) |field| {
-                    @field(active.stats, field.name) = @field(pokemon.stats, field.name);
-                }
+                active.stats = pokemon.stats;
                 inline for (std.meta.fields(@TypeOf(active.boosts))) |field| {
                     if (rand.chance(1, 10)) {
                         @field(active.boosts, field.name) = rand.range(i4, -6, 6);
@@ -131,7 +129,7 @@ pub const Side = struct {
                     active.moves[k] = move;
                 }
                 var volatiles = &active.volatiles;
-                inline for (std.meta.fields(@TypeOf(volatiles))) |field| {
+                inline for (std.meta.fields(@TypeOf(active.volatiles))) |field| {
                     if (field.field_type != bool) continue;
                     if (rand.chance(1, 18)) {
                         @field(volatiles, field.name) = true;
@@ -175,10 +173,10 @@ pub const Pokemon = struct {
         const s = @intToEnum(Species, rand.range(u8, 1, 151));
         const specie = Species.get(s);
         const lvl = if (rand.chance(1, 20)) rand.range(u8, 1, 99) else 100;
-        var stats: Stats(u12) = .{};
+        var stats: Stats(u16) = .{};
         const dvs = DVs.random(rand);
         inline for (std.meta.fields(@TypeOf(stats))) |field| {
-            @field(stats, field.name) = Stats(u12).calc(
+            @field(stats, field.name) = Stats(u16).calc(
                 field.name,
                 @field(specie.stats, field.name),
                 if (field.field_type != u4) dvs.hp() else @field(dvs, field.name),
@@ -240,6 +238,30 @@ test "Battle" {
     const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
     var battle = Battle.init(.{42}, &.{p1}, &.{p2});
     try update(&battle, .{ .type = .Move, .data = 4 }, .{ .type = .Switch, .data = 1 });
+}
+
+fn expectOrder(p1: anytype, o1: []const u8, p2: anytype, o2: []const u8) !void {
+    try expectEqualSlices(u8, o1, &p1.order);
+    try expectEqualSlices(u8, o2, &p2.order);
+}
+
+test "switching" {
+    var battle = Battle.random(&Random.init(SEED));
+    const p1 = battle.side(.P1);
+    const p2 = battle.side(.P2);
+
+    try update(&battle, .{ .type = .Switch, .data = 3 }, .{ .type = .Switch, .data = 2 });
+    try expectOrder(p1, &[_]u8{3,2,1,4,5,6}, p2, &[_]u8{2,1,3,4,5,6});
+    try update(&battle, .{ .type = .Switch, .data = 5 }, .{ .type = .Switch, .data = 5 });
+    try expectOrder(p1, &[_]u8{5,2,1,4,3,6}, p2, &[_]u8{5,1,3,4,2,6});
+    try update(&battle, .{ .type = .Switch, .data = 6 }, .{ .type = .Switch, .data = 3 });
+    try expectOrder(p1, &[_]u8{6,2,1,4,3,5}, p2, &[_]u8{3,1,5,4,2,6});
+    try update(&battle, .{ .type = .Switch, .data = 3 }, .{ .type = .Switch, .data = 3 });
+    try expectOrder(p1, &[_]u8{1,2,6,4,3,5}, p2, &[_]u8{5,1,3,4,2,6});
+    try update(&battle, .{ .type = .Switch, .data = 2 }, .{ .type = .Switch, .data = 4 });
+    try expectOrder(p1, &[_]u8{2,1,6,4,3,5}, p2, &[_]u8{4,1,3,5,2,6});
+    try update(&battle, .{ .type = .Switch, .data = 5 }, .{ .type = .Switch, .data = 5 });
+    try expectOrder(p1, &[_]u8{3,1,6,4,2,5}, p2, &[_]u8{2,1,3,5,4,6});
 }
 
 // var buf = [_]u8{0} ** 7;

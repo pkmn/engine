@@ -23,7 +23,7 @@ pub fn Battle(comptime PRNG: anytype) type {
         last_damage: u16 = 0,
         sides: [2]Side,
 
-        pub fn get(self: *Self, player: Player) *Side {
+        pub fn side(self: *Self, player: Player) *Side {
             return &self.sides[@enumToInt(player)];
         }
 
@@ -38,7 +38,7 @@ pub fn Battle(comptime PRNG: anytype) type {
 }
 
 test "Battle" {
-    try expectEqual(if (build_options.showdown) 368 else 372, @sizeOf(Battle(rng.PRNG(1))));
+    try expectEqual(if (build_options.showdown) 380 else 384, @sizeOf(Battle(rng.PRNG(1))));
 }
 
 pub const Player = enum(u1) {
@@ -49,9 +49,9 @@ pub const Player = enum(u1) {
         return @intToEnum(Player, ~@enumToInt(self));
     }
 
-    pub fn ident(self: Player, slot: u8) u8 {
-        assert(slot > 0 and slot <= 6);
-        return (@as(u8, @enumToInt(self)) << 3) | slot;
+    pub fn ident(self: Player, id: u8) u8 {
+        assert(id > 0 and id <= 6);
+        return (@as(u8, @enumToInt(self)) << 3) | id;
     }
 };
 
@@ -64,49 +64,65 @@ test "Player" {
 pub const Side = extern struct {
     pokemon: [6]Pokemon = [_]Pokemon{.{}} ** 6,
     active: ActivePokemon = .{},
+    order: [6]u8 = [_]u8{0} ** 6,
     last_used_move: Move = .None,
     last_selected_move: Move = .None,
 
     comptime {
-        assert(@sizeOf(Side) == 178);
+        assert(@sizeOf(Side) == 184);
     }
 
     pub fn get(self: *Side, slot: u8) *Pokemon {
         assert(slot > 0 and slot <= 6);
-        return &self.pokemon[slot - 1];
+        const id = self.order[slot - 1];
+        assert(id > 0 and id <= 6);
+        return &self.pokemon[id - 1];
+    }
+
+    pub fn stored(self: *Side) *Pokemon {
+        return self.get(1);
     }
 };
 
 pub const ActivePokemon = extern struct {
+    stats: Stats(u16) = .{},
     volatiles: Volatiles = .{},
-    stats: Stats(u12) = .{},
-    // 4 bit trailling
     moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
     boosts: Boosts = .{},
     species: Species = .None,
-    types: Types = .{}, // TODO document required
-    position: u8 = 0,
-    _: u8 = 0,
+    types: Types = .{},
 
     comptime {
         assert(@sizeOf(ActivePokemon) == 32);
     }
+
+    pub fn ident(self: *ActivePokemon, side: *const Side, player: Player) u8 {
+        _ = self;
+        return player.ident(side.order[0]);
+    }
+
+    pub fn move(self: *ActivePokemon, mslot: u8) *MoveSlot {
+        assert(mslot > 0 and mslot <= 4);
+        return &self.moves[mslot - 1];
+    }
 };
 
 pub const Pokemon = extern struct {
-    stats: Stats(u12) = .{},
-    // 4 bits trailing
+    stats: Stats(u16) = .{},
     moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
     hp: u16 = 0,
     status: u8 = 0,
     species: Species = .None,
     types: Types = .{},
     level: u8 = 100,
-    position: u8 = 0,
-    id: u8 = 0,
 
     comptime {
         assert(@sizeOf(Pokemon) == 24);
+    }
+
+    pub fn move(self: *Pokemon, mslot: u8) *MoveSlot {
+        assert(mslot > 0 and mslot <= 4);
+        return &self.moves[mslot - 1];
     }
 };
 

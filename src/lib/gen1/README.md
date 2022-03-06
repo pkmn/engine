@@ -68,8 +68,6 @@ represented by the same
 [`Pokemon`](https://github.com/smogon/pokemon-showdown/blob/master/sim/pokemon.ts) class, and static
 party information is saved in fields beginning with "`stored`" or "`base`".
 
-TODO: id vs, position
-
 #### `MoveSlot`
 
 A `MoveSlot` is a data-type for a `(move, current pp)` pair. A pared down version of Pokémon
@@ -194,7 +192,6 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 
 - **`Pokemon`**: 5× stats (`50`) + 4× move slot (`60`) + HP (`10`) + status (`4`) + species (`8`) +
   level (`7`)
-  - position does not need to be stored as the party can always be rearranged as switches occur
   - `type` can be computed from the base `Species` information
 - **`ActivePokemon`**: 5× stats (`50`) + 4× move slot (`60`) + 6× boosts (`24`) + volatile data
   (`29`) + volatiles (`18`) + species (`8`) + types (`8`) + disabled (`5`)
@@ -204,6 +201,7 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
     types can be computed from its species
 - **`Side`**: `ActivePokemon` + 6× `Pokemon` + active (`3`) + last used (`8`) + last selected
   (`8`)
+  - `order` does not need to be stored as the party can always be rearranged as switches occur
 - **`Battle`**: 6× `Side` + seed (10× `8` + `4`) + turn (`10`) + last damage (`10`)
 - **`Type.chart`**: attacking types (`15`) × defending types (`15`) × effectiveness (`2`)[^1]
 - **`Moves`**: 164× base power (`6`) + effect (`7`) + accuracy (`4`) + type: (`4`)
@@ -212,8 +210,8 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 | --------------- | ----------- | ------------ | -------- |
 | `Pokemon`       | 192         | 139          | 38.1%    |
 | `ActivePokemon` | 256         | 202          | 26.7%    |
-| `Side`          | 1424        | 1047         | 36.0%    |
-| `Battle`        | 2976        | 2198         | 35.4%    |
+| `Side`          | 1472        | 1047         | 39.5%    |
+| `Battle`        | 3088        | 2198         | 39.5%    |
 | `Type.chart`    | 1800        | 450          | 300.0%   |
 | `Moves.data`    | 2640        | 3444         | 14.3%    |
 
