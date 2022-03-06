@@ -11,6 +11,8 @@ pub fn expectLog(expected: []const u8, actual: []const u8) !void {
 
 pub const ArgType = enum(u8) {
     None,
+
+    // Special
     LastStill,
     LastMiss,
 
@@ -101,6 +103,8 @@ pub const ArgType = enum(u8) {
 };
 
 pub const KWArgType = enum(u8) {
+    None,
+
     // Gen 1
     From,
     Of,
@@ -154,6 +158,8 @@ pub const Move = enum(u8) {
 };
 
 pub const Cant = enum(u8) {
+    None,
+
     Sleep,
     Freeze,
     Paralysis,
@@ -172,6 +178,7 @@ pub const Heal = enum(u8) {
 
 pub const Damage = enum(u8) {
     None,
+
     Poison,
     Burn,
     Confusion,
@@ -193,6 +200,8 @@ const CureStatus = enum(u8) {
 };
 
 const Boost = enum(u8) {
+    None,
+
     Rage,
     Attack,
     Defense,
@@ -206,6 +215,7 @@ const Boost = enum(u8) {
 
 pub const Fail = enum(u8) {
     None,
+
     Sleep,
     Poison,
     Burn,
@@ -217,6 +227,8 @@ pub const Fail = enum(u8) {
 };
 
 pub const Activate = enum(u8) {
+    None,
+
     Confusion,
     Bide,
     Haze,
@@ -225,6 +237,8 @@ pub const Activate = enum(u8) {
 };
 
 pub const Start = enum(u8) {
+    None,
+
     Bide,
     Confusion,
     ConfusionSilent,
@@ -243,6 +257,8 @@ pub const Start = enum(u8) {
 
 // BUG: PS Haze has silent bide,substitute,parspeeddrop,brnattackdrop
 pub const End = enum(u8) {
+    None,
+
     Disable,
     Confusion,
     Bide,
@@ -275,3 +291,16 @@ pub const Immune = enum(u8) {
     None,
     OHKO,
 };
+
+// test {
+//     const print = std.debug.print;
+//     const types = .{ArgType, KWArgType, Move, Cant, Heal, Damage, Status, CureStatus, Boost, Fail, Activate, Start, End, Immune};
+//     inline for (types) |T| {
+//         print("\n## {}\n\n", .{T});
+//         print("<details><summary>Data</summary>\n\nRaw|Data|\n|--|--|\n", .{});
+//         inline for (@typeInfo(T).Enum.fields) |field| {
+//             print("|0x{X:0>2}|{s}|\n", .{field.value, field.name});
+//         }
+//         print("</details>\n", .{});
+//     }
+// }

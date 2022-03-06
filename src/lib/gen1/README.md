@@ -234,3 +234,30 @@ of reference meaning it will likely already be in the cache.
 ## Protocol
 
 TODO: map each PS line to number of bytes, compute max number of bytes required for a chunk (map `|request|` = 0, etc)
+
+## `|-damage|`
+
+    Byte/     0       |       1       |       2       |       3       |
+       /              |               |               |               |
+      |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
+      +---------------+---------------+---------------+---------------+
+     0| 0x0A          | Ident         | Current HP                    |
+      +---------------+---------------+---------------+---------------+
+     4| Max HP                        | Status        | Reason        |
+      +---------------+---------------+---------------+---------------+
+     8| [of]          |
+      +---------------+
+
+<details><summary>Reason</summary>
+
+| Raw  | Reason                   | `[of]` |
+| ---- | ------------------------ | ------ |
+| 0x00 | `None`                   | No     |
+| 0x01 | `psn`                    | No     |
+| 0x02 | `brn`                    | No     |
+| 0x03 | `confusion`              | No     |
+| 0x04 | `psn\|[of]`              | Yes    |
+| 0x05 | `brn\|[of]`              | Yes    |
+| 0x06 | `Recoil\|[of]`           | Yes    |
+| 0x07 | `move: Leech Seed\|[of]` | Yes    |
+</details>
