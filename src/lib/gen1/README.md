@@ -233,48 +233,4 @@ of reference meaning it will likely already be in the cache.
 
 ## Protocol
 
-TODO
-
-```txt
--activate: _, damage
--block: _
--boost: _, from
--clearallboost: silent
--crit: _
--curestatus: msg, silent
--damage: _, from, of
--end: _, silent
--fail: _, weak
--fieldactivate: _
--heal: _, from, of, silent
--hint: _
--hitcount: _
--immune: _, ohko
--message: _
--miss: _
--mustrecharge: _
--ohko: _
--prepare: _
--resisted: _
--start: _, from, of, silent
--status: _, from, silent
--supereffective: _
--transform: _
--unboost: _
-player: _
-teamsize: _
-gametype: _
-gen: _
-tier: _
-start: _
-move: _, from, miss, still
-switch: _
-cant: _
-faint: _
-done: _
-request: _
-turn: _
-upkeep: _
-win: _
-tie: _
-```
+TODO: map each PS line to number of bytes, compute max number of bytes required for a chunk (map `|request|` = 0, etc)

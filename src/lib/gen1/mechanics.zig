@@ -110,14 +110,14 @@ pub fn decrementPP(side: *Side, choice: Choice) void {
     stored.moves[choice.data - 1].pp -= 1;
 }
 
-pub fn findFirstAlive(side: *const Side) u8 {
+pub fn findFirstAlive(side: *const Side) u4 {
     for (side.pokemon) |pokemon, i| {
-        if (pokemon.hp > 0) return @truncate(u8, i + 1); // index -> slot
+        if (pokemon.hp > 0) return @truncate(u4, i + 1); // index -> slot
     }
     return 0;
 }
 
-pub fn switchIn(side: *Side, player: Player, slot: u8, log: anytype) !void {
+pub fn switchIn(side: *Side, player: Player, slot: u4, log: anytype) !void {
     var active = &side.active;
 
     assert(slot != 0);
@@ -147,7 +147,7 @@ pub fn switchIn(side: *Side, player: Player, slot: u8, log: anytype) !void {
     }
     // TODO: ld hl, wEnemyBattleStatus1; res USING_TRAPPING_MOVE, [hl]
 
-    try log.switched(player.ident(side.get(slot).id));
+    try log.switched(player.ident(side.get(slot).id), incoming);
 }
 
 // TODO return an enum instead of bool to handle multiple cases
@@ -189,7 +189,7 @@ pub fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !boo
         volatiles.data.disabled.duration -= 1;
         if (volatiles.data.disabled.duration == 0) {
             volatiles.data.disabled.move = 0;
-            try log.end(ident, .Disable, false);
+            try log.end(ident, .Disable);
         }
     }
     if (volatiles.Confusion) {
@@ -197,7 +197,7 @@ pub fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !boo
         volatiles.data.confusion -= 1;
         if (volatiles.data.confusion == 0) {
             volatiles.Confusion = false;
-            try log.end(ident, .Confusion, false);
+            try log.end(ident, .Confusion);
         } else {
             try log.activate(ident, .Confusion);
             const confused = if (showdown) {
@@ -249,9 +249,9 @@ pub fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !boo
         if (volatiles.data.attacks != 0) return false;
 
         volatiles.Bide = false;
-        try log.end(ident, .Bide, false);
+        try log.end(ident, .Bide);
         if (volatiles.data.bide > 0) {
-            try log.fail(ident, false);
+            try log.fail(ident, .None);
             return false;
         }
         // TODO unleash energy
@@ -336,6 +336,7 @@ pub const Effects = struct {
             @field(foe.active.stats, field.name) = @field(foe_stored.stats, field.name);
         }
         try log.activate(player_ident, .Haze);
+        try log.clearallboost();
 
         if (Status.any(foe_stored.status)) {
             if (Status.is(foe_stored.status, .FRZ) or Status.is(foe_stored.status, .SLP)) {
@@ -360,11 +361,21 @@ pub const Effects = struct {
         var side = battle.get(player);
         const ident = player.ident(side.get(side.active.position).id);
         if (side.active.volatiles.LightScreen) {
-            try log.fail(ident, true);
+            try log.fail(ident, .None);
             return;
         }
         side.active.volatiles.LightScreen = true;
         try log.start(ident, .LightScreen, false);
+    }
+
+    pub fn mist(battle: anytype, player: Player, log: anytype) !void {
+        var side = battle.get(player);
+        const ident = player.ident(side.get(side.active.position).id);
+        if (side.active.volatiles.Mist) {
+            try log.fail(ident, .None);
+            return;
+        }
+        try log.start(ident, .Mist, false);
     }
 
     pub fn paralyze(battle: anytype, player: Player, move: Move, log: anytype) !void {
@@ -374,12 +385,12 @@ pub const Effects = struct {
         const ident = player.ident(stored.id);
 
         if (Status.any(stored.status)) {
-            try log.fail(ident, false); // FIXME: ?
+            try log.fail(ident, .Paralysis); // FIXME: ???
             return;
         }
         const m = Move.get(move.id);
         if (active.types.immune(m.type)) {
-            try log.immune(ident);
+            try log.immune(ident, .None);
             return;
         }
         // TODO MoveHitTest, log
@@ -394,7 +405,8 @@ pub const Effects = struct {
         var side = battle.get(player);
         const ident = player.ident(side.get(side.active.position).id);
         if (side.active.volatiles.Reflect) {
-            try log.fail(ident, true);
+            try log.fail(ident, .None);
+            try log.still();
             return;
         }
         side.active.volatiles.Reflect = true;
@@ -406,12 +418,12 @@ pub fn clearVolatiles(active: *ActivePokemon, ident: u8, log: anytype) !void {
     var volatiles = &active.volatiles;
     if (volatiles.data.disabled.move != 0) {
         volatiles.data.disabled = .{};
-        try log.end(ident, .Disable, true);
+        try log.end(ident, .DisableSilent);
     }
     if (volatiles.Confusion) {
         // NB: leave volatiles.data.confusion unchanged
         volatiles.Confusion = false;
-        try log.end(ident, .Confusion, true);
+        try log.end(ident, .ConfusionSilent);
     }
     if (volatiles.Mist) {
         volatiles.Mist = false;

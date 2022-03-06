@@ -10,13 +10,16 @@ pub fn expectLog(expected: []const u8, actual: []const u8) !void {
 }
 
 pub const ArgType = enum(u8) {
+    None,
+    LastStill,
+    LastMiss,
+
     // Gen 1
     Move,
     Switch,
     Cant,
     Faint,
     Turn,
-    Upkeep,
     Win,
     Tie,
     Damage,
@@ -27,7 +30,6 @@ pub const ArgType = enum(u8) {
     Unboost,
     ClearAllBoost,
     Fail,
-    Block,
     Miss,
     HitCount,
     Prepare,
@@ -58,6 +60,7 @@ pub const ArgType = enum(u8) {
     Weather,
 
     // Gen 3
+    Block,
     Ability,
     EndAbility,
     ClearNegativeBoost,
@@ -144,6 +147,12 @@ pub const KWArgType = enum(u8) {
     ZEffect,
 };
 
+pub const Move = enum(u8) {
+    None,
+    Recharge,
+    From,
+};
+
 pub const Cant = enum(u8) {
     Sleep,
     Freeze,
@@ -155,27 +164,114 @@ pub const Cant = enum(u8) {
     PP,
 };
 
+pub const Heal = enum(u8) {
+    None,
+    Silent,
+    Drain,
+};
+
+pub const Damage = enum(u8) {
+    None,
+    Poison,
+    Burn,
+    Confusion,
+    PoisonOf,
+    BurnOf,
+    RecoilOf,
+    LeechSeedOf,
+};
+
+const Status = enum(u8) {
+    None,
+    Silent,
+    From,
+};
+
+const CureStatus = enum(u8) {
+    None,
+    Silent,
+};
+
+const Boost = enum(u8) {
+    Rage,
+    Attack,
+    Defense,
+    Speed,
+    Special,
+    Accuracy,
+    Evasion,
+    SpecialAttack,
+    SpecialDefense,
+};
+
+pub const Fail = enum(u8) {
+    None,
+    Sleep,
+    Poison,
+    Burn,
+    Freeze,
+    Paralysis,
+    Toxic,
+    Substitute,
+    Weak,
+};
+
 pub const Activate = enum(u8) {
     Confusion,
     Bide,
     Haze,
+    Struggle,
+    Substitute,
 };
 
 pub const Start = enum(u8) {
-    Confusion,
     Bide,
+    Confusion,
+    ConfusionSilent,
+    FocusEnergy,
+    LeechSeed,
     LightScreen,
+    Mist,
     Reflect,
+    Substitute,
+
+    TypeChange,
+
+    Disable,
+    Mimic,
 };
 
+// BUG: PS Haze has silent bide,substitute,parspeeddrop,brnattackdrop
 pub const End = enum(u8) {
     Disable,
     Confusion,
     Bide,
-    Mist,
+    Substitute,
+
+    // Silent
+    DisableSilent,
+    ConfusionSilent,
+
+    Charging,
+    Conversion,
+    DefenseCurl,
+    Dig,
+    Fly,
     FocusEnergy,
     LeechSeed,
-    Toxic,
     LightScreen,
+    Locked,
+    Minimize,
+    Mist,
+    Rage,
+    RazorWind,
     Reflect,
+    SkullBash,
+    SkyAttack,
+    SolarBeam,
+};
+
+pub const Immune = enum(u8) {
+    None,
+    OHKO,
 };

@@ -51,14 +51,14 @@ pub const Player = enum(u1) {
 
     pub fn ident(self: Player, slot: u8) u8 {
         assert(slot > 0 and slot <= 6);
-        return (@as(u8, @enumToInt(self)) << 7) | slot;
+        return (@as(u8, @enumToInt(self)) << 3) | slot;
     }
 };
 
 test "Player" {
     try expectEqual(Player.P2, Player.P1.foe());
     try expectEqual(@as(u8, 0b0000_0001), Player.P1.ident(1));
-    try expectEqual(@as(u8, 0b1000_0101), Player.P2.ident(5));
+    try expectEqual(@as(u8, 0b0000_1101), Player.P2.ident(5));
 }
 
 pub const Side = extern struct {
