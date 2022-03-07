@@ -334,10 +334,10 @@ test "Log" {
         .writer = std.io.fixedBufferStream(&buf).writer(),
     };
 
-    try log.cant(1, .PartialTrap);
+    try log.cant(1, .Trapped);
 
     try expectLog(
-        &[_]u8{ @enumToInt(ArgType.Cant), 1, @enumToInt(Cant.PartialTrap) },
+        &[_]u8{ @enumToInt(ArgType.Cant), 1, @enumToInt(Cant.Trapped) },
         &buf,
     );
 }

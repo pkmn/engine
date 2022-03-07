@@ -120,7 +120,7 @@ pub const KWArgType = enum(u8) {
     Move,
     Name,
     Number,
-    PartiallyTrapped,
+    Trapped,
     Upkeep,
     Block,
 
@@ -163,7 +163,7 @@ pub const Cant = enum(u8) {
     Sleep,
     Freeze,
     Paralysis,
-    PartialTrap,
+    Trapped,
     Flinch,
     Disable,
     Recharging,

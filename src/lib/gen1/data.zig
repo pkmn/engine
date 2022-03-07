@@ -28,7 +28,7 @@ pub fn Battle(comptime PRNG: anytype) type {
         }
 
         pub fn foe(self: *Self, player: Player) *Side {
-            return &self.sides[player.foe()];
+            return &self.sides[@enumToInt(player.foe())];
         }
 
         pub fn update(self: *Self, c1: Choice, c2: Choice, log: anytype) !Result {
@@ -220,7 +220,7 @@ pub const Volatiles = packed struct {
     MultiHit: bool = false,
     Flinch: bool = false,
     Charging: bool = false,
-    PartialTrap: bool = false,
+    Trapping: bool = false,
     Invulnerable: bool = false,
     Confusion: bool = false,
     Mist: bool = false,
@@ -404,9 +404,10 @@ test "DVs" {
 
 pub const Choice = packed struct {
     type: Choice.Type = .Pass,
+    _: u2 = 0,
     data: u4 = 0,
 
-    const Type = enum(u4) {
+    const Type = enum(u2) {
         Pass,
         Move,
         Switch,
@@ -428,13 +429,29 @@ test "Choice" {
     try expectEqual(0b0101_0010, @bitCast(u8, p2));
 }
 
-pub const Result = enum(u3) {
-    None,
-    Win,
-    Lose,
-    Tie,
-    Error, // Desync, EBC, etc.
+pub const Result = packed struct {
+    type: Result.Type = .None,
+    p1: Choice.Type = .Pass,
+    p2: Choice.Type = .Pass,
+
+    pub const Type = enum(u4) {
+        None,
+        Win,
+        Lose,
+        Tie,
+        Error, // Desync, EBC, etc.
+    };
+
+    pub const Tie: Result = .{ .type = .Tie };
+    pub const Win: Result = .{ .type = .Win };
+    pub const Lose: Result = .{ .type = .Lose };
+    pub const Default: Result = .{ .p1 = .Move, .p2 = .Move };
 };
+
+test "Result" {
+    try expectEqual(0b0101_0000, @bitCast(u8, Result.Default));
+    try expectEqual(0b1000_0000, @bitCast(u8, Result{ .p2 = .Switch }));
+}
 
 // TODO DEBUG
 comptime {

@@ -10,9 +10,6 @@ const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
-const showdown = build_options.showdown;
-const trace = build_options.trace;
-
 const Random = rng.Random;
 
 const Choice = data.Choice;
@@ -29,7 +26,7 @@ const ArgType = protocol.ArgType;
 const Log = protocol.Log(std.io.FixedBufferStream([]u8).Writer);
 const expectLog = protocol.expectLog;
 
-const SEED = 0x12345678;
+const SEED = 0x31415926;
 
 pub const Battle = struct {
     pub fn init(
@@ -227,17 +224,16 @@ const START = [_]u8{
 };
 // zig fmt: off
 
-fn update(battle: anytype, c1: Choice, c2: Choice) !void {
+fn update(battle: anytype, c1: Choice, c2: Choice) !Result {
     var log: protocol.Log(@TypeOf(std.io.null_writer)) = .{.writer = std.io.null_writer};
-    const result = try battle.update(c1, c2, &log);
-    try expectEqual(Result.None, result);
+    return try battle.update(c1, c2, &log);
 }
 
 test "Battle" {
     const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
     const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
     var battle = Battle.init(.{42}, &.{p1}, &.{p2});
-    try update(&battle, .{ .type = .Move, .data = 4 }, .{ .type = .Switch, .data = 1 });
+    _ = try update(&battle, .{ .type = .Move, .data = 4 }, .{ .type = .Switch, .data = 1 });
 }
 
 fn expectOrder(p1: anytype, o1: []const u8, p2: anytype, o2: []const u8) !void {
@@ -250,17 +246,17 @@ test "switching" {
     const p1 = battle.side(.P1);
     const p2 = battle.side(.P2);
 
-    try update(&battle, .{ .type = .Switch, .data = 3 }, .{ .type = .Switch, .data = 2 });
+    _ = try update(&battle, .{ .type = .Switch, .data = 3 }, .{ .type = .Switch, .data = 2 });
     try expectOrder(p1, &[_]u8{3,2,1,4,5,6}, p2, &[_]u8{2,1,3,4,5,6});
-    try update(&battle, .{ .type = .Switch, .data = 5 }, .{ .type = .Switch, .data = 5 });
+     _ = try update(&battle, .{ .type = .Switch, .data = 5 }, .{ .type = .Switch, .data = 5 });
     try expectOrder(p1, &[_]u8{5,2,1,4,3,6}, p2, &[_]u8{5,1,3,4,2,6});
-    try update(&battle, .{ .type = .Switch, .data = 6 }, .{ .type = .Switch, .data = 3 });
+     _ = try update(&battle, .{ .type = .Switch, .data = 6 }, .{ .type = .Switch, .data = 3 });
     try expectOrder(p1, &[_]u8{6,2,1,4,3,5}, p2, &[_]u8{3,1,5,4,2,6});
-    try update(&battle, .{ .type = .Switch, .data = 3 }, .{ .type = .Switch, .data = 3 });
+     _ = try update(&battle, .{ .type = .Switch, .data = 3 }, .{ .type = .Switch, .data = 3 });
     try expectOrder(p1, &[_]u8{1,2,6,4,3,5}, p2, &[_]u8{5,1,3,4,2,6});
-    try update(&battle, .{ .type = .Switch, .data = 2 }, .{ .type = .Switch, .data = 4 });
+     _ = try update(&battle, .{ .type = .Switch, .data = 2 }, .{ .type = .Switch, .data = 4 });
     try expectOrder(p1, &[_]u8{2,1,6,4,3,5}, p2, &[_]u8{4,1,3,5,2,6});
-    try update(&battle, .{ .type = .Switch, .data = 5 }, .{ .type = .Switch, .data = 5 });
+     _ = try update(&battle, .{ .type = .Switch, .data = 5 }, .{ .type = .Switch, .data = 5 });
     try expectOrder(p1, &[_]u8{3,1,6,4,2,5}, p2, &[_]u8{2,1,3,5,4,6});
 }
 
@@ -625,6 +621,7 @@ test "switching" {
 
 // // Move.Bide
 // // TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Bide_errors
+// // TODO: https://glitchcity.wiki/Bide_fainted_Pokémon_damage_accumulation_glitch
 // test "Bide" {
 //     // The user spends two or three turns locked into this move and then, on the second or third
 //     // turn after using this move, the user attacks the opponent, inflicting double the damage in HP

@@ -104,7 +104,7 @@ boolean flags that are cleared when the Pokémon faints or switches out:
 | `MultiHit`     | `ATTACKING_MULTIPLE_TIMES` | `Move#multihit`    |
 | `Flinch`       | `FLINCHED`                 | `flinch`           |
 | `Charging`     | `CHARGING_UP`              | `twoturnmove`      |
-| `PartialTrap`  | `USING_TRAPPING_MOVE`      | `partiallytrapped` |
+| `Trapping`     | `USING_TRAPPING_MOVE`      | `partiallytrapped` |
 | `Invulnerable` | `INVULNERABLE`             | `Move#onLockMove`  |
 | `Confusion`    | `CONFUSED`                 | `confusion`        |
 | `Mist`         | `PROTECTED_BY_MIST`        | `mist`             |

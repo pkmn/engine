@@ -22,55 +22,127 @@ const Stats = data.Stats;
 const Status = data.Status;
 
 // FIXME: https://www.smogon.com/forums/threads/self-ko-clause-gens-1-4.3653037/
-// FIXME need to prompt c1 and c2 for new choices...? = should be able to tell choice from state?
 pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
-    _ = c1;
-    _ = c2;
+    assert(c1.data <= 6 and c2.data <= 6);
 
+    var p1 = battle.side(.P1);
+    var p2 = battle.side(.P2);
     if (battle.turn == 0) {
-        var p1 = battle.side(.P1);
-        var p2 = battle.side(.P2);
-
         var slot = findFirstAlive(p1);
-        if (slot == 0) return if (findFirstAlive(p2) == 0) .Tie else .Lose;
-        try switchIn(p1, .P1, slot, true, log);
+        if (slot == 0) return if (findFirstAlive(p2) == 0) Result.Tie else Result.Lose;
+        try switchIn(battle, .P1, slot, true, log);
 
         slot = findFirstAlive(p2);
-        if (slot == 0) return .Win;
-        try switchIn(p2, .P2, slot, true, log);
+        if (slot == 0) return Result.Win;
+        try switchIn(battle, .P2, slot, true, log);
 
         return try endTurn(battle, log);
     }
 
-    // FIXME
-    assert(c1.type == .Switch);
-    try switchIn(battle.side(.P1), .P1, c1.data, false, log);
+    // FIXME monFainted
 
-    assert(c2.type == .Switch);
-    try switchIn(battle.side(.P2), .P2, c2.data, false, log);
+    const choice1 = selectMove(battle, .P1, c1);
+    const choice2 = selectMove(battle, .P2, c2);
 
-    // XXX
-    // if (active.volatiles.Recharging or active.volatiles.Rage) {}
-    // p1.active.volatiles.Flinch = false;
-    // p2.active.volatiles.Flinch = false;
-    // if (active.volatiles.Locked or active.volatiles.Charging) {}
-    // if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP)) {}
-    // if (active.volatiles.Bide or active.volatiles.PartialTrap) {}
-    // if (foe.active.volatiles.PartialTrap) {}
-    // if (active.volatiles.PartialTrap) {}
-    // XXX
+    // TODO: https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
 
-    return .None;
+    if (determineTurnOrder(battle, choice1, choice2) == .P1) {
+        try executeMove(battle, .P1, choice1, log);
+        try checkFaint(battle, .P2, log);
+        try handleResidual(battle, .P1, log);
+        try checkFaint(battle, .P1, log);
+
+        try executeMove(battle, .P2, choice2, log);
+        try checkFaint(battle, .P1, log);
+        try handleResidual(battle, .P2, log);
+        try checkFaint(battle, .P2, log);
+    } else {
+        try executeMove(battle, .P2, choice2, log);
+        try checkFaint(battle, .P1, log);
+        try handleResidual(battle, .P2, log);
+        try checkFaint(battle, .P2, log);
+
+        try executeMove(battle, .P1, choice1, log);
+        try checkFaint(battle, .P2, log);
+        try handleResidual(battle, .P1, log);
+        try checkFaint(battle, .P1, log);
+    }
+    if (p1.active.volatiles.data.attacks == 0) p1.active.volatiles.Trapping = false;
+    if (p2.active.volatiles.data.attacks == 0) p2.active.volatiles.Trapping = false;
+
+    return Result.Default;
 }
 
-pub fn findFirstAlive(side: *const Side) u8 {
+fn findFirstAlive(side: *const Side) u8 {
     for (side.pokemon) |pokemon, i| {
         if (pokemon.hp > 0) return side.order[i];
     }
     return 0;
 }
 
-pub fn switchIn(side: *Side, player: Player, slot: u8, initial: bool, log: anytype) !void {
+fn selectMove(battle: anytype, player: Player, choice: Choice) Choice {
+    var side = battle.side(player);
+    var active = &side.active;
+    const stored = side.stored();
+
+    if (active.volatiles.Recharging or active.volatiles.Rage) return .{};
+    active.volatiles.Flinch = false;
+    if (active.volatiles.Locked or active.volatiles.Charging) return .{};
+
+    if (choice.type == .Switch) return choice;
+
+    if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP)) return .{};
+    if (active.volatiles.Bide or active.volatiles.Trapping) return .{};
+    if (active.volatiles.Trapping) return .{};
+
+    // TODO: can we use just data = 0 as a sentinel?
+    return if (battle.foe(player).active.volatiles.Trapping) .{ .data = 0xF } else choice;
+}
+
+fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !void {
+    _ = battle;
+    _ = player;
+    _ = choice;
+    _ = log;
+
+    // FIXME
+    assert(choice.type == .Switch);
+    try switchIn(battle, player, choice.data, false, log);
+}
+
+fn checkFaint(battle: anytype, player: Player, log: anytype) !void {
+    _ = battle;
+    _ = player;
+    _ = log;
+
+    // TODO: if player is fainted, enemy faint check, and turn is over
+}
+
+fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
+    _ = battle;
+    _ = player;
+    _ = log;
+
+    // TODO: Substract health from player if poisoned/seeded/burned**
+}
+
+fn monFainted(wInHandlePlayerMonFainted: bool) !void {
+    // set wInHandlePlayerMonFainted to avoid recursive
+    // remove fainted mon
+    //  - reset ENEMY attacking multiple times
+    // - 0 enemy ENEMY accumulated damage BUG: POSSIBLY A DESYNC
+    if (wInHandlePlayerMonFainted) return;
+    // test if any more PLAYER mons are alive
+    //
+    // if enemy pokemon hp = 0, monFainted(enmery, true)
+    // test if any more enemy mons alive
+    //
+
+    // need to return none to force end turn?
+}
+
+fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anytype) !void {
+    var side = battle.side(player);
     var active = &side.active;
     const incoming = side.get(slot);
     assert(incoming.hp != 0);
@@ -94,18 +166,18 @@ pub fn switchIn(side: *Side, player: Player, slot: u8, initial: bool, log: anyty
     } else if (Status.is(incoming.status, .BRN)) {
         active.stats.atk = @maximum(active.stats.atk / 2, 1);
     }
-    // TODO: ld hl, wEnemyBattleStatus1; res USING_TRAPPING_MOVE, [hl]
+    battle.foe(player).active.volatiles.Trapping = false;
 
     try log.switched(active.ident(side, player), incoming);
 }
 
-pub fn endTurn(battle: anytype, log: anytype) !Result {
+fn endTurn(battle: anytype, log: anytype) !Result {
     battle.turn += 1;
     try log.turn(battle.turn);
-    return .None;
+    return Result.Default;
 }
 
-pub fn determineTurnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
+fn determineTurnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     if ((c1.type == .Switch) != (c2.type == .Switch)) return if (c1.type == .Switch) .P1 else .P2;
     const m1 = getMove(battle, .P1, c1);
     const m2 = getMove(battle, .P2, c2);
@@ -117,18 +189,17 @@ pub fn determineTurnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     const spe1 = battle.side(.P1).active.stats.spe;
     const spe2 = battle.side(.P2).active.stats.spe;
     if (spe1 == spe2) {
-        const p1 = if (showdown) {
-            battle.rng.range(0, 2) == 0;
-        } else {
+        const p1 = if (showdown)
+            battle.rng.range(0, 2) == 0
+        else
             battle.rng.next() < Gen12.percent(50) + 1;
-        };
         return if (p1) .P1 else .P2;
     }
     return if (spe1 > spe2) .P1 else .P2;
 }
 
-pub fn getMove(battle: anytype, player: Player, choice: Choice) Move {
-    if (choice.type != .Move or choice.data == 0) return .None;
+fn getMove(battle: anytype, player: Player, choice: Choice) Move {
+    if (choice.type != .Move or choice.data == 0 or choice.data == 0xF) return .None;
 
     assert(choice.data <= 4);
     const side = battle.side(player);
@@ -139,7 +210,7 @@ pub fn getMove(battle: anytype, player: Player, choice: Choice) Move {
 }
 
 // TODO return an enum instead of bool to handle multiple cases
-pub fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
+fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
     var side = battle.side(player);
     const foe = battle.foe(player);
     var active = &side.active;
@@ -158,8 +229,8 @@ pub fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !boo
         try log.cant(ident, .Freeze);
         return false;
     }
-    if (foe.active.volatiles.PartialTrap) {
-        try log.cant(ident, .PartialTrap);
+    if (foe.active.volatiles.Trapping) {
+        try log.cant(ident, .Trapping);
         return false;
     }
     if (volatiles.Flinch) {
@@ -187,11 +258,10 @@ pub fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !boo
             try log.end(ident, .Confusion);
         } else {
             try log.activate(ident, .Confusion);
-            const confused = if (showdown) {
-                !battle.rng.chance(128, 256);
-            } else {
+            const confused = if (showdown)
+                !battle.rng.chance(128, 256)
+            else
                 battle.rng.next() >= Gen12.percent(50) + 1;
-            };
             if (confused) {
                 // FIXME: implement self hit
                 volatiles.Bide = false;
@@ -199,7 +269,7 @@ pub fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !boo
                 volatiles.MultiHit = false;
                 volatiles.Flinch = false;
                 volatiles.Charging = false;
-                volatiles.PartialTrap = false;
+                volatiles.Trapping = false;
                 volatiles.Invulnerable = false;
                 return false;
             }
@@ -211,16 +281,15 @@ pub fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !boo
         return false;
     }
     if (Status.is(stored.status, .PAR)) {
-        const paralyzed = if (showdown) {
-            battle.rng.chance(63, 256);
-        } else {
+        const paralyzed = if (showdown)
+            battle.rng.chance(63, 256)
+        else
             battle.rng.next() < Gen12.percent(25);
-        };
         if (paralyzed) {
             volatiles.Bide = false;
             volatiles.Locked = false;
             volatiles.Charging = false;
-            volatiles.PartialTrap = false;
+            volatiles.Trapping = false;
             // NB: Invulnerable is not cleared, resulting in the Fly/Dig glitch
             try log.cant(ident, .Paralysis);
             return false;
@@ -251,16 +320,15 @@ pub fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !boo
             volatiles.Locked = false;
             volatiles.Confusion = true;
             // NB: these values will diverge
-            volatiles.data.confusion = if (showdown) {
-                battle.rng.range(3, 5);
-            } else {
+            volatiles.data.confusion = if (showdown)
+                battle.rng.range(3, 5)
+            else
                 (battle.rng.next() & 3) + 2;
-            };
             try log.start(ident, .Confusion, true);
         }
         // TODO: skip DecrementPP, call PlayerCalcMoveDamage directly
     }
-    if (volatiles.PartialTrap) {
+    if (volatiles.Trapping) {
         assert(volatiles.data.attacks > 0);
         volatiles.data.attacks -= 1;
         if (volatiles.data.attacks == 0) {
@@ -275,7 +343,7 @@ pub fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !boo
 }
 
 // TODO: struggle bypass/wrap underflow
-pub fn decrementPP(side: *Side, choice: Choice) void {
+fn decrementPP(side: *Side, choice: Choice) void {
     assert(choice.type == .Move);
     assert(choice.data <= 4);
 
@@ -292,7 +360,7 @@ pub fn decrementPP(side: *Side, choice: Choice) void {
     side.stored().move(choice.data).pp -= 1;
 }
 
-pub fn moveEffect(battle: anytype, player: Player, move: Move, log: anytype) !void {
+fn moveEffect(battle: anytype, player: Player, move: Move, log: anytype) !void {
     return switch (move.effect) {
         .Conversion => Effects.conversion(battle, player, log),
         .Haze => Effects.haze(battle, player, log),
@@ -306,7 +374,7 @@ pub fn moveEffect(battle: anytype, player: Player, move: Move, log: anytype) !vo
 }
 
 pub const Effects = struct {
-    pub fn conversion(battle: anytype, player: Player, log: anytype) !void {
+    fn conversion(battle: anytype, player: Player, log: anytype) !void {
         var side = battle.side(player);
         const foe = battle.foe(player);
 
@@ -318,7 +386,7 @@ pub const Effects = struct {
         try log.typechange(ident, @bitCast(u8, foe.active.types));
     }
 
-    pub fn haze(battle: anytype, player: Player, log: anytype) !void {
+    fn haze(battle: anytype, player: Player, log: anytype) !void {
         var side = battle.side(player);
         var foe = battle.foe(player);
 
@@ -348,14 +416,14 @@ pub const Effects = struct {
         try clearVolatiles(&foe.active, foe_ident, log);
     }
 
-    pub fn heal(battle: anytype, player: Player, log: anytype) !void {
+    fn heal(battle: anytype, player: Player, log: anytype) !void {
         _ = battle;
         _ = player;
         _ = log;
         // TODO
     }
 
-    pub fn lightScreen(battle: anytype, player: Player, log: anytype) !void {
+    fn lightScreen(battle: anytype, player: Player, log: anytype) !void {
         var side = battle.side(player);
         const ident = side.active.ident(side, player);
         if (side.active.volatiles.LightScreen) {
@@ -366,7 +434,7 @@ pub const Effects = struct {
         try log.start(ident, .LightScreen);
     }
 
-    pub fn mist(battle: anytype, player: Player, log: anytype) !void {
+    fn mist(battle: anytype, player: Player, log: anytype) !void {
         var side = battle.side(player);
         const ident = side.active.ident(side, player);
         if (side.active.volatiles.Mist) {
@@ -376,7 +444,7 @@ pub const Effects = struct {
         try log.start(ident, .Mist);
     }
 
-    pub fn paralyze(battle: anytype, player: Player, move: Move, log: anytype) !void {
+    fn paralyze(battle: anytype, player: Player, move: Move, log: anytype) !void {
         var side = battle.side(player);
         const ident = side.active.ident(side, player);
         if (Status.any(side.stored().status)) {
@@ -392,11 +460,11 @@ pub const Effects = struct {
         side.active.stats.spe = @maximum(side.active.stats.spe / 4, 1);
     }
 
-    pub fn payDay(log: anytype) !void {
+    fn payDay(log: anytype) !void {
         try log.fieldactivate();
     }
 
-    pub fn reflect(battle: anytype, player: Player, log: anytype) !void {
+    fn reflect(battle: anytype, player: Player, log: anytype) !void {
         var side = battle.side(player);
         const ident = side.active.ident(side, player);
         if (side.active.volatiles.Reflect) {
@@ -408,7 +476,7 @@ pub const Effects = struct {
     }
 };
 
-pub fn clearVolatiles(active: *ActivePokemon, ident: u8, log: anytype) !void {
+fn clearVolatiles(active: *ActivePokemon, ident: u8, log: anytype) !void {
     var volatiles = &active.volatiles;
     if (volatiles.data.disabled.move != 0) {
         volatiles.data.disabled = .{};
