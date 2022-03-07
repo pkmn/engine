@@ -18,10 +18,11 @@ pub fn Battle(comptime PRNG: anytype) type {
     return extern struct {
         const Self = @This();
 
-        rng: PRNG,
+        sides: [2]Side,
         turn: u16 = 0,
         last_damage: u16 = 0,
-        sides: [2]Side,
+        rng: PRNG,
+        // 4 bits trailing if showdown
 
         pub fn side(self: *Self, player: Player) *Side {
             return &self.sides[@enumToInt(player)];

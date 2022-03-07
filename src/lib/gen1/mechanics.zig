@@ -23,21 +23,7 @@ const Status = data.Status;
 
 // FIXME: https://www.smogon.com/forums/threads/self-ko-clause-gens-1-4.3653037/
 pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
-    assert(c1.data <= 6 and c2.data <= 6);
-
-    var p1 = battle.side(.P1);
-    var p2 = battle.side(.P2);
-    if (battle.turn == 0) {
-        var slot = findFirstAlive(p1);
-        if (slot == 0) return if (findFirstAlive(p2) == 0) Result.Tie else Result.Lose;
-        try switchIn(battle, .P1, slot, true, log);
-
-        slot = findFirstAlive(p2);
-        if (slot == 0) return Result.Win;
-        try switchIn(battle, .P2, slot, true, log);
-
-        return try endTurn(battle, log);
-    }
+    if (battle.turn == 0) return start(battle, log);
 
     // FIXME monFainted
 
@@ -51,8 +37,30 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     } else {
         try doTurn(battle, .P2, choice2, .P1, choice1, log);
     }
-    if (p1.active.volatiles.data.attacks == 0) p1.active.volatiles.Trapping = false;
-    if (p2.active.volatiles.data.attacks == 0) p2.active.volatiles.Trapping = false;
+
+    var p1 = battle.side(.P1);
+    if (p1.active.volatiles.data.attacks == 0) {
+        p1.active.volatiles.Trapping = false;
+    }
+    var p2 = battle.side(.P2);
+    if (p2.active.volatiles.data.attacks == 0) {
+        p2.active.volatiles.Trapping = false;
+    }
+
+    return try endTurn(battle, log);
+}
+
+fn start(battle: anytype, log: anytype) !Result {
+    const p1 = battle.side(.P1);
+    const p2 = battle.side(.P2);
+
+    var slot = findFirstAlive(p1);
+    if (slot == 0) return if (findFirstAlive(p2) == 0) Result.Tie else Result.Lose;
+    try switchIn(battle, .P1, slot, true, log);
+
+    slot = findFirstAlive(p2);
+    if (slot == 0) return Result.Win;
+    try switchIn(battle, .P2, slot, true, log);
 
     return try endTurn(battle, log);
 }
@@ -66,20 +74,19 @@ fn findFirstAlive(side: *const Side) u8 {
 
 fn selectMove(battle: anytype, player: Player, choice: Choice) Choice {
     var side = battle.side(player);
-    var active = &side.active;
+    var volatiles = &side.active.volatiles;
     const stored = side.stored();
 
-    if (active.volatiles.Recharging or active.volatiles.Rage) return .{};
-    active.volatiles.Flinch = false;
-    if (active.volatiles.Locked or active.volatiles.Charging) return .{};
+    if (volatiles.Recharging or volatiles.Rage) return .{};
+    volatiles.Flinch = false;
+    if (volatiles.Locked or volatiles.Charging) return .{};
 
     if (choice.type == .Switch) return choice;
 
     if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP)) return .{};
-    if (active.volatiles.Bide or active.volatiles.Trapping) return .{};
-    if (active.volatiles.Trapping) return .{};
+    if (volatiles.Bide or volatiles.Trapping) return .{};
 
-    // TODO: can we use just data = 0 as a sentinel?
+    assert(choice.data != 0xF);
     return if (battle.foe(player).active.volatiles.Trapping) .{ .data = 0xF } else choice;
 }
 
@@ -153,7 +160,7 @@ fn endTurn(battle: anytype, log: anytype) !Result {
 }
 
 fn getMove(battle: anytype, player: Player, choice: Choice) Move {
-    if (choice.type != .Move or choice.data == 0 or choice.data == 0xF) return .None;
+    if (choice.type != .Move or choice.data == 0) return .None;
 
     assert(choice.data <= 4);
     const side = battle.side(player);
