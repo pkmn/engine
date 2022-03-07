@@ -46,31 +46,15 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
 
     // TODO: https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
 
-    if (determineTurnOrder(battle, choice1, choice2) == .P1) {
-        try executeMove(battle, .P1, choice1, log);
-        try checkFaint(battle, .P2, log);
-        try handleResidual(battle, .P1, log);
-        try checkFaint(battle, .P1, log);
-
-        try executeMove(battle, .P2, choice2, log);
-        try checkFaint(battle, .P1, log);
-        try handleResidual(battle, .P2, log);
-        try checkFaint(battle, .P2, log);
+    if (turnOrder(battle, choice1, choice2) == .P1) {
+        try doTurn(battle, .P1, choice1, .P2, choice2, log);
     } else {
-        try executeMove(battle, .P2, choice2, log);
-        try checkFaint(battle, .P1, log);
-        try handleResidual(battle, .P2, log);
-        try checkFaint(battle, .P2, log);
-
-        try executeMove(battle, .P1, choice1, log);
-        try checkFaint(battle, .P2, log);
-        try handleResidual(battle, .P1, log);
-        try checkFaint(battle, .P1, log);
+        try doTurn(battle, .P2, choice2, .P1, choice1, log);
     }
     if (p1.active.volatiles.data.attacks == 0) p1.active.volatiles.Trapping = false;
     if (p2.active.volatiles.data.attacks == 0) p2.active.volatiles.Trapping = false;
 
-    return Result.Default;
+    return try endTurn(battle, log);
 }
 
 fn findFirstAlive(side: *const Side) u8 {
@@ -97,6 +81,86 @@ fn selectMove(battle: anytype, player: Player, choice: Choice) Choice {
 
     // TODO: can we use just data = 0 as a sentinel?
     return if (battle.foe(player).active.volatiles.Trapping) .{ .data = 0xF } else choice;
+}
+
+fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anytype) !void {
+    var side = battle.side(player);
+    var active = &side.active;
+    const incoming = side.get(slot);
+    assert(incoming.hp != 0);
+
+    assert(slot != 1 or initial);
+    const out = side.order[0];
+    side.order[0] = side.order[slot - 1];
+    side.order[slot - 1] = out;
+
+    active.stats = incoming.stats;
+    active.volatiles = .{};
+    for (incoming.moves) |move, j| {
+        active.moves[j] = move;
+    }
+    active.boosts = .{};
+    active.species = incoming.species;
+    active.types = incoming.types;
+
+    if (Status.is(incoming.status, .PAR)) {
+        active.stats.spe = @maximum(active.stats.spe / 4, 1);
+    } else if (Status.is(incoming.status, .BRN)) {
+        active.stats.atk = @maximum(active.stats.atk / 2, 1);
+    }
+    battle.foe(player).active.volatiles.Trapping = false;
+
+    try log.switched(active.ident(side, player), incoming);
+}
+
+fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
+    if ((c1.type == .Switch) != (c2.type == .Switch)) return if (c1.type == .Switch) .P1 else .P2;
+    const m1 = getMove(battle, .P1, c1);
+    const m2 = getMove(battle, .P2, c2);
+    if ((m1 == .QuickAttack) != (m2 == .QuickAttack)) return if (m1 == .QuickAttack) .P1 else .P2;
+    if ((m1 == .Counter) != (m2 == .Counter)) return if (m1 == .Counter) .P2 else .P1;
+    // NB: https://www.smogon.com/forums/threads/adv-switch-priority.3622189/
+    if (!showdown and c1.type == .Switch and c2.type == .Switch) return .P1;
+
+    const spe1 = battle.side(.P1).active.stats.spe;
+    const spe2 = battle.side(.P2).active.stats.spe;
+    if (spe1 == spe2) {
+        const p1 = if (showdown)
+            battle.rng.range(0, 2) == 0
+        else
+            battle.rng.next() < Gen12.percent(50) + 1;
+        return if (p1) .P1 else .P2;
+    }
+    return if (spe1 > spe2) .P1 else .P2;
+}
+
+fn doTurn(battle: anytype, p: Player, pc: Choice, f: Player, fc: Choice, log: anytype) !void {
+    try executeMove(battle, p, pc, log);
+    try checkFaint(battle, f, log);
+    try handleResidual(battle, p, log);
+    try checkFaint(battle, p, log);
+
+    try executeMove(battle, f, fc, log);
+    try checkFaint(battle, p, log);
+    try handleResidual(battle, f, log);
+    try checkFaint(battle, f, log);
+}
+
+fn endTurn(battle: anytype, log: anytype) !Result {
+    battle.turn += 1;
+    try log.turn(battle.turn);
+    return Result.Default;
+}
+
+fn getMove(battle: anytype, player: Player, choice: Choice) Move {
+    if (choice.type != .Move or choice.data == 0 or choice.data == 0xF) return .None;
+
+    assert(choice.data <= 4);
+    const side = battle.side(player);
+    const move = side.active.moves[choice.data - 1];
+    assert(move.pp != 0); // FIXME: wrap underflow?
+
+    return move.id;
 }
 
 fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !void {
@@ -139,74 +203,6 @@ fn monFainted(wInHandlePlayerMonFainted: bool) !void {
     //
 
     // need to return none to force end turn?
-}
-
-fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anytype) !void {
-    var side = battle.side(player);
-    var active = &side.active;
-    const incoming = side.get(slot);
-    assert(incoming.hp != 0);
-
-    assert(slot != 1 or initial);
-    const out = side.order[0];
-    side.order[0] = side.order[slot - 1];
-    side.order[slot - 1] = out;
-
-    active.stats = incoming.stats;
-    active.volatiles = .{};
-    for (incoming.moves) |move, j| {
-        active.moves[j] = move;
-    }
-    active.boosts = .{};
-    active.species = incoming.species;
-    active.types = incoming.types;
-
-    if (Status.is(incoming.status, .PAR)) {
-        active.stats.spe = @maximum(active.stats.spe / 4, 1);
-    } else if (Status.is(incoming.status, .BRN)) {
-        active.stats.atk = @maximum(active.stats.atk / 2, 1);
-    }
-    battle.foe(player).active.volatiles.Trapping = false;
-
-    try log.switched(active.ident(side, player), incoming);
-}
-
-fn endTurn(battle: anytype, log: anytype) !Result {
-    battle.turn += 1;
-    try log.turn(battle.turn);
-    return Result.Default;
-}
-
-fn determineTurnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
-    if ((c1.type == .Switch) != (c2.type == .Switch)) return if (c1.type == .Switch) .P1 else .P2;
-    const m1 = getMove(battle, .P1, c1);
-    const m2 = getMove(battle, .P2, c2);
-    if ((m1 == .QuickAttack) != (m2 == .QuickAttack)) return if (m1 == .QuickAttack) .P1 else .P2;
-    if ((m1 == .Counter) != (m2 == .Counter)) return if (m1 == .Counter) .P2 else .P1;
-    // NB: https://www.smogon.com/forums/threads/adv-switch-priority.3622189/
-    if (!showdown and c1.type == .Switch and c2.type == .Switch) return .P1;
-
-    const spe1 = battle.side(.P1).active.stats.spe;
-    const spe2 = battle.side(.P2).active.stats.spe;
-    if (spe1 == spe2) {
-        const p1 = if (showdown)
-            battle.rng.range(0, 2) == 0
-        else
-            battle.rng.next() < Gen12.percent(50) + 1;
-        return if (p1) .P1 else .P2;
-    }
-    return if (spe1 > spe2) .P1 else .P2;
-}
-
-fn getMove(battle: anytype, player: Player, choice: Choice) Move {
-    if (choice.type != .Move or choice.data == 0 or choice.data == 0xF) return .None;
-
-    assert(choice.data <= 4);
-    const side = battle.side(player);
-    const move = side.active.moves[choice.data - 1];
-    assert(move.pp != 0); // FIXME: wrap underflow?
-
-    return move.id;
 }
 
 // TODO return an enum instead of bool to handle multiple cases
