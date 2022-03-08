@@ -24,15 +24,15 @@ const Status = data.Status;
 pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     if (battle.turn == 0) return start(battle, log);
 
-    const choice1 = selectMove(battle, .P1, c1);
-    const choice2 = selectMove(battle, .P2, c2);
+    selectMove(battle, .P1, c1);
+    selectMove(battle, .P2, c2);
 
     // TODO: https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
 
-    if (turnOrder(battle, choice1, choice2) == .P1) {
-        try doTurn(battle, .P1, choice1, .P2, choice2, log);
+    if (turnOrder(battle, c1, c2) == .P1) {
+        try doTurn(battle, .P1, c1, .P2, c2, log);
     } else {
-        try doTurn(battle, .P2, choice2, .P1, choice1, log);
+        try doTurn(battle, .P2, c2, .P1, c1, log);
     }
 
     var p1 = battle.side(.P1);
@@ -69,26 +69,46 @@ fn findFirstAlive(side: *const Side) u8 {
     return 0;
 }
 
-fn selectMove(battle: anytype, player: Player, choice: Choice) Choice {
+fn selectMove(battle: anytype, player: Player, choice: Choice) void {
     var side = battle.side(player);
     var volatiles = &side.active.volatiles;
     const stored = side.stored();
 
-    if (volatiles.Recharging or volatiles.Rage) return .{};
+    // pre-battle menu
+    if (volatiles.Recharging or volatiles.Rage) return;
     volatiles.Flinch = false;
-    if (volatiles.Thrashing or volatiles.Charging) return .{};
+    if (volatiles.Thrashing or volatiles.Charging) return;
 
-    if (choice.type == .Switch) return choice;
+    // battle menu
+    if (choice.type == .Switch) return;
 
-    if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP)) return .{};
-    if (volatiles.Bide or volatiles.Trapping) return .{};
+    // pre-move select
+    if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP)) return;
+    if (volatiles.Bide or volatiles.Trapping) return;
 
     if (battle.foe(player).active.volatiles.Trapping) {
         side.last_selected_move = .TRAPPED;
-        return .{};
+        return;
     }
 
-    return choice;
+    // move select
+    if (choice.data == 0) {
+        const struggle = ok: {
+            for (side.active.moves) |move, i| {
+                if (move.pp > 0 and volatiles.data.disabled.move != i + 1) break :ok false;
+            }
+            break :ok true;
+        };
+        assert(struggle);
+        side.last_selected_move = .Struggle;
+    } else {
+        assert(choice.data <= 4);
+        const move = side.active.moves[choice.data - 1];
+
+        assert(move.pp != 0); // FIXME: wrap underflow?
+        assert(side.active.volatiles.data.disabled.move != choice.data);
+        side.last_selected_move = move.id;
+    }
 }
 
 fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anytype) !void {
@@ -124,8 +144,10 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anyty
 
 fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     if ((c1.type == .Switch) != (c2.type == .Switch)) return if (c1.type == .Switch) .P1 else .P2;
-    const m1 = getMove(battle, .P1, c1);
-    const m2 = getMove(battle, .P2, c2);
+
+    const m1 = battle.side(.P1).last_selected_move;
+    const m2 = battle.side(.P2).last_selected_move;
+
     if ((m1 == .QuickAttack) != (m2 == .QuickAttack)) return if (m1 == .QuickAttack) .P1 else .P2;
     if ((m1 == .Counter) != (m2 == .Counter)) return if (m1 == .Counter) .P2 else .P1;
     // NB: https://www.smogon.com/forums/threads/adv-switch-priority.3622189/
@@ -140,6 +162,7 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
             battle.rng.next() < Gen12.percent(50) + 1;
         return if (p1) .P1 else .P2;
     }
+
     return if (spe1 > spe2) .P1 else .P2;
 }
 
@@ -159,17 +182,6 @@ fn endTurn(battle: anytype, log: anytype) !Result {
     battle.turn += 1;
     try log.turn(battle.turn);
     return if (showdown and battle.turn >= 1000) Result.Tie else Result.Default;
-}
-
-fn getMove(battle: anytype, player: Player, choice: Choice) Move {
-    if (choice.type != .Move or choice.data == 0) return .None;
-
-    assert(choice.data <= 4);
-    const side = battle.side(player);
-    const move = side.active.moves[choice.data - 1];
-    assert(move.pp != 0); // FIXME: wrap underflow?
-
-    return move.id;
 }
 
 fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !void {
