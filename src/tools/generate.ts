@@ -310,11 +310,9 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
         comptime {
             assert(@sizeOf(Data) == 3);
-            // TODO: Safety check workaround for ziglang/zig#2627
-            assert(@bitSizeOf(Data) == @sizeOf(Data) * 8);
         }
 
-        pub fn accuracy(self: *const Data) u8 {
+        pub fn accuracy(self: Data) u8 {
             return (@as(u8, self.acc) + 6) * 5;
         }
     };`;
@@ -337,11 +335,14 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         assert(id != .None);
         return pp_data[@enumToInt(id) - 1];
     }`;
+    const SENTINEL =
+      ',\n\n    // Sentinel used when Pokémon is being trapped by their opponent\n' +
+      '    TRAPPED = 0xFF'
     template('moves', dirs.out, {
       gen: gen.num,
       Move: {
         type: 'u8',
-        values: moves.map(m => m.split(' ')[0]).join(',\n    '),
+        values: moves.map(m => m.split(' ')[0]).join(',\n    ') + SENTINEL,
         size: 1,
         Data,
         data: MOVES.join(',\n        '),
@@ -410,6 +411,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         chartSize: types.length * types.length,
       },
       Types: {
+        qualifier: 'packed',
         bitSize: 8,
       },
     });
@@ -429,6 +431,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         chartSize: types.length * types.length,
       },
       Types: {
+        qualifier: 'extern',
         bitSize: 16,
       },
     });
@@ -551,8 +554,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
         comptime {
             assert(@sizeOf(Data) == 5);
-            // TODO: Safety check workaround for ziglang/zig#2627
-            assert(@bitSizeOf(Data) == @sizeOf(Data) * 8);
         }
     };`;
 
@@ -667,9 +668,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
         comptime {
             assert(@sizeOf(Move) == 5);
-
-            // TODO: Safety check workaround for ziglang/zig#2627
-            assert(@bitSizeOf(Move) == @sizeOf(Move) * 8);
         }
     };`;
     const ppFn = `pub fn pp(id: Move) u8 {

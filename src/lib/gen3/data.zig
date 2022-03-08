@@ -68,11 +68,6 @@ pub const MoveTarget = packed struct {
     FoesAndAlly: bool = false,
     OpponentsField: bool = false,
     _: u2 = 0,
-
-    comptime {
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(MoveTarget) == @sizeOf(MoveTarget) * 8);
-    }
 };
 
 const a = MoveTarget{ .Depends = true };
@@ -86,11 +81,6 @@ pub const MoveFlags = packed struct {
     MirrorMove: bool = false, // mirror
     KingsRock: bool = false, // TODO
     _: u2 = 0,
-
-    comptime {
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(MoveFlags) == @sizeOf(MoveFlags) * 8);
-    }
 };
 
 pub const Move = moves.Move;

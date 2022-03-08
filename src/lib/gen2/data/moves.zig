@@ -273,8 +273,6 @@ pub const Move = enum(u8) {
 
         comptime {
             assert(@sizeOf(Data) == 5);
-            // TODO: Safety check workaround for ziglang/zig#2627
-            assert(@bitSizeOf(Data) == @sizeOf(Data) * 8);
         }
     };
 

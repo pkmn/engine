@@ -63,14 +63,12 @@ pub const Type = enum(u8) {
     }
 };
 
-pub const Types = packed struct {
+pub const Types = extern struct {
     type1: Type = .Normal,
     type2: Type = .Normal,
 
     comptime {
         assert(@bitSizeOf(Types) == 16);
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(Types) == @sizeOf(Types) * 8);
     }
 
     pub fn immune(self: Types, t: Type) bool {

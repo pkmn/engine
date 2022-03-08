@@ -39,7 +39,7 @@ pub fn Battle(comptime PRNG: anytype) type {
 }
 
 test "Battle" {
-    try expectEqual(if (build_options.showdown) 380 else 384, @sizeOf(Battle(rng.PRNG(1))));
+    try expectEqual(384, @sizeOf(Battle(rng.PRNG(1))));
 }
 
 pub const Player = enum(u1) {
@@ -134,8 +134,6 @@ pub const MoveSlot = packed struct {
 
     comptime {
         assert(@sizeOf(MoveSlot) == @sizeOf(u16));
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(MoveSlot) == @sizeOf(MoveSlot) * 8);
     }
 };
 
@@ -254,15 +252,11 @@ pub const Volatiles = packed struct {
 
         comptime {
             assert(@sizeOf(Data) == 6);
-            // TODO: Safety check workaround for ziglang/zig#2627
-            assert(@bitSizeOf(Data) == @sizeOf(Data) * 8);
         }
     };
 
     comptime {
         assert(@sizeOf(Volatiles) == 9);
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(Volatiles) == @sizeOf(Volatiles) * 8);
     }
 };
 
@@ -270,7 +264,7 @@ pub const Volatiles = packed struct {
 pub const Stat = enum { hp, atk, def, spe, spc };
 
 pub fn Stats(comptime T: type) type {
-    return packed struct {
+    return extern struct {
         hp: T = 0,
         atk: T = 0,
         def: T = 0,
@@ -289,7 +283,7 @@ pub fn Stats(comptime T: type) type {
 
 test "Stats" {
     try expectEqual(5, @sizeOf(Stats(u8)));
-    const stats = Stats(u4){ .atk = 2, .spe = 3 };
+    const stats = Stats(u16){ .atk = 2, .spe = 3 };
     try expectEqual(2, stats.atk);
     try expectEqual(0, stats.def);
 }
@@ -304,8 +298,6 @@ pub const Boosts = packed struct {
 
     comptime {
         assert(@sizeOf(Boosts) == 3);
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(Boosts) == @sizeOf(Boosts) * 8);
     }
 };
 
@@ -343,8 +335,7 @@ pub const Effectiveness = enum(u8) {
 
     comptime {
         assert(@bitSizeOf(Effectiveness) == 8);
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(Effectiveness) == @sizeOf(Effectiveness) * 8);
+
     }
 };
 
@@ -369,7 +360,7 @@ pub const DVs = struct {
     spe: u4 = 15,
     spc: u4 = 15,
 
-    pub fn hp(self: *const DVs) u4 {
+    pub fn hp(self: DVs) u4 {
         assert(builtin.is_test);
         return (self.atk & 1) << 3 | (self.def & 1) << 2 | (self.spe & 1) << 1 | (self.spc & 1);
     }
@@ -416,8 +407,6 @@ pub const Choice = packed struct {
 
     comptime {
         assert(@sizeOf(Choice) == 1);
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(Choice) == @sizeOf(Choice) * 8);
     }
 };
 

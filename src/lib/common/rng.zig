@@ -75,8 +75,6 @@ pub const Gen12 = extern struct {
 
     comptime {
         assert(@sizeOf(Gen12) == 11);
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(Gen12) == @sizeOf(Gen12) * 8);
     }
 
     pub fn percent(comptime p: comptime_int) u8 {
@@ -105,13 +103,11 @@ test "Generation I & II" {
 
 // https://pkmn.cc/pokeemerald/src/random.c
 // https://pkmn.cc/pokediamond/arm9/src/math_util.c#L624-L630
-pub const Gen34 = packed struct {
+pub const Gen34 = extern struct {
     seed: u32,
 
     comptime {
         assert(@sizeOf(Gen34) == 4);
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(Gen34) == @sizeOf(Gen34) * 8);
     }
 
     pub fn next(self: *Gen34) u16 {
@@ -140,13 +136,11 @@ test "Generation III & IV" {
     }
 }
 
-pub const Gen56 = packed struct {
+pub const Gen56 = extern struct {
     seed: u64,
 
     comptime {
         assert(@sizeOf(Gen56) == 8);
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(Gen56) == @sizeOf(Gen56) * 8);
     }
 
     pub fn next(self: *Gen56) u32 {

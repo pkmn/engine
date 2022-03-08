@@ -156,7 +156,7 @@ fn doTurn(battle: anytype, p: Player, pc: Choice, f: Player, fc: Choice, log: an
 fn endTurn(battle: anytype, log: anytype) !Result {
     battle.turn += 1;
     try log.turn(battle.turn);
-    return Result.Default;
+    return if (showdown and battle.turn >= 1000) Result.Tie else Result.Default;
 }
 
 fn getMove(battle: anytype, player: Player, choice: Choice) Move {

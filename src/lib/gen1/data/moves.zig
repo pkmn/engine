@@ -177,6 +177,9 @@ pub const Move = enum(u8) {
     Substitute,
     Struggle,
 
+    // Sentinel used when Pokémon is being trapped by their opponent
+    TRAPPED = 0xFF,
+
     pub const Data = packed struct {
         effect: Effect,
         bp: u8,
@@ -185,11 +188,9 @@ pub const Move = enum(u8) {
 
         comptime {
             assert(@sizeOf(Data) == 3);
-            // TODO: Safety check workaround for ziglang/zig#2627
-            assert(@bitSizeOf(Data) == @sizeOf(Data) * 8);
         }
 
-        pub fn accuracy(self: *const Data) u8 {
+        pub fn accuracy(self: Data) u8 {
             return (@as(u8, self.acc) + 6) * 5;
         }
     };

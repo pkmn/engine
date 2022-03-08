@@ -15,10 +15,10 @@ const expect = std.testing.expect;
 
 pub fn Battle(comptime PRNG: anytype) type {
     return extern struct {
-        turn: u16 = 0,
         rng: PRNG,
-        field: Field = .{},
         sides: [2]Side,
+        turn: u16 = 0,
+        field: Field = .{},
 
         pub fn p1(self: *Battle) *Side {
             return &self.sides[0];
@@ -31,16 +31,14 @@ pub fn Battle(comptime PRNG: anytype) type {
 }
 
 test "Battle" {
-    try expectEqual(if (build_options.showdown) 440 else 442, @sizeOf(Battle(rng.PRNG(2))));
+    try expectEqual(if (build_options.showdown) 440 else 444, @sizeOf(Battle(rng.PRNG(2))));
 }
 
-const Field = packed struct {
+const Field = extern struct {
     weather: Weather.Data = .{},
 
     comptime {
         assert(@sizeOf(Field) == 1);
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(Field) == @sizeOf(Field) * 8);
     }
 };
 
@@ -56,8 +54,6 @@ const Weather = enum(u4) {
 
         comptime {
             assert(@sizeOf(Data) == 1);
-            // TODO: Safety check workaround for ziglang/zig#2627
-            assert(@bitSizeOf(Data) == @sizeOf(Data) * 8);
         }
     };
 };
@@ -98,8 +94,6 @@ const SideConditions = packed struct {
 
     comptime {
         assert(@sizeOf(SideConditions) == 2);
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(SideConditions) == @sizeOf(SideConditions) * 8);
     }
 };
 
@@ -160,8 +154,6 @@ const IVs = packed struct {
 
     comptime {
         assert(@sizeOf(IVs) == 2);
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(IVs) == @sizeOf(IVs) * 8);
     }
 };
 
@@ -172,8 +164,6 @@ const MoveSlot = packed struct {
 
     comptime {
         assert(@sizeOf(MoveSlot) == @sizeOf(u16));
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(MoveSlot) == @sizeOf(MoveSlot) * 8);
     }
 
     pub fn init(id: Move) MoveSlot {
@@ -186,7 +176,7 @@ const MoveSlot = packed struct {
         };
     }
 
-    pub fn maxpp(self: *const MoveSlot) u8 {
+    pub fn maxpp(self: MoveSlot) u8 {
         const pp = Move.get(self.id).pp;
         return self.pp_ups * @as(u8, @maximum(pp, 7)) + (@as(u8, pp) * 5);
     }
@@ -265,15 +255,11 @@ const Volatile = packed struct {
 
         comptime {
             assert(@sizeOf(Data) == 12);
-            // TODO: Safety check workaround for ziglang/zig#2627
-            assert(@bitSizeOf(Data) == @sizeOf(Data) * 8);
         }
     };
 
     comptime {
         assert(@sizeOf(Volatile) == 16);
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(Volatile) == @sizeOf(Volatile) * 8);
     }
 };
 
@@ -307,8 +293,6 @@ pub const Boosts = packed struct {
 
     comptime {
         assert(@sizeOf(Boosts) == 4);
-        // TODO: Safety check workaround for ziglang/zig#2627
-        assert(@bitSizeOf(Boosts) == @sizeOf(Boosts) * 8);
     }
 };
 

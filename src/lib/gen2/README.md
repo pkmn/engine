@@ -32,7 +32,7 @@ The following information is required to simulate a Generation II Pokémon battl
 | `pokemon.species`              | `party_struct.Species`            | `pokemon.baseSpecies`                 |
 | `active.species`               | `battle_struct.Species`           | `pokemon.species`                     |
 | `active.stats`                 | `TODO modified`                   | `pokemon.storedStats`                 |
-| `active.trapped`               | `PlayerTrappingMove`              | `pokemon.trapped`                     |
+| `active.trapped FIXME`         | `PlayerTrappingMove`              | `pokemon.trapped`                     |
 | `active.switching`             | `PlayerIsSwitching`               | `pokemon.switchFlag`                  |
 | `active.boosts`                | `PlayerStatLevels`                | `pokemon.boosts`                      |
 | `active.volatiles`             | `PlayerBattleStatus{1,2,3}`       | `pokemon.volatiles`                   |
