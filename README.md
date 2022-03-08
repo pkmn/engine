@@ -67,8 +67,6 @@ should notify you with these options when you attempt to install the package.
 
 ## Usage
 
-**TODO:** C ABI examples
-
 ```ts
 import {Dex} from '@pkmn/dex';
 import {Generations} from '@pkmn/data';
@@ -76,9 +74,33 @@ import {Battle} from `@pkmn/engine`;
 
 const gens = new Generations(Dex);
 const battle = new Battle(gens.get(1), team1, team2);
+```
 
+```c
+#include "pkmn.h"
 
-// TODO ...
+Battle *battle;
+char result, c1, c2;
+while (!RESULT_TYPE(result = battle->update(c1, c2, &log))) {
+  c1 = p1.choose(RESULT_P1(result));
+  c2 = p2.choose(RESULT_P2(result));
+}
+```
+
+```zig
+const pkmn = @import("pkmn");
+
+var battle = pkmn.Battle{ ... };
+var p1 = ...
+var p2 = ...
+
+var result = pkmn.Result{};
+var c1 = pkmn.Choice{};
+var c2 = pkmn.Choice{};
+while (result.type == .None) : (result = try battle.update(c1, c2, &log)) {
+    c1 = p1.choose(result.p1);
+    c2 = p2.choose(result.p2);
+}
 ```
 
 ## Status

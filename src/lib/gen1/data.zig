@@ -335,7 +335,6 @@ pub const Effectiveness = enum(u8) {
 
     comptime {
         assert(@bitSizeOf(Effectiveness) == 8);
-
     }
 };
 
@@ -436,6 +435,10 @@ pub const Result = packed struct {
     pub const Win: Result = .{ .type = .Win };
     pub const Lose: Result = .{ .type = .Lose };
     pub const Default: Result = .{ .p1 = .Move, .p2 = .Move };
+
+    comptime {
+        assert(@sizeOf(Result) == 1);
+    }
 };
 
 test "Result" {

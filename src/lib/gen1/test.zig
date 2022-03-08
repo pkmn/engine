@@ -745,6 +745,11 @@ test "switching" {
 //     return error.SkipZigTest;
 // }
 
+// test "Partial trapping move Mirror Move glitch" {
+//     //  https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
+//     return error.SkipZigTest;
+// }
+
 // BUG: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Dual-type_damage_misinformation
 // BUG: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Poison.2FBurn_animation_with_0_HP
 

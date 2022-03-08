@@ -21,7 +21,6 @@ const Side = data.Side;
 const Stats = data.Stats;
 const Status = data.Status;
 
-// FIXME: https://www.smogon.com/forums/threads/self-ko-clause-gens-1-4.3653037/
 pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     if (battle.turn == 0) return start(battle, log);
 
@@ -86,8 +85,12 @@ fn selectMove(battle: anytype, player: Player, choice: Choice) Choice {
     if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP)) return .{};
     if (volatiles.Bide or volatiles.Trapping) return .{};
 
-    assert(choice.data != 0xF);
-    return if (battle.foe(player).active.volatiles.Trapping) .{ .data = 0xF } else choice;
+    if (battle.foe(player).active.volatiles.Trapping) {
+        side.last_selected_move = .TRAPPED;
+        return .{};
+    }
+
+    return choice;
 }
 
 fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anytype) !void {

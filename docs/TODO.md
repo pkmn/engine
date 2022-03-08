@@ -44,6 +44,7 @@
 - [ ] watch out for [packed](https://github.com/ziglang/zig/issues/9943)
   [struct](https://github.com/ziglang/zig/issues/10104) issues
 - [ ] ensure trace is 0 overhead in MCTS build (use `@import("build_options")` to mark as dead code)
+- [ ] self KO clause? https://www.smogon.com/forums/threads/self-ko-clause-gens-1-4.3653037/
 
 ## Project
 
