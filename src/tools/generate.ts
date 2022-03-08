@@ -337,7 +337,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     }`;
     const SENTINEL =
       ',\n\n    // Sentinel used when Pokémon is being trapped by their opponent\n' +
-      '    TRAPPED = 0xFF'
+      '    TRAPPED = 0xFF';
     template('moves', dirs.out, {
       gen: gen.num,
       Move: {
