@@ -215,7 +215,7 @@ pub const Volatiles = packed struct {
     data: Data = Data{},
 
     Bide: bool = false,
-    Locked: bool = false,
+    Thrashing: bool = false,
     MultiHit: bool = false,
     Flinch: bool = false,
     Charging: bool = false,

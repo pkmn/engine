@@ -276,7 +276,7 @@ pub const End = enum(u8) {
     FocusEnergy,
     LeechSeed,
     LightScreen,
-    Locked,
+    Thrashing,
     Minimize,
     Mist,
     Rage,

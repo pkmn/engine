@@ -119,7 +119,7 @@ which are boolean flags that are cleared when the Pokémon faints or switches ou
 | pkmn          | Pokémon Crystal  (pret) | Pokémon Showdown |
 | ------------- | ----------------------- | ---------------- |
 | `Bide`        | `BIDE`                  | `bide`           |
-| `Locked`      | `RAMPAGE`               | `lockedmove`     |
+| `Thrashing`   | `RAMPAGE`               | `lockedmove`     |
 | `Flinch`      | `FLINCHED`              | `flinch`         |
 | `Charging`    | `CHARGED`               | `twoturnmove`    |
 | `Underground` | `UNDERGROUND`           | `dig`            |

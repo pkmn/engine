@@ -24,8 +24,6 @@ const Status = data.Status;
 pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     if (battle.turn == 0) return start(battle, log);
 
-    // FIXME monFainted
-
     const choice1 = selectMove(battle, .P1, c1);
     const choice2 = selectMove(battle, .P2, c2);
 
@@ -78,7 +76,7 @@ fn selectMove(battle: anytype, player: Player, choice: Choice) Choice {
 
     if (volatiles.Recharging or volatiles.Rage) return .{};
     volatiles.Flinch = false;
-    if (volatiles.Locked or volatiles.Charging) return .{};
+    if (volatiles.Thrashing or volatiles.Charging) return .{};
 
     if (choice.type == .Switch) return choice;
 
@@ -118,6 +116,7 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anyty
     } else if (Status.is(incoming.status, .BRN)) {
         active.stats.atk = @maximum(active.stats.atk / 2, 1);
     }
+
     battle.foe(player).active.volatiles.Trapping = false;
 
     try log.switched(active.ident(side, player), incoming);
@@ -271,7 +270,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
             if (confused) {
                 // FIXME: implement self hit
                 volatiles.Bide = false;
-                volatiles.Locked = false;
+                volatiles.Thrashing = false;
                 volatiles.MultiHit = false;
                 volatiles.Flinch = false;
                 volatiles.Charging = false;
@@ -293,7 +292,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
             battle.rng.next() < Gen12.percent(25);
         if (paralyzed) {
             volatiles.Bide = false;
-            volatiles.Locked = false;
+            volatiles.Thrashing = false;
             volatiles.Charging = false;
             volatiles.Trapping = false;
             // NB: Invulnerable is not cleared, resulting in the Fly/Dig glitch
@@ -318,12 +317,12 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
         }
         // TODO unleash energy
     }
-    if (volatiles.Locked) {
+    if (volatiles.Thrashing) {
         assert(volatiles.data.attacks > 0);
         volatiles.data.attacks -= 1;
         // TODO PlayerMoveNum = THRASH
         if (volatiles.data.attacks == 0) {
-            volatiles.Locked = false;
+            volatiles.Thrashing = false;
             volatiles.Confusion = true;
             // NB: these values will diverge
             volatiles.data.confusion = if (showdown)
@@ -358,7 +357,7 @@ fn decrementPP(side: *Side, choice: Choice) void {
     var active = &side.active;
 
     const volatiles = active.volatiles;
-    if (volatiles.Bide or volatiles.Locked or volatiles.MultiHit or volatiles.Rage) return;
+    if (volatiles.Bide or volatiles.Thrashing or volatiles.MultiHit or volatiles.Rage) return;
 
     active.move(choice.data).pp -= 1;
     if (volatiles.Transform) return;

@@ -100,7 +100,7 @@ boolean flags that are cleared when the Pokémon faints or switches out:
 | pkmn           | Pokémon Red (pret)         | Pokémon Showdown   |
 | -------------- | -------------------------- | ------------------ |
 | `Bide`         | `STORING_ENERGY`           | `bide`             |
-| `Locked`       | `TRASHING_ABOUT`           | `lockedmove`       |
+| `Thrashing`    | `TRASHING_ABOUT`           | `lockedmove`       |
 | `MultiHit`     | `ATTACKING_MULTIPLE_TIMES` | `Move#multihit`    |
 | `Flinch`       | `FLINCHED`                 | `flinch`           |
 | `Charging`     | `CHARGING_UP`              | `twoturnmove`      |

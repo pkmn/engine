@@ -196,7 +196,7 @@ const Volatile = packed struct {
     data: Data,
 
     Bide: bool = false,
-    Locked: bool = false,
+    Thrashing: bool = false,
     Flinch: bool = false,
     Charging: bool = false,
     Underground: bool = false,
