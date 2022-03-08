@@ -30,9 +30,9 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     // TODO: https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
 
     if (turnOrder(battle, c1, c2) == .P1) {
-        try doTurn(battle, .P1, c1, .P2, c2, log);
+        if (try doTurn(battle, .P1, c1, .P2, c2, log)) |r| return r;
     } else {
-        try doTurn(battle, .P2, c2, .P1, c1, log);
+        if (try doTurn(battle, .P2, c2, .P1, c1, log)) |r| return r;
     }
 
     var p1 = battle.side(.P1);
@@ -166,16 +166,18 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     return if (spe1 > spe2) .P1 else .P2;
 }
 
-fn doTurn(battle: anytype, p: Player, pc: Choice, f: Player, fc: Choice, log: anytype) !void {
+fn doTurn(battle: anytype, p: Player, pc: Choice, f: Player, fc: Choice, log: anytype) !?Result {
     try executeMove(battle, p, pc, log);
-    try checkFaint(battle, f, log);
+    if (try checkFaint(battle, f, true, log)) |r| return r;
     try handleResidual(battle, p, log);
-    try checkFaint(battle, p, log);
+    if (try checkFaint(battle, p, true, log)) |r| return r;
 
     try executeMove(battle, f, fc, log);
-    try checkFaint(battle, p, log);
+    if (try checkFaint(battle, p, true, log)) |r| return r;
     try handleResidual(battle, f, log);
-    try checkFaint(battle, f, log);
+    if (try checkFaint(battle, f, true, log)) |r| return r;
+
+    return null;
 }
 
 fn endTurn(battle: anytype, log: anytype) !Result {
@@ -195,35 +197,63 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !v
     try switchIn(battle, player, choice.data, false, log);
 }
 
-fn checkFaint(battle: anytype, player: Player, log: anytype) !void {
-    _ = battle;
-    _ = player;
-    _ = log;
+fn checkFaint(battle: anytype, player: Player, recurse: bool, log: anytype) !?Result {
+    var side = battle.side(player);
+    if (side.stored().hp > 0) return null;
 
-    // TODO: if player is fainted, enemy faint check, and turn is over
+    var foe = battle.foe(player);
+    foe.active.volatiles.MultiHit = false;
+    foe.active.volatiles.data.bide = if (showdown) 0 else foe.active.volatiles.data.bide & 0x00FF;
+    if (foe.active.volatiles.data.bide != 0) return Result{ .type = .Error };
+
+    side.active.volatiles = .{};
+    try log.faint(side.active.ident(side, player));
+
+    //  TODO: if (findFirstAlive(side) == 0)
+
+    _ = recurse;
+
+    return null;
 }
 
 fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
-    _ = battle;
-    _ = player;
-    _ = log;
+    var side = battle.side(player);
+    var stored = side.stored();
+    const ident = side.active.ident(side, player);
 
-    // TODO: Substract health from player if poisoned/seeded/burned**
-}
+    var volatiles = &side.active.volatiles;
 
-fn monFainted(wInHandlePlayerMonFainted: bool) !void {
-    // set wInHandlePlayerMonFainted to avoid recursive
-    // remove fainted mon
-    //  - reset ENEMY attacking multiple times
-    // - 0 enemy ENEMY accumulated damage BUG: POSSIBLY A DESYNC
-    if (wInHandlePlayerMonFainted) return;
-    // test if any more PLAYER mons are alive
-    //
-    // if enemy pokemon hp = 0, monFainted(enmery, true)
-    // test if any more enemy mons alive
-    //
+    const brn = Status.is(stored.status, .BRN);
+    if (brn or Status.is(stored.status, .PSN)) {
+        var damage = @maximum(stored.stats.hp / 16, 1);
+        if (volatiles.Toxic) {
+            volatiles.data.toxic += 1;
+            damage *= volatiles.data.toxic;
+        }
+        stored.hp -= @minimum(damage, stored.hp);
+        // TODO: damageOf?
+        try log.damage(ident, stored, if (brn) .Burn else .Poison);
+    }
 
-    // need to return none to force end turn?
+    if (volatiles.LeechSeed) {
+        var damage = @maximum(stored.stats.hp / 16, 1);
+        // NB: Leech Seed + Toxic glitch
+        if (volatiles.Toxic) {
+            volatiles.data.toxic += 1;
+            damage *= volatiles.data.toxic;
+        }
+        stored.hp -= @minimum(damage, stored.hp);
+
+        var foe = battle.foe(player);
+        var foe_stored = foe.stored();
+        const foe_ident = foe.active.ident(foe, player.foe());
+
+        try log.damageOf(ident, stored, .LeechSeedOf, foe_ident);
+
+        // NB: uncapped damage is added back to the foe
+        foe_stored.hp = @minimum(foe_stored.hp + damage, foe_stored.stats.hp);
+        try log.drain(foe_ident, foe_stored, ident);
+    }
 }
 
 // TODO return an enum instead of bool to handle multiple cases
