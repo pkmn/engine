@@ -79,9 +79,9 @@ pub const Side = struct {
                 );
             }
             assert(p.moves.len > 0 and p.moves.len <= 4);
-            for (p.moves) |move, j| {
-                pokemon.moves[j].id = move;
-                pokemon.moves[j].pp = @truncate(u6, Move.pp(move) / 5 * 8);
+            for (p.moves) |m, j| {
+                pokemon.moves[j].id = m;
+                pokemon.moves[j].pp = @truncate(u6, Move.pp(m) / 5 * 8);
             }
             if (p.hp) |hp| {
                 pokemon.hp = hp;
@@ -122,8 +122,8 @@ pub const Side = struct {
                     }
                 }
                 active.species = pokemon.species;
-                for (pokemon.moves) |move, k| {
-                    active.moves[k] = move;
+                for (pokemon.moves) |m, k| {
+                    active.moves[k] = m;
                 }
                 var volatiles = &active.volatiles;
                 inline for (std.meta.fields(@TypeOf(active.volatiles))) |field| {
@@ -186,19 +186,19 @@ pub const Pokemon = struct {
         var i: u4 = 0;
         const n = if (rand.chance(1, 100)) rand.range(u4, 1, 3) else 4;
         while (i < n) : (i += 1) {
-            var move: Move = .None;
+            var m: Move = .None;
             sample: while (true) {
-                move = @intToEnum(Move, rand.range(u8, 1, 165));
+                m = @intToEnum(Move, rand.range(u8, 1, 165));
                 var j: u4 = 0;
                 while (j < i) : (j += 1) {
-                    if (ms[j].id == move) continue :sample;
+                    if (ms[j].id == m) continue :sample;
                 }
                 break;
             }
             const pp_ups = if (rand.chance(1, 10)) rand.range(u2, 0, 2) else 3;
-            const max_pp = @truncate(u6, Move.pp(move) / 5 * (5 + @as(u8, pp_ups)));
+            const max_pp = @truncate(u6, Move.pp(m) / 5 * (5 + @as(u8, pp_ups)));
             ms[i] = .{
-                .id = move,
+                .id = m,
                 .pp = rand.range(u6, 0, max_pp),
                 .pp_ups = pp_ups,
             };
@@ -224,8 +224,17 @@ const START = [_]u8{
 };
 // zig fmt: off
 
+pub fn move(slot: u4) Choice {
+    return .{.type = .Move, .data = slot};
+}
+
+pub fn swtch(slot: u4) Choice {
+    return .{.type = .Switch, .data = slot};
+}
+
 fn update(battle: anytype, c1: Choice, c2: Choice) !Result {
     var log: protocol.Log(@TypeOf(std.io.null_writer)) = .{.writer = std.io.null_writer};
+    if (battle.turn == 0) try expectEqual(Result.Default, try battle.update(.{}, .{}, &log));
     return try battle.update(c1, c2, &log);
 }
 
@@ -233,7 +242,7 @@ test "Battle" {
     const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
     const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
     var battle = Battle.init(.{42}, &.{p1}, &.{p2});
-    _ = try update(&battle, .{ .type = .Move, .data = 4 }, .{ .type = .Switch, .data = 1 });
+    _ = try update(&battle, move(4), move(2));
 }
 
 fn expectOrder(p1: anytype, o1: []const u8, p2: anytype, o2: []const u8) !void {
@@ -246,23 +255,22 @@ test "switching" {
     const p1 = battle.side(.P1);
     const p2 = battle.side(.P2);
 
-    _ = try update(&battle, .{ .type = .Switch, .data = 3 }, .{ .type = .Switch, .data = 2 });
+    _ = try update(&battle, swtch(3), swtch(2));
     try expectOrder(p1, &[_]u8{3,2,1,4,5,6}, p2, &[_]u8{2,1,3,4,5,6});
-     _ = try update(&battle, .{ .type = .Switch, .data = 5 }, .{ .type = .Switch, .data = 5 });
+     _ = try update(&battle, swtch(5), swtch(5));
     try expectOrder(p1, &[_]u8{5,2,1,4,3,6}, p2, &[_]u8{5,1,3,4,2,6});
-     _ = try update(&battle, .{ .type = .Switch, .data = 6 }, .{ .type = .Switch, .data = 3 });
+     _ = try update(&battle, swtch(6), swtch(3));
     try expectOrder(p1, &[_]u8{6,2,1,4,3,5}, p2, &[_]u8{3,1,5,4,2,6});
-     _ = try update(&battle, .{ .type = .Switch, .data = 3 }, .{ .type = .Switch, .data = 3 });
+     _ = try update(&battle, swtch(3), swtch(3));
     try expectOrder(p1, &[_]u8{1,2,6,4,3,5}, p2, &[_]u8{5,1,3,4,2,6});
-     _ = try update(&battle, .{ .type = .Switch, .data = 2 }, .{ .type = .Switch, .data = 4 });
+     _ = try update(&battle, swtch(2), swtch(4));
     try expectOrder(p1, &[_]u8{2,1,6,4,3,5}, p2, &[_]u8{4,1,3,5,2,6});
-     _ = try update(&battle, .{ .type = .Switch, .data = 5 }, .{ .type = .Switch, .data = 5 });
+     _ = try update(&battle, swtch(5), swtch(5));
     try expectOrder(p1, &[_]u8{3,1,6,4,2,5}, p2, &[_]u8{2,1,3,5,4,6});
 }
 
 // var buf = [_]u8{0} ** 7;
 // var log: Log = .{ .writer = std.io.fixedBufferStream(&buf).writer() };
-
 // _ = try battle.update(.{ .type = .Move, .data = 4 }, .{ .type = .Switch, .data = 1 }, &log);
 // try expectLog(&(START ++ [_]u8{}), &buf);
 

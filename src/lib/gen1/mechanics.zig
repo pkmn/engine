@@ -193,7 +193,7 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !v
     _ = log;
 
     // FIXME
-    assert(choice.type == .Switch);
+    if (choice.type != .Switch) return;
     try switchIn(battle, player, choice.data, false, log);
 }
 
