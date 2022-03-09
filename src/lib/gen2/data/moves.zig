@@ -574,7 +574,7 @@ pub const Move = enum(u8) {
         },
         // Thrash
         .{
-            .effect = .Locking,
+            .effect = .Thrashing,
             .bp = 90,
             .type = .Normal,
             .accuracy = 100,
@@ -930,7 +930,7 @@ pub const Move = enum(u8) {
         },
         // PetalDance
         .{
-            .effect = .Locking,
+            .effect = .Thrashing,
             .bp = 70,
             .type = .Grass,
             .accuracy = 100,
@@ -1915,7 +1915,7 @@ pub const Move = enum(u8) {
         },
         // Outrage
         .{
-            .effect = .Locking,
+            .effect = .Thrashing,
             .bp = 90,
             .type = .Dragon,
             .accuracy = 100,
@@ -2405,7 +2405,6 @@ pub const Move = enum(u8) {
         LevelDamage,
         LightScreen,
         LockOn,
-        Locking,
         Magnitude,
         MeanLook,
         Metronome,
@@ -2471,6 +2470,7 @@ pub const Move = enum(u8) {
         Synthesis,
         Teleport,
         Thief,
+        Thrashing,
         Thunder,
         Toxic,
         Transform,

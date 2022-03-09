@@ -98,9 +98,9 @@ const NAMES: { [constant: string]: string } = {
   EFFECT_POISON_HIT: 'PoisonChance',
   EFFECT_POISON_MULTI_HIT: 'Twineedle',
   EFFECT_PRIORITY_HIT: 'Priority',
-  EFFECT_RAMPAGE: 'Locking',
+  EFFECT_RAMPAGE: 'Thrashing',
   EFFECT_RECOILD_HIT: 'Recoil',
-  THRASH_PETAL_DANCE_EFFECT: 'Locking',
+  THRASH_PETAL_DANCE_EFFECT: 'Thrashing',
   EFFECT_SELF_DESTRUCT: 'Explode',
   EFFECT_SP_ATK_UP: 'SpAtkUp1',
   EFFECT_SP_DEF_DOWN_HIT: 'SpDefDownChance',
@@ -109,12 +109,40 @@ const NAMES: { [constant: string]: string } = {
   EFFECT_TRAP_TARGET: 'Trapping',
 };
 
+const GROUPS: { [constant: string]: string[] } = {
+  // data/battle/residual_effects_1.asm
+  residual1: [
+    'Conversion', 'Haze', 'SwitchAndTeleport', 'Mist', 'FocusEnergy', 'Confusion', 'Heal',
+    'Transform', 'LightScreen', 'Reflect', 'Poison', 'Paralyze', 'Substitute', 'Mimic',
+    'LeechSeed', 'Splash',
+  ],
+  // data/battle/residual_effects_2.asm
+  residual2: [
+    'AttackUp1', 'DefenseUp1', 'SpecialUp1', 'EvasionUp1', 'AttackDown1', 'DefenseDown1',
+    'SpeedDown1', 'AccuracyDown1', 'Bide', 'Sleep', 'AttackUp2', 'DefenseUp2', 'SpeedUp2',
+    'SpecialUp2', 'DefenseDown2',
+  ],
+  // data/battle/special_effects.asm
+  special: [
+    'DrainHP', 'Explode', 'DreamEater', 'PayDay', 'Swift', 'MultiHit', 'Charge', 'SuperFang',
+    'SpecialDamage', 'Fly', 'DoubleHit', 'JumpKick', 'Recoil', 'Thrashing', 'Trapping',
+  ],
+};
+const EFFECT_TO_GROUP: { [effect: string]: string } = {};
+for (const group in GROUPS) {
+  for (const effect of GROUPS[group]) {
+    EFFECT_TO_GROUP[effect] = group;
+  }
+}
+
 const constToEffectEnum = (s: string) =>
   NAMES[s] || constToEnum(s).replace('SideEffect', 'Chance').replace('Effect', '');
 
 const nameToEnum = (s: string) => s.replace(/[^A-Za-z0-9]+/g, '');
 const constToEnum = (s: string) =>
   s.split('_').map(w => `${w[0]}${w.slice(1).toLowerCase()}`).join('');
+
+const effectToGroup = (e: string) => EFFECT_TO_GROUP[e] || 'regular';
 
 const mkdir = (dir: string) => {
   try {
@@ -275,7 +303,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     // Moves
     const HIGH_CRIT = ['KARATE_CHOP', 'RAZOR_LEAF', 'CRABHAMMER', 'SLASH'];
     let url = `${pret}/data/moves/moves.asm`;
-    const moves = await getOrUpdate('moves', dirs.cache, url, update, (line, _, i) => {
+    const unsorted = await getOrUpdate('moves', dirs.cache, url, update, (line, _, i) => {
       const match = /move (\w+),\W+(\w+),/.exec(line);
       if (!match) return undefined;
       const move = gen.moves.get(match[1] === 'PSYCHIC_M' ? 'PSYCHIC' : match[1])!;
@@ -285,6 +313,13 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       }
       return `${nameToEnum(move.name)} ${constToEffectEnum(effect)}`;
     });
+
+    const moves: string[] = [];
+    const grouped: { [key: string]: string[]} =
+      {residual1: [], residual2: [], special: [], regular: []};
+    for (const m of unsorted) grouped[effectToGroup(m.split(' ')[1])].push(m);
+    for (const group in grouped) moves.push(...grouped[group]);
+
     const MOVES: string[] = [];
     const PP: string[] = [];
     const EFFECTS = new Set<string>();
@@ -338,6 +373,25 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const SENTINEL =
       ',\n\n    // Sentinel used when Pokémon is being trapped by their opponent\n' +
       '    TRAPPED = 0xFF';
+    const r1 = grouped.residual1.length;
+    const r2 = r1 + grouped.residual2.length;
+    const sp = r2 + grouped.special.length;
+    const effectFns = `
+    pub fn residual1(id: Move) bool {
+        assert(id != .None);
+        return @enumToInt(id) > 0 and @enumToInt(id) <= ${r1};
+    }
+
+    pub fn residual2(id: Move) bool {
+        assert(id != .None);
+        return @enumToInt(id) > ${r1} and @enumToInt(id) <= ${r2};
+    }
+
+    pub fn special(id: Move) bool {
+        assert(id != .None);
+        return @enumToInt(id) > ${r2} and @enumToInt(id) <= ${sp};
+    }
+`;
     template('moves', dirs.out, {
       gen: gen.num,
       Move: {
@@ -348,6 +402,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         data: MOVES.join(',\n        '),
         dataSize: MOVES.length * 3,
         Effect,
+        effectFns,
         ppData,
         ppFn,
       },

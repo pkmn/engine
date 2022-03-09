@@ -310,11 +310,25 @@ test "Boosts" {
 pub const Move = moves.Move;
 
 test "Move" {
-    try expectEqual(2, @enumToInt(Move.KarateChop));
+    try expectEqual(96, @enumToInt(Move.KarateChop));
     const move = Move.get(.Fissure);
     try expectEqual(Move.Effect.OHKO, move.effect);
     try expectEqual(@as(u8, 30), move.accuracy());
     try expectEqual(Type.Ground, move.type);
+
+    try expect(Move.residual1(.Whirlwind));
+    try expect(Move.residual1(.Substitute));
+    try expect(!Move.residual1(.SwordsDance));
+
+    try expect(!Move.residual2(.Substitute));
+    try expect(Move.residual2(.SwordsDance));
+    try expect(Move.residual2(.Sharpen));
+    try expect(!Move.residual2(.DoubleSlap));
+
+    try expect(!Move.special(.Sharpen));
+    try expect(Move.special(.DoubleSlap));
+    try expect(Move.special(.Struggle));
+    try expect(!Move.special(.Pound));
 }
 
 pub const Species = species.Species;
