@@ -79,11 +79,12 @@ const battle = new Battle(gens.get(1), team1, team2);
 ```c
 #include "pkmn.h"
 
-Battle *battle;
-char result, c1, c2;
+Battle *battle = ....;
+result_t result;
+choice_t c1 = 0, c2 = 0;
 while (!RESULT_TYPE(result = battle->update(c1, c2, &log))) {
-  c1 = p1.choose(RESULT_P1(result));
-  c2 = p2.choose(RESULT_P2(result));
+  c1 = choose(p1, RESULT_P1(result));
+  c2 = choose(p2, RESULT_P2(result));
 }
 ```
 
@@ -94,9 +95,10 @@ var battle = pkmn.Battle{ ... };
 var p1 = ...
 var p2 = ...
 
-var result = pkmn.Result{};
 var c1 = pkmn.Choice{};
 var c2 = pkmn.Choice{};
+
+var result = try battle.update(c1, c2, &log);
 while (result.type == .None) : (result = try battle.update(c1, c2, &log)) {
     c1 = p1.choose(result.p1);
     c2 = p2.choose(result.p2);
@@ -114,16 +116,17 @@ The simulation engine is currently expected to be developed over multiple stages
 | **2**   | ADV & DPP                                       |
 | _**3**_ | _BW & XY & SM & SS & SV_                        |
 
-Currently, the work being done in stage 0 is intended to lay a foundation:
+Currently, most of the foundational work for stage 0 is done:
   
 - [benchmark and integration testing](src/test) infrastructure
 - [documentation](docs) about design, research, methodology, etc
 - definition and implementation of the [protocol](docs/PROTOCOL.md) that will be used by the engine
 
-Stage 1 will see the implementation of the actual Generation I & II battle engines, followed by
-Generation III & IV in stage 2. The implementation of further Pokémon generations is in scope for the
-project but should not be considered as part of the immediate roadmap (ie. exploring the options for
-broadening support for old generation APIs will be given higher priority than implementing more modern generations).
+**Stage 1 is currently in progress** and will see the implementation of the actual Generation I & II
+battle engines, followed by Generation III & IV in stage 2. The implementation of further Pokémon
+generations is in scope for the project but should not be considered as part of the immediate
+roadmap (ie. exploring the options for broadening support for old generation APIs will be given
+higher priority than implementing more modern generations).
 
 Certain features will always be deemed **out of scope**:
 
