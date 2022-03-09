@@ -303,7 +303,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     // Moves
     const HIGH_CRIT = ['KARATE_CHOP', 'RAZOR_LEAF', 'CRABHAMMER', 'SLASH'];
     let url = `${pret}/data/moves/moves.asm`;
-    const unsorted = await getOrUpdate('moves', dirs.cache, url, update, (line, _, i) => {
+    const moves = await getOrUpdate('moves', dirs.cache, url, update, (line, _, i) => {
       const match = /move (\w+),\W+(\w+),/.exec(line);
       if (!match) return undefined;
       const move = gen.moves.get(match[1] === 'PSYCHIC_M' ? 'PSYCHIC' : match[1])!;
@@ -314,18 +314,13 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       return `${nameToEnum(move.name)} ${constToEffectEnum(effect)}`;
     });
 
-    const moves: string[] = [];
-    const grouped: { [key: string]: string[]} =
-      {residual1: [], residual2: [], special: [], regular: []};
-    for (const m of unsorted) grouped[effectToGroup(m.split(' ')[1])].push(m);
-    for (const group in grouped) moves.push(...grouped[group]);
-
     const MOVES: string[] = [];
     const PP: string[] = [];
-    const EFFECTS = new Set<string>();
+    const EFFECTS: { [key: string]: Set<string>} =
+      {residual1: new Set(), residual2: new Set(), special: new Set(), regular: new Set()};
     for (const m of moves) {
       const [name, effect] = m.split(' ');
-      if (effect !== 'None') EFFECTS.add(effect);
+      if (effect !== 'None') EFFECTS[effectToGroup(effect)].add(effect);
       const move = gen.moves.get(name)!;
       const acc = move.accuracy === true ? 100 : move.accuracy;
       MOVES.push(`// ${name}\n` +
@@ -352,13 +347,32 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
     };`;
 
-    const Effect = `\n    pub const Effect = enum(u8) {
+    const r1 = EFFECTS.residual1.size;
+    const r2 = r1 + EFFECTS.residual2.size;
+    const sp = r2 + EFFECTS.special.size;
+    const effects: string[] = [];
+    for (const group in EFFECTS) effects.push(...EFFECTS[group]);
+    const Effect = `
+    pub const Effect = enum(u8) {
         None,
-        ${Array.from(EFFECTS).sort().join(',\n        ')},
+        ${effects.join(',\n        ')},
 
         comptime {
             assert(@sizeOf(Effect) == 1);
-        }\n` + '    };\n';
+        }
+
+        pub fn residual1(effect: Effect) bool {
+            return @enumToInt(effect) > 0 and @enumToInt(effect) <= ${r1};
+        }
+
+        pub fn residual2(effect: Effect) bool {
+            return @enumToInt(effect) > ${r1} and @enumToInt(effect) <= ${r2};
+        }
+
+        pub fn special(effect: Effect) bool {
+            return @enumToInt(effect) > ${r2} and @enumToInt(effect) <= ${sp};
+        }
+    };\n`;
 
     const ppData = `
     // @test-only
@@ -373,25 +387,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const SENTINEL =
       ',\n\n    // Sentinel used when Pokémon is being trapped by their opponent\n' +
       '    TRAPPED = 0xFF';
-    const r1 = grouped.residual1.length;
-    const r2 = r1 + grouped.residual2.length;
-    const sp = r2 + grouped.special.length;
-    const effectFns = `
-    pub fn residual1(id: Move) bool {
-        assert(id != .None);
-        return @enumToInt(id) > 0 and @enumToInt(id) <= ${r1};
-    }
 
-    pub fn residual2(id: Move) bool {
-        assert(id != .None);
-        return @enumToInt(id) > ${r1} and @enumToInt(id) <= ${r2};
-    }
-
-    pub fn special(id: Move) bool {
-        assert(id != .None);
-        return @enumToInt(id) > ${r2} and @enumToInt(id) <= ${sp};
-    }
-`;
     template('moves', dirs.out, {
       gen: gen.num,
       Move: {
@@ -402,7 +398,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         data: MOVES.join(',\n        '),
         dataSize: MOVES.length * 3,
         Effect,
-        effectFns,
         ppData,
         ppFn,
       },

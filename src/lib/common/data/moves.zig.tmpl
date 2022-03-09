@@ -28,7 +28,7 @@ pub const Move = enum({{{ Move.type }}}) {
         assert(id != .None);
         return data[@enumToInt(id) - 1];
     }
-{{{ Move.effectFns }}}
+
     // @test-only
     {{{ Move.ppFn }}}
 };

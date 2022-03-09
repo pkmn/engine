@@ -310,25 +310,26 @@ test "Boosts" {
 pub const Move = moves.Move;
 
 test "Move" {
-    try expectEqual(96, @enumToInt(Move.KarateChop));
+    try expectEqual(2, @enumToInt(Move.KarateChop));
     const move = Move.get(.Fissure);
     try expectEqual(Move.Effect.OHKO, move.effect);
     try expectEqual(@as(u8, 30), move.accuracy());
     try expectEqual(Type.Ground, move.type);
 
-    try expect(Move.residual1(.Whirlwind));
-    try expect(Move.residual1(.Substitute));
-    try expect(!Move.residual1(.SwordsDance));
+    try expect(!Move.Effect.residual1(.None));
+    try expect(Move.Effect.residual1(.SwitchAndTeleport));
+    try expect(Move.Effect.residual1(.Substitute));
+    try expect(!Move.Effect.residual1(.AttackUp2));
 
-    try expect(!Move.residual2(.Substitute));
-    try expect(Move.residual2(.SwordsDance));
-    try expect(Move.residual2(.Sharpen));
-    try expect(!Move.residual2(.DoubleSlap));
+    try expect(!Move.Effect.residual2(.Substitute));
+    try expect(Move.Effect.residual2(.AttackUp2));
+    try expect(Move.Effect.residual2(.SpecialUp2));
+    try expect(!Move.Effect.residual2(.MultiHit));
 
-    try expect(!Move.special(.Sharpen));
-    try expect(Move.special(.DoubleSlap));
-    try expect(Move.special(.Struggle));
-    try expect(!Move.special(.Pound));
+    try expect(!Move.Effect.special(.SpecialUp2));
+    try expect(Move.Effect.special(.MultiHit));
+    try expect(Move.Effect.special(.SuperFang));
+    try expect(!Move.Effect.special(.HighCritical));
 }
 
 pub const Species = species.Species;
