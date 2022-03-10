@@ -386,8 +386,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         return pp_data[@enumToInt(id) - 1];
     }`;
     const SENTINEL =
-      ',\n\n    // Sentinel used when Pokémon is being trapped by their opponent\n' +
-      '    TRAPPED = 0xFF';
+      ',\n\n    // Sentinel used when Pokémon\'s turn should be skipped (eg. trapped)\n' +
+      '    SKIP_TURN = 0xFF';
 
     template('moves', dirs.out, {
       gen: gen.num,
