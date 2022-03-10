@@ -181,9 +181,56 @@ fn doTurn(battle: anytype, p: Player, pc: Choice, f: Player, fc: Choice, log: an
 }
 
 fn endTurn(battle: anytype, log: anytype) !Result {
+    if (showdown and checkEBC(battle)) return Result.Tie;
     battle.turn += 1;
     try log.turn(battle.turn);
-    return if (showdown and battle.turn >= 1000) Result.Tie else Result.Default;
+    if (showdown) {
+        return if (battle.turn >= 1000) Result.Tie else Result.Default;
+    } else {
+        return if (battle.turn >= 0xFFFF) Result.Error else Result.Default;
+    }
+}
+
+fn checkEBC(battle: anytype) bool {
+    ebc: for (battle.sides) |side, i| {
+        var foe_all_ghosts = true;
+        var foe_all_transform = true;
+        for (battle.sides[~@truncate(u1, i)].pokemon) |pokemon| {
+            if (pokemon.species == .None) continue;
+
+            const ghost = pokemon.types.type1 == .Ghost or pokemon.types.type2 == .Ghost;
+            foe_all_ghosts = foe_all_ghosts and ghost;
+            foe_all_transform = foe_all_transform and transform: {
+                for (pokemon.moves) |m| {
+                    if (m.id == .None) break :transform true;
+                    if (m.id != .Transform) break :transform false;
+                }
+                break :transform true;
+            };
+        }
+        for (side.pokemon) |pokemon| {
+            if (Status.is(pokemon.status, .FRZ)) continue;
+            const transform = foe_all_transform and transform: {
+                for (pokemon.moves) |m| {
+                    if (m.id == .None) break :transform true;
+                    if (m.id != .Transform) break :transform false;
+                }
+                break :transform true;
+            };
+            if (transform) continue;
+            const no_pp = foe_all_ghosts and no: {
+                for (pokemon.moves) |m| {
+                    if (m.pp != 0) break :no false;
+                }
+                break :no true;
+            };
+            if (no_pp) continue;
+
+            continue :ebc;
+        }
+        return true;
+    }
+    return false;
 }
 
 fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !void {

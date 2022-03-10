@@ -449,6 +449,7 @@ pub const Result = packed struct {
     pub const Tie: Result = .{ .type = .Tie };
     pub const Win: Result = .{ .type = .Win };
     pub const Lose: Result = .{ .type = .Lose };
+    pub const Error: Result = .{ .type = .Error };
     pub const Default: Result = .{ .p1 = .Move, .p2 = .Move };
 
     comptime {
