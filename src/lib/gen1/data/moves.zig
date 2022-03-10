@@ -324,7 +324,7 @@ pub const Move = enum(u8) {
         },
         // Fly
         .{
-            .effect = .Fly,
+            .effect = .Charge,
             .bp = 70,
             .type = .Flying,
             .acc = 13, // 95%
@@ -1389,7 +1389,6 @@ pub const Move = enum(u8) {
         MultiHit,
         PayDay,
         Charge,
-        Fly,
         Trapping,
         DoubleHit,
         JumpKick,
@@ -1437,7 +1436,7 @@ pub const Move = enum(u8) {
         }
 
         pub fn special(effect: Effect) bool {
-            return @enumToInt(effect) > 31 and @enumToInt(effect) <= 46;
+            return @enumToInt(effect) > 31 and @enumToInt(effect) <= 45;
         }
     };
 

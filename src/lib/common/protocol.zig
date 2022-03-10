@@ -188,18 +188,18 @@ pub const Damage = enum(u8) {
     LeechSeedOf,
 };
 
-const Status = enum(u8) {
+pub const Status = enum(u8) {
     None,
     Silent,
     From,
 };
 
-const CureStatus = enum(u8) {
+pub const CureStatus = enum(u8) {
     None,
     Silent,
 };
 
-const Boost = enum(u8) {
+pub const Boost = enum(u8) {
     None,
 
     Rage,
@@ -276,7 +276,6 @@ pub const End = enum(u8) {
     FocusEnergy,
     LeechSeed,
     LightScreen,
-    Thrashing,
     Minimize,
     Mist,
     Rage,
@@ -285,6 +284,8 @@ pub const End = enum(u8) {
     SkullBash,
     SkyAttack,
     SolarBeam,
+    Thrashing,
+    Toxic,
 };
 
 pub const Immune = enum(u8) {

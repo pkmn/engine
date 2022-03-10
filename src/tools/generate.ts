@@ -70,6 +70,7 @@ const NAMES: { [constant: string]: string } = {
   // Effects
   NO_ADDITIONAL_EFFECT: 'None',
   EFFECT_NORMAL_HIT: 'None',
+  FLY_EFFECT: 'Charge',
   TWO_TO_FIVE_ATTACKS_EFFECT: 'MultiHit',
   ATTACK_TWICE_EFFECT: 'DoubleHit',
   OHKO_EFFECT: 'OHKO',
@@ -125,7 +126,7 @@ const GROUPS: { [constant: string]: string[] } = {
   // data/battle/special_effects.asm
   special: [
     'DrainHP', 'Explode', 'DreamEater', 'PayDay', 'Swift', 'MultiHit', 'Charge', 'SuperFang',
-    'SpecialDamage', 'Fly', 'DoubleHit', 'JumpKick', 'Recoil', 'Thrashing', 'Trapping',
+    'SpecialDamage', 'DoubleHit', 'JumpKick', 'Recoil', 'Thrashing', 'Trapping',
   ],
 };
 const EFFECT_TO_GROUP: { [effect: string]: string } = {};

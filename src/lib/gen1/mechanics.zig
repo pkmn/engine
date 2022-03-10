@@ -44,7 +44,7 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
         p2.active.volatiles.Trapping = false;
     }
 
-    return try endTurn(battle, log);
+    return endTurn(battle, log);
 }
 
 fn start(battle: anytype, log: anytype) !Result {
@@ -59,7 +59,7 @@ fn start(battle: anytype, log: anytype) !Result {
     if (slot == 0) return Result.Win;
     try switchIn(battle, .P2, slot, true, log);
 
-    return try endTurn(battle, log);
+    return endTurn(battle, log);
 }
 
 fn findFirstAlive(side: *const Side) u8 {
@@ -234,73 +234,25 @@ fn checkEBC(battle: anytype) bool {
 }
 
 fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !void {
-    _ = battle;
-    _ = player;
-    _ = choice;
-    _ = log;
-
-    // FIXME
-    if (choice.type != .Switch) return;
-    try switchIn(battle, player, choice.data, false, log);
-}
-
-fn checkFaint(battle: anytype, player: Player, recurse: bool, log: anytype) !?Result {
     var side = battle.side(player);
-    if (side.stored().hp > 0) return null;
+    if (side.last_selected_move == .TRAPPED) return;
+    if (choice.type == .Switch) return switchIn(battle, player, choice.data, false, log);
 
-    var foe = battle.foe(player);
-    foe.active.volatiles.MultiHit = false;
-    foe.active.volatiles.data.bide = if (showdown) 0 else foe.active.volatiles.data.bide & 0x00FF;
-    if (foe.active.volatiles.data.bide != 0) return Result{ .type = .Error };
+    if (!try beforeMove(battle, player, choice.data, log)) return; // FIXME
+    if (!try canExecute(battle, player, log)) return;
 
-    side.active.volatiles = .{};
-    try log.faint(side.active.ident(side, player));
-
-    //  TODO: if (findFirstAlive(side) == 0)
-
-    _ = recurse;
-
-    return null;
-}
-
-fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
-    var side = battle.side(player);
-    var stored = side.stored();
-    const ident = side.active.ident(side, player);
-
-    var volatiles = &side.active.volatiles;
-
-    const brn = Status.is(stored.status, .BRN);
-    if (brn or Status.is(stored.status, .PSN)) {
-        var damage = @maximum(stored.stats.hp / 16, 1);
-        if (volatiles.Toxic) {
-            volatiles.data.toxic += 1;
-            damage *= volatiles.data.toxic;
-        }
-        stored.hp -= @minimum(damage, stored.hp);
-        // TODO: damageOf?
-        try log.damage(ident, stored, if (brn) .Burn else .Poison);
+    const move = Move.get(side.last_selected_move);
+    if (move.effect != .SuperFang and move.effect != .SpecialDamage) {
+        // checkCriticalHit()
+        // handleCounter() => moveEffects(counter) ?
+        // handleMiss
+        // getDamageVars
+        // calcDamage()
+        // adjustDamage()
+        // randomizeDamage
     }
-
-    if (volatiles.LeechSeed) {
-        var damage = @maximum(stored.stats.hp / 16, 1);
-        // NB: Leech Seed + Toxic glitch
-        if (volatiles.Toxic) {
-            volatiles.data.toxic += 1;
-            damage *= volatiles.data.toxic;
-        }
-        stored.hp -= @minimum(damage, stored.hp);
-
-        var foe = battle.foe(player);
-        var foe_stored = foe.stored();
-        const foe_ident = foe.active.ident(foe, player.foe());
-
-        try log.damageOf(ident, stored, .LeechSeedOf, foe_ident);
-
-        // NB: uncapped damage is added back to the foe
-        foe_stored.hp = @minimum(foe_stored.hp + damage, foe_stored.stats.hp);
-        try log.drain(foe_ident, foe_stored, ident);
-    }
+    // checkHit
+    // TODO
 }
 
 // TODO return an enum instead of bool to handle multiple cases
@@ -324,7 +276,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
         return false;
     }
     if (foe.active.volatiles.Trapping) {
-        try log.cant(ident, .Trapping);
+        try log.cant(ident, .Trapped);
         return false;
     }
     if (volatiles.Flinch) {
@@ -414,11 +366,11 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
             volatiles.Thrashing = false;
             volatiles.Confusion = true;
             // NB: these values will diverge
-            volatiles.data.confusion = if (showdown)
+            volatiles.data.confusion = @truncate(u4, if (showdown)
                 battle.rng.range(3, 5)
             else
-                (battle.rng.next() & 3) + 2;
-            try log.start(ident, .Confusion, true);
+                (battle.rng.next() & 3) + 2);
+            try log.start(ident, .ConfusionSilent);
         }
         // TODO: skip DecrementPP, call PlayerCalcMoveDamage directly
     }
@@ -434,6 +386,87 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
     }
 
     return true;
+}
+
+fn canExecute(battle: anytype, player: Player, log: anytype) !bool {
+    var side = battle.side(player);
+    const move = Move.get(side.last_selected_move);
+
+    if (side.active.volatiles.Charging) {
+        side.active.volatiles.Charging = false;
+        side.active.volatiles.Invulnerable = false;
+    } else if (move.effect == .Charge) {
+        try moveEffect(battle, player, move, log);
+        return false;
+    }
+
+    if (move.effect.residual1()) {
+        try moveEffect(battle, player, move, log);
+        return false;
+    }
+    if (move.effect == .Thrashing or move.effect == .Trapping) {
+        try moveEffect(battle, player, move, log);
+    }
+    return true;
+}
+
+fn checkFaint(battle: anytype, player: Player, recurse: bool, log: anytype) !?Result {
+    var side = battle.side(player);
+    if (side.stored().hp > 0) return null;
+
+    var foe = battle.foe(player);
+    foe.active.volatiles.MultiHit = false;
+    foe.active.volatiles.data.bide = if (showdown) 0 else foe.active.volatiles.data.bide & 0x00FF;
+    if (foe.active.volatiles.data.bide != 0) return Result{ .type = .Error };
+
+    side.active.volatiles = .{};
+    try log.faint(side.active.ident(side, player));
+
+    //  TODO: if (findFirstAlive(side) == 0)
+
+    _ = recurse;
+
+    return null;
+}
+
+fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
+    var side = battle.side(player);
+    var stored = side.stored();
+    const ident = side.active.ident(side, player);
+
+    var volatiles = &side.active.volatiles;
+
+    const brn = Status.is(stored.status, .BRN);
+    if (brn or Status.is(stored.status, .PSN)) {
+        var damage = @maximum(stored.stats.hp / 16, 1);
+        if (volatiles.Toxic) {
+            volatiles.data.toxic += 1;
+            damage *= volatiles.data.toxic;
+        }
+        stored.hp -= @minimum(damage, stored.hp);
+        // TODO: damageOf?
+        try log.damage(ident, stored, if (brn) .Burn else .Poison);
+    }
+
+    if (volatiles.LeechSeed) {
+        var damage = @maximum(stored.stats.hp / 16, 1);
+        // NB: Leech Seed + Toxic glitch
+        if (volatiles.Toxic) {
+            volatiles.data.toxic += 1;
+            damage *= volatiles.data.toxic;
+        }
+        stored.hp -= @minimum(damage, stored.hp);
+
+        var foe = battle.foe(player);
+        var foe_stored = foe.stored();
+        const foe_ident = foe.active.ident(foe, player.foe());
+
+        try log.damageOf(ident, stored, .LeechSeedOf, foe_ident);
+
+        // NB: uncapped damage is added back to the foe
+        foe_stored.hp = @minimum(foe_stored.hp + damage, foe_stored.stats.hp);
+        try log.drain(foe_ident, foe_stored, ident);
+    }
 }
 
 // TODO: struggle bypass/wrap underflow
@@ -454,8 +487,9 @@ fn decrementPP(side: *Side, choice: Choice) void {
     side.stored().move(choice.data).pp -= 1;
 }
 
-fn moveEffect(battle: anytype, player: Player, move: Move, log: anytype) !void {
+fn moveEffect(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
     return switch (move.effect) {
+        .Charge => Effects.charge(battle, player, log),
         .Conversion => Effects.conversion(battle, player, log),
         .Haze => Effects.haze(battle, player, log),
         .Heal => Effects.heal(battle, player, log),
@@ -468,13 +502,27 @@ fn moveEffect(battle: anytype, player: Player, move: Move, log: anytype) !void {
 }
 
 pub const Effects = struct {
+    fn charge(battle: anytype, player: Player, log: anytype) !void {
+        var side = battle.side(player);
+        const foe = battle.foe(player);
+        var volatiles = &side.active.volatiles;
+        const ident = side.active.ident(side, player);
+        const foe_ident = foe.active.ident(foe, player.foe());
+
+        volatiles.Charging = true;
+        const move = side.last_selected_move;
+        if (move == .Fly or move == .Dig) volatiles.Invulnerable = true;
+        try log.prepare(ident, move, foe_ident);
+    }
+
     fn conversion(battle: anytype, player: Player, log: anytype) !void {
         var side = battle.side(player);
         const foe = battle.foe(player);
 
         const ident = side.active.ident(side, player);
-        if (foe.active.volatiles.Invulnerability) {
-            return try log.miss(ident, foe.active.ident(foe, player.foe()));
+        if (foe.active.volatiles.Invulnerable) {
+            try log.miss(ident, foe.active.ident(foe, player.foe()));
+            return;
         }
         side.active.types = foe.active.types;
         try log.typechange(ident, @bitCast(u8, foe.active.types));
@@ -502,7 +550,7 @@ pub const Effects = struct {
             if (Status.is(foe_stored.status, .FRZ) or Status.is(foe_stored.status, .SLP)) {
                 // TODO prevent from executing a move by using special case move $FF!!!
             }
-            try log.curestatus(foe_ident, foe_stored.status, true);
+            try log.curestatus(foe_ident, foe_stored.status, .Silent);
             foe_stored.status = 0;
         }
 
@@ -538,15 +586,14 @@ pub const Effects = struct {
         try log.start(ident, .Mist);
     }
 
-    fn paralyze(battle: anytype, player: Player, move: Move, log: anytype) !void {
+    fn paralyze(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
         var side = battle.side(player);
         const ident = side.active.ident(side, player);
         if (Status.any(side.stored().status)) {
             try log.fail(ident, .Paralysis); // FIXME: ???
             return;
         }
-        const m = Move.get(move.id);
-        if (side.active.types.immune(m.type)) {
+        if (side.active.types.immune(move.type)) {
             try log.immune(ident, .None);
             return;
         }

@@ -235,7 +235,7 @@ pub fn swtch(slot: u4) Choice {
 fn update(battle: anytype, c1: Choice, c2: Choice) !Result {
     var log: protocol.Log(@TypeOf(std.io.null_writer)) = .{.writer = std.io.null_writer};
     if (battle.turn == 0) try expectEqual(Result.Default, try battle.update(.{}, .{}, &log));
-    return try battle.update(c1, c2, &log);
+    return battle.update(c1, c2, &log);
 }
 
 test "Battle" {
