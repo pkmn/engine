@@ -33,7 +33,7 @@ pub fn Log(comptime Writer: type) type {
 
         writer: Writer,
 
-        pub fn move(self: *Self, source: u8, m: Move, target: u8, reason: protocol.Move) !void {
+        pub fn move(self: Self, source: u8, m: Move, target: u8, reason: protocol.Move) !void {
             if (!trace) return;
             assert(reason != .From);
             assert(m != .None or reason == .Recharge);
@@ -46,7 +46,7 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn moveFrom(self: *Self, source: u8, m: Move, target: u8, from: Move) !void {
+        pub fn moveFrom(self: Self, source: u8, m: Move, target: u8, from: Move) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{
                 @enumToInt(ArgType.Move),
@@ -58,7 +58,7 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn switched(self: *Self, ident: u8, pokemon: *const Pokemon) !void {
+        pub fn switched(self: Self, ident: u8, pokemon: *const Pokemon) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Switch), ident });
             try self.writer.writeAll(&[_]u8{ @enumToInt(pokemon.species), pokemon.level });
@@ -67,13 +67,13 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&[_]u8{pokemon.status});
         }
 
-        pub fn cant(self: *Self, ident: u8, reason: Cant) !void {
+        pub fn cant(self: Self, ident: u8, reason: Cant) !void {
             if (!trace) return;
             assert(reason != .Disable);
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Cant), ident, @enumToInt(reason) });
         }
 
-        pub fn disabled(self: *Self, ident: u8, mslot: u8) !void {
+        pub fn disabled(self: Self, ident: u8, mslot: u8) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{
                 @enumToInt(ArgType.Cant),
@@ -83,28 +83,28 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn faint(self: *Self, ident: u8) !void {
+        pub fn faint(self: Self, ident: u8) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Faint), ident });
         }
 
-        pub fn turn(self: *Self, num: u16) !void {
+        pub fn turn(self: Self, num: u16) !void {
             if (!trace) return;
             try self.writer.writeByte(@enumToInt(ArgType.Turn));
             try self.writer.writeIntNative(u16, num);
         }
 
-        pub fn win(self: *Self, player: Player) !void {
+        pub fn win(self: Self, player: Player) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Win), @enumToInt(player) });
         }
 
-        pub fn tie(self: *Self) !void {
+        pub fn tie(self: Self) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{@enumToInt(ArgType.Tie)});
         }
 
-        pub fn damage(self: *Self, ident: u8, pokemon: *const Pokemon, reason: Damage) !void {
+        pub fn damage(self: Self, ident: u8, pokemon: *const Pokemon, reason: Damage) !void {
             if (!trace) return;
             assert(@enumToInt(reason) <= @enumToInt(Damage.Confusion));
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Damage), ident });
@@ -114,7 +114,7 @@ pub fn Log(comptime Writer: type) type {
         }
 
         pub fn damageOf(
-            self: *Self,
+            self: Self,
             ident: u8,
             pokemon: *const Pokemon,
             reason: Damage,
@@ -128,7 +128,7 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&[_]u8{ pokemon.status, @enumToInt(reason), source });
         }
 
-        pub fn heal(self: *Self, ident: u8, pokemon: *const Pokemon, reason: Heal) !void {
+        pub fn heal(self: Self, ident: u8, pokemon: *const Pokemon, reason: Heal) !void {
             if (!trace) return;
             assert(reason != .Drain);
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Heal), ident });
@@ -137,7 +137,7 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&[_]u8{ pokemon.status, @enumToInt(reason) });
         }
 
-        pub fn drain(self: *Self, source: u8, pokemon: *const Pokemon, target: u8) !void {
+        pub fn drain(self: Self, source: u8, pokemon: *const Pokemon, target: u8) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Heal), source });
             try self.writer.writeIntNative(u16, pokemon.hp);
@@ -145,7 +145,7 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&[_]u8{ pokemon.status, @enumToInt(Heal.Drain), target });
         }
 
-        pub fn status(self: *Self, ident: u8, value: u8, reason: Status) !void {
+        pub fn status(self: Self, ident: u8, value: u8, reason: Status) !void {
             if (!trace) return;
             assert(reason != .From);
             try self.writer.writeAll(&[_]u8{
@@ -156,7 +156,7 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn statusFrom(self: *Self, ident: u8, value: u8, m: Move) !void {
+        pub fn statusFrom(self: Self, ident: u8, value: u8, m: Move) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{
                 @enumToInt(ArgType.Status),
@@ -167,7 +167,7 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn curestatus(self: *Self, ident: u8, value: u8, reason: CureStatus) !void {
+        pub fn curestatus(self: Self, ident: u8, value: u8, reason: CureStatus) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{
                 @enumToInt(ArgType.CureStatus),
@@ -177,7 +177,7 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn boost(self: *Self, ident: u8, reason: Boost, num: u8) !void {
+        pub fn boost(self: Self, ident: u8, reason: Boost, num: u8) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{
                 @enumToInt(ArgType.Boost),
@@ -187,7 +187,7 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn unboost(self: *Self, ident: u8, reason: Boost, num: u8) !void {
+        pub fn unboost(self: Self, ident: u8, reason: Boost, num: u8) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{
                 @enumToInt(ArgType.Unboost),
@@ -197,27 +197,27 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn clearallboost(self: *Self) !void {
+        pub fn clearallboost(self: Self) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{@enumToInt(ArgType.ClearAllBoost)});
         }
 
-        pub fn fail(self: *Self, ident: u8, reason: Fail) !void {
+        pub fn fail(self: Self, ident: u8, reason: Fail) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Fail), ident, @enumToInt(reason) });
         }
 
-        pub fn miss(self: *Self, source: u8, target: u8) !void {
+        pub fn miss(self: Self, source: u8, target: u8) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Miss), source, target });
         }
 
-        pub fn hitcount(self: *Self, ident: u8, num: u8) !void {
+        pub fn hitcount(self: Self, ident: u8, num: u8) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.HitCount), ident, num });
         }
 
-        pub fn prepare(self: *Self, source: u8, m: Move, target: u8) !void {
+        pub fn prepare(self: Self, source: u8, m: Move, target: u8) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{
                 @enumToInt(ArgType.Prepare),
@@ -227,12 +227,12 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn mustrecharge(self: *Self, ident: u8) !void {
+        pub fn mustrecharge(self: Self, ident: u8) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.MustRecharge), ident });
         }
 
-        pub fn activate(self: *Self, ident: u8, reason: Activate) !void {
+        pub fn activate(self: Self, ident: u8, reason: Activate) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{
                 @enumToInt(ArgType.Activate),
@@ -241,12 +241,12 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn fieldactivate(self: *Self) !void {
+        pub fn fieldactivate(self: Self) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{@enumToInt(ArgType.FieldActivate)});
         }
 
-        pub fn start(self: *Self, ident: u8, reason: Start) !void {
+        pub fn start(self: Self, ident: u8, reason: Start) !void {
             if (!trace) return;
             assert(@enumToInt(reason) < @enumToInt(Start.TypeChange));
             try self.writer.writeAll(&[_]u8{
@@ -256,7 +256,7 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn typechange(self: *Self, ident: u8, types: u8) !void {
+        pub fn typechange(self: Self, ident: u8, types: u8) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{
                 @enumToInt(ArgType.Start),
@@ -266,7 +266,7 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn startEffect(self: *Self, ident: u8, reason: Start, m: Move) !void {
+        pub fn startEffect(self: Self, ident: u8, reason: Start, m: Move) !void {
             if (!trace) return;
             assert(@enumToInt(reason) > @enumToInt(Start.TypeChange));
             try self.writer.writeAll(&[_]u8{
@@ -277,32 +277,32 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn end(self: *Self, ident: u8, reason: End) !void {
+        pub fn end(self: Self, ident: u8, reason: End) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.End), ident, @enumToInt(reason) });
         }
 
-        pub fn ohko(self: *Self) !void {
+        pub fn ohko(self: Self) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{@enumToInt(ArgType.OHKO)});
         }
 
-        pub fn crit(self: *Self, ident: u8) !void {
+        pub fn crit(self: Self, ident: u8) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Crit), ident });
         }
 
-        pub fn supereffective(self: *Self, ident: u8) !void {
+        pub fn supereffective(self: Self, ident: u8) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.SuperEffective), ident });
         }
 
-        pub fn resisted(self: *Self, ident: u8) !void {
+        pub fn resisted(self: Self, ident: u8) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Resisted), ident });
         }
 
-        pub fn immune(self: *Self, ident: u8, reason: Immune) !void {
+        pub fn immune(self: Self, ident: u8, reason: Immune) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{
                 @enumToInt(ArgType.Immune),
@@ -311,17 +311,17 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn transform(self: *Self, source: u8, target: u8) !void {
+        pub fn transform(self: Self, source: u8, target: u8) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Transform), source, target });
         }
 
-        pub fn laststill(self: *Self) !void {
+        pub fn laststill(self: Self) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{@enumToInt(ArgType.LastStill)});
         }
 
-        pub fn lastmiss(self: *Self) !void {
+        pub fn lastmiss(self: Self) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{@enumToInt(ArgType.LastMiss)});
         }

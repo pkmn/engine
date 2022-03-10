@@ -235,7 +235,7 @@ pub fn swtch(slot: u4) Choice {
 fn update(battle: anytype, c1: Choice, c2: Choice) !Result {
     var log: protocol.Log(@TypeOf(std.io.null_writer)) = .{.writer = std.io.null_writer};
     if (battle.turn == 0) try expectEqual(Result.Default, try battle.update(.{}, .{}, &log));
-    return battle.update(c1, c2, &log);
+    return battle.update(c1, c2, log);
 }
 
 test "Battle" {
@@ -271,7 +271,7 @@ test "switching" {
 
 // var buf = [_]u8{0} ** 7;
 // var log: Log = .{ .writer = std.io.fixedBufferStream(&buf).writer() };
-// _ = try battle.update(.{ .type = .Move, .data = 4 }, .{ .type = .Switch, .data = 1 }, &log);
+// _ = try battle.update(.{ .type = .Move, .data = 4 }, .{ .type = .Switch, .data = 1 }, log);
 // try expectLog(&(START ++ [_]u8{}), &buf);
 
 // // Moves

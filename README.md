@@ -82,7 +82,7 @@ const battle = new Battle(gens.get(1), team1, team2);
 Battle *battle = ....;
 result_t result;
 choice_t c1 = 0, c2 = 0;
-while (!RESULT_TYPE(result = battle->update(c1, c2, &log))) {
+while (!RESULT_TYPE(result = battle->update(c1, c2, log))) {
   c1 = choose(p1, RESULT_P1(result));
   c2 = choose(p2, RESULT_P2(result));
 }
@@ -98,8 +98,8 @@ var p2 = ...
 var c1 = pkmn.Choice{};
 var c2 = pkmn.Choice{};
 
-var result = try battle.update(c1, c2, &log);
-while (result.type == .None) : (result = try battle.update(c1, c2, &log)) {
+var result = try battle.update(c1, c2, log);
+while (result.type == .None) : (result = try battle.update(c1, c2, log)) {
     c1 = p1.choose(result.p1);
     c2 = p2.choose(result.p2);
 }

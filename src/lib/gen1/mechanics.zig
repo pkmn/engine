@@ -529,6 +529,7 @@ pub const Effects = struct {
     }
 
     fn haze(battle: anytype, player: Player, log: anytype) !void {
+        // FIXME if showdown logic
         var side = battle.side(player);
         var foe = battle.foe(player);
 
