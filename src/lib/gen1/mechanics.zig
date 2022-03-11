@@ -316,6 +316,7 @@ fn adjustDamage(battle: anytype, player: Player, damage: u16) u16 {
 fn randomizeDamage(battle: anytype, damage: u16) u16 {
     if (damage <= 1) return damage;
 
+    // NB: these values can diverge
     const random = if (showdown)
         battle.rng.range(217, 256)
     else loop: {
