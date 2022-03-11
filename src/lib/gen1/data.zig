@@ -365,6 +365,9 @@ test "Types" {
     const t: Types = .{ .type1 = .Rock, .type2 = .Ground };
     try expect(!t.immune(.Grass));
     try expect(t.immune(.Electric));
+
+    try expect(!t.includes(.Fire));
+    try expect(t.includes(.Rock));
 }
 
 // @test-only

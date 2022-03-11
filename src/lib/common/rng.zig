@@ -189,10 +189,7 @@ fn getRangeDivisor(comptime gen: comptime_int) comptime_int {
     };
 }
 
-// @test-only
 pub fn FixedRNG(comptime gen: comptime_int, comptime len: usize) type {
-    assert(builtin.is_test);
-
     const divisor = getRangeDivisor(gen);
 
     return extern struct {
@@ -280,6 +277,9 @@ pub const Random = struct {
 
 //         const a = rng1.range(0, 2) == 0;
 //         const b = rng2.next() < Gen12.percent(50) + 1;
+
+//         const a = rng1.chance(93, 256);
+//         const b = rng2.next() < 93;
 
 //         try expectEqual(a, b);
 //     }

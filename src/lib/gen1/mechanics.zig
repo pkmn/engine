@@ -18,6 +18,7 @@ const Move = data.Move;
 const Player = data.Player;
 const Result = data.Result;
 const Side = data.Side;
+const Species = data.Species;
 const Stats = data.Stats;
 const Status = data.Status;
 
@@ -99,6 +100,7 @@ fn selectMove(battle: anytype, player: Player, choice: Choice) void {
             }
             break :ok true;
         };
+
         assert(struggle);
         side.last_selected_move = .Struggle;
     } else {
@@ -115,21 +117,22 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anyty
     var side = battle.side(player);
     var active = &side.active;
     const incoming = side.get(slot);
-    assert(incoming.hp != 0);
 
+    assert(incoming.hp != 0);
     assert(slot != 1 or initial);
+
     const out = side.order[0];
     side.order[0] = side.order[slot - 1];
     side.order[slot - 1] = out;
 
     active.stats = incoming.stats;
     active.volatiles = .{};
-    for (incoming.moves) |move, j| {
-        active.moves[j] = move;
-    }
     active.boosts = .{};
     active.species = incoming.species;
     active.types = incoming.types;
+    for (incoming.moves) |move, j| {
+        active.moves[j] = move;
+    }
 
     if (Status.is(incoming.status, .PAR)) {
         active.stats.spe = @maximum(active.stats.spe / 4, 1);
@@ -202,7 +205,7 @@ fn checkEBC(battle: anytype) bool {
         for (battle.sides[~@truncate(u1, i)].pokemon) |pokemon| {
             if (pokemon.species == .None) continue;
 
-            const ghost = pokemon.types.type1 == .Ghost or pokemon.types.type2 == .Ghost;
+            const ghost = pokemon.types.includes(.Ghost);
             foe_all_ghosts = foe_all_ghosts and ghost;
             foe_all_transform = foe_all_transform and transform: {
                 for (pokemon.moves) |m| {
@@ -254,12 +257,75 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !v
         // handleCounter() => moveEffects(counter) ?
         // handleMiss
         // getDamageVars
+
+        // if (move.effect == .OHKO) {
+
+        // } else if (move.bp != 0) {
+        //     calcDamage();
+
+        // }
+
         // calcDamage()
         // adjustDamage()
         // randomizeDamage
     }
     // checkHit
     // TODO
+}
+
+fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data) bool {
+    const side = battle.side(player);
+
+    var chance = Species.get(battle.active.species).stats.spe / 2;
+
+    // NB: Focus Energy reduces critical hit chance instead of increasing it
+    chance = if (side.active.volatiles.FocusEnergy)
+        chance / 2
+    else
+        @minimum(chance * 2, 255);
+
+    chance = if (move.effect == .HighCritical)
+        @minimum(chance * 4, 255)
+    else
+        chance / 2;
+
+    if (showdown) return battle.rng.chance(chance, 256);
+    // NB: these values will diverge (due to rotations)
+    return std.math.rotl(u8, battle.rng.next(), 3) < chance;
+}
+
+fn calcDamage(atk: u16, def: u16, lvl: u16, m: Move.Data) u16 {
+    var d = if (m.effect == .Explode) def / 2 else def;
+    return @minimum(997, ((lvl *% 2 / 5) +% 2) *% m.bp *% atk / d / 50) + 2;
+}
+
+fn adjustDamage(battle: anytype, player: Player, damage: u16) u16 {
+    const side = battle.side(player);
+    const foe = battle.foe(player);
+    const move = Move.get(side.last_selected_move);
+
+    var d = damage;
+    if (side.active.types.includes(move.type)) d *%= 2;
+
+    d = d *% move.type.effectiveness(foe.active.types.type1) / 10;
+    d = d *% move.type.effectiveness(foe.active.types.type2) / 10;
+
+    return d;
+}
+
+fn randomizeDamage(battle: anytype, damage: u16) u16 {
+    if (damage <= 1) return damage;
+
+    const random = if (showdown)
+        battle.rng.range(217, 256)
+    else loop: {
+        while (true) {
+            const r = battle.rng.next();
+            if (r >= 217) break :loop r;
+        }
+    };
+
+    return damage *% random / 255;
 }
 
 // TODO return an enum instead of bool to handle multiple cases
@@ -667,7 +733,7 @@ fn clearVolatiles(active: *ActivePokemon, ident: u8, log: anytype) !void {
         try log.end(ident, .DisableSilent);
     }
     if (volatiles.Confusion) {
-        // NB: leave volatiles.data.confusion unchanged
+        // NB: volatiles.data.confusion is left unchanged
         volatiles.Confusion = false;
         try log.end(ident, .ConfusionSilent);
     }

@@ -68,4 +68,8 @@ pub const Types = packed struct {
     pub fn immune(self: Types, t: Type) bool {
         return t.effectiveness(self.type1) == I or t.effectiveness(self.type2) == I;
     }
+
+    pub fn includes(self: Types, t: Type) bool {
+        return self.type1 == t or self.type2 == t;
+    }
 };
