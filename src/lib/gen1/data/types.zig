@@ -52,6 +52,10 @@ pub const Type = enum(u4) {
         assert(@sizeOf(@TypeOf(chart)) == 225);
     }
 
+    pub fn special(self: Type) bool {
+        return @enumToInt(self) >= @enumToInt(Type.Fire);
+    }
+
     pub fn effectiveness(t1: Type, t2: Type) Effectiveness {
         return chart[@enumToInt(t1)][@enumToInt(t2)];
     }

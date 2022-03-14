@@ -357,6 +357,9 @@ test "Types" {
     try expectEqual(14, @enumToInt(Type.Dragon));
     try expectEqual(20, @enumToInt(Effectiveness.Super));
 
+    try expect(!Type.Ghost.special());
+    try expect(Type.Dragon.special());
+
     try expectEqual(Effectiveness.Immune, Type.effectiveness(.Ghost, .Psychic));
     try expectEqual(Effectiveness.Super, Type.Water.effectiveness(.Fire));
     try expectEqual(Effectiveness.Resisted, Type.effectiveness(.Fire, .Water));

@@ -342,6 +342,10 @@ pub const Effectiveness = gen1.Effectiveness;
 
 test "Types" {
     try expectEqual(13, @enumToInt(Type.Electric));
+
+    try expect(!Type.Steel.special());
+    try expect(Type.Dark.special());
+
     try expectEqual(Effectiveness.Super, Type.effectiveness(.Ghost, .Psychic));
     try expectEqual(Effectiveness.Super, Type.effectiveness(.Water, .Fire));
     try expectEqual(Effectiveness.Resisted, Type.effectiveness(.Fire, .Water));
