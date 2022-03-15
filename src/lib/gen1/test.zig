@@ -131,7 +131,15 @@ pub const Side = struct {
                     if (rand.chance(1, 18)) {
                         @field(volatiles, field.name) = true;
                         if (std.mem.eql(u8, field.name, "Bide")) {
-                            volatiles.data.bide = rand.range(u16, 1, active.stats.hp - 1);
+                            volatiles.data.state = rand.range(u16, 1, active.stats.hp - 1);
+                        } else if (std.mem.eql(u8, field.name, "Trapping")) {
+                            volatiles.data.attacks = 0; // TODO
+                        } else if (std.mem.eql(u8, field.name, "Thrashing")) {
+                            volatiles.data.attacks = 0; // TODO
+                            volatiles.data.state = 0; // TODO
+                        } else if (std.mem.eql(u8, field.name, "Rage")) {
+                            volatiles.data.attacks = 0; // TODO
+                            volatiles.data.state = 0; // TODO
                         } else if (std.mem.eql(u8, field.name, "Confusion")) {
                             volatiles.data.confusion = rand.range(u4, 1, 5);
                         } else if (std.mem.eql(u8, field.name, "Toxic")) {
@@ -495,6 +503,8 @@ test "switching" {
 // }
 
 // // Move.Counter
+// // TODO: https://glitchcity.wiki/Counter_glitches_(Generation_I)
+// // TODO: https://www.youtube.com/watch?v=ftTalHMjPRY
 // test "Counter" {
 //     // Deals damage to the opposing Pokemon equal to twice the damage dealt by the last move used in
 //     // the battle. This move ignores type immunity. Fails if the user moves first, or if the
@@ -611,6 +621,7 @@ test "switching" {
 // }
 
 // // Move.Haze
+// // TODO: https://www.youtube.com/watch?v=gXQlct-DvVg
 // test "Haze" {
 //     // Resets the stat stages of both Pokemon to 0 and removes stat reductions due to burn and
 //     // paralysis. Resets Toxic counters to 0 and removes the effect of confusion, Disable, Focus
@@ -630,6 +641,7 @@ test "switching" {
 // // Move.Bide
 // // TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Bide_errors
 // // TODO: https://glitchcity.wiki/Bide_fainted_Pokémon_damage_accumulation_glitch
+// // TODO: https://www.youtube.com/watch?v=IVxHGyNDW4g
 // test "Bide" {
 //     // The user spends two or three turns locked into this move and then, on the second or third
 //     // turn after using this move, the user attacks the opponent, inflicting double the damage in HP
@@ -756,6 +768,14 @@ test "switching" {
 // test "Partial trapping move Mirror Move glitch" {
 //     //  https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
 //     return error.SkipZigTest;
+// }
+
+// test "Rage and Thrash / Petal Dance accuracy bug" {
+//     // https://www.youtube.com/watch?v=NC5gbJeExbs
+// }
+
+// test "Stat down modifier overflow glitch" {
+//     // https://www.youtube.com/watch?v=y2AOm7r39Jg
 // }
 
 // BUG: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Dual-type_damage_misinformation

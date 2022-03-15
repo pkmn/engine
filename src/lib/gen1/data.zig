@@ -236,7 +236,8 @@ pub const Volatiles = packed struct {
     _: u6 = 0,
 
     pub const Data = packed struct {
-        bide: u16 = 0,
+        // NB: used for both bide and accuracy overwriting!
+        state: u16 = 0,
         substitute: u8 = 0,
         disabled: Disabled = .{},
         confusion: u4 = 0,

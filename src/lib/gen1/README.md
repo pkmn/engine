@@ -13,7 +13,7 @@ The following information is required to simulate a Generation I Pokémon battle
 | `side.team`                 | `PartyMons`                        | `side.pokemon`                         |
 | `side.last_used_move`       | `PlayerUsedMove`                   | `side.lastMove`                        |
 | `side.last_selected_move`   | `PlayerSelectedMove`               | `side.lastSelectedMove`                |
-| `pokemon.position`          | `TODO`                             | `pokemon.position`                     |
+| `side.order`                |                                    | `pokemon.position`                     |
 | `{pokemon,active}.moves`    | `{party,battle}_struct.{Moves,PP}` | `pokemon.{baseMoveSlots,moveSlots}`    |
 | `{pokemon,active}.hp`       | `{party,battle}_struct.HP`         | `pokemon.hp`                           |
 | `{pokemon,active}.status`   | `{party,battle}_struct.Status`     | `pokemon.status`                       |
@@ -25,7 +25,7 @@ The following information is required to simulate a Generation I Pokémon battle
 | `{pokemon,active}.types`    | `{party,battle}_struct.Type`       | `pokemon.types`                        |
 | `active.boosts`             | `PlayerMon*Mod`                    | `pokemon.boosts`                       |
 | `active.volatiles`          | `PlayerBattleStatus{1,2,3}`        | `pokemon.volatiles`                    |
-| `volatiles.data.bide`       | `PlayerBideAccumulatedDamage`      | `volatiles.bide.totalDamage`           |
+| `volatiles.data.state`      | `PlayerBideAccumulatedDamage`      | `volatiles.bide.totalDamage`           |
 | `volatiles.data.attacks`    | `PlayerNumAttacksLeft`             | `volatiles.{bide,lockedmove}.duration` |
 | `volatiles.data.confusion`  | `PlayerConfusedCounter`            | `volatiles.confusion.duration`         |
 | `volatiles.data.toxic`      | `PlayerToxicCounter`               | `volatiles.residualdmg.counter`        |
@@ -36,7 +36,7 @@ The following information is required to simulate a Generation I Pokémon battle
   different
 - `battle.turn` only needs to be tracked in order to be compatible with the Pokémon Showdown
   protocol
-- Battle results (win, lose, draw) or request states are communicated via the return code of
+- Battle results (win, lose, draw) and request states are communicated via the return value of
   `Battle.update`
 - Nicknames (`BattleMonNick`/`pokemon.name`) are not handled by the pkmn engine as they are expected
   to be handled by driver code if required
@@ -49,6 +49,9 @@ The following information is required to simulate a Generation I Pokémon battle
 - pkmn does not store the DVs/stat experience of Pokémon as they are expected to already be
   accounted for in the `Pokemon` `stats` and never need to be referenced in-battle (though the `DVs`
   struct exists to simplify generating legal test data)
+- pkmn uses `volatiles.data.state` for total accumulated damage for Bide but also for implementing
+  accuracy overwrite mechanics for certain moves (this glitch is present on the device but is not
+  correctly implemented by Pokémon Showdown currently)
 
 ### `Battle` / `Side`
 
@@ -124,17 +127,18 @@ boolean flags that are cleared when the Pokémon faints or switches out:
 [Toxic](https://pkmn.cc/bulba/Toxic_(move)) (counter) all require additional information to be
 stored by the `Volatiles.Data` structure.
 
+The `state` field of `Volatiles.Data` is effectively treated as a union:
+
+- if `volatiles.Bide` is set, `volatiles.data.state` reflects the total accumulated Bide damage
+- otherwise, `volatiles.data.state` reflects the last computed move accuracy (required in order to
+  implement the [Rage and Thrash / Petal Dance accuracy
+  bug](https://www.youtube.com/watch?v=NC5gbJeExbs))
+
 #### `Stats` / `Boosts`
 
 [Stats](https://pkmn.cc/bulba/Stat) and [boosts (stat
 modifiers)](https://pkmn.cc/bulba/Stat#Stat_modifiers) are stored logically, with the exception that
-boosts should always range from `-6`...`6` instead of `1`...`13` as on the cartridge. Furthermore,
-only 12 bits are allocated for each `Stat` in `Pokemon` compared to 16 in `ActivePokemon` - in
-Generation I the maximum stat value is 999 so only 10 bits are required, but 16 bit values are more
-efficient for the computer to deal with. 12 bits are used in `Pokemon` as it results in space
-savings and minimizes padding required as the only time the `Pokemon` structure's stats are touched
-is when they are copied during switch-in meaning slightly inefficient access is less punishing
-performance-wise.
+boosts should always range from `-6`...`6` instead of `1`...`13` as on the cartridge.
   
 ### `Move` / `Move.Data`
 
@@ -183,7 +187,7 @@ entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as foll
 | **status**      | 0...10  | 4    |     | **effectiveness** | 0...3    | 2    |
 | **type**        | 0...15  | 4    |     | **accuracy**      | 6...20   | 4    |
 | **disabled**    | 0...7   | 3    |     | **DVs**           | 0...15   | 4    |
-| **move effect** | 0..67   | 7    |     |                   |          |      |
+| **move effect** | 0..66   | 7    |     | **attacks**       | 0..4     | 3    |
 
 From this we can determine the minimum bits required to store each data structure to determine how
 much overhead the representations above have after taking into consideration [alignment &

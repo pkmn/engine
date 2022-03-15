@@ -1112,6 +1112,10 @@
 //     return error.SkipZigTest;
 // }
 
+// TODO: https://bulbapedia.bulbagarden.net/wiki/List_of_glitches_(Generation_II)
+// TODO: https://glitchcity.wiki/Category:Generation_II_glitches
+// TODO: https://www.youtube.com/c/Crystal_2/videos
+
 comptime {
     _ = @import("data.zig");
 }
