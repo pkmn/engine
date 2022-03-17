@@ -190,7 +190,7 @@ pub const Move = enum(u8) {
             assert(@sizeOf(Data) == 3);
         }
 
-        pub fn accuracy(self: Data) u8 {
+        pub inline fn accuracy(self: Data) u8 {
             return (@as(u8, self.acc) + 6) * 5;
         }
     };
@@ -1355,87 +1355,87 @@ pub const Move = enum(u8) {
 
     pub const Effect = enum(u8) {
         None,
-        SwitchAndTeleport,
         Confusion,
-        Mist,
-        LeechSeed,
-        Poison,
-        Paralyze,
-        Mimic,
-        Heal,
-        LightScreen,
-        Haze,
-        Reflect,
-        FocusEnergy,
-        Transform,
-        Splash,
         Conversion,
+        FocusEnergy,
+        Haze,
+        Heal,
+        LeechSeed,
+        LightScreen,
+        Mimic,
+        Mist,
+        Paralyze,
+        Poison,
+        Reflect,
+        Splash,
         Substitute,
-        AttackUp2,
+        SwitchAndTeleport,
+        Transform,
         AccuracyDown1,
-        DefenseDown1,
         AttackDown1,
-        Sleep,
-        SpecialUp1,
-        SpeedDown1,
         AttackUp1,
-        SpeedUp2,
+        AttackUp2,
+        Bide,
+        DefenseDown1,
         DefenseDown2,
-        EvasionUp1,
         DefenseUp1,
         DefenseUp2,
-        Bide,
+        EvasionUp1,
+        Sleep,
+        SpecialUp1,
         SpecialUp2,
+        SpeedDown1,
+        SpeedUp2,
+        Charge,
+        DoubleHit,
+        DrainHP,
+        DreamEater,
+        Explode,
+        JumpKick,
         MultiHit,
         PayDay,
-        Charge,
-        Trapping,
-        DoubleHit,
-        JumpKick,
         Recoil,
-        Thrashing,
         SpecialDamage,
-        DrainHP,
-        Explode,
-        Swift,
-        DreamEater,
         SuperFang,
-        HighCritical,
-        BurnChance1,
-        FreezeChance,
-        ParalyzeChance1,
-        OHKO,
-        FlinchChance2,
-        ParalyzeChance2,
-        PoisonChance1,
-        Twineedle,
-        FlinchChance1,
-        Disable,
-        DefenseDownChance,
-        ConfusionChance,
-        SpeedDownChance,
+        Swift,
+        Thrashing,
+        Trapping,
         AttackDownChance,
+        BurnChance1,
+        BurnChance2,
+        ConfusionChance,
+        DefenseDownChance,
+        Disable,
+        FlinchChance1,
+        FlinchChance2,
+        FreezeChance,
+        HighCritical,
         HyperBeam,
-        SpecialDownChance,
-        Rage,
         Metronome,
         MirrorMove,
+        OHKO,
+        ParalyzeChance1,
+        ParalyzeChance2,
+        PoisonChance1,
         PoisonChance2,
-        BurnChance2,
+        Rage,
+        SpecialDownChance,
+        SpeedDownChance,
+        Twineedle,
 
         comptime {
             assert(@sizeOf(Effect) == 1);
         }
 
-        pub fn residual1(effect: Effect) bool {
+        pub inline fn residual1(effect: Effect) bool {
             return @enumToInt(effect) > 0 and @enumToInt(effect) <= 16;
         }
 
-        pub fn residual2(effect: Effect) bool {
+        pub inline fn residual2(effect: Effect) bool {
             return @enumToInt(effect) > 16 and @enumToInt(effect) <= 31;
         }
 
-        pub fn special(effect: Effect) bool {
+        pub inline fn special(effect: Effect) bool {
             return @enumToInt(effect) > 31 and @enumToInt(effect) <= 45;
         }
     };
@@ -1614,7 +1614,7 @@ pub const Move = enum(u8) {
         assert(@sizeOf(@TypeOf(data)) == 495);
     }
 
-    pub fn get(id: Move) Data {
+    pub inline fn get(id: Move) Data {
         assert(id != .None);
         return data[@enumToInt(id) - 1];
     }

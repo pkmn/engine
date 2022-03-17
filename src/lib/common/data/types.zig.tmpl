@@ -24,11 +24,11 @@ pub const Type = enum({{{ Type.type }}}) {
         assert(@sizeOf(@TypeOf(chart)) == {{{ Type.chartSize }}});
     }
 
-    pub fn special(self: Type) bool {
+    pub inline fn special(self: Type) bool {
         return @enumToInt(self) >= @enumToInt(Type.Fire);
     }
 
-    pub fn effectiveness(t1: Type, t2: Type) Effectiveness {
+    pub inline fn effectiveness(t1: Type, t2: Type) Effectiveness {
         return chart[@enumToInt(t1)][@enumToInt(t2)];
     }
 };
@@ -41,11 +41,11 @@ pub const Types = {{{ Types.qualifier }}} struct {
         assert(@bitSizeOf(Types) == {{{ Types.bitSize }}});
     }
 
-    pub fn immune(self: Types, t: Type) bool {
+    pub inline fn immune(self: Types, t: Type) bool {
         return t.effectiveness(self.type1) == I or t.effectiveness(self.type2) == I;
     }
 
-    pub fn includes(self: Types, t: Type) bool {
+    pub inline fn includes(self: Types, t: Type) bool {
         return self.type1 == t or self.type2 == t;
     }
 };

@@ -70,7 +70,7 @@ should notify you with these options when you attempt to install the package.
 ```ts
 import {Dex} from '@pkmn/dex';
 import {Generations} from '@pkmn/data';
-import {Battle} from `@pkmn/engine`;
+import {Battle} from '@pkmn/engine';
 
 const gens = new Generations(Dex);
 const battle = new Battle(gens.get(1), team1, team2);

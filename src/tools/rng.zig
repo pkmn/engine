@@ -52,12 +52,12 @@ pub fn main() !void {
         const match = match: {
             switch (tool) {
                 .crit => {
-                    const a = rng1.chance(CRIT, 256);
+                    const a = rng1.chance(u8, CRIT, 256);
                     const b = std.math.rotl(u8, rng2.next(), 3) < CRIT;
                     break :match a == b;
                 },
                 .thrash => {
-                    const a = rng1.range(3, 5);
+                    const a = rng1.range(u8, 3, 5);
                     const b = (rng2.next() & 3) + 2;
                     break :match a == b;
                 },

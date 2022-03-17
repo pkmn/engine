@@ -58,11 +58,11 @@ pub const Type = enum(u8) {
         assert(@sizeOf(@TypeOf(chart)) == 324);
     }
 
-    pub fn special(self: Type) bool {
+    pub inline fn special(self: Type) bool {
         return @enumToInt(self) >= @enumToInt(Type.Fire);
     }
 
-    pub fn effectiveness(t1: Type, t2: Type) Effectiveness {
+    pub inline fn effectiveness(t1: Type, t2: Type) Effectiveness {
         return chart[@enumToInt(t1)][@enumToInt(t2)];
     }
 };
@@ -75,11 +75,11 @@ pub const Types = extern struct {
         assert(@bitSizeOf(Types) == 16);
     }
 
-    pub fn immune(self: Types, t: Type) bool {
+    pub inline fn immune(self: Types, t: Type) bool {
         return t.effectiveness(self.type1) == I or t.effectiveness(self.type2) == I;
     }
 
-    pub fn includes(self: Types, t: Type) bool {
+    pub inline fn includes(self: Types, t: Type) bool {
         return self.type1 == t or self.type2 == t;
     }
 };

@@ -24,9 +24,19 @@ const Status = data.Status;
 
 // zig fmt: off
 const BOOSTS = &[_][2]u8{
-    .{ 25, 100 }, .{ 28, 100 }, .{ 33, 100 }, .{ 40, 100 }, .{ 50, 100 }, .{ 66, 100 },
-    .{ 1, 1 },
-    .{ 15, 10 },  .{ 2, 1 },    .{ 25, 10 },  .{ 3, 1 },    .{ 35, 10 },  .{ 4, 1 },
+    .{ 25, 100 }, // -6
+    .{ 28, 100 }, // -5
+    .{ 33, 100 }, // -4
+    .{ 40, 100 }, // -3
+    .{ 50, 100 }, // -2
+    .{ 66, 100 }, // -1
+    .{   1,  1 }, //  0
+    .{ 15,  10 }, // +1
+    .{  2,   1 }, // +2
+    .{ 25,  10 }, // +3
+    .{  3,   1 }, // +4
+    .{ 35,  10 }, // +5
+    .{  4,   1 }, // +6
 };
 // zig fmt: on
 
@@ -78,6 +88,7 @@ fn findFirstAlive(side: *const Side) u8 {
     return 0;
 }
 
+// FIXME decrementPP?
 fn selectMove(battle: anytype, player: Player, choice: Choice) void {
     var side = battle.side(player);
     var volatiles = &side.active.volatiles;
@@ -173,7 +184,7 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     const spe2 = battle.side(.P2).active.stats.spe;
     if (spe1 == spe2) {
         const p1 = if (showdown)
-            battle.rng.range(0, 2) == 0
+            battle.rng.range(u8, 0, 2) == 0
         else
             battle.rng.next() < Gen12.percent(50) + 1;
         return if (p1) .P1 else .P2;
@@ -257,6 +268,7 @@ fn checkEBC(battle: anytype) bool {
 
 fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !void {
     var side = battle.side(player);
+    const foe = battle.foe(player);
     if (side.last_selected_move == .SKIP_TURN) return;
     if (choice.type == .Switch) return switchIn(battle, player, choice.data, false, log);
 
@@ -266,7 +278,27 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !v
 
     const move = Move.get(side.last_selected_move);
     if (move.effect == .SuperFang or move.effect == .SpecialDamage) {
-        // checkHit
+        // TODO checkHit
+        battle.last_damage = switch (side.last_selected_move) {
+            .SuperFang => @maximum(foe.active.stats.hp / 2, 1),
+            .SeismicToss, .NightShade => side.stored().level,
+            .SonicBoom => 20,
+            .DragonRage => 40,
+            // NB: if power = 0 then a desync occurs (or a miss on Pokémon Showdown)
+            .Psywave => power: {
+                const max = @truncate(u8, @as(u15, side.stored().level) * 3 / 2);
+                // NB: these values will diverge
+                if (showdown) {
+                    break :power battle.rng.range(u8, 0, max);
+                } else {
+                    while (true) {
+                        const r = battle.rng.next();
+                        if (r < max) break :power r;
+                    }
+                }
+            },
+            else => unreachable,
+        };
         return; // TODO
     }
 
@@ -275,7 +307,6 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !v
 
     // NB: Counter desync due to changing move selection prior to switching is not supported
     if (side.last_selected_move == .Counter) {
-        // FIXME move to moveEffect()
         const foe_last_move = Move.get(foe.last_selected_move);
         const miss = foe_last_move.bp == 0 or
             foe.last_selected_move == .Counter or
@@ -283,7 +314,11 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !v
             foe_last_move.type != .Fighting or
             battle.last_damage == 0;
         const damage = if (battle.last_damage > 0x7FFF) 0xFFFF else battle.last_damage * 2;
-        return; // TODO checkHit, then skip
+
+        // TODO checkHit, then skip if miss
+        _ = miss;
+        _ = damage;
+        return;
     }
 
     battle.last_damage = 0;
@@ -291,9 +326,13 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !v
     if (move.effect == .OHKO) {
         const miss = side.active.stats.spe < foe.active.stats.spe;
         // NB: this can overflow after adjustDamage, but will still be sufficient to OHKO
-        const damage = if (miss) 0 else 0xFFFF;
+        const damage: u16 = if (miss) 0 else 0xFFFF;
         const ohko = !miss;
+
         // TODO
+        _ = miss;
+        _ = damage;
+        _ = ohko;
     }
 
     if (move.bp == 0) {
@@ -314,19 +353,32 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !v
             // FIXME side.last_selected_move = foe.last_used_move;
             return executeMove(battle, player, choice, log);
         }
-
     } else if (move.effect == .Metronome) {
-        // TODO
+        // FIXME: test this + show where differs
+        // NB: these values will diverge
+        const random = if (showdown) blk: {
+            const r = battle.rng.range(u8, 0, @enumToInt(Move.Struggle) - 2);
+            break :blk @intToEnum(Move, r + @as(u2, (if (r < @enumToInt(Move.Metronome)) 1 else 2)));
+        } else loop: {
+            while (true) {
+                const r = battle.rng.next();
+                if (r == 0 or r == @enumToInt(Move.Metronome)) continue;
+                if (r >= @enumToInt(Move.Struggle)) continue;
+                break :loop @intToEnum(Move, r);
+            }
+        };
+
+        _ = random; // FIXME side.last_selected_move = random
         return executeMove(battle, player, choice, log);
     }
 
-      if (move.effect.residual2()) {
+    if (move.effect.residual2()) {
         try moveEffect(battle, player, move, log);
         return;
     }
 
-    // checkHit
     // TODO
+    _ = hit;
 }
 
 // TODO return an enum instead of bool to handle multiple cases
@@ -389,7 +441,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
             try log.activate(ident, .Confusion);
 
             const confused = if (showdown)
-                !battle.rng.chance(128, 256)
+                !battle.rng.chance(u8, 128, 256)
             else
                 battle.rng.next() >= Gen12.percent(50) + 1;
 
@@ -415,7 +467,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
 
     if (Status.is(stored.status, .PAR)) {
         const paralyzed = if (showdown)
-            battle.rng.chance(63, 256)
+            battle.rng.chance(u8, 63, 256)
         else
             battle.rng.next() < Gen12.percent(25);
 
@@ -460,7 +512,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
             volatiles.Confusion = true;
             // NB: these values will diverge
             volatiles.data.confusion = @truncate(u4, if (showdown)
-                battle.rng.range(3, 5)
+                battle.rng.range(u8, 3, 5)
             else
                 (battle.rng.next() & 3) + 2);
             try log.start(ident, .ConfusionSilent);
@@ -510,7 +562,7 @@ fn canExecute(battle: anytype, player: Player, log: anytype) !bool {
 fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data) bool {
     const side = battle.side(player);
 
-    var chance = Species.get(battle.active.species).stats.spe / 2;
+    var chance = Species.chance(side.active.species);
 
     // NB: Focus Energy reduces critical hit chance instead of increasing it
     chance = if (side.active.volatiles.FocusEnergy)
@@ -523,7 +575,7 @@ fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data) bool {
     else
         chance / 2;
 
-    if (showdown) return battle.rng.chance(chance, 256);
+    if (showdown) return battle.rng.chance(u8, chance, 256);
     // NB: these values will diverge (due to rotations)
     return std.math.rotl(u8, battle.rng.next(), 3) < chance;
 }
@@ -549,8 +601,10 @@ fn calcDamage(battle: anytype, player: Player, move: Move.Data, crit: bool) u16 
             else foe.stored().stats.def
         else
             // NB: not capped to MAX_STAT_VALUE, can be 999 * 2 = 1998
-            if (special) foe.active.stats.spc *% (if (foe.active.volatiles.LightScreen) 2 else 1)
-            else foe.active.stats.def *% (if (foe.active.volatiles.Reflect) 2 else 1);
+            if (special)
+                foe.active.stats.spc *% @as(u2, if (foe.active.volatiles.LightScreen) 2 else 1)
+            else
+                foe.active.stats.def *% @as(u2, if (foe.active.volatiles.Reflect) 2 else 1);
     // zig fmt: on
 
     if (atk > 0xFF or def > 0xFF) {
@@ -559,11 +613,11 @@ fn calcDamage(battle: anytype, player: Player, move: Move.Data, crit: bool) u16 
         def = @maximum((def / 4) & 0xFF, if (showdown) 1 else 0);
     }
 
-    const lvl = side.active.lvl * (if (crit) 2 else 1);
+    const lvl = side.stored().level * @as(u2, if (crit) 2 else 1);
 
-    def = if (m.effect == .Explode) @maximum(def / 2, 1) else def;
+    def = if (move.effect == .Explode) @maximum(def / 2, 1) else def;
 
-    return @minimum(997, ((lvl *% 2 / 5) +% 2) *% m.bp *% atk / d / 50) + 2;
+    return @minimum(997, ((lvl *% 2 / 5) +% 2) *% move.bp *% atk / def / 50) + 2;
 }
 
 fn adjustDamage(battle: anytype, player: Player, damage: u16) u16 {
@@ -574,8 +628,8 @@ fn adjustDamage(battle: anytype, player: Player, damage: u16) u16 {
     var d = damage;
     if (side.active.types.includes(move.type)) d *%= 2;
 
-    d = d *% move.type.effectiveness(foe.active.types.type1) / 10;
-    d = d *% move.type.effectiveness(foe.active.types.type2) / 10;
+    d = d *% @enumToInt(move.type.effectiveness(foe.active.types.type1)) / 10;
+    d = d *% @enumToInt(move.type.effectiveness(foe.active.types.type2)) / 10;
 
     return d;
 }
@@ -583,9 +637,9 @@ fn adjustDamage(battle: anytype, player: Player, damage: u16) u16 {
 fn randomizeDamage(battle: anytype, damage: u16) u16 {
     if (damage <= 1) return damage;
 
-    // NB: these values can diverge
+    // NB: these values will diverge
     const random = if (showdown)
-        battle.rng.range(217, 256)
+        battle.rng.range(u8, 217, 256)
     else loop: {
         while (true) {
             const r = battle.rng.next();
@@ -610,7 +664,7 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data) bool {
     if (foe.active.volatiles.Mist and
         (move.effect == .AttackDown1 or move.effect == .DefenseDown1 or
         move.effect == .SpeedDown1 or move.effect == .AccuracyDown1 or
-        move.effect == .AttackDown2)) return false;
+        move.effect == .DefenseDown2)) return false;
 
     // NB: Thrash / Petal Dance / Rage get their accuracy overwritten on subsequent hits
     const overwritten = side.active.volatiles.data.state > 0;
@@ -620,18 +674,18 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data) bool {
     else
         @as(u16, move.accuracy());
 
-    var boost = BOOSTS[side.active.boosts.accuracy + 6];
+    var boost = BOOSTS[@intCast(u4, side.active.boosts.accuracy + 6)];
     accuracy = accuracy * boost[0] / boost[1];
-    boost = BOOSTS[-foe.active.boosts.evasion + 6];
+    boost = BOOSTS[@intCast(u4, -foe.active.boosts.evasion + 6)];
     accuracy = accuracy * boost[0] / boost[1];
     accuracy = @minimum(0xFF, @maximum(1, accuracy));
 
     side.active.volatiles.data.state = accuracy;
 
     const miss = if (showdown)
-        !battle.rng.chance(accuracy, 256)
+        !battle.rng.chance(u8, @truncate(u8, accuracy), 256)
     else
-      battle.rng.next() >= accuracy;
+        battle.rng.next() >= accuracy;
 
     if (miss) {
         battle.last_damage = 0;
@@ -639,6 +693,26 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data) bool {
     }
 
     return miss;
+}
+
+fn applyDamage(battle: anytype, player: Player, move: Move.Data) void {
+    assert(move.bp != 0);
+    assert(battle.last_damage != 0);
+
+    var foe = battle.foe(player);
+    if (foe.active.volatiles.Substitute) {
+        // NB: foe.volatiles.data.substitute is a u8 so must be less than 0xFF anyway
+        if (battle.last_damage >= foe.volatiles.data.substitute) {
+            foe.active.volatiles.data.substitute = 0;
+            foe.active.volatiles.Substitute = false;
+            // NB: battle.last_damage is not updated with the amount of HP the Substitute had
+        } else {
+            foe.active.volatiles.data.substitute -= battle.last_damage;
+        }
+    } else {
+        if (battle.last_damage > foe.active.hp) battle.last_damage = foe.active.hp;
+        foe.active.hp -= battle.last_damage;
+    }
 }
 
 fn checkFaint(battle: anytype, player: Player, recurse: bool, log: anytype) !?Result {
@@ -725,19 +799,86 @@ fn decrementPP(side: *Side, choice: Choice) void {
 
 fn moveEffect(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
     return switch (move.effect) {
+        .Bide => Effects.bide(battle, player, log),
+        .BurnChance1, .BurnChance2 => Effects.burnChance(battle, player, move, log),
         .Charge => Effects.charge(battle, player, log),
+        .Confusion, .ConfusionChance => Effects.confusion(battle, player, move, log),
         .Conversion => Effects.conversion(battle, player, log),
+        .Disable => Effects.disable(battle, player, move, log),
+        .DrainHP, .DreamEater => Effects.drainHP(battle, player, log),
+        .Explode => Effects.explode(battle, player),
+        .FlinchChance1, .FlinchChance2 => Effects.flinchChance(battle, player, move),
+        .FocusEnergy => Effects.focusEnergy(battle, player, log),
+        .FreezeChance => Effects.freezeChance(battle, player, move, log),
         .Haze => Effects.haze(battle, player, log),
         .Heal => Effects.heal(battle, player, log),
+        .HyperBeam => Effects.hyperBeam(battle, player),
+        .LeechSeed => Effects.leechSeed(battle, player, log),
         .LightScreen => Effects.lightScreen(battle, player, log),
-        .PayDay => Effects.payDay(log),
+        .Mimic => Effects.mimic(battle, player, log),
+        .Mist => Effects.mist(battle, player, log),
+        .MultiHit, .DoubleHit, .Twineedle => Effects.multiHit(battle, player, move, log),
         .Paralyze => Effects.paralyze(battle, player, move, log),
+        .ParalyzeChance1, .ParalyzeChance2 => Effects.paralyzeChance(battle, player, move, log),
+        .PayDay => Effects.payDay(log),
+        .Poison, .PoisonChance1, .PoisonChance2 => Effects.paralyze(battle, player, move, log),
+        .Rage => Effects.rage(battle, player),
+        .Recoil => Effects.recoil(battle, player, log),
         .Reflect => Effects.reflect(battle, player, log),
+        .Sleep => Effects.sleep(battle, player, move, log),
+        .Splash => Effects.splash(battle, player, log),
+        .SwitchAndTeleport => {}, // does nothing outside of wild battles
+        .Thrashing => Effects.thrashing(battle, player),
+        .Transform => Effects.transform(battle, player, log),
+        .Trapping => Effects.trapping(battle, player),
+        // zig fmt: off
+        .AttackUp1, .AttackUp2, .DefenseUp1, .DefenseUp2,
+        .EvasionUp1, .SpecialUp1, .SpecialUp2, .SpeedUp2 =>
+            Effects.boost(battle, player, move, log),
+        .AccuracyDown1, .AttackDown1, .DefenseDown1, .DefenseDown2, .SpeedDown1,
+        .AttackDownChance, .DefenseDownChance, .SpecialDownChance, .SpeedDownChance =>
+            Effects.unboost(battle, player, move, log),
+        // zig fmt: on
         else => unreachable,
     };
 }
 
 pub const Effects = struct {
+    fn bide(battle: anytype, player: Player, log: anytype) !void {
+        // TODO
+        _ = battle;
+        _ = player;
+        _ = log;
+    }
+
+    fn burnChance(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
+        var foe = battle.foe(player);
+        var foe_stored = foe.stored();
+        const foe_ident = foe.active.ident(foe, player.foe());
+
+        if (Status.is(foe_stored.status, .FRZ)) {
+            assert(move.type == .Fire);
+            foe_stored.status = 0;
+        }
+
+        const cant = foe.active.volatiles.Substitute or Status.any(foe_stored.status);
+        if (cant) return log.fail(foe_ident, .Burn);
+
+        const chance = !foe.active.types.includes(move.type) and if (showdown)
+            battle.rng.chance(u8, @as(u8, if (move.effect == .BurnChance1) 26 else 77), 256)
+        else
+            battle.rng.next() < 1 + (if (move.effect == .BurnChance1)
+                Gen12.percent(10)
+            else
+                Gen12.percent(30));
+        if (!chance) return;
+
+        foe_stored.status = Status.init(.BRN);
+        foe.active.stats.atk = @maximum(foe.active.stats.atk / 2, 1);
+
+        try log.status(foe_ident, foe_stored.status, .None);
+    }
+
     fn charge(battle: anytype, player: Player, log: anytype) !void {
         var side = battle.side(player);
         const foe = battle.foe(player);
@@ -749,6 +890,40 @@ pub const Effects = struct {
         const move = side.last_selected_move;
         if (move == .Fly or move == .Dig) volatiles.Invulnerable = true;
         try log.prepare(ident, move, foe_ident);
+    }
+
+    fn confusion(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
+        var side = battle.side(player);
+        var foe = battle.foe(player);
+        const player_ident = side.active.ident(side, player);
+        const foe_ident = foe.active.ident(foe, player.foe());
+
+        if (move.effect == .ConfusionChance) {
+            const chance = if (showdown)
+                // BUG: showdown uses 26/256 instead of 25?
+                battle.rng.chance(u8, 25, 256)
+            else
+                battle.rng.next() < Gen12.percent(10);
+            if (!chance) return;
+        } else {
+            if (foe.active.volatiles.Substitute) return;
+
+            if (!checkHit(battle, player, move)) {
+                try log.lastmiss();
+                return log.miss(player_ident, foe_ident);
+            }
+        }
+
+        if (foe.active.volatiles.Confusion) return;
+        foe.active.volatiles.Confusion = true;
+
+        // NB: these values will diverge
+        foe.active.volatiles.data.confusion = @truncate(u4, if (showdown)
+            battle.rng.range(u8, 3, 5)
+        else
+            (battle.rng.next() & 3) + 2);
+
+        try log.start(foe_ident, .Confusion);
     }
 
     fn conversion(battle: anytype, player: Player, log: anytype) !void {
@@ -766,6 +941,107 @@ pub const Effects = struct {
         try log.typechange(ident, @bitCast(u8, foe.active.types));
     }
 
+    fn disable(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
+        var side = battle.side(player);
+        var foe = battle.foe(player);
+
+        var volatiles = foe.active.volatiles;
+
+        const player_ident = side.active.ident(side, player);
+        const foe_ident = foe.active.ident(foe, player.foe());
+
+        if (!checkHit(battle, player, move) or volatiles.data.disabled.move != 0) {
+            try log.lastmiss();
+            return log.miss(player_ident, foe_ident);
+        }
+
+        const m = .None; // TODO
+        volatiles.data.disabled.move = 0; // TODO;
+
+        // NB: these values will diverge
+        volatiles.data.disabled.duration = @truncate(u4, if (showdown)
+            // BUG: battle.rng.range(u8, 1, 7) + 1 = 2 - 8...?
+            battle.rng.range(u8, 1, 7)
+        else
+            (battle.rng.next() & 7) + 1);
+
+        try log.startEffect(foe_ident, .Disable, m);
+    }
+
+    fn drainHP(battle: anytype, player: Player, log: anytype) !void {
+        var side = battle.side(player);
+        var foe = battle.foe(player);
+
+        var stored = side.stored();
+
+        const player_ident = side.active.ident(side, player);
+        const foe_ident = foe.active.ident(foe, player.foe());
+
+        const drain = @maximum(battle.last_damage / 2, 1);
+        battle.last_damage = drain;
+        stored.hp = @minimum(stored.stats.hp, stored.hp + drain);
+
+        try log.drain(player_ident, stored, foe_ident);
+    }
+
+    fn explode(battle: anytype, player: Player) !void {
+        var side = battle.side(player);
+        var stored = side.stored();
+
+        stored.hp = 0;
+        stored.status = 0;
+        side.active.volatiles.LeechSeed = false;
+    }
+
+    fn flinchChance(battle: anytype, player: Player, move: Move.Data) !void {
+        var volatiles = battle.foe(player).active.volatiles;
+
+        if (volatiles.Substitute) return;
+
+        const chance = if (showdown)
+            battle.rng.chance(u8, @as(u8, if (move.effect == .FlinchChance1) 26 else 77), 256)
+        else
+            battle.rng.next() < 1 + (if (move.effect == .FlinchChance1)
+                Gen12.percent(10)
+            else
+                Gen12.percent(30));
+        if (!chance) return;
+
+        volatiles.Flinch = true;
+        volatiles.Recharging = false;
+    }
+
+    fn focusEnergy(battle: anytype, player: Player, log: anytype) !void {
+        var side = battle.side(player);
+        const ident = side.active.ident(side, player);
+
+        if (side.active.volatiles.FocusEnergy) return;
+        side.active.volatiles.FocusEnergy = true;
+
+        try log.start(ident, .FocusEnergy);
+    }
+
+    fn freezeChance(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
+        var foe = battle.foe(player);
+        var foe_stored = foe.stored();
+        const foe_ident = foe.active.ident(foe, player.foe());
+
+        const cant = foe.active.volatiles.Substitute or Status.any(foe_stored.status);
+        if (cant) return log.fail(foe_ident, .Freeze);
+
+        const chance = !foe.active.types.includes(move.type) and if (showdown)
+            battle.rng.chance(u8, 26, 256)
+        else
+            battle.rng.next() < 1 + Gen12.percent(10);
+        if (!chance) return;
+
+        foe_stored.status = Status.init(.FRZ);
+        // NB: Hyper Beam recharging status is not cleared
+
+        try log.status(foe_ident, foe_stored.status, .None);
+    }
+
+    // TODO: handle showdown bugginess...
     fn haze(battle: anytype, player: Player, log: anytype) !void {
         var side = battle.side(player);
         var foe = battle.foe(player);
@@ -799,10 +1075,24 @@ pub const Effects = struct {
     }
 
     fn heal(battle: anytype, player: Player, log: anytype) !void {
+        // TODO
         _ = battle;
         _ = player;
         _ = log;
-        // TODO
+    }
+
+    fn hyperBeam(battle: anytype, player: Player) !void {
+        battle.side(player).active.volatiles.Recharging = true;
+    }
+
+    fn leechSeed(battle: anytype, player: Player, log: anytype) !void {
+        var foe = battle.foe(player);
+        const foe_ident = foe.active.ident(foe, player.foe());
+
+        if (foe.active.types.includes(.Grass) or foe.active.volatiles.LeechSeed) return;
+        foe.active.volatiles.LeechSeed = true;
+
+        try log.start(foe_ident, .LeechSeed);
     }
 
     fn lightScreen(battle: anytype, player: Player, log: anytype) !void {
@@ -813,43 +1103,132 @@ pub const Effects = struct {
             try log.fail(ident, .None);
             return;
         }
-
         side.active.volatiles.LightScreen = true;
+
         try log.start(ident, .LightScreen);
+    }
+
+    fn mimic(battle: anytype, player: Player, log: anytype) !void {
+        // TODO
+        _ = battle;
+        _ = player;
+        _ = log;
     }
 
     fn mist(battle: anytype, player: Player, log: anytype) !void {
         var side = battle.side(player);
         const ident = side.active.ident(side, player);
 
-        if (side.active.volatiles.Mist) {
-            try log.fail(ident, .None);
-            return;
-        }
+        if (side.active.volatiles.Mist) return;
+        side.active.volatiles.Mist = true;
 
         try log.start(ident, .Mist);
     }
 
+    fn multiHit(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
+        // TODO
+        _ = battle;
+        _ = player;
+        _ = move;
+        _ = log;
+    }
+
     fn paralyze(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
-        var side = battle.side(player);
-        const ident = side.active.ident(side, player);
+        var foe = battle.foe(player);
+        var foe_stored = foe.stored();
+        const foe_ident = foe.active.ident(foe, player.foe());
 
-        if (Status.any(side.stored().status)) {
-            try log.fail(ident, .Paralysis); // FIXME: ???
-            return;
+        if (Status.any(foe_stored.status)) return log.fail(foe_ident, .Paralysis);
+        if (foe.active.types.immune(move.type)) return log.immune(foe_ident, .None);
+        if (!checkHit(battle, player, move)) {
+            const side = battle.side(player);
+            const player_ident = side.active.ident(side, player);
+
+            try log.lastmiss();
+            return log.miss(player_ident, foe_ident);
         }
 
-        if (side.active.types.immune(move.type)) {
-            try log.immune(ident, .None);
-            return;
-        }
+        foe_stored.status = Status.init(.PAR);
+        foe.active.stats.spe = @maximum(foe.active.stats.spe / 4, 1);
 
-        // TODO MoveHitTest, log
-        side.active.stats.spe = @maximum(side.active.stats.spe / 4, 1);
+        try log.status(foe_ident, foe_stored.status, .None);
+    }
+
+    fn paralyzeChance(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
+        var foe = battle.foe(player);
+        var foe_stored = foe.stored();
+        const foe_ident = foe.active.ident(foe, player.foe());
+
+        const cant = foe.active.volatiles.Substitute or Status.any(foe_stored.status);
+        if (cant) return log.fail(foe_ident, .Paralysis);
+
+        // NB: Body Slam can't paralyze a Normal type Pokémon
+        const chance = !foe.active.types.includes(move.type) and if (showdown)
+            battle.rng.chance(u8, @as(u8, if (move.effect == .ParalyzeChance1) 26 else 77), 256)
+        else
+            battle.rng.next() < 1 + (if (move.effect == .ParalyzeChance1)
+                Gen12.percent(10)
+            else
+                Gen12.percent(30));
+        if (!chance) return;
+
+        foe_stored.status = Status.init(.PAR);
+        foe.active.stats.spe = @maximum(foe.active.stats.spe / 4, 1);
+
+        try log.status(foe_ident, foe_stored.status, .None);
     }
 
     fn payDay(log: anytype) !void {
         try log.fieldactivate();
+    }
+
+    fn poison(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
+        var side = battle.side(player);
+        var foe = battle.foe(player);
+
+        var foe_stored = foe.stored();
+
+        const player_ident = side.active.ident(side, player);
+        const foe_ident = foe.active.ident(foe, player.foe());
+
+        const cant = foe.active.volatiles.Substitute or
+            Status.any(foe_stored.status) or
+            foe.active.types.includes(.Poison);
+
+        if (cant) return log.fail(foe_ident, .Poison);
+
+        const chance = if (move.effect == .Poison) true else if (showdown)
+            battle.rng.chance(u8, if (move.effect == .PoisonChance1) 52 else 103, 256)
+        else
+            battle.rng.next() < 1 + (if (move.effect == .PoisonChance1)
+                Gen12.percent(20)
+            else
+                Gen12.percent(40));
+        if (!chance) return;
+
+        if (!checkHit(battle, player, move)) {
+            try log.lastmiss();
+            return log.miss(player_ident, foe_ident);
+        }
+
+        foe_stored.status = Status.init(.PSN);
+        if (foe.last_selected_move == .Toxic) {
+            foe.active.volatiles.Toxic = true;
+            foe.active.volatiles.data.toxic = 0;
+        }
+
+        try log.status(foe_ident, foe_stored.status, .None);
+    }
+
+    fn rage(battle: anytype, player: Player) !void {
+        battle.side(player).active.volatiles.Rage = true;
+    }
+
+    fn recoil(battle: anytype, player: Player, log: anytype) !void {
+        // TODO
+        _ = battle;
+        _ = player;
+        _ = log;
     }
 
     fn reflect(battle: anytype, player: Player, log: anytype) !void {
@@ -863,6 +1242,91 @@ pub const Effects = struct {
 
         side.active.volatiles.Reflect = true;
         try log.start(ident, .Reflect);
+    }
+
+    fn sleep(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
+        var foe = battle.foe(player);
+        var foe_stored = foe.stored();
+        const foe_ident = foe.active.ident(foe, player.foe());
+
+        if (foe.active.volatiles.Recharging) {
+            foe.active.volatiles.Recharging = false;
+            // NB: hit test not applied if the target is recharging (fallthrough)
+        } else if (Status.any(foe_stored.status)) {
+            return log.fail(foe_ident, .Sleep);
+        } else if (!checkHit(battle, player, move)) {
+            const side = battle.side(player);
+            const player_ident = side.active.ident(side, player);
+
+            try log.lastmiss();
+            return log.miss(player_ident, foe_ident);
+        }
+
+        // NB: these values will diverge
+        const duration = @truncate(u3, if (showdown)
+            battle.rng.range(u8, 1, 8)
+        else loop: {
+            while (true) {
+                const r = battle.rng.next() & 7;
+                if (r != 0) break :loop r;
+            }
+        });
+
+        foe_stored.status = Status.slp(duration);
+        try log.status(foe_ident, foe_stored.status, .None);
+    }
+
+    fn splash(battle: anytype, player: Player, log: anytype) !void {
+        var side = battle.side(player);
+        const ident = side.active.ident(side, player);
+
+        try log.activate(ident, .Splash);
+    }
+
+    fn thrashing(battle: anytype, player: Player) !void {
+        var volatiles = battle.side(player).active.volatiles;
+
+        volatiles.Thrashing = true;
+        // NB: these values will diverge
+        volatiles.data.attacks = @truncate(u4, if (showdown)
+            battle.rng.range(u8, 2, 4)
+        else
+            (battle.rng.next() & 1) + 2);
+    }
+
+    fn transform(battle: anytype, player: Player, log: anytype) !void {
+        // TODO
+        _ = battle;
+        _ = player;
+        _ = log;
+    }
+
+    fn trapping(battle: anytype, player: Player) !void {
+        var side = battle.side(player);
+        var foe = battle.foe(player);
+
+        if (side.active.volatiles.Trapping) return;
+        side.active.volatiles.Trapping = true;
+        // NB: Recharging is cleared even if the trapping move misses
+        foe.active.volatiles.Recharging = false;
+
+        side.active.volatiles.data.attacks = distribution(battle) - 1;
+    }
+
+    fn boost(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
+        // TODO
+        _ = battle;
+        _ = player;
+        _ = move;
+        _ = log;
+    }
+
+    fn unboost(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
+        // TODO
+        _ = battle;
+        _ = player;
+        _ = move;
+        _ = log;
     }
 };
 
@@ -905,4 +1369,13 @@ fn clearVolatiles(active: *ActivePokemon, ident: u8, log: anytype) !void {
     }
     if (!showdown) return;
     // TODO: other volatiles
+}
+
+const DISTRIBUTION = [_]u4{ 2, 2, 2, 3, 3, 3, 4, 5 };
+
+// NB: these values will diverge
+fn distribution(battle: anytype) u4 {
+    if (showdown) return DISTRIBUTION[battle.rng.range(u8, 0, DISTRIBUTION.len)];
+    const r = (battle.rng.next() & 3);
+    return @truncate(u4, (if (r < 2) r else battle.rng.next() & 3) + 2);
 }

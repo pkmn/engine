@@ -249,7 +249,7 @@ fn update(battle: anytype, c1: Choice, c2: Choice) !Result {
 test "Battle" {
     const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
     const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
-    var battle = Battle.init(.{42}, &.{p1}, &.{p2});
+    var battle = Battle.init(.{217, 218, 219, 220, 221}, &.{p1}, &.{p2});
     _ = try update(&battle, move(4), move(2));
 }
 

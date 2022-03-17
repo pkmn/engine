@@ -210,18 +210,18 @@ pub const Item = enum(u8) {
         assert(@sizeOf(Item) == 1);
     }
 
-    pub fn boost(item: Item) ?Type {
+    pub inline fn boost(item: Item) ?Type {
         assert(item != .None);
         if (item == .PolkadotBow) return .Normal;
         return if (@enumToInt(item) <= 18) @intToEnum(Type, @enumToInt(item) - 1) else null;
     }
 
-    pub fn mail(item: Item) bool {
+    pub inline fn mail(item: Item) bool {
         assert(item != .None);
         return @enumToInt(item) > 175 and @enumToInt(item) <= 185;
     }
 
-    pub fn berry(item: Item) bool {
+    pub inline fn berry(item: Item) bool {
         assert(item != .None);
         return @enumToInt(item) > 185;
     }

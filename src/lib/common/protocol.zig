@@ -234,6 +234,7 @@ pub const Activate = enum(u8) {
     Haze,
     Struggle,
     Substitute,
+    Splash,
 };
 
 pub const Start = enum(u8) {

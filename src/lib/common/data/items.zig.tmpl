@@ -16,18 +16,18 @@ pub const Item = enum({{{ Item.type }}}) {
         assert(@sizeOf(Item) == {{{ Item.size }}});
     }
 
-    pub fn boost(item: Item) ?Type {
+    pub inline fn boost(item: Item) ?Type {
         assert(item != .None);
         if (item == .PolkadotBow) return .Normal;
         return if (@enumToInt(item) <= {{{ Item.boosts }}}) @intToEnum(Type, @enumToInt(item) - 1) else null;
     }
 
-    pub fn mail(item: Item) bool {
+    pub inline fn mail(item: Item) bool {
         assert(item != .None);
         return @enumToInt(item) > {{{ Item.mail }}} and @enumToInt(item) <= {{{ Item.berry }}};
     }
 
-    pub fn berry(item: Item) bool {
+    pub inline fn berry(item: Item) bool {
         assert(item != .None);
         return @enumToInt(item) > {{{ Item.berry }}};
     }

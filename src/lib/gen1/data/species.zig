@@ -164,6 +164,160 @@ pub const Species = enum(u8) {
     Mewtwo,
     Mew,
 
+    const chances = [_]u8{
+        22, // Bulbasaur
+        30, // Ivysaur
+        40, // Venusaur
+        32, // Charmander
+        40, // Charmeleon
+        50, // Charizard
+        21, // Squirtle
+        29, // Wartortle
+        39, // Blastoise
+        22, // Caterpie
+        15, // Metapod
+        35, // Butterfree
+        25, // Weedle
+        17, // Kakuna
+        37, // Beedrill
+        28, // Pidgey
+        35, // Pidgeotto
+        45, // Pidgeot
+        36, // Rattata
+        48, // Raticate
+        35, // Spearow
+        50, // Fearow
+        27, // Ekans
+        40, // Arbok
+        45, // Pikachu
+        50, // Raichu
+        20, // Sandshrew
+        32, // Sandslash
+        20, // NidoranF
+        28, // Nidorina
+        38, // Nidoqueen
+        25, // NidoranM
+        32, // Nidorino
+        42, // Nidoking
+        17, // Clefairy
+        30, // Clefable
+        32, // Vulpix
+        50, // Ninetales
+        10, // Jigglypuff
+        22, // Wigglytuff
+        27, // Zubat
+        45, // Golbat
+        15, // Oddish
+        20, // Gloom
+        25, // Vileplume
+        12, // Paras
+        15, // Parasect
+        22, // Venonat
+        45, // Venomoth
+        47, // Diglett
+        60, // Dugtrio
+        45, // Meowth
+        57, // Persian
+        27, // Psyduck
+        42, // Golduck
+        35, // Mankey
+        47, // Primeape
+        30, // Growlithe
+        47, // Arcanine
+        45, // Poliwag
+        45, // Poliwhirl
+        35, // Poliwrath
+        45, // Abra
+        52, // Kadabra
+        60, // Alakazam
+        17, // Machop
+        22, // Machoke
+        27, // Machamp
+        20, // Bellsprout
+        27, // Weepinbell
+        35, // Victreebel
+        35, // Tentacool
+        50, // Tentacruel
+        10, // Geodude
+        17, // Graveler
+        22, // Golem
+        45, // Ponyta
+        52, // Rapidash
+        7, // Slowpoke
+        15, // Slowbro
+        22, // Magnemite
+        35, // Magneton
+        30, // Farfetchd
+        37, // Doduo
+        50, // Dodrio
+        22, // Seel
+        35, // Dewgong
+        12, // Grimer
+        25, // Muk
+        20, // Shellder
+        35, // Cloyster
+        40, // Gastly
+        47, // Haunter
+        55, // Gengar
+        35, // Onix
+        21, // Drowzee
+        33, // Hypno
+        25, // Krabby
+        37, // Kingler
+        50, // Voltorb
+        70, // Electrode
+        20, // Exeggcute
+        27, // Exeggutor
+        17, // Cubone
+        22, // Marowak
+        43, // Hitmonlee
+        38, // Hitmonchan
+        15, // Lickitung
+        17, // Koffing
+        30, // Weezing
+        12, // Rhyhorn
+        20, // Rhydon
+        25, // Chansey
+        30, // Tangela
+        45, // Kangaskhan
+        30, // Horsea
+        42, // Seadra
+        31, // Goldeen
+        34, // Seaking
+        42, // Staryu
+        57, // Starmie
+        45, // MrMime
+        52, // Scyther
+        47, // Jynx
+        52, // Electabuzz
+        46, // Magmar
+        42, // Pinsir
+        55, // Tauros
+        40, // Magikarp
+        40, // Gyarados
+        30, // Lapras
+        24, // Ditto
+        27, // Eevee
+        32, // Vaporeon
+        65, // Jolteon
+        32, // Flareon
+        20, // Porygon
+        17, // Omanyte
+        27, // Omastar
+        27, // Kabuto
+        40, // Kabutops
+        65, // Aerodactyl
+        15, // Snorlax
+        42, // Articuno
+        50, // Zapdos
+        45, // Moltres
+        25, // Dratini
+        35, // Dragonair
+        40, // Dragonite
+        65, // Mewtwo
+        50, // Mew
+    };
+
     // @test-only
     pub const Data = struct {
         stats: Stats(u8),
@@ -931,6 +1085,11 @@ pub const Species = enum(u8) {
 
     comptime {
         assert(@sizeOf(Species) == 1);
+    }
+
+    pub inline fn chance(id: Species) u8 {
+        assert(id != .None);
+        return chances[@enumToInt(id) - 1];
     }
 
     // @test-only

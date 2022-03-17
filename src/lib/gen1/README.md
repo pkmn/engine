@@ -156,7 +156,8 @@ of a species are already accounted for in the computed stats in the `Pokemon` st
 in battle requires these to be recomputed. Similarly, Type is unnecessary to include as it is also
 already present in the `Pokemon` struct. `Specie.None` exists as a special sentinel value to
 indicate `null`. `Species.Data` is only included for testing and is not necessary for the actual
-engine implementation.
+engine implementation, outside of `Species.chances` which is required as the base speed / 2 of the
+species is necessary for computing critical hit probability.
 
 ### `Type` / `Types` / `Effectiveness`
 
@@ -188,6 +189,7 @@ entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as foll
 | **type**        | 0...15  | 4    |     | **accuracy**      | 6...20   | 4    |
 | **disabled**    | 0...7   | 3    |     | **DVs**           | 0...15   | 4    |
 | **move effect** | 0..66   | 7    |     | **attacks**       | 0..4     | 3    |
+| **crit chance** | 7..65   | 6    |     |                   |          |      |
 
 From this we can determine the minimum bits required to store each data structure to determine how
 much overhead the representations above have after taking into consideration [alignment &
@@ -208,7 +210,8 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
   - `order` does not need to be stored as the party can always be rearranged as switches occur
 - **`Battle`**: 6× `Side` + seed (10× `8` + `4`) + turn (`10`) + last damage (`10`)
 - **`Type.chart`**: attacking types (`15`) × defending types (`15`) × effectiveness (`2`)[^1]
-- **`Moves`**: 164× base power (`6`) + effect (`7`) + accuracy (`4`) + type: (`4`)
+- **`Moves.data`**: 164× base power (`6`) + effect (`7`) + accuracy (`4`) + type: (`4`)
+- **`Species.chance`**: 151× crit chance (`6`)
 
 | Data            | Actual bits | Minimum bits | Overhead |
 | --------------- | ----------- | ------------ | -------- |
@@ -217,14 +220,15 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 | `Side`          | 1472        | 1047         | 39.5%    |
 | `Battle`        | 3088        | 2198         | 39.5%    |
 | `Type.chart`    | 1800        | 450          | 300.0%   |
-| `Moves.data`    | 2640        | 3444         | 14.3%    |
+| `Moves.data`    | 3696        | 3444         | 14.3%    |
+| `Species.speed` | 1208        | 906          | 33.3%    |
 
-In the case of `Type.chart` and `Moves.data`, technically only the values which are used by any
-given simulation are required, which could be as low as 1 in both circumstances (eg. all Normal
-Pokémon each only using the single move Tackle), though taking into consideration the worst case all
-Pokémon types are required and 48 moves. The `Moves.data` array could be eliminated and instead the
-`Move` data actually required by each `Pokemon` could be placed beside the `MoveSlot`, though this
-is both less general and adds unnecessary complexity.
+In the case of `Type.chart`/`Moves.data`/`Species.chances`, technically only the values which are
+used by any given simulation are required, which could be as low as 1 in both circumstances (eg. all
+Normal Pokémon each only using the single move Tackle), though taking into consideration the worst
+case all Pokémon types are required and 48 moves. The `Moves.data` array could be eliminated and
+instead the `Move` data actually required by each `Pokemon` could be placed beside the `MoveSlot`,
+though this is both less general and adds unnecessary complexity.
 
 [^1]: Instead of storing as a sparse multi-dimensional array the type chart could instead only
 [store values which are not normal
@@ -235,7 +239,8 @@ of reference meaning it will likely already be in the cache.
 
 ## Protocol
 
-TODO: map each PS line to number of bytes, compute max number of bytes required for a chunk (map `|request|` = 0, etc)
+TODO: map each PS line to number of bytes, compute max number of bytes required for a chunk (map
+`|request|` = 0, etc)
 
 ## `|-damage|`
 

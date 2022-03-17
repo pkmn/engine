@@ -20,24 +20,18 @@ pub fn PRNG(comptime gen: comptime_int) type {
                 return @truncate(Output(gen), self.src.next());
             }
 
-            pub fn range(
-                self: *Self,
-                comptime from: comptime_int,
-                comptime to: comptime_int,
-            ) Output(gen) {
-                return @truncate(
-                    Output(gen),
-                    @as(u64, self.src.next()) * (to - from) / divisor + from,
-                );
+            pub fn range(self: *Self, comptime T: type, from: T, to: Bound(T)) T {
+                return @truncate(T, @as(u64, self.src.next()) * (to - from) / divisor + from);
             }
 
             pub fn chance(
                 self: *Self,
-                comptime numerator: comptime_int,
-                comptime denominator: comptime_int,
+                comptime T: type,
+                numerator: T,
+                denominator: Bound(T),
             ) bool {
                 assert(denominator > 0);
-                return self.range(0, denominator) < numerator;
+                return self.range(T, 0, denominator) < numerator;
             }
         };
     } else {
@@ -63,8 +57,8 @@ pub fn PRNG(comptime gen: comptime_int) type {
 test "PRNG" {
     if (!showdown) return error.SkipZigTest;
     var prng = PRNG(1){ .src = .{ .seed = 0x1234 } };
-    try expectEqual(@as(u8, 50), prng.range(0, 256));
-    try expectEqual(true, prng.chance(128, 256)); // 76 < 128
+    try expectEqual(@as(u8, 50), prng.range(u8, 0, 256));
+    try expectEqual(true, prng.chance(u8, 128, 256)); // 76 < 128
 }
 
 // https://pkmn.cc/pokered/engine/battle/core.asm#L6644-L6693
@@ -180,6 +174,10 @@ fn Output(comptime gen: comptime_int) type {
     };
 }
 
+fn Bound(comptime T: type) type {
+    return std.math.IntFittingRange(0, std.math.maxInt(T) + 1);
+}
+
 fn getRangeDivisor(comptime gen: comptime_int) comptime_int {
     return switch (gen) {
         1, 2 => 0x100,
@@ -199,28 +197,24 @@ pub fn FixedRNG(comptime gen: comptime_int, comptime len: usize) type {
         index: usize = 0,
 
         pub fn next(self: *Self) Output(gen) {
-            if (self.index > self.rolls.len) @panic("Insufficient number of rolls provided");
+            if (self.index >= self.rolls.len) @panic("Insufficient number of rolls provided");
             const roll = @truncate(Output(gen), self.rolls[self.index]);
             self.index += 1;
             return roll;
         }
 
-        pub fn range(
-            self: *Self,
-            comptime from: comptime_int,
-            comptime to: comptime_int,
-        ) Output(gen) {
-            const Cast = std.math.IntFittingRange(from, std.math.max(divisor, to * to));
-            return @truncate(Output(gen), @as(Cast, self.next()) * (to - from) / divisor + from);
+        pub fn range(self: *Self, comptime T: type, from: T, to: Bound(T)) T {
+            return @truncate(T, @as(u64, self.next()) * (to - from) / divisor + from);
         }
 
         pub fn chance(
             self: *Self,
-            comptime numerator: comptime_int,
-            comptime denominator: comptime_int,
+            comptime T: type,
+            numerator: T,
+            denominator: Bound(T),
         ) bool {
             assert(denominator > 0);
-            return self.range(0, denominator) < numerator;
+            return self.range(T, 0, denominator) < numerator;
         }
     };
 }
@@ -233,12 +227,10 @@ test "FixedRNG" {
     }
 }
 
-// @test-only
 pub const Random = struct {
     prng: std.rand.DefaultPrng,
 
     pub fn init(seed: u64) Random {
-        assert(builtin.is_test);
         return .{ .prng = std.rand.DefaultPrng.init(seed) };
     }
 

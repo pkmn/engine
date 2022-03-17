@@ -14,7 +14,7 @@ const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 const expect = std.testing.expect;
 
-pub fn Battle(comptime PRNG: anytype) type {
+pub fn Battle(comptime PRNG: anytype) align(64) type {
     return extern struct {
         const Self = @This();
 
@@ -24,11 +24,11 @@ pub fn Battle(comptime PRNG: anytype) type {
         rng: PRNG,
         // 4 bits trailing if showdown
 
-        pub fn side(self: *Self, player: Player) *Side {
+        pub inline fn side(self: *Self, player: Player) *Side {
             return &self.sides[@enumToInt(player)];
         }
 
-        pub fn foe(self: *Self, player: Player) *Side {
+        pub inline fn foe(self: *Self, player: Player) *Side {
             return &self.sides[@enumToInt(player.foe())];
         }
 
@@ -46,11 +46,11 @@ pub const Player = enum(u1) {
     P1,
     P2,
 
-    pub fn foe(self: Player) Player {
+    pub inline fn foe(self: Player) Player {
         return @intToEnum(Player, ~@enumToInt(self));
     }
 
-    pub fn ident(self: Player, id: u8) u8 {
+    pub inline fn ident(self: Player, id: u8) u8 {
         assert(id > 0 and id <= 6);
         return (@as(u8, @enumToInt(self)) << 3) | id;
     }
@@ -73,14 +73,14 @@ pub const Side = extern struct {
         assert(@sizeOf(Side) == 184);
     }
 
-    pub fn get(self: *Side, slot: u8) *Pokemon {
+    pub inline fn get(self: *Side, slot: u8) *Pokemon {
         assert(slot > 0 and slot <= 6);
         const id = self.order[slot - 1];
         assert(id > 0 and id <= 6);
         return &self.pokemon[id - 1];
     }
 
-    pub fn stored(self: *Side) *Pokemon {
+    pub inline fn stored(self: *Side) *Pokemon {
         return self.get(1);
     }
 };
@@ -97,12 +97,12 @@ pub const ActivePokemon = extern struct {
         assert(@sizeOf(ActivePokemon) == 32);
     }
 
-    pub fn ident(self: *ActivePokemon, side: *const Side, player: Player) u8 {
+    pub inline fn ident(self: *ActivePokemon, side: *const Side, player: Player) u8 {
         _ = self;
         return player.ident(side.order[0]);
     }
 
-    pub fn move(self: *ActivePokemon, mslot: u8) *MoveSlot {
+    pub inline fn move(self: *ActivePokemon, mslot: u8) *MoveSlot {
         assert(mslot > 0 and mslot <= 4);
         return &self.moves[mslot - 1];
     }
@@ -121,7 +121,7 @@ pub const Pokemon = extern struct {
         assert(@sizeOf(Pokemon) == 24);
     }
 
-    pub fn move(self: *Pokemon, mslot: u8) *MoveSlot {
+    pub inline fn move(self: *Pokemon, mslot: u8) *MoveSlot {
         assert(mslot > 0 and mslot <= 4);
         return &self.moves[mslot - 1];
     }
@@ -150,43 +150,31 @@ pub const Status = enum(u8) {
     const SLP = 0b111;
     const PSN = 0b10001000;
 
-    pub fn is(num: u8, status: Status) bool {
+    pub inline fn is(num: u8, status: Status) bool {
         if (status == .SLP) return Status.duration(num) > 0;
         return ((num >> @intCast(u3, @enumToInt(status))) & 1) != 0;
     }
 
-    pub fn init(status: Status) u8 {
+    pub inline fn init(status: Status) u8 {
         assert(status != .SLP);
         return @as(u8, 1) << @intCast(u3, @enumToInt(status));
     }
 
-    pub fn slp(dur: u3) u8 {
+    pub inline fn slp(dur: u3) u8 {
         assert(dur > 0);
         return @as(u8, dur);
     }
 
-    pub fn duration(num: u8) u3 {
+    pub inline fn duration(num: u8) u3 {
         return @intCast(u3, num & SLP);
     }
 
-    pub fn psn(num: u8) bool {
+    pub inline fn psn(num: u8) bool {
         return num & PSN != 0;
     }
 
-    pub fn any(num: u8) bool {
+    pub inline fn any(num: u8) bool {
         return num > 0;
-    }
-
-    // @test-only
-    pub fn name(num: u8) []const u8 {
-        assert(builtin.is_test);
-        if (Status.is(num, .SLP)) return "SLP";
-        if (Status.is(num, .PSN)) return "PSN";
-        if (Status.is(num, .BRN)) return "BRN";
-        if (Status.is(num, .FRZ)) return "FRZ";
-        if (Status.is(num, .PAR)) return "PAR";
-        if (Status.is(num, .TOX)) return "TOX";
-        return "OK";
     }
 };
 
@@ -318,19 +306,19 @@ test "Move" {
     try expectEqual(Type.Ground, move.type);
 
     try expect(!Move.Effect.residual1(.None));
-    try expect(Move.Effect.residual1(.SwitchAndTeleport));
-    try expect(Move.Effect.residual1(.Substitute));
-    try expect(!Move.Effect.residual1(.AttackUp2));
+    try expect(Move.Effect.residual1(.Confusion));
+    try expect(Move.Effect.residual1(.Transform));
+    try expect(!Move.Effect.residual1(.AccuracyDown1));
 
-    try expect(!Move.Effect.residual2(.Substitute));
-    try expect(Move.Effect.residual2(.AttackUp2));
-    try expect(Move.Effect.residual2(.SpecialUp2));
-    try expect(!Move.Effect.residual2(.MultiHit));
+    try expect(!Move.Effect.residual2(.Transform));
+    try expect(Move.Effect.residual2(.AccuracyDown1));
+    try expect(Move.Effect.residual2(.SpeedUp2));
+    try expect(!Move.Effect.residual2(.Charge));
 
-    try expect(!Move.Effect.special(.SpecialUp2));
-    try expect(Move.Effect.special(.MultiHit));
-    try expect(Move.Effect.special(.SuperFang));
-    try expect(!Move.Effect.special(.HighCritical));
+    try expect(!Move.Effect.special(.SpeedUp2));
+    try expect(Move.Effect.special(.Charge));
+    try expect(Move.Effect.special(.Trapping));
+    try expect(!Move.Effect.special(.AttackDownChance));
 }
 
 pub const Species = species.Species;

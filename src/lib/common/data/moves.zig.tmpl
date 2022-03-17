@@ -24,7 +24,7 @@ pub const Move = enum({{{ Move.type }}}) {
         assert(@sizeOf(@TypeOf(data)) == {{{ Move.dataSize }}});
     }
 
-    pub fn get(id: Move) Data {
+    pub inline fn get(id: Move) Data {
         assert(id != .None);
         return data[@enumToInt(id) - 1];
     }

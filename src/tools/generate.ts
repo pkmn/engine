@@ -343,7 +343,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
             assert(@sizeOf(Data) == 3);
         }
 
-        pub fn accuracy(self: Data) u8 {
+        pub inline fn accuracy(self: Data) u8 {
             return (@as(u8, self.acc) + 6) * 5;
         }
     };`;
@@ -352,7 +352,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const r2 = r1 + EFFECTS.residual2.size;
     const sp = r2 + EFFECTS.special.size;
     const effects: string[] = [];
-    for (const group in EFFECTS) effects.push(...EFFECTS[group]);
+    for (const group in EFFECTS) effects.push(...Array.from(EFFECTS[group]).sort());
     const Effect = `
     pub const Effect = enum(u8) {
         None,
@@ -362,15 +362,15 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
             assert(@sizeOf(Effect) == 1);
         }
 
-        pub fn residual1(effect: Effect) bool {
+        pub inline fn residual1(effect: Effect) bool {
             return @enumToInt(effect) > 0 and @enumToInt(effect) <= ${r1};
         }
 
-        pub fn residual2(effect: Effect) bool {
+        pub inline fn residual2(effect: Effect) bool {
             return @enumToInt(effect) > ${r1} and @enumToInt(effect) <= ${r2};
         }
 
-        pub fn special(effect: Effect) bool {
+        pub inline fn special(effect: Effect) bool {
             return @enumToInt(effect) > ${r2} and @enumToInt(effect) <= ${sp};
         }
     };\n`;
@@ -418,6 +418,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       return nameToEnum(specie.name);
     });
     const SPECIES = [];
+    const CHANCES = [];
     for (const name of species) {
       const s = gen.species.get(name)!;
       const types = s.types.length === 1
@@ -433,22 +434,35 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
                       ' },\n' +
         `            .types = .{ .type1 = .${types[0]}, .type2 = .${types[1]} },\n` +
         '        }');
+      CHANCES.push(`${Math.floor(s.baseStats.spe / 2)}, // ${name}`);
     }
     Data = `// @test-only
     pub const Data = struct {
         stats: Stats(u8),
         types: Types,
     };`;
+    const chances = `const chances = [_]u8{
+        ${CHANCES.join('\n        ')}
+    };\n
+    `;
+    const chanceFn = `\n
+    pub inline fn chance(id: Species) u8 {
+        assert(id != .None);
+        return chances[@enumToInt(id) - 1];
+    }`;
     template('species', dirs.out, {
       gen: gen.num,
       Species: {
         type: 'u8',
         values: species.join(',\n    '),
         size: 1,
+        chances,
         Data,
         data: SPECIES.join(',\n        '),
+        chanceFn,
       },
     });
+
 
     // Types
     const types = IDS[1].types;
