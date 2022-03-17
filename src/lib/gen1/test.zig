@@ -7,6 +7,8 @@ const data = @import("data.zig");
 const protocol = @import("protocol.zig");
 
 const assert = std.debug.assert;
+
+const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
@@ -25,8 +27,6 @@ const Status = data.Status;
 const ArgType = protocol.ArgType;
 const Log = protocol.Log(std.io.FixedBufferStream([]u8).Writer);
 const expectLog = protocol.expectLog;
-
-const SEED = 0x31415926;
 
 pub const Battle = struct {
     pub fn init(
@@ -250,7 +250,8 @@ test "Battle" {
     const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
     const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
     var battle = Battle.init(.{217, 218, 219, 220, 221}, &.{p1}, &.{p2});
-    _ = try update(&battle, move(4), move(2));
+    try expectEqual(Result.Default, try update(&battle, move(4), move(2)));
+    try expect(battle.rng.exhausted());
 }
 
 fn expectOrder(p1: anytype, o1: []const u8, p2: anytype, o2: []const u8) !void {
@@ -259,21 +260,21 @@ fn expectOrder(p1: anytype, o1: []const u8, p2: anytype, o2: []const u8) !void {
 }
 
 test "switching" {
-    var battle = Battle.random(&Random.init(SEED));
+    var battle = Battle.random(&Random.init(0x31415926));
     const p1 = battle.side(.P1);
     const p2 = battle.side(.P2);
 
-    _ = try update(&battle, swtch(3), swtch(2));
+    try expectEqual(Result.Default, try update(&battle, swtch(3), swtch(2)));
     try expectOrder(p1, &[_]u8{3,2,1,4,5,6}, p2, &[_]u8{2,1,3,4,5,6});
-     _ = try update(&battle, swtch(5), swtch(5));
+    try expectEqual(Result.Default, try update(&battle, swtch(5), swtch(5)));
     try expectOrder(p1, &[_]u8{5,2,1,4,3,6}, p2, &[_]u8{5,1,3,4,2,6});
-     _ = try update(&battle, swtch(6), swtch(3));
+    try expectEqual(Result.Default, try update(&battle, swtch(6), swtch(3)));
     try expectOrder(p1, &[_]u8{6,2,1,4,3,5}, p2, &[_]u8{3,1,5,4,2,6});
-     _ = try update(&battle, swtch(3), swtch(3));
+    try expectEqual(Result.Default, try update(&battle, swtch(3), swtch(3)));
     try expectOrder(p1, &[_]u8{1,2,6,4,3,5}, p2, &[_]u8{5,1,3,4,2,6});
-     _ = try update(&battle, swtch(2), swtch(4));
+    try expectEqual(Result.Default, try update(&battle, swtch(2), swtch(4)));
     try expectOrder(p1, &[_]u8{2,1,6,4,3,5}, p2, &[_]u8{4,1,3,5,2,6});
-     _ = try update(&battle, swtch(5), swtch(5));
+    try expectEqual(Result.Default, try update(&battle, swtch(5), swtch(5)));
     try expectOrder(p1, &[_]u8{3,1,6,4,2,5}, p2, &[_]u8{2,1,3,5,4,6});
 }
 

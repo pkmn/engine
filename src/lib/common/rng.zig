@@ -55,7 +55,7 @@ pub fn PRNG(comptime gen: comptime_int) type {
 }
 
 test "PRNG" {
-    if (!showdown) return error.SkipZigTest;
+    if (!showdown) return;
     var prng = PRNG(1){ .src = .{ .seed = 0x1234 } };
     try expectEqual(@as(u8, 50), prng.range(u8, 0, 256));
     try expectEqual(true, prng.chance(u8, 128, 256)); // 76 < 128
@@ -215,6 +215,10 @@ pub fn FixedRNG(comptime gen: comptime_int, comptime len: usize) type {
         ) bool {
             assert(denominator > 0);
             return self.range(T, 0, denominator) < numerator;
+        }
+
+        pub fn exhausted(self: Self) bool {
+            return self.index == self.rolls.len;
         }
     };
 }
