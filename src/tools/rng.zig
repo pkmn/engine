@@ -10,8 +10,6 @@ pub const ANSI = struct {
     pub const RESET = "\x1b[0m";
 };
 
-const CRIT: u8 = 93; // EDIT ME
-
 const Tool = enum {
     crit,
     thrash,
@@ -23,12 +21,16 @@ pub fn main() !void {
     const allocator = arena.allocator();
 
     const args = try std.process.argsAlloc(allocator);
-    if (args.len != 2) std.process.exit(1);
+    if (args.len < 2) std.process.exit(1);
 
     var tool: Tool = undefined;
+    var crit: u8 = undefined;
     if (std.mem.eql(u8, args[1], "crit")) {
+        if (args.len != 3) std.process.exit(1);
         tool = .crit;
+        crit = try std.fmt.parseUnsigned(u8, args[2], 10);
     } else if (std.mem.eql(u8, args[1], "thrash")) {
+        if (args.len != 2) std.process.exit(1);
         tool = .thrash;
     } else {
         std.process.exit(1);
@@ -52,8 +54,8 @@ pub fn main() !void {
         const match = match: {
             switch (tool) {
                 .crit => {
-                    const a = rng1.chance(u8, CRIT, 256);
-                    const b = std.math.rotl(u8, rng2.next(), 3) < CRIT;
+                    const a = rng1.chance(u8, crit, 256);
+                    const b = std.math.rotl(u8, rng2.next(), 3) < crit;
                     break :match a == b;
                 },
                 .thrash => {

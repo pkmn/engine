@@ -341,7 +341,7 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !v
 
     var damage = calcDamage(battle, player, move, crit);
     damage = adjustDamage(battle, player, damage);
-    damage = randomizeDamage(battle, damage);
+    damage = randomizeDamage(battle, damage); // FIXME crit?
 
     const hit = checkHit(battle, player, move);
 
