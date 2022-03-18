@@ -36,7 +36,7 @@ const ArgType = protocol.ArgType;
 const Log = protocol.Log(std.io.FixedBufferStream([]u8).Writer);
 // const expectLog = protocol.expectLog;
 
-test "Battle" {
+test "TODO Battle" {
     const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
     const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
     var battle = Battle.init(.{ NO_CRIT, HIT, NO_CRIT, MAX_DMG, HIT }, &.{p1}, &.{p2});

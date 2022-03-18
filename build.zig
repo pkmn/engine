@@ -9,9 +9,20 @@ pub fn build(b: *std.build.Builder) void {
     build_options.addOption(bool, "showdown", showdown);
     build_options.addOption(bool, "trace", trace);
 
-    const tests = b.addTest("src/lib/test.zig");
+    const test_file = b.option([]const u8, "test-file", "Input file for test") orelse "src/lib/test.zig";
+    const test_bin = b.option([]const u8, "test-bin", "Emit test binary to");
+    const test_filter = b.option([]const u8, "test-filter", "Skip tests that do not match filter");
+    const test_no_exec = b.option(bool, "test-no-exec", "Compiles test binary without running it") orelse false;
+
+    const tests = if (test_no_exec) b.addTestExe("test_exe", test_file) else b.addTest(test_file);
+    tests.setMainPkgPath("./");
+    tests.setFilter(test_filter);
     tests.addOptions("build_options", build_options);
     tests.setBuildMode(mode);
+    if (test_bin) |bin| {
+        tests.name = std.fs.path.basename(bin);
+        if (std.fs.path.dirname(bin)) |dir| tests.setOutputDir(dir);
+    }
 
     const format = b.addFmt(&[_][]const u8{"."});
 
