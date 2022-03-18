@@ -286,7 +286,7 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !v
             .DragonRage => 40,
             // NB: if power = 0 then a desync occurs (or a miss on Pokémon Showdown)
             .Psywave => power: {
-                const max = @truncate(u8, @as(u15, side.stored().level) * 3 / 2);
+                const max = @truncate(u8, @as(u16, side.stored().level) * 3 / 2);
                 // NB: these values will diverge
                 if (showdown) {
                     break :power battle.rng.range(u8, 0, max);
