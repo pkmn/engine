@@ -251,32 +251,3 @@ pub const Random = struct {
         return self.prng.random().intRangeAtMostBiased(T, min, max);
     }
 };
-
-// test "DEBUG TODO" {
-//     var expected: [256]u8 = undefined;
-//     var i: usize = 0;
-//     while (i < expected.len) : (i += 1) {
-//         expected[i] = @truncate(u8, i);
-//     }
-//     var rng1 = FixedRNG(1, expected.len){ .rolls = expected };
-//     var rng2 = FixedRNG(1, expected.len){ .rolls = expected };
-//     i = 0;
-//     while (i < expected.len) : (i += 1) {
-//         const a = rng1.chance(63, 256);
-//         const b = rng2.next() < Gen12.percent(25);
-
-//         const a = !rng1.chance(128, 256);
-//         const b = rng2.next() >= Gen12.percent(50) + 1;
-
-//         const a = rng1.range(3, 5);
-//         const b = (rng2.next() & 3) + 2;
-
-//         const a = rng1.range(0, 2) == 0;
-//         const b = rng2.next() < Gen12.percent(50) + 1;
-
-//         const a = rng1.chance(93, 256);
-//         const b = rng2.next() < 93;
-
-//         try expectEqual(a, b);
-//     }
-// }

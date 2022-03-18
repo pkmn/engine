@@ -4,6 +4,7 @@ const build_options = @import("build_options");
 const rng = @import("../common/rng.zig");
 
 const data = @import("data.zig");
+const helpers = @import("helpers.zig");
 const protocol = @import("protocol.zig");
 
 const assert = std.debug.assert;
@@ -12,244 +13,33 @@ const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
+const showdown = build_options.showdown;
+
 const Random = rng.Random;
 
-const Choice = data.Choice;
-const DVs = data.DVs;
-const Move = data.Move;
-const MoveSlot = data.MoveSlot;
-const Player = data.Player;
 const Result = data.Result;
-const Species = data.Species;
-const Stats = data.Stats;
-const Status = data.Status;
+
+const Battle = helpers.Battle;
+const move = helpers.move;
+const swtch = helpers.swtch;
+const update = helpers.update;
+
+const Rolls = helpers.Rolls;
+const HIT = Rolls.HIT;
+const MISS = Rolls.MISS;
+const CRIT = Rolls.CRIT;
+const NO_CRIT = Rolls.NO_CRIT;
+const MIN_DMG = Rolls.MIN_DMG;
+const MAX_DMG = Rolls.MAX_DMG;
 
 const ArgType = protocol.ArgType;
 const Log = protocol.Log(std.io.FixedBufferStream([]u8).Writer);
-const expectLog = protocol.expectLog;
-
-pub const Battle = struct {
-    pub fn init(
-        comptime rolls: anytype,
-        p1: []const Pokemon,
-        p2: []const Pokemon,
-    ) data.Battle(rng.FixedRNG(1, rolls.len)) {
-        return .{
-            .rng = .{ .rolls = rolls },
-            .sides = .{ Side.init(p1), Side.init(p2) },
-        };
-    }
-
-    pub fn random(rand: *Random) data.Battle(rng.PRNG(1)) {
-        return .{
-            .rng = prng(rand),
-            .turn = rand.range(u16, 1, 1000),
-            .last_damage = rand.range(u16, 1, 704),
-            .sides = .{ Side.random(rand), Side.random(rand) },
-        };
-    }
-};
-
-pub fn prng(rand: *Random) rng.PRNG(1) {
-    return .{ .src = .{ .seed = if (build_options.showdown) rand.int(u64) else .{
-        rand.int(u8), rand.int(u8), rand.int(u8), rand.int(u8), rand.int(u8),
-        rand.int(u8), rand.int(u8), rand.int(u8), rand.int(u8), rand.int(u8),
-    } } };
-}
-
-pub const Side = struct {
-    pub fn init(ps: []const Pokemon) data.Side {
-        assert(ps.len > 0 and ps.len <= 6);
-        var side = data.Side{};
-
-        var i: u4 = 0;
-        while (i < ps.len) : (i += 1) {
-            const p = ps[i];
-            side.order[i] = i + 1;
-            var pokemon = &side.pokemon[i];
-            pokemon.species = p.species;
-            const specie = Species.get(p.species);
-            inline for (std.meta.fields(@TypeOf(pokemon.stats))) |field| {
-                @field(pokemon.stats, field.name) = Stats(u16).calc(
-                    field.name,
-                    @field(specie.stats, field.name),
-                    0xF,
-                    0xFFFF,
-                    p.level,
-                );
-            }
-            assert(p.moves.len > 0 and p.moves.len <= 4);
-            for (p.moves) |m, j| {
-                pokemon.moves[j].id = m;
-                pokemon.moves[j].pp = @truncate(u6, Move.pp(m) / 5 * 8);
-            }
-            if (p.hp) |hp| {
-                pokemon.hp = hp;
-            } else {
-                pokemon.hp = pokemon.stats.hp;
-            }
-            pokemon.status = p.status;
-            pokemon.types = specie.types;
-            pokemon.level = p.level;
-        }
-        return side;
-    }
-
-    pub fn random(rand: *Random) data.Side {
-        const n = if (rand.chance(1, 100)) rand.range(u4, 1, 5) else 6;
-        var side = data.Side{};
-
-        var i: u4 = 0;
-        while (i < n) : (i += 1) {
-            side.pokemon[i] = Pokemon.random(rand);
-            side.order[i] = i + 1;
-            var pokemon = &side.pokemon[i];
-            var j: u4 = 0;
-            while (j < 4) : (j += 1) {
-                if (rand.chance(1, 5 + (@as(u8, i) * 2))) {
-                    side.last_selected_move = pokemon.moves[j].id;
-                }
-                if (rand.chance(1, 5 + (@as(u8, i) * 2))) {
-                    side.last_used_move = pokemon.moves[j].id;
-                }
-            }
-            if (i == 0) {
-                var active = &side.active;
-                active.stats = pokemon.stats;
-                inline for (std.meta.fields(@TypeOf(active.boosts))) |field| {
-                    if (rand.chance(1, 10)) {
-                        @field(active.boosts, field.name) = rand.range(i4, -6, 6);
-                    }
-                }
-                active.species = pokemon.species;
-                for (pokemon.moves) |m, k| {
-                    active.moves[k] = m;
-                }
-                var volatiles = &active.volatiles;
-                inline for (std.meta.fields(@TypeOf(active.volatiles))) |field| {
-                    if (field.field_type != bool) continue;
-                    if (rand.chance(1, 18)) {
-                        @field(volatiles, field.name) = true;
-                        if (std.mem.eql(u8, field.name, "Bide")) {
-                            volatiles.data.state = rand.range(u16, 1, active.stats.hp - 1);
-                        } else if (std.mem.eql(u8, field.name, "Trapping")) {
-                            volatiles.data.attacks = 0; // TODO
-                        } else if (std.mem.eql(u8, field.name, "Thrashing")) {
-                            volatiles.data.attacks = 0; // TODO
-                            volatiles.data.state = 0; // TODO
-                        } else if (std.mem.eql(u8, field.name, "Rage")) {
-                            volatiles.data.attacks = 0; // TODO
-                            volatiles.data.state = 0; // TODO
-                        } else if (std.mem.eql(u8, field.name, "Confusion")) {
-                            volatiles.data.confusion = rand.range(u4, 1, 5);
-                        } else if (std.mem.eql(u8, field.name, "Toxic")) {
-                            pokemon.status = Status.init(Status.PSN);
-                            volatiles.data.toxic = rand.range(u4, 1, 15);
-                        } else if (std.mem.eql(u8, field.name, "Substitute")) {
-                            volatiles.data.substitute =
-                                rand.range(u8, 1, @truncate(u8, active.stats.hp / 4));
-                        }
-                    }
-                }
-                if (rand.chance(1, 20)) {
-                    const m = rand.range(u4, 1, 4);
-                    if (active.moves[m].id != .None) {
-                        volatiles.data.disabled = .{
-                            .move = m,
-                            .duration = rand.range(u4, 1, 5),
-                        };
-                    }
-                }
-            }
-        }
-
-        return side;
-    }
-};
-
-pub const Pokemon = struct {
-    species: Species,
-    moves: []const Move,
-    hp: ?u16 = null,
-    status: u8 = 0,
-    level: u8 = 100,
-
-    pub fn random(rand: *Random) data.Pokemon {
-        const s = @intToEnum(Species, rand.range(u8, 1, 151));
-        const specie = Species.get(s);
-        const lvl = if (rand.chance(1, 20)) rand.range(u8, 1, 99) else 100;
-        var stats: Stats(u16) = .{};
-        const dvs = DVs.random(rand);
-        inline for (std.meta.fields(@TypeOf(stats))) |field| {
-            @field(stats, field.name) = Stats(u16).calc(
-                field.name,
-                @field(specie.stats, field.name),
-                if (field.field_type != u4) dvs.hp() else @field(dvs, field.name),
-                if (rand.chance(1, 20)) rand.range(u8, 0, 255) else 255,
-                lvl,
-            );
-        }
-
-        var ms = [_]MoveSlot{.{}} ** 4;
-        var i: u4 = 0;
-        const n = if (rand.chance(1, 100)) rand.range(u4, 1, 3) else 4;
-        while (i < n) : (i += 1) {
-            var m: Move = .None;
-            sample: while (true) {
-                m = @intToEnum(Move, rand.range(u8, 1, 165));
-                var j: u4 = 0;
-                while (j < i) : (j += 1) {
-                    if (ms[j].id == m) continue :sample;
-                }
-                break;
-            }
-            const pp_ups = if (rand.chance(1, 10)) rand.range(u2, 0, 2) else 3;
-            const max_pp = @truncate(u6, Move.pp(m) / 5 * (5 + @as(u8, pp_ups)));
-            ms[i] = .{
-                .id = m,
-                .pp = rand.range(u6, 0, max_pp),
-                .pp_ups = pp_ups,
-            };
-        }
-
-        return .{
-            .species = s,
-            .types = specie.types,
-            .level = lvl,
-            .stats = stats,
-            .hp = rand.range(u16, 0, stats.hp),
-            .status = if (rand.chance(1, 6)) 0 | (@as(u8, 1) << rand.range(u3, 1, 6)) else 0,
-            .moves = ms,
-        };
-    }
-};
-
-// zig fmt: off
-const START = [_]u8{
-    @enumToInt(ArgType.Switch), Player.P1.ident(1),
-    @enumToInt(ArgType.Switch), Player.P2.ident(1),
-    @enumToInt(ArgType.Turn),   1, 0,
-};
-// zig fmt: off
-
-pub fn move(slot: u4) Choice {
-    return .{.type = .Move, .data = slot};
-}
-
-pub fn swtch(slot: u4) Choice {
-    return .{.type = .Switch, .data = slot};
-}
-
-fn update(battle: anytype, c1: Choice, c2: Choice) !Result {
-    var log: protocol.Log(@TypeOf(std.io.null_writer)) = .{.writer = std.io.null_writer};
-    if (battle.turn == 0) try expectEqual(Result.Default, try battle.update(.{}, .{}, &log));
-    return battle.update(c1, c2, log);
-}
+// const expectLog = protocol.expectLog;
 
 test "Battle" {
     const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
     const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
-    var battle = Battle.init(.{217, 218, 219, 220, 221}, &.{p1}, &.{p2});
+    var battle = Battle.init(.{ NO_CRIT, HIT, NO_CRIT, MAX_DMG, HIT }, &.{p1}, &.{p2});
     try expectEqual(Result.Default, try update(&battle, move(4), move(2)));
     try expect(battle.rng.exhausted());
 }
@@ -260,22 +50,22 @@ fn expectOrder(p1: anytype, o1: []const u8, p2: anytype, o2: []const u8) !void {
 }
 
 test "switching" {
-    var battle = Battle.random(&Random.init(0x31415926));
+    var battle = Battle.random(&Random.init(0x31415926), false);
     const p1 = battle.side(.P1);
     const p2 = battle.side(.P2);
 
     try expectEqual(Result.Default, try update(&battle, swtch(3), swtch(2)));
-    try expectOrder(p1, &[_]u8{3,2,1,4,5,6}, p2, &[_]u8{2,1,3,4,5,6});
+    try expectOrder(p1, &[_]u8{ 3, 2, 1, 4, 5, 6 }, p2, &[_]u8{ 2, 1, 3, 4, 5, 6 });
     try expectEqual(Result.Default, try update(&battle, swtch(5), swtch(5)));
-    try expectOrder(p1, &[_]u8{5,2,1,4,3,6}, p2, &[_]u8{5,1,3,4,2,6});
+    try expectOrder(p1, &[_]u8{ 5, 2, 1, 4, 3, 6 }, p2, &[_]u8{ 5, 1, 3, 4, 2, 6 });
     try expectEqual(Result.Default, try update(&battle, swtch(6), swtch(3)));
-    try expectOrder(p1, &[_]u8{6,2,1,4,3,5}, p2, &[_]u8{3,1,5,4,2,6});
+    try expectOrder(p1, &[_]u8{ 6, 2, 1, 4, 3, 5 }, p2, &[_]u8{ 3, 1, 5, 4, 2, 6 });
     try expectEqual(Result.Default, try update(&battle, swtch(3), swtch(3)));
-    try expectOrder(p1, &[_]u8{1,2,6,4,3,5}, p2, &[_]u8{5,1,3,4,2,6});
+    try expectOrder(p1, &[_]u8{ 1, 2, 6, 4, 3, 5 }, p2, &[_]u8{ 5, 1, 3, 4, 2, 6 });
     try expectEqual(Result.Default, try update(&battle, swtch(2), swtch(4)));
-    try expectOrder(p1, &[_]u8{2,1,6,4,3,5}, p2, &[_]u8{4,1,3,5,2,6});
+    try expectOrder(p1, &[_]u8{ 2, 1, 6, 4, 3, 5 }, p2, &[_]u8{ 4, 1, 3, 5, 2, 6 });
     try expectEqual(Result.Default, try update(&battle, swtch(5), swtch(5)));
-    try expectOrder(p1, &[_]u8{3,1,6,4,2,5}, p2, &[_]u8{2,1,3,5,4,6});
+    try expectOrder(p1, &[_]u8{ 3, 1, 6, 4, 2, 5 }, p2, &[_]u8{ 2, 1, 3, 5, 4, 6 });
 }
 
 // var buf = [_]u8{0} ** 7;

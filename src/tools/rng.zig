@@ -13,6 +13,9 @@ pub const ANSI = struct {
 const Tool = enum {
     crit,
     thrash,
+    rampage,
+    disable,
+    sleep,
 };
 
 pub fn main() !void {
@@ -32,6 +35,15 @@ pub fn main() !void {
     } else if (std.mem.eql(u8, args[1], "thrash")) {
         if (args.len != 2) std.process.exit(1);
         tool = .thrash;
+    } else if (std.mem.eql(u8, args[1], "rampage")) {
+        if (args.len != 2) std.process.exit(1);
+        tool = .rampage;
+    } else if (std.mem.eql(u8, args[1], "disable")) {
+        if (args.len != 2) std.process.exit(1);
+        tool = .disable;
+    } else if (std.mem.eql(u8, args[1], "sleep")) {
+        if (args.len != 2) std.process.exit(1);
+        tool = .sleep;
     } else {
         std.process.exit(1);
     }
@@ -61,6 +73,21 @@ pub fn main() !void {
                 .thrash => {
                     const a = rng1.range(u8, 3, 5);
                     const b = (rng2.next() & 3) + 2;
+                    break :match a == b;
+                },
+                .rampage => {
+                    const a = rng1.range(u8, 2, 4);
+                    const b = (rng2.next() & 1) + 2;
+                    break :match a == b;
+                },
+                .disable => {
+                    const a = rng1.range(u8, 1, 7);
+                    const b = (rng2.next() & 7) + 1;
+                    break :match a == b;
+                },
+                .sleep => {
+                    const a = rng1.range(u8, 1, 8);
+                    const b = (rng2.next() & 7);
                     break :match a == b;
                 },
             }

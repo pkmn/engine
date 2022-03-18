@@ -8,6 +8,8 @@ const protocol = @import("./protocol.zig");
 
 const assert = std.debug.assert;
 
+const expectEqual = std.testing.expectEqual;
+
 const showdown = build_options.showdown;
 
 const Gen12 = rng.Gen12;
@@ -22,8 +24,8 @@ const Species = data.Species;
 const Stats = data.Stats;
 const Status = data.Status;
 
-// zig fmt: off
 const BOOSTS = &[_][2]u8{
+    // zig fmt: off
     .{ 25, 100 }, // -6
     .{ 28, 100 }, // -5
     .{ 33, 100 }, // -4
@@ -37,8 +39,8 @@ const BOOSTS = &[_][2]u8{
     .{  3,   1 }, // +4
     .{ 35,  10 }, // +5
     .{  4,   1 }, // +6
+    // zig fmt: on
 };
-// zig fmt: on
 
 pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     if (battle.turn == 0) return start(battle, log);
@@ -54,7 +56,7 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
         if (try doTurn(battle, .P2, c2, .P1, c1, log)) |r| return r;
     }
 
-    var p1 = battle.side(.P1);
+    var p1 = battle.side(.P1); // FIXME what about thrashing/rage?
     if (p1.active.volatiles.data.attacks == 0) {
         p1.active.volatiles.Trapping = false;
     }
@@ -602,9 +604,9 @@ fn calcDamage(battle: anytype, player: Player, move: Move.Data, crit: bool) u16 
         else
             // NB: not capped to MAX_STAT_VALUE, can be 999 * 2 = 1998
             if (special)
-                foe.active.stats.spc *% @as(u2, if (foe.active.volatiles.LightScreen) 2 else 1)
+                foe.active.stats.spc * @as(u2, if (foe.active.volatiles.LightScreen) 2 else 1)
             else
-                foe.active.stats.def *% @as(u2, if (foe.active.volatiles.Reflect) 2 else 1);
+                foe.active.stats.def * @as(u2, if (foe.active.volatiles.Reflect) 2 else 1);
     // zig fmt: on
 
     if (atk > 0xFF or def > 0xFF) {
@@ -613,11 +615,11 @@ fn calcDamage(battle: anytype, player: Player, move: Move.Data, crit: bool) u16 
         def = @maximum((def / 4) & 0xFF, if (showdown) 1 else 0);
     }
 
-    const lvl = side.stored().level * @as(u2, if (crit) 2 else 1);
+    const lvl = @as(u16, side.stored().level * @as(u2, if (crit) 2 else 1));
 
     def = if (move.effect == .Explode) @maximum(def / 2, 1) else def;
 
-    return @minimum(997, ((lvl *% 2 / 5) +% 2) *% move.bp *% atk / def / 50) + 2;
+    return @minimum(997, ((lvl * 2 / 5) + 2) *% move.bp *% atk / def / 50) + 2;
 }
 
 fn adjustDamage(battle: anytype, player: Player, damage: u16) u16 {
@@ -900,8 +902,8 @@ pub const Effects = struct {
 
         if (move.effect == .ConfusionChance) {
             const chance = if (showdown)
-                // BUG: showdown uses 26/256 instead of 25?
-                battle.rng.chance(u8, 25, 256)
+                // BUG: this diverges because showdown uses 26 instead of 25
+                battle.rng.chance(u8, 26, 256)
             else
                 battle.rng.next() < Gen12.percent(10);
             if (!chance) return;
@@ -1378,4 +1380,32 @@ fn distribution(battle: anytype) u4 {
     if (showdown) return DISTRIBUTION[battle.rng.range(u8, 0, DISTRIBUTION.len)];
     const r = (battle.rng.next() & 3);
     return @truncate(u4, (if (r < 2) r else battle.rng.next() & 3) + 2);
+}
+
+test "RNG agreement" {
+    var expected: [256]u8 = undefined;
+    var i: usize = 0;
+    while (i < expected.len) : (i += 1) {
+        expected[i] = @truncate(u8, i);
+    }
+
+    var spe1 = rng.FixedRNG(1, expected.len){ .rolls = expected };
+    var spe2 = rng.FixedRNG(1, expected.len){ .rolls = expected };
+
+    var cfz1 = rng.FixedRNG(1, expected.len){ .rolls = expected };
+    var cfz2 = rng.FixedRNG(1, expected.len){ .rolls = expected };
+
+    var par1 = rng.FixedRNG(1, expected.len){ .rolls = expected };
+    var par2 = rng.FixedRNG(1, expected.len){ .rolls = expected };
+
+    var brn1 = rng.FixedRNG(1, expected.len){ .rolls = expected };
+    var brn2 = rng.FixedRNG(1, expected.len){ .rolls = expected };
+
+    i = 0;
+    while (i < expected.len) : (i += 1) {
+        try expectEqual(spe1.range(u8, 0, 2) == 0, spe2.next() < Gen12.percent(50) + 1);
+        try expectEqual(!cfz1.chance(u8, 128, 256), cfz2.next() >= Gen12.percent(50) + 1);
+        try expectEqual(par1.chance(u8, 63, 256), par2.next() < Gen12.percent(25));
+        try expectEqual(brn1.chance(u8, 26, 256), brn2.next() < Gen12.percent(10) + 1);
+    }
 }
