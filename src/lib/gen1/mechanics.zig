@@ -24,8 +24,8 @@ const Species = data.Species;
 const Stats = data.Stats;
 const Status = data.Status;
 
+// zig fmt: off
 const BOOSTS = &[_][2]u8{
-    // zig fmt: off
     .{ 25, 100 }, // -6
     .{ 28, 100 }, // -5
     .{ 33, 100 }, // -4
@@ -39,8 +39,8 @@ const BOOSTS = &[_][2]u8{
     .{  3,   1 }, // +4
     .{ 35,  10 }, // +5
     .{  4,   1 }, // +6
-    // zig fmt: on
 };
+// zig fmt: on
 
 pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     if (battle.turn == 0) return start(battle, log);

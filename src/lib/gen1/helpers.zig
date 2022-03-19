@@ -223,60 +223,61 @@ pub const Pokemon = struct {
     }
 };
 
+// zig fmt: off
 pub const START = [_]u8{
-    // zig fmt: off
     @enumToInt(ArgType.Switch), Player.P1.ident(1),
     @enumToInt(ArgType.Switch), Player.P2.ident(1),
     @enumToInt(ArgType.Turn),   1, 0,
-    // zig fmt: off
 };
+ // zig fmt: on
 
 pub fn move(slot: u4) Choice {
-    return .{.type = .Move, .data = slot};
+    return .{ .type = .Move, .data = slot };
 }
 
 pub fn swtch(slot: u4) Choice {
-    return .{.type = .Switch, .data = slot};
+    return .{ .type = .Switch, .data = slot };
 }
 
 pub fn update(battle: anytype, c1: Choice, c2: Choice) !Result {
-    var log: protocol.Log(@TypeOf(std.io.null_writer)) = .{.writer = std.io.null_writer};
+    var log: protocol.Log(@TypeOf(std.io.null_writer)) = .{ .writer = std.io.null_writer };
     if (battle.turn == 0) try expectEqual(Result.Default, try battle.update(.{}, .{}, &log));
     return battle.update(c1, c2, log);
 }
 
 pub const Rolls = struct {
-  pub const HIT = hit(true);
-  pub const MISS = hit(false);
-  pub const CRIT = crit(true);
-  pub const NO_CRIT = crit(false);
-  pub const MIN_DMG = damage(217);
-  pub const MAX_DMG = damage(255);
+    pub const NOP = 0;
+    pub const HIT = hit(true);
+    pub const MISS = hit(false);
+    pub const CRIT = crit(true);
+    pub const NO_CRIT = crit(false);
+    pub const MIN_DMG = damage(217);
+    pub const MAX_DMG = damage(255);
 
-  pub fn speedTie(comptime player: Player) u8 {
-    return if (player == .P1) 0 else 255;
-  }
+    pub fn speedTie(comptime player: Player) u8 {
+        return if (player == .P1) 0 else 255;
+    }
 
-  pub fn hit(comptime yes: bool) u8 {
-    return if (yes) 0 else 255;
-  }
+    pub fn hit(comptime yes: bool) u8 {
+        return if (yes) 0 else 255;
+    }
 
-  pub fn crit(comptime yes: bool) u8 {
-    return if (yes) 0 else 255;
-  }
+    pub fn crit(comptime yes: bool) u8 {
+        return if (yes) 0 else 255;
+    }
 
-  pub fn damage(comptime num: u8) u8 {
-    assert(num >= 217 and num <= 255);
-    return num;
-  }
+    pub fn damage(comptime num: u8) u8 {
+        assert(num >= 217 and num <= 255);
+        return num;
+    }
 
-  pub fn psywave(comptime level: u8, comptime factor: f32) u8 {
-    assert(factor >= 0 and factor < 1.5);
-    return @floatToInt(u8, @intToFloat(f32, level) * factor);
-  }
+    pub fn psywave(comptime level: u8, comptime factor: f32) u8 {
+        assert(factor >= 0 and factor < 1.5);
+        return @floatToInt(u8, @intToFloat(f32, level) * factor);
+    }
 
-  pub fn metronome(comptime m: Move) u8 {
-    const int = @enumToInt(m);
-    return if (showdown) int - 1 else int;
-  }
+    pub fn metronome(comptime m: Move) u8 {
+        const int = @enumToInt(m);
+        return if (showdown) int - 1 else int;
+    }
 };
