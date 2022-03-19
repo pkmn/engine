@@ -21,8 +21,9 @@ pub fn Battle(comptime PRNG: anytype) align(64) type {
         sides: [2]Side,
         turn: u16 = 0,
         last_damage: u16 = 0,
+        // = 4 bytes padding if showdown
         rng: PRNG,
-        // 4 bits trailing if showdown
+        // = 1 bytes if not showdown
 
         pub inline fn side(self: *Self, player: Player) *Side {
             return &self.sides[@enumToInt(player)];
