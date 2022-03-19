@@ -1787,7 +1787,6 @@ pub const Species = enum(u8) {
 
     // @test-only
     pub fn get(id: Species) Data {
-        assert(builtin.is_test);
         assert(id != .None);
         return data[@enumToInt(id) - 1];
     }

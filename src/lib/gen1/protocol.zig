@@ -1,9 +1,9 @@
 const std = @import("std");
 const build_options = @import("build_options");
 
-const protocol = @import("../common/protocol.zig");
+const protocol = @import("common").protocol;
 
-const data = @import("./data.zig");
+const data = @import("data.zig");
 
 const assert = std.debug.assert;
 

@@ -2,13 +2,13 @@ const std = @import("std");
 const build_options = @import("build_options");
 const builtin = @import("builtin");
 
-const rng = @import("../common/rng.zig");
+const rng = @import("common").rng;
 
 const moves = @import("data/moves.zig");
 const species = @import("data/species.zig");
 const types = @import("data/types.zig");
 
-const mechanics = @import("./mechanics.zig");
+const mechanics = @import("mechanics.zig");
 
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
@@ -262,7 +262,6 @@ pub fn Stats(comptime T: type) type {
 
         // @test-only
         pub fn calc(comptime stat: []const u8, base: T, dv: u4, exp: u16, level: u8) T {
-            assert(builtin.is_test);
             assert(level > 0 and level <= 100);
             const factor = if (std.mem.eql(u8, stat, "hp")) level + 10 else 5;
             return @truncate(T, (@as(u16, base) + dv) * 2 + @as(u16, (std.math.sqrt(exp) / 4)) * level / 100 + factor);
@@ -370,12 +369,10 @@ pub const DVs = struct {
     spc: u4 = 15,
 
     pub fn hp(self: DVs) u4 {
-        assert(builtin.is_test);
         return (self.atk & 1) << 3 | (self.def & 1) << 2 | (self.spe & 1) << 1 | (self.spc & 1);
     }
 
     pub fn random(rand: *rng.Random) DVs {
-        assert(builtin.is_test);
         return .{
             .atk = if (rand.chance(1, 5)) rand.range(u4, 1, 15) else 15,
             .def = if (rand.chance(1, 5)) rand.range(u4, 1, 15) else 15,

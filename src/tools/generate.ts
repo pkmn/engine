@@ -381,7 +381,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         ${PP.join('\n        ')},
     };\n`;
     const ppFn = `pub fn pp(id: Move) u8 {
-        assert(builtin.is_test);
         assert(id != .None);
         return pp_data[@enumToInt(id) - 1];
     }`;
@@ -631,7 +630,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }\n` + '    };\n';
 
     const ppFn = `pub fn pp(id: Move) u8 {
-        assert(builtin.is_test);
         return Move.get(id).pp * 5;
     }`;
     template('moves', dirs.out, {
@@ -736,7 +734,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
     };`;
     const ppFn = `pub fn pp(id: Move) u8 {
-        assert(builtin.is_test);
         return Move.get(id).pp * 5;
     }`;
     template('moves', dirs.out, {

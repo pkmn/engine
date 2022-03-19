@@ -1,7 +1,7 @@
 const std = @import("std");
 const build_options = @import("build_options");
 
-const rng = @import("../common/rng.zig");
+const rng = @import("common").rng;
 
 const data = @import("data.zig");
 const helpers = @import("helpers.zig");
@@ -17,25 +17,33 @@ const showdown = build_options.showdown;
 
 const Random = rng.Random;
 
+const Player = data.Player;
 const Result = data.Result;
+const Choice = data.Choice;
 
 const Battle = helpers.Battle;
-const move = helpers.move;
-const swtch = helpers.swtch;
-const update = helpers.update;
-
-const Rolls = helpers.Rolls;
-const NOP = Rolls.NOP;
-const HIT = Rolls.HIT;
-const MISS = Rolls.MISS;
-const CRIT = Rolls.CRIT;
-const NO_CRIT = Rolls.NO_CRIT;
-const MIN_DMG = Rolls.MIN_DMG;
-const MAX_DMG = Rolls.MAX_DMG;
 
 const ArgType = protocol.ArgType;
 const Log = protocol.Log(std.io.FixedBufferStream([]u8).Writer);
 // const expectLog = protocol.expectLog;
+
+const P1_FIRST = 0;
+const P2_FIRST = 255;
+const NOP = 0;
+const HIT = 0;
+const MISS = 255;
+const CRIT = 0;
+const NO_CRIT = 255;
+const MIN_DMG = 217;
+const MAX_DMG = 255;
+
+// zig fmt: off
+pub const START = [_]u8{
+    @enumToInt(ArgType.Switch), Player.P1.ident(1),
+    @enumToInt(ArgType.Switch), Player.P2.ident(1),
+    @enumToInt(ArgType.Turn),   1, 0,
+};
+// zig fmt: on
 
 test "TODO Battle" {
     const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
@@ -576,6 +584,20 @@ test "switching" {
 
 // BUG: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Dual-type_damage_misinformation
 // BUG: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Poison.2FBurn_animation_with_0_HP
+
+pub fn move(slot: u4) Choice {
+    return .{ .type = .Move, .data = slot };
+}
+
+pub fn swtch(slot: u4) Choice {
+    return .{ .type = .Switch, .data = slot };
+}
+
+pub fn update(battle: anytype, c1: Choice, c2: Choice) !Result {
+    var log: protocol.Log(@TypeOf(std.io.null_writer)) = .{ .writer = std.io.null_writer };
+    if (battle.turn == 0) try expectEqual(Result.Default, try battle.update(.{}, .{}, &log));
+    return battle.update(c1, c2, log);
+}
 
 comptime {
     _ = @import("data.zig");

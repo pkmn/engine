@@ -396,7 +396,6 @@ pub const Move = enum(u16) {
 
     // @test-only
     pub fn pp(id: Move) u8 {
-        assert(builtin.is_test);
         return Move.get(id).pp * 5;
     }
 };

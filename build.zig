@@ -5,9 +5,28 @@ pub fn build(b: *std.build.Builder) void {
 
     const showdown = b.option(bool, "showdown", "Enable Pokémon Showdown compatability mode") orelse false;
     const trace = b.option(bool, "trace", "Enable trace logs") orelse false;
-    const build_options = b.addOptions();
-    build_options.addOption(bool, "showdown", showdown);
-    build_options.addOption(bool, "trace", trace);
+    const options = b.addOptions();
+    options.addOption(bool, "showdown", showdown);
+    options.addOption(bool, "trace", trace);
+
+    const build_options = std.build.Pkg{ .name = "build_options", .path = options.getSource() };
+
+    const common = std.build.Pkg{
+        .name = "common",
+        .path = .{ .path = "src/lib/common/main.zig" },
+        .dependencies = &[_]std.build.Pkg{build_options},
+    };
+
+    const pkmn = std.build.Pkg{
+        .name = "pkmn",
+        .path = .{ .path = "src/lib/main.zig" },
+        .dependencies = &[_]std.build.Pkg{ build_options, common },
+    };
+
+    const lib = b.addStaticLibrary("pkmn", "src/lib/main.zig");
+    lib.addOptions("build_options", options);
+    lib.setBuildMode(mode);
+    lib.install();
 
     const test_file = b.option([]const u8, "test-file", "Input file for test") orelse "src/lib/test.zig";
     const test_bin = b.option([]const u8, "test-bin", "Emit test binary to");
@@ -17,7 +36,8 @@ pub fn build(b: *std.build.Builder) void {
     const tests = if (test_no_exec) b.addTestExe("test_exe", test_file) else b.addTest(test_file);
     tests.setMainPkgPath("./");
     tests.setFilter(test_filter);
-    tests.addOptions("build_options", build_options);
+    tests.addPackage(common);
+    tests.addOptions("build_options", options);
     tests.setBuildMode(mode);
     if (test_bin) |bin| {
         tests.name = std.fs.path.basename(bin);
@@ -27,18 +47,31 @@ pub fn build(b: *std.build.Builder) void {
     const format = b.addFmt(&[_][]const u8{"."});
 
     const rng = b.addExecutable("rng", "src/tools/rng.zig");
-    rng.addPackagePath("rng", "src/lib/common/rng.zig");
-    rng.addOptions("build_options", build_options);
+    rng.addPackage(common);
     rng.setBuildMode(mode);
     rng.install();
 
     const run_rng = rng.run();
     run_rng.step.dependOn(b.getInstallStep());
-    if (b.args) |args| {
-        run_rng.addArgs(args);
-    }
+    if (b.args) |args| run_rng.addArgs(args);
+
+    const debug = b.addExecutable("debug", "src/tools/debug.zig");
+    debug.addPackage(pkmn);
+    debug.addPackage(common);
+    debug.addPackage(.{
+        .name = "helpers",
+        .path = .{ .path = "src/lib/gen1/helpers.zig" },
+        .dependencies = &[_]std.build.Pkg{ build_options, common },
+    });
+    debug.setBuildMode(mode);
+    debug.install();
+
+    const run_debug = debug.run();
+    run_debug.step.dependOn(b.getInstallStep());
+    if (b.args) |args| run_debug.addArgs(args);
 
     b.step("test", "Run all tests").dependOn(&tests.step);
     b.step("format", "Format source files").dependOn(&format.step);
     b.step("rng", "Run RNG calculator tool").dependOn(&run_rng.step);
+    b.step("debug", "Run debugging tool").dependOn(&run_debug.step);
 }

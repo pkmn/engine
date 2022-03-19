@@ -1,7 +1,7 @@
 const std = @import("std");
 const build_options = @import("build_options");
 
-const rng = @import("../common/rng.zig");
+const rng = @import("common").rng;
 
 const data = @import("data.zig");
 const protocol = @import("protocol.zig");
@@ -14,12 +14,10 @@ const showdown = build_options.showdown;
 
 const Random = rng.Random;
 
-const Choice = data.Choice;
 const DVs = data.DVs;
 const Move = data.Move;
 const MoveSlot = data.MoveSlot;
-const Player = data.Player;
-const Result = data.Result;
+
 const Species = data.Species;
 const Stats = data.Stats;
 const Status = data.Status;
@@ -220,64 +218,5 @@ pub const Pokemon = struct {
             .status = if (rand.chance(1, 6)) 0 | (@as(u8, 1) << rand.range(u3, 1, 6)) else 0,
             .moves = ms,
         };
-    }
-};
-
-// zig fmt: off
-pub const START = [_]u8{
-    @enumToInt(ArgType.Switch), Player.P1.ident(1),
-    @enumToInt(ArgType.Switch), Player.P2.ident(1),
-    @enumToInt(ArgType.Turn),   1, 0,
-};
-// zig fmt: on
-
-pub fn move(slot: u4) Choice {
-    return .{ .type = .Move, .data = slot };
-}
-
-pub fn swtch(slot: u4) Choice {
-    return .{ .type = .Switch, .data = slot };
-}
-
-pub fn update(battle: anytype, c1: Choice, c2: Choice) !Result {
-    var log: protocol.Log(@TypeOf(std.io.null_writer)) = .{ .writer = std.io.null_writer };
-    if (battle.turn == 0) try expectEqual(Result.Default, try battle.update(.{}, .{}, &log));
-    return battle.update(c1, c2, log);
-}
-
-pub const Rolls = struct {
-    pub const NOP = 0;
-    pub const HIT = hit(true);
-    pub const MISS = hit(false);
-    pub const CRIT = crit(true);
-    pub const NO_CRIT = crit(false);
-    pub const MIN_DMG = damage(217);
-    pub const MAX_DMG = damage(255);
-
-    pub fn speedTie(comptime player: Player) u8 {
-        return if (player == .P1) 0 else 255;
-    }
-
-    pub fn hit(comptime yes: bool) u8 {
-        return if (yes) 0 else 255;
-    }
-
-    pub fn crit(comptime yes: bool) u8 {
-        return if (yes) 0 else 255;
-    }
-
-    pub fn damage(comptime num: u8) u8 {
-        assert(num >= 217 and num <= 255);
-        return num;
-    }
-
-    pub fn psywave(comptime level: u8, comptime factor: f32) u8 {
-        assert(factor >= 0 and factor < 1.5);
-        return @floatToInt(u8, @intToFloat(f32, level) * factor);
-    }
-
-    pub fn metronome(comptime m: Move) u8 {
-        const int = @enumToInt(m);
-        return if (showdown) int - 1 else int;
     }
 };
