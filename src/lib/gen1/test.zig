@@ -25,6 +25,7 @@ const swtch = helpers.swtch;
 const update = helpers.update;
 
 const Rolls = helpers.Rolls;
+const NOP = Rolls.NOP;
 const HIT = Rolls.HIT;
 const MISS = Rolls.MISS;
 const CRIT = Rolls.CRIT;
@@ -39,7 +40,11 @@ const Log = protocol.Log(std.io.FixedBufferStream([]u8).Writer);
 test "TODO Battle" {
     const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
     const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
-    var battle = Battle.init(.{ NO_CRIT, HIT, NO_CRIT, MAX_DMG, HIT }, &.{p1}, &.{p2});
+    const rolls = if (showdown)
+        (.{ NOP, NOP, HIT, NO_CRIT, HIT, NO_CRIT, MAX_DMG })
+    else
+        (.{ NO_CRIT, HIT, NO_CRIT, MAX_DMG, HIT });
+    var battle = Battle.init(rolls, &.{p1}, &.{p2});
     try expectEqual(Result.Default, try update(&battle, move(4), move(2)));
     try expect(battle.rng.exhausted());
 }

@@ -229,7 +229,7 @@ pub const START = [_]u8{
     @enumToInt(ArgType.Switch), Player.P2.ident(1),
     @enumToInt(ArgType.Turn),   1, 0,
 };
- // zig fmt: on
+// zig fmt: on
 
 pub fn move(slot: u4) Choice {
     return .{ .type = .Move, .data = slot };

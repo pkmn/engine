@@ -132,6 +132,8 @@ fn selectMove(battle: anytype, player: Player, choice: Choice) void {
         assert(side.active.volatiles.data.disabled.move != choice.data);
         side.last_selected_move = move.id;
     }
+
+    if (showdown) _ = battle.rng.next(); // BUG: getRandomTarget
 }
 
 fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anytype) !void {
