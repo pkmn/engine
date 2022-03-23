@@ -5,6 +5,7 @@ const rng = @import("common").rng;
 const data = @import("data.zig");
 const helpers = @import("helpers.zig");
 
+const assert = std.debug.assert;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
 const Random = rng.Random;
@@ -40,7 +41,14 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
         .Move => {
             const side = battle.side(player);
             const foe = battle.foe(player);
-            const active = side.active;
+
+            var active = side.active;
+
+            if (active.volatiles.Recharging) {
+                out[n] = move(0); // recharge
+                n += 1;
+                return n;
+            }
 
             if (!foe.active.volatiles.Trapping) {
                 var slot: u4 = 2;
@@ -52,7 +60,20 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
                 }
             }
 
-            _ = active;
+            const before = n;
+            var slot: u4 = 1;
+            while (slot <= 4) : (slot += 1) {
+                const m = active.move(slot);
+                if (m.id == .None) break;
+                // TODO: Wrap at 0 PP
+                if (m.pp == 0 or active.volatiles.data.disabled.move == slot) continue;
+                out[n] = move(slot);
+                n += 1;
+            }
+            if (n == before) {
+                out[n] = move(0); // Struggle
+                n += 1;
+            }
         },
     }
     return n;
@@ -69,10 +90,9 @@ test "choices" {
         swtch(4),
         swtch(5),
         swtch(6),
-        // TODO
-        // move(1),
-        // move(2),
-        // move(3),
-        // move(4),
+        move(1),
+        move(2),
+        move(3),
+        move(4),
     }, options[0..n]);
 }
