@@ -406,7 +406,7 @@ pub const Choice = packed struct {
     _: u2 = 0,
     data: u4 = 0,
 
-    const Type = enum(u2) {
+    pub const Type = enum(u2) {
         Pass,
         Move,
         Switch,

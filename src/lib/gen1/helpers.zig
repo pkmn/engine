@@ -14,10 +14,10 @@ const showdown = build_options.showdown;
 
 const Random = rng.Random;
 
+const Choice = data.Choice;
 const DVs = data.DVs;
 const Move = data.Move;
 const MoveSlot = data.MoveSlot;
-
 const Species = data.Species;
 const Stats = data.Stats;
 const Status = data.Status;
@@ -221,3 +221,11 @@ pub const Pokemon = struct {
         };
     }
 };
+
+pub fn move(slot: u4) Choice {
+    return .{ .type = .Move, .data = slot };
+}
+
+pub fn swtch(slot: u4) Choice {
+    return .{ .type = .Switch, .data = slot };
+}

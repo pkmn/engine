@@ -22,6 +22,8 @@ const Result = data.Result;
 const Choice = data.Choice;
 
 const Battle = helpers.Battle;
+const move = helpers.move;
+const swtch = helpers.swtch;
 
 const ArgType = protocol.ArgType;
 const Log = protocol.Log(std.io.FixedBufferStream([]u8).Writer);
@@ -585,21 +587,14 @@ test "switching" {
 // BUG: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Dual-type_damage_misinformation
 // BUG: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Poison.2FBurn_animation_with_0_HP
 
-pub fn move(slot: u4) Choice {
-    return .{ .type = .Move, .data = slot };
-}
-
-pub fn swtch(slot: u4) Choice {
-    return .{ .type = .Switch, .data = slot };
-}
-
-pub fn update(battle: anytype, c1: Choice, c2: Choice) !Result {
+fn update(battle: anytype, c1: Choice, c2: Choice) !Result {
     var log: protocol.Log(@TypeOf(std.io.null_writer)) = .{ .writer = std.io.null_writer };
     if (battle.turn == 0) try expectEqual(Result.Default, try battle.update(.{}, .{}, &log));
     return battle.update(c1, c2, log);
 }
 
 comptime {
+    _ = @import("choices.zig");
     _ = @import("data.zig");
     _ = @import("mechanics.zig");
     _ = @import("protocol.zig");

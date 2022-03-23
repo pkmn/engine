@@ -102,6 +102,7 @@ interface ShiftChoice {
   choiceType: 'shift';
 }
 
+// FIXME TODO need to never trigger an Unavailable choice - need to inspect state not Request
 export function choices(request: Request): string[] { // DEBUG
   // WaitRequest
   if ('wait' in request) return [];
