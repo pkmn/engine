@@ -232,9 +232,9 @@ fn checkEBC(battle: anytype) bool {
         for (battle.sides[~@truncate(u1, i)].pokemon) |pokemon| {
             if (pokemon.species == .None) continue;
 
-            const ghost = pokemon.types.includes(.Ghost);
+            const ghost = pokemon.hp == 0 or pokemon.types.includes(.Ghost);
             foe_all_ghosts = foe_all_ghosts and ghost;
-            foe_all_transform = foe_all_transform and transform: {
+            foe_all_transform = foe_all_transform and pokemon.hp == 0 or transform: {
                 for (pokemon.moves) |m| {
                     if (m.id == .None) break :transform true;
                     if (m.id != .Transform) break :transform false;
@@ -244,7 +244,7 @@ fn checkEBC(battle: anytype) bool {
         }
 
         for (side.pokemon) |pokemon| {
-            if (Status.is(pokemon.status, .FRZ)) continue;
+            if (pokemon.hp == 0 or Status.is(pokemon.status, .FRZ)) continue;
             const transform = foe_all_transform and transform: {
                 for (pokemon.moves) |m| {
                     if (m.id == .None) break :transform true;
