@@ -78,7 +78,8 @@ pub const Side = struct {
             assert(p.moves.len > 0 and p.moves.len <= 4);
             for (p.moves) |m, j| {
                 pokemon.moves[j].id = m;
-                pokemon.moves[j].pp = @truncate(u6, Move.pp(m) / 5 * 8);
+                // NB: PP can be at most 61 legally (though can overflow to 63)
+                pokemon.moves[j].pp = @truncate(u6, @minimum(Move.pp(m) / 5 * 8, 61));
             }
             if (p.hp) |hp| {
                 pokemon.hp = hp;

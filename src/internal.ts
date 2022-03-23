@@ -1,0 +1,104 @@
+import {ID, TypeName, Generation} from '@pkmn/data';
+import json from './ids.json';
+
+export const LE = (() => {
+  const u8 = new Uint8Array(4);
+  const u16 = new Uint16Array(u8.buffer);
+  return !!((u16[0] = 1) & u16[0]);
+})();
+
+
+export interface IDs {
+  1: {
+    types: TypeName[];
+  };
+  2: {
+    items: ID[];
+    types: TypeName[];
+  };
+  3: {
+    items: ID[];
+  };
+}
+
+export const IDS = json as IDs;
+
+const LOOKUPS: Lookup[] = [];
+
+export class Lookup {
+  private readonly gen: Generation;
+  private readonly typesByNum: TypeName[];
+  private readonly typesByName: {[key in TypeName]: number};
+  private readonly species: ID[];
+  private readonly moves: ID[];
+  private readonly items: ID[];
+  private readonly abilities: ID[];
+
+  static get(gen: Generation) {
+    const lookup = LOOKUPS[gen.num - 1];
+    return lookup || (LOOKUPS[gen.num - 1] = new Lookup(gen));
+  }
+
+  private constructor(gen: Generation) {
+    this.gen = gen;
+    this.typesByNum = IDS[Math.min(gen.num, 2) as 1 | 2].types;
+    this.typesByName = {} as {[key in TypeName]: number};
+    for (let i = 0; i < this.typesByNum.length; i++) {
+      this.typesByName[this.typesByNum[i]] = i;
+    }
+    this.species = [];
+    for (const specie of gen.species) {
+      this.species[specie.num - 1] = specie.id;
+    }
+    this.moves = [];
+    for (const move of gen.moves) {
+      this.moves[move.num - 1] = move.id;
+    }
+    if (gen.num === 1) {
+      this.items = [];
+    } else {
+      this.items = IDS[gen.num as 2 | 3].items;
+    }
+    this.abilities = []; // TODO
+  }
+
+  typeByNum(num: number): TypeName {
+    return this.typesByNum[num];
+  }
+
+  typeByName(name: TypeName): number {
+    return this.typesByName[name];
+  }
+
+  specieByNum(num: number): ID {
+    return this.species[num - 1];
+  }
+
+  speciesByID(id: ID): number {
+    return this.gen.species.get(id)!.num;
+  }
+
+  moveByNum(num: number): ID {
+    return this.moves[num - 1];
+  }
+
+  movesByID(id: ID): number {
+    return this.gen.moves.get(id)!.num;
+  }
+
+  itemByNum(num: number): ID {
+    return this.items[num - 1];
+  }
+
+  itemByID(id: ID): number {
+    return this.gen.items.get(id)!.num;
+  }
+
+  abilityByNum(num: number): ID {
+    return this.abilities[num - 1];
+  }
+
+  abilityByID(id: ID): number {
+    return this.gen.abilities.get(id)!.num;
+  }
+}

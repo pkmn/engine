@@ -67,8 +67,8 @@ pub const Side = extern struct {
     pokemon: [6]Pokemon = [_]Pokemon{.{}} ** 6,
     active: ActivePokemon = .{},
     order: [6]u8 = [_]u8{0} ** 6,
-    last_used_move: Move = .None,
     last_selected_move: Move = .None,
+    last_used_move: Move = .None,
 
     comptime {
         assert(@sizeOf(Side) == 184);

@@ -1,17 +1,10 @@
-import {ID, TypeName} from '@pkmn/data';
-import json from './ids.json';
+import {Generation} from '@pkmn/data';
 
-export interface IDs {
-  1: {
-    types: TypeName[];
-  };
-  2: {
-    items: ID[];
-    types: TypeName[];
-  };
-  3: {
-    items: ID[];
-  };
+import {Lookup} from './internal';
+import * as gen1 from './gen1';
+
+export class Battle {
+  static create(gen: Generation, buf: ArrayBuffer) {
+    return new gen1.Battle(Lookup.get(gen), new DataView(buf));
+  }
 }
-
-export const IDS = json as IDs;
