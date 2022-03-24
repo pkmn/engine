@@ -1,8 +1,9 @@
 const std = @import("std");
 
 const pkmn = @import("pkmn");
-const helpers = @import("helpers");
-const rng = @import("common").rng;
+
+const helpers = pkmn.gen1.helpers;
+const rng = pkmn.rng;
 
 pub fn main() !void {
     // var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);

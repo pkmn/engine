@@ -2,7 +2,7 @@ const std = @import("std");
 const build_options = @import("build_options");
 const builtin = @import("builtin");
 
-const rng = @import("common").rng;
+const rng = @import("../common/rng.zig");
 
 const moves = @import("data/moves.zig");
 const species = @import("data/species.zig");

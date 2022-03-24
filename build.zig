@@ -11,22 +11,10 @@ pub fn build(b: *std.build.Builder) void {
 
     const build_options = std.build.Pkg{ .name = "build_options", .path = options.getSource() };
 
-    const common = std.build.Pkg{
-        .name = "common",
-        .path = .{ .path = "src/lib/common/main.zig" },
-        .dependencies = &[_]std.build.Pkg{build_options},
-    };
-
     const pkmn = std.build.Pkg{
         .name = "pkmn",
-        .path = .{ .path = "src/lib/main.zig" },
-        .dependencies = &[_]std.build.Pkg{ build_options, common },
-    };
-
-    const helpers = std.build.Pkg{
-        .name = "helpers",
-        .path = .{ .path = "src/lib/gen1/helpers.zig" },
-        .dependencies = &[_]std.build.Pkg{ build_options, common },
+        .path = .{ .path = "src/lib/all.zig" },
+        .dependencies = &[_]std.build.Pkg{build_options},
     };
 
     const lib = b.addStaticLibrary("pkmn", "src/lib/main.zig");
@@ -42,7 +30,6 @@ pub fn build(b: *std.build.Builder) void {
     const tests = if (test_no_exec) b.addTestExe("test_exe", test_file) else b.addTest(test_file);
     tests.setMainPkgPath("./");
     tests.setFilter(test_filter);
-    tests.addPackage(common);
     tests.addOptions("build_options", options);
     tests.setBuildMode(mode);
     if (test_bin) |bin| {
@@ -52,9 +39,9 @@ pub fn build(b: *std.build.Builder) void {
 
     const format = b.addFmt(&[_][]const u8{"."});
 
-    const rng = executable(b, &[_]std.build.Pkg{common}, "src/tools/rng.zig");
-    const debug = executable(b, &[_]std.build.Pkg{ pkmn, common, helpers }, "src/tools/debug.zig");
-    const protocol = executable(b, &[_]std.build.Pkg{common}, "src/tools/protocol.zig");
+    const rng = executable(b, &.{pkmn}, "src/tools/rng.zig");
+    const debug = executable(b, &.{pkmn}, "src/tools/debug.zig");
+    const protocol = executable(b, &.{pkmn}, "src/tools/protocol.zig");
 
     b.step("debug", "Run debugging tool").dependOn(&debug.step);
     b.step("format", "Format source files").dependOn(&format.step);

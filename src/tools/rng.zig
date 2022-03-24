@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const rng = @import("common").rng;
+const rng = @import("pkmn").rng;
 
 const FixedRNG = rng.FixedRNG;
 

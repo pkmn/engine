@@ -1,7 +1,7 @@
 const std = @import("std");
 const build_options = @import("build_options");
 
-const rng = @import("common").rng;
+const rng = @import("../common/rng.zig");
 
 const data = @import("data.zig");
 const protocol = @import("protocol.zig");
