@@ -240,7 +240,7 @@ of reference meaning it will likely already be in the cache.
 TODO: map each PS line to number of bytes, compute max number of bytes required for a chunk (map
 `|request|` = 0, etc)
 
-## `|-damage|`
+## `|-damage|` (`0x0A`)
 
     Byte/     0       |       1       |       2       |       3       |
        /              |               |               |               |

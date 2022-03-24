@@ -11,68 +11,14 @@ import {
   TypeName,
 } from '@pkmn/data';
 
-import {LE, Lookup} from './internal';
+import {LE, Lookup, LAYOUT} from './internal';
 
-const SIZES = {
-  Battle: 384,
-  Side: 184,
-  Pokemon: 24,
-  ActivePokemon: 32,
-};
-
-const OFFSETS = {
-  Battle: {
-    p1: 0,
-    p2: SIZES.Side,
-    turn: SIZES.Side * 2,
-    last_damage: SIZES.Side * 2 + 2,
-    seed: SIZES.Side * 2 + 4,
-  },
-  Side: {
-    pokemon: 0,
-    active: SIZES.Pokemon * 6,
-    order: SIZES.Pokemon * 6 + SIZES.ActivePokemon + 6,
-    last_selected_move: SIZES.Side - 2,
-    last_used_move: SIZES.Side - 1,
-  },
-  Pokemon: {
-    stats: 0,
-    moves: 10,
-    hp: 18,
-    status: 20,
-    species: 21,
-    types: 22,
-    level: 23,
-  },
-  ActivePokemon: {
-    stats: 0,
-    volatiles: 10,
-    moves: 19,
-    boosts: 27,
-    species: 30,
-    types: 31,
-  },
-  Stats: {
-    hp: 0,
-    atk: 2,
-    def: 4,
-    spe: 6,
-    spa: 8,
-    spd: 8,
-    spc: 8,
-  },
-  // NB: bit offsets, not bytes
-  Boosts: {
-    atk: 0,
-    def: 4,
-    spe: 8,
-    spa: 12,
-    spd: 12,
-    spc: 12,
-    accuracy: 16,
-    evasion: 20,
-  },
-};
+const SIZES = LAYOUT[0].sizes;
+const OFFSETS = LAYOUT[0].offsets;
+OFFSETS.Battle.p1 = 0;
+OFFSETS.Battle.p2 = SIZES.Side;
+OFFSETS.Stats.spa = OFFSETS.Stats.spd = OFFSETS.Stats.spc;
+OFFSETS.Boosts.spa = OFFSETS.Boosts.spd = OFFSETS.Boosts.spc;
 
 export class Battle {
   static readonly SIZE = 184;
@@ -312,26 +258,7 @@ export class Pokemon {
 }
 
 export class ActivePokemon {
-  static Volatiles: {
-    Bide: 48;
-    Thrashing: 49;
-    MultiHit: 50;
-    Flinch: 51;
-    Charging: 52;
-    Trapping: 53;
-    Invulnerable: 54;
-    Confusion: 55;
-    Mist: 56;
-    FocusEnergy: 57;
-    Substitute: 58;
-    Recharging: 59;
-    Rage: 60;
-    LeechSeed: 61;
-    Toxic: 62;
-    LightScreen: 63;
-    Reflect: 64;
-    Transform: 65;
-  };
+  static Volatiles = OFFSETS.Volatiles;
 
   private readonly lookup: Lookup;
   private readonly data: DataView;

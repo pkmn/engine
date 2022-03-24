@@ -14,6 +14,8 @@ const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 const expect = std.testing.expect;
 
+pub const RNG = rng.PRNG(1);
+
 pub fn Battle(comptime PRNG: anytype) align(64) type {
     return extern struct {
         const Self = @This();
@@ -40,7 +42,7 @@ pub fn Battle(comptime PRNG: anytype) align(64) type {
 }
 
 test "Battle" {
-    try expectEqual(384, @sizeOf(Battle(rng.PRNG(1))));
+    try expectEqual(384, @sizeOf(Battle(RNG)));
 }
 
 pub const Player = enum(u1) {

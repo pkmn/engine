@@ -1,12 +1,14 @@
 import {ID, TypeName, Generation} from '@pkmn/data';
-import json from './ids.json';
+
+import idsJSON from './data/ids.json';
+import protocolJSON from './data/protocol.json';
+import offsetsJSON from './data/layout.json';
 
 export const LE = (() => {
   const u8 = new Uint8Array(4);
   const u16 = new Uint16Array(u8.buffer);
   return !!((u16[0] = 1) & u16[0]);
 })();
-
 
 export interface IDs {
   1: {
@@ -21,7 +23,21 @@ export interface IDs {
   };
 }
 
-export const IDS = json as IDs;
+export const IDS = idsJSON as IDs;
+
+export const PROTOCOL: {[decl: string]: {[name: string]: number}} = {};
+for (const decl in protocolJSON) {
+  PROTOCOL[decl] = {};
+  let i = 0;
+  for (const name of protocolJSON[decl as keyof typeof protocolJSON]) {
+    PROTOCOL[decl][name] = i++;
+  }
+}
+
+export const LAYOUT = offsetsJSON as Array<{
+  sizes: {[decl: string]: number};
+  offsets: {[decl: string]: {[field: string]: number}};
+}>;
 
 const LOOKUPS: Lookup[] = [];
 
