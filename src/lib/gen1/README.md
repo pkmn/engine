@@ -75,12 +75,10 @@ party information is saved in fields beginning with "`stored`" or "`base`".
 
 A `MoveSlot` is a data-type for a `(move, current pp)` pair. A pared down version of Pokémon
 Showdown's `Pokemon#moveSlot`, it also stores data from the cartridge's `battle_struct::Move` macro
-and can be used to replace the `PlayerMove*` data. Move PP is stored in the same way as on the
-cartridge (`battle_struct::PP`), with 6 bits for current PP and the remaining 2 bits used to store
-the number of applied PP Ups. PP Ups bits do not actually need to be stored on move slot as max PP
-is never relevant in Generation I, but since those two bits would need to be padded anyway and since
-max PP is necessary in certain cirmcumstances in future Generations (eg. PP increasing berries) it
-is preserved for reasons of symmetry.
+and can be used to replace the `PlayerMove*` data. Move PP is stored as a full byte instead of how
+the cartridge (`battle_struct::PP`) stores it (6 bits for current PP and the remaining 2 bits used
+to store the number of applied PP Ups). PP Up bits do not actually need to be stored on move slot
+as max PP is never relevant in Generation I.
 
 #### `Status`
 

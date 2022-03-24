@@ -43,9 +43,9 @@ pub fn Side(comptime game_type: GameType) type {
     };
 }
 
-pub const ActivePokemon = packed struct {};
+pub const ActivePokemon = extern struct {};
 
-pub const Pokemon = packed struct {};
+pub const Pokemon = extern struct {};
 
 // pub const Items = items.Items;
 
@@ -84,6 +84,16 @@ pub const MoveFlags = packed struct {
 };
 
 pub const Move = moves.Move;
+
+const MoveSlot = extern struct {
+    id: Move = .None,
+    pp: u8 = 0,
+    max_pp: u8 = 0,
+
+    comptime {
+        assert(@sizeOf(MoveSlot) == @sizeOf(u32));
+    }
+};
 
 // test "Moves" {
 //     try expectEqual(251, @enumToInt(Move.BeatUp));

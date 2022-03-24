@@ -128,10 +128,9 @@ pub const Pokemon = extern struct {
     }
 };
 
-pub const MoveSlot = packed struct {
+pub const MoveSlot = extern struct {
     id: Move = .None,
-    pp: u6 = 0,
-    pp_ups: u2 = 3,
+    pp: u8 = 0,
 
     comptime {
         assert(@sizeOf(MoveSlot) == @sizeOf(u16));

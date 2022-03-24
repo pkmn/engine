@@ -79,7 +79,7 @@ pub const Side = struct {
             for (p.moves) |m, j| {
                 pokemon.moves[j].id = m;
                 // NB: PP can be at most 61 legally (though can overflow to 63)
-                pokemon.moves[j].pp = @truncate(u6, @minimum(Move.pp(m) / 5 * 8, 61));
+                pokemon.moves[j].pp = @truncate(u8, @minimum(Move.pp(m) / 5 * 8, 61));
             }
             if (p.hp) |hp| {
                 pokemon.hp = hp;
@@ -202,11 +202,11 @@ pub const Pokemon = struct {
                 break;
             }
             const pp_ups = if (rand.chance(1, 10)) rand.range(u2, 0, 2) else 3;
-            const max_pp = @truncate(u6, Move.pp(m) / 5 * (5 + @as(u8, pp_ups)));
+            // NB: PP can be at most 61 legally (though can overflow to 63)
+            const max_pp = @truncate(u8, @minimum(Move.pp(m) / 5 * (5 + @as(u8, pp_ups)), 61));
             ms[i] = .{
                 .id = m,
-                .pp = rand.range(u6, 0, max_pp),
-                .pp_ups = pp_ups,
+                .pp = rand.range(u8, 0, max_pp),
             };
         }
 

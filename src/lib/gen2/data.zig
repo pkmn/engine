@@ -157,38 +157,14 @@ const IVs = packed struct {
     }
 };
 
-const MoveSlot = packed struct {
+const MoveSlot = extern struct {
     id: Move = .None,
-    pp: u6 = 0,
-    pp_ups: u2 = 0,
+    pp: u8 = 0,
 
     comptime {
         assert(@sizeOf(MoveSlot) == @sizeOf(u16));
     }
-
-    pub fn init(id: Move) MoveSlot {
-        if (id == .None) return MoveSlot{};
-        const move = Move.get(id);
-        return MoveSlot{
-            .id = id,
-            .pp = move.pp,
-            .pp_ups = 3,
-        };
-    }
-
-    pub fn maxpp(self: MoveSlot) u8 {
-        const pp = Move.get(self.id).pp;
-        return self.pp_ups * @as(u8, @maximum(pp, 7)) + (@as(u8, pp) * 5);
-    }
 };
-
-test "MoveSlot" {
-    const ms = MoveSlot.init(.Pound);
-    try expectEqual(@as(u6, 35 / 5), ms.pp);
-    try expectEqual(@as(u8, 56), ms.maxpp());
-    try expectEqual(Move.Pound, ms.id);
-    try expectEqual(@as(u16, 0), @bitCast(u16, MoveSlot.init(.None)));
-}
 
 pub const Status = gen1.Status;
 
