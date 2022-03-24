@@ -293,16 +293,3 @@ pub const Immune = enum(u8) {
     None,
     OHKO,
 };
-
-// test {
-//     const print = std.debug.print;
-//     const types = .{ArgType, KWArgType, Move, Cant, Heal, Damage, Status, CureStatus, Boost, Fail, Activate, Start, End, Immune};
-//     inline for (types) |T| {
-//         print("\n## {}\n\n", .{T});
-//         print("<details><summary>Data</summary>\n\nRaw|Data|\n|--|--|\n", .{});
-//         inline for (@typeInfo(T).Enum.fields) |field| {
-//             print("|0x{X:0>2}|{s}|\n", .{field.value, field.name});
-//         }
-//         print("</details>\n", .{});
-//     }
-// }

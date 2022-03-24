@@ -5,28 +5,28 @@ testing](#integration) and [benchmarking](#benchmarking) against Pokémon Showdo
 
 ## Integration
 
-The [integration test](../src/test/integration.test.ts) exists to ensure the pkmn engine produces
-comparable output to Pokémon Showdown. For each supported generation, both Pokémon Showdown and the
-pkmn engine are run with an
+The [integration test](../src/test/integration.test.ts) exists to ensure the pkmn engine compiled in
+Pokémon Showdown compatibility mode with `-Dshowdown` produces comparable output to Pokémon
+Showdown. For each supported generation, both Pokémon Showdown and the pkmn engine are run with an
 [`ExhaustiveRunner`](https://github.com/smogon/pokemon-showdown/blob/master/sim/tools/exhaustive-runner.ts)
 that attempts to use as many different effects as possible in the battles it randomly simulates and
 the results are collected. While Pokémon Showdown always produces its text protocol streams, pkmn
-must be built specially to opt-in to introspection support.
+must be built specially to opt-in to introspection support (`-Dtrace`).
 
-The pkmn [binary protocol](/PROTOCOL.md) is not expected to be equivalent to Pokémon Showdown for
+The pkmn [binary protocol](PROTOCOL.md) is not expected to be equivalent to Pokémon Showdown for
 several reasons:
 
 - pkmn does not have any notion of a
   ['format'](https://github.com/smogon/pokemon-showdown/blob/master/config/formats.ts) or [custom
   'rules'](https://github.com/smogon/pokemon-showdown/blob/master/config/CUSTOM-RULES.md)
-- pkmn does not implement the ['Endless Battle Clause'](https://pkmn.cc/ebc) beyond the fixed 1000
-  turn limit
 - the ordering of keyword arguments in Pokémon Showdown not strictly defined
+- several of Pokémon Showdown's protocol messages are redundant/implementation specific
 - pkmn always returns a single 'stream' and always includes exact HP (ie. Pokémon Showdown's
   "omniscient stream") - other streams of information must be computed from this
-- [despite what it may claim](https://pokemonshowdown.com/pages/rng), Pokémon Showdown does not
+- [despite what it may claim](https://pokemonshowdown.com/pages/rng), Pokémon Showdown does **not**
   implement the correct pseudo-random number generator for each format (it implements the Generation
-  V & VI PRNG and applies it to all generations)
+  V & VI PRNG and applies it to all generations and performs a different amount of calls, with
+  different arguments and in different order than the cartridge).
 
 The integration test contains logic to configure Pokémon Showdown to produce the correct results and
 for massaging the output from the pkmn engine into something which can be compared to Pokémon

@@ -23,6 +23,12 @@ pub fn build(b: *std.build.Builder) void {
         .dependencies = &[_]std.build.Pkg{ build_options, common },
     };
 
+    const helpers = std.build.Pkg{
+        .name = "helpers",
+        .path = .{ .path = "src/lib/gen1/helpers.zig" },
+        .dependencies = &[_]std.build.Pkg{ build_options, common },
+    };
+
     const lib = b.addStaticLibrary("pkmn", "src/lib/main.zig");
     lib.addOptions("build_options", options);
     lib.setBuildMode(mode);
@@ -46,32 +52,30 @@ pub fn build(b: *std.build.Builder) void {
 
     const format = b.addFmt(&[_][]const u8{"."});
 
-    const rng = b.addExecutable("rng", "src/tools/rng.zig");
-    rng.addPackage(common);
-    rng.setBuildMode(mode);
-    rng.install();
+    const rng = executable(b, &[_]std.build.Pkg{common}, "src/tools/rng.zig");
+    const debug = executable(b, &[_]std.build.Pkg{ pkmn, common, helpers }, "src/tools/debug.zig");
+    const protocol = executable(b, &[_]std.build.Pkg{common}, "src/tools/protocol.zig");
 
-    const run_rng = rng.run();
-    run_rng.step.dependOn(b.getInstallStep());
-    if (b.args) |args| run_rng.addArgs(args);
-
-    const debug = b.addExecutable("debug", "src/tools/debug.zig");
-    debug.addPackage(pkmn);
-    debug.addPackage(common);
-    debug.addPackage(.{
-        .name = "helpers",
-        .path = .{ .path = "src/lib/gen1/helpers.zig" },
-        .dependencies = &[_]std.build.Pkg{ build_options, common },
-    });
-    debug.setBuildMode(mode);
-    debug.install();
-
-    const run_debug = debug.run();
-    run_debug.step.dependOn(b.getInstallStep());
-    if (b.args) |args| run_debug.addArgs(args);
-
-    b.step("test", "Run all tests").dependOn(&tests.step);
+    b.step("debug", "Run debugging tool").dependOn(&debug.step);
     b.step("format", "Format source files").dependOn(&format.step);
-    b.step("rng", "Run RNG calculator tool").dependOn(&run_rng.step);
-    b.step("debug", "Run debugging tool").dependOn(&run_debug.step);
+    b.step("protocol", "Run protocol tool").dependOn(&protocol.step);
+    b.step("rng", "Run RNG calculator tool").dependOn(&rng.step);
+    b.step("test", "Run all tests").dependOn(&tests.step);
+}
+
+fn executable(b: *std.build.Builder, pkgs: []std.build.Pkg, path: []const u8) *std.build.RunStep {
+    var name = std.fs.path.basename(path);
+    const index = std.mem.lastIndexOfScalar(u8, name, '.');
+    if (index) |i| name = name[0..i];
+
+    const exe = b.addExecutable(name, path);
+    for (pkgs) |pkg| exe.addPackage(pkg);
+    exe.setBuildMode(b.standardReleaseOptions());
+    exe.install();
+
+    const run_exe = exe.run();
+    run_exe.step.dependOn(b.getInstallStep());
+    if (b.args) |args| run_exe.addArgs(args);
+
+    return run_exe;
 }

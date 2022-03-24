@@ -4,7 +4,7 @@ import * as fs from 'fs';
 
 import {Dex} from '@pkmn/sim';
 import {Generations} from '@pkmn/data';
-import {Battle} from '../index';
+import {Battle} from '../pkg';
 
 const gens = new Generations(Dex as any);
 
