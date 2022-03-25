@@ -11,7 +11,7 @@ import {
   TypeName,
 } from '@pkmn/data';
 
-import * as I from './index';
+import {Gen1} from './index';
 import {LAYOUT, LE, Lookup} from './internal';
 
 const SIZES = LAYOUT[0].sizes;
@@ -22,7 +22,7 @@ OFFSETS.Battle.p2 = SIZES.Side;
 OFFSETS.Stats.spa = OFFSETS.Stats.spd = OFFSETS.Stats.spc;
 OFFSETS.Boosts.spa = OFFSETS.Boosts.spd = OFFSETS.Boosts.spc;
 
-export class Battle implements I.Battle {
+export class Battle implements Gen1.Battle {
   static readonly SIZE = 184;
 
   private readonly lookup: Lookup;
@@ -96,7 +96,7 @@ export class Battle implements I.Battle {
   static encode(
     gen: Generation,
     lookup: Lookup,
-    battle: I.Battle,
+    battle: Gen1.Battle,
   ) {
     // TODO
   }
@@ -104,7 +104,7 @@ export class Battle implements I.Battle {
 
 export type Slot = 1 | 2 | 3 | 4 | 5 | 6;
 
-export class Side implements I.Side {
+export class Side implements Gen1.Side {
   static readonly SIZE = 184;
 
   private readonly lookup: Lookup;
@@ -176,7 +176,7 @@ export class Side implements I.Side {
   static encode(
     gen: Generation,
     lookup: Lookup,
-    battle: I.Side,
+    battle: Gen1.Side,
     data: DataView,
     offset: number
   ) {
@@ -184,7 +184,7 @@ export class Side implements I.Side {
   }
 }
 
-export class ActivePokemon implements I.ActivePokemon {
+export class ActivePokemon implements Gen1.ActivePokemon {
   static Volatiles = OFFSETS.Volatiles;
 
   private readonly lookup: Lookup;
@@ -280,7 +280,7 @@ export class ActivePokemon implements I.ActivePokemon {
   static encode(
     gen: Generation,
     lookup: Lookup,
-    battle: I.ActivePokemon,
+    battle: Gen1.ActivePokemon,
     data: DataView,
     offset: number
   ) {
@@ -288,7 +288,7 @@ export class ActivePokemon implements I.ActivePokemon {
   }
 }
 
-export class Pokemon implements I.Pokemon {
+export class Pokemon implements Gen1.Pokemon {
   private readonly lookup: Lookup;
   private readonly data: DataView;
   private readonly offset: number;
@@ -399,7 +399,7 @@ export class Pokemon implements I.Pokemon {
   static encode(
     gen: Generation,
     lookup: Lookup,
-    battle: I.Pokemon,
+    battle: Gen1.Pokemon,
     data: DataView,
     offset: number
   ) {
