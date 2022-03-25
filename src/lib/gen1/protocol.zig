@@ -329,7 +329,7 @@ pub fn Log(comptime Writer: type) type {
 }
 
 test "Log" {
-    var buf = [_]u8{0} ** 3;
+    var buf: [3]u8 = undefined;
     var log: Log(std.io.FixedBufferStream([]u8).Writer) = .{
         .writer = std.io.fixedBufferStream(&buf).writer(),
     };

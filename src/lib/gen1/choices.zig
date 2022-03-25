@@ -82,7 +82,7 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
 test "choices" {
     var random = Random.init(0x31415926);
     var battle = Battle.random(&random, false);
-    var options = [_]Choice{.{}} ** 10;
+    var options: [10]Choice = undefined;
     const n = choices(&battle, .P1, .Move, &options);
     try expectEqualSlices(Choice, &[_]Choice{
         swtch(2),
