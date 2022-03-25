@@ -54,6 +54,13 @@
     }
   },
   "eslintConfig": {
-    "extends": "@pkmn"
+    "extends": "@pkmn",
+    "overrides": [{
+        "files": ["src/pkg/index.ts"],
+        "rules": {
+          "@typescript-eslint/no-empty-interface": "off",
+          "@typescript-eslint/no-shadow": "off"
+        }
+    }]
   }
 }
