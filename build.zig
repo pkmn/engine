@@ -1,20 +1,25 @@
 const std = @import("std");
 
-pub fn build(b: *std.build.Builder) void {
+const Builder = std.build.Builder;
+const Pkg = std.build.Pkg;
+
+pub fn build(b: *Builder) void {
     const mode = b.standardReleaseOptions();
 
     const showdown = b.option(bool, "showdown", "Enable Pokémon Showdown compatability mode") orelse false;
+    const strip = b.option(bool, "strip", "Strip debugging symbols from binary") orelse false;
     const trace = b.option(bool, "trace", "Enable trace logs") orelse false;
+
     const options = b.addOptions();
     options.addOption(bool, "showdown", showdown);
     options.addOption(bool, "trace", trace);
 
-    const build_options = std.build.Pkg{ .name = "build_options", .path = options.getSource() };
+    const build_options = Pkg{ .name = "build_options", .path = options.getSource() };
 
-    const pkmn = std.build.Pkg{
+    const pkmn = Pkg{
         .name = "pkmn",
         .path = .{ .path = "src/lib/all.zig" },
-        .dependencies = &[_]std.build.Pkg{build_options},
+        .dependencies = &.{build_options},
     };
 
     const lib = b.addStaticLibrary("pkmn", "src/lib/pkmn.zig");
@@ -32,6 +37,8 @@ pub fn build(b: *std.build.Builder) void {
     tests.setFilter(test_filter);
     tests.addOptions("build_options", options);
     tests.setBuildMode(mode);
+    tests.single_threaded = true;
+    tests.strip = strip;
     if (test_bin) |bin| {
         tests.name = std.fs.path.basename(bin);
         if (std.fs.path.dirname(bin)) |dir| tests.setOutputDir(dir);
@@ -39,9 +46,9 @@ pub fn build(b: *std.build.Builder) void {
 
     const format = b.addFmt(&[_][]const u8{"."});
 
-    const rng = executable(b, &.{pkmn}, "src/tools/rng.zig");
-    const debug = executable(b, &.{pkmn}, "src/tools/debug.zig");
-    const protocol = executable(b, &.{pkmn}, "src/tools/protocol.zig");
+    const rng = executable(b, &.{pkmn}, "src/tools/rng.zig", strip);
+    const debug = executable(b, &.{pkmn}, "src/tools/debug.zig", strip);
+    const protocol = executable(b, &.{pkmn}, "src/tools/protocol.zig", strip);
 
     b.step("debug", "Run debugging tool").dependOn(&debug.step);
     b.step("format", "Format source files").dependOn(&format.step);
@@ -50,7 +57,7 @@ pub fn build(b: *std.build.Builder) void {
     b.step("test", "Run all tests").dependOn(&tests.step);
 }
 
-fn executable(b: *std.build.Builder, pkgs: []std.build.Pkg, path: []const u8) *std.build.RunStep {
+fn executable(b: *Builder, pkgs: []Pkg, path: []const u8, strip: bool) *std.build.RunStep {
     var name = std.fs.path.basename(path);
     const index = std.mem.lastIndexOfScalar(u8, name, '.');
     if (index) |i| name = name[0..i];
@@ -58,6 +65,8 @@ fn executable(b: *std.build.Builder, pkgs: []std.build.Pkg, path: []const u8) *s
     const exe = b.addExecutable(name, path);
     for (pkgs) |pkg| exe.addPackage(pkg);
     exe.setBuildMode(b.standardReleaseOptions());
+    exe.single_threaded = true;
+    exe.strip = strip;
     exe.install();
 
     const run_exe = exe.run();
