@@ -17,7 +17,7 @@ pub fn build(b: *std.build.Builder) void {
         .dependencies = &[_]std.build.Pkg{build_options},
     };
 
-    const lib = b.addStaticLibrary("pkmn", "src/lib/main.zig");
+    const lib = b.addStaticLibrary("pkmn", "src/lib/pkmn.zig");
     lib.addOptions("build_options", options);
     lib.setBuildMode(mode);
     lib.install();
