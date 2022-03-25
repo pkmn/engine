@@ -24,7 +24,7 @@ fix:
 	zig fmt .
 
 test:
-	npm run test
+#	npm run test
 	zig build -Dshowdown -Dtrace test
 	zig build test
 
