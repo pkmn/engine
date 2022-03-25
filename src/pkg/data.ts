@@ -94,15 +94,31 @@ export class Lookup {
     return this.species[num - 1];
   }
 
+  specieByID(id: ID | undefined): number {
+    return id ? this.gen.species.get(id)!.num : 0;
+  }
+
   moveByNum(num: number): ID {
     return this.moves[num - 1];
+  }
+
+  moveByID(id: ID | undefined): number {
+    return id ? this.gen.moves.get(id)!.num : 0;
   }
 
   itemByNum(num: number): ID {
     return this.items[num - 1];
   }
 
+  itemByID(id: ID | undefined): number {
+    return id ? this.gen.items.get(id)!.num : 0;
+  }
+
   abilityByNum(num: number): ID {
     return this.abilities[num - 1];
+  }
+
+  abilityByID(id: ID | undefined): number {
+    return id ? this.gen.abilities.get(id)!.num : 0;
   }
 }

@@ -36,15 +36,16 @@ export namespace Gen1 {
     types: readonly [TypeName, TypeName];
     stats: StatsTable;
     boosts: BoostsTable;
-    volatiles: {[name: string]: number};
+    volatiles: {[name: string]: Volatile};
     moves: Iterable<MoveSlot>;
+    toxic: number;
   }
 
   export interface Pokemon {
     species: ID;
     types: readonly [TypeName, TypeName];
     hp: number;
-    status: StatusName | undefined;
+    status: Exclude<StatusName, 'tox'> | undefined;
     stats: StatsTable;
     level: number;
     moves: Iterable<Omit<MoveSlot, 'disabled'>>;
@@ -53,14 +54,21 @@ export namespace Gen1 {
   export interface MoveSlot {
     move: ID;
     pp: number;
-    disabled: boolean;
+    disabled: number | undefined;
+  }
+
+  export interface Volatile {
+    duration?: number;
+    damage?: number;
+    hp?: number;
+    accuracy?: number;
   }
 }
 
 export class Battle {
-  static create(gen: Generation, buf: ArrayBuffer) {
+  static create(gen: Generation, buf: ArrayBuffer, showdown = true) {
     switch (gen.num) {
-    case 1: return new gen1.Battle(Lookup.get(gen), new DataView(buf));
+    case 1: return new gen1.Battle(Lookup.get(gen), new DataView(buf), showdown);
     default: throw new Error(`Unsupported gen ${gen.num}`);
     }
   }

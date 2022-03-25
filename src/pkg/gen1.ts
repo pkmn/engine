@@ -23,12 +23,14 @@ OFFSETS.Boosts.spa = OFFSETS.Boosts.spd = OFFSETS.Boosts.spc;
 export class Battle implements Gen1.Battle {
   private readonly lookup: Lookup;
   private readonly data: DataView;
+  private readonly showdown: boolean;
 
   private readonly cache: [Side?, Side?];
 
-  constructor(lookup: Lookup, data: DataView) {
+  constructor(lookup: Lookup, data: DataView, showdown: boolean) {
     this.lookup = lookup;
     this.data = data;
+    this.showdown = showdown;
 
     this.cache = [undefined, undefined];
   }
@@ -62,7 +64,24 @@ export class Battle implements Gen1.Battle {
   }
 
   get prng(): readonly number[] {
-    return [0, 0, 0, 0]; // TODO
+    const offset = OFFSETS.Battle.last_damage + 2 + (this.showdown ? 4 : 1);
+    const seed: number[] = [0, 0, 0, 0];
+    if (this.showdown) {
+      seed[LE ? 3 : 0] = this.data.getUint16(offset, LE);
+      seed[LE ? 2 : 1] = this.data.getUint16(offset + 2, LE);
+      seed[LE ? 1 : 2] = this.data.getUint16(offset + 4, LE);
+      seed[LE ? 0 : 3] = this.data.getUint16(offset + 6, LE);
+    } else {
+      // Gen12RNG seed requires an index, but if we always rotate the seed based on the index when
+      // reading we can avoid tracking the index as it will always be zero. NB: the exact bits of
+      // the Battle will not roundtrip, but the *logical* Battle state will.
+      const index = this.data.getUint8(offset + 11);
+      for (let i = 0; i < 10; i++) {
+        const j = i - index;
+        seed[j < 0 ? j + 10 : j] = this.data.getUint8(offset + i);
+      }
+    }
+    return seed;
   }
 
   static init(
@@ -76,17 +95,8 @@ export class Battle implements Gen1.Battle {
     const data = new DataView(buf);
     Side.init(gen, lookup, p1, data, OFFSETS.Battle.p1);
     Side.init(gen, lookup, p2, data, OFFSETS.Battle.p2);
-    const offset = OFFSETS.Battle.last_damage + 2;
-    if (seed.length === 4) {
-      data.setUint16(offset + 4, seed[LE ? 3 : 0], LE);
-      data.setUint16(offset + 6, seed[LE ? 2 : 1], LE);
-      data.setUint16(offset + 8, seed[LE ? 1 : 2], LE);
-      data.setUint16(offset + 10, seed[LE ? 0 : 3], LE);
-    } else {
-      for (let o = offset; o < offset + 10; o++) {
-        data.setUint8(o, seed[o]);
-      }
-    }
+    encodePRNG(data, seed);
+    return buf;
   }
 
   static encode(
@@ -94,7 +104,16 @@ export class Battle implements Gen1.Battle {
     lookup: Lookup,
     battle: Gen1.Battle,
   ) {
-    // TODO
+    const buf = new ArrayBuffer(SIZES.Battle);
+    const data = new DataView(buf);
+    let offset = OFFSETS.Battle.p1;
+    for (const side of battle.sides) {
+      Side.encode(gen, lookup, side, data, offset);
+      offset += SIZES.Side;
+    }
+    data.setUint16(OFFSETS.Battle.turn, battle.turn, LE);
+    data.setUint16(OFFSETS.Battle.last_damage, battle.lastDamage, LE);
+    encodePRNG(data, battle.prng);
   }
 }
 
@@ -170,11 +189,22 @@ export class Side implements Gen1.Side {
   static encode(
     gen: Generation,
     lookup: Lookup,
-    battle: Gen1.Side,
+    side: Gen1.Side,
     data: DataView,
     offset: number
   ) {
-    // TODO
+    let i = 0;
+    for (const pokemon of side.pokemon) {
+      const off = offset + OFFSETS.Side.pokemon * i;
+      Pokemon.encode(gen, lookup, pokemon, data, off);
+      data.setUint8(offset + OFFSETS.Side.order + i, i + 1);
+      i++;
+    }
+    ActivePokemon.encode(gen, lookup, side.active, data, offset + OFFSETS.Side.active);
+    data.setUint8(offset + OFFSETS.Side.last_selected_move,
+      lookup.moveByID(side.lastSelectedMove));
+    data.setUint8(offset + OFFSETS.Side.last_used_move,
+      lookup.moveByID(side.lastUsedMove));
   }
 }
 
@@ -211,24 +241,40 @@ export class ActivePokemon implements Gen1.ActivePokemon {
     return !!(byte & (1 << (bit & 7)));
   }
 
-  get volatiles(): {[name: string]: number} {
-    const volatiles: {[name: string]: number} = {};
+  get volatiles(): {[name: string]: Gen1.Volatile} {
+    const off = this.offset + OFFSETS.ActivePokemon.volatiles + OFFSETS.Volatiles.data;
+    const volatiles: {[name: string]: Gen1.Volatile} = {};
     for (const volatile in ActivePokemon.Volatiles) {
       if (this.volatile(ActivePokemon.Volatiles[volatile])) {
-        volatiles[volatile] = 0;
+        const data: Gen1.Volatile = {};
+        if (volatile === 'Bide') {
+          data.damage = this.data.getUint16(off + OFFSETS.VolatilesData.state, LE);
+        } else if (volatile === 'Trapping') {
+          data.duration = this.data.getUint8(off + OFFSETS.VolatilesData.attacks >> 3);
+        } else if (volatile === 'Thrashing' || volatile === 'Rage') {
+          data.duration = this.data.getUint8(off + OFFSETS.VolatilesData.attacks >> 3);
+          data.accuracy = this.data.getUint16(off + OFFSETS.VolatilesData.state, LE);
+        } else if (volatile === 'Confusion') {
+          data.duration = this.data.getUint8(off + OFFSETS.VolatilesData.confusion >> 3) & 0x0F;
+        } else if (volatile === 'Substitute') {
+          data.damage = this.data.getUint8(off + OFFSETS.VolatilesData.substitute >> 3);
+        }
+        volatiles[volatile] = data;
       }
     }
-    // TODO disabled + data
     return volatiles;
   }
 
-  move(slot: 1 | 2 | 3 | 4): {move: ID; pp: number; disabled: boolean} | undefined {
+  move(slot: 1 | 2 | 3 | 4): Gen1.MoveSlot | undefined {
     const m = this.data.getUint8(this.offset + OFFSETS.ActivePokemon.moves + (slot - 1) << 1);
     if (m === 0) return undefined;
     const move = this.lookup.moveByNum(m);
     const pp = this.data.getUint8(this.offset + OFFSETS.ActivePokemon.moves + (slot << 1) - 1);
-    const byte = this.data.getUint8(this.offset + OFFSETS.ActivePokemon.volatiles + 4);
-    const disabled = (byte & 0x0F) === slot;
+    const byte = this.data.getUint8(this.offset +
+      OFFSETS.ActivePokemon.volatiles +
+      OFFSETS.Volatiles.data +
+      OFFSETS.VolatilesData.disabled >> 3);
+    const disabled = ((byte & 0x0F) === slot) ? byte >> 4 : undefined;
     return {move, pp, disabled};
   }
 
@@ -271,14 +317,63 @@ export class ActivePokemon implements Gen1.ActivePokemon {
     return decodeTypes(this.lookup, this.data.getUint8(this.offset + OFFSETS.ActivePokemon.types));
   }
 
+  get toxic(): number {
+    const off = this.offset + OFFSETS.ActivePokemon.volatiles + OFFSETS.Volatiles.data;
+    return this.data.getUint8(off + OFFSETS.VolatilesData.toxic >> 3) >> 4;
+  }
+
   static encode(
     gen: Generation,
     lookup: Lookup,
-    battle: Gen1.ActivePokemon,
+    active: Gen1.ActivePokemon,
     data: DataView,
     offset: number
   ) {
-    // TODO
+    let off = offset + OFFSETS.ActivePokemon.stats;
+    const stats = active.stats;
+    for (const stat of gen.stats) {
+      if (stat === 'spd') break;
+      data.setUint16(off, stats[stat], LE);
+      off += 2;
+    }
+
+    off = offset + OFFSETS.ActivePokemon.volatiles;
+    const volatiles = active.volatiles;
+    const state = volatiles.Bide?.damage ??
+      volatiles.Thrashing?.accuracy ??
+      volatiles.Rage?.accuracy ?? 0;
+    data.setUint16(off + OFFSETS.VolatilesData.state, state, LE);
+    data.setUint8(off + OFFSETS.VolatilesData.substitute >> 3, volatiles.Substitute.hp ?? 0);
+    const confusion = volatiles.Confusion?.duration ?? 0;
+    data.setUint8(off + OFFSETS.VolatilesData.confusion >> 3, confusion << 4 | active.toxic);
+    const attacks = volatiles.Trapping?.duration ??
+      volatiles.Thrashing?.duration ??
+      volatiles.Rage?.duration ?? 0;
+    data.setUint8(off + OFFSETS.VolatilesData.attacks >> 3, attacks);
+
+
+    off = offset + OFFSETS.ActivePokemon.moves;
+    let slot = 1;
+    for (const ms of active.moves) {
+      data.setUint8(off++, lookup.moveByID(ms.move));
+      data.setUint8(off++, ms.pp);
+      if (ms.disabled !== undefined) {
+        data.setUint8(offset +
+          OFFSETS.ActivePokemon.volatiles +
+          OFFSETS.Volatiles.data +
+          OFFSETS.VolatilesData.disabled >> 3, slot << 3 | ms.disabled);
+      }
+      slot++;
+    }
+
+    off = offset + OFFSETS.ActivePokemon.boosts;
+    const boosts = active.boosts;
+    data.setUint8(off++, boosts.atk << 4 | boosts.def);
+    data.setUint8(off++, boosts.spe << 4 | boosts.spa);
+    data.setUint8(off++, boosts.accuracy << 4 | boosts.evasion);
+
+    data.setUint8(offset + OFFSETS.Pokemon.species, lookup.specieByID(active.species));
+    data.setUint8(offset + OFFSETS.Pokemon.types, encodeTypes(lookup, active.types));
   }
 }
 
@@ -331,7 +426,7 @@ export class Pokemon implements Gen1.Pokemon {
     return this.data.getUint16(this.offset + OFFSETS.Pokemon.hp, LE);
   }
 
-  get status(): StatusName | undefined {
+  get status(): Exclude<StatusName, 'tox'> | undefined {
     const val = this.data.getUint8(this.offset + OFFSETS.Pokemon.status);
     if ((val >> 3) & 1) return 'psn';
     if ((val >> 4) & 1) return 'brn';
@@ -380,25 +475,60 @@ export class Pokemon implements Gen1.Pokemon {
     }
 
     data.setUint16(offset + OFFSETS.Pokemon.hp, hp, LE);
+
     data.setUint8(offset + OFFSETS.Pokemon.species, species.num);
-
-    const type1 = species.types[0];
-    const type2 = species.types[1] ?? type1;
-    const types = lookup.typeByName(type1) << 3 | lookup.typeByName(type2);
-    data.setUint8(offset + OFFSETS.Pokemon.types, types);
-
+    data.setUint8(offset + OFFSETS.Pokemon.types, encodeTypes(lookup, species.types));
     data.setUint8(offset + OFFSETS.Pokemon.level, set.level);
   }
 
   static encode(
     gen: Generation,
     lookup: Lookup,
-    battle: Gen1.Pokemon,
+    pokemon: Gen1.Pokemon,
     data: DataView,
     offset: number
   ) {
-    // TODO
+    let off = offset + OFFSETS.Pokemon.stats;
+    const stats = pokemon.stats;
+    for (const stat of gen.stats) {
+      if (stat === 'spd') break;
+      data.setUint16(off, stats[stat], LE);
+      off += 2;
+    }
+
+    off = offset + OFFSETS.Pokemon.moves;
+    for (const ms of pokemon.moves) {
+      data.setUint8(off++, lookup.moveByID(ms.move));
+      data.setUint8(off++, ms.pp);
+    }
+
+    data.setUint16(offset + OFFSETS.Pokemon.hp, pokemon.hp, LE);
+
+    const species = gen.species.get(pokemon.species)!;
+
+    data.setUint8(offset + OFFSETS.Pokemon.species, species.num);
+    data.setUint8(offset + OFFSETS.Pokemon.types, encodeTypes(lookup, species.types));
+    data.setUint8(offset + OFFSETS.Pokemon.level, pokemon.level);
   }
+}
+
+function encodePRNG(data: DataView, seed: readonly number[]) {
+  const offset = OFFSETS.Battle.last_damage + 2 + (seed.length === 4 ? 4 : 1);
+  if (seed.length === 4) {
+    data.setUint16(offset, seed[LE ? 3 : 0], LE);
+    data.setUint16(offset + 2, seed[LE ? 2 : 1], LE);
+    data.setUint16(offset + 4, seed[LE ? 1 : 2], LE);
+    data.setUint16(offset + 6, seed[LE ? 0 : 3], LE);
+  } else {
+    for (let o = offset; o < offset + 10; o++) {
+      data.setUint8(o, seed[o]);
+    }
+    // NB: ArrayBuffer is zero initialized already so we don't need to set the index to zero
+  }
+}
+
+function encodeTypes(lookup: Lookup, types: Readonly<[TypeName] | [TypeName, TypeName]>): number {
+  return lookup.typeByName(types[0]) << 3 | lookup.typeByName(types[1] ?? types[0]);
 }
 
 function decodeTypes(lookup: Lookup, val: number): readonly [TypeName, TypeName] {
