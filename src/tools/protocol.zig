@@ -57,7 +57,8 @@ pub fn main() !void {
                     var inner = false;
                     inline for (@typeInfo(@field(protocol, decl.name)).Enum.fields) |field| {
                         if (inner) try w.writeAll(",");
-                        try w.print("\"{s}\"", .{field.name});
+                        const arg = std.mem.eql(u8, decl.name, "ArgType");
+                        try w.print("\"{s}\"", .{if (arg) transform(field.name) else field.name});
                         inner = true;
                     }
                     try w.writeAll("]");
@@ -105,7 +106,7 @@ pub fn main() !void {
     try buf.flush();
 }
 
-pub fn print(w: anytype, name: []const u8, comptime T: type, comptime bits: bool) !void {
+fn print(w: anytype, name: []const u8, comptime T: type, comptime bits: bool) !void {
     try w.print("\"{s}\":{{", .{name});
     var inner = false;
     inline for (std.meta.fields(T)) |field| {
@@ -117,4 +118,82 @@ pub fn print(w: anytype, name: []const u8, comptime T: type, comptime bits: bool
         }
     }
     try w.writeAll("}");
+}
+
+fn transform(name: []const u8) []const u8 {
+    const arg = std.meta.stringToEnum(protocol.ArgType, name).?;
+    return switch (arg) {
+        .None => "_",
+        .LastStill => "+still",
+        .LastMiss => "+miss",
+        .Move => "move",
+        .Switch => "switch",
+        .Cant => "cant",
+        .Faint => "faint",
+        .Turn => "turn",
+        .Win => "win",
+        .Tie => "tie",
+        .Damage => "-damage",
+        .Heal => "-heal",
+        .Status => "-status",
+        .CureStatus => "-curestatus",
+        .Boost => "-boost",
+        .Unboost => "-unboost",
+        .ClearAllBoost => "-clearallboost",
+        .Fail => "-fail",
+        .Miss => "-miss",
+        .HitCount => "-hitcount",
+        .Prepare => "-prepare",
+        .MustRecharge => "-mustrecharge",
+        .Activate => "-activate",
+        .FieldActivate => "-fieldactivate",
+        .Start => "-start",
+        .End => "-end",
+        .OHKO => "-ohko",
+        .Crit => "-crit",
+        .SuperEffective => "-supereffective",
+        .Resisted => "-resisted",
+        .Immune => "-immune",
+        .Transform => "-transform",
+        .Drag => "drag",
+        .Item => "-item",
+        .EndItem => "-enditem",
+        .CureTeam => "-cureteam",
+        .SetHP => "-sethp",
+        .SetBoost => "-setboost",
+        .CopyBoost => "-copyboost",
+        .SideStart => "-sidestart",
+        .SideEnd => "-sideend",
+        .SingleMove => "-singlemove",
+        .SingleTurn => "-singleturn",
+        .Weather => "-weather",
+        .Block => "-block",
+        .Ability => "-ability",
+        .EndAbility => "-endability",
+        .ClearNegativeBoost => "-clearnegativeboost",
+        .FormeChange => "-formechange",
+        .NoTarget => "-notarget",
+        .SwapBoost => "-swapboost",
+        .FieldStart => "-fieldstart",
+        .FieldEnd => "-fieldend",
+        .DetailsChange => "-detailschange",
+        .ClearPoke => "clearpoke",
+        .Poke => "poke",
+        .TeamPreview => "teampreview",
+        .Center => "center",
+        .Swap => "swap",
+        .Replace => "replace",
+        .Combine => "-combine",
+        .Waiting => "-waiting",
+        .ClearBoost => "-clearboost",
+        .Mega => "-mega",
+        .Primal => "-primal",
+        .InvertBoost => "-invertboost",
+        .ZBroken => "-zbroken",
+        .ZPower => "-zpower",
+        .Burst => "-burst",
+        .ClearPositiveBoost => "-clearpositiveboost",
+        .CanDynamax => "-candynamax",
+        .SwapSideConditions => "-swapsideconditions",
+    };
 }
