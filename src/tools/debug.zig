@@ -11,6 +11,7 @@ pub fn main() !void {
     // const allocator = arena.allocator();
 
     // const args = try std.process.argsAlloc(allocator);
+    // defer std.process.argsFree(allocator, args);
 
     const out = std.io.getStdOut();
     var buf = std.io.bufferedWriter(out.writer());

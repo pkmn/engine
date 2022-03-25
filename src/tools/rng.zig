@@ -24,6 +24,7 @@ pub fn main() !void {
     const allocator = arena.allocator();
 
     const args = try std.process.argsAlloc(allocator);
+    defer std.process.argsFree(allocator, args);
     if (args.len < 2) std.process.exit(1);
 
     var tool: Tool = undefined;
