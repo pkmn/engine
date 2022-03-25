@@ -7,7 +7,7 @@ import {
   TypeName,
 } from '@pkmn/data';
 
-import {Lookup} from './internal';
+import {Lookup} from './data';
 import * as gen1 from './gen1';
 
 export interface Battle extends Gen1.Battle {}

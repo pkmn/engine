@@ -12,7 +12,7 @@ import {
 } from '@pkmn/data';
 
 import {Gen1} from './index';
-import {LAYOUT, LE, Lookup} from './internal';
+import {LAYOUT, LE, Lookup} from './data';
 
 const SIZES = LAYOUT[0].sizes;
 const OFFSETS = LAYOUT[0].offsets;

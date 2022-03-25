@@ -9,7 +9,7 @@ import * as mustache from 'mustache';
 import {Generations, Generation, GenerationNum, TypeName, Specie} from '@pkmn/data';
 import {Dex, toID} from '@pkmn/sim';
 
-import type {IDs} from '../pkg/internal';
+import type {IDs} from '../pkg/data';
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const TEMPLATES = path.join(ROOT, 'src', 'lib', 'common', 'data');
