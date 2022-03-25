@@ -15,24 +15,24 @@ const ROOT = path.resolve(__dirname, '..', '..');
 const TEMPLATES = path.join(ROOT, 'src', 'lib', 'common', 'data');
 const CACHE = path.join(ROOT, '.cache');
 
-const IDS: IDs = {
-  1: {
+const IDS: IDs = [
+  {
     types: [
       'Normal', 'Fighting', 'Flying', 'Poison', 'Ground', 'Rock', 'Bug', 'Ghost',
       'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Ice', 'Dragon',
     ] as TypeName[],
   },
-  2: {
+  {
     types: [
       'Normal', 'Fighting', 'Flying', 'Poison', 'Ground', 'Rock', 'Bug', 'Ghost', 'Steel',
       '???', 'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Ice', 'Dragon', 'Dark',
     ] as TypeName[],
     items: [],
   },
-  3: {
+  {
     items: [],
   },
-};
+];
 
 const NAMES: { [constant: string]: string } = {
   // Items
@@ -464,7 +464,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
 
     // Types
-    const types = IDS[1].types;
+    const types = IDS[0].types;
     template('types', dirs.out, {
       Type: {
         type: 'u4',
@@ -484,7 +484,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const pret = 'https://raw.githubusercontent.com/pret/pokecrystal/master';
 
     // Types
-    const types = IDS[2].types;
+    const types = IDS[1].types;
     template('types', dirs.out, {
       Type: {
         type: 'u8',
@@ -558,7 +558,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       values.push(s);
     }
     for (const value of values) {
-      IDS[2].items.push(toID(value.split(' ')[0]));
+      IDS[1].items.push(toID(value.split(' ')[0]));
     }
     template('items', dirs.out, {
       gen: gen.num,

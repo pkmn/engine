@@ -10,18 +10,18 @@ export const LE = (() => {
   return !!((u16[0] = 1) & u16[0]);
 })();
 
-export interface IDs {
-  1: {
+export type IDs = [
+  {
     types: TypeName[];
-  };
-  2: {
+  },
+  {
     items: ID[];
     types: TypeName[];
-  };
-  3: {
+  },
+  {
     items: ID[];
-  };
-}
+  },
+];
 
 export const IDS = idsJSON as IDs;
 
@@ -57,7 +57,7 @@ export class Lookup {
 
   private constructor(gen: Generation) {
     this.gen = gen;
-    this.typesByNum = IDS[Math.min(gen.num, 2) as 1 | 2].types;
+    this.typesByNum = IDS[Math.min(gen.num, 2) - 1 as 0 | 1].types;
     this.typesByName = {} as {[key in TypeName]: number};
     for (let i = 0; i < this.typesByNum.length; i++) {
       this.typesByName[this.typesByNum[i]] = i;
@@ -73,7 +73,7 @@ export class Lookup {
     if (gen.num === 1) {
       this.items = [];
     } else {
-      this.items = IDS[gen.num as 2 | 3].items;
+      this.items = IDS[gen.num - 1 as 1 | 2].items;
     }
     this.abilities = []; // TODO
   }
