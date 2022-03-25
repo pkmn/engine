@@ -5,6 +5,6 @@ pub const rng = struct {
     usingnamespace @import("common/rng.zig");
 };
 pub const gen1 = struct {
-    usingnamespace @import("gen1/main.zig");
+    usingnamespace @import("gen1/api.zig");
     pub const helpers = @import("gen1/helpers.zig");
 };
