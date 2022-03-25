@@ -94,31 +94,15 @@ export class Lookup {
     return this.species[num - 1];
   }
 
-  speciesByID(id: ID): number {
-    return this.gen.species.get(id)!.num;
-  }
-
   moveByNum(num: number): ID {
     return this.moves[num - 1];
-  }
-
-  movesByID(id: ID): number {
-    return this.gen.moves.get(id)!.num;
   }
 
   itemByNum(num: number): ID {
     return this.items[num - 1];
   }
 
-  itemByID(id: ID): number {
-    return this.gen.items.get(id)!.num;
-  }
-
   abilityByNum(num: number): ID {
     return this.abilities[num - 1];
-  }
-
-  abilityByID(id: ID): number {
-    return this.gen.abilities.get(id)!.num;
   }
 }

@@ -375,12 +375,12 @@ export class Pokemon implements Gen1.Pokemon {
     off = offset + OFFSETS.Pokemon.moves;
     for (const m of set.moves) {
       const move = gen.moves.get(m)!;
-      data.setUint8(off++, lookup.movesByID(move.id));
+      data.setUint8(off++, move.num);
       data.setUint8(off++, move.pp);
     }
 
     data.setUint16(offset + OFFSETS.Pokemon.hp, hp, LE);
-    data.setUint8(offset + OFFSETS.Pokemon.species, lookup.speciesByID(species.id));
+    data.setUint8(offset + OFFSETS.Pokemon.species, species.num);
 
     const type1 = species.types[0];
     const type2 = species.types[1] ?? type1;
