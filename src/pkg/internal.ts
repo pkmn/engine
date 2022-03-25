@@ -38,6 +38,10 @@ export const LAYOUT = offsetsJSON as Array<{
   sizes: {[decl: string]: number};
   offsets: {[decl: string]: {[field: string]: number}};
 }>;
+for (const gen of LAYOUT) {
+  gen.offsets.Battle.p1 = gen.offsets.Battle.sides;
+  gen.offsets.Battle.p2 = gen.offsets.Battle.sides + gen.sizes.Side;
+}
 
 const LOOKUPS: Lookup[] = [];
 

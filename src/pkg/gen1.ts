@@ -17,14 +17,10 @@ import {LAYOUT, LE, Lookup} from './internal';
 const SIZES = LAYOUT[0].sizes;
 const OFFSETS = LAYOUT[0].offsets;
 
-OFFSETS.Battle.p1 = 0;
-OFFSETS.Battle.p2 = SIZES.Side;
 OFFSETS.Stats.spa = OFFSETS.Stats.spd = OFFSETS.Stats.spc;
 OFFSETS.Boosts.spa = OFFSETS.Boosts.spd = OFFSETS.Boosts.spc;
 
 export class Battle implements Gen1.Battle {
-  static readonly SIZE = 184;
-
   private readonly lookup: Lookup;
   private readonly data: DataView;
 
@@ -105,8 +101,6 @@ export class Battle implements Gen1.Battle {
 export type Slot = 1 | 2 | 3 | 4 | 5 | 6;
 
 export class Side implements Gen1.Side {
-  static readonly SIZE = 184;
-
   private readonly lookup: Lookup;
   private readonly data: DataView;
   private readonly offset: number;
