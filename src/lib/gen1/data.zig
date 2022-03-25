@@ -14,6 +14,8 @@ const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 const expect = std.testing.expect;
 
+const showdown = build_options.showdown;
+
 pub const RNG = rng.PRNG(1);
 
 pub fn Battle(comptime PRNG: anytype) align(64) type {
@@ -23,9 +25,8 @@ pub fn Battle(comptime PRNG: anytype) align(64) type {
         sides: [2]Side,
         turn: u16 = 0,
         last_damage: u16 = 0,
-        // = 4 bytes padding if showdown
+        _: uX = 0,
         rng: PRNG,
-        // = 1 bytes if not showdown
 
         pub inline fn side(self: *Self, player: Player) *Side {
             return &self.sides[@enumToInt(player)];
@@ -40,6 +41,8 @@ pub fn Battle(comptime PRNG: anytype) align(64) type {
         }
     };
 }
+
+const uX = if (showdown) u32 else u8;
 
 test "Battle" {
     try expectEqual(384, @sizeOf(Battle(RNG)));

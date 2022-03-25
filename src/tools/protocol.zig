@@ -108,10 +108,12 @@ pub fn print(w: anytype, name: []const u8, comptime T: type, comptime bits: bool
     try w.print("\"{s}\":{{", .{name});
     var inner = false;
     inline for (std.meta.fields(T)) |field| {
-        if (inner) try w.writeAll(",");
-        const offset = @bitOffsetOf(T, field.name);
-        try w.print("\"{s}\":{d}", .{ field.name, if (bits) offset else offset / 8 });
-        inner = true;
+        if (field.name[0] != '_') {
+            if (inner) try w.writeAll(",");
+            const offset = @bitOffsetOf(T, field.name);
+            try w.print("\"{s}\":{d}", .{ field.name, if (bits) offset else offset / 8 });
+            inner = true;
+        }
     }
     try w.writeAll("}");
 }
