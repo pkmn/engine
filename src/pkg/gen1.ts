@@ -12,7 +12,9 @@ import {
 } from '@pkmn/data';
 
 import {Gen1} from './index';
-import {LAYOUT, LE, Lookup} from './data';
+import {LAYOUT, LE, Lookup, PROTOCOL} from './data';
+
+const ArgType = PROTOCOL.ArgType;
 
 const SIZES = LAYOUT[0].sizes;
 const OFFSETS = LAYOUT[0].offsets;
@@ -155,10 +157,6 @@ export class Side implements Gen1.Side {
   get active(): ActivePokemon {
     const offset = this.offset + OFFSETS.Side.active;
     return new ActivePokemon(this.lookup, this.data, offset);
-  }
-
-  get stored(): Pokemon {
-    return this.get(1);
   }
 
   get lastSelectedMove(): ID | undefined {
@@ -533,4 +531,120 @@ function encodeTypes(lookup: Lookup, types: Readonly<[TypeName] | [TypeName, Typ
 
 function decodeTypes(lookup: Lookup, val: number): readonly [TypeName, TypeName] {
   return [lookup.typeByNum(val & 0x0F), lookup.typeByNum(val >> 4)];
+}
+
+export const Log = new class {
+  parse(battle: Battle, names: {p1: string[]; p2: string[]}, data: DataView): string[] {
+    const log: string[] = [];
+    for (let i = 0; i < data.byteLength;) {
+      const byte = data.getUint8(i++);
+      switch (byte) {
+      case ArgType.LastStill: {
+        break;
+      }
+      case ArgType.LastMiss: {
+        break;
+      }
+      case ArgType.Move: {
+        break;
+      }
+      case ArgType.Switch: {
+        break;
+      }
+      case ArgType.Cant: {
+        break;
+      }
+      case ArgType.Turn: {
+        break;
+      }
+      case ArgType.Win: {
+        break;
+      }
+      case ArgType.Tie: {
+        break;
+      }
+      case ArgType.Damage: {
+        break;
+      }
+      case ArgType.Heal: {
+        break;
+      }
+      case ArgType.Status: {
+        break;
+      }
+      case ArgType.Boost: {
+        break;
+      }
+      case ArgType.Unboost: {
+        break;
+      }
+      case ArgType.Fail: {
+        break;
+      }
+      case ArgType.Miss: {
+        break;
+      }
+      case ArgType.HitCount: {
+        break;
+      }
+      case ArgType.Prepare: {
+        break;
+      }
+      case ArgType.MustRecharge: {
+        break;
+      }
+      case ArgType.Activate: {
+        break;
+      }
+      case ArgType.FieldActivate: {
+        break;
+      }
+      case ArgType.Start: {
+        break;
+      }
+      case ArgType.End: {
+        break;
+      }
+      case ArgType.OHKO: {
+        log.push('|-ohko');
+        break;
+      }
+      case ArgType.Faint:
+      case ArgType.Crit:
+      case ArgType.SuperEffective:
+      case ArgType.Resisted:
+      case ArgType.Immune: {
+        const {player, slot} = ident(data.getUint8(i++));
+        const arg = {
+          [ArgType.Faint]: 'fainted',
+          [ArgType.Crit]: '-crit',
+          [ArgType.SuperEffective]: '-supereffective',
+          [ArgType.Resisted]: '-resisted',
+          [ArgType.Immune]: '-immune',
+        }[byte];
+        log.push(`|${arg}|${player}a: ${names[player][slot - 1]}`);
+        break;
+      }
+      case ArgType.Transform: {
+        const source = ident(data.getUint8(i++));
+        const target = ident(data.getUint8(i++));
+
+        const sourceName = names[source.player][source.slot - 1];
+        const targetName = names[target.player][target.slot - 1];
+
+        log.push(`|-transform|${source.player}a: ${sourceName}|${target.player}a: ${targetName}`);
+        break;
+      }
+      default: throw new Error(`Expected arg at offset ${i} but found 0x${byte.toString(16)}`);
+      }
+    }
+    return log;
+  }
+};
+
+function ident(byte: number): {player: 'p1' | 'p2'; slot: number} {
+  return {
+    player: (byte >> 4) === 0 ? 'p1' : 'p2',
+    slot: byte & 0x0F,
+  };
 }
