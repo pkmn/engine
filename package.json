@@ -38,9 +38,7 @@
     "build": "npm run compile",
     "test": "jest",
     "generate": "npm run compile && node build/tools/generate",
-    "test:integration": "npm run test",
-    "pretest": "npm run build",
-    "posttest": "npm run lint"
+    "test:integration": "npm run test"
   },
   "jest": {
     "preset": "ts-jest",

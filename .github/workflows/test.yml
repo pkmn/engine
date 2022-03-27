@@ -21,8 +21,10 @@ jobs:
         with:
           version: ${{matrix.zig}}
       - run: npm install
-      - run: npm test
+      - run: zig build ${{matrix.options}} -p build
       - run: zig build test ${{matrix.options}}
       - run: zig build test ${{matrix.options}} -Drelease-fast
-      - run: zig build ${{matrix.options}}
       - run: zig fmt --check .
+      - run: npm compile
+      - run: npm test
+      - run: npm run lint

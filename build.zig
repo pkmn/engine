@@ -3,7 +3,7 @@ const std = @import("std");
 const Builder = std.build.Builder;
 const Pkg = std.build.Pkg;
 
-pub fn build(b: *Builder) void {
+pub fn build(b: *Builder) !void {
     const mode = b.standardReleaseOptions();
 
     const showdown = b.option(bool, "showdown", "Enable Pokémon Showdown compatability mode") orelse false;
@@ -22,7 +22,7 @@ pub fn build(b: *Builder) void {
         .dependencies = &.{build_options},
     };
 
-    const lib = b.addStaticLibrary("pkmn", "src/lib/pkmn.zig");
+    const lib = b.addStaticLibrary(if (showdown) "pkmn-showdown" else "pkmn", "src/lib/pkmn.zig");
     lib.addOptions("build_options", options);
     lib.setBuildMode(mode);
     lib.install();
@@ -46,9 +46,9 @@ pub fn build(b: *Builder) void {
 
     const format = b.addFmt(&[_][]const u8{"."});
 
-    const rng = executable(b, &.{pkmn}, "src/tools/rng.zig", strip);
-    const debug = executable(b, &.{pkmn}, "src/tools/debug.zig", strip);
-    const protocol = executable(b, &.{pkmn}, "src/tools/protocol.zig", strip);
+    const rng = try executable(b, &.{pkmn}, "src/tools/rng.zig", showdown, strip);
+    const debug = try executable(b, &.{pkmn}, "src/tools/debug.zig", showdown, strip);
+    const protocol = try executable(b, &.{pkmn}, "src/tools/protocol.zig", showdown, strip);
 
     b.step("debug", "Run debugging tool").dependOn(&debug.step);
     b.step("format", "Format source files").dependOn(&format.step);
@@ -57,10 +57,17 @@ pub fn build(b: *Builder) void {
     b.step("test", "Run all tests").dependOn(&tests.step);
 }
 
-fn executable(b: *Builder, pkgs: []Pkg, path: []const u8, strip: bool) *std.build.RunStep {
+fn executable(
+    b: *Builder,
+    pkgs: []Pkg,
+    path: []const u8,
+    showdown: bool,
+    strip: bool,
+) !*std.build.RunStep {
     var name = std.fs.path.basename(path);
     const index = std.mem.lastIndexOfScalar(u8, name, '.');
     if (index) |i| name = name[0..i];
+    if (showdown) name = try std.fmt.allocPrint(b.allocator, "{s}-showdown", .{name});
 
     const exe = b.addExecutable(name, path);
     for (pkgs) |pkg| exe.addPackage(pkg);
