@@ -31,22 +31,21 @@ class Runner {
       seed: this.newSeed(), move: 0.7, mega: 0.6, ...this.p2options!,
     }).start();
 
+    // FIXME: give pokemon random 6 char names
     await Promise.all([streams.omniscient.write(
       `>start ${JSON.stringify(spec)}\n` +
       `>player p1 ${JSON.stringify(p1spec)}\n` +
       `>player p2 ${JSON.stringify(p2spec)}`
     ), p1, p2]);
 
-    for (const channel in streams) {
-      const buf = [];
-      for await (const chunk of streams[channel as keyof typeof streams]) {
-        buf.push(chunk);
-      }
-      // TODO: feed input from rawBattleStream.rawInputLog into @pkmn/engine
-      // TODO: compare to @pkmn/engine data
-      // TODO: add buf to output if doesn't compare
-      // TODO: verify binary protocol round trip
+    const buf = [];
+    for await (const chunk of streams.omniscient) {
+      buf.push(chunk);
     }
+    // TODO: feed input from rawBattleStream.rawInputLog into @pkmn/engine
+    // TODO: compare to @pkmn/engine data
+    // TODO: add buf to output if doesn't compare
+    // TODO: verify binary protocol round trip
 
     // BUG: streams.p2.writeEnd ?
   }

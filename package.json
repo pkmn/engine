@@ -38,11 +38,12 @@
     "build": "npm run compile",
     "test": "jest",
     "generate": "npm run compile && node build/tools/generate",
-    "test:integration": "npm run test"
+    "test:integration": "jest --testRegex='src/test/.*\\.test\\.ts$'"
   },
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
+    "testRegex": "src/pkg/.*\\.test\\.ts$",
     "testPathIgnorePatterns": [
       "node_modules/",
       "build/"

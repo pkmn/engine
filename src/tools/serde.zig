@@ -2,26 +2,33 @@ const std = @import("std");
 
 const pkmn = @import("pkmn");
 
-const helpers = pkmn.gen1.helpers;
+const gen1 = pkmn.gen1.helpers;
 const rng = pkmn.rng;
 
 pub fn main() !void {
-    // var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    // defer arena.deinit();
-    // const allocator = arena.allocator();
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
-    // const args = try std.process.argsAlloc(allocator);
-    // defer std.process.argsFree(allocator, args);
+    const args = try std.process.argsAlloc(allocator);
+    defer std.process.argsFree(allocator, args);
+    if (args.len < 2) std.process.exit(1);
+
+    const gen = try std.fmt.parseUnsigned(u4, args[1], 10);
+    const seed = if (args.len > 2) try std.fmt.parseUnsigned(u64, args[2], 10) else 0x31415926;
 
     const out = std.io.getStdOut();
     var buf = std.io.bufferedWriter(out.writer());
     var w = buf.writer();
 
-    var battle = helpers.Battle.random(&rng.Random.init(0x31415926), false);
+    var battle = switch (gen) {
+        1 => gen1.Battle.random(&rng.Random.init(seed), false),
+        else => unreachable,
+    };
     try w.writeStruct(battle);
     try buf.flush();
 
-    print(battle);
+    // print(battle);
 
     const serialized = std.mem.toBytes(battle);
     const deserialized = std.mem.bytesToValue(@TypeOf(battle), &serialized);

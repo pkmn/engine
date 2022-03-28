@@ -123,6 +123,7 @@ pub const Side = struct {
                 for (pokemon.moves) |m, k| {
                     active.moves[k] = m;
                 }
+                active.types = pokemon.types;
                 var volatiles = &active.volatiles;
                 inline for (std.meta.fields(@TypeOf(active.volatiles))) |field| {
                     if (field.field_type != bool) continue;

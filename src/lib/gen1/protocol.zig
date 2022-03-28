@@ -83,25 +83,31 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn faint(self: Self, ident: u8) !void {
+        pub fn faint(self: Self, ident: u8, done: bool) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Faint), ident });
+            if (done) try self.writer.writeByte(@enumToInt(ArgType.None));
         }
 
         pub fn turn(self: Self, num: u16) !void {
             if (!trace) return;
             try self.writer.writeByte(@enumToInt(ArgType.Turn));
             try self.writer.writeIntNative(u16, num);
+            try self.writer.writeByte(@enumToInt(ArgType.None));
         }
 
         pub fn win(self: Self, player: Player) !void {
             if (!trace) return;
-            try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Win), @enumToInt(player) });
+            try self.writer.writeAll(&[_]u8{
+                @enumToInt(ArgType.Win),
+                @enumToInt(player),
+                @enumToInt(ArgType.None),
+            });
         }
 
         pub fn tie(self: Self) !void {
             if (!trace) return;
-            try self.writer.writeAll(&[_]u8{@enumToInt(ArgType.Tie)});
+            try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Tie), @enumToInt(ArgType.None) });
         }
 
         pub fn damage(self: Self, ident: u8, pokemon: *const Pokemon, reason: Damage) !void {

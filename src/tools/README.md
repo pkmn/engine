@@ -1,11 +1,5 @@
 This folder contains miscellaneous scripts and tools useful for working on the pkmn engine:
 
-- [`debug.zig`](debug.zig)/[`debug.ts`](debug.ts): Use for debugging the translation layer between
-  the the Zig and TypeScript libraries (primarily testing serialization/deserialization).
-
-      $ zig build debug -Dshowdown > <FILE>
-      $ node build/tools/debug <FILE>
-
 - [`generate.ts`](generate.ts): Generate the the data files for the library based on
   [templates](../lib/common/data) and [`id.json`](../pkg/data/ids.json) for decoding the serialized
   data. Produces the data based on information fetched from the decompiled sources and Pokémon
@@ -31,3 +25,11 @@ This folder contains miscellaneous scripts and tools useful for working on the p
 
       $ zig build rng -- crit 93
       $ zig build rng -- sleep
+
+- [`serde.zig`](serde.zig)/[`serde.ts`](serde.ts): Serializes/deserializes a randomly generated
+  Battle for the provided generation to stdout, optionally for a specific seed. `serde.ts` wraps
+  `serde.zig` and pretty prints the buffer so that it can be easily copied and pasted into JS
+  source files for testing.
+
+      $ zig build serialize -- <GEN> <SEED?>
+      $ npm run compile && node build/tools/serde 1

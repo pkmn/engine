@@ -47,13 +47,13 @@ pub fn build(b: *Builder) !void {
     const format = b.addFmt(&[_][]const u8{"."});
 
     const rng = try executable(b, &.{pkmn}, "src/tools/rng.zig", showdown, strip);
-    const debug = try executable(b, &.{pkmn}, "src/tools/debug.zig", showdown, strip);
+    const serde = try executable(b, &.{pkmn}, "src/tools/serde.zig", showdown, strip);
     const protocol = try executable(b, &.{pkmn}, "src/tools/protocol.zig", showdown, strip);
 
-    b.step("debug", "Run debugging tool").dependOn(&debug.step);
     b.step("format", "Format source files").dependOn(&format.step);
-    b.step("protocol", "Run protocol tool").dependOn(&protocol.step);
+    b.step("protocol", "Run protocol dump tool").dependOn(&protocol.step);
     b.step("rng", "Run RNG calculator tool").dependOn(&rng.step);
+    b.step("serde", "Run serialization/deserialization tool").dependOn(&serde.step);
     b.step("test", "Run all tests").dependOn(&tests.step);
 }
 

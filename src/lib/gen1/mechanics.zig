@@ -732,10 +732,11 @@ fn checkFaint(battle: anytype, player: Player, recurse: bool, log: anytype) !?Re
 
     side.active.volatiles = .{};
     side.last_used_move = .None;
-    try log.faint(side.active.ident(side, player));
+    // try log.faint(side.active.ident(side, player));
 
     //  TODO: if (findFirstAlive(side) == 0)
 
+    _ = log;
     _ = recurse;
 
     return null;
