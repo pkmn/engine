@@ -64,8 +64,10 @@ fn expectOrder(p1: anytype, o1: []const u8, p2: anytype, o2: []const u8) !void {
     try expectEqualSlices(u8, o2, &p2.order);
 }
 
+const SEED = 0x31415926;
+
 test "switching" {
-    var battle = Battle.random(&Random.init(0x31415926), false);
+    var battle = Battle.random(&Random.init(SEED), false);
     const p1 = battle.side(.P1);
     const p2 = battle.side(.P2);
 
@@ -81,6 +83,17 @@ test "switching" {
     try expectOrder(p1, &[_]u8{ 2, 1, 6, 4, 3, 5 }, p2, &[_]u8{ 4, 1, 3, 5, 2, 6 });
     try expectEqual(Result.Default, try update(&battle, swtch(5), swtch(5)));
     try expectOrder(p1, &[_]u8{ 3, 1, 6, 4, 2, 5 }, p2, &[_]u8{ 2, 1, 3, 5, 4, 6 });
+}
+
+test "choices" {
+    var random = Random.init(SEED);
+    var battle = Battle.random(&random, false);
+    var options: [10]Choice = undefined;
+    const n = battle.choices(.P1, .Move, &options);
+    try expectEqualSlices(Choice, &[_]Choice{
+        swtch(2), swtch(3), swtch(4), swtch(5), swtch(6),
+        move(1),  move(2),  move(3),  move(4),
+    }, options[0..n]);
 }
 
 // var buf = [_]u8{0} ** 7;
@@ -594,7 +607,6 @@ fn update(battle: anytype, c1: Choice, c2: Choice) !Result {
 }
 
 comptime {
-    _ = @import("choices.zig");
     _ = @import("data.zig");
     _ = @import("mechanics.zig");
     _ = @import("protocol.zig");

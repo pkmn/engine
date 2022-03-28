@@ -39,6 +39,10 @@ pub fn Battle(comptime PRNG: anytype) align(64) type {
         pub fn update(self: *Self, c1: Choice, c2: Choice, log: anytype) !Result {
             return mechanics.update(self, c1, c2, log);
         }
+
+        pub fn choices(self: *Self, player: Player, request: Choice.Type, out: []Choice) u8 {
+            return mechanics.choices(self, player, request, out);
+        }
     };
 }
 
