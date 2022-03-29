@@ -792,7 +792,7 @@ fn decrementPP(side: *Side, choice: Choice) void {
     if (choice.data == 0) return; // Struggle
 
     var active = &side.active;
-    const volatiles = active.volatiles;
+    const volatiles = &active.volatiles;
 
     if (volatiles.Bide or volatiles.Thrashing or volatiles.MultiHit or volatiles.Rage) return;
 
@@ -950,7 +950,7 @@ pub const Effects = struct {
         var side = battle.side(player);
         var foe = battle.foe(player);
 
-        var volatiles = foe.active.volatiles;
+        var volatiles = &foe.active.volatiles;
 
         const player_ident = side.active.ident(side, player);
         const foe_ident = foe.active.ident(foe, player.foe());
@@ -999,7 +999,7 @@ pub const Effects = struct {
     }
 
     fn flinchChance(battle: anytype, player: Player, move: Move.Data) !void {
-        var volatiles = battle.foe(player).active.volatiles;
+        var volatiles = &battle.foe(player).active.volatiles;
 
         if (volatiles.Substitute) return;
 
@@ -1289,7 +1289,7 @@ pub const Effects = struct {
     }
 
     fn thrashing(battle: anytype, player: Player) !void {
-        var volatiles = battle.side(player).active.volatiles;
+        var volatiles = &battle.side(player).active.volatiles;
 
         volatiles.Thrashing = true;
         // NB: these values will diverge

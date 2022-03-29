@@ -105,7 +105,7 @@ pub fn main() !void {
     try buf.flush();
 }
 
-pub fn print(w: anytype, name: []const u8, comptime T: type, comptime bits: bool) !void {
+fn print(w: anytype, name: []const u8, comptime T: type, comptime bits: bool) !void {
     try w.print("\"{s}\":{{", .{name});
     var inner = false;
     inline for (std.meta.fields(T)) |field| {

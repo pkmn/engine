@@ -3,6 +3,7 @@ import {
   BoostsTable,
   Generation,
   ID,
+  toID,
   PokemonSet,
   SideID,
   StatID,
@@ -11,11 +12,8 @@ import {
   TypeName,
 } from '@pkmn/data';
 
-import {Gen1, Names, ParsedLine} from './index';
-import {LAYOUT, LE, Lookup, PROTOCOL} from './data';
-import {Protocol} from '@pkmn/protocol';
-
-const ArgType = PROTOCOL.ArgType;
+import {Gen1, Slot} from './index';
+import {LAYOUT, LE, Lookup} from './data';
 
 const SIZES = LAYOUT[0].sizes;
 const OFFSETS = LAYOUT[0].offsets;
@@ -78,7 +76,7 @@ export class Battle implements Gen1.Battle {
       // Gen12RNG seed requires an index, but if we always rotate the seed based on the index when
       // reading we can avoid tracking the index as it will always be zero. NB: the exact bits of
       // the Battle will not roundtrip, but the *logical* Battle state will.
-      const index = this.data.getUint8(offset + 11);
+      const index = this.data.getUint8(offset + 10);
       for (let i = 0; i < 10; i++) {
         const j = i - index;
         seed[j < 0 ? j + 10 : j] = this.data.getUint8(offset + i);
@@ -117,10 +115,9 @@ export class Battle implements Gen1.Battle {
     data.setUint16(OFFSETS.Battle.turn, battle.turn, LE);
     data.setUint16(OFFSETS.Battle.last_damage, battle.lastDamage, LE);
     encodePRNG(data, battle.prng);
+    return buf;
   }
 }
-
-export type Slot = 1 | 2 | 3 | 4 | 5 | 6;
 
 export class Side implements Gen1.Side {
   private readonly lookup: Lookup;
@@ -137,6 +134,10 @@ export class Side implements Gen1.Side {
     this.cache = [undefined, undefined, undefined, undefined, undefined, undefined];
   }
 
+  get active(): Pokemon | undefined {
+    return started(this.data) ? this.get(1) : undefined;
+  }
+
   get pokemon() {
     return this._pokemon();
   }
@@ -148,14 +149,10 @@ export class Side implements Gen1.Side {
   }
 
   get(slot: Slot): Pokemon {
-    const id = this.data.getUint8(this.offset + OFFSETS.Side.order + slot - 1);
+    const id = this.data.getUint8(this.offset + OFFSETS.Side.order + slot - 1) - 1;
     const poke = this.cache[id];
     if (poke) return poke;
-    return (this.cache[id] = new Pokemon(this.lookup, this.data, this.offset, id - 1));
-  }
-
-  get active(): Pokemon {
-    return this.get(1);
+    return (this.cache[id] = new Pokemon(this.lookup, this.data, this.offset, id));
   }
 
   get lastSelectedMove(): ID | undefined {
@@ -177,7 +174,7 @@ export class Side implements Gen1.Side {
   ) {
     for (let i = 0; i < 6; i++) {
       const poke = team[i];
-      // Pokemon.init(gen, lookup, poke, data, offset, i);
+      Pokemon.init(gen, lookup, poke, data, offset, i);
       data.setUint8(offset + OFFSETS.Side.order + i, i + 1);
     }
   }
@@ -187,14 +184,16 @@ export class Side implements Gen1.Side {
     lookup: Lookup,
     side: Gen1.Side,
     data: DataView,
-    offset: number
+    offset: number,
   ) {
     let i = 0;
     for (const pokemon of side.pokemon) {
-      Pokemon.encode(gen, lookup, pokemon, data, offset, i);
-      data.setUint8(offset + OFFSETS.Side.order + i, i + 1);
+      const off = offset + OFFSETS.Side.pokemon + SIZES.Pokemon * i;
+      Pokemon.encodeStored(gen, lookup, pokemon, data, off);
+      data.setUint8(offset + OFFSETS.Side.order + i, pokemon.position);
       i++;
     }
+    Pokemon.encodeActive(gen, lookup, side.active, data, offset + OFFSETS.Side.active);
     data.setUint8(offset + OFFSETS.Side.last_selected_move,
       lookup.moveByID(side.lastSelectedMove));
     data.setUint8(offset + OFFSETS.Side.last_used_move,
@@ -219,15 +218,20 @@ export class Pokemon implements Gen1.Pokemon {
     this.data = data;
     this.offset = {
       order: offset + OFFSETS.Side.order,
-      active: offset + OFFSETS.Pokemon.active,
-      stored: offset + OFFSETS.Pokemon.stored + SIZES.Pokemon * index,
+      active: offset + OFFSETS.Side.active,
+      stored: offset + OFFSETS.Side.pokemon + SIZES.Pokemon * index,
     };
+    console.log(this.offset);
     this.index = index;
     this.stored = new StoredPokemon(this.lookup, this.data, this.offset.stored);
   }
 
+  get position(): Slot {
+    return this.index + 1 as Slot;
+  }
+
   active(): boolean {
-    return this.index === this.data.getUint8(this.offset.order);
+    return started(this.data) && this.index === this.data.getUint8(this.offset.order);
   }
 
   stat(stat: StatID): number {
@@ -257,27 +261,39 @@ export class Pokemon implements Gen1.Pokemon {
     return !!(byte & (1 << (bit & 7)));
   }
 
-  get volatiles(): {[name: string]: Gen1.Volatile} {
+  get volatiles(): Gen1.Volatiles {
     if (!this.active) return {};
 
     const off = this.offset.active + OFFSETS.ActivePokemon.volatiles + OFFSETS.Volatiles.data;
-    const volatiles: {[name: string]: Gen1.Volatile} = {};
-    for (const volatile in Pokemon.Volatiles) {
+    const volatiles: Gen1.Volatiles = {};
+    for (const v in Pokemon.Volatiles) {
+      if (v === 'data') continue;
+      const volatile = toID(v) as keyof Gen1.Volatiles;
       if (this.volatile(Pokemon.Volatiles[volatile])) {
-        const data: Gen1.Volatile = {};
-        if (volatile === 'Bide') {
-          data.damage = this.data.getUint16(off + OFFSETS.VolatilesData.state, LE);
-        } else if (volatile === 'Trapping') {
-          data.duration = this.data.getUint8(off + OFFSETS.VolatilesData.attacks >> 3);
-        } else if (volatile === 'Thrashing' || volatile === 'Rage') {
-          data.duration = this.data.getUint8(off + OFFSETS.VolatilesData.attacks >> 3);
-          data.accuracy = this.data.getUint16(off + OFFSETS.VolatilesData.state, LE);
-        } else if (volatile === 'Confusion') {
-          data.duration = this.data.getUint8(off + OFFSETS.VolatilesData.confusion >> 3) & 0x0F;
-        } else if (volatile === 'Substitute') {
-          data.damage = this.data.getUint8(off + OFFSETS.VolatilesData.substitute >> 3);
+        if (volatile === 'bide') {
+          volatiles[volatile] = {
+            damage: this.data.getUint16(off + OFFSETS.VolatilesData.state, LE),
+          };
+        } else if (volatile === 'trapping') {
+          volatiles[volatile] = {
+            duration: this.data.getUint8(off + OFFSETS.VolatilesData.attacks >> 3),
+          };
+        } else if (volatile === 'thrashing' || volatile === 'rage') {
+          volatiles[volatile] = {
+            duration: this.data.getUint8(off + OFFSETS.VolatilesData.attacks >> 3),
+            accuracy: this.data.getUint16(off + OFFSETS.VolatilesData.state, LE),
+          };
+        } else if (volatile === 'confusion') {
+          volatiles[volatile] = {
+            duration: this.data.getUint8(off + OFFSETS.VolatilesData.confusion >> 3) & 0x0F,
+          };
+        } else if (volatile === 'substitute') {
+          volatiles[volatile] = {
+            hp: this.data.getUint8(off + OFFSETS.VolatilesData.substitute >> 3),
+          };
+        } else {
+          volatiles[volatile] = {};
         }
-        volatiles[volatile] = data;
       }
     }
     return volatiles;
@@ -337,7 +353,8 @@ export class Pokemon implements Gen1.Pokemon {
   get species(): ID {
     if (!this.active) return this.stored.species;
 
-    const off = this.offset.active + OFFSETS.ActivePokemon.species;
+  const off = this.offset.active + OFFSETS.ActivePokemon.species;
+    console.log(off, this.data.getUint8(off));
     return this.lookup.specieByNum(this.data.getUint8(off));
   }
 
@@ -378,43 +395,96 @@ export class Pokemon implements Gen1.Pokemon {
     if (!this.active) return 0;
 
     const off = this.offset.active + OFFSETS.ActivePokemon.volatiles + OFFSETS.Volatiles.data;
-    return this.data.getUint8(off + OFFSETS.VolatilesData.toxic >> 3) >> 4;
+    console.log(off, (OFFSETS.VolatilesData.toxic >> 3), this.data.getUint8(off + (OFFSETS.VolatilesData.toxic >> 3)));
+    return this.data.getUint8(off + (OFFSETS.VolatilesData.toxic >> 3)) >> 4;
   }
 
-  static encode(
+  static init(
     gen: Generation,
     lookup: Lookup,
-    active: Gen1.Pokemon,
+    set: PokemonSet,
     data: DataView,
     offset: number,
     index: number,
   ) {
-    let off = offset + OFFSETS.ActivePokemon.stats;
-    const stats = active.stats;
+    const stored = offset + OFFSETS.Pokemon.stored + SIZES.Pokemon * index;
+    const species = gen.species.get(set.species)!;
+
+    let hp = 0;
+    let off = stored + OFFSETS.Pokemon.stats;
     for (const stat of gen.stats) {
       if (stat === 'spd') break;
-      data.setUint16(off, stats[stat], LE);
+      const val =
+         gen.stats.calc(stat, species.baseStats[stat], set.ivs[stat], set.evs[stat], set.level);
+      data.setUint16(off, val, LE);
+      if (stat === 'hp') hp = val;
       off += 2;
     }
 
-    off = offset + OFFSETS.ActivePokemon.volatiles;
-    const volatiles = active.volatiles;
-    const state = volatiles.Bide?.damage ??
-      volatiles.Thrashing?.accuracy ??
-      volatiles.Rage?.accuracy ?? 0;
-    data.setUint16(off + OFFSETS.VolatilesData.state, state, LE);
-    data.setUint8(off + OFFSETS.VolatilesData.substitute >> 3, volatiles.Substitute.hp ?? 0);
-    const confusion = volatiles.Confusion?.duration ?? 0;
-    // XXX data.setUint8(off + OFFSETS.VolatilesData.confusion >> 3, confusion << 4 | active.toxic);
-    const attacks = volatiles.Trapping?.duration ??
-      volatiles.Thrashing?.duration ??
-      volatiles.Rage?.duration ?? 0;
-    data.setUint8(off + OFFSETS.VolatilesData.attacks >> 3, attacks);
+    off = stored + OFFSETS.Pokemon.moves;
+    for (const m of set.moves) {
+      const move = gen.moves.get(m)!;
+      data.setUint8(off++, move.num);
+      data.setUint8(off++, move.pp);
+    }
 
+    data.setUint16(stored + OFFSETS.Pokemon.hp, hp, LE);
+
+    data.setUint8(stored + OFFSETS.Pokemon.species, species.num);
+    data.setUint8(stored + OFFSETS.Pokemon.types, encodeTypes(lookup, species.types));
+    data.setUint8(stored + OFFSETS.Pokemon.level, set.level);
+  }
+
+  static encodeStored(
+    gen: Generation,
+    lookup: Lookup,
+    pokemon: Gen1.Pokemon,
+    data: DataView,
+    offset: number,
+  ) {
+    let off = 0;
+    const stats = pokemon.stats;
+    for (const stat of gen.stats) {
+      if (stat === 'spd') break;
+      data.setUint16(offset + OFFSETS.Pokemon.stats + off, stats[stat], LE);
+      off += 2;
+    }
+
+    off = offset + OFFSETS.Pokemon.moves;
+    for (const ms of pokemon.stored.moves) {
+      data.setUint8(off++, lookup.moveByID(ms.move));
+      data.setUint8(off++, ms.pp);
+    }
+
+    data.setUint16(offset + OFFSETS.Pokemon.hp, pokemon.hp, LE);
+
+    const species = gen.species.get(pokemon.stored.species)!;
+    data.setUint8(offset + OFFSETS.Pokemon.species, species.num);
+    data.setUint8(offset + OFFSETS.Pokemon.types, encodeTypes(lookup, species.types));
+    data.setUint8(offset + OFFSETS.Pokemon.level, pokemon.level);
+    data.setUint8(offset + OFFSETS.Pokemon.status, encodeStatus(pokemon));
+  }
+
+  static encodeActive(
+    gen: Generation,
+    lookup: Lookup,
+    pokemon: Gen1.Pokemon | undefined,
+    data: DataView,
+    offset: number,
+  ) {
+    if (!pokemon) return;
+
+    let off = 0;
+    const stats = pokemon.stats;
+    for (const stat of gen.stats) {
+      if (stat === 'spd') break;
+      data.setUint16(offset + OFFSETS.ActivePokemon.stats + off, stats[stat], LE);
+      off += 2;
+    }
 
     off = offset + OFFSETS.ActivePokemon.moves;
     let slot = 1;
-    for (const ms of active.moves) {
+    for (const ms of pokemon.moves) {
       data.setUint8(off++, lookup.moveByID(ms.move));
       data.setUint8(off++, ms.pp);
       if (ms.disabled !== undefined) {
@@ -426,14 +496,42 @@ export class Pokemon implements Gen1.Pokemon {
       slot++;
     }
 
+    off = offset + OFFSETS.ActivePokemon.volatiles;
+    const volatiles = pokemon.volatiles;
+    const state = volatiles.bide?.damage ??
+      volatiles.thrashing?.accuracy ??
+      volatiles.rage?.accuracy ?? 0;
+    data.setUint16(off + OFFSETS.VolatilesData.state, state, LE);
+    data.setUint8(off + OFFSETS.VolatilesData.substitute >> 3, volatiles.substitute?.hp ?? 0);
+    const confusion = volatiles.confusion?.duration ?? 0;
+    data.setUint8(off + OFFSETS.VolatilesData.confusion >> 3, confusion << 4 |
+      (pokemon.statusData.toxic ?? 0));
+    const attacks = volatiles.trapping?.duration ??
+      volatiles.thrashing?.duration ??
+      volatiles.rage?.duration ?? 0;
+    data.setUint8(off + OFFSETS.VolatilesData.attacks >> 3, attacks);
+
+    data.setUint8(off + (Pokemon.Volatiles.Bide >> 3),
+      +!!volatiles.bide | +!!volatiles.thrashing << 1 |
+       +!!volatiles.multihit << 2 || +!!volatiles.flinch << 3 |
+       +!!volatiles.charging << 4 | +!!volatiles.trapping << 5 |
+       +!!volatiles.invulnerable << 6 | +!!volatiles.confusion << 7);
+    data.setUint8(off + (Pokemon.Volatiles.Mist >> 3),
+      +!!volatiles.mist | +!!volatiles.focusenergy << 1 |
+       +!!volatiles.substitute << 2 || +!!volatiles.recharging << 3 |
+       +!!volatiles.rage << 4 | +!!volatiles.leechseed << 5 |
+       +!!volatiles.toxic << 6 | +!!volatiles.lightscreen << 7);
+    data.setUint8(off + (Pokemon.Volatiles.Reflect >> 3),
+      +!!volatiles.reflect | +!!volatiles.transform << 1);
+
     off = offset + OFFSETS.ActivePokemon.boosts;
-    const boosts = active.boosts;
+    const boosts = pokemon.boosts;
     data.setUint8(off++, boosts.atk << 4 | boosts.def);
     data.setUint8(off++, boosts.spe << 4 | boosts.spa);
     data.setUint8(off++, boosts.accuracy << 4 | boosts.evasion);
 
-    data.setUint8(offset + OFFSETS.Pokemon.species, lookup.specieByID(active.species));
-    data.setUint8(offset + OFFSETS.Pokemon.types, encodeTypes(lookup, active.types));
+    data.setUint8(offset + OFFSETS.ActivePokemon.species, lookup.specieByID(pokemon.species));
+    data.setUint8(offset + OFFSETS.ActivePokemon.types, encodeTypes(lookup, pokemon.types));
   }
 }
 
@@ -489,70 +587,6 @@ export class StoredPokemon {
   get types(): readonly [TypeName, TypeName] {
     return decodeTypes(this.lookup, this.data.getUint8(this.offset + OFFSETS.Pokemon.types));
   }
-
-  static init(
-    gen: Generation,
-    lookup: Lookup,
-    set: PokemonSet,
-    data: DataView,
-    offset: number
-  ) {
-    const species = gen.species.get(set.species)!;
-
-    // let hp = 0;
-    let off = offset + OFFSETS.Pokemon.stats;
-    for (const stat of gen.stats) {
-      if (stat === 'spd') break;
-      const val =
-        gen.stats.calc(stat, species.baseStats[stat], set.ivs[stat], set.evs[stat], set.level);
-      data.setUint16(off, val, LE);
-      // if (stat === 'hp') hp = val;
-      off += 2;
-    }
-
-    off = offset + OFFSETS.Pokemon.moves;
-    for (const m of set.moves) {
-      const move = gen.moves.get(m)!;
-      data.setUint8(off++, move.num);
-      data.setUint8(off++, move.pp);
-    }
-
-    // data.setUint16(offset + OFFSETS.Pokemon.hp, hp, LE);
-
-    data.setUint8(offset + OFFSETS.Pokemon.species, species.num);
-    data.setUint8(offset + OFFSETS.Pokemon.types, encodeTypes(lookup, species.types));
-    // data.setUint8(offset + OFFSETS.Pokemon.level, set.level);
-  }
-
-  static encode(
-    gen: Generation,
-    lookup: Lookup,
-    stored: Gen1.Pokemon['stored'],
-    data: DataView,
-    offset: number
-  ) {
-    let off = offset + OFFSETS.Pokemon.stats;
-    const stats = stored.stats;
-    for (const stat of gen.stats) {
-      if (stat === 'spd') break;
-      data.setUint16(off, stats[stat], LE);
-      off += 2;
-    }
-
-    off = offset + OFFSETS.Pokemon.moves;
-    for (const ms of stored.moves) {
-      data.setUint8(off++, lookup.moveByID(ms.move));
-      data.setUint8(off++, ms.pp);
-    }
-
-    // data.setUint16(offset + OFFSETS.Pokemon.hp, pokemon.hp, LE);
-
-    const species = gen.species.get(stored.species)!;
-
-    data.setUint8(offset + OFFSETS.Pokemon.species, species.num);
-    data.setUint8(offset + OFFSETS.Pokemon.types, encodeTypes(lookup, species.types));
-    // data.setUint8(offset + OFFSETS.Pokemon.level, pokemon.level);
-  }
 }
 
 function encodePRNG(data: DataView, seed: readonly number[]) {
@@ -570,6 +604,10 @@ function encodePRNG(data: DataView, seed: readonly number[]) {
   }
 }
 
+function started(data: DataView) {
+  return data.getUint16(OFFSETS.Battle.turn, LE) !== 0;
+}
+
 function encodeTypes(lookup: Lookup, types: Readonly<[TypeName] | [TypeName, TypeName]>): number {
   return lookup.typeByName(types[0]) << 3 | lookup.typeByName(types[1] ?? types[0]);
 }
@@ -578,95 +616,18 @@ function decodeTypes(lookup: Lookup, val: number): readonly [TypeName, TypeName]
   return [lookup.typeByNum(val & 0x0F), lookup.typeByNum(val >> 4)];
 }
 
-export const Log = new class {
-  *parse(data: DataView, names: Names): Iterable<ParsedLine> {
-    const lines: ParsedLine[] = [];
-    for (let i = 0; i < data.byteLength;) {
-      const byte = data.getUint8(i++);
-      if (!byte) {
-        for (const line of lines) yield line;
-        return;
-      }
-      if (byte === ArgType.LastMiss) {
-        (lines[0].kwargs as Writeable<Protocol.BattleArgsKWArgs['|move|']>).miss = true;
-      } else if (byte === ArgType.LastStill) {
-        (lines[0].kwargs as Writeable<Protocol.BattleArgsKWArgs['|move|']>).still = true;
-      } else {
-        const decoded = DECODERS[byte]?.(i, data, names);
-        if (!decoded) throw new Error(`Expected arg at offset ${i} but found ${byte}`);
-        i += decoded.offset;
-        if (byte === ArgType.Move) {
-          for (const line of lines) yield line;
-        } else if (!lines.length) {
-          yield decoded.line;
-          continue;
-        }
-        lines.push(decoded.line);
-      }
+function encodeStatus(pokemon: Gen1.Pokemon): number {
+  if (pokemon.statusData.sleep) {
+    if (pokemon.status !== 'slp') {
+      throw new Error('Pokemon is not asleep but has non-zero sleep turns');
     }
+    return pokemon.statusData.sleep;
   }
-};
-
-type Writeable<T> = { -readonly [P in keyof T]: T[P] };
-type Decoder = (offset: number, data: DataView, names: Names) => {offset: number; line: ParsedLine};
-
-const TODO: ParsedLine = {args: ['-ohko'], kwargs: {}};
-
-export const DECODERS: {[key: number]: Decoder} = {
-  [ArgType.Move]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.Switch]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.Cant]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.Faint]: (offset, data, names) => decodeType('fainted', offset, data, names),
-  [ArgType.Turn]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.Win]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.Tie]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.Damage]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.Heal]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.Status]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.CureStatus]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.Boost]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.Unboost]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.ClearAllBoost]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.Fail]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.Miss]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.HitCount]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.Prepare]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.MustRecharge]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.Activate]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.FieldActivate]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.Start]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.End]: (offset, data, names) => ({offset, line: TODO}),
-  [ArgType.OHKO]: (offset) => {
-    const line = {args: ['-ohko'] as Protocol.Args['|-ohko|'], kwargs: {}};
-    return {offset, line};
-  },
-  [ArgType.Crit]: (offset, data, names) => decodeType('-crit', offset, data, names),
-  [ArgType.SuperEffective]: (offset, data, names) =>
-    decodeType('-supereffective', offset, data, names),
-  [ArgType.Resisted]: (offset, data, names) => decodeType('-resisted', offset, data, names),
-  [ArgType.Immune]: (offset, data, names) => decodeType('-immune', offset, data, names),
-  [ArgType.Transform]: (offset, data, names) => {
-    const source = ident(names, data.getUint8(offset++));
-    const target = ident(names, data.getUint8(offset++));
-    const line = {
-      args: ['-transform', source, target] as Protocol.Args['|-transform|'],
-      kwargs: {},
-    };
-    return {offset, line};
-  },
-};
-
-function decodeType(type: string, offset: number, data: DataView, names: Names) {
-  const foo = ident(names, data.getUint8(offset++));
-  const line = {
-    args: [type, foo] as Protocol.BattleArgType,
-    kwargs: {},
-  };
-  return {offset, line};
-}
-
-function ident(names: Names, byte: number): Protocol.PokemonIdent {
-  const player = (byte >> 4) === 0 ? 'p1' : 'p2';
-  const slot = byte & 0x0F;
-  return `${player}a: ${names[player].team[slot - 1]}` as Protocol.PokemonIdent;
+  switch (pokemon.status) {
+  case 'tox': case 'psn': return 1 << 3;
+  case 'brn': return 1 << 4;
+  case 'frz': return 1 << 5;
+  case 'par': return 1 << 6;
+  }
+  return 0;
 }
