@@ -169,7 +169,7 @@ export const DECODERS: {[key: number]: Decoder} = {
     }
     return {offset, line: {args, kwargs: {}}};
   },
-  [ArgType.Faint]: (offset, data, names) => decodeProtocol('fainted', offset, data, names),
+  [ArgType.Faint]: (offset, data, names) => decodeProtocol('faint', offset, data, names),
   [ArgType.Turn]: (offset, data) => {
     const turn = data.getUint16(offset, LE).toString() as Protocol.Num;
     offset += 2;
