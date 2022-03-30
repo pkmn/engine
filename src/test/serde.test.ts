@@ -19,8 +19,9 @@ const run = async (cmd: string, args: string[]): Promise<Buffer> =>
       error ? reject(error) : resolve(stdout));
   });
 
-describe('integration', () => {
-  it.skip('serialize/deserialize', async () => {
+describe('serialize/deserialize', () => {
+  it.todo('init'); // TODO @pkmn/randoms!
+  it.skip('encode', async () => {
     const rng = new PRNG([1, 2, 3, 4]);
     for (const gen of new Generations(Dex as any)) {
       if (gen.num > 1) break; // TODO
