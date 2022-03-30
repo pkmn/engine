@@ -24,7 +24,7 @@ describe('serialize/deserialize', () => {
   it.skip('encode', async () => {
     const rng = new PRNG([1, 2, 3, 4]);
     for (const gen of new Generations(Dex as any)) {
-      if (gen.num > 1) break; // TODO
+      if (gen.num > 1) break;
 
       const lookup = Lookup.get(gen);
       for (let i = 0; i < N; i++) {

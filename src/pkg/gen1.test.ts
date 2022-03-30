@@ -1,5 +1,3 @@
-import 'source-map-support/register';
-
 import {Dex} from '@pkmn/sim';
 import {Generations} from '@pkmn/data';
 

@@ -41,7 +41,7 @@ export const Data = new class {
     return Buffer.from(new Uint8Array(data).buffer);
   }
   view(data: number[]): DataView {
-    return new DataView(this.buffer(data));
+    return new DataView(this.buffer(data).buffer);
   }
 };
 
