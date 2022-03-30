@@ -823,7 +823,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     await GEN[gen.num]!(gen, {out, cache}, update, tests === gen.num);
   }
 
-  fs.writeFileSync(path.join(ROOT, 'src', 'pkg', 'data', 'ids.json'), JSON.stringify(IDS));
+  const idsJSON = path.join(ROOT, 'src', 'pkg', 'data', 'ids.json');
+  fs.writeFileSync(idsJSON, JSON.stringify(IDS, null, 2));
 })().catch((err: any) => {
   console.error(err);
   process.exit(1);

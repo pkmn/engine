@@ -1,1 +1,86 @@
-[{"sizes":{"Battle":384,"Side":184,"Pokemon":24,"ActivePokemon":32},"offsets":{"Battle":{"sides":0,"turn":368,"last_damage":370,"rng":373},"Side":{"pokemon":0,"active":144,"order":176,"last_selected_move":182,"last_used_move":183},"Pokemon":{"stats":0,"moves":10,"hp":18,"status":20,"species":21,"types":22,"level":23},"ActivePokemon":{"stats":0,"volatiles":10,"moves":19,"boosts":27,"species":30,"types":31},"Stats":{"hp":0,"atk":2,"def":4,"spe":6,"spc":8},"Boosts":{"atk":0,"def":4,"spe":8,"spc":12,"accuracy":16,"evasion":20},"Volatiles":{"data":0,"Bide":48,"Thrashing":49,"MultiHit":50,"Flinch":51,"Charging":52,"Trapping":53,"Invulnerable":54,"Confusion":55,"Mist":56,"FocusEnergy":57,"Substitute":58,"Recharging":59,"Rage":60,"LeechSeed":61,"Toxic":62,"LightScreen":63,"Reflect":64,"Transform":65},"VolatilesData":{"state":0,"substitute":16,"disabled":24,"confusion":32,"toxic":36,"attacks":40}}}]
+[
+  {
+    "sizes": {
+      "Battle": 384,
+      "Side": 184,
+      "Pokemon": 24,
+      "ActivePokemon": 32
+    },
+    "offsets": {
+      "Battle": {
+        "sides": 0,
+        "turn": 368,
+        "last_damage": 370,
+        "rng": 373
+      },
+      "Side": {
+        "pokemon": 0,
+        "active": 144,
+        "order": 176,
+        "last_selected_move": 182,
+        "last_used_move": 183
+      },
+      "Pokemon": {
+        "stats": 0,
+        "moves": 10,
+        "hp": 18,
+        "status": 20,
+        "species": 21,
+        "types": 22,
+        "level": 23
+      },
+      "ActivePokemon": {
+        "stats": 0,
+        "volatiles": 10,
+        "moves": 19,
+        "boosts": 27,
+        "species": 30,
+        "types": 31
+      },
+      "Stats": {
+        "hp": 0,
+        "atk": 2,
+        "def": 4,
+        "spe": 6,
+        "spc": 8
+      },
+      "Boosts": {
+        "atk": 0,
+        "def": 4,
+        "spe": 8,
+        "spc": 12,
+        "accuracy": 16,
+        "evasion": 20
+      },
+      "Volatiles": {
+        "data": 0,
+        "Bide": 48,
+        "Thrashing": 49,
+        "MultiHit": 50,
+        "Flinch": 51,
+        "Charging": 52,
+        "Trapping": 53,
+        "Invulnerable": 54,
+        "Confusion": 55,
+        "Mist": 56,
+        "FocusEnergy": 57,
+        "Substitute": 58,
+        "Recharging": 59,
+        "Rage": 60,
+        "LeechSeed": 61,
+        "Toxic": 62,
+        "LightScreen": 63,
+        "Reflect": 64,
+        "Transform": 65
+      },
+      "VolatilesData": {
+        "state": 0,
+        "substitute": 16,
+        "disabled": 24,
+        "confusion": 32,
+        "toxic": 36,
+        "attacks": 40
+      }
+    }
+  }
+]
