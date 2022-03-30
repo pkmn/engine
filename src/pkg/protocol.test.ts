@@ -1,4 +1,4 @@
-describe("Protocol", () => {
+describe('Protocol', () => {
   it.todo('|move|');
   it.todo('|switch|');
   it.todo('|cant|');
@@ -28,4 +28,4 @@ describe("Protocol", () => {
   it.todo('|-resisted|');
   it.todo('|-immune|');
   it.todo('|-transform|');
-})
+});
