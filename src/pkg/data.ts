@@ -36,6 +36,15 @@ for (const gen of LAYOUT) {
   gen.offsets.Battle.p2 = gen.offsets.Battle.sides + gen.sizes.Side;
 }
 
+export const Data = new class {
+  buffer(data: number[]): Buffer {
+    return Buffer.from(new Uint8Array(data).buffer);
+  }
+  view(data: number[]): DataView {
+    return new DataView(this.buffer(data));
+  }
+};
+
 const LOOKUPS: Lookup[] = [];
 
 export class Lookup {
