@@ -25,7 +25,7 @@ jobs:
       - run: zig build test ${{matrix.options}}
       - run: zig build test ${{matrix.options}} -Drelease-fast
       - run: zig fmt --check .
-      - run: npm compile
-      - npm: npm test
+      - run: npm run compile
+      - run: npm test
       - run: npm run test:integration
       - run: npm run lint
