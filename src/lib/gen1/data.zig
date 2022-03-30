@@ -68,8 +68,8 @@ pub const Player = enum(u1) {
 
 test "Player" {
     try expectEqual(Player.P2, Player.P1.foe());
-    try expectEqual(@as(u8, 0b0000_0001), Player.P1.ident(1));
-    try expectEqual(@as(u8, 0b0000_1101), Player.P2.ident(5));
+    try expectEqual(@as(u8, 0b0001), Player.P1.ident(1));
+    try expectEqual(@as(u8, 0b1101), Player.P2.ident(5));
 }
 
 pub const Side = extern struct {

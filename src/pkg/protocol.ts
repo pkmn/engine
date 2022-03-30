@@ -374,8 +374,8 @@ function decodeProtocol(type: string, offset: number, data: DataView, names: Nam
 }
 
 function decodeIdent(names: Names, byte: number): Protocol.PokemonIdent {
-  const player = (byte >> 4) === 0 ? 'p1' : 'p2';
-  const slot = byte & 0x0F;
+  const player = (byte >> 3) === 0 ? 'p1' : 'p2';
+  const slot = byte & 0b111;
   return `${player}a: ${names[player].team[slot - 1]}` as Protocol.PokemonIdent;
 }
 
