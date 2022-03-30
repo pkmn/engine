@@ -25,9 +25,18 @@ export class SideNames {
   }
 }
 
-export const Log = new class {
-  // TODO: what should go into instance variables?
-  *parse(gen: Generation, data: DataView, names: Names, lookup: Lookup): Iterable<ParsedLine> {
+export class Log {
+  readonly gen: Generation;
+  readonly lookup: Lookup;
+  readonly names: Names;
+
+  constructor(gen: Generation, lookup: Lookup, names: Names) {
+    this.gen = gen;
+    this.lookup = lookup;
+    this.names = names;
+  }
+
+  *parse(data: DataView): Iterable<ParsedLine> {
     const lines: ParsedLine[] = [];
     for (let i = 0; i < data.byteLength;) {
       const byte = data.getUint8(i++);
@@ -40,7 +49,7 @@ export const Log = new class {
       } else if (byte === ArgType.LastStill) {
         (lines[0].kwargs as Writeable<Protocol.BattleArgsKWArgs['|move|']>).still = true;
       } else {
-        const decoded = DECODERS[byte]?.(i, data, names, gen, lookup);
+        const decoded = DECODERS[byte]?.apply(this, [i, data]);
         if (!decoded) throw new Error(`Expected arg at offset ${i} but found ${byte}`);
         i += decoded.offset;
         if (byte === ArgType.Move) {
@@ -53,11 +62,10 @@ export const Log = new class {
       }
     }
   }
-};
+}
 
 type Writeable<T> = { -readonly [P in keyof T]: T[P] };
-type Decoder = (offset: number, data: DataView, names: Names, gen: Generation, lookup: Lookup)
-=> {offset: number; line: ParsedLine};
+type Decoder = (this: Log, offset: number, data: DataView) => {offset: number; line: ParsedLine};
 
 const CANT: {[reason: number]: Protocol.Reason} = {
   [PROTOCOL.Cant.Sleep]: 'slp',
@@ -136,97 +144,99 @@ const END = {
 };
 
 export const DECODERS: {[key: number]: Decoder} = {
-  [ArgType.Move]: (offset, data, names, gen, lookup) => {
-    const source = decodeIdent(names, data.getUint8(offset++));
+  [ArgType.Move](offset, data) {
+    const source = decodeIdent(this.names, data.getUint8(offset++));
     const m = data.getUint8(offset++);
-    const target = decodeIdent(names, data.getUint8(offset++));
+    const target = decodeIdent(this.names, data.getUint8(offset++));
     const reason = data.getUint8(offset++);
     const move = reason === PROTOCOL.Move.Recharge
-      ? 'recharge' : gen.moves.get(lookup.moveByNum(m))!.name;
+      ? 'recharge' : this.gen.moves.get(this.lookup.moveByNum(m))!.name;
     const args = ['move', source, move, target] as Protocol.Args['|move|'];
     const kwargs = reason === PROTOCOL.Move.From
-      ? {from: gen.moves.get(lookup.moveByNum(data.getUint8(offset++)))!.name} : {};
+      ? {from: this.gen.moves.get(this.lookup.moveByNum(data.getUint8(offset++)))!.name} : {};
     return {offset, line: {args, kwargs}};
   },
-  [ArgType.Switch]: (offset, data, names, gen, lookup) => {
-    const ident = decodeIdent(names, data.getUint8(offset++));
-    const details = decodeDetails(offset, data, gen, lookup);
+  [ArgType.Switch](offset, data) {
+    const ident = decodeIdent(this.names, data.getUint8(offset++));
+    const details = decodeDetails(offset, data, this.gen, this.lookup);
     offset += 2;
     const hpStatus = decodeHPStatus(offset, data);
     offset += 5;
     const args = ['switch', ident, details, hpStatus] as Protocol.Args['|switch|'];
     return {offset, line: {args, kwargs: {}}};
   },
-  [ArgType.Cant]: (offset, data, names, gen, lookup) => {
-    const ident = decodeIdent(names, data.getUint8(offset++));
+  [ArgType.Cant](offset, data) {
+    const ident = decodeIdent(this.names, data.getUint8(offset++));
     const reason = data.getUint8(offset++);
     let args: Protocol.Args['|cant|'];
     if (reason === PROTOCOL.Cant.Disable) {
-      const move = gen.moves.get(lookup.moveByNum(data.getUint8(offset++)))!.name;
+      const move = this.gen.moves.get(this.lookup.moveByNum(data.getUint8(offset++)))!.name;
       args = ['cant', ident, 'Disable' as Protocol.MoveName, move];
     } else {
       args = ['cant', ident, CANT[reason]];
     }
     return {offset, line: {args, kwargs: {}}};
   },
-  [ArgType.Faint]: (offset, data, names) => decodeProtocol('faint', offset, data, names),
-  [ArgType.Turn]: (offset, data) => {
+  [ArgType.Faint](offset, data) {
+    return decodeProtocol('faint', offset, data, this.names);
+  },
+  [ArgType.Turn](offset, data) {
     const turn = data.getUint16(offset, LE).toString() as Protocol.Num;
     offset += 2;
     return {offset, line: {args: ['turn', turn] as Protocol.Args['|turn|'], kwargs: {}}};
   },
-  [ArgType.Win]: (offset, data, names) => {
+  [ArgType.Win](offset, data) {
     const player = data.getUint8(offset++) ? 'p2' : 'p1';
-    const args = ['win', names[player].player] as Protocol.Args['|win|'];
+    const args = ['win', this.names[player].player] as Protocol.Args['|win|'];
     return {offset, line: {args, kwargs: {}}};
   },
-  [ArgType.Tie]: (offset) => {
+  [ArgType.Tie](offset) {
     const line = {args: ['tie'] as Protocol.Args['|tie|'], kwargs: {}};
     return {offset, line};
   },
-  [ArgType.Damage]: (offset, data, names) => {
-    const ident = decodeIdent(names, data.getUint8(offset++));
+  [ArgType.Damage](offset, data) {
+    const ident = decodeIdent(this.names, data.getUint8(offset++));
     const hpStatus = decodeHPStatus(offset, data);
     offset += 5;
     const reason = data.getUint8(offset++);
     const kwargs = {} as Writeable<Protocol.BattleArgsKWArgs['|-damage|']>;
     if (reason >= PROTOCOL.Damage.None) kwargs.from = DAMAGE[reason];
     if (reason >= PROTOCOL.Damage.PoisonOf) {
-      kwargs.of = decodeIdent(names, data.getUint8(offset++));
+      kwargs.of = decodeIdent(this.names, data.getUint8(offset++));
     }
     const args = ['-damage', ident, hpStatus] as Protocol.Args['|-damage|'];
     return {offset, line: {args, kwargs}};
   },
-  [ArgType.Heal]: (offset, data, names) => {
-    const ident = decodeIdent(names, data.getUint8(offset++));
+  [ArgType.Heal](offset, data) {
+    const ident = decodeIdent(this.names, data.getUint8(offset++));
     const hpStatus = decodeHPStatus(offset, data);
     offset += 5;
     const reason = data.getUint8(offset++);
     const kwargs = {} as Writeable<Protocol.BattleArgsKWArgs['|-heal|']>;
     if (reason === PROTOCOL.Heal.Drain) {
       kwargs.from = 'drain' as Protocol.EffectName;
-      kwargs.of = decodeIdent(names, data.getUint8(offset++));
+      kwargs.of = decodeIdent(this.names, data.getUint8(offset++));
     } else if (reason === PROTOCOL.Heal.Silent) {
       kwargs.silent = true;
     }
     const args = ['-heal', ident, hpStatus] as Protocol.Args['|-heal|'];
     return {offset, line: {args, kwargs}};
   },
-  [ArgType.Status]: (offset, data, names, gen, lookup) => {
-    const ident = decodeIdent(names, data.getUint8(offset++));
+  [ArgType.Status](offset, data) {
+    const ident = decodeIdent(this.names, data.getUint8(offset++));
     const status = decodeStatus(data.getUint8(offset++));
     const reason = data.getUint8(offset++);
     const kwargs = {} as Writeable<Protocol.BattleArgsKWArgs['|-status|']>;
     if (reason === PROTOCOL.Status.Silent) {
       kwargs.silent = true;
     } else if (reason === PROTOCOL.Status.From) {
-      kwargs.from = gen.moves.get(lookup.moveByNum(data.getUint8(offset++)))!.name;
+      kwargs.from = this.gen.moves.get(this.lookup.moveByNum(data.getUint8(offset++)))!.name;
     }
     const args = ['-status', ident, status] as Protocol.Args['|-status|'];
     return {offset, line: {args, kwargs}};
   },
-  [ArgType.CureStatus]: (offset, data, names) => {
-    const ident = decodeIdent(names, data.getUint8(offset++));
+  [ArgType.CureStatus](offset, data) {
+    const ident = decodeIdent(this.names, data.getUint8(offset++));
     const status = decodeStatus(data.getUint8(offset++));
     const reason = data.getUint8(offset++);
     const kwargs = {} as Writeable<Protocol.BattleArgsKWArgs['|-status|']>;
@@ -234,8 +244,8 @@ export const DECODERS: {[key: number]: Decoder} = {
     const args = ['-status', ident, status] as Protocol.Args['|-status|'];
     return {offset, line: {args, kwargs}};
   },
-  [ArgType.Boost]: (offset, data, names) => {
-    const ident = decodeIdent(names, data.getUint8(offset++));
+  [ArgType.Boost](offset, data) {
+    const ident = decodeIdent(this.names, data.getUint8(offset++));
     const reason = data.getUint8(offset++);
     const boost = BOOSTS[reason];
     const kwargs = {} as Writeable<Protocol.BattleArgsKWArgs['|-boost|']>;
@@ -246,20 +256,20 @@ export const DECODERS: {[key: number]: Decoder} = {
     const args = ['-boost', ident, boost, num] as Protocol.Args['|-boost|'];
     return {offset, line: {args, kwargs}};
   },
-  [ArgType.Unboost]: (offset, data, names) => {
-    const ident = decodeIdent(names, data.getUint8(offset++));
+  [ArgType.Unboost](offset, data) {
+    const ident = decodeIdent(this.names, data.getUint8(offset++));
     const reason = data.getUint8(offset++);
     const boost = BOOSTS[reason];
     const num = data.getUint8(offset++).toString() as Protocol.Num;
     const args = ['-unboost', ident, boost, num] as Protocol.Args['|-unboost|'];
     return {offset, line: {args, kwargs: {}}};
   },
-  [ArgType.ClearAllBoost]: (offset) => {
+  [ArgType.ClearAllBoost](offset) {
     const args = ['-clearallboost'] as Protocol.Args['|-clearallboost|'];
     return {offset, line: {args, kwargs: {}}};
   },
-  [ArgType.Fail]: (offset, data, names) => {
-    const ident = decodeIdent(names, data.getUint8(offset++));
+  [ArgType.Fail](offset, data) {
+    const ident = decodeIdent(this.names, data.getUint8(offset++));
     const reason = data.getUint8(offset++);
     let args: Protocol.Args['|-fail|'];
     const kwargs = {} as Writeable<Protocol.BattleArgsKWArgs['|-fail|']>;
@@ -274,40 +284,41 @@ export const DECODERS: {[key: number]: Decoder} = {
     }
     return {offset, line: {args, kwargs}};
   },
-  [ArgType.Miss]: (offset, data, names) => {
-    const source = decodeIdent(names, data.getUint8(offset++));
-    const target = decodeIdent(names, data.getUint8(offset++));
+  [ArgType.Miss](offset, data) {
+    const source = decodeIdent(this.names, data.getUint8(offset++));
+    const target = decodeIdent(this.names, data.getUint8(offset++));
     const args = ['-miss', source, target] as Protocol.Args['|-miss|'];
     return {offset, line: {args, kwargs: {}}};
   },
-  [ArgType.HitCount]: (offset, data, names) => {
-    const ident = decodeIdent(names, data.getUint8(offset++));
+  [ArgType.HitCount](offset, data) {
+    const ident = decodeIdent(this.names, data.getUint8(offset++));
     const num = data.getUint8(offset++).toString() as Protocol.Num;
     const args = ['-hitcount', ident, num] as Protocol.Args['|-hitcount|'];
     return {offset, line: {args, kwargs: {}}};
   },
-  [ArgType.Prepare]: (offset, data, names, gen, lookup) => {
-    const source = decodeIdent(names, data.getUint8(offset++));
-    const move = gen.moves.get(lookup.moveByNum(data.getUint8(offset++)))!.name;
+  [ArgType.Prepare](offset, data) {
+    const source = decodeIdent(this.names, data.getUint8(offset++));
+    const move = this.gen.moves.get(this.lookup.moveByNum(data.getUint8(offset++)))!.name;
     const args = ['-prepare', source, move] as Protocol.Args['|-prepare|'];
     return {offset, line: {args, kwargs: {}}};
   },
-  [ArgType.MustRecharge]: (offset, data, names) =>
-    decodeProtocol('-mustrecharge', offset, data, names),
-  [ArgType.Activate]: (offset, data, names) => {
-    const ident = decodeIdent(names, data.getUint8(offset++));
+  [ArgType.MustRecharge](offset, data) {
+    return decodeProtocol('-mustrecharge', offset, data, this.names);
+  },
+  [ArgType.Activate](offset, data) {
+    const ident = decodeIdent(this.names, data.getUint8(offset++));
     const reason = data.getUint8(offset++);
     const args = ['-activate', ident, ACTIVATE[reason]] as Protocol.Args['|-activate|'];
     const kwargs = reason === PROTOCOL.Activate.Substitute ? {damage: true} : {};
     return {offset, line: {args, kwargs}};
   },
-  [ArgType.FieldActivate]: (offset) => {
+  [ArgType.FieldActivate](offset) {
     const effect = 'move: Pay Day' as Protocol.EffectName;
     const args = ['-fieldactivate', effect] as Protocol.Args['|-fieldactivate|'];
     return {offset, line: {args, kwargs: {}}};
   },
-  [ArgType.Start]: (offset, data, names, gen, lookup) => {
-    const ident = decodeIdent(names, data.getUint8(offset++));
+  [ArgType.Start](offset, data) {
+    const ident = decodeIdent(this.names, data.getUint8(offset++));
     const reason = data.getUint8(offset++);
     let args: Protocol.Args['|-start|'];
     const kwargs = {} as Writeable<Protocol.BattleArgsKWArgs['|-start|']>;
@@ -315,35 +326,43 @@ export const DECODERS: {[key: number]: Decoder} = {
       args = ['-start', ident, START[reason]];
       if (reason === PROTOCOL.Start.ConfusionSilent) kwargs.silent = true;
     } else if (reason === PROTOCOL.Start.TypeChange) {
-      const types = decodeTypes(lookup, data.getUint8(offset++));
+      const types = decodeTypes(this.lookup, data.getUint8(offset++));
       const t = types[0] === types[1] ? types[0] : types.join(', ');
       args = ['-start', ident, 'typechange' as Protocol.EffectName, t as Protocol.Types];
       kwargs.from = 'move: Conversion' as Protocol.EffectName;
       kwargs.of = ident;
     } else {
-      const move = gen.moves.get(lookup.moveByNum(data.getUint8(offset++)))!.name;
+      const move = this.gen.moves.get(this.lookup.moveByNum(data.getUint8(offset++)))!.name;
       const effect = reason === PROTOCOL.Start.Disable ? 'Disable' : 'Mimic';
       args = ['-start', ident, effect as Protocol.EffectName, move];
     }
     return {offset, line: {args, kwargs}};
   },
-  [ArgType.End]: (offset, data, names) => {
-    const ident = decodeIdent(names, data.getUint8(offset++));
+  [ArgType.End](offset, data) {
+    const ident = decodeIdent(this.names, data.getUint8(offset++));
     const reason = data.getUint8(offset++);
     const args = ['-end', ident, END[reason]] as Protocol.Args['|-end|'];
     const kwargs = reason >= PROTOCOL.End.DisableSilent ? {silent: true} : {};
     return {offset, line: {args, kwargs}};
   },
-  [ArgType.OHKO]: (offset) =>
-    ({offset, line: {args: ['-ohko'] as Protocol.Args['|-ohko|'], kwargs: {}}}),
-  [ArgType.Crit]: (offset, data, names) => decodeProtocol('-crit', offset, data, names),
-  [ArgType.SuperEffective]: (offset, data, names) =>
-    decodeProtocol('-supereffective', offset, data, names),
-  [ArgType.Resisted]: (offset, data, names) => decodeProtocol('-resisted', offset, data, names),
-  [ArgType.Immune]: (offset, data, names) => decodeProtocol('-immune', offset, data, names),
-  [ArgType.Transform]: (offset, data, names) => {
-    const source = decodeIdent(names, data.getUint8(offset++));
-    const target = decodeIdent(names, data.getUint8(offset++));
+  [ArgType.OHKO](offset) {
+    return {offset, line: {args: ['-ohko'] as Protocol.Args['|-ohko|'], kwargs: {}}};
+  },
+  [ArgType.Crit](offset, data) {
+    return decodeProtocol('-crit', offset, data, this.names);
+  },
+  [ArgType.SuperEffective](offset, data) {
+    return decodeProtocol('-supereffective', offset, data, this.names);
+  },
+  [ArgType.Resisted](offset, data) {
+    return decodeProtocol('-resisted', offset, data, this.names);
+  },
+  [ArgType.Immune](offset, data) {
+    return decodeProtocol('-immune', offset, data, this.names);
+  },
+  [ArgType.Transform](offset, data) {
+    const source = decodeIdent(this.names, data.getUint8(offset++));
+    const target = decodeIdent(this.names, data.getUint8(offset++));
     const args = ['-transform', source, target] as Protocol.Args['|-transform|'];
     return {offset, line: {args, kwargs: {}}};
   },

@@ -11,16 +11,9 @@ export const LE = (() => {
 })();
 
 export type IDs = [
-  {
-    types: TypeName[];
-  },
-  {
-    items: ID[];
-    types: TypeName[];
-  },
-  {
-    items: ID[];
-  },
+  { types: TypeName[] },
+  { items: ID[]; types: TypeName[] },
+  { items: ID[] },
 ];
 
 export const IDS = idsJSON as IDs;
