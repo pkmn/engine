@@ -38,16 +38,18 @@
     "build": "npm run compile",
     "test": "jest",
     "generate": "npm run compile && node build/tools/generate",
-    "test:integration": "jest --testRegex='src/test/.*\\.test\\.ts$'"
+    "test:integration": "jest --coverage=false --testRegex='src/test/.*\\.test\\.ts$'"
   },
   "jest": {
+    "collectCoverage": true,
+    "collectCoverageFrom": [ "src/pkg/*.ts"],
+    "coverageDirectory": "coverage",
+    "coverageProvider": "v8",
     "preset": "ts-jest",
+    "verbose": true,
     "testEnvironment": "node",
     "testRegex": "src/pkg/.*\\.test\\.ts$",
-    "testPathIgnorePatterns": [
-      "node_modules/",
-      "build/"
-    ],
+    "testPathIgnorePatterns": ["node_modules/", "build/"],
     "moduleNameMapper": {
       "^@pkmn/sim/(.*)$": "<rootDir>/node_modules/@pkmn/sim/build/sim/$1"
     }

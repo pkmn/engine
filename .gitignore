@@ -13,6 +13,7 @@ zig-out/
 /docgen_tmp/
 
 # JS
+coverage/
 node_modules/
 dist/
 *package-lock.json

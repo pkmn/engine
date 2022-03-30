@@ -37,7 +37,7 @@ export class Log {
   }
 
   *parse(data: DataView): Iterable<ParsedLine> {
-    const lines: ParsedLine[] = [];
+    let lines: ParsedLine[] = [];
     for (let i = 0; i < data.byteLength;) {
       const byte = data.getUint8(i++);
       if (!byte) {
@@ -51,9 +51,10 @@ export class Log {
       } else {
         const decoded = DECODERS[byte]?.apply(this, [i, data]);
         if (!decoded) throw new Error(`Expected arg at offset ${i} but found ${byte}`);
-        i += decoded.offset;
+        i = decoded.offset;
         if (byte === ArgType.Move) {
           for (const line of lines) yield line;
+          lines = [];
         } else if (!lines.length) {
           yield decoded.line;
           continue;
@@ -61,6 +62,7 @@ export class Log {
         lines.push(decoded.line);
       }
     }
+    for (const line of lines) yield line;
   }
 }
 
@@ -230,7 +232,8 @@ export const DECODERS: {[key: number]: Decoder} = {
     if (reason === PROTOCOL.Status.Silent) {
       kwArgs.silent = true;
     } else if (reason === PROTOCOL.Status.From) {
-      kwArgs.from = this.gen.moves.get(this.lookup.moveByNum(data.getUint8(offset++)))!.name;
+      const move = this.gen.moves.get(this.lookup.moveByNum(data.getUint8(offset++)))!.name;
+      kwArgs.from = `move: ${move}` as Protocol.EffectName;
     }
     const args = ['-status', ident, status] as Protocol.Args['|-status|'];
     return {offset, line: {args, kwArgs}};
@@ -239,9 +242,9 @@ export const DECODERS: {[key: number]: Decoder} = {
     const ident = decodeIdent(this.names, data.getUint8(offset++));
     const status = decodeStatus(data.getUint8(offset++));
     const reason = data.getUint8(offset++);
-    const kwArgs = {} as Writeable<Protocol.BattleArgsKWArgs['|-status|']>;
+    const kwArgs = {} as Writeable<Protocol.BattleArgsKWArgs['|-curestatus|']>;
     if (reason === PROTOCOL.Status.Silent) kwArgs.silent = true;
-    const args = ['-status', ident, status] as Protocol.Args['|-status|'];
+    const args = ['-curestatus', ident, status] as Protocol.Args['|-curestatus|'];
     return {offset, line: {args, kwArgs}};
   },
   [ArgType.Boost](offset, data) {
@@ -308,7 +311,9 @@ export const DECODERS: {[key: number]: Decoder} = {
   [ArgType.Activate](offset, data) {
     const ident = decodeIdent(this.names, data.getUint8(offset++));
     const reason = data.getUint8(offset++);
-    const args = ['-activate', ident, ACTIVATE[reason]] as Protocol.Args['|-activate|'];
+    const args = reason === PROTOCOL.Activate.Splash
+      ? ['-activate', '', ACTIVATE[reason]] as Protocol.Args['|-activate|']
+      : ['-activate', ident, ACTIVATE[reason], ''] as Protocol.Args['|-activate|'];
     const kwArgs = reason === PROTOCOL.Activate.Substitute ? {damage: true} : {};
     return {offset, line: {args, kwArgs}};
   },
