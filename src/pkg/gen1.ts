@@ -14,6 +14,7 @@ import {
 
 import {Gen1, Slot} from './index';
 import {LAYOUT, LE, Lookup} from './data';
+import {decodeStatus, decodeTypes} from './protocol';
 
 const SIZES = LAYOUT[0].sizes;
 const OFFSETS = LAYOUT[0].offsets;
@@ -221,7 +222,6 @@ export class Pokemon implements Gen1.Pokemon {
       active: offset + OFFSETS.Side.active,
       stored: offset + OFFSETS.Side.pokemon + SIZES.Pokemon * index,
     };
-    console.log(this.offset);
     this.index = index;
     this.stored = new StoredPokemon(this.lookup, this.data, this.offset.stored);
   }
@@ -353,8 +353,7 @@ export class Pokemon implements Gen1.Pokemon {
   get species(): ID {
     if (!this.active) return this.stored.species;
 
-  const off = this.offset.active + OFFSETS.ActivePokemon.species;
-    console.log(off, this.data.getUint8(off));
+    const off = this.offset.active + OFFSETS.ActivePokemon.species;
     return this.lookup.specieByNum(this.data.getUint8(off));
   }
 
@@ -374,12 +373,8 @@ export class Pokemon implements Gen1.Pokemon {
   }
 
   get status(): StatusName| undefined {
-    const val = this.data.getUint8(this.offset.stored + OFFSETS.Pokemon.status);
-    if ((val >> 3) & 1) return this.toxic ? 'tox' : 'psn';
-    if ((val >> 4) & 1) return 'brn';
-    if ((val >> 5) & 1) return 'frz';
-    if ((val >> 6) & 1) return 'par';
-    return val > 0 ? 'slp' : undefined;
+    const status = decodeStatus(this.data.getUint8(this.offset.stored + OFFSETS.Pokemon.status));
+    return status === 'psn' && this.toxic ? 'tox' : status;
   }
 
   get statusData(): { sleep: number; toxic: number } {
@@ -395,7 +390,6 @@ export class Pokemon implements Gen1.Pokemon {
     if (!this.active) return 0;
 
     const off = this.offset.active + OFFSETS.ActivePokemon.volatiles + OFFSETS.Volatiles.data;
-    console.log(off, (OFFSETS.VolatilesData.toxic >> 3), this.data.getUint8(off + (OFFSETS.VolatilesData.toxic >> 3)));
     return this.data.getUint8(off + (OFFSETS.VolatilesData.toxic >> 3)) >> 4;
   }
 
@@ -612,9 +606,6 @@ function encodeTypes(lookup: Lookup, types: Readonly<[TypeName] | [TypeName, Typ
   return lookup.typeByName(types[0]) << 3 | lookup.typeByName(types[1] ?? types[0]);
 }
 
-function decodeTypes(lookup: Lookup, val: number): readonly [TypeName, TypeName] {
-  return [lookup.typeByNum(val & 0x0F), lookup.typeByNum(val >> 4)];
-}
 
 function encodeStatus(pokemon: Gen1.Pokemon): number {
   if (pokemon.statusData.sleep) {

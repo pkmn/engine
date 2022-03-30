@@ -37,7 +37,7 @@ pub fn main() !void {
     volatiles.Substitute = true;
     volatiles.data.substitute = 42;
     volatiles.data.toxic = 3;
-    volatiles.data.disabled = .{.move = 2, .duration = 4};
+    volatiles.data.disabled = .{ .move = 2, .duration = 4 };
     p1.stored().status = pkmn.gen1.Status.init(.PSN);
     p1.get(2).status = pkmn.gen1.Status.slp(5);
 

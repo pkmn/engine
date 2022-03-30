@@ -41,7 +41,7 @@ describe('Gen 1', () => {
   const gen = gens.get(1);
   const lookup = Lookup.get(gen);
 
-  it('serialize/deserialize', () => {
+  it.skip('serialize/deserialize', () => {
     const expected = Buffer.alloc(LAYOUT[0].sizes.Battle);
     BUFFER.copy(expected);
 

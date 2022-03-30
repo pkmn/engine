@@ -465,7 +465,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
 
     if (volatiles.data.disabled.move == mslot) {
         volatiles.Charging = false;
-        try log.disabled(ident, volatiles.data.disabled.move);
+        try log.disabled(ident, active.move(volatiles.data.disabled.move).id);
         return false;
     }
 
@@ -886,15 +886,13 @@ pub const Effects = struct {
 
     fn charge(battle: anytype, player: Player, log: anytype) !void {
         var side = battle.side(player);
-        const foe = battle.foe(player);
         var volatiles = &side.active.volatiles;
         const ident = side.active.ident(side, player);
-        const foe_ident = foe.active.ident(foe, player.foe());
 
         volatiles.Charging = true;
         const move = side.last_selected_move;
         if (move == .Fly or move == .Dig) volatiles.Invulnerable = true;
-        try log.prepare(ident, move, foe_ident);
+        try log.prepare(ident, move);
     }
 
     fn confusion(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {

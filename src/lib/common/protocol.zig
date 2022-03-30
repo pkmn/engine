@@ -206,11 +206,10 @@ pub const Boost = enum(u8) {
     Attack,
     Defense,
     Speed,
-    Special,
-    Accuracy,
-    Evasion,
     SpecialAttack,
     SpecialDefense,
+    Accuracy,
+    Evasion,
 };
 
 pub const Fail = enum(u8) {
@@ -269,24 +268,12 @@ pub const End = enum(u8) {
     DisableSilent,
     ConfusionSilent,
 
-    Charging,
-    Conversion,
-    DefenseCurl,
-    Dig,
-    Fly,
+    Mist,
     FocusEnergy,
     LeechSeed,
-    LightScreen,
-    Minimize,
-    Mist,
-    Rage,
-    RazorWind,
-    Reflect,
-    SkullBash,
-    SkyAttack,
-    SolarBeam,
-    Thrashing,
     Toxic,
+    LightScreen,
+    Reflect,
 };
 
 pub const Immune = enum(u8) {

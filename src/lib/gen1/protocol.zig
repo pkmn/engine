@@ -73,13 +73,13 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.Cant), ident, @enumToInt(reason) });
         }
 
-        pub fn disabled(self: Self, ident: u8, mslot: u8) !void {
+        pub fn disabled(self: Self, ident: u8, m: Move) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{
                 @enumToInt(ArgType.Cant),
                 ident,
                 @enumToInt(Cant.Disable),
-                mslot,
+                @enumToInt(m),
             });
         }
 
@@ -223,13 +223,12 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&[_]u8{ @enumToInt(ArgType.HitCount), ident, num });
         }
 
-        pub fn prepare(self: Self, source: u8, m: Move, target: u8) !void {
+        pub fn prepare(self: Self, source: u8, m: Move) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{
                 @enumToInt(ArgType.Prepare),
                 source,
                 @enumToInt(m),
-                target,
             });
         }
 

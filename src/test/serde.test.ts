@@ -20,7 +20,7 @@ const run = async (cmd: string, args: string[]): Promise<Buffer> =>
   });
 
 describe('integration', () => {
-  it('serialize/deserialize', async () => {
+  it.skip('serialize/deserialize', async () => {
     const rng = new PRNG([1, 2, 3, 4]);
     for (const gen of new Generations(Dex as any)) {
       if (gen.num > 1) break; // TODO
