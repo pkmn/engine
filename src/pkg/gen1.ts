@@ -12,7 +12,7 @@ import {
   TypeName,
 } from '@pkmn/data';
 
-import {Gen1, Slot} from './index';
+import {Gen1, Slot, BattleOptions, CreateOptions, RestoreOptions} from './index';
 import {LAYOUT, LE, Lookup} from './data';
 import {decodeStatus, decodeTypes} from './protocol';
 
@@ -25,14 +25,14 @@ OFFSETS.Boosts.spa = OFFSETS.Boosts.spd = OFFSETS.Boosts.spc;
 export class Battle implements Gen1.Battle {
   private readonly lookup: Lookup;
   private readonly data: DataView;
-  private readonly showdown: boolean;
+  private readonly options: BattleOptions;
 
   private readonly cache: [Side?, Side?];
 
-  constructor(lookup: Lookup, data: DataView, showdown: boolean) {
+  constructor(lookup: Lookup, data: DataView, options: BattleOptions) {
     this.lookup = lookup;
     this.data = data;
-    this.showdown = showdown;
+    this.options = options;
 
     this.cache = [undefined, undefined];
   }
@@ -66,9 +66,9 @@ export class Battle implements Gen1.Battle {
   }
 
   get prng(): readonly number[] {
-    const offset = OFFSETS.Battle.last_damage + 2 + (this.showdown ? 4 : 1);
+    const offset = OFFSETS.Battle.last_damage + 2 + (this.options.showdown ? 4 : 1);
     const seed: number[] = [0, 0, 0, 0];
-    if (this.showdown) {
+    if (this.options.showdown) {
       seed[LE ? 3 : 0] = this.data.getUint16(offset, LE);
       seed[LE ? 2 : 1] = this.data.getUint16(offset + 2, LE);
       seed[LE ? 1 : 2] = this.data.getUint16(offset + 4, LE);
@@ -86,25 +86,24 @@ export class Battle implements Gen1.Battle {
     return seed;
   }
 
-  static init(
+  static create(
     gen: Generation,
     lookup: Lookup,
-    seed: number[],
-    p1: PokemonSet[],
-    p2: PokemonSet[]
+    options: CreateOptions,
   ) {
     const buf = new ArrayBuffer(SIZES.Battle);
     const data = new DataView(buf);
-    Side.init(gen, lookup, p1, data, OFFSETS.Battle.p1);
-    Side.init(gen, lookup, p2, data, OFFSETS.Battle.p2);
-    encodePRNG(data, seed);
-    return buf;
+    Side.init(gen, lookup, options.p1.team, data, OFFSETS.Battle.p1);
+    Side.init(gen, lookup, options.p2.team, data, OFFSETS.Battle.p2);
+    encodePRNG(data, options.seed);
+    return new Battle(lookup, new DataView(buf), options);
   }
 
-  static encode(
+  static restore(
     gen: Generation,
     lookup: Lookup,
     battle: Gen1.Battle,
+    options: RestoreOptions,
   ) {
     const buf = new ArrayBuffer(SIZES.Battle);
     const data = new DataView(buf);
@@ -116,7 +115,7 @@ export class Battle implements Gen1.Battle {
     data.setUint16(OFFSETS.Battle.turn, battle.turn, LE);
     data.setUint16(OFFSETS.Battle.last_damage, battle.lastDamage, LE);
     encodePRNG(data, battle.prng);
-    return buf;
+    return new Battle(lookup, new DataView(buf), options);
   }
 }
 

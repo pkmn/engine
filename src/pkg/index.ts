@@ -2,6 +2,7 @@ import {
   BoostsTable,
   Generation,
   ID,
+  PokemonSet,
   StatsTable,
   StatusName,
   TypeName,
@@ -80,10 +81,50 @@ export namespace Gen1 {
   }
 }
 
+export type BattleOptions = CreateOptions | RestoreOptions;
+
+export type CreateOptions = {
+  p1: Player;
+  p2: Player;
+  seed: number[];
+  showdown?: boolean;
+  log: true;
+} | {
+  p1: Omit<Player, 'name'>;
+  p2: Omit<Player, 'name'>;
+  seed: number[];
+  showdown?: boolean;
+  log?: false;
+};
+
+export type RestoreOptions = {
+  p1: Player;
+  p2: Player;
+  showdown?: boolean;
+  log: true;
+} | {
+  showdown?: boolean;
+  log?: false;
+};
+
+export interface Player {
+  name: string;
+  team: PokemonSet[];
+}
+
 export class Battle {
-  static create(gen: Generation, buf: ArrayBuffer, showdown = true) {
+  static create(gen: Generation, options: CreateOptions) {
+    const lookup = Lookup.get(gen);
     switch (gen.num) {
-    case 1: return new gen1.Battle(Lookup.get(gen), new DataView(buf), showdown);
+    case 1: return gen1.Battle.create(gen, lookup, options);
+    default: throw new Error(`Unsupported gen ${gen.num}`);
+    }
+  }
+
+  static restore(gen: Generation, battle: Battle, options: RestoreOptions) {
+    const lookup = Lookup.get(gen);
+    switch (gen.num) {
+    case 1: return gen1.Battle.restore(gen, lookup, battle, options);
     default: throw new Error(`Unsupported gen ${gen.num}`);
     }
   }

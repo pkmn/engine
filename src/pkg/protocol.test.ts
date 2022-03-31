@@ -9,11 +9,11 @@ const ArgType = PROTOCOL.ArgType;
 
 const NAMES = {
   p1: {
-    player: 'Player A' as Protocol.Username,
+    name: 'Player A' as Protocol.Username,
     team: ['Fushigidane', 'Hitokage', 'Zenigame', 'Pikachuu', 'Koratta', 'Poppo'],
   },
   p2: {
-    player: 'Player B' as Protocol.Username,
+    name: 'Player B' as Protocol.Username,
     team: ['Kentarosu', 'Rakkii', 'Kabigon', 'Nasshii', 'Sutaamii', 'Fuudin'],
   },
 };

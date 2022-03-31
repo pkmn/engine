@@ -1,6 +1,7 @@
-import {Generation, PokemonSet, StatusName, TypeName, BoostID, ID} from '@pkmn/data';
+import {Generation, StatusName, TypeName, BoostID, ID} from '@pkmn/data';
 import {Protocol} from '@pkmn/protocol';
 
+import {Player} from './index';
 import {LE, Lookup, PROTOCOL} from './data';
 
 const ArgType = PROTOCOL.ArgType;
@@ -10,18 +11,23 @@ export interface ParsedLine {
   kwArgs: Protocol.BattleArgsKWArgType;
 }
 
-export interface Names {
+export class Names {
   p1: SideNames;
   p2: SideNames;
+
+  constructor(sides: {p1: Player; p2: Player}) {
+    this.p1 = new SideNames(sides.p1);
+    this.p2 = new SideNames(sides.p2);
+  }
 }
 
 export class SideNames {
-  player: Protocol.Username;
+  name: Protocol.Username;
   team: string[];
 
-  constructor(name: string, team: PokemonSet[]) {
-    this.player = name as Protocol.Username;
-    this.team = team.map(p => p.name ?? p.species);
+  constructor(player: Player) {
+    this.name = player.name as Protocol.Username;
+    this.team = player.team.map(p => p.name ?? p.species);
   }
 }
 
@@ -189,7 +195,7 @@ export const DECODERS: {[key: number]: Decoder} = {
   },
   [ArgType.Win](offset, data) {
     const player = data.getUint8(offset++) ? 'p2' : 'p1';
-    const args = ['win', this.names[player].player] as Protocol.Args['|win|'];
+    const args = ['win', this.names[player].name] as Protocol.Args['|win|'];
     return {offset, line: {args, kwArgs: {}}};
   },
   [ArgType.Tie](offset) {
