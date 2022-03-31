@@ -400,7 +400,8 @@ function decodeHPStatus(offset: number, data: DataView): Protocol.PokemonHPStatu
   offset += 2;
   const maxhp = data.getUint16(offset, LE);
   offset += 2;
-  const status = hp === 0 ? 'fnt' : decodeStatus(data.getUint8(offset));
+  if (hp === 0) return '0 fnt' as Protocol.PokemonHPStatus;
+  const status = decodeStatus(data.getUint8(offset));
   return (status ? `${hp}/${maxhp} ${status}` : `${hp}/${maxhp}`) as Protocol.PokemonHPStatus;
 }
 

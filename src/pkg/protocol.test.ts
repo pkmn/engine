@@ -53,7 +53,7 @@ for (const gen of new Generations(Dex as any)) {
         .toEqual(parse('|switch|p2a: Kabigon|Snorlax, L91|200/400 par'));
       hp = LE ? [0, 0, 144, 1] : [0, 0, 1, 144];
       expect(Array.from(log.parse(Data.view([...start, 100, ...hp, 0]))))
-        .toEqual(parse('|switch|p2a: Kabigon|Snorlax|0/400 fnt'));
+        .toEqual(parse('|switch|p2a: Kabigon|Snorlax|0 fnt'));
       hp = LE ? [144, 1, 144, 1] : [1, 144, 1, 144];
       expect(Array.from(log.parse(Data.view([...start, 100, ...hp, 0]))))
         .toEqual(parse('|switch|p2a: Kabigon|Snorlax|400/400'));
