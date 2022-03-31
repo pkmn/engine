@@ -61,34 +61,8 @@ pub const Side = struct {
 
         var i: u4 = 0;
         while (i < ps.len) : (i += 1) {
-            const p = ps[i];
+            side.pokemon[i] = Pokemon.init(ps[i]);
             side.order[i] = i + 1;
-            var pokemon = &side.pokemon[i];
-            pokemon.species = p.species;
-            const specie = Species.get(p.species);
-            inline for (std.meta.fields(@TypeOf(pokemon.stats))) |field| {
-                @field(pokemon.stats, field.name) = Stats(u16).calc(
-                    field.name,
-                    @field(specie.stats, field.name),
-                    0xF,
-                    0xFFFF,
-                    p.level,
-                );
-            }
-            assert(p.moves.len > 0 and p.moves.len <= 4);
-            for (p.moves) |m, j| {
-                pokemon.moves[j].id = m;
-                // NB: PP can be at most 61 legally (though can overflow to 63)
-                pokemon.moves[j].pp = @truncate(u8, @minimum(Move.pp(m) / 5 * 8, 61));
-            }
-            if (p.hp) |hp| {
-                pokemon.hp = hp;
-            } else {
-                pokemon.hp = pokemon.stats.hp;
-            }
-            pokemon.status = p.status;
-            pokemon.types = specie.types;
-            pokemon.level = p.level;
         }
         return side;
     }
@@ -172,6 +146,36 @@ pub const Pokemon = struct {
     hp: ?u16 = null,
     status: u8 = 0,
     level: u8 = 100,
+
+    pub fn init(p: Pokemon) data.Pokemon {
+        var pokemon = data.Pokemon{};
+        pokemon.species = p.species;
+        const specie = Species.get(p.species);
+        inline for (std.meta.fields(@TypeOf(pokemon.stats))) |field| {
+            @field(pokemon.stats, field.name) = Stats(u16).calc(
+                field.name,
+                @field(specie.stats, field.name),
+                0xF,
+                0xFFFF,
+                p.level,
+            );
+        }
+        assert(p.moves.len > 0 and p.moves.len <= 4);
+        for (p.moves) |m, j| {
+            pokemon.moves[j].id = m;
+            // NB: PP can be at most 61 legally (though can overflow to 63)
+            pokemon.moves[j].pp = @truncate(u8, @minimum(Move.pp(m) / 5 * 8, 61));
+        }
+        if (p.hp) |hp| {
+            pokemon.hp = hp;
+        } else {
+            pokemon.hp = pokemon.stats.hp;
+        }
+        pokemon.status = p.status;
+        pokemon.types = specie.types;
+        pokemon.level = p.level;
+        return pokemon;
+    }
 
     pub fn random(rand: *Random) data.Pokemon {
         const s = @intToEnum(Species, rand.range(u8, 1, 151));

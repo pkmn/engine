@@ -941,7 +941,7 @@ pub const Effects = struct {
         }
 
         side.active.types = foe.active.types;
-        try log.typechange(ident, @bitCast(u8, foe.active.types));
+        try log.typechange(ident, foe.active.types);
     }
 
     fn disable(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {

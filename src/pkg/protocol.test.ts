@@ -255,8 +255,10 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     it('|-immune|', () => {
-      const data = Data.view([ArgType.Immune, 0b0011]);
-      expect(Array.from(log.parse(data))).toEqual(parse('|-immune|p1a: Zenigame'));
+      expect(Array.from(log.parse(Data.view([ArgType.Immune, 0b0011, PROTOCOL.Immune.None]))))
+        .toEqual(parse('|-immune|p1a: Zenigame'));
+      expect(Array.from(log.parse(Data.view([ArgType.Immune, 0b1010, PROTOCOL.Immune.OHKO]))))
+        .toEqual(parse('|-immune|p2a: Rakkii|[ohko]'));
     });
 
     it('|-transform|', () => {

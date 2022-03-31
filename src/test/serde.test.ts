@@ -33,8 +33,8 @@ describe('serialize/deserialize', () => {
           const expected = Buffer.alloc(LAYOUT[0].sizes.Battle);
           buf.copy(expected);
 
-          const battle = new gen1.Battle(lookup, new DataView(buf), showdown);
-          const actual = gen1.Battle.encode(gen, lookup, battle);
+          const battle = new gen1.Battle(lookup, new DataView(buf), {showdown});
+          const actual = gen1.Battle.restore(gen, lookup, battle, {showdown});
 
           expect(actual).toEqual(expected);
         }

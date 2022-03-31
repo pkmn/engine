@@ -113,7 +113,6 @@
     "From"
   ],
   "Cant": [
-    "None",
     "Sleep",
     "Freeze",
     "Paralysis",
@@ -148,7 +147,6 @@
     "Silent"
   ],
   "Boost": [
-    "None",
     "Rage",
     "Attack",
     "Defense",
@@ -170,7 +168,6 @@
     "Weak"
   ],
   "Activate": [
-    "None",
     "Confusion",
     "Bide",
     "Haze",
@@ -179,7 +176,6 @@
     "Splash"
   ],
   "Start": [
-    "None",
     "Bide",
     "Confusion",
     "ConfusionSilent",
@@ -194,7 +190,6 @@
     "Mimic"
   ],
   "End": [
-    "None",
     "Disable",
     "Confusion",
     "Bide",

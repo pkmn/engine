@@ -1,9 +1,11 @@
 const std = @import("std");
+const builtin = @import("builtin");
 const build_options = @import("build_options");
 
 const protocol = @import("../common/protocol.zig");
 
 const data = @import("data.zig");
+const helpers = @import("helpers.zig");
 
 const assert = std.debug.assert;
 
@@ -26,6 +28,8 @@ pub const expectLog = protocol.expectLog;
 const Move = data.Move;
 const Player = data.Player;
 const Pokemon = data.Pokemon;
+const Species = data.Species;
+const Types = data.Types;
 
 pub fn Log(comptime Writer: type) type {
     return struct {
@@ -261,13 +265,13 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn typechange(self: Self, ident: u8, types: u8) !void {
+        pub fn typechange(self: Self, ident: u8, types: Types) !void {
             if (!trace) return;
             try self.writer.writeAll(&[_]u8{
                 @enumToInt(ArgType.Start),
                 ident,
                 @enumToInt(Start.TypeChange),
-                types,
+                @bitCast(u8, types),
             });
         }
 
@@ -333,18 +337,393 @@ pub fn Log(comptime Writer: type) type {
     };
 }
 
-test "Log" {
-    var buf: [3]u8 = undefined;
-    var log: Log(std.io.FixedBufferStream([]u8).Writer) = .{
-        .writer = std.io.fixedBufferStream(&buf).writer(),
-    };
+const endian = builtin.target.cpu.arch.endian();
 
-    try log.cant(1, .Trapped);
-
-    try expectLog(
-        &[_]u8{ @enumToInt(ArgType.Cant), 1, @enumToInt(Cant.Trapped) },
-        &buf,
-    );
+fn N(e: anytype) u8 {
+    return @enumToInt(e);
 }
 
-// TODO
+var buf: [100]u8 = undefined;
+var stream = std.io.fixedBufferStream(&buf);
+var log: Log(std.io.FixedBufferStream([]u8).Writer) = .{ .writer = stream.writer() };
+
+const p1 = Player.P1;
+const p2 = Player.P2;
+
+test "|move|" {
+    try log.move(p2.ident(4), .Thunderbolt, p1.ident(5), .None);
+    try expectLog(
+        &[_]u8{ N(ArgType.Move), 0b1100, N(Move.Thunderbolt), 0b0101, N(protocol.Move.None) },
+        buf[0..5],
+    );
+    stream.reset();
+
+    try log.move(p2.ident(4), .None, p1.ident(5), .Recharge);
+    try expectLog(
+        &[_]u8{ N(ArgType.Move), 0b1100, 0, 0b0101, N(protocol.Move.Recharge) },
+        buf[0..5],
+    );
+    stream.reset();
+
+    try log.moveFrom(p2.ident(4), .Wrap, p1.ident(5), .Wrap);
+    const wrap = N(Move.Wrap);
+    try expectLog(
+        &[_]u8{ N(ArgType.Move), 0b1100, wrap, 0b0101, N(protocol.Move.From), wrap },
+        buf[0..6],
+    );
+    stream.reset();
+
+    try log.move(p2.ident(4), .WaterGun, p1.ident(5), .None);
+    try log.laststill();
+    try expectLog(
+        &[_]u8{
+            N(ArgType.Move),
+            0b1100,
+            N(Move.WaterGun),
+            0b0101,
+            N(protocol.Move.None),
+            N(ArgType.LastStill),
+        },
+        buf[0..6],
+    );
+    stream.reset();
+
+    try log.move(p2.ident(4), .Tackle, p1.ident(5), .None);
+    try log.lastmiss();
+    try expectLog(
+        &[_]u8{
+            N(ArgType.Move),
+            0b1100,
+            N(Move.Tackle),
+            0b0101,
+            N(protocol.Move.None),
+            N(ArgType.LastMiss),
+        },
+        buf[0..6],
+    );
+    stream.reset();
+}
+
+test "|switch|" {
+    var snorlax = helpers.Pokemon.init(.{ .species = .Snorlax, .moves = &.{.Splash} });
+    snorlax.level = 91;
+    snorlax.hp = 200;
+    snorlax.stats.hp = 400;
+    snorlax.status = data.Status.init(.PAR);
+    try log.switched(p2.ident(3), &snorlax);
+    const par = 0b1000000;
+    var expected: []const u8 = switch (endian) {
+        .Big => &.{ N(ArgType.Switch), 0b1011, N(Species.Snorlax), 91, 0, 200, 1, 144, par },
+        .Little => &.{ N(ArgType.Switch), 0b1011, N(Species.Snorlax), 91, 200, 0, 144, 1, par },
+    };
+    try expectLog(expected, buf[0..9]);
+    stream.reset();
+
+    snorlax.level = 100;
+    snorlax.hp = 0;
+    snorlax.status = 0;
+    try log.switched(p2.ident(3), &snorlax);
+    expected = switch (endian) {
+        .Big => &.{ N(ArgType.Switch), 0b1011, N(Species.Snorlax), 100, 0, 0, 1, 144, 0 },
+        .Little => &.{ N(ArgType.Switch), 0b1011, N(Species.Snorlax), 100, 0, 0, 144, 1, 0 },
+    };
+    try expectLog(expected, buf[0..9]);
+    stream.reset();
+
+    snorlax.hp = 400;
+    try log.switched(p2.ident(3), &snorlax);
+    expected = switch (endian) {
+        .Big => &.{ N(ArgType.Switch), 0b1011, N(Species.Snorlax), 100, 1, 144, 1, 144, 0 },
+        .Little => &.{ N(ArgType.Switch), 0b1011, N(Species.Snorlax), 100, 144, 1, 144, 1, 0 },
+    };
+    try expectLog(expected, buf[0..9]);
+    stream.reset();
+}
+
+test "|cant|" {
+    try log.cant(p2.ident(6), .Trapped);
+    try expectLog(&[_]u8{ N(ArgType.Cant), 0b1110, N(Cant.Trapped) }, buf[0..3]);
+    stream.reset();
+
+    try log.disabled(p1.ident(2), .Earthquake);
+    try expectLog(&[_]u8{ N(ArgType.Cant), 2, N(Cant.Disable), N(Move.Earthquake) }, buf[0..4]);
+    stream.reset();
+}
+
+test "|faint|" {
+    try log.faint(p2.ident(2), false);
+    try expectLog(&[_]u8{ N(ArgType.Faint), 0b1010 }, buf[0..2]);
+    stream.reset();
+
+    try log.faint(p2.ident(2), true);
+    try expectLog(&[_]u8{ N(ArgType.Faint), 0b1010, N(ArgType.None) }, buf[0..3]);
+    stream.reset();
+}
+
+test "|turn|" {
+    try log.turn(42);
+    var expected = switch (endian) {
+        .Big => &.{ N(ArgType.Turn), 0, 42, N(ArgType.None) },
+        .Little => &.{ N(ArgType.Turn), 42, 0, N(ArgType.None) },
+    };
+    try expectLog(expected, buf[0..4]);
+    stream.reset();
+}
+
+test "|win|" {
+    try log.win(.P2);
+    try expectLog(&[_]u8{ N(ArgType.Win), 1, N(ArgType.None) }, buf[0..3]);
+    stream.reset();
+}
+
+test "|tie|" {
+    try log.tie();
+    try expectLog(&[_]u8{ N(ArgType.Tie), N(ArgType.None) }, buf[0..2]);
+    stream.reset();
+}
+
+test "|-damage|" {
+    var chansey = helpers.Pokemon.init(.{ .species = .Chansey, .moves = &.{.Splash} });
+    chansey.hp = 612;
+    chansey.status = data.Status.slp(1);
+    try log.damage(p2.ident(2), &chansey, .None);
+    const expected1 = switch (endian) {
+        .Big => &.{ N(ArgType.Damage), 0b1010, 2, 100, 2, 191, 1, N(Damage.None) },
+        .Little => &.{ N(ArgType.Damage), 0b1010, 100, 2, 191, 2, 1, N(Damage.None) },
+    };
+    try expectLog(expected1, buf[0..8]);
+    stream.reset();
+
+    chansey.hp = 100;
+    chansey.stats.hp = 256;
+    chansey.status = 0;
+    try log.damage(p2.ident(2), &chansey, .Confusion);
+    const expected2 = switch (endian) {
+        .Big => &.{ N(ArgType.Damage), 0b1010, 0, 100, 1, 0, 0, N(Damage.Confusion) },
+        .Little => &.{ N(ArgType.Damage), 0b1010, 100, 0, 0, 1, 0, N(Damage.Confusion) },
+    };
+    try expectLog(expected2, buf[0..8]);
+    stream.reset();
+
+    chansey.status = data.Status.init(.PSN);
+    try log.damageOf(p2.ident(2), &chansey, .PoisonOf, p1.ident(1));
+    const expected3 = switch (endian) {
+        .Big => &.{ N(ArgType.Damage), 0b1010, 0, 100, 1, 0, 0b1000, N(Damage.PoisonOf), 1 },
+        .Little => &.{ N(ArgType.Damage), 0b1010, 100, 0, 0, 1, 0b1000, N(Damage.PoisonOf), 1 },
+    };
+    try expectLog(expected3, buf[0..9]);
+    stream.reset();
+}
+
+test "|-heal|" {
+    var chansey = helpers.Pokemon.init(.{ .species = .Chansey, .moves = &.{.Splash} });
+    chansey.hp = 612;
+    chansey.status = data.Status.slp(1);
+    try log.heal(p2.ident(2), &chansey, .None);
+    const expected1 = switch (endian) {
+        .Big => &.{ N(ArgType.Heal), 0b1010, 2, 100, 2, 191, 1, N(Heal.None) },
+        .Little => &.{ N(ArgType.Heal), 0b1010, 100, 2, 191, 2, 1, N(Heal.None) },
+    };
+    try expectLog(expected1, buf[0..8]);
+    stream.reset();
+
+    chansey.hp = 100;
+    chansey.stats.hp = 256;
+    chansey.status = 0;
+    try log.heal(p2.ident(2), &chansey, .Silent);
+    const expected2 = switch (endian) {
+        .Big => &.{ N(ArgType.Heal), 0b1010, 0, 100, 1, 0, 0, N(Heal.Silent) },
+        .Little => &.{ N(ArgType.Heal), 0b1010, 100, 0, 0, 1, 0, N(Heal.Silent) },
+    };
+    try expectLog(expected2, buf[0..8]);
+    stream.reset();
+
+    try log.drain(p2.ident(2), &chansey, p1.ident(1));
+    const expected3 = switch (endian) {
+        .Big => &.{ N(ArgType.Heal), 0b1010, 0, 100, 1, 0, 0, N(Heal.Drain), 1 },
+        .Little => &.{ N(ArgType.Heal), 0b1010, 100, 0, 0, 1, 0, N(Heal.Drain), 1 },
+    };
+    try expectLog(expected3, buf[0..9]);
+    stream.reset();
+}
+
+test "|-status|" {
+    try log.status(p2.ident(6), data.Status.init(.BRN), .None);
+    try expectLog(&[_]u8{ N(ArgType.Status), 0b1110, 0b10000, N(Status.None) }, buf[0..4]);
+    stream.reset();
+
+    try log.status(p1.ident(2), data.Status.init(.FRZ), .Silent);
+    try expectLog(&[_]u8{ N(ArgType.Status), 0b0010, 0b100000, N(Status.Silent) }, buf[0..4]);
+    stream.reset();
+
+    try log.statusFrom(p1.ident(1), data.Status.init(.PAR), .BodySlam);
+    try expectLog(
+        &[_]u8{ N(ArgType.Status), 0b0001, 0b1000000, N(Status.From), N(Move.BodySlam) },
+        buf[0..5],
+    );
+    stream.reset();
+}
+
+test "|-curestatus|" {
+    try log.curestatus(p2.ident(6), data.Status.slp(7), .None);
+    try expectLog(&[_]u8{ N(ArgType.CureStatus), 0b1110, 0b111, N(CureStatus.None) }, buf[0..4]);
+    stream.reset();
+
+    try log.curestatus(p1.ident(2), data.Status.init(.PSN), .Silent);
+    try expectLog(&[_]u8{ N(ArgType.CureStatus), 0b0010, 0b1000, N(CureStatus.Silent) }, buf[0..4]);
+    stream.reset();
+}
+
+test "|-boost|" {
+    try log.boost(p2.ident(6), .Speed, 2);
+    try expectLog(&[_]u8{ N(ArgType.Boost), 0b1110, N(Boost.Speed), 2 }, buf[0..4]);
+    stream.reset();
+
+    try log.boost(p1.ident(2), .Rage, 1);
+    try expectLog(&[_]u8{ N(ArgType.Boost), 0b0010, N(Boost.Rage), 1 }, buf[0..4]);
+    stream.reset();
+}
+
+test "|-unboost|" {
+    try log.unboost(p2.ident(3), .Defense, 2);
+    try expectLog(&[_]u8{ N(ArgType.Unboost), 0b1011, N(Boost.Defense), 2 }, buf[0..4]);
+    stream.reset();
+}
+
+test "|-clearallboost|" {
+    try log.clearallboost();
+    try expectLog(&[_]u8{N(ArgType.ClearAllBoost)}, buf[0..1]);
+    stream.reset();
+}
+
+test "|-fail|" {
+    try log.fail(p2.ident(6), .None);
+    try expectLog(&[_]u8{ N(ArgType.Fail), 0b1110, N(Fail.None) }, buf[0..3]);
+    stream.reset();
+
+    try log.fail(p2.ident(6), .Sleep);
+    try expectLog(&[_]u8{ N(ArgType.Fail), 0b1110, N(Fail.Sleep) }, buf[0..3]);
+    stream.reset();
+
+    try log.fail(p2.ident(6), .Substitute);
+    try expectLog(&[_]u8{ N(ArgType.Fail), 0b1110, N(Fail.Substitute) }, buf[0..3]);
+    stream.reset();
+
+    try log.fail(p2.ident(6), .Weak);
+    try expectLog(&[_]u8{ N(ArgType.Fail), 0b1110, N(Fail.Weak) }, buf[0..3]);
+    stream.reset();
+}
+
+test "|-miss|" {
+    try log.miss(p2.ident(4), p1.ident(5));
+    try expectLog(&[_]u8{ N(ArgType.Miss), 0b1100, 0b0101 }, buf[0..3]);
+    stream.reset();
+}
+test "|-hitcount|" {
+    try log.hitcount(p2.ident(1), 5);
+    try expectLog(&[_]u8{ N(ArgType.HitCount), 0b1001, 5 }, buf[0..3]);
+    stream.reset();
+}
+
+test "|-prepare|" {
+    try log.prepare(p2.ident(2), .Dig);
+    try expectLog(&[_]u8{ N(ArgType.Prepare), 0b1010, N(Move.Dig) }, buf[0..3]);
+    stream.reset();
+}
+
+test "|-mustrecharge|" {
+    try log.mustrecharge(p1.ident(6));
+    try expectLog(&[_]u8{ N(ArgType.MustRecharge), 0b0110 }, buf[0..2]);
+    stream.reset();
+}
+
+test "|-activate|" {
+    try log.activate(p1.ident(2), .Struggle);
+    try expectLog(&[_]u8{ N(ArgType.Activate), 0b0010, N(Activate.Struggle) }, buf[0..3]);
+    stream.reset();
+
+    try log.activate(p2.ident(6), .Substitute);
+    try expectLog(&[_]u8{ N(ArgType.Activate), 0b1110, N(Activate.Substitute) }, buf[0..3]);
+    stream.reset();
+
+    try log.activate(p1.ident(2), .Splash);
+    try expectLog(&[_]u8{ N(ArgType.Activate), 0b0010, N(Activate.Splash) }, buf[0..3]);
+    stream.reset();
+}
+
+test "|-fieldactivate|" {
+    try log.fieldactivate();
+    try expectLog(&[_]u8{N(ArgType.FieldActivate)}, buf[0..1]);
+    stream.reset();
+}
+
+test "|-start|" {
+    try log.start(p2.ident(6), .Bide);
+    try expectLog(&[_]u8{ N(ArgType.Start), 0b1110, N(Start.Bide) }, buf[0..3]);
+    stream.reset();
+
+    try log.start(p1.ident(2), .ConfusionSilent);
+    try expectLog(&[_]u8{ N(ArgType.Start), 0b0010, N(Start.ConfusionSilent) }, buf[0..3]);
+    stream.reset();
+
+    try log.typechange(p2.ident(6), .{ .type1 = .Fire, .type2 = .Fire });
+    try expectLog(&[_]u8{ N(ArgType.Start), 0b1110, N(Start.TypeChange), 0b1000_1000 }, buf[0..4]);
+    stream.reset();
+
+    try log.typechange(p1.ident(2), .{ .type1 = .Bug, .type2 = .Poison });
+    try expectLog(&[_]u8{ N(ArgType.Start), 0b0010, N(Start.TypeChange), 0b0011_0110 }, buf[0..4]);
+    stream.reset();
+
+    try log.startEffect(p1.ident(2), .Disable, .Surf);
+    try expectLog(&[_]u8{ N(ArgType.Start), 0b0010, N(Start.Disable), N(Move.Surf) }, buf[0..4]);
+    stream.reset();
+
+    try log.startEffect(p1.ident(2), .Mimic, .Surf);
+    try expectLog(&[_]u8{ N(ArgType.Start), 0b0010, N(Start.Mimic), N(Move.Surf) }, buf[0..4]);
+    stream.reset();
+}
+
+test "|-end|" {
+    try log.end(p2.ident(6), .Bide);
+    try expectLog(&[_]u8{ N(ArgType.End), 0b1110, N(End.Bide) }, buf[0..3]);
+    stream.reset();
+
+    try log.end(p1.ident(2), .ConfusionSilent);
+    try expectLog(&[_]u8{ N(ArgType.End), 0b0010, N(End.ConfusionSilent) }, buf[0..3]);
+    stream.reset();
+}
+
+test "|-ohko|" {
+    try log.ohko();
+    try expectLog(&[_]u8{N(ArgType.OHKO)}, buf[0..1]);
+    stream.reset();
+}
+test "|-crit|" {
+    try log.crit(p2.ident(5));
+    try expectLog(&[_]u8{ N(ArgType.Crit), 0b1101 }, buf[0..2]);
+    stream.reset();
+}
+test "|-supereffective|" {
+    try log.supereffective(p1.ident(1));
+    try expectLog(&[_]u8{ N(ArgType.SuperEffective), 0b0001 }, buf[0..2]);
+    stream.reset();
+}
+test "|-resisted|" {
+    try log.resisted(p2.ident(2));
+    try expectLog(&[_]u8{ N(ArgType.Resisted), 0b1010 }, buf[0..2]);
+    stream.reset();
+}
+test "|-immune|" {
+    try log.immune(p1.ident(3), .None);
+    try expectLog(&[_]u8{ N(ArgType.Immune), 0b0011, N(Immune.None) }, buf[0..3]);
+    stream.reset();
+
+    try log.immune(p2.ident(2), .OHKO);
+    try expectLog(&[_]u8{ N(ArgType.Immune), 0b1010, N(Immune.OHKO) }, buf[0..3]);
+    stream.reset();
+}
+test "|-transform|" {
+    try log.transform(p2.ident(4), p1.ident(5));
+    try expectLog(&[_]u8{ N(ArgType.Transform), 0b1100, 0b0101 }, buf[0..3]);
+    stream.reset();
+}

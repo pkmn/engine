@@ -31,7 +31,6 @@ const BUFFER = Data.buffer([
   0xc3, 0x01, 0x37, 0x01, 0x00, 0x88, 0xc7, 0x28, 0x6c, 0x96, 0x72, 0x1a, 0x45, 0xe0, 0xcc, 0x08,
 ]);
 
-const SHOWDOWN = true;
 const P1_ORDER = LAYOUT[0].offsets.Battle.p1 + LAYOUT[0].offsets.Side.order;
 
 describe('Gen 1', () => {
@@ -43,7 +42,7 @@ describe('Gen 1', () => {
     const expected = Buffer.alloc(LAYOUT[0].sizes.Battle);
     BUFFER.copy(expected);
 
-    const battle = new Battle(lookup, new DataView(BUFFER.buffer), !SHOWDOWN);
+    const battle = new Battle(lookup, new DataView(BUFFER.buffer), {});
     // TODO const actual = Battle.encode(gen, lookup, battle);
 
     expect(battle.turn).toBe(451);

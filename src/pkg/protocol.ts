@@ -369,7 +369,10 @@ export const DECODERS: {[key: number]: Decoder} = {
     return decodeProtocol('-resisted', offset, data, this.names);
   },
   [ArgType.Immune](offset, data) {
-    return decodeProtocol('-immune', offset, data, this.names);
+    const ident = decodeIdent(this.names, data.getUint8(offset++));
+    const reason = data.getUint8(offset++);
+    const kwArgs = reason === PROTOCOL.Immune.OHKO ? {ohko: true} : {};
+    return {offset, line: {args: ['-immune', ident] as Protocol.Args['|-immune|'], kwArgs}};
   },
   [ArgType.Transform](offset, data) {
     const source = decodeIdent(this.names, data.getUint8(offset++));
