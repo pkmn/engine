@@ -2,6 +2,7 @@ const std = @import("std");
 const builtin = @import("builtin");
 const build_options = @import("build_options");
 
+const common = @import("../common/data.zig");
 const protocol = @import("../common/protocol.zig");
 
 const data = @import("data.zig");
@@ -10,6 +11,8 @@ const helpers = @import("helpers.zig");
 const assert = std.debug.assert;
 
 const trace = build_options.trace;
+
+const Player = common.Player;
 
 pub const Activate = protocol.Activate;
 pub const ArgType = protocol.ArgType;
@@ -26,7 +29,6 @@ pub const Status = protocol.Status;
 pub const expectLog = protocol.expectLog;
 
 const Move = data.Move;
-const Player = data.Player;
 const Pokemon = data.Pokemon;
 const Species = data.Species;
 const Types = data.Types;

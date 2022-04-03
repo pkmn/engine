@@ -1,6 +1,7 @@
 const std = @import("std");
 const build_options = @import("build_options");
 
+const common = @import("../common/data.zig");
 const rng = @import("../common/rng.zig");
 
 const data = @import("data.zig");
@@ -12,13 +13,14 @@ const expectEqual = std.testing.expectEqual;
 
 const showdown = build_options.showdown;
 
+const Choice = common.Choice;
+const Player = common.Player;
+const Result = common.Result;
+
 const Gen12 = rng.Gen12;
 
 const ActivePokemon = data.ActivePokemon;
-const Choice = data.Choice;
 const Move = data.Move;
-const Player = data.Player;
-const Result = data.Result;
 const Side = data.Side;
 const Species = data.Species;
 const Stats = data.Stats;

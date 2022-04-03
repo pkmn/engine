@@ -1,6 +1,7 @@
 const std = @import("std");
 const build_options = @import("build_options");
 
+const common = @import("../common/data.zig");
 const rng = @import("../common/rng.zig");
 
 const data = @import("data.zig");
@@ -15,11 +16,11 @@ const expectEqualSlices = std.testing.expectEqualSlices;
 
 const showdown = build_options.showdown;
 
-const Random = rng.Random;
+const Player = common.Player;
+const Result = common.Result;
+const Choice = common.Choice;
 
-const Player = data.Player;
-const Result = data.Result;
-const Choice = data.Choice;
+const Random = rng.Random;
 
 const Battle = helpers.Battle;
 const move = helpers.move;
