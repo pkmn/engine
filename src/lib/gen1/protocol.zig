@@ -487,31 +487,31 @@ test "|-damage|" {
     chansey.hp = 612;
     chansey.status = data.Status.slp(1);
     try log.damage(p2.ident(2), &chansey, .None);
-    const expected1 = switch (endian) {
+    var expected: []const u8 = switch (endian) {
         .Big => &.{ N(ArgType.Damage), 0b1010, 2, 100, 2, 191, 1, N(Damage.None) },
         .Little => &.{ N(ArgType.Damage), 0b1010, 100, 2, 191, 2, 1, N(Damage.None) },
     };
-    try expectLog(expected1, buf[0..8]);
+    try expectLog(expected, buf[0..8]);
     stream.reset();
 
     chansey.hp = 100;
     chansey.stats.hp = 256;
     chansey.status = 0;
     try log.damage(p2.ident(2), &chansey, .Confusion);
-    const expected2 = switch (endian) {
+    expected = switch (endian) {
         .Big => &.{ N(ArgType.Damage), 0b1010, 0, 100, 1, 0, 0, N(Damage.Confusion) },
         .Little => &.{ N(ArgType.Damage), 0b1010, 100, 0, 0, 1, 0, N(Damage.Confusion) },
     };
-    try expectLog(expected2, buf[0..8]);
+    try expectLog(expected, buf[0..8]);
     stream.reset();
 
     chansey.status = data.Status.init(.PSN);
     try log.damageOf(p2.ident(2), &chansey, .PoisonOf, p1.ident(1));
-    const expected3 = switch (endian) {
+    expected = switch (endian) {
         .Big => &.{ N(ArgType.Damage), 0b1010, 0, 100, 1, 0, 0b1000, N(Damage.PoisonOf), 1 },
         .Little => &.{ N(ArgType.Damage), 0b1010, 100, 0, 0, 1, 0b1000, N(Damage.PoisonOf), 1 },
     };
-    try expectLog(expected3, buf[0..9]);
+    try expectLog(expected, buf[0..9]);
     stream.reset();
 }
 
@@ -520,30 +520,30 @@ test "|-heal|" {
     chansey.hp = 612;
     chansey.status = data.Status.slp(1);
     try log.heal(p2.ident(2), &chansey, .None);
-    const expected1 = switch (endian) {
+    var expected: []const u8 = switch (endian) {
         .Big => &.{ N(ArgType.Heal), 0b1010, 2, 100, 2, 191, 1, N(Heal.None) },
         .Little => &.{ N(ArgType.Heal), 0b1010, 100, 2, 191, 2, 1, N(Heal.None) },
     };
-    try expectLog(expected1, buf[0..8]);
+    try expectLog(expected, buf[0..8]);
     stream.reset();
 
     chansey.hp = 100;
     chansey.stats.hp = 256;
     chansey.status = 0;
     try log.heal(p2.ident(2), &chansey, .Silent);
-    const expected2 = switch (endian) {
+    expected = switch (endian) {
         .Big => &.{ N(ArgType.Heal), 0b1010, 0, 100, 1, 0, 0, N(Heal.Silent) },
         .Little => &.{ N(ArgType.Heal), 0b1010, 100, 0, 0, 1, 0, N(Heal.Silent) },
     };
-    try expectLog(expected2, buf[0..8]);
+    try expectLog(expected, buf[0..8]);
     stream.reset();
 
     try log.drain(p2.ident(2), &chansey, p1.ident(1));
-    const expected3 = switch (endian) {
+    expected = switch (endian) {
         .Big => &.{ N(ArgType.Heal), 0b1010, 0, 100, 1, 0, 0, N(Heal.Drain), 1 },
         .Little => &.{ N(ArgType.Heal), 0b1010, 100, 0, 0, 1, 0, N(Heal.Drain), 1 },
     };
-    try expectLog(expected3, buf[0..9]);
+    try expectLog(expected, buf[0..9]);
     stream.reset();
 }
 
