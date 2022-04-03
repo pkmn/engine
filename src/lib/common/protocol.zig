@@ -108,55 +108,6 @@ pub const ArgType = enum(u8) {
     SwapSideConditions,
 };
 
-pub const KWArgType = enum(u8) {
-    None,
-
-    // Gen 1
-    From,
-    Of,
-    Damage,
-    Silent,
-    Message,
-    Weak,
-    OHKO,
-    Miss,
-    Still,
-
-    // Gen 2
-    Move,
-    Name,
-    Number,
-    Trapped,
-    Upkeep,
-    Block,
-
-    // Gen 3
-    Ability,
-    Ability2,
-    Consumed,
-    Eat,
-    Fatigue,
-    Wisher,
-    NoTarget,
-    Spread,
-
-    // Gen 4
-    Weaken,
-    Broken,
-
-    // Gen 5
-    Interrupt,
-    Heavy,
-
-    // Gen 6
-    Fail,
-    Forme,
-    Item,
-
-    // Gen 7
-    ZEffect,
-};
-
 pub const Move = enum(u8) {
     None,
     Recharge,
