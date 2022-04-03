@@ -394,6 +394,7 @@ pub fn Log(comptime Writer: type) type {
 
         pub fn unboost(self: Self, ident: u8, reason: Boost, num: u8) !void {
             if (!trace) return;
+            assert(reason != .Rage);
             try self.writer.writeAll(&.{
                 @enumToInt(ArgType.Unboost),
                 ident,

@@ -42,10 +42,10 @@ pub fn main() !void {
                     !std.mem.eql(u8, decl.name, "Log"))
                 {
                     try w.print(
-                        "<details><summary><b><code>{s}</code><b></summary>\n",
+                        "## {s}\n\n<details><summary>Reason</summary>\n",
                         .{decl.name},
                     );
-                    try w.writeAll("\nRaw|Data|\n|--|--|\n");
+                    try w.writeAll("\n|Raw|Description|\n|--|--|\n");
                     inline for (@typeInfo(@field(protocol, decl.name)).Enum.fields) |field| {
                         try w.print("|`0x{X:0>2}`|`{s}`|\n", .{ field.value, field.name });
                     }
