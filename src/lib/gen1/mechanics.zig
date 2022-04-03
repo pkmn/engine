@@ -2,10 +2,10 @@ const std = @import("std");
 const build_options = @import("build_options");
 
 const common = @import("../common/data.zig");
+const protocol = @import("../common/protocol.zig");
 const rng = @import("../common/rng.zig");
 
 const data = @import("data.zig");
-const protocol = @import("protocol.zig");
 
 const assert = std.debug.assert;
 
@@ -16,6 +16,8 @@ const showdown = build_options.showdown;
 const Choice = common.Choice;
 const Player = common.Player;
 const Result = common.Result;
+
+const Damage = protocol.Damage;
 
 const Gen12 = rng.Gen12;
 
@@ -760,7 +762,7 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
         }
 
         stored.hp -= @minimum(damage, stored.hp);
-        try log.damage(ident, stored, if (brn) .Burn else .Poison); // TODO: damageOf?
+        try log.damage(ident, stored, if (brn) Damage.Burn else Damage.Poison); // TODO: damageOf?
     }
 
     if (volatiles.LeechSeed) {
@@ -960,7 +962,7 @@ pub const Effects = struct {
             return log.miss(player_ident, foe_ident);
         }
 
-        const m = .None; // TODO
+        const m = Move.None; // TODO
         volatiles.data.disabled.move = 0; // TODO;
 
         // NB: these values will diverge

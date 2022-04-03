@@ -1,1 +1,1 @@
-pub const gen1 = @import("gen1/api.zig");
+pub const gen1 = @import("gen1/data.zig");

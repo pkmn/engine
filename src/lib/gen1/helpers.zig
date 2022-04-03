@@ -2,10 +2,10 @@ const std = @import("std");
 const build_options = @import("build_options");
 
 const common = @import("../common/data.zig");
+const protocol = @import("../common/protocol.zig");
 const rng = @import("../common/rng.zig");
 
 const data = @import("data.zig");
-const protocol = @import("protocol.zig");
 
 const assert = std.debug.assert;
 

@@ -37,7 +37,10 @@ pub fn main() !void {
     switch (tool) {
         .markdown => {
             inline for (@typeInfo(protocol).Struct.decls) |decl| {
-                if (comptime std.ascii.isUpper((decl.name[0]))) {
+                if (comptime std.ascii.isUpper(decl.name[0]) and
+                    decl.is_pub and
+                    !std.mem.eql(u8, decl.name, "Log"))
+                {
                     try w.print(
                         "<details><summary><b><code>{s}</code><b></summary>\n",
                         .{decl.name},
@@ -54,7 +57,10 @@ pub fn main() !void {
             var outer = false;
             try w.writeAll("{\n");
             inline for (@typeInfo(protocol).Struct.decls) |decl| {
-                if (comptime std.ascii.isUpper((decl.name[0]))) {
+                if (comptime std.ascii.isUpper(decl.name[0]) and
+                    decl.is_pub and
+                    !std.mem.eql(u8, decl.name, "Log"))
+                {
                     if (outer) try w.writeAll(",\n");
                     try w.print("  \"{s}\": [\n", .{decl.name});
                     var inner = false;

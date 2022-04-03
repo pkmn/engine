@@ -1,7 +1,6 @@
 # Pokémon Generation I: RBY
 
 - [data.zig](data.zig) ([data](data))
-- [api.zig](api.zig)
 - [helpers.zig](helpers.zig)
 - [mechanics.zig](mechanics.zig)
 - [protocol.zig](protocol.zig)

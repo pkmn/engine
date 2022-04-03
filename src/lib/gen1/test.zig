@@ -2,11 +2,11 @@ const std = @import("std");
 const build_options = @import("build_options");
 
 const common = @import("../common/data.zig");
+const protocol = @import("../common/protocol.zig");
 const rng = @import("../common/rng.zig");
 
 const data = @import("data.zig");
 const helpers = @import("helpers.zig");
-const protocol = @import("protocol.zig");
 
 const assert = std.debug.assert;
 
@@ -20,15 +20,15 @@ const Player = common.Player;
 const Result = common.Result;
 const Choice = common.Choice;
 
+const ArgType = protocol.ArgType;
+const Log = protocol.Log(std.io.FixedBufferStream([]u8).Writer);
+// const expectLog = protocol.expectLog;
+
 const Random = rng.Random;
 
 const Battle = helpers.Battle;
 const move = helpers.move;
 const swtch = helpers.swtch;
-
-const ArgType = protocol.ArgType;
-const Log = protocol.Log(std.io.FixedBufferStream([]u8).Writer);
-// const expectLog = protocol.expectLog;
 
 const P1_FIRST = 0;
 const P2_FIRST = 255;
@@ -49,8 +49,8 @@ pub const START = [_]u8{
 // zig fmt: on
 
 test "TODO Battle" {
-    const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
-    const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
+    const p1 = .{ .species = .Gengar, .moves = &.{ data.Move.Absorb, data.Move.Pound, data.Move.DreamEater, data.Move.Psychic } };
+    const p2 = .{ .species = .Mew, .moves = &.{ data.Move.HydroPump, data.Move.Surf, data.Move.Bubble, data.Move.WaterGun } };
     const rolls = if (showdown)
         (.{ NOP, NOP, HIT, NO_CRIT, HIT, NO_CRIT, MAX_DMG })
     else
@@ -610,5 +610,4 @@ fn update(battle: anytype, c1: Choice, c2: Choice) !Result {
 comptime {
     _ = @import("data.zig");
     _ = @import("mechanics.zig");
-    _ = @import("protocol.zig");
 }
