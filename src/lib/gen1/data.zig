@@ -17,9 +17,9 @@ const expect = std.testing.expect;
 
 const showdown = build_options.showdown;
 
-const Choice = data.Choice;
-const Player = data.Player;
-const Result = data.Result;
+pub const Choice = data.Choice;
+pub const Player = data.Player;
+pub const Result = data.Result;
 
 pub const RNG = rng.PRNG(1);
 
