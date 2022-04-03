@@ -49,8 +49,8 @@ pub const START = [_]u8{
 // zig fmt: on
 
 test "TODO Battle" {
-    const p1 = .{ .species = .Gengar, .moves = &.{ data.Move.Absorb, data.Move.Pound, data.Move.DreamEater, data.Move.Psychic } };
-    const p2 = .{ .species = .Mew, .moves = &.{ data.Move.HydroPump, data.Move.Surf, data.Move.Bubble, data.Move.WaterGun } };
+    const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
+    const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
     const rolls = if (showdown)
         (.{ NOP, NOP, HIT, NO_CRIT, HIT, NO_CRIT, MAX_DMG })
     else
