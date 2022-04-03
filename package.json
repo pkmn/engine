@@ -7,13 +7,13 @@
   "repository": "github:pkmn/engine",
   "license": "MIT",
   "dependencies": {
-    "@pkmn/data": "^0.5.11",
-    "@pkmn/protocol": "^0.3.4"
+    "@pkmn/data": "^0.5.12",
+    "@pkmn/protocol": "^0.4.0"
   },
   "devDependencies": {
     "@pkmn/eslint-config": "^2.4.0",
-    "@pkmn/randoms": "^0.5.11",
-    "@pkmn/sim": "^0.5.11",
+    "@pkmn/randoms": "^0.5.12",
+    "@pkmn/sim": "^0.5.12",
     "@types/jest": "^27.4.1",
     "@types/minimist": "^1.2.2",
     "@types/mustache": "^4.1.2",
