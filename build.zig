@@ -28,7 +28,7 @@ pub fn build(b: *Builder) !void {
     lib.setBuildMode(mode);
     lib.install();
 
-    const coverage = b.option(bool, "test-coverage", "Generate test coverage") orelse false;
+    const coverage = b.option([]const u8, "test-coverage", "Generate test coverage");
     const test_file =
         b.option([]const u8, "test-file", "Input file for test") orelse "src/lib/test.zig";
     const test_bin = b.option([]const u8, "test-bin", "Emit test binary to");
@@ -47,11 +47,11 @@ pub fn build(b: *Builder) !void {
         tests.name = std.fs.path.basename(bin);
         if (std.fs.path.dirname(bin)) |dir| tests.setOutputDir(dir);
     }
-    if (coverage) {
+    if (coverage) |path| {
         tests.setExecCmd(&[_]?[]const u8{
             "kcov",
             "--include-pattern=src/lib",
-            "coverage/kcov",
+            path,
             null,
         });
     }
