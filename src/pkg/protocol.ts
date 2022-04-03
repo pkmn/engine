@@ -338,7 +338,7 @@ export const DECODERS: {[key: number]: Decoder} = {
       if (reason === PROTOCOL.Start.ConfusionSilent) kwArgs.silent = true;
     } else if (reason === PROTOCOL.Start.TypeChange) {
       const types = decodeTypes(this.lookup, data.getUint8(offset++));
-      const t = types[0] === types[1] ? types[0] : types.join(', ');
+      const t = types[0] === types[1] ? types[0] : types.join('/');
       args = ['-start', ident, 'typechange' as Protocol.EffectName, t as Protocol.Types];
       kwArgs.from = 'move: Conversion' as Protocol.EffectName;
       kwArgs.of = ident;

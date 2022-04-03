@@ -216,7 +216,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(Array.from(
         log.parse(Data.view([ArgType.Start, 0b0010, PROTOCOL.Start.TypeChange, 0b0011_0110]))
       )).toEqual(parse(
-        '|-start|p1a: Hitokage|typechange|Bug, Poison|[from] move: Conversion|[of] p1a: Hitokage'
+        '|-start|p1a: Hitokage|typechange|Bug/Poison|[from] move: Conversion|[of] p1a: Hitokage'
       ));
       const surf = gen.moves.get('Surf')!.num;
       expect(Array.from(
