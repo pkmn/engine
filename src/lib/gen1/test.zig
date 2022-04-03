@@ -41,7 +41,7 @@ const MIN_DMG = 217;
 const MAX_DMG = 255;
 
 // zig fmt: off
-pub const START = [_]u8{
+pub const START = .{
     @enumToInt(ArgType.Switch), Player.P1.ident(1),
     @enumToInt(ArgType.Switch), Player.P2.ident(1),
     @enumToInt(ArgType.Turn),   1, 0,
@@ -73,17 +73,17 @@ test "switching" {
     const p2 = battle.side(.P2);
 
     try expectEqual(Result.Default, try update(&battle, swtch(3), swtch(2)));
-    try expectOrder(p1, &[_]u8{ 3, 2, 1, 4, 5, 6 }, p2, &[_]u8{ 2, 1, 3, 4, 5, 6 });
+    try expectOrder(p1, &.{ 3, 2, 1, 4, 5, 6 }, p2, &.{ 2, 1, 3, 4, 5, 6 });
     try expectEqual(Result.Default, try update(&battle, swtch(5), swtch(5)));
-    try expectOrder(p1, &[_]u8{ 5, 2, 1, 4, 3, 6 }, p2, &[_]u8{ 5, 1, 3, 4, 2, 6 });
+    try expectOrder(p1, &.{ 5, 2, 1, 4, 3, 6 }, p2, &.{ 5, 1, 3, 4, 2, 6 });
     try expectEqual(Result.Default, try update(&battle, swtch(6), swtch(3)));
-    try expectOrder(p1, &[_]u8{ 6, 2, 1, 4, 3, 5 }, p2, &[_]u8{ 3, 1, 5, 4, 2, 6 });
+    try expectOrder(p1, &.{ 6, 2, 1, 4, 3, 5 }, p2, &.{ 3, 1, 5, 4, 2, 6 });
     try expectEqual(Result.Default, try update(&battle, swtch(3), swtch(3)));
-    try expectOrder(p1, &[_]u8{ 1, 2, 6, 4, 3, 5 }, p2, &[_]u8{ 5, 1, 3, 4, 2, 6 });
+    try expectOrder(p1, &.{ 1, 2, 6, 4, 3, 5 }, p2, &.{ 5, 1, 3, 4, 2, 6 });
     try expectEqual(Result.Default, try update(&battle, swtch(2), swtch(4)));
-    try expectOrder(p1, &[_]u8{ 2, 1, 6, 4, 3, 5 }, p2, &[_]u8{ 4, 1, 3, 5, 2, 6 });
+    try expectOrder(p1, &.{ 2, 1, 6, 4, 3, 5 }, p2, &.{ 4, 1, 3, 5, 2, 6 });
     try expectEqual(Result.Default, try update(&battle, swtch(5), swtch(5)));
-    try expectOrder(p1, &[_]u8{ 3, 1, 6, 4, 2, 5 }, p2, &[_]u8{ 2, 1, 3, 5, 4, 6 });
+    try expectOrder(p1, &.{ 3, 1, 6, 4, 2, 5 }, p2, &.{ 2, 1, 3, 5, 4, 6 });
 }
 
 test "choices" {
@@ -97,10 +97,10 @@ test "choices" {
     }, options[0..n]);
 }
 
-// var buf = [_]u8{0} ** 7;
+// var buf = .{0} ** 7;
 // var log: Log = .{ .writer = std.io.fixedBufferStream(&buf).writer() };
 // _ = try battle.update(.{ .type = .Move, .data = 4 }, .{ .type = .Switch, .data = 1 }, log);
-// try expectLog(&(START ++ [_]u8{}), &buf);
+// try expectLog(&(START ++ .{}), &buf);
 
 // // Moves
 
