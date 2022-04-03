@@ -10,9 +10,6 @@
 
 ## Driver
 
-- [ ] implements binary protocol encode/decode
-- [ ] turn `Battle.update` responses into `|request|` ~~(can consider moving down a layer into an
-  optional piece of the engine)~~
 - [ ] **integration tests**: run streams in lockstep (like `@pkmn/sim`) and compare output *and*
   ensure binary protocol roundtrips
 

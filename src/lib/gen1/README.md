@@ -1,5 +1,12 @@
 # Pokémon Generation I: RBY
 
+- [data.zig](data.zig) ([data](data))
+- [api.zig](api.zig)
+- [helpers.zig](helpers.zig)
+- [mechanics.zig](mechanics.zig)
+- [protocol.zig](protocol.zig)
+- [test.zig](test.zig)
+
 ## Data Structures
 
 The following information is required to simulate a Generation I Pokémon battle:
@@ -189,7 +196,7 @@ entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as foll
 | **move effect** | 0..66   | 7    |     | **attacks**       | 0..4     | 3    |
 | **crit chance** | 7..65   | 6    |     |                   |          |      |
 
-From this we can determine the minimum bits required to store each data structure to determine how
+From this we can determine the minimum bits[^1] required to store each data structure to determine how
 much overhead the representations above have after taking into consideration [alignment &
 padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 [denormalization](https://en.wikipedia.org/wiki/Denormalization):
@@ -207,7 +214,7 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
   (`8`)
   - `order` does not need to be stored as the party can always be rearranged as switches occur
 - **`Battle`**: 6× `Side` + seed (10× `8` + `4`) + turn (`10`) + last damage (`10`)
-- **`Type.chart`**: attacking types (`15`) × defending types (`15`) × effectiveness (`2`)[^1]
+- **`Type.chart`**: attacking types (`15`) × defending types (`15`) × effectiveness (`2`)[^2]
 - **`Moves.data`**: 164× base power (`6`) + effect (`7`) + accuracy (`4`) + type: (`4`)
 - **`Species.chance`**: 151× crit chance (`6`)
 
@@ -228,7 +235,13 @@ case all Pokémon types are required and 48 moves. The `Moves.data` array could 
 instead the `Move` data actually required by each `Pokemon` could be placed beside the `MoveSlot`,
 though this is both less general and adds unnecessary complexity.
 
-[^1]: Instead of storing as a sparse multi-dimensional array the type chart could instead only
+[^1]: For data with lower cardinality it is possible to save memory by ordinalizing the values and
+turning them into indices into a lookup table (eg. encode all possible move base powers in a lookup
+table and store the index into that table instead of the actual base power). While this approach may
+minimize the absolute memory used, performance is more likely to suffer as the goal is to minimize
+uncached memory lookups, not total memory usage.
+
+[^2]: Instead of storing as a sparse multi-dimensional array the type chart could instead only
 [store values which are not normal
 effectiveness](https://github.com/pret/pokered/blob/master/data/types/type_matchups.asm) in 820 bits
 as 82× attacking type (`4`) + defending type (`4`) + non-Normal effectiveness (`2`). This would

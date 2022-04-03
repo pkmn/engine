@@ -133,8 +133,9 @@ TODO
   [old](https://raw.githubusercontent.com/smogon/pokemon-showdown/master/old-simulator-doc.txt))
 - [PokemonBattleEngine](https://github.com/Kermalis/PokemonBattleEngine)
 - [pokebattle](https://github.com/sarenji/pokebattle-sim)
-- [Pokemon Online](https://github.com/po-devs/pokemon-online) documentation ([RBY](https://raw.githubusercontent.com/po-devs/pokemon-online/master/bin/database/rby-stuff.txt))
-- [PokemonLab/Shoddy Battle](https://github.com/cathyjf/PokemonLab)
+- [Pokemon Online](https://github.com/po-devs/pokemon-online) documentation
+  ([RBY](https://raw.githubusercontent.com/po-devs/pokemon-online/master/bin/database/rby-stuff.txt))
+- [PokemonLab / Shoddy Battle](https://github.com/cathyjf/PokemonLab)
 
 ### RNG
 
@@ -158,8 +159,12 @@ TODO
 
 ### Other
 
-- [Technical Machine](https://github.com/davidstone/technical-machine)
-- [Gen I & II](https://www.smogon.com/forums/threads/past-gens-research-thread.3506992/#post-5878612)
+- [Technical Machine](https://github.com/davidstone/technical-machine) - david stone
+- [Gen I Main Battle
+  Function](https://www.smogon.com/forums/threads/past-gens-research-thread.3506992/#post-5878612) -
+  Crystal_
+- [the ultimate POKéMON
+  CENTER](https://web.archive.org/web/20170622160244/http:/upcarchive.playker.info/0/upokecenter/content/pokemon-ruby-version-sapphire-version-and-emerald-version-timing-notes.html) - Peter O
 
 ### Benchmarks
 
