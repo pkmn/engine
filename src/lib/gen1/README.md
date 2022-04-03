@@ -1,10 +1,22 @@
 # Pokémon Generation I: RBY
 
-- [data.zig](data.zig) ([data](data))
-- [helpers.zig](helpers.zig)
-- [mechanics.zig](mechanics.zig)
-- [protocol.zig](protocol.zig)
-- [test.zig](test.zig)
+This document exists to describe the design of pkmn's Generation I ("RBY") engine. A high level
+overview of the project's design can be found in the [top level design
+document](../../../docs/DESIGN.md). The Gen I engine is implemented and tested across the following
+files.
+
+- [`data.zig`](data.zig) ([`data`](data)): contains definitions of all of the data structures used
+  by the engine, described in detail [below](#data-structures)
+- [`helpers.zig`](helpers.zig): helpers used to construct complex data types with
+  sensible defaults (internally used by tests and tools)
+- [`mechanics.zig`](mechanics.zig): code which manipulates the data structures in order to implement
+  the mechanics of the game
+- [`test.zig`](test.zig): unit tests for `mechanics.zig` (the code is also tested by [integration
+  tests](../../../docs/TESTING.md) at a higher level)
+
+The engine also relies on the [data types](../common/data.zig), [protocol](../common/protocol.zig),
+and [RNG](../common/rng.zig) logic which is shared across generations and lives in
+[`lib/common`](../common).
 
 ## Data Structures
 
