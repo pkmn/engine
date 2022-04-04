@@ -13,9 +13,8 @@
   </a>
 </p>
 
-A minimal, complete Pokémon battle simulation engine optimized for performance and
-designed for tooling, embedded systems, and [artifical
-intelligence](https://github.com/pkmn/0-ERROR) use cases.
+A minimal, complete, Pokémon battle simulation engine optimized for performance and designed for
+tooling, embedded systems, and [artifical intelligence](https://github.com/pkmn/0-ERROR) use cases.
 
 ## Installation
 
@@ -67,17 +66,12 @@ should notify you with these options when you attempt to install the package.
 
 ## Usage
 
-```ts
-import {Dex} from '@pkmn/dex';
-import {Generations} from '@pkmn/data';
-import {Battle} from '@pkmn/engine';
+### C
 
-const gens = new Generations(Dex);
-const battle = new Battle(gens.get(1), team1, team2);
-```
+[example code](src/examples/c)
 
 ```c
-#include "pkmn.h"
+#include <pkmn.h>
 
 Battle *battle = ....;
 result_t result;
@@ -87,6 +81,23 @@ while (!RESULT_TYPE(result = battle->update(c1, c2, log))) {
   c2 = choose(p2, RESULT_P2(result));
 }
 ```
+
+### JavaScript / TypeScript
+
+[example code](src/examples/js)
+
+```ts
+import {Dex} from '@pkmn/dex';
+import {Generations} from '@pkmn/data';
+import {Battle} from '@pkmn/engine';
+
+const gens = new Generations(Dex);
+const battle = Battle.create(gens.get(1), team1, team2);
+```
+
+### Zig
+
+[example code](src/examples/zig)
 
 ```zig
 const pkmn = @import("pkmn");
@@ -116,7 +127,7 @@ The simulation engine is currently expected to be developed over multiple stages
 | **2**   | ADV & DPP                                       |
 | _**3**_ | _BW & XY & SM & SS & SV_                        |
 
-Currently, most of the foundational work for stage 0 is done:
+Currently, most of the foundational work from stage 0 is done:
   
 - [benchmark and integration testing](src/test) infrastructure
 - [documentation](docs) about design, research, methodology, etc
