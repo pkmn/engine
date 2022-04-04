@@ -43,7 +43,11 @@ pub fn Battle(comptime PRNG: anytype) align(64) type {
         }
 
         pub fn update(self: *Self, c1: Choice, c2: Choice, log: anytype) !Result {
-            return mechanics.update(self, c1, c2, log);
+            return mechanics.update(self, c1, c2, switch (@typeInfo(@TypeOf(log))) {
+                .Null => protocol.NULL,
+                .Optional => log orelse protocol.NULL,
+                else => log,
+            });
         }
 
         pub fn choices(self: *Self, player: Player, request: Choice.Type, out: []Choice) u8 {

@@ -612,10 +612,8 @@ test "choices" {
 // BUG: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Poison.2FBurn_animation_with_0_HP
 
 fn update(battle: anytype, c1: Choice, c2: Choice) !Result {
-    if (battle.turn == 0) {
-        try expectEqual(Result.Default, try battle.update(.{}, .{}, protocol.NULL));
-    }
-    return battle.update(c1, c2, protocol.NULL);
+    if (battle.turn == 0) try expectEqual(Result.Default, try battle.update(.{}, .{}, null));
+    return battle.update(c1, c2, null);
 }
 
 comptime {
