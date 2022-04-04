@@ -22,7 +22,7 @@ const Choice = common.Choice;
 
 const ArgType = protocol.ArgType;
 const Log = protocol.Log(std.io.FixedBufferStream([]u8).Writer);
-// const expectLog = protocol.expectLog;
+const expectLog = protocol.expectLog;
 
 const Random = rng.Random;
 
@@ -40,15 +40,7 @@ const NO_CRIT = 255;
 const MIN_DMG = 217;
 const MAX_DMG = 255;
 
-// zig fmt: off
-pub const START = .{
-    @enumToInt(ArgType.Switch), Player.P1.ident(1),
-    @enumToInt(ArgType.Switch), Player.P2.ident(1),
-    @enumToInt(ArgType.Turn),   1, 0,
-};
-// zig fmt: on
-
-test "TODO Battle" {
+test "TODO Battle1" {
     const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
     const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
     const rolls = if (showdown)
@@ -58,6 +50,29 @@ test "TODO Battle" {
     var battle = Battle.init(rolls, &.{p1}, &.{p2});
     try expectEqual(Result.Default, try update(&battle, move(4), move(2)));
     try expect(battle.rng.exhausted());
+}
+
+test "TODO Battle2" {
+    const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
+    const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
+    const rolls = if (showdown)
+        (.{ NOP, NOP, HIT, NO_CRIT, HIT, NO_CRIT, MAX_DMG })
+    else
+        (.{ NO_CRIT, HIT, NO_CRIT, MAX_DMG, HIT });
+    var battle = Battle.init(rolls, &.{p1}, &.{p2});
+
+    var actual = [_]u8{0} ** 22;
+    var actual_log = Log{ .writer = std.io.fixedBufferStream(&actual).writer() };
+
+    var expected = [_]u8{0} ** 22;
+    var expected_log = Log{ .writer = std.io.fixedBufferStream(&expected).writer() };
+
+    try expected_log.switched(Player.P1.ident(1), battle.side(.P1).pokemon[0]);
+    try expected_log.switched(Player.P2.ident(1), battle.side(.P2).pokemon[0]);
+    try expected_log.turn(1);
+
+    try expectEqual(Result.Default, try battle.update(.{}, .{}, actual_log));
+    try expectLog(&expected, &actual);
 }
 
 fn expectOrder(p1: anytype, o1: []const u8, p2: anytype, o2: []const u8) !void {
@@ -96,11 +111,6 @@ test "choices" {
         move(1),  move(2),  move(3),  move(4),
     }, options[0..n]);
 }
-
-// var buf = .{0} ** 7;
-// var log: Log = .{ .writer = std.io.fixedBufferStream(&buf).writer() };
-// _ = try battle.update(.{ .type = .Move, .data = 4 }, .{ .type = .Switch, .data = 1 }, log);
-// try expectLog(&(START ++ .{}), &buf);
 
 // // Moves
 
@@ -602,9 +612,10 @@ test "choices" {
 // BUG: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Poison.2FBurn_animation_with_0_HP
 
 fn update(battle: anytype, c1: Choice, c2: Choice) !Result {
-    var log: protocol.Log(@TypeOf(std.io.null_writer)) = .{ .writer = std.io.null_writer };
-    if (battle.turn == 0) try expectEqual(Result.Default, try battle.update(.{}, .{}, &log));
-    return battle.update(c1, c2, log);
+    if (battle.turn == 0) {
+        try expectEqual(Result.Default, try battle.update(.{}, .{}, protocol.NULL));
+    }
+    return battle.update(c1, c2, protocol.NULL);
 }
 
 comptime {

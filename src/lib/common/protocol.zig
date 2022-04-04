@@ -226,6 +226,8 @@ pub const Immune = enum(u8) {
     OHKO,
 };
 
+pub const NULL = Log(@TypeOf(std.io.null_writer)){ .writer = std.io.null_writer };
+
 pub fn Log(comptime Writer: type) type {
     return struct {
         const Self = @This();

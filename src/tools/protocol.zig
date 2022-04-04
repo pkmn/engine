@@ -39,7 +39,8 @@ pub fn main() !void {
             inline for (@typeInfo(protocol).Struct.decls) |decl| {
                 if (comptime std.ascii.isUpper(decl.name[0]) and
                     decl.is_pub and
-                    !std.mem.eql(u8, decl.name, "Log"))
+                    !std.mem.eql(u8, decl.name, "Log") and
+                    !std.mem.eql(u8, decl.name, "NULL"))
                 {
                     try w.print(
                         "## {s}\n\n<details><summary>Reason</summary>\n",
@@ -59,7 +60,8 @@ pub fn main() !void {
             inline for (@typeInfo(protocol).Struct.decls) |decl| {
                 if (comptime std.ascii.isUpper(decl.name[0]) and
                     decl.is_pub and
-                    !std.mem.eql(u8, decl.name, "Log"))
+                    !std.mem.eql(u8, decl.name, "Log") and
+                    !std.mem.eql(u8, decl.name, "NULL"))
                 {
                     if (outer) try w.writeAll(",\n");
                     try w.print("  \"{s}\": [\n", .{decl.name});

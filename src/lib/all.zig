@@ -1,3 +1,4 @@
+pub const Log = @import("common/protocol.zig").Log;
 pub const protocol = struct {
     usingnamespace @import("common/protocol.zig");
 };
