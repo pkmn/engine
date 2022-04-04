@@ -1,3 +1,16 @@
+# Protocol
+
+- `Result`/`Choice`
+- data structures serialized in native endianness
+- `choices`
+
+[Pokémon Showdown's simulator protocol](https://github.com/smogon/pokemon-showdown/blob/master/sim/SIM-PROTOCOL.md)
+
+
+
+
+
+---
 - Native endianess!
 - different (but related) protocol per generation
 - if have kwargs change first bit (usually u7, 8th bit is whether kwargs is set) and then second bit is length to indicate the *number* of kwargs

@@ -215,12 +215,12 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 - **`Pokemon`**: 5× stats (`50`) + 4× move slot (`60`) + HP (`10`) + status (`4`) + species (`8`) +
   level (`7`)
   - `type` can be computed from the base `Species` information
-- **`ActivePokemon`**: 5× stats (`50`) + 4× move slot (`60`) + 6× boosts (`24`) + volatile data
+- **`ActivePokemon`**: 4× stats (`40`) + 4× move slot (`60`) + 6× boosts (`24`) + volatile data
   (`29`) + volatiles (`18`) + species (`8`) + types (`8`) + disabled (`5`)
   - the active Pokémon's stats/species/move slots/types may change in the case of Transform
   - the active Pokémon's types may change due to Conversion
-  - the active Pokémon's level and current HP can always be referred to the `Pokemon` struct, and
-    types can be computed from its species
+  - the active Pokémon's level and current and max HP can always be referred to the `Pokemon`
+    struct, and types can be computed from its species
 - **`Side`**: `ActivePokemon` + 6× `Pokemon` + active (`3`) + last used (`8`) + last selected
   (`8`)
   - `order` does not need to be stored as the party can always be rearranged as switches occur
@@ -232,11 +232,11 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 | Data            | Actual bits | Minimum bits | Overhead |
 | --------------- | ----------- | ------------ | -------- |
 | `Pokemon`       | 192         | 139          | 38.1%    |
-| `ActivePokemon` | 256         | 202          | 26.7%    |
-| `Side`          | 1472        | 1047         | 39.5%    |
-| `Battle`        | 3088        | 2198         | 39.5%    |
+| `ActivePokemon` | 256         | 192          | 33.3%    |
+| `Side`          | 1472        | 1045         | 40.9%    |
+| `Battle`        | 3088        | 2194         | 40.7%    |
 | `Type.chart`    | 1800        | 450          | 300.0%   |
-| `Moves.data`    | 3696        | 3444         | 14.3%    |
+| `Moves.data`    | 3636        | 3444         | 14.3%    |
 | `Species.speed` | 1208        | 906          | 33.3%    |
 
 In the case of `Type.chart`/`Moves.data`/`Species.chances`, technically only the values which are
@@ -258,3 +258,122 @@ effectiveness](https://github.com/pret/pokered/blob/master/data/types/type_match
 as 82× attacking type (`4`) + defending type (`4`) + non-Normal effectiveness (`2`). This would
 avoid having to do two memory lookups, but the second lookup should already be fast due to locality
 of reference meaning it will likely already be in the cache.
+
+## Layout
+
+### `Battle`
+
+| Start | End | Data                | Description                          |
+| ----- | --- | ------------------- | ------------------------------------ |
+| 0     | 184 | [`sides[0]`](#side) | Player 1's side                      |
+| 184   | 368 | [`sides[1]`](#side) | Player 2's side                      |
+| 368   | 370 | `turn`              | The current turn number              |
+| 370   | 372 | `last_damage`       | The last damage dealt by either side |
+| 372   | 384 | `rng`               | The RNG state                        |
+
+- the current `turn` is 2 bytes, written in native-endianess
+- the `rng` state depends on whether or not Pokémon Showdown compatibility mode is enabled
+  (`-Dshowdown`):
+  - if `showdown` is enabled, the RNG state consists of 4 bytes of zero-padding followed by the
+    64-bit seed, written in native-endianess
+  - otherwise the RNG state consists of 1 bytes of zero-padding, the 10 bytes of the seed, and
+    finally the index pointing to which byte of the seed is currently being used
+
+### `Side`
+
+| Start | End | Data                       | Description                             |
+| ----- | --- | -------------------------- | --------------------------------------- |
+| 0     | 24  | [`pokemon[0]`](#pokemon)   | The player's first Pokémon              |
+| 24    | 48  | [`pokemon[1]`](#pokemon)   | The player's second Pokémon             |
+| 48    | 72  | [`pokemon[2]`](#pokemon)   | The player's third Pokémon              |
+| 72    | 96  | [`pokemon[3]`](#pokemon)   | The player's fourth Pokémon             |
+| 96    | 120 | [`pokemon[4]`](#pokemon)   | The player's fifth Pokémon              |
+| 120   | 144 | [`pokemon[5]`](#pokemon)   | The player's sixth Pokémon              |
+| 144   | 176 | [`active`](#activepokemon) | The player's active Pokémon             |
+| 176   | 182 | `order`                    | The current order of the player's party |
+| 182   | 183 | `last_selected_move`       | The last move the player selected       |
+| 183   | 184 | `last_used_move`           | The last move the player used           |
+
+- `order` is a 6 byte array where `order[i]` represents the position of `pokemon[i]`
+
+### `ActivePokemon`
+
+| Start | End | Data                               | Description                                                 |
+| ----- | --- | ---------------------------------- | ----------------------------------------------------------- |
+| 0     | 2   | `stats.hp`                         | The active Pokémon's computed max HP stat                   |
+| 2     | 4   | `stats.atk`                        | The active Pokémon's modified Attack stat                   |
+| 4     | 6   | `stats.def`                        | The active Pokémon's modified Defense stat                  |
+| 6     | 8   | `stats.spe`                        | The active Pokémon's modified Speed stat                    |
+| 7     | 10  | `stats.spc`                        | The active Pokémon's modified Special stat                  |
+| 10    | 19  | [`volatiles`](#volatiles)          | The active Pokémon's volatiles statuses and associated data |
+| 19    | 20  | `moves[0].pp`                      | The PP of the active Pokémon's first move                   |
+| 20    | 21  | `moves[1].id`                      | The active Pokémon's second move                            |
+| 21    | 22  | `moves[1].pp`                      | The PP of the active Pokémon's second move                  |
+| 22    | 23  | `moves[2].id`                      | The active Pokémon's third move                             |
+| 23    | 24  | `moves[2].pp`                      | The PP of the active Pokémon's third move                   |
+| 24    | 25  | `moves[3].id`                      | The active Pokémon's fourth move                            |
+| 25    | 26  | `moves[4].pp`                      | The PP of the active Pokémon's fourth move                  |
+| 27    | 28  | `boosts.atk`/`boosts.def`          | The active Pokémon's Attack and Defense boosts              |
+| 28    | 29  | `boosts.spe`/`boosts.spd`          | The active Pokémon's Speed and Special boosts               |
+| 29    | 30  | `boosts.accuracy`/`boosts.evasion` | The active Pokémon's Accuracy and Evasion boosts            |
+| 30    | 31  | `species`                          | The active Pokémon's species                                |
+| 31    | 32  | `type1`/`type2`                    | The active Pokémon's types                                  |
+
+- the active Pokémon's `stats.hp` is always identical to the the corresponding stored Pokémon's `stats.hp`
+- `boosts` and `types` includes bytes which store two 4-bit fields each
+
+#### `Volatiles`
+
+> **NOTE:** The offsets in the following table represent *bits* and **not** bytes.
+
+| Start | End | Data                     | Description  |
+| ----- | --- | ------------------------ | ------------ |
+| 0     | 16  | `data.state`             | TODO         |
+| 16    | 24  | `data.substitute`        | TODO         |
+| 24    | 28  | `data.disabled.move`     | TODO         |
+| 28    | 32  | `data.disabled.duration` | TODO         |
+| 32    | 36  | `data.confusion`         | TODO         |
+| 36    | 40  | `data.toxic`             | TODO         |
+| 40    | 44  | `data.attacks`           | TODO         |
+| 44    | 48  | `0000`                   | Zero padding |
+| 48    | 49  | `Bide`                   | TODO         |
+| 49    | 50  | `Thrashing`              | TODO         |
+| 50    | 51  | `MultiHit`               | TODO         |
+| 51    | 52  | `Flinch`                 | TODO         |
+| 52    | 53  | `Charging`               | TODO         |
+| 53    | 54  | `Trapping`               | TODO         |
+| 54    | 55  | `Invulnerable`           | TODO         |
+| 55    | 56  | `Confusion`              | TODO         |
+| 56    | 57  | `Mist`                   | TODO         |
+| 57    | 58  | `FocusEnergy`            | TODO         |
+| 58    | 59  | `Substitute`             | TODO         |
+| 59    | 60  | `Recharging`             | TODO         |
+| 60    | 61  | `Rage`                   | TODO         |
+| 61    | 62  | `LeechSeed`              | TODO         |
+| 62    | 63  | `Toxic`                  | TODO         |
+| 63    | 64  | `Reflect`                | TODO         |
+| 64    | 65  | `Transform`              | TODO         |
+| 66    | 72  | `000000`                 | Zero padding |
+
+### `Pokemon`
+
+| Start | End | Data            | Description                                |
+| ----- | --- | --------------- | ------------------------------------------ |
+| 0     | 2   | `stats.hp`      | The Pokémon's computed max HP stat         |
+| 2     | 4   | `stats.atk`     | The Pokémon's unmodified Attack stat       |
+| 4     | 6   | `stats.def`     | The Pokémon's unmodified Defense stat      |
+| 6     | 8   | `stats.spe`     | The Pokémon's unmodified Speed stat        |
+| 7     | 10  | `stats.spc`     | The Pokémon's unmodified Special stat      |
+| 10    | 11  | `moves[0].id`   | The Pokémon's first stored move            |
+| 11    | 12  | `moves[0].pp`   | The PP of the Pokémon's first stored move  |
+| 12    | 13  | `moves[1].id`   | The Pokémon's second stored move           |
+| 13    | 14  | `moves[1].pp`   | The PP of the Pokémon's second stored move |
+| 14    | 15  | `moves[2].id`   | The Pokémon's third stored move            |
+| 15    | 16  | `moves[2].pp`   | The PP of the Pokémon's third stored move  |
+| 16    | 17  | `moves[3].id`   | The Pokémon's fourth stored move           |
+| 17    | 18  | `moves[4].pp`   | The PP of the Pokémon's fourth stored move |
+| 18    | 20  | `hp`            | The Pokémon's current HP                   |
+| 20    | 21  | `status`        | The Pokémon's current status               |
+| 21    | 20  | `species`       | The Pokémon's stored species               |
+| 22    | 22  | `type1`/`type2` | The Pokémon's stored types                 |
+| 23    | 24  | `level`         | The Pokémon's level                        |
