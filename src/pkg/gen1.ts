@@ -65,6 +65,15 @@ export class Battle implements Gen1.Battle {
     return this.data.getUint16(OFFSETS.Battle.last_damage, LE);
   }
 
+  toJSON(): Gen1.Battle {
+    return {
+      sides: Array.from(this.sides).map(s => s.toJSON()),
+      turn: this.turn,
+      lastDamage: this.lastDamage,
+      prng: this.prng,
+    };
+  }
+
   get prng(): readonly number[] {
     const offset = OFFSETS.Battle.last_damage + 2 + (this.options.showdown ? 4 : 1);
     const seed: number[] = [0, 0, 0, 0];
@@ -165,6 +174,15 @@ export class Side implements Gen1.Side {
     return m === 0 ? undefined : this.lookup.moveByNum(m);
   }
 
+  toJSON(): Gen1.Side {
+    return {
+      active: this.active,
+      pokemon: Array.from(this.pokemon).map(p => p.toJSON()),
+      lastSelectedMove: this.lastSelectedMove,
+      lastUsedMove: this.lastUsedMove,
+    };
+  }
+
   static init(
     gen: Generation,
     lookup: Lookup,
@@ -229,7 +247,7 @@ export class Pokemon implements Gen1.Pokemon {
     return this.index + 1 as Slot;
   }
 
-  active(): boolean {
+  get active(): boolean {
     return started(this.data) && this.index === this.data.getUint8(this.offset.order);
   }
 
@@ -390,6 +408,23 @@ export class Pokemon implements Gen1.Pokemon {
 
     const off = this.offset.active + OFFSETS.ActivePokemon.volatiles + OFFSETS.Volatiles.data;
     return this.data.getUint8(off + (OFFSETS.VolatilesData.toxic >> 3)) >> 4;
+  }
+
+  toJSON(): Gen1.Pokemon {
+    return {
+      species: this.species,
+      types: this.types,
+      level: this.level,
+      hp: this.hp,
+      status: this.status,
+      statusData: this.statusData,
+      stats: this.stats,
+      boosts: this.boosts,
+      moves: Array.from(this.moves),
+      volatiles: this.volatiles,
+      stored: this.stored.toJSON(),
+      position: this.position,
+    }
   }
 
   static init(
@@ -579,6 +614,15 @@ export class StoredPokemon {
 
   get types(): readonly [TypeName, TypeName] {
     return decodeTypes(this.lookup, this.data.getUint8(this.offset + OFFSETS.Pokemon.types));
+  }
+
+  toJSON(): Gen1.Pokemon['stored'] {
+    return {
+      species: this.species,
+      types: this.types,
+      stats: this.stats,
+      moves: this.moves,
+    };
   }
 }
 
