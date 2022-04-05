@@ -37,4 +37,4 @@ tried so far).
 - [ ] I have split off unrelated changes into their own PRs and done my best to make this PR as
       focused as possible while still being useful
 
- [1]: https://github.com/pkmn/engine/blob/master/CONTRIBUTING.md
+ [1]: https://github.com/pkmn/engine/blob/master/.github/CONTRIBUTING.md
