@@ -118,3 +118,18 @@ Stochastic:
 Can't test: increased rates of already inconsistent things
   - accuracy - could show roll before using increased accuracy does work, doesnt after? (implies accuracy changed)
   - critical hits
+
+TESTING - exhaustive runner
+
+parse directly to @protocol (no json), though allow for protocol to be stringified (though wont match). add logic to compare protocol directly (order insenstivie), filter out fields which arent implement like break or rules
+
+run PS in battle stream and run through protocol parser. run engine synchronously and gather all converted update/sideupdate data, compare
+
+BENCHMARK - custom multi random runner
+checksum = final seed pkus sum of turns
+
+generate teams for each (not included in timing)
+dont include team packing time for PS, dont include team encoding time for JS (though optionally can)
+play out exact same battle using random ai, only disable trace output for engine and use a binary random ai that makes same decisions as ps but purely off the data it reads directly out of the casted bytes of the engines Battle instance
+
+integration test. equals(parsed protcol) , not string line

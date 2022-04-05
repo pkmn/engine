@@ -1,137 +1,159 @@
-EBC, desync, random number generator, mods
+# Design
 
-explain difference between engine and simulator (engine: just subset of Battle. no battle stream (driver), no team validator/format awareness etc. minimal protocol support (not full protocol).)
+The pkmn engine is able to be much faster and simpler than both Pokemon
+Showdown! and the original game cartridge TODO
 
-how the engine can be used for the damage calc
+## Pokemon Red & Blue
 
-- mcts
-- damage calc (how? need to give example)
+The battle engine from the original game code was written for limited, legacy,
+hardware while under time pressure and as one aspect in a complete role-playing
+game:
 
-non goal: fully feature data lib - general functionality at odds with performance
+- the GB Z80 hardware does not support multiply/divide instructions efficiently
+  (and certainly doesn't support modern SIMD instructions)
+- the game code's battle engine includes many features that can be removed when
+  only emulating the post-game "link" battle system utilized by competitive play
+  - the ["Old Man"
+    tutorial](https://bulbapedia.bulbagarden.net/wiki/Old_man_(Kanto))
+  - the
+    [Safari Zone](https://bulbapedia.bulbagarden.net/wiki/Kanto_Safari_Zone)
+  - unidentified ghosts
+  - in-battle item use
+  - "switch" vs. "set" mode
+  - badge boosts/disobedience
+  - catching Pokemon
+  - running from battle
+  - experience
+- the game's data was created organically and as a result is laid out
+  haphazardly instead of in terms of what is most efficient
 
-```txt
-full architecture design docs
-goals: speed, accuracy
-- dont pay at all for abstractions etc not used in the gen (gen 2 doesnt pay for inheritance of gen 1, doesnt have to deal with `spc`, etc) = possibly a lot less code reuse! inheritance can be done at compile time (just pointers, no redundant memory). gen 8 doesnt need to pay for gen 1->7
+By streamlining the existing code and updating it for a modern instruction set
+it is possible to both reduce complexity and increase performance.
 
-text => all text (descriptions, short desc, names, etc) in separate translatable files
-IDs (ints) most fundamental -> looking up data should be looking up in array!
+## Pokemon Showdown!
 
-1) faster (event dispatch?, use numbers instead of strings)  
-2) same protocol? (at least need to be able to translate to ps protocol)  
-3) DAMAGE CALC (need to be able to return all randoms with same code, also force events to always proc)  
-4) MINMAX (need to be able to proc multiple possibilies)  
-5) MCTS (efficient state representation)
+Like the original game code, Pokemon Showdown's codebase has grown organically
+and is concerned about a different set of constraints than those that the pkmn
+engine is focused on. Pokemon Showdown is a clean room implementation of a
+generic Pokemon battling engine focused on extensibility and ease of
+development. Pokemon Showdown makes several design tradeoffs which increase
+complexity and inhibit performance, but novice coders are able to create custom
+formats with ease (and in practice entirely new generations of Pokemon can be
+supported within a matter of hours):
 
-- convert to PS protocol (after) for compatibility
-- dont include input/ouput logs in text encoding (like trace!) can still rematerialize, just cant display same results
+- Pokemon Showdown is structured such that the core code reflects the current
+  generation of Pokemon games and past generations are implemented as a set of
+  "mods" to data files and handlers. This generally means the most relevant code
+  is easy to find and modify, though the core flow is substantially more
+  complicated as it contains branches and hooks for all other generations (and
+  the simpler code for other generations must pay the price for all of the
+  modern generation code). Furthermore, it becomes difficult to determine where
+  exactly code for a specific older generation lives, as the funtionality may be
+  inherited from newer generations (which is counter intuitive to how the game
+  mechanics actually evolved)
+- Pokemon Showdown is built around a custom generic events system with an
+  interactive bubbling and priority system. This system is very powerful, though
+  event dispatch is very expensive and the slowest part of the engine. While
+  this bottleneck has been improved since it was first
+  [identified](https://pkmn.cc/optimize), the pattern of searching for handlers
+  is slow and a model where handlers are preregistered instead of searched for
+  would be a large improvement (i.e. currently the event loop searches through
+  all possible sources for any handlers, despite there usually being 0 or 1
+  handler that actually needs to run).
+- Pokemon Showdown's most foundational type is an `ID` - a lower case string
+  with special characters removed. While this is fairly convenient for
+  developers who can easily tell at a glance what object an `ID` is intended to
+  reference, it is inefficient as it relies heavily on the assumption of the
+  compiler performing string interning and uses up more memory than integers (JS
+  numbers are technically all 8 bytes, but JS runtimes usually implement 'Smi'
+  optimizations for 32 bit integers). More importantly, Pokemon Showdown
+  frequently calls `toID` on strings to convert strings to an `ID` to the point
+  where `toID` is Pokemon Showdown's hottest function. Pokemon Showdown should
+  be able to leverage TypeScript's type checking to enable only calling `toID`
+  on input and not multiple times over the lifetime of the `ID` to minimize this
+  cost, but this still does not fully mitigate the issue.
+- Pokemon Showdown's data layer is fully featured and designed to support a
+  plethora of use cases beyond what is specifically required for implementing
+  a Pokemon battle. This data is useful for various additional tools and
+  features, but the more general API results in bloat that hinders performance.
+  In a similar vein, many of Pokemon Showdown's core classes are designed for
+  convenience and for developer ergonomics as opposed to performance (e.g. no
+  distinction between the `ActivePokemon`'s fields and a `Pokemon` in the party,
+  resulting in redundant data being stored and filling up cache lines).
+- Pokemon Showdown does not pay close attention to [monomorphism]() and
+  frequently initializes key data objects inefficiently (e.g. the
+  `Object.assign(this, data)` pattern used by its foundational types). Always
+  ensuring object fields are initialized in the same order becomes even more
+  difficult due to the raw size/number of fields involved (i.e. for objects with
+  only a few fields it is easier to ensure they are always initialized in the
+  same order, but many of Pokemon Showdown's game objects involve 50-100
+  fields).
+- Most of Pokemon Showdown's core APIs involve looking up keys in a map (e.g.
+  lookup by `ID`) which is inherently less efficient than directly indexing into
+  an array. While both are ultimately `O(1)` in the average case, the additional
+  pointer chasing/redirection result in cache misses and poor performance.
+- Pokemon Showdown produces text protocol logs in all cases. While invaluable
+  for debugging, the text logs are expensive to produce and parse, and
+  importantly, are often wasted work in many use cases where they are simply
+  ignored.
+- Pokemon Showdown is written in JavaScript/TypeScript which makes it
+  unergonomic to have precisely laid out data structures with minimally sized
+  fields (as mentioned above, the minimum data size of a number is going to be
+  4-8 bytes outside of making all the code manipulate `ArrayBuffer`s),
+  substantially larger than what is convenient to use in lower level languages.
+  While modern JavaScript engines like V8 and JSC are impressive, there is a
+  limit to how much help they can provide when push comes to shove. Furthermore,
+  Pokemon Showdown relies on a lot of dynamic memory allocation which is
+  inherently slower than repurposing existing objects on the stack would be.
+  Finally, being written in JavaScript means third-party developers wishing to
+  leverage Pokemon Showdown's engine must either also be written in JavaScript,
+  embed a JavaScript runtime (and pay in terms of overhead on the boundary), or
+  interface with the engine through standard input/output streams (which incur
+  syscall overhead).
 
-```
+Ultimately, the Pokemon Showdown's design choices may result in a flexible
+engine which is easy to expand upon, but its architecture is fundamentally at
+odds with acheiving peak performance.
 
-TODO Performance
 
-- constraint: engine (but not required for wrapper) does not allocate any dynamic memory
-- constraint: no pointers in data representation - must be copyable by `mem.copy`
-- native endianess for trivial input/output
-- padding, alignment, cache lines
-- dont create protocol objects, just write byes directly to stream
+## pkmn
 
-PS could be made more perfomant by po/optimize:
+The pkmn engine is much more targetted in scope than either the original game
+cartridge (which includes code for an entire RPG) or Pokemon Showdown (which
+supports a fully featured simulator in addition to a chat server). The engine
+more closely approximates a subset of Pokemon Showdown's [`Battle](TODO)` class:
 
-```txt
-Events - don't go over all the events each time, instead have array of NUMEVEMT and have monsters reg and dereg where appropriate, then just need to look up if theres any handlers. Num handlers for each event could also possibly be fixed to small N (20?), Always use naive insertion sort to keep sorted since small arrays. FULLY STACK.  
-- when to add and remove?  
-- monsters should not poll over the fields either, can precompute when turning set to Mon which events it needs to reg and dereg? NO SEARching full static lookups
-```
+- there is no [`BattleStream`](TODO) equivalent - Pokemon Showdown's stream
+  abstraction is asynchronoux and text based, both of which add latency
+- the is no support for validating teams/formats/custom rules - these are
+  expected to be taken care of at a higher level
+- the is input (choice) validation - the engine is expected to be wrapped by
+  some form of driver code which either provides the input validation for the
+  user or to be driven by code which can only provide valid input.
+- pkmn's wire protocol is opt-in, binary, and minimal compared to Pokemon
+  Showdown's expressive text protocol.
 
-also rethinking IDs to be numbers not strings, minimizing string parsing, etc
 
-- binary for each gen, simulate glue script in JS which includes driver `pkmn/simulate gen1` => `pkmn/bin/gen1`
-- library `pkmn/lib/pkmn.so` which is `-OReleaseFast` but two modes, one with trace, one without trace
+---
 
-Most inter-gen releases just deal with legality (team validator, handled at a higher level), but can include data changes (Hypnosis in gen 4) and even data presence causes problems - eg trouble implementing `gen8-dlc1` given moves like Metronome etc might depdend on moves which don't exist
+- separate code and data for each gen (despite some duplicated data = still
+  smaller/similar code size than PS due only including percisely the required
+  data/encoding it more efficiently)
+- principle: "no compromises"
+  - native endianess
+- no dynamic allocations
+- NO STRINGS
+- no pointers, handles into array and minimal/no searching (sorted arrays,
+  perfect hashing)
+- able to use smaller integer types
+- precise layout
 
-- would need to add `Release` to battle and do `if` checks in relevant places like Metronome handler
-  
-0 error = mcts random playouts over library, no streaming just accumulating stats. however, provided multiple roots (possible instantiations)? , optionally with weights - epoke run in js
+- rng accuracy (2 different)
 
-also have pure MCTS random playout function - naive (not heavy) playouts, focused on speed: need to be careful about omniscience
 
-```txt
-Battle update(u16, ?[BUF]trace) -> info about win or lose and requesttype for either player. if trace is provided will output trace protocol lines (null separated? protocol type plus args plus etc - is chunk and line bounded? run PS a while and figure out chunk arg lenghts and kwargs)  
-```
-
-todo: can turn basepower/accuracy/effect chance into enums because sparse (requires another table lookup then) - alternatively can at least drop 0 from accuracy and make u4 instead of u8, pp is 2*pp%10 as well
-
-PROTOCOL
-
-auto build json string as ascii in Int8Array? vs string concat vs json?
-if manually building ascii why not just make the protocol text to begin with? zig text is already the same thing that could be accomplished? text should only be for things which require trace, mcts doesn t require trace so could just as easily use datastrucute and return value!
-
-what data is required to unpack? can just unpack? mods rules formats etc - need some predefined headers via format. no validation
-binary protocol - less bytes written at
-
-text munging separable from actual engine - high level concerned with munging? problem - names
-
-DRIVER
-
-ensure monomorphic (can do decode function on certain bytes to populate field, then a toJSON), though decode should auto pull out to toJSON representation to save space? any additional details can be saved on a second field (ie. if necessary toJSON returns json field immediately) - can we just build the decode into Battle and do the whole thing at once instead of making separate classes?
-
-JS - just napi to expose Engine.init and Engine.update. engine = binary protocol so languages dont need to string parse
-js = wrap with napi and expose binary directly, but also implement code to turn into json/text and be fully comparable etc. will NOT implement a stream (also for reasons of speed) - how to handle clients using synchronously? clients need to say ahead of time which streams theyre interested in and will receive updates automically.
-
-NOT actually json, skip parsig entirely and just return protocol?
-just do protocol.deepequals but ignore order of keys, filter out unsupported
-
-```ts
-import * as engine from pkmn/engine
-const engine = new Engine(gen, p1, p2); // need to specify whether doubles or not
-
-let result; // requestState (or win/end/tie etc)
-while (result = engine.update(choice)) {
-  choice = ...
-}
-```
-
-TESTING - exhaustive runner
-
-parse directly to @protocol (no json), though allow for protocol to be stringified (though wont match). add logic to compare protocol directly (order insenstivie), filter out fields which arent implement like break or rules
-
-run PS in battle stream and run through protocol parser. run engine synchronously and gather all converted update/sideupdate data, compare
-
-BENCHMARK - custom multi random runner
-checksum = final seed pkus sum of turns
-
-generate teams for each (not included in timing)
-dont include team packing time for PS, dont include team encoding time for JS (though optionally can)
-play out exact same battle using random ai, only disable trace output for engine and use a binary random ai that makes same decisions as ps but purely off the data it reads directly out of the casted bytes of the engines Battle instance
-
-js
-
-- binary trace and state dump to @pkmn/protocol
-- stringify and deepequals for protocol
-- randomplayer ai which works purely on binary (can optionally pull on 0 error random player ai and implement it in zig instead…., need to compare the js version with ps to zig version. use fast random generator LCRNG)
-
-need to have both libs loaded, with and without? alternative just provide command in package.json to let the user switch engines to untraced! engine code can detect if its available for use and try to use the faster lib if trace is false, falling back to slow lib (we ship zig with the package and just provide a different install option)
-
-alternatively - dont ship zig or binary at all (no postinstall). instead provide binary that can be USED to install(ie. let users choose to set up a postinstall or not, where they can run the install-pkmn-engine binary)
-
-Gamefreak:
-
-- implement wild/trainer + link battles
-- implement experience, catching (safari zone), in-battle item use
-- targetting Z80: limited memory and instruction set, eg. poor Muliply/Divide
-- don't know what theyre implementing + under time pressure to ship vs. fully defined closed solution
-
-Pokemon Showdown:
-
-- JS
-- looking to easy moddability
-- easy to write/extend by amateur coders
-- target quick iteration, implementing features as fast as possible (quantity vs. quality)
-- generic solution, looking to minimize code ("one engine") vs. multi specific engines
-
-### Resources
+Much of Pokemon Showdown's performance issues stem from its desire to easily
+support "mods" - if Pokemon Showdown only cared about handling solely the data
+from the game it would have a fixed 
 
 - [Handles vs. Pointers][handles]
 - [Data-Oriented Design][dod] ([book][dodbook])
@@ -148,59 +170,23 @@ Pokemon Showdown:
 [numbers]: https://github.com/sirupsen/napkin-math#numbers
 [costs]: http://ithare.com/infographics-operation-costs-in-cpu-clock-cycles/
 
----
 
-TODO: need separate start battle from update? or do start code in `init`?
+TODO Performance
 
-### `init`
+- constraint: engine (but not required for wrapper) does not allocate any dynamic memory
+- constraint: no pointers in data representation - must be copyable by `mem.copy`
+- native endianess for trivial input/output
+- padding, alignment, cache lines
+- dont create protocol objects, just write byes directly to stream
 
-- iterate through p2 pokemon to find first unfainted (hp != 0)
-- iterate through p1 pokemon, blackout if no pokemon alive, otherwise send out first mon
 
-### `update` (MainInBattleLoop)
+- dont pay at all for abstractions etc not used in the gen (gen 2 doesnt pay for inheritance of gen 1, doesnt have to deal with `spc`, etc) = possibly a lot less code reuse! inheritance can be done at compile time (just pointers, no redundant memory). gen 8 doesnt need to pay for gen 1->7
 
-- check if p1 hp is 0, handle mon fainted if so
-- check if p2 hp is 0, handle mon fainted if so
-- (volatiles/pre select)
-  - check p1 Recharge/Rage, jump to p2 move if so
-  - reset p2 and p1 flinched
-  - check p1 thrashing about/charging up, jump to p2 move if so
-  - check p1 frozen/sleep, jump to p2 if so
-  - check p1 bide/using wrap, jump to p2 if so
-  - check if p2 using wrap, player cannot execut move, select enemy move
-  - check if player already switched this turn, if so jump to p2 move
-- p2 select move
-  - check if enemy is struggling/, switched
-  - check if p1 is using wrap or metronome (should check mirorr move)
-  - switch enemy mon
-    - copy hp/number/status to roster, send out new mon
-- check p1 quick attack, p2 quick attack
-  - if p1 used quick attack and enemy didnt go first, otherwise if p2 did enemey goes first, otherwise perform same check for Counter
-  - if speed tie, compare speed, do 50% roll for player vs. enemry (PROBLEM: PS speed tie vs. game)
 
----
 
-- `MainInBattleLoop`
-  - `Handle{Player,Enemy}MonFainted`
-  - check volatiles
-  - `select{Player,Enemy}Move`
-  - check for wrap/metronome
-  - check for quick attack/counter, determine order
-  - `Execute{Enemy,Player}Move`
-    - TODO
-  - `Handle{Player,Enemy}MonFainted`
-  - `HandlePoisonBurnLeechSeed`
-    - check for BRN/PSN, call `HandlePoisonBurnLeechSeed_DecreaseOwnHP`
-    - check for Leechseed, do decrease on opponent -> increase on self
-  - `Handle{Enemy,Player}MonFainted`
-    - `RemoveFaintedPlayerMon`
-    - `AnyPartyAlive`
-    - `HandlePlayerBlackOut`
-    - `FaintEnemyPokemon`
-    - `AnyEnemyPokemonAliveCheck`
-    - `TrainerBattleVictory`
-    - `ChooseNextMon`
-    - `ReplaceFaintedEnemyMon`
-  - `CheckNumAttacksLeft` (check for wrap, clear status if num attacks left is 0)
-  - `MainInBattleLoop` (again)
-  
+
+
+
+
+
+
