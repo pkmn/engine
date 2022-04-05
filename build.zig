@@ -5,6 +5,7 @@ const Pkg = std.build.Pkg;
 
 pub fn build(b: *Builder) !void {
     const mode = b.standardReleaseOptions();
+    const target = b.standardTargetOptions(.{});
 
     const showdown =
         b.option(bool, "showdown", "Enable Pokémon Showdown compatability mode") orelse false;
@@ -23,10 +24,63 @@ pub fn build(b: *Builder) !void {
         .dependencies = &.{build_options},
     };
 
-    const lib = b.addStaticLibrary(if (showdown) "pkmn-showdown" else "pkmn", "src/lib/pkmn.zig");
-    lib.addOptions("build_options", options);
-    lib.setBuildMode(mode);
-    lib.install();
+    const lib = if (showdown) "pkmn-showdown" else "pkmn";
+
+    const static_lib = b.addStaticLibrary(lib, "src/lib/binding.zig");
+    static_lib.addOptions("build_options", options);
+    static_lib.setBuildMode(mode);
+    static_lib.setTarget(target);
+    static_lib.addIncludeDir("src/include");
+    static_lib.linkLibC();
+    static_lib.install();
+    b.default_step.dependOn(&static_lib.step); // TODO: ???
+
+    const dlib = if (target.isWindows())
+        try std.fmt.allocPrintZ(b.allocator, "{s}.dll", .{lib})
+    else
+        lib;
+
+    const dynamic_lib = b.addSharedLibrary(dlib, "src/lib/binding.zig", .unversioned);
+    dynamic_lib.addOptions("build_options", options);
+    dynamic_lib.setBuildMode(mode);
+    dynamic_lib.setTarget(target);
+    dynamic_lib.addIncludeDir("src/include");
+    dynamic_lib.linkLibC();
+    static_lib.install();
+    b.default_step.dependOn(&dynamic_lib.step); // TODO: ???
+
+    const header = b.addInstallFileWithDir(
+        .{ .path = "src/include/pkmn.h" },
+        .header,
+        "pkmn.h",
+    );
+    b.getInstallStep().dependOn(&header.step);
+    {
+        const pc = try std.fmt.allocPrint(b.allocator, "lib{s}.pc", .{lib});
+        const file = try std.fs.path.join(
+            b.allocator,
+            &[_][]const u8{ b.cache_root, pc },
+        );
+        const pkgconfig_file = try std.fs.cwd().createFile(file, .{});
+
+        const suffix = if (showdown) " Showdown!" else "";
+        const writer = pkgconfig_file.writer();
+        try writer.print(
+            \\prefix={0s}
+            \\includedir=${{prefix}}/include
+            \\libdir=${{prefix}}/lib
+            \\
+            \\Name: lib{1s}
+            \\URL: https://github.com/pkmn/engine
+            \\Description: Library for simulating Pokémon{2s} battles.
+            \\Version: 0.0.1
+            \\Cflags: -I${{includedir}}
+            \\Libs: -L${{libdir}} -l{1s}
+        , .{ b.install_prefix, lib, suffix });
+        defer pkgconfig_file.close();
+
+        b.installFile(file, try std.fmt.allocPrint(b.allocator, "share/pkgconfig/{s}", .{pc}));
+    }
 
     const coverage = b.option([]const u8, "test-coverage", "Generate test coverage");
     const test_file =
