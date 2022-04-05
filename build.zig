@@ -32,13 +32,13 @@ pub fn build(b: *Builder) !void {
     static_lib.setTarget(target);
     static_lib.addIncludeDir("src/include");
     static_lib.linkLibC();
+    static_lib.strip = strip;
     static_lib.install();
-    b.default_step.dependOn(&static_lib.step); // TODO: ???
+    b.getInstallStep().dependOn(&static_lib.step);
 
-    const dlib = if (target.isWindows())
-        try std.fmt.allocPrintZ(b.allocator, "{s}.dll", .{lib})
-    else
-        lib;
+    const dlib =
+        if (target.isWindows()) try std.fmt.allocPrintZ(b.allocator, "{s}.dll", .{lib}) else lib;
+    defer if (target.isWindows()) b.allocator.free(dlib);
 
     const dynamic_lib = b.addSharedLibrary(dlib, "src/lib/binding.zig", .unversioned);
     dynamic_lib.addOptions("build_options", options);
@@ -46,8 +46,9 @@ pub fn build(b: *Builder) !void {
     dynamic_lib.setTarget(target);
     dynamic_lib.addIncludeDir("src/include");
     dynamic_lib.linkLibC();
-    static_lib.install();
-    b.default_step.dependOn(&dynamic_lib.step); // TODO: ???
+    dynamic_lib.strip = strip;
+    dynamic_lib.install();
+    b.getInstallStep().dependOn(&dynamic_lib.step);
 
     const header = b.addInstallFileWithDir(
         .{ .path = "src/include/pkmn.h" },
@@ -99,6 +100,7 @@ pub fn build(b: *Builder) !void {
     tests.setFilter(test_filter);
     tests.addOptions("build_options", options);
     tests.setBuildMode(mode);
+    tests.setTarget(target);
     tests.single_threaded = true;
     tests.strip = strip;
     if (test_bin) |bin| {
@@ -116,9 +118,9 @@ pub fn build(b: *Builder) !void {
 
     const format = b.addFmt(&[_][]const u8{"."});
 
-    const rng = try executable(b, &.{pkmn}, "src/tools/rng.zig", showdown, strip);
-    const serde = try executable(b, &.{pkmn}, "src/tools/serde.zig", showdown, strip);
-    const protocol = try executable(b, &.{pkmn}, "src/tools/protocol.zig", showdown, strip);
+    const rng = try tool(b, &.{pkmn}, "src/tools/rng.zig", showdown, strip);
+    const serde = try tool(b, &.{pkmn}, "src/tools/serde.zig", showdown, strip);
+    const protocol = try tool(b, &.{pkmn}, "src/tools/protocol.zig", showdown, strip);
 
     b.step("format", "Format source files").dependOn(&format.step);
     b.step("protocol", "Run protocol dump tool").dependOn(&protocol.step);
@@ -127,7 +129,7 @@ pub fn build(b: *Builder) !void {
     b.step("test", "Run all tests").dependOn(&tests.step);
 }
 
-fn executable(
+fn tool(
     b: *Builder,
     pkgs: []Pkg,
     path: []const u8,
@@ -145,7 +147,6 @@ fn executable(
     exe.setBuildMode(b.standardReleaseOptions());
     exe.single_threaded = true;
     exe.strip = strip;
-    exe.install();
 
     const run_exe = exe.run();
     run_exe.step.dependOn(b.getInstallStep());
