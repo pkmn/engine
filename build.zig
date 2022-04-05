@@ -57,6 +57,8 @@ pub fn build(b: *Builder) !void {
     b.getInstallStep().dependOn(&header.step);
     {
         const pc = try std.fmt.allocPrint(b.allocator, "lib{s}.pc", .{lib});
+        defer b.allocator.free(pc);
+
         const file = try std.fs.path.join(
             b.allocator,
             &[_][]const u8{ b.cache_root, pc },
@@ -79,7 +81,9 @@ pub fn build(b: *Builder) !void {
         , .{ b.install_prefix, lib, suffix });
         defer pkgconfig_file.close();
 
-        b.installFile(file, try std.fmt.allocPrint(b.allocator, "share/pkgconfig/{s}", .{pc}));
+        const dest = try std.fmt.allocPrint(b.allocator, "share/pkgconfig/{s}", .{pc});
+        defer b.allocator.free(dest);
+        b.installFile(file, dest);
     }
 
     const coverage = b.option([]const u8, "test-coverage", "Generate test coverage");
@@ -134,6 +138,7 @@ fn executable(
     const index = std.mem.lastIndexOfScalar(u8, name, '.');
     if (index) |i| name = name[0..i];
     if (showdown) name = try std.fmt.allocPrint(b.allocator, "{s}-showdown", .{name});
+    defer if (showdown) b.allocator.free(name);
 
     const exe = b.addExecutable(name, path);
     for (pkgs) |pkg| exe.addPackage(pkg);
