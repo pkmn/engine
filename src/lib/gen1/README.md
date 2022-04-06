@@ -261,6 +261,14 @@ of reference meaning it will likely already be in the cache.
 
 ## Layout
 
+The precise layout of the engine's data structures is important to those implementing driver code,
+as users must directly probe the engine's state through these structures (i.e. the pkmn engine does
+not produce an equivalent to Pokémon Showdown's `|request|` protocol message, this information must
+be gleaned through the `Battle` state).
+
+Documentation wire protocol used for logging traces when `-Dtrace` is enabled can be found in
+[PROTOCOL.md](../../../docs/PROTOCOL.md).
+
 ### `Battle`
 
 | Start | End | Data                | Description                          |
