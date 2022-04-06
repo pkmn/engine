@@ -34,7 +34,7 @@ pub fn build(b: *Builder) !void {
 
     const lib = if (showdown) "pkmn-showdown" else "pkmn";
 
-    const static_lib = b.addStaticLibrary(lib, "src/lib/binding.zig");
+    const static_lib = b.addStaticLibrary(lib, "src/lib/binding/c.zig");
     static_lib.addOptions("build_options", options);
     static_lib.setBuildMode(mode);
     static_lib.setTarget(target);
@@ -49,7 +49,7 @@ pub fn build(b: *Builder) !void {
     defer if (target.isWindows()) b.allocator.free(dlib);
 
     const kind = .{ .versioned = try std.builtin.Version.parse(version) };
-    const dynamic_lib = b.addSharedLibrary(dlib, "src/lib/binding.zig", kind);
+    const dynamic_lib = b.addSharedLibrary(dlib, "src/lib/binding/c.zig", kind);
     dynamic_lib.addOptions("build_options", options);
     dynamic_lib.setBuildMode(mode);
     dynamic_lib.setTarget(target);
