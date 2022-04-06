@@ -1278,7 +1278,7 @@ pub const Effects = struct {
                 if (r != 0) break :loop r;
             }
         });
-
+        // FIXME: Sleep Clause Mod
         foe_stored.status = Status.slp(duration);
         try log.status(foe_ident, foe_stored.status, .None);
     }
