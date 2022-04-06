@@ -1,49 +1,73 @@
 # Protocol
 
-- `Result`/`Choice`
-- data structures serialized in native endianness
-- `choices`
+At a high level, the pkmn engine updates a battle's state based on both player's choices, returning
+a result which indicates whether the battle has ended and what each player's options are. A
+non-terminal result can be fed into a battle's `choices` method which returns all legal choices[^1],
+though the state of the engine may also be inspected directly to determine information about the
+battle and what choices are possible. By [design](DESIGN.md), each generation's data structures are
+different, but the precise layout of the battle information is outlined in the respective
+documentation.
 
-[Pokémon Showdown's simulator protocol](https://github.com/smogon/pokemon-showdown/blob/master/sim/SIM-PROTOCOL.md)
+More information about a battle can be generated via the `-Dtrace` flag when building the engine.
+This flag enables the engine to write the wire protocol described in this document to a `Log`.
+Generally, this `Log` should be a `FixedBufferStream` `Writer` backed by a statically allocated
+fixed-size array that gets `reset` after each `update` as the maximum number of bytes written by a
+single `update` call is bounded to a relatively small number of bytes per generation, though since
+any `Writer` implementation is allowed this `Log` could instead write to standard output (**NOTE:**
+in Zig, the default writer is not buffered by default - you must use a
+[`BufferedWriter`](https://zig.news/kristoff/how-to-add-buffering-to-a-writer-reader-in-zig-7jd)
+wrapper to acheive reasonable performance).
+
+The engine's wire protocol essentially amounts to a stripped down binary translation of [Pokémon
+Showdown's simulator
+protocol](https://github.com/smogon/pokemon-showdown/blob/master/sim/SIM-PROTOCOL.md), with certain
+redundant messages (e.g. `|upkeep|` or `|`) removed, and others subtly tweaked (there is no
+`|split|` message - the "ominprescient" stream of information is always provided and other streams
+must be recreated by driver code). Like the rest of the pkmn engine, the protocol uses
+**native-endianess**, and furthermore, is **not backwards-compatible** - the protocol is only
+guaranteed to be translatable by the exact version of the library that produced it (i.e. the
+protocol does not respect [semantic versioning](https://semver.org) as it is effectively treated as
+an internal implementation detail of the engine).
+
+While the protocol may change slightly depending on the generation in question (e.g. a `Move`
+requires more than a single byte to encode after Generation I & II), any differences will called out
+below where applicable.
+
+[^1]: The `choices` method leaks information in certain cases where legal decisions would not be
+known to a user until after having already attempted a choice (e.g. that a Pokémon has been trapped
+or has had a move has been blocked due to an opponent's use of
+[Imprison](https://bulbapedia.bulbagarden.net/wiki/Imprison_(move))). This is a non-issue for the
+use case of games being played out randomly via a machine, but a simulator for human players built
+on top of the pkmn engine would need to provide an alternative implementation of the `choices`
+function.
 
 
+## Overview
+
+With `-Dtrace` enabled, [messages](#messages) are written to the `Log` provided. The first byte of
+each message is an integer representing the `ArgType` of the message, followed by 0 or more bytes
+containing the payload of the message. Game objects such as moves, species, abilities, items, types,
+etc are written as their internal identifier which usually matches their public facing number, but
+in cases where these differ the [`ids.json`](src/pkg/data/ids.json) can  be used to decode them.
+A [`protocol.json`](../src/pkg/data/protocol.json) containing a human-readable lookup for the
+`ArgType` and various "reason" enums (see below) is generated from the library code and can be used
+for similar purposes.
+
+Because each protocol message is a fixed length, parsing can be terminated when a `0x00` byte is
+read when an the leading `ArgType` header byte of a message is expected. Note that a `0x00` byte may
+also appear internally within the payload of a message - only the `0x00` in the header of a message
+indicates the end.
+
+TODO FIXME finish
+
+- `Reason`
+- lastmove/lastmiss
+- pokemon ident
 
 
+## Messages
 
----
-- Native endianess!
-- different (but related) protocol per generation
-- if have kwargs change first bit (usually u7, 8th bit is whether kwargs is set) and then second bit is length to indicate the *number* of kwargs
-- not guaranteed to be same order as PS, driver code might need to correct
-- drop begin of battle message and `|upkeep|`
-- **can hp mod be applies at top level, not in engine? just return exact hp always**
-  
-example docs: https://github.com/couchbase/kv_engine/blob/master/docs/BinaryProtocol.md
-
-```txt
-pass
-move
-switch
-team
-(shift)
-
-2 bits
-
-2 bits move
-3 bits switch
-
-player 1 player 2
-
-continue vs wlt (ended) 2 bits. 2 bits p1 request type 2 bits p2 request type = 6
-
-response 4-5 bits p1, 4-5 p2. team is more complicated… (need u3*6=18 bits each = 40 ttotal)
-
-doubles = 55 55 = 20 bits?
-```
-
----
-
-## `|move|` (`0x03`)
+### `|move|` (`0x03`)
 
     Byte/     0       |       1       |       2       |       3       |
        /              |               |               |               |
@@ -65,7 +89,7 @@ doubles = 55 55 = 20 bits?
 
 TODO: `LastStill`, `LastMove`
 
-## `|switch|` (`0x04`)
+### `|switch|` (`0x04`)
 
     Byte/     0       |       1       |       2       |       3       |
        /              |               |               |               |
@@ -78,7 +102,7 @@ TODO: `LastStill`, `LastMove`
      8| Status        |
       +---------------+
 
-## `|cant|` (`0x05`)
+### `|cant|` (`0x05`)
 
     Byte/     0       |       1       |       2       |       3       |
        /              |               |               |               |
@@ -101,7 +125,7 @@ TODO: `LastStill`, `LastMove`
 | `0x07` | `nopp`             | No    |
 </details>
 
-## `|faint|` (`0x06`)
+### `|faint|` (`0x06`)
 
     Byte/     0       |       1       |
        /              |               |
@@ -110,7 +134,7 @@ TODO: `LastStill`, `LastMove`
      0| 0x06          | Ident         |
       +---------------+---------------+
 
-## `|turn|` (`0x07`)
+### `|turn|` (`0x07`)
 
     Byte/     0       |       1       |       2       |
        /              |               |               |
@@ -119,7 +143,7 @@ TODO: `LastStill`, `LastMove`
      0| 0x07          | Turn                          |
       +---------------+---------------+---------------+
 
-## `|win` (`0x08`)
+### `|win` (`0x08`)
 
     Byte/     0       |       1       |
        /              |               |
@@ -128,7 +152,7 @@ TODO: `LastStill`, `LastMove`
      0| 0x06          | Player        |
       +---------------+---------------+
 
-## `|tie|` (`0x09`)
+### `|tie|` (`0x09`)
 
     Byte/     0       |
        /              |
@@ -137,7 +161,7 @@ TODO: `LastStill`, `LastMove`
      0| 0x09          |
       +---------------+
 
-## `|-damage|` (`0x0A`)
+### `|-damage|` (`0x0A`)
 
     Byte/     0       |       1       |       2       |       3       |
        /              |               |               |               |
@@ -164,7 +188,7 @@ TODO: `LastStill`, `LastMove`
 | `0x07` | `move: Leech Seed\|[of]` | Yes     |
 </details>
 
-## `|-heal|` (`0x0B`)
+### `|-heal|` (`0x0B`)
 
     Byte/     0       |       1       |       2       |       3       |
        /              |               |               |               |
@@ -186,7 +210,7 @@ TODO: `LastStill`, `LastMove`
 | `0x02` | `\|[from] drain\|[of]` | Yes     |
 </details>
 
-## `|-status|` (`0x0C`)
+### `|-status|` (`0x0C`)
 
     Byte/     0       |       1       |       2       |       3       |
        /              |               |               |               |
@@ -206,7 +230,7 @@ TODO: `LastStill`, `LastMove`
 | `0x02` | `\|[from]`   | Yes       |
 </details>
 
-## `|-curestatus|` (`0x0D`)
+### `|-curestatus|` (`0x0D`)
 
     Byte/     0       |       1       |       2       |       3       |
        /              |               |               |               |
@@ -223,7 +247,7 @@ TODO: `LastStill`, `LastMove`
 | `0x01` | `\|[silent]` |
 </details>
 
-## `|-boost|` (`0x0E`)
+### `|-boost|` (`0x0E`)
 
     Byte/     0       |       1       |       2       |       3       |
        /              |               |               |               |
@@ -246,7 +270,7 @@ TODO: `LastStill`, `LastMove`
 | `0x07` | `evasion`          |
 </details>
 
-## `|-unboost|` (`0x0F`)
+### `|-unboost|` (`0x0F`)
 
     Byte/     0       |       1       |       2       |       3       |
        /              |               |               |               |
@@ -268,7 +292,7 @@ TODO: `LastStill`, `LastMove`
 | `0x07` | `evasion`   |
 </details>
 
-## `|-clearallboost|` (`0x10`)
+### `|-clearallboost|` (`0x10`)
 
     Byte/     0       |
        /              |
@@ -277,7 +301,7 @@ TODO: `LastStill`, `LastMove`
      0| 0x10          |
       +---------------+
 
-## `|-fail|` (`0x11`)
+### `|-fail|` (`0x11`)
 
     Byte/     0       |       1       |       2       |
        /              |               |               |
@@ -301,7 +325,7 @@ TODO: `LastStill`, `LastMove`
 | `0x08` | `move: Substitute\|[weak]` |
 </details>
 
-## `|-miss|` (`0x12`)
+### `|-miss|` (`0x12`)
 
     Byte/     0       |       1       |       2       |
        /              |               |               |
@@ -310,7 +334,7 @@ TODO: `LastStill`, `LastMove`
      0| 0x12          | Source        | Target        |
       +---------------+---------------+---------------+
 
-## `|-hitcount|` (`0x13`)
+### `|-hitcount|` (`0x13`)
 
     Byte/     0       |       1       |       2       |
        /              |               |               |
@@ -319,7 +343,7 @@ TODO: `LastStill`, `LastMove`
      0| 0x13          | Ident         | Num           |
       +---------------+---------------+---------------+
 
-## `|-prepare|` (`0x14`)
+### `|-prepare|` (`0x14`)
 
     Byte/     0       |       1       |       2       |
        /              |               |               |
@@ -328,7 +352,7 @@ TODO: `LastStill`, `LastMove`
      0| 0x14          | Source        | Move          |
       +---------------+---------------+---------------+
 
-## `|-mustrecharge|` (`0x15`)
+### `|-mustrecharge|` (`0x15`)
 
     Byte/     0       |       1       |
        /              |               |
@@ -337,7 +361,7 @@ TODO: `LastStill`, `LastMove`
      0| 0x15          | Ident         |
       +---------------+---------------+
 
-## `|-activate|` (`0x16`)
+### `|-activate|` (`0x16`)
 
     Byte/     0       |       1       |       2       |
        /              |               |               |
@@ -358,7 +382,7 @@ TODO: `LastStill`, `LastMove`
 | `0x05` | `\|\|move: Splash`     |
 </details>
 
-## `|-fieldactivate|` (`0x17`)
+### `|-fieldactivate|` (`0x17`)
 
     Byte/     0       |
        /              |
@@ -367,7 +391,7 @@ TODO: `LastStill`, `LastMove`
      0| 0x17          |
       +---------------+
 
-## `|-start|` (`0x18`)
+### `|-start|` (`0x18`)
 
     Byte/     0       |       1       |       2       |       3       |
        /              |               |               |               |
@@ -394,7 +418,7 @@ TODO: `LastStill`, `LastMove`
 | `0x0B` | `Mimic\|`                                        | Yes         |
 </details>
 
-## `|-end|` (`0x19`)
+### `|-end|` (`0x19`)
 
     Byte/     0       |       1       |       2       |
        /              |               |               |
@@ -421,7 +445,7 @@ TODO: `LastStill`, `LastMove`
 | `0x0B` | `reflect\|[silent]`     |
 </details>
 
-## `|-ohko|` (`0x1A`)
+### `|-ohko|` (`0x1A`)
 
     Byte/     0       |
        /              |
@@ -430,7 +454,7 @@ TODO: `LastStill`, `LastMove`
      0| 0x1A          |
       +---------------+
 
-## `|-crit|` (`0x1B`)
+### `|-crit|` (`0x1B`)
 
     Byte/     0       |       1       |
        /              |               |
@@ -439,7 +463,7 @@ TODO: `LastStill`, `LastMove`
      0| 0x1B          | Ident         |
       +---------------+---------------+
 
-## `|-supereffective|` (`0x1C`)
+### `|-supereffective|` (`0x1C`)
 
     Byte/     0       |       1       |
        /              |               |
@@ -448,7 +472,7 @@ TODO: `LastStill`, `LastMove`
      0| 0x1C          | Ident         |
       +---------------+---------------+
 
-## `|-resisted|` (`0x1D`)
+### `|-resisted|` (`0x1D`)
 
     Byte/     0       |       1       |
        /              |               |
@@ -457,7 +481,7 @@ TODO: `LastStill`, `LastMove`
      0| 0x1D          | Ident         |
       +---------------+---------------+
 
-## `|-immune|` (`0x1E`)
+### `|-immune|` (`0x1E`)
 
     Byte/     0       |       1       |       2       |
        /              |               |               |
@@ -474,7 +498,7 @@ TODO: `LastStill`, `LastMove`
 | `0x01` | `\|[ohko]`  |
 </details>
 
-## `|-transform|` (`0x1F`)
+### `|-transform|` (`0x1F`)
 
     Byte/     0       |       1       |       2       |
        /              |               |               |
