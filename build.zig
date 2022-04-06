@@ -85,10 +85,10 @@ pub fn build(b: *Builder) !void {
             \\Name: lib{1s}
             \\URL: https://github.com/pkmn/engine
             \\Description: Library for simulating Pokémon{2s} battles.
-            \\Version: 0.0.1
+            \\Version: {3s}
             \\Cflags: -I${{includedir}}
             \\Libs: -L${{libdir}} -l{1s}
-        , .{ b.install_prefix, lib, suffix });
+        , .{ b.install_prefix, lib, suffix, version });
         defer pkgconfig_file.close();
 
         const dest = try std.fmt.allocPrint(b.allocator, "share/pkgconfig/{s}", .{pc});
