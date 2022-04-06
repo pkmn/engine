@@ -1042,6 +1042,7 @@ pub const Effects = struct {
             battle.rng.next() < 1 + Gen12.percent(10);
         if (!chance) return;
 
+        // FIXME: Freeze Clause Mod
         foe_stored.status = Status.init(.FRZ);
         // NB: Hyper Beam recharging status is not cleared
 

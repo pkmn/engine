@@ -385,3 +385,12 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 | 21    | 20  | `species`       | The Pokémon's stored species               |
 | 22    | 22  | `type1`/`type2` | The Pokémon's stored types                 |
 | 23    | 24  | `level`         | The Pokémon's level                        |
+
+## Bugs
+
+In addition to its alternative RNG semantics, Pokémon Showdown's implemention of the first
+generation of Pokémon contains a number bugs:
+
+- **Haze:**
+- **Order of events:**
+- **`Battle.getRandomTarget()`**:
