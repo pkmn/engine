@@ -207,8 +207,8 @@ entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as foll
 | **move effect** | 0..66   | 7    |     | **attacks**       | 0..4     | 3    |
 | **crit chance** | 7..65   | 6    |     |                   |          |      |
 
-From this we can determine the minimum bits[^1] required to store each data structure to determine how
-much overhead the representations above have after taking into consideration [alignment &
+From this we can determine the minimum bits[^1] required to store each data structure to determine
+how much overhead the representations above have after taking into consideration [alignment &
 padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 [denormalization](https://en.wikipedia.org/wiki/Denormalization):
 
@@ -391,6 +391,27 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 In addition to its alternative RNG semantics, Pokémon Showdown's implemention of the first
 generation of Pokémon contains a number bugs:
 
-- **Haze:**
-- **Order of events:**
-- **`Battle.getRandomTarget()`**:
+- **Haze:** TODO
+- **`Battle.getRandomTarget()`**: TODO
+- **Psybeam / Confusion:** the secondary chance of these moves causing confusion is not 26/256 like
+  most "10%" chance moves but instead **25/256**.
+
+Finally, in Generation I, checking whether a move has **hit should come *after* determining
+damage**, not before. Pokémon Showdown's altered ordering here (which is more in line with how
+future generations work) would have consequences on RNG accuracy, though since RNG accuracy is not a
+goal for the simulator this bug should not have any implications
+
+## RNG
+
+TODO table
+
+## Resources
+
+- [pret/pokered](https://github.com/pret/pokered/) disassembly
+- [Gen I Main Battle
+  Function](https://www.smogon.com/forums/threads/past-gens-research-thread.3506992/#post-5878612) -
+  Crystal_
+- [Pokemon Showdown!](https://github.com/smogon/pokemon-showdown)
+- [List of glitches (Generation
+  I)](https://bulbapedia.bulbagarden.net/wiki/List_of_glitches_(Generation_I))
+

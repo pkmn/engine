@@ -2,7 +2,7 @@
 
 The pkmn engine is first and foremost designed for performance. The engine's most impactful design
 principle is that of **"no compromises"** when it comes to performance - ergonomics / simplicity /
-convenience are always trumped by performance, and the engine will tradeoff never performance for
+convenience are always trumped by performance, and the engine will never tradeoff performance for
 any other feature. This principle leads to the following:
 
 - the engine is much **more targeted in scope** than either the original game cartridge (which
