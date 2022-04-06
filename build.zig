@@ -7,6 +7,14 @@ pub fn build(b: *Builder) !void {
     const mode = b.standardReleaseOptions();
     const target = b.standardTargetOptions(.{});
 
+    var parser = std.json.Parser.init(b.allocator, false);
+    defer parser.deinit();
+
+    var tree = try parser.parse(@embedFile("package.json"));
+    defer tree.deinit();
+
+    const version = tree.root.Object.get("version").?.String;
+
     const showdown =
         b.option(bool, "showdown", "Enable Pokémon Showdown compatability mode") orelse false;
     const strip = b.option(bool, "strip", "Strip debugging symbols from binary") orelse false;
@@ -40,7 +48,8 @@ pub fn build(b: *Builder) !void {
         if (target.isWindows()) try std.fmt.allocPrintZ(b.allocator, "{s}.dll", .{lib}) else lib;
     defer if (target.isWindows()) b.allocator.free(dlib);
 
-    const dynamic_lib = b.addSharedLibrary(dlib, "src/lib/binding.zig", .unversioned);
+    const kind = .{ .versioned = try std.builtin.Version.parse(version) };
+    const dynamic_lib = b.addSharedLibrary(dlib, "src/lib/binding.zig", kind);
     dynamic_lib.addOptions("build_options", options);
     dynamic_lib.setBuildMode(mode);
     dynamic_lib.setTarget(target);
