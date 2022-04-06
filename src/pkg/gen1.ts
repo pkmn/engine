@@ -424,7 +424,7 @@ export class Pokemon implements Gen1.Pokemon {
       volatiles: this.volatiles,
       stored: this.stored.toJSON(),
       position: this.position,
-    }
+    };
   }
 
   static init(
