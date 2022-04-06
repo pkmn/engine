@@ -1,6 +1,13 @@
 {
+  "type": "module",
   "dependencies": {
     "@pkmn/data": "^0.5.12",
-    "@pkmn/dex":  "^0.5.12"
+    "@pkmn/dex": "^0.5.12",
+    "@pkmn/engine": "file:../../pkg",
+    "parcel": "^2.4.1"
+  },
+  "scripts": {
+    "start": "node example.js",
+    "start:web": "parcel index.html"
   }
 }

@@ -12,6 +12,9 @@ zig-out/
 /build-*/
 /docgen_tmp/
 
+# C
+*.o
+
 # JS
 coverage/
 node_modules/
@@ -20,5 +23,9 @@ dist/
 *npm-debug.log
 .eslintcache
 .tsbuildinfo
+.parcel-cache/
 
+# Project
 .cache
+src/examples/c/example
+

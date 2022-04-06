@@ -8,15 +8,17 @@ zig-build:
 	zig build -Dshowdown -Dtrace -p build
 
 .PHONY: js-build
-js-build:
+js-build: node_modules
 	npm run compile
 
 .PHONY: build
 build: zig-build js-build
 
-.PHONY: install
-install:
+node_modules:
 	npm install
+
+.PHONY: install
+install: node_modules
 
 .PHONY: uninstall
 uninstall:
@@ -31,7 +33,7 @@ zig-lint:
 	zig fmt --check .
 
 .PHONY: js-lint
-js-lint:
+js-lint: node_modules
 	npm run lint
 
 .PHONY: lint
@@ -42,7 +44,7 @@ zig-fix:
 	zig fmt .
 
 .PHONY: js-fix
-js-fix:
+js-fix: node_modules
 	npm run fix
 
 .PHONY: fix
@@ -77,13 +79,35 @@ coverage: zig-coverage js-coverage
 .PHONY: check
 check: test lint
 
+.PHONY: c-example
+c-example:
+	$(MAKE) -C src/examples/c
+	./src/examples/c/example
+
+src/examples/js/node_modules:
+	npm -C src/examples/js install
+
+.PHONY: js-example
+js-example: src/examples/js/node_modules
+	npm -C src/examples/js start
+
+.PHONY: zig-example
+zig-example:
+	zig build --build-file src/examples/zig/build.zig run
+
+.PHONY: example
+example: c-example js-example zig-example
+
 .PHONY: integration
-integration: check
+integration: check example
 	npm run test:integration
 
 .PHONY: clean
 clean:
-	rm -rf bin lib zig-* build node_modules .tsbuildinfo .eslintcache
+	rm -rf zig-* build .tsbuildinfo .eslintcache
+	$(MAKE) clean -C src/examples/c
+	rm -rf src/examples/js/.parcel*
+	rm -rf src/examples/zig/zig-*
 
 .PHONY: release
 release:
