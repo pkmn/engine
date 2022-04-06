@@ -106,7 +106,7 @@ integration: check example
 clean:
 	rm -rf zig-* build .tsbuildinfo .eslintcache
 	$(MAKE) clean -C src/examples/c
-	rm -rf src/examples/js/.parcel*
+	rm -rf src/examples/js/.parcel* src/examples/js/dist
 	rm -rf src/examples/zig/zig-*
 
 .PHONY: release
