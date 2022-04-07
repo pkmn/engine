@@ -75,7 +75,7 @@ pub const Side = struct {
 
         var i: u4 = 0;
         while (i < n) : (i += 1) {
-            side.pokemon[i] = Pokemon.random(rand);
+            side.pokemon[i] = Pokemon.random(rand, initial);
             side.order[i] = i + 1;
             var pokemon = &side.pokemon[i];
             var j: u4 = 0;
@@ -179,7 +179,7 @@ pub const Pokemon = struct {
         return pokemon;
     }
 
-    pub fn random(rand: *Random) data.Pokemon {
+    pub fn random(rand: *Random, initial: bool) data.Pokemon {
         const s = @intToEnum(Species, rand.range(u8, 1, 151));
         const specie = Species.get(s);
         const lvl = if (rand.chance(1, 20)) rand.range(u8, 1, 99) else 100;
@@ -208,12 +208,12 @@ pub const Pokemon = struct {
                 }
                 break;
             }
-            const pp_ups = if (rand.chance(1, 10)) rand.range(u2, 0, 2) else 3;
+            const pp_ups = if (!initial and rand.chance(1, 10)) rand.range(u2, 0, 2) else 3;
             // NB: PP can be at most 61 legally (though can overflow to 63)
             const max_pp = @truncate(u8, @minimum(Move.pp(m) / 5 * (5 + @as(u8, pp_ups)), 61));
             ms[i] = .{
                 .id = m,
-                .pp = rand.range(u8, 0, max_pp),
+                .pp = if (initial) max_pp else rand.range(u8, 0, max_pp),
             };
         }
 
@@ -222,8 +222,11 @@ pub const Pokemon = struct {
             .types = specie.types,
             .level = lvl,
             .stats = stats,
-            .hp = rand.range(u16, 0, stats.hp),
-            .status = if (rand.chance(1, 6)) 0 | (@as(u8, 1) << rand.range(u3, 1, 6)) else 0,
+            .hp = if (initial) stats.hp else rand.range(u16, 0, stats.hp),
+            .status = if (!initial and rand.chance(1, 6))
+                0 | (@as(u8, 1) << rand.range(u3, 1, 6))
+            else
+                0,
             .moves = ms,
         };
     }

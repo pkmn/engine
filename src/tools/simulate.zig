@@ -1,8 +1,19 @@
 const std = @import("std");
 const pkmn = @import("pkmn");
 
-const print = std.debug.print;
-
+/// .pkmn.gen1.Pokemon{
+///    .species = .Moltres,
+///    .types = .{ .type1 = .Fire, .type2 = .Flying },
+///    .stats = .{ .hp = 323, .atk = 238, .def = 217, .spe = 218, .spc = 288 },
+///    .moves = {
+///        .{ .id = .Flamethrower, .pp = 24 },
+///        .{ .id = .Scratch, .pp = 56 },
+///        .{ .id = .SwordsDance, .pp = 48 },
+///        .{ .id = .Clamp, .pp = 16 }
+///    },
+///    .hp = 323,
+///    .status = 16,
+///}
 pub fn simulate(gen: u8, num: usize, seed: u64) !void {
     std.debug.assert(gen >= 1 and gen <= 8);
 
@@ -13,7 +24,7 @@ pub fn simulate(gen: u8, num: usize, seed: u64) !void {
     var i: usize = 0;
     while (i <= num) : (i += 1) {
         var battle = switch (gen) {
-            1 => pkmn.gen1.helpers.Battle.random(&random, false),
+            1 => pkmn.gen1.helpers.Battle.random(&random, true),
             else => unreachable, // TODO
         };
 
