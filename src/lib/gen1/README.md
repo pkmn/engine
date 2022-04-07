@@ -334,35 +334,35 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 
 > **NOTE:** The offsets in the following table represent *bits* and **not** bytes.
 
-| Start | End | Data                     | Description  |
-| ----- | --- | ------------------------ | ------------ |
-| 0     | 16  | `data.state`             | The total accumulated damage from Bide or the overwritten accuracy of certain moves|
-| 16    | 24  | `data.substitute`        | The remaining HP of the Substitute         |
-| 24    | 28  | `data.disabled.move`     | The move slot (1-4) the is disabled         |
-| 28    | 32  | `data.disabled.duration` | The remaining turns the move is disabled         |
-| 32    | 36  | `data.confusion`         | The remaining turns of confusion          |
-| 36    | 40  | `data.toxic`             | The number of turns toxic damage has been accumulating|
-| 40    | 44  | `data.attacks`           | The number of attacks remaining         |
-| 44    | 48  | `0000`                   | Zero padding |
-| 48    | 49  | `Bide`                   | Whether the "Bide" volatile status is present |
-| 49    | 50  | `Thrashing`              | Whether the "Thrashing" volatile status is present |
-| 50    | 51  | `MultiHit`               | Whether the "MultiHit" volatile status is present |
-| 51    | 52  | `Flinch`                 |Whether the "Flinch" volatile status is present |
-| 52    | 53  | `Charging`               |Whether the "Charging" volatile status is present |
-| 53    | 54  | `Trapping`               |Whether the "Trapping" volatile status is present |
-| 54    | 55  | `Invulnerable`           | Whether the "Invulnerable" volatile status is present |
-| 55    | 56  | `Confusion`              |  Whether the "Confusion" volatile status is present |
-| 56    | 57  | `Mist`                   |Whether the "Mist" volatile status is present |
-| 57    | 58  | `FocusEnergy`            | Whether the "FocusEnergy" volatile status is present |
-| 58    | 59  | `Substitute`             | Whether the "Substitute" volatile status is present |
-| 59    | 60  | `Recharging`             | Whether the "Recharging" volatile status is present |
-| 60    | 61  | `Rage`                   |  Whether the "Rage" volatile status is present |
-| 61    | 62  | `LeechSeed`              | Whether the "LeechSeed" volatile status is present |
-| 62    | 63  | `Toxic`                  | Whether the "Toxic" volatile status is present |
-| 63    | 64  | `LightScreen`            | Whether the "LightScreen" volatile status is present |
-| 64    | 65  | `Reflect`                | Whether the "Reflect" volatile status is present |
-| 65    | 66  | `Transform`              |  Whether the "Transform" volatile status is present |
-| 66    | 72  | `000000`                 | Zero padding |
+| Start | End | Data                     | Description                                                                         |
+| ----- | --- | ------------------------ | ----------------------------------------------------------------------------------- |
+| 0     | 16  | `data.state`             | The total accumulated damage from Bide or the overwritten accuracy of certain moves |
+| 16    | 24  | `data.substitute`        | The remaining HP of the Substitute                                                  |
+| 24    | 28  | `data.disabled.move`     | The move slot (1-4) the is disabled                                                 |
+| 28    | 32  | `data.disabled.duration` | The remaining turns the move is disabled                                            |
+| 32    | 36  | `data.confusion`         | The remaining turns of confusion                                                    |
+| 36    | 40  | `data.toxic`             | The number of turns toxic damage has been accumulating                              |
+| 40    | 44  | `data.attacks`           | The number of attacks remaining                                                     |
+| 44    | 48  | `0000`                   | Zero padding                                                                        |
+| 48    | 49  | `Bide`                   | Whether the "Bide" volatile status is present                                       |
+| 49    | 50  | `Thrashing`              | Whether the "Thrashing" volatile status is present                                  |
+| 50    | 51  | `MultiHit`               | Whether the "MultiHit" volatile status is present                                   |
+| 51    | 52  | `Flinch`                 | Whether the "Flinch" volatile status is present                                     |
+| 52    | 53  | `Charging`               | Whether the "Charging" volatile status is present                                   |
+| 53    | 54  | `Trapping`               | Whether the "Trapping" volatile status is present                                   |
+| 54    | 55  | `Invulnerable`           | Whether the "Invulnerable" volatile status is present                               |
+| 55    | 56  | `Confusion`              | Whether the "Confusion" volatile status is present                                  |
+| 56    | 57  | `Mist`                   | Whether the "Mist" volatile status is present                                       |
+| 57    | 58  | `FocusEnergy`            | Whether the "FocusEnergy" volatile status is present                                |
+| 58    | 59  | `Substitute`             | Whether the "Substitute" volatile status is present                                 |
+| 59    | 60  | `Recharging`             | Whether the "Recharging" volatile status is present                                 |
+| 60    | 61  | `Rage`                   | Whether the "Rage" volatile status is present                                       |
+| 61    | 62  | `LeechSeed`              | Whether the "LeechSeed" volatile status is present                                  |
+| 62    | 63  | `Toxic`                  | Whether the "Toxic" volatile status is present                                      |
+| 63    | 64  | `LightScreen`            | Whether the "LightScreen" volatile status is present                                |
+| 64    | 65  | `Reflect`                | Whether the "Reflect" volatile status is present                                    |
+| 65    | 66  | `Transform`              | Whether the "Transform" volatile status is present                                  |
+| 66    | 72  | `000000`                 | Zero padding                                                                        |
 
 ### `Pokemon`
 
@@ -429,4 +429,3 @@ TODO table
 - [Pokemon Showdown!](https://github.com/smogon/pokemon-showdown)
 - [List of glitches (Generation
   I)](https://bulbapedia.bulbagarden.net/wiki/List_of_glitches_(Generation_I))
-
