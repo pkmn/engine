@@ -336,31 +336,32 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 
 | Start | End | Data                     | Description  |
 | ----- | --- | ------------------------ | ------------ |
-| 0     | 16  | `data.state`             | TODO         |
-| 16    | 24  | `data.substitute`        | TODO         |
-| 24    | 28  | `data.disabled.move`     | TODO         |
-| 28    | 32  | `data.disabled.duration` | TODO         |
-| 32    | 36  | `data.confusion`         | TODO         |
-| 36    | 40  | `data.toxic`             | TODO         |
-| 40    | 44  | `data.attacks`           | TODO         |
+| 0     | 16  | `data.state`             | The total accumulated damage from Bide or the overwritten accuracy of certain moves|
+| 16    | 24  | `data.substitute`        | The remaining HP of the Substitute         |
+| 24    | 28  | `data.disabled.move`     | The move slot (1-4) the is disabled         |
+| 28    | 32  | `data.disabled.duration` | The remaining turns the move is disabled         |
+| 32    | 36  | `data.confusion`         | The remaining turns of confusion          |
+| 36    | 40  | `data.toxic`             | The number of turns toxic damage has been accumulating|
+| 40    | 44  | `data.attacks`           | The number of attacks remaining         |
 | 44    | 48  | `0000`                   | Zero padding |
-| 48    | 49  | `Bide`                   | TODO         |
-| 49    | 50  | `Thrashing`              | TODO         |
-| 50    | 51  | `MultiHit`               | TODO         |
-| 51    | 52  | `Flinch`                 | TODO         |
-| 52    | 53  | `Charging`               | TODO         |
-| 53    | 54  | `Trapping`               | TODO         |
-| 54    | 55  | `Invulnerable`           | TODO         |
-| 55    | 56  | `Confusion`              | TODO         |
-| 56    | 57  | `Mist`                   | TODO         |
-| 57    | 58  | `FocusEnergy`            | TODO         |
-| 58    | 59  | `Substitute`             | TODO         |
-| 59    | 60  | `Recharging`             | TODO         |
-| 60    | 61  | `Rage`                   | TODO         |
-| 61    | 62  | `LeechSeed`              | TODO         |
-| 62    | 63  | `Toxic`                  | TODO         |
-| 63    | 64  | `Reflect`                | TODO         |
-| 64    | 65  | `Transform`              | TODO         |
+| 48    | 49  | `Bide`                   | Whether the "Bide" volatile status is present |
+| 49    | 50  | `Thrashing`              | Whether the "Thrashing" volatile status is present |
+| 50    | 51  | `MultiHit`               | Whether the "MultiHit" volatile status is present |
+| 51    | 52  | `Flinch`                 |Whether the "Flinch" volatile status is present |
+| 52    | 53  | `Charging`               |Whether the "Charging" volatile status is present |
+| 53    | 54  | `Trapping`               |Whether the "Trapping" volatile status is present |
+| 54    | 55  | `Invulnerable`           | Whether the "Invulnerable" volatile status is present |
+| 55    | 56  | `Confusion`              |  Whether the "Confusion" volatile status is present |
+| 56    | 57  | `Mist`                   |Whether the "Mist" volatile status is present |
+| 57    | 58  | `FocusEnergy`            | Whether the "FocusEnergy" volatile status is present |
+| 58    | 59  | `Substitute`             | Whether the "Substitute" volatile status is present |
+| 59    | 60  | `Recharging`             | Whether the "Recharging" volatile status is present |
+| 60    | 61  | `Rage`                   |  Whether the "Rage" volatile status is present |
+| 61    | 62  | `LeechSeed`              | Whether the "LeechSeed" volatile status is present |
+| 62    | 63  | `Toxic`                  | Whether the "Toxic" volatile status is present |
+| 63    | 64  | `LightScreen`            | Whether the "LightScreen" volatile status is present |
+| 64    | 65  | `Reflect`                | Whether the "Reflect" volatile status is present |
+| 65    | 66  | `Transform`              |  Whether the "Transform" volatile status is present |
 | 66    | 72  | `000000`                 | Zero padding |
 
 ### `Pokemon`
@@ -391,8 +392,15 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 In addition to its alternative RNG semantics, Pokémon Showdown's implemention of the first
 generation of Pokémon contains a number bugs:
 
-- **Haze:** TODO
-- **`Battle.getRandomTarget()`**: TODO
+- **Haze:** Haze should remove the toxic volatile and leave the toxic counter unchanged, not reset
+  the toxic counter. Furthermore, Haze should clear a specific set of volatiles, not clear all
+  volatiles indiscriminately (including artificial implementation-defined volatiles like
+  `brnattackdrop`).
+- **`Battle.getRandomTarget()`**: Pokémon Showdown randomly determines a target (causing the RNG to
+  advance a frame) in cases where the target of a move is required but has not been specified,
+  though erroneously applies this logic in singles battles where only one target is possible. This
+  spuriously and inefficiently advances the RNG and results in inconsistencies if a player specifies
+  `move 1 1` instead of `move 1`.
 - **Psybeam / Confusion:** the secondary chance of these moves causing confusion is not 26/256 like
   most "10%" chance moves but instead **25/256**.
 
@@ -404,6 +412,13 @@ goal for the simulator this bug should not have any implications
 ## RNG
 
 TODO table
+
+- crit
+- dmg
+- miss
+- secondary
+  - breakdown of each
+- metronome
 
 ## Resources
 
