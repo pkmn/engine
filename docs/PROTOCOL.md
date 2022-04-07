@@ -41,7 +41,6 @@ use case of games being played out randomly via a machine, but a simulator for h
 on top of the pkmn engine would need to provide an alternative implementation of the `choices`
 function.
 
-
 ## Overview
 
 With `-Dtrace` enabled, [messages](#messages) are written to the `Log` provided. The first byte of
@@ -80,9 +79,9 @@ Pokémon Showdown's documentation:
 
 > A Pokémon ID is in the form `POSITION: NAME`.
 >
->   - `POSITION` is the spot that the Pokémon is in: it consists of the `PLAYER` of the player
->     (see `|player|`), followed by a position letter (`a` in singles).
->   - `NAME` is the nickname of the Pokémon (or the species name, if no nickname is given).
+> - `POSITION` is the spot that the Pokémon is in: it consists of the `PLAYER` of the player
+>   (see `|player|`), followed by a position letter (`a` in singles).
+> - `NAME` is the nickname of the Pokémon (or the species name, if no nickname is given).
 >
 > For example: `p1a: Sparky` could be a Charizard named Sparky. `p1: Dragonite` could be an
 > inactive Dragonite being healed by Heal Bell.
@@ -223,7 +222,7 @@ It is now turn `Turn`.
      0| 0x06          | Player        |
       +---------------+---------------+
 
-The `Player` has wonthe battle.
+The `Player` has won the battle.
 
 ### `|tie|` (`0x09`)
 
@@ -430,7 +429,6 @@ due to its own mechanics.
       +---------------+---------------+---------------+
      0| 0x12          | Source        | Target        |
       +---------------+---------------+---------------+
-
 
 A move used by the `Source` [`PokemonIdent`](#pokemonident) missed the `Target`
 [`PokemonIdent`](#pokemonident).
