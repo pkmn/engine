@@ -8,7 +8,7 @@ pub fn simulate(gen: u8, num: usize, seed: u64) !void {
 
     var random = pkmn.rng.Random.init(seed);
 
-    var options: [10]pkmn.Choice = undefined;
+    var options: [pkmn.MAX_OPTIONS_SIZE]pkmn.Choice = undefined;
 
     var i: usize = 0;
     while (i <= num) : (i += 1) {

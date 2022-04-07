@@ -18,6 +18,9 @@ const expect = std.testing.expect;
 
 const showdown = build_options.showdown;
 
+pub const MAX_OPTIONS_SIZE = 9;
+pub const MAX_LOG_SIZE = 100; // TODO
+
 pub const Choice = data.Choice;
 pub const Player = data.Player;
 pub const Result = data.Result;
