@@ -1,9 +1,9 @@
 # Design
 
 The pkmn engine is first and foremost designed for performance. The engine's most impactful design
-principle is that of **"no compromises"** when it comes to performance - ergonomics / simplicity /
-convenience are always trumped by performance, and the engine will never tradeoff performance for
-any other feature. This principle leads to the following:
+principle is that of **"no compromises"** when it comes to performance -
+ergonomics/simplicity/convenience are always trumped by performance, and the engine will never
+tradeoff performance for any other feature. This principle leads to the following:
 
 - the engine is much **more targeted in scope** than either the original game cartridge (which
   includes code for an entire RPG) or Pokémon Showdown (which supports a fully featured simulator in
@@ -13,7 +13,7 @@ any other feature. This principle leads to the following:
     [`BattleStream`](https://github.com/smogon/pokemon-showdown/blob/master/sim/battle-stream.ts)
     equivalent - Pokémon Showdown's stream abstraction is asynchronous and text based, both of which
     add latency
-  - the is no support for validating teams / formats / custom rules - these are expected to be taken
+  - the is no support for validating teams/formats/custom rules - these are expected to be taken
     care of at a higher level
   - the is no input (choice) validation - the engine is expected to be wrapped by some form of
     driver code which either provides the input validation for the user or to be driven by code
@@ -92,7 +92,7 @@ though contains all of the information required to produce identical logs to eit
   - `gen*`: the code for the respective Pokémon generations implemented by the engine
 - [pkg](../src/pkg): code for the `@pkmn/engine` JavaScript package with driver code for the engine
 - [`test`](../src/test): code for high level tests (integration, benchmarking, fuzzing) - unit tests
-  live inline / beside the code they implement in the `lib` / `pkg` directories
+  live inline/beside the code they implement in the `lib`/`pkg` directories
 - [tools](../src/tools): miscellaneous scripts and tools useful for working on the pkmn engine
 
 Each individual generation has its own documentation regarding how they are implemented and what
@@ -178,7 +178,7 @@ hours):
   [**monomorphism**](https://mrale.ph/blog/2015/01/11/whats-up-with-monomorphism.html) and
   frequently initializes key data objects inefficiently (e.g. the **`Object.assign(this, data)`
   pattern** used by its foundational types). Always ensuring object fields are initialized in the
-  same order becomes even more difficult due to the raw size / number of fields involved (i.e. for
+  same order becomes even more difficult due to the raw size/number of fields involved (i.e. for
   objects with only a few fields it is easier to ensure they are always initialized in the same
   order, but many of Pokémon Showdown's game objects include 50-100 fields).
 - Most of Pokémon Showdown's core APIs involve **looking up keys in a map** (e.g. lookup by `ID`)
@@ -188,7 +188,7 @@ hours):
 - Pokémon Showdown produces **text protocol logs in all cases**. While invaluable for debugging, the
   text logs are expensive to produce and parse, and importantly, are often wasted work in many use
   cases where they are simply ignored.
-- Pokémon Showdown is written in JavaScript / TypeScript which makes it **unergonomic to have
+- Pokémon Showdown is written in JavaScript/TypeScript which makes it **unergonomic to have
   precisely laid out data structures with minimally sized fields** (as mentioned above, the minimum
   data size of a number is going to be 4-8 bytes outside of making all the code manipulate
   `ArrayBuffer`s), substantially larger than what is convenient to use in lower level languages.
@@ -198,7 +198,7 @@ hours):
   stack would be. Finally, being **written in JavaScript** means third-party developers wishing to
   leverage Pokémon Showdown's engine must either also be written in JavaScript, embed a JavaScript
   runtime (and pay in terms of overhead on the boundary), or interface with the engine through
-  standard input / output streams (which incurs **syscall overhead**).
+  standard input/output streams (which incurs **syscall overhead**).
 
 Ultimately, the Pokémon Showdown's design choices may result in a flexible engine which is easy to
 expand upon, but its architecture is fundamentally at odds with acheiving peak performance.
