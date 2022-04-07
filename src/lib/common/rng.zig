@@ -244,7 +244,7 @@ pub const Random = struct {
 
     pub fn chance(self: *Random, numerator: u16, denominator: u16) bool {
         assert(denominator > 0);
-        return self.prng.random().uintLessThan(u16, denominator) < numerator;
+        return self.prng.random().uintLessThanBiased(u16, denominator) < numerator;
     }
 
     pub fn range(self: *Random, comptime T: type, min: T, max: T) T {
