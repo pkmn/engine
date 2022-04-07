@@ -13,8 +13,8 @@ This flag enables the engine to write the wire protocol described in this docume
 Generally, this `Log` should be a `FixedBufferStream` `Writer` backed by a statically allocated
 fixed-size array that gets `reset` after each `update` as the maximum number of bytes written by a
 single `update` call is bounded to a relatively small number of bytes per generation, though since
-any `Writer` implementation is allowed this `Log` could instead write to standard output (**NOTE:**
-in Zig, the default writer is not buffered by default - you must use a
+any `Writer` implementation is allowed this `Log` could instead write to standard output (Note that
+in Zig the standard out writer is not buffered by default - you must use a
 [`BufferedWriter`](https://zig.news/kristoff/how-to-add-buffering-to-a-writer-reader-in-zig-7jd)
 wrapper to acheive reasonable performance).
 
@@ -48,22 +48,79 @@ With `-Dtrace` enabled, [messages](#messages) are written to the `Log` provided.
 each message is an integer representing the `ArgType` of the message, followed by 0 or more bytes
 containing the payload of the message. Game objects such as moves, species, abilities, items, types,
 etc are written as their internal identifier which usually matches their public facing number, but
-in cases where these differ the [`ids.json`](src/pkg/data/ids.json) can  be used to decode them.
-A [`protocol.json`](../src/pkg/data/protocol.json) containing a human-readable lookup for the
-`ArgType` and various "reason" enums (see below) is generated from the library code and can be used
-for similar purposes.
+in cases where these differ the [`ids.json`](src/pkg/data/ids.json) can  be used to decode them.  A
+[`protocol.json`](../src/pkg/data/protocol.json) containing a human-readable lookup for the
+`ArgType` and various "[reason](#reason)" enums (see below) is generated from the library code and
+can be used for similar purposes.
 
 Because each protocol message is a fixed length, parsing can be terminated when a `0x00` byte is
-read when an the leading `ArgType` header byte of a message is expected. Note that a `0x00` byte may
+read when the leading `ArgType` header byte of a message is expected. Note that a `0x00` byte may
 also appear internally within the payload of a message - only the `0x00` in the header of a message
-indicates the end.
+indicates the end. This `0x00` byte will be written even in places where the previous `ArgType`
+alone would be sufficient to indicate the end of parsing (e.g. after reading a `|win|` or `|turn|`
+message). Unlike the Pokémon Showdown simulator protocol, the pkmn engine's protocol does not
+produce a `|request|` message - as outlined above a driver should inspect the raw bytes of the
+`Battle` object in addition to the `Result` to determine enough about state to determine which
+choices are possible (taking into account privileged information depending on the side in question).
 
-TODO FIXME finish
+### Reason
 
-- `Reason`
-- lastmove/lastmiss
-- pokemon ident
+Several protocol messages have a "reason" field which provides further information/context about the
+message and may indicate that the payload contains additional bytes. Bytes that are only present
+when the reason field is a specific value are indicated by a trailing `?`. Messages which contain a
+reason field will document each possible value the field can take and whether or not the specific
+reason will cause the message to contain additional data. Reason fields are required to be able to
+encode the information Pokémon Showdown stores in its "keyword args" (`kwArgs`) mapping (e.g.
+`[from]` or `[of]`).
 
+### `PokemonIdent`
+
+Many protocol message types encode the source/target/actor as a `PokemonIdent` (or Pokémon ID). From
+Pokémon Showdown's documentation:
+
+> A Pokémon ID is in the form `POSITION: NAME`.
+>
+>   - `POSITION` is the spot that the Pokémon is in: it consists of the `PLAYER` of the player
+>     (see `|player|`), followed by a position letter (`a` in singles).
+>   - `NAME` is the nickname of the Pokémon (or the species name, if no nickname is given).
+>
+> For example: `p1a: Sparky` could be a Charizard named Sparky. `p1: Dragonite` could be an
+> inactive Dragonite being healed by Heal Bell.
+>
+> For most commands, you can just use the position information in the Pokémon ID to identify
+> the Pokémon. Only a few commands actually change the Pokémon in that position (`|switch|`
+> switching, `|replace|` illusion dropping, `|drag|` phazing, and `|detailschange|` permanent
+> forme changes), and these all specify `DETAILS` for you to perform updates with.
+
+Identity works a little differently in the pkmn engine, given that nicknames are not part of the
+engine. While the given player, position letter and identity of the Pokémon in question are all
+still encoded, the identity takes the form of a single bit-packed native-endian byte:
+
+- the most significant 3 bits are always `0`
+- the 4th most signficiant bit is `0` if the position is `a` and `1` if the position is `b` (only
+  relevant in doubles battles)
+- the 5th most signficant bit is `0` for player 1 and `1` for player 2.
+- the lowest 3 bits represent the slot (`1` through `6` inclusive) of the Pokémon's original
+  location within the party (i.e. the order a player's team was initially in when the battle
+  started, before any Pokémon were switched).
+
+A Pokémon Showdown-compatible `PokemonIdent` can be translated from the pkmn engine identity
+by driver code provided there exists a mapping from the party's original positions and Pokémon
+nicknames.
+
+### `LastStill`/`LastMiss`
+
+Unfortunately, Pokémon Showdown's protocol does not allow for translating one message at a time. The
+`|move|` message can be modified by a message with the `LastStill` (`0x01`) or `LastMiss` (`0x02`)
+`ArgType`. In the Pokémon Showdown simulator the `attrLastStill` method is used to modify a batched
+`|move|` message before it is written with other messages as a single chunk, but the pkmn engine
+streams out writes immediately and does not perform batching, meaning code parsing the engine's
+protocol is required to do the batching instead.
+
+When interepreting a buffer written by the pkmn `Log`, if a `LastStill` (`0x01`) byte is
+encountered, if there is a previous `|move|` message in the same buffer that occured earlier, append
+a `[still]` keyword arg to it. Similarly, if a `LastMiss` (`0x02`) byte is encountered, append a
+`[miss]` to the last seen `|move|` message if present.
 
 ## Messages
 
@@ -78,6 +135,11 @@ TODO FIXME finish
      4| Reason        | [from]?       |
       +---------------+---------------+
 
+`Source` is the [`PokemonIdent`](#pokemonident) of the Pokémon that used the `Move` on the
+[`PokemonIdent`](#pokemonident) `Target` for `Reason`.  If `Reason` is `0x02` then the following
+byte which indicate which `Move` the `|move|` is `[from]`. This message may be modified later on by
+a `LastStill` or `LastMiss` message in the same buffer (see above).
+
 <details><summary>Reason</summary>
 
 | Raw    | Description | `[from]`? |
@@ -86,8 +148,6 @@ TODO FIXME finish
 | `0x01` | `recharge`  | No        |
 | `0x02` | `\|[from]`  | Yes       |
 </details>
-
-TODO: `LastStill`, `LastMove`
 
 ### `|switch|` (`0x04`)
 
@@ -102,6 +162,9 @@ TODO: `LastStill`, `LastMove`
      8| Status        |
       +---------------+
 
+The Pokémon identified by [`Ident`](#pokemonident) has switched in and is a level `Level` `Species`
+with `Current HP`, `Max HP` and `Status`.
+
 ### `|cant|` (`0x05`)
 
     Byte/     0       |       1       |       2       |       3       |
@@ -110,6 +173,10 @@ TODO: `LastStill`, `LastMove`
       +---------------+---------------+---------------+---------------+
      0| 0x05          | Ident         | Reason        | Move?         |
       +---------------+---------------+---------------+---------------+
+
+The Pokémon identified by [`Ident`](#pokemonident) could not perform an action due to `Reason`. If
+the reason is `0x05` then the following byte indicates which `Move` the Pokémon was unable to
+perform.
 
 <details><summary>Reason</summary>
 
@@ -134,6 +201,8 @@ TODO: `LastStill`, `LastMove`
      0| 0x06          | Ident         |
       +---------------+---------------+
 
+The Pokémon identified by [`Ident`](#pokemonident) has fainted.
+
 ### `|turn|` (`0x07`)
 
     Byte/     0       |       1       |       2       |
@@ -142,6 +211,8 @@ TODO: `LastStill`, `LastMove`
       +---------------+---------------+---------------+
      0| 0x07          | Turn                          |
       +---------------+---------------+---------------+
+
+It is now turn `Turn`.
 
 ### `|win` (`0x08`)
 
@@ -152,6 +223,8 @@ TODO: `LastStill`, `LastMove`
      0| 0x06          | Player        |
       +---------------+---------------+
 
+The `Player` has wonthe battle.
+
 ### `|tie|` (`0x09`)
 
     Byte/     0       |
@@ -160,6 +233,8 @@ TODO: `LastStill`, `LastMove`
       +---------------+
      0| 0x09          |
       +---------------+
+
+The battle has ended in a tie.
 
 ### `|-damage|` (`0x0A`)
 
@@ -173,6 +248,10 @@ TODO: `LastStill`, `LastMove`
       +---------------+---------------+---------------+---------------+
      8| [of]?         |
       +---------------+
+
+The Pokémon identified by [`Ident`](#pokemonident) has taken damage and now has the `Current HP`,
+`Max HP` and `Status`. If `Reason` is in `0x04` - `0x07` then the following byte indicates the
+[`PokemonIdent`](#pokemonident) of the source `[of]` the damage.
 
 <details><summary>Reason</summary>
 
@@ -201,6 +280,9 @@ TODO: `LastStill`, `LastMove`
      8| [of]?         |
       +---------------+
 
+Equivalent to `|-boost|` above, but the Pokémon has healed damage instead. If `Reason` is `0x02`
+then the damage was healed `[from]` a draining move indicated by the subsequent byte `[of]`.
+
 <details><summary>Reason</summary>
 
 | Raw    | Description            | `[of]`? |
@@ -221,6 +303,9 @@ TODO: `LastStill`, `LastMove`
      4| [from]?       |
       +---------------+
 
+The Pokémon identified by [`Ident`](#pokemonident) has been inflicted with `Status`. If `Reason` is
+`0x02` then the following byte which indicate which `Move` the `Status` is `[from]`.
+
 <details><summary>Reason</summary>
 
 | Raw    | Description  | `[from]`? |
@@ -239,6 +324,8 @@ TODO: `LastStill`, `LastMove`
      0| 0x0D          | Ident         | Status        | Reason        |
       +---------------+---------------+---------------+---------------+
 
+The Pokémon identified by [`Ident`](#pokemonident) has recovered from `Status`.
+
 <details><summary>Reason</summary>
 
 | Raw    | Description  |
@@ -255,6 +342,9 @@ TODO: `LastStill`, `LastMove`
       +---------------+---------------+---------------+---------------+
      0| 0x0E          | Ident         | Reason        | Num           |
       +---------------+---------------+---------------+---------------+
+
+The Pokémon identified by [`Ident`](#pokemonident) has gained `Num` boosts in a stat indicated by
+the `Reason`.
 
 <details><summary>Reason</summary>
 
@@ -279,6 +369,8 @@ TODO: `LastStill`, `LastMove`
      0| 0x0F          | Ident         | Reason        | Num           |
       +---------------+---------------+---------------+---------------+
 
+Equivalent to `|-boost|` above, but for negative stat changes.
+
 <details><summary>Reason</summary>
 
 | Raw    | Description |
@@ -301,6 +393,8 @@ TODO: `LastStill`, `LastMove`
      0| 0x10          |
       +---------------+
 
+Clears all boosts from all Pokémon on both sides.
+
 ### `|-fail|` (`0x11`)
 
     Byte/     0       |       1       |       2       |
@@ -309,6 +403,9 @@ TODO: `LastStill`, `LastMove`
       +---------------+---------------+---------------+
      0| 0x11          | Ident         | Reason        |
       +---------------+---------------+---------------+
+
+An action denoted by `Reason` used by the Pokémon identified by [`Ident`](#pokemonident) has failed
+due to its own mechanics.
 
 <details><summary>Reason</summary>
 
@@ -334,6 +431,10 @@ TODO: `LastStill`, `LastMove`
      0| 0x12          | Source        | Target        |
       +---------------+---------------+---------------+
 
+
+A move used by the `Source` [`PokemonIdent`](#pokemonident) missed the `Target`
+[`PokemonIdent`](#pokemonident).
+
 ### `|-hitcount|` (`0x13`)
 
     Byte/     0       |       1       |       2       |
@@ -343,14 +444,18 @@ TODO: `LastStill`, `LastMove`
      0| 0x13          | Ident         | Num           |
       +---------------+---------------+---------------+
 
+A multi-hit move hit the Pokémon identified by [`Ident`](#pokemonident) `Num` times.
+
 ### `|-prepare|` (`0x14`)
 
     Byte/     0       |       1       |       2       |
        /              |               |               |
       |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
       +---------------+---------------+---------------+
-     0| 0x14          | Source        | Move          |
+     0| 0x14          | Ident         | Move          |
       +---------------+---------------+---------------+
+
+The Pokémon identified by [`Ident`](#pokemonident) is preparing to charge `Move`.
 
 ### `|-mustrecharge|` (`0x15`)
 
@@ -361,6 +466,9 @@ TODO: `LastStill`, `LastMove`
      0| 0x15          | Ident         |
       +---------------+---------------+
 
+The Pokémon identified by [`Ident`](#pokemonident) must spend the turn recharging from a previous
+move.
+
 ### `|-activate|` (`0x16`)
 
     Byte/     0       |       1       |       2       |
@@ -369,6 +477,9 @@ TODO: `LastStill`, `LastMove`
       +---------------+---------------+---------------+
      0| 0x16          | Ident         | Reason        |
       +---------------+---------------+---------------+
+
+A miscellaneous effect indicated by `Reason` has activated on the Pokémon identified by
+[`Ident`](#pokemonident).
 
 <details><summary>Reason</summary>
 
@@ -391,6 +502,8 @@ TODO: `LastStill`, `LastMove`
      0| 0x17          |
       +---------------+
 
+A field condition has activated.
+
 ### `|-start|` (`0x18`)
 
     Byte/     0       |       1       |       2       |       3       |
@@ -399,6 +512,11 @@ TODO: `LastStill`, `LastMove`
       +---------------+---------------+---------------+---------------+
      0| 0x18          | Ident         | Reason        | Move/Types?   |
       +---------------+---------------+---------------+---------------+
+
+A volatile status from `Reason` has been inflicted on the Pokémon identified by
+[`Ident`](#pokemonident). If `Reason` is `0x09` then the following byte indicates which `Types` the
+Pokémon has changed to. If `Reason` is `0x0A` or `0x0B` then the following byte indicates the `Move`
+which has been disabled/mimicked.
 
 <details><summary>Reason</summary>
 
@@ -427,6 +545,9 @@ TODO: `LastStill`, `LastMove`
      0| 0x19          | Ident         | Reason        |
       +---------------+---------------+---------------+
 
+A volatile status from `Reason` inflicted on the Pokémon identified by [`Ident`](#pokemonident) has
+ended.
+
 <details><summary>Reason</summary>
 
 | Raw    | Description             |
@@ -454,6 +575,8 @@ TODO: `LastStill`, `LastMove`
      0| 0x1A          |
       +---------------+
 
+A OHKO move was used sucessfully.
+
 ### `|-crit|` (`0x1B`)
 
     Byte/     0       |       1       |
@@ -462,6 +585,8 @@ TODO: `LastStill`, `LastMove`
       +---------------+---------------+
      0| 0x1B          | Ident         |
       +---------------+---------------+
+
+A move has dealt a critical hit against the Pokémon identified by [`Ident`](#pokemonident).
 
 ### `|-supereffective|` (`0x1C`)
 
@@ -472,6 +597,8 @@ TODO: `LastStill`, `LastMove`
      0| 0x1C          | Ident         |
       +---------------+---------------+
 
+A move was supereffective against the Pokémon identified by [`Ident`](#pokemonident).
+
 ### `|-resisted|` (`0x1D`)
 
     Byte/     0       |       1       |
@@ -481,14 +608,18 @@ TODO: `LastStill`, `LastMove`
      0| 0x1D          | Ident         |
       +---------------+---------------+
 
+A move was not very effective against the Pokémon identified by [`Ident`](#pokemonident).
+
 ### `|-immune|` (`0x1E`)
 
     Byte/     0       |       1       |       2       |
        /              |               |               |
       |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
       +---------------+---------------+---------------+
-     0| 0x1E          | Source        | Reason        |
+     0| 0x1E          | Ident         | Reason        |
       +---------------+---------------+---------------+
+
+The Pokémon identified by [`Ident`](#pokemonident) is immune to a move.
 
 <details><summary>Reason</summary>
 
@@ -506,3 +637,6 @@ TODO: `LastStill`, `LastMove`
       +---------------+---------------+---------------+
      0| 0x1F          | Source        | Target        |
       +---------------+---------------+---------------+
+
+`Source` is the [`PokemonIdent`](#pokemonident) of the Pokémon that transformed into the Pokémon
+identified by the `Target` [`PokemonIdent`](#pokemonident).
