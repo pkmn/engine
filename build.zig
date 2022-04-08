@@ -44,12 +44,8 @@ pub fn build(b: *Builder) !void {
     static_lib.install();
     b.getInstallStep().dependOn(&static_lib.step);
 
-    const dlib =
-        if (target.isWindows()) try std.fmt.allocPrintZ(b.allocator, "{s}.dll", .{lib}) else lib;
-    defer if (target.isWindows()) b.allocator.free(dlib);
-
     const kind = .{ .versioned = try std.builtin.Version.parse(version) };
-    const dynamic_lib = b.addSharedLibrary(dlib, "src/lib/binding/c.zig", kind);
+    const dynamic_lib = b.addSharedLibrary(lib, "src/lib/binding/c.zig", kind);
     dynamic_lib.addOptions("build_options", options);
     dynamic_lib.setBuildMode(mode);
     dynamic_lib.setTarget(target);
