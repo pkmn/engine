@@ -37,20 +37,21 @@ pub fn main() !void {
     switch (tool) {
         .markdown => {
             inline for (@typeInfo(protocol).Struct.decls) |decl| {
-                if (comptime std.ascii.isUpper(decl.name[0]) and
-                    decl.is_pub and
-                    !std.mem.eql(u8, decl.name, "Log") and
-                    !std.mem.eql(u8, decl.name, "NULL"))
-                {
-                    try w.print(
-                        "## {s}\n\n<details><summary>Reason</summary>\n",
-                        .{decl.name},
-                    );
-                    try w.writeAll("\n|Raw|Description|\n|--|--|\n");
-                    inline for (@typeInfo(@field(protocol, decl.name)).Enum.fields) |field| {
-                        try w.print("|`0x{X:0>2}`|`{s}`|\n", .{ field.value, field.name });
+                if (@TypeOf(@field(protocol, decl.name)) == type) {
+                    switch (@typeInfo(@field(protocol, decl.name))) {
+                        .Enum => |e| {
+                            try w.print(
+                                "## {s}\n\n<details><summary>Reason</summary>\n",
+                                .{decl.name},
+                            );
+                            try w.writeAll("\n|Raw|Description|\n|--|--|\n");
+                            inline for (e.fields) |field| {
+                                try w.print("|`0x{X:0>2}`|`{s}`|\n", .{ field.value, field.name });
+                            }
+                            try w.writeAll("</details>\n\n");
+                        },
+                        else => {},
                     }
-                    try w.writeAll("</details>\n\n");
                 }
             }
         },
@@ -58,21 +59,22 @@ pub fn main() !void {
             var outer = false;
             try w.writeAll("{\n");
             inline for (@typeInfo(protocol).Struct.decls) |decl| {
-                if (comptime std.ascii.isUpper(decl.name[0]) and
-                    decl.is_pub and
-                    !std.mem.eql(u8, decl.name, "Log") and
-                    !std.mem.eql(u8, decl.name, "NULL"))
-                {
-                    if (outer) try w.writeAll(",\n");
-                    try w.print("  \"{s}\": [\n", .{decl.name});
-                    var inner = false;
-                    inline for (@typeInfo(@field(protocol, decl.name)).Enum.fields) |field| {
-                        if (inner) try w.writeAll(",\n");
-                        try w.print("    \"{s}\"", .{field.name});
-                        inner = true;
+                if (@TypeOf(@field(protocol, decl.name)) == type) {
+                    switch (@typeInfo(@field(protocol, decl.name))) {
+                        .Enum => |e| {
+                            if (outer) try w.writeAll(",\n");
+                            try w.print("  \"{s}\": [\n", .{decl.name});
+                            var inner = false;
+                            inline for (e.fields) |field| {
+                                if (inner) try w.writeAll(",\n");
+                                try w.print("    \"{s}\"", .{field.name});
+                                inner = true;
+                            }
+                            try w.writeAll("\n  ]");
+                            outer = true;
+                        },
+                        else => {},
                     }
-                    try w.writeAll("\n  ]");
-                    outer = true;
                 }
             }
             try w.writeAll("\n}\n");
