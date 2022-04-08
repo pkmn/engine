@@ -84,8 +84,6 @@ though contains all of the information required to produce identical logs to eit
 - [`examples`](../src/examples): examples of using the engine across all supported targets
 - [`lib`](../src/lib): the Zig code for the `libpkmn` engine
   - [`pkmn.zig`](../src/lib/pkmn.zig): the main entry point for the Zig library
-  - [`all.zig`](../src/lib/all.zig): an alternative entry point which includes convenience helpers,
-    used internally by tools
   - [`bindings`](..src/lib/bindings): code which exposes the `libpkmn` API for non-Zig uses
   - [`common`](..src/lib/common): code shared by all generations (common data
     structures/RNG/protocol logic)

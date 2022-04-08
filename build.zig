@@ -28,7 +28,7 @@ pub fn build(b: *Builder) !void {
 
     const pkmn = Pkg{
         .name = "pkmn",
-        .path = .{ .path = "src/lib/all.zig" },
+        .path = .{ .path = "src/lib/pkmn.zig" },
         .dependencies = &.{build_options},
     };
 
