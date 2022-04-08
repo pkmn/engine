@@ -232,22 +232,35 @@ test "FixedRNG" {
 }
 
 pub const Random = struct {
-    prng: std.rand.DefaultPrng,
+    src: Gen56,
+
+    const divisor = getRangeDivisor(6);
 
     pub fn init(seed: u64) Random {
-        return .{ .prng = std.rand.DefaultPrng.init(seed) };
+        return .{ .src = .{ .seed = seed } };
     }
 
-    pub fn int(self: *Random, comptime T: type) T {
-        return self.prng.random().int(T);
+    pub fn uint(self: *Random, comptime T: type) T {
+        return self.inclusive(T, std.math.minInt(T), std.math.maxInt(T));
     }
 
     pub fn chance(self: *Random, numerator: u16, denominator: u16) bool {
         assert(denominator > 0);
-        return self.prng.random().uintLessThanBiased(u16, denominator) < numerator;
+        return self.exclusive(u16, 0, denominator) < numerator;
     }
 
+    // NOTE: inclusive range, not exclusive like elsewhere in this file
     pub fn range(self: *Random, comptime T: type, min: T, max: T) T {
-        return self.prng.random().intRangeAtMostBiased(T, min, max);
+        return self.inclusive(T, min, max);
+    }
+
+    inline fn inclusive(self: *Random, comptime T: type, from: T, to: T) T {
+        return self.exclusive(T, from, @as(Bound(T), to) + 1);
+    }
+
+    inline fn exclusive(self: *Random, comptime T: type, from: T, to: Bound(T)) T {
+        const max = @maximum(std.math.maxInt(u64), std.math.maxInt(T) * std.math.maxInt(T));
+        const U = std.math.IntFittingRange(0, max);
+        return @truncate(T, @as(U, self.src.next()) * (to - from) / @as(U, divisor) + from);
     }
 };

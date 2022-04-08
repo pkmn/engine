@@ -50,9 +50,9 @@ pub const Battle = struct {
 };
 
 fn prng(rand: *Random) rng.PRNG(1) {
-    return .{ .src = .{ .seed = if (build_options.showdown) rand.int(u64) else .{
-        rand.int(u8), rand.int(u8), rand.int(u8), rand.int(u8), rand.int(u8),
-        rand.int(u8), rand.int(u8), rand.int(u8), rand.int(u8), rand.int(u8),
+    return .{ .src = .{ .seed = if (build_options.showdown) rand.uint(u64) else .{
+        rand.uint(u8), rand.uint(u8), rand.uint(u8), rand.uint(u8), rand.uint(u8),
+        rand.uint(u8), rand.uint(u8), rand.uint(u8), rand.uint(u8), rand.uint(u8),
     } } };
 }
 
@@ -92,7 +92,8 @@ pub const Side = struct {
                 active.stats = pokemon.stats;
                 inline for (std.meta.fields(@TypeOf(active.boosts))) |field| {
                     if (rand.chance(1, 10)) {
-                        @field(active.boosts, field.name) = rand.range(i4, -6, 6);
+                        @field(active.boosts, field.name) =
+                            @truncate(i4, @as(i5, rand.range(u4, 0, 12)) - 6);
                     }
                 }
                 active.species = pokemon.species;
