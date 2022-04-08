@@ -11,10 +11,6 @@ const trace = build_options.trace;
 
 const Player = data.Player;
 
-pub fn expectLog(expected: []const u8, actual: []const u8) !void {
-    if (trace) try expectEqualSlices(u8, expected, actual);
-}
-
 pub const ArgType = enum(u8) {
     None,
 
@@ -535,15 +531,39 @@ pub fn Log(comptime Writer: type) type {
     };
 }
 
+pub const FixedLog = Log(std.io.FixedBufferStream([]u8).Writer);
+
+// @test-only
+pub fn TestLogs(comptime n: comptime_int) type {
+    return struct {
+        const Self = @This();
+
+        expected: [n]u8 = [_]u8{0} ** n,
+        actual: [n]u8 = [_]u8{0} ** n,
+
+        pub fn expectMatches(self: Self) !void {
+            try expectLog(&self.expected, &self.actual);
+        }
+    };
+}
+
+// @test-only
+pub fn expectLog(expected: []const u8, actual: []const u8) !void {
+    if (!trace) return;
+    expectEqualSlices(u8, expected, actual) catch |err| switch (err) {
+        error.TestExpectedEqual => {
+            std.debug.print("Expected:{any}\nactual:{any}\n", .{ expected, actual });
+            return err;
+        },
+        else => return err,
+    };
+}
+
 const endian = builtin.target.cpu.arch.endian();
 
 fn N(e: anytype) u8 {
     return @enumToInt(e);
 }
-
-var buf: [100]u8 = undefined;
-var stream = std.io.fixedBufferStream(&buf);
-var log: Log(std.io.FixedBufferStream([]u8).Writer) = .{ .writer = stream.writer() };
 
 const p1 = Player.P1;
 const p2 = Player.P2;
@@ -552,6 +572,10 @@ const gen1 = struct {
     usingnamespace @import("../gen1/data.zig");
     pub const helpers = @import("../gen1/helpers.zig");
 };
+
+var buf: [gen1.MAX_LOG_SIZE]u8 = undefined;
+var stream = std.io.fixedBufferStream(&buf);
+var log: FixedLog = .{ .writer = stream.writer() };
 
 const M = gen1.Move;
 const S = gen1.Species;
