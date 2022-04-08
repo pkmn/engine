@@ -538,8 +538,8 @@ pub fn TestLogs(comptime n: comptime_int) type {
     return struct {
         const Self = @This();
 
-        expected: [n]u8 = [_]u8{0} ** n,
-        actual: [n]u8 = [_]u8{0} ** n,
+        expected: [n]u8 = [_]u8{0xFF} ** n,
+        actual: [n]u8 = [_]u8{0xFF} ** n,
 
         pub fn expectMatches(self: Self) !void {
             try expectLog(&self.expected, &self.actual);
