@@ -101,20 +101,24 @@ const battle = Battle.create(gens.get(1), team1, team2);
 [example code](src/examples/zig)
 
 ```zig
+const std = @import("std");
 const pkmn = @import("pkmn");
 
-var battle = pkmn.Battle{ ... };
-var p1 = ...
-var p2 = ...
+var random = std.rand.DefaultPrng.init(seed).random();
+var options: [pkmn.MAX_OPTIONS_SIZE]pkmn.Choice = undefined;
+
+var battle = ...
 
 var c1 = pkmn.Choice{};
 var c2 = pkmn.Choice{};
 
-var result = try battle.update(c1, c2, log);
-while (result.type == .None) : (result = try battle.update(c1, c2, log)) {
-    c1 = p1.choose(result.p1);
-    c2 = p2.choose(result.p2);
+var result = try battle.update(c1, c2, null);
+while (result.type == .None) : (result = try battle.update(c1, c2, null)) {
+    c1 = options[random.uintLessThan(battle.choices(.P1, result.p1, options))];
+    c2 = options[random.uintLessThan(battle.choices(.P2, result.p2, options))];
 }
+
+try std.debug.print("{}", result.type);
 ```
 
 ## Status
