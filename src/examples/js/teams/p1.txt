@@ -1,0 +1,35 @@
+Fushigidane (Bulbasaur)
+- Sleep Powder
+- Swords Dance
+- Razor Leaf
+- Body Slam
+
+Hitokage (Charmander)
+- Fire Blast
+- Fire Spin
+- Slash
+- Counter
+
+Zenigame (Squirtle)
+- Surf
+- Blizzard
+- Body Slam
+- Rest
+
+Pikachuu (Pikachu)
+- Thunderbolt
+- Thunder Wave
+- Surf
+- Seismic Toss
+
+Koratta (Rattata)
+- Super Fang
+- Body Slam
+- Blizzard
+- Thunderbolt
+
+Poppo (Pidgey)
+- Double-Edge
+- Quick Attack
+- Wing Attack
+- Mirror Move

@@ -1,0 +1,35 @@
+Kentarosu (Tauros)
+- Body Slam
+- Hyper Beam
+- Blizzard
+- Earthquake
+
+Rakkii (Chansey)
+- Reflect
+- Seismic Toss
+- Soft-Boiled
+- Thunder Wave
+
+Kabigon (Snorlax)
+- Body Slam
+- Reflect
+- Rest
+- Ice Beam
+
+Nasshii (Exeggutor)
+- Sleep Powder
+- Psychic
+- Explosion
+- Double-Edge
+
+Sutaamii (Starmie)
+- Recover
+- Thunder Wave
+- Blizzard
+- Thunderbolt
+
+Fuudin (Alakazam)
+- Psychic
+- Seismic Toss
+- Thunder Wave
+- Recover

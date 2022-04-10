@@ -1,5 +1,4 @@
 {
-  "type": "module",
   "dependencies": {
     "@pkmn/data": "^0.5.12",
     "@pkmn/dex": "^0.5.12",
