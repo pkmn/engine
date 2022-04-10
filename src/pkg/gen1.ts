@@ -186,7 +186,7 @@ export class Side implements Gen1.Side {
   static init(
     gen: Generation,
     lookup: Lookup,
-    team: PokemonSet[],
+    team: Partial<PokemonSet>[],
     data: DataView,
     offset: number
   ) {
@@ -430,27 +430,32 @@ export class Pokemon implements Gen1.Pokemon {
   static init(
     gen: Generation,
     lookup: Lookup,
-    set: PokemonSet,
+    set: Partial<PokemonSet>,
     data: DataView,
     offset: number,
     index: number,
   ) {
     const stored = offset + OFFSETS.Pokemon.stored + SIZES.Pokemon * index;
-    const species = gen.species.get(set.species)!;
+    const species = gen.species.get(set.species!)!;
 
     let hp = 0;
     let off = stored + OFFSETS.Pokemon.stats;
     for (const stat of gen.stats) {
       if (stat === 'spd') break;
-      const val =
-         gen.stats.calc(stat, species.baseStats[stat], set.ivs[stat], set.evs[stat], set.level);
+      const val = gen.stats.calc(
+        stat,
+        species.baseStats[stat],
+        set.ivs?.[stat] ?? 31,
+        set.evs?.[stat] ?? 252,
+        set.level ?? 100
+      );
       data.setUint16(off, val, LE);
       if (stat === 'hp') hp = val;
       off += 2;
     }
 
     off = stored + OFFSETS.Pokemon.moves;
-    for (const m of set.moves) {
+    for (const m of set.moves!) {
       const move = gen.moves.get(m)!;
       data.setUint8(off++, move.num);
       data.setUint8(off++, move.pp);
@@ -460,7 +465,7 @@ export class Pokemon implements Gen1.Pokemon {
 
     data.setUint8(stored + OFFSETS.Pokemon.species, species.num);
     data.setUint8(stored + OFFSETS.Pokemon.types, encodeTypes(lookup, species.types));
-    data.setUint8(stored + OFFSETS.Pokemon.level, set.level);
+    data.setUint8(stored + OFFSETS.Pokemon.level, set.level ?? 100);
   }
 
   static encodeStored(

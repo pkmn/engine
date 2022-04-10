@@ -55,6 +55,7 @@
   },
   "eslintConfig": {
     "extends": "@pkmn",
+    "ignorePatterns": ["dist/", "node_modules/"],
     "overrides": [{
       "files": ["src/pkg/index.ts"],
       "rules": {
