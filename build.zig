@@ -23,6 +23,12 @@ pub fn build(b: *Builder) !void {
     const options = b.addOptions();
     options.addOption(bool, "showdown", showdown);
     options.addOption(bool, "trace", trace);
+    // FIXME: remove
+    options.addOption(
+        bool,
+        "patched",
+        comptime std.mem.eql(u8, "51fda733a", @import("builtin").zig_version.build orelse ""),
+    );
 
     const build_options = Pkg{ .name = "build_options", .path = options.getSource() };
 

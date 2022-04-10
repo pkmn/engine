@@ -252,9 +252,7 @@ pub const Volatiles = packed struct {
 };
 
 test "Volatiles" {
-    if (!std.mem.eql(u8, "51fda733a", @import("builtin").zig_version.build orelse "")) {
-        return error.SkipZigTest;
-    }
+    if (!build_options.patched) return error.SkipZigTest;
 
     var volatiles = Volatiles{};
     volatiles.Confusion = true;
