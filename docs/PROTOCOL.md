@@ -24,14 +24,9 @@ protocol](https://github.com/smogon/pokemon-showdown/blob/master/sim/SIM-PROTOCO
 redundant messages (e.g. `|upkeep|` or `|`) removed, and others subtly tweaked (there is no
 `|split|` message - the "ominprescient" stream of information is always provided and other streams
 must be recreated by driver code). Like the rest of the pkmn engine, the protocol uses
-**native-endianess**, and furthermore, is **not backwards-compatible** - the protocol is only
-guaranteed to be translatable by the exact version of the library that produced it (i.e. the
-protocol does not respect [semantic versioning](https://semver.org) as it is effectively treated as
-an internal implementation detail of the engine).
-
-While the protocol may change slightly depending on the generation in question (e.g. a `Move`
-requires more than a single byte to encode after Generation I & II), any differences will called out
-below where applicable.
+**native-endianess**. While the protocol may change slightly depending on the generation in question
+(e.g. a `Move` requires more than a single byte to encode after Generation I & II), any differences
+will called out below where applicable.
 
 [^1]: The `choices` method leaks information in certain cases where legal decisions would not be
 known to a user until after having already attempted a choice (e.g. that a Pokémon has been trapped
