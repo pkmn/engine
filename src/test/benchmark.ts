@@ -4,7 +4,6 @@ import 'source-map-support/register';
 import {Buffer} from 'buffer';
 import {performance} from 'perf_hooks';
 
-import {TeamGenerators} from '@pkmn/randoms';
 import {
   Battle,
   BattleStreams,
@@ -20,8 +19,6 @@ import {
 
 import {Stats, Tracker} from 'trakr';
 import minimist from 'minimist';
-
-Teams.setGeneratorFactory(TeamGenerators);
 
 const TAG = 'time';
 const FORMATS = [

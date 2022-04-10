@@ -20,7 +20,7 @@ const run = async (cmd: string, args: string[]): Promise<Buffer> =>
   });
 
 describe('serialize/deserialize', () => {
-  it.todo('init'); // TODO @pkmn/randoms!
+  it.todo('init');
   it.skip('encode', async () => {
     const rng = new PRNG([1, 2, 3, 4]);
     for (const gen of new Generations(Dex as any)) {
