@@ -33,10 +33,10 @@ pub fn main() !void {
     volatiles.data.confusion = 2;
     volatiles.Thrashing = true;
     volatiles.data.state = 235;
-    volatiles.data.attacks = 2;
+    volatiles.data.attacks = 3;
     volatiles.Substitute = true;
     volatiles.data.substitute = 42;
-    volatiles.data.toxic = 3;
+    volatiles.data.toxic = 4;
     volatiles.data.disabled = .{ .move = 2, .duration = 4 };
     p1.stored().status = pkmn.gen1.Status.init(.PSN);
     p1.get(2).status = pkmn.gen1.Status.slp(5);

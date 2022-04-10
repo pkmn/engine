@@ -251,6 +251,38 @@ pub const Volatiles = packed struct {
     }
 };
 
+test "Volatiles" {
+    if (!std.mem.eql(u8, "51fda733a", @import("builtin").zig_version.build orelse "")) {
+        return error.SkipZigTest;
+    }
+
+    var volatiles = Volatiles{};
+    volatiles.Confusion = true;
+    volatiles.data.confusion = 2;
+    volatiles.Thrashing = true;
+    volatiles.data.state = 235;
+    volatiles.data.attacks = 3;
+    volatiles.Substitute = true;
+    volatiles.data.substitute = 42;
+    volatiles.data.toxic = 4;
+    volatiles.data.disabled = .{ .move = 2, .duration = 4 };
+
+    try expect(volatiles.Confusion);
+    try expect(volatiles.Thrashing);
+    try expect(volatiles.Substitute);
+    try expect(!volatiles.Recharging);
+    try expect(!volatiles.Transform);
+    try expect(!volatiles.MultiHit);
+
+    try expectEqual(@as(u16, 235), volatiles.data.state);
+    try expectEqual(@as(u8, 42), volatiles.data.substitute);
+    try expectEqual(@as(u4, 2), volatiles.data.disabled.move);
+    try expectEqual(@as(u4, 4), volatiles.data.disabled.duration);
+    try expectEqual(@as(u4, 2), volatiles.data.confusion);
+    try expectEqual(@as(u4, 4), volatiles.data.toxic);
+    try expectEqual(@as(u4, 3), volatiles.data.attacks);
+}
+
 // @test-only
 pub const Stat = enum { hp, atk, def, spe, spc };
 
