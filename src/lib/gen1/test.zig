@@ -26,7 +26,7 @@ const ArgType = protocol.ArgType;
 const TestLogs = protocol.TestLogs;
 const FixedLog = protocol.FixedLog;
 
-const Random = rng.Random;
+const PRNG = rng.PRNG;
 
 const Move = data.Move;
 
@@ -88,7 +88,7 @@ fn expectOrder(p1: anytype, o1: []const u8, p2: anytype, o2: []const u8) !void {
 const SEED = 0x31415926;
 
 test "switching" {
-    var battle = Battle.random(&Random.init(SEED), false);
+    var battle = Battle.random(&PRNG.init(SEED), false);
     const p1 = battle.side(.P1);
     const p2 = battle.side(.P2);
 
@@ -107,7 +107,7 @@ test "switching" {
 }
 
 test "choices" {
-    var random = Random.init(SEED);
+    var random = PRNG.init(SEED);
     var battle = Battle.random(&random, false);
     var options: [MAX_OPTIONS_SIZE]Choice = undefined;
     const n = battle.choices(.P1, .Move, &options);

@@ -25,7 +25,7 @@ pub const Choice = data.Choice;
 pub const Player = data.Player;
 pub const Result = data.Result;
 
-pub const RNG = rng.PRNG(1);
+pub const RNG = rng.Random(1);
 
 pub fn Battle(comptime PRNG: anytype) align(64) type {
     return extern struct {
@@ -404,7 +404,7 @@ pub const DVs = struct {
         return (self.atk & 1) << 3 | (self.def & 1) << 2 | (self.spe & 1) << 1 | (self.spc & 1);
     }
 
-    pub fn random(rand: *rng.Random) DVs {
+    pub fn random(rand: *rng.PRNG) DVs {
         return .{
             .atk = if (rand.chance(1, 5)) rand.range(u4, 1, 15) else 15,
             .def = if (rand.chance(1, 5)) rand.range(u4, 1, 15) else 15,

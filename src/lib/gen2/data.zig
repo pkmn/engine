@@ -13,6 +13,8 @@ const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 const expect = std.testing.expect;
 
+pub const RNG = rng.Random(2);
+
 pub fn Battle(comptime PRNG: anytype) type {
     return extern struct {
         rng: PRNG,
@@ -31,7 +33,7 @@ pub fn Battle(comptime PRNG: anytype) type {
 }
 
 test "Battle" {
-    try expectEqual(if (build_options.showdown) 440 else 444, @sizeOf(Battle(rng.PRNG(2))));
+    try expectEqual(if (build_options.showdown) 440 else 444, @sizeOf(Battle(RNG)));
 }
 
 const Field = extern struct {

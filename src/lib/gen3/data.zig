@@ -17,6 +17,8 @@ pub const GameType = enum {
     Doubles,
 };
 
+pub const RNG = rng.Random(3);
+
 pub fn Battle(comptime PRNG: anytype, comptime game_type: GameType) type {
     return extern struct {
         sides: [2]Side(game_type),

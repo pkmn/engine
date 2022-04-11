@@ -7,7 +7,7 @@ const expectEqual = std.testing.expectEqual;
 
 const showdown = build_options.showdown;
 
-pub fn PRNG(comptime gen: comptime_int) type {
+pub fn Random(comptime gen: comptime_int) type {
     const divisor = getRangeDivisor(gen);
 
     if (showdown) {
@@ -54,9 +54,9 @@ pub fn PRNG(comptime gen: comptime_int) type {
     }
 }
 
-test "PRNG" {
+test "Random" {
     if (!showdown) return;
-    var prng = PRNG(1){ .src = .{ .seed = 0x1234 } };
+    var prng = Random(1){ .src = .{ .seed = 0x1234 } };
     try expectEqual(@as(u8, 50), prng.range(u8, 0, 256));
     try expectEqual(true, prng.chance(u8, 128, 256)); // 76 < 128
 }
@@ -231,34 +231,34 @@ test "FixedRNG" {
     }
 }
 
-pub const Random = struct {
+pub const PRNG = struct {
     src: Gen56,
 
     const divisor = getRangeDivisor(6);
 
-    pub fn init(seed: u64) Random {
+    pub fn init(seed: u64) PRNG {
         return .{ .src = .{ .seed = seed } };
     }
 
-    pub fn uint(self: *Random, comptime T: type) T {
+    pub fn uint(self: *PRNG, comptime T: type) T {
         return self.inclusive(T, std.math.minInt(T), std.math.maxInt(T));
     }
 
-    pub fn chance(self: *Random, numerator: u16, denominator: u16) bool {
+    pub fn chance(self: *PRNG, numerator: u16, denominator: u16) bool {
         assert(denominator > 0);
         return self.exclusive(u16, 0, denominator) < numerator;
     }
 
     // NOTE: inclusive range, not exclusive like elsewhere in this file
-    pub fn range(self: *Random, comptime T: type, min: T, max: T) T {
+    pub fn range(self: *PRNG, comptime T: type, min: T, max: T) T {
         return self.inclusive(T, min, max);
     }
 
-    inline fn inclusive(self: *Random, comptime T: type, from: T, to: T) T {
+    inline fn inclusive(self: *PRNG, comptime T: type, from: T, to: T) T {
         return self.exclusive(T, from, @as(Bound(T), to) + 1);
     }
 
-    inline fn exclusive(self: *Random, comptime T: type, from: T, to: Bound(T)) T {
+    inline fn exclusive(self: *PRNG, comptime T: type, from: T, to: Bound(T)) T {
         const max = @maximum(std.math.maxInt(u64), std.math.maxInt(T) * std.math.maxInt(T));
         const U = std.math.IntFittingRange(0, max);
         return @truncate(T, @as(U, self.src.next()) * (to - from) / @as(U, divisor) + from);
