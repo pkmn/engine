@@ -64,6 +64,28 @@ $ npx install-pkmn-engine
 to `node_modules/@pkmn/engine/bin/zig` and build the `pkmn.node` file to the correct location. `npm`
 should notify you with these options when you attempt to install the package.
 
+### `pkmn`
+
+```zig
+const std = @import("std");
+const pkmn = @import("libs/pkmn/build.zig");
+
+pub fn build(b: *std.build.Builder) void {
+    ...
+    const showdown = b.option(bool, "showdown", "Enable Pokémon Showdown compatability mode") orelse false;
+    const trace = b.option(bool, "trace", "Enable trace logs") orelse false;
+
+    const options = b.addOptions();
+    options.addOption(bool, "showdown", showdown);
+    options.addOption(bool, "trace", trace);
+
+    const build_options = options.getPackage("build_options");
+    ...
+    exe.addPackage(pkmn.pkg(b, build_options));
+    ...
+}
+```
+
 ## Usage
 
 ### C

@@ -3,6 +3,15 @@ const std = @import("std");
 const Builder = std.build.Builder;
 const Pkg = std.build.Pkg;
 
+pub fn pkg(b: *Builder, build_options: Pkg) Pkg {
+    const dirname = comptime std.fs.path.dirname(@src().file) orelse ".";
+    return b.dupePkg(.{
+        .name = "pkmn",
+        .path = .{ .path = dirname ++ "/src/lib/pkmn.zig" },
+        .dependencies = &.{build_options},
+    });
+}
+
 pub fn build(b: *Builder) !void {
     const mode = b.standardReleaseOptions();
     const target = b.standardTargetOptions(.{});
@@ -30,13 +39,8 @@ pub fn build(b: *Builder) !void {
         comptime std.mem.eql(u8, "51fda733a", @import("builtin").zig_version.build orelse ""),
     );
 
-    const build_options = Pkg{ .name = "build_options", .path = options.getSource() };
-
-    const pkmn = Pkg{
-        .name = "pkmn",
-        .path = .{ .path = "src/lib/pkmn.zig" },
-        .dependencies = &.{build_options},
-    };
+    const build_options = options.getPackage("build_options");
+    const pkmn = pkg(b, build_options);
 
     const lib = if (showdown) "pkmn-showdown" else "pkmn";
 
@@ -154,7 +158,7 @@ fn tool(
     defer if (showdown) b.allocator.free(name);
 
     const exe = b.addExecutable(name, path);
-    for (pkgs) |pkg| exe.addPackage(pkg);
+    for (pkgs) |p| exe.addPackage(p);
     exe.setBuildMode(b.standardReleaseOptions());
     exe.single_threaded = true;
     exe.strip = strip;
