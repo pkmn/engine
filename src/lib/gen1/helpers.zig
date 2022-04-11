@@ -138,7 +138,7 @@ pub const Side = struct {
                     }
                 }
                 if (rand.chance(u8, 1, 20)) {
-                    const m = rand.range(u4, 1, 4 + 1);
+                    const m = rand.range(u4, 0, 4);
                     if (active.moves[m].id != .None) {
                         volatiles.data.disabled = .{
                             .move = m,

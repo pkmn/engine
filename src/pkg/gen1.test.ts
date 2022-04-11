@@ -38,12 +38,11 @@ describe('Gen 1', () => {
   const gen = gens.get(1);
   const lookup = Lookup.get(gen);
 
-  it.skip('serialize/deserialize', () => {
-    const expected = Buffer.alloc(LAYOUT[0].sizes.Battle);
-    BUFFER.copy(expected);
-
+  it('serialize/deserialize', () => {
     const battle = new Battle(lookup, new DataView(BUFFER.buffer), {});
-    // TODO const actual = Battle.encode(gen, lookup, battle);
+    const restored = Battle.restore(gen, lookup, battle, {});
+    // NOTE: Jest object diffing toJSON is super slow so we compare strings instead...
+    expect(JSON.stringify(restored)).toEqual(JSON.stringify(battle));
 
     expect(battle.turn).toBe(451);
     expect(battle.lastDamage).toBe(311);
@@ -56,16 +55,16 @@ describe('Gen 1', () => {
     expect(p1.lastUsedMove).toBe('wingattack');
 
     const slot1 = p1.active!;
-    const slot2 = p1.get(2);
+    const slot2 = p1.get(2)!;
 
     expect(slot1.species).toBe('weezing');
     expect(slot1.stored.species).toBe('weezing');
     expect(slot1.hp).toBe(268);
     expect(slot1.status).toBe('tox');
-    expect(slot1.statusData.toxic).toBe(2);
+    expect(slot1.statusData.toxic).toBe(4);
     expect(slot1.volatiles).toEqual({
       confusion: {duration: 2},
-      thrashing: {duration: 2, accuracy: 235},
+      thrashing: {duration: 3, accuracy: 235},
       substitute: {hp: 42},
     });
     expect(slot1.stats.atk).toBe(218);
@@ -77,6 +76,7 @@ describe('Gen 1', () => {
 
     expect(slot2.species).toBe('dodrio');
     expect(slot2.stored.species).toBe('dodrio');
+    expect(slot2.types).toEqual(['Normal', 'Flying']);
     expect(slot2.hp).toBe(211);
     expect(slot2.status).toBe('slp');
     expect(slot2.statusData.sleep).toBe(5);
@@ -85,6 +85,7 @@ describe('Gen 1', () => {
     const p2 = battle.side('p2');
     expect(p2.lastSelectedMove).toBe('doubleteam');
     expect(p2.active!.species).toBe('tentacruel');
+    expect(p2.active!.types).toEqual(['Water', 'Poison']);
     expect(p2.active!.hp).toBe(188);
     expect(p2.active!.stats.spa).toBe(278);
     expect(p2.active!.move(2)).toEqual({id: 'strength', pp: 7});
@@ -100,8 +101,5 @@ describe('Gen 1', () => {
     expect(slot2.boosts.evasion).toBe(3);
     expect(slot2.species).toBe('weezing');
     expect(slot2.stored.species).toBe('dodrio');
-
-    // FIXME - prng should be rotated..
-    // expect(actual).toEqual(expected);
   });
 });

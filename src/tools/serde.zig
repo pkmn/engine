@@ -22,29 +22,29 @@ pub fn main() !void {
     var w = buf.writer();
 
     var battle = switch (gen) {
-        1 => gen1.Battle.random(&rng.Random.init(seed), false),
+        1 => gen1.Battle.random(&rng.PRNG(6).init(seed), false),
         else => unreachable,
     };
 
     // TODO
-    var p1 = battle.side(.P1);
-    var volatiles = &p1.active.volatiles;
-    volatiles.Confusion = true;
-    volatiles.data.confusion = 2;
-    volatiles.Thrashing = true;
-    volatiles.data.state = 235;
-    volatiles.data.attacks = 3;
-    volatiles.Substitute = true;
-    volatiles.data.substitute = 42;
-    volatiles.data.toxic = 4;
-    volatiles.data.disabled = .{ .move = 2, .duration = 4 };
-    p1.stored().status = pkmn.gen1.Status.init(.PSN);
-    p1.get(2).status = pkmn.gen1.Status.slp(5);
+    // var p1 = battle.side(.P1);
+    // var volatiles = &p1.active.volatiles;
+    // volatiles.Confusion = true;
+    // volatiles.data.confusion = 2;
+    // volatiles.Thrashing = true;
+    // volatiles.data.state = 235;
+    // volatiles.data.attacks = 3;
+    // volatiles.Substitute = true;
+    // volatiles.data.substitute = 42;
+    // volatiles.data.toxic = 4;
+    // volatiles.data.disabled = .{ .move = 2, .duration = 4 };
+    // p1.stored().status = pkmn.gen1.Status.init(.PSN);
+    // p1.get(2).status = pkmn.gen1.Status.slp(5);
 
     try w.writeStruct(battle);
     try buf.flush();
 
-    // print(battle);
+    print(battle);
 
     const serialized = std.mem.toBytes(battle);
     const deserialized = std.mem.bytesToValue(@TypeOf(battle), &serialized);

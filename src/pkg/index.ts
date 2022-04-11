@@ -54,7 +54,7 @@ export namespace Gen1 {
   }
 
   export interface MoveSlot {
-    move: ID;
+    id: ID;
     pp: number;
     disabled?: number;
   }
