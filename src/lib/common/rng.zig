@@ -8,55 +8,59 @@ const expectEqual = std.testing.expectEqual;
 const showdown = build_options.showdown;
 
 pub fn Random(comptime gen: comptime_int) type {
-    const divisor = getRangeDivisor(gen);
+    if (showdown) return PRNG(gen);
 
-    if (showdown) {
-        return extern struct {
-            const Self = @This();
+    const Source = switch (gen) {
+        1, 2 => Gen12,
+        3, 4 => Gen34,
+        5, 6 => Gen56,
+        else => unreachable,
+    };
 
-            src: Gen56,
+    return extern struct {
+        const Self = @This();
 
-            pub fn next(self: *Self) Output(gen) {
-                return @truncate(Output(gen), self.src.next());
-            }
+        src: Source,
 
-            pub fn range(self: *Self, comptime T: type, from: T, to: Bound(T)) T {
-                return @truncate(T, @as(u64, self.src.next()) * (to - from) / divisor + from);
-            }
-
-            pub fn chance(
-                self: *Self,
-                comptime T: type,
-                numerator: T,
-                denominator: Bound(T),
-            ) bool {
-                assert(denominator > 0);
-                return self.range(T, 0, denominator) < numerator;
-            }
-        };
-    } else {
-        const Source = switch (gen) {
-            1, 2 => Gen12,
-            3, 4 => Gen34,
-            5, 6 => Gen56,
-            else => unreachable,
-        };
-
-        return extern struct {
-            const Self = @This();
-
-            src: Source,
-
-            pub fn next(self: *Self) Output(gen) {
-                return @truncate(Output(gen), self.src.next());
-            }
-        };
-    }
+        pub fn next(self: *Self) Output(gen) {
+            return @truncate(Output(gen), self.src.next());
+        }
+    };
 }
 
-test "Random" {
-    if (!showdown) return;
-    var prng = Random(1){ .src = .{ .seed = 0x1234 } };
+pub fn PRNG(comptime gen: comptime_int) type {
+    const divisor = getRangeDivisor(gen);
+    return extern struct {
+        const Self = @This();
+
+        src: Gen56,
+
+        pub fn init(seed: u64) Self {
+            return .{ .src = .{ .seed = seed } };
+        }
+
+        pub fn next(self: *Self) Output(gen) {
+            return @truncate(Output(gen), self.src.next());
+        }
+
+        pub fn range(self: *Self, comptime T: type, from: T, to: Bound(T)) T {
+            return @truncate(T, @as(u64, self.src.next()) * (to - from) / divisor + from);
+        }
+
+        pub fn chance(
+            self: *Self,
+            comptime T: type,
+            numerator: T,
+            denominator: Bound(T),
+        ) bool {
+            assert(denominator > 0);
+            return self.range(T, 0, denominator) < numerator;
+        }
+    };
+}
+
+test "PRNG" {
+    var prng = PRNG(1){ .src = .{ .seed = 0x1234 } };
     try expectEqual(@as(u8, 50), prng.range(u8, 0, 256));
     try expectEqual(true, prng.chance(u8, 128, 256)); // 76 < 128
 }
@@ -230,37 +234,3 @@ test "FixedRNG" {
         try expectEqual(e, rng.next());
     }
 }
-
-pub const PRNG = struct {
-    src: Gen56,
-
-    const divisor = getRangeDivisor(6);
-
-    pub fn init(seed: u64) PRNG {
-        return .{ .src = .{ .seed = seed } };
-    }
-
-    pub fn uint(self: *PRNG, comptime T: type) T {
-        return self.inclusive(T, std.math.minInt(T), std.math.maxInt(T));
-    }
-
-    pub fn chance(self: *PRNG, numerator: u16, denominator: u16) bool {
-        assert(denominator > 0);
-        return self.exclusive(u16, 0, denominator) < numerator;
-    }
-
-    // NOTE: inclusive range, not exclusive like elsewhere in this file
-    pub fn range(self: *PRNG, comptime T: type, min: T, max: T) T {
-        return self.inclusive(T, min, max);
-    }
-
-    inline fn inclusive(self: *PRNG, comptime T: type, from: T, to: T) T {
-        return self.exclusive(T, from, @as(Bound(T), to) + 1);
-    }
-
-    inline fn exclusive(self: *PRNG, comptime T: type, from: T, to: Bound(T)) T {
-        const max = @maximum(std.math.maxInt(u64), std.math.maxInt(T) * std.math.maxInt(T));
-        const U = std.math.IntFittingRange(0, max);
-        return @truncate(T, @as(U, self.src.next()) * (to - from) / @as(U, divisor) + from);
-    }
-};

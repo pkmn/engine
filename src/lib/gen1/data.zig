@@ -25,9 +25,9 @@ pub const Choice = data.Choice;
 pub const Player = data.Player;
 pub const Result = data.Result;
 
-pub const RNG = rng.Random(1);
+pub const Random = rng.Random(1);
 
-pub fn Battle(comptime PRNG: anytype) align(64) type {
+pub fn Battle(comptime RNG: anytype) align(64) type {
     return extern struct {
         const Self = @This();
 
@@ -35,7 +35,7 @@ pub fn Battle(comptime PRNG: anytype) align(64) type {
         turn: u16 = 0,
         last_damage: u16 = 0,
         _: uX = 0,
-        rng: PRNG,
+        rng: RNG,
 
         pub inline fn side(self: *Self, player: Player) *Side {
             return &self.sides[@enumToInt(player)];
@@ -62,7 +62,7 @@ pub fn Battle(comptime PRNG: anytype) align(64) type {
 const uX = if (showdown) u32 else u8;
 
 test "Battle" {
-    try expectEqual(384, @sizeOf(Battle(RNG)));
+    try expectEqual(384, @sizeOf(Battle(Random)));
 }
 
 pub const Side = extern struct {
@@ -404,12 +404,12 @@ pub const DVs = struct {
         return (self.atk & 1) << 3 | (self.def & 1) << 2 | (self.spe & 1) << 1 | (self.spc & 1);
     }
 
-    pub fn random(rand: *rng.PRNG) DVs {
+    pub fn random(rand: *rng.PRNG(6)) DVs {
         return .{
-            .atk = if (rand.chance(1, 5)) rand.range(u4, 1, 15) else 15,
-            .def = if (rand.chance(1, 5)) rand.range(u4, 1, 15) else 15,
-            .spe = if (rand.chance(1, 5)) rand.range(u4, 1, 15) else 15,
-            .spc = if (rand.chance(1, 5)) rand.range(u4, 1, 15) else 15,
+            .atk = if (rand.chance(u8, 1, 5)) rand.range(u4, 1, 15 + 1) else 15,
+            .def = if (rand.chance(u8, 1, 5)) rand.range(u4, 1, 15 + 1) else 15,
+            .spe = if (rand.chance(u8, 1, 5)) rand.range(u4, 1, 15 + 1) else 15,
+            .spc = if (rand.chance(u8, 1, 5)) rand.range(u4, 1, 15 + 1) else 15,
         };
     }
 };

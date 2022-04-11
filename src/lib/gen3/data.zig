@@ -17,12 +17,12 @@ pub const GameType = enum {
     Doubles,
 };
 
-pub const RNG = rng.Random(3);
+pub const Random = rng.Random(3);
 
-pub fn Battle(comptime PRNG: anytype, comptime game_type: GameType) type {
+pub fn Battle(comptime RNG: anytype, comptime game_type: GameType) type {
     return extern struct {
         sides: [2]Side(game_type),
-        rng: PRNG,
+        rng: RNG,
         turn: u8 = 0,
 
         pub fn p1(self: *Battle) *Side {

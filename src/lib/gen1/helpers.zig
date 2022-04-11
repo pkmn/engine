@@ -15,7 +15,7 @@ const showdown = build_options.showdown;
 
 const Choice = common.Choice;
 
-const PRNG = rng.PRNG;
+const PRNG = rng.PRNG(6);
 
 const DVs = data.DVs;
 const Move = data.Move;
@@ -39,20 +39,28 @@ pub const Battle = struct {
         };
     }
 
-    pub fn random(rand: *PRNG, initial: bool) data.Battle(data.RNG) {
+    pub fn random(rand: *PRNG, initial: bool) data.Battle(data.Random) {
         return .{
             .rng = prng(rand),
-            .turn = if (initial) 0 else rand.range(u16, 1, 1000),
-            .last_damage = if (initial) 0 else rand.range(u16, 1, 704),
+            .turn = if (initial) 0 else rand.range(u16, 1, 1000 + 1),
+            .last_damage = if (initial) 0 else rand.range(u16, 1, 704 + 1),
             .sides = .{ Side.random(rand, initial), Side.random(rand, initial) },
         };
     }
 };
 
-fn prng(rand: *PRNG) data.RNG {
-    return .{ .src = .{ .seed = if (build_options.showdown) rand.uint(u64) else .{
-        rand.uint(u8), rand.uint(u8), rand.uint(u8), rand.uint(u8), rand.uint(u8),
-        rand.uint(u8), rand.uint(u8), rand.uint(u8), rand.uint(u8), rand.uint(u8),
+fn prng(rand: *PRNG) data.Random {
+    return .{ .src = .{ .seed = if (build_options.showdown)
+        (@as(u64, rand.range(u16, 0, 0x10000)) << 48) |
+            (@as(u64, rand.range(u16, 0, 0x10000)) << 32) |
+            (@as(u64, rand.range(u16, 0, 0x10000)) << 16) |
+            (@as(u64, rand.range(u16, 0, 0x10000)))
+    else .{
+        rand.range(u8, 0, 256), rand.range(u8, 0, 256),
+        rand.range(u8, 0, 256), rand.range(u8, 0, 256),
+        rand.range(u8, 0, 256), rand.range(u8, 0, 256),
+        rand.range(u8, 0, 256), rand.range(u8, 0, 256),
+        rand.range(u8, 0, 256), rand.range(u8, 0, 256),
     } } };
 }
 
@@ -70,7 +78,7 @@ pub const Side = struct {
     }
 
     pub fn random(rand: *PRNG, initial: bool) data.Side {
-        const n = if (rand.chance(1, 100)) rand.range(u4, 1, 5) else 6;
+        const n = if (rand.chance(u8, 1, 100)) rand.range(u4, 1, 5 + 1) else 6;
         var side = data.Side{};
 
         var i: u4 = 0;
@@ -80,10 +88,10 @@ pub const Side = struct {
             var pokemon = &side.pokemon[i];
             var j: u4 = 0;
             while (j < 4) : (j += 1) {
-                if (!initial and rand.chance(1, 5 + (@as(u8, i) * 2))) {
+                if (!initial and rand.chance(u8, 1, 5 + (@as(u8, i) * 2))) {
                     side.last_selected_move = pokemon.moves[j].id;
                 }
-                if (!initial and rand.chance(1, 5 + (@as(u8, i) * 2))) {
+                if (!initial and rand.chance(u8, 1, 5 + (@as(u8, i) * 2))) {
                     side.last_used_move = pokemon.moves[j].id;
                 }
             }
@@ -91,9 +99,9 @@ pub const Side = struct {
                 var active = &side.active;
                 active.stats = pokemon.stats;
                 inline for (std.meta.fields(@TypeOf(active.boosts))) |field| {
-                    if (rand.chance(1, 10)) {
+                    if (rand.chance(u8, 1, 10)) {
                         @field(active.boosts, field.name) =
-                            @truncate(i4, @as(i5, rand.range(u4, 0, 12)) - 6);
+                            @truncate(i4, @as(i5, rand.range(u4, 0, 12 + 1)) - 6);
                     }
                 }
                 active.species = pokemon.species;
@@ -104,35 +112,37 @@ pub const Side = struct {
                 var volatiles = &active.volatiles;
                 inline for (std.meta.fields(@TypeOf(active.volatiles))) |field| {
                     if (field.field_type != bool) continue;
-                    if (rand.chance(1, 18)) {
+                    if (rand.chance(u8, 1, 18)) {
                         @field(volatiles, field.name) = true;
                         if (std.mem.eql(u8, field.name, "Bide")) {
-                            volatiles.data.state = rand.range(u16, 1, active.stats.hp - 1);
+                            volatiles.data.state = rand.range(u16, 1, active.stats.hp);
                         } else if (std.mem.eql(u8, field.name, "Trapping")) {
-                            volatiles.data.attacks = rand.range(u4, 0, 4);
+                            volatiles.data.attacks = rand.range(u4, 0, 4 + 1);
                         } else if (std.mem.eql(u8, field.name, "Thrashing")) {
-                            volatiles.data.attacks = rand.range(u4, 0, 4);
-                            volatiles.data.state = if (rand.chance(1, 10)) rand.range(u8, 1, 255) else 0;
+                            volatiles.data.attacks = rand.range(u4, 0, 4 + 1);
+                            volatiles.data.state =
+                                if (rand.chance(u8, 1, 10)) rand.range(u8, 1, 255 + 1) else 0;
                         } else if (std.mem.eql(u8, field.name, "Rage")) {
                             volatiles.data.attacks = 0; // TODO
-                            volatiles.data.state = if (rand.chance(1, 10)) rand.range(u8, 1, 255) else 0;
+                            volatiles.data.state =
+                                if (rand.chance(u8, 1, 10)) rand.range(u8, 1, 255 + 1) else 0;
                         } else if (std.mem.eql(u8, field.name, "Confusion")) {
-                            volatiles.data.confusion = rand.range(u4, 1, 5);
+                            volatiles.data.confusion = rand.range(u4, 1, 5 + 1);
                         } else if (std.mem.eql(u8, field.name, "Toxic")) {
                             pokemon.status = Status.init(Status.PSN);
-                            volatiles.data.toxic = rand.range(u4, 1, 15);
+                            volatiles.data.toxic = rand.range(u4, 1, 15 + 1);
                         } else if (std.mem.eql(u8, field.name, "Substitute")) {
                             volatiles.data.substitute =
-                                rand.range(u8, 1, @truncate(u8, active.stats.hp / 4));
+                                rand.range(u8, 1, @truncate(u8, active.stats.hp / 4) + 1);
                         }
                     }
                 }
-                if (rand.chance(1, 20)) {
-                    const m = rand.range(u4, 1, 4);
+                if (rand.chance(u8, 1, 20)) {
+                    const m = rand.range(u4, 1, 4 + 1);
                     if (active.moves[m].id != .None) {
                         volatiles.data.disabled = .{
                             .move = m,
-                            .duration = rand.range(u4, 1, 5),
+                            .duration = rand.range(u4, 1, 5 + 1),
                         };
                     }
                 }
@@ -181,9 +191,9 @@ pub const Pokemon = struct {
     }
 
     pub fn random(rand: *PRNG, initial: bool) data.Pokemon {
-        const s = @intToEnum(Species, rand.range(u8, 1, 151));
+        const s = @intToEnum(Species, rand.range(u8, 1, 151 + 1));
         const specie = Species.get(s);
-        const lvl = if (rand.chance(1, 20)) rand.range(u8, 1, 99) else 100;
+        const lvl = if (rand.chance(u8, 1, 20)) rand.range(u8, 1, 99 + 1) else 100;
         var stats: Stats(u16) = .{};
         const dvs = DVs.random(rand);
         inline for (std.meta.fields(@TypeOf(stats))) |field| {
@@ -191,30 +201,31 @@ pub const Pokemon = struct {
                 field.name,
                 @field(specie.stats, field.name),
                 if (field.field_type != u4) dvs.hp() else @field(dvs, field.name),
-                if (rand.chance(1, 20)) rand.range(u8, 0, 255) else 255,
+                if (rand.chance(u8, 1, 20)) rand.range(u8, 0, 255 + 1) else 255,
                 lvl,
             );
         }
 
         var ms = [_]MoveSlot{.{}} ** 4;
         var i: u4 = 0;
-        const n = if (rand.chance(1, 100)) rand.range(u4, 1, 3) else 4;
+        const n = if (rand.chance(u8, 1, 100)) rand.range(u4, 1, 3 + 1) else 4;
         while (i < n) : (i += 1) {
             var m: Move = .None;
             sample: while (true) {
-                m = @intToEnum(Move, rand.range(u8, 1, 165));
+                m = @intToEnum(Move, rand.range(u8, 1, 165 + 1));
                 var j: u4 = 0;
                 while (j < i) : (j += 1) {
                     if (ms[j].id == m) continue :sample;
                 }
                 break;
             }
-            const pp_ups = if (!initial and rand.chance(1, 10)) rand.range(u2, 0, 2) else 3;
+            const pp_ups =
+                if (!initial and rand.chance(u8, 1, 10)) rand.range(u2, 0, 2 + 1) else 3;
             // NB: PP can be at most 61 legally (though can overflow to 63)
             const max_pp = @truncate(u8, @minimum(Move.pp(m) / 5 * (5 + @as(u8, pp_ups)), 61));
             ms[i] = .{
                 .id = m,
-                .pp = if (initial) max_pp else rand.range(u8, 0, max_pp),
+                .pp = if (initial) max_pp else rand.range(u8, 0, max_pp + 1),
             };
         }
 
@@ -223,9 +234,9 @@ pub const Pokemon = struct {
             .types = specie.types,
             .level = lvl,
             .stats = stats,
-            .hp = if (initial) stats.hp else rand.range(u16, 0, stats.hp),
-            .status = if (!initial and rand.chance(1, 6))
-                0 | (@as(u8, 1) << rand.range(u3, 1, 6))
+            .hp = if (initial) stats.hp else rand.range(u16, 0, stats.hp + 1),
+            .status = if (!initial and rand.chance(u8, 1, 6 + 1))
+                0 | (@as(u8, 1) << rand.range(u3, 1, 6 + 1))
             else
                 0,
             .moves = ms,

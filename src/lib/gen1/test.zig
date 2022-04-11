@@ -26,7 +26,7 @@ const ArgType = protocol.ArgType;
 const TestLogs = protocol.TestLogs;
 const FixedLog = protocol.FixedLog;
 
-const PRNG = rng.PRNG;
+const PRNG = rng.PRNG(6);
 
 const Move = data.Move;
 
