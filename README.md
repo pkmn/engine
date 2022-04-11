@@ -72,8 +72,16 @@ const pkmn = @import("libs/pkmn/build.zig");
 
 pub fn build(b: *std.build.Builder) void {
     ...
-    const showdown = b.option(bool, "showdown", "Enable Pokémon Showdown compatability mode") orelse false;
-    const trace = b.option(bool, "trace", "Enable trace logs") orelse false;
+    const showdown = b.option(
+        bool,
+        "showdown",
+        "Enable Pokémon Showdown compatability mode",
+    ) orelse false;
+    const trace = b.option(
+        bool,
+        "trace",
+        "Enable trace logs",
+    ) orelse false;
 
     const options = b.addOptions();
     options.addOption(bool, "showdown", showdown);
