@@ -102,6 +102,10 @@ example: c-example js-example zig-example
 integration: check example
 	npm run test:integration
 
+.PHONY: benchmark
+benchmark:
+	npm run benchmark
+
 .PHONY: clean
 clean:
 	rm -rf zig-* build .tsbuildinfo .eslintcache

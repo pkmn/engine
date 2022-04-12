@@ -35,8 +35,9 @@
     "compile": "tsc -p .",
     "build": "npm run compile",
     "test": "jest",
+    "test:integration": "jest --coverage=false --testRegex='src/test/.*\\.test\\.ts$'",
     "generate": "npm run compile && node build/tools/generate",
-    "test:integration": "jest --coverage=false --testRegex='src/test/.*\\.test\\.ts$'"
+    "benchmark": "npm run compile && node build/test/benchmark"
   },
   "jest": {
     "collectCoverage": true,
