@@ -82,7 +82,7 @@ describe('Gen 1', () => {
     expect(slot2.statusData.sleep).toBe(5);
     expect(slot2.active).toBe(false);
 
-    const p2 = battle.side('p2');
+    const p2 = battle.foe('p1');
     expect(p2.lastSelectedMove).toBe('doubleteam');
     expect(p2.active!.species).toBe('tentacruel');
     expect(p2.active!.types).toEqual(['Water', 'Poison']);

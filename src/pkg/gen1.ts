@@ -67,6 +67,7 @@ export class Battle implements Gen1.Battle {
 
   get prng(): readonly number[] {
     const offset = OFFSETS.Battle.last_damage + 2 + (this.options.showdown ? 4 : 1);
+    // Pokémon Showdown's PRNGSeed is always big-endian
     const seed: number[] = [0, 0, 0, 0];
     if (this.options.showdown) {
       seed[LE ? 3 : 0] = this.data.getUint16(offset, LE);
