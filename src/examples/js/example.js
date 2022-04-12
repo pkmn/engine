@@ -20,7 +20,7 @@ const TEAMS = {
 // const battle = Battle.create(gens.get(1), options);
 // while (!(result = battle.update(c1, c2))) {
 //   c1 = random.range(0, battle.choices('p1', result));
-//   c2 = random.range(0, battle.choices('p1', result));
+//   c2 = random.range(0, battle.choices('p2', result));
 // }
 
 // console.log(result);

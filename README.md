@@ -14,7 +14,7 @@
 </p>
 
 A minimal, complete, Pokémon battle simulation engine optimized for performance and designed for
-tooling, embedded systems, and [artifical intelligence](https://github.com/pkmn/0-ERROR) use cases.
+tooling, embedded systems, and [artificial intelligence](https://github.com/pkmn/0-ERROR) use cases.
 
 ## Installation
 
@@ -129,7 +129,7 @@ let result: Result;
 let c1: Choice, c2: Choice;
 while (!(result = battle.update(c1, c2))) {
   c1 = random.range(0, battle.choices('p1', result));
-  c2 = random.range(0, battle.choices('p1', result));
+  c2 = random.range(0, battle.choices('p2', result));
 }
 
 console.log(result);
