@@ -13,7 +13,6 @@ export const LE = (() => {
 export type IDs = [
   { types: TypeName[] },
   { items: ID[]; types: TypeName[] },
-  { items: ID[] },
 ];
 
 export const IDS = idsJSON as IDs;
@@ -79,7 +78,7 @@ export class Lookup {
     if (gen.num === 1) {
       this.items = [];
     } else {
-      this.items = IDS[gen.num - 1 as 1 | 2].items;
+      this.items = IDS[gen.num - 1 as 1].items;
     }
     this.abilities = []; // TODO
   }

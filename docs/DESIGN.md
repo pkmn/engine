@@ -98,7 +98,6 @@ their data structures / protocol looks like:
 
 - [Generation I](../src/lib/gen1/README.md)
 - [Generation II](../src/lib/gen2/README.md)
-- [Generation III](../src/lib/gen3/README.md)
 
 ## Appendix
 

@@ -28,10 +28,7 @@ const IDS: IDs = [
       '???', 'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Ice', 'Dragon', 'Dark',
     ] as TypeName[],
     items: [],
-  },
-  {
-    items: [],
-  },
+  }
 ];
 
 const NAMES: { [constant: string]: string } = {
@@ -694,112 +691,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         data: SPECIES.join(',\n        '),
       },
     });
-  },
-  3: async (gen, dirs, update, tests) => {
-    const pret = 'https://raw.githubusercontent.com/pret/pokeemerald/master';
-
-    // Moves
-    let url = `${pret}/include/constants/moves.h`;
-    const moves = await getOrUpdate('moves', dirs.cache, url, update, (line, _, i) => {
-      const match = /#define MOVE_(\w+)/.exec(line);
-      if (!match || match[1] === 'NONE') return undefined;
-      const move = gen.moves.get(NAMES[match[1]] || match[1])!;
-      if (move.num !== i + 1) {
-        throw new Error(`Expected ${move.num} for ${move.name} and received ${i + 1}`);
-      }
-      return nameToEnum(move.name);
-    });
-    // const MOVES: string[] = [];
-    // for (const name of moves) {
-    //   const move = gen.moves.get(name)!;
-    //   MOVES.push(`// ${name}\n` +
-    //     '        .{\n' +
-    //     `            .bp = ${move.basePower},\n` +
-    //     `            .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
-    //     `            .accuracy = ${move.accuracy === true ? '100' : move.accuracy},\n` +
-    //     `            .pp = ${move.pp / 5}, // * 5 = ${move.pp}\n` +
-    //     '        }');
-    // }
-    let Data = `pub const Move = packed struct {
-        bp: u8,
-        accuracy: u8,
-        type: Type,
-        pp: u4, // pp / 5
-        chance: u4, // chance / 10
-        target: MoveTarget,
-        // FIXME flags
-
-        comptime {
-            assert(@sizeOf(Move) == 5);
-        }
-    };`;
-    const ppFn = `pub fn pp(id: Move) u8 {
-        return Move.get(id).pp * 5;
-    }`;
-    template('moves', dirs.out, {
-      gen: gen.num,
-      Move: {
-        type: 'u16',
-        values: moves.join(',\n    '),
-        size: 2,
-        Data,
-        data: '//', // MOVES.join(',\n        '),
-        dataSize: 0,
-        ppFn,
-      },
-    });
-
-    if (tests) moveTests(gen, moves);
-
-    // Species
-    url = `${pret}/include/constants/pokedex.h`;
-    const species = await getOrUpdate('species', dirs.cache, url, update, (line, _, i) => {
-      const match = /NATIONAL_DEX_(\w+),/.exec(line);
-      if (!match || match[1] === 'NONE' || match[1].startsWith('OLD_UNOWN')) return undefined;
-      if (!match || match[1] === 'EGG' || match[1].startsWith('UNOWN_')) return undefined;
-      const specie = gen.species.get(match[1])!;
-      if (specie.num !== i + 1) {
-        throw new Error(`Expected ${specie.num} for ${specie.name} and received ${i + 1}`);
-      }
-      return nameToEnum(specie.name);
-    });
-    const SPECIES = [];
-    for (const name of species) {
-      const s = gen.species.get(name)!;
-      const types = s.types.length === 1
-        ? [s.types[0], s.types[0]] : s.types;
-      // FIXME abilities
-      SPECIES.push(`// ${name}\n` +
-        '        .{\n' +
-        '            .stats = .{ ' +
-                        `.hp = ${s.baseStats.hp}, ` +
-                        `.atk = ${s.baseStats.atk}, ` +
-                        `.def = ${s.baseStats.def}, ` +
-                        `.spe = ${s.baseStats.spe}, ` +
-                        `.spa = ${s.baseStats.spa}, ` +
-                        `.spd = ${s.baseStats.spd}` +
-                      ' },\n' +
-        `            .types = .{ .type1 = .${types[0]}, .type2 = .${types[1]} },\n` +
-        `            .ratio = ${convertGenderRatio(s)}\n` +
-        '        }');
-    }
-    Data = `// @test-only
-    pub const Data = struct {
-        stats: Stats(u8),
-        types: Types,
-        ratio: u8,
-    };`;
-    template('species', dirs.out, {
-      gen: gen.num,
-      Species: {
-        type: 'u16',
-        values: species.join(',\n    '),
-        size: 2,
-        Data,
-        data: SPECIES.join(',\n        '),
-      },
-    });
-  },
+  }
 };
 
 (async () => {
