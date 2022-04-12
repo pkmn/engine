@@ -22,6 +22,12 @@ const OFFSETS = LAYOUT[0].offsets;
 OFFSETS.Stats.spa = OFFSETS.Stats.spd = OFFSETS.Stats.spc;
 OFFSETS.Boosts.spa = OFFSETS.Boosts.spd = OFFSETS.Boosts.spc;
 
+// TODO: bindings
+// - support both WASM and node (autodetect which to use)
+// - support multiple implementations (pkmn-showdown.node and pkmn.node), possibly both
+// - binding should expose whether it was build with showon (also in name) and trace
+// integration test = only debug and -Dshowdown -Dtrace
+// benchmark = only releasefast and -Dshowdown
 export class Battle implements Gen1.Battle {
   private readonly lookup: Lookup;
   private readonly data: DataView;
