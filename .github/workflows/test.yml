@@ -16,7 +16,8 @@ jobs:
         zig: [0.9.0, master]
     runs-on: ${{matrix.os}}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - run: git config core.symlinks true
       - uses: goto-bus-stop/setup-zig@v1
         with:
           version: ${{matrix.zig}}

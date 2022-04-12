@@ -84,22 +84,22 @@ export namespace Gen1 {
 export type BattleOptions = CreateOptions | RestoreOptions;
 
 export type CreateOptions = {
-  p1: Player;
-  p2: Player;
+  p1: PlayerOptions;
+  p2: PlayerOptions;
   seed: number[];
   showdown?: boolean;
   log: true;
 } | {
-  p1: Omit<Player, 'name'>;
-  p2: Omit<Player, 'name'>;
+  p1: Omit<PlayerOptions, 'name'>;
+  p2: Omit<PlayerOptions, 'name'>;
   seed: number[];
   showdown?: boolean;
   log?: false;
 };
 
 export type RestoreOptions = {
-  p1: Player;
-  p2: Player;
+  p1: PlayerOptions;
+  p2: PlayerOptions;
   showdown?: boolean;
   log: true;
 } | {
@@ -107,9 +107,20 @@ export type RestoreOptions = {
   log?: false;
 };
 
-export interface Player {
+export interface PlayerOptions {
   name: string;
-  team: PokemonSet[];
+  team: Partial<PokemonSet>[];
+}
+
+export interface Choice {
+  type: 'move' | 'switch' | 'pass';
+  data: number;
+}
+
+export interface Result {
+  type: 'none' | 'win' | 'lose' | 'tie' | 'error';
+  p1: Choice['type'];
+  p2: Choice['type'];
 }
 
 export class Battle {

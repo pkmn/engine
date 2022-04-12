@@ -1,7 +1,13 @@
 pub const MAX_OPTIONS_SIZE = gen1.MAX_OPTIONS_SIZE;
 pub const MAX_LOG_SIZE = gen1.MAX_LOG_SIZE;
 
+pub const Player = @import("common/data.zig").Player;
+pub const Choice = @import("common/data.zig").Choice;
+pub const Result = @import("common/data.zig").Result;
+
 pub const Log = @import("common/protocol.zig").Log;
+
+pub const PRNG = @import("common/rng.zig").PRNG(6);
 
 pub const protocol = struct {
     usingnamespace @import("common/protocol.zig");

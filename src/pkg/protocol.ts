@@ -1,7 +1,7 @@
 import {Generation, StatusName, TypeName, BoostID, ID} from '@pkmn/data';
 import {Protocol} from '@pkmn/protocol';
 
-import {Player} from './index';
+import {PlayerOptions} from './index';
 import {LE, Lookup, PROTOCOL} from './data';
 
 const ArgType = PROTOCOL.ArgType;
@@ -15,7 +15,7 @@ export class Names {
   p1: SideNames;
   p2: SideNames;
 
-  constructor(sides: {p1: Player; p2: Player}) {
+  constructor(sides: {p1: PlayerOptions; p2: PlayerOptions}) {
     this.p1 = new SideNames(sides.p1);
     this.p2 = new SideNames(sides.p2);
   }
@@ -25,9 +25,9 @@ export class SideNames {
   name: Protocol.Username;
   team: string[];
 
-  constructor(player: Player) {
+  constructor(player: PlayerOptions) {
     this.name = player.name as Protocol.Username;
-    this.team = player.team.map(p => p.name ?? p.species);
+    this.team = player.team.map(p => p.name ?? p.species!);
   }
 }
 

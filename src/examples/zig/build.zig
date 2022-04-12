@@ -1,19 +1,31 @@
 const std = @import("std");
+const pkmn = @import("libs/pkmn/build.zig");
 
 pub fn build(b: *std.build.Builder) void {
-    // Standard target options allows the person running `zig build` to choose
-    // what target to build for. Here we do not override the defaults, which
-    // means any target is allowed, and the default is native. Other options
-    // for restricting supported target set are available.
     const target = b.standardTargetOptions(.{});
-
-    // Standard release options allow the person running `zig build` to select
-    // between Debug, ReleaseSafe, ReleaseFast, and ReleaseSmall.
     const mode = b.standardReleaseOptions();
+
+    const showdown = b.option(
+        bool,
+        "showdown",
+        "Enable Pokémon Showdown compatability mode",
+    ) orelse false;
+    const trace = b.option(
+        bool,
+        "trace",
+        "Enable trace logs",
+    ) orelse false;
+
+    const options = b.addOptions();
+    options.addOption(bool, "showdown", showdown);
+    options.addOption(bool, "trace", trace);
+
+    const build_options = options.getPackage("build_options");
 
     const exe = b.addExecutable("zig", "example.zig");
     exe.setTarget(target);
     exe.setBuildMode(mode);
+    exe.addPackage(pkmn.pkg(b, build_options));
     exe.install();
 
     const run_cmd = exe.run();
@@ -24,11 +36,4 @@ pub fn build(b: *std.build.Builder) void {
 
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
-
-    const exe_tests = b.addTest("example.zig");
-    exe_tests.setTarget(target);
-    exe_tests.setBuildMode(mode);
-
-    const test_step = b.step("test", "Run unit tests");
-    test_step.dependOn(&exe_tests.step);
 }

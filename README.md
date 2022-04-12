@@ -123,7 +123,16 @@ import {Generations} from '@pkmn/data';
 import {Battle} from '@pkmn/engine';
 
 const gens = new Generations(Dex);
-const battle = Battle.create(gens.get(1), team1, team2);
+const battle = Battle.create(...);
+
+let result: Result;
+let c1: Choice, c2: Choice;
+while (!(result = battle.update(c1, c2))) {
+  c1 = random.range(0, battle.choices('p1', result));
+  c2 = random.range(0, battle.choices('p1', result));
+}
+
+console.log(result);
 ```
 
 ### Zig
@@ -144,11 +153,11 @@ var c2 = pkmn.Choice{};
 
 var result = try battle.update(c1, c2, null);
 while (result.type == .None) : (result = try battle.update(c1, c2, null)) {
-    c1 = options[random.uintLessThan(battle.choices(.P1, result.p1, options))];
-    c2 = options[random.uintLessThan(battle.choices(.P2, result.p2, options))];
+    c1 = options[random.uintLessThan(u8, battle.choices(.P1, result.p1, &options))];
+    c2 = options[random.uintLessThan(u8, battle.choices(.P2, result.p2, &options))];
 }
 
-try std.debug.print("{}", result.type);
+std.debug.print("{}", .{result.type});
 ```
 
 ## Status
