@@ -10,7 +10,7 @@ pub fn main() !void {
     const args = try std.process.argsAlloc(allocator);
     defer std.process.argsFree(allocator, args);
 
-    // Expect that we have been given a seed as our only argument
+    // Expect that we have been given a decimal seed as our only argument
     // (error handling left as an exercise for the reader...)
     const seed = try std.fmt.parseUnsigned(u64, args[2], 10);
 
@@ -19,8 +19,8 @@ pub fn main() !void {
     // Preallocate a small buffer for the choice options throughout the battle
     var options: [pkmn.MAX_OPTIONS_SIZE]pkmn.Choice = undefined;
 
-    // pkmn.gen1.Battle can be tedious to initialize, the helper constructor fills in
-    // missing fields with intelligent defaults to cut down on boilerplate.
+    // pkmn.gen1.Battle can be tedious to initialize - the helper constructor used here
+    // fills in missing fields with intelligent defaults to cut down on boilerplate.
     var battle = pkmn.gen1.helpers.Battle.init(
         random.int(u64),
         &.{
@@ -54,14 +54,22 @@ pub fn main() !void {
 
     var result = try battle.update(c1, c2, log);
     while (result.type == .None) : (result = try battle.update(c1, c2, log)) {
-        // Here we would do something with the log data in buffer if -Dtrace was enabled
+        // Here we would do something with the log data in buffer if -Dtrace were enabled
 
-        // battle.choices does most of the "heavy lifting" in terms of determining what the
-        // possible options are - we then just use the system PRNG to choose one at random
+        // battle.choices determines what the possible options are - the simplest way to
+        // choose and option here is to just use system PRNG to pick one at random
         c1 = options[random.uintLessThan(u8, battle.choices(.P1, result.p1, &options))];
         c2 = options[random.uintLessThan(u8, battle.choices(.P2, result.p2, &options))];
     }
 
-    // Pretty printing the result is also left as an exercise...
-    std.debug.print("{}", .{result.type});
+    // The result is from the perspective of P1
+    const msg = switch (result.type) {
+        .Win => "won by Player A",
+        .Lose => "won by Player B",
+        .Tie => "ended in a tie",
+        .Error => "encountered an error",
+        else => unreachable,
+    };
+
+    std.debug.print("Battle {s} after {d} turns", .{ msg, battle.turn });
 }
