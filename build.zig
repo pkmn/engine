@@ -131,12 +131,26 @@ pub fn build(b: *Builder) !void {
         });
     }
 
+    const bench = b.addExecutable(
+        if (showdown) "benchmark-showdown" else "benchmark",
+        "src/test/benchmark.zig",
+    );
+    bench.addPackage(pkmn);
+    bench.setBuildMode(.ReleaseFast);
+    bench.single_threaded = true;
+    bench.strip = true;
+
+    const benchmark = bench.run();
+    benchmark.step.dependOn(b.getInstallStep());
+    if (b.args) |args| benchmark.addArgs(args);
+
     const format = b.addFmt(&[_][]const u8{"."});
 
     const rng = try tool(b, &.{pkmn}, "src/tools/rng.zig", showdown, strip);
     const serde = try tool(b, &.{pkmn}, "src/tools/serde.zig", showdown, strip);
     const protocol = try tool(b, &.{pkmn}, "src/tools/protocol.zig", showdown, strip);
 
+    b.step("benchmark", "Run benchmark code").dependOn(&benchmark.step);
     b.step("format", "Format source files").dependOn(&format.step);
     b.step("protocol", "Run protocol dump tool").dependOn(&protocol.step);
     b.step("rng", "Run RNG calculator tool").dependOn(&rng.step);

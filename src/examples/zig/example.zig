@@ -11,8 +11,12 @@ pub fn main() !void {
     defer std.process.argsFree(allocator, args);
 
     // Expect that we have been given a decimal seed as our only argument
-    // (error handling left as an exercise for the reader...)
-    const seed = try std.fmt.parseUnsigned(u64, args[2], 10);
+    const seed = std.fmt.parseUnsigned(u64, args[2], 10) catch {
+        const err = std.io.getStdErr().writer();
+        try err.print("Invalid seed: {s}\n", .{args[1]});
+        try err.print("Usage: {s} <seed>\n", .{args[0]});
+        std.process.exit(1);
+    };
 
     // Use Zig's system PRNG (pkmn.PRNG is another option with a slightly different API)
     var random = std.rand.DefaultPrng.init(seed).random();
@@ -71,5 +75,6 @@ pub fn main() !void {
         else => unreachable,
     };
 
-    std.debug.print("Battle {s} after {d} turns", .{ msg, battle.turn });
+    const out = std.io.getStdOut().writer();
+    try out.print("Battle {s} after {d} turns", .{ msg, battle.turn });
 }
