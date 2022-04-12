@@ -29,6 +29,17 @@ const Log = protocol.Log(std.io.FixedBufferStream([]u8).Writer);
 
 pub const Battle = struct {
     pub fn init(
+        seed: u64,
+        p1: []const Pokemon,
+        p2: []const Pokemon,
+    ) data.Battle(data.Random) {
+        return .{
+            .rng = prng(&.{.seed = seed}),
+            .sides = .{ Side.init(p1), Side.init(p2) },
+        };
+    }
+
+    pub fn fixed(
         comptime rolls: anytype,
         p1: []const Pokemon,
         p2: []const Pokemon,

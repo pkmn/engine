@@ -56,7 +56,7 @@ test "TODO Battle1" {
         (.{ NOP, NOP, HIT, NO_CRIT, HIT, NO_CRIT, MAX_DMG })
     else
         (.{ NO_CRIT, HIT, NO_CRIT, MAX_DMG, HIT });
-    var battle = Battle.init(rolls, &.{p1}, &.{p2});
+    var battle = Battle.fixed(rolls, &.{p1}, &.{p2});
     try expectEqual(Result.Default, try update(&battle, move(4), move(2), null));
     try expect(battle.rng.exhausted());
 }
@@ -68,7 +68,7 @@ test "TODO Battle2" {
         (.{ NOP, NOP, HIT, NO_CRIT, HIT, NO_CRIT, MAX_DMG })
     else
         (.{ NO_CRIT, HIT, NO_CRIT, MAX_DMG, HIT });
-    var battle = Battle.init(rolls, &.{p1}, &.{p2});
+    var battle = Battle.fixed(rolls, &.{p1}, &.{p2});
 
     // var logs = TestLogs(100){};
     // var expected = FixedLog{ .writer = stream(&logs.expected).writer() };
