@@ -40,10 +40,10 @@ argv.seed = argv.seed
   : [1, 2, 3, 4];
 
 const newSeed = (prng: PRNG) => [
-  Math.floor(prng.next() * 0x10000),
-  Math.floor(prng.next() * 0x10000),
-  Math.floor(prng.next() * 0x10000),
-  Math.floor(prng.next() * 0x10000),
+  prng.next(0x10000),
+  prng.next(0x10000),
+  prng.next(0x10000),
+  prng.next(0x10000),
 ] as PRNGSeed;
 
 const getPRNGs = () => {

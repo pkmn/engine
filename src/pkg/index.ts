@@ -124,6 +124,8 @@ export interface Result {
 }
 
 export class Battle {
+  private constructor() {}
+
   static create(gen: Generation, options: CreateOptions) {
     const lookup = Lookup.get(gen);
     switch (gen.num) {

@@ -97,16 +97,18 @@ pub const Side = struct {
             side.pokemon[i] = Pokemon.random(rand, initial);
             side.order[i] = i + 1;
             var pokemon = &side.pokemon[i];
+            if (initial) continue;
+
             var j: u4 = 0;
             while (j < 4) : (j += 1) {
-                if (!initial and rand.chance(u8, 1, 5 + (@as(u8, i) * 2))) {
+                if (rand.chance(u8, 1, 5 + (@as(u8, i) * 2))) {
                     side.last_selected_move = pokemon.moves[j].id;
                 }
-                if (!initial and rand.chance(u8, 1, 5 + (@as(u8, i) * 2))) {
+                if (rand.chance(u8, 1, 5 + (@as(u8, i) * 2))) {
                     side.last_used_move = pokemon.moves[j].id;
                 }
             }
-            if (!initial and i == 0) {
+            if (i == 0) {
                 var active = &side.active;
                 active.stats = pokemon.stats;
                 inline for (std.meta.fields(@TypeOf(active.boosts))) |field| {
@@ -174,11 +176,11 @@ pub const Pokemon = struct {
     pub fn init(p: Pokemon) data.Pokemon {
         var pokemon = data.Pokemon{};
         pokemon.species = p.species;
-        const specie = Species.get(p.species);
+        const species = Species.get(p.species);
         inline for (std.meta.fields(@TypeOf(pokemon.stats))) |field| {
             @field(pokemon.stats, field.name) = Stats(u16).calc(
                 field.name,
-                @field(specie.stats, field.name),
+                @field(species.stats, field.name),
                 0xF,
                 0xFFFF,
                 p.level,
@@ -196,21 +198,21 @@ pub const Pokemon = struct {
             pokemon.hp = pokemon.stats.hp;
         }
         pokemon.status = p.status;
-        pokemon.types = specie.types;
+        pokemon.types = species.types;
         pokemon.level = p.level;
         return pokemon;
     }
 
     pub fn random(rand: *PRNG, initial: bool) data.Pokemon {
         const s = @intToEnum(Species, rand.range(u8, 1, 151 + 1));
-        const specie = Species.get(s);
+        const species = Species.get(s);
         const lvl = if (rand.chance(u8, 1, 20)) rand.range(u8, 1, 99 + 1) else 100;
         var stats: Stats(u16) = .{};
         const dvs = DVs.random(rand);
         inline for (std.meta.fields(@TypeOf(stats))) |field| {
             @field(stats, field.name) = Stats(u16).calc(
                 field.name,
-                @field(specie.stats, field.name),
+                @field(species.stats, field.name),
                 if (field.field_type != u4) dvs.hp() else @field(dvs, field.name),
                 if (rand.chance(u8, 1, 20)) rand.range(u8, 0, 255 + 1) else 255,
                 lvl,
@@ -242,7 +244,7 @@ pub const Pokemon = struct {
 
         return .{
             .species = s,
-            .types = specie.types,
+            .types = species.types,
             .level = lvl,
             .stats = stats,
             .hp = if (initial) stats.hp else rand.range(u16, 0, stats.hp + 1),
