@@ -127,9 +127,9 @@ const battle = Battle.create(...);
 
 let result: Result;
 let c1: Choice, c2: Choice;
-while (!(result = battle.update(c1, c2))) {
-  c1 = random.range(0, battle.choices('p1', result));
-  c2 = random.range(0, battle.choices('p2', result));
+while (!(result = battle.update(c1, c2)).type) {
+  c1 = Math.floor(Math.random() * battle.choices('p1', result));
+  c2 = Math.floor(Math.random() * battle.choices('p2', result));
 }
 
 console.log(result);
