@@ -46,6 +46,10 @@ const newSeed = (prng: PRNG) => [
   prng.next(0x10000),
 ] as PRNGSeed;
 
+// TODO ps async = uses RandomPlayerAI = no, causes jank due to unavailable choice
+// need 2 static chooser fns based on engine/pkmn Battle = 1 that works for PS battle +
+// 1 for engine and wrap in a BattlePlayer for ps Async
+
 const getPRNGs = () => {
   const prng = new PRNG(argv.seed.slice());
   const p1 = new PRNG(newSeed(prng));

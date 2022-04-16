@@ -125,11 +125,14 @@ import {Battle} from '@pkmn/engine';
 const gens = new Generations(Dex);
 const battle = Battle.create(...);
 
+const choose = (options: Choice[]) =>
+  options[Math.floor(Math.random() * options.length];
+
 let result: Result;
 let c1: Choice, c2: Choice;
 while (!(result = battle.update(c1, c2)).type) {
-  c1 = Math.floor(Math.random() * battle.choices('p1', result));
-  c2 = Math.floor(Math.random() * battle.choices('p2', result));
+  c1 = choose(battle.choices('p1', result));
+  c2 = choose(battle.choices('p2', result));
 }
 
 console.log(result);

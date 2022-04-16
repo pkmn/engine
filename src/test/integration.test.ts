@@ -1,6 +1,9 @@
 import {PRNG, PRNGSeed, BattleStreams} from '@pkmn/sim';
 import {ExhaustiveRunner, ExhaustiveRunnerOptions, RunnerOptions, AIOptions} from '@pkmn/sim/tools';
 
+// FIXME: exhaustive runner depends on RandomPlayerAI = possibly invalid choices need to figure out
+// which choices get accepted and use those (= from raw battle stream? or is raw too raw and we need
+// a sanitized log?)
 class Runner {
   private readonly format: string;
   private readonly prng: PRNG;

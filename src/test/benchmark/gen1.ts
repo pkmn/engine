@@ -1,15 +1,16 @@
-import {PRNG} from '@pkmn/sim';
-import {Generation, PokemonSet, StatsTable} from '@pkmn/data';
+import * as sim from '@pkmn/sim';
+import {Generation, PokemonSet, SideID, StatsTable} from '@pkmn/data';
 
 import * as engine from '../../pkg';
+import * as gen1 from '../../pkg/gen1';
 import {Lookup} from '../../pkg/data';
 
 export const Battle = new class {
-  static random(gen: Generation, prng: PRNG): engine.Battle {
+  random(gen: Generation, prng: sim.PRNG): engine.Battle {
     return engine.Battle.create(gen, this.options(gen, prng));
   }
 
-  private static options(gen: Generation, prng: PRNG): engine.CreateOptions {
+  options(gen: Generation, prng: sim.PRNG): engine.CreateOptions {
     return {
       seed: [
         prng.next(0x10000),
@@ -26,7 +27,7 @@ export const Battle = new class {
 };
 
 const Player = new class {
-  options(gen: Generation, prng: PRNG): Omit<engine.PlayerOptions, 'name'> {
+  options(gen: Generation, prng: sim.PRNG): Omit<engine.PlayerOptions, 'name'> {
     const lookup = Lookup.get(gen);
 
     const team: Partial<PokemonSet>[] = [];
@@ -64,3 +65,53 @@ const Player = new class {
     return {team};
   }
 };
+
+export const Choices = new class {
+  engine(battle: gen1.Battle, id: SideID, request: engine.Choice['type']): engine.Choice[] {
+    switch (request) {
+      case 'pass': {
+        return [{type: 'pass', data: 0}];
+      }
+      case 'switch': {
+        const options: engine.Choice[] = [];
+        const side = battle.side(id);
+        for (let slot = 2; slot <= 6; slot++) {
+          const pokemon = side.get(slot as engine.Slot);
+          if (!pokemon || pokemon.hp === 0) continue;
+          options.push({type: 'switch', data: slot});
+        }
+        return options.length === 0 ? [{type: 'pass', data: 0}] : options;
+      }
+      case 'move': {
+        return []; // TODO
+      }
+    }
+  }
+
+  sim(battle: sim.Battle, id: SideID): string[] {
+    return []; // TODO
+  }
+};
+
+export class RandomPlayerAI extends sim.BattleStreams.BattlePlayer {
+  readonly battle: sim.Battle;
+  readonly id: SideID;
+  readonly prng: sim.PRNG;
+
+  constructor(
+    stream: sim.Streams.ObjectReadWriteStream<string>,
+    battle: sim.Battle,
+    id: SideID,
+    prng: sim.PRNG
+  ) {
+    super(stream);
+    this.battle = battle;
+    this.id = id;
+    this.prng = prng;
+  }
+
+  receiveRequest(_: sim.AnyObject) {
+    const options = Choices.sim(this.battle, this.id);
+    this.choose(options[this.prng.next(options.length)]);
+  }
+}
