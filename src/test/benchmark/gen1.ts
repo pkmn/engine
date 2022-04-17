@@ -55,7 +55,7 @@ const Player = new class {
       const m = prng.randomChance(1, 100) ? prng.next(1, 3 + 1) : 4;
       for (let j = 0; j < m; j++) {
         let move;
-        while (moves.includes((move = lookup.moveByNum(prng.next(1, 165 + 1))))) {}
+        while (moves.includes((move = lookup.moveByNum(prng.next(1, 165 + 1)))));
         moves.push(move);
       }
 
@@ -69,22 +69,22 @@ const Player = new class {
 export const Choices = new class {
   engine(battle: gen1.Battle, id: SideID, request: engine.Choice['type']): engine.Choice[] {
     switch (request) {
-      case 'pass': {
-        return [{type: 'pass', data: 0}];
+    case 'pass': {
+      return [{type: 'pass', data: 0}];
+    }
+    case 'switch': {
+      const options: engine.Choice[] = [];
+      const side = battle.side(id);
+      for (let slot = 2; slot <= 6; slot++) {
+        const pokemon = side.get(slot as engine.Slot);
+        if (!pokemon || pokemon.hp === 0) continue;
+        options.push({type: 'switch', data: slot});
       }
-      case 'switch': {
-        const options: engine.Choice[] = [];
-        const side = battle.side(id);
-        for (let slot = 2; slot <= 6; slot++) {
-          const pokemon = side.get(slot as engine.Slot);
-          if (!pokemon || pokemon.hp === 0) continue;
-          options.push({type: 'switch', data: slot});
-        }
-        return options.length === 0 ? [{type: 'pass', data: 0}] : options;
-      }
-      case 'move': {
-        return []; // TODO
-      }
+      return options.length === 0 ? [{type: 'pass', data: 0}] : options;
+    }
+    case 'move': {
+      return []; // TODO
+    }
     }
   }
 

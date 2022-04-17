@@ -26,7 +26,7 @@ class Random {
     z = z ^ (z + Math.imul(z ^ (z >>> 7), z | 61));
     z = (z ^ (z >>> 14)) >>> 0;
     const n = z / 2 ** 32;
-    return Math.floor(n * min);
+    return Math.floor(n * max);
   }
 }
 
@@ -42,3 +42,4 @@ class Random {
 
 console.log(gens.get(1).species.get('Gengar').baseStats.hp);
 console.log(TEAMS);
+console.log(new Random().next());

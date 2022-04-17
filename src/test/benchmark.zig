@@ -26,7 +26,7 @@ pub fn main() !void {
         try err.print("Invalid playouts: {s}\n", .{args[3]});
         usageAndExit(args[0]);
     };
-    const seed = std.fmt.parseUnsigned(usize, args[4], 10)  catch {
+    const seed = std.fmt.parseUnsigned(usize, args[4], 10) catch {
         try err.print("Invalid seed: {s}\n", .{args[4]});
         usageAndExit(args[0]);
     };

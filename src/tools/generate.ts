@@ -28,7 +28,7 @@ const IDS: IDs = [
       '???', 'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Ice', 'Dragon', 'Dark',
     ] as TypeName[],
     items: [],
-  }
+  },
 ];
 
 const NAMES: { [constant: string]: string } = {
@@ -691,7 +691,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         data: SPECIES.join(',\n        '),
       },
     });
-  }
+  },
 };
 
 (async () => {
