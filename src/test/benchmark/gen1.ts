@@ -88,30 +88,9 @@ export const Choices = new class {
     }
   }
 
-  sim(battle: sim.Battle, id: SideID): string[] {
+  sim(this: void, battle: sim.Battle, id: SideID): string[] {
+    if (!battle[id]!.activeRequest) return [];
+
     return []; // TODO
   }
 };
-
-export class RandomPlayerAI extends sim.BattleStreams.BattlePlayer {
-  readonly battle: sim.Battle;
-  readonly id: SideID;
-  readonly prng: sim.PRNG;
-
-  constructor(
-    stream: sim.Streams.ObjectReadWriteStream<string>,
-    battle: sim.Battle,
-    id: SideID,
-    prng: sim.PRNG
-  ) {
-    super(stream);
-    this.battle = battle;
-    this.id = id;
-    this.prng = prng;
-  }
-
-  receiveRequest(_: sim.AnyObject) {
-    const options = Choices.sim(this.battle, this.id);
-    this.choose(options[this.prng.next(options.length)]);
-  }
-}

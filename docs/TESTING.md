@@ -68,26 +68,28 @@ possible, eg. [disabling CPU performance scaling, Intel Turbo Boost,
 etc](https://github.com/travisdowns/uarch-bench/blob/master/uarch-bench.sh). The benchmark tool
 measures 4 different configurations:
 
-- **Pokémon Showdown! (async)**: this configuration attempts to use Pokémon Showdown's
-  `BattleStream`/`BattlePlayer` APIs mostly as intended, with 2 tweaks:
+- **Pokémon Showdown! (default)**: this configuration uses the regular Pokémon Showdown `Battle`,
+  though does so directly instead of via the asynchronous  `BattleStream`/`BattlePlayer` APIs. While
+  the asynchronous APIs are the blessed way of using Pokémon Showdown, the asynchronous nature adds
+  latency and makes coordinating the order of PRNG calls difficult - we need to ensure that each
+  update causes the RNG frame to advance by 2 (one for a choice from player 1 and one from player
+  2), and this is difficult with the asynchronous APIs where player 1 and player 2 may receive
+  messages out of order and without knowledge of the other player's choice. While the synchronous
+  set up is slightly more artificial, it is simpler and faster.
 
-    1. A special `RandomPlayerAI` is used that directly inspects the `Battle` to avoid making
-       unavailable choices and matches the AI used by all of the other configurations.
-    2. The `Battle` within the `BattleStream` is directly inspected in order to more easily access
-       the grab the turn count.
-
-- **Pokémon Showdown! (direct)**: this configuration introduces the concept of a `DirectBattle` which
+- **Pokémon Showdown! (optimized)**: this configuration introduces the concept of a `DirectBattle` which
   overrides the Pokémon Showdown `Battle` class to strip out unused functionality:
 
     1. methods which add to the battle log are overriden to drop any messages immediately
     2. `sendUpdates` is overridden to not send any updates.
     3. `makeRequest` avoids serializing the request for each side.  
   
-  The `DirectBattle` is then used synchronously as opposed to via the async `BattleStream`. This
-  configuration minimizes string processing overhead and unnecessary delays due to `async` calls and
-  is as close to as fast as Pokémon Showdown can be run (there is room for further optimization by
-  simplifying choice parsing to to not perform any verification, though this is signficantly less
-  trivial than the aforementioned optimizations).
+  The `DirectBattle` is then used synchronously as opposed to via the async `BattleStream` for the
+  reasons described above (simplicity and speed). This configuration minimizes string processing
+  overhead and unnecessary delays due to `async` calls and is as close to as fast as Pokémon
+  Showdown can be run (there is room for further optimization by simplifying choice parsing to to
+  not perform any verification, though this is signficantly less trivial than the aforementioned
+  optimizations). This is closer to how the pkmn engine runs with `-Dtrace` disabled.
 
 - **`@pkmn/engine`**: this configuration uses the `@pmn/engine` driver package to run battles with
   the pkmn engine.
@@ -113,12 +115,12 @@ compares the total number of turns across all battles and the final RNG seed to 
 The benchmarks are run on a Intel(R) Xeon(R) CPU E5-2690 v3 @ 2.60GHz on 64-bit x86 Linux which has
 undergone the pre-benchmark tuning detailed above via the command  `npm run benchmark -- 1000`:
 
-| Generation | `libpkmn` | `@pkmn/engine` | Pokémon Showdown! (direct) | Pokémon Showdown! (async) |
-| ---------- | --------- | -------------- | -------------------------- | ------------------------- |
-| **RBY**    | 1ms       | 2ms (2x)       | 3ms (3x)                   | 4ms (4x)                  |
-| **GSC**    | 1ms       | 2ms (2x)       | 3ms (3x)                   | 4ms (4x)                  |
-| **ADV**    | 1ms       | 2ms (2x)       | 3ms (3x)                   | 4ms (4x)                  |
-| **DPP**    | 1ms       | 2ms (2x)       | 3ms (3x)                   | 4ms (4x)                  |
+| Generation | `libpkmn` | `@pkmn/engine` | Pokémon Showdown! (optimized) | Pokémon Showdown! (default) |
+| ---------- | --------- | -------------- | ----------------------------- | --------------------------- |
+| **RBY**    | 1ms       | 2ms (2x)       | 3ms (3x)                      | 4ms (4x)                    |
+| **GSC**    | 1ms       | 2ms (2x)       | 3ms (3x)                      | 4ms (4x)                    |
+| **ADV**    | 1ms       | 2ms (2x)       | 3ms (3x)                      | 4ms (4x)                    |
+| **DPP**    | 1ms       | 2ms (2x)       | 3ms (3x)                      | 4ms (4x)                    |
 
 <details><summary>CPU Details</summary><pre>
 Architecture:            x86_64
