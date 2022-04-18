@@ -11,8 +11,13 @@ pub fn main() !void {
     defer std.process.argsFree(allocator, args);
 
     // Expect that we have been given a decimal seed as our only argument
+    const err = std.io.getStdErr().writer();
+    if (args.len != 2) {
+        try err.print("Usage: {s} <seed>\n", .{args[0]});
+        std.process.exit(1);
+    }
+
     const seed = std.fmt.parseUnsigned(u64, args[2], 10) catch {
-        const err = std.io.getStdErr().writer();
         try err.print("Invalid seed: {s}\n", .{args[1]});
         try err.print("Usage: {s} <seed>\n", .{args[0]});
         std.process.exit(1);
@@ -45,13 +50,12 @@ pub fn main() !void {
         },
     );
 
-    // This example doesn't demonstrate trace log handling (which requires -Dtrace), but to use
-    // it you need to create a protocol.Log implementation with a preallocated buffer
-    // (pkmn.MAX_LOG_SIZE is guaranteed to be large enough for a single update) and then do
-    // something with the data in the buffer after each update.
-    const log = null;
-    // var buf: [pkmn.MAX_LOG_SIZE]u8 = undefined;
-    // var log = pkmn.protocol.FixedLog{ .writer = std.io.fixedBufferStream(&buf).writer() };
+    // Preallocate a buffer for the log and create a Log handler which will write to it.
+    // pkmn.MAX_LOG_SIZE is guaranteed to be large enough for a single update. This will only be
+    // used if -Dtrace is enabled - simply setting the log to null will also disable it, regardless
+    // of what -Dtrace is set to.
+    var buf: [pkmn.MAX_LOG_SIZE]u8 = undefined;
+    var log = pkmn.protocol.FixedLog{ .writer = std.io.fixedBufferStream(&buf).writer() };
 
     var c1 = pkmn.Choice{};
     var c2 = pkmn.Choice{};
@@ -59,6 +63,7 @@ pub fn main() !void {
     var result = try battle.update(c1, c2, log);
     while (result.type == .None) : (result = try battle.update(c1, c2, log)) {
         // Here we would do something with the log data in buffer if -Dtrace were enabled
+        _ = buf;
 
         // battle.choices determines what the possible options are - the simplest way to
         // choose and option here is to just use system PRNG to pick one at random
