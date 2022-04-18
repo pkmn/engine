@@ -53,19 +53,72 @@ being in agreement **they may both be incorrect** when it comes to the actual ca
 
 ## Benchmark
 
-### Methodology
+Benchmarking the pkmn engine vs. Pokémon Showdown is slightly more complicated than simply using a
+tool like [`hyperfine`](https://github.com/sharkdp/hyperfine) due to the need to account for the
+runtime overhead and warmup period required by V8 (`hyperfine --warmup` is intended to help with
+disk caching, not JIT warmup). As such, a [custom benchmark tool](`../src/tools/benchmark`) exists
+which can be used to run the benchmark. The benchmark measures how long it takes to play M playouts
+of N randomly generated battles, excluding any set up time and time spent warming up the JS
+configurations. This benchmark scenario is useful for approximating the [Monte Carlo tree search
+(MCTS)](https://en.wikipedia.org/wiki/Monte_Carlo_tree_search) use case where various battles are
+played out each turn to the end numerous times to determine the best course of action.
 
-TODO setup https://github.com/travisdowns/uarch-bench/blob/master/uarch-bench.sh#L66
+Before running the benchmark, care needs to be taken to set up the environment to be as stable as
+possible, eg. [disabling CPU performance scaling, Intel Turbo Boost,
+etc](https://github.com/travisdowns/uarch-bench/blob/master/uarch-bench.sh). The benchmark tool
+measures 4 different configurations:
+
+- **Pokémon Showdown! (async)**: this configuration attempts to use Pokémon Showdown's
+  `BattleStream`/`BattlePlayer` APIs mostly as intended, with 2 tweaks:
+
+    1. A special `RandomPlayerAI` is used that directly inspects the `Battle` to avoid making
+       unavailable choices and matches the AI used by all of the other configurations.
+    2. The `Battle` within the `BattleStream` is directly inspected in order to more easily access
+       the grab the turn count.
+
+- **Pokémon Showdown! (direct)**: this configuration introduces the concept of a `DirectBattle` which
+  overrides the Pokémon Showdown `Battle` class to strip out unused functionality:
+
+    1. methods which add to the battle log are overriden to drop any messages immediately
+    2. `sendUpdates` is overridden to not send any updates.
+    3. `makeRequest` avoids serializing the request for each side.  
+  
+  The `DirectBattle` is then used synchronously as opposed to via the async `BattleStream`. This
+  configuration minimizes string processing overhead and unnecessary delays due to `async` calls and
+  is as close to as fast as Pokémon Showdown can be run (there is room for further optimization by
+  simplifying choice parsing to to not perform any verification, though this is signficantly less
+  trivial than the aforementioned optimizations).
+
+- **`@pkmn/engine`**: this configuration uses the `@pmn/engine` driver package to run battles with
+  the pkmn engine.
+
+- **`libpkmn`**: this configuration runs battles directly with the `libpkmn` library and does not
+  interface with JS at all. The benchmark runner invokes
+  [`benchmark.zig`](../src/test/benchmark.zig) to directly run the benchmark and report the results.
+
+Both pkmn engine configurations are intended to be used `-Dshowdown` build option but with tracing
+disabled. Both of the Pokémon Showdown configurations are run beforehand for a warmup period to
+ensure the measured duration is representative of the actual best case runtime.
+
+In order to ensure all configurations are testing the same thing, we need to ensure that the exact
+same battles are generated, the same sequence of moves are chosen, and the battle results are match.
+As such, all benchmarks are run with the same PRNGs that have been initialized with the same seeds,
+and the logic for generating battles/randomly choosing moves is duplicated across  both the Zig and
+TypeScript implementations. Finally, in addition to total duration, the benchmarking tool tracks and
+compares the total number of turns across all battles and the final RNG seed to serve as a
+"checksum" and verify that all of the configurations are in agreement.
 
 ### Results
 
-<p align="center">
-  <img src="https://gist.githubusercontent.com/scheibo/1edecb6e76dd9176691e50819d90e841/raw/f15db8b25ae5a64d3f712fba79416d65c0c9b0e2/benchmark.svg" alt="Bar chart with benchmark results">
-</p>
+The benchmarks are run on a Intel(R) Xeon(R) CPU E5-2690 v3 @ 2.60GHz on 64-bit x86 Linux which has
+undergone the pre-benchmark tuning detailed above via the command  `npm run benchmark -- 1000`:
 
-TODO table
-
-The benchmarks are run on a Intel(R) Xeon(R) CPU E5-2690 v3 @ 2.60GHz on 64-bit x86 Linux which has undergone the pre-benchmark tuning detailed above:
+| Generation | `libpkmn` | `@pkmn/engine` | Pokémon Showdown! (direct) | Pokémon Showdown! (async) |
+| ---------- | --------- | -------------- | -------------------------- | ------------------------- |
+| **RBY**    | 1ms       | 2ms (2x)       | 3ms (3x)                   | 4ms (4x)                  |
+| **GSC**    | 1ms       | 2ms (2x)       | 3ms (3x)                   | 4ms (4x)                  |
+| **ADV**    | 1ms       | 2ms (2x)       | 3ms (3x)                   | 4ms (4x)                  |
+| **DPP**    | 1ms       | 2ms (2x)       | 3ms (3x)                   | 4ms (4x)                  |
 
 <details><summary>CPU Details</summary><pre>
 Architecture:            x86_64
@@ -111,41 +164,3 @@ Vulnerabilities:
   Srbds:                 Not affected
   Tsx async abort:       Not affected
 <pre></details>
-
-TODO compared to PS - time/1000 battles,               avg battles/s
-
-```txt
-4 AIs:
-
-- random player (all choices) for traditional PS
-- random player (all choices) for direct PS (JS)
-- random player (all choices) for engine and 0 ERROR select (zig)
-- random player (fastpath abort) for 0 ERROR playout (zig)
-Results
-
-- per gen or average battles across all (supported) gens?
-- normalize to turns per second vs. battles per second? (both)
-```
-
-Stochastic:
-  - multi-hit: rolls of 2 and 5
-  - two rolls, one without secondary and one with (just to prove it can proc, not which rates)
-
-Can't test: increased rates of already inconsistent things
-  - accuracy - could show roll before using increased accuracy does work, doesnt after? (implies accuracy changed)
-  - critical hits
-
-TESTING - exhaustive runner
-
-parse directly to @protocol (no json), though allow for protocol to be stringified (though wont match). add logic to compare protocol directly (order insenstivie), filter out fields which arent implement like break or rules
-
-run PS in battle stream and run through protocol parser. run engine synchronously and gather all converted update/sideupdate data, compare
-
-BENCHMARK - custom multi random runner
-checksum = final seed pkus sum of turns
-
-generate teams for each (not included in timing)
-dont include team packing time for PS, dont include team encoding time for JS (though optionally can)
-play out exact same battle using random ai, only disable trace output for engine and use a binary random ai that makes same decisions as ps but purely off the data it reads directly out of the casted bytes of the engines Battle instance
-
-integration test. equals(parsed protcol) , not string line
