@@ -53,7 +53,6 @@ export class Lookup {
   private readonly species: ID[];
   private readonly moves: ID[];
   private readonly items: ID[];
-  private readonly abilities: ID[];
 
   static get(gen: Generation) {
     const lookup = LOOKUPS[gen.num - 1];
@@ -80,7 +79,6 @@ export class Lookup {
     } else {
       this.items = IDS[gen.num - 1 as 1].items;
     }
-    this.abilities = []; // TODO
   }
 
   typeByNum(num: number): TypeName {
@@ -113,13 +111,5 @@ export class Lookup {
 
   itemByID(id: ID | undefined): number {
     return id ? this.gen.items.get(id)!.num : 0;
-  }
-
-  abilityByNum(num: number): ID {
-    return this.abilities[num - 1];
-  }
-
-  abilityByID(id: ID | undefined): number {
-    return id ? this.gen.abilities.get(id)!.num : 0;
   }
 }
