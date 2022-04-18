@@ -12,10 +12,13 @@ pub fn main() !void {
 
     const args = try std.process.argsAlloc(allocator);
     defer std.process.argsFree(allocator, args);
-    if (args.len < 2) std.process.exit(1);
+    if (args.len < 2) usageAndExit(args[0]);
 
-    const gen = try std.fmt.parseUnsigned(u4, args[1], 10);
-    const seed = if (args.len > 2) try std.fmt.parseUnsigned(u64, args[2], 10) else 0x31415926;
+    const gen = std.fmt.parseUnsigned(u8, args[1], 10) catch
+        errorAndExit("gen", args[1], args[0]);
+    if (gen < 1 or gen > 8) errorAndExit("gen", args[1], args[0]);
+    const seed = if (args.len > 2) std.fmt.parseUnsigned(u64, args[2], 10) catch
+        errorAndExit("seed", args[2], args[0]) else 0x31415926;
 
     const out = std.io.getStdOut();
     var buf = std.io.bufferedWriter(out.writer());
@@ -49,6 +52,18 @@ pub fn main() !void {
     const serialized = std.mem.toBytes(battle);
     const deserialized = std.mem.bytesToValue(@TypeOf(battle), &serialized);
     try std.testing.expectEqual(battle, deserialized);
+}
+
+fn errorAndExit(msg: []const u8, arg: []const u8, cmd: []const u8) noreturn {
+    const err = std.io.getStdErr().writer();
+    err.print("Invalid {s}: {s}\n", .{msg, arg}) catch {};
+    usageAndExit(cmd);
+}
+
+fn usageAndExit(cmd: []const u8) noreturn {
+    const err = std.io.getStdErr().writer();
+    err.print("Usage: {s} <GEN> <SEED?>\n", .{cmd}) catch {};
+    std.process.exit(1);
 }
 
 // DEBUG

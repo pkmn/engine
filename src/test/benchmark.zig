@@ -10,31 +10,24 @@ pub fn main() !void {
 
     const args = try std.process.argsAlloc(allocator);
     defer std.process.argsFree(allocator, args);
-    if (args.len != 5) usageAndExit(args[0]);
+    if (args.len < 3 or args.len > 5) usageAndExit(args[0]);
 
-    const err = std.io.getStdErr().writer();
+    const gen = std.fmt.parseUnsigned(u8, args[1], 10) catch
+        errorAndExit("gen", args[1], args[0]);
+    if (gen < 1 or gen > 8) errorAndExit("gen", args[1], args[0]);
+    const battles = std.fmt.parseUnsigned(usize, args[2], 10) catch
+        errorAndExit("battles", args[2], args[0]);
+    if (battles == 0) errorAndExit("battles", args[2], args[0]);
+    const seed = if (args.len > 3) std.fmt.parseUnsigned(u64, args[3], 10) catch
+        errorAndExit("seed", args[3], args[0]) else 0x31415926;
+    const playouts = if (args.len == 5) std.fmt.parseUnsigned(usize, args[4], 10) catch
+        errorAndExit("playouts", args[4], args[0])
+    else null;
 
-    const gen = std.fmt.parseUnsigned(u8, args[1], 10) catch {
-        try err.print("Invalid gen: {s}\n", .{args[1]});
-        usageAndExit(args[0]);
-    };
-    const battles = std.fmt.parseUnsigned(u64, args[2], 10) catch {
-        try err.print("Invalid battles: {s}\n", .{args[2]});
-        usageAndExit(args[0]);
-    };
-    const playouts = std.fmt.parseUnsigned(usize, args[3], 10) catch {
-        try err.print("Invalid playouts: {s}\n", .{args[3]});
-        usageAndExit(args[0]);
-    };
-    const seed = std.fmt.parseUnsigned(usize, args[4], 10) catch {
-        try err.print("Invalid seed: {s}\n", .{args[4]});
-        usageAndExit(args[0]);
-    };
-
-    try benchmark(gen, battles, playouts, seed);
+    try benchmark(gen, seed, battles, playouts);
 }
 
-pub fn benchmark(gen: u8, battles: usize, playouts: usize, seed: u64) !void {
+pub fn benchmark(gen: u8, seed: u64, battles: usize, playouts: ?usize) !void {
     std.debug.assert(gen >= 1 and gen <= 8);
 
     var random = pkmn.PRNG.init(seed);
@@ -46,13 +39,14 @@ pub fn benchmark(gen: u8, battles: usize, playouts: usize, seed: u64) !void {
     var i: usize = 0;
     while (i <= battles) : (i += 1) {
         var original = switch (gen) {
-            1 => pkmn.gen1.helpers.Battle.random(&random, true),
+            1 => pkmn.gen1.helpers.Battle.random(&random, playouts != null),
             // TODO: support additional generations
             else => unreachable,
         };
 
+        var n = playouts orelse 1;
         var j: usize = 0;
-        while (j <= playouts) : (j += 1) {
+        while (j <= n) : (j += 1) {
             var battle = original;
 
             var c1 = pkmn.Choice{};
@@ -73,8 +67,14 @@ pub fn benchmark(gen: u8, battles: usize, playouts: usize, seed: u64) !void {
     try out.print("{d},{d},{d}\n", .{ duration, turns, random.src.seed });
 }
 
+fn errorAndExit(msg: []const u8, arg: []const u8, cmd: []const u8) noreturn {
+    const err = std.io.getStdErr().writer();
+    err.print("Invalid {s}: {s}\n", .{msg, arg}) catch {};
+    usageAndExit(cmd);
+}
+
 fn usageAndExit(cmd: []const u8) noreturn {
     const err = std.io.getStdErr().writer();
-    err.print("Usage: {s} <gen> <battles> <playouts> <seed>\n", .{cmd}) catch std.process.exit(1);
+    err.print("Usage: {s} <GEN> <BATTLES> <SEED?> <PLAYOUTS?>\n", .{cmd}) catch {};
     std.process.exit(1);
 }

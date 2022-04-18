@@ -17,7 +17,7 @@ pub fn main() !void {
 
     const args = try std.process.argsAlloc(allocator);
     defer std.process.argsFree(allocator, args);
-    if (args.len != 2) std.process.exit(1);
+    if (args.len != 2) usageAndExit(args[0]);
 
     var tool: Tool = undefined;
     if (std.mem.eql(u8, args[1], "markdown")) {
@@ -27,7 +27,7 @@ pub fn main() !void {
     } else if (std.mem.eql(u8, args[1], "layout")) {
         tool = .layout;
     } else {
-        std.process.exit(1);
+        usageAndExit(args[0]);
     }
 
     const out = std.io.getStdOut();
@@ -86,7 +86,7 @@ pub fn main() !void {
                 {
                     try w.print(
                         "      \"{s}\": {d},\n",
-                        .{ "Battle", @sizeOf(pkmn.gen1.Battle(pkmn.gen1.RNG)) },
+                        .{ "Battle", @sizeOf(pkmn.gen1.Battle(pkmn.gen1.Random)) },
                     );
                     try w.print(
                         "      \"{s}\": {d},\n",
@@ -104,7 +104,7 @@ pub fn main() !void {
                 try w.writeAll("    },\n");
                 try w.writeAll("    \"offsets\": {\n");
                 {
-                    try print(w, "Battle", pkmn.gen1.Battle(pkmn.gen1.RNG), false);
+                    try print(w, "Battle", pkmn.gen1.Battle(pkmn.gen1.Random), false);
                     try w.writeAll(",\n");
                     try print(w, "Side", pkmn.gen1.Side, false);
                     try w.writeAll(",\n");
@@ -142,4 +142,10 @@ fn print(w: anytype, name: []const u8, comptime T: type, comptime bits: bool) !v
         }
     }
     try w.writeAll("\n      }");
+}
+
+fn usageAndExit(cmd: []const u8) noreturn {
+    const err = std.io.getStdErr().writer();
+    err.print("Usage: {s} <markdown|protocol|layout>\n", .{cmd}) catch {};
+    std.process.exit(1);
 }

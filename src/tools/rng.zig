@@ -25,28 +25,35 @@ pub fn main() !void {
 
     const args = try std.process.argsAlloc(allocator);
     defer std.process.argsFree(allocator, args);
-    if (args.len < 2) std.process.exit(1);
+    if (args.len < 2) usageAndExit(args[0]);
 
     var tool: Tool = undefined;
     var crit: u8 = undefined;
     if (std.mem.eql(u8, args[1], "crit")) {
-        if (args.len != 3) std.process.exit(1);
+        const err = std.io.getStdErr().writer();
+        if (args.len != 3) {
+            err.print("Usage: {s} crit <N>\n", .{args[0]}) catch {};
+            std.process.exit(1);
+        }
         tool = .crit;
-        crit = try std.fmt.parseUnsigned(u8, args[2], 10);
+        crit = std.fmt.parseUnsigned(u8, args[2], 10) catch {
+            err.print("Usage: {s} crit <N>\n", .{args[0]}) catch {};
+            std.process.exit(1);
+        };
     } else if (std.mem.eql(u8, args[1], "thrash")) {
         if (args.len != 2) std.process.exit(1);
         tool = .thrash;
     } else if (std.mem.eql(u8, args[1], "rampage")) {
-        if (args.len != 2) std.process.exit(1);
+        if (args.len != 2) usageAndExit(args[0]);
         tool = .rampage;
     } else if (std.mem.eql(u8, args[1], "disable")) {
-        if (args.len != 2) std.process.exit(1);
+        if (args.len != 2) usageAndExit(args[0]);
         tool = .disable;
     } else if (std.mem.eql(u8, args[1], "sleep")) {
-        if (args.len != 2) std.process.exit(1);
+        if (args.len != 2) usageAndExit(args[0]);
         tool = .sleep;
     } else {
-        std.process.exit(1);
+        usageAndExit(args[0]);
     }
 
     var expected: [256]u8 = undefined;
@@ -103,4 +110,10 @@ pub fn main() !void {
     }
     _ = try w.write("\n");
     try buf.flush();
+}
+
+fn usageAndExit(cmd: []const u8) noreturn {
+    const err = std.io.getStdErr().writer();
+    err.print("Usage: {s} <TOOL> (<arg>...)?\n", .{cmd}) catch {};
+    std.process.exit(1);
 }
