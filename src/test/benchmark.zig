@@ -21,8 +21,7 @@ pub fn main() !void {
     const seed = if (args.len > 3) std.fmt.parseUnsigned(u64, args[3], 10) catch
         errorAndExit("seed", args[3], args[0]) else 0x31415926;
     const playouts = if (args.len == 5) std.fmt.parseUnsigned(usize, args[4], 10) catch
-        errorAndExit("playouts", args[4], args[0])
-    else null;
+        errorAndExit("playouts", args[4], args[0]) else null;
 
     try benchmark(gen, seed, battles, playouts);
 }
@@ -69,7 +68,7 @@ pub fn benchmark(gen: u8, seed: u64, battles: usize, playouts: ?usize) !void {
 
 fn errorAndExit(msg: []const u8, arg: []const u8, cmd: []const u8) noreturn {
     const err = std.io.getStdErr().writer();
-    err.print("Invalid {s}: {s}\n", .{msg, arg}) catch {};
+    err.print("Invalid {s}: {s}\n", .{ msg, arg }) catch {};
     usageAndExit(cmd);
 }
 

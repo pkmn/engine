@@ -56,7 +56,7 @@ pub fn main() !void {
 
 fn errorAndExit(msg: []const u8, arg: []const u8, cmd: []const u8) noreturn {
     const err = std.io.getStdErr().writer();
-    err.print("Invalid {s}: {s}\n", .{msg, arg}) catch {};
+    err.print("Invalid {s}: {s}\n", .{ msg, arg }) catch {};
     usageAndExit(cmd);
 }
 
