@@ -15,9 +15,10 @@
   "files": [
     "build/pkg",
     "!build/pkg/*.test.*",
-    "build/tools/install.*",
     "src/pkg",
     "!src/pkg/*.test.*",
+    "build/tools/install.*",
+    "src/tools/install.*",
     "src/lib",
     "!src/**/test.zig",
     "!src/lib/commmon/data"
