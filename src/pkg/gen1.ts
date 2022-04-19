@@ -27,7 +27,6 @@ OFFSETS.Boosts.spa = OFFSETS.Boosts.spd = OFFSETS.Boosts.spc;
 // - support multiple implementations (pkmn-showdown.node and pkmn.node), possibly both
 // - binding should expose whether it was build with showon (also in name) and trace
 // integration test = only debug and -Dshowdown -Dtrace
-// benchmark = only releasefast and -Dshowdown
 export class Battle implements Gen1.Battle {
   private readonly lookup: Lookup;
   private readonly data: DataView;
@@ -445,7 +444,7 @@ export class Pokemon implements Gen1.Pokemon {
     offset: number,
     index: number,
   ) {
-    const stored = offset + OFFSETS.Pokemon.stored + SIZES.Pokemon * index;
+    const stored = offset + OFFSETS.Side.pokemon + SIZES.Pokemon * index;
     const species = gen.species.get(set.species!)!;
 
     let hp = 0;
