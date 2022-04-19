@@ -13,8 +13,15 @@
   </a>
 </p>
 
-A minimal, complete, Pokémon battle simulation engine optimized for performance and designed for
-tooling, embedded systems, and [artificial intelligence](https://github.com/pkmn/0-ERROR) use cases.
+A minimal, complete, Pokémon battle simulation engine optimized for performance and
+[designed](docs/DESIGN.md) for tooling, embedded systems, and [artificial
+intelligence](https://github.com/pkmn/0-ERROR) use cases.
+
+The pkmn engine is up to [**XXX× faster**](docs/TESTING.md#results) than [Pokémon
+Showdown](https://github.com/smogon/pokemon-showdown) when playing out supported formats in
+compatability mode and is extensively [tested](docs/TESTING.md) and [documented](docs). Note,
+however, that the engine is **not** a fully featured simulator but is instead a low-level library
+which can be used as a building block for more advanced use cases.
 
 ## Installation
 
@@ -26,19 +33,24 @@ This repository hosts both the engine code (written in [Zig](https://ziglang.org
 Binaries of the engine code can be downloaded from the
 [releases](https://github.com/pkmn/engine/releases) tab on GitHub, or you can [download the source
 code](https://github.com/pkmn/engine/archive/refs/heads/main.zip) directly and build it with the
-latest `zig` compiler, see `zig build --help` for build options.:
+latest `zig` compiler, see `zig build --help` for build options:
 
 ```sh
 $ curl https://github.com/pkmn/engine/archive/refs/heads/main.zip -o engine.zip
 $ unzip engine.zip
 $ cd engine
-$ zig build --prefix .
+$ zig build --prefix /usr/local -Drelease-fast
 ```
 
 The Zig website has [installation instructions](https://ziglang.org/learn/getting-started/) which
 walk through how to install Zig on each platform - the engine code should work on Zig v0.9.0 or
 greater, though tracks Zig's master branch so this may change in the future if breaking language
 changes are introduced.
+
+`libpkmn` can be built with `-Dshowdown` to instead produce the Pokémon Showdown compatible
+`libpkmn-showdown` library. Furthermore, trace logging can be enabled through `-Dtrace`. The
+`libpkmn` and `libpkmn-showdown` objects available in the binary release are compiled with and
+without the `-Dtrace` flag respectively.
 
 ### `@pkmn/engine`
 
@@ -48,23 +60,24 @@ The driver code can be installed from [npm](https://www.npmjs.com/package/@pkmn/
 $ npm install @pkmn/engine
 ```
 
-The driver depends on being able to find the `pkmn.node` library to be useful. By default it will
-look in `node_modules/@pkmn/engine/lib` for this, and if the library cannot be found it will check
-if there is a `zig` compiler with the correct version available in order to build the library and
-place it in the correct location as part of its `postinstall` script. If there is not system-wide
-`zig` you can either follow the instructions above to install `zig`, build the library, and move it
-to the correct folder, or (recommended) **run the `install-pkmn-engine` script that is bundled with
-the library:**
+The driver depends on being able to find compiled Node/WASM add-ons in
+`node_modules/@pkmn/engine/build/lib` in order to be useful. When you install the package a
+[`postinstall` lifecycle script](https://docs.npmjs.com/cli/v8/using-npm/scripts) will run
+[`src/tools/install.ts`](src/tools/install.ts) which will check for a compatible `zig` compiler and
+download one to `node_module/@pkmn/engine/build/bin` if it can't find one, as well as downloading
+the appropriate Node headers so that it can successfully build the add-ons natively.
 
-```sh
-$ npx install-pkmn-engine
-```
-
-`install-pkmn-engine` will download and install the correct version of the  `zig` compiler locally
-to `node_modules/@pkmn/engine/bin/zig` and build the `pkmn.node` file to the correct location. `npm`
-should notify you with these options when you attempt to install the package.
+If you have configured NPM to ignore scripts you must either run
+`node_modules/@pkmn/engine/build/tools/install.js` manually or build the add-ons manually and place
+the artifacts in the expected paths.
 
 ### `pkmn`
+
+Until the [Zig package manager](https://github.com/ziglang/zig/issues/943) is completed, the
+recommended way of using the `pkmn` package in Zig is by either copying this repository into your
+project or by using [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) and then
+adding the following to your `build.zig`:
+
 
 ```zig
 const std = @import("std");
@@ -94,11 +107,20 @@ pub fn build(b: *std.build.Builder) void {
 }
 ```
 
+You must provide a `build_options` package with `showdown` and `trace` boolean options that the
+`pkmn` package can be made to depend on. The `pkmn()` function in the engine's `build.zig` can then
+be used to simplify adding the `pkmn` package to your project.
+
 ## Usage
+
+Please note that the snippets below are meant to merely illustrate in broad strokes how the pkmn
+engine can be used - the [`examples`](src/examples) contains fully realized and runnable code. 
 
 ### C
 
-[example code](src/examples/c)
+[`pkmn.h`](src/include/pkmn.h) exports the C API for `libpkmn`. Symbols are all prefixed with
+`pkmn_` to avoid name collisions. If `-Dtrace` is enabled and logging throws an error then the error
+will be encoded in the `pkmn_result` and can be checked with `pkmn_result_error`.
 
 ```c
 #include <pkmn.h>
@@ -106,16 +128,22 @@ pub fn build(b: *std.build.Builder) void {
 pkmn_battle *battle = ...;
 pkmn_result result;
 pkmn_choice c1 = 0, c2 = 0;
-while (!PKMN_RESULT_TYPE(result = pkmn_battle_update(battle, c1, c2, NULL))) {
-  c1 = choose(p1, PKMN_RESULT_P1(result));
-  c2 = choose(p2, PKMN_RESULT_P2(result));
+while (!pkmn_result_type(result = pkmn_battle_update(battle, c1, c2, &buf))) {
+  c1 = choose(p1, pkmn_result_p1(result));
+  c2 = choose(p2, pkmn_result_p2(result));
 }
-if (PKMN_RESULT_ERROR(result)) exit(1);
+if (pkmn_result_error(result)) exit(1);
 ```
+
+[*(full code)*](src/examples/c)
 
 ### JavaScript / TypeScript
 
-[example code](src/examples/js)
+`@pkmn/engine` depends on the [`@pkmn/data`](https://www.npmjs.com/package/@pkmn/data) which
+requires a `Dex` implementation to be provided as well. The `Battle.create` function can be used to
+initialize a `Battle` from the beginning, or `Battle.restore` can be used to reinstantiate a battle
+which is in already progress. If logging is enabled the output can be turned into Pokémon Showdown
+protocol via `Log.parse`.
 
 ```ts
 import {Dex} from '@pkmn/dex';
@@ -138,9 +166,19 @@ while (!(result = battle.update(c1, c2)).type) {
 console.log(result);
 ```
 
+[*(full code)*](src/examples/js)
+
+The `Battle` interface is designed to be zero-copy compatible with other `@pkmn` packages -
+equivalently named types in [`@pkmn/client`](https://www.npmjs.com/package/@pkmn/client),
+[`@pkmn/epoke`](https://www.npmjs.com/package/@pkmn/epoke),
+[`@pkmn/dmg`](https://www.npmjs.com/package/@pkmn/dmg) should "just work" (however, until all of
+these libraries reach v1.0.0 they are likely to require some massaging).
+
 ### Zig
 
-[example code](src/examples/zig)
+The `pkmn` Zig package should be relatively straightforward to use once installed correctly. Helper
+methods exist to simplify state instantiation, and any `Writer` can be used when logging is enabled
+to allow for easily printing eg. to standard out or a buffer.
 
 ```zig
 const std = @import("std");
@@ -162,6 +200,8 @@ while (result.type == .None) : (result = try battle.update(c1, c2, null)) {
 
 std.debug.print("{}", .{result.type});
 ```
+
+[*(full code)*](src/examples/zig)
 
 ## Status
 

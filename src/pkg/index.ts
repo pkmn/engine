@@ -142,3 +142,5 @@ export class Battle {
     }
   }
 }
+
+export * from './protocol';

@@ -71,7 +71,7 @@ Showdown. If **`-Dshowdown`** is enabled, the pkmn engine will be configured to:
   Battle Clause, Sleep/Freeze/Desync/Switch Priority Clause Mod, etc).
 
 As a result, when compiled with `-Dshowdown` enabled the pkmn engine should exactly match the
-behavior of Pokémon Showdown instead of the cartrige (this is verified through the integration
+behavior of Pokémon Showdown instead of the cartridge (this is verified through the integration
 tests).
 
 By default, the engine produces no output about the state of a battle, merely communicating progress
