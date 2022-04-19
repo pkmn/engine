@@ -20,7 +20,7 @@ intelligence](https://github.com/pkmn/0-ERROR) use cases.
 The pkmn engine is up to [**XXX× faster**](docs/TESTING.md#results) than [Pokémon
 Showdown](https://github.com/smogon/pokemon-showdown) when playing out supported formats in
 compatability mode and is extensively [tested](docs/TESTING.md) and [documented](docs). Note,
-however, that the engine is **not** a fully featured simulator but is instead a low-level library
+however, that the engine is **not a fully-featured simulator** but is instead a low-level library
 which can be used as a building block for more advanced use cases.
 
 ## Installation
@@ -135,7 +135,7 @@ while (!pkmn_result_type(result = pkmn_battle_update(battle, c1, c2, &buf))) {
 if (pkmn_result_error(result)) exit(1);
 ```
 
-[*(full code)*](src/examples/c)
+[(full code)](src/examples/c)
 
 ### JavaScript / TypeScript
 
@@ -166,13 +166,18 @@ while (!(result = battle.update(c1, c2)).type) {
 console.log(result);
 ```
 
-[*(full code)*](src/examples/js)
+[(full code)](src/examples/js)
 
 The `Battle` interface is designed to be zero-copy compatible with other `@pkmn` packages -
 equivalently named types in [`@pkmn/client`](https://www.npmjs.com/package/@pkmn/client),
 [`@pkmn/epoke`](https://www.npmjs.com/package/@pkmn/epoke),
 [`@pkmn/dmg`](https://www.npmjs.com/package/@pkmn/dmg) should "just work" (however, until all of
 these libraries reach v1.0.0 they are likely to require some massaging).
+
+Despite relying on the native engine code, the `@pkmn/engine` code is designed to also work in
+browsers which support [WebAssembly](https://webassembly.org/). Running `npm run start:web` from the
+[`examples`](src/examples/js) directory will start a server that can be used to demonstrate the
+engine running in the browser.
 
 ### Zig
 
@@ -201,7 +206,7 @@ while (result.type == .None) : (result = try battle.update(c1, c2, null)) {
 std.debug.print("{}", .{result.type});
 ```
 
-[*(full code)*](src/examples/zig)
+[(full code)](src/examples/zig)
 
 ## Status
 
