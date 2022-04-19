@@ -109,7 +109,7 @@ const install = async () => {
 
 // https://github.com/coilhq/tigerbeetle-node/blob/main/scripts/download_node_headers.sh
 const headers = async () => {
-  const dir = path.join(__dirname, '..', 'bin');
+  const dir = path.join(__dirname, '..', 'include');
   try {
     fs.mkdirSync(dir);
   } catch (err: any) {
@@ -135,11 +135,7 @@ const headers = async () => {
   const zig = await install();
   const include = await headers();
 
-  console.debug(zig, include);
-
-  // TODO
-  // mkdir -p dist && zig/zig build-lib -mcpu=baseline -OReleaseSafe -dynamic -lc
-  // -isystem build/node-$(node --version)/include/node src/node.zig -fallow-shlib-undefined
-  // -femit-bin=dist/client.node
+  console.log('Building build/lib/pkmn.node');
+  sh(zig, ['build', '-Dshowdown', '-Drelease-fast', `-Dnode-headers=${include}`, '-Dstrip']);
 })();
 

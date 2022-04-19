@@ -49,10 +49,8 @@ pub fn build(b: *Builder) !void {
     static_lib.setBuildMode(mode);
     static_lib.setTarget(target);
     static_lib.addIncludeDir("src/include");
-    static_lib.linkLibC();
     static_lib.strip = strip;
     static_lib.install();
-    b.getInstallStep().dependOn(&static_lib.step);
 
     const kind = .{ .versioned = try std.builtin.Version.parse(version) };
     const dynamic_lib = b.addSharedLibrary(lib, "src/lib/binding/c.zig", kind);
@@ -60,10 +58,28 @@ pub fn build(b: *Builder) !void {
     dynamic_lib.setBuildMode(mode);
     dynamic_lib.setTarget(target);
     dynamic_lib.addIncludeDir("src/include");
-    dynamic_lib.linkLibC();
     dynamic_lib.strip = strip;
     dynamic_lib.install();
-    b.getInstallStep().dependOn(&dynamic_lib.step);
+
+    const node_headers = b.option([]const u8, "node-headers", "Path to node-headers");
+    if (node_headers) |headers| {
+        const name = try std.fmt.allocPrint(b.allocator, "{s}.node", .{lib});
+        defer b.allocator.free(name);
+        // Always emit to build/lib because this is where the driver code expects to find it
+        const emit_to = try std.fmt.allocPrint(b.allocator, "build/lib/{s}.node", .{lib});
+        // BUG: can't free emit_to because emit_bin takes ownership
+
+        const node_lib = b.addSharedLibrary(name, "src/lib/binding/node.zig", .unversioned);
+        node_lib.addSystemIncludePath(headers);
+        node_lib.addOptions("build_options", options);
+        node_lib.setBuildMode(mode);
+        node_lib.setTarget(target);
+        node_lib.linkLibC();
+        node_lib.linker_allow_shlib_undefined = true;
+        node_lib.strip = strip;
+        node_lib.emit_bin = .{ .emit_to = emit_to };
+        b.getInstallStep().dependOn(&node_lib.step);
+    }
 
     const header = b.addInstallFileWithDir(
         .{ .path = "src/include/pkmn.h" },
