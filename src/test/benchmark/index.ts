@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import 'source-map-support/register';
 
 import {execFileSync} from 'child_process';

@@ -30,7 +30,7 @@ generate:
 
 .PHONY: zig-lint
 zig-lint:
-	zig fmt --check .
+	zig fmt --check . --exclude build
 
 .PHONY: js-lint
 js-lint: node_modules
@@ -41,7 +41,7 @@ lint: zig-lint js-lint
 
 .PHONY: zig-fix
 zig-fix:
-	zig fmt .
+	zig fmt . --exclude build
 
 .PHONY: js-fix
 js-fix: node_modules

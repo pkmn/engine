@@ -6,6 +6,9 @@
   "description": "A minimal, complete, Pokémon battle simulation engine optimized for performance",
   "repository": "github:pkmn/engine",
   "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "dependencies": {
     "@pkmn/data": "^0.5.14",
     "@pkmn/protocol": "^0.4.0"
@@ -63,8 +66,15 @@
         "@typescript-eslint/no-shadow": "off"
       }
     }, {
-      "files": ["src/examples/js/example.js"],
-      "parserOptions": { "sourceType": "module" }
+      "files": ["src/test/benchmark/index.ts"],
+      "rules": {
+        "@typescript-eslint/no-unused-vars": "off"
+      }
+    }, {
+      "files": ["src/tools/install.ts"],
+      "rules": {
+        "@typescript-eslint/no-var-requires": "off"
+      }
     }]
   }
 }

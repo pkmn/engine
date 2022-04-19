@@ -411,7 +411,7 @@ goal for the simulator this bug should not have any implications
 
 ## RNG
 
-TODO table
+TODO table https://cdn.discordapp.com/attachments/491775824509272070/786688582592495646/unknown.png
 
 - crit
 - dmg
