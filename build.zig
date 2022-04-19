@@ -66,6 +66,7 @@ pub fn build(b: *Builder) !void {
         const name = try std.fmt.allocPrint(b.allocator, "{s}.node", .{lib});
         defer b.allocator.free(name);
         // Always emit to build/lib because this is where the driver code expects to find it
+        // TODO: find alternative to emit_to that works properly with .install()
         const emit_to = try std.fmt.allocPrint(b.allocator, "build/lib/{s}.node", .{lib});
         // BUG: can't free emit_to because emit_bin takes ownership
 
