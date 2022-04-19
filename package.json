@@ -9,6 +9,19 @@
   "engines": {
     "node": ">=16.0.0"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "build/pkg",
+    "!build/pkg/*.test.*",
+    "build/tools/install.*",
+    "src/pkg",
+    "!src/pkg/*.test.*",
+    "src/lib",
+    "!src/**/test.zig",
+    "!src/lib/commmon/data"
+  ],
   "dependencies": {
     "@pkmn/data": "^0.5.14",
     "@pkmn/protocol": "^0.4.0"
