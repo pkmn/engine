@@ -1,5 +1,13 @@
 # Design
 
+> Each individual generation has its own documentation which goes into extensive detail on how they
+> are implemented and what their data structures / protocol looks like:
+>
+> - [Generation I](../src/lib/gen1/README.md)
+> - [Generation II](../src/lib/gen2/README.md)
+>
+> This document exists to provide a high-level overview of the design of the engine in general.
+
 The pkmn engine is first and foremost designed for performance. The engine's most impactful design
 principle is that of **"no compromises"** when it comes to performance -
 ergonomics/simplicity/convenience are always trumped by performance, and the engine will never
@@ -92,12 +100,6 @@ though contains all of the information required to produce identical logs to eit
 - [`test`](../src/test): code for high level tests (integration, benchmarking, fuzzing) - unit tests
   live inline/beside the code they implement in the `lib`/`pkg` directories
 - [tools](../src/tools): miscellaneous scripts and tools useful for working on the pkmn engine
-
-Each individual generation has its own documentation regarding how they are implemented and what
-their data structures / protocol looks like:
-
-- [Generation I](../src/lib/gen1/README.md)
-- [Generation II](../src/lib/gen2/README.md)
 
 ## Appendix
 
