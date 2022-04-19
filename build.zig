@@ -65,7 +65,7 @@ pub fn build(b: *Builder) !void {
     if (node_headers) |headers| {
         const name = b.fmt("{s}.node", .{lib});
         const node_lib = b.addSharedLibrary(name, "src/lib/binding/node.zig", .unversioned);
-        node_lib.addSystemIncludePath(headers);
+        node_lib.addSystemIncludeDir(headers);
         node_lib.addOptions("build_options", options);
         node_lib.setBuildMode(mode);
         node_lib.setTarget(target);
