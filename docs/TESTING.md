@@ -81,8 +81,8 @@ measures 4 different configurations:
   overrides the Pokémon Showdown `Battle` class to strip out unused functionality:
 
     1. methods which add to the battle log are overriden to drop any messages immediately
-    2. `sendUpdates` is overridden to not send any updates.
-    3. `makeRequest` avoids serializing the request for each side.  
+    2. `sendUpdates` is overridden to not send any updates
+    3. `makeRequest` avoids serializing the request for each side  
   
   The `DirectBattle` is then used synchronously as opposed to via the async `BattleStream` for the
   reasons described above (simplicity and speed). This configuration minimizes string processing
