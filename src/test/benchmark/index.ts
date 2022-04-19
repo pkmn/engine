@@ -149,13 +149,14 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
       ], {encoding: 'utf8'});
 
       const [duration, turn, seed] = stdout.split(',');
-      return [Number(duration), Number(turn), seed];
+      return [toMillis(BigInt(duration)), Number(turn), seed];
     },
   },
 };
 
 const stats: {[format: string]: {[config: string]: number}} = {};
 for (const format of FORMATS) {
+  stats[format] = {};
   const control = {turns: 0, seed: ''};
 
   for (const name in CONFIGURATIONS) {
@@ -190,7 +191,7 @@ const display = (durations: {[config: string]: number}) => {
   const min = Math.min(...Object.values(durations));
   for (const config in durations) {
     out[config] = `${(durations[config] / 1000).toFixed(2)}s`;
-    if (durations[config] !== min) out[config] += ` (${(min / durations[config]).toFixed(2)}×)`;
+    if (durations[config] !== min) out[config] += ` (${(durations[config] / min).toFixed(2)}×)`;
   }
   return out;
 };
