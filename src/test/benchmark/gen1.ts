@@ -83,7 +83,33 @@ export const Choices = new class {
       return options.length === 0 ? [{type: 'pass', data: 0}] : options;
     }
     case 'move': {
-      return []; // TODO
+      const side = battle.side(id);
+      const foe = battle.foe(id);
+
+      const active = side.active!;
+      if (active.volatile(gen1.Pokemon.Volatiles.Recharging)) {
+        return [{type: 'move', data: 0}];
+      }
+
+      const options: engine.Choice[] = [];
+      if (!foe.active!.volatile(gen1.Pokemon.Volatiles.Trapping)) {
+        for (let slot = 2; slot <= 6; slot++) {
+          const pokemon = side.get(slot as engine.Slot);
+          if (!pokemon || pokemon.hp === 0) continue;
+          options.push({type: 'switch', data: slot});
+        }
+      }
+      const before = options.length;
+      let slot = 0;
+      for (const move of active.moves) {
+        slot++;
+        if (move.pp === 0 || move.disabled) continue;
+        options.push({type: 'move', data: slot});
+      }
+      if (options.length === before) {
+        options.push({type: 'move', data: 0}); // Struggle
+      }
+      return options;
     }
     }
   }

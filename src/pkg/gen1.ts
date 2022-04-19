@@ -341,7 +341,7 @@ export class Pokemon implements Gen1.Pokemon {
     return {id, pp, disabled};
   }
 
-  get moves() {
+  get moves(): Iterable<Gen1.MoveSlot> {
     if (!this.active) return this.stored.moves;
 
     return this._moves();
