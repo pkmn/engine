@@ -63,13 +63,7 @@ pub fn build(b: *Builder) !void {
 
     const node_headers = b.option([]const u8, "node-headers", "Path to node-headers");
     if (node_headers) |headers| {
-        const name = try std.fmt.allocPrint(b.allocator, "{s}.node", .{lib});
-        defer b.allocator.free(name);
-        // Always emit to build/lib because this is where the driver code expects to find it
-        // TODO: find alternative to emit_to that works properly with .install()
-        const emit_to = try std.fmt.allocPrint(b.allocator, "build/lib/{s}.node", .{lib});
-        // BUG: can't free emit_to because emit_bin takes ownership
-
+        const name = b.fmt("{s}.node", .{lib});
         const node_lib = b.addSharedLibrary(name, "src/lib/binding/node.zig", .unversioned);
         node_lib.addSystemIncludePath(headers);
         node_lib.addOptions("build_options", options);
@@ -78,7 +72,9 @@ pub fn build(b: *Builder) !void {
         node_lib.linkLibC();
         node_lib.linker_allow_shlib_undefined = true;
         node_lib.strip = strip;
-        node_lib.emit_bin = .{ .emit_to = emit_to };
+        // Always emit to build/lib because this is where the driver code expects to find it
+        // TODO: find alternative to emit_to that works properly with .install()
+        node_lib.emit_bin = .{ .emit_to = b.fmt("build/lib/{s}", .{name}) };
         b.getInstallStep().dependOn(&node_lib.step);
     }
 
@@ -89,8 +85,7 @@ pub fn build(b: *Builder) !void {
     );
     b.getInstallStep().dependOn(&header.step);
     {
-        const pc = try std.fmt.allocPrint(b.allocator, "lib{s}.pc", .{lib});
-        defer b.allocator.free(pc);
+        const pc = b.fmt("lib{s}.pc", .{lib});
 
         const file = try std.fs.path.join(
             b.allocator,
@@ -114,9 +109,7 @@ pub fn build(b: *Builder) !void {
         , .{ b.install_prefix, lib, suffix, version });
         defer pkgconfig_file.close();
 
-        const dest = try std.fmt.allocPrint(b.allocator, "share/pkgconfig/{s}", .{pc});
-        defer b.allocator.free(dest);
-        b.installFile(file, dest);
+        b.installFile(file, b.fmt("share/pkgconfig/{s}", .{pc}));
     }
 
     const coverage = b.option([]const u8, "test-coverage", "Generate test coverage");
@@ -187,8 +180,7 @@ fn tool(
     var name = std.fs.path.basename(path);
     const index = std.mem.lastIndexOfScalar(u8, name, '.');
     if (index) |i| name = name[0..i];
-    if (showdown) name = try std.fmt.allocPrint(b.allocator, "{s}-showdown", .{name});
-    defer if (showdown) b.allocator.free(name);
+    if (showdown) name = b.fmt("{s}-showdown", .{name});
 
     const exe = b.addExecutable(name, path);
     for (pkgs) |p| exe.addPackage(p);
