@@ -92,31 +92,74 @@ export const Choices = new class {
       }
 
       const options: engine.Choice[] = [];
-      if (!foe.active!.volatile(gen1.Pokemon.Volatiles.Trapping)) {
+      const trapped = foe.active!.volatile(gen1.Pokemon.Volatiles.Trapping);
+      if (!trapped) {
         for (let slot = 2; slot <= 6; slot++) {
           const pokemon = side.get(slot as engine.Slot);
           if (!pokemon || pokemon.hp === 0) continue;
           options.push({type: 'switch', data: slot});
         }
       }
+
       const before = options.length;
       let slot = 0;
       for (const move of active.moves) {
         slot++;
-        if (move.pp === 0 || move.disabled) continue;
+        if ((move.pp === 0 && !trapped) || move.disabled) continue;
         options.push({type: 'move', data: slot});
       }
       if (options.length === before) {
         options.push({type: 'move', data: 0}); // Struggle
       }
+
       return options;
     }
     }
   }
 
   sim(this: void, battle: sim.Battle, id: SideID): string[] {
-    if (!battle[id]!.activeRequest) return [];
+    const request = battle[id]!.activeRequest;
+    if (!request || request.wait) return [];
 
-    return []; // TODO
+    if (request.forceSwitch) {
+      const options: string[] = [];
+      const side = battle[id]!;
+      for (let slot = 2; slot <= 6; slot++) {
+        const pokemon = side.pokemon[slot - 1];
+        if (!pokemon || pokemon.hp === 0) continue;
+        options.push(`switch ${slot}`);
+      }
+      return options.length === 0 ? ['pass'] : options;
+    } else if (request.active) {
+      const side = battle[id]!;
+
+      const active = side.active[0];
+      if (active.volatiles['mustrecharge']) return ['move 1'];
+
+      const options: string[] = [];
+      const trapped = active.volatiles['partialtrappinglock'];
+      if (!trapped) {
+        for (let slot = 2; slot <= 6; slot++) {
+          const pokemon = side.pokemon[slot - 1];
+          if (!pokemon || pokemon.hp === 0) continue;
+          options.push(`switch ${slot}`);
+        }
+      }
+
+      const before = options.length;
+      let slot = 0;
+      for (const move of active.moveSlots) {
+        slot++;
+        if ((move.pp === 0 && !trapped) || move.disabled) continue;
+        options.push(`move ${slot}`);
+      }
+      if (options.length === before) {
+        options.push('move 1'); // Struggle
+      }
+
+      return options;
+    } else {
+      throw new Error(`Unsupported request: ${JSON.stringify(request)}`);
+    }
   }
 };

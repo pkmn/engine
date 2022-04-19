@@ -1449,7 +1449,8 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
                 return n;
             }
 
-            if (!foe.active.volatiles.Trapping) {
+            const trapped = foe.active.volatiles.Trapping;
+            if (!trapped) {
                 var slot: u4 = 2;
                 while (slot <= 6) : (slot += 1) {
                     const pokemon = side.get(slot);
@@ -1464,8 +1465,8 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
             while (slot <= 4) : (slot += 1) {
                 const m = active.move(slot);
                 if (m.id == .None) break;
-                // TODO: Wrap at 0 PP
-                if (m.pp == 0 or active.volatiles.data.disabled.move == slot) continue;
+                if (m.pp == 0 and !trapped) continue;
+                if (active.volatiles.data.disabled.move == slot) continue;
                 out[n] = .{ .type = .Move, .data = slot };
                 n += 1;
             }
