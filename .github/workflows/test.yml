@@ -29,7 +29,7 @@ jobs:
       - run: zig build ${{matrix.options}} -p build
       - run: zig build test ${{matrix.options}}
       - run: zig build test ${{matrix.options}} -Drelease-fast
-      - run: zig fmt --check . --exclude build
+      - run: zig fmt --check . # --exclude build
       - run: npm run compile
       - run: npm test
       - run: npm run test:integration
