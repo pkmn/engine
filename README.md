@@ -106,7 +106,7 @@ pub fn build(b: *std.build.Builder) void {
 pkmn_battle *battle = ...;
 pkmn_result result;
 pkmn_choice c1 = 0, c2 = 0;
-while (!PKMN_RESULT_TYPE(result = pkmn_battle_update(battle, c1, c2, log))) {
+while (!PKMN_RESULT_TYPE(result = pkmn_battle_update(battle, c1, c2, NULL))) {
   c1 = choose(p1, PKMN_RESULT_P1(result));
   c2 = choose(p2, PKMN_RESULT_P2(result));
 }
