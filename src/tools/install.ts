@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import {execFileSync} from 'child_process';
 import {pipeline} from 'stream/promises';
 
-if (+process.version.match(/^v(\d+)/)![1] < 16) {
+if (+/^v(\d+)/.exec(process.version)![1] < 16) {
   console.error('The pkmn engine requires Node v16+');
   process.exit(1);
 }
