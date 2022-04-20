@@ -87,6 +87,7 @@ export const Choices = new class {
       const foe = battle.foe(id);
 
       const active = side.active!;
+      // TODO: handle locked move properly
       if (active.volatile(gen1.Pokemon.Volatiles.Recharging)) {
         return [{type: 'move', data: 0}];
       }
@@ -134,7 +135,10 @@ export const Choices = new class {
       const side = battle[id]!;
 
       const active = side.active[0];
-      if (active.volatiles['mustrecharge']) return ['move 1'];
+      // Locked
+      if (active.trapped && request.active[0].moves.length === 1) {
+        return ['move 1'];
+      }
 
       const options: string[] = [];
       const trapped = active.volatiles['partialtrappinglock'];

@@ -6,6 +6,11 @@ import * as fs from 'fs';
 import {execFileSync} from 'child_process';
 import {pipeline} from 'stream/promises';
 
+if (+process.version.match(/^v(\d+)/)![1] < 16) {
+  console.error('The pkmn engine requires Node v16+');
+  process.exit(1);
+}
+
 try {
   require.resolve('7zip-min');
 } catch (err: any) {

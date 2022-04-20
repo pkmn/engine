@@ -21,6 +21,6 @@
     "tsBuildInfoFile": ".tsbuildinfo",
     "paths": {
       "@pkmn/sim/*": ["node_modules/@pkmn/sim/build/sim/*"]
-    },
+    }
   }
 }

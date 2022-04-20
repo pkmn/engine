@@ -64,7 +64,7 @@ test: zig-test js-test
 
 .PHONY: zig-coverage
 zig-coverage:
-	rm -f coverage/zig
+	rm -rf coverage/zig
 	mkdir -p coverage/zig
 	zig build test -Dtest-coverage=coverage/zig/pkmn
 	zig build -Dshowdown -Dtrace test -Dtest-coverage=coverage/zig/pkmn-showdown

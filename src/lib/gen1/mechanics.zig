@@ -1443,8 +1443,9 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
 
             var active = side.active;
 
+            // TODO: handle locked move (charging/recharging/rage/bide/dig/etc)
             if (active.volatiles.Recharging) {
-                out[n] = .{ .type = .Move, .data = 0 }; // recharge
+                out[n] = .{ .type = .Move, .data = 0 };
                 n += 1;
                 return n;
             }

@@ -14,6 +14,11 @@ This folder contains miscellaneous scripts and tools useful for working on the p
   The `--force` flag can be used to ensure that the data is refetched from the source instead of
   from a local `.cache` directory.
 
+- ['install.ts'](install.ts): Postinstall script which installs Zig, downloads the correct Node
+  headers and builds the engine as a Node add-on.
+
+      $ npm run compile && node build/tools/install
+
 - [`protocol.zig`](protocol.zig): Print out offsets and constants required to properly encode and
   decode the pkmn [protocol](../../docs/PROTOCOL.md).
 

@@ -52,8 +52,8 @@ pub fn build(b: *Builder) !void {
     static_lib.strip = strip;
     static_lib.install();
 
-    const kind = .{ .versioned = try std.builtin.Version.parse(version) };
-    const dynamic_lib = b.addSharedLibrary(lib, "src/lib/binding/c.zig", kind);
+    const versioned = .{ .versioned = try std.builtin.Version.parse(version) };
+    const dynamic_lib = b.addSharedLibrary(lib, "src/lib/binding/c.zig", versioned);
     dynamic_lib.addOptions("build_options", options);
     dynamic_lib.setBuildMode(mode);
     dynamic_lib.setTarget(target);
@@ -89,7 +89,7 @@ pub fn build(b: *Builder) !void {
 
         const file = try std.fs.path.join(
             b.allocator,
-            &[_][]const u8{ b.cache_root, pc },
+            &.{ b.cache_root, pc },
         );
         const pkgconfig_file = try std.fs.cwd().createFile(file, .{});
 
@@ -133,12 +133,7 @@ pub fn build(b: *Builder) !void {
         if (std.fs.path.dirname(bin)) |dir| tests.setOutputDir(dir);
     }
     if (coverage) |path| {
-        tests.setExecCmd(&[_]?[]const u8{
-            "kcov",
-            "--include-pattern=src/lib",
-            path,
-            null,
-        });
+        tests.setExecCmd(&.{ "kcov", "--include-pattern=src/lib", path, null });
     }
 
     const bench = b.addExecutable(
@@ -155,7 +150,7 @@ pub fn build(b: *Builder) !void {
     if (b.args) |args| benchmark.addArgs(args);
     tests.step.dependOn(&bench.step);
 
-    const format = b.addFmt(&[_][]const u8{"."});
+    const format = b.addFmt(&.{"."});
 
     const rng = try tool(b, &.{pkmn}, "src/tools/rng.zig", showdown, strip, &tests.step);
     const serde = try tool(b, &.{pkmn}, "src/tools/serde.zig", showdown, strip, &tests.step);
