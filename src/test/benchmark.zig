@@ -36,16 +36,15 @@ pub fn benchmark(gen: u8, seed: u64, battles: usize, playouts: ?usize) !void {
     var turns: usize = 0;
 
     var i: usize = 0;
-    while (i <= battles) : (i += 1) {
+    while (i < battles) : (i += 1) {
         var original = switch (gen) {
             1 => pkmn.gen1.helpers.Battle.random(&random, playouts != null),
-            // TODO: support additional generations
             else => unreachable,
         };
 
         var n = playouts orelse 1;
         var j: usize = 0;
-        while (j <= n) : (j += 1) {
+        while (j < n) : (j += 1) {
             var battle = original;
 
             var c1 = pkmn.Choice{};

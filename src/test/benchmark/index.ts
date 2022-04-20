@@ -27,6 +27,11 @@ const FORMATS = [
 ] as ID[];
 
 const toMillis = (duration: bigint) => Number(duration / BigInt(1e6));
+const serialize = (seed: PRNGSeed) =>
+  ((BigInt(seed[0]) << 48n) |
+    (BigInt(seed[1]) << 32n) |
+    (BigInt(seed[2]) << 16n) |
+    BigInt(seed[3])).toString();
 
 interface Configuration {
   warmup?: boolean;
@@ -72,7 +77,7 @@ const ps = (direct: boolean) => (format: ID, prng: PRNG, battles: number, playou
     }
   }
 
-  return [toMillis(duration), turns, prng.seed.join('')] as const;
+  return [toMillis(duration), turns, serialize(prng.seed)] as const;
 };
 
 class DirectBattle extends Battle {
@@ -144,12 +149,12 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
         'build', '-Dshowdown=true', 'benchmark', '--',
         format[3], // TODO: support doubles
         battles.toString(),
-        prng.seed.join(''),
+        serialize(prng.seed),
         playouts.toString(),
       ], {encoding: 'utf8'});
 
       const [duration, turn, seed] = stdout.split(',');
-      return [toMillis(BigInt(duration)), Number(turn), seed];
+      return [toMillis(BigInt(duration)), Number(turn), seed.trim()];
     },
   },
 };
@@ -173,7 +178,7 @@ for (const format of FORMATS) {
 
     const prng = new PRNG(argv.seed.slice());
     const [duration, turns, seed] = config.run(format, prng, argv.battles, argv.playouts);
-    if (!control.turns) {
+    if (!control.seed) {
       control.turns = turns;
       control.seed = seed;
     } else if (turns !== control.turns) {
