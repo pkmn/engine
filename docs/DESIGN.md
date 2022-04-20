@@ -160,12 +160,13 @@ hours):
   characters removed. While this is fairly convenient for developers who can easily tell at a glance
   what object an `ID` is intended to reference, it is **inefficient** as it relies heavily on the
   assumption of the compiler performing string interning and uses up more memory than integers (JS
-  numbers are technically all 8 bytes, but JS runtimes usually implement 'Smi' optimizations for 32
-  bit integers). More importantly, Pokémon Showdown **frequently calls `toID`** on strings to
-  convert strings to an `ID` to the point where `toID` is Pokémon Showdown's hottest function.
-  Pokémon Showdown should be able to leverage TypeScript's type checking to enable only calling
-  `toID` on input and not multiple times over the lifetime of the `ID` to minimize this cost, but
-  this still does not fully mitigate the issue.
+  numbers are technically all 8 bytes, but JS runtimes usually implement ['Smi' optimizations for 32
+  bit integers](https://github.com/v8/v8/blob/a9e3d9c7/include/v8.h#L253)). More importantly,
+  Pokémon Showdown **frequently calls `toID`** on strings to convert strings to an `ID` to the point
+  where `toID` is Pokémon Showdown's hottest function. Pokémon Showdown should be
+  able to leverage TypeScript's type checking to enable only calling `toID` on input and not
+  multiple times over the lifetime of the `ID` to minimize this cost, but this still does not fully
+  mitigate the issue.
 - Pokémon Showdown's **data layer is fully featured** and designed to support a plethora of use
   cases beyond what is specifically required for implementing a Pokémon battle. This data is useful
   for various additional tools and features, but the more **general API results in bloat** that
