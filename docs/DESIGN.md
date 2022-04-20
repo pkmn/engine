@@ -53,7 +53,7 @@ tradeoff performance for any other feature. This principle leads to the followin
 - data is structured such that in most cases **lookups are not required** (i.e. range checks are
   used instead) or can be done with an efficient linear search. In extreme cases, [perfect
   hashing](https://en.wikipedia.org/wiki/Perfect_hash_function) is utilized to avoid ever having to
-  probe.`
+  probe.
 
 The biggest challenge resulting from the "no compromises" design principle is that **the engine must
 be compiled with specific flags to opt-in to certain behavior**. By default, the pkmn engine
