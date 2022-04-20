@@ -284,7 +284,7 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
   (`-Dshowdown`):
   - if `showdown` is enabled, the RNG state consists of 4 bytes of zero-padding followed by the
     64-bit seed, written in native-endianess
-  - otherwise the RNG state consists of 1 bytes of zero-padding, the 10 bytes of the seed, and
+  - otherwise the RNG state consists of 1 byte of zero-padding, the 10 bytes of the seed, and
     finally the index pointing to which byte of the seed is currently being used
 
 ### `Side`
