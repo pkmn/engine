@@ -12,6 +12,7 @@
     <img alt="License" src="https://img.shields.io/badge/License-MIT-blue.svg" />
   </a>
 </p>
+<hr />
 
 A minimal, complete, Pokémon battle simulation engine optimized for performance and
 [designed](docs/DESIGN.md) for tooling, embedded systems, and [artificial
