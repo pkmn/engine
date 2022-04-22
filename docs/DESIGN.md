@@ -88,7 +88,7 @@ though contains all of the information required to produce identical logs to eit
 - [`Makefile`](../Makefile): the top-level `Makefile` orchestrates the tasks from `build.zig` and
   `package.json`
   - [`build.zig`](../build.zig): deals with building all Zig code
-  - [package.json](../package.json): deals with building all JavaScript code
+  - [`package.json`](../package.json): deals with building all JavaScript code
 - [`examples`](../src/examples): examples of using the engine across all supported targets
 - [`lib`](../src/lib): the Zig code for the `libpkmn` engine
   - [`pkmn.zig`](../src/lib/pkmn.zig): the main entry point for the Zig library
@@ -96,10 +96,11 @@ though contains all of the information required to produce identical logs to eit
   - [`common`](..src/lib/common): code shared by all generations (common data
     structures/RNG/protocol logic)
   - `gen*`: the code for the respective Pokémon generations implemented by the engine
-- [pkg](../src/pkg): code for the `@pkmn/engine` JavaScript package with driver code for the engine
+- [`pkg`](../src/pkg): code for the `@pkmn/engine` JavaScript package with driver code for the
+  engine
 - [`test`](../src/test): code for high level tests (integration, benchmarking, fuzzing) - unit tests
   live inline/beside the code they implement in the `lib`/`pkg` directories
-- [tools](../src/tools): miscellaneous scripts and tools useful for working on the pkmn engine
+- [`tools`](../src/tools): miscellaneous scripts and tools useful for working on the pkmn engine
 
 ## Appendix
 
