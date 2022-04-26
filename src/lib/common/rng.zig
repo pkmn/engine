@@ -56,6 +56,13 @@ pub fn PRNG(comptime gen: comptime_int) type {
             assert(denominator > 0);
             return self.range(T, 0, denominator) < numerator;
         }
+
+        pub fn newSeed(self: *Self) u64 {
+            return (@as(u64, self.range(u16, 0, 0x10000)) << 48) |
+                (@as(u64, self.range(u16, 0, 0x10000)) << 32) |
+                (@as(u64, self.range(u16, 0, 0x10000)) << 16) |
+                (@as(u64, self.range(u16, 0, 0x10000)));
+        }
     };
 }
 

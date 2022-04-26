@@ -4,6 +4,7 @@ import {Generation, PokemonSet, SideID, StatsTable} from '@pkmn/data';
 import * as engine from '../../pkg';
 import * as gen1 from '../../pkg/gen1';
 import {Lookup} from '../../pkg/data';
+import {newSeed} from './index';
 
 export const Battle = new class {
   random(gen: Generation, prng: sim.PRNG): engine.Battle {
@@ -12,12 +13,7 @@ export const Battle = new class {
 
   options(gen: Generation, prng: sim.PRNG): engine.CreateOptions {
     return {
-      seed: [
-        prng.next(0x10000),
-        prng.next(0x10000),
-        prng.next(0x10000),
-        prng.next(0x10000),
-      ],
+      seed: newSeed(prng),
       p1: Player.options(gen, prng),
       p2: Player.options(gen, prng),
       showdown: true,
@@ -167,3 +163,27 @@ export const Choices = new class {
     }
   }
 };
+
+export class RandomPlayerAI extends sim.BattleStreams.BattlePlayer {
+  readonly battleStream: sim.BattleStreams.BattleStream;
+  readonly id: SideID;
+  readonly prng: sim.PRNG;
+
+  constructor(
+    playerStream: sim.Streams.ObjectReadWriteStream<string>,
+    battleStream: sim.BattleStreams.BattleStream,
+    id: SideID,
+    prng: sim.PRNG
+  ) {
+    super(playerStream);
+    this.battleStream = battleStream;
+    this.id = id;
+    this.prng = prng;
+  }
+
+  receiveRequest(_: sim.AnyObject) {
+    const options = Choices.sim(this.battleStream.battle!, this.id);
+    const choice = options[this.prng.next(options.length)];
+    if (choice) this.choose(choice);
+  }
+}

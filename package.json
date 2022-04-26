@@ -83,7 +83,7 @@
         "@typescript-eslint/no-shadow": "off"
       }
     }, {
-      "files": ["src/test/benchmark/index.ts"],
+      "files": ["src/test/benchmark/*.ts"],
       "rules": {
         "@typescript-eslint/no-unused-vars": "off"
       }

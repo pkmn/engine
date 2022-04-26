@@ -50,11 +50,14 @@ pub fn benchmark(gen: u8, seed: u64, battles: usize, playouts: ?usize) !void {
             var c1 = pkmn.Choice{};
             var c2 = pkmn.Choice{};
 
+            var p1 = pkmn.PRNG.init(random.newSeed());
+            var p2 = pkmn.PRNG.init(random.newSeed());
+
             var timer = try Timer.start();
             var result = try battle.update(c1, c2, null);
             while (result.type == .None) : (result = try battle.update(c1, c2, null)) {
-                c1 = options[random.range(u8, 0, battle.choices(.P1, result.p1, &options))];
-                c2 = options[random.range(u8, 0, battle.choices(.P2, result.p2, &options))];
+                c1 = options[p1.range(u8, 0, battle.choices(.P1, result.p1, &options))];
+                c2 = options[p2.range(u8, 0, battle.choices(.P2, result.p2, &options))];
             }
             duration += timer.read();
             turns += battle.turn;

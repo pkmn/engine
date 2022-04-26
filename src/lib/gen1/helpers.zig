@@ -62,10 +62,7 @@ pub const Battle = struct {
 
 fn prng(rand: *PRNG) data.Random {
     return .{ .src = .{ .seed = if (build_options.showdown)
-        (@as(u64, rand.range(u16, 0, 0x10000)) << 48) |
-            (@as(u64, rand.range(u16, 0, 0x10000)) << 32) |
-            (@as(u64, rand.range(u16, 0, 0x10000)) << 16) |
-            (@as(u64, rand.range(u16, 0, 0x10000)))
+        rand.newSeed()
     else .{
         rand.range(u8, 0, 256), rand.range(u8, 0, 256),
         rand.range(u8, 0, 256), rand.range(u8, 0, 256),

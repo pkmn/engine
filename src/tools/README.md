@@ -34,6 +34,12 @@ This folder contains miscellaneous scripts and tools useful for working on the p
       $ zig build rng -- crit 93
       $ zig build rng -- sleep
 
+- [`showdown.ts`](showdown.ts): Stripped-down clone of the `pokemon-showdown` binary that Pokémon
+  Showdown advertises as the blessed way to interact with the simulator from other languages when
+  simulating battles.
+
+      $ npm run compile && node build/tools/showdown
+
 - [`serde.zig`](serde.zig)/[`serde.ts`](serde.ts): Serializes/deserializes a randomly generated
   Battle for the provided generation to stdout, optionally for a specific seed. `serde.ts` wraps
   `serde.zig` and pretty prints the buffer so that it can be easily copied and pasted into JS

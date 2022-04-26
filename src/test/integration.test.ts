@@ -57,10 +57,10 @@ class Runner {
   // NOTE: advances this.prng's seed by 4.
   newSeed(): PRNGSeed {
     return [
-      Math.floor(this.prng.next() * 0x10000),
-      Math.floor(this.prng.next() * 0x10000),
-      Math.floor(this.prng.next() * 0x10000),
-      Math.floor(this.prng.next() * 0x10000),
+      this.prng.next(0x10000),
+      this.prng.next(0x10000),
+      this.prng.next(0x10000),
+      this.prng.next(0x10000),
     ];
   }
 }

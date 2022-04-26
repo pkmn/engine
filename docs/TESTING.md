@@ -68,28 +68,33 @@ possible, eg. [disabling CPU performance scaling, Intel Turbo Boost,
 etc](https://github.com/travisdowns/uarch-bench/blob/master/uarch-bench.sh). The benchmark tool
 measures 4 different configurations:
 
-- **Pokémon Showdown! (default)**: this configuration uses the regular Pokémon Showdown `Battle`,
-  though does so directly instead of via the asynchronous  `BattleStream`/`BattlePlayer` APIs. While
-  the asynchronous APIs are the blessed way of using Pokémon Showdown, the asynchronous nature adds
-  latency and makes coordinating the order of PRNG calls difficult - we need to ensure that each
-  update causes the RNG frame to advance by 2 (one for a choice from player 1 and one from player
-  2), and this is difficult with the asynchronous APIs where player 1 and player 2 may receive
-  messages out of order and without knowledge of the other player's choice. While the synchronous
-  set up is slightly more artificial, it is simpler and faster.
+- **`pokemon-showdown`**: this configuration uses a [clone](../src/tools/showdown.ts) of Pokémon
+  Showdown's root `pokemon-showdown` binary that allows for users to drive the simulator via
+  standard input/output.  This is Pokémon Showdown's blessed solution for using the simulator for
+  non-JavaScript programming languages. The same caveats that apply to `Battle` (below) also apply
+  here, though there is additional I/O overhead.
 
-- **Pokémon Showdown! (optimized)**: this configuration introduces the concept of a `DirectBattle` which
+- **`BattleStream`**: this configuration attempts to use Pokémon Showdown's
+`BattleStream`/`BattlePlayer` APIs mostly as intended, with 2 tweaks:
+
+  1. A special `RandomPlayerAI` is used that directly inspects the `Battle` to avoid making
+     unavailable choices and matches the AI used by all of the other configurations.
+  2. The `Battle` within the `BattleStream` is directly inspected in order to more easily grab the
+     turn count.
+
+- **`DirectBattle`**: this configuration introduces the concept of a `DirectBattle` which
   overrides the Pokémon Showdown `Battle` class to strip out unused functionality:
 
     1. methods which add to the battle log are overriden to drop any messages immediately
     2. `sendUpdates` is overridden to not send any updates
     3. `makeRequest` avoids serializing the request for each side  
   
-  The `DirectBattle` is then used synchronously as opposed to via the async `BattleStream` for the
-  reasons described above (simplicity and speed). This configuration minimizes string processing
-  overhead and unnecessary delays due to `async` calls and is as close to as fast as Pokémon
-  Showdown can be run (there is room for further optimization by simplifying choice parsing to to
-  not perform any verification, though this is signficantly less trivial than the aforementioned
-  optimizations). This is closer to how the pkmn engine runs with `-Dtrace` disabled.
+  The `DirectBattle` is then used synchronously as opposed to via the async `BattleStream` which is
+  about 10% faster and obviates needing to care about races. This configuration minimizes string
+  processing overhead and unnecessary delays due to `async` calls and is as close to as fast as
+  Pokémon Showdown can be run (there is room for further optimization by simplifying choice parsing
+  to to not perform any verification, though this is signficantly less trivial than the
+  aforementioned optimizations). This is closer to how the pkmn engine runs with `-Dtrace` disabled.
 
 - **`@pkmn/engine`**: this configuration uses the `@pmn/engine` driver package to run battles with
   the pkmn engine.
@@ -108,19 +113,26 @@ As such, all benchmarks are run with the same PRNGs that have been initialized w
 and the logic for generating battles/randomly choosing moves is duplicated across  both the Zig and
 TypeScript implementations. Finally, in addition to total duration, the benchmarking tool tracks and
 compares the total number of turns across all battles and the final RNG seed to serve as a
-"checksum" and verify that all of the configurations are in agreement.
+"checksum" and verify that all of the configurations are in agreement - Pokémon Showdown requires
+that we:
+
+  - serialize the player's teams passed to the `Battle` constructor, as Pokémon Showdown mutates
+    them
+  - drive both players with separate PRNGs from each other and from the `Battle`, as there is no
+    guarantee around the order of operations (Pokémon Showdown has numerous races and
+    [unpleasantries](https://github.com/smogon/pokemon-showdown/issues/8546))
 
 ### Results
 
 The benchmarks are run on a Intel(R) Xeon(R) CPU E5-2690 v3 @ 2.60GHz on 64-bit x86 Linux which has
 undergone the pre-benchmark tuning detailed above via the command  `npm run benchmark -- 1000`:
 
-| Generation | `libpkmn` | `@pkmn/engine` | Pokémon Showdown! (optimized) | Pokémon Showdown! (default) |
-| ---------- | --------- | -------------- | ----------------------------- | --------------------------- |
-| **RBY**    | 1ms       | 2ms (2x)       | 3ms (3x)                      | 4ms (4x)                    |
-| **GSC**    | 1ms       | 2ms (2x)       | 3ms (3x)                      | 4ms (4x)                    |
-| **ADV**    | 1ms       | 2ms (2x)       | 3ms (3x)                      | 4ms (4x)                    |
-| **DPP**    | 1ms       | 2ms (2x)       | 3ms (3x)                      | 4ms (4x)                    |
+| Generation | `libpkmn` | `@pkmn/engine` | `DirectBattle` | `BattleStream` | `pokemon-showdown` |
+| ---------- | --------- | -------------- | -------------- | ---------------| ------------------ |
+| **RBY**    | 1ms       | 2ms (2x)       | 3ms (3x)       | 4ms (4x)       | 5ms (5x)           |
+| **GSC**    | 1ms       | 2ms (2x)       | 3ms (3x)       | 4ms (4x)       | 5ms (5x)           |
+| **ADV**    | 1ms       | 2ms (2x)       | 3ms (3x)       | 4ms (4x)       | 5ms (5x)           |
+| **DPP**    | 1ms       | 2ms (2x)       | 3ms (3x)       | 4ms (4x)       | 5ms (5x)           |
 
 <details><summary>CPU Details</summary><pre>
 Architecture:            x86_64
