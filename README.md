@@ -64,13 +64,13 @@ $ npm install @pkmn/engine
 The driver depends on being able to find compiled Node/WASM add-ons in
 `node_modules/@pkmn/engine/build/lib` in order to be useful. When you install the package a
 [`postinstall` lifecycle script](https://docs.npmjs.com/cli/v8/using-npm/scripts) will run
-[`src/tools/install.ts`](src/tools/install.ts) which will check for a compatible `zig` compiler and
-download one to `node_module/@pkmn/engine/build/bin` if it can't find one, as well as downloading
-the appropriate Node headers so that it can successfully build the add-ons natively.
+[`install-pkmn-engine`](src/tools/install.ts) which will check for a compatible `zig` compiler (see
+above regarding minimum version) and download one to `node_module/@pkmn/engine/build/bin` if it
+can't find one, as well as looking for (and downloading, if necessary) the required Node headers
+required to successfully build the add-ons natively.
 
-If you have configured NPM to ignore scripts you must either run
-`node_modules/@pkmn/engine/build/tools/install.js` manually or build the add-ons manually and place
-the artifacts in the expected paths.
+**If you have configured NPM to ignore scripts you must either run `install-pkmn-engine` manually or
+build the add-ons manually and place the artifacts in the expected paths.**
 
 ### `pkmn`
 
@@ -78,7 +78,6 @@ Until the [Zig package manager](https://github.com/ziglang/zig/issues/943) is co
 recommended way of using the `pkmn` package in Zig is by either copying this repository into your
 project or by using [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) and then
 adding the following to your `build.zig`:
-
 
 ```zig
 const std = @import("std");
@@ -114,8 +113,8 @@ be used to simplify adding the `pkmn` package to your project.
 
 ## Usage
 
-Please note that the snippets below are meant to merely illustrate in broad strokes how the pkmn
-engine can be used - the [`examples`](src/examples) contains fully realized and runnable code. 
+*The snippets below are meant to merely illustrate in broad strokes how the pkmn engine can be used
+\- the [`examples`](src/examples) contains fully commented and runnable code.*
 
 ### C
 
@@ -218,7 +217,7 @@ The simulation engine is currently expected to be developed over multiple stages
 | **0**   | documentation, integration, benchmark, protocol |
 | **1**   | RBY & GSC                                       |
 | **2**   | ADV & DPP                                       |
-| _**3**_ | _BW & XY & SM & SS & SV_                        |
+| ***3*** | *modern generations*                            |
 
 Currently, most of the foundational work from stage 0 is done:
   
@@ -230,7 +229,9 @@ Currently, most of the foundational work from stage 0 is done:
 battle engines, followed by Generation III & IV in stage 2. The implementation of further Pokémon
 generations is in scope for the project but should not be considered as part of the immediate
 roadmap (ie. exploring the options for broadening support for old generation APIs will be given
-higher priority than implementing more modern generations).
+higher priority than implementing more modern generations). Furthermore, implementation of modern
+generations is soft-blocked on the [availability of high quality
+decompilations](https://github.com/orgs/pret/repositories) of the original games in question.
 
 Certain features will always be deemed **out of scope**:
 

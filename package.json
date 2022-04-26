@@ -9,6 +9,9 @@
   "engines": {
     "node": ">=16.0.0"
   },
+  "bin": {
+    "install-pkmn-engine": "build/tools/install.js"
+  },
   "publishConfig": {
     "access": "public"
   },
