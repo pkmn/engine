@@ -1,12 +1,6 @@
 #!/usr/bin/env node
 'use strict';
 
-try {
-  require('source-map-support').install();
-} catch (err) {
-  if (err.code !== 'MODULE_NOT_FOUND') throw err;
-}
-
 const https = require('https');
 const path = require('path');
 const fs = require('fs');
@@ -16,6 +10,7 @@ const {pipeline} = require('stream/promises');
 const ZIG_VERSION = {major: 0, minor: 9, patch: 0};
 const VERSION = `${ZIG_VERSION.major}.${ZIG_VERSION.minor}.${ZIG_VERSION.patch}`;
 const INDEX = 'https://ziglang.org/download/index.json';
+const ROOT = path.resolve(__dirname, '../..');
 
 const sh = (cmd, args) => execFileSync(cmd, args, {encoding: 'utf8'});
 // This is hardly the browser fetch API, but it works for our primitive needs
@@ -48,9 +43,7 @@ const unpack7 = (input, output) => new Promise((resolve, reject) => {
   } catch (err) {
     if (err.code !== 'MODULE_NOT_FOUND') throw err;
     console.log('Installing 7zip-min package locally to unpack the archive...');
-    execFileSync('npm', ['install', '7zip-min', '--no-audit', '--no-save'], {
-      cwd: path.resolve(__dirname, '../..'),
-    });
+    execFileSync('npm', ['install', '7zip-min', '--no-audit', '--no-save'], { cwd: ROOT });
   }
 
   // Node won't let us used the package we just installed above before v16 because pain
@@ -122,9 +115,9 @@ const install = async () => {
     ? 'macos' : process.platform === 'win32'
       ? 'windows' : process.platform;
 
-  const dir = path.join(__dirname, '..', 'bin');
+  const dir = path.join(ROOT, 'build', 'bin');
   try {
-    fs.mkdirSync(dir);
+    fs.mkdirSync(dir, {recursive: true});
   } catch (err) {
     if (err.code !== 'EEXIST') throw err;
   }
@@ -148,7 +141,11 @@ const install = async () => {
   fs.renameSync(`${dir}/${base}`, `${dir}/zig`);
 
   const zig = `${dir}/zig/zig`;
-  fs.chmodSync(zig, 0o755);
+  try {
+    fs.chmodSync(zig, 0o755);
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw err;
+  }
   console.log(`Zig v${VERSION} executable:`, zig);
 
   return zig;
@@ -164,9 +161,9 @@ const headers = async () => {
   } else {
     console.log(`Could not find node headers at ${include}, downloading...`);
   }
-  const dir = path.join(__dirname, '..', 'include');
+  const dir = path.join(ROOT, 'build', 'include');
   try {
-    fs.mkdirSync(dir);
+    fs.mkdirSync(dir, {recursive: true});
   } catch (err) {
     if (err.code !== 'EEXIST') throw err;
   }

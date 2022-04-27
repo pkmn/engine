@@ -13,19 +13,21 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         options: ['-Dshowdown', '-Dshowdown -Dtrace', '']
-        zig: ['', master]
+        zig: [local, master]
     runs-on: ${{matrix.os}}
     steps:
       - uses: actions/checkout@v3
       - run: git config core.symlinks true
       # NOTE: rely on npm postinstall-ed zig for non-master
-      - if: ${{ matrix.zig == 'master' }}
       - uses: goto-bus-stop/setup-zig@v1
+        if: ${{ matrix.zig == 'master' }}
         with:
           version: ${{matrix.zig}}
       - run: npm install
-      - if: ${{ matrix.zig != 'master' }}
-      - run: echo "${GITHUB_WORKSPACE}/build/bin/zig/zig" >> $GITHUB_PATH
+      - run: echo "${GITHUB_WORKSPACE}/build/bin/zig" >> $GITHUB_PATH
+        if: ${{ matrix.zig != 'master' && matrix.os != 'windows-latest' }}
+      - run: echo "${env:GITHUB_WORKSPACE}/build/bin/zig" >> $env:GITHUB_PATH
+        if: ${{ matrix.zig != 'master' && matrix.os == 'windows-latest' }}
       - run: zig build ${{matrix.options}} -p build
       - run: zig build test ${{matrix.options}}
       - run: zig build test ${{matrix.options}} -Drelease-fast

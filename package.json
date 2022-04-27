@@ -57,7 +57,7 @@
     "test:integration": "jest --coverage=false --testRegex='src/test/.*\\.test\\.ts$'",
     "generate": "npm run compile && node build/tools/generate",
     "benchmark": "npm run compile && node build/test/benchmark",
-    "postinstall": "src/bin/install-pkmn-engine"
+    "postinstall": "node src/bin/install-pkmn-engine"
   },
   "jest": {
     "collectCoverage": true,
