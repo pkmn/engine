@@ -66,7 +66,7 @@ pub fn main() !void {
         _ = buf;
 
         // battle.choices determines what the possible options are - the simplest way to
-        // choose and option here is to just use system PRNG to pick one at random
+        // choose an option here is to just use the system PRNG to pick one at random
         c1 = options[random.uintLessThan(u8, battle.choices(.P1, result.p1, &options))];
         c2 = options[random.uintLessThan(u8, battle.choices(.P2, result.p2, &options))];
     }
