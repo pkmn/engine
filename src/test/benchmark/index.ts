@@ -102,11 +102,6 @@ class DirectBattle extends Battle {
 }
 
 const CONFIGURATIONS: {[name: string]: Configuration} = {
-  // 'pokemon-showdown': {
-  // run(format, prng, battles, playouts) {
-  // // TODO
-  // },
-  // },
   'BattleStream': {
     warmup: true,
     async run(format, prng, battles, playouts) {

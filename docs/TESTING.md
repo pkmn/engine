@@ -68,12 +68,6 @@ possible, eg. [disabling CPU performance scaling, Intel Turbo Boost,
 etc](https://github.com/travisdowns/uarch-bench/blob/master/uarch-bench.sh). The benchmark tool
 measures 4 different configurations:
 
-- **`pokemon-showdown`**: this configuration uses a [clone](../src/tools/showdown.ts) of Pokémon
-  Showdown's root `pokemon-showdown` binary that allows for users to drive the simulator via
-  standard input/output.  This is Pokémon Showdown's blessed solution for using the simulator for
-  non-JavaScript programming languages. The same caveats that apply to `Battle` (below) also apply
-  here, though there is additional I/O overhead.
-
 - **`BattleStream`**: this configuration attempts to use Pokémon Showdown's
 `BattleStream`/`BattlePlayer` APIs mostly as intended, with 2 tweaks:
 
@@ -81,6 +75,12 @@ measures 4 different configurations:
      unavailable choices and matches the AI used by all of the other configurations.
   2. The `Battle` within the `BattleStream` is directly inspected in order to more easily grab the
      turn count.
+
+  Pokémon Showdown's root `pokemon-showdown` binary is technically the blessed approach to using
+  the simulator, but `BattleStream` is effectively the same thing but without the (sizeable) I/O
+  overhead. Attempting to use the actual `pokemon-showdown` binary is deemed too difficult as there
+  would then be no way to inspect the `Battle` in order to avoid making unavailable choices[^1],
+  meaning it would be difficult to keep in sync with the other configurations.
 
 - **`DirectBattle`**: this configuration introduces the concept of a `DirectBattle` which
   overrides the Pokémon Showdown `Battle` class to strip out unused functionality:
@@ -130,17 +130,26 @@ latter) it is expected to take substantially longer than more traditional ["Rand
 sets](https://github.com/pkmn/randbats) or handcrafted teams. **Experimentally the random sets used
 by the benchmark are expected to be roughly 2-3× slower than what would be typical in practice.**
 
+[^1]: It is possible to remain in sync between configurations which can inspect `Battle` and those
+that can't by always saving the raw result returned by the last RNG call and reapplying it to the
+next request in the event of an "[Unavailable choice]" error (eg. call the RNG and get back `r`,
+attempt to choose the `r % N`-th choice, get rejected, on the next request do not generate a new `r`
+but instead now make the `r % M`-th choice where `M` is the actual available choices post
+rejection). Since it isn't especially important to demonstrate how much slower the (already slow)
+async `BattleStream` API when you introduce syscall overhead into the mix, this workaround is left
+as an exercise to the reader.
+
 ### Results
 
 The benchmarks are run on a Intel(R) Xeon(R) CPU E5-2690 v3 @ 2.60GHz on 64-bit x86 Linux which has
 undergone the pre-benchmark tuning detailed above via the command  `npm run benchmark -- 1000`:
 
-| Generation | `libpkmn` | `@pkmn/engine` | `DirectBattle` | `BattleStream` | `pokemon-showdown` |
-| ---------- | --------- | -------------- | -------------- | -------------- | ------------------ |
-| **RBY**    | 1ms       | 2ms (2x)       | 3ms (3x)       | 4ms (4x)       | 5ms (5x)           |
-| **GSC**    | 1ms       | 2ms (2x)       | 3ms (3x)       | 4ms (4x)       | 5ms (5x)           |
-| **ADV**    | 1ms       | 2ms (2x)       | 3ms (3x)       | 4ms (4x)       | 5ms (5x)           |
-| **DPP**    | 1ms       | 2ms (2x)       | 3ms (3x)       | 4ms (4x)       | 5ms (5x)           |
+| Generation | `libpkmn` | `@pkmn/engine` | `DirectBattle` | `BattleStream` |
+| ---------- | --------- | -------------- | -------------- | -------------- |
+| **RBY**    | 1ms       | 2ms (2x)       | 3ms (3x)       | 4ms (4x)       |
+| **GSC**    | 1ms       | 2ms (2x)       | 3ms (3x)       | 4ms (4x)       |
+| **ADV**    | 1ms       | 2ms (2x)       | 3ms (3x)       | 4ms (4x)       |
+| **DPP**    | 1ms       | 2ms (2x)       | 3ms (3x)       | 4ms (4x)       |
 
 <details><summary>CPU Details</summary><pre>
 Architecture:            x86_64
