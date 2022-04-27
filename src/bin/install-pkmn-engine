@@ -1,21 +1,28 @@
-import 'source-map-support/register';
+#!/usr/bin/env node
+'use strict';
 
-import * as https from 'https';
-import * as path from 'path';
-import * as fs from 'fs';
-import {execFileSync} from 'child_process';
-import {pipeline} from 'stream/promises';
+try {
+  require('source-map-support').install();
+} catch (err) {
+  if (err.code !== 'MODULE_NOT_FOUND') throw err;
+}
 
-const ZIG_VERSION = {major: 0, minor: 9, patch: 1};
+const https = require('https');
+const path = require('path');
+const fs = require('fs');
+const {execFileSync} = require('child_process');
+const {pipeline} = require('stream/promises');
+
+const ZIG_VERSION = {major: 0, minor: 9, patch: 0};
 const VERSION = `${ZIG_VERSION.major}.${ZIG_VERSION.minor}.${ZIG_VERSION.patch}`;
 const INDEX = 'https://ziglang.org/download/index.json';
 
-const sh = (cmd: string, args: string[]) => execFileSync(cmd, args, {encoding: 'utf8'});
+const sh = (cmd, args) => execFileSync(cmd, args, {encoding: 'utf8'});
 // This is hardly the browser fetch API, but it works for our primitive needs
-const fetch = (url: string) => new Promise<string>((resolve, reject) => {
+const fetch = url => new Promise((resolve, reject) => {
   let buf = '';
   const req = https.request(url, res => {
-    if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode!}`));
+    if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode}`));
     res.on('data', d => {
       buf += d;
     });
@@ -24,21 +31,21 @@ const fetch = (url: string) => new Promise<string>((resolve, reject) => {
   req.on('error', reject);
   req.end();
 });
-const download = (url: string, dest: string) => new Promise<void>((resolve, reject) => {
+const download = (url, dest) => new Promise((resolve, reject) => {
   const req = https.request(url, res => {
-    if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode!}`));
+    if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode}`));
     resolve(pipeline(res, fs.createWriteStream(dest)));
   });
   req.on('error', reject);
   req.end();
 });
 // If we're on a system without tar or 7zip we need to download 7zip, which requires some hackery
-const unpack7 = (input: string, output: string) => new Promise<void>((resolve, reject) => {
+const unpack7 = (input, output) => new Promise((resolve, reject) => {
   console.debug('here');
   // If we already have 7zip-min installed we can just used it, otherwise we need to install it
   try {
     require.resolve('7zip-min');
-  } catch (err: any) {
+  } catch (err) {
     if (err.code !== 'MODULE_NOT_FOUND') throw err;
     console.log('Installing 7zip-min package locally to unpack the archive...');
     execFileSync('npm', ['install', '7zip-min', '--no-audit', '--no-save'], {
@@ -47,18 +54,18 @@ const unpack7 = (input: string, output: string) => new Promise<void>((resolve, r
   }
 
   // Node won't let us used the package we just installed above before v16 because pain
-  if (+/^v(\d+)/.exec(process.version)![1] < 16) {
+  if (+/^v(\d+)/.exec(process.version)[1] < 16) {
     console.error('The pkmn engine requires Node v16+');
     process.exit(1);
   }
 
   // Actually use 7zip now that we've installed it
-  require('7zip-min').unpack(input, output, (err: any) => {
+  require('7zip-min').unpack(input, output, err => {
     err ? reject(err) : resolve();
   });
 });
 // Unpacking is kind of an unholy abomination because we don't know what tool we're going to use
-const unpack = async (input: string, output: string) => {
+const unpack = async (input, output) => {
   // This is basically a check for "not windows", in which case simply using `tar` will likely work
   if (!input.endsWith('.zip')) {
     try {
@@ -94,8 +101,8 @@ const unpack = async (input: string, output: string) => {
 // https://github.com/coilhq/tigerbeetle/blob/main/scripts/install_zig.sh
 const install = async () => {
   try {
-    const {zig_exe, version} = JSON.parse(sh('zig', ['env'])) as {zig_exe: string; version: string};
-    const [major, minor, patch] = version.split('.').map((n: string) => parseInt(n));
+    const {zig_exe, version} = JSON.parse(sh('zig', ['env']));
+    const [major, minor, patch] = version.split('.').map(n => parseInt(n));
     if (major > ZIG_VERSION.major ||
       (major >= ZIG_VERSION.major && minor > ZIG_VERSION.minor) ||
       (major >= ZIG_VERSION.major && minor >= ZIG_VERSION.minor && patch >= ZIG_VERSION.patch)) {
@@ -104,7 +111,7 @@ const install = async () => {
     } else {
       console.log(`Existing Zig executable is not compatible (${version} < ${VERSION}): `, zig_exe);
     }
-  } catch (err: any) {
+  } catch (err) {
     if (err.code !== 'ENOENT') throw err;
   }
 
@@ -118,11 +125,11 @@ const install = async () => {
   const dir = path.join(__dirname, '..', 'bin');
   try {
     fs.mkdirSync(dir);
-  } catch (err: any) {
+  } catch (err) {
     if (err.code !== 'EEXIST') throw err;
   }
 
-  const url: string = JSON.parse(await fetch(INDEX))[VERSION][`${arch}-${platform}`].tarball;
+  const url = JSON.parse(await fetch(INDEX))[VERSION][`${arch}-${platform}`].tarball;
 
   let base = path.basename(url);
   const archive = `${dir}/${path.basename(url)}`;
@@ -160,11 +167,11 @@ const headers = async () => {
   const dir = path.join(__dirname, '..', 'include');
   try {
     fs.mkdirSync(dir);
-  } catch (err: any) {
+  } catch (err) {
     if (err.code !== 'EEXIST') throw err;
   }
 
-  const url = process.release.headersUrl!;
+  const url = process.release.headersUrl;
   const targz = `${dir}/${path.basename(url)}`;
 
   console.log(`Downloading Node headers from ${url} to ${targz}`);

@@ -10,7 +10,7 @@
     "node": ">=16.0.0"
   },
   "bin": {
-    "install-pkmn-engine": "build/tools/install.js"
+    "install-pkmn-engine": "src/bin/install-pkmn-engine"
   },
   "publishConfig": {
     "access": "public"
@@ -20,11 +20,10 @@
     "!build/pkg/*.test.*",
     "src/pkg",
     "!src/pkg/*.test.*",
-    "build/tools/install.*",
-    "src/tools/install.*",
     "src/lib",
     "!src/**/test.zig",
-    "!src/lib/commmon/data"
+    "!src/lib/commmon/data",
+    "src/bin/install-pkmn-engine"
   ],
   "dependencies": {
     "@pkmn/data": "^0.5.14",
@@ -57,7 +56,8 @@
     "test": "jest",
     "test:integration": "jest --coverage=false --testRegex='src/test/.*\\.test\\.ts$'",
     "generate": "npm run compile && node build/tools/generate",
-    "benchmark": "npm run compile && node build/test/benchmark"
+    "benchmark": "npm run compile && node build/test/benchmark",
+    "postinstall": "src/bin/install-pkmn-engine"
   },
   "jest": {
     "collectCoverage": true,
