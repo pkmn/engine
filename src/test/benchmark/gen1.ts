@@ -4,7 +4,7 @@ import {Generation, PokemonSet, SideID, StatsTable} from '@pkmn/data';
 import * as engine from '../../pkg';
 import * as gen1 from '../../pkg/gen1';
 import {Lookup} from '../../pkg/data';
-import {newSeed} from './index';
+import {newSeed} from './common';
 
 export const Battle = new class {
   random(gen: Generation, prng: sim.PRNG): engine.Battle {

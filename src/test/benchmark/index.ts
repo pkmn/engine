@@ -18,6 +18,8 @@ import {
 } from '@pkmn/sim';
 import minimist from 'minimist';
 
+import {newSeed} from './common';
+
 import * as gen1 from './gen1';
 
 const argv = minimist(process.argv.slice(2), {default: {battles: 100, playouts: 10}});
@@ -37,13 +39,6 @@ const FORMATS = [
   // 'gen7customgame', 'gen7doublescustomgame',
   // 'gen8customgame', 'gen8doublescustomgame',
 ] as ID[];
-
-export const newSeed = (prng: PRNG) => [
-  prng.next(0x10000),
-  prng.next(0x10000),
-  prng.next(0x10000),
-  prng.next(0x10000),
-] as PRNGSeed;
 
 const toMillis = (duration: bigint) => Number(duration / BigInt(1e6));
 const serialize = (seed: PRNGSeed) =>
