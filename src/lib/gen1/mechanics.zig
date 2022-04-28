@@ -60,7 +60,7 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
         if (try doTurn(battle, .P2, c2, .P1, c1, log)) |r| return r;
     }
 
-    var p1 = battle.side(.P1); // FIXME what about thrashing/rage?
+    var p1 = battle.side(.P1);
     if (p1.active.volatiles.data.attacks == 0) {
         p1.active.volatiles.Trapping = false;
     }
@@ -88,9 +88,7 @@ fn start(battle: anytype, log: anytype) !Result {
 }
 
 fn findFirstAlive(side: *const Side) u8 {
-    for (side.pokemon) |pokemon, i| {
-        if (pokemon.hp > 0) return side.order[i];
-    }
+    for (side.pokemon) |pokemon, i| if (pokemon.hp > 0) return side.order[i];
     return 0;
 }
 
@@ -201,21 +199,28 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     return if (spe1 > spe2) .P1 else .P2;
 }
 
-fn doTurn(battle: anytype, p: Player, pc: Choice, f: Player, fc: Choice, log: anytype) !?Result {
-    try executeMove(battle, p, pc, log);
-    if (try checkFaint(battle, f, true, log)) |r| return r;
-    try handleResidual(battle, p, log);
-    if (try checkFaint(battle, p, true, log)) |r| return r;
+fn doTurn(
+    battle: anytype,
+    player: Player,
+    player_choice: Choice,
+    foe: Player,
+    foe_choice: Choice,
+    log: anytype,
+) !?Result {
+    if (try executeMove(battle, player, player_choice, log)) |r| return r;
+    if (try checkFaint(battle, foe, log)) |r| return r;
+    try handleResidual(battle, player, log);
+    if (try checkFaint(battle, player, log)) |r| return r;
 
-    try executeMove(battle, f, fc, log);
-    if (try checkFaint(battle, p, true, log)) |r| return r;
-    try handleResidual(battle, f, log);
-    if (try checkFaint(battle, f, true, log)) |r| return r;
+    if (try executeMove(battle, foe, foe_choice, log)) |r| return r;
+    if (try checkFaint(battle, player, log)) |r| return r;
+    try handleResidual(battle, foe, log);
+    if (try checkFaint(battle, foe, log)) |r| return r;
 
     return null;
 }
 
-fn endTurn(battle: anytype, log: anytype) !Result {
+fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
     if (showdown and checkEBC(battle)) return Result.Tie;
 
     battle.turn += 1;
@@ -274,15 +279,33 @@ fn checkEBC(battle: anytype) bool {
     return false;
 }
 
-fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !void {
+fn executeMove(
+    battle: anytype,
+    player: Player,
+    choice: Choice,
+    log: anytype,
+) @TypeOf(log).Error!?Result {
     var side = battle.side(player);
     const foe = battle.foe(player);
-    if (side.last_selected_move == .SKIP_TURN) return;
-    if (choice.type == .Switch) return switchIn(battle, player, choice.data, false, log);
+    if (side.last_selected_move == .SKIP_TURN) return null;
+    if (choice.type == .Switch) {
+        try switchIn(battle, player, choice.data, false, log);
+        return null;
+    }
 
-    if (!try beforeMove(battle, player, choice.data, log)) return; // FIXME
-    // FIXME set volatiles.data.state = 0 if not bide (getCurrentMove)
-    if (!try canExecute(battle, player, log)) return;
+    var skip_pp = false;
+    switch (try beforeMove(battle, player, choice.data, log)) {
+        .done => return null,
+        .damage => |damage| {
+            // TODO: Skip damage calc, decrementPP, MoveHitTest
+            _ = damage;
+        },
+        .skip_pp => skip_pp = true,
+        .ok => {},
+        .err => return @as(?Result, Result.Error),
+    }
+    //
+    if (!try canExecute(battle, player, log)) return null;
 
     const move = Move.get(side.last_selected_move);
     if (move.effect == .SuperFang or move.effect == .SpecialDamage) {
@@ -307,7 +330,7 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !v
             },
             else => unreachable,
         };
-        return; // TODO
+        return null; // TODO
     }
 
     // NB: can't reorder this even when unused (eg. Counter) as it advances the RNG
@@ -326,7 +349,7 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !v
         // TODO checkHit, then skip if miss
         _ = miss;
         _ = damage;
-        return;
+        return null;
     }
 
     battle.last_damage = 0;
@@ -344,19 +367,19 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !v
     }
 
     if (move.bp == 0) {
-        return; // TODO playerCheckIfFlyOrChargeEffect
+        return null; // TODO playerCheckIfFlyOrChargeEffect
     }
 
-    var damage = calcDamage(battle, player, move, crit);
-    damage = adjustDamage(battle, player, damage);
-    damage = randomizeDamage(battle, damage); // FIXME crit?
+    if (!calcDamage(battle, player, move, crit)) return Result.Error;
+    adjustDamage(battle, player);
+    randomizeDamage(battle); // FIXME crit?
 
     const hit = checkHit(battle, player, move);
 
     if (move.effect == .MirrorMove) {
         if (foe.last_used_move == .None or foe.last_used_move == .MirrorMove) {
             // TODO
-            return; // TODO
+            return null; // TODO
         } else {
             // FIXME side.last_selected_move = foe.last_used_move;
             return executeMove(battle, player, choice, log);
@@ -382,15 +405,24 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !v
 
     if (move.effect.residual2()) {
         try moveEffect(battle, player, move, log);
-        return;
+        return null;
     }
 
     // TODO
     _ = hit;
+
+    return null;
 }
 
-// TODO return an enum instead of bool to handle multiple cases
-fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
+const BeforeMove = union(enum) {
+    done,
+    damage: u16,
+    skip_pp,
+    ok,
+    err,
+};
+
+fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeMove {
     var side = battle.side(player);
     const foe = battle.foe(player);
     var active = &side.active;
@@ -404,30 +436,30 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
         stored.status -= 1;
         if (!Status.any(stored.status)) try log.cant(ident, .Sleep);
         side.last_used_move = .None;
-        return false;
+        return .done;
     }
 
     if (Status.is(stored.status, .FRZ)) {
         try log.cant(ident, .Freeze);
         side.last_used_move = .None;
-        return false;
+        return .done;
     }
 
     if (foe.active.volatiles.Trapping) {
         try log.cant(ident, .Trapped);
-        return false;
+        return .done;
     }
 
     if (volatiles.Flinch) {
         volatiles.Flinch = false;
         try log.cant(ident, .Flinch);
-        return false;
+        return .done;
     }
 
     if (volatiles.Recharging) {
         volatiles.Recharging = false;
         try log.cant(ident, .Recharging);
-        return false;
+        return .done;
     }
 
     if (volatiles.data.disabled.duration > 0) {
@@ -454,7 +486,6 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
                 battle.rng.next() >= Gen12.percent(50) + 1;
 
             if (confused) {
-                // FIXME: implement self hit
                 volatiles.Bide = false;
                 volatiles.Thrashing = false;
                 volatiles.MultiHit = false;
@@ -462,15 +493,22 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
                 volatiles.Charging = false;
                 volatiles.Trapping = false;
                 volatiles.Invulnerable = false;
-                return false;
+
+                // calcDamage just needs a 40 BP physical move, its not actually Pound
+                const move = Move.get(.Pound);
+                if (!calcDamage(battle, player, move, false)) return .err;
+                // NB: skipping adjustDamage/randomizeDamage/checkHit
+                applyDamage(battle, player, move);
+
+                return .done;
             }
         }
     }
 
     if (volatiles.data.disabled.move == mslot) {
-        volatiles.Charging = false;
+        // FIXME: ??? volatiles.Charging = false;
         try log.disabled(ident, active.move(volatiles.data.disabled.move).id);
-        return false;
+        return .done;
     }
 
     if (Status.is(stored.status, .PAR)) {
@@ -486,7 +524,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
             volatiles.Trapping = false;
             // NB: Invulnerable is not cleared, resulting in the Fly/Dig glitch
             try log.cant(ident, .Paralysis);
-            return false;
+            return .done;
         }
     }
 
@@ -498,22 +536,24 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
         assert(volatiles.data.attacks > 0);
 
         volatiles.data.attacks -= 1;
-        if (volatiles.data.attacks != 0) return false;
+        if (volatiles.data.attacks != 0) return .done;
 
         volatiles.Bide = false;
         try log.end(ident, .Bide);
 
-        if (volatiles.data.state > 0) {
+        const damage = volatiles.data.state * 2;
+        if (damage == 0) {
             try log.fail(ident, .None);
-            return false;
+            return .done;
         }
-        // TODO unleash energy
+        // TODO: instead move after beforeMove call to reset accuracy?
+        volatiles.data.state = 0;
+        return BeforeMove{ .damage = damage };
     }
 
     if (volatiles.Thrashing) {
         assert(volatiles.data.attacks > 0);
 
-        // TODO PlayerMoveNum = THRASH
         volatiles.data.attacks -= 1;
         if (volatiles.data.attacks == 0) {
             volatiles.Thrashing = false;
@@ -525,22 +565,16 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
                 (battle.rng.next() & 3) + 2);
             try log.start(ident, .ConfusionSilent);
         }
-        // TODO: skip DecrementPP, call PlayerCalcMoveDamage directly
+        return .skip_pp;
     }
 
     if (volatiles.Trapping) {
         assert(volatiles.data.attacks > 0);
         volatiles.data.attacks -= 1;
-        if (volatiles.data.attacks == 0) {
-            // TODO skip DamageCalc/DecrementPP/MoveHitTest
-        }
+        if (volatiles.data.attacks != 0) return BeforeMove{ .damage = battle.last_damage };
     }
 
-    if (volatiles.Rage) {
-        // TODO skip DecrementPP, go to PlayerCanExecuteMove
-    }
-
-    return true;
+    return if (volatiles.Rage) .skip_pp else .ok;
 }
 
 fn canExecute(battle: anytype, player: Player, log: anytype) !bool {
@@ -588,7 +622,7 @@ fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data) bool {
     return std.math.rotl(u8, battle.rng.next(), 3) < chance;
 }
 
-fn calcDamage(battle: anytype, player: Player, move: Move.Data, crit: bool) u16 {
+fn calcDamage(battle: anytype, player: Player, move: Move.Data, crit: bool) bool {
     const side = battle.side(player);
     const foe = battle.foe(player);
 
@@ -625,25 +659,27 @@ fn calcDamage(battle: anytype, player: Player, move: Move.Data, crit: bool) u16 
 
     def = if (move.effect == .Explode) @maximum(def / 2, 1) else def;
 
-    return @minimum(997, ((lvl * 2 / 5) + 2) *% move.bp *% atk / def / 50) + 2;
+    if (def == 0) return false;
+    battle.last_damage = @minimum(997, ((lvl * 2 / 5) + 2) *% move.bp *% atk / def / 50) + 2;
+    return true;
 }
 
-fn adjustDamage(battle: anytype, player: Player, damage: u16) u16 {
+fn adjustDamage(battle: anytype, player: Player) void {
     const side = battle.side(player);
     const foe = battle.foe(player);
     const move = Move.get(side.last_selected_move);
 
-    var d = damage;
+    var d = battle.last_damage;
     if (side.active.types.includes(move.type)) d *%= 2;
 
     d = d *% @enumToInt(move.type.effectiveness(foe.active.types.type1)) / 10;
     d = d *% @enumToInt(move.type.effectiveness(foe.active.types.type2)) / 10;
 
-    return d;
+    battle.last_damage = d;
 }
 
-fn randomizeDamage(battle: anytype, damage: u16) u16 {
-    if (damage <= 1) return damage;
+fn randomizeDamage(battle: anytype) void {
+    if (battle.last_damage <= 1) return;
 
     // NB: these values will diverge
     const random = if (showdown)
@@ -655,7 +691,7 @@ fn randomizeDamage(battle: anytype, damage: u16) u16 {
         }
     };
 
-    return damage *% random / 0xFF;
+    battle.last_damage = battle.last_damage *% random / 0xFF;
 }
 
 fn checkHit(battle: anytype, player: Player, move: Move.Data) bool {
@@ -710,39 +746,49 @@ fn applyDamage(battle: anytype, player: Player, move: Move.Data) void {
     var foe = battle.foe(player);
     if (foe.active.volatiles.Substitute) {
         // NB: foe.volatiles.data.substitute is a u8 so must be less than 0xFF anyway
-        if (battle.last_damage >= foe.volatiles.data.substitute) {
+        if (battle.last_damage >= foe.active.volatiles.data.substitute) {
             foe.active.volatiles.data.substitute = 0;
             foe.active.volatiles.Substitute = false;
             // NB: battle.last_damage is not updated with the amount of HP the Substitute had
         } else {
-            foe.active.volatiles.data.substitute -= battle.last_damage;
+            foe.active.volatiles.data.substitute -= @truncate(u8, battle.last_damage);
         }
     } else {
-        if (battle.last_damage > foe.active.hp) battle.last_damage = foe.active.hp;
-        foe.active.hp -= battle.last_damage;
+        if (battle.last_damage > foe.stored().hp) battle.last_damage = foe.stored().hp;
+        foe.stored().hp -= battle.last_damage;
     }
 }
 
-fn checkFaint(battle: anytype, player: Player, recurse: bool, log: anytype) !?Result {
+fn checkFaint(battle: anytype, player: Player, log: anytype) @TypeOf(log).Error!?Result {
     var side = battle.side(player);
     if (side.stored().hp > 0) return null;
 
     var foe = battle.foe(player);
-    foe.active.volatiles.MultiHit = false;
-    if (foe.active.volatiles.Bide) {
-        foe.active.volatiles.data.state = if (showdown) 0 else foe.active.volatiles.data.state & 0xFF;
-        if (foe.active.volatiles.data.state != 0) return Result.Error;
+    if (try faint(side, player, foe, log)) |r| return r;
+    if (foe.stored().hp == 0) if (try faint(foe, player.foe(), side, log)) |r| return r;
+
+    const player_out = findFirstAlive(side) == 0;
+    const foe_out = findFirstAlive(foe) == 0;
+    if (player_out and foe_out) return Result.Tie;
+    if (player_out) return if (player == .P1) Result.Lose else Result.Win;
+    if (foe_out) return if (player == .P1) Result.Win else Result.Lose;
+
+    return @as(?Result, try endTurn(battle, log));
+}
+
+fn faint(side: *Side, player: Player, foe: *Side, log: anytype) !?Result {
+    assert(side.stored().hp == 0);
+
+    var foe_volatiles = &foe.active.volatiles;
+    foe_volatiles.MultiHit = false;
+    if (foe_volatiles.Bide) {
+        foe_volatiles.data.state = if (showdown) 0 else foe_volatiles.data.state & 0xFF;
+        if (foe_volatiles.data.state != 0) return Result.Error;
     }
 
     side.active.volatiles = .{};
     side.last_used_move = .None;
-    // try log.faint(side.active.ident(side, player));
-
-    //  TODO: if (findFirstAlive(side) == 0)
-
-    _ = log;
-    _ = recurse;
-
+    try log.faint(side.active.ident(side, player), false);
     return null;
 }
 
@@ -830,7 +876,7 @@ fn moveEffect(battle: anytype, player: Player, move: Move.Data, log: anytype) !v
         .Paralyze => Effects.paralyze(battle, player, move, log),
         .ParalyzeChance1, .ParalyzeChance2 => Effects.paralyzeChance(battle, player, move, log),
         .PayDay => Effects.payDay(log),
-        .Poison, .PoisonChance1, .PoisonChance2 => Effects.paralyze(battle, player, move, log),
+        .Poison, .PoisonChance1, .PoisonChance2 => Effects.poison(battle, player, move, log),
         .Rage => Effects.rage(battle, player),
         .Recoil => Effects.recoil(battle, player, log),
         .Reflect => Effects.reflect(battle, player, log),
@@ -1206,7 +1252,7 @@ pub const Effects = struct {
         if (cant) return log.fail(foe_ident, .Poison);
 
         const chance = if (move.effect == .Poison) true else if (showdown)
-            battle.rng.chance(u8, if (move.effect == .PoisonChance1) 52 else 103, 256)
+            battle.rng.chance(u8, @as(u8, if (move.effect == .PoisonChance1) 52 else 103), 256)
         else
             battle.rng.next() < 1 + (if (move.effect == .PoisonChance1)
                 Gen12.percent(20)
