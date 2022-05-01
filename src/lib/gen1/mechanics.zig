@@ -382,6 +382,7 @@ fn executeMove(
             return null; // TODO
         } else {
             // FIXME side.last_selected_move = foe.last_used_move;
+            // TODO: return @call(.{.modifier = .always_tail}, executeMove, battle, player, choice, log);
             return executeMove(battle, player, choice, log);
         }
     } else if (move.effect == .Metronome) {
@@ -400,6 +401,7 @@ fn executeMove(
         };
 
         _ = random; // FIXME side.last_selected_move = random
+        // TODO: return @call(.{.modifier = .always_tail}, executeMove, battle, player, choice, log);
         return executeMove(battle, player, choice, log);
     }
 
