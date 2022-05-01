@@ -544,6 +544,21 @@ pub fn TestLogs(comptime n: comptime_int) type {
         actual: [n]u8 = [_]u8{0xFF} ** n,
 
         pub fn expectMatches(self: Self) !void {
+            if (!trace) return;
+            // NOTE: some logs can end in the 0xFF sentinel byte so expectMatches can't be used
+            // indiscriminately - in niche cases expectLog should be used directly
+            var i = self.expected.len;
+            while (i > 0) {
+                if (self.expected[i - 1] != 0xFF) break;
+                i -= 1;
+            }
+            if (i != self.expected.len) {
+                std.debug.print("Expected buffer should be {d} bytes, not {d}\n", .{
+                    i,
+                    self.expected.len,
+                });
+                return error.TestExpectedEqual;
+            }
             try expectLog(&self.expected, &self.actual);
         }
     };
@@ -554,7 +569,7 @@ pub fn expectLog(expected: []const u8, actual: []const u8) !void {
     if (!trace) return;
     expectEqualSlices(u8, expected, actual) catch |err| switch (err) {
         error.TestExpectedEqual => {
-            std.debug.print("Expected:{any}\nactual:{any}\n", .{ expected, actual });
+            std.debug.print("Expected: {any}\nActual:{any}\n", .{ expected, actual });
             return err;
         },
         else => return err,

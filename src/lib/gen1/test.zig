@@ -613,6 +613,28 @@ test "choices" {
 //     // https://www.youtube.com/watch?v=y2AOm7r39Jg
 // }
 
+test "Endless Battle Clause (initial)" {
+    if (!showdown) return;
+
+    const p1 = .{ .species = .Gengar, .moves = &.{.Tackle} };
+    const p2 = .{ .species = .Gengar, .moves = &.{.Tackle} };
+    var battle = Battle.fixed(.{}, &.{p1}, &.{p2});
+
+    battle.sides[0].pokemon[0].moves[0].pp = 0;
+    battle.sides[1].pokemon[0].moves[0].pp = 0;
+
+    var logs = TestLogs(20){};
+    var expected = FixedLog{ .writer = stream(&logs.expected).writer() };
+    try expected.switched(P1.ident(1), battle.side(.P1).pokemon[0]);
+    try expected.switched(P2.ident(1), battle.side(.P2).pokemon[0]);
+    try expected.tie();
+
+    const actual = FixedLog{ .writer = stream(&logs.actual).writer() };
+    try expectEqual(Result.Tie, try battle.update(.{}, .{}, actual));
+    try logs.expectMatches();
+    try expect(battle.rng.exhausted());
+}
+
 // BUG: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Dual-type_damage_misinformation
 // BUG: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Poison.2FBurn_animation_with_0_HP
 

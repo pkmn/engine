@@ -221,13 +221,18 @@ fn doTurn(
 }
 
 fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
-    if (showdown and checkEBC(battle)) return Result.Tie;
+    if (showdown and checkEBC(battle)) {
+        try log.tie();
+        return Result.Tie;
+    }
 
     battle.turn += 1;
     try log.turn(battle.turn);
 
     if (showdown) {
-        return if (battle.turn >= 1000) Result.Tie else Result.Default;
+        if (battle.turn < 1000) return Result.Default;
+        try log.tie();
+        return Result.Tie;
     } else {
         return if (battle.turn >= 0xFFFF) Result.Error else Result.Default;
     }
