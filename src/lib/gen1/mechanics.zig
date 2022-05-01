@@ -1060,7 +1060,7 @@ pub const Effects = struct {
         side.active.volatiles.LeechSeed = false;
     }
 
-    fn flinchChance(battle: anytype, player: Player, move: Move.Data) !void {
+    fn flinchChance(battle: anytype, player: Player, move: Move.Data) void {
         var volatiles = &battle.foe(player).active.volatiles;
 
         if (volatiles.Substitute) return;
@@ -1351,7 +1351,7 @@ pub const Effects = struct {
         try log.activate(ident, .Splash);
     }
 
-    fn thrashing(battle: anytype, player: Player) !void {
+    fn thrashing(battle: anytype, player: Player) void {
         var volatiles = &battle.side(player).active.volatiles;
 
         volatiles.Thrashing = true;
@@ -1369,7 +1369,7 @@ pub const Effects = struct {
         _ = log;
     }
 
-    fn trapping(battle: anytype, player: Player) !void {
+    fn trapping(battle: anytype, player: Player) void {
         var side = battle.side(player);
         var foe = battle.foe(player);
 
