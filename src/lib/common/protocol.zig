@@ -702,7 +702,6 @@ test "|faint|" {
     try expectLog(&.{ N(ArgType.Faint), 0b1010 }, buf[0..2]);
     stream.reset();
 
-    // FIXME: when does this happen?
     try log.faint(p2.ident(2), true);
     try expectLog(&.{ N(ArgType.Faint), 0b1010, N(ArgType.None) }, buf[0..3]);
     stream.reset();

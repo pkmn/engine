@@ -771,8 +771,9 @@ fn checkFaint(battle: anytype, player: Player, log: anytype) @TypeOf(log).Error!
     if (side.stored().hp > 0) return null;
 
     var foe = battle.foe(player);
-    if (try faint(side, player, foe, log)) |r| return r;
-    if (foe.stored().hp == 0) if (try faint(foe, player.foe(), side, log)) |r| return r;
+    var foe_fainted = foe.stored().hp == 0;
+    if (try faint(side, player, foe, log, !foe_fainted)) |r| return r;
+    if (foe_fainted) if (try faint(foe, player.foe(), side, log, true)) |r| return r;
 
     const player_out = findFirstAlive(side) == 0;
     const foe_out = findFirstAlive(foe) == 0;
@@ -780,10 +781,16 @@ fn checkFaint(battle: anytype, player: Player, log: anytype) @TypeOf(log).Error!
     if (player_out) return if (player == .P1) Result.Lose else Result.Win;
     if (foe_out) return if (player == .P1) Result.Win else Result.Lose;
 
-    return @as(?Result, try endTurn(battle, log));
+    const foe_choice: Choice.Type = if (foe_fainted) .Switch else .Pass;
+    // TODO: Zig stage1 bug, return directly in stage2
+    const result = if (player == .P1)
+        Result{ .p1 = .Switch, .p2 = foe_choice }
+    else
+        Result{ .p1 = foe_choice, .p2 = .Switch };
+    return result;
 }
 
-fn faint(side: *Side, player: Player, foe: *Side, log: anytype) !?Result {
+fn faint(side: *Side, player: Player, foe: *Side, log: anytype, done: bool) !?Result {
     assert(side.stored().hp == 0);
 
     var foe_volatiles = &foe.active.volatiles;
@@ -795,7 +802,7 @@ fn faint(side: *Side, player: Player, foe: *Side, log: anytype) !?Result {
 
     side.active.volatiles = .{};
     side.last_used_move = .None;
-    try log.faint(side.active.ident(side, player), false);
+    try log.faint(side.active.ident(side, player), done);
     return null;
 }
 
