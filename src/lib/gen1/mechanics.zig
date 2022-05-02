@@ -45,6 +45,7 @@ const BOOSTS = &[_][2]u8{
     .{  4,   1 }, // +6
 };
 // zig fmt: on
+const MAX_STAT_VALUE = 999;
 
 pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     if (battle.turn == 0) return start(battle, log);
@@ -1382,19 +1383,121 @@ pub const Effects = struct {
     }
 
     fn boost(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
-        // TODO
-        _ = battle;
-        _ = player;
-        _ = move;
-        _ = log;
+        var side = battle.side(player);
+        const ident = side.active.ident(side, player);
+
+        var stats = &side.active.stats;
+        var boosts = &side.active.boosts;
+
+        switch (move.effect) {
+            .AttackUp1, .AttackUp2 => {
+                const n: u2 = if (move.effect == .AttackUp2) 2 else 1;
+                boosts.atk = @minimum(6, boosts.atk + n);
+                var mod = BOOSTS[@intCast(u4, boosts.atk + 6)];
+                stats.atk = @minimum(MAX_STAT_VALUE, stats.atk * mod[0] / mod[1]);
+                try log.boost(ident, .Attack, n);
+            },
+            .DefenseUp1, .DefenseUp2 => {
+                const n: u2 = if (move.effect == .DefenseUp2) 2 else 1;
+                boosts.def = @minimum(6, boosts.def + n);
+                var mod = BOOSTS[@intCast(u4, boosts.def + 6)];
+                stats.def = @minimum(MAX_STAT_VALUE, stats.def * mod[0] / mod[1]);
+                try log.boost(ident, .Defense, n);
+            },
+            .EvasionUp1 => {
+                boosts.evasion = @minimum(6, boosts.evasion + 1);
+                try log.boost(ident, .Evasion, 1);
+            },
+            .SpecialUp1, .SpecialUp2 => {
+                const n: u2 = if (move.effect == .SpecialUp2) 2 else 1;
+                boosts.spc = @minimum(6, boosts.spc + n);
+                var mod = BOOSTS[@intCast(u4, boosts.spc + 6)];
+                stats.spc = @minimum(MAX_STAT_VALUE, stats.spc * mod[0] / mod[1]);
+                try log.boost(ident, .SpecialAttack, n);
+                try log.boost(ident, .SpecialDefense, n);
+            },
+            .SpeedUp2 => {
+                boosts.spe = @minimum(6, boosts.spe + 1);
+                var mod = BOOSTS[@intCast(u4, boosts.spe + 6)];
+                stats.spe = @minimum(MAX_STAT_VALUE, stats.spe * mod[0] / mod[1]);
+                try log.boost(ident, .Speed, 1);
+            },
+            else => unreachable,
+        }
+
+        // NB: Stat modification errors glitch
+        if (Status.is(side.stored().status, .PAR)) {
+            stats.spe = @maximum(stats.spe / 4, 1);
+        } else if (Status.is(side.stored().status, .BRN)) {
+            stats.atk = @maximum(stats.atk / 2, 1);
+        }
     }
 
     fn unboost(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
-        // TODO
-        _ = battle;
-        _ = player;
-        _ = move;
-        _ = log;
+        var side = battle.side(player);
+
+        var foe = battle.foe(player);
+        const ident = foe.active.ident(foe, player.foe());
+
+        if (foe.active.volatiles.Substitute) return;
+
+        if (move.effect == .AttackDownChance or move.effect == .DefenseDownChance or
+            move.effect == .SpecialDownChance or move.effect == .SpeedDownChance)
+        {
+            const chance = if (showdown)
+                battle.rng.chance(u8, 85, 256)
+            else
+                battle.rng.next() < Gen12.percent(33) + 1;
+            if (chance or foe.active.volatiles.Invulnerable) return;
+        } else if (!checkHit(battle, player, move)) {
+            // NB: checkHit already checks for Invulnerable
+            try log.lastmiss();
+            return log.miss(side.active.ident(side, player), ident);
+        }
+
+        var stats = &foe.active.stats;
+        var boosts = &foe.active.boosts;
+
+        switch (move.effect) {
+            .AccuracyDown1 => {
+                boosts.accuracy = @maximum(-6, boosts.accuracy - 1);
+                try log.unboost(ident, .Accuracy, 1);
+            },
+            .AttackDown1, .AttackDownChance => {
+                boosts.atk = @maximum(-6, boosts.atk - 1);
+                var mod = BOOSTS[@intCast(u4, boosts.atk + 6)];
+                stats.atk = @maximum(1, @minimum(MAX_STAT_VALUE, stats.atk * mod[0] / mod[1]));
+                try log.unboost(ident, .Attack, 1);
+            },
+            .DefenseDown1, .DefenseDown2, .DefenseDownChance => {
+                const n: u2 = if (move.effect == .DefenseDown2) 2 else 1;
+                boosts.def = @maximum(-6, boosts.def - n);
+                var mod = BOOSTS[@intCast(u4, boosts.def + 6)];
+                stats.def = @maximum(1, @minimum(MAX_STAT_VALUE, stats.def * mod[0] / mod[1]));
+                try log.unboost(ident, .Defense, n);
+            },
+            .SpecialDownChance => {
+                boosts.spc = @maximum(-6, boosts.spc - 1);
+                var mod = BOOSTS[@intCast(u4, boosts.spc + 6)];
+                stats.spc = @maximum(1, @minimum(MAX_STAT_VALUE, stats.spc * mod[0] / mod[1]));
+                try log.unboost(ident, .SpecialAttack, 1);
+                try log.unboost(ident, .SpecialDefense, 1);
+            },
+            .SpeedDown1, .SpeedDownChance => {
+                boosts.spe = @maximum(-6, boosts.spe - 1);
+                var mod = BOOSTS[@intCast(u4, boosts.spe + 6)];
+                stats.spe = @maximum(1, @minimum(MAX_STAT_VALUE, stats.spe * mod[0] / mod[1]));
+                try log.unboost(ident, .Speed, 1);
+            },
+            else => unreachable,
+        }
+
+        // NB: Stat modification errors glitch
+        if (Status.is(side.stored().status, .PAR)) {
+            stats.spe = @maximum(stats.spe / 4, 1);
+        } else if (Status.is(side.stored().status, .BRN)) {
+            stats.atk = @maximum(stats.atk / 2, 1);
+        }
     }
 };
 
@@ -1467,12 +1570,16 @@ test "RNG agreement" {
     var brn1 = rng.FixedRNG(1, expected.len){ .rolls = expected };
     var brn2 = rng.FixedRNG(1, expected.len){ .rolls = expected };
 
+    var eff1 = rng.FixedRNG(1, expected.len){ .rolls = expected };
+    var eff2 = rng.FixedRNG(1, expected.len){ .rolls = expected };
+
     i = 0;
     while (i < expected.len) : (i += 1) {
         try expectEqual(spe1.range(u8, 0, 2) == 0, spe2.next() < Gen12.percent(50) + 1);
         try expectEqual(!cfz1.chance(u8, 128, 256), cfz2.next() >= Gen12.percent(50) + 1);
         try expectEqual(par1.chance(u8, 63, 256), par2.next() < Gen12.percent(25));
         try expectEqual(brn1.chance(u8, 26, 256), brn2.next() < Gen12.percent(10) + 1);
+        try expectEqual(eff1.chance(u8, 85, 256), eff2.next() < Gen12.percent(33) + 1);
     }
 }
 
