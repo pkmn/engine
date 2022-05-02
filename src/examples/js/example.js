@@ -42,4 +42,4 @@ class Random {
 
 console.log(gens.get(1).species.get('Gengar').baseStats.hp);
 console.log(TEAMS);
-console.log(new Random().next());
+console.log(new Random().next(5));
