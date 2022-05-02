@@ -164,11 +164,7 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anyty
         active.moves[j] = move;
     }
 
-    if (Status.is(incoming.status, .PAR)) {
-        active.stats.spe = @maximum(active.stats.spe / 4, 1);
-    } else if (Status.is(incoming.status, .BRN)) {
-        active.stats.atk = @maximum(active.stats.atk / 2, 1);
-    }
+    statusModify(incoming.status, &active.stats);
 
     foe.active.volatiles.Trapping = false;
 
@@ -1426,11 +1422,7 @@ pub const Effects = struct {
         }
 
         // NB: Stat modification errors glitch
-        if (Status.is(side.stored().status, .PAR)) {
-            stats.spe = @maximum(stats.spe / 4, 1);
-        } else if (Status.is(side.stored().status, .BRN)) {
-            stats.atk = @maximum(stats.atk / 2, 1);
-        }
+        statusModify(side.stored().status, stats);
     }
 
     fn unboost(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
@@ -1493,13 +1485,17 @@ pub const Effects = struct {
         }
 
         // NB: Stat modification errors glitch
-        if (Status.is(side.stored().status, .PAR)) {
-            stats.spe = @maximum(stats.spe / 4, 1);
-        } else if (Status.is(side.stored().status, .BRN)) {
-            stats.atk = @maximum(stats.atk / 2, 1);
-        }
+        statusModify(side.stored().status, stats);
     }
 };
+
+fn statusModify(status: u8, stats: *Stats(u16)) void {
+    if (Status.is(status, .PAR)) {
+        stats.spe = @maximum(stats.spe / 4, 1);
+    } else if (Status.is(status, .BRN)) {
+        stats.atk = @maximum(stats.atk / 2, 1);
+    }
+}
 
 fn clearVolatiles(active: *ActivePokemon, ident: u8, log: anytype) !void {
     var volatiles = &active.volatiles;
