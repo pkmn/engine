@@ -14,6 +14,7 @@ const expectEqual = std.testing.expectEqual;
 const showdown = build_options.showdown;
 
 const Choice = common.Choice;
+const ID = common.ID;
 const Player = common.Player;
 const Result = common.Result;
 
@@ -169,7 +170,7 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anyty
 
     foe.active.volatiles.Trapping = false;
 
-    try log.switched(active.ident(side, player), incoming);
+    try log.switched(battle.active(player), incoming);
 }
 
 fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
@@ -432,7 +433,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
     const foe = battle.foe(player);
     var active = &side.active;
     var stored = side.stored();
-    const ident = active.ident(side, player);
+    const ident = battle.active(player);
     var volatiles = &active.volatiles;
 
     assert(active.move(mslot).id != .None);
@@ -770,8 +771,8 @@ fn checkFaint(battle: anytype, player: Player, log: anytype) @TypeOf(log).Error!
 
     var foe = battle.foe(player);
     var foe_fainted = foe.stored().hp == 0;
-    if (try faint(side, player, foe, log, !foe_fainted)) |r| return r;
-    if (foe_fainted) if (try faint(foe, player.foe(), side, log, true)) |r| return r;
+    if (try faint(battle, player, log, !foe_fainted)) |r| return r;
+    if (foe_fainted) if (try faint(battle, player.foe(), log, true)) |r| return r;
 
     const player_out = findFirstAlive(side) == 0;
     const foe_out = findFirstAlive(foe) == 0;
@@ -788,7 +789,9 @@ fn checkFaint(battle: anytype, player: Player, log: anytype) @TypeOf(log).Error!
     return result;
 }
 
-fn faint(side: *Side, player: Player, foe: *Side, log: anytype, done: bool) !?Result {
+fn faint(battle: anytype, player: Player, log: anytype, done: bool) !?Result {
+    var side = battle.side(player);
+    var foe = battle.foe(player);
     assert(side.stored().hp == 0);
 
     var foe_volatiles = &foe.active.volatiles;
@@ -800,14 +803,14 @@ fn faint(side: *Side, player: Player, foe: *Side, log: anytype, done: bool) !?Re
 
     side.active.volatiles = .{};
     side.last_used_move = .None;
-    try log.faint(side.active.ident(side, player), done);
+    try log.faint(battle.active(player), done);
     return null;
 }
 
 fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
     var side = battle.side(player);
     var stored = side.stored();
-    const ident = side.active.ident(side, player);
+    const ident = battle.active(player);
     var volatiles = &side.active.volatiles;
 
     const brn = Status.is(stored.status, .BRN);
@@ -836,7 +839,7 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
 
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
-        const foe_ident = foe.active.ident(foe, player.foe());
+        const foe_ident = battle.active(player.foe());
 
         try log.damageOf(ident, stored, .LeechSeedOf, foe_ident);
 
@@ -921,7 +924,7 @@ pub const Effects = struct {
     fn burnChance(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
-        const foe_ident = foe.active.ident(foe, player.foe());
+        const foe_ident = battle.active(player.foe());
 
         if (Status.is(foe_stored.status, .FRZ)) {
             assert(move.type == .Fire);
@@ -949,7 +952,7 @@ pub const Effects = struct {
     fn charge(battle: anytype, player: Player, log: anytype) !void {
         var side = battle.side(player);
         var volatiles = &side.active.volatiles;
-        const ident = side.active.ident(side, player);
+        const ident = battle.active(player);
 
         volatiles.Charging = true;
         const move = side.last_selected_move;
@@ -958,10 +961,9 @@ pub const Effects = struct {
     }
 
     fn confusion(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
-        var side = battle.side(player);
         var foe = battle.foe(player);
-        const player_ident = side.active.ident(side, player);
-        const foe_ident = foe.active.ident(foe, player.foe());
+        const player_ident = battle.active(player);
+        const foe_ident = battle.active(player.foe());
 
         if (move.effect == .ConfusionChance) {
             const chance = if (showdown)
@@ -995,10 +997,10 @@ pub const Effects = struct {
         var side = battle.side(player);
         const foe = battle.foe(player);
 
-        const ident = side.active.ident(side, player);
+        const ident = battle.active(player);
 
         if (foe.active.volatiles.Invulnerable) {
-            try log.miss(ident, foe.active.ident(foe, player.foe()));
+            try log.miss(ident, battle.active(player.foe()));
             return;
         }
 
@@ -1007,13 +1009,12 @@ pub const Effects = struct {
     }
 
     fn disable(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
-        var side = battle.side(player);
         var foe = battle.foe(player);
 
         var volatiles = &foe.active.volatiles;
 
-        const player_ident = side.active.ident(side, player);
-        const foe_ident = foe.active.ident(foe, player.foe());
+        const player_ident = battle.active(player);
+        const foe_ident = battle.active(player.foe());
 
         if (!checkHit(battle, player, move) or volatiles.disabled.move != 0) {
             try log.lastmiss();
@@ -1035,12 +1036,10 @@ pub const Effects = struct {
 
     fn drainHP(battle: anytype, player: Player, log: anytype) !void {
         var side = battle.side(player);
-        var foe = battle.foe(player);
-
         var stored = side.stored();
 
-        const player_ident = side.active.ident(side, player);
-        const foe_ident = foe.active.ident(foe, player.foe());
+        const player_ident = battle.active(player);
+        const foe_ident = battle.active(player.foe());
 
         const drain = @maximum(battle.last_damage / 2, 1);
         battle.last_damage = drain;
@@ -1078,7 +1077,7 @@ pub const Effects = struct {
 
     fn focusEnergy(battle: anytype, player: Player, log: anytype) !void {
         var side = battle.side(player);
-        const ident = side.active.ident(side, player);
+        const ident = battle.active(player);
 
         if (side.active.volatiles.FocusEnergy) return;
         side.active.volatiles.FocusEnergy = true;
@@ -1089,7 +1088,7 @@ pub const Effects = struct {
     fn freezeChance(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
-        const foe_ident = foe.active.ident(foe, player.foe());
+        const foe_ident = battle.active(player.foe());
 
         const cant = foe.active.volatiles.Substitute or Status.any(foe_stored.status);
         if (cant) return log.fail(foe_ident, .Freeze);
@@ -1115,8 +1114,8 @@ pub const Effects = struct {
         var side_stored = side.stored();
         var foe_stored = foe.stored();
 
-        const player_ident = side.active.ident(side, player);
-        const foe_ident = foe.active.ident(foe, player.foe());
+        const player_ident = battle.active(player);
+        const foe_ident = battle.active(player.foe());
 
         var transformed = side.active.boosts.transform;
         side.active.boosts = .{};
@@ -1158,7 +1157,7 @@ pub const Effects = struct {
 
     fn leechSeed(battle: anytype, player: Player, log: anytype) !void {
         var foe = battle.foe(player);
-        const foe_ident = foe.active.ident(foe, player.foe());
+        const foe_ident = battle.active(player.foe());
 
         if (foe.active.types.includes(.Grass) or foe.active.volatiles.LeechSeed) return;
         foe.active.volatiles.LeechSeed = true;
@@ -1168,7 +1167,7 @@ pub const Effects = struct {
 
     fn lightScreen(battle: anytype, player: Player, log: anytype) !void {
         var side = battle.side(player);
-        const ident = side.active.ident(side, player);
+        const ident = battle.active(player);
 
         if (side.active.volatiles.LightScreen) {
             try log.fail(ident, .None);
@@ -1188,7 +1187,7 @@ pub const Effects = struct {
 
     fn mist(battle: anytype, player: Player, log: anytype) !void {
         var side = battle.side(player);
-        const ident = side.active.ident(side, player);
+        const ident = battle.active(player);
 
         if (side.active.volatiles.Mist) return;
         side.active.volatiles.Mist = true;
@@ -1207,16 +1206,13 @@ pub const Effects = struct {
     fn paralyze(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
-        const foe_ident = foe.active.ident(foe, player.foe());
+        const foe_ident = battle.active(player.foe());
 
         if (Status.any(foe_stored.status)) return log.fail(foe_ident, .Paralysis);
         if (foe.active.types.immune(move.type)) return log.immune(foe_ident, .None);
         if (!checkHit(battle, player, move)) {
-            const side = battle.side(player);
-            const player_ident = side.active.ident(side, player);
-
             try log.lastmiss();
-            return log.miss(player_ident, foe_ident);
+            return log.miss(battle.active(player), foe_ident);
         }
 
         foe_stored.status = Status.init(.PAR);
@@ -1228,7 +1224,7 @@ pub const Effects = struct {
     fn paralyzeChance(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
-        const foe_ident = foe.active.ident(foe, player.foe());
+        const foe_ident = battle.active(player.foe());
 
         const cant = foe.active.volatiles.Substitute or Status.any(foe_stored.status);
         if (cant) return log.fail(foe_ident, .Paralysis);
@@ -1254,13 +1250,11 @@ pub const Effects = struct {
     }
 
     fn poison(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
-        var side = battle.side(player);
         var foe = battle.foe(player);
-
         var foe_stored = foe.stored();
 
-        const player_ident = side.active.ident(side, player);
-        const foe_ident = foe.active.ident(foe, player.foe());
+        const player_ident = battle.active(player);
+        const foe_ident = battle.active(player.foe());
 
         const cant = foe.active.volatiles.Substitute or
             Status.any(foe_stored.status) or
@@ -1304,7 +1298,7 @@ pub const Effects = struct {
 
     fn reflect(battle: anytype, player: Player, log: anytype) !void {
         var side = battle.side(player);
-        const ident = side.active.ident(side, player);
+        const ident = battle.active(player);
 
         if (side.active.volatiles.Reflect) {
             try log.fail(ident, .None);
@@ -1318,7 +1312,7 @@ pub const Effects = struct {
     fn sleep(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
-        const foe_ident = foe.active.ident(foe, player.foe());
+        const foe_ident = battle.active(player.foe());
 
         if (foe.active.volatiles.Recharging) {
             foe.active.volatiles.Recharging = false;
@@ -1326,11 +1320,8 @@ pub const Effects = struct {
         } else if (Status.any(foe_stored.status)) {
             return log.fail(foe_ident, .Sleep);
         } else if (!checkHit(battle, player, move)) {
-            const side = battle.side(player);
-            const player_ident = side.active.ident(side, player);
-
             try log.lastmiss();
-            return log.miss(player_ident, foe_ident);
+            return log.miss(battle.active(player), foe_ident);
         }
 
         // NB: these values will diverge
@@ -1348,10 +1339,7 @@ pub const Effects = struct {
     }
 
     fn splash(battle: anytype, player: Player, log: anytype) !void {
-        var side = battle.side(player);
-        const ident = side.active.ident(side, player);
-
-        try log.activate(ident, .Splash);
+        try log.activate(battle.active(player), .Splash);
     }
 
     fn thrashing(battle: anytype, player: Player) void {
@@ -1367,10 +1355,10 @@ pub const Effects = struct {
 
     fn transform(battle: anytype, player: Player, log: anytype) !void {
         var side = battle.side(player);
-        const ident = side.active.ident(side, player);
-
         const foe = battle.foe(player);
-        const foe_ident = foe.active.ident(foe, player.foe());
+
+        const player_ident = battle.active(player);
+        const foe_ident = battle.active(player.foe());
 
         if (foe.active.volatiles.Invulnerable) return;
 
@@ -1389,11 +1377,11 @@ pub const Effects = struct {
 
         side.active.boosts = foe.active.boosts;
         // NB: foe could themselves be transformed, so transform could already be set
-        if (side.active.boosts.transform == 0) side.active.boosts.transform = foe_ident;
+        if (side.active.boosts.transform.id == 0) side.active.boosts.transform = foe_ident;
         side.active.species = foe.active.species;
         side.active.types = foe.active.types;
 
-        try log.transform(ident, foe_ident);
+        try log.transform(player_ident, foe_ident);
     }
 
     fn trapping(battle: anytype, player: Player) void {
@@ -1410,7 +1398,7 @@ pub const Effects = struct {
 
     fn boost(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
         var side = battle.side(player);
-        const ident = side.active.ident(side, player);
+        const ident = battle.active(player);
 
         var stats = &side.active.stats;
         var boosts = &side.active.boosts;
@@ -1464,7 +1452,7 @@ pub const Effects = struct {
         var side = battle.side(player);
 
         var foe = battle.foe(player);
-        const ident = foe.active.ident(foe, player.foe());
+        const foe_ident = battle.active(player.foe());
 
         if (foe.active.volatiles.Substitute) return;
 
@@ -1479,7 +1467,7 @@ pub const Effects = struct {
         } else if (!checkHit(battle, player, move)) {
             // NB: checkHit already checks for Invulnerable
             try log.lastmiss();
-            return log.miss(side.active.ident(side, player), ident);
+            return log.miss(battle.active(player), foe_ident);
         }
 
         var stats = &foe.active.stats;
@@ -1491,7 +1479,7 @@ pub const Effects = struct {
                 var mod = BOOSTS[@intCast(u4, boosts.atk + 6)];
                 const stat = unmodifiedStats(battle, player).atk;
                 stats.atk = @maximum(1, @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]));
-                try log.unboost(ident, .Attack, 1);
+                try log.unboost(foe_ident, .Attack, 1);
             },
             .DefenseDown1, .DefenseDown2, .DefenseDownChance => {
                 const n: u2 = if (move.effect == .DefenseDown2) 2 else 1;
@@ -1499,26 +1487,26 @@ pub const Effects = struct {
                 var mod = BOOSTS[@intCast(u4, boosts.def + 6)];
                 const stat = unmodifiedStats(battle, player).def;
                 stats.def = @maximum(1, @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]));
-                try log.unboost(ident, .Defense, n);
+                try log.unboost(foe_ident, .Defense, n);
             },
             .SpeedDown1, .SpeedDownChance => {
                 boosts.spe = @maximum(-6, boosts.spe - 1);
                 var mod = BOOSTS[@intCast(u4, boosts.spe + 6)];
                 const stat = unmodifiedStats(battle, player).spe;
                 stats.spe = @maximum(1, @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]));
-                try log.unboost(ident, .Speed, 1);
+                try log.unboost(foe_ident, .Speed, 1);
             },
             .SpecialDownChance => {
                 boosts.spc = @maximum(-6, boosts.spc - 1);
                 var mod = BOOSTS[@intCast(u4, boosts.spc + 6)];
                 const stat = unmodifiedStats(battle, player).spc;
                 stats.spc = @maximum(1, @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]));
-                try log.unboost(ident, .SpecialAttack, 1);
-                try log.unboost(ident, .SpecialDefense, 1);
+                try log.unboost(foe_ident, .SpecialAttack, 1);
+                try log.unboost(foe_ident, .SpecialDefense, 1);
             },
             .AccuracyDown1 => {
                 boosts.accuracy = @maximum(-6, boosts.accuracy - 1);
-                try log.unboost(ident, .Accuracy, 1);
+                try log.unboost(foe_ident, .Accuracy, 1);
             },
             else => unreachable,
         }
@@ -1531,8 +1519,8 @@ pub const Effects = struct {
 inline fn unmodifiedStats(battle: anytype, player: Player) Stats(u16) {
     const side = battle.side(player);
     if (!side.active.volatiles.Transform) return side.active.stats;
-    return battle.side(Player.from(side.active.boosts.transform))
-        .get(Player.slot(side.active.boosts.transform)).stats;
+    return battle.side(side.active.boosts.transform.player)
+        .pokemon[side.active.boosts.transform.id].stats;
 }
 
 fn statusModify(status: u8, stats: *Stats(u16)) void {
@@ -1543,7 +1531,7 @@ fn statusModify(status: u8, stats: *Stats(u16)) void {
     }
 }
 
-fn clearVolatiles(active: *ActivePokemon, ident: u8, log: anytype) !void {
+fn clearVolatiles(active: *ActivePokemon, ident: ID, log: anytype) !void {
     var volatiles = &active.volatiles;
     if (volatiles.disabled.move != 0) {
         volatiles.disabled = .{};

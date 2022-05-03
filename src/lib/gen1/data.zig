@@ -22,6 +22,7 @@ pub const MAX_OPTIONS_SIZE = 9;
 pub const MAX_LOG_SIZE = 100; // TODO
 
 pub const Choice = data.Choice;
+pub const ID = data.ID;
 pub const Player = data.Player;
 pub const Result = data.Result;
 
@@ -43,6 +44,10 @@ pub fn Battle(comptime RNG: anytype) align(64) type {
 
         pub inline fn foe(self: *Self, player: Player) *Side {
             return &self.sides[@enumToInt(player.foe())];
+        }
+
+        pub inline fn active(self: *Self, player: Player) ID {
+            return player.ident(@truncate(u3, self.side(player).order[0]));
         }
 
         pub fn update(self: *Self, c1: Choice, c2: Choice, log: anytype) !Result {
@@ -98,11 +103,6 @@ pub const ActivePokemon = extern struct {
 
     comptime {
         assert(@sizeOf(ActivePokemon) == 32);
-    }
-
-    pub inline fn ident(self: *ActivePokemon, side: *const Side, player: Player) u8 {
-        _ = self;
-        return player.ident(side.order[0]);
     }
 
     pub inline fn move(self: *ActivePokemon, mslot: u8) *MoveSlot {
@@ -310,7 +310,7 @@ pub const Boosts = packed struct {
     evasion: i4 = 0,
 
     // really belongs in Volatiles :(
-    transform: u8 = 0,
+    transform: ID = .{},
 
     comptime {
         assert(@sizeOf(Boosts) == 4);

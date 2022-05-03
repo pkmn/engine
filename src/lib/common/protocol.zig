@@ -10,6 +10,7 @@ const expectEqualSlices = std.testing.expectEqualSlices;
 const trace = build_options.trace;
 
 const Player = data.Player;
+const ID = data.ID;
 
 pub const ArgType = enum(u8) {
     None,
@@ -232,59 +233,63 @@ pub fn Log(comptime Writer: type) type {
 
         pub const Error = Writer.Error;
 
-        pub fn move(self: Self, source: u8, m: anytype, target: u8, reason: Move) Error!void {
+        pub fn move(self: Self, source: ID, m: anytype, target: ID, reason: Move) Error!void {
             if (!trace) return;
             assert(reason != .From);
             assert(m != .None or reason == .Recharge);
             try self.writer.writeAll(&.{
                 @enumToInt(ArgType.Move),
-                source,
+                @bitCast(u8, source),
                 @enumToInt(m),
-                target,
+                @bitCast(u8, target),
                 @enumToInt(reason),
             });
         }
 
-        pub fn moveFrom(self: Self, source: u8, m: anytype, target: u8, from: anytype) Error!void {
+        pub fn moveFrom(self: Self, source: ID, m: anytype, target: ID, from: anytype) Error!void {
             if (!trace) return;
             try self.writer.writeAll(&.{
                 @enumToInt(ArgType.Move),
-                source,
+                @bitCast(u8, source),
                 @enumToInt(m),
-                target,
+                @bitCast(u8, target),
                 @enumToInt(Move.From),
                 @enumToInt(from),
             });
         }
 
-        pub fn switched(self: Self, ident: u8, pokemon: anytype) Error!void {
+        pub fn switched(self: Self, ident: ID, pokemon: anytype) Error!void {
             if (!trace) return;
-            try self.writer.writeAll(&.{ @enumToInt(ArgType.Switch), ident });
+            try self.writer.writeAll(&.{ @enumToInt(ArgType.Switch), @bitCast(u8, ident) });
             try self.writer.writeAll(&.{ @enumToInt(pokemon.species), pokemon.level });
             try self.writer.writeIntNative(u16, pokemon.hp);
             try self.writer.writeIntNative(u16, pokemon.stats.hp);
             try self.writer.writeAll(&.{pokemon.status});
         }
 
-        pub fn cant(self: Self, ident: u8, reason: Cant) Error!void {
+        pub fn cant(self: Self, ident: ID, reason: Cant) Error!void {
             if (!trace) return;
             assert(reason != .Disable);
-            try self.writer.writeAll(&.{ @enumToInt(ArgType.Cant), ident, @enumToInt(reason) });
+            try self.writer.writeAll(&.{
+                @enumToInt(ArgType.Cant),
+                @bitCast(u8, ident),
+                @enumToInt(reason),
+            });
         }
 
-        pub fn disabled(self: Self, ident: u8, m: anytype) Error!void {
+        pub fn disabled(self: Self, ident: ID, m: anytype) Error!void {
             if (!trace) return;
             try self.writer.writeAll(&.{
                 @enumToInt(ArgType.Cant),
-                ident,
+                @bitCast(u8, ident),
                 @enumToInt(Cant.Disable),
                 @enumToInt(m),
             });
         }
 
-        pub fn faint(self: Self, ident: u8, done: bool) Error!void {
+        pub fn faint(self: Self, ident: ID, done: bool) Error!void {
             if (!trace) return;
-            try self.writer.writeAll(&.{ @enumToInt(ArgType.Faint), ident });
+            try self.writer.writeAll(&.{ @enumToInt(ArgType.Faint), @bitCast(u8, ident) });
             if (done) try self.writer.writeByte(@enumToInt(ArgType.None));
         }
 
@@ -309,10 +314,10 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&.{ @enumToInt(ArgType.Tie), @enumToInt(ArgType.None) });
         }
 
-        pub fn damage(self: Self, ident: u8, pokemon: anytype, reason: Damage) Error!void {
+        pub fn damage(self: Self, ident: ID, pokemon: anytype, reason: Damage) Error!void {
             if (!trace) return;
             assert(@enumToInt(reason) <= @enumToInt(Damage.Confusion));
-            try self.writer.writeAll(&.{ @enumToInt(ArgType.Damage), ident });
+            try self.writer.writeAll(&.{ @enumToInt(ArgType.Damage), @bitCast(u8, ident) });
             try self.writer.writeIntNative(u16, pokemon.hp);
             try self.writer.writeIntNative(u16, pokemon.stats.hp);
             try self.writer.writeAll(&.{ pokemon.status, @enumToInt(reason) });
@@ -320,84 +325,92 @@ pub fn Log(comptime Writer: type) type {
 
         pub fn damageOf(
             self: Self,
-            ident: u8,
+            ident: ID,
             pokemon: anytype,
             reason: Damage,
-            source: u8,
+            source: ID,
         ) Error!void {
             if (!trace) return;
             assert(@enumToInt(reason) >= @enumToInt(Damage.PoisonOf));
-            try self.writer.writeAll(&.{ @enumToInt(ArgType.Damage), ident });
+            try self.writer.writeAll(&.{ @enumToInt(ArgType.Damage), @bitCast(u8, ident) });
             try self.writer.writeIntNative(u16, pokemon.hp);
             try self.writer.writeIntNative(u16, pokemon.stats.hp);
-            try self.writer.writeAll(&.{ pokemon.status, @enumToInt(reason), source });
+            try self.writer.writeAll(&.{
+                pokemon.status,
+                @enumToInt(reason),
+                @bitCast(u8, source),
+            });
         }
 
-        pub fn heal(self: Self, ident: u8, pokemon: anytype, reason: Heal) Error!void {
+        pub fn heal(self: Self, ident: ID, pokemon: anytype, reason: Heal) Error!void {
             if (!trace) return;
             assert(reason != .Drain);
-            try self.writer.writeAll(&.{ @enumToInt(ArgType.Heal), ident });
+            try self.writer.writeAll(&.{ @enumToInt(ArgType.Heal), @bitCast(u8, ident) });
             try self.writer.writeIntNative(u16, pokemon.hp);
             try self.writer.writeIntNative(u16, pokemon.stats.hp);
             try self.writer.writeAll(&.{ pokemon.status, @enumToInt(reason) });
         }
 
-        pub fn drain(self: Self, source: u8, pokemon: anytype, target: u8) Error!void {
+        pub fn drain(self: Self, source: ID, pokemon: anytype, target: ID) Error!void {
             if (!trace) return;
-            try self.writer.writeAll(&.{ @enumToInt(ArgType.Heal), source });
+            try self.writer.writeAll(&.{ @enumToInt(ArgType.Heal), @bitCast(u8, source) });
             try self.writer.writeIntNative(u16, pokemon.hp);
             try self.writer.writeIntNative(u16, pokemon.stats.hp);
-            try self.writer.writeAll(&.{ pokemon.status, @enumToInt(Heal.Drain), target });
+            try self.writer.writeAll(&.{
+                pokemon.status,
+                @enumToInt(Heal.Drain),
+                @bitCast(u8, target),
+            });
         }
 
-        pub fn status(self: Self, ident: u8, value: u8, reason: Status) Error!void {
+        pub fn status(self: Self, ident: ID, value: u8, reason: Status) Error!void {
             if (!trace) return;
             assert(reason != .From);
             try self.writer.writeAll(&.{
                 @enumToInt(ArgType.Status),
-                ident,
+                @bitCast(u8, ident),
                 value,
                 @enumToInt(reason),
             });
         }
 
-        pub fn statusFrom(self: Self, ident: u8, value: u8, m: anytype) Error!void {
+        pub fn statusFrom(self: Self, ident: ID, value: u8, m: anytype) Error!void {
             if (!trace) return;
             try self.writer.writeAll(&.{
                 @enumToInt(ArgType.Status),
-                ident,
+                @bitCast(u8, ident),
                 value,
                 @enumToInt(Status.From),
                 @enumToInt(m),
             });
         }
 
-        pub fn curestatus(self: Self, ident: u8, value: u8, reason: CureStatus) Error!void {
+        pub fn curestatus(self: Self, ident: ID, value: u8, reason: CureStatus) Error!void {
             if (!trace) return;
             try self.writer.writeAll(&.{
                 @enumToInt(ArgType.CureStatus),
-                ident,
+                @bitCast(u8, ident),
                 value,
                 @enumToInt(reason),
             });
         }
 
-        pub fn boost(self: Self, ident: u8, reason: Boost, num: u8) Error!void {
+        pub fn boost(self: Self, ident: ID, reason: Boost, num: u8) Error!void {
             if (!trace) return;
             try self.writer.writeAll(&.{
                 @enumToInt(ArgType.Boost),
-                ident,
+                @bitCast(u8, ident),
                 @enumToInt(reason),
                 num,
             });
         }
 
-        pub fn unboost(self: Self, ident: u8, reason: Boost, num: u8) Error!void {
+        pub fn unboost(self: Self, ident: ID, reason: Boost, num: u8) Error!void {
             if (!trace) return;
             assert(reason != .Rage);
             try self.writer.writeAll(&.{
                 @enumToInt(ArgType.Unboost),
-                ident,
+                @bitCast(u8, ident),
                 @enumToInt(reason),
                 num,
             });
@@ -408,40 +421,48 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&.{@enumToInt(ArgType.ClearAllBoost)});
         }
 
-        pub fn fail(self: Self, ident: u8, reason: Fail) Error!void {
+        pub fn fail(self: Self, ident: ID, reason: Fail) Error!void {
             if (!trace) return;
-            try self.writer.writeAll(&.{ @enumToInt(ArgType.Fail), ident, @enumToInt(reason) });
+            try self.writer.writeAll(&.{
+                @enumToInt(ArgType.Fail),
+                @bitCast(u8, ident),
+                @enumToInt(reason),
+            });
         }
 
-        pub fn miss(self: Self, source: u8, target: u8) Error!void {
+        pub fn miss(self: Self, source: ID, target: ID) Error!void {
             if (!trace) return;
-            try self.writer.writeAll(&.{ @enumToInt(ArgType.Miss), source, target });
+            try self.writer.writeAll(&.{
+                @enumToInt(ArgType.Miss),
+                @bitCast(u8, source),
+                @bitCast(u8, target),
+            });
         }
 
-        pub fn hitcount(self: Self, ident: u8, num: u8) Error!void {
+        pub fn hitcount(self: Self, ident: ID, num: u8) Error!void {
             if (!trace) return;
-            try self.writer.writeAll(&.{ @enumToInt(ArgType.HitCount), ident, num });
+            try self.writer.writeAll(&.{ @enumToInt(ArgType.HitCount), @bitCast(u8, ident), num });
         }
 
-        pub fn prepare(self: Self, source: u8, m: anytype) Error!void {
+        pub fn prepare(self: Self, source: ID, m: anytype) Error!void {
             if (!trace) return;
             try self.writer.writeAll(&.{
                 @enumToInt(ArgType.Prepare),
-                source,
+                @bitCast(u8, source),
                 @enumToInt(m),
             });
         }
 
-        pub fn mustrecharge(self: Self, ident: u8) Error!void {
+        pub fn mustrecharge(self: Self, ident: ID) Error!void {
             if (!trace) return;
-            try self.writer.writeAll(&.{ @enumToInt(ArgType.MustRecharge), ident });
+            try self.writer.writeAll(&.{ @enumToInt(ArgType.MustRecharge), @bitCast(u8, ident) });
         }
 
-        pub fn activate(self: Self, ident: u8, reason: Activate) Error!void {
+        pub fn activate(self: Self, ident: ID, reason: Activate) Error!void {
             if (!trace) return;
             try self.writer.writeAll(&.{
                 @enumToInt(ArgType.Activate),
-                ident,
+                @bitCast(u8, ident),
                 @enumToInt(reason),
             });
         }
@@ -451,40 +472,44 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&.{@enumToInt(ArgType.FieldActivate)});
         }
 
-        pub fn start(self: Self, ident: u8, reason: Start) Error!void {
+        pub fn start(self: Self, ident: ID, reason: Start) Error!void {
             if (!trace) return;
             assert(@enumToInt(reason) < @enumToInt(Start.TypeChange));
             try self.writer.writeAll(&.{
                 @enumToInt(ArgType.Start),
-                ident,
+                @bitCast(u8, ident),
                 @enumToInt(reason),
             });
         }
 
-        pub fn typechange(self: Self, ident: u8, types: anytype) Error!void {
+        pub fn typechange(self: Self, ident: ID, types: anytype) Error!void {
             if (!trace) return;
             try self.writer.writeAll(&.{
                 @enumToInt(ArgType.Start),
-                ident,
+                @bitCast(u8, ident),
                 @enumToInt(Start.TypeChange),
                 @bitCast(u8, types),
             });
         }
 
-        pub fn startEffect(self: Self, ident: u8, reason: Start, m: anytype) Error!void {
+        pub fn startEffect(self: Self, ident: ID, reason: Start, m: anytype) Error!void {
             if (!trace) return;
             assert(@enumToInt(reason) > @enumToInt(Start.TypeChange));
             try self.writer.writeAll(&.{
                 @enumToInt(ArgType.Start),
-                ident,
+                @bitCast(u8, ident),
                 @enumToInt(reason),
                 @enumToInt(m),
             });
         }
 
-        pub fn end(self: Self, ident: u8, reason: End) Error!void {
+        pub fn end(self: Self, ident: ID, reason: End) Error!void {
             if (!trace) return;
-            try self.writer.writeAll(&.{ @enumToInt(ArgType.End), ident, @enumToInt(reason) });
+            try self.writer.writeAll(&.{
+                @enumToInt(ArgType.End),
+                @bitCast(u8, ident),
+                @enumToInt(reason),
+            });
         }
 
         pub fn ohko(self: Self) Error!void {
@@ -492,33 +517,37 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&.{@enumToInt(ArgType.OHKO)});
         }
 
-        pub fn crit(self: Self, ident: u8) Error!void {
+        pub fn crit(self: Self, ident: ID) Error!void {
             if (!trace) return;
-            try self.writer.writeAll(&.{ @enumToInt(ArgType.Crit), ident });
+            try self.writer.writeAll(&.{ @enumToInt(ArgType.Crit), @bitCast(u8, ident) });
         }
 
-        pub fn supereffective(self: Self, ident: u8) Error!void {
+        pub fn supereffective(self: Self, ident: ID) Error!void {
             if (!trace) return;
-            try self.writer.writeAll(&.{ @enumToInt(ArgType.SuperEffective), ident });
+            try self.writer.writeAll(&.{ @enumToInt(ArgType.SuperEffective), @bitCast(u8, ident) });
         }
 
-        pub fn resisted(self: Self, ident: u8) Error!void {
+        pub fn resisted(self: Self, ident: ID) Error!void {
             if (!trace) return;
-            try self.writer.writeAll(&.{ @enumToInt(ArgType.Resisted), ident });
+            try self.writer.writeAll(&.{ @enumToInt(ArgType.Resisted), @bitCast(u8, ident) });
         }
 
-        pub fn immune(self: Self, ident: u8, reason: Immune) Error!void {
+        pub fn immune(self: Self, ident: ID, reason: Immune) Error!void {
             if (!trace) return;
             try self.writer.writeAll(&.{
                 @enumToInt(ArgType.Immune),
-                ident,
+                @bitCast(u8, ident),
                 @enumToInt(reason),
             });
         }
 
-        pub fn transform(self: Self, source: u8, target: u8) Error!void {
+        pub fn transform(self: Self, source: ID, target: ID) Error!void {
             if (!trace) return;
-            try self.writer.writeAll(&.{ @enumToInt(ArgType.Transform), source, target });
+            try self.writer.writeAll(&.{
+                @enumToInt(ArgType.Transform),
+                @bitCast(u8, source),
+                @bitCast(u8, target),
+            });
         }
 
         pub fn laststill(self: Self) Error!void {
