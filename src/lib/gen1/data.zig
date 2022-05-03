@@ -90,11 +90,11 @@ pub const Side = extern struct {
 
 pub const ActivePokemon = extern struct {
     stats: Stats(u16) = .{},
-    volatiles: Volatiles = .{},
-    moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
-    boosts: Boosts = .{},
     species: Species = .None,
     types: Types = .{},
+    boosts: Boosts = .{},
+    volatiles: Volatiles = .{},
+    moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
 
     comptime {
         assert(@sizeOf(ActivePokemon) == 32);
@@ -202,8 +202,6 @@ test "Status" {
 }
 
 pub const Volatiles = packed struct {
-    data: Data = Data{},
-
     Bide: bool = false,
     Thrashing: bool = false,
     MultiHit: bool = false,
@@ -212,6 +210,7 @@ pub const Volatiles = packed struct {
     Trapping: bool = false,
     Invulnerable: bool = false,
     Confusion: bool = false,
+
     Mist: bool = false,
     FocusEnergy: bool = false,
     Substitute: bool = false,
@@ -220,34 +219,28 @@ pub const Volatiles = packed struct {
     LeechSeed: bool = false,
     Toxic: bool = false,
     LightScreen: bool = false,
+
     Reflect: bool = false,
     Transform: bool = false,
 
-    _: u6 = 0,
+    _: u2 = 0,
 
-    pub const Data = packed struct {
-        // NB: used for both bide and accuracy overwriting!
-        state: u16 = 0,
-        substitute: u8 = 0,
-        disabled: Disabled = .{},
-        confusion: u4 = 0,
-        toxic: u4 = 0,
-        attacks: u4 = 0,
+    attacks: u4 = 0,
 
-        _: u4 = 0,
+    // NB: used for both bide and accuracy overwriting!
+    state: u16 = 0,
+    substitute: u8 = 0,
+    disabled: Disabled = .{},
+    confusion: u4 = 0,
+    toxic: u4 = 0,
 
-        const Disabled = packed struct {
-            move: u4 = 0,
-            duration: u4 = 0,
-        };
-
-        comptime {
-            assert(@sizeOf(Data) == 6);
-        }
+    const Disabled = packed struct {
+        move: u4 = 0,
+        duration: u4 = 0,
     };
 
     comptime {
-        assert(@sizeOf(Volatiles) == 9);
+        assert(@sizeOf(Volatiles) == 8);
     }
 };
 
@@ -256,14 +249,14 @@ test "Volatiles" {
 
     var volatiles = Volatiles{};
     volatiles.Confusion = true;
-    volatiles.data.confusion = 2;
+    volatiles.confusion = 2;
     volatiles.Thrashing = true;
-    volatiles.data.state = 235;
-    volatiles.data.attacks = 3;
+    volatiles.state = 235;
+    volatiles.attacks = 3;
     volatiles.Substitute = true;
-    volatiles.data.substitute = 42;
-    volatiles.data.toxic = 4;
-    volatiles.data.disabled = .{ .move = 2, .duration = 4 };
+    volatiles.substitute = 42;
+    volatiles.toxic = 4;
+    volatiles.disabled = .{ .move = 2, .duration = 4 };
 
     try expect(volatiles.Confusion);
     try expect(volatiles.Thrashing);
@@ -272,13 +265,13 @@ test "Volatiles" {
     try expect(!volatiles.Transform);
     try expect(!volatiles.MultiHit);
 
-    try expectEqual(@as(u16, 235), volatiles.data.state);
-    try expectEqual(@as(u8, 42), volatiles.data.substitute);
-    try expectEqual(@as(u4, 2), volatiles.data.disabled.move);
-    try expectEqual(@as(u4, 4), volatiles.data.disabled.duration);
-    try expectEqual(@as(u4, 2), volatiles.data.confusion);
-    try expectEqual(@as(u4, 4), volatiles.data.toxic);
-    try expectEqual(@as(u4, 3), volatiles.data.attacks);
+    try expectEqual(@as(u16, 235), volatiles.state);
+    try expectEqual(@as(u8, 42), volatiles.substitute);
+    try expectEqual(@as(u4, 2), volatiles.disabled.move);
+    try expectEqual(@as(u4, 4), volatiles.disabled.duration);
+    try expectEqual(@as(u4, 2), volatiles.confusion);
+    try expectEqual(@as(u4, 4), volatiles.toxic);
+    try expectEqual(@as(u4, 3), volatiles.attacks);
 }
 
 // @test-only
@@ -316,8 +309,11 @@ pub const Boosts = packed struct {
     accuracy: i4 = 0,
     evasion: i4 = 0,
 
+    // really belongs in Volatiles :(
+    transform: u8 = 0,
+
     comptime {
-        assert(@sizeOf(Boosts) == 3);
+        assert(@sizeOf(Boosts) == 4);
     }
 };
 

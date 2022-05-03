@@ -117,8 +117,6 @@ pub fn main() !void {
                     try print(w, "Boosts", pkmn.gen1.Boosts, true);
                     try w.writeAll(",\n");
                     try print(w, "Volatiles", pkmn.gen1.Volatiles, true);
-                    try w.writeAll(",\n");
-                    try print(w, "VolatilesData", pkmn.gen1.Volatiles.Data, true);
                     try w.writeAll("\n    }\n");
                 }
                 try w.writeAll("  }\n");

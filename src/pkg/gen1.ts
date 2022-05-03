@@ -14,13 +14,20 @@ import {
 
 import {Gen1, Slot, BattleOptions, CreateOptions, RestoreOptions} from './index';
 import {LAYOUT, LE, Lookup} from './data';
-import {decodeStatus, decodeTypes} from './protocol';
+import {decodeIdentRaw, decodeStatus, decodeTypes} from './protocol';
 
 const SIZES = LAYOUT[0].sizes;
 const OFFSETS = LAYOUT[0].offsets;
 
 OFFSETS.Stats.spa = OFFSETS.Stats.spd = OFFSETS.Stats.spc;
 OFFSETS.Boosts.spa = OFFSETS.Boosts.spd = OFFSETS.Boosts.spc;
+
+const VOLATILES: {[volatile: string]: number} = {};
+for (const v in OFFSETS.Volatiles) {
+  if (v.charCodeAt(0) >= 65 && v.charCodeAt(0) <= 90) {
+    VOLATILES[v] = OFFSETS.Volatiles[v];
+  }
+}
 
 // TODO: bindings
 // - support both WASM and node (autodetect which to use)
@@ -231,7 +238,7 @@ export class Side implements Gen1.Side {
 const BOOSTS = {atk: 0, def: 0, spe: 0, spa: 0, spd: 0, accuracy: 0, evasion: 0};
 
 export class Pokemon implements Gen1.Pokemon {
-  static Volatiles = OFFSETS.Volatiles;
+  static Volatiles = VOLATILES;
 
   private readonly lookup: Lookup;
   private readonly data: DataView;
@@ -290,33 +297,35 @@ export class Pokemon implements Gen1.Pokemon {
   get volatiles(): Gen1.Volatiles {
     if (!this.active) return {};
 
-    const off = this.offset.active + OFFSETS.ActivePokemon.volatiles + OFFSETS.Volatiles.data;
+    const off = this.offset.active + OFFSETS.ActivePokemon.volatiles;
     const volatiles: Gen1.Volatiles = {};
     for (const v in Pokemon.Volatiles) {
-      if (v === 'data') continue;
       const volatile = toID(v) as keyof Gen1.Volatiles;
       if (this.volatile(Pokemon.Volatiles[v])) {
         if (volatile === 'bide') {
           volatiles[volatile] = {
-            damage: this.data.getUint16(off + OFFSETS.VolatilesData.state, LE),
+            damage: this.data.getUint16(off + (OFFSETS.Volatiles.state >> 3), LE),
           };
         } else if (volatile === 'trapping') {
           volatiles[volatile] = {
-            duration: this.data.getUint8(off + (OFFSETS.VolatilesData.attacks >> 3)),
+            duration: this.data.getUint8(off + (OFFSETS.Volatiles.attacks >> 3)) >> 4,
           };
         } else if (volatile === 'thrashing' || volatile === 'rage') {
           volatiles[volatile] = {
-            duration: this.data.getUint8(off + (OFFSETS.VolatilesData.attacks >> 3)),
-            accuracy: this.data.getUint16(off + OFFSETS.VolatilesData.state, LE),
+            duration: this.data.getUint8(off + (OFFSETS.Volatiles.attacks >> 3)) >> 4,
+            accuracy: this.data.getUint16(off + (OFFSETS.Volatiles.state >> 3), LE),
           };
         } else if (volatile === 'confusion') {
           volatiles[volatile] = {
-            duration: this.data.getUint8(off + (OFFSETS.VolatilesData.confusion >> 3)) & 0x0F,
+            duration: this.data.getUint8(off + (OFFSETS.Volatiles.confusion >> 3)) & 0x0F,
           };
         } else if (volatile === 'substitute') {
           volatiles[volatile] = {
-            hp: this.data.getUint8(off + (OFFSETS.VolatilesData.substitute >> 3)),
+            hp: this.data.getUint8(off + (OFFSETS.Volatiles.substitute >> 3)),
           };
+        } else if (volatile === 'transform') {
+          volatiles[volatile] =
+            decodeIdentRaw(this.data.getUint8(off + (OFFSETS.Boosts.transform >> 3)));
         } else {
           volatiles[volatile] = {};
         }
@@ -335,8 +344,7 @@ export class Pokemon implements Gen1.Pokemon {
     const pp = this.data.getUint8(off + ((slot << 1) - 1));
     const byte = this.data.getUint8(this.offset.active +
       OFFSETS.ActivePokemon.volatiles +
-      OFFSETS.Volatiles.data +
-      (OFFSETS.VolatilesData.disabled >> 3));
+      (OFFSETS.Volatiles.disabled >> 3));
     const disabled = ((byte & 0x0F) === slot) ? byte >> 4 : undefined;
     return {id, pp, disabled};
   }
@@ -415,8 +423,8 @@ export class Pokemon implements Gen1.Pokemon {
   private get toxic(): number {
     if (!this.active) return 0;
 
-    const off = this.offset.active + OFFSETS.ActivePokemon.volatiles + OFFSETS.Volatiles.data;
-    return this.data.getUint8(off + (OFFSETS.VolatilesData.toxic >> 3)) >> 4;
+    const off = this.offset.active + OFFSETS.ActivePokemon.volatiles;
+    return this.data.getUint8(off + (OFFSETS.Volatiles.toxic >> 3)) >> 4;
   }
 
   toJSON(): Gen1.Pokemon {
@@ -532,8 +540,7 @@ export class Pokemon implements Gen1.Pokemon {
       if (ms.disabled !== undefined) {
         data.setUint8(offset +
           OFFSETS.ActivePokemon.volatiles +
-          OFFSETS.Volatiles.data +
-          (OFFSETS.VolatilesData.disabled >> 3), slot | (ms.disabled << 4));
+          (OFFSETS.Volatiles.disabled >> 3), slot | (ms.disabled << 4));
       }
       slot++;
     }
@@ -543,15 +550,17 @@ export class Pokemon implements Gen1.Pokemon {
     const state = volatiles.bide?.damage ??
       volatiles.thrashing?.accuracy ??
       volatiles.rage?.accuracy ?? 0;
-    data.setUint16(off + OFFSETS.VolatilesData.state, state, LE);
-    data.setUint8(off + (OFFSETS.VolatilesData.substitute >> 3), volatiles.substitute?.hp ?? 0);
+    data.setUint16(off + (OFFSETS.Volatiles.state >> 3), state, LE);
+    data.setUint8(off + (OFFSETS.Volatiles.substitute >> 3), volatiles.substitute?.hp ?? 0);
     const confusion = volatiles.confusion?.duration ?? 0;
-    data.setUint8(off + (OFFSETS.VolatilesData.confusion >> 3), confusion |
+    data.setUint8(off + (OFFSETS.Volatiles.confusion >> 3), confusion |
       ((pokemon.statusData.toxic ?? 0) << 4));
     const attacks = volatiles.trapping?.duration ??
       volatiles.thrashing?.duration ??
       volatiles.rage?.duration ?? 0;
-    data.setUint8(off + (OFFSETS.VolatilesData.attacks >> 3), attacks);
+    const transform = volatiles.transform
+      ? (+!!(volatiles.transform.player === 'p2') << 3) | volatiles.transform.slot
+      : 0;
 
     data.setUint8(off + (Pokemon.Volatiles.Bide >> 3),
       +!!volatiles.bide | (+!!volatiles.thrashing << 1) |
@@ -564,13 +573,15 @@ export class Pokemon implements Gen1.Pokemon {
        (+!!volatiles.rage << 4) | (+!!volatiles.leechseed << 5) |
        (+!!volatiles.toxic << 6) | (+!!volatiles.lightscreen << 7));
     data.setUint8(off + (Pokemon.Volatiles.Reflect >> 3),
-      +!!volatiles.reflect | (+!!volatiles.transform << 1));
+      +!!volatiles.reflect | (+!!volatiles.transform << 1) |
+      attacks << 4);
 
     off = offset + OFFSETS.ActivePokemon.boosts;
     const boosts = pokemon.boosts;
     data.setUint8(off++, encodeSigned(boosts.atk) | (encodeSigned(boosts.def) << 4));
     data.setUint8(off++, encodeSigned(boosts.spe) | (encodeSigned(boosts.spa) << 4));
     data.setUint8(off++, encodeSigned(boosts.accuracy) | (encodeSigned(boosts.evasion) << 4));
+    data.setUint8(off++, transform);
 
     data.setUint8(offset + OFFSETS.ActivePokemon.species, lookup.specieByID(pokemon.species));
     data.setUint8(offset + OFFSETS.ActivePokemon.types, encodeTypes(lookup, pokemon.types));

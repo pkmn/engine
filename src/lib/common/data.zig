@@ -15,12 +15,24 @@ pub const Player = enum(u1) {
         assert(id > 0 and id <= 6);
         return (@as(u8, @enumToInt(self)) << 3) | id;
     }
+
+    pub inline fn from(id: u8) Player {
+        assert(id > 0);
+        return @intToEnum(Player, @truncate(u1, id >> 3));
+    }
+
+    pub inline fn slot(id: u8) u8 {
+        assert(id > 0);
+        return id & 0b111;
+    }
 };
 
 test "Player" {
     try expectEqual(Player.P2, Player.P1.foe());
     try expectEqual(@as(u8, 0b0001), Player.P1.ident(1));
     try expectEqual(@as(u8, 0b1101), Player.P2.ident(5));
+    try expectEqual(Player.P2, Player.from(0b1000));
+    try expectEqual(@as(u8, 5), Player.slot(0b0101));
 }
 
 pub const Choice = packed struct {

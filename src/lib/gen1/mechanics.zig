@@ -63,11 +63,11 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     }
 
     var p1 = battle.side(.P1);
-    if (p1.active.volatiles.data.attacks == 0) {
+    if (p1.active.volatiles.attacks == 0) {
         p1.active.volatiles.Trapping = false;
     }
     var p2 = battle.side(.P2);
-    if (p2.active.volatiles.data.attacks == 0) {
+    if (p2.active.volatiles.attacks == 0) {
         p2.active.volatiles.Trapping = false;
     }
 
@@ -121,7 +121,7 @@ fn selectMove(battle: anytype, player: Player, choice: Choice) void {
     if (choice.data == 0) {
         const struggle = ok: {
             for (side.active.moves) |move, i| {
-                if (move.pp > 0 and volatiles.data.disabled.move != i + 1) break :ok false;
+                if (move.pp > 0 and volatiles.disabled.move != i + 1) break :ok false;
             }
             break :ok true;
         };
@@ -133,7 +133,7 @@ fn selectMove(battle: anytype, player: Player, choice: Choice) void {
         const move = side.active.moves[choice.data - 1];
 
         assert(move.pp != 0); // FIXME: wrap underflow?
-        assert(side.active.volatiles.data.disabled.move != choice.data);
+        assert(side.active.volatiles.disabled.move != choice.data);
         side.last_selected_move = move.id;
     }
 
@@ -467,19 +467,19 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
         return .done;
     }
 
-    if (volatiles.data.disabled.duration > 0) {
-        volatiles.data.disabled.duration -= 1;
-        if (volatiles.data.disabled.duration == 0) {
-            volatiles.data.disabled.move = 0;
+    if (volatiles.disabled.duration > 0) {
+        volatiles.disabled.duration -= 1;
+        if (volatiles.disabled.duration == 0) {
+            volatiles.disabled.move = 0;
             try log.end(ident, .Disable);
         }
     }
 
     if (volatiles.Confusion) {
-        assert(volatiles.data.confusion > 0);
+        assert(volatiles.confusion > 0);
 
-        volatiles.data.confusion -= 1;
-        if (volatiles.data.confusion == 0) {
+        volatiles.confusion -= 1;
+        if (volatiles.confusion == 0) {
             volatiles.Confusion = false;
             try log.end(ident, .Confusion);
         } else {
@@ -510,9 +510,9 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
         }
     }
 
-    if (volatiles.data.disabled.move == mslot) {
+    if (volatiles.disabled.move == mslot) {
         // FIXME: ??? volatiles.Charging = false;
-        try log.disabled(ident, active.move(volatiles.data.disabled.move).id);
+        try log.disabled(ident, active.move(volatiles.disabled.move).id);
         return .done;
     }
 
@@ -535,36 +535,36 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
 
     if (volatiles.Bide) {
         // TODO accumulate? overflow?
-        volatiles.data.state += battle.last_damage;
+        volatiles.state += battle.last_damage;
         try log.activate(ident, .Bide);
 
-        assert(volatiles.data.attacks > 0);
+        assert(volatiles.attacks > 0);
 
-        volatiles.data.attacks -= 1;
-        if (volatiles.data.attacks != 0) return .done;
+        volatiles.attacks -= 1;
+        if (volatiles.attacks != 0) return .done;
 
         volatiles.Bide = false;
         try log.end(ident, .Bide);
 
-        const damage = volatiles.data.state * 2;
+        const damage = volatiles.state * 2;
         if (damage == 0) {
             try log.fail(ident, .None);
             return .done;
         }
         // TODO: instead move after beforeMove call to reset accuracy?
-        volatiles.data.state = 0;
+        volatiles.state = 0;
         return BeforeMove{ .damage = damage };
     }
 
     if (volatiles.Thrashing) {
-        assert(volatiles.data.attacks > 0);
+        assert(volatiles.attacks > 0);
 
-        volatiles.data.attacks -= 1;
-        if (volatiles.data.attacks == 0) {
+        volatiles.attacks -= 1;
+        if (volatiles.attacks == 0) {
             volatiles.Thrashing = false;
             volatiles.Confusion = true;
             // NB: these values will diverge
-            volatiles.data.confusion = @truncate(u4, if (showdown)
+            volatiles.confusion = @truncate(u4, if (showdown)
                 battle.rng.range(u8, 3, 5)
             else
                 (battle.rng.next() & 3) + 2);
@@ -574,9 +574,9 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
     }
 
     if (volatiles.Trapping) {
-        assert(volatiles.data.attacks > 0);
-        volatiles.data.attacks -= 1;
-        if (volatiles.data.attacks != 0) return BeforeMove{ .damage = battle.last_damage };
+        assert(volatiles.attacks > 0);
+        volatiles.attacks -= 1;
+        if (volatiles.attacks != 0) return BeforeMove{ .damage = battle.last_damage };
     }
 
     return if (volatiles.Rage) .skip_pp else .ok;
@@ -716,10 +716,10 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data) bool {
         move.effect == .DefenseDown2)) return false;
 
     // NB: Thrash / Petal Dance / Rage get their accuracy overwritten on subsequent hits
-    const overwritten = side.active.volatiles.data.state > 0;
+    const overwritten = side.active.volatiles.state > 0;
     assert(!overwritten or (move.effect == .Thrashing or move.effect == .Rage));
     var accuracy = if (!showdown and overwritten)
-        side.active.volatiles.data.state
+        side.active.volatiles.state
     else
         @as(u16, move.accuracy());
 
@@ -729,7 +729,7 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data) bool {
     accuracy = accuracy * boost[0] / boost[1];
     accuracy = @minimum(0xFF, @maximum(1, accuracy));
 
-    side.active.volatiles.data.state = accuracy;
+    side.active.volatiles.state = accuracy;
 
     const miss = if (showdown)
         !battle.rng.chance(u8, @truncate(u8, accuracy), 256)
@@ -750,13 +750,13 @@ fn applyDamage(battle: anytype, player: Player, move: Move.Data) void {
 
     var foe = battle.foe(player);
     if (foe.active.volatiles.Substitute) {
-        // NB: foe.volatiles.data.substitute is a u8 so must be less than 0xFF anyway
-        if (battle.last_damage >= foe.active.volatiles.data.substitute) {
-            foe.active.volatiles.data.substitute = 0;
+        // NB: foe.volatiles.substitute is a u8 so must be less than 0xFF anyway
+        if (battle.last_damage >= foe.active.volatiles.substitute) {
+            foe.active.volatiles.substitute = 0;
             foe.active.volatiles.Substitute = false;
             // NB: battle.last_damage is not updated with the amount of HP the Substitute had
         } else {
-            foe.active.volatiles.data.substitute -= @truncate(u8, battle.last_damage);
+            foe.active.volatiles.substitute -= @truncate(u8, battle.last_damage);
         }
     } else {
         if (battle.last_damage > foe.stored().hp) battle.last_damage = foe.stored().hp;
@@ -794,8 +794,8 @@ fn faint(side: *Side, player: Player, foe: *Side, log: anytype, done: bool) !?Re
     var foe_volatiles = &foe.active.volatiles;
     foe_volatiles.MultiHit = false;
     if (foe_volatiles.Bide) {
-        foe_volatiles.data.state = if (showdown) 0 else foe_volatiles.data.state & 0xFF;
-        if (foe_volatiles.data.state != 0) return Result.Error;
+        foe_volatiles.state = if (showdown) 0 else foe_volatiles.state & 0xFF;
+        if (foe_volatiles.state != 0) return Result.Error;
     }
 
     side.active.volatiles = .{};
@@ -815,8 +815,8 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
         var damage = @maximum(stored.stats.hp / 16, 1);
 
         if (volatiles.Toxic) {
-            volatiles.data.toxic += 1;
-            damage *= volatiles.data.toxic;
+            volatiles.toxic += 1;
+            damage *= volatiles.toxic;
         }
 
         stored.hp -= @minimum(damage, stored.hp);
@@ -828,8 +828,8 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
 
         // NB: Leech Seed + Toxic glitch
         if (volatiles.Toxic) {
-            volatiles.data.toxic += 1;
-            damage *= volatiles.data.toxic;
+            volatiles.toxic += 1;
+            damage *= volatiles.toxic;
         }
 
         stored.hp -= @minimum(damage, stored.hp);
@@ -983,7 +983,7 @@ pub const Effects = struct {
         foe.active.volatiles.Confusion = true;
 
         // NB: these values will diverge
-        foe.active.volatiles.data.confusion = @truncate(u4, if (showdown)
+        foe.active.volatiles.confusion = @truncate(u4, if (showdown)
             battle.rng.range(u8, 3, 5)
         else
             (battle.rng.next() & 3) + 2);
@@ -1015,16 +1015,16 @@ pub const Effects = struct {
         const player_ident = side.active.ident(side, player);
         const foe_ident = foe.active.ident(foe, player.foe());
 
-        if (!checkHit(battle, player, move) or volatiles.data.disabled.move != 0) {
+        if (!checkHit(battle, player, move) or volatiles.disabled.move != 0) {
             try log.lastmiss();
             return log.miss(player_ident, foe_ident);
         }
 
         const m = Move.None; // TODO
-        volatiles.data.disabled.move = 0; // TODO;
+        volatiles.disabled.move = 0; // TODO;
 
         // NB: these values will diverge
-        volatiles.data.disabled.duration = @truncate(u4, if (showdown)
+        volatiles.disabled.duration = @truncate(u4, if (showdown)
             // BUG: battle.rng.range(u8, 1, 7) + 1 = 2 - 8...?
             battle.rng.range(u8, 1, 7)
         else
@@ -1118,8 +1118,13 @@ pub const Effects = struct {
         const player_ident = side.active.ident(side, player);
         const foe_ident = foe.active.ident(foe, player.foe());
 
+        var transformed = side.active.boosts.transform;
         side.active.boosts = .{};
+        side.active.boosts.transform = transformed;
+
+        transformed = foe.active.boosts.transform;
         foe.active.boosts = .{};
+        foe.active.boosts.transform = transformed;
 
         side.active.stats = side_stored.stats;
         foe.active.stats = foe_stored.stats;
@@ -1280,7 +1285,7 @@ pub const Effects = struct {
         foe_stored.status = Status.init(.PSN);
         if (foe.last_selected_move == .Toxic) {
             foe.active.volatiles.Toxic = true;
-            foe.active.volatiles.data.toxic = 0;
+            foe.active.volatiles.toxic = 0;
         }
 
         try log.status(foe_ident, foe_stored.status, .None);
@@ -1354,7 +1359,7 @@ pub const Effects = struct {
 
         volatiles.Thrashing = true;
         // NB: these values will diverge
-        volatiles.data.attacks = @truncate(u4, if (showdown)
+        volatiles.attacks = @truncate(u4, if (showdown)
             battle.rng.range(u8, 2, 4)
         else
             (battle.rng.next() & 1) + 2);
@@ -1377,14 +1382,14 @@ pub const Effects = struct {
         side.active.stats.spe = foe.active.stats.spe;
         side.active.stats.spc = foe.active.stats.spc;
 
-        // FIXME: need unmodified stats! :(((
-
         for (foe.active.moves) |m, i| {
             side.active.moves[i] = m;
             side.active.moves[i].pp = 5;
         }
 
         side.active.boosts = foe.active.boosts;
+        // NB: foe could themselves be transformed, so transform could already be set
+        if (side.active.boosts.transform == 0) side.active.boosts.transform = foe_ident;
         side.active.species = foe.active.species;
         side.active.types = foe.active.types;
 
@@ -1400,7 +1405,7 @@ pub const Effects = struct {
         // NB: Recharging is cleared even if the trapping move misses
         foe.active.volatiles.Recharging = false;
 
-        side.active.volatiles.data.attacks = distribution(battle) - 1;
+        side.active.volatiles.attacks = distribution(battle) - 1;
     }
 
     fn boost(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
@@ -1415,34 +1420,39 @@ pub const Effects = struct {
                 const n: u2 = if (move.effect == .AttackUp2) 2 else 1;
                 boosts.atk = @minimum(6, boosts.atk + n);
                 var mod = BOOSTS[@intCast(u4, boosts.atk + 6)];
-                stats.atk = @minimum(MAX_STAT_VALUE, stats.atk * mod[0] / mod[1]);
+                const stat = unmodifiedStats(battle, player).atk;
+                stats.atk = @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
                 try log.boost(ident, .Attack, n);
             },
             .DefenseUp1, .DefenseUp2 => {
                 const n: u2 = if (move.effect == .DefenseUp2) 2 else 1;
                 boosts.def = @minimum(6, boosts.def + n);
                 var mod = BOOSTS[@intCast(u4, boosts.def + 6)];
-                stats.def = @minimum(MAX_STAT_VALUE, stats.def * mod[0] / mod[1]);
+                const stat = unmodifiedStats(battle, player).def;
+                stats.def = @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
                 try log.boost(ident, .Defense, n);
             },
-            .EvasionUp1 => {
-                boosts.evasion = @minimum(6, boosts.evasion + 1);
-                try log.boost(ident, .Evasion, 1);
+            .SpeedUp2 => {
+                boosts.spe = @minimum(6, boosts.spe + 1);
+                var mod = BOOSTS[@intCast(u4, boosts.spe + 6)];
+                const stat = unmodifiedStats(battle, player).spe;
+                stats.spe = @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
+                try log.boost(ident, .Speed, 1);
             },
             .SpecialUp1, .SpecialUp2 => {
                 const n: u2 = if (move.effect == .SpecialUp2) 2 else 1;
                 boosts.spc = @minimum(6, boosts.spc + n);
                 var mod = BOOSTS[@intCast(u4, boosts.spc + 6)];
-                stats.spc = @minimum(MAX_STAT_VALUE, stats.spc * mod[0] / mod[1]);
+                const stat = unmodifiedStats(battle, player).spc;
+                stats.spc = @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
                 try log.boost(ident, .SpecialAttack, n);
                 try log.boost(ident, .SpecialDefense, n);
             },
-            .SpeedUp2 => {
-                boosts.spe = @minimum(6, boosts.spe + 1);
-                var mod = BOOSTS[@intCast(u4, boosts.spe + 6)];
-                stats.spe = @minimum(MAX_STAT_VALUE, stats.spe * mod[0] / mod[1]);
-                try log.boost(ident, .Speed, 1);
+            .EvasionUp1 => {
+                boosts.evasion = @minimum(6, boosts.evasion + 1);
+                try log.boost(ident, .Evasion, 1);
             },
+
             else => unreachable,
         }
 
@@ -1476,35 +1486,39 @@ pub const Effects = struct {
         var boosts = &foe.active.boosts;
 
         switch (move.effect) {
-            .AccuracyDown1 => {
-                boosts.accuracy = @maximum(-6, boosts.accuracy - 1);
-                try log.unboost(ident, .Accuracy, 1);
-            },
             .AttackDown1, .AttackDownChance => {
                 boosts.atk = @maximum(-6, boosts.atk - 1);
                 var mod = BOOSTS[@intCast(u4, boosts.atk + 6)];
-                stats.atk = @maximum(1, @minimum(MAX_STAT_VALUE, stats.atk * mod[0] / mod[1]));
+                const stat = unmodifiedStats(battle, player).atk;
+                stats.atk = @maximum(1, @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]));
                 try log.unboost(ident, .Attack, 1);
             },
             .DefenseDown1, .DefenseDown2, .DefenseDownChance => {
                 const n: u2 = if (move.effect == .DefenseDown2) 2 else 1;
                 boosts.def = @maximum(-6, boosts.def - n);
                 var mod = BOOSTS[@intCast(u4, boosts.def + 6)];
-                stats.def = @maximum(1, @minimum(MAX_STAT_VALUE, stats.def * mod[0] / mod[1]));
+                const stat = unmodifiedStats(battle, player).def;
+                stats.def = @maximum(1, @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]));
                 try log.unboost(ident, .Defense, n);
-            },
-            .SpecialDownChance => {
-                boosts.spc = @maximum(-6, boosts.spc - 1);
-                var mod = BOOSTS[@intCast(u4, boosts.spc + 6)];
-                stats.spc = @maximum(1, @minimum(MAX_STAT_VALUE, stats.spc * mod[0] / mod[1]));
-                try log.unboost(ident, .SpecialAttack, 1);
-                try log.unboost(ident, .SpecialDefense, 1);
             },
             .SpeedDown1, .SpeedDownChance => {
                 boosts.spe = @maximum(-6, boosts.spe - 1);
                 var mod = BOOSTS[@intCast(u4, boosts.spe + 6)];
-                stats.spe = @maximum(1, @minimum(MAX_STAT_VALUE, stats.spe * mod[0] / mod[1]));
+                const stat = unmodifiedStats(battle, player).spe;
+                stats.spe = @maximum(1, @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]));
                 try log.unboost(ident, .Speed, 1);
+            },
+            .SpecialDownChance => {
+                boosts.spc = @maximum(-6, boosts.spc - 1);
+                var mod = BOOSTS[@intCast(u4, boosts.spc + 6)];
+                const stat = unmodifiedStats(battle, player).spc;
+                stats.spc = @maximum(1, @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]));
+                try log.unboost(ident, .SpecialAttack, 1);
+                try log.unboost(ident, .SpecialDefense, 1);
+            },
+            .AccuracyDown1 => {
+                boosts.accuracy = @maximum(-6, boosts.accuracy - 1);
+                try log.unboost(ident, .Accuracy, 1);
             },
             else => unreachable,
         }
@@ -1513,6 +1527,13 @@ pub const Effects = struct {
         statusModify(side.stored().status, stats);
     }
 };
+
+inline fn unmodifiedStats(battle: anytype, player: Player) Stats(u16) {
+    const side = battle.side(player);
+    if (!side.active.volatiles.Transform) return side.active.stats;
+    return battle.side(Player.from(side.active.boosts.transform))
+        .get(Player.slot(side.active.boosts.transform)).stats;
+}
 
 fn statusModify(status: u8, stats: *Stats(u16)) void {
     if (Status.is(status, .PAR)) {
@@ -1524,12 +1545,12 @@ fn statusModify(status: u8, stats: *Stats(u16)) void {
 
 fn clearVolatiles(active: *ActivePokemon, ident: u8, log: anytype) !void {
     var volatiles = &active.volatiles;
-    if (volatiles.data.disabled.move != 0) {
-        volatiles.data.disabled = .{};
+    if (volatiles.disabled.move != 0) {
+        volatiles.disabled = .{};
         try log.end(ident, .DisableSilent);
     }
     if (volatiles.Confusion) {
-        // NB: volatiles.data.confusion is left unchanged
+        // NB: volatiles.confusion is left unchanged
         volatiles.Confusion = false;
         try log.end(ident, .ConfusionSilent);
     }
@@ -1546,8 +1567,8 @@ fn clearVolatiles(active: *ActivePokemon, ident: u8, log: anytype) !void {
         try log.end(ident, .LeechSeed);
     }
     if (volatiles.Toxic) {
-        if (showdown) volatiles.data.toxic = 0;
-        // NB: volatiles.data.toxic is left unchanged
+        if (showdown) volatiles.toxic = 0;
+        // NB: volatiles.toxic is left unchanged
         volatiles.Toxic = false;
         try log.end(ident, .Toxic);
     }
@@ -1655,7 +1676,7 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
                 const m = active.move(slot);
                 if (m.id == .None) break;
                 if (m.pp == 0 and !trapped) continue;
-                if (active.volatiles.data.disabled.move == slot) continue;
+                if (active.volatiles.disabled.move == slot) continue;
                 out[n] = .{ .type = .Move, .data = slot };
                 n += 1;
             }

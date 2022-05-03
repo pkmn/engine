@@ -31,11 +31,11 @@
       },
       "ActivePokemon": {
         "stats": 0,
-        "volatiles": 10,
-        "moves": 19,
-        "boosts": 27,
-        "species": 30,
-        "types": 31
+        "species": 10,
+        "types": 11,
+        "boosts": 12,
+        "volatiles": 16,
+        "moves": 24
       },
       "Stats": {
         "hp": 0,
@@ -50,36 +50,34 @@
         "spe": 8,
         "spc": 12,
         "accuracy": 16,
-        "evasion": 20
+        "evasion": 20,
+        "transform": 24
       },
       "Volatiles": {
-        "data": 0,
-        "Bide": 48,
-        "Thrashing": 49,
-        "MultiHit": 50,
-        "Flinch": 51,
-        "Charging": 52,
-        "Trapping": 53,
-        "Invulnerable": 54,
-        "Confusion": 55,
-        "Mist": 56,
-        "FocusEnergy": 57,
-        "Substitute": 58,
-        "Recharging": 59,
-        "Rage": 60,
-        "LeechSeed": 61,
-        "Toxic": 62,
-        "LightScreen": 63,
-        "Reflect": 64,
-        "Transform": 65
-      },
-      "VolatilesData": {
-        "state": 0,
-        "substitute": 16,
-        "disabled": 24,
-        "confusion": 32,
-        "toxic": 36,
-        "attacks": 40
+        "Bide": 0,
+        "Thrashing": 1,
+        "MultiHit": 2,
+        "Flinch": 3,
+        "Charging": 4,
+        "Trapping": 5,
+        "Invulnerable": 6,
+        "Confusion": 7,
+        "Mist": 8,
+        "FocusEnergy": 9,
+        "Substitute": 10,
+        "Recharging": 11,
+        "Rage": 12,
+        "LeechSeed": 13,
+        "Toxic": 14,
+        "LightScreen": 15,
+        "Reflect": 16,
+        "Transform": 17,
+        "attacks": 20,
+        "state": 24,
+        "substitute": 40,
+        "disabled": 48,
+        "confusion": 56,
+        "toxic": 60
       }
     }
   }

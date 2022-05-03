@@ -109,6 +109,7 @@ pub const Side = struct {
                 var active = &side.active;
                 active.stats = pokemon.stats;
                 inline for (std.meta.fields(@TypeOf(active.boosts))) |field| {
+                    if (comptime std.mem.eql(u8, field.name, "transform")) continue;
                     if (rand.chance(u8, 1, 10)) {
                         @field(active.boosts, field.name) =
                             @truncate(i4, @as(i5, rand.range(u4, 0, 12 + 1)) - 6);
@@ -122,27 +123,28 @@ pub const Side = struct {
                 var volatiles = &active.volatiles;
                 inline for (std.meta.fields(@TypeOf(active.volatiles))) |field| {
                     if (field.field_type != bool) continue;
+                    if (comptime std.mem.eql(u8, field.name, "Transform")) continue;
                     if (rand.chance(u8, 1, 18)) {
                         @field(volatiles, field.name) = true;
                         if (std.mem.eql(u8, field.name, "Bide")) {
-                            volatiles.data.state = rand.range(u16, 1, active.stats.hp);
+                            volatiles.state = rand.range(u16, 1, active.stats.hp);
                         } else if (std.mem.eql(u8, field.name, "Trapping")) {
-                            volatiles.data.attacks = rand.range(u4, 0, 4 + 1);
+                            volatiles.attacks = rand.range(u4, 0, 4 + 1);
                         } else if (std.mem.eql(u8, field.name, "Thrashing")) {
-                            volatiles.data.attacks = rand.range(u4, 0, 4 + 1);
-                            volatiles.data.state =
+                            volatiles.attacks = rand.range(u4, 0, 4 + 1);
+                            volatiles.state =
                                 if (rand.chance(u8, 1, 10)) rand.range(u8, 1, 255 + 1) else 0;
                         } else if (std.mem.eql(u8, field.name, "Rage")) {
-                            volatiles.data.attacks = 0; // TODO
-                            volatiles.data.state =
+                            volatiles.attacks = 0; // TODO
+                            volatiles.state =
                                 if (rand.chance(u8, 1, 10)) rand.range(u8, 1, 255 + 1) else 0;
                         } else if (std.mem.eql(u8, field.name, "Confusion")) {
-                            volatiles.data.confusion = rand.range(u4, 1, 5 + 1);
+                            volatiles.confusion = rand.range(u4, 1, 5 + 1);
                         } else if (std.mem.eql(u8, field.name, "Toxic")) {
                             pokemon.status = Status.init(Status.PSN);
-                            volatiles.data.toxic = rand.range(u4, 1, 15 + 1);
+                            volatiles.toxic = rand.range(u4, 1, 15 + 1);
                         } else if (std.mem.eql(u8, field.name, "Substitute")) {
-                            volatiles.data.substitute =
+                            volatiles.substitute =
                                 rand.range(u8, 1, @truncate(u8, active.stats.hp / 4) + 1);
                         }
                     }
@@ -150,7 +152,7 @@ pub const Side = struct {
                 if (rand.chance(u8, 1, 20)) {
                     const m = rand.range(u4, 0, 4);
                     if (active.moves[m].id != .None) {
-                        volatiles.data.disabled = .{
+                        volatiles.disabled = .{
                             .move = m,
                             .duration = rand.range(u4, 1, 5 + 1),
                         };

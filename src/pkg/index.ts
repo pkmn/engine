@@ -77,7 +77,7 @@ export namespace Gen1 {
     toxic?: unknown;
     lightscreen?: unknown;
     reflect?: unknown;
-    transform?: unknown;
+    transform?: {player: 'p1' | 'p2'; slot: number};
   }
 }
 
