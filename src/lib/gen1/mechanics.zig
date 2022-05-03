@@ -23,6 +23,7 @@ const Gen12 = rng.Gen12;
 
 const ActivePokemon = data.ActivePokemon;
 const Move = data.Move;
+const MoveSlot = data.MoveSlot;
 const Side = data.Side;
 const Species = data.Species;
 const Stats = data.Stats;
@@ -1360,10 +1361,34 @@ pub const Effects = struct {
     }
 
     fn transform(battle: anytype, player: Player, log: anytype) !void {
-        // TODO
-        _ = battle;
-        _ = player;
-        _ = log;
+        var side = battle.side(player);
+        const ident = side.active.ident(side, player);
+
+        const foe = battle.foe(player);
+        const foe_ident = foe.active.ident(foe, player.foe());
+
+        if (foe.active.volatiles.Invulnerable) return;
+
+        side.active.volatiles.Transform = true;
+
+        // NB: HP is not copied by Transform
+        side.active.stats.atk = foe.active.stats.atk;
+        side.active.stats.def = foe.active.stats.def;
+        side.active.stats.spe = foe.active.stats.spe;
+        side.active.stats.spc = foe.active.stats.spc;
+
+        // FIXME: need unmodified stats! :(((
+
+        for (foe.active.moves) |m, i| {
+            side.active.moves[i] = m;
+            side.active.moves[i].pp = 5;
+        }
+
+        side.active.boosts = foe.active.boosts;
+        side.active.species = foe.active.species;
+        side.active.types = foe.active.types;
+
+        try log.transform(ident, foe_ident);
     }
 
     fn trapping(battle: anytype, player: Player) void {
