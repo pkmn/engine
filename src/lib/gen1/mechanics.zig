@@ -915,10 +915,19 @@ fn moveEffect(battle: anytype, player: Player, move: Move.Data, log: anytype) !v
 
 pub const Effects = struct {
     fn bide(battle: anytype, player: Player, log: anytype) !void {
-        // TODO
-        _ = battle;
-        _ = player;
-        _ = log;
+        var side = battle.side(player);
+        const ident = battle.active(player);
+
+        side.active.volatiles.Bide = true;
+        side.active.volatiles.state = 0;
+        // NB: these values will diverge
+        side.active.volatiles.attacks = @truncate(u4, if (showdown)
+            // FIXME: showdown sets duration to 3-4 instead of 2-3...
+            battle.rng.range(u4, 3, 4) - 1
+        else
+            (battle.rng.next() & 1) + 2);
+
+        try log.start(ident, .Bide);
     }
 
     fn burnChance(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
@@ -1145,10 +1154,22 @@ pub const Effects = struct {
     }
 
     fn heal(battle: anytype, player: Player, log: anytype) !void {
-        // TODO
-        _ = battle;
-        _ = player;
-        _ = log;
+        var side = battle.side(player);
+        var stored = side.stored();
+        const ident = battle.active(player);
+
+        // NB: HP recovery move failure glitches
+        const delta = stored.stats.hp - stored.hp;
+        if (delta == 0 or delta & 0xFF == 0xFF) return;
+
+        if (side.last_selected_move == .Rest) {
+            stored.status = Status.slp(2);
+            try log.statusFrom(ident, stored.status, Move.Rest);
+            stored.hp = stored.stats.hp;
+        } else {
+            stored.hp = @maximum(stored.stats.hp, stored.hp + (stored.stats.hp / 2));
+        }
+        try log.heal(ident, stored, .None);
     }
 
     fn hyperBeam(battle: anytype, player: Player) !void {
@@ -1290,10 +1311,14 @@ pub const Effects = struct {
     }
 
     fn recoil(battle: anytype, player: Player, log: anytype) !void {
-        // TODO
-        _ = battle;
-        _ = player;
-        _ = log;
+        var side = battle.side(player);
+        var stored = side.stored();
+
+        const damage = battle.last_damage /
+            @as(u8, if (side.last_selected_move == .Struggle) 2 else 4);
+        stored.hp = @maximum(stored.hp - damage, 0);
+
+        try log.damageOf(battle.active(player), stored, .RecoilOf, battle.active(player.foe()));
     }
 
     fn reflect(battle: anytype, player: Player, log: anytype) !void {
@@ -1516,11 +1541,10 @@ pub const Effects = struct {
     }
 };
 
-// RLS should ensure returning Stats(u16) here isn't expensive
-fn unmodifiedStats(battle: anytype, player: Player) Stats(u16) {
+fn unmodifiedStats(battle: anytype, player: Player) *Stats(u16) {
     const side = battle.side(player);
-    if (!side.active.volatiles.Transform) return side.active.stats;
-    return battle.side(side.active.boosts.transform.player)
+    if (!side.active.volatiles.Transform) return &side.active.stats;
+    return &battle.side(side.active.boosts.transform.player)
         .pokemon[side.active.boosts.transform.id].stats;
 }
 
