@@ -308,7 +308,7 @@ fn executeMove(
         .err => return @as(?Result, Result.Error),
     }
     //
-    if (!try canExecute(battle, player, log)) return null;
+    if (!try canExecute(battle, player, choice.data, log)) return null;
 
     const move = Move.get(side.last_selected_move);
     if (move.effect == .SuperFang or move.effect == .SpecialDamage) {
@@ -409,7 +409,7 @@ fn executeMove(
     }
 
     if (move.effect.postExecute()) {
-        try moveEffect(battle, player, move, log);
+        try moveEffect(battle, player, move, choice.data, log);
         return null;
     }
 
@@ -582,7 +582,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
     return if (volatiles.Rage) .skip_pp else .ok;
 }
 
-fn canExecute(battle: anytype, player: Player, log: anytype) !bool {
+fn canExecute(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
     var side = battle.side(player);
     const move = Move.get(side.last_selected_move);
 
@@ -590,17 +590,17 @@ fn canExecute(battle: anytype, player: Player, log: anytype) !bool {
         side.active.volatiles.Charging = false;
         side.active.volatiles.Invulnerable = false;
     } else if (move.effect == .Charge) {
-        try moveEffect(battle, player, move, log);
+        try moveEffect(battle, player, move, mslot, log);
         return false;
     }
 
     if (move.effect.skipExecute()) {
-        try moveEffect(battle, player, move, log);
+        try moveEffect(battle, player, move, mslot, log);
         return false;
     }
 
     if (move.effect == .Thrashing or move.effect == .Trapping) {
-        try moveEffect(battle, player, move, log);
+        try moveEffect(battle, player, move, mslot, log);
     }
 
     return true;
@@ -863,7 +863,7 @@ fn decrementPP(side: *Side, choice: Choice) void {
     side.stored().move(choice.data).pp -= 1;
 }
 
-fn moveEffect(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
+fn moveEffect(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: anytype) !void {
     return switch (move.effect) {
         .Bide => Effects.bide(battle, player, log),
         .BurnChance1, .BurnChance2 => Effects.burnChance(battle, player, move, log),
@@ -881,7 +881,7 @@ fn moveEffect(battle: anytype, player: Player, move: Move.Data, log: anytype) !v
         .HyperBeam => Effects.hyperBeam(battle, player),
         .LeechSeed => Effects.leechSeed(battle, player, log),
         .LightScreen => Effects.lightScreen(battle, player, log),
-        .Mimic => Effects.mimic(battle, player, move, log),
+        .Mimic => Effects.mimic(battle, player, move, mslot, log),
         .Mist => Effects.mist(battle, player, log),
         .MultiHit, .DoubleHit, .Twineedle => Effects.multiHit(battle, player, move, log),
         .Paralyze => Effects.paralyze(battle, player, move, log),
@@ -1195,23 +1195,34 @@ pub const Effects = struct {
         try log.start(ident, .LightScreen);
     }
 
-    fn mimic(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
+    fn mimic(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: anytype) !void {
         var side = battle.side(player);
         var foe = battle.foe(player);
 
-        if (!checkHit(battle, player, move)) {
+        // BUG: showdown requires the user has Mimic (but not necessarily located at mslot)
+        const ok = !showdown or has_mimic: {
+            for (side.active.moves) |m| {
+                if (m.id == .Mimic) break :has_mimic true;
+            }
+            break :has_mimic false;
+        };
+
+        // In reality, Mimic can also be called via Metronome or Mirror Move
+        assert(showdown or side.active.moves[mslot].id == .Mimic or
+            side.active.moves[mslot].id == .Metronome or
+            side.active.moves[mslot].id == .MirrorMove);
+
+        if (!checkHit(battle, player, move) or !ok) {
             try log.lastmiss();
             return log.miss(battle.active(player), battle.active(player.foe()));
         }
 
         const moves = &foe.active.moves;
-        // NB: these values will diverge
-        const slot = randomMoveSlot(&battle.rng, moves);
+        const rslot = randomMoveSlot(&battle.rng, moves);
 
-        const XXX = 0; // TODO: need to know which slot to replace (wPlayerMoveListIndex)
-        side.active.moves[XXX].id = moves[slot].id;
+        side.active.moves[mslot].id = moves[rslot].id;
 
-        try log.startEffect(battle.active(player), .Mimic, moves[slot].id);
+        try log.startEffect(battle.active(player), .Mimic, moves[rslot].id);
     }
 
     fn mist(battle: anytype, player: Player, log: anytype) !void {

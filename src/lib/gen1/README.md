@@ -331,7 +331,7 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 | 13    | 14  | `boosts.spe`/`boosts.spd`          | The active Pokémon's Speed and Special boosts               |
 | 14    | 15  | `boosts.accuracy`/`boosts.evasion` | The active Pokémon's Accuracy and Evasion boosts            |
 | 15    | 16  | `transform`                        | The identity of whom the active Pokémon is transformed into |
-| 16    | 24  | [`volatiles`](#volatiles)          | The active Pokémon's volatiles statuses and associated data |
+| 16    | 24  | [`volatiles`](#volatiles-1)        | The active Pokémon's volatiles statuses and associated data |
 | 24    | 25  | `moves[0].id`                      | The active Pokémon's second move                            |
 | 25    | 26  | `moves[0].pp`                      | The PP of the active Pokémon's first move                   |
 | 26    | 27  | `moves[1].id`                      | The active Pokémon's second move                            |
@@ -406,22 +406,51 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 In addition to its alternative RNG semantics, Pokémon Showdown's implemention of the first
 generation of Pokémon contains a number bugs:
 
-- **Haze:** Haze should remove the toxic volatile and leave the toxic counter unchanged, not reset
+- **Haze**: Haze should remove the toxic volatile and leave the toxic counter unchanged, not reset
   the toxic counter. Furthermore, Haze should clear a specific set of volatiles, not clear all
   volatiles indiscriminately (including artificial implementation-defined volatiles like
   `brnattackdrop`).
+- **Mimic**: Pokémon Showdown checks that the user of Mimic has Mimic in one of their move slots,
+  which means Mimic legally called via Metronome or Mirror Move will only work if the user also has
+  Mimic (and the moved mimiced by Mimic called via Metronome / Mirror Move will erroneously override
+  the Mimic move slot instead of the Metronome / Mirror Move move slot).
 - **`Battle.getRandomTarget()`**: Pokémon Showdown randomly determines a target (causing the RNG to
   advance a frame) in cases where the target of a move is required but has not been specified,
   though erroneously applies this logic in singles battles where only one target is possible. This
   spuriously and inefficiently advances the RNG and results in inconsistencies if a player specifies
   `move 1 1` instead of `move 1`.
-- **Psybeam / Confusion:** the secondary chance of these moves causing confusion is not 26/256 like
+- **Psybeam / Confusion**: the secondary chance of these moves causing confusion is not 26/256 like
   most "10%" chance moves but instead **25/256**.
+- **Thrash / Petal Dance / Rage**: On the cartridge (but not on Pokémon Showdown) these moves have
+  glitchy behavior where the the scaled accuracy after accuracy/evasion modifiers have been applied
+  should overwrite the original accuracy of the move for as long as the move's lock lasts.
 
 Finally, in Generation I, checking whether a move has **hit should come *after* determining
 damage**, not before. Pokémon Showdown's altered ordering here (which is more in line with how
 future generations work) would have consequences on RNG accuracy, though since RNG accuracy is not a
-goal for the simulator this bug should not have any implications
+goal for the simulator this bug should not have any implications.
+
+Pokémon Showdown also implements a number of modifications to the cartridge (usually but not always
+called out in the `|rule|` section at the beginning of a battle's log):
+
+- **Sleep Clause Mod**: players are prevented from putting more than one of their opponent's Pokémon
+  to sleep at a time (usage of the move will fail).
+- **Freeze Clause Mod**: players are prevented from freezing more than one of their opponent's Pokémon
+  at a time (usage of the move will fail).
+- **Desync Clause Mod**: If the usage of a move would cause a desync it instead causes a
+  failure. However, this mod does not trigger for [**division by
+  zero**](https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Division_by_0) - instead of failing,
+  Pokémon Showdown silently patches the damage calculation to divide by 1 instead of 0. The
+  definition of the Desync Clause Mod should be extended or the code should be changed to fail
+  instead of succeeding in these cases.
+- **Endless Battle Clause**: Prematurely ends the battle in a tie after 1000 turns or in certain
+  situations where it is trivially detectable that no progress can be made.
+- **Switch Priority Clause Mod**: When both player switch out their Pokémon at the same time the
+  faster Pokémon switches first. This mod is **not broadcast at the start of the battle in the
+  `|rule|` section** in Generation I (or II) as the actual order of switches here does not have
+  competitive implications like it does in Generation III, but it is still contrary to how the games
+  work where the [host (Player 1)'s Pokemon would switch
+  first](https://www.smogon.com/forums/threads/gen-3-on-ps-final-fixes.3527268/post-5989318).
 
 ## RNG
 
