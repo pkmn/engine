@@ -95,7 +95,6 @@ fn findFirstAlive(side: *const Side) u8 {
     return 0;
 }
 
-// FIXME decrementPP?
 fn selectMove(battle: anytype, player: Player, choice: Choice) void {
     var side = battle.side(player);
     var volatiles = &side.active.volatiles;
@@ -1031,15 +1030,7 @@ pub const Effects = struct {
         }
 
         const moves = &foe.active.moves;
-        // NB: these values will diverge
-        volatiles.disabled.move = if (showdown)
-            battle.rng.range(u4, 0, @truncate(u4, numMoves(moves)))
-        else loop: {
-            while (true) {
-                const r = @truncate(u4, battle.rng.next() & 3);
-                if (moves[r].id != .None) break :loop r;
-            }
-        };
+        volatiles.disabled.move = randomMoveSlot(&battle.rng, moves);
 
         // NB: these values will diverge
         volatiles.disabled.duration = @truncate(u4, if (showdown)
@@ -1218,14 +1209,7 @@ pub const Effects = struct {
 
         const moves = &foe.active.moves;
         // NB: these values will diverge
-        const slot = if (showdown)
-            battle.rng.range(u4, 0, @truncate(u4, numMoves(moves)))
-        else loop: {
-            while (true) {
-                const r = @truncate(u4, battle.rng.next() & 3);
-                if (moves[r].id != .None) break :loop r;
-            }
-        };
+        const slot = randomMoveSlot(&battle.rng, moves);
 
         const XXX = 0; // TODO: need to know which slot to replace (wPlayerMoveListIndex)
         side.active.moves[XXX].id = moves[slot].id;
@@ -1638,13 +1622,21 @@ fn distribution(battle: anytype) u4 {
     return @truncate(u4, (if (r < 2) r else battle.rng.next() & 3) + 2);
 }
 
-fn numMoves(moves: []MoveSlot) usize {
-    var i: usize = moves.len;
-    while (i > 0) {
-        i -= 1;
-        if (moves[i].id != .None) return i;
+// NB: these values will diverge
+fn randomMoveSlot(rand: anytype, moves: []MoveSlot) u4 {
+    if (showdown) {
+        var i: usize = moves.len;
+        while (i > 0) {
+            i -= 1;
+            if (moves[i].id != .None) return rand.range(u4, 0, @truncate(u4, i));
+        }
+        unreachable;
     }
-    unreachable;
+
+    while (true) {
+        const r = @truncate(u4, rand.next() & 3);
+        if (moves[r].id != .None) return r;
+    }
 }
 
 test "RNG agreement" {
