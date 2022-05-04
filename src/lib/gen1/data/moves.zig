@@ -1427,11 +1427,11 @@ pub const Move = enum(u8) {
             assert(@sizeOf(Effect) == 1);
         }
 
-        pub inline fn residual1(effect: Effect) bool {
+        pub inline fn skipExecute(effect: Effect) bool {
             return @enumToInt(effect) > 0 and @enumToInt(effect) <= 16;
         }
 
-        pub inline fn residual2(effect: Effect) bool {
+        pub inline fn postExecute(effect: Effect) bool {
             return @enumToInt(effect) > 16 and @enumToInt(effect) <= 31;
         }
 

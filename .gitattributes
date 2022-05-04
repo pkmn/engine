@@ -1,6 +1,7 @@
-# Windows crap
+# Windows
 * text=auto
 *.zig text=auto eol=lf
-# generated, but we still want diffs
-src/lib/gen1/data/* linguist-vendored
-src/lib/gen2/data/* linguist-vendored
+
+# GitHub
+src/lib/gen1/data/* linguist-generated
+src/lib/gen2/data/* linguist-generated

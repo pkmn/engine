@@ -408,7 +408,7 @@ fn executeMove(
         return executeMove(battle, player, choice, log);
     }
 
-    if (move.effect.residual2()) {
+    if (move.effect.postExecute()) {
         try moveEffect(battle, player, move, log);
         return null;
     }
@@ -594,7 +594,7 @@ fn canExecute(battle: anytype, player: Player, log: anytype) !bool {
         return false;
     }
 
-    if (move.effect.residual1()) {
+    if (move.effect.skipExecute()) {
         try moveEffect(battle, player, move, log);
         return false;
     }

@@ -359,11 +359,11 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
             assert(@sizeOf(Effect) == 1);
         }
 
-        pub inline fn residual1(effect: Effect) bool {
+        pub inline fn skipExecute(effect: Effect) bool {
             return @enumToInt(effect) > 0 and @enumToInt(effect) <= ${r1};
         }
 
-        pub inline fn residual2(effect: Effect) bool {
+        pub inline fn postExecute(effect: Effect) bool {
             return @enumToInt(effect) > ${r1} and @enumToInt(effect) <= ${r2};
         }
 

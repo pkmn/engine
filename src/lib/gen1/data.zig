@@ -332,15 +332,15 @@ test "Move" {
     try expectEqual(@as(u8, 30), move.accuracy());
     try expectEqual(Type.Ground, move.type);
 
-    try expect(!Move.Effect.residual1(.None));
-    try expect(Move.Effect.residual1(.Confusion));
-    try expect(Move.Effect.residual1(.Transform));
-    try expect(!Move.Effect.residual1(.AccuracyDown1));
+    try expect(!Move.Effect.skipExecute(.None));
+    try expect(Move.Effect.skipExecute(.Confusion));
+    try expect(Move.Effect.skipExecute(.Transform));
+    try expect(!Move.Effect.skipExecute(.AccuracyDown1));
 
-    try expect(!Move.Effect.residual2(.Transform));
-    try expect(Move.Effect.residual2(.AccuracyDown1));
-    try expect(Move.Effect.residual2(.SpeedUp2));
-    try expect(!Move.Effect.residual2(.Charge));
+    try expect(!Move.Effect.postExecute(.Transform));
+    try expect(Move.Effect.postExecute(.AccuracyDown1));
+    try expect(Move.Effect.postExecute(.SpeedUp2));
+    try expect(!Move.Effect.postExecute(.Charge));
 
     try expect(!Move.Effect.special(.SpeedUp2));
     try expect(Move.Effect.special(.Charge));
