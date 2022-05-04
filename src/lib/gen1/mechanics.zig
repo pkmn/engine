@@ -1443,7 +1443,7 @@ pub const Effects = struct {
         side.active.stats.spc = foe.active.stats.spc;
 
         for (foe.active.moves) |m, i| {
-            side.active.moves[i] = m;
+            side.active.moves[i].id = m.id;
             side.active.moves[i].pp = 5;
         }
 

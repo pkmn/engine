@@ -1,3 +1,6 @@
+pub const showdown = @import("build_options").showdown;
+pub const trace = @import("build_options").trace;
+
 pub const MAX_OPTIONS_SIZE = gen1.MAX_OPTIONS_SIZE;
 pub const MAX_LOG_SIZE = gen1.MAX_LOG_SIZE;
 

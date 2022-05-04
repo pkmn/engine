@@ -62,7 +62,7 @@ export class Battle implements Gen1.Battle {
     const i = id === 'p1' ? 0 : 1;
     const side = this.cache[i];
     return side ?? (this.cache[i] =
-        new Side(this.lookup, this.data, OFFSETS.Battle[id as 'p1' | 'p2']));
+        new Side(this, this.lookup, this.data, OFFSETS.Battle[id as 'p1' | 'p2']));
   }
 
   foe(side: SideID): Side {
@@ -142,13 +142,15 @@ export class Battle implements Gen1.Battle {
 }
 
 export class Side implements Gen1.Side {
+  private readonly battle: Battle;
   private readonly lookup: Lookup;
   private readonly data: DataView;
   private readonly offset: number;
 
   readonly cache: [Pokemon?, Pokemon?, Pokemon?, Pokemon?, Pokemon?, Pokemon?];
 
-  constructor(lookup: Lookup, data: DataView, offset: number) {
+  constructor(battle: Battle, lookup: Lookup, data: DataView, offset: number) {
+    this.battle = battle;
     this.lookup = lookup;
     this.data = data;
     this.offset = offset;
@@ -172,12 +174,20 @@ export class Side implements Gen1.Side {
     }
   }
 
+  slot(id: number): Slot | undefined {
+    for (let slot = 1; slot <= 6; slot++) {
+      const i = this.data.getUint8(this.offset + OFFSETS.Side.order + slot - 1);
+      if (i === id) return slot as Slot;
+    }
+    return undefined;
+  }
+
   get(slot: Slot): Pokemon | undefined {
     const id = this.data.getUint8(this.offset + OFFSETS.Side.order + slot - 1) - 1;
     if (id < 0) return undefined;
     const poke = this.cache[id];
     if (poke) return poke;
-    return (this.cache[id] = new Pokemon(this.lookup, this.data, this.offset, id));
+    return (this.cache[id] = new Pokemon(this.battle, this.lookup, this.data, this.offset, id));
   }
 
   get lastSelectedMove(): ID | undefined {
@@ -240,6 +250,7 @@ const BOOSTS = {atk: 0, def: 0, spe: 0, spa: 0, spd: 0, accuracy: 0, evasion: 0}
 export class Pokemon implements Gen1.Pokemon {
   static Volatiles = VOLATILES;
 
+  private readonly battle: Battle;
   private readonly lookup: Lookup;
   private readonly data: DataView;
   private readonly offset: {order: number; active: number; stored: number};
@@ -247,7 +258,8 @@ export class Pokemon implements Gen1.Pokemon {
 
   readonly stored: StoredPokemon;
 
-  constructor(lookup: Lookup, data: DataView, offset: number, index: number) {
+  constructor(battle: Battle, lookup: Lookup, data: DataView, offset: number, index: number) {
+    this.battle = battle;
     this.lookup = lookup;
     this.data = data;
     this.offset = {
@@ -298,6 +310,7 @@ export class Pokemon implements Gen1.Pokemon {
     if (!this.active) return {};
 
     const off = this.offset.active + OFFSETS.ActivePokemon.volatiles;
+    const boosts = this.offset.active + OFFSETS.ActivePokemon.boosts;
     const volatiles: Gen1.Volatiles = {};
     for (const v in Pokemon.Volatiles) {
       const volatile = toID(v) as keyof Gen1.Volatiles;
@@ -324,8 +337,9 @@ export class Pokemon implements Gen1.Pokemon {
             hp: this.data.getUint8(off + (OFFSETS.Volatiles.substitute >> 3)),
           };
         } else if (volatile === 'transform') {
-          volatiles[volatile] =
-            decodeIdentRaw(this.data.getUint8(off + (OFFSETS.Boosts.transform >> 3)));
+          const {player, id} =
+            decodeIdentRaw(this.data.getUint8(boosts + (OFFSETS.Boosts.transform >> 3)));
+          volatiles[volatile] = {player, slot: this.battle.side(player).slot(id)!};
         } else {
           volatiles[volatile] = {};
         }
@@ -417,7 +431,7 @@ export class Pokemon implements Gen1.Pokemon {
 
   private get sleep(): number {
     const val = this.data.getUint8(this.offset.stored + OFFSETS.Pokemon.status);
-    return val <= 7 ? val : 0;
+    return val & 0b111;
   }
 
   private get self(): boolean {

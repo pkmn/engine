@@ -388,8 +388,8 @@ function decodeProtocol(type: string, offset: number, data: DataView, names: Nam
 }
 
 function decodeIdent(names: Names, byte: number): Protocol.PokemonIdent {
-  const {player, slot} = decodeIdentRaw(byte);
-  return `${player}a: ${names[player].team[slot - 1]}` as Protocol.PokemonIdent;
+  const {player, id} = decodeIdentRaw(byte);
+  return `${player}a: ${names[player].team[id - 1]}` as Protocol.PokemonIdent;
 }
 
 function decodeDetails(
@@ -413,14 +413,15 @@ function decodeHPStatus(offset: number, data: DataView): Protocol.PokemonHPStatu
   return (status ? `${hp}/${maxhp} ${status}` : `${hp}/${maxhp}`) as Protocol.PokemonHPStatus;
 }
 
-export function decodeIdentRaw(byte: number): {player: 'p1' | 'p2'; slot: number} {
-  const player = (byte >> 3) === 0 ? 'p1' : 'p2';
-  const slot = byte & 0b111;
-  return {player, slot};
+export function decodeIdentRaw(byte: number): {player: 'p1' | 'p2'; id: number} {
+  return {
+    player: (byte >> 3) === 0 ? 'p1' : 'p2',
+    id: byte & 0b111,
+  };
 }
 
 export function decodeStatus(val: number): StatusName | undefined {
-  if (val > 0 && val <= 7) return 'slp';
+  if (val & 0b111) return 'slp';
   if ((val >> 3) & 1) return 'psn';
   if ((val >> 4) & 1) return 'brn';
   if ((val >> 5) & 1) return 'frz';
