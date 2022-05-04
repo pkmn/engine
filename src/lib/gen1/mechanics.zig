@@ -710,10 +710,7 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data) bool {
     if (foe.active.volatiles.Invulnerable) return false;
 
     // NB: Conversion / Haze / Light Screen / Reflect qualify but do not call checkHit
-    if (foe.active.volatiles.Mist and
-        (move.effect == .AttackDown1 or move.effect == .DefenseDown1 or
-        move.effect == .SpeedDown1 or move.effect == .AccuracyDown1 or
-        move.effect == .DefenseDown2)) return false;
+    if (foe.active.volatiles.Mist and move.effect.statDown()) return false;
 
     // NB: Thrash / Petal Dance / Rage get their accuracy overwritten on subsequent hits
     const overwritten = side.active.volatiles.state > 0;

@@ -337,6 +337,11 @@ test "Move" {
     try expect(Move.Effect.skipExecute(.Transform));
     try expect(!Move.Effect.skipExecute(.AccuracyDown1));
 
+    try expect(!Move.Effect.statDown(.Transform));
+    try expect(Move.Effect.statDown(.AccuracyDown1));
+    try expect(Move.Effect.statDown(.SpeedDown1));
+    try expect(!Move.Effect.statDown(.AttackUp1));
+
     try expect(!Move.Effect.postExecute(.Transform));
     try expect(Move.Effect.postExecute(.AccuracyDown1));
     try expect(Move.Effect.postExecute(.SpeedUp2));

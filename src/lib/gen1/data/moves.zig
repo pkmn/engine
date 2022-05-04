@@ -1373,18 +1373,18 @@ pub const Move = enum(u8) {
         Transform,
         AccuracyDown1,
         AttackDown1,
+        DefenseDown1,
+        DefenseDown2,
+        SpeedDown1,
         AttackUp1,
         AttackUp2,
         Bide,
-        DefenseDown1,
-        DefenseDown2,
         DefenseUp1,
         DefenseUp2,
         EvasionUp1,
         Sleep,
         SpecialUp1,
         SpecialUp2,
-        SpeedDown1,
         SpeedUp2,
         Charge,
         DoubleHit,
@@ -1429,6 +1429,10 @@ pub const Move = enum(u8) {
 
         pub inline fn skipExecute(effect: Effect) bool {
             return @enumToInt(effect) > 0 and @enumToInt(effect) <= 16;
+        }
+
+        pub inline fn statDown(effect: Effect) bool {
+            return @enumToInt(effect) > 16 and @enumToInt(effect) <= 21;
         }
 
         pub inline fn postExecute(effect: Effect) bool {

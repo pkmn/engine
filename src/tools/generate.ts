@@ -107,6 +107,10 @@ const NAMES: { [constant: string]: string } = {
   EFFECT_TRAP_TARGET: 'Trapping',
 };
 
+const STAT_DOWN = [
+  'AccuracyDown1', 'AttackDown1', 'DefenseDown1', 'DefenseDown2', 'SpeedDown1',
+];
+
 const GROUPS: { [constant: string]: string[] } = {
   // data/battle/residual_effects_1.asm
   residual1: [
@@ -116,9 +120,8 @@ const GROUPS: { [constant: string]: string[] } = {
   ],
   // data/battle/residual_effects_2.asm
   residual2: [
-    'AttackUp1', 'DefenseUp1', 'SpecialUp1', 'EvasionUp1', 'AttackDown1', 'DefenseDown1',
-    'SpeedDown1', 'AccuracyDown1', 'Bide', 'Sleep', 'AttackUp2', 'DefenseUp2', 'SpeedUp2',
-    'SpecialUp2', 'DefenseDown2',
+    ...STAT_DOWN, 'AttackUp1', 'AttackUp2', 'Bide', 'DefenseUp1', 'DefenseUp2',
+    'EvasionUp1', 'Sleep', 'SpecialUp1', 'SpecialUp2', 'SpeedUp2',
   ],
   // data/battle/special_effects.asm
   special: [
@@ -349,7 +352,12 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const r2 = r1 + EFFECTS.residual2.size;
     const sp = r2 + EFFECTS.special.size;
     const effects: string[] = [];
-    for (const group in EFFECTS) effects.push(...Array.from(EFFECTS[group]).sort());
+    // Sort STAT_DOWN to the beginning of residual2 so that it can be range checked
+    for (const group in EFFECTS) {
+      effects.push(...(group === 'residual2'
+        ? [...STAT_DOWN, ...Array.from(EFFECTS[group]).filter(e => !STAT_DOWN.includes(e)).sort()]
+        : Array.from(EFFECTS[group]).sort()));
+    }
     const Effect = `
     pub const Effect = enum(u8) {
         None,
@@ -361,6 +369,10 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
         pub inline fn skipExecute(effect: Effect) bool {
             return @enumToInt(effect) > 0 and @enumToInt(effect) <= ${r1};
+        }
+
+        pub inline fn statDown(effect: Effect) bool {
+          return @enumToInt(effect) > ${r1} and @enumToInt(effect) <= ${r1 + STAT_DOWN.length};
         }
 
         pub inline fn postExecute(effect: Effect) bool {
