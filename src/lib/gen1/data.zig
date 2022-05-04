@@ -1,6 +1,5 @@
 const std = @import("std");
 const build_options = @import("build_options");
-const builtin = @import("builtin");
 
 const data = @import("../common/data.zig");
 const protocol = @import("../common/protocol.zig");

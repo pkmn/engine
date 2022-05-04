@@ -372,7 +372,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
 
         pub inline fn statDown(effect: Effect) bool {
-          return @enumToInt(effect) > ${r1} and @enumToInt(effect) <= ${r1 + STAT_DOWN.length};
+            return @enumToInt(effect) > ${r1} and @enumToInt(effect) <= ${r1 + STAT_DOWN.length};
         }
 
         pub inline fn postExecute(effect: Effect) bool {

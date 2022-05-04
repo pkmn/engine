@@ -1,6 +1,5 @@
 const std = @import("std");
 const build_options = @import("build_options");
-const builtin = @import("builtin");
 
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
