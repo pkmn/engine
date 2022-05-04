@@ -1516,7 +1516,8 @@ pub const Effects = struct {
     }
 };
 
-inline fn unmodifiedStats(battle: anytype, player: Player) Stats(u16) {
+// RLS should ensure returning Stats(u16) here isn't expensive
+fn unmodifiedStats(battle: anytype, player: Player) Stats(u16) {
     const side = battle.side(player);
     if (!side.active.volatiles.Transform) return side.active.stats;
     return battle.side(side.active.boosts.transform.player)
