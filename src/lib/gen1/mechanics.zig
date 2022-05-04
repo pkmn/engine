@@ -885,7 +885,7 @@ fn moveEffect(battle: anytype, player: Player, move: Move.Data, log: anytype) !v
         .HyperBeam => Effects.hyperBeam(battle, player),
         .LeechSeed => Effects.leechSeed(battle, player, log),
         .LightScreen => Effects.lightScreen(battle, player, log),
-        .Mimic => Effects.mimic(battle, player, log),
+        .Mimic => Effects.mimic(battle, player, move, log),
         .Mist => Effects.mist(battle, player, log),
         .MultiHit, .DoubleHit, .Twineedle => Effects.multiHit(battle, player, move, log),
         .Paralyze => Effects.paralyze(battle, player, move, log),
@@ -1030,8 +1030,16 @@ pub const Effects = struct {
             return log.miss(player_ident, foe_ident);
         }
 
-        const m = Move.None; // TODO
-        volatiles.disabled.move = 0; // TODO;
+        const moves = &foe.active.moves;
+        // NB: these values will diverge
+        volatiles.disabled.move = if (showdown)
+            battle.rng.range(u4, 0, @truncate(u4, numMoves(moves)))
+        else loop: {
+            while (true) {
+                const r = @truncate(u4, battle.rng.next() & 3);
+                if (moves[r].id != .None) break :loop r;
+            }
+        };
 
         // NB: these values will diverge
         volatiles.disabled.duration = @truncate(u4, if (showdown)
@@ -1040,7 +1048,7 @@ pub const Effects = struct {
         else
             (battle.rng.next() & 7) + 1);
 
-        try log.startEffect(foe_ident, .Disable, m);
+        try log.startEffect(foe_ident, .Disable, moves[volatiles.disabled.move].id);
     }
 
     fn drainHP(battle: anytype, player: Player, log: anytype) !void {
@@ -1199,11 +1207,30 @@ pub const Effects = struct {
         try log.start(ident, .LightScreen);
     }
 
-    fn mimic(battle: anytype, player: Player, log: anytype) !void {
-        // TODO
-        _ = battle;
-        _ = player;
-        _ = log;
+    fn mimic(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
+        var side = battle.side(player);
+        var foe = battle.foe(player);
+
+        if (!checkHit(battle, player, move)) {
+            try log.lastmiss();
+            return log.miss(battle.active(player), battle.active(player.foe()));
+        }
+
+        const moves = &foe.active.moves;
+        // NB: these values will diverge
+        const slot = if (showdown)
+            battle.rng.range(u4, 0, @truncate(u4, numMoves(moves)))
+        else loop: {
+            while (true) {
+                const r = @truncate(u4, battle.rng.next() & 3);
+                if (moves[r].id != .None) break :loop r;
+            }
+        };
+
+        const XXX = 0; // TODO: need to know which slot to replace (wPlayerMoveListIndex)
+        side.active.moves[XXX].id = moves[slot].id;
+
+        try log.startEffect(battle.active(player), .Mimic, moves[slot].id);
     }
 
     fn mist(battle: anytype, player: Player, log: anytype) !void {
@@ -1217,11 +1244,16 @@ pub const Effects = struct {
     }
 
     fn multiHit(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
-        // TODO
-        _ = battle;
-        _ = player;
-        _ = move;
-        _ = log;
+        var side = battle.side(player);
+
+        if (side.active.volatiles.MultiHit) return;
+        side.active.volatiles.MultiHit = true;
+
+        side.active.volatiles.attacks = if (move.effect == .MultiHit) distribution(battle) else 2;
+
+        // FIXME: Twineedle POISON_SIDE_EFFECT1 on second hit!
+        // FIXME: log hitcount properly after all hits are done (may be less than attacks)
+        try log.hitcount(battle.active(player), side.active.volatiles.attacks);
     }
 
     fn paralyze(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
@@ -1604,6 +1636,15 @@ fn distribution(battle: anytype) u4 {
     if (showdown) return DISTRIBUTION[battle.rng.range(u8, 0, DISTRIBUTION.len)];
     const r = (battle.rng.next() & 3);
     return @truncate(u4, (if (r < 2) r else battle.rng.next() & 3) + 2);
+}
+
+fn numMoves(moves: []MoveSlot) usize {
+    var i: usize = moves.len;
+    while (i > 0) {
+        i -= 1;
+        if (moves[i].id != .None) return i;
+    }
+    unreachable;
 }
 
 test "RNG agreement" {
