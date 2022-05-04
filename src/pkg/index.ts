@@ -39,7 +39,7 @@ export namespace Gen1 {
     level: number;
     hp: number;
     status: StatusName | undefined;
-    statusData: {sleep: number; toxic: number};
+    statusData: {sleep: number; self: boolean; toxic: number};
     stats: StatsTable;
     boosts: BoostsTable;
     moves: Iterable<MoveSlot>;

@@ -420,12 +420,15 @@ export function decodeIdentRaw(byte: number): {player: 'p1' | 'p2'; slot: number
 }
 
 export function decodeStatus(val: number): StatusName | undefined {
+  if (val > 0 && val <= 7) return 'slp';
   if ((val >> 3) & 1) return 'psn';
   if ((val >> 4) & 1) return 'brn';
   if ((val >> 5) & 1) return 'frz';
   if ((val >> 6) & 1) return 'par';
+  // NOTE: this bit is also used in Gen I & II to indicate self-inflicted sleep,
+  // but we should already have returned above with 'slp'
   if ((val >> 7) & 1) return 'tox';
-  return val > 0 ? 'slp' : undefined;
+  return undefined;
 }
 
 export function decodeTypes(lookup: Lookup, val: number): readonly [TypeName, TypeName] {

@@ -110,7 +110,9 @@ bits represent the remaining duration for Sleep. Other status are denoted by the
 individual bits - at most one status should be set at any given time.
 
 In Generation I & II, the "badly poisoned" status (Toxic) is instead treated as a volatile (see
-below).
+below), so the upper most bit of `Status` is instead used to track whether or not the Pokémon's
+sleep status is self-inflicted or not, for the purposes of being able to implement Pokémon
+Showdown's "Sleep Clause Mod".
 
 #### `Volatiles`
 
@@ -435,8 +437,8 @@ called out in the `|rule|` section at the beginning of a battle's log):
 
 - **Sleep Clause Mod**: players are prevented from putting more than one of their opponent's Pokémon
   to sleep at a time (usage of the move will fail).
-- **Freeze Clause Mod**: players are prevented from freezing more than one of their opponent's Pokémon
-  at a time (usage of the move will fail).
+- **Freeze Clause Mod**: players are prevented from freezing more than one of their opponent's
+  Pokémon at a time (usage of the move will fail).
 - **Desync Clause Mod**: If the usage of a move would cause a desync it instead causes a
   failure. However, this mod does not trigger for [**division by
   zero**](https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Division_by_0) - instead of failing,

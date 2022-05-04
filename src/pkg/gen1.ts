@@ -406,18 +406,22 @@ export class Pokemon implements Gen1.Pokemon {
     return this.data.getUint16(this.offset.stored + OFFSETS.Pokemon.hp, LE);
   }
 
-  get status(): StatusName| undefined {
+  get status(): StatusName | undefined {
     const status = decodeStatus(this.data.getUint8(this.offset.stored + OFFSETS.Pokemon.status));
     return status === 'psn' && this.toxic ? 'tox' : status;
   }
 
-  get statusData(): { sleep: number; toxic: number } {
-    return {sleep: this.sleep, toxic: this.toxic};
+  get statusData(): { sleep: number; self: boolean; toxic: number } {
+    return {sleep: this.sleep, self: this.self, toxic: this.toxic};
   }
 
   private get sleep(): number {
     const val = this.data.getUint8(this.offset.stored + OFFSETS.Pokemon.status);
     return val <= 7 ? val : 0;
+  }
+
+  private get self(): boolean {
+    return (this.data.getUint8(this.offset.stored + OFFSETS.Pokemon.status) >> 7) === 1;
   }
 
   private get toxic(): number {
@@ -687,7 +691,9 @@ function encodeStatus(pokemon: Gen1.Pokemon): number {
     if (pokemon.status !== 'slp') {
       throw new Error('Pokemon is not asleep but has non-zero sleep turns');
     }
-    return pokemon.statusData.sleep;
+    return (pokemon.statusData.self ? 0x80 : 0) | pokemon.statusData.sleep;
+  } else if (pokemon.statusData.self) {
+    throw new Error('Pokemon is not asleep but has self-inflicted sleep bit set');
   }
   switch (pokemon.status) {
   case 'tox': case 'psn': return 1 << 3;

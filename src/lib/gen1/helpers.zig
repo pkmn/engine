@@ -247,6 +247,7 @@ pub const Pokemon = struct {
             .level = lvl,
             .stats = stats,
             .hp = if (initial) stats.hp else rand.range(u16, 0, stats.hp + 1),
+            // TODO: SLF
             .status = if (!initial and rand.chance(u8, 1, 6 + 1))
                 0 | (@as(u8, 1) << rand.range(u3, 1, 6 + 1))
             else

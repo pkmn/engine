@@ -47,6 +47,7 @@ const BOOSTS = &[_][2]u8{
     .{  4,   1 }, // +6
 };
 // zig fmt: on
+
 const MAX_STAT_VALUE = 999;
 
 pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
@@ -63,14 +64,7 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
         if (try doTurn(battle, .P2, c2, .P1, c1, log)) |r| return r;
     }
 
-    var p1 = battle.side(.P1);
-    if (p1.active.volatiles.attacks == 0) {
-        p1.active.volatiles.Trapping = false;
-    }
-    var p2 = battle.side(.P2);
-    if (p2.active.volatiles.attacks == 0) {
-        p2.active.volatiles.Trapping = false;
-    }
+    postMove(battle);
 
     return endTurn(battle, log);
 }
@@ -265,11 +259,11 @@ fn checkEBC(battle: anytype) bool {
                 break :transform true;
             };
             if (transform) continue;
-            const no_pp = foe_all_ghosts and no: {
+            const no_pp = foe_all_ghosts and no_pp: {
                 for (pokemon.moves) |m| {
-                    if (m.pp != 0) break :no false;
+                    if (m.pp != 0) break :no_pp false;
                 }
-                break :no true;
+                break :no_pp true;
             };
             if (no_pp) continue;
 
@@ -439,7 +433,10 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
 
     if (Status.is(stored.status, .SLP)) {
         stored.status -= 1;
-        if (!Status.any(stored.status)) try log.cant(ident, .Sleep);
+        if (Status.duration(stored.status) == 0) {
+            stored.status = 0; // clears SLF if present
+            try log.cant(ident, .Sleep);
+        }
         side.last_used_move = .None;
         return .done;
     }
@@ -863,6 +860,17 @@ fn decrementPP(side: *Side, choice: Choice) void {
     side.stored().move(choice.data).pp -= 1;
 }
 
+pub fn postMove(battle: anytype) void {
+    var p1 = battle.side(.P1);
+    if (p1.active.volatiles.attacks == 0) {
+        p1.active.volatiles.Trapping = false;
+    }
+    var p2 = battle.side(.P2);
+    if (p2.active.volatiles.attacks == 0) {
+        p2.active.volatiles.Trapping = false;
+    }
+}
+
 fn moveEffect(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: anytype) !void {
     return switch (move.effect) {
         .Bide => Effects.bide(battle, player, log),
@@ -1104,7 +1112,13 @@ pub const Effects = struct {
             battle.rng.next() < 1 + Gen12.percent(10);
         if (!chance) return;
 
-        // FIXME: Freeze Clause Mod
+        // NB: Freeze Clause Mod
+        if (showdown) {
+            for (foe.pokemon) |p| {
+                if (Status.is(p.status, .FRZ)) return log.fail(foe_ident, .Freeze);
+            }
+        }
+
         foe_stored.status = Status.init(.FRZ);
         // NB: Hyper Beam recharging status is not cleared
 
@@ -1159,7 +1173,7 @@ pub const Effects = struct {
         if (delta == 0 or delta & 0xFF == 0xFF) return;
 
         if (side.last_selected_move == .Rest) {
-            stored.status = Status.slp(2);
+            stored.status = Status.slf(2);
             try log.statusFrom(ident, stored.status, Move.Rest);
             stored.hp = stored.stats.hp;
         } else {
@@ -1382,7 +1396,16 @@ pub const Effects = struct {
                 if (r != 0) break :loop r;
             }
         });
-        // FIXME: Sleep Clause Mod
+
+        // NB: SLeep Clause Mod
+        if (showdown) {
+            for (foe.pokemon) |p| {
+                if (Status.is(p.status, .SLP) and !Status.is(p.status, .SLF)) {
+                    return log.fail(foe_ident, .Sleep);
+                }
+            }
+        }
+
         foe_stored.status = Status.slp(duration);
         try log.status(foe_ident, foe_stored.status, .None);
     }

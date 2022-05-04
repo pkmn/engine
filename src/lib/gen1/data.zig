@@ -145,11 +145,12 @@ pub const Status = enum(u8) {
     BRN = 4,
     FRZ = 5,
     PAR = 6,
-    // NB: Gen 1 uses Volatiles.Toxic instead
-    TOX = 7,
+    // Gen 1/2 uses Volatiles.Toxic instead of TOX, so the top Status bit is
+    // repurposed to track whether the SLP status was self-inflicted or not
+    // in order to implement Pokémon Showdown's "Sleep Clause Mod"
+    SLF = 7,
 
     const SLP = 0b111;
-    const PSN = 0b10001000;
 
     pub inline fn is(num: u8, status: Status) bool {
         if (status == .SLP) return Status.duration(num) > 0;
@@ -157,7 +158,7 @@ pub const Status = enum(u8) {
     }
 
     pub inline fn init(status: Status) u8 {
-        assert(status != .SLP);
+        assert(status != .SLP and status != .SLF);
         return @as(u8, 1) << @intCast(u3, @enumToInt(status));
     }
 
@@ -166,12 +167,13 @@ pub const Status = enum(u8) {
         return @as(u8, dur);
     }
 
-    pub inline fn duration(num: u8) u3 {
-        return @intCast(u3, num & SLP);
+    pub inline fn slf(dur: u3) u8 {
+        assert(dur > 0);
+        return 0x80 | slp(dur);
     }
 
-    pub inline fn psn(num: u8) bool {
-        return num & PSN != 0;
+    pub inline fn duration(num: u8) u3 {
+        return @intCast(u3, num & SLP);
     }
 
     pub inline fn any(num: u8) bool {
@@ -180,24 +182,22 @@ pub const Status = enum(u8) {
 };
 
 test "Status" {
+    try expect(!Status.any(0));
+
     try expect(Status.is(Status.init(.PSN), .PSN));
     try expect(!Status.is(Status.init(.PSN), .PAR));
     try expect(Status.is(Status.init(.BRN), .BRN));
     try expect(!Status.is(Status.init(.FRZ), .SLP));
     try expect(Status.is(Status.init(.FRZ), .FRZ));
-    try expect(Status.is(Status.init(.TOX), .TOX));
 
     try expect(!Status.is(0, .SLP));
     try expect(Status.is(Status.slp(5), .SLP));
+    try expect(!Status.is(Status.slp(5), .SLF));
     try expect(!Status.is(Status.slp(7), .PSN));
     try expectEqual(@as(u3, 5), Status.duration(Status.slp(5)));
-
-    try expect(!Status.psn(Status.init(.BRN)));
-    try expect(Status.psn(Status.init(.PSN)));
-    try expect(Status.psn(Status.init(.TOX)));
-
-    try expect(!Status.any(0));
-    try expect(Status.any(Status.init(.TOX)));
+    try expect(Status.is(Status.slf(2), .SLP));
+    try expect(Status.is(Status.slf(2), .SLF));
+    try expectEqual(@as(u3, 1), Status.duration(Status.slp(1)));
 }
 
 pub const Volatiles = packed struct {
