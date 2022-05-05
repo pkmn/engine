@@ -311,7 +311,6 @@ export class Pokemon implements Gen1.Pokemon {
     if (!this.active) return {};
 
     const off = this.offset.active + OFFSETS.ActivePokemon.volatiles;
-    const boosts = this.offset.active + OFFSETS.ActivePokemon.boosts;
     const volatiles: Gen1.Volatiles = {};
     for (const v in Pokemon.Volatiles) {
       const volatile = toID(v) as keyof Gen1.Volatiles;
@@ -322,16 +321,16 @@ export class Pokemon implements Gen1.Pokemon {
           };
         } else if (volatile === 'trapping') {
           volatiles[volatile] = {
-            duration: this.data.getUint8(off + (OFFSETS.Volatiles.attacks >> 3)) >> 4,
+            duration: (this.data.getUint8(off + (OFFSETS.Volatiles.attacks >> 3)) >> 5) & 0b111,
           };
         } else if (volatile === 'thrashing' || volatile === 'rage') {
           volatiles[volatile] = {
-            duration: this.data.getUint8(off + (OFFSETS.Volatiles.attacks >> 3)) >> 4,
+            duration: (this.data.getUint8(off + (OFFSETS.Volatiles.attacks >> 3)) >> 5) & 0b111,
             accuracy: this.data.getUint16(off + (OFFSETS.Volatiles.state >> 3), LE),
           };
         } else if (volatile === 'confusion') {
           volatiles[volatile] = {
-            duration: this.data.getUint8(off + (OFFSETS.Volatiles.confusion >> 3)) & 0x0F,
+            duration: (this.data.getUint8(off + (OFFSETS.Volatiles.confusion >> 3)) >> 2) & 0b111,
           };
         } else if (volatile === 'substitute') {
           volatiles[volatile] = {
@@ -339,7 +338,7 @@ export class Pokemon implements Gen1.Pokemon {
           };
         } else if (volatile === 'transform') {
           const {player, id} =
-            decodeIdentRaw(this.data.getUint8(boosts + (OFFSETS.Boosts.transform >> 3)));
+            decodeIdentRaw((this.data.getUint8(off + (OFFSETS.Volatiles.transform >> 3))) >> 4);
           volatiles[volatile] = {player, slot: this.battle.side(player).slot(id)!};
         } else {
           volatiles[volatile] = {};
@@ -392,7 +391,7 @@ export class Pokemon implements Gen1.Pokemon {
 
     const boosts: Partial<BoostsTable> = {};
     for (const b in OFFSETS.Boosts) {
-      if (b === 'spc' || b === 'transform') continue;
+      if (b === 'spc') continue;
       const boost = b as BoostID;
       boosts[boost] = this.boost(boost);
     }
@@ -443,7 +442,7 @@ export class Pokemon implements Gen1.Pokemon {
     if (!this.active) return 0;
 
     const off = this.offset.active + OFFSETS.ActivePokemon.volatiles;
-    return this.data.getUint8(off + (OFFSETS.Volatiles.toxic >> 3)) >> 4;
+    return this.data.getUint8(off + (OFFSETS.Volatiles.toxic >> 3)) & 0x0F;
   }
 
   toJSON(): Gen1.Pokemon {
@@ -567,17 +566,32 @@ export class Pokemon implements Gen1.Pokemon {
 
     off = offset + OFFSETS.ActivePokemon.volatiles;
     const volatiles = pokemon.volatiles;
+
+    data.setUint8(off + (Pokemon.Volatiles.Bide >> 3),
+      +!!volatiles.bide | (+!!volatiles.thrashing << 1) |
+       (+!!volatiles.multihit << 2) | (+!!volatiles.flinch << 3) |
+       (+!!volatiles.charging << 4) | (+!!volatiles.trapping << 5) |
+       (+!!volatiles.invulnerable << 6) | (+!!volatiles.confusion << 7));
+
+    data.setUint8(off + (Pokemon.Volatiles.Mist >> 3),
+      +!!volatiles.mist | (+!!volatiles.focusenergy << 1) |
+       (+!!volatiles.substitute << 2) | (+!!volatiles.recharging << 3) |
+       (+!!volatiles.rage << 4) | (+!!volatiles.leechseed << 5) |
+       (+!!volatiles.toxic << 6) | (+!!volatiles.lightscreen << 7));
+
+    const confusion = volatiles.confusion?.duration ?? 0;
+    const attacks = volatiles.trapping?.duration ??
+      volatiles.thrashing?.duration ??
+      volatiles.rage?.duration ?? 0;
+    data.setUint8(off + (Pokemon.Volatiles.Reflect >> 3),
+      +!!volatiles.reflect | (+!!volatiles.transform << 1) |
+      (confusion << 2) | (attacks << 5));
+
     const state = volatiles.bide?.damage ??
       volatiles.thrashing?.accuracy ??
       volatiles.rage?.accuracy ?? 0;
     data.setUint16(off + (OFFSETS.Volatiles.state >> 3), state, LE);
     data.setUint8(off + (OFFSETS.Volatiles.substitute >> 3), volatiles.substitute?.hp ?? 0);
-    const confusion = volatiles.confusion?.duration ?? 0;
-    data.setUint8(off + (OFFSETS.Volatiles.confusion >> 3), confusion |
-      ((pokemon.statusData.toxic ?? 0) << 4));
-    const attacks = volatiles.trapping?.duration ??
-      volatiles.thrashing?.duration ??
-      volatiles.rage?.duration ?? 0;
 
     let transform = 0;
     if (volatiles.transform) {
@@ -585,27 +599,14 @@ export class Pokemon implements Gen1.Pokemon {
       const id = Array.from(side.pokemon)[volatiles.transform.slot - 1].position;
       transform = (+!!(volatiles.transform.player === 'p2') << 3) | id;
     }
-
-    data.setUint8(off + (Pokemon.Volatiles.Bide >> 3),
-      +!!volatiles.bide | (+!!volatiles.thrashing << 1) |
-       (+!!volatiles.multihit << 2) | (+!!volatiles.flinch << 3) |
-       (+!!volatiles.charging << 4) | (+!!volatiles.trapping << 5) |
-       (+!!volatiles.invulnerable << 6) | (+!!volatiles.confusion << 7));
-    data.setUint8(off + (Pokemon.Volatiles.Mist >> 3),
-      +!!volatiles.mist | (+!!volatiles.focusenergy << 1) |
-       (+!!volatiles.substitute << 2) | (+!!volatiles.recharging << 3) |
-       (+!!volatiles.rage << 4) | (+!!volatiles.leechseed << 5) |
-       (+!!volatiles.toxic << 6) | (+!!volatiles.lightscreen << 7));
-    data.setUint8(off + (Pokemon.Volatiles.Reflect >> 3),
-      +!!volatiles.reflect | (+!!volatiles.transform << 1) |
-      attacks << 4);
+    data.setUint8(off + (OFFSETS.Volatiles.toxic >> 3),
+      (pokemon.statusData.toxic ?? 0) | (transform << 4));
 
     off = offset + OFFSETS.ActivePokemon.boosts;
     const boosts = pokemon.boosts;
     data.setUint8(off++, encodeSigned(boosts.atk) | (encodeSigned(boosts.def) << 4));
     data.setUint8(off++, encodeSigned(boosts.spe) | (encodeSigned(boosts.spa) << 4));
     data.setUint8(off++, encodeSigned(boosts.accuracy) | (encodeSigned(boosts.evasion) << 4));
-    data.setUint8(off++, transform);
 
     data.setUint8(offset + OFFSETS.ActivePokemon.species, lookup.specieByID(pokemon.species));
     data.setUint8(offset + OFFSETS.ActivePokemon.types, encodeTypes(lookup, pokemon.types));

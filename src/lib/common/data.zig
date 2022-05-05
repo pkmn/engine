@@ -31,11 +31,21 @@ pub const ID = packed struct {
     comptime {
         assert(@sizeOf(ID) == 1);
     }
+
+    pub inline fn int(self: ID) u4 {
+        return @truncate(u4, @bitCast(u8, self));
+    }
+
+    pub inline fn from(id: u4) ID {
+        return @bitCast(ID, @as(u8, id));
+    }
 };
 
 test "ID" {
     try expectEqual(@as(u8, 0b0001), @bitCast(u8, ID{ .player = .P1, .id = 1 }));
     try expectEqual(@as(u8, 0b1101), @bitCast(u8, ID{ .player = .P2, .id = 5 }));
+    const id = ID{ .player = .P2, .id = 4 };
+    try expectEqual(id, ID.from(id.int()));
 }
 
 pub const Choice = packed struct {

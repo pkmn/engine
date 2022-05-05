@@ -39,7 +39,7 @@ The following information is required to simulate a Generation I Pokémon battle
 | `pokemon.species`         | `party_struct.Species`             | `pokemon.baseSpecies`                  |
 | `pokemon.stats`           | `box_struct.Stats`                 | `pokemon.baseStoredStats`              |
 | `active.stats`            | `battle_struct.Stats`              | `pokemon.modifiedStats`                |
-| `active.boosts.transform` | `PlayerMonUnmodified*`             | `pokemon.storedStats`                  |
+| `volatiles.transform`     | `PlayerMonUnmodified*`             | `pokemon.storedStats`                  |
 | `active.species`          | `battle_struct.Species`            | `pokemon.species`                      |
 | `{pokemon,active}.types`  | `{party,battle}_struct.Type`       | `pokemon.types`                        |
 | `active.boosts`           | `PlayerMon*Mod`                    | `pokemon.boosts`                       |
@@ -69,7 +69,7 @@ The following information is required to simulate a Generation I Pokémon battle
   accounted for in the `Pokemon` `stats` and never need to be referenced in-battle (though the `DVs`
   struct exists to simplify generating legal test data)
 - Instead of storing unmodified stats like Pokémon Red or Pokémon Showdown, pkmn simply tracks the
-  identity of the Pokémon that has been transformed into in the `active.boosts.transformed` field.
+  identity of the Pokémon that has been transformed into in the `active.volatiles.transform` field.
 - pkmn uses `volatiles.state` for total accumulated damage for Bide but also for implementing
   accuracy overwrite mechanics for certain moves (this glitch is present on the device but is not
   correctly implemented by Pokémon Showdown currently)
@@ -144,8 +144,9 @@ boolean flags that are cleared when the Pokémon faints or switches out:
 
 [Bide](https://pkmn.cc/bulba/Bide_(move)) (damage),
 [Substitute](https://pkmn.cc/bulba/Substitute_(move)) (substitute HP),
-[Confusion](https://pkmn.cc/bulba/Confusion_(status_condition)) (duration), and
+[Confusion](https://pkmn.cc/bulba/Confusion_(status_condition)) (duration),
 [Toxic](https://pkmn.cc/bulba/Toxic_(move)) (counter),
+[Transform](https://pkmn.cc/bulba/Transform_(move)) (identity), and
 [Disable](https://pkmn.cc/bulba/Disable_(move)) (move and duration), and multi attacks all require
 additional information that is also stored in the `Volatiles` structure.
 
@@ -156,19 +157,11 @@ The `state` field of `Volatiles` is effectively treated as a union:
   implement the [Rage and Thrash / Petal Dance accuracy
   bug](https://www.youtube.com/watch?v=NC5gbJeExbs))
 
-Logically, the data about which Pokémon has been transformed into belongs in the `Volatiles`
-structure, but due to space constraints it is stored in `Boosts.transform` instead.
-
 #### `Stats` / `Boosts`
 
 [Stats](https://pkmn.cc/bulba/Stat) and [boosts (stat
 modifiers)](https://pkmn.cc/bulba/Stat#Stat_modifiers) are stored logically, with the exception that
 boosts should always range from `-6`...`6` instead of `1`...`13` as on the cartridge.
-
-As noted above, the data about which Pokémon has been transformed into when `Volatiles.Transform` is
-set is stored in the `Boosts` structure as well - while it logically would make sense to store it in
-`Volatiles` there is space for it in the padding of `Boosts` and not in `Volatiles` so some
-logical consistency has been sacrificed at the altar of performance.
   
 ### `Move` / `Move.Data`
 
@@ -332,7 +325,7 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 | 12    | 13  | `boosts.atk`/`boosts.def`          | The active Pokémon's Attack and Defense boosts              |
 | 13    | 14  | `boosts.spe`/`boosts.spd`          | The active Pokémon's Speed and Special boosts               |
 | 14    | 15  | `boosts.accuracy`/`boosts.evasion` | The active Pokémon's Accuracy and Evasion boosts            |
-| 15    | 16  | `transform`                        | The identity of whom the active Pokémon is transformed into |
+| 15    | 16  | -                                  | *Zero padding*                                              |
 | 16    | 24  | [`volatiles`](#volatiles-1)        | The active Pokémon's volatiles statuses and associated data |
 | 24    | 25  | `moves[0].id`                      | The active Pokémon's second move                            |
 | 25    | 26  | `moves[0].pp`                      | The PP of the active Pokémon's first move                   |
@@ -350,34 +343,34 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 
 > **NOTE:** The offsets in the following table represent *bits* and **not** bytes.
 
-| Start | End | Data                | Description                                            |
-| ----- | --- | --------------------| ------------------------------------------------------ |
-| 0     | 1   | `Bide`              | Whether the "Bide" volatile status is present          |
-| 1     | 2   | `Thrashing`         | Whether the "Thrashing" volatile status is present     |
-| 2     | 3   | `MultiHit`          | Whether the "MultiHit" volatile status is present      |
-| 3     | 4   | `Flinch`            | Whether the "Flinch" volatile status is present        |
-| 4     | 5   | `Charging`          | Whether the "Charging" volatile status is present      |
-| 5     | 6   | `Trapping`          | Whether the "Trapping" volatile status is present      |
-| 6     | 7   | `Invulnerable`      | Whether the "Invulnerable" volatile status is present  |
-| 7     | 8   | `Confusion`         | Whether the "Confusion" volatile status is present     |
-| 8     | 9   | `Mist`              | Whether the "Mist" volatile status is present          |
-| 9     | 10  | `FocusEnergy`       | Whether the "FocusEnergy" volatile status is present   |
-| 10    | 11  | `Substitute`        | Whether the "Substitute" volatile status is present    |
-| 11    | 12  | `Recharging`        | Whether the "Recharging" volatile status is present    |
-| 12    | 13  | `Rage`              | Whether the "Rage" volatile status is present          |
-| 13    | 14  | `LeechSeed`         | Whether the "LeechSeed" volatile status is present     |
-| 14    | 15  | `Toxic`             | Whether the "Toxic" volatile status is present         |
-| 15    | 16  | `LightScreen`       | Whether the "LightScreen" volatile status is present   |
-| 16    | 17  | `Reflect`           | Whether the "Reflect" volatile status is present       |
-| 17    | 18  | `Transform`         | Whether the "Transform" volatile status is present     |
-| 18    | 20  | `00`                | Zero padding (2 bits)                                  |
-| 20    | 24  | `attacks`           | The number of attacks remaining                        |
+| Start | End | Data                | Description                                                 |
+| ----- | --- | ------------------- | ----------------------------------------------------------- |
+| 0     | 1   | `Bide`              | Whether the "Bide" volatile status is present               |
+| 1     | 2   | `Thrashing`         | Whether the "Thrashing" volatile status is present          |
+| 2     | 3   | `MultiHit`          | Whether the "MultiHit" volatile status is present           |
+| 3     | 4   | `Flinch`            | Whether the "Flinch" volatile status is present             |
+| 4     | 5   | `Charging`          | Whether the "Charging" volatile status is present           |
+| 5     | 6   | `Trapping`          | Whether the "Trapping" volatile status is present           |
+| 6     | 7   | `Invulnerable`      | Whether the "Invulnerable" volatile status is present       |
+| 7     | 8   | `Confusion`         | Whether the "Confusion" volatile status is present          |
+| 8     | 9   | `Mist`              | Whether the "Mist" volatile status is present               |
+| 9     | 10  | `FocusEnergy`       | Whether the "FocusEnergy" volatile status is present        |
+| 10    | 11  | `Substitute`        | Whether the "Substitute" volatile status is present         |
+| 11    | 12  | `Recharging`        | Whether the "Recharging" volatile status is present         |
+| 12    | 13  | `Rage`              | Whether the "Rage" volatile status is present               |
+| 13    | 14  | `LeechSeed`         | Whether the "LeechSeed" volatile status is present          |
+| 14    | 15  | `Toxic`             | Whether the "Toxic" volatile status is present              |
+| 15    | 16  | `LightScreen`       | Whether the "LightScreen" volatile status is present        |
+| 16    | 17  | `Reflect`           | Whether the "Reflect" volatile status is present            |
+| 17    | 18  | `Transform`         | Whether the "Transform" volatile status is present          |
+| 18    | 21  | `confusion`         | The remaining turns of confusion                            |
+| 21    | 24  | `attacks`           | The number of attacks remaining                             |
 | 24    | 40  | `state`             | A union of either: <ul><li>the total accumulated damage from Bide</li><li>the overwritten accuracy of certain moves</li></ul> |
-| 40    | 48  | `substitute`        | The remaining HP of the Substitute                     |
-| 48    | 52  | `disabled.move`     | The move slot (1-4) the is disabled                    |
-| 52    | 56  | `disabled.duration` | The remaining turns the move is disabled               |
-| 56    | 60  | `confusion`         | The remaining turns of confusion                       |
-| 60    | 64  | `toxic`             | The number of turns toxic damage has been accumulating |
+| 40    | 48  | `substitute`        | The remaining HP of the Substitute                          |
+| 48    | 52  | `disabled.move`     | The move slot (1-4) the is disabled                         |
+| 52    | 56  | `disabled.duration` | The remaining turns the move is disabled                    |
+| 56    | 60  | `toxic`             | The number of turns toxic damage has been accumulating      |
+| 60    | 64  | `transform`         | The identity of whom the active Pokémon is transformed into |
 
 ### `Pokemon`
 

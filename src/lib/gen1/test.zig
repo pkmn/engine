@@ -85,10 +85,8 @@ fn expectOrder(p1: anytype, o1: []const u8, p2: anytype, o2: []const u8) !void {
     try expectEqualSlices(u8, o2, &p2.order);
 }
 
-const SEED = 0x31415926;
-
 test "switching" {
-    var battle = Battle.random(&PRNG.init(SEED), false);
+    var battle = Battle.random(&PRNG.init(0x31415926), false);
     const p1 = battle.side(.P1);
     const p2 = battle.side(.P2);
 
@@ -107,7 +105,7 @@ test "switching" {
 }
 
 test "choices" {
-    var random = PRNG.init(SEED);
+    var random = PRNG.init(0x27182818);
     var battle = Battle.random(&random, false);
     var options: [MAX_OPTIONS_SIZE]Choice = undefined;
     const n = battle.choices(.P1, .Move, &options);

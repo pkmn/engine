@@ -50,8 +50,7 @@
         "spe": 8,
         "spc": 12,
         "accuracy": 16,
-        "evasion": 20,
-        "transform": 24
+        "evasion": 20
       },
       "Volatiles": {
         "Bide": 0,
@@ -72,12 +71,13 @@
         "LightScreen": 15,
         "Reflect": 16,
         "Transform": 17,
-        "attacks": 20,
+        "confusion": 18,
+        "attacks": 21,
         "state": 24,
         "substitute": 40,
         "disabled": 48,
-        "confusion": 56,
-        "toxic": 60
+        "toxic": 56,
+        "transform": 60
       }
     }
   }

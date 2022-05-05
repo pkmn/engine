@@ -561,7 +561,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
             volatiles.Thrashing = false;
             volatiles.Confusion = true;
             // NB: these values will diverge
-            volatiles.confusion = @truncate(u4, if (showdown)
+            volatiles.confusion = @truncate(u3, if (showdown)
                 battle.rng.range(u8, 3, 5)
             else
                 (battle.rng.next() & 3) + 2);
@@ -925,7 +925,7 @@ pub const Effects = struct {
         side.active.volatiles.Bide = true;
         side.active.volatiles.state = 0;
         // NB: these values will diverge
-        side.active.volatiles.attacks = @truncate(u4, if (showdown)
+        side.active.volatiles.attacks = @truncate(u3, if (showdown)
             // FIXME: showdown sets duration to 3-4 instead of 2-3...
             battle.rng.range(u4, 3, 4) - 1
         else
@@ -998,7 +998,7 @@ pub const Effects = struct {
         foe.active.volatiles.Confusion = true;
 
         // NB: these values will diverge
-        foe.active.volatiles.confusion = @truncate(u4, if (showdown)
+        foe.active.volatiles.confusion = @truncate(u3, if (showdown)
             battle.rng.range(u8, 3, 5)
         else
             (battle.rng.next() & 3) + 2);
@@ -1136,13 +1136,8 @@ pub const Effects = struct {
         const player_ident = battle.active(player);
         const foe_ident = battle.active(player.foe());
 
-        var transformed = side.active.boosts.transform;
         side.active.boosts = .{};
-        side.active.boosts.transform = transformed;
-
-        transformed = foe.active.boosts.transform;
         foe.active.boosts = .{};
-        foe.active.boosts.transform = transformed;
 
         side.active.stats = side_stored.stats;
         foe.active.stats = foe_stored.stats;
@@ -1419,7 +1414,7 @@ pub const Effects = struct {
 
         volatiles.Thrashing = true;
         // NB: these values will diverge
-        volatiles.attacks = @truncate(u4, if (showdown)
+        volatiles.attacks = @truncate(u3, if (showdown)
             battle.rng.range(u8, 2, 4)
         else
             (battle.rng.next() & 1) + 2);
@@ -1435,6 +1430,11 @@ pub const Effects = struct {
         if (foe.active.volatiles.Invulnerable) return;
 
         side.active.volatiles.Transform = true;
+        // NB: foe could themselves be transformed
+        side.active.volatiles.transform = if (foe.active.volatiles.transform != 0)
+            foe.active.volatiles.transform
+        else
+            foe_ident.int();
 
         // NB: HP is not copied by Transform
         side.active.stats.atk = foe.active.stats.atk;
@@ -1448,8 +1448,6 @@ pub const Effects = struct {
         }
 
         side.active.boosts = foe.active.boosts;
-        // NB: foe could themselves be transformed, so transform could already be set
-        if (side.active.boosts.transform.id == 0) side.active.boosts.transform = foe_ident;
         side.active.species = foe.active.species;
         side.active.types = foe.active.types;
 
@@ -1591,8 +1589,8 @@ pub const Effects = struct {
 fn unmodifiedStats(battle: anytype, player: Player) *Stats(u16) {
     const side = battle.side(player);
     if (!side.active.volatiles.Transform) return &side.active.stats;
-    return &battle.side(side.active.boosts.transform.player)
-        .pokemon[side.active.boosts.transform.id].stats;
+    const id = ID.from(side.active.volatiles.transform);
+    return &battle.side(id.player).pokemon[id.id].stats;
 }
 
 fn statusModify(status: u8, stats: *Stats(u16)) void {
@@ -1644,13 +1642,13 @@ fn clearVolatiles(active: *ActivePokemon, ident: ID, log: anytype) !void {
     // TODO: other volatiles
 }
 
-const DISTRIBUTION = [_]u4{ 2, 2, 2, 3, 3, 3, 4, 5 };
+const DISTRIBUTION = [_]u3{ 2, 2, 2, 3, 3, 3, 4, 5 };
 
 // NB: these values will diverge
-fn distribution(battle: anytype) u4 {
+fn distribution(battle: anytype) u3 {
     if (showdown) return DISTRIBUTION[battle.rng.range(u8, 0, DISTRIBUTION.len)];
     const r = (battle.rng.next() & 3);
-    return @truncate(u4, (if (r < 2) r else battle.rng.next() & 3) + 2);
+    return @truncate(u3, (if (r < 2) r else battle.rng.next() & 3) + 2);
 }
 
 // NB: these values will diverge

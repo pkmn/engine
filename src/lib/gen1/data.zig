@@ -221,17 +221,15 @@ pub const Volatiles = packed struct {
 
     Reflect: bool = false,
     Transform: bool = false,
-
-    _: u2 = 0,
-
-    attacks: u4 = 0,
+    confusion: u3 = 0,
+    attacks: u3 = 0,
 
     // NB: used for both bide and accuracy overwriting!
     state: u16 = 0,
     substitute: u8 = 0,
     disabled: Disabled = .{},
-    confusion: u4 = 0,
     toxic: u4 = 0,
+    transform: u4 = 0,
 
     const Disabled = packed struct {
         move: u4 = 0,
@@ -308,8 +306,7 @@ pub const Boosts = packed struct {
     accuracy: i4 = 0,
     evasion: i4 = 0,
 
-    // really belongs in Volatiles :(
-    transform: ID = .{},
+    _: u8 = 0,
 
     comptime {
         assert(@sizeOf(Boosts) == 4);

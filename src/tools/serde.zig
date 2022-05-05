@@ -132,6 +132,7 @@ const GEN1: pkmn.gen1.Battle(rng.Random(1)) = .{
                 .Thrashing = true,
                 .Confusion = true,
                 .Substitute = true,
+                .LightScreen = true,
                 .attacks = 3,
                 .state = 235,
                 .substitute = 42,
@@ -222,13 +223,13 @@ const GEN1: pkmn.gen1.Battle(rng.Random(1)) = .{
             .stats = .{ .hp = 281, .atk = 134, .def = 168, .spe = 124, .spc = 138 },
             .species = .Squirtle,
             .types = .{ .type1 = .Water, .type2 = .Water },
-            .boosts = .{ .transform = .{ .player = .P1, .id = 3 } },
             .volatiles = .{
                 .Bide = true,
                 .Trapping = true,
                 .Transform = true,
                 .attacks = 2,
                 .state = 100,
+                .transform = 0b0101,
             },
             .moves = .{
                 .{ .id = .Flamethrower, .pp = 5 },
