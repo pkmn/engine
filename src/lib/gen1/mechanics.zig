@@ -1397,7 +1397,7 @@ pub const Effects = struct {
             }
         });
 
-        // NB: SLeep Clause Mod
+        // NB: Sleep Clause Mod
         if (showdown) {
             for (foe.pokemon) |p| {
                 if (Status.is(p.status, .SLP) and !Status.is(p.status, .SLF)) {
