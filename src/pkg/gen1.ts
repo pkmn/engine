@@ -131,7 +131,7 @@ export class Battle implements Gen1.Battle {
     const data = new DataView(buf);
     let offset = OFFSETS.Battle.p1;
     for (const side of battle.sides) {
-      Side.encode(gen, lookup, side, data, offset);
+      Side.encode(gen, lookup, battle, side, data, offset);
       offset += SIZES.Side;
     }
     data.setUint16(OFFSETS.Battle.turn, battle.turn, LE);
@@ -226,18 +226,19 @@ export class Side implements Gen1.Side {
   static encode(
     gen: Generation,
     lookup: Lookup,
+    battle: Gen1.Battle,
     side: Gen1.Side,
     data: DataView,
     offset: number,
   ) {
     let i = 0;
     for (const pokemon of side.pokemon) {
-      const off = offset + OFFSETS.Side.pokemon + SIZES.Pokemon * i;
+      const off = offset + OFFSETS.Side.pokemon + SIZES.Pokemon * (pokemon.position - 1);
       Pokemon.encodeStored(gen, lookup, pokemon, data, off);
-      data.setUint8(offset + OFFSETS.Side.order + i, pokemon.position);
+      data.setUint8(offset + OFFSETS.Side.order + (pokemon.position - 1), i + 1);
       i++;
     }
-    Pokemon.encodeActive(gen, lookup, side.active, data, offset + OFFSETS.Side.active);
+    Pokemon.encodeActive(gen, lookup, battle, side.active, data, offset + OFFSETS.Side.active);
     data.setUint8(offset + OFFSETS.Side.last_selected_move,
       lookup.moveByID(side.lastSelectedMove));
     data.setUint8(offset + OFFSETS.Side.last_used_move,
@@ -391,7 +392,7 @@ export class Pokemon implements Gen1.Pokemon {
 
     const boosts: Partial<BoostsTable> = {};
     for (const b in OFFSETS.Boosts) {
-      if (b === 'spc') continue;
+      if (b === 'spc' || b === 'transform') continue;
       const boost = b as BoostID;
       boosts[boost] = this.boost(boost);
     }
@@ -511,7 +512,7 @@ export class Pokemon implements Gen1.Pokemon {
     offset: number,
   ) {
     let off = 0;
-    const stats = pokemon.stats;
+    const stats = pokemon.stored.stats;
     for (const stat of gen.stats) {
       if (stat === 'spd') break;
       data.setUint16(offset + OFFSETS.Pokemon.stats + off, stats[stat], LE);
@@ -536,6 +537,7 @@ export class Pokemon implements Gen1.Pokemon {
   static encodeActive(
     gen: Generation,
     lookup: Lookup,
+    battle: Gen1.Battle,
     pokemon: Gen1.Pokemon | undefined,
     data: DataView,
     offset: number,
@@ -576,9 +578,13 @@ export class Pokemon implements Gen1.Pokemon {
     const attacks = volatiles.trapping?.duration ??
       volatiles.thrashing?.duration ??
       volatiles.rage?.duration ?? 0;
-    const transform = volatiles.transform
-      ? (+!!(volatiles.transform.player === 'p2') << 3) | volatiles.transform.slot
-      : 0;
+
+    let transform = 0;
+    if (volatiles.transform) {
+      const side = Array.from(battle.sides)[volatiles.transform.player === 'p1' ? 0 : 1];
+      const id = Array.from(side.pokemon)[volatiles.transform.slot - 1].position;
+      transform = (+!!(volatiles.transform.player === 'p2') << 3) | id;
+    }
 
     data.setUint8(off + (Pokemon.Volatiles.Bide >> 3),
       +!!volatiles.bide | (+!!volatiles.thrashing << 1) |

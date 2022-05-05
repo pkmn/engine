@@ -42,7 +42,7 @@ describe('Gen 1', () => {
     const battle = new Battle(lookup, new DataView(BUFFER.buffer), {});
     const restored = Battle.restore(gen, lookup, battle, {});
     // NOTE: Jest object diffing toJSON is super slow so we compare strings instead...
-    expect(JSON.stringify(restored)).toEqual(JSON.stringify(battle));
+    expect(JSON.stringify(restored, null, 2)).toEqual(JSON.stringify(battle, null, 2));
 
     expect(battle.turn).toBe(609);
     expect(battle.lastDamage).toBe(84);
@@ -100,6 +100,8 @@ describe('Gen 1', () => {
       trapping: {duration: 2},
       transform: {player: 'p1', slot: 2},
     });
+    const boosts = Array.from(Object.values(p2.active!.boosts));
+    expect(boosts.every(b => b === 0)).toBe(true);
 
     const pos = BUFFER[P1_ORDER];
     BUFFER[P1_ORDER] = BUFFER[P1_ORDER + 1];
