@@ -215,7 +215,7 @@ entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as foll
 | **multi hits**  | 0...5   | 3    |     | **base power**    | 0...40   | 6    |
 | **base PP**     | 1...8   | 3    |     | **PP Ups**        | 0...3    | 2    |
 | **PP**          | 0...64  | 7    |     | **HP / damage**   | 0...704  | 10   |
-| **status**      | 0...10  | 4    |     | **effectiveness** | 0...3    | 2    |
+| **status**      | 0...13  | 4    |     | **effectiveness** | 0...3    | 2    |
 | **type**        | 0...15  | 4    |     | **accuracy**      | 6...20   | 4    |
 | **disabled**    | 0...7   | 3    |     | **DVs**           | 0...15   | 4    |
 | **move effect** | 0..66   | 7    |     | **attacks**       | 0..4     | 3    |
@@ -378,7 +378,6 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 | 52    | 56  | `disabled.duration` | The remaining turns the move is disabled               |
 | 56    | 60  | `confusion`         | The remaining turns of confusion                       |
 | 60    | 64  | `toxic`             | The number of turns toxic damage has been accumulating |
-
 
 ### `Pokemon`
 
