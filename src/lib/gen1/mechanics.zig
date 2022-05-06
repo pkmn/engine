@@ -131,7 +131,7 @@ fn selectMove(battle: anytype, player: Player, choice: Choice) void {
         side.last_selected_move = move.id;
     }
 
-    // BUG: Pokémon Showdown's getRandomTarget arbitrarily advances the RNG
+    // SHOWDOWN: Pokémon Showdown's getRandomTarget arbitrarily advances the RNG
     if (showdown) battle.rng.advance(side.last_selected_move.frames());
 }
 
@@ -174,7 +174,11 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     if ((m1 == .QuickAttack) != (m2 == .QuickAttack)) return if (m1 == .QuickAttack) .P1 else .P2;
     if ((m1 == .Counter) != (m2 == .Counter)) return if (m1 == .Counter) .P2 else .P1;
 
-    // NB: https://www.smogon.com/forums/threads/adv-switch-priority.3622189/
+    // SHOWDOWN: https://www.smogon.com/forums/threads/adv-switch-priority.3622189/
+    // > In Gen 1 it's irrelevant [which player switches first] because switches happen instantly on
+    // > your own screen without waiting for the other player's choice (and their choice will appear
+    // > to happen first for them too, unless they attacked in which case your switch happens first)
+    // NB: A cartridge-compatible implemention must not advance the RNG so we simply default to P1
     if (!showdown and c1.type == .Switch and c2.type == .Switch) return .P1;
 
     const spe1 = battle.side(.P1).active.stats.spe;
@@ -311,10 +315,10 @@ fn executeMove(
             .SeismicToss, .NightShade => side.stored().level,
             .SonicBoom => 20,
             .DragonRage => 40,
-            // NB: if power = 0 then a desync occurs (or a miss on Pokémon Showdown)
+            // GLITCH: if power = 0 then a desync occurs (or a miss on Pokémon Showdown)
             .Psywave => power: {
                 const max = @truncate(u8, @as(u16, side.stored().level) * 3 / 2);
-                // NB: these values will diverge
+                // SHOWDOWN: these values will diverge
                 if (showdown) {
                     break :power battle.rng.range(u8, 0, max);
                 } else {
@@ -383,7 +387,7 @@ fn executeMove(
         }
     } else if (move.effect == .Metronome) {
         // FIXME: test this + show where differs
-        // NB: these values will diverge
+        // SHOWDOWN: these values will diverge
         const random = if (showdown) blk: {
             const r = battle.rng.range(u8, 0, @enumToInt(Move.Struggle) - 2);
             break :blk @intToEnum(Move, r + @as(u2, (if (r < @enumToInt(Move.Metronome)) 1 else 2)));
@@ -498,7 +502,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
                 // calcDamage just needs a 40 BP physical move, its not actually Pound
                 const move = Move.get(.Pound);
                 if (!calcDamage(battle, player, move, false)) return .err;
-                // NB: skipping adjustDamage/randomizeDamage/checkHit
+                // NB: skipping adjustDamage / randomizeDamage / checkHit
                 applyDamage(battle, player, move);
 
                 return .done;
@@ -523,7 +527,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
             volatiles.Thrashing = false;
             volatiles.Charging = false;
             volatiles.Trapping = false;
-            // NB: Invulnerable is not cleared, resulting in the Fly/Dig glitch
+            // GLITCH: Invulnerable is not cleared, resulting in the Fly/Dig glitch
             try log.cant(ident, .Paralysis);
             return .done;
         }
@@ -559,7 +563,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
         if (volatiles.attacks == 0) {
             volatiles.Thrashing = false;
             volatiles.Confusion = true;
-            // NB: these values will diverge
+            // SHOWDOWN: these values will diverge
             volatiles.confusion = @truncate(u3, if (showdown)
                 battle.rng.range(u8, 3, 5)
             else
@@ -607,7 +611,7 @@ fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data) bool {
 
     var chance = @as(u16, Species.chance(side.active.species));
 
-    // NB: Focus Energy reduces critical hit chance instead of increasing it
+    // GLITCH: Focus Energy reduces critical hit chance instead of increasing it
     chance = if (side.active.volatiles.FocusEnergy)
         chance / 2
     else
@@ -618,8 +622,8 @@ fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data) bool {
     else
         chance / 2;
 
+    // SHOWDOWN: these values will diverge (due to rotations)
     if (showdown) return battle.rng.chance(u8, @truncate(u8, chance), 256);
-    // NB: these values will diverge (due to rotations)
     return std.math.rotl(u8, battle.rng.next(), 3) < chance;
 }
 
@@ -643,7 +647,7 @@ fn calcDamage(battle: anytype, player: Player, move: Move.Data, crit: bool) bool
             if (special) foe.stored().stats.spc
             else foe.stored().stats.def
         else
-            // NB: not capped to MAX_STAT_VALUE, can be 999 * 2 = 1998
+            // GLITCH: not capped to MAX_STAT_VALUE, can be 999 * 2 = 1998
             if (special)
                 foe.active.stats.spc * @as(u2, if (foe.active.volatiles.LightScreen) 2 else 1)
             else
@@ -652,7 +656,7 @@ fn calcDamage(battle: anytype, player: Player, move: Move.Data, crit: bool) bool
 
     if (atk > 255 or def > 255) {
         atk = @maximum((atk / 4) & 255, 1);
-        // NB: not adjusted to be a minimum of 1 on cartridge (can lead to division-by-zero freeze)
+        // GLITCH: not adjusted to be a min of 1 on cartridge (can lead to division-by-zero freeze)
         def = @maximum((def / 4) & 255, if (showdown) 1 else 0);
     }
 
@@ -682,7 +686,7 @@ fn adjustDamage(battle: anytype, player: Player) void {
 fn randomizeDamage(battle: anytype) void {
     if (battle.last_damage <= 1) return;
 
-    // NB: these values will diverge
+    // SHOWDOWN: these values will diverge
     const random = if (showdown)
         battle.rng.range(u8, 217, 256)
     else loop: {
@@ -708,7 +712,7 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data) bool {
     // NB: Conversion / Haze / Light Screen / Reflect qualify but do not call checkHit
     if (foe.active.volatiles.Mist and move.effect.statDown()) return false;
 
-    // NB: Thrash / Petal Dance / Rage get their accuracy overwritten on subsequent hits
+    // GLITCH: Thrash / Petal Dance / Rage get their accuracy overwritten on subsequent hits
     const overwritten = side.active.volatiles.state > 0;
     assert(!overwritten or (move.effect == .Thrashing or move.effect == .Rage));
     var accuracy = if (!showdown and overwritten)
@@ -747,7 +751,7 @@ fn applyDamage(battle: anytype, player: Player, move: Move.Data) void {
         if (battle.last_damage >= foe.active.volatiles.substitute) {
             foe.active.volatiles.substitute = 0;
             foe.active.volatiles.Substitute = false;
-            // NB: battle.last_damage is not updated with the amount of HP the Substitute had
+            // GLITCH: battle.last_damage is not updated with the amount of HP the Substitute had
         } else {
             foe.active.volatiles.substitute -= @truncate(u8, battle.last_damage);
         }
@@ -822,7 +826,7 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
     if (volatiles.LeechSeed) {
         var damage = @maximum(stored.stats.hp / 16, 1);
 
-        // NB: Leech Seed + Toxic glitch
+        // GLITCH: Leech Seed + Toxic glitch
         if (volatiles.Toxic) {
             volatiles.toxic += 1;
             damage *= volatiles.toxic;
@@ -836,7 +840,7 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
 
         try log.damageOf(ident, stored, .LeechSeedOf, foe_ident);
 
-        // NB: uncapped damage is added back to the foe
+        // GLITCH: uncapped damage is added back to the foe
         foe_stored.hp = @minimum(foe_stored.hp + damage, foe_stored.stats.hp);
         try log.drain(foe_ident, foe_stored, ident);
     }
@@ -924,10 +928,9 @@ pub const Effects = struct {
 
         side.active.volatiles.Bide = true;
         side.active.volatiles.state = 0;
-        // NB: these values will diverge
+        // SHOWDOWN: these values will diverge
         side.active.volatiles.attacks = @truncate(u3, if (showdown)
-            // FIXME: showdown sets duration to 3-4 instead of 2-3...
-            battle.rng.range(u4, 3, 4) - 1
+            battle.rng.range(u4, 3, 4) // FIXME
         else
             (battle.rng.next() & 1) + 2);
 
@@ -980,7 +983,7 @@ pub const Effects = struct {
 
         if (move.effect == .ConfusionChance) {
             const chance = if (showdown)
-                // BUG: this diverges because showdown uses 26 instead of 25
+                // SHOWDOWN: this diverges because showdown uses 26 instead of 25
                 battle.rng.chance(u8, 26, 256)
             else
                 battle.rng.next() < Gen12.percent(10);
@@ -997,7 +1000,7 @@ pub const Effects = struct {
         if (foe.active.volatiles.Confusion) return;
         foe.active.volatiles.Confusion = true;
 
-        // NB: these values will diverge
+        // SHOWDOWN: these values will diverge
         foe.active.volatiles.confusion = @truncate(u3, if (showdown)
             battle.rng.range(u8, 3, 5)
         else
@@ -1037,10 +1040,9 @@ pub const Effects = struct {
         const moves = &foe.active.moves;
         volatiles.disabled.move = randomMoveSlot(&battle.rng, moves);
 
-        // NB: these values will diverge
+        // SHOWDOWN: these values will diverge
         volatiles.disabled.duration = @truncate(u4, if (showdown)
-            // BUG: battle.rng.range(u8, 1, 7) + 1 = 2 - 8...?
-            battle.rng.range(u8, 1, 7)
+            battle.rng.range(u8, 1, 7) + 1 // FIXME
         else
             (battle.rng.next() & 7) + 1);
 
@@ -1112,7 +1114,7 @@ pub const Effects = struct {
             battle.rng.next() < 1 + Gen12.percent(10);
         if (!chance) return;
 
-        // NB: Freeze Clause Mod
+        // SHOWDOWN: Freeze Clause Mod
         if (showdown) {
             for (foe.pokemon) |p| {
                 if (Status.is(p.status, .FRZ)) return log.fail(foe_ident, .Freeze);
@@ -1120,7 +1122,7 @@ pub const Effects = struct {
         }
 
         foe_stored.status = Status.init(.FRZ);
-        // NB: Hyper Beam recharging status is not cleared
+        // GLITCH: Hyper Beam recharging status is not cleared
 
         try log.status(foe_ident, foe_stored.status, .None);
     }
@@ -1163,7 +1165,7 @@ pub const Effects = struct {
         var stored = side.stored();
         const ident = battle.active(player);
 
-        // NB: HP recovery move failure glitches
+        // GLITCH: HP recovery move failure glitches
         const delta = stored.stats.hp - stored.hp;
         if (delta == 0 or delta & 255 == 255) return;
 
@@ -1208,7 +1210,7 @@ pub const Effects = struct {
         var side = battle.side(player);
         var foe = battle.foe(player);
 
-        // BUG: showdown requires the user has Mimic (but not necessarily located at mslot)
+        // SHOWDOWN: showdown requires the user has Mimic (but not necessarily located at mslot)
         const ok = !showdown or has_mimic: {
             for (side.active.moves) |m| {
                 if (m.id == .Mimic) break :has_mimic true;
@@ -1382,7 +1384,7 @@ pub const Effects = struct {
             return log.miss(battle.active(player), foe_ident);
         }
 
-        // NB: these values will diverge
+        // SHOWDOWN: these values will diverge
         const duration = @truncate(u3, if (showdown)
             battle.rng.range(u8, 1, 8)
         else loop: {
@@ -1392,7 +1394,7 @@ pub const Effects = struct {
             }
         });
 
-        // NB: Sleep Clause Mod
+        // SHOWDOWN: Sleep Clause Mod
         if (showdown) {
             for (foe.pokemon) |p| {
                 if (Status.is(p.status, .SLP) and !Status.is(p.status, .SLF)) {
@@ -1413,7 +1415,7 @@ pub const Effects = struct {
         var volatiles = &battle.side(player).active.volatiles;
 
         volatiles.Thrashing = true;
-        // NB: these values will diverge
+        // SHOWDOWN: these values will diverge
         volatiles.attacks = @truncate(u3, if (showdown)
             battle.rng.range(u8, 2, 4)
         else
@@ -1513,7 +1515,7 @@ pub const Effects = struct {
             else => unreachable,
         }
 
-        // NB: Stat modification errors glitch
+        // GLITCH: Stat modification errors glitch
         statusModify(side.stored().status, stats);
     }
 
@@ -1580,7 +1582,7 @@ pub const Effects = struct {
             else => unreachable,
         }
 
-        // NB: Stat modification errors glitch
+        // GLITCH: Stat modification errors glitch
         statusModify(side.stored().status, stats);
     }
 };
@@ -1643,14 +1645,14 @@ fn clearVolatiles(active: *ActivePokemon, ident: ID, log: anytype) !void {
 
 const DISTRIBUTION = [_]u3{ 2, 2, 2, 3, 3, 3, 4, 5 };
 
-// NB: these values will diverge
+// SHOWDOWN: these values will diverge
 fn distribution(battle: anytype) u3 {
     if (showdown) return DISTRIBUTION[battle.rng.range(u8, 0, DISTRIBUTION.len)];
     const r = (battle.rng.next() & 3);
     return @truncate(u3, (if (r < 2) r else battle.rng.next() & 3) + 2);
 }
 
-// NB: these values will diverge
+// SHOWDOWN: these values will diverge
 fn randomMoveSlot(rand: anytype, moves: []MoveSlot) u4 {
     if (showdown) {
         var i: usize = moves.len;
