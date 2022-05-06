@@ -316,6 +316,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     });
 
     const MOVES: string[] = [];
+    const TARGETS: string[] = [];
     const PP: string[] = [];
     const EFFECTS: { [key: string]: Set<string>} =
       {residual1: new Set(), residual2: new Set(), special: new Set(), regular: new Set()};
@@ -332,6 +333,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .acc = ${acc / 5 - 6}, // ${acc}%\n` +
         '        }');
       PP.push(`${move.pp}, // ${name}`);
+      TARGETS.push(`${move.target !== 'self'}, // ${name}`);
     }
     let Data = `pub const Data = packed struct {
         effect: Effect,
@@ -406,6 +408,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         Data,
         data: MOVES.join(',\n        '),
         dataSize: MOVES.length * 3,
+        targets: TARGETS.join('\n        '),
         Effect,
         ppData,
         ppFn,
@@ -598,6 +601,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       return `${nameToEnum(move.name)} ${constToEffectEnum(effect)}`;
     });
     const MOVES: string[] = [];
+    const TARGETS: string[] = [];
     const EFFECTS = new Set<string>();
     for (const m of moves) {
       const [name, effect] = m.split(' ');
@@ -616,6 +620,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .pp = ${pp}\n` +
         (chance ? `            .chance = ${chance}\n` : '') +
         '        }');
+      TARGETS.push(`${move.target !== 'self'}, // ${name}`);
     }
     let Data = `pub const Data = packed struct {
         effect: Effect,
@@ -650,6 +655,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         Data,
         data: MOVES.join(',\n        '),
         dataSize: MOVES.length * 5,
+        targets: TARGETS.join('\n        '),
         Effect,
         ppFn,
       },

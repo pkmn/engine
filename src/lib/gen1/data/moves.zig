@@ -1352,6 +1352,174 @@ pub const Move = enum(u8) {
         },
     };
 
+    const targets = [_]bool{
+        true, // Pound
+        true, // KarateChop
+        true, // DoubleSlap
+        true, // CometPunch
+        true, // MegaPunch
+        true, // PayDay
+        true, // FirePunch
+        true, // IcePunch
+        true, // ThunderPunch
+        true, // Scratch
+        true, // ViseGrip
+        true, // Guillotine
+        true, // RazorWind
+        false, // SwordsDance
+        true, // Cut
+        true, // Gust
+        true, // WingAttack
+        true, // Whirlwind
+        true, // Fly
+        true, // Bind
+        true, // Slam
+        true, // VineWhip
+        true, // Stomp
+        true, // DoubleKick
+        true, // MegaKick
+        true, // JumpKick
+        true, // RollingKick
+        true, // SandAttack
+        true, // Headbutt
+        true, // HornAttack
+        true, // FuryAttack
+        true, // HornDrill
+        true, // Tackle
+        true, // BodySlam
+        true, // Wrap
+        true, // TakeDown
+        true, // Thrash
+        true, // DoubleEdge
+        true, // TailWhip
+        true, // PoisonSting
+        true, // Twineedle
+        true, // PinMissile
+        true, // Leer
+        true, // Bite
+        true, // Growl
+        true, // Roar
+        true, // Sing
+        true, // Supersonic
+        true, // SonicBoom
+        true, // Disable
+        true, // Acid
+        true, // Ember
+        true, // Flamethrower
+        false, // Mist
+        true, // WaterGun
+        true, // HydroPump
+        true, // Surf
+        true, // IceBeam
+        true, // Blizzard
+        true, // Psybeam
+        true, // BubbleBeam
+        true, // AuroraBeam
+        true, // HyperBeam
+        true, // Peck
+        true, // DrillPeck
+        true, // Submission
+        true, // LowKick
+        true, // Counter
+        true, // SeismicToss
+        true, // Strength
+        true, // Absorb
+        true, // MegaDrain
+        true, // LeechSeed
+        false, // Growth
+        true, // RazorLeaf
+        true, // SolarBeam
+        true, // PoisonPowder
+        true, // StunSpore
+        true, // SleepPowder
+        true, // PetalDance
+        true, // StringShot
+        true, // DragonRage
+        true, // FireSpin
+        true, // ThunderShock
+        true, // Thunderbolt
+        true, // ThunderWave
+        true, // Thunder
+        true, // RockThrow
+        true, // Earthquake
+        true, // Fissure
+        true, // Dig
+        true, // Toxic
+        true, // Confusion
+        true, // Psychic
+        true, // Hypnosis
+        false, // Meditate
+        false, // Agility
+        true, // QuickAttack
+        true, // Rage
+        false, // Teleport
+        true, // NightShade
+        true, // Mimic
+        true, // Screech
+        false, // DoubleTeam
+        false, // Recover
+        false, // Harden
+        false, // Minimize
+        true, // Smokescreen
+        true, // ConfuseRay
+        false, // Withdraw
+        false, // DefenseCurl
+        false, // Barrier
+        false, // LightScreen
+        false, // Haze
+        false, // Reflect
+        false, // FocusEnergy
+        false, // Bide
+        false, // Metronome
+        false, // MirrorMove
+        true, // SelfDestruct
+        true, // EggBomb
+        true, // Lick
+        true, // Smog
+        true, // Sludge
+        true, // BoneClub
+        true, // FireBlast
+        true, // Waterfall
+        true, // Clamp
+        true, // Swift
+        true, // SkullBash
+        true, // SpikeCannon
+        true, // Constrict
+        false, // Amnesia
+        true, // Kinesis
+        false, // SoftBoiled
+        true, // HighJumpKick
+        true, // Glare
+        true, // DreamEater
+        true, // PoisonGas
+        true, // Barrage
+        true, // LeechLife
+        true, // LovelyKiss
+        true, // SkyAttack
+        true, // Transform
+        true, // Bubble
+        true, // DizzyPunch
+        true, // Spore
+        true, // Flash
+        true, // Psywave
+        false, // Splash
+        false, // AcidArmor
+        true, // Crabhammer
+        true, // Explosion
+        true, // FurySwipes
+        true, // Bonemerang
+        false, // Rest
+        true, // RockSlide
+        true, // HyperFang
+        false, // Sharpen
+        true, // Conversion
+        true, // TriAttack
+        true, // SuperFang
+        true, // Slash
+        false, // Substitute
+        true, // Struggle,
+    };
+
     pub const Effect = enum(u8) {
         None,
         Confusion,
@@ -1620,6 +1788,11 @@ pub const Move = enum(u8) {
     pub inline fn get(id: Move) Data {
         assert(id != .None);
         return data[@enumToInt(id) - 1];
+    }
+
+    pub inline fn target(id: Move) bool {
+        assert(id != .None);
+        return targets[@enumToInt(id) - 1];
     }
 
     // @test-only

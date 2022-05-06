@@ -345,6 +345,9 @@ test "Move" {
     try expect(Move.Effect.special(.Charge));
     try expect(Move.Effect.special(.Trapping));
     try expect(!Move.Effect.special(.AttackDownChance));
+
+    try expect(Move.Tackle.target());
+    try expect(!Move.Bide.target());
 }
 
 pub const Species = species.Species;

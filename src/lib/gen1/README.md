@@ -171,6 +171,10 @@ above, PP information isn't strictly necessary in Generation I so is dropped. `M
 a special sentinel value to indicate `null`. Move PP data is only included for testing and is not
 necessary for the actual engine implementation.
 
+In order to workaround Pokémon Showdown's [bugged usage of `getRandomTarget`](#bugs), a boolean is
+required for each move (`Move.targets`) to determine whether it should advance the RNG in
+`selectMove`. This is only include if `-Dshowdown` is enabled.
+
 ### `Species` / `Species.Data`
 
 `Species` just serves as an identifier for a unique [Pokémon

@@ -131,7 +131,8 @@ fn selectMove(battle: anytype, player: Player, choice: Choice) void {
         side.last_selected_move = move.id;
     }
 
-    if (showdown) _ = battle.rng.next(); // BUG: getRandomTarget
+    // BUG: Pokémon Showdown's getRandomTarget arbitrarily advances the RNG
+    if (showdown and side.last_selected_move.target()) _ = battle.rng.next();
 }
 
 fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anytype) !void {
@@ -816,7 +817,8 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
         }
 
         stored.hp -= @minimum(damage, stored.hp);
-        try log.damage(ident, stored, if (brn) Damage.Burn else Damage.Poison); // TODO: damageOf?
+        // NB: Pokémon Showdown uses damageOf here but its not relevant in Generation I
+        try log.damage(ident, stored, if (brn) Damage.Burn else Damage.Poison);
     }
 
     if (volatiles.LeechSeed) {
@@ -1402,7 +1404,7 @@ pub const Effects = struct {
         }
 
         foe_stored.status = Status.slp(duration);
-        try log.status(foe_ident, foe_stored.status, .None);
+        try log.statusFrom(foe_ident, foe_stored.status, battle.side(player).last_selected_move);
     }
 
     fn splash(battle: anytype, player: Player, log: anytype) !void {

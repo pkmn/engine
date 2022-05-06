@@ -17,6 +17,10 @@ pub const Move = enum({{{ Move.type }}}) {
     const data = [_]Data{
         {{{ Move.data }}},
     };
+
+    const targets = [_]bool{
+        {{{ Move.targets }}},
+    };
 {{{ Move.Effect }}}{{{ Move.ppData }}}
     comptime {
         assert(@sizeOf(Move) == {{{ Move.size }}});
@@ -26,6 +30,11 @@ pub const Move = enum({{{ Move.type }}}) {
     pub inline fn get(id: Move) Data {
         assert(id != .None);
         return data[@enumToInt(id) - 1];
+    }
+
+    pub inline fn target(id: Move) bool {
+        assert(id != .None);
+        return targets[@enumToInt(id) - 1];
     }
 
     // @test-only
