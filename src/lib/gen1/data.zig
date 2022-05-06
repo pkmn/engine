@@ -346,8 +346,9 @@ test "Move" {
     try expect(Move.Effect.special(.Trapping));
     try expect(!Move.Effect.special(.AttackDownChance));
 
-    try expect(Move.Tackle.target());
-    try expect(!Move.Bide.target());
+    try expectEqual(@as(u8, 0), Move.Bide.frames());
+    try expectEqual(@as(u8, 1), Move.Tackle.frames());
+    try expectEqual(@as(u8, 2), Move.Counter.frames());
 }
 
 pub const Species = species.Species;

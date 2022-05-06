@@ -194,7 +194,7 @@ pub const Move = enum(u8) {
         }
     };
 
-    const data = [_]Data{
+    const DATA = [_]Data{
         // Pound
         .{
             .effect = .None,
@@ -1352,172 +1352,172 @@ pub const Move = enum(u8) {
         },
     };
 
-    const targets = [_]bool{
-        true, // Pound
-        true, // KarateChop
-        true, // DoubleSlap
-        true, // CometPunch
-        true, // MegaPunch
-        true, // PayDay
-        true, // FirePunch
-        true, // IcePunch
-        true, // ThunderPunch
-        true, // Scratch
-        true, // ViseGrip
-        true, // Guillotine
-        true, // RazorWind
-        false, // SwordsDance
-        true, // Cut
-        true, // Gust
-        true, // WingAttack
-        true, // Whirlwind
-        true, // Fly
-        true, // Bind
-        true, // Slam
-        true, // VineWhip
-        true, // Stomp
-        true, // DoubleKick
-        true, // MegaKick
-        true, // JumpKick
-        true, // RollingKick
-        true, // SandAttack
-        true, // Headbutt
-        true, // HornAttack
-        true, // FuryAttack
-        true, // HornDrill
-        true, // Tackle
-        true, // BodySlam
-        true, // Wrap
-        true, // TakeDown
-        true, // Thrash
-        true, // DoubleEdge
-        true, // TailWhip
-        true, // PoisonSting
-        true, // Twineedle
-        true, // PinMissile
-        true, // Leer
-        true, // Bite
-        true, // Growl
-        true, // Roar
-        true, // Sing
-        true, // Supersonic
-        true, // SonicBoom
-        true, // Disable
-        true, // Acid
-        true, // Ember
-        true, // Flamethrower
-        false, // Mist
-        true, // WaterGun
-        true, // HydroPump
-        true, // Surf
-        true, // IceBeam
-        true, // Blizzard
-        true, // Psybeam
-        true, // BubbleBeam
-        true, // AuroraBeam
-        true, // HyperBeam
-        true, // Peck
-        true, // DrillPeck
-        true, // Submission
-        true, // LowKick
-        true, // Counter
-        true, // SeismicToss
-        true, // Strength
-        true, // Absorb
-        true, // MegaDrain
-        true, // LeechSeed
-        false, // Growth
-        true, // RazorLeaf
-        true, // SolarBeam
-        true, // PoisonPowder
-        true, // StunSpore
-        true, // SleepPowder
-        true, // PetalDance
-        true, // StringShot
-        true, // DragonRage
-        true, // FireSpin
-        true, // ThunderShock
-        true, // Thunderbolt
-        true, // ThunderWave
-        true, // Thunder
-        true, // RockThrow
-        true, // Earthquake
-        true, // Fissure
-        true, // Dig
-        true, // Toxic
-        true, // Confusion
-        true, // Psychic
-        true, // Hypnosis
-        false, // Meditate
-        false, // Agility
-        true, // QuickAttack
-        true, // Rage
-        false, // Teleport
-        true, // NightShade
-        true, // Mimic
-        true, // Screech
-        false, // DoubleTeam
-        false, // Recover
-        false, // Harden
-        false, // Minimize
-        true, // Smokescreen
-        true, // ConfuseRay
-        false, // Withdraw
-        false, // DefenseCurl
-        false, // Barrier
-        false, // LightScreen
-        false, // Haze
-        false, // Reflect
-        false, // FocusEnergy
-        false, // Bide
-        false, // Metronome
-        false, // MirrorMove
-        true, // SelfDestruct
-        true, // EggBomb
-        true, // Lick
-        true, // Smog
-        true, // Sludge
-        true, // BoneClub
-        true, // FireBlast
-        true, // Waterfall
-        true, // Clamp
-        true, // Swift
-        true, // SkullBash
-        true, // SpikeCannon
-        true, // Constrict
-        false, // Amnesia
-        true, // Kinesis
-        false, // SoftBoiled
-        true, // HighJumpKick
-        true, // Glare
-        true, // DreamEater
-        true, // PoisonGas
-        true, // Barrage
-        true, // LeechLife
-        true, // LovelyKiss
-        true, // SkyAttack
-        true, // Transform
-        true, // Bubble
-        true, // DizzyPunch
-        true, // Spore
-        true, // Flash
-        true, // Psywave
-        false, // Splash
-        false, // AcidArmor
-        true, // Crabhammer
-        true, // Explosion
-        true, // FurySwipes
-        true, // Bonemerang
-        false, // Rest
-        true, // RockSlide
-        true, // HyperFang
-        false, // Sharpen
-        true, // Conversion
-        true, // TriAttack
-        true, // SuperFang
-        true, // Slash
-        false, // Substitute
-        true, // Struggle,
+    const FRAMES = [_]u8{
+        1, // Pound
+        1, // KarateChop
+        1, // DoubleSlap
+        1, // CometPunch
+        1, // MegaPunch
+        1, // PayDay
+        1, // FirePunch
+        1, // IcePunch
+        1, // ThunderPunch
+        1, // Scratch
+        1, // ViseGrip
+        1, // Guillotine
+        1, // RazorWind
+        0, // SwordsDance
+        1, // Cut
+        1, // Gust
+        1, // WingAttack
+        1, // Whirlwind
+        1, // Fly
+        1, // Bind
+        1, // Slam
+        1, // VineWhip
+        1, // Stomp
+        1, // DoubleKick
+        1, // MegaKick
+        1, // JumpKick
+        1, // RollingKick
+        1, // SandAttack
+        1, // Headbutt
+        1, // HornAttack
+        1, // FuryAttack
+        1, // HornDrill
+        1, // Tackle
+        1, // BodySlam
+        1, // Wrap
+        1, // TakeDown
+        1, // Thrash
+        1, // DoubleEdge
+        1, // TailWhip
+        1, // PoisonSting
+        1, // Twineedle
+        1, // PinMissile
+        1, // Leer
+        1, // Bite
+        1, // Growl
+        1, // Roar
+        1, // Sing
+        1, // Supersonic
+        1, // SonicBoom
+        1, // Disable
+        1, // Acid
+        1, // Ember
+        1, // Flamethrower
+        0, // Mist
+        1, // WaterGun
+        1, // HydroPump
+        1, // Surf
+        1, // IceBeam
+        1, // Blizzard
+        1, // Psybeam
+        1, // BubbleBeam
+        1, // AuroraBeam
+        1, // HyperBeam
+        1, // Peck
+        1, // DrillPeck
+        1, // Submission
+        1, // LowKick
+        2, // Counter
+        1, // SeismicToss
+        1, // Strength
+        1, // Absorb
+        1, // MegaDrain
+        1, // LeechSeed
+        0, // Growth
+        1, // RazorLeaf
+        1, // SolarBeam
+        1, // PoisonPowder
+        1, // StunSpore
+        1, // SleepPowder
+        1, // PetalDance
+        1, // StringShot
+        1, // DragonRage
+        1, // FireSpin
+        1, // ThunderShock
+        1, // Thunderbolt
+        1, // ThunderWave
+        1, // Thunder
+        1, // RockThrow
+        1, // Earthquake
+        1, // Fissure
+        1, // Dig
+        1, // Toxic
+        1, // Confusion
+        1, // Psychic
+        1, // Hypnosis
+        0, // Meditate
+        0, // Agility
+        1, // QuickAttack
+        1, // Rage
+        0, // Teleport
+        1, // NightShade
+        1, // Mimic
+        1, // Screech
+        0, // DoubleTeam
+        0, // Recover
+        0, // Harden
+        0, // Minimize
+        1, // Smokescreen
+        1, // ConfuseRay
+        0, // Withdraw
+        0, // DefenseCurl
+        0, // Barrier
+        0, // LightScreen
+        0, // Haze
+        0, // Reflect
+        0, // FocusEnergy
+        0, // Bide
+        0, // Metronome
+        0, // MirrorMove
+        1, // SelfDestruct
+        1, // EggBomb
+        1, // Lick
+        1, // Smog
+        1, // Sludge
+        1, // BoneClub
+        1, // FireBlast
+        1, // Waterfall
+        1, // Clamp
+        1, // Swift
+        1, // SkullBash
+        1, // SpikeCannon
+        1, // Constrict
+        0, // Amnesia
+        1, // Kinesis
+        0, // SoftBoiled
+        1, // HighJumpKick
+        1, // Glare
+        1, // DreamEater
+        1, // PoisonGas
+        1, // Barrage
+        1, // LeechLife
+        1, // LovelyKiss
+        1, // SkyAttack
+        1, // Transform
+        1, // Bubble
+        1, // DizzyPunch
+        1, // Spore
+        1, // Flash
+        1, // Psywave
+        0, // Splash
+        0, // AcidArmor
+        1, // Crabhammer
+        1, // Explosion
+        1, // FurySwipes
+        1, // Bonemerang
+        0, // Rest
+        1, // RockSlide
+        1, // HyperFang
+        0, // Sharpen
+        1, // Conversion
+        1, // TriAttack
+        1, // SuperFang
+        1, // Slash
+        0, // Substitute
+        1, // Struggle,
     };
 
     pub const Effect = enum(u8) {
@@ -1612,7 +1612,7 @@ pub const Move = enum(u8) {
     };
 
     // @test-only
-    const pp_data = [_]u8{
+    const PP = [_]u8{
         35, // Pound
         25, // KarateChop
         10, // DoubleSlap
@@ -1782,22 +1782,22 @@ pub const Move = enum(u8) {
 
     comptime {
         assert(@sizeOf(Move) == 1);
-        assert(@sizeOf(@TypeOf(data)) == 495);
+        assert(@sizeOf(@TypeOf(DATA)) == 495);
     }
 
     pub inline fn get(id: Move) Data {
         assert(id != .None);
-        return data[@enumToInt(id) - 1];
+        return DATA[@enumToInt(id) - 1];
     }
 
-    pub inline fn target(id: Move) bool {
+    pub inline fn frames(id: Move) u8 {
         assert(id != .None);
-        return targets[@enumToInt(id) - 1];
+        return FRAMES[@enumToInt(id) - 1];
     }
 
     // @test-only
     pub fn pp(id: Move) u8 {
         assert(id != .None);
-        return pp_data[@enumToInt(id) - 1];
+        return PP[@enumToInt(id) - 1];
     }
 };

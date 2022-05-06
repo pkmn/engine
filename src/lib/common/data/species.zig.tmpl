@@ -16,7 +16,7 @@ pub const Species = enum({{{ Species.type }}}) {
     {{{ Species.chances }}}{{{ Species.Data }}}
 
     // @test-only
-    const data = [_]Data{
+    const DATA = [_]Data{
         {{{ Species.data }}},
     };
 
@@ -27,6 +27,6 @@ pub const Species = enum({{{ Species.type }}}) {
     // @test-only
     pub fn get(id: Species) Data {
         assert(id != .None);
-        return data[@enumToInt(id) - 1];
+        return DATA[@enumToInt(id) - 1];
     }
 };

@@ -14,27 +14,27 @@ pub const Move = enum({{{ Move.type }}}) {
 
     {{{ Move.Data }}}
 
-    const data = [_]Data{
+    const DATA = [_]Data{
         {{{ Move.data }}},
     };
 
-    const targets = [_]bool{
-        {{{ Move.targets }}},
+    const FRAMES = [_]u8{
+        {{{ Move.frames }}},
     };
 {{{ Move.Effect }}}{{{ Move.ppData }}}
     comptime {
         assert(@sizeOf(Move) == {{{ Move.size }}});
-        assert(@sizeOf(@TypeOf(data)) == {{{ Move.dataSize }}});
+        assert(@sizeOf(@TypeOf(DATA)) == {{{ Move.dataSize }}});
     }
 
     pub inline fn get(id: Move) Data {
         assert(id != .None);
-        return data[@enumToInt(id) - 1];
+        return DATA[@enumToInt(id) - 1];
     }
 
-    pub inline fn target(id: Move) bool {
+    pub inline fn frames(id: Move) u8 {
         assert(id != .None);
-        return targets[@enumToInt(id) - 1];
+        return FRAMES[@enumToInt(id) - 1];
     }
 
     // @test-only

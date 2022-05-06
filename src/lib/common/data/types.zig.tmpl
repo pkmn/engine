@@ -15,13 +15,13 @@ const I = Effectiveness.Immune;
 pub const Type = enum({{{ Type.type }}}) {
     {{{ Type.values }}},
 
-    const chart = [{{{ Type.num }}}][{{{ Type.num }}}]Effectiveness{
+    const CHART = [{{{ Type.num }}}][{{{ Type.num }}}]Effectiveness{
         {{{ Type.chart }}}
     };
 
     comptime {
         assert(@bitSizeOf(Type) == {{{ Type.bitSize }}});
-        assert(@sizeOf(@TypeOf(chart)) == {{{ Type.chartSize }}});
+        assert(@sizeOf(@TypeOf(CHART)) == {{{ Type.chartSize }}});
     }
 
     pub inline fn special(self: Type) bool {
@@ -29,7 +29,7 @@ pub const Type = enum({{{ Type.type }}}) {
     }
 
     pub inline fn effectiveness(t1: Type, t2: Type) Effectiveness {
-        return chart[@enumToInt(t1)][@enumToInt(t2)];
+        return CHART[@enumToInt(t1)][@enumToInt(t2)];
     }
 };
 

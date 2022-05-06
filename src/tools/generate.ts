@@ -6,7 +6,7 @@ import * as https from 'https';
 
 import * as mustache from 'mustache';
 
-import {Generations, Generation, GenerationNum, TypeName, Specie} from '@pkmn/data';
+import {Generations, Generation, GenerationNum, TypeName, Specie, MoveTarget} from '@pkmn/data';
 import {Dex, toID} from '@pkmn/sim';
 
 import type {IDs} from '../pkg/data';
@@ -135,6 +135,31 @@ for (const group in GROUPS) {
     EFFECT_TO_GROUP[effect] = group;
   }
 }
+
+const ADVANCES: {[target in MoveTarget]: number} = {
+  all: 0,
+  allySide: 0,
+  allyTeam: 0,
+  self: 0,
+
+  normal: 1,
+  any: 1,
+  randomNormal: 1,
+  allAdjacentFoes: 1,
+  allAdjacent: 1,
+  // NB: Spikes has 2 advances but non-consecutively (resolveAction vs. runAction)
+  foeSide: 1,
+  // NB: beforeTurnCallback
+  scripted: 1,
+
+  // TODO
+  adjacentAlly: -1,
+  adjacentAllyOrSelf: -1,
+  adjacentFoe: -1,
+  allies: -1,
+};
+
+// = ['self', 'allyTeam', 'allySide', 'all'];
 
 const constToEffectEnum = (s: string) =>
   NAMES[s] || constToEnum(s).replace('SideEffect', 'Chance').replace('Effect', '');
@@ -316,7 +341,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     });
 
     const MOVES: string[] = [];
-    const TARGETS: string[] = [];
+    const FRAMES: string[] = [];
     const PP: string[] = [];
     const EFFECTS: { [key: string]: Set<string>} =
       {residual1: new Set(), residual2: new Set(), special: new Set(), regular: new Set()};
@@ -333,7 +358,9 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .acc = ${acc / 5 - 6}, // ${acc}%\n` +
         '        }');
       PP.push(`${move.pp}, // ${name}`);
-      TARGETS.push(`${move.target !== 'self'}, // ${name}`);
+      let frames = ADVANCES[move.target];
+      if ('beforeTurnCallback' in move) frames += frames;
+      FRAMES.push(`${frames}, // ${name}`);
     }
     let Data = `pub const Data = packed struct {
         effect: Effect,
@@ -388,12 +415,12 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
     const ppData = `
     // @test-only
-    const pp_data = [_]u8{
+    const PP = [_]u8{
         ${PP.join('\n        ')},
     };\n`;
     const ppFn = `pub fn pp(id: Move) u8 {
         assert(id != .None);
-        return pp_data[@enumToInt(id) - 1];
+        return PP[@enumToInt(id) - 1];
     }`;
     const SENTINEL =
       ',\n\n    // Sentinel used when Pokémon\'s turn should be skipped (eg. trapped)\n' +
@@ -408,7 +435,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         Data,
         data: MOVES.join(',\n        '),
         dataSize: MOVES.length * 3,
-        targets: TARGETS.join('\n        '),
+        frames: FRAMES.join('\n        '),
         Effect,
         ppData,
         ppFn,
@@ -601,7 +628,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       return `${nameToEnum(move.name)} ${constToEffectEnum(effect)}`;
     });
     const MOVES: string[] = [];
-    const TARGETS: string[] = [];
+    const FRAMES: string[] = [];
     const EFFECTS = new Set<string>();
     for (const m of moves) {
       const [name, effect] = m.split(' ');
@@ -620,7 +647,9 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .pp = ${pp}\n` +
         (chance ? `            .chance = ${chance}\n` : '') +
         '        }');
-      TARGETS.push(`${move.target !== 'self'}, // ${name}`);
+      let frames = ADVANCES[move.target];
+      if ('beforeTurnCallback' in move) frames += frames;
+      FRAMES.push(`${frames}, // ${name}`);
     }
     let Data = `pub const Data = packed struct {
         effect: Effect,
@@ -655,7 +684,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         Data,
         data: MOVES.join(',\n        '),
         dataSize: MOVES.length * 5,
-        targets: TARGETS.join('\n        '),
+        frames: FRAMES.join('\n        '),
         Effect,
         ppFn,
       },

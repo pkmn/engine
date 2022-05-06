@@ -42,6 +42,11 @@ pub fn PRNG(comptime gen: comptime_int) type {
             return @truncate(Output(gen), self.src.next());
         }
 
+        pub fn advance(self: *Self, n: usize) void {
+            var i: usize = 0;
+            while (i < n) : (i += 1) _ = self.src.next();
+        }
+
         pub fn range(self: *Self, comptime T: type, from: T, to: Bound(T)) T {
             return @truncate(T, @as(u64, self.src.next()) * (to - from) / divisor + from);
         }
@@ -211,6 +216,11 @@ pub fn FixedRNG(comptime gen: comptime_int, comptime len: usize) type {
             const roll = @truncate(Output(gen), self.rolls[self.index]);
             self.index += 1;
             return roll;
+        }
+
+        pub fn advance(self: *Self, n: usize) void {
+            var i: usize = 0;
+            while (i < n) : (i += 1) _ = self.next();
         }
 
         pub fn range(self: *Self, comptime T: type, from: T, to: Bound(T)) T {

@@ -132,7 +132,7 @@ fn selectMove(battle: anytype, player: Player, choice: Choice) void {
     }
 
     // BUG: Pokémon Showdown's getRandomTarget arbitrarily advances the RNG
-    if (showdown and side.last_selected_move.target()) _ = battle.rng.next();
+    if (showdown) battle.rng.advance(side.last_selected_move.frames());
 }
 
 fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anytype) !void {

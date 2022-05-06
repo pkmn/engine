@@ -271,7 +271,7 @@ pub const Species = enum(u8) {
     };
 
     // @test-only
-    const data = [_]Data{
+    const DATA = [_]Data{
         // Bulbasaur
         .{
             .stats = .{ .hp = 45, .atk = 49, .def = 49, .spe = 45, .spa = 65, .spd = 65 },
@@ -1787,6 +1787,6 @@ pub const Species = enum(u8) {
     // @test-only
     pub fn get(id: Species) Data {
         assert(id != .None);
-        return data[@enumToInt(id) - 1];
+        return DATA[@enumToInt(id) - 1];
     }
 };

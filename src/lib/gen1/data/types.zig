@@ -29,7 +29,7 @@ pub const Type = enum(u4) {
     Ice,
     Dragon,
 
-    const chart = [15][15]Effectiveness{
+    const CHART = [15][15]Effectiveness{
         [_]Effectiveness{ N, N, N, N, N, R, N, I, N, N, N, N, N, N, N }, // Normal
         [_]Effectiveness{ S, N, R, R, N, S, R, I, N, N, N, N, R, S, N }, // Fighting
         [_]Effectiveness{ N, S, N, N, N, R, S, N, N, N, S, R, N, N, N }, // Flying
@@ -49,7 +49,7 @@ pub const Type = enum(u4) {
 
     comptime {
         assert(@bitSizeOf(Type) == 4);
-        assert(@sizeOf(@TypeOf(chart)) == 225);
+        assert(@sizeOf(@TypeOf(CHART)) == 225);
     }
 
     pub inline fn special(self: Type) bool {
@@ -57,7 +57,7 @@ pub const Type = enum(u4) {
     }
 
     pub inline fn effectiveness(t1: Type, t2: Type) Effectiveness {
-        return chart[@enumToInt(t1)][@enumToInt(t2)];
+        return CHART[@enumToInt(t1)][@enumToInt(t2)];
     }
 };
 
