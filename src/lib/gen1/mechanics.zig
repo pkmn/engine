@@ -152,13 +152,11 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anyty
     foe.last_used_move = .None;
 
     active.stats = incoming.stats;
-    active.volatiles = .{};
-    active.boosts = .{};
     active.species = incoming.species;
     active.types = incoming.types;
-    for (incoming.moves) |move, j| {
-        active.moves[j] = move;
-    }
+    active.boosts = .{};
+    active.volatiles = .{};
+    active.moves = incoming.moves;
 
     statusModify(incoming.status, &active.stats);
 
@@ -1444,14 +1442,13 @@ pub const Effects = struct {
         side.active.stats.spe = foe.active.stats.spe;
         side.active.stats.spc = foe.active.stats.spc;
 
-        for (foe.active.moves) |m, i| {
-            side.active.moves[i].id = m.id;
-            side.active.moves[i].pp = 5;
-        }
-
-        side.active.boosts = foe.active.boosts;
         side.active.species = foe.active.species;
         side.active.types = foe.active.types;
+        side.active.boosts = foe.active.boosts;
+        for (foe.active.moves) |m, i| {
+            side.active.moves[i].id = m.id;
+            side.active.moves[i].pp = if (m.id != .None) 5 else 0;
+        }
 
         try log.transform(player_ident, foe_ident);
     }
