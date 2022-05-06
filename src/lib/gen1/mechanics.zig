@@ -225,7 +225,7 @@ fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
         try log.tie();
         return Result.Tie;
     } else {
-        return if (battle.turn >= 0xFFFF) Result.Error else Result.Default;
+        return if (battle.turn >= 65535) Result.Error else Result.Default;
     }
 }
 
@@ -353,7 +353,7 @@ fn executeMove(
     if (move.effect == .OHKO) {
         const miss = side.active.stats.spe < foe.active.stats.spe;
         // NB: this can overflow after adjustDamage, but will still be sufficient to OHKO
-        const damage: u16 = if (miss) 0 else 0xFFFF;
+        const damage: u16 = if (miss) 0 else 65535;
         const ohko = !miss;
 
         // TODO
@@ -605,20 +605,20 @@ fn canExecute(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
 fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data) bool {
     const side = battle.side(player);
 
-    var chance = Species.chance(side.active.species);
+    var chance = @as(u16, Species.chance(side.active.species));
 
     // NB: Focus Energy reduces critical hit chance instead of increasing it
     chance = if (side.active.volatiles.FocusEnergy)
         chance / 2
     else
-        @minimum(chance * 2, 0xFF);
+        @minimum(chance * 2, 255);
 
     chance = if (move.effect == .HighCritical)
-        @minimum(chance * 4, 0xFF)
+        @minimum(chance * 4, 255)
     else
         chance / 2;
 
-    if (showdown) return battle.rng.chance(u8, chance, 256);
+    if (showdown) return battle.rng.chance(u8, @truncate(u8, chance), 256);
     // NB: these values will diverge (due to rotations)
     return std.math.rotl(u8, battle.rng.next(), 3) < chance;
 }
@@ -650,10 +650,10 @@ fn calcDamage(battle: anytype, player: Player, move: Move.Data, crit: bool) bool
                 foe.active.stats.def * @as(u2, if (foe.active.volatiles.Reflect) 2 else 1);
     // zig fmt: on
 
-    if (atk > 0xFF or def > 0xFF) {
-        atk = @maximum((atk / 4) & 0xFF, 1);
+    if (atk > 255 or def > 255) {
+        atk = @maximum((atk / 4) & 255, 1);
         // NB: not adjusted to be a minimum of 1 on cartridge (can lead to division-by-zero freeze)
-        def = @maximum((def / 4) & 0xFF, if (showdown) 1 else 0);
+        def = @maximum((def / 4) & 255, if (showdown) 1 else 0);
     }
 
     const lvl = @as(u16, side.stored().level * @as(u2, if (crit) 2 else 1));
@@ -692,7 +692,7 @@ fn randomizeDamage(battle: anytype) void {
         }
     };
 
-    battle.last_damage = battle.last_damage *% random / 0xFF;
+    battle.last_damage = battle.last_damage *% random / 255;
 }
 
 fn checkHit(battle: anytype, player: Player, move: Move.Data) bool {
@@ -720,7 +720,7 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data) bool {
     accuracy = accuracy * boost[0] / boost[1];
     boost = BOOSTS[@intCast(u4, -foe.active.boosts.evasion + 6)];
     accuracy = accuracy * boost[0] / boost[1];
-    accuracy = @minimum(0xFF, @maximum(1, accuracy));
+    accuracy = @minimum(255, @maximum(1, accuracy));
 
     side.active.volatiles.state = accuracy;
 
@@ -743,7 +743,7 @@ fn applyDamage(battle: anytype, player: Player, move: Move.Data) void {
 
     var foe = battle.foe(player);
     if (foe.active.volatiles.Substitute) {
-        // NB: foe.volatiles.substitute is a u8 so must be less than 0xFF anyway
+        // NB: foe.volatiles.substitute is a u8 so must be less than 255 anyway
         if (battle.last_damage >= foe.active.volatiles.substitute) {
             foe.active.volatiles.substitute = 0;
             foe.active.volatiles.Substitute = false;
@@ -789,7 +789,7 @@ fn faint(battle: anytype, player: Player, log: anytype, done: bool) !?Result {
     var foe_volatiles = &foe.active.volatiles;
     foe_volatiles.MultiHit = false;
     if (foe_volatiles.Bide) {
-        foe_volatiles.state = if (showdown) 0 else foe_volatiles.state & 0xFF;
+        foe_volatiles.state = if (showdown) 0 else foe_volatiles.state & 255;
         if (foe_volatiles.state != 0) return Result.Error;
     }
 
@@ -1165,7 +1165,7 @@ pub const Effects = struct {
 
         // NB: HP recovery move failure glitches
         const delta = stored.stats.hp - stored.hp;
-        if (delta == 0 or delta & 0xFF == 0xFF) return;
+        if (delta == 0 or delta & 255 == 255) return;
 
         if (side.last_selected_move == .Rest) {
             stored.status = Status.slf(2);
