@@ -32,13 +32,6 @@ pub fn build(b: *Builder) !void {
     const options = b.addOptions();
     options.addOption(bool, "showdown", showdown);
     options.addOption(bool, "trace", trace);
-    // FIXME: remove
-    const patched = comptime std.SemanticVersion.parse("0.10.0-dev.1930") catch unreachable;
-    options.addOption(
-        bool,
-        "patched",
-        comptime @import("builtin").zig_version.order(patched) == .gt,
-    );
 
     const build_options = options.getPackage("build_options");
     const pkmn = pkg(b, build_options);

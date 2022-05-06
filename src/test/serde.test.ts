@@ -15,8 +15,7 @@ const run = async (cmd: string, args: string[]): Promise<Buffer> =>
       error ? reject(error) : resolve(stdout));
   });
 
-// TODO: depends on Zig with stage1 packed struct patch
-describe.skip('serialize/deserialize', () => {
+describe('serialize/deserialize', () => {
   it.todo('create');
 
   it('restore', async () => {
@@ -40,5 +39,5 @@ describe.skip('serialize/deserialize', () => {
         }
       }
     }
-  }, N * 1000);
+  }, N * 5000);
 });

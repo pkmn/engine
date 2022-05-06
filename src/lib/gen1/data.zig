@@ -242,8 +242,6 @@ pub const Volatiles = packed struct {
 };
 
 test "Volatiles" {
-    if (!build_options.patched) return error.SkipZigTest;
-
     var volatiles = Volatiles{};
     volatiles.Confusion = true;
     volatiles.confusion = 2;
