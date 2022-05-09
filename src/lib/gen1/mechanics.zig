@@ -53,10 +53,8 @@ const MAX_STAT_VALUE = 999;
 pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     if (battle.turn == 0) return start(battle, log);
 
-    selectMove(battle, .P1, c1);
-    selectMove(battle, .P2, c2);
-
-    // TODO: https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
+    selectMove(battle, .P1, c1, c2);
+    selectMove(battle, .P2, c2, c1);
 
     if (turnOrder(battle, c1, c2) == .P1) {
         if (try doTurn(battle, .P1, c1, .P2, c2, log)) |r| return r;
@@ -89,7 +87,7 @@ fn findFirstAlive(side: *const Side) u8 {
     return 0;
 }
 
-fn selectMove(battle: anytype, player: Player, choice: Choice) void {
+fn selectMove(battle: anytype, player: Player, choice: Choice, foe_choice: Choice) void {
     var side = battle.side(player);
     var volatiles = &side.active.volatiles;
     const stored = side.stored();
@@ -104,7 +102,14 @@ fn selectMove(battle: anytype, player: Player, choice: Choice) void {
 
     // pre-move select
     if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP)) return;
-    if (volatiles.Bide or volatiles.Trapping) return;
+    if (volatiles.Bide) return;
+    if (volatiles.Trapping) {
+        // GLITCH: https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
+        if (foe_choice == .Switch) {
+            // BUG: need to reset side.last_selected_move if originally Metronome
+        }
+        return;
+    }
 
     if (battle.foe(player).active.volatiles.Trapping) {
         side.last_selected_move = .SKIP_TURN;
