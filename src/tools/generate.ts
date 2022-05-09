@@ -479,14 +479,14 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         stats: Stats(u8),
         types: Types,
     };`;
-    const chances = `const chances = [_]u8{
+    const chances = `const CHANCES = [_]u8{
         ${CHANCES.join('\n        ')}
     };\n
     `;
     const chanceFn = `\n
     pub inline fn chance(id: Species) u8 {
         assert(id != .None);
-        return chances[@enumToInt(id) - 1];
+        return CHANCES[@enumToInt(id) - 1];
     }`;
     template('species', dirs.out, {
       gen: gen.num,

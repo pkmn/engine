@@ -183,7 +183,7 @@ of a species are already accounted for in the computed stats in the `Pokemon` st
 in battle requires these to be recomputed. Similarly, Type is unnecessary to include as it is also
 already present in the `Pokemon` struct. `Specie.None` exists as a special sentinel value to
 indicate `null`. `Species.Data` is only included for testing and is not necessary for the actual
-engine implementation, outside of `Species.chances` which is required as the base speed / 2 of the
+engine implementation, outside of `Species.CHANCES` which is required as the base speed / 2 of the
 species is necessary for computing critical hit probability.
 
 ### `Type` / `Types` / `Effectiveness`
@@ -236,24 +236,24 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
   (`8`)
   - `order` does not need to be stored as the party can always be rearranged as switches occur
 - **`Battle`**: 6× `Side` + seed (10× `8` + `4`) + turn (`10`) + last damage (`10`)
-- **`Type.chart`**: attacking types (`15`) × defending types (`15`) × effectiveness (`2`)[^2]
-- **`Moves.data`**: 164× base power (`6`) + effect (`7`) + accuracy (`4`) + type: (`4`)
-- **`Species.chance`**: 151× crit chance (`6`)
+- **`Type.CHART`**: attacking types (`15`) × defending types (`15`) × effectiveness (`2`)[^2]
+- **`Moves.DATA`**: 164× base power (`6`) + effect (`7`) + accuracy (`4`) + type: (`4`)
+- **`Species.CHANCES`**: 151× crit chance (`6`)
 
-| Data            | Actual bits | Minimum bits | Overhead |
-| --------------- | ----------- | ------------ | -------- |
-| `Pokemon`       | 192         | 139          | 38.1%    |
-| `ActivePokemon` | 256         | 196          | 30.6%    |
-| `Side`          | 1472        | 1049         | 40.3%    |
-| `Battle`        | 3088        | 2202         | 40.2%    |
-| `Type.chart`    | 1800        | 450          | 300.0%   |
-| `Moves.data`    | 3636        | 3444         | 14.3%    |
-| `Species.speed` | 1208        | 906          | 33.3%    |
+| Data              | Actual bits | Minimum bits | Overhead |
+| ----------------- | ----------- | ------------ | -------- |
+| `Pokemon`         | 192         | 139          | 38.1%    |
+| `ActivePokemon`   | 256         | 196          | 30.6%    |
+| `Side`            | 1472        | 1049         | 40.3%    |
+| `Battle`          | 3088        | 2202         | 40.2%    |
+| `Type.CHART`      | 1800        | 450          | 300.0%   |
+| `Moves.DATA`      | 3636        | 3444         | 14.3%    |
+| `Species.CHANCES` | 1208        | 906          | 33.3%    |
 
-In the case of `Type.chart`/`Moves.data`/`Species.chances`, technically only the values which are
+In the case of `Type.CHART`/`Moves.DATA`/`Species.CHANCES`, technically only the values which are
 used by any given simulation are required, which could be as low as 1 in both circumstances (eg. all
 Normal Pokémon each only using the single move Tackle), though taking into consideration the worst
-case all Pokémon types are required and 48 moves. The `Moves.data` array could be eliminated and
+case all Pokémon types are required and 48 moves. The `Moves.DATA` array could be eliminated and
 instead the `Move` data actually required by each `Pokemon` could be placed beside the `MoveSlot`,
 though this is both less general and adds unnecessary complexity.
 

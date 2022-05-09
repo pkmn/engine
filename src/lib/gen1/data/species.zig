@@ -163,7 +163,7 @@ pub const Species = enum(u8) {
     Mewtwo,
     Mew,
 
-    const chances = [_]u8{
+    const CHANCES = [_]u8{
         22, // Bulbasaur
         30, // Ivysaur
         40, // Venusaur
@@ -1088,7 +1088,7 @@ pub const Species = enum(u8) {
 
     pub inline fn chance(id: Species) u8 {
         assert(id != .None);
-        return chances[@enumToInt(id) - 1];
+        return CHANCES[@enumToInt(id) - 1];
     }
 
     // @test-only
