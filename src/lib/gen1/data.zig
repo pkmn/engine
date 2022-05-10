@@ -341,8 +341,16 @@ test "Move" {
     try expect(Move.Effect.postExecute(.SpeedUp2));
     try expect(!Move.Effect.postExecute(.Charge));
 
+    try expect(!Move.Effect.alwaysHappen(.SpeedUp2));
+    try expect(Move.Effect.alwaysHappen(.DoubleHit));
+    try expect(Move.Effect.alwaysHappen(.Recoil));
+    try expect(!Move.Effect.alwaysHappen(.Charge));
+    try expect(!Move.Effect.alwaysHappen(.SpeedDownChance));
+    try expect(Move.Effect.alwaysHappen(.Rage));
+    try expect(Move.Effect.alwaysHappen(.Twineedle));
+
     try expect(!Move.Effect.special(.SpeedUp2));
-    try expect(Move.Effect.special(.Charge));
+    try expect(Move.Effect.special(.DoubleHit));
     try expect(Move.Effect.special(.Trapping));
     try expect(!Move.Effect.special(.AttackDownChance));
 

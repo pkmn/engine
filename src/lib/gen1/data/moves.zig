@@ -1556,7 +1556,6 @@ pub const Move = enum(u8) {
         SpecialUp2,
         SpeedUp2,
         // special
-        Charge,
         DoubleHit,
         DrainHP,
         DreamEater,
@@ -1565,6 +1564,7 @@ pub const Move = enum(u8) {
         MultiHit,
         PayDay,
         Recoil,
+        Charge,
         SpecialDamage,
         SuperFang,
         Swift,
@@ -1589,9 +1589,9 @@ pub const Move = enum(u8) {
         ParalyzeChance2,
         PoisonChance1,
         PoisonChance2,
-        Rage,
         SpecialDownChance,
         SpeedDownChance,
+        Rage,
         Twineedle,
 
         comptime {
@@ -1608,6 +1608,11 @@ pub const Move = enum(u8) {
 
         pub inline fn postExecute(effect: Effect) bool {
             return @enumToInt(effect) > 16 and @enumToInt(effect) <= 31;
+        }
+
+        pub inline fn alwaysHappen(effect: Effect) bool {
+            return @enumToInt(effect) > 31 and
+                (@enumToInt(effect) <= 39 or @enumToInt(effect) > 65);
         }
 
         pub inline fn special(effect: Effect) bool {

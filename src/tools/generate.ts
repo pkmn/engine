@@ -111,6 +111,12 @@ const STAT_DOWN = [
   'AccuracyDown1', 'AttackDown1', 'DefenseDown1', 'DefenseDown2', 'SpeedDown1',
 ];
 
+const ALWAYS_HAPPEN_SPECIAL = [
+  'DoubleHit', 'DrainHP', 'DreamEater', 'Explode', 'JumpKick', 'MultiHit', 'PayDay', 'Recoil',
+];
+
+const ALWAYS_HAPPEN_REGULAR = ['Rage', 'Twineedle'];
+
 const GROUPS: { [constant: string]: string[] } = {
   // data/battle/residual_effects_1.asm
   skipExecute: [
@@ -125,8 +131,8 @@ const GROUPS: { [constant: string]: string[] } = {
   ],
   // data/battle/special_effects.asm
   special: [
-    'DrainHP', 'Explode', 'DreamEater', 'PayDay', 'Swift', 'MultiHit', 'Charge', 'SuperFang',
-    'SpecialDamage', 'DoubleHit', 'JumpKick', 'Recoil', 'Thrashing', 'Trapping',
+    ...ALWAYS_HAPPEN_SPECIAL, 'Swift', 'Charge',
+    'SuperFang', 'SpecialDamage', 'Thrashing', 'Trapping',
   ],
 };
 const EFFECT_TO_GROUP: { [effect: string]: string } = {};
@@ -379,13 +385,22 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const pe = se + EFFECTS.postExecute.size;
     const sp = pe + EFFECTS.special.size;
     const effects: string[] = [];
-    // Sort STAT_DOWN to the beginning of postExecute so that it can be range checked
+    // Sort STAT_DOWN/ALWAYS_HAPPEN_* specially so that they can be sub-range checked
     for (const group in EFFECTS) {
       effects.push(`${group === 'skipExecute' ? '' : '        '}// ${group}`);
-      effects.push('        ' + (group === 'postExecute'
+      const sorted = group === 'postExecute'
         ? [...STAT_DOWN, ...Array.from(EFFECTS[group]).filter(e => !STAT_DOWN.includes(e)).sort()]
-        : Array.from(EFFECTS[group]).sort()).join(',\n        ') + ',');
+        : group === 'special'
+          ? [...ALWAYS_HAPPEN_SPECIAL,
+            ...Array.from(EFFECTS[group]).filter(e => !ALWAYS_HAPPEN_SPECIAL.includes(e)).sort()]
+          : group === 'regular'
+            ? [...Array.from(EFFECTS[group]).filter(e => !ALWAYS_HAPPEN_REGULAR.includes(e)).sort(),
+              ...ALWAYS_HAPPEN_REGULAR]
+            : Array.from(EFFECTS[group]).sort();
+      effects.push(`        ${sorted.join(',\n        ')},`);
     }
+    const ahs = pe + ALWAYS_HAPPEN_SPECIAL.length;
+    const ahr = sp + EFFECTS.regular.size - ALWAYS_HAPPEN_REGULAR.length;
     const Effect = `
     pub const Effect = enum(u8) {
         None,
@@ -405,6 +420,11 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
         pub inline fn postExecute(effect: Effect) bool {
             return @enumToInt(effect) > ${se} and @enumToInt(effect) <= ${pe};
+        }
+
+        pub inline fn alwaysHappen(effect: Effect) bool {
+            return @enumToInt(effect) > ${pe} and
+                (@enumToInt(effect) <= ${ahs} or @enumToInt(effect) > ${ahr});
         }
 
         pub inline fn special(effect: Effect) bool {

@@ -426,6 +426,10 @@ fn executeMove(
     // TODO
     _ = hit;
 
+    if (!move.effect.special()) {
+        try moveEffect(battle, player, move, choice.data, log);
+    }
+
     return null;
 }
 
