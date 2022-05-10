@@ -440,6 +440,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
     assert(active.move(mslot).id != .None);
 
     if (Status.is(stored.status, .SLP)) {
+        // NB: even if the SLF bit is set this will still correctly modify the sleep duration
         stored.status -= 1;
         if (Status.duration(stored.status) == 0) {
             stored.status = 0; // clears SLF if present
@@ -1188,9 +1189,15 @@ pub const Effects = struct {
         battle.side(player).active.volatiles.Recharging = true;
     }
 
-    fn leechSeed(battle: anytype, player: Player, log: anytype) !void {
+    fn leechSeed(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
         var foe = battle.foe(player);
+        const player_ident = battle.active(player);
         const foe_ident = battle.active(player.foe());
+
+        if (!checkHit(battle, player, move)) {
+            try log.lastmiss();
+            return log.miss(player_ident, foe_ident);
+        }
 
         if (foe.active.types.includes(.Grass) or foe.active.volatiles.LeechSeed) return;
         foe.active.volatiles.LeechSeed = true;
