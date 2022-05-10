@@ -86,7 +86,8 @@ fn expectOrder(p1: anytype, o1: []const u8, p2: anytype, o2: []const u8) !void {
 }
 
 test "switching" {
-    var battle = Battle.random(&PRNG.init(0x31415926), false);
+    var battle = Battle.random(&PRNG.init(0x12345678), false);
+    battle.turn = 1;
     const p1 = battle.side(.P1);
     const p2 = battle.side(.P2);
 
@@ -100,8 +101,18 @@ test "switching" {
     try expectOrder(p1, &.{ 1, 2, 6, 4, 3, 5 }, p2, &.{ 5, 1, 3, 4, 2, 6 });
     try expectEqual(Result.Default, try update(&battle, swtch(2), swtch(4), null));
     try expectOrder(p1, &.{ 2, 1, 6, 4, 3, 5 }, p2, &.{ 4, 1, 3, 5, 2, 6 });
-    try expectEqual(Result.Default, try update(&battle, swtch(5), swtch(5), null));
+
+    var logs = TestLogs(22){};
+    var expected = FixedLog{ .writer = stream(&logs.expected).writer() };
+    try expected.switched(P1.ident(3), p1.pokemon[2]);
+    try expected.switched(P2.ident(2), p2.pokemon[1]);
+    const actual = FixedLog{ .writer = stream(&logs.actual).writer() };
+
+    try expectEqual(Result.Default, try update(&battle, swtch(5), swtch(5), actual));
     try expectOrder(p1, &.{ 3, 1, 6, 4, 2, 5 }, p2, &.{ 2, 1, 3, 5, 4, 6 });
+    try expected.turn(7);
+
+    try logs.expectMatches();
 }
 
 test "choices" {

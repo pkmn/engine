@@ -598,7 +598,7 @@ pub fn expectLog(expected: []const u8, actual: []const u8) !void {
     if (!trace) return;
     expectEqualSlices(u8, expected, actual) catch |err| switch (err) {
         error.TestExpectedEqual => {
-            std.debug.print("Expected: {any}\nActual:{any}\n", .{ expected, actual });
+            std.debug.print("Expected: {any}\nActual:   {any}\n", .{ expected, actual });
             return err;
         },
         else => return err,
