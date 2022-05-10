@@ -113,13 +113,13 @@ const STAT_DOWN = [
 
 const GROUPS: { [constant: string]: string[] } = {
   // data/battle/residual_effects_1.asm
-  residual1: [
+  skipExecute: [
     'Conversion', 'Haze', 'SwitchAndTeleport', 'Mist', 'FocusEnergy', 'Confusion', 'Heal',
     'Transform', 'LightScreen', 'Reflect', 'Poison', 'Paralyze', 'Substitute', 'Mimic',
     'LeechSeed', 'Splash',
   ],
   // data/battle/residual_effects_2.asm
-  residual2: [
+  postExecute: [
     ...STAT_DOWN, 'AttackUp1', 'AttackUp2', 'Bide', 'DefenseUp1', 'DefenseUp2',
     'EvasionUp1', 'Sleep', 'SpecialUp1', 'SpecialUp2', 'SpeedUp2',
   ],
@@ -158,8 +158,6 @@ const ADVANCES: {[target in MoveTarget]: number} = {
   adjacentFoe: -1,
   allies: -1,
 };
-
-// = ['self', 'allyTeam', 'allySide', 'all'];
 
 const constToEffectEnum = (s: string) =>
   NAMES[s] || constToEnum(s).replace('SideEffect', 'Chance').replace('Effect', '');
@@ -344,7 +342,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const FRAMES: string[] = [];
     const PP: string[] = [];
     const EFFECTS: { [key: string]: Set<string>} =
-      {residual1: new Set(), residual2: new Set(), special: new Set(), regular: new Set()};
+      {skipExecute: new Set(), postExecute: new Set(), special: new Set(), regular: new Set()};
     for (const m of moves) {
       const [name, effect] = m.split(' ');
       if (effect !== 'None') EFFECTS[effectToGroup(effect)].add(effect);
@@ -377,39 +375,40 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
     };`;
 
-    const r1 = EFFECTS.residual1.size;
-    const r2 = r1 + EFFECTS.residual2.size;
-    const sp = r2 + EFFECTS.special.size;
+    const se = EFFECTS.skipExecute.size;
+    const pe = se + EFFECTS.postExecute.size;
+    const sp = pe + EFFECTS.special.size;
     const effects: string[] = [];
-    // Sort STAT_DOWN to the beginning of residual2 so that it can be range checked
+    // Sort STAT_DOWN to the beginning of postExecute so that it can be range checked
     for (const group in EFFECTS) {
-      effects.push(...(group === 'residual2'
+      effects.push(`${group === 'skipExecute' ? '' : '        '}// ${group}`);
+      effects.push('        ' + (group === 'postExecute'
         ? [...STAT_DOWN, ...Array.from(EFFECTS[group]).filter(e => !STAT_DOWN.includes(e)).sort()]
-        : Array.from(EFFECTS[group]).sort()));
+        : Array.from(EFFECTS[group]).sort()).join(',\n        ') + ',');
     }
     const Effect = `
     pub const Effect = enum(u8) {
         None,
-        ${effects.join(',\n        ')},
+        ${effects.join('\n')}
 
         comptime {
             assert(@sizeOf(Effect) == 1);
         }
 
         pub inline fn skipExecute(effect: Effect) bool {
-            return @enumToInt(effect) > 0 and @enumToInt(effect) <= ${r1};
+            return @enumToInt(effect) > 0 and @enumToInt(effect) <= ${se};
         }
 
         pub inline fn statDown(effect: Effect) bool {
-            return @enumToInt(effect) > ${r1} and @enumToInt(effect) <= ${r1 + STAT_DOWN.length};
+            return @enumToInt(effect) > ${se} and @enumToInt(effect) <= ${se + STAT_DOWN.length};
         }
 
         pub inline fn postExecute(effect: Effect) bool {
-            return @enumToInt(effect) > ${r1} and @enumToInt(effect) <= ${r2};
+            return @enumToInt(effect) > ${se} and @enumToInt(effect) <= ${pe};
         }
 
         pub inline fn special(effect: Effect) bool {
-            return @enumToInt(effect) > ${r2} and @enumToInt(effect) <= ${sp};
+            return @enumToInt(effect) > ${pe} and @enumToInt(effect) <= ${sp};
         }
     };\n`;
 

@@ -1522,6 +1522,7 @@ pub const Move = enum(u8) {
 
     pub const Effect = enum(u8) {
         None,
+        // skipExecute
         Confusion,
         Conversion,
         FocusEnergy,
@@ -1538,6 +1539,7 @@ pub const Move = enum(u8) {
         Substitute,
         SwitchAndTeleport,
         Transform,
+        // postExecute
         AccuracyDown1,
         AttackDown1,
         DefenseDown1,
@@ -1553,6 +1555,7 @@ pub const Move = enum(u8) {
         SpecialUp1,
         SpecialUp2,
         SpeedUp2,
+        // special
         Charge,
         DoubleHit,
         DrainHP,
@@ -1567,6 +1570,7 @@ pub const Move = enum(u8) {
         Swift,
         Thrashing,
         Trapping,
+        // regular
         AttackDownChance,
         BurnChance1,
         BurnChance2,
