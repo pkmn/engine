@@ -86,7 +86,7 @@ pub const Gen12 = extern struct {
         assert(@sizeOf(Gen12) == 11);
     }
 
-    pub fn percent(comptime p: comptime_int) u8 {
+    pub fn percent(p: u8) u8 {
         return (p * 0xFF) / 100;
     }
 

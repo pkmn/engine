@@ -724,7 +724,7 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data) bool {
     var accuracy = if (!showdown and overwritten)
         side.active.volatiles.state
     else
-        @as(u16, move.accuracy());
+        @as(u16, Gen12.percent(move.accuracy()));
 
     var boost = BOOSTS[@intCast(u4, side.active.boosts.accuracy + 6)];
     accuracy = accuracy * boost[0] / boost[1];
@@ -734,6 +734,7 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data) bool {
 
     side.active.volatiles.state = accuracy;
 
+    // GLITCH: max accuracy is 255 so 1/256 chance of miss
     const miss = if (showdown)
         !battle.rng.chance(u8, @truncate(u8, accuracy), 256)
     else
