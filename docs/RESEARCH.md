@@ -156,6 +156,7 @@ TODO
 - [List of glitches (Generation
   I)](https://bulbapedia.bulbagarden.net/wiki/List_of_glitches_(Generation_I))
 - [Pokémon Crystal - Bugs & Glitches](https://pkmn.cc/pokecrystal/docs/bugs_and_glitches.md)
+- [Compilation of Red/Blue UE errors](https://sites.google.com/site/crystalglitchystuff/research/compilation-of-red-blue-eu-errors) - Crystal_
 
 ### Other
 
