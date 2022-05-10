@@ -911,6 +911,7 @@ fn moveEffect(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: 
         .Reflect => Effects.reflect(battle, player, log),
         .Sleep => Effects.sleep(battle, player, move, log),
         .Splash => Effects.splash(battle, player, log),
+        .Substitute => Effects.substitute(battle, player, log),
         .SwitchAndTeleport => {}, // does nothing outside of wild battles
         .Thrashing => Effects.thrashing(battle, player),
         .Transform => Effects.transform(battle, player, log),
@@ -1421,6 +1422,28 @@ pub const Effects = struct {
 
     fn splash(battle: anytype, player: Player, log: anytype) !void {
         try log.activate(battle.active(player), .Splash);
+    }
+
+    fn substitute(battle: anytype, player: Player, log: anytype) !void {
+        var side = battle.side(player);
+        if (side.active.volatiles.Substitute) {
+            try log.fail(battle.active(player), .Substitute);
+            return;
+        }
+
+        assert(side.stored().stats.hp <= 1023);
+        // NB: will be 0 if HP is <= 3
+        const hp = side.stored().stats.hp / 4;
+        if (side.stored().hp < hp) {
+            try log.fail(battle.active(player), .Weak);
+            return;
+        }
+
+        // GLITCH: can leave the user with 0 HP (faints later) because didn't check '<=' above
+        side.stored().hp -= hp;
+        side.active.volatiles.substitute = hp + 1;
+        side.active.volatiles.Substitute = true;
+        try log.start(battle.active(player), .Substitute);
     }
 
     fn thrashing(battle: anytype, player: Player) void {
