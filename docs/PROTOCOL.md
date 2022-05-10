@@ -325,7 +325,8 @@ The Pokémon identified by [`Ident`](#pokemonident) has recovered from `Status`.
 | Raw    | Description  |
 | ------ | ------------ |
 | `0x00` | None         |
-| `0x01` | `\|[silent]` |
+| `0x01` | `\|[msg]`    |
+| `0x02` | `\|[silent]` |
 </details>
 
 ### `|-boost|` (`0x0E`)

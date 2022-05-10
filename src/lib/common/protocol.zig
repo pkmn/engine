@@ -147,6 +147,7 @@ pub const Status = enum(u8) {
 
 pub const CureStatus = enum(u8) {
     None,
+    Message,
     Silent,
 };
 
@@ -841,8 +842,8 @@ test "|-status|" {
 }
 
 test "|-curestatus|" {
-    try log.curestatus(p2.ident(6), gen1.Status.slp(7), .None);
-    try expectLog(&.{ N(ArgType.CureStatus), 0b1110, 0b111, N(CureStatus.None) }, buf[0..4]);
+    try log.curestatus(p2.ident(6), gen1.Status.slp(7), .Message);
+    try expectLog(&.{ N(ArgType.CureStatus), 0b1110, 0b111, N(CureStatus.Message) }, buf[0..4]);
     stream.reset();
 
     try log.curestatus(p1.ident(2), gen1.Status.init(.PSN), .Silent);

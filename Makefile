@@ -56,7 +56,7 @@ zig-test:
 	zig build -Dshowdown -Dtrace test
 
 .PHONY: js-test
-js-test: zig-build js-build
+js-test: js-build
 	npm run test
 
 .PHONY: test

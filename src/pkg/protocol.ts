@@ -249,7 +249,11 @@ export const DECODERS: {[key: number]: Decoder} = {
     const status = decodeStatus(data.getUint8(offset++));
     const reason = data.getUint8(offset++);
     const kwArgs = {} as Writeable<Protocol.BattleArgsKWArgs['|-curestatus|']>;
-    if (reason === PROTOCOL.Status.Silent) kwArgs.silent = true;
+    if (reason === PROTOCOL.CureStatus.Message) {
+      kwArgs.msg = true;
+    } else if (reason === PROTOCOL.CureStatus.Silent) {
+      kwArgs.silent = true;
+    }
     const args = ['-curestatus', ident, status] as Protocol.Args['|-curestatus|'];
     return {offset, line: {args, kwArgs}};
   },

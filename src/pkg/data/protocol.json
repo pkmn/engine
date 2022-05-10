@@ -110,6 +110,7 @@
   ],
   "CureStatus": [
     "None",
+    "Message",
     "Silent"
   ],
   "Boost": [

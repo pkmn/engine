@@ -130,8 +130,8 @@ for (const gen of new Generations(Dex as any)) {
 
     it('|-curestatus|', () => {
       expect(Array.from(
-        log.parse(Data.view([ArgType.CureStatus, 0b1110, 0b111, PROTOCOL.CureStatus.None]))
-      )).toEqual(parse('|-curestatus|p2a: Fuudin|slp'));
+        log.parse(Data.view([ArgType.CureStatus, 0b1110, 0b111, PROTOCOL.CureStatus.Message]))
+      )).toEqual(parse('|-curestatus|p2a: Fuudin|slp|[msg]'));
       expect(Array.from(
         log.parse(Data.view([ArgType.CureStatus, 0b0010, 0b1000, PROTOCOL.CureStatus.Silent]))
       )).toEqual(parse('|-curestatus|p1a: Hitokage|psn|[silent]'));
