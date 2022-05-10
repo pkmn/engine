@@ -426,9 +426,9 @@ fn executeMove(
     // TODO
     _ = hit;
 
-    if (!move.effect.special()) {
-        try moveEffect(battle, player, move, choice.data, log);
-    }
+    // if (!move.effect.special()) {
+    //     try moveEffect(battle, player, move, choice.data, log);
+    // }
 
     return null;
 }
@@ -926,7 +926,7 @@ fn moveEffect(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: 
         .AttackDownChance, .DefenseDownChance, .SpecialDownChance, .SpeedDownChance =>
             Effects.unboost(battle, player, move, log),
         // zig fmt: on
-        else => unreachable,
+        else => {},
     };
 }
 
