@@ -87,7 +87,7 @@ pub const Gen12 = extern struct {
     }
 
     pub fn percent(p: u8) u8 {
-        return (p * 0xFF) / 100;
+        return @truncate(u8, (@as(u16, p) * 0xFF) / 100);
     }
 
     pub fn next(self: *Gen12) u8 {

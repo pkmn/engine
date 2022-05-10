@@ -105,7 +105,7 @@ fn selectMove(battle: anytype, player: Player, choice: Choice, foe_choice: Choic
     if (volatiles.Bide) return;
     if (volatiles.Trapping) {
         // GLITCH: https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
-        if (foe_choice == .Switch) {
+        if (foe_choice.type == .Switch) {
             // BUG: need to reset side.last_selected_move if originally Metronome
         }
         return;
@@ -898,7 +898,7 @@ fn moveEffect(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: 
         .Haze => Effects.haze(battle, player, log),
         .Heal => Effects.heal(battle, player, log),
         .HyperBeam => Effects.hyperBeam(battle, player),
-        .LeechSeed => Effects.leechSeed(battle, player, log),
+        .LeechSeed => Effects.leechSeed(battle, player, move, log),
         .LightScreen => Effects.lightScreen(battle, player, log),
         .Mimic => Effects.mimic(battle, player, move, mslot, log),
         .Mist => Effects.mist(battle, player, log),
@@ -1434,7 +1434,7 @@ pub const Effects = struct {
 
         assert(side.stored().stats.hp <= 1023);
         // NB: will be 0 if HP is <= 3
-        const hp = side.stored().stats.hp / 4;
+        const hp = @truncate(u8, side.stored().stats.hp / 4);
         if (side.stored().hp < hp) {
             try log.fail(battle.active(player), .Weak);
             return;
