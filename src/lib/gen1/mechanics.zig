@@ -143,7 +143,7 @@ fn selectMove(battle: anytype, player: Player, choice: Choice, foe_choice: Choic
         side.last_selected_move = move.id;
     }
 
-    // SHOWDOWN: Pokémon Showdown's getRandomTarget arbitrarily advances the RNG
+    // SHOWDOWN: getRandomTarget arbitrarily advances the RNG
     if (showdown) battle.rng.advance(side.last_selected_move.frames());
 }
 
@@ -190,7 +190,7 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     // > In Gen 1 it's irrelevant [which player switches first] because switches happen instantly on
     // > your own screen without waiting for the other player's choice (and their choice will appear
     // > to happen first for them too, unless they attacked in which case your switch happens first)
-    // NB: A cartridge-compatible implemention must not advance the RNG so we simply default to P1
+    // A cartridge-compatible implemention must not advance the RNG so we simply default to P1
     if (!showdown and c1.type == .Switch and c2.type == .Switch) return .P1;
 
     const spe1 = battle.side(.P1).active.stats.spe;
@@ -346,10 +346,10 @@ fn executeMove(
         return null; // TODO
     }
 
-    // NB: can't reorder this even when unused (eg. Counter) as it advances the RNG
+    // Can't reorder this even when unused (eg. Counter) as it advances the RNG
     const crit = checkCriticalHit(battle, player, move);
 
-    // NB: Counter desync due to changing move selection prior to switching is not supported
+    // Counter desync due to changing move selection prior to switching is not supported
     if (side.last_selected_move == .Counter) {
         const foe_last_move = Move.get(foe.last_selected_move);
         const miss = foe_last_move.bp == 0 or
@@ -369,7 +369,7 @@ fn executeMove(
 
     if (move.effect == .OHKO) {
         const miss = side.active.stats.spe < foe.active.stats.spe;
-        // NB: this can overflow after adjustDamage, but will still be sufficient to OHKO
+        // This can overflow after adjustDamage, but will still be sufficient to OHKO
         const damage: u16 = if (miss) 0 else 65535;
         const ohko = !miss;
 
@@ -385,7 +385,7 @@ fn executeMove(
 
     if (!calcDamage(battle, player, move, crit)) return Result.Error;
     adjustDamage(battle, player);
-    randomizeDamage(battle); // FIXME crit?
+    randomizeDamage(battle);
 
     const hit = checkHit(battle, player, move);
 
@@ -452,7 +452,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
     assert(active.move(mslot).id != .None);
 
     if (Status.is(stored.status, .SLP)) {
-        // NB: even if the SLF bit is set this will still correctly modify the sleep duration
+        // Even if the SLF bit is set this will still correctly modify the sleep duration
         stored.status -= 1;
         if (Status.duration(stored.status) == 0) {
             stored.status = 0; // clears SLF if present
@@ -520,7 +520,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
                 // calcDamage just needs a 40 BP physical move, its not actually Pound
                 const move = Move.get(.Pound);
                 if (!calcDamage(battle, player, move, false)) return .err;
-                // NB: skipping adjustDamage / randomizeDamage / checkHit
+                // Skipping adjustDamage / randomizeDamage / checkHit
                 applyDamage(battle, player, move);
 
                 return .done;
@@ -529,7 +529,6 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
     }
 
     if (volatiles.disabled.move == mslot) {
-        // FIXME: ??? volatiles.Charging = false;
         try log.disabled(ident, active.move(volatiles.disabled.move).id);
         return .done;
     }
@@ -552,8 +551,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
     }
 
     if (volatiles.Bide) {
-        // TODO accumulate? overflow?
-        volatiles.state += battle.last_damage;
+        volatiles.state +%= battle.last_damage;
         try log.activate(ident, .Bide);
 
         assert(volatiles.attacks > 0);
@@ -564,13 +562,13 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
         volatiles.Bide = false;
         try log.end(ident, .Bide);
 
-        const damage = volatiles.state * 2;
+        const damage = volatiles.state *% 2;
+        volatiles.state = 0;
+
         if (damage == 0) {
             try log.fail(ident, .None);
             return .done;
         }
-        // TODO: instead move after beforeMove call to reset accuracy?
-        volatiles.state = 0;
         return BeforeMove{ .damage = damage };
     }
 
@@ -727,7 +725,7 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data) bool {
     if (move.effect == .Swift) return true;
     if (foe.active.volatiles.Invulnerable) return false;
 
-    // NB: Conversion / Haze / Light Screen / Reflect qualify but do not call checkHit
+    // Conversion / Haze / Light Screen / Reflect qualify but do not call checkHit
     if (foe.active.volatiles.Mist and move.effect.statDown()) return false;
 
     // GLITCH: Thrash / Petal Dance / Rage get their accuracy overwritten on subsequent hits
@@ -766,7 +764,7 @@ fn applyDamage(battle: anytype, player: Player, move: Move.Data) void {
 
     var foe = battle.foe(player);
     if (foe.active.volatiles.Substitute) {
-        // NB: foe.volatiles.substitute is a u8 so must be less than 255 anyway
+        // foe.volatiles.substitute is a u8 so must be less than 255 anyway
         if (battle.last_damage >= foe.active.volatiles.substitute) {
             foe.active.volatiles.substitute = 0;
             foe.active.volatiles.Substitute = false;
@@ -838,7 +836,7 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
         }
 
         stored.hp -= @minimum(damage, stored.hp);
-        // NB: Pokémon Showdown uses damageOf here but its not relevant in Generation I
+        // Pokémon Showdown uses damageOf here but its not relevant in Generation I
         try log.damage(ident, stored, if (brn) Damage.Burn else Damage.Poison);
     }
 
@@ -883,6 +881,7 @@ fn decrementPP(side: *Side, choice: Choice) void {
     side.stored().move(choice.data).pp -= 1;
 }
 
+// TODO: optimize by splitting up into skipExecuteEffect/specialEffect etc to make switch faster?
 fn moveEffect(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: anytype) !void {
     return switch (move.effect) {
         .Bide => Effects.bide(battle, player, log),
@@ -898,7 +897,9 @@ fn moveEffect(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: 
         .FreezeChance => Effects.freezeChance(battle, player, move, log),
         .Haze => Effects.haze(battle, player, log),
         .Heal => Effects.heal(battle, player, log),
+        .HighCritical => {}, // checkCriticalHit
         .HyperBeam => Effects.hyperBeam(battle, player),
+        .JumpKick, .Metronome, .MirrorMove, .OHKO, .SpecialDamage, .SuperFang => {}, // executeMove
         .LeechSeed => Effects.leechSeed(battle, player, move, log),
         .LightScreen => Effects.lightScreen(battle, player, log),
         .Mimic => Effects.mimic(battle, player, move, mslot, log),
@@ -914,6 +915,7 @@ fn moveEffect(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: 
         .Sleep => Effects.sleep(battle, player, move, log),
         .Splash => Effects.splash(battle, player, log),
         .Substitute => Effects.substitute(battle, player, log),
+        .Swift => {}, // checkHit
         .SwitchAndTeleport => {}, // does nothing outside of wild battles
         .Thrashing => Effects.thrashing(battle, player),
         .Transform => Effects.transform(battle, player, log),
@@ -926,7 +928,7 @@ fn moveEffect(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: 
         .AttackDownChance, .DefenseDownChance, .SpecialDownChance, .SpeedDownChance =>
             Effects.unboost(battle, player, move, log),
         // zig fmt: on
-        else => {},
+        .None => {},
     };
 }
 
@@ -1300,7 +1302,7 @@ pub const Effects = struct {
         const cant = foe.active.volatiles.Substitute or Status.any(foe_stored.status);
         if (cant) return log.fail(foe_ident, .Paralysis);
 
-        // NB: Body Slam can't paralyze a Normal type Pokémon
+        // Body Slam can't paralyze a Normal type Pokémon
         const chance = !foe.active.types.includes(move.type) and if (showdown)
             battle.rng.chance(u8, @as(u8, if (move.effect == .ParalyzeChance1) 26 else 77), 256)
         else
@@ -1391,7 +1393,7 @@ pub const Effects = struct {
 
         if (foe.active.volatiles.Recharging) {
             foe.active.volatiles.Recharging = false;
-            // NB: hit test not applied if the target is recharging (fallthrough)
+            // Hit test not applied if the target is recharging (fallthrough)
         } else if (Status.any(foe_stored.status)) {
             return log.fail(foe_ident, .Sleep);
         } else if (!checkHit(battle, player, move)) {
@@ -1434,7 +1436,7 @@ pub const Effects = struct {
         }
 
         assert(side.stored().stats.hp <= 1023);
-        // NB: will be 0 if HP is <= 3
+        // Will be 0 if HP is <= 3 meaning that the user gets a 1 HP Substitute for "free"
         const hp = @truncate(u8, side.stored().stats.hp / 4);
         if (side.stored().hp < hp) {
             try log.fail(battle.active(player), .Weak);
@@ -1469,13 +1471,13 @@ pub const Effects = struct {
         if (foe.active.volatiles.Invulnerable) return;
 
         side.active.volatiles.Transform = true;
-        // NB: foe could themselves be transformed
+        // foe could themselves be transformed
         side.active.volatiles.transform = if (foe.active.volatiles.transform != 0)
             foe.active.volatiles.transform
         else
             foe_ident.int();
 
-        // NB: HP is not copied by Transform
+        // HP is not copied by Transform
         side.active.stats.atk = foe.active.stats.atk;
         side.active.stats.def = foe.active.stats.def;
         side.active.stats.spe = foe.active.stats.spe;
@@ -1498,7 +1500,7 @@ pub const Effects = struct {
 
         if (side.active.volatiles.Trapping) return;
         side.active.volatiles.Trapping = true;
-        // NB: Recharging is cleared even if the trapping move misses
+        // Recharging is cleared even if the trapping move misses
         foe.active.volatiles.Recharging = false;
 
         side.active.volatiles.attacks = distribution(battle) - 1;
@@ -1548,7 +1550,6 @@ pub const Effects = struct {
                 boosts.evasion = @minimum(6, boosts.evasion + 1);
                 try log.boost(ident, .Evasion, 1);
             },
-
             else => unreachable,
         }
 
@@ -1571,7 +1572,7 @@ pub const Effects = struct {
                 battle.rng.next() < Gen12.percent(33) + 1;
             if (chance or foe.active.volatiles.Invulnerable) return;
         } else if (!checkHit(battle, player, move)) {
-            // NB: checkHit already checks for Invulnerable
+            // checkHit already checks for Invulnerable
             try log.lastmiss();
             return log.miss(battle.active(player), foe_ident);
         }
@@ -1644,7 +1645,7 @@ fn clearVolatiles(active: *ActivePokemon, ident: ID, log: anytype) !void {
         try log.end(ident, .DisableSilent);
     }
     if (volatiles.Confusion) {
-        // NB: volatiles.confusion is left unchanged
+        // volatiles.confusion is left unchanged
         volatiles.Confusion = false;
         try log.end(ident, .ConfusionSilent);
     }
@@ -1662,7 +1663,7 @@ fn clearVolatiles(active: *ActivePokemon, ident: ID, log: anytype) !void {
     }
     if (volatiles.Toxic) {
         if (showdown) volatiles.toxic = 0;
-        // NB: volatiles.toxic is left unchanged
+        // volatiles.toxic is left unchanged
         volatiles.Toxic = false;
         try log.end(ident, .Toxic);
     }
