@@ -1572,10 +1572,12 @@ pub const Move = enum(u8) {
         Trapping,
         // regular
         AttackDownChance,
+        DefenseDownChance,
+        SpeedDownChance,
+        SpecialDownChance,
         BurnChance1,
         BurnChance2,
         ConfusionChance,
-        DefenseDownChance,
         Disable,
         FlinchChance1,
         FlinchChance2,
@@ -1589,8 +1591,6 @@ pub const Move = enum(u8) {
         ParalyzeChance2,
         PoisonChance1,
         PoisonChance2,
-        SpecialDownChance,
-        SpeedDownChance,
         Rage,
         Twineedle,
 
@@ -1617,6 +1617,10 @@ pub const Move = enum(u8) {
 
         pub inline fn special(effect: Effect) bool {
             return @enumToInt(effect) > 31 and @enumToInt(effect) <= 45;
+        }
+
+        pub inline fn statDownChance(effect: Effect) bool {
+            return @enumToInt(effect) > 45 and @enumToInt(effect) <= 49;
         }
     };
 

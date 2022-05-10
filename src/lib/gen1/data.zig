@@ -354,6 +354,11 @@ test "Move" {
     try expect(Move.Effect.special(.Trapping));
     try expect(!Move.Effect.special(.AttackDownChance));
 
+    try expect(!Move.Effect.statDownChance(.Trapping));
+    try expect(Move.Effect.statDownChance(.AttackDownChance));
+    try expect(Move.Effect.statDownChance(.SpecialDownChance));
+    try expect(!Move.Effect.statDownChance(.BurnChance1));
+
     try expectEqual(@as(u8, 0), Move.Bide.frames());
     try expectEqual(@as(u8, 1), Move.Tackle.frames());
     try expectEqual(@as(u8, 2), Move.Counter.frames());

@@ -1564,9 +1564,7 @@ pub const Effects = struct {
 
         if (foe.active.volatiles.Substitute) return;
 
-        if (move.effect == .AttackDownChance or move.effect == .DefenseDownChance or
-            move.effect == .SpecialDownChance or move.effect == .SpeedDownChance)
-        {
+        if (move.effect.statDownChance()) {
             const chance = if (showdown)
                 battle.rng.chance(u8, 85, 256)
             else

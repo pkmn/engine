@@ -111,6 +111,10 @@ const STAT_DOWN = [
   'AccuracyDown1', 'AttackDown1', 'DefenseDown1', 'DefenseDown2', 'SpeedDown1',
 ];
 
+const STAT_DOWN_CHANCE = [
+  'AttackDownChance', 'DefenseDownChance', 'SpeedDownChance', 'SpecialDownChance',
+];
+
 const ALWAYS_HAPPEN_SPECIAL = [
   'DoubleHit', 'DrainHP', 'DreamEater', 'Explode', 'JumpKick', 'MultiHit', 'PayDay', 'Recoil',
 ];
@@ -394,13 +398,17 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
           ? [...ALWAYS_HAPPEN_SPECIAL,
             ...Array.from(EFFECTS[group]).filter(e => !ALWAYS_HAPPEN_SPECIAL.includes(e)).sort()]
           : group === 'regular'
-            ? [...Array.from(EFFECTS[group]).filter(e => !ALWAYS_HAPPEN_REGULAR.includes(e)).sort(),
+            ? [...STAT_DOWN_CHANCE,
+              ...Array.from(EFFECTS[group]).filter(e =>
+                !ALWAYS_HAPPEN_REGULAR.includes(e) && !STAT_DOWN_CHANCE.includes(e)).sort(),
               ...ALWAYS_HAPPEN_REGULAR]
             : Array.from(EFFECTS[group]).sort();
       effects.push(`        ${sorted.join(',\n        ')},`);
     }
+    const sd = se + STAT_DOWN.length;
     const ahs = pe + ALWAYS_HAPPEN_SPECIAL.length;
     const ahr = sp + EFFECTS.regular.size - ALWAYS_HAPPEN_REGULAR.length;
+    const sdc = sp + STAT_DOWN_CHANCE.length;
     const Effect = `
     pub const Effect = enum(u8) {
         None,
@@ -415,7 +423,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
 
         pub inline fn statDown(effect: Effect) bool {
-            return @enumToInt(effect) > ${se} and @enumToInt(effect) <= ${se + STAT_DOWN.length};
+            return @enumToInt(effect) > ${se} and @enumToInt(effect) <= ${sd};
         }
 
         pub inline fn postExecute(effect: Effect) bool {
@@ -429,6 +437,10 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
         pub inline fn special(effect: Effect) bool {
             return @enumToInt(effect) > ${pe} and @enumToInt(effect) <= ${sp};
+        }
+
+        pub inline fn statDownChance(effect: Effect) bool {
+            return @enumToInt(effect) > ${sp} and @enumToInt(effect) <= ${sdc};
         }
     };\n`;
 
