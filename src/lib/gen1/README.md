@@ -461,6 +461,64 @@ TODO table https://cdn.discordapp.com/attachments/491775824509272070/78668858259
   - breakdown of each
 - metronome
 
+```txt
+selectMove -> showdown nop
+
+turnOrder -> speed tie (0-127 = P1)
+
+beforeMove ->
+  Confusion = (128-255) = hit self
+  Paralyzed = (0-62) = fully paralyzed
+  Thrashing = (*) = length of confusion post rampage
+
+canExecute ->
+  (skipExecute) ->
+    Confusion = checkHit (= possibly overwritten accuracy)
+    LeechSeed = checkHit (ibid)
+    Mimic = checkHit, randomMoveSlot
+    Paralyze = checkHit
+    Poison = checkHit
+  Thrashing - (*) turns
+  Trapping - distribution attacks
+
+
+executeMove -> Psywave
+
+
+  (postExecute)
+    Bide = (*) = duration
+    Sleep = checkHit, (*) duration
+
+
+checkCriticalHit -> (0, chance*) = crit # rotate 3 for present
+randomizeDamage -> [217, 255] = damage modifier
+checkHit -> [0, accuracy* - 1)
+
+
+// beforeExecute (CheckPlayerStatusConditions)
+// canExecute (PlayerCanExecuteChargingMove / PlayerCanExecuteMove)
+//   skipExecute (ResidualEffects1)
+//               (SpecialEffectsCont)
+// executeMove
+//   (PlayerCalcMoveDamage)
+//    SetDamageEffects -> moveHitTest
+//    CriticalHitTest
+//    HandleCounterMove
+//    GetDamageVarsForPlayerAttack
+//    CalculateDamage
+//    AdjustDamageForMoveType
+//    RandomizeDamage
+//    MoveHitTest
+//    MirrorMove/Metronome (tailcall)
+//   ResidualEffects2
+//   ApplyAttackToEnemyPokemon
+//   AlwaysHappenSideEffects
+//   HandleBuildingRage
+//  multi attack -> skip to MirrorrMove/MetronomeCHeck = residualeffects2
+
+AlwaysHappenSideEffects
+```
+
 ## Resources
 
 - [pret/pokered](https://github.com/pret/pokered/) disassembly
