@@ -62,7 +62,14 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
         if (try doTurn(battle, .P2, c2, .P1, c1, log)) |r| return r;
     }
 
-    postMove(battle);
+    var p1 = battle.side(.P1);
+    if (p1.active.volatiles.attacks == 0) {
+        p1.active.volatiles.Trapping = false;
+    }
+    var p2 = battle.side(.P2);
+    if (p2.active.volatiles.attacks == 0) {
+        p2.active.volatiles.Trapping = false;
+    }
 
     return endTurn(battle, log);
 }
@@ -284,6 +291,7 @@ fn checkEBC(battle: anytype) bool {
     return false;
 }
 
+// TODO: move beforeMove/canExecute + postExecute out of move!
 fn executeMove(
     battle: anytype,
     player: Player,
@@ -869,17 +877,6 @@ fn decrementPP(side: *Side, choice: Choice) void {
     if (volatiles.Transform) return;
 
     side.stored().move(choice.data).pp -= 1;
-}
-
-pub fn postMove(battle: anytype) void {
-    var p1 = battle.side(.P1);
-    if (p1.active.volatiles.attacks == 0) {
-        p1.active.volatiles.Trapping = false;
-    }
-    var p2 = battle.side(.P2);
-    if (p2.active.volatiles.attacks == 0) {
-        p2.active.volatiles.Trapping = false;
-    }
 }
 
 fn moveEffect(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: anytype) !void {
