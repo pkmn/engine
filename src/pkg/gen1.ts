@@ -35,16 +35,18 @@ for (const v in OFFSETS.Volatiles) {
 // - binding should expose whether it was build with showon (also in name) and trace
 // integration test = only debug and -Dshowdown -Dtrace
 export class Battle implements Gen1.Battle {
+  readonly options: BattleOptions;
+
   private readonly lookup: Lookup;
   private readonly data: DataView;
-  private readonly options: BattleOptions;
 
   private readonly cache: [Side?, Side?];
 
   constructor(lookup: Lookup, data: DataView, options: BattleOptions) {
+    this.options = options;
+
     this.lookup = lookup;
     this.data = data;
-    this.options = options;
 
     this.cache = [undefined, undefined];
   }
@@ -61,8 +63,7 @@ export class Battle implements Gen1.Battle {
   side(id: SideID): Side {
     const i = id === 'p1' ? 0 : 1;
     const side = this.cache[i];
-    return side ?? (this.cache[i] =
-        new Side(this, this.lookup, this.data, OFFSETS.Battle[id as 'p1' | 'p2']));
+    return side ?? (this.cache[i] = new Side(this, this.lookup, this.data, id as 'p1' | 'p2'));
   }
 
   foe(side: SideID): Side {
@@ -78,7 +79,7 @@ export class Battle implements Gen1.Battle {
   }
 
   get prng(): readonly number[] {
-    const offset = OFFSETS.Battle.last_damage + 2 + (this.options.showdown ? 4 : 1);
+    const offset = OFFSETS.Battle.last_selected_indexes + (this.options.showdown ? 4 : 1);
     // Pokémon Showdown's PRNGSeed is always big-endian
     const seed: number[] = [0, 0, 0, 0];
     if (this.options.showdown) {
@@ -130,31 +131,43 @@ export class Battle implements Gen1.Battle {
     const buf = new ArrayBuffer(SIZES.Battle);
     const data = new DataView(buf);
     let offset = OFFSETS.Battle.p1;
+    const indexes: number[] = [];
     for (const side of battle.sides) {
       Side.encode(gen, lookup, battle, side, data, offset);
       offset += SIZES.Side;
+      indexes.push(side.lastSelectedIndex ?? 0);
     }
     data.setUint16(OFFSETS.Battle.turn, battle.turn, LE);
     data.setUint16(OFFSETS.Battle.last_damage, battle.lastDamage, LE);
+    if (options.showdown) {
+      data.setUint16(OFFSETS.Battle.last_selected_indexes, indexes[0], LE);
+      data.setUint16(OFFSETS.Battle.last_selected_indexes + 2, indexes[1], LE);
+    } else {
+      data.setUint8(OFFSETS.Battle.last_selected_indexes, (indexes[1] << 4) | indexes[0]);
+    }
     encodePRNG(data, battle.prng);
     return new Battle(lookup, data, options);
   }
 }
 
 export class Side implements Gen1.Side {
+  readonly id: 'p1' | 'p2';
+
   private readonly battle: Battle;
   private readonly lookup: Lookup;
   private readonly data: DataView;
+
   private readonly offset: number;
+  private readonly cache: [Pokemon?, Pokemon?, Pokemon?, Pokemon?, Pokemon?, Pokemon?];
 
-  readonly cache: [Pokemon?, Pokemon?, Pokemon?, Pokemon?, Pokemon?, Pokemon?];
+  constructor(battle: Battle, lookup: Lookup, data: DataView, id: 'p1' | 'p2') {
+    this.id = id;
 
-  constructor(battle: Battle, lookup: Lookup, data: DataView, offset: number) {
     this.battle = battle;
     this.lookup = lookup;
     this.data = data;
-    this.offset = offset;
 
+    this.offset = OFFSETS.Battle[id];
     this.cache = [undefined, undefined, undefined, undefined, undefined, undefined];
   }
 
@@ -190,14 +203,26 @@ export class Side implements Gen1.Side {
     return (this.cache[id] = new Pokemon(this.battle, this.lookup, this.data, this.offset, id));
   }
 
+  get lastUsedMove(): ID | undefined {
+    const m = this.data.getUint8(this.offset + OFFSETS.Side.last_used_move);
+    return m === 0 ? undefined : this.lookup.moveByNum(m);
+  }
+
   get lastSelectedMove(): ID | undefined {
     const m = this.data.getUint8(this.offset + OFFSETS.Side.last_selected_move);
     return m === 0 ? undefined : this.lookup.moveByNum(m);
   }
 
-  get lastUsedMove(): ID | undefined {
-    const m = this.data.getUint8(this.offset + OFFSETS.Side.last_used_move);
-    return m === 0 ? undefined : this.lookup.moveByNum(m);
+  get lastSelectedIndex(): 1 | 2 | 3 | 4 | undefined {
+    let m: number;
+    if (this.battle.options.showdown) {
+      const off = this.id === 'p1' ? 0 : 2;
+      m = this.data.getUint16(OFFSETS.Battle.last_selected_indexes + off, LE);
+    } else {
+      m = this.data.getUint8(OFFSETS.Battle.last_selected_indexes);
+      m = this.id === 'p1' ? (m & 0xF) : (m >> 4);
+    }
+    return m === 0 ? undefined : m as 1 | 2 | 3 | 4;
   }
 
   toJSON(): Gen1.Side {
@@ -206,6 +231,7 @@ export class Side implements Gen1.Side {
       pokemon: Array.from(this.pokemon).map(p => p.toJSON()),
       lastSelectedMove: this.lastSelectedMove,
       lastUsedMove: this.lastUsedMove,
+      lastSelectedIndex: this.lastSelectedIndex,
     };
   }
 
@@ -323,9 +349,13 @@ export class Pokemon implements Gen1.Pokemon {
           volatiles[volatile] = {
             duration: (this.data.getUint8(off + (OFFSETS.Volatiles.attacks >> 3)) >> 5) & 0b111,
           };
-        } else if (volatile === 'thrashing' || volatile === 'rage') {
+        } else if (volatile === 'thrashing') {
           volatiles[volatile] = {
             duration: (this.data.getUint8(off + (OFFSETS.Volatiles.attacks >> 3)) >> 5) & 0b111,
+            accuracy: this.data.getUint16(off + (OFFSETS.Volatiles.state >> 3), LE),
+          };
+        } else if (volatile === 'rage') {
+          volatiles[volatile] = {
             accuracy: this.data.getUint16(off + (OFFSETS.Volatiles.state >> 3), LE),
           };
         } else if (volatile === 'confusion') {
@@ -581,8 +611,7 @@ export class Pokemon implements Gen1.Pokemon {
 
     const confusion = volatiles.confusion?.duration ?? 0;
     const attacks = volatiles.trapping?.duration ??
-      volatiles.thrashing?.duration ??
-      volatiles.rage?.duration ?? 0;
+      volatiles.thrashing?.duration ?? 0;
     data.setUint8(off + (Pokemon.Volatiles.Reflect >> 3),
       +!!volatiles.reflect | (+!!volatiles.transform << 1) |
       (confusion << 2) | (attacks << 5));

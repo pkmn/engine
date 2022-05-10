@@ -28,39 +28,43 @@ list of additional reference [**resources**](#resources).
 
 The following information is required to simulate a Generation I Pokémon battle:
 
-| pkmn                      | Pokémon Red (pret)                 | Pokémon Showdown                       |
-| ------------------------- | ---------------------------------- | -------------------------------------- |
-| `battle.seed`             | `Random{Add,Sub}`                  | `battle.seed`                          |
-| `battle.turn`             | -                                  | `battle.turn`                          |
-| `battle.last_damage`      | `Damage`                           | `battle.lastDamage`                    |
-| `side.{active,pokemon}`   | `PlayerMonNumber`/`BattleMon`      | `side.active`                          |
-| `side.team`               | `PartyMons`                        | `side.pokemon`                         |
-| `side.last_used_move`     | `PlayerUsedMove`                   | `side.lastMove`                        |
-| `side.last_selected_move` | `PlayerSelectedMove`               | `side.lastSelectedMove`                |
-| `side.order`              |  -                                 | `pokemon.position`                     |
-| `{pokemon,active}.moves`  | `{party,battle}_struct.{Moves,PP}` | `pokemon.{baseMoveSlots,moveSlots}`    |
-| `{pokemon,active}.hp`     | `{party,battle}_struct.HP`         | `pokemon.hp`                           |
-| `{pokemon,active}.status` | `{party,battle}_struct.Status`     | `pokemon.status`                       |
-| `{pokemon,active}.level`  | `PlayerMonUnmodifiedLevel`         | `pokemon.level`                        |
-| `pokemon.species`         | `party_struct.Species`             | `pokemon.baseSpecies`                  |
-| `pokemon.stats`           | `box_struct.Stats`                 | `pokemon.baseStoredStats`              |
-| `active.stats`            | `battle_struct.Stats`              | `pokemon.modifiedStats`                |
-| `volatiles.transform`     | `PlayerMonUnmodified*`             | `pokemon.storedStats`                  |
-| `active.species`          | `battle_struct.Species`            | `pokemon.species`                      |
-| `{pokemon,active}.types`  | `{party,battle}_struct.Type`       | `pokemon.types`                        |
-| `active.boosts`           | `PlayerMon*Mod`                    | `pokemon.boosts`                       |
-| `active.volatiles`        | `PlayerBattleStatus{1,2,3}`        | `pokemon.volatiles`                    |
-| `volatiles.state`         | `PlayerBideAccumulatedDamage`      | `volatiles.bide.totalDamage`           |
-| `volatiles.attacks`       | `PlayerNumAttacksLeft`             | `volatiles.{bide,lockedmove}.duration` |
-| `volatiles.confusion`     | `PlayerConfusedCounter`            | `volatiles.confusion.duration`         |
-| `volatiles.toxic`         | `PlayerToxicCounter`               | `volatiles.residualdmg.counter`        |
-| `volatiles.substitute`    | `PlayerSubstituteHP`               | `volatiles.substitute.hp`              |
-| `volatiles.disabled`      | `PlayerDisabledMove{,Number}`      | `moveSlots.disabled`                   |
+| pkmn                           | Pokémon Red (pret)                 | Pokémon Showdown                       |
+| ------------------------------ | ---------------------------------- | -------------------------------------- |
+| `battle.seed`                  | `Random{Add,Sub}`                  | `battle.seed`                          |
+| `battle.turn`                  | -                                  | `battle.turn`                          |
+| `battle.last_damage`           | `Damage`                           | `battle.lastDamage`                    |
+| `side.{active,pokemon}`        | `PlayerMonNumber`/`BattleMon`      | `side.active`                          |
+| `side.team`                    | `PartyMons`                        | `side.pokemon`                         |
+| `side.last_used_move`          | `PlayerUsedMove`                   | `side.lastMove`                        |
+| `side.last_selected_move`      | `PlayerSelectedMove`               | `side.lastSelectedMove`                |
+| `battle.last_selected_indexes` | `PlayerMoveListIndex`              | -                                      |
+| `side.order`                   | -                                  | `pokemon.position`                     |
+| `{pokemon,active}.moves`       | `{party,battle}_struct.{Moves,PP}` | `pokemon.{baseMoveSlots,moveSlots}`    |
+| `{pokemon,active}.hp`          | `{party,battle}_struct.HP`         | `pokemon.hp`                           |
+| `{pokemon,active}.status`      | `{party,battle}_struct.Status`     | `pokemon.status`                       |
+| `{pokemon,active}.level`       | `PlayerMonUnmodifiedLevel`         | `pokemon.level`                        |
+| `pokemon.species`              | `party_struct.Species`             | `pokemon.baseSpecies`                  |
+| `pokemon.stats`                | `box_struct.Stats`                 | `pokemon.baseStoredStats`              |
+| `active.stats`                 | `battle_struct.Stats`              | `pokemon.modifiedStats`                |
+| `volatiles.transform`          | `PlayerMonUnmodified*`             | `pokemon.storedStats`                  |
+| `active.species`               | `battle_struct.Species`            | `pokemon.species`                      |
+| `{pokemon,active}.types`       | `{party,battle}_struct.Type`       | `pokemon.types`                        |
+| `active.boosts`                | `PlayerMon*Mod`                    | `pokemon.boosts`                       |
+| `active.volatiles`             | `PlayerBattleStatus{1,2,3}`        | `pokemon.volatiles`                    |
+| `volatiles.state`              | `PlayerBideAccumulatedDamage`      | `volatiles.bide.totalDamage`           |
+| `volatiles.attacks`            | `PlayerNumAttacksLeft`             | `volatiles.{bide,lockedmove}.duration` |
+| `volatiles.confusion`          | `PlayerConfusedCounter`            | `volatiles.confusion.duration`         |
+| `volatiles.toxic`              | `PlayerToxicCounter`               | `volatiles.residualdmg.counter`        |
+| `volatiles.substitute`         | `PlayerSubstituteHP`               | `volatiles.substitute.hp`              |
+| `volatiles.disabled`           | `PlayerDisabledMove{,Number}`      | `moveSlots.disabled`                   |
 
 - Pokémon Showdown does not implement the correct Generation I RNG and as such its `seed` is
   different
 - `battle.turn` only needs to be tracked in order to be compatible with the Pokémon Showdown
   protocol
+- Pokémon Showdown does not implement the [Partial-trapping move Mirror Move
+  glitch](https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch) and as such
+  does not need to keep track of a player's last selected move index (`PlayerMoveListIndex`)
 - Battle results (win, lose, draw) and request states are communicated via the return value of
   `Battle.update`
 - Nicknames (`BattleMonNick`/`pokemon.name`) are not handled by the pkmn engine as they are expected
@@ -87,6 +91,9 @@ The following information is required to simulate a Generation I Pokémon battle
 [name](https://github.com/smogon/pokemon-showdown/blob/master/sim/name.ts) in Pokémon Showdown and
 store general information about the battle. Unlike in Pokémon Showdown there is a distinction
 between the data structure for the "active" Pokémon and its party members (see below).
+
+Due to padding constraints, the index of the last selected move for a side is stored on `Battle`
+directly in `last_selected_indexes` instead of in `Side`.
 
 ### `Pokemon` / `ActivePokemon`
 
@@ -290,21 +297,27 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 
 ### `Battle`
 
-| Start | End | Data                | Description                          |
-| ----- | --- | ------------------- | ------------------------------------ |
-| 0     | 184 | [`sides[0]`](#side) | Player 1's side                      |
-| 184   | 368 | [`sides[1]`](#side) | Player 2's side                      |
-| 368   | 370 | `turn`              | The current turn number              |
-| 370   | 372 | `last_damage`       | The last damage dealt by either side |
-| 372   | 384 | `rng`               | The RNG state                        |
+| Start   | End     | Data                    | Description                                             |
+| ------- | ------- | ----------------------- | ------------------------------------------------------- |
+| 0       | 184     | [`sides[0]`](#side)     | Player 1's side                                         |
+| 184     | 368     | [`sides[1]`](#side)     | Player 2's side                                         |
+| 368     | 370     | `turn`                  | The current turn number                                 |
+| 370     | 372     | `last_damage`           | The last damage dealt by either side                    |
+| 372     | 373-376 | `last_selected_indexes` | The slot index of the last selected moves for each side |
+| 373-376 | 384     | `rng`                   | The RNG state                                           |
 
 - the current `turn` is 2 bytes, written in native-endianess
-- the `rng` state depends on whether or not Pokémon Showdown compatibility mode is enabled
-  (`-Dshowdown`):
-  - if `showdown` is enabled, the RNG state consists of 4 bytes of zero-padding followed by the
-    64-bit seed, written in native-endianess
-  - otherwise the RNG state consists of 1 byte of zero-padding, the 10 bytes of the seed, and
-    finally the index pointing to which byte of the seed is currently being used
+- `last_selected_indexes` layout depends on whether or not Pokémon Showdown compatibility mode is
+  enabled (`-Dshowdown`):
+  - if `showdown` is enabled bytes 372 and 373 are used to store the last selected move index of
+    `side[0]` and bytes 374 and 375 store the last selected move index of `side[1]`
+  - otherwise byte 372 stores the last selected move index of `side[0]` in its first 4 bits and
+    `side[1]`'s in its second 4 bits
+- the `rng` depends on whether or not Pokémon Showdown compatibility mode is enabled (`-Dshowdown`):
+  - if `showdown` is enabled, the RNG state begins on byte 376 and consists of a 64-bit seed,
+    written in native-endianess
+  - otherwise the RNG state begins on byte 373 and consists of the 10 bytes of the seed followed by
+    the index pointing to which byte of the seed is currently being used
 
 ### `Side`
 
@@ -570,34 +583,34 @@ TODO
   if there is no `player` in scope (eg. in helper functions)
 - **`target_player`** is a target `Player` whose corresponding `Side` is  **`target`**
 
-| pkmn                   | Pokémon Red (pret)                                      |
-| ---------------------- | ------------------------------------------------------- |
-| `start`                | `StartBattle`                                           |
-| `update`               | `MainInBattleLoop`                                      |
-| `findFirstAlive`       | `findFirstAlive*MonLoop` / `AnyPartyAlive`              |
-| `selectMove`           | `selectPlayerMove`                                      |
-| `switchIn`             | `SwitchPlayerMon` / `SendOutMon`                        |
-| `turnOrder`            | `MainInBattleLoop`                                      |
-| `doTurn`               | `MainInBattleLoop`                                      |
-| `executeMove`          | `ExecutePlayerMove`                                     |
-| `beforeMove`           | `CheckPlayerStatusConditions`                           |
-| `canMove`              | `CheckIfPlayerNeedsToChargeUp` / `PlayerCanExecuteMove` |
-| `decrementPP`          | `DecrementPP`                                           |
-| `doMove`               | `PlayerCalcMoveDamage`                                  |
-| `checkCriticalHit`     | `CriticalHitTest`                                       |
-| `calcDamage`           | `GetDamageVarsForPlayerAttack` / `CalculateDamage`      |
-| `adjustDamage`         | `AdjustDamageForMoveType`                               |
-| `randomizeDamage`      | `RandomizeDamage`                                       |
-| `specialDamage`        | `ApplyAttackToEnemyPokemon`                             |
-| `counterDamage`        | `HandleCounterMove`                                     |
-| `applyDamage`          | `ApplyDamageToEnemyPokemon` / `AttackSubstitute`        |
-| `mirrorMove`           | `MirrorMoveCheck` / `MirrorMoveCopyMove`                |
-| `metronome`            | `metronomeCheck` / `MetronomePickMove`                  |
-| `checkHit` / `moveHit` | `MoveHitTest`                                           |
-| `checkFaint`           | `HasMonFainted` / `HandlePlayerMonFainted`              |
-| `faint`                | `FaintEnemyPokemon`                                     |
-| `handleResidual`       | `HandlePoisonBurnLeechSeed`                             |
-| `endTurn` / `checkEBC` | -                                                       |
+| pkmn                      | Pokémon Red (pret)                                      |
+| ------------------------- | ------------------------------------------------------- |
+| `start`                   | `StartBattle`                                           |
+| `update`                  | `MainInBattleLoop`                                      |
+| `findFirstAlive`          | `findFirstAlive*MonLoop` / `AnyPartyAlive`              |
+| `selectMove` / `saveMove` | `selectPlayerMove`                                      |
+| `switchIn`                | `SwitchPlayerMon` / `SendOutMon`                        |
+| `turnOrder`               | `MainInBattleLoop`                                      |
+| `doTurn`                  | `MainInBattleLoop`                                      |
+| `executeMove`             | `ExecutePlayerMove`                                     |
+| `beforeMove`              | `CheckPlayerStatusConditions`                           |
+| `canMove`                 | `CheckIfPlayerNeedsToChargeUp` / `PlayerCanExecuteMove` |
+| `decrementPP`             | `DecrementPP`                                           |
+| `doMove`                  | `PlayerCalcMoveDamage`                                  |
+| `checkCriticalHit`        | `CriticalHitTest`                                       |
+| `calcDamage`              | `GetDamageVarsForPlayerAttack` / `CalculateDamage`      |
+| `adjustDamage`            | `AdjustDamageForMoveType`                               |
+| `randomizeDamage`         | `RandomizeDamage`                                       |
+| `specialDamage`           | `ApplyAttackToEnemyPokemon`                             |
+| `counterDamage`           | `HandleCounterMove`                                     |
+| `applyDamage`             | `ApplyDamageToEnemyPokemon` / `AttackSubstitute`        |
+| `mirrorMove`              | `MirrorMoveCheck` / `MirrorMoveCopyMove`                |
+| `metronome`               | `metronomeCheck` / `MetronomePickMove`                  |
+| `checkHit` / `moveHit`    | `MoveHitTest`                                           |
+| `checkFaint`              | `HasMonFainted` / `HandlePlayerMonFainted`              |
+| `faint`                   | `FaintEnemyPokemon`                                     |
+| `handleResidual`          | `HandlePoisonBurnLeechSeed`                             |
+| `endTurn` / `checkEBC`    | -                                                       |
 
 | pkmn            | Pokémon Red (pret)        |
 | --------------- | ------------------------- |

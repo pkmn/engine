@@ -53,8 +53,11 @@ const MAX_STAT_VALUE = 999;
 pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     if (battle.turn == 0) return start(battle, log);
 
-    const l1 = selectMove(battle, .P1, c1, c2);
-    const l2 = selectMove(battle, .P2, c2, c1);
+    var l1 = false;
+    var l2 = false;
+
+    if (selectMove(battle, .P1, c1, c2, &l1)) |r| return r;
+    if (selectMove(battle, .P2, c2, c1, &l2)) |r| return r;
 
     if (turnOrder(battle, c1, c2) == .P1) {
         if (try doTurn(battle, .P1, c1, l1, .P2, c2, l2, log)) |r| return r;
@@ -95,7 +98,13 @@ fn findFirstAlive(side: *const Side) u8 {
     return 0;
 }
 
-fn selectMove(battle: anytype, player: Player, choice: Choice, foe_choice: Choice) bool {
+fn selectMove(
+    battle: anytype,
+    player: Player,
+    choice: Choice,
+    foe_choice: Choice,
+    locked: *bool,
+) ?Result {
     var side = battle.side(player);
     var volatiles = &side.active.volatiles;
     const stored = side.stored();
@@ -108,7 +117,7 @@ fn selectMove(battle: anytype, player: Player, choice: Choice, foe_choice: Choic
         if (volatiles.Thrashing or volatiles.Charging) break :save true;
 
         // battle menu
-        if (choice.type == .Switch) return false;
+        if (choice.type == .Switch) return null;
 
         // pre-move select
         if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP)) break :save true;
@@ -116,7 +125,18 @@ fn selectMove(battle: anytype, player: Player, choice: Choice, foe_choice: Choic
         if (volatiles.Trapping) {
             // GLITCH: https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
             if (foe_choice.type == .Switch) {
-                // BUG: need to reset side.last_selected_move if originally Metronome
+                const slot = if (player == .P1)
+                    battle.last_selected_indexes.p1
+                else
+                    battle.last_selected_indexes.p2;
+                const last = side.active.move(@truncate(u4, slot));
+                if (last.id == .Metronome) side.last_selected_move = last.id;
+                if (last.id == .MirrorMove) {
+                    if (!showdown) return Result.Error;
+                    // SHOWDOWN: Mirror Move is broken but forcing reuse after switch will cause it
+                    // to fail which is the required behavior to appease the Desync Clause Mod
+                    side.last_selected_move = last.id;
+                }
             }
             break :save true;
         }
@@ -139,27 +159,36 @@ fn selectMove(battle: anytype, player: Player, choice: Choice, foe_choice: Choic
             assert(struggle);
             side.last_selected_move = .Struggle;
         } else {
-            assert(side.active.volatiles.disabled.move != choice.data);
-            const move = side.active.move(choice.data);
-            // You cannot *select* a move with 0 PP, but a 0 PP move can be used automatically
-            assert(showdown or move.pp != 0);
-            side.last_selected_move = move.id;
+            saveMove(battle, player, choice);
         }
 
         // SHOWDOWN: getRandomTarget arbitrarily advances the RNG
         if (showdown) battle.rng.advance(Move.get(side.last_selected_move).frames);
 
-        return false;
+        locked.* = false;
+        return null;
     };
 
-    if (showdown and save) {
-        assert(side.active.volatiles.disabled.move != choice.data);
-        const move = side.active.move(choice.data);
-        // Pokémon Showdown allows you to select moves with 0 PP in certain situations
-        side.last_selected_move = move.id;
-    }
+    if (showdown and save) saveMove(battle, player, choice);
 
-    return true;
+    locked.* = true;
+    return null;
+}
+
+fn saveMove(battle: anytype, player: Player, choice: Choice) void {
+    var side = battle.side(player);
+    assert(side.active.volatiles.disabled.move != choice.data);
+    const move = side.active.move(choice.data);
+    // You cannot *select* a move with 0 PP, but a 0 PP move can be used automatically
+    // SHOWDOWN: Pokémon Showdown allows you to select moves with 0 PP in certain situations
+    assert(showdown or move.pp != 0);
+
+    side.last_selected_move = move.id;
+    if (player == .P1) {
+        battle.last_selected_indexes.p1 = choice.data;
+    } else {
+        battle.last_selected_indexes.p2 = choice.data;
+    }
 }
 
 fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anytype) !void {

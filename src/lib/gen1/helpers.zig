@@ -105,6 +105,7 @@ pub const Side = struct {
             while (j < 4) : (j += 1) {
                 if (rand.chance(u8, 1, 5 + (@as(u8, i) * 2))) {
                     side.last_selected_move = pokemon.moves[j].id;
+                    // BUG: battle.last_selected_indexes is not updated
                 }
                 if (rand.chance(u8, 1, 5 + (@as(u8, i) * 2))) {
                     side.last_used_move = pokemon.moves[j].id;
@@ -140,7 +141,6 @@ pub const Side = struct {
                             volatiles.state =
                                 if (rand.chance(u8, 1, 10)) rand.range(u8, 1, 255 + 1) else 0;
                         } else if (std.mem.eql(u8, field.name, "Rage")) {
-                            volatiles.attacks = 0; // TODO
                             volatiles.state =
                                 if (rand.chance(u8, 1, 10)) rand.range(u8, 1, 255 + 1) else 0;
                         } else if (std.mem.eql(u8, field.name, "Confusion")) {

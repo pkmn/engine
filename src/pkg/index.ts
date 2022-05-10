@@ -31,6 +31,7 @@ export namespace Gen1 {
     pokemon: Iterable<Pokemon>;
     lastUsedMove: ID | undefined;
     lastSelectedMove: ID | undefined;
+    lastSelectedIndex: 1 | 2 | 3 | 4 | undefined;
   }
 
   export interface Pokemon {
@@ -72,7 +73,7 @@ export namespace Gen1 {
     focusenergy?: unknown;
     substitute?: {hp: number};
     recharging?: unknown;
-    rage?: {duration: number; accuracy: number};
+    rage?: {accuracy: number};
     leechseed?: unknown;
     toxic?: unknown;
     lightscreen?: unknown;

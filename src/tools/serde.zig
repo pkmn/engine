@@ -229,7 +229,7 @@ const GEN1: pkmn.gen1.Battle(rng.Random(1)) = .{
                 .Transform = true,
                 .attacks = 2,
                 .state = 100,
-                .transform = 0b0101,
+                .transform = 0b0011,
             },
             .moves = .{
                 .{ .id = .Flamethrower, .pp = 5 },
@@ -244,6 +244,7 @@ const GEN1: pkmn.gen1.Battle(rng.Random(1)) = .{
     } },
     .turn = 609,
     .last_damage = 84,
+    .last_selected_indexes = .{ .p1 = 2, .p2 = 1 },
     .rng = .{ .src = if (pkmn.showdown) .{ .seed = 0x31415926 } else .{
         .seed = .{ 114, 155, 42, 78, 253, 19, 117, 37, 253, 105 },
         .index = 8,

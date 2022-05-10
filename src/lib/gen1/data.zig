@@ -44,7 +44,7 @@ pub fn Battle(comptime RNG: anytype) align(64) type {
         sides: [2]Side,
         turn: u16 = 0,
         last_damage: u16 = 0,
-        _: uX = 0,
+        last_selected_indexes: MoveIndexes = .{},
         rng: RNG,
 
         pub inline fn side(self: *Self, player: Player) *Side {
@@ -72,8 +72,6 @@ pub fn Battle(comptime RNG: anytype) align(64) type {
         }
     };
 }
-
-const uX = if (showdown) u32 else u8;
 
 test "Battle" {
     try expectEqual(384, @sizeOf(Battle(Random)));
@@ -147,6 +145,17 @@ pub const MoveSlot = extern struct {
 
     comptime {
         assert(@sizeOf(MoveSlot) == @sizeOf(u16));
+    }
+};
+
+const uindex = if (showdown) u16 else u4;
+
+pub const MoveIndexes = packed struct {
+    p1: uindex = 0,
+    p2: uindex = 0,
+
+    comptime {
+        assert(@sizeOf(MoveIndexes) == if (showdown) 4 else 1);
     }
 };
 
