@@ -322,28 +322,7 @@ fn executeMove(
 
     const move = Move.get(side.last_selected_move);
     if (move.effect == .SuperFang or move.effect == .SpecialDamage) {
-        // TODO checkHit
-        battle.last_damage = switch (side.last_selected_move) {
-            .SuperFang => @maximum(foe.active.stats.hp / 2, 1),
-            .SeismicToss, .NightShade => side.stored().level,
-            .SonicBoom => 20,
-            .DragonRage => 40,
-            // GLITCH: if power = 0 then a desync occurs (or a miss on Pokémon Showdown)
-            .Psywave => power: {
-                const max = @truncate(u8, @as(u16, side.stored().level) * 3 / 2);
-                // SHOWDOWN: these values will diverge
-                if (showdown) {
-                    break :power battle.rng.range(u8, 0, max);
-                } else {
-                    while (true) {
-                        const r = battle.rng.next();
-                        if (r < max) break :power r;
-                    }
-                }
-            },
-            else => unreachable,
-        };
-        return null; // TODO
+        return specialDamage(battle, player, move, log);
     }
 
     // Can't reorder this even when unused (eg. Counter) as it advances the RNG
@@ -383,7 +362,7 @@ fn executeMove(
         return null; // TODO playerCheckIfFlyOrChargeEffect
     }
 
-    if (!calcDamage(battle, player, move, crit)) return Result.Error;
+    if (!calcDamage(battle, player, move, crit)) return @as(?Result, Result.Error);
     adjustDamage(battle, player);
     randomizeDamage(battle);
 
@@ -521,7 +500,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
                 const move = Move.get(.Pound);
                 if (!calcDamage(battle, player, move, false)) return .err;
                 // Skipping adjustDamage / randomizeDamage / checkHit
-                applyDamage(battle, player, move);
+                applyDamage(battle, player);
 
                 return .done;
             }
@@ -606,7 +585,7 @@ fn canExecute(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
         side.active.volatiles.Charging = false;
         side.active.volatiles.Invulnerable = false;
     } else if (move.effect == .Charge) {
-        try moveEffect(battle, player, move, mslot, log);
+        try Effects.charge(battle, player, log);
         return false;
     }
 
@@ -615,8 +594,10 @@ fn canExecute(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
         return false;
     }
 
-    if (move.effect == .Thrashing or move.effect == .Trapping) {
-        try moveEffect(battle, player, move, mslot, log);
+    if (move.effect == .Thrashing) {
+        Effects.thrashing(battle, player);
+    } else if (move.effect == .Trapping) {
+        Effects.trapping(battle, player);
     }
 
     return true;
@@ -758,18 +739,63 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data) bool {
     return miss;
 }
 
-fn applyDamage(battle: anytype, player: Player, move: Move.Data) void {
-    assert(move.bp != 0);
+fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype) !?Result {
+    const side = battle.side(player);
+    const player_ident = battle.active(player);
+    const foe_ident = battle.active(player.foe());
+
+    if (!checkHit(battle, player, move)) {
+        try log.lastmiss();
+        try log.miss(player_ident, foe_ident);
+        return null;
+    }
+
+    battle.last_damage = switch (side.last_selected_move) {
+        .SuperFang => @maximum(battle.foe(player).active.stats.hp / 2, 1),
+        .SeismicToss, .NightShade => side.stored().level,
+        .SonicBoom => 20,
+        .DragonRage => 40,
+        // GLITCH: if power = 0 then a desync occurs (or a miss on Pokémon Showdown)
+        .Psywave => power: {
+            const max = @truncate(u8, @as(u16, side.stored().level) * 3 / 2);
+            // SHOWDOWN: these values will diverge
+            if (showdown) {
+                break :power battle.rng.range(u8, 0, max);
+            } else {
+                while (true) {
+                    const r = battle.rng.next();
+                    if (r < max) break :power r;
+                }
+            }
+        },
+        else => unreachable,
+    };
+
+    if (battle.last_damage == 0) {
+        if (showdown) {
+            try log.lastmiss();
+            try log.miss(player_ident, foe_ident);
+            return null;
+        } else {
+            return Result.Error;
+        }
+    }
+
+    applyDamage(battle, player);
+    return null;
+}
+
+fn applyDamage(battle: anytype, player: Player) void {
     assert(battle.last_damage != 0);
 
     var foe = battle.foe(player);
     if (foe.active.volatiles.Substitute) {
-        // foe.volatiles.substitute is a u8 so must be less than 255 anyway
         if (battle.last_damage >= foe.active.volatiles.substitute) {
             foe.active.volatiles.substitute = 0;
             foe.active.volatiles.Substitute = false;
             // GLITCH: battle.last_damage is not updated with the amount of HP the Substitute had
         } else {
+            // Safe to truncate since less than foe.volatiles.substitute which is a u8
             foe.active.volatiles.substitute -= @truncate(u8, battle.last_damage);
         }
     } else {
@@ -886,7 +912,7 @@ fn moveEffect(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: 
     return switch (move.effect) {
         .Bide => Effects.bide(battle, player, log),
         .BurnChance1, .BurnChance2 => Effects.burnChance(battle, player, move, log),
-        .Charge => Effects.charge(battle, player, log),
+        .Charge => {}, // canExecute
         .Confusion, .ConfusionChance => Effects.confusion(battle, player, move, log),
         .Conversion => Effects.conversion(battle, player, log),
         .Disable => Effects.disable(battle, player, move, log),
@@ -899,7 +925,7 @@ fn moveEffect(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: 
         .Heal => Effects.heal(battle, player, log),
         .HighCritical => {}, // checkCriticalHit
         .HyperBeam => Effects.hyperBeam(battle, player),
-        .JumpKick, .Metronome, .MirrorMove, .OHKO, .SpecialDamage, .SuperFang => {}, // executeMove
+        .JumpKick, .Metronome, .MirrorMove, .OHKO => {}, // executeMove
         .LeechSeed => Effects.leechSeed(battle, player, move, log),
         .LightScreen => Effects.lightScreen(battle, player, log),
         .Mimic => Effects.mimic(battle, player, move, mslot, log),
@@ -913,13 +939,13 @@ fn moveEffect(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: 
         .Recoil => Effects.recoil(battle, player, log),
         .Reflect => Effects.reflect(battle, player, log),
         .Sleep => Effects.sleep(battle, player, move, log),
+        .SpecialDamage, .SuperFang => {}, // specialDamage
         .Splash => Effects.splash(battle, player, log),
         .Substitute => Effects.substitute(battle, player, log),
         .Swift => {}, // checkHit
         .SwitchAndTeleport => {}, // does nothing outside of wild battles
-        .Thrashing => Effects.thrashing(battle, player),
+        .Thrashing, .Trapping => {}, // canExecute
         .Transform => Effects.transform(battle, player, log),
-        .Trapping => Effects.trapping(battle, player),
         // zig fmt: off
         .AttackUp1, .AttackUp2, .DefenseUp1, .DefenseUp2,
         .EvasionUp1, .SpecialUp1, .SpecialUp2, .SpeedUp2 =>
