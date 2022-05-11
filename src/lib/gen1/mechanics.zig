@@ -291,7 +291,6 @@ fn checkEBC(battle: anytype) bool {
     return false;
 }
 
-// TODO: move beforeMove/canExecute + postExecute out of move!
 fn executeMove(
     battle: anytype,
     player: Player,
@@ -306,19 +305,16 @@ fn executeMove(
         return null;
     }
 
+    var skip_can = false;
     var skip_pp = false;
     switch (try beforeMove(battle, player, choice.data, log)) {
         .done => return null,
-        .damage => |damage| {
-            // TODO: Skip damage calc, decrementPP, MoveHitTest
-            _ = damage;
-        },
+        .skip_can => skip_can = true,
         .skip_pp => skip_pp = true,
         .ok => {},
         .err => return @as(?Result, Result.Error),
     }
-    //
-    if (!try canExecute(battle, player, choice.data, log)) return null;
+    if (!skip_can and !try canExecute(battle, player, choice, skip_pp, log)) return null;
 
     const move = Move.get(side.last_selected_move);
     if (move.effect == .SuperFang or move.effect == .SpecialDamage) {
@@ -329,20 +325,7 @@ fn executeMove(
     const crit = checkCriticalHit(battle, player, move);
 
     // Counter desync due to changing move selection prior to switching is not supported
-    if (side.last_selected_move == .Counter) {
-        const foe_last_move = Move.get(foe.last_selected_move);
-        const miss = foe_last_move.bp == 0 or
-            foe.last_selected_move == .Counter or
-            foe_last_move.type != .Normal or
-            foe_last_move.type != .Fighting or
-            battle.last_damage == 0;
-        const damage = if (battle.last_damage > 0x7FFF) 0xFFFF else battle.last_damage * 2;
-
-        // TODO checkHit, then skip if miss
-        _ = miss;
-        _ = damage;
-        return null;
-    }
+    if (side.last_selected_move == .Counter) return counterDamage(battle, player, move, log);
 
     battle.last_damage = 0;
 
@@ -414,7 +397,7 @@ fn executeMove(
 
 const BeforeMove = union(enum) {
     done,
-    damage: u16,
+    skip_can,
     skip_pp,
     ok,
     err,
@@ -541,14 +524,17 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
         volatiles.Bide = false;
         try log.end(ident, .Bide);
 
-        const damage = volatiles.state *% 2;
+        battle.last_damage = volatiles.state *% 2;
         volatiles.state = 0;
 
-        if (damage == 0) {
+        if (battle.last_damage == 0) {
             try log.fail(ident, .None);
             return .done;
         }
-        return BeforeMove{ .damage = damage };
+
+        // Skip Decrement PP / calcDamage / checkHit
+        applyDamage(battle, player);
+        return .done;
     }
 
     if (volatiles.Thrashing) {
@@ -565,19 +551,22 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
                 (battle.rng.next() & 3) + 2);
             try log.start(ident, .ConfusionSilent);
         }
-        return .skip_pp;
+        return .skip_can;
     }
 
     if (volatiles.Trapping) {
         assert(volatiles.attacks > 0);
         volatiles.attacks -= 1;
-        if (volatiles.attacks != 0) return BeforeMove{ .damage = battle.last_damage };
+
+        // Skip Decrement PP / calcDamage / checkHit
+        applyDamage(battle, player);
+        return .done;
     }
 
     return if (volatiles.Rage) .skip_pp else .ok;
 }
 
-fn canExecute(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
+fn canExecute(battle: anytype, player: Player, choice: Choice, skip_pp: bool, log: anytype) !bool {
     var side = battle.side(player);
     const move = Move.get(side.last_selected_move);
 
@@ -589,8 +578,10 @@ fn canExecute(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
         return false;
     }
 
+    if (!skip_pp) decrementPP(side, choice);
+
     if (move.effect.skipExecute()) {
-        try moveEffect(battle, player, move, mslot, log);
+        try moveEffect(battle, player, move, choice.data, log);
         return false;
     }
 
@@ -601,6 +592,25 @@ fn canExecute(battle: anytype, player: Player, mslot: u8, log: anytype) !bool {
     }
 
     return true;
+}
+
+// TODO: struggle bypass/wrap underflow
+fn decrementPP(side: *Side, choice: Choice) void {
+    assert(choice.type == .Move);
+    assert(choice.data <= 4);
+
+    if (choice.data == 0) return; // Struggle
+
+    var active = &side.active;
+    const volatiles = &active.volatiles;
+
+    assert(!volatiles.Rage and !volatiles.Thrashing);
+    if (volatiles.Bide or volatiles.MultiHit) return;
+
+    active.move(choice.data).pp -%= 1;
+    if (volatiles.Transform) return;
+
+    side.stored().move(choice.data).pp -%= 1;
 }
 
 fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data) bool {
@@ -716,7 +726,6 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data) bool {
         side.active.volatiles.state
     else
         @as(u16, Gen12.percent(move.accuracy()));
-
     var boost = BOOSTS[@intCast(u4, side.active.boosts.accuracy + 6)];
     accuracy = accuracy * boost[0] / boost[1];
     boost = BOOSTS[@intCast(u4, -foe.active.boosts.evasion + 6)];
@@ -779,6 +788,33 @@ fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
         } else {
             return Result.Error;
         }
+    }
+
+    applyDamage(battle, player);
+    return null;
+}
+
+fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype) !?Result {
+    const foe = battle.foe(player);
+    const foe_last_move = Move.get(foe.last_selected_move);
+    const miss = foe_last_move.bp == 0 or
+        foe.last_selected_move == .Counter or
+        foe_last_move.type != .Normal or
+        foe_last_move.type != .Fighting or
+        battle.last_damage == 0;
+
+    if (miss) {
+        try log.lastmiss();
+        try log.miss(battle.active(player), battle.active(player.foe()));
+        return null;
+    }
+
+    battle.last_damage = if (battle.last_damage > 0x7FFF) 0xFFFF else battle.last_damage * 2;
+
+    if (!checkHit(battle, player, move)) {
+        try log.lastmiss();
+        try log.miss(battle.active(player), battle.active(player.foe()));
+        return null;
     }
 
     applyDamage(battle, player);
@@ -887,24 +923,6 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
         foe_stored.hp = @minimum(foe_stored.hp + damage, foe_stored.stats.hp);
         try log.drain(foe_ident, foe_stored, ident);
     }
-}
-
-// TODO: struggle bypass/wrap underflow
-fn decrementPP(side: *Side, choice: Choice) void {
-    assert(choice.type == .Move);
-    assert(choice.data <= 4);
-
-    if (choice.data == 0) return; // Struggle
-
-    var active = &side.active;
-    const volatiles = &active.volatiles;
-
-    if (volatiles.Bide or volatiles.Thrashing or volatiles.MultiHit or volatiles.Rage) return;
-
-    active.move(choice.data).pp -= 1;
-    if (volatiles.Transform) return;
-
-    side.stored().move(choice.data).pp -= 1;
 }
 
 // TODO: optimize by splitting up into skipExecuteEffect/specialEffect etc to make switch faster?
