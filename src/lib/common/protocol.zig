@@ -146,7 +146,6 @@ pub const Status = enum(u8) {
 };
 
 pub const CureStatus = enum(u8) {
-    None,
     Message,
     Silent,
 };
