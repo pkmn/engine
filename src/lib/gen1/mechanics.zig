@@ -349,7 +349,7 @@ fn executeMove(
     adjustDamage(battle, player);
     randomizeDamage(battle);
 
-    const hit = checkHit(battle, player, move);
+    if (!try checkHit(battle, player, move, log)) return null; // TODO ???
 
     if (move.effect == .MirrorMove) {
         if (foe.last_used_move == .None or foe.last_used_move == .MirrorMove) {
@@ -384,9 +384,6 @@ fn executeMove(
         try moveEffect(battle, player, move, choice.data, log);
         return null;
     }
-
-    // TODO
-    _ = hit;
 
     // if (!move.effect.special()) {
     //     try moveEffect(battle, player, move, choice.data, log);
@@ -706,56 +703,61 @@ fn randomizeDamage(battle: anytype) void {
     battle.last_damage = battle.last_damage *% random / 255;
 }
 
-fn checkHit(battle: anytype, player: Player, move: Move.Data) bool {
-    var side = battle.side(player);
-    const foe = battle.foe(player);
+fn checkHit(battle: anytype, player: Player, move: Move.Data, log: anytype) !bool {
+    const hit = hit: {
+        var side = battle.side(player);
+        const foe = battle.foe(player);
 
-    assert(!side.active.volatiles.Bide and move.effect != .Bide);
+        assert(!side.active.volatiles.Bide and move.effect != .Bide);
 
-    if (move.effect == .DreamEater and !Status.is(foe.stored().status, .SLP)) return false;
-    if (move.effect == .Swift) return true;
-    if (foe.active.volatiles.Invulnerable) return false;
+        if (move.effect == .DreamEater and !Status.is(foe.stored().status, .SLP)) break :hit false;
+        if (move.effect == .Swift) break :hit true;
+        if (foe.active.volatiles.Invulnerable) break :hit false;
 
-    // Conversion / Haze / Light Screen / Reflect qualify but do not call checkHit
-    if (foe.active.volatiles.Mist and move.effect.statDown()) return false;
+        // Conversion / Haze / Light Screen / Reflect qualify but do not call checkHit
+        if (foe.active.volatiles.Mist and move.effect.statDown()) break :hit false;
 
-    // GLITCH: Thrash / Petal Dance / Rage get their accuracy overwritten on subsequent hits
-    const overwritten = side.active.volatiles.state > 0;
-    assert(!overwritten or (move.effect == .Thrashing or move.effect == .Rage));
-    var accuracy = if (!showdown and overwritten)
-        side.active.volatiles.state
-    else
-        @as(u16, Gen12.percent(move.accuracy()));
-    var boost = BOOSTS[@intCast(u4, side.active.boosts.accuracy + 6)];
-    accuracy = accuracy * boost[0] / boost[1];
-    boost = BOOSTS[@intCast(u4, -foe.active.boosts.evasion + 6)];
-    accuracy = accuracy * boost[0] / boost[1];
-    accuracy = @minimum(255, @maximum(1, accuracy));
+        // GLITCH: Thrash / Petal Dance / Rage get their accuracy overwritten on subsequent hits
+        const overwritten = side.active.volatiles.state > 0;
+        assert(!overwritten or (move.effect == .Thrashing or move.effect == .Rage));
+        var accuracy = if (!showdown and overwritten)
+            side.active.volatiles.state
+        else
+            @as(u16, Gen12.percent(move.accuracy()));
+        var boost = BOOSTS[@intCast(u4, side.active.boosts.accuracy + 6)];
+        accuracy = accuracy * boost[0] / boost[1];
+        boost = BOOSTS[@intCast(u4, -foe.active.boosts.evasion + 6)];
+        accuracy = accuracy * boost[0] / boost[1];
+        accuracy = @minimum(255, @maximum(1, accuracy));
 
-    side.active.volatiles.state = accuracy;
+        side.active.volatiles.state = accuracy;
 
-    // GLITCH: max accuracy is 255 so 1/256 chance of miss
-    const miss = if (showdown)
-        !battle.rng.chance(u8, @truncate(u8, accuracy), 256)
-    else
-        battle.rng.next() >= accuracy;
+        // GLITCH: max accuracy is 255 so 1/256 chance of miss
+        const miss = if (showdown)
+            !battle.rng.chance(u8, @truncate(u8, accuracy), 256)
+        else
+            battle.rng.next() >= accuracy;
 
-    if (miss) {
-        battle.last_damage = 0;
-        side.active.volatiles.Trapping = false;
+        if (miss) {
+            battle.last_damage = 0;
+            side.active.volatiles.Trapping = false;
+        }
+
+        break :hit !miss;
+    };
+
+    if (!hit) {
+        try log.lastmiss();
+        try log.miss(battle.active(player), battle.active(player.foe()));
     }
 
-    return miss;
+    return hit;
 }
 
 fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype) !?Result {
     const side = battle.side(player);
 
-    if (!checkHit(battle, player, move)) {
-        try log.lastmiss();
-        try log.miss(battle.active(player), battle.active(player.foe()));
-        return null;
-    }
+    if (!try checkHit(battle, player, move, log)) return null;
 
     battle.last_damage = switch (side.last_selected_move) {
         .SuperFang => @maximum(battle.foe(player).active.stats.hp / 2, 1),
@@ -809,11 +811,7 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
 
     battle.last_damage = if (battle.last_damage > 0x7FFF) 0xFFFF else battle.last_damage * 2;
 
-    if (!checkHit(battle, player, move)) {
-        try log.lastmiss();
-        try log.miss(battle.active(player), battle.active(player.foe()));
-        return null;
-    }
+    if (!try checkHit(battle, player, move, log)) return null;
 
     applyDamage(battle, player);
     return null;
@@ -1036,13 +1034,8 @@ pub const Effects = struct {
             else
                 battle.rng.next() < Gen12.percent(10);
             if (!chance) return;
-        } else {
-            if (foe.active.volatiles.Substitute) return;
-
-            if (!checkHit(battle, player, move)) {
-                try log.lastmiss();
-                return log.miss(battle.active(player), battle.active(player.foe()));
-            }
+        } else if (foe.active.volatiles.Substitute or !try checkHit(battle, player, move, log)) {
+            return;
         }
 
         if (foe.active.volatiles.Confusion) return;
@@ -1073,7 +1066,8 @@ pub const Effects = struct {
         var volatiles = &foe.active.volatiles;
         const foe_ident = battle.active(player.foe());
 
-        if (!checkHit(battle, player, move) or volatiles.disabled.move != 0) {
+        if (!try checkHit(battle, player, move, log)) return;
+        if (volatiles.disabled.move != 0) {
             try log.lastmiss();
             return log.miss(battle.active(player), foe_ident);
         }
@@ -1223,11 +1217,7 @@ pub const Effects = struct {
     fn leechSeed(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
         var foe = battle.foe(player);
 
-        if (!checkHit(battle, player, move)) {
-            try log.lastmiss();
-            return log.miss(battle.active(player), battle.active(player.foe()));
-        }
-
+        if (!try checkHit(battle, player, move, log)) return;
         if (foe.active.types.includes(.Grass) or foe.active.volatiles.LeechSeed) return;
         foe.active.volatiles.LeechSeed = true;
 
@@ -1260,10 +1250,7 @@ pub const Effects = struct {
             side.active.moves[mslot].id == .Metronome or
             side.active.moves[mslot].id == .MirrorMove);
 
-        if (!checkHit(battle, player, move) or !ok) {
-            try log.lastmiss();
-            return log.miss(battle.active(player), battle.active(player.foe()));
-        }
+        if (!try checkHit(battle, player, move, log) or !ok) return;
 
         const moves = &foe.active.moves;
         const rslot = randomMoveSlot(&battle.rng, moves);
@@ -1302,10 +1289,7 @@ pub const Effects = struct {
 
         if (Status.any(foe_stored.status)) return log.fail(foe_ident, .Paralysis);
         if (foe.active.types.immune(move.type)) return log.immune(foe_ident, .None);
-        if (!checkHit(battle, player, move)) {
-            try log.lastmiss();
-            return log.miss(battle.active(player), foe_ident);
-        }
+        if (!try checkHit(battle, player, move, log)) return;
 
         foe_stored.status = Status.init(.PAR);
         foe.active.stats.spe = @maximum(foe.active.stats.spe / 4, 1);
@@ -1360,10 +1344,7 @@ pub const Effects = struct {
                 Gen12.percent(40));
         if (!chance) return;
 
-        if (!checkHit(battle, player, move)) {
-            try log.lastmiss();
-            return log.miss(battle.active(player), foe_ident);
-        }
+        if (!try checkHit(battle, player, move, log)) return;
 
         foe_stored.status = Status.init(.PSN);
         if (foe.last_selected_move == .Toxic) {
@@ -1408,9 +1389,8 @@ pub const Effects = struct {
             // Hit test not applied if the target is recharging (fallthrough)
         } else if (Status.any(foe_stored.status)) {
             return log.fail(foe_ident, .Sleep);
-        } else if (!checkHit(battle, player, move)) {
-            try log.lastmiss();
-            return log.miss(battle.active(player), foe_ident);
+        } else if (!try checkHit(battle, player, move, log)) {
+            return;
         }
 
         // SHOWDOWN: these values will diverge
@@ -1581,10 +1561,8 @@ pub const Effects = struct {
             else
                 battle.rng.next() < Gen12.percent(33) + 1;
             if (chance or foe.active.volatiles.Invulnerable) return;
-        } else if (!checkHit(battle, player, move)) {
-            // checkHit already checks for Invulnerable
-            try log.lastmiss();
-            return log.miss(battle.active(player), foe_ident);
+        } else if (!try checkHit(battle, player, move, log)) {
+            return; // checkHit already checks for Invulnerable
         }
 
         var stats = &foe.active.stats;
