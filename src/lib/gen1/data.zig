@@ -326,38 +326,38 @@ test "Move" {
     try expectEqual(@as(u8, 30), move.accuracy());
     try expectEqual(Type.Ground, move.type);
 
-    try expect(!Move.Effect.skipExecute(.None));
-    try expect(Move.Effect.skipExecute(.Confusion));
-    try expect(Move.Effect.skipExecute(.Transform));
-    try expect(!Move.Effect.skipExecute(.AccuracyDown1));
+    try expect(!Move.Effect.onBegin(.None));
+    try expect(Move.Effect.onBegin(.Confusion));
+    try expect(Move.Effect.onBegin(.Transform));
+    try expect(!Move.Effect.onBegin(.AccuracyDown1));
 
-    try expect(!Move.Effect.statDown(.Transform));
-    try expect(Move.Effect.statDown(.AccuracyDown1));
-    try expect(Move.Effect.statDown(.SpeedDown1));
-    try expect(!Move.Effect.statDown(.AttackUp1));
+    try expect(!Move.Effect.isStatDown(.Transform));
+    try expect(Move.Effect.isStatDown(.AccuracyDown1));
+    try expect(Move.Effect.isStatDown(.SpeedDown1));
+    try expect(!Move.Effect.isStatDown(.AttackUp1));
 
-    try expect(!Move.Effect.postExecute(.Transform));
-    try expect(Move.Effect.postExecute(.AccuracyDown1));
-    try expect(Move.Effect.postExecute(.SpeedUp2));
-    try expect(!Move.Effect.postExecute(.Charge));
+    try expect(!Move.Effect.onEnd(.Transform));
+    try expect(Move.Effect.onEnd(.AccuracyDown1));
+    try expect(Move.Effect.onEnd(.SpeedUp2));
+    try expect(!Move.Effect.onEnd(.Charge));
 
-    try expect(!Move.Effect.alwaysHappen(.SpeedUp2));
-    try expect(Move.Effect.alwaysHappen(.DoubleHit));
-    try expect(Move.Effect.alwaysHappen(.Recoil));
-    try expect(!Move.Effect.alwaysHappen(.Charge));
-    try expect(!Move.Effect.alwaysHappen(.SpeedDownChance));
-    try expect(Move.Effect.alwaysHappen(.Rage));
-    try expect(Move.Effect.alwaysHappen(.Twineedle));
+    try expect(!Move.Effect.alwaysHappens(.SpeedUp2));
+    try expect(Move.Effect.alwaysHappens(.DoubleHit));
+    try expect(Move.Effect.alwaysHappens(.Recoil));
+    try expect(!Move.Effect.alwaysHappens(.Charge));
+    try expect(!Move.Effect.alwaysHappens(.SpeedDownChance));
+    try expect(Move.Effect.alwaysHappens(.Rage));
+    try expect(Move.Effect.alwaysHappens(.Twineedle));
 
-    try expect(!Move.Effect.special(.SpeedUp2));
-    try expect(Move.Effect.special(.DoubleHit));
-    try expect(Move.Effect.special(.Trapping));
-    try expect(!Move.Effect.special(.AttackDownChance));
+    try expect(!Move.Effect.isSpecial(.SpeedUp2));
+    try expect(Move.Effect.isSpecial(.DoubleHit));
+    try expect(Move.Effect.isSpecial(.Trapping));
+    try expect(!Move.Effect.isSpecial(.AttackDownChance));
 
-    try expect(!Move.Effect.statDownChance(.Trapping));
-    try expect(Move.Effect.statDownChance(.AttackDownChance));
-    try expect(Move.Effect.statDownChance(.SpecialDownChance));
-    try expect(!Move.Effect.statDownChance(.BurnChance1));
+    try expect(!Move.Effect.isStatDownChance(.Trapping));
+    try expect(Move.Effect.isStatDownChance(.AttackDownChance));
+    try expect(Move.Effect.isStatDownChance(.SpecialDownChance));
+    try expect(!Move.Effect.isStatDownChance(.BurnChance1));
 
     try expectEqual(@as(u8, 0), Move.Bide.frames());
     try expectEqual(@as(u8, 1), Move.Tackle.frames());

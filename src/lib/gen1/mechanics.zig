@@ -291,15 +291,11 @@ fn checkEBC(battle: anytype) bool {
     return false;
 }
 
-fn executeMove(
-    battle: anytype,
-    player: Player,
-    choice: Choice,
-    log: anytype,
-) @TypeOf(log).Error!?Result {
+fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !?Result {
     var side = battle.side(player);
-    const foe = battle.foe(player);
+
     if (side.last_selected_move == .SKIP_TURN) return null;
+
     if (choice.type == .Switch) {
         try switchIn(battle, player, choice.data, false, log);
         return null;
@@ -314,9 +310,18 @@ fn executeMove(
         .ok => {},
         .err => return @as(?Result, Result.Error),
     }
-    if (!skip_can and !try canExecute(battle, player, choice, skip_pp, log)) return null;
+
+    if (!skip_can and !try canMove(battle, player, choice, skip_pp, log)) return null;
+
+    return doMove(battle, player, choice, false, log);
+}
+
+fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: anytype) !?Result {
+    var side = battle.side(player);
+    const foe = battle.foe(player);
 
     const move = Move.get(side.last_selected_move);
+
     if (move.effect == .SuperFang or move.effect == .SpecialDamage) {
         return specialDamage(battle, player, move, log);
     }
@@ -327,78 +332,61 @@ fn executeMove(
     // Counter desync due to changing move selection prior to switching is not supported
     if (side.last_selected_move == .Counter) return counterDamage(battle, player, move, log);
 
+    var ohko = false;
     battle.last_damage = 0;
+    // Dissambly does a check to allow 0 BP MultiHit moves this isn't possible in practice
+    if (move.bp != 0) {
+        if (move.effect == .OHKO) {
+            ohko = side.active.stats.spe >= foe.active.stats.spe;
+            if (ohko) {
+                // This can overflow after adjustDamage, but will still be sufficient to OHKO
+                battle.last_damage = 65535;
+            } else {
+                battle.last_damage = 0;
+                try log.immune(battle.active(player.foe()), .OHKO);
+            }
+        } else {
+            if (!calcDamage(battle, player, move, crit)) return @as(?Result, Result.Error);
+        }
 
-    if (move.effect == .OHKO) {
-        const miss = side.active.stats.spe < foe.active.stats.spe;
-        // This can overflow after adjustDamage, but will still be sufficient to OHKO
-        const damage: u16 = if (miss) 0 else 65535;
-        const ohko = !miss;
-
-        // TODO
-        _ = miss;
-        _ = damage;
-        _ = ohko;
+        adjustDamage(battle, player);
+        randomizeDamage(battle);
     }
 
-    if (move.bp == 0) {
-        return null; // TODO playerCheckIfFlyOrChargeEffect
+    var miss = (try checkHit(battle, player, move, log)) or missed;
+    // While battle.last_damage could have been set to 0 from the beginning but we
+    // still need to run through all the functions to advance the RNG approriately
+    if (!miss and battle.last_damage == 0) {
+        try log.lastmiss();
+        try log.miss(battle.active(player), battle.active(player.foe()));
+        miss = true;
     }
-
-    if (!calcDamage(battle, player, move, crit)) return @as(?Result, Result.Error);
-    adjustDamage(battle, player);
-    randomizeDamage(battle);
-
-    if (!try checkHit(battle, player, move, log)) return null; // TODO ???
 
     if (move.effect == .MirrorMove) {
-        if (foe.last_used_move == .None or foe.last_used_move == .MirrorMove) {
-            // TODO
-            return null; // TODO
-        } else {
-            // FIXME side.last_selected_move = foe.last_used_move;
-            // TODO: return @call(.{.modifier = .always_tail}, executeMove, battle, player, choice, log);
-            return executeMove(battle, player, choice, log);
-        }
+        return mirrorMove(battle, player, choice, miss, log);
     } else if (move.effect == .Metronome) {
-        // FIXME: test this + show where differs
-        // SHOWDOWN: these values will diverge
-        const random = if (showdown) blk: {
-            const r = battle.rng.range(u8, 0, @enumToInt(Move.Struggle) - 2);
-            break :blk @intToEnum(Move, r + @as(u2, (if (r < @enumToInt(Move.Metronome)) 1 else 2)));
-        } else loop: {
-            while (true) {
-                const r = battle.rng.next();
-                if (r == 0 or r == @enumToInt(Move.Metronome)) continue;
-                if (r >= @enumToInt(Move.Struggle)) continue;
-                break :loop @intToEnum(Move, r);
-            }
-        };
-
-        _ = random; // FIXME side.last_selected_move = random
-        // TODO: return @call(.{.modifier = .always_tail}, executeMove, battle, player, choice, log);
-        return executeMove(battle, player, choice, log);
+        return metronome(battle, player, choice, miss, log);
     }
 
-    if (move.effect.postExecute()) {
+    if (move.effect.onEnd()) {
         try moveEffect(battle, player, move, choice.data, log);
         return null;
     }
 
-    // if (!move.effect.special()) {
+    if (miss) {}
+
+    // TODO applyDamage
+
+    if (ohko) try log.ohko();
+
+    // if (!move.effect.isSpecial()) {
     //     try moveEffect(battle, player, move, choice.data, log);
     // }
 
     return null;
 }
 
-const BeforeMove = union(enum) {
-    done,
-    skip_can,
-    skip_pp,
-    ok,
-    err,
-};
+const BeforeMove = union(enum) { done, skip_can, skip_pp, ok, err };
 
 fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeMove {
     var side = battle.side(player);
@@ -480,7 +468,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
                 const move = Move.get(.Pound);
                 if (!calcDamage(battle, player, move, false)) return .err;
                 // Skipping adjustDamage / randomizeDamage / checkHit
-                applyDamage(battle, player);
+                try applyDamage(battle, player, log);
 
                 return .done;
             }
@@ -530,7 +518,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
         }
 
         // Skip Decrement PP / calcDamage / checkHit
-        applyDamage(battle, player);
+        try applyDamage(battle, player, log);
         return .done;
     }
 
@@ -556,14 +544,14 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
         volatiles.attacks -= 1;
 
         // Skip Decrement PP / calcDamage / checkHit
-        applyDamage(battle, player);
+        try applyDamage(battle, player, log);
         return .done;
     }
 
     return if (volatiles.Rage) .skip_pp else .ok;
 }
 
-fn canExecute(battle: anytype, player: Player, choice: Choice, skip_pp: bool, log: anytype) !bool {
+fn canMove(battle: anytype, player: Player, choice: Choice, skip_pp: bool, log: anytype) !bool {
     var side = battle.side(player);
     const move = Move.get(side.last_selected_move);
 
@@ -575,9 +563,10 @@ fn canExecute(battle: anytype, player: Player, choice: Choice, skip_pp: bool, lo
         return false;
     }
 
+    side.last_used_move = side.last_selected_move;
     if (!skip_pp) decrementPP(side, choice);
 
-    if (move.effect.skipExecute()) {
+    if (move.effect.onBegin()) {
         try moveEffect(battle, player, move, choice.data, log);
         return false;
     }
@@ -591,7 +580,6 @@ fn canExecute(battle: anytype, player: Player, choice: Choice, skip_pp: bool, lo
     return true;
 }
 
-// TODO: struggle bypass/wrap underflow
 fn decrementPP(side: *Side, choice: Choice) void {
     assert(choice.type == .Move);
     assert(choice.data <= 4);
@@ -632,6 +620,8 @@ fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data) bool {
 }
 
 fn calcDamage(battle: anytype, player: Player, move: Move.Data, crit: bool) bool {
+    assert(move.bp != 0);
+
     const side = battle.side(player);
     const foe = battle.foe(player);
 
@@ -703,57 +693,6 @@ fn randomizeDamage(battle: anytype) void {
     battle.last_damage = battle.last_damage *% random / 255;
 }
 
-fn checkHit(battle: anytype, player: Player, move: Move.Data, log: anytype) !bool {
-    const hit = hit: {
-        var side = battle.side(player);
-        const foe = battle.foe(player);
-
-        assert(!side.active.volatiles.Bide and move.effect != .Bide);
-
-        if (move.effect == .DreamEater and !Status.is(foe.stored().status, .SLP)) break :hit false;
-        if (move.effect == .Swift) break :hit true;
-        if (foe.active.volatiles.Invulnerable) break :hit false;
-
-        // Conversion / Haze / Light Screen / Reflect qualify but do not call checkHit
-        if (foe.active.volatiles.Mist and move.effect.statDown()) break :hit false;
-
-        // GLITCH: Thrash / Petal Dance / Rage get their accuracy overwritten on subsequent hits
-        const overwritten = side.active.volatiles.state > 0;
-        assert(!overwritten or (move.effect == .Thrashing or move.effect == .Rage));
-        var accuracy = if (!showdown and overwritten)
-            side.active.volatiles.state
-        else
-            @as(u16, Gen12.percent(move.accuracy()));
-        var boost = BOOSTS[@intCast(u4, side.active.boosts.accuracy + 6)];
-        accuracy = accuracy * boost[0] / boost[1];
-        boost = BOOSTS[@intCast(u4, -foe.active.boosts.evasion + 6)];
-        accuracy = accuracy * boost[0] / boost[1];
-        accuracy = @minimum(255, @maximum(1, accuracy));
-
-        side.active.volatiles.state = accuracy;
-
-        // GLITCH: max accuracy is 255 so 1/256 chance of miss
-        const miss = if (showdown)
-            !battle.rng.chance(u8, @truncate(u8, accuracy), 256)
-        else
-            battle.rng.next() >= accuracy;
-
-        if (miss) {
-            battle.last_damage = 0;
-            side.active.volatiles.Trapping = false;
-        }
-
-        break :hit !miss;
-    };
-
-    if (!hit) {
-        try log.lastmiss();
-        try log.miss(battle.active(player), battle.active(player.foe()));
-    }
-
-    return hit;
-}
-
 fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype) !?Result {
     const side = battle.side(player);
 
@@ -790,7 +729,7 @@ fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
         }
     }
 
-    applyDamage(battle, player);
+    try applyDamage(battle, player, log);
     return null;
 }
 
@@ -813,11 +752,11 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
 
     if (!try checkHit(battle, player, move, log)) return null;
 
-    applyDamage(battle, player);
+    try applyDamage(battle, player, log);
     return null;
 }
 
-fn applyDamage(battle: anytype, player: Player) void {
+fn applyDamage(battle: anytype, player: Player, log: anytype) !void {
     assert(battle.last_damage != 0);
 
     var foe = battle.foe(player);
@@ -829,11 +768,60 @@ fn applyDamage(battle: anytype, player: Player) void {
         } else {
             // Safe to truncate since less than foe.volatiles.substitute which is a u8
             foe.active.volatiles.substitute -= @truncate(u8, battle.last_damage);
+            try log.activate(battle.active(player.foe()), .Substitute);
         }
     } else {
         if (battle.last_damage > foe.stored().hp) battle.last_damage = foe.stored().hp;
         foe.stored().hp -= battle.last_damage;
+        try log.damage(battle.active(player.foe()), foe.stored(), .None);
     }
+}
+
+fn checkHit(battle: anytype, player: Player, move: Move.Data, log: anytype) !bool {
+    var side = battle.side(player);
+    const foe = battle.foe(player);
+
+    const miss = miss: {
+        assert(!side.active.volatiles.Bide);
+
+        if (move.effect == .DreamEater and !Status.is(foe.stored().status, .SLP)) break :miss true;
+        if (move.effect == .Swift) break :miss false;
+        if (foe.active.volatiles.Invulnerable) break :miss true;
+
+        // Conversion / Haze / Light Screen / Reflect qualify but do not call checkHit
+        if (foe.active.volatiles.Mist and move.effect.isStatDown()) break :miss true;
+
+        // GLITCH: Thrash / Petal Dance / Rage get their accuracy overwritten on subsequent hits
+        const overwritten = side.active.volatiles.state > 0;
+        assert(!overwritten or (move.effect == .Thrashing or move.effect == .Rage));
+        var accuracy = if (!showdown and overwritten)
+            side.active.volatiles.state
+        else
+            @as(u16, Gen12.percent(move.accuracy()));
+        var boost = BOOSTS[@intCast(u4, side.active.boosts.accuracy + 6)];
+        accuracy = accuracy * boost[0] / boost[1];
+        boost = BOOSTS[@intCast(u4, -foe.active.boosts.evasion + 6)];
+        accuracy = accuracy * boost[0] / boost[1];
+        accuracy = @minimum(255, @maximum(1, accuracy));
+
+        side.active.volatiles.state = accuracy;
+
+        // GLITCH: max accuracy is 255 so 1/256 chance of miss
+        break :miss if (showdown)
+            !battle.rng.chance(u8, @truncate(u8, accuracy), 256)
+        else
+            battle.rng.next() >= accuracy;
+    };
+
+    if (miss) {
+        try log.lastmiss();
+        try log.miss(battle.active(player), battle.active(player.foe()));
+
+        battle.last_damage = 0;
+        side.active.volatiles.Trapping = false;
+    }
+
+    return !miss;
 }
 
 fn checkFaint(battle: anytype, player: Player, log: anytype) @TypeOf(log).Error!?Result {
@@ -921,12 +909,47 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
     }
 }
 
-// TODO: optimize by splitting up into skipExecuteEffect/specialEffect etc to make switch faster?
+fn mirrorMove(battle: anytype, player: Player, choice: Choice, miss: bool, log: anytype) !?Result {
+    var side = battle.side(player);
+    const foe = battle.foe(player);
+
+    if (foe.last_used_move == .None or foe.last_used_move == .MirrorMove) {
+        try log.lastmiss();
+        try log.miss(battle.active(player), battle.active(player.foe()));
+        return null;
+    }
+
+    side.last_selected_move = foe.last_used_move;
+
+    if (!try canMove(battle, player, choice, true, log)) return null;
+    return doMove(battle, player, choice, miss, log);
+}
+
+fn metronome(battle: anytype, player: Player, choice: Choice, miss: bool, log: anytype) !?Result {
+    var side = battle.side(player);
+
+    // SHOWDOWN: these values will diverge
+    side.last_selected_move = if (showdown) blk: {
+        const r = battle.rng.range(u8, 0, @enumToInt(Move.Struggle) - 1);
+        break :blk @intToEnum(Move, r + @as(u2, (if (r < @enumToInt(Move.Metronome)) 1 else 2)));
+    } else loop: {
+        while (true) {
+            const r = battle.rng.next();
+            if (r == 0 or r == @enumToInt(Move.Metronome)) continue;
+            if (r >= @enumToInt(Move.Struggle)) continue;
+            break :loop @intToEnum(Move, r);
+        }
+    };
+
+    if (!try canMove(battle, player, choice, true, log)) return null;
+    return doMove(battle, player, choice, miss, log);
+}
+
+// TODO: optimize by splitting up into onBegin/onEnd/regular etc to make switch faster?
 fn moveEffect(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: anytype) !void {
     return switch (move.effect) {
         .Bide => Effects.bide(battle, player, log),
         .BurnChance1, .BurnChance2 => Effects.burnChance(battle, player, move, log),
-        .Charge => {}, // canExecute
         .Confusion, .ConfusionChance => Effects.confusion(battle, player, move, log),
         .Conversion => Effects.conversion(battle, player, log),
         .Disable => Effects.disable(battle, player, move, log),
@@ -937,9 +960,7 @@ fn moveEffect(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: 
         .FreezeChance => Effects.freezeChance(battle, player, move, log),
         .Haze => Effects.haze(battle, player, log),
         .Heal => Effects.heal(battle, player, log),
-        .HighCritical => {}, // checkCriticalHit
         .HyperBeam => Effects.hyperBeam(battle, player),
-        .JumpKick, .Metronome, .MirrorMove, .OHKO => {}, // executeMove
         .LeechSeed => Effects.leechSeed(battle, player, move, log),
         .LightScreen => Effects.lightScreen(battle, player, log),
         .Mimic => Effects.mimic(battle, player, move, mslot, log),
@@ -953,12 +974,8 @@ fn moveEffect(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: 
         .Recoil => Effects.recoil(battle, player, log),
         .Reflect => Effects.reflect(battle, player, log),
         .Sleep => Effects.sleep(battle, player, move, log),
-        .SpecialDamage, .SuperFang => {}, // specialDamage
         .Splash => Effects.splash(battle, player, log),
         .Substitute => Effects.substitute(battle, player, log),
-        .Swift => {}, // checkHit
-        .SwitchAndTeleport => {}, // does nothing outside of wild battles
-        .Thrashing, .Trapping => {}, // canExecute
         .Transform => Effects.transform(battle, player, log),
         // zig fmt: off
         .AttackUp1, .AttackUp2, .DefenseUp1, .DefenseUp2,
@@ -968,7 +985,7 @@ fn moveEffect(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: 
         .AttackDownChance, .DefenseDownChance, .SpecialDownChance, .SpeedDownChance =>
             Effects.unboost(battle, player, move, log),
         // zig fmt: on
-        .None => {},
+        else => {},
     };
 }
 
@@ -1035,7 +1052,7 @@ pub const Effects = struct {
                 battle.rng.next() < Gen12.percent(10);
             if (!chance) return;
         } else if (foe.active.volatiles.Substitute or !try checkHit(battle, player, move, log)) {
-            return;
+            return; // FIXME needs miss already applied
         }
 
         if (foe.active.volatiles.Confusion) return;
@@ -1555,7 +1572,7 @@ pub const Effects = struct {
 
         if (foe.active.volatiles.Substitute) return;
 
-        if (move.effect.statDownChance()) {
+        if (move.effect.isStatDownChance()) {
             const chance = if (showdown)
                 battle.rng.chance(u8, 85, 256)
             else

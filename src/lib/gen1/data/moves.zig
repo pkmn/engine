@@ -1522,7 +1522,7 @@ pub const Move = enum(u8) {
 
     pub const Effect = enum(u8) {
         None,
-        // skipExecute
+        // onBeginMove
         Confusion,
         Conversion,
         FocusEnergy,
@@ -1539,7 +1539,7 @@ pub const Move = enum(u8) {
         Substitute,
         SwitchAndTeleport,
         Transform,
-        // postExecute
+        // onEnd
         AccuracyDown1,
         AttackDown1,
         DefenseDown1,
@@ -1555,7 +1555,7 @@ pub const Move = enum(u8) {
         SpecialUp1,
         SpecialUp2,
         SpeedUp2,
-        // special
+        // isSpecial
         DoubleHit,
         DrainHP,
         DreamEater,
@@ -1598,28 +1598,28 @@ pub const Move = enum(u8) {
             assert(@sizeOf(Effect) == 1);
         }
 
-        pub inline fn skipExecute(effect: Effect) bool {
+        pub inline fn onBegin(effect: Effect) bool {
             return @enumToInt(effect) > 0 and @enumToInt(effect) <= 16;
         }
 
-        pub inline fn statDown(effect: Effect) bool {
+        pub inline fn isStatDown(effect: Effect) bool {
             return @enumToInt(effect) > 16 and @enumToInt(effect) <= 21;
         }
 
-        pub inline fn postExecute(effect: Effect) bool {
+        pub inline fn onEnd(effect: Effect) bool {
             return @enumToInt(effect) > 16 and @enumToInt(effect) <= 31;
         }
 
-        pub inline fn alwaysHappen(effect: Effect) bool {
+        pub inline fn alwaysHappens(effect: Effect) bool {
             return @enumToInt(effect) > 31 and
                 (@enumToInt(effect) <= 39 or @enumToInt(effect) > 65);
         }
 
-        pub inline fn special(effect: Effect) bool {
+        pub inline fn isSpecial(effect: Effect) bool {
             return @enumToInt(effect) > 31 and @enumToInt(effect) <= 45;
         }
 
-        pub inline fn statDownChance(effect: Effect) bool {
+        pub inline fn isStatDownChance(effect: Effect) bool {
             return @enumToInt(effect) > 45 and @enumToInt(effect) <= 49;
         }
     };

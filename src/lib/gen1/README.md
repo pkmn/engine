@@ -461,6 +461,9 @@ TODO table https://cdn.discordapp.com/attachments/491775824509272070/78668858259
   - breakdown of each
 - metronome
 
+
+## Details
+
 ```txt
 selectMove -> showdown nop
 

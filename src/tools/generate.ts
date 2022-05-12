@@ -123,18 +123,18 @@ const ALWAYS_HAPPEN_REGULAR = ['Rage', 'Twineedle'];
 
 const GROUPS: { [constant: string]: string[] } = {
   // data/battle/residual_effects_1.asm
-  skipExecute: [
+  onBeginMove: [
     'Conversion', 'Haze', 'SwitchAndTeleport', 'Mist', 'FocusEnergy', 'Confusion', 'Heal',
     'Transform', 'LightScreen', 'Reflect', 'Poison', 'Paralyze', 'Substitute', 'Mimic',
     'LeechSeed', 'Splash',
   ],
   // data/battle/residual_effects_2.asm
-  postExecute: [
+  onEnd: [
     ...STAT_DOWN, 'AttackUp1', 'AttackUp2', 'Bide', 'DefenseUp1', 'DefenseUp2',
     'EvasionUp1', 'Sleep', 'SpecialUp1', 'SpecialUp2', 'SpeedUp2',
   ],
   // data/battle/special_effects.asm
-  special: [
+  isSpecial: [
     ...ALWAYS_HAPPEN_SPECIAL, 'Swift', 'Charge',
     'SuperFang', 'SpecialDamage', 'Thrashing', 'Trapping',
   ],
@@ -352,7 +352,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const FRAMES: string[] = [];
     const PP: string[] = [];
     const EFFECTS: { [key: string]: Set<string>} =
-      {skipExecute: new Set(), postExecute: new Set(), special: new Set(), regular: new Set()};
+      {onBeginMove: new Set(), onEnd: new Set(), isSpecial: new Set(), regular: new Set()};
     for (const m of moves) {
       const [name, effect] = m.split(' ');
       if (effect !== 'None') EFFECTS[effectToGroup(effect)].add(effect);
@@ -385,16 +385,16 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
     };`;
 
-    const se = EFFECTS.skipExecute.size;
-    const pe = se + EFFECTS.postExecute.size;
-    const sp = pe + EFFECTS.special.size;
+    const begin = EFFECTS.onBeginMove.size;
+    const end = begin + EFFECTS.onEnd.size;
+    const special = end + EFFECTS.isSpecial.size;
     const effects: string[] = [];
     // Sort STAT_DOWN/ALWAYS_HAPPEN_* specially so that they can be sub-range checked
     for (const group in EFFECTS) {
-      effects.push(`${group === 'skipExecute' ? '' : '        '}// ${group}`);
-      const sorted = group === 'postExecute'
+      effects.push(`${group === 'onBeginMove' ? '' : '        '}// ${group}`);
+      const sorted = group === 'onEnd'
         ? [...STAT_DOWN, ...Array.from(EFFECTS[group]).filter(e => !STAT_DOWN.includes(e)).sort()]
-        : group === 'special'
+        : group === 'isSpecial'
           ? [...ALWAYS_HAPPEN_SPECIAL,
             ...Array.from(EFFECTS[group]).filter(e => !ALWAYS_HAPPEN_SPECIAL.includes(e)).sort()]
           : group === 'regular'
@@ -405,10 +405,10 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
             : Array.from(EFFECTS[group]).sort();
       effects.push(`        ${sorted.join(',\n        ')},`);
     }
-    const sd = se + STAT_DOWN.length;
-    const ahs = pe + ALWAYS_HAPPEN_SPECIAL.length;
-    const ahr = sp + EFFECTS.regular.size - ALWAYS_HAPPEN_REGULAR.length;
-    const sdc = sp + STAT_DOWN_CHANCE.length;
+    const sd = begin + STAT_DOWN.length;
+    const ahs = end + ALWAYS_HAPPEN_SPECIAL.length;
+    const ahr = special + EFFECTS.regular.size - ALWAYS_HAPPEN_REGULAR.length;
+    const sdc = special + STAT_DOWN_CHANCE.length;
     const Effect = `
     pub const Effect = enum(u8) {
         None,
@@ -418,29 +418,29 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
             assert(@sizeOf(Effect) == 1);
         }
 
-        pub inline fn skipExecute(effect: Effect) bool {
-            return @enumToInt(effect) > 0 and @enumToInt(effect) <= ${se};
+        pub inline fn onBegin(effect: Effect) bool {
+            return @enumToInt(effect) > 0 and @enumToInt(effect) <= ${begin};
         }
 
-        pub inline fn statDown(effect: Effect) bool {
-            return @enumToInt(effect) > ${se} and @enumToInt(effect) <= ${sd};
+        pub inline fn isStatDown(effect: Effect) bool {
+            return @enumToInt(effect) > ${begin} and @enumToInt(effect) <= ${sd};
         }
 
-        pub inline fn postExecute(effect: Effect) bool {
-            return @enumToInt(effect) > ${se} and @enumToInt(effect) <= ${pe};
+        pub inline fn onEnd(effect: Effect) bool {
+            return @enumToInt(effect) > ${begin} and @enumToInt(effect) <= ${end};
         }
 
-        pub inline fn alwaysHappen(effect: Effect) bool {
-            return @enumToInt(effect) > ${pe} and
+        pub inline fn alwaysHappens(effect: Effect) bool {
+            return @enumToInt(effect) > ${end} and
                 (@enumToInt(effect) <= ${ahs} or @enumToInt(effect) > ${ahr});
         }
 
-        pub inline fn special(effect: Effect) bool {
-            return @enumToInt(effect) > ${pe} and @enumToInt(effect) <= ${sp};
+        pub inline fn isSpecial(effect: Effect) bool {
+            return @enumToInt(effect) > ${end} and @enumToInt(effect) <= ${special};
         }
 
-        pub inline fn statDownChance(effect: Effect) bool {
-            return @enumToInt(effect) > ${sp} and @enumToInt(effect) <= ${sdc};
+        pub inline fn isStatDownChance(effect: Effect) bool {
+            return @enumToInt(effect) > ${special} and @enumToInt(effect) <= ${sdc};
         }
     };\n`;
 
