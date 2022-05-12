@@ -146,9 +146,10 @@ pub fn build(b: *Builder) !void {
 
     const format = b.addFmt(&.{"."});
 
-    const rng = try tool(b, &.{pkmn}, "src/tools/rng.zig", showdown, strip, &tests.step);
-    const serde = try tool(b, &.{pkmn}, "src/tools/serde.zig", showdown, strip, &tests.step);
-    const protocol = try tool(b, &.{pkmn}, "src/tools/protocol.zig", showdown, strip, &tests.step);
+    const test_step = if (test_filter != null) null else &tests.step;
+    const rng = try tool(b, &.{pkmn}, "src/tools/rng.zig", showdown, strip, test_step);
+    const serde = try tool(b, &.{pkmn}, "src/tools/serde.zig", showdown, strip, test_step);
+    const protocol = try tool(b, &.{pkmn}, "src/tools/protocol.zig", showdown, strip, test_step);
 
     b.step("benchmark", "Run benchmark code").dependOn(&benchmark.step);
     b.step("format", "Format source files").dependOn(&format.step);
@@ -164,7 +165,7 @@ fn tool(
     path: []const u8,
     showdown: bool,
     strip: bool,
-    test_step: *std.build.Step,
+    test_step: ?*std.build.Step,
 ) !*std.build.RunStep {
     var name = std.fs.path.basename(path);
     const index = std.mem.lastIndexOfScalar(u8, name, '.');
@@ -176,7 +177,7 @@ fn tool(
     exe.setBuildMode(b.standardReleaseOptions());
     exe.single_threaded = true;
     exe.strip = strip;
-    test_step.dependOn(&exe.step);
+    if (test_step) |ts| ts.dependOn(&exe.step);
 
     const run_exe = exe.run();
     run_exe.step.dependOn(b.getInstallStep());
