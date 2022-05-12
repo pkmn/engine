@@ -452,15 +452,34 @@ called out in the `|rule|` section at the beginning of a battle's log):
 
 ## RNG
 
+- **Pokémon Showdown `getRandomTarget`** (`selectMove`)
+- **Speed Tie** (`turnOrder`)
+- **Confusion Self-Hit** (`beforeMove`)
+- **Full Paralysis** (`beforeMove`)
+- **Thrash Confusion Duration** (`beforeMove`)
+- **Critical Hit** (`checkCriticalHit`)
+- **Damage Range** (`randomizeDamage`)
+- **Psywave Power** (`specialDamage`)
+- **Hit / Miss** (`checkHit`)
+- **Metronome** (`metronome`)
+- **Bide** (`Effects.bide`)
+- **Burn Chance** (`Effects.burnChance`)
+- **Confusion Chance** (`Effects.confusion`)
+- **Confusion Duration** (`Effects.confusion`)
+- **Disable Move** (`Effects.disable`)
+- **Disable Duration** (`Effects.disable`)
+- **Flinch Chance** (`Effects.flinchChance`)
+- **Freeze Chance** (`Effects.freezeChance`)
+- **Mimic** (`Effects.mimic`)
+- **Multi-Hit** (`Effects.multiHit`)
+- **Paralyze Chance** (`Effects.paralyzeChance`)
+- **Poison Chance** (`Effects.poison`)
+- **Sleep Duration** (`Effects.sleep`)
+- **Thrash Rampage Duration** (`Effects.thrash`)
+- **Trapping Duration** (`Effects.trapping`)
+- **Unboost Chance** (`Effects.unboost`)
+
 TODO table https://cdn.discordapp.com/attachments/491775824509272070/786688582592495646/unknown.png
-
-- crit
-- dmg
-- miss
-- secondary
-  - breakdown of each
-- metronome
-
 
 ## Details
 
