@@ -227,70 +227,6 @@ fn doTurn(
     return null;
 }
 
-fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
-    if (showdown and checkEBC(battle)) {
-        try log.tie();
-        return Result.Tie;
-    }
-
-    battle.turn += 1;
-    try log.turn(battle.turn);
-
-    if (showdown) {
-        if (battle.turn < 1000) return Result.Default;
-        try log.tie();
-        return Result.Tie;
-    } else {
-        return if (battle.turn >= 65535) Result.Error else Result.Default;
-    }
-}
-
-fn checkEBC(battle: anytype) bool {
-    ebc: for (battle.sides) |side, i| {
-        var foe_all_ghosts = true;
-        var foe_all_transform = true;
-
-        for (battle.sides[~@truncate(u1, i)].pokemon) |pokemon| {
-            if (pokemon.species == .None) continue;
-
-            const ghost = pokemon.hp == 0 or pokemon.types.includes(.Ghost);
-            foe_all_ghosts = foe_all_ghosts and ghost;
-            foe_all_transform = foe_all_transform and pokemon.hp == 0 or transform: {
-                for (pokemon.moves) |m| {
-                    if (m.id == .None) break :transform true;
-                    if (m.id != .Transform) break :transform false;
-                }
-                break :transform true;
-            };
-        }
-
-        for (side.pokemon) |pokemon| {
-            if (pokemon.hp == 0 or Status.is(pokemon.status, .FRZ)) continue;
-            const transform = foe_all_transform and transform: {
-                for (pokemon.moves) |m| {
-                    if (m.id == .None) break :transform true;
-                    if (m.id != .Transform) break :transform false;
-                }
-                break :transform true;
-            };
-            if (transform) continue;
-            const no_pp = foe_all_ghosts and no_pp: {
-                for (pokemon.moves) |m| {
-                    if (m.pp != 0) break :no_pp false;
-                }
-                break :no_pp true;
-            };
-            if (no_pp) continue;
-
-            continue :ebc;
-        }
-
-        return true;
-    }
-
-    return false;
-}
-
 fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !?Result {
     var side = battle.side(player);
 
@@ -314,76 +250,6 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !?
     if (!skip_can and !try canMove(battle, player, choice, skip_pp, log)) return null;
 
     return doMove(battle, player, choice, false, log);
-}
-
-fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: anytype) !?Result {
-    var side = battle.side(player);
-    const foe = battle.foe(player);
-
-    const move = Move.get(side.last_selected_move);
-
-    if (move.effect == .SuperFang or move.effect == .SpecialDamage) {
-        return specialDamage(battle, player, move, log);
-    }
-
-    // Can't reorder this even when unused (eg. Counter) as it advances the RNG
-    const crit = checkCriticalHit(battle, player, move);
-
-    // Counter desync due to changing move selection prior to switching is not supported
-    if (side.last_selected_move == .Counter) return counterDamage(battle, player, move, log);
-
-    var ohko = false;
-    battle.last_damage = 0;
-    // Dissambly does a check to allow 0 BP MultiHit moves this isn't possible in practice
-    if (move.bp != 0) {
-        if (move.effect == .OHKO) {
-            ohko = side.active.stats.spe >= foe.active.stats.spe;
-            if (ohko) {
-                // This can overflow after adjustDamage, but will still be sufficient to OHKO
-                battle.last_damage = 65535;
-            } else {
-                battle.last_damage = 0;
-                try log.immune(battle.active(player.foe()), .OHKO);
-            }
-        } else {
-            if (!calcDamage(battle, player, move, crit)) return @as(?Result, Result.Error);
-        }
-
-        adjustDamage(battle, player);
-        randomizeDamage(battle);
-    }
-
-    var miss = (try checkHit(battle, player, move, log)) or missed;
-    // While battle.last_damage could have been set to 0 from the beginning but we
-    // still need to run through all the functions to advance the RNG approriately
-    if (!miss and battle.last_damage == 0) {
-        try log.lastmiss();
-        try log.miss(battle.active(player), battle.active(player.foe()));
-        miss = true;
-    }
-
-    if (move.effect == .MirrorMove) {
-        return mirrorMove(battle, player, choice, miss, log);
-    } else if (move.effect == .Metronome) {
-        return metronome(battle, player, choice, miss, log);
-    }
-
-    if (move.effect.onEnd()) {
-        try moveEffect(battle, player, move, choice.data, log);
-        return null;
-    }
-
-    if (miss) {}
-
-    // TODO applyDamage
-
-    if (ohko) try log.ohko();
-
-    // if (!move.effect.isSpecial()) {
-    //     try moveEffect(battle, player, move, choice.data, log);
-    // }
-
-    return null;
 }
 
 const BeforeMove = union(enum) { done, skip_can, skip_pp, ok, err };
@@ -598,6 +464,76 @@ fn decrementPP(side: *Side, choice: Choice) void {
     side.stored().move(choice.data).pp -%= 1;
 }
 
+fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: anytype) !?Result {
+    var side = battle.side(player);
+    const foe = battle.foe(player);
+
+    const move = Move.get(side.last_selected_move);
+
+    if (move.effect == .SuperFang or move.effect == .SpecialDamage) {
+        return specialDamage(battle, player, move, log);
+    }
+
+    // Can't reorder this even when unused (eg. Counter) as it advances the RNG
+    const crit = checkCriticalHit(battle, player, move);
+
+    // Counter desync due to changing move selection prior to switching is not supported
+    if (side.last_selected_move == .Counter) return counterDamage(battle, player, move, log);
+
+    var ohko = false;
+    battle.last_damage = 0;
+    // Dissambly does a check to allow 0 BP MultiHit moves this isn't possible in practice
+    if (move.bp != 0) {
+        if (move.effect == .OHKO) {
+            ohko = side.active.stats.spe >= foe.active.stats.spe;
+            if (ohko) {
+                // This can overflow after adjustDamage, but will still be sufficient to OHKO
+                battle.last_damage = 65535;
+            } else {
+                battle.last_damage = 0;
+                try log.immune(battle.active(player.foe()), .OHKO);
+            }
+        } else {
+            if (!calcDamage(battle, player, move, crit)) return @as(?Result, Result.Error);
+        }
+
+        adjustDamage(battle, player);
+        randomizeDamage(battle);
+    }
+
+    var miss = (try checkHit(battle, player, move, log)) or missed;
+    // While battle.last_damage could have been set to 0 from the beginning but we
+    // still need to run through all the functions to advance the RNG approriately
+    if (!miss and battle.last_damage == 0) {
+        try log.lastmiss();
+        try log.miss(battle.active(player), battle.active(player.foe()));
+        miss = true;
+    }
+
+    if (move.effect == .MirrorMove) {
+        return mirrorMove(battle, player, choice, miss, log);
+    } else if (move.effect == .Metronome) {
+        return metronome(battle, player, choice, miss, log);
+    }
+
+    if (move.effect.onEnd()) {
+        try moveEffect(battle, player, move, choice.data, log);
+        return null;
+    }
+
+    if (miss) {}
+
+    // TODO applyDamage
+
+    if (ohko) try log.ohko();
+
+    // if (!move.effect.isSpecial()) {
+    //     try moveEffect(battle, player, move, choice.data, log);
+    // }
+
+    return null;
+}
+
 fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data) bool {
     const side = battle.side(player);
 
@@ -777,6 +713,42 @@ fn applyDamage(battle: anytype, player: Player, log: anytype) !void {
     }
 }
 
+fn mirrorMove(battle: anytype, player: Player, choice: Choice, miss: bool, log: anytype) !?Result {
+    var side = battle.side(player);
+    const foe = battle.foe(player);
+
+    if (foe.last_used_move == .None or foe.last_used_move == .MirrorMove) {
+        try log.lastmiss();
+        try log.miss(battle.active(player), battle.active(player.foe()));
+        return null;
+    }
+
+    side.last_selected_move = foe.last_used_move;
+
+    if (!try canMove(battle, player, choice, true, log)) return null;
+    return doMove(battle, player, choice, miss, log);
+}
+
+fn metronome(battle: anytype, player: Player, choice: Choice, miss: bool, log: anytype) !?Result {
+    var side = battle.side(player);
+
+    // SHOWDOWN: these values will diverge
+    side.last_selected_move = if (showdown) blk: {
+        const r = battle.rng.range(u8, 0, @enumToInt(Move.Struggle) - 1);
+        break :blk @intToEnum(Move, r + @as(u2, (if (r < @enumToInt(Move.Metronome)) 1 else 2)));
+    } else loop: {
+        while (true) {
+            const r = battle.rng.next();
+            if (r == 0 or r == @enumToInt(Move.Metronome)) continue;
+            if (r >= @enumToInt(Move.Struggle)) continue;
+            break :loop @intToEnum(Move, r);
+        }
+    };
+
+    if (!try canMove(battle, player, choice, true, log)) return null;
+    return doMove(battle, player, choice, miss, log);
+}
+
 fn checkHit(battle: anytype, player: Player, move: Move.Data, log: anytype) !bool {
     var side = battle.side(player);
     const foe = battle.foe(player);
@@ -909,40 +881,68 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
     }
 }
 
-fn mirrorMove(battle: anytype, player: Player, choice: Choice, miss: bool, log: anytype) !?Result {
-    var side = battle.side(player);
-    const foe = battle.foe(player);
-
-    if (foe.last_used_move == .None or foe.last_used_move == .MirrorMove) {
-        try log.lastmiss();
-        try log.miss(battle.active(player), battle.active(player.foe()));
-        return null;
+fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
+    if (showdown and checkEBC(battle)) {
+        try log.tie();
+        return Result.Tie;
     }
 
-    side.last_selected_move = foe.last_used_move;
+    battle.turn += 1;
+    try log.turn(battle.turn);
 
-    if (!try canMove(battle, player, choice, true, log)) return null;
-    return doMove(battle, player, choice, miss, log);
+    if (showdown) {
+        if (battle.turn < 1000) return Result.Default;
+        try log.tie();
+        return Result.Tie;
+    } else {
+        return if (battle.turn >= 65535) Result.Error else Result.Default;
+    }
 }
 
-fn metronome(battle: anytype, player: Player, choice: Choice, miss: bool, log: anytype) !?Result {
-    var side = battle.side(player);
+fn checkEBC(battle: anytype) bool {
+    ebc: for (battle.sides) |side, i| {
+        var foe_all_ghosts = true;
+        var foe_all_transform = true;
 
-    // SHOWDOWN: these values will diverge
-    side.last_selected_move = if (showdown) blk: {
-        const r = battle.rng.range(u8, 0, @enumToInt(Move.Struggle) - 1);
-        break :blk @intToEnum(Move, r + @as(u2, (if (r < @enumToInt(Move.Metronome)) 1 else 2)));
-    } else loop: {
-        while (true) {
-            const r = battle.rng.next();
-            if (r == 0 or r == @enumToInt(Move.Metronome)) continue;
-            if (r >= @enumToInt(Move.Struggle)) continue;
-            break :loop @intToEnum(Move, r);
+        for (battle.sides[~@truncate(u1, i)].pokemon) |pokemon| {
+            if (pokemon.species == .None) continue;
+
+            const ghost = pokemon.hp == 0 or pokemon.types.includes(.Ghost);
+            foe_all_ghosts = foe_all_ghosts and ghost;
+            foe_all_transform = foe_all_transform and pokemon.hp == 0 or transform: {
+                for (pokemon.moves) |m| {
+                    if (m.id == .None) break :transform true;
+                    if (m.id != .Transform) break :transform false;
+                }
+                break :transform true;
+            };
         }
-    };
 
-    if (!try canMove(battle, player, choice, true, log)) return null;
-    return doMove(battle, player, choice, miss, log);
+        for (side.pokemon) |pokemon| {
+            if (pokemon.hp == 0 or Status.is(pokemon.status, .FRZ)) continue;
+            const transform = foe_all_transform and transform: {
+                for (pokemon.moves) |m| {
+                    if (m.id == .None) break :transform true;
+                    if (m.id != .Transform) break :transform false;
+                }
+                break :transform true;
+            };
+            if (transform) continue;
+            const no_pp = foe_all_ghosts and no_pp: {
+                for (pokemon.moves) |m| {
+                    if (m.pp != 0) break :no_pp false;
+                }
+                break :no_pp true;
+            };
+            if (no_pp) continue;
+
+            continue :ebc;
+        }
+
+        return true;
+    }
+
+    return false;
 }
 
 // TODO: optimize by splitting up into onBegin/onEnd/regular etc to make switch faster?
