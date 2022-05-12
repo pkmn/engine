@@ -422,6 +422,9 @@ generation of Pokémon contains a number bugs:
 - **Thrash / Petal Dance / Rage**: On the cartridge (but not on Pokémon Showdown) these moves have
   glitchy behavior where the the scaled accuracy after accuracy/evasion modifiers have been applied
   should overwrite the original accuracy of the move for as long as the move's lock lasts.
+- **Bide**: Pokémon Showdown uses `random(3, 4)` to generate a duration in the range <b>[</b>3,
+  4<b>)</b> which means Bide will always deterministically last 2 turns (Pokémon Showdown ends when
+  duration reaches 1 instead of 0) despite advancing the RNG.
 
 Finally, in Generation I, checking whether a move has **hit should come *after* determining
 damage**, not before. Pokémon Showdown's altered ordering here (which is more in line with how
@@ -452,91 +455,60 @@ called out in the `|rule|` section at the beginning of a battle's log):
 
 ## RNG
 
-- **Pokémon Showdown `getRandomTarget`** (`selectMove`)
-- **Speed Tie** (`turnOrder`)
-- **Confusion Self-Hit** (`beforeMove`)
-- **Full Paralysis** (`beforeMove`)
-- **Thrash Confusion Duration** (`beforeMove`)
-- **Critical Hit** (`checkCriticalHit`)
-- **Damage Range** (`randomizeDamage`)
-- **Psywave Power** (`specialDamage`)
-- **Hit / Miss** (`checkHit`)
-- **Metronome** (`metronome`)
-- **Bide** (`Effects.bide`)
-- **Burn Chance** (`Effects.burnChance`)
-- **Confusion Chance** (`Effects.confusion`)
-- **Confusion Duration** (`Effects.confusion`)
-- **Disable Move** (`Effects.disable`)
-- **Disable Duration** (`Effects.disable`)
-- **Flinch Chance** (`Effects.flinchChance`)
-- **Freeze Chance** (`Effects.freezeChance`)
-- **Mimic** (`Effects.mimic`)
-- **Multi-Hit** (`Effects.multiHit`)
-- **Paralyze Chance** (`Effects.paralyzeChance`)
-- **Poison Chance** (`Effects.poison`)
-- **Sleep Duration** (`Effects.sleep`)
-- **Thrash Rampage Duration** (`Effects.thrash`)
-- **Trapping Duration** (`Effects.trapping`)
-- **Unboost Chance** (`Effects.unboost`)
-
-TODO table https://cdn.discordapp.com/attachments/491775824509272070/786688582592495646/unknown.png
+| Type                     | Location                 | Description |
+| ------------------------ | ------------------------ | ----------- |
+| **Speed Tie**            | `turnOrder`              | Player 1 if <var>X</var> < 127, otherwise Player 2 |
+| **Critical Hit**         | `checkCriticalHit`       | <dl><dt>Pokémon Red</dt><dd>Inflict a critical hit if <var>X</var> with its bits rotated left by 3 < <code>chance</code></dd><dt>Pokémon Showdown</dt><dd>Critical hit if <var>X</var> < <code>chance</code></dd></dl> For both, 0 will always be a critical hit and 255 will never be a critical hit |
+| **Damage** (range)       | `randomizeDamage`        | <dl><dt>Pokémon Red</dt><dd>Continue generating until <var>X</var> >= 217</dd><dt>Pokémon Showdown</dt><dd>Generate <var>X</var> ∈ <b>[</b>217, 256<b>)</b></dd></dl> Maximum damage occurs at 255 for both, but 217 represents the minimum damage for Pokémon Red and 0 represents the minimum damage for Pokémon Showdown |
+| **Hit / Miss**           | `checkHit`               | Hit if <var>X</var> < scaled accuracy |
+| **Burn** (chance)        | `Effects.burnChance`     | Trigger if <var>X</var> < 26 (77 for Fire Blast) |
+| **Confusion** (chance)   | `Effects.confusion`      | <dl><dt>Pokémon Red</dt><dd>Trigger if <var>X</var> < 25</dd><dt>Pokémon Showdown</dt><dd>Trigger if <var>X</var> < 26</dd></dl> These differ due to a [bug in Pokémon Showdown](#bug) |
+| **Confusion** (duration) | `Effects.confusion`      | <dl><dt>Pokémon Red</dt><dd>Last for (<var>X</var> &amp; 3) ＋ 2 turns</dd><dt>Pokémon Showdown</dt><dd>Last for <var>X</var> ∈ <b>[</b>2, 6)</b> turns</dd></dl>  Overlap occurs at 0, 65, 130, 195 |
+| **Confusion** (self-hit) | `beforeMove`             | Trigger if <var>X</var> >= 128 |            |
+| **Flinch** (chance)      | `Effects.flinchChance`   | Trigger if <var>X</var> < 26 (77 for Stomp / Headbutt / Rolling Kick / Low Kick) |
+| **Freeze** (chance)      | `Effects.freezeChance`   | Trigger if <var>X</var> < 26 |
+| **Paralysis** (chance)   | `Effects.paralyzeChance` | Trigger if <var>X</var> < 26 (77 for Body Slam / Lick) |
+| **Paralysis** (full)     | `beforeMove`             | Trigger if <var>X</var> < 63 |
+| **Poison** (chance)      | `Effects.poison`         | Trigger if <var>X</var> < 52 (103 for Smog / Sludge) |
+| **Sleep** (duration)     | `Effects.sleep`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until <var>X</var> &amp; 7 ≠ 0</dd><dt>Pokémon Showdown</dt><dd>Generate <var>X</var> ∈ <b>[</b>1, 8)</b></dd></dl> Overlap occurs at 1, 42, 75, 116, 149, 190, 223 |
+| **Bide** (duration)      | `Effects.bide`           | <dl><dt>Pokémon Red</dt><dd>Last for (<var>X</var> &amp; 1) ＋ 2 turns</dd><dt>Pokémon Showdown</dt><dd>Last for <var>X</var> ∈ <b>[</b>3, 4)</b> turns</dd></dl> Due to a [bug in Pokémon Showdown](#bug) the duration will always be 3 (2 turns) |
+| **Disable** (move)       | `Effects.disable`        | <dl><dt>Pokémon Red</dt><dd>Continue generating until <var>X</var> &amp; 3 is the index of a non-empty move slot</dd><dt>Pokémon Showdown</dt><dd>Generate <var>X</var> ∈ <b>[</b>0, <code>moveSlots.length</code><b>)</b></dd></dl> For Pokémon Red, 0-3 represent the indexable move slots, for Pokémon Showdown 0-63, 64-127, 128-191, 192-255 (overlap occurs at 0, 65, 130, 195) |
+| **Disable** (duration)   | `Effects.disable`        | <dl><dt>Pokémon Red</dt><dd>Last for (<var>X</var> &amp; 7) ＋ 1 turns</dd><dt>Pokémon Showdown</dt><dd>Last for <var>X</var> ∈ <b>[</b>1, 7)</b> turns</dd></dl> TODO |
+| **Metronome** (move)     | `metronome`              | <dl><dt>Pokémon Red</dt><dd>Continue generating until <var>X</var> matches the index of a move which is not Struggle or Metronome</dd><dt>Pokémon Showdown</dt><dd>Generate <var>X</var> ∈ <b>[</b>1, <code>validMoves.length</code><b>)</b>, where <code>validMoves</code> is of moves with  Struggle and Metronome removed <i>(indexes of moves > Metronome will be shifted down)</i></dd></dl> |
+| **Mimic** (move)         | `Effects.mimic`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until <var>X</var> &amp; 3 is the index of a non-empty move slot</dd><dt>Pokémon Showdown</dt><dd>Generate <var>X</var> ∈ <b>[</b>0, <code>moveSlots.length</code><b>)</b></dd></dl> For Pokémon Red: 0-3 represent the indexable move slots, for Pokémon Showdown: 0-63, 64-127, 128-191, 192-255 (overlap occurs at 0, 65, 130, 195) |
+| **Psywave** (power)      | `specialDamage`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until <var>X</var> < 1.5×<code>level</code></dd><dt>Pokémon Showdown</dt><dd>Generate <var>X</var> ∈ <b>[</b>0, 1.5×<code>level</code><b>)</b></dd></dl> Minimum power occurs at 0 for both, but maximum power occurs at 1.5×<code>level</code> - 1 for Pokémon Red and 255 for Pokémon Showdown |
+| **Thrash** (rampage)     | `Effects.thrash`         | <dl><dt>Pokémon Red</dt><dd>Last for (<var>X</var> &amp; 1) ＋ 2 turns</dd><dt>Pokémon Showdown</dt><dd>Last for <var>X</var> ∈ <b>[</b>2, 4)</b> turns</dd></dl> TODO |
+| **Thrash** (confusion)   | `beforeMove`             | <dl><dt>Pokémon Red</dt><dd>Last for (<var>X</var> &amp; 3) ＋ 2 turns</dd><dt>Pokémon Showdown</dt><dd>Last for <var>X</var> ∈ <b>[</b>3, 5)</b> turns</dd></dl> TODO |
+| **Trapping** (duration)  | `Effects.trapping`       | <dl><dt>Pokémon Red</dt><dd>Last for (<var>X</var> &amp; 3) ＋ 2 turns if (<var>X</var> &amp; 3) < 2<br /> otherwise last for (<var>Y</var> &amp; 3) ＋ 2 turns (reroll)</dd><dt>Pokémon Showdown</dt><dd>Last for <var>X</var> ∈ <b>{</b>2, 2, 2, 3, 3, 3, 4, 5<b>}</b> turns</dd></dl> TODO |
+| **Multi-Hit** (hits)     | `Effects.multiHit`       | *Ibid.* |
+| **Unboost** (chance)     | `Effects.unboost`        | Trigger if <var>X</var> < 85 |
+| **`getRandomTarget`**    | `selectMove`             | [Pokémon Showdown only](#bugs) - value is ignored so any number is valid |
 
 ## Details
 
+TODO
+
 ```txt
-selectMove -> showdown nop
-
-turnOrder -> speed tie (0-127 = P1)
-
-beforeMove ->
-  Confusion = (128-255) = hit self
-  Paralyzed = (0-62) = fully paralyzed
-  Thrashing = (*) = length of confusion post rampage
-
-canExecute ->
-  (skipExecute) ->
-    Confusion = checkHit (= possibly overwritten accuracy)
-    LeechSeed = checkHit (ibid)
-    Mimic = checkHit, randomMoveSlot
-    Paralyze = checkHit
-    Poison = checkHit
-  Thrashing - (*) turns
-  Trapping - distribution attacks
-
-
-executeMove -> Psywave
-
-
-  (postExecute)
-    Bide = (*) = duration
-    Sleep = checkHit, (*) duration
-
-
-checkCriticalHit -> (0, chance*) = crit # rotate 3 for present
-randomizeDamage -> [217, 255] = damage modifier
-checkHit -> [0, accuracy* - 1)
-
-
-// beforeExecute (CheckPlayerStatusConditions)
-// canExecute (PlayerCanExecuteChargingMove / PlayerCanExecuteMove)
-//   skipExecute (ResidualEffects1)
-//               (SpecialEffectsCont)
-// executeMove
-//   (PlayerCalcMoveDamage)
-//    SetDamageEffects -> moveHitTest
-//    CriticalHitTest
-//    HandleCounterMove
-//    GetDamageVarsForPlayerAttack
-//    CalculateDamage
-//    AdjustDamageForMoveType
-//    RandomizeDamage
-//    MoveHitTest
-//    MirrorMove/Metronome (tailcall)
-//   ResidualEffects2
-//   ApplyAttackToEnemyPokemon
-//   AlwaysHappenSideEffects
-//   HandleBuildingRage
-//  multi attack -> skip to MirrorrMove/MetronomeCHeck = residualeffects2
+beforeExecute (CheckPlayerStatusConditions)
+canExecute (PlayerCanExecuteChargingMove / PlayerCanExecuteMove)
+  skipExecute (ResidualEffects1)
+              (SpecialEffectsCont)
+executeMove
+  (PlayerCalcMoveDamage)
+   SetDamageEffects -> moveHitTest
+   CriticalHitTest
+   HandleCounterMove
+   GetDamageVarsForPlayerAttack
+   CalculateDamage
+   AdjustDamageForMoveType
+   RandomizeDamage
+   MoveHitTest
+   MirrorMove/Metronome (tailcall)
+  ResidualEffects2
+  ApplyAttackToEnemyPokemon
+  AlwaysHappenSideEffects
+  HandleBuildingRage
+ multi attack -> skip to MirrorrMove/MetronomeCHeck = residualeffects2
 
 AlwaysHappenSideEffects
 ```

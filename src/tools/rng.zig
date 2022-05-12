@@ -11,11 +11,13 @@ pub const ANSI = struct {
 };
 
 const Tool = enum {
+    bide,
+    confusion,
     crit,
-    thrash,
-    rampage,
     disable,
+    rampage,
     sleep,
+    thrash,
 };
 
 pub fn main() !void {
@@ -29,7 +31,13 @@ pub fn main() !void {
 
     var tool: Tool = undefined;
     var crit: u8 = undefined;
-    if (std.mem.eql(u8, args[1], "crit")) {
+    if (std.mem.eql(u8, args[1], "bide")) {
+        if (args.len != 2) usageAndExit(args[0]);
+        tool = .bide;
+    } else if (std.mem.eql(u8, args[1], "confusion")) {
+        if (args.len != 2) usageAndExit(args[0]);
+        tool = .confusion;
+    } else if (std.mem.eql(u8, args[1], "crit")) {
         const err = std.io.getStdErr().writer();
         if (args.len != 3) {
             err.print("Usage: {s} crit <N>\n", .{args[0]}) catch {};
@@ -40,15 +48,15 @@ pub fn main() !void {
             err.print("Usage: {s} crit <N>\n", .{args[0]}) catch {};
             std.process.exit(1);
         };
-    } else if (std.mem.eql(u8, args[1], "thrash")) {
-        if (args.len != 2) std.process.exit(1);
-        tool = .thrash;
-    } else if (std.mem.eql(u8, args[1], "rampage")) {
-        if (args.len != 2) usageAndExit(args[0]);
-        tool = .rampage;
     } else if (std.mem.eql(u8, args[1], "disable")) {
         if (args.len != 2) usageAndExit(args[0]);
         tool = .disable;
+    } else if (std.mem.eql(u8, args[1], "rampage")) {
+        if (args.len != 2) usageAndExit(args[0]);
+        tool = .rampage;
+    } else if (std.mem.eql(u8, args[1], "thrash")) {
+        if (args.len != 2) std.process.exit(1);
+        tool = .thrash;
     } else if (std.mem.eql(u8, args[1], "sleep")) {
         if (args.len != 2) usageAndExit(args[0]);
         tool = .sleep;
@@ -73,9 +81,24 @@ pub fn main() !void {
     while (i < 256) : (i += 1) {
         const match = match: {
             switch (tool) {
+                .bide => {
+                    const a = rng1.range(u8, 3, 4);
+                    const b = (rng2.next() & 1) + 2;
+                    break :match a == b;
+                },
+                .confusion => {
+                    const a = rng1.range(u8, 2, 6);
+                    const b = (rng2.next() & 3) + 2;
+                    break :match a == b;
+                },
                 .crit => {
                     const a = rng1.chance(u8, crit, 256);
                     const b = std.math.rotl(u8, rng2.next(), 3) < crit;
+                    break :match a == b;
+                },
+                .disable => {
+                    const a = rng1.range(u8, 1, 7);
+                    const b = (rng2.next() & 7) + 1;
                     break :match a == b;
                 },
                 .thrash => {
@@ -88,11 +111,7 @@ pub fn main() !void {
                     const b = (rng2.next() & 1) + 2;
                     break :match a == b;
                 },
-                .disable => {
-                    const a = rng1.range(u8, 1, 7);
-                    const b = (rng2.next() & 7) + 1;
-                    break :match a == b;
-                },
+
                 .sleep => {
                     const a = rng1.range(u8, 1, 8);
                     const b = (rng2.next() & 7);

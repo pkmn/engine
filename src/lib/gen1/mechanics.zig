@@ -997,7 +997,8 @@ pub const Effects = struct {
         side.active.volatiles.state = 0;
         // SHOWDOWN: these values will diverge
         side.active.volatiles.attacks = @truncate(u3, if (showdown)
-            battle.rng.range(u4, 3, 4) // FIXME
+            // SHOWDOWN: this will (incorrectly) always return 3
+            battle.rng.range(u4, 3, 4)
         else
             (battle.rng.next() & 1) + 2);
 
@@ -1060,7 +1061,7 @@ pub const Effects = struct {
 
         // SHOWDOWN: these values will diverge
         foe.active.volatiles.confusion = @truncate(u3, if (showdown)
-            battle.rng.range(u8, 3, 5)
+            battle.rng.range(u8, 2, 6)
         else
             (battle.rng.next() & 3) + 2);
 
@@ -1094,7 +1095,7 @@ pub const Effects = struct {
 
         // SHOWDOWN: these values will diverge
         volatiles.disabled.duration = @truncate(u4, if (showdown)
-            battle.rng.range(u8, 1, 7) + 1 // FIXME
+            battle.rng.range(u8, 1, 7)
         else
             (battle.rng.next() & 7) + 1);
 
@@ -1510,7 +1511,7 @@ pub const Effects = struct {
         // Recharging is cleared even if the trapping move misses
         foe.active.volatiles.Recharging = false;
 
-        side.active.volatiles.attacks = distribution(battle) - 1;
+        side.active.volatiles.attacks = distribution(battle);
     }
 
     fn boost(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
