@@ -997,8 +997,8 @@ pub const Effects = struct {
         side.active.volatiles.state = 0;
         // SHOWDOWN: these values will diverge
         side.active.volatiles.attacks = @truncate(u3, if (showdown)
-            // SHOWDOWN: this will (incorrectly) always return 3
-            battle.rng.range(u4, 3, 4)
+            // SHOWDOWN: this will (incorrectly) always return 2
+            battle.rng.range(u4, 3, 4) - 1
         else
             (battle.rng.next() & 1) + 2);
 
@@ -1095,7 +1095,7 @@ pub const Effects = struct {
 
         // SHOWDOWN: these values will diverge
         volatiles.disabled.duration = @truncate(u4, if (showdown)
-            battle.rng.range(u8, 1, 7)
+            battle.rng.range(u8, 1, 7) + 1 // FIXME: 2-7, not 2-9 or 1-8
         else
             (battle.rng.next() & 7) + 1);
 
