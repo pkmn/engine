@@ -247,7 +247,7 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !?
         .err => return @as(?Result, Result.Error),
     }
 
-    if (!skip_can and !try canMove(battle, player, choice, skip_pp, false, log)) return null;
+    if (!skip_can and !try canMove(battle, player, choice, skip_pp, false, null, log)) return null;
 
     return doMove(battle, player, choice, false, log);
 }
@@ -294,7 +294,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
 
     if (volatiles.Recharging) {
         volatiles.Recharging = false;
-        try log.cant(ident, .Recharging);
+        try log.cant(ident, .Recharge);
         return .done;
     }
 
@@ -423,6 +423,7 @@ fn canMove(
     choice: Choice,
     skip_pp: bool,
     miss: bool,
+    from: ?Move,
     log: anytype,
 ) !bool {
     var side = battle.side(player);
@@ -438,6 +439,10 @@ fn canMove(
 
     side.last_used_move = side.last_selected_move;
     if (!skip_pp) decrementPP(side, choice);
+
+    const player_ident = battle.active(player);
+    const foe_ident = battle.active(player.foe());
+    try log.move(player_ident, side.last_selected_move, foe_ident, from);
 
     if (move.effect.onBegin()) {
         try moveEffect(battle, player, move, choice.data, miss, log);
@@ -748,7 +753,7 @@ fn mirrorMove(battle: anytype, player: Player, choice: Choice, miss: bool, log: 
 
     side.last_selected_move = foe.last_used_move;
 
-    if (!try canMove(battle, player, choice, true, miss, log)) return null;
+    if (!try canMove(battle, player, choice, true, miss, .MirrorMove, log)) return null;
     return doMove(battle, player, choice, miss, log);
 }
 
@@ -768,7 +773,7 @@ fn metronome(battle: anytype, player: Player, choice: Choice, miss: bool, log: a
         }
     };
 
-    if (!try canMove(battle, player, choice, true, miss, log)) return null;
+    if (!try canMove(battle, player, choice, true, miss, .Metronome, log)) return null;
     return doMove(battle, player, choice, miss, log);
 }
 

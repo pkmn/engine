@@ -107,7 +107,6 @@ pub const ArgType = enum(u8) {
 
 pub const Move = enum(u8) {
     None,
-    Recharge,
     From,
 };
 
@@ -118,7 +117,7 @@ pub const Cant = enum(u8) {
     Trapped,
     Flinch,
     Disable,
-    Recharging,
+    Recharge,
     PP,
 };
 
@@ -233,28 +232,20 @@ pub fn Log(comptime Writer: type) type {
 
         pub const Error = Writer.Error;
 
-        pub fn move(self: Self, source: ID, m: anytype, target: ID, reason: Move) Error!void {
+        pub fn move(self: Self, source: ID, m: anytype, target: ID, from: anytype) Error!void {
             if (!trace) return;
-            assert(reason != .From);
-            assert(m != .None or reason == .Recharge);
+            assert(m != .None);
             try self.writer.writeAll(&.{
                 @enumToInt(ArgType.Move),
                 @bitCast(u8, source),
                 @enumToInt(m),
                 @bitCast(u8, target),
-                @enumToInt(reason),
             });
-        }
-
-        pub fn moveFrom(self: Self, source: ID, m: anytype, target: ID, from: anytype) Error!void {
-            if (!trace) return;
-            try self.writer.writeAll(&.{
-                @enumToInt(ArgType.Move),
-                @bitCast(u8, source),
-                @enumToInt(m),
-                @bitCast(u8, target),
-                @enumToInt(Move.From),
-                @enumToInt(from),
+            const none = &[_]u8{@enumToInt(Move.None)};
+            try self.writer.writeAll(switch (@typeInfo(@TypeOf(from))) {
+                .Null => none,
+                .Optional => if (from) |f| &[_]u8{ @enumToInt(Move.From), @enumToInt(f) } else none,
+                else => &[_]u8{ @enumToInt(Move.From), @enumToInt(from) },
             });
         }
 
@@ -627,21 +618,14 @@ const M = gen1.Move;
 const S = gen1.Species;
 
 test "|move|" {
-    try log.move(p2.ident(4), M.Thunderbolt, p1.ident(5), .None);
+    try log.move(p2.ident(4), M.Thunderbolt, p1.ident(5), null);
     try expectLog(
         &.{ N(ArgType.Move), 0b1100, N(M.Thunderbolt), 0b0101, N(Move.None) },
         buf[0..5],
     );
     stream.reset();
 
-    try log.move(p2.ident(4), M.None, p1.ident(5), .Recharge);
-    try expectLog(
-        &.{ N(ArgType.Move), 0b1100, 0, 0b0101, N(Move.Recharge) },
-        buf[0..5],
-    );
-    stream.reset();
-
-    try log.moveFrom(p2.ident(4), M.Wrap, p1.ident(5), M.Wrap);
+    try log.move(p2.ident(4), M.Wrap, p1.ident(5), M.Wrap);
     const wrap = N(M.Wrap);
     try expectLog(
         &.{ N(ArgType.Move), 0b1100, wrap, 0b0101, N(Move.From), wrap },
@@ -649,7 +633,7 @@ test "|move|" {
     );
     stream.reset();
 
-    try log.move(p2.ident(4), M.WaterGun, p1.ident(5), .None);
+    try log.move(p2.ident(4), M.WaterGun, p1.ident(5), null);
     try log.laststill();
     try expectLog(
         &.{
@@ -664,7 +648,7 @@ test "|move|" {
     );
     stream.reset();
 
-    try log.move(p2.ident(4), M.Tackle, p1.ident(5), .None);
+    try log.move(p2.ident(4), M.Tackle, p1.ident(5), null);
     try log.lastmiss();
     try expectLog(
         &.{

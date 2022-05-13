@@ -75,7 +75,6 @@
   ],
   "Move": [
     "None",
-    "Recharge",
     "From"
   ],
   "Cant": [
@@ -85,7 +84,7 @@
     "Trapped",
     "Flinch",
     "Disable",
-    "Recharging",
+    "Recharge",
     "PP"
   ],
   "Heal": [

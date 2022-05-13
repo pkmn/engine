@@ -81,7 +81,7 @@ const CANT: {[reason: number]: Protocol.Reason} = {
   [PROTOCOL.Cant.Paralysis]: 'par',
   [PROTOCOL.Cant.Trapped]: 'partiallytrapped',
   [PROTOCOL.Cant.Flinch]: 'flinch',
-  [PROTOCOL.Cant.Recharging]: 'recharge',
+  [PROTOCOL.Cant.Recharge]: 'recharge',
   [PROTOCOL.Cant.PP]: 'nopp',
 };
 
