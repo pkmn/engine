@@ -531,6 +531,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
             try log.lastmiss();
             try log.miss(battle.active(player), foe_ident);
         }
+        // SHOWDOWN: Pokémon Showdown does not inflict crash damage when attacking a Ghost
         if (move.effect == .JumpKick and !(showdown and immune)) {
             // GLITCH: Recoil is supposed to be damage / 8 but damage will always be 0 here
             assert(battle.last_damage == 0);
@@ -1106,7 +1107,7 @@ pub const Effects = struct {
 
         if (move.effect == .ConfusionChance) {
             const chance = if (showdown)
-                // SHOWDOWN: this diverges because showdown uses 26 instead of 25
+                // SHOWDOWN: this diverges because Pokémon Showdown uses 26 instead of 25
                 battle.rng.chance(u8, 26, 256)
             else
                 battle.rng.next() < Gen12.percent(10);
@@ -1327,7 +1328,7 @@ pub const Effects = struct {
         var side = battle.side(player);
         var foe = battle.foe(player);
 
-        // SHOWDOWN: showdown requires the user has Mimic (but not necessarily located at mslot)
+        // SHOWDOWN: Pokémon Showdown requires the user has Mimic (but not necessarily at mslot)
         const ok = !showdown or has_mimic: {
             for (side.active.moves) |m| {
                 if (m.id == .Mimic) break :has_mimic true;
