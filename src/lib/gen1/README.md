@@ -425,6 +425,9 @@ generation of Pokémon contains a number bugs:
 - **Bide**: Pokémon Showdown uses `random(3, 4)` to generate a duration in the range <b>[</b>3,
   4<b>)</b> which means Bide will always deterministically last 2 turns (Pokémon Showdown ends when
   duration reaches 1 instead of 0) despite advancing the RNG.
+- **Jump Kick** / **High Jump Kick**: these should cause 1 HP of crash damage when the target is a
+  Ghost, despite what Pokémon Showdown or Bulbapedia suggests or what the case is in later
+  generations.
 
 Finally, in Generation I, checking whether a move has **hit should come *after* determining
 damage**, not before. Pokémon Showdown's altered ordering here (which is more in line with how

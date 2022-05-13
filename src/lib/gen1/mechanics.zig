@@ -332,7 +332,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
 
                 // calcDamage just needs a 40 BP physical move, its not actually Pound
                 const move = Move.get(.Pound);
-                if (!calcDamage(battle, player, move, false)) return .err;
+                if (!calcDamage(battle, player, player, move, false)) return .err;
                 // Skipping adjustDamage / randomizeDamage / checkHit
                 try applyDamage(battle, player, log);
 
@@ -384,7 +384,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
         }
 
         // Skip Decrement PP / calcDamage / checkHit
-        try applyDamage(battle, player, log);
+        try applyDamage(battle, player.foe(), log);
         return .done;
     }
 
@@ -410,7 +410,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
         volatiles.attacks -= 1;
 
         // Skip Decrement PP / calcDamage / checkHit
-        try applyDamage(battle, player, log);
+        try applyDamage(battle, player.foe(), log);
         return .done;
     }
 
@@ -495,21 +495,15 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
     var ohko = false;
     var immune = false;
     battle.last_damage = 0;
-    // Dissambly does a check to allow 0 BP MultiHit moves this isn't possible in practice
+    // Disassembly does a check to allow 0 BP MultiHit moves this isn't possible in practice
     if (move.bp != 0) {
         if (move.effect == .OHKO) {
             ohko = side.active.stats.spe >= foe.active.stats.spe;
-            if (ohko) {
-                // This can overflow after adjustDamage, but will still be sufficient to OHKO
-                battle.last_damage = 65535;
-            } else {
-                battle.last_damage = 0;
-                try log.immune(battle.active(player.foe()), .OHKO);
-            }
-        } else {
-            if (!calcDamage(battle, player, move, crit)) return @as(?Result, Result.Error);
+            // This can overflow after adjustDamage, but will still be sufficient to OHKO
+            battle.last_damage = if (ohko) 65535 else 0;
+        } else if (!calcDamage(battle, player, player.foe(), move, crit)) {
+            return @as(?Result, Result.Error);
         }
-
         immune = adjustDamage(battle, player);
         randomizeDamage(battle);
     }
@@ -537,12 +531,29 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
             try log.lastmiss();
             try log.miss(battle.active(player), foe_ident);
         }
+        if (move.effect == .JumpKick and !(showdown and immune)) {
+            // GLITCH: Recoil is supposed to be damage / 8 but damage will always be 0 here
+            assert(battle.last_damage == 0);
+            battle.last_damage = 1;
+            try applyDamage(battle, player, log);
+        } else if (move.effect == .Explode) {
+            try Effects.explode(battle, player);
+            // TODO: does explosion missing build rage?
+        }
         return null;
     }
 
-    // TODO applyDamage
+    // FIXME multihit
 
+    if (crit) try log.crit(battle.active(player));
     if (ohko) try log.ohko();
+    try applyDamage(battle, player.foe(), log);
+
+    if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
+        try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
+    }
+
+    // FIXME always happen
 
     // if (!move.effect.isSpecial()) {
     //     try moveEffect(battle, player, move, choice.data, miss, log);
@@ -572,11 +583,11 @@ fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data) bool {
     return std.math.rotl(u8, battle.rng.next(), 3) < chance;
 }
 
-fn calcDamage(battle: anytype, player: Player, move: Move.Data, crit: bool) bool {
+fn calcDamage(battle: anytype, player: Player, target: Player, move: Move.Data, crit: bool) bool {
     assert(move.bp != 0);
 
     const side = battle.side(player);
-    const foe = battle.foe(player);
+    const foe = battle.foe(target);
 
     const special = move.type.special();
 
@@ -693,7 +704,7 @@ fn specialDamage(
         }
     }
 
-    try applyDamage(battle, player, log);
+    try applyDamage(battle, player.foe(), log);
     return null;
 }
 
@@ -716,28 +727,29 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
 
     if (!try checkHit(battle, player, move, false, log)) return null;
 
-    try applyDamage(battle, player, log);
+    try applyDamage(battle, player.foe(), log);
     return null;
 }
 
 fn applyDamage(battle: anytype, player: Player, log: anytype) !void {
     assert(battle.last_damage != 0);
 
-    var foe = battle.foe(player);
-    if (foe.active.volatiles.Substitute) {
-        if (battle.last_damage >= foe.active.volatiles.substitute) {
-            foe.active.volatiles.substitute = 0;
-            foe.active.volatiles.Substitute = false;
+    var target = battle.side(player);
+    // GLITCH: target here could be self for confusion and Jump Kick recoil but Substitute blocks
+    if (target.active.volatiles.Substitute) {
+        if (battle.last_damage >= target.active.volatiles.substitute) {
+            target.active.volatiles.substitute = 0;
+            target.active.volatiles.Substitute = false;
             // GLITCH: battle.last_damage is not updated with the amount of HP the Substitute had
         } else {
             // Safe to truncate since less than foe.volatiles.substitute which is a u8
-            foe.active.volatiles.substitute -= @truncate(u8, battle.last_damage);
-            try log.activate(battle.active(player.foe()), .Substitute);
+            target.active.volatiles.substitute -= @truncate(u8, battle.last_damage);
+            try log.activate(battle.active(player), .Substitute);
         }
     } else {
-        if (battle.last_damage > foe.stored().hp) battle.last_damage = foe.stored().hp;
-        foe.stored().hp -= battle.last_damage;
-        try log.damage(battle.active(player.foe()), foe.stored(), .None);
+        if (battle.last_damage > target.stored().hp) battle.last_damage = target.stored().hp;
+        target.stored().hp -= battle.last_damage;
+        try log.damage(battle.active(player), target.stored(), .None);
     }
 }
 
@@ -1583,15 +1595,17 @@ pub const Effects = struct {
         var boosts = &side.active.boosts;
 
         switch (move.effect) {
-            .AttackUp1, .AttackUp2 => {
+            .AttackUp1, .AttackUp2, .Rage => {
+                assert(boosts.atk >= -6 and boosts.atk <= 6);
                 const n: u2 = if (move.effect == .AttackUp2) 2 else 1;
                 boosts.atk = @minimum(6, boosts.atk + n);
                 var mod = BOOSTS[@intCast(u4, boosts.atk + 6)];
                 const stat = unmodifiedStats(battle, player).atk;
                 stats.atk = @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
-                try log.boost(ident, .Attack, n);
+                try log.boost(ident, if (move.effect == .Rage) .Rage else .Attack, n);
             },
             .DefenseUp1, .DefenseUp2 => {
+                assert(boosts.def >= -6 and boosts.def <= 6);
                 const n: u2 = if (move.effect == .DefenseUp2) 2 else 1;
                 boosts.def = @minimum(6, boosts.def + n);
                 var mod = BOOSTS[@intCast(u4, boosts.def + 6)];
@@ -1600,6 +1614,7 @@ pub const Effects = struct {
                 try log.boost(ident, .Defense, n);
             },
             .SpeedUp2 => {
+                assert(boosts.spe >= -6 and boosts.spe <= 6);
                 boosts.spe = @minimum(6, boosts.spe + 1);
                 var mod = BOOSTS[@intCast(u4, boosts.spe + 6)];
                 const stat = unmodifiedStats(battle, player).spe;
@@ -1607,6 +1622,7 @@ pub const Effects = struct {
                 try log.boost(ident, .Speed, 1);
             },
             .SpecialUp1, .SpecialUp2 => {
+                assert(boosts.spc >= -6 and boosts.spc <= 6);
                 const n: u2 = if (move.effect == .SpecialUp2) 2 else 1;
                 boosts.spc = @minimum(6, boosts.spc + n);
                 var mod = BOOSTS[@intCast(u4, boosts.spc + 6)];
@@ -1616,6 +1632,7 @@ pub const Effects = struct {
                 try log.boost(ident, .SpecialDefense, n);
             },
             .EvasionUp1 => {
+                assert(boosts.evasion >= -6 and boosts.evasion <= 6);
                 boosts.evasion = @minimum(6, boosts.evasion + 1);
                 try log.boost(ident, .Evasion, 1);
             },
@@ -1623,12 +1640,10 @@ pub const Effects = struct {
         }
 
         // GLITCH: Stat modification errors glitch
-        statusModify(side.stored().status, stats);
+        statusModify(battle.foe(player).stored().status, stats);
     }
 
     fn unboost(battle: anytype, player: Player, move: Move.Data, miss: bool, log: anytype) !void {
-        var side = battle.side(player);
-
         var foe = battle.foe(player);
         const foe_ident = battle.active(player.foe());
 
@@ -1649,36 +1664,42 @@ pub const Effects = struct {
 
         switch (move.effect) {
             .AttackDown1, .AttackDownChance => {
+                assert(boosts.atk >= -6 and boosts.atk <= 6);
                 boosts.atk = @maximum(-6, boosts.atk - 1);
                 var mod = BOOSTS[@intCast(u4, boosts.atk + 6)];
-                const stat = unmodifiedStats(battle, player).atk;
+                const stat = unmodifiedStats(battle, player.foe()).atk;
                 stats.atk = @maximum(1, @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]));
                 try log.unboost(foe_ident, .Attack, 1);
             },
             .DefenseDown1, .DefenseDown2, .DefenseDownChance => {
+                assert(boosts.atk >= -6 and boosts.atk <= 6);
                 const n: u2 = if (move.effect == .DefenseDown2) 2 else 1;
                 boosts.def = @maximum(-6, boosts.def - n);
                 var mod = BOOSTS[@intCast(u4, boosts.def + 6)];
-                const stat = unmodifiedStats(battle, player).def;
+                const stat = unmodifiedStats(battle, player.foe()).def;
                 stats.def = @maximum(1, @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]));
                 try log.unboost(foe_ident, .Defense, n);
             },
             .SpeedDown1, .SpeedDownChance => {
+                assert(boosts.spe >= -6 and boosts.spe <= 6);
                 boosts.spe = @maximum(-6, boosts.spe - 1);
                 var mod = BOOSTS[@intCast(u4, boosts.spe + 6)];
-                const stat = unmodifiedStats(battle, player).spe;
+                const stat = unmodifiedStats(battle, player.foe()).spe;
                 stats.spe = @maximum(1, @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]));
                 try log.unboost(foe_ident, .Speed, 1);
+                assert(boosts.spe >= -6);
             },
             .SpecialDownChance => {
+                assert(boosts.spc >= -6 and boosts.spc <= 6);
                 boosts.spc = @maximum(-6, boosts.spc - 1);
                 var mod = BOOSTS[@intCast(u4, boosts.spc + 6)];
-                const stat = unmodifiedStats(battle, player).spc;
+                const stat = unmodifiedStats(battle, player.foe()).spc;
                 stats.spc = @maximum(1, @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]));
                 try log.unboost(foe_ident, .SpecialAttack, 1);
                 try log.unboost(foe_ident, .SpecialDefense, 1);
             },
             .AccuracyDown1 => {
+                assert(boosts.accuracy >= -6 and boosts.accuracy <= 6);
                 boosts.accuracy = @maximum(-6, boosts.accuracy - 1);
                 try log.unboost(foe_ident, .Accuracy, 1);
             },
@@ -1686,7 +1707,7 @@ pub const Effects = struct {
         }
 
         // GLITCH: Stat modification errors glitch
-        statusModify(side.stored().status, stats);
+        statusModify(battle.side(player).stored().status, stats);
     }
 };
 
