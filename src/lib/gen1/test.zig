@@ -43,7 +43,7 @@ const HIT = 0;
 const MISS = 255;
 const CRIT = 0;
 const NO_CRIT = 255;
-const MIN_DMG = 217;
+const MIN_DMG = if (showdown) 0 else 217;
 const MAX_DMG = 255;
 
 const P1 = Player.P1;
