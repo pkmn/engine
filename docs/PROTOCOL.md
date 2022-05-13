@@ -139,8 +139,7 @@ a `LastStill` or `LastMiss` message in the same buffer (see above).
 | Raw    | Description | `[from]`? |
 | ------ | ----------- | --------- |
 | `0x00` | None        | No        |
-| `0x01` | `recharge`  | No        |
-| `0x02` | `\|[from]`  | Yes       |
+| `0x01` | `\|[from]`  | Yes       |
 </details>
 
 ### `|switch|` (`0x04`)
