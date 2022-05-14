@@ -492,6 +492,7 @@ fn decrementPP(side: *Side, choice: Choice) void {
     assert(active.move(choice.data).pp == side.stored().move(choice.data).pp);
 }
 
+// SHOWDOWN: Pokémon Showdown does hit/multi/crit/damage insrtead of crit/damage/hit/multi
 fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: anytype) !?Result {
     var side = battle.side(player);
     const foe = battle.foe(player);
@@ -503,50 +504,85 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
         return specialDamage(battle, player, move, missed, log);
     }
 
-    // Runs even for moves that can't crit (onEnd Status or moves like Counter/set damage/Metronome)
-    const crit = checkCriticalHit(battle, player, move);
-
-    if (side.last_selected_move == .Counter) return counterDamage(battle, player, move, log);
-
-    var ohko = false;
-    var immune = false;
-    // SHOWDOWN: Pokémon Showdown has broken `Battle.lastDamage` handling
-    if (!showdown) battle.last_damage = 0;
-
-    // Disassembly does a check to allow 0 BP MultiHit moves but this isn't possible in practice
-    assert(move.effect != .MultiHit or move.bp > 0);
-    if (move.bp != 0) {
-        if (move.effect == .OHKO) {
-            ohko = side.active.stats.spe >= foe.active.stats.spe;
-            // This can overflow after adjustDamage, but will still be sufficient to OHKO
-            battle.last_damage = if (ohko) 65535 else 0;
-        } else if (!calcDamage(battle, player, player.foe(), move, crit)) {
-            return @as(?Result, Result.Error);
+    // SHOWDOWN: Pokémon Showdown runs type and OHKO immunity checks before the accuracy check
+    if (showdown) {
+        const type1 = @enumToInt(move.type.effectiveness(foe.active.types.type1));
+        const type2 = @enumToInt(move.type.effectiveness(foe.active.types.type2));
+        if (type1 == 0 or type2 == 0) {
+            try log.immune(battle.active(player.foe()), .None);
+            if (move.effect == .Explode) try Effects.explode(battle, player);
+            return null;
         }
-        immune = adjustDamage(battle, player);
-        randomizeDamage(battle);
+        if (move.effect == .OHKO and side.active.stats.spe < foe.active.stats.spe) {
+            try log.immune(battle.active(player.foe()), .OHKO);
+            return null;
+        }
     }
 
-    var miss = moveHit(battle, player, move) or battle.last_damage == 0 or missed;
+    var crit = false;
+    var ohko = false;
+    var immune = false;
+    var hits: u4 = 1;
+    var miss = if (showdown) moveHit(battle, player, move) else false;
+
+    const counter = side.last_selected_move == .Counter;
+    if (!miss and (!showdown or (move.bp or counter))) {
+        if (showdown and move.effect.isMulti()) {
+            Effects.multiHit(battle, player, move);
+            hits = side.active.volatiles.attacks;
+        }
+
+        // Cartridge rolls for crit even for moves that can't crit (Counter/Metronome/status)
+        crit = if (!showdown or !counter) checkCriticalHit(battle, player, move);
+
+        if (counter) return counterDamage(battle, player, move, log);
+
+        // SHOWDOWN: Pokémon Showdown has broken `Battle.lastDamage` handling
+        if (!showdown) battle.last_damage = 0;
+
+        // Disassembly does a check to allow 0 BP MultiHit moves but this isn't possible in practice
+        assert(move.effect != .MultiHit or move.bp > 0);
+        if (move.bp != 0) {
+            if (move.effect == .OHKO) {
+                ohko = if (!showdown) side.active.stats.spe >= foe.active.stats.spe else true;
+                // This can overflow after adjustDamage, but will still be sufficient to OHKO
+                battle.last_damage = if (ohko) 65535 else 0;
+            } else if (!calcDamage(battle, player, player.foe(), move, crit)) {
+                return @as(?Result, Result.Error);
+            }
+            immune = adjustDamage(battle, player);
+            randomizeDamage(battle);
+        }
+    }
+
+    miss = if (showdown)
+        miss
+    else
+        (moveHit(battle, player, move) or battle.last_damage == 0 or missed);
+
     assert(miss or battle.last_damage > 0);
     assert(!(ohko and immune));
     assert(!immune or miss);
 
-    if (move.effect == .MirrorMove) {
-        return mirrorMove(battle, player, choice, miss, log);
-    } else if (move.effect == .Metronome) {
-        return metronome(battle, player, choice, miss, log);
+    if (!showdown or !miss) {
+        if (move.effect == .MirrorMove) {
+            return mirrorMove(battle, player, choice, miss, log);
+        } else if (move.effect == .Metronome) {
+            return metronome(battle, player, choice, miss, log);
+        }
     }
 
-    if (move.effect.onEnd()) {
+    if ((!showdown or !miss) and move.effect.onEnd()) {
         try moveEffect(battle, player, move, choice.data, miss, log);
         return null;
     }
 
     if (miss) {
         const foe_ident = battle.active(player.foe());
-        if (immune) {
-            try log.immune(foe_ident, if (move.effect == .OHKO) .OHKO else .None);
+        if (!showdown and move.effect == .OHKO and side.active.stats.spe < foe.active.stats.spe) {
+            try log.immune(foe_ident, .OHKO);
+        } else if (immune) {
+            try log.immune(foe_ident, .None);
         } else {
             try log.lastmiss();
             try log.miss(battle.active(player), foe_ident);
@@ -568,27 +604,22 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
         return null;
     }
 
-    if (move.effect.onEnd()) {
-        try moveEffect(battle, player, move, choice.data, miss, log);
-        return null;
-    }
-
-    // On the cartridge MultiHit doesn't get set up until after damage has been applied
-    // for the first time but its more convenient and efficient to set it up here
-    var max: u4 = 1;
-    if (move.effect.isMulti()) {
+    // On the cartridge MultiHit doesn't get set up until after damage has been applied for the
+    // first time but its more convenient and efficient to set it up here (Pokémon Showdown sets
+    // it up above before damage calculation).
+    if (!showdown and move.effect.isMulti()) {
         Effects.multiHit(battle, player, move);
-        max = side.active.volatiles.attacks;
+        hits = side.active.volatiles.attacks;
     }
 
     var nullified = false;
-    var hits: u4 = 0;
-    while (hits < max) : (hits += 1) {
+    var hit: u4 = 0;
+    while (hit < hits) : (hit += 1) {
         nullified = try applyDamage(battle, player.foe(), player.foe(), log);
         if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
             try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
         }
-        if (hits == 0) {
+        if (hit == 0) {
             if (crit) try log.crit(battle.active(player));
             if (ohko) try log.ohko();
         }
@@ -598,7 +629,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
 
     if (side.active.volatiles.MultiHit) {
         side.active.volatiles.MultiHit = false;
-        assert(nullified or side.active.volatiles.attacks + hits == max);
+        assert(nullified or side.active.volatiles.attacks + hit == hits);
         side.active.volatiles.attacks = 0;
         try log.hitcount(battle.active(player), hits);
     }
@@ -797,7 +828,8 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
 
     battle.last_damage = if (battle.last_damage > 0x7FFF) 0xFFFF else battle.last_damage * 2;
 
-    if (!try checkHit(battle, player, move, false, log)) return null;
+    // SHOWDOWN: Pokémon Showdown calls checkHit before Counter
+    if (!showdown and !try checkHit(battle, player, move, false, log)) return null;
 
     _ = try applyDamage(battle, player.foe(), player.foe(), log);
     return null;
@@ -885,8 +917,10 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data) bool {
         assert(!side.active.volatiles.Bide);
 
         if (move.effect == .DreamEater and !Status.is(foe.stored().status, .SLP)) break :miss true;
-        if (move.effect == .Swift) break :miss false;
+        if (move.effect == .Swift) return false;
         if (foe.active.volatiles.Invulnerable) break :miss true;
+        // SHOWDOWN: need to special case Sleep + Recharging glitch in checkHit due to control flow
+        if (showdown and move.effect == .Sleep and foe.active.volatiles.Recharging) return false;
 
         // Conversion / Haze / Light Screen / Reflect qualify but do not call moveHit
         if (foe.active.volatiles.Mist and move.effect.isStatDown()) break :miss true;
@@ -1565,7 +1599,9 @@ pub const Effects = struct {
             // Hit test not applied if the target is recharging (bypass)
         } else {
             if (Status.any(foe_stored.status)) return log.fail(foe_ident, .Sleep);
-            if (!try checkHit(battle, player, move, miss, log)) return;
+            // SHOWDOWN: if checkHit didn't return true showdown wouldn't even call this handler
+            assert(!showdown or !miss);
+            if (!showdown and !try checkHit(battle, player, move, miss, log)) return;
         }
 
         // SHOWDOWN: these values will diverge
@@ -1733,13 +1769,15 @@ pub const Effects = struct {
 
         if (foe.active.volatiles.Substitute) return;
 
+        // SHOWDOWN: if checkHit didn't return true showdown wouldn't even call this handler
+        assert(move.effect.isStatDownChance() or (!showdown or !miss));
         if (move.effect.isStatDownChance()) {
             const chance = if (showdown)
                 battle.rng.chance(u8, 85, 256)
             else
                 battle.rng.next() < Gen12.percent(33) + 1;
             if (chance or foe.active.volatiles.Invulnerable) return;
-        } else if (!try checkHit(battle, player, move, miss, log)) {
+        } else if (!showdown and !try checkHit(battle, player, move, miss, log)) {
             return; // checkHit already checks for Invulnerable
         }
 
