@@ -526,14 +526,14 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
     var miss = if (showdown) moveHit(battle, player, move) else false;
 
     const counter = side.last_selected_move == .Counter;
-    if (!miss and (!showdown or (move.bp or counter))) {
+    if (!miss and (!showdown or (move.bp > 0 or counter))) {
         if (showdown and move.effect.isMulti()) {
             Effects.multiHit(battle, player, move);
             hits = side.active.volatiles.attacks;
         }
 
         // Cartridge rolls for crit even for moves that can't crit (Counter/Metronome/status)
-        crit = if (!showdown or !counter) checkCriticalHit(battle, player, move);
+        crit = if (!showdown or !counter) checkCriticalHit(battle, player, move) else crit;
 
         if (counter) return counterDamage(battle, player, move, log);
 
@@ -811,17 +811,38 @@ fn specialDamage(
     return null;
 }
 
-// FIXME: Counter selected vs used Desync
 fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype) !?Result {
     const foe = battle.foe(player);
-    const foe_last_move = Move.get(foe.last_selected_move);
-    const miss = foe_last_move.bp == 0 or
-        foe.last_selected_move == .Counter or
-        foe_last_move.type != .Normal or
-        foe_last_move.type != .Fighting or
-        battle.last_damage == 0;
 
-    if (miss) {
+    if (battle.last_damage == 0) {
+        try log.fail(battle.active(player), .None);
+        return null;
+    }
+
+    // Pretend Counter was used as a stand-in when no move has been used to fail below with 0 BP
+    const foe_last_used_move =
+        Move.get(if (foe.last_used_move == .None) .Counter else foe.last_used_move);
+    const foe_last_selected_move =
+        Move.get(if (foe.last_selected_move == .None) .Counter else foe.last_selected_move);
+
+    const used = foe_last_used_move.bp == 0 or
+        foe.last_used_move == .Counter or
+        foe_last_used_move.type != .Normal or
+        foe_last_used_move.type != .Fighting;
+
+    const selected = foe_last_selected_move.bp == 0 or
+        foe.last_selected_move == .Counter or
+        foe_last_selected_move.type != .Normal or
+        foe_last_selected_move.type != .Fighting;
+
+    if (!used and !selected) {
+        try log.fail(battle.active(player), .None);
+        return null;
+    }
+
+    if (!used or !selected) {
+        // GLITCH: Counter desync (covered by Desync Clause Mod on Pokémon Showdown)
+        if (!showdown) return Result.Error;
         try log.fail(battle.active(player), .None);
         return null;
     }
