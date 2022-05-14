@@ -142,7 +142,6 @@ fn selectMove(battle: anytype, player: Player, choice: Choice, foe_choice: Choic
         assert(side.active.volatiles.disabled.move != choice.data);
         side.last_selected_move = move.id;
     }
-
     // SHOWDOWN: getRandomTarget arbitrarily advances the RNG
     if (showdown) battle.rng.advance(side.last_selected_move.frames());
     return false;
@@ -695,7 +694,7 @@ fn calcDamage(
     const special = move.type.special();
 
     // zig fmt: off
-    var atk =
+    var atk: u32 =
         if (crit)
             if (special) side.stored().stats.spc
             else side.stored().stats.atk
@@ -703,7 +702,7 @@ fn calcDamage(
             if (special) side.active.stats.spc
             else side.active.stats.atk;
 
-    var def =
+    var def: u32 =
         if (crit)
             if (special) target.stored().stats.spc
             else target.stored().stats.def
@@ -721,12 +720,13 @@ fn calcDamage(
         def = @maximum((def / 4) & 255, if (showdown) 1 else 0);
     }
 
-    const lvl = @as(u16, side.stored().level * @as(u2, if (crit) 2 else 1));
+    const lvl = @as(u32, side.stored().level * @as(u2, if (crit) 2 else 1));
 
-    def = if (move.effect == .Explode) @maximum(def / 2, 1) else def;
+    def = @as(u32, if (move.effect == .Explode) @maximum(def / 2, 1) else def);
 
     if (def == 0) return false;
-    battle.last_damage = @minimum(997, ((lvl * 2 / 5) + 2) *% move.bp *% atk / def / 50) + 2;
+    battle.last_damage = @truncate(u16, @minimum(997, ((lvl * 2 / 5) + 2) *%
+        @as(u32, move.bp) *% atk / def / 50) + 2);
     return true;
 }
 
@@ -973,7 +973,7 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data) bool {
         side.active.volatiles.Trapping = false;
     }
 
-    return !miss;
+    return miss;
 }
 
 fn checkFaint(

@@ -45,29 +45,19 @@ const CRIT = 0;
 const NO_CRIT = 255;
 const MIN_DMG = if (showdown) 0 else 217;
 const MAX_DMG = 255;
+const PROC = 0;
+const NO_PROC = 255;
 
 const P1 = Player.P1;
 const P2 = Player.P2;
 
-test "TODO Battle1" {
+test "TODO Battle" {
     const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
     const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
     const rolls = if (showdown)
-        (.{ NOP, NOP, HIT, NO_CRIT, HIT, NO_CRIT, MAX_DMG })
+        (.{ NOP, NOP, HIT, NO_CRIT, MIN_DMG, NO_PROC, HIT, CRIT, MAX_DMG })
     else
-        (.{ NO_CRIT, HIT, NO_CRIT, MAX_DMG, HIT });
-    var battle = Battle.fixed(rolls, &.{p1}, &.{p2});
-    try expectEqual(Result.Default, try update(&battle, move(4), move(2), null));
-    try expect(battle.rng.exhausted());
-}
-
-test "TODO Battle2" {
-    const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
-    const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
-    const rolls = if (showdown)
-        (.{ NOP, NOP, HIT, NO_CRIT, HIT, NO_CRIT, MAX_DMG })
-    else
-        (.{ NO_CRIT, HIT, NO_CRIT, MAX_DMG, HIT });
+        (.{ NO_CRIT, MIN_DMG, HIT, NO_PROC, CRIT, MAX_DMG, HIT });
     var battle = Battle.fixed(rolls, &.{p1}, &.{p2});
 
     // var logs = TestLogs(100){};
