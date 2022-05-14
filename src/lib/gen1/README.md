@@ -18,6 +18,12 @@ The engine also relies on the [data types](../common/data.zig), [protocol](../co
 and [RNG](../common/rng.zig) logic which is shared across generations and lives in
 [`lib/common`](../common).
 
+Covered below is a description of the [**data structures**](#data-structures) used including the
+[**information**](#information) they contain and their [**layout**](#layout), a list of
+[**bugs**](#bugs) that are introduced by `-Dshowdown` for Pokémon Showdown compatibility, an
+[**RNG**](#rng) table, high level [**details**](#details) about the control flow of the engine and a
+list of additional reference [**resources**](#resources).
+
 ## Data Structures
 
 The following information is required to simulate a Generation I Pokémon battle:
@@ -424,13 +430,29 @@ generation of Pokémon contains a number bugs:
   should overwrite the original accuracy of the move for as long as the move's lock lasts.
 - **Bide**: Pokémon Showdown uses `random(3, 4)` to generate a duration in the range <b>[</b>3,
   4<b>)</b> which means Bide will always deterministically last 2 turns (Pokémon Showdown ends when
-  duration reaches 1 instead of 0) despite advancing the RNG.
+  duration reaches 1 instead of 0) despite advancing the RNG. See also below regarding `lastDamage`.
 - **Jump Kick** / **High Jump Kick**: these should cause 1 HP of crash damage when the target is a
   Ghost, despite what Pokémon Showdown or Bulbapedia suggests or what the case is in later
   generations.
 - **Self-Destruct** / **Explosion**: these both should cause their target to continue building Rage
   even if they miss (most sources erroneously claim a move needs to hit to cause Rage to build but
   the `EXPLODE_EFFECT` is special-cased in the original game code).
+- **`lastDamage`**: Pokémon Showdown's tracking of `wDamage` (`battle.last_damage` in the pkmn
+  engine) is incorrect as it confuses its `Pokemon.lastDamage` field with the `Battle.lastDamage`
+  field its Counter / Substitute / Bide implementations rely on. The main consequences are that
+  `Battle.lastDamage` does not get zeroed appropriately at the beginning of executing a move
+  (`Pokemon.lastDamage` is zeroed instead) and that draining moves impact on last damage gets
+  ignored.
+  - `Battle.lastDamage` (Counter)
+    - updated in `spreadDamage` for non-recoil/**drain**/status moves
+    - zeroed in `useMove` after `tryMoveHit`
+    - used by Counter to determine success and damage
+  - `Pokemon.lastDamage` (Substitute)
+    - zeroed at the start of `runMove` between `BeforeMove` and deducting PP
+    - zeroed in `tryMoveHit` after determining the move hit
+    - read and updated by Substitute
+  - `effectState.lastDamage` (Bide):
+    - updated by Bide, use to determine the amount of damage the move eventually does
 
 Finally, in Generation I, checking whether a move has **hit should come *after* determining
 damage**, not before. Pokémon Showdown's altered ordering here (which is more in line with how

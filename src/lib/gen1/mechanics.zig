@@ -506,14 +506,12 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
     // Runs even for moves that can't crit (onEnd Status or moves like Counter/set damage/Metronome)
     const crit = checkCriticalHit(battle, player, move);
 
-    // SHOWDOWN: showdown resets last_damage before counter instead of after
-    if (showdown) battle.last_damage = 0;
-
     if (side.last_selected_move == .Counter) return counterDamage(battle, player, move, log);
 
     var ohko = false;
     var immune = false;
-    battle.last_damage = 0;
+    // SHOWDOWN: Pokémon Showdown has broken `Battle.lastDamage` handling
+    if (!showdown) battle.last_damage = 0;
 
     // Disassembly does a check to allow 0 BP MultiHit moves but this isn't possible in practice
     assert(move.effect != .MultiHit or move.bp > 0);
@@ -1253,7 +1251,8 @@ pub const Effects = struct {
         var stored = side.stored();
 
         const drain = @maximum(battle.last_damage / 2, 1);
-        battle.last_damage = drain;
+        // SHOWDOWN: Pokémon Showdown has broken `Battle.lastDamage` handling
+        if (!showdown) battle.last_damage = drain;
         stored.hp = @minimum(stored.stats.hp, stored.hp + drain);
 
         try log.drain(battle.active(player), stored, battle.active(player.foe()));
