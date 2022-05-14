@@ -129,6 +129,7 @@ pub fn build(b: *Builder) !void {
     if (coverage) |path| {
         tests.setExecCmd(&.{ "kcov", "--include-pattern=src/lib", path, null });
     }
+    const test_step = if (test_filter != null) null else &tests.step;
 
     const bench = b.addExecutable(
         if (showdown) "benchmark-showdown" else "benchmark",
@@ -142,11 +143,10 @@ pub fn build(b: *Builder) !void {
     const benchmark = bench.run();
     benchmark.step.dependOn(b.getInstallStep());
     if (b.args) |args| benchmark.addArgs(args);
-    tests.step.dependOn(&bench.step);
+    if (test_step) |ts| ts.dependOn(&bench.step);
 
     const format = b.addFmt(&.{"."});
 
-    const test_step = if (test_filter != null) null else &tests.step;
     const rng = try tool(b, &.{pkmn}, "src/tools/rng.zig", showdown, strip, test_step);
     const serde = try tool(b, &.{pkmn}, "src/tools/serde.zig", showdown, strip, test_step);
     const protocol = try tool(b, &.{pkmn}, "src/tools/protocol.zig", showdown, strip, test_step);
