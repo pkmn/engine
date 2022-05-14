@@ -633,14 +633,14 @@ test "|move|" {
     );
     stream.reset();
 
-    try log.move(p2.ident(4), M.WaterGun, p1.ident(5), null);
+    try log.move(p2.ident(4), M.SkullBash, .{}, null);
     try log.laststill();
     try expectLog(
         &.{
             N(ArgType.Move),
             0b1100,
-            N(M.WaterGun),
-            0b0101,
+            N(M.SkullBash),
+            0,
             N(Move.None),
             N(ArgType.LastStill),
         },

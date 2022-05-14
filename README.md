@@ -132,7 +132,7 @@ while (!pkmn_result_type(result = pkmn_battle_update(battle, c1, c2, &buf))) {
   c1 = choose(p1, pkmn_result_p1(result));
   c2 = choose(p2, pkmn_result_p2(result));
 }
-if (pkmn_result_error(result)) exit(1);
+if (pkmn_error(result)) exit(1);
 ```
 
 [(full code)](src/examples/c)

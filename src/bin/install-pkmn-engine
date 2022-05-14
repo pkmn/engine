@@ -188,4 +188,3 @@ const headers = async () => {
   console.log('Building build/lib/pkmn.node');
   sh(zig, ['build', '-Dshowdown', '-Drelease-fast', `-Dnode-headers=${include}`, '-Dstrip']);
 })();
-

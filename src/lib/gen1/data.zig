@@ -342,17 +342,30 @@ test "Move" {
     try expect(!Move.Effect.onEnd(.Charge));
 
     try expect(!Move.Effect.alwaysHappens(.SpeedUp2));
-    try expect(Move.Effect.alwaysHappens(.DoubleHit));
+    try expect(Move.Effect.alwaysHappens(.DrainHP));
     try expect(Move.Effect.alwaysHappens(.Recoil));
     try expect(!Move.Effect.alwaysHappens(.Charge));
     try expect(!Move.Effect.alwaysHappens(.SpeedDownChance));
     try expect(Move.Effect.alwaysHappens(.Rage));
-    try expect(Move.Effect.alwaysHappens(.Twineedle));
+
+    // NB: differs from cartridge
+    try expect(!Move.Effect.alwaysHappens(.DoubleHit));
+    try expect(!Move.Effect.alwaysHappens(.MultiHit));
+    try expect(!Move.Effect.alwaysHappens(.Twineedle));
 
     try expect(!Move.Effect.isSpecial(.SpeedUp2));
+    try expect(Move.Effect.isSpecial(.DrainHP));
+    try expect(Move.Effect.isSpecial(.Rage)); // other on cartridge
     try expect(Move.Effect.isSpecial(.DoubleHit));
-    try expect(Move.Effect.isSpecial(.Trapping));
+    try expect(Move.Effect.isSpecial(.MultiHit));
+    try expect(Move.Effect.isSpecial(.Twineedle)); // other on cartridge
     try expect(!Move.Effect.isSpecial(.AttackDownChance));
+
+    try expect(!Move.Effect.isMulti(.Trapping));
+    try expect(Move.Effect.isMulti(.DoubleHit));
+    try expect(Move.Effect.isMulti(.MultiHit));
+    try expect(Move.Effect.isMulti(.Twineedle));
+    try expect(!Move.Effect.isMulti(.AttackDownChance));
 
     try expect(!Move.Effect.isStatDownChance(.Trapping));
     try expect(Move.Effect.isStatDownChance(.AttackDownChance));

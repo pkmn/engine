@@ -1556,13 +1556,12 @@ pub const Move = enum(u8) {
         SpecialUp2,
         SpeedUp2,
         // isSpecial
-        DoubleHit,
         DrainHP,
         DreamEater,
         Explode,
         JumpKick,
-        MultiHit,
         PayDay,
+        Rage,
         Recoil,
         Charge,
         SpecialDamage,
@@ -1570,7 +1569,11 @@ pub const Move = enum(u8) {
         Swift,
         Thrashing,
         Trapping,
-        // regular
+        // isMulti
+        DoubleHit,
+        MultiHit,
+        Twineedle,
+        // other
         AttackDownChance,
         DefenseDownChance,
         SpeedDownChance,
@@ -1591,8 +1594,6 @@ pub const Move = enum(u8) {
         ParalyzeChance2,
         PoisonChance1,
         PoisonChance2,
-        Rage,
-        Twineedle,
 
         comptime {
             assert(@sizeOf(Effect) == 1);
@@ -1611,16 +1612,20 @@ pub const Move = enum(u8) {
         }
 
         pub inline fn alwaysHappens(effect: Effect) bool {
-            return @enumToInt(effect) > 31 and
-                (@enumToInt(effect) <= 39 or @enumToInt(effect) > 65);
+            return @enumToInt(effect) > 31 and @enumToInt(effect) <= 38;
         }
 
         pub inline fn isSpecial(effect: Effect) bool {
-            return @enumToInt(effect) > 31 and @enumToInt(effect) <= 45;
+            // NB: isSpecial includes isMulti
+            return @enumToInt(effect) > 31 and @enumToInt(effect) <= 47;
+        }
+
+        pub inline fn isMulti(effect: Effect) bool {
+            return @enumToInt(effect) > 44 and @enumToInt(effect) <= 47;
         }
 
         pub inline fn isStatDownChance(effect: Effect) bool {
-            return @enumToInt(effect) > 45 and @enumToInt(effect) <= 49;
+            return @enumToInt(effect) > 47 and @enumToInt(effect) <= 51;
         }
     };
 

@@ -155,7 +155,9 @@ export const DECODERS: {[key: number]: Decoder} = {
   [ArgType.Move](offset, data) {
     const source = decodeIdent(this.names, data.getUint8(offset++));
     const m = data.getUint8(offset++);
-    const target = decodeIdent(this.names, data.getUint8(offset++));
+    const {player, id} = decodeIdentRaw(data.getUint8(offset++));
+    const target =
+      id === 0 ? '' : `${player}a: ${this.names[player].team[id - 1]}` as Protocol.PokemonIdent;
     const reason = data.getUint8(offset++);
     const move = reason === PROTOCOL.Move.Recharge
       ? 'recharge' : this.gen.moves.get(this.lookup.moveByNum(m))!.name;

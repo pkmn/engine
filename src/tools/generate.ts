@@ -115,11 +115,12 @@ const STAT_DOWN_CHANCE = [
   'AttackDownChance', 'DefenseDownChance', 'SpeedDownChance', 'SpecialDownChance',
 ];
 
+// Technically DoubleHit and MultiHit belong here but they're handled subtly differently. Similarly,
+// Rage is not considered to be "special" though is considered to "always happen", but simply
+// considering it "special" is simpler and allows us to avoid redundantly calling Rage twice anyway
 const ALWAYS_HAPPEN_SPECIAL = [
-  'DoubleHit', 'DrainHP', 'DreamEater', 'Explode', 'JumpKick', 'MultiHit', 'PayDay', 'Recoil',
+  'DrainHP', 'DreamEater', 'Explode', 'JumpKick', 'PayDay', 'Rage', 'Recoil',
 ];
-
-const ALWAYS_HAPPEN_REGULAR = ['Rage', 'Twineedle'];
 
 const GROUPS: { [constant: string]: string[] } = {
   // data/battle/residual_effects_1.asm
@@ -138,6 +139,8 @@ const GROUPS: { [constant: string]: string[] } = {
     ...ALWAYS_HAPPEN_SPECIAL, 'Swift', 'Charge',
     'SuperFang', 'SpecialDamage', 'Thrashing', 'Trapping',
   ],
+  // custom group used as an optimization/simplification by the engine
+  isMulti: ['DoubleHit', 'MultiHit', 'Twineedle'],
 };
 const EFFECT_TO_GROUP: { [effect: string]: string } = {};
 for (const group in GROUPS) {
@@ -176,7 +179,7 @@ const nameToEnum = (s: string) => s.replace(/[^A-Za-z0-9]+/g, '');
 const constToEnum = (s: string) =>
   s.split('_').map(w => `${w[0]}${w.slice(1).toLowerCase()}`).join('');
 
-const effectToGroup = (e: string) => EFFECT_TO_GROUP[e] || 'regular';
+const effectToGroup = (e: string) => EFFECT_TO_GROUP[e] || 'other';
 
 const mkdir = (dir: string) => {
   try {
@@ -351,8 +354,13 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const MOVES: string[] = [];
     const FRAMES: string[] = [];
     const PP: string[] = [];
-    const EFFECTS: { [key: string]: Set<string>} =
-      {onBeginMove: new Set(), onEnd: new Set(), isSpecial: new Set(), regular: new Set()};
+    const EFFECTS: { [key: string]: Set<string>} = {
+      onBeginMove: new Set(),
+      onEnd: new Set(),
+      isSpecial: new Set(),
+      isMulti: new Set(),
+      other: new Set(),
+    };
     for (const m of moves) {
       const [name, effect] = m.split(' ');
       if (effect !== 'None') EFFECTS[effectToGroup(effect)].add(effect);
@@ -388,6 +396,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const begin = EFFECTS.onBeginMove.size;
     const end = begin + EFFECTS.onEnd.size;
     const special = end + EFFECTS.isSpecial.size;
+    const multi = special + EFFECTS.isMulti.size;
     const effects: string[] = [];
     // Sort STAT_DOWN/ALWAYS_HAPPEN_* specially so that they can be sub-range checked
     for (const group in EFFECTS) {
@@ -397,18 +406,15 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         : group === 'isSpecial'
           ? [...ALWAYS_HAPPEN_SPECIAL,
             ...Array.from(EFFECTS[group]).filter(e => !ALWAYS_HAPPEN_SPECIAL.includes(e)).sort()]
-          : group === 'regular'
+          : group === 'other'
             ? [...STAT_DOWN_CHANCE,
-              ...Array.from(EFFECTS[group]).filter(e =>
-                !ALWAYS_HAPPEN_REGULAR.includes(e) && !STAT_DOWN_CHANCE.includes(e)).sort(),
-              ...ALWAYS_HAPPEN_REGULAR]
+              ...Array.from(EFFECTS[group]).filter(e => !STAT_DOWN_CHANCE.includes(e)).sort()]
             : Array.from(EFFECTS[group]).sort();
       effects.push(`        ${sorted.join(',\n        ')},`);
     }
     const sd = begin + STAT_DOWN.length;
     const ahs = end + ALWAYS_HAPPEN_SPECIAL.length;
-    const ahr = special + EFFECTS.regular.size - ALWAYS_HAPPEN_REGULAR.length;
-    const sdc = special + STAT_DOWN_CHANCE.length;
+    const sdc = multi + STAT_DOWN_CHANCE.length;
     const Effect = `
     pub const Effect = enum(u8) {
         None,
@@ -431,16 +437,20 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
 
         pub inline fn alwaysHappens(effect: Effect) bool {
-            return @enumToInt(effect) > ${end} and
-                (@enumToInt(effect) <= ${ahs} or @enumToInt(effect) > ${ahr});
+            return @enumToInt(effect) > ${end} and @enumToInt(effect) <= ${ahs};
         }
 
         pub inline fn isSpecial(effect: Effect) bool {
-            return @enumToInt(effect) > ${end} and @enumToInt(effect) <= ${special};
+            // NB: isSpecial includes isMulti
+            return @enumToInt(effect) > ${end} and @enumToInt(effect) <= ${multi};
+        }
+
+        pub inline fn isMulti(effect: Effect) bool {
+          return @enumToInt(effect) > ${special} and @enumToInt(effect) <= ${multi};
         }
 
         pub inline fn isStatDownChance(effect: Effect) bool {
-            return @enumToInt(effect) > ${special} and @enumToInt(effect) <= ${sdc};
+            return @enumToInt(effect) > ${multi} and @enumToInt(effect) <= ${sdc};
         }
     };\n`;
 
@@ -531,7 +541,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         chanceFn,
       },
     });
-
 
     // Types
     const types = IDS[0].types;

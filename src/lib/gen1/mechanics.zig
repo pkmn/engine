@@ -53,13 +53,13 @@ const MAX_STAT_VALUE = 999;
 pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     if (battle.turn == 0) return start(battle, log);
 
-    selectMove(battle, .P1, c1, c2);
-    selectMove(battle, .P2, c2, c1);
+    const f1 = selectMove(battle, .P1, c1, c2);
+    const f2 = selectMove(battle, .P2, c2, c1);
 
     if (turnOrder(battle, c1, c2) == .P1) {
-        if (try doTurn(battle, .P1, c1, .P2, c2, log)) |r| return r;
+        if (try doTurn(battle, .P1, c1, f1, .P2, c2, f2, log)) |r| return r;
     } else {
-        if (try doTurn(battle, .P2, c2, .P1, c1, log)) |r| return r;
+        if (try doTurn(battle, .P2, c2, f1, .P1, c1, f2, log)) |r| return r;
     }
 
     var p1 = battle.side(.P1);
@@ -94,33 +94,33 @@ fn findFirstAlive(side: *const Side) u8 {
     return 0;
 }
 
-fn selectMove(battle: anytype, player: Player, choice: Choice, foe_choice: Choice) void {
+fn selectMove(battle: anytype, player: Player, choice: Choice, foe_choice: Choice) bool {
     var side = battle.side(player);
     var volatiles = &side.active.volatiles;
     const stored = side.stored();
 
     // pre-battle menu
-    if (volatiles.Recharging or volatiles.Rage) return;
+    if (volatiles.Recharging or volatiles.Rage) return true;
     volatiles.Flinch = false;
-    if (volatiles.Thrashing or volatiles.Charging) return;
+    if (volatiles.Thrashing or volatiles.Charging) return true;
 
     // battle menu
-    if (choice.type == .Switch) return;
+    if (choice.type == .Switch) return false;
 
     // pre-move select
-    if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP)) return;
-    if (volatiles.Bide) return;
+    if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP)) return true;
+    if (volatiles.Bide) return true;
     if (volatiles.Trapping) {
         // GLITCH: https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
         if (foe_choice.type == .Switch) {
             // BUG: need to reset side.last_selected_move if originally Metronome
         }
-        return;
+        return true;
     }
 
     if (battle.foe(player).active.volatiles.Trapping) {
         side.last_selected_move = .SKIP_TURN;
-        return;
+        return true;
     }
 
     // move select
@@ -145,6 +145,7 @@ fn selectMove(battle: anytype, player: Player, choice: Choice, foe_choice: Choic
 
     // SHOWDOWN: getRandomTarget arbitrarily advances the RNG
     if (showdown) battle.rng.advance(side.last_selected_move.frames());
+    return false;
 }
 
 fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anytype) !void {
@@ -210,24 +211,26 @@ fn doTurn(
     battle: anytype,
     player: Player,
     player_choice: Choice,
-    foe: Player,
+    player_forced: bool,
+    foe_player: Player,
     foe_choice: Choice,
+    foe_forced: bool,
     log: anytype,
 ) !?Result {
-    if (try executeMove(battle, player, player_choice, log)) |r| return r;
-    if (try checkFaint(battle, foe, log)) |r| return r;
+    if (try executeMove(battle, player, player_choice, player_forced, log)) |r| return r;
+    if (try checkFaint(battle, foe_player, log)) |r| return r;
     try handleResidual(battle, player, log);
     if (try checkFaint(battle, player, log)) |r| return r;
 
-    if (try executeMove(battle, foe, foe_choice, log)) |r| return r;
+    if (try executeMove(battle, foe_player, foe_choice, foe_forced, log)) |r| return r;
     if (try checkFaint(battle, player, log)) |r| return r;
-    try handleResidual(battle, foe, log);
-    if (try checkFaint(battle, foe, log)) |r| return r;
+    try handleResidual(battle, foe_player, log);
+    if (try checkFaint(battle, foe_player, log)) |r| return r;
 
     return null;
 }
 
-fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !?Result {
+fn executeMove(battle: anytype, player: Player, choice: Choice, forced: bool, log: anytype) !?Result {
     var side = battle.side(player);
 
     if (side.last_selected_move == .SKIP_TURN) return null;
@@ -247,7 +250,8 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, log: anytype) !?
         .err => return @as(?Result, Result.Error),
     }
 
-    if (!skip_can and !try canMove(battle, player, choice, skip_pp, false, null, log)) return null;
+    const from: ?Move = if (forced) side.last_selected_move else null;
+    if (!skip_can and !try canMove(battle, player, choice, skip_pp, false, from, log)) return null;
 
     return doMove(battle, player, choice, false, log);
 }
@@ -334,7 +338,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
                 const move = Move.get(.Pound);
                 if (!calcDamage(battle, player, player, move, false)) return .err;
                 // Skipping adjustDamage / randomizeDamage / checkHit
-                try applyDamage(battle, player, log);
+                _ = try applyDamage(battle, player, player.foe(), log);
 
                 return .done;
             }
@@ -384,7 +388,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
         }
 
         // Skip Decrement PP / calcDamage / checkHit
-        try applyDamage(battle, player.foe(), log);
+        _ = try applyDamage(battle, player.foe(), player.foe(), log);
         return .done;
     }
 
@@ -410,7 +414,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
         volatiles.attacks -= 1;
 
         // Skip Decrement PP / calcDamage / checkHit
-        try applyDamage(battle, player.foe(), log);
+        _ = try applyDamage(battle, player.foe(), player.foe(), log);
         return .done;
     }
 
@@ -427,12 +431,14 @@ fn canMove(
     log: anytype,
 ) !bool {
     var side = battle.side(player);
+    const player_ident = battle.active(player);
     const move = Move.get(side.last_selected_move);
 
     if (side.active.volatiles.Charging) {
         side.active.volatiles.Charging = false;
         side.active.volatiles.Invulnerable = false;
     } else if (move.effect == .Charge) {
+        try log.move(player_ident, side.last_selected_move, .{}, from);
         try Effects.charge(battle, player, log);
         return false;
     }
@@ -440,9 +446,8 @@ fn canMove(
     side.last_used_move = side.last_selected_move;
     if (!skip_pp) decrementPP(side, choice);
 
-    const player_ident = battle.active(player);
-    const foe_ident = battle.active(player.foe());
-    try log.move(player_ident, side.last_selected_move, foe_ident, from);
+    const target_ident = battle.active(player.foe());
+    try log.move(player_ident, side.last_selected_move, target_ident, from);
 
     if (move.effect.onBegin()) {
         try moveEffect(battle, player, move, choice.data, miss, log);
@@ -474,28 +479,32 @@ fn decrementPP(side: *Side, choice: Choice) void {
     if (volatiles.Transform) return;
 
     side.stored().move(choice.data).pp -%= 1;
+    assert(active.move(choice.data).pp == side.stored().move(choice.data).pp);
 }
 
 fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: anytype) !?Result {
     var side = battle.side(player);
     const foe = battle.foe(player);
 
-    const move = Move.get(side.last_selected_move);
+    var move = Move.get(side.last_selected_move);
 
+    // The cartridge handles set damage moves in applyDamage but we short circuit to simplify things
     if (move.effect == .SuperFang or move.effect == .SpecialDamage) {
         return specialDamage(battle, player, move, missed, log);
     }
 
-    // Can't reorder this even when unused (eg. Counter) as it advances the RNG
+    // Runs even for moves that can't crit (onEnd Status or moves like Counter/set damage/Metronome)
     const crit = checkCriticalHit(battle, player, move);
 
-    // Counter desync due to changing move selection prior to switching is not supported
+    // UI-dependent Counter desync from changing move selection prior to switching is not supported
     if (side.last_selected_move == .Counter) return counterDamage(battle, player, move, log);
 
     var ohko = false;
     var immune = false;
     battle.last_damage = 0;
-    // Disassembly does a check to allow 0 BP MultiHit moves this isn't possible in practice
+
+    // Disassembly does a check to allow 0 BP MultiHit moves but this isn't possible in practice
+    assert(move.effect != .MultiHit or move.bp > 0);
     if (move.bp != 0) {
         if (move.effect == .OHKO) {
             ohko = side.active.stats.spe >= foe.active.stats.spe;
@@ -509,6 +518,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
     }
 
     var miss = moveHit(battle, player, move) or battle.last_damage == 0 or missed;
+    assert(miss or battle.last_damage > 0);
     assert(!(ohko and immune));
     assert(!immune or miss);
 
@@ -533,32 +543,77 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
         }
         // SHOWDOWN: Pokémon Showdown does not inflict crash damage when attacking a Ghost
         if (move.effect == .JumpKick and !(showdown and immune)) {
-            // GLITCH: Recoil is supposed to be damage / 8 but damage will always be 0 here
+            // GLITCH: Recoil is supposed to be damage/8 but damage will always be 0 here
             assert(battle.last_damage == 0);
             battle.last_damage = 1;
-            try applyDamage(battle, player, log);
+            _ = try applyDamage(battle, player, player.foe(), log);
         } else if (move.effect == .Explode) {
             try Effects.explode(battle, player);
-            // TODO: does explosion missing build rage?
+            // SHOWDOWN: Pokémon Showdown does not build Rage after missing Self-Destruct/Explosion
+            if (foe.stored().hp == 0 or showdown) return null;
+            if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
+                try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
+            }
         }
         return null;
     }
 
-    // FIXME multihit
-
-    if (crit) try log.crit(battle.active(player));
-    if (ohko) try log.ohko();
-    try applyDamage(battle, player.foe(), log);
-
-    if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
-        try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
+    if (move.effect.onEnd()) {
+        try moveEffect(battle, player, move, choice.data, miss, log);
+        return null;
     }
 
-    // FIXME always happen
+    // On the cartridge MultiHit doesn't get set up until after damage has been applied
+    // for the first time but its more convenient and efficient to set it up here
+    var max: u4 = 1;
+    if (move.effect.isMulti()) {
+        Effects.multiHit(battle, player, move);
+        max = side.active.volatiles.attacks;
+    }
 
-    // if (!move.effect.isSpecial()) {
-    //     try moveEffect(battle, player, move, choice.data, miss, log);
-    // }
+    var nullified = false;
+    var hits: u4 = 0;
+    while (hits < max) : (hits += 1) {
+        nullified = try applyDamage(battle, player.foe(), player.foe(), log);
+        if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
+            try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
+        }
+        if (hits == 0) {
+            if (crit) try log.crit(battle.active(player));
+            if (ohko) try log.ohko();
+        }
+        // If the substitute breaks during a multi-hit attack, the attack ends
+        if (nullified or foe.stored().hp == 0) break;
+    }
+
+    if (side.active.volatiles.MultiHit) {
+        side.active.volatiles.MultiHit = false;
+        assert(nullified or side.active.volatiles.attacks + hits == max);
+        side.active.volatiles.attacks = 0;
+        try log.hitcount(battle.active(player), hits);
+    }
+
+    // Substitute being broken nullifies the move's effect completely so even
+    // if an effect was intended to "always happen" it will still get skipped.
+    if (nullified) return null;
+
+    // On the cartridge, "always happen" effect handlers are called in the applyDamage loop above,
+    // but this is only done to setup the MultiHit looping in the first place. Moving the MultiHit
+    // setup before the loop means we can avoid having to waste time doing no-op handler searches
+    if (move.effect.alwaysHappens()) {
+        try moveEffect(battle, player, move, choice.data, miss, log);
+    }
+
+    if (foe.stored().hp == 0) return null;
+
+    if (!move.effect.isSpecial()) {
+        // On the catridge Rage is not considered to be "special" and thus gets executed for a
+        // second time here (after being executed in the "always happens" block above) but that
+        // doesn't matter since its idempotent. For Twineedle we change the data to that of one
+        //  with PoisonChance1 given its MultiHit behavior is complete after the loop above.
+        if (move.effect == .Twineedle) move = Move.get(.PoisonSting);
+        try moveEffect(battle, player, move, choice.data, miss, log);
+    }
 
     return null;
 }
@@ -584,11 +639,17 @@ fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data) bool {
     return std.math.rotl(u8, battle.rng.next(), 3) < chance;
 }
 
-fn calcDamage(battle: anytype, player: Player, target: Player, move: Move.Data, crit: bool) bool {
+fn calcDamage(
+    battle: anytype,
+    player: Player,
+    target_player: Player,
+    move: Move.Data,
+    crit: bool,
+) bool {
     assert(move.bp != 0);
 
     const side = battle.side(player);
-    const foe = battle.foe(target);
+    const target = battle.side(target_player);
 
     const special = move.type.special();
 
@@ -603,14 +664,14 @@ fn calcDamage(battle: anytype, player: Player, target: Player, move: Move.Data, 
 
     var def =
         if (crit)
-            if (special) foe.stored().stats.spc
-            else foe.stored().stats.def
+            if (special) target.stored().stats.spc
+            else target.stored().stats.def
         else
             // GLITCH: not capped to MAX_STAT_VALUE, can be 999 * 2 = 1998
             if (special)
-                foe.active.stats.spc * @as(u2, if (foe.active.volatiles.LightScreen) 2 else 1)
+                target.active.stats.spc * @as(u2, if (target.active.volatiles.LightScreen) 2 else 1)
             else
-                foe.active.stats.def * @as(u2, if (foe.active.volatiles.Reflect) 2 else 1);
+                target.active.stats.def * @as(u2, if (target.active.volatiles.Reflect) 2 else 1);
     // zig fmt: on
 
     if (atk > 255 or def > 255) {
@@ -705,7 +766,7 @@ fn specialDamage(
         }
     }
 
-    try applyDamage(battle, player.foe(), log);
+    _ = try applyDamage(battle, player.foe(), player.foe(), log);
     return null;
 }
 
@@ -728,30 +789,37 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
 
     if (!try checkHit(battle, player, move, false, log)) return null;
 
-    try applyDamage(battle, player.foe(), log);
+    _ = try applyDamage(battle, player.foe(), player.foe(), log);
     return null;
 }
 
-fn applyDamage(battle: anytype, player: Player, log: anytype) !void {
+fn applyDamage(battle: anytype, target_player: Player, sub_player: Player, log: anytype) !bool {
     assert(battle.last_damage != 0);
 
-    var target = battle.side(player);
-    // GLITCH: target here could be self for confusion and Jump Kick recoil but Substitute blocks
+    var target = battle.side(target_player);
+    // GLITCH: Substitute + Confusion glitch
+    // We check if the target has a Substitute but then apply damage to the "sub player" which
+    // isn't guaranteed to be the same (eg. crash or confusion damage) or to even have a Substitute
     if (target.active.volatiles.Substitute) {
-        if (battle.last_damage >= target.active.volatiles.substitute) {
-            target.active.volatiles.substitute = 0;
-            target.active.volatiles.Substitute = false;
+        var subbed = battle.side(sub_player);
+        assert(subbed.active.volatiles.Substitute or subbed.active.volatiles.substitute == 0);
+        if (battle.last_damage >= subbed.active.volatiles.substitute) {
+            subbed.active.volatiles.substitute = 0;
+            subbed.active.volatiles.Substitute = false;
             // GLITCH: battle.last_damage is not updated with the amount of HP the Substitute had
+            try log.end(battle.active(sub_player), .Substitute);
+            return true;
         } else {
-            // Safe to truncate since less than foe.volatiles.substitute which is a u8
-            target.active.volatiles.substitute -= @truncate(u8, battle.last_damage);
-            try log.activate(battle.active(player), .Substitute);
+            // Safe to truncate since less than subbed.volatiles.substitute which is a u8
+            subbed.active.volatiles.substitute -= @truncate(u8, battle.last_damage);
+            try log.activate(battle.active(sub_player), .Substitute);
         }
     } else {
         if (battle.last_damage > target.stored().hp) battle.last_damage = target.stored().hp;
         target.stored().hp -= battle.last_damage;
-        try log.damage(battle.active(player), target.stored(), .None);
+        try log.damage(battle.active(target_player), target.stored(), .None);
     }
+    return false;
 }
 
 fn mirrorMove(battle: anytype, player: Player, choice: Choice, miss: bool, log: anytype) !?Result {
@@ -992,7 +1060,6 @@ fn checkEBC(battle: anytype) bool {
     return false;
 }
 
-// TODO: optimize by splitting up into onBegin/onEnd/regular etc to make switch faster?
 fn moveEffect(
     battle: anytype,
     player: Player,
@@ -1019,7 +1086,7 @@ fn moveEffect(
         .LightScreen => Effects.lightScreen(battle, player, log),
         .Mimic => Effects.mimic(battle, player, move, mslot, miss, log),
         .Mist => Effects.mist(battle, player, log),
-        .MultiHit, .DoubleHit, .Twineedle => Effects.multiHit(battle, player, move, log),
+        .MultiHit, .DoubleHit, .Twineedle => Effects.multiHit(battle, player, move),
         .Paralyze => Effects.paralyze(battle, player, move, miss, log),
         .ParalyzeChance1, .ParalyzeChance2 => Effects.paralyzeChance(battle, player, move, log),
         .PayDay => Effects.payDay(log),
@@ -1234,7 +1301,7 @@ pub const Effects = struct {
         try log.status(foe_ident, foe_stored.status, .None);
     }
 
-    // TODO: handle showdown bugginess...
+    // FIXME: handle showdown bugginess...
     fn haze(battle: anytype, player: Player, log: anytype) !void {
         var side = battle.side(player);
         var foe = battle.foe(player);
@@ -1360,17 +1427,13 @@ pub const Effects = struct {
         try log.start(battle.active(player), .Mist);
     }
 
-    fn multiHit(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
+    fn multiHit(battle: anytype, player: Player, move: Move.Data) void {
         var side = battle.side(player);
 
-        if (side.active.volatiles.MultiHit) return;
+        assert(!side.active.volatiles.MultiHit);
         side.active.volatiles.MultiHit = true;
 
         side.active.volatiles.attacks = if (move.effect == .MultiHit) distribution(battle) else 2;
-
-        // FIXME: Twineedle POISON_SIDE_EFFECT1 on second hit!
-        // FIXME: log hitcount properly after all hits are done (may be less than attacks)
-        try log.hitcount(battle.active(player), side.active.volatiles.attacks);
     }
 
     fn paralyze(battle: anytype, player: Player, move: Move.Data, miss: bool, log: anytype) !void {
@@ -1708,12 +1771,12 @@ pub const Effects = struct {
         }
 
         // GLITCH: Stat modification errors glitch
-        statusModify(battle.side(player).stored().status, stats);
+        statusModify(foe.stored().status, stats);
     }
 };
 
-fn unmodifiedStats(battle: anytype, player: Player) *Stats(u16) {
-    const side = battle.side(player);
+fn unmodifiedStats(battle: anytype, who: Player) *Stats(u16) {
+    const side = battle.side(who);
     if (!side.active.volatiles.Transform) return &side.active.stats;
     const id = ID.from(side.active.volatiles.transform);
     return &battle.side(id.player).pokemon[id.id].stats;
@@ -1765,7 +1828,7 @@ fn clearVolatiles(active: *ActivePokemon, ident: ID, log: anytype) !void {
         try log.end(ident, .Reflect);
     }
     if (!showdown) return;
-    // TODO: other volatiles
+    // FIXME: other volatiles
 }
 
 const DISTRIBUTION = [_]u3{ 2, 2, 2, 3, 3, 3, 4, 5 };
@@ -1853,7 +1916,7 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
 
             var active = side.active;
 
-            // TODO: handle locked move (charging/recharging/rage/bide/dig/etc)
+            // FIXME: handle locked move (charging/recharging/rage/bide/dig/etc)
             if (active.volatiles.Recharging) {
                 out[n] = .{ .type = .Move, .data = 0 };
                 n += 1;

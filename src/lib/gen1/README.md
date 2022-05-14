@@ -428,6 +428,9 @@ generation of Pokémon contains a number bugs:
 - **Jump Kick** / **High Jump Kick**: these should cause 1 HP of crash damage when the target is a
   Ghost, despite what Pokémon Showdown or Bulbapedia suggests or what the case is in later
   generations.
+- **Self-Destruct** / **Explosion**: these both should cause their target to continue building Rage
+  even if they miss (most sources erroneously claim a move needs to hit to cause Rage to build but
+  the `EXPLODE_EFFECT` is special-cased in the original game code).
 
 Finally, in Generation I, checking whether a move has **hit should come *after* determining
 damage**, not before. Pokémon Showdown's altered ordering here (which is more in line with how
@@ -490,6 +493,16 @@ called out in the `|rule|` section at the beginning of a battle's log):
 ## Details
 
 TODO
+
+### Naming
+
+- **`p1`** & **`p2`** always correspond to the `Side` of `Player.P1` and `Player.P2` respectively
+- **`player`** is the executing turn `Player` (`hWhoseTurn`) and **`player.foe()`** is their
+  opponent
+- if `player` (executing turn player) is present then **`side`** will always correspond to their
+  `Side` and **`foe`** the opposing `Side`, however `side` can refer to an arbitrary `Side` object
+  if there is no `player` in scope (eg. in helper functions)
+- **`target_player`** is a target `Player` whose corresponding `Side` is  **`target`**
 
 ```txt
 beforeExecute (CheckPlayerStatusConditions)
