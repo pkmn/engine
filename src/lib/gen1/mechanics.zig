@@ -53,13 +53,13 @@ const MAX_STAT_VALUE = 999;
 pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     if (battle.turn == 0) return start(battle, log);
 
-    const f1 = selectMove(battle, .P1, c1, c2);
-    const f2 = selectMove(battle, .P2, c2, c1);
+    const l1 = selectMove(battle, .P1, c1, c2);
+    const l2 = selectMove(battle, .P2, c2, c1);
 
     if (turnOrder(battle, c1, c2) == .P1) {
-        if (try doTurn(battle, .P1, c1, f1, .P2, c2, f2, log)) |r| return r;
+        if (try doTurn(battle, .P1, c1, l1, .P2, c2, l2, log)) |r| return r;
     } else {
-        if (try doTurn(battle, .P2, c2, f1, .P1, c1, f2, log)) |r| return r;
+        if (try doTurn(battle, .P2, c2, l2, .P1, c1, l1, log)) |r| return r;
     }
 
     var p1 = battle.side(.P1);
@@ -71,7 +71,7 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
         p2.active.volatiles.Trapping = false;
     }
 
-    return endTurn(battle, log);
+    return endTurn(battle, log, @as(u2, @boolToInt(l1)) + @as(u2, @boolToInt(l2)));
 }
 
 fn start(battle: anytype, log: anytype) !Result {
@@ -86,7 +86,7 @@ fn start(battle: anytype, log: anytype) !Result {
     if (slot == 0) return Result.Win;
     try switchIn(battle, .P2, slot, true, log);
 
-    return endTurn(battle, log);
+    return endTurn(battle, log, 0);
 }
 
 fn findFirstAlive(side: *const Side) u8 {
@@ -211,26 +211,26 @@ fn doTurn(
     battle: anytype,
     player: Player,
     player_choice: Choice,
-    player_forced: bool,
+    player_locked: bool,
     foe_player: Player,
     foe_choice: Choice,
-    foe_forced: bool,
+    foe_locked: bool,
     log: anytype,
 ) !?Result {
-    if (try executeMove(battle, player, player_choice, player_forced, log)) |r| return r;
-    if (try checkFaint(battle, foe_player, log)) |r| return r;
+    if (try executeMove(battle, player, player_choice, player_locked, log)) |r| return r;
+    if (try checkFaint(battle, foe_player, foe_locked, player_locked, log)) |r| return r;
     try handleResidual(battle, player, log);
-    if (try checkFaint(battle, player, log)) |r| return r;
+    if (try checkFaint(battle, player, player_locked, foe_locked, log)) |r| return r;
 
-    if (try executeMove(battle, foe_player, foe_choice, foe_forced, log)) |r| return r;
-    if (try checkFaint(battle, player, log)) |r| return r;
+    if (try executeMove(battle, foe_player, foe_choice, foe_locked, log)) |r| return r;
+    if (try checkFaint(battle, player, player_locked, foe_locked, log)) |r| return r;
     try handleResidual(battle, foe_player, log);
-    if (try checkFaint(battle, foe_player, log)) |r| return r;
+    if (try checkFaint(battle, foe_player, foe_locked, player_locked, log)) |r| return r;
 
     return null;
 }
 
-fn executeMove(battle: anytype, player: Player, choice: Choice, forced: bool, log: anytype) !?Result {
+fn executeMove(battle: anytype, player: Player, choice: Choice, locked: bool, log: anytype) !?Result {
     var side = battle.side(player);
 
     if (side.last_selected_move == .SKIP_TURN) return null;
@@ -250,7 +250,7 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, forced: bool, lo
         .err => return @as(?Result, Result.Error),
     }
 
-    const from: ?Move = if (forced) side.last_selected_move else null;
+    const from: ?Move = if (locked) side.last_selected_move else null;
     if (!skip_can and !try canMove(battle, player, choice, skip_pp, false, from, log)) return null;
 
     return doMove(battle, player, choice, false, log);
@@ -443,8 +443,18 @@ fn canMove(
         return false;
     }
 
+    // SHOWDOWN: getting a "locked" move advances the RNG
+    const special = if (from) |m| (m == .Metronome or m == .MirrorMove) else false;
+    const locked = from != null and !special;
+    if (showdown and locked) battle.rng.advance(1);
+
     side.last_used_move = side.last_selected_move;
     if (!skip_pp) decrementPP(side, choice);
+
+    // SHOWDOWN: Metronome / Mirror Move call getRandomTarget if the move they're using targets
+    if (showdown and special) {
+        battle.rng.advance(if (side.last_selected_move.frames() > 0) 1 else 0);
+    }
 
     const target_ident = battle.active(player.foe());
     try log.move(player_ident, side.last_selected_move, target_ident, from);
@@ -496,7 +506,9 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
     // Runs even for moves that can't crit (onEnd Status or moves like Counter/set damage/Metronome)
     const crit = checkCriticalHit(battle, player, move);
 
-    // UI-dependent Counter desync from changing move selection prior to switching is not supported
+    // SHOWDOWN: showdown resets last_damage before counter instead of after
+    if (showdown) battle.last_damage = 0;
+
     if (side.last_selected_move == .Counter) return counterDamage(battle, player, move, log);
 
     var ohko = false;
@@ -770,6 +782,7 @@ fn specialDamage(
     return null;
 }
 
+// FIXME: Counter selected vs used Desync
 fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype) !?Result {
     const foe = battle.foe(player);
     const foe_last_move = Move.get(foe.last_selected_move);
@@ -780,8 +793,7 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
         battle.last_damage == 0;
 
     if (miss) {
-        try log.lastmiss();
-        try log.miss(battle.active(player), battle.active(player.foe()));
+        try log.fail(battle.active(player), .None);
         return null;
     }
 
@@ -911,7 +923,13 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data) bool {
     return !miss;
 }
 
-fn checkFaint(battle: anytype, player: Player, log: anytype) @TypeOf(log).Error!?Result {
+fn checkFaint(
+    battle: anytype,
+    player: Player,
+    player_locked: bool,
+    foe_locked: bool,
+    log: anytype,
+) @TypeOf(log).Error!?Result {
     var side = battle.side(player);
     if (side.stored().hp > 0) return null;
 
@@ -926,13 +944,14 @@ fn checkFaint(battle: anytype, player: Player, log: anytype) @TypeOf(log).Error!
     if (player_out) return if (player == .P1) Result.Lose else Result.Win;
     if (foe_out) return if (player == .P1) Result.Win else Result.Lose;
 
+    // SHOWDOWN: emitting |request| for sides will advance the RNG by 2 for each "locked" move
+    const locked = @as(u2, @boolToInt(player_locked)) +
+        @as(u2, (if (foe_fainted) @boolToInt(foe_locked) else 0));
+    if (showdown) battle.rng.advance(locked * 2);
+
     const foe_choice: Choice.Type = if (foe_fainted) .Switch else .Pass;
-    // TODO: Zig stage1 bug, return directly in stage2
-    const result = if (player == .P1)
-        Result{ .p1 = .Switch, .p2 = foe_choice }
-    else
-        Result{ .p1 = foe_choice, .p2 = .Switch };
-    return result;
+    if (player == .P1) return Result{ .p1 = .Switch, .p2 = foe_choice };
+    return Result{ .p1 = foe_choice, .p2 = .Switch };
 }
 
 fn faint(battle: anytype, player: Player, log: anytype, done: bool) !?Result {
@@ -996,7 +1015,7 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
     }
 }
 
-fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
+fn endTurn(battle: anytype, log: anytype, locked: u8) @TypeOf(log).Error!Result {
     if (showdown and checkEBC(battle)) {
         try log.tie();
         return Result.Tie;
@@ -1004,6 +1023,8 @@ fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
 
     battle.turn += 1;
     try log.turn(battle.turn);
+    // SHOWDOWN: emitting |request| for sides will advance the RNG by 2 for each "locked" move
+    if (showdown) battle.rng.advance(locked * 2);
 
     if (showdown) {
         if (battle.turn < 1000) return Result.Default;
