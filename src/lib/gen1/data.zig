@@ -456,8 +456,3 @@ test "DVs" {
     };
     try expectEqual(@as(u4, 13), dvs.hp());
 }
-
-// TODO DEBUG
-comptime {
-    std.testing.refAllDecls(@This());
-}
