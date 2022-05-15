@@ -1192,8 +1192,7 @@ pub const Effects = struct {
         side.active.volatiles.state = 0;
         // SHOWDOWN: these values will diverge
         side.active.volatiles.attacks = @truncate(u3, if (showdown)
-            // SHOWDOWN: this will (incorrectly) always return 2
-            battle.rng.range(u4, 3, 4) - 1
+            battle.rng.range(u4, 3, 5) - 1
         else
             (battle.rng.next() & 1) + 2);
 
