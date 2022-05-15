@@ -416,8 +416,8 @@ generation of Pokémon contains a number bugs:
   `brnattackdrop`).
 - **Mimic**: Pokémon Showdown checks that the user of Mimic has Mimic in one of their move slots,
   which means Mimic legally called via Metronome or Mirror Move will only work if the user also has
-  Mimic (and the moved mimiced by Mimic called via Metronome / Mirror Move will erroneously override
-  the Mimic move slot instead of the Metronome / Mirror Move move slot).
+  Mimic (and the moved mimicked by Mimic called via Metronome / Mirror Move will erroneously
+  override the Mimic move slot instead of the Metronome / Mirror Move move slot).
 - **`Battle.getRandomTarget()`**: Pokémon Showdown randomly determines a target (causing the RNG to
   advance a frame) in cases where the target of a move is required but has not been specified,
   though erroneously applies this logic in singles battles where only one target is possible. This
@@ -455,6 +455,8 @@ generation of Pokémon contains a number bugs:
     - read and updated by Substitute
   - `effectState.lastDamage` (Bide):
     - updated by Bide, use to determine the amount of damage the move eventually does
+- **Disable**: Pokémon Showdown can possibly disable moves with 0 PP and lasts 1-6 turns instead of
+  1-8
 
 Finally, in Generation I, checking whether a move has **hit should come *after* determining
 damage**, not before. Pokémon Showdown's altered ordering here (which is more in line with how
@@ -501,14 +503,14 @@ called out in the `|rule|` section at the beginning of a battle's log):
 | **Paralysis** (full)     | `beforeMove`             | Trigger if <var>X</var> < 63 |
 | **Poison** (chance)      | `Effects.poison`         | Trigger if <var>X</var> < 52 (103 for Smog / Sludge) |
 | **Sleep** (duration)     | `Effects.sleep`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until <var>X</var> &amp; 7 ≠ 0</dd><dt>Pokémon Showdown</dt><dd>Generate <var>X</var> ∈ <b>[</b>1, 8)</b></dd></dl> Overlap occurs at 1, 42, 75, 116, 149, 190, 223 |
-| **Bide** (duration)      | `Effects.bide`           | <dl><dt>Pokémon Red</dt><dd>Last for (<var>X</var> &amp; 1) ＋ 2 turns</dd><dt>Pokémon Showdown</dt><dd>Last for <var>X</var> ∈ <b>[</b>3, 4)</b> − 1 turns</dd></dl> Due to a [bug in Pokémon Showdown](#bug) the duration will always be 2 turns |
+| **Bide** (duration)      | `Effects.bide`           | <dl><dt>Pokémon Red</dt><dd>Last for (<var>X</var> &amp; 1) ＋ 2 turns</dd><dt>Pokémon Showdown</dt><dd>Last for <var>X</var> ∈ <b>[</b>3, 5)</b> − 1 turns</dd></dl> Overlap at 0 and 255 for 2 and 3 turns respectively |
 | **Disable** (move)       | `Effects.disable`        | <dl><dt>Pokémon Red</dt><dd>Continue generating until <var>X</var> &amp; 3 is the index of a non-empty move slot</dd><dt>Pokémon Showdown</dt><dd>Generate <var>X</var> ∈ <b>[</b>0, <code>moveSlots.length</code><b>)</b></dd></dl> For Pokémon Red, 0-3 represent the indexable move slots, for Pokémon Showdown 0-63, 64-127, 128-191, 192-255 (overlap occurs at 0, 65, 130, 195) |
-| **Disable** (duration)   | `Effects.disable`        | <dl><dt>Pokémon Red</dt><dd>Last for (<var>X</var> &amp; 7) ＋ 1 turns</dd><dt>Pokémon Showdown</dt><dd>Last for <var>X</var> ∈ <b>[</b>1, 7)</b> ＋ 1 turns</dd></dl> TODO |
+| **Disable** (duration)   | `Effects.disable`        | <dl><dt>Pokémon Red</dt><dd>Last for (<var>X</var> &amp; 7) ＋ 1 turns</dd><dt>Pokémon Showdown</dt><dd>Last for <var>X</var> ∈ <b>[</b>1, 7)</b> ＋ 1 turns</dd></dl> Disable duration is [incorrect in Pokémon Showdown](#bug) |
 | **Metronome** (move)     | `metronome`              | <dl><dt>Pokémon Red</dt><dd>Continue generating until <var>X</var> matches the index of a move which is not Struggle or Metronome</dd><dt>Pokémon Showdown</dt><dd>Generate <var>X</var> ∈ <b>[</b>1, <code>validMoves.length</code><b>)</b>, where <code>validMoves</code> is of moves with  Struggle and Metronome removed <i>(indexes of moves > Metronome will be shifted down)</i></dd></dl> |
 | **Mimic** (move)         | `Effects.mimic`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until <var>X</var> &amp; 3 is the index of a non-empty move slot</dd><dt>Pokémon Showdown</dt><dd>Generate <var>X</var> ∈ <b>[</b>0, <code>moveSlots.length</code><b>)</b></dd></dl> For Pokémon Red: 0-3 represent the indexable move slots, for Pokémon Showdown: 0-63, 64-127, 128-191, 192-255 (overlap occurs at 0, 65, 130, 195) |
 | **Psywave** (power)      | `specialDamage`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until <var>X</var> < 1.5×<code>level</code></dd><dt>Pokémon Showdown</dt><dd>Generate <var>X</var> ∈ <b>[</b>0, 1.5×<code>level</code><b>)</b></dd></dl> Minimum power occurs at 0 for both, but maximum power occurs at 1.5×<code>level</code> - 1 for Pokémon Red and 255 for Pokémon Showdown |
 | **Thrash** (rampage)     | `Effects.thrash`         | <dl><dt>Pokémon Red</dt><dd>Last for (<var>X</var> &amp; 1) ＋ 2 turns</dd><dt>Pokémon Showdown</dt><dd>Last for <var>X</var> ∈ <b>[</b>2, 4)</b> turns</dd></dl> Overlap at 0 and 255 for 2 and 3 turns respectively |
-| **Thrash** (confusion)   | `beforeMove`             | <dl><dt>Pokémon Red</dt><dd>Last for (<var>X</var> &amp; 3) ＋ 2 turns</dd><dt>Pokémon Showdown</dt><dd>Last for <var>X</var> ∈ <b>[</b>3, 5)</b> turns</dd></dl> TODO |
+| **Thrash** (confusion)   | `beforeMove`             |  <dl><dt>Pokémon Red</dt><dd>Last for (<var>X</var> &amp; 3) ＋ 2 turns</dd><dt>Pokémon Showdown</dt><dd>Last for <var>X</var> ∈ <b>[</b>2, 6)</b> turns</dd></dl>  Overlap occurs at 0, 65, 130, 195 |
 | **Trapping** (duration)  | `Effects.trapping`       | <dl><dt>Pokémon Red</dt><dd>Last for (<var>X</var> &amp; 3) ＋ 2 turns if (<var>X</var> &amp; 3) < 2<br /> otherwise last for (<var>Y</var> &amp; 3) ＋ 2 turns (reroll)</dd><dt>Pokémon Showdown</dt><dd>Last for <var>X</var> ∈ <b>{</b>2, 2, 2, 3, 3, 3, 4, 5<b>}</b> turns</dd></dl> Overlap at 0 for 2 turns and diverges otherwise |
 | **Multi-Hit** (hits)     | `Effects.multiHit`       | *Ibid.* |
 | **Unboost** (chance)     | `Effects.unboost`        | Trigger if <var>X</var> < 85 |

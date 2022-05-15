@@ -82,7 +82,7 @@ pub fn main() !void {
         const match = match: {
             switch (tool) {
                 .bide => {
-                    const a = rng1.range(u8, 3, 4) - 1;
+                    const a = rng1.range(u8, 3, 5) - 1;
                     const b = (rng2.next() & 1) + 2;
                     break :match a == b;
                 },

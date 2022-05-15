@@ -400,7 +400,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
             volatiles.Confusion = true;
             // SHOWDOWN: these values will diverge
             volatiles.confusion = @truncate(u3, if (showdown)
-                battle.rng.range(u8, 3, 5)
+                battle.rng.range(u8, 2, 6)
             else
                 (battle.rng.next() & 3) + 2);
             try log.start(ident, .ConfusionSilent);
@@ -1290,11 +1290,12 @@ pub const Effects = struct {
         }
 
         const moves = &foe.active.moves;
-        volatiles.disabled.move = randomMoveSlot(&battle.rng, moves);
+        // SHOWDOWN: Pokémon Showdown does not check for moves with 0 PP
+        volatiles.disabled.move = randomMoveSlot(&battle.rng, moves, !showdown);
 
-        // SHOWDOWN: these values will diverge
+        // SHOWDOWN: these values would diverge anyway, but range is incorrectly 2-7 instead of 1-8
         volatiles.disabled.duration = @truncate(u4, if (showdown)
-            battle.rng.range(u8, 1, 7) + 1 // FIXME: 2-7, not 2-9 or 1-8
+            battle.rng.range(u8, 1, 7) + 1
         else
             (battle.rng.next() & 7) + 1);
 
@@ -1486,7 +1487,7 @@ pub const Effects = struct {
         if (!try checkHit(battle, player, move, miss, log) or !ok) return;
 
         const moves = &foe.active.moves;
-        const rslot = randomMoveSlot(&battle.rng, moves);
+        const rslot = randomMoveSlot(&battle.rng, moves, false);
 
         side.active.moves[mslot].id = moves[rslot].id;
 
@@ -1680,7 +1681,7 @@ pub const Effects = struct {
         volatiles.Thrashing = true;
         // SHOWDOWN: these values will diverge
         volatiles.attacks = @truncate(u3, if (showdown)
-            battle.rng.range(u8, 2, 4)
+            battle.rng.range(u8, 3, 5) - 1
         else
             (battle.rng.next() & 1) + 2);
     }
@@ -1920,19 +1921,21 @@ fn distribution(battle: anytype) u3 {
 }
 
 // SHOWDOWN: these values will diverge
-fn randomMoveSlot(rand: anytype, moves: []MoveSlot) u4 {
+fn randomMoveSlot(rand: anytype, moves: []MoveSlot, check_pp: bool) u4 {
     if (showdown) {
         var i: usize = moves.len;
         while (i > 0) {
             i -= 1;
-            if (moves[i].id != .None) return rand.range(u4, 0, @truncate(u4, i));
+            if (moves[i].id != .None and (!check_pp or moves[i].pp > 0)) {
+                return rand.range(u4, 0, @truncate(u4, i));
+            }
         }
         unreachable;
     }
 
     while (true) {
         const r = @truncate(u4, rand.next() & 3);
-        if (moves[r].id != .None) return r;
+        if (moves[r].id != .None and (!check_pp or moves[r].pp > 0)) return r;
     }
 }
 
