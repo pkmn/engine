@@ -348,7 +348,7 @@ test "Move" {
     try expect(!Move.Effect.alwaysHappens(.SpeedDownChance));
     try expect(Move.Effect.alwaysHappens(.Rage));
 
-    // NB: differs from cartridge
+    // all considered "always happens" on cartridge
     try expect(!Move.Effect.alwaysHappens(.DoubleHit));
     try expect(!Move.Effect.alwaysHappens(.MultiHit));
     try expect(!Move.Effect.alwaysHappens(.Twineedle));
@@ -358,8 +358,7 @@ test "Move" {
     try expect(Move.Effect.isSpecial(.Rage)); // other on cartridge
     try expect(Move.Effect.isSpecial(.DoubleHit));
     try expect(Move.Effect.isSpecial(.MultiHit));
-    try expect(Move.Effect.isSpecial(.Twineedle)); // other on cartridge
-    try expect(!Move.Effect.isSpecial(.AttackDownChance));
+    try expect(!Move.Effect.isSpecial(.Twineedle));
 
     try expect(!Move.Effect.isMulti(.Trapping));
     try expect(Move.Effect.isMulti(.DoubleHit));

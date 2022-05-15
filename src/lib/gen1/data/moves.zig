@@ -1616,8 +1616,8 @@ pub const Move = enum(u8) {
         }
 
         pub inline fn isSpecial(effect: Effect) bool {
-            // NB: isSpecial includes isMulti
-            return @enumToInt(effect) > 31 and @enumToInt(effect) <= 47;
+            // NB: isSpecial includes isMulti up to Twineedle
+            return @enumToInt(effect) > 31 and @enumToInt(effect) <= 46;
         }
 
         pub inline fn isMulti(effect: Effect) bool {

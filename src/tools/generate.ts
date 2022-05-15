@@ -441,12 +441,12 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
 
         pub inline fn isSpecial(effect: Effect) bool {
-            // NB: isSpecial includes isMulti
-            return @enumToInt(effect) > ${end} and @enumToInt(effect) <= ${multi};
+            // NB: isSpecial includes isMulti up to Twineedle
+            return @enumToInt(effect) > ${end} and @enumToInt(effect) <= ${multi - 1};
         }
 
         pub inline fn isMulti(effect: Effect) bool {
-          return @enumToInt(effect) > ${special} and @enumToInt(effect) <= ${multi};
+            return @enumToInt(effect) > ${special} and @enumToInt(effect) <= ${multi};
         }
 
         pub inline fn isStatDownChance(effect: Effect) bool {

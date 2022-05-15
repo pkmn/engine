@@ -8,7 +8,7 @@ const rng = @import("../common/rng.zig");
 const data = @import("data.zig");
 
 const assert = std.debug.assert;
-
+const debug = std.log.debug;
 const expectEqual = std.testing.expectEqual;
 
 const showdown = build_options.showdown;
@@ -142,8 +142,10 @@ fn selectMove(battle: anytype, player: Player, choice: Choice, foe_choice: Choic
         assert(side.active.volatiles.disabled.move != choice.data);
         side.last_selected_move = move.id;
     }
+
     // SHOWDOWN: getRandomTarget arbitrarily advances the RNG
     if (showdown) battle.rng.advance(side.last_selected_move.frames());
+
     return false;
 }
 
@@ -229,7 +231,13 @@ fn doTurn(
     return null;
 }
 
-fn executeMove(battle: anytype, player: Player, choice: Choice, locked: bool, log: anytype) !?Result {
+fn executeMove(
+    battle: anytype,
+    player: Player,
+    choice: Choice,
+    locked: bool,
+    log: anytype,
+) !?Result {
     var side = battle.side(player);
 
     if (side.last_selected_move == .SKIP_TURN) return null;
@@ -367,6 +375,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
     }
 
     if (volatiles.Bide) {
+        assert(!volatiles.Thrashing and !volatiles.Rage);
         volatiles.state +%= battle.last_damage;
         try log.activate(ident, .Bide);
 
@@ -491,7 +500,7 @@ fn decrementPP(side: *Side, choice: Choice) void {
     assert(active.move(choice.data).pp == side.stored().move(choice.data).pp);
 }
 
-// SHOWDOWN: Pokémon Showdown does hit/multi/crit/damage insrtead of crit/damage/hit/multi
+// SHOWDOWN: Pokémon Showdown does hit/multi/crit/damage instead of crit/damage/hit/multi
 fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: anytype) !?Result {
     var side = battle.side(player);
     const foe = battle.foe(player);
@@ -507,7 +516,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
     if (showdown) {
         const type1 = @enumToInt(move.type.effectiveness(foe.active.types.type1));
         const type2 = @enumToInt(move.type.effectiveness(foe.active.types.type2));
-        if (type1 == 0 or type2 == 0) {
+        if (move.bp > 0 and (type1 == 0 or type2 == 0)) {
             try log.immune(battle.active(player.foe()), .None);
             if (move.effect == .Explode) try Effects.explode(battle, player);
             return null;
@@ -639,7 +648,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
 
     // On the cartridge, "always happen" effect handlers are called in the applyDamage loop above,
     // but this is only done to setup the MultiHit looping in the first place. Moving the MultiHit
-    // setup before the loop means we can avoid having to waste time doing no-op handler searches
+    // setup before the loop means we can avoid having to waste time doing no-op handler searches.
     if (move.effect.alwaysHappens()) {
         try moveEffect(battle, player, move, choice.data, miss, log);
     }
@@ -647,10 +656,11 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
     if (foe.stored().hp == 0) return null;
 
     if (!move.effect.isSpecial()) {
-        // On the catridge Rage is not considered to be "special" and thus gets executed for a
+        // On the cartridge Rage is not considered to be "special" and thus gets executed for a
         // second time here (after being executed in the "always happens" block above) but that
-        // doesn't matter since its idempotent. For Twineedle we change the data to that of one
-        //  with PoisonChance1 given its MultiHit behavior is complete after the loop above.
+        // doesn't matter since its idempotent (on the cartridge, but not in the implementation
+        // below). For Twineedle we change the data to that of one with PoisonChance1 given its
+        // MultiHit behavior is complete after the loop above.
         if (move.effect == .Twineedle) move = Move.get(.PoisonSting);
         try moveEffect(battle, player, move, choice.data, miss, log);
     }
@@ -927,7 +937,7 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data, missed: bool, log:
         try log.lastmiss();
         try log.miss(battle.active(player), battle.active(player.foe()));
     }
-    return miss;
+    return !miss;
 }
 
 fn moveHit(battle: anytype, player: Player, move: Move.Data) bool {
@@ -940,17 +950,18 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data) bool {
         if (move.effect == .DreamEater and !Status.is(foe.stored().status, .SLP)) break :miss true;
         if (move.effect == .Swift) return false;
         if (foe.active.volatiles.Invulnerable) break :miss true;
-        // SHOWDOWN: need to special case Sleep + Recharging glitch in checkHit due to control flow
+        // SHOWDOWN: need to special case Sleep + Recharging glitch due to control flow differences
         if (showdown and move.effect == .Sleep and foe.active.volatiles.Recharging) return false;
 
         // Conversion / Haze / Light Screen / Reflect qualify but do not call moveHit
         if (foe.active.volatiles.Mist and move.effect.isStatDown()) break :miss true;
 
         // GLITCH: Thrash / Petal Dance / Rage get their accuracy overwritten on subsequent hits
-        const overwritten = side.active.volatiles.state > 0;
-        assert(!overwritten or (move.effect == .Thrashing or move.effect == .Rage));
+        var state = &side.active.volatiles.state;
+        const overwritten = (move.effect == .Thrashing or move.effect == .Rage) and state.* > 0;
+        assert(!overwritten or (0 < state.* and state.* < 255 and !side.active.volatiles.Bide));
         var accuracy = if (!showdown and overwritten)
-            side.active.volatiles.state
+            state.*
         else
             @as(u16, Gen12.percent(move.accuracy()));
         var boost = BOOSTS[@intCast(u4, side.active.boosts.accuracy + 6)];
@@ -959,7 +970,7 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data) bool {
         accuracy = accuracy * boost[0] / boost[1];
         accuracy = @minimum(255, @maximum(1, accuracy));
 
-        side.active.volatiles.state = accuracy;
+        state.* = accuracy;
 
         // GLITCH: max accuracy is 255 so 1/256 chance of miss
         break :miss if (showdown)
@@ -1015,6 +1026,7 @@ fn faint(battle: anytype, player: Player, log: anytype, done: bool) !?Result {
     var foe_volatiles = &foe.active.volatiles;
     foe_volatiles.MultiHit = false;
     if (foe_volatiles.Bide) {
+        assert(!foe_volatiles.Thrashing and !foe_volatiles.Rage);
         foe_volatiles.state = if (showdown) 0 else foe_volatiles.state & 255;
         if (foe_volatiles.state != 0) return Result.Error;
     }
@@ -1189,6 +1201,7 @@ pub const Effects = struct {
         var side = battle.side(player);
 
         side.active.volatiles.Bide = true;
+        assert(!side.active.volatiles.Thrashing and !side.active.volatiles.Rage);
         side.active.volatiles.state = 0;
         // SHOWDOWN: these values will diverge
         side.active.volatiles.attacks = @truncate(u3, if (showdown)
@@ -1589,7 +1602,10 @@ pub const Effects = struct {
     }
 
     fn rage(battle: anytype, player: Player) !void {
-        battle.side(player).active.volatiles.Rage = true;
+        var volatiles = &battle.side(player).active.volatiles;
+        volatiles.Rage = true;
+        assert(!volatiles.Bide);
+        volatiles.state = 0;
     }
 
     fn recoil(battle: anytype, player: Player, log: anytype) !void {
@@ -1680,6 +1696,8 @@ pub const Effects = struct {
         var volatiles = &battle.side(player).active.volatiles;
 
         volatiles.Thrashing = true;
+        assert(!volatiles.Bide);
+        volatiles.state = 0;
         // SHOWDOWN: these values will diverge
         volatiles.attacks = @truncate(u3, if (showdown)
             battle.rng.range(u8, 3, 5) - 1
