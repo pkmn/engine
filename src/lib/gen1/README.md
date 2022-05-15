@@ -413,7 +413,8 @@ generation of Pokémon contains a number bugs:
 - **Haze**: Haze should remove the toxic volatile and leave the toxic counter unchanged, not reset
   the toxic counter. Furthermore, Haze should clear a specific set of volatiles, not clear all
   volatiles indiscriminately (including artificial implementation-defined volatiles like
-  `brnattackdrop`).
+  `brnattackdrop`). Finally, if Haze resets a foe's sleep or freeze status it should still be
+  prevented from moving for the turn.
 - **Mimic**: Pokémon Showdown checks that the user of Mimic has Mimic in one of their move slots,
   which means Mimic legally called via Metronome or Mirror Move will only work if the user also has
   Mimic (and the moved mimicked by Mimic called via Metronome / Mirror Move will erroneously

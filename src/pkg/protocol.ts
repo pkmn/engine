@@ -146,7 +146,6 @@ const END = {
   [PROTOCOL.End.Mist]: 'mist' as ID,
   [PROTOCOL.End.FocusEnergy]: 'focusenergy' as ID,
   [PROTOCOL.End.LeechSeed]: 'leechseed' as ID,
-  [PROTOCOL.End.Toxic]: 'toxic' as ID,
   [PROTOCOL.End.LightScreen]: 'lightscreen' as ID,
   [PROTOCOL.End.Reflect]: 'reflect' as ID,
 };

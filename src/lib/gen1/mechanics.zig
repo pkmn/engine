@@ -1376,7 +1376,6 @@ pub const Effects = struct {
         try log.status(foe_ident, foe_stored.status, .None);
     }
 
-    // FIXME: handle showdown bugginess...
     fn haze(battle: anytype, player: Player, log: anytype) !void {
         var side = battle.side(player);
         var foe = battle.foe(player);
@@ -1397,8 +1396,11 @@ pub const Effects = struct {
         try log.clearallboost();
 
         if (Status.any(foe_stored.status)) {
-            if (Status.is(foe_stored.status, .FRZ) or Status.is(foe_stored.status, .SLP)) {
-                foe.last_selected_move = .SKIP_TURN;
+            // SHOWDOWN: Pokémon Showdown does not prevent sleep/freeze from moving immediately
+            if (!showdown) {
+                if (Status.is(foe_stored.status, .FRZ) or Status.is(foe_stored.status, .SLP)) {
+                    foe.last_selected_move = .SKIP_TURN;
+                }
             }
 
             try log.curestatus(foe_ident, foe_stored.status, .Silent);
@@ -1893,10 +1895,9 @@ fn clearVolatiles(active: *ActivePokemon, ident: ID, log: anytype) !void {
         try log.end(ident, .LeechSeed);
     }
     if (volatiles.Toxic) {
-        if (showdown) volatiles.toxic = 0;
         // volatiles.toxic is left unchanged
         volatiles.Toxic = false;
-        try log.end(ident, .Toxic);
+        // no protocol for clearing Toxic because Pokémon Showdown considers it a status
     }
     if (volatiles.LightScreen) {
         volatiles.LightScreen = false;
@@ -1906,8 +1907,6 @@ fn clearVolatiles(active: *ActivePokemon, ident: ID, log: anytype) !void {
         volatiles.Reflect = false;
         try log.end(ident, .Reflect);
     }
-    if (!showdown) return;
-    // FIXME: other volatiles
 }
 
 const DISTRIBUTION = [_]u3{ 2, 2, 2, 3, 3, 3, 4, 5 };

@@ -198,7 +198,6 @@ pub const Start = enum(u8) {
     Mimic,
 };
 
-// BUG: PS Haze has silent bide,substitute,parspeeddrop,brnattackdrop
 pub const End = enum(u8) {
     Disable,
     Confusion,
@@ -212,7 +211,6 @@ pub const End = enum(u8) {
     Mist,
     FocusEnergy,
     LeechSeed,
-    Toxic,
     LightScreen,
     Reflect,
 };
