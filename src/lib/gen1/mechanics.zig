@@ -100,55 +100,65 @@ fn selectMove(battle: anytype, player: Player, choice: Choice, foe_choice: Choic
     var volatiles = &side.active.volatiles;
     const stored = side.stored();
 
-    // pre-battle menu
-    if (volatiles.Recharging or volatiles.Rage) return true;
-    volatiles.Flinch = false;
-    if (volatiles.Thrashing or volatiles.Charging) return true;
+    const save = save: {
+        // pre-battle menu
+        if (volatiles.Recharging) break :save false;
+        if (volatiles.Rage) break :save true;
+        volatiles.Flinch = false;
+        if (volatiles.Thrashing or volatiles.Charging) break :save true;
 
-    // battle menu
-    if (choice.type == .Switch) return false;
+        // battle menu
+        if (choice.type == .Switch) return false;
 
-    // pre-move select
-    if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP)) return true;
-    if (volatiles.Bide) return true;
-    if (volatiles.Trapping) {
-        // GLITCH: https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
-        if (foe_choice.type == .Switch) {
-            // BUG: need to reset side.last_selected_move if originally Metronome
-        }
-        return true;
-    }
-
-    if (battle.foe(player).active.volatiles.Trapping) {
-        side.last_selected_move = .SKIP_TURN;
-        return true;
-    }
-
-    // move select
-    if (choice.data == 0) {
-        const struggle = ok: {
-            for (side.active.moves) |move, i| {
-                if (move.pp > 0 and volatiles.disabled.move != i + 1) break :ok false;
+        // pre-move select
+        if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP)) break :save true;
+        if (volatiles.Bide) break :save true;
+        if (volatiles.Trapping) {
+            // GLITCH: https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
+            if (foe_choice.type == .Switch) {
+                // BUG: need to reset side.last_selected_move if originally Metronome
             }
-            break :ok true;
-        };
+            break :save true;
+        }
 
-        assert(struggle);
-        side.last_selected_move = .Struggle;
-    } else {
-        assert(choice.data <= 4);
-        const move = side.active.moves[choice.data - 1];
+        if (battle.foe(player).active.volatiles.Trapping) {
+            side.last_selected_move = .SKIP_TURN;
+            return true;
+        }
 
-        // You cannot *select* a move with 0 PP, but a 0 PP can be used automatically
-        assert(move.pp != 0);
+        // move select
+        if (choice.data == 0) {
+            const struggle = ok: {
+                for (side.active.moves) |move, i| {
+                    if (move.pp > 0 and volatiles.disabled.move != i + 1) break :ok false;
+                }
+                break :ok true;
+            };
+
+            assert(struggle);
+            side.last_selected_move = .Struggle;
+        } else {
+            assert(side.active.volatiles.disabled.move != choice.data);
+            const move = side.active.move(choice.data);
+            // You cannot *select* a move with 0 PP, but a 0 PP can be used automatically
+            assert(move.pp != 0);
+            side.last_selected_move = move.id;
+        }
+
+        // SHOWDOWN: getRandomTarget arbitrarily advances the RNG
+        if (showdown) battle.rng.advance(side.last_selected_move.frames());
+
+        return false;
+    };
+
+    if (showdown and save) {
         assert(side.active.volatiles.disabled.move != choice.data);
+        const move = side.active.move(choice.data);
+        // Pokémon Showdown allows you to select moves with 0 PP in certain situations
         side.last_selected_move = move.id;
     }
 
-    // SHOWDOWN: getRandomTarget arbitrarily advances the RNG
-    if (showdown) battle.rng.advance(side.last_selected_move.frames());
-
-    return false;
+    return true;
 }
 
 fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anytype) !void {
@@ -1754,7 +1764,7 @@ pub const Effects = struct {
         if (side.active.volatiles.Trapping) return;
         side.active.volatiles.Trapping = true;
         // GLITCH: Hyper Beam automatic selection glitch if Recharging gets cleared on miss
-        foe.active.volatiles.Recharging = false;
+        if (!showdown) foe.active.volatiles.Recharging = false;
 
         side.active.volatiles.attacks = distribution(battle);
     }

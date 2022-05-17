@@ -460,8 +460,8 @@ generation of Pokémon contains a number bugs:
 - **Disable**: Pokémon Showdown can possibly disable moves with 0 PP and lasts 1-6 turns instead of
   1-8.
 - **Freeze** / **Sleep**: Pokémon Showdown requires a move to be selected when a Pokémon is frozen
-  or sleeping and uses that in the event that the status is removed when on the cartridge no
-  selection is possible and no turn exists for the thawed/woken Pokémon to merge except in the case
+  or sleeping and uses that in the event that the status is removed while on the cartridge no
+  selection is possible and no turn exists for the thawed/woken Pokémon to act except in the case
   of a Fire-type move thawing a slower Pokémon (which should result in the [Freeze top move
   selection glitch](https://glitchcity.wiki/Freeze_top_move_selection_glitch)).
 - **Hyper Beam**: due to improperly implemented selection mechanics, the [Hyper Beam

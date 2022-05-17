@@ -116,6 +116,7 @@ pub const ActivePokemon = extern struct {
 
     pub inline fn move(self: *ActivePokemon, mslot: u8) *MoveSlot {
         assert(mslot > 0 and mslot <= 4);
+        assert(self.moves[mslot - 1].id != .None);
         return &self.moves[mslot - 1];
     }
 };
@@ -135,6 +136,7 @@ pub const Pokemon = extern struct {
 
     pub inline fn move(self: *Pokemon, mslot: u8) *MoveSlot {
         assert(mslot > 0 and mslot <= 4);
+        assert(self.moves[mslot - 1].id != .None);
         return &self.moves[mslot - 1];
     }
 };
