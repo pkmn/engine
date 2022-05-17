@@ -190,7 +190,7 @@ const std = @import("std");
 const pkmn = @import("pkmn");
 
 var random = std.rand.DefaultPrng.init(seed).random();
-var options: [pkmn.MAX_OPTIONS_SIZE]pkmn.Choice = undefined;
+var options: [pkmn.OPTIONS_SIZE]pkmn.Choice = undefined;
 
 var battle = ...
 

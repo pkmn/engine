@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 const build_options = @import("build_options");
 
 const data = @import("../common/data.zig");
@@ -17,8 +18,17 @@ const expect = std.testing.expect;
 
 const showdown = build_options.showdown;
 
-pub const MAX_OPTIONS_SIZE = 9;
-pub const MAX_LOG_SIZE = 100; // TODO
+pub const MAX_OPTIONS = 9; // move 1..4, switch 2..6
+pub const MAX_LOGS = 100; // TODO
+
+pub const OPTIONS_SIZE = if (builtin.mode == .ReleaseSmall)
+    MAX_OPTIONS
+else
+    std.math.ceilPowerOfTwo(usize, MAX_OPTIONS) catch unreachable;
+pub const LOG_SIZE = if (builtin.mode == .ReleaseSmall)
+    MAX_LOGS
+else
+    std.math.ceilPowerOfTwo(usize, MAX_LOGS) catch unreachable;
 
 pub const Choice = data.Choice;
 pub const ID = data.ID;

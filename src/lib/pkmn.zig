@@ -1,8 +1,10 @@
 pub const showdown = @import("build_options").showdown;
 pub const trace = @import("build_options").trace;
 
-pub const MAX_OPTIONS_SIZE = gen1.MAX_OPTIONS_SIZE;
-pub const MAX_LOG_SIZE = gen1.MAX_LOG_SIZE;
+pub const MAX_OPTIONS = gen1.MAX_OPTIONS;
+pub const OPTIONS_SIZE = gen1.OPTIONS_SIZE;
+pub const MAX_LOGS = gen1.MAX_LOGS;
+pub const LOG_SIZE = gen1.LOG_SIZE;
 
 pub const Player = @import("common/data.zig").Player;
 pub const Choice = @import("common/data.zig").Choice;

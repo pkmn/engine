@@ -30,7 +30,7 @@ pub fn benchmark(gen: u8, seed: u64, battles: usize, playouts: ?usize) !void {
     std.debug.assert(gen >= 1 and gen <= 8);
 
     var random = pkmn.PRNG.init(seed);
-    var options: [pkmn.MAX_OPTIONS_SIZE]pkmn.Choice = undefined;
+    var options: [pkmn.OPTIONS_SIZE]pkmn.Choice = undefined;
 
     var duration: u64 = 0;
     var turns: usize = 0;

@@ -34,7 +34,7 @@ const Battle = helpers.Battle;
 const move = helpers.move;
 const swtch = helpers.swtch;
 
-const MAX_OPTIONS_SIZE = data.MAX_OPTIONS_SIZE;
+const OPTIONS_SIZE = data.OPTIONS_SIZE;
 
 const P1_FIRST = 0;
 const P2_FIRST = 255;
@@ -108,7 +108,7 @@ test "switching" {
 test "choices" {
     var random = PRNG.init(0x27182818);
     var battle = Battle.random(&random, false);
-    var options: [MAX_OPTIONS_SIZE]Choice = undefined;
+    var options: [OPTIONS_SIZE]Choice = undefined;
     const n = battle.choices(.P1, .Move, &options);
     try expectEqualSlices(Choice, &[_]Choice{
         swtch(2), swtch(3), swtch(4), swtch(5), swtch(6),

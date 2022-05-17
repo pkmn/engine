@@ -26,7 +26,7 @@ pub fn main() !void {
     // Use Zig's system PRNG (pkmn.PRNG is another option with a slightly different API)
     var random = std.rand.DefaultPrng.init(seed).random();
     // Preallocate a small buffer for the choice options throughout the battle
-    var options: [pkmn.MAX_OPTIONS_SIZE]pkmn.Choice = undefined;
+    var options: [pkmn.OPTIONS_SIZE]pkmn.Choice = undefined;
 
     // pkmn.gen1.Battle can be tedious to initialize - the helper constructor used here
     // fills in missing fields with intelligent defaults to cut down on boilerplate.
@@ -51,9 +51,9 @@ pub fn main() !void {
     );
 
     // Preallocate a buffer for the log and create a Log handler which will write to it.
-    // pkmn.MAX_LOG_SIZE is guaranteed to be large enough for a single update. This will only be
-    // used if -Dtrace is enabled - simply setting the log to null will also disable it, regardless
-    // of what -Dtrace is set to.
+    // pkmn.LOG_SIZE is guaranteed to be large enough for a single update. This will only be used if
+    // -Dtrace is enabled - simply setting the log to null will also disable it, regardless of what
+    // -Dtrace is set to.
     var buf: [pkmn.MAX_LOG_SIZE]u8 = undefined;
     var log = pkmn.protocol.FixedLog{ .writer = std.io.fixedBufferStream(&buf).writer() };
 
