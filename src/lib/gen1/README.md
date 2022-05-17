@@ -424,16 +424,17 @@ generation of Pokémon contains a number bugs:
   though erroneously applies this logic in singles battles where only one target is possible. This
   spuriously and inefficiently advances the RNG and results in inconsistencies if a player specifies
   `move 1 1` instead of `move 1`.
-- **Psybeam / Confusion**: the secondary chance of these moves causing confusion is not 26/256 like
-  most "10%" chance moves but instead **25/256**.
-- **Thrash / Petal Dance / Rage**: On the cartridge (but not on Pokémon Showdown) these moves have
-  glitchy behavior where the the scaled accuracy after accuracy/evasion modifiers have been applied
-  should overwrite the original accuracy of the move for as long as the move's lock lasts.
+- **Psybeam** / **Confusion**: the secondary chance of these moves causing confusion is not 26/256
+  like most "10%" chance moves but instead **25/256**.
+- **Thrash** / **Petal Dance** / **Rage**: On the cartridge (but not on Pokémon Showdown) these
+  moves have glitchy behavior where the the scaled accuracy after accuracy/evasion modifiers have
+  been applied should overwrite the original accuracy of the move for as long as the move's lock
+  lasts.
 - ~~**Bide**: Pokémon Showdown uses `random(3, 4)` to generate a duration in the range <b>[</b>3,
   4<b>)</b> which means Bide will always deterministically last 2 turns (Pokémon Showdown ends when
-  duration reaches 1 instead of 0) despite advancing the RNG. See also below regarding
-  `lastDamage`.~~ Fixed in
-  [smogon/pokemon-showdown@`77b1596c`](https://github.com/smogon/pokemon-showdown/commit/77b1596c).
+  duration reaches 1 instead of 0) despite advancing the RNG.~~ Fixed in
+  [smogon/pokemon-showdown@`77b1596c`](https://github.com/smogon/pokemon-showdown/commit/77b1596c),
+  though see below regarding `lastDamage`.
 - **Jump Kick** / **High Jump Kick**: these should cause 1 HP of crash damage when the target is a
   Ghost, despite what Pokémon Showdown or Bulbapedia suggests or what the case is in later
   generations.
@@ -457,7 +458,15 @@ generation of Pokémon contains a number bugs:
   - `effectState.lastDamage` (Bide):
     - updated by Bide, use to determine the amount of damage the move eventually does
 - **Disable**: Pokémon Showdown can possibly disable moves with 0 PP and lasts 1-6 turns instead of
-  1-8
+  1-8.
+- **Freeze** / **Sleep**: Pokémon Showdown requires a move to be selected when a Pokémon is frozen
+  or sleeping and uses that in the event that the status is removed when on the cartridge no
+  selection is possible and no turn exists for the thawed/woken Pokémon to merge except in the case
+  of a Fire-type move thawing a slower Pokémon (which should result in the [Freeze top move
+  selection glitch](https://glitchcity.wiki/Freeze_top_move_selection_glitch)).
+- **Hyper Beam**: due to improperly implemented selection mechanics, the [Hyper Beam
+  automatic-selection glitch](https://glitchcity.wiki/Hyper_Beam_automatic_selection_glitch) does
+  not exist on Pokémon Showdown.
 
 Finally, in Generation I, checking whether a move has **hit should come *after* determining
 damage**, not before. Pokémon Showdown's altered ordering here (which is more in line with how

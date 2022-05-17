@@ -132,6 +132,7 @@ pub const Damage = enum(u8) {
     Poison,
     Burn,
     Confusion,
+    LeechSeed,
     PoisonOf,
     BurnOf,
     RecoilOf,

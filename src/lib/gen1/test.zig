@@ -600,7 +600,7 @@ test "choices" {
 // }
 
 // test "Partial trapping move Mirror Move glitch" {
-//     //  https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
+//     // https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
 //     return error.SkipZigTest;
 // }
 

@@ -79,18 +79,23 @@ export const Choices = new class {
       return options.length === 0 ? [{type: 'pass', data: 0}] : options;
     }
     case 'move': {
+      const options: engine.Choice[] = [];
+
       const side = battle.side(id);
       const foe = battle.foe(id);
 
       const active = side.active!;
-      // TODO: handle locked move properly
-      if (active.volatile(gen1.Pokemon.Volatiles.Recharging)) {
-        return [{type: 'move', data: 0}];
-      }
 
-      const options: engine.Choice[] = [];
-      const trapped = foe.active!.volatile(gen1.Pokemon.Volatiles.Trapping);
-      if (!trapped) {
+      if (foe.active!.volatile(gen1.Pokemon.Volatiles.Trapping)) {
+        const locked =
+          active.volatile(gen1.Pokemon.Volatiles.Recharging) ||
+          active.volatile(gen1.Pokemon.Volatiles.Rage) ||
+          active.volatile(gen1.Pokemon.Volatiles.Thrashing) ||
+          active.volatile(gen1.Pokemon.Volatiles.Charging) ||
+          active.volatile(gen1.Pokemon.Volatiles.Bide) ||
+          active.volatile(gen1.Pokemon.Volatiles.Trapping);
+        if (locked) return [{type: 'move', data: 0}];
+      } else {
         for (let slot = 2; slot <= 6; slot++) {
           const pokemon = side.get(slot as engine.Slot);
           if (!pokemon || pokemon.hp === 0) continue;
@@ -102,7 +107,7 @@ export const Choices = new class {
       let slot = 0;
       for (const move of active.moves) {
         slot++;
-        if ((move.pp === 0 && !trapped) || move.disabled) continue;
+        if (move.pp === 0 || move.disabled) continue;
         options.push({type: 'move', data: slot});
       }
       if (options.length === before) {
@@ -128,17 +133,16 @@ export const Choices = new class {
       }
       return options.length === 0 ? ['pass'] : options;
     } else if (request.active) {
-      const side = battle[id]!;
-
-      const active = side.active[0];
-      // Locked
-      if (active.trapped && request.active[0].moves.length === 1) {
-        return ['move 1'];
-      }
-
       const options: string[] = [];
+
+      const side = battle[id]!;
+      const active = side.active[0];
+
       const trapped = active.volatiles['partialtrappinglock'];
-      if (!trapped) {
+      if (trapped) {
+        const locked = active.trapped && request.active[0].moves.length === 1;
+        if (locked) return ['move 1'];
+      } else {
         for (let slot = 2; slot <= 6; slot++) {
           const pokemon = side.pokemon[slot - 1];
           if (!pokemon || pokemon.hp === 0) continue;
@@ -150,6 +154,7 @@ export const Choices = new class {
       let slot = 0;
       for (const move of active.moveSlots) {
         slot++;
+        // Pokémon Showdown expect us to select 0 PP moves when trapped
         if ((move.pp === 0 && !trapped) || move.disabled) continue;
         options.push(`move ${slot}`);
       }

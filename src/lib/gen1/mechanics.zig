@@ -71,7 +71,8 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
         p2.active.volatiles.Trapping = false;
     }
 
-    return endTurn(battle, log, @as(u2, @boolToInt(l1)) + @as(u2, @boolToInt(l2)));
+    const locked = @as(u2, @boolToInt(l1)) + @as(u2, @boolToInt(l2));
+    return endTurn(battle, log, locked);
 }
 
 fn start(battle: anytype, log: anytype) !Result {
@@ -138,7 +139,8 @@ fn selectMove(battle: anytype, player: Player, choice: Choice, foe_choice: Choic
         assert(choice.data <= 4);
         const move = side.active.moves[choice.data - 1];
 
-        assert(move.pp != 0); // FIXME: wrap underflow?
+        // You cannot *select* a move with 0 PP, but a 0 PP can be used automatically
+        assert(move.pp != 0);
         assert(side.active.volatiles.disabled.move != choice.data);
         side.last_selected_move = move.id;
     }
@@ -493,9 +495,16 @@ fn decrementPP(side: *Side, choice: Choice) void {
     assert(!volatiles.Rage and !volatiles.Thrashing);
     if (volatiles.Bide or volatiles.MultiHit) return;
 
+    // BUG: https://glitchcity.wiki/Freeze_top_move_selection_glitch
+    // GLITCH: Struggle bypass PP underflow via Hyper Beam / Trapping-switch auto selection
+    const underflow = side.last_selected_move == .HyperBeam or
+        Move.get(side.last_selected_move).effect == .Trapping;
+
+    assert(active.move(choice.data).pp > 0 or underflow);
     active.move(choice.data).pp -%= 1;
     if (volatiles.Transform) return;
 
+    assert(side.stored().move(choice.data).pp > 0 or underflow);
     side.stored().move(choice.data).pp -%= 1;
     assert(active.move(choice.data).pp == side.stored().move(choice.data).pp);
 }
@@ -1072,7 +1081,8 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
         var foe_stored = foe.stored();
         const foe_ident = battle.active(player.foe());
 
-        try log.damageOf(ident, stored, .LeechSeedOf, foe_ident);
+        // As above, Pokémon Showdown uses damageOf but its not relevant
+        try log.damage(ident, stored, .LeechSeed);
 
         // GLITCH: uncapped damage is added back to the foe
         foe_stored.hp = @minimum(foe_stored.hp + damage, foe_stored.stats.hp);
@@ -1216,6 +1226,7 @@ pub const Effects = struct {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
 
+        // GLITCH: Freeze top move selection desync can occur if thawed Pokémon is slower
         if (Status.is(foe_stored.status, .FRZ)) {
             assert(move.type == .Fire);
             foe_stored.status = 0;
@@ -1742,7 +1753,7 @@ pub const Effects = struct {
 
         if (side.active.volatiles.Trapping) return;
         side.active.volatiles.Trapping = true;
-        // Recharging is cleared even if the trapping move misses
+        // GLITCH: Hyper Beam automatic selection glitch if Recharging gets cleared on miss
         foe.active.volatiles.Recharging = false;
 
         side.active.volatiles.attacks = distribution(battle);
@@ -2013,16 +2024,22 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
             const foe = battle.foe(player);
 
             var active = side.active;
-
-            // FIXME: handle locked move (charging/recharging/rage/bide/dig/etc)
-            if (active.volatiles.Recharging) {
-                out[n] = .{ .type = .Move, .data = 0 };
-                n += 1;
-                return n;
-            }
-
-            const trapped = foe.active.volatiles.Trapping;
-            if (!trapped) {
+            const stored = side.stored();
+            if (foe.active.volatiles.Trapping) {
+                // SHOWDOWN: Pokémon Showdown still requires you select a move when sleeping/frozen
+                const status = if (!showdown)
+                    Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP)
+                else
+                    false;
+                const locked = active.volatiles.Recharging or active.volatiles.Rage or
+                    active.volatiles.Thrashing or active.volatiles.Charging or
+                    active.volatiles.Bide or active.volatiles.Trapping or status;
+                if (locked) {
+                    out[n] = .{ .type = .Move, .data = 0 };
+                    n += 1;
+                    return n;
+                }
+            } else {
                 var slot: u4 = 2;
                 while (slot <= 6) : (slot += 1) {
                     const pokemon = side.get(slot);
@@ -2037,7 +2054,7 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
             while (slot <= 4) : (slot += 1) {
                 const m = active.move(slot);
                 if (m.id == .None) break;
-                if (m.pp == 0 and !trapped) continue;
+                if (m.pp == 0) continue;
                 if (active.volatiles.disabled.move == slot) continue;
                 out[n] = .{ .type = .Move, .data = slot };
                 n += 1;

@@ -89,6 +89,7 @@ const DAMAGE = {
   [PROTOCOL.Damage.Poison]: 'psn' as Protocol.EffectName,
   [PROTOCOL.Damage.Burn]: 'psn' as Protocol.EffectName,
   [PROTOCOL.Damage.Confusion]: 'confusion' as Protocol.EffectName,
+  [PROTOCOL.Damage.LeechSeed]: 'Leech Seed' as Protocol.MoveName,
   [PROTOCOL.Damage.PoisonOf]: 'psn' as Protocol.EffectName,
   [PROTOCOL.Damage.BurnOf]: 'brn' as Protocol.EffectName,
   [PROTOCOL.Damage.RecoilOf]: 'Recoil' as Protocol.EffectName,
