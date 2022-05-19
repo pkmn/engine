@@ -472,6 +472,7 @@ generation of Pokémon contains a number bugs:
 - **Roar** / **Whirlwind**: these moves can miss on Pokémon Showdown (and advance the RNG when
   checking) which is incorrect (these moves should always fail, but do not check accuracy or advance
   the RNG).
+- **Sonic Boom**: this move incorrectly fails to ignore type immunity on Pokémon Showdown.
 
 Finally, in Generation I, checking whether a move has **hit should come *after* determining
 damage**, not before. Pokémon Showdown's altered ordering here (which is more in line with how

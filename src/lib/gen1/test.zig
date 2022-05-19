@@ -248,15 +248,17 @@ test "SwitchAndTeleport" {
     // |move|p2a: Pidgey|Whirlwind|p2a: Abra|[miss]
     // |-miss|p2a: Pidgey
     // |turn|3
-    var logs = TestLogs(31){};
+    var logs = TestLogs(if (showdown) 31 else 28){};
     var expected = FixedLog{ .writer = stream(&logs.expected).writer() };
     try expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
     try expected.move(P2.ident(1), Move.Whirlwind, P1.ident(1), null);
     try expected.turn(2);
     try expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
     try expected.move(P2.ident(1), Move.Whirlwind, P1.ident(1), null);
-    try expected.lastmiss();
-    try expected.miss(P2.ident(1));
+    if (showdown) {
+        try expected.lastmiss();
+        try expected.miss(P2.ident(1));
+    }
     try expected.turn(3);
 
     const actual = FixedLog{ .writer = stream(&logs.actual).writer() };
@@ -369,19 +371,16 @@ test "Twineedle" {
     return error.SkipZigTest;
 }
 
-//fn damage(expected: anytype, id: ID, pokemon: Pokemon, hp: u16) !void {
-//var p = pokemon;
-//p.hp -= hp;
-//try expected.damage(id, p, .None);
-//}
-
 // Move.{SonicBoom,DragonRage}
 test "SpecialDamage (fixed)" {
     // Deals X HP of damage to the target. This move ignores type immunity.
     var battle = Battle.fixed(
-        (if (showdown) .{ NOP, NOP } else .{}) ++ .{ HIT, HIT },
+        (if (showdown) .{ NOP, NOP, HIT, HIT, NOP } else .{ HIT, HIT, HIT }),
         &.{.{ .species = .Voltorb, .moves = &.{.SonicBoom} }},
-        &.{.{ .species = .Dratini, .moves = &.{.DragonRage} }},
+        &.{
+            .{ .species = .Dratini, .moves = &.{.DragonRage} },
+            .{ .species = .Gastly, .moves = &.{.NightShade} },
+        },
     );
     var copy = battle;
 
@@ -391,26 +390,47 @@ test "SpecialDamage (fixed)" {
     var e1 = copy.side(.P1);
     var e2 = copy.side(.P2);
 
-    e1.stored().hp -= 40;
-    e2.stored().hp -= 20;
+    e1.get(1).hp -= 40;
+    e2.get(1).hp -= 20;
 
     // |move|p1a: Voltorb|Sonic Boom|p2a: Dratini
     // |-damage|p2a: Dratini|265/285
     // |move|p2a: Dratini|Dragon Rage|p1a: Voltorb
     // |-damage|p1a: Voltorb|243/283
     // |turn|2
-    var logs = TestLogs(30){};
+    var logs = TestLogs(if (showdown) 51 else 56){};
     var expected = FixedLog{ .writer = stream(&logs.expected).writer() };
     try expected.move(P1.ident(1), Move.SonicBoom, P2.ident(1), null);
-    try expected.damage(P2.ident(1), e2.stored(), .None);
+    try expected.damage(P2.ident(1), e2.get(1), .None);
     try expected.move(P2.ident(1), Move.DragonRage, P1.ident(1), null);
-    try expected.damage(P1.ident(1), e1.stored(), .None);
+    try expected.damage(P1.ident(1), e1.get(1), .None);
     try expected.turn(2);
 
     const actual = FixedLog{ .writer = stream(&logs.actual).writer() };
     try expectEqual(Result.Default, try update(&battle, move(1), move(1), actual));
-    try expectEqual(e1.stored().hp, p1.stored().hp);
-    try expectEqual(e2.stored().hp, p2.stored().hp);
+    try expectEqual(e1.get(1).hp, p1.get(1).hp);
+    try expectEqual(e2.get(1).hp, p2.get(1).hp);
+    try expectEqual(e2.get(2).hp, p2.get(2).hp);
+
+    // |switch|p2a: Gastly|Gastly|263/263
+    // |move|p1a: Voltorb|Sonic Boom|p2a: Gastly
+    try expected.switched(P2.ident(2), p2.get(2));
+    try expected.move(P1.ident(1), Move.SonicBoom, P2.ident(2), null);
+    if (showdown) {
+        // |-immune|p2a: Gastly
+        try expected.immune(P2.ident(2), .None);
+    } else {
+        // |-damage|p2a: Gastly|243/263
+        e2.get(2).hp -= 20;
+        try expected.damage(P2.ident(2), e2.get(2), .None);
+    }
+    // |turn|3
+    try expected.turn(3);
+
+    try expectEqual(Result.Default, try update(&battle, move(1), swtch(2), actual));
+    try expectEqual(e1.get(1).hp, p1.get(1).hp);
+    try expectEqual(e2.get(2).hp, p2.get(1).hp);
+    try expectEqual(e2.get(1).hp, p2.get(2).hp);
     try logs.expectMatches();
     try expect(battle.rng.exhausted());
 }
@@ -418,7 +438,42 @@ test "SpecialDamage (fixed)" {
 // Move.{SeismicToss,NightShade}
 test "SpecialDamage (level)" {
     // Deals damage to the target equal to the user's level. This move ignores type immunity.
-    return error.SkipZigTest;
+    var battle = Battle.fixed(
+        (if (showdown) .{ NOP, NOP, HIT, HIT } else .{ HIT, HIT }),
+        &.{.{ .species = .Gastly, .level = 22, .moves = &.{.NightShade} }},
+        &.{.{ .species = .Clefairy, .level = 16, .moves = &.{.SeismicToss} }},
+    );
+    var copy = battle;
+
+    const p1 = battle.side(.P1);
+    const p2 = battle.side(.P2);
+
+    var e1 = copy.side(.P1);
+    var e2 = copy.side(.P2);
+
+    e1.get(1).hp -= 16;
+    e2.get(1).hp -= 22;
+
+    // |move|p1a: Gastly|Night Shade|p2a: Clefairy
+    // |-damage|p2a: Clefairy|41/63
+    // |move|p2a: Clefairy|Seismic Toss|p1a: Gastly
+    // |-damage|p1a: Gastly|49/65
+    // |turn|2
+    var logs = TestLogs(30){};
+    var expected = FixedLog{ .writer = stream(&logs.expected).writer() };
+    try expected.move(P1.ident(1), Move.NightShade, P2.ident(1), null);
+    try expected.damage(P2.ident(1), e2.get(1), .None);
+    try expected.move(P2.ident(1), Move.SeismicToss, P1.ident(1), null);
+    try expected.damage(P1.ident(1), e1.get(1), .None);
+    try expected.turn(2);
+
+    const actual = FixedLog{ .writer = stream(&logs.actual).writer() };
+    try expectEqual(Result.Default, try update(&battle, move(1), move(1), actual));
+    try expectEqual(e1.get(1).hp, p1.get(1).hp);
+    try expectEqual(e2.get(1).hp, p2.get(1).hp);
+
+    try logs.expectMatches();
+    try expect(battle.rng.exhausted());
 }
 
 // Move.Psywave

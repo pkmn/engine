@@ -4,7 +4,7 @@
 
 .PHONY: zig-build
 zig-build:
-	zig build -p build
+	zig build -Dtrace -p build
 	zig build -Dshowdown -Dtrace -p build
 
 .PHONY: js-build
@@ -52,7 +52,7 @@ fix: zig-fix js-fix
 
 .PHONY: zig-test
 zig-test:
-	zig build test
+	zig build -Dtrace test
 	zig build -Dshowdown -Dtrace test
 
 .PHONY: js-test

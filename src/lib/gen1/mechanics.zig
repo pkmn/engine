@@ -525,17 +525,15 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
     const foe = battle.foe(player);
 
     var move = Move.get(side.last_selected_move);
-
-    // The cartridge handles set damage moves in applyDamage but we short circuit to simplify things
-    if (move.effect == .SuperFang or move.effect == .SpecialDamage) {
-        return specialDamage(battle, player, move, missed, log);
-    }
+    const special = move.effect == .SuperFang or move.effect == .SpecialDamage;
 
     // SHOWDOWN: Pokémon Showdown runs type and OHKO immunity checks before the accuracy check
     if (showdown) {
         const type1 = @enumToInt(move.type.effectiveness(foe.active.types.type1));
         const type2 = @enumToInt(move.type.effectiveness(foe.active.types.type2));
-        if (move.bp > 0 and (type1 == 0 or type2 == 0)) {
+        // SHOWDOWN: Sonic Boom incorrectly checks type immunity
+        const ignore = special and side.last_selected_move != .SonicBoom;
+        if (move.targets() and !ignore and (type1 == 0 or type2 == 0)) {
             try log.immune(battle.active(player.foe()), .None);
             if (move.effect == .Explode) try Effects.explode(battle, player);
             return null;
@@ -545,6 +543,9 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
             return null;
         }
     }
+
+    // The cartridge handles set damage moves in applyDamage but we short circuit to simplify things
+    if (special) return specialDamage(battle, player, move, missed, log);
 
     var crit = false;
     var ohko = false;
