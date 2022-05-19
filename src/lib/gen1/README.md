@@ -467,6 +467,9 @@ generation of Pokémon contains a number bugs:
 - **Hyper Beam**: due to improperly implemented selection mechanics, the [Hyper Beam
   automatic-selection glitch](https://glitchcity.wiki/Hyper_Beam_automatic_selection_glitch) does
   not exist on Pokémon Showdown.
+- **Roar** / **Whirlwind**: these moves can miss on Pokémon Showdown (and advance the RNG when
+  checking) which is incorrect (these moves should always fail, but do not check accuracy or advance
+  the RNG).
 
 Finally, in Generation I, checking whether a move has **hit should come *after* determining
 damage**, not before. Pokémon Showdown's altered ordering here (which is more in line with how
