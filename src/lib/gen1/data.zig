@@ -383,9 +383,13 @@ test "Move" {
     try expect(Move.Effect.isStatDownChance(.SpecialDownChance));
     try expect(!Move.Effect.isStatDownChance(.BurnChance1));
 
-    try expectEqual(@as(u8, 0), Move.Bide.frames());
-    try expectEqual(@as(u8, 1), Move.Tackle.frames());
-    try expectEqual(@as(u8, 2), Move.Counter.frames());
+    try expectEqual(@as(u8, 0), Move.get(.Bide).frames);
+    try expectEqual(@as(u8, 1), Move.get(.Tackle).frames);
+    try expectEqual(@as(u8, 2), Move.get(.Counter).frames);
+
+    try expect(!Move.get(.Bide).targets());
+    try expect(Move.get(.Tackle).targets());
+    try expect(Move.get(.Counter).targets());
 }
 
 pub const Species = species.Species;

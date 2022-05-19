@@ -177,9 +177,9 @@ above, PP information isn't strictly necessary in Generation I so is dropped. `M
 a special sentinel value to indicate `null`. Move PP data is only included for testing and is not
 necessary for the actual engine implementation.
 
-In order to workaround Pokémon Showdown's [bugged usage of `getRandomTarget`](#bugs), a boolean is
-required for each move (`Move.targets`) to determine whether it should advance the RNG in
-`selectMove`. This is only include if `-Dshowdown` is enabled.
+In order to workaround various [Pokémon Showdown bugs](#bugs) and to support its protocol in traces,
+additional information is stored in `Move.Data` (`frames`) which determines how much to advance the
+RNG in various places based on whether Pokémon Showdown considers the move to "target" or not.
 
 ### `Species` / `Species.Data`
 
@@ -223,6 +223,7 @@ entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as foll
 | **disabled**    | 0...7   | 3    |     | **DVs**           | 0...15   | 4    |
 | **move effect** | 0..66   | 7    |     | **attacks**       | 0..4     | 3    |
 | **crit chance** | 7..65   | 6    |     | **transform**     | 0..15    | 4    |
+| **frames**      | 0..2    | 2    |     |                   |          |      |
 
 From this we can determine the minimum bits[^1] required to store each data structure to determine
 how much overhead the representations above have after taking into consideration [alignment &
@@ -243,7 +244,8 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
   - `order` does not need to be stored as the party can always be rearranged as switches occur
 - **`Battle`**: 6× `Side` + seed (10× `8` + `4`) + turn (`10`) + last damage (`10`)
 - **`Type.CHART`**: attacking types (`15`) × defending types (`15`) × effectiveness (`2`)[^2]
-- **`Moves.DATA`**: 164× base power (`6`) + effect (`7`) + accuracy (`4`) + type: (`4`)
+- **`Moves.DATA`**: 165× base power (`6`) + effect (`7`) + accuracy (`4`) + type: (`4`) + frames
+  (`2`)
 - **`Species.CHANCES`**: 151× crit chance (`6`)
 
 | Data              | Actual bits | Minimum bits | Overhead |
@@ -253,7 +255,7 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 | `Side`            | 1472        | 1049         | 40.3%    |
 | `Battle`          | 3088        | 2202         | 40.2%    |
 | `Type.CHART`      | 1800        | 450          | 300.0%   |
-| `Moves.DATA`      | 3636        | 3444         | 14.3%    |
+| `Moves.DATA`      | 5280        | 3795         | 39.1%    |
 | `Species.CHANCES` | 1208        | 906          | 33.3%    |
 
 In the case of `Type.CHART`/`Moves.DATA`/`Species.CHANCES`, technically only the values which are

@@ -265,13 +265,22 @@ pub const Move = enum(u8) {
     pub const Data = packed struct {
         effect: Effect,
         bp: u8,
-        accuracy: u8,
         type: Type,
         pp: u4, // pp / 5
+        acc: u4, // accuracy / 5 - 6
+        frames: u4,
         chance: u4 = 0, // chance / 10
 
         comptime {
             assert(@sizeOf(Data) == 5);
+        }
+
+        pub inline fn accuracy(self: Data) u8 {
+            return (@as(u8, self.acc) + 6) * 5;
+        }
+
+        pub inline fn targets(self: Data) bool {
+            return self.frames > 0;
         }
     };
 
@@ -281,56 +290,63 @@ pub const Move = enum(u8) {
             .effect = .None,
             .bp = 40,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 7, // * 5 = 35
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // KarateChop
         .{
             .effect = .HighCritical,
             .bp = 50,
             .type = .Fighting,
-            .accuracy = 100,
             .pp = 5, // * 5 = 25
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // DoubleSlap
         .{
             .effect = .MultiHit,
             .bp = 15,
             .type = .Normal,
-            .accuracy = 85,
             .pp = 2, // * 5 = 10
+            .acc = 11, // 85%
+            .frames = 1,
         },
         // CometPunch
         .{
             .effect = .MultiHit,
             .bp = 18,
             .type = .Normal,
-            .accuracy = 85,
             .pp = 3, // * 5 = 15
+            .acc = 11, // 85%
+            .frames = 1,
         },
         // MegaPunch
         .{
             .effect = .None,
             .bp = 80,
             .type = .Normal,
-            .accuracy = 85,
             .pp = 4, // * 5 = 20
+            .acc = 11, // 85%
+            .frames = 1,
         },
         // PayDay
         .{
             .effect = .PayDay,
             .bp = 40,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // FirePunch
         .{
             .effect = .BurnChance,
             .bp = 75,
             .type = .Fire,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // IcePunch
@@ -338,8 +354,9 @@ pub const Move = enum(u8) {
             .effect = .FreezeChance,
             .bp = 75,
             .type = .Ice,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // ThunderPunch
@@ -347,8 +364,9 @@ pub const Move = enum(u8) {
             .effect = .ParalyzeChance,
             .bp = 75,
             .type = .Electric,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // Scratch
@@ -356,112 +374,126 @@ pub const Move = enum(u8) {
             .effect = .None,
             .bp = 40,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 7, // * 5 = 35
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // ViseGrip
         .{
             .effect = .None,
             .bp = 55,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Guillotine
         .{
             .effect = .OHKO,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 30,
             .pp = 1, // * 5 = 5
+            .acc = 0, // 30%
+            .frames = 1,
         },
         // RazorWind
         .{
             .effect = .RazorWind,
             .bp = 80,
             .type = .Normal,
-            .accuracy = 75,
             .pp = 2, // * 5 = 10
+            .acc = 9, // 75%
+            .frames = 1,
         },
         // SwordsDance
         .{
             .effect = .AttackUp2,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Cut
         .{
             .effect = .None,
             .bp = 50,
             .type = .Normal,
-            .accuracy = 95,
             .pp = 6, // * 5 = 30
+            .acc = 13, // 95%
+            .frames = 1,
         },
         // Gust
         .{
             .effect = .Gust,
             .bp = 40,
             .type = .Flying,
-            .accuracy = 100,
             .pp = 7, // * 5 = 35
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // WingAttack
         .{
             .effect = .None,
             .bp = 60,
             .type = .Flying,
-            .accuracy = 100,
             .pp = 7, // * 5 = 35
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Whirlwind
         .{
             .effect = .ForceSwitch,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Fly
         .{
             .effect = .Fly,
             .bp = 70,
             .type = .Flying,
-            .accuracy = 95,
             .pp = 3, // * 5 = 15
+            .acc = 13, // 95%
+            .frames = 1,
         },
         // Bind
         .{
             .effect = .Trapping,
             .bp = 15,
             .type = .Normal,
-            .accuracy = 75,
             .pp = 4, // * 5 = 20
+            .acc = 9, // 75%
+            .frames = 1,
         },
         // Slam
         .{
             .effect = .None,
             .bp = 80,
             .type = .Normal,
-            .accuracy = 75,
             .pp = 4, // * 5 = 20
+            .acc = 9, // 75%
+            .frames = 1,
         },
         // VineWhip
         .{
             .effect = .None,
             .bp = 35,
             .type = .Grass,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Stomp
         .{
             .effect = .Stomp,
             .bp = 65,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 3, // * 10 = 30
         },
         // DoubleKick
@@ -469,32 +501,36 @@ pub const Move = enum(u8) {
             .effect = .DoubleHit,
             .bp = 30,
             .type = .Fighting,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // MegaKick
         .{
             .effect = .None,
             .bp = 120,
             .type = .Normal,
-            .accuracy = 75,
             .pp = 1, // * 5 = 5
+            .acc = 9, // 75%
+            .frames = 1,
         },
         // JumpKick
         .{
             .effect = .JumpKick,
             .bp = 70,
             .type = .Fighting,
-            .accuracy = 95,
             .pp = 5, // * 5 = 25
+            .acc = 13, // 95%
+            .frames = 1,
         },
         // RollingKick
         .{
             .effect = .FlinchChance,
             .bp = 60,
             .type = .Fighting,
-            .accuracy = 85,
             .pp = 3, // * 5 = 15
+            .acc = 11, // 85%
+            .frames = 1,
             .chance = 3, // * 10 = 30
         },
         // SandAttack
@@ -502,16 +538,18 @@ pub const Move = enum(u8) {
             .effect = .AccuracyDown1,
             .bp = 0,
             .type = .Ground,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Headbutt
         .{
             .effect = .FlinchChance,
             .bp = 70,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 3, // * 10 = 30
         },
         // HornAttack
@@ -519,40 +557,45 @@ pub const Move = enum(u8) {
             .effect = .None,
             .bp = 65,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 5, // * 5 = 25
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // FuryAttack
         .{
             .effect = .MultiHit,
             .bp = 15,
             .type = .Normal,
-            .accuracy = 85,
             .pp = 4, // * 5 = 20
+            .acc = 11, // 85%
+            .frames = 1,
         },
         // HornDrill
         .{
             .effect = .OHKO,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 30,
             .pp = 1, // * 5 = 5
+            .acc = 0, // 30%
+            .frames = 1,
         },
         // Tackle
         .{
             .effect = .None,
             .bp = 35,
             .type = .Normal,
-            .accuracy = 95,
             .pp = 7, // * 5 = 35
+            .acc = 13, // 95%
+            .frames = 1,
         },
         // BodySlam
         .{
             .effect = .ParalyzeChance,
             .bp = 85,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 3, // * 10 = 30
         },
         // Wrap
@@ -560,48 +603,54 @@ pub const Move = enum(u8) {
             .effect = .Trapping,
             .bp = 15,
             .type = .Normal,
-            .accuracy = 85,
             .pp = 4, // * 5 = 20
+            .acc = 11, // 85%
+            .frames = 1,
         },
         // TakeDown
         .{
             .effect = .RecoilHit,
             .bp = 90,
             .type = .Normal,
-            .accuracy = 85,
             .pp = 4, // * 5 = 20
+            .acc = 11, // 85%
+            .frames = 1,
         },
         // Thrash
         .{
             .effect = .Thrashing,
             .bp = 90,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // DoubleEdge
         .{
             .effect = .RecoilHit,
             .bp = 120,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // TailWhip
         .{
             .effect = .DefenseDown1,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // PoisonSting
         .{
             .effect = .PoisonChance,
             .bp = 15,
             .type = .Poison,
-            .accuracy = 100,
             .pp = 7, // * 5 = 35
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 3, // * 10 = 30
         },
         // Twineedle
@@ -609,8 +658,9 @@ pub const Move = enum(u8) {
             .effect = .Twineedle,
             .bp = 25,
             .type = .Bug,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 2, // * 10 = 20
         },
         // PinMissile
@@ -618,24 +668,27 @@ pub const Move = enum(u8) {
             .effect = .MultiHit,
             .bp = 14,
             .type = .Bug,
-            .accuracy = 85,
             .pp = 4, // * 5 = 20
+            .acc = 11, // 85%
+            .frames = 1,
         },
         // Leer
         .{
             .effect = .DefenseDown1,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Bite
         .{
             .effect = .FlinchChance,
             .bp = 60,
             .type = .Dark,
-            .accuracy = 100,
             .pp = 5, // * 5 = 25
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 3, // * 10 = 30
         },
         // Growl
@@ -643,56 +696,63 @@ pub const Move = enum(u8) {
             .effect = .AttackDown1,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 8, // * 5 = 40
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Roar
         .{
             .effect = .ForceSwitch,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Sing
         .{
             .effect = .Sleep,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 55,
             .pp = 3, // * 5 = 15
+            .acc = 5, // 55%
+            .frames = 1,
         },
         // Supersonic
         .{
             .effect = .Confusion,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 55,
             .pp = 4, // * 5 = 20
+            .acc = 5, // 55%
+            .frames = 1,
         },
         // SonicBoom
         .{
             .effect = .StaticDamage,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 90,
             .pp = 4, // * 5 = 20
+            .acc = 12, // 90%
+            .frames = 1,
         },
         // Disable
         .{
             .effect = .Disable,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 55,
             .pp = 4, // * 5 = 20
+            .acc = 5, // 55%
+            .frames = 1,
         },
         // Acid
         .{
             .effect = .DefenseDownChance,
             .bp = 40,
             .type = .Poison,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // Ember
@@ -700,8 +760,9 @@ pub const Move = enum(u8) {
             .effect = .BurnChance,
             .bp = 40,
             .type = .Fire,
-            .accuracy = 100,
             .pp = 5, // * 5 = 25
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // Flamethrower
@@ -709,8 +770,9 @@ pub const Move = enum(u8) {
             .effect = .BurnChance,
             .bp = 95,
             .type = .Fire,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // Mist
@@ -718,40 +780,45 @@ pub const Move = enum(u8) {
             .effect = .Mist,
             .bp = 0,
             .type = .Ice,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // WaterGun
         .{
             .effect = .None,
             .bp = 40,
             .type = .Water,
-            .accuracy = 100,
             .pp = 5, // * 5 = 25
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // HydroPump
         .{
             .effect = .None,
             .bp = 120,
             .type = .Water,
-            .accuracy = 80,
             .pp = 1, // * 5 = 5
+            .acc = 10, // 80%
+            .frames = 1,
         },
         // Surf
         .{
             .effect = .None,
             .bp = 95,
             .type = .Water,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // IceBeam
         .{
             .effect = .FreezeChance,
             .bp = 95,
             .type = .Ice,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // Blizzard
@@ -759,8 +826,9 @@ pub const Move = enum(u8) {
             .effect = .FreezeChance,
             .bp = 120,
             .type = .Ice,
-            .accuracy = 70,
             .pp = 1, // * 5 = 5
+            .acc = 8, // 70%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // Psybeam
@@ -768,8 +836,9 @@ pub const Move = enum(u8) {
             .effect = .ConfusionChance,
             .bp = 65,
             .type = .Psychic,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // BubbleBeam
@@ -777,8 +846,9 @@ pub const Move = enum(u8) {
             .effect = .SpeedDownChance,
             .bp = 65,
             .type = .Water,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // AuroraBeam
@@ -786,8 +856,9 @@ pub const Move = enum(u8) {
             .effect = .AttackDownChance,
             .bp = 65,
             .type = .Ice,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // HyperBeam
@@ -795,40 +866,45 @@ pub const Move = enum(u8) {
             .effect = .HyperBeam,
             .bp = 150,
             .type = .Normal,
-            .accuracy = 90,
             .pp = 1, // * 5 = 5
+            .acc = 12, // 90%
+            .frames = 1,
         },
         // Peck
         .{
             .effect = .None,
             .bp = 35,
             .type = .Flying,
-            .accuracy = 100,
             .pp = 7, // * 5 = 35
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // DrillPeck
         .{
             .effect = .None,
             .bp = 80,
             .type = .Flying,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Submission
         .{
             .effect = .RecoilHit,
             .bp = 80,
             .type = .Fighting,
-            .accuracy = 80,
             .pp = 5, // * 5 = 25
+            .acc = 10, // 80%
+            .frames = 1,
         },
         // LowKick
         .{
             .effect = .FlinchChance,
             .bp = 50,
             .type = .Fighting,
-            .accuracy = 90,
             .pp = 4, // * 5 = 20
+            .acc = 12, // 90%
+            .frames = 1,
             .chance = 3, // * 10 = 30
         },
         // Counter
@@ -836,136 +912,153 @@ pub const Move = enum(u8) {
             .effect = .Counter,
             .bp = 0,
             .type = .Fighting,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 2,
         },
         // SeismicToss
         .{
             .effect = .LevelDamage,
             .bp = 0,
             .type = .Fighting,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Strength
         .{
             .effect = .None,
             .bp = 80,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Absorb
         .{
             .effect = .DrainHP,
             .bp = 20,
             .type = .Grass,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // MegaDrain
         .{
             .effect = .DrainHP,
             .bp = 40,
             .type = .Grass,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // LeechSeed
         .{
             .effect = .LeechSeed,
             .bp = 0,
             .type = .Grass,
-            .accuracy = 90,
             .pp = 2, // * 5 = 10
+            .acc = 12, // 90%
+            .frames = 1,
         },
         // Growth
         .{
             .effect = .SpAtkUp1,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 8, // * 5 = 40
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // RazorLeaf
         .{
             .effect = .HighCritical,
             .bp = 55,
             .type = .Grass,
-            .accuracy = 95,
             .pp = 5, // * 5 = 25
+            .acc = 13, // 95%
+            .frames = 1,
         },
         // SolarBeam
         .{
             .effect = .Solarbeam,
             .bp = 120,
             .type = .Grass,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // PoisonPowder
         .{
             .effect = .Poison,
             .bp = 0,
             .type = .Poison,
-            .accuracy = 75,
             .pp = 7, // * 5 = 35
+            .acc = 9, // 75%
+            .frames = 1,
         },
         // StunSpore
         .{
             .effect = .Paralyze,
             .bp = 0,
             .type = .Grass,
-            .accuracy = 75,
             .pp = 6, // * 5 = 30
+            .acc = 9, // 75%
+            .frames = 1,
         },
         // SleepPowder
         .{
             .effect = .Sleep,
             .bp = 0,
             .type = .Grass,
-            .accuracy = 75,
             .pp = 3, // * 5 = 15
+            .acc = 9, // 75%
+            .frames = 1,
         },
         // PetalDance
         .{
             .effect = .Thrashing,
             .bp = 70,
             .type = .Grass,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // StringShot
         .{
             .effect = .SpeedDown1,
             .bp = 0,
             .type = .Bug,
-            .accuracy = 95,
             .pp = 8, // * 5 = 40
+            .acc = 13, // 95%
+            .frames = 1,
         },
         // DragonRage
         .{
             .effect = .StaticDamage,
             .bp = 0,
             .type = .Dragon,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // FireSpin
         .{
             .effect = .Trapping,
             .bp = 15,
             .type = .Fire,
-            .accuracy = 70,
             .pp = 3, // * 5 = 15
+            .acc = 8, // 70%
+            .frames = 1,
         },
         // ThunderShock
         .{
             .effect = .ParalyzeChance,
             .bp = 40,
             .type = .Electric,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // Thunderbolt
@@ -973,8 +1066,9 @@ pub const Move = enum(u8) {
             .effect = .ParalyzeChance,
             .bp = 95,
             .type = .Electric,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // ThunderWave
@@ -982,16 +1076,18 @@ pub const Move = enum(u8) {
             .effect = .Paralyze,
             .bp = 0,
             .type = .Electric,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Thunder
         .{
             .effect = .Thunder,
             .bp = 120,
             .type = .Electric,
-            .accuracy = 70,
             .pp = 2, // * 5 = 10
+            .acc = 8, // 70%
+            .frames = 1,
             .chance = 3, // * 10 = 30
         },
         // RockThrow
@@ -999,48 +1095,54 @@ pub const Move = enum(u8) {
             .effect = .None,
             .bp = 50,
             .type = .Rock,
-            .accuracy = 90,
             .pp = 3, // * 5 = 15
+            .acc = 12, // 90%
+            .frames = 1,
         },
         // Earthquake
         .{
             .effect = .Earthquake,
             .bp = 100,
             .type = .Ground,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Fissure
         .{
             .effect = .OHKO,
             .bp = 0,
             .type = .Ground,
-            .accuracy = 30,
             .pp = 1, // * 5 = 5
+            .acc = 0, // 30%
+            .frames = 1,
         },
         // Dig
         .{
             .effect = .Fly,
             .bp = 60,
             .type = .Ground,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Toxic
         .{
             .effect = .Toxic,
             .bp = 0,
             .type = .Poison,
-            .accuracy = 85,
             .pp = 2, // * 5 = 10
+            .acc = 11, // 85%
+            .frames = 1,
         },
         // Confusion
         .{
             .effect = .ConfusionChance,
             .bp = 50,
             .type = .Psychic,
-            .accuracy = 100,
             .pp = 5, // * 5 = 25
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // Psychic
@@ -1048,8 +1150,9 @@ pub const Move = enum(u8) {
             .effect = .SpDefDownChance,
             .bp = 90,
             .type = .Psychic,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // Hypnosis
@@ -1057,224 +1160,252 @@ pub const Move = enum(u8) {
             .effect = .Sleep,
             .bp = 0,
             .type = .Psychic,
-            .accuracy = 60,
             .pp = 4, // * 5 = 20
+            .acc = 6, // 60%
+            .frames = 1,
         },
         // Meditate
         .{
             .effect = .AttackUp1,
             .bp = 0,
             .type = .Psychic,
-            .accuracy = 100,
             .pp = 8, // * 5 = 40
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Agility
         .{
             .effect = .SpeedUp2,
             .bp = 0,
             .type = .Psychic,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // QuickAttack
         .{
             .effect = .Priority,
             .bp = 40,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Rage
         .{
             .effect = .Rage,
             .bp = 20,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Teleport
         .{
             .effect = .Teleport,
             .bp = 0,
             .type = .Psychic,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // NightShade
         .{
             .effect = .LevelDamage,
             .bp = 0,
             .type = .Ghost,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Mimic
         .{
             .effect = .Mimic,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Screech
         .{
             .effect = .DefenseDown2,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 85,
             .pp = 8, // * 5 = 40
+            .acc = 11, // 85%
+            .frames = 1,
         },
         // DoubleTeam
         .{
             .effect = .EvasionUp1,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Recover
         .{
             .effect = .Heal,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Harden
         .{
             .effect = .DefenseUp1,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Minimize
         .{
             .effect = .EvasionUp1,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Smokescreen
         .{
             .effect = .AccuracyDown1,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // ConfuseRay
         .{
             .effect = .Confusion,
             .bp = 0,
             .type = .Ghost,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Withdraw
         .{
             .effect = .DefenseUp1,
             .bp = 0,
             .type = .Water,
-            .accuracy = 100,
             .pp = 8, // * 5 = 40
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // DefenseCurl
         .{
             .effect = .DefenseCurl,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 8, // * 5 = 40
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Barrier
         .{
             .effect = .DefenseUp2,
             .bp = 0,
             .type = .Psychic,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // LightScreen
         .{
             .effect = .LightScreen,
             .bp = 0,
             .type = .Psychic,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Haze
         .{
             .effect = .ResetStats,
             .bp = 0,
             .type = .Ice,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Reflect
         .{
             .effect = .Reflect,
             .bp = 0,
             .type = .Psychic,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // FocusEnergy
         .{
             .effect = .FocusEnergy,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Bide
         .{
             .effect = .Bide,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Metronome
         .{
             .effect = .Metronome,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // MirrorMove
         .{
             .effect = .MirrorMove,
             .bp = 0,
             .type = .Flying,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // SelfDestruct
         .{
             .effect = .Selfdestruct,
             .bp = 200,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 1, // * 5 = 5
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // EggBomb
         .{
             .effect = .None,
             .bp = 100,
             .type = .Normal,
-            .accuracy = 75,
             .pp = 2, // * 5 = 10
+            .acc = 9, // 75%
+            .frames = 1,
         },
         // Lick
         .{
             .effect = .ParalyzeChance,
             .bp = 20,
             .type = .Ghost,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 3, // * 10 = 30
         },
         // Smog
@@ -1282,8 +1413,9 @@ pub const Move = enum(u8) {
             .effect = .PoisonChance,
             .bp = 20,
             .type = .Poison,
-            .accuracy = 70,
             .pp = 4, // * 5 = 20
+            .acc = 8, // 70%
+            .frames = 1,
             .chance = 4, // * 10 = 40
         },
         // Sludge
@@ -1291,8 +1423,9 @@ pub const Move = enum(u8) {
             .effect = .PoisonChance,
             .bp = 65,
             .type = .Poison,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 3, // * 10 = 30
         },
         // BoneClub
@@ -1300,8 +1433,9 @@ pub const Move = enum(u8) {
             .effect = .FlinchChance,
             .bp = 65,
             .type = .Ground,
-            .accuracy = 85,
             .pp = 4, // * 5 = 20
+            .acc = 11, // 85%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // FireBlast
@@ -1309,8 +1443,9 @@ pub const Move = enum(u8) {
             .effect = .BurnChance,
             .bp = 120,
             .type = .Fire,
-            .accuracy = 85,
             .pp = 1, // * 5 = 5
+            .acc = 11, // 85%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // Waterfall
@@ -1318,48 +1453,54 @@ pub const Move = enum(u8) {
             .effect = .None,
             .bp = 80,
             .type = .Water,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Clamp
         .{
             .effect = .Trapping,
             .bp = 35,
             .type = .Water,
-            .accuracy = 75,
             .pp = 2, // * 5 = 10
+            .acc = 9, // 75%
+            .frames = 1,
         },
         // Swift
         .{
             .effect = .AlwaysHit,
             .bp = 60,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // SkullBash
         .{
             .effect = .SkullBash,
             .bp = 100,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // SpikeCannon
         .{
             .effect = .MultiHit,
             .bp = 20,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Constrict
         .{
             .effect = .SpeedDownChance,
             .bp = 10,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 7, // * 5 = 35
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // Amnesia
@@ -1367,104 +1508,117 @@ pub const Move = enum(u8) {
             .effect = .SpDefUp2,
             .bp = 0,
             .type = .Psychic,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Kinesis
         .{
             .effect = .AccuracyDown1,
             .bp = 0,
             .type = .Psychic,
-            .accuracy = 80,
             .pp = 3, // * 5 = 15
+            .acc = 10, // 80%
+            .frames = 1,
         },
         // SoftBoiled
         .{
             .effect = .Heal,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // HighJumpKick
         .{
             .effect = .JumpKick,
             .bp = 85,
             .type = .Fighting,
-            .accuracy = 90,
             .pp = 4, // * 5 = 20
+            .acc = 12, // 90%
+            .frames = 1,
         },
         // Glare
         .{
             .effect = .Paralyze,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 75,
             .pp = 6, // * 5 = 30
+            .acc = 9, // 75%
+            .frames = 1,
         },
         // DreamEater
         .{
             .effect = .DreamEater,
             .bp = 100,
             .type = .Psychic,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // PoisonGas
         .{
             .effect = .Poison,
             .bp = 0,
             .type = .Poison,
-            .accuracy = 55,
             .pp = 8, // * 5 = 40
+            .acc = 5, // 55%
+            .frames = 1,
         },
         // Barrage
         .{
             .effect = .MultiHit,
             .bp = 15,
             .type = .Normal,
-            .accuracy = 85,
             .pp = 4, // * 5 = 20
+            .acc = 11, // 85%
+            .frames = 1,
         },
         // LeechLife
         .{
             .effect = .DrainHP,
             .bp = 20,
             .type = .Bug,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // LovelyKiss
         .{
             .effect = .Sleep,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 75,
             .pp = 2, // * 5 = 10
+            .acc = 9, // 75%
+            .frames = 1,
         },
         // SkyAttack
         .{
             .effect = .SkyAttack,
             .bp = 140,
             .type = .Flying,
-            .accuracy = 90,
             .pp = 1, // * 5 = 5
+            .acc = 12, // 90%
+            .frames = 1,
         },
         // Transform
         .{
             .effect = .Transform,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Bubble
         .{
             .effect = .SpeedDownChance,
             .bp = 20,
             .type = .Water,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // DizzyPunch
@@ -1472,8 +1626,9 @@ pub const Move = enum(u8) {
             .effect = .ConfusionChance,
             .bp = 70,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 2, // * 10 = 20
         },
         // Spore
@@ -1481,88 +1636,99 @@ pub const Move = enum(u8) {
             .effect = .Sleep,
             .bp = 0,
             .type = .Grass,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Flash
         .{
             .effect = .AccuracyDown1,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 70,
             .pp = 4, // * 5 = 20
+            .acc = 8, // 70%
+            .frames = 1,
         },
         // Psywave
         .{
             .effect = .Psywave,
             .bp = 0,
             .type = .Psychic,
-            .accuracy = 80,
             .pp = 3, // * 5 = 15
+            .acc = 10, // 80%
+            .frames = 1,
         },
         // Splash
         .{
             .effect = .Splash,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 8, // * 5 = 40
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // AcidArmor
         .{
             .effect = .DefenseUp2,
             .bp = 0,
             .type = .Poison,
-            .accuracy = 100,
             .pp = 8, // * 5 = 40
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Crabhammer
         .{
             .effect = .HighCritical,
             .bp = 90,
             .type = .Water,
-            .accuracy = 85,
             .pp = 2, // * 5 = 10
+            .acc = 11, // 85%
+            .frames = 1,
         },
         // Explosion
         .{
             .effect = .Selfdestruct,
             .bp = 250,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 1, // * 5 = 5
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // FurySwipes
         .{
             .effect = .MultiHit,
             .bp = 18,
             .type = .Normal,
-            .accuracy = 80,
             .pp = 3, // * 5 = 15
+            .acc = 10, // 80%
+            .frames = 1,
         },
         // Bonemerang
         .{
             .effect = .DoubleHit,
             .bp = 50,
             .type = .Ground,
-            .accuracy = 90,
             .pp = 2, // * 5 = 10
+            .acc = 12, // 90%
+            .frames = 1,
         },
         // Rest
         .{
             .effect = .Heal,
             .bp = 0,
             .type = .Psychic,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // RockSlide
         .{
             .effect = .FlinchChance,
             .bp = 75,
             .type = .Rock,
-            .accuracy = 90,
             .pp = 2, // * 5 = 10
+            .acc = 12, // 90%
+            .frames = 1,
             .chance = 3, // * 10 = 30
         },
         // HyperFang
@@ -1570,8 +1736,9 @@ pub const Move = enum(u8) {
             .effect = .FlinchChance,
             .bp = 80,
             .type = .Normal,
-            .accuracy = 90,
             .pp = 3, // * 5 = 15
+            .acc = 12, // 90%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // Sharpen
@@ -1579,24 +1746,27 @@ pub const Move = enum(u8) {
             .effect = .AttackUp1,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Conversion
         .{
             .effect = .Conversion,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // TriAttack
         .{
             .effect = .TriAttack,
             .bp = 80,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 2, // * 10 = 20
         },
         // SuperFang
@@ -1604,56 +1774,63 @@ pub const Move = enum(u8) {
             .effect = .SuperFang,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 90,
             .pp = 2, // * 5 = 10
+            .acc = 12, // 90%
+            .frames = 1,
         },
         // Slash
         .{
             .effect = .HighCritical,
             .bp = 70,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Substitute
         .{
             .effect = .Substitute,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Struggle
         .{
             .effect = .RecoilHit,
             .bp = 50,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 0, // = 1
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Sketch
         .{
             .effect = .Sketch,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 0, // = 1
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // TripleKick
         .{
             .effect = .TripleKick,
             .bp = 10,
             .type = .Fighting,
-            .accuracy = 90,
             .pp = 2, // * 5 = 10
+            .acc = 12, // 90%
+            .frames = 1,
         },
         // Thief
         .{
             .effect = .Thief,
             .bp = 40,
             .type = .Dark,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 10, // * 10 = 100
         },
         // SpiderWeb
@@ -1661,32 +1838,36 @@ pub const Move = enum(u8) {
             .effect = .MeanLook,
             .bp = 0,
             .type = .Bug,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // MindReader
         .{
             .effect = .LockOn,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 1, // * 5 = 5
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Nightmare
         .{
             .effect = .Nightmare,
             .bp = 0,
             .type = .Ghost,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // FlameWheel
         .{
             .effect = .FlameWheel,
             .bp = 60,
             .type = .Fire,
-            .accuracy = 100,
             .pp = 5, // * 5 = 25
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // Snore
@@ -1694,8 +1875,9 @@ pub const Move = enum(u8) {
             .effect = .Snore,
             .bp = 40,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 3, // * 10 = 30
         },
         // Curse
@@ -1703,64 +1885,72 @@ pub const Move = enum(u8) {
             .effect = .Curse,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Flail
         .{
             .effect = .Reversal,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Conversion2
         .{
             .effect = .Conversion2,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Aeroblast
         .{
             .effect = .HighCritical,
             .bp = 100,
             .type = .Flying,
-            .accuracy = 95,
             .pp = 1, // * 5 = 5
+            .acc = 13, // 95%
+            .frames = 1,
         },
         // CottonSpore
         .{
             .effect = .SpeedDown2,
             .bp = 0,
             .type = .Grass,
-            .accuracy = 85,
             .pp = 8, // * 5 = 40
+            .acc = 11, // 85%
+            .frames = 1,
         },
         // Reversal
         .{
             .effect = .Reversal,
             .bp = 0,
             .type = .Fighting,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Spite
         .{
             .effect = .Spite,
             .bp = 0,
             .type = .Ghost,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // PowderSnow
         .{
             .effect = .FreezeChance,
             .bp = 40,
             .type = .Ice,
-            .accuracy = 100,
             .pp = 5, // * 5 = 25
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // Protect
@@ -1768,56 +1958,63 @@ pub const Move = enum(u8) {
             .effect = .Protect,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // MachPunch
         .{
             .effect = .Priority,
             .bp = 40,
             .type = .Fighting,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // ScaryFace
         .{
             .effect = .SpeedDown2,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 90,
             .pp = 2, // * 5 = 10
+            .acc = 12, // 90%
+            .frames = 1,
         },
         // FeintAttack
         .{
             .effect = .AlwaysHit,
             .bp = 60,
             .type = .Dark,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // SweetKiss
         .{
             .effect = .Confusion,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 75,
             .pp = 2, // * 5 = 10
+            .acc = 9, // 75%
+            .frames = 1,
         },
         // BellyDrum
         .{
             .effect = .BellyDrum,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // SludgeBomb
         .{
             .effect = .PoisonChance,
             .bp = 90,
             .type = .Poison,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 3, // * 10 = 30
         },
         // MudSlap
@@ -1825,8 +2022,9 @@ pub const Move = enum(u8) {
             .effect = .AccuracyDownChance,
             .bp = 20,
             .type = .Ground,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 10, // * 10 = 100
         },
         // Octazooka
@@ -1834,8 +2032,9 @@ pub const Move = enum(u8) {
             .effect = .AccuracyDownChance,
             .bp = 65,
             .type = .Water,
-            .accuracy = 85,
             .pp = 2, // * 5 = 10
+            .acc = 11, // 85%
+            .frames = 1,
             .chance = 5, // * 10 = 50
         },
         // Spikes
@@ -1843,16 +2042,18 @@ pub const Move = enum(u8) {
             .effect = .Spikes,
             .bp = 0,
             .type = .Ground,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // ZapCannon
         .{
             .effect = .ParalyzeChance,
             .bp = 100,
             .type = .Electric,
-            .accuracy = 50,
             .pp = 1, // * 5 = 5
+            .acc = 4, // 50%
+            .frames = 1,
             .chance = 10, // * 10 = 100
         },
         // Foresight
@@ -1860,32 +2061,36 @@ pub const Move = enum(u8) {
             .effect = .Foresight,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 8, // * 5 = 40
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // DestinyBond
         .{
             .effect = .DestinyBond,
             .bp = 0,
             .type = .Ghost,
-            .accuracy = 100,
             .pp = 1, // * 5 = 5
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // PerishSong
         .{
             .effect = .PerishSong,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 1, // * 5 = 5
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // IcyWind
         .{
             .effect = .SpeedDownChance,
             .bp = 55,
             .type = .Ice,
-            .accuracy = 95,
             .pp = 3, // * 5 = 15
+            .acc = 13, // 95%
+            .frames = 1,
             .chance = 10, // * 10 = 100
         },
         // Detect
@@ -1893,104 +2098,117 @@ pub const Move = enum(u8) {
             .effect = .Protect,
             .bp = 0,
             .type = .Fighting,
-            .accuracy = 100,
             .pp = 1, // * 5 = 5
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // BoneRush
         .{
             .effect = .MultiHit,
             .bp = 25,
             .type = .Ground,
-            .accuracy = 80,
             .pp = 2, // * 5 = 10
+            .acc = 10, // 80%
+            .frames = 1,
         },
         // LockOn
         .{
             .effect = .LockOn,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 1, // * 5 = 5
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Outrage
         .{
             .effect = .Thrashing,
             .bp = 90,
             .type = .Dragon,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Sandstorm
         .{
             .effect = .Sandstorm,
             .bp = 0,
             .type = .Rock,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // GigaDrain
         .{
             .effect = .DrainHP,
             .bp = 60,
             .type = .Grass,
-            .accuracy = 100,
             .pp = 1, // * 5 = 5
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Endure
         .{
             .effect = .Endure,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Charm
         .{
             .effect = .AttackDown2,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Rollout
         .{
             .effect = .Rollout,
             .bp = 30,
             .type = .Rock,
-            .accuracy = 90,
             .pp = 4, // * 5 = 20
+            .acc = 12, // 90%
+            .frames = 1,
         },
         // FalseSwipe
         .{
             .effect = .FalseSwipe,
             .bp = 40,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 8, // * 5 = 40
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Swagger
         .{
             .effect = .Swagger,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 90,
             .pp = 3, // * 5 = 15
+            .acc = 12, // 90%
+            .frames = 1,
         },
         // MilkDrink
         .{
             .effect = .Heal,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Spark
         .{
             .effect = .ParalyzeChance,
             .bp = 65,
             .type = .Electric,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 3, // * 10 = 30
         },
         // FuryCutter
@@ -1998,16 +2216,18 @@ pub const Move = enum(u8) {
             .effect = .FuryCutter,
             .bp = 10,
             .type = .Bug,
-            .accuracy = 95,
             .pp = 4, // * 5 = 20
+            .acc = 13, // 95%
+            .frames = 1,
         },
         // SteelWing
         .{
             .effect = .DefenseUpChance,
             .bp = 70,
             .type = .Steel,
-            .accuracy = 90,
             .pp = 5, // * 5 = 25
+            .acc = 12, // 90%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // MeanLook
@@ -2015,80 +2235,90 @@ pub const Move = enum(u8) {
             .effect = .MeanLook,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 1, // * 5 = 5
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Attract
         .{
             .effect = .Attract,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // SleepTalk
         .{
             .effect = .SleepTalk,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // HealBell
         .{
             .effect = .HealBell,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 1, // * 5 = 5
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Return
         .{
             .effect = .Return,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Present
         .{
             .effect = .Present,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 90,
             .pp = 3, // * 5 = 15
+            .acc = 12, // 90%
+            .frames = 1,
         },
         // Frustration
         .{
             .effect = .Frustration,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Safeguard
         .{
             .effect = .Safeguard,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 5, // * 5 = 25
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // PainSplit
         .{
             .effect = .PainSplit,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // SacredFire
         .{
             .effect = .SacredFire,
             .bp = 100,
             .type = .Fire,
-            .accuracy = 95,
             .pp = 1, // * 5 = 5
+            .acc = 13, // 95%
+            .frames = 1,
             .chance = 5, // * 10 = 50
         },
         // Magnitude
@@ -2096,16 +2326,18 @@ pub const Move = enum(u8) {
             .effect = .Magnitude,
             .bp = 0,
             .type = .Ground,
-            .accuracy = 100,
             .pp = 6, // * 5 = 30
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // DynamicPunch
         .{
             .effect = .ConfusionChance,
             .bp = 100,
             .type = .Fighting,
-            .accuracy = 50,
             .pp = 1, // * 5 = 5
+            .acc = 4, // 50%
+            .frames = 1,
             .chance = 10, // * 10 = 100
         },
         // Megahorn
@@ -2113,16 +2345,18 @@ pub const Move = enum(u8) {
             .effect = .None,
             .bp = 120,
             .type = .Bug,
-            .accuracy = 85,
             .pp = 2, // * 5 = 10
+            .acc = 11, // 85%
+            .frames = 1,
         },
         // DragonBreath
         .{
             .effect = .ParalyzeChance,
             .bp = 60,
             .type = .Dragon,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 3, // * 10 = 30
         },
         // BatonPass
@@ -2130,48 +2364,54 @@ pub const Move = enum(u8) {
             .effect = .BatonPass,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 8, // * 5 = 40
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Encore
         .{
             .effect = .Encore,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 1, // * 5 = 5
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // Pursuit
         .{
             .effect = .Pursuit,
             .bp = 40,
             .type = .Dark,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 2,
         },
         // RapidSpin
         .{
             .effect = .RapidSpin,
             .bp = 20,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 8, // * 5 = 40
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // SweetScent
         .{
             .effect = .EvasionDown1,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // IronTail
         .{
             .effect = .DefenseDownChance,
             .bp = 100,
             .type = .Steel,
-            .accuracy = 75,
             .pp = 3, // * 5 = 15
+            .acc = 9, // 75%
+            .frames = 1,
             .chance = 3, // * 10 = 30
         },
         // MetalClaw
@@ -2179,8 +2419,9 @@ pub const Move = enum(u8) {
             .effect = .AttackDownChance,
             .bp = 50,
             .type = .Steel,
-            .accuracy = 95,
             .pp = 7, // * 5 = 35
+            .acc = 13, // 95%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // VitalThrow
@@ -2188,56 +2429,63 @@ pub const Move = enum(u8) {
             .effect = .AlwaysHit,
             .bp = 70,
             .type = .Fighting,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // MorningSun
         .{
             .effect = .MorningSun,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 1, // * 5 = 5
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Synthesis
         .{
             .effect = .Synthesis,
             .bp = 0,
             .type = .Grass,
-            .accuracy = 100,
             .pp = 1, // * 5 = 5
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Moonlight
         .{
             .effect = .Moonlight,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 1, // * 5 = 5
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // HiddenPower
         .{
             .effect = .HiddenPower,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // CrossChop
         .{
             .effect = .HighCritical,
             .bp = 100,
             .type = .Fighting,
-            .accuracy = 80,
             .pp = 1, // * 5 = 5
+            .acc = 10, // 80%
+            .frames = 1,
         },
         // Twister
         .{
             .effect = .Twister,
             .bp = 40,
             .type = .Dragon,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 2, // * 10 = 20
         },
         // RainDance
@@ -2245,24 +2493,27 @@ pub const Move = enum(u8) {
             .effect = .RainDance,
             .bp = 0,
             .type = .Water,
-            .accuracy = 100,
             .pp = 1, // * 5 = 5
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // SunnyDay
         .{
             .effect = .SunnyDay,
             .bp = 0,
             .type = .Fire,
-            .accuracy = 100,
             .pp = 1, // * 5 = 5
+            .acc = 14, // 100%
+            .frames = 0,
         },
         // Crunch
         .{
             .effect = .SpDefDownChance,
             .bp = 80,
             .type = .Dark,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 2, // * 10 = 20
         },
         // MirrorCoat
@@ -2270,32 +2521,36 @@ pub const Move = enum(u8) {
             .effect = .MirrorCoat,
             .bp = 0,
             .type = .Psychic,
-            .accuracy = 100,
             .pp = 4, // * 5 = 20
+            .acc = 14, // 100%
+            .frames = 2,
         },
         // PsychUp
         .{
             .effect = .PsychUp,
             .bp = 0,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // ExtremeSpeed
         .{
             .effect = .Priority,
             .bp = 80,
             .type = .Normal,
-            .accuracy = 100,
             .pp = 1, // * 5 = 5
+            .acc = 14, // 100%
+            .frames = 1,
         },
         // AncientPower
         .{
             .effect = .BoostAllChance,
             .bp = 60,
             .type = .Rock,
-            .accuracy = 100,
             .pp = 1, // * 5 = 5
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 1, // * 10 = 10
         },
         // ShadowBall
@@ -2303,8 +2558,9 @@ pub const Move = enum(u8) {
             .effect = .SpDefDownChance,
             .bp = 80,
             .type = .Ghost,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 2, // * 10 = 20
         },
         // FutureSight
@@ -2312,16 +2568,18 @@ pub const Move = enum(u8) {
             .effect = .FutureSight,
             .bp = 80,
             .type = .Psychic,
-            .accuracy = 90,
             .pp = 3, // * 5 = 15
+            .acc = 12, // 90%
+            .frames = 1,
         },
         // RockSmash
         .{
             .effect = .DefenseDownChance,
             .bp = 20,
             .type = .Fighting,
-            .accuracy = 100,
             .pp = 3, // * 5 = 15
+            .acc = 14, // 100%
+            .frames = 1,
             .chance = 5, // * 10 = 50
         },
         // Whirlpool
@@ -2329,271 +2587,19 @@ pub const Move = enum(u8) {
             .effect = .Trapping,
             .bp = 15,
             .type = .Water,
-            .accuracy = 70,
             .pp = 3, // * 5 = 15
+            .acc = 8, // 70%
+            .frames = 1,
         },
         // BeatUp
         .{
             .effect = .BeatUp,
             .bp = 10,
             .type = .Dark,
-            .accuracy = 100,
             .pp = 2, // * 5 = 10
+            .acc = 14, // 100%
+            .frames = 1,
         },
-    };
-
-    const FRAMES = [_]u8{
-        1, // Pound
-        1, // KarateChop
-        1, // DoubleSlap
-        1, // CometPunch
-        1, // MegaPunch
-        1, // PayDay
-        1, // FirePunch
-        1, // IcePunch
-        1, // ThunderPunch
-        1, // Scratch
-        1, // ViseGrip
-        1, // Guillotine
-        1, // RazorWind
-        0, // SwordsDance
-        1, // Cut
-        1, // Gust
-        1, // WingAttack
-        1, // Whirlwind
-        1, // Fly
-        1, // Bind
-        1, // Slam
-        1, // VineWhip
-        1, // Stomp
-        1, // DoubleKick
-        1, // MegaKick
-        1, // JumpKick
-        1, // RollingKick
-        1, // SandAttack
-        1, // Headbutt
-        1, // HornAttack
-        1, // FuryAttack
-        1, // HornDrill
-        1, // Tackle
-        1, // BodySlam
-        1, // Wrap
-        1, // TakeDown
-        1, // Thrash
-        1, // DoubleEdge
-        1, // TailWhip
-        1, // PoisonSting
-        1, // Twineedle
-        1, // PinMissile
-        1, // Leer
-        1, // Bite
-        1, // Growl
-        1, // Roar
-        1, // Sing
-        1, // Supersonic
-        1, // SonicBoom
-        1, // Disable
-        1, // Acid
-        1, // Ember
-        1, // Flamethrower
-        0, // Mist
-        1, // WaterGun
-        1, // HydroPump
-        1, // Surf
-        1, // IceBeam
-        1, // Blizzard
-        1, // Psybeam
-        1, // BubbleBeam
-        1, // AuroraBeam
-        1, // HyperBeam
-        1, // Peck
-        1, // DrillPeck
-        1, // Submission
-        1, // LowKick
-        2, // Counter
-        1, // SeismicToss
-        1, // Strength
-        1, // Absorb
-        1, // MegaDrain
-        1, // LeechSeed
-        0, // Growth
-        1, // RazorLeaf
-        1, // SolarBeam
-        1, // PoisonPowder
-        1, // StunSpore
-        1, // SleepPowder
-        1, // PetalDance
-        1, // StringShot
-        1, // DragonRage
-        1, // FireSpin
-        1, // ThunderShock
-        1, // Thunderbolt
-        1, // ThunderWave
-        1, // Thunder
-        1, // RockThrow
-        1, // Earthquake
-        1, // Fissure
-        1, // Dig
-        1, // Toxic
-        1, // Confusion
-        1, // Psychic
-        1, // Hypnosis
-        0, // Meditate
-        0, // Agility
-        1, // QuickAttack
-        1, // Rage
-        0, // Teleport
-        1, // NightShade
-        1, // Mimic
-        1, // Screech
-        0, // DoubleTeam
-        0, // Recover
-        0, // Harden
-        0, // Minimize
-        1, // Smokescreen
-        1, // ConfuseRay
-        0, // Withdraw
-        0, // DefenseCurl
-        0, // Barrier
-        0, // LightScreen
-        0, // Haze
-        0, // Reflect
-        0, // FocusEnergy
-        0, // Bide
-        0, // Metronome
-        0, // MirrorMove
-        1, // SelfDestruct
-        1, // EggBomb
-        1, // Lick
-        1, // Smog
-        1, // Sludge
-        1, // BoneClub
-        1, // FireBlast
-        1, // Waterfall
-        1, // Clamp
-        1, // Swift
-        1, // SkullBash
-        1, // SpikeCannon
-        1, // Constrict
-        0, // Amnesia
-        1, // Kinesis
-        0, // SoftBoiled
-        1, // HighJumpKick
-        1, // Glare
-        1, // DreamEater
-        1, // PoisonGas
-        1, // Barrage
-        1, // LeechLife
-        1, // LovelyKiss
-        1, // SkyAttack
-        1, // Transform
-        1, // Bubble
-        1, // DizzyPunch
-        1, // Spore
-        1, // Flash
-        1, // Psywave
-        0, // Splash
-        0, // AcidArmor
-        1, // Crabhammer
-        1, // Explosion
-        1, // FurySwipes
-        1, // Bonemerang
-        0, // Rest
-        1, // RockSlide
-        1, // HyperFang
-        0, // Sharpen
-        0, // Conversion
-        1, // TriAttack
-        1, // SuperFang
-        1, // Slash
-        0, // Substitute
-        1, // Struggle
-        1, // Sketch
-        1, // TripleKick
-        1, // Thief
-        1, // SpiderWeb
-        1, // MindReader
-        1, // Nightmare
-        1, // FlameWheel
-        1, // Snore
-        1, // Curse
-        1, // Flail
-        1, // Conversion2
-        1, // Aeroblast
-        1, // CottonSpore
-        1, // Reversal
-        1, // Spite
-        1, // PowderSnow
-        0, // Protect
-        1, // MachPunch
-        1, // ScaryFace
-        1, // FeintAttack
-        1, // SweetKiss
-        0, // BellyDrum
-        1, // SludgeBomb
-        1, // MudSlap
-        1, // Octazooka
-        1, // Spikes
-        1, // ZapCannon
-        1, // Foresight
-        0, // DestinyBond
-        0, // PerishSong
-        1, // IcyWind
-        0, // Detect
-        1, // BoneRush
-        1, // LockOn
-        1, // Outrage
-        0, // Sandstorm
-        1, // GigaDrain
-        0, // Endure
-        1, // Charm
-        1, // Rollout
-        1, // FalseSwipe
-        1, // Swagger
-        0, // MilkDrink
-        1, // Spark
-        1, // FuryCutter
-        1, // SteelWing
-        1, // MeanLook
-        1, // Attract
-        0, // SleepTalk
-        0, // HealBell
-        1, // Return
-        1, // Present
-        1, // Frustration
-        0, // Safeguard
-        1, // PainSplit
-        1, // SacredFire
-        1, // Magnitude
-        1, // DynamicPunch
-        1, // Megahorn
-        1, // DragonBreath
-        0, // BatonPass
-        1, // Encore
-        2, // Pursuit
-        1, // RapidSpin
-        1, // SweetScent
-        1, // IronTail
-        1, // MetalClaw
-        1, // VitalThrow
-        0, // MorningSun
-        0, // Synthesis
-        0, // Moonlight
-        1, // HiddenPower
-        1, // CrossChop
-        1, // Twister
-        0, // RainDance
-        0, // SunnyDay
-        1, // Crunch
-        2, // MirrorCoat
-        1, // PsychUp
-        1, // ExtremeSpeed
-        1, // AncientPower
-        1, // ShadowBall
-        1, // FutureSight
-        1, // RockSmash
-        1, // Whirlpool
-        1, // BeatUp,
     };
 
     pub const Effect = enum(u8) {
@@ -2746,11 +2752,6 @@ pub const Move = enum(u8) {
     pub inline fn get(id: Move) Data {
         assert(id != .None);
         return DATA[@enumToInt(id) - 1];
-    }
-
-    pub inline fn frames(id: Move) u8 {
-        assert(id != .None);
-        return FRAMES[@enumToInt(id) - 1];
     }
 
     // @test-only

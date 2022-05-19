@@ -146,7 +146,7 @@ fn selectMove(battle: anytype, player: Player, choice: Choice, foe_choice: Choic
         }
 
         // SHOWDOWN: getRandomTarget arbitrarily advances the RNG
-        if (showdown) battle.rng.advance(side.last_selected_move.frames());
+        if (showdown) battle.rng.advance(Move.get(side.last_selected_move).frames);
 
         return false;
     };
@@ -473,11 +473,10 @@ fn canMove(
 
     // SHOWDOWN: Metronome / Mirror Move call getRandomTarget if the move they're using targets
     if (showdown and special) {
-        battle.rng.advance(if (side.last_selected_move.frames() > 0) 1 else 0);
+        battle.rng.advance(@boolToInt(move.targets()));
     }
 
-    // FIXME: get target better
-    const target = if (side.last_selected_move.frames() > 0) player.foe() else player;
+    const target = if (move.targets()) player.foe() else player;
     try log.move(player_ident, side.last_selected_move, battle.active(target), from);
 
     if (move.effect.onBegin()) {

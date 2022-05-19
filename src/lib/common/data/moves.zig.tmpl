@@ -17,10 +17,6 @@ pub const Move = enum({{{ Move.type }}}) {
     const DATA = [_]Data{
         {{{ Move.data }}},
     };
-
-    const FRAMES = [_]u8{
-        {{{ Move.frames }}},
-    };
 {{{ Move.Effect }}}{{{ Move.ppData }}}
     comptime {
         assert(@sizeOf(Move) == {{{ Move.size }}});
@@ -30,11 +26,6 @@ pub const Move = enum({{{ Move.type }}}) {
     pub inline fn get(id: Move) Data {
         assert(id != .None);
         return DATA[@enumToInt(id) - 1];
-    }
-
-    pub inline fn frames(id: Move) u8 {
-        assert(id != .None);
-        return FRAMES[@enumToInt(id) - 1];
     }
 
     // @test-only

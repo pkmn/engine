@@ -352,7 +352,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     });
 
     const MOVES: string[] = [];
-    const FRAMES: string[] = [];
     const PP: string[] = [];
     const EFFECTS: { [key: string]: Set<string>} = {
       onBeginMove: new Set(),
@@ -366,30 +365,34 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       if (effect !== 'None') EFFECTS[effectToGroup(effect)].add(effect);
       const move = gen.moves.get(name)!;
       const acc = move.accuracy === true ? 100 : move.accuracy;
+      const frames = ADVANCES[move.target] * (('beforeTurnCallback' in move) ? 2 : 1);
       MOVES.push(`// ${name}\n` +
         '        .{\n' +
         `            .effect = .${effect},\n` +
         `            .bp = ${move.basePower},\n` +
         `            .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
         `            .acc = ${acc / 5 - 6}, // ${acc}%\n` +
+        `            .frames = ${frames},\n` +
         '        }');
       PP.push(`${move.pp}, // ${name}`);
-      let frames = ADVANCES[move.target];
-      if ('beforeTurnCallback' in move) frames += frames;
-      FRAMES.push(`${frames}, // ${name}`);
     }
     let Data = `pub const Data = packed struct {
         effect: Effect,
         bp: u8,
         acc: u4, // accuracy / 5 - 6
         type: Type,
+        frames: u8,
 
         comptime {
-            assert(@sizeOf(Data) == 3);
+            assert(@sizeOf(Data) == 4);
         }
 
         pub inline fn accuracy(self: Data) u8 {
             return (@as(u8, self.acc) + 6) * 5;
+        }
+
+        pub inline fn targets(self: Data) bool {
+            return self.frames > 0;
         }
     };`;
 
@@ -475,8 +478,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         size: 1,
         Data,
         data: MOVES.join(',\n        '),
-        dataSize: MOVES.length * 3,
-        frames: FRAMES.join('\n        '),
+        dataSize: MOVES.length * 4,
         Effect,
         ppData,
         ppFn,
@@ -668,7 +670,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       return `${nameToEnum(move.name)} ${constToEffectEnum(effect)}`;
     });
     const MOVES: string[] = [];
-    const FRAMES: string[] = [];
     const EFFECTS = new Set<string>();
     for (const m of moves) {
       const [name, effect] = m.split(' ');
@@ -678,29 +679,38 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       const chance = move.secondary?.chance
         ? `${move.secondary.chance / 10}, // * 10 = ${move.secondary.chance}`
         : '';
+      const acc = move.accuracy === true ? 100 : move.accuracy;
+      const frames = ADVANCES[move.target] * (('beforeTurnCallback' in move) ? 2 : 1);
       MOVES.push(`// ${name}\n` +
         '        .{\n' +
         `            .effect = .${effect},\n` +
         `            .bp = ${move.basePower},\n` +
         `            .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
-        `            .accuracy = ${move.accuracy === true ? '100' : move.accuracy},\n` +
         `            .pp = ${pp}\n` +
+        `            .acc = ${acc / 5 - 6}, // ${acc}%\n` +
+        `            .frames = ${frames},\n` +
         (chance ? `            .chance = ${chance}\n` : '') +
         '        }');
-      let frames = ADVANCES[move.target];
-      if ('beforeTurnCallback' in move) frames += frames;
-      FRAMES.push(`${frames}, // ${name}`);
     }
     let Data = `pub const Data = packed struct {
         effect: Effect,
         bp: u8,
-        accuracy: u8,
         type: Type,
         pp: u4, // pp / 5
+        acc: u4, // accuracy / 5 - 6
+        frames: u4,
         chance: u4 = 0, // chance / 10
 
         comptime {
             assert(@sizeOf(Data) == 5);
+        }
+
+        pub inline fn accuracy(self: Data) u8 {
+            return (@as(u8, self.acc) + 6) * 5;
+        }
+
+        pub inline fn targets(self: Data) bool {
+            return self.frames > 0;
         }
     };`;
 
@@ -724,7 +734,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         Data,
         data: MOVES.join(',\n        '),
         dataSize: MOVES.length * 5,
-        frames: FRAMES.join('\n        '),
         Effect,
         ppFn,
       },

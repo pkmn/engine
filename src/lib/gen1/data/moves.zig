@@ -184,13 +184,18 @@ pub const Move = enum(u8) {
         bp: u8,
         acc: u4, // accuracy / 5 - 6
         type: Type,
+        frames: u8,
 
         comptime {
-            assert(@sizeOf(Data) == 3);
+            assert(@sizeOf(Data) == 4);
         }
 
         pub inline fn accuracy(self: Data) u8 {
             return (@as(u8, self.acc) + 6) * 5;
+        }
+
+        pub inline fn targets(self: Data) bool {
+            return self.frames > 0;
         }
     };
 
@@ -201,6 +206,7 @@ pub const Move = enum(u8) {
             .bp = 40,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // KarateChop
         .{
@@ -208,6 +214,7 @@ pub const Move = enum(u8) {
             .bp = 50,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // DoubleSlap
         .{
@@ -215,6 +222,7 @@ pub const Move = enum(u8) {
             .bp = 15,
             .type = .Normal,
             .acc = 11, // 85%
+            .frames = 1,
         },
         // CometPunch
         .{
@@ -222,6 +230,7 @@ pub const Move = enum(u8) {
             .bp = 18,
             .type = .Normal,
             .acc = 11, // 85%
+            .frames = 1,
         },
         // MegaPunch
         .{
@@ -229,6 +238,7 @@ pub const Move = enum(u8) {
             .bp = 80,
             .type = .Normal,
             .acc = 11, // 85%
+            .frames = 1,
         },
         // PayDay
         .{
@@ -236,6 +246,7 @@ pub const Move = enum(u8) {
             .bp = 40,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // FirePunch
         .{
@@ -243,6 +254,7 @@ pub const Move = enum(u8) {
             .bp = 75,
             .type = .Fire,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // IcePunch
         .{
@@ -250,6 +262,7 @@ pub const Move = enum(u8) {
             .bp = 75,
             .type = .Ice,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // ThunderPunch
         .{
@@ -257,6 +270,7 @@ pub const Move = enum(u8) {
             .bp = 75,
             .type = .Electric,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Scratch
         .{
@@ -264,6 +278,7 @@ pub const Move = enum(u8) {
             .bp = 40,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // ViseGrip
         .{
@@ -271,6 +286,7 @@ pub const Move = enum(u8) {
             .bp = 55,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Guillotine
         .{
@@ -278,6 +294,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 0, // 30%
+            .frames = 1,
         },
         // RazorWind
         .{
@@ -285,6 +302,7 @@ pub const Move = enum(u8) {
             .bp = 80,
             .type = .Normal,
             .acc = 9, // 75%
+            .frames = 1,
         },
         // SwordsDance
         .{
@@ -292,6 +310,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // Cut
         .{
@@ -299,6 +318,7 @@ pub const Move = enum(u8) {
             .bp = 50,
             .type = .Normal,
             .acc = 13, // 95%
+            .frames = 1,
         },
         // Gust
         .{
@@ -306,6 +326,7 @@ pub const Move = enum(u8) {
             .bp = 40,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // WingAttack
         .{
@@ -313,6 +334,7 @@ pub const Move = enum(u8) {
             .bp = 35,
             .type = .Flying,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Whirlwind
         .{
@@ -320,6 +342,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 11, // 85%
+            .frames = 1,
         },
         // Fly
         .{
@@ -327,6 +350,7 @@ pub const Move = enum(u8) {
             .bp = 70,
             .type = .Flying,
             .acc = 13, // 95%
+            .frames = 1,
         },
         // Bind
         .{
@@ -334,6 +358,7 @@ pub const Move = enum(u8) {
             .bp = 15,
             .type = .Normal,
             .acc = 9, // 75%
+            .frames = 1,
         },
         // Slam
         .{
@@ -341,6 +366,7 @@ pub const Move = enum(u8) {
             .bp = 80,
             .type = .Normal,
             .acc = 9, // 75%
+            .frames = 1,
         },
         // VineWhip
         .{
@@ -348,6 +374,7 @@ pub const Move = enum(u8) {
             .bp = 35,
             .type = .Grass,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Stomp
         .{
@@ -355,6 +382,7 @@ pub const Move = enum(u8) {
             .bp = 65,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // DoubleKick
         .{
@@ -362,6 +390,7 @@ pub const Move = enum(u8) {
             .bp = 30,
             .type = .Fighting,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // MegaKick
         .{
@@ -369,6 +398,7 @@ pub const Move = enum(u8) {
             .bp = 120,
             .type = .Normal,
             .acc = 9, // 75%
+            .frames = 1,
         },
         // JumpKick
         .{
@@ -376,6 +406,7 @@ pub const Move = enum(u8) {
             .bp = 70,
             .type = .Fighting,
             .acc = 13, // 95%
+            .frames = 1,
         },
         // RollingKick
         .{
@@ -383,6 +414,7 @@ pub const Move = enum(u8) {
             .bp = 60,
             .type = .Fighting,
             .acc = 11, // 85%
+            .frames = 1,
         },
         // SandAttack
         .{
@@ -390,6 +422,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Headbutt
         .{
@@ -397,6 +430,7 @@ pub const Move = enum(u8) {
             .bp = 70,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // HornAttack
         .{
@@ -404,6 +438,7 @@ pub const Move = enum(u8) {
             .bp = 65,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // FuryAttack
         .{
@@ -411,6 +446,7 @@ pub const Move = enum(u8) {
             .bp = 15,
             .type = .Normal,
             .acc = 11, // 85%
+            .frames = 1,
         },
         // HornDrill
         .{
@@ -418,6 +454,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 0, // 30%
+            .frames = 1,
         },
         // Tackle
         .{
@@ -425,6 +462,7 @@ pub const Move = enum(u8) {
             .bp = 35,
             .type = .Normal,
             .acc = 13, // 95%
+            .frames = 1,
         },
         // BodySlam
         .{
@@ -432,6 +470,7 @@ pub const Move = enum(u8) {
             .bp = 85,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Wrap
         .{
@@ -439,6 +478,7 @@ pub const Move = enum(u8) {
             .bp = 15,
             .type = .Normal,
             .acc = 11, // 85%
+            .frames = 1,
         },
         // TakeDown
         .{
@@ -446,6 +486,7 @@ pub const Move = enum(u8) {
             .bp = 90,
             .type = .Normal,
             .acc = 11, // 85%
+            .frames = 1,
         },
         // Thrash
         .{
@@ -453,6 +494,7 @@ pub const Move = enum(u8) {
             .bp = 90,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // DoubleEdge
         .{
@@ -460,6 +502,7 @@ pub const Move = enum(u8) {
             .bp = 100,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // TailWhip
         .{
@@ -467,6 +510,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // PoisonSting
         .{
@@ -474,6 +518,7 @@ pub const Move = enum(u8) {
             .bp = 15,
             .type = .Poison,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Twineedle
         .{
@@ -481,6 +526,7 @@ pub const Move = enum(u8) {
             .bp = 25,
             .type = .Bug,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // PinMissile
         .{
@@ -488,6 +534,7 @@ pub const Move = enum(u8) {
             .bp = 14,
             .type = .Bug,
             .acc = 11, // 85%
+            .frames = 1,
         },
         // Leer
         .{
@@ -495,6 +542,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Bite
         .{
@@ -502,6 +550,7 @@ pub const Move = enum(u8) {
             .bp = 60,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Growl
         .{
@@ -509,6 +558,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Roar
         .{
@@ -516,6 +566,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Sing
         .{
@@ -523,6 +574,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 5, // 55%
+            .frames = 1,
         },
         // Supersonic
         .{
@@ -530,6 +582,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 5, // 55%
+            .frames = 1,
         },
         // SonicBoom
         .{
@@ -537,6 +590,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 12, // 90%
+            .frames = 1,
         },
         // Disable
         .{
@@ -544,6 +598,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 5, // 55%
+            .frames = 1,
         },
         // Acid
         .{
@@ -551,6 +606,7 @@ pub const Move = enum(u8) {
             .bp = 40,
             .type = .Poison,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Ember
         .{
@@ -558,6 +614,7 @@ pub const Move = enum(u8) {
             .bp = 40,
             .type = .Fire,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Flamethrower
         .{
@@ -565,6 +622,7 @@ pub const Move = enum(u8) {
             .bp = 95,
             .type = .Fire,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Mist
         .{
@@ -572,6 +630,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Ice,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // WaterGun
         .{
@@ -579,6 +638,7 @@ pub const Move = enum(u8) {
             .bp = 40,
             .type = .Water,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // HydroPump
         .{
@@ -586,6 +646,7 @@ pub const Move = enum(u8) {
             .bp = 120,
             .type = .Water,
             .acc = 10, // 80%
+            .frames = 1,
         },
         // Surf
         .{
@@ -593,6 +654,7 @@ pub const Move = enum(u8) {
             .bp = 95,
             .type = .Water,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // IceBeam
         .{
@@ -600,6 +662,7 @@ pub const Move = enum(u8) {
             .bp = 95,
             .type = .Ice,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Blizzard
         .{
@@ -607,6 +670,7 @@ pub const Move = enum(u8) {
             .bp = 120,
             .type = .Ice,
             .acc = 12, // 90%
+            .frames = 1,
         },
         // Psybeam
         .{
@@ -614,6 +678,7 @@ pub const Move = enum(u8) {
             .bp = 65,
             .type = .Psychic,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // BubbleBeam
         .{
@@ -621,6 +686,7 @@ pub const Move = enum(u8) {
             .bp = 65,
             .type = .Water,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // AuroraBeam
         .{
@@ -628,6 +694,7 @@ pub const Move = enum(u8) {
             .bp = 65,
             .type = .Ice,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // HyperBeam
         .{
@@ -635,6 +702,7 @@ pub const Move = enum(u8) {
             .bp = 150,
             .type = .Normal,
             .acc = 12, // 90%
+            .frames = 1,
         },
         // Peck
         .{
@@ -642,6 +710,7 @@ pub const Move = enum(u8) {
             .bp = 35,
             .type = .Flying,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // DrillPeck
         .{
@@ -649,6 +718,7 @@ pub const Move = enum(u8) {
             .bp = 80,
             .type = .Flying,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Submission
         .{
@@ -656,6 +726,7 @@ pub const Move = enum(u8) {
             .bp = 80,
             .type = .Fighting,
             .acc = 10, // 80%
+            .frames = 1,
         },
         // LowKick
         .{
@@ -663,6 +734,7 @@ pub const Move = enum(u8) {
             .bp = 50,
             .type = .Fighting,
             .acc = 12, // 90%
+            .frames = 1,
         },
         // Counter
         .{
@@ -670,6 +742,7 @@ pub const Move = enum(u8) {
             .bp = 1,
             .type = .Fighting,
             .acc = 14, // 100%
+            .frames = 2,
         },
         // SeismicToss
         .{
@@ -677,6 +750,7 @@ pub const Move = enum(u8) {
             .bp = 1,
             .type = .Fighting,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Strength
         .{
@@ -684,6 +758,7 @@ pub const Move = enum(u8) {
             .bp = 80,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Absorb
         .{
@@ -691,6 +766,7 @@ pub const Move = enum(u8) {
             .bp = 20,
             .type = .Grass,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // MegaDrain
         .{
@@ -698,6 +774,7 @@ pub const Move = enum(u8) {
             .bp = 40,
             .type = .Grass,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // LeechSeed
         .{
@@ -705,6 +782,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Grass,
             .acc = 12, // 90%
+            .frames = 1,
         },
         // Growth
         .{
@@ -712,6 +790,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // RazorLeaf
         .{
@@ -719,6 +798,7 @@ pub const Move = enum(u8) {
             .bp = 55,
             .type = .Grass,
             .acc = 13, // 95%
+            .frames = 1,
         },
         // SolarBeam
         .{
@@ -726,6 +806,7 @@ pub const Move = enum(u8) {
             .bp = 120,
             .type = .Grass,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // PoisonPowder
         .{
@@ -733,6 +814,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Poison,
             .acc = 9, // 75%
+            .frames = 1,
         },
         // StunSpore
         .{
@@ -740,6 +822,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Grass,
             .acc = 9, // 75%
+            .frames = 1,
         },
         // SleepPowder
         .{
@@ -747,6 +830,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Grass,
             .acc = 9, // 75%
+            .frames = 1,
         },
         // PetalDance
         .{
@@ -754,6 +838,7 @@ pub const Move = enum(u8) {
             .bp = 70,
             .type = .Grass,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // StringShot
         .{
@@ -761,6 +846,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Bug,
             .acc = 13, // 95%
+            .frames = 1,
         },
         // DragonRage
         .{
@@ -768,6 +854,7 @@ pub const Move = enum(u8) {
             .bp = 1,
             .type = .Dragon,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // FireSpin
         .{
@@ -775,6 +862,7 @@ pub const Move = enum(u8) {
             .bp = 15,
             .type = .Fire,
             .acc = 8, // 70%
+            .frames = 1,
         },
         // ThunderShock
         .{
@@ -782,6 +870,7 @@ pub const Move = enum(u8) {
             .bp = 40,
             .type = .Electric,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Thunderbolt
         .{
@@ -789,6 +878,7 @@ pub const Move = enum(u8) {
             .bp = 95,
             .type = .Electric,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // ThunderWave
         .{
@@ -796,6 +886,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Electric,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Thunder
         .{
@@ -803,6 +894,7 @@ pub const Move = enum(u8) {
             .bp = 120,
             .type = .Electric,
             .acc = 8, // 70%
+            .frames = 1,
         },
         // RockThrow
         .{
@@ -810,6 +902,7 @@ pub const Move = enum(u8) {
             .bp = 50,
             .type = .Rock,
             .acc = 7, // 65%
+            .frames = 1,
         },
         // Earthquake
         .{
@@ -817,6 +910,7 @@ pub const Move = enum(u8) {
             .bp = 100,
             .type = .Ground,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Fissure
         .{
@@ -824,6 +918,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Ground,
             .acc = 0, // 30%
+            .frames = 1,
         },
         // Dig
         .{
@@ -831,6 +926,7 @@ pub const Move = enum(u8) {
             .bp = 100,
             .type = .Ground,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Toxic
         .{
@@ -838,6 +934,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Poison,
             .acc = 11, // 85%
+            .frames = 1,
         },
         // Confusion
         .{
@@ -845,6 +942,7 @@ pub const Move = enum(u8) {
             .bp = 50,
             .type = .Psychic,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Psychic
         .{
@@ -852,6 +950,7 @@ pub const Move = enum(u8) {
             .bp = 90,
             .type = .Psychic,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Hypnosis
         .{
@@ -859,6 +958,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Psychic,
             .acc = 6, // 60%
+            .frames = 1,
         },
         // Meditate
         .{
@@ -866,6 +966,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Psychic,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // Agility
         .{
@@ -873,6 +974,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Psychic,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // QuickAttack
         .{
@@ -880,6 +982,7 @@ pub const Move = enum(u8) {
             .bp = 40,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Rage
         .{
@@ -887,6 +990,7 @@ pub const Move = enum(u8) {
             .bp = 20,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Teleport
         .{
@@ -894,6 +998,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Psychic,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // NightShade
         .{
@@ -901,6 +1006,7 @@ pub const Move = enum(u8) {
             .bp = 1,
             .type = .Ghost,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Mimic
         .{
@@ -908,6 +1014,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Screech
         .{
@@ -915,6 +1022,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 11, // 85%
+            .frames = 1,
         },
         // DoubleTeam
         .{
@@ -922,6 +1030,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // Recover
         .{
@@ -929,6 +1038,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // Harden
         .{
@@ -936,6 +1046,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // Minimize
         .{
@@ -943,6 +1054,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // Smokescreen
         .{
@@ -950,6 +1062,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // ConfuseRay
         .{
@@ -957,6 +1070,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Ghost,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Withdraw
         .{
@@ -964,6 +1078,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Water,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // DefenseCurl
         .{
@@ -971,6 +1086,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // Barrier
         .{
@@ -978,6 +1094,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Psychic,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // LightScreen
         .{
@@ -985,6 +1102,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Psychic,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // Haze
         .{
@@ -992,6 +1110,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Ice,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // Reflect
         .{
@@ -999,6 +1118,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Psychic,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // FocusEnergy
         .{
@@ -1006,6 +1126,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // Bide
         .{
@@ -1013,6 +1134,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // Metronome
         .{
@@ -1020,6 +1142,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // MirrorMove
         .{
@@ -1027,6 +1150,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Flying,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // SelfDestruct
         .{
@@ -1034,6 +1158,7 @@ pub const Move = enum(u8) {
             .bp = 130,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // EggBomb
         .{
@@ -1041,6 +1166,7 @@ pub const Move = enum(u8) {
             .bp = 100,
             .type = .Normal,
             .acc = 9, // 75%
+            .frames = 1,
         },
         // Lick
         .{
@@ -1048,6 +1174,7 @@ pub const Move = enum(u8) {
             .bp = 20,
             .type = .Ghost,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Smog
         .{
@@ -1055,6 +1182,7 @@ pub const Move = enum(u8) {
             .bp = 20,
             .type = .Poison,
             .acc = 8, // 70%
+            .frames = 1,
         },
         // Sludge
         .{
@@ -1062,6 +1190,7 @@ pub const Move = enum(u8) {
             .bp = 65,
             .type = .Poison,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // BoneClub
         .{
@@ -1069,6 +1198,7 @@ pub const Move = enum(u8) {
             .bp = 65,
             .type = .Ground,
             .acc = 11, // 85%
+            .frames = 1,
         },
         // FireBlast
         .{
@@ -1076,6 +1206,7 @@ pub const Move = enum(u8) {
             .bp = 120,
             .type = .Fire,
             .acc = 11, // 85%
+            .frames = 1,
         },
         // Waterfall
         .{
@@ -1083,6 +1214,7 @@ pub const Move = enum(u8) {
             .bp = 80,
             .type = .Water,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Clamp
         .{
@@ -1090,6 +1222,7 @@ pub const Move = enum(u8) {
             .bp = 35,
             .type = .Water,
             .acc = 9, // 75%
+            .frames = 1,
         },
         // Swift
         .{
@@ -1097,6 +1230,7 @@ pub const Move = enum(u8) {
             .bp = 60,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // SkullBash
         .{
@@ -1104,6 +1238,7 @@ pub const Move = enum(u8) {
             .bp = 100,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // SpikeCannon
         .{
@@ -1111,6 +1246,7 @@ pub const Move = enum(u8) {
             .bp = 20,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Constrict
         .{
@@ -1118,6 +1254,7 @@ pub const Move = enum(u8) {
             .bp = 10,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Amnesia
         .{
@@ -1125,6 +1262,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Psychic,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // Kinesis
         .{
@@ -1132,6 +1270,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Psychic,
             .acc = 10, // 80%
+            .frames = 1,
         },
         // SoftBoiled
         .{
@@ -1139,6 +1278,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // HighJumpKick
         .{
@@ -1146,6 +1286,7 @@ pub const Move = enum(u8) {
             .bp = 85,
             .type = .Fighting,
             .acc = 12, // 90%
+            .frames = 1,
         },
         // Glare
         .{
@@ -1153,6 +1294,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 9, // 75%
+            .frames = 1,
         },
         // DreamEater
         .{
@@ -1160,6 +1302,7 @@ pub const Move = enum(u8) {
             .bp = 100,
             .type = .Psychic,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // PoisonGas
         .{
@@ -1167,6 +1310,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Poison,
             .acc = 5, // 55%
+            .frames = 1,
         },
         // Barrage
         .{
@@ -1174,6 +1318,7 @@ pub const Move = enum(u8) {
             .bp = 15,
             .type = .Normal,
             .acc = 11, // 85%
+            .frames = 1,
         },
         // LeechLife
         .{
@@ -1181,6 +1326,7 @@ pub const Move = enum(u8) {
             .bp = 20,
             .type = .Bug,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // LovelyKiss
         .{
@@ -1188,6 +1334,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 9, // 75%
+            .frames = 1,
         },
         // SkyAttack
         .{
@@ -1195,6 +1342,7 @@ pub const Move = enum(u8) {
             .bp = 140,
             .type = .Flying,
             .acc = 12, // 90%
+            .frames = 1,
         },
         // Transform
         .{
@@ -1202,6 +1350,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Bubble
         .{
@@ -1209,6 +1358,7 @@ pub const Move = enum(u8) {
             .bp = 20,
             .type = .Water,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // DizzyPunch
         .{
@@ -1216,6 +1366,7 @@ pub const Move = enum(u8) {
             .bp = 70,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Spore
         .{
@@ -1223,6 +1374,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Grass,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Flash
         .{
@@ -1230,6 +1382,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 8, // 70%
+            .frames = 1,
         },
         // Psywave
         .{
@@ -1237,6 +1390,7 @@ pub const Move = enum(u8) {
             .bp = 1,
             .type = .Psychic,
             .acc = 10, // 80%
+            .frames = 1,
         },
         // Splash
         .{
@@ -1244,6 +1398,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // AcidArmor
         .{
@@ -1251,6 +1406,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Poison,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // Crabhammer
         .{
@@ -1258,6 +1414,7 @@ pub const Move = enum(u8) {
             .bp = 90,
             .type = .Water,
             .acc = 11, // 85%
+            .frames = 1,
         },
         // Explosion
         .{
@@ -1265,6 +1422,7 @@ pub const Move = enum(u8) {
             .bp = 170,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // FurySwipes
         .{
@@ -1272,6 +1430,7 @@ pub const Move = enum(u8) {
             .bp = 18,
             .type = .Normal,
             .acc = 10, // 80%
+            .frames = 1,
         },
         // Bonemerang
         .{
@@ -1279,6 +1438,7 @@ pub const Move = enum(u8) {
             .bp = 50,
             .type = .Ground,
             .acc = 12, // 90%
+            .frames = 1,
         },
         // Rest
         .{
@@ -1286,6 +1446,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Psychic,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // RockSlide
         .{
@@ -1293,6 +1454,7 @@ pub const Move = enum(u8) {
             .bp = 75,
             .type = .Rock,
             .acc = 12, // 90%
+            .frames = 1,
         },
         // HyperFang
         .{
@@ -1300,6 +1462,7 @@ pub const Move = enum(u8) {
             .bp = 80,
             .type = .Normal,
             .acc = 12, // 90%
+            .frames = 1,
         },
         // Sharpen
         .{
@@ -1307,6 +1470,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // Conversion
         .{
@@ -1314,6 +1478,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // TriAttack
         .{
@@ -1321,6 +1486,7 @@ pub const Move = enum(u8) {
             .bp = 80,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // SuperFang
         .{
@@ -1328,6 +1494,7 @@ pub const Move = enum(u8) {
             .bp = 1,
             .type = .Normal,
             .acc = 12, // 90%
+            .frames = 1,
         },
         // Slash
         .{
@@ -1335,6 +1502,7 @@ pub const Move = enum(u8) {
             .bp = 70,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
         // Substitute
         .{
@@ -1342,6 +1510,7 @@ pub const Move = enum(u8) {
             .bp = 0,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 0,
         },
         // Struggle
         .{
@@ -1349,175 +1518,8 @@ pub const Move = enum(u8) {
             .bp = 50,
             .type = .Normal,
             .acc = 14, // 100%
+            .frames = 1,
         },
-    };
-
-    const FRAMES = [_]u8{
-        1, // Pound
-        1, // KarateChop
-        1, // DoubleSlap
-        1, // CometPunch
-        1, // MegaPunch
-        1, // PayDay
-        1, // FirePunch
-        1, // IcePunch
-        1, // ThunderPunch
-        1, // Scratch
-        1, // ViseGrip
-        1, // Guillotine
-        1, // RazorWind
-        0, // SwordsDance
-        1, // Cut
-        1, // Gust
-        1, // WingAttack
-        1, // Whirlwind
-        1, // Fly
-        1, // Bind
-        1, // Slam
-        1, // VineWhip
-        1, // Stomp
-        1, // DoubleKick
-        1, // MegaKick
-        1, // JumpKick
-        1, // RollingKick
-        1, // SandAttack
-        1, // Headbutt
-        1, // HornAttack
-        1, // FuryAttack
-        1, // HornDrill
-        1, // Tackle
-        1, // BodySlam
-        1, // Wrap
-        1, // TakeDown
-        1, // Thrash
-        1, // DoubleEdge
-        1, // TailWhip
-        1, // PoisonSting
-        1, // Twineedle
-        1, // PinMissile
-        1, // Leer
-        1, // Bite
-        1, // Growl
-        1, // Roar
-        1, // Sing
-        1, // Supersonic
-        1, // SonicBoom
-        1, // Disable
-        1, // Acid
-        1, // Ember
-        1, // Flamethrower
-        0, // Mist
-        1, // WaterGun
-        1, // HydroPump
-        1, // Surf
-        1, // IceBeam
-        1, // Blizzard
-        1, // Psybeam
-        1, // BubbleBeam
-        1, // AuroraBeam
-        1, // HyperBeam
-        1, // Peck
-        1, // DrillPeck
-        1, // Submission
-        1, // LowKick
-        2, // Counter
-        1, // SeismicToss
-        1, // Strength
-        1, // Absorb
-        1, // MegaDrain
-        1, // LeechSeed
-        0, // Growth
-        1, // RazorLeaf
-        1, // SolarBeam
-        1, // PoisonPowder
-        1, // StunSpore
-        1, // SleepPowder
-        1, // PetalDance
-        1, // StringShot
-        1, // DragonRage
-        1, // FireSpin
-        1, // ThunderShock
-        1, // Thunderbolt
-        1, // ThunderWave
-        1, // Thunder
-        1, // RockThrow
-        1, // Earthquake
-        1, // Fissure
-        1, // Dig
-        1, // Toxic
-        1, // Confusion
-        1, // Psychic
-        1, // Hypnosis
-        0, // Meditate
-        0, // Agility
-        1, // QuickAttack
-        1, // Rage
-        0, // Teleport
-        1, // NightShade
-        1, // Mimic
-        1, // Screech
-        0, // DoubleTeam
-        0, // Recover
-        0, // Harden
-        0, // Minimize
-        1, // Smokescreen
-        1, // ConfuseRay
-        0, // Withdraw
-        0, // DefenseCurl
-        0, // Barrier
-        0, // LightScreen
-        0, // Haze
-        0, // Reflect
-        0, // FocusEnergy
-        0, // Bide
-        0, // Metronome
-        0, // MirrorMove
-        1, // SelfDestruct
-        1, // EggBomb
-        1, // Lick
-        1, // Smog
-        1, // Sludge
-        1, // BoneClub
-        1, // FireBlast
-        1, // Waterfall
-        1, // Clamp
-        1, // Swift
-        1, // SkullBash
-        1, // SpikeCannon
-        1, // Constrict
-        0, // Amnesia
-        1, // Kinesis
-        0, // SoftBoiled
-        1, // HighJumpKick
-        1, // Glare
-        1, // DreamEater
-        1, // PoisonGas
-        1, // Barrage
-        1, // LeechLife
-        1, // LovelyKiss
-        1, // SkyAttack
-        1, // Transform
-        1, // Bubble
-        1, // DizzyPunch
-        1, // Spore
-        1, // Flash
-        1, // Psywave
-        0, // Splash
-        0, // AcidArmor
-        1, // Crabhammer
-        1, // Explosion
-        1, // FurySwipes
-        1, // Bonemerang
-        0, // Rest
-        1, // RockSlide
-        1, // HyperFang
-        0, // Sharpen
-        1, // Conversion
-        1, // TriAttack
-        1, // SuperFang
-        1, // Slash
-        0, // Substitute
-        1, // Struggle,
     };
 
     pub const Effect = enum(u8) {
@@ -1800,17 +1802,12 @@ pub const Move = enum(u8) {
 
     comptime {
         assert(@sizeOf(Move) == 1);
-        assert(@sizeOf(@TypeOf(DATA)) == 495);
+        assert(@sizeOf(@TypeOf(DATA)) == 660);
     }
 
     pub inline fn get(id: Move) Data {
         assert(id != .None);
         return DATA[@enumToInt(id) - 1];
-    }
-
-    pub inline fn frames(id: Move) u8 {
-        assert(id != .None);
-        return FRAMES[@enumToInt(id) - 1];
     }
 
     // @test-only
