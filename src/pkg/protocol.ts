@@ -300,9 +300,8 @@ export const DECODERS: {[key: number]: Decoder} = {
     return {offset, line: {args, kwArgs}};
   },
   [ArgType.Miss](offset, data) {
-    const source = decodeIdent(this.names, data.getUint8(offset++));
-    const target = decodeIdent(this.names, data.getUint8(offset++));
-    const args = ['-miss', source, target] as Protocol.Args['|-miss|'];
+    const ident = decodeIdent(this.names, data.getUint8(offset++));
+    const args = ['-miss', ident] as Protocol.Args['|-miss|'];
     return {offset, line: {args, kwArgs: {}}};
   },
   [ArgType.HitCount](offset, data) {

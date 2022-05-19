@@ -163,8 +163,8 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     it('|-miss|', () => {
-      const data = Data.view([ArgType.Miss, 0b1100, 0b0101]);
-      expect(Array.from(log.parse(data))).toEqual(parse('|-miss|p2a: Nasshii|p1a: Koratta'));
+      const data = Data.view([ArgType.Miss, 0b1100]);
+      expect(Array.from(log.parse(data))).toEqual(parse('|-miss|p2a: Nasshii'));
     });
 
     it('|-hitcount|', () => {
@@ -267,7 +267,7 @@ for (const gen of new Generations(Dex as any)) {
       const data = Data.view([
         ArgType.Cant, 0b1110, PROTOCOL.Cant.Trapped,
         ArgType.Move, 0b0101, 1, 0b1110, PROTOCOL.Move.None,
-        ArgType.Miss, 0b0101, 0b1110,
+        ArgType.Miss, 0b0101,
         ArgType.LastMiss,
         ArgType.Move, 0b1110, 2, 0b0101, PROTOCOL.Move.None,
         ArgType.Faint, 0b0101,
@@ -277,7 +277,7 @@ for (const gen of new Generations(Dex as any)) {
       const parsed = parse(
         '|cant|p2a: Fuudin|partiallytrapped\n' +
         '|move|p1a: Koratta|Pound|p2a: Fuudin|[miss]\n' +
-        '|-miss|p1a: Koratta|p2a: Fuudin\n' +
+        '|-miss|p1a: Koratta\n' +
         '|move|p2a: Fuudin|Karate Chop|p1a: Koratta|[still]\n' +
         '|faint|p1a: Koratta\n'
       );

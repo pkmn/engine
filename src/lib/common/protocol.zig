@@ -420,13 +420,9 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn miss(self: Self, source: ID, target: ID) Error!void {
+        pub fn miss(self: Self, source: ID) Error!void {
             if (!trace) return;
-            try self.writer.writeAll(&.{
-                @enumToInt(ArgType.Miss),
-                @bitCast(u8, source),
-                @bitCast(u8, target),
-            });
+            try self.writer.writeAll(&.{ @enumToInt(ArgType.Miss), @bitCast(u8, source) });
         }
 
         pub fn hitcount(self: Self, ident: ID, num: u8) Error!void {
@@ -564,6 +560,7 @@ pub fn TestLogs(comptime n: comptime_int) type {
 
         pub fn expectMatches(self: Self) !void {
             if (!trace) return;
+            try expectLog(&self.expected, &self.actual);
             // NOTE: some logs can end in the 0xFF sentinel byte so expectMatches can't be used
             // indiscriminately - in niche cases expectLog should be used directly
             var i = self.expected.len;
@@ -578,7 +575,6 @@ pub fn TestLogs(comptime n: comptime_int) type {
                 });
                 return error.TestExpectedEqual;
             }
-            try expectLog(&self.expected, &self.actual);
         }
     };
 }
@@ -874,8 +870,8 @@ test "|-fail|" {
 }
 
 test "|-miss|" {
-    try log.miss(p2.ident(4), p1.ident(5));
-    try expectLog(&.{ N(ArgType.Miss), 0b1100, 0b0101 }, buf[0..3]);
+    try log.miss(p2.ident(4));
+    try expectLog(&.{ N(ArgType.Miss), 0b1100 }, buf[0..2]);
     stream.reset();
 }
 test "|-hitcount|" {

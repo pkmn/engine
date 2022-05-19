@@ -418,15 +418,14 @@ due to its own mechanics.
 
 ### `|-miss|` (`0x12`)
 
-    Byte/     0       |       1       |       2       |
-       /              |               |               |
-      |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
-      +---------------+---------------+---------------+
-     0| 0x12          | Source        | Target        |
-      +---------------+---------------+---------------+
+    Byte/     0       |       1       |
+       /              |               |
+      |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
+      +---------------+---------------+
+     0| 0x12          | Ident         |
+      +---------------+---------------+
 
-A move used by the `Source` [`PokemonIdent`](#pokemonident) missed the `Target`
-[`PokemonIdent`](#pokemonident).
+A move used by the Pokémon identified by [`Ident`](#pokemonident) missed.
 
 ### `|-hitcount|` (`0x13`)
 

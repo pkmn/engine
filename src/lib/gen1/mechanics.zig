@@ -8,7 +8,7 @@ const rng = @import("../common/rng.zig");
 const data = @import("data.zig");
 
 const assert = std.debug.assert;
-const debug = std.log.debug;
+const debug = std.debug.print;
 const expectEqual = std.testing.expectEqual;
 
 const showdown = build_options.showdown;
@@ -476,8 +476,9 @@ fn canMove(
         battle.rng.advance(if (side.last_selected_move.frames() > 0) 1 else 0);
     }
 
-    const target_ident = battle.active(player.foe());
-    try log.move(player_ident, side.last_selected_move, target_ident, from);
+    // FIXME: get target better
+    const target = if (side.last_selected_move.frames() > 0) player.foe() else player;
+    try log.move(player_ident, side.last_selected_move, battle.active(target), from);
 
     if (move.effect.onBegin()) {
         try moveEffect(battle, player, move, choice.data, miss, log);
@@ -612,7 +613,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
             try log.immune(foe_ident, .None);
         } else {
             try log.lastmiss();
-            try log.miss(battle.active(player), foe_ident);
+            try log.miss(battle.active(player));
         }
         // SHOWDOWN: Pokémon Showdown does not inflict crash damage when attacking a Ghost
         if (move.effect == .JumpKick and !(showdown and immune)) {
@@ -829,7 +830,7 @@ fn specialDamage(
     if (battle.last_damage == 0) {
         if (showdown) {
             try log.lastmiss();
-            try log.miss(battle.active(player), battle.active(player.foe()));
+            try log.miss(battle.active(player));
             return null;
         } else {
             return Result.Error;
@@ -920,7 +921,7 @@ fn mirrorMove(battle: anytype, player: Player, choice: Choice, miss: bool, log: 
 
     if (foe.last_used_move == .None or foe.last_used_move == .MirrorMove) {
         try log.lastmiss();
-        try log.miss(battle.active(player), battle.active(player.foe()));
+        try log.miss(battle.active(player));
         return null;
     }
 
@@ -954,7 +955,7 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data, missed: bool, log:
     const miss = moveHit(battle, player, move) or missed;
     if (miss) {
         try log.lastmiss();
-        try log.miss(battle.active(player), battle.active(player.foe()));
+        try log.miss(battle.active(player));
     }
     return !miss;
 }
@@ -1203,6 +1204,7 @@ fn moveEffect(
         .Sleep => Effects.sleep(battle, player, move, miss, log),
         .Splash => Effects.splash(battle, player, log),
         .Substitute => Effects.substitute(battle, player, log),
+        .SwitchAndTeleport => Effects.switchAndTeleport(battle, player, move, log),
         .Transform => Effects.transform(battle, player, log),
         // zig fmt: off
         .AttackUp1, .AttackUp2, .DefenseUp1, .DefenseUp2,
@@ -1305,7 +1307,7 @@ pub const Effects = struct {
         const foe = battle.foe(player);
 
         if (foe.active.volatiles.Invulnerable) {
-            return log.miss(battle.active(player), battle.active(player.foe()));
+            return log.miss(battle.active(player));
         }
 
         battle.side(player).active.types = foe.active.types;
@@ -1319,7 +1321,7 @@ pub const Effects = struct {
 
         if (!moveHit(battle, player, move) or miss or volatiles.disabled.move != 0) {
             try log.lastmiss();
-            return log.miss(battle.active(player), foe_ident);
+            return log.miss(battle.active(player));
         }
 
         const moves = &foe.active.moves;
@@ -1711,6 +1713,13 @@ pub const Effects = struct {
         side.active.volatiles.substitute = hp + 1;
         side.active.volatiles.Substitute = true;
         try log.start(battle.active(player), .Substitute);
+    }
+
+    fn switchAndTeleport(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
+        if (!showdown or battle.side(player).last_selected_move == .Teleport) return;
+
+        // SHOWDOWN: Whirlwind/Roar should not roll to hit but showdown does anyway
+        _ = try checkHit(battle, player, move, false, log);
     }
 
     fn thrashing(battle: anytype, player: Player) void {
