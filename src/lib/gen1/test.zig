@@ -78,8 +78,20 @@ test "switching (order)" {
     try expectOrder(p1, &.{ 1, 2, 6, 4, 3, 5 }, p2, &.{ 5, 1, 3, 4, 2, 6 });
     try expectEqual(Result.Default, try battle.update(swtch(2), swtch(4), null));
     try expectOrder(p1, &.{ 2, 1, 6, 4, 3, 5 }, p2, &.{ 4, 1, 3, 5, 2, 6 });
-    try expectEqual(Result.Default, try battle.update(swtch(5), swtch(5), null));
+
+    var expected_buf: [22]u8 = undefined;
+    var actual_buf: [22]u8 = undefined;
+
+    var expected = FixedLog{ .writer = stream(&expected_buf).writer() };
+    var actual = FixedLog{ .writer = stream(&actual_buf).writer() };
+
+    try expected.switched(P1.ident(3), p1.pokemon[2]);
+    try expected.switched(P2.ident(2), p2.pokemon[1]);
+    try expected.turn(7);
+
+    try expectEqual(Result.Default, try battle.update(swtch(5), swtch(5), actual));
     try expectOrder(p1, &.{ 3, 1, 6, 4, 2, 5 }, p2, &.{ 2, 1, 3, 5, 4, 6 });
+    try expectLog(&expected_buf, &actual_buf);
 }
 
 test "choices" {
