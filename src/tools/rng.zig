@@ -1,8 +1,8 @@
 const std = @import("std");
 
-const rng = @import("pkmn").rng;
+const pkmn = @import("pkmn");
 
-const FixedRNG = rng.FixedRNG;
+const FixedRNG = pkmn.rng.FixedRNG;
 
 // https://en.wikipedia.org/wiki/ANSI_escape_code
 pub const ANSI = struct {
@@ -15,6 +15,7 @@ const Tool = enum {
     confusion,
     crit,
     disable,
+    metronome,
     rampage,
     sleep,
     thrash,
@@ -31,6 +32,7 @@ pub fn main() !void {
 
     var tool: Tool = undefined;
     var crit: u8 = undefined;
+    var metronome: pkmn.gen1.Move = undefined;
     if (std.mem.eql(u8, args[1], "bide")) {
         if (args.len != 2) usageAndExit(args[0]);
         tool = .bide;
@@ -51,6 +53,17 @@ pub fn main() !void {
     } else if (std.mem.eql(u8, args[1], "disable")) {
         if (args.len != 2) usageAndExit(args[0]);
         tool = .disable;
+    } else if (std.mem.eql(u8, args[1], "metronome")) {
+        const err = std.io.getStdErr().writer();
+        if (args.len != 3) {
+            err.print("Usage: {s} metronome <Move>\n", .{args[0]}) catch {};
+            std.process.exit(1);
+        }
+        tool = .metronome;
+        metronome = std.meta.stringToEnum(pkmn.gen1.Move, args[2]) orelse {
+            err.print("Usage: {s} metronome <Move>\n", .{args[0]}) catch {};
+            std.process.exit(1);
+        };
     } else if (std.mem.eql(u8, args[1], "rampage")) {
         if (args.len != 2) usageAndExit(args[0]);
         tool = .rampage;
@@ -100,6 +113,36 @@ pub fn main() !void {
                     const a = rng1.range(u8, 1, 7) + 1;
                     const b = (rng2.next() & 7) + 1;
                     break :match a == b;
+                },
+                .metronome => {
+                    const a = move: {
+                        const r = rng1.range(u8, 0, @enumToInt(pkmn.gen1.Move.Struggle) - 2);
+                        const mod = @as(u2, (if (r < @enumToInt(pkmn.gen1.Move.Metronome) - 1) 1 else 2));
+                        break :move @intToEnum(pkmn.gen1.Move, r + mod);
+                    };
+                    const b = move: {
+                        const r = rng2.next();
+                        if (r == 0 or r == @enumToInt(pkmn.gen1.Move.Metronome)) break :move pkmn.gen1.Move.None;
+                        if (r >= @enumToInt(pkmn.gen1.Move.Struggle)) break :move pkmn.gen1.Move.None;
+                        break :move @intToEnum(pkmn.gen1.Move, r);
+                    };
+
+                    try w.print("{d} ", .{i});
+                    if (a == metronome) {
+                        try w.print("{s}{s: >12}{s} ", .{ ANSI.RED, @tagName(a), ANSI.RESET });
+                    } else {
+                        try w.print("{s: >12} ", .{@tagName(a)});
+                    }
+                    if (b == metronome) {
+                        try w.print("{s}{s: >12}{s}", .{ ANSI.RED, @tagName(b), ANSI.RESET });
+                    } else if (b == pkmn.gen1.Move.None) {
+                        try w.print("{s: >12}", .{"*"});
+                    } else {
+                        try w.print("{s: >12}", .{@tagName(b)});
+                    }
+                    try w.print("\n", .{});
+                    try buf.flush();
+                    continue;
                 },
                 .thrash => {
                     const a = rng1.range(u8, 3, 5);

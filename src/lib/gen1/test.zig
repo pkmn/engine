@@ -8,6 +8,8 @@ const rng = @import("../common/rng.zig");
 const data = @import("data.zig");
 const helpers = @import("helpers.zig");
 
+const ArrayList = std.ArrayList;
+
 const assert = std.debug.assert;
 const debug = std.debug.print;
 
@@ -18,20 +20,23 @@ const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
 const showdown = build_options.showdown;
+const trace = build_options.trace;
 
 const Player = common.Player;
 const Result = common.Result;
 const Choice = common.Choice;
 
 const ArgType = protocol.ArgType;
-const TestLogs = protocol.TestLogs;
 const FixedLog = protocol.FixedLog;
+const Log = protocol.Log;
+const expectLog = protocol.expectLog;
 
 const PRNG = rng.PRNG(6);
 
 const Move = data.Move;
 
 const Battle = helpers.Battle;
+const Pokemon = helpers.Pokemon;
 const move = helpers.move;
 const swtch = helpers.swtch;
 
@@ -52,58 +57,29 @@ const NO_PROC = 255;
 const P1 = Player.P1;
 const P2 = Player.P2;
 
-test "TODO Battle" {
-    const p1 = .{ .species = .Gengar, .moves = &.{ .Absorb, .Pound, .DreamEater, .Psychic } };
-    const p2 = .{ .species = .Mew, .moves = &.{ .HydroPump, .Surf, .Bubble, .WaterGun } };
-    const rolls = if (showdown)
-        (.{ NOP, NOP, HIT, NO_CRIT, MIN_DMG, NO_PROC, HIT, CRIT, MAX_DMG })
-    else
-        (.{ NO_CRIT, MIN_DMG, HIT, NO_PROC, CRIT, MAX_DMG, HIT });
-    var battle = Battle.fixed(rolls, &.{p1}, &.{p2});
-
-    // var logs = TestLogs(100){};
-    // var expected = FixedLog{ .writer = stream(&logs.expected).writer() };
-    // try expected.move(P1.ident(1), Move.Psychic, P2.ident(1), .None);
-
-    const actual = null; // FixedLog{ .writer = stream(&logs.actual).writer() };
-    try expectEqual(Result.Default, try update(&battle, move(4), move(2), actual));
-    // try logs.expectMatches();
-    try expect(battle.rng.exhausted());
-}
-
 fn expectOrder(p1: anytype, o1: []const u8, p2: anytype, o2: []const u8) !void {
     try expectEqualSlices(u8, o1, &p1.order);
     try expectEqualSlices(u8, o2, &p2.order);
 }
 
-test "switching" {
+test "switching (order)" {
     var battle = Battle.random(&PRNG.init(0x12345678), false);
     battle.turn = 1;
     const p1 = battle.side(.P1);
     const p2 = battle.side(.P2);
 
-    try expectEqual(Result.Default, try update(&battle, swtch(3), swtch(2), null));
+    try expectEqual(Result.Default, try battle.update(swtch(3), swtch(2), null));
     try expectOrder(p1, &.{ 3, 2, 1, 4, 5, 6 }, p2, &.{ 2, 1, 3, 4, 5, 6 });
-    try expectEqual(Result.Default, try update(&battle, swtch(5), swtch(5), null));
+    try expectEqual(Result.Default, try battle.update(swtch(5), swtch(5), null));
     try expectOrder(p1, &.{ 5, 2, 1, 4, 3, 6 }, p2, &.{ 5, 1, 3, 4, 2, 6 });
-    try expectEqual(Result.Default, try update(&battle, swtch(6), swtch(3), null));
+    try expectEqual(Result.Default, try battle.update(swtch(6), swtch(3), null));
     try expectOrder(p1, &.{ 6, 2, 1, 4, 3, 5 }, p2, &.{ 3, 1, 5, 4, 2, 6 });
-    try expectEqual(Result.Default, try update(&battle, swtch(3), swtch(3), null));
+    try expectEqual(Result.Default, try battle.update(swtch(3), swtch(3), null));
     try expectOrder(p1, &.{ 1, 2, 6, 4, 3, 5 }, p2, &.{ 5, 1, 3, 4, 2, 6 });
-    try expectEqual(Result.Default, try update(&battle, swtch(2), swtch(4), null));
+    try expectEqual(Result.Default, try battle.update(swtch(2), swtch(4), null));
     try expectOrder(p1, &.{ 2, 1, 6, 4, 3, 5 }, p2, &.{ 4, 1, 3, 5, 2, 6 });
-
-    var logs = TestLogs(22){};
-    var expected = FixedLog{ .writer = stream(&logs.expected).writer() };
-    try expected.switched(P1.ident(3), p1.pokemon[2]);
-    try expected.switched(P2.ident(2), p2.pokemon[1]);
-    const actual = FixedLog{ .writer = stream(&logs.actual).writer() };
-
-    try expectEqual(Result.Default, try update(&battle, swtch(5), swtch(5), actual));
+    try expectEqual(Result.Default, try battle.update(swtch(5), swtch(5), null));
     try expectOrder(p1, &.{ 3, 1, 6, 4, 2, 5 }, p2, &.{ 2, 1, 3, 5, 4, 6 });
-    try expected.turn(7);
-
-    try logs.expectMatches();
 }
 
 test "choices" {
@@ -121,7 +97,6 @@ test "choices" {
 
 // Move.{KarateChop,RazorLeaf,Crabhammer,Slash}
 test "HighCritical" {
-
     // Has a higher chance for a critical hit.
     return error.SkipZigTest;
 }
@@ -228,18 +203,11 @@ test "Charge" {
 // Move.{Whirlwind,Roar,Teleport}
 test "SwitchAndTeleport" {
     // No competitive use.
-    var battle = Battle.fixed(
-        if (showdown) .{ NOP, HIT, NOP, MISS } else .{},
+    var t = Test(if (showdown) .{ NOP, HIT, NOP, MISS } else .{}).init(
         &.{.{ .species = .Abra, .moves = &.{.Teleport} }},
         &.{.{ .species = .Pidgey, .moves = &.{.Whirlwind} }},
     );
-    var copy = battle;
-
-    const p1 = battle.side(.P1);
-    const p2 = battle.side(.P2);
-
-    var e1 = copy.side(.P1);
-    var e2 = copy.side(.P2);
+    defer t.deinit();
 
     // |move|p1a: Abra|Teleport|p1a: Abra
     // |move|p2a: Pidgey|Whirlwind|p2a: Abra
@@ -248,63 +216,48 @@ test "SwitchAndTeleport" {
     // |move|p2a: Pidgey|Whirlwind|p2a: Abra|[miss]
     // |-miss|p2a: Pidgey
     // |turn|3
-    var logs = TestLogs(if (showdown) 31 else 28){};
-    var expected = FixedLog{ .writer = stream(&logs.expected).writer() };
-    try expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
-    try expected.move(P2.ident(1), Move.Whirlwind, P1.ident(1), null);
-    try expected.turn(2);
-    try expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
-    try expected.move(P2.ident(1), Move.Whirlwind, P1.ident(1), null);
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.move(P2.ident(1), Move.Whirlwind, P1.ident(1), null);
+    try t.log.expected.turn(2);
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.move(P2.ident(1), Move.Whirlwind, P1.ident(1), null);
     if (showdown) {
-        try expected.lastmiss();
-        try expected.miss(P2.ident(1));
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P2.ident(1));
     }
-    try expected.turn(3);
+    try t.log.expected.turn(3);
 
-    const actual = FixedLog{ .writer = stream(&logs.actual).writer() };
-    try expectEqual(Result.Default, try update(&battle, move(1), move(1), actual));
-    try expectEqual(Result.Default, try update(&battle, move(1), move(1), actual));
-    try expectEqual(e1.stored().hp, p1.stored().hp);
-    try expectEqual(e2.stored().hp, p2.stored().hp);
-    try logs.expectMatches();
-    try expect(battle.rng.exhausted());
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(t.p1().get(1).hp, t.battle.p1().get(1).hp);
+    try expectEqual(t.p2().get(1).hp, t.battle.p2().get(1).hp);
+    try t.verify();
 }
 
 // Move.Splash
 test "Splash" {
     // No competitive use.
-    var battle = Battle.fixed(
-        .{},
+    var t = Test(.{}).init(
         &.{.{ .species = .Gyarados, .moves = &.{.Splash} }},
         &.{.{ .species = .Magikarp, .moves = &.{.Splash} }},
     );
-    var copy = battle;
-
-    const p1 = battle.side(.P1);
-    const p2 = battle.side(.P2);
-
-    var e1 = copy.side(.P1);
-    var e2 = copy.side(.P2);
+    defer t.deinit();
 
     // |move|p1a: Gyarados|Splash|p1a: Gyarados
     // |-activate||move: Splash
     // |move|p2a: Magikarp|Splash|p2a: Magikarp
     // |-activate||move: Splash
     // |turn|2
-    var logs = TestLogs(20){};
-    var expected = FixedLog{ .writer = stream(&logs.expected).writer() };
-    try expected.move(P1.ident(1), Move.Splash, P1.ident(1), null);
-    try expected.activate(P1.ident(1), .Splash);
-    try expected.move(P2.ident(1), Move.Splash, P2.ident(1), null);
-    try expected.activate(P2.ident(1), .Splash);
-    try expected.turn(2);
+    try t.log.expected.move(P1.ident(1), Move.Splash, P1.ident(1), null);
+    try t.log.expected.activate(P1.ident(1), .Splash);
+    try t.log.expected.move(P2.ident(1), Move.Splash, P2.ident(1), null);
+    try t.log.expected.activate(P2.ident(1), .Splash);
+    try t.log.expected.turn(2);
 
-    const actual = FixedLog{ .writer = stream(&logs.actual).writer() };
-    try expectEqual(Result.Default, try update(&battle, move(1), move(1), actual));
-    try expectEqual(e1.stored().hp, p1.stored().hp);
-    try expectEqual(e2.stored().hp, p2.stored().hp);
-    try logs.expectMatches();
-    try expect(battle.rng.exhausted());
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(t.p1().get(1).hp, t.battle.p1().get(1).hp);
+    try expectEqual(t.p2().get(1).hp, t.battle.p2().get(1).hp);
+    try t.verify();
 }
 
 // Move.{Fly,Dig}
@@ -374,106 +327,83 @@ test "Twineedle" {
 // Move.{SonicBoom,DragonRage}
 test "SpecialDamage (fixed)" {
     // Deals X HP of damage to the target. This move ignores type immunity.
-    var battle = Battle.fixed(
-        (if (showdown) .{ NOP, NOP, HIT, HIT, NOP } else .{ HIT, HIT, HIT }),
+    var t = Test(if (showdown) .{ NOP, NOP, HIT, HIT, NOP } else .{ HIT, HIT, HIT }).init(
         &.{.{ .species = .Voltorb, .moves = &.{.SonicBoom} }},
         &.{
             .{ .species = .Dratini, .moves = &.{.DragonRage} },
             .{ .species = .Gastly, .moves = &.{.NightShade} },
         },
     );
-    var copy = battle;
+    defer t.deinit();
 
-    const p1 = battle.side(.P1);
-    const p2 = battle.side(.P2);
-
-    var e1 = copy.side(.P1);
-    var e2 = copy.side(.P2);
-
-    e1.get(1).hp -= 40;
-    e2.get(1).hp -= 20;
+    t.p1().get(1).hp -= 40;
+    t.p2().get(1).hp -= 20;
 
     // |move|p1a: Voltorb|Sonic Boom|p2a: Dratini
     // |-damage|p2a: Dratini|265/285
     // |move|p2a: Dratini|Dragon Rage|p1a: Voltorb
     // |-damage|p1a: Voltorb|243/283
     // |turn|2
-    var logs = TestLogs(if (showdown) 51 else 56){};
-    var expected = FixedLog{ .writer = stream(&logs.expected).writer() };
-    try expected.move(P1.ident(1), Move.SonicBoom, P2.ident(1), null);
-    try expected.damage(P2.ident(1), e2.get(1), .None);
-    try expected.move(P2.ident(1), Move.DragonRage, P1.ident(1), null);
-    try expected.damage(P1.ident(1), e1.get(1), .None);
-    try expected.turn(2);
+    try t.log.expected.move(P1.ident(1), Move.SonicBoom, P2.ident(1), null);
+    try t.log.expected.damage(P2.ident(1), t.p2().get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.DragonRage, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.p1().get(1), .None);
+    try t.log.expected.turn(2);
 
-    const actual = FixedLog{ .writer = stream(&logs.actual).writer() };
-    try expectEqual(Result.Default, try update(&battle, move(1), move(1), actual));
-    try expectEqual(e1.get(1).hp, p1.get(1).hp);
-    try expectEqual(e2.get(1).hp, p2.get(1).hp);
-    try expectEqual(e2.get(2).hp, p2.get(2).hp);
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(t.p1().get(1).hp, t.battle.p1().get(1).hp);
+    try expectEqual(t.p2().get(1).hp, t.battle.p2().get(1).hp);
+    try expectEqual(t.p2().get(2).hp, t.battle.p2().get(2).hp);
 
     // |switch|p2a: Gastly|Gastly|263/263
     // |move|p1a: Voltorb|Sonic Boom|p2a: Gastly
-    try expected.switched(P2.ident(2), p2.get(2));
-    try expected.move(P1.ident(1), Move.SonicBoom, P2.ident(2), null);
+    try t.log.expected.switched(P2.ident(2), t.p2().get(2));
+    try t.log.expected.move(P1.ident(1), Move.SonicBoom, P2.ident(2), null);
     if (showdown) {
         // |-immune|p2a: Gastly
-        try expected.immune(P2.ident(2), .None);
+        try t.log.expected.immune(P2.ident(2), .None);
     } else {
         // |-damage|p2a: Gastly|243/263
-        e2.get(2).hp -= 20;
-        try expected.damage(P2.ident(2), e2.get(2), .None);
+        t.p2().get(2).hp -= 20;
+        try t.log.expected.damage(P2.ident(2), t.p2().get(2), .None);
     }
     // |turn|3
-    try expected.turn(3);
+    try t.log.expected.turn(3);
 
-    try expectEqual(Result.Default, try update(&battle, move(1), swtch(2), actual));
-    try expectEqual(e1.get(1).hp, p1.get(1).hp);
-    try expectEqual(e2.get(2).hp, p2.get(1).hp);
-    try expectEqual(e2.get(1).hp, p2.get(2).hp);
-    try logs.expectMatches();
-    try expect(battle.rng.exhausted());
+    try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+    try expectEqual(t.p1().get(1).hp, t.battle.p1().get(1).hp);
+    try expectEqual(t.p2().get(2).hp, t.battle.p2().get(1).hp);
+    try expectEqual(t.p2().get(1).hp, t.battle.p2().get(2).hp);
+    try t.verify();
 }
 
 // Move.{SeismicToss,NightShade}
 test "SpecialDamage (level)" {
     // Deals damage to the target equal to the user's level. This move ignores type immunity.
-    var battle = Battle.fixed(
-        (if (showdown) .{ NOP, NOP, HIT, HIT } else .{ HIT, HIT }),
+    var t = Test((if (showdown) .{ NOP, NOP, HIT, HIT } else .{ HIT, HIT })).init(
         &.{.{ .species = .Gastly, .level = 22, .moves = &.{.NightShade} }},
         &.{.{ .species = .Clefairy, .level = 16, .moves = &.{.SeismicToss} }},
     );
-    var copy = battle;
+    defer t.deinit();
 
-    const p1 = battle.side(.P1);
-    const p2 = battle.side(.P2);
-
-    var e1 = copy.side(.P1);
-    var e2 = copy.side(.P2);
-
-    e1.get(1).hp -= 16;
-    e2.get(1).hp -= 22;
+    t.p1().get(1).hp -= 16;
+    t.p2().get(1).hp -= 22;
 
     // |move|p1a: Gastly|Night Shade|p2a: Clefairy
     // |-damage|p2a: Clefairy|41/63
     // |move|p2a: Clefairy|Seismic Toss|p1a: Gastly
     // |-damage|p1a: Gastly|49/65
     // |turn|2
-    var logs = TestLogs(30){};
-    var expected = FixedLog{ .writer = stream(&logs.expected).writer() };
-    try expected.move(P1.ident(1), Move.NightShade, P2.ident(1), null);
-    try expected.damage(P2.ident(1), e2.get(1), .None);
-    try expected.move(P2.ident(1), Move.SeismicToss, P1.ident(1), null);
-    try expected.damage(P1.ident(1), e1.get(1), .None);
-    try expected.turn(2);
+    try t.log.expected.move(P1.ident(1), Move.NightShade, P2.ident(1), null);
+    try t.log.expected.damage(P2.ident(1), t.p2().get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.SeismicToss, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.p1().get(1), .None);
+    try t.log.expected.turn(2);
 
-    const actual = FixedLog{ .writer = stream(&logs.actual).writer() };
-    try expectEqual(Result.Default, try update(&battle, move(1), move(1), actual));
-    try expectEqual(e1.get(1).hp, p1.get(1).hp);
-    try expectEqual(e2.get(1).hp, p2.get(1).hp);
-
-    try logs.expectMatches();
-    try expect(battle.rng.exhausted());
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(t.p1().get(1).hp, t.battle.p1().get(1).hp);
+    try expectEqual(t.p2().get(1).hp, t.battle.p2().get(1).hp);
+    try t.verify();
 }
 
 // Move.Psywave
@@ -790,46 +720,109 @@ test "Stat down modifier overflow glitch" {
 test "Endless Battle Clause (initial)" {
     if (!showdown) return;
 
-    const p1 = .{ .species = .Gengar, .moves = &.{.Tackle} };
-    const p2 = .{ .species = .Gengar, .moves = &.{.Tackle} };
-    var battle = Battle.fixed(.{}, &.{p1}, &.{p2});
+    var t = Test(.{}).init(
+        &.{.{ .species = .Gengar, .moves = &.{.Tackle} }},
+        &.{.{ .species = .Gengar, .moves = &.{.Tackle} }},
+    );
+    defer t.deinit();
 
-    battle.sides[0].pokemon[0].moves[0].pp = 0;
-    battle.sides[1].pokemon[0].moves[0].pp = 0;
+    t.battle.expected.sides[0].pokemon[0].moves[0].pp = 0;
+    t.battle.expected.sides[1].pokemon[0].moves[0].pp = 0;
 
-    var logs = TestLogs(20){};
-    var expected = FixedLog{ .writer = stream(&logs.expected).writer() };
-    try expected.switched(P1.ident(1), battle.side(.P1).pokemon[0]);
-    try expected.switched(P2.ident(1), battle.side(.P2).pokemon[0]);
-    try expected.tie();
+    t.battle.actual.sides[0].pokemon[0].moves[0].pp = 0;
+    t.battle.actual.sides[1].pokemon[0].moves[0].pp = 0;
 
-    const actual = FixedLog{ .writer = stream(&logs.actual).writer() };
-    try expectEqual(Result.Tie, try battle.update(.{}, .{}, actual));
-    try logs.expectMatches();
-    try expect(battle.rng.exhausted());
+    try t.log.expected.switched(P1.ident(1), t.p1().get(1));
+    try t.log.expected.switched(P2.ident(1), t.p2().get(1));
+    try t.log.expected.tie();
+
+    try expectEqual(Result.Tie, try t.battle.expected.update(.{}, .{}, t.log.actual));
+    try t.verify();
+}
+
+fn Test(comptime rolls: anytype) type {
+    return struct {
+        const Self = @This();
+
+        battle: struct {
+            const This = @This();
+
+            expected: data.Battle(rng.FixedRNG(1, rolls.len)),
+            actual: data.Battle(rng.FixedRNG(1, rolls.len)),
+
+            pub fn p1(this: *This) *data.Side {
+                return this.actual.side(.P1);
+            }
+
+            pub fn p2(this: *This) *data.Side {
+                return this.actual.side(.P2);
+            }
+        },
+        buf: struct {
+            expected: ArrayList(u8),
+            actual: ArrayList(u8),
+        },
+        log: struct {
+            expected: Log(ArrayList(u8).Writer),
+            actual: Log(ArrayList(u8).Writer),
+        },
+
+        pub fn init(
+            pokemon1: []const Pokemon,
+            pokemon2: []const Pokemon,
+        ) *Self {
+            var t = std.testing.allocator.create(Self) catch unreachable;
+            t.battle.expected = Battle.fixed(rolls, pokemon1, pokemon2);
+            t.battle.actual = t.battle.expected;
+            t.buf.expected = std.ArrayList(u8).init(std.testing.allocator);
+            t.buf.actual = std.ArrayList(u8).init(std.testing.allocator);
+            t.log.expected = Log(ArrayList(u8).Writer){ .writer = t.buf.expected.writer() };
+            t.log.actual = Log(ArrayList(u8).Writer){ .writer = t.buf.actual.writer() };
+            return t;
+        }
+
+        pub fn deinit(self: *Self) void {
+            self.buf.expected.deinit();
+            self.buf.actual.deinit();
+            std.testing.allocator.destroy(self);
+        }
+
+        pub fn p1(self: *Self) *data.Side {
+            return self.battle.expected.side(.P1);
+        }
+
+        pub fn p2(self: *Self) *data.Side {
+            return self.battle.expected.side(.P2);
+        }
+
+        pub fn update(self: *Self, c1: Choice, c2: Choice) !Result {
+            if (self.battle.actual.turn == 0) {
+                var expected_buf: [22]u8 = undefined;
+                var actual_buf: [22]u8 = undefined;
+
+                var expected = FixedLog{ .writer = stream(&expected_buf).writer() };
+                var actual = FixedLog{ .writer = stream(&actual_buf).writer() };
+
+                try expected.switched(P1.ident(1), self.battle.p1().get(1));
+                try expected.switched(P2.ident(1), self.battle.p2().get(1));
+                try expected.turn(1);
+
+                try expectEqual(Result.Default, try self.battle.actual.update(.{}, .{}, actual));
+                try expectLog(&expected_buf, &actual_buf);
+            }
+
+            return self.battle.actual.update(c1, c2, self.log.actual);
+        }
+
+        pub fn verify(t: *Self) !void {
+            try expect(t.battle.actual.rng.exhausted());
+            if (trace) try expectLog(t.buf.expected.items, t.buf.actual.items);
+        }
+    };
 }
 
 // BUG: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Dual-type_damage_misinformation
 // BUG: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Poison.2FBurn_animation_with_0_HP
-
-fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
-    if (battle.turn == 0) {
-        if (@typeInfo(@TypeOf(log)) == .Null) {
-            var logs = TestLogs(22){};
-            var expected = FixedLog{ .writer = stream(&logs.expected).writer() };
-            try expected.switched(P1.ident(1), battle.side(.P1).pokemon[0]);
-            try expected.switched(P2.ident(1), battle.side(.P2).pokemon[0]);
-            try expected.turn(1);
-
-            var actual = FixedLog{ .writer = stream(&logs.actual).writer() };
-            try expectEqual(Result.Default, try battle.update(.{}, .{}, actual));
-            try logs.expectMatches();
-        } else {
-            try expectEqual(Result.Default, try battle.update(.{}, .{}, null));
-        }
-    }
-    return battle.update(c1, c2, log);
-}
 
 comptime {
     _ = @import("data.zig");
