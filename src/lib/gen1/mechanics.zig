@@ -123,7 +123,8 @@ fn selectMove(battle: anytype, player: Player, choice: Choice, foe_choice: Choic
 
         if (battle.foe(player).active.volatiles.Trapping) {
             side.last_selected_move = .SKIP_TURN;
-            return true;
+            // SHOWDOWN: Pokémon Showdown promptly overwrites the SKIP_TURN below...
+            break :save true;
         }
 
         // move select
@@ -252,7 +253,12 @@ fn executeMove(
 ) !?Result {
     var side = battle.side(player);
 
-    if (side.last_selected_move == .SKIP_TURN) return null;
+    // SHOWDOWN: Pokémon Showdown overwirtes the SKIP_TURN sentinel with its botched move select
+    const skip_turn = if (showdown)
+        battle.foe(player).active.volatiles.Trapping
+    else
+        side.last_selected_move == .SKIP_TURN;
+    if (skip_turn) return null;
 
     if (choice.type == .Switch) {
         try switchIn(battle, player, choice.data, false, log);
@@ -2075,6 +2081,7 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
                 if (m.id == .None) break;
                 if (m.pp == 0) continue;
                 if (active.volatiles.disabled.move == slot) continue;
+                // FIXME: select 0 PP move for PS
                 out[n] = .{ .type = .Move, .data = slot };
                 n += 1;
             }

@@ -57,6 +57,20 @@ const NO_PROC = 255;
 const P1 = Player.P1;
 const P2 = Player.P2;
 
+// General
+
+test "start (first fainted)" {
+    return error.SkipZigTest;
+}
+
+test "start (all fainted)" {
+    return error.SkipZigTest;
+}
+
+test "move select" {
+    return error.SkipZigTest;
+}
+
 fn expectOrder(p1: anytype, o1: []const u8, p2: anytype, o2: []const u8) !void {
     try expectEqualSlices(u8, o1, &p1.order);
     try expectEqualSlices(u8, o2, &p2.order);
@@ -94,15 +108,158 @@ test "switching (order)" {
     try expectLog(&expected_buf, &actual_buf);
 }
 
-test "choices" {
+test "switching (reset)" {
+    // TODO clear boosts/volatiles/etc, trapping etc
+    return error.SkipZigTest;
+}
+
+test "switching (brn/par)" {
+    return error.SkipZigTest;
+}
+
+test "turn order (priority)" {
+    return error.SkipZigTest;
+}
+
+test "turn order (speed tie)" {
+    return error.SkipZigTest;
+}
+
+test "turn order (switch vs. move)" {
+    return error.SkipZigTest;
+}
+
+test "paralysis" {
+    // TODO cant be fully paralyzed
+    // TODO lower speed
+    return error.SkipZigTest;
+}
+
+test "confusion" {
+    // TODO cant hit self
+    // TODO disappears after duration
+    return error.SkipZigTest;
+}
+
+test "sleep" {
+    // TODO decrement counter, no turn,
+    // TODO wake up and cant act
+    // TODO can act after
+    return error.SkipZigTest;
+}
+
+test "freeze" {
+    // TODO cant act
+    // TODO thaws on fire
+    return error.SkipZigTest;
+}
+
+test "PP deduction" {
+    return error.SkipZigTest;
+}
+
+test "accuracy" {
+    return error.SkipZigTest;
+}
+
+test "damage calc" {
+    // TODO crit
+    // TODO roll
+    // TODO types (STAB, type effectiveness)
+    return error.SkipZigTest;
+}
+
+test "fainting (single)" {
+    return error.SkipZigTest;
+}
+
+test "fainting (double)" {
+    return error.SkipZigTest;
+}
+
+test "fainting (all)" {
+    return error.SkipZigTest;
+}
+
+test "residual (brn/psn/toxic)" {
+    // TODO residual
+    // TODO effected by toxic counter
+    return error.SkipZigTest;
+}
+
+test "residual (Leech Seed)" {
+    // TODO residual
+    // TODO effected by toxic counter
+    return error.SkipZigTest;
+}
+
+test "end turn (locked)" {
+    return error.SkipZigTest;
+}
+
+test "end turn (turn limit)" {
+    return error.SkipZigTest;
+}
+
+
+test "Endless Battle Clause (initial)" {
+    if (!showdown) return;
+
+    var t = Test(.{}).init(
+        &.{.{ .species = .Gengar, .moves = &.{.Tackle} }},
+        &.{.{ .species = .Gengar, .moves = &.{.Tackle} }},
+    );
+    defer t.deinit();
+
+    t.expected.p1.get(1).move(1).pp = 0;
+    t.expected.p2.get(1).move(1).pp = 0;
+
+    t.actual.p1.get(1).move(1).pp = 0;
+    t.actual.p2.get(1).move(1).pp = 0;
+
+    try t.log.expected.switched(P1.ident(1), t.expected.p1.get(1));
+    try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
+    try t.log.expected.tie();
+
+    try expectEqual(Result.Tie, try t.battle.expected.update(.{}, .{}, t.log.actual));
+    try t.verify();
+}
+
+test "Endless Battle Clause (TODO)" {
+    if (!showdown) return;
+    return error.SkipZigTest;
+}
+
+test "choices (default)" {
     var random = PRNG.init(0x27182818);
     var battle = Battle.random(&random, false);
     var options: [OPTIONS_SIZE]Choice = undefined;
-    const n = battle.choices(.P1, .Move, &options);
+
+    var n = battle.choices(.P1, .Move, &options);
     try expectEqualSlices(Choice, &[_]Choice{
         swtch(2), swtch(3), swtch(4), swtch(5), swtch(6),
         move(1),  move(2),  move(3),  move(4),
     }, options[0..n]);
+
+    n = battle.choices(.P1, .Switch, &options);
+    try expectEqualSlices(Choice, &[_]Choice{
+        swtch(2), swtch(3), swtch(4), swtch(5), swtch(6),
+    }, options[0..n]);
+
+    n = battle.choices(.P1, .Pass, &options);
+    try expectEqualSlices(Choice, &[_]Choice{.{}}, options[0..n]);
+}
+
+test "choices (locked)" {
+    return error.SkipZigTest;
+}
+
+test "choices (trapped)" {
+    return error.SkipZigTest;
+}
+
+test "choices (Struggle)" {
+    return error.SkipZigTest;
 }
 
 // Moves
@@ -715,29 +872,6 @@ test "Rage and Thrash / Petal Dance accuracy bug" {
 
 test "Stat down modifier overflow glitch" {
     // https://www.youtube.com/watch?v=y2AOm7r39Jg
-}
-
-test "Endless Battle Clause (initial)" {
-    if (!showdown) return;
-
-    var t = Test(.{}).init(
-        &.{.{ .species = .Gengar, .moves = &.{.Tackle} }},
-        &.{.{ .species = .Gengar, .moves = &.{.Tackle} }},
-    );
-    defer t.deinit();
-
-    t.expected.p1.get(1).move(1).pp = 0;
-    t.expected.p2.get(1).move(1).pp = 0;
-
-    t.actual.p1.get(1).move(1).pp = 0;
-    t.actual.p2.get(1).move(1).pp = 0;
-
-    try t.log.expected.switched(P1.ident(1), t.expected.p1.get(1));
-    try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
-    try t.log.expected.tie();
-
-    try expectEqual(Result.Tie, try t.battle.expected.update(.{}, .{}, t.log.actual));
-    try t.verify();
 }
 
 fn Test(comptime rolls: anytype) type {
