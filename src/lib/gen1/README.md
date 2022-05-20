@@ -409,7 +409,7 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 
 ## Bugs
 
-In addition to its alternative RNG semantics, Pokémon Showdown's implemention of the first
+In addition to its alternative [RNG semantics](#RNG), Pokémon Showdown's implemention of the first
 generation of Pokémon contains a number bugs:
 
 - **Haze**: Haze should remove the toxic volatile and leave the toxic counter unchanged, not reset
@@ -421,11 +421,6 @@ generation of Pokémon contains a number bugs:
   which means Mimic legally called via Metronome or Mirror Move will only work if the user also has
   Mimic (and the moved mimicked by Mimic called via Metronome / Mirror Move will erroneously
   override the Mimic move slot instead of the Metronome / Mirror Move move slot).
-- **`Battle.getRandomTarget()`**: Pokémon Showdown randomly determines a target (causing the RNG to
-  advance a frame) in cases where the target of a move is required but has not been specified,
-  though erroneously applies this logic in singles battles where only one target is possible. This
-  spuriously and inefficiently advances the RNG and results in inconsistencies if a player specifies
-  `move 1 1` instead of `move 1`.
 - **Psybeam** / **Confusion**: the secondary chance of these moves causing confusion is not 26/256
   like most "10%" chance moves but instead **25/256**.
 - **Thrash** / **Petal Dance** / **Rage**: On the cartridge (but not on Pokémon Showdown) these
@@ -502,6 +497,19 @@ called out in the `|rule|` section at the beginning of a battle's log):
   first](https://www.smogon.com/forums/threads/gen-3-on-ps-final-fixes.3527268/post-5989318).
 
 ## RNG
+
+TODO
+
+- **Algorithm**: gen 6 vs. gen 1
+- **Order of operations**: do move flow etc
+- **Speed-ties**: multiple rolls, roll each on `eachEvent`
+- **`Battle.getRandomTarget()`**: Pokémon Showdown randomly determines a target (causing the RNG to
+  advance a frame) in cases where the target of a move is required but has not been specified,
+  though erroneously applies this logic in singles battles where only one target is possible. This
+  spuriously and inefficiently advances the RNG and results in inconsistencies if a player specifies
+  `move 1 1` instead of `move 1`. TODO during move selection, also `Metronome`/`MirrorMove`
+- **`Pokemon.getLockedMove()`**: TODO endTurn (checkFaint, `Metronome`/`MirrorMove`)
+- **Bias** (**Metronome**): TODO
 
 | Type                     | Location                 | Description |
 | ------------------------ | ------------------------ | ----------- |
