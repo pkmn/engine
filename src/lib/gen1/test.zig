@@ -241,8 +241,6 @@ test "SwitchAndTeleport" {
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try expectEqual(t.expected.p1.get(1).hp, t.actual.p1.get(1).hp);
-    try expectEqual(t.expected.p2.get(1).hp, t.actual.p2.get(1).hp);
     try t.verify();
 }
 
@@ -267,8 +265,6 @@ test "Splash" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try expectEqual(t.expected.p1.get(1).hp, t.actual.p1.get(1).hp);
-    try expectEqual(t.expected.p2.get(1).hp, t.actual.p2.get(1).hp);
     try t.verify();
 }
 
@@ -363,9 +359,6 @@ test "SpecialDamage (fixed)" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try expectEqual(t.expected.p1.get(1).hp, t.actual.p1.get(1).hp);
-    try expectEqual(t.expected.p2.get(1).hp, t.actual.p2.get(1).hp);
-    try expectEqual(t.expected.p2.get(2).hp, t.actual.p2.get(2).hp);
 
     // |switch|p2a: Gastly|Gastly|263/263
     // |move|p1a: Voltorb|Sonic Boom|p2a: Gastly
@@ -383,9 +376,6 @@ test "SpecialDamage (fixed)" {
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
-    try expectEqual(t.expected.p1.get(1).hp, t.actual.p1.get(1).hp);
-    try expectEqual(t.expected.p2.get(2).hp, t.actual.p2.get(1).hp);
-    try expectEqual(t.expected.p2.get(1).hp, t.actual.p2.get(2).hp);
     try t.verify();
 }
 
@@ -413,8 +403,6 @@ test "SpecialDamage (level)" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try expectEqual(t.expected.p1.get(1).hp, t.actual.p1.get(1).hp);
-    try expectEqual(t.expected.p2.get(1).hp, t.actual.p2.get(1).hp);
     try t.verify();
 }
 
@@ -824,7 +812,9 @@ fn Test(comptime rolls: anytype) type {
             return self.battle.actual.update(c1, c2, self.log.actual);
         }
 
-        pub fn verify(t: *Self) !void {
+          pub fn verify(t: *Self) !void {
+            for (t.expected.p1.pokemon) |p, i| try expectEqual(p.hp, t.actual.p1.pokemon[i].hp);
+            for (t.expected.p2.pokemon) |p, i| try expectEqual(p.hp, t.actual.p2.pokemon[i].hp);
             try expect(t.battle.actual.rng.exhausted());
             if (trace) try expectLog(t.buf.expected.items, t.buf.actual.items);
         }
