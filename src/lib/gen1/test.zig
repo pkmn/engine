@@ -241,8 +241,8 @@ test "SwitchAndTeleport" {
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try expectEqual(t.p1().get(1).hp, t.battle.p1().get(1).hp);
-    try expectEqual(t.p2().get(1).hp, t.battle.p2().get(1).hp);
+    try expectEqual(t.expected.p1.get(1).hp, t.actual.p1.get(1).hp);
+    try expectEqual(t.expected.p2.get(1).hp, t.actual.p2.get(1).hp);
     try t.verify();
 }
 
@@ -267,8 +267,8 @@ test "Splash" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try expectEqual(t.p1().get(1).hp, t.battle.p1().get(1).hp);
-    try expectEqual(t.p2().get(1).hp, t.battle.p2().get(1).hp);
+    try expectEqual(t.expected.p1.get(1).hp, t.actual.p1.get(1).hp);
+    try expectEqual(t.expected.p2.get(1).hp, t.actual.p2.get(1).hp);
     try t.verify();
 }
 
@@ -348,8 +348,8 @@ test "SpecialDamage (fixed)" {
     );
     defer t.deinit();
 
-    t.p1().get(1).hp -= 40;
-    t.p2().get(1).hp -= 20;
+    t.expected.p1.get(1).hp -= 40;
+    t.expected.p2.get(1).hp -= 20;
 
     // |move|p1a: Voltorb|Sonic Boom|p2a: Dratini
     // |-damage|p2a: Dratini|265/285
@@ -357,35 +357,35 @@ test "SpecialDamage (fixed)" {
     // |-damage|p1a: Voltorb|243/283
     // |turn|2
     try t.log.expected.move(P1.ident(1), Move.SonicBoom, P2.ident(1), null);
-    try t.log.expected.damage(P2.ident(1), t.p2().get(1), .None);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.move(P2.ident(1), Move.DragonRage, P1.ident(1), null);
-    try t.log.expected.damage(P1.ident(1), t.p1().get(1), .None);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try expectEqual(t.p1().get(1).hp, t.battle.p1().get(1).hp);
-    try expectEqual(t.p2().get(1).hp, t.battle.p2().get(1).hp);
-    try expectEqual(t.p2().get(2).hp, t.battle.p2().get(2).hp);
+    try expectEqual(t.expected.p1.get(1).hp, t.actual.p1.get(1).hp);
+    try expectEqual(t.expected.p2.get(1).hp, t.actual.p2.get(1).hp);
+    try expectEqual(t.expected.p2.get(2).hp, t.actual.p2.get(2).hp);
 
     // |switch|p2a: Gastly|Gastly|263/263
     // |move|p1a: Voltorb|Sonic Boom|p2a: Gastly
-    try t.log.expected.switched(P2.ident(2), t.p2().get(2));
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
     try t.log.expected.move(P1.ident(1), Move.SonicBoom, P2.ident(2), null);
     if (showdown) {
         // |-immune|p2a: Gastly
         try t.log.expected.immune(P2.ident(2), .None);
     } else {
         // |-damage|p2a: Gastly|243/263
-        t.p2().get(2).hp -= 20;
-        try t.log.expected.damage(P2.ident(2), t.p2().get(2), .None);
+        t.expected.p2.get(2).hp -= 20;
+        try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
     }
     // |turn|3
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
-    try expectEqual(t.p1().get(1).hp, t.battle.p1().get(1).hp);
-    try expectEqual(t.p2().get(2).hp, t.battle.p2().get(1).hp);
-    try expectEqual(t.p2().get(1).hp, t.battle.p2().get(2).hp);
+    try expectEqual(t.expected.p1.get(1).hp, t.actual.p1.get(1).hp);
+    try expectEqual(t.expected.p2.get(2).hp, t.actual.p2.get(1).hp);
+    try expectEqual(t.expected.p2.get(1).hp, t.actual.p2.get(2).hp);
     try t.verify();
 }
 
@@ -398,8 +398,8 @@ test "SpecialDamage (level)" {
     );
     defer t.deinit();
 
-    t.p1().get(1).hp -= 16;
-    t.p2().get(1).hp -= 22;
+    t.expected.p1.get(1).hp -= 16;
+    t.expected.p2.get(1).hp -= 22;
 
     // |move|p1a: Gastly|Night Shade|p2a: Clefairy
     // |-damage|p2a: Clefairy|41/63
@@ -407,14 +407,14 @@ test "SpecialDamage (level)" {
     // |-damage|p1a: Gastly|49/65
     // |turn|2
     try t.log.expected.move(P1.ident(1), Move.NightShade, P2.ident(1), null);
-    try t.log.expected.damage(P2.ident(1), t.p2().get(1), .None);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.move(P2.ident(1), Move.SeismicToss, P1.ident(1), null);
-    try t.log.expected.damage(P1.ident(1), t.p1().get(1), .None);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try expectEqual(t.p1().get(1).hp, t.battle.p1().get(1).hp);
-    try expectEqual(t.p2().get(1).hp, t.battle.p2().get(1).hp);
+    try expectEqual(t.expected.p1.get(1).hp, t.actual.p1.get(1).hp);
+    try expectEqual(t.expected.p2.get(1).hp, t.actual.p2.get(1).hp);
     try t.verify();
 }
 
@@ -738,14 +738,14 @@ test "Endless Battle Clause (initial)" {
     );
     defer t.deinit();
 
-    t.battle.expected.sides[0].pokemon[0].moves[0].pp = 0;
-    t.battle.expected.sides[1].pokemon[0].moves[0].pp = 0;
+    t.expected.p1.get(1).move(1).pp = 0;
+    t.expected.p2.get(1).move(1).pp = 0;
 
-    t.battle.actual.sides[0].pokemon[0].moves[0].pp = 0;
-    t.battle.actual.sides[1].pokemon[0].moves[0].pp = 0;
+    t.actual.p1.get(1).move(1).pp = 0;
+    t.actual.p2.get(1).move(1).pp = 0;
 
-    try t.log.expected.switched(P1.ident(1), t.p1().get(1));
-    try t.log.expected.switched(P2.ident(1), t.p2().get(1));
+    try t.log.expected.switched(P1.ident(1), t.expected.p1.get(1));
+    try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
     try t.log.expected.tie();
 
     try expectEqual(Result.Tie, try t.battle.expected.update(.{}, .{}, t.log.actual));
@@ -757,18 +757,8 @@ fn Test(comptime rolls: anytype) type {
         const Self = @This();
 
         battle: struct {
-            const This = @This();
-
             expected: data.Battle(rng.FixedRNG(1, rolls.len)),
             actual: data.Battle(rng.FixedRNG(1, rolls.len)),
-
-            pub fn p1(this: *This) *data.Side {
-                return this.actual.side(.P1);
-            }
-
-            pub fn p2(this: *This) *data.Side {
-                return this.actual.side(.P2);
-            }
         },
         buf: struct {
             expected: ArrayList(u8),
@@ -779,17 +769,33 @@ fn Test(comptime rolls: anytype) type {
             actual: Log(ArrayList(u8).Writer),
         },
 
+        expected: struct {
+            p1: *data.Side,
+            p2: *data.Side,
+        },
+        actual: struct {
+            p1: *data.Side,
+            p2: *data.Side,
+        },
+
         pub fn init(
             pokemon1: []const Pokemon,
             pokemon2: []const Pokemon,
         ) *Self {
             var t = std.testing.allocator.create(Self) catch unreachable;
+
             t.battle.expected = Battle.fixed(rolls, pokemon1, pokemon2);
             t.battle.actual = t.battle.expected;
             t.buf.expected = std.ArrayList(u8).init(std.testing.allocator);
             t.buf.actual = std.ArrayList(u8).init(std.testing.allocator);
             t.log.expected = Log(ArrayList(u8).Writer){ .writer = t.buf.expected.writer() };
             t.log.actual = Log(ArrayList(u8).Writer){ .writer = t.buf.actual.writer() };
+
+            t.expected.p1 = t.battle.expected.side(.P1);
+            t.expected.p2 = t.battle.expected.side(.P2);
+            t.actual.p1 = t.battle.actual.side(.P1);
+            t.actual.p2 = t.battle.actual.side(.P2);
+
             return t;
         }
 
@@ -797,14 +803,6 @@ fn Test(comptime rolls: anytype) type {
             self.buf.expected.deinit();
             self.buf.actual.deinit();
             std.testing.allocator.destroy(self);
-        }
-
-        pub fn p1(self: *Self) *data.Side {
-            return self.battle.expected.side(.P1);
-        }
-
-        pub fn p2(self: *Self) *data.Side {
-            return self.battle.expected.side(.P2);
         }
 
         pub fn update(self: *Self, c1: Choice, c2: Choice) !Result {
@@ -815,8 +813,8 @@ fn Test(comptime rolls: anytype) type {
                 var expected = FixedLog{ .writer = stream(&expected_buf).writer() };
                 var actual = FixedLog{ .writer = stream(&actual_buf).writer() };
 
-                try expected.switched(P1.ident(1), self.battle.p1().get(1));
-                try expected.switched(P2.ident(1), self.battle.p2().get(1));
+                try expected.switched(P1.ident(1), self.actual.p1.get(1));
+                try expected.switched(P2.ident(1), self.actual.p2.get(1));
                 try expected.turn(1);
 
                 try expectEqual(Result.Default, try self.battle.actual.update(.{}, .{}, actual));
