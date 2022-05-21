@@ -157,6 +157,7 @@ TODO
   I)](https://bulbapedia.bulbagarden.net/wiki/List_of_glitches_(Generation_I))
 - [Pokémon Crystal - Bugs & Glitches](https://pkmn.cc/pokecrystal/docs/bugs_and_glitches.md)
 - [Compilation of Red/Blue UE errors](https://sites.google.com/site/crystalglitchystuff/research/compilation-of-red-blue-eu-errors) - Crystal_
+- [Pokémon Showdown RBY Bugs](https://www.smogon.com/forums/threads/rby-tradebacks-bug-report-thread.3524844/#post-5933177)
 
 ### Other
 

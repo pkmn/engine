@@ -410,28 +410,29 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 ## Bugs
 
 In addition to its alternative [RNG semantics](#RNG), Pokémon Showdown's implemention of the first
-generation of Pokémon contains a number bugs:
+generation of Pokémon contains a number bugs, [many of which are known and have been documented on
+Smogon](https://www.smogon.com/forums/threads/rby-tradebacks-bug-report-thread.3524844/#post-5933177):
 
 - **Haze**: Haze should remove the toxic volatile and leave the toxic counter unchanged, not reset
   the toxic counter. Furthermore, Haze should clear a specific set of volatiles, not clear all
   volatiles indiscriminately (including artificial implementation-defined volatiles like
   `brnattackdrop`). Finally, if Haze resets a foe's sleep or freeze status it should still be
   prevented from moving for the turn.
-- **Mimic**: Pokémon Showdown checks that the user of Mimic has Mimic in one of their move slots,
-  which means Mimic legally called via Metronome or Mirror Move will only work if the user also has
-  Mimic (and the moved mimicked by Mimic called via Metronome / Mirror Move will erroneously
-  override the Mimic move slot instead of the Metronome / Mirror Move move slot).
+- **Mimic**: Pokémon Showdown considers Mimic to not have to check to hit instead of having 100%
+  accuracy (which can 1/256 miss). It also checks that the user of Mimic has Mimic in one of their
+  move slots, which means Mimic legally called via Metronome or Mirror Move will only work if the
+  user also has Mimic (and the moved mimicked by Mimic called via Metronome / Mirror Move will
+  erroneously override the Mimic move slot instead of the Metronome / Mirror Move move slot).
+  Furthermore, because Pokémon Showdown deducts PP based on a move's name instead of slot, if Mimic
+  copies a move the Pokémon already knows, PP deduction for using either the original move of the
+  mimicked move will instead deduct PP for whichever appears at the lower move slot and the PP will
+  be allowed to go negative (effectively allowing for infinite PP use).
 - **Psybeam** / **Confusion**: the secondary chance of these moves causing confusion is not 26/256
   like most "10%" chance moves but instead **25/256**.
 - **Thrash** / **Petal Dance** / **Rage**: On the cartridge (but not on Pokémon Showdown) these
   moves have glitchy behavior where the the scaled accuracy after accuracy/evasion modifiers have
   been applied should overwrite the original accuracy of the move for as long as the move's lock
   lasts.
-- ~~**Bide**: Pokémon Showdown uses `random(3, 4)` to generate a duration in the range <b>[</b>3,
-  4<b>)</b> which means Bide will always deterministically last 2 turns (Pokémon Showdown ends when
-  duration reaches 1 instead of 0) despite advancing the RNG.~~ Fixed in
-  [smogon/pokemon-showdown@`77b1596c`](https://github.com/smogon/pokemon-showdown/commit/77b1596c),
-  though see below regarding `lastDamage`.
 - **Jump Kick** / **High Jump Kick**: these should cause 1 HP of crash damage when the target is a
   Ghost, despite what Pokémon Showdown or Bulbapedia suggests or what the case is in later
   generations.
@@ -455,7 +456,7 @@ generation of Pokémon contains a number bugs:
   - `effectState.lastDamage` (Bide):
     - updated by Bide, use to determine the amount of damage the move eventually does
 - **Disable**: Pokémon Showdown can possibly disable moves with 0 PP and lasts 1-6 turns instead of
-  1-8.
+  1-8. Furthermore, Disable should cause their target to continue building Rage even if it misses.
 - **Freeze** / **Sleep**: Pokémon Showdown requires a move to be selected when a Pokémon is frozen
   or sleeping and uses that in the event that the status is removed while on the cartridge no
   selection is possible and no turn exists for the thawed/woken Pokémon to act except in the case
@@ -463,11 +464,25 @@ generation of Pokémon contains a number bugs:
   selection glitch](https://glitchcity.wiki/Freeze_top_move_selection_glitch)).
 - **Hyper Beam**: due to improperly implemented selection mechanics, the [Hyper Beam
   automatic-selection glitch](https://glitchcity.wiki/Hyper_Beam_automatic_selection_glitch) does
-  not exist on Pokémon Showdown.
+  not exist on Pokémon Showdown. Furthermore, Hyper Beam's recharging turn should be cancelled if a
+  Pokémon would have been flinched (even if the Pokémon doing the flinching was slower) or if the
+  target fainted, even if called via Metronome or Mirror Move.
 - **Roar** / **Whirlwind**: these moves can miss on Pokémon Showdown (and advance the RNG when
   checking) which is incorrect (these moves should always fail, but do not check accuracy or advance
   the RNG).
 - **Sonic Boom**: this move incorrectly fails to ignore type immunity on Pokémon Showdown.
+- **Substitute**: on Pokémon Showdown Substitute does not block burn, paralysis, or freeze secondary
+  effects and does erroneously block secondary effect confusion.
+- **Fly** / **Dig**: these should not clear the "invulnerability" volatile if the Pokémon using them
+  is interrupted due to being fully paralyzed (Bulbapeda incorrectly claims that hurting itself in
+  confusion will also result in this glitch which is incorrect). The "invulnerability" volatile
+  should then only be reset if the Pokémon switches or successfully completes Fly or Dig (and not
+  any other "charge" move, as incorrectly claimed by Bulbapedia).
+- **Twineedle**: on Pokémon Showdown Twineedle can poison on both hits as opposed to how in the
+  original game only the second hit can poison.
+- **Mirror Move**: Mirror Move should not copy a "charge" move during its first turn of charging but
+  should instead copy the move that was used prior to the "charge" move being used (i.e. "charging"
+  should not set the last used move).
 
 Finally, in Generation I, checking whether a move has **hit should come *after* determining
 damage**, not before. Pokémon Showdown's altered ordering here (which is more in line with how
@@ -500,6 +515,7 @@ called out in the `|rule|` section at the beginning of a battle's log):
 
 TODO
 
+- TODO First 10 rolls RNG quirk ([1](https://www.smogon.com/forums/threads/rby-tradebacks-bug-report-thread.3524844/page-16#post-9068411))
 - **Algorithm**: gen 6 vs. gen 1
 - **Order of operations**: do move flow etc
 - **Speed-ties**: multiple rolls, roll each on `eachEvent`
@@ -588,3 +604,5 @@ AlwaysHappenSideEffects
 - [Pokemon Showdown!](https://github.com/smogon/pokemon-showdown)
 - [List of glitches (Generation
   I)](https://bulbapedia.bulbagarden.net/wiki/List_of_glitches_(Generation_I))
+- [Pokémon Showdown RBY
+  Bugs](https://www.smogon.com/forums/threads/rby-tradebacks-bug-report-thread.3524844/#post-5933177)

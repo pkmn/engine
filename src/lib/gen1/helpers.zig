@@ -61,15 +61,20 @@ pub const Battle = struct {
 };
 
 fn prng(rand: *PRNG) data.Random {
-    return .{ .src = .{ .seed = if (build_options.showdown)
-        rand.newSeed()
-    else .{
-        rand.range(u8, 0, 256), rand.range(u8, 0, 256),
-        rand.range(u8, 0, 256), rand.range(u8, 0, 256),
-        rand.range(u8, 0, 256), rand.range(u8, 0, 256),
-        rand.range(u8, 0, 256), rand.range(u8, 0, 256),
-        rand.range(u8, 0, 256), rand.range(u8, 0, 256),
-    } } };
+    return .{
+        .src = .{
+            .seed = if (build_options.showdown)
+                rand.newSeed()
+            else .{
+                // GLITCH: initial bytes in seed can only range from 0-251, not 0-255
+                rand.range(u8, 0, 251), rand.range(u8, 0, 251),
+                rand.range(u8, 0, 251), rand.range(u8, 0, 251),
+                rand.range(u8, 0, 251), rand.range(u8, 0, 251),
+                rand.range(u8, 0, 251), rand.range(u8, 0, 251),
+                rand.range(u8, 0, 251), rand.range(u8, 0, 251),
+            },
+        },
+    };
 }
 
 pub const Side = struct {

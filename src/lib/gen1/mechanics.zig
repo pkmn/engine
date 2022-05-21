@@ -278,7 +278,7 @@ fn executeMove(
     const from: ?Move = if (locked) side.last_selected_move else null;
     if (!skip_can and !try canMove(battle, player, choice, skip_pp, false, from, log)) return null;
 
-    return doMove(battle, player, choice, false, log);
+    return doMove(battle, player, choice, false, from, log);
 }
 
 const BeforeMove = union(enum) { done, skip_can, skip_pp, ok, err };
@@ -387,6 +387,8 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
             volatiles.Charging = false;
             volatiles.Trapping = false;
             // GLITCH: Invulnerable is not cleared, resulting in the Fly/Dig glitch
+            // SHOWDOWN: Pokémon Showdown patches this glitch, preventing invulnerability
+            if (showdown) volatiles.Invulnerable = false;
             try log.cant(ident, .Paralysis);
             return .done;
         }
@@ -466,6 +468,8 @@ fn canMove(
     } else if (move.effect == .Charge) {
         try log.move(player_ident, side.last_selected_move, .{}, from);
         try Effects.charge(battle, player, log);
+        // SHOWDOWN: Pokémon Showdown thinks the first turn of charging counts as using a move
+        if (showdown) side.last_used_move = side.last_selected_move;
         return false;
     }
 
@@ -511,6 +515,27 @@ fn decrementPP(side: *Side, choice: Choice) void {
     assert(!volatiles.Rage and !volatiles.Thrashing);
     if (volatiles.Bide or volatiles.MultiHit) return;
 
+    // SHOWDOWN: Pokémon Showdown's broken PP deduction allows for infinite PP use with Mimic
+    if (showdown) {
+        const intended = active.move(choice.data);
+        for (active.moves) |move, i| {
+            if (move.id == intended.id) {
+                const mimic = ok: {
+                    for (active.moves) |m| if (m.id == .Mimic) break :ok false;
+                    break :ok true;
+                };
+                assert(i == choice.data or mimic);
+                // Technically on Pokémon Showdown the PP data goes negative, but since we're using
+                // an unsigned integer we can't do that and just wrapping around is equivalent
+                active.moves[i].pp -= 1;
+                if (volatiles.Transform) return;
+                side.stored().moves[i].pp -= 1;
+                assert(active.moves[i].pp == side.stored().moves[i].pp);
+            }
+        }
+        return;
+    }
+
     // BUG: https://glitchcity.wiki/Freeze_top_move_selection_glitch
     // GLITCH: Struggle bypass PP underflow via Hyper Beam / Trapping-switch auto selection
     const underflow = side.last_selected_move == .HyperBeam or
@@ -526,7 +551,14 @@ fn decrementPP(side: *Side, choice: Choice) void {
 }
 
 // SHOWDOWN: Pokémon Showdown does hit/multi/crit/damage instead of crit/damage/hit/multi
-fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: anytype) !?Result {
+fn doMove(
+    battle: anytype,
+    player: Player,
+    choice: Choice,
+    missed: bool,
+    from: ?Move,
+    log: anytype,
+) !?Result {
     var side = battle.side(player);
     const foe = battle.foe(player);
 
@@ -557,7 +589,9 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
     var ohko = false;
     var immune = false;
     var hits: u4 = 1;
-    var miss = if (showdown) moveHit(battle, player, move) else false;
+    var miss = showdown and (move.effect == .Bide or
+        (move.effect == .Sleep and foe.active.volatiles.Recharging) or
+        moveHit(battle, player, move));
 
     const counter = side.last_selected_move == .Counter;
     if (!miss and (!showdown or (move.bp > 0 or counter))) {
@@ -589,12 +623,12 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
         }
     }
 
-    miss = if (showdown)
+    miss = if (showdown or move.bp == 0)
         miss
     else
         (moveHit(battle, player, move) or battle.last_damage == 0 or missed);
 
-    assert(miss or battle.last_damage > 0);
+    assert(miss or battle.last_damage > 0 or move.bp == 0);
     assert(!(ohko and immune));
     assert(!immune or miss);
 
@@ -646,10 +680,12 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
         hits = side.active.volatiles.attacks;
     }
 
+    // FIXME: HyperBeam from MirrorMove
+    _ = from;
     var nullified = false;
     var hit: u4 = 0;
     while (hit < hits) : (hit += 1) {
-        nullified = try applyDamage(battle, player.foe(), player.foe(), log);
+        if (move.bp > 0) nullified = try applyDamage(battle, player.foe(), player.foe(), log);
         if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
             try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
         }
@@ -659,6 +695,11 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
         }
         // If the substitute breaks during a multi-hit attack, the attack ends
         if (nullified or foe.stored().hp == 0) break;
+
+        // SHOWDOWN: Twineedle can also poison on the first hit on Pokémon Showdown (second below)
+        if (showdown and hit == 0 and move.effect == .Twineedle) {
+            try moveEffect(battle, player, Move.get(.PoisonSting), choice.data, miss, log);
+        }
     }
 
     if (side.active.volatiles.MultiHit) {
@@ -697,7 +738,8 @@ fn doMove(battle: anytype, player: Player, choice: Choice, missed: bool, log: an
 fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data) bool {
     const side = battle.side(player);
 
-    var chance = @as(u16, Species.chance(side.active.species));
+    // Base speed is used for the critical hit calculation, even when Transform-ed
+    var chance = @as(u16, Species.chance(side.stored().species));
 
     // GLITCH: Focus Energy reduces critical hit chance instead of increasing it
     chance = if (side.active.volatiles.FocusEnergy)
@@ -913,6 +955,8 @@ fn applyDamage(battle: anytype, target_player: Player, sub_player: Player, log: 
             subbed.active.volatiles.substitute -= @truncate(u8, battle.last_damage);
             try log.activate(battle.active(sub_player), .Substitute);
         }
+        // SHOWDOWN: attacking a Substitute with Hyper Beam never causes a recharge on showdown
+        if (showdown) battle.foe(target_player).active.volatiles.Recharging = false;
     } else {
         if (battle.last_damage > target.stored().hp) battle.last_damage = target.stored().hp;
         target.stored().hp -= battle.last_damage;
@@ -934,7 +978,7 @@ fn mirrorMove(battle: anytype, player: Player, choice: Choice, miss: bool, log: 
     side.last_selected_move = foe.last_used_move;
 
     if (!try canMove(battle, player, choice, true, miss, .MirrorMove, log)) return null;
-    return doMove(battle, player, choice, miss, log);
+    return doMove(battle, player, choice, miss, .MirrorMove, log);
 }
 
 fn metronome(battle: anytype, player: Player, choice: Choice, miss: bool, log: anytype) !?Result {
@@ -955,7 +999,7 @@ fn metronome(battle: anytype, player: Player, choice: Choice, miss: bool, log: a
     };
 
     if (!try canMove(battle, player, choice, true, miss, .Metronome, log)) return null;
-    return doMove(battle, player, choice, miss, log);
+    return doMove(battle, player, choice, miss, .Metronome, log);
 }
 
 fn checkHit(battle: anytype, player: Player, move: Move.Data, missed: bool, log: anytype) !bool {
@@ -1251,7 +1295,9 @@ pub const Effects = struct {
             foe_stored.status = 0;
         }
 
-        const cant = foe.active.volatiles.Substitute or Status.any(foe_stored.status);
+        // SHOWDOWN: Substitute does not block burn on Pokémon Showdown
+        const cant = (!showdown and foe.active.volatiles.Substitute) or
+            Status.any(foe_stored.status);
         if (cant) return log.fail(battle.active(player.foe()), .Burn);
 
         const chance = !foe.active.types.includes(move.type) and if (showdown)
@@ -1289,6 +1335,8 @@ pub const Effects = struct {
         var foe = battle.foe(player);
 
         if (move.effect == .ConfusionChance) {
+            // SHOWDOWN: Substitute blocks secondary effect confusion on Pokémon Showdown
+            if (showdown and foe.active.volatiles.Substitute) return;
             const chance = if (showdown)
                 // SHOWDOWN: this diverges because Pokémon Showdown uses 26 instead of 25
                 battle.rng.chance(u8, 26, 256)
@@ -1380,7 +1428,8 @@ pub const Effects = struct {
         if (!chance) return;
 
         volatiles.Flinch = true;
-        volatiles.Recharging = false;
+        // SHOWDOWN: Pokémon Showdown does not cancel recharging on flinch
+        if (!showdown) volatiles.Recharging = false;
     }
 
     fn focusEnergy(battle: anytype, player: Player, log: anytype) !void {
@@ -1397,7 +1446,9 @@ pub const Effects = struct {
         var foe_stored = foe.stored();
         const foe_ident = battle.active(player.foe());
 
-        const cant = foe.active.volatiles.Substitute or Status.any(foe_stored.status);
+        // SHOWDOWN: Substitute does not block freeze on Pokémon Showdown
+        const cant = (!showdown and foe.active.volatiles.Substitute) or
+            Status.any(foe_stored.status);
         if (cant) return log.fail(foe_ident, .Freeze);
 
         const chance = !foe.active.types.includes(move.type) and if (showdown)
@@ -1516,19 +1567,21 @@ pub const Effects = struct {
         var foe = battle.foe(player);
 
         // SHOWDOWN: Pokémon Showdown requires the user has Mimic (but not necessarily at mslot)
-        const ok = !showdown or has_mimic: {
-            for (side.active.moves) |m| {
-                if (m.id == .Mimic) break :has_mimic true;
-            }
-            break :has_mimic false;
-        };
-
         // In reality, Mimic can also be called via Metronome or Mirror Move
         assert(showdown or side.active.moves[mslot].id == .Mimic or
             side.active.moves[mslot].id == .Metronome or
             side.active.moves[mslot].id == .MirrorMove);
 
-        if (!try checkHit(battle, player, move, miss, log) or !ok) return;
+        // SHOWDOWN: Pokémon Showdown considers Mimic to never miss instead of having 100% accuracy
+        if (showdown) {
+            const has_mimic = has_mimic: {
+                for (side.active.moves) |m| if (m.id == .Mimic) break :has_mimic true;
+                break :has_mimic false;
+            };
+            if (!has_mimic) return;
+        } else if (!try checkHit(battle, player, move, miss, log)) {
+            return;
+        }
 
         const moves = &foe.active.moves;
         const rslot = randomMoveSlot(&battle.rng, moves, false);
@@ -1575,7 +1628,9 @@ pub const Effects = struct {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
 
-        const cant = foe.active.volatiles.Substitute or Status.any(foe_stored.status);
+        // SHOWDOWN: Substitute does not block paralysis on Pokémon Showdown
+        const cant = (!showdown and foe.active.volatiles.Substitute) or
+            Status.any(foe_stored.status);
         if (cant) return log.fail(battle.active(player.foe()), .Paralysis);
 
         // Body Slam can't paralyze a Normal type Pokémon
@@ -1779,6 +1834,7 @@ pub const Effects = struct {
 
         if (side.active.volatiles.Trapping) return;
         side.active.volatiles.Trapping = true;
+        // SHOWDOWN: Pokémon Showdown patches this glitch, preventing automatic selection
         // GLITCH: Hyper Beam automatic selection glitch if Recharging gets cleared on miss
         if (!showdown) foe.active.volatiles.Recharging = false;
 
