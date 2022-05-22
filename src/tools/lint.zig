@@ -50,6 +50,11 @@ fn checkFormat(file_path: []const u8) !bool {
     return false;
 }
 
+// Line length linting logic forked from coilhq/tigerbeetle's Apache-2 licensed scripts/lint.zig.
+// The code has been modified specifically for the structure of this pkmn engine project with a
+// hardcoded symlink skip, though also includes support for Windows paths and skipping entire files.
+// The full license can be found at https://github.com/coilhq/tigerbeetle/blob/main/LICENSE
+
 const Ignored = union(enum) { lines: []const u32, all };
 
 const ignore = std.ComptimeStringMap(Ignored, .{
