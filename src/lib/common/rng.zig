@@ -1,10 +1,12 @@
 const std = @import("std");
 const build_options = @import("build_options");
+const root = @import("root");
 
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 
 const showdown = build_options.showdown;
+const skip_advance = if (@hasDecl(root, "skip_advance")) @as(bool, root.skip_advance) else false;
 
 pub fn Random(comptime gen: comptime_int) type {
     if (showdown) return PRNG(gen);
@@ -43,6 +45,7 @@ pub fn PRNG(comptime gen: comptime_int) type {
         }
 
         pub fn advance(self: *Self, n: usize) void {
+            if (skip_advance) return;
             var i: usize = 0;
             while (i < n) : (i += 1) _ = self.src.next();
         }
