@@ -1,8 +1,6 @@
 const std = @import("std");
 const fs = std.fs;
 
-const assert = std.debug.assert;
-
 const PATH = "src";
 const LINE_LENGTH = 100;
 
@@ -18,8 +16,15 @@ pub fn main() !void {
 fn checkFormat(file_path: []const u8) !bool {
     const argv = &.{ "zig", "fmt", "--check", file_path };
 
-    assert(std.process.can_spawn);
-    var child = std.ChildProcess.init(argv, allocator);
+    // TODO: ziglang/zig@a0a2ce92 changed ChildProcess initialization
+    const allocates = @hasDecl(std.ChildProcess, "deinit");
+    var child: *std.ChildProcess = undefined;
+    if (allocates) {
+        child = try std.ChildProcess.init(argv, allocator);
+    } else {
+        child = &std.ChildProcess.init(argv, allocator);
+    }
+    defer if (allocates) child.deinit();
 
     const term = child.spawnAndWait() catch |err| {
         const stderr = std.io.getStdErr().writer();
@@ -44,10 +49,7 @@ fn checkFormat(file_path: []const u8) !bool {
     return false;
 }
 
-const Ignored = union(enum) {
-    lines: []const u32,
-    all,
-};
+const Ignored = union(enum) { lines: []const u32, all };
 
 const ignore = std.ComptimeStringMap(Ignored, .{
     .{ "src/tools/serde.zig", .{ .lines = &.{ 404, 514 } } },

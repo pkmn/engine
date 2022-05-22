@@ -102,7 +102,7 @@ const install = async () => {
       console.log('Found existing compatible Zig executable:', zig_exe);
       return zig_exe;
     } else {
-      console.log(`Existing Zig executable is not compatible (${version} < ${VERSION}): `, zig_exe);
+      console.log(`Existing Zig executable is not compatible (${version} < ${VERSION}):`, zig_exe);
     }
   } catch (err) {
     if (err.code !== 'ENOENT') throw err;
