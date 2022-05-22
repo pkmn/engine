@@ -1,4 +1,5 @@
 const std = @import("std");
+
 const fs = std.fs;
 
 const PATH = "src";
@@ -58,7 +59,11 @@ const ignore = std.ComptimeStringMap(Ignored, .{
     .{ "src/lib/gen1/test.zig", .{ .lines = &.{599} } },
 });
 
-fn ignored(path: []const u8, line: u32) bool {
+fn ignored(raw_path: []const u8, line: u32) !bool {
+    var path = try allocator.dupe(u8, raw_path);
+    std.mem.replaceScalar(u8, path, fs.path.sep_windows, fs.path.sep_posix);
+    defer allocator.free(path);
+
     const value = ignore.get(path) orelse return false;
     switch (value) {
         .lines => |lines| return std.mem.indexOfScalar(u32, lines, line) != null,
@@ -82,8 +87,11 @@ fn lintDir(file_path: []const u8, parent_dir: fs.Dir, parent_sub_path: []const u
 
     var dir_it = dir.iterate();
     while (try dir_it.next()) |entry| {
+        if (entry.kind == .SymLink) continue;
+
         const is_dir = entry.kind == .Directory;
         if (is_dir and std.mem.eql(u8, entry.name, "zig-cache")) continue;
+
         if (is_dir or std.mem.endsWith(u8, entry.name, ".zig")) {
             const full_path = try fs.path.join(allocator, &[_][]const u8{ file_path, entry.name });
             defer allocator.free(full_path);
@@ -123,7 +131,7 @@ fn lintLineLength(source: []const u8, path: []const u8) !bool {
     while (std.mem.indexOfScalar(u8, source[i..], '\n')) |newline| : (line += 1) {
         const line_length =
             std.unicode.utf8CountCodepoints(source[i..][0..newline]) catch return error.NotUtf8;
-        if (line_length > LINE_LENGTH and !ignored(path, line)) {
+        if (line_length > LINE_LENGTH and !try ignored(path, line)) {
             const stderr = std.io.getStdErr().writer();
             try stderr.print(
                 "{s}:{d} has a length of {d}. Maximum allowed is 100\n",
