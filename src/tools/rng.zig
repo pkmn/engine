@@ -117,13 +117,18 @@ pub fn main() !void {
                 .metronome => {
                     const a = move: {
                         const r = rng1.range(u8, 0, @enumToInt(pkmn.gen1.Move.Struggle) - 2);
-                        const mod = @as(u2, (if (r < @enumToInt(pkmn.gen1.Move.Metronome) - 1) 1 else 2));
+                        const mod =
+                            @as(u2, (if (r < @enumToInt(pkmn.gen1.Move.Metronome) - 1) 1 else 2));
                         break :move @intToEnum(pkmn.gen1.Move, r + mod);
                     };
                     const b = move: {
                         const r = rng2.next();
-                        if (r == 0 or r == @enumToInt(pkmn.gen1.Move.Metronome)) break :move pkmn.gen1.Move.None;
-                        if (r >= @enumToInt(pkmn.gen1.Move.Struggle)) break :move pkmn.gen1.Move.None;
+                        if (r == 0 or r == @enumToInt(pkmn.gen1.Move.Metronome)) {
+                            break :move pkmn.gen1.Move.None;
+                        }
+                        if (r >= @enumToInt(pkmn.gen1.Move.Struggle)) {
+                            break :move pkmn.gen1.Move.None;
+                        }
                         break :move @intToEnum(pkmn.gen1.Move, r);
                     };
 

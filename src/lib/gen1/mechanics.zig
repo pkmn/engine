@@ -943,7 +943,8 @@ fn metronome(battle: anytype, player: Player, choice: Choice, miss: bool, log: a
     // SHOWDOWN: these values will diverge
     side.last_selected_move = if (showdown) blk: {
         const r = battle.rng.range(u8, 0, @enumToInt(Move.Struggle) - 2);
-        break :blk @intToEnum(Move, r + @as(u2, (if (r < @enumToInt(Move.Metronome) - 1) 1 else 2)));
+        const mod = @as(u2, (if (r < @enumToInt(Move.Metronome) - 1) 1 else 2));
+        break :blk @intToEnum(Move, r + mod);
     } else loop: {
         while (true) {
             const r = battle.rng.next();

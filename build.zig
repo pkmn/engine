@@ -140,12 +140,15 @@ pub fn build(b: *Builder) !void {
     bench.single_threaded = true;
     bench.strip = true;
 
+    const format = b.addFmt(&.{"."});
+
+    const lint = b.addExecutable("lint", "src/tools/lint.zig").run();
+    lint.step.dependOn(b.getInstallStep());
+
     const benchmark = bench.run();
     benchmark.step.dependOn(b.getInstallStep());
     if (b.args) |args| benchmark.addArgs(args);
     if (test_step) |ts| ts.dependOn(&bench.step);
-
-    const format = b.addFmt(&.{"."});
 
     const rng = try tool(b, &.{pkmn}, "src/tools/rng.zig", showdown, strip, test_step);
     const serde = try tool(b, &.{pkmn}, "src/tools/serde.zig", showdown, strip, test_step);
@@ -153,6 +156,7 @@ pub fn build(b: *Builder) !void {
 
     b.step("benchmark", "Run benchmark code").dependOn(&benchmark.step);
     b.step("format", "Format source files").dependOn(&format.step);
+    b.step("lint", "Lint source files").dependOn(&lint.step);
     b.step("protocol", "Run protocol dump tool").dependOn(&protocol.step);
     b.step("rng", "Run RNG calculator tool").dependOn(&rng.step);
     b.step("serde", "Run serialization/deserialization tool").dependOn(&serde.step);
