@@ -59,6 +59,9 @@ const ignore = std.ComptimeStringMap(Ignored, .{
     .{ "src/lib/gen1/test.zig", .{ .lines = &.{599} } },
 });
 
+// Windows has trouble with the symlink so we need to hardcode the logic to skip it
+const LIBS = "src\\examples\\zig\\libs";
+
 fn ignored(raw_path: []const u8, line: u32) !bool {
     var path = try allocator.dupe(u8, raw_path);
     std.mem.replaceScalar(u8, path, fs.path.sep_windows, fs.path.sep_posix);
@@ -95,6 +98,7 @@ fn lintDir(file_path: []const u8, parent_dir: fs.Dir, parent_sub_path: []const u
         if (is_dir or std.mem.endsWith(u8, entry.name, ".zig")) {
             const full_path = try fs.path.join(allocator, &[_][]const u8{ file_path, entry.name });
             defer allocator.free(full_path);
+            if (std.mem.eql(u8, full_path, LIBS)) continue;
 
             var e = false;
             if (is_dir) {
