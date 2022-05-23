@@ -253,7 +253,7 @@ fn executeMove(
 ) !?Result {
     var side = battle.side(player);
 
-    // SHOWDOWN: Pokémon Showdown overwirtes the SKIP_TURN sentinel with its botched move select
+    // SHOWDOWN: Pokémon Showdown overwrites the SKIP_TURN sentinel with its botched move select
     const skip_turn = if (showdown)
         battle.foe(player).active.volatiles.Trapping
     else
@@ -427,7 +427,6 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
         if (volatiles.attacks == 0) {
             volatiles.Thrashing = false;
             volatiles.Confusion = true;
-            // SHOWDOWN: these values will diverge
             volatiles.confusion = @truncate(u3, if (showdown)
                 battle.rng.range(u8, 2, 6)
             else
@@ -752,7 +751,6 @@ fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data) bool {
     else
         chance / 2;
 
-    // SHOWDOWN: these values will diverge (due to rotations)
     if (showdown) return battle.rng.chance(u8, @truncate(u8, chance), 256);
     return std.math.rotl(u8, battle.rng.next(), 3) < chance;
 }
@@ -830,7 +828,6 @@ fn adjustDamage(battle: anytype, player: Player) bool {
 fn randomizeDamage(battle: anytype) void {
     if (battle.last_damage <= 1) return;
 
-    // SHOWDOWN: these values will diverge
     const random = if (showdown)
         battle.rng.range(u8, 217, 256)
     else loop: {
@@ -862,7 +859,6 @@ fn specialDamage(
         // GLITCH: if power = 0 then a desync occurs (or a miss on Pokémon Showdown)
         .Psywave => power: {
             const max = @truncate(u8, @as(u16, side.stored().level) * 3 / 2);
-            // SHOWDOWN: these values will diverge
             if (showdown) {
                 break :power battle.rng.range(u8, 0, max);
             } else {
@@ -984,7 +980,6 @@ fn mirrorMove(battle: anytype, player: Player, choice: Choice, miss: bool, log: 
 fn metronome(battle: anytype, player: Player, choice: Choice, miss: bool, log: anytype) !?Result {
     var side = battle.side(player);
 
-    // SHOWDOWN: these values will diverge
     side.last_selected_move = if (showdown) blk: {
         const r = battle.rng.range(u8, 0, @enumToInt(Move.Struggle) - 2);
         const mod = @as(u2, (if (r < @enumToInt(Move.Metronome) - 1) 1 else 2));
@@ -1276,7 +1271,6 @@ pub const Effects = struct {
         side.active.volatiles.Bide = true;
         assert(!side.active.volatiles.Thrashing and !side.active.volatiles.Rage);
         side.active.volatiles.state = 0;
-        // SHOWDOWN: these values will diverge
         side.active.volatiles.attacks = @truncate(u3, if (showdown)
             battle.rng.range(u4, 3, 5) - 1
         else
@@ -1338,7 +1332,7 @@ pub const Effects = struct {
             // SHOWDOWN: Substitute blocks secondary effect confusion on Pokémon Showdown
             if (showdown and foe.active.volatiles.Substitute) return;
             const chance = if (showdown)
-                // SHOWDOWN: this diverges because Pokémon Showdown uses 26 instead of 25
+                // SHOWDOWN: this should be 26 instead of 25
                 battle.rng.chance(u8, 26, 256)
             else
                 battle.rng.next() < Gen12.percent(10);
@@ -1348,8 +1342,6 @@ pub const Effects = struct {
 
         if (foe.active.volatiles.Confusion) return;
         foe.active.volatiles.Confusion = true;
-
-        // SHOWDOWN: these values will diverge
         foe.active.volatiles.confusion = @truncate(u3, if (showdown)
             battle.rng.range(u8, 2, 6)
         else
@@ -1383,7 +1375,7 @@ pub const Effects = struct {
         // SHOWDOWN: Pokémon Showdown does not check for moves with 0 PP
         volatiles.disabled.move = randomMoveSlot(&battle.rng, moves, !showdown);
 
-        // SHOWDOWN: these values would diverge anyway, but range is incorrectly 2-7 instead of 1-8
+        // SHOWDOWN: this range is incorrectly 2-7 instead of 1-8
         volatiles.disabled.duration = @truncate(u4, if (showdown)
             battle.rng.range(u8, 1, 7) + 1
         else
@@ -1728,7 +1720,6 @@ pub const Effects = struct {
             if (!showdown and !try checkHit(battle, player, move, miss, log)) return;
         }
 
-        // SHOWDOWN: these values will diverge
         const duration = @truncate(u3, if (showdown)
             battle.rng.range(u8, 1, 8)
         else loop: {
@@ -1790,7 +1781,6 @@ pub const Effects = struct {
         volatiles.Thrashing = true;
         assert(!volatiles.Bide);
         volatiles.state = 0;
-        // SHOWDOWN: these values will diverge
         volatiles.attacks = @truncate(u3, if (showdown)
             battle.rng.range(u8, 3, 5) - 1
         else
@@ -2022,14 +2012,12 @@ fn clearVolatiles(active: *ActivePokemon, ident: ID, log: anytype) !void {
 
 const DISTRIBUTION = [_]u3{ 2, 2, 2, 3, 3, 3, 4, 5 };
 
-// SHOWDOWN: these values will diverge
 fn distribution(battle: anytype) u3 {
     if (showdown) return DISTRIBUTION[battle.rng.range(u8, 0, DISTRIBUTION.len)];
     const r = (battle.rng.next() & 3);
     return @truncate(u3, (if (r < 2) r else battle.rng.next() & 3) + 2);
 }
 
-// SHOWDOWN: these values will diverge
 fn randomMoveSlot(rand: anytype, moves: []MoveSlot, check_pp: bool) u4 {
     if (showdown) {
         var i: usize = moves.len;
