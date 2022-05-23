@@ -142,7 +142,7 @@ fn selectMove(battle: anytype, player: Player, choice: Choice, foe_choice: Choic
             assert(side.active.volatiles.disabled.move != choice.data);
             const move = side.active.move(choice.data);
             // You cannot *select* a move with 0 PP, but a 0 PP move can be used automatically
-            assert(move.pp != 0);
+            assert(showdown or move.pp != 0);
             side.last_selected_move = move.id;
         }
 
