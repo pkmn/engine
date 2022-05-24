@@ -31,13 +31,13 @@ The following information is required to simulate a Generation I Pokémon battle
 | pkmn                      | Pokémon Red (pret)                 | Pokémon Showdown                       |
 | ------------------------- | ---------------------------------- | -------------------------------------- |
 | `battle.seed`             | `Random{Add,Sub}`                  | `battle.seed`                          |
-| `battle.turn`             |                                    | `battle.turn`                          |
+| `battle.turn`             | -                                  | `battle.turn`                          |
 | `battle.last_damage`      | `Damage`                           | `battle.lastDamage`                    |
 | `side.{active,pokemon}`   | `PlayerMonNumber`/`BattleMon`      | `side.active`                          |
 | `side.team`               | `PartyMons`                        | `side.pokemon`                         |
 | `side.last_used_move`     | `PlayerUsedMove`                   | `side.lastMove`                        |
 | `side.last_selected_move` | `PlayerSelectedMove`               | `side.lastSelectedMove`                |
-| `side.order`              |                                    | `pokemon.position`                     |
+| `side.order`              |  -                                 | `pokemon.position`                     |
 | `{pokemon,active}.moves`  | `{party,battle}_struct.{Moves,PP}` | `pokemon.{baseMoveSlots,moveSlots}`    |
 | `{pokemon,active}.hp`     | `{party,battle}_struct.HP`         | `pokemon.hp`                           |
 | `{pokemon,active}.status` | `{party,battle}_struct.Status`     | `pokemon.status`                       |
@@ -570,30 +570,41 @@ TODO
   if there is no `player` in scope (eg. in helper functions)
 - **`target_player`** is a target `Player` whose corresponding `Side` is  **`target`**
 
-```txt
-beforeExecute (CheckPlayerStatusConditions)
-canExecute (PlayerCanExecuteChargingMove / PlayerCanExecuteMove)
-  skipExecute (ResidualEffects1)
-              (SpecialEffectsCont)
-executeMove
-  (PlayerCalcMoveDamage)
-   SetDamageEffects -> moveHitTest
-   CriticalHitTest
-   HandleCounterMove
-   GetDamageVarsForPlayerAttack
-   CalculateDamage
-   AdjustDamageForMoveType
-   RandomizeDamage
-   MoveHitTest
-   MirrorMove/Metronome (tailcall)
-  ResidualEffects2
-  ApplyAttackToEnemyPokemon
-  AlwaysHappenSideEffects
-  HandleBuildingRage
- multi attack -> skip to MirrorrMove/MetronomeCHeck = residualeffects2
+| pkmn                   | Pokémon Red (pret)                                      |
+| ---------------------- | ------------------------------------------------------- |
+| `start`                | `StartBattle`                                           |
+| `update`               | `MainInBattleLoop`                                      |
+| `findFirstAlive`       | `findFirstAlive*MonLoop` / `AnyPartyAlive`              |
+| `selectMove`           | `selectPlayerMove`                                      |
+| `switchIn`             | `SwitchPlayerMon` / `SendOutMon`                        |
+| `turnOrder`            | `MainInBattleLoop`                                      |
+| `doTurn`               | `MainInBattleLoop`                                      |
+| `executeMove`          | `ExecutePlayerMove`                                     |
+| `beforeMove`           | `CheckPlayerStatusConditions`                           |
+| `canMove`              | `CheckIfPlayerNeedsToChargeUp` / `PlayerCanExecuteMove` |
+| `decrementPP`          | `DecrementPP`                                           |
+| `doMove`               | `PlayerCalcMoveDamage`                                  |
+| `checkCriticalHit`     | `CriticalHitTest`                                       |
+| `calcDamage`           | `GetDamageVarsForPlayerAttack` / `CalculateDamage`      |
+| `adjustDamage`         | `AdjustDamageForMoveType`                               |
+| `randomizeDamage`      | `RandomizeDamage`                                       |
+| `specialDamage`        | `ApplyAttackToEnemyPokemon`                             |
+| `counterDamage`        | `HandleCounterMove`                                     |
+| `applyDamage`          | `ApplyDamageToEnemyPokemon` / `AttackSubstitute`        |
+| `mirrorMove`           | `MirrorMoveCheck` / `MirrorMoveCopyMove`                |
+| `metronome`            | `metronomeCheck` / `MetronomePickMove`                  |
+| `checkHit` / `moveHit` | `MoveHitTest`                                           |
+| `checkFaint`           | `HasMonFainted` / `HandlePlayerMonFainted`              |
+| `faint`                | `FaintEnemyPokemon`                                     |
+| `handleResidual`       | `HandlePoisonBurnLeechSeed`                             |
+| `endTurn` / `checkEBC` | -                                                       |
 
-AlwaysHappenSideEffects
-```
+| pkmn            | Pokémon Red (pret)        |
+| --------------- | ------------------------- |
+| `onBeforeMove`  | `ResidualEffects1`        |
+| `onEndMove`     | `ResidualEffects2`        |
+| `alwaysHappens` | `AlwaysHappensSideEffect` |
+| `isSpecial`     | `SpecialEffects`          |
 
 ## Resources
 
