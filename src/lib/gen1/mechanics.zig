@@ -276,9 +276,9 @@ fn executeMove(
     }
 
     const from: ?Move = if (locked) side.last_selected_move else null;
-    if (!skip_can and !try canMove(battle, player, choice, skip_pp, false, from, log)) return null;
+    if (!skip_can and !try canMove(battle, player, choice, skip_pp, from, log)) return null;
 
-    return doMove(battle, player, choice, false, from, log);
+    return doMove(battle, player, choice, from, log);
 }
 
 const BeforeMove = union(enum) { done, skip_can, skip_pp, ok, err };
@@ -453,7 +453,6 @@ fn canMove(
     player: Player,
     choice: Choice,
     skip_pp: bool,
-    miss: bool,
     from: ?Move,
     log: anytype,
 ) !bool {
@@ -481,15 +480,13 @@ fn canMove(
     if (!skip_pp) decrementPP(side, choice);
 
     // SHOWDOWN: Metronome / Mirror Move call getRandomTarget if the move they're using targets
-    if (showdown and special) {
-        battle.rng.advance(@boolToInt(move.targets()));
-    }
+    if (showdown and special) battle.rng.advance(@boolToInt(move.targets()));
 
     const target = if (move.targets()) player.foe() else player;
     try log.move(player_ident, side.last_selected_move, battle.active(target), from);
 
     if (move.effect.onBegin()) {
-        try moveEffect(battle, player, move, choice.data, miss, log);
+        try moveEffect(battle, player, move, choice.data, log);
         return false;
     }
 
@@ -550,14 +547,7 @@ fn decrementPP(side: *Side, choice: Choice) void {
 }
 
 // SHOWDOWN: Pokémon Showdown does hit/multi/crit/damage instead of crit/damage/hit/multi
-fn doMove(
-    battle: anytype,
-    player: Player,
-    choice: Choice,
-    missed: bool,
-    from: ?Move,
-    log: anytype,
-) !?Result {
+fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: anytype) !?Result {
     var side = battle.side(player);
     const foe = battle.foe(player);
 
@@ -582,15 +572,15 @@ fn doMove(
     }
 
     // The cartridge handles set damage moves in applyDamage but we short circuit to simplify things
-    if (special) return specialDamage(battle, player, move, missed, log);
+    if (special) return specialDamage(battle, player, move, log);
 
     var crit = false;
     var ohko = false;
     var immune = false;
     var hits: u4 = 1;
-    var miss = showdown and (move.effect == .Bide or
-        (move.effect == .Sleep and foe.active.volatiles.Recharging) or
-        moveHit(battle, player, move));
+    var miss = showdown and (move.effect != .Bide and
+        !(move.effect == .Sleep and foe.active.volatiles.Recharging) and
+        !moveHit(battle, player, move));
 
     const counter = side.last_selected_move == .Counter;
     if (!miss and (!showdown or (move.bp > 0 or counter))) {
@@ -625,7 +615,7 @@ fn doMove(
     miss = if (showdown or move.bp == 0)
         miss
     else
-        (moveHit(battle, player, move) or battle.last_damage == 0 or missed);
+        (!moveHit(battle, player, move) or battle.last_damage == 0);
 
     assert(miss or battle.last_damage > 0 or move.bp == 0);
     assert(!(ohko and immune));
@@ -633,14 +623,14 @@ fn doMove(
 
     if (!showdown or !miss) {
         if (move.effect == .MirrorMove) {
-            return mirrorMove(battle, player, choice, miss, log);
+            return mirrorMove(battle, player, choice, log);
         } else if (move.effect == .Metronome) {
-            return metronome(battle, player, choice, miss, log);
+            return metronome(battle, player, choice, log);
         }
     }
 
     if ((!showdown or !miss) and move.effect.onEnd()) {
-        try moveEffect(battle, player, move, choice.data, miss, log);
+        try moveEffect(battle, player, move, choice.data, log);
         return null;
     }
 
@@ -697,7 +687,7 @@ fn doMove(
 
         // SHOWDOWN: Twineedle can also poison on the first hit on Pokémon Showdown (second below)
         if (showdown and hit == 0 and move.effect == .Twineedle) {
-            try moveEffect(battle, player, Move.get(.PoisonSting), choice.data, miss, log);
+            try moveEffect(battle, player, Move.get(.PoisonSting), choice.data, log);
         }
     }
 
@@ -715,9 +705,7 @@ fn doMove(
     // On the cartridge, "always happen" effect handlers are called in the applyDamage loop above,
     // but this is only done to setup the MultiHit looping in the first place. Moving the MultiHit
     // setup before the loop means we can avoid having to waste time doing no-op handler searches.
-    if (move.effect.alwaysHappens()) {
-        try moveEffect(battle, player, move, choice.data, miss, log);
-    }
+    if (move.effect.alwaysHappens()) try moveEffect(battle, player, move, choice.data, log);
 
     if (foe.stored().hp == 0) return null;
 
@@ -728,7 +716,7 @@ fn doMove(
         // below). For Twineedle we change the data to that of one with PoisonChance1 given its
         // MultiHit behavior is complete after the loop above.
         if (move.effect == .Twineedle) move = Move.get(.PoisonSting);
-        try moveEffect(battle, player, move, choice.data, miss, log);
+        try moveEffect(battle, player, move, choice.data, log);
     }
 
     return null;
@@ -840,16 +828,10 @@ fn randomizeDamage(battle: anytype) void {
     battle.last_damage = battle.last_damage *% random / 255;
 }
 
-fn specialDamage(
-    battle: anytype,
-    player: Player,
-    move: Move.Data,
-    miss: bool,
-    log: anytype,
-) !?Result {
+fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype) !?Result {
     const side = battle.side(player);
 
-    if (!try checkHit(battle, player, move, miss, log)) return null;
+    if (!try checkHit(battle, player, move, log)) return null;
 
     battle.last_damage = switch (side.last_selected_move) {
         .SuperFang => @maximum(battle.foe(player).active.stats.hp / 2, 1),
@@ -924,7 +906,7 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
     battle.last_damage = if (battle.last_damage > 0x7FFF) 0xFFFF else battle.last_damage * 2;
 
     // SHOWDOWN: Pokémon Showdown calls checkHit before Counter
-    if (!showdown and !try checkHit(battle, player, move, false, log)) return null;
+    if (!showdown and !try checkHit(battle, player, move, log)) return null;
 
     _ = try applyDamage(battle, player.foe(), player.foe(), log);
     return null;
@@ -961,7 +943,7 @@ fn applyDamage(battle: anytype, target_player: Player, sub_player: Player, log: 
     return false;
 }
 
-fn mirrorMove(battle: anytype, player: Player, choice: Choice, miss: bool, log: anytype) !?Result {
+fn mirrorMove(battle: anytype, player: Player, choice: Choice, log: anytype) !?Result {
     var side = battle.side(player);
     const foe = battle.foe(player);
 
@@ -973,11 +955,11 @@ fn mirrorMove(battle: anytype, player: Player, choice: Choice, miss: bool, log: 
 
     side.last_selected_move = foe.last_used_move;
 
-    if (!try canMove(battle, player, choice, true, miss, .MirrorMove, log)) return null;
-    return doMove(battle, player, choice, miss, .MirrorMove, log);
+    if (!try canMove(battle, player, choice, true, .MirrorMove, log)) return null;
+    return doMove(battle, player, choice, .MirrorMove, log);
 }
 
-fn metronome(battle: anytype, player: Player, choice: Choice, miss: bool, log: anytype) !?Result {
+fn metronome(battle: anytype, player: Player, choice: Choice, log: anytype) !?Result {
     var side = battle.side(player);
 
     side.last_selected_move = if (showdown) blk: {
@@ -993,17 +975,15 @@ fn metronome(battle: anytype, player: Player, choice: Choice, miss: bool, log: a
         }
     };
 
-    if (!try canMove(battle, player, choice, true, miss, .Metronome, log)) return null;
-    return doMove(battle, player, choice, miss, .Metronome, log);
+    if (!try canMove(battle, player, choice, true, .Metronome, log)) return null;
+    return doMove(battle, player, choice, .Metronome, log);
 }
 
-fn checkHit(battle: anytype, player: Player, move: Move.Data, missed: bool, log: anytype) !bool {
-    const miss = moveHit(battle, player, move) or missed;
-    if (miss) {
-        try log.lastmiss();
-        try log.miss(battle.active(player));
-    }
-    return !miss;
+fn checkHit(battle: anytype, player: Player, move: Move.Data, log: anytype) !bool {
+    if (moveHit(battle, player, move)) return true;
+    try log.lastmiss();
+    try log.miss(battle.active(player));
+    return false;
 }
 
 fn moveHit(battle: anytype, player: Player, move: Move.Data) bool {
@@ -1014,10 +994,10 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data) bool {
         assert(!side.active.volatiles.Bide);
 
         if (move.effect == .DreamEater and !Status.is(foe.stored().status, .SLP)) break :miss true;
-        if (move.effect == .Swift) return false;
+        if (move.effect == .Swift) return true;
         if (foe.active.volatiles.Invulnerable) break :miss true;
         // SHOWDOWN: need to special case Sleep + Recharging glitch due to control flow differences
-        if (showdown and move.effect == .Sleep and foe.active.volatiles.Recharging) return false;
+        if (showdown and move.effect == .Sleep and foe.active.volatiles.Recharging) return true;
 
         // Conversion / Haze / Light Screen / Reflect qualify but do not call moveHit
         if (foe.active.volatiles.Mist and move.effect.isStatDown()) break :miss true;
@@ -1045,12 +1025,10 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data) bool {
             battle.rng.next() >= accuracy;
     };
 
-    if (miss) {
-        battle.last_damage = 0;
-        side.active.volatiles.Trapping = false;
-    }
-
-    return miss;
+    if (!miss) return true;
+    battle.last_damage = 0;
+    side.active.volatiles.Trapping = false;
+    return false;
 }
 
 fn checkFaint(
@@ -1213,20 +1191,13 @@ fn checkEBC(battle: anytype) bool {
     return false;
 }
 
-fn moveEffect(
-    battle: anytype,
-    player: Player,
-    move: Move.Data,
-    mslot: u8,
-    miss: bool,
-    log: anytype,
-) !void {
+fn moveEffect(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: anytype) !void {
     return switch (move.effect) {
         .Bide => Effects.bide(battle, player, log),
         .BurnChance1, .BurnChance2 => Effects.burnChance(battle, player, move, log),
-        .Confusion, .ConfusionChance => Effects.confusion(battle, player, move, miss, log),
+        .Confusion, .ConfusionChance => Effects.confusion(battle, player, move, log),
         .Conversion => Effects.conversion(battle, player, log),
-        .Disable => Effects.disable(battle, player, move, miss, log),
+        .Disable => Effects.disable(battle, player, move, log),
         .DrainHP, .DreamEater => Effects.drainHP(battle, player, log),
         .Explode => Effects.explode(battle, player),
         .FlinchChance1, .FlinchChance2 => Effects.flinchChance(battle, player, move),
@@ -1235,19 +1206,19 @@ fn moveEffect(
         .Haze => Effects.haze(battle, player, log),
         .Heal => Effects.heal(battle, player, log),
         .HyperBeam => Effects.hyperBeam(battle, player),
-        .LeechSeed => Effects.leechSeed(battle, player, move, miss, log),
+        .LeechSeed => Effects.leechSeed(battle, player, move, log),
         .LightScreen => Effects.lightScreen(battle, player, log),
-        .Mimic => Effects.mimic(battle, player, move, mslot, miss, log),
+        .Mimic => Effects.mimic(battle, player, move, mslot, log),
         .Mist => Effects.mist(battle, player, log),
         .MultiHit, .DoubleHit, .Twineedle => Effects.multiHit(battle, player, move),
-        .Paralyze => Effects.paralyze(battle, player, move, miss, log),
+        .Paralyze => Effects.paralyze(battle, player, move, log),
         .ParalyzeChance1, .ParalyzeChance2 => Effects.paralyzeChance(battle, player, move, log),
         .PayDay => Effects.payDay(log),
-        .Poison, .PoisonChance1, .PoisonChance2 => Effects.poison(battle, player, move, miss, log),
+        .Poison, .PoisonChance1, .PoisonChance2 => Effects.poison(battle, player, move, log),
         .Rage => Effects.rage(battle, player),
         .Recoil => Effects.recoil(battle, player, log),
         .Reflect => Effects.reflect(battle, player, log),
-        .Sleep => Effects.sleep(battle, player, move, miss, log),
+        .Sleep => Effects.sleep(battle, player, move, log),
         .Splash => Effects.splash(battle, player, log),
         .Substitute => Effects.substitute(battle, player, log),
         .SwitchAndTeleport => Effects.switchAndTeleport(battle, player, move, log),
@@ -1258,7 +1229,7 @@ fn moveEffect(
             Effects.boost(battle, player, move, log),
         .AccuracyDown1, .AttackDown1, .DefenseDown1, .DefenseDown2, .SpeedDown1,
         .AttackDownChance, .DefenseDownChance, .SpecialDownChance, .SpeedDownChance =>
-            Effects.unboost(battle, player, move, miss, log),
+            Effects.unboost(battle, player, move, log),
         // zig fmt: on
         else => {},
     };
@@ -1319,13 +1290,7 @@ pub const Effects = struct {
         try log.prepare(battle.active(player), move);
     }
 
-    fn confusion(
-        battle: anytype,
-        player: Player,
-        move: Move.Data,
-        miss: bool,
-        log: anytype,
-    ) !void {
+    fn confusion(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
         var foe = battle.foe(player);
 
         if (move.effect == .ConfusionChance) {
@@ -1338,7 +1303,7 @@ pub const Effects = struct {
                 battle.rng.next() < Gen12.percent(10);
             if (!chance) return;
         } else if (foe.active.volatiles.Substitute or
-            !try checkHit(battle, player, move, miss, log)) return;
+            !try checkHit(battle, player, move, log)) return;
 
         if (foe.active.volatiles.Confusion) return;
         foe.active.volatiles.Confusion = true;
@@ -1361,12 +1326,12 @@ pub const Effects = struct {
         return log.typechange(battle.active(player), foe.active.types);
     }
 
-    fn disable(battle: anytype, player: Player, move: Move.Data, miss: bool, log: anytype) !void {
+    fn disable(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
         var foe = battle.foe(player);
         var volatiles = &foe.active.volatiles;
         const foe_ident = battle.active(player.foe());
 
-        if (!moveHit(battle, player, move) or miss or volatiles.disabled.move != 0) {
+        if (!moveHit(battle, player, move) or volatiles.disabled.move != 0) {
             try log.lastmiss();
             return log.miss(battle.active(player));
         }
@@ -1520,16 +1485,10 @@ pub const Effects = struct {
         battle.side(player).active.volatiles.Recharging = true;
     }
 
-    fn leechSeed(
-        battle: anytype,
-        player: Player,
-        move: Move.Data,
-        miss: bool,
-        log: anytype,
-    ) !void {
+    fn leechSeed(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
         var foe = battle.foe(player);
 
-        if (!try checkHit(battle, player, move, miss, log)) return;
+        if (!try checkHit(battle, player, move, log)) return;
         if (foe.active.types.includes(.Grass) or foe.active.volatiles.LeechSeed) {
             return log.immune(battle.active(player.foe()), .None);
         }
@@ -1547,14 +1506,7 @@ pub const Effects = struct {
         try log.start(battle.active(player), .LightScreen);
     }
 
-    fn mimic(
-        battle: anytype,
-        player: Player,
-        move: Move.Data,
-        mslot: u8,
-        miss: bool,
-        log: anytype,
-    ) !void {
+    fn mimic(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: anytype) !void {
         var side = battle.side(player);
         var foe = battle.foe(player);
 
@@ -1571,7 +1523,7 @@ pub const Effects = struct {
                 break :has_mimic false;
             };
             if (!has_mimic) return;
-        } else if (!try checkHit(battle, player, move, miss, log)) {
+        } else if (!try checkHit(battle, player, move, log)) {
             return;
         }
 
@@ -1601,14 +1553,14 @@ pub const Effects = struct {
         side.active.volatiles.attacks = if (move.effect == .MultiHit) distribution(battle) else 2;
     }
 
-    fn paralyze(battle: anytype, player: Player, move: Move.Data, miss: bool, log: anytype) !void {
+    fn paralyze(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
         const foe_ident = battle.active(player.foe());
 
         if (Status.any(foe_stored.status)) return log.fail(foe_ident, .Paralysis);
         if (foe.active.types.immune(move.type)) return log.immune(foe_ident, .None);
-        if (!try checkHit(battle, player, move, miss, log)) return;
+        if (!try checkHit(battle, player, move, log)) return;
 
         foe_stored.status = Status.init(.PAR);
         foe.active.stats.spe = @maximum(foe.active.stats.spe / 4, 1);
@@ -1645,7 +1597,7 @@ pub const Effects = struct {
         try log.fieldactivate();
     }
 
-    fn poison(battle: anytype, player: Player, move: Move.Data, miss: bool, log: anytype) !void {
+    fn poison(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
         const foe_ident = battle.active(player.foe());
@@ -1657,7 +1609,7 @@ pub const Effects = struct {
         if (cant) return log.fail(foe_ident, .Poison);
 
         if (move.effect == .Poison) {
-            if (!try checkHit(battle, player, move, miss, log)) return;
+            if (!try checkHit(battle, player, move, log)) return;
         } else {
             const chance = if (showdown)
                 battle.rng.chance(u8, @as(u8, if (move.effect == .PoisonChance1) 52 else 103), 256)
@@ -1705,7 +1657,7 @@ pub const Effects = struct {
         try log.start(battle.active(player), .Reflect);
     }
 
-    fn sleep(battle: anytype, player: Player, move: Move.Data, miss: bool, log: anytype) !void {
+    fn sleep(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
         const foe_ident = battle.active(player.foe());
@@ -1716,8 +1668,7 @@ pub const Effects = struct {
         } else {
             if (Status.any(foe_stored.status)) return log.fail(foe_ident, .Sleep);
             // SHOWDOWN: if checkHit didn't return true showdown wouldn't even call this handler
-            assert(!showdown or !miss);
-            if (!showdown and !try checkHit(battle, player, move, miss, log)) return;
+            if (!showdown and !try checkHit(battle, player, move, log)) return;
         }
 
         const duration = @truncate(u3, if (showdown)
@@ -1772,7 +1723,7 @@ pub const Effects = struct {
         if (!showdown or battle.side(player).last_selected_move == .Teleport) return;
 
         // SHOWDOWN: Whirlwind/Roar should not roll to hit but showdown does anyway
-        _ = try checkHit(battle, player, move, false, log);
+        _ = try checkHit(battle, player, move, log);
     }
 
     fn thrashing(battle: anytype, player: Player) void {
@@ -1887,21 +1838,21 @@ pub const Effects = struct {
         statusModify(battle.foe(player).stored().status, stats);
     }
 
-    fn unboost(battle: anytype, player: Player, move: Move.Data, miss: bool, log: anytype) !void {
+    fn unboost(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
         var foe = battle.foe(player);
         const foe_ident = battle.active(player.foe());
 
         if (foe.active.volatiles.Substitute) return;
 
         // SHOWDOWN: if checkHit didn't return true showdown wouldn't even call this handler
-        assert(move.effect.isStatDownChance() or (!showdown or !miss));
+        assert(move.effect.isStatDownChance() or !showdown);
         if (move.effect.isStatDownChance()) {
             const chance = if (showdown)
                 battle.rng.chance(u8, 85, 256)
             else
                 battle.rng.next() < Gen12.percent(33) + 1;
             if (chance or foe.active.volatiles.Invulnerable) return;
-        } else if (!showdown and !try checkHit(battle, player, move, miss, log)) {
+        } else if (!showdown and !try checkHit(battle, player, move, log)) {
             return; // checkHit already checks for Invulnerable
         }
 
