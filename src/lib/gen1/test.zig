@@ -31,8 +31,6 @@ const FixedLog = protocol.FixedLog;
 const Log = protocol.Log;
 const expectLog = protocol.expectLog;
 
-const PRNG = rng.PRNG(6);
-
 const Move = data.Move;
 
 const Battle = helpers.Battle;
@@ -42,17 +40,20 @@ const swtch = helpers.swtch;
 
 const OPTIONS_SIZE = data.OPTIONS_SIZE;
 
-const P1_FIRST = 0;
-const P2_FIRST = 255;
-const NOP = 0;
-const HIT = 0;
-const MISS = 255;
-const CRIT = 0;
-const NO_CRIT = 255;
-const MIN_DMG = if (showdown) 0 else 217;
-const MAX_DMG = 255;
-const PROC = 0;
-const NO_PROC = 255;
+const MIN = 0;
+const MAX = std.math.maxInt(if (showdown) u32 else u8);
+
+const P1_FIRST = MIN;
+const P2_FIRST = MAX;
+const NOP = MIN;
+const HIT = MIN;
+const MISS = MAX;
+const CRIT = MIN;
+const NO_CRIT = MAX;
+const MIN_DMG = if (showdown) MIN else 217;
+const MAX_DMG = MAX;
+const PROC = MIN;
+const NO_PROC = MAX;
 
 const P1 = Player.P1;
 const P2 = Player.P2;
@@ -77,7 +78,7 @@ fn expectOrder(p1: anytype, o1: []const u8, p2: anytype, o2: []const u8) !void {
 }
 
 test "switching (order)" {
-    var battle = Battle.random(&PRNG.init(0x12345678), false);
+    var battle = Battle.random(&rng.PSRNG.init(0x12345678), false);
     battle.turn = 1;
     const p1 = battle.side(.P1);
     const p2 = battle.side(.P2);
@@ -230,7 +231,7 @@ test "Endless Battle Clause (TODO)" {
 }
 
 test "choices (default)" {
-    var random = PRNG.init(0x27182818);
+    var random = rng.PSRNG.init(0x27182818);
     var battle = Battle.random(&random, false);
     var options: [OPTIONS_SIZE]Choice = undefined;
 

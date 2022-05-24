@@ -29,7 +29,7 @@ pub fn main() !void {
 pub fn benchmark(gen: u8, seed: u64, battles: usize, playouts: ?usize) !void {
     std.debug.assert(gen >= 1 and gen <= 8);
 
-    var random = pkmn.PRNG.init(seed);
+    var random = pkmn.PSRNG.init(seed);
     var options: [pkmn.OPTIONS_SIZE]pkmn.Choice = undefined;
 
     var duration: u64 = 0;
@@ -50,8 +50,8 @@ pub fn benchmark(gen: u8, seed: u64, battles: usize, playouts: ?usize) !void {
             var c1 = pkmn.Choice{};
             var c2 = pkmn.Choice{};
 
-            var p1 = pkmn.PRNG.init(random.newSeed());
-            var p2 = pkmn.PRNG.init(random.newSeed());
+            var p1 = pkmn.PSRNG.init(random.newSeed());
+            var p2 = pkmn.PSRNG.init(random.newSeed());
 
             var timer = try Timer.start();
             var result = try battle.update(c1, c2, null);

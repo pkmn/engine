@@ -2017,34 +2017,26 @@ fn randomMoveSlot(rand: anytype, moves: []MoveSlot, check_pp: bool) u4 {
 }
 
 test "RNG agreement" {
-    var expected: [256]u8 = undefined;
+    if (!showdown) return;
+    var expected: [256]u32 = undefined;
     var i: usize = 0;
     while (i < expected.len) : (i += 1) {
-        expected[i] = @truncate(u8, i);
+        expected[i] = @truncate(u32, i * 0x1000000);
     }
 
-    var spe1 = rng.FixedRNG(1, expected.len){ .rolls = expected };
-    var spe2 = rng.FixedRNG(1, expected.len){ .rolls = expected };
-
-    var cfz1 = rng.FixedRNG(1, expected.len){ .rolls = expected };
-    var cfz2 = rng.FixedRNG(1, expected.len){ .rolls = expected };
-
-    var par1 = rng.FixedRNG(1, expected.len){ .rolls = expected };
-    var par2 = rng.FixedRNG(1, expected.len){ .rolls = expected };
-
-    var brn1 = rng.FixedRNG(1, expected.len){ .rolls = expected };
-    var brn2 = rng.FixedRNG(1, expected.len){ .rolls = expected };
-
-    var eff1 = rng.FixedRNG(1, expected.len){ .rolls = expected };
-    var eff2 = rng.FixedRNG(1, expected.len){ .rolls = expected };
+    var spe = rng.FixedRNG(1, expected.len){ .rolls = expected };
+    var cfz = rng.FixedRNG(1, expected.len){ .rolls = expected };
+    var par = rng.FixedRNG(1, expected.len){ .rolls = expected };
+    var brn = rng.FixedRNG(1, expected.len){ .rolls = expected };
+    var eff = rng.FixedRNG(1, expected.len){ .rolls = expected };
 
     i = 0;
     while (i < expected.len) : (i += 1) {
-        try expectEqual(spe1.range(u8, 0, 2) == 0, spe2.next() < Gen12.percent(50) + 1);
-        try expectEqual(!cfz1.chance(u8, 128, 256), cfz2.next() >= Gen12.percent(50) + 1);
-        try expectEqual(par1.chance(u8, 63, 256), par2.next() < Gen12.percent(25));
-        try expectEqual(brn1.chance(u8, 26, 256), brn2.next() < Gen12.percent(10) + 1);
-        try expectEqual(eff1.chance(u8, 85, 256), eff2.next() < Gen12.percent(33) + 1);
+        try expectEqual(spe.range(u8, 0, 2) == 0, i < Gen12.percent(50) + 1);
+        try expectEqual(!cfz.chance(u8, 128, 256), i >= Gen12.percent(50) + 1);
+        try expectEqual(par.chance(u8, 63, 256), i < Gen12.percent(25));
+        try expectEqual(brn.chance(u8, 26, 256), i < Gen12.percent(10) + 1);
+        try expectEqual(eff.chance(u8, 85, 256), i < Gen12.percent(33) + 1);
     }
 }
 

@@ -12,7 +12,7 @@ pub const Result = @import("common/data.zig").Result;
 
 pub const Log = @import("common/protocol.zig").Log;
 
-pub const PRNG = @import("common/rng.zig").PRNG(6);
+pub const PSRNG = @import("common/rng.zig").PSRNG;
 
 pub const protocol = struct {
     usingnamespace @import("common/protocol.zig");

@@ -3,7 +3,6 @@ const std = @import("std");
 const pkmn = @import("pkmn");
 
 const gen1 = pkmn.gen1.helpers;
-const rng = pkmn.rng;
 
 pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -25,7 +24,7 @@ pub fn main() !void {
     var w = buf.writer();
 
     var battle = switch (gen) {
-        1 => if (seed) |s| gen1.Battle.random(&rng.PRNG(6).init(s), false) else GEN1,
+        1 => if (seed) |s| gen1.Battle.random(&pkmn.PSRNG.init(s), false) else GEN1,
         else => unreachable,
     };
 
@@ -51,7 +50,7 @@ fn usageAndExit(cmd: []const u8) noreturn {
     std.process.exit(1);
 }
 
-const GEN1: pkmn.gen1.Battle(rng.Random(1)) = .{
+const GEN1: pkmn.gen1.Battle(pkmn.gen1.PRNG) = .{
     .sides = .{ .{
         .pokemon = .{ .{
             .stats = .{ .hp = 233, .atk = 98, .def = 108, .spe = 128, .spc = 76 },

@@ -13,6 +13,7 @@ pub const ANSI = struct {
 const Tool = enum {
     bide,
     confusion,
+    chance,
     crit,
     disable,
     metronome,
@@ -30,40 +31,56 @@ pub fn main() !void {
     defer std.process.argsFree(allocator, args);
     if (args.len < 2) usageAndExit(args[0]);
 
+    const err = std.io.getStdErr().writer();
+
     var tool: Tool = undefined;
-    var crit: u8 = undefined;
-    var metronome: pkmn.gen1.Move = undefined;
+    var param: u64 = undefined;
     if (std.mem.eql(u8, args[1], "bide")) {
         if (args.len != 2) usageAndExit(args[0]);
         tool = .bide;
+    } else if (std.mem.eql(u8, args[1], "chance")) {
+        if (args.len != 3) {
+            err.print("Usage: {s} chance <N>\n", .{args[0]}) catch {};
+            std.process.exit(1);
+        }
+        tool = .chance;
+        param = std.fmt.parseUnsigned(u8, args[2], 10) catch {
+            err.print("Usage: {s} chance <N>\n", .{args[0]}) catch {};
+            std.process.exit(1);
+        };
     } else if (std.mem.eql(u8, args[1], "confusion")) {
         if (args.len != 2) usageAndExit(args[0]);
         tool = .confusion;
     } else if (std.mem.eql(u8, args[1], "crit")) {
-        const err = std.io.getStdErr().writer();
         if (args.len != 3) {
-            err.print("Usage: {s} crit <N>\n", .{args[0]}) catch {};
+            err.print("Usage: {s} crit <Species>\n", .{args[0]}) catch {};
             std.process.exit(1);
         }
         tool = .crit;
-        crit = std.fmt.parseUnsigned(u8, args[2], 10) catch {
+        const crit = std.meta.stringToEnum(pkmn.gen1.Species, args[2]) orelse {
             err.print("Usage: {s} crit <N>\n", .{args[0]}) catch {};
             std.process.exit(1);
         };
+        param = pkmn.gen1.Species.chance(crit);
     } else if (std.mem.eql(u8, args[1], "disable")) {
         if (args.len != 2) usageAndExit(args[0]);
         tool = .disable;
     } else if (std.mem.eql(u8, args[1], "metronome")) {
-        const err = std.io.getStdErr().writer();
         if (args.len != 3) {
             err.print("Usage: {s} metronome <Move>\n", .{args[0]}) catch {};
             std.process.exit(1);
         }
         tool = .metronome;
-        metronome = std.meta.stringToEnum(pkmn.gen1.Move, args[2]) orelse {
+        const metronome = std.meta.stringToEnum(pkmn.gen1.Move, args[2]) orelse {
             err.print("Usage: {s} metronome <Move>\n", .{args[0]}) catch {};
             std.process.exit(1);
         };
+        param = @enumToInt(metronome);
+        const invalid = param >= @enumToInt(pkmn.gen1.Move.Struggle);
+        if (invalid or metronome == .None or metronome == .Metronome) {
+            err.print("Usage: {s} metronome <Move>\n", .{args[0]}) catch {};
+            std.process.exit(1);
+        }
     } else if (std.mem.eql(u8, args[1], "rampage")) {
         if (args.len != 2) usageAndExit(args[0]);
         tool = .rampage;
@@ -77,104 +94,71 @@ pub fn main() !void {
         usageAndExit(args[0]);
     }
 
-    var expected: [256]u8 = undefined;
+    var expected: [256](if (pkmn.showdown) u32 else u8) = undefined;
     var i: usize = 0;
     while (i < expected.len) : (i += 1) {
         expected[i] = @truncate(u8, i);
     }
 
-    var rng1 = FixedRNG(1, expected.len){ .rolls = expected };
-    var rng2 = FixedRNG(1, expected.len){ .rolls = expected };
+    var rng = FixedRNG(1, expected.len){ .rolls = expected };
 
     const out = std.io.getStdOut();
     var buf = std.io.bufferedWriter(out.writer());
     var w = buf.writer();
 
+    try w.print("\nPokémon Red\n===========\n\n", .{});
     i = 0;
     while (i < 256) : (i += 1) {
-        const match = match: {
-            switch (tool) {
-                .bide => {
-                    const a = rng1.range(u8, 3, 5) - 1;
-                    const b = (rng2.next() & 1) + 2;
-                    break :match a == b;
-                },
-                .confusion => {
-                    const a = rng1.range(u8, 2, 6);
-                    const b = (rng2.next() & 3) + 2;
-                    break :match a == b;
-                },
-                .crit => {
-                    const a = rng1.chance(u8, crit, 256);
-                    const b = std.math.rotl(u8, rng2.next(), 3) < crit;
-                    break :match a == b;
-                },
-                .disable => {
-                    const a = rng1.range(u8, 1, 7) + 1;
-                    const b = (rng2.next() & 7) + 1;
-                    break :match a == b;
-                },
-                .metronome => {
-                    const a = move: {
-                        const r = rng1.range(u8, 0, @enumToInt(pkmn.gen1.Move.Struggle) - 2);
-                        const mod =
-                            @as(u2, (if (r < @enumToInt(pkmn.gen1.Move.Metronome) - 1) 1 else 2));
-                        break :move @intToEnum(pkmn.gen1.Move, r + mod);
-                    };
-                    const b = move: {
-                        const r = rng2.next();
-                        if (r == 0 or r == @enumToInt(pkmn.gen1.Move.Metronome)) {
-                            break :move pkmn.gen1.Move.None;
-                        }
-                        if (r >= @enumToInt(pkmn.gen1.Move.Struggle)) {
-                            break :move pkmn.gen1.Move.None;
-                        }
-                        break :move @intToEnum(pkmn.gen1.Move, r);
-                    };
-
-                    try w.print("{d} ", .{i});
-                    if (a == metronome) {
-                        try w.print("{s}{s: >12}{s} ", .{ ANSI.RED, @tagName(a), ANSI.RESET });
-                    } else {
-                        try w.print("{s: >12} ", .{@tagName(a)});
-                    }
-                    if (b == metronome) {
-                        try w.print("{s}{s: >12}{s}", .{ ANSI.RED, @tagName(b), ANSI.RESET });
-                    } else if (b == pkmn.gen1.Move.None) {
-                        try w.print("{s: >12}", .{"*"});
-                    } else {
-                        try w.print("{s: >12}", .{@tagName(b)});
-                    }
-                    try w.print("\n", .{});
-                    try buf.flush();
-                    continue;
-                },
-                .thrash => {
-                    const a = rng1.range(u8, 3, 5);
-                    const b = (rng2.next() & 3) + 2;
-                    break :match a == b;
-                },
-                .rampage => {
-                    const a = rng1.range(u8, 2, 4);
-                    const b = (rng2.next() & 1) + 2;
-                    break :match a == b;
-                },
-                .sleep => {
-                    const a = rng1.range(u8, 1, 8);
-                    const b = (rng2.next() & 7);
-                    break :match a == b;
-                },
-            }
+        if (tool == .chance or tool == .metronome) {
+            try w.print("{d}", .{param});
+            break;
+        }
+        const value = switch (tool) {
+            .bide, .rampage => (rng.next() & 1) + 2,
+            .confusion, .thrash => (rng.next() & 3) + 2,
+            .crit => @boolToInt(std.math.rotl(u8, @truncate(u8, rng.next()), 3) < param),
+            .disable => (rng.next() & 7) + 1,
+            .sleep => rng.next() & 7,
+            else => unreachable,
         };
 
         if (i != 0) _ = try w.write(if (i % 16 == 0) "\n" else " ");
-        if (match) {
-            try w.print("{d: >3}", .{i});
+        if (tool == .crit) {
+            if (value == 0) {
+                try w.print(" {s}F{s} ", .{ ANSI.RED, ANSI.RESET });
+            } else {
+                try w.print(" T ", .{});
+            }
         } else {
-            try w.print("{s}{d: >3}{s}", .{ ANSI.RED, i, ANSI.RESET });
+            try w.print("{d: >3}", .{value});
         }
     }
     _ = try w.write("\n");
+
+    try w.print("\nPokémon Showdown\n================\n\n", .{});
+    i = 0;
+
+    if (tool == .chance or tool == .crit) {
+        try w.print("0x{X:0<8}", .{param * 0x1000000});
+    } else if (tool == .metronome) {
+        const range: u64 = @enumToInt(pkmn.gen1.Move.Struggle) - 2;
+        const mod = @as(u2, (if (param < @enumToInt(pkmn.gen1.Move.Metronome) - 1) 1 else 2));
+        try w.print("0x{X:0<8}", .{(param - mod) * (0x100000000 / range)});
+    } else {
+        var range: u64 = switch (tool) {
+            .bide, .thrash => 5 - 3,
+            .rampage => 4 - 2,
+            .confusion => 6 - 2,
+            .sleep => 8 - 1,
+            else => unreachable,
+        };
+        while (i < range) : (i += 1) {
+            try w.print("0x{X:0<8}", .{i * (0x100000000 / range)});
+            if (i != range - 1) try w.print(" ", .{});
+        }
+    }
+
+    _ = try w.write("\n\n");
     try buf.flush();
 }
 

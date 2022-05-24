@@ -35,7 +35,7 @@ pub const ID = data.ID;
 pub const Player = data.Player;
 pub const Result = data.Result;
 
-pub const Random = rng.Random(1);
+pub const PRNG = rng.PRNG(1);
 
 pub fn Battle(comptime RNG: anytype) align(64) type {
     return extern struct {
@@ -74,7 +74,7 @@ pub fn Battle(comptime RNG: anytype) align(64) type {
 }
 
 test "Battle" {
-    try expectEqual(384, @sizeOf(Battle(Random)));
+    try expectEqual(384, @sizeOf(Battle(PRNG)));
 }
 
 pub const Side = extern struct {
@@ -454,7 +454,7 @@ pub const DVs = struct {
         return (self.atk & 1) << 3 | (self.def & 1) << 2 | (self.spe & 1) << 1 | (self.spc & 1);
     }
 
-    pub fn random(rand: *rng.PRNG(6)) DVs {
+    pub fn random(rand: *rng.PSRNG) DVs {
         return .{
             .atk = if (rand.chance(u8, 1, 5)) rand.range(u4, 1, 15 + 1) else 15,
             .def = if (rand.chance(u8, 1, 5)) rand.range(u4, 1, 15 + 1) else 15,

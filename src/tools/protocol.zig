@@ -86,7 +86,7 @@ pub fn main() !void {
                 {
                     try w.print(
                         "      \"{s}\": {d},\n",
-                        .{ "Battle", @sizeOf(pkmn.gen1.Battle(pkmn.gen1.Random)) },
+                        .{ "Battle", @sizeOf(pkmn.gen1.Battle(pkmn.gen1.PRNG)) },
                     );
                     try w.print(
                         "      \"{s}\": {d},\n",
@@ -104,7 +104,7 @@ pub fn main() !void {
                 try w.writeAll("    },\n");
                 try w.writeAll("    \"offsets\": {\n");
                 {
-                    try print(w, "Battle", pkmn.gen1.Battle(pkmn.gen1.Random), false);
+                    try print(w, "Battle", pkmn.gen1.Battle(pkmn.gen1.PRNG), false);
                     try w.writeAll(",\n");
                     try print(w, "Side", pkmn.gen1.Side, false);
                     try w.writeAll(",\n");

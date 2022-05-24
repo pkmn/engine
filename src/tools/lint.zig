@@ -58,10 +58,10 @@ fn checkFormat(file_path: []const u8) !bool {
 const Ignored = union(enum) { lines: []const u32, all };
 
 const ignore = std.ComptimeStringMap(Ignored, .{
-    .{ "src/tools/serde.zig", .{ .lines = &.{ 405, 515 } } },
+    .{ "src/tools/serde.zig", .{ .lines = &.{ 404, 514 } } },
     .{ "src/examples/zig/example.zig", .all },
     .{ "src/lib/gen2/test.zig", .all },
-    .{ "src/lib/gen1/test.zig", .{ .lines = &.{599} } },
+    .{ "src/lib/gen1/test.zig", .{ .lines = &.{600} } },
 });
 
 // Windows has trouble with the symlink so we need to hardcode the logic to skip it

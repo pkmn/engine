@@ -8,8 +8,8 @@ const expectEqual = std.testing.expectEqual;
 const showdown = build_options.showdown;
 const skip_advance = if (@hasDecl(root, "skip_advance")) @as(bool, root.skip_advance) else false;
 
-pub fn Random(comptime gen: comptime_int) type {
-    if (showdown) return PRNG(gen);
+pub fn PRNG(comptime gen: comptime_int) type {
+    if (showdown) return PSRNG;
 
     const Source = switch (gen) {
         1, 2 => Gen12,
@@ -24,59 +24,51 @@ pub fn Random(comptime gen: comptime_int) type {
         src: Source,
 
         pub fn next(self: *Self) Output(gen) {
-            return @truncate(Output(gen), self.src.next());
+            return self.src.next();
         }
     };
 }
 
-pub fn PRNG(comptime gen: comptime_int) type {
-    const divisor = getRangeDivisor(gen);
-    return extern struct {
-        const Self = @This();
+pub const PSRNG = extern struct {
+    src: Gen56,
 
-        src: Gen56,
+    const divisor = 0x100000000;
 
-        pub fn init(seed: u64) Self {
-            return .{ .src = .{ .seed = seed } };
-        }
+    pub fn init(seed: u64) PSRNG {
+        return .{ .src = .{ .seed = seed } };
+    }
 
-        pub fn next(self: *Self) Output(gen) {
-            return @truncate(Output(gen), self.src.next());
-        }
+    pub fn next(self: *PSRNG) u32 {
+        return self.src.next();
+    }
 
-        pub fn advance(self: *Self, n: usize) void {
-            if (skip_advance) return;
-            var i: usize = 0;
-            while (i < n) : (i += 1) _ = self.src.next();
-        }
+    pub fn advance(self: *PSRNG, n: usize) void {
+        if (skip_advance) return;
+        var i: usize = 0;
+        while (i < n) : (i += 1) self.src.advance();
+    }
 
-        pub fn range(self: *Self, comptime T: type, from: T, to: Bound(T)) T {
-            return @truncate(T, @as(u64, self.src.next()) * (to - from) / divisor + from);
-        }
+    pub fn range(self: *PSRNG, comptime T: type, from: T, to: Bound(T)) T {
+        return @truncate(T, @as(u64, self.src.next()) * (to - from) / divisor + from);
+    }
 
-        pub fn chance(
-            self: *Self,
-            comptime T: type,
-            numerator: T,
-            denominator: Bound(T),
-        ) bool {
-            assert(denominator > 0);
-            return self.range(T, 0, denominator) < numerator;
-        }
+    pub fn chance(self: *PSRNG, comptime T: type, numerator: T, denominator: Bound(T)) bool {
+        assert(denominator > 0);
+        return self.range(T, 0, denominator) < numerator;
+    }
 
-        pub fn newSeed(self: *Self) u64 {
-            return (@as(u64, self.range(u16, 0, 0x10000)) << 48) |
-                (@as(u64, self.range(u16, 0, 0x10000)) << 32) |
-                (@as(u64, self.range(u16, 0, 0x10000)) << 16) |
-                (@as(u64, self.range(u16, 0, 0x10000)));
-        }
-    };
-}
+    pub fn newSeed(self: *PSRNG) u64 {
+        return (@as(u64, self.range(u16, 0, 0x10000)) << 48) |
+            (@as(u64, self.range(u16, 0, 0x10000)) << 32) |
+            (@as(u64, self.range(u16, 0, 0x10000)) << 16) |
+            (@as(u64, self.range(u16, 0, 0x10000)));
+    }
+};
 
-test "PRNG" {
-    var prng = PRNG(1){ .src = .{ .seed = 0x1234 } };
-    try expectEqual(@as(u8, 50), prng.range(u8, 0, 256));
-    try expectEqual(true, prng.chance(u8, 128, 256)); // 76 < 128
+test "PSRNG" {
+    var psrng = PSRNG{ .src = .{ .seed = 0x0001000200030004 } };
+    try expectEqual(@as(u8, 121), psrng.range(u8, 0, 256));
+    try expectEqual(false, psrng.chance(u8, 128, 256)); // 226 < 128
 }
 
 // https://pkmn.cc/pokered/engine/battle/core.asm#L6644-L6693
@@ -127,7 +119,7 @@ pub const Gen34 = extern struct {
         return @truncate(u16, self.seed >> 16);
     }
 
-    fn advance(self: *Gen34) void {
+    pub fn advance(self: *Gen34) void {
         self.seed = 0x41C64E6D *% self.seed +% 0x00006073;
     }
 };
@@ -160,7 +152,7 @@ pub const Gen56 = extern struct {
         return @truncate(u32, self.seed >> 32);
     }
 
-    fn advance(self: *Gen56) void {
+    pub fn advance(self: *Gen56) void {
         self.seed = 0x5D588B656C078965 *% self.seed +% 0x0000000000269EC3;
     }
 };
@@ -183,30 +175,8 @@ test "Generation V & VI" {
     }
 }
 
-fn Output(comptime gen: comptime_int) type {
-    return switch (gen) {
-        1, 2 => u8,
-        3, 4 => u16,
-        5, 6 => u32,
-        else => unreachable,
-    };
-}
-
-fn Bound(comptime T: type) type {
-    return std.math.IntFittingRange(0, std.math.maxInt(T) + 1);
-}
-
-fn getRangeDivisor(comptime gen: comptime_int) comptime_int {
-    return switch (gen) {
-        1, 2 => 0x100,
-        3, 4 => 0x10000,
-        5, 6 => 0x100000000,
-        else => unreachable,
-    };
-}
-
 pub fn FixedRNG(comptime gen: comptime_int, comptime len: usize) type {
-    const divisor = getRangeDivisor(gen);
+    const divisor = 0x100000000;
 
     return extern struct {
         const Self = @This();
@@ -216,17 +186,19 @@ pub fn FixedRNG(comptime gen: comptime_int, comptime len: usize) type {
 
         pub fn next(self: *Self) Output(gen) {
             if (self.index >= self.rolls.len) @panic("Insufficient number of rolls provided");
-            const roll = @truncate(Output(gen), self.rolls[self.index]);
+            const roll = self.rolls[self.index];
             self.index += 1;
             return roll;
         }
 
         pub fn advance(self: *Self, n: usize) void {
+            assert(showdown);
             var i: usize = 0;
             while (i < n) : (i += 1) _ = self.next();
         }
 
         pub fn range(self: *Self, comptime T: type, from: T, to: Bound(T)) T {
+            assert(showdown);
             return @truncate(T, @as(u64, self.next()) * (to - from) / divisor + from);
         }
 
@@ -236,6 +208,7 @@ pub fn FixedRNG(comptime gen: comptime_int, comptime len: usize) type {
             numerator: T,
             denominator: Bound(T),
         ) bool {
+            assert(showdown);
             assert(denominator > 0);
             return self.range(T, 0, denominator) < numerator;
         }
@@ -247,9 +220,24 @@ pub fn FixedRNG(comptime gen: comptime_int, comptime len: usize) type {
 }
 
 test "FixedRNG" {
-    const expected = [_]u8{ 42, 255, 0 };
+    const Type = if (showdown) u32 else u8;
+    const expected = [_]Type{ 42, 255, 0 };
     var rng = FixedRNG(1, expected.len){ .rolls = expected };
     for (expected) |e| {
         try expectEqual(e, rng.next());
     }
+}
+
+fn Output(comptime gen: comptime_int) type {
+    if (showdown) return u32;
+    return switch (gen) {
+        1, 2 => u8,
+        3, 4 => u16,
+        5, 6 => u32,
+        else => unreachable,
+    };
+}
+
+fn Bound(comptime T: type) type {
+    return std.math.IntFittingRange(0, std.math.maxInt(T) + 1);
 }

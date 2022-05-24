@@ -15,7 +15,7 @@ const showdown = build_options.showdown;
 
 const Choice = common.Choice;
 
-const PRNG = rng.PRNG(6);
+const PSRNG = rng.PSRNG;
 
 const DVs = data.DVs;
 const Move = data.Move;
@@ -32,9 +32,9 @@ pub const Battle = struct {
         seed: u64,
         p1: []const Pokemon,
         p2: []const Pokemon,
-    ) data.Battle(data.Random) {
+    ) data.Battle(data.PRNG) {
         return .{
-            .rng = prng(&PRNG.init(seed)),
+            .rng = prng(&PSRNG.init(seed)),
             .sides = .{ Side.init(p1), Side.init(p2) },
         };
     }
@@ -50,7 +50,7 @@ pub const Battle = struct {
         };
     }
 
-    pub fn random(rand: *PRNG, initial: bool) data.Battle(data.Random) {
+    pub fn random(rand: *PSRNG, initial: bool) data.Battle(data.PRNG) {
         return .{
             .rng = prng(rand),
             .turn = if (initial) 0 else rand.range(u16, 1, 1000 + 1),
@@ -60,7 +60,7 @@ pub const Battle = struct {
     }
 };
 
-fn prng(rand: *PRNG) data.Random {
+fn prng(rand: *PSRNG) data.PRNG {
     return .{
         .src = .{
             .seed = if (build_options.showdown)
@@ -90,7 +90,7 @@ pub const Side = struct {
         return side;
     }
 
-    pub fn random(rand: *PRNG, initial: bool) data.Side {
+    pub fn random(rand: *PSRNG, initial: bool) data.Side {
         const n = if (rand.chance(u8, 1, 100)) rand.range(u4, 1, 5 + 1) else 6;
         var side = data.Side{};
 
@@ -207,7 +207,7 @@ pub const Pokemon = struct {
         return pokemon;
     }
 
-    pub fn random(rand: *PRNG, initial: bool) data.Pokemon {
+    pub fn random(rand: *PSRNG, initial: bool) data.Pokemon {
         const s = @intToEnum(Species, rand.range(u8, 1, 151 + 1));
         const species = Species.get(s);
         const lvl = if (rand.chance(u8, 1, 20)) rand.range(u8, 1, 99 + 1) else 100;
