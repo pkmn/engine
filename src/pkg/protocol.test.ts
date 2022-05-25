@@ -75,8 +75,11 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     it('|win|', () => {
-      expect(Array.from(log.parse(Data.view([ArgType.Win, 0])))).toEqual(parse('|win|Player A'));
-      expect(Array.from(log.parse(Data.view([ArgType.Win, 1])))).toEqual(parse('|win|Player B'));
+      expect(Array.from(log.parse(Data.view([ArgType.Win])))).toEqual(parse('|win|Player A'));
+    });
+
+    it('|lose|', () => {
+      expect(Array.from(log.parse(Data.view([ArgType.Lose])))).toEqual(parse('|win|Player B'));
     });
 
     it('|tie|', () => {
