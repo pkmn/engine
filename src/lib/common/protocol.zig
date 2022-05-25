@@ -26,7 +26,6 @@ pub const ArgType = enum(u8) {
     Faint,
     Turn,
     Win,
-    Lose,
     Tie,
     Damage,
     Heal,
@@ -291,14 +290,13 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeByte(@enumToInt(ArgType.None));
         }
 
-        pub fn win(self: Self) Error!void {
+        pub fn win(self: Self, player: Player) Error!void {
             if (!trace) return;
-            try self.writer.writeAll(&.{ @enumToInt(ArgType.Win), @enumToInt(ArgType.None) });
-        }
-
-        pub fn lose(self: Self) Error!void {
-            if (!trace) return;
-            try self.writer.writeAll(&.{ @enumToInt(ArgType.Lose), @enumToInt(ArgType.None) });
+            try self.writer.writeAll(&.{
+                @enumToInt(ArgType.Win),
+                @enumToInt(player),
+                @enumToInt(ArgType.None),
+            });
         }
 
         pub fn tie(self: Self) Error!void {
@@ -699,14 +697,8 @@ test "|turn|" {
 }
 
 test "|win|" {
-    try log.win();
-    try expectLog(&.{ N(ArgType.Win), N(ArgType.None) }, buf[0..2]);
-    stream.reset();
-}
-
-test "|lose|" {
-    try log.lose();
-    try expectLog(&.{ N(ArgType.Lose), N(ArgType.None) }, buf[0..2]);
+    try log.win(.P2);
+    try expectLog(&.{ N(ArgType.Win), 1, N(ArgType.None) }, buf[0..3]);
     stream.reset();
 }
 

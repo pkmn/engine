@@ -195,13 +195,10 @@ export const DECODERS: {[key: number]: Decoder} = {
     offset += 2;
     return {offset, line: {args: ['turn', turn] as Protocol.Args['|turn|'], kwArgs: {}}};
   },
-  [ArgType.Win](offset) {
-    const line = {args: ['win', this.names.p1.name] as Protocol.Args['|win|'], kwArgs: {}};
-    return {offset, line};
-  },
-  [ArgType.Lose](offset) {
-    const line = {args: ['win', this.names.p2.name] as Protocol.Args['|win|'], kwArgs: {}};
-    return {offset, line};
+  [ArgType.Win](offset, data) {
+    const player = data.getUint8(offset++) ? 'p2' : 'p1';
+    const args = ['win', this.names[player].name] as Protocol.Args['|win|'];
+    return {offset, line: {args, kwArgs: {}}};
   },
   [ArgType.Tie](offset) {
     const line = {args: ['tie'] as Protocol.Args['|tie|'], kwArgs: {}};
