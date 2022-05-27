@@ -955,9 +955,6 @@ fn Test(comptime rolls: anytype) type {
     };
 }
 
-// BUG: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Dual-type_damage_misinformation
-// BUG: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Poison.2FBurn_animation_with_0_HP
-
 comptime {
     _ = @import("data.zig");
     _ = @import("mechanics.zig");

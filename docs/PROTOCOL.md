@@ -12,9 +12,9 @@ More information about a battle can be generated via the `-Dtrace` flag when bui
 This flag enables the engine to write the wire protocol described in this document to a `Log`.
 Generally, this `Log` should be a `FixedBufferStream` `Writer` backed by a statically allocated
 fixed-size array that gets `reset` after each `update` as the maximum number of bytes written by a
-single `update` call is bounded to a relatively small number of bytes per generation, though since
-any `Writer` implementation is allowed this `Log` could instead write to standard output (Note that
-in Zig the standard out writer is not buffered by default - you must use a
+single `update` call is bounded to a [relatively small number of bytes](#size) per generation,
+though since any `Writer` implementation is allowed this `Log` could instead write to standard
+output (Note that in Zig the standard out writer is not buffered by default - you must use a
 [`BufferedWriter`](https://zig.news/kristoff/how-to-add-buffering-to-a-writer-reader-in-zig-7jd)
 wrapper to acheive reasonable performance).
 
@@ -635,12 +635,108 @@ identified by the `Target` [`PokemonIdent`](#pokemonident).
 
 ## Size
 
-TODO `pkmn.MAX_LOGS` / `pkmn.LOGS_SIZE` (e.g. `pkmn.gen1.MAX_LOGS`)
+As mentioned above, any `Writer` can be used to back the protocol `Log`, and as such something like
+an `ArrayList.Writer` can be used to support arbitrary amounts of data being written to the log each
+update. For performance reasons it is desirable to be able to preallocate a fixed size buffer for
+this, where the recommended size is determined by `pkmn.LOGS_SIZE` which is guaranteed to be able to
+handle at least `pkmn.MAX_LOGS` bytes (these constants are defined to be the maximum of all
+generations - each generation also has its own parallel constants that can be used instead, e.g.
+`pkmn.gen1.LOGS_SIZE`).
 
-UPPER BOUNDS maximum allowed for
-- on cartridge (no clauses like species or clerics clause, but yes to legal moves)
-- need to take turns of setup into account
-- arguments from actual RNG (both PS or cartridge) used to restrict, but not considered in depth (hence upper bound)
+Determining the maximum amount of bytes in a single update (i.e. bytes logged by a call to `update`
+with each player's `Choice`) per generation is non-trivial and could vary greatly depending on the
+constraints:
 
-fuzz testing (all possible volatiles can be set, no move legality concerns)
-- has to use a different value!
+- **Standard**: The most restrictive constaint supported is one which considers Pokémon Showdown's
+  "Standard" restrictions for competitive formats - Species Clause, Cleric Clause, movepool legality
+  and bans, etc.
+- **Cartridge**: Cartridge legality still enforces anything that can be legitimately obtained on the
+  cartridge and used in link battles, but does not enforce any of Pokémon Showdown's clauses or
+  mods.
+- **"Hackmons"**: A step further than cartridge legality, removing restrictions on moves / items /
+  abilities / types / stats / etc - anything which can be hacked into the game before the battle.
+- **Fuzzing**: Used for testing, the same "hackmons" constraints but also allowing for arbitrary
+  in-battle manipulation as well to be able to set impossible combinations of volatiles statuses or
+  side conditions etc.
+
+Furthermore, a **lax** vs. **strict** interpretation of the RNG can be applied - whether or not any
+conceivable sequence of events should be considered or only those which can be obtained in practice
+via the actual RNG (on either the catridge or Pokémon Showdown).
+
+**"Cartridge" constraints with a lax consideration of the RNG** are used for the purposes of
+defining the maximum size constants (though taking a strict intepretation of the RNG is required in
+some cases to be able to conservatively set the upper bounds in specific scenarios). The maximum
+size of the "fuzzing" use-case is also outlined below (though not encoded in a constant).
+
+*The following maximum log size scenarios where developed with help from
+[**@gigalh128**](https://github.com/gigalh128).*
+
+### Generation I
+
+In order to maximize log message size in Generation I several observations need to be made:
+
+- `|move`, `|switch|`, `|-damage|`, and `|-heal|` take up the most space in the log
+- `|switch|` will result in less bytes than `|move|` because it will not result in any additional
+  messages  whereas `|move|` can trigger many others, including `|-damage|` or `|-heal|`
+- `|move|` should `|-crit|` and either be `|-supereffective|` or `|-resisted|` in order to use up
+  more bytes
+- before a `|move|` a Pokémon can activate confusion, and after residual damage from a poison or
+  burn status and Leech Seed can be triggered
+- only a single Pokémon should `|faint|` at the end. While intially it might seem like having both
+  `|faint|` and causing one side to `|win|` would be optimal (two `|faint|` messages and one `|win|`
+  is 6 bytes total, a single `|faint|` and a `|turn|` message is 5 bytes), if one side faints you
+  miss out on a round of damage and healing from Leech Seed which is 16 bytes
+- Substitute activating actually reduces the size of the log as `|-activate|` replaces the larger
+  `|-damage|` messages, and in Generation I if the substitute breaks it nullifies the rest of the
+  move's effects
+- ultimately a `MuliHit` move is optimal as it can generate 5 `|-damage|` messages and a
+  `|-hitcount|`
+
+The most important observation is that **Metronome and Mirror Move can be used in tandem to rack up
+arbitrary increases in log size via mutual recursion**. Metronome and Mirror Move handlers both
+contain checks to prevent infinite self-recursion, but do not check for each other, meaning a
+Pokémon can use Metronome to proc Mirror Move to copy their opponent's Metronome to proc Mirror Move
+again etc.  With true randomness it seems at face value that with the proper set up the chances of
+this occuring would be ${1 \over 163}^N$ (given Metronome can choose 1 out of 163 moves), which
+while vanishingly small as $N$ increases is still possible. However, both Pokémon Red and Pokémon
+Showdown use *pseudo*-random number generators and thus in order to find our way out of this
+potential infinite recursion we must strictly consider what is actually possibly with the RNG, and
+not just what is possible in theory.
+
+In Pokémon Showdown there are several frame advances between each call (e.g. a consequential roll to
+hit, an advance to retarget, etc) and setting up the RNG to accomplish arbitrary recursion is not
+feasible in practice. However, in Pokémon Red there is only an inconsequential critical hit roll
+between each roll to determine which move to use and the seed can be used to set up 10 arbitrary
+values. Thus we can start with a seed of `[126, 119, 126, 119, ...]` where `126` is chosen for each
+critical hit roll because `(5 * 126 + 1) % 256 = 119` to set up ~10 levels of recursive Metronome →
+Mirror Move calls. This is an **upper bound** (in reality it would be impossible to set up the rest
+of the battle, do 10 rounds of recursion, and still have optimal rolls on the other side to be able
+to maximum log size) and only applies to a single player (there would be no way to end up with such
+a perfect seed on the other side to be able to trigger another 10 rounds of recursion for the second
+player).
+
+We thus expect an upper bound on the maximum log size of a single update to be given by (note the multipliers in cases where we would expect both sides to have the same messages):
+
+- `|-activate|` confusion: 2×3 bytes
+- `|move|` Metronome → `|move|` Mirror Move recursion: $N$×6 bytes
+- `|move|` multi-hit: 2×6 bytes
+- `|-crit|`: 2×2 bytes
+- `|supereffective|` or `|resisted|`: 2×2 bytes
+- `|-damage|` multi-hit: 10×8 bytes
+- `|-hitcount|`: 2×3 bytes
+- `|-damage|` poison or burn: 2×8 bytes
+- `|-damage|` Leech Seed: 2×8 bytes
+- `|-heal|` Leech Seed: 2×8 bytes
+- `|faint|`: 2 bytes
+- `|turn|`: 3 bytes
+- `0x00`: 1 byte (end of buffer)
+
+Given $N$ of 22 (10× rounds of Metronome → Mirror Move calls for the first player and a single round
+for the second player results in 11 pairs of `|move|` calls with `[from]`) this leaves us with **298
+bytes**. In Generation I this number holds as the maximum for both the cartridge constraints and
+fuzzing, as setting everything up should theoretically be acheivable legally if the RNG can be
+assumed.
+
+### Generation II
+
+TODO
