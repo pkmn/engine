@@ -521,6 +521,17 @@ called out in the `|rule|` section at the beginning of a battle's log):
   work where the [host (Player 1)'s Pokemon would switch
   first](https://www.smogon.com/forums/threads/gen-3-on-ps-final-fixes.3527268/post-5989318).
 
+TODO Team legaility
+
+- **"Cleric" Clause**: TODO
+- **Tradeback**: TODO simulate link battles at the time of Pokémon Yellow 
+  - makes exception for unobtainable **DV** combinations 
+- **Species Clause**, **Evasion Clause**, **OHKO Clause**, **Invulnerability Clause**
+
+
+TODO UI 
+- **HP Percentage Mod**, **Move Effectiveness**, 
+
 ## RNG
 
 **The pkmn engine aims to match the cartridge's RNG frame-accurately**, in that provided with the same

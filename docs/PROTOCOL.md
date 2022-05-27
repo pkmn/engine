@@ -632,3 +632,15 @@ The Pokémon identified by [`Ident`](#pokemonident) is immune to a move.
 
 `Source` is the [`PokemonIdent`](#pokemonident) of the Pokémon that transformed into the Pokémon
 identified by the `Target` [`PokemonIdent`](#pokemonident).
+
+## Size
+
+TODO `pkmn.MAX_LOGS` / `pkmn.LOGS_SIZE` (e.g. `pkmn.gen1.MAX_LOGS`)
+
+UPPER BOUNDS maximum allowed for
+- on cartridge (no clauses like species or clerics clause, but yes to legal moves)
+- need to take turns of setup into account
+- arguments from actual RNG (both PS or cartridge) used to restrict, but not considered in depth (hence upper bound)
+
+fuzz testing (all possible volatiles can be set, no move legality concerns)
+- has to use a different value!
