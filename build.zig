@@ -5,11 +5,12 @@ const Pkg = std.build.Pkg;
 
 pub fn pkg(b: *Builder, build_options: Pkg) Pkg {
     const dirname = comptime std.fs.path.dirname(@src().file) orelse ".";
-    return b.dupePkg(.{
-        .name = "pkmn",
-        .path = .{ .path = dirname ++ "/src/lib/pkmn.zig" },
-        .dependencies = &.{build_options},
-    });
+    const source = .{ .path = dirname ++ "/src/lib/pkmn.zig" };
+    const package = if (@hasField(Pkg, "path"))
+        Pkg{ .name = "pkmn", .path = source, .dependencies = &.{build_options} }
+    else
+        Pkg{ .name = "pkmn", .source = source, .dependencies = &.{build_options} };
+    return b.dupePkg(package);
 }
 
 pub fn build(b: *Builder) !void {
