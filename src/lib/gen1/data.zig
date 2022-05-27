@@ -19,7 +19,7 @@ const expect = std.testing.expect;
 const showdown = build_options.showdown;
 
 pub const MAX_OPTIONS = 9; // move 1..4, switch 2..6
-pub const MAX_LOGS = 298;
+pub const MAX_LOGS = 191;
 
 pub const OPTIONS_SIZE = if (builtin.mode == .ReleaseSmall)
     MAX_OPTIONS

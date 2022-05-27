@@ -306,7 +306,7 @@ pub fn Log(comptime Writer: type) type {
 
         pub fn damage(self: Self, ident: ID, pokemon: anytype, reason: Damage) Error!void {
             if (!trace) return;
-            assert(@enumToInt(reason) <= @enumToInt(Damage.Confusion));
+            assert(@enumToInt(reason) <= @enumToInt(Damage.LeechSeed));
             try self.writer.writeAll(&.{ @enumToInt(ArgType.Damage), @bitCast(u8, ident) });
             try self.writer.writeIntNative(u16, pokemon.hp);
             try self.writer.writeIntNative(u16, pokemon.stats.hp);

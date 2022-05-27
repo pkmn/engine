@@ -32,8 +32,10 @@ const Log = protocol.Log;
 const expectLog = protocol.expectLog;
 
 const Move = data.Move;
+const Status = data.Status;
 
 const Battle = helpers.Battle;
+const Side = helpers.Side;
 const Pokemon = helpers.Pokemon;
 const move = helpers.move;
 const swtch = helpers.swtch;
@@ -54,6 +56,8 @@ const MIN_DMG = if (showdown) MIN else 217;
 const MAX_DMG = MAX;
 const PROC = MIN;
 const NO_PROC = MAX;
+const CFZ = MAX;
+const NO_CFZ = MIN;
 
 const P1 = Player.P1;
 const P2 = Player.P2;
@@ -872,6 +876,85 @@ test "Rage and Thrash / Petal Dance accuracy bug" {
 
 test "Stat down modifier overflow glitch" {
     // https://www.youtube.com/watch?v=y2AOm7r39Jg
+}
+
+// Miscellaneous
+
+test "MAX_LOGS" {
+    if (showdown) return;
+
+    const MIRROR_MOVE = @enumToInt(Move.MirrorMove);
+    // TODO: replace this with a handcrafted actual seed instead of using the fixed RNG
+    var battle = Battle.fixed(
+        // zig fmt: off
+        .{
+            // Set up
+            HIT,
+            NO_CRIT, @enumToInt(Move.LeechSeed), HIT,
+            HIT, 3, NO_CFZ, HIT, 3,
+            NO_CFZ, NO_CFZ, NO_CRIT, @enumToInt(Move.SolarBeam),
+            // Scenario
+            NO_CFZ,
+            NO_CRIT, MIRROR_MOVE, NO_CRIT,
+            NO_CRIT, MIRROR_MOVE, NO_CRIT,
+            NO_CRIT, MIRROR_MOVE, NO_CRIT,
+            NO_CRIT, MIRROR_MOVE, NO_CRIT,
+            NO_CRIT, MIRROR_MOVE, NO_CRIT,
+            NO_CRIT, MIRROR_MOVE, NO_CRIT,
+            NO_CRIT, MIRROR_MOVE, NO_CRIT,
+            NO_CRIT, MIRROR_MOVE, NO_CRIT,
+            NO_CRIT, MIRROR_MOVE, NO_CRIT,
+            NO_CRIT, MIRROR_MOVE, NO_CRIT,
+            NO_CRIT, @enumToInt(Move.PinMissile), CRIT, MIN_DMG, HIT, 3, 3,
+            NO_CFZ, CRIT, MIN_DMG, HIT,
+        },
+         // zig fmt: on
+        &.{
+            .{
+                .species = .Bulbasaur,
+                .moves = &.{.LeechSeed},
+            },
+            .{
+                .species = .Gengar,
+                .hp = 224,
+                .status = 0b10000, // TODO: Status.init(.BRN),
+                .moves = &.{ .Metronome, .ConfuseRay, .Toxic },
+            },
+        },
+        &.{
+            .{
+                .species = .Bulbasaur,
+                .moves = &.{.LeechSeed},
+            },
+            .{
+                .species = .Gengar,
+                .status = 0b10000, // TODO: Status.init(.BRN),
+                .moves = &.{ .Metronome, .ConfuseRay },
+            },
+        },
+    );
+    battle.side(.P2).get(2).stats.spe = 317; // make P2 slower to avoid speed ties
+
+    try expectEqual(Result.Default, try battle.update(.{}, .{}, null));
+    // P1 switches into Leech Seed
+    try expectEqual(Result.Default, try battle.update(swtch(2), move(1), null));
+    // P2 switches into to P1's Metronome -> Leech Seed
+    try expectEqual(Result.Default, try battle.update(move(1), swtch(2), null));
+    // P1 and P2 confuse each other
+    try expectEqual(Result.Default, try battle.update(move(2), move(2), null));
+    // P1 uses Toxic to noop while P2 uses Metronome -> Solar Beam
+    try expectEqual(Result.Default, try battle.update(move(3), move(1), null));
+
+    try expectEqual(Move.SolarBeam, battle.side(.P2).last_selected_move);
+    try expectEqual(Move.Metronome, battle.side(.P2).last_used_move);
+
+    // BUG: data.MAX_LOGS not enough?
+    var buf: [data.MAX_LOGS * 100]u8 = undefined;
+    var log = FixedLog{ .writer = stream(&buf).writer() };
+    // P1 uses Metronome -> Mirror Move -> ... -> Pin Missile, P2 -> Solar Beam
+    try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try battle.update(move(1), move(0), log));
+
+    try expect(battle.rng.exhausted());
 }
 
 fn Test(comptime rolls: anytype) type {

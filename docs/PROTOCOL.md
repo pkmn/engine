@@ -696,46 +696,72 @@ The most important observation is that **Metronome and Mirror Move can be used i
 arbitrary increases in log size via mutual recursion**. Metronome and Mirror Move handlers both
 contain checks to prevent infinite self-recursion, but do not check for each other, meaning a
 Pokémon can use Metronome to proc Mirror Move to copy their opponent's Metronome to proc Mirror Move
-again etc.  With true randomness it seems at face value that with the proper set up the chances of
-this occuring would be ${1 \over 163}^N$ (given Metronome can choose 1 out of 163 moves), which
-while vanishingly small as $N$ increases is still possible. However, both Pokémon Red and Pokémon
-Showdown use *pseudo*-random number generators and thus in order to find our way out of this
-potential infinite recursion we must strictly consider what is actually possibly with the RNG, and
-not just what is possible in theory.
+again etc. However, since Mirror Move works off of the `last_used_move` field and Metronome using
+a new move overwrites this field, Mirror Move copying an opponent's original Metronome will only
+work if a charging move is triggered by the intial Metronome, meaning the other player can not also
+perform this loop (and can actually not use a move on their turn at all, as they would then be
+locked in by the previous turn's charging move used via Metronome).
+
+With true randomness it seems at face value that with the proper set up the chances of achieving
+Metronome → Mirror Move calls would be ${1 \over 163}^N$ (given Metronome can choose 1 out of 163
+moves), which while vanishingly small as $N$ increases is still possible. However, both Pokémon Red
+and Pokémon Showdown use *pseudo*-random number generators and thus in order to find our way out of
+this potential infinite recursion we must strictly consider what is actually possibly with the RNG,
+and not just what is possible in theory.
 
 In Pokémon Showdown there are several frame advances between each call (e.g. a consequential roll to
 hit, an advance to retarget, etc) and setting up the RNG to accomplish arbitrary recursion is not
-feasible in practice. However, in Pokémon Red there is only an inconsequential critical hit roll
-between each roll to determine which move to use and the seed can be used to set up 10 arbitrary
-values. Thus we can start with a seed of `[126, 119, 126, 119, ...]` where `126` is chosen for each
-critical hit roll because `(5 * 126 + 1) % 256 = 119` to set up ~10 levels of recursive Metronome →
-Mirror Move calls. This is an **upper bound** (in reality it would be impossible to set up the rest
-of the battle, do 10 rounds of recursion, and still have optimal rolls on the other side to be able
-to maximum log size) and only applies to a single player (there would be no way to end up with such
-a perfect seed on the other side to be able to trigger another 10 rounds of recursion for the second
-player).
+feasible in practice. However, in Pokémon Red there is only an inconsequential (i.e. the value is
+ignored) critical hit roll for both Metronome and Mirror Move between each roll to determine which
+move to use and the seed can be used to set up 10 arbitrary values. Define $X$, $X'$, and $X''$ such
+that $X' = 5X+1 \bmod 256$ and $X'' = 5X'+1 \bmod 256$. We want $X'' = 119$ as that will cause
+Metronome to use Mirror Move, so $X' = 126$ and $X = 25$.
 
-We thus expect an upper bound on the maximum log size of a single update to be given by (note the multipliers in cases where we would expect both sides to have the same messages):
+Thus we can start with a seed of `[126, 119, 25, 126, 119, 25, 126]` to achieve 10 levels of
+recursive Metronome → Mirror Move calls. This is an **upper bound** (in reality it would be
+impossible to set up the rest of the battle, do 10 rounds of recursion, and still have optimal rolls
+on the other side to be able to obtain maximum log size) and only applies to a single player (as
+mentioned above the only way to have Mirror Move copy Metronome is if the opponent is locked into a
+charging move from a previous Metronome call).
 
-- `|-activate|` confusion: 2×3 bytes
-- `|move|` Metronome → `|move|` Mirror Move recursion: $N$×6 bytes
-- `|move|` multi-hit: 2×6 bytes
-- `|-crit|`: 2×2 bytes
-- `|supereffective|` or `|resisted|`: 2×2 bytes
-- `|-damage|` multi-hit: 10×8 bytes
-- `|-hitcount|`: 2×3 bytes
-- `|-damage|` poison or burn: 2×8 bytes
-- `|-damage|` Leech Seed: 2×8 bytes
-- `|-heal|` Leech Seed: 2×8 bytes
-- `|faint|`: 2 bytes
-- `|turn|`: 3 bytes
-- `0x00`: 1 byte (end of buffer)
+There are then two hypothetical scenarios we need to consider to determine upper bound on the
+maximum log size of a single update - one where a single player gets to benefit from the Metronome →
+Mirror Move → ... → Metronome → multi hit move and the other side is locked into a charging move or
+one where both players simply call a multi hit move through a single iteration of Metronome → Mirror
+Move → multi hit.
 
-Given $N$ of 22 (10× rounds of Metronome → Mirror Move calls for the first player and a single round
-for the second player results in 11 pairs of `|move|` calls with `[from]`) this leaves us with **298
-bytes**. In Generation I this number holds as the maximum for both the cartridge constraints and
-fuzzing, as setting everything up should theoretically be acheivable legally if the RNG can be
-assumed.
+- **Scenario 1:** recursion + charge move
+  - `|-activate|` confusion: 2×3 bytes
+  - `|move|` Metronome → `|move|` Mirror Move P1 recursion: 10×6 bytes
+  - `|move|` multi-hit: 6 bytes
+  - `|move|` P2 turn 2 charging move: 6 bytes
+  - `|-crit|`: 2×2 bytes
+  - `|supereffective|` or `|resisted|`: 2×2 bytes
+  - `|-damage|` multi-hit: 5×8 bytes
+  - `|-hitcount|`: 3 bytes
+  - `|-damage|` charging: 8 bytes
+  - `|-damage|` poison or burn: 2×8 bytes
+  - `|-damage|` Leech Seed: 2×8 bytes
+  - `|-heal|` Leech Seed: 2×8 bytes
+  - `|faint|`: 2 bytes
+  - `|turn|`: 3 bytes
+  - `0x00`: 1 byte (end of buffer)
+- **Scenario 2:** both multi hit
+  - `|-activate|` confusion: 2×3 bytes
+  - `|move|` Metronome → `|move|` Mirror Move -> `|move|` multi-hit: 6×6 bytes
+  - `|-crit|`: 2×2 bytes
+  - `|supereffective|` or `|resisted|`: 2×2 bytes
+  - `|-damage|` multi-hit: 10×8 bytes
+  - `|-hitcount|`: 2×3 bytes
+  - `|-damage|` poison or burn: 2×8 bytes
+  - `|-damage|` Leech Seed: 2×8 bytes
+  - `|-heal|` Leech Seed: 2×8 bytes
+  - `|faint|`: 2 bytes
+  - `|turn|`: 3 bytes
+  - `0x00`: 1 byte (end of buffer)
+
+TODO: setup requires a minimum of 13 rolls. Scenario is 1 byte more, but probably not actually
+achievable after set up? Is Scenario 2 achievable?
 
 ### Generation II
 

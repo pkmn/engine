@@ -320,7 +320,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
     const ident = battle.active(player);
     var volatiles = &active.volatiles;
 
-    assert(active.move(mslot).id != .None);
+    assert(mslot == 0 or active.move(mslot).id != .None);
 
     if (Status.is(stored.status, .SLP)) {
         // Even if the SLF bit is set this will still correctly modify the sleep duration
@@ -399,7 +399,7 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
         }
     }
 
-    if (volatiles.disabled.move == mslot) {
+    if (mslot != 0 and volatiles.disabled.move == mslot) {
         try log.disabled(ident, active.move(volatiles.disabled.move).id);
         return .done;
     }
@@ -721,7 +721,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
 
     if (side.active.volatiles.MultiHit) {
         side.active.volatiles.MultiHit = false;
-        assert(nullified or side.active.volatiles.attacks + hit == hits);
+        assert(nullified or side.active.volatiles.attacks - hit == 0);
         side.active.volatiles.attacks = 0;
         try log.hitcount(battle.active(player), hits);
     }
@@ -1332,7 +1332,6 @@ pub const Effects = struct {
             if (!chance) return;
         } else if (foe.active.volatiles.Substitute or
             !try checkHit(battle, player, move, log)) return;
-
         if (foe.active.volatiles.Confusion) return;
         foe.active.volatiles.Confusion = true;
         foe.active.volatiles.confusion = @truncate(u3, if (showdown)
