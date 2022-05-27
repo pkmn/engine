@@ -34,7 +34,7 @@ pub const Battle = struct {
         p2: []const Pokemon,
     ) data.Battle(data.PRNG) {
         return .{
-            .rng = prng(&PSRNG.init(seed)),
+            .rng = prng(&PSRNG.init(seed), true),
             .sides = .{ Side.init(p1), Side.init(p2) },
         };
     }
@@ -52,7 +52,7 @@ pub const Battle = struct {
 
     pub fn random(rand: *PSRNG, initial: bool) data.Battle(data.PRNG) {
         return .{
-            .rng = prng(rand),
+            .rng = prng(rand, initial),
             .turn = if (initial) 0 else rand.range(u16, 1, 1000 + 1),
             .last_damage = if (initial) 0 else rand.range(u16, 1, 704 + 1),
             .sides = .{ Side.random(rand, initial), Side.random(rand, initial) },
@@ -60,18 +60,19 @@ pub const Battle = struct {
     }
 };
 
-fn prng(rand: *PSRNG) data.PRNG {
+fn prng(rand: *PSRNG, initial: bool) data.PRNG {
+    // GLITCH: initial bytes in seed can only range from 0-252, not 0-255
+    const max: u9 = if (initial) 253 else 256;
     return .{
         .src = .{
             .seed = if (build_options.showdown)
                 rand.newSeed()
             else .{
-                // GLITCH: initial bytes in seed can only range from 0-251, not 0-255
-                rand.range(u8, 0, 251), rand.range(u8, 0, 251),
-                rand.range(u8, 0, 251), rand.range(u8, 0, 251),
-                rand.range(u8, 0, 251), rand.range(u8, 0, 251),
-                rand.range(u8, 0, 251), rand.range(u8, 0, 251),
-                rand.range(u8, 0, 251), rand.range(u8, 0, 251),
+                rand.range(u8, 0, max), rand.range(u8, 0, max),
+                rand.range(u8, 0, max), rand.range(u8, 0, max),
+                rand.range(u8, 0, max), rand.range(u8, 0, max),
+                rand.range(u8, 0, max), rand.range(u8, 0, max),
+                rand.range(u8, 0, max), rand.range(u8, 0, max),
             },
         },
     };
