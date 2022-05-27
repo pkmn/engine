@@ -616,7 +616,7 @@ speed ties, etc) that Pokémon Showdown cannot replicate due to everything descr
 | **Multi-Hit** (hits)     | `Effects.multiHit`       | *Ibid.* |
 | **Unboost** (chance)     | `Effects.unboost`        | Trigger if $X < 85$ |
 
-*In the table above, $X$ is always in the range $\left[0, 256\right)$ for Pokémon Red and for
+*In the table above,* $X$ *is always in the range* $\left[0, 256\right)$ *for Pokémon Red and for
 Pokémon Showdown is always **scaled** from the 32-bit output range of the RNG to either be in that
 range or to whichever range is specified by the description.*
 
