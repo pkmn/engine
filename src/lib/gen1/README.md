@@ -494,11 +494,6 @@ Smogon](https://www.smogon.com/forums/threads/rby-tradebacks-bug-report-thread.3
   should instead copy the move that was used prior to the "charge" move being used (i.e. "charging"
   should not set the last used move).
 
-Finally, in Generation I, checking whether a move has **hit should come *after* determining
-damage**, not before. Pokémon Showdown's altered ordering here (which is more in line with how
-future generations work) would have consequences on RNG accuracy, though since RNG accuracy is not a
-goal for the simulator this bug should not have any implications.
-
 Pokémon Showdown also implements a number of modifications to the cartridge (usually but not always
 called out in the `|rule|` section at the beginning of a battle's log):
 
@@ -521,16 +516,20 @@ called out in the `|rule|` section at the beginning of a battle's log):
   work where the [host (Player 1)'s Pokemon would switch
   first](https://www.smogon.com/forums/threads/gen-3-on-ps-final-fixes.3527268/post-5989318).
 
-TODO Team legaility
-
-- **"Cleric" Clause**: TODO
-- **Tradeback**: TODO simulate link battles at the time of Pokémon Yellow 
-  - makes exception for unobtainable **DV** combinations 
-- **Species Clause**, **Evasion Clause**, **OHKO Clause**, **Invulnerability Clause**
-
-
-TODO UI 
-- **HP Percentage Mod**, **Move Effectiveness**, 
+Pokémon Showdown enforces several clauses *before* the battle: **Cleric Clause** (all Pokémon must
+have full HP and PP, and not have any status conditions prior to the battle), **Tradeback Clause**
+(Pokémon may not have moves obtained from trading back from Pokémon Gold/Silver/Crystal, though may
+have DV spreads which would otherwise be unobtainable), **Species Clause** (players may not have
+more than one of the same Pokémon species on their team) and bans specific moves via **Evasion
+Clause**, **OHKO Clause**, and the **Invulnerability Clause** - none of these are implemented by the
+pkmn engine as they can all be accomplished at a higher level by the client. Similarly, Pokémon
+Showdown's UI mods, the **HP Percentage Mod** which displays the HP percentage of a Pokémon instead
+of pixel information and the **Move Effectiveness Mod** which corrects for the [dual-type damage
+misinformation
+glitch](https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Dual-type_damage_misinformation) or
+the correction to [Poison/Burn animation with 0
+HP](https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Poison.2FBurn_animation_with_0_HP) are all
+left up to a client to support.
 
 ## RNG
 
