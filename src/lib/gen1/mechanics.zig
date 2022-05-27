@@ -673,8 +673,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
             try log.lastmiss();
             try log.miss(battle.active(player));
         }
-        // SHOWDOWN: Pokémon Showdown does not inflict crash damage when attacking a Ghost
-        if (move.effect == .JumpKick and !(showdown and immune)) {
+        if (move.effect == .JumpKick) {
             // GLITCH: Recoil is supposed to be damage/8 but damage will always be 0 here
             assert(battle.last_damage == 0);
             battle.last_damage = 1;

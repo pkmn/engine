@@ -446,9 +446,6 @@ Smogon](https://www.smogon.com/forums/threads/rby-tradebacks-bug-report-thread.3
   moves have glitchy behavior where the the scaled accuracy after accuracy/evasion modifiers have
   been applied should overwrite the original accuracy of the move for as long as the move's lock
   lasts.
-- **Jump Kick** / **High Jump Kick**: these should cause 1 HP of crash damage when the target is a
-  Ghost, despite what Pokémon Showdown or Bulbapedia suggests or what the case is in later
-  generations.
 - **Self-Destruct** / **Explosion**: these both should cause their target to continue building Rage
   even if they miss (most sources erroneously claim a move needs to hit to cause Rage to build but
   the `EXPLODE_EFFECT` is special-cased in the original game code).
