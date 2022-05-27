@@ -51,12 +51,17 @@ pub const Battle = struct {
     }
 
     pub fn random(rand: *PSRNG, initial: bool) data.Battle(data.PRNG) {
-        return .{
+        var p1: u4 = 0;
+        var p2: u4 = 0;
+        var battle: data.Battle(data.PRNG) = .{
             .rng = prng(rand, initial),
             .turn = if (initial) 0 else rand.range(u16, 1, 1000 + 1),
             .last_damage = if (initial) 0 else rand.range(u16, 1, 704 + 1),
-            .sides = .{ Side.random(rand, initial), Side.random(rand, initial) },
+            .sides = .{ Side.random(rand, &p1, initial), Side.random(rand, &p2, initial) },
         };
+        battle.last_selected_indexes.p1 = p1;
+        battle.last_selected_indexes.p2 = p2;
+        return battle;
     }
 };
 
@@ -91,7 +96,7 @@ pub const Side = struct {
         return side;
     }
 
-    pub fn random(rand: *PSRNG, initial: bool) data.Side {
+    pub fn random(rand: *PSRNG, index: *u4, initial: bool) data.Side {
         const n = if (rand.chance(u8, 1, 100)) rand.range(u4, 1, 5 + 1) else 6;
         var side = data.Side{};
 
@@ -106,7 +111,7 @@ pub const Side = struct {
             while (j < 4) : (j += 1) {
                 if (rand.chance(u8, 1, 5 + (@as(u8, i) * 2))) {
                     side.last_selected_move = pokemon.moves[j].id;
-                    // BUG: battle.last_selected_indexes is not updated
+                    index.* = j;
                 }
                 if (rand.chance(u8, 1, 5 + (@as(u8, i) * 2))) {
                     side.last_used_move = pokemon.moves[j].id;
