@@ -627,14 +627,15 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     assert(!immune);
 
     const counter = side.last_selected_move == .Counter;
-    if (!miss and (!showdown or (move.bp > 0 or counter))) {
+    if (!miss and (!showdown or (move.bp > 0 or counter or move.effect == .OHKO))) blk: {
         if (showdown and move.effect.isMulti()) {
             Effects.multiHit(battle, player, move);
             hits = side.active.volatiles.attacks;
         }
 
-        // Cartridge rolls for crit even for moves that can't crit (Counter/Metronome/status)
-        crit = if (!showdown or !counter) checkCriticalHit(battle, player, move) else crit;
+        // Cartridge rolls for crit even for moves that can't crit (Counter/Metronome/status/OHKO)
+        const check = if (!showdown) true else !counter and move.effect != .OHKO;
+        crit = if (check) checkCriticalHit(battle, player, move) else crit;
 
         if (counter) return counterDamage(battle, player, move, log);
 
@@ -643,25 +644,26 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
 
         // Disassembly does a check to allow 0 BP MultiHit moves but this isn't possible in practice
         assert(move.effect != .MultiHit or move.bp > 0);
-        if (move.bp != 0) {
+        if (move.bp != 0 or move.effect == .OHKO) {
             if (move.effect == .OHKO) {
                 ohko = if (!showdown) side.active.stats.spe >= foe.active.stats.spe else true;
                 // This can overflow after adjustDamage, but will still be sufficient to OHKO
                 battle.last_damage = if (ohko) 65535 else 0;
+                if (showdown) break :blk; // skip adjustDamage / randomizeDamage
             } else if (!calcDamage(battle, player, player.foe(), move, crit)) {
                 return @as(?Result, Result.Error);
             }
-            immune = adjustDamage(battle, player);
+            immune = battle.last_damage == 0 or adjustDamage(battle, player);
             randomizeDamage(battle);
         }
     }
 
-    miss = if (showdown or move.bp == 0)
+    miss = if (showdown or (move.bp == 0 and move.effect != .OHKO))
         miss
     else
         (!moveHit(battle, player, move, &immune) or battle.last_damage == 0);
 
-    assert(miss or battle.last_damage > 0 or move.bp == 0);
+    assert(miss or battle.last_damage > 0 or (move.bp == 0 and move.effect != .OHKO));
     assert(!(ohko and immune));
     assert(!immune or miss);
 
@@ -717,7 +719,9 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     var nullified = false;
     var hit: u4 = 0;
     while (hit < hits) : (hit += 1) {
-        if (move.bp > 0) nullified = try applyDamage(battle, player.foe(), player.foe(), log);
+        if (move.bp > 0 or move.effect == .OHKO) {
+            nullified = try applyDamage(battle, player.foe(), player.foe(), log);
+        }
         if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
             try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
         }
@@ -864,11 +868,13 @@ fn randomizeDamage(battle: anytype) void {
     else loop: {
         while (true) {
             const r = battle.rng.next();
+            // BUG: rotate right! FIXME
+            // const r = std.math.rotr(u8, battle.rng.next(), 1);
             if (r >= 217) break :loop r;
         }
     };
 
-    battle.last_damage = battle.last_damage *% random / 255;
+    battle.last_damage = @truncate(u16, @as(u32, battle.last_damage) *% random / 255);
 }
 
 fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype) !?Result {

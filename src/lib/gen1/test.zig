@@ -360,7 +360,34 @@ test "StatUp" {
 // Move.{Guillotine,HornDrill,Fissure}
 test "OHKO" {
     // Deals 65535 damage to the target. Fails if the target's Speed is greater than the user's.
-    return error.SkipZigTest;
+    var t = Test(if (showdown) .{ NOP, NOP, ~HIT, NOP, NOP, HIT } else .{ ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT }).init(
+        &.{
+            .{ .species = .Kingler, .moves = &.{.Guillotine} },
+            .{ .species = .Tauros, .moves = &.{.HornDrill} },
+        },
+        &.{.{ .species = .Dugtrio, .moves = &.{.Fissure} }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P2.ident(1), Move.Fissure, P1.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    try t.log.expected.move(P1.ident(1), Move.Guillotine, P2.ident(1), null);
+    try t.log.expected.immune(P2.ident(1), .OHKO);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    t.expected.p1.get(1).hp = 0;
+
+    try t.log.expected.move(P2.ident(1), Move.Fissure, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.ohko();
+    try t.log.expected.faint(P1.ident(1), true);
+
+    try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(move(1), move(1)));
+
+    try t.verify();
 }
 
 // Move.{RazorWind,SolarBeam,SkullBash,SkyAttack}

@@ -9,8 +9,8 @@ const MAX = 0xFFFFFFFF;
 const NOP = MIN;
 const HIT = MIN;
 const MISS = MAX;
-// const CRIT = MIN;
-// const NO_CRIT = MAX;
+const CRIT = MIN;
+const NO_CRIT = MAX;
 // const MIN_DMG = MIN;
 // const MAX_DMG = MAX;
 // const PROC = MIN;
@@ -62,6 +62,33 @@ for (const gen of new Generations(Dex as any)) {
         '|switch|p2a: Gengar|Gengar|260/260',
         '|tie',
       ]);
+    });
+
+    test('OHKO', () => {
+      const battle = startBattle([NOP, NOP, MISS, NOP, NOP, HIT], [
+        {species: 'Kingler', evs, moves: ['Guillotine']},
+        {species: 'Tauros', evs, moves: ['Horn Drill']},
+      ], [
+        {species: 'Dugtrio', evs, moves: ['Fissure']},
+      ]);
+
+      battle.makeChoices('move 1', 'move 1');
+      battle.makeChoices('move 1', 'move 1');
+
+      expect(battle.p1.pokemon[0].hp).toEqual(0);
+
+      expect(filter(battle.log)).toEqual([
+        '|move|p2a: Dugtrio|Fissure|p1a: Kingler|[miss]',
+        '|-miss|p2a: Dugtrio',
+        '|move|p1a: Kingler|Guillotine|p2a: Dugtrio',
+        '|-immune|p2a: Dugtrio|[ohko]',
+        '|turn|2',
+        '|move|p2a: Dugtrio|Fissure|p1a: Kingler',
+        '|-damage|p1a: Kingler|0 fnt',
+        '|-ohko',
+        '|faint|p1a: Kingler'
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('SwitchAndTeleport', () => {

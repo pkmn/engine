@@ -654,7 +654,7 @@ TODO
 | `beforeMove`              | `CheckPlayerStatusConditions`                           |
 | `canMove`                 | `CheckIfPlayerNeedsToChargeUp` / `PlayerCanExecuteMove` |
 | `decrementPP`             | `DecrementPP`                                           |
-| `doMove`                  | `PlayerCalcMoveDamage`                                  |
+| `doMove`                  | `PlayerCalcMoveDamage` / `CalculateDamage`              |
 | `checkCriticalHit`        | `CriticalHitTest`                                       |
 | `calcDamage`              | `GetDamageVarsForPlayerAttack` / `CalculateDamage`      |
 | `adjustDamage`            | `AdjustDamageForMoveType`                               |
