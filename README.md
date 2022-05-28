@@ -120,7 +120,7 @@ be used to simplify adding the `pkmn` package to your project.
 
 [`pkmn.h`](src/include/pkmn.h) exports the C API for `libpkmn`. Symbols are all prefixed with
 `pkmn_` to avoid name collisions. If `-Dtrace` is enabled and logging throws an error then the error
-will be encoded in the `pkmn_result` and can be checked with `pkmn_result_error`.
+will be encoded in the `pkmn_result` and can be checked with `pkmn_error`.
 
 ```c
 #include <pkmn.h>

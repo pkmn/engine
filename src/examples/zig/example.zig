@@ -54,7 +54,7 @@ pub fn main() !void {
     // pkmn.LOG_SIZE is guaranteed to be large enough for a single update. This will only be used if
     // -Dtrace is enabled - simply setting the log to null will also disable it, regardless of what
     // -Dtrace is set to.
-    var buf: [pkmn.MAX_LOG_SIZE]u8 = undefined;
+    var buf: [pkmn.LOG_SIZE]u8 = undefined;
     var log = pkmn.protocol.FixedLog{ .writer = std.io.fixedBufferStream(&buf).writer() };
 
     var c1 = pkmn.Choice{};
