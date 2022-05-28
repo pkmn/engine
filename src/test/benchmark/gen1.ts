@@ -1,10 +1,14 @@
 import * as sim from '@pkmn/sim';
-import {Generation, PokemonSet, SideID, StatsTable} from '@pkmn/data';
+import {Generation, PokemonSet, SideID, StatsTable, ID} from '@pkmn/data';
 
 import * as engine from '../../pkg';
 import * as gen1 from '../../pkg/gen1';
 import {Lookup} from '../../pkg/data';
 import {newSeed} from './common';
+
+import blocklistJSON from '../blocklist.json';
+
+const BLOCKLIST = blocklistJSON[1].moves as ID[];
 
 export const Battle = new class {
   random(gen: Generation, prng: sim.PRNG): engine.Battle {
@@ -47,11 +51,12 @@ const Player = new class {
       }
       evs.spd = evs.spa;
 
-      const moves: string[] = [];
+      const moves: ID[] = [];
       const m = prng.randomChance(1, 100) ? prng.next(1, 3 + 1) : 4;
       for (let j = 0; j < m; j++) {
-        let move;
-        while (moves.includes((move = lookup.moveByNum(prng.next(1, 165 + 1)))));
+        let move: ID;
+        while (moves.includes((move = lookup.moveByNum(prng.next(1, 165 + 1)))) ||
+          BLOCKLIST.includes(move));
         moves.push(move);
       }
 

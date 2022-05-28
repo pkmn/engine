@@ -239,6 +239,7 @@ pub const Pokemon = struct {
                 var j: u4 = 0;
                 while (j < i) : (j += 1) {
                     if (ms[j].id == m) continue :sample;
+                    if (showdown and blocked(m)) continue :sample;
                 }
                 break;
             }
@@ -267,6 +268,15 @@ pub const Pokemon = struct {
         };
     }
 };
+
+// cat src/test/blocklist.json | jq '."1".moves'
+fn blocked(m: Move) bool {
+    if (Move.get(m).effect == .Trapping) return true;
+    return switch (m) {
+        .Bind, .Counter, .Mimic, .Haze, .Bide, .Metronome, .MirrorMove => true,
+        else => false,
+    };
+}
 
 pub fn move(slot: u4) Choice {
     return .{ .type = .Move, .data = slot };
