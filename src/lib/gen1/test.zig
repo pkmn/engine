@@ -382,13 +382,6 @@ test "SwitchAndTeleport" {
     );
     defer t.deinit();
 
-    // |move|p1a: Abra|Teleport|p1a: Abra
-    // |move|p2a: Pidgey|Whirlwind|p2a: Abra
-    // |turn|2
-    // |move|p1a: Abra|Teleport|p1a: Abra
-    // |move|p2a: Pidgey|Whirlwind|p2a: Abra|[miss]
-    // |-miss|p2a: Pidgey
-    // |turn|3
     try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
     try t.log.expected.move(P2.ident(1), Move.Whirlwind, P1.ident(1), null);
     try t.log.expected.turn(2);
@@ -414,11 +407,6 @@ test "Splash" {
     );
     defer t.deinit();
 
-    // |move|p1a: Gyarados|Splash|p1a: Gyarados
-    // |-activate||move: Splash
-    // |move|p2a: Magikarp|Splash|p2a: Magikarp
-    // |-activate||move: Splash
-    // |turn|2
     try t.log.expected.move(P1.ident(1), Move.Splash, P1.ident(1), null);
     try t.log.expected.activate(P1.ident(1), .Splash);
     try t.log.expected.move(P2.ident(1), Move.Splash, P2.ident(1), null);
@@ -508,11 +496,6 @@ test "SpecialDamage (fixed)" {
     t.expected.p1.get(1).hp -= 40;
     t.expected.p2.get(1).hp -= 20;
 
-    // |move|p1a: Voltorb|Sonic Boom|p2a: Dratini
-    // |-damage|p2a: Dratini|265/285
-    // |move|p2a: Dratini|Dragon Rage|p1a: Voltorb
-    // |-damage|p1a: Voltorb|243/283
-    // |turn|2
     try t.log.expected.move(P1.ident(1), Move.SonicBoom, P2.ident(1), null);
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.move(P2.ident(1), Move.DragonRage, P1.ident(1), null);
@@ -521,19 +504,14 @@ test "SpecialDamage (fixed)" {
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-    // |switch|p2a: Gastly|Gastly|263/263
-    // |move|p1a: Voltorb|Sonic Boom|p2a: Gastly
     try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
     try t.log.expected.move(P1.ident(1), Move.SonicBoom, P2.ident(2), null);
     if (showdown) {
-        // |-immune|p2a: Gastly
         try t.log.expected.immune(P2.ident(2), .None);
     } else {
-        // |-damage|p2a: Gastly|243/263
         t.expected.p2.get(2).hp -= 20;
         try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
     }
-    // |turn|3
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
@@ -552,11 +530,6 @@ test "SpecialDamage (level)" {
     t.expected.p1.get(1).hp -= 16;
     t.expected.p2.get(1).hp -= 22;
 
-    // |move|p1a: Gastly|Night Shade|p2a: Clefairy
-    // |-damage|p2a: Clefairy|41/63
-    // |move|p2a: Clefairy|Seismic Toss|p1a: Gastly
-    // |-damage|p1a: Gastly|49/65
-    // |turn|2
     try t.log.expected.move(P1.ident(1), Move.NightShade, P2.ident(1), null);
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.move(P2.ident(1), Move.SeismicToss, P1.ident(1), null);
@@ -568,7 +541,7 @@ test "SpecialDamage (level)" {
 }
 
 // Move.Psywave
-// TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Psywave_glitches
+// TODO: https://pkmn.cc/bulba-glitch-1#Psywave_glitches
 test "SpecialDamage (Psywave)" {
     // Deals damage to the target equal to a random number from 1 to (user's level * 1.5 - 1),
     // rounded down, but not less than 1 HP.
@@ -601,8 +574,8 @@ test "Mist" {
 }
 
 // Move.HyperBeam
-// TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Hyper_Beam_.2B_Freeze_permanent_helplessness
-// TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Hyper_Beam_.2B_Sleep_move_glitch
+// TODO: https://pkmn.cc/bulba-glitch-1#Hyper_Beam_.2B_Freeze_permanent_helplessness
+// TODO: https://pkmn.cc/bulba-glitch-1#Hyper_Beam_.2B_Sleep_move_glitch
 test "HyperBeam" {
     // If this move is successful, the user must recharge on the following turn and cannot select a
     // move, unless the target or its substitute was knocked out by this move.
@@ -672,7 +645,7 @@ test "Paralyze" {
 }
 
 // Move.Toxic
-// TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Toxic_counter_glitches
+// TODO: https://pkmn.cc/bulba-glitch-1#Toxic_counter_glitches
 test "Poison (Toxic)" {
     // Badly poisons the target.
     return error.SkipZigTest;
@@ -698,7 +671,7 @@ test "Mimic" {
 }
 
 // Move.{Recover,SoftBoiled}
-// TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#HP_recovery_move_failure
+// TODO: https://pkmn.cc/bulba-glitch-1#HP_recovery_move_failure
 test "Heal" {
     // The user restores 1/2 of its maximum HP, rounded down. Fails if (user's maximum HP - user's
     // current HP + 1) is divisible by 256.
@@ -738,7 +711,7 @@ test "Haze" {
 }
 
 // Move.FocusEnergy
-// TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Critical_hit_ratio_error
+// TODO: https://pkmn.cc/bulba-glitch-1#Critical_hit_ratio_error
 test "FocusEnergy" {
     // While the user remains active, its chance for a critical hit is quartered. Fails if the user
     // already has the effect. If any Pokemon uses Haze, this effect ends.
@@ -746,7 +719,7 @@ test "FocusEnergy" {
 }
 
 // Move.Bide
-// TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Bide_errors
+// TODO: https://pkmn.cc/bulba-glitch-1#Bide_errors
 // TODO: https://glitchcity.wiki/Bide_fainted_Pokémon_damage_accumulation_glitch
 // TODO: https://www.youtube.com/watch?v=IVxHGyNDW4g
 test "Bide" {
@@ -769,7 +742,7 @@ test "Metronome" {
 }
 
 // Move.MirrorMove
-// TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Mirror_Move_glitch
+// TODO: https://pkmn.cc/bulba-glitch-1#Mirror_Move_glitch
 test "MirrorMove" {
     // The user uses the last move used by the target. Fails if the target has not made a move, or
     // if the last move used was Mirror Move.
@@ -805,8 +778,8 @@ test "Conversion" {
 }
 
 // Move.Substitute
-// TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Substitute_HP_drain_bug
-// TODO: https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Substitute_.2B_Confusion_glitch
+// TODO: https://pkmn.cc/bulba-glitch-1#Substitute_HP_drain_bug
+// TODO: https://pkmn.cc/bulba-glitch-1#Substitute_.2B_Confusion_glitch
 test "Substitute" {
     // The user takes 1/4 of its maximum HP, rounded down, and puts it into a substitute to take its
     // place in battle. The substitute has 1 HP plus the HP used to create it, and is removed once
@@ -826,42 +799,42 @@ test "Substitute" {
 // Glitches
 
 test "0 damage glitch" {
-    // https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#0_damage_glitch
+    // https://pkmn.cc/bulba-glitch-1#0_damage_glitch
     return error.SkipZigTest;
 }
 
 test "1/256 miss glitch" {
-    // https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#1.2F256_miss_glitch
+    // https://pkmn.cc/bulba-glitch-1#1.2F256_miss_glitch
     return error.SkipZigTest;
 }
 
 test "Defrost move forcing" {
-    // https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Defrost_move_forcing
+    // https://pkmn.cc/bulba-glitch-1#Defrost_move_forcing
     return error.SkipZigTest;
 }
 
 test "Division by 0" {
-    // https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Division_by_0
+    // https://pkmn.cc/bulba-glitch-1#Division_by_0
     return error.SkipZigTest;
 }
 
 test "Invulnerability glitch" {
-    // https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Invulnerability_glitch
+    // https://pkmn.cc/bulba-glitch-1#Invulnerability_glitch
     return error.SkipZigTest;
 }
 
 test "Stat modification errors" {
-    // https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Stat_modification_errors
+    // https://pkmn.cc/bulba-glitch-1#Stat_modification_errors
     return error.SkipZigTest;
 }
 
 test "Struggle bypassing" {
-    // https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Struggle_bypassing
+    // https://pkmn.cc/bulba-glitch-1#Struggle_bypassing
     return error.SkipZigTest;
 }
 
 test "Trapping sleep glitch" {
-    // https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Trapping_sleep_glitch
+    // https://pkmn.cc/bulba-glitch-1#Trapping_sleep_glitch
     return error.SkipZigTest;
 }
 

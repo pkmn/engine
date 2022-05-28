@@ -9,15 +9,26 @@ Due to the `-Dshowdown` and `-Dtrace` build options and the stochastic nature of
 testing the pkmn engine requires a little extra work. Helper functions exist to remove the majority
 of the boilerplate from the library's unit tests:
 
-- `Battle.fixed`: unit tests can use a `FixedRNG` which returns a fixed sequence of results
-  ("rolls") - this provides complete control over whether or not events should occur. One problem is
-  that `-Dshowdown` Pokemon Showdown compatibility mode requires a different number and order of
-  rolls, meaning both must be specified. Furthermore, at the end of the test it is important to
-  verify that all of the rolls provided were actually required with `try
-  expect(battle.rng.exhausted())` - unexpectedly unused rolls could point to bugs.
-- `TestLogs`: unit tests can easily exercise the `-Dtrace` code path via the `TestLogs` helper which
-  initializes buffers for the expected and actual logs and a `FixedLog` can be created to easily
-  set up expectations on the expected output.
+- `Test`: the main helper type for testing, a test can be initialized with `Test(rolls).init(p1,
+  p2)` (`Test.deinit()` should be `defer`-ed immediatley after initialization to free resources),
+  expected updates and logs can be tracked on the `expected` fields and finally the `actual` state
+  can be `verify`-ed at the end of the test.
+- `Battle.fixed`: under the hood, `Test` uses this helper to create a battle with a `FixedRNG` that
+  returns a fixed sequence of results ("rolls") - this provides complete control over whether or not
+  events should occur. One problem is that `-Dshowdown` Pokemon Showdown compatibility mode requires
+  a different number and order of rolls, meaning both must be specified. Furthermore, at the end of
+  the test it is important to verify that all of the rolls provided were actually required with `try
+  expect(battle.rng.exhausted())` - unexpectedly unused rolls could point to bugs (`Test.verify()`
+  will automatically check that the `rng` is exhausted).
+
+### `showdown.test.ts`
+
+In order to verify Pokémon Showdown's behavior, many of the pkmn engine's unit tests are mirrored in
+[`showdown.test.ts`](../src/test/showdown.test.ts). It should be emphasized that these are tests
+against Pokémon Showdown, **not** the pkmn engine (engine code is not being tested). Pokémon
+Showdown's own unit tests are inadequate for the pkmn engine's purposes as they mostly cover the
+latest generation, do not use a fixed RNG, and do not verify logs (both of which are crucial for
+matching Pokémon Showdown's RNG and output).
 
 ## Integration
 
