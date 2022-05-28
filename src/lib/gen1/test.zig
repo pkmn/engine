@@ -42,22 +42,18 @@ const swtch = helpers.swtch;
 
 const OPTIONS_SIZE = data.OPTIONS_SIZE;
 
-const MIN = 0;
-const MAX = std.math.maxInt(if (showdown) u32 else u8);
+const U = if (showdown) u32 else u8;
+const MIN: U = 0;
+const MAX: U = std.math.maxInt(U);
 
 const P1_FIRST = MIN;
-const P2_FIRST = MAX;
 const NOP = MIN;
 const HIT = MIN;
-const MISS = MAX;
 const CRIT = MIN;
-const NO_CRIT = MAX;
 const MIN_DMG = if (showdown) MIN else 217;
 const MAX_DMG = MAX;
 const PROC = MIN;
-const NO_PROC = MAX;
 const CFZ = MAX;
-const NO_CFZ = MIN;
 
 const P1 = Player.P1;
 const P2 = Player.P2;
@@ -376,7 +372,7 @@ test "Charge" {
 // Move.{Whirlwind,Roar,Teleport}
 test "SwitchAndTeleport" {
     // No competitive use.
-    var t = Test(if (showdown) .{ NOP, HIT, NOP, MISS } else .{}).init(
+    var t = Test(if (showdown) .{ NOP, HIT, NOP, ~HIT } else .{}).init(
         &.{.{ .species = .Abra, .moves = &.{.Teleport} }},
         &.{.{ .species = .Pidgey, .moves = &.{.Whirlwind} }},
     );
@@ -863,23 +859,23 @@ test "MAX_LOGS" {
         .{
             // Set up
             HIT,
-            NO_CRIT, @enumToInt(Move.LeechSeed), HIT,
-            HIT, 3, NO_CFZ, HIT, 3,
-            NO_CFZ, NO_CFZ, NO_CRIT, @enumToInt(Move.SolarBeam),
+            ~CRIT, @enumToInt(Move.LeechSeed), HIT,
+            HIT, 3, ~CFZ, HIT, 3,
+            ~CFZ, ~CFZ, ~CRIT, @enumToInt(Move.SolarBeam),
             // Scenario
-            NO_CFZ,
-            NO_CRIT, MIRROR_MOVE, NO_CRIT,
-            NO_CRIT, MIRROR_MOVE, NO_CRIT,
-            NO_CRIT, MIRROR_MOVE, NO_CRIT,
-            NO_CRIT, MIRROR_MOVE, NO_CRIT,
-            NO_CRIT, MIRROR_MOVE, NO_CRIT,
-            NO_CRIT, MIRROR_MOVE, NO_CRIT,
-            NO_CRIT, MIRROR_MOVE, NO_CRIT,
-            NO_CRIT, MIRROR_MOVE, NO_CRIT,
-            NO_CRIT, MIRROR_MOVE, NO_CRIT,
-            NO_CRIT, MIRROR_MOVE, NO_CRIT,
-            NO_CRIT, @enumToInt(Move.PinMissile), CRIT, MIN_DMG, HIT, 3, 3,
-            NO_CFZ, CRIT, MIN_DMG, HIT,
+            ~CFZ,
+            ~CRIT, MIRROR_MOVE, ~CRIT,
+            ~CRIT, MIRROR_MOVE, ~CRIT,
+            ~CRIT, MIRROR_MOVE, ~CRIT,
+            ~CRIT, MIRROR_MOVE, ~CRIT,
+            ~CRIT, MIRROR_MOVE, ~CRIT,
+            ~CRIT, MIRROR_MOVE, ~CRIT,
+            ~CRIT, MIRROR_MOVE, ~CRIT,
+            ~CRIT, MIRROR_MOVE, ~CRIT,
+            ~CRIT, MIRROR_MOVE, ~CRIT,
+            ~CRIT, MIRROR_MOVE, ~CRIT,
+            ~CRIT, @enumToInt(Move.PinMissile), CRIT, MIN_DMG, HIT, 3, 3,
+            ~CFZ, CRIT, MIN_DMG, HIT,
         },
          // zig fmt: on
         &.{
