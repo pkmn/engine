@@ -67,11 +67,62 @@ const P2 = Player.P2;
 // General
 
 test "start (first fainted)" {
-    return error.SkipZigTest;
+    if (showdown) return;
+    var t = Test(.{}).init(
+        &.{
+            .{ .species = .Pikachu, .hp = 0, .moves = &.{.ThunderShock} },
+            .{ .species = .Bulbasaur, .moves = &.{.Tackle} },
+        },
+        &.{
+            .{ .species = .Charmander, .hp = 0, .moves = &.{.Scratch} },
+            .{ .species = .Squirtle, .moves = &.{.Tackle} },
+        },
+    );
+    defer t.deinit();
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.turn(1);
+
+    try expectEqual(Result.Default, try t.battle.expected.update(.{}, .{}, t.log.actual));
+    try t.verify();
 }
 
 test "start (all fainted)" {
-    return error.SkipZigTest;
+    if (showdown) return;
+    // Win
+    {
+        var t = Test(.{}).init(
+            &.{.{ .species = .Bulbasaur, .moves = &.{.Tackle} }},
+            &.{.{ .species = .Charmander, .hp = 0, .moves = &.{.Scratch} }},
+        );
+        defer t.deinit();
+
+        try expectEqual(Result.Win, try t.battle.expected.update(.{}, .{}, t.log.actual));
+        try t.verify();
+    }
+    // Lose
+    {
+        var t = Test(.{}).init(
+            &.{.{ .species = .Bulbasaur, .hp = 0, .moves = &.{.Tackle} }},
+            &.{.{ .species = .Charmander, .moves = &.{.Scratch} }},
+        );
+        defer t.deinit();
+
+        try expectEqual(Result.Lose, try t.battle.expected.update(.{}, .{}, t.log.actual));
+        try t.verify();
+    }
+    // Tie
+    {
+        var t = Test(.{}).init(
+            &.{.{ .species = .Bulbasaur, .hp = 0, .moves = &.{.Tackle} }},
+            &.{.{ .species = .Charmander, .hp = 0, .moves = &.{.Scratch} }},
+        );
+        defer t.deinit();
+
+        try expectEqual(Result.Tie, try t.battle.expected.update(.{}, .{}, t.log.actual));
+        try t.verify();
+    }
 }
 
 test "move select" {

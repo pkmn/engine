@@ -84,13 +84,16 @@ fn start(battle: anytype, log: anytype) !Result {
     const p1 = battle.side(.P1);
     const p2 = battle.side(.P2);
 
-    var slot = findFirstAlive(p1);
-    if (slot == 0) return if (findFirstAlive(p2) == 0) Result.Tie else Result.Lose;
-    try switchIn(battle, .P1, slot, true, log);
+    var p1_slot = findFirstAlive(p1);
+    assert(!showdown or p1_slot == 1);
+    if (p1_slot == 0) return if (findFirstAlive(p2) == 0) Result.Tie else Result.Lose;
 
-    slot = findFirstAlive(p2);
-    if (slot == 0) return Result.Win;
-    try switchIn(battle, .P2, slot, true, log);
+    var p2_slot = findFirstAlive(p2);
+    assert(!showdown or p2_slot == 1);
+    if (p2_slot == 0) return Result.Win;
+
+    try switchIn(battle, .P1, p1_slot, true, log);
+    try switchIn(battle, .P2, p2_slot, true, log);
 
     return endTurn(battle, log, 0);
 }

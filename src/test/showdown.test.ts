@@ -45,6 +45,32 @@ for (const gen of new Generations(Dex as any)) {
   const evs = {hp: EVS, atk: EVS, def: EVS, spa: EVS, spd: EVS, spe: EVS};
 
   describe(`Gen ${gen.num}`, () => {
+    test('start', () => {
+      const battle = createBattle([]);
+      battle.started = true;
+      battle.setPlayer('p1', {team: [
+        {species: 'Pikachu', evs, moves: ['Thunder Shock']},
+        {species: 'Bulbasaur', evs, moves: ['Tackle']},
+      ] as PokemonSet[]});
+      battle.setPlayer('p2', {team: [
+        {species: 'Charmander', evs, moves: ['Scratch']},
+        {species: 'Squirtle', evs, moves: ['Tackle']},
+      ] as PokemonSet[]});
+
+      battle.p1.pokemon[0].hp = 0;
+      battle.p2.pokemon[0].hp = 0;
+
+      battle.started = false;
+      battle.start();
+
+       // lol...
+      expect(filter(battle.log)).toEqual([
+        '|switch|p1a: Pikachu|Pikachu|0 fnt',
+        '|switch|p2a: Charmander|Charmander|0 fnt',
+        '|turn|1',
+      ]);
+    });
+
     test('turn order (priority)', () => {
       const battle = startBattle([
         NOP, NOP, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
