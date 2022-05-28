@@ -8,7 +8,7 @@ const rng = @import("../common/rng.zig");
 const data = @import("data.zig");
 
 const assert = std.debug.assert;
-const debug = std.debug.print;
+const DEBUG = @import("../common/debug.zig").print;
 const expectEqual = std.testing.expectEqual;
 
 const showdown = build_options.showdown;
