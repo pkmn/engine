@@ -57,27 +57,27 @@ for (const gen of new Generations(Dex as any)) {
         {species: 'Chansey', evs, moves: ['Tackle', 'Quick Attack', 'Counter']},
       ]);
 
-      let p1hp = battle.p1.active[0].hp;
+      let p1hp = battle.p1.pokemon[0].hp;
       let p2hp = battle.p2.pokemon[0].hp;
 
       // Raticate > Chansey
       battle.makeChoices('move 1', 'move 1');
-      expect(battle.p1.active[0].hp).toBe(p1hp -= 20);
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 20);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 91);
 
       // Chansey > Raticate
       battle.makeChoices('move 1', 'move 2');
-      expect(battle.p1.active[0].hp).toBe(p1hp -= 22);
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 22);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 91);
 
       // Raticate > Chansey
       battle.makeChoices('move 2', 'move 2');
-      expect(battle.p1.active[0].hp).toBe(p1hp -= 22);
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 22);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 104);
 
       // Chansey > Raticate
       battle.makeChoices('move 3', 'move 1');
-      expect(battle.p1.active[0].hp).toBe(p1hp -= 20);
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 20);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 40);
 
       expect(filter(battle.log)).toEqual([
@@ -101,6 +101,43 @@ for (const gen of new Generations(Dex as any)) {
         '|move|p1a: Raticate|Counter|p2a: Chansey',
         '|-damage|p2a: Chansey|377/703',
         '|turn|5',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
+    test.todo('turn order (speed tie)');
+
+    test('turn order (switch vs. move)', () => {
+      const battle = startBattle([
+        NOP, HIT, NO_CRIT, MIN_DMG, NOP, HIT, NO_CRIT, MIN_DMG,
+      ], [
+        {species: 'Raticate', evs, moves: ['Quick Attack']},
+        {species: 'Rattata', evs, moves: ['Quick Attack']},
+      ], [
+        {species: 'Ninetales', evs, moves: ['Quick Attack']},
+        {species: 'Vulpix', evs, moves: ['Quick Attack']},
+      ]);
+
+      const rattata = battle.p1.pokemon[1].hp;
+      const vulpix = battle.p2.pokemon[1].hp;
+
+      // Switch > Quick Attack
+      battle.makeChoices('move 1', 'switch 2');
+      expect(battle.p2.pokemon[0].hp).toBe(vulpix - 64);
+
+      // Switch > Quick Attack
+      battle.makeChoices('switch 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(rattata - 32);
+
+      expect(filter(battle.log)).toEqual([
+        '|switch|p2a: Vulpix|Vulpix|279/279',
+        '|move|p1a: Raticate|Quick Attack|p2a: Vulpix',
+        '|-damage|p2a: Vulpix|215/279',
+        '|turn|2',
+        '|switch|p1a: Rattata|Rattata|263/263',
+        '|move|p2a: Vulpix|Quick Attack|p1a: Rattata',
+        '|-damage|p1a: Rattata|231/263',
+        '|turn|3',
       ]);
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
@@ -198,14 +235,14 @@ for (const gen of new Generations(Dex as any)) {
         {species: 'Gastly', evs, moves: ['Night Shade']},
       ]);
 
-      const p1hp = battle.p1.active[0].hp;
+      const p1hp = battle.p1.pokemon[0].hp;
       const p2hp1 = battle.p2.pokemon[0].hp;
       const p2hp2 = battle.p2.pokemon[1].hp;
 
       battle.makeChoices('move 1', 'move 1');
       battle.makeChoices('move 1', 'switch 2');
 
-      expect(battle.p1.active[0].hp).toEqual(p1hp - 40);
+      expect(battle.p1.pokemon[0].hp).toEqual(p1hp - 40);
       expect(battle.p2.pokemon[0].hp).toEqual(p2hp2);
       expect(battle.p2.pokemon[1].hp).toEqual(p2hp1 - 20);
 
@@ -230,13 +267,13 @@ for (const gen of new Generations(Dex as any)) {
         {species: 'Clefairy', evs, level: 16, moves: ['Seismic Toss']},
       ]);
 
-      const p1hp = battle.p1.active[0].hp;
-      const p2hp = battle.p2.active[0].hp;
+      const p1hp = battle.p1.pokemon[0].hp;
+      const p2hp = battle.p2.pokemon[0].hp;
 
       battle.makeChoices('move 1', 'move 1');
 
-      expect(battle.p1.active[0].hp).toEqual(p1hp - 16);
-      expect(battle.p2.active[0].hp).toEqual(p2hp - 22);
+      expect(battle.p1.pokemon[0].hp).toEqual(p1hp - 16);
+      expect(battle.p2.pokemon[0].hp).toEqual(p2hp - 22);
 
       expect(filter(battle.log)).toEqual([
         '|move|p1a: Gastly|Night Shade|p2a: Clefairy',
@@ -255,11 +292,11 @@ for (const gen of new Generations(Dex as any)) {
         {species: 'Clefable', evs, level: 42, moves: ['Psywave']},
       ]);
 
-      const p2hp = battle.p2.active[0].hp;
+      const p2hp = battle.p2.pokemon[0].hp;
 
       battle.makeChoices('move 1', 'move 1');
 
-      expect(battle.p2.active[0].hp).toEqual(p2hp - 87);
+      expect(battle.p2.pokemon[0].hp).toEqual(p2hp - 87);
 
       expect(filter(battle.log)).toEqual([
         '|move|p1a: Gengar|Psywave|p2a: Clefable',
@@ -278,18 +315,18 @@ for (const gen of new Generations(Dex as any)) {
         {species: 'Rattata', evs, moves: ['Super Fang']},
       ]);
 
-      battle.p1.active[0].hp = 1;
-      expect(battle.p2.active[0].hp).toBe(263);
+      battle.p1.pokemon[0].hp = 1;
+      expect(battle.p2.pokemon[0].hp).toBe(263);
 
       battle.makeChoices('move 1', 'move 1');
-      expect(battle.p1.active[0].hp).toBe(0);
-      expect(battle.p2.active[0].hp).toBe(132);
+      expect(battle.p1.pokemon[0].hp).toBe(0);
+      expect(battle.p2.pokemon[0].hp).toBe(132);
 
       battle.makeChoices('switch 2', '');
-      expect(battle.p1.active[0].hp).toBe(293);
+      expect(battle.p1.pokemon[0].hp).toBe(293);
 
       battle.makeChoices('move 1', 'move 1');
-      expect(battle.p1.active[0].hp).toBe(147);
+      expect(battle.p1.pokemon[0].hp).toBe(147);
 
       expect(filter(battle.log)).toEqual([
         '|move|p1a: Raticate|Super Fang|p2a: Rattata',

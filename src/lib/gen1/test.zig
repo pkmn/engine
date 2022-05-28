@@ -196,11 +196,42 @@ test "turn order (priority)" {
 }
 
 test "turn order (speed tie)" {
+    // TODO switch switch + move move
     return error.SkipZigTest;
 }
 
 test "turn order (switch vs. move)" {
-    return error.SkipZigTest;
+    var t = Test(if (showdown)
+        (.{ NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, ~CRIT, MIN_DMG })
+    else
+        (.{ ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT })).init(
+        &.{
+            .{ .species = .Raticate, .moves = &.{.QuickAttack} },
+            .{ .species = .Rattata, .moves = &.{.QuickAttack} },
+        },
+        &.{
+            .{ .species = .Ninetales, .moves = &.{.QuickAttack} },
+            .{ .species = .Vulpix, .moves = &.{.QuickAttack} },
+        },
+    );
+    defer t.deinit();
+
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.move(P1.ident(1), Move.QuickAttack, P2.ident(2), null);
+    t.expected.p2.get(2).hp -= 64;
+    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.move(P2.ident(2), Move.QuickAttack, P1.ident(2), null);
+    t.expected.p1.get(2).hp -= 32;
+    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(swtch(2), move(1)));
+    try t.verify();
 }
 
 test "paralysis" {
