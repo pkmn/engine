@@ -626,15 +626,16 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         !moveHit(battle, player, move, &immune));
     assert(!immune);
 
+    const skip = move.bp == 0 and move.effect != .OHKO;
     const counter = side.last_selected_move == .Counter;
-    if (!miss and (!showdown or (move.bp > 0 or counter or move.effect == .OHKO))) blk: {
+    if (!miss and (!showdown or (!skip or counter))) blk: {
         if (showdown and move.effect.isMulti()) {
             Effects.multiHit(battle, player, move);
             hits = side.active.volatiles.attacks;
         }
 
         // Cartridge rolls for crit even for moves that can't crit (Counter/Metronome/status/OHKO)
-        const check = if (!showdown) true else !counter and move.effect != .OHKO;
+        const check = if (!showdown) true else !counter and move.effect != .OHKO; // TODO: skip?
         crit = if (check) checkCriticalHit(battle, player, move) else crit;
 
         if (counter) return counterDamage(battle, player, move, log);
@@ -644,7 +645,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
 
         // Disassembly does a check to allow 0 BP MultiHit moves but this isn't possible in practice
         assert(move.effect != .MultiHit or move.bp > 0);
-        if (move.bp != 0 or move.effect == .OHKO) {
+        if (!skip) {
             if (move.effect == .OHKO) {
                 ohko = if (!showdown) side.active.stats.spe >= foe.active.stats.spe else true;
                 // This can overflow after adjustDamage, but will still be sufficient to OHKO
@@ -658,12 +659,12 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         }
     }
 
-    miss = if (showdown or (move.bp == 0 and move.effect != .OHKO))
+    miss = if (showdown or skip)
         miss
     else
         (!moveHit(battle, player, move, &immune) or battle.last_damage == 0);
 
-    assert(miss or battle.last_damage > 0 or (move.bp == 0 and move.effect != .OHKO));
+    assert(miss or battle.last_damage > 0 or skip);
     assert(!(ohko and immune));
     assert(!immune or miss);
 
@@ -719,9 +720,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     var nullified = false;
     var hit: u4 = 0;
     while (hit < hits) : (hit += 1) {
-        if (move.bp > 0 or move.effect == .OHKO) {
-            nullified = try applyDamage(battle, player.foe(), player.foe(), log);
-        }
+        if (!skip) nullified = try applyDamage(battle, player.foe(), player.foe(), log);
         if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
             try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
         }

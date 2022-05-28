@@ -488,7 +488,7 @@ test "Recoil" {
 }
 
 // Move.Struggle
-test "Recoil (Struggle)" {
+test "Struggle" {
     // Deals Normal-type damage. If this move was successful, the user takes damage equal to 1/2 the
     // HP lost by the target, rounded down, but not less than 1 HP. This move is automatically used
     // if none of the user's known moves can be selected.
@@ -701,22 +701,17 @@ test "Confusion" {
     return error.SkipZigTest;
 }
 
+// TODO Move.Toxic
 // Move.{PoisonPowder,PoisonGas}
 test "Poison" {
-    // Poisons the target.
+    // (Badly) Poisons the target.
+    // TODO: https://pkmn.cc/bulba-glitch-1#Toxic_counter_glitches
     return error.SkipZigTest;
 }
 
 // Move.{ThunderWave,StunSpore,Glare}
 test "Paralyze" {
     // Paralyzes the target.
-    return error.SkipZigTest;
-}
-
-// Move.Toxic
-// TODO: https://pkmn.cc/bulba-glitch-1#Toxic_counter_glitches
-test "Poison (Toxic)" {
-    // Badly poisons the target.
     return error.SkipZigTest;
 }
 
