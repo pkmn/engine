@@ -1,5 +1,16 @@
-import {PRNG, PRNGSeed, BattleStreams} from '@pkmn/sim';
-import {ExhaustiveRunner, ExhaustiveRunnerOptions, RunnerOptions, AIOptions} from '@pkmn/sim/tools';
+import {Generations, Generation, GenerationNum} from '@pkmn/data';
+import {Dex, PRNG, PRNGSeed, BattleStreams, ID} from '@pkmn/sim';
+import {
+  AIOptions,
+  ExhaustiveRunner,
+  ExhaustiveRunnerOptions,
+  ExhaustiveRunnerPossibilites,
+  RunnerOptions,
+} from '@pkmn/sim/tools';
+
+import blocklistJSON from './blocklist.json';
+
+const BLOCKLIST = blocklistJSON as {[gen: number]: Partial<ExhaustiveRunnerPossibilites>};
 
 // FIXME: exhaustive runner depends on RandomPlayerAI = possibly invalid choices need to figure out
 // which choices get accepted and use those (= from raw battle stream? or is raw too raw and we need
@@ -92,12 +103,33 @@ const FORMATS = [
   // 'gen8customgame', 'gen8doublescustomgame',
 ];
 
+function possibilities(gen: Generation) {
+  const blocked = BLOCKLIST[gen.num] || {};
+  const pokemon = Array.from(gen.species).filter(p => !blocked.pokemon?.includes(p.id as ID) &&
+    (p.name !== 'Pichu-Spiky-eared' && p.name.slice(0, 8) !== 'Pikachu-'));
+  const items = gen.num < 2
+    ? [] : Array.from(gen.items).filter(i => !blocked.items?.includes(i.id as ID));
+  const abilities = gen.num < 3
+    ? [] : Array.from(gen.abilities).filter(a => !blocked.abilities?.includes(a.id as ID));
+  const moves = Array.from(gen.moves).filter(m => !blocked.moves?.includes(m.id as ID) &&
+    (m.id !== 'struggle' && (m.id === 'hiddenpower' || m.id.slice(0, 11) !== 'hiddenpower')));
+  return {
+    pokemon: pokemon.map(p => p.id as ID),
+    items: items.map(i => i.id as ID),
+    abilities: abilities.map(a => a.id as ID),
+    moves: moves.map(m => m.id as ID),
+  };
+}
+
 describe('integration', () => {
   it('test', async () => {
     const opts: ExhaustiveRunnerOptions =
       {format: '', prng: [1, 2, 3, 4], runner: o => new Runner(o).run()};
     for (const format of FORMATS) {
+      const gen = new Generations(Dex as any).get(+format.charAt(3) as GenerationNum);
       opts.format = format;
+      opts.possible = possibilities(gen);
+      console.log(JSON.stringify(opts.possible, null, 2));
       expect(await (new ExhaustiveRunner(opts).run())).toBe(0);
     }
   });

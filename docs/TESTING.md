@@ -57,10 +57,26 @@ several reasons:
 
 The integration test contains logic to configure Pokémon Showdown to produce the correct results and
 for massaging the output from the pkmn engine into something which can be compared to Pokémon
-Showdown.  Care is taken to ensure that where they disagree the actual cartridge decompilations are
+Showdown. Care is taken to ensure that where they disagree the actual cartridge decompilations are
 used as the arbiter of correctness, but it is still possible that since Pokémon Showdown and the
 pkmn engine are both independent implementations of the actual Pokémon cartridge logic  despite
 being in agreement **they may both be incorrect** when it comes to the actual cartridge.
+
+### `blocklist.json`
+
+Some of Pokémon Showdown's bugs are too convoluted to be implemented in the pkmn engine. The engine
+tries its best to reproduce the behavior of even the most misunderstood and broken mechanics of
+Pokémon Showdown, but in the same way that implementing the cartridge behavior correctly is
+difficult starting from Pokémon Showdown's architecture, implementing Pokémon Showdown's mechanics
+is also difficult starting from an architecture that mirrors the cartridge.
+
+In cases where the pkmn engine cannot reproduce 100% of the behavior of Pokémon Showdown for the
+purposes of lockstep integration tests or benchmarking, the offending Pokémon / Items / Abilities /
+Moves will be blocked from inclusion by their presence in the
+[`blocklist.json`](../src/test/blocklist.json) file. Note that the pkmn engine implements as much
+of Pokémon Showdown's behavior for these effects as possible, it is usually just the extreme edge
+cases which would require large amounts of coding or additional state to implement the same faulty
+behavior where these effects break down.
 
 ## Benchmark
 
