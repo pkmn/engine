@@ -52,8 +52,7 @@ const BOOSTS = &[_][2]u8{
 const MAX_STAT_VALUE = 999;
 
 pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
-    assert(c1.type != .Pass or (c2.type == .Pass and battle.turn == 0) or (c2.type != .Pass));
-    assert(c2.type != .Pass or (c1.type == .Pass and battle.turn == 0) or (c1.type != .Pass));
+    assert(c1.type != .Pass or c2.type != .Pass or battle.turn == 0);
     if (battle.turn == 0) return start(battle, log);
 
     var l1 = false;
@@ -228,6 +227,7 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anyty
 
 fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     assert(c1.type != .Pass or c2.type != .Pass);
+
     if (c1.type == .Pass) return .P2;
     if (c2.type == .Pass) return .P1;
 
@@ -846,7 +846,7 @@ fn adjustDamage(battle: anytype, player: Player) bool {
     const move = Move.get(side.last_selected_move);
 
     var d = battle.last_damage;
-    if (side.active.types.includes(move.type)) d *%= 2;
+    if (side.active.types.includes(move.type)) d +%= d / 2;
 
     const type1 = @enumToInt(move.type.effectiveness(foe.active.types.type1));
     const type2 = @enumToInt(move.type.effectiveness(foe.active.types.type2));

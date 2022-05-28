@@ -125,7 +125,74 @@ test "switching (brn/par)" {
 }
 
 test "turn order (priority)" {
-    return error.SkipZigTest;
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+            NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT,
+        } else .{
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+            ~CRIT, MIN_DMG, HIT, ~CRIT, HIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Raticate, .moves = &.{ .Tackle, .QuickAttack, .Counter } }},
+        &.{.{ .species = .Chansey, .moves = &.{ .Tackle, .QuickAttack, .Counter } }},
+    );
+    defer t.deinit();
+
+    t.expected.p1.get(1).hp -= 20;
+    t.expected.p2.get(1).hp -= 91;
+
+    try t.log.expected.move(P1.ident(1), Move.Tackle, P2.ident(1), null);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Tackle, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(2);
+
+    // Raticate > Chansey
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    t.expected.p1.get(1).hp -= 22;
+    t.expected.p2.get(1).hp -= 91;
+
+    try t.log.expected.move(P2.ident(1), Move.QuickAttack, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Tackle, P2.ident(1), null);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(3);
+
+    // Chansey > Raticate
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+
+    t.expected.p1.get(1).hp -= 22;
+    t.expected.p2.get(1).hp -= 104;
+
+    try t.log.expected.move(P1.ident(1), Move.QuickAttack, P2.ident(1), null);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.QuickAttack, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(4);
+
+    // Raticate > Chansey
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+
+    t.expected.p1.get(1).hp -= 20;
+    t.expected.p2.get(1).hp -= 40;
+
+    try t.log.expected.move(P2.ident(1), Move.Tackle, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Counter, P2.ident(1), null);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(5);
+
+    // Chansey > Raticate
+    try expectEqual(Result.Default, try t.update(move(3), move(1)));
+    try t.verify();
 }
 
 test "turn order (speed tie)" {

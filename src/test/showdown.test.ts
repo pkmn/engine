@@ -10,7 +10,7 @@ const NOP = MIN;
 const HIT = MIN;
 const MISS = MAX;
 // const CRIT = MIN;
-// const NO_CRIT = MAX;
+const NO_CRIT = MAX;
 const MIN_DMG = MIN;
 const MAX_DMG = MAX;
 // const PROC = MIN;
@@ -45,6 +45,66 @@ for (const gen of new Generations(Dex as any)) {
   const evs = {hp: EVS, atk: EVS, def: EVS, spa: EVS, spd: EVS, spe: EVS};
 
   describe(`Gen ${gen.num}`, () => {
+    test('turn order (priority)', () => {
+      const battle = startBattle([
+        NOP, NOP, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+        NOP, NOP, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+        NOP, NOP, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+        NOP, NOP, NOP, HIT, NO_CRIT, MIN_DMG, HIT,
+      ], [
+        {species: 'Raticate', evs, moves: ['Tackle', 'Quick Attack', 'Counter']},
+      ], [
+        {species: 'Chansey', evs, moves: ['Tackle', 'Quick Attack', 'Counter']},
+      ]);
+
+      let p1hp = battle.p1.active[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      // Raticate > Chansey
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.active[0].hp).toBe(p1hp -= 20);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 91);
+
+      // Chansey > Raticate
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.active[0].hp).toBe(p1hp -= 22);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 91);
+
+      // Raticate > Chansey
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.active[0].hp).toBe(p1hp -= 22);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 104);
+
+      // Chansey > Raticate
+      battle.makeChoices('move 3', 'move 1');
+      expect(battle.p1.active[0].hp).toBe(p1hp -= 20);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 40);
+
+      expect(filter(battle.log)).toEqual([
+        '|move|p1a: Raticate|Tackle|p2a: Chansey',
+        '|-damage|p2a: Chansey|612/703',
+        '|move|p2a: Chansey|Tackle|p1a: Raticate',
+        '|-damage|p1a: Raticate|293/313',
+        '|turn|2',
+        '|move|p2a: Chansey|Quick Attack|p1a: Raticate',
+        '|-damage|p1a: Raticate|271/313',
+        '|move|p1a: Raticate|Tackle|p2a: Chansey',
+        '|-damage|p2a: Chansey|521/703',
+        '|turn|3',
+        '|move|p1a: Raticate|Quick Attack|p2a: Chansey',
+        '|-damage|p2a: Chansey|417/703',
+        '|move|p2a: Chansey|Quick Attack|p1a: Raticate',
+        '|-damage|p1a: Raticate|249/313',
+        '|turn|4',
+        '|move|p2a: Chansey|Tackle|p1a: Raticate',
+        '|-damage|p1a: Raticate|229/313',
+        '|move|p1a: Raticate|Counter|p2a: Chansey',
+        '|-damage|p2a: Chansey|377/703',
+        '|turn|5',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
     test('Endless Battle Clause (initial)', () => {
       const battle = createBattle([]);
       battle.started = true;
