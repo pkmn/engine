@@ -129,7 +129,6 @@ describe('integration', () => {
       const gen = new Generations(Dex as any).get(+format.charAt(3) as GenerationNum);
       opts.format = format;
       opts.possible = possibilities(gen);
-      console.log(JSON.stringify(opts.possible, null, 2));
       expect(await (new ExhaustiveRunner(opts).run())).toBe(0);
     }
   });

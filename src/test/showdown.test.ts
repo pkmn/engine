@@ -45,11 +45,11 @@ for (const gen of new Generations(Dex as any)) {
   const evs = {hp: EVS, atk: EVS, def: EVS, spa: EVS, spd: EVS, spe: EVS};
 
   describe(`Gen ${gen.num}`, () => {
-    test.skip('Endless Battle Clause (initial)', () => {
+    test('Endless Battle Clause (initial)', () => {
       const battle = createBattle([]);
       battle.started = true;
-      battle.setPlayer('p1', {team: [{species: 'Gengar', evs, moves: 'Tackle'}] as any});
-      battle.setPlayer('p2', {team: [{species: 'Gengar', moves: 'Tackle'}] as any});
+      battle.setPlayer('p1', {team: [{species: 'Gengar', evs, moves: ['Lick']}] as PokemonSet[]});
+      battle.setPlayer('p2', {team: [{species: 'Gengar', moves: ['Lick']}] as PokemonSet[]});
 
       battle.p1.pokemon[0].moveSlots[0].pp = 0;
       battle.p2.pokemon[0].moveSlots[0].pp = 0;
@@ -222,7 +222,7 @@ class FixedRNG extends PRNG {
 }
 
 const SKIP = new Set([
-  '', 't:', 'gametype', 'player', 'teamsize', 'gen', 'tier', 'rule', 'start', 'upkeep',
+  '', 't:', 'gametype', 'player', 'teamsize', 'gen', 'tier', 'rule', 'start', 'upkeep', '-message',
 ]);
 
 function filter(raw: string[]) {
