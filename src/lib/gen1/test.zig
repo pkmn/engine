@@ -573,11 +573,30 @@ test "SpecialDamage (level)" {
 }
 
 // Move.Psywave
-// TODO: https://pkmn.cc/bulba-glitch-1#Psywave_glitches
 test "SpecialDamage (Psywave)" {
     // Deals damage to the target equal to a random number from 1 to (user's level * 1.5 - 1),
     // rounded down, but not less than 1 HP.
-    return error.SkipZigTest;
+    var t = Test((if (showdown)
+        (.{ NOP, NOP, HIT, MAX_DMG, HIT, MIN_DMG })
+    else
+        (.{ HIT, 88, 87, HIT, 255, 0 }))).init(
+        &.{.{ .species = .Gengar, .level = 59, .moves = &.{.Psywave} }},
+        &.{.{ .species = .Clefable, .level = 42, .moves = &.{.Psywave} }},
+    );
+    defer t.deinit();
+
+    t.expected.p2.get(1).hp -= 87;
+
+    try t.log.expected.move(P1.ident(1), Move.Psywave, P2.ident(1), null);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Psywave, P1.ident(1), null);
+
+    // https://pkmn.cc/bulba-glitch-1#Psywave_glitches
+    const result = if (showdown) Result.Default else Result.Error;
+    if (showdown) try t.log.expected.turn(2);
+
+    try expectEqual(result, try t.update(move(1), move(1)));
+    try t.verify();
 }
 
 // Move.SuperFang

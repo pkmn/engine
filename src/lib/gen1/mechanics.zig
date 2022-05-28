@@ -899,15 +899,7 @@ fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
         else => unreachable,
     };
 
-    if (battle.last_damage == 0) {
-        if (showdown) {
-            try log.lastmiss();
-            try log.miss(battle.active(player));
-            return null;
-        } else {
-            return Result.Error;
-        }
-    }
+    if (battle.last_damage == 0) return if (showdown) null else Result.Error;
 
     _ = try applyDamage(battle, player.foe(), player.foe(), log);
     return null;

@@ -11,8 +11,8 @@ const HIT = MIN;
 const MISS = MAX;
 // const CRIT = MIN;
 // const NO_CRIT = MAX;
-// const MIN_DMG = MIN;
-// const MAX_DMG = MAX;
+const MIN_DMG = MIN;
+const MAX_DMG = MAX;
 // const PROC = MIN;
 // const NO_PROC = MAX;
 // const CFZ = MAX;
@@ -188,6 +188,28 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
+    test('SpecialDamage (Psywave)', () => {
+      const battle = startBattle([NOP, NOP, HIT, MAX_DMG, HIT, MIN_DMG], [
+        {species: 'Gengar', evs, level: 59, moves: ['Psywave']},
+      ], [
+        {species: 'Clefable', evs, level: 42, moves: ['Psywave']},
+      ]);
+
+      const p2hp = battle.p2.active[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+
+      expect(battle.p2.active[0].hp).toEqual(p2hp - 87);
+
+      expect(filter(battle.log)).toEqual([
+        '|move|p1a: Gengar|Psywave|p2a: Clefable',
+        '|-damage|p2a: Clefable|83/170',
+        '|move|p2a: Clefable|Psywave|p1a: Gengar',
+        '|turn|2',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
     test('SuperFang', () => {
       const battle = startBattle([NOP, NOP, HIT, HIT, NOP, NOP, HIT], [
         {species: 'Raticate', evs, moves: ['Super Fang']},
@@ -305,7 +327,8 @@ class FixedRNG extends PRNG {
 }
 
 const SKIP = new Set([
-  '', 't:', 'gametype', 'player', 'teamsize', 'gen', 'tier', 'rule', 'start', 'upkeep', '-message',
+  '', 't:', 'gametype', 'player', 'teamsize', 'gen',
+  'tier', 'rule', 'start', 'upkeep', '-message', '-hint',
 ]);
 
 function filter(raw: string[]) {
