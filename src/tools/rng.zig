@@ -18,6 +18,7 @@ const Tool = enum {
     disable,
     metronome,
     rampage,
+    seed,
     sleep,
     thrash,
 };
@@ -32,66 +33,78 @@ pub fn main() !void {
     if (args.len < 2) usageAndExit(args[0]);
 
     const err = std.io.getStdErr().writer();
+    const out = std.io.getStdOut();
+    var buf = std.io.bufferedWriter(out.writer());
+    var w = buf.writer();
 
-    var tool: Tool = undefined;
+    const tool: Tool = std.meta.stringToEnum(Tool, args[1]) orelse usageAndExit(args[0]);
     var param: u64 = undefined;
-    if (std.mem.eql(u8, args[1], "bide")) {
-        if (args.len != 2) usageAndExit(args[0]);
-        tool = .bide;
-    } else if (std.mem.eql(u8, args[1], "chance")) {
-        if (args.len != 3) {
-            err.print("Usage: {s} chance <N>\n", .{args[0]}) catch {};
-            std.process.exit(1);
-        }
-        tool = .chance;
-        param = std.fmt.parseUnsigned(u8, args[2], 10) catch {
-            err.print("Usage: {s} chance <N>\n", .{args[0]}) catch {};
-            std.process.exit(1);
-        };
-    } else if (std.mem.eql(u8, args[1], "confusion")) {
-        if (args.len != 2) usageAndExit(args[0]);
-        tool = .confusion;
-    } else if (std.mem.eql(u8, args[1], "crit")) {
-        if (args.len != 3) {
-            err.print("Usage: {s} crit <Species>\n", .{args[0]}) catch {};
-            std.process.exit(1);
-        }
-        tool = .crit;
-        const crit = std.meta.stringToEnum(pkmn.gen1.Species, args[2]) orelse {
-            err.print("Usage: {s} crit <N>\n", .{args[0]}) catch {};
-            std.process.exit(1);
-        };
-        param = pkmn.gen1.Species.chance(crit);
-    } else if (std.mem.eql(u8, args[1], "disable")) {
-        if (args.len != 2) usageAndExit(args[0]);
-        tool = .disable;
-    } else if (std.mem.eql(u8, args[1], "metronome")) {
-        if (args.len != 3) {
-            err.print("Usage: {s} metronome <Move>\n", .{args[0]}) catch {};
-            std.process.exit(1);
-        }
-        tool = .metronome;
-        const metronome = std.meta.stringToEnum(pkmn.gen1.Move, args[2]) orelse {
-            err.print("Usage: {s} metronome <Move>\n", .{args[0]}) catch {};
-            std.process.exit(1);
-        };
-        param = @enumToInt(metronome);
-        const invalid = param >= @enumToInt(pkmn.gen1.Move.Struggle);
-        if (invalid or metronome == .None or metronome == .Metronome) {
-            err.print("Usage: {s} metronome <Move>\n", .{args[0]}) catch {};
-            std.process.exit(1);
-        }
-    } else if (std.mem.eql(u8, args[1], "rampage")) {
-        if (args.len != 2) usageAndExit(args[0]);
-        tool = .rampage;
-    } else if (std.mem.eql(u8, args[1], "thrash")) {
-        if (args.len != 2) std.process.exit(1);
-        tool = .thrash;
-    } else if (std.mem.eql(u8, args[1], "sleep")) {
-        if (args.len != 2) usageAndExit(args[0]);
-        tool = .sleep;
-    } else {
-        usageAndExit(args[0]);
+    switch (tool) {
+        .chance => {
+            if (args.len != 3) {
+                err.print("Usage: {s} chance <N>\n", .{args[0]}) catch {};
+                std.process.exit(1);
+            }
+            param = std.fmt.parseUnsigned(u8, args[2], 10) catch {
+                err.print("Usage: {s} chance <N>\n", .{args[0]}) catch {};
+                std.process.exit(1);
+            };
+        },
+        .crit => {
+            if (args.len != 3) {
+                err.print("Usage: {s} crit <Species>\n", .{args[0]}) catch {};
+                std.process.exit(1);
+            }
+            const crit = std.meta.stringToEnum(pkmn.gen1.Species, args[2]) orelse {
+                err.print("Usage: {s} crit <N>\n", .{args[0]}) catch {};
+                std.process.exit(1);
+            };
+            param = pkmn.gen1.Species.chance(crit);
+        },
+        .metronome => {
+            if (args.len != 3) {
+                err.print("Usage: {s} metronome <Move>\n", .{args[0]}) catch {};
+                std.process.exit(1);
+            }
+            const metronome = std.meta.stringToEnum(pkmn.gen1.Move, args[2]) orelse {
+                err.print("Usage: {s} metronome <Move>\n", .{args[0]}) catch {};
+                std.process.exit(1);
+            };
+            param = @enumToInt(metronome);
+            const invalid = param >= @enumToInt(pkmn.gen1.Move.Struggle);
+            if (invalid or metronome == .None or metronome == .Metronome) {
+                err.print("Usage: {s} metronome <Move>\n", .{args[0]}) catch {};
+                std.process.exit(1);
+            }
+        },
+        .seed => {
+            if (args.len != 3) {
+                err.print("Usage: {s} seed <N>\n", .{args[0]}) catch {};
+                std.process.exit(1);
+            }
+            param = std.fmt.parseUnsigned(u8, args[2], 10) catch {
+                err.print("Usage: {s} seed <N>\n", .{args[0]}) catch {};
+                std.process.exit(1);
+            };
+
+            var i: usize = 0;
+            while (i < 256) : (i += 1) {
+                const a: u8 = 5 *% @truncate(u8, i) +% 1;
+                const b: u8 = 5 *% a +% 1;
+                const c: u8 = 5 *% b +% 1;
+                if (c != param) continue;
+
+                const d: u8 = 5 *% c +% 1;
+                const e = 5 *% d +% 1;
+                try w.print(
+                    "{d} {d} {s}{d}{s} {d} {d}\n",
+                    .{ a, b, ANSI.RED, c, ANSI.RESET, d, e },
+                );
+            }
+            try buf.flush();
+            std.process.exit(0);
+        },
+        else => if (args.len != 2) usageAndExit(args[0]),
     }
 
     var expected: [256](if (pkmn.showdown) u32 else u8) = undefined;
@@ -101,10 +114,6 @@ pub fn main() !void {
     }
 
     var rng = FixedRNG(1, expected.len){ .rolls = expected };
-
-    const out = std.io.getStdOut();
-    var buf = std.io.bufferedWriter(out.writer());
-    var w = buf.writer();
 
     try w.print("\nPokémon Red\n===========\n\n", .{});
     i = 0;
