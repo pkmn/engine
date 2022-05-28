@@ -225,6 +225,24 @@ for (const gen of new Generations(Dex as any)) {
       ]);
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
+
+    test('Conversion', () => {
+      const battle = startBattle([NOP], [
+        {species: 'Porygon', evs, moves: ['Conversion']},
+      ], [
+        {species: 'Slowbro', evs, moves: ['Teleport']},
+      ]);
+
+      battle.makeChoices('move 1', 'move 1');
+
+      expect(filter(battle.log)).toEqual([
+        '|move|p1a: Porygon|Conversion|p2a: Slowbro',
+        '|-start|p1a: Porygon|typechange|Water/Psychic|[from] move: Conversion|[of] p2a: Slowbro',
+        '|move|p2a: Slowbro|Teleport|p2a: Slowbro',
+        '|turn|2',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
   });
 
   if (gen.num === 1) {

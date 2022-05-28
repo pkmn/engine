@@ -33,6 +33,7 @@ const expectLog = protocol.expectLog;
 
 const Move = data.Move;
 const Status = data.Status;
+const Types = data.Types;
 
 const Battle = helpers.Battle;
 const Side = helpers.Side;
@@ -842,7 +843,19 @@ test "Transform" {
 // Move.Conversion
 test "Conversion" {
     // Causes the user's types to become the same as the current types of the target.
-    return error.SkipZigTest;
+    var t = Test(if (showdown) .{NOP} else .{}).init(
+        &.{.{ .species = .Porygon, .moves = &.{.Conversion} }},
+        &.{.{ .species = .Slowbro, .moves = &.{.Teleport} }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Conversion, P2.ident(1), null);
+    try t.log.expected.typechange(P1.ident(1), Types{ .type1 = .Water, .type2 = .Psychic });
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.verify();
 }
 
 // Move.Substitute
