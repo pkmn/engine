@@ -2,13 +2,14 @@ const std = @import("std");
 const build_options = @import("build_options");
 
 const common = @import("../common/data.zig");
+const DEBUG = @import("../common/debug.zig").print;
 const protocol = @import("../common/protocol.zig");
 const rng = @import("../common/rng.zig");
 
 const data = @import("data.zig");
 
 const assert = std.debug.assert;
-const DEBUG = @import("../common/debug.zig").print;
+
 const expectEqual = std.testing.expectEqual;
 
 const showdown = build_options.showdown;
@@ -51,6 +52,8 @@ const BOOSTS = &[_][2]u8{
 const MAX_STAT_VALUE = 999;
 
 pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
+    assert(c1.type != .Pass or (c2.type == .Pass and battle.turn == 0) or (c2.type != .Pass));
+    assert(c2.type != .Pass or (c1.type == .Pass and battle.turn == 0) or (c1.type != .Pass));
     if (battle.turn == 0) return start(battle, log);
 
     var l1 = false;
@@ -105,6 +108,8 @@ fn selectMove(
     foe_choice: Choice,
     locked: *bool,
 ) ?Result {
+    if (choice.type == .Pass) return null;
+
     var side = battle.side(player);
     var volatiles = &side.active.volatiles;
     const stored = side.stored();
@@ -222,6 +227,10 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anyty
 }
 
 fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
+    assert(c1.type != .Pass or c2.type != .Pass);
+    if (c1.type == .Pass) return .P2;
+    if (c2.type == .Pass) return .P1;
+
     if ((c1.type == .Switch) != (c2.type == .Switch)) return if (c1.type == .Switch) .P1 else .P2;
 
     const m1 = battle.side(.P1).last_selected_move;
@@ -260,10 +269,13 @@ fn doTurn(
     foe_locked: bool,
     log: anytype,
 ) !?Result {
+    assert(player_choice.type != .Pass);
     if (try executeMove(battle, player, player_choice, player_locked, log)) |r| return r;
     if (try checkFaint(battle, foe_player, foe_locked, player_locked, log)) |r| return r;
     try handleResidual(battle, player, log);
     if (try checkFaint(battle, player, player_locked, foe_locked, log)) |r| return r;
+
+    if (foe_choice.type == .Pass) return null;
 
     if (try executeMove(battle, foe_player, foe_choice, foe_locked, log)) |r| return r;
     if (try checkFaint(battle, player, player_locked, foe_locked, log)) |r| return r;
@@ -585,11 +597,13 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
 
     // SHOWDOWN: Pokémon Showdown runs type and OHKO immunity checks before the accuracy check
     if (showdown) {
+        const m = side.last_selected_move;
         const type1 = @enumToInt(move.type.effectiveness(foe.active.types.type1));
         const type2 = @enumToInt(move.type.effectiveness(foe.active.types.type2));
         // SHOWDOWN: Sonic Boom incorrectly checks type immunity
-        const ignore = special and side.last_selected_move != .SonicBoom;
-        if (move.targets() and !ignore and (type1 == 0 or type2 == 0)) {
+        if (move.targets() and !(special and m != .SonicBoom) and (type1 == 0 or type2 == 0) or
+            (m == .DreamEater and !Status.is(foe.stored().status, .SLP)))
+        {
             try log.immune(battle.active(player.foe()), .None);
             if (move.effect == .Explode) try Effects.explode(battle, player);
             return null;
@@ -609,7 +623,8 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     var hits: u4 = 1;
     var miss = showdown and (move.effect != .Bide and
         !(move.effect == .Sleep and foe.active.volatiles.Recharging) and
-        !moveHit(battle, player, move));
+        !moveHit(battle, player, move, &immune));
+    assert(!immune);
 
     const counter = side.last_selected_move == .Counter;
     if (!miss and (!showdown or (move.bp > 0 or counter))) {
@@ -644,7 +659,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     miss = if (showdown or move.bp == 0)
         miss
     else
-        (!moveHit(battle, player, move) or battle.last_damage == 0);
+        (!moveHit(battle, player, move, &immune) or battle.last_damage == 0);
 
     assert(miss or battle.last_damage > 0 or move.bp == 0);
     assert(!(ohko and immune));
@@ -1008,20 +1023,25 @@ fn metronome(battle: anytype, player: Player, choice: Choice, log: anytype) !?Re
 }
 
 fn checkHit(battle: anytype, player: Player, move: Move.Data, log: anytype) !bool {
-    if (moveHit(battle, player, move)) return true;
+    var immune = false;
+    if (moveHit(battle, player, move, &immune)) return true;
+    assert(!immune);
     try log.lastmiss();
     try log.miss(battle.active(player));
     return false;
 }
 
-fn moveHit(battle: anytype, player: Player, move: Move.Data) bool {
+fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool) bool {
     var side = battle.side(player);
     const foe = battle.foe(player);
 
     const miss = miss: {
         assert(!side.active.volatiles.Bide);
 
-        if (move.effect == .DreamEater and !Status.is(foe.stored().status, .SLP)) break :miss true;
+        if (move.effect == .DreamEater and !Status.is(foe.stored().status, .SLP)) {
+            immune.* = true;
+            break :miss true;
+        }
         if (move.effect == .Swift) return true;
         if (foe.active.volatiles.Invulnerable) break :miss true;
         // SHOWDOWN: need to special case Sleep + Recharging glitch due to control flow differences
@@ -1358,7 +1378,9 @@ pub const Effects = struct {
         var volatiles = &foe.active.volatiles;
         const foe_ident = battle.active(player.foe());
 
-        if (!moveHit(battle, player, move) or volatiles.disabled.move != 0) {
+        var immune = false;
+        if (!moveHit(battle, player, move, &immune) or volatiles.disabled.move != 0) {
+            assert(!immune);
             try log.lastmiss();
             return log.miss(battle.active(player));
         }

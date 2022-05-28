@@ -2,6 +2,7 @@ const std = @import("std");
 const build_options = @import("build_options");
 
 const common = @import("../common/data.zig");
+const DEBUG = @import("../common/debug.zig").print;
 const protocol = @import("../common/protocol.zig");
 const rng = @import("../common/rng.zig");
 
@@ -11,7 +12,6 @@ const helpers = @import("helpers.zig");
 const ArrayList = std.ArrayList;
 
 const assert = std.debug.assert;
-const debug = std.debug.print;
 
 const stream = std.io.fixedBufferStream;
 
@@ -548,7 +548,44 @@ test "SpecialDamage (Psywave)" {
 test "SuperFang" {
     // Deals damage to the target equal to half of its current HP, rounded down, but not less than 1
     // HP. This move ignores type immunity.
-    return error.SkipZigTest;
+    var t = Test((if (showdown)
+        (.{ NOP, NOP, HIT, HIT, NOP, NOP, HIT })
+    else
+        (.{ HIT, HIT, ~CRIT, MIN_DMG, HIT }))).init(
+        &.{
+            .{ .species = .Raticate, .hp = 1, .moves = &.{.SuperFang} },
+            .{ .species = .Haunter, .moves = &.{.DreamEater} },
+        },
+        &.{.{ .species = .Rattata, .moves = &.{.SuperFang} }},
+    );
+    defer t.deinit();
+
+    t.expected.p1.get(1).hp -= 1;
+    t.expected.p2.get(1).hp -= 131;
+
+    try t.log.expected.move(P1.ident(1), Move.SuperFang, P2.ident(1), null);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.SuperFang, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.faint(P1.ident(1), true);
+
+    try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(move(1), move(1)));
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(swtch(2), .{}));
+
+    t.expected.p1.get(2).hp -= 146;
+
+    try t.log.expected.move(P1.ident(2), Move.DreamEater, P2.ident(1), null);
+    try t.log.expected.immune(P2.ident(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.SuperFang, P1.ident(2), null);
+    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.verify();
 }
 
 // Move.Disable

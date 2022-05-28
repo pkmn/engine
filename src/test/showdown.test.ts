@@ -160,6 +160,44 @@ for (const gen of new Generations(Dex as any)) {
       ]);
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
+
+    test('SuperFang', () => {
+      const battle = startBattle([NOP, NOP, HIT, HIT, NOP, NOP, HIT], [
+        {species: 'Raticate', evs, moves: ['Super Fang']},
+        {species: 'Haunter', evs, moves: ['Dream Eater']},
+      ], [
+        {species: 'Rattata', evs, moves: ['Super Fang']},
+      ]);
+
+      battle.p1.active[0].hp = 1;
+      expect(battle.p2.active[0].hp).toBe(263);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.active[0].hp).toBe(0);
+      expect(battle.p2.active[0].hp).toBe(132);
+
+      battle.makeChoices('switch 2', '');
+      expect(battle.p1.active[0].hp).toBe(293);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.active[0].hp).toBe(147);
+
+      expect(filter(battle.log)).toEqual([
+        '|move|p1a: Raticate|Super Fang|p2a: Rattata',
+        '|-damage|p2a: Rattata|132/263',
+        '|move|p2a: Rattata|Super Fang|p1a: Raticate',
+        '|-damage|p1a: Raticate|0 fnt',
+        '|faint|p1a: Raticate',
+        '|switch|p1a: Haunter|Haunter|293/293',
+        '|turn|2',
+        '|move|p1a: Haunter|Dream Eater|p2a: Rattata',
+        '|-immune|p2a: Rattata',
+        '|move|p2a: Rattata|Super Fang|p1a: Haunter',
+        '|-damage|p1a: Haunter|147/293',
+        '|turn|3',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
   });
 
   if (gen.num === 1) {
