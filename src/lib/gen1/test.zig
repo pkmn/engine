@@ -50,10 +50,15 @@ const P1_FIRST = MIN;
 const NOP = MIN;
 const HIT = MIN;
 const CRIT = MIN;
-const MIN_DMG = if (showdown) MIN else 217;
+const MIN_DMG = if (showdown) MIN else 179;
 const MAX_DMG = MAX;
 const PROC = MIN;
 const CFZ = MAX;
+
+comptime {
+    assert(showdown or std.math.rotr(u8, MIN_DMG, 1) == 217);
+    assert(showdown or std.math.rotr(u8, MAX_DMG, 1) == 255);
+}
 
 const P1 = Player.P1;
 const P2 = Player.P2;
@@ -360,7 +365,10 @@ test "StatUp" {
 // Move.{Guillotine,HornDrill,Fissure}
 test "OHKO" {
     // Deals 65535 damage to the target. Fails if the target's Speed is greater than the user's.
-    var t = Test(if (showdown) .{ NOP, NOP, ~HIT, NOP, NOP, HIT } else .{ ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT }).init(
+    var t = Test(if (showdown)
+        (.{ NOP, NOP, ~HIT, NOP, NOP, HIT })
+    else
+        (.{ ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT })).init(
         &.{
             .{ .species = .Kingler, .moves = &.{.Guillotine} },
             .{ .species = .Tauros, .moves = &.{.HornDrill} },

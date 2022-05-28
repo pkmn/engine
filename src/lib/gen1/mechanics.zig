@@ -867,9 +867,7 @@ fn randomizeDamage(battle: anytype) void {
         battle.rng.range(u8, 217, 256)
     else loop: {
         while (true) {
-            const r = battle.rng.next();
-            // BUG: rotate right! FIXME
-            // const r = std.math.rotr(u8, battle.rng.next(), 1);
+            const r = std.math.rotr(u8, battle.rng.next(), 1);
             if (r >= 217) break :loop r;
         }
     };

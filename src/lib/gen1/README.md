@@ -598,8 +598,8 @@ speed ties, etc) that Pokémon Showdown cannot replicate due to everything descr
 | Type                     | Location                 | Description |
 | ------------------------ | ------------------------ | ----------- |
 | **Speed Tie**            | `turnOrder`              | Player 1 if $X < 127$, otherwise Player 2 |
-| **Critical Hit**         | `checkCriticalHit`       | <dl><dt>Pokémon Red</dt><dd>Inflict a critical hit if $X' < chance$ where $X'$ is $X$ with its bits rotated left by $3$</dd><dt>Pokémon Showdown</dt><dd>Critical hit if $X < chance$</dd></dl> |
-| **Damage** (range)     left  | `randomizeDamage`        | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X \geq  217$</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[217, 256\right)$</dd></dl>|
+| **Critical Hit**         | `checkCriticalHit`       | <dl><dt>Pokémon Red</dt><dd>Inflict a critical hit if $X' < chance$ where $X'$ is $X$ with its bits rotated left three times</dd><dt>Pokémon Showdown</dt><dd>Critical hit if $X < chance$</dd></dl> |
+| **Damage** (range)     left  | `randomizeDamage`        | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X' \geq  217$ where $X'$ is $X$ with its bits rotated right once</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[217, 256\right)$</dd></dl>|
 | **Hit / Miss**           | `checkHit`               | Hit if $X < scaledAccuracy$ |
 | **Burn** (chance)        | `Effects.burnChance`     | Trigger if $X < 26$ ($77$ for Fire Blast) |
 | **Confusion** (chance)   | `Effects.confusion`      | <dl><dt>Pokémon Red</dt><dd>Trigger if $X< 25$</dd><dt>Pokémon Showdown</dt><dd>Trigger if $X < 26$</dd></dl> These differ due to a [bug in Pokémon Showdown](#bug) |

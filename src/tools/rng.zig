@@ -2,8 +2,6 @@ const std = @import("std");
 
 const pkmn = @import("pkmn");
 
-const FixedRNG = pkmn.rng.FixedRNG;
-
 // https://en.wikipedia.org/wiki/ANSI_escape_code
 pub const ANSI = struct {
     pub const RED = "\x1b[31m";
@@ -15,6 +13,7 @@ const Tool = enum {
     confusion,
     chance,
     crit,
+    damage,
     disable,
     metronome,
     rampage,
@@ -107,27 +106,21 @@ pub fn main() !void {
         else => if (args.len != 2) usageAndExit(args[0]),
     }
 
-    var expected: [256](if (pkmn.showdown) u32 else u8) = undefined;
-    var i: usize = 0;
-    while (i < expected.len) : (i += 1) {
-        expected[i] = @truncate(u8, i);
-    }
-
-    var rng = FixedRNG(1, expected.len){ .rolls = expected };
-
     try w.print("\nPokémon Red\n===========\n\n", .{});
-    i = 0;
+    var i: usize = 0;
     while (i < 256) : (i += 1) {
         if (tool == .chance or tool == .metronome) {
             try w.print("{d}", .{param});
             break;
         }
+        const next = @truncate(u8, i);
         const value = switch (tool) {
-            .bide, .rampage => (rng.next() & 1) + 2,
-            .confusion, .thrash => (rng.next() & 3) + 2,
-            .crit => @boolToInt(std.math.rotl(u8, @truncate(u8, rng.next()), 3) < param),
-            .disable => (rng.next() & 7) + 1,
-            .sleep => rng.next() & 7,
+            .bide, .rampage => (next & 1) + 2,
+            .damage => std.math.rotr(u8, next, 1),
+            .confusion, .thrash => (next & 3) + 2,
+            .crit => @boolToInt(std.math.rotl(u8, @truncate(u8, next), 3) < param),
+            .disable => (next & 7) + 1,
+            .sleep => next & 7,
             else => unreachable,
         };
 
@@ -137,6 +130,12 @@ pub fn main() !void {
                 try w.print(" {s}F{s} ", .{ ANSI.RED, ANSI.RESET });
             } else {
                 try w.print(" T ", .{});
+            }
+        } else if (tool == .damage) {
+            if (value < 217) {
+                try w.print("{s}{d: >3}{s}", .{ ANSI.RED, value, ANSI.RESET });
+            } else {
+                try w.print("{d: >3}", .{value});
             }
         } else {
             try w.print("{d: >3}", .{value});
@@ -156,6 +155,7 @@ pub fn main() !void {
     } else {
         var range: u64 = switch (tool) {
             .bide, .thrash => 5 - 3,
+            .damage => 256 - 217,
             .rampage => 4 - 2,
             .confusion => 6 - 2,
             .sleep => 8 - 1,
@@ -163,7 +163,11 @@ pub fn main() !void {
         };
         while (i < range) : (i += 1) {
             try w.print("0x{X:0<8}", .{i * (0x100000000 / range)});
-            if (i != range - 1) try w.print(" ", .{});
+            if (range > 9 and i % 3 == 2) {
+                _ = try w.write("\n");
+            } else if (i != range - 1) {
+                _ = try w.write(" ");
+            }
         }
     }
 

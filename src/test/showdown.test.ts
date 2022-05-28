@@ -9,8 +9,8 @@ const MAX = 0xFFFFFFFF;
 const NOP = MIN;
 const HIT = MIN;
 const MISS = MAX;
-const CRIT = MIN;
-const NO_CRIT = MAX;
+// const CRIT = MIN;
+// const NO_CRIT = MAX;
 // const MIN_DMG = MIN;
 // const MAX_DMG = MAX;
 // const PROC = MIN;
@@ -75,7 +75,7 @@ for (const gen of new Generations(Dex as any)) {
       battle.makeChoices('move 1', 'move 1');
       battle.makeChoices('move 1', 'move 1');
 
-      expect(battle.p1.pokemon[0].hp).toEqual(0);
+      expect(battle.p1.pokemon[0].hp).toBe(0);
 
       expect(filter(battle.log)).toEqual([
         '|move|p2a: Dugtrio|Fissure|p1a: Kingler|[miss]',
@@ -86,7 +86,7 @@ for (const gen of new Generations(Dex as any)) {
         '|move|p2a: Dugtrio|Fissure|p1a: Kingler',
         '|-damage|p1a: Kingler|0 fnt',
         '|-ohko',
-        '|faint|p1a: Kingler'
+        '|faint|p1a: Kingler',
       ]);
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
