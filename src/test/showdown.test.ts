@@ -65,11 +65,11 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('SwitchAndTeleport', () => {
-      const battle = startBattle(
-        [NOP, HIT, NOP, MISS],
-        [{species: 'Abra', evs, moves: ['Teleport']}],
-        [{species: 'Pidgey', evs, moves: ['Whirlwind']}]
-      );
+      const battle = startBattle([NOP, HIT, NOP, MISS], [
+        {species: 'Abra', evs, moves: ['Teleport']},
+      ], [
+        {species: 'Pidgey', evs, moves: ['Whirlwind']},
+      ]);
 
       battle.makeChoices('move 1', 'move 1');
       battle.makeChoices('move 1', 'move 1');
@@ -104,12 +104,12 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('SpecialDamage (fixed)', () => {
-      const battle = startBattle(
-        [NOP, NOP, HIT, HIT, NOP],
-        [{species: 'Voltorb', evs, moves: ['Sonic Boom']}],
-        [{species: 'Dratini', evs, moves: ['Dragon Rage']},
-          {species: 'Gastly', evs, moves: ['Night Shade']}]
-      );
+      const battle = startBattle([NOP, NOP, HIT, HIT, NOP], [
+        {species: 'Voltorb', evs, moves: ['Sonic Boom']},
+      ], [
+        {species: 'Dratini', evs, moves: ['Dragon Rage']},
+        {species: 'Gastly', evs, moves: ['Night Shade']},
+      ]);
 
       const p1hp = battle.p1.active[0].hp;
       const p2hp1 = battle.p2.pokemon[0].hp;
@@ -137,11 +137,11 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('SpecialDamage (level)', () => {
-      const battle = startBattle(
-        [NOP, NOP, HIT, HIT],
-        [{species: 'Gastly', evs, level: 22, moves: ['Night Shade']}],
-        [{species: 'Clefairy', evs, level: 16, moves: ['Seismic Toss']}]
-      );
+      const battle = startBattle([NOP, NOP, HIT, HIT], [
+        {species: 'Gastly', evs, level: 22, moves: ['Night Shade']},
+      ], [
+        {species: 'Clefairy', evs, level: 16, moves: ['Seismic Toss']},
+      ]);
 
       const p1hp = battle.p1.active[0].hp;
       const p2hp = battle.p2.active[0].hp;
