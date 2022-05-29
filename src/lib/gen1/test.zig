@@ -130,11 +130,6 @@ test "move select" {
     return error.SkipZigTest;
 }
 
-fn expectOrder(p1: anytype, o1: []const u8, p2: anytype, o2: []const u8) !void {
-    try expectEqualSlices(u8, o1, &p1.order);
-    try expectEqualSlices(u8, o2, &p2.order);
-}
-
 test "switching (order)" {
     var battle = Battle.random(&rng.PSRNG.init(0x12345678), false);
     battle.turn = 1;
@@ -165,6 +160,11 @@ test "switching (order)" {
     try expectEqual(Result.Default, try battle.update(swtch(5), swtch(5), actual));
     try expectOrder(p1, &.{ 3, 1, 6, 4, 2, 5 }, p2, &.{ 2, 1, 3, 5, 4, 6 });
     try expectLog(&expected_buf, &actual_buf);
+}
+
+fn expectOrder(p1: anytype, o1: []const u8, p2: anytype, o2: []const u8) !void {
+    try expectEqualSlices(u8, o1, &p1.order);
+    try expectEqualSlices(u8, o2, &p2.order);
 }
 
 test "switching (reset)" {
@@ -211,9 +211,8 @@ test "switching (reset)" {
 }
 
 test "switching (brn/par)" {
-    // TODO: workaround for Zig SIGBUS
-    const BRN = 0b10000; // Status.init(.BRN);
-    const PAR = 0b1000000; // Status.init(.PAR);
+    const BRN = 0b10000; // TODO: Status.init(.BRN);
+    const PAR = 0b1000000; // TODO: Status.init(.PAR);
     var t = Test(.{}).init(
         &.{
             .{ .species = .Pikachu, .moves = &.{.ThunderShock} },
@@ -462,6 +461,14 @@ test "HighCritical" {
     return error.SkipZigTest;
 }
 
+// Move.FocusEnergy
+// TODO: https://pkmn.cc/bulba-glitch-1#Critical_hit_ratio_error
+test "FocusEnergy" {
+    // While the user remains active, its chance for a critical hit is quartered. Fails if the user
+    // already has the effect. If any Pokemon uses Haze, this effect ends.
+    return error.SkipZigTest;
+}
+
 // Move.{DoubleSlap,CometPunch,FuryAttack,PinMissile,SpikeCannon,Barrage,FurySwipes}
 test "MultiHit" {
     // Hits two to five times. Has a 3/8 chance to hit two or three times, and a 1/8 chance to hit
@@ -476,6 +483,21 @@ test "MultiHit" {
 test "DoubleHit" {
     // Hits twice. Damage is calculated once for the first hit and used for both hits. If the first
     // hit breaks the target's substitute, the move ends.
+    return error.SkipZigTest;
+}
+
+// Move.Twineedle
+test "Twineedle" {
+    // Hits twice, with the second hit having a 20% chance to poison the target. If the first hit
+    // breaks the target's substitute, the move ends.
+    return error.SkipZigTest;
+}
+
+// TODO Move.Toxic
+// Move.{PoisonPowder,PoisonGas}
+test "Poison (primary)" {
+    // (Badly) Poisons the target.
+    // TODO: https://pkmn.cc/bulba-glitch-1#Toxic_counter_glitches
     return error.SkipZigTest;
 }
 
@@ -514,6 +536,152 @@ test "FreezeChance" {
     // TODO thaws on fire (specifically on fire move which can burn, NOT fire spin)
     // TODO blocked by substitute, but NOT ON SHOWDOWN
     // TODO: Freeze Clause Mod
+
+    return error.SkipZigTest;
+}
+
+// Move.{ThunderWave,StunSpore,Glare}
+test "Paralyze (primary)" {
+    // Paralyzes the target.
+    const PROC = comptime ranged(63, 256) - 1;
+    const NO_PROC = PROC + 1;
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, ~HIT, HIT, NOP,
+            NOP,  NOP, HIT, NO_PROC, HIT, NOP,
+            NOP, PROC,
+            NOP, NOP, HIT, NO_PROC, HIT, NOP,
+            NOP, NO_PROC,
+            NOP, NO_PROC, HIT, NOP,
+        } else .{
+            ~HIT, HIT,
+            NO_PROC, HIT,
+            PROC,
+            NO_PROC, HIT,
+            NO_PROC,
+            NO_PROC, HIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{
+            .{ .species = .Arbok, .moves = &.{.Glare} },
+            .{ .species = .Dugtrio, .moves = &.{ .Earthquake, .Substitute } },
+        },
+        &.{
+            .{ .species = .Magneton, .moves = &.{.ThunderWave} },
+            .{ .species = .Gengar, .moves = &.{ .Toxic, .ThunderWave, .Glare } },
+        },
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Glare, P2.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P1.ident(1));
+    try t.log.expected.move(P2.ident(1), Move.ThunderWave, P1.ident(1), null);
+    try t.log.expected.status(P1.ident(1), Status.init(.PAR), .None);
+    try t.log.expected.turn(2);
+
+    // Glare can miss
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P2.ident(1), Move.ThunderWave, P1.ident(1), null);
+    try t.log.expected.fail(P1.ident(1), .Paralysis);
+    try t.log.expected.move(P1.ident(1), Move.Glare, P2.ident(1), null);
+    try t.log.expected.status(P2.ident(1), Status.init(.PAR), .None);
+    try t.log.expected.turn(3);
+
+    // Electric-type Pokémon can be paralyzed
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.cant(P1.ident(1), .Paralysis);
+    try t.log.expected.turn(4);
+
+    // Can be fully paralyzed
+    try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+
+    try t.log.expected.move(P2.ident(2), Move.Toxic, P1.ident(1), null);
+    try t.log.expected.fail(P1.ident(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Glare, P2.ident(2), null);
+    try t.log.expected.status(P2.ident(2), Status.init(.PAR), .None);
+    try t.log.expected.turn(5);
+
+    // Glare ignores type immunity
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.move(P2.ident(2), Move.ThunderWave, P1.ident(2), null);
+    try t.log.expected.immune(P1.ident(2), .None);
+    try t.log.expected.turn(6);
+
+    // Thunder Wave does not ignore type immunity
+    try expectEqual(Result.Default, try t.update(swtch(2), move(2)));
+
+    t.expected.p1.get(2).hp -= 68;
+
+    try t.log.expected.move(P1.ident(2), Move.Substitute, P1.ident(2), null);
+    try t.log.expected.start(P1.ident(2), .Substitute);
+    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
+    try t.log.expected.move(P2.ident(2), Move.Glare, P1.ident(2), null);
+    try t.log.expected.status(P1.ident(2), Status.init(.PAR), .None);
+    try t.log.expected.turn(7);
+
+    // Primary paralysis ignores Substitute
+    try expectEqual(Result.Default, try t.update(move(2), move(3)));
+
+    // // Paralysis lowers speed
+    try expectEqual(Status.init(.PAR), t.actual.p2.stored().status);
+    try expectEqual(@as(u16, 79), t.actual.p2.active.stats.spe);
+    try expectEqual(@as(u16, 318), t.actual.p2.stored().stats.spe);
+
+    try t.verify();
+}
+
+// Move.{ThunderPunch,ThunderShock,Thunderbolt,Thunder}: ParalyzeChance1
+// Move.{BodySlam,Lick}: ParalyzeChance2
+test "ParalyzeChance" {
+    // Has a X% chance to paralyze the target.
+
+    // TODO can proc / not proc - use chance2 roll for both and dont proc the chance1 roll
+    // TODO can't proc on same type (body slam + normal, thunderbolt + electric)
+    // TODO already paralyzed vs. already other status
+    // TODO immunity
+    // TODO quarters speed
+    // TODO blocked by substitute, but NOT ON SHOWDOWN
+
+    return error.SkipZigTest;
+}
+
+// Move.{Sing,SleepPowder,Hypnosis,LovelyKiss,Spore}
+test "Sleep" {
+    // Causes the target to fall asleep.
+
+    // TODO decrement counter, no turn,
+    // TODO wake up and cant act
+    // TODO can act after
+    // TODO: Sleep Clause MOd
+
+    return error.SkipZigTest;
+}
+
+// Move.{Supersonic,ConfuseRay}
+test "Confusion (primary)" {
+    // Causes the target to become confused.
+
+    // TODO cant
+    // TODO hit self
+    // TODO disappears after duration
+    // TODO blocked by substitute
+
+    return error.SkipZigTest;
+}
+
+// Move.{Psybeam,Confusion}: ConfusionChance
+test "ConfusionChance" {
+    // Has a 10% chance to confuse the target.
+
+    // TODO blocked by substitute on showdown
 
     return error.SkipZigTest;
 }
@@ -707,13 +875,6 @@ test "Thrashing" {
     // confusion. During the effect, this move's accuracy is overwritten every turn with the current
     // calculated accuracy including stat stage changes, but not to less than 1/256 or more than
     // 255/256.
-    return error.SkipZigTest;
-}
-
-// Move.Twineedle
-test "Twineedle" {
-    // Hits twice, with the second hit having a 20% chance to poison the target. If the first hit
-    // breaks the target's substitute, the move ends.
     return error.SkipZigTest;
 }
 
@@ -912,160 +1073,6 @@ test "LeechSeed" {
     return error.SkipZigTest;
 }
 
-// Move.{Sing,SleepPowder,Hypnosis,LovelyKiss,Spore}
-test "Sleep" {
-    // Causes the target to fall asleep.
-
-    // TODO decrement counter, no turn,
-    // TODO wake up and cant act
-    // TODO can act after
-    // TODO: Sleep Clause MOd
-
-    return error.SkipZigTest;
-}
-
-// Move.{Supersonic,ConfuseRay}
-test "Confusion (primary)" {
-    // Causes the target to become confused.
-
-    // TODO cant
-    // TODO hit self
-    // TODO disappears after duration
-    // TODO blocked by substitute
-
-    return error.SkipZigTest;
-}
-
-// Move.{Psybeam,Confusion}: ConfusionChance
-test "ConfusionChance" {
-    // Has a 10% chance to confuse the target.
-
-    // TODO blocked by substitute on showdown
-
-    return error.SkipZigTest;
-}
-
-// TODO Move.Toxic
-// Move.{PoisonPowder,PoisonGas}
-test "Poison (primary)" {
-    // (Badly) Poisons the target.
-    // TODO: https://pkmn.cc/bulba-glitch-1#Toxic_counter_glitches
-    return error.SkipZigTest;
-}
-
-// Move.{ThunderWave,StunSpore,Glare}
-test "Paralyze (primary)" {
-    // Paralyzes the target.
-    const PROC = comptime ranged(63, 256) - 1;
-    const NO_PROC = PROC + 1;
-    var t = Test(
-    // zig fmt: off
-        if (showdown) .{
-            NOP, NOP, ~HIT, HIT, NOP,
-            NOP,  NOP, HIT, NO_PROC, HIT, NOP,
-            NOP, PROC,
-            NOP, NOP, HIT, NO_PROC, HIT, NOP,
-            NOP, NO_PROC,
-            NOP, NO_PROC, HIT, NOP,
-        } else .{
-            ~HIT, HIT,
-            NO_PROC, HIT,
-            PROC,
-            NO_PROC, HIT,
-            NO_PROC,
-            NO_PROC, HIT,
-        }
-    // zig fmt: on
-    ).init(
-        &.{
-            .{ .species = .Arbok, .moves = &.{.Glare} },
-            .{ .species = .Dugtrio, .moves = &.{ .Earthquake, .Substitute } },
-        },
-        &.{
-            .{ .species = .Magneton, .moves = &.{.ThunderWave} },
-            .{ .species = .Gengar, .moves = &.{ .Toxic, .ThunderWave, .Glare } },
-        },
-    );
-    defer t.deinit();
-
-    try t.log.expected.move(P1.ident(1), Move.Glare, P2.ident(1), null);
-    try t.log.expected.lastmiss();
-    try t.log.expected.miss(P1.ident(1));
-    try t.log.expected.move(P2.ident(1), Move.ThunderWave, P1.ident(1), null);
-    try t.log.expected.status(P1.ident(1), Status.init(.PAR), .None);
-    try t.log.expected.turn(2);
-
-    // Glare can miss
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
-
-    try t.log.expected.move(P2.ident(1), Move.ThunderWave, P1.ident(1), null);
-    try t.log.expected.fail(P1.ident(1), .Paralysis);
-    try t.log.expected.move(P1.ident(1), Move.Glare, P2.ident(1), null);
-    try t.log.expected.status(P2.ident(1), Status.init(.PAR), .None);
-    try t.log.expected.turn(3);
-
-    // Electric-type Pokémon can be paralyzed
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
-
-    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
-    try t.log.expected.cant(P1.ident(1), .Paralysis);
-    try t.log.expected.turn(4);
-
-    // Can be fully paralyzed
-    try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
-
-    try t.log.expected.move(P2.ident(2), Move.Toxic, P1.ident(1), null);
-    try t.log.expected.fail(P1.ident(1), .None);
-    try t.log.expected.move(P1.ident(1), Move.Glare, P2.ident(2), null);
-    try t.log.expected.status(P2.ident(2), Status.init(.PAR), .None);
-    try t.log.expected.turn(5);
-
-    // Glare ignores type immunity
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
-
-    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
-    try t.log.expected.move(P2.ident(2), Move.ThunderWave, P1.ident(2), null);
-    try t.log.expected.immune(P1.ident(2), .None);
-    try t.log.expected.turn(6);
-
-    // Thunder Wave does not ignore type immunity
-    try expectEqual(Result.Default, try t.update(swtch(2), move(2)));
-
-    t.expected.p1.get(2).hp -= 68;
-
-    try t.log.expected.move(P1.ident(2), Move.Substitute, P1.ident(2), null);
-    try t.log.expected.start(P1.ident(2), .Substitute);
-    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
-    try t.log.expected.move(P2.ident(2), Move.Glare, P1.ident(2), null);
-    try t.log.expected.status(P1.ident(2), Status.init(.PAR), .None);
-    try t.log.expected.turn(7);
-
-    // Primary paralysis ignores Substitute
-    try expectEqual(Result.Default, try t.update(move(2), move(3)));
-
-    // // Paralysis lowers speed
-    try expectEqual(Status.init(.PAR), t.actual.p2.stored().status);
-    try expectEqual(@as(u16, 79), t.actual.p2.active.stats.spe);
-    try expectEqual(@as(u16, 318), t.actual.p2.stored().stats.spe);
-
-    try t.verify();
-}
-
-// Move.{ThunderPunch,ThunderShock,Thunderbolt,Thunder}: ParalyzeChance1
-// Move.{BodySlam,Lick}: ParalyzeChance2
-test "ParalyzeChance" {
-    // Has a X% chance to paralyze the target.
-
-    // TODO can proc / not proc - use chance2 roll for both and dont proc the chance1 roll
-    // TODO can't proc on same type (body slam + normal, thunderbolt + electric)
-    // TODO already paralyzed vs. already other status
-    // TODO immunity
-    // TODO quarters speed
-    // TODO blocked by substitute, but NOT ON SHOWDOWN
-
-    return error.SkipZigTest;
-}
-
 // Move.Rage
 test "Rage" {
     // Once this move is successfully used, the user automatically uses this move every turn and can
@@ -1122,14 +1129,6 @@ test "Haze" {
     // paralysis. Resets Toxic counters to 0 and removes the effect of confusion, Disable, Focus
     // Energy, Leech Seed, Light Screen, Mist, and Reflect from both Pokemon. Removes the opponent's
     // non-volatile status condition.
-    return error.SkipZigTest;
-}
-
-// Move.FocusEnergy
-// TODO: https://pkmn.cc/bulba-glitch-1#Critical_hit_ratio_error
-test "FocusEnergy" {
-    // While the user remains active, its chance for a critical hit is quartered. Fails if the user
-    // already has the effect. If any Pokemon uses Haze, this effect ends.
     return error.SkipZigTest;
 }
 
@@ -1288,8 +1287,7 @@ test "Stat down modifier overflow glitch" {
 //     if (showdown) return;
 
 //     const MIRROR_MOVE = @enumToInt(Move.MirrorMove);
-//     // TODO: workaround for Zig SIGBUS
-//     const BRN = 0b10000; // Status.init(.BRN);
+//     const BRN = 0b10000; // TODO: Status.init(.BRN);
 //     const CFZ = comptime ranged(128, 256);
 //     const NO_CFZ = CFZ - 1;
 //     // TODO: replace this with a handcrafted actual seed instead of using the fixed RNG
