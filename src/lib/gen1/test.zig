@@ -949,7 +949,7 @@ test "Sleep" {
 }
 
 // Move.{Supersonic,ConfuseRay}
-test "Confusion (direct)" {
+test "Confusion (primary)" {
     // Causes the target to become confused.
 
     // TODO cant hit self
@@ -961,14 +961,14 @@ test "Confusion (direct)" {
 
 // TODO Move.Toxic
 // Move.{PoisonPowder,PoisonGas}
-test "Poison (direct)" {
+test "Poison (primary)" {
     // (Badly) Poisons the target.
     // TODO: https://pkmn.cc/bulba-glitch-1#Toxic_counter_glitches
     return error.SkipZigTest;
 }
 
 // Move.{ThunderWave,StunSpore,Glare}
-test "Paralyze (direct)" {
+test "Paralyze (primary)" {
     // Paralyzes the target.
     const PROC = comptime ranged(63, 256) - 1;
     const NO_PROC = PROC + 1;
@@ -980,22 +980,24 @@ test "Paralyze (direct)" {
             NOP, PROC,
             NOP, NOP, HIT, NO_PROC, HIT, NOP,
             NOP, NO_PROC,
+            NOP, NO_PROC, HIT, NOP,
         } else .{
             ~HIT, HIT,
             NO_PROC, HIT,
             PROC,
             NO_PROC, HIT,
             NO_PROC,
+            NO_PROC, HIT,
         }
     // zig fmt: on
     ).init(
         &.{
             .{ .species = .Arbok, .moves = &.{.Glare} },
-            .{ .species = .Dugtrio, .moves = &.{.Earthquake} },
+            .{ .species = .Dugtrio, .moves = &.{ .Earthquake, .Substitute } },
         },
         &.{
             .{ .species = .Magneton, .moves = &.{.ThunderWave} },
-            .{ .species = .Gengar, .moves = &.{ .Toxic, .ThunderWave } },
+            .{ .species = .Gengar, .moves = &.{ .Toxic, .ThunderWave, .Glare } },
         },
     );
     defer t.deinit();
@@ -1042,6 +1044,18 @@ test "Paralyze (direct)" {
 
     // Thunder Wave does not ignore type immunity
     try expectEqual(Result.Default, try t.update(swtch(2), move(2)));
+
+    t.expected.p1.get(2).hp -= 68;
+
+    try t.log.expected.move(P1.ident(2), Move.Substitute, P1.ident(2), null);
+    try t.log.expected.start(P1.ident(2), .Substitute);
+    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
+    try t.log.expected.move(P2.ident(2), Move.Glare, P1.ident(2), null);
+    try t.log.expected.status(P1.ident(2), Status.init(.PAR), .None);
+    try t.log.expected.turn(7);
+
+    // Primary paralysis ignores Substitute
+    try expectEqual(Result.Default, try t.update(move(2), move(3)));
 
     // // Paralysis lowers speed
     try expectEqual(Status.init(.PAR), t.actual.p2.stored().status);

@@ -88,6 +88,14 @@
         "@typescript-eslint/no-unused-vars": "off"
       }
     }, {
+      "files": ["src/test/showdown.test.ts"],
+      "rules": {
+        "jest/expect-expect": [
+          "warn",
+          { "assertFunctionNames": ["expect", "expectLog"] }
+        ]
+      }
+    }, {
       "files": ["src/tools/generate.ts"],
       "rules": {
         "@typescript-eslint/restrict-template-expressions": ["error", {"allowBoolean": true}]

@@ -60,7 +60,7 @@ for (const gen of new Generations(Dex as any)) {
       battle.start();
 
       // lol...
-      expect(filter(battle.log)).toEqual([
+      expectLog(battle, [
         '|switch|p1a: Pikachu|Pikachu|0 fnt',
         '|switch|p2a: Charmander|Charmander|0 fnt',
         '|turn|1',
@@ -102,7 +102,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 20);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 40);
 
-      expect(filter(battle.log)).toEqual([
+      expectLog(battle, [
         '|move|p1a: Raticate|Tackle|p2a: Chansey',
         '|-damage|p2a: Chansey|612/703',
         '|move|p2a: Chansey|Tackle|p1a: Raticate',
@@ -151,7 +151,7 @@ for (const gen of new Generations(Dex as any)) {
       battle.makeChoices('switch 2', 'move 1');
       expect(battle.p1.pokemon[0].hp).toBe(rattata - 32);
 
-      expect(filter(battle.log)).toEqual([
+      expectLog(battle, [
         '|switch|p2a: Vulpix|Vulpix|279/279',
         '|move|p1a: Raticate|Quick Attack|p2a: Vulpix',
         '|-damage|p2a: Vulpix|215/279',
@@ -164,7 +164,7 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
-    test('Paralyze (direct)', () => {
+    test('Paralyze (primary)', () => {
       const PROC = ranged(63, 256) - 1;
       const NO_PROC = PROC + 1;
       const battle = startBattle([
@@ -173,12 +173,13 @@ for (const gen of new Generations(Dex as any)) {
         NOP, PROC,
         NOP, NOP, HIT, NO_PROC, HIT, NOP,
         NOP, NO_PROC,
+        NOP, NO_PROC, HIT, NOP,
       ], [
         {species: 'Arbok', evs, moves: ['Glare']},
-        {species: 'Dugtrio', evs, moves: ['Earthquake']},
+        {species: 'Dugtrio', evs, moves: ['Earthquake', 'Substitute']},
       ], [
         {species: 'Magneton', evs, moves: ['Thunder Wave']},
-        {species: 'Gengar', evs, moves: ['Toxic', 'Thunder Wave']},
+        {species: 'Gengar', evs, moves: ['Toxic', 'Thunder Wave', 'Glare']},
       ]);
 
       // Glare can miss
@@ -191,13 +192,15 @@ for (const gen of new Generations(Dex as any)) {
       battle.makeChoices('move 1', 'move 1');
       // Thunder Wave does not ignore type immunity
       battle.makeChoices('switch 2', 'move 2');
+      // Primary paralysis ignores Substitute
+      battle.makeChoices('move 2', 'move 3');
 
       // Paralysis lowers speed
       expect(battle.p2.pokemon[0].status).toBe('par');
       expect(battle.p2.pokemon[0].modifiedStats!.spe).toBe(79);
       expect(battle.p2.pokemon[0].storedStats.spe).toBe(318);
 
-      expect(filter(battle.log)).toEqual([
+      expectLog(battle, [
         '|move|p1a: Arbok|Glare|p2a: Magneton|[miss]',
         '|-miss|p1a: Arbok',
         '|move|p2a: Magneton|Thunder Wave|p1a: Arbok',
@@ -220,6 +223,12 @@ for (const gen of new Generations(Dex as any)) {
         '|move|p2a: Gengar|Thunder Wave|p1a: Dugtrio',
         '|-immune|p1a: Dugtrio',
         '|turn|6',
+        '|move|p1a: Dugtrio|Substitute|p1a: Dugtrio',
+        '|-start|p1a: Dugtrio|Substitute',
+        '|-damage|p1a: Dugtrio|205/273',
+        '|move|p2a: Gengar|Glare|p1a: Dugtrio',
+        '|-status|p1a: Dugtrio|par',
+        '|turn|7',
       ]);
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
@@ -236,7 +245,7 @@ for (const gen of new Generations(Dex as any)) {
       battle.started = false;
       battle.start();
 
-      expect(filter(battle.log)).toEqual([
+      expectLog(battle, [
         '|switch|p1a: Gengar|Gengar|323/323',
         '|switch|p2a: Gengar|Gengar|260/260',
         '|tie',
@@ -256,7 +265,7 @@ for (const gen of new Generations(Dex as any)) {
 
       expect(battle.p1.pokemon[0].hp).toBe(0);
 
-      expect(filter(battle.log)).toEqual([
+      expectLog(battle, [
         '|move|p2a: Dugtrio|Fissure|p1a: Kingler|[miss]',
         '|-miss|p2a: Dugtrio',
         '|move|p1a: Kingler|Guillotine|p2a: Dugtrio',
@@ -280,7 +289,7 @@ for (const gen of new Generations(Dex as any)) {
       battle.makeChoices('move 1', 'move 1');
       battle.makeChoices('move 1', 'move 1');
 
-      expect(filter(battle.log)).toEqual([
+      expectLog(battle, [
         '|move|p1a: Abra|Teleport|p1a: Abra',
         '|move|p2a: Pidgey|Whirlwind|p1a: Abra',
         '|turn|2',
@@ -299,7 +308,7 @@ for (const gen of new Generations(Dex as any)) {
 
       battle.makeChoices('move 1', 'move 1');
 
-      expect(filter(battle.log)).toEqual([
+      expectLog(battle, [
         '|move|p1a: Gyarados|Splash|p1a: Gyarados',
         '|-nothing',
         '|move|p2a: Magikarp|Splash|p2a: Magikarp',
@@ -328,7 +337,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].hp).toEqual(p2hp2);
       expect(battle.p2.pokemon[1].hp).toEqual(p2hp1 - 20);
 
-      expect(filter(battle.log)).toEqual([
+      expectLog(battle, [
         '|move|p1a: Voltorb|Sonic Boom|p2a: Dratini',
         '|-damage|p2a: Dratini|265/285',
         '|move|p2a: Dratini|Dragon Rage|p1a: Voltorb',
@@ -357,7 +366,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toEqual(p1hp - 16);
       expect(battle.p2.pokemon[0].hp).toEqual(p2hp - 22);
 
-      expect(filter(battle.log)).toEqual([
+      expectLog(battle, [
         '|move|p1a: Gastly|Night Shade|p2a: Clefairy',
         '|-damage|p2a: Clefairy|41/63',
         '|move|p2a: Clefairy|Seismic Toss|p1a: Gastly',
@@ -380,7 +389,7 @@ for (const gen of new Generations(Dex as any)) {
 
       expect(battle.p2.pokemon[0].hp).toEqual(p2hp - 87);
 
-      expect(filter(battle.log)).toEqual([
+      expectLog(battle, [
         '|move|p1a: Gengar|Psywave|p2a: Clefable',
         '|-damage|p2a: Clefable|83/170',
         '|move|p2a: Clefable|Psywave|p1a: Gengar',
@@ -410,7 +419,7 @@ for (const gen of new Generations(Dex as any)) {
       battle.makeChoices('move 1', 'move 1');
       expect(battle.p1.pokemon[0].hp).toBe(147);
 
-      expect(filter(battle.log)).toEqual([
+      expectLog(battle, [
         '|move|p1a: Raticate|Super Fang|p2a: Rattata',
         '|-damage|p2a: Rattata|132/263',
         '|move|p2a: Rattata|Super Fang|p1a: Raticate',
@@ -436,7 +445,7 @@ for (const gen of new Generations(Dex as any)) {
 
       battle.makeChoices('move 1', 'move 1');
 
-      expect(filter(battle.log)).toEqual([
+      expectLog(battle, [
         '|move|p1a: Porygon|Conversion|p2a: Slowbro',
         '|-start|p1a: Porygon|typechange|Water/Psychic|[from] move: Conversion|[of] p2a: Slowbro',
         '|move|p2a: Slowbro|Teleport|p2a: Slowbro',
@@ -521,4 +530,14 @@ function filter(raw: string[]) {
   }
 
   return filtered;
+}
+
+function expectLog(battle: Battle, expected: string[]) {
+  const actual = filter(battle.log);
+  try {
+    expect(actual).toEqual(expected);
+  } catch (err) {
+    console.log(actual);
+    throw err;
+  }
 }

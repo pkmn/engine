@@ -1778,6 +1778,7 @@ pub const Effects = struct {
         side.active.volatiles.substitute = hp + 1;
         side.active.volatiles.Substitute = true;
         try log.start(battle.active(player), .Substitute);
+        try log.damage(battle.active(player), side.stored(), .None);
     }
 
     fn switchAndTeleport(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
@@ -1976,7 +1977,7 @@ fn unmodifiedStats(battle: anytype, who: Player) *Stats(u16) {
     return &battle.side(id.player).pokemon[id.id].stats;
 }
 
-fn setStatus(battle: anytype, pokemon: *Pokemon, status: u8) void {
+inline fn setStatus(battle: anytype, pokemon: *Pokemon, status: u8) void {
     pokemon.status = status;
     // SHOWDOWN: Sleep Clause Mod & Freeze Clause Mod both "speed tie" during onSetStatus...
     if (showdown) battle.rng.advance(1);
