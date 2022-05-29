@@ -47,18 +47,19 @@ const U = if (showdown) u32 else u8;
 const MIN: U = 0;
 const MAX: U = std.math.maxInt(U);
 
-const P1_FIRST = MIN;
 const NOP = MIN;
 const HIT = MIN;
 const CRIT = MIN;
 const MIN_DMG = if (showdown) MIN else 179;
 const MAX_DMG = MAX;
-const PROC = MIN;
-const CFZ = MAX;
 
 comptime {
     assert(showdown or std.math.rotr(u8, MIN_DMG, 1) == 217);
     assert(showdown or std.math.rotr(u8, MAX_DMG, 1) == 255);
+}
+
+fn ranged(comptime n: u8, comptime d: u9) U {
+   return if (showdown) @as(U, n) * (@as(u64, 0x100000000) / @as(U, d)) else n;
 }
 
 const P1 = Player.P1;
@@ -940,20 +941,22 @@ test "Poison (direct)" {
 // Move.{ThunderWave,StunSpore,Glare}
 test "Paralyze (direct)" {
     // Paralyzes the target.
+    const PROC = comptime ranged(63, 256) - 1;
+    const NO_PROC = PROC + 1;
     var t = Test(
     // zig fmt: off
         if (showdown) .{
             NOP, NOP, ~HIT, HIT, NOP,
-            NOP,  NOP, HIT, ~PROC, HIT, NOP,
+            NOP,  NOP, HIT, NO_PROC, HIT, NOP,
             NOP, PROC,
-            NOP, NOP, HIT, ~PROC, HIT, NOP,
-            NOP, ~PROC,
+            NOP, NOP, HIT, NO_PROC, HIT, NOP,
+            NOP, NO_PROC,
         } else .{
             ~HIT, HIT,
-            ~PROC, HIT,
+            NO_PROC, HIT,
             PROC,
-            ~PROC, HIT,
-            ~PROC,
+            NO_PROC, HIT,
+            NO_PROC,
         }
     // zig fmt: on
     ).init(
@@ -1239,6 +1242,8 @@ test "MAX_LOGS" {
     const MIRROR_MOVE = @enumToInt(Move.MirrorMove);
     // TODO: workaround for Zig SIGBUS
     const BRN = 0b10000; // Status.init(.BRN);
+    const CFZ = comptime ranged(128, 256);
+    const NO_CFZ = CFZ - 1;
     // TODO: replace this with a handcrafted actual seed instead of using the fixed RNG
     var battle = Battle.fixed(
         // zig fmt: off
@@ -1246,10 +1251,10 @@ test "MAX_LOGS" {
             // Set up
             HIT,
             ~CRIT, @enumToInt(Move.LeechSeed), HIT,
-            HIT, 3, ~CFZ, HIT, 3,
-            ~CFZ, ~CFZ, ~CRIT, @enumToInt(Move.SolarBeam),
+            HIT, 3, NO_CFZ, HIT, 3,
+            NO_CFZ, NO_CFZ, ~CRIT, @enumToInt(Move.SolarBeam),
             // Scenario
-            ~CFZ,
+            NO_CFZ,
             ~CRIT, MIRROR_MOVE, ~CRIT,
             ~CRIT, MIRROR_MOVE, ~CRIT,
             ~CRIT, MIRROR_MOVE, ~CRIT,
@@ -1261,7 +1266,7 @@ test "MAX_LOGS" {
             ~CRIT, MIRROR_MOVE, ~CRIT,
             ~CRIT, MIRROR_MOVE, ~CRIT,
             ~CRIT, @enumToInt(Move.PinMissile), CRIT, MIN_DMG, HIT, 3, 3,
-            ~CFZ, CRIT, MIN_DMG, HIT,
+            NO_CFZ, CRIT, MIN_DMG, HIT,
         },
          // zig fmt: on
         &.{

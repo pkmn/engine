@@ -4,19 +4,15 @@ import {Generations, PokemonSet} from '@pkmn/data';
 const MIN = 0;
 const MAX = 0xFFFFFFFF;
 
-// const P1_FIRST = MIN;
-// const P2_FIRST = MAX;
 const NOP = MIN;
 const HIT = MIN;
 const MISS = MAX;
-// const CRIT = MIN;
+// const CRIT = MAX;
 const NO_CRIT = MAX;
 const MIN_DMG = MIN;
 const MAX_DMG = MAX;
-const PROC = MIN;
-const NO_PROC = MAX;
-// const CFZ = MAX;
-// const NO_CFZ = MIN;
+
+const ranged = (n: number, d: number) => n * (0x100000000 / d);
 
 const MODS: {[gen: number]: string[]} = {
   1: ['Endless Battle Clause', 'Sleep Clause Mod', 'Freeze Clause Mod'],
@@ -169,6 +165,8 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('Paralyze (direct)', () => {
+      const PROC = ranged(63, 256) - 1;
+      const NO_PROC = PROC + 1;
       const battle = startBattle([
         NOP, NOP, MISS, HIT, NOP,
         NOP, NOP, HIT, NO_PROC, HIT, NOP,
