@@ -7,10 +7,10 @@ const NOP = 42;
 
 const HIT = {key: 'BattleActions.tryMoveHit', value: MIN};
 const MISS = {key: 'BattleActions.tryMoveHit', value: MAX};
-// const CRIT = {key: ['Battle.randomChance', 'BattleActions.getDamage'], value: MIN};
+const CRIT = {key: ['Battle.randomChance', 'BattleActions.getDamage'], value: MIN};
 const NO_CRIT = {key: ['Battle.randomChance', 'BattleActions.getDamage'], value: MAX};
 const MIN_DMG = {key: ['Battle.random', 'BattleActions.getDamage'], value: MIN};
-// const MAX_DMG = {key: ['Battle.random', 'BattleActions.getDamage'], value: MAX};
+const MAX_DMG = {key: ['Battle.random', 'BattleActions.getDamage'], value: MAX};
 
 const SRF = {key: 'Side.randomFoe', value: NOP};
 const SSM = {key: 'Battle.speedSort', value: NOP};
@@ -163,6 +163,60 @@ for (const gen of new Generations(Dex as any)) {
         '|move|p2a: Vulpix|Quick Attack|p1a: Rattata',
         '|-damage|p1a: Rattata|231/263',
         '|turn|3',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
+    test('PP deduction', () => {
+      const battle = startBattle([], [
+        {species: 'Alakazam', evs, moves: ['Teleport']},
+      ], [
+        {species: 'Abra', evs, moves: ['Teleport']},
+      ]);
+
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(32);
+      expect(battle.p1.pokemon[0].baseMoveSlots[0].pp).toBe(32);
+      expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(32);
+      expect(battle.p2.pokemon[0].baseMoveSlots[0].pp).toBe(32);
+
+      battle.makeChoices('move 1', 'move 1');
+
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(31);
+      expect(battle.p1.pokemon[0].baseMoveSlots[0].pp).toBe(31);
+      expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(31);
+      expect(battle.p2.pokemon[0].baseMoveSlots[0].pp).toBe(31);
+
+      battle.makeChoices('move 1', 'move 1');
+
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(30);
+      expect(battle.p1.pokemon[0].baseMoveSlots[0].pp).toBe(30);
+      expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(30);
+      expect(battle.p2.pokemon[0].baseMoveSlots[0].pp).toBe(30);
+    });
+
+    test('accuracy (normal)', () => {
+      const hit = {key: HIT.key, value: ranged(Math.floor(85 * 255 / 100), 256) - 1};
+      const miss = {key: MISS.key, value: hit.value + 1 };
+      const battle = startBattle([SRF, SRF, hit, CRIT, MAX_DMG, miss], [
+        {species: 'Hitmonchan', evs, moves: ['Mega Punch']},
+      ], [
+        {species: 'Machamp', evs, moves: ['Mega Punch']},
+      ]);
+
+      const p1hp = battle.p1.pokemon[0].hp;
+      const p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toEqual(p1hp);
+      expect(battle.p2.pokemon[0].hp).toEqual(p2hp - 159);
+
+      expectLog(battle, [
+        '|move|p1a: Hitmonchan|Mega Punch|p2a: Machamp',
+        '|-crit|p2a: Machamp',
+        '|-damage|p2a: Machamp|224/383',
+        '|move|p2a: Machamp|Mega Punch|p1a: Hitmonchan|[miss]',
+        '|-miss|p2a: Machamp',
+        '|turn|2',
       ]);
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });

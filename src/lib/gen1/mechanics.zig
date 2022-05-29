@@ -705,14 +705,12 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     var nullified = false;
     var hit: u4 = 0;
     while (hit < hits) : (hit += 1) {
+        if (hit == 0 and crit) try log.crit(battle.active(player.foe()));
         if (!skip) nullified = try applyDamage(battle, player.foe(), player.foe(), log);
         if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
             try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
         }
-        if (hit == 0) {
-            if (crit) try log.crit(battle.active(player));
-            if (ohko) try log.ohko();
-        }
+        if (hit == 0 and ohko) try log.ohko();
         // If the substitute breaks during a multi-hit attack, the attack ends
         if (nullified or foe.stored().hp == 0) break;
 

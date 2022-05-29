@@ -355,21 +355,49 @@ test "PP deduction" {
     try t.start();
 
     try expectEqual(@as(u8, 32), t.actual.p1.active.move(1).pp);
+    try expectEqual(@as(u8, 32), t.actual.p1.stored().move(1).pp);
     try expectEqual(@as(u8, 32), t.actual.p2.active.move(1).pp);
+    try expectEqual(@as(u8, 32), t.actual.p2.stored().move(1).pp);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
     try expectEqual(@as(u8, 31), t.actual.p1.active.move(1).pp);
+    try expectEqual(@as(u8, 31), t.actual.p1.stored().move(1).pp);
     try expectEqual(@as(u8, 31), t.actual.p2.active.move(1).pp);
+    try expectEqual(@as(u8, 31), t.actual.p2.stored().move(1).pp);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
     try expectEqual(@as(u8, 30), t.actual.p1.active.move(1).pp);
+    try expectEqual(@as(u8, 30), t.actual.p1.stored().move(1).pp);
     try expectEqual(@as(u8, 30), t.actual.p2.active.move(1).pp);
+    try expectEqual(@as(u8, 30), t.actual.p2.stored().move(1).pp);
 }
 
-test "accuracy" {
-    return error.SkipZigTest;
+test "accuracy (normal)" {
+    const hit = comptime ranged(85 * 255 / 100, 256) - 1;
+    const miss = hit + 1;
+    var t = Test(if (showdown)
+        (.{ NOP, NOP, hit, CRIT, MAX_DMG, miss })
+    else
+        (.{ CRIT, MAX_DMG, hit, ~CRIT, MIN_DMG, miss })).init(
+        &.{.{ .species = .Hitmonchan, .moves = &.{.MegaPunch} }},
+        &.{.{ .species = .Machamp, .moves = &.{.MegaPunch} }},
+    );
+    defer t.deinit();
+
+    t.expected.p2.get(1).hp -= 159;
+
+    try t.log.expected.move(P1.ident(1), Move.MegaPunch, P2.ident(1), null);
+    try t.log.expected.crit(P2.ident(1));
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.MegaPunch, P1.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.verify();
 }
 
 test "damage calc" {
@@ -775,7 +803,6 @@ test "OHKO" {
     try t.log.expected.faint(P1.ident(1), true);
 
     try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(move(1), move(1)));
-
     try t.verify();
 }
 
