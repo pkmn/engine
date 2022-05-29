@@ -84,7 +84,7 @@ test "start (first fainted)" {
     try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
     try t.log.expected.turn(1);
 
-    try expectEqual(Result.Default, try t.battle.expected.update(.{}, .{}, t.log.actual));
+    try expectEqual(Result.Default, try t.battle.actual.update(.{}, .{}, t.log.actual));
     try t.verify();
 }
 
@@ -98,7 +98,7 @@ test "start (all fainted)" {
         );
         defer t.deinit();
 
-        try expectEqual(Result.Win, try t.battle.expected.update(.{}, .{}, t.log.actual));
+        try expectEqual(Result.Win, try t.battle.actual.update(.{}, .{}, t.log.actual));
         try t.verify();
     }
     // Lose
@@ -109,7 +109,7 @@ test "start (all fainted)" {
         );
         defer t.deinit();
 
-        try expectEqual(Result.Lose, try t.battle.expected.update(.{}, .{}, t.log.actual));
+        try expectEqual(Result.Lose, try t.battle.actual.update(.{}, .{}, t.log.actual));
         try t.verify();
     }
     // Tie
@@ -120,7 +120,7 @@ test "start (all fainted)" {
         );
         defer t.deinit();
 
-        try expectEqual(Result.Tie, try t.battle.expected.update(.{}, .{}, t.log.actual));
+        try expectEqual(Result.Tie, try t.battle.actual.update(.{}, .{}, t.log.actual));
         try t.verify();
     }
 }
@@ -167,8 +167,46 @@ test "switching (order)" {
 }
 
 test "switching (reset)" {
-    // TODO clear boosts/volatiles/etc, trapping etc
-    return error.SkipZigTest;
+    var t = Test(.{}).init(
+        &.{.{ .species = .Abra, .moves = &.{.Teleport} }},
+        &.{
+            .{ .species = .Charmander, .moves = &.{.Scratch} },
+            .{ .species = .Squirtle, .moves = &.{.Tackle} },
+        },
+    );
+    defer t.deinit();
+
+    try t.log.expected.switched(P1.ident(1), t.expected.p1.get(1));
+    try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
+    try t.log.expected.turn(1);
+
+    try expectEqual(Result.Default, try t.battle.actual.update(.{}, .{}, t.log.actual));
+
+    var p1 = &t.actual.p1.active;
+    p1.volatiles.Reflect = true;
+
+    t.actual.p2.last_used_move = .Scratch;
+    var p2 = &t.actual.p2.active;
+    p2.boosts.atk = 1;
+    p2.volatiles.LightScreen = true;
+    t.actual.p2.get(1).status = Status.init(.PAR);
+
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+    try expect(p1.volatiles.Reflect);
+
+    try expectEqual(data.Volatiles{}, p2.volatiles);
+    try expectEqual(data.Boosts{}, p2.boosts);
+    try expectEqual(@as(u8, 0), t.actual.p2.get(1).status);
+    try expectEqual(Status.init(.PAR), t.actual.p2.get(2).status);
+
+    try expectEqual(Move.Teleport, t.actual.p1.last_used_move);
+    try expectEqual(Move.None, t.actual.p2.last_used_move);
+
+    try t.verify();
 }
 
 test "switching (brn/par)" {
@@ -376,7 +414,7 @@ test "Endless Battle Clause (initial)" {
     try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
     try t.log.expected.tie();
 
-    try expectEqual(Result.Tie, try t.battle.expected.update(.{}, .{}, t.log.actual));
+    try expectEqual(Result.Tie, try t.battle.actual.update(.{}, .{}, t.log.actual));
     try t.verify();
 }
 
