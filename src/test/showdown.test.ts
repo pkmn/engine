@@ -63,7 +63,7 @@ for (const gen of new Generations(Dex as any)) {
       battle.started = false;
       battle.start();
 
-       // lol...
+      // lol...
       expect(filter(battle.log)).toEqual([
         '|switch|p1a: Pikachu|Pikachu|0 fnt',
         '|switch|p2a: Charmander|Charmander|0 fnt',
