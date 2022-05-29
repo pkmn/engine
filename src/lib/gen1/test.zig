@@ -59,7 +59,7 @@ comptime {
 }
 
 fn ranged(comptime n: u8, comptime d: u9) U {
-   return if (showdown) @as(U, n) * (@as(u64, 0x100000000) / @as(U, d)) else n;
+    return if (showdown) @as(U, n) * (@as(u64, 0x100000000) / @as(U, d)) else n;
 }
 
 const P1 = Player.P1;
@@ -352,26 +352,8 @@ test "turn order (switch vs. move)" {
     try t.verify();
 }
 
-test "confusion" {
-    // TODO cant hit self
-    // TODO disappears after duration
-    return error.SkipZigTest;
-}
-
-test "sleep" {
-    // TODO decrement counter, no turn,
-    // TODO wake up and cant act
-    // TODO can act after
-    return error.SkipZigTest;
-}
-
-test "freeze" {
-    // TODO cant act
-    // TODO thaws on fire
-    return error.SkipZigTest;
-}
-
 test "PP deduction" {
+
     return error.SkipZigTest;
 }
 
@@ -491,6 +473,8 @@ test "MultiHit" {
     // Hits two to five times. Has a 3/8 chance to hit two or three times, and a 1/8 chance to hit
     // four or five times. Damage is calculated once for the first hit and used for every hit. If
     // one of the hits breaks the target's substitute, the move ends.
+
+    // TODO subsequent hits don't decrement PP
     return error.SkipZigTest;
 }
 
@@ -512,12 +496,30 @@ test "PoisonChance" {
 // Move.FireBlast: BurnChance2
 test "BurnChance" {
     // Has a X% chance to burn the target.
+
+    // TODO can proc / not proc - use chance2 roll for both and dont proc the chance1 roll
+    // TODO can't proc on same type
+    // TODO already burned vs. already other status
+    // TODO blocked by substitute, but NOT ON SHOWDOWN
+
+    // TODO halve atk
+    // TODO residual dmg
+
     return error.SkipZigTest;
 }
 
 // Move.{IcePunch,IceBeam,Blizzard}: FreezeChance
 test "FreezeChance" {
     // Has a 10% chance to freeze the target.
+
+    // TODO can proc / not proc
+    // TODO can't proc on same type
+    // TODO already frozen vs. already other status
+
+    // TODO cant act
+    // TODO thaws on fire (specifically on fire move which can burn, NOT fire spin)
+    // TODO blocked by substitute, but NOT ON SHOWDOWN
+
     return error.SkipZigTest;
 }
 
@@ -525,6 +527,14 @@ test "FreezeChance" {
 // Move.{BodySlam,Lick}: ParalyzeChance2
 test "ParalyzeChance" {
     // Has a X% chance to paralyze the target.
+
+    // TODO can proc / not proc - use chance2 roll for both and dont proc the chance1 roll
+    // TODO can't proc on same type (body slam + normal, thunderbolt + electric)
+    // TODO already paralyzed vs. already other status
+    // TODO immunity
+    // TODO quarters speed
+    // TODO blocked by substitute, but NOT ON SHOWDOWN
+
     return error.SkipZigTest;
 }
 
@@ -532,12 +542,20 @@ test "ParalyzeChance" {
 // Move.{Stomp,RollingKick,Headbutt,LowKick}: FlinchChance2
 test "FlinchChance" {
     // Has a X% chance to flinch the target.
+
+    // TODO can proc / not proc - use chance2 roll for both and dont proc the chance1 roll
+    // TODO clears recharging even on a miss when slower!
+    // TODO blocked by substitute
+
     return error.SkipZigTest;
 }
 
 // Move.{Psybeam,Confusion}: ConfusionChance
 test "ConfusionChance" {
     // Has a 10% chance to confuse the target.
+
+    // TODO blocked by substitute on showdown
+
     return error.SkipZigTest;
 }
 
@@ -702,6 +720,8 @@ test "Struggle" {
     // Deals Normal-type damage. If this move was successful, the user takes damage equal to 1/2 the
     // HP lost by the target, rounded down, but not less than 1 HP. This move is automatically used
     // if none of the user's known moves can be selected.
+
+    // TODO doesn't decrement PP
     return error.SkipZigTest;
 }
 
@@ -921,12 +941,22 @@ test "LeechSeed" {
 // Move.{Sing,SleepPowder,Hypnosis,LovelyKiss,Spore}
 test "Sleep" {
     // Causes the target to fall asleep.
+
+    // TODO decrement counter, no turn,
+    // TODO wake up and cant act
+    // TODO can act after
+
     return error.SkipZigTest;
 }
 
 // Move.{Supersonic,ConfuseRay}
 test "Confusion (direct)" {
     // Causes the target to become confused.
+
+    // TODO cant hit self
+    // TODO disappears after duration
+    // TODO blocked by substitute
+
     return error.SkipZigTest;
 }
 
@@ -1103,6 +1133,8 @@ test "Bide" {
     // Glare, Haze, Leech Seed, Light Screen, Mimic, Mist, Poison Gas, Poison Powder, Recover,
     // Reflect, Rest, Soft-Boiled, Splash, Stun Spore, Substitute, Supersonic, Teleport, Thunder
     // Wave, Toxic, or Transform, the previous damage dealt to the user will be added to the total.
+
+    // TODO subsequent turn don't decrement PP
     return error.SkipZigTest;
 }
 

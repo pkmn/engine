@@ -556,7 +556,15 @@ fn decrementPP(side: *Side, choice: Choice) void {
     assert(!volatiles.Rage and !volatiles.Thrashing);
     if (volatiles.Bide or volatiles.MultiHit) return;
 
-    // SHOWDOWN: Pokémon Showdown's broken PP deduction allows for infinite PP use with Mimic
+    // SHOWDOWN: Pokémon Showdown's broken PP deduction allows for infinite PP use with Mimic. This
+    // can't be replicated correctly in the pkmn engine as Pokémon Showdown uses a 64-bit signed
+    // float instead of an 8-bit unsigned integer and goes negative. Furthermore, PS does:
+    //
+    //     const moveslot = this.baseMoves.indexOf('mimic' as ID);
+    //     const mimicPP = this.moveSlots[moveslot] ? this.moveSlots[moveslot].pp : 16;
+    //
+    // Which means that the PP the Mimic user ends up with after they switch can be either
+    // untouched, the correct value, negative, or 16 (if the copied move's PP ended at 0).
     if (showdown) {
         const intended = active.move(choice.data);
         for (active.moves) |move, i| {
@@ -566,12 +574,13 @@ fn decrementPP(side: *Side, choice: Choice) void {
                     break :ok true;
                 };
                 assert(i == choice.data or mimic);
-                // Technically on Pokémon Showdown the PP data goes negative, but since we're using
-                // an unsigned integer we can't do that and just wrapping around is equivalent
-                active.moves[i].pp -= 1;
-                if (volatiles.Transform) return;
-                side.stored().moves[i].pp -= 1;
+                // Instead of going negative the best we can do is leave the PP at 0...
+                if (active.moves[i].pp != 0) active.moves[i].pp;
+                if (volatiles.Transform) break;
+                //
+                if (side.stored().moves[i].pp != 0) side.stored().moves[i].pp -= 1;
                 assert(active.moves[i].pp == side.stored().moves[i].pp);
+                break;
             }
         }
         return;
@@ -605,7 +614,8 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         const type1 = @enumToInt(move.type.effectiveness(foe.active.types.type1));
         const type2 = @enumToInt(move.type.effectiveness(foe.active.types.type2));
         // SHOWDOWN: Sonic Boom incorrectly checks type immunity
-        if (move.targets() and !(special and m != .SonicBoom) and (type1 == 0 or type2 == 0) or
+        if (move.targets() and (type1 == 0 or type2 == 0) and
+            !(special and m != .SonicBoom) or
             (m == .DreamEater and !Status.is(foe.stored().status, .SLP)))
         {
             try log.immune(battle.active(player.foe()), .None);
