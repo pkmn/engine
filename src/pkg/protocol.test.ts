@@ -24,7 +24,7 @@ const parse = (chunk: string) =>
 for (const gen of new Generations(Dex as any)) {
   if (gen.num > 1) break;
 
-  describe(`Protocol (Gen ${gen.num})`, () => {
+  describe(`Gen ${gen.num}`, () => {
     const log = new Log(gen, Lookup.get(gen), NAMES);
 
     it('|move|', () => {
