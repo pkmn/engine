@@ -149,27 +149,26 @@ for (const group in GROUPS) {
   }
 }
 
-const ADVANCES: {[target in MoveTarget]: number} = {
-  all: 0,
-  allySide: 0,
-  allyTeam: 0,
-  self: 0,
-
-  normal: 1,
-  any: 1,
-  randomNormal: 1,
-  allAdjacentFoes: 1,
-  allAdjacent: 1,
-  // NB: Spikes has 2 advances but non-consecutively (resolveAction vs. runAction)
-  foeSide: 1,
-  // NB: beforeTurnCallback
-  scripted: 1,
-
-  // TODO
-  adjacentAlly: -1,
-  adjacentAllyOrSelf: -1,
-  adjacentFoe: -1,
-  allies: -1,
+// NB:  all/allySide/allyTeam/self  = All/Field/AllySide/Self dont advance frames
+// TODO: determine frames for adjacentAlly/adjacentAllyOrSelf/adjacentFoe/allies
+// NB: beforeTurnCallback = extra advance (Counter, Mirror Coat, Pursuit)
+// NB: validTargetLoc: allAdjacentFoes/FoeSide (allies)= Foes (Allies) = advance
+const TARGETS: {[target in MoveTarget]: string} = {
+  adjacentAlly: 'Ally',
+  adjacentAllyOrSelf: 'AllyOrSelf',
+  adjacentFoe: 'Foe',
+  all: 'All', // or 'Field'
+  allAdjacent: 'AllOthers',
+  allAdjacentFoes: 'Foes',
+  allies: 'Allies',
+  allySide: 'AllySide',
+  allyTeam: 'Self',
+  any: 'Other',
+  foeSide: 'FoeSide',
+  normal: 'Other',
+  randomNormal: 'RandomFoe',
+  scripted: 'Depends',
+  self: 'Self',
 };
 
 const constToEffectEnum = (s: string) =>
@@ -364,35 +363,26 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       const [name, effect] = m.split(' ');
       if (effect !== 'None') EFFECTS[effectToGroup(effect)].add(effect);
       const move = gen.moves.get(name)!;
-      const acc = move.accuracy === true ? 100 : move.accuracy;
-      const frames = ADVANCES[move.target] * (('beforeTurnCallback' in move) ? 2 : 1);
+      const accuracy = move.accuracy === true ? 100 : move.accuracy;
       MOVES.push(`// ${name}\n` +
         '        .{\n' +
         `            .effect = .${effect},\n` +
         `            .bp = ${move.basePower},\n` +
         `            .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
-        `            .acc = ${acc / 5 - 6}, // ${acc}%\n` +
-        `            .frames = ${frames},\n` +
+        `            .accuracy = ${accuracy},\n` +
+        `            .target = .${TARGETS[move.target]},\n` +
         '        }');
       PP.push(`${move.pp}, // ${name}`);
     }
     let Data = `pub const Data = packed struct {
         effect: Effect,
         bp: u8,
-        acc: u4, // accuracy / 5 - 6
+        accuracy: u8,
         type: Type,
-        frames: u8,
+        target: Target,
 
         comptime {
             assert(@sizeOf(Data) == 4);
-        }
-
-        pub inline fn accuracy(self: Data) u8 {
-            return (@as(u8, self.acc) + 6) * 5;
-        }
-
-        pub inline fn targets(self: Data) bool {
-            return self.frames > 0;
         }
     };`;
 
@@ -470,6 +460,12 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       ',\n\n    // Sentinel used when Pokémon\'s turn should be skipped (eg. trapped)\n' +
       '    SKIP_TURN = 0xFF';
 
+    const frames = `if (id == .Counter and event == .resolve) return 2;
+        return @as(u8, @boolToInt(switch (event) {
+            .resolve => get(id).target.resolves(),
+            .run => get(id).target.runs(),
+        }));`;
+
     template('moves', dirs.out, {
       gen: gen.num,
       Move: {
@@ -480,6 +476,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         data: MOVES.join(',\n        '),
         dataSize: MOVES.length * 4,
         Effect,
+        frames,
         ppData,
         ppFn,
       },
@@ -680,7 +677,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         ? `${move.secondary.chance / 10}, // * 10 = ${move.secondary.chance}`
         : '';
       const acc = move.accuracy === true ? 100 : move.accuracy;
-      const frames = ADVANCES[move.target] * (('beforeTurnCallback' in move) ? 2 : 1);
       MOVES.push(`// ${name}\n` +
         '        .{\n' +
         `            .effect = .${effect},\n` +
@@ -688,7 +684,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
         `            .pp = ${pp}\n` +
         `            .acc = ${acc / 5 - 6}, // ${acc}%\n` +
-        `            .frames = ${frames},\n` +
+        `            .target = .${TARGETS[move.target]},\n` +
         (chance ? `            .chance = ${chance}\n` : '') +
         '        }');
     }
@@ -698,7 +694,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         type: Type,
         pp: u4, // pp / 5
         acc: u4, // accuracy / 5 - 6
-        frames: u4,
+        target: Target,
         chance: u4 = 0, // chance / 10
 
         comptime {
@@ -707,10 +703,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
         pub inline fn accuracy(self: Data) u8 {
             return (@as(u8, self.acc) + 6) * 5;
-        }
-
-        pub inline fn targets(self: Data) bool {
-            return self.frames > 0;
         }
     };`;
 
@@ -725,6 +717,15 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const ppFn = `pub fn pp(id: Move) u8 {
         return Move.get(id).pp * 5;
     }`;
+
+    const frames = `return @as(u8, @boolToInt(switch (event) {
+            .resolve => switch (id) {
+                .Counter, .MirrorCoat, .Pursuit => 2,
+                else => get(id).target.resolves(),
+            },
+            .run => get(id).target.runs(),
+        }));`;
+
     template('moves', dirs.out, {
       gen: gen.num,
       Move: {
@@ -735,6 +736,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         data: MOVES.join(',\n        '),
         dataSize: MOVES.length * 5,
         Effect,
+        frames,
         ppFn,
       },
     });

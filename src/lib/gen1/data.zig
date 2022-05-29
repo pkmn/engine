@@ -345,7 +345,7 @@ test "Move" {
     try expectEqual(2, @enumToInt(Move.KarateChop));
     const move = Move.get(.Fissure);
     try expectEqual(Move.Effect.OHKO, move.effect);
-    try expectEqual(@as(u8, 30), move.accuracy());
+    try expectEqual(@as(u8, 30), move.accuracy);
     try expectEqual(Type.Ground, move.type);
 
     try expect(!Move.Effect.onBegin(.None));
@@ -393,13 +393,16 @@ test "Move" {
     try expect(Move.Effect.isStatDownChance(.SpecialDownChance));
     try expect(!Move.Effect.isStatDownChance(.BurnChance1));
 
-    try expectEqual(@as(u8, 0), Move.get(.Bide).frames);
-    try expectEqual(@as(u8, 1), Move.get(.Tackle).frames);
-    try expectEqual(@as(u8, 2), Move.get(.Counter).frames);
+    try expectEqual(@as(u8, 0), Move.frames(.Bide, .resolve));
+    try expectEqual(@as(u8, 1), Move.frames(.Tackle, .resolve));
+    try expectEqual(@as(u8, 2), Move.frames(.Counter, .resolve));
+    try expectEqual(@as(u8, 0), Move.frames(.Counter, .run));
+    try expectEqual(@as(u8, 1), Move.frames(.Swift, .run));
 
-    try expect(!Move.get(.Bide).targets());
-    try expect(Move.get(.Tackle).targets());
-    try expect(Move.get(.Counter).targets());
+    try expect(!Move.get(.Bide).target.resolves());
+    try expect(Move.get(.Tackle).target.resolves());
+    try expect(!Move.get(.Counter).target.runs());
+    try expect(Move.get(.Swift).target.runs());
 }
 
 pub const Species = species.Species;

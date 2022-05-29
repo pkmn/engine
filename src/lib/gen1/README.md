@@ -185,8 +185,29 @@ a special sentinel value to indicate `null`. Move PP data is only included for t
 necessary for the actual engine implementation.
 
 In order to workaround various [Pokémon Showdown bugs](#bugs) and to support its protocol in traces,
-additional information is stored in `Move.Data` (`frames`) which determines how much to advance the
-RNG in various places based on whether Pokémon Showdown considers the move to "target" or not.
+additional information is stored in `Move.Data` (`targets`) about what Pokémon Showdown believes the
+`Move.Target` to be (despite the concept of targeting not existing until Generation III when Doubles
+battles were introduced). More specifically, a move's "targeting" status is required in various
+places to determine how many frames to advance the RNG by.
+
+| pkmn         | Pokémon Showdown     |
+| ------------ | -------------------- |
+| `Ally`       | `adjacentAlly`       |
+| `AllyOrSelf` | `adjacentAllyOrSelf` |
+| `Foe`        | `adjacentFoe`        |
+| `All`        | `all`                |
+| `Field`      | (`all`)              |
+| `AllOthers`  | `allAdjacent`        |
+| `Foes`       | `allAdjacentFoes`    |
+| `Allies`     | `allies`             |
+| `FoeSide`    | `foeSide`            |
+| `AllySide`   | `allySide`           |
+| (`Self`)     | `allyTeam`           |
+| (`Other`)    | `any`                |
+| `Other`      | `normal`             |
+| `RandomFoe`  | `randomNormal`       |
+| `Depends`    | `scripted`           |
+| `Self`       | `self`               |
 
 ### `Species` / `Species.Data`
 
@@ -230,7 +251,7 @@ entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as foll
 | **disabled**    | 0...7   | 3    |     | **DVs**           | 0...15   | 4    |
 | **move effect** | 0..66   | 7    |     | **attacks**       | 0..4     | 3    |
 | **crit chance** | 7..65   | 6    |     | **transform**     | 0..15    | 4    |
-| **frames**      | 0..2    | 2    |     |                   |          |      |
+| **target**      | 0..13    | 4   |     |                   |          |      |
 
 From this we can determine the minimum bits[^1] required to store each data structure to determine
 how much overhead the representations above have after taking into consideration [alignment &
@@ -252,7 +273,7 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 - **`Battle`**: 6× `Side` + seed (10× `8` + `4`) + turn (`10`) + last damage (`10`)
 - **`Type.CHART`**: attacking types (`15`) × defending types (`15`) × effectiveness (`2`)[^2]
 - **`Moves.DATA`**: 165× base power (`6`) + effect (`7`) + accuracy (`4`) + type: (`4`) + frames
-  (`2`)
+  (`4`)
 - **`Species.CHANCES`**: 151× crit chance (`6`)
 
 | Data              | Actual bits | Minimum bits | Overhead |
@@ -262,7 +283,7 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 | `Side`            | 1472        | 1049         | 40.3%    |
 | `Battle`          | 3088        | 2202         | 40.2%    |
 | `Type.CHART`      | 1800        | 450          | 300.0%   |
-| `Moves.DATA`      | 5280        | 3795         | 39.1%    |
+| `Moves.DATA`      | 5280        | 4125         | 28.0%    |
 | `Species.CHANCES` | 1208        | 906          | 33.3%    |
 
 In the case of `Type.CHART`/`Moves.DATA`/`Species.CHANCES`, technically only the values which are

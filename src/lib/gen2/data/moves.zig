@@ -268,7 +268,7 @@ pub const Move = enum(u8) {
         type: Type,
         pp: u4, // pp / 5
         acc: u4, // accuracy / 5 - 6
-        frames: u4,
+        target: Target,
         chance: u4 = 0, // chance / 10
 
         comptime {
@@ -277,10 +277,6 @@ pub const Move = enum(u8) {
 
         pub inline fn accuracy(self: Data) u8 {
             return (@as(u8, self.acc) + 6) * 5;
-        }
-
-        pub inline fn targets(self: Data) bool {
-            return self.frames > 0;
         }
     };
 
@@ -292,7 +288,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 7, // * 5 = 35
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // KarateChop
         .{
@@ -301,7 +297,7 @@ pub const Move = enum(u8) {
             .type = .Fighting,
             .pp = 5, // * 5 = 25
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // DoubleSlap
         .{
@@ -310,7 +306,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 11, // 85%
-            .frames = 1,
+            .target = .Other,
         },
         // CometPunch
         .{
@@ -319,7 +315,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 3, // * 5 = 15
             .acc = 11, // 85%
-            .frames = 1,
+            .target = .Other,
         },
         // MegaPunch
         .{
@@ -328,7 +324,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 11, // 85%
-            .frames = 1,
+            .target = .Other,
         },
         // PayDay
         .{
@@ -337,7 +333,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // FirePunch
         .{
@@ -346,7 +342,7 @@ pub const Move = enum(u8) {
             .type = .Fire,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 1, // * 10 = 10
         },
         // IcePunch
@@ -356,7 +352,7 @@ pub const Move = enum(u8) {
             .type = .Ice,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 1, // * 10 = 10
         },
         // ThunderPunch
@@ -366,7 +362,7 @@ pub const Move = enum(u8) {
             .type = .Electric,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 1, // * 10 = 10
         },
         // Scratch
@@ -376,7 +372,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 7, // * 5 = 35
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // ViseGrip
         .{
@@ -385,7 +381,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Guillotine
         .{
@@ -394,7 +390,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 1, // * 5 = 5
             .acc = 0, // 30%
-            .frames = 1,
+            .target = .Other,
         },
         // RazorWind
         .{
@@ -403,7 +399,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 9, // 75%
-            .frames = 1,
+            .target = .Foes,
         },
         // SwordsDance
         .{
@@ -412,7 +408,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // Cut
         .{
@@ -421,7 +417,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 6, // * 5 = 30
             .acc = 13, // 95%
-            .frames = 1,
+            .target = .Other,
         },
         // Gust
         .{
@@ -430,7 +426,7 @@ pub const Move = enum(u8) {
             .type = .Flying,
             .pp = 7, // * 5 = 35
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // WingAttack
         .{
@@ -439,7 +435,7 @@ pub const Move = enum(u8) {
             .type = .Flying,
             .pp = 7, // * 5 = 35
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Whirlwind
         .{
@@ -448,7 +444,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Fly
         .{
@@ -457,7 +453,7 @@ pub const Move = enum(u8) {
             .type = .Flying,
             .pp = 3, // * 5 = 15
             .acc = 13, // 95%
-            .frames = 1,
+            .target = .Other,
         },
         // Bind
         .{
@@ -466,7 +462,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 9, // 75%
-            .frames = 1,
+            .target = .Other,
         },
         // Slam
         .{
@@ -475,7 +471,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 9, // 75%
-            .frames = 1,
+            .target = .Other,
         },
         // VineWhip
         .{
@@ -484,7 +480,7 @@ pub const Move = enum(u8) {
             .type = .Grass,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Stomp
         .{
@@ -493,7 +489,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 3, // * 10 = 30
         },
         // DoubleKick
@@ -503,7 +499,7 @@ pub const Move = enum(u8) {
             .type = .Fighting,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // MegaKick
         .{
@@ -512,7 +508,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 1, // * 5 = 5
             .acc = 9, // 75%
-            .frames = 1,
+            .target = .Other,
         },
         // JumpKick
         .{
@@ -521,7 +517,7 @@ pub const Move = enum(u8) {
             .type = .Fighting,
             .pp = 5, // * 5 = 25
             .acc = 13, // 95%
-            .frames = 1,
+            .target = .Other,
         },
         // RollingKick
         .{
@@ -530,7 +526,7 @@ pub const Move = enum(u8) {
             .type = .Fighting,
             .pp = 3, // * 5 = 15
             .acc = 11, // 85%
-            .frames = 1,
+            .target = .Other,
             .chance = 3, // * 10 = 30
         },
         // SandAttack
@@ -540,7 +536,7 @@ pub const Move = enum(u8) {
             .type = .Ground,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Headbutt
         .{
@@ -549,7 +545,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 3, // * 10 = 30
         },
         // HornAttack
@@ -559,7 +555,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 5, // * 5 = 25
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // FuryAttack
         .{
@@ -568,7 +564,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 11, // 85%
-            .frames = 1,
+            .target = .Other,
         },
         // HornDrill
         .{
@@ -577,7 +573,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 1, // * 5 = 5
             .acc = 0, // 30%
-            .frames = 1,
+            .target = .Other,
         },
         // Tackle
         .{
@@ -586,7 +582,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 7, // * 5 = 35
             .acc = 13, // 95%
-            .frames = 1,
+            .target = .Other,
         },
         // BodySlam
         .{
@@ -595,7 +591,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 3, // * 10 = 30
         },
         // Wrap
@@ -605,7 +601,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 11, // 85%
-            .frames = 1,
+            .target = .Other,
         },
         // TakeDown
         .{
@@ -614,7 +610,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 11, // 85%
-            .frames = 1,
+            .target = .Other,
         },
         // Thrash
         .{
@@ -623,7 +619,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .RandomFoe,
         },
         // DoubleEdge
         .{
@@ -632,7 +628,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // TailWhip
         .{
@@ -641,7 +637,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Foes,
         },
         // PoisonSting
         .{
@@ -650,7 +646,7 @@ pub const Move = enum(u8) {
             .type = .Poison,
             .pp = 7, // * 5 = 35
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 3, // * 10 = 30
         },
         // Twineedle
@@ -660,7 +656,7 @@ pub const Move = enum(u8) {
             .type = .Bug,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 2, // * 10 = 20
         },
         // PinMissile
@@ -670,7 +666,7 @@ pub const Move = enum(u8) {
             .type = .Bug,
             .pp = 4, // * 5 = 20
             .acc = 11, // 85%
-            .frames = 1,
+            .target = .Other,
         },
         // Leer
         .{
@@ -679,7 +675,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Foes,
         },
         // Bite
         .{
@@ -688,7 +684,7 @@ pub const Move = enum(u8) {
             .type = .Dark,
             .pp = 5, // * 5 = 25
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 3, // * 10 = 30
         },
         // Growl
@@ -698,7 +694,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 8, // * 5 = 40
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Foes,
         },
         // Roar
         .{
@@ -707,7 +703,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Sing
         .{
@@ -716,7 +712,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 3, // * 5 = 15
             .acc = 5, // 55%
-            .frames = 1,
+            .target = .Other,
         },
         // Supersonic
         .{
@@ -725,7 +721,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 5, // 55%
-            .frames = 1,
+            .target = .Other,
         },
         // SonicBoom
         .{
@@ -734,7 +730,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 12, // 90%
-            .frames = 1,
+            .target = .Other,
         },
         // Disable
         .{
@@ -743,7 +739,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 5, // 55%
-            .frames = 1,
+            .target = .Other,
         },
         // Acid
         .{
@@ -752,7 +748,7 @@ pub const Move = enum(u8) {
             .type = .Poison,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Foes,
             .chance = 1, // * 10 = 10
         },
         // Ember
@@ -762,7 +758,7 @@ pub const Move = enum(u8) {
             .type = .Fire,
             .pp = 5, // * 5 = 25
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 1, // * 10 = 10
         },
         // Flamethrower
@@ -772,7 +768,7 @@ pub const Move = enum(u8) {
             .type = .Fire,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 1, // * 10 = 10
         },
         // Mist
@@ -782,7 +778,7 @@ pub const Move = enum(u8) {
             .type = .Ice,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // WaterGun
         .{
@@ -791,7 +787,7 @@ pub const Move = enum(u8) {
             .type = .Water,
             .pp = 5, // * 5 = 25
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // HydroPump
         .{
@@ -800,7 +796,7 @@ pub const Move = enum(u8) {
             .type = .Water,
             .pp = 1, // * 5 = 5
             .acc = 10, // 80%
-            .frames = 1,
+            .target = .Other,
         },
         // Surf
         .{
@@ -809,7 +805,7 @@ pub const Move = enum(u8) {
             .type = .Water,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Foes,
         },
         // IceBeam
         .{
@@ -818,7 +814,7 @@ pub const Move = enum(u8) {
             .type = .Ice,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 1, // * 10 = 10
         },
         // Blizzard
@@ -828,7 +824,7 @@ pub const Move = enum(u8) {
             .type = .Ice,
             .pp = 1, // * 5 = 5
             .acc = 8, // 70%
-            .frames = 1,
+            .target = .Foes,
             .chance = 1, // * 10 = 10
         },
         // Psybeam
@@ -838,7 +834,7 @@ pub const Move = enum(u8) {
             .type = .Psychic,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 1, // * 10 = 10
         },
         // BubbleBeam
@@ -848,7 +844,7 @@ pub const Move = enum(u8) {
             .type = .Water,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 1, // * 10 = 10
         },
         // AuroraBeam
@@ -858,7 +854,7 @@ pub const Move = enum(u8) {
             .type = .Ice,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 1, // * 10 = 10
         },
         // HyperBeam
@@ -868,7 +864,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 1, // * 5 = 5
             .acc = 12, // 90%
-            .frames = 1,
+            .target = .Other,
         },
         // Peck
         .{
@@ -877,7 +873,7 @@ pub const Move = enum(u8) {
             .type = .Flying,
             .pp = 7, // * 5 = 35
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // DrillPeck
         .{
@@ -886,7 +882,7 @@ pub const Move = enum(u8) {
             .type = .Flying,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Submission
         .{
@@ -895,7 +891,7 @@ pub const Move = enum(u8) {
             .type = .Fighting,
             .pp = 5, // * 5 = 25
             .acc = 10, // 80%
-            .frames = 1,
+            .target = .Other,
         },
         // LowKick
         .{
@@ -904,7 +900,7 @@ pub const Move = enum(u8) {
             .type = .Fighting,
             .pp = 4, // * 5 = 20
             .acc = 12, // 90%
-            .frames = 1,
+            .target = .Other,
             .chance = 3, // * 10 = 30
         },
         // Counter
@@ -914,7 +910,7 @@ pub const Move = enum(u8) {
             .type = .Fighting,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 2,
+            .target = .Depends,
         },
         // SeismicToss
         .{
@@ -923,7 +919,7 @@ pub const Move = enum(u8) {
             .type = .Fighting,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Strength
         .{
@@ -932,7 +928,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Absorb
         .{
@@ -941,7 +937,7 @@ pub const Move = enum(u8) {
             .type = .Grass,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // MegaDrain
         .{
@@ -950,7 +946,7 @@ pub const Move = enum(u8) {
             .type = .Grass,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // LeechSeed
         .{
@@ -959,7 +955,7 @@ pub const Move = enum(u8) {
             .type = .Grass,
             .pp = 2, // * 5 = 10
             .acc = 12, // 90%
-            .frames = 1,
+            .target = .Other,
         },
         // Growth
         .{
@@ -968,7 +964,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 8, // * 5 = 40
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // RazorLeaf
         .{
@@ -977,7 +973,7 @@ pub const Move = enum(u8) {
             .type = .Grass,
             .pp = 5, // * 5 = 25
             .acc = 13, // 95%
-            .frames = 1,
+            .target = .Foes,
         },
         // SolarBeam
         .{
@@ -986,7 +982,7 @@ pub const Move = enum(u8) {
             .type = .Grass,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // PoisonPowder
         .{
@@ -995,7 +991,7 @@ pub const Move = enum(u8) {
             .type = .Poison,
             .pp = 7, // * 5 = 35
             .acc = 9, // 75%
-            .frames = 1,
+            .target = .Other,
         },
         // StunSpore
         .{
@@ -1004,7 +1000,7 @@ pub const Move = enum(u8) {
             .type = .Grass,
             .pp = 6, // * 5 = 30
             .acc = 9, // 75%
-            .frames = 1,
+            .target = .Other,
         },
         // SleepPowder
         .{
@@ -1013,7 +1009,7 @@ pub const Move = enum(u8) {
             .type = .Grass,
             .pp = 3, // * 5 = 15
             .acc = 9, // 75%
-            .frames = 1,
+            .target = .Other,
         },
         // PetalDance
         .{
@@ -1022,7 +1018,7 @@ pub const Move = enum(u8) {
             .type = .Grass,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .RandomFoe,
         },
         // StringShot
         .{
@@ -1031,7 +1027,7 @@ pub const Move = enum(u8) {
             .type = .Bug,
             .pp = 8, // * 5 = 40
             .acc = 13, // 95%
-            .frames = 1,
+            .target = .Foes,
         },
         // DragonRage
         .{
@@ -1040,7 +1036,7 @@ pub const Move = enum(u8) {
             .type = .Dragon,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // FireSpin
         .{
@@ -1049,7 +1045,7 @@ pub const Move = enum(u8) {
             .type = .Fire,
             .pp = 3, // * 5 = 15
             .acc = 8, // 70%
-            .frames = 1,
+            .target = .Other,
         },
         // ThunderShock
         .{
@@ -1058,7 +1054,7 @@ pub const Move = enum(u8) {
             .type = .Electric,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 1, // * 10 = 10
         },
         // Thunderbolt
@@ -1068,7 +1064,7 @@ pub const Move = enum(u8) {
             .type = .Electric,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 1, // * 10 = 10
         },
         // ThunderWave
@@ -1078,7 +1074,7 @@ pub const Move = enum(u8) {
             .type = .Electric,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Thunder
         .{
@@ -1087,7 +1083,7 @@ pub const Move = enum(u8) {
             .type = .Electric,
             .pp = 2, // * 5 = 10
             .acc = 8, // 70%
-            .frames = 1,
+            .target = .Other,
             .chance = 3, // * 10 = 30
         },
         // RockThrow
@@ -1097,7 +1093,7 @@ pub const Move = enum(u8) {
             .type = .Rock,
             .pp = 3, // * 5 = 15
             .acc = 12, // 90%
-            .frames = 1,
+            .target = .Other,
         },
         // Earthquake
         .{
@@ -1106,7 +1102,7 @@ pub const Move = enum(u8) {
             .type = .Ground,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .AllOthers,
         },
         // Fissure
         .{
@@ -1115,7 +1111,7 @@ pub const Move = enum(u8) {
             .type = .Ground,
             .pp = 1, // * 5 = 5
             .acc = 0, // 30%
-            .frames = 1,
+            .target = .Other,
         },
         // Dig
         .{
@@ -1124,7 +1120,7 @@ pub const Move = enum(u8) {
             .type = .Ground,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Toxic
         .{
@@ -1133,7 +1129,7 @@ pub const Move = enum(u8) {
             .type = .Poison,
             .pp = 2, // * 5 = 10
             .acc = 11, // 85%
-            .frames = 1,
+            .target = .Other,
         },
         // Confusion
         .{
@@ -1142,7 +1138,7 @@ pub const Move = enum(u8) {
             .type = .Psychic,
             .pp = 5, // * 5 = 25
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 1, // * 10 = 10
         },
         // Psychic
@@ -1152,7 +1148,7 @@ pub const Move = enum(u8) {
             .type = .Psychic,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 1, // * 10 = 10
         },
         // Hypnosis
@@ -1162,7 +1158,7 @@ pub const Move = enum(u8) {
             .type = .Psychic,
             .pp = 4, // * 5 = 20
             .acc = 6, // 60%
-            .frames = 1,
+            .target = .Other,
         },
         // Meditate
         .{
@@ -1171,7 +1167,7 @@ pub const Move = enum(u8) {
             .type = .Psychic,
             .pp = 8, // * 5 = 40
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // Agility
         .{
@@ -1180,7 +1176,7 @@ pub const Move = enum(u8) {
             .type = .Psychic,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // QuickAttack
         .{
@@ -1189,7 +1185,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Rage
         .{
@@ -1198,7 +1194,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Teleport
         .{
@@ -1207,7 +1203,7 @@ pub const Move = enum(u8) {
             .type = .Psychic,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // NightShade
         .{
@@ -1216,7 +1212,7 @@ pub const Move = enum(u8) {
             .type = .Ghost,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Mimic
         .{
@@ -1225,7 +1221,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Screech
         .{
@@ -1234,7 +1230,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 8, // * 5 = 40
             .acc = 11, // 85%
-            .frames = 1,
+            .target = .Other,
         },
         // DoubleTeam
         .{
@@ -1243,7 +1239,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // Recover
         .{
@@ -1252,7 +1248,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // Harden
         .{
@@ -1261,7 +1257,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // Minimize
         .{
@@ -1270,7 +1266,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // Smokescreen
         .{
@@ -1279,7 +1275,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // ConfuseRay
         .{
@@ -1288,7 +1284,7 @@ pub const Move = enum(u8) {
             .type = .Ghost,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Withdraw
         .{
@@ -1297,7 +1293,7 @@ pub const Move = enum(u8) {
             .type = .Water,
             .pp = 8, // * 5 = 40
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // DefenseCurl
         .{
@@ -1306,7 +1302,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 8, // * 5 = 40
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // Barrier
         .{
@@ -1315,7 +1311,7 @@ pub const Move = enum(u8) {
             .type = .Psychic,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // LightScreen
         .{
@@ -1324,7 +1320,7 @@ pub const Move = enum(u8) {
             .type = .Psychic,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .AllySide,
         },
         // Haze
         .{
@@ -1333,7 +1329,7 @@ pub const Move = enum(u8) {
             .type = .Ice,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .All,
         },
         // Reflect
         .{
@@ -1342,7 +1338,7 @@ pub const Move = enum(u8) {
             .type = .Psychic,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .AllySide,
         },
         // FocusEnergy
         .{
@@ -1351,7 +1347,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // Bide
         .{
@@ -1360,7 +1356,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // Metronome
         .{
@@ -1369,7 +1365,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // MirrorMove
         .{
@@ -1378,7 +1374,7 @@ pub const Move = enum(u8) {
             .type = .Flying,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // SelfDestruct
         .{
@@ -1387,7 +1383,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 1, // * 5 = 5
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .AllOthers,
         },
         // EggBomb
         .{
@@ -1396,7 +1392,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 9, // 75%
-            .frames = 1,
+            .target = .Other,
         },
         // Lick
         .{
@@ -1405,7 +1401,7 @@ pub const Move = enum(u8) {
             .type = .Ghost,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 3, // * 10 = 30
         },
         // Smog
@@ -1415,7 +1411,7 @@ pub const Move = enum(u8) {
             .type = .Poison,
             .pp = 4, // * 5 = 20
             .acc = 8, // 70%
-            .frames = 1,
+            .target = .Other,
             .chance = 4, // * 10 = 40
         },
         // Sludge
@@ -1425,7 +1421,7 @@ pub const Move = enum(u8) {
             .type = .Poison,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 3, // * 10 = 30
         },
         // BoneClub
@@ -1435,7 +1431,7 @@ pub const Move = enum(u8) {
             .type = .Ground,
             .pp = 4, // * 5 = 20
             .acc = 11, // 85%
-            .frames = 1,
+            .target = .Other,
             .chance = 1, // * 10 = 10
         },
         // FireBlast
@@ -1445,7 +1441,7 @@ pub const Move = enum(u8) {
             .type = .Fire,
             .pp = 1, // * 5 = 5
             .acc = 11, // 85%
-            .frames = 1,
+            .target = .Other,
             .chance = 1, // * 10 = 10
         },
         // Waterfall
@@ -1455,7 +1451,7 @@ pub const Move = enum(u8) {
             .type = .Water,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Clamp
         .{
@@ -1464,7 +1460,7 @@ pub const Move = enum(u8) {
             .type = .Water,
             .pp = 2, // * 5 = 10
             .acc = 9, // 75%
-            .frames = 1,
+            .target = .Other,
         },
         // Swift
         .{
@@ -1473,7 +1469,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Foes,
         },
         // SkullBash
         .{
@@ -1482,7 +1478,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // SpikeCannon
         .{
@@ -1491,7 +1487,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Constrict
         .{
@@ -1500,7 +1496,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 7, // * 5 = 35
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 1, // * 10 = 10
         },
         // Amnesia
@@ -1510,7 +1506,7 @@ pub const Move = enum(u8) {
             .type = .Psychic,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // Kinesis
         .{
@@ -1519,7 +1515,7 @@ pub const Move = enum(u8) {
             .type = .Psychic,
             .pp = 3, // * 5 = 15
             .acc = 10, // 80%
-            .frames = 1,
+            .target = .Other,
         },
         // SoftBoiled
         .{
@@ -1528,7 +1524,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // HighJumpKick
         .{
@@ -1537,7 +1533,7 @@ pub const Move = enum(u8) {
             .type = .Fighting,
             .pp = 4, // * 5 = 20
             .acc = 12, // 90%
-            .frames = 1,
+            .target = .Other,
         },
         // Glare
         .{
@@ -1546,7 +1542,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 6, // * 5 = 30
             .acc = 9, // 75%
-            .frames = 1,
+            .target = .Other,
         },
         // DreamEater
         .{
@@ -1555,7 +1551,7 @@ pub const Move = enum(u8) {
             .type = .Psychic,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // PoisonGas
         .{
@@ -1564,7 +1560,7 @@ pub const Move = enum(u8) {
             .type = .Poison,
             .pp = 8, // * 5 = 40
             .acc = 5, // 55%
-            .frames = 1,
+            .target = .Other,
         },
         // Barrage
         .{
@@ -1573,7 +1569,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 11, // 85%
-            .frames = 1,
+            .target = .Other,
         },
         // LeechLife
         .{
@@ -1582,7 +1578,7 @@ pub const Move = enum(u8) {
             .type = .Bug,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // LovelyKiss
         .{
@@ -1591,7 +1587,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 9, // 75%
-            .frames = 1,
+            .target = .Other,
         },
         // SkyAttack
         .{
@@ -1600,7 +1596,7 @@ pub const Move = enum(u8) {
             .type = .Flying,
             .pp = 1, // * 5 = 5
             .acc = 12, // 90%
-            .frames = 1,
+            .target = .Other,
         },
         // Transform
         .{
@@ -1609,7 +1605,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Bubble
         .{
@@ -1618,7 +1614,7 @@ pub const Move = enum(u8) {
             .type = .Water,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Foes,
             .chance = 1, // * 10 = 10
         },
         // DizzyPunch
@@ -1628,7 +1624,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 2, // * 10 = 20
         },
         // Spore
@@ -1638,7 +1634,7 @@ pub const Move = enum(u8) {
             .type = .Grass,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Flash
         .{
@@ -1647,7 +1643,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 8, // 70%
-            .frames = 1,
+            .target = .Other,
         },
         // Psywave
         .{
@@ -1656,7 +1652,7 @@ pub const Move = enum(u8) {
             .type = .Psychic,
             .pp = 3, // * 5 = 15
             .acc = 10, // 80%
-            .frames = 1,
+            .target = .Other,
         },
         // Splash
         .{
@@ -1665,7 +1661,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 8, // * 5 = 40
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // AcidArmor
         .{
@@ -1674,7 +1670,7 @@ pub const Move = enum(u8) {
             .type = .Poison,
             .pp = 8, // * 5 = 40
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // Crabhammer
         .{
@@ -1683,7 +1679,7 @@ pub const Move = enum(u8) {
             .type = .Water,
             .pp = 2, // * 5 = 10
             .acc = 11, // 85%
-            .frames = 1,
+            .target = .Other,
         },
         // Explosion
         .{
@@ -1692,7 +1688,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 1, // * 5 = 5
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .AllOthers,
         },
         // FurySwipes
         .{
@@ -1701,7 +1697,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 3, // * 5 = 15
             .acc = 10, // 80%
-            .frames = 1,
+            .target = .Other,
         },
         // Bonemerang
         .{
@@ -1710,7 +1706,7 @@ pub const Move = enum(u8) {
             .type = .Ground,
             .pp = 2, // * 5 = 10
             .acc = 12, // 90%
-            .frames = 1,
+            .target = .Other,
         },
         // Rest
         .{
@@ -1719,7 +1715,7 @@ pub const Move = enum(u8) {
             .type = .Psychic,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // RockSlide
         .{
@@ -1728,7 +1724,7 @@ pub const Move = enum(u8) {
             .type = .Rock,
             .pp = 2, // * 5 = 10
             .acc = 12, // 90%
-            .frames = 1,
+            .target = .Foes,
             .chance = 3, // * 10 = 30
         },
         // HyperFang
@@ -1738,7 +1734,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 3, // * 5 = 15
             .acc = 12, // 90%
-            .frames = 1,
+            .target = .Other,
             .chance = 1, // * 10 = 10
         },
         // Sharpen
@@ -1748,7 +1744,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // Conversion
         .{
@@ -1757,7 +1753,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // TriAttack
         .{
@@ -1766,7 +1762,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 2, // * 10 = 20
         },
         // SuperFang
@@ -1776,7 +1772,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 12, // 90%
-            .frames = 1,
+            .target = .Other,
         },
         // Slash
         .{
@@ -1785,7 +1781,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Substitute
         .{
@@ -1794,7 +1790,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // Struggle
         .{
@@ -1803,7 +1799,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 0, // = 1
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .RandomFoe,
         },
         // Sketch
         .{
@@ -1812,7 +1808,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 0, // = 1
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // TripleKick
         .{
@@ -1821,7 +1817,7 @@ pub const Move = enum(u8) {
             .type = .Fighting,
             .pp = 2, // * 5 = 10
             .acc = 12, // 90%
-            .frames = 1,
+            .target = .Other,
         },
         // Thief
         .{
@@ -1830,7 +1826,7 @@ pub const Move = enum(u8) {
             .type = .Dark,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 10, // * 10 = 100
         },
         // SpiderWeb
@@ -1840,7 +1836,7 @@ pub const Move = enum(u8) {
             .type = .Bug,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // MindReader
         .{
@@ -1849,7 +1845,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 1, // * 5 = 5
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Nightmare
         .{
@@ -1858,7 +1854,7 @@ pub const Move = enum(u8) {
             .type = .Ghost,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // FlameWheel
         .{
@@ -1867,7 +1863,7 @@ pub const Move = enum(u8) {
             .type = .Fire,
             .pp = 5, // * 5 = 25
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 1, // * 10 = 10
         },
         // Snore
@@ -1877,7 +1873,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 3, // * 10 = 30
         },
         // Curse
@@ -1887,7 +1883,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Flail
         .{
@@ -1896,7 +1892,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Conversion2
         .{
@@ -1905,7 +1901,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Aeroblast
         .{
@@ -1914,7 +1910,7 @@ pub const Move = enum(u8) {
             .type = .Flying,
             .pp = 1, // * 5 = 5
             .acc = 13, // 95%
-            .frames = 1,
+            .target = .Other,
         },
         // CottonSpore
         .{
@@ -1923,7 +1919,7 @@ pub const Move = enum(u8) {
             .type = .Grass,
             .pp = 8, // * 5 = 40
             .acc = 11, // 85%
-            .frames = 1,
+            .target = .Other,
         },
         // Reversal
         .{
@@ -1932,7 +1928,7 @@ pub const Move = enum(u8) {
             .type = .Fighting,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Spite
         .{
@@ -1941,7 +1937,7 @@ pub const Move = enum(u8) {
             .type = .Ghost,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // PowderSnow
         .{
@@ -1950,7 +1946,7 @@ pub const Move = enum(u8) {
             .type = .Ice,
             .pp = 5, // * 5 = 25
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Foes,
             .chance = 1, // * 10 = 10
         },
         // Protect
@@ -1960,7 +1956,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // MachPunch
         .{
@@ -1969,7 +1965,7 @@ pub const Move = enum(u8) {
             .type = .Fighting,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // ScaryFace
         .{
@@ -1978,7 +1974,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 12, // 90%
-            .frames = 1,
+            .target = .Other,
         },
         // FeintAttack
         .{
@@ -1987,7 +1983,7 @@ pub const Move = enum(u8) {
             .type = .Dark,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // SweetKiss
         .{
@@ -1996,7 +1992,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 9, // 75%
-            .frames = 1,
+            .target = .Other,
         },
         // BellyDrum
         .{
@@ -2005,7 +2001,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // SludgeBomb
         .{
@@ -2014,7 +2010,7 @@ pub const Move = enum(u8) {
             .type = .Poison,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 3, // * 10 = 30
         },
         // MudSlap
@@ -2024,7 +2020,7 @@ pub const Move = enum(u8) {
             .type = .Ground,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 10, // * 10 = 100
         },
         // Octazooka
@@ -2034,7 +2030,7 @@ pub const Move = enum(u8) {
             .type = .Water,
             .pp = 2, // * 5 = 10
             .acc = 11, // 85%
-            .frames = 1,
+            .target = .Other,
             .chance = 5, // * 10 = 50
         },
         // Spikes
@@ -2044,7 +2040,7 @@ pub const Move = enum(u8) {
             .type = .Ground,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .FoeSide,
         },
         // ZapCannon
         .{
@@ -2053,7 +2049,7 @@ pub const Move = enum(u8) {
             .type = .Electric,
             .pp = 1, // * 5 = 5
             .acc = 4, // 50%
-            .frames = 1,
+            .target = .Other,
             .chance = 10, // * 10 = 100
         },
         // Foresight
@@ -2063,7 +2059,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 8, // * 5 = 40
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // DestinyBond
         .{
@@ -2072,7 +2068,7 @@ pub const Move = enum(u8) {
             .type = .Ghost,
             .pp = 1, // * 5 = 5
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // PerishSong
         .{
@@ -2081,7 +2077,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 1, // * 5 = 5
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .All,
         },
         // IcyWind
         .{
@@ -2090,7 +2086,7 @@ pub const Move = enum(u8) {
             .type = .Ice,
             .pp = 3, // * 5 = 15
             .acc = 13, // 95%
-            .frames = 1,
+            .target = .Foes,
             .chance = 10, // * 10 = 100
         },
         // Detect
@@ -2100,7 +2096,7 @@ pub const Move = enum(u8) {
             .type = .Fighting,
             .pp = 1, // * 5 = 5
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // BoneRush
         .{
@@ -2109,7 +2105,7 @@ pub const Move = enum(u8) {
             .type = .Ground,
             .pp = 2, // * 5 = 10
             .acc = 10, // 80%
-            .frames = 1,
+            .target = .Other,
         },
         // LockOn
         .{
@@ -2118,7 +2114,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 1, // * 5 = 5
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Outrage
         .{
@@ -2127,7 +2123,7 @@ pub const Move = enum(u8) {
             .type = .Dragon,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .RandomFoe,
         },
         // Sandstorm
         .{
@@ -2136,7 +2132,7 @@ pub const Move = enum(u8) {
             .type = .Rock,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .All,
         },
         // GigaDrain
         .{
@@ -2145,7 +2141,7 @@ pub const Move = enum(u8) {
             .type = .Grass,
             .pp = 1, // * 5 = 5
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Endure
         .{
@@ -2154,7 +2150,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // Charm
         .{
@@ -2163,7 +2159,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Rollout
         .{
@@ -2172,7 +2168,7 @@ pub const Move = enum(u8) {
             .type = .Rock,
             .pp = 4, // * 5 = 20
             .acc = 12, // 90%
-            .frames = 1,
+            .target = .Other,
         },
         // FalseSwipe
         .{
@@ -2181,7 +2177,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 8, // * 5 = 40
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Swagger
         .{
@@ -2190,7 +2186,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 3, // * 5 = 15
             .acc = 12, // 90%
-            .frames = 1,
+            .target = .Other,
         },
         // MilkDrink
         .{
@@ -2199,7 +2195,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // Spark
         .{
@@ -2208,7 +2204,7 @@ pub const Move = enum(u8) {
             .type = .Electric,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 3, // * 10 = 30
         },
         // FuryCutter
@@ -2218,7 +2214,7 @@ pub const Move = enum(u8) {
             .type = .Bug,
             .pp = 4, // * 5 = 20
             .acc = 13, // 95%
-            .frames = 1,
+            .target = .Other,
         },
         // SteelWing
         .{
@@ -2227,7 +2223,7 @@ pub const Move = enum(u8) {
             .type = .Steel,
             .pp = 5, // * 5 = 25
             .acc = 12, // 90%
-            .frames = 1,
+            .target = .Other,
             .chance = 1, // * 10 = 10
         },
         // MeanLook
@@ -2237,7 +2233,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 1, // * 5 = 5
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Attract
         .{
@@ -2246,7 +2242,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // SleepTalk
         .{
@@ -2255,7 +2251,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // HealBell
         .{
@@ -2264,7 +2260,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 1, // * 5 = 5
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // Return
         .{
@@ -2273,7 +2269,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Present
         .{
@@ -2282,7 +2278,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 3, // * 5 = 15
             .acc = 12, // 90%
-            .frames = 1,
+            .target = .Other,
         },
         // Frustration
         .{
@@ -2291,7 +2287,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Safeguard
         .{
@@ -2300,7 +2296,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 5, // * 5 = 25
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .AllySide,
         },
         // PainSplit
         .{
@@ -2309,7 +2305,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // SacredFire
         .{
@@ -2318,7 +2314,7 @@ pub const Move = enum(u8) {
             .type = .Fire,
             .pp = 1, // * 5 = 5
             .acc = 13, // 95%
-            .frames = 1,
+            .target = .Other,
             .chance = 5, // * 10 = 50
         },
         // Magnitude
@@ -2328,7 +2324,7 @@ pub const Move = enum(u8) {
             .type = .Ground,
             .pp = 6, // * 5 = 30
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .AllOthers,
         },
         // DynamicPunch
         .{
@@ -2337,7 +2333,7 @@ pub const Move = enum(u8) {
             .type = .Fighting,
             .pp = 1, // * 5 = 5
             .acc = 4, // 50%
-            .frames = 1,
+            .target = .Other,
             .chance = 10, // * 10 = 100
         },
         // Megahorn
@@ -2347,7 +2343,7 @@ pub const Move = enum(u8) {
             .type = .Bug,
             .pp = 2, // * 5 = 10
             .acc = 11, // 85%
-            .frames = 1,
+            .target = .Other,
         },
         // DragonBreath
         .{
@@ -2356,7 +2352,7 @@ pub const Move = enum(u8) {
             .type = .Dragon,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 3, // * 10 = 30
         },
         // BatonPass
@@ -2366,7 +2362,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 8, // * 5 = 40
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // Encore
         .{
@@ -2375,7 +2371,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 1, // * 5 = 5
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // Pursuit
         .{
@@ -2384,7 +2380,7 @@ pub const Move = enum(u8) {
             .type = .Dark,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 2,
+            .target = .Other,
         },
         // RapidSpin
         .{
@@ -2393,7 +2389,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 8, // * 5 = 40
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // SweetScent
         .{
@@ -2402,7 +2398,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Foes,
         },
         // IronTail
         .{
@@ -2411,7 +2407,7 @@ pub const Move = enum(u8) {
             .type = .Steel,
             .pp = 3, // * 5 = 15
             .acc = 9, // 75%
-            .frames = 1,
+            .target = .Other,
             .chance = 3, // * 10 = 30
         },
         // MetalClaw
@@ -2421,7 +2417,7 @@ pub const Move = enum(u8) {
             .type = .Steel,
             .pp = 7, // * 5 = 35
             .acc = 13, // 95%
-            .frames = 1,
+            .target = .Other,
             .chance = 1, // * 10 = 10
         },
         // VitalThrow
@@ -2431,7 +2427,7 @@ pub const Move = enum(u8) {
             .type = .Fighting,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // MorningSun
         .{
@@ -2440,7 +2436,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 1, // * 5 = 5
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // Synthesis
         .{
@@ -2449,7 +2445,7 @@ pub const Move = enum(u8) {
             .type = .Grass,
             .pp = 1, // * 5 = 5
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // Moonlight
         .{
@@ -2458,7 +2454,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 1, // * 5 = 5
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .Self,
         },
         // HiddenPower
         .{
@@ -2467,7 +2463,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // CrossChop
         .{
@@ -2476,7 +2472,7 @@ pub const Move = enum(u8) {
             .type = .Fighting,
             .pp = 1, // * 5 = 5
             .acc = 10, // 80%
-            .frames = 1,
+            .target = .Other,
         },
         // Twister
         .{
@@ -2485,7 +2481,7 @@ pub const Move = enum(u8) {
             .type = .Dragon,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Foes,
             .chance = 2, // * 10 = 20
         },
         // RainDance
@@ -2495,7 +2491,7 @@ pub const Move = enum(u8) {
             .type = .Water,
             .pp = 1, // * 5 = 5
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .All,
         },
         // SunnyDay
         .{
@@ -2504,7 +2500,7 @@ pub const Move = enum(u8) {
             .type = .Fire,
             .pp = 1, // * 5 = 5
             .acc = 14, // 100%
-            .frames = 0,
+            .target = .All,
         },
         // Crunch
         .{
@@ -2513,7 +2509,7 @@ pub const Move = enum(u8) {
             .type = .Dark,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 2, // * 10 = 20
         },
         // MirrorCoat
@@ -2523,7 +2519,7 @@ pub const Move = enum(u8) {
             .type = .Psychic,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .frames = 2,
+            .target = .Depends,
         },
         // PsychUp
         .{
@@ -2532,7 +2528,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // ExtremeSpeed
         .{
@@ -2541,7 +2537,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .pp = 1, // * 5 = 5
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
         // AncientPower
         .{
@@ -2550,7 +2546,7 @@ pub const Move = enum(u8) {
             .type = .Rock,
             .pp = 1, // * 5 = 5
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 1, // * 10 = 10
         },
         // ShadowBall
@@ -2560,7 +2556,7 @@ pub const Move = enum(u8) {
             .type = .Ghost,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 2, // * 10 = 20
         },
         // FutureSight
@@ -2570,7 +2566,7 @@ pub const Move = enum(u8) {
             .type = .Psychic,
             .pp = 3, // * 5 = 15
             .acc = 12, // 90%
-            .frames = 1,
+            .target = .Other,
         },
         // RockSmash
         .{
@@ -2579,7 +2575,7 @@ pub const Move = enum(u8) {
             .type = .Fighting,
             .pp = 3, // * 5 = 15
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
             .chance = 5, // * 10 = 50
         },
         // Whirlpool
@@ -2589,7 +2585,7 @@ pub const Move = enum(u8) {
             .type = .Water,
             .pp = 3, // * 5 = 15
             .acc = 8, // 70%
-            .frames = 1,
+            .target = .Other,
         },
         // BeatUp
         .{
@@ -2598,7 +2594,7 @@ pub const Move = enum(u8) {
             .type = .Dark,
             .pp = 2, // * 5 = 10
             .acc = 14, // 100%
-            .frames = 1,
+            .target = .Other,
         },
     };
 
@@ -2744,6 +2740,35 @@ pub const Move = enum(u8) {
         }
     };
 
+    const Target = enum(u4) {
+        // none
+        All,
+        AllySide,
+        Field,
+        Self,
+        // resolve
+        AllOthers,
+        Depends,
+        Other,
+        RandomFoe,
+        // TODO: resolve or resolve + run?
+        Allies,
+        Ally,
+        AllyOrSelf,
+        Foe,
+        // resolve + run
+        Foes,
+        FoeSide,
+
+        pub inline fn resolves(target: Target) bool {
+            return @enumToInt(target) >= @enumToInt(Target.Other);
+        }
+
+        pub inline fn runs(target: Target) bool {
+            return @enumToInt(target) >= @enumToInt(Target.Foes);
+        }
+    };
+
     comptime {
         assert(@sizeOf(Move) == 1);
         assert(@sizeOf(@TypeOf(DATA)) == 1255);
@@ -2752,6 +2777,18 @@ pub const Move = enum(u8) {
     pub inline fn get(id: Move) Data {
         assert(id != .None);
         return DATA[@enumToInt(id) - 1];
+    }
+
+    const Event = enum { resolve, run };
+
+    pub inline fn frames(id: Move, event: Event) u8 {
+        return @as(u8, @boolToInt(switch (event) {
+            .resolve => switch (id) {
+                .Counter, .MirrorCoat, .Pursuit => 2,
+                else => get(id).target.resolves(),
+            },
+            .run => get(id).target.runs(),
+        }));
     }
 
     // @test-only

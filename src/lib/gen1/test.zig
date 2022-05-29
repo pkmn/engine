@@ -465,7 +465,7 @@ test "fainting (single)" {
     // Lose
     {
         var t = Test(if (showdown)
-            (.{ NOP, NOP, ~CRIT, MIN_DMG, HIT }) // FIXME: missing SRF, need move target
+            (.{ NOP, NOP, NOP, ~CRIT, MIN_DMG, HIT })
         else
             (.{ ~CRIT, MIN_DMG, HIT })).init(
             &.{.{ .species = .Jolteon, .hp = 1, .moves = &.{.Swift} }},

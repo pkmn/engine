@@ -171,8 +171,8 @@ fn selectMove(
             saveMove(battle, player, choice);
         }
 
-        // SHOWDOWN: getRandomTarget arbitrarily advances the RNG
-        if (showdown) battle.rng.advance(Move.get(side.last_selected_move).frames);
+        // SHOWDOWN: getRandomTarget arbitrarily advances the RNG during resolveAction
+        if (showdown) battle.rng.advance(Move.frames(side.last_selected_move, .resolve));
 
         locked.* = false;
         return null;
@@ -275,6 +275,7 @@ fn doTurn(
     log: anytype,
 ) !?Result {
     assert(player_choice.type != .Pass);
+
     if (try executeMove(battle, player, player_choice, player_locked, log)) |r| return r;
     if (try checkFaint(battle, foe_player, foe_locked, player_locked, log)) |r| return r;
     try handleResidual(battle, player, log);
@@ -310,6 +311,9 @@ fn executeMove(
         try switchIn(battle, player, choice.data, false, log);
         return null;
     }
+
+    // SHOWDOWN: getRandomTarget arbitrarily advances the RNG during runAction
+    if (showdown) battle.rng.advance(Move.frames(side.last_selected_move, .run));
 
     var skip_can = false;
     var skip_pp = false;
@@ -526,9 +530,9 @@ fn canMove(
     if (!skip_pp) decrementPP(side, choice);
 
     // SHOWDOWN: Metronome / Mirror Move call getRandomTarget if the move they're using targets
-    if (showdown and special) battle.rng.advance(@boolToInt(move.targets()));
+    if (showdown and special) battle.rng.advance(@boolToInt(move.target != .Self));
 
-    const target = if (move.targets()) player.foe() else player;
+    const target = if (move.target == .Self) player else player.foe();
     try log.move(player_ident, side.last_selected_move, battle.active(target), from);
 
     if (move.effect.onBegin()) {
@@ -586,7 +590,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         const type1 = @enumToInt(move.type.effectiveness(foe.active.types.type1));
         const type2 = @enumToInt(move.type.effectiveness(foe.active.types.type2));
         // SHOWDOWN: Sonic Boom incorrectly checks type immunity
-        if (move.targets() and (type1 == 0 or type2 == 0) and
+        if (move.target != .Self and (type1 == 0 or type2 == 0) and
             !(special and m != .SonicBoom) or
             (m == .DreamEater and !Status.is(foe.stored().status, .SLP)))
         {
@@ -1047,7 +1051,7 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool) bool
         var accuracy = if (!showdown and overwritten)
             state.*
         else
-            @as(u16, Gen12.percent(move.accuracy()));
+            @as(u16, Gen12.percent(move.accuracy));
         var boost = BOOSTS[@intCast(u4, side.active.boosts.accuracy + 6)];
         accuracy = accuracy * boost[0] / boost[1];
         boost = BOOSTS[@intCast(u4, -foe.active.boosts.evasion + 6)];
