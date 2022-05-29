@@ -24,6 +24,7 @@ const Damage = protocol.Damage;
 const Gen12 = rng.Gen12;
 
 const ActivePokemon = data.ActivePokemon;
+const Pokemon = data.Pokemon;
 const Move = data.Move;
 const MoveSlot = data.MoveSlot;
 const Side = data.Side;
@@ -1307,9 +1308,12 @@ pub const Effects = struct {
         }
 
         // SHOWDOWN: Substitute does not block burn on Pokémon Showdown
-        const cant = (!showdown and foe.active.volatiles.Substitute) or
-            Status.any(foe_stored.status);
-        if (cant) return log.fail(battle.active(player.foe()), .Burn);
+        if ((!showdown and foe.active.volatiles.Substitute) or Status.any(foe_stored.status)) {
+            return log.fail(
+                battle.active(player.foe()),
+                if (Status.is(foe_stored.status, .BRN)) .Burn else .None,
+            );
+        }
 
         const chance = !foe.active.types.includes(move.type) and if (showdown)
             battle.rng.chance(u8, @as(u8, if (move.effect == .BurnChance1) 26 else 77), 256)
@@ -1320,7 +1324,7 @@ pub const Effects = struct {
                 Gen12.percent(30));
         if (!chance) return;
 
-        foe_stored.status = Status.init(.BRN);
+        setStatus(battle, foe_stored, Status.init(.BRN));
         foe.active.stats.atk = @maximum(foe.active.stats.atk / 2, 1);
 
         try log.status(battle.active(player.foe()), foe_stored.status, .None);
@@ -1451,9 +1455,12 @@ pub const Effects = struct {
         const foe_ident = battle.active(player.foe());
 
         // SHOWDOWN: Substitute does not block freeze on Pokémon Showdown
-        const cant = (!showdown and foe.active.volatiles.Substitute) or
-            Status.any(foe_stored.status);
-        if (cant) return log.fail(foe_ident, .Freeze);
+        if ((!showdown and foe.active.volatiles.Substitute) or Status.any(foe_stored.status)) {
+            return log.fail(
+                foe_ident,
+                if (Status.is(foe_stored.status, .FRZ)) .Freeze else .None,
+            );
+        }
 
         const chance = !foe.active.types.includes(move.type) and if (showdown)
             battle.rng.chance(u8, 26, 256)
@@ -1468,7 +1475,7 @@ pub const Effects = struct {
             }
         }
 
-        foe_stored.status = Status.init(.FRZ);
+        setStatus(battle, foe_stored, Status.init(.FRZ));
         // GLITCH: Hyper Beam recharging status is not cleared
 
         try log.status(foe_ident, foe_stored.status, .None);
@@ -1519,7 +1526,7 @@ pub const Effects = struct {
         if (delta == 0 or delta & 255 == 255) return;
 
         if (side.last_selected_move == .Rest) {
-            stored.status = Status.slf(2);
+            setStatus(battle, stored, Status.slf(2));
             try log.statusFrom(ident, stored.status, Move.Rest);
             stored.hp = stored.stats.hp;
         } else {
@@ -1605,11 +1612,25 @@ pub const Effects = struct {
         var foe_stored = foe.stored();
         const foe_ident = battle.active(player.foe());
 
-        if (Status.any(foe_stored.status)) return log.fail(foe_ident, .Paralysis);
-        if (foe.active.types.immune(move.type)) return log.immune(foe_ident, .None);
-        if (!try checkHit(battle, player, move, log)) return;
+        // GLITCH: only Thunder Wave checks for type-immunity, not Glare
+        const immune = move.type == .Electric and foe.active.types.immune(move.type);
 
-        foe_stored.status = Status.init(.PAR);
+        if (showdown) {
+            if (immune) return log.immune(foe_ident, .None);
+            if (!try checkHit(battle, player, move, log)) return;
+        }
+        if (Status.any(foe_stored.status)) {
+            return log.fail(
+                foe_ident,
+                if (Status.is(foe_stored.status, .PAR)) .Paralysis else .None,
+            );
+        }
+        if (!showdown) {
+            if (immune) return log.immune(foe_ident, .None);
+            if (!try checkHit(battle, player, move, log)) return;
+        }
+
+        setStatus(battle, foe_stored, Status.init(.PAR));
         foe.active.stats.spe = @maximum(foe.active.stats.spe / 4, 1);
 
         try log.status(foe_ident, foe_stored.status, .None);
@@ -1620,9 +1641,12 @@ pub const Effects = struct {
         var foe_stored = foe.stored();
 
         // SHOWDOWN: Substitute does not block paralysis on Pokémon Showdown
-        const cant = (!showdown and foe.active.volatiles.Substitute) or
-            Status.any(foe_stored.status);
-        if (cant) return log.fail(battle.active(player.foe()), .Paralysis);
+        if ((!showdown and foe.active.volatiles.Substitute) or Status.any(foe_stored.status)) {
+            return log.fail(
+                battle.active(player.foe()),
+                if (Status.is(foe_stored.status, .PAR)) .Paralysis else .None,
+            );
+        }
 
         // Body Slam can't paralyze a Normal type Pokémon
         const chance = !foe.active.types.includes(move.type) and if (showdown)
@@ -1634,7 +1658,7 @@ pub const Effects = struct {
                 Gen12.percent(30));
         if (!chance) return;
 
-        foe_stored.status = Status.init(.PAR);
+        setStatus(battle, foe_stored, Status.init(.PAR));
         foe.active.stats.spe = @maximum(foe.active.stats.spe / 4, 1);
 
         try log.status(battle.active(player.foe()), foe_stored.status, .None);
@@ -1649,14 +1673,19 @@ pub const Effects = struct {
         var foe_stored = foe.stored();
         const foe_ident = battle.active(player.foe());
 
+        if (showdown and move.effect == .Poison and !try checkHit(battle, player, move, log)) {
+            return;
+        }
+
         const cant = foe.active.volatiles.Substitute or
             Status.any(foe_stored.status) or
             foe.active.types.includes(.Poison);
-
-        if (cant) return log.fail(foe_ident, .Poison);
+        if (cant) {
+            return log.fail(foe_ident, if (Status.is(foe_stored.status, .PSN)) .Poison else .None);
+        }
 
         if (move.effect == .Poison) {
-            if (!try checkHit(battle, player, move, log)) return;
+            if (!showdown and !try checkHit(battle, player, move, log)) return;
         } else {
             const chance = if (showdown)
                 battle.rng.chance(u8, @as(u8, if (move.effect == .PoisonChance1) 52 else 103), 256)
@@ -1668,7 +1697,7 @@ pub const Effects = struct {
             if (!chance) return;
         }
 
-        foe_stored.status = Status.init(.PSN);
+        setStatus(battle, foe_stored, Status.init(.PSN));
         if (foe.last_selected_move == .Toxic) {
             foe.active.volatiles.Toxic = true;
             foe.active.volatiles.toxic = 0;
@@ -1713,7 +1742,12 @@ pub const Effects = struct {
             foe.active.volatiles.Recharging = false;
             // Hit test not applied if the target is recharging (bypass)
         } else {
-            if (Status.any(foe_stored.status)) return log.fail(foe_ident, .Sleep);
+            if (Status.any(foe_stored.status)) {
+                return log.fail(
+                    foe_ident,
+                    if (Status.is(foe_stored.status, .SLP)) .Sleep else .None,
+                );
+            }
             // SHOWDOWN: if checkHit didn't return true showdown wouldn't even call this handler
             if (!showdown and !try checkHit(battle, player, move, log)) return;
         }
@@ -1736,7 +1770,7 @@ pub const Effects = struct {
             }
         }
 
-        foe_stored.status = Status.slp(duration);
+        setStatus(battle, foe_stored, Status.slp(duration));
         try log.statusFrom(foe_ident, foe_stored.status, battle.side(player).last_selected_move);
     }
 
@@ -1960,6 +1994,12 @@ fn unmodifiedStats(battle: anytype, who: Player) *Stats(u16) {
     if (!side.active.volatiles.Transform) return &side.active.stats;
     const id = ID.from(side.active.volatiles.transform);
     return &battle.side(id.player).pokemon[id.id].stats;
+}
+
+fn setStatus(battle: anytype, pokemon: *Pokemon, status: u8) void {
+    pokemon.status = status;
+    // SHOWDOWN: Sleep Clause Mod & Freeze Clause Mod both "speed tie" during onSetStatus...
+    if (showdown) battle.rng.advance(1);
 }
 
 fn statusModify(status: u8, stats: *Stats(u16)) void {

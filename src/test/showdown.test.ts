@@ -13,8 +13,8 @@ const MISS = MAX;
 const NO_CRIT = MAX;
 const MIN_DMG = MIN;
 const MAX_DMG = MAX;
-// const PROC = MIN;
-// const NO_PROC = MAX;
+const PROC = MIN;
+const NO_PROC = MAX;
 // const CFZ = MAX;
 // const NO_CFZ = MIN;
 
@@ -164,6 +164,64 @@ for (const gen of new Generations(Dex as any)) {
         '|move|p2a: Vulpix|Quick Attack|p1a: Rattata',
         '|-damage|p1a: Rattata|231/263',
         '|turn|3',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
+    test('Paralyze (direct)', () => {
+      const battle = startBattle([
+        NOP, NOP, MISS, HIT, NOP,
+        NOP, NOP, HIT, NO_PROC, HIT, NOP,
+        NOP, PROC,
+        NOP, NOP, HIT, NO_PROC, HIT, NOP,
+        NOP, NO_PROC,
+      ], [
+        {species: 'Arbok', evs, moves: ['Glare']},
+        {species: 'Dugtrio', evs, moves: ['Earthquake']},
+      ], [
+        {species: 'Magneton', evs, moves: ['Thunder Wave']},
+        {species: 'Gengar', evs, moves: ['Toxic', 'Thunder Wave']},
+      ]);
+
+      // Glare can miss
+      battle.makeChoices('move 1', 'move 1');
+      // Electric-type Pokémon can be paralyzed
+      battle.makeChoices('move 1', 'move 1');
+      // Can be fully paralyzed
+      battle.makeChoices('move 1', 'switch 2');
+      // Glare ignores type immunity
+      battle.makeChoices('move 1', 'move 1');
+      // Thunder Wave does not ignore type immunity
+      battle.makeChoices('switch 2', 'move 2');
+
+      // Paralysis lowers speed
+      expect(battle.p2.pokemon[0].status).toBe('par');
+      expect(battle.p2.pokemon[0].modifiedStats!.spe).toBe(79);
+      expect(battle.p2.pokemon[0].storedStats.spe).toBe(318);
+
+      expect(filter(battle.log)).toEqual([
+        '|move|p1a: Arbok|Glare|p2a: Magneton|[miss]',
+        '|-miss|p1a: Arbok',
+        '|move|p2a: Magneton|Thunder Wave|p1a: Arbok',
+        '|-status|p1a: Arbok|par',
+        '|turn|2',
+        '|move|p2a: Magneton|Thunder Wave|p1a: Arbok',
+        '|-fail|p1a: Arbok|par',
+        '|move|p1a: Arbok|Glare|p2a: Magneton',
+        '|-status|p2a: Magneton|par',
+        '|turn|3',
+        '|switch|p2a: Gengar|Gengar|323/323',
+        '|cant|p1a: Arbok|par',
+        '|turn|4',
+        '|move|p2a: Gengar|Toxic|p1a: Arbok',
+        '|-fail|p1a: Arbok',
+        '|move|p1a: Arbok|Glare|p2a: Gengar',
+        '|-status|p2a: Gengar|par',
+        '|turn|5',
+        '|switch|p1a: Dugtrio|Dugtrio|273/273',
+        '|move|p2a: Gengar|Thunder Wave|p1a: Dugtrio',
+        '|-immune|p1a: Dugtrio',
+        '|turn|6',
       ]);
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });

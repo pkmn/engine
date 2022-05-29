@@ -351,12 +351,6 @@ test "turn order (switch vs. move)" {
     try t.verify();
 }
 
-test "paralysis" {
-    // TODO cant be fully paralyzed
-    // TODO lower speed
-    return error.SkipZigTest;
-}
-
 test "confusion" {
     // TODO cant hit self
     // TODO disappears after duration
@@ -930,23 +924,99 @@ test "Sleep" {
 }
 
 // Move.{Supersonic,ConfuseRay}
-test "Confusion" {
+test "Confusion (direct)" {
     // Causes the target to become confused.
     return error.SkipZigTest;
 }
 
 // TODO Move.Toxic
 // Move.{PoisonPowder,PoisonGas}
-test "Poison" {
+test "Poison (direct)" {
     // (Badly) Poisons the target.
     // TODO: https://pkmn.cc/bulba-glitch-1#Toxic_counter_glitches
     return error.SkipZigTest;
 }
 
 // Move.{ThunderWave,StunSpore,Glare}
-test "Paralyze" {
+test "Paralyze (direct)" {
     // Paralyzes the target.
-    return error.SkipZigTest;
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, ~HIT, HIT, NOP,
+            NOP,  NOP, HIT, ~PROC, HIT, NOP,
+            NOP, PROC,
+            NOP, NOP, HIT, ~PROC, HIT, NOP,
+            NOP, ~PROC,
+        } else .{
+            ~HIT, HIT,
+            ~PROC, HIT,
+            PROC,
+            ~PROC, HIT,
+            ~PROC,
+        }
+    // zig fmt: on
+    ).init(
+        &.{
+            .{ .species = .Arbok, .moves = &.{.Glare} },
+            .{ .species = .Dugtrio, .moves = &.{.Earthquake} },
+        },
+        &.{
+            .{ .species = .Magneton, .moves = &.{.ThunderWave} },
+            .{ .species = .Gengar, .moves = &.{ .Toxic, .ThunderWave } },
+        },
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Glare, P2.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P1.ident(1));
+    try t.log.expected.move(P2.ident(1), Move.ThunderWave, P1.ident(1), null);
+    try t.log.expected.status(P1.ident(1), Status.init(.PAR), .None);
+    try t.log.expected.turn(2);
+
+    // Glare can miss
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P2.ident(1), Move.ThunderWave, P1.ident(1), null);
+    try t.log.expected.fail(P1.ident(1), .Paralysis);
+    try t.log.expected.move(P1.ident(1), Move.Glare, P2.ident(1), null);
+    try t.log.expected.status(P2.ident(1), Status.init(.PAR), .None);
+    try t.log.expected.turn(3);
+
+    // Electric-type Pokémon can be paralyzed
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.cant(P1.ident(1), .Paralysis);
+    try t.log.expected.turn(4);
+
+    // Can be fully paralyzed
+    try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+
+    try t.log.expected.move(P2.ident(2), Move.Toxic, P1.ident(1), null);
+    try t.log.expected.fail(P1.ident(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Glare, P2.ident(2), null);
+    try t.log.expected.status(P2.ident(2), Status.init(.PAR), .None);
+    try t.log.expected.turn(5);
+
+    // Glare ignores type immunity
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.move(P2.ident(2), Move.ThunderWave, P1.ident(2), null);
+    try t.log.expected.immune(P1.ident(2), .None);
+    try t.log.expected.turn(6);
+
+    // Thunder Wave does not ignore type immunity
+    try expectEqual(Result.Default, try t.update(swtch(2), move(2)));
+
+    // // Paralysis lowers speed
+    try expectEqual(Status.init(.PAR), t.actual.p2.stored().status);
+    try expectEqual(@as(u16, 79), t.actual.p2.active.stats.spe);
+    try expectEqual(@as(u16, 318), t.actual.p2.stored().stats.spe);
+
+    try t.verify();
 }
 
 // Move.Rage
