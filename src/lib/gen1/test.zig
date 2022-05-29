@@ -176,12 +176,7 @@ test "switching (reset)" {
         },
     );
     defer t.deinit();
-
-    try t.log.expected.switched(P1.ident(1), t.expected.p1.get(1));
-    try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
-    try t.log.expected.turn(1);
-
-    try expectEqual(Result.Default, try t.battle.actual.update(.{}, .{}, t.log.actual));
+    try t.start();
 
     var p1 = &t.actual.p1.active;
     p1.volatiles.Reflect = true;
@@ -352,7 +347,25 @@ test "turn order (switch vs. move)" {
 }
 
 test "PP deduction" {
-    return error.SkipZigTest;
+    var t = Test(.{}).init(
+        &.{.{ .species = .Alakazam, .moves = &.{.Teleport} }},
+        &.{.{ .species = .Abra, .moves = &.{.Teleport} }},
+    );
+    defer t.deinit();
+    try t.start();
+
+    try expectEqual(@as(u8, 32), t.actual.p1.active.move(1).pp);
+    try expectEqual(@as(u8, 32), t.actual.p2.active.move(1).pp);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try expectEqual(@as(u8, 31), t.actual.p1.active.move(1).pp);
+    try expectEqual(@as(u8, 31), t.actual.p2.active.move(1).pp);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try expectEqual(@as(u8, 30), t.actual.p1.active.move(1).pp);
+    try expectEqual(@as(u8, 30), t.actual.p2.active.move(1).pp);
 }
 
 test "accuracy" {
@@ -1416,22 +1429,23 @@ fn Test(comptime rolls: anytype) type {
             std.testing.allocator.destroy(self);
         }
 
+        pub fn start(self: *Self) !void {
+            var expected_buf: [22]u8 = undefined;
+            var actual_buf: [22]u8 = undefined;
+
+            var expected = FixedLog{ .writer = stream(&expected_buf).writer() };
+            var actual = FixedLog{ .writer = stream(&actual_buf).writer() };
+
+            try expected.switched(P1.ident(1), self.actual.p1.get(1));
+            try expected.switched(P2.ident(1), self.actual.p2.get(1));
+            try expected.turn(1);
+
+            try expectEqual(Result.Default, try self.battle.actual.update(.{}, .{}, actual));
+            try expectLog(&expected_buf, &actual_buf);
+        }
+
         pub fn update(self: *Self, c1: Choice, c2: Choice) !Result {
-            if (self.battle.actual.turn == 0) {
-                var expected_buf: [22]u8 = undefined;
-                var actual_buf: [22]u8 = undefined;
-
-                var expected = FixedLog{ .writer = stream(&expected_buf).writer() };
-                var actual = FixedLog{ .writer = stream(&actual_buf).writer() };
-
-                try expected.switched(P1.ident(1), self.actual.p1.get(1));
-                try expected.switched(P2.ident(1), self.actual.p2.get(1));
-                try expected.turn(1);
-
-                try expectEqual(Result.Default, try self.battle.actual.update(.{}, .{}, actual));
-                try expectLog(&expected_buf, &actual_buf);
-            }
-
+            if (self.battle.actual.turn == 0) try self.start();
             return self.battle.actual.update(c1, c2, self.log.actual);
         }
 
