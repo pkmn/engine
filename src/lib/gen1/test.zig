@@ -53,6 +53,10 @@ const CRIT = MIN;
 const MIN_DMG = if (showdown) MIN else 179;
 const MAX_DMG = MAX;
 
+// TODO: inline Status.init(...) when Zig no longer causes SIGBUS
+const BRN = 0b10000;
+const PAR = 0b1000000;
+
 comptime {
     assert(showdown or std.math.rotr(u8, MIN_DMG, 1) == 217);
     assert(showdown or std.math.rotr(u8, MAX_DMG, 1) == 255);
@@ -206,8 +210,6 @@ test "switching (reset)" {
 }
 
 test "switching (brn/par)" {
-    const BRN = 0b10000; // TODO: Status.init(.BRN);
-    const PAR = 0b1000000; // TODO: Status.init(.PAR);
     var t = Test(.{}).init(
         &.{
             .{ .species = .Pikachu, .moves = &.{.ThunderShock} },
@@ -412,13 +414,91 @@ test "damage calc" {
     return error.SkipZigTest;
 }
 
-test "fainting" {
-    // TODO single
-    // TODO double
-    // TODO all
-    // test fainting / game over
-    return error.SkipZigTest;
+test "fainting (single)" {
+    // Switch
+    {
+        var t = Test(if (showdown)
+            (.{ NOP, NOP, HIT, HIT, ~CRIT, MAX_DMG })
+        else
+            (.{ HIT, ~CRIT, MAX_DMG, HIT })).init(
+            &.{.{ .species = .Venusaur, .moves = &.{.LeechSeed} }},
+            &.{
+                .{ .species = .Slowpoke, .hp = 1, .moves = &.{.WaterGun} },
+                .{ .species = .Dratini, .moves = &.{.DragonRage} },
+            },
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P1.ident(1), Move.LeechSeed, P2.ident(1), null);
+        try t.log.expected.start(P2.ident(1), .LeechSeed);
+        try t.log.expected.move(P2.ident(1), Move.WaterGun, P1.ident(1), null);
+        try t.log.expected.resisted(P1.ident(1));
+        t.expected.p1.get(1).hp -= 15;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        t.expected.p2.get(1).hp = 0;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .LeechSeed);
+        t.expected.p1.get(1).hp += 15;
+        try t.log.expected.heal(P1.ident(1), t.expected.p1.get(1), .Silent);
+        try t.log.expected.faint(P2.ident(1), true);
+
+        try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(move(1), move(1)));
+        try t.verify();
+    }
+    // Win
+    {
+        var t = Test(if (showdown) .{ NOP, NOP, HIT } else .{HIT}).init(
+            &.{.{ .species = .Dratini, .hp = 1, .status = BRN, .moves = &.{.DragonRage} }},
+            &.{.{ .species = .Slowpoke, .hp = 1, .moves = &.{.WaterGun} }},
+        );
+        defer t.deinit();
+
+        t.expected.p2.get(1).hp = 0;
+
+        try t.log.expected.move(P1.ident(1), Move.DragonRage, P2.ident(1), null);
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.faint(P2.ident(1), true);
+        try t.log.expected.win(.P1);
+
+        try expectEqual(Result.Win, try t.update(move(1), move(1)));
+        try t.verify();
+    }
+    // Lose
+    {
+        var t = Test(if (showdown)
+            (.{ NOP, NOP, ~CRIT, MIN_DMG, HIT }) // FIXME: missing SRF, need move target
+        else
+            (.{ ~CRIT, MIN_DMG, HIT })).init(
+            &.{.{ .species = .Jolteon, .hp = 1, .moves = &.{.Swift} }},
+            &.{.{ .species = .Dratini, .status = BRN, .moves = &.{.DragonRage} }},
+        );
+        defer t.deinit();
+
+        t.expected.p1.get(1).hp = 0;
+        t.expected.p2.get(1).hp -= 53;
+
+        try t.log.expected.move(P1.ident(1), Move.Swift, P2.ident(1), null);
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.move(P2.ident(1), Move.DragonRage, P1.ident(1), null);
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.faint(P1.ident(1), true);
+        try t.log.expected.win(.P2);
+
+        try expectEqual(Result.Lose, try t.update(move(1), move(1)));
+        try t.verify();
+    }
 }
+
+// test "fainting (double)" {
+//     // Switch
+//     {
+
+//     }
+
+//     // Tie
+//     {
+
+//     }
+// }
 
 test "residual" {
     // TODO residual brn/tox/psn/ Leech Seed
@@ -1327,7 +1407,6 @@ test "Stat down modifier overflow glitch" {
 //     if (showdown) return;
 
 //     const MIRROR_MOVE = @enumToInt(Move.MirrorMove);
-//     const BRN = 0b10000; // TODO: Status.init(.BRN);
 //     const CFZ = comptime ranged(128, 256);
 //     const NO_CFZ = CFZ - 1;
 //     // TODO: replace this with a handcrafted actual seed instead of using the fixed RNG

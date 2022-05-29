@@ -24,9 +24,10 @@ const Damage = protocol.Damage;
 const Gen12 = rng.Gen12;
 
 const ActivePokemon = data.ActivePokemon;
-const Pokemon = data.Pokemon;
+const Effectiveness = data.Effectiveness;
 const Move = data.Move;
 const MoveSlot = data.MoveSlot;
+const Pokemon = data.Pokemon;
 const Side = data.Side;
 const Species = data.Species;
 const Stats = data.Stats;
@@ -639,7 +640,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
             } else if (!calcDamage(battle, player, player.foe(), move, crit)) {
                 return @as(?Result, Result.Error);
             }
-            immune = battle.last_damage == 0 or adjustDamage(battle, player);
+            immune = battle.last_damage == 0 or try adjustDamage(battle, player, log);
             randomizeDamage(battle);
         }
     }
@@ -823,7 +824,7 @@ fn calcDamage(
     return true;
 }
 
-fn adjustDamage(battle: anytype, player: Player) bool {
+fn adjustDamage(battle: anytype, player: Player, log: anytype) !bool {
     const side = battle.side(player);
     const foe = battle.foe(player);
     const move = Move.get(side.last_selected_move);
@@ -839,7 +840,18 @@ fn adjustDamage(battle: anytype, player: Player) bool {
 
     battle.last_damage = d;
 
-    return type1 == 0 or type2 == 0;
+    const effectiveness = type1 * type2;
+    if (effectiveness == 0) return true;
+
+    // Can't just check if d is greater or less than battle.last_damage due to overflow
+    const neutral = @enumToInt(Effectiveness.Neutral) * @enumToInt(Effectiveness.Neutral);
+    if (effectiveness > neutral) {
+        try log.supereffective(battle.active(player.foe()));
+    } else if (effectiveness < neutral) {
+        try log.resisted(battle.active(player.foe()));
+    }
+
+    return false;
 }
 
 fn randomizeDamage(battle: anytype) void {
@@ -1074,9 +1086,16 @@ fn checkFaint(
 
     const player_out = findFirstAlive(side) == 0;
     const foe_out = findFirstAlive(foe) == 0;
-    if (player_out and foe_out) return Result.Tie;
-    if (player_out) return if (player == .P1) Result.Lose else Result.Win;
-    if (foe_out) return if (player == .P1) Result.Win else Result.Lose;
+    if (player_out and foe_out) {
+        try log.tie();
+        return Result.Tie;
+    } else if (player_out) {
+        try log.win(player.foe());
+        return if (player == .P1) Result.Lose else Result.Win;
+    } else if (foe_out) {
+        try log.win(player);
+        return if (player == .P1) Result.Win else Result.Lose;
+    }
 
     // SHOWDOWN: emitting |request| for sides will advance the RNG by 2 for each "locked" move
     const locked = @as(u2, @boolToInt(player_locked)) +
@@ -1147,7 +1166,8 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
 
         // GLITCH: uncapped damage is added back to the foe
         foe_stored.hp = @minimum(foe_stored.hp + damage, foe_stored.stats.hp);
-        try log.drain(foe_ident, foe_stored, ident);
+        // Pokémon Showdown uses the less specific heal here instead of drain... because reasons?
+        try log.heal(foe_ident, foe_stored, .Silent);
     }
 }
 

@@ -196,7 +196,7 @@ for (const gen of new Generations(Dex as any)) {
 
     test('accuracy (normal)', () => {
       const hit = {key: HIT.key, value: ranged(Math.floor(85 * 255 / 100), 256) - 1};
-      const miss = {key: MISS.key, value: hit.value + 1 };
+      const miss = {key: MISS.key, value: hit.value + 1};
       const battle = startBattle([SRF, SRF, hit, CRIT, MAX_DMG, miss], [
         {species: 'Hitmonchan', evs, moves: ['Mega Punch']},
       ], [
@@ -220,6 +220,83 @@ for (const gen of new Generations(Dex as any)) {
       ]);
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
+
+
+    test('fainting (single)', () => {
+      // Switch
+      {
+        const battle = startBattle([SRF, SRF, HIT, HIT, NO_CRIT, MAX_DMG], [
+          {species: 'Venusaur', evs, moves: ['Leech Seed']},
+        ], [
+          {species: 'Slowpoke', evs, moves: ['Water Gun']},
+          {species: 'Dratini', evs, moves: ['Dragon Rage']},
+        ]);
+
+        battle.p2.pokemon[0].hp = 1;
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p2.pokemon[0].hp).toBe(0);
+
+        expectLog(battle, [
+          '|move|p1a: Venusaur|Leech Seed|p2a: Slowpoke',
+          '|-start|p2a: Slowpoke|move: Leech Seed',
+          '|move|p2a: Slowpoke|Water Gun|p1a: Venusaur',
+          '|-resisted|p1a: Venusaur',
+          '|-damage|p1a: Venusaur|348/363',
+          '|-damage|p2a: Slowpoke|0 fnt|[from] Leech Seed|[of] p1a: Venusaur',
+          '|-heal|p1a: Venusaur|363/363|[silent]',
+          '|faint|p2a: Slowpoke',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      }
+      // Win
+      {
+        const battle = startBattle([SRF, SRF, HIT], [
+          {species: 'Dratini', evs, moves: ['Dragon Rage']},
+        ], [
+          {species: 'Slowpoke', evs, moves: ['Water Gun']},
+        ]);
+
+        battle.p1.pokemon[0].hp = 1;
+        battle.p2.pokemon[0].hp = 1;
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p2.pokemon[0].hp).toBe(0);
+
+        expectLog(battle, [
+          '|move|p1a: Dratini|Dragon Rage|p2a: Slowpoke',
+          '|-damage|p2a: Slowpoke|0 fnt',
+          '|faint|p2a: Slowpoke',
+          '|win|Player 1',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      }
+      // Lose
+      {
+        const battle = startBattle([SRF, SRF, SRF, NO_CRIT, MIN_DMG, HIT], [
+          {species: 'Jolteon', evs, moves: ['Swift']},
+        ], [
+          {species: 'Dratini', evs, moves: ['Dragon Rage']},
+        ]);
+
+        battle.p1.pokemon[0].hp = 1;
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p1.pokemon[0].hp).toBe(0);
+        expect(battle.p2.pokemon[0].hp).toBe(232);
+
+        expectLog(battle, [
+          '|move|p1a: Jolteon|Swift|p2a: Dratini',
+          '|-damage|p2a: Dratini|232/285',
+          '|move|p2a: Dratini|Dragon Rage|p1a: Jolteon',
+          '|-damage|p1a: Jolteon|0 fnt',
+          '|faint|p1a: Jolteon',
+          '|win|Player 2',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      }
+    });
+
 
     test('Paralyze (primary)', () => {
       const PAR_CANT = {key: 'Battle.onBeforeMove', value: ranged(63, 256) - 1};
