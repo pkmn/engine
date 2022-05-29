@@ -1295,7 +1295,25 @@ test "Explode" {
 // Move.Swift
 test "Swift" {
     // This move does not check accuracy and hits even if the target is using Dig or Fly.
-    return error.SkipZigTest;
+    var t = Test(if (showdown)
+        (.{ NOP, NOP, NOP, ~CRIT, MIN_DMG }) // FIXME: SSR & GLM
+    else
+        (.{ ~CRIT, MIN_DMG })).init(
+        &.{.{ .species = .Eevee, .moves = &.{.Swift} }},
+        &.{.{ .species = .Diglett, .moves = &.{.Dig} }},
+    );
+    defer t.deinit();
+
+    t.expected.p2.get(1).hp -= 91;
+
+    try t.log.expected.move(P2.ident(1), Move.Dig, .{}, null);
+    try t.log.expected.prepare(P2.ident(1), Move.Dig);
+    try t.log.expected.move(P1.ident(1), Move.Swift, P2.ident(1), null);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.verify();
 }
 
 // Move.Transform

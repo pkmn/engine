@@ -13,7 +13,9 @@ const MIN_DMG = {key: ['Battle.random', 'BattleActions.getDamage'], value: MIN};
 const MAX_DMG = {key: ['Battle.random', 'BattleActions.getDamage'], value: MAX};
 
 const SRF = {key: 'Side.randomFoe', value: NOP};
-const SSM = {key: 'Battle.speedSort', value: NOP};
+const SSM = {key: ['Battle.speedSort', 'Pokemon.setStatus'], value: NOP};
+const SSR = {key: ['Battle.speedSort', 'Battle.residualEvent'], value: NOP};
+const GLM = {key: 'Pokemon.getLockedMove', value: NOP};
 
 const ranged = (n: number, d: number) => n * (0x100000000 / d);
 
@@ -220,7 +222,6 @@ for (const gen of new Generations(Dex as any)) {
       ]);
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
-
 
     test('fainting (single)', () => {
       // Switch
@@ -573,6 +574,28 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
+    test('Swift', () => {
+      const battle = startBattle([SRF, SRF, SRF, NO_CRIT, MIN_DMG, SSR, GLM], [
+        {species: 'Eevee', evs, moves: ['Swift']},
+      ], [
+        {species: 'Diglett', evs, moves: ['Dig']},
+      ]);
+
+      const p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp - 91);
+
+      expectLog(battle, [
+        '|move|p2a: Diglett|Dig||[still]',
+        '|-prepare|p2a: Diglett|Dig',
+        '|move|p1a: Eevee|Swift|p2a: Diglett',
+        '|-damage|p2a: Diglett|132/223',
+        '|turn|2'
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
     test('Conversion', () => {
       const battle = startBattle([SRF], [
         {species: 'Porygon', evs, moves: ['Conversion']},
@@ -628,14 +651,13 @@ class FixedRNG extends PRNG {
     if (this.index >= this.rolls.length) throw new Error('Insufficient number of rolls provided');
     const roll = this.rolls[this.index++];
     const where = locations();
+    const locs = where.join(' -> ');
     if (Array.isArray(roll.key)) {
-      if (where[0] !== roll.key[0] || where[1] !== roll.key[1]) {
-        const keys = roll.key.join(', ');
-        const locs = where.join(', ');
-        throw new Error(`Expected roll for (${keys}) but got (${locs})`);
+      if (!roll.key.every(k => where.includes(k))) {
+        throw new Error(`Expected roll for (${roll.key.join(' -> ')}) but got (${locs})`);
       }
-    } else if (where[1] !== roll.key) {
-      throw new Error(`Expected roll for ${roll.key} but got ${where[1]}`);
+    } else if (!where.includes(roll.key)) {
+      throw new Error(`Expected roll for (${roll.key}) but got (${locs})`);
     }
     let result = roll.value;
     if (from) from = Math.floor(from);
@@ -692,17 +714,20 @@ const NON_TERMINAL = new Set([
 ]);
 
 function locations() {
+  const results = [];
   let last: string | undefined = undefined;
   for (const line of new Error().stack!.split('\n').slice(1)) {
     const match = METHOD.exec(line);
     if (!match) continue;
     const m = match[1];
-    const now = [last, m] as [string, string];
-    last = m;
-    if (NON_TERMINAL.has(m)) continue;
-    return now;
+    if (NON_TERMINAL.has(m)) {
+      last = m;
+      continue;
+    }
+    if (!results.length && last) results.push(last);
+    results.push(m);
   }
-  throw new Error('Unable to find location');
+  return results;
 }
 
 function expectLog(battle: Battle, expected: string[]) {
