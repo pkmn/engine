@@ -3,14 +3,17 @@ import {Generations, PokemonSet} from '@pkmn/data';
 
 const MIN = 0;
 const MAX = 0xFFFFFFFF;
+const NOP = 42;
 
-const NOP = MIN;
-const HIT = MIN;
-const MISS = MAX;
-// const CRIT = MAX;
-const NO_CRIT = MAX;
-const MIN_DMG = MIN;
-const MAX_DMG = MAX;
+const HIT = {key: 'BattleActions.tryMoveHit', value: MIN};
+const MISS = {key: 'BattleActions.tryMoveHit', value: MAX};
+// const CRIT = {key: ['Battle.randomChance', 'BattleActions.getDamage'], value: MIN};
+const NO_CRIT = {key: ['Battle.randomChance', 'BattleActions.getDamage'], value: MAX};
+const MIN_DMG = {key: ['Battle.random', 'BattleActions.getDamage'], value: MIN};
+// const MAX_DMG = {key: ['Battle.random', 'BattleActions.getDamage'], value: MAX};
+
+const SRF = {key: 'Side.randomFoe', value: NOP};
+const SSM = {key: 'Battle.speedSort', value: NOP};
 
 const ranged = (n: number, d: number) => n * (0x100000000 / d);
 
@@ -21,7 +24,7 @@ const MODS: {[gen: number]: string[]} = {
 for (const gen of new Generations(Dex as any)) {
   if (gen.num > 1) break;
 
-  const createBattle = (rolls: number[]) => {
+  const createBattle = (rolls: Roll[]) => {
     const formatid = `gen${gen.num}customgame@@@${MODS[gen.num].join(',')}` as ID;
     const battle = new Battle({formatid, strictChoices: true});
     (battle as any).debugMode = false;
@@ -29,7 +32,7 @@ for (const gen of new Generations(Dex as any)) {
     return battle;
   };
 
-  const startBattle = (rolls: number[], p1: Partial<PokemonSet>[], p2: Partial<PokemonSet>[]) => {
+  const startBattle = (rolls: Roll[], p1: Partial<PokemonSet>[], p2: Partial<PokemonSet>[]) => {
     const battle = createBattle(rolls);
     battle.setPlayer('p1', {team: p1 as PokemonSet[]});
     battle.setPlayer('p2', {team: p2 as PokemonSet[]});
@@ -69,10 +72,10 @@ for (const gen of new Generations(Dex as any)) {
 
     test('turn order (priority)', () => {
       const battle = startBattle([
-        NOP, NOP, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
-        NOP, NOP, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
-        NOP, NOP, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
-        NOP, NOP, NOP, HIT, NO_CRIT, MIN_DMG, HIT,
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+        SRF, SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT,
       ], [
         {species: 'Raticate', evs, moves: ['Tackle', 'Quick Attack', 'Counter']},
       ], [
@@ -131,7 +134,7 @@ for (const gen of new Generations(Dex as any)) {
 
     test('turn order (switch vs. move)', () => {
       const battle = startBattle([
-        NOP, HIT, NO_CRIT, MIN_DMG, NOP, HIT, NO_CRIT, MIN_DMG,
+        SRF, HIT, NO_CRIT, MIN_DMG, SRF, HIT, NO_CRIT, MIN_DMG,
       ], [
         {species: 'Raticate', evs, moves: ['Quick Attack']},
         {species: 'Rattata', evs, moves: ['Quick Attack']},
@@ -165,15 +168,16 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('Paralyze (primary)', () => {
-      const PROC = ranged(63, 256) - 1;
-      const NO_PROC = PROC + 1;
+      const PAR_CANT = {key: 'Battle.onBeforeMove', value: ranged(63, 256) - 1};
+      const PAR_CAN = {key: 'Battle.onBeforeMove', value: PAR_CANT.value + 1};
+
       const battle = startBattle([
-        NOP, NOP, MISS, HIT, NOP,
-        NOP, NOP, HIT, NO_PROC, HIT, NOP,
-        NOP, PROC,
-        NOP, NOP, HIT, NO_PROC, HIT, NOP,
-        NOP, NO_PROC,
-        NOP, NO_PROC, HIT, NOP,
+        SRF, SRF, MISS, HIT, SSM,
+        SRF, SRF, HIT, PAR_CAN, HIT, SSM,
+        SRF, PAR_CANT,
+        SRF, SRF, HIT, PAR_CAN, HIT, SSM,
+        SRF, PAR_CAN,
+        SRF, PAR_CAN, HIT, SSM,
       ], [
         {species: 'Arbok', evs, moves: ['Glare']},
         {species: 'Dugtrio', evs, moves: ['Earthquake', 'Substitute']},
@@ -253,7 +257,7 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('OHKO', () => {
-      const battle = startBattle([NOP, NOP, MISS, NOP, NOP, HIT], [
+      const battle = startBattle([SRF, SRF, MISS, SRF, SRF, HIT], [
         {species: 'Kingler', evs, moves: ['Guillotine']},
         {species: 'Tauros', evs, moves: ['Horn Drill']},
       ], [
@@ -280,7 +284,7 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('SwitchAndTeleport', () => {
-      const battle = startBattle([NOP, HIT, NOP, MISS], [
+      const battle = startBattle([SRF, HIT, SRF, MISS], [
         {species: 'Abra', evs, moves: ['Teleport']},
       ], [
         {species: 'Pidgey', evs, moves: ['Whirlwind']},
@@ -319,7 +323,7 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('SpecialDamage (fixed)', () => {
-      const battle = startBattle([NOP, NOP, HIT, HIT, NOP], [
+      const battle = startBattle([SRF, SRF, HIT, HIT, SRF], [
         {species: 'Voltorb', evs, moves: ['Sonic Boom']},
       ], [
         {species: 'Dratini', evs, moves: ['Dragon Rage']},
@@ -352,7 +356,7 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('SpecialDamage (level)', () => {
-      const battle = startBattle([NOP, NOP, HIT, HIT], [
+      const battle = startBattle([SRF, SRF, HIT, HIT], [
         {species: 'Gastly', evs, level: 22, moves: ['Night Shade']},
       ], [
         {species: 'Clefairy', evs, level: 16, moves: ['Seismic Toss']},
@@ -377,7 +381,9 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('SpecialDamage (Psywave)', () => {
-      const battle = startBattle([NOP, NOP, HIT, MAX_DMG, HIT, MIN_DMG], [
+      const PSY_MAX = {key: 'Battle.damageCallback', value: MAX};
+      const PSY_MIN = {key: 'Battle.damageCallback', value: MIN};
+      const battle = startBattle([SRF, SRF, HIT, PSY_MAX, HIT, PSY_MIN], [
         {species: 'Gengar', evs, level: 59, moves: ['Psywave']},
       ], [
         {species: 'Clefable', evs, level: 42, moves: ['Psywave']},
@@ -399,7 +405,7 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('SuperFang', () => {
-      const battle = startBattle([NOP, NOP, HIT, HIT, NOP, NOP, HIT], [
+      const battle = startBattle([SRF, SRF, HIT, HIT, SRF, SRF, HIT], [
         {species: 'Raticate', evs, moves: ['Super Fang']},
         {species: 'Haunter', evs, moves: ['Dream Eater']},
       ], [
@@ -437,7 +443,7 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('Conversion', () => {
-      const battle = startBattle([NOP], [
+      const battle = startBattle([SRF], [
         {species: 'Porygon', evs, moves: ['Conversion']},
       ], [
         {species: 'Slowbro', evs, moves: ['Teleport']},
@@ -472,11 +478,16 @@ for (const gen of new Generations(Dex as any)) {
   }
 }
 
+interface Roll {
+  key: string | string[];
+  value: number;
+}
+
 class FixedRNG extends PRNG {
-  private readonly rolls: number[];
+  private readonly rolls: Roll[];
   private index: number;
 
-  constructor(rolls: number[]) {
+  constructor(rolls: Roll[]) {
     super([0, 0, 0, 0]);
     this.rolls = rolls;
     this.index = 0;
@@ -484,7 +495,18 @@ class FixedRNG extends PRNG {
 
   next(from?: number, to?: number): number {
     if (this.index >= this.rolls.length) throw new Error('Insufficient number of rolls provided');
-    let result = this.rolls[this.index++];
+    const roll = this.rolls[this.index++];
+    const where = locations();
+    if (Array.isArray(roll.key)) {
+      if (where[0] !== roll.key[0] || where[1] !== roll.key[1]) {
+        const keys = roll.key.join(', ');
+        const locs = where.join(', ');
+        throw new Error(`Expected roll for (${keys}) but got (${locs})`);
+      }
+    } else if (where[1] !== roll.key) {
+      throw new Error(`Expected roll for ${roll.key} but got ${where[1]}`);
+    }
+    let result = roll.value;
     if (from) from = Math.floor(from);
     if (to) to = Math.floor(to);
     if (from === undefined) {
@@ -514,7 +536,7 @@ class FixedRNG extends PRNG {
   }
 }
 
-const SKIP = new Set([
+const FILTER = new Set([
   '', 't:', 'gametype', 'player', 'teamsize', 'gen',
   'tier', 'rule', 'start', 'upkeep', '-message', '-hint',
 ]);
@@ -525,11 +547,31 @@ function filter(raw: string[]) {
   for (const line of log) {
     const i = line.indexOf('|', 1);
     const arg = line.slice(1, i > 0 ? i : line.length);
-    if (SKIP.has(arg)) continue;
+    if (FILTER.has(arg)) continue;
     filtered.push(line);
   }
 
   return filtered;
+}
+
+const METHOD = /^ {4}at ((?:\w|\.)+) /;
+const NON_TERMINAL = new Set([
+  'FixedRNG.next', 'FixedRNG.randomChance', 'FixedRNG.sample', 'FixedRNG.shuffle',
+  'Battle.random', 'Battle.randomChance', 'Battle.sample', 'locations',
+]);
+
+function locations() {
+  let last: string | undefined = undefined;
+  for (const line of new Error().stack!.split('\n').slice(1)) {
+    const match = METHOD.exec(line);
+    if (!match) continue;
+    const m = match[1];
+    const now = [last, m] as [string, string];
+    last = m;
+    if (NON_TERMINAL.has(m)) continue;
+    return now;
+  }
+  throw new Error('Unable to find location');
 }
 
 function expectLog(battle: Battle, expected: string[]) {
