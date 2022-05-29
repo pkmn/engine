@@ -548,7 +548,8 @@ fn decrementPP(side: *Side, choice: Choice) void {
     assert(choice.type == .Move);
     assert(choice.data <= 4);
 
-    if (choice.data == 0) return; // Struggle
+    assert(choice.data != 0 or side.last_selected_move == .Struggle);
+    if (choice.data == 0) return;
 
     var active = &side.active;
     const volatiles = &active.volatiles;

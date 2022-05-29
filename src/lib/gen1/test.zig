@@ -364,29 +364,24 @@ test "damage calc" {
     // TODO crit
     // TODO roll
     // TODO types (STAB, type effectiveness)
+
+    // stab nostab
+    // super resisted normal immune
+    // crit nocrit
+    // high low roll
     return error.SkipZigTest;
 }
 
-test "fainting (single)" {
+test "fainting" {
+    // TODO single
+    // TODO double
+    // TODO all
+    // test fainting / game over
     return error.SkipZigTest;
 }
 
-test "fainting (double)" {
-    return error.SkipZigTest;
-}
-
-test "fainting (all)" {
-    return error.SkipZigTest;
-}
-
-test "residual (brn/psn/toxic)" {
-    // TODO residual
-    // TODO effected by toxic counter
-    return error.SkipZigTest;
-}
-
-test "residual (Leech Seed)" {
-    // TODO residual
+test "residual" {
+    // TODO residual brn/tox/psn/ Leech Seed
     // TODO effected by toxic counter
     return error.SkipZigTest;
 }
@@ -518,21 +513,7 @@ test "FreezeChance" {
     // TODO cant act
     // TODO thaws on fire (specifically on fire move which can burn, NOT fire spin)
     // TODO blocked by substitute, but NOT ON SHOWDOWN
-
-    return error.SkipZigTest;
-}
-
-// Move.{ThunderPunch,ThunderShock,Thunderbolt,Thunder}: ParalyzeChance1
-// Move.{BodySlam,Lick}: ParalyzeChance2
-test "ParalyzeChance" {
-    // Has a X% chance to paralyze the target.
-
-    // TODO can proc / not proc - use chance2 roll for both and dont proc the chance1 roll
-    // TODO can't proc on same type (body slam + normal, thunderbolt + electric)
-    // TODO already paralyzed vs. already other status
-    // TODO immunity
-    // TODO quarters speed
-    // TODO blocked by substitute, but NOT ON SHOWDOWN
+    // TODO: Freeze Clause Mod
 
     return error.SkipZigTest;
 }
@@ -545,15 +526,6 @@ test "FlinchChance" {
     // TODO can proc / not proc - use chance2 roll for both and dont proc the chance1 roll
     // TODO clears recharging even on a miss when slower!
     // TODO blocked by substitute
-
-    return error.SkipZigTest;
-}
-
-// Move.{Psybeam,Confusion}: ConfusionChance
-test "ConfusionChance" {
-    // Has a 10% chance to confuse the target.
-
-    // TODO blocked by substitute on showdown
 
     return error.SkipZigTest;
 }
@@ -695,6 +667,9 @@ test "Trapping" {
     // move again automatically, and if it had 0 PP at the time, it becomes 63. If the user or the
     // target switch out, or the user is prevented from moving, the effect ends. This move can
     // prevent the target from moving even if it has type immunity, but will not deal damage.
+
+    // TODO: test opponents wrapping cleared by switching
+
     return error.SkipZigTest;
 }
 
@@ -944,6 +919,7 @@ test "Sleep" {
     // TODO decrement counter, no turn,
     // TODO wake up and cant act
     // TODO can act after
+    // TODO: Sleep Clause MOd
 
     return error.SkipZigTest;
 }
@@ -952,9 +928,19 @@ test "Sleep" {
 test "Confusion (primary)" {
     // Causes the target to become confused.
 
-    // TODO cant hit self
+    // TODO cant
+    // TODO hit self
     // TODO disappears after duration
     // TODO blocked by substitute
+
+    return error.SkipZigTest;
+}
+
+// Move.{Psybeam,Confusion}: ConfusionChance
+test "ConfusionChance" {
+    // Has a 10% chance to confuse the target.
+
+    // TODO blocked by substitute on showdown
 
     return error.SkipZigTest;
 }
@@ -1063,6 +1049,21 @@ test "Paralyze (primary)" {
     try expectEqual(@as(u16, 318), t.actual.p2.stored().stats.spe);
 
     try t.verify();
+}
+
+// Move.{ThunderPunch,ThunderShock,Thunderbolt,Thunder}: ParalyzeChance1
+// Move.{BodySlam,Lick}: ParalyzeChance2
+test "ParalyzeChance" {
+    // Has a X% chance to paralyze the target.
+
+    // TODO can proc / not proc - use chance2 roll for both and dont proc the chance1 roll
+    // TODO can't proc on same type (body slam + normal, thunderbolt + electric)
+    // TODO already paralyzed vs. already other status
+    // TODO immunity
+    // TODO quarters speed
+    // TODO blocked by substitute, but NOT ON SHOWDOWN
+
+    return error.SkipZigTest;
 }
 
 // Move.Rage
@@ -1283,86 +1284,86 @@ test "Stat down modifier overflow glitch" {
 
 // Miscellaneous
 
-test "MAX_LOGS" {
-    if (showdown) return;
+// test "MAX_LOGS" {
+//     if (showdown) return;
 
-    const MIRROR_MOVE = @enumToInt(Move.MirrorMove);
-    // TODO: workaround for Zig SIGBUS
-    const BRN = 0b10000; // Status.init(.BRN);
-    const CFZ = comptime ranged(128, 256);
-    const NO_CFZ = CFZ - 1;
-    // TODO: replace this with a handcrafted actual seed instead of using the fixed RNG
-    var battle = Battle.fixed(
-        // zig fmt: off
-        .{
-            // Set up
-            HIT,
-            ~CRIT, @enumToInt(Move.LeechSeed), HIT,
-            HIT, 3, NO_CFZ, HIT, 3,
-            NO_CFZ, NO_CFZ, ~CRIT, @enumToInt(Move.SolarBeam),
-            // Scenario
-            NO_CFZ,
-            ~CRIT, MIRROR_MOVE, ~CRIT,
-            ~CRIT, MIRROR_MOVE, ~CRIT,
-            ~CRIT, MIRROR_MOVE, ~CRIT,
-            ~CRIT, MIRROR_MOVE, ~CRIT,
-            ~CRIT, MIRROR_MOVE, ~CRIT,
-            ~CRIT, MIRROR_MOVE, ~CRIT,
-            ~CRIT, MIRROR_MOVE, ~CRIT,
-            ~CRIT, MIRROR_MOVE, ~CRIT,
-            ~CRIT, MIRROR_MOVE, ~CRIT,
-            ~CRIT, MIRROR_MOVE, ~CRIT,
-            ~CRIT, @enumToInt(Move.PinMissile), CRIT, MIN_DMG, HIT, 3, 3,
-            NO_CFZ, CRIT, MIN_DMG, HIT,
-        },
-         // zig fmt: on
-        &.{
-            .{
-                .species = .Bulbasaur,
-                .moves = &.{.LeechSeed},
-            },
-            .{
-                .species = .Gengar,
-                .hp = 224,
-                .status = BRN,
-                .moves = &.{ .Metronome, .ConfuseRay, .Toxic },
-            },
-        },
-        &.{
-            .{
-                .species = .Bulbasaur,
-                .moves = &.{.LeechSeed},
-            },
-            .{
-                .species = .Gengar,
-                .status = BRN,
-                .moves = &.{ .Metronome, .ConfuseRay },
-            },
-        },
-    );
-    battle.side(.P2).get(2).stats.spe = 317; // make P2 slower to avoid speed ties
+//     const MIRROR_MOVE = @enumToInt(Move.MirrorMove);
+//     // TODO: workaround for Zig SIGBUS
+//     const BRN = 0b10000; // Status.init(.BRN);
+//     const CFZ = comptime ranged(128, 256);
+//     const NO_CFZ = CFZ - 1;
+//     // TODO: replace this with a handcrafted actual seed instead of using the fixed RNG
+//     var battle = Battle.fixed(
+//         // zig fmt: off
+//         .{
+//             // Set up
+//             HIT,
+//             ~CRIT, @enumToInt(Move.LeechSeed), HIT,
+//             HIT, 3, NO_CFZ, HIT, 3,
+//             NO_CFZ, NO_CFZ, ~CRIT, @enumToInt(Move.SolarBeam),
+//             // Scenario
+//             NO_CFZ,
+//             ~CRIT, MIRROR_MOVE, ~CRIT,
+//             ~CRIT, MIRROR_MOVE, ~CRIT,
+//             ~CRIT, MIRROR_MOVE, ~CRIT,
+//             ~CRIT, MIRROR_MOVE, ~CRIT,
+//             ~CRIT, MIRROR_MOVE, ~CRIT,
+//             ~CRIT, MIRROR_MOVE, ~CRIT,
+//             ~CRIT, MIRROR_MOVE, ~CRIT,
+//             ~CRIT, MIRROR_MOVE, ~CRIT,
+//             ~CRIT, MIRROR_MOVE, ~CRIT,
+//             ~CRIT, MIRROR_MOVE, ~CRIT,
+//             ~CRIT, @enumToInt(Move.PinMissile), CRIT, MIN_DMG, HIT, 3, 3,
+//             NO_CFZ, CRIT, MIN_DMG, HIT,
+//         },
+//          // zig fmt: on
+//         &.{
+//             .{
+//                 .species = .Bulbasaur,
+//                 .moves = &.{.LeechSeed},
+//             },
+//             .{
+//                 .species = .Gengar,
+//                 .hp = 224,
+//                 .status = BRN,
+//                 .moves = &.{ .Metronome, .ConfuseRay, .Toxic },
+//             },
+//         },
+//         &.{
+//             .{
+//                 .species = .Bulbasaur,
+//                 .moves = &.{.LeechSeed},
+//             },
+//             .{
+//                 .species = .Gengar,
+//                 .status = BRN,
+//                 .moves = &.{ .Metronome, .ConfuseRay },
+//             },
+//         },
+//     );
+//     battle.side(.P2).get(2).stats.spe = 317; // make P2 slower to avoid speed ties
 
-    try expectEqual(Result.Default, try battle.update(.{}, .{}, null));
-    // P1 switches into Leech Seed
-    try expectEqual(Result.Default, try battle.update(swtch(2), move(1), null));
-    // P2 switches into to P1's Metronome -> Leech Seed
-    try expectEqual(Result.Default, try battle.update(move(1), swtch(2), null));
-    // P1 and P2 confuse each other
-    try expectEqual(Result.Default, try battle.update(move(2), move(2), null));
-    // P1 uses Toxic to noop while P2 uses Metronome -> Solar Beam
-    try expectEqual(Result.Default, try battle.update(move(3), move(1), null));
+//     try expectEqual(Result.Default, try battle.update(.{}, .{}, null));
+//     // P1 switches into Leech Seed
+//     try expectEqual(Result.Default, try battle.update(swtch(2), move(1), null));
+//     // P2 switches into to P1's Metronome -> Leech Seed
+//     try expectEqual(Result.Default, try battle.update(move(1), swtch(2), null));
+//     // P1 and P2 confuse each other
+//     try expectEqual(Result.Default, try battle.update(move(2), move(2), null));
+//     // P1 uses Toxic to noop while P2 uses Metronome -> Solar Beam
+//     try expectEqual(Result.Default, try battle.update(move(3), move(1), null));
 
-    try expectEqual(Move.SolarBeam, battle.side(.P2).last_selected_move);
-    try expectEqual(Move.Metronome, battle.side(.P2).last_used_move);
+//     try expectEqual(Move.SolarBeam, battle.side(.P2).last_selected_move);
+//     try expectEqual(Move.Metronome, battle.side(.P2).last_used_move);
 
-    // BUG: data.MAX_LOGS not enough?
-    var buf: [data.MAX_LOGS * 100]u8 = undefined;
-    var log = FixedLog{ .writer = stream(&buf).writer() };
-    // P1 uses Metronome -> Mirror Move -> ... -> Pin Missile, P2 -> Solar Beam
-    try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try battle.update(move(1), move(0), log));
-
-    try expect(battle.rng.exhausted());
-}
+//     // BUG: data.MAX_LOGS not enough?
+//     var buf: [data.MAX_LOGS * 100]u8 = undefined;
+//     var log = FixedLog{ .writer = stream(&buf).writer() };
+//     // P1 uses Metronome -> Mirror Move -> ... -> Pin Missile, P2 -> Solar Beam
+//     try expectEqual(
+//         Result{ .p1 = .Switch, .p2 = .Pass }, try battle.update(move(1), move(0), log));
+//     try expect(battle.rng.exhausted());
+// }
 
 fn Test(comptime rolls: anytype) type {
     return struct {
