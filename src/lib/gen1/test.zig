@@ -210,7 +210,35 @@ test "switching (reset)" {
 }
 
 test "switching (brn/par)" {
-    return error.SkipZigTest;
+    // TODO: workaround for Zig SIGBUS
+    const BRN = 0b10000; // Status.init(.BRN);
+    const PAR = 0b1000000; // Status.init(.PAR);
+    var t = Test(.{}).init(
+        &.{
+            .{ .species = .Pikachu, .moves = &.{.ThunderShock} },
+            .{ .species = .Bulbasaur, .status = BRN, .moves = &.{.Tackle} },
+        },
+        &.{
+            .{ .species = .Charmander, .moves = &.{.Scratch} },
+            .{ .species = .Squirtle, .status = PAR, .moves = &.{.Tackle} },
+        },
+    );
+    defer t.deinit();
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    t.expected.p1.get(2).hp -= 18;
+    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .Burn);
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(swtch(2), swtch(2)));
+
+    try expectEqual(@as(u16, 98), t.actual.p1.active.stats.atk);
+    try expectEqual(@as(u16, 196), t.actual.p1.stored().stats.atk);
+    try expectEqual(@as(u16, 46), t.actual.p2.active.stats.spe);
+    try expectEqual(@as(u16, 184), t.actual.p2.stored().stats.spe);
+
+    try t.verify();
 }
 
 test "turn order (priority)" {
@@ -1139,6 +1167,8 @@ test "MAX_LOGS" {
     if (showdown) return;
 
     const MIRROR_MOVE = @enumToInt(Move.MirrorMove);
+    // TODO: workaround for Zig SIGBUS
+    const BRN = 0b10000; // Status.init(.BRN);
     // TODO: replace this with a handcrafted actual seed instead of using the fixed RNG
     var battle = Battle.fixed(
         // zig fmt: off
@@ -1172,7 +1202,7 @@ test "MAX_LOGS" {
             .{
                 .species = .Gengar,
                 .hp = 224,
-                .status = 0b10000, // TODO: Status.init(.BRN),
+                .status = BRN,
                 .moves = &.{ .Metronome, .ConfuseRay, .Toxic },
             },
         },
@@ -1183,7 +1213,7 @@ test "MAX_LOGS" {
             },
             .{
                 .species = .Gengar,
-                .status = 0b10000, // TODO: Status.init(.BRN),
+                .status = BRN,
                 .moves = &.{ .Metronome, .ConfuseRay },
             },
         },
