@@ -147,11 +147,11 @@ pub fn main() !void {
     i = 0;
 
     if (tool == .chance or tool == .crit) {
-        try w.print("0x{X:0<8}", .{param * 0x1000000});
+        try w.print("0x{X:0>8}", .{param * 0x1000000});
     } else if (tool == .metronome) {
         const range: u64 = @enumToInt(pkmn.gen1.Move.Struggle) - 2;
         const mod = @as(u2, (if (param < @enumToInt(pkmn.gen1.Move.Metronome) - 1) 1 else 2));
-        try w.print("0x{X:0<8}", .{(param - mod) * (0x100000000 / range)});
+        try w.print("0x{X:0>8}", .{(param - mod) * (0x100000000 / range)});
     } else {
         var range: u64 = switch (tool) {
             .bide, .thrash => 5 - 3,
@@ -162,7 +162,7 @@ pub fn main() !void {
             else => unreachable,
         };
         while (i < range) : (i += 1) {
-            try w.print("0x{X:0<8}", .{i * (0x100000000 / range)});
+            try w.print("0x{X:0>8}", .{i * (0x100000000 / range)});
             if (range > 9 and i % 3 == 2) {
                 _ = try w.write("\n");
             } else if (i != range - 1) {

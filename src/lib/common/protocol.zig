@@ -5,7 +5,7 @@ const build_options = @import("build_options");
 const data = @import("../common/data.zig");
 
 const assert = std.debug.assert;
-const expectEqualSlices = std.testing.expectEqualSlices;
+const print = std.debug.print;
 
 const trace = build_options.trace;
 
@@ -553,13 +553,60 @@ pub const FixedLog = Log(std.io.FixedBufferStream([]u8).Writer);
 // @test-only
 pub fn expectLog(expected: []const u8, actual: []const u8) !void {
     if (!trace) return;
-    expectEqualSlices(u8, expected, actual) catch |err| switch (err) {
+    const color = color: {
+        if (std.process.hasEnvVarConstant("ZIG_DEBUG_COLOR")) {
+            break :color true;
+        } else if (std.process.hasEnvVarConstant("NO_COLOR")) {
+            break :color false;
+        } else {
+            break :color std.io.getStdErr().supportsAnsiEscapeCodes();
+        }
+    };
+
+    expectEqualBytes(expected, actual) catch |err| switch (err) {
         error.TestExpectedEqual => {
-            std.debug.print("Expected: {any}\nActual:   {any}\n", .{ expected, actual });
+            print("\n", .{});
+            var i: usize = 0;
+            while (i < expected.len) : (i += 1) {
+                if (i != 0) if (i % 16 == 0) print("\n", .{}) else print(" ", .{});
+                if (color and i >= actual.len or expected[i] != actual[i]) {
+                    print("\x1b[31m0x{X:0>2}\x1b[0m", .{expected[i]});
+                } else {
+                    print("0x{X:0>2}", .{expected[i]});
+                }
+            }
+            print("\n\n", .{});
+            i = 0;
+            while (i < actual.len) : (i += 1) {
+                if (i != 0) if (i % 16 == 0) print("\n", .{}) else print(" ", .{});
+                print("0x{X:0>2}", .{actual[i]});
+            }
+            print("\n\n", .{});
             return err;
         },
         else => return err,
     };
+}
+
+fn expectEqualBytes(expected: []const u8, actual: []const u8) !void {
+    const len = @minimum(expected.len, actual.len);
+    var i: usize = 0;
+    while (i < len) : (i += 1) {
+        if (expected[i] != actual[i]) {
+            print(
+                "index {} incorrect. expected 0x{X:0>2}, found 0x{X:0>2}\n",
+                .{ i, expected[i], actual[i] },
+            );
+            return error.TestExpectedEqual;
+        }
+    }
+    if (expected.len != actual.len) {
+        print(
+            "slice lengths differ. expected {d}, found {d}\n",
+            .{ expected.len, actual.len },
+        );
+        return error.TestExpectedEqual;
+    }
 }
 
 const endian = builtin.target.cpu.arch.endian();
