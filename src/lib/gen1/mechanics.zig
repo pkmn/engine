@@ -901,6 +901,8 @@ fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
             if (showdown) {
                 break :power battle.rng.range(u8, 0, max);
             } else {
+                // GLITCH: Psywave infinite glitch loop
+                if (max <= 1) return Result.Error;
                 while (true) {
                     const r = battle.rng.next();
                     if (r < max) break :power r;

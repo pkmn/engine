@@ -1620,6 +1620,28 @@ test "Stat down modifier overflow glitch" {
     // https://www.youtube.com/watch?v=y2AOm7r39Jg
 }
 
+test "Psywave infinite loop" {
+    // https://pkmn.cc/bulba-glitch-1#Psywave_infinite_loop
+    var t = Test((if (showdown)
+        (.{ NOP, NOP, NOP, HIT, HIT, MAX_DMG })
+    else
+        (.{ ~CRIT, HIT, HIT }))).init(
+        &.{.{ .species = .Charmander, .level = 1, .moves = &.{.Psywave} }},
+        &.{.{ .species = .Rattata, .level = 3, .moves = &.{.TailWhip} }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P2.ident(1), Move.TailWhip, P1.ident(1), null);
+    try t.log.expected.unboost(P1.ident(1), .Defense, 1);
+    try t.log.expected.move(P1.ident(1), Move.Psywave, P2.ident(1), null);
+
+    const result = if (showdown) Result.Default else Result.Error;
+    if (showdown) try t.log.expected.turn(2);
+
+    try expectEqual(result, try t.update(move(1), move(1)));
+    try t.verify();
+}
+
 // Miscellaneous
 
 // test "MAX_LOGS" {

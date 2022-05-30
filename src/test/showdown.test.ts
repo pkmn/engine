@@ -817,6 +817,29 @@ for (const gen of new Generations(Dex as any)) {
       test.todo('Partial trapping move Mirror Move glitch');
       test.todo('Rage and Thrash / Petal Dance accuracy bug');
       test.todo('Stat down modifier overflow glitch');
+
+      test('Psywave infinite loop', () => {
+        const PSY_MAX = {key: 'Battle.damageCallback', value: MAX};
+        const battle = startBattle([SRF, SRF, SRF, HIT, HIT, PSY_MAX], [
+          {species: 'Charmander', evs, level: 1, moves: ['Psywave']},
+        ], [
+          {species: 'Rattata', evs, level: 3, moves: ['TailWhip']},
+        ]);
+
+        const p2hp = battle.p2.pokemon[0].hp;
+
+        battle.makeChoices('move 1', 'move 1');
+
+        expect(battle.p2.pokemon[0].hp).toEqual(p2hp);
+
+        expectLog(battle, [
+          '|move|p2a: Rattata|Tail Whip|p1a: Charmander',
+          '|-unboost|p1a: Charmander|def|1',
+          '|move|p1a: Charmander|Psywave|p2a: Rattata',
+          '|turn|2',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      });
     });
   }
 }
