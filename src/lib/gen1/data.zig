@@ -304,9 +304,9 @@ pub fn Stats(comptime T: type) type {
         // @test-only
         pub fn calc(comptime stat: []const u8, base: T, dv: u4, exp: u16, level: u8) T {
             assert(level > 0 and level <= 100);
-            const factor = if (std.mem.eql(u8, stat, "hp")) level + 10 else 5;
-            return @truncate(T, (@as(u16, base) + dv) * 2 +
-                @as(u16, (std.math.sqrt(exp) / 4)) * level / 100 + factor);
+            const core: u32 = (2 *% (@as(u32, base) +% dv)) +% @as(u32, (std.math.sqrt(exp) / 4));
+            const factor: u32 = if (std.mem.eql(u8, stat, "hp")) level + 10 else 5;
+            return @truncate(T, core *% @as(u32, level) / 100 +% factor);
         }
     };
 }

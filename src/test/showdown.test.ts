@@ -664,7 +664,46 @@ for (const gen of new Generations(Dex as any)) {
 
   if (gen.num === 1) {
     describe('Gen 1', () => {
-      test.todo('0 damage glitch');
+      test('0 damage glitch', () => {
+        const battle = startBattle([
+          SRF, SRF, SRF, HIT, HIT, NO_CRIT,
+          SRF, SRF, HIT,
+          SRF, SRF, SRF, HIT, HIT, NO_CRIT,
+        ], [
+          {species: 'Bulbasaur', evs, moves: ['Growl']},
+        ], [
+          {species: 'Bellsprout', level: 2, moves: ['Vine Whip']},
+          {species: 'Chansey', level: 2, moves: ['Vine Whip']},
+        ]);
+
+        const p1hp = battle.p1.pokemon[0].hp;
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p1.pokemon[0].hp).toEqual(p1hp - 1); // NB: should be 0
+        battle.makeChoices('move 1', 'switch 2');
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p1.pokemon[0].hp).toEqual(p1hp - 1); // NB: should be 0
+
+        expectLog(battle, [
+          '|move|p1a: Bulbasaur|Growl|p2a: Bellsprout',
+          '|-unboost|p2a: Bellsprout|atk|1',
+          '|move|p2a: Bellsprout|Vine Whip|p1a: Bulbasaur',
+          '|-resisted|p1a: Bulbasaur',
+          '|-damage|p1a: Bulbasaur|292/293',
+          '|turn|2',
+          '|switch|p2a: Chansey|Chansey, L2|22/22',
+          '|move|p1a: Bulbasaur|Growl|p2a: Chansey',
+          '|-unboost|p2a: Chansey|atk|1',
+          '|turn|3',
+          '|move|p1a: Bulbasaur|Growl|p2a: Chansey',
+          '|-unboost|p2a: Chansey|atk|1',
+          '|move|p2a: Chansey|Vine Whip|p1a: Bulbasaur',
+          '|-resisted|p1a: Bulbasaur',
+          '|-damage|p1a: Bulbasaur|292/293',
+          '|turn|4',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      });
 
       test('1/256 miss glitch', () => {
         const battle = startBattle([SRF, SRF, MISS, MISS], [

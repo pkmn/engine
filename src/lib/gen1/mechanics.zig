@@ -654,7 +654,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     else
         (!moveHit(battle, player, move, &immune) or battle.last_damage == 0);
 
-    assert(miss or battle.last_damage > 0 or skip);
+    assert(miss or battle.last_damage > 0 or skip or showdown);
     assert(!(ohko and immune));
     assert(!immune or miss);
 
@@ -823,8 +823,19 @@ fn calcDamage(
     def = @as(u32, if (move.effect == .Explode) @maximum(def / 2, 1) else def);
 
     if (def == 0) return false;
-    battle.last_damage = @truncate(u16, @minimum(997, ((lvl * 2 / 5) + 2) *%
-        @as(u32, move.bp) *% atk / def / 50) + 2);
+
+    var d: u32 = (lvl * 2 / 5) + 2;
+    d *%= @as(u32, move.bp);
+    d *%= atk;
+    d /= def;
+    d /= 50;
+    d = @minimum(997, d);
+    // SHOWDOWN: Pokémon Showdown clamps damage here between 1 and 997 instead 0 and 997
+    if (showdown) d = @maximum(d, 1);
+    d += 2;
+
+    battle.last_damage = @truncate(u16, d);
+
     return true;
 }
 
@@ -846,6 +857,7 @@ fn adjustDamage(battle: anytype, player: Player, log: anytype) !bool {
 
     const effectiveness = type1 * type2;
     if (effectiveness == 0) return true;
+    if (!showdown and d == 0) return false;
 
     // Can't just check if d is greater or less than battle.last_damage due to overflow
     const neutral = @enumToInt(Effectiveness.Neutral) * @enumToInt(Effectiveness.Neutral);
@@ -950,7 +962,7 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
 }
 
 fn applyDamage(battle: anytype, target_player: Player, sub_player: Player, log: anytype) !bool {
-    assert(battle.last_damage != 0);
+    assert(battle.last_damage != 0 or showdown);
 
     var target = battle.side(target_player);
     // GLITCH: Substitute + Confusion glitch
@@ -1932,8 +1944,6 @@ pub const Effects = struct {
 
         if (foe.active.volatiles.Substitute) return;
 
-        // SHOWDOWN: if checkHit didn't return true showdown wouldn't even call this handler
-        assert(move.effect.isStatDownChance() or !showdown);
         if (move.effect.isStatDownChance()) {
             const chance = if (showdown)
                 battle.rng.chance(u8, 85, 256)

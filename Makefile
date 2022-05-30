@@ -99,7 +99,8 @@ zig-example:
 example: c-example js-example zig-example
 
 .PHONY: integration
-integration: check example
+# integration: check example
+integration: check
 	npm run test:integration
 
 .PHONY: benchmark

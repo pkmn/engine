@@ -176,12 +176,15 @@ pub const Side = struct {
     }
 };
 
+const EXP = 0xFFFF;
+
 pub const Pokemon = struct {
     species: Species,
     moves: []const Move,
     hp: ?u16 = null,
     status: u8 = 0,
     level: u8 = 100,
+    stats: Stats(u16) = .{ .hp = EXP, .atk = EXP, .def = EXP, .spe = EXP, .spc = EXP },
 
     pub fn init(p: Pokemon) data.Pokemon {
         var pokemon = data.Pokemon{};
@@ -192,7 +195,7 @@ pub const Pokemon = struct {
                 field.name,
                 @field(species.stats, field.name),
                 0xF,
-                0xFFFF,
+                @field(p.stats, field.name),
                 p.level,
             );
         }

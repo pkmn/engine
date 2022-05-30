@@ -1335,7 +1335,8 @@ test "Explode" {
     // damage. The target's Defense is halved during damage calculation.
 
     // TODO: faint order if immune
-    // TODO If the user of Explosion attacks first and faints itself, the opponent will not attack or be subjected to recurrent damage during that round.
+    // TODO If the user of Explosion attacks first and faints itself, the opponent will not attack
+    // or be subjected to recurrent damage during that round.
 
     return error.SkipZigTest;
 }
@@ -1416,7 +1417,55 @@ test "Substitute" {
 
 test "0 damage glitch" {
     // https://pkmn.cc/bulba-glitch-1#0_damage_glitch
-    return error.SkipZigTest;
+    // https://www.youtube.com/watch?v=fxNzPeLlPTU
+    var t = Test(if (showdown)
+        (.{ NOP, NOP, NOP, HIT, HIT, ~CRIT, NOP, NOP, HIT, NOP, NOP, NOP, HIT, HIT, ~CRIT })
+    else
+        (.{ ~CRIT, HIT, ~CRIT, HIT, ~CRIT, HIT, ~CRIT, HIT, ~CRIT, HIT })).init(
+        &.{.{ .species = .Bulbasaur, .moves = &.{.Growl} }},
+        &.{
+            .{ .species = .Bellsprout, .level = 2, .stats = .{}, .moves = &.{.VineWhip} },
+            .{ .species = .Chansey, .level = 2, .stats = .{}, .moves = &.{.VineWhip} },
+        },
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Growl, P2.ident(1), null);
+    try t.log.expected.unboost(P2.ident(1), .Attack, 1);
+    try t.log.expected.move(P2.ident(1), Move.VineWhip, P1.ident(1), null);
+    if (showdown) {
+        try t.log.expected.resisted(P1.ident(1));
+        t.expected.p1.get(1).hp -= 1;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    } else {
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P2.ident(1));
+    }
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.move(P1.ident(1), Move.Growl, P2.ident(2), null);
+    try t.log.expected.unboost(P2.ident(2), .Attack, 1);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+
+    try t.log.expected.move(P1.ident(1), Move.Growl, P2.ident(2), null);
+    try t.log.expected.unboost(P2.ident(2), .Attack, 1);
+    try t.log.expected.move(P2.ident(2), Move.VineWhip, P1.ident(1), null);
+    if (showdown) {
+        try t.log.expected.resisted(P1.ident(1));
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    } else {
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P2.ident(2));
+    }
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.verify();
 }
 
 test "1/256 miss glitch" {
