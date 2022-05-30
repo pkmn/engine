@@ -488,17 +488,61 @@ test "fainting (single)" {
     }
 }
 
-// test "fainting (double)" {
-//     // Switch
-//     {
+test "fainting (double)" {
+    // Switch
+    {
+        var t = Test(if (showdown)
+            (.{ NOP, NOP, HIT, CRIT, MAX_DMG })
+        else
+            (.{ CRIT, MAX_DMG, HIT })).init(
+            &.{
+                .{ .species = .Weezing, .hp = 1, .moves = &.{.Explosion} },
+                .{ .species = .Koffing, .moves = &.{.SelfDestruct} },
+            },
+            &.{
+                .{ .species = .Weedle, .hp = 1, .moves = &.{.PoisonSting} },
+                .{ .species = .Caterpie, .moves = &.{.StringShot} },
+            },
+        );
+        defer t.deinit();
 
-//     }
+        t.expected.p1.get(1).hp = 0;
+        t.expected.p2.get(1).hp = 0;
 
-//     // Tie
-//     {
+        try t.log.expected.move(P1.ident(1), Move.Explosion, P2.ident(1), null);
+        try t.log.expected.crit(P2.ident(1));
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.faint(P2.ident(1), false);
+        try t.log.expected.faint(P1.ident(1), true);
 
-//     }
-// }
+        try expectEqual(Result{ .p1 = .Switch, .p2 = .Switch }, try t.update(move(1), move(1)));
+        try t.verify();
+    }
+    // Tie
+    {
+        var t = Test(if (showdown)
+            (.{ NOP, NOP, HIT, CRIT, MAX_DMG })
+        else
+            (.{ CRIT, MAX_DMG, HIT })).init(
+            &.{.{ .species = .Weezing, .hp = 1, .moves = &.{.Explosion} }},
+            &.{.{ .species = .Weedle, .hp = 1, .moves = &.{.PoisonSting} }},
+        );
+        defer t.deinit();
+
+        t.expected.p1.get(1).hp = 0;
+        t.expected.p2.get(1).hp = 0;
+
+        try t.log.expected.move(P1.ident(1), Move.Explosion, P2.ident(1), null);
+        try t.log.expected.crit(P2.ident(1));
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.faint(P2.ident(1), false);
+        try t.log.expected.faint(P1.ident(1), false);
+        try t.log.expected.tie();
+
+        try expectEqual(Result.Tie, try t.update(move(1), move(1)));
+        try t.verify();
+    }
+}
 
 test "residual" {
     // TODO residual brn/tox/psn/ Leech Seed
@@ -1289,6 +1333,10 @@ test "MirrorMove" {
 test "Explode" {
     // The user faints after using this move, unless the target's substitute was broken by the
     // damage. The target's Defense is halved during damage calculation.
+
+    // TODO: faint order if immune
+    // TODO If the user of Explosion attacks first and faints itself, the opponent will not attack or be subjected to recurrent damage during that round.
+
     return error.SkipZigTest;
 }
 

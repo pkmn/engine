@@ -1086,11 +1086,14 @@ fn checkFaint(
     var foe = battle.foe(player);
     var foe_fainted = foe.stored().hp == 0;
     if (try faint(battle, player, log, !foe_fainted)) |r| return r;
-    if (foe_fainted) if (try faint(battle, player.foe(), log, true)) |r| return r;
 
     const player_out = findFirstAlive(side) == 0;
     const foe_out = findFirstAlive(foe) == 0;
-    if (player_out and foe_out) {
+    const tie = player_out and foe_out;
+
+    if (foe_fainted) if (try faint(battle, player.foe(), log, !tie)) |r| return r;
+
+    if (tie) {
         try log.tie();
         return Result.Tie;
     } else if (player_out) {

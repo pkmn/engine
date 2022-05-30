@@ -298,6 +298,53 @@ for (const gen of new Generations(Dex as any)) {
       }
     });
 
+    test('fainting (double)', () => {
+      // Switch
+      {
+        const battle = startBattle([SRF, SRF, HIT, CRIT, MAX_DMG], [
+          {species: 'Weezing', evs, moves: ['Explosion']},
+          {species: 'Koffing', evs, moves: ['Self-Destruct']},
+        ], [
+          {species: 'Weedle', evs, moves: ['Poison Sting']},
+          {species: 'Caterpie', evs, moves: ['String Shot']},
+        ]);
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p1.pokemon[0].hp).toBe(0);
+        expect(battle.p2.pokemon[0].hp).toBe(0);
+
+        expectLog(battle, [
+          '|move|p1a: Weezing|Explosion|p2a: Weedle',
+          '|-crit|p2a: Weedle',
+          '|-damage|p2a: Weedle|0 fnt',
+          '|faint|p2a: Weedle',
+          '|faint|p1a: Weezing',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      }
+      // Tie
+      {
+        const battle = startBattle([SRF, SRF, HIT, CRIT, MAX_DMG], [
+          {species: 'Weezing', evs, moves: ['Explosion']},
+        ], [
+          {species: 'Weedle', evs, moves: ['Poison Sting']},
+        ]);
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p1.pokemon[0].hp).toBe(0);
+        expect(battle.p2.pokemon[0].hp).toBe(0);
+
+        expectLog(battle, [
+          '|move|p1a: Weezing|Explosion|p2a: Weedle',
+          '|-crit|p2a: Weedle',
+          '|-damage|p2a: Weedle|0 fnt',
+          '|faint|p2a: Weedle',
+          '|faint|p1a: Weezing',
+          '|tie',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      }
+    });
 
     test('Paralyze (primary)', () => {
       const PAR_CANT = {key: 'Battle.onBeforeMove', value: ranged(63, 256) - 1};
@@ -591,7 +638,7 @@ for (const gen of new Generations(Dex as any)) {
         '|-prepare|p2a: Diglett|Dig',
         '|move|p1a: Eevee|Swift|p2a: Diglett',
         '|-damage|p2a: Diglett|132/223',
-        '|turn|2'
+        '|turn|2',
       ]);
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
