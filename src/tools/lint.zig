@@ -1,20 +1,22 @@
 const std = @import("std");
 
 const fs = std.fs;
+const Allocator = std.mem.Allocator;
 
 const PATH = "src";
 const LINE_LENGTH = 100;
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-const allocator = gpa.allocator();
-
 pub fn main() !void {
-    const format = try checkFormat(PATH);
-    const lint = try lintDir(PATH, fs.cwd(), PATH);
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+
+    const format = try checkFormat(PATH, allocator);
+    const lint = try lintDir(PATH, fs.cwd(), PATH, allocator);
     std.process.exit(@boolToInt(format or lint));
 }
 
-fn checkFormat(file_path: []const u8) !bool {
+fn checkFormat(file_path: []const u8, allocator: Allocator) !bool {
     const argv = &.{ "zig", "fmt", "--check", file_path };
 
     // TODO: ziglang/zig@a0a2ce92 changed ChildProcess initialization
@@ -66,7 +68,7 @@ const ignore = std.ComptimeStringMap(Ignored, .{
 // Windows has trouble with the symlink so we need to hardcode the logic to skip it
 const LIBS = "src\\examples\\zig\\libs";
 
-fn ignored(raw_path: []const u8, line: u32) !bool {
+fn ignored(raw_path: []const u8, line: u32, allocator: Allocator) !bool {
     var path = try allocator.dupe(u8, raw_path);
     std.mem.replaceScalar(u8, path, fs.path.sep_windows, fs.path.sep_posix);
     defer allocator.free(path);
@@ -83,7 +85,12 @@ var seen = std.AutoArrayHashMapUnmanaged(fs.File.INode, void){};
 const LintError =
     error{ OutOfMemory, NotUtf8 } || fs.File.OpenError || fs.File.ReadError || fs.File.WriteError;
 
-fn lintDir(file_path: []const u8, parent_dir: fs.Dir, parent_sub_path: []const u8) LintError!bool {
+fn lintDir(
+    file_path: []const u8,
+    parent_dir: fs.Dir,
+    parent_sub_path: []const u8,
+    allocator: Allocator,
+) LintError!bool {
     var err = false;
 
     var dir = try parent_dir.openDir(parent_sub_path, .{ .iterate = true });
@@ -106,9 +113,9 @@ fn lintDir(file_path: []const u8, parent_dir: fs.Dir, parent_sub_path: []const u
 
             var e = false;
             if (is_dir) {
-                e = try lintDir(full_path, dir, entry.name);
+                e = try lintDir(full_path, dir, entry.name, allocator);
             } else {
-                e = try lintFile(full_path, dir, entry.name);
+                e = try lintFile(full_path, dir, entry.name, allocator);
             }
             err = err or e;
         }
@@ -117,7 +124,7 @@ fn lintDir(file_path: []const u8, parent_dir: fs.Dir, parent_sub_path: []const u
     return err;
 }
 
-fn lintFile(file_path: []const u8, dir: fs.Dir, sub_path: []const u8) !bool {
+fn lintFile(file_path: []const u8, dir: fs.Dir, sub_path: []const u8, allocator: Allocator) !bool {
     const source_file = try dir.openFile(sub_path, .{});
     defer source_file.close();
 
@@ -129,17 +136,17 @@ fn lintFile(file_path: []const u8, dir: fs.Dir, sub_path: []const u8) !bool {
         0,
     );
 
-    return lintLineLength(source, file_path);
+    return lintLineLength(source, file_path, allocator);
 }
 
-fn lintLineLength(source: []const u8, path: []const u8) !bool {
+fn lintLineLength(source: []const u8, path: []const u8, allocator: Allocator) !bool {
     var err = false;
     var i: usize = 0;
     var line: u32 = 1;
     while (std.mem.indexOfScalar(u8, source[i..], '\n')) |newline| : (line += 1) {
         const line_length =
             std.unicode.utf8CountCodepoints(source[i..][0..newline]) catch return error.NotUtf8;
-        if (line_length > LINE_LENGTH and !try ignored(path, line)) {
+        if (line_length > LINE_LENGTH and !try ignored(path, line, allocator)) {
             const stderr = std.io.getStdErr().writer();
             try stderr.print(
                 "{s}:{d} has a length of {d}. Maximum allowed is 100\n",
