@@ -543,13 +543,6 @@ test "fainting (double)" {
         try t.verify();
     }
 }
-
-test "residual" {
-    // TODO residual brn/tox/psn/ Leech Seed
-    // TODO effected by toxic counter
-    return error.SkipZigTest;
-}
-
 test "end turn (locked)" {
     return error.SkipZigTest;
 }
@@ -1234,7 +1227,94 @@ test "LeechSeed" {
     // it has one, even if the target currently has less than that amount of HP remaining. If the
     // target switches out or any Pokemon uses Haze, this effect ends. Grass-type Pokemon are immune
     // to this move.
-    return error.SkipZigTest;
+    var t = Test((if (showdown)
+        (.{ NOP, NOP, ~HIT, NOP, HIT, NOP, NOP, HIT, HIT, NOP, HIT })
+    else
+        (.{ HIT, ~HIT, HIT, HIT, HIT, HIT }))).init(
+        &.{
+            .{ .species = .Venusaur, .moves = &.{.LeechSeed} },
+            .{ .species = .Exeggutor, .moves = &.{ .LeechSeed, .Teleport } },
+        },
+        &.{
+            .{ .species = .Gengar, .moves = &.{ .LeechSeed, .Substitute, .NightShade } },
+            .{ .species = .Slowbro, .hp = 1, .moves = &.{.Teleport} },
+        },
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P2.ident(1), Move.LeechSeed, P1.ident(1), null);
+    if (showdown) {
+        try t.log.expected.immune(P1.ident(1), .None);
+    } else {
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P2.ident(1));
+    }
+    try t.log.expected.move(P1.ident(1), Move.LeechSeed, P2.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P1.ident(1));
+    try t.log.expected.turn(2);
+
+    // Leed Seed can miss / Grass-type Pokémon are immune
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    t.expected.p2.get(1).hp -= 80;
+
+    try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Substitute);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.LeechSeed, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .LeechSeed);
+    try t.log.expected.turn(3);
+
+    // Leech Seed ignores Substitute
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+    try t.log.expected.fail(P2.ident(1), .Substitute);
+    t.expected.p2.get(1).hp -= 20;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .LeechSeed);
+    try t.log.expected.turn(4);
+
+    // Leech Seed does not |-heal| when at full health
+    try expectEqual(Result.Default, try t.update(swtch(2), move(2)));
+
+    try t.log.expected.move(P2.ident(1), Move.NightShade, P1.ident(2), null);
+    t.expected.p1.get(2).hp -= 100;
+    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
+    t.expected.p2.get(1).hp -= 20;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .LeechSeed);
+    t.expected.p1.get(2).hp += 20;
+    try t.log.expected.heal(P1.ident(2), t.expected.p1.get(2), .Silent);
+    try t.log.expected.move(P1.ident(2), Move.LeechSeed, P2.ident(1), null);
+    if (!showdown) {
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P1.ident(2));
+    }
+    try t.log.expected.turn(5);
+
+    // Leech Seed fails if already seeded / heals back damage
+    try expectEqual(Result.Default, try t.update(move(1), move(3)));
+
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.move(P1.ident(2), Move.LeechSeed, P2.ident(2), null);
+    try t.log.expected.start(P2.ident(2), .LeechSeed);
+    try t.log.expected.turn(6);
+
+    // Switching breaks Leech Seed
+    try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+
+    try t.log.expected.move(P1.ident(2), Move.Teleport, P1.ident(2), null);
+    try t.log.expected.move(P2.ident(2), Move.Teleport, P2.ident(2), null);
+    t.expected.p2.get(2).hp = 0;
+    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .LeechSeed);
+    t.expected.p1.get(2).hp += 24;
+    try t.log.expected.heal(P1.ident(2), t.expected.p1.get(2), .Silent);
+    try t.log.expected.faint(P2.ident(2), true);
+
+    // // Leech Seed's uncapped damage is added back
+    try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(move(2), move(1)));
+    try t.verify();
 }
 
 // Move.Rage
@@ -1489,6 +1569,12 @@ test "1/256 miss glitch" {
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
     try t.verify();
+}
+
+test "Toxic counter glitch" {
+    // https://pkmn.cc/bulba-glitch-1#Toxic_counter_glitches
+    // TODO: Toxic -> Rest -> Leech Seed -> Burn
+    return error.SkipZigTest;
 }
 
 test "Defrost move forcing" {

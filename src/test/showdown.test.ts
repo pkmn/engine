@@ -643,6 +643,85 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
+    test('LeechSeed', () => {
+      const battle = startBattle([SRF, SRF, MISS, SRF, HIT, SRF, SRF, HIT, HIT, SRF, HIT], [
+        {species: 'Venusaur', evs, moves: ['Leech Seed']},
+        {species: 'Exeggutor', evs, moves: ['Leech Seed', 'Teleport']},
+      ], [
+        {species: 'Gengar', evs, moves: ['Leech Seed', 'Substitute', 'Night Shade']},
+        {species: 'Slowbro', evs, moves: ['Teleport']},
+      ]);
+
+      battle.p2.pokemon[1].hp = 1;
+
+      let exeggutor = battle.p1.pokemon[1].hp;
+      let gengar = battle.p2.pokemon[0].hp;
+      const slowbro = battle.p2.pokemon[1].hp;
+
+      // Leed Seed can miss / Grass-type Pokémon are immune
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(gengar);
+
+      // Leech Seed ignores Substitute
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p2.pokemon[0].hp).toBe(gengar -= 80);
+
+      // Leech Seed does not |-heal| when at full health
+      battle.makeChoices('switch 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(exeggutor);
+      expect(battle.p2.pokemon[0].hp).toBe(gengar -= 20);
+
+      // Leech Seed fails if already seeded / heals back damage
+      battle.makeChoices('move 1', 'move 3');
+      expect(battle.p1.pokemon[0].hp).toBe(exeggutor -= 100 - 20);
+      expect(battle.p2.pokemon[0].hp).toBe(gengar -= 20);
+
+      // Switching breaks Leech Seed
+      battle.makeChoices('move 1', 'switch 2');
+      expect(battle.p1.pokemon[0].hp).toBe(exeggutor);
+      expect(battle.p2.pokemon[0].hp).toBe(slowbro);
+
+      // Leech Seed's uncapped damage is added back
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(exeggutor += 24);
+      expect(battle.p2.pokemon[0].hp).toBe(slowbro - 1);
+
+      expectLog(battle, [
+        '|move|p2a: Gengar|Leech Seed|p1a: Venusaur',
+        '|-immune|p1a: Venusaur',
+        '|move|p1a: Venusaur|Leech Seed|p2a: Gengar|[miss]',
+        '|-miss|p1a: Venusaur',
+        '|turn|2',
+        '|move|p2a: Gengar|Substitute|p2a: Gengar',
+        '|-start|p2a: Gengar|Substitute',
+        '|-damage|p2a: Gengar|243/323',
+        '|move|p1a: Venusaur|Leech Seed|p2a: Gengar',
+        '|-start|p2a: Gengar|move: Leech Seed',
+        '|turn|3',
+        '|switch|p1a: Exeggutor|Exeggutor|393/393',
+        '|move|p2a: Gengar|Substitute|p2a: Gengar',
+        '|-fail|p2a: Gengar|move: Substitute',
+        '|-damage|p2a: Gengar|223/323|[from] Leech Seed|[of] p1a: Exeggutor',
+        '|turn|4',
+        '|move|p2a: Gengar|Night Shade|p1a: Exeggutor',
+        '|-damage|p1a: Exeggutor|293/393',
+        '|-damage|p2a: Gengar|203/323|[from] Leech Seed|[of] p1a: Exeggutor',
+        '|-heal|p1a: Exeggutor|313/393|[silent]',
+        '|move|p1a: Exeggutor|Leech Seed|p2a: Gengar',
+        '|turn|5',
+        '|switch|p2a: Slowbro|Slowbro|1/393',
+        '|move|p1a: Exeggutor|Leech Seed|p2a: Slowbro',
+        '|-start|p2a: Slowbro|move: Leech Seed',
+        '|turn|6',
+        '|move|p1a: Exeggutor|Teleport|p1a: Exeggutor',
+        '|move|p2a: Slowbro|Teleport|p2a: Slowbro',
+        '|-damage|p2a: Slowbro|0 fnt|[from] Leech Seed|[of] p1a: Exeggutor',
+        '|-heal|p1a: Exeggutor|337/393|[silent]',
+        '|faint|p2a: Slowbro',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
     test('Conversion', () => {
       const battle = startBattle([SRF], [
         {species: 'Porygon', evs, moves: ['Conversion']},

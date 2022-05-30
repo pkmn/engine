@@ -1183,10 +1183,11 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
         // As above, Pokémon Showdown uses damageOf but its not relevant
         try log.damage(ident, stored, .LeechSeed);
 
+        const before = foe_stored.hp;
         // GLITCH: uncapped damage is added back to the foe
         foe_stored.hp = @minimum(foe_stored.hp + damage, foe_stored.stats.hp);
         // Pokémon Showdown uses the less specific heal here instead of drain... because reasons?
-        try log.heal(foe_ident, foe_stored, .Silent);
+        if (foe_stored.hp > before) try log.heal(foe_ident, foe_stored, .Silent);
     }
 }
 
@@ -1560,10 +1561,20 @@ pub const Effects = struct {
     fn leechSeed(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
         var foe = battle.foe(player);
 
-        if (!try checkHit(battle, player, move, log)) return;
-        if (foe.active.types.includes(.Grass) or foe.active.volatiles.LeechSeed) {
-            return log.immune(battle.active(player.foe()), .None);
+        if (showdown) {
+            if (foe.active.types.includes(.Grass)) {
+                return log.immune(battle.active(player.foe()), .None);
+            }
+            if (!try checkHit(battle, player, move, log)) return;
+            if (foe.active.volatiles.LeechSeed) return;
+        } else {
+            if (!try checkHit(battle, player, move, log)) return;
+            if (foe.active.types.includes(.Grass) or foe.active.volatiles.LeechSeed) {
+                try log.lastmiss();
+                return log.miss(battle.active(player));
+            }
         }
+
         foe.active.volatiles.LeechSeed = true;
 
         try log.start(battle.active(player.foe()), .LeechSeed);
