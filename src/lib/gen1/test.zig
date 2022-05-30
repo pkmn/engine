@@ -1421,7 +1421,25 @@ test "0 damage glitch" {
 
 test "1/256 miss glitch" {
     // https://pkmn.cc/bulba-glitch-1#1.2F256_miss_glitch
-    return error.SkipZigTest;
+    var t = Test(if (showdown)
+        (.{ NOP, NOP, ~HIT, ~HIT })
+    else
+        (.{ CRIT, MAX_DMG, ~HIT, CRIT, MAX_DMG, ~HIT })).init(
+        &.{.{ .species = .Jigglypuff, .moves = &.{.Pound} }},
+        &.{.{ .species = .NidoranF, .moves = &.{.Scratch} }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P2.ident(1), Move.Scratch, P1.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    try t.log.expected.move(P1.ident(1), Move.Pound, P2.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P1.ident(1));
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.verify();
 }
 
 test "Defrost move forcing" {

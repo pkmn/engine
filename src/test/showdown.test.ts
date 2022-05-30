@@ -665,7 +665,31 @@ for (const gen of new Generations(Dex as any)) {
   if (gen.num === 1) {
     describe('Gen 1', () => {
       test.todo('0 damage glitch');
-      test.todo('1/256 miss glitch');
+
+      test('1/256 miss glitch', () => {
+        const battle = startBattle([SRF, SRF, MISS, MISS], [
+          {species: 'Jigglypuff', evs, moves: ['Pound']},
+        ], [
+          {species: 'Nidoran-F', evs, moves: ['Scratch']},
+        ]);
+
+        const p1hp = battle.p1.pokemon[0].hp;
+        const p2hp = battle.p2.pokemon[0].hp;
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p1.pokemon[0].hp).toEqual(p1hp);
+        expect(battle.p2.pokemon[0].hp).toEqual(p2hp);
+
+        expectLog(battle, [
+          '|move|p2a: Nidoran-F|Scratch|p1a: Jigglypuff|[miss]',
+          '|-miss|p2a: Nidoran-F',
+          '|move|p1a: Jigglypuff|Pound|p2a: Nidoran-F|[miss]',
+          '|-miss|p1a: Jigglypuff',
+          '|turn|2',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      });
+
       test.todo('Defrost move forcing');
       test.todo('Division by 0');
       test.todo('Invulnerability glitch');
