@@ -13,6 +13,7 @@ const INDEX = 'https://ziglang.org/download/index.json';
 const ROOT = path.resolve(__dirname, '../..');
 
 const sh = (cmd, args) => execFileSync(cmd, args, {encoding: 'utf8'});
+
 // This is hardly the browser fetch API, but it works for our primitive needs
 const fetch = url => new Promise((resolve, reject) => {
   let buf = '';
@@ -26,6 +27,7 @@ const fetch = url => new Promise((resolve, reject) => {
   req.on('error', reject);
   req.end();
 });
+
 const download = (url, dest) => new Promise((resolve, reject) => {
   const req = https.request(url, res => {
     if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode}`));
@@ -34,9 +36,9 @@ const download = (url, dest) => new Promise((resolve, reject) => {
   req.on('error', reject);
   req.end();
 });
+
 // If we're on a system without tar or 7zip we need to download 7zip, which requires some hackery
 const unpack7 = (input, output) => new Promise((resolve, reject) => {
-  console.debug('here');
   // If we already have 7zip-min installed we can just used it, otherwise we need to install it
   try {
     require.resolve('7zip-min');
@@ -57,6 +59,7 @@ const unpack7 = (input, output) => new Promise((resolve, reject) => {
     err ? reject(err) : resolve();
   });
 });
+
 // Unpacking is kind of an unholy abomination because we don't know what tool we're going to use
 const unpack = async (input, output) => {
   // This is basically a check for "not windows", in which case simply using `tar` will likely work
