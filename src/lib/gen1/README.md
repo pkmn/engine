@@ -192,16 +192,7 @@ places to determine how many frames to advance the RNG by.
 
 | pkmn         | Pokémon Showdown     |
 | ------------ | -------------------- |
-| `Ally`       | `adjacentAlly`       |
-| `AllyOrSelf` | `adjacentAllyOrSelf` |
-| `Foe`        | `adjacentFoe`        |
-| `All`        | `all`                |
-| `Field`      | (`all`)              |
 | `AllOthers`  | `allAdjacent`        |
-| `Foes`       | `allAdjacentFoes`    |
-| `Allies`     | `allies`             |
-| `FoeSide`    | `foeSide`            |
-| `AllySide`   | `allySide`           |
 | (`Self`)     | `allyTeam`           |
 | (`Other`)    | `any`                |
 | `Other`      | `normal`             |
@@ -251,7 +242,7 @@ entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as foll
 | **disabled**    | 0...7   | 3    |     | **DVs**           | 0...15   | 4    |
 | **move effect** | 0..66   | 7    |     | **attacks**       | 0..4     | 3    |
 | **crit chance** | 7..65   | 6    |     | **transform**     | 0..15    | 4    |
-| **target**      | 0..13    | 4   |     |                   |          |      |
+| **target**      | 0..4    | 3    |     |                   |          |      |
 
 From this we can determine the minimum bits[^1] required to store each data structure to determine
 how much overhead the representations above have after taking into consideration [alignment &
@@ -272,8 +263,8 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
   - `order` does not need to be stored as the party can always be rearranged as switches occur
 - **`Battle`**: 6× `Side` + seed (10× `8` + `4`) + turn (`10`) + last damage (`10`)
 - **`Type.CHART`**: attacking types (`15`) × defending types (`15`) × effectiveness (`2`)[^2]
-- **`Moves.DATA`**: 165× base power (`6`) + effect (`7`) + accuracy (`4`) + type: (`4`) + frames
-  (`4`)
+- **`Moves.DATA`**: 165× base power (`6`) + effect (`7`) + accuracy (`4`) + type (`4`) + target
+  (`3`)
 - **`Species.CHANCES`**: 151× crit chance (`6`)
 
 | Data              | Actual bits | Minimum bits | Overhead |
@@ -283,7 +274,7 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 | `Side`            | 1472        | 1049         | 40.3%    |
 | `Battle`          | 3088        | 2202         | 40.2%    |
 | `Type.CHART`      | 1800        | 450          | 300.0%   |
-| `Moves.DATA`      | 5280        | 4125         | 28.0%    |
+| `Moves.DATA`      | 5280        | 3960         | 33.3%    |
 | `Species.CHANCES` | 1208        | 906          | 33.3%    |
 
 In the case of `Type.CHART`/`Moves.DATA`/`Species.CHANCES`, technically only the values which are
