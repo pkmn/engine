@@ -1574,8 +1574,70 @@ test "1/256 miss glitch" {
 
 test "Toxic counter glitch" {
     // https://pkmn.cc/bulba-glitch-1#Toxic_counter_glitches
-    // TODO: Toxic -> Rest -> Leech Seed -> Burn
-    return error.SkipZigTest;
+    const brn = comptime ranged(77, 256) - 1;
+    var t = Test(if (showdown)
+        (.{ NOP, HIT, NOP, NOP, NOP, NOP, HIT, NOP, HIT, ~CRIT, MIN_DMG, brn, NOP })
+    else
+        (.{ HIT, HIT, ~CRIT, MIN_DMG, HIT, brn })).init(
+        &.{.{ .species = .Venusaur, .moves = &.{ .Toxic, .LeechSeed, .Teleport, .FireBlast } }},
+        &.{.{ .species = .Clefable, .hp = 392, .moves = &.{ .Teleport, .Rest } }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(1), null);
+    try t.log.expected.status(P2.ident(1), Status.init(.PSN), .None);
+    try t.log.expected.move(P2.ident(1), Move.Rest, P2.ident(1), null);
+    try t.log.expected.statusFrom(P2.ident(1), Status.slf(2), Move.Rest);
+    t.expected.p2.get(1).hp += 1;
+    t.expected.p2.get(1).status = Status.slf(2);
+    try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .Silent);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    try expectEqual(@as(u4, 0), t.actual.p2.active.volatiles.toxic);
+
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.cant(P2.ident(1), .Sleep);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(3), move(1)));
+    try expectEqual(@as(u4, 0), t.actual.p2.active.volatiles.toxic);
+
+    try t.log.expected.move(P1.ident(1), Move.LeechSeed, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .LeechSeed);
+    // BUG: Showdown is missing onAfterMoveSelfPriority on sleep condition
+    // if (showdown) {
+    //     t.expected.p2.get(1).hp -= 24;
+    //     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .LeechSeed);
+    //     t.expected.p2.get(1).status = 0;
+    //     try t.log.expected.curestatus(P2.ident(1), Status.slp(1), .Message);
+    // } else {
+    t.expected.p2.get(1).status = 0;
+    try t.log.expected.curestatus(P2.ident(1), Status.slf(1), .Message);
+    t.expected.p2.get(1).hp -= 24;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .LeechSeed);
+    // }
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    try expectEqual(@as(u4, 1), t.actual.p2.active.volatiles.toxic);
+
+    try t.log.expected.move(P1.ident(1), Move.FireBlast, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 96;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    t.expected.p2.get(1).status = Status.init(.BRN);
+    try t.log.expected.status(P2.ident(1), Status.init(.BRN), .None);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 48;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Burn);
+    t.expected.p2.get(1).hp -= 72;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .LeechSeed);
+    try t.log.expected.turn(5);
+
+    try expectEqual(Result.Default, try t.update(move(4), move(1)));
+    try expectEqual(@as(u4, 3), t.actual.p2.active.volatiles.toxic);
+
+    try t.verify();
 }
 
 test "Defrost move forcing" {

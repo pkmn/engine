@@ -758,10 +758,12 @@ for (const gen of new Generations(Dex as any)) {
         const p1hp = battle.p1.pokemon[0].hp;
 
         battle.makeChoices('move 1', 'move 1');
-        expect(battle.p1.pokemon[0].hp).toEqual(p1hp - 1); // NB: should be 0
+        // expect(battle.p1.pokemon[0].hp).toEqual(p1hp);
+        expect(battle.p1.pokemon[0].hp).toEqual(p1hp - 1);
         battle.makeChoices('move 1', 'switch 2');
         battle.makeChoices('move 1', 'move 1');
-        expect(battle.p1.pokemon[0].hp).toEqual(p1hp - 1); // NB: should be 0
+        // expect(battle.p1.pokemon[0].hp).toEqual(p1hp);
+        expect(battle.p1.pokemon[0].hp).toEqual(p1hp - 1);
 
         expectLog(battle, [
           '|move|p1a: Bulbasaur|Growl|p2a: Bellsprout',
@@ -804,6 +806,54 @@ for (const gen of new Generations(Dex as any)) {
           '|move|p1a: Jigglypuff|Pound|p2a: Nidoran-F|[miss]',
           '|-miss|p1a: Jigglypuff',
           '|turn|2',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      });
+
+      test('Toxic counter glitch', () => {
+        const SLP = {key: ['Battle.random', 'Pokemon.setStatus'], value: ranged(5, 8 - 1)};
+        const BRN = {key: HIT.key, value: ranged(Math.floor(30 * 255 / 100), 256) - 1};
+        const battle = startBattle([
+          SRF, HIT, SSM, SSM, SLP, SRF, HIT, SRF, HIT, NO_CRIT, MIN_DMG, BRN, SSM,
+        ], [
+          {species: 'Venusaur', evs, moves: ['Toxic', 'Leech Seed', 'Teleport', 'Fire Blast']},
+        ], [
+          {species: 'Clefable', evs, moves: ['Teleport', 'Rest']},
+        ]);
+
+        battle.p2.pokemon[0].hp = 392;
+
+        battle.makeChoices('move 1', 'move 2');
+        expect(battle.p2.active[0].volatiles['residualdmg'].counter).toBe(0);
+        battle.makeChoices('move 3', 'move 1');
+        expect(battle.p2.active[0].volatiles['residualdmg'].counter).toBe(0);
+        battle.makeChoices('move 2', 'move 1');
+        expect(battle.p2.active[0].volatiles['residualdmg'].counter).toBe(1);
+        battle.makeChoices('move 4', 'move 1');
+        expect(battle.p2.active[0].volatiles['residualdmg'].counter).toBe(3);
+
+        expectLog(battle, [
+          '|move|p1a: Venusaur|Toxic|p2a: Clefable',
+          '|-status|p2a: Clefable|tox',
+          '|move|p2a: Clefable|Rest|p2a: Clefable',
+          '|-status|p2a: Clefable|slp|[from] move: Rest',
+          '|-heal|p2a: Clefable|393/393 slp|[silent]',
+          '|turn|2',
+          '|move|p1a: Venusaur|Teleport|p1a: Venusaur',
+          '|cant|p2a: Clefable|slp',
+          '|turn|3',
+          '|move|p1a: Venusaur|Leech Seed|p2a: Clefable',
+          '|-start|p2a: Clefable|move: Leech Seed',
+          '|-damage|p2a: Clefable|369/393 slp|[from] Leech Seed|[of] p1a: Venusaur',
+          '|-curestatus|p2a: Clefable|slp|[msg]',
+          '|turn|4',
+          '|move|p1a: Venusaur|Fire Blast|p2a: Clefable',
+          '|-damage|p2a: Clefable|273/393',
+          '|-status|p2a: Clefable|brn',
+          '|move|p2a: Clefable|Teleport|p2a: Clefable',
+          '|-damage|p2a: Clefable|225/393 brn|[from] brn',
+          '|-damage|p2a: Clefable|153/393 brn|[from] Leech Seed|[of] p1a: Venusaur',
+          '|turn|5',
         ]);
         expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });

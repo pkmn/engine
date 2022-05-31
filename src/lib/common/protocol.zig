@@ -684,7 +684,7 @@ pub fn format(formatter: Formatter, a: []const u8, b: ?[]const u8, color: bool) 
                 if (arg == .Damage) {
                     const reason = a[i];
                     printc(" {s}", .{@tagName(@intToEnum(Damage, reason))}, a, b, &i, 1, color);
-                    if (reason >= @enumToInt(Damage.Confusion)) {
+                    if (reason >= @enumToInt(Damage.PoisonOf)) {
                         id = ID.from(@truncate(u4, a[i]));
                         printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                     }

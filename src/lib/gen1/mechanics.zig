@@ -20,6 +20,7 @@ const Player = common.Player;
 const Result = common.Result;
 
 const Damage = protocol.Damage;
+const Heal = protocol.Heal;
 
 const Gen12 = rng.Gen12;
 
@@ -351,10 +352,13 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
     assert(mslot == 0 or active.move(mslot).id != .None);
 
     if (Status.is(stored.status, .SLP)) {
+        const status = stored.status;
         // Even if the SLF bit is set this will still correctly modify the sleep duration
         stored.status -= 1;
         if (Status.duration(stored.status) == 0) {
+            try log.curestatus(ident, status, .Message);
             stored.status = 0; // clears SLF if present
+        } else {
             try log.cant(ident, .Sleep);
         }
         side.last_used_move = .None;
@@ -1557,14 +1561,17 @@ pub const Effects = struct {
         const delta = stored.stats.hp - stored.hp;
         if (delta == 0 or delta & 255 == 255) return;
 
-        if (side.last_selected_move == .Rest) {
+        const rest = side.last_selected_move == .Rest;
+        if (rest) {
+            // SHOWDOWN: adding the sleep status runs the sleep condition handler to roll duration
+            if (showdown) battle.rng.advance(1);
             setStatus(battle, stored, Status.slf(2));
             try log.statusFrom(ident, stored.status, Move.Rest);
             stored.hp = stored.stats.hp;
         } else {
             stored.hp = @maximum(stored.stats.hp, stored.hp + (stored.stats.hp / 2));
         }
-        try log.heal(ident, stored, .None);
+        try log.heal(ident, stored, if (rest) Heal.Silent else Heal.None);
     }
 
     fn hyperBeam(battle: anytype, player: Player) !void {
@@ -1740,7 +1747,7 @@ pub const Effects = struct {
         }
 
         setStatus(battle, foe_stored, Status.init(.PSN));
-        if (foe.last_selected_move == .Toxic) {
+        if (battle.side(player).last_selected_move == .Toxic) {
             foe.active.volatiles.Toxic = true;
             foe.active.volatiles.toxic = 0;
         }
