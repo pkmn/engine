@@ -814,7 +814,46 @@ for (const gen of new Generations(Dex as any)) {
       test.todo('Stat modification errors');
       test.todo('Struggle bypassing');
       test.todo('Trapping sleep glitch');
-      test.todo('Partial trapping move Mirror Move glitch');
+
+      test('Partial trapping move Mirror Move glitch', () => {
+        const TURNS = {key: 'Battle.durationCallback', value: MIN};
+        const battle = startBattle(
+          [SRF, MISS, SRF, SRF, HIT, NO_CRIT, MAX_DMG, TURNS, SRF],
+          [{species: 'Pidgeot', evs, moves: ['Agility', 'Mirror Move']}],
+          [{species: 'Moltres', evs, moves: ['Leer', 'Fire Spin']},
+            {species: 'Drowzee', evs, moves: ['Pound']}]
+        );
+
+        const p2hp1 = battle.p2.pokemon[0].hp;
+        const p2hp2 = battle.p2.pokemon[1].hp;
+
+        battle.makeChoices('move 1', 'move 2');
+        battle.makeChoices('move 2', 'move 1');
+        battle.makeChoices('move 2', 'switch 2');
+
+        expect(battle.p2.pokemon[0].hp).toEqual(p2hp2);
+        expect(battle.p2.pokemon[1].hp).toEqual(p2hp1 - 5);
+
+        expect(filter(battle.log)).toEqual([
+          '|move|p1a: Pidgeot|Agility|p1a: Pidgeot',
+          '|-boost|p1a: Pidgeot|spe|2',
+          '|move|p2a: Moltres|Fire Spin|p1a: Pidgeot|[miss]',
+          '|-miss|p2a: Moltres',
+          '|turn|2',
+          '|move|p1a: Pidgeot|Mirror Move|p1a: Pidgeot',
+          '|move|p1a: Pidgeot|Fire Spin|p2a: Moltres|[from]Mirror Move',
+          '|-resisted|p2a: Moltres',
+          '|-damage|p2a: Moltres|378/383',
+          '|cant|p2a: Moltres|partiallytrapped',
+          '|turn|3',
+          '|switch|p2a: Drowzee|Drowzee|323/323',
+          '|move|p1a: Pidgeot|Mirror Move|p1a: Pidgeot',
+          '|-fail|p1a: Pidgeot',
+          '|turn|4',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      });
+
       test.todo('Rage and Thrash / Petal Dance accuracy bug');
       test.todo('Stat down modifier overflow glitch');
 
