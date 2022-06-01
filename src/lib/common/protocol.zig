@@ -551,6 +551,21 @@ pub fn Log(comptime Writer: type) type {
 pub const FixedLog = Log(std.io.FixedBufferStream([]u8).Writer);
 
 // @test-only
+pub fn format(a: []const u8, b: ?[]const u8, color: bool) void {
+    print("\n", .{});
+    var i: usize = 0;
+    while (i < a.len) : (i += 1) {
+        if (i != 0) if (i % 16 == 0) print("\n", .{}) else print(" ", .{});
+        if (color and b != null and (i >= b.?.len or a[i] != b.?[i])) {
+            print("\x1b[31m0x{X:0>2}\x1b[0m", .{a[i]});
+        } else {
+            print("0x{X:0>2}", .{a[i]});
+        }
+    }
+    print("\n", .{});
+}
+
+// @test-only
 pub fn expectLog(expected: []const u8, actual: []const u8) !void {
     if (!trace) return;
     const color = color: {
@@ -565,23 +580,9 @@ pub fn expectLog(expected: []const u8, actual: []const u8) !void {
 
     expectEqualBytes(expected, actual) catch |err| switch (err) {
         error.TestExpectedEqual => {
+            format(expected, null, color);
+            format(actual, expected, color);
             print("\n", .{});
-            var i: usize = 0;
-            while (i < expected.len) : (i += 1) {
-                if (i != 0) if (i % 16 == 0) print("\n", .{}) else print(" ", .{});
-                if (color and i >= actual.len or expected[i] != actual[i]) {
-                    print("\x1b[31m0x{X:0>2}\x1b[0m", .{expected[i]});
-                } else {
-                    print("0x{X:0>2}", .{expected[i]});
-                }
-            }
-            print("\n\n", .{});
-            i = 0;
-            while (i < actual.len) : (i += 1) {
-                if (i != 0) if (i % 16 == 0) print("\n", .{}) else print(" ", .{});
-                print("0x{X:0>2}", .{actual[i]});
-            }
-            print("\n\n", .{});
             return err;
         },
         else => return err,
