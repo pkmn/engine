@@ -200,6 +200,17 @@ pub const Status = enum(u8) {
     pub inline fn any(num: u8) bool {
         return num > 0;
     }
+
+    // @test-only
+    pub fn name(num: u8) []const u8 {
+        if (Status.is(num, .SLF)) return "SLF";
+        if (Status.is(num, .SLP)) return "SLP";
+        if (Status.is(num, .PSN)) return "PSN";
+        if (Status.is(num, .BRN)) return "BRN";
+        if (Status.is(num, .FRZ)) return "FRZ";
+        if (Status.is(num, .PAR)) return "PAR";
+        return "OK";
+    }
 };
 
 test "Status" {
