@@ -15,6 +15,7 @@ const Tool = enum {
     crit,
     damage,
     disable,
+    distribution,
     metronome,
     rampage,
     seed,
@@ -117,7 +118,7 @@ pub fn main() !void {
         const value = switch (tool) {
             .bide, .rampage => (next & 1) + 2,
             .damage => std.math.rotr(u8, next, 1),
-            .confusion, .thrash => (next & 3) + 2,
+            .confusion, .distribution, .thrash => (next & 3) + 2,
             .crit => @boolToInt(std.math.rotl(u8, @truncate(u8, next), 3) < param),
             .disable => (next & 7) + 1,
             .sleep => next & 7,
@@ -152,6 +153,14 @@ pub fn main() !void {
         const range: u64 = @enumToInt(pkmn.gen1.Move.Struggle) - 2;
         const mod = @as(u2, (if (param < @enumToInt(pkmn.gen1.Move.Metronome) - 1) 1 else 2));
         try w.print("0x{X:0>8}", .{(param - mod) * (0x100000000 / range)});
+    } else if (tool == .distribution) {
+        const range: u64 = 8;
+        try w.print("0x{X:0>8} 0x{X:0>8} 0x{X:0>8} 0x{X:0>8}", .{
+            0 * (0x100000000 / range),
+            3 * (0x100000000 / range),
+            6 * (0x100000000 / range),
+            7 * (0x100000000 / range),
+        });
     } else {
         var range: u64 = switch (tool) {
             .bide, .thrash => 5 - 3,
