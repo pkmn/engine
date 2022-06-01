@@ -29,10 +29,11 @@ const Choice = common.Choice;
 const ArgType = protocol.ArgType;
 const FixedLog = protocol.FixedLog;
 const Log = protocol.Log;
-const expectLog = protocol.expectLog;
 
 const Move = data.Move;
+const Species = data.Species;
 const Status = data.Status;
+const Type = data.Type;
 const Types = data.Types;
 
 const Battle = helpers.Battle;
@@ -1802,6 +1803,19 @@ fn Test(comptime rolls: anytype) type {
             try expect(t.battle.actual.rng.exhausted());
             if (trace) try expectLog(t.buf.expected.items, t.buf.actual.items);
         }
+    };
+}
+
+fn expectLog(expected: []const u8, actual: []const u8) !void {
+    return protocol.expectLog(formatter, expected, actual);
+}
+
+fn formatter(kind: protocol.Kind, byte: u8) []const u8 {
+    return switch (kind) {
+        .Move => @tagName(@intToEnum(Move, byte)),
+        .Species => @tagName(@intToEnum(Species, byte)),
+        .Type => @tagName(@intToEnum(Type, byte)),
+        .Status => Status.name(byte),
     };
 }
 
