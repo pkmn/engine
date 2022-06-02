@@ -119,17 +119,16 @@ fn selectMove(
     const stored = side.stored();
 
     // pre-battle menu
-    if (volatiles.Recharging) {
-        return null;
-    } else if (volatiles.Rage) {
-        from.* = side.last_selected_move;
-        if (showdown) saveMove(battle, player, choice);
+    if (volatiles.Recharging) return null;
+    if (volatiles.Rage) {
+        from.* = side.last_used_move;
+        if (showdown) saveMove(battle, player, null);
         return null;
     }
     volatiles.Flinch = false;
     if (volatiles.Thrashing or volatiles.Charging) {
-        from.* = side.last_selected_move;
-        if (showdown) saveMove(battle, player, choice);
+        from.* = side.last_used_move;
+        if (showdown) saveMove(battle, player, null);
         return null;
     }
 
@@ -143,7 +142,7 @@ fn selectMove(
     }
     if (volatiles.Trapping) {
         if (showdown) {
-            from.* = side.last_selected_move;
+            from.* = side.last_used_move;
             // SHOWDOWN: Pokémon Showdown overwrites Mirror Move with whatever was selected - really
             // this should set side.last_selected_move = last.id to reuse Mirror Move and fail in
             // order to satisfy the conditions of the Desync Clause Mod
@@ -190,19 +189,29 @@ fn selectMove(
     return null;
 }
 
-fn saveMove(battle: anytype, player: Player, choice: Choice) void {
+fn saveMove(battle: anytype, player: Player, choice: ?Choice) void {
     var side = battle.side(player);
-    assert(side.active.volatiles.disabled.move != choice.data);
-    const move = side.active.move(choice.data);
-    // You cannot *select* a move with 0 PP, but a 0 PP move can be used automatically
-    // SHOWDOWN: Pokémon Showdown allows you to select moves with 0 PP in certain situations
-    assert(showdown or move.pp != 0);
 
-    side.last_selected_move = move.id;
-    if (player == .P1) {
-        battle.last_selected_indexes.p1 = choice.data;
+    if (choice) |c| {
+        assert(c.type == .Move and c.data != 0);
+        assert(side.active.volatiles.disabled.move != c.data);
+        const move = side.active.move(c.data);
+        // You cannot *select* a move with 0 PP, but a 0 PP move can be used automatically
+        // SHOWDOWN: Pokémon Showdown allows you to select moves with 0 PP in certain situations
+        assert(showdown or move.pp != 0);
+
+        side.last_selected_move = move.id;
+        if (player == .P1) {
+            battle.last_selected_indexes.p1 = c.data;
+        } else {
+            battle.last_selected_indexes.p2 = c.data;
+        }
     } else {
-        battle.last_selected_indexes.p2 = choice.data;
+        assert(showdown);
+        // The choice's move slot isn't useful as Pokémon Showdown will always force the "locked"
+        // choice to be slot 1. Overwriting the last_selected_move with the last_used_move in this
+        // case ensures we actually call the correct move.
+        side.last_selected_move = side.last_used_move;
     }
 
     // SHOWDOWN: getRandomTarget arbitrarily advances the RNG during resolveAction
@@ -326,7 +335,7 @@ fn executeMove(
 
     var skip_can = false;
     var skip_pp = false;
-    switch (try beforeMove(battle, player, choice.data, log)) {
+    switch (try beforeMove(battle, player, log)) {
         .done => return null,
         .skip_can => skip_can = true,
         .skip_pp => skip_pp = true,
@@ -341,15 +350,13 @@ fn executeMove(
 
 const BeforeMove = union(enum) { done, skip_can, skip_pp, ok, err };
 
-fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeMove {
+fn beforeMove(battle: anytype, player: Player, log: anytype) !BeforeMove {
     var side = battle.side(player);
     const foe = battle.foe(player);
     var active = &side.active;
     var stored = side.stored();
     const ident = battle.active(player);
     var volatiles = &active.volatiles;
-
-    assert(mslot == 0 or active.move(mslot).id != .None);
 
     if (Status.is(stored.status, .SLP)) {
         const status = stored.status;
@@ -431,8 +438,10 @@ fn beforeMove(battle: anytype, player: Player, mslot: u8, log: anytype) !BeforeM
         }
     }
 
-    if (mslot != 0 and volatiles.disabled.move == mslot) {
-        try log.disabled(ident, active.move(volatiles.disabled.move).id);
+    if (volatiles.disabled.move != 0 and
+        active.move(volatiles.disabled.move).id == side.last_selected_move)
+    {
+        try log.disabled(ident, side.last_selected_move);
         return .done;
     }
 
@@ -1619,10 +1628,17 @@ pub const Effects = struct {
             side.active.moves[mslot].id == .Metronome or
             side.active.moves[mslot].id == .MirrorMove);
 
+        // SHOWDOWN: Pokémon Showdown replaces the existing Mimic's slot instead of mslot
+        var oslot = mslot;
         // SHOWDOWN: Pokémon Showdown considers Mimic to never miss instead of having 100% accuracy
         if (showdown) {
             const has_mimic = has_mimic: {
-                for (side.active.moves) |m| if (m.id == .Mimic) break :has_mimic true;
+                for (side.active.moves) |m, i| {
+                    if (m.id == .Mimic) {
+                        oslot = @truncate(u8, i + 1);
+                        break :has_mimic true;
+                    }
+                }
                 break :has_mimic false;
             };
             if (!has_mimic) return;
@@ -1633,7 +1649,7 @@ pub const Effects = struct {
         const moves = &foe.active.moves;
         const rslot = randomMoveSlot(&battle.rng, moves, false);
 
-        side.active.moves[mslot].id = moves[rslot].id;
+        side.active.moves[oslot].id = moves[rslot].id;
 
         try log.startEffect(battle.active(player), .Mimic, moves[rslot].id);
     }
@@ -2179,15 +2195,24 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
             var active = side.active;
             const stored = side.stored();
 
-            const pseudoLocked = active.volatiles.Bide or active.volatiles.Trapping;
-            var locked = isLocked(active);
-
-            // SHOWDOWN: Pokémon Showdown requires you to select a move if sleeping/frozen
-            if (!showdown) {
-                locked = locked or pseudoLocked or
-                    Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP);
+            // Players are not given any input options on the cartridge, but Pokémon Showdown
+            // instead produces a list with a single move that must be chosen (and thus would
+            // expect `move 1`, though this is both incorrect and screws up how the pkmn engine
+            // handles disabled moves so we don't match this)
+            if (isLocked(active)) {
+                out[n] = if (showdown) .{ .type = .Move, .data = 1 } else .{};
+                n += 1;
+                return n;
             }
-            if (locked) {
+
+            const limited = active.volatiles.Bide or active.volatiles.Trapping;
+            // All of these happen after "FIGHT" (indicating you are not switching) but before you
+            // are allowed to select a move on the cartridge. Pokémon Showdown instead either
+            // disables all other moves in the case of limited or requires you to select a move
+            // normally if sleeping/frozen/trapped.
+            if (!showdown and (limited or foe.active.volatiles.Trapping or
+                Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP)))
+            {
                 out[n] = .{ .type = .Move, .data = 0 };
                 n += 1;
                 return n;
@@ -2207,7 +2232,8 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
             // question is present in the Pokémon's moveset (which means moves called via Metronome
             // / Mirror Move) will not result in forcing the subsequent use unless the user also had
             // the proc-ed move in their moveset) and disabling all other moves.
-            if (pseudoLocked) {
+            if (limited) {
+                assert(showdown);
                 assert(side.last_selected_move != .None);
                 while (slot <= 4) : (slot += 1) {
                     const m = active.move(slot);

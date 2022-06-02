@@ -95,7 +95,7 @@ export const Choices = new class {
         active.volatile(gen1.Pokemon.Volatiles.Rage) ||
         active.volatile(gen1.Pokemon.Volatiles.Thrashing) ||
         active.volatile(gen1.Pokemon.Volatiles.Charging);
-      if (locked) return [{type: 'move', data: 0}];
+      if (locked) return [{type: 'move', data: 1}];
 
       if (!foe.active!.volatile(gen1.Pokemon.Volatiles.Trapping)) {
         for (let slot = 2; slot <= 6; slot++) {
