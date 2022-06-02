@@ -708,7 +708,7 @@ test "Paralyze (primary)" {
     // zig fmt: off
         if (showdown) .{
             NOP, NOP, ~HIT, HIT, NOP,
-            NOP,  NOP, HIT, NO_PROC, HIT, NOP,
+            NOP, NOP, HIT, NO_PROC, HIT, NOP,
             NOP, PROC,
             NOP, NOP, HIT, NO_PROC, HIT, NOP,
             NOP, NO_PROC,
