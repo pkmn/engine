@@ -416,6 +416,32 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
+    test('end turn (turn limit)', () => {
+      const battle = startBattle([], [
+        {species: 'Bulbasaur', evs, moves: ['Tackle']},
+        {species: 'Charmander', evs, moves: ['Scratch']},
+      ], [
+        {species: 'Squirtle', evs, moves: ['Tackle']},
+        {species: 'Pikachu', evs, moves: ['Thunder Shock']},
+      ]);
+
+      for (let i = 0; i < 998; i++) {
+        battle.makeChoices('switch 2', 'switch 2');
+      }
+      expect(battle.ended).toBe(false);
+      expect(battle.turn).toBe(999);
+      (battle as any).log = [];
+
+      battle.makeChoices('switch 2', 'switch 2');
+      expect(battle.ended).toBe(true);
+
+      expectLog(battle, [
+        '|switch|p1a: Charmander|Charmander|281/281',
+        '|switch|p2a: Pikachu|Pikachu|273/273',
+        '|tie',
+      ]);
+    });
+
     test('Endless Battle Clause (initial)', () => {
       const battle = createBattle([]);
       battle.started = true;
@@ -991,7 +1017,7 @@ class FixedRNG extends PRNG {
 }
 
 const FILTER = new Set([
-  '', 't:', 'gametype', 'player', 'teamsize', 'gen',
+  '', 't:', 'gametype', 'player', 'teamsize', 'gen', 'message',
   'tier', 'rule', 'start', 'upkeep', '-message', '-hint',
 ]);
 

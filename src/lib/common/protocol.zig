@@ -19,7 +19,7 @@ pub const ArgType = enum(u8) {
     LastStill,
     LastMiss,
 
-    // Gen 1
+    // Gen 1expect
     Move,
     Switch,
     Cant,
@@ -561,7 +561,7 @@ pub fn format(formatter: Formatter, a: []const u8, b: ?[]const u8, color: bool) 
     while (i < a.len) {
         const arg = @intToEnum(ArgType, a[i]);
         const name = switch (arg) {
-            .None => "---",
+            .None => if (color) "\x1b[2m-\x1b[0m" else "-",
             .LastStill => "|[still]",
             .LastMiss => "|[miss]",
             .Move => "|move|",

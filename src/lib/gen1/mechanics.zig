@@ -1220,6 +1220,14 @@ fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
     }
 
     battle.turn += 1;
+
+    if (showdown and battle.turn >= 1000) {
+        try log.tie();
+        return Result.Tie;
+    } else if (battle.turn >= 65535) {
+        return Result.Error;
+    }
+
     try log.turn(battle.turn);
     // SHOWDOWN: emitting |request| for sides will advance the RNG by 2 for each "locked" move
     if (showdown) {
@@ -1228,13 +1236,7 @@ fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
         battle.rng.advance(locked * 2);
     }
 
-    if (showdown) {
-        if (battle.turn < 1000) return Result.Default;
-        try log.tie();
-        return Result.Tie;
-    } else {
-        return if (battle.turn >= 65535) Result.Error else Result.Default;
-    }
+    return Result.Default;
 }
 
 fn checkEBC(battle: anytype) bool {

@@ -544,12 +544,43 @@ test "fainting (double)" {
         try t.verify();
     }
 }
-test "end turn (locked)" {
-    return error.SkipZigTest;
-}
 
 test "end turn (turn limit)" {
-    return error.SkipZigTest;
+    var t = Test(.{}).init(
+        &.{
+            .{ .species = .Bulbasaur, .hp = 1, .moves = &.{.Tackle} },
+            .{ .species = .Charmander, .moves = &.{.Scratch} },
+        },
+        &.{
+            .{ .species = .Squirtle, .hp = 1, .moves = &.{.Tackle} },
+            .{ .species = .Pikachu, .moves = &.{.ThunderShock} },
+        },
+    );
+    defer t.deinit();
+
+    var max: u16 = if (showdown) 1000 else 65535;
+    var i: usize = 0;
+    while (i < max - 1) : (i += 1) {
+        try expectEqual(Result.Default, try t.battle.actual.update(swtch(2), swtch(2), null));
+    }
+    try expectEqual(max - 1, t.battle.actual.turn);
+
+    const size = if (showdown) 20 else 18;
+    var expected_buf: [size]u8 = undefined;
+    var actual_buf: [size]u8 = undefined;
+
+    var expected = FixedLog{ .writer = stream(&expected_buf).writer() };
+    var actual = FixedLog{ .writer = stream(&actual_buf).writer() };
+
+    const slot = if (showdown) 2 else 1;
+    try expected.switched(P1.ident(slot), t.expected.p1.get(slot));
+    try expected.switched(P2.ident(slot), t.expected.p2.get(slot));
+    if (showdown) try expected.tie();
+
+    const result = if (showdown) Result.Tie else Result.Error;
+    try expectEqual(result, try t.battle.actual.update(swtch(2), swtch(2), actual));
+    try expectEqual(max, t.battle.actual.turn);
+    try expectLog(&expected_buf, &actual_buf);
 }
 
 test "Endless Battle Clause (initial)" {
