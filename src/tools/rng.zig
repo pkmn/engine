@@ -56,7 +56,7 @@ pub fn main() !void {
                 std.process.exit(1);
             }
             const crit = std.meta.stringToEnum(pkmn.gen1.Species, args[2]) orelse {
-                err.print("Usage: {s} crit <N>\n", .{args[0]}) catch {};
+                err.print("Usage: {s} crit <Species>\n", .{args[0]}) catch {};
                 std.process.exit(1);
             };
             param = pkmn.gen1.Species.chance(crit);

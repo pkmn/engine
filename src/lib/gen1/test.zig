@@ -648,7 +648,30 @@ test "choices (Struggle)" {
 // Move.{KarateChop,RazorLeaf,Crabhammer,Slash}
 test "HighCritical" {
     // Has a higher chance for a critical hit.
-    return error.SkipZigTest;
+    const crit = if (showdown) comptime ranged(Species.chance(.Machop), 256) else 2;
+    const no_crit = crit + 1;
+    var t = Test(if (showdown)
+        (.{ NOP, NOP, HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG })
+    else
+        (.{ no_crit, MIN_DMG, HIT, no_crit, MIN_DMG, HIT })).init(
+        &.{.{ .species = .Machop, .moves = &.{.KarateChop} }},
+        &.{.{ .species = .Machop, .level = 99, .moves = &.{.Strength} }},
+    );
+    defer t.deinit();
+
+    t.expected.p1.get(1).hp -= 73;
+    t.expected.p2.get(1).hp -= 92;
+
+    try t.log.expected.move(P1.ident(1), Move.KarateChop, P2.ident(1), null);
+    try t.log.expected.crit(P2.ident(1));
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Strength, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.verify();
 }
 
 // Move.FocusEnergy

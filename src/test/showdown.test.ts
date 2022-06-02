@@ -346,6 +346,83 @@ for (const gen of new Generations(Dex as any)) {
       }
     });
 
+    test('end turn (turn limit)', () => {
+      const battle = startBattle([], [
+        {species: 'Bulbasaur', evs, moves: ['Tackle']},
+        {species: 'Charmander', evs, moves: ['Scratch']},
+      ], [
+        {species: 'Squirtle', evs, moves: ['Tackle']},
+        {species: 'Pikachu', evs, moves: ['Thunder Shock']},
+      ]);
+
+      for (let i = 0; i < 998; i++) {
+        battle.makeChoices('switch 2', 'switch 2');
+      }
+      expect(battle.ended).toBe(false);
+      expect(battle.turn).toBe(999);
+      (battle as any).log = [];
+
+      battle.makeChoices('switch 2', 'switch 2');
+      expect(battle.ended).toBe(true);
+
+      expectLog(battle, [
+        '|switch|p1a: Charmander|Charmander|281/281',
+        '|switch|p2a: Pikachu|Pikachu|273/273',
+        '|tie',
+      ]);
+    });
+
+    test('Endless Battle Clause (initial)', () => {
+      const battle = createBattle([]);
+      battle.started = true;
+      battle.setPlayer('p1', {team: [{species: 'Gengar', evs, moves: ['Lick']}] as PokemonSet[]});
+      battle.setPlayer('p2', {team: [{species: 'Gengar', moves: ['Lick']}] as PokemonSet[]});
+
+      battle.p1.pokemon[0].moveSlots[0].pp = 0;
+      battle.p2.pokemon[0].moveSlots[0].pp = 0;
+
+      battle.started = false;
+      battle.start();
+
+      expectLog(battle, [
+        '|switch|p1a: Gengar|Gengar|323/323',
+        '|switch|p2a: Gengar|Gengar|260/260',
+        '|tie',
+      ]);
+    });
+
+    test('HighCritical', () => {
+      const crit = {
+        key: CRIT.key,
+        value: ranged(Math.floor(gen.species.get('Machop')!.baseStats.spe / 2), 256),
+      };
+      const no_crit = {key: crit.key, value: crit.value + 1};
+      // Regular non-crit roll is still a crit for high critical moves
+      const battle = startBattle([SRF, SRF, HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG], [
+        {species: 'Machop', evs, moves: ['Karate Chop']},
+      ], [
+        {species: 'Machop', level: 99, evs, moves: ['Strength']},
+      ]);
+
+      const p1hp = battle.p1.pokemon[0].hp;
+      const p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+
+      expect(battle.p1.pokemon[0].hp).toEqual(p1hp - 73);
+      expect(battle.p2.pokemon[0].hp).toEqual(p2hp - 92);
+
+      expectLog(battle, [
+        '|move|p1a: Machop|Karate Chop|p2a: Machop',
+        '|-crit|p2a: Machop',
+        '|-damage|p2a: Machop|247/339',
+        '|move|p2a: Machop|Strength|p1a: Machop',
+        '|-damage|p1a: Machop|270/343',
+        '|turn|2',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
     test('Paralyze (primary)', () => {
       const PAR_CANT = {key: 'Battle.onBeforeMove', value: ranged(63, 256) - 1};
       const PAR_CAN = {key: 'Battle.onBeforeMove', value: PAR_CANT.value + 1};
@@ -414,51 +491,6 @@ for (const gen of new Generations(Dex as any)) {
         '|turn|7',
       ]);
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
-    });
-
-    test('end turn (turn limit)', () => {
-      const battle = startBattle([], [
-        {species: 'Bulbasaur', evs, moves: ['Tackle']},
-        {species: 'Charmander', evs, moves: ['Scratch']},
-      ], [
-        {species: 'Squirtle', evs, moves: ['Tackle']},
-        {species: 'Pikachu', evs, moves: ['Thunder Shock']},
-      ]);
-
-      for (let i = 0; i < 998; i++) {
-        battle.makeChoices('switch 2', 'switch 2');
-      }
-      expect(battle.ended).toBe(false);
-      expect(battle.turn).toBe(999);
-      (battle as any).log = [];
-
-      battle.makeChoices('switch 2', 'switch 2');
-      expect(battle.ended).toBe(true);
-
-      expectLog(battle, [
-        '|switch|p1a: Charmander|Charmander|281/281',
-        '|switch|p2a: Pikachu|Pikachu|273/273',
-        '|tie',
-      ]);
-    });
-
-    test('Endless Battle Clause (initial)', () => {
-      const battle = createBattle([]);
-      battle.started = true;
-      battle.setPlayer('p1', {team: [{species: 'Gengar', evs, moves: ['Lick']}] as PokemonSet[]});
-      battle.setPlayer('p2', {team: [{species: 'Gengar', moves: ['Lick']}] as PokemonSet[]});
-
-      battle.p1.pokemon[0].moveSlots[0].pp = 0;
-      battle.p2.pokemon[0].moveSlots[0].pp = 0;
-
-      battle.started = false;
-      battle.start();
-
-      expectLog(battle, [
-        '|switch|p1a: Gengar|Gengar|323/323',
-        '|switch|p2a: Gengar|Gengar|260/260',
-        '|tie',
-      ]);
     });
 
     test('OHKO', () => {
