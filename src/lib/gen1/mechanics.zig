@@ -57,16 +57,16 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     assert(c1.type != .Pass or c2.type != .Pass or battle.turn == 0);
     if (battle.turn == 0) return start(battle, log);
 
-    var l1 = false;
-    var l2 = false;
+    var f1: ?Move = null;
+    var f2: ?Move = null;
 
-    if (selectMove(battle, .P1, c1, c2, &l1)) |r| return r;
-    if (selectMove(battle, .P2, c2, c1, &l2)) |r| return r;
+    if (selectMove(battle, .P1, c1, c2, &f1)) |r| return r;
+    if (selectMove(battle, .P2, c2, c1, &f2)) |r| return r;
 
     if (turnOrder(battle, c1, c2) == .P1) {
-        if (try doTurn(battle, .P1, c1, l1, .P2, c2, l2, log)) |r| return r;
+        if (try doTurn(battle, .P1, c1, f1, .P2, c2, f2, log)) |r| return r;
     } else {
-        if (try doTurn(battle, .P2, c2, l2, .P1, c1, l1, log)) |r| return r;
+        if (try doTurn(battle, .P2, c2, f2, .P1, c1, f1, log)) |r| return r;
     }
 
     var p1 = battle.side(.P1);
@@ -78,8 +78,7 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
         p2.active.volatiles.Trapping = false;
     }
 
-    const locked = @as(u2, @boolToInt(l1)) + @as(u2, @boolToInt(l2));
-    return endTurn(battle, log, locked);
+    return endTurn(battle, log);
 }
 
 fn start(battle: anytype, log: anytype) !Result {
@@ -97,7 +96,7 @@ fn start(battle: anytype, log: anytype) !Result {
     try switchIn(battle, .P1, p1_slot, true, log);
     try switchIn(battle, .P2, p2_slot, true, log);
 
-    return endTurn(battle, log, 0);
+    return endTurn(battle, log);
 }
 
 fn findFirstAlive(side: *const Side) u8 {
@@ -110,7 +109,7 @@ fn selectMove(
     player: Player,
     choice: Choice,
     foe_choice: Choice,
-    locked: *bool,
+    from: *?Move,
 ) ?Result {
     if (choice.type == .Pass) return null;
 
@@ -118,20 +117,37 @@ fn selectMove(
     var volatiles = &side.active.volatiles;
     const stored = side.stored();
 
-    const save = save: {
-        // pre-battle menu
-        if (volatiles.Recharging) break :save false;
-        if (volatiles.Rage) break :save true;
-        volatiles.Flinch = false;
-        if (volatiles.Thrashing or volatiles.Charging) break :save true;
+    // pre-battle menu
+    if (volatiles.Recharging) {
+        return null;
+    } else if (volatiles.Rage) {
+        from.* = side.last_selected_move;
+        if (showdown) saveMove(battle, player, choice);
+        return null;
+    }
+    volatiles.Flinch = false;
+    if (volatiles.Thrashing or volatiles.Charging) {
+        from.* = side.last_selected_move;
+        if (showdown) saveMove(battle, player, choice);
+        return null;
+    }
 
-        // battle menu
-        if (choice.type == .Switch) return null;
+    // battle menu
+    if (choice.type == .Switch) return null;
 
-        // pre-move select
-        if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP)) break :save true;
-        if (volatiles.Bide) break :save true;
-        if (volatiles.Trapping) {
+    // pre-move select
+    if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP) or volatiles.Bide) {
+        if (showdown) saveMove(battle, player, choice);
+        return null;
+    }
+    if (volatiles.Trapping) {
+        if (showdown) {
+            from.* = side.last_selected_move;
+            // SHOWDOWN: Pokémon Showdown overwrites Mirror Move with whatever was selected - really
+            // this should set side.last_selected_move = last.id to reuse Mirror Move and fail in
+            // order to satisfy the conditions of the Desync Clause Mod
+            saveMove(battle, player, choice);
+        } else {
             // GLITCH: https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
             if (foe_choice.type == .Switch) {
                 const slot = if (player == .P1)
@@ -140,47 +156,36 @@ fn selectMove(
                     battle.last_selected_indexes.p2;
                 const last = side.active.move(@truncate(u4, slot));
                 if (last.id == .Metronome) side.last_selected_move = last.id;
-                if (last.id == .MirrorMove) {
-                    if (!showdown) return Result.Error;
-                    // SHOWDOWN: Mirror Move is broken but forcing reuse after switch will cause it
-                    // to fail which is the required behavior to appease the Desync Clause Mod
-                    side.last_selected_move = last.id;
-                }
+                if (last.id == .MirrorMove) return Result.Error;
             }
-            break :save true;
         }
-
-        if (battle.foe(player).active.volatiles.Trapping) {
-            side.last_selected_move = .SKIP_TURN;
-            // SHOWDOWN: Pokémon Showdown promptly overwrites the SKIP_TURN below...
-            break :save true;
-        }
-
-        // move select
-        if (choice.data == 0) {
-            const struggle = ok: {
-                for (side.active.moves) |move, i| {
-                    if (move.pp > 0 and volatiles.disabled.move != i + 1) break :ok false;
-                }
-                break :ok true;
-            };
-
-            assert(struggle);
-            side.last_selected_move = .Struggle;
-        } else {
-            saveMove(battle, player, choice);
-        }
-
-        // SHOWDOWN: getRandomTarget arbitrarily advances the RNG during resolveAction
-        if (showdown) battle.rng.advance(Move.frames(side.last_selected_move, .resolve));
-
-        locked.* = false;
         return null;
-    };
+    }
 
-    if (showdown and save) saveMove(battle, player, choice);
+    if (battle.foe(player).active.volatiles.Trapping) {
+        if (showdown) {
+            saveMove(battle, player, choice);
+        } else {
+            side.last_selected_move = .SKIP_TURN;
+        }
+        return null;
+    }
 
-    locked.* = true;
+    // move select
+    if (choice.data == 0) {
+        const struggle = ok: {
+            for (side.active.moves) |move, i| {
+                if (move.pp > 0 and volatiles.disabled.move != i + 1) break :ok false;
+            }
+            break :ok true;
+        };
+
+        assert(struggle);
+        side.last_selected_move = .Struggle;
+    } else {
+        saveMove(battle, player, choice);
+    }
+
     return null;
 }
 
@@ -198,6 +203,9 @@ fn saveMove(battle: anytype, player: Player, choice: Choice) void {
     } else {
         battle.last_selected_indexes.p2 = choice.data;
     }
+
+    // SHOWDOWN: getRandomTarget arbitrarily advances the RNG during resolveAction
+    if (showdown) battle.rng.advance(Move.frames(side.last_selected_move, .resolve));
 }
 
 fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anytype) !void {
@@ -268,25 +276,25 @@ fn doTurn(
     battle: anytype,
     player: Player,
     player_choice: Choice,
-    player_locked: bool,
+    player_from: ?Move,
     foe_player: Player,
     foe_choice: Choice,
-    foe_locked: bool,
+    foe_from: ?Move,
     log: anytype,
 ) !?Result {
     assert(player_choice.type != .Pass);
 
-    if (try executeMove(battle, player, player_choice, player_locked, log)) |r| return r;
-    if (try checkFaint(battle, foe_player, foe_locked, player_locked, log)) |r| return r;
+    if (try executeMove(battle, player, player_choice, player_from, log)) |r| return r;
+    if (try checkFaint(battle, foe_player, log)) |r| return r;
     try handleResidual(battle, player, log);
-    if (try checkFaint(battle, player, player_locked, foe_locked, log)) |r| return r;
+    if (try checkFaint(battle, player, log)) |r| return r;
 
     if (foe_choice.type == .Pass) return null;
 
-    if (try executeMove(battle, foe_player, foe_choice, foe_locked, log)) |r| return r;
-    if (try checkFaint(battle, player, player_locked, foe_locked, log)) |r| return r;
+    if (try executeMove(battle, foe_player, foe_choice, foe_from, log)) |r| return r;
+    if (try checkFaint(battle, player, log)) |r| return r;
     try handleResidual(battle, foe_player, log);
-    if (try checkFaint(battle, foe_player, foe_locked, player_locked, log)) |r| return r;
+    if (try checkFaint(battle, foe_player, log)) |r| return r;
 
     return null;
 }
@@ -295,7 +303,7 @@ fn executeMove(
     battle: anytype,
     player: Player,
     choice: Choice,
-    locked: bool,
+    from: ?Move,
     log: anytype,
 ) !?Result {
     var side = battle.side(player);
@@ -325,7 +333,6 @@ fn executeMove(
         .err => return @as(?Result, Result.Error),
     }
 
-    const from: ?Move = if (locked) side.last_selected_move else null;
     if (!skip_can and !try canMove(battle, player, choice, skip_pp, from, log)) return null;
 
     return doMove(battle, player, choice, from, log);
@@ -1090,8 +1097,6 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool) bool
 fn checkFaint(
     battle: anytype,
     player: Player,
-    player_locked: bool,
-    foe_locked: bool,
     log: anytype,
 ) @TypeOf(log).Error!?Result {
     var side = battle.side(player);
@@ -1119,9 +1124,11 @@ fn checkFaint(
     }
 
     // SHOWDOWN: emitting |request| for sides will advance the RNG by 2 for each "locked" move
-    const locked = @as(u2, @boolToInt(player_locked)) +
-        @as(u2, (if (foe_fainted) @boolToInt(foe_locked) else 0));
-    if (showdown) battle.rng.advance(locked * 2);
+    if (showdown) {
+        const locked = @as(u2, @boolToInt(isLocked(side.active))) +
+            @as(u2, @boolToInt(!foe_fainted and isLocked(foe.active)));
+        battle.rng.advance(locked * 2);
+    }
 
     const foe_choice: Choice.Type = if (foe_fainted) .Switch else .Pass;
     if (player == .P1) return Result{ .p1 = .Switch, .p2 = foe_choice };
@@ -1193,7 +1200,7 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
     }
 }
 
-fn endTurn(battle: anytype, log: anytype, locked: u8) @TypeOf(log).Error!Result {
+fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
     if (showdown and checkEBC(battle)) {
         try log.tie();
         return Result.Tie;
@@ -1202,7 +1209,11 @@ fn endTurn(battle: anytype, log: anytype, locked: u8) @TypeOf(log).Error!Result 
     battle.turn += 1;
     try log.turn(battle.turn);
     // SHOWDOWN: emitting |request| for sides will advance the RNG by 2 for each "locked" move
-    if (showdown) battle.rng.advance(locked * 2);
+    if (showdown) {
+        const locked = @as(u2, @boolToInt(isLocked(battle.side(.P1).active))) +
+            @as(u2, @boolToInt(isLocked(battle.side(.P2).active)));
+        battle.rng.advance(locked * 2);
+    }
 
     if (showdown) {
         if (battle.turn < 1000) return Result.Default;
@@ -2040,6 +2051,11 @@ fn statusModify(status: u8, stats: *Stats(u16)) void {
     }
 }
 
+fn isLocked(active: ActivePokemon) bool {
+    return active.volatiles.Recharging or active.volatiles.Rage or
+        active.volatiles.Thrashing or active.volatiles.Charging;
+}
+
 fn clearVolatiles(active: *ActivePokemon, ident: ID, log: anytype) !void {
     var volatiles = &active.volatiles;
     if (volatiles.disabled.move != 0) {
@@ -2155,21 +2171,22 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
 
             var active = side.active;
             const stored = side.stored();
-            if (foe.active.volatiles.Trapping) {
-                // SHOWDOWN: Pokémon Showdown still requires you select a move when sleeping/frozen
-                const status = if (!showdown)
-                    Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP)
-                else
-                    false;
-                const locked = active.volatiles.Recharging or active.volatiles.Rage or
-                    active.volatiles.Thrashing or active.volatiles.Charging or
-                    active.volatiles.Bide or active.volatiles.Trapping or status;
-                if (locked) {
-                    out[n] = .{ .type = .Move, .data = 0 };
-                    n += 1;
-                    return n;
-                }
-            } else {
+
+            const pseudoLocked = active.volatiles.Bide or active.volatiles.Trapping;
+            var locked = isLocked(active);
+
+            // SHOWDOWN: Pokémon Showdown requires you to select a move if sleeping/frozen
+            if (!showdown) {
+                locked = locked or pseudoLocked or
+                    Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP);
+            }
+            if (locked) {
+                out[n] = .{ .type = .Move, .data = 0 };
+                n += 1;
+                return n;
+            }
+
+            if (!foe.active.volatiles.Trapping) {
                 var slot: u4 = 2;
                 while (slot <= 6) : (slot += 1) {
                     const pokemon = side.get(slot);
@@ -2178,15 +2195,32 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
                     n += 1;
                 }
             }
+            var slot: u4 = 1;
+            // SHOWDOWN: Pokémon Showdown handles Bide and Trapping moves by checking if the move in
+            // question is present in the Pokémon's moveset (which means moves called via Metronome
+            // / Mirror Move) will not result in forcing the subsequent use unless the user also had
+            // the proc-ed move in their moveset) and disabling all other moves.
+            if (pseudoLocked) {
+                assert(side.last_selected_move != .None);
+                while (slot <= 4) : (slot += 1) {
+                    const m = active.move(slot);
+                    if (m.id == .None) break;
+                    if (m.id == side.last_selected_move) {
+                        assert(m.pp > 0 or Move.get(m.id).effect == .Trapping);
+                        out[n] = .{ .type = .Move, .data = slot };
+                        n += 1;
+                        return n;
+                    }
+                }
+            }
 
             const before = n;
-            var slot: u4 = 1;
+            slot = 1;
             while (slot <= 4) : (slot += 1) {
                 const m = active.move(slot);
                 if (m.id == .None) break;
                 if (m.pp == 0) continue;
                 if (active.volatiles.disabled.move == slot) continue;
-                // FIXME: select 0 PP move for PS
                 out[n] = .{ .type = .Move, .data = slot };
                 n += 1;
             }

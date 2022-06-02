@@ -1426,7 +1426,7 @@ test "Explode" {
 test "Swift" {
     // This move does not check accuracy and hits even if the target is using Dig or Fly.
     var t = Test(if (showdown)
-        (.{ NOP, NOP, NOP, ~CRIT, MIN_DMG }) // FIXME: SSR & GLM
+        (.{ NOP, NOP, NOP, ~CRIT, MIN_DMG, NOP, NOP }) // FIXME: SSR
     else
         (.{ ~CRIT, MIN_DMG })).init(
         &.{.{ .species = .Eevee, .moves = &.{.Swift} }},

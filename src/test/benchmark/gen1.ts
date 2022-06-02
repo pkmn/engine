@@ -88,19 +88,16 @@ export const Choices = new class {
 
       const side = battle.side(id);
       const foe = battle.foe(id);
-
       const active = side.active!;
 
-      if (foe.active!.volatile(gen1.Pokemon.Volatiles.Trapping)) {
-        const locked =
-          active.volatile(gen1.Pokemon.Volatiles.Recharging) ||
-          active.volatile(gen1.Pokemon.Volatiles.Rage) ||
-          active.volatile(gen1.Pokemon.Volatiles.Thrashing) ||
-          active.volatile(gen1.Pokemon.Volatiles.Charging) ||
-          active.volatile(gen1.Pokemon.Volatiles.Bide) ||
-          active.volatile(gen1.Pokemon.Volatiles.Trapping);
-        if (locked) return [{type: 'move', data: 0}];
-      } else {
+      const locked =
+        active.volatile(gen1.Pokemon.Volatiles.Recharging) ||
+        active.volatile(gen1.Pokemon.Volatiles.Rage) ||
+        active.volatile(gen1.Pokemon.Volatiles.Thrashing) ||
+        active.volatile(gen1.Pokemon.Volatiles.Charging);
+      if (locked) return [{type: 'move', data: 0}];
+
+      if (!foe.active!.volatile(gen1.Pokemon.Volatiles.Trapping)) {
         for (let slot = 2; slot <= 6; slot++) {
           const pokemon = side.get(slot as engine.Slot);
           if (!pokemon || pokemon.hp === 0) continue;
@@ -108,8 +105,21 @@ export const Choices = new class {
         }
       }
 
-      const before = options.length;
       let slot = 0;
+      const trapping = side.active!.volatile(gen1.Pokemon.Volatiles.Trapping);
+      const bide = active.volatile(gen1.Pokemon.Volatiles.Bide);
+      if (trapping || bide) {
+        const last = side.lastSelectedMove!;
+        for (const move of active.moves) {
+          if (move.id === last) {
+            options.push({type: 'move', data: slot});
+            return options;
+          }
+        }
+      }
+
+      slot = 0;
+      const before = options.length;
       for (const move of active.moves) {
         slot++;
         if (move.pp === 0 || move.disabled) continue;
@@ -143,8 +153,8 @@ export const Choices = new class {
       const side = battle[id]!;
       const active = side.active[0];
 
-      const trapped = active.volatiles['partialtrappinglock'];
-      if (trapped) {
+      // Being "locked" on Pokémon Showdown sets "trapped"
+      if (active.trapped) {
         const locked = active.trapped && request.active[0].moves.length === 1;
         if (locked) return ['move 1'];
       } else {
@@ -155,12 +165,14 @@ export const Choices = new class {
         }
       }
 
+      const trapping = active.volatiles['partialtrappinglock'];
       const before = options.length;
       let slot = 0;
       for (const move of active.moveSlots) {
         slot++;
-        // Pokémon Showdown expect us to select 0 PP moves when trapped
-        if ((move.pp === 0 && !trapped) || move.disabled) continue;
+        // Pokémon Showdown expect us to select 0 PP moves when trapping as it disables
+        // everything but the move we are to use (and forced trapping moves underflow)
+        if ((move.pp === 0 && !trapping) || move.disabled) continue;
         options.push(`move ${slot}`);
       }
       if (options.length === before) {
