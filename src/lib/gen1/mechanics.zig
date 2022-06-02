@@ -631,7 +631,8 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     var ohko = false;
     var immune = false;
     var hits: u4 = 1;
-    var miss = showdown and (move.effect != .Bide and
+
+    var miss = showdown and (move.target != .Self and
         !(move.effect == .Sleep and foe.active.volatiles.Recharging) and
         !moveHit(battle, player, move, &immune));
     assert(!immune);

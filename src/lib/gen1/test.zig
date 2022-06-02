@@ -648,8 +648,7 @@ test "choices (Struggle)" {
 // Move.{KarateChop,RazorLeaf,Crabhammer,Slash}
 test "HighCritical" {
     // Has a higher chance for a critical hit.
-    const crit = if (showdown) comptime ranged(Species.chance(.Machop), 256) else 2;
-    const no_crit = crit + 1;
+    const no_crit = if (showdown) comptime ranged(Species.chance(.Machop), 256) else 3;
     var t = Test(if (showdown)
         (.{ NOP, NOP, HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG })
     else
@@ -667,7 +666,6 @@ test "HighCritical" {
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.move(P2.ident(1), Move.Strength, P1.ident(1), null);
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
@@ -675,11 +673,52 @@ test "HighCritical" {
 }
 
 // Move.FocusEnergy
-// TODO: https://pkmn.cc/bulba-glitch-1#Critical_hit_ratio_error
 test "FocusEnergy" {
     // While the user remains active, its chance for a critical hit is quartered. Fails if the user
     // already has the effect. If any Pokemon uses Haze, this effect ends.
-    return error.SkipZigTest;
+    const crit = if (showdown) comptime ranged(Species.chance(.Machoke), 256) - 1 else 2;
+    var t = Test(if (showdown)
+        (.{ NOP, HIT, crit, MIN_DMG, NOP, HIT, crit, MIN_DMG })
+    else
+        (.{ ~CRIT, crit, MIN_DMG, HIT, crit, MIN_DMG, HIT, ~CRIT })).init(
+        &.{.{ .species = .Machoke, .moves = &.{ .FocusEnergy, .Strength } }},
+        &.{.{ .species = .Koffing, .moves = &.{ .DoubleTeam, .Haze } }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.FocusEnergy, P1.ident(1), null);
+    try t.log.expected.start(P1.ident(1), .FocusEnergy);
+    try t.log.expected.move(P2.ident(1), Move.DoubleTeam, P2.ident(1), null);
+    try t.log.expected.boost(P2.ident(1), .Evasion, 1);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    t.expected.p2.get(1).hp -= 60;
+
+    try t.log.expected.move(P1.ident(1), Move.Strength, P2.ident(1), null);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Haze, P2.ident(1), null);
+    try t.log.expected.activate(P2.ident(1), .Haze);
+    try t.log.expected.clearallboost();
+    try t.log.expected.end(P1.ident(1), .FocusEnergy);
+    try t.log.expected.turn(3);
+
+    // No crit after Focus Energy (https://pkmn.cc/bulba-glitch-1#Critical_hit_ratio_error)
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+
+    t.expected.p2.get(1).hp -= 115;
+
+    try t.log.expected.move(P1.ident(1), Move.Strength, P2.ident(1), null);
+    try t.log.expected.crit(P2.ident(1));
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.DoubleTeam, P2.ident(1), null);
+    try t.log.expected.boost(P2.ident(1), .Evasion, 1);
+    try t.log.expected.turn(4);
+
+    // Crit once Haze removes Focus Energy
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    try t.verify();
 }
 
 // Move.{DoubleSlap,CometPunch,FuryAttack,PinMissile,SpikeCannon,Barrage,FurySwipes}

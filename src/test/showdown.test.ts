@@ -392,11 +392,8 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('HighCritical', () => {
-      const crit = {
-        key: CRIT.key,
-        value: ranged(Math.floor(gen.species.get('Machop')!.baseStats.spe / 2), 256),
-      };
-      const no_crit = {key: crit.key, value: crit.value + 1};
+      const value = ranged(Math.floor(gen.species.get('Machop')!.baseStats.spe / 2), 256);
+      const no_crit = {key: CRIT.key, value};
       // Regular non-crit roll is still a crit for high critical moves
       const battle = startBattle([SRF, SRF, HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG], [
         {species: 'Machop', evs, moves: ['Karate Chop']},
@@ -419,6 +416,50 @@ for (const gen of new Generations(Dex as any)) {
         '|move|p2a: Machop|Strength|p1a: Machop',
         '|-damage|p1a: Machop|270/343',
         '|turn|2',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
+    test('FocusEnergy', () => {
+      const value = ranged(Math.floor(gen.species.get('Machoke')!.baseStats.spe / 2), 256) - 1;
+      const crit = {key: CRIT.key, value};
+      const battle = startBattle([SRF, HIT, crit, MIN_DMG, SRF, HIT, crit, MIN_DMG], [
+        {species: 'Machoke', evs, moves: ['Focus Energy', 'Strength']},
+      ], [
+        {species: 'Koffing', evs, moves: ['Double Team', 'Haze']},
+      ]);
+
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+
+      // No crit after Focus Energy
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p2.pokemon[0].hp).toEqual(p2hp -= 60);
+
+      // Crit once Haze removes Focus Energy
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toEqual(p2hp -= 115);
+
+      expectLog(battle, [
+        '|move|p1a: Machoke|Focus Energy|p1a: Machoke',
+        '|-start|p1a: Machoke|move: Focus Energy',
+        '|move|p2a: Koffing|Double Team|p2a: Koffing',
+        '|-boost|p2a: Koffing|evasion|1',
+        '|turn|2',
+        '|move|p1a: Machoke|Strength|p2a: Koffing',
+        '|-damage|p2a: Koffing|223/283',
+        '|move|p2a: Koffing|Haze|p2a: Koffing',
+        '|-activate|p2a: Koffing|move: Haze',
+        '|-clearallboost|[silent]',
+        '|-end|p1a: Machoke|focusenergy|[silent]',
+        '|turn|3',
+        '|move|p1a: Machoke|Strength|p2a: Koffing',
+        '|-crit|p2a: Koffing',
+        '|-damage|p2a: Koffing|108/283',
+        '|move|p2a: Koffing|Double Team|p2a: Koffing',
+        '|-boost|p2a: Koffing|evasion|1',
+        '|turn|4',
       ]);
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
