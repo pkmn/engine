@@ -1495,12 +1495,35 @@ for (const gen of new Generations(Dex as any)) {
       test.todo('Rage and Thrash / Petal Dance accuracy bug');
       test.todo('Stat down modifier overflow glitch');
 
+      test('Substitute 1/4 HP glitch', () => {
+        const battle = startBattle([], [
+          {species: 'Pidgey', level: 3, moves: ['Substitute']},
+        ], [
+          {species: 'Rattata', level: 4, moves: ['Focus Energy']},
+        ]);
+
+        battle.p1.pokemon[0].hp = 4;
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p1.pokemon[0].hp).toEqual(0);
+
+        expectLog(battle, [
+          '|move|p2a: Rattata|Focus Energy|p2a: Rattata',
+          '|-start|p2a: Rattata|move: Focus Energy',
+          '|move|p1a: Pidgey|Substitute|p1a: Pidgey',
+          '|-fail|p1a: Pidgey|move: Substitute|[weak]',
+          '|faint|p1a: Pidgey',
+          '|win|Player 2'
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      });
+
       test('Psywave infinite loop', () => {
         const PSY_MAX = {key: 'Battle.damageCallback', value: MAX};
         const battle = startBattle([SRF, SRF, SRF, HIT, HIT, PSY_MAX], [
           {species: 'Charmander', evs, level: 1, moves: ['Psywave']},
         ], [
-          {species: 'Rattata', evs, level: 3, moves: ['TailWhip']},
+          {species: 'Rattata', evs, level: 3, moves: ['Tail Whip']},
         ]);
 
         const p2hp = battle.p2.pokemon[0].hp;
