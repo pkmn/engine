@@ -1459,7 +1459,6 @@ test "Reflect" {
 }
 
 // Move.Haze
-// TODO: https://www.youtube.com/watch?v=gXQlct-DvVg
 test "Haze" {
     // Resets the stat stages of both Pokemon to 0 and removes stat reductions due to burn and
     // paralysis. Resets Toxic counters to 0 and removes the effect of confusion, Disable, Focus
@@ -1680,6 +1679,7 @@ test "Freeze top move selection glitch" {
 
 test "Haze glitch" {
     // https://glitchcity.wiki/Haze_glitch
+    // https://www.youtube.com/watch?v=gXQlct-DvVg
     return error.SkipZigTest;
 }
 
@@ -1794,7 +1794,7 @@ test "Stat down modifier overflow glitch" {
     // https://www.youtube.com/watch?v=y2AOm7r39Jg
 }
 
-test "Struggle bypassing // Switch PP underflow" {
+test "Struggle bypassing / Switch PP underflow" {
     // https://pkmn.cc/bulba-glitch-1#Struggle_bypassing
     // https://glitchcity.wiki/Switch_PP_underflow_glitch
     return error.SkipZigTest;
