@@ -19,6 +19,9 @@ const GLM = {key: 'Pokemon.getLockedMove', value: NOP};
 
 const ranged = (n: number, d: number) => n * (0x100000000 / d);
 
+const SLP = (n: number) =>
+  ({key: ['Battle.random', 'Pokemon.setStatus'], value: ranged(n, 8 - 1)});
+
 const MODS: {[gen: number]: string[]} = {
   1: ['Endless Battle Clause', 'Sleep Clause Mod', 'Freeze Clause Mod'],
 };
@@ -1037,12 +1040,11 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('Heal (Rest)', () => {
-      const SLP = {key: ['Battle.random', 'Pokemon.setStatus'], value: ranged(5, 8 - 1)};
       const PAR_CANT = {key: 'Battle.onBeforeMove', value: ranged(63, 256) - 1};
       const PAR_CAN = {key: 'Battle.onBeforeMove', value: PAR_CANT.value + 1};
       const battle = startBattle([
         SRF, HIT, SSM,
-        SRF, HIT, NO_CRIT, MIN_DMG, PAR_CAN, SSM, SLP,
+        SRF, HIT, NO_CRIT, MIN_DMG, PAR_CAN, SSM, SLP(5),
         SRF, HIT, NO_CRIT, MIN_DMG,
       ], [
         {species: 'Porygon', evs, moves: ['Thunder Wave', 'Tackle', 'Rest']},
@@ -1231,6 +1233,107 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
+    test('Drain', () => {
+      const battle = startBattle([
+        SRF, HIT, NO_CRIT, MIN_DMG, SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+      ], [
+        {species: 'Slowpoke', evs, moves: ['Teleport']},
+        {species: 'Butterfree', evs, moves: ['Mega Drain']},
+      ], [
+        {species: 'Parasect', evs, moves: ['Leech Life']},
+      ]);
+
+      battle.p1.pokemon[0].hp = 1;
+      battle.p2.pokemon[0].hp = 300;
+
+      let p1hp = battle.p1.pokemon[1].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      // Heals at least 1 HP
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(0);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp += 1);
+
+      battle.makeChoices('switch 2', '');
+
+      // Heals 1/2 of the damage dealt unless the user is at full health
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 16);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp = p2hp - 6 + 8);
+
+      expectLog(battle, [
+        '|move|p2a: Parasect|Leech Life|p1a: Slowpoke',
+        '|-supereffective|p1a: Slowpoke',
+        '|-damage|p1a: Slowpoke|0 fnt',
+        '|-heal|p2a: Parasect|301/323|[from] drain|[of] p1a: Slowpoke',
+        '|faint|p1a: Slowpoke',
+        '|switch|p1a: Butterfree|Butterfree|323/323',
+        '|turn|2',
+        '|move|p1a: Butterfree|Mega Drain|p2a: Parasect',
+        '|-resisted|p2a: Parasect',
+        '|-damage|p2a: Parasect|295/323',
+        '|move|p2a: Parasect|Leech Life|p1a: Butterfree',
+        '|-resisted|p1a: Butterfree',
+        '|-damage|p1a: Butterfree|307/323',
+        '|-heal|p2a: Parasect|303/323|[from] drain|[of] p1a: Butterfree',
+        '|turn|3',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
+    test('DreamEater', () => {
+      const battle = startBattle([
+        SRF, SRF, HIT, SSM, SLP(5), SRF, HIT, NO_CRIT, MIN_DMG, SRF, HIT, NO_CRIT, MIN_DMG,
+      ], [
+        {species: 'Hypno', evs, moves: ['Dream Eater', 'Hypnosis']},
+      ], [
+        {species: 'Wigglytuff', evs, moves: ['Teleport']},
+      ]);
+
+      battle.p1.pokemon[0].hp = 100;
+      battle.p2.pokemon[0].hp = 182;
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      // Fails unless the target is sleeping
+      battle.makeChoices('move 1', 'move 1');
+
+      battle.makeChoices('move 2', 'move 1');
+
+      // Heals 1/2 of the damage dealt
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp += 90);
+      expect(battle.p2.pokemon[0].hp).toBe(1);
+
+      // Heals at least 1 HP
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp += 1);
+      expect(battle.p2.pokemon[0].hp).toBe(0);
+
+      expectLog(battle, [
+        '|move|p1a: Hypno|Dream Eater|p2a: Wigglytuff',
+        '|-immune|p2a: Wigglytuff',
+        '|move|p2a: Wigglytuff|Teleport|p2a: Wigglytuff',
+        '|turn|2',
+        '|move|p1a: Hypno|Hypnosis|p2a: Wigglytuff',
+        '|-status|p2a: Wigglytuff|slp|[from] move: Hypnosis',
+        '|cant|p2a: Wigglytuff|slp',
+        '|turn|3',
+        '|move|p1a: Hypno|Dream Eater|p2a: Wigglytuff',
+        '|-damage|p2a: Wigglytuff|1/483 slp',
+        '|-heal|p1a: Hypno|190/373|[from] drain|[of] p2a: Wigglytuff',
+        '|cant|p2a: Wigglytuff|slp',
+        '|turn|4',
+        '|move|p1a: Hypno|Dream Eater|p2a: Wigglytuff',
+        '|-damage|p2a: Wigglytuff|0 fnt',
+        '|-heal|p1a: Hypno|191/373|[from] drain|[of] p2a: Wigglytuff',
+        '|faint|p2a: Wigglytuff',
+        '|win|Player 1',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
     test('LeechSeed', () => {
       const battle = startBattle([SRF, SRF, MISS, SRF, HIT, SRF, SRF, HIT, HIT, SRF, HIT], [
         {species: 'Venusaur', evs, moves: ['Leech Seed']},
@@ -1399,10 +1502,9 @@ for (const gen of new Generations(Dex as any)) {
       });
 
       test('Toxic counter glitches', () => {
-        const SLP = {key: ['Battle.random', 'Pokemon.setStatus'], value: ranged(5, 8 - 1)};
         const BRN = {key: HIT.key, value: ranged(77, 256) - 1};
         const battle = startBattle([
-          SRF, HIT, SSM, SSM, SLP, SRF, HIT, SRF, HIT, NO_CRIT, MIN_DMG, BRN, SSM,
+          SRF, HIT, SSM, SSM, SLP(5), SRF, HIT, SRF, HIT, NO_CRIT, MIN_DMG, BRN, SSM,
         ], [
           {species: 'Venusaur', evs, moves: ['Toxic', 'Leech Seed', 'Teleport', 'Fire Blast']},
         ], [
@@ -1505,7 +1607,7 @@ for (const gen of new Generations(Dex as any)) {
         battle.p1.pokemon[0].hp = 4;
 
         battle.makeChoices('move 1', 'move 1');
-        expect(battle.p1.pokemon[0].hp).toEqual(0);
+        expect(battle.p1.pokemon[0].hp).toBe(0);
 
         expectLog(battle, [
           '|move|p2a: Rattata|Focus Energy|p2a: Rattata',
@@ -1513,7 +1615,7 @@ for (const gen of new Generations(Dex as any)) {
           '|move|p1a: Pidgey|Substitute|p1a: Pidgey',
           '|-fail|p1a: Pidgey|move: Substitute|[weak]',
           '|faint|p1a: Pidgey',
-          '|win|Player 2'
+          '|win|Player 2',
         ]);
         expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
