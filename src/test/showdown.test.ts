@@ -752,6 +752,58 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
+    test('JumpKick', () => {
+      const battle = startBattle([SRF, SRF, MISS, HIT, CRIT, MAX_DMG, SRF, SRF, MISS, MISS], [
+        {species: 'Hitmonlee', evs, moves: ['Jump Kick', 'Substitute']},
+      ], [
+        {species: 'Hitmonlee', level: 99, evs, moves: ['High Jump Kick', 'Substitute']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 75);
+      expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(76);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 75);
+      expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(76);
+
+      // Jump Kick causes crash damage to the opponent's sub if both Pokémon have one
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].volatiles['substitute']).toBeUndefined();
+      expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(75);
+
+      // Jump Kick causes 1 HP crash damage unless only the user who crashed has a Substitute
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 1);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+      expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(75);
+
+      expectLog(battle, [
+        '|move|p1a: Hitmonlee|Substitute|p1a: Hitmonlee',
+        '|-start|p1a: Hitmonlee|Substitute',
+        '|-damage|p1a: Hitmonlee|228/303',
+        '|move|p2a: Hitmonlee|Substitute|p2a: Hitmonlee',
+        '|-start|p2a: Hitmonlee|Substitute',
+        '|-damage|p2a: Hitmonlee|225/300',
+        '|turn|2',
+        '|move|p1a: Hitmonlee|Jump Kick|p2a: Hitmonlee|[miss]',
+        '|-miss|p1a: Hitmonlee',
+        '|-activate|p2a: Hitmonlee|Substitute|[damage]',
+        '|move|p2a: Hitmonlee|High Jump Kick|p1a: Hitmonlee',
+        '|-crit|p1a: Hitmonlee',
+        '|-end|p1a: Hitmonlee|Substitute',
+        '|turn|3',
+        '|move|p1a: Hitmonlee|Jump Kick|p2a: Hitmonlee|[miss]',
+        '|-miss|p1a: Hitmonlee',
+        '|-damage|p1a: Hitmonlee|227/303',
+        '|move|p2a: Hitmonlee|High Jump Kick|p1a: Hitmonlee|[miss]',
+        '|-miss|p2a: Hitmonlee',
+        '|turn|4',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
     test('SpecialDamage (fixed)', () => {
       const battle = startBattle([SRF, SRF, HIT, HIT, SRF], [
         {species: 'Voltorb', evs, moves: ['Sonic Boom']},
