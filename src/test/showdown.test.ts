@@ -583,7 +583,7 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('StatDownChance', () => {
-      const proc = {key: HIT.key, value: ranged(Math.ceil(33 * 255 / 100), 256) - 1};
+      const proc = {key: HIT.key, value: ranged(85, 256) - 1};
       const no_proc = {key: proc.key, value: proc.value + 1};
       const battle = startBattle([
         SRF, SRF, HIT, NO_CRIT, MIN_DMG, no_proc, HIT, NO_CRIT, MIN_DMG, proc,
@@ -868,6 +868,71 @@ for (const gen of new Generations(Dex as any)) {
         '|move|p2a: Rattata|Super Fang|p1a: Haunter',
         '|-damage|p1a: Haunter|147/293',
         '|turn|3',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
+    test('Mist', () => {
+      const proc = {key: HIT.key, value: ranged(85, 256) - 1};
+      const battle = startBattle([
+        SRF, HIT, NO_CRIT, MIN_DMG, proc,
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, SRF, HIT,
+        SRF, HIT, NO_CRIT, MIN_DMG,
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, SRF, HIT,
+      ], [
+        {species: 'Articuno', evs, moves: ['Mist', 'Peck']},
+      ], [
+        {species: 'Vaporeon', evs, moves: ['Aurora Beam', 'Growl', 'Haze']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      // Mist doesn't protect against secondary effects
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 43);
+      expect(battle.p1.pokemon[0].volatiles['mist']).toBeDefined();
+      expect(battle.p1.pokemon[0].boosts.atk).toBe(-1);
+
+      // Mist does protect against primary stat lowering effects
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].boosts.atk).toBe(-1);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 31);
+
+      battle.makeChoices('move 2', 'move 3');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 31);
+
+      // Haze ends Mist's effect
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].volatiles['mist']).toBeUndefined();
+      expect(battle.p1.pokemon[0].boosts.atk).toBe(-1);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 48);
+
+      expectLog(battle, [
+        '|move|p1a: Articuno|Mist|p1a: Articuno',
+        '|-start|p1a: Articuno|Mist',
+        '|move|p2a: Vaporeon|Aurora Beam|p1a: Articuno',
+        '|-damage|p1a: Articuno|340/383',
+        '|-unboost|p1a: Articuno|atk|1',
+        '|turn|2',
+        '|move|p1a: Articuno|Peck|p2a: Vaporeon',
+        '|-damage|p2a: Vaporeon|432/463',
+        '|move|p2a: Vaporeon|Growl|p1a: Articuno',
+        '|-activate|p1a: Articuno|move: Mist',
+        '|-fail|p1a: Articuno',
+        '|turn|3',
+        '|move|p1a: Articuno|Peck|p2a: Vaporeon',
+        '|-damage|p2a: Vaporeon|401/463',
+        '|move|p2a: Vaporeon|Haze|p2a: Vaporeon',
+        '|-activate|p2a: Vaporeon|move: Haze',
+        '|-clearallboost|[silent]',
+        '|-end|p1a: Articuno|mist|[silent]',
+        '|turn|4',
+        '|move|p1a: Articuno|Peck|p2a: Vaporeon',
+        '|-damage|p2a: Vaporeon|353/463',
+        '|move|p2a: Vaporeon|Growl|p1a: Articuno',
+        '|-unboost|p1a: Articuno|atk|1',
+        '|turn|5',
       ]);
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
@@ -1283,7 +1348,7 @@ for (const gen of new Generations(Dex as any)) {
 
       test('Toxic counter glitches', () => {
         const SLP = {key: ['Battle.random', 'Pokemon.setStatus'], value: ranged(5, 8 - 1)};
-        const BRN = {key: HIT.key, value: ranged(Math.floor(30 * 255 / 100), 256) - 1};
+        const BRN = {key: HIT.key, value: ranged(77, 256) - 1};
         const battle = startBattle([
           SRF, HIT, SSM, SSM, SLP, SRF, HIT, SRF, HIT, NO_CRIT, MIN_DMG, BRN, SSM,
         ], [
