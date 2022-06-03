@@ -1395,7 +1395,7 @@ pub const Effects = struct {
             // SHOWDOWN: Substitute blocks secondary effect confusion on Pokémon Showdown
             if (showdown and foe.active.volatiles.Substitute) return;
             const chance = if (showdown)
-                // SHOWDOWN: this should be 26 instead of 25
+                // SHOWDOWN: this should be 25 instead of 26
                 battle.rng.chance(u8, 26, 256)
             else
                 battle.rng.next() < Gen12.percent(10);
