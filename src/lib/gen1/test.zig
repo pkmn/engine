@@ -1023,6 +1023,15 @@ test "Charge" {
     return error.SkipZigTest;
 }
 
+// Move.{Fly,Dig}
+test "Fly / Dig" {
+    // This attack charges on the first turn and executes on the second. On the first turn, the user
+    // avoids all attacks other than Bide, Swift, and Transform. If the user is fully paralyzed on
+    // the second turn, it continues avoiding attacks until it switches out or successfully executes
+    // the second turn of this move or {Fly,Dig}.
+    return error.SkipZigTest;
+}
+
 // Move.{Whirlwind,Roar,Teleport}
 test "SwitchAndTeleport" {
     // No competitive use.
@@ -1065,15 +1074,6 @@ test "Splash" {
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
     try t.verify();
-}
-
-// Move.{Fly,Dig}
-test "Fly / Dig" {
-    // This attack charges on the first turn and executes on the second. On the first turn, the user
-    // avoids all attacks other than Bide, Swift, and Transform. If the user is fully paralyzed on
-    // the second turn, it continues avoiding attacks until it switches out or successfully executes
-    // the second turn of this move or {Fly,Dig}.
-    return error.SkipZigTest;
 }
 
 // Move.{Bind,Wrap,FireSpin,Clamp}
@@ -1207,7 +1207,8 @@ test "SpecialDamage (Psywave)" {
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.move(P2.ident(1), Move.Psywave, P1.ident(1), null);
 
-    // https://pkmn.cc/bulba-glitch-1#Psywave_glitches
+    // https://pkmn.cc/bulba-glitch-1#Psywave_desynchronization
+    // https://glitchcity.wiki/Psywave_desync_glitch
     const result = if (showdown) Result.Default else Result.Error;
     if (showdown) try t.log.expected.turn(2);
 
@@ -1278,8 +1279,6 @@ test "Mist" {
 }
 
 // Move.HyperBeam
-// TODO: https://pkmn.cc/bulba-glitch-1#Hyper_Beam_.2B_Freeze_permanent_helplessness
-// TODO: https://pkmn.cc/bulba-glitch-1#Hyper_Beam_.2B_Sleep_move_glitch
 test "HyperBeam" {
     // If this move is successful, the user must recharge on the following turn and cannot select a
     // move, unless the target or its substitute was knocked out by this move.
@@ -1287,8 +1286,6 @@ test "HyperBeam" {
 }
 
 // Move.Counter
-// TODO: https://glitchcity.wiki/Counter_glitches_(Generation_I)
-// TODO: https://www.youtube.com/watch?v=ftTalHMjPRY
 test "Counter" {
     // Deals damage to the opposing Pokemon equal to twice the damage dealt by the last move used in
     // the battle. This move ignores type immunity. Fails if the user moves first, or if the
@@ -1431,7 +1428,6 @@ test "Mimic" {
 }
 
 // Move.{Recover,SoftBoiled}
-// TODO: https://pkmn.cc/bulba-glitch-1#HP_recovery_move_failure
 test "Heal (normal)" {
     // The user restores 1/2 of its maximum HP, rounded down. Fails if (user's maximum HP - user's
     // current HP + 1) is divisible by 256.
@@ -1471,9 +1467,6 @@ test "Haze" {
 }
 
 // Move.Bide
-// TODO: https://pkmn.cc/bulba-glitch-1#Bide_errors
-// TODO: https://glitchcity.wiki/Bide_fainted_Pokémon_damage_accumulation_glitch
-// TODO: https://www.youtube.com/watch?v=IVxHGyNDW4g
 test "Bide" {
     // The user spends two or three turns locked into this move and then, on the second or third
     // turn after using this move, the user attacks the opponent, inflicting double the damage in HP
@@ -1569,8 +1562,6 @@ test "Conversion" {
 }
 
 // Move.Substitute
-// TODO: https://pkmn.cc/bulba-glitch-1#Substitute_HP_drain_bug
-// TODO: https://pkmn.cc/bulba-glitch-1#Substitute_.2B_Confusion_glitch
 test "Substitute" {
     // The user takes 1/4 of its maximum HP, rounded down, and puts it into a substitute to take its
     // place in battle. The substitute has 1 HP plus the HP used to create it, and is removed once
@@ -1665,8 +1656,34 @@ test "1/256 miss glitch" {
     try t.verify();
 }
 
-test "Toxic counter glitch" {
+test "Bide errors" {
+    // https://pkmn.cc/bulba-glitch-1#Bide_errors
+    // https://glitchcity.wiki/Bide_fainted_Pokémon_damage_accumulation_glitch
+    // https://glitchcity.wiki/Bide_non-damaging_move/action_damage_accumulation_glitch
+    // https://www.youtube.com/watch?v=IVxHGyNDW4g
+    return error.SkipZigTest;
+}
+
+test "Counter glitches" {
+    // https://glitchcity.wiki/Counter_glitches_(Generation_I)
+    // https://glitchcity.wiki/Counter_glitches_(Generation_I)
+    // https://www.youtube.com/watch?v=ftTalHMjPRY
+    return error.SkipZigTest;
+}
+
+test "Freeze top move selection glitch" {
+    // https://glitchcity.wiki/Freeze_top_move_selection_glitch
+    return error.SkipZigTest;
+}
+
+test "Haze glitch" {
+    // https://glitchcity.wiki/Haze_glitch
+    return error.SkipZigTest;
+}
+
+test "Toxic counter glitches" {
     // https://pkmn.cc/bulba-glitch-1#Toxic_counter_glitches
+    // https://glitchcity.wiki/Leech_Seed_and_Toxic_stacking
     const brn = comptime ranged(77, 256) - 1;
     var t = Test(if (showdown)
         (.{ NOP, HIT, NOP, NOP, NOP, NOP, HIT, NOP, HIT, ~CRIT, MIN_DMG, brn, NOP })
@@ -1743,18 +1760,47 @@ test "Division by 0" {
     return error.SkipZigTest;
 }
 
+test "HP recovery move failure" {
+    // https://pkmn.cc/bulba-glitch-1#HP_recovery_move_failure
+    // https://glitchcity.wiki/Recovery_move_glitch
+    return error.SkipZigTest;
+}
+
+test "Hyper Beam + Freeze permanent helplessness" {
+    // https://pkmn.cc/bulba-glitch-1#Hyper_Beam_.2B_Freeze_permanent_helplessness
+    return error.SkipZigTest;
+}
+
+test "Hyper Beam + Sleep move glitch" {
+    // https://pkmn.cc/bulba-glitch-1#Hyper_Beam_.2B_Sleep_move_glitch
+    // https://glitchcity.wiki/Hyper_Beam_sleep_move_glitch
+    return error.SkipZigTest;
+}
+
+test "Hyper Beam automatic selection glitch" {
+    // https://glitchcity.wiki/Hyper_Beam_automatic_selection_glitch
+    return error.SkipZigTest;
+}
+
 test "Invulnerability glitch" {
     // https://pkmn.cc/bulba-glitch-1#Invulnerability_glitch
+    // https://glitchcity.wiki/Invulnerability_glitch
     return error.SkipZigTest;
 }
 
 test "Stat modification errors" {
     // https://pkmn.cc/bulba-glitch-1#Stat_modification_errors
+    // https://glitchcity.wiki/Stat_modification_glitches
     return error.SkipZigTest;
 }
 
-test "Struggle bypassing" {
+test "Stat down modifier overflow glitch" {
+    // https://www.youtube.com/watch?v=y2AOm7r39Jg
+}
+
+test "Struggle bypassing // Switch PP underflow" {
     // https://pkmn.cc/bulba-glitch-1#Struggle_bypassing
+    // https://glitchcity.wiki/Switch_PP_underflow_glitch
     return error.SkipZigTest;
 }
 
@@ -1765,15 +1811,30 @@ test "Trapping sleep glitch" {
 
 test "Partial trapping move Mirror Move glitch" {
     // https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
+    // https://pkmn.cc/bulba-glitch-1##Mirror_Move_glitch
     return error.SkipZigTest;
 }
 
 test "Rage and Thrash / Petal Dance accuracy bug" {
     // https://www.youtube.com/watch?v=NC5gbJeExbs
+    return error.SkipZigTest;
 }
 
-test "Stat down modifier overflow glitch" {
-    // https://www.youtube.com/watch?v=y2AOm7r39Jg
+test "Substitute HP drain bug" {
+    // https://pkmn.cc/bulba-glitch-1#Substitute_HP_drain_bug
+    // https://glitchcity.wiki/Substitute_drain_move_not_missing_glitch
+    return error.SkipZigTest;
+}
+
+test "Substitute 1/4 HP glitch" {
+    // https://glitchcity.wiki/Substitute_%C2%BC_HP_glitch
+    return error.SkipZigTest;
+}
+
+test "Substitute + Confusion glitch" {
+    // https://pkmn.cc/bulba-glitch-1#Substitute_.2B_Confusion_glitch
+    // https://glitchcity.wiki/Confusion_and_Substitute_glitch
+    return error.SkipZigTest;
 }
 
 test "Psywave infinite loop" {

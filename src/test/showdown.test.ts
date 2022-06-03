@@ -1281,7 +1281,7 @@ for (const gen of new Generations(Dex as any)) {
         expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
-      test('Toxic counter glitch', () => {
+      test('Toxic counter glitches', () => {
         const SLP = {key: ['Battle.random', 'Pokemon.setStatus'], value: ranged(5, 8 - 1)};
         const BRN = {key: HIT.key, value: ranged(Math.floor(30 * 255 / 100), 256) - 1};
         const battle = startBattle([

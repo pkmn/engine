@@ -143,9 +143,9 @@ fn selectMove(
     if (volatiles.Trapping) {
         if (showdown) {
             from.* = side.last_used_move;
-            // SHOWDOWN: Pokémon Showdown overwrites Mirror Move with whatever was selected - really
-            // this should set side.last_selected_move = last.id to reuse Mirror Move and fail in
-            // order to satisfy the conditions of the Desync Clause Mod
+            // Pokémon Showdown overwrites Mirror Move with whatever was selected - really this
+            // should set side.last_selected_move = last.id to reuse Mirror Move and fail in order
+            // to satisfy the conditions of the Desync Clause Mod
             saveMove(battle, player, choice);
         } else {
             // GLITCH: https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
@@ -196,8 +196,8 @@ fn saveMove(battle: anytype, player: Player, choice: ?Choice) void {
         assert(c.type == .Move and c.data != 0);
         assert(side.active.volatiles.disabled.move != c.data);
         const move = side.active.move(c.data);
-        // You cannot *select* a move with 0 PP, but a 0 PP move can be used automatically
-        // SHOWDOWN: Pokémon Showdown allows you to select moves with 0 PP in certain situations
+        // You cannot *select* a move with 0 PP (except on Pokémon Showdown where that is sometimes
+        // required...), but a 0 PP move can be used automatically
         assert(showdown or move.pp != 0);
 
         side.last_selected_move = move.id;
@@ -214,7 +214,7 @@ fn saveMove(battle: anytype, player: Player, choice: ?Choice) void {
         side.last_selected_move = side.last_used_move;
     }
 
-    // SHOWDOWN: getRandomTarget arbitrarily advances the RNG during resolveAction
+    // getRandomTarget arbitrarily advances the RNG during resolveAction
     if (showdown) battle.rng.advance(Move.frames(side.last_selected_move, .resolve));
 }
 
@@ -262,7 +262,7 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     if ((m1 == .QuickAttack) != (m2 == .QuickAttack)) return if (m1 == .QuickAttack) .P1 else .P2;
     if ((m1 == .Counter) != (m2 == .Counter)) return if (m1 == .Counter) .P2 else .P1;
 
-    // SHOWDOWN: https://www.smogon.com/forums/threads/adv-switch-priority.3622189/
+    // https://www.smogon.com/forums/threads/adv-switch-priority.3622189/
     // > In Gen 1 it's irrelevant [which player switches first] because switches happen instantly on
     // > your own screen without waiting for the other player's choice (and their choice will appear
     // > to happen first for them too, unless they attacked in which case your switch happens first)
@@ -318,7 +318,7 @@ fn executeMove(
 ) !?Result {
     var side = battle.side(player);
 
-    // SHOWDOWN: Pokémon Showdown overwrites the SKIP_TURN sentinel with its botched move select
+    // Pokémon Showdown overwrites the SKIP_TURN sentinel with its botched move select
     const skip_turn = if (showdown)
         battle.foe(player).active.volatiles.Trapping
     else
@@ -330,7 +330,7 @@ fn executeMove(
         return null;
     }
 
-    // SHOWDOWN: getRandomTarget arbitrarily advances the RNG during runAction
+    // getRandomTarget arbitrarily advances the RNG during runAction
     if (showdown) battle.rng.advance(Move.frames(side.last_selected_move, .run));
 
     var skip_can = false;
@@ -456,8 +456,8 @@ fn beforeMove(battle: anytype, player: Player, log: anytype) !BeforeMove {
             volatiles.Thrashing = false;
             volatiles.Charging = false;
             volatiles.Trapping = false;
-            // GLITCH: Invulnerable is not cleared, resulting in the Fly/Dig glitch
-            // SHOWDOWN: Pokémon Showdown patches this glitch, preventing invulnerability
+            // GLITCH: Invulnerable is not cleared, resulting in permanent Fly/Dig invulnerability
+            // (Pokémon Showdown unintentionally patches this glitch, preventing invulnerability)
             if (showdown) volatiles.Invulnerable = false;
             try log.cant(ident, .Paralysis);
             return .done;
@@ -485,7 +485,6 @@ fn beforeMove(battle: anytype, player: Player, log: anytype) !BeforeMove {
             return .done;
         }
 
-        // Skip Decrement PP / calcDamage / checkHit
         _ = try applyDamage(battle, player.foe(), player.foe(), log);
         return .done;
     }
@@ -509,8 +508,6 @@ fn beforeMove(battle: anytype, player: Player, log: anytype) !BeforeMove {
     if (volatiles.Trapping) {
         assert(volatiles.attacks > 0);
         volatiles.attacks -= 1;
-
-        // Skip Decrement PP / calcDamage / checkHit
         _ = try applyDamage(battle, player.foe(), player.foe(), log);
         return .done;
     }
@@ -536,12 +533,12 @@ fn canMove(
     } else if (move.effect == .Charge) {
         try log.move(player_ident, side.last_selected_move, .{}, from);
         try Effects.charge(battle, player, log);
-        // SHOWDOWN: Pokémon Showdown thinks the first turn of charging counts as using a move
+        // Pokémon Showdown thinks the first turn of charging counts as using a move
         if (showdown) side.last_used_move = side.last_selected_move;
         return false;
     }
 
-    // SHOWDOWN: getting a "locked" move advances the RNG
+    // Getting a "locked" move advances the RNG on Pokémon Showdown
     const special = if (from) |m| (m == .Metronome or m == .MirrorMove) else false;
     const locked = from != null and !special;
     if (showdown and locked) battle.rng.advance(1);
@@ -549,7 +546,7 @@ fn canMove(
     side.last_used_move = side.last_selected_move;
     if (!skip_pp) decrementPP(side, choice);
 
-    // SHOWDOWN: Metronome / Mirror Move call getRandomTarget if the move they're using targets
+    // Metronome / Mirror Move call getRandomTarget if the move they proc targets
     if (showdown and special) battle.rng.advance(@boolToInt(move.target != .Self));
 
     const target = if (move.target == .Self) player else player.foe();
@@ -582,7 +579,6 @@ fn decrementPP(side: *Side, choice: Choice) void {
     assert(!volatiles.Rage and !volatiles.Thrashing);
     if (volatiles.Bide or volatiles.MultiHit) return;
 
-    // BUG: https://glitchcity.wiki/Freeze_top_move_selection_glitch
     // GLITCH: Struggle bypass PP underflow via Hyper Beam / Trapping-switch auto selection
     const underflow = side.last_selected_move == .HyperBeam or
         Move.get(side.last_selected_move).effect == .Trapping;
@@ -596,7 +592,7 @@ fn decrementPP(side: *Side, choice: Choice) void {
     assert(active.move(choice.data).pp == side.stored().move(choice.data).pp);
 }
 
-// SHOWDOWN: Pokémon Showdown does hit/multi/crit/damage instead of crit/damage/hit/multi
+// Pokémon Showdown does hit/multi/crit/damage instead of crit/damage/hit/multi
 fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: anytype) !?Result {
     var side = battle.side(player);
     const foe = battle.foe(player);
@@ -604,12 +600,12 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     var move = Move.get(side.last_selected_move);
     const special = move.effect == .SuperFang or move.effect == .SpecialDamage;
 
-    // SHOWDOWN: Pokémon Showdown runs type and OHKO immunity checks before the accuracy check
+    // Pokémon Showdown runs type and OHKO immunity checks before the accuracy check
     if (showdown) {
         const m = side.last_selected_move;
         const type1 = @enumToInt(move.type.effectiveness(foe.active.types.type1));
         const type2 = @enumToInt(move.type.effectiveness(foe.active.types.type2));
-        // SHOWDOWN: Sonic Boom incorrectly checks type immunity
+        // Sonic Boom incorrectly checks type immunity on Pokémon Showdown
         if (move.target != .Self and (type1 == 0 or type2 == 0) and
             !(special and m != .SonicBoom) or
             (m == .DreamEater and !Status.is(foe.stored().status, .SLP)))
@@ -651,7 +647,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
 
         if (counter) return counterDamage(battle, player, move, log);
 
-        // SHOWDOWN: Pokémon Showdown has broken `Battle.lastDamage` handling
+        // Pokémon Showdown has broken `Battle.lastDamage` handling
         if (!showdown) battle.last_damage = 0;
 
         // Disassembly does a check to allow 0 BP MultiHit moves but this isn't possible in practice
@@ -703,13 +699,13 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
             try log.miss(battle.active(player));
         }
         if (move.effect == .JumpKick) {
-            // GLITCH: Recoil is supposed to be damage/8 but damage will always be 0 here
+            // Recoil is supposed to be damage/8 but damage will always be 0 here
             assert(battle.last_damage == 0);
             battle.last_damage = 1;
             _ = try applyDamage(battle, player, player.foe(), log);
         } else if (move.effect == .Explode) {
             try Effects.explode(battle, player);
-            // SHOWDOWN: Pokémon Showdown does not build Rage after missing Self-Destruct/Explosion
+            // Pokémon Showdown does not build Rage after missing Self-Destruct/Explosion
             if (foe.stored().hp == 0 or showdown) return null;
             if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
                 try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
@@ -726,7 +722,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         hits = side.active.volatiles.attacks;
     }
 
-    // FIXME: HyperBeam from MirrorMove
+    // FIXME: HyperBeam [from] MirrorMove
     _ = from;
     var nullified = false;
     var hit: u4 = 0;
@@ -740,7 +736,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         // If the substitute breaks during a multi-hit attack, the attack ends
         if (nullified or foe.stored().hp == 0) break;
 
-        // SHOWDOWN: Twineedle can also poison on the first hit on Pokémon Showdown (second below)
+        // Twineedle can also poison on the first hit on Pokémon Showdown (second hit below)
         if (showdown and hit == 0 and move.effect == .Twineedle) {
             try moveEffect(battle, player, Move.get(.PoisonSting), choice.data, log);
         }
@@ -851,7 +847,7 @@ fn calcDamage(
     d /= def;
     d /= 50;
     d = @minimum(997, d);
-    // SHOWDOWN: Pokémon Showdown clamps damage here between 1 and 997 instead 0 and 997
+    // Pokémon Showdown incorrectly clamps damage here between 1 and 997 instead 0 and 997
     if (showdown) d = @maximum(d, 1);
     d += 2;
 
@@ -977,7 +973,7 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
 
     battle.last_damage = if (battle.last_damage > 0x7FFF) 0xFFFF else battle.last_damage * 2;
 
-    // SHOWDOWN: Pokémon Showdown calls checkHit before Counter
+    // Pokémon Showdown calls checkHit before Counter
     if (!showdown and !try checkHit(battle, player, move, log)) return null;
 
     _ = try applyDamage(battle, player.foe(), player.foe(), log);
@@ -997,7 +993,7 @@ fn applyDamage(battle: anytype, target_player: Player, sub_player: Player, log: 
         if (battle.last_damage >= subbed.active.volatiles.substitute) {
             subbed.active.volatiles.substitute = 0;
             subbed.active.volatiles.Substitute = false;
-            // GLITCH: battle.last_damage is not updated with the amount of HP the Substitute had
+            // battle.last_damage is not updated with the amount of HP the Substitute had
             try log.end(battle.active(sub_player), .Substitute);
             return true;
         } else {
@@ -1005,7 +1001,7 @@ fn applyDamage(battle: anytype, target_player: Player, sub_player: Player, log: 
             subbed.active.volatiles.substitute -= @truncate(u8, battle.last_damage);
             try log.activate(battle.active(sub_player), .Substitute);
         }
-        // SHOWDOWN: attacking a Substitute with Hyper Beam never causes a recharge on showdown
+        // Attacking a Substitute with Hyper Beam never causes a recharge on Pokémon Showdown
         if (showdown) battle.foe(target_player).active.volatiles.Recharging = false;
     } else {
         if (battle.last_damage > target.stored().hp) battle.last_damage = target.stored().hp;
@@ -1073,7 +1069,7 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool) bool
         }
         if (move.effect == .Swift) return true;
         if (foe.active.volatiles.Invulnerable) break :miss true;
-        // SHOWDOWN: need to special case Sleep + Recharging glitch due to control flow differences
+        // Hyper Beam + Sleep glitch needs to be special cased here due to control flow differences
         if (showdown and move.effect == .Sleep and foe.active.volatiles.Recharging) return true;
 
         // Conversion / Haze / Light Screen / Reflect qualify but do not call moveHit
@@ -1137,7 +1133,7 @@ fn checkFaint(
         return if (player == .P1) Result.Win else Result.Lose;
     }
 
-    // SHOWDOWN: emitting |request| for sides will advance the RNG by 2 for each "locked" move
+    // Emitting |request| for each side will advance the RNG by 2 for each "locked" move
     if (showdown) {
         const locked = @as(u2, @boolToInt(isLocked(side.active))) +
             @as(u2, @boolToInt(!foe_fainted and isLocked(foe.active)));
@@ -1207,7 +1203,7 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
         try log.damage(ident, stored, .LeechSeed);
 
         const before = foe_stored.hp;
-        // GLITCH: uncapped damage is added back to the foe
+        // Uncapped damage is added back to the foe
         foe_stored.hp = @minimum(foe_stored.hp + damage, foe_stored.stats.hp);
         // Pokémon Showdown uses the less specific heal here instead of drain... because reasons?
         if (foe_stored.hp > before) try log.heal(foe_ident, foe_stored, .Silent);
@@ -1230,7 +1226,7 @@ fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
     }
 
     try log.turn(battle.turn);
-    // SHOWDOWN: emitting |request| for sides will advance the RNG by 2 for each "locked" move
+    // Emitting |request| for each side will advance the RNG by 2 for each "locked" move
     if (showdown) {
         const locked = @as(u2, @boolToInt(isLocked(battle.side(.P1).active))) +
             @as(u2, @boolToInt(isLocked(battle.side(.P2).active)));
@@ -1355,7 +1351,7 @@ pub const Effects = struct {
             foe_stored.status = 0;
         }
 
-        // SHOWDOWN: Substitute does not block burn on Pokémon Showdown
+        // Substitute incorrectly does not block burn on Pokémon Showdown
         if ((!showdown and foe.active.volatiles.Substitute) or Status.any(foe_stored.status)) {
             return log.fail(
                 battle.active(player.foe()),
@@ -1392,10 +1388,10 @@ pub const Effects = struct {
         var foe = battle.foe(player);
 
         if (move.effect == .ConfusionChance) {
-            // SHOWDOWN: Substitute blocks secondary effect confusion on Pokémon Showdown
+            // Substitute incorrectly blocks secondary effect confusion on Pokémon Showdown
             if (showdown and foe.active.volatiles.Substitute) return;
             const chance = if (showdown)
-                // SHOWDOWN: this should be 25 instead of 26
+                // Due to a Pokémon Showdown bug this is incorrectly 26 instead of 25
                 battle.rng.chance(u8, 26, 256)
             else
                 battle.rng.next() < Gen12.percent(10);
@@ -1436,10 +1432,10 @@ pub const Effects = struct {
         }
 
         const moves = &foe.active.moves;
-        // SHOWDOWN: Pokémon Showdown does not check for moves with 0 PP
+        // Pokémon Showdown incorrectly does not check for moves with 0 PP
         volatiles.disabled.move = randomMoveSlot(&battle.rng, moves, !showdown);
 
-        // SHOWDOWN: this range is incorrectly 2-7 instead of 1-8
+        // On Pokémon Showdown this range is incorrectly 2-7 instead of 1-8
         volatiles.disabled.duration = @truncate(u4, if (showdown)
             battle.rng.range(u8, 1, 7) + 1
         else
@@ -1453,7 +1449,7 @@ pub const Effects = struct {
         var stored = side.stored();
 
         const drain = @maximum(battle.last_damage / 2, 1);
-        // SHOWDOWN: Pokémon Showdown has broken `Battle.lastDamage` handling
+        // Pokémon Showdown has broken `Battle.lastDamage` handling
         if (!showdown) battle.last_damage = drain;
         stored.hp = @minimum(stored.stats.hp, stored.hp + drain);
 
@@ -1484,7 +1480,7 @@ pub const Effects = struct {
         if (!chance) return;
 
         volatiles.Flinch = true;
-        // SHOWDOWN: Pokémon Showdown does not cancel recharging on flinch
+        // Pokémon Showdown incorrectly does not cancel recharging on flinch
         if (!showdown) volatiles.Recharging = false;
     }
 
@@ -1502,7 +1498,7 @@ pub const Effects = struct {
         var foe_stored = foe.stored();
         const foe_ident = battle.active(player.foe());
 
-        // SHOWDOWN: Substitute does not block freeze on Pokémon Showdown
+        // Substitute incorrectly does not block freeze on Pokémon Showdown
         if ((!showdown and foe.active.volatiles.Substitute) or Status.any(foe_stored.status)) {
             return log.fail(
                 foe_ident,
@@ -1516,7 +1512,7 @@ pub const Effects = struct {
             battle.rng.next() < 1 + Gen12.percent(10);
         if (!chance) return;
 
-        // SHOWDOWN: Freeze Clause Mod
+        // Freeze Clause Mod
         if (showdown) {
             for (foe.pokemon) |p| {
                 if (Status.is(p.status, .FRZ)) return log.fail(foe_ident, .Freeze);
@@ -1549,7 +1545,7 @@ pub const Effects = struct {
         try log.clearallboost();
 
         if (Status.any(foe_stored.status)) {
-            // SHOWDOWN: Pokémon Showdown does not prevent sleep/freeze from moving immediately
+            // Pokémon Showdown incorrectly does not prevent sleep/freeze from moving immediately
             if (!showdown) {
                 if (Status.is(foe_stored.status, .FRZ) or Status.is(foe_stored.status, .SLP)) {
                     foe.last_selected_move = .SKIP_TURN;
@@ -1575,7 +1571,7 @@ pub const Effects = struct {
 
         const rest = side.last_selected_move == .Rest;
         if (rest) {
-            // SHOWDOWN: adding the sleep status runs the sleep condition handler to roll duration
+            // Adding the sleep status runs the sleep condition handler to roll duration
             if (showdown) battle.rng.advance(1);
             setStatus(battle, stored, Status.slf(2));
             try log.statusFrom(ident, stored.status, Move.Rest);
@@ -1625,15 +1621,15 @@ pub const Effects = struct {
         var side = battle.side(player);
         var foe = battle.foe(player);
 
-        // SHOWDOWN: Pokémon Showdown requires the user has Mimic (but not necessarily at mslot)
-        // In reality, Mimic can also be called via Metronome or Mirror Move
+        // Pokémon Showdown incorrectly requires the user to have Mimic (but not necessarily at
+        // mslot). In reality, Mimic can also be called via Metronome or Mirror Move
         assert(showdown or side.active.moves[mslot].id == .Mimic or
             side.active.moves[mslot].id == .Metronome or
             side.active.moves[mslot].id == .MirrorMove);
 
-        // SHOWDOWN: Pokémon Showdown replaces the existing Mimic's slot instead of mslot
+        // Pokémon Showdown incorrectly replaces the existing Mimic's slot instead of mslot
         var oslot = mslot;
-        // SHOWDOWN: Pokémon Showdown considers Mimic to never miss instead of having 100% accuracy
+        // Pokémon Showdown considers Mimic to never miss instead of having 100% accuracy
         if (showdown) {
             const has_mimic = has_mimic: {
                 for (side.active.moves) |m, i| {
@@ -1680,7 +1676,7 @@ pub const Effects = struct {
         var foe_stored = foe.stored();
         const foe_ident = battle.active(player.foe());
 
-        // GLITCH: only Thunder Wave checks for type-immunity, not Glare
+        // Only Thunder Wave checks for type-immunity, not Glare
         const immune = move.type == .Electric and foe.active.types.immune(move.type);
 
         if (showdown) {
@@ -1708,7 +1704,7 @@ pub const Effects = struct {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
 
-        // SHOWDOWN: Substitute does not block paralysis on Pokémon Showdown
+        // Substitute incorrectly does not block paralysis on Pokémon Showdown
         if ((!showdown and foe.active.volatiles.Substitute) or Status.any(foe_stored.status)) {
             return log.fail(
                 battle.active(player.foe()),
@@ -1816,7 +1812,7 @@ pub const Effects = struct {
                     if (Status.is(foe_stored.status, .SLP)) .Sleep else .None,
                 );
             }
-            // SHOWDOWN: if checkHit didn't return true showdown wouldn't even call this handler
+            // If checkHit in doMove didn't return true Pokémon Showdown wouldn't be in here
             if (!showdown and !try checkHit(battle, player, move, log)) return;
         }
 
@@ -1829,7 +1825,7 @@ pub const Effects = struct {
             }
         });
 
-        // SHOWDOWN: Sleep Clause Mod
+        // Sleep Clause Mod
         if (showdown) {
             for (foe.pokemon) |p| {
                 if (Status.is(p.status, .SLP) and !Status.is(p.status, .SLF)) {
@@ -1872,7 +1868,7 @@ pub const Effects = struct {
     fn switchAndTeleport(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
         if (!showdown or battle.side(player).last_selected_move == .Teleport) return;
 
-        // SHOWDOWN: Whirlwind/Roar should not roll to hit but showdown does anyway
+        // Whirlwind/Roar should not roll to hit but Pokémon Showdown does anyway
         _ = try checkHit(battle, player, move, log);
     }
 
@@ -1925,8 +1921,8 @@ pub const Effects = struct {
 
         if (side.active.volatiles.Trapping) return;
         side.active.volatiles.Trapping = true;
-        // SHOWDOWN: Pokémon Showdown patches this glitch, preventing automatic selection
         // GLITCH: Hyper Beam automatic selection glitch if Recharging gets cleared on miss
+        // (Pokémon Showdown unitentionally patches this glitch, preventing automatic selection)
         if (!showdown) foe.active.volatiles.Recharging = false;
 
         side.active.volatiles.attacks = distribution(battle);
@@ -2065,7 +2061,7 @@ fn unmodifiedStats(battle: anytype, who: Player) *Stats(u16) {
 
 inline fn setStatus(battle: anytype, pokemon: *Pokemon, status: u8) void {
     pokemon.status = status;
-    // SHOWDOWN: Sleep Clause Mod & Freeze Clause Mod both "speed tie" during onSetStatus...
+    // Sleep Clause Mod & Freeze Clause Mod both "speed tie" during onSetStatus...
     if (showdown) battle.rng.advance(1);
 }
 
@@ -2198,10 +2194,8 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
             var active = side.active;
             const stored = side.stored();
 
-            // Players are not given any input options on the cartridge, but Pokémon Showdown
-            // instead produces a list with a single move that must be chosen (and thus would
-            // expect `move 1`, though this is both incorrect and screws up how the pkmn engine
-            // handles disabled moves so we don't match this)
+            // While players are not given any input options on the cartridge in these cases,
+            // Pokémon Showdown instead produces a list with a single move that must be chosen.
             if (isLocked(active)) {
                 out[n] = if (showdown) .{ .type = .Move, .data = 1 } else .{};
                 n += 1;
@@ -2209,10 +2203,10 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
             }
 
             const limited = active.volatiles.Bide or active.volatiles.Trapping;
-            // All of these happen after "FIGHT" (indicating you are not switching) but before you
-            // are allowed to select a move on the cartridge. Pokémon Showdown instead either
-            // disables all other moves in the case of limited or requires you to select a move
-            // normally if sleeping/frozen/trapped.
+            // On the cartridge, all of these happen after "FIGHT" (indicating you are not
+            // switching) but before you are allowed to select a move. Pokémon Showdown instead
+            // either disables all other moves in the case of limited or requires you to select a
+            // move normally if sleeping/frozen/trapped.
             if (!showdown and (limited or foe.active.volatiles.Trapping or
                 Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP)))
             {
@@ -2231,10 +2225,10 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
                 }
             }
             var slot: u4 = 1;
-            // SHOWDOWN: Pokémon Showdown handles Bide and Trapping moves by checking if the move in
-            // question is present in the Pokémon's moveset (which means moves called via Metronome
-            // / Mirror Move) will not result in forcing the subsequent use unless the user also had
-            // the proc-ed move in their moveset) and disabling all other moves.
+            // Pokémon Showdown handles Bide and Trapping moves by checking if the move in question
+            // is present in the Pokémon's moveset (which means moves called via Metronome / Mirror
+            // Move will not result in forcing the subsequent use unless the user also had the
+            // proc-ed move in their moveset) and disabling all other moves.
             if (limited) {
                 assert(showdown);
                 assert(side.last_selected_move != .None);
@@ -2260,8 +2254,9 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
                 out[n] = .{ .type = .Move, .data = slot };
                 n += 1;
             }
+            // Struggle
             if (n == before) {
-                out[n] = .{ .type = .Move, .data = 0 }; // Struggle
+                out[n] = .{ .type = .Move, .data = 0 };
                 n += 1;
             }
         },
