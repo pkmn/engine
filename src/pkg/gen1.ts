@@ -29,6 +29,20 @@ for (const v in OFFSETS.Volatiles) {
   }
 }
 
+if ((VOLATILES.Thrashing >> 3) !== (VOLATILES.Charging >> 3)) {
+  throw new Error('Thrashing and Charging expected to be in the same byte');
+} else if ((VOLATILES.Rage >> 3) !== (VOLATILES.Recharging >> 3)) {
+  throw new Error('Rage and Recharging expected to be in the same byte');
+} else if ((VOLATILES.Bide >> 3) !== (VOLATILES.Trapping >> 3)) {
+  throw new Error('Bide and Trapping expected to be in the same byte');
+}
+
+const MASKS = {
+  locked1: (1 << (VOLATILES.Thrashing & 7)) | (1 << (VOLATILES.Charging & 7)),
+  locked2: (1 << (VOLATILES.Rage & 7)) | (1 << (VOLATILES.Recharging & 7)),
+  limited: (1 << (VOLATILES.Bide & 7)) | (1 << (VOLATILES.Trapping & 7)),
+};
+
 // TODO: bindings
 // - support both WASM and node (autodetect which to use)
 // - support multiple implementations (pkmn-showdown.node and pkmn.node), possibly both
@@ -376,6 +390,20 @@ export class Pokemon implements Gen1.Pokemon {
       }
     }
     return volatiles;
+  }
+
+  get locked(): boolean {
+    if (!this.active) return false;
+    const byte1 = this.data.getUint8(this.offset.active + OFFSETS.ActivePokemon.volatiles);
+    if (byte1 & MASKS.locked1) return true;
+    const byte2 = this.data.getUint8(this.offset.active + OFFSETS.ActivePokemon.volatiles);
+    return !!(byte2 & MASKS.locked2);
+  }
+
+  get limited(): boolean {
+    if (!this.active) return false;
+    const byte = this.data.getUint8(this.offset.active + OFFSETS.ActivePokemon.volatiles);
+    return !!(byte & MASKS.limited);
   }
 
   move(slot: 1 | 2 | 3 | 4): Gen1.MoveSlot | undefined {

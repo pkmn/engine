@@ -69,6 +69,8 @@ describe('Gen 1', () => {
       thrashing: {duration: 3, accuracy: 235},
       substitute: {hp: 42},
     });
+    expect(slot1.locked).toBe(true);
+    expect(slot1.limited).toBe(false);
     expect(slot1.stats.atk).toBe(98);
     expect(slot1.stored.stats.atk).toBe(98);
     expect(slot1.boost('spa')).toBe(-2);
@@ -103,6 +105,8 @@ describe('Gen 1', () => {
       trapping: {duration: 2},
       transform: {player: 'p1', slot: 2},
     });
+    expect(p2.active!.locked).toBe(false);
+    expect(p2.active!.limited).toBe(true);
     const boosts = Array.from(Object.values(p2.active!.boosts));
     expect(boosts.every(b => b === 0)).toBe(true);
 

@@ -90,12 +90,9 @@ export const Choices = new class {
       const foe = battle.foe(id);
       const active = side.active!;
 
-      const locked =
-        active.volatile(gen1.Pokemon.Volatiles.Recharging) ||
-        active.volatile(gen1.Pokemon.Volatiles.Rage) ||
-        active.volatile(gen1.Pokemon.Volatiles.Thrashing) ||
-        active.volatile(gen1.Pokemon.Volatiles.Charging);
-      if (locked) return [{type: 'move', data: 1}];
+      if (active.locked) {
+        return [{type: 'move', data: 1}];
+      }
 
       if (!foe.active!.volatile(gen1.Pokemon.Volatiles.Trapping)) {
         for (let slot = 2; slot <= 6; slot++) {
@@ -106,9 +103,7 @@ export const Choices = new class {
       }
 
       let slot = 0;
-      const trapping = side.active!.volatile(gen1.Pokemon.Volatiles.Trapping);
-      const bide = active.volatile(gen1.Pokemon.Volatiles.Bide);
-      if (trapping || bide) {
+      if (active.limited) {
         const last = side.lastSelectedMove!;
         for (const move of active.moves) {
           if (move.id === last) {
