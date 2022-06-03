@@ -534,6 +534,158 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
+    test('StatDown', () => {
+      const battle = startBattle([
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+        SRF, SRF, HIT, SRF, HIT,
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+      ], [
+        {species: 'Ekans', evs, moves: ['Screech', 'Strength']},
+      ], [
+        {species: 'Caterpie', evs, moves: ['String Shot', 'Tackle']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 22);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 75);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p1.pokemon[0].boosts.spe).toBe(-1);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+      expect(battle.p2.pokemon[0].boosts.def).toBe(-2);
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 22);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 149);
+
+      expectLog(battle, [
+        '|move|p1a: Ekans|Strength|p2a: Caterpie',
+        '|-damage|p2a: Caterpie|218/293',
+        '|move|p2a: Caterpie|Tackle|p1a: Ekans',
+        '|-damage|p1a: Ekans|251/273',
+        '|turn|2',
+        '|move|p1a: Ekans|Screech|p2a: Caterpie',
+        '|-unboost|p2a: Caterpie|def|2',
+        '|move|p2a: Caterpie|String Shot|p1a: Ekans',
+        '|-unboost|p1a: Ekans|spe|1',
+        '|turn|3',
+        '|move|p2a: Caterpie|Tackle|p1a: Ekans',
+        '|-damage|p1a: Ekans|229/273',
+        '|move|p1a: Ekans|Strength|p2a: Caterpie',
+        '|-damage|p2a: Caterpie|69/293',
+        '|turn|4',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
+    test('StatDownChance', () => {
+      const proc = {key: HIT.key, value: ranged(Math.ceil(33 * 255 / 100), 256) - 1};
+      const no_proc = {key: proc.key, value: proc.value + 1};
+      const battle = startBattle([
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, no_proc, HIT, NO_CRIT, MIN_DMG, proc,
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, no_proc, HIT, NO_CRIT, MIN_DMG, proc,
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, no_proc, HIT, NO_CRIT, MIN_DMG, no_proc,
+      ], [
+        {species: 'Alakazam', evs, moves: ['Psychic']},
+      ], [
+        {species: 'Starmie', evs, moves: ['Bubble Beam']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 57);
+      expect(battle.p1.pokemon[0].boosts.spe).toBe(-1);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 60);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 57);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 60);
+      expect(battle.p2.pokemon[0].boosts.spa).toBe(-1);
+      expect(battle.p2.pokemon[0].boosts.spd).toBe(-1);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 39);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 91);
+
+      expectLog(battle, [
+        '|move|p1a: Alakazam|Psychic|p2a: Starmie',
+        '|-resisted|p2a: Starmie',
+        '|-damage|p2a: Starmie|263/323',
+        '|move|p2a: Starmie|Bubble Beam|p1a: Alakazam',
+        '|-damage|p1a: Alakazam|256/313',
+        '|-unboost|p1a: Alakazam|spe|1',
+        '|turn|2',
+        '|move|p2a: Starmie|Bubble Beam|p1a: Alakazam',
+        '|-damage|p1a: Alakazam|199/313',
+        '|move|p1a: Alakazam|Psychic|p2a: Starmie',
+        '|-resisted|p2a: Starmie',
+        '|-damage|p2a: Starmie|203/323',
+        '|-unboost|p2a: Starmie|spd|1',
+        '|-unboost|p2a: Starmie|spa|1',
+        '|turn|3',
+        '|move|p2a: Starmie|Bubble Beam|p1a: Alakazam',
+        '|-damage|p1a: Alakazam|160/313',
+        '|move|p1a: Alakazam|Psychic|p2a: Starmie',
+        '|-resisted|p2a: Starmie',
+        '|-damage|p2a: Starmie|112/323',
+        '|turn|4',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
+    test('StatUp', () => {
+      const battle = startBattle([
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+      ], [
+        {species: 'Scyther', evs, moves: ['Swords Dance', 'Cut']},
+      ], [
+        {species: 'Slowbro', evs, moves: ['Withdraw', 'Water Gun']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 54);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 37);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+      expect(battle.p2.pokemon[0].boosts.def).toBe(1);
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 54);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 49);
+
+      expectLog(battle, [
+        '|move|p1a: Scyther|Cut|p2a: Slowbro',
+        '|-damage|p2a: Slowbro|356/393',
+        '|move|p2a: Slowbro|Water Gun|p1a: Scyther',
+        '|-damage|p1a: Scyther|289/343',
+        '|turn|2',
+        '|move|p1a: Scyther|Swords Dance|p1a: Scyther',
+        '|-boost|p1a: Scyther|atk|2',
+        '|move|p2a: Slowbro|Withdraw|p2a: Slowbro',
+        '|-boost|p2a: Slowbro|def|1',
+        '|turn|3',
+        '|move|p1a: Scyther|Cut|p2a: Slowbro',
+        '|-damage|p2a: Slowbro|307/393',
+        '|move|p2a: Slowbro|Water Gun|p1a: Scyther',
+        '|-damage|p1a: Scyther|235/343',
+        '|turn|4',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
     test('OHKO', () => {
       const battle = startBattle([SRF, SRF, MISS, SRF, SRF, HIT], [
         {species: 'Kingler', evs, moves: ['Guillotine']},
