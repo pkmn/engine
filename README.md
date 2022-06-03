@@ -16,10 +16,14 @@
 
 A minimal, complete, Pokémon battle simulation engine optimized for performance and
 [designed](docs/DESIGN.md) for tooling, embedded systems, and [artificial
-intelligence](https://github.com/pkmn/0-ERROR) use cases.
+intelligence](https://github.com/pkmn/0-ERROR) use cases. This engine aims to be a frame-accurate and
+[bug-for-bug compatible](http://www.catb.org/jargon/html/B/bug-for-bug-compatible.html)
+implementation of both Pokémon battles as defined by the original game code, and the [Pokémon
+Showdown](https://pokemonshowdown.com/)[^1] simulator which represents Pokémon battling as practically
+interpreted online.
 
-The pkmn engine is up to [**XXX× faster**](docs/TESTING.md#results) than [Pokémon
-Showdown](https://github.com/smogon/pokemon-showdown) when playing out supported formats in
+The pkmn engine is up to [**XXX× faster**](docs/TESTING.md#results) than the [Pokémon Showdown
+simulator code](https://github.com/smogon/pokemon-showdown) when playing out supported formats in
 compatability mode and is extensively [tested](docs/TESTING.md) and [documented](docs). Note,
 however, that the engine is **not a fully-featured simulator** but is instead a low-level library
 which can be used as a building block for more advanced use cases.
@@ -244,3 +248,9 @@ Certain features will always be deemed **out of scope**:
 ## License
 
 The pkmn engine is distributed under the terms of the [MIT License](LICENSE).
+
+[^1]: In the case of Pokémon Showdown, only bugs which stem from a misimplementation of specific
+  effects are reproduced in the engine, bugs which are the result of a misunderstanding of the
+  fundamental mechanics of Pokémon are not. In practical terms, 99.99% of games played out in the
+  pkmn engine and on the Pokémon Showdown simulator will be the same, it is only in a very obscure
+  and well documented set of circumstances where the two implementations diverge.
