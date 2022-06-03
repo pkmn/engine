@@ -1432,7 +1432,7 @@ test "Mimic" {
 
 // Move.{Recover,SoftBoiled}
 // TODO: https://pkmn.cc/bulba-glitch-1#HP_recovery_move_failure
-test "Heal" {
+test "Heal (normal)" {
     // The user restores 1/2 of its maximum HP, rounded down. Fails if (user's maximum HP - user's
     // current HP + 1) is divisible by 256.
     return error.SkipZigTest;

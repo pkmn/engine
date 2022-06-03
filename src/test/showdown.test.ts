@@ -872,6 +872,116 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
+    test('Heal (normal)', () => {
+      const battle = startBattle([SRF, SRF, HIT, CRIT, MAX_DMG, HIT, NO_CRIT, MIN_DMG], [
+        {species: 'Alakazam', evs, moves: ['Recover', 'Mega Kick']},
+      ], [
+        {species: 'Chansey', evs, moves: ['Soft-Boiled', 'Mega Punch']},
+      ]);
+
+      battle.p2.pokemon[0].hp = 448;
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      // Fails at full health or at specific fractions
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 51);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 362);
+
+      // Heals 1/2 of maximum HP
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp += 51);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp += 351);
+
+      expectLog(battle, [
+        '|move|p1a: Alakazam|Recover|p1a: Alakazam',
+        '|-fail|p1a: Alakazam',
+        '|move|p2a: Chansey|Soft-Boiled|p2a: Chansey',
+        '|-fail|p2a: Chansey',
+        '|turn|2',
+        '|move|p1a: Alakazam|Mega Kick|p2a: Chansey',
+        '|-crit|p2a: Chansey',
+        '|-damage|p2a: Chansey|86/703',
+        '|move|p2a: Chansey|Mega Punch|p1a: Alakazam',
+        '|-damage|p1a: Alakazam|262/313',
+        '|turn|3',
+        '|move|p1a: Alakazam|Recover|p1a: Alakazam',
+        '|-heal|p1a: Alakazam|313/313',
+        '|move|p2a: Chansey|Soft-Boiled|p2a: Chansey',
+        '|-heal|p2a: Chansey|437/703',
+        '|turn|4',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
+    test('Heal (Rest)', () => {
+      const SLP = {key: ['Battle.random', 'Pokemon.setStatus'], value: ranged(5, 8 - 1)};
+      const PAR_CANT = {key: 'Battle.onBeforeMove', value: ranged(63, 256) - 1};
+      const PAR_CAN = {key: 'Battle.onBeforeMove', value: PAR_CANT.value + 1};
+      const battle = startBattle([
+        SRF, HIT, SSM,
+        SRF, HIT, NO_CRIT, MIN_DMG, PAR_CAN, SSM, SLP,
+        SRF, HIT, NO_CRIT, MIN_DMG,
+      ], [
+        {species: 'Porygon', evs, moves: ['Thunder Wave', 'Tackle', 'Rest']},
+      ], [
+        {species: 'Chansey', evs, moves: ['Rest', 'Teleport']},
+      ]);
+
+      battle.p2.pokemon[0].hp = 192;
+
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      // Fails at pecific fractions
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+      expect(battle.p2.pokemon[0].status).toBe('par');
+      expect(battle.p2.pokemon[0].modifiedStats!.spe).toBe(49);
+      expect(battle.p2.pokemon[0].storedStats.spe).toBe(198);
+
+      // Puts user to sleep to fully heal HP and removes status
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 77 + 588));
+      expect(battle.p2.pokemon[0].status).toBe('slp');
+
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 77);
+
+      // Fails at full HP / Last two turns but stat penalty still remains after waking
+      battle.makeChoices('move 3', 'move 1');
+      expect(battle.p2.pokemon[0].status).toBe('');
+      expect(battle.p2.pokemon[0].modifiedStats!.spe).toBe(49);
+      expect(battle.p2.pokemon[0].storedStats.spe).toBe(198);
+
+      expectLog(battle, [
+        '|move|p2a: Chansey|Rest|p2a: Chansey',
+        '|-fail|p2a: Chansey',
+        '|move|p1a: Porygon|Thunder Wave|p2a: Chansey',
+        '|-status|p2a: Chansey|par',
+        '|turn|2',
+        '|move|p1a: Porygon|Tackle|p2a: Chansey',
+        '|-damage|p2a: Chansey|115/703 par',
+        '|move|p2a: Chansey|Rest|p2a: Chansey',
+        '|-status|p2a: Chansey|slp|[from] move: Rest',
+        '|-heal|p2a: Chansey|703/703 slp|[silent]',
+        '|turn|3',
+        '|move|p1a: Porygon|Tackle|p2a: Chansey',
+        '|-damage|p2a: Chansey|626/703 slp',
+        '|cant|p2a: Chansey|slp',
+        '|turn|4',
+        '|move|p1a: Porygon|Rest|p1a: Porygon',
+        '|-fail|p1a: Porygon',
+        '|-curestatus|p2a: Chansey|slp|[msg]',
+        '|turn|5',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
     test('LightScreen', () => {
       const battle = startBattle([
         SRF, HIT, NO_CRIT, MIN_DMG,
