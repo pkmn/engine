@@ -872,6 +872,116 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
+    test('LightScreen', () => {
+      const battle = startBattle([
+        SRF, HIT, NO_CRIT, MIN_DMG,
+        SRF, HIT, NO_CRIT, MIN_DMG,
+        SRF, HIT, CRIT, MIN_DMG,
+      ], [
+        {species: 'Chansey', evs, moves: ['Light Screen', 'Teleport']},
+      ], [
+        {species: 'Vaporeon', evs, moves: ['Water Gun', 'Haze']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+
+      // Water Gun does normal damage before Light Screen
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].volatiles['lightscreen']).toBeDefined();
+      expect(battle.p1.pokemon[0].hp).toEqual(p1hp -= 45);
+
+      // Water Gun's damage is reduced after Light Screen
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toEqual(p1hp -= 23);
+
+      // Critical hits ignore Light Screen
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toEqual(p1hp -= 87);
+
+      // Haze removes Light Screen
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].volatiles['lightscreen']).toBeUndefined();
+
+      expectLog(battle, [
+        '|move|p2a: Vaporeon|Water Gun|p1a: Chansey',
+        '|-damage|p1a: Chansey|658/703',
+        '|move|p1a: Chansey|Light Screen|p1a: Chansey',
+        '|-start|p1a: Chansey|Light Screen',
+        '|turn|2',
+        '|move|p2a: Vaporeon|Water Gun|p1a: Chansey',
+        '|-damage|p1a: Chansey|635/703',
+        '|move|p1a: Chansey|Teleport|p1a: Chansey',
+        '|turn|3',
+        '|move|p2a: Vaporeon|Water Gun|p1a: Chansey',
+        '|-crit|p1a: Chansey',
+        '|-damage|p1a: Chansey|548/703',
+        '|move|p1a: Chansey|Teleport|p1a: Chansey',
+        '|turn|4',
+        '|move|p2a: Vaporeon|Haze|p2a: Vaporeon',
+        '|-activate|p2a: Vaporeon|move: Haze',
+        '|-clearallboost|[silent]',
+        '|-end|p1a: Chansey|lightscreen|[silent]',
+        '|move|p1a: Chansey|Teleport|p1a: Chansey',
+        '|turn|5',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
+    test('Reflect', () => {
+      const battle = startBattle([
+        SRF, HIT, NO_CRIT, MIN_DMG,
+        SRF, HIT, NO_CRIT, MIN_DMG,
+        SRF, HIT, CRIT, MIN_DMG,
+      ], [
+        {species: 'Chansey', evs, moves: ['Reflect', 'Teleport']},
+      ], [
+        {species: 'Vaporeon', evs, moves: ['Tackle', 'Haze']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+
+      // Tackle does normal damage before Reflect
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].volatiles['reflect']).toBeDefined();
+      expect(battle.p1.pokemon[0].hp).toEqual(p1hp -= 54);
+
+      // Tackle's damage is reduced after Reflect
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toEqual(p1hp -= 28);
+
+      // Critical hits ignore Reflect
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toEqual(p1hp -= 104);
+
+      // Haze removes Reflect
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].volatiles['reflect']).toBeUndefined();
+
+      expectLog(battle, [
+        '|move|p2a: Vaporeon|Tackle|p1a: Chansey',
+        '|-damage|p1a: Chansey|649/703',
+        '|move|p1a: Chansey|Reflect|p1a: Chansey',
+        '|-start|p1a: Chansey|Reflect',
+        '|turn|2',
+        '|move|p2a: Vaporeon|Tackle|p1a: Chansey',
+        '|-damage|p1a: Chansey|621/703',
+        '|move|p1a: Chansey|Teleport|p1a: Chansey',
+        '|turn|3',
+        '|move|p2a: Vaporeon|Tackle|p1a: Chansey',
+        '|-crit|p1a: Chansey',
+        '|-damage|p1a: Chansey|517/703',
+        '|move|p1a: Chansey|Teleport|p1a: Chansey',
+        '|turn|4',
+        '|move|p2a: Vaporeon|Haze|p2a: Vaporeon',
+        '|-activate|p2a: Vaporeon|move: Haze',
+        '|-clearallboost|[silent]',
+        '|-end|p1a: Chansey|reflect|[silent]',
+        '|move|p1a: Chansey|Teleport|p1a: Chansey',
+        '|turn|5',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
     test('Swift', () => {
       const battle = startBattle([SRF, SRF, SRF, NO_CRIT, MIN_DMG, SSR, GLM], [
         {species: 'Eevee', evs, moves: ['Swift']},
