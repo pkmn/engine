@@ -1431,6 +1431,7 @@ test "Mimic" {
 test "Heal (normal)" {
     // The user restores 1/2 of its maximum HP, rounded down. Fails if (user's maximum HP - user's
     // current HP + 1) is divisible by 256.
+    // https://pkmn.cc/bulba-glitch-1#HP_recovery_move_failure
     return error.SkipZigTest;
 }
 
@@ -1439,6 +1440,7 @@ test "Heal (Rest)" {
     // The user falls asleep for the next two turns and restores all of its HP, curing itself of any
     // non-volatile status condition in the process. This does not remove the user's stat penalty
     // for burn or paralysis. Fails if the user has full HP.
+    // https://pkmn.cc/bulba-glitch-1#HP_recovery_move_failure
     return error.SkipZigTest;
 }
 
@@ -1757,12 +1759,6 @@ test "Defrost move forcing" {
 
 test "Division by 0" {
     // https://pkmn.cc/bulba-glitch-1#Division_by_0
-    return error.SkipZigTest;
-}
-
-test "HP recovery move failure" {
-    // https://pkmn.cc/bulba-glitch-1#HP_recovery_move_failure
-    // https://glitchcity.wiki/Recovery_move_glitch
     return error.SkipZigTest;
 }
 
