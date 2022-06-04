@@ -21,6 +21,7 @@ const ranged = (n: number, d: number) => n * (0x100000000 / d);
 
 const SLP = (n: number) =>
   ({key: ['Battle.random', 'Pokemon.setStatus'], value: ranged(n, 8 - 1)});
+const BRN = {key: HIT.key, value: ranged(77, 256) - 1};
 
 const MODS: {[gen: number]: string[]} = {
   1: ['Endless Battle Clause', 'Sleep Clause Mod', 'Freeze Clause Mod'],
@@ -49,7 +50,7 @@ for (const gen of new Generations(Dex as any)) {
   const evs = {hp: EVS, atk: EVS, def: EVS, spa: EVS, spd: EVS, spe: EVS};
 
   describe(`Gen ${gen.num}`, () => {
-    test('start', () => {
+    test('start (first fainted)', () => {
       const battle = createBattle([]);
       battle.started = true;
       battle.setPlayer('p1', {team: [
@@ -74,6 +75,8 @@ for (const gen of new Generations(Dex as any)) {
         '|turn|1',
       ]);
     });
+
+    test.todo('move select');
 
     test('turn order (priority)', () => {
       const battle = startBattle([
@@ -222,6 +225,48 @@ for (const gen of new Generations(Dex as any)) {
         '|move|p2a: Machamp|Mega Punch|p1a: Hitmonchan|[miss]',
         '|-miss|p2a: Machamp',
         '|turn|2',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
+    test('damage calc', () => {
+      const NO_BRN = {key: BRN.key, value: BRN.value + 1};
+      const battle = startBattle([
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, NO_BRN,
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG,
+      ], [
+        {species: 'Starmie', evs, moves: ['Water Gun', 'Thunderbolt']},
+      ], [
+        {species: 'Golem', evs, moves: ['Fire Blast', 'Strength']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      // STAB super effective non-critical min damage vs. non-STAB resisted critical max damage
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 70);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 248);
+
+      // immune vs. normal
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 68);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+      expectLog(battle, [
+        '|move|p1a: Starmie|Water Gun|p2a: Golem',
+        '|-supereffective|p2a: Golem',
+        '|-damage|p2a: Golem|115/363',
+        '|move|p2a: Golem|Fire Blast|p1a: Starmie',
+        '|-crit|p1a: Starmie',
+        '|-resisted|p1a: Starmie',
+        '|-damage|p1a: Starmie|253/323',
+        '|turn|2',
+        '|move|p1a: Starmie|Thunderbolt|p2a: Golem',
+        '|-immune|p2a: Golem',
+        '|move|p2a: Golem|Strength|p1a: Starmie',
+        '|-damage|p1a: Starmie|185/323',
+        '|turn|3',
       ]);
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
@@ -751,7 +796,7 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
-    test.todo("Fly / Dig");
+    test.todo('Fly / Dig');
 
     test('SwitchAndTeleport', () => {
       const battle = startBattle([SRF, HIT, SRF, MISS], [
@@ -1331,7 +1376,6 @@ for (const gen of new Generations(Dex as any)) {
       battle.p2.pokemon[0].hp = 182;
 
       let p1hp = battle.p1.pokemon[0].hp;
-      let p2hp = battle.p2.pokemon[0].hp;
 
       // Fails unless the target is sleeping
       battle.makeChoices('move 1', 'move 1');
@@ -1539,7 +1583,6 @@ for (const gen of new Generations(Dex as any)) {
       });
 
       test('Toxic counter glitches', () => {
-        const BRN = {key: HIT.key, value: ranged(77, 256) - 1};
         const battle = startBattle([
           SRF, HIT, SSM, SSM, SLP(5), SRF, HIT, SRF, HIT, NO_CRIT, MIN_DMG, BRN, SSM,
         ], [
