@@ -21,7 +21,6 @@ const ranged = (n: number, d: number) => n * (0x100000000 / d);
 
 const SLP = (n: number) =>
   ({key: ['Battle.random', 'Pokemon.setStatus'], value: ranged(n, 8 - 1)});
-const BRN = {key: HIT.key, value: ranged(77, 256) - 1};
 
 const MODS: {[gen: number]: string[]} = {
   1: ['Endless Battle Clause', 'Sleep Clause Mod', 'Freeze Clause Mod'],
@@ -230,7 +229,7 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('damage calc', () => {
-      const NO_BRN = {key: BRN.key, value: BRN.value + 1};
+      const NO_BRN = {key: HIT.key, value: ranged(77, 256)};
       const battle = startBattle([
         SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, NO_BRN,
         SRF, SRF, HIT, NO_CRIT, MIN_DMG,
@@ -1827,6 +1826,7 @@ for (const gen of new Generations(Dex as any)) {
       test.todo('Haze glitch');
 
       test('Toxic counter glitches', () => {
+        const BRN = {key: HIT.key, value: ranged(77, 256) - 1};
         const battle = startBattle([
           SRF, HIT, SSM, SSM, SLP(5), SRF, HIT, SRF, HIT, NO_CRIT, MIN_DMG, BRN, SSM,
         ], [
