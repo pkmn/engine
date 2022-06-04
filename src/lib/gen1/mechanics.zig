@@ -1,8 +1,8 @@
 const std = @import("std");
-const build_options = @import("build_options");
 
 const common = @import("../common/data.zig");
 const DEBUG = @import("../common/debug.zig").print;
+const options = @import("../common/options.zig").options;
 const protocol = @import("../common/protocol.zig");
 const rng = @import("../common/rng.zig");
 
@@ -12,12 +12,12 @@ const assert = std.debug.assert;
 
 const expectEqual = std.testing.expectEqual;
 
-const showdown = build_options.showdown;
-
 const Choice = common.Choice;
 const ID = common.ID;
 const Player = common.Player;
 const Result = common.Result;
+
+const showdown = options.showdown;
 
 const Damage = protocol.Damage;
 const Heal = protocol.Heal;
@@ -1211,7 +1211,7 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
 }
 
 fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
-    if (showdown and checkEBC(battle)) {
+    if (showdown and options.ebc and checkEBC(battle)) {
         try log.tie();
         return Result.Tie;
     }

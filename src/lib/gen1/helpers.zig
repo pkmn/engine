@@ -1,7 +1,7 @@
 const std = @import("std");
-const build_options = @import("build_options");
 
 const common = @import("../common/data.zig");
+const options = @import("../common/options.zig").options;
 const protocol = @import("../common/protocol.zig");
 const rng = @import("../common/rng.zig");
 
@@ -11,9 +11,9 @@ const assert = std.debug.assert;
 
 const expectEqual = std.testing.expectEqual;
 
-const showdown = build_options.showdown;
-
 const Choice = common.Choice;
+
+const showdown = options.showdown;
 
 const PSRNG = rng.PSRNG;
 
@@ -70,7 +70,7 @@ fn prng(rand: *PSRNG, initial: bool) data.PRNG {
     const max: u9 = if (initial) 253 else 256;
     return .{
         .src = .{
-            .seed = if (build_options.showdown)
+            .seed = if (showdown)
                 rand.newSeed()
             else .{
                 rand.range(u8, 0, max), rand.range(u8, 0, max),

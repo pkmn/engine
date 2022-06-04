@@ -244,7 +244,7 @@ const GEN1: pkmn.gen1.Battle(pkmn.gen1.PRNG) = .{
     .turn = 609,
     .last_damage = 84,
     .last_selected_indexes = .{ .p1 = 2, .p2 = 1 },
-    .rng = .{ .src = if (pkmn.showdown) .{ .seed = 0x31415926 } else .{
+    .rng = .{ .src = if (pkmn.options.showdown) .{ .seed = 0x31415926 } else .{
         .seed = .{ 114, 155, 42, 78, 253, 19, 117, 37, 253, 105 },
         .index = 8,
     } },
@@ -382,7 +382,9 @@ pub fn inspectN(value: anytype, ais: *Ais, max_depth: usize) !void {
             try ais.writer().writeAll(RESET);
             if (max_depth == 0) return ais.writer().writeAll(".{ ... }");
 
-            const compact = if (info.fields.len > COMPACT) false else inline for (info.fields) |f| {
+            const compact = if (info.fields.len > COMPACT)
+                false
+            else inline for (info.fields) |f| {
                 if (!isPrimitive(f.field_type)) break false;
             } else true;
 
@@ -401,7 +403,15 @@ pub fn inspectN(value: anytype, ais: *Ais, max_depth: usize) !void {
                     else
                         @ptrCast(*const f.field_type, @alignCast(@alignOf(f.field_type), dv)).*;
                     switch (@typeInfo(f.field_type)) {
-                        .ComptimeInt, .Int, .ComptimeFloat, .Float, .Bool, .Optional, .ErrorUnion, .Enum => {
+                        .ComptimeInt,
+                        .Int,
+                        .ComptimeFloat,
+                        .Float,
+                        .Bool,
+                        .Optional,
+                        .ErrorUnion,
+                        .Enum,
+                        => {
                             if (@field(value, f.name) != default_value) {
                                 try ais.writer().writeAll(".");
                                 try ais.writer().writeAll(f.name);
@@ -511,7 +521,11 @@ pub fn inspectN(value: anytype, ais: *Ais, max_depth: usize) !void {
                 .Enum, .Union, .Struct => {
                     return inspectN(value.*, ais, max_depth);
                 },
-                else => return std.fmt.format(ais.writer(), "{s}@{x}", .{ @typeName(ptr_info.child), @ptrToInt(value) }),
+                else => return std.fmt.format(
+                    ais.writer(),
+                    "{s}@{x}",
+                    .{ @typeName(ptr_info.child), @ptrToInt(value) },
+                ),
             },
             .Many, .C => {
                 if (ptr_info.sentinel) |_| {

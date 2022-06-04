@@ -1,5 +1,5 @@
-pub const showdown = @import("build_options").showdown;
-pub const trace = @import("build_options").trace;
+pub const Options = @import("common/options.zig").Options;
+pub const options = @import("common/options.zig").options;
 
 pub const MAX_OPTIONS = gen1.MAX_OPTIONS;
 pub const OPTIONS_SIZE = gen1.OPTIONS_SIZE;

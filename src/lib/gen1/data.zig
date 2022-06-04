@@ -1,8 +1,8 @@
 const std = @import("std");
 const builtin = @import("builtin");
-const build_options = @import("build_options");
 
 const data = @import("../common/data.zig");
+const options = @import("../common/options.zig").options;
 const protocol = @import("../common/protocol.zig");
 const rng = @import("../common/rng.zig");
 
@@ -15,8 +15,6 @@ const mechanics = @import("mechanics.zig");
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 const expect = std.testing.expect;
-
-const showdown = build_options.showdown;
 
 pub const MAX_OPTIONS = 9; // move 1..4, switch 2..6
 pub const MAX_LOGS = 191;
@@ -34,6 +32,8 @@ pub const Choice = data.Choice;
 pub const ID = data.ID;
 pub const Player = data.Player;
 pub const Result = data.Result;
+
+const showdown = options.showdown;
 
 pub const PRNG = rng.PRNG(1);
 

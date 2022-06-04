@@ -1,8 +1,8 @@
 const std = @import("std");
-const build_options = @import("build_options");
 
 const common = @import("../common/data.zig");
 const DEBUG = @import("../common/debug.zig").print;
+const options = @import("../common/options.zig").options;
 const protocol = @import("../common/protocol.zig");
 const rng = @import("../common/rng.zig");
 
@@ -19,12 +19,12 @@ const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
-const showdown = build_options.showdown;
-const trace = build_options.trace;
-
 const Player = common.Player;
 const Result = common.Result;
 const Choice = common.Choice;
+
+const showdown = options.showdown;
+const trace = options.trace;
 
 const ArgType = protocol.ArgType;
 const FixedLog = protocol.FixedLog;
@@ -614,21 +614,21 @@ test "Endless Battle Clause (basic)" {
 test "choices (default)" {
     var random = rng.PSRNG.init(0x27182818);
     var battle = Battle.random(&random, false);
-    var options: [OPTIONS_SIZE]Choice = undefined;
+    var choices: [OPTIONS_SIZE]Choice = undefined;
 
-    var n = battle.choices(.P1, .Move, &options);
+    var n = battle.choices(.P1, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{
         swtch(2), swtch(3), swtch(4), swtch(5), swtch(6),
         move(1),  move(2),  move(3),  move(4),
-    }, options[0..n]);
+    }, choices[0..n]);
 
-    n = battle.choices(.P1, .Switch, &options);
+    n = battle.choices(.P1, .Switch, &choices);
     try expectEqualSlices(Choice, &[_]Choice{
         swtch(2), swtch(3), swtch(4), swtch(5), swtch(6),
-    }, options[0..n]);
+    }, choices[0..n]);
 
-    n = battle.choices(.P1, .Pass, &options);
-    try expectEqualSlices(Choice, &[_]Choice{.{}}, options[0..n]);
+    n = battle.choices(.P1, .Pass, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{.{}}, choices[0..n]);
 }
 
 test "choices (locked)" {

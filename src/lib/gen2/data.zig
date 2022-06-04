@@ -1,7 +1,7 @@
 const std = @import("std");
-const build_options = @import("build_options");
 
 const rng = @import("../common/rng.zig");
+const options = @import("../common/options.zig").options;
 const gen1 = @import("../gen1/data.zig");
 
 const items = @import("data/items.zig");
@@ -12,6 +12,8 @@ const types = @import("data/types.zig");
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 const expect = std.testing.expect;
+
+const showdown = options.showdown;
 
 pub const PRNG = rng.PRNG(2);
 
@@ -33,7 +35,7 @@ pub fn Battle(comptime RNG: anytype) type {
 }
 
 test "Battle" {
-    try expectEqual(if (build_options.showdown) 440 else 444, @sizeOf(Battle(PRNG)));
+    try expectEqual(if (showdown) 440 else 444, @sizeOf(Battle(PRNG)));
 }
 
 const Field = extern struct {

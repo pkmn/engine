@@ -60,7 +60,6 @@ fn checkFormat(file_path: []const u8, allocator: Allocator) !bool {
 const Ignored = union(enum) { lines: []const u32, all };
 
 const ignore = std.ComptimeStringMap(Ignored, .{
-    .{ "src/tools/serde.zig", .{ .lines = &.{ 404, 514 } } },
     .{ "src/examples/zig/example.zig", .all },
     .{ "src/lib/gen2/test.zig", .all },
 });
