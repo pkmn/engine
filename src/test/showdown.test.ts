@@ -716,6 +716,43 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
+    test('Charge', () => {
+      const battle = startBattle([
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+      ], [
+        {species: 'Wartortle', evs, moves: ['Skull Bash']},
+      ], [
+        {species: 'Psyduck', evs, moves: ['Scratch']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 23);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 23);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 83);
+
+      expectLog(battle, [
+        '|move|p1a: Wartortle|Skull Bash||[still]',
+        '|-prepare|p1a: Wartortle|Skull Bash',
+        '|move|p2a: Psyduck|Scratch|p1a: Wartortle',
+        '|-damage|p1a: Wartortle|298/321',
+        '|turn|2',
+        '|move|p1a: Wartortle|Skull Bash|p2a: Psyduck|[from]Skull Bash',
+        '|-damage|p2a: Psyduck|220/303',
+        '|move|p2a: Psyduck|Scratch|p1a: Wartortle',
+        '|-damage|p1a: Wartortle|275/321',
+        '|turn|3',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
+    test.todo("Fly / Dig");
+
     test('SwitchAndTeleport', () => {
       const battle = startBattle([SRF, HIT, SRF, MISS], [
         {species: 'Abra', evs, moves: ['Teleport']},
