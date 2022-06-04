@@ -19,10 +19,8 @@ pub fn build(b: *Builder) !void {
 
     var parser = std.json.Parser.init(b.allocator, false);
     defer parser.deinit();
-
     var tree = try parser.parse(@embedFile("package.json"));
     defer tree.deinit();
-
     const version = tree.root.Object.get("version").?.String;
 
     const showdown =
@@ -132,31 +130,24 @@ pub fn build(b: *Builder) !void {
     }
     const test_step = if (test_filter != null) null else &tests.step;
 
-    const bench = b.addExecutable(
-        if (showdown) "benchmark-showdown" else "benchmark",
-        "src/test/benchmark.zig",
-    );
-    bench.addPackage(pkmn);
-    bench.setBuildMode(.ReleaseFast);
-    bench.single_threaded = true;
-    bench.strip = true;
-
     const format = b.addFmt(&.{"."});
-
     const lint = b.addExecutable("lint", "src/tools/lint.zig").run();
     lint.step.dependOn(b.getInstallStep());
 
-    const benchmark = bench.run();
-    benchmark.step.dependOn(b.getInstallStep());
-    if (b.args) |args| benchmark.addArgs(args);
-    if (test_step) |ts| ts.dependOn(&bench.step);
-
-    const rng = try tool(b, &.{pkmn}, "src/tools/rng.zig", showdown, strip, test_step);
-    const serde = try tool(b, &.{pkmn}, "src/tools/serde.zig", showdown, strip, test_step);
-    const protocol = try tool(b, &.{pkmn}, "src/tools/protocol.zig", showdown, strip, test_step);
+    const benchmark =
+        tool(b, &.{pkmn}, "src/test/benchmark.zig", showdown, true, test_step, .ReleaseFast);
+    const fuzz =
+        tool(b, &.{pkmn}, "src/test/benchmark.zig", showdown, false, test_step, .ReleaseSafe);
+    const rng =
+        tool(b, &.{pkmn}, "src/tools/rng.zig", showdown, strip, test_step, null);
+    const serde =
+        tool(b, &.{pkmn}, "src/tools/serde.zig", showdown, strip, test_step, null);
+    const protocol =
+        tool(b, &.{pkmn}, "src/tools/protocol.zig", showdown, strip, test_step, null);
 
     b.step("benchmark", "Run benchmark code").dependOn(&benchmark.step);
     b.step("format", "Format source files").dependOn(&format.step);
+    b.step("fuzz", "Run fuzz tester").dependOn(&fuzz.step);
     b.step("lint", "Lint source files").dependOn(&lint.step);
     b.step("protocol", "Run protocol dump tool").dependOn(&protocol.step);
     b.step("rng", "Run RNG calculator tool").dependOn(&rng.step);
@@ -171,7 +162,8 @@ fn tool(
     showdown: bool,
     strip: bool,
     test_step: ?*std.build.Step,
-) !*std.build.RunStep {
+    mode: ?std.builtin.Mode,
+) *std.build.RunStep {
     var name = std.fs.path.basename(path);
     const index = std.mem.lastIndexOfScalar(u8, name, '.');
     if (index) |i| name = name[0..i];
@@ -179,7 +171,7 @@ fn tool(
 
     const exe = b.addExecutable(name, path);
     for (pkgs) |p| exe.addPackage(p);
-    exe.setBuildMode(b.standardReleaseOptions());
+    exe.setBuildMode(mode orelse b.standardReleaseOptions());
     exe.single_threaded = true;
     exe.strip = strip;
     if (test_step) |ts| ts.dependOn(&exe.step);

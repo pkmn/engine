@@ -1,0 +1,22 @@
+name: Fuzz
+# on:
+#   schedule:
+#     - cron: '36 * * * *'
+#   push:
+#     branches: [ main ]
+#   pull_request:
+#     branches: [ main ]
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        gen: [1]
+        options: ['-Dtrace', '-Dshowdown -Dtrace']
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: goto-bus-stop/setup-zig@v1
+          version: master
+      - run: npm install
+      - run: zig run ${{matrix.options}} fuzz -- 15m ${{matrix.gen}}
