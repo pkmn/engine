@@ -606,7 +606,7 @@ test "Endless Battle Clause (initial)" {
     try t.verify();
 }
 
-test "Endless Battle Clause (TODO)" {
+test "Endless Battle Clause (basic)" {
     if (!showdown) return;
     return error.SkipZigTest;
 }
@@ -1297,6 +1297,23 @@ test "Counter" {
     return error.SkipZigTest;
 }
 
+// Move.{Recover,SoftBoiled}
+test "Heal (normal)" {
+    // The user restores 1/2 of its maximum HP, rounded down. Fails if (user's maximum HP - user's
+    // current HP + 1) is divisible by 256.
+    // https://pkmn.cc/bulba-glitch-1#HP_recovery_move_failure
+    return error.SkipZigTest;
+}
+
+// Move.Rest
+test "Heal (Rest)" {
+    // The user falls asleep for the next two turns and restores all of its HP, curing itself of any
+    // non-volatile status condition in the process. This does not remove the user's stat penalty
+    // for burn or paralysis. Fails if the user has full HP.
+    // https://pkmn.cc/bulba-glitch-1#HP_recovery_move_failure
+    return error.SkipZigTest;
+}
+
 // Move.{Absorb,MegaDrain,LeechLife}
 test "Drain" {
     // The user recovers 1/2 the HP lost by the target, rounded down.
@@ -1424,23 +1441,6 @@ test "Mimic" {
     // even if the user already knows that move. The copied move keeps the remaining PP for this
     // move, regardless of the copied move's maximum PP. Whenever one PP is used for a copied move,
     // one PP is used for this move.
-    return error.SkipZigTest;
-}
-
-// Move.{Recover,SoftBoiled}
-test "Heal (normal)" {
-    // The user restores 1/2 of its maximum HP, rounded down. Fails if (user's maximum HP - user's
-    // current HP + 1) is divisible by 256.
-    // https://pkmn.cc/bulba-glitch-1#HP_recovery_move_failure
-    return error.SkipZigTest;
-}
-
-// Move.Rest
-test "Heal (Rest)" {
-    // The user falls asleep for the next two turns and restores all of its HP, curing itself of any
-    // non-volatile status condition in the process. This does not remove the user's stat penalty
-    // for burn or paralysis. Fails if the user has full HP.
-    // https://pkmn.cc/bulba-glitch-1#HP_recovery_move_failure
     return error.SkipZigTest;
 }
 

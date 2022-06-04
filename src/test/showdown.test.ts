@@ -432,11 +432,37 @@ for (const gen of new Generations(Dex as any)) {
       battle.started = false;
       battle.start();
 
+      expect(battle.ended).toBe(true);
       expectLog(battle, [
         '|switch|p1a: Gengar|Gengar|323/323',
         '|switch|p2a: Gengar|Gengar|260/260',
         '|tie',
       ]);
+    });
+
+    test('Endless Battle Clause (basic)', () => {
+      let battle = createBattle([]);
+      battle.started = true;
+      battle.setPlayer('p1', {team: [{species: 'Mew', evs, moves: ['Transform']}] as PokemonSet[]});
+      battle.setPlayer('p2', {team: [{species: 'Ditto', moves: ['Transform']}] as PokemonSet[]});
+      battle.started = false;
+      battle.start();
+
+      expect(battle.ended).toBe(true);
+
+      battle = createBattle([SRF, SRF]);
+      battle.started = true;
+      battle.setPlayer('p1', {team: [
+        {species: 'Mew', evs, moves: ['Transform']}, {species: 'Muk', evs, moves: ['Pound']},
+      ] as PokemonSet[]});
+      battle.setPlayer('p2', {team: [{species: 'Ditto', moves: ['Transform']}] as PokemonSet[]});
+      battle.started = false;
+      battle.start();
+
+      expect(battle.ended).toBe(false);
+      battle.p1.pokemon[1].fainted = true;
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.ended).toBe(true);
     });
 
     test('HighCritical', () => {
@@ -512,6 +538,89 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
+    test('MultiHit', () => {
+      const key = ['Battle.sample', 'BattleActions.tryMoveHit'];
+      const hit3 = {key, value: 3 * (0x100000000 / 8) - 1};
+      const hit5 = {key, value: MAX};
+      const battle = startBattle([
+        SRF, HIT, hit3, NO_CRIT, MAX_DMG, SRF, HIT, hit5, NO_CRIT, MAX_DMG
+      ], [
+        {species: 'Kangaskhan', evs, moves: ['Comet Punch']},
+      ], [
+        {species: 'Slowpoke', evs, moves: ['Substitute', 'Teleport']},
+      ]);
+
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp = p2hp - (31 * 3) - 95);
+
+      // Breaking a target's Substitute ends the move
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+      expectLog(battle, [
+        '|move|p1a: Kangaskhan|Comet Punch|p2a: Slowpoke',
+        '|-damage|p2a: Slowpoke|352/383',
+        '|-damage|p2a: Slowpoke|321/383',
+        '|-damage|p2a: Slowpoke|290/383',
+        '|-hitcount|p2a: Slowpoke|3',
+        '|move|p2a: Slowpoke|Substitute|p2a: Slowpoke',
+        '|-start|p2a: Slowpoke|Substitute',
+        '|-damage|p2a: Slowpoke|195/383',
+        '|turn|2',
+        '|move|p1a: Kangaskhan|Comet Punch|p2a: Slowpoke',
+        '|-activate|p2a: Slowpoke|Substitute|[damage]',
+        '|-activate|p2a: Slowpoke|Substitute|[damage]',
+        '|-activate|p2a: Slowpoke|Substitute|[damage]',
+        '|-end|p2a: Slowpoke|Substitute',
+        '|-hitcount|p2a: Slowpoke|4',
+        '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
+        '|turn|3'
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
+    test('DoubleHit', () => {
+      const battle = startBattle([SRF, HIT, NO_CRIT, MAX_DMG, SRF, HIT, NO_CRIT, MAX_DMG], [
+        {species: 'Marowak', evs, moves: ['Bonemerang']},
+      ], [
+        {species: 'Slowpoke', level: 80, evs, moves: ['Substitute', 'Teleport']},
+      ]);
+
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp = p2hp - (91 * 2) - 77);
+
+      // Breaking a target's Substitute ends the move
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+      expectLog(battle, [
+        '|move|p1a: Marowak|Bonemerang|p2a: Slowpoke',
+        '|-damage|p2a: Slowpoke|217/308',
+        '|-damage|p2a: Slowpoke|126/308',
+        '|-hitcount|p2a: Slowpoke|2',
+        '|move|p2a: Slowpoke|Substitute|p2a: Slowpoke',
+        '|-start|p2a: Slowpoke|Substitute',
+        '|-damage|p2a: Slowpoke|49/308',
+        '|turn|2',
+        '|move|p1a: Marowak|Bonemerang|p2a: Slowpoke',
+        '|-end|p2a: Slowpoke|Substitute',
+        '|-hitcount|p2a: Slowpoke|1',
+        '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
+        '|turn|3'
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
+    test.todo('Twineedle');
+    test.todo('Poison (primary)');
+    test.todo('PoisonChance');
+    test.todo('BurnChance');
+    test.todo('FreezeChance');
+
     test('Paralyze (primary)', () => {
       const PAR_CANT = {key: 'Battle.onBeforeMove', value: ranged(63, 256) - 1};
       const PAR_CAN = {key: 'Battle.onBeforeMove', value: PAR_CANT.value + 1};
@@ -581,6 +690,12 @@ for (const gen of new Generations(Dex as any)) {
       ]);
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
+
+    test.todo('ParalyzeChance');
+    test.todo('Sleep');
+    test.todo('Confusion (primary)');
+    test.todo('ConfusionChance');
+    test.todo('FlinchChance');
 
     test('StatDown', () => {
       const battle = startBattle([
@@ -837,6 +952,8 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
+    test.todo('Trapping');
+
     test('JumpKick', () => {
       const battle = startBattle([SRF, SRF, MISS, HIT, CRIT, MAX_DMG, SRF, SRF, MISS, MISS], [
         {species: 'Hitmonlee', evs, moves: ['Jump Kick', 'Substitute']},
@@ -888,6 +1005,46 @@ for (const gen of new Generations(Dex as any)) {
       ]);
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
+
+    // test('Recoil', () => {
+    //   const battle = startBattle([], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ]);
+
+    //   let p1hp = battle.p1.pokemon[0].hp;
+    //   let p2hp = battle.p2.pokemon[0].hp;
+
+    //   battle.makeChoices('move 1', 'move 1');
+    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
+    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+
+    //   expectLog(battle, [
+    //   ]);
+    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    // });
+
+    // test('Struggle', () => {
+    //   const battle = startBattle([], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ]);
+
+    //   let p1hp = battle.p1.pokemon[0].hp;
+    //   let p2hp = battle.p2.pokemon[0].hp;
+
+    //   battle.makeChoices('move 1', 'move 1');
+    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
+    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+
+    //   expectLog(battle, [
+    //   ]);
+    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    // });
+
+    test.todo('Thrashing');
 
     test('SpecialDamage (fixed)', () => {
       const battle = startBattle([SRF, SRF, HIT, HIT, SRF], [
@@ -1009,6 +1166,8 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
+    test.todo('Disable');
+
     test('Mist', () => {
       const proc = {key: HIT.key, value: ranged(85, 256) - 1};
       const battle = startBattle([
@@ -1073,6 +1232,9 @@ for (const gen of new Generations(Dex as any)) {
       ]);
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
+
+    test.todo('HyperBeam');
+    test.todo('Counter');
 
     test('Heal (normal)', () => {
       const battle = startBattle([SRF, SRF, HIT, CRIT, MAX_DMG, HIT, NO_CRIT, MIN_DMG], [
@@ -1179,138 +1341,6 @@ for (const gen of new Generations(Dex as any)) {
         '|-fail|p1a: Porygon',
         '|-curestatus|p2a: Chansey|slp|[msg]',
         '|turn|5',
-      ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
-    });
-
-    test('LightScreen', () => {
-      const battle = startBattle([
-        SRF, HIT, NO_CRIT, MIN_DMG,
-        SRF, HIT, NO_CRIT, MIN_DMG,
-        SRF, HIT, CRIT, MIN_DMG,
-      ], [
-        {species: 'Chansey', evs, moves: ['Light Screen', 'Teleport']},
-      ], [
-        {species: 'Vaporeon', evs, moves: ['Water Gun', 'Haze']},
-      ]);
-
-      let p1hp = battle.p1.pokemon[0].hp;
-
-      // Water Gun does normal damage before Light Screen
-      battle.makeChoices('move 1', 'move 1');
-      expect(battle.p1.pokemon[0].volatiles['lightscreen']).toBeDefined();
-      expect(battle.p1.pokemon[0].hp).toEqual(p1hp -= 45);
-
-      // Water Gun's damage is reduced after Light Screen
-      battle.makeChoices('move 2', 'move 1');
-      expect(battle.p1.pokemon[0].hp).toEqual(p1hp -= 23);
-
-      // Critical hits ignore Light Screen
-      battle.makeChoices('move 2', 'move 1');
-      expect(battle.p1.pokemon[0].hp).toEqual(p1hp -= 87);
-
-      // Haze removes Light Screen
-      battle.makeChoices('move 2', 'move 2');
-      expect(battle.p1.pokemon[0].volatiles['lightscreen']).toBeUndefined();
-
-      expectLog(battle, [
-        '|move|p2a: Vaporeon|Water Gun|p1a: Chansey',
-        '|-damage|p1a: Chansey|658/703',
-        '|move|p1a: Chansey|Light Screen|p1a: Chansey',
-        '|-start|p1a: Chansey|Light Screen',
-        '|turn|2',
-        '|move|p2a: Vaporeon|Water Gun|p1a: Chansey',
-        '|-damage|p1a: Chansey|635/703',
-        '|move|p1a: Chansey|Teleport|p1a: Chansey',
-        '|turn|3',
-        '|move|p2a: Vaporeon|Water Gun|p1a: Chansey',
-        '|-crit|p1a: Chansey',
-        '|-damage|p1a: Chansey|548/703',
-        '|move|p1a: Chansey|Teleport|p1a: Chansey',
-        '|turn|4',
-        '|move|p2a: Vaporeon|Haze|p2a: Vaporeon',
-        '|-activate|p2a: Vaporeon|move: Haze',
-        '|-clearallboost|[silent]',
-        '|-end|p1a: Chansey|lightscreen|[silent]',
-        '|move|p1a: Chansey|Teleport|p1a: Chansey',
-        '|turn|5',
-      ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
-    });
-
-    test('Reflect', () => {
-      const battle = startBattle([
-        SRF, HIT, NO_CRIT, MIN_DMG,
-        SRF, HIT, NO_CRIT, MIN_DMG,
-        SRF, HIT, CRIT, MIN_DMG,
-      ], [
-        {species: 'Chansey', evs, moves: ['Reflect', 'Teleport']},
-      ], [
-        {species: 'Vaporeon', evs, moves: ['Tackle', 'Haze']},
-      ]);
-
-      let p1hp = battle.p1.pokemon[0].hp;
-
-      // Tackle does normal damage before Reflect
-      battle.makeChoices('move 1', 'move 1');
-      expect(battle.p1.pokemon[0].volatiles['reflect']).toBeDefined();
-      expect(battle.p1.pokemon[0].hp).toEqual(p1hp -= 54);
-
-      // Tackle's damage is reduced after Reflect
-      battle.makeChoices('move 2', 'move 1');
-      expect(battle.p1.pokemon[0].hp).toEqual(p1hp -= 28);
-
-      // Critical hits ignore Reflect
-      battle.makeChoices('move 2', 'move 1');
-      expect(battle.p1.pokemon[0].hp).toEqual(p1hp -= 104);
-
-      // Haze removes Reflect
-      battle.makeChoices('move 2', 'move 2');
-      expect(battle.p1.pokemon[0].volatiles['reflect']).toBeUndefined();
-
-      expectLog(battle, [
-        '|move|p2a: Vaporeon|Tackle|p1a: Chansey',
-        '|-damage|p1a: Chansey|649/703',
-        '|move|p1a: Chansey|Reflect|p1a: Chansey',
-        '|-start|p1a: Chansey|Reflect',
-        '|turn|2',
-        '|move|p2a: Vaporeon|Tackle|p1a: Chansey',
-        '|-damage|p1a: Chansey|621/703',
-        '|move|p1a: Chansey|Teleport|p1a: Chansey',
-        '|turn|3',
-        '|move|p2a: Vaporeon|Tackle|p1a: Chansey',
-        '|-crit|p1a: Chansey',
-        '|-damage|p1a: Chansey|517/703',
-        '|move|p1a: Chansey|Teleport|p1a: Chansey',
-        '|turn|4',
-        '|move|p2a: Vaporeon|Haze|p2a: Vaporeon',
-        '|-activate|p2a: Vaporeon|move: Haze',
-        '|-clearallboost|[silent]',
-        '|-end|p1a: Chansey|reflect|[silent]',
-        '|move|p1a: Chansey|Teleport|p1a: Chansey',
-        '|turn|5',
-      ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
-    });
-
-    test('Swift', () => {
-      const battle = startBattle([SRF, SRF, SRF, NO_CRIT, MIN_DMG, SSR, GLM], [
-        {species: 'Eevee', evs, moves: ['Swift']},
-      ], [
-        {species: 'Diglett', evs, moves: ['Dig']},
-      ]);
-
-      const p2hp = battle.p2.pokemon[0].hp;
-
-      battle.makeChoices('move 1', 'move 1');
-      expect(battle.p2.pokemon[0].hp).toBe(p2hp - 91);
-
-      expectLog(battle, [
-        '|move|p2a: Diglett|Dig||[still]',
-        '|-prepare|p2a: Diglett|Dig',
-        '|move|p1a: Eevee|Swift|p2a: Diglett',
-        '|-damage|p2a: Diglett|132/223',
-        '|turn|2',
       ]);
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
@@ -1494,6 +1524,167 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
+    test.todo('Rage');
+    test.todo('Mimic');
+
+    test('LightScreen', () => {
+      const battle = startBattle([
+        SRF, HIT, NO_CRIT, MIN_DMG,
+        SRF, HIT, NO_CRIT, MIN_DMG,
+        SRF, HIT, CRIT, MIN_DMG,
+      ], [
+        {species: 'Chansey', evs, moves: ['Light Screen', 'Teleport']},
+      ], [
+        {species: 'Vaporeon', evs, moves: ['Water Gun', 'Haze']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+
+      // Water Gun does normal damage before Light Screen
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].volatiles['lightscreen']).toBeDefined();
+      expect(battle.p1.pokemon[0].hp).toEqual(p1hp -= 45);
+
+      // Water Gun's damage is reduced after Light Screen
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toEqual(p1hp -= 23);
+
+      // Critical hits ignore Light Screen
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toEqual(p1hp -= 87);
+
+      // Haze removes Light Screen
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].volatiles['lightscreen']).toBeUndefined();
+
+      expectLog(battle, [
+        '|move|p2a: Vaporeon|Water Gun|p1a: Chansey',
+        '|-damage|p1a: Chansey|658/703',
+        '|move|p1a: Chansey|Light Screen|p1a: Chansey',
+        '|-start|p1a: Chansey|Light Screen',
+        '|turn|2',
+        '|move|p2a: Vaporeon|Water Gun|p1a: Chansey',
+        '|-damage|p1a: Chansey|635/703',
+        '|move|p1a: Chansey|Teleport|p1a: Chansey',
+        '|turn|3',
+        '|move|p2a: Vaporeon|Water Gun|p1a: Chansey',
+        '|-crit|p1a: Chansey',
+        '|-damage|p1a: Chansey|548/703',
+        '|move|p1a: Chansey|Teleport|p1a: Chansey',
+        '|turn|4',
+        '|move|p2a: Vaporeon|Haze|p2a: Vaporeon',
+        '|-activate|p2a: Vaporeon|move: Haze',
+        '|-clearallboost|[silent]',
+        '|-end|p1a: Chansey|lightscreen|[silent]',
+        '|move|p1a: Chansey|Teleport|p1a: Chansey',
+        '|turn|5',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
+    test('Reflect', () => {
+      const battle = startBattle([
+        SRF, HIT, NO_CRIT, MIN_DMG,
+        SRF, HIT, NO_CRIT, MIN_DMG,
+        SRF, HIT, CRIT, MIN_DMG,
+      ], [
+        {species: 'Chansey', evs, moves: ['Reflect', 'Teleport']},
+      ], [
+        {species: 'Vaporeon', evs, moves: ['Tackle', 'Haze']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+
+      // Tackle does normal damage before Reflect
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].volatiles['reflect']).toBeDefined();
+      expect(battle.p1.pokemon[0].hp).toEqual(p1hp -= 54);
+
+      // Tackle's damage is reduced after Reflect
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toEqual(p1hp -= 28);
+
+      // Critical hits ignore Reflect
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toEqual(p1hp -= 104);
+
+      // Haze removes Reflect
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].volatiles['reflect']).toBeUndefined();
+
+      expectLog(battle, [
+        '|move|p2a: Vaporeon|Tackle|p1a: Chansey',
+        '|-damage|p1a: Chansey|649/703',
+        '|move|p1a: Chansey|Reflect|p1a: Chansey',
+        '|-start|p1a: Chansey|Reflect',
+        '|turn|2',
+        '|move|p2a: Vaporeon|Tackle|p1a: Chansey',
+        '|-damage|p1a: Chansey|621/703',
+        '|move|p1a: Chansey|Teleport|p1a: Chansey',
+        '|turn|3',
+        '|move|p2a: Vaporeon|Tackle|p1a: Chansey',
+        '|-crit|p1a: Chansey',
+        '|-damage|p1a: Chansey|517/703',
+        '|move|p1a: Chansey|Teleport|p1a: Chansey',
+        '|turn|4',
+        '|move|p2a: Vaporeon|Haze|p2a: Vaporeon',
+        '|-activate|p2a: Vaporeon|move: Haze',
+        '|-clearallboost|[silent]',
+        '|-end|p1a: Chansey|reflect|[silent]',
+        '|move|p1a: Chansey|Teleport|p1a: Chansey',
+        '|turn|5',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
+    test.todo('Haze');
+    test.todo('Bide');
+    test.todo('Metronome');
+    test.todo('MirrorMove');
+
+    // test('Explode', () => {
+    //   const battle = startBattle([], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ]);
+
+    //   let p1hp = battle.p1.pokemon[0].hp;
+    //   let p2hp = battle.p2.pokemon[0].hp;
+
+    //   battle.makeChoices('move 1', 'move 1');
+    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
+    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+
+    //   expectLog(battle, [
+    //   ]);
+    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    // });
+
+    test('Swift', () => {
+      const battle = startBattle([SRF, SRF, SRF, NO_CRIT, MIN_DMG, SSR, GLM], [
+        {species: 'Eevee', evs, moves: ['Swift']},
+      ], [
+        {species: 'Diglett', evs, moves: ['Dig']},
+      ]);
+
+      const p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp - 91);
+
+      expectLog(battle, [
+        '|move|p2a: Diglett|Dig||[still]',
+        '|-prepare|p2a: Diglett|Dig',
+        '|move|p1a: Eevee|Swift|p2a: Diglett',
+        '|-damage|p2a: Diglett|132/223',
+        '|turn|2',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
+    test.todo('Transform');
+
     test('Conversion', () => {
       const battle = startBattle([SRF], [
         {species: 'Porygon', evs, moves: ['Conversion']},
@@ -1512,6 +1703,8 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
   });
+
+  test.todo('Substitute');
 
   if (gen.num === 1) {
     describe('Gen 1', () => {
@@ -1582,6 +1775,11 @@ for (const gen of new Generations(Dex as any)) {
         expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
+      test.todo('Bide errors');
+      test.todo('Counter glitches');
+      test.todo('Freeze top move selection glitch');
+      test.todo('Haze glitch');
+
       test('Toxic counter glitches', () => {
         const battle = startBattle([
           SRF, HIT, SSM, SSM, SLP(5), SRF, HIT, SRF, HIT, NO_CRIT, MIN_DMG, BRN, SSM,
@@ -1630,9 +1828,13 @@ for (const gen of new Generations(Dex as any)) {
 
       test.todo('Defrost move forcing');
       test.todo('Division by 0');
+      test.todo('Hyper Beam + Freeze permanent helplessness');
+      test.todo('Hyper Beam + Sleep move glitch');
+      test.todo('Hyper Beam automatic selection glitch');
       test.todo('Invulnerability glitch');
       test.todo('Stat modification errors');
-      test.todo('Struggle bypassing');
+      test.todo('Stat down modifier overflow glitch');
+      test.todo('Struggle bypassing / Switch PP underflow');
       test.todo('Trapping sleep glitch');
 
       test('Partial trapping move Mirror Move glitch', () => {
@@ -1675,7 +1877,7 @@ for (const gen of new Generations(Dex as any)) {
       });
 
       test.todo('Rage and Thrash / Petal Dance accuracy bug');
-      test.todo('Stat down modifier overflow glitch');
+      test.todo('Substitute HP drain bug');
 
       test('Substitute 1/4 HP glitch', () => {
         const battle = startBattle([], [
@@ -1699,6 +1901,8 @@ for (const gen of new Generations(Dex as any)) {
         ]);
         expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
+
+      test.todo('Substitute + Confusion glitch');
 
       test('Psywave infinite loop', () => {
         const PSY_MAX = {key: 'Battle.damageCallback', value: MAX};
@@ -1745,10 +1949,10 @@ class FixedRNG extends PRNG {
     if (this.index >= this.rolls.length) throw new Error('Insufficient number of rolls provided');
     const roll = this.rolls[this.index++];
     const where = locations();
-    const locs = where.join(' -> ');
+    const locs = where.join(', ');
     if (Array.isArray(roll.key)) {
       if (!roll.key.every(k => where.includes(k))) {
-        throw new Error(`Expected roll for (${roll.key.join(' -> ')}) but got (${locs})`);
+        throw new Error(`Expected roll for (${roll.key.join(', ')}) but got (${locs})`);
       }
     } else if (!where.includes(roll.key)) {
       throw new Error(`Expected roll for (${roll.key}) but got (${locs})`);
