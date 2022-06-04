@@ -543,7 +543,7 @@ for (const gen of new Generations(Dex as any)) {
       const hit3 = {key, value: 3 * (0x100000000 / 8) - 1};
       const hit5 = {key, value: MAX};
       const battle = startBattle([
-        SRF, HIT, hit3, NO_CRIT, MAX_DMG, SRF, HIT, hit5, NO_CRIT, MAX_DMG
+        SRF, HIT, hit3, NO_CRIT, MAX_DMG, SRF, HIT, hit5, NO_CRIT, MAX_DMG,
       ], [
         {species: 'Kangaskhan', evs, moves: ['Comet Punch']},
       ], [
@@ -576,7 +576,7 @@ for (const gen of new Generations(Dex as any)) {
         '|-end|p2a: Slowpoke|Substitute',
         '|-hitcount|p2a: Slowpoke|4',
         '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
-        '|turn|3'
+        '|turn|3',
       ]);
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
@@ -610,7 +610,7 @@ for (const gen of new Generations(Dex as any)) {
         '|-end|p2a: Slowpoke|Substitute',
         '|-hitcount|p2a: Slowpoke|1',
         '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
-        '|turn|3'
+        '|turn|3',
       ]);
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
@@ -1642,24 +1642,70 @@ for (const gen of new Generations(Dex as any)) {
     test.todo('Metronome');
     test.todo('MirrorMove');
 
-    // test('Explode', () => {
-    //   const battle = startBattle([], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ]);
+    test('Explode', () => {
+      const battle = startBattle([
+        SRF, HIT, SSM,
+        SRF, HIT, NO_CRIT, MAX_DMG,
+        SRF, HIT, NO_CRIT, MAX_DMG,
+        SRF,
+      ], [
+        {species: 'Electrode', level: 80, evs, moves: ['Explosion', 'Toxic']},
+        {species: 'Onix', evs, moves: ['Self-Destruct']},
+      ], [
+        {species: 'Chansey', evs, moves: ['Substitute', 'Teleport']},
+        {species: 'Gengar', evs, moves: ['Night Shade']},
+      ]);
 
-    //   let p1hp = battle.p1.pokemon[0].hp;
-    //   let p2hp = battle.p2.pokemon[0].hp;
+      const electrode = battle.p1.pokemon[0].hp;
+      const onix = battle.p1.pokemon[1].hp;
+      let chansey = battle.p2.pokemon[0].hp;
+      const gengar = battle.p2.pokemon[1].hp;
 
-    //   battle.makeChoices('move 1', 'move 1');
-    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
-    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(electrode);
+      expect(battle.p2.pokemon[0].hp).toBe(chansey = chansey - 175 - 43);
 
-    //   expectLog(battle, [
-    //   ]);
-    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
-    // });
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p2.pokemon[0].hp).toBe(chansey -= 86);
+
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(0);
+      expect(battle.p2.pokemon[0].hp).toBe(chansey -= 342);
+
+      battle.makeChoices('switch 2', '');
+      expect(battle.p1.pokemon[0].hp).toBe(onix);
+      expect(battle.p2.pokemon[0].hp).toBe(chansey);
+
+      battle.makeChoices('move 1', 'switch 2');
+      expect(battle.p1.pokemon[0].hp).toBe(0);
+      expect(battle.p2.pokemon[0].hp).toBe(gengar);
+
+      expectLog(battle, [
+        '|move|p1a: Electrode|Toxic|p2a: Chansey',
+        '|-status|p2a: Chansey|tox',
+        '|move|p2a: Chansey|Substitute|p2a: Chansey',
+        '|-start|p2a: Chansey|Substitute',
+        '|-damage|p2a: Chansey|528/703 tox',
+        '|-damage|p2a: Chansey|485/703 tox|[from] psn',
+        '|turn|2',
+        '|move|p1a: Electrode|Explosion|p2a: Chansey',
+        '|-end|p2a: Chansey|Substitute',
+        '|move|p2a: Chansey|Teleport|p2a: Chansey',
+        '|-damage|p2a: Chansey|399/703 tox|[from] psn',
+        '|turn|3',
+        '|move|p1a: Electrode|Explosion|p2a: Chansey',
+        '|-damage|p2a: Chansey|57/703 tox',
+        '|faint|p1a: Electrode',
+        '|switch|p1a: Onix|Onix|273/273',
+        '|turn|4',
+        '|switch|p2a: Gengar|Gengar|323/323',
+        '|move|p1a: Onix|Self-Destruct|p2a: Gengar',
+        '|-immune|p2a: Gengar',
+        '|faint|p1a: Onix',
+        '|win|Player 2',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
 
     test('Swift', () => {
       const battle = startBattle([SRF, SRF, SRF, NO_CRIT, MIN_DMG, SSR, GLM], [
