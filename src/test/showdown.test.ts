@@ -1923,7 +1923,29 @@ for (const gen of new Generations(Dex as any)) {
       });
 
       test.todo('Rage and Thrash / Petal Dance accuracy bug');
-      test.todo('Substitute HP drain bug');
+
+      test('Substitute HP drain bug', () => {
+        const battle = startBattle([SRF, HIT, NO_CRIT, MIN_DMG], [
+          {species: 'Butterfree', evs, moves: ['Mega Drain']},
+        ], [
+          {species: 'Jolteon', evs, moves: ['Substitute']},
+        ]);
+
+        const p2hp = battle.p2.pokemon[0].hp;
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p2.pokemon[0].hp).toBe(p2hp - 83);
+
+        expectLog(battle, [
+          '|move|p2a: Jolteon|Substitute|p2a: Jolteon',
+          '|-start|p2a: Jolteon|Substitute',
+          '|-damage|p2a: Jolteon|250/333',
+          '|move|p1a: Butterfree|Mega Drain|p2a: Jolteon',
+          '|-activate|p2a: Jolteon|Substitute|[damage]',
+          '|turn|2',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      });
 
       test('Substitute 1/4 HP glitch', () => {
         const battle = startBattle([], [
