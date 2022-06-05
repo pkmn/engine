@@ -13,8 +13,9 @@ const MIN_DMG = {key: ['Battle.random', 'BattleActions.getDamage'], value: MIN};
 const MAX_DMG = {key: ['Battle.random', 'BattleActions.getDamage'], value: MAX};
 
 const SRF = {key: 'Side.randomFoe', value: NOP};
-const SSM = {key: ['Battle.speedSort', 'Pokemon.setStatus'], value: NOP};
-const SSR = {key: ['Battle.speedSort', 'Battle.residualEvent'], value: NOP};
+const SS_MOD = {key: ['Battle.speedSort', 'Pokemon.setStatus'], value: NOP};
+const SS_RES = {key: ['Battle.speedSort', 'Battle.residualEvent'], value: NOP};
+const SS_RUN = {key: ['Battle.speedSort', 'Battle.runEvent'], value: NOP};
 const GLM = {key: 'Pokemon.getLockedMove', value: NOP};
 
 const ranged = (n: number, d: number) => n * (0x100000000 / d);
@@ -625,12 +626,12 @@ for (const gen of new Generations(Dex as any)) {
       const PAR_CAN = {key: 'Battle.onBeforeMove', value: PAR_CANT.value + 1};
 
       const battle = startBattle([
-        SRF, SRF, MISS, HIT, SSM,
-        SRF, SRF, HIT, PAR_CAN, HIT, SSM,
+        SRF, SRF, MISS, HIT, SS_MOD,
+        SRF, SRF, HIT, PAR_CAN, HIT, SS_MOD,
         SRF, PAR_CANT,
-        SRF, SRF, HIT, PAR_CAN, HIT, SSM,
+        SRF, SRF, HIT, PAR_CAN, HIT, SS_MOD,
         SRF, PAR_CAN,
-        SRF, PAR_CAN, HIT, SSM,
+        SRF, PAR_CAN, HIT, SS_MOD,
       ], [
         {species: 'Arbok', evs, moves: ['Glare']},
         {species: 'Dugtrio', evs, moves: ['Earthquake', 'Substitute']},
@@ -910,7 +911,41 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
-    test.todo('Fly / Dig');
+    test('Fly / Dig', () => {
+      const battle = startBattle([
+        SRF, SRF, SS_RES, GLM,
+        GLM, GLM, SRF, SRF, SS_RUN, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+      ], [
+        {species: 'Pidgeot', evs, moves: ['Fly']},
+      ], [
+        {species: 'Lickitung', evs, moves: ['Strength']},
+      ]);
+
+      const p1hp = battle.p1.pokemon[0].hp;
+      const p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp - 74);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp - 79);
+
+      expectLog(battle, [
+        '|move|p1a: Pidgeot|Fly||[still]',
+        '|-prepare|p1a: Pidgeot|Fly',
+        '|move|p2a: Lickitung|Strength|p1a: Pidgeot|[miss]',
+        '|-miss|p2a: Lickitung',
+        '|turn|2',
+        '|move|p1a: Pidgeot|Fly|p2a: Lickitung|[from]Fly',
+        '|-damage|p2a: Lickitung|304/383',
+        '|move|p2a: Lickitung|Strength|p1a: Pidgeot',
+        '|-damage|p1a: Pidgeot|295/369',
+        '|turn|3',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
 
     test('SwitchAndTeleport', () => {
       const battle = startBattle([SRF, HIT, SRF, MISS], [
@@ -1286,8 +1321,8 @@ for (const gen of new Generations(Dex as any)) {
       const PAR_CANT = {key: 'Battle.onBeforeMove', value: ranged(63, 256) - 1};
       const PAR_CAN = {key: 'Battle.onBeforeMove', value: PAR_CANT.value + 1};
       const battle = startBattle([
-        SRF, HIT, SSM,
-        SRF, HIT, NO_CRIT, MIN_DMG, PAR_CAN, SSM, SLP(5),
+        SRF, HIT, SS_MOD,
+        SRF, HIT, NO_CRIT, MIN_DMG, PAR_CAN, SS_MOD, SLP(5),
         SRF, HIT, NO_CRIT, MIN_DMG,
       ], [
         {species: 'Porygon', evs, moves: ['Thunder Wave', 'Tackle', 'Rest']},
@@ -1394,7 +1429,7 @@ for (const gen of new Generations(Dex as any)) {
 
     test('DreamEater', () => {
       const battle = startBattle([
-        SRF, SRF, HIT, SSM, SLP(5), SRF, HIT, NO_CRIT, MIN_DMG, SRF, HIT, NO_CRIT, MIN_DMG,
+        SRF, SRF, HIT, SS_MOD, SLP(5), SRF, HIT, NO_CRIT, MIN_DMG, SRF, HIT, NO_CRIT, MIN_DMG,
       ], [
         {species: 'Hypno', evs, moves: ['Dream Eater', 'Hypnosis']},
       ], [
@@ -1643,7 +1678,7 @@ for (const gen of new Generations(Dex as any)) {
 
     test('Explode', () => {
       const battle = startBattle([
-        SRF, HIT, SSM,
+        SRF, HIT, SS_MOD,
         SRF, HIT, NO_CRIT, MAX_DMG,
         SRF, HIT, NO_CRIT, MAX_DMG,
         SRF,
@@ -1707,7 +1742,7 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('Swift', () => {
-      const battle = startBattle([SRF, SRF, SRF, NO_CRIT, MIN_DMG, SSR, GLM], [
+      const battle = startBattle([SRF, SRF, SRF, NO_CRIT, MIN_DMG, SS_RES, GLM], [
         {species: 'Eevee', evs, moves: ['Swift']},
       ], [
         {species: 'Diglett', evs, moves: ['Dig']},
@@ -1828,7 +1863,7 @@ for (const gen of new Generations(Dex as any)) {
       test('Toxic counter glitches', () => {
         const BRN = {key: HIT.key, value: ranged(77, 256) - 1};
         const battle = startBattle([
-          SRF, HIT, SSM, SSM, SLP(5), SRF, HIT, SRF, HIT, NO_CRIT, MIN_DMG, BRN, SSM,
+          SRF, HIT, SS_MOD, SS_MOD, SLP(5), SRF, HIT, SRF, HIT, NO_CRIT, MIN_DMG, BRN, SS_MOD,
         ], [
           {species: 'Venusaur', evs, moves: ['Toxic', 'Leech Seed', 'Teleport', 'Fire Blast']},
         ], [
