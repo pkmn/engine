@@ -1313,7 +1313,97 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
-    test.todo('Thrashing');
+    test('Thrashing', () => {
+      const THRASH = (n: 3 | 4) => ({
+        name: `THRASH(${n})`,
+        key: ['Battle.durationCallback', 'Pokemon.addVolatile'],
+        value: ranged(n - 2, 5 - 3) - 1,
+      });
+      const CFZ = (n: number) => ({
+        name: `CFZ(${n})`,
+        key: ['Battle.onStart', 'Pokemon.addVolatile'],
+        value: ranged(n - 1, 6 - 2) - 1,
+      });
+      const CFZ_CAN = {name: 'CFZ_CAN', key: 'Battle.onBeforeMove', value: 0};
+      const PAR_CANT = {name: 'PAR_CANT', key: 'Battle.onBeforeMove', value: ranged(63, 256) - 1};
+      const PAR_CAN = {name: 'PAR_CAN', key: 'Battle.onBeforeMove', value: PAR_CANT.value + 1};
+      const battle = startBattle([
+        SRF, SRF, SRF, HIT, NO_CRIT, MIN_DMG, THRASH(3), HIT, CFZ(5),
+        SRF, SRF, SRF, SRF, CFZ_CAN, MISS, SRF, MISS, THRASH(3),
+        SRF, SRF, SRF, SRF, SRF, CFZ_CAN, HIT, NO_CRIT, MIN_DMG, CFZ(5), SRF, HIT, NO_CRIT, MIN_DMG,
+        SRF, SRF, SRF, CFZ_CAN, HIT, SS_MOD, SRF, PAR_CANT,
+        SRF, SRF, CFZ_CAN, HIT, SRF, PAR_CAN, HIT, NO_CRIT, MAX_DMG, THRASH(3),
+      ], [
+        {species: 'Nidoking', evs, moves: ['Thrash', 'Thunder Wave']},
+      ], [
+        {species: 'Vileplume', evs, moves: ['Petal Dance', 'Confuse Ray']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      // Thrashig locks user in for 3-4 turns
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p1.pokemon[0].volatiles['confusion'].time).toBe(5);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 68);
+
+      // Thrashing locks you in whether you hit or not
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p1.pokemon[0].volatiles['confusion'].time).toBe(4);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+      // Thrashing confuses you even if already confused
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 91);
+      expect(battle.p1.pokemon[0].volatiles['confusion'].time).toBe(5);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 68);
+
+      // Thrashing doesn't confuse you if the user is prevented from moving
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+      expect(battle.p2.pokemon[0].status).toBe('par');
+      expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
+
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 108);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+      expectLog(battle, [
+        '|move|p1a: Nidoking|Thrash|p2a: Vileplume',
+        '|-damage|p2a: Vileplume|285/353',
+        '|move|p2a: Vileplume|Confuse Ray|p1a: Nidoking',
+        '|-start|p1a: Nidoking|confusion',
+        '|turn|2',
+        '|-activate|p1a: Nidoking|confusion',
+        '|move|p1a: Nidoking|Thrash|p2a: Vileplume|[from]Thrash|[miss]',
+        '|-miss|p1a: Nidoking',
+        '|move|p2a: Vileplume|Petal Dance|p1a: Nidoking|[miss]',
+        '|-miss|p2a: Vileplume',
+        '|turn|3',
+        '|-activate|p1a: Nidoking|confusion',
+        '|move|p1a: Nidoking|Thrash|p2a: Vileplume|[from]Thrash',
+        '|-damage|p2a: Vileplume|217/353',
+        '|-start|p1a: Nidoking|confusion|[silent]',
+        '|move|p2a: Vileplume|Petal Dance|p1a: Nidoking|[from]Petal Dance',
+        '|-damage|p1a: Nidoking|274/365',
+        '|turn|4',
+        '|-activate|p1a: Nidoking|confusion',
+        '|move|p1a: Nidoking|Thunder Wave|p2a: Vileplume',
+        '|-status|p2a: Vileplume|par',
+        '|cant|p2a: Vileplume|par',
+        '|turn|5',
+        '|-activate|p1a: Nidoking|confusion',
+        '|move|p1a: Nidoking|Thunder Wave|p2a: Vileplume',
+        '|-fail|p2a: Vileplume|par',
+        '|move|p2a: Vileplume|Petal Dance|p1a: Nidoking',
+        '|-damage|p1a: Nidoking|166/365',
+        '|turn|6',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
 
     test('SpecialDamage (fixed)', () => {
       const battle = startBattle([SRF, SRF, HIT, HIT, SRF], [
