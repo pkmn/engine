@@ -22,6 +22,16 @@ const ranged = (n: number, d: number) => n * (0x100000000 / d);
 
 const SLP = (n: number) =>
   ({key: ['Battle.random', 'Pokemon.setStatus'], value: ranged(n, 8 - 1)});
+const DISABLE_DURATION = (n: number) => ({
+  name: 'DISABLE_DURATION',
+  key: ['Battle.durationCallback', 'Pokemon.addVolatile'],
+  value: ranged(n, 7 - 1) - 1,
+});
+const DISABLE_MOVE = (m: number, n = 4) => ({
+  name: 'DISABLE_MOVE',
+  key: ['Battle.onStart', 'Pokemon.addVolatile'],
+  value: ranged(m, n) - 1,
+});
 
 const MODS: {[gen: number]: string[]} = {
   1: ['Endless Battle Clause', 'Sleep Clause Mod', 'Freeze Clause Mod'],
@@ -1200,7 +1210,106 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
-    test.todo('Disable');
+    test('Disable', () => {
+      const no_frz = {key: HIT.key, value: ranged(26, 256)};
+      const battle = startBattle([
+        SRF, SRF, HIT, HIT, NO_CRIT, MIN_DMG,
+        SRF, SRF, HIT, DISABLE_DURATION(1), DISABLE_MOVE(1),
+        SRF, SRF, HIT, DISABLE_DURATION(5), DISABLE_MOVE(3), HIT, NO_CRIT, MIN_DMG,
+        SRF, SRF, HIT, DISABLE_DURATION(5), DISABLE_MOVE(4),
+        SRF, SRF, HIT, HIT, NO_CRIT, MIN_DMG,
+        SRF, HIT, NO_CRIT, MIN_DMG,
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, no_frz
+      ], [
+        {species: 'Golduck', evs, moves: ['Disable', 'Water Gun']},
+      ], [
+        {species: 'Vaporeon', evs, moves: ['Water Gun', 'Haze', 'Rest', 'Blizzard']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      // Fails on Pokémon Showdown if there is no last move
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 27);
+      expect(battle.p2.pokemon[0].volatiles['disable']).toBeUndefined();
+
+      // On Pokémon Showdown lasts a minimum of 1 turn instead of 0
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p2.pokemon[0].volatiles['disable']).toBeUndefined();
+
+      // Should skip over moves which are already out of PP (but Pokémon Showdown doesn't)
+      battle.p2.pokemon[0].moveSlots[2].pp = 0;
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 27);
+      delete battle.p2.pokemon[0].volatiles['disable'];
+
+      // Can be disabled for many turns
+      battle.makeChoices('move 1', 'move 4');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p2.pokemon[0].volatiles['disable'].duration).toBe(4);
+
+      // Disable fails if a move is already disabled
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 27);
+      expect(battle.p2.pokemon[0].volatiles['disable'].duration).toBe(3);
+
+      // Haze clears disable
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 17);
+      expect(battle.p2.pokemon[0].volatiles['disable']).toBeUndefined();
+
+      battle.makeChoices('move 2', 'move 4');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 53);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 17);
+
+      expectLog(battle, [
+        '|move|p1a: Golduck|Disable|p2a: Vaporeon',
+        '|-fail|p2a: Vaporeon',
+        '|move|p2a: Vaporeon|Water Gun|p1a: Golduck',
+        '|-resisted|p1a: Golduck',
+        '|-damage|p1a: Golduck|336/363',
+        '|turn|2',
+        '|move|p1a: Golduck|Disable|p2a: Vaporeon',
+        '|-start|p2a: Vaporeon|Disable|Water Gun',
+        '|cant|p2a: Vaporeon|Disable|Water Gun',
+        '|-end|p2a: Vaporeon|Disable',
+        '|turn|3',
+        '|move|p1a: Golduck|Disable|p2a: Vaporeon',
+        '|-start|p2a: Vaporeon|Disable|Rest',
+        '|move|p2a: Vaporeon|Water Gun|p1a: Golduck',
+        '|-resisted|p1a: Golduck',
+        '|-damage|p1a: Golduck|309/363',
+        '|turn|4',
+        '|move|p1a: Golduck|Disable|p2a: Vaporeon',
+        '|-start|p2a: Vaporeon|Disable|Blizzard',
+        '|cant|p2a: Vaporeon|Disable|Blizzard',
+        '|turn|5',
+        '|move|p1a: Golduck|Disable|p2a: Vaporeon',
+        '|move|p2a: Vaporeon|Water Gun|p1a: Golduck',
+        '|-resisted|p1a: Golduck',
+        '|-damage|p1a: Golduck|282/363',
+        '|turn|6',
+        '|move|p1a: Golduck|Water Gun|p2a: Vaporeon',
+        '|-resisted|p2a: Vaporeon',
+        '|-damage|p2a: Vaporeon|446/463',
+        '|move|p2a: Vaporeon|Haze|p2a: Vaporeon',
+        '|-activate|p2a: Vaporeon|move: Haze',
+        '|-clearallboost|[silent]',
+        '|-end|p2a: Vaporeon|Disable',
+        '|-end|p2a: Vaporeon|disable|[silent]',
+        '|turn|7',
+        '|move|p1a: Golduck|Water Gun|p2a: Vaporeon',
+        '|-resisted|p2a: Vaporeon',
+        '|-damage|p2a: Vaporeon|429/463',
+        '|move|p2a: Vaporeon|Blizzard|p1a: Golduck',
+        '|-resisted|p1a: Golduck',
+        '|-damage|p1a: Golduck|229/363',
+        '|turn|8',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
 
     test('Mist', () => {
       const proc = {key: HIT.key, value: ranged(85, 256) - 1};
@@ -1559,20 +1668,10 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('Rage', () => {
-      const DISABLE_DURATION = {
-        name: 'DISABLE_DURATION',
-        key: ['Battle.durationCallback', 'Pokemon.addVolatile'],
-        value: ranged(5, 7 - 1),
-      };
-      const DISABLE_MOVE = {
-        name: 'DISABLE_MOVE',
-        key: ['Battle.onStart', 'Pokemon.addVolatile'],
-        value: MIN,
-      };
       const battle = startBattle([
         SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
         SRF, SRF, HIT, NO_CRIT, MIN_DMG, MISS,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, DISABLE_DURATION, DISABLE_MOVE,
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, DISABLE_DURATION(5), DISABLE_MOVE(1, 1),
         SRF, SRF, MISS,
       ], [
         {species: 'Charmeleon', evs, moves: ['Rage']},
