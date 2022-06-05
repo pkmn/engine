@@ -1950,6 +1950,28 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
+    test('PayDay', () => {
+      const battle = startBattle([SRF, HIT, NO_CRIT, MAX_DMG], [
+        {species: 'Meowth', evs, moves: ['Pay Day']},
+      ], [
+        {species: 'Slowpoke', evs, moves: ['Teleport']},
+      ]);
+
+      const p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp - 43);
+
+      expectLog(battle, [
+        '|move|p1a: Meowth|Pay Day|p2a: Slowpoke',
+        '|-damage|p2a: Slowpoke|340/383',
+        '|-fieldactivate|move: Pay Day',
+        '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
+        '|turn|2',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
     test('Rage', () => {
       const battle = startBattle([
         SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,

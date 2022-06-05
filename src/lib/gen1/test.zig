@@ -1429,6 +1429,12 @@ test "LeechSeed" {
     try t.verify();
 }
 
+// Move.PayDay
+test "PayDay" {
+    // "Scatters coins"
+
+}
+
 // Move.Rage
 test "Rage" {
     // Once this move is successfully used, the user automatically uses this move every turn and can
