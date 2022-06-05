@@ -121,7 +121,8 @@ export const Choices = new class {
         options.push({type: 'move', data: slot});
       }
       if (options.length === before) {
-        options.push({type: 'move', data: 0}); // Struggle
+        // Struggle (Pokémon Showdown would use `move 1` here)
+        options.push({type: 'move', data: 0});
       }
 
       return options;
@@ -171,7 +172,8 @@ export const Choices = new class {
         options.push(`move ${slot}`);
       }
       if (options.length === before) {
-        options.push('move 1'); // Struggle
+        // Struggle
+        options.push('move 1');
       }
 
       return options;

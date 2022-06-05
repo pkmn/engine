@@ -2254,7 +2254,7 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
                 out[n] = .{ .type = .Move, .data = slot };
                 n += 1;
             }
-            // Struggle
+            // Struggle (Pokémon Showdown would use `move 1` here)
             if (n == before) {
                 out[n] = .{ .type = .Move, .data = 0 };
                 n += 1;
