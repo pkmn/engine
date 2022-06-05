@@ -142,9 +142,55 @@ for (const gen of new Generations(Dex as any)) {
       }
     });
     test.todo('move select');
-    test.todo('TODO switching (order)');
-    test.todo('TODO switching (reset)');
-    test.todo('TODO switching (brn/par)');
+
+    test('switching (order)', () => {
+      const battle = startBattle([], [
+        {species: 'Abra', level: 10, moves: ['Teleport']},
+        {species: 'Abra', level: 20, moves: ['Teleport']},
+        {species: 'Abra', level: 30, moves: ['Teleport']},
+        {species: 'Abra', level: 40, moves: ['Teleport']},
+        {species: 'Abra', level: 50, moves: ['Teleport']},
+        {species: 'Abra', level: 60, moves: ['Teleport']},
+      ], [
+        {species: 'Gastly', level: 1, moves: ['Lick']},
+        {species: 'Gastly', level: 2, moves: ['Lick']},
+        {species: 'Gastly', level: 3, moves: ['Lick']},
+        {species: 'Gastly', level: 4, moves: ['Lick']},
+        {species: 'Gastly', level: 5, moves: ['Lick']},
+        {species: 'Gastly', level: 6, moves: ['Lick']},
+      ]);
+
+      const expectOrder = (p1: number[], p2: number[]) => {
+        for (let i = 0; i < 6; i++) {
+          expect(battle.p1.pokemon[i].level).toBe(p1[i] * 10);
+          expect(battle.p2.pokemon[i].level).toBe(p2[i]);
+        }
+      };
+
+      battle.makeChoices('switch 3', 'switch 2');
+      expectOrder([3, 2, 1, 4, 5, 6], [2, 1, 3, 4, 5, 6]);
+      battle.makeChoices('switch 5', 'switch 5');
+      expectOrder([5, 2, 1, 4, 3, 6], [5, 1, 3, 4, 2, 6]);
+      battle.makeChoices('switch 6', 'switch 3');
+      expectOrder([6, 2, 1, 4, 3, 5], [3, 1, 5, 4, 2, 6]);
+      battle.makeChoices('switch 3', 'switch 3');
+      expectOrder([1, 2, 6, 4, 3, 5], [5, 1, 3, 4, 2, 6]);
+      battle.makeChoices('switch 2', 'switch 4');
+      expectOrder([2, 1, 6, 4, 3, 5], [4, 1, 3, 5, 2, 6]);
+
+      (battle as any).log = [];
+      battle.makeChoices('switch 5', 'switch 5');
+      expectOrder([3, 1, 6, 4, 2, 5], [2, 1, 3, 5, 4, 6]);
+
+      expectLog(battle, [
+        '|switch|p1a: Abra|Abra, L30|64/64',
+        '|switch|p2a: Gastly|Gastly, L2|13/13',
+        '|turn|7',
+      ]);
+    });
+
+    test.todo('switching (reset)');
+    test.todo('switching (brn/par)');
 
     test('turn order (priority)', () => {
       const battle = startBattle([
@@ -490,9 +536,9 @@ for (const gen of new Generations(Dex as any)) {
 
     test('Endless Battle Clause (initial)', () => {
       const battle = startBattle([], [
-        {species: 'Gengar', evs, moves: ['Lick']}
+        {species: 'Gengar', evs, moves: ['Lick']},
       ], [
-        {species: 'Gengar', moves: ['Lick']}
+        {species: 'Gengar', moves: ['Lick']},
       ], b => {
         b.p1.pokemon[0].moveSlots[0].pp = 0;
         b.p2.pokemon[0].moveSlots[0].pp = 0;
@@ -509,9 +555,9 @@ for (const gen of new Generations(Dex as any)) {
     test('Endless Battle Clause (basic)', () => {
       {
         const battle = startBattle([], [
-          {species: 'Mew', evs, moves: ['Transform']}
+          {species: 'Mew', evs, moves: ['Transform']},
         ], [
-          {species: 'Ditto', evs, moves: ['Transform']}
+          {species: 'Ditto', evs, moves: ['Transform']},
         ], b => {
           b.p1.pokemon[0].moveSlots[0].pp = 0;
           b.p2.pokemon[0].moveSlots[0].pp = 0;
@@ -522,9 +568,9 @@ for (const gen of new Generations(Dex as any)) {
       {
         const battle = startBattle([SRF, SRF], [
           {species: 'Mew', evs, moves: ['Transform']},
-          {species: 'Muk', evs, moves: ['Pound']}
+          {species: 'Muk', evs, moves: ['Pound']},
         ], [
-          {species: 'Ditto', moves: ['Transform']}
+          {species: 'Ditto', moves: ['Transform']},
         ]);
 
         expect(battle.ended).toBe(false);
@@ -1283,7 +1329,7 @@ for (const gen of new Generations(Dex as any)) {
         SRF, SRF, HIT, DISABLE_DURATION(5), DISABLE_MOVE(4),
         SRF, SRF, HIT, HIT, NO_CRIT, MIN_DMG,
         SRF, HIT, NO_CRIT, MIN_DMG,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, no_frz
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, no_frz,
       ], [
         {species: 'Golduck', evs, moves: ['Disable', 'Water Gun']},
       ], [
