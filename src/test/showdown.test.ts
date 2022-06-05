@@ -2142,7 +2142,64 @@ for (const gen of new Generations(Dex as any)) {
     });
   });
 
-  test.todo('Substitute');
+  test('Substitute', () => {
+    const battle = startBattle([SRF, HIT, SRF, HIT, NO_CRIT, MIN_DMG, SRF, HIT, SRF, HIT], [
+      {species: 'Mewtwo', evs, moves: ['Substitute', 'Teleport']},
+      {species: 'Abra', level: 2, moves: ['Substitute']},
+    ], [
+      {species: 'Electabuzz', moves: ['Flash', 'Strength']},
+    ]);
+
+    battle.p1.pokemon[1].hp = 3;
+    battle.p1.pokemon[1].maxhp = 3;
+
+    let mewtwo = battle.p1.pokemon[0].hp;
+    const mew = battle.p1.pokemon[1].hp;
+
+    // Takes 1/4 of maximum HP to make a Substitute with that HP + 1, protects against stat down
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(mewtwo -= 103);
+    expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(104);
+
+    // Can't make a Substitute if you already have one, absorbs damage
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(mewtwo);
+    expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(62);
+
+    // Disappears when switching out
+    battle.makeChoices('switch 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(mew);
+    expect(battle.p1.pokemon[0].volatiles['substitute']).toBeUndefined();
+
+    // Can get "free" Substitutes if 3 or less max HP
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(mew);
+    expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(1);
+
+    expectLog(battle, [
+      '|move|p1a: Mewtwo|Substitute|p1a: Mewtwo',
+      '|-start|p1a: Mewtwo|Substitute',
+      '|-damage|p1a: Mewtwo|312/415',
+      '|move|p2a: Electabuzz|Flash|p1a: Mewtwo',
+      '|-fail|p1a: Mewtwo',
+      '|turn|2',
+      '|move|p1a: Mewtwo|Substitute|p1a: Mewtwo',
+      '|-fail|p1a: Mewtwo|move: Substitute',
+      '|move|p2a: Electabuzz|Strength|p1a: Mewtwo',
+      '|-activate|p1a: Mewtwo|Substitute|[damage]',
+      '|turn|3',
+      '|switch|p1a: Abra|Abra, L2|3/3',
+      '|move|p2a: Electabuzz|Flash|p1a: Abra',
+      '|-unboost|p1a: Abra|accuracy|1',
+      '|turn|4',
+      '|move|p2a: Electabuzz|Flash|p1a: Abra',
+      '|-unboost|p1a: Abra|accuracy|1',
+      '|move|p1a: Abra|Substitute|p1a: Abra',
+      '|-start|p1a: Abra|Substitute',
+      '|turn|5',
+    ]);
+    expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+  });
 
   if (gen.num === 1) {
     describe('Gen 1', () => {
