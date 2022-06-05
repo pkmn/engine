@@ -1514,7 +1514,65 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
-    test.todo('HyperBeam');
+    test('HyperBeam', () => {
+      const battle = startBattle([
+        SRF, HIT, NO_CRIT, MAX_DMG,
+        SRF, HIT, NO_CRIT, MAX_DMG,
+        SRF, HIT, NO_CRIT, MIN_DMG,
+        SRF, SRF,
+      ], [
+        {species: 'Tauros', evs, moves: ['Hyper Beam']},
+      ], [
+        {species: 'Jolteon', evs, moves: ['Substitute', 'Teleport']},
+        {species: 'Chansey', evs, moves: ['Teleport']},
+      ]);
+
+      battle.p2.pokemon[0].hp = 100;
+
+      let jolteon = battle.p2.pokemon[0].hp;
+      let chansey = battle.p2.pokemon[1].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(jolteon -= 83);
+
+      // Doesn't require a recharge if it knocks out a Substitute
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p2.pokemon[0].hp).toBe(0);
+
+      battle.makeChoices('', 'switch 2');
+
+      // Doesn't require a recharge if it knocks out opponent
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(chansey -= 442);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(chansey);
+
+      expectLog(battle, [
+        '|move|p2a: Jolteon|Substitute|p2a: Jolteon',
+        '|-start|p2a: Jolteon|Substitute',
+        '|-damage|p2a: Jolteon|17/333',
+        '|move|p1a: Tauros|Hyper Beam|p2a: Jolteon',
+        '|-end|p2a: Jolteon|Substitute',
+        '|turn|2',
+        '|move|p2a: Jolteon|Teleport|p2a: Jolteon',
+        '|move|p1a: Tauros|Hyper Beam|p2a: Jolteon',
+        '|-damage|p2a: Jolteon|0 fnt',
+        '|faint|p2a: Jolteon',
+        '|switch|p2a: Chansey|Chansey|703/703',
+        '|turn|3',
+        '|move|p1a: Tauros|Hyper Beam|p2a: Chansey',
+        '|-damage|p2a: Chansey|261/703',
+        '|-mustrecharge|p1a: Tauros',
+        '|move|p2a: Chansey|Teleport|p2a: Chansey',
+        '|turn|4',
+        '|cant|p1a: Tauros|recharge',
+        '|move|p2a: Chansey|Teleport|p2a: Chansey',
+        '|turn|5',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
     test.todo('Counter');
 
     test('Heal (normal)', () => {
