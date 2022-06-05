@@ -40,19 +40,26 @@ const MODS: {[gen: number]: string[]} = {
 for (const gen of new Generations(Dex as any)) {
   if (gen.num > 1) break;
 
-  const createBattle = (rolls: Roll[]) => {
+  const startBattle = (
+    rolls: Roll[],
+    p1: Partial<PokemonSet>[],
+    p2: Partial<PokemonSet>[],
+    fn?: (b: Battle) => void,
+  ) => {
     const formatid = `gen${gen.num}customgame@@@${MODS[gen.num].join(',')}` as ID;
     const battle = new Battle({formatid, strictChoices: true});
     (battle as any).debugMode = false;
     (battle as any).prng = new FixedRNG(rolls);
-    return battle;
-  };
-
-  const startBattle = (rolls: Roll[], p1: Partial<PokemonSet>[], p2: Partial<PokemonSet>[]) => {
-    const battle = createBattle(rolls);
+    if (fn) battle.started = true;
     battle.setPlayer('p1', {team: p1 as PokemonSet[]});
     battle.setPlayer('p2', {team: p2 as PokemonSet[]});
-    (battle as any).log = [];
+    if (fn) {
+      fn(battle);
+      battle.started = false;
+      battle.start();
+    } else {
+      (battle as any).log = [];
+    }
     return battle;
   };
 
@@ -61,22 +68,16 @@ for (const gen of new Generations(Dex as any)) {
 
   describe(`Gen ${gen.num}`, () => {
     test('start (first fainted)', () => {
-      const battle = createBattle([]);
-      battle.started = true;
-      battle.setPlayer('p1', {team: [
+      const battle = startBattle([], [
         {species: 'Pikachu', evs, moves: ['Thunder Shock']},
         {species: 'Bulbasaur', evs, moves: ['Tackle']},
-      ] as PokemonSet[]});
-      battle.setPlayer('p2', {team: [
+      ], [
         {species: 'Charmander', evs, moves: ['Scratch']},
         {species: 'Squirtle', evs, moves: ['Tackle']},
-      ] as PokemonSet[]});
-
-      battle.p1.pokemon[0].hp = 0;
-      battle.p2.pokemon[0].hp = 0;
-
-      battle.started = false;
-      battle.start();
+      ], b => {
+        b.p1.pokemon[0].hp = 0;
+        b.p2.pokemon[0].hp = 0;
+      });
 
       // lol...
       expectLog(battle, [
@@ -86,7 +87,64 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
+    test('start (all fainted)', () => {
+      // Win
+      {
+        const battle = startBattle([], [
+          {species: 'Bulbasaur', evs, moves: ['Tackle']},
+        ], [
+          {species: 'Charmander', evs, moves: ['Scratch']},
+        ], b => {
+          b.p2.pokemon[0].hp = 0;
+        });
+
+        // lol...
+        expectLog(battle, [
+          '|switch|p1a: Bulbasaur|Bulbasaur|293/293',
+          '|switch|p2a: Charmander|Charmander|0 fnt',
+          '|turn|1',
+        ]);
+      }
+      // Lose
+      {
+        const battle = startBattle([], [
+          {species: 'Bulbasaur', evs, moves: ['Tackle']},
+        ], [
+          {species: 'Charmander', evs, moves: ['Scratch']},
+        ], b => {
+          b.p1.pokemon[0].hp = 0;
+        });
+
+        // lol...
+        expectLog(battle, [
+          '|switch|p1a: Bulbasaur|Bulbasaur|0 fnt',
+          '|switch|p2a: Charmander|Charmander|281/281',
+          '|turn|1',
+        ]);
+      }
+      // Tie
+      {
+        const battle = startBattle([], [
+          {species: 'Bulbasaur', evs, moves: ['Tackle']},
+        ], [
+          {species: 'Charmander', evs, moves: ['Scratch']},
+        ], b => {
+          b.p1.pokemon[0].hp = 0;
+          b.p2.pokemon[0].hp = 0;
+        });
+
+        // lol...
+        expectLog(battle, [
+          '|switch|p1a: Bulbasaur|Bulbasaur|0 fnt',
+          '|switch|p2a: Charmander|Charmander|0 fnt',
+          '|turn|1',
+        ]);
+      }
+    });
     test.todo('move select');
+    test.todo('TODO switching (order)');
+    test.todo('TODO switching (reset)');
+    test.todo('TODO switching (brn/par)');
 
     test('turn order (priority)', () => {
       const battle = startBattle([
@@ -431,16 +489,14 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('Endless Battle Clause (initial)', () => {
-      const battle = createBattle([]);
-      battle.started = true;
-      battle.setPlayer('p1', {team: [{species: 'Gengar', evs, moves: ['Lick']}] as PokemonSet[]});
-      battle.setPlayer('p2', {team: [{species: 'Gengar', moves: ['Lick']}] as PokemonSet[]});
-
-      battle.p1.pokemon[0].moveSlots[0].pp = 0;
-      battle.p2.pokemon[0].moveSlots[0].pp = 0;
-
-      battle.started = false;
-      battle.start();
+      const battle = startBattle([], [
+        {species: 'Gengar', evs, moves: ['Lick']}
+      ], [
+        {species: 'Gengar', moves: ['Lick']}
+      ], b => {
+        b.p1.pokemon[0].moveSlots[0].pp = 0;
+        b.p2.pokemon[0].moveSlots[0].pp = 0;
+      });
 
       expect(battle.ended).toBe(true);
       expectLog(battle, [
@@ -451,29 +507,37 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('Endless Battle Clause (basic)', () => {
-      let battle = createBattle([]);
-      battle.started = true;
-      battle.setPlayer('p1', {team: [{species: 'Mew', evs, moves: ['Transform']}] as PokemonSet[]});
-      battle.setPlayer('p2', {team: [{species: 'Ditto', moves: ['Transform']}] as PokemonSet[]});
-      battle.started = false;
-      battle.start();
+      {
+        const battle = startBattle([], [
+          {species: 'Mew', evs, moves: ['Transform']}
+        ], [
+          {species: 'Ditto', evs, moves: ['Transform']}
+        ], b => {
+          b.p1.pokemon[0].moveSlots[0].pp = 0;
+          b.p2.pokemon[0].moveSlots[0].pp = 0;
+        });
 
-      expect(battle.ended).toBe(true);
+        expect(battle.ended).toBe(true);
+      }
+      {
+        const battle = startBattle([SRF, SRF], [
+          {species: 'Mew', evs, moves: ['Transform']},
+          {species: 'Muk', evs, moves: ['Pound']}
+        ], [
+          {species: 'Ditto', moves: ['Transform']}
+        ]);
 
-      battle = createBattle([SRF, SRF]);
-      battle.started = true;
-      battle.setPlayer('p1', {team: [
-        {species: 'Mew', evs, moves: ['Transform']}, {species: 'Muk', evs, moves: ['Pound']},
-      ] as PokemonSet[]});
-      battle.setPlayer('p2', {team: [{species: 'Ditto', moves: ['Transform']}] as PokemonSet[]});
-      battle.started = false;
-      battle.start();
-
-      expect(battle.ended).toBe(false);
-      battle.p1.pokemon[1].fainted = true;
-      battle.makeChoices('move 1', 'move 1');
-      expect(battle.ended).toBe(true);
+        expect(battle.ended).toBe(false);
+        battle.p1.pokemon[1].fainted = true;
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.ended).toBe(true);
+      }
     });
+
+    test.todo('choices (default)');
+    test.todo('choices (locked)');
+    test.todo('choices (trapped)');
+    test.todo('choices (Struggle)');
 
     test('HighCritical', () => {
       const value = ranged(Math.floor(gen.species.get('Machop')!.baseStats.spe / 2), 256);
