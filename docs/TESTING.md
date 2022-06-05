@@ -222,3 +222,13 @@ Vulnerabilities:
   Srbds:                 Not affected
   Tsx async abort:       Not affected
 <pre></details>
+
+## Fuzz
+
+The [integration](#integration) tests and [benchmark](#benchmark) are also used for
+[fuzzing](https://en.wikipedia.org/wiki/Fuzzing). A [GitHub workflow](../.github/workflows/fuzz.yml)
+exists to run these tests on a schedule from random seeds for various durations to attempt to
+uncover latent bugs. While the integration tests cover full battles and always run from states
+possible over the course of a battle, when the benchmark tool is run in fuzzing mode it will
+run from states which may not actually be obtainable in game (e.g. multiple volatiles which would
+not have been possible to set up at the same time before expiring).
