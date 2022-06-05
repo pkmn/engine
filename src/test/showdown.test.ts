@@ -2046,7 +2046,54 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
-    test.todo('Transform');
+    test('Transform', () => {
+      const battle = startBattle([SRF, SRF, SS_RES, GLM, GLM, GLM, SRF, SRF, SS_RUN, MISS], [
+        {species: 'Mew', level: 50, moves: ['Swords Dance', 'Transform']},
+      ], [
+        {species: 'Articuno', evs, moves: ['Agility', 'Fly']},
+      ]);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
+      expect(battle.p2.pokemon[0].boosts.spe).toBe(2);
+
+      // Pokémon Showdown is bugged and doesn't let Transform hit while Flying
+      battle.makeChoices('move 2', 'move 2');
+
+      // Transform should copy species, types, stats, and boosts but not level or HP
+      battle.makeChoices('move 2', 'move 1');
+
+      expect(battle.p1.pokemon[0].species).toEqual(battle.p2.pokemon[0].species);
+      expect(battle.p1.pokemon[0].types).toEqual(battle.p2.pokemon[0].types);
+      expect(battle.p1.pokemon[0].level).toBe(50);
+      expect(battle.p1.pokemon[0].storedStats).toEqual(battle.p2.pokemon[0].storedStats);
+      expect(battle.p1.pokemon[0].boosts).toEqual(battle.p2.pokemon[0].boosts);
+
+      expect(battle.p1.pokemon[0].moveSlots).toHaveLength(2);
+      expect(battle.p1.pokemon[0].moveSlots[0].move).toBe('Agility');
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(5);
+      expect(battle.p1.pokemon[0].moveSlots[1].move).toBe('Fly');
+      expect(battle.p1.pokemon[0].moveSlots[1].pp).toBe(5);
+
+      expectLog(battle, [
+        '|move|p2a: Articuno|Agility|p2a: Articuno',
+        '|-boost|p2a: Articuno|spe|2',
+        '|move|p1a: Mew|Swords Dance|p1a: Mew',
+        '|-boost|p1a: Mew|atk|2',
+        '|turn|2',
+        '|move|p2a: Articuno|Fly||[still]',
+        '|-prepare|p2a: Articuno|Fly',
+        '|move|p1a: Mew|Transform|p2a: Articuno|[miss]',
+        '|-miss|p1a: Mew',
+        '|turn|3',
+        '|move|p2a: Articuno|Fly|p1a: Mew|[from]Fly|[miss]',
+        '|-miss|p2a: Articuno',
+        '|move|p1a: Mew|Transform|p2a: Articuno',
+        '|-transform|p1a: Mew|p2a: Articuno',
+        '|turn|4',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
 
     test('Conversion', () => {
       const battle = startBattle([SRF], [
