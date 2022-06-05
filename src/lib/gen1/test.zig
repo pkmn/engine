@@ -310,8 +310,12 @@ test "turn order (priority)" {
     try t.verify();
 }
 
-test "turn order (speed tie)" {
-    // TODO switch switch + move move
+test "turn order (basic speed tie)" {
+    return error.SkipZigTest;
+}
+
+test "turn order (complex speed tie)" {
+    // TODO Dig, Rage, Metronome, etc
     return error.SkipZigTest;
 }
 

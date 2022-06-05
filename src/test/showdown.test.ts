@@ -16,10 +16,14 @@ const SRF = {key: 'Side.randomFoe', value: NOP};
 const SS_MOD = {key: ['Battle.speedSort', 'Pokemon.setStatus'], value: NOP};
 const SS_RES = {key: ['Battle.speedSort', 'Battle.residualEvent'], value: NOP};
 const SS_RUN = {key: ['Battle.speedSort', 'Battle.runEvent'], value: NOP};
+const SS_EACH = {name: 'SS_EACH', key: ['Battle.speedSort', 'Battle.eachEvent'], value: NOP};
+const INS = {name: 'INS', key: ['BattleQueue.insertChoice', 'BattleActions.switchIn'], value: NOP};
 const GLM = {key: 'Pokemon.getLockedMove', value: NOP};
 
 const ranged = (n: number, d: number) => n * (0x100000000 / d);
 
+const TIE = (n: 1 | 2) =>
+  ({name: `TIE(${n})`, key: ['Battle.speedSort', 'BattleQueue.sort'], value: ranged(n, 2) - 1});
 const SLP = (n: number) =>
   ({key: ['Battle.random', 'Pokemon.setStatus'], value: ranged(n, 8 - 1)});
 const DISABLE_DURATION = (n: number) => ({
@@ -252,7 +256,90 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
-    test.todo('turn order (speed tie)');
+    test('turn order (basic speed tie)', () => {
+      // Move vs. Move
+      {
+        const battle = startBattle([
+          INS, INS,	SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
+          SRF, SRF, TIE(1),
+          SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG,
+          SS_EACH, HIT, NO_CRIT, MAX_DMG,
+          SS_EACH, SS_EACH,
+        ], [
+          {species: 'Tauros', evs, moves: ['Hyper Beam']},
+        ], [
+          {species: 'Tauros', evs, moves: ['Hyper Beam']},
+        ]);
+
+        const p1hp = battle.p1.pokemon[0].hp;
+        const p2hp = battle.p2.pokemon[0].hp;
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p1.pokemon[0].hp).toBe(p1hp - 196);
+        expect(battle.p2.pokemon[0].hp).toBe(p2hp - 166);
+
+        expectLog(battle, [
+          '|move|p1a: Tauros|Hyper Beam|p2a: Tauros',
+          '|-damage|p2a: Tauros|187/353',
+          '|-mustrecharge|p1a: Tauros',
+          '|move|p2a: Tauros|Hyper Beam|p1a: Tauros',
+          '|-damage|p1a: Tauros|157/353',
+          '|-mustrecharge|p2a: Tauros',
+          '|turn|2',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      }
+      // Switch vs. Switch
+      {
+        const battle = startBattle([
+          INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, TIE(2), SS_EACH, SS_EACH,
+        ], [
+          {species: 'Tauros', evs, moves: ['Hyper Beam']},
+          {species: 'Starmie', evs, moves: ['Surf']},
+        ], [
+          {species: 'Tauros', evs, moves: ['Hyper Beam']},
+          {species: 'Alakazam', evs, moves: ['Psychic']},
+        ]);
+
+        battle.makeChoices('switch 2', 'switch 2');
+
+        expectLog(battle, [
+          '|switch|p2a: Alakazam|Alakazam|313/313',
+          '|switch|p1a: Starmie|Starmie|323/323',
+          '|turn|2',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      }
+      // Move vs. Switch
+      {
+        const battle = startBattle([
+          INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
+          SRF, SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG,
+        ], [
+          {species: 'Tauros', evs, moves: ['Hyper Beam']},
+          {species: 'Starmie', evs, moves: ['Surf']},
+        ], [
+          {species: 'Tauros', evs, moves: ['Hyper Beam']},
+          {species: 'Alakazam', evs, moves: ['Psychic']},
+        ]);
+
+        const p2hp = battle.p2.pokemon[1].hp;
+
+        battle.makeChoices('move 1', 'switch 2');
+        expect(battle.p2.pokemon[0].hp).toBe(p2hp - 255);
+
+        expectLog(battle, [
+          '|switch|p2a: Alakazam|Alakazam|313/313',
+          '|move|p1a: Tauros|Hyper Beam|p2a: Alakazam',
+          '|-damage|p2a: Alakazam|58/313',
+          '|-mustrecharge|p1a: Tauros',
+          '|turn|2',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      }
+    });
+
+    test.todo('turn order (compex speed tie)');
 
     test('turn order (switch vs. move)', () => {
       const battle = startBattle([
