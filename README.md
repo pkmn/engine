@@ -113,15 +113,15 @@ pub fn build(b: *std.build.Builder) void {
 
 You must provide a `build_options` package to use the `pkmn` package due to Zig not currently
 [supporting conditional inclusion](https://github.com/ziglang/zig/issues/8025), however, you may set
-options via an `options` [root source file
+options via an `pkmn_options` [root source file
 declaration](https://ziglang.org/documentation/master/#Root-Source-File) (i.e. the `pkmn` package
-needs a `build_options` package to be defined, but you can set options via the root instead of via
-build flags). There are several undocumented internal options that can be tweaked as well via
-build or root options, though these options are not officially supported, affect correctness, and
-may change meaning or behavior without warning. Use at your own risk.
+needs a `build_options` package to be defined, but you can set options via the root declaration
+instead of via build flags). There are several undocumented internal options that can be tweaked as
+well via build or root options, though these options are not officially supported, affect
+correctness, and may change meaning or behavior without warning. Use at your own risk.
 
 ```zig
-pub const options = .{ .showdown = true, .trace = true };
+pub const pkmn_options = .{ .showdown = true, .trace = true };
 ```
 
 The `pkmn()` function in the engine's `build.zig` can then be used to simplify adding the `pkmn`

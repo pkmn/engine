@@ -1,5 +1,5 @@
-pub const Options = @import("common/options.zig").Options;
-pub const options = @import("common/options.zig").options;
+pub const options = @import("common/options.zig");
+pub const Options = options.Options;
 
 pub const MAX_OPTIONS = gen1.MAX_OPTIONS;
 pub const OPTIONS_SIZE = gen1.OPTIONS_SIZE;

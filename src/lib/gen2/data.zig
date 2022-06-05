@@ -1,7 +1,7 @@
 const std = @import("std");
 
 const rng = @import("../common/rng.zig");
-const options = @import("../common/options.zig").options;
+const options = @import("../common/options.zig");
 const gen1 = @import("../gen1/data.zig");
 
 const items = @import("data/items.zig");
