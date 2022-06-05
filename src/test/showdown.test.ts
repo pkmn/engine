@@ -1558,7 +1558,81 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
-    test.todo('Rage');
+    test('Rage', () => {
+      const DISABLE_DURATION = {
+        name: 'DISABLE_DURATION',
+        key: ['Battle.durationCallback', 'Pokemon.addVolatile'],
+        value: ranged(5, 7 - 1),
+      };
+      const DISABLE_MOVE = {
+        name: 'DISABLE_MOVE',
+        key: ['Battle.onStart', 'Pokemon.addVolatile'],
+        value: MIN,
+      };
+      const battle = startBattle([
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, MISS,
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, DISABLE_DURATION, DISABLE_MOVE,
+        SRF, SRF, MISS,
+      ], [
+        {species: 'Charmeleon', evs, moves: ['Rage']},
+      ], [
+        {species: 'Grimer', evs, moves: ['Pound', 'Disable', 'Self-Destruct']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 35);
+      expect(battle.p1.pokemon[0].boosts.atk).toBe(1);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 17);
+
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      // expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
+      expect(battle.p1.pokemon[0].boosts.atk).toBe(1);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 25);
+
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      // expect(battle.p1.pokemon[0].boosts.atk).toBe(3);
+      expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 25);
+
+      battle.makeChoices('move 1', 'move 3');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      // expect(battle.p1.pokemon[0].boosts.atk).toBe(4);
+      expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
+      expect(battle.p2.pokemon[0].hp).toBe(0);
+
+      expectLog(battle, [
+        '|move|p1a: Charmeleon|Rage|p2a: Grimer',
+        '|-damage|p2a: Grimer|346/363',
+        '|move|p2a: Grimer|Pound|p1a: Charmeleon',
+        '|-damage|p1a: Charmeleon|284/319',
+        '|-boost|p1a: Charmeleon|atk|1|[from] Rage',
+        '|turn|2',
+        '|move|p1a: Charmeleon|Rage|p2a: Grimer|[from]Rage',
+        '|-damage|p2a: Grimer|321/363',
+        '|move|p2a: Grimer|Disable|p1a: Charmeleon|[miss]',
+        '|-miss|p2a: Grimer',
+        '|turn|3',
+        '|move|p1a: Charmeleon|Rage|p2a: Grimer|[from]Rage',
+        '|-damage|p2a: Grimer|296/363',
+        '|move|p2a: Grimer|Disable|p1a: Charmeleon',
+        '|-boost|p1a: Charmeleon|atk|1|[from] Rage',
+        '|-start|p1a: Charmeleon|Disable|Rage',
+        '|turn|4',
+        '|cant|p1a: Charmeleon|Disable|Rage',
+        '|move|p2a: Grimer|Self-Destruct|p1a: Charmeleon|[miss]',
+        '|-miss|p2a: Grimer',
+        '|faint|p2a: Grimer',
+        '|win|Player 1',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
     test.todo('Mimic');
 
     test('LightScreen', () => {
