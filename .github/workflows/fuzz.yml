@@ -1,4 +1,5 @@
 name: Fuzz
+on: workflow_dispatch
 # on:
 #   schedule:
 #     - cron: '36 * * * *'
@@ -17,6 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: goto-bus-stop/setup-zig@v1
+        with:
           version: master
       - run: npm install
       # TODO: add integration tests!
