@@ -2633,7 +2633,166 @@ for (const gen of new Generations(Dex as any)) {
         expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
-      test.todo('Division by 0');
+      test('Division by 0', () => {
+        //  Attack/Special > 255 vs. Defense/Special stat < 4.
+        {
+          const battle = startBattle([
+            SRF, SRF, HIT, SRF, HIT,
+            SRF, SRF, MISS,
+            SRF, SRF, MISS,
+            SRF, SRF, HIT, NO_CRIT, MIN_DMG,
+          ], [
+            {species: 'Cloyster', level: 65, evs, moves: ['Screech']},
+            {species: 'Parasect', level: 100, evs, moves: ['Swords Dance', 'Leech Life']},
+          ], [
+            {species: 'Rattata', level: 2, moves: ['Tail Whip']},
+          ]);
+
+          battle.makeChoices('move 1', 'move 1');
+          battle.makeChoices('switch 2', 'move 1');
+          battle.makeChoices('move 1', 'move 1');
+
+          expect(battle.p1.pokemon[0].modifiedStats!.atk).toBe(576);
+          expect(battle.p2.pokemon[0].modifiedStats!.def).toBe(3);
+
+          // 576 Atk vs. 3 Def = should result in a division by 0 freeze
+          battle.makeChoices('move 2', 'move 1');
+          expect(battle.p2.pokemon[0].hp).toBe(0);
+
+          expectLog(battle, [
+            '|move|p1a: Cloyster|Screech|p2a: Rattata',
+            '|-unboost|p2a: Rattata|def|2',
+            '|move|p2a: Rattata|Tail Whip|p1a: Cloyster',
+            '|-unboost|p1a: Cloyster|def|1',
+            '|turn|2',
+            '|switch|p1a: Parasect|Parasect|323/323',
+            '|move|p2a: Rattata|Tail Whip|p1a: Parasect|[miss]',
+            '|-miss|p2a: Rattata',
+            '|turn|3',
+            '|move|p1a: Parasect|Swords Dance|p1a: Parasect',
+            '|-boost|p1a: Parasect|atk|2',
+            '|move|p2a: Rattata|Tail Whip|p1a: Parasect|[miss]',
+            '|-miss|p2a: Rattata',
+            '|turn|4',
+            '|move|p1a: Parasect|Leech Life|p2a: Rattata',
+            '|-damage|p2a: Rattata|0 fnt',
+            '|faint|p2a: Rattata',
+            '|win|Player 1',
+          ]);
+          expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+        }
+        // Defense/Special stat is 512 or 513 + Reflect/Light Screen.
+        {
+          const def12 = {hp: 0, atk: 0, def: 12, spa: 0, spd: 0, spe: 0};
+          const battle = startBattle([
+            SRF, HIT, NO_CRIT, MAX_DMG,
+            SRF, HIT, NO_CRIT, MAX_DMG,
+            SRF, HIT,
+            SRF, HIT, NO_CRIT, MAX_DMG,
+          ], [
+            {species: 'Cloyster', level: 64, evs: def12, moves: ['Withdraw', 'Reflect']},
+          ], [
+            {species: 'Pidgey', level: 5, moves: ['Gust', 'Sand-Attack']},
+          ]);
+
+          let p1hp = battle.p1.pokemon[0].hp;
+
+          expect(battle.p1.pokemon[0].storedStats.def).toBe(256);
+
+          battle.makeChoices('move 1', 'move 1');
+          expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 4);
+
+          battle.makeChoices('move 1', 'move 1');
+          expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 4);
+          expect(battle.p1.pokemon[0].modifiedStats!.def).toBe(512);
+
+          battle.makeChoices('move 2', 'move 2');
+
+          // Division by 0 should occur
+          battle.makeChoices('move 2', 'move 1');
+          expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 12);
+
+          expectLog(battle, [
+            '|move|p1a: Cloyster|Withdraw|p1a: Cloyster',
+            '|-boost|p1a: Cloyster|def|1',
+            '|move|p2a: Pidgey|Gust|p1a: Cloyster',
+            '|-damage|p1a: Cloyster|153/157',
+            '|turn|2',
+            '|move|p1a: Cloyster|Withdraw|p1a: Cloyster',
+            '|-boost|p1a: Cloyster|def|1',
+            '|move|p2a: Pidgey|Gust|p1a: Cloyster',
+            '|-damage|p1a: Cloyster|149/157',
+            '|turn|3',
+            '|move|p1a: Cloyster|Reflect|p1a: Cloyster',
+            '|-start|p1a: Cloyster|Reflect',
+            '|move|p2a: Pidgey|Sand Attack|p1a: Cloyster',
+            '|-unboost|p1a: Cloyster|accuracy|1',
+            '|turn|4',
+            '|move|p1a: Cloyster|Reflect|p1a: Cloyster',
+            '|-fail|p1a: Cloyster',
+            '|move|p2a: Pidgey|Gust|p1a: Cloyster',
+            '|-damage|p1a: Cloyster|137/157',
+            '|turn|5',
+          ]);
+          expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+        }
+        // Defense/Special stat >= 514 + Reflect/Light Screen.
+        {
+          const def20 = {hp: 0, atk: 0, def: 20, spa: 0, spd: 0, spe: 0};
+          const battle = startBattle([
+            SRF, HIT, NO_CRIT, MAX_DMG,
+            SRF, HIT, NO_CRIT, MAX_DMG,
+            SRF, HIT,
+            SRF, HIT, NO_CRIT, MAX_DMG,
+          ], [
+            {species: 'Cloyster', level: 64, evs: def20, moves: ['Withdraw', 'Reflect']},
+          ], [
+            {species: 'Pidgey', level: 5, moves: ['Gust', 'Sand-Attack']},
+          ]);
+
+          let p1hp = battle.p1.pokemon[0].hp;
+
+          expect(battle.p1.pokemon[0].storedStats.def).toBe(257);
+
+          battle.makeChoices('move 1', 'move 1');
+          expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 4);
+
+          battle.makeChoices('move 1', 'move 1');
+          expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 4);
+          expect(battle.p1.pokemon[0].modifiedStats!.def).toBe(514);
+
+          battle.makeChoices('move 2', 'move 2');
+
+          // Division by 0 should occur
+          battle.makeChoices('move 2', 'move 1');
+          expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 12);
+
+          expectLog(battle, [
+            '|move|p1a: Cloyster|Withdraw|p1a: Cloyster',
+            '|-boost|p1a: Cloyster|def|1',
+            '|move|p2a: Pidgey|Gust|p1a: Cloyster',
+            '|-damage|p1a: Cloyster|153/157',
+            '|turn|2',
+            '|move|p1a: Cloyster|Withdraw|p1a: Cloyster',
+            '|-boost|p1a: Cloyster|def|1',
+            '|move|p2a: Pidgey|Gust|p1a: Cloyster',
+            '|-damage|p1a: Cloyster|149/157',
+            '|turn|3',
+            '|move|p1a: Cloyster|Reflect|p1a: Cloyster',
+            '|-start|p1a: Cloyster|Reflect',
+            '|move|p2a: Pidgey|Sand Attack|p1a: Cloyster',
+            '|-unboost|p1a: Cloyster|accuracy|1',
+            '|turn|4',
+            '|move|p1a: Cloyster|Reflect|p1a: Cloyster',
+            '|-fail|p1a: Cloyster',
+            '|move|p2a: Pidgey|Gust|p1a: Cloyster',
+            '|-damage|p1a: Cloyster|137/157',
+            '|turn|5',
+          ]);
+          expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+        }
+      });
+
       test.todo('Hyper Beam + Freeze permanent helplessness');
       test.todo('Hyper Beam + Sleep move glitch');
       test.todo('Hyper Beam automatic selection glitch');
