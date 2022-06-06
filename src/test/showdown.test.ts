@@ -18,26 +18,29 @@ const SRF = {key: 'Side.randomFoe', value: NOP};
 const SS_MOD = {key: ['Battle.speedSort', 'Pokemon.setStatus'], value: NOP};
 const SS_RES = {key: ['Battle.speedSort', 'Battle.residualEvent'], value: NOP};
 const SS_RUN = {key: ['Battle.speedSort', 'Battle.runEvent'], value: NOP};
-const SS_EACH = {name: 'SS_EACH', key: ['Battle.speedSort', 'Battle.eachEvent'], value: NOP};
-const INS = {name: 'INS', key: ['BattleQueue.insertChoice', 'BattleActions.switchIn'], value: NOP};
+const SS_EACH = {key: ['Battle.speedSort', 'Battle.eachEvent'], value: NOP};
+const INS = {key: ['BattleQueue.insertChoice', 'BattleActions.switchIn'], value: NOP};
 const GLM = {key: 'Pokemon.getLockedMove', value: NOP};
 
 const ranged = (n: number, d: number) => n * (0x100000000 / d);
 
 const TIE = (n: 1 | 2) =>
-  ({name: `TIE(${n})`, key: ['Battle.speedSort', 'BattleQueue.sort'], value: ranged(n, 2) - 1});
+  ({key: ['Battle.speedSort', 'BattleQueue.sort'], value: ranged(n, 2) - 1});
 const SLP = (n: number) =>
   ({key: ['Battle.random', 'Pokemon.setStatus'], value: ranged(n, 8 - 1)});
-const DISABLE_DURATION = (n: number) => ({
-  name: 'DISABLE_DURATION',
-  key: ['Battle.durationCallback', 'Pokemon.addVolatile'],
-  value: ranged(n, 7 - 1) - 1,
-});
-const DISABLE_MOVE = (m: number, n = 4) => ({
-  name: 'DISABLE_MOVE',
-  key: ['Battle.onStart', 'Pokemon.addVolatile'],
-  value: ranged(m, n) - 1,
-});
+const DISABLE_DURATION = (n: number) =>
+  ({key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: ranged(n, 7 - 1) - 1});
+const DISABLE_MOVE = (m: number, n = 4) =>
+  ({key: ['Battle.onStart', 'Pokemon.addVolatile'], value: ranged(m, n) - 1});
+const PAR_CANT = {key: 'Battle.onBeforeMove', value: ranged(63, 256) - 1};
+const PAR_CAN = {key: 'Battle.onBeforeMove', value: PAR_CANT.value + 1};
+const FRZ = {key: HIT.key, value: ranged(26, 256) - 1};
+const CFZ = (n: number) =>
+  ({key: ['Battle.onStart', 'Pokemon.addVolatile'], value: ranged(n - 1, 6 - 2) - 1});
+const CFZ_CAN = {key: 'Battle.onBeforeMove', value: 0}; // FIXME TODO
+const CFZ_CANT = {key: 'Battle.onBeforeMove', value: MAX}; // TODO
+const THRASH = (n: 3 | 4) =>
+  ({key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: ranged(n - 2, 5 - 3) - 1});
 
 const MODS: {[gen: number]: string[]} = {
   1: ['Endless Battle Clause', 'Sleep Clause Mod', 'Freeze Clause Mod'],
@@ -837,16 +840,102 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
-    test.todo('Twineedle');
-    test.todo('Poison (primary)');
-    test.todo('PoisonChance');
-    test.todo('BurnChance');
-    test.todo('FreezeChance');
+    // test('Twineedle', () => {
+    //   const battle = startBattle([], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ]);
+
+    //   let p1hp = battle.p1.pokemon[0].hp;
+    //   let p2hp = battle.p2.pokemon[0].hp;
+
+    //   battle.makeChoices('move 1', 'move 1');
+    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
+    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+
+    //   expectLog(battle, [
+    //   ]);
+    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    // });
+
+    // test('Poison (primary)', () => {
+    //   const battle = startBattle([], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ]);
+
+    //   let p1hp = battle.p1.pokemon[0].hp;
+    //   let p2hp = battle.p2.pokemon[0].hp;
+
+    //   battle.makeChoices('move 1', 'move 1');
+    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
+    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+
+    //   expectLog(battle, [
+    //   ]);
+    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    // });
+
+    // test('PoisonChance', () => {
+    //   const battle = startBattle([], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ]);
+
+    //   let p1hp = battle.p1.pokemon[0].hp;
+    //   let p2hp = battle.p2.pokemon[0].hp;
+
+    //   battle.makeChoices('move 1', 'move 1');
+    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
+    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+
+    //   expectLog(battle, [
+    //   ]);
+    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    // });
+
+    // test('BurnChance', () => {
+    //   const battle = startBattle([], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ]);
+
+    //   let p1hp = battle.p1.pokemon[0].hp;
+    //   let p2hp = battle.p2.pokemon[0].hp;
+
+    //   battle.makeChoices('move 1', 'move 1');
+    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
+    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+
+    //   expectLog(battle, [
+    //   ]);
+    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    // });
+
+    // test('FreezeChance', () => {
+    //   const battle = startBattle([], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ]);
+
+    //   let p1hp = battle.p1.pokemon[0].hp;
+    //   let p2hp = battle.p2.pokemon[0].hp;
+
+    //   battle.makeChoices('move 1', 'move 1');
+    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
+    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+
+    //   expectLog(battle, [
+    //   ]);
+    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    // });
 
     test('Paralyze (primary)', () => {
-      const PAR_CANT = {key: 'Battle.onBeforeMove', value: ranged(63, 256) - 1};
-      const PAR_CAN = {key: 'Battle.onBeforeMove', value: PAR_CANT.value + 1};
-
       const battle = startBattle([
         SRF, SRF, MISS, HIT, SS_MOD,
         SRF, SRF, HIT, PAR_CAN, HIT, SS_MOD,
@@ -913,11 +1002,100 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
-    test.todo('ParalyzeChance');
-    test.todo('Sleep');
-    test.todo('Confusion (primary)');
-    test.todo('ConfusionChance');
-    test.todo('FlinchChance');
+    // test('ParalyzeChance', () => {
+    //   const battle = startBattle([], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ]);
+
+    //   let p1hp = battle.p1.pokemon[0].hp;
+    //   let p2hp = battle.p2.pokemon[0].hp;
+
+    //   battle.makeChoices('move 1', 'move 1');
+    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
+    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+
+    //   expectLog(battle, [
+    //   ]);
+    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    // });
+
+    // test('Sleep', () => {
+    //   const battle = startBattle([], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ]);
+
+    //   let p1hp = battle.p1.pokemon[0].hp;
+    //   let p2hp = battle.p2.pokemon[0].hp;
+
+    //   battle.makeChoices('move 1', 'move 1');
+    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
+    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+
+    //   expectLog(battle, [
+    //   ]);
+    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    // });
+
+    // test('Confusion (primary', () => {
+    //   const battle = startBattle([], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ]);
+
+    //   let p1hp = battle.p1.pokemon[0].hp;
+    //   let p2hp = battle.p2.pokemon[0].hp;
+
+    //   battle.makeChoices('move 1', 'move 1');
+    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
+    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+
+    //   expectLog(battle, [
+    //   ]);
+    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    // });
+
+    // test('ConfusionChance', () => {
+    //   const battle = startBattle([], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ]);
+
+    //   let p1hp = battle.p1.pokemon[0].hp;
+    //   let p2hp = battle.p2.pokemon[0].hp;
+
+    //   battle.makeChoices('move 1', 'move 1');
+    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
+    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+
+    //   expectLog(battle, [
+    //   ]);
+    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    // });
+
+    // test('FlinchChance', () => {
+    //   const battle = startBattle([], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ], [
+    //     {species: 'TODO', evs, moves: ['TODO']},
+    //   ]);
+
+    //   let p1hp = battle.p1.pokemon[0].hp;
+    //   let p2hp = battle.p2.pokemon[0].hp;
+
+    //   battle.makeChoices('move 1', 'move 1');
+    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
+    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+
+    //   expectLog(battle, [
+    //   ]);
+    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    // });
 
     test('StatDown', () => {
       const battle = startBattle([
@@ -1347,19 +1525,6 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('Thrashing', () => {
-      const THRASH = (n: 3 | 4) => ({
-        name: `THRASH(${n})`,
-        key: ['Battle.durationCallback', 'Pokemon.addVolatile'],
-        value: ranged(n - 2, 5 - 3) - 1,
-      });
-      const CFZ = (n: number) => ({
-        name: `CFZ(${n})`,
-        key: ['Battle.onStart', 'Pokemon.addVolatile'],
-        value: ranged(n - 1, 6 - 2) - 1,
-      });
-      const CFZ_CAN = {name: 'CFZ_CAN', key: 'Battle.onBeforeMove', value: 0};
-      const PAR_CANT = {name: 'PAR_CANT', key: 'Battle.onBeforeMove', value: ranged(63, 256) - 1};
-      const PAR_CAN = {name: 'PAR_CAN', key: 'Battle.onBeforeMove', value: PAR_CANT.value + 1};
       const battle = startBattle([
         SRF, SRF, SRF, HIT, NO_CRIT, MIN_DMG, THRASH(3), HIT, CFZ(5),
         SRF, SRF, SRF, SRF, CFZ_CAN, MISS, SRF, MISS, THRASH(3),
@@ -1885,8 +2050,6 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('Heal (Rest)', () => {
-      const PAR_CANT = {key: 'Battle.onBeforeMove', value: ranged(63, 256) - 1};
-      const PAR_CAN = {key: 'Battle.onBeforeMove', value: PAR_CANT.value + 1};
       const battle = startBattle([
         SRF, HIT, SS_MOD,
         SRF, HIT, NO_CRIT, MIN_DMG, PAR_CAN, SS_MOD, SLP(5),
@@ -2635,7 +2798,66 @@ for (const gen of new Generations(Dex as any)) {
 
       test.todo('Bide errors');
       test.todo('Counter glitches');
-      test.todo('Freeze top move selection glitch');
+
+      test('Freeze top move selection glitch', () => {
+        const NO_BRN = {key: FRZ.key, value: FRZ.value + 1};
+        const battle = startBattle([
+          SRF, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
+          SRF, HIT, NO_CRIT, MIN_DMG, NO_BRN,
+          SRF, HIT, NO_CRIT, MIN_DMG, NO_BRN,
+        ], [
+          {species: 'Slowbro', evs, moves: ['Psychic', 'Amnesia', 'Teleport']},
+          {species: 'Spearow', level: 8, evs, moves: ['Peck']},
+        ], [
+          {species: 'Mew', evs, moves: ['Blizzard', 'Fire Blast']},
+        ], b => {
+          b.p1.pokemon[0].moveSlots[0].pp = 0;
+        });
+
+        let p1hp = battle.p1.pokemon[0].hp;
+
+        expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(0);
+
+        // last_selected_move is Amnesia before getting Frozen
+        battle.makeChoices('move 2', 'move 1');
+        expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 50);
+        expect(battle.p1.pokemon[0].status).toBe('frz');
+
+        battle.makeChoices('switch 2', 'move 2');
+        expect(battle.p1.pokemon[0].hp).toBe(0);
+
+        battle.makeChoices('switch 2', '');
+
+        // last_selected_move is still Amnesia but desync occurs as Psychic gets chosen
+        battle.makeChoices('move 3', 'move 2');
+        expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 50);
+
+        expectLog(battle, [
+          '|switch|p1a: Slowbro|Slowbro|393/393',
+          '|switch|p2a: Mew|Mew|403/403',
+          '|turn|1',
+          '|move|p2a: Mew|Blizzard|p1a: Slowbro',
+          '|-resisted|p1a: Slowbro',
+          '|-damage|p1a: Slowbro|343/393',
+          '|-status|p1a: Slowbro|frz',
+          '|cant|p1a: Slowbro|frz',
+          '|turn|2',
+          '|switch|p1a: Spearow|Spearow, L8|31/31',
+          '|move|p2a: Mew|Fire Blast|p1a: Spearow',
+          '|-damage|p1a: Spearow|0 fnt',
+          '|faint|p1a: Spearow',
+          '|switch|p1a: Slowbro|Slowbro|343/393 frz',
+          '|turn|3',
+          '|move|p2a: Mew|Fire Blast|p1a: Slowbro',
+          '|-resisted|p1a: Slowbro',
+          '|-damage|p1a: Slowbro|293/393 frz',
+          '|-curestatus|p1a: Slowbro|frz|[msg]',
+          '|move|p1a: Slowbro|Teleport|p1a: Slowbro',
+          '|turn|4',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      });
+
       test.todo('Haze glitch');
 
       test('Toxic counter glitches', () => {
@@ -2686,8 +2908,7 @@ for (const gen of new Generations(Dex as any)) {
       });
 
       test('Defrost move forcing', () => {
-        const FRZ = {name: 'FRZ', key: HIT.key, value: ranged(26, 256) - 1};
-        const NO_BRN = {name: 'NO_BRN', key: FRZ.key, value: FRZ.value + 1};
+        const NO_BRN = {key: FRZ.key, value: FRZ.value + 1};
         const battle = startBattle([
           SRF, HIT, NO_CRIT, MIN_DMG,
           SRF, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
@@ -2904,8 +3125,7 @@ for (const gen of new Generations(Dex as any)) {
       });
 
       test('Hyper Beam + Freeze permanent helplessness', () => {
-        const FRZ = {name: 'FRZ', key: HIT.key, value: ranged(26, 256) - 1};
-        const NO_BRN = {name: 'NO_BRN', key: FRZ.key, value: FRZ.value + 1};
+        const NO_BRN = {key: FRZ.key, value: FRZ.value + 1};
         const battle = startBattle([
           SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
           SRF, SRF,
@@ -3079,9 +3299,7 @@ for (const gen of new Generations(Dex as any)) {
       });
 
       test('Invulnerability glitch', () => {
-        const NO_PAR = {name: 'NO_PAR', key: HIT.key, value: ranged(26, 256)};
-        const PAR_CANT = {name: 'PAR_CANT', key: 'Battle.onBeforeMove', value: ranged(63, 256) - 1};
-        const PAR_CAN = {name: 'PAR_CAN', key: 'Battle.onBeforeMove', value: PAR_CANT.value + 1};
+        const NO_PAR = {key: HIT.key, value: ranged(26, 256)};
         const battle = startBattle([
           SRF, HIT, SS_MOD,
           SRF, SRF, PAR_CAN, SS_RES, GLM,
@@ -3156,15 +3374,372 @@ for (const gen of new Generations(Dex as any)) {
         expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
-      test.todo('Stat modification errors');
-      test.todo('Stat down modifier overflow glitch');
-      test.todo('Struggle bypassing / Switch PP underflow');
-      test.todo('Trapping sleep glitch');
+      test('Stat modification errors', () => {
+        {
+          const battle = startBattle([
+            SRF, SRF, HIT, HIT, SS_MOD, SRF, PAR_CAN, HIT, SRF, PAR_CAN, HIT,
+          ], [
+            {species: 'Bulbasaur', level: 6, moves: ['Stun Spore', 'Growth']},
+          ], [
+            {species: 'Pidgey', level: 56, moves: ['Sand-Attack']},
+          ]);
+
+          expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(12);
+          expect(battle.p2.pokemon[0].modifiedStats!.spe).toBe(84);
+
+          battle.makeChoices('move 1', 'move 1');
+          expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(12);
+          expect(battle.p2.pokemon[0].modifiedStats!.spe).toBe(21);
+
+          battle.makeChoices('move 2', 'move 1');
+          expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(12);
+          expect(battle.p2.pokemon[0].modifiedStats!.spe).toBe(5);
+
+          battle.makeChoices('move 2', 'move 1');
+          expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(12);
+          expect(battle.p2.pokemon[0].modifiedStats!.spe).toBe(1);
+
+          expectLog(battle, [
+            '|move|p2a: Pidgey|Sand Attack|p1a: Bulbasaur',
+            '|-unboost|p1a: Bulbasaur|accuracy|1',
+            '|move|p1a: Bulbasaur|Stun Spore|p2a: Pidgey',
+            '|-status|p2a: Pidgey|par',
+            '|turn|2',
+            '|move|p2a: Pidgey|Sand Attack|p1a: Bulbasaur',
+            '|-unboost|p1a: Bulbasaur|accuracy|1',
+            '|move|p1a: Bulbasaur|Growth|p1a: Bulbasaur',
+            '|-boost|p1a: Bulbasaur|spa|1',
+            '|-boost|p1a: Bulbasaur|spd|1',
+            '|turn|3',
+            '|move|p1a: Bulbasaur|Growth|p1a: Bulbasaur',
+            '|-boost|p1a: Bulbasaur|spa|1',
+            '|-boost|p1a: Bulbasaur|spd|1',
+            '|move|p2a: Pidgey|Sand Attack|p1a: Bulbasaur',
+            '|-unboost|p1a: Bulbasaur|accuracy|1',
+            '|turn|4',
+          ]);
+          expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+        }
+        {
+          const battle = startBattle([
+            SRF, HIT, SS_MOD,
+            SRF, PAR_CAN, SRF, HIT,
+            SRF, PAR_CANT, SRF, HIT,
+            SRF, SRF, HIT, PAR_CANT,
+          ], [
+            {species: 'Bulbasaur', level: 6, moves: ['Stun Spore', 'Growth']},
+            {species: 'Cloyster', level: 82, moves: ['Withdraw']},
+          ], [
+            {species: 'Rattata', level: 2, moves: ['Thunder Wave', 'Tail Whip', 'String Shot']},
+          ]);
+
+          expect(battle.p1.pokemon[1].modifiedStats!.spe).toBe(144);
+          expect(battle.p2.pokemon[0].modifiedStats!.spe).toBe(8);
+
+          battle.makeChoices('switch 2', 'move 1');
+          expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(36);
+          expect(battle.p2.pokemon[0].modifiedStats!.spe).toBe(8);
+
+          battle.makeChoices('move 1', 'move 2');
+          expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(9);
+          expect(battle.p2.pokemon[0].modifiedStats!.spe).toBe(8);
+
+          battle.makeChoices('move 1', 'move 2');
+          expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(2);
+          expect(battle.p2.pokemon[0].modifiedStats!.spe).toBe(8);
+
+          battle.makeChoices('move 1', 'move 3');
+          expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(23);
+          expect(battle.p2.pokemon[0].modifiedStats!.spe).toBe(8);
+
+          expectLog(battle, [
+            '|switch|p1a: Cloyster|Cloyster, L82|198/198',
+            '|move|p2a: Rattata|Thunder Wave|p1a: Cloyster',
+            '|-status|p1a: Cloyster|par',
+            '|turn|2',
+            '|move|p1a: Cloyster|Withdraw|p1a: Cloyster',
+            '|-boost|p1a: Cloyster|def|1',
+            '|move|p2a: Rattata|Tail Whip|p1a: Cloyster',
+            '|-unboost|p1a: Cloyster|def|1',
+            '|turn|3',
+            '|cant|p1a: Cloyster|par',
+            '|move|p2a: Rattata|Tail Whip|p1a: Cloyster',
+            '|-unboost|p1a: Cloyster|def|1',
+            '|turn|4',
+            '|move|p2a: Rattata|String Shot|p1a: Cloyster',
+            '|-unboost|p1a: Cloyster|spe|1',
+            '|cant|p1a: Cloyster|par',
+            '|turn|5',
+          ]);
+          expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+        }
+      });
+
+      test('Stat down modifier overflow glitch', () => {
+        const proc = {key: HIT.key, value: ranged(85, 256) - 1};
+        const no_proc = {key: proc.key, value: proc.value + 1};
+        // 342 -> 1026
+        {
+          const spc342 = {...evs, spa: 12, spd: 12};
+          const battle = startBattle([
+            SRF, HIT, NO_CRIT, MIN_DMG, proc,
+            SRF, HIT, NO_CRIT, MIN_DMG, no_proc,
+          ], [
+            {species: 'Porygon', level: 58, moves: ['Recover', 'Psychic']},
+          ], [
+            {species: 'Mewtwo', level: 99, evs: spc342, moves: ['Amnesia', 'Recover']},
+          ]);
+
+          let p2hp = battle.p2.pokemon[0].hp;
+
+          expect(battle.p2.pokemon[0].modifiedStats!.spa).toBe(342);
+
+          battle.makeChoices('move 1', 'move 1');
+          expect(battle.p2.pokemon[0].modifiedStats!.spa).toBe(684);
+          expect(battle.p2.pokemon[0].boosts.spa).toBe(2);
+
+          battle.makeChoices('move 1', 'move 1');
+          expect(battle.p2.pokemon[0].modifiedStats!.spa).toBe(999);
+          expect(battle.p2.pokemon[0].boosts.spa).toBe(4);
+
+          battle.makeChoices('move 1', 'move 1');
+          expect(battle.p2.pokemon[0].modifiedStats!.spa).toBe(999);
+          // expect(battle.p2.pokemon[0].boosts.spa).toBe(5);
+          expect(battle.p2.pokemon[0].boosts.spa).toBe(6);
+
+          battle.makeChoices('move 2', 'move 2');
+          expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 2);
+          // expect(battle.p2.pokemon[0].modifiedStats!.spa).toBe(1026);
+          expect(battle.p2.pokemon[0].modifiedStats!.spa).toBe(999);
+          // expect(battle.p2.pokemon[0].boosts.spa).toBe(4);
+          expect(battle.p2.pokemon[0].boosts.spa).toBe(5);
+
+          // Division by 0
+          battle.makeChoices('move 2', 'move 2');
+          expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+          expectLog(battle, [
+            '|move|p2a: Mewtwo|Amnesia|p2a: Mewtwo',
+            '|-boost|p2a: Mewtwo|spd|2',
+            '|-boost|p2a: Mewtwo|spa|2',
+            '|move|p1a: Porygon|Recover|p1a: Porygon',
+            '|-fail|p1a: Porygon',
+            '|turn|2',
+            '|move|p2a: Mewtwo|Amnesia|p2a: Mewtwo',
+            '|-boost|p2a: Mewtwo|spd|2',
+            '|-boost|p2a: Mewtwo|spa|2',
+            '|move|p1a: Porygon|Recover|p1a: Porygon',
+            '|-fail|p1a: Porygon',
+            '|turn|3',
+            '|move|p2a: Mewtwo|Amnesia|p2a: Mewtwo',
+            '|-boost|p2a: Mewtwo|spd|2',
+            '|-boost|p2a: Mewtwo|spa|2',
+            '|move|p1a: Porygon|Recover|p1a: Porygon',
+            '|-fail|p1a: Porygon',
+            '|turn|4',
+            '|move|p2a: Mewtwo|Recover|p2a: Mewtwo',
+            '|-fail|p2a: Mewtwo',
+            '|move|p1a: Porygon|Psychic|p2a: Mewtwo',
+            '|-resisted|p2a: Mewtwo',
+            '|-damage|p2a: Mewtwo|408/410',
+            '|-unboost|p2a: Mewtwo|spd|1',
+            '|-unboost|p2a: Mewtwo|spa|1',
+            '|turn|5',
+            '|move|p2a: Mewtwo|Recover|p2a: Mewtwo',
+            '|-heal|p2a: Mewtwo|410/410',
+            '|move|p1a: Porygon|Psychic|p2a: Mewtwo',
+            '|-resisted|p2a: Mewtwo',
+            '|-damage|p2a: Mewtwo|408/410',
+            '|turn|6',
+          ]);
+          expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+        }
+        // 343 -> 1029
+        {
+          const battle = startBattle([
+            SRF, HIT, NO_CRIT, MIN_DMG, proc,
+            SRF, HIT, NO_CRIT, MIN_DMG, no_proc,
+          ], [
+            {species: 'Porygon', level: 58, moves: ['Recover', 'Psychic']},
+          ], [
+            {species: 'Mewtwo', moves: ['Amnesia', 'Recover']},
+          ]);
+
+          let p2hp = battle.p2.pokemon[0].hp;
+
+          expect(battle.p2.pokemon[0].modifiedStats!.spa).toBe(343);
+
+          battle.makeChoices('move 1', 'move 1');
+          expect(battle.p2.pokemon[0].modifiedStats!.spa).toBe(686);
+          expect(battle.p2.pokemon[0].boosts.spa).toBe(2);
+
+          battle.makeChoices('move 1', 'move 1');
+          expect(battle.p2.pokemon[0].modifiedStats!.spa).toBe(999);
+          expect(battle.p2.pokemon[0].boosts.spa).toBe(4);
+
+          battle.makeChoices('move 1', 'move 1');
+          expect(battle.p2.pokemon[0].modifiedStats!.spa).toBe(999);
+          // expect(battle.p2.pokemon[0].boosts.spa).toBe(5);
+          expect(battle.p2.pokemon[0].boosts.spa).toBe(6);
+
+          battle.makeChoices('move 2', 'move 2');
+          expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 2);
+          // expect(battle.p2.pokemon[0].modifiedStats!.spa).toBe(1029);
+          expect(battle.p2.pokemon[0].modifiedStats!.spa).toBe(999);
+          // expect(battle.p2.pokemon[0].boosts.spa).toBe(4);
+          expect(battle.p2.pokemon[0].boosts.spa).toBe(5);
+
+          // Overflow means Mewtwo gets KOed
+          battle.makeChoices('move 2', 'move 2');
+          // expect(battle.p2.pokemon[0].hp).toBe(0);
+          expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+          expectLog(battle, [
+            '|move|p2a: Mewtwo|Amnesia|p2a: Mewtwo',
+            '|-boost|p2a: Mewtwo|spd|2',
+            '|-boost|p2a: Mewtwo|spa|2',
+            '|move|p1a: Porygon|Recover|p1a: Porygon',
+            '|-fail|p1a: Porygon',
+            '|turn|2',
+            '|move|p2a: Mewtwo|Amnesia|p2a: Mewtwo',
+            '|-boost|p2a: Mewtwo|spd|2',
+            '|-boost|p2a: Mewtwo|spa|2',
+            '|move|p1a: Porygon|Recover|p1a: Porygon',
+            '|-fail|p1a: Porygon',
+            '|turn|3',
+            '|move|p2a: Mewtwo|Amnesia|p2a: Mewtwo',
+            '|-boost|p2a: Mewtwo|spd|2',
+            '|-boost|p2a: Mewtwo|spa|2',
+            '|move|p1a: Porygon|Recover|p1a: Porygon',
+            '|-fail|p1a: Porygon',
+            '|turn|4',
+            '|move|p2a: Mewtwo|Recover|p2a: Mewtwo',
+            '|-fail|p2a: Mewtwo',
+            '|move|p1a: Porygon|Psychic|p2a: Mewtwo',
+            '|-resisted|p2a: Mewtwo',
+            '|-damage|p2a: Mewtwo|350/352',
+            '|-unboost|p2a: Mewtwo|spd|1',
+            '|-unboost|p2a: Mewtwo|spa|1',
+            '|turn|5',
+            '|move|p2a: Mewtwo|Recover|p2a: Mewtwo',
+            '|-heal|p2a: Mewtwo|352/352',
+            '|move|p1a: Porygon|Psychic|p2a: Mewtwo',
+            '|-resisted|p2a: Mewtwo',
+            '|-damage|p2a: Mewtwo|350/352',
+            '|turn|6',
+          ]);
+          expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+        }
+      });
+
+      test('Struggle bypassing / Switch PP underflow', () => {
+        const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MAX};
+        const rewrap = {key: ['Battle.sample', 'BattleActions.runMove'], value: MAX};
+        const battle = startBattle([
+          SRF, HIT, NO_CRIT, MIN_DMG, wrap, SRF, HIT, NO_CRIT, MIN_DMG, rewrap,
+        ], [
+          {species: 'Victreebel', evs, moves: ['Wrap', 'Vine Whip']},
+          {species: 'Seel', evs, moves: ['Bubble']},
+        ], [
+          {species: 'Kadabra', evs, moves: ['Teleport']},
+          {species: 'Mr. Mime', evs, moves: ['Teleport']},
+        ], b => {
+          b.p1.pokemon[0].moveSlots[0].pp = 1;
+        });
+
+        const kadabra = battle.p2.pokemon[0].hp;
+        const mrmime = battle.p2.pokemon[1].hp;
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(0);
+        expect(battle.p2.pokemon[0].hp).toBe(kadabra - 22);
+
+        expect(gen1.Choices.sim(battle, 'p1')).toEqual(['switch 2', 'move 1']);
+
+        battle.makeChoices('move 1', 'switch 2');
+        expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(63);
+        expect(battle.p2.pokemon[0].hp).toBe(mrmime - 16);
+
+        expectLog(battle, [
+          '|switch|p1a: Victreebel|Victreebel|363/363',
+          '|switch|p2a: Kadabra|Kadabra|283/283',
+          '|turn|1',
+          '|move|p2a: Kadabra|Teleport|p2a: Kadabra',
+          '|move|p1a: Victreebel|Wrap|p2a: Kadabra',
+          '|-damage|p2a: Kadabra|261/283',
+          '|turn|2',
+          '|switch|p2a: Mr. Mime|Mr. Mime|283/283',
+          '|move|p1a: Victreebel|Wrap|p2a: Mr. Mime',
+          '|-damage|p2a: Mr. Mime|267/283',
+          '|turn|3',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      });
+
+      test('Trapping sleep glitch', () => {
+        const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
+        const battle = startBattle([
+          SRF, SRF, HIT, NO_CRIT, MIN_DMG, wrap,
+          SRF, SRF,
+          SRF, SRF, HIT, SS_MOD, SLP(5),
+          SRF, SRF, HIT,
+        ], [
+          {species: 'Weepinbell', evs, moves: ['Wrap', 'Sleep Powder']},
+          {species: 'Gloom', evs, moves: ['Absorb']},
+        ], [
+          {species: 'Sandshrew', evs, moves: ['Scratch', 'Sand Attack']},
+          {species: 'Magnemite', evs, moves: ['Thunder Shock']},
+        ]);
+
+        let p2hp = battle.p2.pokemon[0].hp;
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 11);
+        expect(gen1.Choices.sim(battle, 'p1')).toEqual(['switch 2', 'move 1']);
+        expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 11);
+        expect(gen1.Choices.sim(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+        expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+
+        battle.makeChoices('move 2', 'move 1');
+        expect(battle.p2.pokemon[0].status).toBe('slp');
+        expect(gen1.Choices.sim(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+        // expect(gen1.Choices.sim(battle, 'p2')).toEqual([]);
+        expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+
+        // Should not have a turn, can only pass!
+        battle.makeChoices('move 2', 'move 1');
+        expect(gen1.Choices.sim(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+        // expect(gen1.Choices.sim(battle, 'p2')).toEqual([]);
+        expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+
+        expectLog(battle, [
+          '|move|p1a: Weepinbell|Wrap|p2a: Sandshrew',
+          '|-damage|p2a: Sandshrew|292/303',
+          '|cant|p2a: Sandshrew|partiallytrapped',
+          '|turn|2',
+          '|move|p1a: Weepinbell|Wrap|p2a: Sandshrew|[from]Wrap',
+          '|-damage|p2a: Sandshrew|281/303',
+          '|cant|p2a: Sandshrew|partiallytrapped',
+          '|turn|3',
+          '|move|p1a: Weepinbell|Sleep Powder|p2a: Sandshrew',
+          '|-status|p2a: Sandshrew|slp|[from] move: Sleep Powder',
+          '|cant|p2a: Sandshrew|slp',
+          '|turn|4',
+          '|move|p1a: Weepinbell|Sleep Powder|p2a: Sandshrew',
+          '|-fail|p2a: Sandshrew|slp',
+          '|cant|p2a: Sandshrew|slp',
+          '|turn|5',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      });
 
       test('Partial trapping move Mirror Move glitch', () => {
-        const TURNS = {key: 'Battle.durationCallback', value: MIN};
+        const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
         const battle = startBattle(
-          [SRF, MISS, SRF, SRF, HIT, NO_CRIT, MAX_DMG, TURNS, SRF],
+          [SRF, MISS, SRF, SRF, HIT, NO_CRIT, MAX_DMG, wrap, SRF],
           [{species: 'Pidgeot', evs, moves: ['Agility', 'Mirror Move']}],
           [{species: 'Moltres', evs, moves: ['Leer', 'Fire Spin']},
             {species: 'Drowzee', evs, moves: ['Pound']}]
@@ -3200,7 +3775,55 @@ for (const gen of new Generations(Dex as any)) {
         expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
-      test.todo('Rage and Thrash / Petal Dance accuracy bug');
+      test('Rage and Thrash / Petal Dance accuracy bug', () => {
+        const hit = (n: number) => ({key: HIT.key, value: ranged(n, 256) - 1});
+        const miss = (n: number) => ({key: HIT.key, value: hit(n).value + 1});
+        const battle = startBattle([
+          SRF, SRF, hit(255), NO_CRIT, MIN_DMG, THRASH(4),
+          SRF, SRF, SRF, hit(168), NO_CRIT, MIN_DMG,
+          SRF, SRF, SRF, miss(84), NO_CRIT, MIN_DMG, // should miss!
+        ], [
+          {species: 'Nidoking', evs, moves: ['Thrash']},
+        ], [
+          {species: 'Onix', evs, moves: ['Double Team']},
+        ]);
+
+        let p2hp = battle.p2.pokemon[0].hp;
+
+        // 255 -> 168
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 22);
+
+        // 168 -> 84
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 22);
+
+        // should miss!
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 22);
+
+        expectLog(battle, [
+          '|move|p1a: Nidoking|Thrash|p2a: Onix',
+          '|-resisted|p2a: Onix',
+          '|-damage|p2a: Onix|251/273',
+          '|move|p2a: Onix|Double Team|p2a: Onix',
+          '|-boost|p2a: Onix|evasion|1',
+          '|turn|2',
+          '|move|p1a: Nidoking|Thrash|p2a: Onix|[from]Thrash',
+          '|-resisted|p2a: Onix',
+          '|-damage|p2a: Onix|229/273',
+          '|move|p2a: Onix|Double Team|p2a: Onix',
+          '|-boost|p2a: Onix|evasion|1',
+          '|turn|3',
+          '|move|p1a: Nidoking|Thrash|p2a: Onix|[from]Thrash',
+          '|-resisted|p2a: Onix',
+          '|-damage|p2a: Onix|207/273',
+          '|move|p2a: Onix|Double Team|p2a: Onix',
+          '|-boost|p2a: Onix|evasion|1',
+          '|turn|4',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      });
 
       test('Substitute HP drain bug', () => {
         const battle = startBattle([SRF, HIT, NO_CRIT, MIN_DMG], [
@@ -3248,7 +3871,109 @@ for (const gen of new Generations(Dex as any)) {
         expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
-      test.todo('Substitute + Confusion glitch');
+      test('Substitute + Confusion glitch', () => {
+        // Confused Pokémon has Substitute
+        {
+          const battle = startBattle([
+            SRF, HIT, CFZ(5), CFZ_CAN, SRF, SRF, HIT, SRF, CFZ_CANT
+          ], [
+            {species: 'Bulbasaur', level: 6, evs, moves: ['Substitute', 'Growl']},
+          ], [
+            {species: 'Zubat', level: 10, evs, moves: ['Supersonic']},
+          ]);
+
+          let p1hp = battle.p1.pokemon[0].hp;
+
+          battle.makeChoices('move 1', 'move 1');
+          expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 6);
+          expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(7);
+
+          // If Substitute is up, opponent's sub takes damage for Confusion self-hit or 0 damage
+          battle.makeChoices('move 2', 'move 1');
+          expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+          expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(7);
+
+          expectLog(battle, [
+            '|move|p2a: Zubat|Supersonic|p1a: Bulbasaur',
+            '|-start|p1a: Bulbasaur|confusion',
+            '|-activate|p1a: Bulbasaur|confusion',
+            '|move|p1a: Bulbasaur|Substitute|p1a: Bulbasaur',
+            '|-start|p1a: Bulbasaur|Substitute',
+            '|-damage|p1a: Bulbasaur|20/26',
+            '|turn|2',
+            '|move|p2a: Zubat|Supersonic|p1a: Bulbasaur',
+            '|-fail|p1a: Bulbasaur',
+            '|-activate|p1a: Bulbasaur|confusion',
+            '|turn|3'
+          ]);
+          expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+        }
+        // Both Pokémon have Substitutes
+        {
+          const battle = startBattle([
+            SRF, HIT, NO_CRIT, MIN_DMG, SRF, SRF, HIT, CFZ(5), CFZ_CANT, CFZ_CAN, SRF, CFZ_CANT,
+          ], [
+            {species: 'Bulbasaur', level: 6, evs, moves: ['Substitute', 'Tackle']},
+          ], [
+            {species: 'Zubat', level: 10, evs, moves: ['Supersonic', 'Substitute']},
+          ]);
+
+          let p1hp = battle.p1.pokemon[0].hp;
+          let p2hp = battle.p2.pokemon[0].hp;
+          let sub1 = 7;
+          let sub2 = 10;
+
+          battle.makeChoices('move 2', 'move 2');
+          expect(battle.p2.pokemon[0].hp).toBe(p2hp -= (sub2 - 1));
+          expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(sub2 -= 3);
+
+          // Opponent's sub doesn't take damage because confused user doesn't have one
+          battle.makeChoices('move 2', 'move 1');
+          expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 5);
+          expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+          expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(sub2);
+
+          battle.makeChoices('move 1', 'move 2');
+          expect(battle.p1.pokemon[0].hp).toBe(p1hp -= (sub1 - 1));
+          expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(sub1);
+          expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+          expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(sub2);
+
+          // Opponent's sub takes damage for Confusion self-hit if both have one
+          battle.makeChoices('move 2', 'move 2');
+          expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+          expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(sub1);
+          expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+          expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(sub2 -= 5);
+
+          expectLog(battle, [
+            '|move|p2a: Zubat|Substitute|p2a: Zubat',
+            '|-start|p2a: Zubat|Substitute',
+            '|-damage|p2a: Zubat|28/37',
+            '|move|p1a: Bulbasaur|Tackle|p2a: Zubat',
+            '|-activate|p2a: Zubat|Substitute|[damage]',
+            '|turn|2',
+            '|move|p2a: Zubat|Supersonic|p1a: Bulbasaur',
+            '|-start|p1a: Bulbasaur|confusion',
+            '|-activate|p1a: Bulbasaur|confusion',
+            '|-damage|p1a: Bulbasaur|21/26|[from] confusion',
+            '|turn|3',
+            '|move|p2a: Zubat|Substitute|p2a: Zubat',
+            '|-fail|p2a: Zubat|move: Substitute',
+            '|-activate|p1a: Bulbasaur|confusion',
+            '|move|p1a: Bulbasaur|Substitute|p1a: Bulbasaur',
+            '|-start|p1a: Bulbasaur|Substitute',
+            '|-damage|p1a: Bulbasaur|15/26',
+            '|turn|4',
+            '|move|p2a: Zubat|Substitute|p2a: Zubat',
+            '|-fail|p2a: Zubat|move: Substitute',
+            '|-activate|p1a: Bulbasaur|confusion',
+            '|-activate|p2a: Zubat|Substitute|[damage]',
+            '|turn|5'
+          ]);
+          expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+        }
+      });
 
       test('Psywave infinite loop', () => {
         const PSY_MAX = {key: 'Battle.damageCallback', value: MAX};
