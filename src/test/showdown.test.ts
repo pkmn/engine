@@ -2579,7 +2579,60 @@ for (const gen of new Generations(Dex as any)) {
         expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
-      test.todo('Defrost move forcing');
+      test('Defrost move forcing', () => {
+        const FRZ = {name: 'FRZ', key: HIT.key, value: ranged(26, 256) - 1};
+        const NO_BRN = {name: 'NO_BRN', key: FRZ.key, value: FRZ.value + 1};
+        const battle = startBattle([
+          SRF, HIT, NO_CRIT, MIN_DMG,
+          SRF, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
+          SRF, SRF, HIT, NO_CRIT, MIN_DMG, NO_BRN, HIT, NO_CRIT, MIN_DMG,
+        ], [
+          {species: 'Hypno', level: 50, evs, moves: ['Teleport', 'Ice Punch', 'Fire Punch']},
+        ], [
+          {species: 'Bulbasaur', level: 6, evs, moves: ['Vine Whip']},
+          {species: 'Poliwrath', level: 40, evs, moves: ['Surf', 'Water Gun']},
+        ]);
+
+        let p1hp = battle.p1.pokemon[0].hp;
+        let p2hp = battle.p2.pokemon[1].hp;
+
+        // Set up P2's last_selected_move to be Vine Whip
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 3);
+
+        // Switching clears last_used_move but not last_selected_move
+        battle.makeChoices('move 2', 'switch 2');
+        expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 23);
+        expect(battle.p2.pokemon[0].status).toBe('frz');
+
+        // After defrosting, Poliwrath will appear to use Surf to P1 and Vine Whip to P2
+        battle.makeChoices('move 3', 'move 2');
+        expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 12);
+        expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 23);
+        expect(battle.p2.pokemon[0].status).toBe('');
+
+        expectLog(battle, [
+          '|move|p1a: Hypno|Teleport|p1a: Hypno',
+          '|move|p2a: Bulbasaur|Vine Whip|p1a: Hypno',
+          '|-damage|p1a: Hypno|188/191',
+          '|turn|2',
+          '|switch|p2a: Poliwrath|Poliwrath, L40|159/159',
+          '|move|p1a: Hypno|Ice Punch|p2a: Poliwrath',
+          '|-resisted|p2a: Poliwrath',
+          '|-damage|p2a: Poliwrath|136/159',
+          '|-status|p2a: Poliwrath|frz',
+          '|turn|3',
+          '|move|p1a: Hypno|Fire Punch|p2a: Poliwrath',
+          '|-resisted|p2a: Poliwrath',
+          '|-damage|p2a: Poliwrath|113/159 frz',
+          '|-curestatus|p2a: Poliwrath|frz|[msg]',
+          '|move|p2a: Poliwrath|Water Gun|p1a: Hypno',
+          '|-damage|p1a: Hypno|176/191',
+          '|turn|4',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      });
+
       test.todo('Division by 0');
       test.todo('Hyper Beam + Freeze permanent helplessness');
       test.todo('Hyper Beam + Sleep move glitch');
