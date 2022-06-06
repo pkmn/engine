@@ -70,6 +70,8 @@ fn ranged(comptime n: u8, comptime d: u9) U {
 const P1 = Player.P1;
 const P2 = Player.P2;
 
+var choices: [OPTIONS_SIZE]Choice = undefined;
+
 // General
 
 test "start (first fainted)" {
@@ -443,6 +445,12 @@ test "fainting (single)" {
         try t.log.expected.faint(P2.ident(1), true);
 
         try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(move(1), move(1)));
+
+        var n = t.battle.actual.choices(.P1, .Pass, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{.{}}, choices[0..n]);
+        n = t.battle.actual.choices(.P2, .Switch, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{swtch(2)}, choices[0..n]);
+
         try t.verify();
     }
     // Win
@@ -614,7 +622,6 @@ test "Endless Battle Clause (basic)" {
 test "choices" {
     var random = rng.PSRNG.init(0x27182818);
     var battle = Battle.random(&random, false);
-    var choices: [OPTIONS_SIZE]Choice = undefined;
 
     var n = battle.choices(.P1, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{

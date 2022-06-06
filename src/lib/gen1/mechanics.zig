@@ -2177,8 +2177,8 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
             const side = battle.side(player);
             var slot: u4 = 2;
             while (slot <= 6) : (slot += 1) {
-                const pokemon = side.get(slot);
-                if (pokemon.hp == 0) continue;
+                const id = side.order[slot - 1];
+                if (id == 0 or side.pokemon[id - 1].hp == 0) continue;
                 out[n] = .{ .type = .Switch, .data = slot };
                 n += 1;
             }
@@ -2202,6 +2202,16 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
                 return n;
             }
 
+            if (!foe.active.volatiles.Trapping) {
+                var slot: u4 = 2;
+                while (slot <= 6) : (slot += 1) {
+                    const id = side.order[slot - 1];
+                    if (id == 0 or side.pokemon[id - 1].hp == 0) continue;
+                    out[n] = .{ .type = .Switch, .data = slot };
+                    n += 1;
+                }
+            }
+
             const limited = active.volatiles.Bide or active.volatiles.Trapping;
             // On the cartridge, all of these happen after "FIGHT" (indicating you are not
             // switching) but before you are allowed to select a move. Pokémon Showdown instead
@@ -2215,15 +2225,6 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
                 return n;
             }
 
-            if (!foe.active.volatiles.Trapping) {
-                var slot: u4 = 2;
-                while (slot <= 6) : (slot += 1) {
-                    const pokemon = side.get(slot);
-                    if (pokemon.hp == 0) continue;
-                    out[n] = .{ .type = .Switch, .data = slot };
-                    n += 1;
-                }
-            }
             var slot: u4 = 1;
             // Pokémon Showdown handles Bide and Trapping moves by checking if the move in question
             // is present in the Pokémon's moveset (which means moves called via Metronome / Mirror
@@ -2233,7 +2234,7 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
                 assert(showdown);
                 assert(side.last_selected_move != .None);
                 while (slot <= 4) : (slot += 1) {
-                    const m = active.move(slot);
+                    const m = active.moves[slot - 1];
                     if (m.id == .None) break;
                     if (m.id == side.last_selected_move) {
                         assert(m.pp > 0 or Move.get(m.id).effect == .Trapping);
@@ -2247,14 +2248,14 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
             const before = n;
             slot = 1;
             while (slot <= 4) : (slot += 1) {
-                const m = active.move(slot);
+                const m = active.moves[slot - 1];
                 if (m.id == .None) break;
                 if (m.pp == 0) continue;
                 if (active.volatiles.disabled.move == slot) continue;
                 out[n] = .{ .type = .Move, .data = slot };
                 n += 1;
             }
-            // Struggle (Pokémon Showdown would use `move 1` here)
+            // Struggle (Pokémon Showdown would use 'move 1' here)
             if (n == before) {
                 out[n] = .{ .type = .Move, .data = 0 };
                 n += 1;
