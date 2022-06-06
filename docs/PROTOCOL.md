@@ -668,7 +668,7 @@ defining the maximum size constants (though taking a strict intepretation of the
 some cases to be able to conservatively set the upper bounds in specific scenarios). The maximum
 size of the "fuzzing" use-case is also outlined below (though not encoded in a constant).
 
-*The following maximum log size scenarios where developed with help from
+*The following maximum log size scenarios were developed with help from
 [**@gigalh128**](https://github.com/gigalh128).*
 
 ### Generation I
