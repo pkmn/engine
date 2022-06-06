@@ -1,6 +1,8 @@
 import {Battle, Dex, ID, PRNG, PRNGSeed} from '@pkmn/sim';
 import {Generations, PokemonSet} from '@pkmn/data';
 
+import * as gen1 from './benchmark/gen1';
+
 const MIN = 0;
 const MAX = 0xFFFFFFFF;
 const NOP = 42;
@@ -145,7 +147,6 @@ for (const gen of new Generations(Dex as any)) {
         ]);
       }
     });
-    test.todo('move select');
 
     test('switching (order)', () => {
       const battle = startBattle([], [
@@ -192,9 +193,6 @@ for (const gen of new Generations(Dex as any)) {
         '|turn|7',
       ]);
     });
-
-    test.todo('switching (reset)');
-    test.todo('switching (brn/par)');
 
     test('turn order (priority)', () => {
       const battle = startBattle([
@@ -667,10 +665,24 @@ for (const gen of new Generations(Dex as any)) {
       }
     });
 
-    test.todo('choices (default)');
-    test.todo('choices (locked)');
-    test.todo('choices (trapped)');
-    test.todo('choices (Struggle)');
+    test('choices', () => {
+      const random = new PRNG([1, 2, 3, 4]);
+      const formatid = `gen${gen.num}customgame@@@${MODS[gen.num].join(',')}` as ID;
+      const battle = new Battle({formatid, ...gen1.Battle.options(gen, random) as any});
+
+      expect(gen1.Choices.sim(battle, 'p1')).toEqual([
+        'switch 2', 'switch 3', 'switch 4', 'switch 5',  'switch 6',
+        'move 1', 'move 2', 'move 3', 'move 4',
+      ]);
+
+      battle.p1.activeRequest!.forceSwitch = true;
+      expect(gen1.Choices.sim(battle, 'p1')).toEqual([
+        'switch 2', 'switch 3', 'switch 4', 'switch 5',  'switch 6',
+      ]);
+
+      battle.p1.activeRequest!.wait = true;
+      expect(gen1.Choices.sim(battle, 'p1')).toEqual([]);
+    });
 
     test('HighCritical', () => {
       const value = ranged(Math.floor(gen.species.get('Machop')!.baseStats.spe / 2), 256);

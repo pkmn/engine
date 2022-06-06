@@ -131,10 +131,6 @@ test "start (all fainted)" {
     }
 }
 
-test "move select" {
-    return error.SkipZigTest;
-}
-
 test "switching (order)" {
     var battle = Battle.random(&rng.PSRNG.init(0x12345678), false);
     battle.turn = 1;
@@ -615,7 +611,7 @@ test "Endless Battle Clause (basic)" {
     return error.SkipZigTest;
 }
 
-test "choices (default)" {
+test "choices" {
     var random = rng.PSRNG.init(0x27182818);
     var battle = Battle.random(&random, false);
     var choices: [OPTIONS_SIZE]Choice = undefined;
@@ -634,19 +630,6 @@ test "choices (default)" {
     n = battle.choices(.P1, .Pass, &choices);
     try expectEqualSlices(Choice, &[_]Choice{.{}}, choices[0..n]);
 }
-
-test "choices (locked)" {
-    return error.SkipZigTest;
-}
-
-test "choices (trapped)" {
-    return error.SkipZigTest;
-}
-
-test "choices (Struggle)" {
-    return error.SkipZigTest;
-}
-
 // Moves
 
 // Move.{KarateChop,RazorLeaf,Crabhammer,Slash}
