@@ -339,7 +339,7 @@ for (const gen of new Generations(Dex as any)) {
       }
     });
 
-    test.todo('turn order (compex speed tie)');
+    test.todo('turn order (complex speed tie)');
 
     test('turn order (switch vs. move)', () => {
       const battle = startBattle([
@@ -2959,7 +2959,84 @@ for (const gen of new Generations(Dex as any)) {
         expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
-      test.todo('Invulnerability glitch');
+      test('Invulnerability glitch', () => {
+        const NO_PAR = {name: 'NO_PAR', key: HIT.key, value: ranged(26, 256)};
+        const PAR_CANT = {name: 'PAR_CANT', key: 'Battle.onBeforeMove', value: ranged(63, 256) - 1};
+        const PAR_CAN = {name: 'PAR_CAN', key: 'Battle.onBeforeMove', value: PAR_CANT.value + 1};
+        const battle = startBattle([
+          SRF, HIT, SS_MOD,
+          SRF, SRF, PAR_CAN, SS_RES, GLM,
+          GLM, GLM, SRF, SRF, PAR_CANT, HIT, NO_CRIT, MIN_DMG, NO_PAR,
+          SRF, PAR_CAN, SRF, NO_CRIT, MIN_DMG,
+          SRF, SRF, PAR_CAN, SS_RES, GLM,
+          GLM, GLM, SRF, SRF, PAR_CAN, SS_RUN, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, NO_PAR,
+        ], [
+          {species: 'Fearow', evs, moves: ['Agility', 'Fly']},
+        ], [
+          {species: 'Pikachu', level: 50, evs, moves: ['Thunder Wave', 'Thunder Shock', 'Swift']},
+        ]);
+
+        let p1hp = battle.p1.pokemon[0].hp;
+        let p2hp = battle.p2.pokemon[0].hp;
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p1.pokemon[0].status).toBe('par');
+
+        battle.makeChoices('move 2', 'move 2');
+
+        // After Fly is interrupted by Paralysis, Invulnerability should be preserved
+        battle.makeChoices('move 1', 'move 2');
+        // expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+        expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 25);
+
+        // Swift should still be able to hit
+        battle.makeChoices('move 1', 'move 3');
+        expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 11);
+
+        battle.makeChoices('move 2', 'move 2');
+
+        // Successfully completing Fly removes Invulnerability
+        battle.makeChoices('move 1', 'move 2');
+        expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 25);
+        expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 130);
+
+        expectLog(battle, [
+          '|move|p1a: Fearow|Agility|p1a: Fearow',
+          '|-boost|p1a: Fearow|spe|2',
+          '|move|p2a: Pikachu|Thunder Wave|p1a: Fearow',
+          '|-status|p1a: Fearow|par',
+          '|turn|2',
+          '|move|p1a: Fearow|Fly||[still]',
+          '|-prepare|p1a: Fearow|Fly',
+          '|move|p2a: Pikachu|Thunder Shock|p1a: Fearow|[miss]',
+          '|-miss|p2a: Pikachu',
+          '|turn|3',
+          '|cant|p1a: Fearow|par',
+          '|move|p2a: Pikachu|Thunder Shock|p1a: Fearow',
+          '|-supereffective|p1a: Fearow',
+          '|-damage|p1a: Fearow|308/333 par',
+          '|turn|4',
+          '|move|p1a: Fearow|Agility|p1a: Fearow',
+          '|-boost|p1a: Fearow|spe|2',
+          '|move|p2a: Pikachu|Swift|p1a: Fearow',
+          '|-damage|p1a: Fearow|297/333 par',
+          '|turn|5',
+          '|move|p1a: Fearow|Fly||[still]',
+          '|-prepare|p1a: Fearow|Fly',
+          '|move|p2a: Pikachu|Thunder Shock|p1a: Fearow|[miss]',
+          '|-miss|p2a: Pikachu',
+          '|turn|6',
+          '|move|p1a: Fearow|Fly|p2a: Pikachu|[from]Fly',
+          '|-resisted|p2a: Pikachu',
+          '|-damage|p2a: Pikachu|11/141',
+          '|move|p2a: Pikachu|Thunder Shock|p1a: Fearow',
+          '|-supereffective|p1a: Fearow',
+          '|-damage|p1a: Fearow|272/333 par',
+          '|turn|7',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      });
+
       test.todo('Stat modification errors');
       test.todo('Stat down modifier overflow glitch');
       test.todo('Struggle bypassing / Switch PP underflow');
