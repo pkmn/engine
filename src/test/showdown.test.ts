@@ -2793,9 +2793,172 @@ for (const gen of new Generations(Dex as any)) {
         }
       });
 
-      test.todo('Hyper Beam + Freeze permanent helplessness');
-      test.todo('Hyper Beam + Sleep move glitch');
-      test.todo('Hyper Beam automatic selection glitch');
+      test('Hyper Beam + Freeze permanent helplessness', () => {
+        const FRZ = {name: 'FRZ', key: HIT.key, value: ranged(26, 256) - 1};
+        const NO_BRN = {name: 'NO_BRN', key: FRZ.key, value: FRZ.value + 1};
+        const battle = startBattle([
+          SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
+          SRF, SRF,
+          SRF, HIT, NO_CRIT, MIN_DMG,
+          SRF, SRF, HIT, NO_CRIT, MIN_DMG, NO_BRN, SRF,
+          SRF, SRF, HIT, NO_CRIT, MIN_DMG, NO_BRN, HIT, NO_CRIT, MIN_DMG,
+        ], [
+          {species: 'Chansey', evs, moves: ['Hyper Beam']},
+        ], [
+          {species: 'Lapras', level: 56, evs, moves: ['Blizzard', 'Haze']},
+          {species: 'Charizard', evs, moves: ['Flamethrower']},
+        ]);
+
+        let chansey = battle.p1.pokemon[0].hp;
+        let lapras = battle.p2.pokemon[0].hp;
+        let charizard = battle.p2.pokemon[1].hp;
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p1.pokemon[0].status).toBe('frz');
+        expect(battle.p2.pokemon[0].hp).toBe(lapras -= 120);
+
+        // After thawing Chansey should still be stuck recharging
+        battle.makeChoices('move 1', 'move 2');
+        expect(battle.p1.pokemon[0].status).toBe('');
+        expect(battle.p2.pokemon[0].hp).toBe(lapras);
+
+        battle.makeChoices('move 1', 'switch 2');
+        expect(battle.p2.pokemon[0].hp).toBe(charizard -= 69);
+
+        // Using a Fire-type move after should do nothing to fix the problem
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p1.pokemon[0].hp).toBe(chansey -= 129);
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p1.pokemon[0].hp).toBe(chansey -= 90);
+        expect(battle.p2.pokemon[0].hp).toBe(charizard -= 69);
+
+        expectLog(battle, [
+          '|move|p1a: Chansey|Hyper Beam|p2a: Lapras',
+          '|-damage|p2a: Lapras|143/263',
+          '|-mustrecharge|p1a: Chansey',
+          '|move|p2a: Lapras|Blizzard|p1a: Chansey',
+          '|-damage|p1a: Chansey|664/703',
+          '|-status|p1a: Chansey|frz',
+          '|turn|2',
+          '|cant|p1a: Chansey|frz',
+          '|move|p2a: Lapras|Haze|p2a: Lapras',
+          '|-activate|p2a: Lapras|move: Haze',
+          '|-clearallboost|[silent]',
+          '|-curestatus|p1a: Chansey|frz|[silent]',
+          '|-end|p1a: Chansey|mustrecharge|[silent]',
+          '|turn|3',
+          '|switch|p2a: Charizard|Charizard|359/359',
+          '|move|p1a: Chansey|Hyper Beam|p2a: Charizard',
+          '|-damage|p2a: Charizard|290/359',
+          '|-mustrecharge|p1a: Chansey',
+          '|turn|4',
+          '|move|p2a: Charizard|Flamethrower|p1a: Chansey',
+          '|-damage|p1a: Chansey|574/703',
+          '|cant|p1a: Chansey|recharge',
+          '|turn|5',
+          '|move|p2a: Charizard|Flamethrower|p1a: Chansey',
+          '|-damage|p1a: Chansey|484/703',
+          '|move|p1a: Chansey|Hyper Beam|p2a: Charizard',
+          '|-damage|p2a: Charizard|221/359',
+          '|-mustrecharge|p1a: Chansey',
+          '|turn|6',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      });
+
+      test('Hyper Beam + Sleep move glitch', () => {
+        const battle = startBattle([
+          SRF, SRF, HIT, SS_MOD, HIT, NO_CRIT, MIN_DMG,
+          SRF, SRF, SS_MOD, SLP(1), SRF,
+          SRF, SRF, SRF, HIT, SS_MOD, MISS,
+        ], [
+          {species: 'Hypno', evs, moves: ['Toxic', 'Hypnosis', 'Teleport']},
+        ], [
+          {species: 'Snorlax', evs, moves: ['Hyper Beam']},
+        ]);
+
+        let p1hp = battle.p1.pokemon[0].hp;
+        let p2hp = battle.p2.pokemon[0].hp;
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 217);
+        expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 32);
+        expect(battle.p2.pokemon[0].status).toBe('tox');
+        expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(1);
+
+        battle.makeChoices('move 2', 'move 1');
+        expect(battle.p2.pokemon[0].status).toBe('slp');
+
+        battle.makeChoices('move 3', 'move 1');
+        expect(battle.p2.pokemon[0].status).toBe('');
+
+        // The Toxic counter should be preserved
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 32);
+        expect(battle.p2.pokemon[0].status).toBe('tox');
+        // expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(2);
+        expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(1);
+
+        expectLog(battle, [
+          '|move|p1a: Hypno|Toxic|p2a: Snorlax',
+          '|-status|p2a: Snorlax|tox',
+          '|move|p2a: Snorlax|Hyper Beam|p1a: Hypno',
+          '|-damage|p1a: Hypno|156/373',
+          '|-damage|p2a: Snorlax|491/523 tox|[from] psn',
+          '|-mustrecharge|p2a: Snorlax',
+          '|turn|2',
+          '|move|p1a: Hypno|Hypnosis|p2a: Snorlax',
+          '|-status|p2a: Snorlax|slp|[from] move: Hypnosis',
+          '|cant|p2a: Snorlax|slp',
+          '|turn|3',
+          '|move|p1a: Hypno|Teleport|p1a: Hypno',
+          '|-curestatus|p2a: Snorlax|slp|[msg]',
+          '|turn|4',
+          '|move|p1a: Hypno|Toxic|p2a: Snorlax',
+          '|-status|p2a: Snorlax|tox',
+          '|move|p2a: Snorlax|Hyper Beam|p1a: Hypno|[miss]',
+          '|-miss|p2a: Snorlax',
+          '|-damage|p2a: Snorlax|459/523 tox|[from] psn',
+          '|turn|5',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      });
+
+      test('Hyper Beam automatic selection glitch', () => {
+        const battle = startBattle([SRF, SRF, MISS, HIT, NO_CRIT, MIN_DMG, SRF, SRF, MISS, SRF], [
+          {species: 'Chansey', evs, moves: ['Hyper Beam']},
+        ], [
+          {species: 'Tentacool', evs, moves: ['Wrap']},
+        ]);
+
+        battle.p1.pokemon[0].moveSlots[0].pp = 1;
+
+        const p2hp = battle.p2.pokemon[0].hp;
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(0);
+        expect(battle.p2.pokemon[0].hp).toBe(p2hp - 105);
+
+        // Missing should cause Hyper Beam to be automatically selected and underflow
+        battle.makeChoices('move 1', 'move 1');
+        // expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(63);
+
+        expectLog(battle, [
+          '|move|p2a: Tentacool|Wrap|p1a: Chansey|[miss]',
+          '|-miss|p2a: Tentacool',
+          '|move|p1a: Chansey|Hyper Beam|p2a: Tentacool',
+          '|-damage|p2a: Tentacool|178/283',
+          '|-mustrecharge|p1a: Chansey',
+          '|turn|2',
+          '|move|p2a: Tentacool|Wrap|p1a: Chansey|[miss]',
+          '|-miss|p2a: Tentacool',
+          '|cant|p1a: Chansey|recharge',
+          '|turn|3',
+        ]);
+        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+      });
+
       test.todo('Invulnerability glitch');
       test.todo('Stat modification errors');
       test.todo('Stat down modifier overflow glitch');
