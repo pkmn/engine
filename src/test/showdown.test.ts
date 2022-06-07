@@ -776,13 +776,16 @@ for (const gen of new Generations(Dex as any)) {
       ]);
 
       let p2hp = battle.p2.pokemon[0].hp;
+      let pp = battle.p1.pokemon[0].moveSlots[0].pp;
 
       battle.makeChoices('move 1', 'move 1');
       expect(battle.p2.pokemon[0].hp).toBe(p2hp = p2hp - (31 * 3) - 95);
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
 
       // Breaking a target's Substitute ends the move
       battle.makeChoices('move 1', 'move 2');
       expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
 
       expectLog(battle, [
         '|move|p1a: Kangaskhan|Comet Punch|p2a: Slowpoke',
@@ -1687,6 +1690,61 @@ for (const gen of new Generations(Dex as any)) {
 
     test('Recoil', () => {
       const battle = startBattle([
+        SRF, HIT, NO_CRIT, MIN_DMG, SRF, HIT, NO_CRIT, MAX_DMG, SRF, HIT, NO_CRIT, MIN_DMG,
+      ], [
+        {species: 'Slowpoke', evs, moves: ['Teleport']},
+        {species: 'Rhydon', evs, moves: ['Take Down', 'Teleport']},
+      ], [
+        {species: 'Tauros', evs, moves: ['Double Edge', 'Substitute']},
+      ]);
+
+      battle.p1.pokemon[0].hp = 1;
+
+      let p1hp = battle.p1.pokemon[1].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      // Recoil inflicts at least 1 HP
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(0);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 1);
+
+      battle.makeChoices('switch 2', '');
+
+      // Deals no damage if the move breaks the target's Substitute
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 88);
+
+      // Inflicts 1/4 of damage dealt to user as recoil
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 48);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 12);
+
+      expectLog(battle, [
+        '|move|p2a: Tauros|Double-Edge|p1a: Slowpoke',
+        '|-damage|p1a: Slowpoke|0 fnt',
+        '|-damage|p2a: Tauros|352/353|[from] Recoil|[of] p1a: Slowpoke',
+        '|faint|p1a: Slowpoke',
+        '|switch|p1a: Rhydon|Rhydon|413/413',
+        '|turn|2',
+        '|move|p2a: Tauros|Substitute|p2a: Tauros',
+        '|-start|p2a: Tauros|Substitute',
+        '|-damage|p2a: Tauros|264/353',
+        '|move|p1a: Rhydon|Take Down|p2a: Tauros',
+        '|-end|p2a: Tauros|Substitute',
+        '|turn|3',
+        '|move|p2a: Tauros|Double-Edge|p1a: Rhydon',
+        '|-resisted|p1a: Rhydon',
+        '|-damage|p1a: Rhydon|365/413',
+        '|-damage|p2a: Tauros|252/353|[from] Recoil|[of] p1a: Rhydon',
+        '|move|p1a: Rhydon|Teleport|p1a: Rhydon',
+        '|turn|4',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
+    test('Struggle', () => {
+      const battle = startBattle([
         SRF, SRF, HIT, NO_CRIT, MIN_DMG,
         SRF, SRF, HIT, NO_CRIT, MIN_DMG,
         SRF, SRF, HIT, NO_CRIT, MIN_DMG,
@@ -1703,7 +1761,7 @@ for (const gen of new Generations(Dex as any)) {
       const p1hp = battle.p1.pokemon[1].hp;
       let p2hp = battle.p2.pokemon[0].hp;
 
-      // Struggle only becomes an pption if the user has no PP left
+      // Struggle only becomes an option if the user has no PP left
       battle.makeChoices('move 1', 'move 1');
       expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(0);
 
@@ -1711,6 +1769,7 @@ for (const gen of new Generations(Dex as any)) {
       battle.makeChoices('move 2', 'move 1');
       expect(battle.p1.pokemon[0].hp).toBe(1);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+      expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(0);
 
       // Struggle recoil inflicts at least 1 HP
       battle.makeChoices('move 2', 'move 1');

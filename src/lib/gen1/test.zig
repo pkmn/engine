@@ -406,14 +406,6 @@ test "accuracy (normal)" {
 }
 
 test "damage calc" {
-    // TODO crit
-    // TODO roll
-    // TODO types (STAB, type effectiveness)
-
-    // stab nostab
-    // super resisted normal immune
-    // crit nocrit
-    // high low roll
     return error.SkipZigTest;
 }
 
@@ -720,8 +712,6 @@ test "MultiHit" {
     // Hits two to five times. Has a 3/8 chance to hit two or three times, and a 1/8 chance to hit
     // four or five times. Damage is calculated once for the first hit and used for every hit. If
     // one of the hits breaks the target's substitute, the move ends.
-
-    // TODO subsequent hits don't decrement PP
     return error.SkipZigTest;
 }
 
@@ -773,16 +763,6 @@ test "BurnChance" {
 // Move.{IcePunch,IceBeam,Blizzard}: FreezeChance
 test "FreezeChance" {
     // Has a 10% chance to freeze the target.
-
-    // TODO can proc / not proc
-    // TODO can't proc on same type
-    // TODO already frozen vs. already other status
-
-    // TODO cant act
-    // TODO thaws on fire (specifically on fire move which can burn, NOT fire spin)
-    // TODO blocked by substitute, but NOT ON SHOWDOWN
-    // TODO: Freeze Clause Mod
-
     return error.SkipZigTest;
 }
 
@@ -902,33 +882,18 @@ test "ParalyzeChance" {
 // Move.{Sing,SleepPowder,Hypnosis,LovelyKiss,Spore}
 test "Sleep" {
     // Causes the target to fall asleep.
-
-    // TODO decrement counter, no turn,
-    // TODO wake up and cant act
-    // TODO can act after
-    // TODO: Sleep Clause MOd
-
     return error.SkipZigTest;
 }
 
 // Move.{Supersonic,ConfuseRay}
 test "Confusion (primary)" {
     // Causes the target to become confused.
-
-    // TODO cant
-    // TODO hit self
-    // TODO disappears after duration
-    // TODO blocked by substitute
-
     return error.SkipZigTest;
 }
 
 // Move.{Psybeam,Confusion}: ConfusionChance
 test "ConfusionChance" {
     // Has a 10% chance to confuse the target.
-
-    // TODO blocked by substitute on showdown
-
     return error.SkipZigTest;
 }
 
@@ -1082,7 +1047,6 @@ test "Trapping" {
     // prevent the target from moving even if it has type immunity, but will not deal damage.
 
     // TODO: test opponents wrapping cleared by switching
-
     return error.SkipZigTest;
 }
 
@@ -1107,8 +1071,6 @@ test "Struggle" {
     // Deals Normal-type damage. If this move was successful, the user takes damage equal to 1/2 the
     // HP lost by the target, rounded down, but not less than 1 HP. This move is automatically used
     // if none of the user's known moves can be selected.
-
-    // TODO doesn't decrement PP
     return error.SkipZigTest;
 }
 
@@ -1422,7 +1384,7 @@ test "LeechSeed" {
 // Move.PayDay
 test "PayDay" {
     // "Scatters coins"
-
+    return error.SkipZigTest;
 }
 
 // Move.Rage
@@ -1490,7 +1452,6 @@ test "Metronome" {
 }
 
 // Move.MirrorMove
-// TODO: https://pkmn.cc/bulba-glitch-1#Mirror_Move_glitch
 test "MirrorMove" {
     // The user uses the last move used by the target. Fails if the target has not made a move, or
     // if the last move used was Mirror Move.
@@ -1501,11 +1462,6 @@ test "MirrorMove" {
 test "Explode" {
     // The user faints after using this move, unless the target's substitute was broken by the
     // damage. The target's Defense is halved during damage calculation.
-
-    // TODO: faint order if immune
-    // TODO If the user of Explosion attacks first and faints itself, the opponent will not attack
-    // or be subjected to recurrent damage during that round.
-
     return error.SkipZigTest;
 }
 
