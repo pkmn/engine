@@ -46,8 +46,14 @@ const MODS: {[gen: number]: string[]} = {
   1: ['Endless Battle Clause', 'Sleep Clause Mod', 'Freeze Clause Mod'],
 };
 
+const CHOICES: {[gen: number]:  (battle: Battle, id: 'p1' | 'p2') => string[]} = {
+  1: gen1.Choices.sim,
+};
+
 for (const gen of new Generations(Dex as any)) {
   if (gen.num > 1) break;
+
+  const choices = CHOICES[gen.num];
 
   const startBattle = (
     rolls: Roll[],
@@ -488,8 +494,8 @@ for (const gen of new Generations(Dex as any)) {
         battle.makeChoices('move 1', 'move 1');
         expect(battle.p2.pokemon[0].hp).toBe(0);
 
-        expect(gen1.Choices.sim(battle, 'p1')).toEqual([]);
-        expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2']);
+        expect(choices(battle, 'p1')).toEqual([]);
+        expect(choices(battle, 'p2')).toEqual(['switch 2']);
 
         expectLog(battle, [
           '|move|p1a: Venusaur|Leech Seed|p2a: Slowpoke',
@@ -676,18 +682,18 @@ for (const gen of new Generations(Dex as any)) {
       const formatid = `gen${gen.num}customgame@@@${MODS[gen.num].join(',')}` as ID;
       const battle = new Battle({formatid, ...gen1.Battle.options(gen, random) as any});
 
-      expect(gen1.Choices.sim(battle, 'p1')).toEqual([
+      expect(choices(battle, 'p1')).toEqual([
         'switch 2', 'switch 3', 'switch 4', 'switch 5', 'switch 6',
         'move 1', 'move 2', 'move 3', 'move 4',
       ]);
 
       battle.p1.activeRequest!.forceSwitch = true;
-      expect(gen1.Choices.sim(battle, 'p1')).toEqual([
+      expect(choices(battle, 'p1')).toEqual([
         'switch 2', 'switch 3', 'switch 4', 'switch 5', 'switch 6',
       ]);
 
       battle.p1.activeRequest!.wait = true;
-      expect(gen1.Choices.sim(battle, 'p1')).toEqual([]);
+      expect(choices(battle, 'p1')).toEqual([]);
     });
 
     test('HighCritical', () => {
@@ -962,7 +968,7 @@ for (const gen of new Generations(Dex as any)) {
       // Freezing prevents action
       battle.makeChoices('move 1', 'move 1');
       // ...Pokémon Showdown still lets you choose whatever
-      expect(gen1.Choices.sim(battle, 'p1')).toEqual(['switch 2', 'switch 3', 'move 1', 'move 2']);
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'switch 3', 'move 1', 'move 2']);
 
       // Freeze Clause Mod prevents multiple Pokémon from being frozen
       battle.makeChoices('switch 3', 'move 2');
@@ -1352,8 +1358,8 @@ for (const gen of new Generations(Dex as any)) {
       battle.makeChoices('move 3', 'move 1');
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 60);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 133);
-      // expect(gen1.Choices.sim(battle, 'p1')).toEqual(['move 1', 'move 2', 'move 3']);
-      expect(gen1.Choices.sim(battle, 'p1')).toEqual(['move 1']);
+      // expect(choices(battle, 'p1')).toEqual(['move 1', 'move 2', 'move 3']);
+      expect(choices(battle, 'p1')).toEqual(['move 1']);
 
       // Flinch should have cleared recharge, but this doesn't work on Pokémon Showdown
       battle.makeChoices('move 1', 'move 1');
@@ -1598,8 +1604,8 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].hp).toBe(p2hp);
       expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
 
-      expect(gen1.Choices.sim(battle, 'p1')).toEqual(['move 1']);
-      expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p1')).toEqual(['move 1']);
+      expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
       battle.makeChoices('move 1', 'move 1');
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 23);
@@ -1643,8 +1649,8 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].hp).toBe(p2hp);
       expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
 
-      expect(gen1.Choices.sim(battle, 'p1')).toEqual(['move 1']);
-      expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p1')).toEqual(['move 1']);
+      expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
       battle.makeChoices('move 1', 'move 1');
       expect(battle.p1.pokemon[0].hp).toBe(p1hp - 74);
@@ -1908,8 +1914,8 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 68);
       expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
 
-      expect(gen1.Choices.sim(battle, 'p1')).toEqual(['move 1']);
-      expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p1')).toEqual(['move 1']);
+      expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
       // Thrashing locks you in whether you hit or not
       battle.makeChoices('move 1', 'move 1');
@@ -1918,8 +1924,8 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].hp).toBe(p2hp);
       expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
 
-      expect(gen1.Choices.sim(battle, 'p1')).toEqual(['move 1']);
-      expect(gen1.Choices.sim(battle, 'p2')).toEqual(['move 1']);
+      expect(choices(battle, 'p1')).toEqual(['move 1']);
+      expect(choices(battle, 'p2')).toEqual(['move 1']);
 
       // Thrashing confuses you even if already confused
       battle.makeChoices('move 1', 'move 1');
@@ -1928,8 +1934,8 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 68);
       expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
 
-      expect(gen1.Choices.sim(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
-      expect(gen1.Choices.sim(battle, 'p2')).toEqual(['move 1']);
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p2')).toEqual(['move 1']);
 
       // Thrashing doesn't confuse you if the user is prevented from moving
       battle.makeChoices('move 2', 'move 1');
@@ -1938,8 +1944,8 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].status).toBe('par');
       expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
 
-      expect(gen1.Choices.sim(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
-      expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
       battle.makeChoices('move 2', 'move 1');
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 108);
@@ -2124,7 +2130,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 27);
       expect(battle.p2.pokemon[0].volatiles['disable']).toBeUndefined();
 
-      expect(gen1.Choices.sim(battle, 'p2'))
+      expect(choices(battle, 'p2'))
         .toEqual(['switch 2', 'move 1', 'move 2', 'move 3', 'move 4']);
 
       // On Pokémon Showdown lasts a minimum of 1 turn instead of 0
@@ -2132,33 +2138,33 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toBe(p1hp);
       expect(battle.p2.pokemon[0].volatiles['disable']).toBeUndefined();
 
-      expect(gen1.Choices.sim(battle, 'p2'))
+      expect(choices(battle, 'p2'))
         .toEqual(['switch 2', 'move 1', 'move 2', 'move 3', 'move 4']);
 
       // Should skip over moves which are already out of PP (but Pokémon Showdown doesn't)
       battle.p2.pokemon[0].moveSlots[2].pp = 0;
       battle.makeChoices('move 1', 'move 1');
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 27);
-      expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2', 'move 4']);
+      expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2', 'move 4']);
       delete battle.p2.pokemon[0].volatiles['disable'];
 
       // Can be disabled for many turns
       battle.makeChoices('move 1', 'move 4');
       expect(battle.p1.pokemon[0].hp).toBe(p1hp);
       expect(battle.p2.pokemon[0].volatiles['disable'].duration).toBe(4);
-      expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
       // Disable fails if a move is already disabled
       battle.makeChoices('move 1', 'move 1');
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 27);
       expect(battle.p2.pokemon[0].volatiles['disable'].duration).toBe(3);
-      expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
       // Haze clears disable
       battle.makeChoices('move 2', 'move 2');
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 17);
       expect(battle.p2.pokemon[0].volatiles['disable']).toBeUndefined();
-      expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2', 'move 4']);
+      expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2', 'move 4']);
 
       battle.makeChoices('move 2', 'move 4');
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 53);
@@ -2302,35 +2308,35 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].hp).toBe(jolteon -= 83);
       expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
 
-      expect(gen1.Choices.sim(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
-      expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
       // Doesn't require a recharge if it knocks out opponent
       battle.makeChoices('move 1', 'move 2');
       expect(battle.p2.pokemon[0].hp).toBe(0);
       expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
 
-      expect(gen1.Choices.sim(battle, 'p1')).toEqual([]);
-      expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2']);
+      expect(choices(battle, 'p1')).toEqual([]);
+      expect(choices(battle, 'p2')).toEqual(['switch 2']);
 
       battle.makeChoices('', 'switch 2');
 
-      expect(gen1.Choices.sim(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
-      expect(gen1.Choices.sim(battle, 'p2')).toEqual(['move 1', 'move 2']);
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
 
       battle.makeChoices('move 1', 'move 1');
       expect(battle.p2.pokemon[0].hp).toBe(chansey -= 442);
       expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
 
-      expect(gen1.Choices.sim(battle, 'p1')).toEqual(['move 1']);
-      expect(gen1.Choices.sim(battle, 'p2')).toEqual(['move 1', 'move 2']);
+      expect(choices(battle, 'p1')).toEqual(['move 1']);
+      expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
 
       battle.makeChoices('move 1', 'move 1');
       expect(battle.p2.pokemon[0].hp).toBe(chansey);
       expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
 
-      expect(gen1.Choices.sim(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
-      expect(gen1.Choices.sim(battle, 'p2')).toEqual(['move 1', 'move 2']);
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
 
       expectLog(battle, [
         '|move|p2a: Jolteon|Substitute|p2a: Jolteon',
@@ -2435,8 +2441,8 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 77 + 588));
       expect(battle.p2.pokemon[0].status).toBe('slp');
 
-      expect(gen1.Choices.sim(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2', 'move 3']);
-      expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2', 'move 3']);
+      expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
       battle.makeChoices('move 2', 'move 1');
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 77);
@@ -2696,7 +2702,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 17);
       expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
 
-      expect(gen1.Choices.sim(battle, 'p1')).toEqual(['move 1']);
+      expect(choices(battle, 'p1')).toEqual(['move 1']);
 
       battle.makeChoices('move 1', 'move 2');
       expect(battle.p1.pokemon[0].hp).toBe(p1hp);
@@ -2705,7 +2711,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 25);
       expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
 
-      expect(gen1.Choices.sim(battle, 'p1')).toEqual(['move 1']);
+      expect(choices(battle, 'p1')).toEqual(['move 1']);
 
       battle.makeChoices('move 1', 'move 2');
       expect(battle.p1.pokemon[0].hp).toBe(p1hp);
@@ -2714,7 +2720,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 25);
       expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
 
-      expect(gen1.Choices.sim(battle, 'p1')).toEqual(['move 1']);
+      expect(choices(battle, 'p1')).toEqual(['move 1']);
 
       battle.makeChoices('move 1', 'move 3');
       expect(battle.p1.pokemon[0].hp).toBe(p1hp);
@@ -3289,7 +3295,7 @@ for (const gen of new Generations(Dex as any)) {
         expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 23);
         expect(battle.p2.pokemon[0].status).toBe('frz');
 
-        expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+        expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
         // After defrosting, Poliwrath will appear to use Surf to P1 and Vine Whip to P2
         battle.makeChoices('move 3', 'move 2');
@@ -3297,7 +3303,7 @@ for (const gen of new Generations(Dex as any)) {
         expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 23);
         expect(battle.p2.pokemon[0].status).toBe('');
 
-        expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+        expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
         expectLog(battle, [
           '|move|p1a: Hypno|Teleport|p1a: Hypno',
@@ -3505,25 +3511,25 @@ for (const gen of new Generations(Dex as any)) {
         expect(battle.p1.pokemon[0].status).toBe('frz');
         expect(battle.p2.pokemon[0].hp).toBe(lapras -= 120);
 
-        expect(gen1.Choices.sim(battle, 'p1')).toEqual(['move 1']);
+        expect(choices(battle, 'p1')).toEqual(['move 1']);
 
         // After thawing Chansey should still be stuck recharging
         battle.makeChoices('move 1', 'move 2');
         expect(battle.p1.pokemon[0].status).toBe('');
         expect(battle.p2.pokemon[0].hp).toBe(lapras);
 
-        expect(gen1.Choices.sim(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+        expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
 
         battle.makeChoices('move 1', 'switch 2');
         expect(battle.p2.pokemon[0].hp).toBe(charizard -= 69);
 
-        expect(gen1.Choices.sim(battle, 'p1')).toEqual(['move 1']);
+        expect(choices(battle, 'p1')).toEqual(['move 1']);
 
         // Using a Fire-type move after should do nothing to fix the problem
         battle.makeChoices('move 1', 'move 1');
         expect(battle.p1.pokemon[0].hp).toBe(chansey -= 129);
 
-        expect(gen1.Choices.sim(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+        expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
 
         battle.makeChoices('move 1', 'move 1');
         expect(battle.p1.pokemon[0].hp).toBe(chansey -= 90);
@@ -4011,7 +4017,7 @@ for (const gen of new Generations(Dex as any)) {
         expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(0);
         expect(battle.p2.pokemon[0].hp).toBe(kadabra - 22);
 
-        expect(gen1.Choices.sim(battle, 'p1')).toEqual(['switch 2', 'move 1']);
+        expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1']);
 
         battle.makeChoices('move 1', 'switch 2');
         expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(63);
@@ -4052,25 +4058,25 @@ for (const gen of new Generations(Dex as any)) {
 
         battle.makeChoices('move 1', 'move 1');
         expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 11);
-        expect(gen1.Choices.sim(battle, 'p1')).toEqual(['switch 2', 'move 1']);
-        expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+        expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1']);
+        expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
         battle.makeChoices('move 1', 'move 1');
         expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 11);
-        expect(gen1.Choices.sim(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
-        expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+        expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+        expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
         battle.makeChoices('move 2', 'move 1');
         expect(battle.p2.pokemon[0].status).toBe('slp');
-        expect(gen1.Choices.sim(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
-        // expect(gen1.Choices.sim(battle, 'p2')).toEqual([]);
-        expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+        expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+        // expect(choices(battle, 'p2')).toEqual([]);
+        expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
         // Should not have a turn, can only pass!
         battle.makeChoices('move 2', 'move 1');
-        expect(gen1.Choices.sim(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
-        // expect(gen1.Choices.sim(battle, 'p2')).toEqual([]);
-        expect(gen1.Choices.sim(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+        expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+        // expect(choices(battle, 'p2')).toEqual([]);
+        expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
         expectLog(battle, [
           '|move|p1a: Weepinbell|Wrap|p2a: Sandshrew',

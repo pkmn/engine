@@ -95,7 +95,7 @@ pub fn main() !void {
                 if (c != param) continue;
 
                 const d: u8 = 5 *% c +% 1;
-                const e = 5 *% d +% 1;
+                const e: u8 = 5 *% d +% 1;
                 try w.print(
                     "{d} {d} {s}{d}{s} {d} {d}\n",
                     .{ a, b, ANSI.RED, c, ANSI.RESET, d, e },
