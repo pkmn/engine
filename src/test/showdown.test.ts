@@ -27,7 +27,7 @@ const ranged = (n: number, d: number) => n * (0x100000000 / d);
 const TIE = (n: 1 | 2) =>
   ({key: ['Battle.speedSort', 'BattleQueue.sort'], value: ranged(n, 2) - 1});
 const SLP = (n: number) =>
-  ({key: ['Battle.random', 'Pokemon.setStatus'], value: ranged(n, 8 - 1)});
+  ({key: ['Battle.random', 'Pokemon.setStatus'], value: ranged(n - 1, 8 - 1)});
 const DISABLE_DURATION = (n: number) =>
   ({key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: ranged(n, 7 - 1) - 1});
 const DISABLE_MOVE = (m: number, n = 4) =>
@@ -916,24 +916,124 @@ for (const gen of new Generations(Dex as any)) {
     //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     // });
 
-    // test('FreezeChance', () => {
-    //   const battle = startBattle([], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ]);
+    test('FreezeChance', () => {
+      const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
+      const battle = startBattle([
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, SS_MOD,
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, FRZ, PAR_CANT,
+        SRF, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
+        SRF, SRF, HIT,
+        SRF, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
+        SRF, HIT, NO_CRIT, MIN_DMG, wrap,
+        SRF, SRF,
+        SRF, HIT, NO_CRIT, MIN_DMG,
+        SRF, HIT, NO_CRIT, MIN_DMG, FRZ,
+      ], [
+        {species: 'Starmie', evs, moves: ['Ice Beam']},
+        {species: 'Magmar', evs, moves: ['Flamethrower', 'Substitute']},
+        {species: 'Lickitung', evs, moves: ['Slam']},
+      ], [
+        {species: 'Jynx', evs, moves: ['Thunder Wave', 'Blizzard', 'Fire Spin', 'Flamethrower']},
+      ]);
 
-    //   let p1hp = battle.p1.pokemon[0].hp;
-    //   let p2hp = battle.p2.pokemon[0].hp;
+      let starmie = battle.p1.pokemon[0].hp;
+      let magmar = battle.p1.pokemon[1].hp;
+      let lickitung = battle.p1.pokemon[2].hp;
+      let jynx = battle.p2.pokemon[0].hp;
 
-    //   battle.makeChoices('move 1', 'move 1');
-    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
-    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+      // Can't freeze Ice-types
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].status).toBe('par');
+      expect(battle.p2.pokemon[0].hp).toBe(jynx -= 35);
 
-    //   expectLog(battle, [
-    //   ]);
-    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
-    // });
+      // Can't freeze a Pokémon which is already statused
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(starmie -= 63);
+      expect(battle.p1.pokemon[0].status).toBe('par');
+
+      // Can freeze Fire types
+      battle.makeChoices('switch 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(magmar -= 140);
+      expect(battle.p1.pokemon[0].status).toBe('frz');
+
+      // Freezing prevents action
+      battle.makeChoices('move 1', 'move 1');
+      // ...Pokémon Showdown still lets you choose whatever
+      expect(gen1.Choices.sim(battle, 'p1')).toEqual(['switch 2', 'switch 3', 'move 1', 'move 2']);
+
+      // Freeze Clause Mod prevents multiple Pokémon from being frozen
+      battle.makeChoices('switch 3', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(lickitung -= 173);
+      expect(battle.p1.pokemon[0].status).toBe('');
+
+      // Fire Spin does not thaw frozen Pokémon
+      battle.makeChoices('switch 3', 'move 3');
+      expect(battle.p1.pokemon[0].hp).toBe(magmar -= 5);
+      expect(battle.p1.pokemon[0].status).toBe('frz');
+
+      battle.makeChoices('move 1', 'move 3');
+      expect(battle.p1.pokemon[0].hp).toBe(magmar -= 5);
+
+      // Other Fire moves thaw frozen Pokémon
+      battle.makeChoices('move 2', 'move 4');
+      expect(battle.p1.pokemon[0].hp).toBe(magmar = (magmar - 36 - 83));
+      expect(battle.p1.pokemon[0].status).toBe('');
+
+      // Substitute blocks Freeze
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(magmar);
+      expect(battle.p1.pokemon[0].status).toBe('');
+
+      expectLog(battle, [
+        '|move|p1a: Starmie|Ice Beam|p2a: Jynx',
+        '|-resisted|p2a: Jynx',
+        '|-damage|p2a: Jynx|298/333',
+        '|move|p2a: Jynx|Thunder Wave|p1a: Starmie',
+        '|-status|p1a: Starmie|par',
+        '|turn|2',
+        '|move|p2a: Jynx|Blizzard|p1a: Starmie',
+        '|-resisted|p1a: Starmie',
+        '|-damage|p1a: Starmie|260/323 par',
+        '|cant|p1a: Starmie|par',
+        '|turn|3',
+        '|switch|p1a: Magmar|Magmar|333/333',
+        '|move|p2a: Jynx|Blizzard|p1a: Magmar',
+        '|-damage|p1a: Magmar|193/333',
+        '|-status|p1a: Magmar|frz',
+        '|turn|4',
+        '|move|p2a: Jynx|Thunder Wave|p1a: Magmar',
+        '|-fail|p1a: Magmar',
+        '|cant|p1a: Magmar|frz',
+        '|turn|5',
+        '|switch|p1a: Lickitung|Lickitung|383/383',
+        '|move|p2a: Jynx|Blizzard|p1a: Lickitung',
+        '|-damage|p1a: Lickitung|210/383',
+        '|turn|6',
+        '|switch|p1a: Magmar|Magmar|193/333 frz',
+        '|move|p2a: Jynx|Fire Spin|p1a: Magmar',
+        '|-resisted|p1a: Magmar',
+        '|-damage|p1a: Magmar|188/333 frz',
+        '|turn|7',
+        '|move|p2a: Jynx|Fire Spin|p1a: Magmar|[from]Fire Spin',
+        '|-damage|p1a: Magmar|183/333 frz',
+        '|cant|p1a: Magmar|frz',
+        '|turn|8',
+        '|move|p2a: Jynx|Flamethrower|p1a: Magmar',
+        '|-resisted|p1a: Magmar',
+        '|-damage|p1a: Magmar|147/333 frz',
+        '|-curestatus|p1a: Magmar|frz|[msg]',
+        '|move|p1a: Magmar|Substitute|p1a: Magmar',
+        '|-start|p1a: Magmar|Substitute',
+        '|-damage|p1a: Magmar|64/333',
+        '|turn|9',
+        '|move|p2a: Jynx|Blizzard|p1a: Magmar',
+        '|-end|p1a: Magmar|Substitute',
+        '|move|p1a: Magmar|Substitute|p1a: Magmar',
+        '|-fail|p1a: Magmar|move: Substitute|[weak]',
+        '|turn|10'
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
 
     test('Paralyze (primary)', () => {
       const battle = startBattle([
@@ -1021,24 +1121,67 @@ for (const gen of new Generations(Dex as any)) {
     //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     // });
 
-    // test('Sleep', () => {
-    //   const battle = startBattle([], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ]);
+    test('Sleep', () => {
+      const battle = startBattle([
+        SRF, SRF, HIT, SS_MOD, SLP(1),
+        SRF, SRF, HIT, SS_MOD, SLP(2),
+        SRF, HIT, SS_MOD,
+        SRF, HIT,
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG,
+      ], [
+        {species: 'Parasect', evs, moves: ['Spore', 'Cut']},
+      ], [
+        {species: 'Geodude', evs, moves: ['Tackle']},
+        {species: 'Slowpoke', evs, moves: ['Water Gun']},
+      ]);
 
-    //   let p1hp = battle.p1.pokemon[0].hp;
-    //   let p2hp = battle.p2.pokemon[0].hp;
+      const p2hp = battle.p2.pokemon[0].hp;
 
-    //   battle.makeChoices('move 1', 'move 1');
-    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
-    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+      // Can wake up immediately but still lose their turn
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].status).toBe('');
 
-    //   expectLog(battle, [
-    //   ]);
-    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
-    // });
+      // Can be put to sleep for multiple turns
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].status).toBe('slp');
+
+      // Sleep Clause Mod prevents multiple Pokémon from being put to sleep
+      battle.makeChoices('move 1', 'switch 2');
+      expect(battle.p2.pokemon[0].status).toBe('');
+
+      // Can't sleep someone already sleeping, turns only decrement while in battle
+      battle.makeChoices('move 1', 'switch 2');
+      expect(battle.p2.pokemon[0].status).toBe('slp');
+
+      // Eventually wakes up
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p2.pokemon[0].status).toBe('');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp - 17);
+
+      expectLog(battle, [
+        '|move|p1a: Parasect|Spore|p2a: Geodude',
+        '|-status|p2a: Geodude|slp|[from] move: Spore',
+        '|-curestatus|p2a: Geodude|slp|[msg]',
+        '|turn|2',
+        '|move|p1a: Parasect|Spore|p2a: Geodude',
+        '|-status|p2a: Geodude|slp|[from] move: Spore',
+        '|cant|p2a: Geodude|slp',
+        '|turn|3',
+        '|switch|p2a: Slowpoke|Slowpoke|383/383',
+        '|move|p1a: Parasect|Spore|p2a: Slowpoke',
+        '|turn|4',
+        '|switch|p2a: Geodude|Geodude|283/283 slp',
+        '|move|p1a: Parasect|Spore|p2a: Geodude',
+        '|-fail|p2a: Geodude|slp',
+        '|turn|5',
+        '|move|p1a: Parasect|Cut|p2a: Geodude',
+        '|-resisted|p2a: Geodude',
+        '|-damage|p2a: Geodude|266/283 slp',
+        '|-curestatus|p2a: Geodude|slp|[msg]',
+        '|turn|6',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
 
     test('Confusion (primary)', () => {
       const battle = startBattle([
@@ -3293,7 +3436,7 @@ for (const gen of new Generations(Dex as any)) {
       test('Hyper Beam + Sleep move glitch', () => {
         const battle = startBattle([
           SRF, SRF, HIT, SS_MOD, HIT, NO_CRIT, MIN_DMG,
-          SRF, SRF, SS_MOD, SLP(1), SRF,
+          SRF, SRF, SS_MOD, SLP(2), SRF,
           SRF, SRF, SRF, HIT, SS_MOD, MISS,
         ], [
           {species: 'Hypno', evs, moves: ['Toxic', 'Hypnosis', 'Teleport']},

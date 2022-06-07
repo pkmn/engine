@@ -1498,7 +1498,7 @@ pub const Effects = struct {
         var foe_stored = foe.stored();
         const foe_ident = battle.active(player.foe());
 
-        // Substitute incorrectly does not block freeze on Pokémon Showdown
+        // FIXME Substitute incorrectly does not block freeze on Pokémon Showdown
         if ((!showdown and foe.active.volatiles.Substitute) or Status.any(foe_stored.status)) {
             return log.fail(
                 foe_ident,
