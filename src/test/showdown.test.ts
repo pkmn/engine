@@ -37,8 +37,8 @@ const PAR_CAN = {key: 'Battle.onBeforeMove', value: PAR_CANT.value + 1};
 const FRZ = {key: HIT.key, value: ranged(26, 256) - 1};
 const CFZ = (n: number) =>
   ({key: ['Battle.onStart', 'Pokemon.addVolatile'], value: ranged(n - 1, 6 - 2) - 1});
-const CFZ_CAN = {key: 'Battle.onBeforeMove', value: 0}; // FIXME TODO
-const CFZ_CANT = {key: 'Battle.onBeforeMove', value: MAX}; // TODO
+const CFZ_CAN = {name: 'CFZ_CAN', key: 'Battle.onBeforeMove', value: ranged(128, 256) - 1};
+const CFZ_CANT = {name: 'CFZ_CANT', key: 'Battle.onBeforeMove', value: CFZ_CAN.value + 1};
 const THRASH = (n: 3 | 4) =>
   ({key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: ranged(n - 2, 5 - 3) - 1});
 
@@ -1040,43 +1040,127 @@ for (const gen of new Generations(Dex as any)) {
     //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     // });
 
-    // test('Confusion (primary', () => {
-    //   const battle = startBattle([], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ]);
+    test('Confusion (primary)', () => {
+      const battle = startBattle([
+        SRF, HIT, SRF, HIT, SRF, HIT, CFZ(3), SRF, CFZ_CANT, HIT, SRF, CFZ_CAN, HIT, SRF, HIT,
+      ], [
+        {species: 'Haunter', evs, moves: ['Confuse Ray', 'Night Shade']},
+      ], [
+        {species: 'Gengar', evs, moves: ['Substitute', 'Agility']},
+      ]);
 
-    //   let p1hp = battle.p1.pokemon[0].hp;
-    //   let p2hp = battle.p2.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
 
-    //   battle.makeChoices('move 1', 'move 1');
-    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
-    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+      // Confusion is blocked by Substitute
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 80);
+      expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
 
-    //   expectLog(battle, [
-    //   ]);
-    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
-    // });
+      battle.makeChoices('move 2', 'move 1');
 
-    // test('ConfusionChance', () => {
-    //   const battle = startBattle([], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ]);
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p2.pokemon[0].volatiles['confusion']).toBeDefined();
 
-    //   let p1hp = battle.p1.pokemon[0].hp;
-    //   let p2hp = battle.p2.pokemon[0].hp;
+      // Can't confuse a Pokémon that already has a confusion
+      battle.makeChoices('move 1', 'move 2');
+      // Confused Pokémon can hurt themselves in confusion (typeless damage)
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 37);
 
-    //   battle.makeChoices('move 1', 'move 1');
-    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
-    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+      // Pokémon can still successfully move despite being confused
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
 
-    //   expectLog(battle, [
-    //   ]);
-    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
-    // });
+      // Pokémon snap out of confusion
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
+      expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
+
+      expectLog(battle, [
+        '|move|p2a: Gengar|Substitute|p2a: Gengar',
+        '|-start|p2a: Gengar|Substitute',
+        '|-damage|p2a: Gengar|243/323',
+        '|move|p1a: Haunter|Confuse Ray|p2a: Gengar',
+        '|-fail|p2a: Gengar',
+        '|turn|2',
+        '|move|p2a: Gengar|Substitute|p2a: Gengar',
+        '|-fail|p2a: Gengar|move: Substitute',
+        '|move|p1a: Haunter|Night Shade|p2a: Gengar',
+        '|-end|p2a: Gengar|Substitute',
+        '|turn|3',
+        '|move|p2a: Gengar|Agility|p2a: Gengar',
+        '|-boost|p2a: Gengar|spe|2',
+        '|move|p1a: Haunter|Confuse Ray|p2a: Gengar',
+        '|-start|p2a: Gengar|confusion',
+        '|turn|4',
+        '|-activate|p2a: Gengar|confusion',
+        '|-damage|p2a: Gengar|206/323|[from] confusion',
+        '|move|p1a: Haunter|Confuse Ray|p2a: Gengar',
+        '|turn|5',
+        '|-activate|p2a: Gengar|confusion',
+        '|move|p2a: Gengar|Agility|p2a: Gengar',
+        '|-boost|p2a: Gengar|spe|2',
+        '|move|p1a: Haunter|Night Shade|p2a: Gengar',
+        '|-damage|p2a: Gengar|106/323',
+        '|turn|6',
+        '|-end|p2a: Gengar|confusion',
+        '|move|p2a: Gengar|Agility|p2a: Gengar',
+        '|-boost|p2a: Gengar|spe|2',
+        '|move|p1a: Haunter|Night Shade|p2a: Gengar',
+        '|-damage|p2a: Gengar|6/323',
+        '|turn|7',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
+
+    test('ConfusionChance', () => {
+      const proc = {key: HIT.key, value: ranged(25, 256) - 1};
+      const no_proc = {key: proc.key, value: proc.value + 1};
+      const battle = startBattle([
+        SRF, HIT, NO_CRIT, MAX_DMG, proc,
+        SRF, HIT, NO_CRIT, MAX_DMG, proc,
+        SRF, HIT, NO_CRIT, MAX_DMG, no_proc, CFZ(3),
+      ], [
+        {species: 'Venomoth', evs, moves: ['Psybeam']},
+      ], [
+        {species: 'Jolteon', evs, moves: ['Substitute', 'Agility']},
+      ]);
+
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      // Substitute blocks ConfusionChance on Pokémon Showdown
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 83);
+      expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+      // Pokémon Showdown procs on 26 instead of 25, so no_proc will still proc
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 49);
+      expect(battle.p2.pokemon[0].volatiles['confusion']).toBeDefined();
+
+      expectLog(battle, [
+        '|move|p2a: Jolteon|Substitute|p2a: Jolteon',
+        '|-start|p2a: Jolteon|Substitute',
+        '|-damage|p2a: Jolteon|250/333',
+        '|move|p1a: Venomoth|Psybeam|p2a: Jolteon',
+        '|-activate|p2a: Jolteon|Substitute|[damage]',
+        '|turn|2',
+        '|move|p2a: Jolteon|Substitute|p2a: Jolteon',
+        '|-fail|p2a: Jolteon|move: Substitute',
+        '|move|p1a: Venomoth|Psybeam|p2a: Jolteon',
+        '|-end|p2a: Jolteon|Substitute',
+        '|turn|3',
+        '|move|p2a: Jolteon|Agility|p2a: Jolteon',
+        '|-boost|p2a: Jolteon|spe|2',
+        '|move|p1a: Venomoth|Psybeam|p2a: Jolteon',
+        '|-damage|p2a: Jolteon|201/333',
+        '|-start|p2a: Jolteon|confusion',
+        '|turn|4',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
 
     // test('FlinchChance', () => {
     //   const battle = startBattle([], [
@@ -3875,7 +3959,7 @@ for (const gen of new Generations(Dex as any)) {
         // Confused Pokémon has Substitute
         {
           const battle = startBattle([
-            SRF, HIT, CFZ(5), CFZ_CAN, SRF, SRF, HIT, SRF, CFZ_CANT
+            SRF, HIT, CFZ(5), CFZ_CAN, SRF, SRF, HIT, SRF, CFZ_CANT,
           ], [
             {species: 'Bulbasaur', level: 6, evs, moves: ['Substitute', 'Growl']},
           ], [
@@ -3904,7 +3988,7 @@ for (const gen of new Generations(Dex as any)) {
             '|move|p2a: Zubat|Supersonic|p1a: Bulbasaur',
             '|-fail|p1a: Bulbasaur',
             '|-activate|p1a: Bulbasaur|confusion',
-            '|turn|3'
+            '|turn|3',
           ]);
           expect((battle.prng as FixedRNG).exhausted()).toBe(true);
         }
@@ -3920,7 +4004,7 @@ for (const gen of new Generations(Dex as any)) {
 
           let p1hp = battle.p1.pokemon[0].hp;
           let p2hp = battle.p2.pokemon[0].hp;
-          let sub1 = 7;
+          const sub1 = 7;
           let sub2 = 10;
 
           battle.makeChoices('move 2', 'move 2');
@@ -3969,7 +4053,7 @@ for (const gen of new Generations(Dex as any)) {
             '|-fail|p2a: Zubat|move: Substitute',
             '|-activate|p1a: Bulbasaur|confusion',
             '|-activate|p2a: Zubat|Substitute|[damage]',
-            '|turn|5'
+            '|turn|5',
           ]);
           expect((battle.prng as FixedRNG).exhausted()).toBe(true);
         }
