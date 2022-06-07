@@ -91,7 +91,7 @@
       "rules": {
         "jest/expect-expect": [
           "warn",
-          { "assertFunctionNames": ["expect", "expectLog"] }
+          { "assertFunctionNames": ["expect", "expectLog", "verify"] }
         ]
       }
     }, {

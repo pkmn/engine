@@ -46,7 +46,7 @@ const MODS: {[gen: number]: string[]} = {
   1: ['Endless Battle Clause', 'Sleep Clause Mod', 'Freeze Clause Mod'],
 };
 
-const CHOICES: {[gen: number]:  (battle: Battle, id: 'p1' | 'p2') => string[]} = {
+const CHOICES: {[gen: number]: (battle: Battle, id: 'p1' | 'p2') => string[]} = {
   1: gen1.Choices.sim,
 };
 
@@ -56,7 +56,7 @@ for (const gen of new Generations(Dex as any)) {
   const choices = CHOICES[gen.num];
 
   const startBattle = (
-    rolls: Roll[],
+    rolls: Roll[][],
     p1: Partial<PokemonSet>[],
     p2: Partial<PokemonSet>[],
     fn?: (b: Battle) => void,
@@ -64,7 +64,12 @@ for (const gen of new Generations(Dex as any)) {
     const formatid = `gen${gen.num}customgame@@@${MODS[gen.num].join(',')}` as ID;
     const battle = new Battle({formatid, strictChoices: true});
     (battle as any).debugMode = false;
-    (battle as any).prng = new FixedRNG(rolls);
+    const rng = new FixedRNG(rolls);
+    (battle as any).prng = rng;
+    const makeChoices = battle.makeChoices.bind(battle);
+    battle.makeChoices = (...inputs: string[]) => {
+      rng.makeDecision(() => makeChoices.apply(battle, inputs));
+    };
     if (fn) battle.started = true;
     battle.setPlayer('p1', {team: p1 as PokemonSet[]});
     battle.setPlayer('p2', {team: p2 as PokemonSet[]});
@@ -95,7 +100,7 @@ for (const gen of new Generations(Dex as any)) {
       });
 
       // lol...
-      expectLog(battle, [
+      verify(battle, [
         '|switch|p1a: Pikachu|Pikachu|0 fnt',
         '|switch|p2a: Charmander|Charmander|0 fnt',
         '|turn|1',
@@ -114,7 +119,7 @@ for (const gen of new Generations(Dex as any)) {
         });
 
         // lol...
-        expectLog(battle, [
+        verify(battle, [
           '|switch|p1a: Bulbasaur|Bulbasaur|293/293',
           '|switch|p2a: Charmander|Charmander|0 fnt',
           '|turn|1',
@@ -131,7 +136,7 @@ for (const gen of new Generations(Dex as any)) {
         });
 
         // lol...
-        expectLog(battle, [
+        verify(battle, [
           '|switch|p1a: Bulbasaur|Bulbasaur|0 fnt',
           '|switch|p2a: Charmander|Charmander|281/281',
           '|turn|1',
@@ -149,7 +154,7 @@ for (const gen of new Generations(Dex as any)) {
         });
 
         // lol...
-        expectLog(battle, [
+        verify(battle, [
           '|switch|p1a: Bulbasaur|Bulbasaur|0 fnt',
           '|switch|p2a: Charmander|Charmander|0 fnt',
           '|turn|1',
@@ -158,7 +163,7 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('switching (order)', () => {
-      const battle = startBattle([], [
+      const battle = startBattle(Array(6).fill([]), [
         {species: 'Abra', level: 10, moves: ['Teleport']},
         {species: 'Abra', level: 20, moves: ['Teleport']},
         {species: 'Abra', level: 30, moves: ['Teleport']},
@@ -196,7 +201,7 @@ for (const gen of new Generations(Dex as any)) {
       battle.makeChoices('switch 5', 'switch 5');
       expectOrder([3, 1, 6, 4, 2, 5], [2, 1, 3, 5, 4, 6]);
 
-      expectLog(battle, [
+      verify(battle, [
         '|switch|p1a: Abra|Abra, L30|64/64',
         '|switch|p2a: Gastly|Gastly, L2|13/13',
         '|turn|7',
@@ -205,10 +210,10 @@ for (const gen of new Generations(Dex as any)) {
 
     test('turn order (priority)', () => {
       const battle = startBattle([
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
-        SRF, SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT,
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
+        [SRF, SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT],
       ], [
         {species: 'Raticate', evs, moves: ['Tackle', 'Quick Attack', 'Counter']},
       ], [
@@ -238,7 +243,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 20);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 40);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Raticate|Tackle|p2a: Chansey',
         '|-damage|p2a: Chansey|612/703',
         '|move|p2a: Chansey|Tackle|p1a: Raticate',
@@ -260,19 +265,18 @@ for (const gen of new Generations(Dex as any)) {
         '|-damage|p2a: Chansey|377/703',
         '|turn|5',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('turn order (basic speed tie)', () => {
       // Move vs. Move
       {
-        const battle = startBattle([
+        const battle = startBattle([[
           INS, INS,	SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
           SRF, SRF, TIE(1),
           SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG,
           SS_EACH, HIT, NO_CRIT, MAX_DMG,
           SS_EACH, SS_EACH,
-        ], [
+        ]], [
           {species: 'Tauros', evs, moves: ['Hyper Beam']},
         ], [
           {species: 'Tauros', evs, moves: ['Hyper Beam']},
@@ -285,7 +289,7 @@ for (const gen of new Generations(Dex as any)) {
         expect(battle.p1.pokemon[0].hp).toBe(p1hp - 196);
         expect(battle.p2.pokemon[0].hp).toBe(p2hp - 166);
 
-        expectLog(battle, [
+        verify(battle, [
           '|move|p1a: Tauros|Hyper Beam|p2a: Tauros',
           '|-damage|p2a: Tauros|187/353',
           '|-mustrecharge|p1a: Tauros',
@@ -294,13 +298,12 @@ for (const gen of new Generations(Dex as any)) {
           '|-mustrecharge|p2a: Tauros',
           '|turn|2',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       }
       // Switch vs. Switch
       {
-        const battle = startBattle([
+        const battle = startBattle([[
           INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, TIE(2), SS_EACH, SS_EACH,
-        ], [
+        ]], [
           {species: 'Tauros', evs, moves: ['Hyper Beam']},
           {species: 'Starmie', evs, moves: ['Surf']},
         ], [
@@ -310,19 +313,18 @@ for (const gen of new Generations(Dex as any)) {
 
         battle.makeChoices('switch 2', 'switch 2');
 
-        expectLog(battle, [
+        verify(battle, [
           '|switch|p2a: Alakazam|Alakazam|313/313',
           '|switch|p1a: Starmie|Starmie|323/323',
           '|turn|2',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       }
       // Move vs. Switch
       {
-        const battle = startBattle([
+        const battle = startBattle([[
           INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
           SRF, SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG,
-        ], [
+        ]], [
           {species: 'Tauros', evs, moves: ['Hyper Beam']},
           {species: 'Starmie', evs, moves: ['Surf']},
         ], [
@@ -335,14 +337,13 @@ for (const gen of new Generations(Dex as any)) {
         battle.makeChoices('move 1', 'switch 2');
         expect(battle.p2.pokemon[0].hp).toBe(p2hp - 255);
 
-        expectLog(battle, [
+        verify(battle, [
           '|switch|p2a: Alakazam|Alakazam|313/313',
           '|move|p1a: Tauros|Hyper Beam|p2a: Alakazam',
           '|-damage|p2a: Alakazam|58/313',
           '|-mustrecharge|p1a: Tauros',
           '|turn|2',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       }
     });
 
@@ -350,7 +351,7 @@ for (const gen of new Generations(Dex as any)) {
 
     test('turn order (switch vs. move)', () => {
       const battle = startBattle([
-        SRF, HIT, NO_CRIT, MIN_DMG, SRF, HIT, NO_CRIT, MIN_DMG,
+        [SRF, HIT, NO_CRIT, MIN_DMG], [SRF, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Raticate', evs, moves: ['Quick Attack']},
         {species: 'Rattata', evs, moves: ['Quick Attack']},
@@ -370,7 +371,7 @@ for (const gen of new Generations(Dex as any)) {
       battle.makeChoices('switch 2', 'move 1');
       expect(battle.p1.pokemon[0].hp).toBe(rattata - 32);
 
-      expectLog(battle, [
+      verify(battle, [
         '|switch|p2a: Vulpix|Vulpix|279/279',
         '|move|p1a: Raticate|Quick Attack|p2a: Vulpix',
         '|-damage|p2a: Vulpix|215/279',
@@ -380,11 +381,10 @@ for (const gen of new Generations(Dex as any)) {
         '|-damage|p1a: Rattata|231/263',
         '|turn|3',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('PP deduction', () => {
-      const battle = startBattle([], [
+      const battle = startBattle([[], []], [
         {species: 'Alakazam', evs, moves: ['Teleport']},
       ], [
         {species: 'Abra', evs, moves: ['Teleport']},
@@ -413,7 +413,7 @@ for (const gen of new Generations(Dex as any)) {
     test('accuracy (normal)', () => {
       const hit = {key: HIT.key, value: ranged(Math.floor(85 * 255 / 100), 256) - 1};
       const miss = {key: MISS.key, value: hit.value + 1};
-      const battle = startBattle([SRF, SRF, hit, CRIT, MAX_DMG, miss], [
+      const battle = startBattle([[SRF, SRF, hit, CRIT, MAX_DMG, miss]], [
         {species: 'Hitmonchan', evs, moves: ['Mega Punch']},
       ], [
         {species: 'Machamp', evs, moves: ['Mega Punch']},
@@ -426,7 +426,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toEqual(p1hp);
       expect(battle.p2.pokemon[0].hp).toEqual(p2hp - 159);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Hitmonchan|Mega Punch|p2a: Machamp',
         '|-crit|p2a: Machamp',
         '|-damage|p2a: Machamp|224/383',
@@ -434,14 +434,13 @@ for (const gen of new Generations(Dex as any)) {
         '|-miss|p2a: Machamp',
         '|turn|2',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('damage calc', () => {
       const NO_BRN = {key: HIT.key, value: ranged(77, 256)};
       const battle = startBattle([
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, NO_BRN,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG,
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, NO_BRN],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Starmie', evs, moves: ['Water Gun', 'Thunderbolt']},
       ], [
@@ -461,7 +460,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 68);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Starmie|Water Gun|p2a: Golem',
         '|-supereffective|p2a: Golem',
         '|-damage|p2a: Golem|115/363',
@@ -476,13 +475,12 @@ for (const gen of new Generations(Dex as any)) {
         '|-damage|p1a: Starmie|185/323',
         '|turn|3',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('fainting (single)', () => {
       // Switch
       {
-        const battle = startBattle([SRF, SRF, HIT, HIT, NO_CRIT, MAX_DMG], [
+        const battle = startBattle([[SRF, SRF, HIT, HIT, NO_CRIT, MAX_DMG]], [
           {species: 'Venusaur', evs, moves: ['Leech Seed']},
         ], [
           {species: 'Slowpoke', evs, moves: ['Water Gun']},
@@ -497,7 +495,7 @@ for (const gen of new Generations(Dex as any)) {
         expect(choices(battle, 'p1')).toEqual([]);
         expect(choices(battle, 'p2')).toEqual(['switch 2']);
 
-        expectLog(battle, [
+        verify(battle, [
           '|move|p1a: Venusaur|Leech Seed|p2a: Slowpoke',
           '|-start|p2a: Slowpoke|move: Leech Seed',
           '|move|p2a: Slowpoke|Water Gun|p1a: Venusaur',
@@ -507,11 +505,10 @@ for (const gen of new Generations(Dex as any)) {
           '|-heal|p1a: Venusaur|363/363|[silent]',
           '|faint|p2a: Slowpoke',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       }
       // Win
       {
-        const battle = startBattle([SRF, SRF, HIT], [
+        const battle = startBattle([[SRF, SRF, HIT]], [
           {species: 'Dratini', evs, moves: ['Dragon Rage']},
         ], [
           {species: 'Slowpoke', evs, moves: ['Water Gun']},
@@ -523,17 +520,16 @@ for (const gen of new Generations(Dex as any)) {
         battle.makeChoices('move 1', 'move 1');
         expect(battle.p2.pokemon[0].hp).toBe(0);
 
-        expectLog(battle, [
+        verify(battle, [
           '|move|p1a: Dratini|Dragon Rage|p2a: Slowpoke',
           '|-damage|p2a: Slowpoke|0 fnt',
           '|faint|p2a: Slowpoke',
           '|win|Player 1',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       }
       // Lose
       {
-        const battle = startBattle([SRF, SRF, SRF, NO_CRIT, MIN_DMG, HIT], [
+        const battle = startBattle([[SRF, SRF, SRF, NO_CRIT, MIN_DMG, HIT]], [
           {species: 'Jolteon', evs, moves: ['Swift']},
         ], [
           {species: 'Dratini', evs, moves: ['Dragon Rage']},
@@ -545,7 +541,7 @@ for (const gen of new Generations(Dex as any)) {
         expect(battle.p1.pokemon[0].hp).toBe(0);
         expect(battle.p2.pokemon[0].hp).toBe(232);
 
-        expectLog(battle, [
+        verify(battle, [
           '|move|p1a: Jolteon|Swift|p2a: Dratini',
           '|-damage|p2a: Dratini|232/285',
           '|move|p2a: Dratini|Dragon Rage|p1a: Jolteon',
@@ -553,14 +549,13 @@ for (const gen of new Generations(Dex as any)) {
           '|faint|p1a: Jolteon',
           '|win|Player 2',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       }
     });
 
     test('fainting (double)', () => {
       // Switch
       {
-        const battle = startBattle([SRF, SRF, HIT, CRIT, MAX_DMG], [
+        const battle = startBattle([[SRF, SRF, HIT, CRIT, MAX_DMG]], [
           {species: 'Weezing', evs, moves: ['Explosion']},
           {species: 'Koffing', evs, moves: ['Self-Destruct']},
         ], [
@@ -572,18 +567,17 @@ for (const gen of new Generations(Dex as any)) {
         expect(battle.p1.pokemon[0].hp).toBe(0);
         expect(battle.p2.pokemon[0].hp).toBe(0);
 
-        expectLog(battle, [
+        verify(battle, [
           '|move|p1a: Weezing|Explosion|p2a: Weedle',
           '|-crit|p2a: Weedle',
           '|-damage|p2a: Weedle|0 fnt',
           '|faint|p2a: Weedle',
           '|faint|p1a: Weezing',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       }
       // Tie
       {
-        const battle = startBattle([SRF, SRF, HIT, CRIT, MAX_DMG], [
+        const battle = startBattle([[SRF, SRF, HIT, CRIT, MAX_DMG]], [
           {species: 'Weezing', evs, moves: ['Explosion']},
         ], [
           {species: 'Weedle', evs, moves: ['Poison Sting']},
@@ -593,7 +587,7 @@ for (const gen of new Generations(Dex as any)) {
         expect(battle.p1.pokemon[0].hp).toBe(0);
         expect(battle.p2.pokemon[0].hp).toBe(0);
 
-        expectLog(battle, [
+        verify(battle, [
           '|move|p1a: Weezing|Explosion|p2a: Weedle',
           '|-crit|p2a: Weedle',
           '|-damage|p2a: Weedle|0 fnt',
@@ -601,12 +595,11 @@ for (const gen of new Generations(Dex as any)) {
           '|faint|p1a: Weezing',
           '|tie',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       }
     });
 
     test('end turn (turn limit)', () => {
-      const battle = startBattle([], [
+      const battle = startBattle(Array(999).fill([]), [
         {species: 'Bulbasaur', evs, moves: ['Tackle']},
         {species: 'Charmander', evs, moves: ['Scratch']},
       ], [
@@ -624,7 +617,7 @@ for (const gen of new Generations(Dex as any)) {
       battle.makeChoices('switch 2', 'switch 2');
       expect(battle.ended).toBe(true);
 
-      expectLog(battle, [
+      verify(battle, [
         '|switch|p1a: Charmander|Charmander|281/281',
         '|switch|p2a: Pikachu|Pikachu|273/273',
         '|tie',
@@ -642,7 +635,7 @@ for (const gen of new Generations(Dex as any)) {
       });
 
       expect(battle.ended).toBe(true);
-      expectLog(battle, [
+      verify(battle, [
         '|switch|p1a: Gengar|Gengar|323/323',
         '|switch|p2a: Gengar|Gengar|260/260',
         '|tie',
@@ -651,7 +644,7 @@ for (const gen of new Generations(Dex as any)) {
 
     test('Endless Battle Clause (basic)', () => {
       {
-        const battle = startBattle([], [
+        const battle = startBattle([[]], [
           {species: 'Mew', evs, moves: ['Transform']},
         ], [
           {species: 'Ditto', evs, moves: ['Transform']},
@@ -663,7 +656,7 @@ for (const gen of new Generations(Dex as any)) {
         expect(battle.ended).toBe(true);
       }
       {
-        const battle = startBattle([SRF, SRF], [
+        const battle = startBattle([[SRF, SRF]], [
           {species: 'Mew', evs, moves: ['Transform']},
           {species: 'Muk', evs, moves: ['Pound']},
         ], [
@@ -700,7 +693,7 @@ for (const gen of new Generations(Dex as any)) {
       const value = ranged(Math.floor(gen.species.get('Machop')!.baseStats.spe / 2), 256);
       const no_crit = {key: CRIT.key, value};
       // Regular non-crit roll is still a crit for high critical moves
-      const battle = startBattle([SRF, SRF, HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG], [
+      const battle = startBattle([[SRF, SRF, HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG]], [
         {species: 'Machop', evs, moves: ['Karate Chop']},
       ], [
         {species: 'Machop', level: 99, evs, moves: ['Strength']},
@@ -714,7 +707,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toEqual(p1hp - 73);
       expect(battle.p2.pokemon[0].hp).toEqual(p2hp - 92);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Machop|Karate Chop|p2a: Machop',
         '|-crit|p2a: Machop',
         '|-damage|p2a: Machop|247/339',
@@ -722,13 +715,12 @@ for (const gen of new Generations(Dex as any)) {
         '|-damage|p1a: Machop|270/343',
         '|turn|2',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('FocusEnergy', () => {
       const value = ranged(Math.floor(gen.species.get('Machoke')!.baseStats.spe / 2), 256) - 1;
       const crit = {key: CRIT.key, value};
-      const battle = startBattle([SRF, HIT, crit, MIN_DMG, SRF, HIT, crit, MIN_DMG], [
+      const battle = startBattle([[], [SRF, HIT, crit, MIN_DMG], [SRF, HIT, crit, MIN_DMG]], [
         {species: 'Machoke', evs, moves: ['Focus Energy', 'Strength']},
       ], [
         {species: 'Koffing', evs, moves: ['Double Team', 'Haze']},
@@ -746,7 +738,7 @@ for (const gen of new Generations(Dex as any)) {
       battle.makeChoices('move 2', 'move 1');
       expect(battle.p2.pokemon[0].hp).toEqual(p2hp -= 115);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Machoke|Focus Energy|p1a: Machoke',
         '|-start|p1a: Machoke|move: Focus Energy',
         '|move|p2a: Koffing|Double Team|p2a: Koffing',
@@ -766,7 +758,6 @@ for (const gen of new Generations(Dex as any)) {
         '|-boost|p2a: Koffing|evasion|1',
         '|turn|4',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('MultiHit', () => {
@@ -774,7 +765,7 @@ for (const gen of new Generations(Dex as any)) {
       const hit3 = {key, value: 3 * (0x100000000 / 8) - 1};
       const hit5 = {key, value: MAX};
       const battle = startBattle([
-        SRF, HIT, hit3, NO_CRIT, MAX_DMG, SRF, HIT, hit5, NO_CRIT, MAX_DMG,
+        [SRF, HIT, hit3, NO_CRIT, MAX_DMG], [SRF, HIT, hit5, NO_CRIT, MAX_DMG],
       ], [
         {species: 'Kangaskhan', evs, moves: ['Comet Punch']},
       ], [
@@ -793,7 +784,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].hp).toBe(p2hp);
       expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Kangaskhan|Comet Punch|p2a: Slowpoke',
         '|-damage|p2a: Slowpoke|352/383',
         '|-damage|p2a: Slowpoke|321/383',
@@ -812,11 +803,10 @@ for (const gen of new Generations(Dex as any)) {
         '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
         '|turn|3',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('DoubleHit', () => {
-      const battle = startBattle([SRF, HIT, NO_CRIT, MAX_DMG, SRF, HIT, NO_CRIT, MAX_DMG], [
+      const battle = startBattle([[SRF, HIT, NO_CRIT, MAX_DMG], [SRF, HIT, NO_CRIT, MAX_DMG]], [
         {species: 'Marowak', evs, moves: ['Bonemerang']},
       ], [
         {species: 'Slowpoke', level: 80, evs, moves: ['Substitute', 'Teleport']},
@@ -831,7 +821,7 @@ for (const gen of new Generations(Dex as any)) {
       battle.makeChoices('move 1', 'move 2');
       expect(battle.p2.pokemon[0].hp).toBe(p2hp);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Marowak|Bonemerang|p2a: Slowpoke',
         '|-damage|p2a: Slowpoke|217/308',
         '|-damage|p2a: Slowpoke|126/308',
@@ -846,11 +836,10 @@ for (const gen of new Generations(Dex as any)) {
         '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
         '|turn|3',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     // test('Twineedle', () => {
-    //   const battle = startBattle([], [
+    //   const battle = startBattle([[]], [
     //     {species: 'TODO', evs, moves: ['TODO']},
     //   ], [
     //     {species: 'TODO', evs, moves: ['TODO']},
@@ -865,11 +854,11 @@ for (const gen of new Generations(Dex as any)) {
 
     //   expectLog(battle, [
     //   ]);
-    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    //
     // });
 
     // test('Poison (primary)', () => {
-    //   const battle = startBattle([], [
+    //   const battle = startBattle([[]], [
     //     {species: 'TODO', evs, moves: ['TODO']},
     //   ], [
     //     {species: 'TODO', evs, moves: ['TODO']},
@@ -884,11 +873,11 @@ for (const gen of new Generations(Dex as any)) {
 
     //   expectLog(battle, [
     //   ]);
-    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    //
     // });
 
     // test('PoisonChance', () => {
-    //   const battle = startBattle([], [
+    //   const battle = startBattle([[]], [
     //     {species: 'TODO', evs, moves: ['TODO']},
     //   ], [
     //     {species: 'TODO', evs, moves: ['TODO']},
@@ -903,11 +892,11 @@ for (const gen of new Generations(Dex as any)) {
 
     //   expectLog(battle, [
     //   ]);
-    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    //
     // });
 
     // test('BurnChance', () => {
-    //   const battle = startBattle([], [
+    //   const battle = startBattle([[]], [
     //     {species: 'TODO', evs, moves: ['TODO']},
     //   ], [
     //     {species: 'TODO', evs, moves: ['TODO']},
@@ -922,21 +911,21 @@ for (const gen of new Generations(Dex as any)) {
 
     //   expectLog(battle, [
     //   ]);
-    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    //
     // });
 
     test('FreezeChance', () => {
       const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
       const battle = startBattle([
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, SS_MOD,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, FRZ, PAR_CANT,
-        SRF, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
-        SRF, SRF, HIT,
-        SRF, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
-        SRF, HIT, NO_CRIT, MIN_DMG, wrap,
-        SRF, SRF,
-        SRF, HIT, NO_CRIT, MIN_DMG,
-        SRF, HIT, NO_CRIT, MIN_DMG, FRZ,
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, SS_MOD],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, FRZ, PAR_CANT],
+        [SRF, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD],
+        [SRF, SRF, HIT],
+        [SRF, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD],
+        [SRF, HIT, NO_CRIT, MIN_DMG, wrap],
+        [SRF, SRF],
+        [SRF, HIT, NO_CRIT, MIN_DMG],
+        [SRF, HIT, NO_CRIT, MIN_DMG, FRZ],
       ], [
         {species: 'Starmie', evs, moves: ['Ice Beam']},
         {species: 'Magmar', evs, moves: ['Flamethrower', 'Substitute']},
@@ -993,7 +982,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toBe(magmar);
       expect(battle.p1.pokemon[0].status).toBe('');
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Starmie|Ice Beam|p2a: Jynx',
         '|-resisted|p2a: Jynx',
         '|-damage|p2a: Jynx|298/333',
@@ -1041,17 +1030,16 @@ for (const gen of new Generations(Dex as any)) {
         '|-fail|p1a: Magmar|move: Substitute|[weak]',
         '|turn|10',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('Paralyze (primary)', () => {
       const battle = startBattle([
-        SRF, SRF, MISS, HIT, SS_MOD,
-        SRF, SRF, HIT, PAR_CAN, HIT, SS_MOD,
-        SRF, PAR_CANT,
-        SRF, SRF, HIT, PAR_CAN, HIT, SS_MOD,
-        SRF, PAR_CAN,
-        SRF, PAR_CAN, HIT, SS_MOD,
+        [SRF, SRF, MISS, HIT, SS_MOD],
+        [SRF, SRF, HIT, PAR_CAN, HIT, SS_MOD],
+        [SRF, PAR_CANT],
+        [SRF, SRF, HIT, PAR_CAN, HIT, SS_MOD],
+        [SRF, PAR_CAN],
+        [SRF, PAR_CAN, HIT, SS_MOD],
       ], [
         {species: 'Arbok', evs, moves: ['Glare']},
         {species: 'Dugtrio', evs, moves: ['Earthquake', 'Substitute']},
@@ -1078,7 +1066,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].modifiedStats!.spe).toBe(79);
       expect(battle.p2.pokemon[0].storedStats.spe).toBe(318);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Arbok|Glare|p2a: Magneton|[miss]',
         '|-miss|p1a: Arbok',
         '|move|p2a: Magneton|Thunder Wave|p1a: Arbok',
@@ -1108,11 +1096,10 @@ for (const gen of new Generations(Dex as any)) {
         '|-status|p1a: Dugtrio|par',
         '|turn|7',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     // test('ParalyzeChance', () => {
-    //   const battle = startBattle([], [
+    //   const battle = startBattle([[]], [
     //     {species: 'TODO', evs, moves: ['TODO']},
     //   ], [
     //     {species: 'TODO', evs, moves: ['TODO']},
@@ -1127,16 +1114,16 @@ for (const gen of new Generations(Dex as any)) {
 
     //   expectLog(battle, [
     //   ]);
-    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    //
     // });
 
     test('Sleep', () => {
       const battle = startBattle([
-        SRF, SRF, HIT, SS_MOD, SLP(1),
-        SRF, SRF, HIT, SS_MOD, SLP(2),
-        SRF, HIT, SS_MOD,
-        SRF, HIT,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG,
+        [SRF, SRF, HIT, SS_MOD, SLP(1)],
+        [SRF, SRF, HIT, SS_MOD, SLP(2)],
+        [SRF, HIT, SS_MOD],
+        [SRF, HIT],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Parasect', evs, moves: ['Spore', 'Cut']},
       ], [
@@ -1167,7 +1154,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].status).toBe('');
       expect(battle.p2.pokemon[0].hp).toBe(p2hp - 17);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Parasect|Spore|p2a: Geodude',
         '|-status|p2a: Geodude|slp|[from] move: Spore',
         '|-curestatus|p2a: Geodude|slp|[msg]',
@@ -1189,12 +1176,12 @@ for (const gen of new Generations(Dex as any)) {
         '|-curestatus|p2a: Geodude|slp|[msg]',
         '|turn|6',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('Confusion (primary)', () => {
       const battle = startBattle([
-        SRF, HIT, SRF, HIT, SRF, HIT, CFZ(3), SRF, CFZ_CANT, HIT, SRF, CFZ_CAN, HIT, SRF, HIT,
+        [SRF, HIT], [SRF, HIT], [SRF, HIT, CFZ(3)], [SRF, CFZ_CANT, HIT],
+        [SRF, CFZ_CAN, HIT], [SRF, HIT],
       ], [
         {species: 'Haunter', evs, moves: ['Confuse Ray', 'Night Shade']},
       ], [
@@ -1227,7 +1214,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
       expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p2a: Gengar|Substitute|p2a: Gengar',
         '|-start|p2a: Gengar|Substitute',
         '|-damage|p2a: Gengar|243/323',
@@ -1261,16 +1248,15 @@ for (const gen of new Generations(Dex as any)) {
         '|-damage|p2a: Gengar|6/323',
         '|turn|7',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('ConfusionChance', () => {
       const proc = {key: HIT.key, value: ranged(25, 256) - 1};
       const no_proc = {key: proc.key, value: proc.value + 1};
       const battle = startBattle([
-        SRF, HIT, NO_CRIT, MAX_DMG, proc,
-        SRF, HIT, NO_CRIT, MAX_DMG, proc,
-        SRF, HIT, NO_CRIT, MAX_DMG, no_proc, CFZ(3),
+        [SRF, HIT, NO_CRIT, MAX_DMG, proc],
+        [SRF, HIT, NO_CRIT, MAX_DMG, proc],
+        [SRF, HIT, NO_CRIT, MAX_DMG, no_proc, CFZ(3)],
       ], [
         {species: 'Venomoth', evs, moves: ['Psybeam']},
       ], [
@@ -1292,7 +1278,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 49);
       expect(battle.p2.pokemon[0].volatiles['confusion']).toBeDefined();
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p2a: Jolteon|Substitute|p2a: Jolteon',
         '|-start|p2a: Jolteon|Substitute',
         '|-damage|p2a: Jolteon|250/333',
@@ -1311,20 +1297,19 @@ for (const gen of new Generations(Dex as any)) {
         '|-start|p2a: Jolteon|confusion',
         '|turn|4',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('FlinchChance', () => {
       const lo_proc = {key: HIT.key, value: ranged(26, 256) - 1};
       const hi_proc = {key: HIT.key, value: ranged(77, 256) - 1};
       const battle = startBattle([
-        SRF, HIT, NO_CRIT, MIN_DMG, hi_proc,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, hi_proc, HIT, NO_CRIT, MIN_DMG, hi_proc,
-        SRF, SRF, HIT, NO_CRIT, MAX_DMG, lo_proc, HIT, NO_CRIT, MIN_DMG,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, lo_proc,	SRF,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, lo_proc,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, hi_proc,
-        SRF, SRF, SRF, MISS,
+        [SRF, HIT, NO_CRIT, MIN_DMG, hi_proc],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, hi_proc, HIT, NO_CRIT, MIN_DMG, hi_proc],
+        [SRF, SRF, HIT, NO_CRIT, MAX_DMG, lo_proc, HIT, NO_CRIT, MIN_DMG],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, lo_proc,	SRF],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, lo_proc],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, hi_proc],
+        [SRF, SRF, SRF, MISS],
       ], [
         {species: 'Raticate', evs, moves: ['Hyper Fang', 'Headbutt', 'Hyper Beam']},
       ], [
@@ -1364,7 +1349,7 @@ for (const gen of new Generations(Dex as any)) {
       // Flinch should have cleared recharge, but this doesn't work on Pokémon Showdown
       battle.makeChoices('move 1', 'move 1');
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Raticate|Hyper Fang|p2a: Marowak',
         '|-damage|p2a: Marowak|251/323',
         '|move|p2a: Marowak|Substitute|p2a: Marowak',
@@ -1401,14 +1386,13 @@ for (const gen of new Generations(Dex as any)) {
         '|-miss|p2a: Marowak',
         '|turn|8',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('StatDown', () => {
       const battle = startBattle([
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
-        SRF, SRF, HIT, SRF, HIT,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
+        [SRF, SRF, HIT, SRF, HIT],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Ekans', evs, moves: ['Screech', 'Strength']},
       ], [
@@ -1432,7 +1416,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 22);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 149);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Ekans|Strength|p2a: Caterpie',
         '|-damage|p2a: Caterpie|218/293',
         '|move|p2a: Caterpie|Tackle|p1a: Ekans',
@@ -1449,16 +1433,15 @@ for (const gen of new Generations(Dex as any)) {
         '|-damage|p2a: Caterpie|69/293',
         '|turn|4',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('StatDownChance', () => {
       const proc = {key: HIT.key, value: ranged(85, 256) - 1};
       const no_proc = {key: proc.key, value: proc.value + 1};
       const battle = startBattle([
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, no_proc, HIT, NO_CRIT, MIN_DMG, proc,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, no_proc, HIT, NO_CRIT, MIN_DMG, proc,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, no_proc, HIT, NO_CRIT, MIN_DMG, no_proc,
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, no_proc, HIT, NO_CRIT, MIN_DMG, proc],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, no_proc, HIT, NO_CRIT, MIN_DMG, proc],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, no_proc, HIT, NO_CRIT, MIN_DMG, no_proc],
       ], [
         {species: 'Alakazam', evs, moves: ['Psychic']},
       ], [
@@ -1483,7 +1466,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 39);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 91);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Alakazam|Psychic|p2a: Starmie',
         '|-resisted|p2a: Starmie',
         '|-damage|p2a: Starmie|263/323',
@@ -1506,13 +1489,13 @@ for (const gen of new Generations(Dex as any)) {
         '|-damage|p2a: Starmie|112/323',
         '|turn|4',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('StatUp', () => {
       const battle = startBattle([
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
+        [],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Scyther', evs, moves: ['Swords Dance', 'Cut']},
       ], [
@@ -1536,7 +1519,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 54);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 49);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Scyther|Cut|p2a: Slowbro',
         '|-damage|p2a: Slowbro|356/393',
         '|move|p2a: Slowbro|Water Gun|p1a: Scyther',
@@ -1553,11 +1536,10 @@ for (const gen of new Generations(Dex as any)) {
         '|-damage|p1a: Scyther|235/343',
         '|turn|4',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('OHKO', () => {
-      const battle = startBattle([SRF, SRF, MISS, SRF, SRF, HIT], [
+      const battle = startBattle([[SRF, SRF, MISS], [SRF, SRF, HIT]], [
         {species: 'Kingler', evs, moves: ['Guillotine']},
         {species: 'Tauros', evs, moves: ['Horn Drill']},
       ], [
@@ -1569,7 +1551,7 @@ for (const gen of new Generations(Dex as any)) {
 
       expect(battle.p1.pokemon[0].hp).toBe(0);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p2a: Dugtrio|Fissure|p1a: Kingler|[miss]',
         '|-miss|p2a: Dugtrio',
         '|move|p1a: Kingler|Guillotine|p2a: Dugtrio',
@@ -1580,12 +1562,11 @@ for (const gen of new Generations(Dex as any)) {
         '|-ohko',
         '|faint|p1a: Kingler',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('Charge', () => {
       const battle = startBattle([
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG], [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Wartortle', evs, moves: ['Skull Bash', 'Water Gun']},
         {species: 'Ivysaur', evs, moves: ['Vine Whip']},
@@ -1612,7 +1593,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 83);
       expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Wartortle|Skull Bash||[still]',
         '|-prepare|p1a: Wartortle|Skull Bash',
         '|move|p2a: Psyduck|Scratch|p1a: Wartortle',
@@ -1624,13 +1605,12 @@ for (const gen of new Generations(Dex as any)) {
         '|-damage|p1a: Wartortle|275/321',
         '|turn|3',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('Fly / Dig', () => {
       const battle = startBattle([
-        SRF, SRF, SS_RES, GLM,
-        GLM, GLM, SRF, SRF, SS_RUN, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+        [SRF, SRF, SS_RES, GLM],
+        [GLM, GLM, SRF, SRF, SS_RUN, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Pidgeot', evs, moves: ['Fly', 'Sand-Attack']},
         {species: 'Metapod', evs, moves: ['Harden']},
@@ -1657,7 +1637,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].hp).toBe(p2hp - 79);
       expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Pidgeot|Fly||[still]',
         '|-prepare|p1a: Pidgeot|Fly',
         '|move|p2a: Lickitung|Strength|p1a: Pidgeot|[miss]',
@@ -1669,11 +1649,10 @@ for (const gen of new Generations(Dex as any)) {
         '|-damage|p1a: Pidgeot|295/369',
         '|turn|3',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('SwitchAndTeleport', () => {
-      const battle = startBattle([SRF, HIT, SRF, MISS], [
+      const battle = startBattle([[SRF, HIT], [SRF, MISS]], [
         {species: 'Abra', evs, moves: ['Teleport']},
       ], [
         {species: 'Pidgey', evs, moves: ['Whirlwind']},
@@ -1682,7 +1661,7 @@ for (const gen of new Generations(Dex as any)) {
       battle.makeChoices('move 1', 'move 1');
       battle.makeChoices('move 1', 'move 1');
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Abra|Teleport|p1a: Abra',
         '|move|p2a: Pidgey|Whirlwind|p1a: Abra',
         '|turn|2',
@@ -1691,30 +1670,30 @@ for (const gen of new Generations(Dex as any)) {
         '|-miss|p2a: Pidgey',
         '|turn|3',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('Splash', () => {
-      const battle = startBattle([],
+      const battle = startBattle([[]],
         [{species: 'Gyarados', evs, moves: ['Splash']}],
         [{species: 'Magikarp', evs, moves: ['Splash']}]);
 
       battle.makeChoices('move 1', 'move 1');
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Gyarados|Splash|p1a: Gyarados',
         '|-nothing',
         '|move|p2a: Magikarp|Splash|p2a: Magikarp',
         '|-nothing',
         '|turn|2',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test.todo('Trapping');
 
     test('JumpKick', () => {
-      const battle = startBattle([SRF, SRF, MISS, HIT, CRIT, MAX_DMG, SRF, SRF, MISS, MISS], [
+      const battle = startBattle([
+        [], [SRF, SRF, MISS, HIT, CRIT, MAX_DMG], [SRF, SRF, MISS, MISS],
+      ], [
         {species: 'Hitmonlee', evs, moves: ['Jump Kick', 'Substitute']},
       ], [
         {species: 'Hitmonlee', level: 99, evs, moves: ['High Jump Kick', 'Substitute']},
@@ -1740,7 +1719,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].hp).toBe(p2hp);
       expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(75);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Hitmonlee|Substitute|p1a: Hitmonlee',
         '|-start|p1a: Hitmonlee|Substitute',
         '|-damage|p1a: Hitmonlee|228/303',
@@ -1762,12 +1741,14 @@ for (const gen of new Generations(Dex as any)) {
         '|-miss|p2a: Hitmonlee',
         '|turn|4',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('Recoil', () => {
       const battle = startBattle([
-        SRF, HIT, NO_CRIT, MIN_DMG, SRF, HIT, NO_CRIT, MAX_DMG, SRF, HIT, NO_CRIT, MIN_DMG,
+        [SRF, HIT, NO_CRIT, MIN_DMG],
+        [],
+        [SRF, HIT, NO_CRIT, MAX_DMG],
+        [SRF, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Slowpoke', evs, moves: ['Teleport']},
         {species: 'Rhydon', evs, moves: ['Take Down', 'Teleport']},
@@ -1797,7 +1778,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 48);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 12);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p2a: Tauros|Double-Edge|p1a: Slowpoke',
         '|-damage|p1a: Slowpoke|0 fnt',
         '|-damage|p2a: Tauros|352/353|[from] Recoil|[of] p1a: Slowpoke',
@@ -1817,14 +1798,15 @@ for (const gen of new Generations(Dex as any)) {
         '|move|p1a: Rhydon|Teleport|p1a: Rhydon',
         '|turn|4',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('Struggle', () => {
       const battle = startBattle([
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG,
+        [],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG],
+        [],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Abra', evs, moves: ['Substitute', 'Teleport']},
         {species: 'Golem', evs, moves: ['Harden']},
@@ -1860,7 +1842,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toBe(p1hp - 16);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 8);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p2a: Arcanine|Teleport|p2a: Arcanine',
         '|move|p1a: Abra|Substitute|p1a: Abra',
         '|-start|p1a: Abra|Substitute',
@@ -1884,16 +1866,16 @@ for (const gen of new Generations(Dex as any)) {
         '|-boost|p1a: Golem|def|1',
         '|turn|5',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('Thrashing', () => {
       const battle = startBattle([
-        SRF, SRF, SRF, HIT, NO_CRIT, MIN_DMG, THRASH(3), HIT, CFZ(5),
-        SRF, SRF, SRF, SRF, CFZ_CAN, MISS, SRF, MISS, THRASH(3),
-        SRF, SRF, SRF, SRF, SRF, CFZ_CAN, HIT, NO_CRIT, MIN_DMG, CFZ(5), SRF, HIT, NO_CRIT, MIN_DMG,
-        SRF, SRF, SRF, CFZ_CAN, HIT, SS_MOD, SRF, PAR_CANT,
-        SRF, SRF, CFZ_CAN, HIT, SRF, PAR_CAN, HIT, NO_CRIT, MAX_DMG, THRASH(3),
+        [SRF, SRF, SRF, HIT, NO_CRIT, MIN_DMG, THRASH(3), HIT, CFZ(5)],
+        [SRF, SRF, SRF, SRF, CFZ_CAN, MISS, SRF, MISS, THRASH(3)],
+        [SRF, SRF, SRF, SRF, SRF, CFZ_CAN, HIT, NO_CRIT,
+          MIN_DMG, CFZ(5), SRF, HIT, NO_CRIT, MIN_DMG],
+        [SRF, SRF, SRF, CFZ_CAN, HIT, SS_MOD, SRF, PAR_CANT],
+        [SRF, SRF, CFZ_CAN, HIT, SRF, PAR_CAN, HIT, NO_CRIT, MAX_DMG, THRASH(3)],
       ], [
         {species: 'Nidoking', evs, moves: ['Thrash', 'Thunder Wave']},
         {species: 'Nidoqueen', evs, moves: ['Poison Sting']},
@@ -1951,7 +1933,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 108);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Nidoking|Thrash|p2a: Vileplume',
         '|-damage|p2a: Vileplume|285/353',
         '|move|p2a: Vileplume|Confuse Ray|p1a: Nidoking',
@@ -1982,11 +1964,10 @@ for (const gen of new Generations(Dex as any)) {
         '|-damage|p1a: Nidoking|166/365',
         '|turn|6',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('SpecialDamage (fixed)', () => {
-      const battle = startBattle([SRF, SRF, HIT, HIT, SRF], [
+      const battle = startBattle([[SRF, SRF, HIT, HIT], [SRF]], [
         {species: 'Voltorb', evs, moves: ['Sonic Boom']},
       ], [
         {species: 'Dratini', evs, moves: ['Dragon Rage']},
@@ -2004,7 +1985,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].hp).toEqual(p2hp2);
       expect(battle.p2.pokemon[1].hp).toEqual(p2hp1 - 20);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Voltorb|Sonic Boom|p2a: Dratini',
         '|-damage|p2a: Dratini|265/285',
         '|move|p2a: Dratini|Dragon Rage|p1a: Voltorb',
@@ -2015,11 +1996,10 @@ for (const gen of new Generations(Dex as any)) {
         '|-immune|p2a: Gastly',
         '|turn|3',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('SpecialDamage (level)', () => {
-      const battle = startBattle([SRF, SRF, HIT, HIT], [
+      const battle = startBattle([[SRF, SRF, HIT, HIT]], [
         {species: 'Gastly', evs, level: 22, moves: ['Night Shade']},
       ], [
         {species: 'Clefairy', evs, level: 16, moves: ['Seismic Toss']},
@@ -2033,20 +2013,19 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toEqual(p1hp - 16);
       expect(battle.p2.pokemon[0].hp).toEqual(p2hp - 22);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Gastly|Night Shade|p2a: Clefairy',
         '|-damage|p2a: Clefairy|41/63',
         '|move|p2a: Clefairy|Seismic Toss|p1a: Gastly',
         '|-damage|p1a: Gastly|49/65',
         '|turn|2',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('SpecialDamage (Psywave)', () => {
       const PSY_MAX = {key: 'Battle.damageCallback', value: MAX};
       const PSY_MIN = {key: 'Battle.damageCallback', value: MIN};
-      const battle = startBattle([SRF, SRF, HIT, PSY_MAX, HIT, PSY_MIN], [
+      const battle = startBattle([[SRF, SRF, HIT, PSY_MAX, HIT, PSY_MIN]], [
         {species: 'Gengar', evs, level: 59, moves: ['Psywave']},
       ], [
         {species: 'Clefable', evs, level: 42, moves: ['Psywave']},
@@ -2058,17 +2037,16 @@ for (const gen of new Generations(Dex as any)) {
 
       expect(battle.p2.pokemon[0].hp).toEqual(p2hp - 87);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Gengar|Psywave|p2a: Clefable',
         '|-damage|p2a: Clefable|83/170',
         '|move|p2a: Clefable|Psywave|p1a: Gengar',
         '|turn|2',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('SuperFang', () => {
-      const battle = startBattle([SRF, SRF, HIT, HIT, SRF, SRF, HIT], [
+      const battle = startBattle([[SRF, SRF, HIT, HIT], [], [SRF, SRF, HIT]], [
         {species: 'Raticate', evs, moves: ['Super Fang']},
         {species: 'Haunter', evs, moves: ['Dream Eater']},
       ], [
@@ -2088,7 +2066,7 @@ for (const gen of new Generations(Dex as any)) {
       battle.makeChoices('move 1', 'move 1');
       expect(battle.p1.pokemon[0].hp).toBe(147);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Raticate|Super Fang|p2a: Rattata',
         '|-damage|p2a: Rattata|132/263',
         '|move|p2a: Rattata|Super Fang|p1a: Raticate',
@@ -2102,19 +2080,18 @@ for (const gen of new Generations(Dex as any)) {
         '|-damage|p1a: Haunter|147/293',
         '|turn|3',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('Disable', () => {
       const no_frz = {key: HIT.key, value: ranged(26, 256)};
       const battle = startBattle([
-        SRF, SRF, HIT, HIT, NO_CRIT, MIN_DMG,
-        SRF, SRF, HIT, DISABLE_DURATION(1), DISABLE_MOVE(1),
-        SRF, SRF, HIT, DISABLE_DURATION(5), DISABLE_MOVE(3), HIT, NO_CRIT, MIN_DMG,
-        SRF, SRF, HIT, DISABLE_DURATION(5), DISABLE_MOVE(4),
-        SRF, SRF, HIT, HIT, NO_CRIT, MIN_DMG,
-        SRF, HIT, NO_CRIT, MIN_DMG,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, no_frz,
+        [SRF, SRF, HIT, HIT, NO_CRIT, MIN_DMG],
+        [SRF, SRF, HIT, DISABLE_DURATION(1), DISABLE_MOVE(1)],
+        [SRF, SRF, HIT, DISABLE_DURATION(5), DISABLE_MOVE(3), HIT, NO_CRIT, MIN_DMG],
+        [SRF, SRF, HIT, DISABLE_DURATION(5), DISABLE_MOVE(4)],
+        [SRF, SRF, HIT, HIT, NO_CRIT, MIN_DMG],
+        [SRF, HIT, NO_CRIT, MIN_DMG],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, no_frz],
       ], [
         {species: 'Golduck', evs, moves: ['Disable', 'Water Gun']},
       ], [
@@ -2170,7 +2147,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 53);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 17);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Golduck|Disable|p2a: Vaporeon',
         '|-fail|p2a: Vaporeon',
         '|move|p2a: Vaporeon|Water Gun|p1a: Golduck',
@@ -2214,16 +2191,15 @@ for (const gen of new Generations(Dex as any)) {
         '|-damage|p1a: Golduck|229/363',
         '|turn|8',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('Mist', () => {
       const proc = {key: HIT.key, value: ranged(85, 256) - 1};
       const battle = startBattle([
-        SRF, HIT, NO_CRIT, MIN_DMG, proc,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, SRF, HIT,
-        SRF, HIT, NO_CRIT, MIN_DMG,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, SRF, HIT,
+        [SRF, HIT, NO_CRIT, MIN_DMG, proc],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, SRF, HIT],
+        [SRF, HIT, NO_CRIT, MIN_DMG],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, SRF, HIT],
       ], [
         {species: 'Articuno', evs, moves: ['Mist', 'Peck']},
       ], [
@@ -2253,7 +2229,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].boosts.atk).toBe(-1);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 48);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Articuno|Mist|p1a: Articuno',
         '|-start|p1a: Articuno|Mist',
         '|move|p2a: Vaporeon|Aurora Beam|p1a: Articuno',
@@ -2279,15 +2255,15 @@ for (const gen of new Generations(Dex as any)) {
         '|-unboost|p1a: Articuno|atk|1',
         '|turn|5',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('HyperBeam', () => {
       const battle = startBattle([
-        SRF, HIT, NO_CRIT, MAX_DMG,
-        SRF, HIT, NO_CRIT, MAX_DMG,
-        SRF, HIT, NO_CRIT, MIN_DMG,
-        SRF, SRF,
+        [SRF, HIT, NO_CRIT, MAX_DMG],
+        [SRF, HIT, NO_CRIT, MAX_DMG],
+        [],
+        [SRF, HIT, NO_CRIT, MIN_DMG],
+        [SRF, SRF],
       ], [
         {species: 'Tauros', evs, moves: ['Hyper Beam', 'Body Slam']},
         {species: 'Exeggutor', evs, moves: ['Sleep Powder']},
@@ -2338,7 +2314,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
       expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p2a: Jolteon|Substitute|p2a: Jolteon',
         '|-start|p2a: Jolteon|Substitute',
         '|-damage|p2a: Jolteon|17/333',
@@ -2360,13 +2336,12 @@ for (const gen of new Generations(Dex as any)) {
         '|move|p2a: Chansey|Teleport|p2a: Chansey',
         '|turn|5',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test.todo('Counter');
 
     test('Heal (normal)', () => {
-      const battle = startBattle([SRF, SRF, HIT, CRIT, MAX_DMG, HIT, NO_CRIT, MIN_DMG], [
+      const battle = startBattle([[], [SRF, SRF, HIT, CRIT, MAX_DMG, HIT, NO_CRIT, MIN_DMG], []], [
         {species: 'Alakazam', evs, moves: ['Recover', 'Mega Kick']},
       ], [
         {species: 'Chansey', evs, moves: ['Soft-Boiled', 'Mega Punch']},
@@ -2391,7 +2366,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toBe(p1hp += 51);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp += 351);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Alakazam|Recover|p1a: Alakazam',
         '|-fail|p1a: Alakazam',
         '|move|p2a: Chansey|Soft-Boiled|p2a: Chansey',
@@ -2409,14 +2384,12 @@ for (const gen of new Generations(Dex as any)) {
         '|-heal|p2a: Chansey|437/703',
         '|turn|4',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('Heal (Rest)', () => {
       const battle = startBattle([
-        SRF, HIT, SS_MOD,
-        SRF, HIT, NO_CRIT, MIN_DMG, PAR_CAN, SS_MOD, SLP(5),
-        SRF, HIT, NO_CRIT, MIN_DMG,
+        [SRF, HIT, SS_MOD], [SRF, HIT, NO_CRIT, MIN_DMG, PAR_CAN, SS_MOD, SLP(5)],
+        [SRF, HIT, NO_CRIT, MIN_DMG], [],
       ], [
         {species: 'Porygon', evs, moves: ['Thunder Wave', 'Tackle', 'Rest']},
         {species: 'Dragonair', evs, moves: ['Slam']},
@@ -2453,7 +2426,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].modifiedStats!.spe).toBe(49);
       expect(battle.p2.pokemon[0].storedStats.spe).toBe(198);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p2a: Chansey|Rest|p2a: Chansey',
         '|-fail|p2a: Chansey',
         '|move|p1a: Porygon|Thunder Wave|p2a: Chansey',
@@ -2474,12 +2447,11 @@ for (const gen of new Generations(Dex as any)) {
         '|-curestatus|p2a: Chansey|slp|[msg]',
         '|turn|5',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('Drain', () => {
       const battle = startBattle([
-        SRF, HIT, NO_CRIT, MIN_DMG, SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+        [SRF, HIT, NO_CRIT, MIN_DMG], [], [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Slowpoke', evs, moves: ['Teleport']},
         {species: 'Butterfree', evs, moves: ['Mega Drain']},
@@ -2505,7 +2477,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 16);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp = p2hp - 6 + 8);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p2a: Parasect|Leech Life|p1a: Slowpoke',
         '|-supereffective|p1a: Slowpoke',
         '|-damage|p1a: Slowpoke|0 fnt',
@@ -2522,12 +2494,14 @@ for (const gen of new Generations(Dex as any)) {
         '|-heal|p2a: Parasect|303/323|[from] drain|[of] p1a: Butterfree',
         '|turn|3',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('DreamEater', () => {
       const battle = startBattle([
-        SRF, SRF, HIT, SS_MOD, SLP(5), SRF, HIT, NO_CRIT, MIN_DMG, SRF, HIT, NO_CRIT, MIN_DMG,
+        [SRF],
+        [SRF, HIT, SS_MOD, SLP(5)],
+        [SRF, HIT, NO_CRIT, MIN_DMG],
+        [SRF, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Hypno', evs, moves: ['Dream Eater', 'Hypnosis']},
       ], [
@@ -2554,7 +2528,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toBe(p1hp += 1);
       expect(battle.p2.pokemon[0].hp).toBe(0);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Hypno|Dream Eater|p2a: Wigglytuff',
         '|-immune|p2a: Wigglytuff',
         '|move|p2a: Wigglytuff|Teleport|p2a: Wigglytuff',
@@ -2574,11 +2548,12 @@ for (const gen of new Generations(Dex as any)) {
         '|faint|p2a: Wigglytuff',
         '|win|Player 1',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('LeechSeed', () => {
-      const battle = startBattle([SRF, SRF, MISS, SRF, HIT, SRF, SRF, HIT, HIT, SRF, HIT], [
+      const battle = startBattle([
+        [SRF, SRF, MISS], [SRF, HIT], [], [SRF, SRF, HIT, HIT], [SRF, HIT], [],
+      ], [
         {species: 'Venusaur', evs, moves: ['Leech Seed']},
         {species: 'Exeggutor', evs, moves: ['Leech Seed', 'Teleport']},
       ], [
@@ -2620,7 +2595,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toBe(exeggutor += 24);
       expect(battle.p2.pokemon[0].hp).toBe(slowbro - 1);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p2a: Gengar|Leech Seed|p1a: Venusaur',
         '|-immune|p1a: Venusaur',
         '|move|p1a: Venusaur|Leech Seed|p2a: Gengar|[miss]',
@@ -2653,11 +2628,10 @@ for (const gen of new Generations(Dex as any)) {
         '|-heal|p1a: Exeggutor|337/393|[silent]',
         '|faint|p2a: Slowbro',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('PayDay', () => {
-      const battle = startBattle([SRF, HIT, NO_CRIT, MAX_DMG], [
+      const battle = startBattle([[SRF, HIT, NO_CRIT, MAX_DMG]], [
         {species: 'Meowth', evs, moves: ['Pay Day']},
       ], [
         {species: 'Slowpoke', evs, moves: ['Teleport']},
@@ -2668,22 +2642,21 @@ for (const gen of new Generations(Dex as any)) {
       battle.makeChoices('move 1', 'move 1');
       expect(battle.p2.pokemon[0].hp).toBe(p2hp - 43);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Meowth|Pay Day|p2a: Slowpoke',
         '|-damage|p2a: Slowpoke|340/383',
         '|-fieldactivate|move: Pay Day',
         '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
         '|turn|2',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('Rage', () => {
       const battle = startBattle([
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, MISS,
-        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, DISABLE_DURATION(5), DISABLE_MOVE(1, 2),
-        SRF, SRF, MISS,
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, MISS],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, DISABLE_DURATION(5), DISABLE_MOVE(1, 2)],
+        [SRF, SRF, MISS],
       ], [
         {species: 'Charmeleon', evs, moves: ['Rage', 'Flamethrower']},
         {species: 'Doduo', evs, moves: ['Drill Peck']},
@@ -2729,7 +2702,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p2.pokemon[0].hp).toBe(0);
       expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Charmeleon|Rage|p2a: Grimer',
         '|-damage|p2a: Grimer|346/363',
         '|move|p2a: Grimer|Pound|p1a: Charmeleon',
@@ -2753,16 +2726,13 @@ for (const gen of new Generations(Dex as any)) {
         '|faint|p2a: Grimer',
         '|win|Player 1',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test.todo('Mimic');
 
     test('LightScreen', () => {
       const battle = startBattle([
-        SRF, HIT, NO_CRIT, MIN_DMG,
-        SRF, HIT, NO_CRIT, MIN_DMG,
-        SRF, HIT, CRIT, MIN_DMG,
+        [SRF, HIT, NO_CRIT, MIN_DMG], [SRF, HIT, NO_CRIT, MIN_DMG], [SRF, HIT, CRIT, MIN_DMG], [],
       ], [
         {species: 'Chansey', evs, moves: ['Light Screen', 'Teleport']},
       ], [
@@ -2788,7 +2758,7 @@ for (const gen of new Generations(Dex as any)) {
       battle.makeChoices('move 2', 'move 2');
       expect(battle.p1.pokemon[0].volatiles['lightscreen']).toBeUndefined();
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p2a: Vaporeon|Water Gun|p1a: Chansey',
         '|-damage|p1a: Chansey|658/703',
         '|move|p1a: Chansey|Light Screen|p1a: Chansey',
@@ -2810,14 +2780,11 @@ for (const gen of new Generations(Dex as any)) {
         '|move|p1a: Chansey|Teleport|p1a: Chansey',
         '|turn|5',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('Reflect', () => {
       const battle = startBattle([
-        SRF, HIT, NO_CRIT, MIN_DMG,
-        SRF, HIT, NO_CRIT, MIN_DMG,
-        SRF, HIT, CRIT, MIN_DMG,
+        [SRF, HIT, NO_CRIT, MIN_DMG], [SRF, HIT, NO_CRIT, MIN_DMG], [SRF, HIT, CRIT, MIN_DMG], [],
       ], [
         {species: 'Chansey', evs, moves: ['Reflect', 'Teleport']},
       ], [
@@ -2843,7 +2810,7 @@ for (const gen of new Generations(Dex as any)) {
       battle.makeChoices('move 2', 'move 2');
       expect(battle.p1.pokemon[0].volatiles['reflect']).toBeUndefined();
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p2a: Vaporeon|Tackle|p1a: Chansey',
         '|-damage|p1a: Chansey|649/703',
         '|move|p1a: Chansey|Reflect|p1a: Chansey',
@@ -2865,7 +2832,6 @@ for (const gen of new Generations(Dex as any)) {
         '|move|p1a: Chansey|Teleport|p1a: Chansey',
         '|turn|5',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test.todo('Haze');
@@ -2875,10 +2841,7 @@ for (const gen of new Generations(Dex as any)) {
 
     test('Explode', () => {
       const battle = startBattle([
-        SRF, HIT, SS_MOD,
-        SRF, HIT, NO_CRIT, MAX_DMG,
-        SRF, HIT, NO_CRIT, MAX_DMG,
-        SRF,
+        [SRF, HIT, SS_MOD], [SRF, HIT, NO_CRIT, MAX_DMG], [SRF, HIT, NO_CRIT, MAX_DMG], [], [SRF],
       ], [
         {species: 'Electrode', level: 80, evs, moves: ['Explosion', 'Toxic']},
         {species: 'Onix', evs, moves: ['Self-Destruct']},
@@ -2911,7 +2874,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].hp).toBe(0);
       expect(battle.p2.pokemon[0].hp).toBe(gengar);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Electrode|Toxic|p2a: Chansey',
         '|-status|p2a: Chansey|tox',
         '|move|p2a: Chansey|Substitute|p2a: Chansey',
@@ -2935,11 +2898,10 @@ for (const gen of new Generations(Dex as any)) {
         '|faint|p1a: Onix',
         '|win|Player 2',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('Swift', () => {
-      const battle = startBattle([SRF, SRF, SRF, NO_CRIT, MIN_DMG, SS_RES, GLM], [
+      const battle = startBattle([[SRF, SRF, SRF, NO_CRIT, MIN_DMG, SS_RES, GLM]], [
         {species: 'Eevee', evs, moves: ['Swift']},
       ], [
         {species: 'Diglett', evs, moves: ['Dig']},
@@ -2950,18 +2912,19 @@ for (const gen of new Generations(Dex as any)) {
       battle.makeChoices('move 1', 'move 1');
       expect(battle.p2.pokemon[0].hp).toBe(p2hp - 91);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p2a: Diglett|Dig||[still]',
         '|-prepare|p2a: Diglett|Dig',
         '|move|p1a: Eevee|Swift|p2a: Diglett',
         '|-damage|p2a: Diglett|132/223',
         '|turn|2',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('Transform', () => {
-      const battle = startBattle([SRF, SRF, SS_RES, GLM, GLM, GLM, SRF, SRF, SS_RUN, MISS], [
+      const battle = startBattle([
+        [], [SRF, SRF, SS_RES, GLM], [GLM, GLM, SRF, SRF, SS_RUN, MISS],
+      ], [
         {species: 'Mew', level: 50, moves: ['Swords Dance', 'Transform']},
       ], [
         {species: 'Articuno', evs, moves: ['Agility', 'Fly']},
@@ -2992,7 +2955,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(battle.p1.pokemon[0].moveSlots[1].move).toBe('Fly');
       expect(battle.p1.pokemon[0].moveSlots[1].pp).toBe(5);
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p2a: Articuno|Agility|p2a: Articuno',
         '|-boost|p2a: Articuno|spe|2',
         '|move|p1a: Mew|Swords Dance|p1a: Mew',
@@ -3009,11 +2972,10 @@ for (const gen of new Generations(Dex as any)) {
         '|-transform|p1a: Mew|p2a: Articuno',
         '|turn|4',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
     test('Conversion', () => {
-      const battle = startBattle([SRF], [
+      const battle = startBattle([[SRF]], [
         {species: 'Porygon', evs, moves: ['Conversion']},
       ], [
         {species: 'Slowbro', evs, moves: ['Teleport']},
@@ -3021,18 +2983,19 @@ for (const gen of new Generations(Dex as any)) {
 
       battle.makeChoices('move 1', 'move 1');
 
-      expectLog(battle, [
+      verify(battle, [
         '|move|p1a: Porygon|Conversion|p2a: Slowbro',
         '|-start|p1a: Porygon|typechange|Water/Psychic|[from] move: Conversion|[of] p2a: Slowbro',
         '|move|p2a: Slowbro|Teleport|p2a: Slowbro',
         '|turn|2',
       ]);
-      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
   });
 
   test('Substitute', () => {
-    const battle = startBattle([SRF, HIT, SRF, HIT, NO_CRIT, MIN_DMG, SRF, HIT, SRF, HIT], [
+    const battle = startBattle([
+      [SRF, HIT], [SRF, HIT, NO_CRIT, MIN_DMG], [SRF, HIT], [SRF, HIT],
+    ], [
       {species: 'Mewtwo', evs, moves: ['Substitute', 'Teleport']},
       {species: 'Abra', level: 2, moves: ['Substitute']},
     ], [
@@ -3065,7 +3028,7 @@ for (const gen of new Generations(Dex as any)) {
     expect(battle.p1.pokemon[0].hp).toBe(mew);
     expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(1);
 
-    expectLog(battle, [
+    verify(battle, [
       '|move|p1a: Mewtwo|Substitute|p1a: Mewtwo',
       '|-start|p1a: Mewtwo|Substitute',
       '|-damage|p1a: Mewtwo|312/415',
@@ -3087,16 +3050,14 @@ for (const gen of new Generations(Dex as any)) {
       '|-start|p1a: Abra|Substitute',
       '|turn|5',
     ]);
-    expect((battle.prng as FixedRNG).exhausted()).toBe(true);
   });
 
   if (gen.num === 1) {
     describe('Gen 1', () => {
       test('0 damage glitch', () => {
         const battle = startBattle([
-          SRF, SRF, SRF, HIT, HIT, NO_CRIT,
-          SRF, SRF, HIT,
-          SRF, SRF, SRF, HIT, HIT, NO_CRIT,
+          [SRF, SRF, SRF, HIT, HIT, NO_CRIT], [SRF, SRF, HIT],
+          [SRF, SRF, SRF, HIT, HIT, NO_CRIT],
         ], [
           {species: 'Bulbasaur', evs, moves: ['Growl']},
         ], [
@@ -3114,7 +3075,7 @@ for (const gen of new Generations(Dex as any)) {
         // expect(battle.p1.pokemon[0].hp).toEqual(p1hp);
         expect(battle.p1.pokemon[0].hp).toEqual(p1hp - 1);
 
-        expectLog(battle, [
+        verify(battle, [
           '|move|p1a: Bulbasaur|Growl|p2a: Bellsprout',
           '|-unboost|p2a: Bellsprout|atk|1',
           '|move|p2a: Bellsprout|Vine Whip|p1a: Bulbasaur',
@@ -3132,11 +3093,10 @@ for (const gen of new Generations(Dex as any)) {
           '|-damage|p1a: Bulbasaur|292/293',
           '|turn|4',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
       test('1/256 miss glitch', () => {
-        const battle = startBattle([SRF, SRF, MISS, MISS], [
+        const battle = startBattle([[SRF, SRF, MISS, MISS]], [
           {species: 'Jigglypuff', evs, moves: ['Pound']},
         ], [
           {species: 'Nidoran-F', evs, moves: ['Scratch']},
@@ -3149,14 +3109,13 @@ for (const gen of new Generations(Dex as any)) {
         expect(battle.p1.pokemon[0].hp).toEqual(p1hp);
         expect(battle.p2.pokemon[0].hp).toEqual(p2hp);
 
-        expectLog(battle, [
+        verify(battle, [
           '|move|p2a: Nidoran-F|Scratch|p1a: Jigglypuff|[miss]',
           '|-miss|p2a: Nidoran-F',
           '|move|p1a: Jigglypuff|Pound|p2a: Nidoran-F|[miss]',
           '|-miss|p1a: Jigglypuff',
           '|turn|2',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
       test.todo('Bide errors');
@@ -3165,9 +3124,8 @@ for (const gen of new Generations(Dex as any)) {
       test('Freeze top move selection glitch', () => {
         const NO_BRN = {key: FRZ.key, value: FRZ.value + 1};
         const battle = startBattle([
-          SRF, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
-          SRF, HIT, NO_CRIT, MIN_DMG, NO_BRN,
-          SRF, HIT, NO_CRIT, MIN_DMG, NO_BRN,
+          [SRF, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD], [SRF, HIT, NO_CRIT, MIN_DMG, NO_BRN],
+          [], [SRF, HIT, NO_CRIT, MIN_DMG, NO_BRN],
         ], [
           {species: 'Slowbro', evs, moves: ['Psychic', 'Amnesia', 'Teleport']},
           {species: 'Spearow', level: 8, evs, moves: ['Peck']},
@@ -3195,7 +3153,7 @@ for (const gen of new Generations(Dex as any)) {
         battle.makeChoices('move 3', 'move 2');
         expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 50);
 
-        expectLog(battle, [
+        verify(battle, [
           '|switch|p1a: Slowbro|Slowbro|393/393',
           '|switch|p2a: Mew|Mew|403/403',
           '|turn|1',
@@ -3218,7 +3176,6 @@ for (const gen of new Generations(Dex as any)) {
           '|move|p1a: Slowbro|Teleport|p1a: Slowbro',
           '|turn|4',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
       test.todo('Haze glitch');
@@ -3226,7 +3183,8 @@ for (const gen of new Generations(Dex as any)) {
       test('Toxic counter glitches', () => {
         const BRN = {key: HIT.key, value: ranged(77, 256) - 1};
         const battle = startBattle([
-          SRF, HIT, SS_MOD, SS_MOD, SLP(5), SRF, HIT, SRF, HIT, NO_CRIT, MIN_DMG, BRN, SS_MOD,
+          [SRF, HIT, SS_MOD, SS_MOD, SLP(5)], [], [SRF, HIT],
+          [SRF, HIT, NO_CRIT, MIN_DMG, BRN, SS_MOD],
         ], [
           {species: 'Venusaur', evs, moves: ['Toxic', 'Leech Seed', 'Teleport', 'Fire Blast']},
         ], [
@@ -3244,7 +3202,7 @@ for (const gen of new Generations(Dex as any)) {
         battle.makeChoices('move 4', 'move 1');
         expect(battle.p2.active[0].volatiles['residualdmg'].counter).toBe(3);
 
-        expectLog(battle, [
+        verify(battle, [
           '|move|p1a: Venusaur|Toxic|p2a: Clefable',
           '|-status|p2a: Clefable|tox',
           '|move|p2a: Clefable|Rest|p2a: Clefable',
@@ -3267,15 +3225,13 @@ for (const gen of new Generations(Dex as any)) {
           '|-damage|p2a: Clefable|153/393 brn|[from] Leech Seed|[of] p1a: Venusaur',
           '|turn|5',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
       test('Defrost move forcing', () => {
         const NO_BRN = {key: FRZ.key, value: FRZ.value + 1};
         const battle = startBattle([
-          SRF, HIT, NO_CRIT, MIN_DMG,
-          SRF, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
-          SRF, SRF, HIT, NO_CRIT, MIN_DMG, NO_BRN, HIT, NO_CRIT, MIN_DMG,
+          [SRF, HIT, NO_CRIT, MIN_DMG], [SRF, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD],
+          [SRF, SRF, HIT, NO_CRIT, MIN_DMG, NO_BRN, HIT, NO_CRIT, MIN_DMG],
         ], [
           {species: 'Hypno', level: 50, evs, moves: ['Teleport', 'Ice Punch', 'Fire Punch']},
         ], [
@@ -3305,7 +3261,7 @@ for (const gen of new Generations(Dex as any)) {
 
         expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
-        expectLog(battle, [
+        verify(battle, [
           '|move|p1a: Hypno|Teleport|p1a: Hypno',
           '|move|p2a: Bulbasaur|Vine Whip|p1a: Hypno',
           '|-damage|p1a: Hypno|188/191',
@@ -3324,17 +3280,14 @@ for (const gen of new Generations(Dex as any)) {
           '|-damage|p1a: Hypno|176/191',
           '|turn|4',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
       test('Division by 0', () => {
         //  Attack/Special > 255 vs. Defense/Special stat < 4.
         {
           const battle = startBattle([
-            SRF, SRF, HIT, SRF, HIT,
-            SRF, SRF, MISS,
-            SRF, SRF, MISS,
-            SRF, SRF, HIT, NO_CRIT, MIN_DMG,
+            [SRF, SRF, HIT, SRF, HIT], [SRF, SRF, MISS], [SRF, SRF, MISS],
+            [SRF, SRF, HIT, NO_CRIT, MIN_DMG],
           ], [
             {species: 'Cloyster', level: 65, evs, moves: ['Screech']},
             {species: 'Parasect', level: 100, evs, moves: ['Swords Dance', 'Leech Life']},
@@ -3353,7 +3306,7 @@ for (const gen of new Generations(Dex as any)) {
           battle.makeChoices('move 2', 'move 1');
           expect(battle.p2.pokemon[0].hp).toBe(0);
 
-          expectLog(battle, [
+          verify(battle, [
             '|move|p1a: Cloyster|Screech|p2a: Rattata',
             '|-unboost|p2a: Rattata|def|2',
             '|move|p2a: Rattata|Tail Whip|p1a: Cloyster',
@@ -3373,16 +3326,13 @@ for (const gen of new Generations(Dex as any)) {
             '|faint|p2a: Rattata',
             '|win|Player 1',
           ]);
-          expect((battle.prng as FixedRNG).exhausted()).toBe(true);
         }
         // Defense/Special stat is 512 or 513 + Reflect/Light Screen.
         {
           const def12 = {hp: 0, atk: 0, def: 12, spa: 0, spd: 0, spe: 0};
           const battle = startBattle([
-            SRF, HIT, NO_CRIT, MAX_DMG,
-            SRF, HIT, NO_CRIT, MAX_DMG,
-            SRF, HIT,
-            SRF, HIT, NO_CRIT, MAX_DMG,
+            [SRF, HIT, NO_CRIT, MAX_DMG], [SRF, HIT, NO_CRIT, MAX_DMG],
+            [SRF, HIT], [SRF, HIT, NO_CRIT, MAX_DMG],
           ], [
             {species: 'Cloyster', level: 64, evs: def12, moves: ['Withdraw', 'Reflect']},
           ], [
@@ -3406,7 +3356,7 @@ for (const gen of new Generations(Dex as any)) {
           battle.makeChoices('move 2', 'move 1');
           expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 12);
 
-          expectLog(battle, [
+          verify(battle, [
             '|move|p1a: Cloyster|Withdraw|p1a: Cloyster',
             '|-boost|p1a: Cloyster|def|1',
             '|move|p2a: Pidgey|Gust|p1a: Cloyster',
@@ -3428,16 +3378,13 @@ for (const gen of new Generations(Dex as any)) {
             '|-damage|p1a: Cloyster|137/157',
             '|turn|5',
           ]);
-          expect((battle.prng as FixedRNG).exhausted()).toBe(true);
         }
         // Defense/Special stat >= 514 + Reflect/Light Screen.
         {
           const def20 = {hp: 0, atk: 0, def: 20, spa: 0, spd: 0, spe: 0};
           const battle = startBattle([
-            SRF, HIT, NO_CRIT, MAX_DMG,
-            SRF, HIT, NO_CRIT, MAX_DMG,
-            SRF, HIT,
-            SRF, HIT, NO_CRIT, MAX_DMG,
+            [SRF, HIT, NO_CRIT, MAX_DMG], [SRF, HIT, NO_CRIT, MAX_DMG],
+            [SRF, HIT], [SRF, HIT, NO_CRIT, MAX_DMG],
           ], [
             {species: 'Cloyster', level: 64, evs: def20, moves: ['Withdraw', 'Reflect']},
           ], [
@@ -3461,7 +3408,7 @@ for (const gen of new Generations(Dex as any)) {
           battle.makeChoices('move 2', 'move 1');
           expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 12);
 
-          expectLog(battle, [
+          verify(battle, [
             '|move|p1a: Cloyster|Withdraw|p1a: Cloyster',
             '|-boost|p1a: Cloyster|def|1',
             '|move|p2a: Pidgey|Gust|p1a: Cloyster',
@@ -3483,18 +3430,15 @@ for (const gen of new Generations(Dex as any)) {
             '|-damage|p1a: Cloyster|137/157',
             '|turn|5',
           ]);
-          expect((battle.prng as FixedRNG).exhausted()).toBe(true);
         }
       });
 
       test('Hyper Beam + Freeze permanent helplessness', () => {
         const NO_BRN = {key: FRZ.key, value: FRZ.value + 1};
         const battle = startBattle([
-          SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
-          SRF, SRF,
-          SRF, HIT, NO_CRIT, MIN_DMG,
-          SRF, SRF, HIT, NO_CRIT, MIN_DMG, NO_BRN, SRF,
-          SRF, SRF, HIT, NO_CRIT, MIN_DMG, NO_BRN, HIT, NO_CRIT, MIN_DMG,
+          [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD],
+          [SRF, SRF], [SRF, HIT, NO_CRIT, MIN_DMG], [SRF, SRF, HIT, NO_CRIT, MIN_DMG, NO_BRN, SRF],
+          [SRF, SRF, HIT, NO_CRIT, MIN_DMG, NO_BRN, HIT, NO_CRIT, MIN_DMG],
         ], [
           {species: 'Chansey', evs, moves: ['Hyper Beam', 'Soft-Boiled']},
           {species: 'Blastoise', evs, moves: ['Hydro Pump']},
@@ -3535,7 +3479,7 @@ for (const gen of new Generations(Dex as any)) {
         expect(battle.p1.pokemon[0].hp).toBe(chansey -= 90);
         expect(battle.p2.pokemon[0].hp).toBe(charizard -= 69);
 
-        expectLog(battle, [
+        verify(battle, [
           '|move|p1a: Chansey|Hyper Beam|p2a: Lapras',
           '|-damage|p2a: Lapras|143/263',
           '|-mustrecharge|p1a: Chansey',
@@ -3566,14 +3510,12 @@ for (const gen of new Generations(Dex as any)) {
           '|-mustrecharge|p1a: Chansey',
           '|turn|6',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
       test('Hyper Beam + Sleep move glitch', () => {
         const battle = startBattle([
-          SRF, SRF, HIT, SS_MOD, HIT, NO_CRIT, MIN_DMG,
-          SRF, SRF, SS_MOD, SLP(2), SRF,
-          SRF, SRF, SRF, HIT, SS_MOD, MISS,
+          [SRF, SRF, HIT, SS_MOD, HIT, NO_CRIT, MIN_DMG], [SRF, SRF, SS_MOD, SLP(2), SRF],
+          [SRF], [SRF, SRF, HIT, SS_MOD, MISS],
         ], [
           {species: 'Hypno', evs, moves: ['Toxic', 'Hypnosis', 'Teleport']},
         ], [
@@ -3602,7 +3544,7 @@ for (const gen of new Generations(Dex as any)) {
         // expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(2);
         expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(1);
 
-        expectLog(battle, [
+        verify(battle, [
           '|move|p1a: Hypno|Toxic|p2a: Snorlax',
           '|-status|p2a: Snorlax|tox',
           '|move|p2a: Snorlax|Hyper Beam|p1a: Hypno',
@@ -3624,11 +3566,12 @@ for (const gen of new Generations(Dex as any)) {
           '|-damage|p2a: Snorlax|459/523 tox|[from] psn',
           '|turn|5',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
       test('Hyper Beam automatic selection glitch', () => {
-        const battle = startBattle([SRF, SRF, MISS, HIT, NO_CRIT, MIN_DMG, SRF, SRF, MISS, SRF], [
+        const battle = startBattle([
+          [SRF, SRF, MISS, HIT, NO_CRIT, MIN_DMG], [SRF, SRF, MISS, SRF],
+        ], [
           {species: 'Chansey', evs, moves: ['Hyper Beam', 'Soft-Boiled']},
         ], [
           {species: 'Tentacool', evs, moves: ['Wrap']},
@@ -3646,7 +3589,7 @@ for (const gen of new Generations(Dex as any)) {
         battle.makeChoices('move 1', 'move 1');
         // expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(63);
 
-        expectLog(battle, [
+        verify(battle, [
           '|move|p2a: Tentacool|Wrap|p1a: Chansey|[miss]',
           '|-miss|p2a: Tentacool',
           '|move|p1a: Chansey|Hyper Beam|p2a: Tentacool',
@@ -3658,18 +3601,18 @@ for (const gen of new Generations(Dex as any)) {
           '|cant|p1a: Chansey|recharge',
           '|turn|3',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
       test('Invulnerability glitch', () => {
         const NO_PAR = {key: HIT.key, value: ranged(26, 256)};
         const battle = startBattle([
-          SRF, HIT, SS_MOD,
-          SRF, SRF, PAR_CAN, SS_RES, GLM,
-          GLM, GLM, SRF, SRF, PAR_CANT, HIT, NO_CRIT, MIN_DMG, NO_PAR,
-          SRF, PAR_CAN, SRF, NO_CRIT, MIN_DMG,
-          SRF, SRF, PAR_CAN, SS_RES, GLM,
-          GLM, GLM, SRF, SRF, PAR_CAN, SS_RUN, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, NO_PAR,
+          [SRF, HIT, SS_MOD],
+          [SRF, SRF, PAR_CAN, SS_RES, GLM],
+          [GLM, GLM, SRF, SRF, PAR_CANT, HIT, NO_CRIT, MIN_DMG, NO_PAR],
+          [SRF, PAR_CAN, SRF, NO_CRIT, MIN_DMG],
+          [SRF, SRF, PAR_CAN, SS_RES, GLM],
+          [GLM, GLM, SRF, SRF, PAR_CAN, SS_RUN, HIT,
+            NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, NO_PAR],
         ], [
           {species: 'Fearow', evs, moves: ['Agility', 'Fly']},
         ], [
@@ -3700,7 +3643,7 @@ for (const gen of new Generations(Dex as any)) {
         expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 25);
         expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 130);
 
-        expectLog(battle, [
+        verify(battle, [
           '|move|p1a: Fearow|Agility|p1a: Fearow',
           '|-boost|p1a: Fearow|spe|2',
           '|move|p2a: Pikachu|Thunder Wave|p1a: Fearow',
@@ -3734,13 +3677,12 @@ for (const gen of new Generations(Dex as any)) {
           '|-damage|p1a: Fearow|272/333 par',
           '|turn|7',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
       test('Stat modification errors', () => {
         {
           const battle = startBattle([
-            SRF, SRF, HIT, HIT, SS_MOD, SRF, PAR_CAN, HIT, SRF, PAR_CAN, HIT,
+            [SRF, SRF, HIT, HIT, SS_MOD], [SRF, PAR_CAN, HIT], [SRF, PAR_CAN, HIT],
           ], [
             {species: 'Bulbasaur', level: 6, moves: ['Stun Spore', 'Growth']},
           ], [
@@ -3762,7 +3704,7 @@ for (const gen of new Generations(Dex as any)) {
           expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(12);
           expect(battle.p2.pokemon[0].modifiedStats!.spe).toBe(1);
 
-          expectLog(battle, [
+          verify(battle, [
             '|move|p2a: Pidgey|Sand Attack|p1a: Bulbasaur',
             '|-unboost|p1a: Bulbasaur|accuracy|1',
             '|move|p1a: Bulbasaur|Stun Spore|p2a: Pidgey',
@@ -3781,14 +3723,11 @@ for (const gen of new Generations(Dex as any)) {
             '|-unboost|p1a: Bulbasaur|accuracy|1',
             '|turn|4',
           ]);
-          expect((battle.prng as FixedRNG).exhausted()).toBe(true);
         }
         {
           const battle = startBattle([
-            SRF, HIT, SS_MOD,
-            SRF, PAR_CAN, SRF, HIT,
-            SRF, PAR_CANT, SRF, HIT,
-            SRF, SRF, HIT, PAR_CANT,
+            [SRF, HIT, SS_MOD], [SRF, PAR_CAN, SRF, HIT],
+            [SRF, PAR_CANT, SRF, HIT], [SRF, SRF, HIT, PAR_CANT],
           ], [
             {species: 'Bulbasaur', level: 6, moves: ['Stun Spore', 'Growth']},
             {species: 'Cloyster', level: 82, moves: ['Withdraw']},
@@ -3815,7 +3754,7 @@ for (const gen of new Generations(Dex as any)) {
           expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(23);
           expect(battle.p2.pokemon[0].modifiedStats!.spe).toBe(8);
 
-          expectLog(battle, [
+          verify(battle, [
             '|switch|p1a: Cloyster|Cloyster, L82|198/198',
             '|move|p2a: Rattata|Thunder Wave|p1a: Cloyster',
             '|-status|p1a: Cloyster|par',
@@ -3834,7 +3773,6 @@ for (const gen of new Generations(Dex as any)) {
             '|cant|p1a: Cloyster|par',
             '|turn|5',
           ]);
-          expect((battle.prng as FixedRNG).exhausted()).toBe(true);
         }
       });
 
@@ -3845,8 +3783,7 @@ for (const gen of new Generations(Dex as any)) {
         {
           const spc342 = {...evs, spa: 12, spd: 12};
           const battle = startBattle([
-            SRF, HIT, NO_CRIT, MIN_DMG, proc,
-            SRF, HIT, NO_CRIT, MIN_DMG, no_proc,
+            [], [], [], [SRF, HIT, NO_CRIT, MIN_DMG, proc], [SRF, HIT, NO_CRIT, MIN_DMG, no_proc],
           ], [
             {species: 'Porygon', level: 58, moves: ['Recover', 'Psychic']},
           ], [
@@ -3881,7 +3818,7 @@ for (const gen of new Generations(Dex as any)) {
           battle.makeChoices('move 2', 'move 2');
           expect(battle.p2.pokemon[0].hp).toBe(p2hp);
 
-          expectLog(battle, [
+          verify(battle, [
             '|move|p2a: Mewtwo|Amnesia|p2a: Mewtwo',
             '|-boost|p2a: Mewtwo|spd|2',
             '|-boost|p2a: Mewtwo|spa|2',
@@ -3915,13 +3852,11 @@ for (const gen of new Generations(Dex as any)) {
             '|-damage|p2a: Mewtwo|408/410',
             '|turn|6',
           ]);
-          expect((battle.prng as FixedRNG).exhausted()).toBe(true);
         }
         // 343 -> 1029
         {
           const battle = startBattle([
-            SRF, HIT, NO_CRIT, MIN_DMG, proc,
-            SRF, HIT, NO_CRIT, MIN_DMG, no_proc,
+            [], [], [], [SRF, HIT, NO_CRIT, MIN_DMG, proc], [SRF, HIT, NO_CRIT, MIN_DMG, no_proc],
           ], [
             {species: 'Porygon', level: 58, moves: ['Recover', 'Psychic']},
           ], [
@@ -3957,7 +3892,7 @@ for (const gen of new Generations(Dex as any)) {
           // expect(battle.p2.pokemon[0].hp).toBe(0);
           expect(battle.p2.pokemon[0].hp).toBe(p2hp);
 
-          expectLog(battle, [
+          verify(battle, [
             '|move|p2a: Mewtwo|Amnesia|p2a: Mewtwo',
             '|-boost|p2a: Mewtwo|spd|2',
             '|-boost|p2a: Mewtwo|spa|2',
@@ -3991,7 +3926,6 @@ for (const gen of new Generations(Dex as any)) {
             '|-damage|p2a: Mewtwo|350/352',
             '|turn|6',
           ]);
-          expect((battle.prng as FixedRNG).exhausted()).toBe(true);
         }
       });
 
@@ -3999,7 +3933,7 @@ for (const gen of new Generations(Dex as any)) {
         const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MAX};
         const rewrap = {key: ['Battle.sample', 'BattleActions.runMove'], value: MAX};
         const battle = startBattle([
-          SRF, HIT, NO_CRIT, MIN_DMG, wrap, SRF, HIT, NO_CRIT, MIN_DMG, rewrap,
+          [SRF, HIT, NO_CRIT, MIN_DMG, wrap], [SRF, HIT, NO_CRIT, MIN_DMG, rewrap],
         ], [
           {species: 'Victreebel', evs, moves: ['Wrap', 'Vine Whip']},
           {species: 'Seel', evs, moves: ['Bubble']},
@@ -4023,7 +3957,7 @@ for (const gen of new Generations(Dex as any)) {
         expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(63);
         expect(battle.p2.pokemon[0].hp).toBe(mrmime - 16);
 
-        expectLog(battle, [
+        verify(battle, [
           '|switch|p1a: Victreebel|Victreebel|363/363',
           '|switch|p2a: Kadabra|Kadabra|283/283',
           '|turn|1',
@@ -4036,16 +3970,13 @@ for (const gen of new Generations(Dex as any)) {
           '|-damage|p2a: Mr. Mime|267/283',
           '|turn|3',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
       test('Trapping sleep glitch', () => {
         const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
         const battle = startBattle([
-          SRF, SRF, HIT, NO_CRIT, MIN_DMG, wrap,
-          SRF, SRF,
-          SRF, SRF, HIT, SS_MOD, SLP(5),
-          SRF, SRF, HIT,
+          [SRF, SRF, HIT, NO_CRIT, MIN_DMG, wrap], [SRF, SRF],
+          [SRF, SRF, HIT, SS_MOD, SLP(5)], [SRF, SRF, HIT],
         ], [
           {species: 'Weepinbell', evs, moves: ['Wrap', 'Sleep Powder']},
           {species: 'Gloom', evs, moves: ['Absorb']},
@@ -4078,7 +4009,7 @@ for (const gen of new Generations(Dex as any)) {
         // expect(choices(battle, 'p2')).toEqual([]);
         expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
-        expectLog(battle, [
+        verify(battle, [
           '|move|p1a: Weepinbell|Wrap|p2a: Sandshrew',
           '|-damage|p2a: Sandshrew|292/303',
           '|cant|p2a: Sandshrew|partiallytrapped',
@@ -4096,13 +4027,12 @@ for (const gen of new Generations(Dex as any)) {
           '|cant|p2a: Sandshrew|slp',
           '|turn|5',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
       test('Partial trapping move Mirror Move glitch', () => {
         const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
         const battle = startBattle(
-          [SRF, MISS, SRF, SRF, HIT, NO_CRIT, MAX_DMG, wrap, SRF],
+          [[SRF, MISS], [SRF, SRF, HIT, NO_CRIT, MAX_DMG, wrap, SRF], []],
           [{species: 'Pidgeot', evs, moves: ['Agility', 'Mirror Move']}],
           [{species: 'Moltres', evs, moves: ['Leer', 'Fire Spin']},
             {species: 'Drowzee', evs, moves: ['Pound']}]
@@ -4135,16 +4065,15 @@ for (const gen of new Generations(Dex as any)) {
           '|-fail|p1a: Pidgeot',
           '|turn|4',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
       test('Rage and Thrash / Petal Dance accuracy bug', () => {
         const hit = (n: number) => ({key: HIT.key, value: ranged(n, 256) - 1});
         const miss = (n: number) => ({key: HIT.key, value: hit(n).value + 1});
         const battle = startBattle([
-          SRF, SRF, hit(255), NO_CRIT, MIN_DMG, THRASH(4),
-          SRF, SRF, SRF, hit(168), NO_CRIT, MIN_DMG,
-          SRF, SRF, SRF, miss(84), NO_CRIT, MIN_DMG, // should miss!
+          [SRF, SRF, hit(255), NO_CRIT, MIN_DMG, THRASH(4)],
+          [SRF, SRF, SRF, hit(168), NO_CRIT, MIN_DMG],
+          [SRF, SRF, SRF, miss(84), NO_CRIT, MIN_DMG], // should miss!
         ], [
           {species: 'Nidoking', evs, moves: ['Thrash']},
         ], [
@@ -4165,7 +4094,7 @@ for (const gen of new Generations(Dex as any)) {
         battle.makeChoices('move 1', 'move 1');
         expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 22);
 
-        expectLog(battle, [
+        verify(battle, [
           '|move|p1a: Nidoking|Thrash|p2a: Onix',
           '|-resisted|p2a: Onix',
           '|-damage|p2a: Onix|251/273',
@@ -4185,11 +4114,10 @@ for (const gen of new Generations(Dex as any)) {
           '|-boost|p2a: Onix|evasion|1',
           '|turn|4',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
       test('Substitute HP drain bug', () => {
-        const battle = startBattle([SRF, HIT, NO_CRIT, MIN_DMG], [
+        const battle = startBattle([[SRF, HIT, NO_CRIT, MIN_DMG]], [
           {species: 'Butterfree', evs, moves: ['Mega Drain']},
         ], [
           {species: 'Jolteon', evs, moves: ['Substitute']},
@@ -4200,7 +4128,7 @@ for (const gen of new Generations(Dex as any)) {
         battle.makeChoices('move 1', 'move 1');
         expect(battle.p2.pokemon[0].hp).toBe(p2hp - 83);
 
-        expectLog(battle, [
+        verify(battle, [
           '|move|p2a: Jolteon|Substitute|p2a: Jolteon',
           '|-start|p2a: Jolteon|Substitute',
           '|-damage|p2a: Jolteon|250/333',
@@ -4208,11 +4136,10 @@ for (const gen of new Generations(Dex as any)) {
           '|-activate|p2a: Jolteon|Substitute|[damage]',
           '|turn|2',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
       test('Substitute 1/4 HP glitch', () => {
-        const battle = startBattle([], [
+        const battle = startBattle([[]], [
           {species: 'Pidgey', level: 3, moves: ['Substitute']},
         ], [
           {species: 'Rattata', level: 4, moves: ['Focus Energy']},
@@ -4223,7 +4150,7 @@ for (const gen of new Generations(Dex as any)) {
         battle.makeChoices('move 1', 'move 1');
         expect(battle.p1.pokemon[0].hp).toBe(0);
 
-        expectLog(battle, [
+        verify(battle, [
           '|move|p2a: Rattata|Focus Energy|p2a: Rattata',
           '|-start|p2a: Rattata|move: Focus Energy',
           '|move|p1a: Pidgey|Substitute|p1a: Pidgey',
@@ -4231,14 +4158,13 @@ for (const gen of new Generations(Dex as any)) {
           '|faint|p1a: Pidgey',
           '|win|Player 2',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
 
       test('Substitute + Confusion glitch', () => {
         // Confused Pokémon has Substitute
         {
           const battle = startBattle([
-            SRF, HIT, CFZ(5), CFZ_CAN, SRF, SRF, HIT, SRF, CFZ_CANT,
+            [SRF, HIT, CFZ(5), CFZ_CAN], [SRF, SRF, HIT, SRF, CFZ_CANT],
           ], [
             {species: 'Bulbasaur', level: 6, evs, moves: ['Substitute', 'Growl']},
           ], [
@@ -4256,7 +4182,7 @@ for (const gen of new Generations(Dex as any)) {
           expect(battle.p1.pokemon[0].hp).toBe(p1hp);
           expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(7);
 
-          expectLog(battle, [
+          verify(battle, [
             '|move|p2a: Zubat|Supersonic|p1a: Bulbasaur',
             '|-start|p1a: Bulbasaur|confusion',
             '|-activate|p1a: Bulbasaur|confusion',
@@ -4269,12 +4195,12 @@ for (const gen of new Generations(Dex as any)) {
             '|-activate|p1a: Bulbasaur|confusion',
             '|turn|3',
           ]);
-          expect((battle.prng as FixedRNG).exhausted()).toBe(true);
         }
         // Both Pokémon have Substitutes
         {
           const battle = startBattle([
-            SRF, HIT, NO_CRIT, MIN_DMG, SRF, SRF, HIT, CFZ(5), CFZ_CANT, CFZ_CAN, SRF, CFZ_CANT,
+            [SRF, HIT, NO_CRIT, MIN_DMG], [SRF, SRF, HIT, CFZ(5), CFZ_CANT],
+            [CFZ_CAN], [SRF, CFZ_CANT],
           ], [
             {species: 'Bulbasaur', level: 6, evs, moves: ['Substitute', 'Tackle']},
           ], [
@@ -4309,7 +4235,7 @@ for (const gen of new Generations(Dex as any)) {
           expect(battle.p2.pokemon[0].hp).toBe(p2hp);
           expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(sub2 -= 5);
 
-          expectLog(battle, [
+          verify(battle, [
             '|move|p2a: Zubat|Substitute|p2a: Zubat',
             '|-start|p2a: Zubat|Substitute',
             '|-damage|p2a: Zubat|28/37',
@@ -4334,13 +4260,12 @@ for (const gen of new Generations(Dex as any)) {
             '|-activate|p2a: Zubat|Substitute|[damage]',
             '|turn|5',
           ]);
-          expect((battle.prng as FixedRNG).exhausted()).toBe(true);
         }
       });
 
       test('Psywave infinite loop', () => {
         const PSY_MAX = {key: 'Battle.damageCallback', value: MAX};
-        const battle = startBattle([SRF, SRF, SRF, HIT, HIT, PSY_MAX], [
+        const battle = startBattle([[SRF, SRF, SRF, HIT, HIT, PSY_MAX]], [
           {species: 'Charmander', evs, level: 1, moves: ['Psywave']},
         ], [
           {species: 'Rattata', evs, level: 3, moves: ['Tail Whip']},
@@ -4352,13 +4277,12 @@ for (const gen of new Generations(Dex as any)) {
 
         expect(battle.p2.pokemon[0].hp).toEqual(p2hp);
 
-        expectLog(battle, [
+        verify(battle, [
           '|move|p2a: Rattata|Tail Whip|p1a: Charmander',
           '|-unboost|p1a: Charmander|def|1',
           '|move|p1a: Charmander|Psywave|p2a: Rattata',
           '|turn|2',
         ]);
-        expect((battle.prng as FixedRNG).exhausted()).toBe(true);
       });
     });
   }
@@ -4370,26 +4294,31 @@ interface Roll {
 }
 
 class FixedRNG extends PRNG {
-  private readonly rolls: Roll[];
+  private readonly rolls: Roll[][];
+  private decision: number;
   private index: number;
 
-  constructor(rolls: Roll[]) {
+  constructor(rolls: Roll[][]) {
     super([0, 0, 0, 0]);
     this.rolls = rolls;
+    this.decision = 0;
     this.index = 0;
   }
 
   next(from?: number, to?: number): number {
-    if (this.index >= this.rolls.length) throw new Error('Insufficient number of rolls provided');
-    const roll = this.rolls[this.index++];
+    if (this.index >= this.rolls[this.decision].length) {
+      throw new Error(`Insufficient number of rolls provided for decision ${this.decision + 1}`);
+    }
+    const roll = this.rolls[this.decision][this.index++];
     const where = locations();
     const locs = where.join(', ');
+    const start = `Provided roll ${this.index} for decision ${this.decision + 1} is`;
     if (Array.isArray(roll.key)) {
       if (!roll.key.every(k => where.includes(k))) {
-        throw new Error(`Expected roll for (${roll.key.join(', ')}) but got (${locs})`);
+        throw new Error(`${start} (${roll.key.join(', ')}) but need (${locs})`);
       }
     } else if (!where.includes(roll.key)) {
-      throw new Error(`Expected roll for (${roll.key}) but got (${locs})`);
+      throw new Error(`${start} (${roll.key}) but need (${locs})`);
     }
     let result = roll.value;
     if (from) from = Math.floor(from);
@@ -4416,8 +4345,23 @@ class FixedRNG extends PRNG {
     throw new Error('Unsupported operation');
   }
 
-  exhausted(): boolean {
-    return this.index === this.rolls.length;
+  makeDecision(fn: () => void): void {
+    if (this.decision > this.rolls.length) {
+      throw new Error('Insufficient number of decisions provided');
+    }
+    fn();
+    try {
+      expect(this.index).toEqual(this.rolls[this.decision].length);
+    } catch (err) {
+      console.log(`Decision ${this.decision + 1}`);
+      throw err;
+    }
+    this.decision++;
+    this.index = 0;
+  }
+
+  exhausted() {
+    return this.decision === this.rolls.length;
   }
 }
 
@@ -4462,7 +4406,7 @@ function locations() {
   return results;
 }
 
-function expectLog(battle: Battle, expected: string[]) {
+function verify(battle: Battle, expected: string[]) {
   const actual = filter(battle.log);
   try {
     expect(actual).toEqual(expected);
@@ -4470,4 +4414,5 @@ function expectLog(battle: Battle, expected: string[]) {
     console.log(actual);
     throw err;
   }
+  expect((battle.prng as FixedRNG).exhausted()).toBe(true);
 }
