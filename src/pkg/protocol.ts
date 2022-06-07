@@ -90,10 +90,7 @@ const DAMAGE = {
   [PROTOCOL.Damage.Burn]: 'psn' as Protocol.EffectName,
   [PROTOCOL.Damage.Confusion]: 'confusion' as Protocol.EffectName,
   [PROTOCOL.Damage.LeechSeed]: 'Leech Seed' as Protocol.MoveName,
-  [PROTOCOL.Damage.PoisonOf]: 'psn' as Protocol.EffectName,
-  [PROTOCOL.Damage.BurnOf]: 'brn' as Protocol.EffectName,
   [PROTOCOL.Damage.RecoilOf]: 'Recoil' as Protocol.EffectName,
-  [PROTOCOL.Damage.LeechSeedOf]: 'Leech Seed' as Protocol.MoveName,
 };
 
 const BOOSTS: {[reason: number]: BoostID} = {
@@ -211,7 +208,7 @@ export const DECODERS: {[key: number]: Decoder} = {
     const reason = data.getUint8(offset++);
     const kwArgs = {} as Writeable<Protocol.BattleArgsKWArgs['|-damage|']>;
     if (reason >= PROTOCOL.Damage.None) kwArgs.from = DAMAGE[reason];
-    if (reason >= PROTOCOL.Damage.PoisonOf) {
+    if (reason === PROTOCOL.Damage.RecoilOf) {
       kwArgs.of = decodeIdent(this.names, data.getUint8(offset++));
     }
     const args = ['-damage', ident, hpStatus] as Protocol.Args['|-damage|'];

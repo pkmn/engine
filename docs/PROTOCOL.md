@@ -243,7 +243,7 @@ The battle has ended in a tie.
       +---------------+
 
 The Pokémon identified by [`Ident`](#pokemonident) has taken damage and now has the `Current HP`,
-`Max HP` and `Status`. If `Reason` is in `0x04` - `0x07` then the following byte indicates the
+`Max HP` and `Status`. If `Reason` is in `0x04` then the following byte indicates the
 [`PokemonIdent`](#pokemonident) of the source `[of]` the damage.
 
 <details><summary>Reason</summary>
@@ -254,10 +254,8 @@ The Pokémon identified by [`Ident`](#pokemonident) has taken damage and now has
 | `0x01` | `psn`                    | No      |
 | `0x02` | `brn`                    | No      |
 | `0x03` | `confusion`              | No      |
-| `0x04` | `psn\|[of]`              | Yes     |
-| `0x05` | `brn\|[of]`              | Yes     |
-| `0x06` | `Recoil\|[of]`           | Yes     |
-| `0x07` | `move: Leech Seed\|[of]` | Yes     |
+| `0x04` | `Recoil\|[of]`           | Yes     |
+
 </details>
 
 ### `|-heal|` (`0x0B`)

@@ -98,10 +98,7 @@
     "Burn",
     "Confusion",
     "LeechSeed",
-    "PoisonOf",
-    "BurnOf",
-    "RecoilOf",
-    "LeechSeedOf"
+    "RecoilOf"
   ],
   "Status": [
     "None",
@@ -171,5 +168,11 @@
   "Immune": [
     "None",
     "OHKO"
+  ],
+  "Kind": [
+    "Move",
+    "Species",
+    "Type",
+    "Status"
   ]
 }

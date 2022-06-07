@@ -133,10 +133,7 @@ pub const Damage = enum(u8) {
     Burn,
     Confusion,
     LeechSeed,
-    PoisonOf,
-    BurnOf,
     RecoilOf,
-    LeechSeedOf,
 };
 
 pub const Status = enum(u8) {
@@ -321,7 +318,7 @@ pub fn Log(comptime Writer: type) type {
             source: ID,
         ) Error!void {
             if (!trace) return;
-            assert(@enumToInt(reason) >= @enumToInt(Damage.PoisonOf));
+            assert(@enumToInt(reason) == @enumToInt(Damage.RecoilOf));
             try self.writer.writeAll(&.{ @enumToInt(ArgType.Damage), @bitCast(u8, ident) });
             try self.writer.writeIntNative(u16, pokemon.hp);
             try self.writer.writeIntNative(u16, pokemon.stats.hp);
@@ -684,7 +681,7 @@ pub fn format(formatter: Formatter, a: []const u8, b: ?[]const u8, color: bool) 
                 if (arg == .Damage) {
                     const reason = a[i];
                     printc(" {s}", .{@tagName(@intToEnum(Damage, reason))}, a, b, &i, 1, color);
-                    if (reason >= @enumToInt(Damage.PoisonOf)) {
+                    if (reason == @enumToInt(Damage.RecoilOf)) {
                         id = ID.from(@truncate(u4, a[i]));
                         printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                     }
@@ -1025,10 +1022,10 @@ test "|-damage|" {
     stream.reset();
 
     chansey.status = gen1.Status.init(.PSN);
-    try log.damageOf(p2.ident(2), &chansey, .PoisonOf, p1.ident(1));
+    try log.damageOf(p2.ident(2), &chansey, .RecoilOf, p1.ident(1));
     expected = switch (endian) {
-        .Big => &.{ N(ArgType.Damage), 0b1010, 0, 100, 1, 0, 0b1000, N(Damage.PoisonOf), 1 },
-        .Little => &.{ N(ArgType.Damage), 0b1010, 100, 0, 0, 1, 0b1000, N(Damage.PoisonOf), 1 },
+        .Big => &.{ N(ArgType.Damage), 0b1010, 0, 100, 1, 0, 0b1000, N(Damage.RecoilOf), 1 },
+        .Little => &.{ N(ArgType.Damage), 0b1010, 100, 0, 0, 1, 0b1000, N(Damage.RecoilOf), 1 },
     };
     try expectLog1(expected, buf[0..9]);
     stream.reset();

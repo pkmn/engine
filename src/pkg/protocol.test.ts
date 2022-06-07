@@ -94,8 +94,8 @@ for (const gen of new Generations(Dex as any)) {
         log.parse(Data.view([ArgType.Damage, 0b1010, ...hp, 0, PROTOCOL.Damage.Confusion]))
       )).toEqual(parse('|-damage|p2a: Rakkii|100/256|[from] confusion'));
       expect(Array.from(
-        log.parse(Data.view([ArgType.Damage, 0b1010, ...hp, 0b1000, PROTOCOL.Damage.PoisonOf, 1]))
-      )).toEqual(parse('|-damage|p2a: Rakkii|100/256 psn|[from] psn|[of] p1a: Fushigidane'));
+        log.parse(Data.view([ArgType.Damage, 0b1010, ...hp, 0b1000, PROTOCOL.Damage.RecoilOf, 1]))
+      )).toEqual(parse('|-damage|p2a: Rakkii|100/256 psn|[from] Recoil|[of] p1a: Fushigidane'));
     });
 
     it('|-heal|', () => {
