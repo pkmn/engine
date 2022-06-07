@@ -1033,7 +1033,7 @@ for (const gen of new Generations(Dex as any)) {
         '|-end|p1a: Magmar|Substitute',
         '|move|p1a: Magmar|Substitute|p1a: Magmar',
         '|-fail|p1a: Magmar|move: Substitute|[weak]',
-        '|turn|10'
+        '|turn|10',
       ]);
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
@@ -1308,24 +1308,95 @@ for (const gen of new Generations(Dex as any)) {
       expect((battle.prng as FixedRNG).exhausted()).toBe(true);
     });
 
-    // test('FlinchChance', () => {
-    //   const battle = startBattle([], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ]);
+    test('FlinchChance', () => {
+      const lo_proc = {key: HIT.key, value: ranged(26, 256) - 1};
+      const hi_proc = {key: HIT.key, value: ranged(77, 256) - 1};
+      const battle = startBattle([
+        SRF, HIT, NO_CRIT, MIN_DMG, hi_proc,
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, hi_proc, HIT, NO_CRIT, MIN_DMG, hi_proc,
+        SRF, SRF, HIT, NO_CRIT, MAX_DMG, lo_proc, HIT, NO_CRIT, MIN_DMG,
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, lo_proc,	SRF,
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, lo_proc,
+        SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, hi_proc,
+        SRF, SRF, SRF, MISS,
+      ], [
+        {species: 'Raticate', evs, moves: ['Hyper Fang', 'Headbutt', 'Hyper Beam']},
+      ], [
+        {species: 'Marowak', evs, moves: ['Headbutt', 'Hyper Beam', 'Substitute']},
+      ]);
 
-    //   let p1hp = battle.p1.pokemon[0].hp;
-    //   let p2hp = battle.p2.pokemon[0].hp;
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
 
-    //   battle.makeChoices('move 1', 'move 1');
-    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
-    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+      // Moves have different flinch rates
+      battle.makeChoices('move 1', 'move 3');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 72 - 80));
 
-    //   expectLog(battle, [
-    //   ]);
-    //   expect((battle.prng as FixedRNG).exhausted()).toBe(true);
-    // });
+      // Substitute blocks flinch, flinch doesn't prevent movement when slower
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 60);
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 128);
+
+      // Flinch prevents movement but counts as recharge turn
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 72);
+
+      // Can prevent movement even without recharge
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 72);
+
+      // (need to artificially recover HP to survive Raticate's Hyper Beam)
+      p2hp = battle.p2.pokemon[0].hp = 323;
+      battle.makeChoices('move 3', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 60);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 133);
+      // expect(gen1.Choices.sim(battle, 'p1')).toEqual(['move 1', 'move 2', 'move 3']);
+      expect(gen1.Choices.sim(battle, 'p1')).toEqual(['move 1']);
+
+      // Flinch should have cleared recharge, but this doesn't work on Pokémon Showdown
+      battle.makeChoices('move 1', 'move 1');
+
+      expectLog(battle, [
+        '|move|p1a: Raticate|Hyper Fang|p2a: Marowak',
+        '|-damage|p2a: Marowak|251/323',
+        '|move|p2a: Marowak|Substitute|p2a: Marowak',
+        '|-start|p2a: Marowak|Substitute',
+        '|-damage|p2a: Marowak|171/323',
+        '|turn|2',
+        '|move|p1a: Raticate|Headbutt|p2a: Marowak',
+        '|-activate|p2a: Marowak|Substitute|[damage]',
+        '|move|p2a: Marowak|Headbutt|p1a: Raticate',
+        '|-damage|p1a: Raticate|253/313',
+        '|turn|3',
+        '|move|p1a: Raticate|Headbutt|p2a: Marowak',
+        '|-end|p2a: Marowak|Substitute',
+        '|move|p2a: Marowak|Hyper Beam|p1a: Raticate',
+        '|-damage|p1a: Raticate|125/313',
+        '|-mustrecharge|p2a: Marowak',
+        '|turn|4',
+        '|move|p1a: Raticate|Hyper Fang|p2a: Marowak',
+        '|-damage|p2a: Marowak|99/323',
+        '|cant|p2a: Marowak|recharge',
+        '|turn|5',
+        '|move|p1a: Raticate|Hyper Fang|p2a: Marowak',
+        '|-damage|p2a: Marowak|27/323',
+        '|cant|p2a: Marowak|flinch',
+        '|turn|6',
+        '|move|p1a: Raticate|Hyper Beam|p2a: Marowak',
+        '|-damage|p2a: Marowak|190/323',
+        '|-mustrecharge|p1a: Raticate',
+        '|move|p2a: Marowak|Headbutt|p1a: Raticate',
+        '|-damage|p1a: Raticate|65/313',
+        '|turn|7',
+        '|cant|p1a: Raticate|recharge',
+        '|move|p2a: Marowak|Headbutt|p1a: Raticate|[miss]',
+        '|-miss|p2a: Marowak',
+        '|turn|8',
+      ]);
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    });
 
     test('StatDown', () => {
       const battle = startBattle([

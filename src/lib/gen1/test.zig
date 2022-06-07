@@ -901,11 +901,6 @@ test "ConfusionChance" {
 // Move.{Stomp,RollingKick,Headbutt,LowKick}: FlinchChance2
 test "FlinchChance" {
     // Has a X% chance to flinch the target.
-
-    // TODO can proc / not proc - use chance2 roll for both and dont proc the chance1 roll
-    // TODO clears recharging even on a miss when slower!
-    // TODO blocked by substitute
-
     return error.SkipZigTest;
 }
 
