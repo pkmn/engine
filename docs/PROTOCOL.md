@@ -671,6 +671,10 @@ size of the "fuzzing" use-case is also outlined below (though not encoded in a c
 
 ### Generation I
 
+TODO
+
+<details><summary>Details</summary>
+
 In order to maximize log message size in Generation I several observations need to be made:
 
 - `|move`, `|switch|`, `|-damage|`, and `|-heal|` take up the most space in the log
@@ -760,6 +764,8 @@ Move → multi hit.
 
 TODO: setup requires a minimum of 13 rolls. Scenario is 1 byte more, but probably not actually
 achievable after set up? Is Scenario 2 achievable?
+
+</details>
 
 ### Generation II
 
