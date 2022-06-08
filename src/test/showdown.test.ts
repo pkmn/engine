@@ -1959,6 +1959,11 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
+    // TODO: Wrap should not immobilise Pokemon under Substitute if it misses
+    // TODO: Wrappers are forced to use their respective move again if the Pokemon is KOed
+    // TODO: Mirror Move + Wrap weirdness
+    // TODO: Wrap should not immobilise Pokemon a turn late under Substitute, other weirdness
+    // TODO: Wrap should not immobilise Pokemon when they are KOed by residual damage
     test.todo('Trapping');
 
     test('JumpKick', () => {
@@ -2609,6 +2614,8 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
+    // TODO: Counter should not fail behind Substitute
+    // TODO: Counter should trigger against sleeping Pokemon, Desync Clause Mod should not trigger
     test.todo('Counter');
 
     test('Heal (normal)', () => {
@@ -2999,6 +3006,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
+    // TODO: Mimic Infinite PP glitch being inherited from later generations
     test.todo('Mimic');
 
     test('LightScreen', () => {
@@ -3105,6 +3113,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
+    // TODO: Haze delays charge moves + other weirdness
     // test('Haze', () => {
     //   const battle = startBattle([], [
     //     {species: 'Vaporeon', evs, moves: ['Haze', 'Acid Armor', 'Thunder Wave']},
@@ -3123,6 +3132,7 @@ for (const gen of new Generations(Dex as any)) {
     //   ]);
     // });
 
+    // TODO: Bide fails in situations involving Substitute
     test.todo('Bide');
 
     test('Metronome', () => {
@@ -3132,13 +3142,13 @@ for (const gen of new Generations(Dex as any)) {
         .filter(m => !['Struggle', 'Metronome'].includes(m));
       const metronome = (move: string) => ({
         key: ['Battle.sample', 'Battle.singleEvent'],
-        value: ranged(moves.indexOf(move) + 1, moves.length) - 1
+        value: ranged(moves.indexOf(move) + 1, moves.length) - 1,
       });
       const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
 
       const battle = startBattle([
         [metronome('Wrap'), SRF, HIT, NO_CRIT, MIN_DMG, wrap],
-        [metronome('Petal Dance') , SRF, HIT, NO_CRIT, MIN_DMG, THRASH(3)],
+        [metronome('Petal Dance'), SRF, HIT, NO_CRIT, MIN_DMG, THRASH(3)],
         [SRF, SRF, SRF, MISS, metronome('Mirror Move'),
           metronome('Mirror Move'), metronome('Fly'), SRF, SS_RES, GLM],
         [GLM, GLM, SRF, SRF, SRF, SRF, CFZ(2), SS_RUN, MISS],
@@ -3225,10 +3235,11 @@ for (const gen of new Generations(Dex as any)) {
         '|move|p1a: Clefable|Swift|p2a: Primeape|[from]Metronome',
         '|-damage|p2a: Primeape|261/333',
         '|-boost|p2a: Primeape|atk|1|[from] Rage',
-        '|turn|7'
+        '|turn|7',
       ]);
     });
 
+    // TODO: Mirror Move should not apply Hyper Beam recharge upon KOing a Pokemon
     test('MirrorMove', () => {
       const battle = startBattle([
         [],	[SRF, HIT, NO_CRIT, MIN_DMG, SRF, HIT, NO_CRIT, MIN_DMG],
@@ -3391,6 +3402,8 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
+    // TODO: Transform should not copy the opponent's critical hit rate
+    // TODO: Transform after stats boosted/unboosted - what happens after recalc?
     test('Transform', () => {
       const battle = startBattle([
         [], [SRF, SRF, SS_RES, GLM], [GLM, GLM, SRF, SRF, SS_RUN, MISS],
