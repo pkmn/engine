@@ -838,81 +838,292 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    // test('Twineedle', () => {
-    //   const battle = startBattle([[]], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ]);
+    test('Twineedle', () => {
+      const proc = {key: HIT.key, value: ranged(52, 256) - 1};
+      const no_proc = {key: HIT.key, value: proc.value + 1};
 
-    //   let p1hp = battle.p1.pokemon[0].hp;
-    //   let p2hp = battle.p2.pokemon[0].hp;
+      const battle = startBattle([
+        [SRF, HIT, NO_CRIT, MAX_DMG, proc, proc],
+        [SRF, HIT, NO_CRIT, MIN_DMG, proc, no_proc, no_proc],
+        [SRF, HIT, NO_CRIT, MIN_DMG, no_proc, proc, proc],
+        [SRF, HIT, NO_CRIT, MIN_DMG, proc, proc],
+      ], [
+        {species: 'Beedrill', evs, moves: ['Twineedle']},
+      ], [
+        {species: 'Voltorb', evs, moves: ['Substitute', 'Teleport']},
+        {species: 'Electrode', evs, moves: ['Explosion']},
+        {species: 'Weezing', evs, moves: ['Explosion']},
+      ]);
 
-    //   battle.makeChoices('move 1', 'move 1');
-    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
-    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+      let voltorb = battle.p2.pokemon[0].hp;
+      const electrode = battle.p2.pokemon[1].hp;
+      const weezing = battle.p2.pokemon[2].hp;
 
-    //   expectLog(battle, [
-    //   ]);
-    //
-    // });
+      // Breaking a target's Substitute ends the move
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(voltorb -= 70);
+      expect(battle.p2.pokemon[0].status).toBe('');
 
-    // test('Poison (primary)', () => {
-    //   const battle = startBattle([[]], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ]);
+      // On Pokémon Showdown the first hit can poison the tatget
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p2.pokemon[0].hp).toBe(voltorb - (36 * 2));
+      expect(battle.p2.pokemon[0].status).toBe('psn');
 
-    //   let p1hp = battle.p1.pokemon[0].hp;
-    //   let p2hp = battle.p2.pokemon[0].hp;
+      // The second hit can always poison the target
+      battle.makeChoices('move 1', 'switch 2');
+      expect(battle.p2.pokemon[0].hp).toBe(electrode - (30 * 2));
+      expect(battle.p2.pokemon[0].status).toBe('psn');
 
-    //   battle.makeChoices('move 1', 'move 1');
-    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
-    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+      // Poison types cannot be poisoned
+      battle.makeChoices('move 1', 'switch 3');
+      expect(battle.p2.pokemon[0].hp).toBe(weezing - (45 * 2));
+      expect(battle.p2.pokemon[0].status).toBe('');
 
-    //   expectLog(battle, [
-    //   ]);
-    //
-    // });
+      verify(battle, [
+        '|move|p2a: Voltorb|Substitute|p2a: Voltorb',
+        '|-start|p2a: Voltorb|Substitute',
+        '|-damage|p2a: Voltorb|213/283',
+        '|move|p1a: Beedrill|Twineedle|p2a: Voltorb',
+        '|-activate|p2a: Voltorb|Substitute|[damage]',
+        '|-end|p2a: Voltorb|Substitute',
+        '|-hitcount|p2a: Voltorb|2',
+        '|turn|2',
+        '|move|p2a: Voltorb|Teleport|p2a: Voltorb',
+        '|move|p1a: Beedrill|Twineedle|p2a: Voltorb',
+        '|-damage|p2a: Voltorb|177/283',
+        '|-status|p2a: Voltorb|psn',
+        '|-damage|p2a: Voltorb|141/283 psn',
+        '|-hitcount|p2a: Voltorb|2',
+        '|turn|3',
+        '|switch|p2a: Electrode|Electrode|323/323',
+        '|move|p1a: Beedrill|Twineedle|p2a: Electrode',
+        '|-damage|p2a: Electrode|293/323',
+        '|-damage|p2a: Electrode|263/323',
+        '|-status|p2a: Electrode|psn',
+        '|-hitcount|p2a: Electrode|2',
+        '|turn|4',
+        '|switch|p2a: Weezing|Weezing|333/333',
+        '|move|p1a: Beedrill|Twineedle|p2a: Weezing',
+        '|-supereffective|p2a: Weezing',
+        '|-damage|p2a: Weezing|288/333',
+        '|-damage|p2a: Weezing|243/333',
+        '|-hitcount|p2a: Weezing|2',
+        '|turn|5',
+      ]);
+    });
 
-    // test('PoisonChance', () => {
-    //   const battle = startBattle([[]], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ]);
+    test('Poison (primary)', () => {
+      const battle = startBattle([
+        [SRF, HIT], [SRF, HIT], [SRF, HIT, SS_MOD], [SRF, HIT, SS_MOD], [], [],
+      ], [
+        {species: 'Jolteon', evs, moves: ['Toxic', 'Substitute']},
+        {species: 'Abra', evs, moves: ['Teleport']},
+      ], [
+        {species: 'Venomoth', evs, moves: ['Teleport', 'Toxic']},
+        {species: 'Drowzee', evs, moves: ['Poison Gas', 'Teleport']},
+      ]);
 
-    //   let p1hp = battle.p1.pokemon[0].hp;
-    //   let p2hp = battle.p2.pokemon[0].hp;
+      let jolteon = battle.p1.pokemon[0].hp;
+      let abra = battle.p1.pokemon[1].hp;
+      let drowzee = battle.p2.pokemon[1].hp;
 
-    //   battle.makeChoices('move 1', 'move 1');
-    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
-    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+      // Poison-type Pokémon cannot be poisoned
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].status).toBe('');
 
-    //   expectLog(battle, [
-    //   ]);
-    //
-    // });
+      // Substitute blocks poison
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(jolteon -= 83);
+      expect(battle.p1.pokemon[0].status).toBe('');
 
-    // test('BurnChance', () => {
-    //   const battle = startBattle([[]], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ]);
+      // Toxic damage increases each turn
+      battle.makeChoices('move 1', 'switch 2');
+      expect(battle.p2.pokemon[0].hp).toBe(drowzee);
+      expect(battle.p2.pokemon[0].status).toBe('tox');
 
-    //   let p1hp = battle.p1.pokemon[0].hp;
-    //   let p2hp = battle.p2.pokemon[0].hp;
+      battle.makeChoices('switch 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(abra);
+      expect(battle.p1.pokemon[0].status).toBe('psn');
+      expect(battle.p2.pokemon[0].hp).toBe(drowzee -= 20);
 
-    //   battle.makeChoices('move 1', 'move 1');
-    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
-    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(abra -= 15);
+      expect(battle.p2.pokemon[0].hp).toBe(drowzee -= 40);
 
-    //   expectLog(battle, [
-    //   ]);
-    //
-    // });
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(abra -= 15);
+      expect(battle.p2.pokemon[0].hp).toBe(drowzee -= 60);
+
+      verify(battle, [
+        '|move|p1a: Jolteon|Toxic|p2a: Venomoth',
+        '|-immune|p2a: Venomoth',
+        '|move|p2a: Venomoth|Teleport|p2a: Venomoth',
+        '|turn|2',
+        '|move|p1a: Jolteon|Substitute|p1a: Jolteon',
+        '|-start|p1a: Jolteon|Substitute',
+        '|-damage|p1a: Jolteon|250/333',
+        '|move|p2a: Venomoth|Toxic|p1a: Jolteon',
+        '|-fail|p1a: Jolteon',
+        '|turn|3',
+        '|switch|p2a: Drowzee|Drowzee|323/323',
+        '|move|p1a: Jolteon|Toxic|p2a: Drowzee',
+        '|-status|p2a: Drowzee|tox',
+        '|turn|4',
+        '|switch|p1a: Abra|Abra|253/253',
+        '|move|p2a: Drowzee|Poison Gas|p1a: Abra',
+        '|-status|p1a: Abra|psn',
+        '|-damage|p2a: Drowzee|303/323 tox|[from] psn',
+        '|turn|5',
+        '|move|p1a: Abra|Teleport|p1a: Abra',
+        '|-damage|p1a: Abra|238/253 psn|[from] psn',
+        '|move|p2a: Drowzee|Teleport|p2a: Drowzee',
+        '|-damage|p2a: Drowzee|263/323 tox|[from] psn',
+        '|turn|6',
+        '|move|p1a: Abra|Teleport|p1a: Abra',
+        '|-damage|p1a: Abra|223/253 psn|[from] psn',
+        '|move|p2a: Drowzee|Teleport|p2a: Drowzee',
+        '|-damage|p2a: Drowzee|203/323 tox|[from] psn',
+        '|turn|7',
+      ]);
+    });
+
+    test('PoisonChance', () => {
+      const lo_proc = {key: HIT.key, value: ranged(52, 256) - 1};
+      const hi_proc = {key: HIT.key, value: ranged(103, 256) - 1};
+
+      const battle = startBattle([
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, lo_proc, HIT, NO_CRIT, MIN_DMG, hi_proc],
+        [SRF, HIT, NO_CRIT, MAX_DMG, hi_proc],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc, SS_MOD],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc],
+      ], [
+        {species: 'Tentacruel', evs, moves: ['Poison Sting', 'Sludge']},
+      ], [
+        {species: 'Persian', evs, moves: ['Substitute', 'Poison Sting', 'Scratch']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      // Can't poison Poison-types / moves have different burn chances
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 5);
+      expect(battle.p1.pokemon[0].status).toBe('');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 18);
+      expect(battle.p2.pokemon[0].status).toBe('');
+
+      // Substitute prevents poison chance
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 83);
+      expect(battle.p2.pokemon[0].status).toBe('');
+
+      battle.makeChoices('move 1', 'move 3');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 46);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 18);
+      expect(battle.p2.pokemon[0].status).toBe('psn');
+
+      // Can't poison already poisoned Pokémon / poison causes residual damage
+      battle.makeChoices('move 1', 'move 3');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 46);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 20 - 18));
+
+      verify(battle, [
+        '|move|p2a: Persian|Poison Sting|p1a: Tentacruel',
+        '|-resisted|p1a: Tentacruel',
+        '|-damage|p1a: Tentacruel|358/363',
+        '|move|p1a: Tentacruel|Poison Sting|p2a: Persian',
+        '|-damage|p2a: Persian|315/333',
+        '|turn|2',
+        '|move|p2a: Persian|Substitute|p2a: Persian',
+        '|-start|p2a: Persian|Substitute',
+        '|-damage|p2a: Persian|232/333',
+        '|move|p1a: Tentacruel|Sludge|p2a: Persian',
+        '|-end|p2a: Persian|Substitute',
+        '|turn|3',
+        '|move|p2a: Persian|Scratch|p1a: Tentacruel',
+        '|-damage|p1a: Tentacruel|312/363',
+        '|move|p1a: Tentacruel|Poison Sting|p2a: Persian',
+        '|-damage|p2a: Persian|214/333',
+        '|-status|p2a: Persian|psn',
+        '|turn|4',
+        '|move|p2a: Persian|Scratch|p1a: Tentacruel',
+        '|-damage|p1a: Tentacruel|266/363',
+        '|-damage|p2a: Persian|194/333 psn|[from] psn|[of] p1a: Tentacruel',
+        '|move|p1a: Tentacruel|Poison Sting|p2a: Persian',
+        '|-damage|p2a: Persian|176/333 psn',
+        '|turn|5',
+      ]);
+    });
+
+    test('BurnChance', () => {
+      const lo_proc = {key: HIT.key, value: ranged(26, 256) - 1};
+      const hi_proc = {key: HIT.key, value: ranged(77, 256) - 1};
+
+      const battle = startBattle([
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, hi_proc],
+        [SRF, HIT, NO_CRIT, MIN_DMG, hi_proc],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc, SS_MOD],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc],
+      ], [
+        {species: 'Charizard', evs, moves: ['Ember', 'Fire Blast']},
+      ], [
+        {species: 'Tauros', evs, moves: ['Substitute', 'Fire Blast', 'Tackle']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      // Can't burn Fire-types / moves have different burn chances
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 38);
+      expect(battle.p1.pokemon[0].status).toBe('');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 51);
+      expect(battle.p2.pokemon[0].status).toBe('');
+
+      // Substitute prevents burn chance
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 88);
+      expect(battle.p2.pokemon[0].status).toBe('');
+
+      battle.makeChoices('move 1', 'move 3');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 45);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 51);
+      expect(battle.p2.pokemon[0].status).toBe('brn');
+
+      // Can't burn already burnt Pokémon / Burn lowers attack and causes residual damage
+      battle.makeChoices('move 1', 'move 3');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 23);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 22 - 51));
+
+      verify(battle, [
+        '|move|p2a: Tauros|Fire Blast|p1a: Charizard',
+        '|-resisted|p1a: Charizard',
+        '|-damage|p1a: Charizard|321/359',
+        '|move|p1a: Charizard|Ember|p2a: Tauros',
+        '|-damage|p2a: Tauros|302/353',
+        '|turn|2',
+        '|move|p2a: Tauros|Substitute|p2a: Tauros',
+        '|-start|p2a: Tauros|Substitute',
+        '|-damage|p2a: Tauros|214/353',
+        '|move|p1a: Charizard|Fire Blast|p2a: Tauros',
+        '|-end|p2a: Tauros|Substitute',
+        '|turn|3',
+        '|move|p2a: Tauros|Tackle|p1a: Charizard',
+        '|-damage|p1a: Charizard|276/359',
+        '|move|p1a: Charizard|Ember|p2a: Tauros',
+        '|-damage|p2a: Tauros|163/353',
+        '|-status|p2a: Tauros|brn',
+        '|turn|4',
+        '|move|p2a: Tauros|Tackle|p1a: Charizard',
+        '|-damage|p1a: Charizard|253/359',
+        '|-damage|p2a: Tauros|141/353 brn|[from] brn|[of] p1a: Charizard',
+        '|move|p1a: Charizard|Ember|p2a: Tauros',
+        '|-damage|p2a: Tauros|90/353 brn',
+        '|turn|5',
+      ]);
+    });
 
     test('FreezeChance', () => {
       const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
@@ -1098,24 +1309,81 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    // test('ParalyzeChance', () => {
-    //   const battle = startBattle([[]], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ], [
-    //     {species: 'TODO', evs, moves: ['TODO']},
-    //   ]);
+    test('ParalyzeChance', () => {
+      const lo_proc = {key: HIT.key, value: ranged(26, 256) - 1};
+      const hi_proc = {key: HIT.key, value: ranged(77, 256) - 1};
 
-    //   let p1hp = battle.p1.pokemon[0].hp;
-    //   let p2hp = battle.p2.pokemon[0].hp;
+      const battle = startBattle([
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, hi_proc, HIT, NO_CRIT, MIN_DMG, hi_proc, SS_MOD],
+        [SRF, PAR_CAN, HIT, NO_CRIT, MIN_DMG, lo_proc],
+        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, hi_proc, PAR_CANT], [SRF],
+      ], [
+        {species: 'Jolteon', evs, moves: ['Body Slam', 'Thundershock']},
+        {species: 'Dugtrio', evs, moves: ['Earthquake']},
+      ], [
+        {species: 'Raticate', evs, moves: ['Body Slam', 'Thunderbolt', 'Substitute']},
+      ]);
 
-    //   battle.makeChoices('move 1', 'move 1');
-    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
-    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
 
-    //   expectLog(battle, [
-    //   ]);
-    //
-    // });
+      // Cannot paralyze a Pokémon of the same type as the move
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 21);
+      expect(battle.p1.pokemon[0].status).toBe('');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 64);
+      expect(battle.p2.pokemon[0].status).toBe('');
+
+      // Moves have different paralysis rates / Electric-type Pokémon can be paralyzed
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 110);
+      expect(battle.p1.pokemon[0].status).toBe('par');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 71);
+      expect(battle.p2.pokemon[0].status).toBe('');
+
+      // Paralysis lowers speed / Substitute block paralysis chance
+      battle.makeChoices('move 2', 'move 3');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 78);
+      expect(battle.p2.pokemon[0].status).toBe('');
+
+      // Doesn't work if already statused / paralysis can prevent action
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 110);
+
+      // Doesn't trigger if the opponent is immune to the move
+      battle.makeChoices('switch 2', 'move 2');
+
+      verify(battle, [
+        '|move|p1a: Jolteon|Body Slam|p2a: Raticate',
+        '|-damage|p2a: Raticate|249/313',
+        '|move|p2a: Raticate|Thunderbolt|p1a: Jolteon',
+        '|-resisted|p1a: Jolteon',
+        '|-damage|p1a: Jolteon|312/333',
+        '|turn|2',
+        '|move|p1a: Jolteon|Thunder Shock|p2a: Raticate',
+        '|-damage|p2a: Raticate|178/313',
+        '|move|p2a: Raticate|Body Slam|p1a: Jolteon',
+        '|-damage|p1a: Jolteon|202/333',
+        '|-status|p1a: Jolteon|par',
+        '|turn|3',
+        '|move|p2a: Raticate|Substitute|p2a: Raticate',
+        '|-start|p2a: Raticate|Substitute',
+        '|-damage|p2a: Raticate|100/313',
+        '|move|p1a: Jolteon|Thunder Shock|p2a: Raticate',
+        '|-activate|p2a: Raticate|Substitute|[damage]',
+        '|turn|4',
+        '|move|p2a: Raticate|Body Slam|p1a: Jolteon',
+        '|-damage|p1a: Jolteon|92/333 par',
+        '|cant|p1a: Jolteon|par',
+        '|turn|5',
+        '|switch|p1a: Dugtrio|Dugtrio|273/273',
+        '|move|p2a: Raticate|Thunderbolt|p1a: Dugtrio',
+        '|-immune|p1a: Dugtrio',
+        '|turn|6',
+      ]);
+    });
 
     test('Sleep', () => {
       const battle = startBattle([
@@ -1302,6 +1570,7 @@ for (const gen of new Generations(Dex as any)) {
     test('FlinchChance', () => {
       const lo_proc = {key: HIT.key, value: ranged(26, 256) - 1};
       const hi_proc = {key: HIT.key, value: ranged(77, 256) - 1};
+
       const battle = startBattle([
         [SRF, HIT, NO_CRIT, MIN_DMG, hi_proc],
         [SRF, SRF, HIT, NO_CRIT, MIN_DMG, hi_proc, HIT, NO_CRIT, MIN_DMG, hi_proc],

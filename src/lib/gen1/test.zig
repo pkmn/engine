@@ -733,7 +733,6 @@ test "Twineedle" {
 // Move.{PoisonPowder,PoisonGas}
 test "Poison (primary)" {
     // (Badly) Poisons the target.
-    // TODO: https://pkmn.cc/bulba-glitch-1#Toxic_counter_glitches
     return error.SkipZigTest;
 }
 
@@ -748,15 +747,6 @@ test "PoisonChance" {
 // Move.FireBlast: BurnChance2
 test "BurnChance" {
     // Has a X% chance to burn the target.
-
-    // TODO can proc / not proc - use chance2 roll for both and dont proc the chance1 roll
-    // TODO can't proc on same type
-    // TODO already burned vs. already other status
-    // TODO blocked by substitute, but NOT ON SHOWDOWN
-
-    // TODO halve atk
-    // TODO residual dmg
-
     return error.SkipZigTest;
 }
 
@@ -868,14 +858,6 @@ test "Paralyze (primary)" {
 // Move.{BodySlam,Lick}: ParalyzeChance2
 test "ParalyzeChance" {
     // Has a X% chance to paralyze the target.
-
-    // TODO can proc / not proc - use chance2 roll for both and dont proc the chance1 roll
-    // TODO can't proc on same type (body slam + normal, thunderbolt + electric)
-    // TODO already paralyzed vs. already other status
-    // TODO immunity
-    // TODO quarters speed
-    // TODO blocked by substitute, but NOT ON SHOWDOWN
-
     return error.SkipZigTest;
 }
 
