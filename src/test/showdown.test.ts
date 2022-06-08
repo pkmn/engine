@@ -16,7 +16,7 @@ const MAX_DMG = {key: ['Battle.random', 'BattleActions.getDamage'], value: MAX};
 
 const SRF_RES = {key: ['Side.randomFoe', 'BattleQueue.resolveAction'], value: NOP};
 const SRF_RUN = {key: ['Side.randomFoe', 'BattleActions.runMove'], value: NOP};
-const SRF_USE =  {key: ['Side.randomFoe', 'BattleActions.useMove'], value: NOP};
+const SRF_USE = {key: ['Side.randomFoe', 'BattleActions.useMove'], value: NOP};
 const SS_MOD = {key: ['Battle.speedSort', 'Pokemon.setStatus'], value: NOP};
 const SS_RES = {key: ['Battle.speedSort', 'Battle.residualEvent'], value: NOP};
 const SS_RUN = {key: ['Battle.speedSort', 'Battle.runEvent'], value: NOP};
@@ -45,6 +45,9 @@ const CFZ_CAN = {key: 'Battle.onBeforeMove', value: ranged(128, 256) - 1};
 const CFZ_CANT = {key: 'Battle.onBeforeMove', value: CFZ_CAN.value + 1};
 const THRASH = (n: 3 | 4) =>
   ({key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: ranged(n - 2, 5 - 3) - 1});
+const MIN_WRAP = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
+const MAX_WRAP = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MAX};
+const REWRAP = {key: ['Battle.sample', 'BattleActions.runMove'], value: MIN};
 
 const MODS: {[gen: number]: string[]} = {
   1: ['Endless Battle Clause', 'Sleep Clause Mod', 'Freeze Clause Mod'],
@@ -58,6 +61,15 @@ for (const gen of new Generations(Dex as any)) {
   if (gen.num > 1) break;
 
   const choices = CHOICES[gen.num];
+
+  const moves: string[] = Array.from(gen.moves)
+    .sort((a, b) => a.num - b.num)
+    .map(m => m.name)
+    .filter(m => !['Struggle', 'Metronome'].includes(m));
+  const metronome = (move: string) => ({
+    key: ['Battle.sample', 'Battle.singleEvent'],
+    value: ranged(moves.indexOf(move) + 1, moves.length) - 1,
+  });
 
   const startBattle = (
     rolls: Roll[][],
@@ -351,7 +363,72 @@ for (const gen of new Generations(Dex as any)) {
       }
     });
 
-    test.todo('turn order (complex speed tie)');
+    test('turn order (complex speed tie)', () => {
+      const battle = startBattle([
+        [INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
+          TIE(2), SS_EACH, SS_EACH, metronome('Fly'), SRF_USE, SS_EACH,
+          metronome('Mirror Move'), metronome('Mirror Move'), metronome('Dig'),
+          SRF_USE, SS_EACH, SS_RES, SS_RES, SS_RES, SS_EACH, GLM, GLM,
+        ],
+        [GLM, GLM, GLM, GLM, SRF_RES, TIE(1), SS_EACH, SS_EACH, SS_RUN, SS_EACH,
+          SS_RUN, HIT, NO_CRIT, MIN_DMG, SS_EACH, SS_RES, SS_EACH],
+        [SRF_RES, SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG, SS_EACH,
+          metronome('Swift'), SRF_USE, NO_CRIT, MIN_DMG, SS_EACH, SS_EACH],
+        [SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, metronome('Petal Dance'),
+          SRF_USE, HIT, NO_CRIT, MIN_DMG, THRASH(3), SS_EACH, SS_EACH],
+      ], [
+        {species: 'Clefable', evs, moves: ['Metronome', 'Quick Attack']},
+      ], [
+        {species: 'Clefable', evs, moves: ['Metronome']},
+        {species: 'Farfetch’d', evs, moves: ['Metronome']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp1 = battle.p2.pokemon[0].hp;
+      let p2hp2 = battle.p2.pokemon[1].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 50);
+
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 64);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp1 -= 43);
+
+      battle.makeChoices('move 1', 'switch 2');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp2 -= 32);
+
+      verify(battle, [
+        '|move|p2a: Clefable|Metronome|p2a: Clefable',
+        '|move|p2a: Clefable|Fly||[from]Metronome|[still]',
+        '|-prepare|p2a: Clefable|Fly',
+        '|move|p1a: Clefable|Metronome|p1a: Clefable',
+        '|move|p1a: Clefable|Mirror Move|p1a: Clefable|[from]Metronome',
+        '|move|p1a: Clefable|Metronome|p1a: Clefable|[from]Mirror Move',
+        '|move|p1a: Clefable|Mirror Move|p1a: Clefable|[from]Metronome',
+        '|move|p1a: Clefable|Metronome|p1a: Clefable|[from]Mirror Move',
+        '|move|p1a: Clefable|Dig||[from]Metronome|[still]',
+        '|-prepare|p1a: Clefable|Dig',
+        '|turn|2',
+        '|move|p1a: Clefable|Dig|p2a: Clefable|[from]Dig|[miss]',
+        '|-miss|p1a: Clefable',
+        '|move|p2a: Clefable|Fly|p1a: Clefable|[from]Fly',
+        '|-damage|p1a: Clefable|343/393',
+        '|turn|3',
+        '|move|p1a: Clefable|Quick Attack|p2a: Clefable',
+        '|-damage|p2a: Clefable|350/393',
+        '|move|p2a: Clefable|Metronome|p2a: Clefable',
+        '|move|p2a: Clefable|Swift|p1a: Clefable|[from]Metronome',
+        '|-damage|p1a: Clefable|279/393',
+        '|turn|4',
+        '|switch|p2a: Farfetch’d|Farfetch’d|307/307',
+        '|move|p1a: Clefable|Metronome|p1a: Clefable',
+        '|move|p1a: Clefable|Petal Dance|p2a: Farfetch’d|[from]Metronome',
+        '|-resisted|p2a: Farfetch’d',
+        '|-damage|p2a: Farfetch’d|275/307',
+        '|turn|5',
+      ]);
+    });
 
     test('turn order (switch vs. move)', () => {
       const battle = startBattle([
@@ -693,7 +770,7 @@ for (const gen of new Generations(Dex as any)) {
       expect(choices(battle, 'p1')).toEqual([]);
     });
 
-    test('HighCritical', () => {
+    test('HighCritical effect', () => {
       const value = ranged(Math.floor(gen.species.get('Machop')!.baseStats.spe / 2), 256);
       const no_crit = {key: CRIT.key, value};
       // Regular non-crit roll is still a crit for high critical moves
@@ -723,7 +800,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('FocusEnergy', () => {
+    test('FocusEnergy effect', () => {
       const value = ranged(Math.floor(gen.species.get('Machoke')!.baseStats.spe / 2), 256) - 1;
       const crit = {key: CRIT.key, value};
       const battle = startBattle([
@@ -768,7 +845,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('MultiHit', () => {
+    test('MultiHit effect', () => {
       const key = ['Battle.sample', 'BattleActions.tryMoveHit'];
       const hit3 = {key, value: 3 * (0x100000000 / 8) - 1};
       const hit5 = {key, value: MAX};
@@ -813,7 +890,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('DoubleHit', () => {
+    test('DoubleHit effect', () => {
       const battle = startBattle([
         [SRF_RES, HIT, NO_CRIT, MAX_DMG], [SRF_RES, HIT, NO_CRIT, MAX_DMG],
       ], [
@@ -848,7 +925,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('Twineedle', () => {
+    test('Twineedle effect', () => {
       const proc = {key: HIT.key, value: ranged(52, 256) - 1};
       const no_proc = {key: HIT.key, value: proc.value + 1};
 
@@ -922,7 +999,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('Poison (primary)', () => {
+    test('Poison  effect', () => {
       const battle = startBattle([
         [SRF_RES, HIT], [SRF_RES, HIT], [SRF_RES, HIT, SS_MOD], [SRF_RES, HIT, SS_MOD], [], [],
       ], [
@@ -997,7 +1074,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('PoisonChance', () => {
+    test('PoisonChance effect', () => {
       const lo_proc = {key: HIT.key, value: ranged(52, 256) - 1};
       const hi_proc = {key: HIT.key, value: ranged(103, 256) - 1};
 
@@ -1066,7 +1143,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('BurnChance', () => {
+    test('BurnChance effect', () => {
       const lo_proc = {key: HIT.key, value: ranged(26, 256) - 1};
       const hi_proc = {key: HIT.key, value: ranged(77, 256) - 1};
 
@@ -1135,15 +1212,14 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('FreezeChance', () => {
-      const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
+    test('FreezeChance effect', () => {
       const battle = startBattle([
         [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, SS_MOD],
         [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, FRZ, PAR_CANT],
         [SRF_RES, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD],
         [SRF_RES, SRF_RES, HIT],
         [SRF_RES, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD],
-        [SRF_RES, HIT, NO_CRIT, MIN_DMG, wrap],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG, MIN_WRAP],
         [SRF_RES, SRF_RES],
         [SRF_RES, HIT, NO_CRIT, MIN_DMG],
         [SRF_RES, HIT, NO_CRIT, MIN_DMG, FRZ],
@@ -1253,7 +1329,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('Paralyze (primary)', () => {
+    test('Paralyze effect', () => {
       const battle = startBattle([
         [SRF_RES, SRF_RES, MISS, HIT, SS_MOD],
         [SRF_RES, SRF_RES, HIT, PAR_CAN, HIT, SS_MOD],
@@ -1319,7 +1395,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('ParalyzeChance', () => {
+    test('ParalyzeChance effect', () => {
       const lo_proc = {key: HIT.key, value: ranged(26, 256) - 1};
       const hi_proc = {key: HIT.key, value: ranged(77, 256) - 1};
 
@@ -1395,7 +1471,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('Sleep', () => {
+    test('Sleep effect', () => {
       const battle = startBattle([
         [SRF_RES, SRF_RES, HIT, SS_MOD, SLP(1)],
         [SRF_RES, SRF_RES, HIT, SS_MOD, SLP(2)],
@@ -1456,7 +1532,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('Confusion (primary)', () => {
+    test('Confusion effect', () => {
       const battle = startBattle([
         [SRF_RES, HIT], [SRF_RES, HIT], [SRF_RES, HIT, CFZ(3)], [SRF_RES, CFZ_CANT, HIT],
         [SRF_RES, CFZ_CAN, HIT], [SRF_RES, HIT],
@@ -1528,7 +1604,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('ConfusionChance', () => {
+    test('ConfusionChance effect', () => {
       const proc = {key: HIT.key, value: ranged(25, 256) - 1};
       const no_proc = {key: proc.key, value: proc.value + 1};
       const battle = startBattle([
@@ -1577,7 +1653,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('FlinchChance', () => {
+    test('FlinchChance effect', () => {
       const lo_proc = {key: HIT.key, value: ranged(26, 256) - 1};
       const hi_proc = {key: HIT.key, value: ranged(77, 256) - 1};
 
@@ -1667,7 +1743,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('StatDown', () => {
+    test('StatDown effect', () => {
       const battle = startBattle([
         [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
         [SRF_RES, SRF_RES, HIT, SRF_RUN, HIT],
@@ -1714,7 +1790,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('StatDownChance', () => {
+    test('StatDownChance effect', () => {
       const proc = {key: HIT.key, value: ranged(85, 256) - 1};
       const no_proc = {key: proc.key, value: proc.value + 1};
       const battle = startBattle([
@@ -1770,7 +1846,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('StatUp', () => {
+    test('StatUp effect', () => {
       const battle = startBattle([
         [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
         [],
@@ -1817,7 +1893,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('OHKO', () => {
+    test('OHKO effect', () => {
       const battle = startBattle([[SRF_RES, SRF_RES, MISS], [SRF_RES, SRF_RES, HIT]], [
         {species: 'Kingler', evs, moves: ['Guillotine']},
         {species: 'Tauros', evs, moves: ['Horn Drill']},
@@ -1843,7 +1919,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('Charge', () => {
+    test('Charge effect', () => {
       const battle = startBattle([
         [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG],
         [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
@@ -1887,7 +1963,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('Fly / Dig', () => {
+    test('Fly / Dig effect', () => {
       const battle = startBattle([
         [SRF_RES, SRF_RES, SS_RES, GLM],
         [GLM, GLM, SRF_RES, SRF_RES, SS_RUN, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
@@ -1931,7 +2007,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('SwitchAndTeleport', () => {
+    test('SwitchAndTeleport effect', () => {
       const battle = startBattle([[SRF_RES, HIT], [SRF_RES, MISS]], [
         {species: 'Abra', evs, moves: ['Teleport']},
       ], [
@@ -1952,7 +2028,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('Splash', () => {
+    test('Splash effect', () => {
       const battle = startBattle([[]],
         [{species: 'Gyarados', evs, moves: ['Splash']}],
         [{species: 'Magikarp', evs, moves: ['Splash']}]);
@@ -1968,14 +2044,111 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    // TODO: Wrap should not immobilise Pokemon under Substitute if it misses
-    // TODO: Wrappers are forced to use their respective move again if the Pokemon is KOed
-    // TODO: Mirror Move + Wrap weirdness
-    // TODO: Wrap should not immobilise Pokemon a turn late under Substitute, other weirdness
-    // TODO: Wrap should not immobilise Pokemon when they are KOed by residual damage
-    test.todo('Trapping');
+    test('Trapping effect', () => {
+      const battle = startBattle([
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, MIN_WRAP],
+        [SRF_RES, HIT, NO_CRIT, MAX_DMG, REWRAP],
+        [SRF_RES, SRF_RES], [SRF_RES, HIT, SS_MOD],
+        [SRF_RES, PAR_CAN, HIT, MAX_WRAP], [SRF_RES, PAR_CAN],
+        [SRF_RES, PAR_CANT], [PAR_CAN],
+      ], [
+        {species: 'Dragonite', evs, moves: ['Wrap', 'Agility']},
+        {species: 'Moltres', evs, moves: ['Fire Spin', 'Fire Blast']},
+      ], [
+        {species: 'Cloyster', evs, moves: ['Clamp', 'Surf']},
+        {species: 'Tangela', evs, moves: ['Bind', 'Stun Spore']},
+        {species: 'Gengar', evs, moves: ['Teleport', 'Night Shade']},
+      ]);
 
-    test('JumpKick', () => {
+      let cloyster = battle.p2.pokemon[0].hp;
+      let tangela = battle.p2.pokemon[1].hp;
+      const gengar = battle.p2.pokemon[2].hp;
+
+      let pp = battle.p1.pokemon[0].moveSlots[0].pp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+      expect(battle.p2.pokemon[0].hp).toBe(cloyster -= 10);
+
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1']);
+      expect(choices(battle, 'p2')).toEqual(['switch 2', 'switch 3', 'move 1', 'move 2']);
+
+      battle.makeChoices('move 1', 'switch 2');
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+      expect(battle.p2.pokemon[0].hp).toBe(tangela -= 15);
+
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1']);
+      expect(choices(battle, 'p2')).toEqual(['switch 2', 'switch 3', 'move 1', 'move 2']);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(tangela -= 15);
+
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p2')).toEqual(['switch 2', 'switch 3', 'move 1', 'move 2']);
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].status).toBe('par');
+
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p2')).toEqual(['switch 2', 'switch 3', 'move 1', 'move 2']);
+
+      battle.makeChoices('move 1', 'switch 3');
+      expect(battle.p2.pokemon[0].hp).toBe(gengar);
+
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1']);
+      expect(choices(battle, 'p2')).toEqual(['switch 2', 'switch 3', 'move 1', 'move 2']);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(gengar);
+
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1']);
+      expect(choices(battle, 'p2')).toEqual(['switch 2', 'switch 3', 'move 1', 'move 2']);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(gengar);
+
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p2')).toEqual(['switch 2', 'switch 3', 'move 1', 'move 2']);
+
+      battle.makeChoices('move 2', 'move 1');
+
+      verify(battle, [
+        '|move|p1a: Dragonite|Wrap|p2a: Cloyster',
+        '|-damage|p2a: Cloyster|293/303',
+        '|cant|p2a: Cloyster|partiallytrapped',
+        '|turn|2',
+        '|switch|p2a: Tangela|Tangela|333/333',
+        '|move|p1a: Dragonite|Wrap|p2a: Tangela',
+        '|-damage|p2a: Tangela|318/333',
+        '|turn|3',
+        '|move|p1a: Dragonite|Wrap|p2a: Tangela|[from]Wrap',
+        '|-damage|p2a: Tangela|303/333',
+        '|cant|p2a: Tangela|partiallytrapped',
+        '|turn|4',
+        '|move|p1a: Dragonite|Agility|p1a: Dragonite',
+        '|-boost|p1a: Dragonite|spe|2',
+        '|move|p2a: Tangela|Stun Spore|p1a: Dragonite',
+        '|-status|p1a: Dragonite|par',
+        '|turn|5',
+        '|switch|p2a: Gengar|Gengar|323/323',
+        '|move|p1a: Dragonite|Wrap|p2a: Gengar',
+        '|-damage|p2a: Gengar|323/323',
+        '|turn|6',
+        '|cant|p2a: Gengar|partiallytrapped',
+        '|move|p1a: Dragonite|Wrap|p2a: Gengar|[from]Wrap',
+        '|-damage|p2a: Gengar|323/323',
+        '|turn|7',
+        '|cant|p2a: Gengar|partiallytrapped',
+        '|cant|p1a: Dragonite|par',
+        '|turn|8',
+        '|move|p2a: Gengar|Teleport|p2a: Gengar',
+        '|move|p1a: Dragonite|Agility|p1a: Dragonite',
+        '|-boost|p1a: Dragonite|spe|2',
+        '|turn|9',
+      ]);
+    });
+
+    test('JumpKick effect', () => {
       const battle = startBattle([
         [], [SRF_RES, SRF_RES, MISS, HIT, CRIT, MAX_DMG], [SRF_RES, SRF_RES, MISS, MISS],
       ], [
@@ -2028,7 +2201,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('Recoil', () => {
+    test('Recoil effect', () => {
       const battle = startBattle([
         [SRF_RES, HIT, NO_CRIT, MIN_DMG],
         [],
@@ -2085,7 +2258,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('Struggle', () => {
+    test('Struggle effect', () => {
       const battle = startBattle([
         [],
         [SRF_RES, SRF_RUN, HIT, NO_CRIT, MIN_DMG],
@@ -2153,7 +2326,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('Thrashing', () => {
+    test('Thrashing effect', () => {
       const battle = startBattle([
         [SRF_RES, SRF_RES, SRF_RUN, HIT, NO_CRIT, MIN_DMG, THRASH(3), HIT, CFZ(5)],
         [SRF_RES, SRF_RES, SRF_RES, SRF_RUN, CFZ_CAN, MISS, SRF_RUN, MISS, THRASH(3)],
@@ -2251,7 +2424,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('SpecialDamage (fixed)', () => {
+    test('SpecialDamage (fixed) effect', () => {
       const battle = startBattle([[SRF_RES, SRF_RES, HIT, HIT], [SRF_RES]], [
         {species: 'Voltorb', evs, moves: ['Sonic Boom']},
       ], [
@@ -2283,7 +2456,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('SpecialDamage (level)', () => {
+    test('SpecialDamage (level) effect', () => {
       const battle = startBattle([[SRF_RES, SRF_RES, HIT, HIT]], [
         {species: 'Gastly', evs, level: 22, moves: ['Night Shade']},
       ], [
@@ -2307,7 +2480,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('SpecialDamage (Psywave)', () => {
+    test('SpecialDamage (Psywave) effect', () => {
       const PSY_MAX = {key: 'Battle.damageCallback', value: MAX};
       const PSY_MIN = {key: 'Battle.damageCallback', value: MIN};
       const battle = startBattle([[SRF_RES, SRF_RES, HIT, PSY_MAX, HIT, PSY_MIN]], [
@@ -2330,7 +2503,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('SuperFang', () => {
+    test('SuperFang effect', () => {
       const battle = startBattle([[SRF_RES, SRF_RES, HIT, HIT], [], [SRF_RES, SRF_RES, HIT]], [
         {species: 'Raticate', evs, moves: ['Super Fang']},
         {species: 'Haunter', evs, moves: ['Dream Eater']},
@@ -2367,7 +2540,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('Disable', () => {
+    test('Disable effect', () => {
       const no_frz = {key: HIT.key, value: ranged(26, 256)};
       const battle = startBattle([
         [SRF_RES, SRF_RES, HIT, HIT, NO_CRIT, MIN_DMG],
@@ -2478,7 +2651,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('Mist', () => {
+    test('Mist effect', () => {
       const proc = {key: HIT.key, value: ranged(85, 256) - 1};
       const battle = startBattle([
         [SRF_RES, HIT, NO_CRIT, MIN_DMG, proc],
@@ -2542,7 +2715,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('HyperBeam', () => {
+    test('HyperBeam effect', () => {
       const battle = startBattle([
         [SRF_RES, HIT, NO_CRIT, MAX_DMG],
         [SRF_RES, HIT, NO_CRIT, MAX_DMG],
@@ -2623,11 +2796,9 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    // TODO: Counter should not fail behind Substitute
-    // TODO: Counter should trigger against sleeping Pokemon, Desync Clause Mod should not trigger
-    test.todo('Counter');
+    test.todo('Counter effect');
 
-    test('Heal (normal)', () => {
+    test('Heal effect', () => {
       const battle = startBattle([
         [], [SRF_RES, SRF_RES, HIT, CRIT, MAX_DMG, HIT, NO_CRIT, MIN_DMG], [],
       ], [
@@ -2675,7 +2846,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('Heal (Rest)', () => {
+    test('Heal (Rest) effect', () => {
       const battle = startBattle([
         [SRF_RES, HIT, SS_MOD], [SRF_RES, HIT, NO_CRIT, MIN_DMG, PAR_CAN, SS_MOD, SLP(5)],
         [SRF_RES, HIT, NO_CRIT, MIN_DMG], [],
@@ -2738,7 +2909,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('Drain', () => {
+    test('Drain effect', () => {
       const battle = startBattle([
         [SRF_RES, HIT, NO_CRIT, MIN_DMG], [],
         [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
@@ -2786,7 +2957,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('DreamEater', () => {
+    test('DreamEater effect', () => {
       const battle = startBattle([
         [SRF_RES],
         [SRF_RES, HIT, SS_MOD, SLP(5)],
@@ -2840,7 +3011,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('LeechSeed', () => {
+    test('LeechSeed effect', () => {
       const battle = startBattle([
         [SRF_RES, SRF_RES, MISS], [SRF_RES, HIT], [],
         [SRF_RES, SRF_RES, HIT, HIT], [SRF_RES, HIT], [],
@@ -2921,7 +3092,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('PayDay', () => {
+    test('PayDay effect', () => {
       const battle = startBattle([[SRF_RES, HIT, NO_CRIT, MAX_DMG]], [
         {species: 'Meowth', evs, moves: ['Pay Day']},
       ], [
@@ -2942,7 +3113,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('Rage', () => {
+    test('Rage effect', () => {
       const battle = startBattle([
         [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
         [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, MISS],
@@ -3019,10 +3190,9 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    // TODO: Mimic Infinite PP glitch being inherited from later generations
-    test.todo('Mimic');
+    test.todo('Mimic effect');
 
-    test('LightScreen', () => {
+    test('LightScreen effect', () => {
       const battle = startBattle([
         [SRF_RES, HIT, NO_CRIT, MIN_DMG], [SRF_RES, HIT, NO_CRIT, MIN_DMG],
         [SRF_RES, HIT, CRIT, MIN_DMG], [],
@@ -3075,7 +3245,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('Reflect', () => {
+    test('Reflect effect', () => {
       const battle = startBattle([
         [SRF_RES, HIT, NO_CRIT, MIN_DMG], [SRF_RES, HIT, NO_CRIT, MIN_DMG],
         [SRF_RES, HIT, CRIT, MIN_DMG], [],
@@ -3128,37 +3298,11 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    // TODO: Haze delays charge moves + other weirdness
-    // test('Haze', () => {
-    //   const battle = startBattle([], [
-    //     {species: 'Vaporeon', evs, moves: ['Haze', 'Acid Armor', 'Thunder Wave']},
-    //   ], [
-    //     {species: 'TODO', evs, moves: ['Toxic', 'Confuse Ray', 'Leech Seed']},
-    //   ]);
 
-    //   let p1hp = battle.p1.pokemon[0].hp;
-    //   let p2hp = battle.p2.pokemon[0].hp;
+    test.todo('Haze effect');
+    test.todo('Bide effect');
 
-    //   battle.makeChoices('move 1', 'move 1');
-    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
-    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
-
-    //   verify(battle, [
-    //   ]);
-    // });
-
-    // TODO: Bide fails in situations involving Substitute
-    test.todo('Bide');
-
-    test('Metronome', () => {
-      const moves: string[] = Array.from(gen.moves)
-        .sort((a, b) => a.num - b.num)
-        .map(m => m.name)
-        .filter(m => !['Struggle', 'Metronome'].includes(m));
-      const metronome = (move: string) => ({
-        key: ['Battle.sample', 'Battle.singleEvent'],
-        value: ranged(moves.indexOf(move) + 1, moves.length) - 1,
-      });
+    test('Metronome effect', () => {
       const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
 
       const battle = startBattle([
@@ -3197,8 +3341,8 @@ for (const gen of new Generations(Dex as any)) {
 
       battle.makeChoices('move 1', 'move 1');
 
-      // Metronome -> Mimic only works on Pokémon Showdown if Mimic is in the moveset and
-      // replaces *that* slot instead of Metronome
+      // Metronome -> Mimic only works on Pokémon Showdown if Mimic
+      // is in the moveset and replaces *that* slot instead of Metronome
       battle.makeChoices('move 1', 'move 1');
       expect(choices(battle, 'p2')).toEqual(['move 1', 'move 3']);
 
@@ -3254,8 +3398,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    // TODO: Mirror Move should not apply Hyper Beam recharge upon KOing a Pokemon
-    test('MirrorMove', () => {
+    test('MirrorMove effect', () => {
       const battle = startBattle([
         [],	[SRF_RES, HIT, NO_CRIT, MIN_DMG, SRF_USE, HIT, NO_CRIT, MIN_DMG],
         [SRF_RES, SRF_RUN, NO_CRIT, MIN_DMG], [SRF_USE, NO_CRIT, MIN_DMG],
@@ -3335,7 +3478,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('Explode', () => {
+    test('Explode effect', () => {
       const battle = startBattle([
         [SRF_RES, HIT, SS_MOD], [SRF_RES, HIT, NO_CRIT, MAX_DMG],
         [SRF_RES, HIT, NO_CRIT, MAX_DMG], [], [SRF_RES],
@@ -3397,7 +3540,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('Swift', () => {
+    test('Swift effect', () => {
       const battle = startBattle([[SRF_RES, SRF_RES, SRF_RUN, NO_CRIT, MIN_DMG, SS_RES, GLM]], [
         {species: 'Eevee', evs, moves: ['Swift']},
       ], [
@@ -3418,9 +3561,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    // TODO: Transform should not copy the opponent's critical hit rate
-    // TODO: Transform after stats boosted/unboosted - what happens after recalc?
-    test('Transform', () => {
+    test('Transform effect', () => {
       const battle = startBattle([
         [], [SRF_RES, SRF_RES, SS_RES, GLM], [GLM, GLM, SRF_RES, SRF_RES, SS_RUN, MISS],
       ], [
@@ -3473,7 +3614,7 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test('Conversion', () => {
+    test('Conversion effect', () => {
       const battle = startBattle([[SRF_RES]], [
         {species: 'Porygon', evs, moves: ['Conversion']},
       ], [
@@ -3491,7 +3632,7 @@ for (const gen of new Generations(Dex as any)) {
     });
   });
 
-  test('Substitute', () => {
+  test('Substitute effect', () => {
     const battle = startBattle([
       [SRF_RES, HIT], [SRF_RES, HIT, NO_CRIT, MIN_DMG], [SRF_RES, HIT], [SRF_RES, HIT],
     ], [
@@ -3553,6 +3694,72 @@ for (const gen of new Generations(Dex as any)) {
 
   if (gen.num === 1) {
     describe('Gen 1', () => {
+      // TODO: Bide fails in situations involving Substitute
+      test.todo('Bide + Substitute bug');
+
+      // TODO: Counter should not fail behind Substitute
+      test.todo('Counter + Substitute bug');
+
+      // TODO: Counter should trigger against sleeping Pokemon, Desync Clause Mod should not trigger
+      test.todo('Counter + sleep = Desync Clause Mod bug');
+
+      // TODO: Mimic Infinite PP glitch being inherited from later generations
+      test.todo('Mimic infinite PP bug');
+
+      test('Mirror Move + Wrap bug', () => {
+        const battle = startBattle([
+          [SRF_RES, MISS, SRF_USE, HIT, NO_CRIT, MIN_DMG, MIN_WRAP],
+          [SRF_RES, SRF_RES, SRF_RUN, HIT, NO_CRIT, MIN_DMG],
+        ], [
+          {species: 'Tentacruel', evs, moves: ['Wrap', 'Surf']},
+        ], [
+          {species: 'Pidgeot', evs, moves: ['Mirror Move', 'Gust']},
+        ]);
+
+        let p1hp = battle.p1.pokemon[0].hp;
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 20);
+
+        // Should be locked into Wrap...
+        expect(choices(battle, 'p1')).toEqual(['move 1', 'move 2']);
+        // expect(choices(battle, 'p2')).toEqual(['move 1']);
+        expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
+
+        battle.makeChoices('move 2', 'move 2');
+        expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 49);
+
+        verify(battle, [
+          '|move|p1a: Tentacruel|Wrap|p2a: Pidgeot|[miss]',
+          '|-miss|p1a: Tentacruel',
+          '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
+          '|move|p2a: Pidgeot|Wrap|p1a: Tentacruel|[from]Mirror Move',
+          '|-damage|p1a: Tentacruel|343/363',
+          '|turn|2',
+          '|cant|p1a: Tentacruel|partiallytrapped',
+          '|move|p2a: Pidgeot|Gust|p1a: Tentacruel',
+          '|-damage|p1a: Tentacruel|294/363',
+          '|turn|3',
+        ]);
+      });
+
+      // TODO: Mirror Move should not apply Hyper Beam recharge upon KOing a Pokemon
+      test.todo('Mirror Move recharge bug');
+
+      // TODO: Transform should not copy the opponent's critical hit rate
+      test.todo('Transform critical hit rate bug');
+
+      // TODO: Transform after stats boosted/unboosted - what happens after recalc?
+      test.todo('Transform stat recalculation bug');
+
+      // TODO: Wrap should not immobilise Pokemon under Substitute if it misses
+      // TODO: Wrap should not immobilise Pokemon a turn late under Substitute, other weirdness
+      test.todo('Wrap + Substitute bug');
+
+      // TODO: Wrappers are forced to use their respective move again if the Pokemon is KOed
+      // TODO: Wrap should not immobilise Pokemon when they are KOed by residual damage
+      test.todo('Wrap locking + KOs bug');
+
       test('0 damage glitch', () => {
         const battle = startBattle([
           [SRF_RES, SRF_RES, SRF_RUN, HIT, HIT, NO_CRIT], [SRF_RES, SRF_RUN, HIT],
@@ -4433,10 +4640,8 @@ for (const gen of new Generations(Dex as any)) {
       });
 
       test('Struggle bypassing / Switch PP underflow', () => {
-        const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MAX};
-        const rewrap = {key: ['Battle.sample', 'BattleActions.runMove'], value: MAX};
         const battle = startBattle([
-          [SRF_RES, HIT, NO_CRIT, MIN_DMG, wrap], [SRF_RES, HIT, NO_CRIT, MIN_DMG, rewrap],
+          [SRF_RES, HIT, NO_CRIT, MIN_DMG, MAX_WRAP], [SRF_RES, HIT, NO_CRIT, MIN_DMG, REWRAP],
         ], [
           {species: 'Victreebel', evs, moves: ['Wrap', 'Vine Whip']},
           {species: 'Seel', evs, moves: ['Bubble']},
@@ -4476,9 +4681,8 @@ for (const gen of new Generations(Dex as any)) {
       });
 
       test('Trapping sleep glitch', () => {
-        const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
         const battle = startBattle([
-          [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, wrap], [SRF_RES, SRF_RES],
+          [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, MIN_WRAP], [SRF_RES, SRF_RES],
           [SRF_RES, SRF_RES, HIT, SS_MOD, SLP(5)], [SRF_RES, SRF_RES, HIT],
         ], [
           {species: 'Weepinbell', evs, moves: ['Wrap', 'Sleep Powder']},
@@ -4533,9 +4737,8 @@ for (const gen of new Generations(Dex as any)) {
       });
 
       test('Partial trapping move Mirror Move glitch', () => {
-        const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
         const battle = startBattle(
-          [[SRF_RES, MISS], [SRF_RES, SRF_USE, HIT, NO_CRIT, MAX_DMG, wrap, SRF_RUN], []],
+          [[SRF_RES, MISS], [SRF_RES, SRF_USE, HIT, NO_CRIT, MAX_DMG, MIN_WRAP, SRF_RUN], []],
           [{species: 'Pidgeot', evs, moves: ['Agility', 'Mirror Move']}],
           [{species: 'Moltres', evs, moves: ['Leer', 'Fire Spin']},
             {species: 'Drowzee', evs, moves: ['Pound']}]
