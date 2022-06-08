@@ -14,7 +14,9 @@ const NO_CRIT = {key: ['Battle.randomChance', 'BattleActions.getDamage'], value:
 const MIN_DMG = {key: ['Battle.random', 'BattleActions.getDamage'], value: MIN};
 const MAX_DMG = {key: ['Battle.random', 'BattleActions.getDamage'], value: MAX};
 
-const SRF = {key: 'Side.randomFoe', value: NOP};
+const SRF_RES = {key: ['Side.randomFoe', 'BattleQueue.resolveAction'], value: NOP};
+const SRF_RUN = {key: ['Side.randomFoe', 'BattleActions.runMove'], value: NOP};
+const SRF_USE =  {key: ['Side.randomFoe', 'BattleActions.useMove'], value: NOP};
 const SS_MOD = {key: ['Battle.speedSort', 'Pokemon.setStatus'], value: NOP};
 const SS_RES = {key: ['Battle.speedSort', 'Battle.residualEvent'], value: NOP};
 const SS_RUN = {key: ['Battle.speedSort', 'Battle.runEvent'], value: NOP};
@@ -39,8 +41,8 @@ const PAR_CAN = {key: 'Battle.onBeforeMove', value: PAR_CANT.value + 1};
 const FRZ = {key: HIT.key, value: ranged(26, 256) - 1};
 const CFZ = (n: number) =>
   ({key: ['Battle.onStart', 'Pokemon.addVolatile'], value: ranged(n - 1, 6 - 2) - 1});
-const CFZ_CAN = {name: 'CFZ_CAN', key: 'Battle.onBeforeMove', value: ranged(128, 256) - 1};
-const CFZ_CANT = {name: 'CFZ_CANT', key: 'Battle.onBeforeMove', value: CFZ_CAN.value + 1};
+const CFZ_CAN = {key: 'Battle.onBeforeMove', value: ranged(128, 256) - 1};
+const CFZ_CANT = {key: 'Battle.onBeforeMove', value: CFZ_CAN.value + 1};
 const THRASH = (n: 3 | 4) =>
   ({key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: ranged(n - 2, 5 - 3) - 1});
 
@@ -212,10 +214,10 @@ for (const gen of new Generations(Dex as any)) {
 
     test('turn order (priority)', () => {
       const battle = startBattle([
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
-        [SRF, SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT],
       ], [
         {species: 'Raticate', evs, moves: ['Tackle', 'Quick Attack', 'Counter']},
       ], [
@@ -274,7 +276,7 @@ for (const gen of new Generations(Dex as any)) {
       {
         const battle = startBattle([[
           INS, INS,	SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
-          SRF, SRF, TIE(1),
+          SRF_RES, SRF_RES, TIE(1),
           SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG,
           SS_EACH, HIT, NO_CRIT, MAX_DMG,
           SS_EACH, SS_EACH,
@@ -325,7 +327,7 @@ for (const gen of new Generations(Dex as any)) {
       {
         const battle = startBattle([[
           INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
-          SRF, SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG,
+          SRF_RES, SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG,
         ]], [
           {species: 'Tauros', evs, moves: ['Hyper Beam']},
           {species: 'Starmie', evs, moves: ['Surf']},
@@ -353,7 +355,7 @@ for (const gen of new Generations(Dex as any)) {
 
     test('turn order (switch vs. move)', () => {
       const battle = startBattle([
-        [SRF, HIT, NO_CRIT, MIN_DMG], [SRF, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG], [SRF_RES, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Raticate', evs, moves: ['Quick Attack']},
         {species: 'Rattata', evs, moves: ['Quick Attack']},
@@ -415,7 +417,7 @@ for (const gen of new Generations(Dex as any)) {
     test('accuracy (normal)', () => {
       const hit = {key: HIT.key, value: ranged(Math.floor(85 * 255 / 100), 256) - 1};
       const miss = {key: MISS.key, value: hit.value + 1};
-      const battle = startBattle([[SRF, SRF, hit, CRIT, MAX_DMG, miss]], [
+      const battle = startBattle([[SRF_RES, SRF_RES, hit, CRIT, MAX_DMG, miss]], [
         {species: 'Hitmonchan', evs, moves: ['Mega Punch']},
       ], [
         {species: 'Machamp', evs, moves: ['Mega Punch']},
@@ -441,8 +443,8 @@ for (const gen of new Generations(Dex as any)) {
     test('damage calc', () => {
       const NO_BRN = {key: HIT.key, value: ranged(77, 256)};
       const battle = startBattle([
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, NO_BRN],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, NO_BRN],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Starmie', evs, moves: ['Water Gun', 'Thunderbolt']},
       ], [
@@ -482,7 +484,7 @@ for (const gen of new Generations(Dex as any)) {
     test('fainting (single)', () => {
       // Switch
       {
-        const battle = startBattle([[SRF, SRF, HIT, HIT, NO_CRIT, MAX_DMG]], [
+        const battle = startBattle([[SRF_RES, SRF_RES, HIT, HIT, NO_CRIT, MAX_DMG]], [
           {species: 'Venusaur', evs, moves: ['Leech Seed']},
         ], [
           {species: 'Slowpoke', evs, moves: ['Water Gun']},
@@ -510,7 +512,7 @@ for (const gen of new Generations(Dex as any)) {
       }
       // Win
       {
-        const battle = startBattle([[SRF, SRF, HIT]], [
+        const battle = startBattle([[SRF_RES, SRF_RES, HIT]], [
           {species: 'Dratini', evs, moves: ['Dragon Rage']},
         ], [
           {species: 'Slowpoke', evs, moves: ['Water Gun']},
@@ -531,7 +533,7 @@ for (const gen of new Generations(Dex as any)) {
       }
       // Lose
       {
-        const battle = startBattle([[SRF, SRF, SRF, NO_CRIT, MIN_DMG, HIT]], [
+        const battle = startBattle([[SRF_RES, SRF_RES, SRF_RUN, NO_CRIT, MIN_DMG, HIT]], [
           {species: 'Jolteon', evs, moves: ['Swift']},
         ], [
           {species: 'Dratini', evs, moves: ['Dragon Rage']},
@@ -557,7 +559,7 @@ for (const gen of new Generations(Dex as any)) {
     test('fainting (double)', () => {
       // Switch
       {
-        const battle = startBattle([[SRF, SRF, HIT, CRIT, MAX_DMG]], [
+        const battle = startBattle([[SRF_RES, SRF_RES, HIT, CRIT, MAX_DMG]], [
           {species: 'Weezing', evs, moves: ['Explosion']},
           {species: 'Koffing', evs, moves: ['Self-Destruct']},
         ], [
@@ -579,7 +581,7 @@ for (const gen of new Generations(Dex as any)) {
       }
       // Tie
       {
-        const battle = startBattle([[SRF, SRF, HIT, CRIT, MAX_DMG]], [
+        const battle = startBattle([[SRF_RES, SRF_RES, HIT, CRIT, MAX_DMG]], [
           {species: 'Weezing', evs, moves: ['Explosion']},
         ], [
           {species: 'Weedle', evs, moves: ['Poison Sting']},
@@ -658,7 +660,7 @@ for (const gen of new Generations(Dex as any)) {
         expect(battle.ended).toBe(true);
       }
       {
-        const battle = startBattle([[SRF, SRF]], [
+        const battle = startBattle([[SRF_RES, SRF_RES]], [
           {species: 'Mew', evs, moves: ['Transform']},
           {species: 'Muk', evs, moves: ['Pound']},
         ], [
@@ -695,7 +697,9 @@ for (const gen of new Generations(Dex as any)) {
       const value = ranged(Math.floor(gen.species.get('Machop')!.baseStats.spe / 2), 256);
       const no_crit = {key: CRIT.key, value};
       // Regular non-crit roll is still a crit for high critical moves
-      const battle = startBattle([[SRF, SRF, HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG]], [
+      const battle = startBattle([
+        [SRF_RES, SRF_RES, HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG],
+      ], [
         {species: 'Machop', evs, moves: ['Karate Chop']},
       ], [
         {species: 'Machop', level: 99, evs, moves: ['Strength']},
@@ -722,7 +726,9 @@ for (const gen of new Generations(Dex as any)) {
     test('FocusEnergy', () => {
       const value = ranged(Math.floor(gen.species.get('Machoke')!.baseStats.spe / 2), 256) - 1;
       const crit = {key: CRIT.key, value};
-      const battle = startBattle([[], [SRF, HIT, crit, MIN_DMG], [SRF, HIT, crit, MIN_DMG]], [
+      const battle = startBattle([
+        [], [SRF_RES, HIT, crit, MIN_DMG], [SRF_RES, HIT, crit, MIN_DMG],
+      ], [
         {species: 'Machoke', evs, moves: ['Focus Energy', 'Strength']},
       ], [
         {species: 'Koffing', evs, moves: ['Double Team', 'Haze']},
@@ -767,7 +773,7 @@ for (const gen of new Generations(Dex as any)) {
       const hit3 = {key, value: 3 * (0x100000000 / 8) - 1};
       const hit5 = {key, value: MAX};
       const battle = startBattle([
-        [SRF, HIT, hit3, NO_CRIT, MAX_DMG], [SRF, HIT, hit5, NO_CRIT, MAX_DMG],
+        [SRF_RES, HIT, hit3, NO_CRIT, MAX_DMG], [SRF_RES, HIT, hit5, NO_CRIT, MAX_DMG],
       ], [
         {species: 'Kangaskhan', evs, moves: ['Comet Punch']},
       ], [
@@ -808,7 +814,9 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('DoubleHit', () => {
-      const battle = startBattle([[SRF, HIT, NO_CRIT, MAX_DMG], [SRF, HIT, NO_CRIT, MAX_DMG]], [
+      const battle = startBattle([
+        [SRF_RES, HIT, NO_CRIT, MAX_DMG], [SRF_RES, HIT, NO_CRIT, MAX_DMG],
+      ], [
         {species: 'Marowak', evs, moves: ['Bonemerang']},
       ], [
         {species: 'Slowpoke', level: 80, evs, moves: ['Substitute', 'Teleport']},
@@ -845,10 +853,10 @@ for (const gen of new Generations(Dex as any)) {
       const no_proc = {key: HIT.key, value: proc.value + 1};
 
       const battle = startBattle([
-        [SRF, HIT, NO_CRIT, MAX_DMG, proc, proc],
-        [SRF, HIT, NO_CRIT, MIN_DMG, proc, no_proc, no_proc],
-        [SRF, HIT, NO_CRIT, MIN_DMG, no_proc, proc, proc],
-        [SRF, HIT, NO_CRIT, MIN_DMG, proc, proc],
+        [SRF_RES, HIT, NO_CRIT, MAX_DMG, proc, proc],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG, proc, no_proc, no_proc],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG, no_proc, proc, proc],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG, proc, proc],
       ], [
         {species: 'Beedrill', evs, moves: ['Twineedle']},
       ], [
@@ -916,7 +924,7 @@ for (const gen of new Generations(Dex as any)) {
 
     test('Poison (primary)', () => {
       const battle = startBattle([
-        [SRF, HIT], [SRF, HIT], [SRF, HIT, SS_MOD], [SRF, HIT, SS_MOD], [], [],
+        [SRF_RES, HIT], [SRF_RES, HIT], [SRF_RES, HIT, SS_MOD], [SRF_RES, HIT, SS_MOD], [], [],
       ], [
         {species: 'Jolteon', evs, moves: ['Toxic', 'Substitute']},
         {species: 'Abra', evs, moves: ['Teleport']},
@@ -994,10 +1002,10 @@ for (const gen of new Generations(Dex as any)) {
       const hi_proc = {key: HIT.key, value: ranged(103, 256) - 1};
 
       const battle = startBattle([
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, lo_proc, HIT, NO_CRIT, MIN_DMG, hi_proc],
-        [SRF, HIT, NO_CRIT, MAX_DMG, hi_proc],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc, SS_MOD],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, lo_proc, HIT, NO_CRIT, MIN_DMG, hi_proc],
+        [SRF_RES, HIT, NO_CRIT, MAX_DMG, hi_proc],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc, SS_MOD],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc],
       ], [
         {species: 'Tentacruel', evs, moves: ['Poison Sting', 'Sludge']},
       ], [
@@ -1063,10 +1071,10 @@ for (const gen of new Generations(Dex as any)) {
       const hi_proc = {key: HIT.key, value: ranged(77, 256) - 1};
 
       const battle = startBattle([
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, hi_proc],
-        [SRF, HIT, NO_CRIT, MIN_DMG, hi_proc],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc, SS_MOD],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, hi_proc],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG, hi_proc],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc, SS_MOD],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc],
       ], [
         {species: 'Charizard', evs, moves: ['Ember', 'Fire Blast']},
       ], [
@@ -1130,15 +1138,15 @@ for (const gen of new Generations(Dex as any)) {
     test('FreezeChance', () => {
       const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
       const battle = startBattle([
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, SS_MOD],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, FRZ, PAR_CANT],
-        [SRF, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD],
-        [SRF, SRF, HIT],
-        [SRF, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD],
-        [SRF, HIT, NO_CRIT, MIN_DMG, wrap],
-        [SRF, SRF],
-        [SRF, HIT, NO_CRIT, MIN_DMG],
-        [SRF, HIT, NO_CRIT, MIN_DMG, FRZ],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, SS_MOD],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, FRZ, PAR_CANT],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD],
+        [SRF_RES, SRF_RES, HIT],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG, wrap],
+        [SRF_RES, SRF_RES],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG, FRZ],
       ], [
         {species: 'Starmie', evs, moves: ['Ice Beam']},
         {species: 'Magmar', evs, moves: ['Flamethrower', 'Substitute']},
@@ -1247,12 +1255,12 @@ for (const gen of new Generations(Dex as any)) {
 
     test('Paralyze (primary)', () => {
       const battle = startBattle([
-        [SRF, SRF, MISS, HIT, SS_MOD],
-        [SRF, SRF, HIT, PAR_CAN, HIT, SS_MOD],
-        [SRF, PAR_CANT],
-        [SRF, SRF, HIT, PAR_CAN, HIT, SS_MOD],
-        [SRF, PAR_CAN],
-        [SRF, PAR_CAN, HIT, SS_MOD],
+        [SRF_RES, SRF_RES, MISS, HIT, SS_MOD],
+        [SRF_RES, SRF_RES, HIT, PAR_CAN, HIT, SS_MOD],
+        [SRF_RES, PAR_CANT],
+        [SRF_RES, SRF_RES, HIT, PAR_CAN, HIT, SS_MOD],
+        [SRF_RES, PAR_CAN],
+        [SRF_RES, PAR_CAN, HIT, SS_MOD],
       ], [
         {species: 'Arbok', evs, moves: ['Glare']},
         {species: 'Dugtrio', evs, moves: ['Earthquake', 'Substitute']},
@@ -1316,10 +1324,10 @@ for (const gen of new Generations(Dex as any)) {
       const hi_proc = {key: HIT.key, value: ranged(77, 256) - 1};
 
       const battle = startBattle([
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, hi_proc, HIT, NO_CRIT, MIN_DMG, hi_proc, SS_MOD],
-        [SRF, PAR_CAN, HIT, NO_CRIT, MIN_DMG, lo_proc],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, hi_proc, PAR_CANT], [SRF],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, hi_proc, HIT, NO_CRIT, MIN_DMG, hi_proc, SS_MOD],
+        [SRF_RES, PAR_CAN, HIT, NO_CRIT, MIN_DMG, lo_proc],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, hi_proc, PAR_CANT], [SRF_RES],
       ], [
         {species: 'Jolteon', evs, moves: ['Body Slam', 'Thundershock']},
         {species: 'Dugtrio', evs, moves: ['Earthquake']},
@@ -1389,11 +1397,11 @@ for (const gen of new Generations(Dex as any)) {
 
     test('Sleep', () => {
       const battle = startBattle([
-        [SRF, SRF, HIT, SS_MOD, SLP(1)],
-        [SRF, SRF, HIT, SS_MOD, SLP(2)],
-        [SRF, HIT, SS_MOD],
-        [SRF, HIT],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RES, HIT, SS_MOD, SLP(1)],
+        [SRF_RES, SRF_RES, HIT, SS_MOD, SLP(2)],
+        [SRF_RES, HIT, SS_MOD],
+        [SRF_RES, HIT],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Parasect', evs, moves: ['Spore', 'Cut']},
       ], [
@@ -1450,8 +1458,8 @@ for (const gen of new Generations(Dex as any)) {
 
     test('Confusion (primary)', () => {
       const battle = startBattle([
-        [SRF, HIT], [SRF, HIT], [SRF, HIT, CFZ(3)], [SRF, CFZ_CANT, HIT],
-        [SRF, CFZ_CAN, HIT], [SRF, HIT],
+        [SRF_RES, HIT], [SRF_RES, HIT], [SRF_RES, HIT, CFZ(3)], [SRF_RES, CFZ_CANT, HIT],
+        [SRF_RES, CFZ_CAN, HIT], [SRF_RES, HIT],
       ], [
         {species: 'Haunter', evs, moves: ['Confuse Ray', 'Night Shade']},
       ], [
@@ -1524,9 +1532,9 @@ for (const gen of new Generations(Dex as any)) {
       const proc = {key: HIT.key, value: ranged(25, 256) - 1};
       const no_proc = {key: proc.key, value: proc.value + 1};
       const battle = startBattle([
-        [SRF, HIT, NO_CRIT, MAX_DMG, proc],
-        [SRF, HIT, NO_CRIT, MAX_DMG, proc],
-        [SRF, HIT, NO_CRIT, MAX_DMG, no_proc, CFZ(3)],
+        [SRF_RES, HIT, NO_CRIT, MAX_DMG, proc],
+        [SRF_RES, HIT, NO_CRIT, MAX_DMG, proc],
+        [SRF_RES, HIT, NO_CRIT, MAX_DMG, no_proc, CFZ(3)],
       ], [
         {species: 'Venomoth', evs, moves: ['Psybeam']},
       ], [
@@ -1574,13 +1582,13 @@ for (const gen of new Generations(Dex as any)) {
       const hi_proc = {key: HIT.key, value: ranged(77, 256) - 1};
 
       const battle = startBattle([
-        [SRF, HIT, NO_CRIT, MIN_DMG, hi_proc],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, hi_proc, HIT, NO_CRIT, MIN_DMG, hi_proc],
-        [SRF, SRF, HIT, NO_CRIT, MAX_DMG, lo_proc, HIT, NO_CRIT, MIN_DMG],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, lo_proc,	SRF],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, lo_proc],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, hi_proc],
-        [SRF, SRF, SRF, MISS],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG, hi_proc],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, hi_proc, HIT, NO_CRIT, MIN_DMG, hi_proc],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MAX_DMG, lo_proc, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, lo_proc, SRF_RUN],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, lo_proc],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, hi_proc],
+        [SRF_RES, SRF_RES, SRF_RUN, MISS],
       ], [
         {species: 'Raticate', evs, moves: ['Hyper Fang', 'Headbutt', 'Hyper Beam']},
       ], [
@@ -1661,9 +1669,9 @@ for (const gen of new Generations(Dex as any)) {
 
     test('StatDown', () => {
       const battle = startBattle([
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
-        [SRF, SRF, HIT, SRF, HIT],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RES, HIT, SRF_RUN, HIT],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Ekans', evs, moves: ['Screech', 'Strength']},
       ], [
@@ -1710,9 +1718,9 @@ for (const gen of new Generations(Dex as any)) {
       const proc = {key: HIT.key, value: ranged(85, 256) - 1};
       const no_proc = {key: proc.key, value: proc.value + 1};
       const battle = startBattle([
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, no_proc, HIT, NO_CRIT, MIN_DMG, proc],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, no_proc, HIT, NO_CRIT, MIN_DMG, proc],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, no_proc, HIT, NO_CRIT, MIN_DMG, no_proc],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, no_proc, HIT, NO_CRIT, MIN_DMG, proc],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, no_proc, HIT, NO_CRIT, MIN_DMG, proc],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, no_proc, HIT, NO_CRIT, MIN_DMG, no_proc],
       ], [
         {species: 'Alakazam', evs, moves: ['Psychic']},
       ], [
@@ -1764,9 +1772,9 @@ for (const gen of new Generations(Dex as any)) {
 
     test('StatUp', () => {
       const battle = startBattle([
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
         [],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Scyther', evs, moves: ['Swords Dance', 'Cut']},
       ], [
@@ -1810,7 +1818,7 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('OHKO', () => {
-      const battle = startBattle([[SRF, SRF, MISS], [SRF, SRF, HIT]], [
+      const battle = startBattle([[SRF_RES, SRF_RES, MISS], [SRF_RES, SRF_RES, HIT]], [
         {species: 'Kingler', evs, moves: ['Guillotine']},
         {species: 'Tauros', evs, moves: ['Horn Drill']},
       ], [
@@ -1837,7 +1845,8 @@ for (const gen of new Generations(Dex as any)) {
 
     test('Charge', () => {
       const battle = startBattle([
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG], [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Wartortle', evs, moves: ['Skull Bash', 'Water Gun']},
         {species: 'Ivysaur', evs, moves: ['Vine Whip']},
@@ -1880,8 +1889,8 @@ for (const gen of new Generations(Dex as any)) {
 
     test('Fly / Dig', () => {
       const battle = startBattle([
-        [SRF, SRF, SS_RES, GLM],
-        [GLM, GLM, SRF, SRF, SS_RUN, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RES, SS_RES, GLM],
+        [GLM, GLM, SRF_RES, SRF_RES, SS_RUN, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Pidgeot', evs, moves: ['Fly', 'Sand-Attack']},
         {species: 'Metapod', evs, moves: ['Harden']},
@@ -1923,7 +1932,7 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('SwitchAndTeleport', () => {
-      const battle = startBattle([[SRF, HIT], [SRF, MISS]], [
+      const battle = startBattle([[SRF_RES, HIT], [SRF_RES, MISS]], [
         {species: 'Abra', evs, moves: ['Teleport']},
       ], [
         {species: 'Pidgey', evs, moves: ['Whirlwind']},
@@ -1968,7 +1977,7 @@ for (const gen of new Generations(Dex as any)) {
 
     test('JumpKick', () => {
       const battle = startBattle([
-        [], [SRF, SRF, MISS, HIT, CRIT, MAX_DMG], [SRF, SRF, MISS, MISS],
+        [], [SRF_RES, SRF_RES, MISS, HIT, CRIT, MAX_DMG], [SRF_RES, SRF_RES, MISS, MISS],
       ], [
         {species: 'Hitmonlee', evs, moves: ['Jump Kick', 'Substitute']},
       ], [
@@ -2021,10 +2030,10 @@ for (const gen of new Generations(Dex as any)) {
 
     test('Recoil', () => {
       const battle = startBattle([
-        [SRF, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG],
         [],
-        [SRF, HIT, NO_CRIT, MAX_DMG],
-        [SRF, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, HIT, NO_CRIT, MAX_DMG],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Slowpoke', evs, moves: ['Teleport']},
         {species: 'Rhydon', evs, moves: ['Take Down', 'Teleport']},
@@ -2079,10 +2088,10 @@ for (const gen of new Generations(Dex as any)) {
     test('Struggle', () => {
       const battle = startBattle([
         [],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RUN, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RUN, HIT, NO_CRIT, MIN_DMG],
         [],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RUN, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Abra', evs, moves: ['Substitute', 'Teleport']},
         {species: 'Golem', evs, moves: ['Harden']},
@@ -2146,12 +2155,12 @@ for (const gen of new Generations(Dex as any)) {
 
     test('Thrashing', () => {
       const battle = startBattle([
-        [SRF, SRF, SRF, HIT, NO_CRIT, MIN_DMG, THRASH(3), HIT, CFZ(5)],
-        [SRF, SRF, SRF, SRF, CFZ_CAN, MISS, SRF, MISS, THRASH(3)],
-        [SRF, SRF, SRF, SRF, SRF, CFZ_CAN, HIT, NO_CRIT,
-          MIN_DMG, CFZ(5), SRF, HIT, NO_CRIT, MIN_DMG],
-        [SRF, SRF, SRF, CFZ_CAN, HIT, SS_MOD, SRF, PAR_CANT],
-        [SRF, SRF, CFZ_CAN, HIT, SRF, PAR_CAN, HIT, NO_CRIT, MAX_DMG, THRASH(3)],
+        [SRF_RES, SRF_RES, SRF_RUN, HIT, NO_CRIT, MIN_DMG, THRASH(3), HIT, CFZ(5)],
+        [SRF_RES, SRF_RES, SRF_RES, SRF_RUN, CFZ_CAN, MISS, SRF_RUN, MISS, THRASH(3)],
+        [SRF_RES, SRF_RES, SRF_RES, SRF_RES, SRF_RUN, CFZ_CAN, HIT, NO_CRIT,
+          MIN_DMG, CFZ(5), SRF_RUN, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RES, SRF_RES, CFZ_CAN, HIT, SS_MOD, SRF_RUN, PAR_CANT],
+        [SRF_RES, SRF_RES, CFZ_CAN, HIT, SRF_RUN, PAR_CAN, HIT, NO_CRIT, MAX_DMG, THRASH(3)],
       ], [
         {species: 'Nidoking', evs, moves: ['Thrash', 'Thunder Wave']},
         {species: 'Nidoqueen', evs, moves: ['Poison Sting']},
@@ -2243,7 +2252,7 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('SpecialDamage (fixed)', () => {
-      const battle = startBattle([[SRF, SRF, HIT, HIT], [SRF]], [
+      const battle = startBattle([[SRF_RES, SRF_RES, HIT, HIT], [SRF_RES]], [
         {species: 'Voltorb', evs, moves: ['Sonic Boom']},
       ], [
         {species: 'Dratini', evs, moves: ['Dragon Rage']},
@@ -2275,7 +2284,7 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('SpecialDamage (level)', () => {
-      const battle = startBattle([[SRF, SRF, HIT, HIT]], [
+      const battle = startBattle([[SRF_RES, SRF_RES, HIT, HIT]], [
         {species: 'Gastly', evs, level: 22, moves: ['Night Shade']},
       ], [
         {species: 'Clefairy', evs, level: 16, moves: ['Seismic Toss']},
@@ -2301,7 +2310,7 @@ for (const gen of new Generations(Dex as any)) {
     test('SpecialDamage (Psywave)', () => {
       const PSY_MAX = {key: 'Battle.damageCallback', value: MAX};
       const PSY_MIN = {key: 'Battle.damageCallback', value: MIN};
-      const battle = startBattle([[SRF, SRF, HIT, PSY_MAX, HIT, PSY_MIN]], [
+      const battle = startBattle([[SRF_RES, SRF_RES, HIT, PSY_MAX, HIT, PSY_MIN]], [
         {species: 'Gengar', evs, level: 59, moves: ['Psywave']},
       ], [
         {species: 'Clefable', evs, level: 42, moves: ['Psywave']},
@@ -2322,7 +2331,7 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('SuperFang', () => {
-      const battle = startBattle([[SRF, SRF, HIT, HIT], [], [SRF, SRF, HIT]], [
+      const battle = startBattle([[SRF_RES, SRF_RES, HIT, HIT], [], [SRF_RES, SRF_RES, HIT]], [
         {species: 'Raticate', evs, moves: ['Super Fang']},
         {species: 'Haunter', evs, moves: ['Dream Eater']},
       ], [
@@ -2361,13 +2370,13 @@ for (const gen of new Generations(Dex as any)) {
     test('Disable', () => {
       const no_frz = {key: HIT.key, value: ranged(26, 256)};
       const battle = startBattle([
-        [SRF, SRF, HIT, HIT, NO_CRIT, MIN_DMG],
-        [SRF, SRF, HIT, DISABLE_DURATION(1), DISABLE_MOVE(1)],
-        [SRF, SRF, HIT, DISABLE_DURATION(5), DISABLE_MOVE(3), HIT, NO_CRIT, MIN_DMG],
-        [SRF, SRF, HIT, DISABLE_DURATION(5), DISABLE_MOVE(4)],
-        [SRF, SRF, HIT, HIT, NO_CRIT, MIN_DMG],
-        [SRF, HIT, NO_CRIT, MIN_DMG],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, no_frz],
+        [SRF_RES, SRF_RES, HIT, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RES, HIT, DISABLE_DURATION(1), DISABLE_MOVE(1)],
+        [SRF_RES, SRF_RES, HIT, DISABLE_DURATION(5), DISABLE_MOVE(3), HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RES, HIT, DISABLE_DURATION(5), DISABLE_MOVE(4)],
+        [SRF_RES, SRF_RES, HIT, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, no_frz],
       ], [
         {species: 'Golduck', evs, moves: ['Disable', 'Water Gun']},
       ], [
@@ -2472,10 +2481,10 @@ for (const gen of new Generations(Dex as any)) {
     test('Mist', () => {
       const proc = {key: HIT.key, value: ranged(85, 256) - 1};
       const battle = startBattle([
-        [SRF, HIT, NO_CRIT, MIN_DMG, proc],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, SRF, HIT],
-        [SRF, HIT, NO_CRIT, MIN_DMG],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, SRF, HIT],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG, proc],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, SRF_RUN, HIT],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, SRF_RUN, HIT],
       ], [
         {species: 'Articuno', evs, moves: ['Mist', 'Peck']},
       ], [
@@ -2535,11 +2544,11 @@ for (const gen of new Generations(Dex as any)) {
 
     test('HyperBeam', () => {
       const battle = startBattle([
-        [SRF, HIT, NO_CRIT, MAX_DMG],
-        [SRF, HIT, NO_CRIT, MAX_DMG],
+        [SRF_RES, HIT, NO_CRIT, MAX_DMG],
+        [SRF_RES, HIT, NO_CRIT, MAX_DMG],
         [],
-        [SRF, HIT, NO_CRIT, MIN_DMG],
-        [SRF, SRF],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RUN],
       ], [
         {species: 'Tauros', evs, moves: ['Hyper Beam', 'Body Slam']},
         {species: 'Exeggutor', evs, moves: ['Sleep Powder']},
@@ -2619,7 +2628,9 @@ for (const gen of new Generations(Dex as any)) {
     test.todo('Counter');
 
     test('Heal (normal)', () => {
-      const battle = startBattle([[], [SRF, SRF, HIT, CRIT, MAX_DMG, HIT, NO_CRIT, MIN_DMG], []], [
+      const battle = startBattle([
+        [], [SRF_RES, SRF_RES, HIT, CRIT, MAX_DMG, HIT, NO_CRIT, MIN_DMG], [],
+      ], [
         {species: 'Alakazam', evs, moves: ['Recover', 'Mega Kick']},
       ], [
         {species: 'Chansey', evs, moves: ['Soft-Boiled', 'Mega Punch']},
@@ -2666,8 +2677,8 @@ for (const gen of new Generations(Dex as any)) {
 
     test('Heal (Rest)', () => {
       const battle = startBattle([
-        [SRF, HIT, SS_MOD], [SRF, HIT, NO_CRIT, MIN_DMG, PAR_CAN, SS_MOD, SLP(5)],
-        [SRF, HIT, NO_CRIT, MIN_DMG], [],
+        [SRF_RES, HIT, SS_MOD], [SRF_RES, HIT, NO_CRIT, MIN_DMG, PAR_CAN, SS_MOD, SLP(5)],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG], [],
       ], [
         {species: 'Porygon', evs, moves: ['Thunder Wave', 'Tackle', 'Rest']},
         {species: 'Dragonair', evs, moves: ['Slam']},
@@ -2729,7 +2740,8 @@ for (const gen of new Generations(Dex as any)) {
 
     test('Drain', () => {
       const battle = startBattle([
-        [SRF, HIT, NO_CRIT, MIN_DMG], [], [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG], [],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Slowpoke', evs, moves: ['Teleport']},
         {species: 'Butterfree', evs, moves: ['Mega Drain']},
@@ -2776,10 +2788,10 @@ for (const gen of new Generations(Dex as any)) {
 
     test('DreamEater', () => {
       const battle = startBattle([
-        [SRF],
-        [SRF, HIT, SS_MOD, SLP(5)],
-        [SRF, HIT, NO_CRIT, MIN_DMG],
-        [SRF, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES],
+        [SRF_RES, HIT, SS_MOD, SLP(5)],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Hypno', evs, moves: ['Dream Eater', 'Hypnosis']},
       ], [
@@ -2830,7 +2842,8 @@ for (const gen of new Generations(Dex as any)) {
 
     test('LeechSeed', () => {
       const battle = startBattle([
-        [SRF, SRF, MISS], [SRF, HIT], [], [SRF, SRF, HIT, HIT], [SRF, HIT], [],
+        [SRF_RES, SRF_RES, MISS], [SRF_RES, HIT], [],
+        [SRF_RES, SRF_RES, HIT, HIT], [SRF_RES, HIT], [],
       ], [
         {species: 'Venusaur', evs, moves: ['Leech Seed']},
         {species: 'Exeggutor', evs, moves: ['Leech Seed', 'Teleport']},
@@ -2909,7 +2922,7 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('PayDay', () => {
-      const battle = startBattle([[SRF, HIT, NO_CRIT, MAX_DMG]], [
+      const battle = startBattle([[SRF_RES, HIT, NO_CRIT, MAX_DMG]], [
         {species: 'Meowth', evs, moves: ['Pay Day']},
       ], [
         {species: 'Slowpoke', evs, moves: ['Teleport']},
@@ -2931,10 +2944,10 @@ for (const gen of new Generations(Dex as any)) {
 
     test('Rage', () => {
       const battle = startBattle([
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, MISS],
-        [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, DISABLE_DURATION(5), DISABLE_MOVE(1, 2)],
-        [SRF, SRF, MISS],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, MISS],
+        [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, DISABLE_DURATION(5), DISABLE_MOVE(1, 2)],
+        [SRF_RES, SRF_RES, MISS],
       ], [
         {species: 'Charmeleon', evs, moves: ['Rage', 'Flamethrower']},
         {species: 'Doduo', evs, moves: ['Drill Peck']},
@@ -3011,7 +3024,8 @@ for (const gen of new Generations(Dex as any)) {
 
     test('LightScreen', () => {
       const battle = startBattle([
-        [SRF, HIT, NO_CRIT, MIN_DMG], [SRF, HIT, NO_CRIT, MIN_DMG], [SRF, HIT, CRIT, MIN_DMG], [],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG], [SRF_RES, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, HIT, CRIT, MIN_DMG], [],
       ], [
         {species: 'Chansey', evs, moves: ['Light Screen', 'Teleport']},
       ], [
@@ -3063,7 +3077,8 @@ for (const gen of new Generations(Dex as any)) {
 
     test('Reflect', () => {
       const battle = startBattle([
-        [SRF, HIT, NO_CRIT, MIN_DMG], [SRF, HIT, NO_CRIT, MIN_DMG], [SRF, HIT, CRIT, MIN_DMG], [],
+        [SRF_RES, HIT, NO_CRIT, MIN_DMG], [SRF_RES, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, HIT, CRIT, MIN_DMG], [],
       ], [
         {species: 'Chansey', evs, moves: ['Reflect', 'Teleport']},
       ], [
@@ -3147,15 +3162,15 @@ for (const gen of new Generations(Dex as any)) {
       const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
 
       const battle = startBattle([
-        [metronome('Wrap'), SRF, HIT, NO_CRIT, MIN_DMG, wrap],
-        [metronome('Petal Dance'), SRF, HIT, NO_CRIT, MIN_DMG, THRASH(3)],
-        [SRF, SRF, SRF, MISS, metronome('Mirror Move'),
-          metronome('Mirror Move'), metronome('Fly'), SRF, SS_RES, GLM],
-        [GLM, GLM, SRF, SRF, SRF, SRF, CFZ(2), SS_RUN, MISS],
-        [CFZ_CAN, metronome('Mimic'), SRF, MIMIC(2, 2), metronome('Disable'),
-          SRF, HIT, DISABLE_DURATION(3), DISABLE_MOVE(2, 3)],
-        [metronome('Rage'), SRF, HIT, NO_CRIT, MIN_DMG,
-          metronome('Swift'), SRF, NO_CRIT, MIN_DMG],
+        [metronome('Wrap'), SRF_USE, HIT, NO_CRIT, MIN_DMG, wrap],
+        [metronome('Petal Dance'), SRF_USE, HIT, NO_CRIT, MIN_DMG, THRASH(3)],
+        [SRF_RES, SRF_RES, SRF_RUN, MISS, metronome('Mirror Move'),
+          metronome('Mirror Move'), metronome('Fly'), SRF_USE, SS_RES, GLM],
+        [GLM, GLM, SRF_RES, SRF_RES, SRF_RES, SRF_RUN, CFZ(2), SS_RUN, MISS],
+        [CFZ_CAN, metronome('Mimic'), SRF_USE, MIMIC(2, 2), metronome('Disable'),
+          SRF_USE, HIT, DISABLE_DURATION(3), DISABLE_MOVE(2, 3)],
+        [metronome('Rage'), SRF_USE, HIT, NO_CRIT, MIN_DMG,
+          metronome('Swift'), SRF_USE, NO_CRIT, MIN_DMG],
       ], [
         {species: 'Clefable', evs, moves: ['Metronome', 'Teleport']},
       ], [
@@ -3242,10 +3257,10 @@ for (const gen of new Generations(Dex as any)) {
     // TODO: Mirror Move should not apply Hyper Beam recharge upon KOing a Pokemon
     test('MirrorMove', () => {
       const battle = startBattle([
-        [],	[SRF, HIT, NO_CRIT, MIN_DMG, SRF, HIT, NO_CRIT, MIN_DMG],
-        [SRF, SRF, NO_CRIT, MIN_DMG], [SRF, NO_CRIT, MIN_DMG],
-        [SRF, SRF, SS_RES, SS_RES, GLM, GLM],
-        [GLM, GLM, GLM, GLM, SRF, SRF, SS_RUN, SS_RUN, HIT, NO_CRIT, MIN_DMG], [],
+        [],	[SRF_RES, HIT, NO_CRIT, MIN_DMG, SRF_USE, HIT, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_RUN, NO_CRIT, MIN_DMG], [SRF_USE, NO_CRIT, MIN_DMG],
+        [SRF_RES, SRF_USE, SS_RES, SS_RES, GLM, GLM],
+        [GLM, GLM, GLM, GLM, SRF_RES, SRF_RES, SS_RUN, SS_RUN, HIT, NO_CRIT, MIN_DMG], [],
       ], [
         {species: 'Fearow', evs, moves: ['Mirror Move', 'Peck', 'Fly']},
       ], [
@@ -3322,7 +3337,8 @@ for (const gen of new Generations(Dex as any)) {
 
     test('Explode', () => {
       const battle = startBattle([
-        [SRF, HIT, SS_MOD], [SRF, HIT, NO_CRIT, MAX_DMG], [SRF, HIT, NO_CRIT, MAX_DMG], [], [SRF],
+        [SRF_RES, HIT, SS_MOD], [SRF_RES, HIT, NO_CRIT, MAX_DMG],
+        [SRF_RES, HIT, NO_CRIT, MAX_DMG], [], [SRF_RES],
       ], [
         {species: 'Electrode', level: 80, evs, moves: ['Explosion', 'Toxic']},
         {species: 'Onix', evs, moves: ['Self-Destruct']},
@@ -3382,7 +3398,7 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('Swift', () => {
-      const battle = startBattle([[SRF, SRF, SRF, NO_CRIT, MIN_DMG, SS_RES, GLM]], [
+      const battle = startBattle([[SRF_RES, SRF_RES, SRF_RUN, NO_CRIT, MIN_DMG, SS_RES, GLM]], [
         {species: 'Eevee', evs, moves: ['Swift']},
       ], [
         {species: 'Diglett', evs, moves: ['Dig']},
@@ -3406,7 +3422,7 @@ for (const gen of new Generations(Dex as any)) {
     // TODO: Transform after stats boosted/unboosted - what happens after recalc?
     test('Transform', () => {
       const battle = startBattle([
-        [], [SRF, SRF, SS_RES, GLM], [GLM, GLM, SRF, SRF, SS_RUN, MISS],
+        [], [SRF_RES, SRF_RES, SS_RES, GLM], [GLM, GLM, SRF_RES, SRF_RES, SS_RUN, MISS],
       ], [
         {species: 'Mew', level: 50, moves: ['Swords Dance', 'Transform']},
       ], [
@@ -3458,7 +3474,7 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('Conversion', () => {
-      const battle = startBattle([[SRF]], [
+      const battle = startBattle([[SRF_RES]], [
         {species: 'Porygon', evs, moves: ['Conversion']},
       ], [
         {species: 'Slowbro', evs, moves: ['Teleport']},
@@ -3477,7 +3493,7 @@ for (const gen of new Generations(Dex as any)) {
 
   test('Substitute', () => {
     const battle = startBattle([
-      [SRF, HIT], [SRF, HIT, NO_CRIT, MIN_DMG], [SRF, HIT], [SRF, HIT],
+      [SRF_RES, HIT], [SRF_RES, HIT, NO_CRIT, MIN_DMG], [SRF_RES, HIT], [SRF_RES, HIT],
     ], [
       {species: 'Mewtwo', evs, moves: ['Substitute', 'Teleport']},
       {species: 'Abra', level: 2, moves: ['Substitute']},
@@ -3539,8 +3555,8 @@ for (const gen of new Generations(Dex as any)) {
     describe('Gen 1', () => {
       test('0 damage glitch', () => {
         const battle = startBattle([
-          [SRF, SRF, SRF, HIT, HIT, NO_CRIT], [SRF, SRF, HIT],
-          [SRF, SRF, SRF, HIT, HIT, NO_CRIT],
+          [SRF_RES, SRF_RES, SRF_RUN, HIT, HIT, NO_CRIT], [SRF_RES, SRF_RUN, HIT],
+          [SRF_RES, SRF_RES, SRF_RUN, HIT, HIT, NO_CRIT],
         ], [
           {species: 'Bulbasaur', evs, moves: ['Growl']},
         ], [
@@ -3579,7 +3595,7 @@ for (const gen of new Generations(Dex as any)) {
       });
 
       test('1/256 miss glitch', () => {
-        const battle = startBattle([[SRF, SRF, MISS, MISS]], [
+        const battle = startBattle([[SRF_RES, SRF_RES, MISS, MISS]], [
           {species: 'Jigglypuff', evs, moves: ['Pound']},
         ], [
           {species: 'Nidoran-F', evs, moves: ['Scratch']},
@@ -3607,8 +3623,8 @@ for (const gen of new Generations(Dex as any)) {
       test('Freeze top move selection glitch', () => {
         const NO_BRN = {key: FRZ.key, value: FRZ.value + 1};
         const battle = startBattle([
-          [SRF, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD], [SRF, HIT, NO_CRIT, MIN_DMG, NO_BRN],
-          [], [SRF, HIT, NO_CRIT, MIN_DMG, NO_BRN],
+          [SRF_RES, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD], [SRF_RES, HIT, NO_CRIT, MIN_DMG, NO_BRN],
+          [], [SRF_RES, HIT, NO_CRIT, MIN_DMG, NO_BRN],
         ], [
           {species: 'Slowbro', evs, moves: ['Psychic', 'Amnesia', 'Teleport']},
           {species: 'Spearow', level: 8, evs, moves: ['Peck']},
@@ -3666,8 +3682,8 @@ for (const gen of new Generations(Dex as any)) {
       test('Toxic counter glitches', () => {
         const BRN = {key: HIT.key, value: ranged(77, 256) - 1};
         const battle = startBattle([
-          [SRF, HIT, SS_MOD, SS_MOD, SLP(5)], [], [SRF, HIT],
-          [SRF, HIT, NO_CRIT, MIN_DMG, BRN, SS_MOD],
+          [SRF_RES, HIT, SS_MOD, SS_MOD, SLP(5)], [], [SRF_RES, HIT],
+          [SRF_RES, HIT, NO_CRIT, MIN_DMG, BRN, SS_MOD],
         ], [
           {species: 'Venusaur', evs, moves: ['Toxic', 'Leech Seed', 'Teleport', 'Fire Blast']},
         ], [
@@ -3713,8 +3729,8 @@ for (const gen of new Generations(Dex as any)) {
       test('Defrost move forcing', () => {
         const NO_BRN = {key: FRZ.key, value: FRZ.value + 1};
         const battle = startBattle([
-          [SRF, HIT, NO_CRIT, MIN_DMG], [SRF, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD],
-          [SRF, SRF, HIT, NO_CRIT, MIN_DMG, NO_BRN, HIT, NO_CRIT, MIN_DMG],
+          [SRF_RES, HIT, NO_CRIT, MIN_DMG], [SRF_RES, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD],
+          [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, NO_BRN, HIT, NO_CRIT, MIN_DMG],
         ], [
           {species: 'Hypno', level: 50, evs, moves: ['Teleport', 'Ice Punch', 'Fire Punch']},
         ], [
@@ -3769,8 +3785,8 @@ for (const gen of new Generations(Dex as any)) {
         //  Attack/Special > 255 vs. Defense/Special stat < 4.
         {
           const battle = startBattle([
-            [SRF, SRF, HIT, SRF, HIT], [SRF, SRF, MISS], [SRF, SRF, MISS],
-            [SRF, SRF, HIT, NO_CRIT, MIN_DMG],
+            [SRF_RES, SRF_RES, HIT, SRF_RUN, HIT], [SRF_RES, SRF_RUN, MISS],
+            [SRF_RES, SRF_RUN, MISS], [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG],
           ], [
             {species: 'Cloyster', level: 65, evs, moves: ['Screech']},
             {species: 'Parasect', level: 100, evs, moves: ['Swords Dance', 'Leech Life']},
@@ -3814,8 +3830,8 @@ for (const gen of new Generations(Dex as any)) {
         {
           const def12 = {hp: 0, atk: 0, def: 12, spa: 0, spd: 0, spe: 0};
           const battle = startBattle([
-            [SRF, HIT, NO_CRIT, MAX_DMG], [SRF, HIT, NO_CRIT, MAX_DMG],
-            [SRF, HIT], [SRF, HIT, NO_CRIT, MAX_DMG],
+            [SRF_RES, HIT, NO_CRIT, MAX_DMG], [SRF_RES, HIT, NO_CRIT, MAX_DMG],
+            [SRF_RES, HIT], [SRF_RES, HIT, NO_CRIT, MAX_DMG],
           ], [
             {species: 'Cloyster', level: 64, evs: def12, moves: ['Withdraw', 'Reflect']},
           ], [
@@ -3866,8 +3882,8 @@ for (const gen of new Generations(Dex as any)) {
         {
           const def20 = {hp: 0, atk: 0, def: 20, spa: 0, spd: 0, spe: 0};
           const battle = startBattle([
-            [SRF, HIT, NO_CRIT, MAX_DMG], [SRF, HIT, NO_CRIT, MAX_DMG],
-            [SRF, HIT], [SRF, HIT, NO_CRIT, MAX_DMG],
+            [SRF_RES, HIT, NO_CRIT, MAX_DMG], [SRF_RES, HIT, NO_CRIT, MAX_DMG],
+            [SRF_RES, HIT], [SRF_RES, HIT, NO_CRIT, MAX_DMG],
           ], [
             {species: 'Cloyster', level: 64, evs: def20, moves: ['Withdraw', 'Reflect']},
           ], [
@@ -3919,9 +3935,10 @@ for (const gen of new Generations(Dex as any)) {
       test('Hyper Beam + Freeze permanent helplessness', () => {
         const NO_BRN = {key: FRZ.key, value: FRZ.value + 1};
         const battle = startBattle([
-          [SRF, SRF, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD],
-          [SRF, SRF], [SRF, HIT, NO_CRIT, MIN_DMG], [SRF, SRF, HIT, NO_CRIT, MIN_DMG, NO_BRN, SRF],
-          [SRF, SRF, HIT, NO_CRIT, MIN_DMG, NO_BRN, HIT, NO_CRIT, MIN_DMG],
+          [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD],
+          [SRF_RES, SRF_RUN], [SRF_RES, HIT, NO_CRIT, MIN_DMG],
+          [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, NO_BRN, SRF_RUN],
+          [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, NO_BRN, HIT, NO_CRIT, MIN_DMG],
         ], [
           {species: 'Chansey', evs, moves: ['Hyper Beam', 'Soft-Boiled']},
           {species: 'Blastoise', evs, moves: ['Hydro Pump']},
@@ -3997,8 +4014,9 @@ for (const gen of new Generations(Dex as any)) {
 
       test('Hyper Beam + Sleep move glitch', () => {
         const battle = startBattle([
-          [SRF, SRF, HIT, SS_MOD, HIT, NO_CRIT, MIN_DMG], [SRF, SRF, SS_MOD, SLP(2), SRF],
-          [SRF], [SRF, SRF, HIT, SS_MOD, MISS],
+          [SRF_RES, SRF_RES, HIT, SS_MOD, HIT, NO_CRIT, MIN_DMG],
+          [SRF_RES, SRF_RES, SS_MOD, SLP(2), SRF_RUN],
+          [SRF_RES], [SRF_RES, SRF_RES, HIT, SS_MOD, MISS],
         ], [
           {species: 'Hypno', evs, moves: ['Toxic', 'Hypnosis', 'Teleport']},
         ], [
@@ -4053,7 +4071,7 @@ for (const gen of new Generations(Dex as any)) {
 
       test('Hyper Beam automatic selection glitch', () => {
         const battle = startBattle([
-          [SRF, SRF, MISS, HIT, NO_CRIT, MIN_DMG], [SRF, SRF, MISS, SRF],
+          [SRF_RES, SRF_RES, MISS, HIT, NO_CRIT, MIN_DMG], [SRF_RES, SRF_RES, MISS, SRF_RUN],
         ], [
           {species: 'Chansey', evs, moves: ['Hyper Beam', 'Soft-Boiled']},
         ], [
@@ -4089,12 +4107,12 @@ for (const gen of new Generations(Dex as any)) {
       test('Invulnerability glitch', () => {
         const NO_PAR = {key: HIT.key, value: ranged(26, 256)};
         const battle = startBattle([
-          [SRF, HIT, SS_MOD],
-          [SRF, SRF, PAR_CAN, SS_RES, GLM],
-          [GLM, GLM, SRF, SRF, PAR_CANT, HIT, NO_CRIT, MIN_DMG, NO_PAR],
-          [SRF, PAR_CAN, SRF, NO_CRIT, MIN_DMG],
-          [SRF, SRF, PAR_CAN, SS_RES, GLM],
-          [GLM, GLM, SRF, SRF, PAR_CAN, SS_RUN, HIT,
+          [SRF_RES, HIT, SS_MOD],
+          [SRF_RES, SRF_RES, PAR_CAN, SS_RES, GLM],
+          [GLM, GLM, SRF_RES, SRF_RES, PAR_CANT, HIT, NO_CRIT, MIN_DMG, NO_PAR],
+          [SRF_RES, PAR_CAN, SRF_RUN, NO_CRIT, MIN_DMG],
+          [SRF_RES, SRF_RES, PAR_CAN, SS_RES, GLM],
+          [GLM, GLM, SRF_RES, SRF_RES, PAR_CAN, SS_RUN, HIT,
             NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, NO_PAR],
         ], [
           {species: 'Fearow', evs, moves: ['Agility', 'Fly']},
@@ -4165,7 +4183,7 @@ for (const gen of new Generations(Dex as any)) {
       test('Stat modification errors', () => {
         {
           const battle = startBattle([
-            [SRF, SRF, HIT, HIT, SS_MOD], [SRF, PAR_CAN, HIT], [SRF, PAR_CAN, HIT],
+            [SRF_RES, SRF_RES, HIT, HIT, SS_MOD], [SRF_RES, PAR_CAN, HIT], [SRF_RES, PAR_CAN, HIT],
           ], [
             {species: 'Bulbasaur', level: 6, moves: ['Stun Spore', 'Growth']},
           ], [
@@ -4209,8 +4227,8 @@ for (const gen of new Generations(Dex as any)) {
         }
         {
           const battle = startBattle([
-            [SRF, HIT, SS_MOD], [SRF, PAR_CAN, SRF, HIT],
-            [SRF, PAR_CANT, SRF, HIT], [SRF, SRF, HIT, PAR_CANT],
+            [SRF_RES, HIT, SS_MOD], [SRF_RES, PAR_CAN, SRF_RUN, HIT],
+            [SRF_RES, PAR_CANT, SRF_RUN, HIT], [SRF_RES, SRF_RUN, HIT, PAR_CANT],
           ], [
             {species: 'Bulbasaur', level: 6, moves: ['Stun Spore', 'Growth']},
             {species: 'Cloyster', level: 82, moves: ['Withdraw']},
@@ -4266,7 +4284,8 @@ for (const gen of new Generations(Dex as any)) {
         {
           const spc342 = {...evs, spa: 12, spd: 12};
           const battle = startBattle([
-            [], [], [], [SRF, HIT, NO_CRIT, MIN_DMG, proc], [SRF, HIT, NO_CRIT, MIN_DMG, no_proc],
+            [], [], [], [SRF_RES, HIT, NO_CRIT, MIN_DMG, proc],
+            [SRF_RES, HIT, NO_CRIT, MIN_DMG, no_proc],
           ], [
             {species: 'Porygon', level: 58, moves: ['Recover', 'Psychic']},
           ], [
@@ -4339,7 +4358,8 @@ for (const gen of new Generations(Dex as any)) {
         // 343 -> 1029
         {
           const battle = startBattle([
-            [], [], [], [SRF, HIT, NO_CRIT, MIN_DMG, proc], [SRF, HIT, NO_CRIT, MIN_DMG, no_proc],
+            [], [], [], [SRF_RES, HIT, NO_CRIT, MIN_DMG, proc],
+            [SRF_RES, HIT, NO_CRIT, MIN_DMG, no_proc],
           ], [
             {species: 'Porygon', level: 58, moves: ['Recover', 'Psychic']},
           ], [
@@ -4416,7 +4436,7 @@ for (const gen of new Generations(Dex as any)) {
         const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MAX};
         const rewrap = {key: ['Battle.sample', 'BattleActions.runMove'], value: MAX};
         const battle = startBattle([
-          [SRF, HIT, NO_CRIT, MIN_DMG, wrap], [SRF, HIT, NO_CRIT, MIN_DMG, rewrap],
+          [SRF_RES, HIT, NO_CRIT, MIN_DMG, wrap], [SRF_RES, HIT, NO_CRIT, MIN_DMG, rewrap],
         ], [
           {species: 'Victreebel', evs, moves: ['Wrap', 'Vine Whip']},
           {species: 'Seel', evs, moves: ['Bubble']},
@@ -4458,8 +4478,8 @@ for (const gen of new Generations(Dex as any)) {
       test('Trapping sleep glitch', () => {
         const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
         const battle = startBattle([
-          [SRF, SRF, HIT, NO_CRIT, MIN_DMG, wrap], [SRF, SRF],
-          [SRF, SRF, HIT, SS_MOD, SLP(5)], [SRF, SRF, HIT],
+          [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, wrap], [SRF_RES, SRF_RES],
+          [SRF_RES, SRF_RES, HIT, SS_MOD, SLP(5)], [SRF_RES, SRF_RES, HIT],
         ], [
           {species: 'Weepinbell', evs, moves: ['Wrap', 'Sleep Powder']},
           {species: 'Gloom', evs, moves: ['Absorb']},
@@ -4515,7 +4535,7 @@ for (const gen of new Generations(Dex as any)) {
       test('Partial trapping move Mirror Move glitch', () => {
         const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
         const battle = startBattle(
-          [[SRF, MISS], [SRF, SRF, HIT, NO_CRIT, MAX_DMG, wrap, SRF], []],
+          [[SRF_RES, MISS], [SRF_RES, SRF_USE, HIT, NO_CRIT, MAX_DMG, wrap, SRF_RUN], []],
           [{species: 'Pidgeot', evs, moves: ['Agility', 'Mirror Move']}],
           [{species: 'Moltres', evs, moves: ['Leer', 'Fire Spin']},
             {species: 'Drowzee', evs, moves: ['Pound']}]
@@ -4554,9 +4574,9 @@ for (const gen of new Generations(Dex as any)) {
         const hit = (n: number) => ({key: HIT.key, value: ranged(n, 256) - 1});
         const miss = (n: number) => ({key: HIT.key, value: hit(n).value + 1});
         const battle = startBattle([
-          [SRF, SRF, hit(255), NO_CRIT, MIN_DMG, THRASH(4)],
-          [SRF, SRF, SRF, hit(168), NO_CRIT, MIN_DMG],
-          [SRF, SRF, SRF, miss(84), NO_CRIT, MIN_DMG], // should miss!
+          [SRF_RES, SRF_RUN, hit(255), NO_CRIT, MIN_DMG, THRASH(4)],
+          [SRF_RES, SRF_RES, SRF_RUN, hit(168), NO_CRIT, MIN_DMG],
+          [SRF_RES, SRF_RES, SRF_RUN, miss(84), NO_CRIT, MIN_DMG], // should miss!
         ], [
           {species: 'Nidoking', evs, moves: ['Thrash']},
         ], [
@@ -4600,7 +4620,7 @@ for (const gen of new Generations(Dex as any)) {
       });
 
       test('Substitute HP drain bug', () => {
-        const battle = startBattle([[SRF, HIT, NO_CRIT, MIN_DMG]], [
+        const battle = startBattle([[SRF_RES, HIT, NO_CRIT, MIN_DMG]], [
           {species: 'Butterfree', evs, moves: ['Mega Drain']},
         ], [
           {species: 'Jolteon', evs, moves: ['Substitute']},
@@ -4647,7 +4667,7 @@ for (const gen of new Generations(Dex as any)) {
         // Confused Pokémon has Substitute
         {
           const battle = startBattle([
-            [SRF, HIT, CFZ(5), CFZ_CAN], [SRF, SRF, HIT, SRF, CFZ_CANT],
+            [SRF_RES, HIT, CFZ(5), CFZ_CAN], [SRF_RES, SRF_RES, HIT, SRF_RUN, CFZ_CANT],
           ], [
             {species: 'Bulbasaur', level: 6, evs, moves: ['Substitute', 'Growl']},
           ], [
@@ -4682,8 +4702,8 @@ for (const gen of new Generations(Dex as any)) {
         // Both Pokémon have Substitutes
         {
           const battle = startBattle([
-            [SRF, HIT, NO_CRIT, MIN_DMG], [SRF, SRF, HIT, CFZ(5), CFZ_CANT],
-            [CFZ_CAN], [SRF, CFZ_CANT],
+            [SRF_RES, HIT, NO_CRIT, MIN_DMG], [SRF_RES, SRF_RES, HIT, CFZ(5), CFZ_CANT],
+            [CFZ_CAN], [SRF_RES, CFZ_CANT],
           ], [
             {species: 'Bulbasaur', level: 6, evs, moves: ['Substitute', 'Tackle']},
           ], [
@@ -4748,7 +4768,7 @@ for (const gen of new Generations(Dex as any)) {
 
       test('Psywave infinite loop', () => {
         const PSY_MAX = {key: 'Battle.damageCallback', value: MAX};
-        const battle = startBattle([[SRF, SRF, SRF, HIT, HIT, PSY_MAX]], [
+        const battle = startBattle([[SRF_RES, SRF_RES, SRF_RUN, HIT, HIT, PSY_MAX]], [
           {species: 'Charmander', evs, level: 1, moves: ['Psywave']},
         ], [
           {species: 'Rattata', evs, level: 3, moves: ['Tail Whip']},
