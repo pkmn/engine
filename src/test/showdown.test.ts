@@ -22,16 +22,18 @@ const SS_EACH = {key: ['Battle.speedSort', 'Battle.eachEvent'], value: NOP};
 const INS = {key: ['BattleQueue.insertChoice', 'BattleActions.switchIn'], value: NOP};
 const GLM = {key: 'Pokemon.getLockedMove', value: NOP};
 
-const ranged = (n: number, d: number) => n * (0x100000000 / d);
+const ranged = (n: number, d: number) => n * Math.floor(0x100000000 / d);
 
 const TIE = (n: 1 | 2) =>
   ({key: ['Battle.speedSort', 'BattleQueue.sort'], value: ranged(n, 2) - 1});
 const SLP = (n: number) =>
-  ({key: ['Battle.random', 'Pokemon.setStatus'], value: ranged(n - 1, 8 - 1)});
+  ({key: ['Battle.random', 'Pokemon.setStatus'], value: ranged(n, 8 - 1)});
 const DISABLE_DURATION = (n: number) =>
   ({key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: ranged(n, 7 - 1) - 1});
 const DISABLE_MOVE = (m: number, n = 4) =>
   ({key: ['Battle.onStart', 'Pokemon.addVolatile'], value: ranged(m, n) - 1});
+const MIMIC = (m: number, n = 4) =>
+  ({key: ['Battle.sample', 'Battle.singleEvent'], value: ranged(m, n) - 1});
 const PAR_CANT = {key: 'Battle.onBeforeMove', value: ranged(63, 256) - 1};
 const PAR_CAN = {key: 'Battle.onBeforeMove', value: PAR_CANT.value + 1};
 const FRZ = {key: HIT.key, value: ranged(26, 256) - 1};
@@ -3103,10 +3105,209 @@ for (const gen of new Generations(Dex as any)) {
       ]);
     });
 
-    test.todo('Haze');
+    // test('Haze', () => {
+    //   const battle = startBattle([], [
+    //     {species: 'Vaporeon', evs, moves: ['Haze', 'Acid Armor', 'Thunder Wave']},
+    //   ], [
+    //     {species: 'TODO', evs, moves: ['Toxic', 'Confuse Ray', 'Leech Seed']},
+    //   ]);
+
+    //   let p1hp = battle.p1.pokemon[0].hp;
+    //   let p2hp = battle.p2.pokemon[0].hp;
+
+    //   battle.makeChoices('move 1', 'move 1');
+    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
+    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+
+    //   verify(battle, [
+    //   ]);
+    // });
+
     test.todo('Bide');
-    test.todo('Metronome');
-    test.todo('MirrorMove');
+
+    test('Metronome', () => {
+      const moves: string[] = Array.from(gen.moves)
+        .sort((a, b) => a.num - b.num)
+        .map(m => m.name)
+        .filter(m => !['Struggle', 'Metronome'].includes(m));
+      const metronome = (move: string) => ({
+        key: ['Battle.sample', 'Battle.singleEvent'],
+        value: ranged(moves.indexOf(move) + 1, moves.length) - 1
+      });
+      const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
+
+      const battle = startBattle([
+        [metronome('Wrap'), SRF, HIT, NO_CRIT, MIN_DMG, wrap],
+        [metronome('Petal Dance') , SRF, HIT, NO_CRIT, MIN_DMG, THRASH(3)],
+        [SRF, SRF, SRF, MISS, metronome('Mirror Move'),
+          metronome('Mirror Move'), metronome('Fly'), SRF, SS_RES, GLM],
+        [GLM, GLM, SRF, SRF, SRF, SRF, CFZ(2), SS_RUN, MISS],
+        [CFZ_CAN, metronome('Mimic'), SRF, MIMIC(2, 2), metronome('Disable'),
+          SRF, HIT, DISABLE_DURATION(3), DISABLE_MOVE(2, 3)],
+        [metronome('Rage'), SRF, HIT, NO_CRIT, MIN_DMG,
+          metronome('Swift'), SRF, NO_CRIT, MIN_DMG],
+      ], [
+        {species: 'Clefable', evs, moves: ['Metronome', 'Teleport']},
+      ], [
+        {species: 'Primeape', evs, moves: ['Metronome', 'Mimic', 'Fury Swipes']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      // Pokémon Showdown partial trapping lock doesn't work with Metronome...
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 14);
+      // expect(choices(battle, 'p2')).toEqual(['move 1']);
+      expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2', 'move 3']);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 41);
+      expect(choices(battle, 'p2')).toEqual(['move 1']);
+
+      // Metronome -> Mirror Move -> Metronome recursion is allowed
+      battle.makeChoices('move 1', 'move 1');
+      expect(choices(battle, 'p1')).toEqual(['move 1']);
+      expect(choices(battle, 'p2')).toEqual(['move 1']);
+
+      battle.makeChoices('move 1', 'move 1');
+
+      // Metronome -> Mimic only works on Pokémon Showdown if Mimic is in the moveset and
+      // replaces *that* slot instead of Metronome
+      battle.makeChoices('move 1', 'move 1');
+      expect(choices(battle, 'p2')).toEqual(['move 1', 'move 3']);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 19);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 72);
+      expect(choices(battle, 'p2')).toEqual(['move 1']);
+
+      verify(battle, [
+        '|move|p2a: Primeape|Metronome|p2a: Primeape',
+        '|move|p2a: Primeape|Wrap|p1a: Clefable|[from]Metronome',
+        '|-damage|p1a: Clefable|379/393',
+        '|cant|p1a: Clefable|partiallytrapped',
+        '|turn|2',
+        '|move|p2a: Primeape|Metronome|p2a: Primeape',
+        '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from]Metronome',
+        '|-damage|p1a: Clefable|338/393',
+        '|cant|p1a: Clefable|partiallytrapped',
+        '|turn|3',
+        '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from]Petal Dance|[miss]',
+        '|-miss|p2a: Primeape',
+        '|move|p1a: Clefable|Metronome|p1a: Clefable',
+        '|move|p1a: Clefable|Mirror Move|p1a: Clefable|[from]Metronome',
+        '|move|p1a: Clefable|Metronome|p1a: Clefable|[from]Mirror Move',
+        '|move|p1a: Clefable|Mirror Move|p1a: Clefable|[from]Metronome',
+        '|move|p1a: Clefable|Metronome|p1a: Clefable|[from]Mirror Move',
+        '|move|p1a: Clefable|Fly||[from]Metronome|[still]',
+        '|-prepare|p1a: Clefable|Fly',
+        '|turn|4',
+        '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from]Petal Dance|[miss]',
+        '|-miss|p2a: Primeape',
+        '|-start|p2a: Primeape|confusion|[silent]',
+        '|move|p1a: Clefable|Fly|p2a: Primeape|[from]Fly|[miss]',
+        '|-miss|p1a: Clefable',
+        '|turn|5',
+        '|-activate|p2a: Primeape|confusion',
+        '|move|p2a: Primeape|Metronome|p2a: Primeape',
+        '|move|p2a: Primeape|Mimic|p1a: Clefable|[from]Metronome',
+        '|-start|p2a: Primeape|Mimic|Teleport',
+        '|move|p1a: Clefable|Metronome|p1a: Clefable',
+        '|move|p1a: Clefable|Disable|p2a: Primeape|[from]Metronome',
+        '|-start|p2a: Primeape|Disable|Teleport',
+        '|turn|6',
+        '|-end|p2a: Primeape|confusion',
+        '|move|p2a: Primeape|Metronome|p2a: Primeape',
+        '|move|p2a: Primeape|Rage|p1a: Clefable|[from]Metronome',
+        '|-damage|p1a: Clefable|319/393',
+        '|move|p1a: Clefable|Metronome|p1a: Clefable',
+        '|move|p1a: Clefable|Swift|p2a: Primeape|[from]Metronome',
+        '|-damage|p2a: Primeape|261/333',
+        '|-boost|p2a: Primeape|atk|1|[from] Rage',
+        '|turn|7'
+      ]);
+    });
+
+    test('MirrorMove', () => {
+      const battle = startBattle([
+        [],	[SRF, HIT, NO_CRIT, MIN_DMG, SRF, HIT, NO_CRIT, MIN_DMG],
+        [SRF, SRF, NO_CRIT, MIN_DMG], [SRF, NO_CRIT, MIN_DMG],
+        [SRF, SRF, SS_RES, SS_RES, GLM, GLM],
+        [GLM, GLM, GLM, GLM, SRF, SRF, SS_RUN, SS_RUN, HIT, NO_CRIT, MIN_DMG], [],
+      ], [
+        {species: 'Fearow', evs, moves: ['Mirror Move', 'Peck', 'Fly']},
+      ], [
+        {species: 'Pidgeot', evs, moves: ['Mirror Move', 'Swift']},
+        {species: 'Pidgeotto', evs, moves: ['Gust']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      // Can't Mirror Move if no move has been used or if Mirror Move is last used
+      battle.makeChoices('move 1', 'move 1');
+
+      // Can Mirror Move regular attacks
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 44);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 43);
+
+      // Pokémon Showdown sets last_used_move incorrectly, this should succeed
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 74);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 74);
+
+      // Should actually copy Swift and not Fly
+      battle.makeChoices('move 3', 'move 1');
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 86);
+
+      // Switching rests last used moves
+      battle.makeChoices('move 1', 'switch 2');
+
+      verify(battle, [
+        '|move|p1a: Fearow|Mirror Move|p1a: Fearow',
+        '|-fail|p1a: Fearow',
+        '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
+        '|-fail|p2a: Pidgeot',
+        '|turn|2',
+        '|move|p1a: Fearow|Peck|p2a: Pidgeot',
+        '|-damage|p2a: Pidgeot|326/369',
+        '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
+        '|move|p2a: Pidgeot|Peck|p1a: Fearow|[from]Mirror Move',
+        '|-damage|p1a: Fearow|289/333',
+        '|turn|3',
+        '|move|p1a: Fearow|Mirror Move|p1a: Fearow',
+        '|-fail|p1a: Fearow',
+        '|move|p2a: Pidgeot|Swift|p1a: Fearow',
+        '|-damage|p1a: Fearow|215/333',
+        '|turn|4',
+        '|move|p1a: Fearow|Mirror Move|p1a: Fearow',
+        '|move|p1a: Fearow|Swift|p2a: Pidgeot|[from]Mirror Move',
+        '|-damage|p2a: Pidgeot|252/369',
+        '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
+        '|-fail|p2a: Pidgeot',
+        '|turn|5',
+        '|move|p1a: Fearow|Fly||[still]',
+        '|-prepare|p1a: Fearow|Fly',
+        '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
+        '|move|p2a: Pidgeot|Fly||[from]Mirror Move|[still]',
+        '|-prepare|p2a: Pidgeot|Fly',
+        '|turn|6',
+        '|move|p1a: Fearow|Fly|p2a: Pidgeot|[from]Fly|[miss]',
+        '|-miss|p1a: Fearow',
+        '|move|p2a: Pidgeot|Fly|p1a: Fearow|[from]Fly',
+        '|-damage|p1a: Fearow|129/333',
+        '|turn|7',
+        '|switch|p2a: Pidgeotto|Pidgeotto|329/329',
+        '|move|p1a: Fearow|Mirror Move|p1a: Fearow',
+        '|-fail|p1a: Fearow',
+        '|turn|8',
+      ]);
+    });
 
     test('Explode', () => {
       const battle = startBattle([
