@@ -21,10 +21,10 @@ of the boilerplate from the library's unit tests:
   expect(battle.rng.exhausted())` - unexpectedly unused rolls could point to bugs (`Test.verify()`
   will automatically check that the `rng` is exhausted).
 
-### `showdown.test.ts`
+### `showdown`
 
 In order to verify Pokémon Showdown's behavior, many of the pkmn engine's unit tests are mirrored in
-[`showdown.test.ts`](../src/test/showdown.test.ts). It should be emphasized that these are tests
+the [`showdown/`](../src/test/showdown/) directory. It should be emphasized that these are tests
 against Pokémon Showdown, **not** the pkmn engine (engine code is not being tested). Pokémon
 Showdown's own unit tests are inadequate for the pkmn engine's purposes as they mostly cover the
 latest generation, do not use a fixed RNG, and do not verify logs (both of which are crucial for
