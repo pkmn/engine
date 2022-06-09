@@ -719,6 +719,8 @@ describe('Gen 1', () => {
     expect(choices(battle, 'p1')).toEqual([]);
   });
 
+  // Moves
+
   test('HighCritical effect', () => {
     const no_crit = {
       key: CRIT.key,
@@ -950,7 +952,7 @@ describe('Gen 1', () => {
     ]);
   });
 
-  test('Poison  effect', () => {
+  test('Poison effect', () => {
     const battle = startBattle([
       SRF_RES, HIT, SRF_RES, HIT, SRF_RES, HIT, SS_MOD, SRF_RES, HIT, SS_MOD,
     ], [
@@ -2371,7 +2373,7 @@ describe('Gen 1', () => {
     ]);
   });
 
-  test('SpecialDamage (fixed) effect', () => {
+  test('FixedDamage effect', () => {
     const battle = startBattle([SRF_RES, SRF_RES, HIT, HIT, SRF_RES], [
       {species: 'Voltorb', evs, moves: ['Sonic Boom']},
     ], [
@@ -2403,7 +2405,7 @@ describe('Gen 1', () => {
     ]);
   });
 
-  test('SpecialDamage (level) effect', () => {
+  test('LevelDamage effect', () => {
     const battle = startBattle([SRF_RES, SRF_RES, HIT, HIT], [
       {species: 'Gastly', evs, level: 22, moves: ['Night Shade']},
     ], [
@@ -2427,7 +2429,7 @@ describe('Gen 1', () => {
     ]);
   });
 
-  test('SpecialDamage (Psywave) effect', () => {
+  test('Psywave effect', () => {
     const PSY_MAX = {key: 'Battle.damageCallback', value: MAX};
     const PSY_MIN = {key: 'Battle.damageCallback', value: MIN};
     const battle = startBattle([SRF_RES, SRF_RES, HIT, PSY_MAX, HIT, PSY_MIN], [
@@ -2855,7 +2857,7 @@ describe('Gen 1', () => {
     ]);
   });
 
-  test('Drain effect', () => {
+  test('DrainHP effect', () => {
     const battle = startBattle([
       SRF_RES, HIT, NO_CRIT, MIN_DMG,
       SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
@@ -3241,7 +3243,6 @@ describe('Gen 1', () => {
       '|turn|5',
     ]);
   });
-
 
   test.todo('Haze effect');
   test.todo('Bide effect');
@@ -3682,6 +3683,8 @@ describe('Gen 1', () => {
     ]);
   });
 
+  // Pokémon Showdown Bugs
+
   // TODO: Bide fails in situations involving Substitute
   test.todo('Bide + Substitute bug');
 
@@ -4086,6 +4089,8 @@ describe('Gen 1', () => {
       '|turn|6',
     ]);
   });
+
+  // Glitches
 
   test('0 damage glitch', () => {
     const battle = startBattle([
