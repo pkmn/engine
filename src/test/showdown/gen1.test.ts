@@ -3136,7 +3136,49 @@ describe('Gen 1', () => {
     ]);
   });
 
-  test.todo('Mimic effect');
+  test('Mimic effect', () => {
+    const battle = startBattle([SRF_RES, MIMIC(3, 3)], [
+      {species: 'Mr. Mime', evs, moves: ['Mimic']},
+      {species: 'Abra', evs, moves: ['Teleport']},
+    ], [
+      {species: 'Jigglypuff', evs, moves: ['Blizzard', 'Thunderbolt', 'Teleport']},
+    ]);
+
+    let pp = battle.p1.pokemon[0].moveSlots[0].pp;
+
+    expect(battle.p1.pokemon[0].moveSlots[0].move).toBe('Mimic');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
+
+    battle.makeChoices('move 1', 'move 3');
+    expect(battle.p1.pokemon[0].moveSlots[0].move).toBe('Teleport');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+
+    battle.makeChoices('move 1', 'move 3');
+    expect(battle.p1.pokemon[0].moveSlots[0].move).toBe('Teleport');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+
+    battle.makeChoices('switch 2', 'move 3');
+    battle.makeChoices('switch 2', 'move 3');
+
+    expect(battle.p1.pokemon[0].moveSlots[0].move).toBe('Mimic');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
+
+    verify(battle, [
+      '|move|p1a: Mr. Mime|Mimic|p2a: Jigglypuff',
+      '|-start|p1a: Mr. Mime|Mimic|Teleport',
+      '|move|p2a: Jigglypuff|Teleport|p2a: Jigglypuff',
+      '|turn|2',
+      '|move|p1a: Mr. Mime|Teleport|p1a: Mr. Mime',
+      '|move|p2a: Jigglypuff|Teleport|p2a: Jigglypuff',
+      '|turn|3',
+      '|switch|p1a: Abra|Abra|253/253',
+      '|move|p2a: Jigglypuff|Teleport|p2a: Jigglypuff',
+      '|turn|4',
+      '|switch|p1a: Mr. Mime|Mr. Mime|283/283',
+      '|move|p2a: Jigglypuff|Teleport|p2a: Jigglypuff',
+      '|turn|5',
+    ]);
+  });
 
   test('LightScreen effect', () => {
     const battle = startBattle([
