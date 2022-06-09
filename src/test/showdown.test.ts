@@ -771,8 +771,10 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('HighCritical effect', () => {
-      const value = ranged(Math.floor(gen.species.get('Machop')!.baseStats.spe / 2), 256);
-      const no_crit = {key: CRIT.key, value};
+      const no_crit = {
+        key: CRIT.key,
+        value: ranged(Math.floor(gen.species.get('Machop')!.baseStats.spe / 2), 256),
+      };
       // Regular non-crit roll is still a crit for high critical moves
       const battle = startBattle([
         [SRF_RES, SRF_RES, HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG],
@@ -3562,14 +3564,23 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('Transform effect', () => {
+      const no_crit = {
+        key: CRIT.key,
+        value: ranged(Math.floor(gen.species.get('Articuno')!.baseStats.spe / 2), 256),
+      };
       const battle = startBattle([
         [], [SRF_RES, SRF_RES, SS_RES, GLM], [GLM, GLM, SRF_RES, SRF_RES, SS_RUN, MISS],
+        [SRF_RES, SRF_RES, HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG], [], [],
       ], [
-        {species: 'Mew', level: 50, moves: ['Swords Dance', 'Transform']},
+        {species: 'Mew', level: 50, evs, moves: ['Swords Dance', 'Transform']},
+        {species: 'Ditto', evs, moves: ['Swords Dance', 'Transform']},
       ], [
-        {species: 'Articuno', evs, moves: ['Agility', 'Fly']},
+        {species: 'Articuno', evs, moves: ['Agility', 'Fly', 'Peck']},
       ]);
       const pp = battle.p1.pokemon[0].moveSlots[1].pp;
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
 
       battle.makeChoices('move 1', 'move 1');
       expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
@@ -3583,17 +3594,40 @@ for (const gen of new Generations(Dex as any)) {
       // expect(battle.p1.pokemon[0].baseMoveSlots[1].pp).toBe(pp - 1);
       expect(battle.p1.pokemon[0].baseMoveSlots[1].pp).toBe(pp - 2);
 
-      expect(battle.p1.pokemon[0].species).toEqual(battle.p2.pokemon[0].species);
+      expect(battle.p1.pokemon[0].species.name).toBe('Articuno');
       expect(battle.p1.pokemon[0].types).toEqual(battle.p2.pokemon[0].types);
       expect(battle.p1.pokemon[0].level).toBe(50);
+      // expect(battle.p1.pokemon[0].modifiedStats).toEqual(battle.p2.pokemon[0].modifiedStats);
+      // expect(battle.p1.pokemon[0].storedStats).not.toEqual(battle.p2.pokemon[0].storedStats);
       expect(battle.p1.pokemon[0].storedStats).toEqual(battle.p2.pokemon[0].storedStats);
       expect(battle.p1.pokemon[0].boosts).toEqual(battle.p2.pokemon[0].boosts);
 
-      expect(battle.p1.pokemon[0].moveSlots).toHaveLength(2);
-      expect(battle.p1.pokemon[0].moveSlots[0].move).toBe('Agility');
-      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(5);
-      expect(battle.p1.pokemon[0].moveSlots[1].move).toBe('Fly');
-      expect(battle.p1.pokemon[0].moveSlots[1].pp).toBe(5);
+      expect(battle.p1.pokemon[0].moveSlots).toHaveLength(3);
+      expect(battle.p1.pokemon[0].moveSlots.map(m => m.move)).toEqual(['Agility', 'Fly', 'Peck']);
+      expect(battle.p1.pokemon[0].moveSlots.map(m => m.pp)).toEqual([5, 5, 5]);
+
+      // Transformed Pokémon should retain their original crit rate (and this should speed tie...)
+      battle.makeChoices('move 3', 'move 3');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 69);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 35);
+      const spe1 = battle.p1.pokemon[0].storedStats.spe;
+      const spe2 = battle.p2.pokemon[0].storedStats.spe;
+      expect(spe1).toEqual(spe2);
+      expect(spe2).toBe(268);
+
+      // Stats get wonky on Pokémon Showdown...
+      battle.makeChoices('move 1', 'move 1');
+      // expect(battle.p1.pokemon[0].modifiedStats).toEqual(battle.p2.pokemon[0].modifiedStats);
+      // expect(battle.p1.pokemon[0].storedStats).not.toEqual(battle.p2.pokemon[0].storedStats);
+      expect(battle.p1.pokemon[0].storedStats.spe).toBe(136);
+      expect(battle.p2.pokemon[0].storedStats.spe).toBe(268);
+      expect(battle.p1.pokemon[0].boosts).toEqual(battle.p2.pokemon[0].boosts);
+
+      battle.makeChoices('switch 2', 'move 1');
+      expect(battle.p1.pokemon[1].species.name).toBe('Mew');
+      // expect(battle.p1.pokemon[1].modifiedStats).toEqual(battle.p1.pokemon[0].storedStats);
+      // expect(battle.p1.pokemon[1].moveSlots[1].pp).toBe(pp - 1);
+      expect(battle.p1.pokemon[1].moveSlots[1].pp).toBe(pp - 2);
 
       verify(battle, [
         '|move|p2a: Articuno|Agility|p2a: Articuno',
@@ -3611,6 +3645,21 @@ for (const gen of new Generations(Dex as any)) {
         '|move|p1a: Mew|Transform|p2a: Articuno',
         '|-transform|p1a: Mew|p2a: Articuno',
         '|turn|4',
+        '|move|p2a: Articuno|Peck|p1a: Mew',
+        '|-damage|p1a: Mew|137/206',
+        '|move|p1a: Mew|Peck|p2a: Articuno',
+        '|-crit|p2a: Articuno',
+        '|-damage|p2a: Articuno|348/383',
+        '|turn|5',
+        '|move|p2a: Articuno|Agility|p2a: Articuno',
+        '|-boost|p2a: Articuno|spe|2',
+        '|move|p1a: Mew|Agility|p1a: Mew',
+        '|-boost|p1a: Mew|spe|2',
+        '|turn|6',
+        '|switch|p1a: Ditto|Ditto|299/299',
+        '|move|p2a: Articuno|Agility|p2a: Articuno',
+        '|-boost|p2a: Articuno|spe|2',
+        '|turn|7',
       ]);
     });
 
@@ -3703,8 +3752,66 @@ for (const gen of new Generations(Dex as any)) {
       // TODO: Counter should trigger against sleeping Pokemon, Desync Clause Mod should not trigger
       test.todo('Counter + sleep = Desync Clause Mod bug');
 
-      // TODO: Mimic Infinite PP glitch being inherited from later generations
-      test.todo('Mimic infinite PP bug');
+      test('Mimic infinite PP bug', () => {
+        // Mimic first
+        {
+          const battle = startBattle([[SRF_RES, MIMIC(2, 2)], ...Array(18).fill([SRF_RES]), []], [
+            {species: 'Gengar', evs, moves: ['Teleport', 'Mega Kick']},
+          ], [
+            {species: 'Gengar', level: 99, evs, moves: ['Mimic', 'Mega Kick', 'Teleport']},
+            {species: 'Clefable', evs, moves: ['Teleport']},
+          ]);
+
+          battle.makeChoices('move 1', 'move 1');
+          expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(15);
+          expect(battle.p2.pokemon[0].baseMoveSlots[0].pp).toBe(15);
+          expect(battle.p2.pokemon[0].moveSlots[1].pp).toBe(8);
+          expect(battle.p2.pokemon[0].baseMoveSlots[1].pp).toBe(8);
+
+          for (let i = 0; i < 18; i++) {
+            battle.makeChoices('move 1', 'move 1');
+          }
+          expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(-3);
+          expect(battle.p2.pokemon[0].baseMoveSlots[0].pp).toBe(15);
+          expect(battle.p2.pokemon[0].moveSlots[1].pp).toBe(8);
+          expect(battle.p2.pokemon[0].baseMoveSlots[1].pp).toBe(8);
+
+          battle.makeChoices('move 1', 'switch 2');
+          expect(battle.p2.pokemon[1].moveSlots[0].pp).toBe(-3);
+          expect(battle.p2.pokemon[1].baseMoveSlots[0].pp).toBe(-3);
+          expect(battle.p2.pokemon[1].moveSlots[1].pp).toBe(8);
+          expect(battle.p2.pokemon[1].baseMoveSlots[1].pp).toBe(8);
+        }
+        // Mimicked move first
+        {
+          const battle = startBattle([[SRF_RES, MIMIC(2, 2)], ...Array(18).fill([SRF_RES]), []], [
+            {species: 'Gengar', evs, moves: ['Teleport', 'Mega Kick']},
+          ], [
+            {species: 'Gengar', level: 99, evs, moves: ['Mega Kick', 'Mimic', 'Teleport']},
+            {species: 'Clefable', evs, moves: ['Teleport']},
+          ]);
+
+          battle.makeChoices('move 1', 'move 2');
+          expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(8);
+          expect(battle.p2.pokemon[0].baseMoveSlots[0].pp).toBe(8);
+          expect(battle.p2.pokemon[0].moveSlots[1].pp).toBe(15);
+          expect(battle.p2.pokemon[0].baseMoveSlots[1].pp).toBe(15);
+
+          for (let i = 0; i < 18; i++) {
+            battle.makeChoices('move 1', 'move 2');
+          }
+          expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(-10);
+          expect(battle.p2.pokemon[0].baseMoveSlots[0].pp).toBe(-10);
+          expect(battle.p2.pokemon[0].moveSlots[1].pp).toBe(15);
+          expect(battle.p2.pokemon[0].baseMoveSlots[1].pp).toBe(15);
+
+          battle.makeChoices('move 1', 'switch 2');
+          expect(battle.p2.pokemon[1].moveSlots[0].pp).toBe(-10);
+          expect(battle.p2.pokemon[1].baseMoveSlots[0].pp).toBe(-10);
+          expect(battle.p2.pokemon[1].moveSlots[1].pp).toBe(15);
+          expect(battle.p2.pokemon[1].baseMoveSlots[1].pp).toBe(15);
+        }
+      });
 
       test('Mirror Move + Wrap bug', () => {
         const battle = startBattle([
@@ -3743,22 +3850,131 @@ for (const gen of new Generations(Dex as any)) {
         ]);
       });
 
-      // TODO: Mirror Move should not apply Hyper Beam recharge upon KOing a Pokemon
-      test.todo('Mirror Move recharge bug');
+      test('Mirror Move recharge bug', () => {
+        const battle = startBattle([
+          [SRF_RES, HIT, NO_CRIT, MIN_DMG, SRF_USE, HIT, NO_CRIT, MAX_DMG], [], [SRF_RES, SRF_RUN],
+        ], [
+          {species: 'Kadabra', evs, moves: ['Hyper Beam']},
+          {species: 'Haunter', evs, moves: ['Teleport']},
+        ], [
+          {species: 'Pidgeot', evs, moves: ['Mirror Move', 'Gust']},
+        ]);
 
-      // TODO: Transform should not copy the opponent's critical hit rate
-      test.todo('Transform critical hit rate bug');
+        const p2hp = battle.p2.pokemon[0].hp;
 
-      // TODO: Transform after stats boosted/unboosted - what happens after recalc?
-      test.todo('Transform stat recalculation bug');
+        expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
 
-      // TODO: Wrap should not immobilise Pokemon under Substitute if it misses
-      // TODO: Wrap should not immobilise Pokemon a turn late under Substitute, other weirdness
-      test.todo('Wrap + Substitute bug');
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p1.pokemon[0].hp).toBe(0);
+        expect(battle.p2.pokemon[0].hp).toBe(p2hp - 74);
 
-      // TODO: Wrappers are forced to use their respective move again if the Pokemon is KOed
-      // TODO: Wrap should not immobilise Pokemon when they are KOed by residual damage
-      test.todo('Wrap locking + KOs bug');
+        battle.makeChoices('switch 2', '');
+
+        // Mirror Move should not apply Hyper Beam recharge upon KOing a Pokemon
+        // expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
+        expect(choices(battle, 'p2')).toEqual(['move 1']);
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
+
+        verify(battle, [
+          '|move|p1a: Kadabra|Hyper Beam|p2a: Pidgeot',
+          '|-damage|p2a: Pidgeot|295/369',
+          '|-mustrecharge|p1a: Kadabra',
+          '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
+          '|move|p2a: Pidgeot|Hyper Beam|p1a: Kadabra|[from]Mirror Move',
+          '|-damage|p1a: Kadabra|0 fnt',
+          '|-mustrecharge|p2a: Pidgeot',
+          '|faint|p1a: Kadabra',
+          '|switch|p1a: Haunter|Haunter|293/293',
+          '|turn|2',
+          '|move|p1a: Haunter|Teleport|p1a: Haunter',
+          '|cant|p2a: Pidgeot|recharge',
+          '|turn|3',
+        ]);
+      });
+
+      test('Wrap locking + KOs bug', () => {
+        const proc = {key: HIT.key, value: MIN};
+        const battle = startBattle([
+          [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, proc, SS_MOD, HIT, NO_CRIT, MIN_DMG, MIN_WRAP],
+          [], [SRF_RES, SRF_RES, HIT], [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, proc, SS_MOD],
+          [SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, MIN_WRAP], [],
+          [SRF_RES, HIT, NO_CRIT, MIN_DMG, REWRAP],
+        ], [
+          {species: 'Dragonair', evs, moves: ['Wrap']},
+          {species: 'Dragonite', evs, moves: ['Dragon Rage', 'Ember', 'Wrap']},
+        ], [
+          {species: 'Beedrill', evs, moves: ['Poison Sting']},
+          {species: 'Kakuna', evs, moves: ['Harden']},
+        ]);
+
+        battle.p1.pokemon[0].hp = 21;
+        battle.p2.pokemon[0].hp = 210;
+
+        let beedrill = battle.p2.pokemon[0].hp;
+        let kakuna = battle.p2.pokemon[1].hp;
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p1.pokemon[0].hp).toBe(0);
+        expect(battle.p2.pokemon[0].hp).toBe(beedrill -= 17);
+
+        battle.makeChoices('switch 2', '');
+
+        // Target should not still be trapped after the Trapper faints from residual damage
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p2.pokemon[0].hp).toBe(beedrill -= 40);
+
+        battle.makeChoices('move 2', 'move 1');
+        expect(battle.p2.pokemon[0].hp).toBe(beedrill = (beedrill - 91 - 20));
+        expect(battle.p2.pokemon[0].status).toBe('brn');
+
+        battle.makeChoices('move 3', 'move 1');
+        expect(battle.p2.pokemon[0].hp).toBe(0);
+
+        battle.makeChoices('', 'switch 2');
+
+        // Trapper should not still be locked into Wrap after residual KO
+        // expect(choices(battle, 'p1')).toEqual(['move 1', 'move 2', 'move 3']);
+        expect(choices(battle, 'p1')).toEqual(['move 3']);
+
+        battle.makeChoices('move 3', 'move 1');
+        expect(battle.p2.pokemon[0].hp).toBe(kakuna -= 21);
+
+        verify(battle, [
+          '|move|p2a: Beedrill|Poison Sting|p1a: Dragonair',
+          '|-damage|p1a: Dragonair|1/325',
+          '|-status|p1a: Dragonair|psn',
+          '|move|p1a: Dragonair|Wrap|p2a: Beedrill',
+          '|-damage|p2a: Beedrill|193/333',
+          '|-damage|p1a: Dragonair|0 fnt|[from] psn|[of] p2a: Beedrill',
+          '|faint|p1a: Dragonair',
+          '|switch|p1a: Dragonite|Dragonite|385/385',
+          '|turn|2',
+          '|move|p1a: Dragonite|Dragon Rage|p2a: Beedrill',
+          '|-damage|p2a: Beedrill|153/333',
+          '|cant|p2a: Beedrill|partiallytrapped',
+          '|turn|3',
+          '|move|p1a: Dragonite|Ember|p2a: Beedrill',
+          '|-supereffective|p2a: Beedrill',
+          '|-damage|p2a: Beedrill|62/333',
+          '|-status|p2a: Beedrill|brn',
+          '|cant|p2a: Beedrill|partiallytrapped',
+          '|-damage|p2a: Beedrill|42/333 brn|[from] brn|[of] p1a: Dragonite',
+          '|turn|4',
+          '|move|p1a: Dragonite|Wrap|p2a: Beedrill',
+          '|-damage|p2a: Beedrill|19/333 brn',
+          '|cant|p2a: Beedrill|partiallytrapped',
+          '|-damage|p2a: Beedrill|0 fnt|[from] brn|[of] p1a: Dragonite',
+          '|faint|p2a: Beedrill',
+          '|switch|p2a: Kakuna|Kakuna|293/293',
+          '|turn|5',
+          '|move|p1a: Dragonite|Wrap|p2a: Kakuna',
+          '|-damage|p2a: Kakuna|272/293',
+          '|cant|p2a: Kakuna|partiallytrapped',
+          '|turn|6',
+        ]);
+      });
 
       test('0 damage glitch', () => {
         const battle = startBattle([
