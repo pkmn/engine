@@ -3746,11 +3746,100 @@ for (const gen of new Generations(Dex as any)) {
       // TODO: Bide fails in situations involving Substitute
       test.todo('Bide + Substitute bug');
 
-      // TODO: Counter should not fail behind Substitute
-      test.todo('Counter + Substitute bug');
+      test('Counter + Substitute bug', () => {
+        const NO_PAR = {key: HIT.key, value: ranged(77, 256)};
+        const battle = startBattle([
+          [], [SRF_RES, SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, NO_PAR, HIT],
+        ], [
+          {species: 'Snorlax', evs, moves: ['Reflect', 'Body Slam']},
+        ], [
+          {species: 'Chansey', evs, moves: ['Substitute', 'Counter']},
+        ]);
 
-      // TODO: Counter should trigger against sleeping Pokemon, Desync Clause Mod should not trigger
-      test.todo('Counter + sleep = Desync Clause Mod bug');
+        const p1hp = battle.p1.pokemon[0].hp;
+        let p2hp = battle.p2.pokemon[0].hp;
+
+        battle.makeChoices('move 1', 'move 1');
+
+        battle.makeChoices('move 2', 'move 2');
+        // expect(battle.p1.pokemon[0].hp).toBe(0);
+        expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+        expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 175);
+
+        verify(battle, [
+          '|move|p2a: Chansey|Substitute|p2a: Chansey',
+          '|-start|p2a: Chansey|Substitute',
+          '|-damage|p2a: Chansey|528/703',
+          '|move|p1a: Snorlax|Reflect|p1a: Snorlax',
+          '|-start|p1a: Snorlax|Reflect',
+          '|turn|2',
+          '|move|p1a: Snorlax|Body Slam|p2a: Chansey',
+          '|-end|p2a: Chansey|Substitute',
+          '|move|p2a: Chansey|Counter|p1a: Snorlax',
+          '|-fail|p2a: Chansey',
+          '|turn|3',
+        ]);
+      });
+
+      test('Counter + sleep = Desync Clause Mod bug', () => {
+        const battle = startBattle([
+          [SRF_RES, SRF_RES, HIT, HIT, SS_MOD, SLP(8)], [SRF_RES, SRF_RES, HIT],
+          [SRF_RES, HIT, NO_CRIT, MIN_DMG], [], [SRF_RES, SRF_RES, SRF_RES, HIT],
+        ], [
+          {species: 'Alakazam', evs, moves: ['Seismic Toss', 'Psychic']},
+          {species: 'Snorlax', evs, moves: ['Body Slam']},
+        ], [
+          {species: 'Chansey', evs, moves: ['Sing', 'Soft-Boiled', 'Counter']},
+        ]);
+
+        const alakazam = battle.p1.pokemon[0].hp;
+        const snorlax = battle.p1.pokemon[1].hp;
+        let chansey = battle.p2.pokemon[0].hp;
+
+        battle.makeChoices('move 1', 'move 1');
+        expect(battle.p1.pokemon[0].status).toBe('slp');
+        expect(battle.p2.pokemon[0].hp).toBe(chansey -= 100);
+
+        battle.makeChoices('switch 2', 'move 3');
+        expect(battle.p1.pokemon[0].hp).toBe(snorlax);
+
+        battle.makeChoices('move 1', 'move 2');
+        expect(battle.p2.pokemon[0].hp).toBe(chansey -= 168);
+
+        battle.makeChoices('switch 2', 'move 2');
+        expect(battle.p2.pokemon[0].hp).toBe(703);
+
+        // Choice made while sleeping should not have been saved (and lead to a desync) as
+        // on the cartridge not opportunity is given for choosing a move while sleeping
+        battle.makeChoices('move 2', 'move 3');
+        // expect(battle.p1.pokemon[0].hp).toBe(0);
+        expect(battle.p1.pokemon[0].hp).toBe(alakazam);
+
+        verify(battle, [
+          '|move|p1a: Alakazam|Seismic Toss|p2a: Chansey',
+          '|-damage|p2a: Chansey|603/703',
+          '|move|p2a: Chansey|Sing|p1a: Alakazam',
+          '|-status|p1a: Alakazam|slp|[from] move: Sing',
+          '|turn|2',
+          '|switch|p1a: Snorlax|Snorlax|523/523',
+          '|move|p2a: Chansey|Counter|p1a: Snorlax',
+          '|-fail|p2a: Chansey',
+          '|turn|3',
+          '|move|p2a: Chansey|Soft-Boiled|p2a: Chansey',
+          '|-heal|p2a: Chansey|703/703',
+          '|move|p1a: Snorlax|Body Slam|p2a: Chansey',
+          '|-damage|p2a: Chansey|435/703',
+          '|turn|4',
+          '|switch|p1a: Alakazam|Alakazam|313/313 slp',
+          '|move|p2a: Chansey|Soft-Boiled|p2a: Chansey',
+          '|-heal|p2a: Chansey|703/703',
+          '|turn|5',
+          '|cant|p1a: Alakazam|slp',
+          '|move|p2a: Chansey|Counter|p1a: Alakazam',
+          '|-fail|p2a: Chansey',
+          '|turn|6',
+        ]);
+      });
 
       test('Mimic infinite PP bug', () => {
         // Mimic first
@@ -3781,6 +3870,8 @@ for (const gen of new Generations(Dex as any)) {
           expect(battle.p2.pokemon[1].baseMoveSlots[0].pp).toBe(-3);
           expect(battle.p2.pokemon[1].moveSlots[1].pp).toBe(8);
           expect(battle.p2.pokemon[1].baseMoveSlots[1].pp).toBe(8);
+
+          expect((battle.prng as FixedRNG).exhausted()).toBe(true);
         }
         // Mimicked move first
         {
@@ -3810,6 +3901,8 @@ for (const gen of new Generations(Dex as any)) {
           expect(battle.p2.pokemon[1].baseMoveSlots[0].pp).toBe(-10);
           expect(battle.p2.pokemon[1].moveSlots[1].pp).toBe(15);
           expect(battle.p2.pokemon[1].baseMoveSlots[1].pp).toBe(15);
+
+          expect((battle.prng as FixedRNG).exhausted()).toBe(true);
         }
       });
 

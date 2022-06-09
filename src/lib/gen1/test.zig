@@ -1512,6 +1512,43 @@ test "Substitute" {
     return error.SkipZigTest;
 }
 
+// Pokémon Showdown Bugs
+
+test "Bide + Substitute bug" {
+    // TODO
+    return error.SkipZigTest;
+}
+
+test "Counter + Substitute bug" {
+    // https://www.youtube.com/watch?v=_cEVqYFoBhE
+    return error.SkipZigTest;
+}
+
+test "Counter + sleep = Desync Clause Mod bug" {
+    // TODO
+    return error.SkipZigTest;
+}
+
+test "Mimic infinite PP bug" {
+    // TODO
+    return error.SkipZigTest;
+}
+
+test "Mirror Move + Wrap bug" {
+    // TODO
+    return error.SkipZigTest;
+}
+
+test "Mirror Move recharge bug" {
+    // TODO
+    return error.SkipZigTest;
+}
+
+test "Wrap locking + KOs bug" {
+    // TODO
+    return error.SkipZigTest;
+}
+
 // Glitches
 
 test "0 damage glitch" {
