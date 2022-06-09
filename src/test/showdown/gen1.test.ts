@@ -3780,6 +3780,85 @@ describe('Gen 1', () => {
     ]);
   });
 
+  test('Disable duration bug', () => {
+    // Explicitly set value to MAX to ensure DISABLE_DURATION isn't the problem
+    const disable =  {key: DISABLE_DURATION(6).key, value: MAX};
+    const battle = startBattle([
+      SRF_RES, SRF_RES, HIT, disable, DISABLE_MOVE(1, 2),
+    ], [
+      {species: 'Alakazam', evs, moves: ['Disable', 'Teleport']},
+    ], [
+      {species: 'Slowbro', evs, moves: ['Psychic', 'Teleport']},
+    ]);
+
+    battle.makeChoices('move 2', 'move 2');
+    battle.makeChoices('move 1', 'move 1');
+    expect(choices(battle, 'p2')).toEqual(['move 2']);
+    // After only 5 additional turns after turn 0 the move becomes reenabled
+    for (let i = 0; i < 5; i++) {
+      battle.makeChoices('move 2', 'move 2');
+    }
+    expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
+
+    verify(battle, [
+      '|move|p1a: Alakazam|Teleport|p1a: Alakazam',
+      '|move|p2a: Slowbro|Teleport|p2a: Slowbro',
+      '|turn|2',
+      '|move|p1a: Alakazam|Disable|p2a: Slowbro',
+      '|-start|p2a: Slowbro|Disable|Psychic',
+      '|cant|p2a: Slowbro|Disable|Psychic',
+      '|turn|3',
+      '|move|p1a: Alakazam|Teleport|p1a: Alakazam',
+      '|move|p2a: Slowbro|Teleport|p2a: Slowbro',
+      '|turn|4',
+      '|move|p1a: Alakazam|Teleport|p1a: Alakazam',
+      '|move|p2a: Slowbro|Teleport|p2a: Slowbro',
+      '|turn|5',
+      '|move|p1a: Alakazam|Teleport|p1a: Alakazam',
+      '|move|p2a: Slowbro|Teleport|p2a: Slowbro',
+      '|turn|6',
+      '|move|p1a: Alakazam|Teleport|p1a: Alakazam',
+      '|move|p2a: Slowbro|Teleport|p2a: Slowbro',
+      '|turn|7',
+      '|move|p1a: Alakazam|Teleport|p1a: Alakazam',
+      '|move|p2a: Slowbro|Teleport|p2a: Slowbro',
+      '|-end|p2a: Slowbro|Disable',
+      '|turn|8',
+    ]);
+  });
+
+  test('Hyper Beam + Substitute bug', () => {
+    const battle = startBattle([SRF_RES, HIT, NO_CRIT, MAX_DMG, SRF_RES, HIT, NO_CRIT, MAX_DMG], [
+      {species: 'Abra', evs, moves: ['Hyper Beam']},
+    ], [
+      {species: 'Jolteon', evs, moves: ['Substitute', 'Teleport']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    // Should require recharge if it doesn't knock out the Substitute
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 83);
+    expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBeGreaterThan(0);
+
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+    expect(battle.p2.pokemon[0].volatiles['substitute']).toBeUndefined();
+
+    verify(battle, [
+      '|move|p2a: Jolteon|Substitute|p2a: Jolteon',
+      '|-start|p2a: Jolteon|Substitute',
+      '|-damage|p2a: Jolteon|250/333',
+      '|move|p1a: Abra|Hyper Beam|p2a: Jolteon',
+      '|-activate|p2a: Jolteon|Substitute|[damage]',
+      '|turn|2',
+      '|move|p2a: Jolteon|Teleport|p2a: Jolteon',
+      '|move|p1a: Abra|Hyper Beam|p2a: Jolteon',
+      '|-end|p2a: Jolteon|Substitute',
+      '|turn|3',
+    ]);
+  });
+
   test('Mimic infinite PP bug', () => {
     // Mimic first
     {
