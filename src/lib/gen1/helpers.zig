@@ -276,7 +276,7 @@ pub const Pokemon = struct {
 fn blocked(m: Move) bool {
     if (Move.get(m).effect == .Trapping) return true;
     return switch (m) {
-        .Bind, .Counter, .Mimic, .Haze, .Bide, .Metronome, .MirrorMove => true,
+        .Bind, .Counter, .Mimic, .Haze, .Bide, .Metronome, .MirrorMove, .Transform => true,
         else => false,
     };
 }

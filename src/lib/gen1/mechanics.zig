@@ -1448,7 +1448,8 @@ pub const Effects = struct {
         var stored = side.stored();
 
         const drain = @maximum(battle.last_damage / 2, 1);
-        // Pokémon Showdown has broken `Battle.lastDamage` handling
+        // Pokémon Showdown doesn't update `Battle.lastDamage` here but it shouldn't really matter
+        // as the only draining moves are Grass and Bug type which don't work with Counter anyway
         if (!showdown) battle.last_damage = drain;
         stored.hp = @minimum(stored.stats.hp, stored.hp + drain);
 

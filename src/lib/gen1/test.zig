@@ -134,7 +134,11 @@ test "start (all fainted)" {
 }
 
 test "switching (order)" {
-    var battle = Battle.random(&rng.PSRNG.init(0x12345678), false);
+    var battle = Battle.init(
+        0x12345678,
+        &[_]Pokemon{.{ .species = .Abra, .moves = &.{.Teleport} }} ** 6,
+        &[_]Pokemon{.{ .species = .Gastly, .moves = &.{.Lick} }} ** 6,
+    );
     battle.turn = 1;
     const p1 = battle.side(.P1);
     const p2 = battle.side(.P2);

@@ -10,7 +10,8 @@
       "bide",
       "metronome",
       "mirrormove",
-      "clamp"
+      "clamp",
+      "transform"
     ]
   }
 }
