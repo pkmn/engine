@@ -131,21 +131,11 @@ describe('Gen 1', () => {
   });
 
   test('switching (order)', () => {
-    const battle = startBattle([], [
-      {species: 'Abra', level: 10, moves: ['Teleport']},
-      {species: 'Abra', level: 20, moves: ['Teleport']},
-      {species: 'Abra', level: 30, moves: ['Teleport']},
-      {species: 'Abra', level: 40, moves: ['Teleport']},
-      {species: 'Abra', level: 50, moves: ['Teleport']},
-      {species: 'Abra', level: 60, moves: ['Teleport']},
-    ], [
-      {species: 'Gastly', level: 1, moves: ['Lick']},
-      {species: 'Gastly', level: 2, moves: ['Lick']},
-      {species: 'Gastly', level: 3, moves: ['Lick']},
-      {species: 'Gastly', level: 4, moves: ['Lick']},
-      {species: 'Gastly', level: 5, moves: ['Lick']},
-      {species: 'Gastly', level: 6, moves: ['Lick']},
-    ]);
+    const battle = startBattle([],
+      Array(6).fill({species: 'Abra', moves: ['Teleport']})
+        .map((p, i) => ({...p, level: (i + 1) * 10})),
+      Array(6).fill({species: 'Gastly', moves: ['Lick']})
+        .map((p, i) => ({...p, level: (i + 1)})));
 
     const expectOrder = (p1: number[], p2: number[]) => {
       for (let i = 0; i < 6; i++) {
