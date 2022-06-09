@@ -65,7 +65,31 @@ const Weather = enum(u4) {
 const Side = extern struct {
     pokemon: [6]Pokemon = [_]Pokemon{.{}} ** 6,
     active: ActivePokemon = .{},
-    conditions: SideConditions,
+    conditions: Conditions,
+
+    // BUG: ziglang/zig#2627
+    const Conditions = packed struct {
+        data: Data = .{},
+
+        Spikes: bool = false,
+        Safeguard: bool = false,
+        LightScreen: bool = false,
+        Reflect: bool = false,
+
+        const Data = packed struct {
+            safeguard: u4 = 0,
+            light_screen: u4 = 0,
+            reflect: u4 = 0,
+
+            comptime {
+                assert(@bitSizeOf(Data) == 12);
+            }
+        };
+
+        comptime {
+            assert(@sizeOf(Conditions) == 2);
+        }
+    };
 
     comptime {
         assert(@sizeOf(Side) == 214);
@@ -75,31 +99,10 @@ const Side = extern struct {
         assert(slot > 0 and slot < 7);
         return self.pokemon[slot - 1];
     }
+
 };
 
-// BUG: ziglang/zig#2627
-const SideConditions = packed struct {
-    data: Data = .{},
 
-    Spikes: bool = false,
-    Safeguard: bool = false,
-    LightScreen: bool = false,
-    Reflect: bool = false,
-
-    const Data = packed struct {
-        safeguard: u4 = 0,
-        light_screen: u4 = 0,
-        reflect: u4 = 0,
-
-        comptime {
-            assert(@bitSizeOf(Data) == 12);
-        }
-    };
-
-    comptime {
-        assert(@sizeOf(SideConditions) == 2);
-    }
-};
 
 // NOTE: IVs (Gender & Hidden Power) and Happiness are stored only in Pokemon
 const ActivePokemon = extern struct {
