@@ -1351,8 +1351,7 @@ pub const Effects = struct {
             foe_stored.status = 0;
         }
 
-        // Substitute incorrectly does not block burn on Pokémon Showdown
-        if ((!showdown and foe.active.volatiles.Substitute) or Status.any(foe_stored.status)) {
+        if (foe.active.volatiles.Substitute or Status.any(foe_stored.status)) {
             return log.fail(
                 battle.active(player.foe()),
                 if (Status.is(foe_stored.status, .BRN)) .Burn else .None,
@@ -1498,8 +1497,7 @@ pub const Effects = struct {
         var foe_stored = foe.stored();
         const foe_ident = battle.active(player.foe());
 
-        // FIXME Substitute incorrectly does not block freeze on Pokémon Showdown
-        if ((!showdown and foe.active.volatiles.Substitute) or Status.any(foe_stored.status)) {
+        if (foe.active.volatiles.Substitute or Status.any(foe_stored.status)) {
             return log.fail(
                 foe_ident,
                 if (Status.is(foe_stored.status, .FRZ)) .Freeze else .None,
@@ -1704,8 +1702,7 @@ pub const Effects = struct {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
 
-        // Substitute incorrectly does not block paralysis on Pokémon Showdown
-        if ((!showdown and foe.active.volatiles.Substitute) or Status.any(foe_stored.status)) {
+        if (foe.active.volatiles.Substitute or Status.any(foe_stored.status)) {
             return log.fail(
                 battle.active(player.foe()),
                 if (Status.is(foe_stored.status, .PAR)) .Paralysis else .None,
