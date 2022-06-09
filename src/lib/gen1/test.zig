@@ -1643,7 +1643,7 @@ test "Bide errors" {
 }
 
 test "Counter glitches" {
-    // https://glitchcity.wiki/Counter_glitches_(Generation_I)
+    // https://pkmn.cc/bulba-glitch-1#Counter_glitches
     // https://glitchcity.wiki/Counter_glitches_(Generation_I)
     // https://www.youtube.com/watch?v=ftTalHMjPRY
     return error.SkipZigTest;
@@ -1651,12 +1651,6 @@ test "Counter glitches" {
 
 test "Freeze top move selection glitch" {
     // https://glitchcity.wiki/Freeze_top_move_selection_glitch
-    return error.SkipZigTest;
-}
-
-test "Haze glitch" {
-    // https://glitchcity.wiki/Haze_glitch
-    // https://www.youtube.com/watch?v=gXQlct-DvVg
     return error.SkipZigTest;
 }
 
@@ -1741,6 +1735,8 @@ test "Division by 0" {
 
 test "Hyper Beam + Freeze permanent helplessness" {
     // https://pkmn.cc/bulba-glitch-1#Hyper_Beam_.2B_Freeze_permanent_helplessness
+    // https://glitchcity.wiki/Haze_glitch
+    // https://www.youtube.com/watch?v=gXQlct-DvVg
     return error.SkipZigTest;
 }
 

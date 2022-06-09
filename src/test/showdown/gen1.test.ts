@@ -28,6 +28,9 @@ const DISABLE_MOVE = (m: number, n = 4) =>
   ({key: ['Battle.onStart', 'Pokemon.addVolatile'], value: ranged(m, n) - 1});
 const MIMIC = (m: number, n = 4) =>
   ({key: ['Battle.sample', 'Battle.singleEvent'], value: ranged(m, n) - 1});
+const BIDE = (n: 2 | 3) =>
+  ({key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: ranged(n - 2, 5 - 3)});
+const NO_PAR = {key: HIT.key, value: MAX};
 const PAR_CANT = {key: 'Battle.onBeforeMove', value: ranged(63, 256) - 1};
 const PAR_CAN = {key: 'Battle.onBeforeMove', value: PAR_CANT.value + 1};
 const FRZ = {key: HIT.key, value: ranged(26, 256) - 1};
@@ -2744,7 +2747,138 @@ describe('Gen 1', () => {
     ]);
   });
 
-  test.todo('Counter effect');
+  test('Counter effect', () => {
+    const key = ['Battle.sample', 'BattleActions.tryMoveHit'];
+    const hit2 = {key, value: MIN};
+    const battle = startBattle([
+      SRF_RES, SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, NO_PAR, HIT,
+      SRF_RES, SRF_RES, SRF_RES, HIT, hit2, NO_CRIT, MIN_DMG, HIT,
+      SRF_RES, SRF_RES, SRF_RES, SRF_RES, HIT, HIT,
+      SRF_RES, SRF_RES, SRF_RES, HIT, HIT,
+      SRF_RES, SRF_RES, SRF_RES, HIT, hit2, NO_CRIT, MIN_DMG, HIT,
+      SRF_RES, SRF_RES, HIT,
+      SRF_RES, SRF_RES, HIT,
+      SRF_RES, SRF_RES, SRF_RES, HIT, HIT,
+      SRF_RES, SRF_RES, HIT,
+      SRF_RES, SRF_RES, SRF_RES, HIT, SS_MOD, SLP(3),
+      SRF_RES, SRF_RES,
+    ], [
+      {species: 'Voltorb', evs, moves: ['Thunderbolt', 'Double Slap', 'Counter', 'Sonic Boom']},
+      {species: 'Gengar', evs, moves: ['Teleport', 'Seismic Toss']},
+      {species: 'Snorlax', evs, moves: ['Lovely Kiss', 'Reflect']},
+    ], [
+      {species: 'Chansey', evs, moves: ['Counter']},
+    ]);
+
+    let voltorb = battle.p1.pokemon[0].hp;
+    let gengar = battle.p1.pokemon[1].hp;
+    let snorlax = battle.p1.pokemon[2].hp;
+    let chansey = battle.p2.pokemon[0].hp;
+
+    // Fails for moves which are not Normal / Fighting
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(voltorb);
+    expect(battle.p2.pokemon[0].hp).toBe(chansey -= 69);
+
+    // Deals back double damage to target, though only of the last hit of a multi-hit move
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(voltorb -= 34);
+    expect(battle.p2.pokemon[0].hp).toBe(chansey = chansey - (2 * 17));
+
+    // Cannot Counter an opponent's Counter
+    battle.makeChoices('move 3', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(voltorb);
+    expect(battle.p2.pokemon[0].hp).toBe(chansey);
+
+    // Works on fixed damage moves, but Sonic Boom fails on Pokémon Showdown
+    battle.makeChoices('move 4', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(voltorb);
+    expect(battle.p2.pokemon[0].hp).toBe(chansey -= 20);
+
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(voltorb -= 34);
+    expect(battle.p2.pokemon[0].hp).toBe(chansey = chansey - (2 * 17));
+
+    // Ignores type immunity and works across switches
+    battle.makeChoices('switch 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(gengar -= 68);
+
+    // Pokémon Showdown claims certain zero damage moves like Teleport should not reset it
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(gengar);
+
+    // Fixed damage works with Seismic Toss on Pokémon Showdown
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(gengar -= 200);
+    expect(battle.p2.pokemon[0].hp).toBe(chansey -= 100);
+
+    // Last damage gets updated to the damage Counter inflicted and doubles again
+    battle.makeChoices('switch 3', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(snorlax -= 400);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].status).toBe('slp');
+
+    // When slept, Counters negative priority gets preserved
+    battle.makeChoices('move 2', 'move 1');
+
+    verify(battle, [
+      '|move|p1a: Voltorb|Thunderbolt|p2a: Chansey',
+      '|-damage|p2a: Chansey|634/703',
+      '|move|p2a: Chansey|Counter|p1a: Voltorb',
+      '|-fail|p2a: Chansey',
+      '|turn|2',
+      '|move|p1a: Voltorb|Double Slap|p2a: Chansey',
+      '|-damage|p2a: Chansey|617/703',
+      '|-damage|p2a: Chansey|600/703',
+      '|-hitcount|p2a: Chansey|2',
+      '|move|p2a: Chansey|Counter|p1a: Voltorb',
+      '|-damage|p1a: Voltorb|249/283',
+      '|turn|3',
+      '|move|p1a: Voltorb|Counter|p2a: Chansey',
+      '|-fail|p1a: Voltorb',
+      '|move|p2a: Chansey|Counter|p1a: Voltorb',
+      '|-fail|p2a: Chansey',
+      '|turn|4',
+      '|move|p1a: Voltorb|Sonic Boom|p2a: Chansey',
+      '|-damage|p2a: Chansey|580/703',
+      '|move|p2a: Chansey|Counter|p1a: Voltorb',
+      '|-fail|p2a: Chansey',
+      '|turn|5',
+      '|move|p1a: Voltorb|Double Slap|p2a: Chansey',
+      '|-damage|p2a: Chansey|563/703',
+      '|-damage|p2a: Chansey|546/703',
+      '|-hitcount|p2a: Chansey|2',
+      '|move|p2a: Chansey|Counter|p1a: Voltorb',
+      '|-damage|p1a: Voltorb|215/283',
+      '|turn|6',
+      '|switch|p1a: Gengar|Gengar|323/323',
+      '|move|p2a: Chansey|Counter|p1a: Gengar',
+      '|-damage|p1a: Gengar|255/323',
+      '|turn|7',
+      '|move|p1a: Gengar|Teleport|p1a: Gengar',
+      '|move|p2a: Chansey|Counter|p1a: Gengar',
+      '|-fail|p2a: Chansey',
+      '|turn|8',
+      '|move|p1a: Gengar|Seismic Toss|p2a: Chansey',
+      '|-damage|p2a: Chansey|446/703',
+      '|move|p2a: Chansey|Counter|p1a: Gengar',
+      '|-damage|p1a: Gengar|55/323',
+      '|turn|9',
+      '|switch|p1a: Snorlax|Snorlax|523/523',
+      '|move|p2a: Chansey|Counter|p1a: Snorlax',
+      '|-damage|p1a: Snorlax|123/523',
+      '|turn|10',
+      '|move|p1a: Snorlax|Lovely Kiss|p2a: Chansey',
+      '|-status|p2a: Chansey|slp|[from] move: Lovely Kiss',
+      '|cant|p2a: Chansey|slp',
+      '|turn|11',
+      '|move|p1a: Snorlax|Reflect|p1a: Snorlax',
+      '|-start|p1a: Snorlax|Reflect',
+      '|cant|p2a: Chansey|slp',
+      '|turn|12',
+    ]);
+  });
 
   test('Heal effect', () => {
     const battle = startBattle([
@@ -3286,8 +3420,202 @@ describe('Gen 1', () => {
     ]);
   });
 
-  test.todo('Haze effect');
-  test.todo('Bide effect');
+  test('Haze effect', () => {
+    const proc = {key: HIT.key, value: MIN};
+    const battle = startBattle([
+      SRF_RES, SRF_RES, HIT, SS_MOD, HIT,
+      SRF_RES, HIT, SS_MOD, SRF_RES, PAR_CAN, HIT, CFZ(5),
+      CFZ_CAN, PAR_CAN, METRONOME('Haze'),
+      PAR_CAN, METRONOME('Ember'), SRF_USE, HIT, NO_CRIT, MIN_DMG, proc, SS_MOD,
+      PAR_CAN,
+    ], [
+      {species: 'Golbat', evs, moves: ['Toxic', 'Agility', 'Confuse Ray', 'Metronome']},
+    ], [
+      {species: 'Exeggutor', evs, moves: ['Leech Seed', 'Stun Spore', 'Double Team', 'Teleport']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].volatiles['leechseed']).toBeDefined();
+    expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(278);
+    expect(battle.p2.pokemon[0].status).toBe('tox');
+    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(1);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 24);
+
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 22);
+    expect(battle.p1.pokemon[0].boosts.spe).toBe(2);
+    expect(battle.p1.pokemon[0].status).toBe('par');
+    expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(139);
+    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(2);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 37 + 11));
+
+    battle.makeChoices('move 3', 'move 3');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 22);
+    expect(battle.p2.pokemon[0].boosts.evasion).toBe(1);
+    expect(battle.p2.pokemon[0].volatiles['confusion']).toBeDefined();
+    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(3);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 61 + 11));
+
+    battle.makeChoices('move 4', 'move 4');
+    expect(battle.p1.pokemon[0].volatiles['leechseed']).toBeUndefined();
+    expect(battle.p1.pokemon[0].boosts.spe).toBe(0);
+    expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(278);
+    expect(battle.p2.pokemon[0].status).toBe('');
+    // expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(3);
+    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(0);
+    expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
+    expect(battle.p2.pokemon[0].boosts.evasion).toBe(0);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 96);
+
+    battle.makeChoices('move 4', 'move 4');
+    // expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(4);
+    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(1);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 42 - 24));
+
+    battle.makeChoices('move 2', 'move 4');
+    expect(battle.p1.pokemon[0].boosts.spe).toBe(2);
+    expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(556);
+    // expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(5);
+    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(2);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 48);
+
+    verify(battle, [
+      '|move|p1a: Golbat|Toxic|p2a: Exeggutor',
+      '|-status|p2a: Exeggutor|tox',
+      '|move|p2a: Exeggutor|Leech Seed|p1a: Golbat',
+      '|-start|p1a: Golbat|move: Leech Seed',
+      '|-damage|p2a: Exeggutor|369/393 tox|[from] psn',
+      '|turn|2',
+      '|move|p1a: Golbat|Agility|p1a: Golbat',
+      '|-boost|p1a: Golbat|spe|2',
+      '|-damage|p1a: Golbat|331/353|[from] Leech Seed|[of] p2a: Exeggutor',
+      '|-heal|p2a: Exeggutor|391/393 tox|[silent]',
+      '|move|p2a: Exeggutor|Stun Spore|p1a: Golbat',
+      '|-status|p1a: Golbat|par',
+      '|-damage|p2a: Exeggutor|343/393 tox|[from] psn',
+      '|turn|3',
+      '|move|p2a: Exeggutor|Double Team|p2a: Exeggutor',
+      '|-boost|p2a: Exeggutor|evasion|1',
+      '|-damage|p2a: Exeggutor|271/393 tox|[from] psn',
+      '|move|p1a: Golbat|Confuse Ray|p2a: Exeggutor',
+      '|-start|p2a: Exeggutor|confusion',
+      '|-damage|p1a: Golbat|309/353 par|[from] Leech Seed|[of] p2a: Exeggutor',
+      '|-heal|p2a: Exeggutor|293/393 tox|[silent]',
+      '|turn|4',
+      '|-activate|p2a: Exeggutor|confusion',
+      '|move|p2a: Exeggutor|Teleport|p2a: Exeggutor',
+      '|-damage|p2a: Exeggutor|197/393 tox|[from] psn',
+      '|move|p1a: Golbat|Metronome|p1a: Golbat',
+      '|move|p1a: Golbat|Haze|p1a: Golbat|[from]Metronome',
+      '|-activate|p1a: Golbat|move: Haze',
+      '|-clearallboost|[silent]',
+      '|-end|p1a: Golbat|leechseed|[silent]',
+      '|-end|p1a: Golbat|parspeeddrop|[silent]',
+      '|-curestatus|p2a: Exeggutor|tox|[silent]',
+      '|-end|p2a: Exeggutor|confusion',
+      '|-end|p2a: Exeggutor|confusion|[silent]',
+      '|turn|5',
+      '|move|p1a: Golbat|Metronome|p1a: Golbat',
+      '|move|p1a: Golbat|Ember|p2a: Exeggutor|[from]Metronome',
+      '|-supereffective|p2a: Exeggutor',
+      '|-damage|p2a: Exeggutor|155/393',
+      '|-status|p2a: Exeggutor|brn',
+      '|move|p2a: Exeggutor|Teleport|p2a: Exeggutor',
+      '|-damage|p2a: Exeggutor|131/393 brn|[from] brn',
+      '|turn|6',
+      '|move|p1a: Golbat|Agility|p1a: Golbat',
+      '|-boost|p1a: Golbat|spe|2',
+      '|move|p2a: Exeggutor|Teleport|p2a: Exeggutor',
+      '|-damage|p2a: Exeggutor|83/393 brn|[from] brn',
+      '|turn|7',
+    ]);
+  });
+
+  test('Bide effect', () => {
+    const battle = startBattle([
+      SRF_RES, BIDE(3), HIT, SRF_RES, HIT, SRF_RES, SS_RES, GLM,
+      GLM, GLM, SRF_RES, SS_RUN, HIT, NO_CRIT, MIN_DMG, BIDE(3), SRF_RES, HIT,
+      SRF_RES, HIT, CFZ(3), CFZ_CAN,
+    ], [
+      {species: 'Chansey', evs, moves: ['Bide', 'Teleport']},
+      {species: 'Onix', evs, moves: ['Bide']},
+    ], [
+      {species: 'Magnemite', evs, moves: ['Sonic Boom']},
+      {species: 'Dugtrio', evs, moves: ['Dig']},
+      {species: 'Haunter', evs, moves: ['Night Shade', 'Confuse Ray']},
+    ]);
+
+    let chansey = battle.p1.pokemon[0].hp;
+    let dugtrio = battle.p2.pokemon[1].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
+
+    expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1']);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
+
+    battle.makeChoices('move 1', 'switch 2');
+    expect(battle.p1.pokemon[0].hp).toBe(chansey);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(chansey);
+    expect(battle.p2.pokemon[0].hp).toBe(dugtrio -= 80);
+
+    expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 256);
+
+    battle.makeChoices('move 1', 'switch 3');
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 100);
+
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(0);
+
+    verify(battle, [
+      '|move|p1a: Chansey|Bide|p1a: Chansey',
+      '|-start|p1a: Chansey|Bide',
+      '|move|p2a: Magnemite|Sonic Boom|p1a: Chansey',
+      '|-damage|p1a: Chansey|683/703',
+      '|turn|2',
+      '|-activate|p1a: Chansey|Bide',
+      '|move|p2a: Magnemite|Sonic Boom|p1a: Chansey',
+      '|-damage|p1a: Chansey|663/703',
+      '|turn|3',
+      '|switch|p2a: Dugtrio|Dugtrio|273/273',
+      '|-activate|p1a: Chansey|Bide',
+      '|turn|4',
+      '|move|p2a: Dugtrio|Dig||[still]',
+      '|-prepare|p2a: Dugtrio|Dig',
+      '|-end|p1a: Chansey|Bide',
+      '|-damage|p2a: Dugtrio|193/273',
+      '|turn|5',
+      '|move|p2a: Dugtrio|Dig|p1a: Chansey|[from]Dig',
+      '|-damage|p1a: Chansey|407/703',
+      '|move|p1a: Chansey|Bide|p1a: Chansey',
+      '|-start|p1a: Chansey|Bide',
+      '|turn|6',
+      '|switch|p2a: Haunter|Haunter|293/293',
+      '|-activate|p1a: Chansey|Bide',
+      '|turn|7',
+      '|move|p2a: Haunter|Night Shade|p1a: Chansey',
+      '|-damage|p1a: Chansey|307/703',
+      '|-activate|p1a: Chansey|Bide',
+      '|turn|8',
+      '|move|p2a: Haunter|Confuse Ray|p1a: Chansey',
+      '|-start|p1a: Chansey|confusion',
+      '|-activate|p1a: Chansey|confusion',
+      '|-end|p1a: Chansey|Bide',
+      '|-damage|p2a: Haunter|0 fnt',
+      '|faint|p2a: Haunter',
+    ]);
+  });
 
   test('Metronome effect', () => {
     const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
@@ -3727,11 +4055,113 @@ describe('Gen 1', () => {
 
   // Pokémon Showdown Bugs
 
-  // TODO: Bide fails in situations involving Substitute
-  test.todo('Bide + Substitute bug');
+  test('Bide + Substitute bug', () => {
+    const battle = startBattle([BIDE(2), SRF_RES, HIT, SRF_RES, HIT], [
+      {species: 'Voltorb', evs, moves: ['Sonic Boom', 'Substitute']},
+    ], [
+      {species: 'Chansey', evs, moves: ['Bide', 'Teleport']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    // On Pokémon Showdown the opponent having a Substitute blanks Bide
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 70);
+    expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(71);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+    expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(71);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 20);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+    // expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(31);
+    expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(71);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 20);
+
+    verify(battle, [
+      '|move|p1a: Voltorb|Substitute|p1a: Voltorb',
+      '|-start|p1a: Voltorb|Substitute',
+      '|-damage|p1a: Voltorb|213/283',
+      '|move|p2a: Chansey|Bide|p2a: Chansey',
+      '|-start|p2a: Chansey|Bide',
+      '|turn|2',
+      '|move|p1a: Voltorb|Sonic Boom|p2a: Chansey',
+      '|-damage|p2a: Chansey|683/703',
+      '|-activate|p2a: Chansey|Bide',
+      '|turn|3',
+      '|move|p1a: Voltorb|Sonic Boom|p2a: Chansey',
+      '|-damage|p2a: Chansey|663/703',
+      '|-end|p2a: Chansey|Bide',
+      '|turn|4',
+    ]);
+  });
+
+  test('Counter via Metronome bug', () => {
+    // Counter second
+    {
+      const battle = startBattle([
+        SRF_RES, HIT, METRONOME('Counter'), SRF_USE, HIT,
+      ], [
+        {species: 'Alakazam', evs, moves: ['Seismic Toss']},
+      ], [
+        {species: 'Chansey', evs, moves: ['Metronome']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 200);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
+
+      verify(battle, [
+        '|move|p1a: Alakazam|Seismic Toss|p2a: Chansey',
+        '|-damage|p2a: Chansey|603/703',
+        '|move|p2a: Chansey|Metronome|p2a: Chansey',
+        '|move|p2a: Chansey|Counter|p1a: Alakazam|[from]Metronome',
+        '|-damage|p1a: Alakazam|113/313',
+        '|turn|2',
+      ]);
+    }
+    // Counter first
+    {
+      const battle = startBattle([
+        SRF_RES, HIT, SRF_RES, METRONOME('Counter'), SRF_USE, HIT, HIT,
+      ], [
+        {species: 'Snorlax', evs, moves: ['Seismic Toss']},
+      ], [
+        {species: 'Chansey', evs, moves: ['Teleport', 'Metronome']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
+
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 200);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
+
+      verify(battle, [
+        '|move|p2a: Chansey|Teleport|p2a: Chansey',
+        '|move|p1a: Snorlax|Seismic Toss|p2a: Chansey',
+        '|-damage|p2a: Chansey|603/703',
+        '|turn|2',
+        '|move|p2a: Chansey|Metronome|p2a: Chansey',
+        '|move|p2a: Chansey|Counter|p1a: Snorlax|[from]Metronome',
+        '|-damage|p1a: Snorlax|323/523',
+        '|move|p1a: Snorlax|Seismic Toss|p2a: Chansey',
+        '|-damage|p2a: Chansey|503/703',
+        '|turn|3',
+      ]);
+    }
+  });
 
   test('Counter + Substitute bug', () => {
-    const NO_PAR = {key: HIT.key, value: ranged(77, 256)};
     const battle = startBattle([
       SRF_RES, SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, NO_PAR, HIT,
     ], [
@@ -3827,7 +4257,7 @@ describe('Gen 1', () => {
 
   test('Disable duration bug', () => {
     // Explicitly set value to MAX to ensure DISABLE_DURATION isn't the problem
-    const disable =  {key: DISABLE_DURATION(6).key, value: MAX};
+    const disable = {key: DISABLE_DURATION(6).key, value: MAX};
     const battle = startBattle([
       SRF_RES, SRF_RES, HIT, disable, DISABLE_MOVE(1, 2),
     ], [
@@ -4198,7 +4628,6 @@ describe('Gen 1', () => {
     ]);
   });
 
-  test.todo('Bide errors');
   test.todo('Counter glitches');
 
   test('Freeze top move selection glitch', () => {
@@ -4258,8 +4687,6 @@ describe('Gen 1', () => {
     ]);
   });
 
-  test.todo('Haze glitch');
-
   test('Toxic counter glitches', () => {
     const BRN = {key: HIT.key, value: ranged(77, 256) - 1};
     const battle = startBattle([
@@ -4274,13 +4701,13 @@ describe('Gen 1', () => {
     battle.p2.pokemon[0].hp = 392;
 
     battle.makeChoices('move 1', 'move 2');
-    expect(battle.p2.active[0].volatiles['residualdmg'].counter).toBe(0);
+    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(0);
     battle.makeChoices('move 3', 'move 1');
-    expect(battle.p2.active[0].volatiles['residualdmg'].counter).toBe(0);
+    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(0);
     battle.makeChoices('move 2', 'move 1');
-    expect(battle.p2.active[0].volatiles['residualdmg'].counter).toBe(1);
+    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(1);
     battle.makeChoices('move 4', 'move 1');
-    expect(battle.p2.active[0].volatiles['residualdmg'].counter).toBe(3);
+    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(3);
 
     verify(battle, [
       '|move|p1a: Venusaur|Toxic|p2a: Clefable',
@@ -4686,7 +5113,6 @@ describe('Gen 1', () => {
   });
 
   test('Invulnerability glitch', () => {
-    const NO_PAR = {key: HIT.key, value: ranged(26, 256)};
     const battle = startBattle([
       SRF_RES, HIT, SS_MOD,
       SRF_RES, SRF_RES, PAR_CAN, SS_RES, GLM,

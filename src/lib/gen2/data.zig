@@ -99,10 +99,7 @@ const Side = extern struct {
         assert(slot > 0 and slot < 7);
         return self.pokemon[slot - 1];
     }
-
 };
-
-
 
 // NOTE: IVs (Gender & Hidden Power) and Happiness are stored only in Pokemon
 const ActivePokemon = extern struct {
