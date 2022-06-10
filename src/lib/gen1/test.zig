@@ -654,7 +654,54 @@ test "Endless Battle Clause (initial)" {
 
 test "Endless Battle Clause (basic)" {
     if (!showdown) return;
-    return error.SkipZigTest;
+    {
+        var t = Test(.{}).init(
+            &.{.{ .species = .Mew, .moves = &.{.Transform} }},
+            &.{.{ .species = .Ditto, .moves = &.{.Transform} }},
+        );
+        defer t.deinit();
+
+        t.expected.p1.get(1).move(1).pp = 0;
+        t.expected.p2.get(1).move(1).pp = 0;
+
+        t.actual.p1.get(1).move(1).pp = 0;
+        t.actual.p2.get(1).move(1).pp = 0;
+
+        try t.log.expected.switched(P1.ident(1), t.expected.p1.get(1));
+        try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
+        try t.log.expected.tie();
+
+        try expectEqual(Result.Tie, try t.battle.actual.update(.{}, .{}, t.log.actual));
+        try t.verify();
+    }
+    {
+        var t = Test(.{NOP, NOP}).init(
+            &.{
+                .{ .species = .Mew, .moves = &.{.Transform} },
+                .{ .species = .Muk, .moves = &.{.Pound} },
+            },
+            &.{.{ .species = .Ditto, .moves = &.{.Transform} }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.switched(P1.ident(1), t.expected.p1.get(1));
+        try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
+        try t.log.expected.turn(1);
+
+        try expectEqual(Result.Default, try t.battle.actual.update(.{}, .{}, t.log.actual));
+
+        t.expected.p1.get(2).hp = 0;
+        t.actual.p1.get(2).hp = 0;
+
+        try t.log.expected.move(P1.ident(1), Move.Transform, P2.ident(1), null);
+        try t.log.expected.transform(P1.ident(1), P2.ident(1));
+        try t.log.expected.move(P2.ident(1), Move.Transform, P1.ident(1), null);
+        try t.log.expected.transform(P2.ident(1), P1.ident(1));
+        try t.log.expected.tie();
+
+        try expectEqual(Result.Tie, try t.update(move(1), move(1)));
+        try t.verify();
+    }
 }
 
 test "choices" {
