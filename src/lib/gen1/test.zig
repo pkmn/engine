@@ -1634,8 +1634,7 @@ test "1/256 miss glitch" {
     try t.verify();
 }
 
-test "Bide errors" {
-    // https://pkmn.cc/bulba-glitch-1#Bide_errors
+test "Bide damage accumulation glitches" {
     // https://glitchcity.wiki/Bide_fainted_Pokémon_damage_accumulation_glitch
     // https://glitchcity.wiki/Bide_non-damaging_move/action_damage_accumulation_glitch
     // https://www.youtube.com/watch?v=IVxHGyNDW4g

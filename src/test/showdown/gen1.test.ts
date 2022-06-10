@@ -4612,7 +4612,206 @@ describe('Gen 1', () => {
     ]);
   });
 
-  test.todo('Counter glitches');
+  test('Bide damage accumulation glitches', () => {
+    // Non-damaging move/action damage accumulation
+    {
+      const battle = startBattle([SRF_RES, BIDE(2), SRF_RUN, HIT, NO_CRIT, MIN_DMG], [
+        {species: 'Poliwrath', level: 40, evs, moves: ['Surf', 'Teleport']},
+        {species: 'Snorlax', level: 80, evs, moves: ['Rest']},
+      ], [
+        {species: 'Chansey', level: 80, evs, moves: ['Bide']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[1].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 18);
+
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+      battle.makeChoices('switch 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 36);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+      verify(battle, [
+        '|move|p2a: Chansey|Bide|p2a: Chansey',
+        '|-start|p2a: Chansey|Bide',
+        '|move|p1a: Poliwrath|Surf|p2a: Chansey',
+        '|-damage|p2a: Chansey|546/564',
+        '|turn|2',
+        '|-activate|p2a: Chansey|Bide',
+        '|move|p1a: Poliwrath|Teleport|p1a: Poliwrath',
+        '|turn|3',
+        '|switch|p1a: Snorlax|Snorlax, L80|420/420',
+        '|-end|p2a: Chansey|Bide',
+        '|-damage|p1a: Snorlax|384/420',
+        '|turn|4',
+      ]);
+    }
+    // Fainted Pokémon damage accumulation desync
+    {
+      const battle = startBattle([
+        SRF_RES, HIT, SS_MOD, SRF_RES, BIDE(2), HIT, NO_CRIT, MIN_DMG,
+        SRF_RES, HIT, NO_CRIT, MIN_DMG,
+      ], [
+        {species: 'Wigglytuff', evs, moves: ['Teleport', 'Tri Attack']},
+        {species: 'Snorlax', evs, moves: ['Defense Curl']},
+      ], [
+        {species: 'Chansey', evs, moves: ['Toxic', 'Bide']},
+      ]);
+
+      battle.p1.pokemon[0].hp = 179;
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].status).toBe('tox');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 30);
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 60);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 191);
+      expect(battle.p2.pokemon[0].volatiles['bide'].totalDamage).toBe(191);
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(0);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 191);
+      expect(battle.p2.pokemon[0].volatiles['bide'].totalDamage).toBe(382);
+
+      battle.makeChoices('switch 2', '');
+
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+      expect(battle.p2.pokemon[0].volatiles['bide'].totalDamage).toBe(382);
+
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(0);
+
+      verify(battle, [
+        '|move|p2a: Chansey|Toxic|p1a: Wigglytuff',
+        '|-status|p1a: Wigglytuff|tox',
+        '|move|p1a: Wigglytuff|Teleport|p1a: Wigglytuff',
+        '|-damage|p1a: Wigglytuff|149/483 tox|[from] psn',
+        '|turn|2',
+        '|move|p2a: Chansey|Bide|p2a: Chansey',
+        '|-start|p2a: Chansey|Bide',
+        '|move|p1a: Wigglytuff|Tri Attack|p2a: Chansey',
+        '|-damage|p2a: Chansey|512/703',
+        '|-damage|p1a: Wigglytuff|89/483 tox|[from] psn',
+        '|turn|3',
+        '|-activate|p2a: Chansey|Bide',
+        '|move|p1a: Wigglytuff|Tri Attack|p2a: Chansey',
+        '|-damage|p2a: Chansey|321/703',
+        '|-damage|p1a: Wigglytuff|0 fnt|[from] psn',
+        '|faint|p1a: Wigglytuff',
+        '|switch|p1a: Snorlax|Snorlax|523/523',
+        '|turn|4',
+        '|-activate|p2a: Chansey|Bide',
+        '|move|p1a: Snorlax|Defense Curl|p1a: Snorlax',
+        '|-boost|p1a: Snorlax|def|1',
+        '|turn|5',
+        '|-end|p2a: Chansey|Bide',
+        '|-damage|p1a: Snorlax|0 fnt',
+        '|faint|p1a: Snorlax',
+        '|win|Player 2',
+      ]);
+    }
+  });
+
+  test('Counter glitches', () => {
+    // self-Counter
+    {
+      const battle = startBattle([
+        SRF_RES, HIT, SS_MOD,
+        SRF_RES, SRF_RES, PAR_CAN, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+        SRF_RES, SRF_RES, SRF_RES, PAR_CANT, HIT,
+      ], [
+        {species: 'Jolteon', evs, moves: ['Agility', 'Tackle']},
+      ], [
+        {species: 'Chansey', level: 80, evs, moves: ['Thunder Wave', 'Mega Drain', 'Counter']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].status).toBe('par');
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 19);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 67 + 9));
+
+      battle.makeChoices('move 2', 'move 3');
+      // expect(battle.p1.pokemon[0].hp).toBe(p1hp -= (2 * 9));
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= (2 * 19));
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+      verify(battle, [
+        '|move|p1a: Jolteon|Agility|p1a: Jolteon',
+        '|-boost|p1a: Jolteon|spe|2',
+        '|move|p2a: Chansey|Thunder Wave|p1a: Jolteon',
+        '|-status|p1a: Jolteon|par',
+        '|turn|2',
+        '|move|p1a: Jolteon|Tackle|p2a: Chansey',
+        '|-damage|p2a: Chansey|497/564',
+        '|move|p2a: Chansey|Mega Drain|p1a: Jolteon',
+        '|-damage|p1a: Jolteon|314/333 par',
+        '|-heal|p2a: Chansey|506/564|[from] drain|[of] p1a: Jolteon',
+        '|turn|3',
+        '|cant|p1a: Jolteon|par',
+        '|move|p2a: Chansey|Counter|p1a: Jolteon',
+        '|-damage|p1a: Jolteon|276/333 par',
+        '|turn|4',
+      ]);
+    }
+    // Desync
+    {
+      const battle = startBattle([
+        SRF_RES, HIT, SS_MOD,
+        SRF_RES, SRF_RES, PAR_CAN, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+        SRF_RES, SRF_RES, PAR_CANT, HIT,
+      ], [
+        {species: 'Jolteon', evs, moves: ['Agility', 'Tackle']},
+      ], [
+        {species: 'Chansey', level: 80, evs, moves: ['Thunder Wave', 'Mega Drain', 'Counter']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].status).toBe('par');
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 19);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 67 + 9));
+
+      battle.makeChoices('move 1', 'move 3');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+      verify(battle, [
+        '|move|p1a: Jolteon|Agility|p1a: Jolteon',
+        '|-boost|p1a: Jolteon|spe|2',
+        '|move|p2a: Chansey|Thunder Wave|p1a: Jolteon',
+        '|-status|p1a: Jolteon|par',
+        '|turn|2',
+        '|move|p1a: Jolteon|Tackle|p2a: Chansey',
+        '|-damage|p2a: Chansey|497/564',
+        '|move|p2a: Chansey|Mega Drain|p1a: Jolteon',
+        '|-damage|p1a: Jolteon|314/333 par',
+        '|-heal|p2a: Chansey|506/564|[from] drain|[of] p1a: Jolteon',
+        '|turn|3',
+        '|cant|p1a: Jolteon|par',
+        '|move|p2a: Chansey|Counter|p1a: Jolteon',
+        '|-fail|p2a: Chansey',
+        '|turn|4',
+      ]);
+    }
+  });
 
   test('Freeze top move selection glitch', () => {
     const NO_BRN = {key: FRZ.key, value: FRZ.value + 1};

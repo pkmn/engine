@@ -11,10 +11,15 @@ export const MAX = 0xFFFFFFFF;
 export const NOP = 42;
 
 export const ROLLS: {[category: string]: {[name: string]: Roll}} = {
-  BASIC: {
-
+  basic: {
+    HIT: {key: 'BattleActions.tryMoveHit', value: MIN},
+    MISS: {key: 'BattleActions.tryMoveHit', value: MAX},
+    CRIT: {key: ['Battle.randomChance', 'BattleActions.getDamage'], value: MIN},
+    NO_CRIT: {key: ['Battle.randomChance', 'BattleActions.getDamage'], value: MAX},
+    MIN_DMG: {key: ['Battle.random', 'BattleActions.getDamage'], value: MIN},
+    MAX_DMG: {key: ['Battle.random', 'BattleActions.getDamage'], value: MAX},
   },
-  NOPS: {
+  nops: {
     SRF_RES: {key: ['Side.randomFoe', 'BattleQueue.resolveAction'], value: NOP},
     SRF_RUN: {key: ['Side.randomFoe', 'BattleActions.runMove'], value: NOP},
     SRF_USE: {key: ['Side.randomFoe', 'BattleActions.useMove'], value: NOP},
@@ -25,7 +30,7 @@ export const ROLLS: {[category: string]: {[name: string]: Roll}} = {
     INS: {key: ['BattleQueue.insertChoice', 'BattleActions.switchIn'], value: NOP},
     GLM: {key: 'Pokemon.getLockedMove', value: NOP},
   },
-}
+};
 
 export const ranged = (n: number, d: number) => n * Math.floor(0x100000000 / d);
 
