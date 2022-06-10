@@ -850,7 +850,38 @@ test "MultiHit effect" {
 test "DoubleHit effect" {
     // Hits twice. Damage is calculated once for the first hit and used for both hits. If the first
     // hit breaks the target's substitute, the move ends.
-    return error.SkipZigTest;
+      var t = Test(if (showdown)
+        (.{ NOP, HIT, ~CRIT, MAX_DMG, NOP, HIT, ~CRIT, MAX_DMG })
+    else
+        (.{ ~CRIT, MAX_DMG, HIT, ~CRIT, MAX_DMG, HIT })).init(
+        &.{.{ .species = .Marowak, .moves = &.{.Bonemerang} }},
+        &.{.{ .species = .Slowpoke, .level = 80, .moves = &.{ .Substitute, .Teleport } }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Bonemerang, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 91;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    t.expected.p2.get(1).hp -= 91;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.hitcount(P2.ident(1), 2);
+    try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Substitute);
+    t.expected.p2.get(1).hp -= 77;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.Bonemerang, P2.ident(1), null);
+    try t.log.expected.end(P2.ident(1), .Substitute);
+    try t.log.expected.hitcount(P2.ident(1), 1);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(3);
+
+    // Breaking a target's Substitute ends the move
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    try t.verify();
 }
 
 // Move.Twineedle
