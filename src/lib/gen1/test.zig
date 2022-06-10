@@ -675,7 +675,7 @@ test "Endless Battle Clause (basic)" {
         try t.verify();
     }
     {
-        var t = Test(.{NOP, NOP}).init(
+        var t = Test(.{ NOP, NOP }).init(
             &.{
                 .{ .species = .Mew, .moves = &.{.Transform} },
                 .{ .species = .Muk, .moves = &.{.Pound} },
@@ -805,7 +805,45 @@ test "MultiHit effect" {
     // Hits two to five times. Has a 3/8 chance to hit two or three times, and a 1/8 chance to hit
     // four or five times. Damage is calculated once for the first hit and used for every hit. If
     // one of the hits breaks the target's substitute, the move ends.
-    return error.SkipZigTest;
+    const hit3 = if (showdown) 0x60000000 else 1;
+    const hit5 = MAX;
+    var t = Test(if (showdown)
+        (.{ NOP, HIT, hit3, ~CRIT, MAX_DMG, NOP, HIT, hit5, ~CRIT, MAX_DMG })
+    else
+        (.{ ~CRIT, MAX_DMG, HIT, hit3, ~CRIT, MAX_DMG, HIT, hit5, hit5 })).init(
+        &.{.{ .species = .Kangaskhan, .moves = &.{.CometPunch} }},
+        &.{.{ .species = .Slowpoke, .moves = &.{ .Substitute, .Teleport } }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.CometPunch, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 31;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    t.expected.p2.get(1).hp -= 31;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    t.expected.p2.get(1).hp -= 31;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.hitcount(P2.ident(1), 3);
+    try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Substitute);
+    t.expected.p2.get(1).hp -= 95;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.CometPunch, P2.ident(1), null);
+    try t.log.expected.activate(P2.ident(1), .Substitute);
+    try t.log.expected.activate(P2.ident(1), .Substitute);
+    try t.log.expected.activate(P2.ident(1), .Substitute);
+    try t.log.expected.end(P2.ident(1), .Substitute);
+    try t.log.expected.hitcount(P2.ident(1), 4);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(3);
+
+    // Breaking a target's Substitute ends the move
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    try t.verify();
 }
 
 // Move.{DoubleKick,Bonemerang}

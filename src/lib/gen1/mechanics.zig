@@ -726,7 +726,8 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     _ = from;
     var nullified = false;
     var hit: u4 = 0;
-    while (hit < hits) : (hit += 1) {
+    while (hit < hits) {
+        hit += 1;
         if (!skip) nullified = try applyDamage(battle, player.foe(), player.foe(), log);
         if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
             try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
@@ -745,7 +746,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         side.active.volatiles.MultiHit = false;
         assert(nullified or side.active.volatiles.attacks - hit == 0);
         side.active.volatiles.attacks = 0;
-        try log.hitcount(battle.active(player), hits);
+        try log.hitcount(battle.active(player.foe()), hit);
     }
 
     // Substitute being broken nullifies the move's effect completely so even
