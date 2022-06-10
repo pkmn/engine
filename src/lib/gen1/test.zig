@@ -1194,7 +1194,68 @@ test "StatDown effect" {
 // Move.Psychic: SpecialDownChance
 test "StatDownChance effect" {
     // Has a 33% chance to lower the target's X by 1 stage.
-    return error.SkipZigTest;
+    const proc = comptime ranged(85, 256) - 1;
+    const no_proc = proc + 1;
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, no_proc, HIT, ~CRIT, MIN_DMG, proc,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, no_proc, HIT, ~CRIT, MIN_DMG, proc,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, no_proc, HIT, ~CRIT, MIN_DMG, no_proc,
+        } else .{
+            ~CRIT, MIN_DMG, HIT, no_proc, ~CRIT, MIN_DMG, HIT, proc,
+            ~CRIT, MIN_DMG, HIT, no_proc, ~CRIT, MIN_DMG, HIT, proc,
+            ~CRIT, MIN_DMG, HIT, no_proc, ~CRIT, MIN_DMG, HIT, no_proc,
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Alakazam, .moves = &.{ .Psychic } }},
+        &.{.{ .species = .Starmie, .moves = &.{ .BubbleBeam } }},
+    );
+    defer t.deinit();
+
+    t.expected.p1.get(1).hp -= 57;
+    t.expected.p2.get(1).hp -= 60;
+
+    try t.log.expected.move(P1.ident(1), Move.Psychic, P2.ident(1), null);
+    try t.log.expected.resisted(P2.ident(1));
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.BubbleBeam, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.unboost(P1.ident(1), .Speed, 1);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(@as(i4, -1), t.actual.p1.active.boosts.spe);
+
+    t.expected.p1.get(1).hp -= 57;
+    t.expected.p2.get(1).hp -= 60;
+
+    try t.log.expected.move(P2.ident(1), Move.BubbleBeam, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Psychic, P2.ident(1), null);
+    try t.log.expected.resisted(P2.ident(1));
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.unboost(P2.ident(1), .SpecialAttack, 1);
+    try t.log.expected.unboost(P2.ident(1), .SpecialDefense, 1);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(@as(i4, -1), t.actual.p2.active.boosts.spc);
+
+    t.expected.p1.get(1).hp -= 39;
+    t.expected.p2.get(1).hp -= 91;
+
+    try t.log.expected.move(P2.ident(1), Move.BubbleBeam, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Psychic, P2.ident(1), null);
+    try t.log.expected.resisted(P2.ident(1));
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.verify();
 }
 
 // Move.{Meditate,Sharpen}: AttackUp1

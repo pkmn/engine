@@ -1995,7 +1995,7 @@ pub const Effects = struct {
                 battle.rng.chance(u8, 85, 256)
             else
                 battle.rng.next() < Gen12.percent(33) + 1;
-            if (chance or foe.active.volatiles.Invulnerable) return;
+            if (!chance or foe.active.volatiles.Invulnerable) return;
         } else if (!showdown and !try checkHit(battle, player, move, log)) {
             return; // checkHit already checks for Invulnerable
         }
