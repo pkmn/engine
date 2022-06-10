@@ -850,7 +850,7 @@ test "MultiHit effect" {
 test "DoubleHit effect" {
     // Hits twice. Damage is calculated once for the first hit and used for both hits. If the first
     // hit breaks the target's substitute, the move ends.
-      var t = Test(if (showdown)
+    var t = Test(if (showdown)
         (.{ NOP, HIT, ~CRIT, MAX_DMG, NOP, HIT, ~CRIT, MAX_DMG })
     else
         (.{ ~CRIT, MAX_DMG, HIT, ~CRIT, MAX_DMG, HIT })).init(
@@ -885,11 +885,91 @@ test "DoubleHit effect" {
 }
 
 // Move.Twineedle
-test "Twineedle effect" {
-    // Hits twice, with the second hit having a 20% chance to poison the target. If the first hit
-    // breaks the target's substitute, the move ends.
-    return error.SkipZigTest;
-}
+// test "Twineedle effect" {
+//     // Hits twice, with the second hit having a 20% chance to poison the target. If the first hit
+//     // breaks the target's substitute, the move ends.
+//     const proc = comptime ranged(52, 256) - 1;
+//     const no_proc = proc + 1;
+//     var t = Test(
+//     // zig fmt: off
+//         if (showdown) .{
+//             NOP, HIT, CRIT, MAX_DMG, proc, proc,
+//             NOP, HIT, ~CRIT, MIN_DMG, proc, no_proc, no_proc,
+//             NOP, HIT, ~CRIT, MIN_DMG, no_proc, proc, proc,
+//             NOP, HIT, ~CRIT, MIN_DMG, proc, proc,
+//         } else .{
+//             // TODO
+//         }
+//     // zig fmt: on
+//     ).init(
+//         &.{.{ .species = .Beedrill, .moves = &.{.Twineedle} }},
+//         &.{
+//             .{ .species = .Voltorb, .moves = &.{ .Substitute, .Teleport } },
+//             .{ .species = .Electrode, .moves = &.{.Explosion} },
+//             .{ .species = .Weezing, .moves = &.{.Explosion} },
+//         },
+//     );
+//     defer t.deinit();
+
+//     t.expected.p2.get(1).hp -= 70;
+
+//     try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+//     try t.log.expected.start(P2.ident(1), .Substitute);
+//     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+//     try t.log.expected.move(P1.ident(1), Move.Twineedle, P2.ident(1), null);
+//     try t.log.expected.crit(P2.ident(1));
+//     try t.log.expected.end(P2.ident(1), .Substitute);
+//     try t.log.expected.hitcount(P2.ident(1), 1);
+//     try t.log.expected.turn(2);
+
+//     // Breaking a target's Substitute ends the move
+//     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+//     try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+//     try t.log.expected.move(P1.ident(1), Move.Twineedle, P2.ident(1), null);
+//     t.expected.p2.get(1).hp -= 36;
+//     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+//     if (showdown) {
+//         t.expected.p2.get(1).status = Status.init(.PSN);
+//         try t.log.expected.status(P2.ident(1), Status.init(.PSN), .None);
+//     }
+//     t.expected.p2.get(1).hp -= 36;
+//     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+//     try t.log.expected.hitcount(P2.ident(1), 2);
+//     try t.log.expected.turn(3);
+
+//     // On Pokémon Showdown the first hit can poison the tatget
+//     try expectEqual(Result.Default, try t.update(move(1), move(2)));
+//     // if (showdown) try expectEqual(t.actual.p2.get(1).status, Status.init(.PSN));
+
+//     try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+//     try t.log.expected.move(P1.ident(1), Move.Twineedle, P2.ident(2), null);
+//     t.expected.p2.get(2).hp -= 30;
+//     try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+//     t.expected.p2.get(2).hp -= 30;
+//     try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+//     t.expected.p2.get(2).status = Status.init(.PSN);
+//     try t.log.expected.status(P2.ident(2), Status.init(.PSN), .None);
+//     try t.log.expected.hitcount(P2.ident(2), 2);
+//     try t.log.expected.turn(4);
+
+//     // The second hit can always poison the target
+//     try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+//     // try expectEqual(t.actual.p2.get(2).status, Status.init(.PSN));
+
+//     try t.log.expected.switched(P2.ident(3), t.expected.p2.get(3));
+//     try t.log.expected.move(P1.ident(1), Move.Twineedle, P2.ident(3), null);
+//     t.expected.p2.get(3).hp -= 45;
+//     try t.log.expected.damage(P2.ident(3), t.expected.p2.get(3), .None);
+//     t.expected.p2.get(3).hp -= 45;
+//     try t.log.expected.damage(P2.ident(3), t.expected.p2.get(3), .None);
+//     try t.log.expected.hitcount(P2.ident(3), 2);
+//     try t.log.expected.turn(5);
+
+//     // Poison types cannot be poisoned
+//     try expectEqual(Result.Default, try t.update(move(1), swtch(3)));
+//     try t.verify();
+// }
 
 // Move.Toxic
 // Move.{PoisonPowder,PoisonGas}
@@ -1055,7 +1135,57 @@ test "FlinchChance effect" {
 // Move.Screech: DefenseDown2
 test "StatDown effect" {
     // Lowers the target's X by Y stage(s).
-    return error.SkipZigTest;
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+            NOP, NOP, HIT, NOP, HIT,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+        } else .{
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+            ~CRIT, HIT, ~CRIT, HIT,
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Ekans, .moves = &.{ .Screech, .Strength } }},
+        &.{.{ .species = .Caterpie, .moves = &.{ .StringShot, .Tackle } }},
+    );
+    defer t.deinit();
+
+    t.expected.p1.get(1).hp -= 22;
+    t.expected.p2.get(1).hp -= 75;
+
+    try t.log.expected.move(P1.ident(1), Move.Strength, P2.ident(1), null);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Tackle, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+
+    try t.log.expected.move(P1.ident(1), Move.Screech, P2.ident(1), null);
+    try t.log.expected.unboost(P2.ident(1), .Defense, 2);
+    try t.log.expected.move(P2.ident(1), Move.StringShot, P1.ident(1), null);
+    try t.log.expected.unboost(P1.ident(1), .Speed, 1);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(@as(i4, -1), t.actual.p1.active.boosts.spe);
+    try expectEqual(@as(i4, -2), t.actual.p2.active.boosts.def);
+
+    t.expected.p1.get(1).hp -= 22;
+    t.expected.p2.get(1).hp -= 149;
+
+    try t.log.expected.move(P2.ident(1), Move.Tackle, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Strength, P2.ident(1), null);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+
+    try t.verify();
 }
 
 // Move.AuroraBeam: AttackDownChance

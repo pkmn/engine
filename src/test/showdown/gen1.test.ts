@@ -870,7 +870,7 @@ describe('Gen 1', () => {
     const no_proc = {key: HIT.key, value: proc.value + 1};
 
     const battle = startBattle([
-      SRF_RES, HIT, NO_CRIT, MAX_DMG, proc, proc,
+      SRF_RES, HIT, CRIT, MAX_DMG, proc,
       SRF_RES, HIT, NO_CRIT, MIN_DMG, proc, no_proc, no_proc,
       SRF_RES, HIT, NO_CRIT, MIN_DMG, no_proc, proc, proc,
       SRF_RES, HIT, NO_CRIT, MIN_DMG, proc, proc,
@@ -911,9 +911,9 @@ describe('Gen 1', () => {
       '|-start|p2a: Voltorb|Substitute',
       '|-damage|p2a: Voltorb|213/283',
       '|move|p1a: Beedrill|Twineedle|p2a: Voltorb',
-      '|-activate|p2a: Voltorb|Substitute|[damage]',
+      '|-crit|p2a: Voltorb',
       '|-end|p2a: Voltorb|Substitute',
-      '|-hitcount|p2a: Voltorb|2',
+      '|-hitcount|p2a: Voltorb|1',
       '|turn|2',
       '|move|p2a: Voltorb|Teleport|p2a: Voltorb',
       '|move|p1a: Beedrill|Twineedle|p2a: Voltorb',
