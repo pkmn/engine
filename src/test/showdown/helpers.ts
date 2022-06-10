@@ -10,17 +10,22 @@ export const MIN = 0;
 export const MAX = 0xFFFFFFFF;
 export const NOP = 42;
 
-export const NOPS: {[name: string]: Roll} = {
-  SRF_RES: {key: ['Side.randomFoe', 'BattleQueue.resolveAction'], value: NOP},
-  SRF_RUN: {key: ['Side.randomFoe', 'BattleActions.runMove'], value: NOP},
-  SRF_USE: {key: ['Side.randomFoe', 'BattleActions.useMove'], value: NOP},
-  SS_MOD: {key: ['Battle.speedSort', 'Pokemon.setStatus'], value: NOP},
-  SS_RES: {key: ['Battle.speedSort', 'Battle.residualEvent'], value: NOP},
-  SS_RUN: {key: ['Battle.speedSort', 'Battle.runEvent'], value: NOP},
-  SS_EACH: {key: ['Battle.speedSort', 'Battle.eachEvent'], value: NOP},
-  INS: {key: ['BattleQueue.insertChoice', 'BattleActions.switchIn'], value: NOP},
-  GLM: {key: 'Pokemon.getLockedMove', value: NOP},
-};
+export const ROLLS: {[category: string]: {[name: string]: Roll}} = {
+  BASIC: {
+
+  },
+  NOPS: {
+    SRF_RES: {key: ['Side.randomFoe', 'BattleQueue.resolveAction'], value: NOP},
+    SRF_RUN: {key: ['Side.randomFoe', 'BattleActions.runMove'], value: NOP},
+    SRF_USE: {key: ['Side.randomFoe', 'BattleActions.useMove'], value: NOP},
+    SS_MOD: {key: ['Battle.speedSort', 'Pokemon.setStatus'], value: NOP},
+    SS_RES: {key: ['Battle.speedSort', 'Battle.residualEvent'], value: NOP},
+    SS_RUN: {key: ['Battle.speedSort', 'Battle.runEvent'], value: NOP},
+    SS_EACH: {key: ['Battle.speedSort', 'Battle.eachEvent'], value: NOP},
+    INS: {key: ['BattleQueue.insertChoice', 'BattleActions.switchIn'], value: NOP},
+    GLM: {key: 'Pokemon.getLockedMove', value: NOP},
+  },
+}
 
 export const ranged = (n: number, d: number) => n * Math.floor(0x100000000 / d);
 

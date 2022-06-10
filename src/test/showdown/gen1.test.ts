@@ -1,7 +1,7 @@
 import {Battle, Dex, PRNG} from '@pkmn/sim';
 import {Generations} from '@pkmn/data';
 
-import {MIN, MAX, NOPS, ranged, formatFor, createStartBattle, FixedRNG, verify} from './helpers';
+import {MIN, MAX, ROLLS, ranged, formatFor, createStartBattle, FixedRNG, verify} from './helpers';
 import * as gen1 from '../benchmark/gen1';
 
 const gens = new Generations(Dex as any);
@@ -9,14 +9,8 @@ const gen = gens.get(1);
 const choices = gen1.Choices.sim;
 const startBattle = createStartBattle(gen);
 
-const HIT = {key: 'BattleActions.tryMoveHit', value: MIN};
-const MISS = {key: 'BattleActions.tryMoveHit', value: MAX};
-const CRIT = {key: ['Battle.randomChance', 'BattleActions.getDamage'], value: MIN};
-const NO_CRIT = {key: ['Battle.randomChance', 'BattleActions.getDamage'], value: MAX};
-const MIN_DMG = {key: ['Battle.random', 'BattleActions.getDamage'], value: MIN};
-const MAX_DMG = {key: ['Battle.random', 'BattleActions.getDamage'], value: MAX};
-
-const {SRF_RES, SRF_RUN, SRF_USE, SS_MOD, SS_RES, SS_RUN, SS_EACH, INS, GLM} = NOPS;
+const {HIT, MISS, CRIT, NO_CRIT, MIN_DMG, MAX_DMG} = ROLLS.basic;
+const {SRF_RES, SRF_RUN, SRF_USE, SS_MOD, SS_RES, SS_RUN, SS_EACH, INS, GLM} = ROLLS.nops;
 
 const TIE = (n: 1 | 2) =>
   ({key: ['Battle.speedSort', 'BattleQueue.sort'], value: ranged(n, 2) - 1});
