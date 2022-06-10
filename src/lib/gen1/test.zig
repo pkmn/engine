@@ -1209,8 +1209,8 @@ test "StatDownChance effect" {
         }
     // zig fmt: on
     ).init(
-        &.{.{ .species = .Alakazam, .moves = &.{ .Psychic } }},
-        &.{.{ .species = .Starmie, .moves = &.{ .BubbleBeam } }},
+        &.{.{ .species = .Alakazam, .moves = &.{.Psychic} }},
+        &.{.{ .species = .Starmie, .moves = &.{.BubbleBeam} }},
     );
     defer t.deinit();
 
@@ -1268,7 +1268,56 @@ test "StatDownChance effect" {
 // Move.Amnesia: SpecialUp2
 test "StatUp effect" {
     // Raises the target's X by Y stage(s).
-    return error.SkipZigTest;
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+        } else .{
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+            ~CRIT, ~CRIT,
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Scyther, .moves = &.{ .SwordsDance, .Cut } }},
+        &.{.{ .species = .Slowbro, .moves = &.{ .Withdraw, .WaterGun } }},
+    );
+    defer t.deinit();
+
+    t.expected.p1.get(1).hp -= 54;
+    t.expected.p2.get(1).hp -= 37;
+
+    try t.log.expected.move(P1.ident(1), Move.Cut, P2.ident(1), null);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.WaterGun, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+
+    try t.log.expected.move(P1.ident(1), Move.SwordsDance, P1.ident(1), null);
+    try t.log.expected.boost(P1.ident(1), .Attack, 2);
+    try t.log.expected.move(P2.ident(1), Move.Withdraw, P2.ident(1), null);
+    try t.log.expected.boost(P2.ident(1), .Defense, 1);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(@as(i4, 2), t.actual.p1.active.boosts.atk);
+    try expectEqual(@as(i4, 1), t.actual.p2.active.boosts.def);
+
+    t.expected.p1.get(1).hp -= 54;
+    t.expected.p2.get(1).hp -= 49;
+
+    try t.log.expected.move(P1.ident(1), Move.Cut, P2.ident(1), null);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.WaterGun, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+
+    try t.verify();
 }
 
 // Move.{Guillotine,HornDrill,Fissure}
