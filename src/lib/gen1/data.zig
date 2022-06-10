@@ -432,6 +432,8 @@ pub const Effectiveness = enum(u8) {
     Neutral = 10,
     Super = 20,
 
+    pub const neutral: u16 = @enumToInt(Effectiveness.Neutral) * @enumToInt(Effectiveness.Neutral);
+
     comptime {
         assert(@bitSizeOf(Effectiveness) == 8);
     }

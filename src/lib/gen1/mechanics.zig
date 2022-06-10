@@ -429,7 +429,7 @@ fn beforeMove(battle: anytype, player: Player, log: anytype) !BeforeMove {
 
                 // calcDamage just needs a 40 BP physical move, its not actually Pound
                 const move = Move.get(.Pound);
-                if (!try calcDamage(battle, player, player, move, false, log)) return .err;
+                if (!calcDamage(battle, player, player, move, false)) return .err;
                 // Skipping adjustDamage / randomizeDamage / checkHit
                 _ = try applyDamage(battle, player, player.foe(), log);
 
@@ -627,6 +627,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     var ohko = false;
     var immune = false;
     var hits: u4 = 1;
+    var effectiveness = Effectiveness.neutral;
 
     var miss = showdown and (move.target != .Self and
         !(move.effect == .Sleep and foe.active.volatiles.Recharging) and
@@ -658,10 +659,16 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
                 // This can overflow after adjustDamage, but will still be sufficient to OHKO
                 battle.last_damage = if (ohko) 65535 else 0;
                 if (showdown) break :blk; // skip adjustDamage / randomizeDamage
-            } else if (!try calcDamage(battle, player, player.foe(), move, crit, log)) {
+            } else if (!calcDamage(battle, player, player.foe(), move, crit)) {
                 return @as(?Result, Result.Error);
             }
-            immune = battle.last_damage == 0 or try adjustDamage(battle, player, log);
+            if (battle.last_damage == 0) {
+                immune = true;
+                effectiveness = 0;
+            } else {
+                effectiveness = adjustDamage(battle, player);
+                immune = effectiveness == 0;
+            }
             randomizeDamage(battle);
         }
     }
@@ -727,12 +734,20 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     var nullified = false;
     var hit: u4 = 0;
     while (hit < hits) {
-        hit += 1;
+        if (hit == 0) {
+            if (crit) try log.crit(battle.active(player.foe()));
+            if (effectiveness > Effectiveness.neutral) {
+                try log.supereffective(battle.active(player.foe()));
+            } else if (effectiveness < Effectiveness.neutral) {
+                try log.resisted(battle.active(player.foe()));
+            }
+        }
         if (!skip) nullified = try applyDamage(battle, player.foe(), player.foe(), log);
         if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
             try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
         }
         if (hit == 0 and ohko) try log.ohko();
+        hit += 1;
         // If the substitute breaks during a multi-hit attack, the attack ends
         if (nullified or foe.stored().hp == 0) break;
 
@@ -800,8 +815,7 @@ fn calcDamage(
     target_player: Player,
     move: Move.Data,
     crit: bool,
-    log: anytype,
-) !bool {
+) bool {
     assert(move.bp != 0);
 
     const side = battle.side(player);
@@ -837,7 +851,6 @@ fn calcDamage(
     }
 
     const lvl = @as(u32, side.stored().level * @as(u2, if (crit) 2 else 1));
-    if (crit) try log.crit(battle.active(player.foe()));
 
     def = @as(u32, if (move.effect == .Explode) @maximum(def / 2, 1) else def);
 
@@ -858,7 +871,7 @@ fn calcDamage(
     return true;
 }
 
-fn adjustDamage(battle: anytype, player: Player, log: anytype) !bool {
+fn adjustDamage(battle: anytype, player: Player) u16 {
     const side = battle.side(player);
     const foe = battle.foe(player);
     const move = Move.get(side.last_selected_move);
@@ -874,19 +887,7 @@ fn adjustDamage(battle: anytype, player: Player, log: anytype) !bool {
 
     battle.last_damage = d;
 
-    const effectiveness = type1 * type2;
-    if (effectiveness == 0) return true;
-    if (!showdown and d == 0) return false;
-
-    // Can't just check if d is greater or less than battle.last_damage due to overflow
-    const neutral = @enumToInt(Effectiveness.Neutral) * @enumToInt(Effectiveness.Neutral);
-    if (effectiveness > neutral) {
-        try log.supereffective(battle.active(player.foe()));
-    } else if (effectiveness < neutral) {
-        try log.resisted(battle.active(player.foe()));
-    }
-
-    return false;
+    return type1 * type2;
 }
 
 fn randomizeDamage(battle: anytype) void {
