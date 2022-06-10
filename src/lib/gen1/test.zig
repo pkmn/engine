@@ -411,7 +411,48 @@ test "accuracy (normal)" {
 }
 
 test "damage calc" {
-    return error.SkipZigTest;
+    const NO_BRN = MAX;
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, NO_BRN,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG
+        } else .{
+            ~CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, HIT, NO_BRN, ~CRIT, HIT, ~CRIT, MIN_DMG, HIT
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Starmie, .moves = &.{ .WaterGun, .Thunderbolt } }},
+        &.{.{ .species = .Golem, .moves = &.{ .FireBlast, .Strength } }},
+    );
+    defer t.deinit();
+
+    t.expected.p1.get(1).hp -= 70;
+    t.expected.p2.get(1).hp -= 248;
+
+    try t.log.expected.move(P1.ident(1), Move.WaterGun, P2.ident(1), null);
+    try t.log.expected.supereffective(P2.ident(1));
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.FireBlast, P1.ident(1), null);
+    try t.log.expected.crit(P1.ident(1));
+    try t.log.expected.resisted(P1.ident(1));
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(2);
+
+    // STAB super effective non-critical min damage vs. non-STAB resisted critical max damage
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    t.expected.p1.get(1).hp -= 68;
+
+    try t.log.expected.move(P1.ident(1), Move.Thunderbolt, P2.ident(1), null);
+    try t.log.expected.immune(P2.ident(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Strength, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(3);
+
+    // immune vs. normal
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    try t.verify();
 }
 
 test "fainting (single)" {
@@ -1859,7 +1900,7 @@ test "Psywave infinite loop" {
 //             ~CRIT, @enumToInt(Move.PinMissile), CRIT, MIN_DMG, HIT, 3, 3,
 //             NO_CFZ, CRIT, MIN_DMG, HIT,
 //         },
-//          // zig fmt: on
+//         // zig fmt: on
 //         &.{
 //             .{
 //                 .species = .Bulbasaur,

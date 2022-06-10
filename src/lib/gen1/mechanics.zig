@@ -429,7 +429,7 @@ fn beforeMove(battle: anytype, player: Player, log: anytype) !BeforeMove {
 
                 // calcDamage just needs a 40 BP physical move, its not actually Pound
                 const move = Move.get(.Pound);
-                if (!calcDamage(battle, player, player, move, false)) return .err;
+                if (!try calcDamage(battle, player, player, move, false, log)) return .err;
                 // Skipping adjustDamage / randomizeDamage / checkHit
                 _ = try applyDamage(battle, player, player.foe(), log);
 
@@ -658,7 +658,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
                 // This can overflow after adjustDamage, but will still be sufficient to OHKO
                 battle.last_damage = if (ohko) 65535 else 0;
                 if (showdown) break :blk; // skip adjustDamage / randomizeDamage
-            } else if (!calcDamage(battle, player, player.foe(), move, crit)) {
+            } else if (!try calcDamage(battle, player, player.foe(), move, crit, log)) {
                 return @as(?Result, Result.Error);
             }
             immune = battle.last_damage == 0 or try adjustDamage(battle, player, log);
@@ -727,7 +727,6 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     var nullified = false;
     var hit: u4 = 0;
     while (hit < hits) : (hit += 1) {
-        if (hit == 0 and crit) try log.crit(battle.active(player.foe()));
         if (!skip) nullified = try applyDamage(battle, player.foe(), player.foe(), log);
         if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
             try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
@@ -800,7 +799,8 @@ fn calcDamage(
     target_player: Player,
     move: Move.Data,
     crit: bool,
-) bool {
+    log: anytype,
+) !bool {
     assert(move.bp != 0);
 
     const side = battle.side(player);
@@ -836,6 +836,7 @@ fn calcDamage(
     }
 
     const lvl = @as(u32, side.stored().level * @as(u2, if (crit) 2 else 1));
+    if (crit) try log.crit(battle.active(player.foe()));
 
     def = @as(u32, if (move.effect == .Explode) @maximum(def / 2, 1) else def);
 
@@ -864,8 +865,8 @@ fn adjustDamage(battle: anytype, player: Player, log: anytype) !bool {
     var d = battle.last_damage;
     if (side.active.types.includes(move.type)) d +%= d / 2;
 
-    const type1 = @enumToInt(move.type.effectiveness(foe.active.types.type1));
-    const type2 = @enumToInt(move.type.effectiveness(foe.active.types.type2));
+    const type1: u16 = @enumToInt(move.type.effectiveness(foe.active.types.type1));
+    const type2: u16 = @enumToInt(move.type.effectiveness(foe.active.types.type2));
 
     d = d *% type1 / 10;
     d = d *% type2 / 10;
