@@ -1493,7 +1493,60 @@ test "Recoil effect" {
     // If the target lost HP, the user takes recoil damage equal to 1/4 the HP lost by the target,
     // rounded down, but not less than 1 HP. If this move breaks the target's substitute, the user
     // does not take any recoil damage.
-    return error.SkipZigTest;
+    var t = Test(if (showdown)
+        (.{ NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, ~CRIT, MAX_DMG, NOP, HIT, ~CRIT, MIN_DMG })
+    else
+        (.{ ~CRIT, MIN_DMG, HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, MIN_DMG, HIT })).init(
+        &.{
+            .{ .species = .Slowpoke, .hp = 1, .moves = &.{.Teleport} },
+            .{ .species = .Rhydon, .moves = &.{ .TakeDown, .Teleport } },
+        },
+        &.{.{ .species = .Tauros, .moves = &.{ .DoubleEdge, .Substitute } }},
+    );
+    defer t.deinit();
+
+    t.expected.p1.get(1).hp -= 1;
+    t.expected.p2.get(1).hp -= 1;
+
+    try t.log.expected.move(P2.ident(1), Move.DoubleEdge, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.damageOf(P2.ident(1), t.expected.p2.get(1), .RecoilOf, P1.ident(1));
+    try t.log.expected.faint(P1.ident(1), true);
+
+    // Recoil inflicts at least 1 HP
+    try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(move(1), move(1)));
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(swtch(2), .{}));
+
+    t.expected.p2.get(1).hp -= 88;
+
+    try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Substitute);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P1.ident(2), Move.TakeDown, P2.ident(1), null);
+    try t.log.expected.end(P2.ident(1), .Substitute);
+    try t.log.expected.turn(3);
+
+    // Deals no damage if the move breaks the target's Substitute
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+
+    t.expected.p1.get(2).hp -= 48;
+    t.expected.p2.get(1).hp -= 12;
+
+    try t.log.expected.move(P2.ident(1), Move.DoubleEdge, P1.ident(2), null);
+    try t.log.expected.resisted(P1.ident(2));
+    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
+    try t.log.expected.damageOf(P2.ident(1), t.expected.p2.get(1), .RecoilOf, P1.ident(2));
+    try t.log.expected.move(P1.ident(2), Move.Teleport, P1.ident(2), null);
+    try t.log.expected.turn(4);
+
+    // Inflicts 1/4 of damage dealt to user as recoil
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+
+    try t.verify();
 }
 
 // Move.Struggle

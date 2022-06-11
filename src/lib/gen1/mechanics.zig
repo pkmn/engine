@@ -1782,8 +1782,8 @@ pub const Effects = struct {
         var side = battle.side(player);
         var stored = side.stored();
 
-        const damage = battle.last_damage /
-            @as(u8, if (side.last_selected_move == .Struggle) 2 else 4);
+        const damage = @maximum(battle.last_damage /
+            @as(u8, if (side.last_selected_move == .Struggle) 2 else 4), 1);
         stored.hp = @maximum(stored.hp - damage, 0);
 
         try log.damageOf(battle.active(player), stored, .RecoilOf, battle.active(player.foe()));
