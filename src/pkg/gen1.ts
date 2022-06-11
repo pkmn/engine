@@ -387,6 +387,8 @@ export class Pokemon implements Gen1.Pokemon {
         } else {
           volatiles[volatile] = {};
         }
+      } else {
+        volatiles[volatile] = undefined;
       }
     }
     return volatiles;
