@@ -992,7 +992,7 @@ fn applyDamage(battle: anytype, target_player: Player, sub_player: Player, log: 
     // isn't guaranteed to be the same (eg. crash or confusion damage) or to even have a Substitute
     if (target.active.volatiles.Substitute) {
         var subbed = battle.side(sub_player);
-        assert(subbed.active.volatiles.Substitute or subbed.active.volatiles.substitute == 0);
+        if (!subbed.active.volatiles.Substitute) return false;
         if (battle.last_damage >= subbed.active.volatiles.substitute) {
             subbed.active.volatiles.substitute = 0;
             subbed.active.volatiles.Substitute = false;

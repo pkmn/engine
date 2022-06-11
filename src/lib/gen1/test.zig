@@ -1432,7 +1432,60 @@ test "JumpKick effect" {
     // If this attack misses the target, the user takes 1 HP of crash damage. If the user has a
     // substitute, the crash damage is dealt to the target's substitute if it has one, otherwise no
     // crash damage is dealt.
-    return error.SkipZigTest;
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, ~HIT, HIT, CRIT, MAX_DMG, NOP, NOP, ~HIT, ~HIT
+        } else .{
+            ~CRIT, MIN_DMG, ~HIT, CRIT, MAX_DMG, HIT, ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, ~HIT
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Hitmonlee, .moves = &.{ .JumpKick, .Substitute } }},
+        &.{.{ .species = .Hitmonlee, .level = 99, .moves = &.{ .HighJumpKick, .Substitute } }},
+    );
+    defer t.deinit();
+
+    t.expected.p1.get(1).hp -= 75;
+    t.expected.p2.get(1).hp -= 75;
+
+    try t.log.expected.move(P1.ident(1), Move.Substitute, P1.ident(1), null);
+    try t.log.expected.start(P1.ident(1), .Substitute);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Substitute);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+
+    try t.log.expected.move(P1.ident(1), Move.JumpKick, P2.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P1.ident(1));
+    try t.log.expected.activate(P2.ident(1), .Substitute);
+    try t.log.expected.move(P2.ident(1), Move.HighJumpKick, P1.ident(1), null);
+    try t.log.expected.crit(P1.ident(1));
+    try t.log.expected.end(P1.ident(1), .Substitute);
+    try t.log.expected.turn(3);
+
+    // Jump Kick causes crash damage to the opponent's sub if both Pokémon have one
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    t.expected.p1.get(1).hp -= 1;
+
+    try t.log.expected.move(P1.ident(1), Move.JumpKick, P2.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P1.ident(1));
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.HighJumpKick, P1.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    try t.log.expected.turn(4);
+
+    // Jump Kick causes 1 HP crash damage unless only the user who crashed has a Substitute
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.verify();
 }
 
 // Move.{TakeDown,DoubleEdge,Submission}
