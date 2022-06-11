@@ -2218,7 +2218,7 @@ describe('Gen 1', () => {
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(0);
 
-    // Deals no damage if the move breaks the target's Substitute
+    // Deals no recoil damage if the move breaks the target's Substitute
     battle.makeChoices('move 2', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(1);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp);

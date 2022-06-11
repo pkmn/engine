@@ -638,9 +638,6 @@ test "Endless Battle Clause (initial)" {
     );
     defer t.deinit();
 
-    t.expected.p1.get(1).move(1).pp = 0;
-    t.expected.p2.get(1).move(1).pp = 0;
-
     t.actual.p1.get(1).move(1).pp = 0;
     t.actual.p2.get(1).move(1).pp = 0;
 
@@ -1184,7 +1181,6 @@ test "StatDown effect" {
     try t.log.expected.turn(4);
 
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
-
     try t.verify();
 }
 
@@ -1254,7 +1250,6 @@ test "StatDownChance effect" {
     try t.log.expected.turn(4);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-
     try t.verify();
 }
 
@@ -1316,7 +1311,6 @@ test "StatUp effect" {
     try t.log.expected.turn(4);
 
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
-
     try t.verify();
 }
 
@@ -1435,9 +1429,9 @@ test "JumpKick effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, ~HIT, HIT, CRIT, MAX_DMG, NOP, NOP, ~HIT, ~HIT
+            NOP, NOP, ~HIT, HIT, CRIT, MAX_DMG, NOP, NOP, ~HIT, ~HIT,
         } else .{
-            ~CRIT, MIN_DMG, ~HIT, CRIT, MAX_DMG, HIT, ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, ~HIT
+            ~CRIT, MIN_DMG, ~HIT, CRIT, MAX_DMG, HIT, ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, ~HIT,
         }
     // zig fmt: on
     ).init(
@@ -1484,7 +1478,6 @@ test "JumpKick effect" {
 
     // Jump Kick causes 1 HP crash damage unless only the user who crashed has a Substitute
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-
     try t.verify();
 }
 
@@ -1545,7 +1538,6 @@ test "Recoil effect" {
 
     // Inflicts 1/4 of damage dealt to user as recoil
     try expectEqual(Result.Default, try t.update(move(2), move(1)));
-
     try t.verify();
 }
 
@@ -1554,7 +1546,79 @@ test "Struggle effect" {
     // Deals Normal-type damage. If this move was successful, the user takes damage equal to 1/2 the
     // HP lost by the target, rounded down, but not less than 1 HP. This move is automatically used
     // if none of the user's known moves can be selected.
-    return error.SkipZigTest;
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, HIT, ~CRIT, MIN_DMG,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG,
+        } else .{
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{
+            .{ .species = .Abra, .hp = 64, .moves = &.{ .Substitute, .Teleport } },
+            .{ .species = .Golem, .moves = &.{.Harden} },
+        },
+        &.{.{ .species = .Arcanine, .moves = &.{.Teleport} }},
+    );
+    defer t.deinit();
+
+    t.actual.p2.get(1).move(1).pp = 1;
+
+    t.expected.p1.get(1).hp -= 63;
+
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.move(P1.ident(1), Move.Substitute, P1.ident(1), null);
+    try t.log.expected.start(P1.ident(1), .Substitute);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(2);
+
+    // Struggle only becomes an option if the user has no PP left
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(@as(u8, 0), t.actual.p2.get(1).move(1).pp);
+    const n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{move(0)}, choices[0..n]);
+
+    try t.log.expected.move(P2.ident(1), Move.Struggle, P1.ident(1), null);
+    try t.log.expected.end(P1.ident(1), .Substitute);
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.turn(3);
+
+    // Deals no recoil damage if the move breaks the target's Substitute
+    try expectEqual(Result.Default, try t.update(move(2), move(0)));
+
+    t.expected.p1.get(1).hp -= 1;
+    t.expected.p2.get(1).hp -= 1;
+
+    try t.log.expected.move(P2.ident(1), Move.Struggle, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.damageOf(P2.ident(1), t.expected.p2.get(1), .RecoilOf, P1.ident(1));
+    try t.log.expected.faint(P1.ident(1), true);
+
+    // Struggle recoil inflicts at least 1 HP
+    try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(move(2), move(0)));
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(swtch(2), .{}));
+
+    t.expected.p1.get(2).hp -= 16;
+    t.expected.p2.get(1).hp -= 8;
+
+    try t.log.expected.move(P2.ident(1), Move.Struggle, P1.ident(2), null);
+    try t.log.expected.resisted(P1.ident(2));
+    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
+    try t.log.expected.damageOf(P2.ident(1), t.expected.p2.get(1), .RecoilOf, P1.ident(2));
+    try t.log.expected.move(P1.ident(2), Move.Harden, P1.ident(2), null);
+    try t.log.expected.boost(P1.ident(2), .Defense, 1);
+    try t.log.expected.turn(5);
+
+    // Respects type effectiveness and inflicts 1/2 of damage dealt to user as recoil
+    try expectEqual(Result.Default, try t.update(move(1), move(0)));
+    try t.verify();
 }
 
 // Move.{Thrash,PetalDance}

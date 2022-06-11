@@ -181,7 +181,7 @@ fn selectMove(
         };
 
         assert(struggle);
-        side.last_selected_move = .Struggle;
+        saveMove(battle, player, choice);
     } else {
         saveMove(battle, player, choice);
     }
@@ -193,14 +193,18 @@ fn saveMove(battle: anytype, player: Player, choice: ?Choice) void {
     var side = battle.side(player);
 
     if (choice) |c| {
-        assert(c.type == .Move and c.data != 0);
-        assert(side.active.volatiles.disabled.move != c.data);
-        const move = side.active.move(c.data);
-        // You cannot *select* a move with 0 PP (except on Pokémon Showdown where that is sometimes
-        // required...), but a 0 PP move can be used automatically
-        assert(showdown or move.pp != 0);
+        assert(c.type == .Move);
+        if (c.data == 0) {
+            side.last_selected_move = .Struggle;
+        } else {
+            assert(side.active.volatiles.disabled.move != c.data);
+            const move = side.active.move(c.data);
+            // You cannot *select* a move with 0 PP (except on Pokémon Showdown where that is
+            // sometimes required...), but a 0 PP move can be used automatically
+            assert(showdown or move.pp != 0);
 
-        side.last_selected_move = move.id;
+            side.last_selected_move = move.id;
+        }
         if (player == .P1) {
             battle.last_selected_indexes.p1 = c.data;
         } else {

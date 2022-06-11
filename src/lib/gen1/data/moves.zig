@@ -1633,7 +1633,6 @@ pub const Move = enum(u8) {
         AllOthers,
         Depends,
         Other,
-        RandomFoe,
         // TODO: resolve or resolve + run?
         Allies,
         Ally,
@@ -1642,9 +1641,10 @@ pub const Move = enum(u8) {
         // resolve + run
         Foes,
         FoeSide,
+        RandomFoe,
 
         pub inline fn resolves(target: Target) bool {
-            return @enumToInt(target) >= @enumToInt(Target.Other);
+            return @enumToInt(target) >= @enumToInt(Target.AllOthers);
         }
 
         pub inline fn runs(target: Target) bool {

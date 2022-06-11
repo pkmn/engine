@@ -28,7 +28,6 @@ pub const Move = enum({{{ Move.type }}}) {
         AllOthers,
         Depends,
         Other,
-        RandomFoe,
         // TODO: resolve or resolve + run?
         Allies,
         Ally,
@@ -37,9 +36,10 @@ pub const Move = enum({{{ Move.type }}}) {
         // resolve + run
         Foes,
         FoeSide,
+        RandomFoe,
 
         pub inline fn resolves(target: Target) bool {
-            return @enumToInt(target) >= @enumToInt(Target.Other);
+            return @enumToInt(target) >= @enumToInt(Target.AllOthers);
         }
 
         pub inline fn runs(target: Target) bool {
