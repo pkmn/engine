@@ -204,11 +204,11 @@ fn saveMove(battle: anytype, player: Player, choice: ?Choice) void {
             assert(showdown or move.pp != 0);
 
             side.last_selected_move = move.id;
-        }
-        if (player == .P1) {
-            battle.last_selected_indexes.p1 = c.data;
-        } else {
-            battle.last_selected_indexes.p2 = c.data;
+            if (player == .P1) {
+                battle.last_selected_indexes.p1 = c.data;
+            } else {
+                battle.last_selected_indexes.p2 = c.data;
+            }
         }
     } else {
         assert(showdown);
