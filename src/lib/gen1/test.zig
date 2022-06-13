@@ -1804,17 +1804,139 @@ test "Counter effect" {
 test "Heal effect" {
     // The user restores 1/2 of its maximum HP, rounded down. Fails if (user's maximum HP - user's
     // current HP + 1) is divisible by 256.
-    // https://pkmn.cc/bulba-glitch-1#HP_recovery_move_failure
-    return error.SkipZigTest;
+    // https://pkmn.cc/bulba-glitch-1#HP_re covery_move_failure
+    var t = Test((if (showdown)
+        (.{ NOP, NOP, HIT, CRIT, MAX_DMG, HIT, ~CRIT, MIN_DMG })
+    else
+        (.{ CRIT, MAX_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
+        &.{.{ .species = .Alakazam, .moves = &.{ .Recover, .MegaKick } }},
+        &.{.{ .species = .Chansey, .hp = 448, .moves = &.{ .SoftBoiled, .MegaPunch } }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Recover, P1.ident(1), null);
+    try t.log.expected.fail(P1.ident(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.SoftBoiled, P2.ident(1), null);
+    try t.log.expected.fail(P2.ident(1), .None);
+    try t.log.expected.turn(2);
+
+    // Fails at full health or at specific fractions
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    t.expected.p1.get(1).hp -= 51;
+    t.expected.p2.get(1).hp -= 362;
+
+    try t.log.expected.move(P1.ident(1), Move.MegaKick, P2.ident(1), null);
+    try t.log.expected.crit(P2.ident(1));
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.MegaPunch, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+
+    t.expected.p1.get(1).hp += 51;
+    t.expected.p2.get(1).hp += 351;
+
+    try t.log.expected.move(P1.ident(1), Move.Recover, P1.ident(1), null);
+    try t.log.expected.heal(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.SoftBoiled, P2.ident(1), null);
+    try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(4);
+
+    // Heals 1/2 of maximum HP
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.verify();
 }
 
 // Move.Rest
-test "Heal (Rest) effect" {
+test "Rest effect" {
     // The user falls asleep for the next two turns and restores all of its HP, curing itself of any
     // non-volatile status condition in the process. This does not remove the user's stat penalty
     // for burn or paralysis. Fails if the user has full HP.
     // https://pkmn.cc/bulba-glitch-1#HP_recovery_move_failure
-    return error.SkipZigTest;
+    const PROC = comptime ranged(63, 256) - 1;
+    const NO_PROC = PROC + 1;
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, HIT, NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_PROC, NOP, MAX,
+            NOP, HIT, ~CRIT, MIN_DMG,
+        } else .{
+            HIT, ~CRIT, MIN_DMG, HIT, NO_PROC, ~CRIT, MIN_DMG, HIT
+        }
+    // zig fmt: on
+    ).init(
+        &.{
+            .{ .species = .Porygon, .moves = &.{ .ThunderWave, .Tackle, .Rest } },
+            .{ .species = .Dragonair, .moves = &.{.Slam} },
+        },
+        &.{
+            .{ .species = .Chansey, .hp = 192, .moves = &.{ .Rest, .Teleport } },
+            .{ .species = .Jynx, .moves = &.{.Hypnosis} },
+        },
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P2.ident(1), Move.Rest, P2.ident(1), null);
+    try t.log.expected.fail(P2.ident(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
+    t.expected.p2.get(1).status = Status.init(.PAR);
+    try t.log.expected.status(P2.ident(1), Status.init(.PAR), .None);
+    try t.log.expected.turn(2);
+
+    // Fails at specific fractions
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(Status.init(.PAR), t.actual.p2.get(1).status);
+    try expectEqual(@as(u16, 49), t.actual.p2.active.stats.spe);
+    try expectEqual(@as(u16, 198), t.actual.p2.get(1).stats.spe);
+
+    try t.log.expected.move(P1.ident(1), Move.Tackle, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 77;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Rest, P2.ident(1), null);
+    t.expected.p2.get(1).hp += 588;
+    t.expected.p2.get(1).status = Status.slf(2);
+    try t.log.expected.statusFrom(P2.ident(1), Status.slf(2), Move.Rest);
+    try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .Silent);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    try expectEqual(Status.slf(2), t.actual.p2.get(1).status);
+
+    var n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2), move(3) }, choices[0..n]);
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    if (showdown) {
+        try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+    } else {
+        try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(0) }, choices[0..n]);
+    }
+
+    t.expected.p2.get(1).hp -= 77;
+
+    try t.log.expected.move(P1.ident(1), Move.Tackle, P2.ident(1), null);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    t.expected.p2.get(1).status -= 1;
+    try t.log.expected.cant(P2.ident(1), .Sleep);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.Rest, P1.ident(1), null);
+    try t.log.expected.fail(P1.ident(1), .None);
+    t.expected.p2.get(1).status = 0;
+    try t.log.expected.curestatus(P2.ident(1), Status.slf(1), .Message);
+    try t.log.expected.turn(5);
+
+    // Fails at full HP / Last two turns but stat penalty still remains after waking
+    try expectEqual(Result.Default, try t.update(move(3), move(1)));
+    try expectEqual(@as(u8, 0), t.actual.p2.get(1).status);
+    try expectEqual(@as(u16, 49), t.actual.p2.active.stats.spe);
+    try expectEqual(@as(u16, 198), t.actual.p2.get(1).stats.spe);
+
+    try t.verify();
 }
 
 // Move.{Absorb,MegaDrain,LeechLife}
@@ -2549,10 +2671,10 @@ fn Test(comptime rolls: anytype) type {
         }
 
         pub fn verify(t: *Self) !void {
+            if (trace) try expectLog(t.buf.expected.items, t.buf.actual.items);
             for (t.expected.p1.pokemon) |p, i| try expectEqual(p.hp, t.actual.p1.pokemon[i].hp);
             for (t.expected.p2.pokemon) |p, i| try expectEqual(p.hp, t.actual.p2.pokemon[i].hp);
             try expect(t.battle.actual.rng.exhausted());
-            if (trace) try expectLog(t.buf.expected.items, t.buf.actual.items);
         }
     };
 }

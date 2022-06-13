@@ -2912,7 +2912,7 @@ describe('Gen 1', () => {
     ]);
   });
 
-  test('Heal (Rest) effect', () => {
+  test('Rest effect', () => {
     const battle = startBattle([
       SRF_RES, HIT, SS_MOD, SRF_RES, HIT, NO_CRIT, MIN_DMG, PAR_CAN, SS_MOD, SLP(5),
       SRF_RES, HIT, NO_CRIT, MIN_DMG,

@@ -1573,7 +1573,7 @@ pub const Effects = struct {
 
         // GLITCH: HP recovery move failure glitches
         const delta = stored.stats.hp - stored.hp;
-        if (delta == 0 or delta & 255 == 255) return;
+        if (delta == 0 or delta & 255 == 255) return try log.fail(ident, .None);
 
         const rest = side.last_selected_move == .Rest;
         if (rest) {
@@ -1583,7 +1583,7 @@ pub const Effects = struct {
             try log.statusFrom(ident, stored.status, Move.Rest);
             stored.hp = stored.stats.hp;
         } else {
-            stored.hp = @maximum(stored.stats.hp, stored.hp + (stored.stats.hp / 2));
+            stored.hp = @minimum(stored.stats.hp, stored.hp + (stored.stats.hp / 2));
         }
         try log.heal(ident, stored, if (rest) Heal.Silent else Heal.None);
     }
