@@ -2079,14 +2079,120 @@ test "Mimic effect" {
 test "LightScreen effect" {
     // While the user remains active, its Special is doubled when taking damage. Critical hits
     // ignore this effect. If any Pokemon uses Haze, this effect ends.
-    return error.SkipZigTest;
+    var t = Test((if (showdown)
+        (.{ NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, CRIT, MIN_DMG })
+    else
+        (.{ ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, CRIT, MIN_DMG, HIT }))).init(
+        &.{.{ .species = .Chansey, .moves = &.{ .LightScreen, .Teleport } }},
+        &.{.{ .species = .Vaporeon, .moves = &.{ .WaterGun, .Haze } }},
+    );
+    defer t.deinit();
+
+    t.expected.p1.get(1).hp -= 45;
+
+    try t.log.expected.move(P2.ident(1), Move.WaterGun, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.LightScreen, P1.ident(1), null);
+    try t.log.expected.start(P1.ident(1), .LightScreen);
+    try t.log.expected.turn(2);
+
+    // Water Gun does normal damage before Light Screen
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expect(t.actual.p1.active.volatiles.LightScreen);
+
+    t.expected.p1.get(1).hp -= 23;
+
+    try t.log.expected.move(P2.ident(1), Move.WaterGun, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.turn(3);
+
+    // Water Gun's damage is reduced after Light Screen
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+
+    t.expected.p1.get(1).hp -= 87;
+
+    try t.log.expected.move(P2.ident(1), Move.WaterGun, P1.ident(1), null);
+    try t.log.expected.crit(P1.ident(1));
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.turn(4);
+
+    // Critical hits ignore Light Screen
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+
+    try t.log.expected.move(P2.ident(1), Move.Haze, P2.ident(1), null);
+    try t.log.expected.activate(P2.ident(1), .Haze);
+    try t.log.expected.clearallboost();
+    try t.log.expected.end(P1.ident(1), .LightScreen);
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.turn(5);
+
+    // Haze removes Light Screen
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    try expect(!t.actual.p1.active.volatiles.LightScreen);
+
+    try t.verify();
 }
 
 // Move.Reflect
 test "Reflect effect" {
     // While the user remains active, its Defense is doubled when taking damage. Critical hits
     // ignore this protection. This effect can be removed by Haze.
-    return error.SkipZigTest;
+    var t = Test((if (showdown)
+        (.{ NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, CRIT, MIN_DMG })
+    else
+        (.{ ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, CRIT, MIN_DMG, HIT }))).init(
+        &.{.{ .species = .Chansey, .moves = &.{ .Reflect, .Teleport } }},
+        &.{.{ .species = .Vaporeon, .moves = &.{ .Tackle, .Haze } }},
+    );
+    defer t.deinit();
+
+    t.expected.p1.get(1).hp -= 54;
+
+    try t.log.expected.move(P2.ident(1), Move.Tackle, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Reflect, P1.ident(1), null);
+    try t.log.expected.start(P1.ident(1), .Reflect);
+    try t.log.expected.turn(2);
+
+    // Tackle does normal damage before Reflect
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expect(t.actual.p1.active.volatiles.Reflect);
+
+    t.expected.p1.get(1).hp -= 28;
+
+    try t.log.expected.move(P2.ident(1), Move.Tackle, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.turn(3);
+
+    // Tackle's damage is reduced after Reflect
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+
+    t.expected.p1.get(1).hp -= 104;
+
+    try t.log.expected.move(P2.ident(1), Move.Tackle, P1.ident(1), null);
+    try t.log.expected.crit(P1.ident(1));
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.turn(4);
+
+    // Critical hits ignore Reflect
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+
+    try t.log.expected.move(P2.ident(1), Move.Haze, P2.ident(1), null);
+    try t.log.expected.activate(P2.ident(1), .Haze);
+    try t.log.expected.clearallboost();
+    try t.log.expected.end(P1.ident(1), .Reflect);
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.turn(5);
+
+    // Haze removes Reflect
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    try expect(!t.actual.p1.active.volatiles.Reflect);
+
+    try t.verify();
 }
 
 // Move.Haze
