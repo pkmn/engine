@@ -2010,7 +2010,7 @@ pub const Effects = struct {
         }
 
         // GLITCH: Stat modification errors glitch
-        statusModify(battle.foe(player).stored().status, stats);
+        statusModify(battle.foe(player).stored().status, &battle.foe(player).active.stats);
     }
 
     fn unboost(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {

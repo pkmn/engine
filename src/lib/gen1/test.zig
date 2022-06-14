@@ -2555,7 +2555,127 @@ test "Invulnerability glitch" {
 test "Stat modification errors" {
     // https://pkmn.cc/bulba-glitch-1#Stat_modification_errors
     // https://glitchcity.wiki/Stat_modification_glitches
-    return error.SkipZigTest;
+    const PROC = comptime ranged(63, 256) - 1;
+    const NO_PROC = PROC + 1;
+    {
+        var t = Test((if (showdown)
+            (.{ NOP, NOP, HIT, HIT, NOP, NOP, NO_PROC, HIT, NOP, NO_PROC, HIT })
+        else
+            (.{ ~CRIT, HIT, HIT, NO_PROC, ~CRIT, HIT, ~CRIT, ~CRIT, NO_PROC, ~CRIT, HIT }))).init(
+            &.{.{
+                .species = .Bulbasaur,
+                .level = 6,
+                .stats = .{},
+                .moves = &.{ .StunSpore, .Growth },
+            }},
+            &.{.{ .species = .Pidgey, .level = 56, .stats = .{}, .moves = &.{.SandAttack} }},
+        );
+        defer t.deinit();
+        try t.start();
+
+        try expectEqual(@as(u16, 12), t.actual.p1.active.stats.spe);
+        try expectEqual(@as(u16, 84), t.actual.p2.active.stats.spe);
+
+        try t.log.expected.move(P2.ident(1), Move.SandAttack, P1.ident(1), null);
+        try t.log.expected.unboost(P1.ident(1), .Accuracy, 1);
+        try t.log.expected.move(P1.ident(1), Move.StunSpore, P2.ident(1), null);
+        try t.log.expected.status(P2.ident(1), Status.init(.PAR), .None);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(@as(u16, 12), t.actual.p1.active.stats.spe);
+        try expectEqual(@as(u16, 21), t.actual.p2.active.stats.spe);
+
+        try t.log.expected.move(P2.ident(1), Move.SandAttack, P1.ident(1), null);
+        try t.log.expected.unboost(P1.ident(1), .Accuracy, 1);
+        try t.log.expected.move(P1.ident(1), Move.Growth, P1.ident(1), null);
+        try t.log.expected.boost(P1.ident(1), .SpecialAttack, 1);
+        try t.log.expected.boost(P1.ident(1), .SpecialDefense, 1);
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(move(2), move(1)));
+        try expectEqual(@as(u16, 12), t.actual.p1.active.stats.spe);
+        try expectEqual(@as(u16, 5), t.actual.p2.active.stats.spe);
+
+        try t.log.expected.move(P1.ident(1), Move.Growth, P1.ident(1), null);
+        try t.log.expected.boost(P1.ident(1), .SpecialAttack, 1);
+        try t.log.expected.boost(P1.ident(1), .SpecialDefense, 1);
+        try t.log.expected.move(P2.ident(1), Move.SandAttack, P1.ident(1), null);
+        try t.log.expected.unboost(P1.ident(1), .Accuracy, 1);
+        try t.log.expected.turn(4);
+
+        try expectEqual(Result.Default, try t.update(move(2), move(1)));
+        try expectEqual(@as(u16, 12), t.actual.p1.active.stats.spe);
+        try expectEqual(@as(u16, 1), t.actual.p2.active.stats.spe);
+
+        try t.verify();
+    }
+    {
+        var t = Test((if (showdown)
+            (.{ NOP, HIT, NOP, NOP, NO_PROC, NOP, HIT, NOP, PROC, NOP, HIT, NOP, NOP, HIT, PROC })
+        else
+            (.{ HIT, NO_PROC, ~CRIT, ~CRIT, HIT, PROC, ~CRIT, HIT, ~CRIT, HIT, PROC }))).init(
+            &.{
+                .{
+                    .species = .Bulbasaur,
+                    .level = 6,
+                    .stats = .{},
+                    .moves = &.{ .StunSpore, .Growth },
+                },
+                .{ .species = .Cloyster, .level = 82, .stats = .{}, .moves = &.{.Withdraw} },
+            },
+            &.{.{
+                .species = .Rattata,
+                .level = 2,
+                .stats = .{},
+                .moves = &.{ .ThunderWave, .TailWhip, .StringShot },
+            }},
+        );
+        defer t.deinit();
+        try t.start();
+
+        try expectEqual(@as(u16, 144), t.actual.p1.pokemon[1].stats.spe);
+        try expectEqual(@as(u16, 8), t.actual.p2.active.stats.spe);
+
+        try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+        try t.log.expected.move(P2.ident(1), Move.ThunderWave, P1.ident(2), null);
+        try t.log.expected.status(P1.ident(2), Status.init(.PAR), .None);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(swtch(2), move(1)));
+        try expectEqual(@as(u16, 36), t.actual.p1.active.stats.spe);
+        try expectEqual(@as(u16, 8), t.actual.p2.active.stats.spe);
+
+        try t.log.expected.move(P1.ident(2), Move.Withdraw, P1.ident(2), null);
+        try t.log.expected.boost(P1.ident(2), .Defense, 1);
+        try t.log.expected.move(P2.ident(1), Move.TailWhip, P1.ident(2), null);
+        try t.log.expected.unboost(P1.ident(2), .Defense, 1);
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(2)));
+        try expectEqual(@as(u16, 9), t.actual.p1.active.stats.spe);
+        try expectEqual(@as(u16, 8), t.actual.p2.active.stats.spe);
+
+        try t.log.expected.cant(P1.ident(2), .Paralysis);
+        try t.log.expected.move(P2.ident(1), Move.TailWhip, P1.ident(2), null);
+        try t.log.expected.unboost(P1.ident(2), .Defense, 1);
+        try t.log.expected.turn(4);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(2)));
+        try expectEqual(@as(u16, 2), t.actual.p1.active.stats.spe);
+        try expectEqual(@as(u16, 8), t.actual.p2.active.stats.spe);
+
+        try t.log.expected.move(P2.ident(1), Move.StringShot, P1.ident(2), null);
+        try t.log.expected.unboost(P1.ident(2), .Speed, 1);
+        try t.log.expected.cant(P1.ident(2), .Paralysis);
+        try t.log.expected.turn(5);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(3)));
+        try expectEqual(@as(u16, 23), t.actual.p1.active.stats.spe);
+        try expectEqual(@as(u16, 8), t.actual.p2.active.stats.spe);
+
+        try t.verify();
+    }
 }
 
 test "Stat down modifier overflow glitch" {
