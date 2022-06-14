@@ -131,12 +131,13 @@
     "Weak"
   ],
   "Activate": [
-    "Confusion",
     "Bide",
+    "Confusion",
     "Haze",
+    "Mist",
+    "Splash",
     "Struggle",
-    "Substitute",
-    "Splash"
+    "Substitute"
   ],
   "Start": [
     "Bide",

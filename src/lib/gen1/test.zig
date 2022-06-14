@@ -1779,7 +1779,80 @@ test "Mist effect" {
     // While the user remains active, it is protected from having its stat stages lowered by other
     // Pokemon, unless caused by the secondary effect of a move. Fails if the user already has the
     // effect. If any Pokemon uses Haze, this effect ends.
-    return error.SkipZigTest;
+    const PROC = comptime ranged(85, 256) - 1;
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, HIT, ~CRIT, MIN_DMG, PROC,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT,
+            NOP, HIT, ~CRIT, MIN_DMG,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT,
+        } else .{
+            ~CRIT, MIN_DMG, HIT, PROC,
+            ~CRIT, MIN_DMG, HIT, ~CRIT,
+            ~CRIT, MIN_DMG, HIT,
+            ~CRIT, MIN_DMG, HIT, ~CRIT, HIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Articuno, .moves = &.{ .Mist, .Peck } }},
+        &.{.{ .species = .Vaporeon, .moves = &.{ .AuroraBeam, .Growl, .Haze } }},
+    );
+    defer t.deinit();
+
+    t.expected.p1.get(1).hp -= if (showdown) 43 else 42;
+
+    try t.log.expected.move(P1.ident(1), Move.Mist, P1.ident(1), null);
+    try t.log.expected.start(P1.ident(1), .Mist);
+    try t.log.expected.move(P2.ident(1), Move.AuroraBeam, P1.ident(1), null);
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.unboost(P1.ident(1), .Attack, 1);
+    try t.log.expected.turn(2);
+
+    // Mist doesn't protect against secondary effects
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expect(t.actual.p1.active.volatiles.Mist);
+    try expectEqual(@as(i4, -1), t.actual.p1.active.boosts.atk);
+
+    t.expected.p2.get(1).hp -= 31;
+
+    try t.log.expected.move(P1.ident(1), Move.Peck, P2.ident(1), null);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Growl, P1.ident(1), null);
+    try t.log.expected.activate(P1.ident(1), .Mist);
+    try t.log.expected.fail(P1.ident(1), .None);
+    try t.log.expected.turn(3);
+
+    // Mist does protect against primary stat lowering effects
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    try expectEqual(@as(i4, -1), t.actual.p1.active.boosts.atk);
+
+    t.expected.p2.get(1).hp -= 31;
+
+    try t.log.expected.move(P1.ident(1), Move.Peck, P2.ident(1), null);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Haze, P2.ident(1), null);
+    try t.log.expected.activate(P2.ident(1), .Haze);
+    try t.log.expected.clearallboost();
+    try t.log.expected.end(P1.ident(1), .Mist);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(3)));
+
+    t.expected.p2.get(1).hp -= 48;
+
+    try t.log.expected.move(P1.ident(1), Move.Peck, P2.ident(1), null);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Growl, P1.ident(1), null);
+    try t.log.expected.unboost(P1.ident(1), .Attack, 1);
+    try t.log.expected.turn(5);
+
+    // Haze ends Mist's effect
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    try expect(!t.actual.p1.active.volatiles.Mist);
+    try expectEqual(@as(i4, -1), t.actual.p1.active.boosts.atk);
+
+    try t.verify();
 }
 
 // Move.HyperBeam

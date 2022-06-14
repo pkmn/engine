@@ -630,12 +630,13 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     var crit = false;
     var ohko = false;
     var immune = false;
+    var mist = false;
     var hits: u4 = 1;
     var effectiveness = Effectiveness.neutral;
 
     var miss = showdown and (move.target != .Self and
         !(move.effect == .Sleep and foe.active.volatiles.Recharging) and
-        !moveHit(battle, player, move, &immune));
+        !moveHit(battle, player, move, &immune, &mist));
     assert(!immune);
 
     const skip = move.bp == 0 and move.effect != .OHKO;
@@ -680,7 +681,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     miss = if (showdown or skip)
         miss
     else
-        (!moveHit(battle, player, move, &immune) or battle.last_damage == 0);
+        (!moveHit(battle, player, move, &immune, &mist) or battle.last_damage == 0);
 
     assert(miss or battle.last_damage > 0 or skip or showdown);
     assert(!(ohko and immune));
@@ -705,6 +706,9 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
             try log.immune(foe_ident, .OHKO);
         } else if (immune) {
             try log.immune(foe_ident, .None);
+        } else if (mist) {
+            try log.activate(foe_ident, .Mist);
+            try log.fail(foe_ident, .None);
         } else {
             try log.lastmiss();
             try log.miss(battle.active(player));
@@ -878,23 +882,32 @@ fn calcDamage(
 fn adjustDamage(battle: anytype, player: Player) u16 {
     const side = battle.side(player);
     const foe = battle.foe(player);
+    const types = foe.active.types;
     const move = Move.get(side.last_selected_move);
 
     var d = battle.last_damage;
     if (side.active.types.includes(move.type)) d +%= d / 2;
 
-    const type1: u16 = @enumToInt(move.type.effectiveness(foe.active.types.type1));
-    d = d *% type1 / 10;
+    const neutral = @enumToInt(Effectiveness.Neutral);
+    const type1: u16 = @enumToInt(move.type.effectiveness(types.type1));
+    const type2: u16 = @enumToInt(move.type.effectiveness(types.type2));
 
-    if (foe.active.types.type1 == foe.active.types.type2) {
+    const total = if (types.type1 == types.type2) type1 * neutral else type1 * type2;
+    // Pokémon Showdown considers the "total type" effectiveness instead of the individual types
+    if (showdown and total == Effectiveness.neutral) {
         battle.last_damage = d;
-        return type1 * @enumToInt(Effectiveness.Neutral);
+        return total;
     }
 
-    const type2: u16 = @enumToInt(move.type.effectiveness(foe.active.types.type2));
-    battle.last_damage = d *% type2 / 10;
+    if (types.type1 == types.type2) {
+        if (type1 != neutral) d = d *% type1 / 10;
+    } else {
+        if (type1 != neutral) d = d *% type1 / 10;
+        if (type2 != neutral) d = d *% type2 / 10;
+    }
 
-    return type1 * type2;
+    battle.last_damage = d;
+    return total;
 }
 
 fn randomizeDamage(battle: anytype) void {
@@ -1059,18 +1072,25 @@ fn metronome(battle: anytype, player: Player, choice: Choice, log: anytype) !?Re
 
 fn checkHit(battle: anytype, player: Player, move: Move.Data, log: anytype) !bool {
     var immune = false;
-    if (moveHit(battle, player, move, &immune)) return true;
+    var mist = false;
+    if (moveHit(battle, player, move, &immune, &mist)) return true;
     assert(!immune);
-    try log.lastmiss();
-    try log.miss(battle.active(player));
+    if (mist) {
+        assert(!showdown);
+        try log.activate(battle.active(player.foe()), .Mist);
+        try log.fail(battle.active(player.foe()), .None);
+    } else {
+        try log.lastmiss();
+        try log.miss(battle.active(player));
+    }
     return false;
 }
 
-fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool) bool {
+fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool, mist: *bool) bool {
     var side = battle.side(player);
     const foe = battle.foe(player);
 
-    const miss = miss: {
+    var miss = miss: {
         assert(!side.active.volatiles.Bide);
 
         if (move.effect == .DreamEater and !Status.is(foe.stored().status, .SLP)) {
@@ -1083,7 +1103,10 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool) bool
         if (showdown and move.effect == .Sleep and foe.active.volatiles.Recharging) return true;
 
         // Conversion / Haze / Light Screen / Reflect qualify but do not call moveHit
-        if (foe.active.volatiles.Mist and move.effect.isStatDown()) break :miss true;
+        if (foe.active.volatiles.Mist and move.effect.isStatDown()) {
+            mist.* = true;
+            if (!showdown) break :miss true;
+        }
 
         // GLITCH: Thrash / Petal Dance / Rage get their accuracy overwritten on subsequent hits
         var state = &side.active.volatiles.state;
@@ -1107,6 +1130,12 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool) bool
         else
             battle.rng.next() >= accuracy;
     };
+
+    // Pokémon Showdown reports miss instead of fail for moves blocked by Mist that 1/256 miss
+    if (showdown and mist.*) {
+        mist.* = !miss;
+        miss = true;
+    }
 
     if (!miss) return true;
     battle.last_damage = 0;
@@ -1433,9 +1462,8 @@ pub const Effects = struct {
         var volatiles = &foe.active.volatiles;
         const foe_ident = battle.active(player.foe());
 
-        var immune = false;
-        if (!moveHit(battle, player, move, &immune) or volatiles.disabled.move != 0) {
-            assert(!immune);
+        if (!try checkHit(battle, player, move, log)) return;
+        if (volatiles.disabled.move != 0) {
             try log.lastmiss();
             return log.miss(battle.active(player));
         }

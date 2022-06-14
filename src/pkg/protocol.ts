@@ -114,9 +114,10 @@ const FAIL: {[reason: number]: StatusName} = {
 };
 
 const ACTIVATE = {
-  [PROTOCOL.Activate.Confusion]: 'confusion' as Protocol.EffectName,
   [PROTOCOL.Activate.Bide]: 'Bide' as Protocol.MoveName,
+  [PROTOCOL.Activate.Confusion]: 'confusion' as Protocol.EffectName,
   [PROTOCOL.Activate.Haze]: 'move: Haze' as Protocol.EffectName,
+  [PROTOCOL.Activate.Mist]: 'move: Mist' as Protocol.EffectName,
   [PROTOCOL.Activate.Struggle]: 'move: Struggle' as Protocol.EffectName,
   [PROTOCOL.Activate.Substitute]: 'Substitute' as Protocol.MoveName,
   [PROTOCOL.Activate.Splash]: 'move: Splash' as Protocol.EffectName,

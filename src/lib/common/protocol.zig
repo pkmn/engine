@@ -171,9 +171,10 @@ pub const Fail = enum(u8) {
 };
 
 pub const Activate = enum(u8) {
-    Confusion,
     Bide,
+    Confusion,
     Haze,
+    Mist,
     Struggle,
     Substitute,
     Splash,
