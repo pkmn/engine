@@ -1148,18 +1148,19 @@ fn checkFaint(
     player: Player,
     log: anytype,
 ) @TypeOf(log).Error!?Result {
-    var side = battle.side(player);
+    const side = battle.side(player);
     if (side.stored().hp > 0) return null;
 
-    var foe = battle.foe(player);
-    var foe_fainted = foe.stored().hp == 0;
-    if (try faint(battle, player, log, !foe_fainted)) |r| return r;
+    const foe = battle.foe(player);
+    const foe_fainted = foe.stored().hp == 0;
 
     const player_out = findFirstAlive(side) == 0;
     const foe_out = findFirstAlive(foe) == 0;
     const tie = player_out and foe_out;
+    const more = tie or player_out or foe_out;
 
-    if (foe_fainted) if (try faint(battle, player.foe(), log, !tie)) |r| return r;
+    if (try faint(battle, player, log, !(more or foe_fainted))) |r| return r;
+    if (foe_fainted) if (try faint(battle, player.foe(), log, !more)) |r| return r;
 
     if (tie) {
         try log.tie();
@@ -1406,7 +1407,8 @@ pub const Effects = struct {
                 Gen12.percent(30));
         if (!chance) return;
 
-        setStatus(battle, foe_stored, Status.init(.BRN));
+        if (showdown) battle.rng.advance(1);
+        foe_stored.status = Status.init(.BRN);
         foe.active.stats.atk = @maximum(foe.active.stats.atk / 2, 1);
 
         try log.status(battle.active(player.foe()), foe_stored.status, .None);
@@ -1489,6 +1491,8 @@ pub const Effects = struct {
         // Pokémon Showdown doesn't update `Battle.lastDamage` here which only matters for the
         // self-Counter glitch (Grass/Bug move damage would not be Counter-able otherwise)
         if (!showdown) battle.last_damage = drain;
+
+        if (stored.hp == stored.stats.hp) return;
         stored.hp = @minimum(stored.stats.hp, stored.hp + drain);
 
         try log.drain(battle.active(player), stored, battle.active(player.foe()));
@@ -1551,12 +1555,13 @@ pub const Effects = struct {
 
         // Freeze Clause Mod
         if (showdown) {
+            battle.rng.advance(1);
             for (foe.pokemon) |p| {
                 if (Status.is(p.status, .FRZ)) return log.fail(foe_ident, .Freeze);
             }
         }
 
-        setStatus(battle, foe_stored, Status.init(.FRZ));
+        foe_stored.status = Status.init(.FRZ);
         // GLITCH: Hyper Beam recharging status is not cleared
 
         try log.status(foe_ident, foe_stored.status, .None);
@@ -1608,9 +1613,10 @@ pub const Effects = struct {
 
         const rest = side.last_selected_move == .Rest;
         if (rest) {
-            // Adding the sleep status runs the sleep condition handler to roll duration
-            if (showdown) battle.rng.advance(1);
-            setStatus(battle, stored, Status.slf(2));
+            // Adding the sleep status runs the sleep condition handler to roll duration as well
+            // as rolling for the the "speed tie" between Sleep Clause Mod / Freeze Clause Mod
+            if (showdown) battle.rng.advance(2);
+            stored.status = Status.slf(2);
             try log.statusFrom(ident, stored.status, Move.Rest);
             stored.hp = stored.stats.hp;
         } else {
@@ -1731,7 +1737,8 @@ pub const Effects = struct {
             if (!try checkHit(battle, player, move, log)) return;
         }
 
-        setStatus(battle, foe_stored, Status.init(.PAR));
+        if (showdown) battle.rng.advance(1);
+        foe_stored.status = Status.init(.PAR);
         foe.active.stats.spe = @maximum(foe.active.stats.spe / 4, 1);
 
         try log.status(foe_ident, foe_stored.status, .None);
@@ -1758,7 +1765,8 @@ pub const Effects = struct {
                 Gen12.percent(30));
         if (!chance) return;
 
-        setStatus(battle, foe_stored, Status.init(.PAR));
+        if (showdown) battle.rng.advance(1);
+        foe_stored.status = Status.init(.PAR);
         foe.active.stats.spe = @maximum(foe.active.stats.spe / 4, 1);
 
         try log.status(battle.active(player.foe()), foe_stored.status, .None);
@@ -1797,7 +1805,8 @@ pub const Effects = struct {
             if (!chance) return;
         }
 
-        setStatus(battle, foe_stored, Status.init(.PSN));
+        if (showdown) battle.rng.advance(1);
+        foe_stored.status = Status.init(.PSN);
         if (battle.side(player).last_selected_move == .Toxic) {
             foe.active.volatiles.Toxic = true;
             foe.active.volatiles.toxic = 0;
@@ -1852,6 +1861,16 @@ pub const Effects = struct {
             if (!showdown and !try checkHit(battle, player, move, log)) return;
         }
 
+        // Sleep Clause Mod
+        if (showdown) {
+            battle.rng.advance(1);
+            for (foe.pokemon) |p| {
+                if (Status.is(p.status, .SLP) and !Status.is(p.status, .SLF)) {
+                    return log.fail(foe_ident, .Sleep);
+                }
+            }
+        }
+
         const duration = @truncate(u3, if (showdown)
             battle.rng.range(u8, 1, 8)
         else loop: {
@@ -1861,16 +1880,7 @@ pub const Effects = struct {
             }
         });
 
-        // Sleep Clause Mod
-        if (showdown) {
-            for (foe.pokemon) |p| {
-                if (Status.is(p.status, .SLP) and !Status.is(p.status, .SLF)) {
-                    return log.fail(foe_ident, .Sleep);
-                }
-            }
-        }
-
-        setStatus(battle, foe_stored, Status.slp(duration));
+        foe_stored.status = Status.slp(duration);
         try log.statusFrom(foe_ident, foe_stored.status, battle.side(player).last_selected_move);
     }
 
@@ -2151,12 +2161,6 @@ fn unmodifiedStats(battle: anytype, who: Player) *Stats(u16) {
     if (!side.active.volatiles.Transform) return &side.stored().stats;
     const id = ID.from(side.active.volatiles.transform);
     return &battle.side(id.player).pokemon[id.id].stats;
-}
-
-inline fn setStatus(battle: anytype, pokemon: *Pokemon, status: u8) void {
-    pokemon.status = status;
-    // Sleep Clause Mod & Freeze Clause Mod both "speed tie" during onSetStatus...
-    if (showdown) battle.rng.advance(1);
 }
 
 fn statusModify(status: u8, stats: *Stats(u16)) void {

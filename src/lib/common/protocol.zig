@@ -690,7 +690,8 @@ pub fn format(formatter: Formatter, a: []const u8, b: ?[]const u8, color: bool) 
                     const reason = @intToEnum(Heal, a[i]);
                     printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
                     if (reason == .Drain) {
-                        printc(" {s}", .{formatter(.Move, a[i])}, a, b, &i, 1, color);
+                        id = ID.from(@truncate(u4, a[i]));
+                        printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                     }
                 }
             },

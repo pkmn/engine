@@ -504,7 +504,7 @@ test "fainting (single)" {
 
         try t.log.expected.move(P1.ident(1), Move.DragonRage, P2.ident(1), null);
         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-        try t.log.expected.faint(P2.ident(1), true);
+        try t.log.expected.faint(P2.ident(1), false);
         try t.log.expected.win(.P1);
 
         try expectEqual(Result.Win, try t.update(move(1), move(1)));
@@ -528,7 +528,7 @@ test "fainting (single)" {
         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
         try t.log.expected.move(P2.ident(1), Move.DragonRage, P1.ident(1), null);
         try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-        try t.log.expected.faint(P1.ident(1), true);
+        try t.log.expected.faint(P1.ident(1), false);
         try t.log.expected.win(.P2);
 
         try expectEqual(Result.Lose, try t.update(move(1), move(1)));
@@ -2016,7 +2016,49 @@ test "Rest effect" {
 // Move.{Absorb,MegaDrain,LeechLife}
 test "DrainHP effect" {
     // The user recovers 1/2 the HP lost by the target, rounded down.
-    return error.SkipZigTest;
+    var t = Test((if (showdown)
+        (.{ NOP, HIT, ~CRIT, MIN_DMG, NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG })
+    else
+        (.{ ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
+        &.{
+            .{ .species = .Slowpoke, .hp = 1, .moves = &.{.Teleport} },
+            .{ .species = .Butterfree, .moves = &.{.MegaDrain} },
+        },
+        &.{.{ .species = .Parasect, .hp = 300, .moves = &.{.LeechLife} }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P2.ident(1), Move.LeechLife, P1.ident(1), null);
+    try t.log.expected.supereffective(P1.ident(1));
+    t.expected.p1.get(1).hp -= 1;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    t.expected.p2.get(1).hp += 1;
+    try t.log.expected.drain(P2.ident(1), t.expected.p2.get(1), P1.ident(1));
+    try t.log.expected.faint(P1.ident(1), true);
+
+    // Heals at least 1 HP
+    try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(move(1), move(1)));
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(swtch(2), .{}));
+
+    try t.log.expected.move(P1.ident(2), Move.MegaDrain, P2.ident(1), null);
+    try t.log.expected.resisted(P2.ident(1));
+    t.expected.p2.get(1).hp -= 6;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.LeechLife, P1.ident(2), null);
+    try t.log.expected.resisted(P1.ident(2));
+    t.expected.p1.get(2).hp -= 16;
+    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
+    t.expected.p2.get(1).hp += 8;
+    try t.log.expected.drain(P2.ident(1), t.expected.p2.get(1), P1.ident(2));
+    try t.log.expected.turn(3);
+
+    // Heals 1/2 of the damage dealt unless the user is at full health
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.verify();
 }
 
 // Move.DreamEater
@@ -2024,7 +2066,55 @@ test "DreamEater effect" {
     // The target is unaffected by this move unless it is asleep. The user recovers 1/2 the HP lost
     // by the target, rounded down, but not less than 1 HP. If this move breaks the target's
     // substitute, the user does not recover any HP.
-    return error.SkipZigTest;
+    var t = Test((if (showdown)
+        (.{ NOP, NOP, HIT, NOP, MAX, NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, ~CRIT, MIN_DMG })
+    else
+        (.{ ~CRIT, MIN_DMG, ~CRIT, HIT, MAX, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
+        &.{.{ .species = .Hypno, .hp = 100, .moves = &.{ .DreamEater, .Hypnosis } }},
+        &.{.{ .species = .Wigglytuff, .hp = 182, .moves = &.{.Teleport} }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.DreamEater, P2.ident(1), null);
+    try t.log.expected.immune(P2.ident(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(2);
+
+    // Fails unless the target is sleeping
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.Hypnosis, P2.ident(1), null);
+    t.expected.p2.get(1).status = Status.slp(7);
+    try t.log.expected.statusFrom(P2.ident(1), t.expected.p2.get(1).status, Move.Hypnosis);
+    try t.log.expected.cant(P2.ident(1), .Sleep);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.DreamEater, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 181;
+    t.expected.p2.get(1).status -= 1;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    t.expected.p1.get(1).hp += 90;
+    try t.log.expected.drain(P1.ident(1), t.expected.p1.get(1), P2.ident(1));
+    try t.log.expected.cant(P2.ident(1), .Sleep);
+    try t.log.expected.turn(4);
+
+    // Heals 1/2 of the damage dealt
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.DreamEater, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 1;
+    t.expected.p2.get(1).status -= 1;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    t.expected.p1.get(1).hp += 1;
+    try t.log.expected.drain(P1.ident(1), t.expected.p1.get(1), P2.ident(1));
+    try t.log.expected.faint(P2.ident(1), false);
+    try t.log.expected.win(.P1);
+
+    // Heals at least 1 HP
+    try expectEqual(Result.Win, try t.update(move(1), move(1)));
+    try t.verify();
 }
 
 // Move.LeechSeed
@@ -2933,7 +3023,7 @@ test "Stat down modifier overflow glitch" {
             try t.log.expected.resisted(P2.ident(1));
             t.expected.p2.get(1).hp = 0;
             try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-            try t.log.expected.faint(P2.ident(1), true);
+            try t.log.expected.faint(P2.ident(1), false);
             try t.log.expected.win(.P1);
         }
 
