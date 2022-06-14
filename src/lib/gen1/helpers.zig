@@ -176,7 +176,7 @@ pub const Side = struct {
     }
 };
 
-const EXP = 0xFFFF;
+pub const EXP = 0xFFFF;
 
 pub const Pokemon = struct {
     species: Species,

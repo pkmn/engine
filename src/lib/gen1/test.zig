@@ -37,9 +37,10 @@ const Type = data.Type;
 const Types = data.Types;
 
 const Battle = helpers.Battle;
-const Side = helpers.Side;
-const Pokemon = helpers.Pokemon;
+const EXP = helpers.EXP;
 const move = helpers.move;
+const Pokemon = helpers.Pokemon;
+const Side = helpers.Side;
 const swtch = helpers.swtch;
 
 const OPTIONS_SIZE = data.OPTIONS_SIZE;
@@ -1190,18 +1191,18 @@ test "StatDown effect" {
 // Move.Psychic: SpecialDownChance
 test "StatDownChance effect" {
     // Has a 33% chance to lower the target's X by 1 stage.
-    const proc = comptime ranged(85, 256) - 1;
-    const no_proc = proc + 1;
+    const PROC = comptime ranged(85, 256) - 1;
+    const NO_PROC = PROC + 1;
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, no_proc, HIT, ~CRIT, MIN_DMG, proc,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, no_proc, HIT, ~CRIT, MIN_DMG, proc,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, no_proc, HIT, ~CRIT, MIN_DMG, no_proc,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_PROC, HIT, ~CRIT, MIN_DMG, PROC,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_PROC, HIT, ~CRIT, MIN_DMG, PROC,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_PROC, HIT, ~CRIT, MIN_DMG, NO_PROC,
         } else .{
-            ~CRIT, MIN_DMG, HIT, no_proc, ~CRIT, MIN_DMG, HIT, proc,
-            ~CRIT, MIN_DMG, HIT, no_proc, ~CRIT, MIN_DMG, HIT, proc,
-            ~CRIT, MIN_DMG, HIT, no_proc, ~CRIT, MIN_DMG, HIT, no_proc,
+            ~CRIT, MIN_DMG, HIT, NO_PROC, ~CRIT, MIN_DMG, HIT, PROC,
+            ~CRIT, MIN_DMG, HIT, NO_PROC, ~CRIT, MIN_DMG, HIT, PROC,
+            ~CRIT, MIN_DMG, HIT, NO_PROC, ~CRIT, MIN_DMG, HIT, NO_PROC,
         }
     // zig fmt: on
     ).init(
@@ -2559,6 +2560,195 @@ test "Stat modification errors" {
 
 test "Stat down modifier overflow glitch" {
     // https://www.youtube.com/watch?v=y2AOm7r39Jg
+    const PROC = comptime ranged(85, 256) - 1;
+    const NO_PROC = PROC + 1;
+    // 342 -> 1026
+    {
+        var t = Test((if (showdown)
+            (.{ NOP, HIT, ~CRIT, MIN_DMG, PROC, NOP, HIT, ~CRIT, MIN_DMG, NO_PROC })
+        else
+            (.{ ~CRIT, ~CRIT, ~CRIT, ~CRIT, MIN_DMG, HIT, PROC, ~CRIT }))).init(
+            &.{.{
+                .species = .Porygon,
+                .level = 58,
+                .stats = .{},
+                .moves = &.{ .Recover, .Psychic },
+            }},
+            &.{.{
+                .species = .Mewtwo,
+                .level = 99,
+                .stats = .{ .hp = EXP, .atk = EXP, .def = EXP, .spe = EXP, .spc = 255 },
+                .moves = &.{ .Amnesia, .Recover },
+            }},
+        );
+        defer t.deinit();
+        try t.start();
+
+        try expectEqual(@as(u16, 342), t.actual.p2.active.stats.spc);
+
+        try t.log.expected.move(P2.ident(1), Move.Amnesia, P2.ident(1), null);
+        try t.log.expected.boost(P2.ident(1), .SpecialAttack, 2);
+        try t.log.expected.boost(P2.ident(1), .SpecialDefense, 2);
+        try t.log.expected.move(P1.ident(1), Move.Recover, P1.ident(1), null);
+        try t.log.expected.fail(P1.ident(1), .None);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(@as(u16, 684), t.actual.p2.active.stats.spc);
+        try expectEqual(@as(i4, 2), t.actual.p2.active.boosts.spc);
+
+        try t.log.expected.move(P2.ident(1), Move.Amnesia, P2.ident(1), null);
+        try t.log.expected.boost(P2.ident(1), .SpecialAttack, 2);
+        try t.log.expected.boost(P2.ident(1), .SpecialDefense, 2);
+        try t.log.expected.move(P1.ident(1), Move.Recover, P1.ident(1), null);
+        try t.log.expected.fail(P1.ident(1), .None);
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(@as(u16, 999), t.actual.p2.active.stats.spc);
+        try expectEqual(@as(i4, 4), t.actual.p2.active.boosts.spc);
+
+        try t.log.expected.move(P2.ident(1), Move.Amnesia, P2.ident(1), null);
+        if (showdown) {
+            try t.log.expected.boost(P2.ident(1), .SpecialAttack, 2);
+            try t.log.expected.boost(P2.ident(1), .SpecialDefense, 2);
+        } else {
+            try t.log.expected.fail(P2.ident(1), .None);
+        }
+
+        try t.log.expected.move(P1.ident(1), Move.Recover, P1.ident(1), null);
+        try t.log.expected.fail(P1.ident(1), .None);
+        try t.log.expected.turn(4);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(@as(u16, 999), t.actual.p2.active.stats.spc);
+        try expectEqual(@as(i4, if (showdown) 6 else 5), t.actual.p2.active.boosts.spc);
+
+        t.expected.p2.get(1).hp -= 2;
+
+        try t.log.expected.move(P2.ident(1), Move.Recover, P2.ident(1), null);
+        try t.log.expected.fail(P2.ident(1), .None);
+        try t.log.expected.move(P1.ident(1), Move.Psychic, P2.ident(1), null);
+        try t.log.expected.resisted(P2.ident(1));
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.unboost(P2.ident(1), .SpecialAttack, 1);
+        try t.log.expected.unboost(P2.ident(1), .SpecialDefense, 1);
+        try t.log.expected.turn(5);
+
+        try expectEqual(Result.Default, try t.update(move(2), move(2)));
+        try expectEqual(@as(u16, if (showdown) 999 else 1026), t.actual.p2.active.stats.spc);
+        try expectEqual(@as(i4, if (showdown) 5 else 4), t.actual.p2.active.boosts.spc);
+
+        try t.log.expected.move(P2.ident(1), Move.Recover, P2.ident(1), null);
+        t.expected.p2.get(1).hp += 2;
+        try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.move(P1.ident(1), Move.Psychic, P2.ident(1), null);
+        if (showdown) {
+            try t.log.expected.resisted(P2.ident(1));
+            t.expected.p2.get(1).hp -= 2;
+            try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+            try t.log.expected.turn(6);
+        }
+
+        // Division by 0
+        const result = if (showdown) Result.Default else Result.Error;
+        try expectEqual(result, try t.update(move(2), move(2)));
+        try t.verify();
+    }
+    // 343 -> 1029
+    {
+        var t = Test((if (showdown)
+            (.{ NOP, HIT, ~CRIT, MIN_DMG, PROC, NOP, HIT, ~CRIT, MIN_DMG, NO_PROC })
+        else
+            (.{ ~CRIT, ~CRIT, ~CRIT, ~CRIT, MIN_DMG, HIT, PROC, ~CRIT, MIN_DMG, HIT }))).init(
+            &.{.{
+                .species = .Porygon,
+                .stats = .{},
+                .level = 58,
+                .moves = &.{ .Recover, .Psychic },
+            }},
+            &.{.{ .species = .Mewtwo, .stats = .{}, .moves = &.{ .Amnesia, .Recover } }},
+        );
+        defer t.deinit();
+        try t.start();
+
+        try expectEqual(@as(u16, 343), t.actual.p2.active.stats.spc);
+
+        try t.log.expected.move(P2.ident(1), Move.Amnesia, P2.ident(1), null);
+        try t.log.expected.boost(P2.ident(1), .SpecialAttack, 2);
+        try t.log.expected.boost(P2.ident(1), .SpecialDefense, 2);
+        try t.log.expected.move(P1.ident(1), Move.Recover, P1.ident(1), null);
+        try t.log.expected.fail(P1.ident(1), .None);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(@as(u16, 686), t.actual.p2.active.stats.spc);
+        try expectEqual(@as(i4, 2), t.actual.p2.active.boosts.spc);
+
+        try t.log.expected.move(P2.ident(1), Move.Amnesia, P2.ident(1), null);
+        try t.log.expected.boost(P2.ident(1), .SpecialAttack, 2);
+        try t.log.expected.boost(P2.ident(1), .SpecialDefense, 2);
+        try t.log.expected.move(P1.ident(1), Move.Recover, P1.ident(1), null);
+        try t.log.expected.fail(P1.ident(1), .None);
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(@as(u16, 999), t.actual.p2.active.stats.spc);
+        try expectEqual(@as(i4, 4), t.actual.p2.active.boosts.spc);
+
+        try t.log.expected.move(P2.ident(1), Move.Amnesia, P2.ident(1), null);
+        if (showdown) {
+            try t.log.expected.boost(P2.ident(1), .SpecialAttack, 2);
+            try t.log.expected.boost(P2.ident(1), .SpecialDefense, 2);
+        } else {
+            try t.log.expected.fail(P2.ident(1), .None);
+        }
+
+        try t.log.expected.move(P1.ident(1), Move.Recover, P1.ident(1), null);
+        try t.log.expected.fail(P1.ident(1), .None);
+        try t.log.expected.turn(4);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(@as(u16, 999), t.actual.p2.active.stats.spc);
+        try expectEqual(@as(i4, if (showdown) 6 else 5), t.actual.p2.active.boosts.spc);
+
+        t.expected.p2.get(1).hp -= 2;
+
+        try t.log.expected.move(P2.ident(1), Move.Recover, P2.ident(1), null);
+        try t.log.expected.fail(P2.ident(1), .None);
+        try t.log.expected.move(P1.ident(1), Move.Psychic, P2.ident(1), null);
+        try t.log.expected.resisted(P2.ident(1));
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.unboost(P2.ident(1), .SpecialAttack, 1);
+        try t.log.expected.unboost(P2.ident(1), .SpecialDefense, 1);
+        try t.log.expected.turn(5);
+
+        try expectEqual(Result.Default, try t.update(move(2), move(2)));
+        try expectEqual(@as(u16, if (showdown) 999 else 1029), t.actual.p2.active.stats.spc);
+        try expectEqual(@as(i4, if (showdown) 5 else 4), t.actual.p2.active.boosts.spc);
+
+        try t.log.expected.move(P2.ident(1), Move.Recover, P2.ident(1), null);
+        t.expected.p2.get(1).hp += 2;
+        try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.move(P1.ident(1), Move.Psychic, P2.ident(1), null);
+        if (showdown) {
+            try t.log.expected.resisted(P2.ident(1));
+            t.expected.p2.get(1).hp -= 2;
+            try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+            try t.log.expected.turn(6);
+        } else {
+            try t.log.expected.resisted(P2.ident(1));
+            t.expected.p2.get(1).hp = 0;
+            try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+            try t.log.expected.faint(P2.ident(1), true);
+            try t.log.expected.win(.P1);
+        }
+
+        // Overflow means Mewtwo gets KOed
+        const result = if (showdown) Result.Default else Result.Win;
+        try expectEqual(result, try t.update(move(2), move(2)));
+        try t.verify();
+    }
 }
 
 test "Struggle bypassing / Switch PP underflow" {
