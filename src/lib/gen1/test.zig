@@ -3064,7 +3064,25 @@ test "Rage and Thrash / Petal Dance accuracy bug" {
 test "Substitute HP drain bug" {
     // https://pkmn.cc/bulba-glitch-1#Substitute_HP_drain_bug
     // https://glitchcity.wiki/Substitute_drain_move_not_missing_glitch
-    return error.SkipZigTest;
+    var t = Test((if (showdown)
+        (.{ NOP, HIT, ~CRIT, MIN_DMG })
+    else
+        (.{ ~CRIT, MIN_DMG, HIT }))).init(
+        &.{.{ .species = .Butterfree, .moves = &.{.MegaDrain} }},
+        &.{.{ .species = .Jolteon, .moves = &.{.Substitute} }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Substitute);
+    t.expected.p2.get(1).hp -= 83;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.MegaDrain, P2.ident(1), null);
+    try t.log.expected.activate(P2.ident(1), .Substitute);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.verify();
 }
 
 test "Substitute 1/4 HP glitch" {
