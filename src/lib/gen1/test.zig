@@ -2351,7 +2351,65 @@ test "MirrorMove effect" {
 test "Explode effect" {
     // The user faints after using this move, unless the target's substitute was broken by the
     // damage. The target's Defense is halved during damage calculation.
-    return error.SkipZigTest;
+    var t = Test((if (showdown)
+        (.{ NOP, HIT, NOP, NOP, HIT, ~CRIT, MAX_DMG, NOP, HIT, ~CRIT, MAX_DMG, NOP })
+    else
+        (.{ HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, HIT }))).init(
+        &.{
+            .{ .species = .Electrode, .level = 80, .moves = &.{ .Explosion, .Toxic } },
+            .{ .species = .Onix, .moves = &.{.SelfDestruct} },
+        },
+        &.{
+            .{ .species = .Chansey, .moves = &.{ .Substitute, .Teleport } },
+            .{ .species = .Gengar, .moves = &.{.NightShade} },
+        },
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(1), null);
+    t.expected.p2.get(1).status = Status.init(.PSN);
+    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Substitute);
+    t.expected.p2.get(1).hp -= 175;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    t.expected.p2.get(1).hp -= 43;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.Explosion, P2.ident(1), null);
+    try t.log.expected.end(P2.ident(1), .Substitute);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 86;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+
+    try t.log.expected.move(P1.ident(1), Move.Explosion, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 342;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    t.expected.p1.get(1).hp = 0;
+    try t.log.expected.faint(P1.ident(1), true);
+
+    try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(move(1), move(2)));
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(swtch(2), .{}));
+
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.move(P1.ident(2), Move.SelfDestruct, P2.ident(2), null);
+    try t.log.expected.immune(P2.ident(2), .None);
+    t.expected.p1.get(2).hp = 0;
+    try t.log.expected.faint(P1.ident(2), false);
+    try t.log.expected.win(.P2);
+
+    try expectEqual(Result.Lose, try t.update(move(1), swtch(2)));
+    try t.verify();
 }
 
 // Move.Swift
