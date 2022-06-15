@@ -135,9 +135,9 @@
     "Confusion",
     "Haze",
     "Mist",
-    "Splash",
     "Struggle",
-    "Substitute"
+    "Substitute",
+    "Splash"
   ],
   "Start": [
     "Bide",
@@ -169,11 +169,5 @@
   "Immune": [
     "None",
     "OHKO"
-  ],
-  "Kind": [
-    "Move",
-    "Species",
-    "Type",
-    "Status"
   ]
 }
