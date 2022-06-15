@@ -1901,10 +1901,14 @@ pub const Effects = struct {
 
         // GLITCH: can leave the user with 0 HP (faints later) because didn't check '<=' above
         side.stored().hp -= hp;
-        side.active.volatiles.substitute = hp + 1;
-        side.active.volatiles.Substitute = true;
-        try log.start(battle.active(player), .Substitute);
-        try log.damage(battle.active(player), side.stored(), .None);
+        if (side.stored().hp == 0) {
+            try log.fail(battle.active(player), .Weak);
+        } else {
+            side.active.volatiles.substitute = hp + 1;
+            side.active.volatiles.Substitute = true;
+            try log.start(battle.active(player), .Substitute);
+            try log.damage(battle.active(player), side.stored(), .None);
+        }
     }
 
     fn switchAndTeleport(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {

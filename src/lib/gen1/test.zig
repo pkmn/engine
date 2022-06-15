@@ -3087,7 +3087,22 @@ test "Substitute HP drain bug" {
 
 test "Substitute 1/4 HP glitch" {
     // https://glitchcity.wiki/Substitute_%C2%BC_HP_glitch
-    return error.SkipZigTest;
+    var t = Test(.{}).init(
+        &.{.{ .species = .Pidgey, .hp = 4, .level = 3, .moves = &.{.Substitute} }},
+        &.{.{ .species = .Rattata, .level = 4, .moves = &.{.FocusEnergy} }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P2.ident(1), Move.FocusEnergy, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .FocusEnergy);
+    try t.log.expected.move(P1.ident(1), Move.Substitute, P1.ident(1), null);
+    try t.log.expected.fail(P1.ident(1), .Weak);
+    t.expected.p1.get(1).hp = 0;
+    try t.log.expected.faint(P1.ident(1), false);
+    try t.log.expected.win(.P2);
+
+    try expectEqual(Result.Lose, try t.update(move(1), move(1)));
+    try t.verify();
 }
 
 test "Substitute + Confusion glitch" {
