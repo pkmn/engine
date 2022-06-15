@@ -607,10 +607,10 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     // Pokémon Showdown runs type and OHKO immunity checks before the accuracy check
     if (showdown) {
         const m = side.last_selected_move;
-        const type1 = @enumToInt(move.type.effectiveness(foe.active.types.type1));
-        const type2 = @enumToInt(move.type.effectiveness(foe.active.types.type2));
+        const eff1 = @enumToInt(move.type.effectiveness(foe.active.types.type1));
+        const eff2 = @enumToInt(move.type.effectiveness(foe.active.types.type2));
         // Sonic Boom incorrectly checks type immunity on Pokémon Showdown
-        if (move.target != .Self and (type1 == 0 or type2 == 0) and
+        if (move.target != .Self and (eff1 == 0 or eff2 == 0) and
             !(special and m != .SonicBoom) or
             (m == .DreamEater and !Status.is(foe.stored().status, .SLP)))
         {
@@ -889,22 +889,18 @@ fn adjustDamage(battle: anytype, player: Player) u16 {
     if (side.active.types.includes(move.type)) d +%= d / 2;
 
     const neutral = @enumToInt(Effectiveness.Neutral);
-    const type1: u16 = @enumToInt(move.type.effectiveness(types.type1));
-    const type2: u16 = @enumToInt(move.type.effectiveness(types.type2));
+    const eff1: u16 = @enumToInt(move.type.effectiveness(types.type1));
+    const eff2: u16 = @enumToInt(move.type.effectiveness(types.type2));
 
-    const total = if (types.type1 == types.type2) type1 * neutral else type1 * type2;
+    const total = if (types.type1 == types.type2) eff1 * neutral else eff1 * eff2;
     // Pokémon Showdown considers the "total type" effectiveness instead of the individual types
     if (showdown and total == Effectiveness.neutral) {
         battle.last_damage = d;
         return total;
     }
 
-    if (types.type1 == types.type2) {
-        if (type1 != neutral) d = d *% type1 / 10;
-    } else {
-        if (type1 != neutral) d = d *% type1 / 10;
-        if (type2 != neutral) d = d *% type2 / 10;
-    }
+    if (eff1 != neutral) d = d *% eff1 / 10;
+    if (types.type1 != types.type2 and eff2 != neutral) d = d *% eff2 / 10;
 
     battle.last_damage = d;
     return total;
