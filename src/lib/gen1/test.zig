@@ -77,6 +77,7 @@ var choices: [OPTIONS_SIZE]Choice = undefined;
 
 test "start (first fainted)" {
     if (showdown) return;
+
     var t = Test(.{}).init(
         &.{
             .{ .species = .Pikachu, .hp = 0, .moves = &.{.ThunderShock} },
@@ -384,6 +385,7 @@ test "PP deduction" {
 test "accuracy (normal)" {
     const hit = comptime ranged(85 * 255 / 100, 256) - 1;
     const miss = hit + 1;
+
     var t = Test(if (showdown)
         (.{ NOP, NOP, hit, CRIT, MAX_DMG, miss })
     else
@@ -408,6 +410,7 @@ test "accuracy (normal)" {
 
 test "damage calc" {
     const NO_BRN = MAX;
+
     var t = Test(
     // zig fmt: off
         if (showdown) .{
@@ -715,6 +718,7 @@ test "choices" {
 test "HighCritical effect" {
     // Has a higher chance for a critical hit.
     const no_crit = if (showdown) comptime ranged(Species.chance(.Machop), 256) else 3;
+
     var t = Test(if (showdown)
         (.{ NOP, NOP, HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG })
     else
@@ -743,6 +747,7 @@ test "FocusEnergy effect" {
     // While the user remains active, its chance for a critical hit is quartered. Fails if the user
     // already has the effect. If any Pokemon uses Haze, this effect ends.
     const crit = if (showdown) comptime ranged(Species.chance(.Machoke), 256) - 1 else 2;
+
     var t = Test(if (showdown)
         (.{ NOP, HIT, crit, MIN_DMG, NOP, HIT, crit, MIN_DMG })
     else
@@ -792,6 +797,7 @@ test "MultiHit effect" {
     // one of the hits breaks the target's substitute, the move ends.
     const hit3 = if (showdown) 0x60000000 else 1;
     const hit5 = MAX;
+
     var t = Test(if (showdown)
         (.{ NOP, HIT, hit3, ~CRIT, MAX_DMG, NOP, HIT, hit5, ~CRIT, MAX_DMG })
     else
@@ -1045,6 +1051,7 @@ test "PoisonChance effect" {
     // Has a X% chance to poison the target.
     const LO_PROC = comptime ranged(52, 256) - 1;
     const HI_PROC = comptime ranged(103, 256) - 1;
+
     var t = Test(
     // zig fmt: off
         if (showdown) .{
@@ -1125,6 +1132,7 @@ test "BurnChance effect" {
     // Has a X% chance to burn the target.
     const LO_PROC = comptime ranged(26, 256) - 1;
     const HI_PROC = comptime ranged(77, 256) - 1;
+
     var t = Test(
     // zig fmt: off
         if (showdown) .{
@@ -1367,6 +1375,7 @@ test "ParalyzeChance effect" {
     const HI_PROC = comptime ranged(77, 256) - 1;
     const PAR_CAN = MAX;
     const PAR_CANT = MIN;
+
     var t = Test(
     // zig fmt: off
         if (showdown) .{
@@ -1455,6 +1464,7 @@ test "Sleep effect" {
     // Causes the target to fall asleep.
     const SLP_1 = if (showdown) comptime ranged(1, 8 - 1) else 1;
     const SLP_2 = if (showdown) comptime ranged(2, 8 - 1) else 2;
+
     var t = Test(
     // zig fmt: off
         if (showdown) .{
@@ -1544,6 +1554,7 @@ test "Confusion effect" {
     const CFZ_3 = if (showdown) comptime ranged(2, 6 - 2) - 1 else 1;
     const CFZ_CAN = if (showdown) comptime ranged(128, 256) - 1 else MIN;
     const CFZ_CANT = if (showdown) CFZ_CAN + 1 else MAX;
+
     var t = Test((if (showdown)
         (.{ NOP, HIT, NOP, HIT, NOP, HIT, CFZ_3, NOP, CFZ_CANT, HIT, NOP, CFZ_CAN, HIT, NOP, HIT })
     else
@@ -1624,6 +1635,7 @@ test "ConfusionChance effect" {
     const PROC = comptime ranged(25, 256) - 1;
     const NO_PROC = PROC + 1;
     const CFZ_3 = if (showdown) comptime ranged(2, 6 - 2) - 1 else 1;
+
     var t = Test(
     // zig fmt: off
         if (showdown) .{
@@ -1670,6 +1682,7 @@ test "ConfusionChance effect" {
     if (showdown) try t.log.expected.start(P2.ident(1), .Confusion);
     try t.log.expected.turn(4);
 
+    // Pokémon Showdown procs on 26 instead of 25, so NO_PROC will still proc
     try expectEqual(Result.Default, try t.update(move(1), move(2)));
     if (showdown) {
         try expect(t.actual.p2.active.volatiles.Confusion);
@@ -1684,7 +1697,118 @@ test "ConfusionChance effect" {
 // Move.{Stomp,RollingKick,Headbutt,LowKick}: FlinchChance2
 test "FlinchChance effect" {
     // Has a X% chance to flinch the target.
-    return error.SkipZigTest;
+    const LO_PROC = comptime ranged(26, 256) - 1;
+    const HI_PROC = comptime ranged(77, 256) - 1;
+
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, HIT, ~CRIT, MIN_DMG, HI_PROC,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HI_PROC, HIT, ~CRIT, MIN_DMG, HI_PROC,
+            NOP, NOP, HIT, ~CRIT, MAX_DMG, LO_PROC, HIT, ~CRIT, MIN_DMG,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, LO_PROC, NOP,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, LO_PROC,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HI_PROC,
+            NOP, NOP, NOP, ~HIT,
+        } else .{
+            ~CRIT, MIN_DMG, HIT, HI_PROC,
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, HI_PROC,
+            ~CRIT, MAX_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+            ~CRIT, MIN_DMG, HIT, LO_PROC,
+            ~CRIT, MIN_DMG, HIT, LO_PROC,
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, HI_PROC,
+            ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, ~HIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Raticate, .moves = &.{ .HyperFang, .Headbutt, .HyperBeam } }},
+        &.{.{ .species = .Marowak, .moves = &.{ .Headbutt, .HyperBeam, .Substitute } }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.HyperFang, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 72;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Substitute);
+    t.expected.p2.get(1).hp -= 80;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(2);
+
+    // Moves have different flinch rates
+    try expectEqual(Result.Default, try t.update(move(1), move(3)));
+
+    try t.log.expected.move(P1.ident(1), Move.Headbutt, P2.ident(1), null);
+    try t.log.expected.activate(P2.ident(1), .Substitute);
+    try t.log.expected.move(P2.ident(1), Move.Headbutt, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 60;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(3);
+
+    // Substitute blocks flinch, flinch doesn't prevent movement when slower
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.Headbutt, P2.ident(1), null);
+    try t.log.expected.end(P2.ident(1), .Substitute);
+    try t.log.expected.move(P2.ident(1), Move.HyperBeam, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 128;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.mustrecharge(P2.ident(1));
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+
+    try t.log.expected.move(P1.ident(1), Move.HyperFang, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 72;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.cant(P2.ident(1), if (showdown) .Recharge else .Flinch);
+    try t.log.expected.turn(5);
+
+    // Flinch prevents movement but counts as recharge turn
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.HyperFang, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 72;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.cant(P2.ident(1), .Flinch);
+    try t.log.expected.turn(6);
+
+    // Can prevent movement even without recharge
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    // (need to artificially recover HP to survive Raticate's Hyper Beam)
+    t.actual.p2.get(1).hp = 323;
+    t.expected.p2.get(1).hp = 323;
+
+    try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 133;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.mustrecharge(P1.ident(1));
+    try t.log.expected.move(P2.ident(1), Move.Headbutt, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 60;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(7);
+
+    try expectEqual(Result.Default, try t.update(move(3), move(1)));
+
+    const n = t.battle.actual.choices(.P1, .Move, &choices);
+    if (showdown) {
+        try expectEqualSlices(Choice, &[_]Choice{move(1)}, choices[0..n]);
+        try t.log.expected.cant(P1.ident(1), .Recharge);
+    } else {
+        try expectEqualSlices(Choice, &[_]Choice{ move(1), move(2), move(3) }, choices[0..n]);
+        try t.log.expected.move(P1.ident(1), Move.HyperFang, P2.ident(1), null);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P1.ident(1));
+    }
+    try t.log.expected.move(P2.ident(1), Move.Headbutt, P1.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    try t.log.expected.turn(8);
+
+    // Flinch should have cleared recharge, but this doesn't work on Pokémon Showdown
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.verify();
 }
 
 // Move.Growl: AttackDown1
@@ -1752,6 +1876,7 @@ test "StatDownChance effect" {
     // Has a 33% chance to lower the target's X by 1 stage.
     const PROC = comptime ranged(85, 256) - 1;
     const NO_PROC = PROC + 1;
+
     var t = Test(
     // zig fmt: off
         if (showdown) .{
@@ -2320,6 +2445,7 @@ test "Mist effect" {
     // Pokemon, unless caused by the secondary effect of a move. Fails if the user already has the
     // effect. If any Pokemon uses Haze, this effect ends.
     const PROC = comptime ranged(85, 256) - 1;
+
     var t = Test(
     // zig fmt: off
         if (showdown) .{
@@ -2465,6 +2591,7 @@ test "Rest effect" {
     // https://pkmn.cc/bulba-glitch-1#HP_recovery_move_failure
     const PROC = comptime ranged(63, 256) - 1;
     const NO_PROC = PROC + 1;
+
     var t = Test(
     // zig fmt: off
         if (showdown) .{
@@ -3134,6 +3261,7 @@ test "Hyper Beam + Substitute bug" {
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), null);
     try t.log.expected.activate(P2.ident(1), .Substitute);
+    if (!showdown) try t.log.expected.mustrecharge(P1.ident(1));
     try t.log.expected.turn(2);
 
     // Should require recharge if it doesn't knock out the Substitute

@@ -119,7 +119,10 @@ fn selectMove(
     const stored = side.stored();
 
     // pre-battle menu
-    if (volatiles.Recharging) return null;
+    if (volatiles.Recharging) {
+        if (showdown) battle.rng.advance(1);
+        return null;
+    }
     if (volatiles.Rage) {
         from.* = side.last_used_move;
         if (showdown) saveMove(battle, player, null);
@@ -335,7 +338,13 @@ fn executeMove(
     }
 
     // getRandomTarget arbitrarily advances the RNG during runAction
-    if (showdown) battle.rng.advance(Move.frames(side.last_selected_move, .run));
+    if (showdown) {
+        // The placeholder "move" 'recharge' has no target so also triggers this... sigh
+        battle.rng.advance(if (side.active.volatiles.Recharging)
+            1
+        else
+            Move.frames(side.last_selected_move, .run));
+    }
 
     var skip_can = false;
     var skip_pp = false;
@@ -1344,7 +1353,7 @@ fn moveEffect(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: 
         .FreezeChance => Effects.freezeChance(battle, player, move, log),
         .Haze => Effects.haze(battle, player, log),
         .Heal => Effects.heal(battle, player, log),
-        .HyperBeam => Effects.hyperBeam(battle, player),
+        .HyperBeam => Effects.hyperBeam(battle, player, log),
         .LeechSeed => Effects.leechSeed(battle, player, move, log),
         .LightScreen => Effects.lightScreen(battle, player, log),
         .Mimic => Effects.mimic(battle, player, move, mslot, log),
@@ -1528,7 +1537,7 @@ pub const Effects = struct {
     fn flinchChance(battle: anytype, player: Player, move: Move.Data) void {
         var volatiles = &battle.foe(player).active.volatiles;
 
-        if (volatiles.Substitute) return;
+        if (volatiles.Substitute) return if (showdown) return battle.rng.advance(1);
 
         const chance = if (showdown)
             battle.rng.chance(u8, @as(u8, if (move.effect == .FlinchChance1) 26 else 77), 256)
@@ -1539,9 +1548,13 @@ pub const Effects = struct {
                 Gen12.percent(30));
         if (!chance) return;
 
-        volatiles.Flinch = true;
         // Pokémon Showdown incorrectly does not cancel recharging on flinch
-        if (!showdown) volatiles.Recharging = false;
+        if (showdown) {
+            if (!volatiles.Recharging) volatiles.Flinch = true;
+        } else {
+            volatiles.Flinch = true;
+            volatiles.Recharging = false;
+        }
     }
 
     fn focusEnergy(battle: anytype, player: Player, log: anytype) !void {
@@ -1638,8 +1651,9 @@ pub const Effects = struct {
         try log.heal(ident, stored, if (rest) Heal.Silent else Heal.None);
     }
 
-    fn hyperBeam(battle: anytype, player: Player) !void {
+    fn hyperBeam(battle: anytype, player: Player, log: anytype) !void {
         battle.side(player).active.volatiles.Recharging = true;
+        try log.mustrecharge(battle.active(player));
     }
 
     fn leechSeed(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
@@ -2181,8 +2195,7 @@ fn statusModify(status: u8, stats: *Stats(u16)) void {
 }
 
 fn isLocked(active: ActivePokemon) bool {
-    return active.volatiles.Recharging or active.volatiles.Rage or
-        active.volatiles.Thrashing or active.volatiles.Charging;
+    return active.volatiles.Rage or active.volatiles.Thrashing or active.volatiles.Charging;
 }
 
 fn clearVolatiles(active: *ActivePokemon, ident: ID, log: anytype) !void {
@@ -2314,7 +2327,7 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
 
             // While players are not given any input options on the cartridge in these cases,
             // Pokémon Showdown instead produces a list with a single move that must be chosen.
-            if (isLocked(active)) {
+            if (isLocked(active) or active.volatiles.Recharging) {
                 out[n] = if (showdown) .{ .type = .Move, .data = 1 } else .{};
                 n += 1;
                 return n;
