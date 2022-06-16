@@ -1203,15 +1203,17 @@ test "BurnChance effect" {
 // test "FreezeChance effect" {
 //     // Has a 10% chance to freeze the target.
 //     const FRZ = comptime ranged(26, 256) - 1;
+//     const PAR_CANT = MIN;
+//     const MIN_WRAP = MIN;
 //     var t = Test(
 //     // zig fmt: off
 //     if (showdown) .{
 //         NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, NOP,
-//         NOP, NOP, HIT, ~CRIT, MIN_DMG, FRZ, MIN,
+//         NOP, NOP, HIT, ~CRIT, MIN_DMG, FRZ, PAR_CANT,
 //         NOP, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
 //         NOP, NOP, HIT,
 //         NOP, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
-//         NOP, HIT, ~CRIT, MIN_DMG, MIN,
+//         NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
 //         NOP, NOP,
 //         NOP, HIT, ~CRIT, MIN_DMG,
 //         NOP, HIT, ~CRIT, MIN_DMG, FRZ,
@@ -1361,7 +1363,91 @@ test "Paralyze effect" {
 // Move.{BodySlam,Lick}: ParalyzeChance2
 test "ParalyzeChance effect" {
     // Has a X% chance to paralyze the target.
-    return error.SkipZigTest;
+    const LO_PROC = comptime ranged(26, 256) - 1;
+    const HI_PROC = comptime ranged(77, 256) - 1;
+    const PAR_CAN = MAX;
+    const PAR_CANT = MIN;
+    var t = Test(
+    // zig fmt: off
+    if (showdown) .{
+        NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+        NOP, NOP, HIT, ~CRIT, MIN_DMG, HI_PROC, HIT, ~CRIT, MIN_DMG, HI_PROC, NOP,
+        NOP, PAR_CAN, HIT, ~CRIT, MIN_DMG, LO_PROC,
+        NOP, NOP, HIT, ~CRIT, MIN_DMG, HI_PROC, PAR_CANT, NOP,
+    } else .{
+        ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+        ~CRIT, MIN_DMG, HIT, HI_PROC, ~CRIT, MIN_DMG, HIT, HI_PROC,
+        PAR_CAN, ~CRIT, MIN_DMG, HIT,
+        ~CRIT, MIN_DMG, HIT, PAR_CANT, ~CRIT, HIT,
+    }
+    // zig fmt: on
+    ).init(
+        &.{
+            .{ .species = .Jolteon, .moves = &.{ .BodySlam, .ThunderShock } },
+            .{ .species = .Dugtrio, .moves = &.{.Earthquake} },
+        },
+        &.{.{ .species = .Raticate, .moves = &.{ .BodySlam, .Thunderbolt, .Substitute } }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.BodySlam, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 64;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Thunderbolt, P1.ident(1), null);
+    try t.log.expected.resisted(P1.ident(1));
+    t.expected.p1.get(1).hp -= 21;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(2);
+
+    // Cannot paralyze a Pokémon of the same type as the move
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    try expectEqual(@as(u8, 0), t.actual.p1.get(1).status);
+    try expectEqual(@as(u8, 0), t.actual.p2.get(1).status);
+
+    try t.log.expected.move(P1.ident(1), Move.ThunderShock, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 71;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.BodySlam, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 110;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    t.expected.p1.get(1).status = Status.init(.PAR);
+    try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+    try t.log.expected.turn(3);
+
+    //  Moves have different paralysis rates / Electric-type Pokémon can be paralyzed
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    try expectEqual(t.expected.p1.get(1).status, t.actual.p1.get(1).status);
+    try expectEqual(@as(u8, 0), t.actual.p2.get(1).status);
+
+    try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Substitute);
+    t.expected.p2.get(1).hp -= 78;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.ThunderShock, P2.ident(1), null);
+    try t.log.expected.activate(P2.ident(1), .Substitute);
+    try t.log.expected.turn(4);
+
+    // Paralysis lowers speed / Substitute block paralysis chance
+    try expectEqual(Result.Default, try t.update(move(2), move(3)));
+    try expectEqual(@as(u8, 0), t.actual.p2.get(1).status);
+
+    try t.log.expected.move(P2.ident(1), Move.BodySlam, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 110;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.cant(P1.ident(1), .Paralysis);
+    try t.log.expected.turn(5);
+
+    // Doesn't work if already statused / paralysis can prevent action
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.move(P2.ident(1), Move.Thunderbolt, P1.ident(2), null);
+    try t.log.expected.immune(P1.ident(2), .None);
+    try t.log.expected.turn(6);
+
+    // Doesn't trigger if the opponent is immune to the move
+    try expectEqual(Result.Default, try t.update(swtch(2), move(2)));
+    try t.verify();
 }
 
 // Move.{Sing,SleepPowder,Hypnosis,LovelyKiss,Spore}
