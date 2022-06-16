@@ -2565,7 +2565,96 @@ test "Mist effect" {
 test "HyperBeam effect" {
     // If this move is successful, the user must recharge on the following turn and cannot select a
     // move, unless the target or its substitute was knocked out by this move.
-    return error.SkipZigTest;
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, HIT, ~CRIT, MAX_DMG,
+            NOP, HIT, ~CRIT, MAX_DMG,
+            NOP, HIT, ~CRIT, MIN_DMG,
+            NOP, NOP,
+        } else .{
+            ~CRIT, MAX_DMG, HIT,
+            ~CRIT,MAX_DMG, HIT,
+            ~CRIT, MIN_DMG, HIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{
+            .{ .species = .Tauros, .moves = &.{ .HyperBeam, .BodySlam } },
+            .{ .species = .Exeggutor, .moves = &.{.SleepPowder} },
+        },
+        &.{
+            .{ .species = .Jolteon, .moves = &.{ .Substitute, .Teleport } },
+            .{ .species = .Chansey, .moves = &.{ .Teleport, .SoftBoiled } },
+        },
+    );
+    defer t.deinit();
+
+    const pp = t.expected.p1.get(1).move(1).pp;
+
+    try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Substitute);
+    t.expected.p2.get(1).hp -= 83;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), null);
+    try t.log.expected.end(P2.ident(1), .Substitute);
+    try t.log.expected.turn(2);
+
+    // Doesn't require a recharge if it knocks out a Substitute
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
+
+    var n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), null);
+    t.expected.p2.get(1).hp = 0;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.faint(P2.ident(1), true);
+
+    // Doesn't require a recharge if it knocks out opponent
+    try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(move(1), move(2)));
+    try expectEqual(pp - 2, t.actual.p1.active.move(1).pp);
+
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(.{}, swtch(2)));
+
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ move(1), move(2) }, choices[0..n]);
+
+    try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(2), null);
+    t.expected.p2.get(2).hp -= 442;
+    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+    try t.log.expected.mustrecharge(P1.ident(1));
+    try t.log.expected.move(P2.ident(2), Move.Teleport, P2.ident(2), null);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{if (showdown) move(1) else .{}}, choices[0..n]);
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ move(1), move(2) }, choices[0..n]);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.cant(P1.ident(1), .Recharge);
+    try t.log.expected.move(P2.ident(2), Move.Teleport, P2.ident(2), null);
+    try t.log.expected.turn(5);
+
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ move(1), move(2) }, choices[0..n]);
+
+    try t.verify();
 }
 
 // Move.Counter
