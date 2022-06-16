@@ -1944,7 +1944,7 @@ pub const Effects = struct {
             side.active.volatiles.substitute = hp + 1;
             side.active.volatiles.Substitute = true;
             try log.start(battle.active(player), .Substitute);
-            try log.damage(battle.active(player), side.stored(), .None);
+            if (hp > 0) try log.damage(battle.active(player), side.stored(), .None);
         }
     }
 
@@ -2092,7 +2092,9 @@ pub const Effects = struct {
         var foe = battle.foe(player);
         const foe_ident = battle.active(player.foe());
 
-        if (foe.active.volatiles.Substitute) return;
+        if (foe.active.volatiles.Substitute) {
+            return if (!move.effect.isStatDownChance()) log.fail(foe_ident, .None);
+        }
 
         if (move.effect.isStatDownChance()) {
             const chance = if (showdown)

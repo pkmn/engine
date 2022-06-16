@@ -3370,7 +3370,63 @@ test "Substitute effect" {
     // breaks during a multi-hit attack, the attack ends. Fails if the user does not have enough HP
     // remaining to create a substitute, or if it already has a substitute. The user will create a
     // substitute and then faint if its current HP is exactly 1/4 of its maximum HP.
-    return error.SkipZigTest;
+    var t = Test((if (showdown)
+        (.{ NOP, HIT, NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, NOP, HIT })
+    else
+        (.{ ~CRIT, ~CRIT, MIN_DMG, HIT, ~CRIT, HIT, ~CRIT, HIT }))).init(
+        &.{
+            .{ .species = .Mewtwo, .moves = &.{ .Substitute, .Teleport } },
+            .{ .species = .Abra, .hp = 3, .level = 2, .stats = .{}, .moves = &.{.Substitute} },
+        },
+        &.{.{ .species = .Electabuzz, .stats = .{}, .moves = &.{ .Flash, .Strength } }},
+    );
+    defer t.deinit();
+
+    t.expected.p1.get(2).stats.hp = 3;
+    t.actual.p1.get(2).stats.hp = 3;
+
+    try t.log.expected.move(P1.ident(1), Move.Substitute, P1.ident(1), null);
+    try t.log.expected.start(P1.ident(1), .Substitute);
+    t.expected.p1.get(1).hp -= 103;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Flash, P1.ident(1), null);
+    try t.log.expected.fail(P1.ident(1), .None);
+    try t.log.expected.turn(2);
+
+    // Takes 1/4 of maximum HP to make a Substitute with that HP + 1, protects against stat down
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(@as(u8, 104), t.actual.p1.active.volatiles.substitute);
+
+    try t.log.expected.move(P1.ident(1), Move.Substitute, P1.ident(1), null);
+    try t.log.expected.fail(P1.ident(1), .Substitute);
+    try t.log.expected.move(P2.ident(1), Move.Strength, P1.ident(1), null);
+    try t.log.expected.activate(P1.ident(1), .Substitute);
+    try t.log.expected.turn(3);
+
+    // Can't make a Substitute if you already have one, absorbs damage
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    try expectEqual(@as(u8, 62), t.actual.p1.active.volatiles.substitute);
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.move(P2.ident(1), Move.Flash, P1.ident(2), null);
+    try t.log.expected.unboost(P1.ident(2), .Accuracy, 1);
+    try t.log.expected.turn(4);
+
+    // Disappears when switching out
+    try expectEqual(Result.Default, try t.update(swtch(2), move(1)));
+    try expect(!t.actual.p1.active.volatiles.Substitute);
+
+    try t.log.expected.move(P2.ident(1), Move.Flash, P1.ident(2), null);
+    try t.log.expected.unboost(P1.ident(2), .Accuracy, 1);
+    try t.log.expected.move(P1.ident(2), Move.Substitute, P1.ident(2), null);
+    try t.log.expected.start(P1.ident(2), .Substitute);
+    try t.log.expected.turn(5);
+
+    // Can get "free" Substitutes if 3 or less max HP
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(@as(u8, 1), t.actual.p1.active.volatiles.substitute);
+
+    try t.verify();
 }
 
 // Pokémon Showdown Bugs
