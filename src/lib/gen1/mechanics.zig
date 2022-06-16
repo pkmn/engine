@@ -130,8 +130,15 @@ fn selectMove(
     }
     volatiles.Flinch = false;
     if (volatiles.Thrashing or volatiles.Charging) {
-        from.* = side.last_used_move;
-        if (showdown) saveMove(battle, player, null);
+        // Pokémon Showdown uses last_used_move here because it overwrites it on the first turn of
+        // the Charging effect but on the cartridge we don't have that data so we fall back to the
+        // last_selected_move (which can result in discrepancies)
+        if (showdown) {
+            from.* = side.last_used_move;
+            saveMove(battle, player, null);
+        } else {
+            from.* = side.last_selected_move;
+        }
         return null;
     }
 
@@ -541,24 +548,30 @@ fn canMove(
     const player_ident = battle.active(player);
     const move = Move.get(side.last_selected_move);
 
+    var skip = skip_pp;
     if (side.active.volatiles.Charging) {
         side.active.volatiles.Charging = false;
         side.active.volatiles.Invulnerable = false;
+        if (showdown) skip = true;
     } else if (move.effect == .Charge) {
         try log.move(player_ident, side.last_selected_move, .{}, from);
         try Effects.charge(battle, player, log);
-        // Pokémon Showdown thinks the first turn of charging counts as using a move
-        if (showdown) side.last_used_move = side.last_selected_move;
+        // Pokémon Showdown thinks the first turn of charging counts as using a move and
+        // also decrements PP now instead of when actually resolving the attack (above)
+        if (showdown) {
+            side.last_used_move = side.last_selected_move;
+            if (!skip) decrementPP(side, choice);
+        }
         return false;
     }
 
     // Getting a "locked" move advances the RNG on Pokémon Showdown
     const special = if (from) |m| (m == .Metronome or m == .MirrorMove) else false;
-    const locked = from != null and !special;
-    if (showdown and locked) battle.rng.advance(1);
+    // FIXME const locked = from != null and !special;
+    // if (showdown and locked) battle.rng.advance(1);
 
     side.last_used_move = side.last_selected_move;
-    if (!skip_pp) decrementPP(side, choice);
+    if (!skip) decrementPP(side, choice);
 
     // Metronome / Mirror Move call getRandomTarget if the move they proc targets
     if (showdown and special) battle.rng.advance(@boolToInt(move.target != .Self));
@@ -1284,11 +1297,11 @@ fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
 
     try log.turn(battle.turn);
     // Emitting |request| for each side will advance the RNG by 2 for each "locked" move
-    if (showdown) {
-        const locked = @as(u2, @boolToInt(isLocked(battle.side(.P1).active))) +
-            @as(u2, @boolToInt(isLocked(battle.side(.P2).active)));
-        battle.rng.advance(locked * 2);
-    }
+    // FIXME if (showdown) {
+    //     const locked = @as(u2, @boolToInt(isLocked(battle.side(.P1).active))) +
+    //         @as(u2, @boolToInt(isLocked(battle.side(.P2).active)));
+    //     battle.rng.advance(locked * 2);
+    // }
 
     return Result.Default;
 }
@@ -1435,6 +1448,7 @@ pub const Effects = struct {
         volatiles.Charging = true;
         const move = side.last_selected_move;
         if (move == .Fly or move == .Dig) volatiles.Invulnerable = true;
+        try log.laststill();
         try log.prepare(battle.active(player), move);
     }
 

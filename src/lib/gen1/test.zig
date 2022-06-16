@@ -2031,7 +2031,51 @@ test "OHKO effect" {
 // Move.{RazorWind,SolarBeam,SkullBash,SkyAttack}
 test "Charge effect" {
     // This attack charges on the first turn and executes on the second.
-    return error.SkipZigTest;
+    var t = Test((if (showdown)
+        (.{ NOP, NOP, HIT, ~CRIT, MIN_DMG, NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG })
+    else
+        (.{ ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
+        &.{
+            .{ .species = .Wartortle, .moves = &.{ .SkullBash, .WaterGun } },
+            .{ .species = .Ivysaur, .moves = &.{.VineWhip} },
+        },
+        &.{
+            .{ .species = .Psyduck, .moves = &.{ .Scratch, .WaterGun } },
+            .{ .species = .Horsea, .moves = &.{.Bubble} },
+        },
+    );
+    defer t.deinit();
+
+    const pp = t.expected.p1.get(1).move(1).pp;
+
+    try t.log.expected.move(P1.ident(1), Move.SkullBash, .{}, null);
+    try t.log.expected.laststill();
+    try t.log.expected.prepare(P1.ident(1), Move.SkullBash);
+    try t.log.expected.move(P2.ident(1), Move.Scratch, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 23;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(if (showdown) pp - 1 else pp, t.actual.p1.active.move(1).pp);
+
+    var n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{if (showdown) move(1) else .{}}, choices[0..n]);
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+
+    try t.log.expected.move(P1.ident(1), Move.SkullBash, P2.ident(1), Move.SkullBash);
+    t.expected.p2.get(1).hp -= 83;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Scratch, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 23;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
+
+    try t.verify();
 }
 
 // Move.{Fly,Dig}
@@ -3163,7 +3207,7 @@ test "Explode effect" {
 test "Swift effect" {
     // This move does not check accuracy and hits even if the target is using Dig or Fly.
     var t = Test(if (showdown)
-        (.{ NOP, NOP, NOP, ~CRIT, MIN_DMG, NOP, NOP }) // FIXME: SSR
+        (.{ NOP, NOP, NOP, ~CRIT, MIN_DMG }) // FIXME: SS_RES, GLM
     else
         (.{ ~CRIT, MIN_DMG })).init(
         &.{.{ .species = .Eevee, .moves = &.{.Swift} }},
@@ -3172,6 +3216,7 @@ test "Swift effect" {
     defer t.deinit();
 
     try t.log.expected.move(P2.ident(1), Move.Dig, .{}, null);
+    try t.log.expected.laststill();
     try t.log.expected.prepare(P2.ident(1), Move.Dig);
     try t.log.expected.move(P1.ident(1), Move.Swift, P2.ident(1), null);
     t.expected.p2.get(1).hp -= 91;
