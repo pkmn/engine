@@ -1434,26 +1434,26 @@ pub const Effects = struct {
 
         if (move.effect == .ConfusionChance) {
             // Substitute incorrectly blocks secondary effect confusion on Pokémon Showdown
-            if (showdown and foe.active.volatiles.Substitute) return;
+            if (showdown and foe.active.volatiles.Substitute) return battle.rng.advance(1);
             const chance = if (showdown)
                 // Due to a Pokémon Showdown bug this is incorrectly 26 instead of 25
                 battle.rng.chance(u8, 26, 256)
             else
                 battle.rng.next() < Gen12.percent(10);
             if (!chance) return;
-        }
-
-        if (showdown) {
-            if (!try checkHit(battle, player, move, log)) {
-                return;
-            } else if (foe.active.volatiles.Substitute) {
-                return log.fail(battle.active(player.foe()), .None);
-            }
         } else {
-            if (foe.active.volatiles.Substitute) {
-                return log.fail(battle.active(player.foe()), .None);
-            } else if (!try checkHit(battle, player, move, log)) {
-                return;
+            if (showdown) {
+                if (!try checkHit(battle, player, move, log)) {
+                    return;
+                } else if (foe.active.volatiles.Substitute) {
+                    return log.fail(battle.active(player.foe()), .None);
+                }
+            } else {
+                if (foe.active.volatiles.Substitute) {
+                    return log.fail(battle.active(player.foe()), .None);
+                } else if (!try checkHit(battle, player, move, log)) {
+                    return;
+                }
             }
         }
 
