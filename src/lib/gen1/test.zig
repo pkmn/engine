@@ -1200,10 +1200,65 @@ test "BurnChance effect" {
 }
 
 // Move.{IcePunch,IceBeam,Blizzard}: FreezeChance
-test "FreezeChance effect" {
-    // Has a 10% chance to freeze the target.
-    return error.SkipZigTest;
-}
+// test "FreezeChance effect" {
+//     // Has a 10% chance to freeze the target.
+//     const FRZ = comptime ranged(26, 256) - 1;
+//     var t = Test(
+//     // zig fmt: off
+//     if (showdown) .{
+//         NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, NOP,
+//         NOP, NOP, HIT, ~CRIT, MIN_DMG, FRZ, MIN,
+//         NOP, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
+//         NOP, NOP, HIT,
+//         NOP, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
+//         NOP, HIT, ~CRIT, MIN_DMG, MIN,
+//         NOP, NOP,
+//         NOP, HIT, ~CRIT, MIN_DMG,
+//         NOP, HIT, ~CRIT, MIN_DMG, FRZ,
+//     } else .{
+//         // TODO
+//     }
+//     // zig fmt: on
+//     ).init(
+//         &.{
+//             .{ .species = .Starmie, .moves = &.{.IceBeam} },
+//             .{ .species = .Magmar, .moves = &.{ .Flamethrower, .Substitute } },
+//             .{ .species = .Lickitung, .moves = &.{.Slam} },
+//         },
+//         &.{.{
+//             .species = .Jynx,
+//             .moves = &.{ .ThunderWave, .Blizzard, .FireSpin, .Flamethrower },
+//         }},
+//     );
+//     defer t.deinit();
+
+//     // Can't freeze Ice-types
+//     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+//     // Can't freeze a Pokémon which is already statused
+//     try expectEqual(Result.Default, try t.update(move(1), move(2)));
+
+//     // Can freeze Fire types
+//     try expectEqual(Result.Default, try t.update(swtch(2), move(2)));
+
+//     // Freezing prevents action
+//     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+//     // Freeze Clause Mod prevents multiple Pokémon from being frozen
+//     try expectEqual(Result.Default, try t.update(swtch(3), move(2)));
+
+//     // Fire Spin does not thaw frozen Pokémon
+//     try expectEqual(Result.Default, try t.update(swtch(3), move(3)));
+
+//     try expectEqual(Result.Default, try t.update(move(1), move(3)));
+
+//     // Other Fire moves thaw frozen Pokémon
+//     try expectEqual(Result.Default, try t.update(move(2), move(4)));
+
+//     // Substitute blocks Freeze
+//     try expectEqual(Result.Default, try t.update(move(2), move(2)));
+//     try t.verify();
+// }
 
 // Move.{ThunderWave,StunSpore,Glare}
 test "Paralyze effect" {
