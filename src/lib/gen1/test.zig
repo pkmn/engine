@@ -2192,7 +2192,52 @@ test "Mimic effect" {
     // even if the user already knows that move. The copied move keeps the remaining PP for this
     // move, regardless of the copied move's maximum PP. Whenever one PP is used for a copied move,
     // one PP is used for this move.
-    return error.SkipZigTest;
+    var t = Test((if (showdown) .{ NOP, MAX } else .{ HIT, 2 })).init(
+        &.{
+            .{ .species = .MrMime, .moves = &.{.Mimic} },
+            .{ .species = .Abra, .moves = &.{.Teleport} },
+        },
+        &.{.{ .species = .Jigglypuff, .moves = &.{ .Blizzard, .Thunderbolt, .Teleport } }},
+    );
+    defer t.deinit();
+
+    const pp = t.expected.p1.get(1).move(1).pp;
+
+    try expectEqual(Move.Mimic, t.actual.p1.get(1).move(1).id);
+    try expectEqual(pp, t.actual.p1.get(1).move(1).pp);
+
+    try t.log.expected.move(P1.ident(1), Move.Mimic, P2.ident(1), null);
+    try t.log.expected.startEffect(P1.ident(1), .Mimic, Move.Teleport);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(3)));
+    try expectEqual(Move.Teleport, t.actual.p1.active.move(1).id);
+    try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
+
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(3)));
+    try expectEqual(Move.Teleport, t.actual.p1.active.move(1).id);
+    try expectEqual(pp - 2, t.actual.p1.active.move(1).pp);
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(swtch(2), move(3)));
+
+    try t.log.expected.switched(P1.ident(1), t.expected.p1.get(1));
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(5);
+
+    try expectEqual(Result.Default, try t.update(swtch(2), move(3)));
+    try expectEqual(Move.Mimic, t.actual.p1.active.move(1).id);
+    try expectEqual(pp - 2, t.actual.p1.active.move(1).pp);
+
+    try t.verify();
 }
 
 // Move.LightScreen

@@ -1474,9 +1474,8 @@ pub const Effects = struct {
             return log.miss(battle.active(player));
         }
 
-        const moves = &foe.active.moves;
         // Pokémon Showdown incorrectly does not check for moves with 0 PP
-        volatiles.disabled.move = randomMoveSlot(&battle.rng, moves, !showdown);
+        volatiles.disabled.move = randomMoveSlot(&battle.rng, &foe.active.moves, !showdown);
 
         // On Pokémon Showdown this range is incorrectly 2-7 instead of 1-8
         volatiles.disabled.duration = @truncate(u4, if (showdown)
@@ -1484,7 +1483,7 @@ pub const Effects = struct {
         else
             (battle.rng.next() & 7) + 1);
 
-        try log.startEffect(foe_ident, .Disable, moves[volatiles.disabled.move].id);
+        try log.startEffect(foe_ident, .Disable, foe.active.move(volatiles.disabled.move).id);
     }
 
     fn drainHP(battle: anytype, player: Player, log: anytype) !void {
@@ -1670,9 +1669,9 @@ pub const Effects = struct {
 
         // Pokémon Showdown incorrectly requires the user to have Mimic (but not necessarily at
         // mslot). In reality, Mimic can also be called via Metronome or Mirror Move
-        assert(showdown or side.active.moves[mslot].id == .Mimic or
-            side.active.moves[mslot].id == .Metronome or
-            side.active.moves[mslot].id == .MirrorMove);
+        assert(showdown or side.active.move(mslot).id == .Mimic or
+            side.active.move(mslot).id == .Metronome or
+            side.active.move(mslot).id == .MirrorMove);
 
         // Pokémon Showdown incorrectly replaces the existing Mimic's slot instead of mslot
         var oslot = mslot;
@@ -1692,12 +1691,10 @@ pub const Effects = struct {
             return;
         }
 
-        const moves = &foe.active.moves;
-        const rslot = randomMoveSlot(&battle.rng, moves, false);
+        const rslot = randomMoveSlot(&battle.rng, &foe.active.moves, false);
+        side.active.move(oslot).id = foe.active.move(rslot).id;
 
-        side.active.moves[oslot].id = moves[rslot].id;
-
-        try log.startEffect(battle.active(player), .Mimic, moves[rslot].id);
+        try log.startEffect(battle.active(player), .Mimic, side.active.move(oslot).id);
     }
 
     fn mist(battle: anytype, player: Player, log: anytype) !void {
@@ -2233,18 +2230,29 @@ fn distribution(battle: anytype) u3 {
 fn randomMoveSlot(rand: anytype, moves: []MoveSlot, check_pp: bool) u4 {
     if (showdown) {
         var i: usize = moves.len;
+        var n: usize = 0;
         while (i > 0) {
             i -= 1;
-            if (moves[i].id != .None and (!check_pp or moves[i].pp > 0)) {
-                return rand.range(u4, 0, @truncate(u4, i));
+            if (moves[i].id != .None) {
+                if (!check_pp) return rand.range(u4, 0, @truncate(u4, i + 1)) + 1;
+                if (moves[i].pp > 0) n += 1;
             }
         }
-        unreachable;
+        assert(check_pp);
+        var r = rand.range(u4, 0, @truncate(u4, n));
+        i = 0;
+        while (i < moves.len and r > 0) : (i += 1) {
+            if (moves[i].pp > 0) {
+                r -= 1;
+                if (r == 0) break;
+            }
+        }
+        return @truncate(u4, i + 1);
     }
 
     while (true) {
         const r = @truncate(u4, rand.next() & 3);
-        if (moves[r].id != .None and (!check_pp or moves[r].pp > 0)) return r;
+        if (moves[r].id != .None and (!check_pp or moves[r].pp > 0)) return r + 1;
     }
 }
 
