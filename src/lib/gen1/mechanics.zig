@@ -561,6 +561,7 @@ fn canMove(
         return false;
     }
 
+    // FIXME: if (!showdown)
     if (move.effect == .Thrashing) {
         Effects.thrashing(battle, player);
     } else if (move.effect == .Trapping) {

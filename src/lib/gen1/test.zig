@@ -2711,10 +2711,50 @@ test "Hyper Beam + Sleep move glitch" {
     return error.SkipZigTest;
 }
 
-test "Hyper Beam automatic selection glitch" {
-    // https://glitchcity.wiki/Hyper_Beam_automatic_selection_glitch
-    return error.SkipZigTest;
-}
+// test "Hyper Beam automatic selection glitch" {
+//     // https://glitchcity.wiki/Hyper_Beam_automatic_selection_glitch
+//     var t = Test((if (showdown)
+//         (.{ NOP, NOP, ~HIT, HIT, ~CRIT, MIN_DMG, NOP, NOP, ~HIT, NOP })
+//     else
+//         (.{}))).init(
+//         &.{.{ .species = .Chansey, .moves = &.{ .HyperBeam, .SoftBoiled } }},
+//         &.{.{ .species = .Tentacool, .moves = &.{.Wrap} }},
+//     );
+//     defer t.deinit();
+
+//     t.actual.p1.get(1).move(1).pp = 1;
+
+//     try t.log.expected.move(P2.ident(1), Move.Wrap, P1.ident(1), null);
+//     try t.log.expected.lastmiss();
+//     try t.log.expected.miss(P2.ident(1));
+//     try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), null);
+//     t.expected.p2.get(1).hp -= 105;
+//     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+//     try t.log.expected.mustrecharge(P1.ident(1));
+//     try t.log.expected.turn(2);
+
+//     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+//     try expectEqual(@as(u8, 0), t.actual.p1.get(1).move(1).pp);
+
+//     try t.log.expected.move(P2.ident(1), Move.Wrap, P1.ident(1), null);
+//     try t.log.expected.lastmiss();
+//     try t.log.expected.miss(P2.ident(1));
+//     if (showdown) {
+//         try t.log.expected.cant(P1.ident(1), .Recharge);
+//     } else {
+//         try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), null);
+//         t.expected.p2.get(1).hp -= 105;
+//         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+//         try t.log.expected.mustrecharge(P1.ident(1));
+//     }
+//     try t.log.expected.turn(3);
+
+//     // Missing should cause Hyper Beam to be automatically selected and underflow
+//     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+//     if (!showdown) try expectEqual(@as(u8, 63), t.actual.p1.get(1).move(1).pp);
+
+//     try t.verify();
+// }
 
 test "Invulnerability glitch" {
     // https://pkmn.cc/bulba-glitch-1#Invulnerability_glitch
