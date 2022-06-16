@@ -3008,7 +3008,21 @@ test "LeechSeed effect" {
 // Move.PayDay
 test "PayDay effect" {
     // "Scatters coins"
-    return error.SkipZigTest;
+    var t = Test((if (showdown) .{ NOP, HIT, ~CRIT, MAX_DMG } else .{ ~CRIT, MAX_DMG, HIT })).init(
+        &.{.{ .species = .Meowth, .moves = &.{.PayDay} }},
+        &.{.{ .species = .Slowpoke, .moves = &.{.Teleport} }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.PayDay, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 43;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.fieldactivate();
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.verify();
 }
 
 // Move.Rage
