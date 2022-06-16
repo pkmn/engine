@@ -960,7 +960,83 @@ test "DoubleHit effect" {
 // Move.{PoisonPowder,PoisonGas}
 test "Poison effect" {
     // (Badly) Poisons the target.
-    return error.SkipZigTest;
+    var t = Test((if (showdown)
+        (.{ NOP, HIT, NOP, HIT, NOP, HIT, NOP, NOP, HIT, NOP })
+    else
+        (.{ HIT, HIT }))).init(
+        &.{
+            .{ .species = .Jolteon, .moves = &.{ .Toxic, .Substitute } },
+            .{ .species = .Abra, .moves = &.{.Teleport} },
+        },
+        &.{
+            .{ .species = .Venomoth, .moves = &.{ .Teleport, .Toxic } },
+            .{ .species = .Drowzee, .moves = &.{ .PoisonGas, .Teleport } },
+        },
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(1), null);
+    try t.log.expected.immune(P2.ident(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(2);
+
+    // Poison-type Pokémon cannot be poisoned
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.Substitute, P1.ident(1), null);
+    try t.log.expected.start(P1.ident(1), .Substitute);
+    t.expected.p1.get(1).hp -= 83;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Toxic, P1.ident(1), null);
+    try t.log.expected.fail(P1.ident(1), .None);
+    try t.log.expected.turn(3);
+
+    // Substitute blocks poison
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    try expectEqual(@as(u8, 0), t.actual.p1.get(1).status);
+
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(2), null);
+    t.expected.p2.get(2).status = Status.init(.PSN);
+    try t.log.expected.status(P2.ident(2), t.expected.p2.get(2).status, .None);
+    try t.log.expected.turn(4);
+
+    // Toxic damage increases each turn
+    try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+    try expectEqual(t.expected.p2.get(2).status, t.actual.p2.get(1).status);
+    try expect(t.actual.p2.active.volatiles.Toxic);
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.move(P2.ident(2), Move.PoisonGas, P1.ident(2), null);
+    t.expected.p1.get(2).status = Status.init(.PSN);
+    try t.log.expected.status(P1.ident(2), t.expected.p1.get(2).status, .None);
+    t.expected.p2.get(2).hp -= 20;
+    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .Poison);
+    try t.log.expected.turn(5);
+
+    try expectEqual(Result.Default, try t.update(swtch(2), move(1)));
+    try expectEqual(t.expected.p1.get(2).status, t.actual.p1.get(1).status);
+
+    try t.log.expected.move(P1.ident(2), Move.Teleport, P1.ident(2), null);
+    t.expected.p1.get(2).hp -= 15;
+    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .Poison);
+    try t.log.expected.move(P2.ident(2), Move.Teleport, P2.ident(2), null);
+    t.expected.p2.get(2).hp -= 40;
+    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .Poison);
+    try t.log.expected.turn(6);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+
+    try t.log.expected.move(P1.ident(2), Move.Teleport, P1.ident(2), null);
+    t.expected.p1.get(2).hp -= 15;
+    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .Poison);
+    try t.log.expected.move(P2.ident(2), Move.Teleport, P2.ident(2), null);
+    t.expected.p2.get(2).hp -= 60;
+    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .Poison);
+    try t.log.expected.turn(7);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    try t.verify();
 }
 
 // Move.PoisonSting

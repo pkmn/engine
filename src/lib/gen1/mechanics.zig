@@ -1784,12 +1784,9 @@ pub const Effects = struct {
 
         if (showdown and move.effect == .Poison and !try checkHit(battle, player, move, log)) {
             return;
-        }
-
-        const cant = foe.active.volatiles.Substitute or
-            Status.any(foe_stored.status) or
-            foe.active.types.includes(.Poison);
-        if (cant) {
+        } else if (foe.active.types.includes(.Poison)) {
+            return log.immune(foe_ident, .None);
+        } else if (foe.active.volatiles.Substitute or Status.any(foe_stored.status)) {
             return log.fail(foe_ident, if (Status.is(foe_stored.status, .PSN)) .Poison else .None);
         }
 
