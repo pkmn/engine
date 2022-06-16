@@ -1441,8 +1441,22 @@ pub const Effects = struct {
             else
                 battle.rng.next() < Gen12.percent(10);
             if (!chance) return;
-        } else if (foe.active.volatiles.Substitute or
-            !try checkHit(battle, player, move, log)) return;
+        }
+
+        if (showdown) {
+            if (!try checkHit(battle, player, move, log)) {
+                return;
+            } else if (foe.active.volatiles.Substitute) {
+                return log.fail(battle.active(player.foe()), .None);
+            }
+        } else {
+            if (foe.active.volatiles.Substitute) {
+                return log.fail(battle.active(player.foe()), .None);
+            } else if (!try checkHit(battle, player, move, log)) {
+                return;
+            }
+        }
+
         if (foe.active.volatiles.Confusion) return;
         foe.active.volatiles.Confusion = true;
         foe.active.volatiles.confusion = @truncate(u3, if (showdown)
@@ -2016,7 +2030,7 @@ pub const Effects = struct {
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.spe) + 6)];
                 const stat = unmodifiedStats(battle, player).spe;
                 stats.spe = @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
-                try log.boost(ident, .Speed, 1);
+                try log.boost(ident, .Speed, 2);
             },
             .SpecialUp1, .SpecialUp2 => {
                 assert(boosts.spc >= -6 and boosts.spc <= 6);

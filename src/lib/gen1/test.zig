@@ -1541,7 +1541,81 @@ test "Sleep effect" {
 // Move.{Supersonic,ConfuseRay}
 test "Confusion effect" {
     // Causes the target to become confused.
-    return error.SkipZigTest;
+    const CFZ_3 = if (showdown) comptime ranged(2, 6 - 2) - 1 else 1;
+    const CFZ_CAN = if (showdown) comptime ranged(128, 256) - 1 else MIN;
+    const CFZ_CANT = if (showdown) CFZ_CAN + 1 else MAX;
+    var t = Test((if (showdown)
+        (.{ NOP, HIT, NOP, HIT, NOP, HIT, CFZ_3, NOP, CFZ_CANT, HIT, NOP, CFZ_CAN, HIT, NOP, HIT })
+    else
+        (.{ HIT, ~CRIT, HIT, CFZ_3, CFZ_CANT, HIT, CFZ_CAN, ~CRIT, HIT, ~CRIT, HIT }))).init(
+        &.{.{ .species = .Haunter, .moves = &.{ .ConfuseRay, .NightShade } }},
+        &.{.{ .species = .Gengar, .moves = &.{ .Substitute, .Agility } }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Substitute);
+    t.expected.p2.get(1).hp -= 80;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.ConfuseRay, P2.ident(1), null);
+    try t.log.expected.fail(P2.ident(1), .None);
+    try t.log.expected.turn(2);
+
+    // Confusion is blocked by Substitute
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expect(!t.actual.p2.active.volatiles.Confusion);
+
+    try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+    try t.log.expected.fail(P2.ident(1), .Substitute);
+    try t.log.expected.move(P1.ident(1), Move.NightShade, P2.ident(1), null);
+    try t.log.expected.end(P2.ident(1), .Substitute);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+
+    try t.log.expected.move(P2.ident(1), Move.Agility, P2.ident(1), null);
+    try t.log.expected.boost(P2.ident(1), .Speed, 2);
+    try t.log.expected.move(P1.ident(1), Move.ConfuseRay, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Confusion);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    try expect(t.actual.p2.active.volatiles.Confusion);
+
+    try t.log.expected.activate(P2.ident(1), .Confusion);
+    // Confused Pokémon can hurt themselves in confusion (typeless damage)
+    t.expected.p2.get(1).hp -= 37;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.ConfuseRay, P2.ident(1), null);
+    try t.log.expected.turn(5);
+
+    // Can't confuse a Pokémon that already has a confusion
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+
+    try t.log.expected.activate(P2.ident(1), .Confusion);
+    try t.log.expected.move(P2.ident(1), Move.Agility, P2.ident(1), null);
+    try t.log.expected.boost(P2.ident(1), .Speed, 2);
+    try t.log.expected.move(P1.ident(1), Move.NightShade, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 100;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(6);
+
+    // Pokémon can still successfully move despite being confused
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+
+    try t.log.expected.end(P2.ident(1), .Confusion);
+    try t.log.expected.move(P2.ident(1), Move.Agility, P2.ident(1), null);
+    try t.log.expected.boost(P2.ident(1), .Speed, 2);
+    try t.log.expected.move(P1.ident(1), Move.NightShade, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 100;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(7);
+
+    // Pokémon snap out of confusion
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    try expect(!t.actual.p2.active.volatiles.Confusion);
+
+    try t.verify();
 }
 
 // Move.{Psybeam,Confusion}: ConfusionChance
