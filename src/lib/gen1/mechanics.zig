@@ -435,7 +435,7 @@ fn beforeMove(battle: anytype, player: Player, log: anytype) !BeforeMove {
                 const move = Move.get(.Pound);
                 if (!calcDamage(battle, player, player, move, false)) return .err;
                 // Skipping adjustDamage / randomizeDamage / checkHit
-                _ = try applyDamage(battle, player, player.foe(), log);
+                _ = try applyDamage(battle, player, player.foe(), move, log);
 
                 return .done;
             }
@@ -489,7 +489,7 @@ fn beforeMove(battle: anytype, player: Player, log: anytype) !BeforeMove {
             return .done;
         }
 
-        _ = try applyDamage(battle, player.foe(), player.foe(), log);
+        _ = try applyDamage(battle, player.foe(), player.foe(), Move.get(.Bide), log);
         return .done;
     }
 
@@ -512,7 +512,8 @@ fn beforeMove(battle: anytype, player: Player, log: anytype) !BeforeMove {
     if (volatiles.Trapping) {
         assert(volatiles.attacks > 0);
         volatiles.attacks -= 1;
-        _ = try applyDamage(battle, player.foe(), player.foe(), log);
+        const move = Move.get(side.last_selected_move);
+        _ = try applyDamage(battle, player.foe(), player.foe(), move, log);
         return .done;
     }
 
@@ -718,7 +719,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
             // Recoil is supposed to be damage/8 but damage will always be 0 here
             assert(battle.last_damage == 0);
             battle.last_damage = 1;
-            _ = try applyDamage(battle, player, player.foe(), log);
+            _ = try applyDamage(battle, player, player.foe(), move, log);
         } else if (move.effect == .Explode) {
             try Effects.explode(battle, player);
             // Pokémon Showdown does not build Rage after missing Self-Destruct/Explosion
@@ -751,7 +752,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
                 try log.resisted(battle.active(player.foe()));
             }
         }
-        if (!skip) nullified = try applyDamage(battle, player.foe(), player.foe(), log);
+        if (!skip) nullified = try applyDamage(battle, player.foe(), player.foe(), move, log);
         if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
             try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
         }
@@ -951,7 +952,7 @@ fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
 
     if (battle.last_damage == 0) return if (showdown) null else Result.Error;
 
-    _ = try applyDamage(battle, player.foe(), player.foe(), log);
+    _ = try applyDamage(battle, player.foe(), player.foe(), move, log);
     return null;
 }
 
@@ -996,11 +997,17 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
     // Pokémon Showdown calls checkHit before Counter
     if (!showdown and !try checkHit(battle, player, move, log)) return null;
 
-    _ = try applyDamage(battle, player.foe(), player.foe(), log);
+    _ = try applyDamage(battle, player.foe(), player.foe(), move, log);
     return null;
 }
 
-fn applyDamage(battle: anytype, target_player: Player, sub_player: Player, log: anytype) !bool {
+fn applyDamage(
+    battle: anytype,
+    target_player: Player,
+    sub_player: Player,
+    move: Move.Data,
+    log: anytype,
+) !bool {
     assert(battle.last_damage != 0 or showdown);
 
     var target = battle.side(target_player);
@@ -1020,14 +1027,14 @@ fn applyDamage(battle: anytype, target_player: Player, sub_player: Player, log: 
             // Safe to truncate since less than subbed.volatiles.substitute which is a u8
             subbed.active.volatiles.substitute -= @truncate(u8, battle.last_damage);
             try log.activate(battle.active(sub_player), .Substitute);
+            // Attacking a Substitute with Hyper Beam never causes a recharge on Pokémon Showdown
+            return showdown and move.effect == .HyperBeam;
         }
-        // Attacking a Substitute with Hyper Beam never causes a recharge on Pokémon Showdown
-        if (showdown) battle.foe(target_player).active.volatiles.Recharging = false;
-    } else {
-        if (battle.last_damage > target.stored().hp) battle.last_damage = target.stored().hp;
-        target.stored().hp -= battle.last_damage;
-        try log.damage(battle.active(target_player), target.stored(), .None);
     }
+
+    if (battle.last_damage > target.stored().hp) battle.last_damage = target.stored().hp;
+    target.stored().hp -= battle.last_damage;
+    try log.damage(battle.active(target_player), target.stored(), .None);
     return false;
 }
 
