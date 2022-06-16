@@ -1047,17 +1047,17 @@ test "PoisonChance effect" {
     const HI_PROC = comptime ranged(103, 256) - 1;
     var t = Test(
     // zig fmt: off
-    if (showdown) .{
-        NOP, NOP, HIT, ~CRIT, MIN_DMG, LO_PROC, HIT, ~CRIT, MIN_DMG, HI_PROC,
-        NOP, HIT, ~CRIT, MAX_DMG, HI_PROC,
-        NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC, NOP,
-        NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC,
-    } else .{
-        ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, HI_PROC,
-        ~CRIT, MAX_DMG, HIT,
-        ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, LO_PROC,
-        ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
-    }
+        if (showdown) .{
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, LO_PROC, HIT, ~CRIT, MIN_DMG, HI_PROC,
+            NOP, HIT, ~CRIT, MAX_DMG, HI_PROC,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC, NOP,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC,
+        } else .{
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, HI_PROC,
+            ~CRIT, MAX_DMG, HIT,
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, LO_PROC,
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+        }
     // zig fmt: on
     ).init(
         &.{.{ .species = .Tentacruel, .moves = &.{ .PoisonSting, .Sludge } }},
@@ -1127,17 +1127,17 @@ test "BurnChance effect" {
     const HI_PROC = comptime ranged(77, 256) - 1;
     var t = Test(
     // zig fmt: off
-    if (showdown) .{
-        NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HI_PROC,
-        NOP, HIT, ~CRIT, MIN_DMG, HI_PROC,
-        NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC, NOP,
-        NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC,
-    } else .{
-        ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, HI_PROC,
-        ~CRIT, MIN_DMG, HIT,
-        ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, LO_PROC,
-        ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
-    }
+        if (showdown) .{
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HI_PROC,
+            NOP, HIT, ~CRIT, MIN_DMG, HI_PROC,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC, NOP,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC,
+        } else .{
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, HI_PROC,
+            ~CRIT, MIN_DMG, HIT,
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, LO_PROC,
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+        }
     // zig fmt: on
     ).init(
         &.{.{ .species = .Charizard, .moves = &.{ .Ember, .FireBlast } }},
@@ -1369,17 +1369,17 @@ test "ParalyzeChance effect" {
     const PAR_CANT = MIN;
     var t = Test(
     // zig fmt: off
-    if (showdown) .{
-        NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
-        NOP, NOP, HIT, ~CRIT, MIN_DMG, HI_PROC, HIT, ~CRIT, MIN_DMG, HI_PROC, NOP,
-        NOP, PAR_CAN, HIT, ~CRIT, MIN_DMG, LO_PROC,
-        NOP, NOP, HIT, ~CRIT, MIN_DMG, HI_PROC, PAR_CANT, NOP,
-    } else .{
-        ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
-        ~CRIT, MIN_DMG, HIT, HI_PROC, ~CRIT, MIN_DMG, HIT, HI_PROC,
-        PAR_CAN, ~CRIT, MIN_DMG, HIT,
-        ~CRIT, MIN_DMG, HIT, PAR_CANT, ~CRIT, HIT,
-    }
+        if (showdown) .{
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HI_PROC, HIT, ~CRIT, MIN_DMG, HI_PROC, NOP,
+            NOP, PAR_CAN, HIT, ~CRIT, MIN_DMG, LO_PROC,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HI_PROC, PAR_CANT, NOP,
+        } else .{
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+            ~CRIT, MIN_DMG, HIT, HI_PROC, ~CRIT, MIN_DMG, HIT, HI_PROC,
+            PAR_CAN, ~CRIT, MIN_DMG, HIT,
+            ~CRIT, MIN_DMG, HIT, PAR_CANT, ~CRIT, HIT,
+        }
     // zig fmt: on
     ).init(
         &.{
@@ -1453,7 +1453,89 @@ test "ParalyzeChance effect" {
 // Move.{Sing,SleepPowder,Hypnosis,LovelyKiss,Spore}
 test "Sleep effect" {
     // Causes the target to fall asleep.
-    return error.SkipZigTest;
+    const SLP_1 = if (showdown) comptime ranged(1, 8 - 1) else 1;
+    const SLP_2 = if (showdown) comptime ranged(2, 8 - 1) else 2;
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, HIT, NOP, SLP_1,
+            NOP, NOP, HIT, NOP, SLP_2,
+            NOP, HIT, NOP,
+            NOP, HIT,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG,
+        } else .{
+            ~CRIT, HIT, SLP_1,
+            ~CRIT, HIT, SLP_2,
+            ~CRIT, HIT, SLP_2,
+            ~CRIT,
+            ~CRIT, MIN_DMG, HIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Parasect, .moves = &.{ .Spore, .Cut } }},
+        &.{
+            .{ .species = .Geodude, .moves = &.{.Tackle} },
+            .{ .species = .Slowpoke, .moves = &.{.WaterGun} },
+        },
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Spore, P2.ident(1), null);
+    t.expected.p2.get(1).status = Status.slp(1);
+    try t.log.expected.statusFrom(P2.ident(1), t.expected.p2.get(1).status, Move.Spore);
+    try t.log.expected.curestatus(P2.ident(1), t.expected.p2.get(1).status, .Message);
+    try t.log.expected.turn(2);
+
+    // Can wake up immediately but still lose their turn
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(@as(u8, 0), t.actual.p2.get(1).status);
+
+    try t.log.expected.move(P1.ident(1), Move.Spore, P2.ident(1), null);
+    t.expected.p2.get(1).status = Status.slp(2);
+    try t.log.expected.statusFrom(P2.ident(1), t.expected.p2.get(1).status, Move.Spore);
+    t.expected.p2.get(1).status -= 1;
+    try t.log.expected.cant(P2.ident(1), .Sleep);
+    try t.log.expected.turn(3);
+
+    // Can be put to sleep for multiple turns
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
+
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.move(P1.ident(1), Move.Spore, P2.ident(2), null);
+    if (showdown) {
+        t.expected.p2.get(2).status = 0;
+    } else {
+        t.expected.p2.get(2).status = Status.slp(2);
+        try t.log.expected.statusFrom(P2.ident(2), t.expected.p2.get(2).status, Move.Spore);
+    }
+    try t.log.expected.turn(4);
+
+    // Sleep Clause Mod prevents multiple Pokémon from being put to sleep
+    try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+    try expectEqual(t.expected.p2.get(2).status, t.actual.p2.get(1).status);
+
+    try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
+    try t.log.expected.move(P1.ident(1), Move.Spore, P2.ident(1), null);
+    try t.log.expected.fail(P2.ident(1), .Sleep);
+    try t.log.expected.turn(5);
+
+    // Can't sleep someone already sleeping, turns only decrement while in battle
+    try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+    try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
+
+    try t.log.expected.move(P1.ident(1), Move.Cut, P2.ident(1), null);
+    try t.log.expected.resisted(P2.ident(1));
+    t.expected.p2.get(1).hp -= 17;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.curestatus(P2.ident(1), t.expected.p2.get(1).status, .Message);
+    try t.log.expected.turn(6);
+
+    // Eventually wakes up
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    try expectEqual(@as(u8, 0), t.actual.p2.get(1).status);
+
+    try t.verify();
 }
 
 // Move.{Supersonic,ConfuseRay}

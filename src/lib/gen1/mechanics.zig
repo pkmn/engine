@@ -1557,9 +1557,7 @@ pub const Effects = struct {
         // Freeze Clause Mod
         if (showdown) {
             battle.rng.advance(1);
-            for (foe.pokemon) |p| {
-                if (Status.is(p.status, .FRZ)) return log.fail(foe_ident, .Freeze);
-            }
+            for (foe.pokemon) |p| if (Status.is(p.status, .FRZ)) return;
         }
 
         foe_stored.status = Status.init(.FRZ);
@@ -1860,9 +1858,7 @@ pub const Effects = struct {
         if (showdown) {
             battle.rng.advance(1);
             for (foe.pokemon) |p| {
-                if (Status.is(p.status, .SLP) and !Status.is(p.status, .SLF)) {
-                    return log.fail(foe_ident, .Sleep);
-                }
+                if (Status.is(p.status, .SLP) and !Status.is(p.status, .SLF)) return;
             }
         }
 
