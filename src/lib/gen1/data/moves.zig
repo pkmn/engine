@@ -1575,19 +1575,19 @@ pub const Move = enum(u8) {
         BurnChance1,
         BurnChance2,
         ConfusionChance,
-        Disable,
         FlinchChance1,
         FlinchChance2,
         FreezeChance,
+        ParalyzeChance1,
+        ParalyzeChance2,
+        PoisonChance1,
+        PoisonChance2,
+        Disable,
         HighCritical,
         HyperBeam,
         Metronome,
         MirrorMove,
         OHKO,
-        ParalyzeChance1,
-        ParalyzeChance2,
-        PoisonChance1,
-        PoisonChance2,
 
         comptime {
             assert(@sizeOf(Effect) == 1);
@@ -1620,6 +1620,11 @@ pub const Move = enum(u8) {
 
         pub inline fn isStatDownChance(effect: Effect) bool {
             return @enumToInt(effect) > 47 and @enumToInt(effect) <= 51;
+        }
+
+        pub inline fn isSecondaryChance(effect: Effect) bool {
+            // NB: isSecondaryChance includes isStatDownChance
+            return @enumToInt(effect) > 47 and @enumToInt(effect) <= 61;
         }
     };
 

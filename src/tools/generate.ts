@@ -115,6 +115,11 @@ const STAT_DOWN_CHANCE = [
   'AttackDownChance', 'DefenseDownChance', 'SpeedDownChance', 'SpecialDownChance',
 ];
 
+const SECONDARY_CHANCE = [
+  'BurnChance1', 'BurnChance2', 'ConfusionChance', 'FlinchChance1', 'FlinchChance2',
+  'FreezeChance', 'ParalyzeChance1', 'ParalyzeChance2', 'PoisonChance1', 'PoisonChance2',
+];
+
 // Technically DoubleHit and MultiHit belong here but they're handled subtly differently. Similarly,
 // Rage is not considered to be "special" though is considered to "always happen", but simply
 // considering it "special" is simpler and allows us to avoid redundantly calling Rage twice anyway
@@ -400,14 +405,16 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
           ? [...ALWAYS_HAPPEN_SPECIAL,
             ...Array.from(EFFECTS[group]).filter(e => !ALWAYS_HAPPEN_SPECIAL.includes(e)).sort()]
           : group === 'other'
-            ? [...STAT_DOWN_CHANCE,
-              ...Array.from(EFFECTS[group]).filter(e => !STAT_DOWN_CHANCE.includes(e)).sort()]
+            ? [...STAT_DOWN_CHANCE, ...SECONDARY_CHANCE,
+              ...Array.from(EFFECTS[group]).filter(e =>
+                !STAT_DOWN_CHANCE.includes(e) && !SECONDARY_CHANCE.includes(e)).sort()]
             : Array.from(EFFECTS[group]).sort();
       effects.push(`        ${sorted.join(',\n        ')},`);
     }
     const sd = begin + STAT_DOWN.length;
     const ahs = end + ALWAYS_HAPPEN_SPECIAL.length;
     const sdc = multi + STAT_DOWN_CHANCE.length;
+    const sec = sdc + SECONDARY_CHANCE.length;
     const Effect = `
     pub const Effect = enum(u8) {
         None,
@@ -444,6 +451,11 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
         pub inline fn isStatDownChance(effect: Effect) bool {
             return @enumToInt(effect) > ${multi} and @enumToInt(effect) <= ${sdc};
+        }
+
+        pub inline fn isSecondaryChance(effect: Effect) bool {
+            // NB: isSecondaryChance includes isStatDownChance
+            return @enumToInt(effect) > ${multi} and @enumToInt(effect) <= ${sec};
         }
     };\n`;
 

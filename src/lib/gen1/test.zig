@@ -1043,7 +1043,80 @@ test "Poison effect" {
 // Move.{Smog,Sludge}
 test "PoisonChance effect" {
     // Has a X% chance to poison the target.
-    return error.SkipZigTest;
+    const LO_PROC = comptime ranged(52, 256) - 1;
+    const HI_PROC = comptime ranged(103, 256) - 1;
+    var t = Test(
+    // zig fmt: off
+    if (showdown) .{
+        NOP, NOP, HIT, ~CRIT, MIN_DMG, LO_PROC, HIT, ~CRIT, MIN_DMG, HI_PROC,
+        NOP, HIT, ~CRIT, MAX_DMG, HI_PROC,
+        NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC, NOP,
+        NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC,
+    } else .{
+        ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, HI_PROC,
+        ~CRIT, MAX_DMG, HIT,
+        ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, LO_PROC,
+        ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+    }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Tentacruel, .moves = &.{ .PoisonSting, .Sludge } }},
+        &.{.{ .species = .Persian, .moves = &.{ .Substitute, .PoisonSting, .Scratch } }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P2.ident(1), Move.PoisonSting, P1.ident(1), null);
+    try t.log.expected.resisted(P1.ident(1));
+    t.expected.p1.get(1).hp -= 5;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.PoisonSting, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 18;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(2);
+
+    // Can't poison Poison-types / moves have different proc rates
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    try expectEqual(@as(u8, 0), t.actual.p1.get(1).status);
+    try expectEqual(@as(u8, 0), t.actual.p2.get(1).status);
+
+    try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Substitute);
+    t.expected.p2.get(1).hp -= 83;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Sludge, P2.ident(1), null);
+    try t.log.expected.end(P2.ident(1), .Substitute);
+    try t.log.expected.turn(3);
+
+    // Substitute prevents poison chance
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    try expectEqual(@as(u8, 0), t.actual.p2.get(1).status);
+
+    try t.log.expected.move(P2.ident(1), Move.Scratch, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 46;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.PoisonSting, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 18;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    t.expected.p2.get(1).status = Status.init(.PSN);
+    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(3)));
+    try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
+
+    try t.log.expected.move(P2.ident(1), Move.Scratch, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 46;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    t.expected.p2.get(1).hp -= 20;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
+    try t.log.expected.move(P1.ident(1), Move.PoisonSting, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 18;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(5);
+
+    // Can't poison already poisoned Pokémon / poison causes residual damage
+    try expectEqual(Result.Default, try t.update(move(1), move(3)));
+    try t.verify();
 }
 
 // Move.{FirePunch,Ember,Flamethrower}: BurnChance1

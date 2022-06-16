@@ -776,7 +776,11 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
 
     // Substitute being broken nullifies the move's effect completely so even
     // if an effect was intended to "always happen" it will still get skipped.
-    if (nullified) return null;
+    if (nullified) {
+        // Pokémon Showdown rolls for secondary chance even if the effect would be nullified
+        if (showdown and move.effect.isSecondaryChance()) battle.rng.advance(1);
+        return null;
+    }
 
     // On the cartridge, "always happen" effect handlers are called in the applyDamage loop above,
     // but this is only done to setup the MultiHit looping in the first place. Moving the MultiHit
@@ -1784,10 +1788,12 @@ pub const Effects = struct {
 
         if (showdown and move.effect == .Poison and !try checkHit(battle, player, move, log)) {
             return;
-        } else if (foe.active.types.includes(.Poison)) {
-            return log.immune(foe_ident, .None);
         } else if (foe.active.volatiles.Substitute or Status.any(foe_stored.status)) {
+            if (move.effect != .Poison) return if (showdown) battle.rng.advance(1);
             return log.fail(foe_ident, if (Status.is(foe_stored.status, .PSN)) .Poison else .None);
+        } else if (foe.active.types.includes(.Poison)) {
+            if (move.effect != .Poison) return if (showdown) battle.rng.advance(1);
+            return log.immune(foe_ident, .None);
         }
 
         if (move.effect == .Poison) {

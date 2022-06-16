@@ -404,6 +404,11 @@ test "Move" {
     try expect(Move.Effect.isStatDownChance(.SpecialDownChance));
     try expect(!Move.Effect.isStatDownChance(.BurnChance1));
 
+    try expect(!Move.Effect.isSecondaryChance(.Trapping));
+    try expect(Move.Effect.isSecondaryChance(.AttackDownChance));
+    try expect(Move.Effect.isSecondaryChance(.PoisonChance2));
+    try expect(!Move.Effect.isSecondaryChance(.Disable));
+
     try expectEqual(@as(u8, 0), Move.frames(.Bide, .resolve));
     try expectEqual(@as(u8, 1), Move.frames(.Tackle, .resolve));
     try expectEqual(@as(u8, 2), Move.frames(.Counter, .resolve));

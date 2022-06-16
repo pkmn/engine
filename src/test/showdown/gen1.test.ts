@@ -1032,7 +1032,7 @@ describe('Gen 1', () => {
     let p1hp = battle.p1.pokemon[0].hp;
     let p2hp = battle.p2.pokemon[0].hp;
 
-    // Can't poison Poison-types / moves have different burn chances
+    // Can't poison Poison-types / moves have different proc rates
     battle.makeChoices('move 1', 'move 2');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 5);
     expect(battle.p1.pokemon[0].status).toBe('');
