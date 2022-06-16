@@ -1074,7 +1074,7 @@ test "PoisonChance effect" {
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.turn(2);
 
-    // Can't poison Poison-types / moves have different proc rates
+    // Can't poison Poison-types / moves have different poison chances
     try expectEqual(Result.Default, try t.update(move(1), move(2)));
     try expectEqual(@as(u8, 0), t.actual.p1.get(1).status);
     try expectEqual(@as(u8, 0), t.actual.p2.get(1).status);
@@ -1123,7 +1123,80 @@ test "PoisonChance effect" {
 // Move.FireBlast: BurnChance2
 test "BurnChance effect" {
     // Has a X% chance to burn the target.
-    return error.SkipZigTest;
+    const LO_PROC = comptime ranged(26, 256) - 1;
+    const HI_PROC = comptime ranged(77, 256) - 1;
+    var t = Test(
+    // zig fmt: off
+    if (showdown) .{
+        NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HI_PROC,
+        NOP, HIT, ~CRIT, MIN_DMG, HI_PROC,
+        NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC, NOP,
+        NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC,
+    } else .{
+        ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, HI_PROC,
+        ~CRIT, MIN_DMG, HIT,
+        ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, LO_PROC,
+        ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+    }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Charizard, .moves = &.{ .Ember, .FireBlast } }},
+        &.{.{ .species = .Tauros, .moves = &.{ .Substitute, .FireBlast, .Tackle } }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P2.ident(1), Move.FireBlast, P1.ident(1), null);
+    try t.log.expected.resisted(P1.ident(1));
+    t.expected.p1.get(1).hp -= 38;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Ember, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 51;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(2);
+
+    // Can't burn Fire-types / moves have different burn chances
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    try expectEqual(@as(u8, 0), t.actual.p1.get(1).status);
+    try expectEqual(@as(u8, 0), t.actual.p2.get(1).status);
+
+    try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Substitute);
+    t.expected.p2.get(1).hp -= 88;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.FireBlast, P2.ident(1), null);
+    try t.log.expected.end(P2.ident(1), .Substitute);
+    try t.log.expected.turn(3);
+
+    // Substitute prevents burn chance
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    try expectEqual(@as(u8, 0), t.actual.p2.get(1).status);
+
+    try t.log.expected.move(P2.ident(1), Move.Tackle, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 45;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Ember, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 51;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    t.expected.p2.get(1).status = Status.init(.BRN);
+    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(3)));
+    try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
+
+    try t.log.expected.move(P2.ident(1), Move.Tackle, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 23;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    t.expected.p2.get(1).hp -= 22;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Burn);
+    try t.log.expected.move(P1.ident(1), Move.Ember, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 51;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(5);
+
+    // Can't burn already burnt Pokémon / Burn lowers attack and causes residual damage
+    try expectEqual(Result.Default, try t.update(move(1), move(3)));
+    try t.verify();
 }
 
 // Move.{IcePunch,IceBeam,Blizzard}: FreezeChance

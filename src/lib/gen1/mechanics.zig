@@ -1400,10 +1400,7 @@ pub const Effects = struct {
         }
 
         if (foe.active.volatiles.Substitute or Status.any(foe_stored.status)) {
-            return log.fail(
-                battle.active(player.foe()),
-                if (Status.is(foe_stored.status, .BRN)) .Burn else .None,
-            );
+            return if (showdown) battle.rng.advance(1);
         }
 
         const chance = !foe.active.types.includes(move.type) and if (showdown)
@@ -1548,10 +1545,7 @@ pub const Effects = struct {
         const foe_ident = battle.active(player.foe());
 
         if (foe.active.volatiles.Substitute or Status.any(foe_stored.status)) {
-            return log.fail(
-                foe_ident,
-                if (Status.is(foe_stored.status, .FRZ)) .Freeze else .None,
-            );
+            return if (showdown) battle.rng.advance(1);
         }
 
         const chance = !foe.active.types.includes(move.type) and if (showdown)
@@ -1754,10 +1748,7 @@ pub const Effects = struct {
         var foe_stored = foe.stored();
 
         if (foe.active.volatiles.Substitute or Status.any(foe_stored.status)) {
-            return log.fail(
-                battle.active(player.foe()),
-                if (Status.is(foe_stored.status, .PAR)) .Paralysis else .None,
-            );
+            return if (showdown) battle.rng.advance(1);
         }
 
         // Body Slam can't paralyze a Normal type Pokémon
