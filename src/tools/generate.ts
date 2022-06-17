@@ -454,8 +454,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
 
         pub inline fn isSecondaryChance(effect: Effect) bool {
-            // NB: isSecondaryChance includes isStatDownChance
-            return @enumToInt(effect) > ${multi} and @enumToInt(effect) <= ${sec};
+            // NB: isSecondaryChance includes isStatDownChance as well as Twineedle
+            return (@enumToInt(effect) > ${multi - 1} and @enumToInt(effect) <= ${sec});
         }
     };\n`;
 

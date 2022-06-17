@@ -781,7 +781,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         if (nullified or foe.stored().hp == 0) break;
 
         // Twineedle can also poison on the first hit on Pokémon Showdown (second hit below)
-        if (showdown and hit == 0 and move.effect == .Twineedle) {
+        if (showdown and hit == 1 and move.effect == .Twineedle) {
             try moveEffect(battle, player, Move.get(.PoisonSting), choice.data, log);
         }
     }
@@ -790,6 +790,9 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         side.active.volatiles.MultiHit = false;
         assert(nullified or side.active.volatiles.attacks - hit == 0);
         side.active.volatiles.attacks = 0;
+        if (showdown and move.effect == .Twineedle and !nullified and foe.stored().hp > 0) {
+            try Effects.poison(battle, player, Move.get(.PoisonSting), log);
+        }
         try log.hitcount(battle.active(player.foe()), hit);
     }
 
@@ -806,16 +809,25 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     // setup before the loop means we can avoid having to waste time doing no-op handler searches.
     if (move.effect.alwaysHappens()) try moveEffect(battle, player, move, choice.data, log);
 
-    if (foe.stored().hp == 0) return null;
+    if (foe.stored().hp == 0) {
+         // Pokémon Showdown rolls for secondary chance even if the target fainted
+         if (showdown and move.effect.isSecondaryChance()) battle.rng.advance(1);
+        return null;
+    }
 
     if (!move.effect.isSpecial()) {
         // On the cartridge Rage is not considered to be "special" and thus gets executed for a
         // second time here (after being executed in the "always happens" block above) but that
         // doesn't matter since its idempotent (on the cartridge, but not in the implementation
         // below). For Twineedle we change the data to that of one with PoisonChance1 given its
-        // MultiHit behavior is complete after the loop above.
-        if (move.effect == .Twineedle) move = Move.get(.PoisonSting);
-        try moveEffect(battle, player, move, choice.data, log);
+        // MultiHit behavior is complete after the loop above, though Pokémon Showdown handles
+        // the Twineedle secondary effect in the MultiHit cleanup block above because it puts the
+        // |-status| message before |-hitcount| instead of after.
+        if (move.effect == .Twineedle) {
+            if (!showdown) try Effects.poison(battle, player,  Move.get(.PoisonSting), log);
+        } else {
+            try moveEffect(battle, player, move, choice.data, log);
+        }
     }
 
     return null;

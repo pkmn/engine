@@ -1623,8 +1623,8 @@ pub const Move = enum(u8) {
         }
 
         pub inline fn isSecondaryChance(effect: Effect) bool {
-            // NB: isSecondaryChance includes isStatDownChance
-            return @enumToInt(effect) > 47 and @enumToInt(effect) <= 61;
+            // NB: isSecondaryChance includes isStatDownChance as well as Twineedle
+            return (@enumToInt(effect) > 46 and @enumToInt(effect) <= 61);
         }
     };
 

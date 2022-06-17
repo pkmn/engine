@@ -871,8 +871,8 @@ describe('Gen 1', () => {
 
     const battle = startBattle([
       SRF_RES, HIT, CRIT, MAX_DMG, proc,
-      SRF_RES, HIT, NO_CRIT, MIN_DMG, proc, no_proc, no_proc,
-      SRF_RES, HIT, NO_CRIT, MIN_DMG, no_proc, proc, proc,
+      SRF_RES, HIT, NO_CRIT, MIN_DMG, proc, SS_MOD, no_proc,
+      SRF_RES, HIT, NO_CRIT, MIN_DMG, no_proc, proc, SS_MOD,
       SRF_RES, HIT, NO_CRIT, MIN_DMG, proc, proc,
     ], [
       {species: 'Beedrill', evs, moves: ['Twineedle']},

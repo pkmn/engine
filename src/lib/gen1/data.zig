@@ -404,8 +404,8 @@ test "Move" {
     try expect(Move.Effect.isStatDownChance(.SpecialDownChance));
     try expect(!Move.Effect.isStatDownChance(.BurnChance1));
 
-    try expect(!Move.Effect.isSecondaryChance(.Trapping));
-    try expect(Move.Effect.isSecondaryChance(.AttackDownChance));
+    try expect(!Move.Effect.isSecondaryChance(.MultiHit));
+    try expect(Move.Effect.isSecondaryChance(.Twineedle));
     try expect(Move.Effect.isSecondaryChance(.PoisonChance2));
     try expect(!Move.Effect.isSecondaryChance(.Disable));
 
