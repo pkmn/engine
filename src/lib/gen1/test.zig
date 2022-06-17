@@ -3654,8 +3654,122 @@ test "Mirror Move recharge bug" {
 }
 
 test "Wrap locking + KOs bug" {
-    // TODO
-    return error.SkipZigTest;
+    const PROC = MIN;
+    const MIN_WRAP = MIN;
+
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, PROC, NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
+            // NOP, NOP, HIT, NOP, NOP, HIT, ~CRIT, MIN_DMG, PROC, NOP,
+            NOP, NOP, HIT, ~HIT, NOP, NOP, HIT, ~CRIT, MIN_DMG, PROC, NOP, ~HIT,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
+            NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
+        } else .{
+            ~CRIT, MIN_DMG, HIT, PROC, MIN_WRAP, ~CRIT, MIN_DMG, HIT,
+            HIT, ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, HIT, PROC, ~CRIT, MIN_DMG, ~HIT,
+            MIN_WRAP, ~CRIT, MIN_DMG, HIT,
+            MIN_WRAP, ~CRIT, MIN_DMG, HIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{
+            .{ .species = .Dragonair, .hp = 21, .moves = &.{.Wrap} },
+            .{ .species = .Dragonite, .moves = &.{ .DragonRage, .Ember, .Wrap } },
+        },
+        &.{
+            .{ .species = .Beedrill, .hp = 210, .moves = &.{.PoisonSting} },
+            .{ .species = .Kakuna, .moves = &.{.Harden} },
+        },
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P2.ident(1), Move.PoisonSting, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 20;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    t.expected.p1.get(1).status = Status.init(.PSN);
+    try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+    try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 17;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    t.expected.p1.get(1).hp = 0;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .Poison);
+    try t.log.expected.faint(P1.ident(1), true);
+
+    // Target should not still be trapped after the Trapper faints from residual damage
+    try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(move(1), move(1)));
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(swtch(2), .{}));
+
+    try t.log.expected.move(P1.ident(2), Move.DragonRage, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 40;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    // BUG: can't implement Pokémon Showdown's broken partialtrappinglock mechanics
+    // if (showdown) {
+    //     try t.log.expected.cant(P2.ident(1), .Trapped);
+    // } else {
+    try t.log.expected.move(P2.ident(1), Move.PoisonSting, P1.ident(2), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    // }
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P1.ident(2), Move.Ember, P2.ident(1), null);
+    try t.log.expected.supereffective(P2.ident(1));
+    t.expected.p2.get(1).hp -= 91;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    t.expected.p2.get(1).status = Status.init(.BRN);
+    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    // if (showdown) {
+    //     try t.log.expected.cant(P2.ident(1), .Trapped);
+    // } else {
+    try t.log.expected.move(P2.ident(1), Move.PoisonSting, P1.ident(2), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    // }
+    t.expected.p2.get(1).hp -= 20;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Burn);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+
+    try t.log.expected.move(P1.ident(2), Move.Wrap, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 23;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.cant(P2.ident(1), .Trapped);
+    t.expected.p2.get(1).hp = 0;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Burn);
+    try t.log.expected.faint(P2.ident(1), true);
+
+    try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(move(3), move(1)));
+
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.turn(5);
+
+    try expectEqual(Result.Default, try t.update(.{}, swtch(2)));
+
+    // Trapper should not still be locked into Wrap after residual KO
+    const n = t.battle.actual.choices(.P1, .Move, &choices);
+    // BUG: further Pokémon Showdown's partialtrappinglock brokeness
+    // if (showdown) {
+    //     try expectEqualSlices(Choice, &[_]Choice{move(3)}, choices[0..n]);
+    // } else {
+    try expectEqualSlices(Choice, &[_]Choice{ move(1), move(2), move(3) }, choices[0..n]);
+    // }
+
+    try t.log.expected.move(P1.ident(2), Move.Wrap, P2.ident(2), null);
+    t.expected.p2.get(2).hp -= 21;
+    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+    try t.log.expected.cant(P2.ident(2), .Trapped);
+    try t.log.expected.turn(6);
+
+    try expectEqual(Result.Default, try t.update(move(3), move(1)));
+    try t.verify();
 }
 
 // Glitches
