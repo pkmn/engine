@@ -630,11 +630,11 @@ fn decrementPP(battle: anytype, player: Player, choice: Choice) void {
     if (volatiles.Bide or volatiles.MultiHit) return;
 
     assert(active.move(slot).pp > 0 or auto);
-    active.move(slot).pp -%= 1;
+    active.move(slot).pp = @truncate(u6, active.move(slot).pp -% 1);
     if (volatiles.Transform) return;
 
     assert(side.stored().move(slot).pp > 0 or auto);
-    side.stored().move(slot).pp -%= 1;
+    side.stored().move(slot).pp = @truncate(u6, side.stored().move(slot).pp -% 1);
     assert(active.move(slot).pp == side.stored().move(slot).pp);
 }
 
