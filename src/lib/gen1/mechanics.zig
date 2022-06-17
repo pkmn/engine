@@ -132,13 +132,10 @@ fn selectMove(
     if (volatiles.Thrashing or volatiles.Charging) {
         // Pokémon Showdown uses last_used_move here because it overwrites it on the first turn of
         // the Charging effect but on the cartridge we don't have that data so we fall back to the
-        // last_selected_move (which can result in discrepancies)
-        if (showdown) {
-            from.* = side.last_used_move;
-            saveMove(battle, player, null);
-        } else {
-            from.* = side.last_selected_move;
-        }
+        // last_selected_move (both should be equivalent at this point on Pokémon Showdown)
+        assert(!showdown or side.last_selected_move == side.last_used_move);
+        from.* = side.last_selected_move;
+        if (showdown) saveMove(battle, player, null);
         return null;
     }
 
