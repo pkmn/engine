@@ -223,7 +223,7 @@ describe('Gen 1', () => {
     // Move vs. Move
     {
       const battle = startBattle([
-        INS, INS,	SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
+        INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
         SRF_RES, SRF_RES, TIE(1),
         SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG,
         SS_EACH, HIT, NO_CRIT, MAX_DMG,
@@ -1161,11 +1161,12 @@ describe('Gen 1', () => {
       SRF_RES, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
       SRF_RES, HIT, NO_CRIT, MIN_DMG, MIN_WRAP,
       SRF_RES, SRF_RES,
-      SRF_RES, HIT, NO_CRIT, MIN_DMG,
+      SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, MISS,
+      SRF_RES, MISS,
       SRF_RES, HIT, NO_CRIT, MIN_DMG, FRZ,
     ], [
       {species: 'Starmie', evs, moves: ['Ice Beam']},
-      {species: 'Magmar', evs, moves: ['Flamethrower', 'Substitute']},
+      {species: 'Magmar', evs, moves: ['Ice Beam', 'Flamethrower', 'Substitute']},
       {species: 'Lickitung', evs, moves: ['Slam']},
     ], [
       {species: 'Jynx', evs, moves: ['Thunder Wave', 'Blizzard', 'Fire Spin', 'Flamethrower']},
@@ -1194,7 +1195,7 @@ describe('Gen 1', () => {
     // Freezing prevents action
     battle.makeChoices('move 1', 'move 1');
     // ...Pokémon Showdown still lets you choose whatever
-    expect(choices(battle, 'p1')).toEqual(['switch 2', 'switch 3', 'move 1', 'move 2']);
+    expect(choices(battle, 'p1')).toEqual(['switch 2', 'switch 3', 'move 1', 'move 2', 'move 3']);
 
     // Freeze Clause Mod prevents multiple Pokémon from being frozen
     battle.makeChoices('switch 3', 'move 2');
@@ -1210,12 +1211,15 @@ describe('Gen 1', () => {
     expect(battle.p1.pokemon[0].hp).toBe(magmar -= 5);
 
     // Other Fire moves thaw frozen Pokémon
-    battle.makeChoices('move 2', 'move 4');
-    expect(battle.p1.pokemon[0].hp).toBe(magmar = (magmar - 36 - 83));
+    battle.makeChoices('move 1', 'move 4');
+    expect(battle.p1.pokemon[0].hp).toBe(magmar -= 36);
     expect(battle.p1.pokemon[0].status).toBe('');
 
+    battle.makeChoices('move 3', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(magmar -= 83);
+
     // Substitute blocks Freeze
-    battle.makeChoices('move 2', 'move 2');
+    battle.makeChoices('move 3', 'move 2');
     expect(battle.p1.pokemon[0].hp).toBe(magmar);
     expect(battle.p1.pokemon[0].status).toBe('');
 
@@ -1257,15 +1261,20 @@ describe('Gen 1', () => {
       '|-resisted|p1a: Magmar',
       '|-damage|p1a: Magmar|147/333 frz',
       '|-curestatus|p1a: Magmar|frz|[msg]',
+      '|move|p1a: Magmar|Ice Beam|p2a: Jynx|[miss]',
+      '|-miss|p1a: Magmar',
+      '|turn|9',
+      '|move|p2a: Jynx|Blizzard|p1a: Magmar|[miss]',
+      '|-miss|p2a: Jynx',
       '|move|p1a: Magmar|Substitute|p1a: Magmar',
       '|-start|p1a: Magmar|Substitute',
       '|-damage|p1a: Magmar|64/333',
-      '|turn|9',
+      '|turn|10',
       '|move|p2a: Jynx|Blizzard|p1a: Magmar',
       '|-end|p1a: Magmar|Substitute',
       '|move|p1a: Magmar|Substitute|p1a: Magmar',
       '|-fail|p1a: Magmar|move: Substitute|[weak]',
-      '|turn|10',
+      '|turn|11',
     ]);
   });
 

@@ -330,25 +330,53 @@ fn executeMove(
 ) !?Result {
     var side = battle.side(player);
 
-    // GLITCH: Freeze top move selection desync (Hyper Beam / trapping underflow does not desync)
-    if (choice.type == .Move and choice.data == 0 and side.last_selected_move != .Struggle) {
-        assert(side.last_selected_move != .None);
-        const auto = side.last_selected_move == .HyperBeam or
-            Move.get(side.last_selected_move).effect == .Trapping;
-        if (!auto) return Result.Error;
-    }
-
     if (choice.type == .Switch) {
         try switchIn(battle, player, choice.data, false, log);
         return null;
     }
 
     // Pokémon Showdown overwrites the SKIP_TURN sentinel with its botched move select
-    if (battle.foe(player).active.volatiles.Trapping) {
-        try log.cant(battle.active(player), .Trapped);
+    if (side.last_selected_move == .SKIP_TURN) {
+        assert(!showdown);
+        if (battle.foe(player).active.volatiles.Trapping) {
+            try log.cant(battle.active(player), .Trapped);
+        }
         return null;
     }
-    if (side.last_selected_move == .SKIP_TURN) return null;
+
+    assert(choice.type == .Move);
+    var mslot = choice.data;
+    var auto = showdown and side.last_selected_move != .None and
+        Move.get(side.last_selected_move).effect == .Trapping;
+
+    // GLITCH: Freeze top move selection desync & PP underflow shenanigans
+    if (mslot == 0 and side.last_selected_move != .Struggle) {
+        // choice.data == 0 only happens with Struggle on Pokémon Showdown
+        assert(!showdown);
+        // Even if the Pokémon started the battle frozen, thawing will set last_selected_move
+        // to SKIP_TURN and that would have been handled in the block above this one
+        assert(side.last_selected_move != .None);
+        mslot = @truncate(u4, if (player == .P1)
+            battle.last_selected_indexes.p1
+        else
+            battle.last_selected_indexes.p2);
+        // GLITCH: Struggle bypass PP underflow via Hyper Beam / Trapping-switch auto selection
+        auto = side.last_selected_move == .HyperBeam or
+            Move.get(side.last_selected_move).effect == .Trapping;
+        // If it wasn't Hyper Beam or the continuation of a Trapping move effect then we must
+        // have just thawed, in which case we will desync unless the last_selected_move
+        // happened to be at index 1 and the current Pokémon has the same move in its first slot
+        if (!auto) {
+            // side.active.moves(slot) is safe to check even though the slot in question may not
+            // technically be from this Pokémon because it must be 1 to not desync and every Pokémon
+            // must have at least one move
+            if (mslot != 1 or side.active.move(mslot).id != side.last_selected_move) {
+                return Result.Error;
+            } else {
+                auto = true;
+            }
+        }
+    }
 
     // getRandomTarget arbitrarily advances the RNG during runAction
     if (showdown) {
@@ -369,7 +397,7 @@ fn executeMove(
         .err => return @as(?Result, Result.Error),
     }
 
-    if (!skip_can and !try canMove(battle, player, choice, skip_pp, from, log)) return null;
+    if (!skip_can and !try canMove(battle, player, mslot, auto, skip_pp, from, log)) return null;
 
     return doMove(battle, player, choice, from, log);
 }
@@ -554,7 +582,8 @@ fn beforeMove(battle: anytype, player: Player, log: anytype) !BeforeMove {
 fn canMove(
     battle: anytype,
     player: Player,
-    choice: Choice,
+    mslot: u4,
+    auto: bool,
     skip_pp: bool,
     from: ?Move,
     log: anytype,
@@ -575,7 +604,7 @@ fn canMove(
         // also decrements PP now instead of when actually resolving the attack (above)
         if (showdown) {
             side.last_used_move = side.last_selected_move;
-            if (!skip) decrementPP(battle, player, choice);
+            if (!skip) decrementPP(side, mslot, auto);
         }
         return false;
     }
@@ -586,7 +615,7 @@ fn canMove(
     // if (showdown and locked) battle.rng.advance(1);
 
     side.last_used_move = side.last_selected_move;
-    if (!skip) decrementPP(battle, player, choice);
+    if (!skip) decrementPP(side, mslot, auto);
 
     // Metronome / Mirror Move call getRandomTarget if the move they proc targets
     if (showdown and special) battle.rng.advance(@boolToInt(move.target != .Self));
@@ -595,7 +624,7 @@ fn canMove(
     try log.move(player_ident, side.last_selected_move, battle.active(target), from);
 
     if (move.effect.onBegin()) {
-        try moveEffect(battle, player, move, choice.data, log);
+        try moveEffect(battle, player, move, mslot, log);
         return false;
     }
 
@@ -611,25 +640,8 @@ fn canMove(
     return true;
 }
 
-fn decrementPP(battle: anytype, player: Player, choice: Choice) void {
-    assert(choice.type == .Move);
-    assert(choice.data <= 4);
-
-    var side = battle.side(player);
+fn decrementPP(side: *Side, mslot: u4, auto: bool) void {
     if (side.last_selected_move == .Struggle) return;
-
-    // GLITCH: Struggle bypass PP underflow via Hyper Beam / Trapping-switch auto selection
-    const auto = side.last_selected_move == .HyperBeam or
-        Move.get(side.last_selected_move).effect == .Trapping;
-
-    var slot = choice.data;
-    if (slot == 0) {
-        assert(auto);
-        slot = @truncate(u4, if (player == .P1)
-            battle.last_selected_indexes.p1
-        else
-            battle.last_selected_indexes.p2);
-    }
 
     var active = &side.active;
     const volatiles = &active.volatiles;
@@ -637,13 +649,13 @@ fn decrementPP(battle: anytype, player: Player, choice: Choice) void {
     assert(!volatiles.Rage and !volatiles.Thrashing);
     if (volatiles.Bide or volatiles.MultiHit) return;
 
-    assert(active.move(slot).pp > 0 or auto);
-    active.move(slot).pp = @truncate(u6, active.move(slot).pp -% 1);
+    assert(active.move(mslot).pp > 0 or auto);
+    active.move(mslot).pp = @truncate(u6, active.move(mslot).pp -% 1);
     if (volatiles.Transform) return;
 
-    assert(side.stored().move(slot).pp > 0 or auto);
-    side.stored().move(slot).pp = @truncate(u6, side.stored().move(slot).pp -% 1);
-    assert(active.move(slot).pp == side.stored().move(slot).pp);
+    assert(side.stored().move(mslot).pp > 0 or auto);
+    side.stored().move(mslot).pp = @truncate(u6, side.stored().move(mslot).pp -% 1);
+    assert(active.move(mslot).pp == side.stored().move(mslot).pp);
 }
 
 // Pokémon Showdown does hit/multi/crit/damage instead of crit/damage/hit/multi
@@ -1131,7 +1143,7 @@ fn mirrorMove(battle: anytype, player: Player, choice: Choice, log: anytype) !?R
 
     side.last_selected_move = foe.last_used_move;
 
-    if (!try canMove(battle, player, choice, true, .MirrorMove, log)) return null;
+    if (!try canMove(battle, player, choice.data, false, true, .MirrorMove, log)) return null;
     return doMove(battle, player, choice, .MirrorMove, log);
 }
 
@@ -1151,7 +1163,7 @@ fn metronome(battle: anytype, player: Player, choice: Choice, log: anytype) !?Re
         }
     };
 
-    if (!try canMove(battle, player, choice, true, .Metronome, log)) return null;
+    if (!try canMove(battle, player, choice.data, false, true, .Metronome, log)) return null;
     return doMove(battle, player, choice, .Metronome, log);
 }
 
@@ -1473,7 +1485,7 @@ pub const Effects = struct {
         if (foe.active.volatiles.Substitute) return if (showdown) battle.rng.advance(1);
 
         if (Status.any(foe_stored.status)) {
-            if (showdown) battle.rng.advance(1);
+            if (showdown and !foe.active.types.includes(move.type)) battle.rng.advance(1);
             // GLITCH: Freeze top move selection desync can occur if thawed Pokémon is slower
             if (Status.is(foe_stored.status, .FRZ)) {
                 assert(move.type == .Fire);
@@ -1644,7 +1656,7 @@ pub const Effects = struct {
         const foe_ident = battle.active(player.foe());
 
         if (foe.active.volatiles.Substitute or Status.any(foe_stored.status)) {
-            return if (showdown) battle.rng.advance(1);
+            return if (showdown and !foe.active.types.includes(move.type)) battle.rng.advance(1);
         }
 
         const chance = !foe.active.types.includes(move.type) and if (showdown)
@@ -1846,7 +1858,7 @@ pub const Effects = struct {
         var foe_stored = foe.stored();
 
         if (foe.active.volatiles.Substitute or Status.any(foe_stored.status)) {
-            return if (showdown) battle.rng.advance(1);
+            return if (showdown and !foe.active.types.includes(move.type)) battle.rng.advance(1);
         }
 
         // Body Slam can't paralyze a Normal type Pokémon

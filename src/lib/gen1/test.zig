@@ -1218,65 +1218,174 @@ test "BurnChance effect" {
 // Move.{IcePunch,IceBeam,Blizzard}: FreezeChance
 test "FreezeChance effect" {
     // Has a 10% chance to freeze the target.
-    return error.SkipZigTest;
-    //     const FRZ = comptime ranged(26, 256) - 1;
-    //     const PAR_CANT = MIN;
-    //     const MIN_WRAP = MIN;
-    //     var t = Test(
-    //     // zig fmt: off
-    //     if (showdown) .{
-    //         NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, NOP,
-    //         NOP, NOP, HIT, ~CRIT, MIN_DMG, FRZ, PAR_CANT,
-    //         NOP, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
-    //         NOP, NOP, HIT,
-    //         NOP, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
-    //         NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
-    //         NOP, NOP,
-    //         NOP, HIT, ~CRIT, MIN_DMG,
-    //         NOP, HIT, ~CRIT, MIN_DMG, FRZ,
-    //     } else .{
-    //         // TODO
-    //     }
-    //     // zig fmt: on
-    //     ).init(
-    //         &.{
-    //             .{ .species = .Starmie, .moves = &.{.IceBeam} },
-    //             .{ .species = .Magmar, .moves = &.{ .Flamethrower, .Substitute } },
-    //             .{ .species = .Lickitung, .moves = &.{.Slam} },
-    //         },
-    //         &.{.{
-    //             .species = .Jynx,
-    //             .moves = &.{ .ThunderWave, .Blizzard, .FireSpin, .Flamethrower },
-    //         }},
-    //     );
-    //     defer t.deinit();
+    const FRZ = comptime ranged(26, 256) - 1;
+    const PAR_CANT = MIN;
+    const MIN_WRAP = MIN;
 
-    //     // Can't freeze Ice-types
-    //     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, NOP,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, FRZ, PAR_CANT,
+            NOP, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
+            NOP, NOP, HIT,
+            NOP, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
+            NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
+            NOP, NOP,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, ~HIT,
+            NOP, ~HIT,
+            NOP, HIT, ~CRIT, MIN_DMG, FRZ,
+        } else .{
+            ~CRIT, MIN_DMG, HIT, HIT,
+            ~CRIT, MIN_DMG, HIT, PAR_CANT,
+            ~CRIT, MIN_DMG, HIT, FRZ,
+            ~CRIT, MIN_DMG, HIT, FRZ,
+            MIN_WRAP, ~CRIT, MIN_DMG, HIT,
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, ~HIT,
+            ~CRIT, MIN_DMG, ~HIT,
+            ~CRIT, MIN_DMG, HIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{
+            .{ .species = .Starmie, .moves = &.{.IceBeam} },
+            .{ .species = .Magmar, .moves = &.{ .IceBeam, .Flamethrower, .Substitute } },
+            .{ .species = .Lickitung, .moves = &.{.Slam} },
+        },
+        &.{.{
+            .species = .Jynx,
+            .moves = &.{ .ThunderWave, .Blizzard, .FireSpin, .Flamethrower },
+        }},
+    );
+    defer t.deinit();
 
-    //     // Can't freeze a Pokémon which is already statused
-    //     try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    try t.log.expected.move(P1.ident(1), Move.IceBeam, P2.ident(1), null);
+    try t.log.expected.resisted(P2.ident(1));
+    t.expected.p2.get(1).hp -= 35;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.ThunderWave, P1.ident(1), null);
+    t.expected.p1.get(1).status = Status.init(.PAR);
+    try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+    try t.log.expected.turn(2);
 
-    //     // Can freeze Fire types
-    //     try expectEqual(Result.Default, try t.update(swtch(2), move(2)));
+    // Can't freeze Ice-types
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(t.expected.p1.get(1).status, t.actual.p1.get(1).status);
 
-    //     // Freezing prevents action
-    //     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.log.expected.move(P2.ident(1), Move.Blizzard, P1.ident(1), null);
+    try t.log.expected.resisted(P1.ident(1));
+    t.expected.p1.get(1).hp -= 63;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.cant(P1.ident(1), .Paralysis);
+    try t.log.expected.turn(3);
 
-    //     // Freeze Clause Mod prevents multiple Pokémon from being frozen
-    //     try expectEqual(Result.Default, try t.update(swtch(3), move(2)));
+    // Can't freeze a Pokémon which is already statused
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
 
-    //     // Fire Spin does not thaw frozen Pokémon
-    //     try expectEqual(Result.Default, try t.update(swtch(3), move(3)));
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.move(P2.ident(1), Move.Blizzard, P1.ident(2), null);
+    t.expected.p1.get(2).hp -= 140;
+    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
+    t.expected.p1.get(2).status = Status.init(.FRZ);
+    try t.log.expected.status(P1.ident(2), t.expected.p1.get(2).status, .None);
+    try t.log.expected.turn(4);
 
-    //     try expectEqual(Result.Default, try t.update(move(1), move(3)));
+    // Can freeze Fire types
+    try expectEqual(Result.Default, try t.update(swtch(2), move(2)));
+    try expectEqual(t.expected.p1.get(2).status, t.actual.p1.get(1).status);
 
-    //     // Other Fire moves thaw frozen Pokémon
-    //     try expectEqual(Result.Default, try t.update(move(2), move(4)));
+    try t.log.expected.move(P2.ident(1), Move.ThunderWave, P1.ident(2), null);
+    try t.log.expected.fail(P1.ident(2), .None);
+    try t.log.expected.cant(P1.ident(2), .Freeze);
+    try t.log.expected.turn(5);
 
-    //     // Substitute blocks Freeze
-    //     try expectEqual(Result.Default, try t.update(move(2), move(2)));
-    //     try t.verify();
+    // Freezing prevents action
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    // ...Pokémon Showdown still lets you choose whatever
+    var n = t.battle.actual.choices(.P1, .Move, &choices);
+    if (showdown) {
+        try expectEqualSlices(
+            Choice,
+            &[_]Choice{ swtch(2), swtch(3), move(1), move(2), move(3) },
+            choices[0..n],
+        );
+    } else {
+        try expectEqualSlices(Choice, &[_]Choice{ swtch(2), swtch(3), move(0) }, choices[0..n]);
+    }
+
+    try t.log.expected.switched(P1.ident(3), t.expected.p1.get(3));
+    try t.log.expected.move(P2.ident(1), Move.Blizzard, P1.ident(3), null);
+    t.expected.p1.get(3).hp -= 173;
+    try t.log.expected.damage(P1.ident(3), t.expected.p1.get(3), .None);
+    if (showdown) {
+        t.expected.p1.get(3).status = 0;
+    } else {
+        t.expected.p1.get(3).status = Status.init(.FRZ);
+        try t.log.expected.status(P1.ident(3), t.expected.p1.get(3).status, .None);
+    }
+    try t.log.expected.turn(6);
+
+    // Freeze Clause Mod prevents multiple Pokémon from being frozen
+    try expectEqual(Result.Default, try t.update(swtch(3), move(2)));
+    try expectEqual(t.expected.p1.get(3).status, t.actual.p1.get(1).status);
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.move(P2.ident(1), Move.FireSpin, P1.ident(2), null);
+    try t.log.expected.resisted(P1.ident(2));
+    t.expected.p1.get(2).hp -= 5;
+    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
+    try t.log.expected.turn(7);
+
+    // Fire Spin does not thaw frozen Pokémon
+    try expectEqual(Result.Default, try t.update(swtch(3), move(3)));
+    try expectEqual(t.expected.p1.get(2).status, t.actual.p1.get(1).status);
+
+    try t.log.expected.move(P2.ident(1), Move.FireSpin, P1.ident(2), Move.FireSpin);
+    t.expected.p1.get(2).hp -= 5;
+    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
+    try t.log.expected.cant(P1.ident(2), .Freeze);
+    try t.log.expected.turn(8);
+
+    try expectEqual(Result.Default, try t.update(move(if (showdown) 1 else 0), move(3)));
+
+    try t.log.expected.move(P2.ident(1), Move.Flamethrower, P1.ident(2), null);
+    try t.log.expected.resisted(P1.ident(2));
+    t.expected.p1.get(2).hp -= 36;
+    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
+    try t.log.expected.curestatus(P1.ident(2), t.expected.p1.get(2).status, .Message);
+    t.expected.p1.get(2).status = 0;
+    try t.log.expected.move(P1.ident(2), Move.IceBeam, P2.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P1.ident(2));
+    try t.log.expected.turn(9);
+
+    // Other Fire moves thaw frozen Pokémon
+    try expectEqual(Result.Default, try t.update(move(1), move(4)));
+    try expectEqual(t.expected.p1.get(2).status, t.actual.p1.get(1).status);
+
+    try t.log.expected.move(P2.ident(1), Move.Blizzard, P1.ident(2), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    try t.log.expected.move(P1.ident(2), Move.Substitute, P1.ident(2), null);
+    try t.log.expected.start(P1.ident(2), .Substitute);
+    t.expected.p1.get(2).hp -= 83;
+    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
+    try t.log.expected.turn(10);
+
+    try expectEqual(Result.Default, try t.update(move(3), move(2)));
+    try expectEqual(t.expected.p1.get(2).status, t.actual.p1.get(1).status);
+
+    try t.log.expected.move(P2.ident(1), Move.Blizzard, P1.ident(2), null);
+    try t.log.expected.end(P1.ident(2), .Substitute);
+    try t.log.expected.move(P1.ident(2), Move.Substitute, P1.ident(2), null);
+    try t.log.expected.fail(P1.ident(2), .Weak);
+    try t.log.expected.turn(11);
+
+    // Substitute blocks Freeze
+    try expectEqual(Result.Default, try t.update(move(3), move(2)));
+    try expectEqual(t.expected.p1.get(2).status, t.actual.p1.get(1).status);
+
+    try t.verify();
 }
 
 // Move.{ThunderWave,StunSpore,Glare}
@@ -2946,8 +3055,8 @@ test "Rest effect" {
 
     try t.log.expected.move(P1.ident(1), Move.Rest, P1.ident(1), null);
     try t.log.expected.fail(P1.ident(1), .None);
+    try t.log.expected.curestatus(P2.ident(1), t.expected.p2.get(1).status, .Message);
     t.expected.p2.get(1).status = 0;
-    try t.log.expected.curestatus(P2.ident(1), Status.slf(1), .Message);
     try t.log.expected.turn(5);
 
     // Fails at full HP / Last two turns but stat penalty still remains after waking
@@ -3924,8 +4033,8 @@ test "Freeze top move selection glitch" {
     try t.log.expected.resisted(P1.ident(1));
     t.expected.p1.get(1).hp -= 50;
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.curestatus(P1.ident(1), t.expected.p1.get(1).status, .Message);
     t.expected.p1.get(1).status = 0;
-    try t.log.expected.curestatus(P1.ident(1), Status.init(.FRZ), .Message);
     if (showdown) {
         try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
         try t.log.expected.turn(4);
@@ -3976,7 +4085,7 @@ test "Toxic counter glitches" {
     //     t.expected.p2.get(1).hp -= 24;
     //     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .LeechSeed);
     //     t.expected.p2.get(1).status = 0;
-    //     try t.log.expected.curestatus(P2.ident(1), Status.slp(1), .Message);
+    //     try t.log.expected.curestatus(P2.ident(1), Status.slf(1), .Message);
     // } else {
     t.expected.p2.get(1).status = 0;
     try t.log.expected.curestatus(P2.ident(1), Status.slf(1), .Message);
@@ -4063,8 +4172,8 @@ test "Defrost move forcing" {
     try t.log.expected.resisted(P2.ident(2));
     t.expected.p2.get(2).hp -= 23;
     try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+    try t.log.expected.curestatus(P2.ident(2), t.expected.p2.get(2).status, .Message);
     t.expected.p2.get(2).status = 0;
-    try t.log.expected.curestatus(P2.ident(2), Status.init(.FRZ), .Message);
     if (showdown) {
         try t.log.expected.move(P2.ident(2), Move.WaterGun, P1.ident(1), null);
         t.expected.p1.get(1).hp -= 12;
