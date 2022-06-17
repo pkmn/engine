@@ -148,8 +148,9 @@ fn selectMove(
         return null;
     }
     if (volatiles.Trapping) {
+        from.* = side.last_used_move;
         if (showdown) {
-            from.* = side.last_used_move;
+            if (foe_choice.type == .Switch) from.* = null;
             // Pokémon Showdown overwrites Mirror Move with whatever was selected - really this
             // should set side.last_selected_move = last.id to reuse Mirror Move and fail in order
             // to satisfy the conditions of the Desync Clause Mod
@@ -329,17 +330,17 @@ fn executeMove(
 ) !?Result {
     var side = battle.side(player);
 
-    // Pokémon Showdown overwrites the SKIP_TURN sentinel with its botched move select
-    const skip_turn = if (showdown)
-        battle.foe(player).active.volatiles.Trapping
-    else
-        side.last_selected_move == .SKIP_TURN;
-    if (skip_turn) return null;
-
     if (choice.type == .Switch) {
         try switchIn(battle, player, choice.data, false, log);
         return null;
     }
+
+    // Pokémon Showdown overwrites the SKIP_TURN sentinel with its botched move select
+    if (battle.foe(player).active.volatiles.Trapping) {
+        try log.cant(battle.active(player), .Trapped);
+        return null;
+    }
+    if (side.last_selected_move == .SKIP_TURN) return null;
 
     // getRandomTarget arbitrarily advances the RNG during runAction
     if (showdown) {
@@ -526,7 +527,16 @@ fn beforeMove(battle: anytype, player: Player, log: anytype) !BeforeMove {
         assert(volatiles.attacks > 0);
         volatiles.attacks -= 1;
         const move = Move.get(side.last_selected_move);
-        _ = try applyDamage(battle, player.foe(), player.foe(), move, log);
+        assert(move.target != .Self);
+        try log.move(
+            battle.active(player),
+            side.last_selected_move,
+            battle.active(player.foe()),
+            side.last_selected_move,
+        );
+        if (battle.last_damage != 0 or showdown) {
+            _ = try applyDamage(battle, player.foe(), player.foe(), move, log);
+        }
         return .done;
     }
 
@@ -557,7 +567,7 @@ fn canMove(
         // also decrements PP now instead of when actually resolving the attack (above)
         if (showdown) {
             side.last_used_move = side.last_selected_move;
-            if (!skip) decrementPP(side, choice);
+            if (!skip) decrementPP(battle, player, choice);
         }
         return false;
     }
@@ -568,7 +578,7 @@ fn canMove(
     // if (showdown and locked) battle.rng.advance(1);
 
     side.last_used_move = side.last_selected_move;
-    if (!skip) decrementPP(side, choice);
+    if (!skip) decrementPP(battle, player, choice);
 
     // Metronome / Mirror Move call getRandomTarget if the move they proc targets
     if (showdown and special) battle.rng.advance(@boolToInt(move.target != .Self));
@@ -581,22 +591,37 @@ fn canMove(
         return false;
     }
 
-    // FIXME: if (!showdown)
-    if (move.effect == .Thrashing) {
-        Effects.thrashing(battle, player);
-    } else if (move.effect == .Trapping) {
-        Effects.trapping(battle, player);
+    // Pokémon Showdown handles these after hit/miss and damage calculation
+    if (!showdown) {
+        if (move.effect == .Thrashing) {
+            Effects.thrashing(battle, player);
+        } else if (move.effect == .Trapping) {
+            Effects.trapping(battle, player);
+        }
     }
 
     return true;
 }
 
-fn decrementPP(side: *Side, choice: Choice) void {
+fn decrementPP(battle: anytype, player: Player, choice: Choice) void {
     assert(choice.type == .Move);
     assert(choice.data <= 4);
 
-    assert(choice.data != 0 or side.last_selected_move == .Struggle);
-    if (choice.data == 0) return;
+    var side = battle.side(player);
+    if (side.last_selected_move == .Struggle) return;
+
+    // GLITCH: Struggle bypass PP underflow via Hyper Beam / Trapping-switch auto selection
+    const auto = side.last_selected_move == .HyperBeam or
+        Move.get(side.last_selected_move).effect == .Trapping;
+
+    var slot = choice.data;
+    if (slot == 0) {
+        assert(auto);
+        slot = @truncate(u4, if (player == .P1)
+            battle.last_selected_indexes.p1
+        else
+            battle.last_selected_indexes.p2);
+    }
 
     var active = &side.active;
     const volatiles = &active.volatiles;
@@ -604,17 +629,13 @@ fn decrementPP(side: *Side, choice: Choice) void {
     assert(!volatiles.Rage and !volatiles.Thrashing);
     if (volatiles.Bide or volatiles.MultiHit) return;
 
-    // GLITCH: Struggle bypass PP underflow via Hyper Beam / Trapping-switch auto selection
-    const underflow = side.last_selected_move == .HyperBeam or
-        Move.get(side.last_selected_move).effect == .Trapping;
-
-    assert(active.move(choice.data).pp > 0 or underflow);
-    active.move(choice.data).pp -%= 1;
+    assert(active.move(slot).pp > 0 or auto);
+    active.move(slot).pp -%= 1;
     if (volatiles.Transform) return;
 
-    assert(side.stored().move(choice.data).pp > 0 or underflow);
-    side.stored().move(choice.data).pp -%= 1;
-    assert(active.move(choice.data).pp == side.stored().move(choice.data).pp);
+    assert(side.stored().move(slot).pp > 0 or auto);
+    side.stored().move(slot).pp -%= 1;
+    assert(active.move(slot).pp == side.stored().move(slot).pp);
 }
 
 // Pokémon Showdown does hit/multi/crit/damage instead of crit/damage/hit/multi
@@ -624,6 +645,13 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
 
     var move = Move.get(side.last_selected_move);
     const special = move.effect == .SuperFang or move.effect == .SpecialDamage;
+
+    var crit = false;
+    var ohko = false;
+    var immune = false;
+    var mist = false;
+    var hits: u4 = 1;
+    var effectiveness = Effectiveness.neutral;
 
     // Pokémon Showdown runs type and OHKO immunity checks before the accuracy check
     if (showdown) {
@@ -635,9 +663,13 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
             !(special and m != .SonicBoom) or
             (m == .DreamEater and !Status.is(foe.stored().status, .SLP)))
         {
-            try log.immune(battle.active(player.foe()), .None);
-            if (move.effect == .Explode) try Effects.explode(battle, player);
-            return null;
+            if (move.effect == .Trapping) {
+                immune = true;
+            } else {
+                try log.immune(battle.active(player.foe()), .None);
+                if (move.effect == .Explode) try Effects.explode(battle, player);
+                return null;
+            }
         }
         if (move.effect == .OHKO and side.active.stats.spe < foe.active.stats.spe) {
             try log.immune(battle.active(player.foe()), .OHKO);
@@ -648,19 +680,12 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     // The cartridge handles set damage moves in applyDamage but we short circuit to simplify things
     if (special) return specialDamage(battle, player, move, log);
 
-    var crit = false;
-    var ohko = false;
-    var immune = false;
-    var mist = false;
-    var hits: u4 = 1;
-    var effectiveness = Effectiveness.neutral;
-
     var miss = showdown and (move.target != .Self and
         !(move.effect == .Sleep and foe.active.volatiles.Recharging) and
         !moveHit(battle, player, move, &immune, &mist));
-    assert(!immune);
+    assert(!immune or (showdown and move.effect == .Trapping));
 
-    const skip = move.bp == 0 and move.effect != .OHKO;
+    const skip = (move.bp == 0 and move.effect != .OHKO) or immune;
     const counter = side.last_selected_move == .Counter;
     if (!miss and (!showdown or (!skip or counter))) blk: {
         if (showdown and move.effect.isMulti()) {
@@ -706,7 +731,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
 
     assert(miss or battle.last_damage > 0 or skip or showdown);
     assert(!(ohko and immune));
-    assert(!immune or miss);
+    assert(!immune or miss or move.effect == .Trapping);
 
     if (!showdown or !miss) {
         if (move.effect == .MirrorMove) {
@@ -748,6 +773,19 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
             }
         }
         return null;
+    } else if (showdown) {
+        // These should be handled in canMove but Pokémon Showdown does it here... ¯\_(ツ)_/¯
+        if (move.effect == .Thrashing) {
+            Effects.thrashing(battle, player);
+        } else if (move.effect == .Trapping) {
+            Effects.trapping(battle, player);
+            if (immune) {
+                battle.last_damage = 0;
+                // Pokémon Showdown logs |-damage| here instead of |-immune| because logic...
+                try log.damage(battle.active(player.foe()), foe.stored(), .None);
+                return null;
+            }
+        }
     }
 
     // On the cartridge MultiHit doesn't get set up until after damage has been applied for the
@@ -810,8 +848,8 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     if (move.effect.alwaysHappens()) try moveEffect(battle, player, move, choice.data, log);
 
     if (foe.stored().hp == 0) {
-         // Pokémon Showdown rolls for secondary chance even if the target fainted
-         if (showdown and move.effect.isSecondaryChance()) battle.rng.advance(1);
+        // Pokémon Showdown rolls for secondary chance even if the target fainted
+        if (showdown and move.effect.isSecondaryChance()) battle.rng.advance(1);
         return null;
     }
 
@@ -824,7 +862,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         // the Twineedle secondary effect in the MultiHit cleanup block above because it puts the
         // |-status| message before |-hitcount| instead of after.
         if (move.effect == .Twineedle) {
-            if (!showdown) try Effects.poison(battle, player,  Move.get(.PoisonSting), log);
+            if (!showdown) try Effects.poison(battle, player, Move.get(.PoisonSting), log);
         } else {
             try moveEffect(battle, player, move, choice.data, log);
         }
@@ -2017,7 +2055,7 @@ pub const Effects = struct {
         // (Pokémon Showdown unitentionally patches this glitch, preventing automatic selection)
         if (!showdown) foe.active.volatiles.Recharging = false;
 
-        side.active.volatiles.attacks = distribution(battle);
+        side.active.volatiles.attacks = distribution(battle) - 1;
     }
 
     fn boost(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
@@ -2359,14 +2397,12 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
                 return n;
             }
 
-            if (!foe.active.volatiles.Trapping) {
-                var slot: u4 = 2;
-                while (slot <= 6) : (slot += 1) {
-                    const id = side.order[slot - 1];
-                    if (id == 0 or side.pokemon[id - 1].hp == 0) continue;
-                    out[n] = .{ .type = .Switch, .data = slot };
-                    n += 1;
-                }
+            var slot: u4 = 2;
+            while (slot <= 6) : (slot += 1) {
+                const id = side.order[slot - 1];
+                if (id == 0 or side.pokemon[id - 1].hp == 0) continue;
+                out[n] = .{ .type = .Switch, .data = slot };
+                n += 1;
             }
 
             const limited = active.volatiles.Bide or active.volatiles.Trapping;
@@ -2382,7 +2418,7 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
                 return n;
             }
 
-            var slot: u4 = 1;
+            slot = 1;
             // Pokémon Showdown handles Bide and Trapping moves by checking if the move in question
             // is present in the Pokémon's moveset (which means moves called via Metronome / Mirror
             // Move will not result in forcing the subsequent use unless the user also had the

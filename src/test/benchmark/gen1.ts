@@ -68,6 +68,7 @@ const Player = new class {
 };
 
 export const Choices = new class {
+  // TODO: expose choices via native API?
   engine(battle: gen1.Battle, id: SideID, request: engine.Choice['type']): engine.Choice[] {
     switch (request) {
     case 'pass': {
@@ -94,12 +95,11 @@ export const Choices = new class {
         return [{type: 'move', data: 1}];
       }
 
-      if (!foe.active!.volatile(gen1.Pokemon.Volatiles.Trapping)) {
-        for (let slot = 2; slot <= 6; slot++) {
-          const pokemon = side.get(slot as engine.Slot);
-          if (!pokemon || pokemon.hp === 0) continue;
-          options.push({type: 'switch', data: slot});
-        }
+
+      for (let slot = 2; slot <= 6; slot++) {
+        const pokemon = side.get(slot as engine.Slot);
+        if (!pokemon || pokemon.hp === 0) continue;
+        options.push({type: 'switch', data: slot});
       }
 
       let slot = 0;

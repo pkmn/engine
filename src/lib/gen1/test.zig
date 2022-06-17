@@ -2150,7 +2150,152 @@ test "Trapping effect" {
     // move again automatically, and if it had 0 PP at the time, it becomes 63. If the user or the
     // target switch out, or the user is prevented from moving, the effect ends. This move can
     // prevent the target from moving even if it has type immunity, but will not deal damage.
-    return error.SkipZigTest;
+    const MIN_WRAP = MIN;
+    const MAX_WRAP = MAX;
+    const PAR_CAN = MAX;
+    const PAR_CANT = MIN;
+
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
+            NOP, HIT, ~CRIT, MAX_DMG, MIN_WRAP,
+            NOP, NOP, NOP, HIT, NOP,
+            NOP, PAR_CAN, HIT, MAX_WRAP, NOP, PAR_CAN,
+            NOP, PAR_CANT, PAR_CAN,
+        } else .{
+            MIN_WRAP, ~CRIT, MIN_DMG, HIT,
+            MIN_WRAP, ~CRIT, MAX_DMG, HIT,
+            ~CRIT, HIT,
+            PAR_CAN, MAX_WRAP, MAX_WRAP, ~CRIT, HIT, PAR_CAN,
+            PAR_CANT, PAR_CAN, ~CRIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{
+            .{ .species = .Dragonite, .moves = &.{ .Wrap, .Agility } },
+            .{ .species = .Moltres, .moves = &.{ .FireSpin, .FireBlast } },
+        },
+        &.{
+            .{ .species = .Cloyster, .moves = &.{ .Clamp, .Surf } },
+            .{ .species = .Tangela, .moves = &.{ .Bind, .StunSpore } },
+            .{ .species = .Gengar, .moves = &.{ .Teleport, .NightShade } },
+        },
+    );
+    defer t.deinit();
+
+    const pp = t.expected.p1.get(1).move(1).pp;
+
+    try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 10;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.cant(P2.ident(1), .Trapped);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
+
+    const choice = move(@boolToInt(showdown));
+    const p1_choices = &[_]Choice{ swtch(2), choice };
+    const all_choices = &[_]Choice{ swtch(2), swtch(3), move(1), move(2) };
+    const p2_choices = if (showdown)
+        all_choices
+    else
+        &[_]Choice{ swtch(2), swtch(3), move(0) };
+
+    var n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, p1_choices, choices[0..n]);
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, p2_choices, choices[0..n]);
+
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(2), if (showdown) null else Move.Wrap);
+    t.expected.p2.get(2).hp -= 15;
+    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(choice, swtch(2)));
+    try expectEqual(pp - 2, t.actual.p1.active.move(1).pp);
+
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, p1_choices, choices[0..n]);
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, p2_choices, choices[0..n]);
+
+    try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(2), Move.Wrap);
+    t.expected.p2.get(2).hp -= 15;
+    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+    try t.log.expected.cant(P2.ident(2), .Trapped);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(choice, move(1)));
+
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, all_choices, choices[0..n]);
+
+    try t.log.expected.move(P1.ident(1), Move.Agility, P1.ident(1), null);
+    try t.log.expected.boost(P1.ident(1), .Speed, 2);
+    try t.log.expected.move(P2.ident(2), Move.StunSpore, P1.ident(1), null);
+    t.expected.p1.get(1).status = Status.init(.PAR);
+    try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+    try t.log.expected.turn(5);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    try expectEqual(t.expected.p1.get(1).status, t.actual.p1.get(1).status);
+
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, all_choices, choices[0..n]);
+
+    try t.log.expected.switched(P2.ident(3), t.expected.p2.get(3));
+    try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(3), null);
+    if (showdown) {
+        try t.log.expected.damage(P2.ident(3), t.expected.p2.get(3), .None);
+    } else {
+        try t.log.expected.immune(P2.ident(3), .None);
+    }
+    try t.log.expected.turn(6);
+
+    try expectEqual(Result.Default, try t.update(move(1), swtch(3)));
+
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, p1_choices, choices[0..n]);
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, p2_choices, choices[0..n]);
+
+    try t.log.expected.cant(P2.ident(3), .Trapped);
+    try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(3), Move.Wrap);
+    if (showdown) try t.log.expected.damage(P2.ident(3), t.expected.p2.get(3), .None);
+    try t.log.expected.turn(7);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, p1_choices, choices[0..n]);
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, p2_choices, choices[0..n]);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.cant(P2.ident(3), .Trapped);
+    try t.log.expected.cant(P1.ident(1), .Paralysis);
+    try t.log.expected.turn(8);
+
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, all_choices, choices[0..n]);
+
+    try t.log.expected.move(P2.ident(3), Move.Teleport, P2.ident(3), null);
+    try t.log.expected.move(P1.ident(1), Move.Agility, P1.ident(1), null);
+    try t.log.expected.boost(P1.ident(1), .Speed, 2);
+    try t.log.expected.turn(9);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    try t.verify();
 }
 
 // Move.{JumpKick,HighJumpKick}
@@ -2764,7 +2909,7 @@ test "Rest effect" {
 
     // Fails at specific fractions
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try expectEqual(Status.init(.PAR), t.actual.p2.get(1).status);
+    try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
     try expectEqual(@as(u16, 49), t.actual.p2.active.stats.spe);
     try expectEqual(@as(u16, 198), t.actual.p2.get(1).stats.spe);
 

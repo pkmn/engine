@@ -631,7 +631,7 @@ speed ties, etc) that Pokémon Showdown cannot replicate due to everything descr
 | **Psywave** (power)      | `specialDamage`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X < {3\over2} \cdot level$</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, {3\over2} \cdot level\right)$</dd></dl> |
 | **Thrash** (rampage)     | `Effects.thrash`         | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 1\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[2, 4\right)$ turns</dd></dl> |
 | **Thrash** (confusion)   | `beforeMove`             |  <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[2, 6\right)$ turns</dd></dl> |
-| **Trapping** (duration)  | `Effects.trapping`       | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 2$ turns if $\left(X \land 3\right) < 2$<br /> otherwise last for $\left(Y \land 3\right) + 2$ turns (reroll)</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \{2, 2, 2, 3, 3, 3, 4, 5\}$ turns</dd></dl> |
+| **Trapping** (duration)  | `Effects.trapping`       | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 1$ further turns if $\left(X \land 3\right) < 2$<br /> otherwise last for $\left(Y \land 3\right) + 1$ further turns (reroll)</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \{2, 2, 2, 3, 3, 3, 4, 5\} - 1$ further turns</dd></dl> |
 | **Multi-Hit** (hits)     | `Effects.multiHit`       | *Ibid.* |
 | **Unboost** (chance)     | `Effects.unboost`        | Trigger if $X < 85$ |
 
