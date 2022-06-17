@@ -876,91 +876,92 @@ test "DoubleHit effect" {
 }
 
 // Move.Twineedle
-// test "Twineedle effect" {
-//     // Hits twice, with the second hit having a 20% chance to poison the target. If the first hit
-//     // breaks the target's substitute, the move ends.
-//     const proc = comptime ranged(52, 256) - 1;
-//     const no_proc = proc + 1;
-//     var t = Test(
-//     // zig fmt: off
-//         if (showdown) .{
-//             NOP, HIT, CRIT, MAX_DMG, proc, proc,
-//             NOP, HIT, ~CRIT, MIN_DMG, proc, no_proc, no_proc,
-//             NOP, HIT, ~CRIT, MIN_DMG, no_proc, proc, proc,
-//             NOP, HIT, ~CRIT, MIN_DMG, proc, proc,
-//         } else .{
-//             // TODO
-//         }
-//     // zig fmt: on
-//     ).init(
-//         &.{.{ .species = .Beedrill, .moves = &.{.Twineedle} }},
-//         &.{
-//             .{ .species = .Voltorb, .moves = &.{ .Substitute, .Teleport } },
-//             .{ .species = .Electrode, .moves = &.{.Explosion} },
-//             .{ .species = .Weezing, .moves = &.{.Explosion} },
-//         },
-//     );
-//     defer t.deinit();
+test "Twineedle effect" {
+    // Hits twice, with the second hit having a 20% chance to poison the target. If the first hit
+    // breaks the target's substitute, the move ends.
+    return error.SkipZigTest;
+    //     const proc = comptime ranged(52, 256) - 1;
+    //     const no_proc = proc + 1;
+    //     var t = Test(
+    //     // zig fmt: off
+    //         if (showdown) .{
+    //             NOP, HIT, CRIT, MAX_DMG, proc, proc,
+    //             NOP, HIT, ~CRIT, MIN_DMG, proc, no_proc, no_proc,
+    //             NOP, HIT, ~CRIT, MIN_DMG, no_proc, proc, proc,
+    //             NOP, HIT, ~CRIT, MIN_DMG, proc, proc,
+    //         } else .{
+    //             // TODO
+    //         }
+    //     // zig fmt: on
+    //     ).init(
+    //         &.{.{ .species = .Beedrill, .moves = &.{.Twineedle} }},
+    //         &.{
+    //             .{ .species = .Voltorb, .moves = &.{ .Substitute, .Teleport } },
+    //             .{ .species = .Electrode, .moves = &.{.Explosion} },
+    //             .{ .species = .Weezing, .moves = &.{.Explosion} },
+    //         },
+    //     );
+    //     defer t.deinit();
 
-//     t.expected.p2.get(1).hp -= 70;
+    //     t.expected.p2.get(1).hp -= 70;
 
-//     try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
-//     try t.log.expected.start(P2.ident(1), .Substitute);
-//     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-//     try t.log.expected.move(P1.ident(1), Move.Twineedle, P2.ident(1), null);
-//     try t.log.expected.crit(P2.ident(1));
-//     try t.log.expected.end(P2.ident(1), .Substitute);
-//     try t.log.expected.hitcount(P2.ident(1), 1);
-//     try t.log.expected.turn(2);
+    //     try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+    //     try t.log.expected.start(P2.ident(1), .Substitute);
+    //     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    //     try t.log.expected.move(P1.ident(1), Move.Twineedle, P2.ident(1), null);
+    //     try t.log.expected.crit(P2.ident(1));
+    //     try t.log.expected.end(P2.ident(1), .Substitute);
+    //     try t.log.expected.hitcount(P2.ident(1), 1);
+    //     try t.log.expected.turn(2);
 
-//     // Breaking a target's Substitute ends the move
-//     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    //     // Breaking a target's Substitute ends the move
+    //     try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-//     try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
-//     try t.log.expected.move(P1.ident(1), Move.Twineedle, P2.ident(1), null);
-//     t.expected.p2.get(1).hp -= 36;
-//     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-//     if (showdown) {
-//         t.expected.p2.get(1).status = Status.init(.PSN);
-//         try t.log.expected.status(P2.ident(1), Status.init(.PSN), .None);
-//     }
-//     t.expected.p2.get(1).hp -= 36;
-//     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-//     try t.log.expected.hitcount(P2.ident(1), 2);
-//     try t.log.expected.turn(3);
+    //     try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    //     try t.log.expected.move(P1.ident(1), Move.Twineedle, P2.ident(1), null);
+    //     t.expected.p2.get(1).hp -= 36;
+    //     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    //     if (showdown) {
+    //         t.expected.p2.get(1).status = Status.init(.PSN);
+    //         try t.log.expected.status(P2.ident(1), Status.init(.PSN), .None);
+    //     }
+    //     t.expected.p2.get(1).hp -= 36;
+    //     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    //     try t.log.expected.hitcount(P2.ident(1), 2);
+    //     try t.log.expected.turn(3);
 
-//     // On Pokémon Showdown the first hit can poison the tatget
-//     try expectEqual(Result.Default, try t.update(move(1), move(2)));
-//     // if (showdown) try expectEqual(t.actual.p2.get(1).status, Status.init(.PSN));
+    //     // On Pokémon Showdown the first hit can poison the tatget
+    //     try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    //     // if (showdown) try expectEqual(t.actual.p2.get(1).status, Status.init(.PSN));
 
-//     try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
-//     try t.log.expected.move(P1.ident(1), Move.Twineedle, P2.ident(2), null);
-//     t.expected.p2.get(2).hp -= 30;
-//     try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
-//     t.expected.p2.get(2).hp -= 30;
-//     try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
-//     t.expected.p2.get(2).status = Status.init(.PSN);
-//     try t.log.expected.status(P2.ident(2), Status.init(.PSN), .None);
-//     try t.log.expected.hitcount(P2.ident(2), 2);
-//     try t.log.expected.turn(4);
+    //     try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    //     try t.log.expected.move(P1.ident(1), Move.Twineedle, P2.ident(2), null);
+    //     t.expected.p2.get(2).hp -= 30;
+    //     try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+    //     t.expected.p2.get(2).hp -= 30;
+    //     try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+    //     t.expected.p2.get(2).status = Status.init(.PSN);
+    //     try t.log.expected.status(P2.ident(2), Status.init(.PSN), .None);
+    //     try t.log.expected.hitcount(P2.ident(2), 2);
+    //     try t.log.expected.turn(4);
 
-//     // The second hit can always poison the target
-//     try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
-//     // try expectEqual(t.actual.p2.get(2).status, Status.init(.PSN));
+    //     // The second hit can always poison the target
+    //     try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+    //     // try expectEqual(t.actual.p2.get(2).status, Status.init(.PSN));
 
-//     try t.log.expected.switched(P2.ident(3), t.expected.p2.get(3));
-//     try t.log.expected.move(P1.ident(1), Move.Twineedle, P2.ident(3), null);
-//     t.expected.p2.get(3).hp -= 45;
-//     try t.log.expected.damage(P2.ident(3), t.expected.p2.get(3), .None);
-//     t.expected.p2.get(3).hp -= 45;
-//     try t.log.expected.damage(P2.ident(3), t.expected.p2.get(3), .None);
-//     try t.log.expected.hitcount(P2.ident(3), 2);
-//     try t.log.expected.turn(5);
+    //     try t.log.expected.switched(P2.ident(3), t.expected.p2.get(3));
+    //     try t.log.expected.move(P1.ident(1), Move.Twineedle, P2.ident(3), null);
+    //     t.expected.p2.get(3).hp -= 45;
+    //     try t.log.expected.damage(P2.ident(3), t.expected.p2.get(3), .None);
+    //     t.expected.p2.get(3).hp -= 45;
+    //     try t.log.expected.damage(P2.ident(3), t.expected.p2.get(3), .None);
+    //     try t.log.expected.hitcount(P2.ident(3), 2);
+    //     try t.log.expected.turn(5);
 
-//     // Poison types cannot be poisoned
-//     try expectEqual(Result.Default, try t.update(move(1), swtch(3)));
-//     try t.verify();
-// }
+    //     // Poison types cannot be poisoned
+    //     try expectEqual(Result.Default, try t.update(move(1), swtch(3)));
+    //     try t.verify();
+}
 
 // Move.Toxic
 // Move.{PoisonPowder,PoisonGas}
@@ -1208,67 +1209,68 @@ test "BurnChance effect" {
 }
 
 // Move.{IcePunch,IceBeam,Blizzard}: FreezeChance
-// test "FreezeChance effect" {
-//     // Has a 10% chance to freeze the target.
-//     const FRZ = comptime ranged(26, 256) - 1;
-//     const PAR_CANT = MIN;
-//     const MIN_WRAP = MIN;
-//     var t = Test(
-//     // zig fmt: off
-//     if (showdown) .{
-//         NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, NOP,
-//         NOP, NOP, HIT, ~CRIT, MIN_DMG, FRZ, PAR_CANT,
-//         NOP, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
-//         NOP, NOP, HIT,
-//         NOP, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
-//         NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
-//         NOP, NOP,
-//         NOP, HIT, ~CRIT, MIN_DMG,
-//         NOP, HIT, ~CRIT, MIN_DMG, FRZ,
-//     } else .{
-//         // TODO
-//     }
-//     // zig fmt: on
-//     ).init(
-//         &.{
-//             .{ .species = .Starmie, .moves = &.{.IceBeam} },
-//             .{ .species = .Magmar, .moves = &.{ .Flamethrower, .Substitute } },
-//             .{ .species = .Lickitung, .moves = &.{.Slam} },
-//         },
-//         &.{.{
-//             .species = .Jynx,
-//             .moves = &.{ .ThunderWave, .Blizzard, .FireSpin, .Flamethrower },
-//         }},
-//     );
-//     defer t.deinit();
+test "FreezeChance effect" {
+    // Has a 10% chance to freeze the target.
+    return error.SkipZigTest;
+    //     const FRZ = comptime ranged(26, 256) - 1;
+    //     const PAR_CANT = MIN;
+    //     const MIN_WRAP = MIN;
+    //     var t = Test(
+    //     // zig fmt: off
+    //     if (showdown) .{
+    //         NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, NOP,
+    //         NOP, NOP, HIT, ~CRIT, MIN_DMG, FRZ, PAR_CANT,
+    //         NOP, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
+    //         NOP, NOP, HIT,
+    //         NOP, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
+    //         NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
+    //         NOP, NOP,
+    //         NOP, HIT, ~CRIT, MIN_DMG,
+    //         NOP, HIT, ~CRIT, MIN_DMG, FRZ,
+    //     } else .{
+    //         // TODO
+    //     }
+    //     // zig fmt: on
+    //     ).init(
+    //         &.{
+    //             .{ .species = .Starmie, .moves = &.{.IceBeam} },
+    //             .{ .species = .Magmar, .moves = &.{ .Flamethrower, .Substitute } },
+    //             .{ .species = .Lickitung, .moves = &.{.Slam} },
+    //         },
+    //         &.{.{
+    //             .species = .Jynx,
+    //             .moves = &.{ .ThunderWave, .Blizzard, .FireSpin, .Flamethrower },
+    //         }},
+    //     );
+    //     defer t.deinit();
 
-//     // Can't freeze Ice-types
-//     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    //     // Can't freeze Ice-types
+    //     try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-//     // Can't freeze a Pokémon which is already statused
-//     try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    //     // Can't freeze a Pokémon which is already statused
+    //     try expectEqual(Result.Default, try t.update(move(1), move(2)));
 
-//     // Can freeze Fire types
-//     try expectEqual(Result.Default, try t.update(swtch(2), move(2)));
+    //     // Can freeze Fire types
+    //     try expectEqual(Result.Default, try t.update(swtch(2), move(2)));
 
-//     // Freezing prevents action
-//     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    //     // Freezing prevents action
+    //     try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-//     // Freeze Clause Mod prevents multiple Pokémon from being frozen
-//     try expectEqual(Result.Default, try t.update(swtch(3), move(2)));
+    //     // Freeze Clause Mod prevents multiple Pokémon from being frozen
+    //     try expectEqual(Result.Default, try t.update(swtch(3), move(2)));
 
-//     // Fire Spin does not thaw frozen Pokémon
-//     try expectEqual(Result.Default, try t.update(swtch(3), move(3)));
+    //     // Fire Spin does not thaw frozen Pokémon
+    //     try expectEqual(Result.Default, try t.update(swtch(3), move(3)));
 
-//     try expectEqual(Result.Default, try t.update(move(1), move(3)));
+    //     try expectEqual(Result.Default, try t.update(move(1), move(3)));
 
-//     // Other Fire moves thaw frozen Pokémon
-//     try expectEqual(Result.Default, try t.update(move(2), move(4)));
+    //     // Other Fire moves thaw frozen Pokémon
+    //     try expectEqual(Result.Default, try t.update(move(2), move(4)));
 
-//     // Substitute blocks Freeze
-//     try expectEqual(Result.Default, try t.update(move(2), move(2)));
-//     try t.verify();
-// }
+    //     // Substitute blocks Freeze
+    //     try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    //     try t.verify();
+}
 
 // Move.{ThunderWave,StunSpore,Glare}
 test "Paralyze effect" {
@@ -3693,50 +3695,51 @@ test "Hyper Beam + Sleep move glitch" {
     return error.SkipZigTest;
 }
 
-// test "Hyper Beam automatic selection glitch" {
-//     // https://glitchcity.wiki/Hyper_Beam_automatic_selection_glitch
-//     var t = Test((if (showdown)
-//         (.{ NOP, NOP, ~HIT, HIT, ~CRIT, MIN_DMG, NOP, NOP, ~HIT, NOP })
-//     else
-//         (.{}))).init(
-//         &.{.{ .species = .Chansey, .moves = &.{ .HyperBeam, .SoftBoiled } }},
-//         &.{.{ .species = .Tentacool, .moves = &.{.Wrap} }},
-//     );
-//     defer t.deinit();
+test "Hyper Beam automatic selection glitch" {
+    // https://glitchcity.wiki/Hyper_Beam_automatic_selection_glitch
+    return error.SkipZigTest;
+    //     var t = Test((if (showdown)
+    //         (.{ NOP, NOP, ~HIT, HIT, ~CRIT, MIN_DMG, NOP, NOP, ~HIT, NOP })
+    //     else
+    //         (.{}))).init(
+    //         &.{.{ .species = .Chansey, .moves = &.{ .HyperBeam, .SoftBoiled } }},
+    //         &.{.{ .species = .Tentacool, .moves = &.{.Wrap} }},
+    //     );
+    //     defer t.deinit();
 
-//     t.actual.p1.get(1).move(1).pp = 1;
+    //     t.actual.p1.get(1).move(1).pp = 1;
 
-//     try t.log.expected.move(P2.ident(1), Move.Wrap, P1.ident(1), null);
-//     try t.log.expected.lastmiss();
-//     try t.log.expected.miss(P2.ident(1));
-//     try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), null);
-//     t.expected.p2.get(1).hp -= 105;
-//     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-//     try t.log.expected.mustrecharge(P1.ident(1));
-//     try t.log.expected.turn(2);
+    //     try t.log.expected.move(P2.ident(1), Move.Wrap, P1.ident(1), null);
+    //     try t.log.expected.lastmiss();
+    //     try t.log.expected.miss(P2.ident(1));
+    //     try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), null);
+    //     t.expected.p2.get(1).hp -= 105;
+    //     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    //     try t.log.expected.mustrecharge(P1.ident(1));
+    //     try t.log.expected.turn(2);
 
-//     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-//     try expectEqual(@as(u8, 0), t.actual.p1.get(1).move(1).pp);
+    //     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    //     try expectEqual(@as(u8, 0), t.actual.p1.get(1).move(1).pp);
 
-//     try t.log.expected.move(P2.ident(1), Move.Wrap, P1.ident(1), null);
-//     try t.log.expected.lastmiss();
-//     try t.log.expected.miss(P2.ident(1));
-//     if (showdown) {
-//         try t.log.expected.cant(P1.ident(1), .Recharge);
-//     } else {
-//         try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), null);
-//         t.expected.p2.get(1).hp -= 105;
-//         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-//         try t.log.expected.mustrecharge(P1.ident(1));
-//     }
-//     try t.log.expected.turn(3);
+    //     try t.log.expected.move(P2.ident(1), Move.Wrap, P1.ident(1), null);
+    //     try t.log.expected.lastmiss();
+    //     try t.log.expected.miss(P2.ident(1));
+    //     if (showdown) {
+    //         try t.log.expected.cant(P1.ident(1), .Recharge);
+    //     } else {
+    //         try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), null);
+    //         t.expected.p2.get(1).hp -= 105;
+    //         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    //         try t.log.expected.mustrecharge(P1.ident(1));
+    //     }
+    //     try t.log.expected.turn(3);
 
-//     // Missing should cause Hyper Beam to be automatically selected and underflow
-//     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-//     if (!showdown) try expectEqual(@as(u8, 63), t.actual.p1.get(1).move(1).pp);
+    //     // Missing should cause Hyper Beam to be automatically selected and underflow
+    //     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    //     if (!showdown) try expectEqual(@as(u8, 63), t.actual.p1.get(1).move(1).pp);
 
-//     try t.verify();
-// }
+    //     try t.verify();
+}
 
 test "Invulnerability glitch" {
     // https://pkmn.cc/bulba-glitch-1#Invulnerability_glitch
@@ -4157,84 +4160,84 @@ test "Psywave infinite loop" {
 
 // Miscellaneous
 
-// test "MAX_LOGS" {
-//     if (showdown) return;
+test "MAX_LOGS" {
+    if (showdown) return;
+    return error.SkipZigTest;
+    //     const MIRROR_MOVE = @enumToInt(Move.MirrorMove);
+    //     const CFZ = comptime ranged(128, 256);
+    //     const NO_CFZ = CFZ - 1;
+    //     // TODO: replace this with a handcrafted actual seed instead of using the fixed RNG
+    //     var battle = Battle.fixed(
+    //         // zig fmt: off
+    //         .{
+    //             // Set up
+    //             HIT,
+    //             ~CRIT, @enumToInt(Move.LeechSeed), HIT,
+    //             HIT, 3, NO_CFZ, HIT, 3,
+    //             NO_CFZ, NO_CFZ, ~CRIT, @enumToInt(Move.SolarBeam),
+    //             // Scenario
+    //             NO_CFZ,
+    //             ~CRIT, MIRROR_MOVE, ~CRIT,
+    //             ~CRIT, MIRROR_MOVE, ~CRIT,
+    //             ~CRIT, MIRROR_MOVE, ~CRIT,
+    //             ~CRIT, MIRROR_MOVE, ~CRIT,
+    //             ~CRIT, MIRROR_MOVE, ~CRIT,
+    //             ~CRIT, MIRROR_MOVE, ~CRIT,
+    //             ~CRIT, MIRROR_MOVE, ~CRIT,
+    //             ~CRIT, MIRROR_MOVE, ~CRIT,
+    //             ~CRIT, MIRROR_MOVE, ~CRIT,
+    //             ~CRIT, MIRROR_MOVE, ~CRIT,
+    //             ~CRIT, @enumToInt(Move.PinMissile), CRIT, MIN_DMG, HIT, 3, 3,
+    //             NO_CFZ, CRIT, MIN_DMG, HIT,
+    //         },
+    //         // zig fmt: on
+    //         &.{
+    //             .{
+    //                 .species = .Bulbasaur,
+    //                 .moves = &.{.LeechSeed},
+    //             },
+    //             .{
+    //                 .species = .Gengar,
+    //                 .hp = 224,
+    //                 .status = BRN,
+    //                 .moves = &.{ .Metronome, .ConfuseRay, .Toxic },
+    //             },
+    //         },
+    //         &.{
+    //             .{
+    //                 .species = .Bulbasaur,
+    //                 .moves = &.{.LeechSeed},
+    //             },
+    //             .{
+    //                 .species = .Gengar,
+    //                 .status = BRN,
+    //                 .moves = &.{ .Metronome, .ConfuseRay },
+    //             },
+    //         },
+    //     );
+    //     battle.side(.P2).get(2).stats.spe = 317; // make P2 slower to avoid speed ties
 
-//     const MIRROR_MOVE = @enumToInt(Move.MirrorMove);
-//     const CFZ = comptime ranged(128, 256);
-//     const NO_CFZ = CFZ - 1;
-//     // TODO: replace this with a handcrafted actual seed instead of using the fixed RNG
-//     var battle = Battle.fixed(
-//         // zig fmt: off
-//         .{
-//             // Set up
-//             HIT,
-//             ~CRIT, @enumToInt(Move.LeechSeed), HIT,
-//             HIT, 3, NO_CFZ, HIT, 3,
-//             NO_CFZ, NO_CFZ, ~CRIT, @enumToInt(Move.SolarBeam),
-//             // Scenario
-//             NO_CFZ,
-//             ~CRIT, MIRROR_MOVE, ~CRIT,
-//             ~CRIT, MIRROR_MOVE, ~CRIT,
-//             ~CRIT, MIRROR_MOVE, ~CRIT,
-//             ~CRIT, MIRROR_MOVE, ~CRIT,
-//             ~CRIT, MIRROR_MOVE, ~CRIT,
-//             ~CRIT, MIRROR_MOVE, ~CRIT,
-//             ~CRIT, MIRROR_MOVE, ~CRIT,
-//             ~CRIT, MIRROR_MOVE, ~CRIT,
-//             ~CRIT, MIRROR_MOVE, ~CRIT,
-//             ~CRIT, MIRROR_MOVE, ~CRIT,
-//             ~CRIT, @enumToInt(Move.PinMissile), CRIT, MIN_DMG, HIT, 3, 3,
-//             NO_CFZ, CRIT, MIN_DMG, HIT,
-//         },
-//         // zig fmt: on
-//         &.{
-//             .{
-//                 .species = .Bulbasaur,
-//                 .moves = &.{.LeechSeed},
-//             },
-//             .{
-//                 .species = .Gengar,
-//                 .hp = 224,
-//                 .status = BRN,
-//                 .moves = &.{ .Metronome, .ConfuseRay, .Toxic },
-//             },
-//         },
-//         &.{
-//             .{
-//                 .species = .Bulbasaur,
-//                 .moves = &.{.LeechSeed},
-//             },
-//             .{
-//                 .species = .Gengar,
-//                 .status = BRN,
-//                 .moves = &.{ .Metronome, .ConfuseRay },
-//             },
-//         },
-//     );
-//     battle.side(.P2).get(2).stats.spe = 317; // make P2 slower to avoid speed ties
+    //     try expectEqual(Result.Default, try battle.update(.{}, .{}, null));
+    //     // P1 switches into Leech Seed
+    //     try expectEqual(Result.Default, try battle.update(swtch(2), move(1), null));
+    //     // P2 switches into to P1's Metronome -> Leech Seed
+    //     try expectEqual(Result.Default, try battle.update(move(1), swtch(2), null));
+    //     // P1 and P2 confuse each other
+    //     try expectEqual(Result.Default, try battle.update(move(2), move(2), null));
+    //     // P1 uses Toxic to noop while P2 uses Metronome -> Solar Beam
+    //     try expectEqual(Result.Default, try battle.update(move(3), move(1), null));
 
-//     try expectEqual(Result.Default, try battle.update(.{}, .{}, null));
-//     // P1 switches into Leech Seed
-//     try expectEqual(Result.Default, try battle.update(swtch(2), move(1), null));
-//     // P2 switches into to P1's Metronome -> Leech Seed
-//     try expectEqual(Result.Default, try battle.update(move(1), swtch(2), null));
-//     // P1 and P2 confuse each other
-//     try expectEqual(Result.Default, try battle.update(move(2), move(2), null));
-//     // P1 uses Toxic to noop while P2 uses Metronome -> Solar Beam
-//     try expectEqual(Result.Default, try battle.update(move(3), move(1), null));
+    //     try expectEqual(Move.SolarBeam, battle.side(.P2).last_selected_move);
+    //     try expectEqual(Move.Metronome, battle.side(.P2).last_used_move);
 
-//     try expectEqual(Move.SolarBeam, battle.side(.P2).last_selected_move);
-//     try expectEqual(Move.Metronome, battle.side(.P2).last_used_move);
-
-//     // BUG: data.MAX_LOGS not enough?
-//     var buf: [data.MAX_LOGS * 100]u8 = undefined;
-//     var log = FixedLog{ .writer = stream(&buf).writer() };
-//     // P1 uses Metronome -> Mirror Move -> ... -> Pin Missile, P2 -> Solar Beam
-//     try expectEqual(
-//         Result{ .p1 = .Switch, .p2 = .Pass }, try battle.update(move(1), move(0), log));
-//     try expect(battle.rng.exhausted());
-// }
+    //     // BUG: data.MAX_LOGS not enough?
+    //     var buf: [data.MAX_LOGS * 100]u8 = undefined;
+    //     var log = FixedLog{ .writer = stream(&buf).writer() };
+    //     // P1 uses Metronome -> Mirror Move -> ... -> Pin Missile, P2 -> Solar Beam
+    //     try expectEqual(
+    //         Result{ .p1 = .Switch, .p2 = .Pass }, try battle.update(move(1), move(0), log));
+    //     try expect(battle.rng.exhausted());
+}
 
 fn Test(comptime rolls: anytype) type {
     return struct {
