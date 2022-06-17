@@ -4224,7 +4224,48 @@ test "Stat down modifier overflow glitch" {
 test "Struggle bypassing / Switch PP underflow" {
     // https://pkmn.cc/bulba-glitch-1#Struggle_bypassing
     // https://glitchcity.wiki/Switch_PP_underflow_glitch
-    return error.SkipZigTest;
+    const MIN_WRAP = MIN;
+
+    var t = Test((if (showdown)
+        (.{ NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP, NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP })
+    else
+        (.{ MIN_WRAP, ~CRIT, MIN_DMG, HIT, MIN_WRAP, ~CRIT, MIN_DMG, HIT }))).init(
+        &.{
+            .{ .species = .Victreebel, .moves = &.{ .Wrap, .VineWhip } },
+            .{ .species = .Seel, .moves = &.{.Bubble} },
+        },
+        &.{
+            .{ .species = .Kadabra, .moves = &.{.Teleport} },
+            .{ .species = .MrMime, .moves = &.{.Teleport} },
+        },
+    );
+    defer t.deinit();
+
+    t.actual.p1.get(1).move(1).pp = 1;
+
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 22;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(@as(u8, 0), t.actual.p1.get(1).move(1).pp);
+
+    const choice = move(@boolToInt(showdown));
+    const n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), choice }, choices[0..n]);
+
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(2), if (showdown) null else Move.Wrap);
+    t.expected.p2.get(2).hp -= 16;
+    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(choice, swtch(2)));
+    try expectEqual(@as(u8, 63), t.actual.p1.get(1).move(1).pp);
+
+    try t.verify();
 }
 
 test "Trapping sleep glitch" {

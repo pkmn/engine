@@ -5624,7 +5624,7 @@ describe('Gen 1', () => {
 
   test('Struggle bypassing / Switch PP underflow', () => {
     const battle = startBattle([
-      SRF_RES, HIT, NO_CRIT, MIN_DMG, MAX_WRAP, SRF_RES, HIT, NO_CRIT, MIN_DMG, REWRAP,
+      SRF_RES, HIT, NO_CRIT, MIN_DMG, MIN_WRAP, SRF_RES, HIT, NO_CRIT, MIN_DMG, REWRAP,
     ], [
       {species: 'Victreebel', evs, moves: ['Wrap', 'Vine Whip']},
       {species: 'Seel', evs, moves: ['Bubble']},
