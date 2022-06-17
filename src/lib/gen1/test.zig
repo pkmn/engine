@@ -924,7 +924,7 @@ test "Twineedle effect" {
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     if (showdown) {
         t.expected.p2.get(1).status = Status.init(.PSN);
-        try t.log.expected.status(P2.ident(1), Status.init(.PSN), .None);
+        try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
     }
     t.expected.p2.get(1).hp -= 36;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
@@ -943,17 +943,17 @@ test "Twineedle effect" {
     try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
     t.expected.p2.get(2).status = Status.init(.PSN);
     if (showdown) {
-        try t.log.expected.status(P2.ident(2), Status.init(.PSN), .None);
+        try t.log.expected.status(P2.ident(2), t.expected.p2.get(2).status, .None);
         try t.log.expected.hitcount(P2.ident(2), 2);
     } else {
         try t.log.expected.hitcount(P2.ident(2), 2);
-        try t.log.expected.status(P2.ident(2), Status.init(.PSN), .None);
+        try t.log.expected.status(P2.ident(2), t.expected.p2.get(2).status, .None);
     }
     try t.log.expected.turn(4);
 
     // The second hit can always poison the target
     try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
-    try expectEqual(t.actual.p2.get(1).status, Status.init(.PSN));
+    try expectEqual(t.expected.p2.get(2).status, t.actual.p2.get(1).status);
 
     try t.log.expected.switched(P2.ident(3), t.expected.p2.get(3));
     try t.log.expected.move(P1.ident(1), Move.Twineedle, P2.ident(3), null);
@@ -2904,7 +2904,7 @@ test "Rest effect" {
     try t.log.expected.fail(P2.ident(1), .None);
     try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
     t.expected.p2.get(1).status = Status.init(.PAR);
-    try t.log.expected.status(P2.ident(1), Status.init(.PAR), .None);
+    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
     try t.log.expected.turn(2);
 
     // Fails at specific fractions
@@ -3866,7 +3866,75 @@ test "Counter glitches" {
 
 test "Freeze top move selection glitch" {
     // https://glitchcity.wiki/Freeze_top_move_selection_glitch
-    return error.SkipZigTest;
+    const FRZ = comptime ranged(26, 256) - 1;
+    const NO_BRN = FRZ + 1;
+
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, HIT, ~CRIT, MIN_DMG, FRZ, NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_BRN,
+            NOP, HIT, ~CRIT, MIN_DMG, NO_BRN,
+        } else .{
+            ~CRIT, MIN_DMG, HIT, FRZ, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{
+            .{ .species = .Slowbro, .moves = &.{ .Psychic, .Amnesia, .Teleport } },
+            .{ .species = .Spearow, .level = 8, .moves = &.{.Peck} },
+        },
+        &.{.{ .species = .Mew, .moves = &.{ .Blizzard, .FireBlast } }},
+    );
+    defer t.deinit();
+
+    t.actual.p1.get(1).move(1).pp = 0;
+
+    try t.log.expected.move(P2.ident(1), Move.Blizzard, P1.ident(1), null);
+    try t.log.expected.resisted(P1.ident(1));
+    t.expected.p1.get(1).hp -= 50;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    t.expected.p1.get(1).status = Status.init(.FRZ);
+    try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+    try t.log.expected.cant(P1.ident(1), .Freeze);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    try expectEqual(t.expected.p1.get(1).status, t.actual.p1.get(1).status);
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.move(P2.ident(1), Move.FireBlast, P1.ident(2), null);
+    t.expected.p1.get(2).hp = 0;
+    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
+    try t.log.expected.faint(P1.ident(2), true);
+
+    try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(swtch(2), move(2)));
+
+    try t.log.expected.switched(P1.ident(1), t.expected.p1.get(1));
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(swtch(2), .{}));
+
+    const n = t.battle.actual.choices(.P1, .Move, &choices);
+    if (showdown) {
+        try expectEqualSlices(Choice, &[_]Choice{ move(2), move(3) }, choices[0..n]);
+    } else {
+        try expectEqualSlices(Choice, &[_]Choice{move(0)}, choices[0..n]);
+    }
+    try t.log.expected.move(P2.ident(1), Move.FireBlast, P1.ident(1), null);
+    try t.log.expected.resisted(P1.ident(1));
+    t.expected.p1.get(1).hp -= 50;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    t.expected.p1.get(1).status = 0;
+    try t.log.expected.curestatus(P1.ident(1), Status.init(.FRZ), .Message);
+    if (showdown) {
+        try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+        try t.log.expected.turn(4);
+    }
+
+    const choice = if (showdown) move(3) else move(0);
+    const result = if (showdown) Result.Default else Result.Error;
+    try expectEqual(result, try t.update(choice, move(2)));
+    try t.verify();
 }
 
 test "Toxic counter glitches" {
@@ -3924,7 +3992,7 @@ test "Toxic counter glitches" {
     t.expected.p2.get(1).hp -= 96;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     t.expected.p2.get(1).status = Status.init(.BRN);
-    try t.log.expected.status(P2.ident(1), Status.init(.BRN), .None);
+    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
     try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
     t.expected.p2.get(1).hp -= 48;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Burn);

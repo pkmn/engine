@@ -330,6 +330,14 @@ fn executeMove(
 ) !?Result {
     var side = battle.side(player);
 
+    // GLITCH: Freeze top move selection desync (Hyper Beam / trapping underflow does not desync)
+    if (choice.type == .Move and choice.data == 0 and side.last_selected_move != .Struggle) {
+        assert(side.last_selected_move != .None);
+        const auto = side.last_selected_move == .HyperBeam or
+            Move.get(side.last_selected_move).effect == .Trapping;
+        if (!auto) return Result.Error;
+    }
+
     if (choice.type == .Switch) {
         try switchIn(battle, player, choice.data, false, log);
         return null;
@@ -1393,7 +1401,7 @@ fn checkEBC(battle: anytype) bool {
             continue :ebc;
         }
 
-        return true;
+        if (i == 1) return true;
     }
 
     return false;
@@ -1462,14 +1470,17 @@ pub const Effects = struct {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
 
-        // GLITCH: Freeze top move selection desync can occur if thawed Pokémon is slower
-        if (Status.is(foe_stored.status, .FRZ)) {
-            assert(move.type == .Fire);
-            foe_stored.status = 0;
-        }
+        if (foe.active.volatiles.Substitute) return if (showdown) battle.rng.advance(1);
 
-        if (foe.active.volatiles.Substitute or Status.any(foe_stored.status)) {
-            return if (showdown) battle.rng.advance(1);
+        if (Status.any(foe_stored.status)) {
+            if (showdown) battle.rng.advance(1);
+            // GLITCH: Freeze top move selection desync can occur if thawed Pokémon is slower
+            if (Status.is(foe_stored.status, .FRZ)) {
+                assert(move.type == .Fire);
+                try log.curestatus(battle.active(player.foe()), foe_stored.status, .Message);
+                foe_stored.status = 0;
+            }
+            return;
         }
 
         const chance = !foe.active.types.includes(move.type) and if (showdown)
