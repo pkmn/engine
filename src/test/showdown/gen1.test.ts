@@ -4934,6 +4934,7 @@ describe('Gen 1', () => {
 
     // Set up P2's last_selected_move to be Vine Whip
     battle.makeChoices('move 1', 'move 1');
+    // expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 2);
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 3);
 
     // Switching clears last_used_move but not last_selected_move

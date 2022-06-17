@@ -4008,7 +4008,79 @@ test "Toxic counter glitches" {
 
 test "Defrost move forcing" {
     // https://pkmn.cc/bulba-glitch-1#Defrost_move_forcing
-    return error.SkipZigTest;
+    const FRZ = comptime ranged(26, 256) - 1;
+    const NO_BRN = FRZ + 1;
+
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_BRN, HIT, ~CRIT, MIN_DMG,
+        } else .{
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, FRZ, ~CRIT, MIN_DMG, HIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Hypno, .level = 50, .moves = &.{ .Teleport, .IcePunch, .FirePunch } }},
+        &.{
+            .{ .species = .Bulbasaur, .level = 6, .moves = &.{.VineWhip} },
+            .{ .species = .Poliwrath, .level = 40, .moves = &.{ .Surf, .WaterGun } },
+        },
+    );
+    defer t.deinit();
+
+    // Set up P2's last_selected_move to be Vine Whip
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.move(P2.ident(1), Move.VineWhip, P1.ident(1), null);
+    // Pokémon Showdown adjusts min damage from 0 to 1 meaning its after the +2
+    t.expected.p1.get(1).hp -= if (showdown) 3 else 2;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.move(P1.ident(1), Move.IcePunch, P2.ident(2), null);
+    try t.log.expected.resisted(P2.ident(2));
+    t.expected.p2.get(2).hp -= 23;
+    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+    t.expected.p2.get(2).status = Status.init(.FRZ);
+    try t.log.expected.status(P2.ident(2), t.expected.p2.get(2).status, .None);
+    try t.log.expected.turn(3);
+
+    // Switching clears last_used_move but not last_selected_move
+    try expectEqual(Result.Default, try t.update(move(2), swtch(2)));
+    try expectEqual(t.expected.p2.get(2).status, t.actual.p2.get(1).status);
+
+    const choice = move(if (showdown) 2 else 0);
+    var n = t.battle.actual.choices(.P2, .Move, &choices);
+    if (showdown) {
+        try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), choice }, choices[0..n]);
+    } else {
+        try expectEqualSlices(Choice, &[_]Choice{ swtch(2), choice }, choices[0..n]);
+    }
+    try t.log.expected.move(P1.ident(1), Move.FirePunch, P2.ident(2), null);
+    try t.log.expected.resisted(P2.ident(2));
+    t.expected.p2.get(2).hp -= 23;
+    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+    t.expected.p2.get(2).status = 0;
+    try t.log.expected.curestatus(P2.ident(2), Status.init(.FRZ), .Message);
+    if (showdown) {
+        try t.log.expected.move(P2.ident(2), Move.WaterGun, P1.ident(1), null);
+        t.expected.p1.get(1).hp -= 12;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.turn(4);
+    }
+
+    // After defrosting, Poliwrath will appear to use Surf to P1 and Vine Whip to P2
+    const result = if (showdown) Result.Default else Result.Error;
+    try expectEqual(result, try t.update(move(3), choice));
+    if (showdown) {
+        n = t.battle.actual.choices(.P2, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), choice }, choices[0..n]);
+    }
+
+    try t.verify();
 }
 
 test "Division by 0" {
