@@ -1204,11 +1204,11 @@ fn checkFaint(
     }
 
     // Emitting |request| for each side will advance the RNG by 2 for each "locked" move
-    if (showdown) {
-        const locked = @as(u2, @boolToInt(isLocked(side.active))) +
-            @as(u2, @boolToInt(!foe_fainted and isLocked(foe.active)));
-        battle.rng.advance(locked * 2);
-    }
+    // FIXME if (showdown) {
+    //     const locked = @as(u2, @boolToInt(isLocked(side.active))) +
+    //         @as(u2, @boolToInt(!foe_fainted and isLocked(foe.active)));
+    //     battle.rng.advance(locked * 2);
+    // }
 
     const foe_choice: Choice.Type = if (foe_fainted) .Switch else .Pass;
     if (player == .P1) return Result{ .p1 = .Switch, .p2 = foe_choice };
@@ -2211,7 +2211,8 @@ fn statusModify(status: u8, stats: *Stats(u16)) void {
 }
 
 fn isLocked(active: ActivePokemon) bool {
-    return active.volatiles.Rage or active.volatiles.Thrashing or active.volatiles.Charging;
+    return active.volatiles.Recharging or active.volatiles.Rage or
+        active.volatiles.Thrashing or active.volatiles.Charging;
 }
 
 fn clearVolatiles(active: *ActivePokemon, ident: ID, log: anytype) !void {
@@ -2343,7 +2344,7 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
 
             // While players are not given any input options on the cartridge in these cases,
             // Pokémon Showdown instead produces a list with a single move that must be chosen.
-            if (isLocked(active) or active.volatiles.Recharging) {
+            if (isLocked(active)) {
                 out[n] = if (showdown) .{ .type = .Move, .data = 1 } else .{};
                 n += 1;
                 return n;
