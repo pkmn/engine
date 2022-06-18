@@ -5214,12 +5214,13 @@ describe('Gen 1', () => {
   });
 
   test('Hyper Beam + Sleep move glitch', () => {
+    const BRN = FRZ;
     const battle = startBattle([
       SRF_RES, SRF_RES, HIT, SS_MOD, HIT, NO_CRIT, MIN_DMG,
-      SRF_RES, SRF_RES, SS_MOD, SLP(2), SRF_RUN,
-      SRF_RES, SRF_RES, SRF_RES, HIT, SS_MOD, MISS,
+      SRF_RES, SRF_RES, SS_MOD, SLP(2), SRF_RUN, SRF_RES,
+      SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, BRN, SS_MOD, MISS,
     ], [
-      {species: 'Hypno', evs, moves: ['Toxic', 'Hypnosis', 'Teleport']},
+      {species: 'Hypno', evs, moves: ['Toxic', 'Hypnosis', 'Teleport', 'Fire Punch']},
     ], [
       {species: 'Snorlax', evs, moves: ['Hyper Beam']},
     ]);
@@ -5240,11 +5241,10 @@ describe('Gen 1', () => {
     expect(battle.p2.pokemon[0].status).toBe('');
 
     // The Toxic counter should be preserved
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 32);
-    expect(battle.p2.pokemon[0].status).toBe('tox');
-    // expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(2);
-    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(1);
+    battle.makeChoices('move 4', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 78 - 64));
+    expect(battle.p2.pokemon[0].status).toBe('brn');
+    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(2);
 
     verify(battle, [
       '|move|p1a: Hypno|Toxic|p2a: Snorlax',
@@ -5261,11 +5261,12 @@ describe('Gen 1', () => {
       '|move|p1a: Hypno|Teleport|p1a: Hypno',
       '|-curestatus|p2a: Snorlax|slp|[msg]',
       '|turn|4',
-      '|move|p1a: Hypno|Toxic|p2a: Snorlax',
-      '|-status|p2a: Snorlax|tox',
+      '|move|p1a: Hypno|Fire Punch|p2a: Snorlax',
+      '|-damage|p2a: Snorlax|413/523',
+      '|-status|p2a: Snorlax|brn',
       '|move|p2a: Snorlax|Hyper Beam|p1a: Hypno|[miss]',
       '|-miss|p2a: Snorlax',
-      '|-damage|p2a: Snorlax|459/523 tox|[from] psn',
+      '|-damage|p2a: Snorlax|349/523 brn|[from] brn|[of] p1a: Hypno',
       '|turn|5',
     ]);
   });

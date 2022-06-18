@@ -4207,7 +4207,81 @@ test "Hyper Beam + Freeze permanent helplessness" {
 test "Hyper Beam + Sleep move glitch" {
     // https://pkmn.cc/bulba-glitch-1#Hyper_Beam_.2B_Sleep_move_glitch
     // https://glitchcity.wiki/Hyper_Beam_sleep_move_glitch
-    return error.SkipZigTest;
+    const SLP_2 = if (showdown) comptime ranged(2, 8 - 1) else 2;
+    const PROC = MIN;
+
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, HIT, NOP, HIT, ~CRIT, MIN_DMG,
+            NOP, NOP, NOP, SLP_2, NOP, NOP,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, PROC, NOP, ~HIT,
+        } else .{
+            HIT, ~CRIT, MIN_DMG, HIT,
+            ~CRIT, SLP_2,
+            ~CRIT, MIN_DMG, HIT, PROC, ~CRIT, MIN_DMG, ~HIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Hypno, .moves = &.{ .Toxic, .Hypnosis, .Teleport, .FirePunch } }},
+        &.{.{ .species = .Snorlax, .moves = &.{.HyperBeam} }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(1), null);
+    t.expected.p2.get(1).status = Status.init(.PSN);
+    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.move(P2.ident(1), Move.HyperBeam, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 217;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.mustrecharge(P2.ident(1));
+    t.expected.p2.get(1).hp -= 32;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
+    try expect(t.actual.p2.active.volatiles.Toxic);
+    try expectEqual(@as(u4, 1), t.actual.p2.active.volatiles.toxic);
+
+    try t.log.expected.move(P1.ident(1), Move.Hypnosis, P2.ident(1), null);
+    t.expected.p2.get(1).status = Status.slp(2);
+    try t.log.expected.statusFrom(P2.ident(1), t.expected.p2.get(1).status, Move.Hypnosis);
+    t.expected.p2.get(1).status -= 1;
+    try t.log.expected.cant(P2.ident(1), .Sleep);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(if (showdown) 1 else 0)));
+    try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
+    try expectEqual(@as(u4, 1), t.actual.p2.active.volatiles.toxic);
+
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.curestatus(P2.ident(1), t.expected.p2.get(1).status, .Message);
+    t.expected.p2.get(1).status = 0;
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(3), move(1)));
+    try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
+
+    try t.log.expected.move(P1.ident(1), Move.FirePunch, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 78;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    t.expected.p2.get(1).status = Status.init(.BRN);
+    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.move(P2.ident(1), Move.HyperBeam, P1.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    t.expected.p2.get(1).hp -= 64;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Burn);
+    try t.log.expected.turn(5);
+
+    // The Toxic counter should be preserved
+    try expectEqual(Result.Default, try t.update(move(4), move(1)));
+    try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
+    try expect(t.actual.p2.active.volatiles.Toxic);
+    try expectEqual(@as(u4, 2), t.actual.p2.active.volatiles.toxic);
+
+    try t.verify();
 }
 
 test "Hyper Beam automatic selection glitch" {
