@@ -4969,7 +4969,103 @@ test "Substitute 1/4 HP glitch" {
 test "Substitute + Confusion glitch" {
     // https://pkmn.cc/bulba-glitch-1#Substitute_.2B_Confusion_glitch
     // https://glitchcity.wiki/Confusion_and_Substitute_glitch
-    return error.SkipZigTest;
+    const CFZ_5 = MAX;
+    const CFZ_CAN = if (showdown) comptime ranged(128, 256) - 1 else MIN;
+    const CFZ_CANT = if (showdown) CFZ_CAN + 1 else MAX;
+
+    // Confused Pokémon has Substitute
+    {
+        var t = Test((if (showdown)
+            (.{ NOP, HIT, CFZ_5, CFZ_CAN, NOP, NOP, HIT, NOP, CFZ_CANT })
+        else
+            (.{ HIT, CFZ_5, CFZ_CAN, CFZ_CANT }))).init(
+            &.{.{ .species = .Bulbasaur, .level = 6, .moves = &.{ .Substitute, .Growl } }},
+            &.{.{ .species = .Zubat, .level = 10, .moves = &.{.Supersonic} }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P2.ident(1), Move.Supersonic, P1.ident(1), null);
+        try t.log.expected.start(P1.ident(1), .Confusion);
+        try t.log.expected.activate(P1.ident(1), .Confusion);
+        try t.log.expected.move(P1.ident(1), Move.Substitute, P1.ident(1), null);
+        try t.log.expected.start(P1.ident(1), .Substitute);
+        t.expected.p1.get(1).hp -= 6;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(@as(u8, 7), t.actual.p1.active.volatiles.substitute);
+
+        try t.log.expected.move(P2.ident(1), Move.Supersonic, P1.ident(1), null);
+        try t.log.expected.fail(P1.ident(1), .None);
+        try t.log.expected.activate(P1.ident(1), .Confusion);
+        try t.log.expected.turn(3);
+
+        // If Substitute is up, opponent's sub takes damage for Confusion self-hit or 0 damage
+        try expectEqual(Result.Default, try t.update(move(2), move(1)));
+        try expectEqual(@as(u8, 7), t.actual.p1.active.volatiles.substitute);
+
+        try t.verify();
+    }
+    // Both Pokémon have Substitutes
+    {
+        var t = Test((if (showdown)
+            (.{ NOP, HIT, ~CRIT, MIN_DMG, NOP, NOP, HIT, CFZ_5, CFZ_CANT, CFZ_CAN, NOP, CFZ_CANT })
+        else
+            (.{ ~CRIT, MIN_DMG, HIT, HIT, CFZ_5, CFZ_CANT, CFZ_CAN, CFZ_CANT }))).init(
+            &.{.{ .species = .Bulbasaur, .level = 6, .moves = &.{ .Substitute, .Tackle } }},
+            &.{.{ .species = .Zubat, .level = 10, .moves = &.{ .Supersonic, .Substitute } }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+        try t.log.expected.start(P2.ident(1), .Substitute);
+        t.expected.p2.get(1).hp -= 9;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.move(P1.ident(1), Move.Tackle, P2.ident(1), null);
+        try t.log.expected.activate(P2.ident(1), .Substitute);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(2), move(2)));
+        try expectEqual(@as(u8, 7), t.actual.p2.active.volatiles.substitute);
+
+        try t.log.expected.move(P2.ident(1), Move.Supersonic, P1.ident(1), null);
+        try t.log.expected.start(P1.ident(1), .Confusion);
+        try t.log.expected.activate(P1.ident(1), .Confusion);
+        t.expected.p1.get(1).hp -= 5;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .Confusion);
+        try t.log.expected.turn(3);
+
+        // Opponent's sub doesn't take damage because confused user doesn't have one
+        try expectEqual(Result.Default, try t.update(move(2), move(1)));
+        try expectEqual(@as(u8, 7), t.actual.p2.active.volatiles.substitute);
+
+        try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+        try t.log.expected.fail(P2.ident(1), .Substitute);
+        try t.log.expected.activate(P1.ident(1), .Confusion);
+        try t.log.expected.move(P1.ident(1), Move.Substitute, P1.ident(1), null);
+        try t.log.expected.start(P1.ident(1), .Substitute);
+        t.expected.p1.get(1).hp -= 6;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.turn(4);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(2)));
+        try expectEqual(@as(u8, 7), t.actual.p1.active.volatiles.substitute);
+        try expectEqual(@as(u8, 7), t.actual.p2.active.volatiles.substitute);
+
+        try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+        try t.log.expected.fail(P2.ident(1), .Substitute);
+        try t.log.expected.activate(P1.ident(1), .Confusion);
+        try t.log.expected.activate(P2.ident(1), .Substitute);
+        try t.log.expected.turn(5);
+
+        // Opponent's sub takes damage for Confusion self-hit if both have one
+        try expectEqual(Result.Default, try t.update(move(2), move(2)));
+        try expectEqual(@as(u8, 7), t.actual.p1.active.volatiles.substitute);
+        try expectEqual(@as(u8, 2), t.actual.p2.active.volatiles.substitute);
+
+        try t.verify();
+    }
 }
 
 test "Psywave infinite loop" {

@@ -497,7 +497,7 @@ fn beforeMove(battle: anytype, player: Player, log: anytype) !BeforeMove {
                 const move = Move.get(.Pound);
                 if (!calcDamage(battle, player, player, move, false)) return .err;
                 // Skipping adjustDamage / randomizeDamage / checkHit
-                _ = try applyDamage(battle, player, player.foe(), move, log);
+                _ = try applyDamage(battle, player, player.foe(), move, .Confusion, log);
 
                 return .done;
             }
@@ -551,7 +551,7 @@ fn beforeMove(battle: anytype, player: Player, log: anytype) !BeforeMove {
             return .done;
         }
 
-        _ = try applyDamage(battle, player.foe(), player.foe(), Move.get(.Bide), log);
+        _ = try applyDamage(battle, player.foe(), player.foe(), Move.get(.Bide), .None, log);
         return .done;
     }
 
@@ -583,7 +583,7 @@ fn beforeMove(battle: anytype, player: Player, log: anytype) !BeforeMove {
             side.last_selected_move,
         );
         if (battle.last_damage != 0 or showdown) {
-            _ = try applyDamage(battle, player.foe(), player.foe(), move, log);
+            _ = try applyDamage(battle, player.foe(), player.foe(), move, .None, log);
         }
         return .done;
     }
@@ -727,7 +727,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
 
         // Cartridge rolls for crit even for moves that can't crit (Counter/Metronome/status/OHKO)
         const check = !showdown or (!counter and move.effect != .OHKO); // TODO: skip?
-        if (check)crit = checkCriticalHit(battle, player, move);
+        if (check) crit = checkCriticalHit(battle, player, move);
 
         if (counter) return counterDamage(battle, player, move, log);
 
@@ -795,7 +795,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
             // Recoil is supposed to be damage/8 but damage will always be 0 here
             assert(battle.last_damage == 0);
             battle.last_damage = 1;
-            _ = try applyDamage(battle, player, player.foe(), move, log);
+            _ = try applyDamage(battle, player, player.foe(), move, .None, log);
         } else if (move.effect == .Explode) {
             try Effects.explode(battle, player);
             // Pokémon Showdown does not build Rage after missing Self-Destruct/Explosion
@@ -841,7 +841,9 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
                 try log.resisted(battle.active(player.foe()));
             }
         }
-        if (!skip) nullified = try applyDamage(battle, player.foe(), player.foe(), move, log);
+        if (!skip) {
+            nullified = try applyDamage(battle, player.foe(), player.foe(), move, .None, log);
+        }
         if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
             try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
         }
@@ -1057,7 +1059,7 @@ fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
 
     if (battle.last_damage == 0) return if (showdown) null else Result.Error;
 
-    _ = try applyDamage(battle, player.foe(), player.foe(), move, log);
+    _ = try applyDamage(battle, player.foe(), player.foe(), move, .None, log);
     return null;
 }
 
@@ -1102,7 +1104,7 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
     // Pokémon Showdown calls checkHit before Counter
     if (!showdown and !try checkHit(battle, player, move, log)) return null;
 
-    _ = try applyDamage(battle, player.foe(), player.foe(), move, log);
+    _ = try applyDamage(battle, player.foe(), player.foe(), move, .None, log);
     return null;
 }
 
@@ -1111,6 +1113,7 @@ fn applyDamage(
     target_player: Player,
     sub_player: Player,
     move: Move.Data,
+    reason: Damage,
     log: anytype,
 ) !bool {
     assert(battle.last_damage != 0 or showdown);
@@ -1139,7 +1142,7 @@ fn applyDamage(
 
     if (battle.last_damage > target.stored().hp) battle.last_damage = target.stored().hp;
     target.stored().hp -= battle.last_damage;
-    try log.damage(battle.active(target_player), target.stored(), .None);
+    try log.damage(battle.active(target_player), target.stored(), reason);
     return false;
 }
 
