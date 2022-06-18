@@ -4194,7 +4194,207 @@ test "Defrost move forcing" {
 
 test "Division by 0" {
     // https://pkmn.cc/bulba-glitch-1#Division_by_0
-    return error.SkipZigTest;
+    // https://www.youtube.com/watch?v=V6iUlyS8GMU
+    // https://www.youtube.com/watch?v=fVtO_DKxIsI
+
+    //  Attack/Special > 255 vs. Defense/Special stat < 4.
+    {
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                NOP, NOP, HIT, NOP, HIT, NOP, NOP, ~HIT,
+                NOP, NOP, ~HIT, NOP, NOP, HIT, ~CRIT, MIN_DMG,
+            } else .{
+                ~CRIT, HIT, ~CRIT, HIT, ~CRIT, ~HIT,
+                ~CRIT, ~CRIT, ~HIT, ~CRIT,
+            }
+        // zig fmt: on
+        ).init(
+            &.{
+                .{ .species = .Cloyster, .level = 65, .moves = &.{.Screech} },
+                .{ .species = .Parasect, .moves = &.{ .SwordsDance, .LeechLife } },
+            },
+            &.{.{ .species = .Rattata, .level = 2, .stats = .{}, .moves = &.{.TailWhip} }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P1.ident(1), Move.Screech, P2.ident(1), null);
+        try t.log.expected.unboost(P2.ident(1), .Defense, 2);
+        try t.log.expected.move(P2.ident(1), Move.TailWhip, P1.ident(1), null);
+        try t.log.expected.unboost(P1.ident(1), .Defense, 1);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+        try t.log.expected.move(P2.ident(1), Move.TailWhip, P1.ident(2), null);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P2.ident(1));
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(swtch(2), move(1)));
+
+        try t.log.expected.move(P1.ident(2), Move.SwordsDance, P1.ident(2), null);
+        try t.log.expected.boost(P1.ident(2), .Attack, 2);
+        try t.log.expected.move(P2.ident(1), Move.TailWhip, P1.ident(2), null);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P2.ident(1));
+        try t.log.expected.turn(4);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        try expectEqual(@as(u16, 576), t.actual.p1.active.stats.atk);
+        try expectEqual(@as(u16, 3), t.actual.p2.active.stats.def);
+
+        try t.log.expected.move(P1.ident(2), Move.LeechLife, P2.ident(1), null);
+        if (showdown) {
+            t.expected.p2.get(1).hp = 0;
+            try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+            try t.log.expected.faint(P2.ident(1), false);
+            try t.log.expected.win(.P1);
+        }
+
+        const result = if (showdown) Result.Win else Result.Error;
+        try expectEqual(result, try t.update(move(2), move(1)));
+        try t.verify();
+    }
+    // Defense/Special stat is 512 or 513 + Reflect/Light Screen.
+    {
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                NOP, HIT, ~CRIT, MAX_DMG, NOP, HIT, ~CRIT, MAX_DMG,
+                NOP, HIT, NOP, HIT, ~CRIT, MAX_DMG,
+            } else .{
+                ~CRIT, ~CRIT, MAX_DMG, HIT, ~CRIT, ~CRIT, MAX_DMG, HIT,
+                ~CRIT, HIT, ~CRIT,
+            }
+        // zig fmt: on
+        ).init(
+            &.{.{
+                .species = .Cloyster,
+                .level = 64,
+                .stats = .{ .def = 255 },
+                .moves = &.{ .Withdraw, .Reflect },
+            }},
+            &.{.{
+                .species = .Pidgey,
+                .level = 5,
+                .stats = .{},
+                .moves = &.{ .Gust, .SandAttack },
+            }},
+        );
+        defer t.deinit();
+
+        try expectEqual(@as(u16, 256), t.actual.p1.get(1).stats.def);
+
+        try t.log.expected.move(P1.ident(1), Move.Withdraw, P1.ident(1), null);
+        try t.log.expected.boost(P1.ident(1), .Defense, 1);
+        try t.log.expected.move(P2.ident(1), Move.Gust, P1.ident(1), null);
+        t.expected.p1.get(1).hp -= if (showdown) 4 else 3;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        try t.log.expected.move(P1.ident(1), Move.Withdraw, P1.ident(1), null);
+        try t.log.expected.boost(P1.ident(1), .Defense, 1);
+        try t.log.expected.move(P2.ident(1), Move.Gust, P1.ident(1), null);
+        t.expected.p1.get(1).hp -= if (showdown) 4 else 3;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(@as(u16, 512), t.actual.p1.active.stats.def);
+
+        try t.log.expected.move(P1.ident(1), Move.Reflect, P1.ident(1), null);
+        try t.log.expected.start(P1.ident(1), .Reflect);
+        try t.log.expected.move(P2.ident(1), Move.SandAttack, P1.ident(1), null);
+        try t.log.expected.unboost(P1.ident(1), .Accuracy, 1);
+        try t.log.expected.turn(4);
+
+        try expectEqual(Result.Default, try t.update(move(2), move(2)));
+
+        try t.log.expected.move(P1.ident(1), Move.Reflect, P1.ident(1), null);
+        try t.log.expected.fail(P1.ident(1), .None);
+        try t.log.expected.move(P2.ident(1), Move.Gust, P1.ident(1), null);
+        if (showdown) {
+            t.expected.p1.get(1).hp -= 12;
+            try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+            try t.log.expected.turn(5);
+        }
+
+        const result = if (showdown) Result.Default else Result.Error;
+        try expectEqual(result, try t.update(move(2), move(1)));
+        try t.verify();
+    }
+    // Defense/Special stat >= 514 + Reflect/Light Screen.
+    {
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                NOP, HIT, ~CRIT, MAX_DMG, NOP, HIT, ~CRIT, MAX_DMG,
+                NOP, HIT, NOP, HIT, ~CRIT, MAX_DMG,
+            } else .{
+                ~CRIT, ~CRIT, MAX_DMG, HIT, ~CRIT, ~CRIT, MAX_DMG, HIT,
+                ~CRIT, HIT, ~CRIT, MAX_DMG, HIT,
+            }
+        // zig fmt: on
+        ).init(
+            &.{.{
+                .species = .Cloyster,
+                .level = 64,
+                .stats = .{ .def = 255 + 85 },
+                .moves = &.{ .Withdraw, .Reflect },
+            }},
+            &.{.{
+                .species = .Pidgey,
+                .level = 5,
+                .stats = .{},
+                .moves = &.{ .Gust, .SandAttack },
+            }},
+        );
+        defer t.deinit();
+
+        try expectEqual(@as(u16, 257), t.actual.p1.get(1).stats.def);
+
+        try t.log.expected.move(P1.ident(1), Move.Withdraw, P1.ident(1), null);
+        try t.log.expected.boost(P1.ident(1), .Defense, 1);
+        try t.log.expected.move(P2.ident(1), Move.Gust, P1.ident(1), null);
+        t.expected.p1.get(1).hp -= if (showdown) 4 else 3;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        try t.log.expected.move(P1.ident(1), Move.Withdraw, P1.ident(1), null);
+        try t.log.expected.boost(P1.ident(1), .Defense, 1);
+        try t.log.expected.move(P2.ident(1), Move.Gust, P1.ident(1), null);
+        t.expected.p1.get(1).hp -= if (showdown) 4 else 3;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(@as(u16, 514), t.actual.p1.active.stats.def);
+
+        try t.log.expected.move(P1.ident(1), Move.Reflect, P1.ident(1), null);
+        try t.log.expected.start(P1.ident(1), .Reflect);
+        try t.log.expected.move(P2.ident(1), Move.SandAttack, P1.ident(1), null);
+        try t.log.expected.unboost(P1.ident(1), .Accuracy, 1);
+        try t.log.expected.turn(4);
+
+        try expectEqual(Result.Default, try t.update(move(2), move(2)));
+
+        try t.log.expected.move(P1.ident(1), Move.Reflect, P1.ident(1), null);
+        try t.log.expected.fail(P1.ident(1), .None);
+        try t.log.expected.move(P2.ident(1), Move.Gust, P1.ident(1), null);
+        t.expected.p1.get(1).hp -= 12;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.turn(5);
+
+        try expectEqual(Result.Default, try t.update(move(2), move(1)));
+        try t.verify();
+    }
 }
 
 test "Hyper Beam + Freeze permanent helplessness" {

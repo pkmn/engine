@@ -4990,7 +4990,7 @@ describe('Gen 1', () => {
         SRF_RES, SRF_RUN, MISS, SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG,
       ], [
         {species: 'Cloyster', level: 65, evs, moves: ['Screech']},
-        {species: 'Parasect', level: 100, evs, moves: ['Swords Dance', 'Leech Life']},
+        {species: 'Parasect', evs, moves: ['Swords Dance', 'Leech Life']},
       ], [
         {species: 'Rattata', level: 2, moves: ['Tail Whip']},
       ]);
@@ -5044,9 +5044,11 @@ describe('Gen 1', () => {
       expect(battle.p1.pokemon[0].storedStats.def).toBe(256);
 
       battle.makeChoices('move 1', 'move 1');
+      // expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 3);
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 4);
 
       battle.makeChoices('move 1', 'move 1');
+      // expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 3);
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 4);
       expect(battle.p1.pokemon[0].modifiedStats!.def).toBe(512);
 
@@ -5096,15 +5098,17 @@ describe('Gen 1', () => {
       expect(battle.p1.pokemon[0].storedStats.def).toBe(257);
 
       battle.makeChoices('move 1', 'move 1');
+      // expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 3);
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 4);
 
       battle.makeChoices('move 1', 'move 1');
+      // expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 3);
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 4);
       expect(battle.p1.pokemon[0].modifiedStats!.def).toBe(514);
 
       battle.makeChoices('move 2', 'move 2');
 
-      // Division by 0 should occur
+      // Higher damage should occur
       battle.makeChoices('move 2', 'move 1');
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 12);
 
