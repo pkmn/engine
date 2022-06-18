@@ -55,10 +55,6 @@ const CRIT = MIN;
 const MIN_DMG = if (showdown) MIN else 179;
 const MAX_DMG = MAX;
 
-// TODO: inline Status.init(...) when Zig no longer causes SIGBUS
-const BRN = 0b10000;
-const PAR = 0b1000000;
-
 comptime {
     assert(showdown or std.math.rotr(u8, MIN_DMG, 1) == 217);
     assert(showdown or std.math.rotr(u8, MAX_DMG, 1) == 255);
@@ -215,6 +211,9 @@ test "switching (reset)" {
 }
 
 test "switching (brn/par)" {
+    // TODO: inline Status.init(...) when Zig no longer causes SIGBUS
+    const BRN = 0b10000;
+    const PAR = 0b1000000;
     var t = Test(.{}).init(
         &.{
             .{ .species = .Pikachu, .moves = &.{.ThunderShock} },
@@ -453,6 +452,8 @@ test "damage calc" {
 }
 
 test "fainting (single)" {
+    // TODO: inline Status.init(...) when Zig no longer causes SIGBUS
+    const BRN = 0b10000;
     // Switch
     {
         var t = Test(if (showdown)
@@ -879,19 +880,19 @@ test "DoubleHit effect" {
 test "Twineedle effect" {
     // Hits twice, with the second hit having a 20% chance to poison the target. If the first hit
     // breaks the target's substitute, the move ends.
-    const proc = comptime ranged(52, 256) - 1;
-    const no_proc = proc + 1;
+    const PROC = comptime ranged(52, 256) - 1;
+    const NO_PROC = PROC + 1;
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, HIT, CRIT, MAX_DMG, proc,
-            NOP, HIT, ~CRIT, MIN_DMG, proc, NOP, no_proc,
-            NOP, HIT, ~CRIT, MIN_DMG, no_proc, proc, NOP,
-            NOP, HIT, ~CRIT, MIN_DMG, proc, proc,
+            NOP, HIT, CRIT, MAX_DMG, PROC,
+            NOP, HIT, ~CRIT, MIN_DMG, PROC, NOP, NO_PROC,
+            NOP, HIT, ~CRIT, MIN_DMG, NO_PROC, PROC, NOP,
+            NOP, HIT, ~CRIT, MIN_DMG, PROC, PROC,
         } else .{
             CRIT, MAX_DMG, HIT,
-            ~CRIT, MIN_DMG, HIT, no_proc,
-            ~CRIT, MIN_DMG, HIT, proc,
+            ~CRIT, MIN_DMG, HIT, NO_PROC,
+            ~CRIT, MIN_DMG, HIT, PROC,
             ~CRIT, MIN_DMG, HIT,
         }
     // zig fmt: on
@@ -2197,7 +2198,7 @@ test "Charge effect" {
 }
 
 // Move.{Fly,Dig}
-test "Fly / Dig effect" {
+test "Fly/Dig effect" {
     // This attack charges on the first turn and executes on the second. On the first turn, the user
     // avoids all attacks other than Bide, Swift, and Transform. If the user is fully paralyzed on
     // the second turn, it continues avoiding attacks until it switches out or successfully executes
@@ -4049,11 +4050,11 @@ test "Freeze top move selection glitch" {
 test "Toxic counter glitches" {
     // https://pkmn.cc/bulba-glitch-1#Toxic_counter_glitches
     // https://glitchcity.wiki/Leech_Seed_and_Toxic_stacking
-    const brn = comptime ranged(77, 256) - 1;
+    const BRN = comptime ranged(77, 256) - 1;
     var t = Test(if (showdown)
-        (.{ NOP, HIT, NOP, NOP, NOP, NOP, HIT, NOP, HIT, ~CRIT, MIN_DMG, brn, NOP })
+        (.{ NOP, HIT, NOP, NOP, NOP, NOP, HIT, NOP, HIT, ~CRIT, MIN_DMG, BRN, NOP })
     else
-        (.{ HIT, HIT, ~CRIT, MIN_DMG, HIT, brn })).init(
+        (.{ HIT, HIT, ~CRIT, MIN_DMG, HIT, BRN })).init(
         &.{.{ .species = .Venusaur, .moves = &.{ .Toxic, .LeechSeed, .Teleport, .FireBlast } }},
         &.{.{ .species = .Clefable, .hp = 392, .moves = &.{ .Teleport, .Rest } }},
     );
@@ -4197,7 +4198,7 @@ test "Division by 0" {
     // https://www.youtube.com/watch?v=V6iUlyS8GMU
     // https://www.youtube.com/watch?v=fVtO_DKxIsI
 
-    //  Attack/Special > 255 vs. Defense/Special stat < 4.
+    // Attack/Special > 255 vs. Defense/Special stat < 4.
     {
         var t = Test(
         // zig fmt: off

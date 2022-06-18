@@ -114,7 +114,7 @@ fn selectMove(
     choice: Choice,
     foe_choice: Choice,
     from: *?Move,
-    run_frames: *u8,
+    run: *u8,
 ) ?Result {
     if (choice.type == .Pass) return null;
 
@@ -124,17 +124,17 @@ fn selectMove(
 
     // pre-battle menu
     if (volatiles.Recharging) {
-        // The placeholder "move" 'recharge' has no target which
-        // results in resolveAction & runAction frame advances
         if (showdown) {
+            // The placeholder "move" 'recharge' has no target which
+            // results in both resolveAction amd runAction frame advances
             battle.rng.advance(1);
-            run_frames.* = 1;
+            run.* = 1;
         }
         return null;
     }
     if (volatiles.Rage) {
         from.* = side.last_used_move;
-        if (showdown) run_frames.* = saveMove(battle, player, null);
+        if (showdown) run.* = saveMove(battle, player, null);
         return null;
     }
     volatiles.Flinch = false;
@@ -144,7 +144,7 @@ fn selectMove(
         // last_selected_move (both should be equivalent at this point on Pokémon Showdown)
         assert(!showdown or side.last_selected_move == side.last_used_move);
         from.* = side.last_selected_move;
-        if (showdown) run_frames.* = saveMove(battle, player, null);
+        if (showdown) run.* = saveMove(battle, player, null);
         return null;
     }
 
@@ -153,7 +153,7 @@ fn selectMove(
 
     // pre-move select
     if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP) or volatiles.Bide) {
-        if (showdown) run_frames.* = saveMove(battle, player, choice);
+        if (showdown) run.* = saveMove(battle, player, choice);
         return null;
     }
     if (volatiles.Trapping) {
@@ -163,7 +163,7 @@ fn selectMove(
             // Pokémon Showdown overwrites Mirror Move with whatever was selected - really this
             // should set side.last_selected_move = last.id to reuse Mirror Move and fail in order
             // to satisfy the conditions of the Desync Clause Mod
-            run_frames.* = saveMove(battle, player, choice);
+            run.* = saveMove(battle, player, choice);
         } else {
             // GLITCH: https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
             if (foe_choice.type == .Switch) {
@@ -181,7 +181,7 @@ fn selectMove(
 
     if (battle.foe(player).active.volatiles.Trapping) {
         if (showdown) {
-            run_frames.* = saveMove(battle, player, choice);
+            run.* = saveMove(battle, player, choice);
         } else {
             side.last_selected_move = .SKIP_TURN;
         }
@@ -198,9 +198,9 @@ fn selectMove(
         };
 
         assert(struggle);
-        run_frames.* = saveMove(battle, player, choice);
+        run.* = saveMove(battle, player, choice);
     } else {
-        run_frames.* = saveMove(battle, player, choice);
+        run.* = saveMove(battle, player, choice);
     }
 
     return null;
@@ -339,7 +339,7 @@ fn executeMove(
     player: Player,
     choice: Choice,
     from: ?Move,
-    run_frames: u8,
+    run: u8,
     log: anytype,
 ) !?Result {
     var side = battle.side(player);
@@ -349,8 +349,9 @@ fn executeMove(
         return null;
     }
 
-    // Pokémon Showdown overwrites the SKIP_TURN sentinel with its botched move select
     if (side.last_selected_move == .SKIP_TURN) {
+        // Pokémon Showdown overwrites the SKIP_TURN sentinel with its botched move select,
+        // Trapping instead gets handled in beforeAfter after sleep and freeze
         assert(!showdown);
         if (battle.foe(player).active.volatiles.Trapping) {
             try log.cant(battle.active(player), .Trapped);
@@ -381,9 +382,9 @@ fn executeMove(
         // have just thawed, in which case we will desync unless the last_selected_move
         // happened to be at index 1 and the current Pokémon has the same move in its first slot
         if (!auto) {
-            // side.active.moves(slot) is safe to check even though the slot in question may not
-            // technically be from this Pokémon because it must be 1 to not desync and every Pokémon
-            // must have at least one move
+            // side.active.moves(slot) is safe to check even though the slot in question might not
+            // technically be from this Pokémon because it must be exactly 1 to not desync and
+            // every Pokémon must have at least one move
             if (mslot != 1 or side.active.move(mslot).id != side.last_selected_move) {
                 return Result.Error;
             } else {
@@ -392,8 +393,11 @@ fn executeMove(
         }
     }
 
-    // getRandomTarget arbitrarily advances the RNG during runAction
-    if (showdown) battle.rng.advance(run_frames);
+    // getRandomTarget arbitrarily advances the RNG during runAction, though we need to decide by
+    // how much when processing choices in selectMove because at this point we may have lost some
+    // state (eg. no longer recharging Hyper Beam after being put to sleep, but Pokémon Showdown
+    // still requires the advance because it added an action to its queue during commitDecisions)
+    if (showdown) battle.rng.advance(run);
 
     var skip_can = false;
     var skip_pp = false;
@@ -608,8 +612,8 @@ fn canMove(
     } else if (move.effect == .Charge) {
         try log.move(player_ident, side.last_selected_move, .{}, from);
         try Effects.charge(battle, player, log);
-        // Pokémon Showdown thinks the first turn of charging counts as using a move and
-        // also decrements PP now instead of when actually resolving the attack (above)
+        // Pokémon Showdown thinks that the first turn of charging counts as using a move
+        // and so decrements PP now instead of when actually resolving the attack (above)
         if (showdown) {
             side.last_used_move = side.last_selected_move;
             if (!skip) decrementPP(side, mslot, auto);
@@ -617,16 +621,16 @@ fn canMove(
         return false;
     }
 
-    // Getting a "locked" move advances the RNG on Pokémon Showdown
-    const special = if (from) |m| (m == .Metronome or m == .MirrorMove) else false;
-    // FIXME const locked = from != null and !special;
+    // FIXME Getting a "locked" move advances the RNG on Pokémon Showdown
+    // const special = if (from) |m| (m == .Metronome or m == .MirrorMove) else false;
+    // const locked = from != null and !special;
     // if (showdown and locked) battle.rng.advance(1);
 
     side.last_used_move = side.last_selected_move;
     if (!skip) decrementPP(side, mslot, auto);
 
-    // Metronome / Mirror Move call getRandomTarget if the move they proc targets
-    if (showdown and special) battle.rng.advance(@boolToInt(move.target != .Self));
+    // FIXME  Metronome / Mirror Move call getRandomTarget if the move they proc targets
+    // if (showdown and special) battle.rng.advance(@boolToInt(move.target != .Self));
 
     const target = if (move.target == .Self) player else player.foe();
     try log.move(player_ident, side.last_selected_move, battle.active(target), from);
@@ -636,7 +640,7 @@ fn canMove(
         return false;
     }
 
-    // Pokémon Showdown handles these after hit/miss and damage calculation
+    // Pokémon Showdown handles these after hit/miss checks and damage calculation
     if (!showdown) {
         if (move.effect == .Thrashing) {
             Effects.thrashing(battle, player);
@@ -722,8 +726,8 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         }
 
         // Cartridge rolls for crit even for moves that can't crit (Counter/Metronome/status/OHKO)
-        const check = if (!showdown) true else !counter and move.effect != .OHKO; // TODO: skip?
-        crit = if (check) checkCriticalHit(battle, player, move) else crit;
+        const check = !showdown or (!counter and move.effect != .OHKO); // TODO: skip?
+        if (check)crit = checkCriticalHit(battle, player, move);
 
         if (counter) return counterDamage(battle, player, move, log);
 
@@ -886,9 +890,9 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         // second time here (after being executed in the "always happens" block above) but that
         // doesn't matter since its idempotent (on the cartridge, but not in the implementation
         // below). For Twineedle we change the data to that of one with PoisonChance1 given its
-        // MultiHit behavior is complete after the loop above, though Pokémon Showdown handles
-        // the Twineedle secondary effect in the MultiHit cleanup block above because it puts the
-        // |-status| message before |-hitcount| instead of after.
+        // MultiHit behavior is complete after the loop above, though Pokémon Showdown handles the
+        // Twineedle secondary effect in the MultiHit cleanup block above because it incorrectly
+        // puts the |-status| message before |-hitcount| instead of after.
         if (move.effect == .Twineedle) {
             if (!showdown) try Effects.poison(battle, player, Move.get(.PoisonSting), log);
         } else {
@@ -1382,7 +1386,7 @@ fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
 }
 
 fn checkEBC(battle: anytype) bool {
-    ebc: for (battle.sides) |side, i| {
+    for (battle.sides) |side, i| {
         var foe_all_ghosts = true;
         var foe_all_transform = true;
 
@@ -1418,7 +1422,7 @@ fn checkEBC(battle: anytype) bool {
             };
             if (no_pp) continue;
 
-            continue :ebc;
+            return false;
         }
 
         if (i == 1) return true;

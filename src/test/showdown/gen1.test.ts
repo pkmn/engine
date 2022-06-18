@@ -1911,7 +1911,7 @@ describe('Gen 1', () => {
     ]);
   });
 
-  test('Fly / Dig effect', () => {
+  test('Fly/Dig effect', () => {
     const battle = startBattle([
       SRF_RES, SRF_RES, SS_RES, GLM,
       GLM, GLM, SRF_RES, SRF_RES, SS_RUN, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
@@ -4983,7 +4983,7 @@ describe('Gen 1', () => {
   });
 
   test('Division by 0', () => {
-    //  Attack/Special > 255 vs. Defense/Special stat < 4.
+    // Attack/Special > 255 vs. Defense/Special stat < 4.
     {
       const battle = startBattle([
         SRF_RES, SRF_RES, HIT, SRF_RUN, HIT, SRF_RES, SRF_RUN, MISS,
