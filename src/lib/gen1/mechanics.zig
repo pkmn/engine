@@ -61,13 +61,16 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     var f1: ?Move = null;
     var f2: ?Move = null;
 
-    if (selectMove(battle, .P1, c1, c2, &f1)) |r| return r;
-    if (selectMove(battle, .P2, c2, c1, &f2)) |r| return r;
+    var r1: u8 = 0;
+    var r2: u8 = 0;
+
+    if (selectMove(battle, .P1, c1, c2, &f1, &r1)) |r| return r;
+    if (selectMove(battle, .P2, c2, c1, &f2, &r2)) |r| return r;
 
     if (turnOrder(battle, c1, c2) == .P1) {
-        if (try doTurn(battle, .P1, c1, f1, .P2, c2, f2, log)) |r| return r;
+        if (try doTurn(battle, .P1, c1, f1, r1, .P2, c2, f2, r2, log)) |r| return r;
     } else {
-        if (try doTurn(battle, .P2, c2, f2, .P1, c1, f1, log)) |r| return r;
+        if (try doTurn(battle, .P2, c2, f2, r2, .P1, c1, f1, r1, log)) |r| return r;
     }
 
     var p1 = battle.side(.P1);
@@ -111,6 +114,7 @@ fn selectMove(
     choice: Choice,
     foe_choice: Choice,
     from: *?Move,
+    run_frames: *u8,
 ) ?Result {
     if (choice.type == .Pass) return null;
 
@@ -120,12 +124,17 @@ fn selectMove(
 
     // pre-battle menu
     if (volatiles.Recharging) {
-        if (showdown) battle.rng.advance(1);
+        // The placeholder "move" 'recharge' has no target which
+        // results in resolveAction & runAction frame advances
+        if (showdown) {
+            battle.rng.advance(1);
+            run_frames.* = 1;
+        }
         return null;
     }
     if (volatiles.Rage) {
         from.* = side.last_used_move;
-        if (showdown) saveMove(battle, player, null);
+        if (showdown) run_frames.* = saveMove(battle, player, null);
         return null;
     }
     volatiles.Flinch = false;
@@ -135,7 +144,7 @@ fn selectMove(
         // last_selected_move (both should be equivalent at this point on Pokémon Showdown)
         assert(!showdown or side.last_selected_move == side.last_used_move);
         from.* = side.last_selected_move;
-        if (showdown) saveMove(battle, player, null);
+        if (showdown) run_frames.* = saveMove(battle, player, null);
         return null;
     }
 
@@ -144,7 +153,7 @@ fn selectMove(
 
     // pre-move select
     if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP) or volatiles.Bide) {
-        if (showdown) saveMove(battle, player, choice);
+        if (showdown) run_frames.* = saveMove(battle, player, choice);
         return null;
     }
     if (volatiles.Trapping) {
@@ -154,7 +163,7 @@ fn selectMove(
             // Pokémon Showdown overwrites Mirror Move with whatever was selected - really this
             // should set side.last_selected_move = last.id to reuse Mirror Move and fail in order
             // to satisfy the conditions of the Desync Clause Mod
-            saveMove(battle, player, choice);
+            run_frames.* = saveMove(battle, player, choice);
         } else {
             // GLITCH: https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
             if (foe_choice.type == .Switch) {
@@ -172,7 +181,7 @@ fn selectMove(
 
     if (battle.foe(player).active.volatiles.Trapping) {
         if (showdown) {
-            saveMove(battle, player, choice);
+            run_frames.* = saveMove(battle, player, choice);
         } else {
             side.last_selected_move = .SKIP_TURN;
         }
@@ -189,15 +198,15 @@ fn selectMove(
         };
 
         assert(struggle);
-        saveMove(battle, player, choice);
+        run_frames.* = saveMove(battle, player, choice);
     } else {
-        saveMove(battle, player, choice);
+        run_frames.* = saveMove(battle, player, choice);
     }
 
     return null;
 }
 
-fn saveMove(battle: anytype, player: Player, choice: ?Choice) void {
+fn saveMove(battle: anytype, player: Player, choice: ?Choice) u8 {
     var side = battle.side(player);
 
     if (choice) |c| {
@@ -226,8 +235,10 @@ fn saveMove(battle: anytype, player: Player, choice: ?Choice) void {
         side.last_selected_move = side.last_used_move;
     }
 
-    // getRandomTarget arbitrarily advances the RNG during resolveAction
-    if (showdown) battle.rng.advance(Move.frames(side.last_selected_move, .resolve));
+    if (!showdown) return 0;
+    // getRandomTarget arbitrarily advances the RNG during resolveAction and runAction
+    battle.rng.advance(Move.frames(side.last_selected_move, .resolve));
+    return Move.frames(side.last_selected_move, .run);
 }
 
 fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anytype) !void {
@@ -299,21 +310,23 @@ fn doTurn(
     player: Player,
     player_choice: Choice,
     player_from: ?Move,
+    player_run: u8,
     foe_player: Player,
     foe_choice: Choice,
     foe_from: ?Move,
+    foe_run: u8,
     log: anytype,
 ) !?Result {
     assert(player_choice.type != .Pass);
 
-    if (try executeMove(battle, player, player_choice, player_from, log)) |r| return r;
+    if (try executeMove(battle, player, player_choice, player_from, player_run, log)) |r| return r;
     if (try checkFaint(battle, foe_player, log)) |r| return r;
     try handleResidual(battle, player, log);
     if (try checkFaint(battle, player, log)) |r| return r;
 
     if (foe_choice.type == .Pass) return null;
 
-    if (try executeMove(battle, foe_player, foe_choice, foe_from, log)) |r| return r;
+    if (try executeMove(battle, foe_player, foe_choice, foe_from, foe_run, log)) |r| return r;
     if (try checkFaint(battle, player, log)) |r| return r;
     try handleResidual(battle, foe_player, log);
     if (try checkFaint(battle, foe_player, log)) |r| return r;
@@ -326,6 +339,7 @@ fn executeMove(
     player: Player,
     choice: Choice,
     from: ?Move,
+    run_frames: u8,
     log: anytype,
 ) !?Result {
     var side = battle.side(player);
@@ -379,13 +393,7 @@ fn executeMove(
     }
 
     // getRandomTarget arbitrarily advances the RNG during runAction
-    if (showdown) {
-        // The placeholder "move" 'recharge' has no target so also triggers this... sigh
-        battle.rng.advance(if (side.active.volatiles.Recharging)
-            1
-        else
-            Move.frames(side.last_selected_move, .run));
-    }
+    if (showdown) battle.rng.advance(run_frames);
 
     var skip_can = false;
     var skip_pp = false;
