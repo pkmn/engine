@@ -461,6 +461,7 @@ fn beforeMove(battle: anytype, player: Player, log: anytype) !BeforeMove {
         return .done;
     }
 
+    // FIXME: Pokémon Showdown behavior here is broken and handles this at the end of turn
     if (volatiles.disabled.duration > 0) {
         volatiles.disabled.duration -= 1;
         if (volatiles.disabled.duration == 0) {
@@ -1591,20 +1592,39 @@ pub const Effects = struct {
         var volatiles = &foe.active.volatiles;
         const foe_ident = battle.active(player.foe());
 
-        if (!try checkHit(battle, player, move, log)) return;
+        if (showdown) {
+            // Pokémon Showdown incorrectly fails if the Pokémon has not used a move
+            if (foe.last_used_move == .None) return try log.fail(foe_ident, .None);
+        } else {
+            // Pokémon Showdown handles hit/miss earlier in doMove
+            if (!try checkHit(battle, player, move, log)) return;
+        }
+
         if (volatiles.disabled.move != 0) {
             try log.lastmiss();
             return log.miss(battle.active(player));
         }
 
-        // Pokémon Showdown incorrectly does not check for moves with 0 PP
-        volatiles.disabled.move = randomMoveSlot(&battle.rng, &foe.active.moves, !showdown);
+        var n: u4 = 0;
+        for (foe.active.moves) |m| {
+            if (m.pp > 0) n += 1;
+        }
 
-        // On Pokémon Showdown this range is incorrectly 2-7 instead of 1-8
-        volatiles.disabled.duration = @truncate(u4, if (showdown)
-            battle.rng.range(u8, 1, 7) + 1
-        else
-            (battle.rng.next() & 7) + 1);
+        if (n == 0) {
+            if (showdown) return try log.fail(foe_ident, .None);
+            try log.lastmiss();
+            return log.miss(battle.active(player));
+        }
+
+        if (showdown) {
+            // On Pokémon Showdown this range is incorrectly 1-6 instead of 1-8 (and rolled first)
+            volatiles.disabled.duration = @truncate(u4, battle.rng.range(u8, 1, 7));
+            // Pokémon Showdown incorrectly does not check for moves with 0 PP
+            volatiles.disabled.move = randomMoveSlot(&battle.rng, &foe.active.moves, 0);
+        } else {
+            volatiles.disabled.move = randomMoveSlot(&battle.rng, &foe.active.moves, n);
+            volatiles.disabled.duration = @truncate(u4, (battle.rng.next() & 7) + 1);
+        }
 
         try log.startEffect(foe_ident, .Disable, foe.active.move(volatiles.disabled.move).id);
     }
@@ -1814,7 +1834,7 @@ pub const Effects = struct {
             return;
         }
 
-        const rslot = randomMoveSlot(&battle.rng, &foe.active.moves, false);
+        const rslot = randomMoveSlot(&battle.rng, &foe.active.moves, 0);
         side.active.move(oslot).id = foe.active.move(rslot).id;
 
         try log.startEffect(battle.active(player), .Mimic, side.active.move(oslot).id);
@@ -2346,32 +2366,30 @@ fn distribution(battle: anytype) u3 {
     return @truncate(u3, (if (r < 2) r else battle.rng.next() & 3) + 2);
 }
 
-fn randomMoveSlot(rand: anytype, moves: []MoveSlot, check_pp: bool) u4 {
+fn randomMoveSlot(rand: anytype, moves: []MoveSlot, check_pp: u4) u4 {
     if (showdown) {
-        var i: usize = moves.len;
-        var n: usize = 0;
-        while (i > 0) {
-            i -= 1;
-            if (moves[i].id != .None) {
-                if (!check_pp) return rand.range(u4, 0, @truncate(u4, i + 1)) + 1;
-                if (moves[i].pp > 0) n += 1;
+        if (check_pp == 0) {
+            var i: usize = moves.len;
+            while (i > 0) {
+                i -= 1;
+                if (moves[i].id != .None) return rand.range(u4, 0, @truncate(u4, i + 1)) + 1;
             }
-        }
-        assert(check_pp);
-        var r = rand.range(u4, 0, @truncate(u4, n));
-        i = 0;
-        while (i < moves.len and r > 0) : (i += 1) {
-            if (moves[i].pp > 0) {
-                r -= 1;
-                if (r == 0) break;
+        } else {
+            var r = rand.range(u4, 0, @truncate(u4, check_pp));
+            var i: usize = 0;
+            while (i < moves.len and r > 0) : (i += 1) {
+                if (moves[i].pp > 0) {
+                    r -= 1;
+                    if (r == 0) break;
+                }
             }
+            return @truncate(u4, i + 1);
         }
-        return @truncate(u4, i + 1);
     }
 
     while (true) {
         const r = @truncate(u4, rand.next() & 3);
-        if (moves[r].id != .None and (!check_pp or moves[r].pp > 0)) return r + 1;
+        if (moves[r].id != .None and (check_pp == 0 or moves[r].pp > 0)) return r + 1;
     }
 }
 

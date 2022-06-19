@@ -3,6 +3,7 @@
     "moves": [
       "bind",
       "wrap",
+      "disable",
       "counter",
       "firespin",
       "mimic",

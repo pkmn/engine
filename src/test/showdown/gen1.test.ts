@@ -2486,7 +2486,7 @@ describe('Gen 1', () => {
   });
 
   test('Disable effect', () => {
-    const no_frz = {key: HIT.key, value: ranged(26, 256)};
+    const NO_FRZ = {key: HIT.key, value: ranged(26, 256)};
     const battle = startBattle([
       SRF_RES, SRF_RES, HIT, HIT, NO_CRIT, MIN_DMG,
       SRF_RES, SRF_RES, HIT, DISABLE_DURATION(1), DISABLE_MOVE(1),
@@ -2494,7 +2494,7 @@ describe('Gen 1', () => {
       SRF_RES, SRF_RES, HIT, DISABLE_DURATION(5), DISABLE_MOVE(4),
       SRF_RES, SRF_RES, HIT, HIT, NO_CRIT, MIN_DMG,
       SRF_RES, HIT, NO_CRIT, MIN_DMG,
-      SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, no_frz,
+      SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, NO_FRZ,
     ], [
       {species: 'Golduck', evs, moves: ['Disable', 'Water Gun']},
     ], [
@@ -2513,7 +2513,7 @@ describe('Gen 1', () => {
     expect(choices(battle, 'p2'))
       .toEqual(['switch 2', 'move 1', 'move 2', 'move 3', 'move 4']);
 
-    // On Pokémon Showdown lasts a minimum of 1 turn instead of 0
+    // Disable can end immediately, but Pokémon Showdown still blanks the turn
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp);
     expect(battle.p2.pokemon[0].volatiles['disable']).toBeUndefined();

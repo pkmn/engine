@@ -1715,7 +1715,7 @@ test "Confusion effect" {
     try t.log.expected.activate(P2.ident(1), .Confusion);
     // Confused Pokémon can hurt themselves in confusion (typeless damage)
     t.expected.p2.get(1).hp -= 37;
-    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Confusion);
     try t.log.expected.move(P1.ident(1), Move.ConfuseRay, P2.ident(1), null);
     try t.log.expected.turn(5);
 
@@ -2745,6 +2745,64 @@ test "Disable effect" {
     // not this move was successful, it counts as a hit for the purposes of the opponent's use of
     // Rage.
     return error.SkipZigTest;
+    // const NO_FRZ = comptime ranged(26, 256);
+    // const DISABLE_DURATION_1 = MIN;
+    // // const DISABLE_DURATION_5 = comptime ranged(5, 7 - 1) - 1;
+    // const DISABLE_MOVE_1 = if (showdown) comptime ranged(1, 4) - 1 else 0;
+    // // const DISABLE_MOVE_3 = if (showdown) comptime ranged(3, 4) - 1 else 2;
+    // // const DISABLE_MOVE_4 = if (showdown) comptime ranged(4, 4) - 1 else 3;
+
+    // var t = Test(
+    // // zig fmt: off
+    //     if (showdown) .{
+    //         NOP, NOP, HIT, HIT, ~CRIT, MIN_DMG,
+    //     NOP, NOP, HIT, DISABLE_DURATION_1, DISABLE_MOVE_1,
+    //         // NOP, NOP, HIT, DISABLE_DURATION_5, DISABLE_MOVE_3, HIT, ~CRIT, MIN_DMG,
+    //         // NOP, NOP, HIT, DISABLE_DURATION_5, DISABLE_MOVE_4,
+    //         // NOP, NOP, HIT, HIT, ~CRIT, MIN_DMG,
+    //         // NOP, HIT, ~CRIT, MIN_DMG,
+    //         // NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, NO_FRZ,
+    //     } else .{
+    //          ~CRIT, ~HIT, ~CRIT, MIN_DMG, HIT,
+    //     }
+    // // zig fmt: on
+    // ).init(
+    //     &.{.{ .species = .Golduck, .moves = &.{ .Disable, .WaterGun } }},
+    //     &.{
+    //         .{ .species = .Vaporeon, .moves = &.{ .WaterGun, .Haze, .Rest, .Blizzard } },
+    //         .{ .species = .Flareon, .moves = &.{.Flamethrower} },
+    //     },
+    // );
+    // defer t.deinit();
+
+    // try t.log.expected.move(P1.ident(1), Move.Disable, P2.ident(1), null);
+    // if (showdown) {
+    //     try t.log.expected.fail(P2.ident(1), .None);
+    // } else {
+    //     try t.log.expected.lastmiss();
+    //     try t.log.expected.miss(P1.ident(1));
+    // }
+    // try t.log.expected.move(P2.ident(1), Move.WaterGun, P1.ident(1), null);
+    // try t.log.expected.resisted(P1.ident(1));
+    // t.expected.p1.get(1).hp -= 27;
+    // try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    // try t.log.expected.turn(2);
+
+    // // Fails on Pokémon Showdown if there is no last move
+    // try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    // try expect(t.actual.p2.active.volatiles.disabled.move == 0);
+
+    // try t.log.expected.move(P1.ident(1), Move.Disable, P2.ident(1), null);
+    // try t.log.expected.startEffect(P2.ident(1), .Disable, Move.WaterGun);
+    // try t.log.expected.disabled(P2.ident(1), Move.WaterGun);
+    // try t.log.expected.end(P2.ident(1), .Disable);
+    // try t.log.expected.turn(3);
+
+    // // Disable can last a single turn
+    // try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    // try expect(t.actual.p2.active.volatiles.disabled.move == 0);
+
+    // try t.verify();
 }
 
 // Move.Mist
