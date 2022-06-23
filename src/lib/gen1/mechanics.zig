@@ -1610,11 +1610,9 @@ pub const Effects = struct {
             if (m.pp > 0) n += 1;
         }
 
-        if (n == 0) {
-            if (showdown) return try log.fail(foe_ident, .None);
-            try log.lastmiss();
-            return log.miss(battle.active(player));
-        }
+        // Technically this is still considered simply a "miss" on the cartridge,
+        // but diverging from Pokémon Showdown here would mostly just be pedantic
+        if (n == 0) return try log.fail(foe_ident, .None);
 
         if (showdown) {
             // On Pokémon Showdown this range is incorrectly 1-6 instead of 1-8 (and rolled first)
