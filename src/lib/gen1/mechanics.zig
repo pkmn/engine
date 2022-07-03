@@ -786,7 +786,8 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         } else if (immune) {
             try log.immune(foe_ident, .None);
         } else if (mist) {
-            try log.activate(foe_ident, .Mist);
+            // TODO: https://github.com/smogon/pokemon-showdown/pull/8818 broke this
+            // try log.activate(foe_ident, .Mist);
             try log.fail(foe_ident, .None);
         } else {
             try log.lastmiss();
@@ -1190,7 +1191,8 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data, log: anytype) !boo
     assert(!immune);
     if (mist) {
         assert(!showdown);
-        try log.activate(battle.active(player.foe()), .Mist);
+        // TODO: https://github.com/smogon/pokemon-showdown/pull/8818 broke this
+        // try log.activate(battle.active(player.foe()), .Mist);
         try log.fail(battle.active(player.foe()), .None);
     } else {
         try log.lastmiss();
@@ -1665,13 +1667,8 @@ pub const Effects = struct {
                 Gen12.percent(30));
         if (!chance) return;
 
-        // Pokémon Showdown incorrectly does not cancel recharging on flinch
-        if (showdown) {
-            if (!volatiles.Recharging) volatiles.Flinch = true;
-        } else {
-            volatiles.Flinch = true;
-            volatiles.Recharging = false;
-        }
+        volatiles.Flinch = true;
+        volatiles.Recharging = false;
     }
 
     fn focusEnergy(battle: anytype, player: Player, log: anytype) !void {

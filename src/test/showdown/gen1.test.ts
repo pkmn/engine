@@ -1613,7 +1613,7 @@ describe('Gen 1', () => {
       SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, lo_proc, SRF_RUN,
       SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, lo_proc,
       SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, hi_proc,
-      SRF_RES, SRF_RES, SRF_RUN, MISS,
+      SRF_RES, SRF_RES, MISS, MISS,
     ], [
       {species: 'Raticate', evs, moves: ['Hyper Fang', 'Headbutt', 'Hyper Beam']},
     ], [
@@ -1647,10 +1647,9 @@ describe('Gen 1', () => {
     battle.makeChoices('move 3', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 60);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 133);
-    // expect(choices(battle, 'p1')).toEqual(['move 1', 'move 2', 'move 3']);
-    expect(choices(battle, 'p1')).toEqual(['move 1']);
+    expect(choices(battle, 'p1')).toEqual(['move 1', 'move 2', 'move 3']);
 
-    // Flinch should have cleared recharge, but this doesn't work on Pokémon Showdown
+    // Flinch should clear recharge
     battle.makeChoices('move 1', 'move 1');
 
     verify(battle, [
@@ -1673,7 +1672,7 @@ describe('Gen 1', () => {
       '|turn|4',
       '|move|p1a: Raticate|Hyper Fang|p2a: Marowak',
       '|-damage|p2a: Marowak|99/323',
-      '|cant|p2a: Marowak|recharge',
+      '|cant|p2a: Marowak|flinch',
       '|turn|5',
       '|move|p1a: Raticate|Hyper Fang|p2a: Marowak',
       '|-damage|p2a: Marowak|27/323',
@@ -1685,10 +1684,11 @@ describe('Gen 1', () => {
       '|move|p2a: Marowak|Headbutt|p1a: Raticate',
       '|-damage|p1a: Raticate|65/313',
       '|turn|7',
-      '|cant|p1a: Raticate|recharge',
+      '|move|p1a: Raticate|Hyper Fang|p2a: Marowak|[miss]',
+      '|-miss|p1a: Raticate',
       '|move|p2a: Marowak|Headbutt|p1a: Raticate|[miss]',
       '|-miss|p2a: Marowak',
-      '|turn|8',
+      '|turn|8'
     ]);
   });
 
@@ -2642,7 +2642,8 @@ describe('Gen 1', () => {
       '|move|p1a: Articuno|Peck|p2a: Vaporeon',
       '|-damage|p2a: Vaporeon|432/463',
       '|move|p2a: Vaporeon|Growl|p1a: Articuno',
-      '|-activate|p1a: Articuno|move: Mist',
+      // TODO: https://github.com/smogon/pokemon-showdown/pull/8818 broke this
+      // '|-activate|p1a: Articuno|move: Mist',
       '|-fail|p1a: Articuno',
       '|turn|3',
       '|move|p1a: Articuno|Peck|p2a: Vaporeon',
@@ -4913,8 +4914,8 @@ describe('Gen 1', () => {
       '|turn|3',
       '|move|p1a: Venusaur|Leech Seed|p2a: Clefable',
       '|-start|p2a: Clefable|move: Leech Seed',
-      '|-damage|p2a: Clefable|369/393 slp|[from] Leech Seed|[of] p1a: Venusaur',
       '|-curestatus|p2a: Clefable|slp|[msg]',
+      '|-damage|p2a: Clefable|369/393|[from] Leech Seed|[of] p1a: Venusaur',
       '|turn|4',
       '|move|p1a: Venusaur|Fire Blast|p2a: Clefable',
       '|-damage|p2a: Clefable|273/393',

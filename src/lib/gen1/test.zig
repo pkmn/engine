@@ -1828,7 +1828,7 @@ test "FlinchChance effect" {
             NOP, NOP, HIT, ~CRIT, MIN_DMG, LO_PROC, NOP,
             NOP, NOP, HIT, ~CRIT, MIN_DMG, LO_PROC,
             NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HI_PROC,
-            NOP, NOP, NOP, ~HIT,
+            NOP, NOP, ~HIT, ~HIT,
         } else .{
             ~CRIT, MIN_DMG, HIT, HI_PROC,
             ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, HI_PROC,
@@ -1880,7 +1880,7 @@ test "FlinchChance effect" {
     try t.log.expected.move(P1.ident(1), Move.HyperFang, P2.ident(1), null);
     t.expected.p2.get(1).hp -= 72;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    try t.log.expected.cant(P2.ident(1), if (showdown) .Recharge else .Flinch);
+    try t.log.expected.cant(P2.ident(1), .Flinch);
     try t.log.expected.turn(5);
 
     // Flinch prevents movement but counts as recharge turn
@@ -1911,21 +1911,17 @@ test "FlinchChance effect" {
     try expectEqual(Result.Default, try t.update(move(3), move(1)));
 
     const n = t.battle.actual.choices(.P1, .Move, &choices);
-    if (showdown) {
-        try expectEqualSlices(Choice, &[_]Choice{move(1)}, choices[0..n]);
-        try t.log.expected.cant(P1.ident(1), .Recharge);
-    } else {
-        try expectEqualSlices(Choice, &[_]Choice{ move(1), move(2), move(3) }, choices[0..n]);
-        try t.log.expected.move(P1.ident(1), Move.HyperFang, P2.ident(1), null);
-        try t.log.expected.lastmiss();
-        try t.log.expected.miss(P1.ident(1));
-    }
+    try expectEqualSlices(Choice, &[_]Choice{ move(1), move(2), move(3) }, choices[0..n]);
+
+    try t.log.expected.move(P1.ident(1), Move.HyperFang, P2.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P1.ident(1));
     try t.log.expected.move(P2.ident(1), Move.Headbutt, P1.ident(1), null);
     try t.log.expected.lastmiss();
     try t.log.expected.miss(P2.ident(1));
     try t.log.expected.turn(8);
 
-    // Flinch should have cleared recharge, but this doesn't work on Pokémon Showdown
+    // Flinch should clear recharge
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
     try t.verify();
 }
@@ -2849,7 +2845,7 @@ test "Mist effect" {
     t.expected.p2.get(1).hp -= 31;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.move(P2.ident(1), Move.Growl, P1.ident(1), null);
-    try t.log.expected.activate(P1.ident(1), .Mist);
+    // try t.log.expected.activate(P1.ident(1), .Mist);
     try t.log.expected.fail(P1.ident(1), .None);
     try t.log.expected.turn(3);
 
@@ -4139,13 +4135,6 @@ test "Toxic counter glitches" {
 
     try t.log.expected.move(P1.ident(1), Move.LeechSeed, P2.ident(1), null);
     try t.log.expected.start(P2.ident(1), .LeechSeed);
-    // BUG: Showdown is missing onAfterMoveSelfPriority on sleep condition
-    // if (showdown) {
-    //     t.expected.p2.get(1).hp -= 24;
-    //     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .LeechSeed);
-    //     t.expected.p2.get(1).status = 0;
-    //     try t.log.expected.curestatus(P2.ident(1), Status.slf(1), .Message);
-    // } else {
     t.expected.p2.get(1).status = 0;
     try t.log.expected.curestatus(P2.ident(1), Status.slf(1), .Message);
     t.expected.p2.get(1).hp -= 24;
