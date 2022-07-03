@@ -845,14 +845,14 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         if (!skip) {
             nullified = try applyDamage(battle, player.foe(), player.foe(), move, .None, log);
         }
+        if (hit == 0 and ohko) try log.ohko();
+        hit += 1;
+        if (foe.stored().hp == 0) break;
         if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
             try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
         }
-        if (hit == 0 and ohko) try log.ohko();
-        hit += 1;
         // If the substitute breaks during a multi-hit attack, the attack ends
-        if (nullified or foe.stored().hp == 0) break;
-
+        if (nullified) break;
         // Twineedle can also poison on the first hit on Pokémon Showdown (second hit below)
         if (showdown and hit == 1 and move.effect == .Twineedle) {
             try moveEffect(battle, player, Move.get(.PoisonSting), choice.data, log);
