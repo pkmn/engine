@@ -1688,7 +1688,7 @@ describe('Gen 1', () => {
       '|-miss|p1a: Raticate',
       '|move|p2a: Marowak|Headbutt|p1a: Raticate|[miss]',
       '|-miss|p2a: Marowak',
-      '|turn|8'
+      '|turn|8',
     ]);
   });
 
