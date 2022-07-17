@@ -5004,8 +5004,9 @@ test "Substitute 1/4 HP glitch" {
     try t.log.expected.move(P2.ident(1), Move.FocusEnergy, P2.ident(1), null);
     try t.log.expected.start(P2.ident(1), .FocusEnergy);
     try t.log.expected.move(P1.ident(1), Move.Substitute, P1.ident(1), null);
-    try t.log.expected.fail(P1.ident(1), .Weak);
+    try t.log.expected.start(P1.ident(1), .Substitute);
     t.expected.p1.get(1).hp = 0;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
     try t.log.expected.faint(P1.ident(1), false);
     try t.log.expected.win(.P2);
 

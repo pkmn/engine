@@ -5859,7 +5859,8 @@ describe('Gen 1', () => {
       '|move|p2a: Rattata|Focus Energy|p2a: Rattata',
       '|-start|p2a: Rattata|move: Focus Energy',
       '|move|p1a: Pidgey|Substitute|p1a: Pidgey',
-      '|-fail|p1a: Pidgey|move: Substitute|[weak]',
+      '|-start|p1a: Pidgey|Substitute',
+      '|-damage|p1a: Pidgey|0 fnt',
       '|faint|p1a: Pidgey',
       '|win|Player 2',
     ]);
