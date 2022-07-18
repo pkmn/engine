@@ -92,18 +92,17 @@ fn lintDir(
 ) LintError!bool {
     var err = false;
 
-    var dir = try parent_dir.openDir(parent_sub_path, .{});
-    defer dir.close();
-
-    const stat = try dir.stat();
-    if (try seen.fetchPut(allocator, stat.inode, {})) |_| return err;
-
     // TODO: ziglang/zig@2b67f56c replaced iterate param with openIterableDir
     var iterable_dir = if (@hasDecl(std.fs.Dir, "openIterableDir"))
         try parent_dir.openIterableDir(parent_sub_path, .{})
     else
         try parent_dir.openDir(parent_sub_path, .{ .iterate = true });
     defer iterable_dir.close();
+
+    var dir = if (@hasDecl(std.fs.Dir, "openIterableDir")) iterable_dir.dir else iterable_dir;
+
+    const stat = try dir.stat();
+    if (try seen.fetchPut(allocator, stat.inode, {})) |_| return err;
 
     var dir_it = iterable_dir.iterate();
     while (try dir_it.next()) |entry| {
