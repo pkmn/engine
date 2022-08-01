@@ -2642,9 +2642,7 @@ describe('Gen 1', () => {
       '|move|p1a: Articuno|Peck|p2a: Vaporeon',
       '|-damage|p2a: Vaporeon|432/463',
       '|move|p2a: Vaporeon|Growl|p1a: Articuno',
-      // TODO: https://github.com/smogon/pokemon-showdown/pull/8818 broke this
-      // '|-activate|p1a: Articuno|move: Mist',
-      '|-fail|p1a: Articuno',
+      '|-activate|p1a: Articuno|move: Mist',
       '|turn|3',
       '|move|p1a: Articuno|Peck|p2a: Vaporeon',
       '|-damage|p2a: Vaporeon|401/463',

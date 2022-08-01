@@ -2845,8 +2845,7 @@ test "Mist effect" {
     t.expected.p2.get(1).hp -= 31;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.move(P2.ident(1), Move.Growl, P1.ident(1), null);
-    // try t.log.expected.activate(P1.ident(1), .Mist);
-    try t.log.expected.fail(P1.ident(1), .None);
+    try t.log.expected.activate(P1.ident(1), .Mist);
     try t.log.expected.turn(3);
 
     // Mist does protect against primary stat lowering effects
