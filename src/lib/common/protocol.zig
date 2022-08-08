@@ -851,7 +851,7 @@ const p1 = Player.P1;
 const p2 = Player.P2;
 
 const gen1 = struct {
-    usingnamespace @import("../gen1/data.zig");
+    pub usingnamespace @import("../gen1/data.zig");
     pub const helpers = @import("../gen1/helpers.zig");
 };
 
