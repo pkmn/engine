@@ -38,8 +38,8 @@ if ((VOLATILES.Thrashing >> 3) !== (VOLATILES.Charging >> 3)) {
 }
 
 const MASKS = {
-  locked1: (1 << (VOLATILES.Thrashing & 7)) | (1 << (VOLATILES.Charging & 7)),
-  locked2: (1 << (VOLATILES.Rage & 7)) | (1 << (VOLATILES.Recharging & 7)),
+  forced1: (1 << (VOLATILES.Thrashing & 7)) | (1 << (VOLATILES.Charging & 7)),
+  forced2: (1 << (VOLATILES.Rage & 7)) | (1 << (VOLATILES.Recharging & 7)),
   limited: (1 << (VOLATILES.Bide & 7)) | (1 << (VOLATILES.Trapping & 7)),
 };
 
@@ -394,12 +394,12 @@ export class Pokemon implements Gen1.Pokemon {
     return volatiles;
   }
 
-  get locked(): boolean {
+  get forced(): boolean {
     if (!this.active) return false;
     const byte1 = this.data.getUint8(this.offset.active + OFFSETS.ActivePokemon.volatiles);
-    if (byte1 & MASKS.locked1) return true;
+    if (byte1 & MASKS.forced1) return true;
     const byte2 = this.data.getUint8(this.offset.active + OFFSETS.ActivePokemon.volatiles);
-    return !!(byte2 & MASKS.locked2);
+    return !!(byte2 & MASKS.forced2);
   }
 
   get limited(): boolean {

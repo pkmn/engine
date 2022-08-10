@@ -1937,8 +1937,8 @@ describe('Gen 1', () => {
     expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
     battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp - 74);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp - 79);
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp - 74);
     expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
 
     verify(battle, [

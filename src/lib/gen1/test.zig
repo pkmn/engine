@@ -2199,7 +2199,57 @@ test "Fly/Dig effect" {
     // avoids all attacks other than Bide, Swift, and Transform. If the user is fully paralyzed on
     // the second turn, it continues avoiding attacks until it switches out or successfully executes
     // the second turn of this move or {Fly,Dig}.
-    return error.SkipZigTest;
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, NOP, // FIXME: SRF_RES (residual)
+            NOP, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, // FIXME: SRF_RUN
+        } else .{
+            ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{
+            .{ .species = .Pidgeot, .moves = &.{ .Fly, .SandAttack } },
+            .{ .species = .Metapod, .moves = &.{.Harden} },
+        },
+        &.{
+            .{ .species = .Lickitung, .moves = &.{ .Strength, .Lick } },
+            .{ .species = .Bellsprout, .moves = &.{.VineWhip} },
+        },
+    );
+    defer t.deinit();
+
+    const pp = t.expected.p1.get(1).move(1).pp;
+
+    try t.log.expected.move(P1.ident(1), Move.Fly, .{}, null);
+    try t.log.expected.laststill();
+    try t.log.expected.prepare(P1.ident(1), Move.Fly);
+    try t.log.expected.move(P2.ident(1), Move.Strength, P1.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(if (showdown) pp - 1 else pp, t.actual.p1.active.move(1).pp);
+
+    var n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{if (showdown) move(1) else .{}}, choices[0..n]);
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+
+    try t.log.expected.move(P1.ident(1), Move.Fly, P2.ident(1), Move.Fly);
+    t.expected.p2.get(1).hp -= 79;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Strength, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 74;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
+
+    try t.verify();
 }
 
 // Move.{Whirlwind,Roar,Teleport}
@@ -3627,7 +3677,7 @@ test "Explode effect" {
 test "Swift effect" {
     // This move does not check accuracy and hits even if the target is using Dig or Fly.
     var t = Test(if (showdown)
-        (.{ NOP, NOP, NOP, ~CRIT, MIN_DMG }) // FIXME: SS_RES, GLM
+        (.{ NOP, NOP, NOP, ~CRIT, MIN_DMG, NOP }) // FIXME: SS_RES (residual)
     else
         (.{ ~CRIT, MIN_DMG })).init(
         &.{.{ .species = .Eevee, .moves = &.{.Swift} }},

@@ -64,6 +64,8 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     var r1: u8 = 0;
     var r2: u8 = 0;
 
+    beforeSelect(battle);
+
     if (selectMove(battle, .P1, c1, c2, &f1, &r1)) |r| return r;
     if (selectMove(battle, .P2, c2, c1, &f2, &r2)) |r| return r;
 
@@ -106,6 +108,15 @@ fn start(battle: anytype, log: anytype) !Result {
 fn findFirstAlive(side: *const Side) u8 {
     for (side.pokemon) |pokemon, i| if (pokemon.hp > 0) return side.order[i];
     return 0;
+}
+
+fn beforeSelect(battle: anytype) void {
+    if (!showdown) return;
+    // Pokémon Showdown calls getLockedMove twice in chooseMove which advances
+    // the RNG each time for each side that has a "locked" move
+    const locked = @as(u2, @boolToInt(isLocked(battle.side(.P1)))) +
+        @as(u2, @boolToInt(isLocked(battle.side(.P2))));
+    battle.rng.advance(locked * 2);
 }
 
 fn selectMove(
@@ -229,7 +240,7 @@ fn saveMove(battle: anytype, player: Player, choice: ?Choice) u8 {
         }
     } else {
         assert(showdown);
-        // The choice's move slot isn't useful as Pokémon Showdown will always force the "locked"
+        // The choice's move slot isn't useful as Pokémon Showdown will always make the "forced"
         // choice to be slot 1. Overwriting the last_selected_move with the last_used_move in this
         // case ensures we actually call the correct move.
         side.last_selected_move = side.last_used_move;
@@ -621,11 +632,6 @@ fn canMove(
         }
         return false;
     }
-
-    // FIXME Getting a "locked" move advances the RNG on Pokémon Showdown
-    // const special = if (from) |m| (m == .Metronome or m == .MirrorMove) else false;
-    // const locked = from != null and !special;
-    // if (showdown and locked) battle.rng.advance(1);
 
     side.last_used_move = side.last_selected_move;
     if (!skip) decrementPP(side, mslot, auto);
@@ -1284,12 +1290,12 @@ fn checkFaint(
         return if (player == .P1) Result.Win else Result.Lose;
     }
 
-    // Emitting |request| for each side will advance the RNG by 2 for each "locked" move
-    // FIXME if (showdown) {
-    //     const locked = @as(u2, @boolToInt(isLocked(side.active))) +
-    //         @as(u2, @boolToInt(!foe_fainted and isLocked(foe.active)));
-    //     battle.rng.advance(locked * 2);
-    // }
+    // Emitting |request| advances the RNG if the side has a "locked" move
+    if (showdown) {
+        const locked = @as(u2, @boolToInt(isLocked(side))) +
+            @as(u2, @boolToInt(!foe_fainted and isLocked(foe)));
+        battle.rng.advance(locked);
+    }
 
     const foe_choice: Choice.Type = if (foe_fainted) .Switch else .Pass;
     if (player == .P1) return Result{ .p1 = .Switch, .p2 = foe_choice };
@@ -1377,12 +1383,12 @@ fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
     }
 
     try log.turn(battle.turn);
-    // Emitting |request| for each side will advance the RNG by 2 for each "locked" move
-    // FIXME if (showdown) {
-    //     const locked = @as(u2, @boolToInt(isLocked(battle.side(.P1).active))) +
-    //         @as(u2, @boolToInt(isLocked(battle.side(.P2).active)));
-    //     battle.rng.advance(locked * 2);
-    // }
+    // Emitting |request| advances the RNG if the side has a "locked" move
+    if (showdown) {
+        const foo = @as(u2, @boolToInt(isLocked(battle.side(.P1)))) +
+            @as(u2, @boolToInt(isLocked(battle.side(.P2))));
+        battle.rng.advance(foo);
+    }
 
     return Result.Default;
 }
@@ -2302,7 +2308,12 @@ fn statusModify(status: u8, stats: *Stats(u16)) void {
     }
 }
 
-fn isLocked(active: ActivePokemon) bool {
+fn isLocked(side: *const Side) bool {
+    return side.active.volatiles.Bide or (side.active.volatiles.Charging and
+        (side.last_selected_move == .Fly or side.last_selected_move == .Dig));
+}
+
+fn isForced(active: ActivePokemon) bool {
     return active.volatiles.Recharging or active.volatiles.Rage or
         active.volatiles.Thrashing or active.volatiles.Charging;
 }
@@ -2434,7 +2445,7 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
 
             // While players are not given any input options on the cartridge in these cases,
             // Pokémon Showdown instead produces a list with a single move that must be chosen.
-            if (isLocked(active)) {
+            if (isForced(active)) {
                 out[n] = if (showdown) .{ .type = .Move, .data = 1 } else .{};
                 n += 1;
                 return n;
