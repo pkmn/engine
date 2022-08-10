@@ -106,6 +106,8 @@ pub const Side = struct {
             side.order[i] = i + 1;
             var pokemon = &side.pokemon[i];
             if (initial) continue;
+            // We need the first party member to be unfainted so that a Move choice is valid
+            if (i == 0 and pokemon.hp == 0) pokemon.hp = 1;
 
             var j: u4 = 0;
             while (j < 4) : (j += 1) {
@@ -153,7 +155,7 @@ pub const Side = struct {
                             volatiles.confusion = rand.range(u3, 1, 5 + 1);
                         } else if (std.mem.eql(u8, field.name, "Toxic")) {
                             pokemon.status = Status.init(Status.PSN);
-                            volatiles.toxic = rand.range(u4, 1, 15 + 1);
+                            volatiles.toxic = rand.range(u4, 1, 14 + 1);
                         } else if (std.mem.eql(u8, field.name, "Substitute")) {
                             volatiles.substitute =
                                 rand.range(u8, 1, @truncate(u8, active.stats.hp / 4) + 1);

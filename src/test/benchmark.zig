@@ -75,6 +75,8 @@ pub fn benchmark(gen: u8, seed: u64, battles: ?usize, playouts: ?usize, duration
         var m = playouts orelse 1;
         while (j < m and (if (duration) |d| elapsed.read() < d else true)) : (j += 1) {
             var battle = original;
+            std.debug.assert(battle.side(.P1).get(1).hp > 0);
+            std.debug.assert(battle.side(.P2).get(1).hp > 0);
 
             var c1 = pkmn.Choice{};
             var c2 = pkmn.Choice{};
@@ -83,7 +85,10 @@ pub fn benchmark(gen: u8, seed: u64, battles: ?usize, playouts: ?usize, duration
             var p2 = pkmn.PSRNG.init(random.newSeed());
 
             var timer = try Timer.start();
-            var result = try battle.update(c1, c2, null);
+            var result = if (duration != null)
+                pkmn.Result.Default
+            else
+                try battle.update(c1, c2, null);
             while (result.type == .None) : (result = try battle.update(c1, c2, null)) {
                 c1 = options[p1.range(u8, 0, battle.choices(.P1, result.p1, &options))];
                 c2 = options[p2.range(u8, 0, battle.choices(.P2, result.p2, &options))];
