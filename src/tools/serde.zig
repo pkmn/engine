@@ -23,8 +23,9 @@ pub fn main() !void {
     var buf = std.io.bufferedWriter(out.writer());
     var w = buf.writer();
 
+    var prng = if (seed) |s| pkmn.PSRNG.init(s) else null;
     var battle = switch (gen) {
-        1 => if (seed) |s| gen1.Battle.random(&pkmn.PSRNG.init(s), false) else GEN1,
+        1 => if (prng) |*p| gen1.Battle.random(p, false) else GEN1,
         else => unreachable,
     };
 

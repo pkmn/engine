@@ -21,12 +21,9 @@ fn checkFormat(file_path: []const u8, allocator: Allocator) !bool {
 
     // TODO: ziglang/zig@a0a2ce92 changed ChildProcess initialization
     const allocates = @hasDecl(std.ChildProcess, "deinit");
-    var child: *std.ChildProcess = undefined;
-    if (allocates) {
-        child = try std.ChildProcess.init(argv, allocator);
-    } else {
-        child = &std.ChildProcess.init(argv, allocator);
-    }
+    var child_process: ?std.ChildProcess =
+        if (allocates) null else std.ChildProcess.init(argv, allocator);
+    var child = if (allocates) try std.ChildProcess.init(argv, allocator) else &child_process.?;
     defer if (allocates) child.deinit();
 
     const term = child.spawnAndWait() catch |err| {
