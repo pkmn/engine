@@ -932,7 +932,7 @@ test "Twineedle effect" {
     try t.log.expected.hitcount(P2.ident(1), 2);
     try t.log.expected.turn(3);
 
-    // On Pokémon Showdown the first hit can poison the tatget
+    // On Pokémon Showdown the first hit can poison the target
     try expectEqual(Result.Default, try t.update(move(1), move(2)));
     if (showdown) try expectEqual(t.actual.p2.get(1).status, Status.init(.PSN));
 
