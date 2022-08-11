@@ -2292,7 +2292,7 @@ describe('Gen 1', () => {
 
     let pp = battle.p1.pokemon[0].moveSlots[0].pp;
 
-    // Thrashig locks user in for 3-4 turns
+    // Thrashing locks user in for 3-4 turns
     battle.makeChoices('move 1', 'move 2');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp);
     expect(battle.p1.pokemon[0].volatiles['confusion'].time).toBe(5);

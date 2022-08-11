@@ -67,6 +67,7 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     checkLocked(battle, 2);
     if (selectMove(battle, .P1, c1, c2, &f1, &r1)) |r| return r;
     if (selectMove(battle, .P2, c2, c1, &f2, &r2)) |r| return r;
+    checkChange(battle);
 
     if (turnOrder(battle, c1, c2) == .P1) {
         if (try doTurn(battle, .P1, c1, f1, r1, .P2, c2, f2, r2, log)) |r| return r;
@@ -115,6 +116,13 @@ fn checkLocked(battle: anytype, n: u2) void {
     // but the RNG advances by 2 during choice verification because getLockedMove gets called twice
     battle.rng.advance(n * (@as(u2, @boolToInt(isLocked(battle.side(.P1)))) +
         @as(u2, @boolToInt(isLocked(battle.side(.P2))))));
+}
+
+fn checkChange(battle: anytype) void {
+    if (!showdown) return;
+    // Thrashing moves call changeAction onBeforeTurn which advances the RNG due to resolve (again)
+    battle.rng.advance(@as(u2, @boolToInt(battle.side(.P1).active.volatiles.Thrashing)) +
+        @as(u2, @boolToInt(battle.side(.P2).active.volatiles.Thrashing)));
 }
 
 fn selectMove(
@@ -410,7 +418,7 @@ fn executeMove(
 
     var skip_can = false;
     var skip_pp = false;
-    switch (try beforeMove(battle, player, log)) {
+    switch (try beforeMove(battle, player, from, log)) {
         .done => return null,
         .skip_can => skip_can = true,
         .skip_pp => skip_pp = true,
@@ -425,7 +433,7 @@ fn executeMove(
 
 const BeforeMove = union(enum) { done, skip_can, skip_pp, ok, err };
 
-fn beforeMove(battle: anytype, player: Player, log: anytype) !BeforeMove {
+fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !BeforeMove {
     var side = battle.side(player);
     const foe = battle.foe(player);
     var active = &side.active;
@@ -567,17 +575,12 @@ fn beforeMove(battle: anytype, player: Player, log: anytype) !BeforeMove {
 
     if (volatiles.Thrashing) {
         assert(volatiles.attacks > 0);
-
+        assert(from != null);
         volatiles.attacks -= 1;
-        if (volatiles.attacks == 0) {
-            volatiles.Thrashing = false;
-            volatiles.Confusion = true;
-            volatiles.confusion = @truncate(u3, if (showdown)
-                battle.rng.range(u8, 2, 6)
-            else
-                (battle.rng.next() & 3) + 2);
-            try log.start(ident, .ConfusionSilent);
+        if (!showdown and handleThrashing(battle, active)) {
+            try log.start(battle.active(player), .ConfusionSilent);
         }
+        try log.move(ident, side.last_selected_move, battle.active(player.foe()), from);
         return .skip_can;
     }
 
@@ -787,6 +790,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         return null;
     }
 
+    var thrashed = false;
     if (miss) {
         const foe_ident = battle.active(player.foe());
         if (!showdown and move.effect == .OHKO and side.active.stats.spe < foe.active.stats.spe) {
@@ -811,12 +815,22 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
             if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
                 try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
             }
+        } else if (showdown and move.effect == .Thrashing) {
+            if (side.active.volatiles.Thrashing) {
+                thrashed = handleThrashing(battle, &side.active);
+            } else {
+                Effects.thrashing(battle, player);
+            }
         }
         return null;
     } else if (showdown) {
-        // These should be handled in canMove but Pokémon Showdown does it here... ¯\_(ツ)_/¯
+        // These should be handled much earlier but Pokémon Showdown does it here... ¯\_(ツ)_/¯
         if (move.effect == .Thrashing) {
-            Effects.thrashing(battle, player);
+            if (side.active.volatiles.Thrashing) {
+                thrashed = handleThrashing(battle, &side.active);
+            } else {
+                Effects.thrashing(battle, player);
+            }
         } else if (move.effect == .Trapping) {
             Effects.trapping(battle, player);
             if (immune) {
@@ -875,6 +889,9 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         }
         try log.hitcount(battle.active(player.foe()), hit);
     }
+
+    // FIXME: test if breaking sub prevents this on showdown
+    if (showdown and thrashed) try log.start(battle.active(player), .ConfusionSilent);
 
     // Substitute being broken nullifies the move's effect completely so even
     // if an effect was intended to "always happen" it will still get skipped.
@@ -1230,7 +1247,7 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool, mist
         // GLITCH: Thrash / Petal Dance / Rage get their accuracy overwritten on subsequent hits
         var state = &side.active.volatiles.state;
         const overwritten = (move.effect == .Thrashing or move.effect == .Rage) and state.* > 0;
-        assert(!overwritten or (0 < state.* and state.* < 255 and !side.active.volatiles.Bide));
+        assert(!overwritten or (0 < state.* and state.* <= 255 and !side.active.volatiles.Bide));
         var accuracy = if (!showdown and overwritten)
             state.*
         else
@@ -2052,9 +2069,10 @@ pub const Effects = struct {
 
     fn thrashing(battle: anytype, player: Player) void {
         var volatiles = &battle.side(player).active.volatiles;
+        assert(!volatiles.Thrashing);
+        assert(!volatiles.Bide);
 
         volatiles.Thrashing = true;
-        assert(!volatiles.Bide);
         volatiles.state = 0;
         volatiles.attacks = @truncate(u3, if (showdown)
             battle.rng.range(u8, 3, 5) - 1
@@ -2351,6 +2369,21 @@ fn clearVolatiles(active: *ActivePokemon, ident: ID, log: anytype) !void {
         volatiles.Reflect = false;
         try log.end(ident, .Reflect);
     }
+}
+
+fn handleThrashing(battle: anytype, active: *ActivePokemon) bool {
+    var volatiles = &active.volatiles;
+    assert(volatiles.Thrashing);
+    if (volatiles.attacks > 0) return false;
+
+    volatiles.Thrashing = false;
+    volatiles.Confusion = true;
+    volatiles.confusion = @truncate(u3, if (showdown)
+        battle.rng.range(u8, 2, 6)
+    else
+        (battle.rng.next() & 3) + 2);
+
+    return true;
 }
 
 const DISTRIBUTION = [_]u3{ 2, 2, 2, 3, 3, 3, 4, 5 };
