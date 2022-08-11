@@ -2202,8 +2202,8 @@ test "Fly/Dig effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, NOP, // FIXME: SRF_RES (residual)
-            NOP, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, // FIXME: SRF_RUN
+            NOP, NOP, NOP, // FIXME: SS_RES (residual)
+            NOP, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, // FIXME: SS_RUN
         } else .{
             ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
         }

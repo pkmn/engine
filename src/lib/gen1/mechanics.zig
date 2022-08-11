@@ -64,8 +64,7 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     var r1: u8 = 0;
     var r2: u8 = 0;
 
-    beforeSelect(battle);
-
+    checkLocked(battle, 2);
     if (selectMove(battle, .P1, c1, c2, &f1, &r1)) |r| return r;
     if (selectMove(battle, .P2, c2, c1, &f2, &r2)) |r| return r;
 
@@ -110,13 +109,12 @@ fn findFirstAlive(side: *const Side) u8 {
     return 0;
 }
 
-fn beforeSelect(battle: anytype) void {
+fn checkLocked(battle: anytype, n: u2) void {
     if (!showdown) return;
-    // Pokémon Showdown calls getLockedMove twice in chooseMove which advances
-    // the RNG each time for each side that has a "locked" move
-    const locked = @as(u2, @boolToInt(isLocked(battle.side(.P1)))) +
-        @as(u2, @boolToInt(isLocked(battle.side(.P2))));
-    battle.rng.advance(locked * 2);
+    // Emitting |request| advances the RNG if the side has a "locked" move, though the RNG
+    // gets advances by 2 during choice verification because getLockedMove gets called twice
+    battle.rng.advance(n * (@as(u2, @boolToInt(isLocked(battle.side(.P1)))) +
+        @as(u2, @boolToInt(isLocked(battle.side(.P2))))));
 }
 
 fn selectMove(
@@ -1290,13 +1288,6 @@ fn checkFaint(
         return if (player == .P1) Result.Win else Result.Lose;
     }
 
-    // Emitting |request| advances the RNG if the side has a "locked" move
-    if (showdown) {
-        const locked = @as(u2, @boolToInt(isLocked(side))) +
-            @as(u2, @boolToInt(!foe_fainted and isLocked(foe)));
-        battle.rng.advance(locked);
-    }
-
     const foe_choice: Choice.Type = if (foe_fainted) .Switch else .Pass;
     if (player == .P1) return Result{ .p1 = .Switch, .p2 = foe_choice };
     return Result{ .p1 = foe_choice, .p2 = .Switch };
@@ -1383,13 +1374,7 @@ fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
     }
 
     try log.turn(battle.turn);
-    // Emitting |request| advances the RNG if the side has a "locked" move
-    if (showdown) {
-        const foo = @as(u2, @boolToInt(isLocked(battle.side(.P1)))) +
-            @as(u2, @boolToInt(isLocked(battle.side(.P2))));
-        battle.rng.advance(foo);
-    }
-
+    checkLocked(battle, 1);
     return Result.Default;
 }
 
