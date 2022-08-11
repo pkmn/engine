@@ -2202,8 +2202,8 @@ test "Fly/Dig effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, NOP, // FIXME: SS_RES (residual)
-            NOP, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, // FIXME: SS_RUN
+            NOP, NOP, NOP, NOP,
+            NOP, NOP, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
         } else .{
             ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
         }
@@ -3677,7 +3677,7 @@ test "Explode effect" {
 test "Swift effect" {
     // This move does not check accuracy and hits even if the target is using Dig or Fly.
     var t = Test(if (showdown)
-        (.{ NOP, NOP, NOP, ~CRIT, MIN_DMG, NOP }) // FIXME: SS_RES (residual)
+        (.{ NOP, NOP, NOP, ~CRIT, MIN_DMG, NOP, NOP })
     else
         (.{ ~CRIT, MIN_DMG })).init(
         &.{.{ .species = .Eevee, .moves = &.{.Swift} }},

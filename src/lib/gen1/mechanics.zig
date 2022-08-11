@@ -111,8 +111,8 @@ fn findFirstAlive(side: *const Side) u8 {
 
 fn checkLocked(battle: anytype, n: u2) void {
     if (!showdown) return;
-    // Emitting |request| advances the RNG if the side has a "locked" move, though the RNG
-    // gets advances by 2 during choice verification because getLockedMove gets called twice
+    // Emitting |request| advances the RNG on Pokémon Showdown if the side has a "locked" move,
+    // but the RNG advances by 2 during choice verification because getLockedMove gets called twice
     battle.rng.advance(n * (@as(u2, @boolToInt(isLocked(battle.side(.P1)))) +
         @as(u2, @boolToInt(isLocked(battle.side(.P2))))));
 }
@@ -613,6 +613,7 @@ fn canMove(
     var side = battle.side(player);
     const player_ident = battle.active(player);
     const move = Move.get(side.last_selected_move);
+    const locked = showdown and isLocked(side);
 
     var skip = skip_pp;
     if (side.active.volatiles.Charging) {
@@ -631,10 +632,13 @@ fn canMove(
         return false;
     }
 
+    // Getting a "locked" move advances the RNG due to a speed sort in Pokémon Showdown's runMove
+    if (locked) battle.rng.advance(1);
+
     side.last_used_move = side.last_selected_move;
     if (!skip) decrementPP(side, mslot, auto);
 
-    // FIXME  Metronome / Mirror Move call getRandomTarget if the move they proc targets
+    // FIXME: Metronome / Mirror Move call getRandomTarget if the move they proc targets
     // if (showdown and special) battle.rng.advance(@boolToInt(move.target != .Self));
 
     const target = if (move.target == .Self) player else player.foe();
@@ -1373,8 +1377,16 @@ fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
         return Result.Error;
     }
 
+    // Pokémon Showdown's "lockedmove" condition has a residual handler meaning at the end of the
+    // turn (but before the `|turn|` protocol message) it will cause the RNG to advance due to speed
+    // sorting any residual events. Technically this is different than the RNG advance due to
+    // getLockedMove that comes after `|turn|` is logged, but given that the only residual handler
+    // for Pokémon Showdown in generation 1 is due to locked moves (which is incorrect, because
+    // there should be *no* residual handler in generation 1...), we can repurpose the same logic
+    checkLocked(battle, 1);
     try log.turn(battle.turn);
     checkLocked(battle, 1);
+
     return Result.Default;
 }
 
