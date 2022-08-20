@@ -3,6 +3,8 @@ const std = @import("std");
 const Builder = std.build.Builder;
 const Pkg = std.build.Pkg;
 
+const use_stage1 = @hasField(std.build.LibExeObjStep, "use_stage1");
+
 pub fn pkg(b: *Builder, build_options: Pkg) Pkg {
     const dirname = comptime std.fs.path.dirname(@src().file) orelse ".";
     const source = .{ .path = dirname ++ "/src/lib/pkmn.zig" };
@@ -43,6 +45,7 @@ pub fn build(b: *Builder) !void {
     static_lib.setTarget(target);
     static_lib.addIncludeDir("src/include");
     static_lib.strip = strip;
+    if (use_stage1) static_lib.use_stage1 = true;
     static_lib.install();
 
     const versioned = .{ .versioned = try std.builtin.Version.parse(version) };
@@ -52,6 +55,7 @@ pub fn build(b: *Builder) !void {
     dynamic_lib.setTarget(target);
     dynamic_lib.addIncludeDir("src/include");
     dynamic_lib.strip = strip;
+    if (use_stage1) dynamic_lib.use_stage1 = true;
     dynamic_lib.install();
 
     const node_headers = b.option([]const u8, "node-headers", "Path to node-headers");
@@ -65,6 +69,7 @@ pub fn build(b: *Builder) !void {
         node_lib.linkLibC();
         node_lib.linker_allow_shlib_undefined = true;
         node_lib.strip = strip;
+        if (use_stage1) node_lib.use_stage1 = true;
         // Always emit to build/lib because this is where the driver code expects to find it
         // TODO: find alternative to emit_to that works properly with .install()
         node_lib.emit_bin = .{ .emit_to = b.fmt("build/lib/{s}", .{name}) };
@@ -121,6 +126,7 @@ pub fn build(b: *Builder) !void {
     tests.setTarget(target);
     tests.single_threaded = true;
     tests.strip = strip;
+    if (use_stage1) tests.use_stage1 = true;
     if (test_bin) |bin| {
         tests.name = std.fs.path.basename(bin);
         if (std.fs.path.dirname(bin)) |dir| tests.setOutputDir(dir);
@@ -131,7 +137,10 @@ pub fn build(b: *Builder) !void {
     const test_step = if (test_filter != null) null else &tests.step;
 
     const format = b.addFmt(&.{"."});
-    const lint = b.addExecutable("lint", "src/tools/lint.zig").run();
+    const lint_exe = b.addExecutable("lint", "src/tools/lint.zig");
+    if (use_stage1) lint_exe.use_stage1 = true;
+    if (test_step) |ts| ts.dependOn(&lint_exe.step);
+    const lint = lint_exe.run();
     lint.step.dependOn(b.getInstallStep());
 
     const benchmark =
@@ -174,6 +183,7 @@ fn tool(
     exe.setBuildMode(mode orelse b.standardReleaseOptions());
     exe.single_threaded = true;
     exe.strip = strip;
+    if (use_stage1) exe.use_stage1 = true;
     if (test_step) |ts| ts.dependOn(&exe.step);
 
     const run_exe = exe.run();
