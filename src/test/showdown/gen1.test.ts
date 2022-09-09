@@ -4554,6 +4554,74 @@ describe('Gen 1', () => {
     ]);
   });
 
+  test('Thrashing + Substitute bugs', () => {
+    // Thrash should lock the user into the move even if it hits a Substitute
+    {
+      const battle = startBattle([SRF_RES, SRF_RUN, HIT, NO_CRIT, MIN_DMG, SRF_RES, HIT, SS_MOD], [
+        {species: 'Nidoking', level: 50, evs, moves: ['Thrash', 'Thunder Wave']},
+      ], [
+        {species: 'Vileplume', evs, moves: ['Substitute', 'Teleport']},
+      ]);
+
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 88);
+      expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(89 - 18);
+
+      // expect(choices(battle, 'p1')).toEqual(['move 1']);
+      expect(choices(battle, 'p1')).toEqual(['move 1', 'move 2']);
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p2.pokemon[0].status).toBe('par');
+
+      verify(battle, [
+        '|move|p2a: Vileplume|Substitute|p2a: Vileplume',
+        '|-start|p2a: Vileplume|Substitute',
+        '|-damage|p2a: Vileplume|265/353',
+        '|move|p1a: Nidoking|Thrash|p2a: Vileplume',
+        '|-activate|p2a: Vileplume|Substitute|[damage]',
+        '|turn|2',
+        '|move|p2a: Vileplume|Teleport|p2a: Vileplume',
+        '|move|p1a: Nidoking|Thunder Wave|p2a: Vileplume',
+        '|-status|p2a: Vileplume|par',
+        '|turn|3'
+      ]);
+    }
+     // Thrash should lock the user into the move even if it breaks a Substitute
+     {
+      const battle = startBattle([SRF_RES, SRF_RUN, HIT, NO_CRIT, MAX_DMG, SRF_RES, HIT, SS_MOD], [
+        {species: 'Nidoking', evs, moves: ['Thrash', 'Thunder Wave']},
+      ], [
+        {species: 'Abra', evs, moves: ['Substitute', 'Teleport']},
+      ]);
+
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 63);
+
+      // expect(choices(battle, 'p1')).toEqual(['move 1']);
+      expect(choices(battle, 'p1')).toEqual(['move 1', 'move 2']);
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p2.pokemon[0].status).toBe('par');
+
+      verify(battle, [
+        '|move|p2a: Abra|Substitute|p2a: Abra',
+        '|-start|p2a: Abra|Substitute',
+        '|-damage|p2a: Abra|190/253',
+        '|move|p1a: Nidoking|Thrash|p2a: Abra',
+        '|-end|p2a: Abra|Substitute',
+        '|turn|2',
+        '|move|p2a: Abra|Teleport|p2a: Abra',
+        '|move|p1a: Nidoking|Thunder Wave|p2a: Abra',
+        '|-status|p2a: Abra|par',
+        '|turn|3'
+      ]);
+    }
+  });
+
   // Glitches
 
   test('0 damage glitch', () => {
