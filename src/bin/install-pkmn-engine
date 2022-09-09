@@ -188,6 +188,8 @@ const headers = async () => {
   const zig = await install();
   const include = await headers();
 
+  // FIXME: need to detect original flags by trying to require pkmn.node/pkmn-showdown.node library
+  // and checking constants to know whether to build with -Dshowdown/-Dtrace + build and embed WASM
   console.log('Building build/lib/pkmn.node');
   sh(zig, ['build', '-Dshowdown', '-Drelease-fast', `-Dnode-headers=${include}`, '-Dstrip']);
 })();
