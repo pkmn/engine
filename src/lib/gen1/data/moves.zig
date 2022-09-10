@@ -579,7 +579,7 @@ pub const Move = enum(u8) {
         // SonicBoom
         .{
             .effect = .SpecialDamage,
-            .bp = 0,
+            .bp = 1,
             .type = .Normal,
             .accuracy = 90,
             .target = .Other,

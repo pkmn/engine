@@ -695,9 +695,10 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     var mist = false;
     var hits: u4 = 1;
     var effectiveness = Effectiveness.neutral;
+    const counter = side.last_selected_move == .Counter;
 
     // Pokémon Showdown runs type and OHKO immunity checks before the accuracy check
-    if (showdown) {
+    if (showdown and !counter) {
         const m = side.last_selected_move;
         const eff1 = @enumToInt(move.type.effectiveness(foe.active.types.type1));
         const eff2 = @enumToInt(move.type.effectiveness(foe.active.types.type2));
@@ -729,7 +730,6 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     assert(!immune or (showdown and move.effect == .Trapping));
 
     const skip = (move.bp == 0 and move.effect != .OHKO) or immune;
-    const counter = side.last_selected_move == .Counter;
     if (!miss and (!showdown or (!skip or counter))) blk: {
         if (showdown and move.effect.isMulti()) {
             Effects.multiHit(battle, player, move);
@@ -766,6 +766,9 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
             randomizeDamage(battle);
         }
     }
+
+    // TODO: is this comprehensive?
+    if (showdown and skip and move.effect != .Bide) battle.last_damage = 0;
 
     miss = if (showdown or skip)
         miss
@@ -854,6 +857,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     _ = from;
     var nullified = false;
     var hit: u4 = 0;
+    const damage = battle.last_damage;
     while (hit < hits) {
         if (hit == 0) {
             if (crit) try log.crit(battle.active(player.foe()));
@@ -864,6 +868,9 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
             }
         }
         if (!skip) {
+            // Pokémon Showdown clears last_damage when attacking a Substitute so subsequent
+            // hits would return 0 if we didn't reset the damage before applying it again
+            battle.last_damage = damage;
             nullified = try applyDamage(battle, player.foe(), player.foe(), move, .None, log);
         }
         if (hit == 0 and ohko) try log.ohko();
@@ -1102,15 +1109,17 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
     const foe_last_selected_move =
         Move.get(if (foe.last_selected_move == .None) .Counter else foe.last_selected_move);
 
-    const used = foe_last_used_move.bp == 0 or
-        foe.last_used_move == .Counter or
-        foe_last_used_move.type != .Normal or
-        foe_last_used_move.type != .Fighting;
+    const used = foe_last_used_move.bp > 0 and
+        !(showdown and foe.last_used_move == .SonicBoom) and
+        foe.last_used_move != .Counter and
+        (foe_last_used_move.type == .Normal or
+        foe_last_used_move.type == .Fighting);
 
-    const selected = foe_last_selected_move.bp == 0 or
-        foe.last_selected_move == .Counter or
-        foe_last_selected_move.type != .Normal or
-        foe_last_selected_move.type != .Fighting;
+    const selected = foe_last_selected_move.bp > 0 and
+        !(showdown and foe.last_selected_move == .SonicBoom) and
+        foe.last_selected_move != .Counter and
+        (foe_last_selected_move.type == .Normal or
+        foe_last_selected_move.type == .Fighting);
 
     if (!used and !selected) {
         try log.fail(battle.active(player), .None);
@@ -1155,11 +1164,13 @@ fn applyDamage(
             subbed.active.volatiles.Substitute = false;
             // battle.last_damage is not updated with the amount of HP the Substitute had
             try log.end(battle.active(sub_player), .Substitute);
+            if (showdown) battle.last_damage = 0;
             return true;
         } else {
             // Safe to truncate since less than subbed.volatiles.substitute which is a u8
             subbed.active.volatiles.substitute -= @truncate(u8, battle.last_damage);
             try log.activate(battle.active(sub_player), .Substitute);
+            if (showdown) battle.last_damage = 0;
             // Attacking a Substitute with Hyper Beam never causes a recharge on Pokémon Showdown
             return showdown and move.effect == .HyperBeam;
         }
@@ -2163,7 +2174,7 @@ pub const Effects = struct {
             .SpeedUp2 => {
                 assert(boosts.spe >= -6 and boosts.spe <= 6);
                 if (boosts.spe == 6) return try log.fail(ident, .None);
-                boosts.spe = @truncate(i4, @minimum(6, @as(i8, boosts.spe) + 1));
+                boosts.spe = @truncate(i4, @minimum(6, @as(i8, boosts.spe) + 2));
                 if (!showdown and stats.spe == MAX_STAT_VALUE) {
                     boosts.spe -= 1;
                     return try log.fail(ident, .None);

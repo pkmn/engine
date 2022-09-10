@@ -3155,7 +3155,162 @@ test "Counter effect" {
     // Energy, Glare, Haze, Leech Seed, Light Screen, Mimic, Mist, Poison Gas, Poison Powder,
     // Recover, Reflect, Rest, Soft-Boiled, Splash, Stun Spore, Substitute, Supersonic, Teleport,
     // Thunder Wave, Toxic, or Transform.
-    return error.SkipZigTest;
+    const NO_PROC = MAX;
+    const MIN_HITS = MIN;
+    const SLP_3 = if (showdown) comptime ranged(3, 8 - 1) else 3;
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_PROC, HIT,
+            NOP, NOP, NOP, HIT, MIN_HITS, ~CRIT, MIN_DMG, HIT,
+            NOP, NOP, NOP, NOP, HIT, HIT,
+            NOP, NOP, NOP, HIT, HIT,
+            NOP, NOP, NOP, HIT, MIN_HITS, ~CRIT, MIN_DMG, HIT,
+            NOP, NOP, HIT,
+            NOP, NOP, HIT,
+            NOP, NOP, NOP, HIT, HIT,
+            NOP, NOP, HIT,
+            NOP, NOP, NOP, HIT, NOP, SLP_3,
+            NOP, NOP,
+        } else .{
+            ~CRIT, MIN_DMG, HIT, NO_PROC, ~CRIT,
+            ~CRIT, MIN_DMG, HIT, MIN_HITS, ~CRIT, HIT,
+            ~CRIT, ~CRIT,
+            HIT, ~CRIT, HIT,
+            ~CRIT, MIN_DMG, HIT, MIN_HITS, ~CRIT, HIT,
+            ~CRIT, HIT,
+            ~CRIT, HIT,
+            ~CRIT, HIT,
+            ~CRIT, HIT,
+            ~CRIT, HIT, SLP_3,
+        }
+    // zig fmt: on
+    ).init(
+        &.{
+            .{ .species = .Voltorb, .moves = &.{ .Thunderbolt, .DoubleSlap, .Counter, .SonicBoom } },
+            .{ .species = .Gengar, .moves = &.{ .Teleport, .SeismicToss } },
+            .{ .species = .Snorlax, .moves = &.{ .LovelyKiss, .Reflect } },
+        },
+        &.{.{ .species = .Chansey, .moves = &.{.Counter} }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Thunderbolt, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 69;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(1), null);
+    try t.log.expected.fail(P2.ident(1), .None);
+    try t.log.expected.turn(2);
+
+    // Fails for moves which are not Normal / Fighting
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.DoubleSlap, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 17;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    t.expected.p2.get(1).hp -= 17;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.hitcount(P2.ident(1), 2);
+    try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 34;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(3);
+
+    // Deals back double damage to target, though only of the last hit of a multi-hit move
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.Counter, P2.ident(1), null);
+    try t.log.expected.fail(P1.ident(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(1), null);
+    try t.log.expected.fail(P2.ident(1), .None);
+    try t.log.expected.turn(4);
+
+    // Cannot Counter an opponent's Counter
+    try expectEqual(Result.Default, try t.update(move(3), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.SonicBoom, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 20;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(1), null);
+    if (showdown) {
+        try t.log.expected.fail(P2.ident(1), .None);
+    } else {
+        t.expected.p1.get(1).hp -= 40;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    }
+    try t.log.expected.turn(5);
+
+    // Works on fixed damage moves, but Sonic Boom fails on Pokémon Showdown
+    try expectEqual(Result.Default, try t.update(move(4), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.DoubleSlap, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 17;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    t.expected.p2.get(1).hp -= 17;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.hitcount(P2.ident(1), 2);
+    try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 34;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(6);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(2), null);
+    t.expected.p1.get(2).hp -= 68;
+    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
+    try t.log.expected.turn(7);
+
+    // Ignores type immunity and works across switches
+    try expectEqual(Result.Default, try t.update(swtch(2), move(1)));
+
+    try t.log.expected.move(P1.ident(2), Move.Teleport, P1.ident(2), null);
+    try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(2), null);
+    try t.log.expected.fail(P2.ident(1), .None);
+    try t.log.expected.turn(8);
+
+    // Pokémon Showdown claims certain zero damage moves like Teleport should not reset it
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P1.ident(2), Move.SeismicToss, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 100;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(2), null);
+    t.expected.p1.get(2).hp -= 200;
+    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
+    try t.log.expected.turn(9);
+
+    // Fixed damage works with Seismic Toss on Pokémon Showdown
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+
+    try t.log.expected.switched(P1.ident(3), t.expected.p1.get(3));
+    try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(3), null);
+    t.expected.p1.get(3).hp -= 400;
+    try t.log.expected.damage(P1.ident(3), t.expected.p1.get(3), .None);
+    try t.log.expected.turn(10);
+
+    // Last damage gets updated to the damage Counter inflicted and doubles again
+    try expectEqual(Result.Default, try t.update(swtch(3), move(1)));
+
+    try t.log.expected.move(P1.ident(3), Move.LovelyKiss, P2.ident(1), null);
+    t.expected.p2.get(1).status = Status.slp(3);
+    try t.log.expected.statusFrom(P2.ident(1), t.expected.p2.get(1).status, Move.LovelyKiss);
+    try t.log.expected.cant(P2.ident(1), .Sleep);
+    try t.log.expected.turn(11);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P1.ident(3), Move.Reflect, P1.ident(3), null);
+    t.expected.p2.get(1).status -= 1;
+    try t.log.expected.start(P1.ident(3), .Reflect);
+    try t.log.expected.cant(P2.ident(1), .Sleep);
+    try t.log.expected.turn(12);
+
+    // When slept, Counters negative priority gets preserved
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+
+    try t.verify();
 }
 
 // Move.{Recover,SoftBoiled}
@@ -3926,10 +4081,121 @@ test "Bide + Substitute bug" {
 
 test "Counter + Substitute bug" {
     // https://www.youtube.com/watch?v=_cEVqYFoBhE
-    return error.SkipZigTest;
+    const NO_PAR = MAX;
+    var t = Test((if (showdown)
+        (.{ NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_PAR, HIT })
+    else
+        (.{ ~CRIT, MIN_DMG, HIT, ~CRIT, HIT }))).init(
+        &.{.{ .species = .Snorlax, .moves = &.{ .Reflect, .BodySlam } }},
+        &.{.{ .species = .Chansey, .moves = &.{ .Substitute, .Counter } }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Substitute);
+    t.expected.p2.get(1).hp -= 175;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Reflect, P1.ident(1), null);
+    try t.log.expected.start(P1.ident(1), .Reflect);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.BodySlam, P2.ident(1), null);
+    try t.log.expected.end(P2.ident(1), .Substitute);
+    try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(1), null);
+    if (showdown) {
+        try t.log.expected.fail(P2.ident(1), .None);
+        try t.log.expected.turn(3);
+    } else {
+        t.expected.p1.get(1).hp = 0;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.faint(P1.ident(1), false);
+        try t.log.expected.win(.P2);
+    }
+
+    try expectEqual(if (showdown) Result.Default else Result.Lose, try t.update(move(2), move(2)));
+
+    try t.verify();
 }
 
 test "Counter + sleep = Desync Clause Mod bug" {
+    const SLP_8 = MAX;
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, HIT, HIT, NOP, SLP_8, NOP, NOP, HIT,
+            NOP, HIT, ~CRIT, MIN_DMG, NOP, NOP, NOP, HIT,
+        } else .{
+            HIT, ~CRIT, HIT, SLP_8, ~CRIT,
+            ~CRIT, MIN_DMG, HIT, ~CRIT, HIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{
+            .{ .species = .Alakazam, .moves = &.{ .SeismicToss, .Psychic } },
+            .{ .species = .Snorlax, .moves = &.{.BodySlam} },
+        },
+        &.{.{ .species = .Chansey, .moves = &.{ .Sing, .SoftBoiled, .Counter } }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.SeismicToss, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 100;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Sing, P1.ident(1), null);
+    t.expected.p1.get(1).status = Status.slp(7);
+    try t.log.expected.statusFrom(P1.ident(1), t.expected.p1.get(1).status, Move.Sing);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(2), null);
+    try t.log.expected.fail(P2.ident(1), .None);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(swtch(2), move(3)));
+
+    try t.log.expected.move(P2.ident(1), Move.SoftBoiled, P2.ident(1), null);
+    t.expected.p2.get(1).hp += 100;
+    try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P1.ident(2), Move.BodySlam, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 268;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+
+    try t.log.expected.switched(P1.ident(1), t.expected.p1.get(1));
+    try t.log.expected.move(P2.ident(1), Move.SoftBoiled, P2.ident(1), null);
+    t.expected.p2.get(1).hp += 268;
+    try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(5);
+
+    try expectEqual(Result.Default, try t.update(swtch(2), move(2)));
+
+    try t.log.expected.cant(P1.ident(1), .Sleep);
+    t.expected.p1.get(1).status -= 1;
+    try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(1), null);
+    if (showdown) {
+        try t.log.expected.fail(P2.ident(1), .None);
+        try t.log.expected.turn(6);
+    } else {
+        t.expected.p1.get(1).hp = 0;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.faint(P1.ident(1), true);
+    }
+
+    // Choice made while sleeping should not have been saved (and lead to a desync) as
+    // on the cartridge not opportunity is given for choosing a move while sleeping
+    const result = if (showdown) Result.Default else Result{ .p1 = .Switch, .p2 = .Pass };
+    try expectEqual(result, try t.update(move(2), move(3)));
+
+    try t.verify();
+}
+
+test "Counter via Metronome bug" {
     // TODO
     return error.SkipZigTest;
 }
@@ -4291,7 +4557,121 @@ test "Counter glitches" {
     // https://pkmn.cc/bulba-glitch-1#Counter_glitches
     // https://glitchcity.wiki/Counter_glitches_(Generation_I)
     // https://www.youtube.com/watch?v=ftTalHMjPRY
-    return error.SkipZigTest;
+    const PAR_CAN = MAX;
+    const PAR_CANT = MIN;
+
+    // self-Counter
+    {
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                NOP, HIT, NOP,
+                NOP, NOP, PAR_CAN, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+                NOP, NOP, NOP, PAR_CANT, HIT,
+            } else .{
+                ~CRIT, HIT,
+                PAR_CAN, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+                PAR_CANT, ~CRIT, HIT,
+            }
+        // zig fmt: on
+        ).init(
+            &.{.{ .species = .Jolteon, .moves = &.{ .Agility, .Tackle } }},
+            &.{.{
+                .species = .Chansey,
+                .level = 80,
+                .moves = &.{ .ThunderWave, .MegaDrain, .Counter },
+            }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P1.ident(1), Move.Agility, P1.ident(1), null);
+        try t.log.expected.boost(P1.ident(1), .Speed, 2);
+        try t.log.expected.move(P2.ident(1), Move.ThunderWave, P1.ident(1), null);
+        t.expected.p1.get(1).status = Status.init(.PAR);
+        try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        try t.log.expected.move(P1.ident(1), Move.Tackle, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 67;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.move(P2.ident(1), Move.MegaDrain, P1.ident(1), null);
+        t.expected.p1.get(1).hp -= 19;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        t.expected.p2.get(1).hp += 9;
+        try t.log.expected.drain(P2.ident(1), t.expected.p2.get(1), P1.ident(1));
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(move(2), move(2)));
+
+        try t.log.expected.cant(P1.ident(1), .Paralysis);
+        try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(1), null);
+        t.expected.p1.get(1).hp -= 2 * (if (showdown) 19 else 9);
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.turn(4);
+
+        try expectEqual(Result.Default, try t.update(move(2), move(3)));
+
+        try t.verify();
+    }
+    // Desync
+    {
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                NOP, HIT, NOP,
+                NOP, NOP, PAR_CAN, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+                NOP, NOP, PAR_CANT, HIT,
+            } else .{
+                ~CRIT, HIT,
+                PAR_CAN, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+                PAR_CANT, ~CRIT,
+            }
+        // zig fmt: on
+        ).init(
+            &.{.{ .species = .Jolteon, .moves = &.{ .Agility, .Tackle } }},
+            &.{.{
+                .species = .Chansey,
+                .level = 80,
+                .moves = &.{ .ThunderWave, .MegaDrain, .Counter },
+            }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P1.ident(1), Move.Agility, P1.ident(1), null);
+        try t.log.expected.boost(P1.ident(1), .Speed, 2);
+        try t.log.expected.move(P2.ident(1), Move.ThunderWave, P1.ident(1), null);
+        t.expected.p1.get(1).status = Status.init(.PAR);
+        try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        try t.log.expected.move(P1.ident(1), Move.Tackle, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 67;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.move(P2.ident(1), Move.MegaDrain, P1.ident(1), null);
+        t.expected.p1.get(1).hp -= 19;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        t.expected.p2.get(1).hp += 9;
+        try t.log.expected.drain(P2.ident(1), t.expected.p2.get(1), P1.ident(1));
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(move(2), move(2)));
+
+        try t.log.expected.cant(P1.ident(1), .Paralysis);
+        try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(1), null);
+        if (showdown) {
+            try t.log.expected.fail(P2.ident(1), .None);
+            try t.log.expected.turn(4);
+        }
+
+        const result = if (showdown) Result.Default else Result.Error;
+        try expectEqual(result, try t.update(move(1), move(3)));
+
+        try t.verify();
+    }
 }
 
 test "Freeze top move selection glitch" {

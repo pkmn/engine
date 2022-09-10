@@ -368,11 +368,12 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       const [name, effect] = m.split(' ');
       if (effect !== 'None') EFFECTS[effectToGroup(effect)].add(effect);
       const move = gen.moves.get(name)!;
+      const bp = move.id === 'sonicboom' ? 1 : move.basePower;
       const accuracy = move.accuracy === true ? 100 : move.accuracy;
       MOVES.push(`// ${name}\n` +
         '        .{\n' +
         `            .effect = .${effect},\n` +
-        `            .bp = ${move.basePower},\n` +
+        `            .bp = ${bp},\n` +
         `            .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
         `            .accuracy = ${accuracy},\n` +
         `            .target = .${TARGETS[move.target]},\n` +

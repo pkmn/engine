@@ -2740,8 +2740,7 @@ describe('Gen 1', () => {
   });
 
   test('Counter effect', () => {
-    const key = ['Battle.sample', 'BattleActions.tryMoveHit'];
-    const hit2 = {key, value: MIN};
+    const hit2 = {key: ['Battle.sample', 'BattleActions.tryMoveHit'], value: MIN};
     const battle = startBattle([
       SRF_RES, SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, NO_PAR, HIT,
       SRF_RES, SRF_RES, SRF_RES, HIT, hit2, NO_CRIT, MIN_DMG, HIT,
@@ -4091,68 +4090,6 @@ describe('Gen 1', () => {
     ]);
   });
 
-  test('Counter via Metronome bug', () => {
-    // Counter second
-    {
-      const battle = startBattle([
-        SRF_RES, HIT, METRONOME('Counter'), SRF_USE, HIT,
-      ], [
-        {species: 'Alakazam', evs, moves: ['Seismic Toss']},
-      ], [
-        {species: 'Chansey', evs, moves: ['Metronome']},
-      ]);
-
-      let p1hp = battle.p1.pokemon[0].hp;
-      let p2hp = battle.p2.pokemon[0].hp;
-
-      battle.makeChoices('move 1', 'move 1');
-      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 200);
-      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
-
-      verify(battle, [
-        '|move|p1a: Alakazam|Seismic Toss|p2a: Chansey',
-        '|-damage|p2a: Chansey|603/703',
-        '|move|p2a: Chansey|Metronome|p2a: Chansey',
-        '|move|p2a: Chansey|Counter|p1a: Alakazam|[from]Metronome',
-        '|-damage|p1a: Alakazam|113/313',
-        '|turn|2',
-      ]);
-    }
-    // Counter first
-    {
-      const battle = startBattle([
-        SRF_RES, HIT, SRF_RES, METRONOME('Counter'), SRF_USE, HIT, HIT,
-      ], [
-        {species: 'Snorlax', evs, moves: ['Seismic Toss']},
-      ], [
-        {species: 'Chansey', evs, moves: ['Teleport', 'Metronome']},
-      ]);
-
-      let p1hp = battle.p1.pokemon[0].hp;
-      let p2hp = battle.p2.pokemon[0].hp;
-
-      battle.makeChoices('move 1', 'move 1');
-      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
-
-      battle.makeChoices('move 1', 'move 2');
-      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 200);
-      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
-
-      verify(battle, [
-        '|move|p2a: Chansey|Teleport|p2a: Chansey',
-        '|move|p1a: Snorlax|Seismic Toss|p2a: Chansey',
-        '|-damage|p2a: Chansey|603/703',
-        '|turn|2',
-        '|move|p2a: Chansey|Metronome|p2a: Chansey',
-        '|move|p2a: Chansey|Counter|p1a: Snorlax|[from]Metronome',
-        '|-damage|p1a: Snorlax|323/523',
-        '|move|p1a: Snorlax|Seismic Toss|p2a: Chansey',
-        '|-damage|p2a: Chansey|503/703',
-        '|turn|3',
-      ]);
-    }
-  });
-
   test('Counter + Substitute bug', () => {
     const battle = startBattle([
       SRF_RES, SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, NO_PAR, HIT,
@@ -4216,7 +4153,7 @@ describe('Gen 1', () => {
     expect(battle.p2.pokemon[0].hp).toBe(703);
 
     // Choice made while sleeping should not have been saved (and lead to a desync) as
-    // on the cartridge not opportunity is given for choosing a move while sleeping
+    // on the cartridge no opportunity is given for choosing a move while sleeping
     battle.makeChoices('move 2', 'move 3');
     // expect(battle.p1.pokemon[0].hp).toBe(0);
     expect(battle.p1.pokemon[0].hp).toBe(alakazam);
@@ -4245,6 +4182,68 @@ describe('Gen 1', () => {
       '|-fail|p2a: Chansey',
       '|turn|6',
     ]);
+  });
+
+  test('Counter via Metronome bug', () => {
+    // Counter second
+    {
+      const battle = startBattle([
+        SRF_RES, HIT, METRONOME('Counter'), SRF_USE, HIT,
+      ], [
+        {species: 'Alakazam', evs, moves: ['Seismic Toss']},
+      ], [
+        {species: 'Chansey', evs, moves: ['Metronome']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 200);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
+
+      verify(battle, [
+        '|move|p1a: Alakazam|Seismic Toss|p2a: Chansey',
+        '|-damage|p2a: Chansey|603/703',
+        '|move|p2a: Chansey|Metronome|p2a: Chansey',
+        '|move|p2a: Chansey|Counter|p1a: Alakazam|[from]Metronome',
+        '|-damage|p1a: Alakazam|113/313',
+        '|turn|2',
+      ]);
+    }
+    // Counter first
+    {
+      const battle = startBattle([
+        SRF_RES, HIT, SRF_RES, METRONOME('Counter'), SRF_USE, HIT, HIT,
+      ], [
+        {species: 'Snorlax', evs, moves: ['Seismic Toss']},
+      ], [
+        {species: 'Chansey', evs, moves: ['Teleport', 'Metronome']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
+
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 200);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
+
+      verify(battle, [
+        '|move|p2a: Chansey|Teleport|p2a: Chansey',
+        '|move|p1a: Snorlax|Seismic Toss|p2a: Chansey',
+        '|-damage|p2a: Chansey|603/703',
+        '|turn|2',
+        '|move|p2a: Chansey|Metronome|p2a: Chansey',
+        '|move|p2a: Chansey|Counter|p1a: Snorlax|[from]Metronome',
+        '|-damage|p1a: Snorlax|323/523',
+        '|move|p1a: Snorlax|Seismic Toss|p2a: Chansey',
+        '|-damage|p2a: Chansey|503/703',
+        '|turn|3',
+      ]);
+    }
   });
 
   test('Disable duration bug', () => {
