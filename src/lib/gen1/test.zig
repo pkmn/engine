@@ -5232,7 +5232,68 @@ test "Partial trapping move Mirror Move glitch" {
 
 test "Rage and Thrash / Petal Dance accuracy bug" {
     // https://www.youtube.com/watch?v=NC5gbJeExbs
-    return error.SkipZigTest;
+    const THRASH_4 = MAX;
+    const HIT_255 = comptime ranged(255, 256) - 1;
+    const HIT_168 = comptime ranged(168, 256) - 1;
+    const MISS_84 = comptime ranged(84, 256);
+
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, HIT_255, ~CRIT, MIN_DMG, THRASH_4,
+            NOP, NOP, NOP, HIT_168, ~CRIT, MIN_DMG,
+            NOP, NOP, NOP, MISS_84, ~CRIT, MIN_DMG,
+        } else .{
+            THRASH_4, ~CRIT, MIN_DMG, HIT_255, ~CRIT,
+            ~CRIT, MIN_DMG, HIT_168, ~CRIT,
+            ~CRIT, MIN_DMG, MISS_84, ~CRIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Nidoking, .moves = &.{.Thrash} }},
+        &.{.{ .species = .Onix, .moves = &.{.DoubleTeam} }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), null);
+    try t.log.expected.resisted(P2.ident(1));
+    t.expected.p2.get(1).hp -= 22;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.DoubleTeam, P2.ident(1), null);
+    try t.log.expected.boost(P2.ident(1), .Evasion, 1);
+    try t.log.expected.turn(2);
+
+    // 255 -> 168
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
+    try t.log.expected.resisted(P2.ident(1));
+    t.expected.p2.get(1).hp -= 22;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.DoubleTeam, P2.ident(1), null);
+    try t.log.expected.boost(P2.ident(1), .Evasion, 1);
+    try t.log.expected.turn(3);
+
+    // 168 -> 84
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
+    if (showdown) {
+        try t.log.expected.resisted(P2.ident(1));
+        t.expected.p2.get(1).hp -= 22;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    } else {
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P1.ident(1));
+    }
+    try t.log.expected.move(P2.ident(1), Move.DoubleTeam, P2.ident(1), null);
+    try t.log.expected.boost(P2.ident(1), .Evasion, 1);
+    try t.log.expected.turn(4);
+
+    // should miss!
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.verify();
 }
 
 test "Substitute HP drain bug" {
