@@ -2175,7 +2175,7 @@ test "Charge effect" {
     try expectEqual(if (showdown) pp - 1 else pp, t.actual.p1.active.move(1).pp);
 
     var n = t.battle.actual.choices(.P1, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{if (showdown) move(1) else .{}}, choices[0..n]);
+    try expectEqualSlices(Choice, &[_]Choice{move(@boolToInt(showdown))}, choices[0..n]);
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
 
@@ -2187,7 +2187,7 @@ test "Charge effect" {
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
     try t.log.expected.turn(3);
 
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(Result.Default, try t.update(move(@boolToInt(showdown)), move(1)));
     try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
 
     try t.verify();
@@ -2233,7 +2233,7 @@ test "Fly/Dig effect" {
     try expectEqual(if (showdown) pp - 1 else pp, t.actual.p1.active.move(1).pp);
 
     var n = t.battle.actual.choices(.P1, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{if (showdown) move(1) else .{}}, choices[0..n]);
+    try expectEqualSlices(Choice, &[_]Choice{move(@boolToInt(showdown))}, choices[0..n]);
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
 
@@ -2245,7 +2245,7 @@ test "Fly/Dig effect" {
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
     try t.log.expected.turn(3);
 
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(Result.Default, try t.update(move(@boolToInt(showdown)), move(1)));
     try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
 
     try t.verify();
@@ -2703,7 +2703,8 @@ test "Thrashing effect" {
     try expectEqual(@as(u3, 5), t.actual.p1.active.volatiles.confusion);
 
     var n = t.battle.actual.choices(.P1, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{if (showdown) move(1) else .{}}, choices[0..n]);
+    const choice = move(@boolToInt(showdown));
+    try expectEqualSlices(Choice, &[_]Choice{choice}, choices[0..n]);
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
 
@@ -2717,15 +2718,15 @@ test "Thrashing effect" {
     try t.log.expected.turn(3);
 
     // Thrashing locks you in whether you hit or not
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(Result.Default, try t.update(choice, move(1)));
     try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
     try expect(t.actual.p1.active.volatiles.Confusion);
     try expectEqual(@as(u3, 4), t.actual.p1.active.volatiles.confusion);
 
     n = t.battle.actual.choices(.P1, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{if (showdown) move(1) else .{}}, choices[0..n]);
+    try expectEqualSlices(Choice, &[_]Choice{choice}, choices[0..n]);
     n = t.battle.actual.choices(.P2, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{if (showdown) move(1) else .{}}, choices[0..n]);
+    try expectEqualSlices(Choice, &[_]Choice{choice}, choices[0..n]);
 
     try t.log.expected.activate(P1.ident(1), .Confusion);
     if (!showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
@@ -2739,7 +2740,7 @@ test "Thrashing effect" {
     try t.log.expected.turn(4);
 
     // Thrashing confuses you even if already confused
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(Result.Default, try t.update(choice, choice));
     try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
     try expect(t.actual.p1.active.volatiles.Confusion);
     try expectEqual(@as(u3, 5), t.actual.p1.active.volatiles.confusion);
@@ -2747,7 +2748,7 @@ test "Thrashing effect" {
     n = t.battle.actual.choices(.P1, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
     n = t.battle.actual.choices(.P2, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{if (showdown) move(1) else .{}}, choices[0..n]);
+    try expectEqualSlices(Choice, &[_]Choice{choice}, choices[0..n]);
 
     try t.log.expected.activate(P1.ident(1), .Confusion);
     try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
@@ -2757,7 +2758,7 @@ test "Thrashing effect" {
     try t.log.expected.turn(5);
 
     // Thrashing doesn't confuse you if the user is prevented from moving
-    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    try expectEqual(Result.Default, try t.update(move(2), choice));
     try expect(!t.actual.p2.active.volatiles.Confusion);
 
     n = t.battle.actual.choices(.P1, .Move, &choices);
@@ -3127,11 +3128,11 @@ test "HyperBeam effect" {
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
     n = t.battle.actual.choices(.P1, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{if (showdown) move(1) else .{}}, choices[0..n]);
+    try expectEqualSlices(Choice, &[_]Choice{move(@boolToInt(showdown))}, choices[0..n]);
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ move(1), move(2) }, choices[0..n]);
 
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(Result.Default, try t.update(move(@boolToInt(showdown)), move(1)));
 
     try t.log.expected.cant(P1.ident(1), .Recharge);
     try t.log.expected.move(P2.ident(2), Move.Teleport, P2.ident(2), null);
@@ -3276,7 +3277,7 @@ test "Rest effect" {
     try t.log.expected.cant(P2.ident(1), .Sleep);
     try t.log.expected.turn(4);
 
-    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    try expectEqual(Result.Default, try t.update(move(2), move(@boolToInt(showdown))));
 
     try t.log.expected.move(P1.ident(1), Move.Rest, P1.ident(1), null);
     try t.log.expected.fail(P1.ident(1), .None);

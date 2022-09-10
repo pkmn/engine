@@ -143,7 +143,7 @@ fn selectMove(
     if (volatiles.Recharging) {
         if (showdown) {
             // The placeholder "move" 'recharge' has no target which
-            // results in both resolveAction amd runAction frame advances
+            // results in both resolveAction and runAction frame advances
             battle.rng.advance(1);
             run.* = 1;
         }
@@ -337,11 +337,11 @@ fn doTurn(
     assert(player_choice.type != .Pass);
 
     if (try executeMove(battle, player, player_choice, player_from, player_run, log)) |r| return r;
+    if (foe_choice.type == .Pass) return null;
+
     if (try checkFaint(battle, foe_player, log)) |r| return r;
     try handleResidual(battle, player, log);
     if (try checkFaint(battle, player, log)) |r| return r;
-
-    if (foe_choice.type == .Pass) return null;
 
     if (try executeMove(battle, foe_player, foe_choice, foe_from, foe_run, log)) |r| return r;
     if (try checkFaint(battle, player, log)) |r| return r;
@@ -368,7 +368,7 @@ fn executeMove(
 
     if (side.last_selected_move == .SKIP_TURN) {
         // Pokémon Showdown overwrites the SKIP_TURN sentinel with its botched move select,
-        // Trapping instead gets handled in beforeAfter after sleep and freeze
+        // Trapping instead gets handled in beforeMove after sleep and freeze
         assert(!showdown);
         if (battle.foe(player).active.volatiles.Trapping) {
             try log.cant(battle.active(player), .Trapped);
@@ -2475,8 +2475,16 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
 
             // While players are not given any input options on the cartridge in these cases,
             // Pokémon Showdown instead produces a list with a single move that must be chosen.
+            //
+            // Given that no input is allowed on the cartridge 'Pass' seems like it would be logical
+            // here when not in compatability mode, but the engine needs to be able to differentiate
+            // between passing while waiting for an opponent's forced switch after fainting and
+            // passing due to being forced into using a move. Instead of introducing another option
+            // we simply repurpose Move with no move slot, even though pedantically this is not
+            // strictly correct as the player would not have been presented the option to move or
+            // switch at all.
             if (isForced(active)) {
-                out[n] = if (showdown) .{ .type = .Move, .data = 1 } else .{};
+                out[n] = .{ .type = .Move, .data = @boolToInt(showdown) };
                 n += 1;
                 return n;
             }

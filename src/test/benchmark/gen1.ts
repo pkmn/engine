@@ -88,13 +88,11 @@ export const Choices = new class {
       const options: engine.Choice[] = [];
 
       const side = battle.side(id);
-      const foe = battle.foe(id);
       const active = side.active!;
 
       if (active.forced) {
-        return [{type: 'move', data: 1}];
+        return [{type: 'move', data: 0}];
       }
-
 
       for (let slot = 2; slot <= 6; slot++) {
         const pokemon = side.get(slot as engine.Slot);
