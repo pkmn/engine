@@ -4107,6 +4107,101 @@ test "Wrap locking + KOs bug" {
     try t.verify();
 }
 
+test "Thrashing + Substitute bugs" {
+    const THRASH_3 = if (showdown) comptime ranged(1, 5 - 3) - 1 else MIN;
+
+    // Thrash should lock the user into the move even if it hits a Substitute
+    {
+        var t = Test((if (showdown)
+            (.{ NOP, NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, NOP })
+        else
+            (.{ THRASH_3, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
+            &.{.{ .species = .Nidoking, .level = 50, .moves = &.{ .Thrash, .ThunderWave } }},
+            &.{.{ .species = .Vileplume, .moves = &.{ .Substitute, .Teleport } }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+        try t.log.expected.start(P2.ident(1), .Substitute);
+        t.expected.p2.get(1).hp -= 88;
+        var subhp: u8 = 89;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), null);
+        try t.log.expected.activate(P2.ident(1), .Substitute);
+        subhp -= 18;
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(@as(u8, subhp), t.actual.p2.active.volatiles.substitute);
+
+        var n = t.battle.actual.choices(.P1, .Move, &choices);
+        try expectEqualSlices(Choice, if (showdown)
+            &[_]Choice{ move(1), move(2) }
+        else
+            &[_]Choice{move(0)}, choices[0..n]);
+
+        try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+        if (showdown) {
+            try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
+            t.expected.p2.get(1).status = Status.init(.PAR);
+            try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+        } else {
+            try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
+            try t.log.expected.activate(P2.ident(1), .Substitute);
+            subhp -= 18;
+        }
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(move(if (showdown) 2 else 0), move(2)));
+        try expectEqual(@as(u8, subhp), t.actual.p2.active.volatiles.substitute);
+
+        try t.verify();
+    }
+    // Thrash should lock the user into the move even if it breaks a Substitute
+    {
+        var t = Test((if (showdown)
+            (.{ NOP, NOP, HIT, ~CRIT, MAX_DMG, NOP, HIT, NOP })
+        else
+            (.{ THRASH_3, ~CRIT, MAX_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
+            &.{.{ .species = .Nidoking, .moves = &.{ .Thrash, .ThunderWave } }},
+            &.{.{ .species = .Abra, .moves = &.{ .Substitute, .Teleport } }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+        try t.log.expected.start(P2.ident(1), .Substitute);
+        t.expected.p2.get(1).hp -= 63;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), null);
+        try t.log.expected.end(P2.ident(1), .Substitute);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        var n = t.battle.actual.choices(.P1, .Move, &choices);
+        try expectEqualSlices(Choice, if (showdown)
+            &[_]Choice{ move(1), move(2) }
+        else
+            &[_]Choice{move(0)}, choices[0..n]);
+
+        try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+        if (showdown) {
+            try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
+            t.expected.p2.get(1).status = Status.init(.PAR);
+            try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+        } else {
+            try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
+            t.expected.p2.get(1).hp -= 142;
+            try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        }
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(move(if (showdown) 2 else 0), move(2)));
+
+        try t.verify();
+    }
+}
+
 // Glitches
 
 test "0 damage glitch" {

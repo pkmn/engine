@@ -338,7 +338,6 @@ fn doTurn(
 
     if (try executeMove(battle, player, player_choice, player_from, player_run, log)) |r| return r;
     if (foe_choice.type == .Pass) return null;
-
     if (try checkFaint(battle, foe_player, log)) |r| return r;
     try handleResidual(battle, player, log);
     if (try checkFaint(battle, player, log)) |r| return r;
@@ -828,7 +827,8 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         if (move.effect == .Thrashing) {
             if (side.active.volatiles.Thrashing) {
                 thrashed = handleThrashing(battle, &side.active);
-            } else {
+            } else if (!foe.active.volatiles.Substitute) {
+                // Pokémon Showdown doesn't lock into Thrashing if move hits a Substitute
                 Effects.thrashing(battle, player);
             }
         } else if (move.effect == .Trapping) {

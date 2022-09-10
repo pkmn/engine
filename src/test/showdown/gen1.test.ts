@@ -4585,11 +4585,11 @@ describe('Gen 1', () => {
         '|move|p2a: Vileplume|Teleport|p2a: Vileplume',
         '|move|p1a: Nidoking|Thunder Wave|p2a: Vileplume',
         '|-status|p2a: Vileplume|par',
-        '|turn|3'
+        '|turn|3',
       ]);
     }
-     // Thrash should lock the user into the move even if it breaks a Substitute
-     {
+    // Thrash should lock the user into the move even if it breaks a Substitute
+    {
       const battle = startBattle([SRF_RES, SRF_RUN, HIT, NO_CRIT, MAX_DMG, SRF_RES, HIT, SS_MOD], [
         {species: 'Nidoking', evs, moves: ['Thrash', 'Thunder Wave']},
       ], [
@@ -4617,7 +4617,7 @@ describe('Gen 1', () => {
         '|move|p2a: Abra|Teleport|p2a: Abra',
         '|move|p1a: Nidoking|Thunder Wave|p2a: Abra',
         '|-status|p2a: Abra|par',
-        '|turn|3'
+        '|turn|3',
       ]);
     }
   });
