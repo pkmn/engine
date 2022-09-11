@@ -897,7 +897,6 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         try log.hitcount(battle.active(player.foe()), hit);
     }
 
-    // FIXME: test if breaking sub prevents this on showdown
     if (showdown and thrashed) try log.start(battle.active(player), .ConfusionSilent);
 
     // Substitute being broken nullifies the move's effect completely so even
@@ -2379,6 +2378,10 @@ fn clearVolatiles(active: *ActivePokemon, ident: ID, log: anytype) !void {
     if (volatiles.Reflect) {
         volatiles.Reflect = false;
         try log.end(ident, .Reflect);
+    }
+    // TODO: https://github.com/smogon/pokemon-showdown/pull/8807
+    if (volatiles.Recharging) {
+        volatiles.Recharging = false;
     }
 }
 

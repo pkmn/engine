@@ -5223,6 +5223,7 @@ describe('Gen 1', () => {
     let charizard = battle.p2.pokemon[1].hp;
 
     battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 39);
     expect(battle.p1.pokemon[0].status).toBe('frz');
     expect(battle.p2.pokemon[0].hp).toBe(lapras -= 120);
 
