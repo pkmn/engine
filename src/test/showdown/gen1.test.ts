@@ -5747,13 +5747,13 @@ describe('Gen 1', () => {
   test('Trapping sleep glitch', () => {
     const battle = startBattle([
       SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, MIN_WRAP, SRF_RES, SRF_RES,
-      SRF_RES, SRF_RES, HIT, SS_MOD, SLP(5), SRF_RES, SRF_RES, HIT,
+      SRF_RES, HIT, SS_MOD, SLP(5), SRF_RES, SRF_RES, HIT,
     ], [
       {species: 'Weepinbell', evs, moves: ['Wrap', 'Sleep Powder']},
       {species: 'Gloom', evs, moves: ['Absorb']},
     ], [
       {species: 'Sandshrew', evs, moves: ['Scratch', 'Sand Attack']},
-      {species: 'Magnemite', evs, moves: ['Thunder Shock']},
+      {species: 'Magnemite', evs, moves: ['Thunder Shock', 'Sonic Boom']},
     ]);
 
     let p2hp = battle.p2.pokemon[0].hp;
@@ -5768,17 +5768,18 @@ describe('Gen 1', () => {
     expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
     expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
-    battle.makeChoices('move 2', 'move 1');
+    battle.makeChoices('move 2', 'switch 2');
     expect(battle.p2.pokemon[0].status).toBe('slp');
     expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
-    // expect(choices(battle, 'p2')).toEqual([]);
     expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+    expect(battle.p2.pokemon[0].statusState.time).toBe(5);
 
     // Should not have a turn, can only pass!
     battle.makeChoices('move 2', 'move 1');
     expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
-    // expect(choices(battle, 'p2')).toEqual([]);
     expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+    // expect(battle.p2.pokemon[0].statusState.time).toBe(5);
+    expect(battle.p2.pokemon[0].statusState.time).toBe(4);
 
     verify(battle, [
       '|move|p1a: Weepinbell|Wrap|p2a: Sandshrew',
@@ -5789,13 +5790,13 @@ describe('Gen 1', () => {
       '|-damage|p2a: Sandshrew|281/303',
       '|cant|p2a: Sandshrew|partiallytrapped',
       '|turn|3',
-      '|move|p1a: Weepinbell|Sleep Powder|p2a: Sandshrew',
-      '|-status|p2a: Sandshrew|slp|[from] move: Sleep Powder',
-      '|cant|p2a: Sandshrew|slp',
+      '|switch|p2a: Magnemite|Magnemite|253/253',
+      '|move|p1a: Weepinbell|Sleep Powder|p2a: Magnemite',
+      '|-status|p2a: Magnemite|slp|[from] move: Sleep Powder',
       '|turn|4',
-      '|move|p1a: Weepinbell|Sleep Powder|p2a: Sandshrew',
-      '|-fail|p2a: Sandshrew|slp',
-      '|cant|p2a: Sandshrew|slp',
+      '|move|p1a: Weepinbell|Sleep Powder|p2a: Magnemite',
+      '|-fail|p2a: Magnemite|slp',
+      '|cant|p2a: Magnemite|slp',
       '|turn|5',
     ]);
   });

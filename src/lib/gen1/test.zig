@@ -5675,8 +5675,89 @@ test "Struggle bypassing / Switch PP underflow" {
 }
 
 test "Trapping sleep glitch" {
-    // https://pkmn.cc/bulba-glitch-1#Trapping_sleep_glitch
-    return error.SkipZigTest;
+    // https://glitchcity.wiki/Trapping_move_and_sleep_glitch
+    const MIN_WRAP = MIN;
+    const SLP_5 = if (showdown) comptime ranged(5, 8 - 1) else 5;
+
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP, NOP, NOP,
+            NOP, HIT, NOP, SLP_5, NOP, NOP, HIT,
+        } else .{
+            MIN_WRAP, ~CRIT, MIN_DMG, HIT, ~CRIT, HIT, SLP_5, ~CRIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{
+            .{ .species = .Weepinbell, .moves = &.{ .Wrap, .SleepPowder } },
+            .{ .species = .Gloom, .moves = &.{.Absorb} },
+        },
+        &.{
+            .{ .species = .Sandshrew, .moves = &.{ .Scratch, .SandAttack } },
+            .{ .species = .Magnemite, .moves = &.{.ThunderShock, .SonicBoom} },
+        },
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 11;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.cant(P2.ident(1), .Trapped);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    const choice = move(@boolToInt(showdown));
+    const p1_choices = &[_]Choice{ swtch(2), choice };
+    const all_choices = &[_]Choice{ swtch(2), move(1), move(2) };
+    const p2_choices = if (showdown) all_choices else &[_]Choice{ swtch(2), move(0) };
+
+    var n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, p1_choices, choices[0..n]);
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, p2_choices, choices[0..n]);
+
+    try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(1), Move.Wrap);
+    t.expected.p2.get(1).hp -= 11;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.cant(P2.ident(1), .Trapped);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(choice, choice));
+
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, all_choices, choices[0..n]);
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, all_choices, choices[0..n]);
+
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.move(P1.ident(1), Move.SleepPowder, P2.ident(2), null);
+    t.expected.p2.get(2).status = Status.slp(5);
+    try t.log.expected.statusFrom(P2.ident(2), t.expected.p2.get(2).status, Move.SleepPowder);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(2), swtch(2)));
+    try expectEqual(t.expected.p2.get(2).status, t.actual.p2.get(1).status);
+
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, all_choices, choices[0..n]);
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, p2_choices, choices[0..n]);
+
+    // Should not have a turn, can only pass!
+    try t.log.expected.move(P1.ident(1), Move.SleepPowder, P2.ident(2), null);
+    try t.log.expected.fail(P2.ident(2), .Sleep);
+    if (showdown) {
+        try t.log.expected.cant(P2.ident(2), .Sleep);
+        t.expected.p2.get(2).status -= 1;
+    }
+    try t.log.expected.turn(5);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(@boolToInt(showdown))));
+    try expectEqual(t.expected.p2.get(2).status, t.actual.p2.get(1).status);
+
+    try t.verify();
 }
 
 test "Partial trapping move Mirror Move glitch" {
