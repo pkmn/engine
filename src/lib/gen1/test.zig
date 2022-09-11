@@ -4240,8 +4240,83 @@ test "Hyper Beam + Substitute bug" {
 }
 
 test "Mimic infinite PP bug" {
-    // TODO
-    return error.SkipZigTest;
+    // Mimic first
+    {
+        var battle = Battle.fixed(
+            if (showdown)
+                (.{ NOP, MAX } ++ .{NOP} ** 15)
+            else
+                (.{ HIT, 1 } ++ .{ ~CRIT, HIT } ** 15),
+            &.{.{ .species = .Gengar, .moves = &.{ .Teleport, .MegaKick } }},
+            &.{
+                .{ .species = .Gengar, .level = 99, .moves = &.{ .Mimic, .MegaKick, .Teleport } },
+                .{ .species = .Clefable, .moves = &.{.Teleport} },
+            },
+        );
+        try expectEqual(Result.Default, try battle.update(.{}, .{}, null));
+
+        try expectEqual(Result.Default, try battle.update(move(1), move(1), null));
+        try expectEqual(@as(u8, 15), battle.side(.P2).active.move(1).pp);
+        try expectEqual(@as(u8, 15), battle.side(.P2).get(1).move(1).pp);
+        try expectEqual(@as(u8, 8), battle.side(.P2).active.move(2).pp);
+        try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(2).pp);
+
+        var i: usize = 1;
+        // BUG: can't implement Pokémon Showdown's negative PP so need to stop iterating early
+        while (i < 16) : (i += 1) {
+            try expectEqual(Result.Default, try battle.update(move(1), move(1), null));
+        }
+        try expectEqual(@as(u8, 0), battle.side(.P2).active.move(1).pp);
+        try expectEqual(@as(u8, 0), battle.side(.P2).get(1).move(1).pp);
+        try expectEqual(@as(u8, 8), battle.side(.P2).active.move(2).pp);
+        try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(2).pp);
+
+        try expectEqual(Result.Default, try battle.update(move(1), swtch(2), null));
+
+        try expectEqual(@as(u8, 0), battle.side(.P2).get(2).move(1).pp);
+        try expectEqual(@as(u8, 8), battle.side(.P2).get(2).move(2).pp);
+
+        try expect(battle.rng.exhausted());
+    }
+    // Mimicked move first
+    {
+        var battle = Battle.fixed(
+            if (showdown)
+                (.{ NOP, MAX } ++ .{NOP} ** 15)
+            else
+                (.{ HIT, 1 } ++ .{ ~CRIT, HIT } ** 15),
+            &.{.{ .species = .Gengar, .moves = &.{ .Teleport, .MegaKick } }},
+            &.{
+                .{ .species = .Gengar, .level = 99, .moves = &.{ .MegaKick, .Mimic, .Teleport } },
+                .{ .species = .Clefable, .moves = &.{.Teleport} },
+            },
+        );
+        try expectEqual(Result.Default, try battle.update(.{}, .{}, null));
+
+        try expectEqual(Result.Default, try battle.update(move(1), move(2), null));
+        try expectEqual(@as(u8, 8), battle.side(.P2).active.move(1).pp);
+        try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(1).pp);
+        try expectEqual(@as(u8, 15), battle.side(.P2).active.move(2).pp);
+        try expectEqual(@as(u8, 15), battle.side(.P2).get(1).move(2).pp);
+
+        var i: usize = 1;
+        // BUG: can't implement Pokémon Showdown's negative PP so need to stop iterating early
+        while (i < 16) : (i += 1) {
+            try expectEqual(Result.Default, try battle.update(move(1), move(2), null));
+        }
+        // BUG: Pokémon Showdown decrements the wrong slot here
+        try expectEqual(@as(u8, 8), battle.side(.P2).active.move(1).pp);
+        try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(1).pp);
+        try expectEqual(@as(u8, 0), battle.side(.P2).active.move(2).pp);
+        try expectEqual(@as(u8, 0), battle.side(.P2).get(1).move(2).pp);
+
+        try expectEqual(Result.Default, try battle.update(move(1), swtch(2), null));
+
+        try expectEqual(@as(u8, 8), battle.side(.P2).get(2).move(1).pp);
+        try expectEqual(@as(u8, 0), battle.side(.P2).get(2).move(2).pp);
+
+        try expect(battle.rng.exhausted());
+    }
 }
 
 test "Mirror Move + Wrap bug" {
