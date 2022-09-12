@@ -3555,6 +3555,7 @@ describe('Gen 1', () => {
 
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(chansey);
+    // expect(battle.p2.pokemon[0].hp).toBe(dugtrio -= 120);
     expect(battle.p2.pokemon[0].hp).toBe(dugtrio -= 80);
 
     expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
@@ -3568,6 +3569,8 @@ describe('Gen 1', () => {
 
     battle.makeChoices('move 1', 'move 2');
     expect(battle.p2.pokemon[0].hp).toBe(0);
+
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(14);
 
     verify(battle, [
       '|move|p1a: Chansey|Bide|p1a: Chansey',

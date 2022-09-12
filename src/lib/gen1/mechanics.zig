@@ -553,12 +553,14 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
     if (volatiles.Bide) {
         assert(!volatiles.Thrashing and !volatiles.Rage);
         volatiles.state +%= battle.last_damage;
-        try log.activate(ident, .Bide);
 
         assert(volatiles.attacks > 0);
 
         volatiles.attacks -= 1;
-        if (volatiles.attacks != 0) return .done;
+        if (volatiles.attacks != 0) {
+            try log.activate(ident, .Bide);
+            return .done;
+        }
 
         volatiles.Bide = false;
         try log.end(ident, .Bide);
@@ -2340,7 +2342,7 @@ fn statusModify(status: u8, stats: *Stats(u16)) void {
 }
 
 fn isLocked(side: *const Side) bool {
-    return side.active.volatiles.Bide or (side.active.volatiles.Charging and
+    return (side.active.volatiles.Charging and
         (side.last_selected_move == .Fly or side.last_selected_move == .Dig));
 }
 
