@@ -397,10 +397,10 @@ fn executeMove(
         // GLITCH: Struggle bypass PP underflow via Hyper Beam / Trapping-switch auto selection
         auto = side.last_selected_move == .HyperBeam or
             Move.get(side.last_selected_move).effect == .Trapping;
-        // If it wasn't Hyper Beam or the continuation of a Trapping move effect then we must
+        // If it wasn't Hyper Beam or the continuation of a Trapping move/Bide effect then we must
         // have just thawed, in which case we will desync unless the last_selected_move
         // happened to be at index 1 and the current Pokémon has the same move in its first slot
-        if (!auto) {
+        if (!auto and side.last_selected_move != .Bide) {
             // side.active.moves(slot) is safe to check even though the slot in question might not
             // technically be from this Pokémon because it must be exactly 1 to not desync and
             // every Pokémon must have at least one move
@@ -552,6 +552,7 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
 
     if (volatiles.Bide) {
         assert(!volatiles.Thrashing and !volatiles.Rage);
+
         volatiles.state +%= battle.last_damage;
 
         assert(volatiles.attacks > 0);
@@ -1339,9 +1340,10 @@ fn faint(battle: anytype, player: Player, log: anytype, done: bool) !?Result {
 
     var foe_volatiles = &foe.active.volatiles;
     foe_volatiles.MultiHit = false;
-    if (foe_volatiles.Bide) {
+    if (foe_volatiles.Bide and !showdown) {
         assert(!foe_volatiles.Thrashing and !foe_volatiles.Rage);
-        foe_volatiles.state = if (showdown) 0 else foe_volatiles.state & 255;
+        // Pokémon Showdown should zero foe_volatiles.state here unconditionally
+        foe_volatiles.state = foe_volatiles.state & 255;
         if (foe_volatiles.state != 0) return Result.Error;
     }
 

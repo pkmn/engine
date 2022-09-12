@@ -4960,7 +4960,121 @@ test "Bide damage accumulation glitches" {
     // https://glitchcity.wiki/Bide_fainted_Pokémon_damage_accumulation_glitch
     // https://glitchcity.wiki/Bide_non-damaging_move/action_damage_accumulation_glitch
     // https://www.youtube.com/watch?v=IVxHGyNDW4g
-    return error.SkipZigTest;
+    const BIDE_2 = MIN;
+
+    // Non-damaging move/action damage accumulation
+    {
+        var t = Test((if (showdown)
+            (.{ NOP, BIDE_2, NOP, HIT, ~CRIT, MIN_DMG })
+        else
+            (.{ ~CRIT, BIDE_2, ~CRIT, MIN_DMG, HIT }))).init(
+            &.{
+                .{ .species = .Poliwrath, .level = 40, .moves = &.{ .Surf, .Teleport } },
+                .{ .species = .Snorlax, .level = 80, .moves = &.{.Rest} },
+            },
+            &.{.{ .species = .Chansey, .level = 80, .moves = &.{.Bide} }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P2.ident(1), Move.Bide, P2.ident(1), null);
+        try t.log.expected.start(P2.ident(1), .Bide);
+        try t.log.expected.move(P1.ident(1), Move.Surf, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 18;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        try t.log.expected.activate(P2.ident(1), .Bide);
+        try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(move(2), move(@boolToInt(showdown))));
+
+        try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+        try t.log.expected.end(P2.ident(1), .Bide);
+        t.expected.p1.get(2).hp -= 72; // BUG: 36 on Pokémon Showdown
+        try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
+        try t.log.expected.turn(4);
+
+        try expectEqual(Result.Default, try t.update(swtch(2), move(@boolToInt(showdown))));
+
+        try t.verify();
+    }
+    // Fainted Pokémon damage accumulation desync
+    {
+        var t = Test((if (showdown)
+            (.{ NOP, HIT, NOP, NOP, BIDE_2, HIT, ~CRIT, MIN_DMG, NOP, HIT, ~CRIT, MIN_DMG })
+        else
+            (.{ HIT, ~CRIT, BIDE_2, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
+            &.{
+                .{ .species = .Wigglytuff, .hp = 179, .moves = &.{ .Teleport, .TriAttack } },
+                .{ .species = .Snorlax, .moves = &.{.DefenseCurl} },
+            },
+            &.{.{ .species = .Chansey, .moves = &.{ .Toxic, .Bide } }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P2.ident(1), Move.Toxic, P1.ident(1), null);
+        t.expected.p1.get(1).status = Status.init(.PSN);
+        try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+        try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+        t.expected.p1.get(1).hp -= 30;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .Poison);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        try t.log.expected.move(P2.ident(1), Move.Bide, P2.ident(1), null);
+        try t.log.expected.start(P2.ident(1), .Bide);
+        try t.log.expected.move(P1.ident(1), Move.TriAttack, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 191;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        t.expected.p1.get(1).hp -= 60;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .Poison);
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(move(2), move(2)));
+
+        try t.log.expected.activate(P2.ident(1), .Bide);
+        try t.log.expected.move(P1.ident(1), Move.TriAttack, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 191;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        t.expected.p1.get(1).hp = 0;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .Poison);
+        if (showdown) try t.log.expected.faint(P1.ident(1), true);
+
+        _ = t.battle.actual.choices(.P2, .Move, &choices);
+
+        const result = if (showdown) Result{ .p1 = .Switch, .p2 = .Pass } else Result.Error;
+        try expectEqual(result, try t.update(move(2), move(if (showdown) 2 else 0)));
+
+        if (showdown) {
+            try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+            try t.log.expected.turn(4);
+
+            try expectEqual(Result.Default, try t.update(swtch(2), .{}));
+            try expectEqual(@as(u16, 191), t.actual.p2.active.volatiles.state);
+
+            // BUG: On Pokémon Showdown if the Bide user goes first an extra turn of damage gets accumulated
+            // try t.log.expected.activate(P2.ident(1), .Bide);
+            // try t.log.expected.move(P1.ident(2), Move.DefenseCurl, P1.ident(2), null);
+            // try t.log.expected.boost(P1.ident(2), .Defense, 1);
+            // try t.log.expected.turn(5);
+
+            // try expectEqual(Result.Default, try t.update(move(1), move(2)));
+
+            try t.log.expected.end(P2.ident(1), .Bide);
+            t.expected.p1.get(2).hp = 0;
+            try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
+            try t.log.expected.faint(P1.ident(2), false);
+            try t.log.expected.win(.P2);
+
+            try expectEqual(Result.Lose, try t.update(move(1), move(2)));
+        }
+
+        try t.verify();
+    }
 }
 
 test "Counter glitches" {

@@ -4715,6 +4715,7 @@ describe('Gen 1', () => {
       expect(battle.p2.pokemon[0].hp).toBe(p2hp);
 
       battle.makeChoices('switch 2', 'move 1');
+      // expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 72);
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 36);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp);
 
