@@ -4317,7 +4317,50 @@ test "Substitute effect" {
 // Pokémon Showdown Bugs
 
 test "Bide + Substitute bug" {
-    return error.SkipZigTest;
+    const BIDE_2 = MIN;
+
+    var t = Test((if (showdown)
+        (.{ BIDE_2, NOP, HIT, NOP, HIT })
+    else
+        (.{ ~CRIT, BIDE_2, HIT, HIT }))).init(
+        &.{.{ .species = .Voltorb, .moves = &.{ .SonicBoom, .Substitute } }},
+        &.{.{ .species = .Chansey, .moves = &.{ .Bide, .Teleport } }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Substitute, P1.ident(1), null);
+    try t.log.expected.start(P1.ident(1), .Substitute);
+    t.expected.p1.get(1).hp -= 70;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Bide, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Bide);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    try expectEqual(@as(u8, 71), t.actual.p1.active.volatiles.substitute);
+
+    try t.log.expected.move(P1.ident(1), Move.SonicBoom, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 20;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.activate(P2.ident(1), .Bide);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(@boolToInt(showdown))));
+    try expectEqual(@as(u8, 71), t.actual.p1.active.volatiles.substitute);
+
+    try t.log.expected.move(P1.ident(1), Move.SonicBoom, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 20;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.end(P2.ident(1), .Bide);
+    // BUG: On Pokémon Showdown the opponent having a Substitute blanks Bid
+    // if (!showdown) try t.log.expected.end(P1.ident(1), .Substitute);
+    try t.log.expected.end(P1.ident(1), .Substitute);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(@boolToInt(showdown))));
+    // if (showdown) try expectEqual(@as(u8, 71), t.actual.p1.active.volatiles.substitute);
+
+    try t.verify();
 }
 
 test "Counter + Substitute bug" {
@@ -5056,7 +5099,7 @@ test "Bide damage accumulation glitches" {
             try expectEqual(Result.Default, try t.update(swtch(2), .{}));
             try expectEqual(@as(u16, 191), t.actual.p2.active.volatiles.state);
 
-            // BUG: On Pokémon Showdown if the Bide user goes first an extra turn of damage gets accumulated
+            // BUG: On Pokémon Showdown if the Bide user goes first it lasts an extra turn
             // try t.log.expected.activate(P2.ident(1), .Bide);
             // try t.log.expected.move(P1.ident(2), Move.DefenseCurl, P1.ident(2), null);
             // try t.log.expected.boost(P1.ident(2), .Defense, 1);

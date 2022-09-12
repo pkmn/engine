@@ -4076,7 +4076,7 @@ describe('Gen 1', () => {
 
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp);
-    // expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(31);
+    // expect(battle.p1.pokemon[0].volatiles['substitute']).toBeUndefined();
     expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(71);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 20);
 
