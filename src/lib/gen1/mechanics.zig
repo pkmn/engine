@@ -114,8 +114,8 @@ fn checkLocked(battle: anytype, n: u2) void {
     if (!showdown) return;
     // Emitting |request| advances the RNG on Pokémon Showdown if the side has a "locked" move,
     // but the RNG advances by 2 during choice verification because getLockedMove gets called twice
-    battle.rng.advance(n * (@as(u2, @boolToInt(isLocked(battle.side(.P1)))) +
-        @as(u2, @boolToInt(isLocked(battle.side(.P2))))));
+    battle.rng.advance(n * (@as(u3, @boolToInt(isLocked(battle.side(.P1)))) +
+        @as(u3, @boolToInt(isLocked(battle.side(.P2))))));
 }
 
 fn checkChange(battle: anytype) void {
@@ -402,7 +402,7 @@ fn executeMove(
             // technically be from this Pokémon because it must be exactly 1 to not desync and
             // every Pokémon must have at least one move
             if (mslot != 1 or side.active.move(mslot).id != side.last_selected_move) {
-                return Result.Error;
+                if (from == null or side.active.move(mslot).id != from.?) return Result.Error;
             } else {
                 auto = true;
             }
@@ -616,6 +616,7 @@ fn canMove(
     const player_ident = battle.active(player);
     const move = Move.get(side.last_selected_move);
     const locked = showdown and isLocked(side);
+    const special = from != null and (from.? == .MirrorMove or from.? == .Metronome);
 
     var skip = skip_pp;
     if (side.active.volatiles.Charging) {
@@ -623,6 +624,9 @@ fn canMove(
         side.active.volatiles.Invulnerable = false;
         if (showdown) skip = true;
     } else if (move.effect == .Charge) {
+        if (showdown and special) {
+            battle.rng.advance(Move.frames(side.last_selected_move, .resolve));
+        }
         try log.move(player_ident, side.last_selected_move, .{}, from);
         try Effects.charge(battle, player, log);
         // Pokémon Showdown thinks that the first turn of charging counts as using a move
@@ -637,11 +641,11 @@ fn canMove(
     // Getting a "locked" move advances the RNG due to a speed sort in Pokémon Showdown's runMove
     if (locked) battle.rng.advance(1);
 
-    side.last_used_move = side.last_selected_move;
+    if (!showdown or !special) side.last_used_move = side.last_selected_move;
     if (!skip) decrementPP(side, mslot, auto);
 
-    // FIXME: Metronome / Mirror Move call getRandomTarget if the move they proc targets
-    // if (showdown and special) battle.rng.advance(@boolToInt(move.target != .Self));
+    // Metronome / Mirror Move call getRandomTarget if the move they proc targets
+    if (showdown and special) battle.rng.advance(Move.frames(side.last_selected_move, .resolve));
 
     const target = if (move.target == .Self) player else player.foe();
     try log.move(player_ident, side.last_selected_move, battle.active(target), from);
@@ -1186,8 +1190,7 @@ fn mirrorMove(battle: anytype, player: Player, choice: Choice, log: anytype) !?R
     const foe = battle.foe(player);
 
     if (foe.last_used_move == .None or foe.last_used_move == .MirrorMove) {
-        try log.lastmiss();
-        try log.miss(battle.active(player));
+        try log.fail(battle.active(player), .None);
         return null;
     }
 

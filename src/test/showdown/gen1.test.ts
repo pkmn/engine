@@ -3729,9 +3729,11 @@ describe('Gen 1', () => {
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 43);
 
     // Pokémon Showdown sets last_used_move incorrectly, this should succeed
+    expect(battle.p2.lastMove!.id).toBe('mirrormove'); // should be 'peck'
     battle.makeChoices('move 1', 'move 2');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 74);
 
+    expect(battle.p1.lastMove!.id).toBe('mirrormove'); // should be 'peck'
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 74);
 
@@ -3740,8 +3742,11 @@ describe('Gen 1', () => {
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 86);
 
-    // Switching rests last used moves
+    // Switching resets last used moves
     battle.makeChoices('move 1', 'switch 2');
+
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(28);
+    expect(battle.p2.pokemon[1].moveSlots[0].pp).toBe(28);
 
     verify(battle, [
       '|move|p1a: Fearow|Mirror Move|p1a: Fearow',
@@ -5243,7 +5248,7 @@ describe('Gen 1', () => {
 
     // Using a Fire-type move after should do nothing to fix the problem
     battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 129);
+    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 90);
 
     expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
 

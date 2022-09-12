@@ -3187,7 +3187,10 @@ test "Counter effect" {
     // zig fmt: on
     ).init(
         &.{
-            .{ .species = .Voltorb, .moves = &.{ .Thunderbolt, .DoubleSlap, .Counter, .SonicBoom } },
+            .{
+                .species = .Voltorb,
+                .moves = &.{ .Thunderbolt, .DoubleSlap, .Counter, .SonicBoom },
+            },
             .{ .species = .Gengar, .moves = &.{ .Teleport, .SeismicToss } },
             .{ .species = .Snorlax, .moves = &.{ .LovelyKiss, .Reflect } },
         },
@@ -3882,7 +3885,144 @@ test "Metronome effect" {
 test "MirrorMove effect" {
     // The user uses the last move used by the target. Fails if the target has not made a move, or
     // if the last move used was Mirror Move.
-    return error.SkipZigTest;
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, ~CRIT, MIN_DMG,
+            NOP, NOP, ~CRIT, MIN_DMG, NOP, ~CRIT, MIN_DMG,
+            NOP, NOP, NOP, NOP, NOP, NOP,
+            NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG,
+        } else .{
+            ~CRIT, ~CRIT, ~CRIT, MIN_DMG, HIT, ~CRIT, ~CRIT, MIN_DMG, HIT,
+            ~CRIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+            ~CRIT, ~CRIT, MIN_DMG, ~CRIT, ~CRIT, MIN_DMG,
+            ~CRIT, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, ~HIT, ~CRIT,
+            ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, ~HIT, ~CRIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Fearow, .moves = &.{ .MirrorMove, .Peck, .Fly } }},
+        &.{
+            .{ .species = .Pidgeot, .moves = &.{ .MirrorMove, .Swift } },
+            .{ .species = .Pidgeotto, .moves = &.{.Gust} },
+        },
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), null);
+    try t.log.expected.fail(P1.ident(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.MirrorMove, P2.ident(1), null);
+    try t.log.expected.fail(P2.ident(1), .None);
+    try t.log.expected.turn(2);
+
+    // Can't Mirror Move if no move has been used or if Mirror Move is last used
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.Peck, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 43;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.MirrorMove, P2.ident(1), null);
+    try t.log.expected.move(P2.ident(1), Move.Peck, P1.ident(1), Move.MirrorMove);
+    t.expected.p1.get(1).hp -= 44;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(3);
+
+    // Can Mirror Move regular attacks
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    try expectEqual(if (showdown) Move.MirrorMove else Move.Peck, t.actual.p2.last_used_move);
+
+    try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), null);
+    if (showdown) {
+        try t.log.expected.fail(P1.ident(1), .None);
+    } else {
+        try t.log.expected.move(P1.ident(1), Move.Peck, P2.ident(1), Move.MirrorMove);
+        t.expected.p2.get(1).hp -= 43;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    }
+    try t.log.expected.move(P2.ident(1), Move.Swift, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 74;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(4);
+
+    // Pokémon Showdown sets last_used_move incorrectly, this should succeed
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    try expectEqual(if (showdown) Move.MirrorMove else Move.Peck, t.actual.p1.last_used_move);
+
+    try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), null);
+    try t.log.expected.move(P1.ident(1), Move.Swift, P2.ident(1), Move.MirrorMove);
+    t.expected.p2.get(1).hp -= 74;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.MirrorMove, P2.ident(1), null);
+    if (showdown) {
+        try t.log.expected.fail(P2.ident(1), .None);
+    } else {
+        try t.log.expected.move(P2.ident(1), Move.Swift, P1.ident(1), Move.MirrorMove);
+        t.expected.p1.get(1).hp -= 74;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    }
+    try t.log.expected.turn(5);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.Fly, .{}, null);
+    try t.log.expected.laststill();
+    try t.log.expected.prepare(P1.ident(1), Move.Fly);
+    try t.log.expected.move(P2.ident(1), Move.MirrorMove, P2.ident(1), null);
+    if (showdown) {
+        try t.log.expected.move(P2.ident(1), Move.Fly, .{}, Move.MirrorMove);
+        try t.log.expected.laststill();
+        try t.log.expected.prepare(P2.ident(1), Move.Fly);
+    } else {
+        try t.log.expected.move(P2.ident(1), Move.Swift, P1.ident(1), Move.MirrorMove);
+        t.expected.p1.get(1).hp -= 74;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    }
+    try t.log.expected.turn(6);
+
+    // Should actually copy Swift and not Fly
+    try expectEqual(Result.Default, try t.update(move(3), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.Fly, P2.ident(1), Move.Fly);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P1.ident(1));
+    if (showdown) {
+        try t.log.expected.move(P2.ident(1), Move.Fly, P1.ident(1), Move.Fly);
+        t.expected.p1.get(1).hp -= 86;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    } else {
+        try t.log.expected.move(P2.ident(1), Move.MirrorMove, P2.ident(1), null);
+        try t.log.expected.move(P2.ident(1), Move.Fly, .{}, Move.MirrorMove);
+        try t.log.expected.laststill();
+        try t.log.expected.prepare(P2.ident(1), Move.Fly);
+    }
+    try t.log.expected.turn(7);
+
+    try expectEqual(Result.Default, try t.update(move(@boolToInt(showdown)), move(1)));
+
+    if (!showdown) {
+        try t.log.expected.move(P1.ident(1), Move.Peck, P2.ident(1), null);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P1.ident(1));
+        try t.log.expected.move(P2.ident(1), Move.Fly, P1.ident(1), Move.Fly);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P2.ident(1));
+        try t.log.expected.turn(8);
+
+        try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    }
+
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), null);
+    try t.log.expected.fail(P1.ident(1), .None);
+    try t.log.expected.turn(if (showdown) 8 else 9);
+
+    // Switching resets last used moves
+    try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+
+    try expectEqual(@as(u8, 28), t.actual.p1.get(1).move(1).pp);
+    try expectEqual(@as(u8, if (showdown) 28 else 26), t.actual.p2.get(2).move(1).pp);
+
+    try t.verify();
 }
 
 // Move.{SelfDestruct,Explosion}
