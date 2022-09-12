@@ -4511,7 +4511,7 @@ test "Mirror Move recharge bug" {
     var t = Test((if (showdown)
         (.{ NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, ~CRIT, MAX_DMG, NOP, NOP })
     else
-        (.{~CRIT, MIN_DMG, HIT, ~CRIT, ~CRIT, MAX_DMG, HIT, ~CRIT}))).init(
+        (.{ ~CRIT, MIN_DMG, HIT, ~CRIT, ~CRIT, MAX_DMG, HIT, ~CRIT }))).init(
         &.{
             .{ .species = .Kadabra, .moves = &.{.HyperBeam} },
             .{ .species = .Haunter, .moves = &.{.Teleport} },
@@ -6159,7 +6159,50 @@ test "Trapping sleep glitch" {
 test "Partial trapping move Mirror Move glitch" {
     // https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
     // https://pkmn.cc/bulba-glitch-1##Mirror_Move_glitch
-    return error.SkipZigTest;
+    const MIN_WRAP = MIN;
+
+    var t = Test((if (showdown)
+        (.{ NOP, ~HIT, NOP, NOP, HIT, ~CRIT, MAX_DMG, MIN_WRAP, NOP })
+    else
+        (.{ ~CRIT, MIN_WRAP, ~CRIT, MAX_DMG, ~HIT, ~CRIT, MIN_WRAP, ~CRIT, MAX_DMG, HIT }))).init(
+        &.{.{ .species = .Pidgeot, .moves = &.{ .Agility, .MirrorMove } }},
+        &.{
+            .{ .species = .Moltres, .moves = &.{ .Leer, .FireSpin } },
+            .{ .species = .Drowzee, .moves = &.{.Pound} },
+        },
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Agility, P1.ident(1), null);
+    try t.log.expected.boost(P1.ident(1), .Speed, 2);
+    try t.log.expected.move(P2.ident(1), Move.FireSpin, P1.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+
+    try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), null);
+    try t.log.expected.move(P1.ident(1), Move.FireSpin, P2.ident(1), Move.MirrorMove);
+    try t.log.expected.resisted(P2.ident(1));
+    t.expected.p2.get(1).hp -= 5;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.cant(P2.ident(1), .Trapped);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+
+    if (showdown) {
+        try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+        try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), null);
+        try t.log.expected.fail(P1.ident(1), .None);
+        try t.log.expected.turn(4);
+    }
+
+    const result = if (showdown) Result.Default else Result.Error;
+    try expectEqual(result, try t.update(move(if (showdown) 2 else 0), swtch(2)));
+
+    try t.verify();
 }
 
 test "Rage and Thrash / Petal Dance accuracy bug" {
