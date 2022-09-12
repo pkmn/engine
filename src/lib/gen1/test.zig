@@ -5370,7 +5370,106 @@ test "Hyper Beam automatic selection glitch" {
 test "Invulnerability glitch" {
     // https://pkmn.cc/bulba-glitch-1#Invulnerability_glitch
     // https://glitchcity.wiki/Invulnerability_glitch
-    return error.SkipZigTest;
+    const PAR_CAN = MAX;
+    const PAR_CANT = MIN;
+
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, HIT, NOP,
+            NOP, NOP, PAR_CAN, NOP, NOP,
+            NOP, NOP, NOP, NOP, PAR_CANT, HIT, ~CRIT, MIN_DMG, NOP,
+            NOP, PAR_CAN, NOP, ~CRIT, MIN_DMG,
+            NOP, NOP, PAR_CAN, NOP, NOP,
+            NOP, NOP, NOP, NOP, PAR_CAN, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, NOP,
+        } else .{
+            ~CRIT, HIT,
+            PAR_CAN, ~CRIT, MIN_DMG,
+            PAR_CANT, ~CRIT, MIN_DMG,
+            PAR_CAN, ~CRIT, ~CRIT, MIN_DMG,
+            PAR_CAN, ~CRIT, MIN_DMG,
+            PAR_CAN, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Fearow, .moves = &.{ .Agility, .Fly } }},
+        &.{.{
+            .species = .Pikachu,
+            .level = 50,
+            .moves = &.{ .ThunderWave, .ThunderShock, .Swift },
+        }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Agility, P1.ident(1), null);
+    try t.log.expected.boost(P1.ident(1), .Speed, 2);
+    try t.log.expected.move(P2.ident(1), Move.ThunderWave, P1.ident(1), null);
+    t.expected.p1.get(1).status = Status.init(.PAR);
+    try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(t.expected.p1.get(1).status, t.actual.p1.get(1).status);
+
+    try t.log.expected.move(P1.ident(1), Move.Fly, .{}, null);
+    try t.log.expected.laststill();
+    try t.log.expected.prepare(P1.ident(1), Move.Fly);
+    try t.log.expected.move(P2.ident(1), Move.ThunderShock, P1.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+
+    try t.log.expected.cant(P1.ident(1), .Paralysis);
+    try t.log.expected.move(P2.ident(1), Move.ThunderShock, P1.ident(1), null);
+    if (showdown) {
+        try t.log.expected.supereffective(P1.ident(1));
+        t.expected.p1.get(1).hp -= 25;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    } else {
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P2.ident(1));
+    }
+    try t.log.expected.turn(4);
+
+    // After Fly is interrupted by Paralysis, Invulnerability should be preserved
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+
+    try t.log.expected.move(P1.ident(1), Move.Agility, P1.ident(1), null);
+    try t.log.expected.boost(P1.ident(1), .Speed, 2);
+    try t.log.expected.move(P2.ident(1), Move.Swift, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 11;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(5);
+
+    // Swift should still be able to hit
+    try expectEqual(Result.Default, try t.update(move(1), move(3)));
+
+    try t.log.expected.move(P1.ident(1), Move.Fly, .{}, null);
+    try t.log.expected.laststill();
+    try t.log.expected.prepare(P1.ident(1), Move.Fly);
+    try t.log.expected.move(P2.ident(1), Move.ThunderShock, P1.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    try t.log.expected.turn(6);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+
+    try t.log.expected.move(P1.ident(1), Move.Fly, P2.ident(1), Move.Fly);
+    try t.log.expected.resisted(P2.ident(1));
+    t.expected.p2.get(1).hp -= 130;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.ThunderShock, P1.ident(1), null);
+    try t.log.expected.supereffective(P1.ident(1));
+    t.expected.p1.get(1).hp -= 25;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(7);
+
+    // Successfully completing Fly removes Invulnerability
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+
+    try t.verify();
 }
 
 test "Stat modification errors" {
