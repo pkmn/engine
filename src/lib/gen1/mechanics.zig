@@ -179,7 +179,10 @@ fn selectMove(
             if (foe_choice.type == .Switch) from.* = null;
             // Pokémon Showdown overwrites Mirror Move with whatever was selected - really this
             // should set side.last_selected_move = last.id to reuse Mirror Move and fail in order
-            // to satisfy the conditions of the Desync Clause Mod
+            // to satisfy the conditions of the Desync Clause Mod. However, because Trapping is
+            // still set the selected move will not actually be used, it will just be reported as
+            // having been used (this differs from how Pokémon Showdown works, but its impossible
+            // to replicate the incorrect behavior with the correct mechanisms).
             run.* = saveMove(battle, player, choice);
         } else {
             // GLITCH: https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
@@ -587,12 +590,11 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
         assert(volatiles.attacks > 0);
         volatiles.attacks -= 1;
         const move = Move.get(side.last_selected_move);
-        assert(move.target != .Self);
         try log.move(
             battle.active(player),
             side.last_selected_move,
             battle.active(player.foe()),
-            side.last_selected_move,
+            if (move.effect == .Trapping) side.last_selected_move else null,
         );
         if (battle.last_damage != 0 or showdown) {
             _ = try applyDamage(battle, player.foe(), player.foe(), move, .None, log);

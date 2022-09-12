@@ -4460,8 +4460,51 @@ test "Mimic infinite PP bug" {
 }
 
 test "Mirror Move + Wrap bug" {
-    // TODO
-    return error.SkipZigTest;
+    const MIN_WRAP = MIN;
+
+    var t = Test((if (showdown)
+        (.{ NOP, ~HIT, NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP, NOP, NOP, NOP })
+        // (.{ NOP, ~HIT, NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP, NOP, NOP, NOP, HIT, NOP, MIN_DMG })
+    else
+        (.{ MIN_WRAP, ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_WRAP, ~CRIT, MIN_DMG, HIT }))).init(
+        &.{.{ .species = .Tentacruel, .moves = &.{ .Wrap, .Surf } }},
+        &.{.{ .species = .Pidgeot, .moves = &.{ .MirrorMove, .Gust } }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P1.ident(1));
+    try t.log.expected.move(P2.ident(1), Move.MirrorMove, P2.ident(1), null);
+    try t.log.expected.move(P2.ident(1), Move.Wrap, P1.ident(1), Move.MirrorMove);
+    t.expected.p1.get(1).hp -= 20;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    var n = t.battle.actual.choices(.P1, .Move, &choices);
+    const expected = if (showdown) &[_]Choice{ move(1), move(2) } else &[_]Choice{move(0)};
+    try expectEqualSlices(Choice, expected, choices[0..n]);
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, expected, choices[0..n]);
+
+    try t.log.expected.cant(P1.ident(1), .Trapped);
+    if (showdown) {
+        try t.log.expected.move(P2.ident(1), Move.Gust, P1.ident(1), null);
+    } else {
+        try t.log.expected.move(P2.ident(1), Move.Wrap, P1.ident(1), Move.Wrap);
+    }
+    // BUG: can't implement Pokémon Showdown's broken partialtrappinglock mechanics
+    // t.expected.p1.get(1).hp -= 49;
+    t.expected.p1.get(1).hp -= 20;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(3);
+
+    const choice = if (showdown) move(2) else move(0);
+    try expectEqual(Result.Default, try t.update(choice, choice));
+
+    try t.verify();
 }
 
 test "Mirror Move recharge bug" {
