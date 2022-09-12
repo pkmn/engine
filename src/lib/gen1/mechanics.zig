@@ -859,8 +859,6 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         hits = side.active.volatiles.attacks;
     }
 
-    // FIXME: HyperBeam [from] MirrorMove
-    _ = from;
     var nullified = false;
     var hit: u4 = 0;
     const damage = battle.last_damage;
@@ -918,7 +916,10 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     // setup before the loop means we can avoid having to waste time doing no-op handler searches.
     if (move.effect.alwaysHappens()) try moveEffect(battle, player, move, choice.data, log);
 
-    if (foe.stored().hp == 0) {
+    // Pokémon Showdown still forces Hyper Beam to recharge when it KOs its opponent if it
+    // was called via another move (eg. Mirror Move).
+    const bypass = showdown and from != null and side.last_selected_move == .HyperBeam;
+    if (foe.stored().hp == 0 and !bypass) {
         // Pokémon Showdown rolls for secondary chance even if the target fainted
         if (showdown and move.effect.isSecondaryChance()) battle.rng.advance(1);
         return null;

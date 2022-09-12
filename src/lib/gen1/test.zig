@@ -4508,8 +4508,59 @@ test "Mirror Move + Wrap bug" {
 }
 
 test "Mirror Move recharge bug" {
-    // TODO
-    return error.SkipZigTest;
+    var t = Test((if (showdown)
+        (.{ NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, ~CRIT, MAX_DMG, NOP, NOP })
+    else
+        (.{~CRIT, MIN_DMG, HIT, ~CRIT, ~CRIT, MAX_DMG, HIT, ~CRIT}))).init(
+        &.{
+            .{ .species = .Kadabra, .moves = &.{.HyperBeam} },
+            .{ .species = .Haunter, .moves = &.{.Teleport} },
+        },
+        &.{.{ .species = .Pidgeot, .moves = &.{ .MirrorMove, .Gust } }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 74;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.mustrecharge(P1.ident(1));
+    try t.log.expected.move(P2.ident(1), Move.MirrorMove, P2.ident(1), null);
+    try t.log.expected.move(P2.ident(1), Move.HyperBeam, P1.ident(1), Move.MirrorMove);
+    t.expected.p1.get(1).hp = 0;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    if (showdown) try t.log.expected.mustrecharge(P2.ident(1));
+    try t.log.expected.faint(P1.ident(1), true);
+
+    try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(move(1), move(1)));
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(swtch(2), .{}));
+
+    var n = t.battle.actual.choices(.P2, .Move, &choices);
+    // Mirror Move should not apply Hyper Beam recharge upon KOing a Pokemon
+    if (showdown) {
+        try expectEqualSlices(Choice, &[_]Choice{move(1)}, choices[0..n]);
+    } else {
+        try expectEqualSlices(Choice, &[_]Choice{ move(1), move(2) }, choices[0..n]);
+    }
+
+    try t.log.expected.move(P1.ident(2), Move.Teleport, P1.ident(2), null);
+    if (showdown) {
+        try t.log.expected.cant(P2.ident(1), .Recharge);
+    } else {
+        try t.log.expected.move(P2.ident(1), Move.MirrorMove, P2.ident(1), null);
+        try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), Move.MirrorMove);
+    }
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ move(1), move(2) }, choices[0..n]);
+
+    try t.verify();
 }
 
 test "Wrap locking + KOs bug" {
