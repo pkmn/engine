@@ -152,7 +152,7 @@ pub fn main() !void {
     } else if (tool == .metronome) {
         const range: u64 = @enumToInt(pkmn.gen1.Move.Struggle) - 2;
         const mod = @as(u2, (if (param < @enumToInt(pkmn.gen1.Move.Metronome) - 1) 1 else 2));
-        try w.print("0x{X:0>8}", .{(param - mod) * (0x100000000 / range)});
+        try w.print("0x{X:0>8}", .{((param - mod) + 1) * (0x100000000 / range) - 1});
     } else if (tool == .distribution) {
         const range: u64 = 8;
         try w.print("0x{X:0>8} 0x{X:0>8} 0x{X:0>8} 0x{X:0>8}", .{

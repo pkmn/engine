@@ -3979,7 +3979,124 @@ test "Bide effect" {
 // Move.Metronome
 test "Metronome effect" {
     // A random move is selected for use, other than Metronome or Struggle.
-    return error.SkipZigTest;
+    const MIN_WRAP = MIN;
+    const THRASH_3 = if (showdown) comptime ranged(1, 5 - 3) - 1 else MIN;
+    const CFZ_2 = MIN;
+    // const CFZ_CAN = if (showdown) comptime ranged(128, 256) - 1 else MIN;
+
+    const wrap = comptime metronome(.Wrap);
+    const petal_dance = comptime metronome(.PetalDance);
+    // const skull_bash = comptime metronome(.SkullBash);
+    // const mirror_move = comptime metronome(.MirrorMove);
+    // const fly = comptime metronome(.Fly);
+
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            wrap, NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
+            petal_dance, NOP, HIT, ~CRIT, MIN_DMG, THRASH_3,
+            NOP, NOP, NOP, ~HIT, NOP, NOP, NOP, ~HIT, CFZ_2,
+            // CFZ_CAN, skull_bash, NOP, mirror_move, mirror_move, fly, NOP, NOP, NOP,
+        } else .{
+            ~CRIT, wrap, MIN_WRAP, ~CRIT, MIN_DMG, HIT,
+            ~CRIT, petal_dance, THRASH_3, ~CRIT, MIN_DMG, HIT,
+            ~CRIT, MIN_DMG, ~HIT, CFZ_2, ~CRIT, MIN_DMG, ~HIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Clefable, .moves = &.{ .Metronome, .Teleport } }},
+        &.{.{ .species = .Primeape, .moves = &.{ .Metronome, .Mimic, .FurySwipes } }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
+    try t.log.expected.move(P2.ident(1), Move.Wrap, P1.ident(1), Move.Metronome);
+    t.expected.p1.get(1).hp -= 14;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.cant(P1.ident(1), .Trapped);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    var n = t.battle.actual.choices(.P1, .Move, &choices);
+    const choice = move(@boolToInt(showdown));
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(
+        Choice,
+        if (showdown) &[_]Choice{ move(1), move(2), move(3) } else &[_]Choice{choice},
+        choices[0..n],
+    );
+
+    // BUG: can't implement Pokémon Showdown's broken partialtrappinglock mechanics
+    // try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
+    // try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), Move.Metronome);
+    // t.expected.p1.get(1).hp -= 41;
+    // try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    // try t.log.expected.cant(P1.ident(1), .Trapped);
+    // try t.log.expected.turn(3);
+
+    // try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    if (showdown) {
+        try t.log.expected.move(P2.ident(1), Move.Metronome, P1.ident(1), null);
+    } else {
+        try t.log.expected.move(P2.ident(1), Move.Wrap, P1.ident(1), Move.Wrap);
+    }
+    t.expected.p1.get(1).hp -= 14;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.cant(P1.ident(1), .Trapped);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(choice, choice));
+
+    try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
+    try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), Move.Metronome);
+    t.expected.p1.get(1).hp -= 41;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{choice}, choices[0..n]);
+
+    try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), Move.PetalDance);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.turn(5);
+
+    try expectEqual(Result.Default, try t.update(move(2), choice));
+
+    if (!showdown) try t.log.expected.start(P2.ident(1), .ConfusionSilent);
+    try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), Move.PetalDance);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    if (showdown) try t.log.expected.start(P2.ident(1), .ConfusionSilent);
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.turn(6);
+
+    try expectEqual(Result.Default, try t.update(move(2), choice));
+
+    // try t.log.expected.activate(P2.ident(1), .Confusion);
+    // try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
+    // try t.log.expected.move(P2.ident(1), Move.SkullBash, .{}, Move.Metronome);
+    // try t.log.expected.laststill();
+    // try t.log.expected.prepare(P2.ident(1), Move.SkullBash);
+    // try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
+    // try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
+    // try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
+    // try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
+    // try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
+    // try t.log.expected.move(P1.ident(1), Move.Fly, .{}, Move.Metronome);
+    // try t.log.expected.laststill();
+    // try t.log.expected.prepare(P1.ident(1), Move.Fly);
+    // try t.log.expected.turn(7);
+
+    // try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.verify();
 }
 
 // Move.MirrorMove
@@ -5275,6 +5392,7 @@ test "Freeze top move selection glitch" {
     try t.log.expected.cant(P1.ident(1), .Freeze);
     try t.log.expected.turn(2);
 
+    // last_selected_move is Amnesia before getting Frozen
     try expectEqual(Result.Default, try t.update(move(2), move(1)));
     try expectEqual(t.expected.p1.get(1).status, t.actual.p1.get(1).status);
 
@@ -5308,6 +5426,7 @@ test "Freeze top move selection glitch" {
         try t.log.expected.turn(4);
     }
 
+    // last_selected_move is still Amnesia but desync occurs as Psychic gets chosen
     const choice = if (showdown) move(3) else move(0);
     const result = if (showdown) Result.Default else Result.Error;
     try expectEqual(result, try t.update(choice, move(2)));
@@ -6872,6 +6991,14 @@ fn formatter(kind: protocol.Kind, byte: u8) []const u8 {
         .Type => @tagName(@intToEnum(Type, byte)),
         .Status => Status.name(byte),
     };
+}
+
+fn metronome(comptime m: Move) U {
+    const param = @enumToInt(m);
+    if (!showdown) return param;
+    const range: u64 = @enumToInt(Move.Struggle) - 2;
+    const mod = @as(u2, (if (param < @enumToInt(Move.Metronome) - 1) 1 else 2));
+    return comptime ranged((param - mod) + 1, range) - 1;
 }
 
 comptime {

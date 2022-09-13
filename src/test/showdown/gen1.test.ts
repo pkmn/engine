@@ -3617,10 +3617,12 @@ describe('Gen 1', () => {
     const battle = startBattle([
       METRONOME('Wrap'), SRF_USE, HIT, NO_CRIT, MIN_DMG, wrap,
       METRONOME('Petal Dance'), SRF_USE, HIT, NO_CRIT, MIN_DMG, THRASH(3),
-      SRF_RES, SRF_RES, SRF_RUN, MISS, METRONOME('Mirror Move'),
+      SRF_RES, SRF_RES, SRF_RUN, MISS,
+      SRF_RES, SRF_RES, SRF_RUN, MISS, CFZ(2),
+      CFZ_CAN, METRONOME('Skull Bash'), SRF_USE, METRONOME('Mirror Move'),
       METRONOME('Mirror Move'), METRONOME('Fly'), SRF_USE, SS_RES, GLM,
-      GLM, GLM, SRF_RES, SRF_RES, SRF_RES, SRF_RUN, CFZ(2), SS_RUN, MISS,
-      CFZ_CAN, METRONOME('Mimic'), SRF_USE, MIMIC(2, 2), METRONOME('Disable'),
+      GLM, GLM, SRF_RES, SS_RUN, MISS,
+      METRONOME('Mimic'), SRF_USE, MIMIC(2, 2), METRONOME('Disable'),
       SRF_USE, HIT, DISABLE_DURATION(3), DISABLE_MOVE(2, 3),
       METRONOME('Rage'), SRF_USE, HIT, NO_CRIT, MIN_DMG,
       METRONOME('Swift'), SRF_USE, NO_CRIT, MIN_DMG,
@@ -3643,7 +3645,11 @@ describe('Gen 1', () => {
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 41);
     expect(choices(battle, 'p2')).toEqual(['move 1']);
 
-    // Metronome -> Mirror Move -> Metronome recursion is allowed
+    battle.makeChoices('move 2', 'move 1');
+    battle.makeChoices('move 2', 'move 1');
+
+    // Metronome -> Mirror Move -> Metronome recursion is allowed, though only works on cartridge
+    // after a charging move (and will crash on Pokémon Showdown if it recurses more than twice).
     battle.makeChoices('move 1', 'move 1');
     expect(choices(battle, 'p1')).toEqual(['move 1']);
     expect(choices(battle, 'p2')).toEqual(['move 1']);
@@ -3673,6 +3679,17 @@ describe('Gen 1', () => {
       '|turn|3',
       '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from]Petal Dance|[miss]',
       '|-miss|p2a: Primeape',
+      '|move|p1a: Clefable|Teleport|p1a: Clefable',
+      '|turn|4',
+      '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from]Petal Dance|[miss]',
+      '|-miss|p2a: Primeape',
+      '|-start|p2a: Primeape|confusion|[silent]',
+      '|move|p1a: Clefable|Teleport|p1a: Clefable',
+      '|turn|5',
+      '|-activate|p2a: Primeape|confusion',
+      '|move|p2a: Primeape|Metronome|p2a: Primeape',
+      '|move|p2a: Primeape|Skull Bash||[from]Metronome|[still]',
+      '|-prepare|p2a: Primeape|Skull Bash',
       '|move|p1a: Clefable|Metronome|p1a: Clefable',
       '|move|p1a: Clefable|Mirror Move|p1a: Clefable|[from]Metronome',
       '|move|p1a: Clefable|Metronome|p1a: Clefable|[from]Mirror Move',
@@ -3680,22 +3697,20 @@ describe('Gen 1', () => {
       '|move|p1a: Clefable|Metronome|p1a: Clefable|[from]Mirror Move',
       '|move|p1a: Clefable|Fly||[from]Metronome|[still]',
       '|-prepare|p1a: Clefable|Fly',
-      '|turn|4',
-      '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from]Petal Dance|[miss]',
+      '|turn|6',
+      '|-end|p2a: Primeape|confusion',
+      '|move|p2a: Primeape|Skull Bash|p1a: Clefable|[from]Skull Bash|[miss]',
       '|-miss|p2a: Primeape',
-      '|-start|p2a: Primeape|confusion|[silent]',
       '|move|p1a: Clefable|Fly|p2a: Primeape|[from]Fly|[miss]',
       '|-miss|p1a: Clefable',
-      '|turn|5',
-      '|-activate|p2a: Primeape|confusion',
+      '|turn|7',
       '|move|p2a: Primeape|Metronome|p2a: Primeape',
       '|move|p2a: Primeape|Mimic|p1a: Clefable|[from]Metronome',
       '|-start|p2a: Primeape|Mimic|Teleport',
       '|move|p1a: Clefable|Metronome|p1a: Clefable',
       '|move|p1a: Clefable|Disable|p2a: Primeape|[from]Metronome',
       '|-start|p2a: Primeape|Disable|Teleport',
-      '|turn|6',
-      '|-end|p2a: Primeape|confusion',
+      '|turn|8',
       '|move|p2a: Primeape|Metronome|p2a: Primeape',
       '|move|p2a: Primeape|Rage|p1a: Clefable|[from]Metronome',
       '|-damage|p1a: Clefable|319/393',
@@ -3703,7 +3718,7 @@ describe('Gen 1', () => {
       '|move|p1a: Clefable|Swift|p2a: Primeape|[from]Metronome',
       '|-damage|p2a: Primeape|261/333',
       '|-boost|p2a: Primeape|atk|1|[from] Rage',
-      '|turn|7',
+      '|turn|9',
     ]);
   });
 

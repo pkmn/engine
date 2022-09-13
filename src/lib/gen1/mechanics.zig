@@ -158,8 +158,8 @@ fn selectMove(
     if (volatiles.Thrashing or volatiles.Charging) {
         // Pokémon Showdown uses last_used_move here because it overwrites it on the first turn of
         // the Charging effect but on the cartridge we don't have that data so we fall back to the
-        // last_selected_move (both should be equivalent at this point on Pokémon Showdown)
-        assert(!showdown or side.last_selected_move == side.last_used_move);
+        // last_selected_move (last_used_move will differ if the move was proc-ed via Metronome /
+        // Mirror Move but they will be equivalent at this point on Pokémon Showdown).
         from.* = side.last_selected_move;
         if (showdown) run.* = saveMove(battle, player, null);
         return null;
@@ -247,12 +247,6 @@ fn saveMove(battle: anytype, player: Player, choice: ?Choice) u8 {
                 battle.last_selected_indexes.p2 = c.data;
             }
         }
-    } else {
-        assert(showdown);
-        // The choice's move slot isn't useful as Pokémon Showdown will always make the "forced"
-        // choice to be slot 1. Overwriting the last_selected_move with the last_used_move in this
-        // case ensures we actually call the correct move.
-        side.last_selected_move = side.last_used_move;
     }
 
     if (!showdown) return 0;
@@ -395,17 +389,16 @@ fn executeMove(
         else
             battle.last_selected_indexes.p2);
         // GLITCH: Struggle bypass PP underflow via Hyper Beam / Trapping-switch auto selection
-        auto = side.last_selected_move == .HyperBeam or
-            Move.get(side.last_selected_move).effect == .Trapping;
-        // If it wasn't Hyper Beam or the continuation of a Trapping move/Bide effect then we must
-        // have just thawed, in which case we will desync unless the last_selected_move
-        // happened to be at index 1 and the current Pokémon has the same move in its first slot
-        if (!auto and side.last_selected_move != .Bide) {
+        auto = side.last_selected_move == .HyperBeam or from != null or side.active.volatiles.Bide;
+        // If it wasn't Hyper Beam or the continuation of a move effect then we must have just
+        // thawed, in which case we will desync unless the last_selected_move happened to be at
+        // index 1 and the current Pokémon has the same move in its first slot.
+        if (!auto) {
             // side.active.moves(slot) is safe to check even though the slot in question might not
             // technically be from this Pokémon because it must be exactly 1 to not desync and
             // every Pokémon must have at least one move
             if (mslot != 1 or side.active.move(mslot).id != side.last_selected_move) {
-                if (from == null or side.active.move(mslot).id != from.?) return Result.Error;
+                return Result.Error;
             } else {
                 auto = true;
             }
@@ -828,7 +821,9 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
             }
         } else if (showdown and move.effect == .Thrashing) {
             if (side.active.volatiles.Thrashing) {
-                thrashed = handleThrashing(battle, &side.active);
+                if (handleThrashing(battle, &side.active)) {
+                    try log.start(battle.active(player), .ConfusionSilent);
+                }
             } else {
                 Effects.thrashing(battle, player);
             }
