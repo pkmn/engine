@@ -3449,8 +3449,8 @@ describe('Gen 1', () => {
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 96);
 
     battle.makeChoices('move 4', 'move 4');
-    // expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(5);
-    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(4);
+    // expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(4);
+    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(5);
     // expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 42 - 96));
     expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 42 - 120));
 
@@ -5165,13 +5165,13 @@ describe('Gen 1', () => {
     }
   });
 
-  test.skip('Hyper Beam + Freeze permanent helplessness', () => {
+  test('Hyper Beam + Freeze permanent helplessness', () => {
     const NO_BRN = {key: FRZ.key, value: FRZ.value + 1};
     const battle = startBattle([
       SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
-      SRF_RES, SRF_RUN, SRF_RES, HIT, NO_CRIT, MIN_DMG,
-      SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, NO_BRN, SRF_RUN,
-      SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, NO_BRN, HIT, NO_CRIT, MIN_DMG,
+      SRF_RES, SRF_RUN, SRF_RES, SRF_RUN,
+      SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, NO_BRN, MISS,
+      SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, NO_BRN, MISS,
     ], [
       {species: 'Chansey', evs, moves: ['Hyper Beam', 'Soft-Boiled']},
       {species: 'Blastoise', evs, moves: ['Hydro Pump']},
@@ -5182,7 +5182,6 @@ describe('Gen 1', () => {
 
     let chansey = battle.p1.pokemon[0].hp;
     let lapras = battle.p2.pokemon[0].hp;
-    let charizard = battle.p2.pokemon[1].hp;
 
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(chansey -= 39);
@@ -5196,22 +5195,22 @@ describe('Gen 1', () => {
     expect(battle.p1.pokemon[0].status).toBe('');
     expect(battle.p2.pokemon[0].hp).toBe(lapras);
 
-    expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+    expect(choices(battle, 'p1')).toEqual(['move 1']);
 
     battle.makeChoices('move 1', 'switch 2');
-    expect(battle.p2.pokemon[0].hp).toBe(charizard -= 69);
 
-    expect(choices(battle, 'p1')).toEqual(['move 1']);
+    // expect(choices(battle, 'p1')).toEqual(['move 1']);
+    expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
 
     // Using a Fire-type move after should do nothing to fix the problem
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(chansey -= 90);
 
+    // expect(choices(battle, 'p1')).toEqual(['move 1']);
     expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
 
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(chansey -= 90);
-    expect(battle.p2.pokemon[0].hp).toBe(charizard -= 69);
 
     verify(battle, [
       '|move|p1a: Chansey|Hyper Beam|p2a: Lapras',
@@ -5226,22 +5225,19 @@ describe('Gen 1', () => {
       '|-activate|p2a: Lapras|move: Haze',
       '|-clearallboost|[silent]',
       '|-curestatus|p1a: Chansey|frz|[silent]',
-      '|-end|p1a: Chansey|mustrecharge|[silent]',
       '|turn|3',
       '|switch|p2a: Charizard|Charizard|359/359',
-      '|move|p1a: Chansey|Hyper Beam|p2a: Charizard',
-      '|-damage|p2a: Charizard|290/359',
-      '|-mustrecharge|p1a: Chansey',
+      '|cant|p1a: Chansey|recharge',
       '|turn|4',
       '|move|p2a: Charizard|Flamethrower|p1a: Chansey',
       '|-damage|p1a: Chansey|574/703',
-      '|cant|p1a: Chansey|recharge',
+      '|move|p1a: Chansey|Hyper Beam|p2a: Charizard|[miss]',
+      '|-miss|p1a: Chansey',
       '|turn|5',
       '|move|p2a: Charizard|Flamethrower|p1a: Chansey',
       '|-damage|p1a: Chansey|484/703',
-      '|move|p1a: Chansey|Hyper Beam|p2a: Charizard',
-      '|-damage|p2a: Charizard|221/359',
-      '|-mustrecharge|p1a: Chansey',
+      '|move|p1a: Chansey|Hyper Beam|p2a: Charizard|[miss]',
+      '|-miss|p1a: Chansey',
       '|turn|6',
     ]);
   });

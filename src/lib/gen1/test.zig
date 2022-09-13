@@ -6076,70 +6076,111 @@ test "Hyper Beam + Freeze permanent helplessness" {
     // https://pkmn.cc/bulba-glitch-1#Hyper_Beam_.2B_Freeze_permanent_helplessness
     // https://glitchcity.wiki/Haze_glitch
     // https://www.youtube.com/watch?v=gXQlct-DvVg
-    // const FRZ = comptime ranged(26, 256) - 1;
-    // // const NO_BRN = FRZ + 1;
+    const FRZ = comptime ranged(26, 256) - 1;
+    const NO_BRN = FRZ + 1;
 
-    // var t = Test(
-    // // zig fmt: off
-    //     if (showdown) .{
-    //         NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
-    //         NOP, NOP, // NOP, HIT, ~CRIT, MIN_DMG,
-    //         // NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_BRN, NOP,
-    //         // NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_BRN, HIT, ~CRIT, MIN_DMG,
-    //     } else .{
-    //         ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, FRZ,
-    //     }
-    // // zig fmt: on
-    // ).init(
-    //     &.{
-    //         .{ .species = .Chansey, .moves = &.{ .HyperBeam, .SoftBoiled } },
-    //         .{ .species = .Blastoise, .moves = &.{.HydroPump} },
-    //     },
-    //     &.{
-    //         .{ .species = .Lapras, .level = 56, .moves = &.{ .Blizzard, .Haze } },
-    //         .{ .species = .Charizard, .moves = &.{.Flamethrower} },
-    //     },
-    // );
-    // defer t.deinit();
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
+            NOP, NOP, NOP, NOP,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_BRN, ~HIT,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_BRN, ~HIT,
+        } else .{
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, FRZ,
+            ~CRIT, MIN_DMG, HIT, NO_BRN, ~CRIT, MIN_DMG, HIT, NO_BRN,
+        }
+    // zig fmt: on
+    ).init(
+        &.{
+            .{ .species = .Chansey, .moves = &.{ .HyperBeam, .SoftBoiled } },
+            .{ .species = .Blastoise, .moves = &.{.HydroPump} },
+        },
+        &.{
+            .{ .species = .Lapras, .level = 56, .moves = &.{ .Blizzard, .Haze } },
+            .{ .species = .Charizard, .moves = &.{.Flamethrower} },
+        },
+    );
+    defer t.deinit();
 
-    // try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), null);
-    // t.expected.p2.get(1).hp -= 120;
-    // try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    // try t.log.expected.mustrecharge(P1.ident(1));
-    // try t.log.expected.move(P2.ident(1), Move.Blizzard, P1.ident(1), null);
-    // t.expected.p1.get(1).hp -= 39;
-    // try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-    // t.expected.p1.get(1).status = Status.init(.FRZ);
-    // try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
-    // try t.log.expected.turn(2);
+    try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 120;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.mustrecharge(P1.ident(1));
+    try t.log.expected.move(P2.ident(1), Move.Blizzard, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 39;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    t.expected.p1.get(1).status = Status.init(.FRZ);
+    try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+    try t.log.expected.turn(2);
 
-    // try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    // try expectEqual(t.expected.p1.get(1).status, t.actual.p1.get(1).status);
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(t.expected.p1.get(1).status, t.actual.p1.get(1).status);
 
-    // var n = t.battle.actual.choices(.P1, .Move, &choices);
-    // try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
+    var n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
-    // try t.log.expected.cant(P1.ident(1), .Freeze);
-    // try t.log.expected.move(P2.ident(1), Move.Haze, P2.ident(1), null);
-    // try t.log.expected.activate(P2.ident(1), .Haze);
-    // try t.log.expected.clearallboost();
-    // try t.log.expected.curestatus(P1.ident(1), t.expected.p1.get(1).status, .Silent);
-    // t.expected.p1.get(1).status = 0;
-    // try t.log.expected.turn(3);
+    try t.log.expected.cant(P1.ident(1), .Freeze);
+    try t.log.expected.move(P2.ident(1), Move.Haze, P2.ident(1), null);
+    try t.log.expected.activate(P2.ident(1), .Haze);
+    try t.log.expected.clearallboost();
+    try t.log.expected.curestatus(P1.ident(1), t.expected.p1.get(1).status, .Silent);
+    t.expected.p1.get(1).status = 0;
+    try t.log.expected.turn(3);
 
-    // // After thawing Chansey should still be stuck recharging
-    // try expectEqual(Result.Default, try t.update(move(1), move(2)));
-    // try expectEqual(t.expected.p1.get(1).status, t.actual.p1.get(1).status);
+    // After thawing Chansey should still be stuck recharging
+    try expectEqual(Result.Default, try t.update(forced, move(2)));
+    try expectEqual(t.expected.p1.get(1).status, t.actual.p1.get(1).status);
 
-    // n = t.battle.actual.choices(.P1, .Move, &choices);
-    // try expectEqualSlices(
-    //     Choice,
-    //     if (showdown) &[_]Choice{ swtch(2), move(1), move(2) } else &[_]Choice{move(0)},
-    //     choices[0..n],
-    // );
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
-    // try t.verify();
-    return error.SkipZigTest;
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    if (showdown) try t.log.expected.cant(P1.ident(1), .Recharge);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(forced, swtch(2)));
+
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(
+        Choice,
+        if (showdown) &[_]Choice{ swtch(2), move(1), move(2) } else &[_]Choice{move(0)},
+        choices[0..n],
+    );
+
+    try t.log.expected.move(P2.ident(2), Move.Flamethrower, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 90;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    if (showdown) {
+        try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(2), null);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P1.ident(1));
+    }
+    try t.log.expected.turn(5);
+
+    // Using a Fire-type move after should do nothing to fix the problem
+    try expectEqual(Result.Default, try t.update(forced, move(1)));
+
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(
+        Choice,
+        if (showdown) &[_]Choice{ swtch(2), move(1), move(2) } else &[_]Choice{move(0)},
+        choices[0..n],
+    );
+
+    try t.log.expected.move(P2.ident(2), Move.Flamethrower, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 90;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    if (showdown) {
+        try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(2), null);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P1.ident(1));
+    }
+    try t.log.expected.turn(6);
+
+    try expectEqual(Result.Default, try t.update(forced, move(1)));
+
+    try t.verify();
 }
 
 test "Hyper Beam + Sleep move glitch" {
