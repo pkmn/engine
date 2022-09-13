@@ -1752,20 +1752,28 @@ pub const Effects = struct {
         try log.activate(player_ident, .Haze);
         try log.clearallboost();
 
-        if (Status.any(foe_stored.status)) {
-            // Pokémon Showdown incorrectly does not prevent sleep/freeze from moving immediately
-            if (!showdown) {
+        // Pokémon Showdown clears P1 then P2 instead of status -> side -> foe
+        if (showdown) {
+            for (battle.sides) |*s, i| {
+                const p = @intToEnum(Player, i);
+                // Pokémon Showdown incorrectly does not prevent sleep/freeze from moving
+                if (p != player and Status.any(s.stored().status)) {
+                    try log.curestatus(foe_ident, foe_stored.status, .Silent);
+                    s.stored().status = 0;
+                }
+                try clearVolatiles(&s.active, battle.active(p), log);
+            }
+        } else {
+            if (Status.any(foe_stored.status)) {
                 if (Status.is(foe_stored.status, .FRZ) or Status.is(foe_stored.status, .SLP)) {
                     foe.last_selected_move = .SKIP_TURN;
                 }
+                try log.curestatus(foe_ident, foe_stored.status, .Silent);
+                foe_stored.status = 0;
             }
-
-            try log.curestatus(foe_ident, foe_stored.status, .Silent);
-            foe_stored.status = 0;
+            try clearVolatiles(&side.active, player_ident, log);
+            try clearVolatiles(&foe.active, foe_ident, log);
         }
-
-        try clearVolatiles(&side.active, player_ident, log);
-        try clearVolatiles(&foe.active, foe_ident, log);
     }
 
     fn heal(battle: anytype, player: Player, log: anytype) !void {
@@ -2378,10 +2386,6 @@ fn clearVolatiles(active: *ActivePokemon, ident: ID, log: anytype) !void {
     if (volatiles.Reflect) {
         volatiles.Reflect = false;
         try log.end(ident, .Reflect);
-    }
-    // TODO: https://github.com/smogon/pokemon-showdown/pull/8807
-    if (volatiles.Recharging) {
-        volatiles.Recharging = false;
     }
 }
 

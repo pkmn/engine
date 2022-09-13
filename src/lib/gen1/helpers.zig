@@ -279,10 +279,9 @@ fn blocked(m: Move) bool {
     if (Move.get(m).effect == .Trapping) return true;
     return switch (m) {
         .Bind,
-        .Disable,
         .Counter,
+        .Toxic,
         .Mimic,
-        .Haze,
         .Bide,
         .Metronome,
         .MirrorMove,

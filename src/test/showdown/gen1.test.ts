@@ -3399,7 +3399,7 @@ describe('Gen 1', () => {
     ]);
   });
 
-  test.skip('Haze effect', () => {
+  test('Haze effect', () => {
     const proc = {key: HIT.key, value: MIN};
     const battle = startBattle([
       SRF_RES, SRF_RES, HIT, SS_MOD, HIT,
@@ -3429,37 +3429,35 @@ describe('Gen 1', () => {
     expect(battle.p1.pokemon[0].status).toBe('par');
     expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(139);
     expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(2);
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 37 + 11));
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 48 + 22));
 
     battle.makeChoices('move 3', 'move 3');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 22);
     expect(battle.p2.pokemon[0].boosts.evasion).toBe(1);
     expect(battle.p2.pokemon[0].volatiles['confusion']).toBeDefined();
     expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(3);
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 61 + 11));
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 72 + 22));
 
     battle.makeChoices('move 4', 'move 4');
     expect(battle.p1.pokemon[0].volatiles['leechseed']).toBeUndefined();
     expect(battle.p1.pokemon[0].boosts.spe).toBe(0);
     expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(278);
     expect(battle.p2.pokemon[0].status).toBe('');
-    // expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(3);
-    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(0);
+    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(4);
     expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
     expect(battle.p2.pokemon[0].boosts.evasion).toBe(0);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 96);
 
     battle.makeChoices('move 4', 'move 4');
-    // expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(4);
-    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(1);
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 42 - 24));
+    // expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(5);
+    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(4);
+    // expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 42 - 96));
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 42 - 120));
 
     battle.makeChoices('move 2', 'move 4');
     expect(battle.p1.pokemon[0].boosts.spe).toBe(2);
     expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(556);
-    // expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(5);
-    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(2);
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 48);
+    expect(battle.p2.pokemon[0].hp).toBe(0);
 
     verify(battle, [
       '|move|p1a: Golbat|Toxic|p2a: Exeggutor',
@@ -3491,10 +3489,8 @@ describe('Gen 1', () => {
       '|move|p1a: Golbat|Haze|p1a: Golbat|[from]Metronome',
       '|-activate|p1a: Golbat|move: Haze',
       '|-clearallboost|[silent]',
-      '|-end|p1a: Golbat|leechseed|[silent]',
-      '|-end|p1a: Golbat|parspeeddrop|[silent]',
+      '|-end|p1a: Golbat|move: Leech Seed|[silent]',
       '|-curestatus|p2a: Exeggutor|tox|[silent]',
-      '|-end|p2a: Exeggutor|confusion',
       '|-end|p2a: Exeggutor|confusion|[silent]',
       '|turn|5',
       '|move|p1a: Golbat|Metronome|p1a: Golbat',
@@ -3503,13 +3499,14 @@ describe('Gen 1', () => {
       '|-damage|p2a: Exeggutor|155/393',
       '|-status|p2a: Exeggutor|brn',
       '|move|p2a: Exeggutor|Teleport|p2a: Exeggutor',
-      '|-damage|p2a: Exeggutor|131/393 brn|[from] brn',
+      '|-damage|p2a: Exeggutor|35/393 brn|[from] brn',
       '|turn|6',
       '|move|p1a: Golbat|Agility|p1a: Golbat',
       '|-boost|p1a: Golbat|spe|2',
       '|move|p2a: Exeggutor|Teleport|p2a: Exeggutor',
-      '|-damage|p2a: Exeggutor|83/393 brn|[from] brn',
-      '|turn|7',
+      '|-damage|p2a: Exeggutor|0 fnt|[from] brn',
+      '|faint|p2a: Exeggutor',
+      '|win|Player 1',
     ]);
   });
 

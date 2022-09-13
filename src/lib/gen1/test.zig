@@ -4013,7 +4013,152 @@ test "Haze effect" {
     // paralysis. Resets Toxic counters to 0 and removes the effect of confusion, Disable, Focus
     // Energy, Leech Seed, Light Screen, Mist, and Reflect from both Pokemon. Removes the opponent's
     // non-volatile status condition.
-    return error.SkipZigTest;
+    const PAR_CAN = MAX;
+    const PROC = MIN;
+    const CFZ_5 = if (showdown) MAX else 3;
+    const CFZ_CAN = if (showdown) comptime ranged(128, 256) - 1 else MIN;
+
+    const haze = comptime metronome(.Haze);
+    const ember = comptime metronome(.Ember);
+
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, HIT, NOP, HIT,
+            NOP, HIT, NOP, NOP, PAR_CAN, HIT, CFZ_5,
+            CFZ_CAN, PAR_CAN, haze,
+            PAR_CAN, ember, NOP, HIT, ~CRIT, MIN_DMG, PROC, NOP, PAR_CAN,
+        } else .{
+            HIT, HIT, ~CRIT, HIT, ~CRIT, PAR_CAN, HIT, CFZ_5,
+            CFZ_CAN, PAR_CAN, ~CRIT, haze,
+            PAR_CAN, ~CRIT, ember,  ~CRIT, MIN_DMG, HIT, PROC, PAR_CAN, ~CRIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{
+            .species = .Golbat,
+            .moves = &.{ .Toxic, .Agility, .ConfuseRay, .Metronome },
+        }},
+        &.{.{
+            .species = .Exeggutor,
+            .moves = &.{ .LeechSeed, .StunSpore, .DoubleTeam, .Teleport },
+        }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(1), null);
+    t.expected.p2.get(1).status = Status.init(.PSN);
+    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.move(P2.ident(1), Move.LeechSeed, P1.ident(1), null);
+    try t.log.expected.start(P1.ident(1), .LeechSeed);
+    t.expected.p2.get(1).hp -= 24;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(@as(u16, 278), t.actual.p1.active.stats.spe);
+    try expectEqual(@as(u4, 1), t.actual.p2.active.volatiles.toxic);
+
+    try t.log.expected.move(P1.ident(1), Move.Agility, P1.ident(1), null);
+    try t.log.expected.boost(P1.ident(1), .Speed, 2);
+    t.expected.p1.get(1).hp -= 22;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .LeechSeed);
+    t.expected.p2.get(1).hp += 22;
+    try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .Silent);
+    try t.log.expected.move(P2.ident(1), Move.StunSpore, P1.ident(1), null);
+    t.expected.p1.get(1).status = Status.init(.PAR);
+    try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+    t.expected.p2.get(1).hp -= 48;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    try expectEqual(@as(i4, 2), t.actual.p1.active.boosts.spe);
+    try expectEqual(@as(u16, 139), t.actual.p1.active.stats.spe);
+    try expectEqual(@as(u4, 2), t.actual.p2.active.volatiles.toxic);
+
+    try t.log.expected.move(P2.ident(1), Move.DoubleTeam, P2.ident(1), null);
+    try t.log.expected.boost(P2.ident(1), .Evasion, 1);
+    t.expected.p2.get(1).hp -= 72;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
+    try t.log.expected.move(P1.ident(1), Move.ConfuseRay, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Confusion);
+    t.expected.p1.get(1).hp -= 22;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .LeechSeed);
+    t.expected.p2.get(1).hp += 22;
+    try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .Silent);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(3), move(3)));
+    try expectEqual(@as(i4, 1), t.actual.p2.active.boosts.evasion);
+    try expect(t.actual.p2.active.volatiles.Confusion);
+    try expectEqual(@as(u4, 3), t.actual.p2.active.volatiles.toxic);
+
+    try t.log.expected.activate(P2.ident(1), .Confusion);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 96;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
+    try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
+    try t.log.expected.move(P1.ident(1), Move.Haze, P1.ident(1), Move.Metronome);
+    try t.log.expected.activate(P1.ident(1), .Haze);
+    try t.log.expected.clearallboost();
+    if (showdown) {
+        try t.log.expected.end(P1.ident(1), .LeechSeed);
+        try t.log.expected.curestatus(P2.ident(1), t.expected.p2.get(1).status, .Silent);
+    } else {
+        try t.log.expected.curestatus(P2.ident(1), t.expected.p2.get(1).status, .Silent);
+        try t.log.expected.end(P1.ident(1), .LeechSeed);
+    }
+    t.expected.p2.get(1).status = 0;
+    try t.log.expected.end(P2.ident(1), .ConfusionSilent);
+    try t.log.expected.turn(5);
+
+    try expectEqual(Result.Default, try t.update(move(4), move(4)));
+    try expect(!t.actual.p1.active.volatiles.LeechSeed);
+    try expectEqual(@as(i4, 0), t.actual.p1.active.boosts.spe);
+    try expectEqual(@as(u16, 278), t.actual.p1.active.stats.spe);
+    try expectEqual(@as(u4, 4), t.actual.p2.active.volatiles.toxic);
+    try expect(!t.actual.p2.active.volatiles.Confusion);
+    try expectEqual(@as(i4, 0), t.actual.p2.active.boosts.evasion);
+
+    try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
+    try t.log.expected.move(P1.ident(1), Move.Ember, P2.ident(1), Move.Metronome);
+    try t.log.expected.supereffective(P2.ident(1));
+    t.expected.p2.get(1).hp -= 42;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    t.expected.p2.get(1).status = Status.init(.BRN);
+    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    // t.expected.p2.get(1).hp -= if (showdown) 120 else 24;
+    t.expected.p2.get(1).hp -= 24;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Burn);
+    try t.log.expected.turn(6);
+
+    try expectEqual(Result.Default, try t.update(move(4), move(4)));
+    // BUG: Pokémon Showdown increments the counter so long as the residualdmg counter is present
+    // try expectEqual(@as(u4, if (showdown) 5 else 4), t.actual.p2.active.volatiles.toxic);
+    try expectEqual(@as(u4, 4), t.actual.p2.active.volatiles.toxic);
+
+    try t.log.expected.move(P1.ident(1), Move.Agility, P1.ident(1), null);
+    try t.log.expected.boost(P1.ident(1), .Speed, 2);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    // t.expected.p2.get(1).hp = if (showdown) 0 else (t.expected.p2.get(1).hp - 24);
+    t.expected.p2.get(1).hp -= 24;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Burn);
+    // if (showdown) {
+    //     try t.log.expected.faint(P2.ident(1), false);
+    //     try t.log.expected.win(.P1);
+    // } else {
+    try t.log.expected.turn(7);
+    // }
+
+    // const result = if (showdown) Result.Win else Result.Default;
+    const result = Result.Default;
+    try expectEqual(result, try t.update(move(2), move(4)));
+    try expectEqual(@as(i4, 2), t.actual.p1.active.boosts.spe);
+    try expectEqual(@as(u16, 556), t.actual.p1.active.stats.spe);
+
+    try t.verify();
 }
 
 // Move.Bide

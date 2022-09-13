@@ -3,11 +3,10 @@
     "moves": [
       "bind",
       "wrap",
-      "disable",
       "counter",
       "firespin",
+      "toxic",
       "mimic",
-      "haze",
       "bide",
       "metronome",
       "mirrormove",
