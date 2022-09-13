@@ -139,6 +139,9 @@ fn selectMove(
     var volatiles = &side.active.volatiles;
     const stored = side.stored();
 
+    assert(!isForced(side.active) or
+        (choice.type == .Move and choice.data == @boolToInt(showdown)));
+
     // pre-battle menu
     if (volatiles.Recharging) {
         if (showdown) {
@@ -170,6 +173,7 @@ fn selectMove(
 
     // pre-move select
     if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP) or volatiles.Bide) {
+        assert(showdown or choice.data == 0);
         if (showdown) run.* = saveMove(battle, player, choice);
         return null;
     }
@@ -185,6 +189,7 @@ fn selectMove(
             // to replicate the incorrect behavior with the correct mechanisms).
             run.* = saveMove(battle, player, choice);
         } else {
+            assert(choice.data == 0);
             // GLITCH: https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
             if (foe_choice.type == .Switch) {
                 const slot = if (player == .P1)
@@ -203,6 +208,7 @@ fn selectMove(
         if (showdown) {
             run.* = saveMove(battle, player, choice);
         } else {
+            assert(choice.data == 0);
             side.last_selected_move = .SKIP_TURN;
         }
         return null;
@@ -388,8 +394,10 @@ fn executeMove(
             battle.last_selected_indexes.p1
         else
             battle.last_selected_indexes.p2);
+        const stored = side.stored();
         // GLITCH: Struggle bypass PP underflow via Hyper Beam / Trapping-switch auto selection
-        auto = side.last_selected_move == .HyperBeam or from != null or side.active.volatiles.Bide;
+        auto = side.last_selected_move == .HyperBeam or from != null or side.active.volatiles.Bide
+            or Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP);
         // If it wasn't Hyper Beam or the continuation of a move effect then we must have just
         // thawed, in which case we will desync unless the last_selected_move happened to be at
         // index 1 and the current Pokémon has the same move in its first slot.

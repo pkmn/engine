@@ -68,6 +68,7 @@ const P1 = Player.P1;
 const P2 = Player.P2;
 
 var choices: [OPTIONS_SIZE]Choice = undefined;
+const forced = move(@boolToInt(showdown));
 
 // General
 
@@ -1301,7 +1302,7 @@ test "FreezeChance effect" {
     try t.log.expected.turn(5);
 
     // Freezing prevents action
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(Result.Default, try t.update(forced, move(1)));
     // ...Pokémon Showdown still lets you choose whatever
     var n = t.battle.actual.choices(.P1, .Move, &choices);
     if (showdown) {
@@ -1347,7 +1348,7 @@ test "FreezeChance effect" {
     try t.log.expected.cant(P1.ident(2), .Freeze);
     try t.log.expected.turn(8);
 
-    try expectEqual(Result.Default, try t.update(move(if (showdown) 1 else 0), move(3)));
+    try expectEqual(Result.Default, try t.update(forced, move(if (showdown) 3 else 0)));
 
     try t.log.expected.move(P2.ident(1), Move.Flamethrower, P1.ident(2), null);
     try t.log.expected.resisted(P1.ident(2));
@@ -1361,7 +1362,7 @@ test "FreezeChance effect" {
     try t.log.expected.turn(9);
 
     // Other Fire moves thaw frozen Pokémon
-    try expectEqual(Result.Default, try t.update(move(1), move(4)));
+    try expectEqual(Result.Default, try t.update(forced, move(4)));
     try expectEqual(t.expected.p1.get(2).status, t.actual.p1.get(1).status);
 
     try t.log.expected.move(P2.ident(1), Move.Blizzard, P1.ident(2), null);
@@ -1661,7 +1662,7 @@ test "Sleep effect" {
     try t.log.expected.turn(6);
 
     // Eventually wakes up
-    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    try expectEqual(Result.Default, try t.update(move(2), forced));
     try expectEqual(@as(u8, 0), t.actual.p2.get(1).status);
 
     try t.verify();
@@ -1884,7 +1885,7 @@ test "FlinchChance effect" {
     try t.log.expected.turn(5);
 
     // Flinch prevents movement but counts as recharge turn
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(Result.Default, try t.update(move(1), forced));
 
     try t.log.expected.move(P1.ident(1), Move.HyperFang, P2.ident(1), null);
     t.expected.p2.get(1).hp -= 72;
@@ -2175,7 +2176,7 @@ test "Charge effect" {
     try expectEqual(if (showdown) pp - 1 else pp, t.actual.p1.active.move(1).pp);
 
     var n = t.battle.actual.choices(.P1, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{move(@boolToInt(showdown))}, choices[0..n]);
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
 
@@ -2187,7 +2188,7 @@ test "Charge effect" {
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
     try t.log.expected.turn(3);
 
-    try expectEqual(Result.Default, try t.update(move(@boolToInt(showdown)), move(1)));
+    try expectEqual(Result.Default, try t.update(forced, move(1)));
     try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
 
     try t.verify();
@@ -2233,7 +2234,7 @@ test "Fly/Dig effect" {
     try expectEqual(if (showdown) pp - 1 else pp, t.actual.p1.active.move(1).pp);
 
     var n = t.battle.actual.choices(.P1, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{move(@boolToInt(showdown))}, choices[0..n]);
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
 
@@ -2245,7 +2246,7 @@ test "Fly/Dig effect" {
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
     try t.log.expected.turn(3);
 
-    try expectEqual(Result.Default, try t.update(move(@boolToInt(showdown)), move(1)));
+    try expectEqual(Result.Default, try t.update(forced, move(1)));
     try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
 
     try t.verify();
@@ -2350,13 +2351,12 @@ test "Trapping effect" {
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
     try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
 
-    const choice = move(@boolToInt(showdown));
-    const p1_choices = &[_]Choice{ swtch(2), choice };
+    const p1_choices = &[_]Choice{ swtch(2), forced };
     const all_choices = &[_]Choice{ swtch(2), swtch(3), move(1), move(2) };
     const p2_choices = if (showdown)
         all_choices
     else
-        &[_]Choice{ swtch(2), swtch(3), move(0) };
+        &[_]Choice{ swtch(2), swtch(3), forced };
 
     var n = t.battle.actual.choices(.P1, .Move, &choices);
     try expectEqualSlices(Choice, p1_choices, choices[0..n]);
@@ -2369,7 +2369,7 @@ test "Trapping effect" {
     try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
     try t.log.expected.turn(3);
 
-    try expectEqual(Result.Default, try t.update(choice, swtch(2)));
+    try expectEqual(Result.Default, try t.update(forced, swtch(2)));
     try expectEqual(pp - 2, t.actual.p1.active.move(1).pp);
 
     n = t.battle.actual.choices(.P1, .Move, &choices);
@@ -2383,7 +2383,7 @@ test "Trapping effect" {
     try t.log.expected.cant(P2.ident(2), .Trapped);
     try t.log.expected.turn(4);
 
-    try expectEqual(Result.Default, try t.update(choice, move(1)));
+    try expectEqual(Result.Default, try t.update(forced, forced));
 
     n = t.battle.actual.choices(.P1, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
@@ -2426,14 +2426,14 @@ test "Trapping effect" {
     if (showdown) try t.log.expected.damage(P2.ident(3), t.expected.p2.get(3), .None);
     try t.log.expected.turn(7);
 
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(Result.Default, try t.update(forced, forced));
 
     n = t.battle.actual.choices(.P1, .Move, &choices);
     try expectEqualSlices(Choice, p1_choices, choices[0..n]);
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, p2_choices, choices[0..n]);
 
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(Result.Default, try t.update(forced, forced));
 
     try t.log.expected.cant(P2.ident(3), .Trapped);
     try t.log.expected.cant(P1.ident(1), .Paralysis);
@@ -2703,8 +2703,7 @@ test "Thrashing effect" {
     try expectEqual(@as(u3, 5), t.actual.p1.active.volatiles.confusion);
 
     var n = t.battle.actual.choices(.P1, .Move, &choices);
-    const choice = move(@boolToInt(showdown));
-    try expectEqualSlices(Choice, &[_]Choice{choice}, choices[0..n]);
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
 
@@ -2718,15 +2717,15 @@ test "Thrashing effect" {
     try t.log.expected.turn(3);
 
     // Thrashing locks you in whether you hit or not
-    try expectEqual(Result.Default, try t.update(choice, move(1)));
+    try expectEqual(Result.Default, try t.update(forced, move(1)));
     try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
     try expect(t.actual.p1.active.volatiles.Confusion);
     try expectEqual(@as(u3, 4), t.actual.p1.active.volatiles.confusion);
 
     n = t.battle.actual.choices(.P1, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{choice}, choices[0..n]);
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
     n = t.battle.actual.choices(.P2, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{choice}, choices[0..n]);
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
     try t.log.expected.activate(P1.ident(1), .Confusion);
     if (!showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
@@ -2740,7 +2739,7 @@ test "Thrashing effect" {
     try t.log.expected.turn(4);
 
     // Thrashing confuses you even if already confused
-    try expectEqual(Result.Default, try t.update(choice, choice));
+    try expectEqual(Result.Default, try t.update(forced, forced));
     try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
     try expect(t.actual.p1.active.volatiles.Confusion);
     try expectEqual(@as(u3, 5), t.actual.p1.active.volatiles.confusion);
@@ -2748,7 +2747,7 @@ test "Thrashing effect" {
     n = t.battle.actual.choices(.P1, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
     n = t.battle.actual.choices(.P2, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{choice}, choices[0..n]);
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
     try t.log.expected.activate(P1.ident(1), .Confusion);
     try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
@@ -2758,7 +2757,7 @@ test "Thrashing effect" {
     try t.log.expected.turn(5);
 
     // Thrashing doesn't confuse you if the user is prevented from moving
-    try expectEqual(Result.Default, try t.update(move(2), choice));
+    try expectEqual(Result.Default, try t.update(move(2), forced));
     try expect(!t.actual.p2.active.volatiles.Confusion);
 
     n = t.battle.actual.choices(.P1, .Move, &choices);
@@ -3128,11 +3127,11 @@ test "HyperBeam effect" {
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
     n = t.battle.actual.choices(.P1, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{move(@boolToInt(showdown))}, choices[0..n]);
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ move(1), move(2) }, choices[0..n]);
 
-    try expectEqual(Result.Default, try t.update(move(@boolToInt(showdown)), move(1)));
+    try expectEqual(Result.Default, try t.update(forced, move(1)));
 
     try t.log.expected.cant(P1.ident(1), .Recharge);
     try t.log.expected.move(P2.ident(2), Move.Teleport, P2.ident(2), null);
@@ -3311,7 +3310,7 @@ test "Counter effect" {
     try t.log.expected.turn(12);
 
     // When slept, Counters negative priority gets preserved
-    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    try expectEqual(Result.Default, try t.update(move(2), forced));
 
     try t.verify();
 }
@@ -3435,7 +3434,7 @@ test "Rest effect" {
     try t.log.expected.cant(P2.ident(1), .Sleep);
     try t.log.expected.turn(4);
 
-    try expectEqual(Result.Default, try t.update(move(2), move(@boolToInt(showdown))));
+    try expectEqual(Result.Default, try t.update(move(2), forced));
 
     try t.log.expected.move(P1.ident(1), Move.Rest, P1.ident(1), null);
     try t.log.expected.fail(P1.ident(1), .None);
@@ -3444,7 +3443,7 @@ test "Rest effect" {
     try t.log.expected.turn(5);
 
     // Fails at full HP / Last two turns but stat penalty still remains after waking
-    try expectEqual(Result.Default, try t.update(move(3), move(1)));
+    try expectEqual(Result.Default, try t.update(move(3), forced));
     try expectEqual(@as(u8, 0), t.actual.p2.get(1).status);
     try expectEqual(@as(u16, 49), t.actual.p2.active.stats.spe);
     try expectEqual(@as(u16, 198), t.actual.p2.get(1).stats.spe);
@@ -3540,7 +3539,7 @@ test "DreamEater effect" {
     try t.log.expected.turn(4);
 
     // Heals 1/2 of the damage dealt
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(Result.Default, try t.update(move(1), forced));
 
     try t.log.expected.move(P1.ident(1), Move.DreamEater, P2.ident(1), null);
     t.expected.p2.get(1).hp -= 1;
@@ -3552,7 +3551,7 @@ test "DreamEater effect" {
     try t.log.expected.win(.P1);
 
     // Heals at least 1 HP
-    try expectEqual(Result.Win, try t.update(move(1), move(1)));
+    try expectEqual(Result.Win, try t.update(move(1), forced));
     try t.verify();
 }
 
@@ -3906,9 +3905,8 @@ test "Bide effect" {
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-    const choice = move(@boolToInt(showdown));
     var n = t.battle.actual.choices(.P1, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), choice }, choices[0..n]);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), forced }, choices[0..n]);
 
     try t.log.expected.activate(P1.ident(1), .Bide);
     try t.log.expected.move(P2.ident(1), Move.SonicBoom, P1.ident(1), null);
@@ -3916,13 +3914,13 @@ test "Bide effect" {
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
     try t.log.expected.turn(3);
 
-    try expectEqual(Result.Default, try t.update(choice, move(1)));
+    try expectEqual(Result.Default, try t.update(forced, move(1)));
 
     try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
     try t.log.expected.activate(P1.ident(1), .Bide);
     try t.log.expected.turn(4);
 
-    try expectEqual(Result.Default, try t.update(choice, swtch(2)));
+    try expectEqual(Result.Default, try t.update(forced, swtch(2)));
 
     try t.log.expected.move(P2.ident(2), Move.Dig, .{}, null);
     try t.log.expected.laststill();
@@ -3933,7 +3931,7 @@ test "Bide effect" {
     try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
     try t.log.expected.turn(5);
 
-    try expectEqual(Result.Default, try t.update(choice, move(1)));
+    try expectEqual(Result.Default, try t.update(forced, move(1)));
 
     n = t.battle.actual.choices(.P1, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
@@ -3945,13 +3943,13 @@ test "Bide effect" {
     try t.log.expected.start(P1.ident(1), .Bide);
     try t.log.expected.turn(6);
 
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(Result.Default, try t.update(move(1), forced));
 
     try t.log.expected.switched(P2.ident(3), t.expected.p2.get(3));
     try t.log.expected.activate(P1.ident(1), .Bide);
     try t.log.expected.turn(7);
 
-    try expectEqual(Result.Default, try t.update(choice, swtch(3)));
+    try expectEqual(Result.Default, try t.update(forced, swtch(3)));
 
     try t.log.expected.move(P2.ident(3), Move.NightShade, P1.ident(1), null);
     t.expected.p1.get(1).hp -= 100;
@@ -3959,7 +3957,7 @@ test "Bide effect" {
     try t.log.expected.activate(P1.ident(1), .Bide);
     try t.log.expected.turn(8);
 
-    try expectEqual(Result.Default, try t.update(choice, move(1)));
+    try expectEqual(Result.Default, try t.update(forced, move(1)));
 
     try t.log.expected.move(P2.ident(3), Move.ConfuseRay, P1.ident(1), null);
     try t.log.expected.start(P1.ident(1), .Confusion);
@@ -3969,7 +3967,7 @@ test "Bide effect" {
     try t.log.expected.damage(P2.ident(3), t.expected.p2.get(3), .None);
     try t.log.expected.faint(P2.ident(3), true);
 
-    try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(choice, move(2)));
+    try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(forced, move(2)));
 
     try expectEqual(@as(u8, 14), t.actual.p1.get(1).move(1).pp);
 
@@ -4019,11 +4017,10 @@ test "Metronome effect" {
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
     var n = t.battle.actual.choices(.P1, .Move, &choices);
-    const choice = move(@boolToInt(showdown));
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(
         Choice,
-        if (showdown) &[_]Choice{ move(1), move(2), move(3) } else &[_]Choice{choice},
+        if (showdown) &[_]Choice{ move(1), move(2), move(3) } else &[_]Choice{forced},
         choices[0..n],
     );
 
@@ -4047,7 +4044,7 @@ test "Metronome effect" {
     try t.log.expected.cant(P1.ident(1), .Trapped);
     try t.log.expected.turn(3);
 
-    try expectEqual(Result.Default, try t.update(choice, choice));
+    try expectEqual(Result.Default, try t.update(forced, forced));
 
     try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
     try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), Move.Metronome);
@@ -4059,7 +4056,7 @@ test "Metronome effect" {
     try expectEqual(Result.Default, try t.update(move(2), move(1)));
 
     n = t.battle.actual.choices(.P2, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{choice}, choices[0..n]);
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
     try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), Move.PetalDance);
     try t.log.expected.lastmiss();
@@ -4067,7 +4064,7 @@ test "Metronome effect" {
     try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
     try t.log.expected.turn(5);
 
-    try expectEqual(Result.Default, try t.update(move(2), choice));
+    try expectEqual(Result.Default, try t.update(move(2), forced));
 
     if (!showdown) try t.log.expected.start(P2.ident(1), .ConfusionSilent);
     try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), Move.PetalDance);
@@ -4077,7 +4074,7 @@ test "Metronome effect" {
     try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
     try t.log.expected.turn(6);
 
-    try expectEqual(Result.Default, try t.update(move(2), choice));
+    try expectEqual(Result.Default, try t.update(move(2), forced));
 
     // try t.log.expected.activate(P2.ident(1), .Confusion);
     // try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
@@ -4215,7 +4212,7 @@ test "MirrorMove effect" {
     }
     try t.log.expected.turn(7);
 
-    try expectEqual(Result.Default, try t.update(move(@boolToInt(showdown)), move(1)));
+    try expectEqual(Result.Default, try t.update(forced, move(1)));
 
     if (!showdown) {
         try t.log.expected.move(P1.ident(1), Move.Peck, P2.ident(1), null);
@@ -4226,7 +4223,7 @@ test "MirrorMove effect" {
         try t.log.expected.miss(P2.ident(1));
         try t.log.expected.turn(8);
 
-        try expectEqual(Result.Default, try t.update(move(2), move(1)));
+        try expectEqual(Result.Default, try t.update(move(2), forced));
     }
 
     try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
@@ -4462,7 +4459,7 @@ test "Bide + Substitute bug" {
     try t.log.expected.activate(P2.ident(1), .Bide);
     try t.log.expected.turn(3);
 
-    try expectEqual(Result.Default, try t.update(move(1), move(@boolToInt(showdown))));
+    try expectEqual(Result.Default, try t.update(move(1), forced));
     try expectEqual(@as(u8, 71), t.actual.p1.active.volatiles.substitute);
 
     try t.log.expected.move(P1.ident(1), Move.SonicBoom, P2.ident(1), null);
@@ -4474,7 +4471,7 @@ test "Bide + Substitute bug" {
     try t.log.expected.end(P1.ident(1), .Substitute);
     try t.log.expected.turn(4);
 
-    try expectEqual(Result.Default, try t.update(move(1), move(@boolToInt(showdown))));
+    try expectEqual(Result.Default, try t.update(move(1), forced));
     // if (showdown) try expectEqual(@as(u8, 71), t.actual.p1.active.volatiles.substitute);
 
     try t.verify();
@@ -4589,9 +4586,9 @@ test "Counter + sleep = Desync Clause Mod bug" {
     }
 
     // Choice made while sleeping should not have been saved (and lead to a desync) as
-    // on the cartridge not opportunity is given for choosing a move while sleeping
+    // on the cartridge no opportunity is given for choosing a move while sleeping
     const result = if (showdown) Result.Default else Result{ .p1 = .Switch, .p2 = .Pass };
-    try expectEqual(result, try t.update(move(2), move(3)));
+    try expectEqual(result, try t.update(move(if (showdown) 2 else 0), move(3)));
 
     try t.verify();
 }
@@ -4632,7 +4629,7 @@ test "Hyper Beam + Substitute bug" {
     }
     try t.log.expected.turn(3);
 
-    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    try expectEqual(Result.Default, try t.update(forced, move(2)));
     try t.verify();
 }
 
@@ -5145,7 +5142,7 @@ test "Bide damage accumulation glitches" {
         try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
         try t.log.expected.turn(3);
 
-        try expectEqual(Result.Default, try t.update(move(2), move(@boolToInt(showdown))));
+        try expectEqual(Result.Default, try t.update(move(2), forced));
 
         try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
         try t.log.expected.end(P2.ident(1), .Bide);
@@ -5153,7 +5150,7 @@ test "Bide damage accumulation glitches" {
         try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
         try t.log.expected.turn(4);
 
-        try expectEqual(Result.Default, try t.update(swtch(2), move(@boolToInt(showdown))));
+        try expectEqual(Result.Default, try t.update(swtch(2), forced));
 
         try t.verify();
     }
@@ -5458,7 +5455,7 @@ test "Toxic counter glitches" {
     try t.log.expected.cant(P2.ident(1), .Sleep);
     try t.log.expected.turn(3);
 
-    try expectEqual(Result.Default, try t.update(move(3), move(1)));
+    try expectEqual(Result.Default, try t.update(move(3), forced));
     try expectEqual(@as(u4, 0), t.actual.p2.active.volatiles.toxic);
 
     try t.log.expected.move(P1.ident(1), Move.LeechSeed, P2.ident(1), null);
@@ -5467,10 +5464,9 @@ test "Toxic counter glitches" {
     try t.log.expected.curestatus(P2.ident(1), Status.slf(1), .Message);
     t.expected.p2.get(1).hp -= 24;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .LeechSeed);
-    // }
     try t.log.expected.turn(4);
 
-    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    try expectEqual(Result.Default, try t.update(move(2), forced));
     try expectEqual(@as(u4, 1), t.actual.p2.active.volatiles.toxic);
 
     try t.log.expected.move(P1.ident(1), Move.FireBlast, P2.ident(1), null);
@@ -5818,7 +5814,7 @@ test "Hyper Beam + Freeze permanent helplessness" {
     // try expectEqual(t.expected.p1.get(1).status, t.actual.p1.get(1).status);
 
     // var n = t.battle.actual.choices(.P1, .Move, &choices);
-    // try expectEqualSlices(Choice, &[_]Choice{move(@boolToInt(showdown))}, choices[0..n]);
+    // try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
     // try t.log.expected.cant(P1.ident(1), .Freeze);
     // try t.log.expected.move(P2.ident(1), Move.Haze, P2.ident(1), null);
@@ -5899,7 +5895,7 @@ test "Hyper Beam + Sleep move glitch" {
     t.expected.p2.get(1).status = 0;
     try t.log.expected.turn(4);
 
-    try expectEqual(Result.Default, try t.update(move(3), move(1)));
+    try expectEqual(Result.Default, try t.update(move(3), forced));
     try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
 
     try t.log.expected.move(P1.ident(1), Move.FirePunch, P2.ident(1), null);
@@ -5967,8 +5963,7 @@ test "Hyper Beam automatic selection glitch" {
     try t.log.expected.turn(3);
 
     // Missing should cause Hyper Beam to be automatically selected and underflow
-    const choice = move(@boolToInt(showdown));
-    try expectEqual(Result.Default, try t.update(choice, move(1)));
+    try expectEqual(Result.Default, try t.update(forced, move(1)));
     if (!showdown) try expectEqual(@as(u8, 63), t.actual.p1.get(1).move(1).pp);
 
     try t.verify();
@@ -6041,7 +6036,7 @@ test "Invulnerability glitch" {
     try t.log.expected.turn(4);
 
     // After Fly is interrupted by Paralysis, Invulnerability should be preserved
-    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    try expectEqual(Result.Default, try t.update(forced, move(2)));
 
     try t.log.expected.move(P1.ident(1), Move.Agility, P1.ident(1), null);
     try t.log.expected.boost(P1.ident(1), .Speed, 2);
@@ -6074,7 +6069,7 @@ test "Invulnerability glitch" {
     try t.log.expected.turn(7);
 
     // Successfully completing Fly removes Invulnerability
-    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    try expectEqual(Result.Default, try t.update(forced, move(2)));
 
     try t.verify();
 }
@@ -6427,9 +6422,8 @@ test "Struggle bypassing / Switch PP underflow" {
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
     try expectEqual(@as(u8, 0), t.actual.p1.get(1).move(1).pp);
 
-    const choice = move(@boolToInt(showdown));
     const n = t.battle.actual.choices(.P1, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), choice }, choices[0..n]);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), forced }, choices[0..n]);
 
     try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
     try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(2), if (showdown) null else Move.Wrap);
@@ -6437,7 +6431,7 @@ test "Struggle bypassing / Switch PP underflow" {
     try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
     try t.log.expected.turn(3);
 
-    try expectEqual(Result.Default, try t.update(choice, swtch(2)));
+    try expectEqual(Result.Default, try t.update(forced, swtch(2)));
     try expectEqual(@as(u8, 63), t.actual.p1.get(1).move(1).pp);
 
     try t.verify();
@@ -6477,8 +6471,7 @@ test "Trapping sleep glitch" {
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-    const choice = move(@boolToInt(showdown));
-    const p1_choices = &[_]Choice{ swtch(2), choice };
+    const p1_choices = &[_]Choice{ swtch(2), forced };
     const all_choices = &[_]Choice{ swtch(2), move(1), move(2) };
     const p2_choices = if (showdown) all_choices else &[_]Choice{ swtch(2), move(0) };
 
@@ -6493,7 +6486,7 @@ test "Trapping sleep glitch" {
     try t.log.expected.cant(P2.ident(1), .Trapped);
     try t.log.expected.turn(3);
 
-    try expectEqual(Result.Default, try t.update(choice, choice));
+    try expectEqual(Result.Default, try t.update(forced, forced));
 
     n = t.battle.actual.choices(.P1, .Move, &choices);
     try expectEqualSlices(Choice, all_choices, choices[0..n]);
@@ -6523,7 +6516,7 @@ test "Trapping sleep glitch" {
     }
     try t.log.expected.turn(5);
 
-    try expectEqual(Result.Default, try t.update(move(2), move(@boolToInt(showdown))));
+    try expectEqual(Result.Default, try t.update(move(2), forced));
     try expectEqual(t.expected.p2.get(2).status, t.actual.p2.get(1).status);
 
     try t.verify();
@@ -6623,7 +6616,7 @@ test "Rage and Thrash / Petal Dance accuracy bug" {
     try t.log.expected.turn(3);
 
     // 168 -> 84
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(Result.Default, try t.update(forced, move(1)));
 
     try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
     if (showdown) {
@@ -6639,7 +6632,7 @@ test "Rage and Thrash / Petal Dance accuracy bug" {
     try t.log.expected.turn(4);
 
     // should miss!
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(Result.Default, try t.update(forced, move(1)));
 
     try t.verify();
 }
