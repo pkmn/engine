@@ -396,8 +396,8 @@ fn executeMove(
             battle.last_selected_indexes.p2);
         const stored = side.stored();
         // GLITCH: Struggle bypass PP underflow via Hyper Beam / Trapping-switch auto selection
-        auto = side.last_selected_move == .HyperBeam or from != null or side.active.volatiles.Bide
-            or Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP);
+        auto = side.last_selected_move == .HyperBeam or side.active.volatiles.Bide or
+            from != null or Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP);
         // If it wasn't Hyper Beam or the continuation of a move effect then we must have just
         // thawed, in which case we will desync unless the last_selected_move happened to be at
         // index 1 and the current Pokémon has the same move in its first slot.
@@ -481,7 +481,6 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
         return .done;
     }
 
-    // FIXME: Pokémon Showdown behavior here is broken and handles this at the end of turn
     if (volatiles.disabled.duration > 0) {
         volatiles.disabled.duration -= 1;
         if (volatiles.disabled.duration == 0) {
@@ -1633,13 +1632,8 @@ pub const Effects = struct {
         var volatiles = &foe.active.volatiles;
         const foe_ident = battle.active(player.foe());
 
-        if (showdown) {
-            // Pokémon Showdown incorrectly fails if the Pokémon has not used a move
-            if (foe.last_used_move == .None) return try log.fail(foe_ident, .None);
-        } else {
-            // Pokémon Showdown handles hit/miss earlier in doMove
-            if (!try checkHit(battle, player, move, log)) return;
-        }
+        // Pokémon Showdown handles hit/miss earlier in doMove
+        if (!showdown and !try checkHit(battle, player, move, log)) return;
 
         if (volatiles.disabled.move != 0) {
             try log.lastmiss();
@@ -1655,15 +1649,11 @@ pub const Effects = struct {
         // but diverging from Pokémon Showdown here would mostly just be pedantic
         if (n == 0) return try log.fail(foe_ident, .None);
 
-        if (showdown) {
-            // On Pokémon Showdown this range is incorrectly 1-6 instead of 1-8 (and rolled first)
-            volatiles.disabled.duration = @truncate(u4, battle.rng.range(u8, 1, 7));
-            // Pokémon Showdown incorrectly does not check for moves with 0 PP
-            volatiles.disabled.move = randomMoveSlot(&battle.rng, &foe.active.moves, 0);
-        } else {
-            volatiles.disabled.move = randomMoveSlot(&battle.rng, &foe.active.moves, n);
-            volatiles.disabled.duration = @truncate(u4, (battle.rng.next() & 7) + 1);
-        }
+        volatiles.disabled.move = randomMoveSlot(&battle.rng, &foe.active.moves, n);
+        volatiles.disabled.duration = @truncate(u4, if (showdown)
+            battle.rng.range(u8, 1, 9)
+        else
+            (battle.rng.next() & 7) + 1);
 
         try log.startEffect(foe_ident, .Disable, foe.active.move(volatiles.disabled.move).id);
     }

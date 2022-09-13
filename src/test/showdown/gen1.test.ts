@@ -17,7 +17,7 @@ const TIE = (n: 1 | 2) =>
 const SLP = (n: number) =>
   ({key: ['Battle.random', 'Pokemon.setStatus'], value: ranged(n, 8 - 1)});
 const DISABLE_DURATION = (n: number) =>
-  ({key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: ranged(n, 7 - 1) - 1});
+  ({key: ['Battle.onStart', 'Pokemon.addVolatile'], value: ranged(n, 9 - 1) - 1});
 const DISABLE_MOVE = (m: number, n = 4) =>
   ({key: ['Battle.onStart', 'Pokemon.addVolatile'], value: ranged(m, n) - 1});
 const MIMIC = (m: number, n = 4) =>
@@ -3184,11 +3184,11 @@ describe('Gen 1', () => {
     ]);
   });
 
-  test.skip('Rage effect', () => {
+  test('Rage effect', () => {
     const battle = startBattle([
       SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
       SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, MISS,
-      SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, DISABLE_DURATION(5), DISABLE_MOVE(1, 2),
+      SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, DISABLE_MOVE(1, 2), DISABLE_DURATION(5),
       SRF_RES, SRF_RES, MISS,
     ], [
       {species: 'Charmeleon', evs, moves: ['Rage', 'Flamethrower']},

@@ -3678,7 +3678,92 @@ test "Rage effect" {
     // is hit by the opposing Pokemon, and this move's accuracy is overwritten every turn with the
     // current calculated accuracy including stat stage changes, but not to less than 1/256 or more
     // than 255/256.
-    return error.SkipZigTest;
+
+    const DISABLE_MOVE_1 = if (showdown) comptime ranged(1, 2) - 1 else 0;
+    const DISABLE_DURATION_5 = comptime ranged(5, 9 - 1) - 1;
+
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, ~HIT,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5,
+            NOP, NOP, ~HIT,
+        } else .{
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+            ~CRIT, MIN_DMG, HIT, ~CRIT, ~HIT,
+            ~CRIT, MIN_DMG, HIT, ~CRIT, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5,
+            ~CRIT, MIN_DMG, ~HIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{
+            .{ .species = .Charmeleon, .moves = &.{ .Rage, .Flamethrower } },
+            .{ .species = .Doduo, .moves = &.{.DrillPeck} },
+        },
+        &.{.{ .species = .Grimer, .moves = &.{ .Pound, .Disable, .SelfDestruct } }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Rage, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 17;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Pound, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 35;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.boost(P1.ident(1), .Rage, 1);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(@as(i4, 1), t.actual.p1.active.boosts.atk);
+
+    var n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
+
+    try t.log.expected.move(P1.ident(1), Move.Rage, P2.ident(1), Move.Rage);
+    t.expected.p2.get(1).hp -= 25;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Disable, P1.ident(1), null);
+    if (!showdown) try t.log.expected.boost(P1.ident(1), .Rage, 1);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(forced, move(2)));
+    try expectEqual(@as(i4, if (showdown) 1 else 2), t.actual.p1.active.boosts.atk);
+
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
+
+    try t.log.expected.move(P1.ident(1), Move.Rage, P2.ident(1), Move.Rage);
+    t.expected.p2.get(1).hp -= if (showdown) 25 else 34;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Disable, P1.ident(1), null);
+    try t.log.expected.boost(P1.ident(1), .Rage, 1);
+    try t.log.expected.startEffect(P1.ident(1), .Disable, Move.Rage);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(forced, move(2)));
+    try expectEqual(@as(i4, if (showdown) 2 else 3), t.actual.p1.active.boosts.atk);
+
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
+
+    try t.log.expected.disabled(P1.ident(1), Move.Rage);
+    try t.log.expected.move(P2.ident(1), Move.SelfDestruct, P1.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    if (!showdown) try t.log.expected.boost(P1.ident(1), .Rage, 1);
+    t.expected.p2.get(1).hp = 0;
+    try t.log.expected.faint(P2.ident(1), false);
+    try t.log.expected.win(.P1);
+
+    try expectEqual(Result.Win, try t.update(forced, move(3)));
+    try expectEqual(@as(i4, if (showdown) 2 else 4), t.actual.p1.active.boosts.atk);
+
+    try expectEqual(@as(u8, 31), t.actual.p1.active.move(1).pp);
+
+    try t.verify();
 }
 
 // Move.Mimic
