@@ -142,11 +142,11 @@ const END = {
   [PROTOCOL.End.Substitute]: 'Substitute' as Protocol.MoveName,
   [PROTOCOL.End.DisableSilent]: 'Disable' as Protocol.MoveName,
   [PROTOCOL.End.ConfusionSilent]: 'confusion' as Protocol.EffectName,
-  [PROTOCOL.End.Mist]: 'mist' as ID,
-  [PROTOCOL.End.FocusEnergy]: 'focusenergy' as ID,
-  [PROTOCOL.End.LeechSeed]: 'leechseed' as ID,
-  [PROTOCOL.End.LightScreen]: 'lightscreen' as ID,
-  [PROTOCOL.End.Reflect]: 'reflect' as ID,
+  [PROTOCOL.End.Mist]: 'Mist' as ID,
+  [PROTOCOL.End.FocusEnergy]: 'move: Focus Energy' as ID,
+  [PROTOCOL.End.LeechSeed]: 'move: Leech Seed' as ID,
+  [PROTOCOL.End.LightScreen]: 'Light Screen' as ID,
+  [PROTOCOL.End.Reflect]: 'Reflect' as ID,
 };
 
 export const DECODERS: {[key: number]: Decoder} = {
