@@ -4601,10 +4601,6 @@ test "Counter via Metronome bug" {
     return error.SkipZigTest;
 }
 
-test "Disable duration bug" {
-    return error.SkipZigTest;
-}
-
 test "Hyper Beam + Substitute bug" {
     var t = Test(if (showdown)
         (.{ NOP, HIT, ~CRIT, MAX_DMG, NOP, HIT, ~CRIT, MAX_DMG })
