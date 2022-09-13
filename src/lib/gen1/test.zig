@@ -2911,65 +2911,138 @@ test "Disable effect" {
     // the target's moves have PP remaining. If any Pokemon uses Haze, this effect ends. Whether or
     // not this move was successful, it counts as a hit for the purposes of the opponent's use of
     // Rage.
-    return error.SkipZigTest;
-    // const NO_FRZ = comptime ranged(26, 256);
-    // const DISABLE_DURATION_1 = MIN;
-    // // const DISABLE_DURATION_5 = comptime ranged(5, 7 - 1) - 1;
-    // const DISABLE_MOVE_1 = if (showdown) comptime ranged(1, 4) - 1 else 0;
-    // // const DISABLE_MOVE_3 = if (showdown) comptime ranged(3, 4) - 1 else 2;
-    // // const DISABLE_MOVE_4 = if (showdown) comptime ranged(4, 4) - 1 else 3;
+    const NO_FRZ = comptime ranged(26, 256);
+    const DISABLE_DURATION_1 = MIN;
+    const DISABLE_DURATION_5 = comptime ranged(5, 9 - 1) - 1;
+    const DISABLE_MOVE_1 = if (showdown) comptime ranged(1, 4) - 1 else 0;
+    const DISABLE_MOVE_2 = if (showdown) comptime ranged(2, 4) - 1 else 2;
+    const DISABLE_MOVE_4 = if (showdown) MAX else 3;
 
-    // var t = Test(
-    // // zig fmt: off
-    //     if (showdown) .{
-    //         NOP, NOP, HIT, HIT, ~CRIT, MIN_DMG,
-    //     NOP, NOP, HIT, DISABLE_DURATION_1, DISABLE_MOVE_1,
-    //         // NOP, NOP, HIT, DISABLE_DURATION_5, DISABLE_MOVE_3, HIT, ~CRIT, MIN_DMG,
-    //         // NOP, NOP, HIT, DISABLE_DURATION_5, DISABLE_MOVE_4,
-    //         // NOP, NOP, HIT, HIT, ~CRIT, MIN_DMG,
-    //         // NOP, HIT, ~CRIT, MIN_DMG,
-    //         // NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, NO_FRZ,
-    //     } else .{
-    //          ~CRIT, ~HIT, ~CRIT, MIN_DMG, HIT,
-    //     }
-    // // zig fmt: on
-    // ).init(
-    //     &.{.{ .species = .Golduck, .moves = &.{ .Disable, .WaterGun } }},
-    //     &.{
-    //         .{ .species = .Vaporeon, .moves = &.{ .WaterGun, .Haze, .Rest, .Blizzard } },
-    //         .{ .species = .Flareon, .moves = &.{.Flamethrower} },
-    //     },
-    // );
-    // defer t.deinit();
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, HIT, DISABLE_MOVE_1, DISABLE_DURATION_1, HIT, ~CRIT, MIN_DMG,
+            NOP, NOP, HIT, DISABLE_MOVE_2, DISABLE_DURATION_5, HIT, ~CRIT, MIN_DMG,
+            NOP, NOP, HIT, DISABLE_MOVE_4, DISABLE_DURATION_5,
+            NOP, NOP, HIT, HIT, ~CRIT, MIN_DMG,
+            NOP, HIT, ~CRIT, MIN_DMG,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, NO_FRZ,
+        } else .{
+            ~CRIT, HIT, DISABLE_MOVE_1, DISABLE_DURATION_1, ~CRIT, MIN_DMG, HIT,
+            ~CRIT, HIT, DISABLE_MOVE_2, DISABLE_DURATION_5, ~CRIT, MIN_DMG, HIT,
+            ~CRIT, HIT, DISABLE_MOVE_4, DISABLE_DURATION_5,
+            ~CRIT, HIT, ~CRIT, MIN_DMG, HIT,
+            ~CRIT, MIN_DMG, HIT,
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, NO_FRZ
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Golduck, .moves = &.{ .Disable, .WaterGun } }},
+        &.{
+            .{ .species = .Vaporeon, .moves = &.{ .WaterGun, .Haze, .Rest, .Blizzard } },
+            .{ .species = .Flareon, .moves = &.{.Flamethrower} },
+        },
+    );
+    defer t.deinit();
 
-    // try t.log.expected.move(P1.ident(1), Move.Disable, P2.ident(1), null);
-    // if (showdown) {
-    //     try t.log.expected.fail(P2.ident(1), .None);
-    // } else {
-    //     try t.log.expected.lastmiss();
-    //     try t.log.expected.miss(P1.ident(1));
-    // }
-    // try t.log.expected.move(P2.ident(1), Move.WaterGun, P1.ident(1), null);
-    // try t.log.expected.resisted(P1.ident(1));
-    // t.expected.p1.get(1).hp -= 27;
-    // try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-    // try t.log.expected.turn(2);
+    try t.log.expected.move(P1.ident(1), Move.Disable, P2.ident(1), null);
+    try t.log.expected.startEffect(P2.ident(1), .Disable, Move.WaterGun);
+    try t.log.expected.end(P2.ident(1), .Disable);
+    try t.log.expected.move(P2.ident(1), Move.WaterGun, P1.ident(1), null);
+    try t.log.expected.resisted(P1.ident(1));
+    t.expected.p1.get(1).hp -= 27;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(2);
 
-    // // Fails on Pokémon Showdown if there is no last move
-    // try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    // try expect(t.actual.p2.active.volatiles.disabled.move == 0);
+    // Disable can end immediately
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(@as(u4, 0), t.actual.p2.active.volatiles.disabled.move);
 
-    // try t.log.expected.move(P1.ident(1), Move.Disable, P2.ident(1), null);
-    // try t.log.expected.startEffect(P2.ident(1), .Disable, Move.WaterGun);
-    // try t.log.expected.disabled(P2.ident(1), Move.WaterGun);
-    // try t.log.expected.end(P2.ident(1), .Disable);
-    // try t.log.expected.turn(3);
+    var n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(
+        Choice,
+        &[_]Choice{ swtch(2), move(1), move(2), move(3), move(4) },
+        choices[0..n],
+    );
 
-    // // Disable can last a single turn
-    // try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    // try expect(t.actual.p2.active.volatiles.disabled.move == 0);
+    try t.log.expected.move(P1.ident(1), Move.Disable, P2.ident(1), null);
+    try t.log.expected.startEffect(P2.ident(1), .Disable, Move.Rest);
+    try t.log.expected.move(P2.ident(1), Move.WaterGun, P1.ident(1), null);
+    try t.log.expected.resisted(P1.ident(1));
+    t.expected.p1.get(1).hp -= 27;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(3);
 
-    // try t.verify();
+    // Should skip over moves which are already out of PP
+    t.actual.p2.active.move(2).pp = 0;
+    t.actual.p2.get(1).move(2).pp = 0;
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(4) }, choices[0..n]);
+
+    t.actual.p2.active.volatiles.disabled = .{};
+    t.actual.p2.active.move(2).pp = 1;
+    t.actual.p2.get(1).move(2).pp = 1;
+
+    try t.log.expected.move(P1.ident(1), Move.Disable, P2.ident(1), null);
+    try t.log.expected.startEffect(P2.ident(1), .Disable, Move.Blizzard);
+    try t.log.expected.disabled(P2.ident(1), Move.Blizzard);
+    try t.log.expected.turn(4);
+
+    // Can be disabled for many turns
+    try expectEqual(Result.Default, try t.update(move(1), move(4)));
+    try expectEqual(@as(u4, 4), t.actual.p2.active.volatiles.disabled.duration);
+
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2), move(3) }, choices[0..n]);
+
+    try t.log.expected.move(P1.ident(1), Move.Disable, P2.ident(1), null);
+    try t.log.expected.fail(P2.ident(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.WaterGun, P1.ident(1), null);
+    try t.log.expected.resisted(P1.ident(1));
+    t.expected.p1.get(1).hp -= 27;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(5);
+
+    // Disable fails if a move is already disabled
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(@as(u4, 3), t.actual.p2.active.volatiles.disabled.duration);
+
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2), move(3) }, choices[0..n]);
+
+    try t.log.expected.move(P1.ident(1), Move.WaterGun, P2.ident(1), null);
+    try t.log.expected.resisted(P2.ident(1));
+    t.expected.p2.get(1).hp -= 17;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Haze, P2.ident(1), null);
+    try t.log.expected.activate(P2.ident(1), .Haze);
+    try t.log.expected.clearallboost();
+    try t.log.expected.end(P2.ident(1), .DisableSilent);
+    try t.log.expected.turn(6);
+
+    // Haze clears disable
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    try expectEqual(@as(u4, 0), t.actual.p2.active.volatiles.disabled.move);
+
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(3), move(4) }, choices[0..n]);
+
+    try t.log.expected.move(P1.ident(1), Move.WaterGun, P2.ident(1), null);
+    try t.log.expected.resisted(P2.ident(1));
+    t.expected.p2.get(1).hp -= 17;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Blizzard, P1.ident(1), null);
+    try t.log.expected.resisted(P1.ident(1));
+    t.expected.p1.get(1).hp -= 53;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(7);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(4)));
+
+    try t.verify();
 }
 
 // Move.Mist

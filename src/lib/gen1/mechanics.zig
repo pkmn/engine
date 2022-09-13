@@ -1635,10 +1635,7 @@ pub const Effects = struct {
         // Pokémon Showdown handles hit/miss earlier in doMove
         if (!showdown and !try checkHit(battle, player, move, log)) return;
 
-        if (volatiles.disabled.move != 0) {
-            try log.lastmiss();
-            return log.miss(battle.active(player));
-        }
+        if (volatiles.disabled.move != 0) return try log.fail(foe_ident, .None);
 
         var n: u4 = 0;
         for (foe.active.moves) |m| {
@@ -2420,7 +2417,7 @@ fn randomMoveSlot(rand: anytype, moves: []MoveSlot, check_pp: u4) u4 {
                 if (moves[i].id != .None) return rand.range(u4, 0, @truncate(u4, i + 1)) + 1;
             }
         } else {
-            var r = rand.range(u4, 0, @truncate(u4, check_pp));
+            var r = rand.range(u4, 0, @truncate(u4, check_pp)) + 1;
             var i: usize = 0;
             while (i < moves.len and r > 0) : (i += 1) {
                 if (moves[i].pp > 0) {

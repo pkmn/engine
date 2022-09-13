@@ -2485,13 +2485,12 @@ describe('Gen 1', () => {
     ]);
   });
 
-  test.skip('Disable effect', () => {
+  test('Disable effect', () => {
     const NO_FRZ = {key: HIT.key, value: ranged(26, 256)};
     const battle = startBattle([
-      SRF_RES, SRF_RES, HIT, HIT, NO_CRIT, MIN_DMG,
-      SRF_RES, SRF_RES, HIT, DISABLE_DURATION(1), DISABLE_MOVE(1),
-      SRF_RES, SRF_RES, HIT, DISABLE_DURATION(5), DISABLE_MOVE(3), HIT, NO_CRIT, MIN_DMG,
-      SRF_RES, SRF_RES, HIT, DISABLE_DURATION(5), DISABLE_MOVE(4),
+      SRF_RES, SRF_RES, HIT, DISABLE_MOVE(1), DISABLE_DURATION(1), HIT, NO_CRIT, MIN_DMG,
+      SRF_RES, SRF_RES, HIT, DISABLE_MOVE(2), DISABLE_DURATION(5), HIT, NO_CRIT, MIN_DMG,
+      SRF_RES, SRF_RES, HIT, DISABLE_MOVE(4), DISABLE_DURATION(5),
       SRF_RES, SRF_RES, HIT, HIT, NO_CRIT, MIN_DMG,
       SRF_RES, HIT, NO_CRIT, MIN_DMG,
       SRF_RES, SRF_RES, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, NO_FRZ,
@@ -2505,7 +2504,7 @@ describe('Gen 1', () => {
     let p1hp = battle.p1.pokemon[0].hp;
     let p2hp = battle.p2.pokemon[0].hp;
 
-    // Fails on Pokémon Showdown if there is no last move
+    // Disable can end immediately
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 27);
     expect(battle.p2.pokemon[0].volatiles['disable']).toBeUndefined();
@@ -2513,38 +2512,31 @@ describe('Gen 1', () => {
     expect(choices(battle, 'p2'))
       .toEqual(['switch 2', 'move 1', 'move 2', 'move 3', 'move 4']);
 
-    // Disable can end immediately, but Pokémon Showdown still blanks the turn
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp);
-    expect(battle.p2.pokemon[0].volatiles['disable']).toBeUndefined();
-
-    expect(choices(battle, 'p2'))
-      .toEqual(['switch 2', 'move 1', 'move 2', 'move 3', 'move 4']);
-
-    // Should skip over moves which are already out of PP (but Pokémon Showdown doesn't)
-    battle.p2.pokemon[0].moveSlots[2].pp = 0;
+    // Should skip over moves which are already out of PP
+    battle.p2.pokemon[0].moveSlots[1].pp = 0;
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 27);
-    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2', 'move 4']);
+    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 4']);
     delete battle.p2.pokemon[0].volatiles['disable'];
+    battle.p2.pokemon[0].moveSlots[1].pp = 1;
 
     // Can be disabled for many turns
     battle.makeChoices('move 1', 'move 4');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp);
-    expect(battle.p2.pokemon[0].volatiles['disable'].duration).toBe(4);
-    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+    expect(battle.p2.pokemon[0].volatiles['disable'].time).toBe(4);
+    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2', 'move 3']);
 
     // Disable fails if a move is already disabled
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 27);
-    expect(battle.p2.pokemon[0].volatiles['disable'].duration).toBe(3);
-    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+    expect(battle.p2.pokemon[0].volatiles['disable'].time).toBe(3);
+    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2', 'move 3']);
 
     // Haze clears disable
     battle.makeChoices('move 2', 'move 2');
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 17);
     expect(battle.p2.pokemon[0].volatiles['disable']).toBeUndefined();
-    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2', 'move 4']);
+    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 3', 'move 4']);
 
     battle.makeChoices('move 2', 'move 4');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 53);
@@ -2552,47 +2544,43 @@ describe('Gen 1', () => {
 
     verify(battle, [
       '|move|p1a: Golduck|Disable|p2a: Vaporeon',
-      '|-fail|p2a: Vaporeon',
+      '|-start|p2a: Vaporeon|Disable|Water Gun',
+      '|-end|p2a: Vaporeon|Disable',
       '|move|p2a: Vaporeon|Water Gun|p1a: Golduck',
       '|-resisted|p1a: Golduck',
       '|-damage|p1a: Golduck|336/363',
       '|turn|2',
       '|move|p1a: Golduck|Disable|p2a: Vaporeon',
-      '|-start|p2a: Vaporeon|Disable|Water Gun',
-      '|cant|p2a: Vaporeon|Disable|Water Gun',
-      '|-end|p2a: Vaporeon|Disable',
-      '|turn|3',
-      '|move|p1a: Golduck|Disable|p2a: Vaporeon',
       '|-start|p2a: Vaporeon|Disable|Rest',
       '|move|p2a: Vaporeon|Water Gun|p1a: Golduck',
       '|-resisted|p1a: Golduck',
       '|-damage|p1a: Golduck|309/363',
-      '|turn|4',
+      '|turn|3',
       '|move|p1a: Golduck|Disable|p2a: Vaporeon',
       '|-start|p2a: Vaporeon|Disable|Blizzard',
       '|cant|p2a: Vaporeon|Disable|Blizzard',
-      '|turn|5',
+      '|turn|4',
       '|move|p1a: Golduck|Disable|p2a: Vaporeon',
+      '|-fail|p2a: Vaporeon',
       '|move|p2a: Vaporeon|Water Gun|p1a: Golduck',
       '|-resisted|p1a: Golduck',
       '|-damage|p1a: Golduck|282/363',
-      '|turn|6',
+      '|turn|5',
       '|move|p1a: Golduck|Water Gun|p2a: Vaporeon',
       '|-resisted|p2a: Vaporeon',
       '|-damage|p2a: Vaporeon|446/463',
       '|move|p2a: Vaporeon|Haze|p2a: Vaporeon',
       '|-activate|p2a: Vaporeon|move: Haze',
       '|-clearallboost|[silent]',
-      '|-end|p2a: Vaporeon|Disable',
-      '|-end|p2a: Vaporeon|disable|[silent]',
-      '|turn|7',
+      '|-end|p2a: Vaporeon|Disable|[silent]',
+      '|turn|6',
       '|move|p1a: Golduck|Water Gun|p2a: Vaporeon',
       '|-resisted|p2a: Vaporeon',
       '|-damage|p2a: Vaporeon|429/463',
       '|move|p2a: Vaporeon|Blizzard|p1a: Golduck',
       '|-resisted|p1a: Golduck',
       '|-damage|p1a: Golduck|229/363',
-      '|turn|8',
+      '|turn|7',
     ]);
   });
 
