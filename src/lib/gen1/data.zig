@@ -37,7 +37,7 @@ const showdown = options.showdown;
 
 pub const PRNG = rng.PRNG(1);
 
-pub fn Battle(comptime RNG: anytype) align(64) type {
+pub fn Battle(comptime RNG: anytype) type {
     return extern struct {
         const Self = @This();
 
