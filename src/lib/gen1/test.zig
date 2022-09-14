@@ -2264,6 +2264,9 @@ test "SwitchAndTeleport effect" {
     try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
     try t.log.expected.move(P2.ident(1), Move.Whirlwind, P1.ident(1), null);
     try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
     try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
     try t.log.expected.move(P2.ident(1), Move.Whirlwind, P1.ident(1), null);
     if (showdown) {
@@ -2273,7 +2276,7 @@ test "SwitchAndTeleport effect" {
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
     try t.verify();
 }
 
@@ -4397,6 +4400,106 @@ test "Metronome effect" {
     // try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
     try t.verify();
+}
+
+test "Infinite Metronome" {
+    const skull_bash = comptime metronome(.SkullBash);
+    const mirror_move = comptime metronome(.MirrorMove);
+    const fly = comptime metronome(.Fly);
+    const pound = comptime metronome(.Pound);
+
+    // Charge
+    {
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                skull_bash, NOP, mirror_move, mirror_move, fly, NOP, NOP, NOP,
+                NOP, NOP, NOP, NOP, ~HIT,
+            } else .{
+                ~CRIT, skull_bash, ~CRIT, mirror_move, ~CRIT, ~CRIT, mirror_move, ~CRIT, ~CRIT, fly,
+                ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, ~HIT
+            }
+        // zig fmt: on
+        ).init(
+            &.{.{ .species = .Clefairy, .moves = &.{.Metronome} }},
+            &.{.{ .species = .Clefable, .moves = &.{.Metronome} }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
+        try t.log.expected.move(P2.ident(1), Move.SkullBash, .{}, Move.Metronome);
+        try t.log.expected.laststill();
+        try t.log.expected.prepare(P2.ident(1), Move.SkullBash);
+        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
+        try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
+        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
+        try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
+        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
+        try t.log.expected.move(P1.ident(1), Move.Fly, .{}, Move.Metronome);
+        try t.log.expected.laststill();
+        try t.log.expected.prepare(P1.ident(1), Move.Fly);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        try expectEqual(@as(u8, 15), t.actual.p1.active.move(1).pp);
+        try expectEqual(@as(u8, 15), t.actual.p1.active.move(1).pp);
+
+        try t.log.expected.move(P2.ident(1), Move.SkullBash, P1.ident(1), Move.SkullBash);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P2.ident(1));
+        try t.log.expected.move(P1.ident(1), Move.Fly, P2.ident(1), Move.Fly);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P1.ident(1));
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(forced, forced));
+
+        const pp = if (showdown) 15 else 14;
+        try expectEqual(@as(u8, pp), t.actual.p1.active.move(1).pp);
+        try expectEqual(@as(u8, pp), t.actual.p1.active.move(1).pp);
+
+        try t.verify();
+    }
+    // non-Charge
+    {
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                pound, NOP, HIT, ~CRIT, MIN_DMG, mirror_move, mirror_move, fly, NOP, NOP, NOP,
+            } else .{
+                ~CRIT, pound, ~CRIT, MIN_DMG, HIT, ~CRIT, mirror_move, ~CRIT, ~CRIT, MIN_DMG, HIT,
+            }
+        // zig fmt: on
+        ).init(
+            &.{.{ .species = .Clefairy, .moves = &.{.Metronome} }},
+            &.{.{ .species = .Clefable, .moves = &.{.Metronome} }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
+        try t.log.expected.move(P2.ident(1), Move.Pound, P1.ident(1), Move.Metronome);
+        t.expected.p1.get(1).hp -= 54;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
+        try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
+        if (showdown) {
+            try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
+            try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
+            try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
+            try t.log.expected.move(P1.ident(1), Move.Fly, .{}, Move.Metronome);
+            try t.log.expected.laststill();
+            try t.log.expected.prepare(P1.ident(1), Move.Fly);
+        } else {
+            try t.log.expected.move(P1.ident(1), Move.Pound, P2.ident(1), Move.MirrorMove);
+            t.expected.p2.get(1).hp -= 34;
+            try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        }
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try t.verify();
+    }
 }
 
 // Move.MirrorMove

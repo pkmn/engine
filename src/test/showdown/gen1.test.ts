@@ -4254,6 +4254,76 @@ describe('Gen 1', () => {
     }
   });
 
+  test('Infinite Metronome', () => {
+    // Charge
+    {
+      const battle = startBattle([
+        METRONOME('Skull Bash'), SRF_USE,
+        METRONOME('Mirror Move'), METRONOME('Mirror Move'), METRONOME('Fly'), SRF_USE, SS_RES, GLM,
+        GLM, GLM, SRF_RES, SS_RUN, MISS,
+      ], [
+        {species: 'Clefairy', evs, moves: ['Metronome']},
+      ], [
+        {species: 'Clefable', evs, moves: ['Metronome']},
+      ]);
+
+      battle.makeChoices('move 1', 'move 1');
+
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(15);
+      expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(15);
+
+      battle.makeChoices('move 1', 'move 1');
+
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(15);
+      expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(15);
+
+      verify(battle, [
+        '|move|p2a: Clefable|Metronome|p2a: Clefable',
+        '|move|p2a: Clefable|Skull Bash||[from]Metronome|[still]',
+        '|-prepare|p2a: Clefable|Skull Bash',
+        '|move|p1a: Clefairy|Metronome|p1a: Clefairy',
+        '|move|p1a: Clefairy|Mirror Move|p1a: Clefairy|[from]Metronome',
+        '|move|p1a: Clefairy|Metronome|p1a: Clefairy|[from]Mirror Move',
+        '|move|p1a: Clefairy|Mirror Move|p1a: Clefairy|[from]Metronome',
+        '|move|p1a: Clefairy|Metronome|p1a: Clefairy|[from]Mirror Move',
+        '|move|p1a: Clefairy|Fly||[from]Metronome|[still]',
+        '|-prepare|p1a: Clefairy|Fly',
+        '|turn|2',
+        '|move|p2a: Clefable|Skull Bash|p1a: Clefairy|[from]Skull Bash|[miss]',
+        '|-miss|p2a: Clefable',
+        '|move|p1a: Clefairy|Fly|p2a: Clefable|[from]Fly|[miss]',
+        '|-miss|p1a: Clefairy',
+        '|turn|3',
+      ]);
+    }
+    // non-Charge
+    {
+      const battle = startBattle([
+        METRONOME('Pound'), SRF_USE, HIT, NO_CRIT, MIN_DMG,
+        METRONOME('Mirror Move'), METRONOME('Mirror Move'), METRONOME('Fly'), SRF_USE, SS_RES, GLM,
+      ], [
+        {species: 'Clefable', evs, moves: ['Metronome']},
+      ], [
+        {species: 'Clefairy', evs, moves: ['Metronome']},
+      ]);
+
+      battle.makeChoices('move 1', 'move 1');
+      verify(battle, [
+        '|move|p1a: Clefable|Metronome|p1a: Clefable',
+        '|move|p1a: Clefable|Pound|p2a: Clefairy|[from]Metronome',
+        '|-damage|p2a: Clefairy|289/343',
+        '|move|p2a: Clefairy|Metronome|p2a: Clefairy',
+        '|move|p2a: Clefairy|Mirror Move|p2a: Clefairy|[from]Metronome',
+        '|move|p2a: Clefairy|Metronome|p2a: Clefairy|[from]Mirror Move',
+        '|move|p2a: Clefairy|Mirror Move|p2a: Clefairy|[from]Metronome',
+        '|move|p2a: Clefairy|Metronome|p2a: Clefairy|[from]Mirror Move',
+        '|move|p2a: Clefairy|Fly||[from]Metronome|[still]',
+        '|-prepare|p2a: Clefairy|Fly',
+        '|turn|2',
+      ]);
+    }
+  });
+
   test('Hyper Beam + Substitute bug', () => {
     const battle = startBattle([SRF_RES, HIT, NO_CRIT, MAX_DMG, SRF_RES, HIT, NO_CRIT, MAX_DMG], [
       {species: 'Abra', evs, moves: ['Hyper Beam']},
