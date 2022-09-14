@@ -23,7 +23,7 @@ jobs:
         if: ${{ matrix.zig == 'master' }}
         with:
           version: ${{matrix.zig}}
-      - run: npm install --legacy-peer-deps
+      - run: npm install
       - run: echo "${GITHUB_WORKSPACE}/build/bin/zig" >> $GITHUB_PATH
         if: ${{ matrix.zig != 'master' && matrix.os != 'windows-latest' }}
       - run: echo "${env:GITHUB_WORKSPACE}/build/bin/zig" >> $env:GITHUB_PATH

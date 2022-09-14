@@ -59,12 +59,12 @@ pub fn benchmark(gen: u8, seed: u64, battles: ?usize, playouts: ?usize, duration
     var turns: usize = 0;
     var elapsed = try Timer.start();
 
-    var out = std.io.getStdOut().writer();
+    var err = std.io.getStdErr().writer();
 
     var i: usize = 0;
     var n = battles orelse std.math.maxInt(usize);
     while (i < n and (if (duration) |d| elapsed.read() < d else true)) : (i += 1) {
-        if (duration != null) try out.print("{d}: {d}\n", .{ i, random.src.seed });
+        if (duration != null) try err.print("{d}: {d}\n", .{ i, random.src.seed });
 
         var original = switch (gen) {
             1 => pkmn.gen1.helpers.Battle.random(&random, duration == null),
@@ -98,7 +98,9 @@ pub fn benchmark(gen: u8, seed: u64, battles: ?usize, playouts: ?usize, duration
         }
     }
 
-    if (battles != null) try out.print("{d},{d},{d}\n", .{ time, turns, random.src.seed });
+    if (battles != null) {
+        try std.io.getStdOut().writer().print("{d},{d},{d}\n", .{ time, turns, random.src.seed });
+    }
 }
 
 fn errorAndExit(msg: []const u8, arg: []const u8, cmd: []const u8, fuzz: bool) noreturn {
@@ -115,4 +117,9 @@ fn usageAndExit(cmd: []const u8, fuzz: bool) noreturn {
         err.print("Usage: {s} <GEN> <BATTLES> <SEED?> <PLAYOUTS?>\n", .{cmd}) catch {};
     }
     std.process.exit(1);
+}
+
+pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) noreturn {
+    // TODO: print out binary states and log info
+    std.builtin.default_panic(msg, error_return_trace);
 }
