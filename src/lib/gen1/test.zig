@@ -4286,13 +4286,17 @@ test "Metronome effect" {
     const MIN_WRAP = MIN;
     const THRASH_3 = if (showdown) comptime ranged(1, 5 - 3) - 1 else MIN;
     const CFZ_2 = MIN;
-    // const CFZ_CAN = if (showdown) comptime ranged(128, 256) - 1 else MIN;
+    const CFZ_CAN = if (showdown) comptime ranged(128, 256) - 1 else MIN;
+    const MIMIC_2 = if (showdown) MAX else 1;
+    const DISABLE_MOVE_2 = if (showdown) comptime ranged(2, 3) - 1 else 1;
+    const DISABLE_DURATION_3 = comptime ranged(3, 9 - 1) - 1;
 
     const wrap = comptime metronome(.Wrap);
     const petal_dance = comptime metronome(.PetalDance);
-    // const skull_bash = comptime metronome(.SkullBash);
-    // const mirror_move = comptime metronome(.MirrorMove);
-    // const fly = comptime metronome(.Fly);
+    const mimic = comptime metronome(.Mimic);
+    const disable = comptime metronome(.Disable);
+    const rage = comptime metronome(.Rage);
+    const swift = comptime metronome(.Swift);
 
     var t = Test(
     // zig fmt: off
@@ -4300,11 +4304,15 @@ test "Metronome effect" {
             wrap, NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
             petal_dance, NOP, HIT, ~CRIT, MIN_DMG, THRASH_3,
             NOP, NOP, NOP, ~HIT, NOP, NOP, NOP, ~HIT, CFZ_2,
-            // CFZ_CAN, skull_bash, NOP, mirror_move, mirror_move, fly, NOP, NOP, NOP,
+            CFZ_CAN, mimic, NOP, MIMIC_2, disable, NOP, HIT, DISABLE_MOVE_2, DISABLE_DURATION_3,
+            rage, NOP, HIT, ~CRIT, MIN_DMG, swift, NOP, ~CRIT, MIN_DMG,
         } else .{
             ~CRIT, wrap, MIN_WRAP, ~CRIT, MIN_DMG, HIT,
             ~CRIT, petal_dance, THRASH_3, ~CRIT, MIN_DMG, HIT,
             ~CRIT, MIN_DMG, ~HIT, CFZ_2, ~CRIT, MIN_DMG, ~HIT,
+            CFZ_CAN, ~CRIT, mimic, HIT, MIMIC_2, ~CRIT, disable, ~CRIT,
+            HIT, DISABLE_MOVE_2, DISABLE_DURATION_3,
+            ~CRIT, rage, ~CRIT, MIN_DMG, HIT,
         }
     // zig fmt: on
     ).init(
@@ -4320,10 +4328,10 @@ test "Metronome effect" {
     try t.log.expected.cant(P1.ident(1), .Trapped);
     try t.log.expected.turn(2);
 
+    // Pokémon Showdown partial trapping lock doesn't work with Metronome...
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-    var n = t.battle.actual.choices(.P1, .Move, &choices);
-    n = t.battle.actual.choices(.P2, .Move, &choices);
+    var n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(
         Choice,
         if (showdown) &[_]Choice{ move(1), move(2), move(3) } else &[_]Choice{forced},
@@ -4382,22 +4390,57 @@ test "Metronome effect" {
 
     try expectEqual(Result.Default, try t.update(move(2), forced));
 
-    // try t.log.expected.activate(P2.ident(1), .Confusion);
-    // try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
-    // try t.log.expected.move(P2.ident(1), Move.SkullBash, .{}, Move.Metronome);
-    // try t.log.expected.laststill();
-    // try t.log.expected.prepare(P2.ident(1), Move.SkullBash);
-    // try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
-    // try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
-    // try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
-    // try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
-    // try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
-    // try t.log.expected.move(P1.ident(1), Move.Fly, .{}, Move.Metronome);
-    // try t.log.expected.laststill();
-    // try t.log.expected.prepare(P1.ident(1), Move.Fly);
-    // try t.log.expected.turn(7);
+    try t.log.expected.activate(P2.ident(1), .Confusion);
+    try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
+    try t.log.expected.move(P2.ident(1), Move.Mimic, P1.ident(1), Move.Metronome);
+    try t.log.expected.startEffect(P2.ident(1), .Mimic, Move.Teleport);
+    try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
+    try t.log.expected.move(P1.ident(1), Move.Disable, P2.ident(1), Move.Metronome);
+    const disabled = if (showdown) Move.Teleport else Move.Mimic;
+    try t.log.expected.startEffect(P2.ident(1), .Disable, disabled);
+    try t.log.expected.turn(7);
 
-    // try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    // Metronome -> Mimic only works on Pokémon Showdown if Mimic
+    // is in the moveset and replaces *that* slot instead of Metronome
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ move(1), move(3) }, choices[0..n]);
+
+    try t.log.expected.end(P2.ident(1), .Confusion);
+    if (showdown) {
+        try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
+        try t.log.expected.move(P2.ident(1), Move.Rage, P1.ident(1), Move.Metronome);
+        t.expected.p1.get(1).hp -= 19;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
+        try t.log.expected.move(P1.ident(1), Move.Swift, P2.ident(1), Move.Metronome);
+        t.expected.p2.get(1).hp -= 72;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.boost(P2.ident(1), .Rage, 1);
+    } else {
+        try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
+        try t.log.expected.move(P1.ident(1), Move.Rage, P2.ident(1), Move.Metronome);
+        t.expected.p2.get(1).hp -= 25;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    }
+    try t.log.expected.turn(8);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(
+        Choice,
+        if (showdown) &[_]Choice{ move(1), move(2) } else &[_]Choice{forced},
+        choices[0..n],
+    );
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(
+        Choice,
+        if (showdown) &[_]Choice{forced} else &[_]Choice{ move(1), move(3) },
+        choices[0..n],
+    );
 
     try t.verify();
 }
