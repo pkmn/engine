@@ -4872,7 +4872,7 @@ test "Bide + Substitute bug" {
     t.expected.p2.get(1).hp -= 20;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.end(P2.ident(1), .Bide);
-    // BUG: On Pokémon Showdown the opponent having a Substitute blanks Bid
+    // BUG: On Pokémon Showdown the opponent having a Substitute blanks Bide
     // if (!showdown) try t.log.expected.end(P1.ident(1), .Substitute);
     try t.log.expected.end(P1.ident(1), .Substitute);
     try t.log.expected.turn(4);
