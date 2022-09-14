@@ -318,7 +318,7 @@ pub const Move = enum(u8) {
             .bp = 40,
             .type = .Normal,
             .accuracy = 100,
-            .target = .Other,
+            .target = .Any,
         },
         // WingAttack
         .{
@@ -326,7 +326,7 @@ pub const Move = enum(u8) {
             .bp = 35,
             .type = .Flying,
             .accuracy = 100,
-            .target = .Other,
+            .target = .Any,
         },
         // Whirlwind
         .{
@@ -342,7 +342,7 @@ pub const Move = enum(u8) {
             .bp = 70,
             .type = .Flying,
             .accuracy = 95,
-            .target = .Other,
+            .target = .Any,
         },
         // Bind
         .{
@@ -702,7 +702,7 @@ pub const Move = enum(u8) {
             .bp = 35,
             .type = .Flying,
             .accuracy = 100,
-            .target = .Other,
+            .target = .Any,
         },
         // DrillPeck
         .{
@@ -710,7 +710,7 @@ pub const Move = enum(u8) {
             .bp = 80,
             .type = .Flying,
             .accuracy = 100,
-            .target = .Other,
+            .target = .Any,
         },
         // Submission
         .{
@@ -1334,7 +1334,7 @@ pub const Move = enum(u8) {
             .bp = 140,
             .type = .Flying,
             .accuracy = 90,
-            .target = .Other,
+            .target = .Any,
         },
         // Transform
         .{
@@ -1639,6 +1639,7 @@ pub const Move = enum(u8) {
         Depends,
         Other,
         // TODO: resolve or resolve + run?
+        Any,
         Allies,
         Ally,
         AllyOrSelf,

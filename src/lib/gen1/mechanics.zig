@@ -257,11 +257,11 @@ fn saveMove(battle: anytype, player: Player, choice: ?Choice) u8 {
 
     if (!showdown) return 0;
 
-    // getRandomTarget arbitrarily advances the RNG during resolveAction and runAction, unless
-    // it is the execution turn of a Charge move (but not Fly/Dig) that was proc-ed via useMove
+    // getRandomTarget arbitrarily advances the RNG during resolveAction and runAction, unless it
+    // is the execution turn of a normal target twoturnmove move that was proc-ed via useMove
     const advance = !(side.active.volatiles.Charging and
         Move.get(side.last_selected_move).effect == .Charge and
-        !(side.last_selected_move == .Fly or side.last_selected_move == .Dig) and
+        !(Move.get(side.last_selected_move).target == .Any) and
         Move.get(side.last_used_move).effect != .Charge);
     if (advance) battle.rng.advance(Move.frames(side.last_selected_move, .resolve));
 

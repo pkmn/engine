@@ -426,7 +426,7 @@ pub const Move = enum(u8) {
             .type = .Flying,
             .pp = 7, // * 5 = 35
             .acc = 14, // 100%
-            .target = .Other,
+            .target = .Any,
         },
         // WingAttack
         .{
@@ -435,7 +435,7 @@ pub const Move = enum(u8) {
             .type = .Flying,
             .pp = 7, // * 5 = 35
             .acc = 14, // 100%
-            .target = .Other,
+            .target = .Any,
         },
         // Whirlwind
         .{
@@ -453,7 +453,7 @@ pub const Move = enum(u8) {
             .type = .Flying,
             .pp = 3, // * 5 = 15
             .acc = 13, // 95%
-            .target = .Other,
+            .target = .Any,
         },
         // Bind
         .{
@@ -873,7 +873,7 @@ pub const Move = enum(u8) {
             .type = .Flying,
             .pp = 7, // * 5 = 35
             .acc = 14, // 100%
-            .target = .Other,
+            .target = .Any,
         },
         // DrillPeck
         .{
@@ -882,7 +882,7 @@ pub const Move = enum(u8) {
             .type = .Flying,
             .pp = 4, // * 5 = 20
             .acc = 14, // 100%
-            .target = .Other,
+            .target = .Any,
         },
         // Submission
         .{
@@ -1596,7 +1596,7 @@ pub const Move = enum(u8) {
             .type = .Flying,
             .pp = 1, // * 5 = 5
             .acc = 12, // 90%
-            .target = .Other,
+            .target = .Any,
         },
         // Transform
         .{
@@ -1910,7 +1910,7 @@ pub const Move = enum(u8) {
             .type = .Flying,
             .pp = 1, // * 5 = 5
             .acc = 13, // 95%
-            .target = .Other,
+            .target = .Any,
         },
         // CottonSpore
         .{
@@ -2751,6 +2751,7 @@ pub const Move = enum(u8) {
         Depends,
         Other,
         // TODO: resolve or resolve + run?
+        Any,
         Allies,
         Ally,
         AllyOrSelf,

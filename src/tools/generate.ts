@@ -168,7 +168,7 @@ const TARGETS: {[target in MoveTarget]: string} = {
   allies: 'Allies',
   allySide: 'AllySide',
   allyTeam: 'Self',
-  any: 'Other',
+  any: 'Any',
   foeSide: 'FoeSide',
   normal: 'Other',
   randomNormal: 'RandomFoe',
