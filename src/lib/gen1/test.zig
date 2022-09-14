@@ -5000,8 +5000,72 @@ test "Counter + sleep = Desync Clause Mod bug" {
 }
 
 test "Counter via Metronome bug" {
-    // TODO
-    return error.SkipZigTest;
+    const counter = comptime metronome(.Counter);
+
+    // Counter first
+    {
+        var t = Test((if (showdown)
+            (.{ NOP, HIT, NOP, counter, NOP, HIT, HIT })
+        else
+            (.{ HIT, ~CRIT, counter, ~CRIT, HIT }))).init(
+            &.{.{ .species = .Snorlax, .moves = &.{.SeismicToss} }},
+            &.{.{ .species = .Chansey, .moves = &.{ .Teleport, .Metronome } }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+        try t.log.expected.move(P1.ident(1), Move.SeismicToss, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 100;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
+        try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(1), Move.Metronome);
+        if (showdown) {
+            t.expected.p1.get(1).hp -= 200;
+            try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        } else {
+            try t.log.expected.fail(P2.ident(1), .None);
+        }
+        try t.log.expected.move(P1.ident(1), Move.SeismicToss, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 100;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(2)));
+
+        try t.verify();
+    }
+    // Counter second
+    {
+        var t = Test((if (showdown)
+            (.{ NOP, HIT, counter, NOP, HIT })
+        else
+            (.{ HIT, ~CRIT, counter, ~CRIT }))).init(
+            &.{.{ .species = .Alakazam, .moves = &.{.SeismicToss} }},
+            &.{.{ .species = .Chansey, .moves = &.{.Metronome} }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P1.ident(1), Move.SeismicToss, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 100;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
+        try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(1), Move.Metronome);
+        if (showdown) {
+            t.expected.p1.get(1).hp -= 200;
+            try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        } else {
+            try t.log.expected.fail(P2.ident(1), .None);
+        }
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        try t.verify();
+    }
 }
 
 test "Hyper Beam + Substitute bug" {

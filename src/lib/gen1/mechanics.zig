@@ -656,8 +656,10 @@ fn canMove(
     if (!showdown or !special) side.last_used_move = side.last_selected_move;
     if (!skip) decrementPP(side, mslot, auto);
 
-    // Metronome / Mirror Move call getRandomTarget if the move they proc targets
-    if (showdown and special) battle.rng.advance(Move.frames(side.last_selected_move, .resolve));
+    // Metronome / Mirror Move call getRandomTarget if the move they proc targets (max once)
+    if (showdown and special) {
+        battle.rng.advance(@boolToInt(Move.get(side.last_selected_move).target.resolves()));
+    }
 
     const target = if (move.target == .Self) player else player.foe();
     try log.move(player_ident, side.last_selected_move, battle.active(target), from);
@@ -783,8 +785,9 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         }
     }
 
-    // TODO: is this comprehensive?
-    if (showdown and skip and move.effect != .Bide) battle.last_damage = 0;
+    if (showdown and skip and move.effect != .Bide and move.effect != .Metronome) {
+        battle.last_damage = 0;
+    }
 
     miss = if (showdown or skip)
         miss

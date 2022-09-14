@@ -4193,32 +4193,6 @@ describe('Gen 1', () => {
   });
 
   test('Counter via Metronome bug', () => {
-    // Counter second
-    {
-      const battle = startBattle([
-        SRF_RES, HIT, METRONOME('Counter'), SRF_USE, HIT,
-      ], [
-        {species: 'Alakazam', evs, moves: ['Seismic Toss']},
-      ], [
-        {species: 'Chansey', evs, moves: ['Metronome']},
-      ]);
-
-      let p1hp = battle.p1.pokemon[0].hp;
-      let p2hp = battle.p2.pokemon[0].hp;
-
-      battle.makeChoices('move 1', 'move 1');
-      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 200);
-      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
-
-      verify(battle, [
-        '|move|p1a: Alakazam|Seismic Toss|p2a: Chansey',
-        '|-damage|p2a: Chansey|603/703',
-        '|move|p2a: Chansey|Metronome|p2a: Chansey',
-        '|move|p2a: Chansey|Counter|p1a: Alakazam|[from]Metronome',
-        '|-damage|p1a: Alakazam|113/313',
-        '|turn|2',
-      ]);
-    }
     // Counter first
     {
       const battle = startBattle([
@@ -4250,6 +4224,32 @@ describe('Gen 1', () => {
         '|move|p1a: Snorlax|Seismic Toss|p2a: Chansey',
         '|-damage|p2a: Chansey|503/703',
         '|turn|3',
+      ]);
+    }
+    // Counter second
+    {
+      const battle = startBattle([
+        SRF_RES, HIT, METRONOME('Counter'), SRF_USE, HIT,
+      ], [
+        {species: 'Alakazam', evs, moves: ['Seismic Toss']},
+      ], [
+        {species: 'Chansey', evs, moves: ['Metronome']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 200);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
+
+      verify(battle, [
+        '|move|p1a: Alakazam|Seismic Toss|p2a: Chansey',
+        '|-damage|p2a: Chansey|603/703',
+        '|move|p2a: Chansey|Metronome|p2a: Chansey',
+        '|move|p2a: Chansey|Counter|p1a: Alakazam|[from]Metronome',
+        '|-damage|p1a: Alakazam|113/313',
+        '|turn|2',
       ]);
     }
   });
