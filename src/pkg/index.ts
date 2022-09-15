@@ -144,4 +144,28 @@ export class Battle {
   }
 }
 
+export class Choice {
+  static Types = ['pass', 'move', 'switch'] as const;
+
+  private constructor() {}
+
+  static parse(byte: number): Choice {
+    return {type: Choice.Types[byte & 0b11], data: byte >> 4};
+  }
+}
+
+export class Result {
+  static Types = ['none', 'win', 'lose', 'tie', 'error'] as const;
+
+  private constructor() {}
+
+  static parse(byte: number): Result {
+    return {
+      type: Result.Types[byte & 0b1111],
+      p1: Choice.Types[(byte >> 4) & 0b11],
+      p2: Choice.Types[byte >> 6],
+    };
+  }
+}
+
 export * from './protocol';

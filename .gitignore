@@ -25,4 +25,5 @@ dist/
 # Project
 .cache
 src/examples/c/example
+index.html
 

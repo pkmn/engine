@@ -2,6 +2,17 @@ const std = @import("std");
 const pkmn = @import("pkmn");
 
 const Timer = std.time.Timer;
+const Allocator = std.mem.Allocator;
+
+const Data = struct {
+    result: pkmn.Result = pkmn.Result.Default,
+    c1: pkmn.Choice = .{},
+    c2: pkmn.Choice = .{},
+    state: []u8,
+    log: []u8 = &.{},
+};
+
+var data: ?std.ArrayList(Data) = null;
 
 pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -46,11 +57,21 @@ pub fn main() !void {
     };
     const playouts = if (args.len == 5) std.fmt.parseUnsigned(usize, args[4], 10) catch
         errorAndExit("playouts", args[4], args[0], fuzz) else null;
-    try benchmark(gen, seed, battles, playouts, duration);
+
+    try benchmark(allocator, gen, seed, battles, playouts, duration);
 }
 
-pub fn benchmark(gen: u8, seed: u64, battles: ?usize, playouts: ?usize, duration: ?usize) !void {
+pub fn benchmark(
+    allocator: Allocator,
+    gen: u8,
+    seed: u64,
+    battles: ?usize,
+    playouts: ?usize,
+    duration: ?usize,
+) !void {
     std.debug.assert(gen >= 1 and gen <= 8);
+
+    const save = duration != null and pkmn.options.trace;
 
     var random = pkmn.PSRNG.init(seed);
     var options: [pkmn.OPTIONS_SIZE]pkmn.Choice = undefined;
@@ -59,6 +80,7 @@ pub fn benchmark(gen: u8, seed: u64, battles: ?usize, playouts: ?usize, duration
     var turns: usize = 0;
     var elapsed = try Timer.start();
 
+    var out = std.io.getStdOut().writer();
     var err = std.io.getStdErr().writer();
 
     var i: usize = 0;
@@ -70,6 +92,12 @@ pub fn benchmark(gen: u8, seed: u64, battles: ?usize, playouts: ?usize, duration
             1 => pkmn.gen1.helpers.Battle.random(&random, duration == null),
             else => unreachable,
         };
+
+        if (save) {
+            if (data) |d| d.deinit();
+            data = std.ArrayList(Data).init(allocator);
+            try data.?.append(.{ .state = std.mem.toBytes(original)[0..] });
+        }
 
         var j: usize = 0;
         var m = playouts orelse 1;
@@ -85,6 +113,7 @@ pub fn benchmark(gen: u8, seed: u64, battles: ?usize, playouts: ?usize, duration
             var p2 = pkmn.PSRNG.init(random.newSeed());
 
             var timer = try Timer.start();
+
             var result = if (duration != null)
                 pkmn.Result.Default
             else
@@ -92,15 +121,23 @@ pub fn benchmark(gen: u8, seed: u64, battles: ?usize, playouts: ?usize, duration
             while (result.type == .None) : (result = try battle.update(c1, c2, null)) {
                 c1 = options[p1.range(u8, 0, battle.choices(.P1, result.p1, &options))];
                 c2 = options[p2.range(u8, 0, battle.choices(.P2, result.p2, &options))];
+
+                if (save) {
+                    try data.?.append(.{
+                        .result = result,
+                        .c1 = c1,
+                        .c2 = c2,
+                        .state = std.mem.toBytes(battle)[0..],
+                        .log = &.{}, // TODO
+                    });
+                }
             }
             time += timer.read();
             turns += battle.turn;
         }
     }
-
-    if (battles != null) {
-        try std.io.getStdOut().writer().print("{d},{d},{d}\n", .{ time, turns, random.src.seed });
-    }
+    if (data) |d| d.deinit();
+    if (battles != null) try out.print("{d},{d},{d}\n", .{ time, turns, random.src.seed });
 }
 
 fn errorAndExit(msg: []const u8, arg: []const u8, cmd: []const u8, fuzz: bool) noreturn {
@@ -120,6 +157,20 @@ fn usageAndExit(cmd: []const u8, fuzz: bool) noreturn {
 }
 
 pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) noreturn {
-    // TODO: print out binary states and log info
+    if (data) |ds| {
+        const out = std.io.getStdOut();
+        var buf = std.io.bufferedWriter(out.writer());
+        var w = buf.writer();
+        for (ds.items) |d| {
+            std.debug.print("{} {} {}\n", .{ d.result, d.c1, d.c2 });
+            w.writeStruct(d.result) catch unreachable;
+            w.writeStruct(d.c1) catch unreachable;
+            w.writeStruct(d.c2) catch unreachable;
+            w.writeAll(d.state) catch unreachable;
+            // w.writeAll(d.log) catch unreachable;
+        }
+        buf.flush() catch unreachable;
+        ds.deinit();
+    }
     std.builtin.default_panic(msg, error_return_trace);
 }

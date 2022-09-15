@@ -30,8 +30,7 @@ describe('serialize/deserialize', () => {
           const opt = `-Dshowdown=${showdown ? 'true' : 'false'}`;
           const seed = rng.next(0, Number.MAX_SAFE_INTEGER).toString();
           const buf = await run('zig', ['build', opt, 'serde', '--', gen.num.toString(), seed]);
-          // NOTE: buf.buffer is garbage data because Node is dumb ¯\_(ツ)_/¯
-          const data = new DataView(Data.buffer(Array.from(buf)).buffer);
+          const data = Data.view(Array.from(buf));
 
           const battle = new gen1.Battle(lookup, data, {showdown});
           const restored = gen1.Battle.restore(gen, lookup, battle, {showdown});

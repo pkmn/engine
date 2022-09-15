@@ -1,5 +1,9 @@
 This folder contains miscellaneous scripts and tools useful for working on the pkmn engine:
 
+- [`fuzz.ts`](fuzz.ts): Runs the [fuzz test](../../docs/TESTING.md#Fuzz) TODO
+
+    $ npm run --silent fuzz  --  <pkmn|showdown> <GEN> <DURATION> <SEED?> >index.html
+
 - [`generate.ts`](generate.ts): Generate the the data files for the library based on
   [templates](../lib/common/data) and [`id.json`](../pkg/data/ids.json) for decoding the serialized
   data. Produces the data based on information fetched from the decompiled sources and Pokémon
