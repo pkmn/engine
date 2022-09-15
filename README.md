@@ -71,7 +71,7 @@ The driver depends on being able to find compiled Node/WASM add-ons in
 [`install-pkmn-engine`](src/bin/install-pkmn-engine) which will check for a compatible `zig`
 compiler (see above regarding minimum version) and download one to
 `node_module/@pkmn/engine/build/bin` if it can't find one, as well as looking for (and downloading,
-if necessary) the required Node headers required to successfully build the add-ons natively.
+if necessary) the required Node headers needed to successfully build the add-ons natively.
 
 **If you have configured NPM to ignore scripts you must either run `install-pkmn-engine` manually or
 build the add-ons manually and place the artifacts in the expected paths.**
