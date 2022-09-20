@@ -97,10 +97,6 @@ pub fn benchmark(
         if (save) {
             if (data != null) deinit();
             data = std.ArrayList(Data).init(allocator);
-            try data.?.append(.{
-                .allocator = allocator,
-                .state = std.mem.toBytes(original)[0..],
-            });
         }
 
         var j: usize = 0;

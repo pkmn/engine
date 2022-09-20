@@ -25,20 +25,16 @@ const pretty = (choice: Choice) =>
 const display = (
   gen: Generation,
   showdown: boolean,
-  result: Result | undefined,
+  result: Result,
   c1: Choice,
   c2: Choice,
   battle: Battle
 ) => {
   displayBattle(gen, showdown, battle);
-  if (result) {
-    console.log('<div class="sides" style="text-align: center;">');
-    console.log(`<pre class='side'><code>${result.p1} -&gt; ${pretty(c1)}</code></pre>`);
-    console.log(`<pre class='side'><code>${result.p2} -&gt; ${pretty(c2)}</code></pre>`);
-    console.log('</div>');
-  } else {
-    console.log('<div style="visibility: hidden;"><pre><code>start</code></pre></div>');
-  }
+  console.log('<div class="sides" style="text-align: center;">');
+  console.log(`<pre class='side'><code>${result.p1} -&gt; ${pretty(c1)}</code></pre>`);
+  console.log(`<pre class='side'><code>${result.p2} -&gt; ${pretty(c2)}</code></pre>`);
+  console.log('</div>');
 };
 
 (async () => {
@@ -98,7 +94,7 @@ const display = (
       const c2 = Choice.parse(data[offset + 2]);
       const battle = deserialize(data.slice(offset + 3, offset + size + 3));
 
-      display(gen, showdown, offset === 0 ? undefined : result, c1, c2, battle);
+      display(gen, showdown, result, c1, c2, battle);
     }
 
     console.log('<hr />');
