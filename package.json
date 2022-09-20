@@ -57,6 +57,7 @@
     "build": "npm run compile",
     "test": "jest",
     "test:integration": "jest --testRegex='src/test/.*\\.test\\.ts$'",
+    "fuzz": "npm run compile && node build/tools/fuzz",
     "generate": "npm run compile && node build/tools/generate",
     "benchmark": "npm run compile && node build/test/benchmark",
     "postinstall": "node src/bin/install-pkmn-engine"
@@ -78,7 +79,7 @@
     "extends": "@pkmn",
     "ignorePatterns": ["dist/", "node_modules/", "src/examples/zig"],
     "overrides": [{
-      "files": ["src/pkg/index.ts"],
+      "files": ["src/pkg/index.ts", "src/test/display.ts"],
       "rules": {
         "@typescript-eslint/no-empty-interface": "off",
         "@typescript-eslint/no-shadow": "off"

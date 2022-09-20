@@ -1,7 +1,7 @@
 import {Dex, PRNG} from '@pkmn/sim';
 import {Generation, Generations} from '@pkmn/data';
 
-import {Battle} from './index';
+import {Battle, Choice, Result} from './index';
 
 import * as gen1 from '../test/benchmark/gen1';
 
@@ -22,6 +22,16 @@ for (const gen of new Generations(Dex as any)) {
       const restored = Battle.restore(gen, battle, options);
       // NOTE: Jest object diffing toJSON is super slow so we compare strings instead...
       expect(JSON.stringify(restored)).toEqual(JSON.stringify(battle));
+    });
+
+    it('Choice.parse', () => {
+      expect(Choice.parse(0b0100_0001)).toEqual({type: 'move', data: 4});
+      expect(Choice.parse(0b0101_0010)).toEqual({type: 'switch', data: 5});
+    });
+
+    it('Result.parse', () => {
+      expect(Result.parse(0b0101_0000)).toEqual({type: 'none', p1: 'move', p2: 'move'});
+      expect(Result.parse(0b1000_0000)).toEqual({type: 'none', p1: 'pass', p2: 'switch'});
     });
   });
 }

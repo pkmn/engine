@@ -75,7 +75,6 @@ export namespace Gen1 {
     recharging?: unknown;
     rage?: {accuracy: number};
     leechseed?: unknown;
-    toxic?: unknown;
     lightscreen?: unknown;
     reflect?: unknown;
     transform?: {player: 'p1' | 'p2'; slot: number};

@@ -25,7 +25,7 @@ pub fn main() !void {
 
     var prng = if (seed) |s| pkmn.PSRNG.init(s) else null;
     var battle = switch (gen) {
-        1 => if (prng) |*p| gen1.Battle.random(p, false) else GEN1,
+        1 => if (prng) |*p| gen1.Battle.random(p) else GEN1,
         else => unreachable,
     };
 

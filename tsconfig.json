@@ -8,7 +8,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "incremental": true,
-    "lib": ["es2020", "dom"],
+    "lib": ["es2021", "dom"],
     "module": "commonjs",
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,

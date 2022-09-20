@@ -1,7 +1,7 @@
 # Testing
 
 In addition to [unit tests](#unit), the code in [`src/test`](../src/test) contains harnesses for
-[integration testing](#integration) and [benchmarking](#benchmarking) against Pokémon Showdown.
+[integration testing](#integration) and [benchmarking](#benchmark) against Pokémon Showdown.
 
 ## Unit
 

@@ -8,9 +8,8 @@ import {Generation, Generations, GenerationNum} from '@pkmn/data';
 
 import {Battle, Result, Choice} from '../pkg';
 import {Lookup, Data, LAYOUT} from '../pkg/data';
+import {STYLES, displayBattle, SCRIPTS} from '../test/display';
 import * as gen1 from '../pkg/gen1';
-
-import stringify from 'json-stringify-pretty-compact';
 
 const run = promisify(execFile);
 
@@ -25,25 +24,24 @@ const pretty = (choice: Choice) =>
 
 const display = (
   gen: Generation,
+  showdown: boolean,
   result: Result | undefined,
   c1: Choice,
   c2: Choice,
   battle: Battle
 ) => {
-  const [p1, p2] = Array.from(battle.sides);
-  const header = {turn: battle.turn, lastDamage: battle.lastDamage, prng: battle.prng};
-  console.log(`<div><pre><code>${stringify(header)}</code></pre><table>`);
+  displayBattle(gen, showdown, battle);
   if (result) {
-    console.log(`<tr><th><pre><code>(${result.p1})&gt; p1 ${pretty(c2)}</code></pre></th>`);
-    console.log(`<th><pre><code>(${result.p2})&gt; p2 ${pretty(c2)}</code></pre></th></tr>`);
+    console.log('<div class="sides" style="text-align: center;">');
+    console.log(`<pre class='side'><code>${result.p1} -&gt; ${pretty(c1)}</code></pre>`);
+    console.log(`<pre class='side'><code>${result.p2} -&gt; ${pretty(c2)}</code></pre>`);
+    console.log('</div>');
+  } else {
+    console.log('<div style="visibility: hidden;"><pre><code>start</code></pre></div>');
   }
-  console.log(`<tr><td><pre><code>${stringify(p1)}</code></pre></td>`);
-  console.log(`<td><pre><code>${stringify(p2)}</code></pre><td></tr>`);
-  console.log('</table></div>');
 };
 
 (async () => {
-  console.debug(Result.parse(0b0101_0000), Result.parse(0b1000_0000));
   if (process.argv.length < 4 || process.argv.length > 6) usage(process.argv.length.toString());
   const mode = process.argv[2];
   if (mode !== 'pkmn' && mode !== 'showdown') {
@@ -55,7 +53,7 @@ const display = (
   const gen = gens.get(+process.argv[3] as GenerationNum);
   const lookup = Lookup.get(gen);
   const size = LAYOUT[gen.num - 1].sizes.Battle;
-  const create = (buf: number[]): Battle => {
+  const deserialize = (buf: number[]): Battle => {
     switch (gen.num) {
     case 1: return new gen1.Battle(lookup, Data.view(buf), {showdown});
     default: throw new Error(`Unsupported gen: ${gen.num}`);
@@ -71,31 +69,40 @@ const display = (
     await run('zig', args, {encoding: 'buffer'});
   } catch (err: any) {
     const {stdout, stderr} = err as {stdout: Buffer; stderr: Buffer};
-    console.error(stderr.toString('utf8'));
+    const error = stderr.toString('utf8');
+
+    console.error(error);
 
     console.log(
       '<!doctype html><html lang=en><head>' +
         '<meta charset="utf-8">' +
         '<meta name="viewport" content="width=device-width, initial-scale=1">' +
-        '<link rel="icon" href="pkmn.cc/favicon.ico">' +
+        '<link rel="icon" href="https://pkmn.cc/favicon.ico">' +
         '<title>@pkmn/engine</title>' +
-        '<style>td { vertical-align: top; }</style>' +
+        `<style>${STYLES}
+        .error {
+          overflow: auto;
+          scrollbar-width: none;
+        }
+        .error::-webkit-scrollbar {
+          display: none;
+        }
+        </style>` +
       '</head><body><div id="content">'
     );
 
     const data = Array.from(stdout);
-    for (let i = 0; ; i++) {
-      const offset = i * (3 + size);
-      if (offset >= data.length) break;
-
-      const result = i === 0 ? undefined : Result.parse(data[offset]);
+    for (let offset = 0; offset < data.length; offset += (3 + size)) {
+      const result = Result.parse(data[offset]);
       const c1 = Choice.parse(data[offset + 1]);
       const c2 = Choice.parse(data[offset + 2]);
-      const battle = create(data.slice(offset + 3, offset + size + 3));
+      const battle = deserialize(data.slice(offset + 3, offset + size + 3));
 
-      display(gen, result, c1, c2, battle);
+      display(gen, showdown, offset === 0 ? undefined : result, c1, c2, battle);
     }
 
-    console.log('</div></body></html>');
+    console.log('<hr />');
+    console.log(`<pre class="error"><code>${error.slice(error.indexOf('panic:'))}</pre></code>`);
+    console.log(`</div><script>${SCRIPTS}</script></body></html>`);
   }
 })().catch(console.error);

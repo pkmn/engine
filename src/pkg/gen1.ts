@@ -353,7 +353,9 @@ export class Pokemon implements Gen1.Pokemon {
     const off = this.offset.active + OFFSETS.ActivePokemon.volatiles;
     const volatiles: Gen1.Volatiles = {};
     for (const v in Pokemon.Volatiles) {
+      if (v === 'Toxic') continue;
       const volatile = toID(v) as keyof Gen1.Volatiles;
+
       if (this.volatile(Pokemon.Volatiles[v])) {
         if (volatile === 'bide') {
           volatiles[volatile] = {
@@ -387,8 +389,6 @@ export class Pokemon implements Gen1.Pokemon {
         } else {
           volatiles[volatile] = {};
         }
-      } else {
-        volatiles[volatile] = undefined;
       }
     }
     return volatiles;
@@ -637,7 +637,7 @@ export class Pokemon implements Gen1.Pokemon {
       +!!volatiles.mist | (+!!volatiles.focusenergy << 1) |
        (+!!volatiles.substitute << 2) | (+!!volatiles.recharging << 3) |
        (+!!volatiles.rage << 4) | (+!!volatiles.leechseed << 5) |
-       (+!!volatiles.toxic << 6) | (+!!volatiles.lightscreen << 7));
+       (+!!pokemon.statusData.toxic << 6) | (+!!volatiles.lightscreen << 7));
 
     const confusion = volatiles.confusion?.duration ?? 0;
     const attacks = volatiles.trapping?.duration ??
@@ -730,7 +730,7 @@ export class StoredPokemon {
       species: this.species,
       types: this.types,
       stats: this.stats,
-      moves: this.moves,
+      moves: Array.from(this.moves),
     };
   }
 }
