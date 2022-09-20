@@ -29,6 +29,7 @@ const trace = options.trace;
 const ArgType = protocol.ArgType;
 const FixedLog = protocol.FixedLog;
 const Log = protocol.Log;
+const NULL = protocol.NULL;
 
 const Move = data.Move;
 const Species = data.Species;
@@ -142,15 +143,15 @@ test "switching (order)" {
     const p1 = battle.side(.P1);
     const p2 = battle.side(.P2);
 
-    try expectEqual(Result.Default, try battle.update(swtch(3), swtch(2), null));
+    try expectEqual(Result.Default, try battle.update(swtch(3), swtch(2), NULL));
     try expectOrder(p1, &.{ 3, 2, 1, 4, 5, 6 }, p2, &.{ 2, 1, 3, 4, 5, 6 });
-    try expectEqual(Result.Default, try battle.update(swtch(5), swtch(5), null));
+    try expectEqual(Result.Default, try battle.update(swtch(5), swtch(5), NULL));
     try expectOrder(p1, &.{ 5, 2, 1, 4, 3, 6 }, p2, &.{ 5, 1, 3, 4, 2, 6 });
-    try expectEqual(Result.Default, try battle.update(swtch(6), swtch(3), null));
+    try expectEqual(Result.Default, try battle.update(swtch(6), swtch(3), NULL));
     try expectOrder(p1, &.{ 6, 2, 1, 4, 3, 5 }, p2, &.{ 3, 1, 5, 4, 2, 6 });
-    try expectEqual(Result.Default, try battle.update(swtch(3), swtch(3), null));
+    try expectEqual(Result.Default, try battle.update(swtch(3), swtch(3), NULL));
     try expectOrder(p1, &.{ 1, 2, 6, 4, 3, 5 }, p2, &.{ 5, 1, 3, 4, 2, 6 });
-    try expectEqual(Result.Default, try battle.update(swtch(2), swtch(4), null));
+    try expectEqual(Result.Default, try battle.update(swtch(2), swtch(4), NULL));
     try expectOrder(p1, &.{ 2, 1, 6, 4, 3, 5 }, p2, &.{ 4, 1, 3, 5, 2, 6 });
 
     var expected_buf: [22]u8 = undefined;
@@ -602,7 +603,7 @@ test "end turn (turn limit)" {
     var max: u16 = if (showdown) 1000 else 65535;
     var i: usize = 0;
     while (i < max - 1) : (i += 1) {
-        try expectEqual(Result.Default, try t.battle.actual.update(swtch(2), swtch(2), null));
+        try expectEqual(Result.Default, try t.battle.actual.update(swtch(2), swtch(2), NULL));
     }
     try expectEqual(max - 1, t.battle.actual.turn);
 
@@ -4882,6 +4883,62 @@ test "Substitute effect" {
 
 // Pokémon Showdown Bugs
 
+test "Charge + Sleep bug" {
+    const SLP_1 = if (showdown) comptime ranged(1, 8 - 1) else 1;
+
+    var t = Test((if (showdown)
+        (.{ NOP, NOP, HIT, NOP, SLP_1, NOP, NOP })
+    else
+        (.{ ~CRIT, HIT, SLP_1, ~CRIT, MIN_DMG, HIT }))).init(
+        &.{.{ .species = .Venusaur, .moves = &.{ .SolarBeam, .Tackle } }},
+        &.{.{ .species = .Snorlax, .moves = &.{ .LovelyKiss, .Teleport } }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.SolarBeam, .{}, null);
+    try t.log.expected.laststill();
+    try t.log.expected.prepare(P1.ident(1), Move.SolarBeam);
+    try t.log.expected.move(P2.ident(1), Move.LovelyKiss, P1.ident(1), null);
+    t.expected.p1.get(1).status = Status.slp(1);
+    try t.log.expected.statusFrom(P1.ident(1), t.expected.p1.get(1).status, Move.LovelyKiss);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    var n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
+
+    try t.log.expected.curestatus(P1.ident(1), t.expected.p1.get(1).status, .Message);
+    t.expected.p1.get(1).status = 0;
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(forced, move(2)));
+
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(
+        Choice,
+        if (showdown) &[_]Choice{ move(1), move(2) } else &[_]Choice{forced},
+        choices[0..n],
+    );
+
+    if (showdown) {
+        try t.log.expected.move(P1.ident(1), Move.SolarBeam, .{}, null);
+        try t.log.expected.laststill();
+        try t.log.expected.prepare(P1.ident(1), Move.SolarBeam);
+    } else {
+        try t.log.expected.move(P1.ident(1), Move.SolarBeam, P2.ident(1), Move.SolarBeam);
+        t.expected.p2.get(1).hp -= 168;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    }
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(forced, move(2)));
+
+    try t.verify();
+}
+
 test "Bide + Substitute bug" {
     const BIDE_2 = MIN;
 
@@ -5163,9 +5220,9 @@ test "Mimic infinite PP bug" {
                 .{ .species = .Clefable, .moves = &.{.Teleport} },
             },
         );
-        try expectEqual(Result.Default, try battle.update(.{}, .{}, null));
+        try expectEqual(Result.Default, try battle.update(.{}, .{}, NULL));
 
-        try expectEqual(Result.Default, try battle.update(move(1), move(1), null));
+        try expectEqual(Result.Default, try battle.update(move(1), move(1), NULL));
         try expectEqual(@as(u8, 15), battle.side(.P2).active.move(1).pp);
         try expectEqual(@as(u8, 15), battle.side(.P2).get(1).move(1).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).active.move(2).pp);
@@ -5174,14 +5231,14 @@ test "Mimic infinite PP bug" {
         var i: usize = 1;
         // BUG: can't implement Pokémon Showdown's negative PP so need to stop iterating early
         while (i < 16) : (i += 1) {
-            try expectEqual(Result.Default, try battle.update(move(1), move(1), null));
+            try expectEqual(Result.Default, try battle.update(move(1), move(1), NULL));
         }
         try expectEqual(@as(u8, 0), battle.side(.P2).active.move(1).pp);
         try expectEqual(@as(u8, 0), battle.side(.P2).get(1).move(1).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).active.move(2).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(2).pp);
 
-        try expectEqual(Result.Default, try battle.update(move(1), swtch(2), null));
+        try expectEqual(Result.Default, try battle.update(move(1), swtch(2), NULL));
 
         try expectEqual(@as(u8, 0), battle.side(.P2).get(2).move(1).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).get(2).move(2).pp);
@@ -5201,9 +5258,9 @@ test "Mimic infinite PP bug" {
                 .{ .species = .Clefable, .moves = &.{.Teleport} },
             },
         );
-        try expectEqual(Result.Default, try battle.update(.{}, .{}, null));
+        try expectEqual(Result.Default, try battle.update(.{}, .{}, NULL));
 
-        try expectEqual(Result.Default, try battle.update(move(1), move(2), null));
+        try expectEqual(Result.Default, try battle.update(move(1), move(2), NULL));
         try expectEqual(@as(u8, 8), battle.side(.P2).active.move(1).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(1).pp);
         try expectEqual(@as(u8, 15), battle.side(.P2).active.move(2).pp);
@@ -5212,7 +5269,7 @@ test "Mimic infinite PP bug" {
         var i: usize = 1;
         // BUG: can't implement Pokémon Showdown's negative PP so need to stop iterating early
         while (i < 16) : (i += 1) {
-            try expectEqual(Result.Default, try battle.update(move(1), move(2), null));
+            try expectEqual(Result.Default, try battle.update(move(1), move(2), NULL));
         }
         // BUG: Pokémon Showdown decrements the wrong slot here
         try expectEqual(@as(u8, 8), battle.side(.P2).active.move(1).pp);
@@ -5220,7 +5277,7 @@ test "Mimic infinite PP bug" {
         try expectEqual(@as(u8, 0), battle.side(.P2).active.move(2).pp);
         try expectEqual(@as(u8, 0), battle.side(.P2).get(1).move(2).pp);
 
-        try expectEqual(Result.Default, try battle.update(move(1), swtch(2), null));
+        try expectEqual(Result.Default, try battle.update(move(1), swtch(2), NULL));
 
         try expectEqual(@as(u8, 8), battle.side(.P2).get(2).move(1).pp);
         try expectEqual(@as(u8, 0), battle.side(.P2).get(2).move(2).pp);
@@ -7081,7 +7138,7 @@ test "Trapping sleep glitch" {
 
 test "Partial trapping move Mirror Move glitch" {
     // https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
-    // https://pkmn.cc/bulba-glitch-1##Mirror_Move_glitch
+    // https://pkmn.cc/bulba-glitch-1#Mirror_Move_glitch
     const MIN_WRAP = MIN;
 
     var t = Test((if (showdown)
@@ -7422,15 +7479,15 @@ test "MAX_LOGS" {
     //     );
     //     battle.side(.P2).get(2).stats.spe = 317; // make P2 slower to avoid speed ties
 
-    //     try expectEqual(Result.Default, try battle.update(.{}, .{}, null));
+    //     try expectEqual(Result.Default, try battle.update(.{}, .{}, NULL));
     //     // P1 switches into Leech Seed
-    //     try expectEqual(Result.Default, try battle.update(swtch(2), move(1), null));
+    //     try expectEqual(Result.Default, try battle.update(swtch(2), move(1), NULL));
     //     // P2 switches into to P1's Metronome -> Leech Seed
-    //     try expectEqual(Result.Default, try battle.update(move(1), swtch(2), null));
+    //     try expectEqual(Result.Default, try battle.update(move(1), swtch(2), NULL));
     //     // P1 and P2 confuse each other
-    //     try expectEqual(Result.Default, try battle.update(move(2), move(2), null));
+    //     try expectEqual(Result.Default, try battle.update(move(2), move(2), NULL));
     //     // P1 uses Toxic to noop while P2 uses Metronome -> Solar Beam
-    //     try expectEqual(Result.Default, try battle.update(move(3), move(1), null));
+    //     try expectEqual(Result.Default, try battle.update(move(3), move(1), NULL));
 
     //     try expectEqual(Move.SolarBeam, battle.side(.P2).last_selected_move);
     //     try expectEqual(Move.Metronome, battle.side(.P2).last_used_move);

@@ -54,7 +54,7 @@ pub const Move = enum({{{ Move.type }}}) {
     }
 
     pub inline fn get(id: Move) Data {
-        assert(id != .None);
+        {{{ Move.assert }}}
         return DATA[@enumToInt(id) - 1];
     }
 

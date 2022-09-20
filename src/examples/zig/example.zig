@@ -51,9 +51,9 @@ pub fn main() !void {
     );
 
     // Preallocate a buffer for the log and create a Log handler which will write to it.
-    // pkmn.LOG_SIZE is guaranteed to be large enough for a single update. This will only be used if
-    // -Dtrace is enabled - simply setting the log to null will also disable it, regardless of what
-    // -Dtrace is set to.
+    // pkmn.LOG_SIZE is guaranteed to be large enough for a single update. This will only be
+    // written to if -Dtrace is enabled - pkmn.protocol.NULL can be used to turn all of the
+    // logging into no-ops.
     var buf: [pkmn.LOG_SIZE]u8 = undefined;
     var log = pkmn.protocol.FixedLog{ .writer = std.io.fixedBufferStream(&buf).writer() };
 

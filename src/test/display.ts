@@ -443,7 +443,7 @@ function getHP(pokemon: Pokemon) {
   if ((percent === 100) && (ratio < 1.0)) {
     percent = 99;
   }
-  const pixels = (pokemon.hp === 1 && pokemon.stats.hp > 45) ? 1 : percent;
+  const pixels = (pokemon.hp === 1 && pokemon.stats.hp > 45) ? 1 : percent * 150 / 100;
   const color = ratio > 0.5 ? '' : ratio > 0.2 ? 'hp-yellow' : 'hp-red';
   return {title, percent, pixels, color};
 }

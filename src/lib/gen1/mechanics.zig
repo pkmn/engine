@@ -391,12 +391,9 @@ fn executeMove(
         Move.get(side.last_selected_move).effect == .Trapping;
 
     // GLITCH: Freeze top move selection desync & PP underflow shenanigans
-    if (mslot == 0 and side.last_selected_move != .Struggle) {
+    if (mslot == 0 and side.last_selected_move != .None and side.last_selected_move != .Struggle) {
         // choice.data == 0 only happens with Struggle on Pokémon Showdown
         assert(!showdown);
-        // Even if the Pokémon started the battle frozen, thawing will set last_selected_move
-        // to SKIP_TURN and that would have been handled in the block above this one
-        assert(side.last_selected_move != .None);
         mslot = @truncate(u4, if (player == .P1)
             battle.last_selected_indexes.p1
         else
@@ -438,7 +435,7 @@ fn executeMove(
 
     if (!skip_can and !try canMove(battle, player, mslot, auto, skip_pp, from, log)) return null;
 
-    return doMove(battle, player, choice, from, log);
+    return doMove(battle, player, mslot, from, log);
 }
 
 const BeforeMove = union(enum) { done, skip_can, skip_pp, ok, err };
@@ -462,12 +459,20 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
             try log.cant(ident, .Sleep);
         }
         side.last_used_move = .None;
+        if (showdown) {
+            volatiles.Charging = false;
+            volatiles.Thrashing = false;
+        }
         return .done;
     }
 
     if (Status.is(stored.status, .FRZ)) {
         try log.cant(ident, .Freeze);
         side.last_used_move = .None;
+        if (showdown) {
+            volatiles.Charging = false;
+            volatiles.Thrashing = false;
+        }
         return .done;
     }
 
@@ -494,6 +499,13 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
             volatiles.disabled.move = 0;
             try log.end(ident, .Disable);
         }
+    }
+
+    // This can only happen if a Pokémon started the battle frozen/sleeping and was thawed/woken
+    // before the side had a selected a move - we simply need to assume this leads to a desync
+    if (side.last_selected_move == .None) {
+        assert(!showdown);
+        return .err;
     }
 
     if (volatiles.Confusion) {
@@ -700,7 +712,7 @@ fn decrementPP(side: *Side, mslot: u4, auto: bool) void {
 }
 
 // Pokémon Showdown does hit/multi/crit/damage instead of crit/damage/hit/multi
-fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: anytype) !?Result {
+fn doMove(battle: anytype, player: Player, mslot: u4, from: ?Move, log: anytype) !?Result {
     var side = battle.side(player);
     const foe = battle.foe(player);
 
@@ -795,19 +807,16 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         (!moveHit(battle, player, move, &immune, &mist) or battle.last_damage == 0);
 
     assert(miss or battle.last_damage > 0 or skip or showdown);
-    assert(!(ohko and immune));
+    assert(!(ohko and immune) or (!showdown and miss));
     assert(!immune or miss or move.effect == .Trapping);
 
     if (!showdown or !miss) {
-        if (move.effect == .MirrorMove) {
-            return mirrorMove(battle, player, choice, log);
-        } else if (move.effect == .Metronome) {
-            return metronome(battle, player, choice, log);
-        }
+        if (move.effect == .MirrorMove) return mirrorMove(battle, player, mslot, log);
+        if (move.effect == .Metronome) return metronome(battle, player, mslot, log);
     }
 
     if ((!showdown or !miss) and move.effect.onEnd()) {
-        try moveEffect(battle, player, move, choice.data, log);
+        try moveEffect(battle, player, move, mslot, log);
         return null;
     }
 
@@ -902,13 +911,13 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         if (nullified) break;
         // Twineedle can also poison on the first hit on Pokémon Showdown (second hit below)
         if (showdown and hit == 1 and move.effect == .Twineedle) {
-            try moveEffect(battle, player, Move.get(.PoisonSting), choice.data, log);
+            try moveEffect(battle, player, Move.get(.PoisonSting), mslot, log);
         }
     }
 
     if (side.active.volatiles.MultiHit) {
         side.active.volatiles.MultiHit = false;
-        assert(nullified or side.active.volatiles.attacks - hit == 0);
+        assert(nullified or foe.stored().hp == 0 or side.active.volatiles.attacks - hit == 0);
         side.active.volatiles.attacks = 0;
         if (showdown and move.effect == .Twineedle and !nullified and foe.stored().hp > 0) {
             try Effects.poison(battle, player, Move.get(.PoisonSting), log);
@@ -929,7 +938,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
     // On the cartridge, "always happen" effect handlers are called in the applyDamage loop above,
     // but this is only done to setup the MultiHit looping in the first place. Moving the MultiHit
     // setup before the loop means we can avoid having to waste time doing no-op handler searches.
-    if (move.effect.alwaysHappens()) try moveEffect(battle, player, move, choice.data, log);
+    if (move.effect.alwaysHappens()) try moveEffect(battle, player, move, mslot, log);
 
     // Pokémon Showdown still forces Hyper Beam to recharge when it KOs its opponent if it
     // was called via another move (eg. Mirror Move).
@@ -951,7 +960,7 @@ fn doMove(battle: anytype, player: Player, choice: Choice, from: ?Move, log: any
         if (move.effect == .Twineedle) {
             if (!showdown) try Effects.poison(battle, player, Move.get(.PoisonSting), log);
         } else {
-            try moveEffect(battle, player, move, choice.data, log);
+            try moveEffect(battle, player, move, mslot, log);
         }
     }
 
@@ -1128,7 +1137,10 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
     const foe_last_used_move =
         Move.get(if (foe.last_used_move == .None) .Counter else foe.last_used_move);
     const foe_last_selected_move =
-        Move.get(if (foe.last_selected_move == .None) .Counter else foe.last_selected_move);
+        Move.get(if (foe.last_selected_move == .None or foe.last_selected_move == .SKIP_TURN)
+        .Counter
+    else
+        foe.last_selected_move);
 
     const used = foe_last_used_move.bp > 0 and
         !(showdown and foe.last_used_move == .SonicBoom) and
@@ -1203,7 +1215,7 @@ fn applyDamage(
     return false;
 }
 
-fn mirrorMove(battle: anytype, player: Player, choice: Choice, log: anytype) !?Result {
+fn mirrorMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
     var side = battle.side(player);
     const foe = battle.foe(player);
 
@@ -1214,11 +1226,11 @@ fn mirrorMove(battle: anytype, player: Player, choice: Choice, log: anytype) !?R
 
     side.last_selected_move = foe.last_used_move;
 
-    if (!try canMove(battle, player, choice.data, false, true, .MirrorMove, log)) return null;
-    return doMove(battle, player, choice, .MirrorMove, log);
+    if (!try canMove(battle, player, mslot, false, true, .MirrorMove, log)) return null;
+    return doMove(battle, player, mslot, .MirrorMove, log);
 }
 
-fn metronome(battle: anytype, player: Player, choice: Choice, log: anytype) !?Result {
+fn metronome(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
     var side = battle.side(player);
 
     side.last_selected_move = if (showdown) blk: {
@@ -1234,8 +1246,8 @@ fn metronome(battle: anytype, player: Player, choice: Choice, log: anytype) !?Re
         }
     };
 
-    if (!try canMove(battle, player, choice.data, false, true, .Metronome, log)) return null;
-    return doMove(battle, player, choice, .Metronome, log);
+    if (!try canMove(battle, player, mslot, false, true, .Metronome, log)) return null;
+    return doMove(battle, player, mslot, .Metronome, log);
 }
 
 fn checkHit(battle: anytype, player: Player, move: Move.Data, log: anytype) !bool {
@@ -2005,9 +2017,9 @@ pub const Effects = struct {
         var side = battle.side(player);
         var stored = side.stored();
 
-        const damage = @maximum(battle.last_damage /
-            @as(u8, if (side.last_selected_move == .Struggle) 2 else 4), 1);
-        stored.hp = @maximum(stored.hp - damage, 0);
+        const damage = @intCast(i16, @maximum(battle.last_damage /
+            @as(u8, if (side.last_selected_move == .Struggle) 2 else 4), 1));
+        stored.hp = @intCast(u16, @maximum(@intCast(i16, stored.hp) - damage, 0));
 
         try log.damageOf(battle.active(player), stored, .RecoilOf, battle.active(player.foe()));
     }
@@ -2340,7 +2352,7 @@ fn unmodifiedStats(battle: anytype, who: Player) *Stats(u16) {
     const side = battle.side(who);
     if (!side.active.volatiles.Transform) return &side.stored().stats;
     const id = ID.from(side.active.volatiles.transform);
-    return &battle.side(id.player).pokemon[id.id].stats;
+    return &battle.side(id.player).pokemon[id.id - 1].stats;
 }
 
 fn statusModify(status: u8, stats: *Stats(u16)) void {

@@ -2750,8 +2750,8 @@ pub const Move = enum(u8) {
         AllOthers,
         Depends,
         Other,
-        // TODO: resolve or resolve + run?
         Any,
+        // TODO: resolve or resolve + run?
         Allies,
         Ally,
         AllyOrSelf,

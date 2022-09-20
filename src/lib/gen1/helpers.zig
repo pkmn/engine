@@ -195,7 +195,7 @@ pub const Pokemon = struct {
             .types = species.types,
             .level = lvl,
             .stats = stats,
-            .hp = rand.range(u16, 0, stats.hp + 1),
+            .hp = if (showdown) stats.hp else rand.range(u16, 0, stats.hp + 1),
             .status = if (!showdown and rand.chance(u8, 1, 6 + 1))
                 0 | (@as(u8, 1) << rand.range(u3, 1, 6 + 1))
             else

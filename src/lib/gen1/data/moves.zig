@@ -1638,8 +1638,8 @@ pub const Move = enum(u8) {
         AllOthers,
         Depends,
         Other,
-        // TODO: resolve or resolve + run?
         Any,
+        // TODO: resolve or resolve + run?
         Allies,
         Ally,
         AllyOrSelf,
@@ -1833,7 +1833,7 @@ pub const Move = enum(u8) {
     }
 
     pub inline fn get(id: Move) Data {
-        assert(id != .None);
+        assert(id != .None and id != .SKIP_TURN);
         return DATA[@enumToInt(id) - 1];
     }
 

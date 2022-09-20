@@ -13,6 +13,7 @@ const Data = struct {
 };
 
 var data: ?std.ArrayList(Data) = null;
+var last: u64 = 0;
 
 pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -32,15 +33,15 @@ pub fn main() !void {
     var duration: ?usize = null;
     if (args[2].len > 1 and std.ascii.isAlpha(args[2][args[2].len - 1])) {
         fuzz = true;
-        const last = args[2].len - 1;
-        const mod: usize = switch (args[2][last]) {
+        const end = args[2].len - 1;
+        const mod: usize = switch (args[2][end]) {
             's' => 1,
             'm' => std.time.s_per_min,
             'h' => std.time.s_per_hour,
             'd' => std.time.s_per_day,
             else => errorAndExit("duration", args[2], args[0], fuzz),
         };
-        duration = mod * (std.fmt.parseUnsigned(usize, args[2][0..last], 10) catch
+        duration = mod * (std.fmt.parseUnsigned(usize, args[2][0..end], 10) catch
             errorAndExit("duration", args[2], args[0], fuzz)) * std.time.ns_per_s;
     } else {
         battles = std.fmt.parseUnsigned(usize, args[2], 10) catch
@@ -86,7 +87,10 @@ pub fn benchmark(
     var i: usize = 0;
     var n = battles orelse std.math.maxInt(usize);
     while (i < n and (if (duration) |d| elapsed.read() < d else true)) : (i += 1) {
-        if (duration != null) try err.print("{d}: {d}\n", .{ i, random.src.seed });
+        if (duration != null) {
+            last = random.src.seed;
+            if (std.io.getStdErr().isTty()) try err.print("{d}: {d}\n", .{ i, last });
+        }
 
         var original = switch (gen) {
             1 => pkmn.gen1.helpers.Battle.random(&random),
@@ -106,8 +110,8 @@ pub fn benchmark(
         var m = playouts orelse 1;
         while (j < m and (if (duration) |d| elapsed.read() < d else true)) : (j += 1) {
             var battle = original;
-            std.debug.assert(battle.side(.P1).get(1).hp > 0);
-            std.debug.assert(battle.side(.P2).get(1).hp > 0);
+            std.debug.assert(!pkmn.options.showdown or battle.side(.P1).get(1).hp > 0);
+            std.debug.assert(!pkmn.options.showdown or battle.side(.P2).get(1).hp > 0);
 
             var c1 = pkmn.Choice{};
             var c2 = pkmn.Choice{};
@@ -117,8 +121,16 @@ pub fn benchmark(
 
             var timer = try Timer.start();
 
-            var result = try battle.update(c1, c2, log);
-            while (result.type == .None) : (result = try battle.update(c1, c2, log)) {
+            var result = try if (save)
+                battle.update(c1, c2, log.?)
+            else
+                battle.update(c1, c2, pkmn.protocol.NULL);
+
+            while (result.type == .None) : (result = try if (save)
+                battle.update(c1, c2, log.?)
+            else
+                battle.update(c1, c2, pkmn.protocol.NULL))
+            {
                 c1 = options[p1.range(u8, 0, battle.choices(.P1, result.p1, &options))];
                 c2 = options[p2.range(u8, 0, battle.choices(.P2, result.p2, &options))];
 
@@ -166,6 +178,7 @@ fn deinit(allocator: Allocator) void {
 }
 
 pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) noreturn {
+    std.io.getStdErr().writer().print("{d}\n", .{last}) catch unreachable;
     if (data) |ds| {
         const out = std.io.getStdOut();
         var buf = std.io.bufferedWriter(out.writer());

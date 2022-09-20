@@ -4027,6 +4027,41 @@ describe('Gen 1', () => {
 
   // Pokémon Showdown Bugs
 
+  test('Charge + Sleep bug', () => {
+    const battle = startBattle([SRF_RES, SRF_RES, HIT, SS_MOD, SLP(1), SRF_RES, SRF_RES], [
+      {species: 'Venusaur', evs, moves: ['Solar Beam', 'Tackle']},
+    ], [
+      {species: 'Snorlax', evs, moves: ['Lovely Kiss', 'Teleport']},
+    ]);
+
+    battle.makeChoices('move 1', 'move 1');
+
+    expect(choices(battle, 'p1')).toEqual(['move 1']);
+
+    battle.makeChoices('move 1', 'move 2');
+
+    // The charging move should be forced and should execute instead of preparing again
+    // expect(choices(battle, 'p1')).toEqual(['move 1']);
+    expect(choices(battle, 'p1')).toEqual(['move 1', 'move 2']);
+
+    battle.makeChoices('move 1', 'move 2');
+
+    verify(battle, [
+      '|move|p1a: Venusaur|Solar Beam||[still]',
+      '|-prepare|p1a: Venusaur|Solar Beam',
+      '|move|p2a: Snorlax|Lovely Kiss|p1a: Venusaur',
+      '|-status|p1a: Venusaur|slp|[from] move: Lovely Kiss',
+      '|turn|2',
+      '|-curestatus|p1a: Venusaur|slp|[msg]',
+      '|move|p2a: Snorlax|Teleport|p2a: Snorlax',
+      '|turn|3',
+      '|move|p1a: Venusaur|Solar Beam||[still]',
+      '|-prepare|p1a: Venusaur|Solar Beam',
+      '|move|p2a: Snorlax|Teleport|p2a: Snorlax',
+      '|turn|4',
+    ]);
+  });
+
   test('Bide + Substitute bug', () => {
     const battle = startBattle([BIDE(2), SRF_RES, HIT, SRF_RES, HIT], [
       {species: 'Voltorb', evs, moves: ['Sonic Boom', 'Substitute']},

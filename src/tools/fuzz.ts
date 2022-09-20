@@ -23,9 +23,11 @@ const usage = (msg?: string): void => {
 const pretty = (choice: Choice) =>
   choice.type === 'pass' ? choice.type : `${choice.type} ${choice.data}`;
 
+const format = (kwVal: any) => typeof kwVal === 'boolean' ? '' : ` ${kwVal as string}`;
+
 const compact = (line: ParsedLine) =>
   [...line.args, ...Object.keys(line.kwArgs)
-    .map(k => `[${k}] ${(line.kwArgs as any)[k] as string}`)].join('|');
+    .map(k => `[${k}]${format((line.kwArgs as any)[k])}`)].join('|');
 
 const display = (
   gen: Generation,
@@ -144,7 +146,7 @@ class SpeciesNames implements Names {
     }
 
     console.log('<hr />');
-    console.log(`<pre class="error"><code>${error.slice(error.indexOf('panic:'))}</pre></code>`);
+    console.log(`<pre class="error"><code>${error}</pre></code>`);
     console.log(`</div><script>${SCRIPTS}</script></body></html>`);
   }
 })().catch(console.error);

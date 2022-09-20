@@ -60,15 +60,7 @@ pub fn Battle(comptime RNG: anytype) type {
         }
 
         pub fn update(self: *Self, c1: Choice, c2: Choice, log: anytype) !Result {
-            // disgusting workaround for `log orelse protocol.NULL`
-            return mechanics.update(self, c1, c2, switch (@typeInfo(@TypeOf(log))) {
-                .Null => protocol.NULL,
-                .Optional => switch (@typeInfo(@TypeOf(log))) {
-                    .Null => protocol.NULL,
-                    else => log.?,
-                },
-                else => log,
-            });
+            return mechanics.update(self, c1, c2, log);
         }
 
         pub fn choices(self: *Self, player: Player, request: Choice.Type, out: []Choice) u8 {
