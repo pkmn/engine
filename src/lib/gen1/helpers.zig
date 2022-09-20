@@ -180,12 +180,13 @@ pub const Pokemon = struct {
                 }
                 break;
             }
-            const pp_ups = if (rand.chance(u8, 1, 10)) rand.range(u2, 0, 2 + 1) else 3;
+            const pp_ups =
+                if (!showdown and rand.chance(u8, 1, 10)) rand.range(u2, 0, 2 + 1) else 3;
             // NB: PP can be at most 61 legally (though can overflow to 63)
             const max_pp = @truncate(u8, @minimum(Move.pp(m) / 5 * (5 + @as(u8, pp_ups)), 61));
             ms[i] = .{
                 .id = m,
-                .pp = rand.range(u8, 0, max_pp + 1),
+                .pp = if (!showdown) rand.range(u8, 0, max_pp + 1) else max_pp,
             };
         }
 
@@ -195,7 +196,7 @@ pub const Pokemon = struct {
             .level = lvl,
             .stats = stats,
             .hp = rand.range(u16, 0, stats.hp + 1),
-            .status = if (rand.chance(u8, 1, 6 + 1))
+            .status = if (!showdown and rand.chance(u8, 1, 6 + 1))
                 0 | (@as(u8, 1) << rand.range(u3, 1, 6 + 1))
             else
                 0,

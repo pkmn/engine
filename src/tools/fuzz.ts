@@ -6,7 +6,8 @@ import {promisify} from 'util';
 import {Dex} from '@pkmn/sim';
 import {Generation, Generations, GenerationNum} from '@pkmn/data';
 
-import {Battle, Result, Choice} from '../pkg';
+
+import {Battle, Result, Choice, Log, ParsedLine, Names} from '../pkg';
 import {Lookup, Data, LAYOUT} from '../pkg/data';
 import {STYLES, displayBattle, SCRIPTS} from '../test/display';
 import * as gen1 from '../pkg/gen1';
@@ -22,20 +23,53 @@ const usage = (msg?: string): void => {
 const pretty = (choice: Choice) =>
   choice.type === 'pass' ? choice.type : `${choice.type} ${choice.data}`;
 
+const compact = (line: ParsedLine) =>
+  [...line.args, ...Object.keys(line.kwArgs)
+    .map(k => `[${k}] ${(line.kwArgs as any)[k] as string}`)].join('|');
+
 const display = (
   gen: Generation,
   showdown: boolean,
   result: Result,
   c1: Choice,
   c2: Choice,
-  battle: Battle
+  battle: Battle,
+  log: ParsedLine[],
 ) => {
+  console.log('<div class="log">');
+  console.log(`<pre><code>|${log.map(compact).join('\n|')}</code></pre>`);
+  console.log('</div>');
   displayBattle(gen, showdown, battle);
   console.log('<div class="sides" style="text-align: center;">');
-  console.log(`<pre class='side'><code>${result.p1} -&gt; ${pretty(c1)}</code></pre>`);
-  console.log(`<pre class='side'><code>${result.p2} -&gt; ${pretty(c2)}</code></pre>`);
+  console.log(`<pre class="side"><code>${result.p1} -&gt; ${pretty(c1)}</code></pre>`);
+  console.log(`<pre class="side"><code>${result.p2} -&gt; ${pretty(c2)}</code></pre>`);
   console.log('</div>');
 };
+
+class SpeciesNames implements Names {
+  gen: Generation;
+  battle!: Battle;
+
+  constructor(gen: Generation) {
+    this.gen = gen;
+  }
+
+  get p1() {
+    const [p1] = Array.from(this.battle.sides);
+    const team = Array.from(p1.pokemon)
+      .sort((a, b) => a.position - b.position)
+      .map(p => this.gen.species.get(p.stored.species)!.name);
+    return {name: 'Player 1', team};
+  }
+
+  get p2() {
+    const [, p2] = Array.from(this.battle.sides);
+    const team = Array.from(p2.pokemon)
+      .sort((a, b) => a.position - b.position)
+      .map(p => this.gen.species.get(p.stored.species)!.name);
+    return {name: 'Player 2', team};
+  }
+}
 
 (async () => {
   if (process.argv.length < 4 || process.argv.length > 6) usage(process.argv.length.toString());
@@ -49,6 +83,8 @@ const display = (
   const gen = gens.get(+process.argv[3] as GenerationNum);
   const lookup = Lookup.get(gen);
   const size = LAYOUT[gen.num - 1].sizes.Battle;
+  const names = new SpeciesNames(gen);
+  const log = new Log(gen, lookup, names);
   const deserialize = (buf: number[]): Battle => {
     switch (gen.num) {
     case 1: return new gen1.Battle(lookup, Data.view(buf), {showdown});
@@ -93,8 +129,18 @@ const display = (
       const c1 = Choice.parse(data[offset + 1]);
       const c2 = Choice.parse(data[offset + 2]);
       const battle = deserialize(data.slice(offset + 3, offset + size + 3));
+      names.battle = battle;
 
-      display(gen, showdown, result, c1, c2, battle);
+      const parsed: ParsedLine[] = [];
+      const it = log.parse(Data.view(data.slice(offset + size + 3)))[Symbol.iterator]();
+      let r = it.next();
+      while (!r.done) {
+        parsed.push(r.value);
+        r = it.next();
+      }
+      offset += r.value;
+
+      display(gen, showdown, result, c1, c2, battle, parsed);
     }
 
     console.log('<hr />');

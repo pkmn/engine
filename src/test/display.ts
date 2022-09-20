@@ -253,12 +253,18 @@ th, td {
   display: flex;
   padding: 0 1em;
   justify-content: space-between;
+  width: 100%;
 }
 .types {
   display: inherit;
 }
 .disabled {
   color: #AAAAAA;
+}
+.log {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 2em;
 }
 .position {
   position: absolute;

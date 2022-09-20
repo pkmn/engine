@@ -5,7 +5,6 @@ const Timer = std.time.Timer;
 const Allocator = std.mem.Allocator;
 
 const Data = struct {
-    allocator: Allocator,
     result: pkmn.Result = pkmn.Result.Default,
     c1: pkmn.Choice = .{},
     c2: pkmn.Choice = .{},
@@ -94,9 +93,13 @@ pub fn benchmark(
             else => unreachable,
         };
 
+        var buf: ?std.ArrayList(u8) = null;
+        var log: ?pkmn.Log(std.ArrayList(u8).Writer) = null;
         if (save) {
-            if (data != null) deinit();
+            if (data != null) deinit(allocator);
             data = std.ArrayList(Data).init(allocator);
+            buf = std.ArrayList(u8).init(allocator);
+            log = pkmn.Log(std.ArrayList(u8).Writer){ .writer = buf.?.writer() };
         }
 
         var j: usize = 0;
@@ -114,19 +117,18 @@ pub fn benchmark(
 
             var timer = try Timer.start();
 
-            var result = try battle.update(c1, c2, null);
-            while (result.type == .None) : (result = try battle.update(c1, c2, null)) {
+            var result = try battle.update(c1, c2, log);
+            while (result.type == .None) : (result = try battle.update(c1, c2, log)) {
                 c1 = options[p1.range(u8, 0, battle.choices(.P1, result.p1, &options))];
                 c2 = options[p2.range(u8, 0, battle.choices(.P2, result.p2, &options))];
 
                 if (save) {
                     try data.?.append(.{
-                        .allocator = allocator,
                         .result = result,
                         .c1 = c1,
                         .c2 = c2,
                         .state = try allocator.dupe(u8, std.mem.toBytes(battle)[0..]),
-                        .log = &.{}, // TODO
+                        .log = buf.?.toOwnedSlice(),
                     });
                 }
             }
@@ -134,7 +136,7 @@ pub fn benchmark(
             turns += battle.turn;
         }
     }
-    if (data != null) deinit();
+    if (data != null) deinit(allocator);
     if (battles != null) try out.print("{d},{d},{d}\n", .{ time, turns, random.src.seed });
 }
 
@@ -154,10 +156,11 @@ fn usageAndExit(cmd: []const u8, fuzz: bool) noreturn {
     std.process.exit(1);
 }
 
-fn deinit() void {
+fn deinit(allocator: Allocator) void {
     std.debug.assert(data != null);
     for (data.?.items) |d| {
-        d.allocator.free(d.state);
+        allocator.free(d.state);
+        allocator.free(d.log);
     }
     data.?.deinit();
 }
@@ -172,11 +175,9 @@ pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) nore
             w.writeStruct(d.c1) catch unreachable;
             w.writeStruct(d.c2) catch unreachable;
             w.writeAll(d.state) catch unreachable;
-            // w.writeAll(d.log) catch unreachable;
-            d.allocator.free(d.state);
+            w.writeAll(d.log) catch unreachable;
         }
         buf.flush() catch unreachable;
-        ds.deinit();
     }
     std.builtin.default_panic(msg, error_return_trace);
 }

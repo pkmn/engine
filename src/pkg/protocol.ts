@@ -22,11 +22,11 @@ export class Names {
 }
 
 export class SideNames {
-  name: Protocol.Username;
+  name: string;
   team: string[];
 
   constructor(player: PlayerOptions) {
-    this.name = player.name as Protocol.Username;
+    this.name = player.name;
     this.team = player.team.map(p => p.name ?? p.species!);
   }
 }
@@ -44,11 +44,12 @@ export class Log {
 
   *parse(data: DataView): Iterable<ParsedLine> {
     let lines: ParsedLine[] = [];
-    for (let i = 0; i < data.byteLength;) {
+    let i = 0;
+    for (; i < data.byteLength;) {
       const byte = data.getUint8(i++);
       if (!byte) {
         for (const line of lines) yield line;
-        return;
+        return i;
       }
       if (byte === ArgType.LastMiss) {
         (lines[0].kwArgs as Writeable<Protocol.BattleArgsKWArgs['|move|']>).miss = true;
@@ -69,6 +70,7 @@ export class Log {
       }
     }
     for (const line of lines) yield line;
+    return i;
   }
 }
 
@@ -195,7 +197,8 @@ export const DECODERS: {[key: number]: Decoder} = {
   },
   [ArgType.Win](offset, data) {
     const player = data.getUint8(offset++) ? 'p2' : 'p1';
-    const args = ['win', this.names[player].name] as Protocol.Args['|win|'];
+    const args =
+      ['win', this.names[player].name as Protocol.Username] as Protocol.Args['|win|'];
     return {offset, line: {args, kwArgs: {}}};
   },
   [ArgType.Tie](offset) {
@@ -208,7 +211,7 @@ export const DECODERS: {[key: number]: Decoder} = {
     offset += 5;
     const reason = data.getUint8(offset++);
     const kwArgs = {} as Writeable<Protocol.BattleArgsKWArgs['|-damage|']>;
-    if (reason >= PROTOCOL.Damage.None) kwArgs.from = DAMAGE[reason];
+    if (reason > PROTOCOL.Damage.None) kwArgs.from = DAMAGE[reason];
     if (reason === PROTOCOL.Damage.RecoilOf) {
       kwArgs.of = decodeIdent(this.names, data.getUint8(offset++));
     }
