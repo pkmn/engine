@@ -2204,56 +2204,65 @@ test "Fly/Dig effect" {
     // avoids all attacks other than Bide, Swift, and Transform. If the user is fully paralyzed on
     // the second turn, it continues avoiding attacks until it switches out or successfully executes
     // the second turn of this move or {Fly,Dig}.
-    var t = Test(
-    // zig fmt: off
-        if (showdown) .{
-            NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
-        } else .{
-            ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
-        }
-    // zig fmt: on
-    ).init(
-        &.{
-            .{ .species = .Pidgeot, .moves = &.{ .Fly, .SandAttack } },
-            .{ .species = .Metapod, .moves = &.{.Harden} },
-        },
-        &.{
-            .{ .species = .Lickitung, .moves = &.{ .Strength, .Lick } },
-            .{ .species = .Bellsprout, .moves = &.{.VineWhip} },
-        },
-    );
-    defer t.deinit();
 
-    const pp = t.expected.p1.get(1).move(1).pp;
+    // normal
+    {
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                NOP, NOP, NOP, NOP,
+                NOP, NOP, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+            } else .{
+                ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+            }
+        // zig fmt: on
+        ).init(
+            &.{
+                .{ .species = .Pidgeot, .moves = &.{ .Fly, .SandAttack } },
+                .{ .species = .Metapod, .moves = &.{.Harden} },
+            },
+            &.{
+                .{ .species = .Lickitung, .moves = &.{ .Strength, .Lick } },
+                .{ .species = .Bellsprout, .moves = &.{.VineWhip} },
+            },
+        );
+        defer t.deinit();
 
-    try t.log.expected.move(P1.ident(1), Move.Fly, .{}, null);
-    try t.log.expected.laststill();
-    try t.log.expected.prepare(P1.ident(1), Move.Fly);
-    try t.log.expected.move(P2.ident(1), Move.Strength, P1.ident(1), null);
-    try t.log.expected.lastmiss();
-    try t.log.expected.miss(P2.ident(1));
-    try t.log.expected.turn(2);
+        const pp = t.expected.p1.get(1).move(1).pp;
 
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try expectEqual(if (showdown) pp - 1 else pp, t.actual.p1.active.move(1).pp);
+        try t.log.expected.move(P1.ident(1), Move.Fly, .{}, null);
+        try t.log.expected.laststill();
+        try t.log.expected.prepare(P1.ident(1), Move.Fly);
+        try t.log.expected.move(P2.ident(1), Move.Strength, P1.ident(1), null);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P2.ident(1));
+        try t.log.expected.turn(2);
 
-    var n = t.battle.actual.choices(.P1, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
-    n = t.battle.actual.choices(.P2, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(if (showdown) pp - 1 else pp, t.actual.p1.active.move(1).pp);
 
-    try t.log.expected.move(P1.ident(1), Move.Fly, P2.ident(1), Move.Fly);
-    t.expected.p2.get(1).hp -= 79;
-    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    try t.log.expected.move(P2.ident(1), Move.Strength, P1.ident(1), null);
-    t.expected.p1.get(1).hp -= 74;
-    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-    try t.log.expected.turn(3);
+        var n = t.battle.actual.choices(.P1, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
+        n = t.battle.actual.choices(.P2, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
 
-    try expectEqual(Result.Default, try t.update(forced, move(1)));
-    try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
+        try t.log.expected.move(P1.ident(1), Move.Fly, P2.ident(1), Move.Fly);
+        t.expected.p2.get(1).hp -= 79;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.move(P2.ident(1), Move.Strength, P1.ident(1), null);
+        t.expected.p1.get(1).hp -= 74;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.turn(3);
 
-    try t.verify();
+        try expectEqual(Result.Default, try t.update(forced, move(1)));
+        try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
+
+        try t.verify();
+    }
+    // fainting
+    {
+        return error.SkipZigTest; // TODO
+    }
 }
 
 // Move.{Whirlwind,Roar,Teleport}
@@ -2666,123 +2675,130 @@ test "Thrashing effect" {
     const PAR_CAN = MAX;
     const PAR_CANT = MIN;
 
-    var t = Test(
-    // zig fmt: off
-        if (showdown) .{
-            NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, THRASH_3, HIT, CFZ_5,
-            NOP, NOP, NOP, NOP, CFZ_CAN, ~HIT, NOP, ~HIT, THRASH_3,
-            NOP, NOP, NOP, NOP, NOP, CFZ_CAN, HIT, ~CRIT, MIN_DMG, CFZ_5, NOP, HIT, ~CRIT, MIN_DMG,
-            NOP, NOP, NOP, CFZ_CAN, HIT, NOP, NOP, PAR_CANT,
-            NOP, NOP, CFZ_CAN, HIT, NOP, PAR_CAN, HIT, ~CRIT, MAX_DMG, THRASH_3,
-        } else .{
-            THRASH_3, ~CRIT, MIN_DMG, HIT, HIT, CFZ_5,
-            CFZ_CAN, ~CRIT, MIN_DMG, ~HIT, THRASH_3, ~CRIT, MIN_DMG, ~HIT,
-            CFZ_CAN, CFZ_5, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
-            CFZ_CAN, HIT, PAR_CANT,
-            CFZ_CAN, PAR_CAN, THRASH_3, ~CRIT, MAX_DMG, HIT,
-        }
-    // zig fmt: on
-    ).init(
-        &.{
-            .{ .species = .Nidoking, .moves = &.{ .Thrash, .ThunderWave } },
-            .{ .species = .Nidoqueen, .moves = &.{.PoisonSting} },
-        },
-        &.{
-            .{ .species = .Vileplume, .moves = &.{ .PetalDance, .ConfuseRay } },
-            .{ .species = .Victreebel, .moves = &.{.RazorLeaf} },
-        },
-    );
-    defer t.deinit();
+    // normal
+    {
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, THRASH_3, HIT, CFZ_5,
+                NOP, NOP, NOP, NOP, CFZ_CAN, ~HIT, NOP, ~HIT, THRASH_3,
+                NOP, NOP, NOP, NOP, NOP, CFZ_CAN, HIT, ~CRIT, MIN_DMG, CFZ_5, NOP, HIT, ~CRIT,
+                MIN_DMG, NOP, NOP, NOP, CFZ_CAN, HIT, NOP, NOP, PAR_CANT,
+                NOP, NOP, CFZ_CAN, HIT, NOP, PAR_CAN, HIT, ~CRIT, MAX_DMG, THRASH_3,
+            } else .{
+                THRASH_3, ~CRIT, MIN_DMG, HIT, HIT, CFZ_5,
+                CFZ_CAN, ~CRIT, MIN_DMG, ~HIT, THRASH_3, ~CRIT, MIN_DMG, ~HIT,
+                CFZ_CAN, CFZ_5, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+                CFZ_CAN, HIT, PAR_CANT,
+                CFZ_CAN, PAR_CAN, THRASH_3, ~CRIT, MAX_DMG, HIT,
+            }
+        // zig fmt: on
+        ).init(
+            &.{
+                .{ .species = .Nidoking, .moves = &.{ .Thrash, .ThunderWave } },
+                .{ .species = .Nidoqueen, .moves = &.{.PoisonSting} },
+            },
+            &.{
+                .{ .species = .Vileplume, .moves = &.{ .PetalDance, .ConfuseRay } },
+                .{ .species = .Victreebel, .moves = &.{.RazorLeaf} },
+            },
+        );
+        defer t.deinit();
 
-    const pp = t.expected.p1.get(1).move(1).pp;
+        const pp = t.expected.p1.get(1).move(1).pp;
 
-    try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), null);
-    t.expected.p2.get(1).hp -= 68;
-    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    try t.log.expected.move(P2.ident(1), Move.ConfuseRay, P1.ident(1), null);
-    try t.log.expected.start(P1.ident(1), .Confusion);
-    try t.log.expected.turn(2);
+        try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 68;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.move(P2.ident(1), Move.ConfuseRay, P1.ident(1), null);
+        try t.log.expected.start(P1.ident(1), .Confusion);
+        try t.log.expected.turn(2);
 
-    // Thrashing locks user in for 3-4 turns
-    try expectEqual(Result.Default, try t.update(move(1), move(2)));
-    try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
-    try expect(t.actual.p1.active.volatiles.Confusion);
-    try expectEqual(@as(u3, 5), t.actual.p1.active.volatiles.confusion);
+        // Thrashing locks user in for 3-4 turns
+        try expectEqual(Result.Default, try t.update(move(1), move(2)));
+        try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
+        try expect(t.actual.p1.active.volatiles.Confusion);
+        try expectEqual(@as(u3, 5), t.actual.p1.active.volatiles.confusion);
 
-    var n = t.battle.actual.choices(.P1, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
-    n = t.battle.actual.choices(.P2, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+        var n = t.battle.actual.choices(.P1, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
+        n = t.battle.actual.choices(.P2, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
 
-    try t.log.expected.activate(P1.ident(1), .Confusion);
-    try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
-    try t.log.expected.lastmiss();
-    try t.log.expected.miss(P1.ident(1));
-    try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), null);
-    try t.log.expected.lastmiss();
-    try t.log.expected.miss(P2.ident(1));
-    try t.log.expected.turn(3);
+        try t.log.expected.activate(P1.ident(1), .Confusion);
+        try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P1.ident(1));
+        try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), null);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P2.ident(1));
+        try t.log.expected.turn(3);
 
-    // Thrashing locks you in whether you hit or not
-    try expectEqual(Result.Default, try t.update(forced, move(1)));
-    try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
-    try expect(t.actual.p1.active.volatiles.Confusion);
-    try expectEqual(@as(u3, 4), t.actual.p1.active.volatiles.confusion);
+        // Thrashing locks you in whether you hit or not
+        try expectEqual(Result.Default, try t.update(forced, move(1)));
+        try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
+        try expect(t.actual.p1.active.volatiles.Confusion);
+        try expectEqual(@as(u3, 4), t.actual.p1.active.volatiles.confusion);
 
-    n = t.battle.actual.choices(.P1, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
-    n = t.battle.actual.choices(.P2, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
+        n = t.battle.actual.choices(.P1, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
+        n = t.battle.actual.choices(.P2, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
-    try t.log.expected.activate(P1.ident(1), .Confusion);
-    if (!showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
-    try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
-    t.expected.p2.get(1).hp -= 68;
-    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    if (showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
-    try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), Move.PetalDance);
-    t.expected.p1.get(1).hp -= 91;
-    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-    try t.log.expected.turn(4);
+        try t.log.expected.activate(P1.ident(1), .Confusion);
+        if (!showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
+        try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
+        t.expected.p2.get(1).hp -= 68;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        if (showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
+        try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), Move.PetalDance);
+        t.expected.p1.get(1).hp -= 91;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.turn(4);
 
-    // Thrashing confuses you even if already confused
-    try expectEqual(Result.Default, try t.update(forced, forced));
-    try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
-    try expect(t.actual.p1.active.volatiles.Confusion);
-    try expectEqual(@as(u3, 5), t.actual.p1.active.volatiles.confusion);
+        // Thrashing confuses you even if already confused
+        try expectEqual(Result.Default, try t.update(forced, forced));
+        try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
+        try expect(t.actual.p1.active.volatiles.Confusion);
+        try expectEqual(@as(u3, 5), t.actual.p1.active.volatiles.confusion);
 
-    n = t.battle.actual.choices(.P1, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
-    n = t.battle.actual.choices(.P2, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
+        n = t.battle.actual.choices(.P1, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+        n = t.battle.actual.choices(.P2, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
-    try t.log.expected.activate(P1.ident(1), .Confusion);
-    try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
-    t.expected.p2.get(1).status = Status.init(.PAR);
-    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
-    try t.log.expected.cant(P2.ident(1), .Paralysis);
-    try t.log.expected.turn(5);
+        try t.log.expected.activate(P1.ident(1), .Confusion);
+        try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
+        t.expected.p2.get(1).status = Status.init(.PAR);
+        try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+        try t.log.expected.cant(P2.ident(1), .Paralysis);
+        try t.log.expected.turn(5);
 
-    // Thrashing doesn't confuse you if the user is prevented from moving
-    try expectEqual(Result.Default, try t.update(move(2), forced));
-    try expect(!t.actual.p2.active.volatiles.Confusion);
+        // Thrashing doesn't confuse you if the user is prevented from moving
+        try expectEqual(Result.Default, try t.update(move(2), forced));
+        try expect(!t.actual.p2.active.volatiles.Confusion);
 
-    n = t.battle.actual.choices(.P1, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
-    n = t.battle.actual.choices(.P2, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+        n = t.battle.actual.choices(.P1, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+        n = t.battle.actual.choices(.P2, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
 
-    try t.log.expected.activate(P1.ident(1), .Confusion);
-    try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
-    try t.log.expected.fail(P2.ident(1), .Paralysis);
-    try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), null);
-    t.expected.p1.get(1).hp -= 108;
-    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-    try t.log.expected.turn(6);
+        try t.log.expected.activate(P1.ident(1), .Confusion);
+        try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
+        try t.log.expected.fail(P2.ident(1), .Paralysis);
+        try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), null);
+        t.expected.p1.get(1).hp -= 108;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.turn(6);
 
-    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+        try expectEqual(Result.Default, try t.update(move(2), move(1)));
 
-    try t.verify();
+        try t.verify();
+    }
+    // immune
+    {
+        return error.SkipZigTest; // TODO
+    }
 }
 
 // Move.{SonicBoom,DragonRage}
@@ -4937,6 +4953,10 @@ test "Charge + Sleep bug" {
     try expectEqual(Result.Default, try t.update(forced, move(2)));
 
     try t.verify();
+}
+
+test "Explosion invulnerability bug" {
+    return error.SkipZigTest; // TODO
 }
 
 test "Bide + Substitute bug" {

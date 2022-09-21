@@ -1912,47 +1912,95 @@ describe('Gen 1', () => {
   });
 
   test('Fly/Dig effect', () => {
-    const battle = startBattle([
-      SRF_RES, SRF_RES, SS_RES, GLM,
-      GLM, GLM, SRF_RES, SRF_RES, SS_RUN, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
-    ], [
-      {species: 'Pidgeot', evs, moves: ['Fly', 'Sand-Attack']},
-      {species: 'Metapod', evs, moves: ['Harden']},
-    ], [
-      {species: 'Lickitung', evs, moves: ['Strength', 'Lick']},
-      {species: 'Bellsprout', evs, moves: ['Vine Whip']},
-    ]);
+    // normal
+    {
+      const battle = startBattle([
+        SRF_RES, SRF_RES, SS_RES, GLM,
+        GLM, GLM, SRF_RES, SRF_RES, SS_RUN, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+      ], [
+        {species: 'Pidgeot', evs, moves: ['Fly', 'Sand-Attack']},
+        {species: 'Metapod', evs, moves: ['Harden']},
+      ], [
+        {species: 'Lickitung', evs, moves: ['Strength', 'Lick']},
+        {species: 'Bellsprout', evs, moves: ['Vine Whip']},
+      ]);
 
-    const p1hp = battle.p1.pokemon[0].hp;
-    const p2hp = battle.p2.pokemon[0].hp;
+      const p1hp = battle.p1.pokemon[0].hp;
+      const p2hp = battle.p2.pokemon[0].hp;
 
-    let pp = battle.p1.pokemon[0].moveSlots[0].pp;
+      let pp = battle.p1.pokemon[0].moveSlots[0].pp;
 
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp);
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
-    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
 
-    expect(choices(battle, 'p1')).toEqual(['move 1']);
-    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p1')).toEqual(['move 1']);
+      expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp - 79);
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp - 74);
-    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp - 79);
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp - 74);
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
 
-    verify(battle, [
-      '|move|p1a: Pidgeot|Fly||[still]',
-      '|-prepare|p1a: Pidgeot|Fly',
-      '|move|p2a: Lickitung|Strength|p1a: Pidgeot|[miss]',
-      '|-miss|p2a: Lickitung',
-      '|turn|2',
-      '|move|p1a: Pidgeot|Fly|p2a: Lickitung|[from]Fly',
-      '|-damage|p2a: Lickitung|304/383',
-      '|move|p2a: Lickitung|Strength|p1a: Pidgeot',
-      '|-damage|p1a: Pidgeot|295/369',
-      '|turn|3',
-    ]);
+      verify(battle, [
+        '|move|p1a: Pidgeot|Fly||[still]',
+        '|-prepare|p1a: Pidgeot|Fly',
+        '|move|p2a: Lickitung|Strength|p1a: Pidgeot|[miss]',
+        '|-miss|p2a: Lickitung',
+        '|turn|2',
+        '|move|p1a: Pidgeot|Fly|p2a: Lickitung|[from]Fly',
+        '|-damage|p2a: Lickitung|304/383',
+        '|move|p2a: Lickitung|Strength|p1a: Pidgeot',
+        '|-damage|p1a: Pidgeot|295/369',
+        '|turn|3',
+      ]);
+    }
+    // fainting
+    {
+      const battle = startBattle([
+        SRF_RES, HIT, SS_MOD, SRF_RES, GLM,
+        GLM, GLM, SRF_RES, SS_RUN, HIT, NO_CRIT, MIN_DMG,
+      ], [
+        {species: 'Zapdos', evs, moves: ['Toxic', 'Fly']},
+      ], [
+        {species: 'Shellder', evs, moves: ['Teleport']},
+        {species: 'Arcanine', evs, moves: ['Teleport']},
+      ]);
+
+      battle.p2.pokemon[0].hp = 31;
+      let p2hp = battle.p2.pokemon[1].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(15);
+
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(0);
+
+      battle.makeChoices('', 'switch 2');
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 82);
+
+      verify(battle, [
+        '|move|p1a: Zapdos|Toxic|p2a: Shellder',
+        '|-status|p2a: Shellder|tox',
+        '|move|p2a: Shellder|Teleport|p2a: Shellder',
+        '|-damage|p2a: Shellder|15/263 tox|[from] psn',
+        '|turn|2',
+        '|move|p1a: Zapdos|Fly||[still]',
+        '|-prepare|p1a: Zapdos|Fly',
+        '|move|p2a: Shellder|Teleport|p2a: Shellder',
+        '|-damage|p2a: Shellder|0 fnt|[from] psn',
+        '|faint|p2a: Shellder',
+        '|switch|p2a: Arcanine|Arcanine|383/383',
+        '|turn|3',
+        '|move|p1a: Zapdos|Fly|p2a: Arcanine|[from]Fly',
+        '|-damage|p2a: Arcanine|301/383',
+        '|move|p2a: Arcanine|Teleport|p2a: Arcanine',
+        '|turn|4',
+      ]);
+    }
   });
 
   test('SwitchAndTeleport effect', () => {
@@ -2272,101 +2320,147 @@ describe('Gen 1', () => {
   });
 
   test('Thrashing effect', () => {
-    const battle = startBattle([
-      SRF_RES, SRF_RES, SRF_RUN, HIT, NO_CRIT, MIN_DMG, THRASH(3), HIT, CFZ(5),
-      SRF_RES, SRF_RES, SRF_RES, SRF_RUN, CFZ_CAN, MISS, SRF_RUN, MISS, THRASH(3),
-      SRF_RES, SRF_RES, SRF_RES, SRF_RES, SRF_RUN, CFZ_CAN, HIT, NO_CRIT,
-      MIN_DMG, CFZ(5), SRF_RUN, HIT, NO_CRIT, MIN_DMG,
-      SRF_RES, SRF_RES, SRF_RES, CFZ_CAN, HIT, SS_MOD, SRF_RUN, PAR_CANT,
-      SRF_RES, SRF_RES, CFZ_CAN, HIT, SRF_RUN, PAR_CAN, HIT, NO_CRIT, MAX_DMG, THRASH(3),
-    ], [
-      {species: 'Nidoking', evs, moves: ['Thrash', 'Thunder Wave']},
-      {species: 'Nidoqueen', evs, moves: ['Poison Sting']},
-    ], [
-      {species: 'Vileplume', evs, moves: ['Petal Dance', 'Confuse Ray']},
-      {species: 'Victreebel', evs, moves: ['Razor Leaf']},
-    ]);
+    // normal
+    {
+      const battle = startBattle([
+        SRF_RES, SRF_RES, SRF_RUN, HIT, NO_CRIT, MIN_DMG, THRASH(3), HIT, CFZ(5),
+        SRF_RES, SRF_RES, SRF_RES, SRF_RUN, CFZ_CAN, MISS, SRF_RUN, MISS, THRASH(3),
+        SRF_RES, SRF_RES, SRF_RES, SRF_RES, SRF_RUN, CFZ_CAN, HIT, NO_CRIT,
+        MIN_DMG, CFZ(5), SRF_RUN, HIT, NO_CRIT, MIN_DMG,
+        SRF_RES, SRF_RES, SRF_RES, CFZ_CAN, HIT, SS_MOD, SRF_RUN, PAR_CANT,
+        SRF_RES, SRF_RES, CFZ_CAN, HIT, SRF_RUN, PAR_CAN, HIT, NO_CRIT, MAX_DMG, THRASH(3),
+      ], [
+        {species: 'Nidoking', evs, moves: ['Thrash', 'Thunder Wave']},
+        {species: 'Nidoqueen', evs, moves: ['Poison Sting']},
+      ], [
+        {species: 'Vileplume', evs, moves: ['Petal Dance', 'Confuse Ray']},
+        {species: 'Victreebel', evs, moves: ['Razor Leaf']},
+      ]);
 
-    let p1hp = battle.p1.pokemon[0].hp;
-    let p2hp = battle.p2.pokemon[0].hp;
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
 
-    let pp = battle.p1.pokemon[0].moveSlots[0].pp;
+      let pp = battle.p1.pokemon[0].moveSlots[0].pp;
 
-    // Thrashing locks user in for 3-4 turns
-    battle.makeChoices('move 1', 'move 2');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp);
-    expect(battle.p1.pokemon[0].volatiles['confusion'].time).toBe(5);
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 68);
-    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+      // Thrashing locks user in for 3-4 turns
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p1.pokemon[0].volatiles['confusion'].time).toBe(5);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 68);
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
 
-    expect(choices(battle, 'p1')).toEqual(['move 1']);
-    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p1')).toEqual(['move 1']);
+      expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
-    // Thrashing locks you in whether you hit or not
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp);
-    expect(battle.p1.pokemon[0].volatiles['confusion'].time).toBe(4);
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
-    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
+      // Thrashing locks you in whether you hit or not
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p1.pokemon[0].volatiles['confusion'].time).toBe(4);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
 
-    expect(choices(battle, 'p1')).toEqual(['move 1']);
-    expect(choices(battle, 'p2')).toEqual(['move 1']);
+      expect(choices(battle, 'p1')).toEqual(['move 1']);
+      expect(choices(battle, 'p2')).toEqual(['move 1']);
 
-    // Thrashing confuses you even if already confused
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 91);
-    expect(battle.p1.pokemon[0].volatiles['confusion'].time).toBe(5);
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 68);
-    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
+      // Thrashing confuses you even if already confused
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 91);
+      expect(battle.p1.pokemon[0].volatiles['confusion'].time).toBe(5);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 68);
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
 
-    expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
-    expect(choices(battle, 'p2')).toEqual(['move 1']);
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p2')).toEqual(['move 1']);
 
-    // Thrashing doesn't confuse you if the user is prevented from moving
-    battle.makeChoices('move 2', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp);
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
-    expect(battle.p2.pokemon[0].status).toBe('par');
-    expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
+      // Thrashing doesn't confuse you if the user is prevented from moving
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+      expect(battle.p2.pokemon[0].status).toBe('par');
+      expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
 
-    expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
-    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
-    battle.makeChoices('move 2', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 108);
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 108);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
 
-    verify(battle, [
-      '|move|p1a: Nidoking|Thrash|p2a: Vileplume',
-      '|-damage|p2a: Vileplume|285/353',
-      '|move|p2a: Vileplume|Confuse Ray|p1a: Nidoking',
-      '|-start|p1a: Nidoking|confusion',
-      '|turn|2',
-      '|-activate|p1a: Nidoking|confusion',
-      '|move|p1a: Nidoking|Thrash|p2a: Vileplume|[from]Thrash|[miss]',
-      '|-miss|p1a: Nidoking',
-      '|move|p2a: Vileplume|Petal Dance|p1a: Nidoking|[miss]',
-      '|-miss|p2a: Vileplume',
-      '|turn|3',
-      '|-activate|p1a: Nidoking|confusion',
-      '|move|p1a: Nidoking|Thrash|p2a: Vileplume|[from]Thrash',
-      '|-damage|p2a: Vileplume|217/353',
-      '|-start|p1a: Nidoking|confusion|[silent]',
-      '|move|p2a: Vileplume|Petal Dance|p1a: Nidoking|[from]Petal Dance',
-      '|-damage|p1a: Nidoking|274/365',
-      '|turn|4',
-      '|-activate|p1a: Nidoking|confusion',
-      '|move|p1a: Nidoking|Thunder Wave|p2a: Vileplume',
-      '|-status|p2a: Vileplume|par',
-      '|cant|p2a: Vileplume|par',
-      '|turn|5',
-      '|-activate|p1a: Nidoking|confusion',
-      '|move|p1a: Nidoking|Thunder Wave|p2a: Vileplume',
-      '|-fail|p2a: Vileplume|par',
-      '|move|p2a: Vileplume|Petal Dance|p1a: Nidoking',
-      '|-damage|p1a: Nidoking|166/365',
-      '|turn|6',
-    ]);
+      verify(battle, [
+        '|move|p1a: Nidoking|Thrash|p2a: Vileplume',
+        '|-damage|p2a: Vileplume|285/353',
+        '|move|p2a: Vileplume|Confuse Ray|p1a: Nidoking',
+        '|-start|p1a: Nidoking|confusion',
+        '|turn|2',
+        '|-activate|p1a: Nidoking|confusion',
+        '|move|p1a: Nidoking|Thrash|p2a: Vileplume|[from]Thrash|[miss]',
+        '|-miss|p1a: Nidoking',
+        '|move|p2a: Vileplume|Petal Dance|p1a: Nidoking|[miss]',
+        '|-miss|p2a: Vileplume',
+        '|turn|3',
+        '|-activate|p1a: Nidoking|confusion',
+        '|move|p1a: Nidoking|Thrash|p2a: Vileplume|[from]Thrash',
+        '|-damage|p2a: Vileplume|217/353',
+        '|-start|p1a: Nidoking|confusion|[silent]',
+        '|move|p2a: Vileplume|Petal Dance|p1a: Nidoking|[from]Petal Dance',
+        '|-damage|p1a: Nidoking|274/365',
+        '|turn|4',
+        '|-activate|p1a: Nidoking|confusion',
+        '|move|p1a: Nidoking|Thunder Wave|p2a: Vileplume',
+        '|-status|p2a: Vileplume|par',
+        '|cant|p2a: Vileplume|par',
+        '|turn|5',
+        '|-activate|p1a: Nidoking|confusion',
+        '|move|p1a: Nidoking|Thunder Wave|p2a: Vileplume',
+        '|-fail|p2a: Vileplume|par',
+        '|move|p2a: Vileplume|Petal Dance|p1a: Nidoking',
+        '|-damage|p1a: Nidoking|166/365',
+        '|turn|6',
+      ]);
+    }
+    // immune
+    {
+      const battle = startBattle([
+        SRF_RES, SRF_RUN, HIT, NO_CRIT, MIN_DMG, THRASH(3),
+        SRF_RES, SRF_RES, SRF_RUN,
+        SRF_RES, SRF_RES, SRF_RUN, CFZ(5),
+      ], [
+        {species: 'Mankey', evs, moves: ['Thrash', 'Scratch']},
+      ], [
+        {species: 'Scyther', evs, moves: ['Cut']},
+        {species: 'Goldeen', evs, moves: ['Water Gun']},
+        {species: 'Gastly', evs, moves: ['Teleport']},
+      ]);
+
+      let goldeen = battle.p2.pokemon[1].hp;
+      const gastly = battle.p2.pokemon[2].hp;
+
+      battle.makeChoices('move 1', 'switch 2');
+      expect(battle.p2.pokemon[0].hp).toBe(goldeen -= 77);
+
+      battle.makeChoices('move 1', 'switch 3');
+      expect(battle.p2.pokemon[0].hp).toBe(gastly);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(gastly);
+      expect(battle.p1.pokemon[0].volatiles['confusion'].time).toBe(5);
+
+      verify(battle, [
+        '|switch|p2a: Goldeen|Goldeen|293/293',
+        '|move|p1a: Mankey|Thrash|p2a: Goldeen',
+        '|-damage|p2a: Goldeen|216/293',
+        '|turn|2',
+        '|switch|p2a: Gastly|Gastly|263/263',
+        '|move|p1a: Mankey|Thrash|p2a: Gastly|[from]Thrash',
+        '|-immune|p2a: Gastly',
+        '|turn|3',
+        '|move|p2a: Gastly|Teleport|p2a: Gastly',
+        '|move|p1a: Mankey|Thrash|p2a: Gastly|[from]Thrash',
+        '|-immune|p2a: Gastly',
+        '|-start|p1a: Mankey|confusion|[silent]',
+        '|turn|4',
+      ]);
+    }
   });
 
   test('FixedDamage effect', () => {
@@ -4059,6 +4153,26 @@ describe('Gen 1', () => {
       '|-prepare|p1a: Venusaur|Solar Beam',
       '|move|p2a: Snorlax|Teleport|p2a: Snorlax',
       '|turn|4',
+    ]);
+  });
+
+  test('Explosion invulnerability bug', () => {
+    const battle = startBattle([SRF_RES, SRF_RES, SS_RES, GLM], [
+      {species: 'Dugtrio', evs, moves: ['Dig']},
+    ], [
+      {species: 'Golem', evs, moves: ['Explosion']},
+    ]);
+
+    battle.makeChoices('move 1', 'move 1');
+    // Explode effects should cause the user to faint if the target is invulnerable
+    // expect(battle.p2.pokemon[0].hp).toBe(0);
+
+    verify(battle, [
+      '|move|p1a: Dugtrio|Dig||[still]',
+      '|-prepare|p1a: Dugtrio|Dig',
+      '|move|p2a: Golem|Explosion|p1a: Dugtrio|[miss]',
+      '|-miss|p2a: Golem',
+      '|turn|2',
     ]);
   });
 
