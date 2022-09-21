@@ -50,14 +50,14 @@ pub const Battle = struct {
         };
     }
 
-    pub fn random(rand: *PSRNG) data.Battle(data.PRNG) {
+    pub fn random(rand: *PSRNG, block: bool) data.Battle(data.PRNG) {
         var p1: u4 = 0;
         var p2: u4 = 0;
         var battle: data.Battle(data.PRNG) = .{
             .rng = prng(rand),
             .turn = 0,
             .last_damage = 0,
-            .sides = .{ Side.random(rand), Side.random(rand) },
+            .sides = .{ Side.random(rand, block), Side.random(rand, block) },
         };
         battle.last_selected_indexes.p1 = p1;
         battle.last_selected_indexes.p2 = p2;
@@ -96,13 +96,13 @@ pub const Side = struct {
         return side;
     }
 
-    pub fn random(rand: *PSRNG) data.Side {
+    pub fn random(rand: *PSRNG, block: bool) data.Side {
         const n = if (rand.chance(u8, 1, 100)) rand.range(u4, 1, 5 + 1) else 6;
         var side = data.Side{};
 
         var i: u4 = 0;
         while (i < n) : (i += 1) {
-            side.pokemon[i] = Pokemon.random(rand);
+            side.pokemon[i] = Pokemon.random(rand, block);
             side.order[i] = i + 1;
         }
 
@@ -150,7 +150,7 @@ pub const Pokemon = struct {
         return pokemon;
     }
 
-    pub fn random(rand: *PSRNG) data.Pokemon {
+    pub fn random(rand: *PSRNG, block: bool) data.Pokemon {
         const s = @intToEnum(Species, rand.range(u8, 1, 151 + 1));
         const species = Species.get(s);
         const lvl = if (rand.chance(u8, 1, 20)) rand.range(u8, 1, 99 + 1) else 100;
@@ -176,7 +176,7 @@ pub const Pokemon = struct {
                 var j: u4 = 0;
                 while (j < i) : (j += 1) {
                     if (ms[j].id == m) continue :sample;
-                    if (showdown and blocked(m)) continue :sample;
+                    if (showdown and block and blocked(m)) continue :sample;
                 }
                 break;
             }

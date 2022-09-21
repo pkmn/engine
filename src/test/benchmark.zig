@@ -93,7 +93,7 @@ pub fn benchmark(
         }
 
         var original = switch (gen) {
-            1 => pkmn.gen1.helpers.Battle.random(&random),
+            1 => pkmn.gen1.helpers.Battle.random(&random, duration == null),
             else => unreachable,
         };
 
