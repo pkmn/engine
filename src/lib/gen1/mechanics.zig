@@ -2053,8 +2053,9 @@ pub const Effects = struct {
         const foe_ident = battle.active(player.foe());
 
         if (foe.active.volatiles.Recharging) {
-            foe.active.volatiles.Recharging = false;
             // Hit test not applied if the target is recharging (bypass)
+            // The volatile itself actually gets cleared below since on Pokémon Showdown
+            // the Sleep Clause Mod might activate, causing us to not actually bypass
         } else {
             if (Status.any(foe_stored.status)) {
                 return log.fail(
@@ -2073,6 +2074,7 @@ pub const Effects = struct {
                 if (Status.is(p.status, .SLP) and !Status.is(p.status, .SLF)) return;
             }
         }
+        foe.active.volatiles.Recharging = false;
 
         const duration = @truncate(u3, if (showdown)
             battle.rng.range(u8, 1, 8)
