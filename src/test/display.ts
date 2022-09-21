@@ -27,15 +27,8 @@ export const STYLES = `
 #content {
   font-family: "Roboto", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
   margin: 4em auto;
-  max-width: 1200px;
+  max-width: 1300px;
   line-height: 1.4em;
-}
-@media(max-width: 768px) {
-  #content {
-    font-size: 0.85em;
-    max-width: 95%;
-    margin: 2em auto;
-  }
 }
 details > summary {
   list-style: none;
@@ -99,6 +92,7 @@ summary {
   border-top: 1px solid black;
   display: flex;
 }
+
 table {
   border-collapse: collapse;
   border-style: hidden;
@@ -239,7 +233,7 @@ th, td {
 .rstatbar .hpbar .hptextborder {
   right: -3px;
 }
-.moves {
+.moves ul {
   column-count: 2;
   column-gap: 2em;
 }
@@ -270,6 +264,77 @@ th, td {
   position: absolute;
   right: 10px;
   color: #AAAAAA;
+}
+.left .position {
+  display: none;
+}
+.right .position {
+  display: block;
+}
+@media(max-width: 1300px) {
+  #content {
+    font-size: 0.85em;
+    max-width: 95%;
+    margin: 2em auto;
+  }
+}
+@media(max-width: 1200px) {
+  .moves ul {
+    column-count: 1;
+  }
+}
+@media(max-width: 1100px) {
+  .pokemon {
+    flex-direction: column;
+  }
+  .stats {
+    justify-content: center;
+  }
+  .boosts {
+    margin-left: 5px;
+  }
+  .moves ul {
+    column-count: 2;
+  }
+  .right {
+    padding-top: 1em;
+  }
+  .volatiles {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .volatile {
+    margin: 2px;
+  }
+  .left .position {
+    display: block;
+  }
+  .right .position {
+    display: none;
+  }
+}
+@media(max-width: 800px) {
+  .moves {
+    display: flex;
+    justify-content: center;
+  }
+  .moves ul {
+    column-count: 1;
+    display: inline-block;
+    padding: 0;
+  }
+}
+@media(max-width: 680px) {
+  .stats {
+    flex-direction: column;
+    padding: 0;
+  }
+  .boosts {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5em;
+  }
 }`;
 
 export const SCRIPTS = `
@@ -345,6 +410,7 @@ function displayPokemon(gen: Generation, showdown: boolean, pokemon: Pokemon, ac
   // HP Bar
   const {title, percent, pixels, color} = getHP(pokemon);
   console.log(`<div class="left" title="${title}">`);
+  if (!active) console.log(`<div class="position">${POSITIONS[pokemon.position - 1]}</div>`);
   console.log('<div class="statbar rstatbar" style="display: block; opacity: 1;">');
   console.log('<span class="name">');
   if (pokemon.status) console.log(displayStatus(pokemon));
@@ -397,7 +463,7 @@ function displayPokemon(gen: Generation, showdown: boolean, pokemon: Pokemon, ac
   console.log('</div>');
 
   // Moves
-  console.log('<ul class="moves">');
+  console.log('<div class="moves"><ul>');
   const moves = active ? pokemon.moves : pokemon.stored.moves;
   for (const move of moves) {
     const name = gen.moves.get(move.id)!.name;
@@ -408,7 +474,7 @@ function displayPokemon(gen: Generation, showdown: boolean, pokemon: Pokemon, ac
     const pp = `<small>(${move.pp}/${maxpp})</small>`;
     console.log(`<li class="${disabled}" ${title}>${name} ${pp}</li>`);
   }
-  console.log('</ul>');
+  console.log('</ul></div>');
 
   // Volatiles
   if (active) {
