@@ -4956,7 +4956,33 @@ test "Charge + Sleep bug" {
 }
 
 test "Explosion invulnerability bug" {
-    return error.SkipZigTest; // TODO
+    var t = Test((if (showdown)
+        (.{ NOP, NOP, NOP, NOP })
+    else
+        (.{ ~CRIT, MIN_DMG }))).init(
+        &.{.{ .species = .Dugtrio, .moves = &.{.Dig} }},
+        &.{.{ .species = .Golem, .moves = &.{.Explosion} }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Dig, .{}, null);
+    try t.log.expected.laststill();
+    try t.log.expected.prepare(P1.ident(1), Move.Dig);
+    try t.log.expected.move(P2.ident(1), Move.Explosion, P1.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    if (showdown) {
+        try t.log.expected.turn(2);
+    } else {
+        t.expected.p2.get(1).hp = 0;
+        try t.log.expected.faint(P2.ident(1), false);
+        try t.log.expected.win(.P1);
+    }
+
+    const result = if (showdown) Result.Default else Result.Win;
+    try expectEqual(result, try t.update(move(1), move(1)));
+
+    try t.verify();
 }
 
 test "Bide + Substitute bug" {

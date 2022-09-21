@@ -839,6 +839,8 @@ fn doMove(battle: anytype, player: Player, mslot: u4, from: ?Move, log: anytype)
             battle.last_damage = 1;
             _ = try applyDamage(battle, player, player.foe(), move, .None, log);
         } else if (move.effect == .Explode) {
+            // Pokémon Showdown does not execute the Explode effect if the target is Invulnerable
+            if (showdown and foe.active.volatiles.Invulnerable) return null;
             try Effects.explode(battle, player);
             // Pokémon Showdown does not build Rage after missing Self-Destruct/Explosion
             if (foe.stored().hp == 0 or showdown) return null;
