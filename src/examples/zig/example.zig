@@ -17,7 +17,7 @@ pub fn main() !void {
         std.process.exit(1);
     }
 
-    const seed = std.fmt.parseUnsigned(u64, args[2], 10) catch {
+    const seed = std.fmt.parseUnsigned(u64, args[1], 10) catch {
         try err.print("Invalid seed: {s}\n", .{args[1]});
         try err.print("Usage: {s} <seed>\n", .{args[0]});
         std.process.exit(1);
@@ -81,5 +81,5 @@ pub fn main() !void {
     };
 
     const out = std.io.getStdOut().writer();
-    try out.print("Battle {s} after {d} turns", .{ msg, battle.turn });
+    try out.print("Battle {s} after {d} turns\n", .{ msg, battle.turn });
 }

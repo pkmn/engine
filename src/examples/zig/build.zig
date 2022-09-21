@@ -23,6 +23,7 @@ pub fn build(b: *std.build.Builder) void {
     const build_options = options.getPackage("build_options");
 
     const exe = b.addExecutable("zig", "example.zig");
+    exe.use_stage1 = true;
     exe.setTarget(target);
     exe.setBuildMode(mode);
     exe.addPackage(pkmn.pkg(b, build_options));

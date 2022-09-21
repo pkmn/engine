@@ -96,14 +96,14 @@ js-example: src/examples/js/node_modules
 
 .PHONY: zig-example
 zig-example:
-	zig build --build-file src/examples/zig/build.zig run
+	zig build --build-file src/examples/zig/build.zig run -- 1234
 
 .PHONY: example
 example: c-example js-example zig-example
 
 .PHONY: integration
-# integration: check example
-integration: check
+# TODO: integration: check example
+integration: check zig-example
 	npm run test:integration
 
 .PHONY: benchmark
