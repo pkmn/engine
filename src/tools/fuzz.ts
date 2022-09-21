@@ -37,7 +37,9 @@ const display = (
   c2: Choice,
   battle: Battle,
   log: ParsedLine[],
+  seed?: string,
 ) => {
+  if (seed) console.log(`<h1>${seed}</h1>`);
   console.log('<div class="log">');
   console.log(`<pre><code>|${log.map(compact).join('\n|')}</code></pre>`);
   console.log('</div>');
@@ -103,9 +105,12 @@ class SpeciesNames implements Names {
     await run('zig', args, {encoding: 'buffer'});
   } catch (err: any) {
     const {stdout, stderr} = err as {stdout: Buffer; stderr: Buffer};
-    const error = stderr.toString('utf8');
+    const raw = stderr.toString('utf8');
+    const panic = raw.indexOf('panic: ');
+    const seed = raw.slice(0, panic - 1).match(/\d+$/)![0];
+    const error = raw.slice(panic);
 
-    console.error(error);
+    console.error(raw);
 
     console.log(
       '<!doctype html><html lang=en><head>' +
@@ -114,6 +119,9 @@ class SpeciesNames implements Names {
         '<link rel="icon" href="https://pkmn.cc/favicon.ico">' +
         '<title>@pkmn/engine</title>' +
         `<style>${STYLES}
+        h1 {
+          text-align: center;
+        }
         .error {
           overflow: auto;
           scrollbar-width: none;
@@ -127,6 +135,8 @@ class SpeciesNames implements Names {
 
     const data = Array.from(stdout);
     for (let offset = 0; offset < data.length; offset += (3 + size)) {
+      const s = offset === 0 ? seed : undefined;
+
       const result = Result.parse(data[offset]);
       const c1 = Choice.parse(data[offset + 1]);
       const c2 = Choice.parse(data[offset + 2]);
@@ -142,7 +152,7 @@ class SpeciesNames implements Names {
       }
       offset += r.value;
 
-      display(gen, showdown, result, c1, c2, battle, parsed);
+      display(gen, showdown, result, c1, c2, battle, parsed, s);
     }
 
     console.log('<hr />');

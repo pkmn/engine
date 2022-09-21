@@ -173,10 +173,10 @@ pub const Pokemon = struct {
             var m: Move = .None;
             sample: while (true) {
                 m = @intToEnum(Move, rand.range(u8, 1, 165 + 1));
+                if (showdown and block and blocked(m)) continue :sample;
                 var j: u4 = 0;
                 while (j < i) : (j += 1) {
                     if (ms[j].id == m) continue :sample;
-                    if (showdown and block and blocked(m)) continue :sample;
                 }
                 break;
             }
