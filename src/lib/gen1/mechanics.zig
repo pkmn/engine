@@ -741,7 +741,17 @@ fn doMove(battle: anytype, player: Player, mslot: u4, from: ?Move, log: anytype)
                 immune = true;
             } else {
                 try log.immune(battle.active(player.foe()), .None);
-                if (move.effect == .Explode) try Effects.explode(battle, player);
+                if (move.effect == .Explode) {
+                    try Effects.explode(battle, player);
+                } else if (move.effect == .Thrashing) {
+                    if (side.active.volatiles.Thrashing) {
+                        if (handleThrashing(battle, &side.active)) {
+                            try log.start(battle.active(player), .ConfusionSilent);
+                        }
+                    } else {
+                        Effects.thrashing(battle, player);
+                    }
+                }
                 return null;
             }
         }

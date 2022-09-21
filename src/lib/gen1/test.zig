@@ -2796,7 +2796,46 @@ test "Thrashing effect" {
     }
     // immune
     {
-        return error.SkipZigTest; // TODO
+        var t = Test((if (showdown)
+            (.{ NOP, NOP, HIT, ~CRIT, MIN_DMG, THRASH_3, NOP, NOP, NOP, NOP, NOP, NOP, CFZ_5 })
+        else
+            (.{ THRASH_3, ~CRIT, MIN_DMG, HIT, ~CRIT, HIT, CFZ_5, ~CRIT, HIT }))).init(
+            &.{.{ .species = .Mankey, .moves = &.{ .Thrash, .Scratch } }},
+            &.{
+                .{ .species = .Scyther, .moves = &.{.Cut} },
+                .{ .species = .Goldeen, .moves = &.{.WaterGun} },
+                .{ .species = .Gastly, .moves = &.{.Teleport} },
+            },
+        );
+        defer t.deinit();
+
+        try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+        try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(2), null);
+        t.expected.p2.get(2).hp -= 77;
+        try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+
+        try t.log.expected.switched(P2.ident(3), t.expected.p2.get(3));
+        try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(3), Move.Thrash);
+        try t.log.expected.immune(P2.ident(3), .None);
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(forced, swtch(3)));
+
+        try t.log.expected.move(P2.ident(3), Move.Teleport, P2.ident(3), null);
+        if (!showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
+        try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(3), Move.Thrash);
+        try t.log.expected.immune(P2.ident(3), .None);
+        if (showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
+        try t.log.expected.turn(4);
+
+        try expectEqual(Result.Default, try t.update(forced, move(1)));
+        try expect(t.actual.p1.active.volatiles.Confusion);
+        try expectEqual(@as(u3, 5), t.actual.p1.active.volatiles.confusion);
+
+        try t.verify();
     }
 }
 
