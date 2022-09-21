@@ -1959,10 +1959,11 @@ describe('Gen 1', () => {
     // fainting
     {
       const battle = startBattle([
-        SRF_RES, HIT, SS_MOD, SRF_RES, GLM,
-        GLM, GLM, SRF_RES, SS_RUN, HIT, NO_CRIT, MIN_DMG,
+        SRF_RES, HIT, SS_MOD, SRF_RES, SS_RES, GLM, GLM, GLM, SRF_RES,
+        GLM, GLM, GLM, SRF_RES, SS_RUN, HIT, NO_CRIT, MIN_DMG,
       ], [
-        {species: 'Zapdos', evs, moves: ['Toxic', 'Fly']},
+        {species: 'Seadra', evs, moves: ['Toxic']},
+        {species: 'Ninetales', evs, moves: ['Dig']},
       ], [
         {species: 'Shellder', evs, moves: ['Teleport']},
         {species: 'Arcanine', evs, moves: ['Teleport']},
@@ -1974,31 +1975,42 @@ describe('Gen 1', () => {
       battle.makeChoices('move 1', 'move 1');
       expect(battle.p2.pokemon[0].hp).toBe(15);
 
-      battle.makeChoices('move 2', 'move 1');
+      battle.makeChoices('switch 2', 'switch 2');
+
+      battle.makeChoices('move 1', 'move 1');
+
+      battle.makeChoices('move 1', 'switch 2');
       expect(battle.p2.pokemon[0].hp).toBe(0);
 
       battle.makeChoices('', 'switch 2');
 
       battle.makeChoices('move 1', 'move 1');
-      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 82);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 141);
 
       verify(battle, [
-        '|move|p1a: Zapdos|Toxic|p2a: Shellder',
+        '|move|p1a: Seadra|Toxic|p2a: Shellder',
         '|-status|p2a: Shellder|tox',
         '|move|p2a: Shellder|Teleport|p2a: Shellder',
         '|-damage|p2a: Shellder|15/263 tox|[from] psn',
         '|turn|2',
-        '|move|p1a: Zapdos|Fly||[still]',
-        '|-prepare|p1a: Zapdos|Fly',
-        '|move|p2a: Shellder|Teleport|p2a: Shellder',
+        '|switch|p1a: Ninetales|Ninetales|349/349',
+        '|switch|p2a: Arcanine|Arcanine|383/383',
+        '|turn|3',
+        '|move|p1a: Ninetales|Dig||[still]',
+        '|-prepare|p1a: Ninetales|Dig',
+        '|move|p2a: Arcanine|Teleport|p2a: Arcanine',
+        '|turn|4',
+        '|switch|p2a: Shellder|Shellder|15/263 tox',
+        '|-status|p2a: Shellder|psn|[silent]',
         '|-damage|p2a: Shellder|0 fnt|[from] psn',
         '|faint|p2a: Shellder',
         '|switch|p2a: Arcanine|Arcanine|383/383',
-        '|turn|3',
-        '|move|p1a: Zapdos|Fly|p2a: Arcanine|[from]Fly',
-        '|-damage|p2a: Arcanine|301/383',
+        '|turn|5',
+        '|move|p1a: Ninetales|Dig|p2a: Arcanine|[from]Dig',
+        '|-supereffective|p2a: Arcanine',
+        '|-damage|p2a: Arcanine|242/383',
         '|move|p2a: Arcanine|Teleport|p2a: Arcanine',
-        '|turn|4',
+        '|turn|6',
       ]);
     }
   });

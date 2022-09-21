@@ -64,10 +64,11 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     var r1: u8 = 0;
     var r2: u8 = 0;
 
-    checkLocked(battle, 2);
+    const pass = showdown and (c1.type == .Pass or c2.type == .Pass);
+    if (showdown and !pass) checkLocked(battle, 2);
     if (selectMove(battle, .P1, c1, c2, &f1, &r1)) |r| return r;
     if (selectMove(battle, .P2, c2, c1, &f2, &r2)) |r| return r;
-    checkChange(battle);
+    if (showdown) checkChange(battle);
 
     if (turnOrder(battle, c1, c2) == .P1) {
         if (try doTurn(battle, .P1, c1, f1, r1, .P2, c2, f2, r2, log)) |r| return r;
@@ -84,7 +85,7 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
         p2.active.volatiles.Trapping = false;
     }
 
-    return endTurn(battle, log);
+    return endTurn(battle, pass, log);
 }
 
 fn start(battle: anytype, log: anytype) !Result {
@@ -102,7 +103,7 @@ fn start(battle: anytype, log: anytype) !Result {
     try switchIn(battle, .P1, p1_slot, true, log);
     try switchIn(battle, .P2, p2_slot, true, log);
 
-    return endTurn(battle, log);
+    return endTurn(battle, true, log);
 }
 
 fn findFirstAlive(side: *const Side) u8 {
@@ -111,7 +112,7 @@ fn findFirstAlive(side: *const Side) u8 {
 }
 
 fn checkLocked(battle: anytype, n: u2) void {
-    if (!showdown) return;
+    assert(showdown);
     // Emitting |request| advances the RNG on Pokémon Showdown if the side has a "locked" move,
     // but the RNG advances by 2 during choice verification because getLockedMove gets called twice
     battle.rng.advance(n * (@as(u3, @boolToInt(isLocked(battle.side(.P1)))) +
@@ -119,7 +120,7 @@ fn checkLocked(battle: anytype, n: u2) void {
 }
 
 fn checkChange(battle: anytype) void {
-    if (!showdown) return;
+    assert(showdown);
     // Thrashing moves call changeAction onBeforeTurn which advances the RNG due to resolve (again)
     battle.rng.advance(@as(u2, @boolToInt(battle.side(.P1).active.volatiles.Thrashing)) +
         @as(u2, @boolToInt(battle.side(.P2).active.volatiles.Thrashing)));
@@ -261,7 +262,8 @@ fn saveMove(battle: anytype, player: Player, choice: ?Choice) u8 {
     // is the execution turn of a normal target twoturnmove move that was proc-ed via useMove
     const advance = !(side.active.volatiles.Charging and
         Move.get(side.last_selected_move).effect == .Charge and
-        !(Move.get(side.last_selected_move).target == .Any) and
+        Move.get(side.last_selected_move).target != .Any and
+        side.last_used_move != .None and
         Move.get(side.last_used_move).effect != .Charge);
     if (advance) battle.rng.advance(Move.frames(side.last_selected_move, .resolve));
 
@@ -1435,7 +1437,7 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
     }
 }
 
-fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
+fn endTurn(battle: anytype, pass: bool, log: anytype) @TypeOf(log).Error!Result {
     if (showdown and options.ebc and checkEBC(battle)) {
         try log.tie();
         return Result.Tie;
@@ -1456,9 +1458,9 @@ fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
     // getLockedMove that comes after `|turn|` is logged, but given that the only residual handler
     // for Pokémon Showdown in generation 1 is due to locked moves (which is incorrect, because
     // there should be *no* residual handler in generation 1...), we can repurpose the same logic
-    checkLocked(battle, 1);
+    if (showdown and !pass) checkLocked(battle, 1);
     try log.turn(battle.turn);
-    checkLocked(battle, 1);
+    if (showdown) checkLocked(battle, 1);
 
     return Result.Default;
 }

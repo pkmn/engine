@@ -2260,7 +2260,73 @@ test "Fly/Dig effect" {
     }
     // fainting
     {
-        return error.SkipZigTest; // TODO
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                NOP, HIT, NOP, NOP, NOP, NOP, NOP, NOP, NOP,
+                NOP, NOP, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG,
+            } else .{
+                HIT, ~CRIT, MIN_DMG, HIT
+            }
+        // zig fmt: on
+        ).init(
+            &.{
+                .{ .species = .Seadra, .hp = 31, .moves = &.{.Toxic} },
+                .{ .species = .Ninetales, .moves = &.{.Dig} },
+            },
+            &.{
+                .{ .species = .Shellder, .hp = 31, .moves = &.{.Teleport} },
+                .{ .species = .Arcanine, .moves = &.{.Teleport} },
+            },
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(1), null);
+        t.expected.p2.get(1).status = Status.init(.PSN);
+        try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+        try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 16;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+        try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(swtch(2), swtch(2)));
+
+        try t.log.expected.move(P1.ident(2), Move.Dig, .{}, null);
+        try t.log.expected.laststill();
+        try t.log.expected.prepare(P1.ident(2), Move.Dig);
+        try t.log.expected.move(P2.ident(2), Move.Teleport, P2.ident(2), null);
+        try t.log.expected.turn(4);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
+        t.expected.p2.get(1).hp = 0;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
+        try t.log.expected.faint(P2.ident(1), true);
+
+        try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(forced, swtch(2)));
+
+        try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+        try t.log.expected.turn(5);
+
+        try expectEqual(Result.Default, try t.update(.{}, swtch(2)));
+
+        try t.log.expected.move(P1.ident(2), Move.Dig, P2.ident(2), Move.Dig);
+        try t.log.expected.supereffective(P2.ident(2));
+        t.expected.p2.get(2).hp -= 141;
+        try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+        try t.log.expected.move(P2.ident(2), Move.Teleport, P2.ident(2), null);
+        try t.log.expected.turn(6);
+
+        try expectEqual(Result.Default, try t.update(forced, move(1)));
+
+        try t.verify();
     }
 }
 

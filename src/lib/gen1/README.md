@@ -35,7 +35,7 @@ The following information is required to simulate a Generation I Pokémon battle
 | `battle.last_damage`           | `Damage`                           | `battle.lastDamage`                    |
 | `side.{active,pokemon}`        | `PlayerMonNumber`/`BattleMon`      | `side.active`                          |
 | `side.team`                    | `PartyMons`                        | `side.pokemon`                         |
-| `side.last_used_move`          | `PlayerUsedMove`                   | `side.lastMove`                        |
+| `side.last_used_move`          | `PlayerUsedMove`                   | `pokemon.lastMove`                     |
 | `side.last_selected_move`      | `PlayerSelectedMove`               | `side.lastSelectedMove`                |
 | `battle.last_selected_indexes` | `PlayerMoveListIndex`              | -                                      |
 | `side.order`                   | -                                  | `pokemon.position`                     |
@@ -62,6 +62,12 @@ The following information is required to simulate a Generation I Pokémon battle
   different
 - `battle.turn` only needs to be tracked in order to be compatible with the Pokémon Showdown
   protocol
+- Pokémon Showdown tracks several last used move variables (`Battle.lastMove`, `Side.lastMove`, and
+  `Pokemon.lastMove`), none of switch accurately match the `PlayerUsedMove` variable from the
+  cartridge (`Side.lastMove` should be what is used, but is used by Pokémon Showdown only for
+  Counter and is not set and cleared in the correct locations. `Pokemon.lastMove` matches
+  `PlayerUsedMove` more often so is what the engine attempts to model, despite the implications for
+  Counter)
 - Pokémon Showdown does not implement the [Partial-trapping move Mirror Move
   glitch](https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch) and as such
   does not need to keep track of a player's last selected move index (`PlayerMoveListIndex`)
