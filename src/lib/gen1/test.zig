@@ -5003,6 +5003,49 @@ test "Substitute effect" {
 
 // Pokémon Showdown Bugs
 
+test "Disable + Bide bug" {
+    const BIDE_3 = MAX;
+    const DISABLE_MOVE_1 = if (showdown) comptime ranged(1, 2) - 1 else 0;
+    const DISABLE_DURATION_5 = comptime ranged(5, 9 - 1) - 1;
+
+    var t = Test((if (showdown)
+        (.{ BIDE_3, NOP, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5 }) // NOP, NOP, NOP, NOP
+    else
+        (.{ ~CRIT, BIDE_3, ~CRIT, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5 }))).init(
+        &.{.{ .species = .Voltorb, .moves = &.{ .Teleport, .Disable } }},
+        &.{.{ .species = .Golem, .moves = &.{ .Bide, .RockThrow } }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.move(P2.ident(1), Move.Bide, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Bide);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.Disable, P2.ident(1), null);
+    try t.log.expected.startEffect(P2.ident(1), .Disable, Move.Bide);
+    try t.log.expected.disabled(P2.ident(1), Move.Bide);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(2), forced));
+
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    // BUG: Pokémon Showdowns Disable + Bide interaction (and odd RNG behavior) is too jank
+    // if (showdown) {
+    //     try t.log.expected.activate(P2.ident(1), .Bide);
+    // } else {
+    try t.log.expected.disabled(P2.ident(1), Move.Bide);
+    // }
+    try t.log.expected.turn(4);
+
+    // Bide should not execute
+    try expectEqual(Result.Default, try t.update(move(1), forced));
+
+    try t.verify();
+}
+
 test "Charge + Sleep bug" {
     const SLP_1 = if (showdown) comptime ranged(1, 8 - 1) else 1;
 

@@ -4133,6 +4133,39 @@ describe('Gen 1', () => {
 
   // Pokémon Showdown Bugs
 
+  test('Disable + Bide bug', () => {
+    const battle = startBattle([
+      BIDE(3),
+      SRF_RES, HIT, DISABLE_MOVE(1, 2), DISABLE_DURATION(5), SS_RUN,
+      SRF_RES, SRF_RUN, SS_RUN,
+    ], [
+      {species: 'Voltorb', evs, moves: ['Teleport', 'Disable']},
+    ], [
+      {species: 'Golem', evs, moves: ['Bide', 'Flash']},
+    ]);
+
+    battle.makeChoices('move 1', 'move 1');
+
+    battle.makeChoices('move 2', 'move 1');
+
+    // Bide should not execute when Disabled
+    battle.makeChoices('move 1', 'move 1');
+
+    verify(battle, [
+      '|move|p1a: Voltorb|Teleport|p1a: Voltorb',
+      '|move|p2a: Golem|Bide|p2a: Golem',
+      '|-start|p2a: Golem|Bide',
+      '|turn|2',
+      '|move|p1a: Voltorb|Disable|p2a: Golem',
+      '|-start|p2a: Golem|Disable|Bide',
+      '|cant|p2a: Golem|Disable|Bide',
+      '|turn|3',
+      '|move|p1a: Voltorb|Teleport|p1a: Voltorb',
+      '|-activate|p2a: Golem|Bide',
+      '|turn|4',
+    ]);
+  });
+
   test('Charge + Sleep bug', () => {
     const battle = startBattle([SRF_RES, SRF_RES, HIT, SS_MOD, SLP(1), SRF_RES, SRF_RES], [
       {species: 'Venusaur', evs, moves: ['Solar Beam', 'Tackle']},
