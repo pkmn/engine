@@ -2579,8 +2579,9 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
                     const m = active.moves[slot - 1];
                     if (m.id == .None) break;
                     if (m.id == side.last_selected_move) {
-                        assert(m.pp > 0 or Move.get(m.id).effect == .Trapping);
-                        out[n] = .{ .type = .Move, .data = slot };
+                        // Pokémon Showdown displays Struggle if limited to Bide when out of PP
+                        const s = if (m.pp == 0 and m.id == .Bide) 0 else slot;
+                        out[n] = .{ .type = .Move, .data = s };
                         n += 1;
                         return n;
                     }
