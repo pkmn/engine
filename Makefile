@@ -74,7 +74,8 @@ zig-coverage:
 	kcov --merge coverage/zig/merged coverage/zig/pkmn coverage/zig/pkmn-showdown
 
 .PHONY: js-coverage
-js-coverage: js-test
+js-coverage: js-build
+	npm run test -- --coverage
 
 .PHONY: coverage
 coverage: zig-coverage js-coverage
