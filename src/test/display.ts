@@ -289,12 +289,16 @@ th, td {
   }
   .stats {
     justify-content: center;
+    padding: 0;
   }
   .boosts {
     margin-left: 5px;
   }
   .moves ul {
     column-count: 2;
+  }
+  .left {
+    padding-right: 0;
   }
   .right {
     padding-top: 1em;
