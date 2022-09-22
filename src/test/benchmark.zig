@@ -179,7 +179,7 @@ pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) nore
     var w = bw.writer();
 
     if (out.isTty()) {
-        w.print("seed: 0x{X}\n", .{ last }) catch unreachable;
+        w.print("seed: 0x{X}\n", .{last}) catch unreachable;
     } else {
         w.writeIntNative(u64, last) catch unreachable;
     }

@@ -105,7 +105,7 @@ export const Choices = new class {
         const last = side.lastSelectedMove!;
         for (const move of active.moves) {
           if (move.id === last) {
-            options.push({type: 'move', data: move.pp == 0 && move.id == 'bide' ? 0 : slot});
+            options.push({type: 'move', data: move.pp === 0 && move.id === 'bide' ? 0 : slot});
             return options;
           }
         }
