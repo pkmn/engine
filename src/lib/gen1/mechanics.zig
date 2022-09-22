@@ -546,11 +546,13 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
         }
     }
 
-    if (volatiles.disabled.move != 0 and
-        active.move(volatiles.disabled.move).id == side.last_selected_move)
-    {
-        try log.disabled(ident, side.last_selected_move);
-        return .done;
+    if (volatiles.disabled.move != 0) {
+        // A Pokémon that transforms after being disabled may end up with less move slots
+        const m = active.moves[volatiles.disabled.move - 1].id;
+        if (m != .None and m == side.last_selected_move) {
+            try log.disabled(ident, side.last_selected_move);
+            return .done;
+        }
     }
 
     if (Status.is(stored.status, .PAR)) {

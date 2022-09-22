@@ -111,6 +111,9 @@ class SpeciesNames implements Names {
 
     console.error(raw);
 
+    const data = Array.from(stdout);
+    if (!data.length) process.exit(1);
+
     console.log(
       '<!doctype html><html lang=en><head>' +
         '<meta charset="utf-8">' +
@@ -132,7 +135,7 @@ class SpeciesNames implements Names {
       '</head><body><div id="content">'
     );
 
-    const data = Array.from(stdout);
+
     const view = Data.view(data);
 
     const head = 8 + 1;
@@ -170,5 +173,7 @@ class SpeciesNames implements Names {
     console.log('<hr />');
     console.log(`<pre class="error"><code>${error}</pre></code>`);
     console.log(`</div><script>${SCRIPTS}</script></body></html>`);
+
+    process.exit(1);
   }
 })().catch(console.error);
