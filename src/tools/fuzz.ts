@@ -8,7 +8,7 @@ import {Generation, Generations, GenerationNum} from '@pkmn/data';
 
 
 import {Battle, Result, Choice, Log, ParsedLine, Names} from '../pkg';
-import {Lookup, Data, LAYOUT} from '../pkg/data';
+import {Lookup, Data, LAYOUT, LE} from '../pkg/data';
 import {STYLES, displayBattle, SCRIPTS} from '../test/display';
 import * as gen1 from '../pkg/gen1';
 
@@ -37,9 +37,9 @@ const display = (
   c2: Choice,
   battle: Battle,
   log: ParsedLine[],
-  seed?: string,
+  seed?: bigint,
 ) => {
-  if (seed) console.log(`<h1>${seed}</h1>`);
+  if (seed) console.log(`<h1>0x${seed.toString(16).toUpperCase()}</h1>`);
   console.log('<div class="log">');
   console.log(`<pre><code>|${log.map(compact).join('\n|')}</code></pre>`);
   console.log('</div>');
@@ -107,7 +107,6 @@ class SpeciesNames implements Names {
     const {stdout, stderr} = err as {stdout: Buffer; stderr: Buffer};
     const raw = stderr.toString('utf8');
     const panic = raw.indexOf('panic: ');
-    const seed = raw.slice(0, panic - 1).match(/0[xX][0-9a-fA-F]+$/)![0];
     const error = raw.slice(panic);
 
     console.error(raw);
@@ -134,9 +133,14 @@ class SpeciesNames implements Names {
     );
 
     const data = Array.from(stdout);
-    for (let offset = 0; offset < data.length; offset += (3 + size)) {
-      const s = offset === 0 ? seed : undefined;
+    const view = Data.view(data);
 
+    const head = 8 + 1;
+    const seed = view.getBigUint64(0, LE);
+    const end = view.getUint8(8);
+
+    let first = true;
+    for (let offset = head + end; offset < data.length; offset += (3 + size)) {
       const result = Result.parse(data[offset]);
       const c1 = Choice.parse(data[offset + 1]);
       const c2 = Choice.parse(data[offset + 2]);
@@ -152,7 +156,15 @@ class SpeciesNames implements Names {
       }
       offset += r.value;
 
-      display(gen, showdown, result, c1, c2, battle, parsed, s);
+      display(gen, showdown, result, c1, c2, battle, parsed, first ? seed : undefined);
+      first = false;
+    }
+
+    if (end > 0) {
+      const logs = Array.from(log.parse(Data.view(data.slice(head, head + end))));
+      console.log('<div class="log">');
+      console.log(`<pre><code>|${logs.map(compact).join('\n|')}</code></pre>`);
+      console.log('</div>');
     }
 
     console.log('<hr />');

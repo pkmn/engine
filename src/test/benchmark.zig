@@ -13,6 +13,7 @@ const Data = struct {
 };
 
 var data: ?std.ArrayList(Data) = null;
+var buf: ?std.ArrayList(u8) = null;
 var last: u64 = 0;
 
 pub fn main() !void {
@@ -82,22 +83,17 @@ pub fn benchmark(
     var elapsed = try Timer.start();
 
     var out = std.io.getStdOut().writer();
-    var err = std.io.getStdErr().writer();
 
     var i: usize = 0;
     var n = battles orelse std.math.maxInt(usize);
     while (i < n and (if (duration) |d| elapsed.read() < d else true)) : (i += 1) {
-        if (duration != null) {
-            last = random.src.seed;
-            if (std.io.getStdErr().isTty()) try err.print("{d}: 0x{X}\n", .{ i, last });
-        }
+        if (duration != null) last = random.src.seed;
 
         var original = switch (gen) {
             1 => pkmn.gen1.helpers.Battle.random(&random, duration == null),
             else => unreachable,
         };
 
-        var buf: ?std.ArrayList(u8) = null;
         var log: ?pkmn.Log(std.ArrayList(u8).Writer) = null;
         if (save) {
             if (data != null) deinit(allocator);
@@ -178,11 +174,23 @@ fn deinit(allocator: Allocator) void {
 }
 
 pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) noreturn {
-    std.io.getStdErr().writer().print("0x{X}\n", .{last}) catch unreachable;
+    const out = std.io.getStdOut();
+    var bw = std.io.bufferedWriter(out.writer());
+    var w = bw.writer();
+
+    if (out.isTty()) {
+        w.print("seed: 0x{X}\n", .{ last }) catch unreachable;
+    } else {
+        w.writeIntNative(u64, last) catch unreachable;
+    }
+
     if (data) |ds| {
-        const out = std.io.getStdOut();
-        var buf = std.io.bufferedWriter(out.writer());
-        var w = buf.writer();
+        if (buf) |b| {
+            w.writeByte(@truncate(u8, b.items.len)) catch unreachable;
+            w.writeAll(b.items) catch unreachable;
+        } else {
+            w.writeByte(0) catch unreachable;
+        }
         for (ds.items) |d| {
             w.writeStruct(d.result) catch unreachable;
             w.writeStruct(d.c1) catch unreachable;
@@ -190,7 +198,9 @@ pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) nore
             w.writeAll(d.state) catch unreachable;
             w.writeAll(d.log) catch unreachable;
         }
-        buf.flush() catch unreachable;
     }
+
+    bw.flush() catch unreachable;
+
     std.builtin.default_panic(msg, error_return_trace);
 }
