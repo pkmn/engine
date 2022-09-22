@@ -48,7 +48,7 @@ pub fn main() !void {
             errorAndExit("battles", args[2], args[0], fuzz);
         if (battles.? == 0) errorAndExit("battles", args[2], args[0], fuzz);
     }
-    const seed = if (args.len > 3) std.fmt.parseUnsigned(u64, args[3], 10) catch
+    const seed = if (args.len > 3) std.fmt.parseUnsigned(u64, args[3], 0) catch
         errorAndExit("seed", args[3], args[0], fuzz) else seed: {
         var secret: [std.rand.DefaultCsprng.secret_seed_length]u8 = undefined;
         std.crypto.random.bytes(&secret);
@@ -89,7 +89,7 @@ pub fn benchmark(
     while (i < n and (if (duration) |d| elapsed.read() < d else true)) : (i += 1) {
         if (duration != null) {
             last = random.src.seed;
-            if (std.io.getStdErr().isTty()) try err.print("{d}: {d}\n", .{ i, last });
+            if (std.io.getStdErr().isTty()) try err.print("{d}: 0x{X}\n", .{ i, last });
         }
 
         var original = switch (gen) {
@@ -178,7 +178,7 @@ fn deinit(allocator: Allocator) void {
 }
 
 pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) noreturn {
-    std.io.getStdErr().writer().print("{d}\n", .{last}) catch unreachable;
+    std.io.getStdErr().writer().print("0x{X}\n", .{last}) catch unreachable;
     if (data) |ds| {
         const out = std.io.getStdOut();
         var buf = std.io.bufferedWriter(out.writer());

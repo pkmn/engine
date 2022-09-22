@@ -107,7 +107,7 @@ class SpeciesNames implements Names {
     const {stdout, stderr} = err as {stdout: Buffer; stderr: Buffer};
     const raw = stderr.toString('utf8');
     const panic = raw.indexOf('panic: ');
-    const seed = raw.slice(0, panic - 1).match(/\d+$/)![0];
+    const seed = raw.slice(0, panic - 1).match(/0[xX][0-9a-fA-F]+$/)![0];
     const error = raw.slice(panic);
 
     console.error(raw);
