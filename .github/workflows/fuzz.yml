@@ -22,4 +22,4 @@ jobs:
           version: master
       - run: npm install
       # TODO: add integration tests!
-      - run: zig run ${{matrix.options}} fuzz -- 15m ${{matrix.gen}}
+      - run: zig run -Drelease-safe ${{matrix.options}} fuzz -- 15m ${{matrix.gen}}

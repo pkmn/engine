@@ -146,7 +146,7 @@ pub fn build(b: *Builder) !void {
     const benchmark =
         tool(b, &.{pkmn}, "src/test/benchmark.zig", showdown, true, test_step, .ReleaseFast);
     const fuzz =
-        tool(b, &.{pkmn}, "src/test/benchmark.zig", showdown, false, test_step, .Debug);
+        tool(b, &.{pkmn}, "src/test/benchmark.zig", showdown, false, test_step, null);
     const rng =
         tool(b, &.{pkmn}, "src/tools/rng.zig", showdown, strip, test_step, null);
     const serde =
