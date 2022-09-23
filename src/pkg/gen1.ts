@@ -359,6 +359,7 @@ export class Pokemon implements Gen1.Pokemon {
       if (this.volatile(Pokemon.Volatiles[v])) {
         if (volatile === 'bide') {
           volatiles[volatile] = {
+            duration: (this.data.getUint8(off + (OFFSETS.Volatiles.attacks >> 3)) >> 5) & 0b111,
             damage: this.data.getUint16(off + (OFFSETS.Volatiles.state >> 3), LE),
           };
         } else if (volatile === 'trapping') {

@@ -61,7 +61,7 @@ export namespace Gen1 {
   }
 
   export interface Volatiles {
-    bide?: {damage: number};
+    bide?: {duration: number; damage: number};
     thrashing?: {duration: number; accuracy: number};
     multihit?: unknown;
     flinch?: unknown;

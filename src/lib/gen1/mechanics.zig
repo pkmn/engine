@@ -532,6 +532,7 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
                 battle.rng.next() >= Gen12.percent(50) + 1;
 
             if (confused) {
+                volatiles.state = 0;
                 volatiles.Bide = false;
                 volatiles.Thrashing = false;
                 volatiles.MultiHit = false;
@@ -567,6 +568,7 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
             battle.rng.next() < Gen12.percent(25);
 
         if (paralyzed) {
+            volatiles.state = 0;
             volatiles.Bide = false;
             volatiles.Thrashing = false;
             volatiles.Charging = false;
