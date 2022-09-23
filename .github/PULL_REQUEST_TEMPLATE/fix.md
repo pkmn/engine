@@ -19,7 +19,7 @@ pull request seeks to fix is.
 
 **Testing:**
 
-All pull requests should be accompanied by new tests. If you
+Per the [contributing guidelines][1], all pull requests should be accompanied by new tests. If you
 have any problems understanding how testing works or need help testing your pull request, please
 feel free to ask for clarification or help here (please also include information on what you've
 tried so far).

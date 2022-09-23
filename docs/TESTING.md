@@ -46,7 +46,7 @@ several reasons:
 - pkmn does not have any notion of a
   ['format'](https://github.com/smogon/pokemon-showdown/blob/master/config/formats.ts) or [custom
   'rules'](https://github.com/smogon/pokemon-showdown/blob/master/config/CUSTOM-RULES.md)
-- the ordering of keyword arguments in Pokémon Showdown not strictly defined
+- the ordering of keyword arguments in Pokémon Showdown is not strictly defined
 - several of Pokémon Showdown's protocol messages are redundant/implementation specific
 - pkmn always returns a single 'stream' and always includes exact HP (ie. Pokémon Showdown's
   "omniscient stream") - other streams of information must be computed from this
@@ -60,7 +60,14 @@ for massaging the output from the pkmn engine into something which can be compar
 Showdown. Care is taken to ensure that where they disagree the actual cartridge decompilations are
 used as the arbiter of correctness, but it is still possible that since Pokémon Showdown and the
 pkmn engine are both independent implementations of the actual Pokémon cartridge logic  despite
-being in agreement **they may both be incorrect** when it comes to the actual cartridge.
+being in agreement **they may both be incorrect** when it comes to the actual cartridge[^1].
+
+[^1]: A stretch goal for the project is to be able to run integration tests against the actual
+    cartridge code.
+    [Examples](https://github.com/jsettlem/elo_world_pokemon_red/blob/master/battle_x_as_y.py) exist
+    of scripting battles to run on the cartridge via an emulator, though the fact that integration
+    testing the engine properly requires support for "link battling" and the ability to detect
+    desyncs makes such a goal decidedly nontrivial.
 
 ### `blocklist.json`
 
@@ -106,7 +113,7 @@ measures 4 different configurations:
   Pokémon Showdown's root `pokemon-showdown` binary is technically the blessed approach to using
   the simulator, but `BattleStream` is effectively the same thing but without the (sizeable) I/O
   overhead. Attempting to use the actual `pokemon-showdown` binary is deemed too difficult as there
-  would then be no way to inspect the `Battle` in order to avoid making unavailable choices[^1],
+  would then be no way to inspect the `Battle` in order to avoid making unavailable choices[^2],
   meaning it would be difficult to keep in sync with the other configurations.
 
 - **`DirectBattle`**: this configuration introduces the concept of a `DirectBattle` which
@@ -157,7 +164,7 @@ latter) it is expected to take substantially longer than more traditional ["Rand
 sets](https://github.com/pkmn/randbats) or handcrafted teams. **Experimentally the random sets used
 by the benchmark are expected to be roughly 2-3× slower than what would be typical in practice.**
 
-[^1]: It is possible to remain in sync between configurations which can inspect `Battle` and those
+[^2]: It is possible to remain in sync between configurations which can inspect `Battle` and those
 that can't by always saving the raw result returned by the last RNG call and reapplying it to the
 next request in the event of an "[Unavailable choice]" error (eg. call the RNG and get back `r`,
 attempt to choose the `r % N`-th choice, get rejected, on the next request do not generate a new `r`
@@ -228,7 +235,8 @@ Vulnerabilities:
 The [integration](#integration) tests and [benchmark](#benchmark) are also used for
 [fuzzing](https://en.wikipedia.org/wiki/Fuzzing). A [GitHub workflow](../.github/workflows/fuzz.yml)
 exists to run these tests on a schedule from random seeds for various durations to attempt to
-uncover latent bugs. While the integration tests cover full battles and always run from states
-possible over the course of a battle, when the benchmark tool is run in fuzzing mode it will
-run from states which may not actually be obtainable in game (e.g. multiple volatiles which would
-not have been possible to set up at the same time before expiring).
+uncover latent bugs. The fuzz tests differ from the benchmark in that they runs for predefined time
+durations as opposed to a given number of battles, never performs more than a single playout per
+battle, and enable the [blocked](#blocklistjson) effects that are usually excluded in `-Dshowdown`
+compatability mode. When run with the `-Dtrace` flag, additional binary data will be dumped on
+crashes to allow for debugging with the help of [`fuzz.ts`](../src/tools/fuzz.ts).

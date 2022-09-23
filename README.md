@@ -22,7 +22,7 @@ implementation of both Pokémon battles as defined by the original game code, an
 Showdown](https://pokemonshowdown.com/)[^1] simulator which represents Pokémon battling as practically
 interpreted online.
 
-The pkmn engine is up to [**XXX× faster**](docs/TESTING.md#results) than the [Pokémon Showdown
+The pkmn engine is up to [**XXXX× faster**](docs/TESTING.md#results) than the [Pokémon Showdown
 simulator code](https://github.com/smogon/pokemon-showdown) when playing out supported formats in
 compatability mode and is extensively [tested](docs/TESTING.md) and [documented](docs). Note,
 however, that the engine is **not a fully-featured simulator** but is instead a low-level library

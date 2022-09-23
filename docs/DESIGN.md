@@ -187,8 +187,8 @@ hours):
   `O(1)` in the average case, the additional pointer chasing / redirection result in cache misses
   and poor performance.
 - Pokémon Showdown produces **text protocol logs in all cases**. While invaluable for debugging, the
-  text logs are expensive to produce and parse, and importantly, are often wasted work in many use
-  cases where they are simply ignored.
+  text logs are expensive to produce and parse, and importantly, are often wasted work for use cases
+  where they are simply ignored.
 - Pokémon Showdown is written in JavaScript/TypeScript which makes it **unergonomic to have
   precisely laid out data structures with minimally sized fields** (as mentioned above, the minimum
   data size of a number is going to be 4-8 bytes outside of making all the code manipulate
