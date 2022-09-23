@@ -1,5 +1,4 @@
 name: Fuzz
-on: workflow_dispatch
 on:
   schedule:
     - cron: '36 */6 * * *'
