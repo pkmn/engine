@@ -1,12 +1,12 @@
 name: Fuzz
 on: workflow_dispatch
-# on:
-#   schedule:
-#     - cron: '36 */6 * * *'
-#   push:
-#     branches: [ main ]
-#   pull_request:
-#     branches: [ main ]
+on:
+  schedule:
+    - cron: '36 */6 * * *'
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   test:

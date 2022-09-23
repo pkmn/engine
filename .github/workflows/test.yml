@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: git config core.symlinks true
-      # NOTE: rely on npm postinstall-ed zig for non-master
+      # NOTE: we rely on npm postinstall-ed zig for non-master
       - uses: goto-bus-stop/setup-zig@v1
         if: ${{ matrix.zig == 'master' }}
         with:
@@ -37,3 +37,4 @@ jobs:
       - run: npm run test:integration
       - run: npm run lint
       # TODO: test examples
+      - run: zig build --build-file src/examples/zig/build.zig run -- 1234
