@@ -206,7 +206,11 @@ fn dump() !void {
 }
 
 pub usingnamespace if (@typeInfo(@TypeOf(std.builtin.default_panic)).Fn.args.len == 3) struct {
-    pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace, ret_addr: ?usize) noreturn {
+    pub fn panic(
+        msg: []const u8,
+        error_return_trace: ?*std.builtin.StackTrace,
+        ret_addr: ?usize,
+    ) noreturn {
         dump() catch unreachable;
         std.builtin.default_panic(msg, error_return_trace, ret_addr);
     }
