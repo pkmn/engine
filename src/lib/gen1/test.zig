@@ -5004,6 +5004,10 @@ test "Substitute effect" {
 // Pokémon Showdown Bugs
 
 test "Disable + Bide bug" {
+    return error.SkipZigTest; // TODO
+}
+
+test "Disable + Bide bug" {
     const BIDE_3 = MAX;
     const DISABLE_MOVE_1 = if (showdown) comptime ranged(1, 2) - 1 else 0;
     const DISABLE_DURATION_5 = comptime ranged(5, 9 - 1) - 1;

@@ -4133,6 +4133,30 @@ describe('Gen 1', () => {
 
   // Pokémon Showdown Bugs
 
+  test('Disable + Transform bug', () => {
+    const battle = startBattle([
+      SRF_RES, SRF_RES, HIT, DISABLE_MOVE(2), DISABLE_DURATION(5), SS_EACH, SS_EACH,
+    ], [
+      {species: 'Voltorb', evs, moves: ['Disable', 'Teleport']},
+    ], [
+      {species: 'Goldeen', evs, moves: ['Transform', 'Water Gun', 'Teleport', 'Haze']},
+    ]);
+
+    battle.makeChoices('move 1', 'move 1');
+
+    // Pokémon Showdown thinks "Water Gun" was disabled instead of move slot 2
+    // expect(choices(battle, 'p2')).toEqual(['move 1']);
+    expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
+
+    verify(battle, [
+      '|move|p1a: Voltorb|Disable|p2a: Goldeen',
+      '|-start|p2a: Goldeen|Disable|Water Gun',
+      '|move|p2a: Goldeen|Transform|p1a: Voltorb',
+      '|-transform|p2a: Goldeen|p1a: Voltorb',
+      '|turn|2',
+    ]);
+  });
+
   test('Disable + Bide bug', () => {
     const battle = startBattle([
       BIDE(3),
