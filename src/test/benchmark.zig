@@ -17,9 +17,9 @@ var buf: ?std.ArrayList(u8) = null;
 var last: u64 = 0;
 
 pub fn main() !void {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    const allocator = arena.allocator();
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer std.debug.assert(!gpa.deinit());
+    const allocator = gpa.allocator();
 
     var fuzz = false;
     const args = try std.process.argsAlloc(allocator);
@@ -166,11 +166,13 @@ fn usageAndExit(cmd: []const u8, fuzz: bool) noreturn {
 
 fn deinit(allocator: Allocator) void {
     std.debug.assert(data != null);
+    std.debug.assert(buf != null);
     for (data.?.items) |d| {
         allocator.free(d.state);
         allocator.free(d.log);
     }
     data.?.deinit();
+    buf.?.deinit();
 }
 
 pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) noreturn {
