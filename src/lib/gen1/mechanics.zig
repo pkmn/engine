@@ -241,8 +241,7 @@ fn saveMove(battle: anytype, player: Player, choice: ?Choice) u8 {
         if (c.data == 0) {
             side.last_selected_move = .Struggle;
         } else {
-            assert(side.active.volatiles.disabled.move != c.data or
-                (showdown and side.active.volatiles.Bide));
+            assert(showdown or side.active.volatiles.disabled.move != c.data);
             const move = side.active.move(c.data);
             // You cannot *select* a move with 0 PP (except on Pokémon Showdown where that is
             // sometimes required...), but a 0 PP move can be used automatically
