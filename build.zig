@@ -43,7 +43,11 @@ pub fn build(b: *Builder) !void {
     static_lib.addOptions("build_options", options);
     static_lib.setBuildMode(mode);
     static_lib.setTarget(target);
-    static_lib.addIncludeDir("src/include");
+    if (@hasDecl(std.build.LibExeObjStep, "addIncludePath")) {
+        static_lib.addIncludePath("src/include");
+    } else {
+        static_lib.addIncludeDir("src/include");
+    }
     static_lib.strip = strip;
     if (use_stage1) static_lib.use_stage1 = true;
     static_lib.install();
@@ -53,7 +57,11 @@ pub fn build(b: *Builder) !void {
     dynamic_lib.addOptions("build_options", options);
     dynamic_lib.setBuildMode(mode);
     dynamic_lib.setTarget(target);
-    dynamic_lib.addIncludeDir("src/include");
+    if (@hasDecl(std.build.LibExeObjStep, "addIncludePath")) {
+        dynamic_lib.addIncludePath("src/include");
+    } else {
+        dynamic_lib.addIncludeDir("src/include");
+    }
     dynamic_lib.strip = strip;
     if (use_stage1) dynamic_lib.use_stage1 = true;
     dynamic_lib.install();
@@ -62,7 +70,11 @@ pub fn build(b: *Builder) !void {
     if (node_headers) |headers| {
         const name = b.fmt("{s}.node", .{lib});
         const node_lib = b.addSharedLibrary(name, "src/lib/binding/node.zig", .unversioned);
-        node_lib.addSystemIncludeDir(headers);
+        if (@hasDecl(std.build.LibExeObjStep, "addSystemIncludePath")) {
+            node_lib.addSystemIncludePath(headers);
+        } else {
+            node_lib.addSystemIncludeDir(headers);
+        }
         node_lib.addOptions("build_options", options);
         node_lib.setBuildMode(mode);
         node_lib.setTarget(target);
