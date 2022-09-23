@@ -5003,7 +5003,7 @@ test "Substitute effect" {
 
 // Pokémon Showdown Bugs
 
-test "Disable + Bide bug" {
+test "Disable + Transfom bug" {
     return error.SkipZigTest; // TODO
 }
 
