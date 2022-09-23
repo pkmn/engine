@@ -175,34 +175,44 @@ fn deinit(allocator: Allocator) void {
     buf.?.deinit();
 }
 
-pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) noreturn {
+fn dump() !void {
     const out = std.io.getStdOut();
     var bw = std.io.bufferedWriter(out.writer());
     var w = bw.writer();
 
     if (out.isTty()) {
-        w.print("seed: 0x{X}\n", .{last}) catch unreachable;
+        try w.print("seed: 0x{X}\n", .{last});
     } else {
-        w.writeIntNative(u64, last) catch unreachable;
+        try w.writeIntNative(u64, last);
     }
 
     if (data) |ds| {
         if (buf) |b| {
-            w.writeByte(@truncate(u8, b.items.len)) catch unreachable;
-            w.writeAll(b.items) catch unreachable;
+            try w.writeByte(@truncate(u8, b.items.len));
+            try w.writeAll(b.items);
         } else {
-            w.writeByte(0) catch unreachable;
+            try w.writeByte(0);
         }
         for (ds.items) |d| {
-            w.writeStruct(d.result) catch unreachable;
-            w.writeStruct(d.c1) catch unreachable;
-            w.writeStruct(d.c2) catch unreachable;
-            w.writeAll(d.state) catch unreachable;
-            w.writeAll(d.log) catch unreachable;
+            try w.writeStruct(d.result);
+            try w.writeStruct(d.c1);
+            try w.writeStruct(d.c2);
+            try w.writeAll(d.state);
+            try w.writeAll(d.log);
         }
     }
 
-    bw.flush() catch unreachable;
-
-    std.builtin.default_panic(msg, error_return_trace);
+    try bw.flush();
 }
+
+pub usingnamespace if (@typeInfo(@TypeOf(std.builtin.default_panic)).Fn.args.len == 3) struct {
+    pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace, ret_addr: ?usize) noreturn {
+        dump() catch unreachable;
+        std.builtin.default_panic(msg, error_return_trace, ret_addr);
+    }
+} else struct {
+    pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) noreturn {
+        dump() catch unreachable;
+        std.builtin.default_panic(msg, error_return_trace);
+    }
+};
