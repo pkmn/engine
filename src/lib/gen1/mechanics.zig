@@ -284,6 +284,12 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anyty
     side.order[0] = side.order[slot - 1];
     side.order[slot - 1] = out;
 
+    if (player == .P1) {
+        battle.last_selected_indexes.p1 = 1;
+    } else {
+        battle.last_selected_indexes.p2 = 1;
+    }
+
     side.last_used_move = .None;
     foe.last_used_move = .None;
 
