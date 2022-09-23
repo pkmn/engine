@@ -62,8 +62,8 @@ pub fn main() !void {
 
     var result = try battle.update(c1, c2, log);
     while (result.type == .None) : (result = try battle.update(c1, c2, log)) {
-        // Here we would do something with the log data in buffer if -Dtrace were enabled
-        _ = buf;
+        // Here we would do something with the log data in buf if -Dtrace were enabled
+        // _ = buf;
 
         // battle.choices determines what the possible options are - the simplest way to
         // choose an option here is to just use the system PRNG to pick one at random
