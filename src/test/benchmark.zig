@@ -96,6 +96,10 @@ pub fn benchmark(
             1 => pkmn.gen1.helpers.Battle.random(&random, opt),
             else => unreachable,
         };
+        var max = switch (gen) {
+            1 => pkmn.gen1.MAX_LOGS,
+            else => unreachable,
+        };
 
         var log: ?pkmn.Log(std.ArrayList(u8).Writer) = null;
         if (save) {
@@ -134,6 +138,7 @@ pub fn benchmark(
                 c2 = options[p2.range(u8, 0, battle.choices(.P2, result.p2, &options))];
 
                 if (save) {
+                    std.debug.assert(buf.?.items.len <= max);
                     try data.?.append(.{
                         .result = result,
                         .c1 = c1,

@@ -16,8 +16,8 @@ const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 const expect = std.testing.expect;
 
-pub const MAX_OPTIONS = 9; // move 1..4, switch 2..6
-pub const MAX_LOGS = 191;
+pub const MAX_OPTIONS: usize = 9; // move 1..4, switch 2..6
+pub const MAX_LOGS: usize = 191;
 
 pub const OPTIONS_SIZE = if (builtin.mode == .ReleaseSmall)
     MAX_OPTIONS
