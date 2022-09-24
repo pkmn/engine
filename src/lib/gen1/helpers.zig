@@ -27,6 +27,11 @@ const Status = data.Status;
 const ArgType = protocol.ArgType;
 const Log = protocol.Log(std.io.FixedBufferStream([]u8).Writer);
 
+pub const Options = struct {
+    cleric: bool = showdown,
+    block: bool = showdown,
+};
+
 pub const Battle = struct {
     pub fn init(
         seed: u64,
@@ -50,14 +55,14 @@ pub const Battle = struct {
         };
     }
 
-    pub fn random(rand: *PSRNG, block: bool) data.Battle(data.PRNG) {
+    pub fn random(rand: *PSRNG, opt: Options) data.Battle(data.PRNG) {
         var p1: u4 = 0;
         var p2: u4 = 0;
         var battle: data.Battle(data.PRNG) = .{
             .rng = prng(rand),
             .turn = 0,
             .last_damage = 0,
-            .sides = .{ Side.random(rand, block), Side.random(rand, block) },
+            .sides = .{ Side.random(rand, opt), Side.random(rand, opt) },
         };
         battle.last_selected_indexes.p1 = p1;
         battle.last_selected_indexes.p2 = p2;
@@ -96,13 +101,13 @@ pub const Side = struct {
         return side;
     }
 
-    pub fn random(rand: *PSRNG, block: bool) data.Side {
+    pub fn random(rand: *PSRNG, opt: Options) data.Side {
         const n = if (rand.chance(u8, 1, 100)) rand.range(u4, 1, 5 + 1) else 6;
         var side = data.Side{};
 
         var i: u4 = 0;
         while (i < n) : (i += 1) {
-            side.pokemon[i] = Pokemon.random(rand, block);
+            side.pokemon[i] = Pokemon.random(rand, opt);
             side.order[i] = i + 1;
         }
 
@@ -150,7 +155,7 @@ pub const Pokemon = struct {
         return pokemon;
     }
 
-    pub fn random(rand: *PSRNG, block: bool) data.Pokemon {
+    pub fn random(rand: *PSRNG, opt: Options) data.Pokemon {
         const s = @intToEnum(Species, rand.range(u8, 1, 151 + 1));
         const species = Species.get(s);
         const lvl = if (rand.chance(u8, 1, 20)) rand.range(u8, 1, 99 + 1) else 100;
@@ -173,7 +178,7 @@ pub const Pokemon = struct {
             var m: Move = .None;
             sample: while (true) {
                 m = @intToEnum(Move, rand.range(u8, 1, 165 + 1));
-                if (showdown and block and blocked(m)) continue :sample;
+                if (opt.block and blocked(m)) continue :sample;
                 var j: u4 = 0;
                 while (j < i) : (j += 1) {
                     if (ms[j].id == m) continue :sample;
@@ -181,12 +186,12 @@ pub const Pokemon = struct {
                 break;
             }
             const pp_ups =
-                if (!showdown and rand.chance(u8, 1, 10)) rand.range(u2, 0, 2 + 1) else 3;
+                if (!opt.cleric and rand.chance(u8, 1, 10)) rand.range(u2, 0, 2 + 1) else 3;
             // NB: PP can be at most 61 legally (though can overflow to 63)
             const max_pp = @truncate(u8, @minimum(Move.pp(m) / 5 * (5 + @as(u8, pp_ups)), 61));
             ms[i] = .{
                 .id = m,
-                .pp = if (!showdown) rand.range(u8, 0, max_pp + 1) else max_pp,
+                .pp = if (opt.cleric) max_pp else rand.range(u8, 0, max_pp + 1),
             };
         }
 
@@ -195,8 +200,8 @@ pub const Pokemon = struct {
             .types = species.types,
             .level = lvl,
             .stats = stats,
-            .hp = if (showdown) stats.hp else rand.range(u16, 0, stats.hp + 1),
-            .status = if (!showdown and rand.chance(u8, 1, 6 + 1))
+            .hp = if (opt.cleric) stats.hp else rand.range(u16, 0, stats.hp + 1),
+            .status = if (!opt.cleric and rand.chance(u8, 1, 6 + 1))
                 0 | (@as(u8, 1) << rand.range(u3, 1, 6 + 1))
             else
                 0,

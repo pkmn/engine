@@ -73,7 +73,9 @@ pub fn benchmark(
 ) !void {
     std.debug.assert(gen >= 1 and gen <= 8);
 
-    const save = duration != null and pkmn.options.trace;
+    const fuzz = duration != null;
+    const showdown = pkmn.options.showdown;
+    const save = fuzz and pkmn.options.trace;
 
     var random = pkmn.PSRNG.init(seed);
     var options: [pkmn.OPTIONS_SIZE]pkmn.Choice = undefined;
@@ -87,10 +89,11 @@ pub fn benchmark(
     var i: usize = 0;
     var n = battles orelse std.math.maxInt(usize);
     while (i < n and (if (duration) |d| elapsed.read() < d else true)) : (i += 1) {
-        if (duration != null) last = random.src.seed;
+        if (fuzz) last = random.src.seed;
 
+        const opt = .{ .cleric = !fuzz or showdown, .block = fuzz and showdown };
         var original = switch (gen) {
-            1 => pkmn.gen1.helpers.Battle.random(&random, duration == null),
+            1 => pkmn.gen1.helpers.Battle.random(&random, opt),
             else => unreachable,
         };
 
@@ -106,8 +109,8 @@ pub fn benchmark(
         var m = playouts orelse 1;
         while (j < m and (if (duration) |d| elapsed.read() < d else true)) : (j += 1) {
             var battle = original;
-            std.debug.assert(!pkmn.options.showdown or battle.side(.P1).get(1).hp > 0);
-            std.debug.assert(!pkmn.options.showdown or battle.side(.P2).get(1).hp > 0);
+            std.debug.assert(!showdown or battle.side(.P1).get(1).hp > 0);
+            std.debug.assert(!showdown or battle.side(.P2).get(1).hp > 0);
 
             var c1 = pkmn.Choice{};
             var c2 = pkmn.Choice{};
