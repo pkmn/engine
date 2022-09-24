@@ -113,6 +113,10 @@ pub fn benchmark(
         var m = playouts orelse 1;
         while (j < m and (if (duration) |d| elapsed.read() < d else true)) : (j += 1) {
             var battle = original;
+            switch (gen) {
+                1 => battle.rng = pkmn.gen1.helpers.prng(&random),
+                else => unreachable,
+            }
             std.debug.assert(!showdown or battle.side(.P1).get(1).hp > 0);
             std.debug.assert(!showdown or battle.side(.P2).get(1).hp > 0);
 

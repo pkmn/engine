@@ -127,7 +127,7 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
           const battleStream = new BattleStreams.BattleStream();
           const streams = BattleStreams.getPlayerStreams(battleStream);
 
-          const spec = {formatid: format, seed: options.seed as PRNGSeed};
+          const spec = {formatid: format, seed: newSeed(prng)};
           const p1spec = {name: 'Player A', team: Teams.pack(options.p1.team as PokemonSet[])};
           const p2spec = {name: 'Player B', team: Teams.pack(options.p2.team as PokemonSet[])};
           const start = `>start ${JSON.stringify(spec)}\n` +
@@ -177,7 +177,7 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
       for (let i = 0; i < battles; i++) {
         const options = gen1.Battle.options(gen, prng);
         for (let j = 0; j < playouts; j++) {
-          const config = {formatid: format, seed: options.seed as PRNGSeed};
+          const config = {formatid: format, seed: newSeed(prng)};
           const battle = new Battle(config);
 
           const p1 = new PRNG(newSeed(prng));
@@ -205,26 +205,26 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
       return Promise.resolve([toMillis(duration), turns, serialize(prng.seed)] as const);
     },
   },
-  // '@pkmn/engine': {
-  // warmup: true,
-  // run() {
-  // return [0, 0, 'TODO'];
-  // },
-  // },
-  // 'libpkmn': {
-  // run(format, prng, battles, playouts) {
-  // const stdout = execFileSync('zig', [
-  // 'build', '-Dshowdown=true', 'benchmark', '--',
-  // format[3], // TODO: support doubles
-  // battles.toString(),
-  // serialize(prng.seed),
-  // playouts.toString(),
-  // ], {encoding: 'utf8'});
+  '@pkmn/engine': {
+    warmup: true,
+    run() {
+      return Promise.resolve([0, 0, 'TODO']);
+    },
+  },
+  'libpkmn': {
+    run(format, prng, battles, playouts) {
+      const stdout = execFileSync('zig', [
+        'build', '-Dshowdown=true', 'benchmark', '--',
+        format[3], // TODO: support doubles
+        battles.toString(),
+        serialize(prng.seed),
+        playouts.toString(),
+      ], {encoding: 'utf8'});
 
-  // const [duration, turn, seed] = stdout.split(',');
-  // return Promise.resolve([toMillis(BigInt(duration)), Number(turn), seed.trim()]);
-  // },
-  // },
+      const [duration, turn, seed] = stdout.split(',');
+      return Promise.resolve([toMillis(BigInt(duration)), Number(turn), seed.trim()]);
+    },
+  },
 };
 
 (async () => {

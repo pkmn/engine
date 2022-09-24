@@ -70,7 +70,7 @@ pub const Battle = struct {
     }
 };
 
-fn prng(rand: *PSRNG) data.PRNG {
+pub fn prng(rand: *PSRNG) data.PRNG {
     // GLITCH: initial bytes in seed can only range from 0-252, not 0-255
     const max: u8 = 253;
     return .{
