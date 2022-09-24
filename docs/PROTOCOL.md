@@ -685,9 +685,9 @@ In order to maximize log message size in Generation I several observations need 
   more bytes
 - before a `|move|` a Pokémon can activate confusion, and after residual damage from a poison or
   burn status and Leech Seed can be triggered
-- only a single Pokémon should `|faint|` at the end. While intially it might seem like having both
+- neither Pokémon can `|faint|` at the end. While intially it might seem like having both
   `|faint|` and causing one side to `|win|` would be optimal (two `|faint|` messages and one `|win|`
-  is 6 bytes total, a single `|faint|` and a `|turn|` message is 5 bytes), if one side faints you
+  is 6 bytes total, a single `|faint|` and a `|turn|` message is 5 bytes), if a side faints you
   miss out on a round of damage and healing from Leech Seed which is 16 bytes
 - Substitute activating actually reduces the size of the log as `|-activate|` replaces the larger
   `|-damage|` messages, and in Generation I if the substitute breaks it nullifies the rest of the
@@ -720,12 +720,12 @@ move to use and the seed can be used to set up 10 arbitrary values. Define $X$, 
 that $X' = 5X+1 \bmod 256$ and $X'' = 5X'+1 \bmod 256$. We want $X'' = 119$ as that will cause
 Metronome to use Mirror Move, so $X' = 126$ and $X = 25$.
 
-Thus we can start with a seed of `[126, 119, 25, 126, 119, 25, 126]` to achieve 10 levels of
-recursive Metronome → Mirror Move calls. This is an **upper bound** (in reality it would be
-impossible to set up the rest of the battle, do 10 rounds of recursion, and still have optimal rolls
-on the other side to be able to obtain maximum log size) and only applies to a single player (as
-mentioned above the only way to have Mirror Move copy Metronome is if the opponent is locked into a
-charging move from a previous Metronome call).
+Thus we can start with a seed of `[25, 126, 56, 25, 126, 56, 25, 126, 56, 25]` to achieve 10 levels
+of recursive Metronome → Mirror Move calls from the output values. This is an **upper bound** (in
+reality it would be impossible to set up the rest of the battle, do 10 rounds of recursion, and
+still have optimal rolls on the other side to be able to obtain maximum log size) and only applies
+to a single player (as mentioned above the only way to have Mirror Move copy Metronome is if the
+opponent is locked into a charging move from a previous Metronome call).
 
 There are then two hypothetical scenarios we need to consider to determine upper bound on the
 maximum log size of a single update - one where a single player gets to benefit from the Metronome →
@@ -733,9 +733,9 @@ Mirror Move → ... → Metronome → multi hit move and the other side is locke
 one where both players simply call a multi hit move through a single iteration of Metronome → Mirror
 Move → multi hit.
 
-- **Scenario 1:** recursion + charge move
+- **Scenario 1:** recursion + charge move (188 bytes)
   - `|-activate|` confusion: 2×3 bytes
-  - `|move|` Metronome → `|move|` Mirror Move P1 recursion: 10×6 bytes
+  - `|move|` Metronome → `|move|` Mirror Move P1 recursion: 1×5 + 9×6 bytes
   - `|move|` multi-hit: 6 bytes
   - `|move|` P2 turn 2 charging move: 6 bytes
   - `|-crit|`: 2×2 bytes
@@ -746,12 +746,11 @@ Move → multi hit.
   - `|-damage|` poison or burn: 2×8 bytes
   - `|-damage|` Leech Seed: 2×8 bytes
   - `|-heal|` Leech Seed: 2×8 bytes
-  - `|faint|`: 2 bytes
   - `|turn|`: 3 bytes
   - `0x00`: 1 byte (end of buffer)
-- **Scenario 2:** both multi hit
+- **Scenario 2:** both multi hit (186 bytes)
   - `|-activate|` confusion: 2×3 bytes
-  - `|move|` Metronome → `|move|` Mirror Move -> `|move|` multi-hit: 6×6 bytes
+  - `|move|` Metronome → `|move|` Mirror Move -> `|move|` multi-hit: 2×5 + 4×6 bytes
   - `|-crit|`: 2×2 bytes
   - `|supereffective|` or `|resisted|`: 2×2 bytes
   - `|-damage|` multi-hit: 10×8 bytes
@@ -759,12 +758,8 @@ Move → multi hit.
   - `|-damage|` poison or burn: 2×8 bytes
   - `|-damage|` Leech Seed: 2×8 bytes
   - `|-heal|` Leech Seed: 2×8 bytes
-  - `|faint|`: 2 bytes
   - `|turn|`: 3 bytes
   - `0x00`: 1 byte (end of buffer)
-
-TODO: setup requires a minimum of 13 rolls. Scenario is 1 byte more, but probably not actually
-achievable after set up? Is Scenario 2 achievable?
 
 </details>
 

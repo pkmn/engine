@@ -7620,82 +7620,87 @@ test "Psywave infinite loop" {
 // Miscellaneous
 
 test "MAX_LOGS" {
-    if (showdown) return;
-    return error.SkipZigTest;
-    //     const MIRROR_MOVE = @enumToInt(Move.MirrorMove);
-    //     const CFZ = comptime ranged(128, 256);
-    //     const NO_CFZ = CFZ - 1;
-    //     // TODO: replace this with a handcrafted actual seed instead of using the fixed RNG
-    //     var battle = Battle.fixed(
-    //         // zig fmt: off
-    //         .{
-    //             // Set up
-    //             HIT,
-    //             ~CRIT, @enumToInt(Move.LeechSeed), HIT,
-    //             HIT, 3, NO_CFZ, HIT, 3,
-    //             NO_CFZ, NO_CFZ, ~CRIT, @enumToInt(Move.SolarBeam),
-    //             // Scenario
-    //             NO_CFZ,
-    //             ~CRIT, MIRROR_MOVE, ~CRIT,
-    //             ~CRIT, MIRROR_MOVE, ~CRIT,
-    //             ~CRIT, MIRROR_MOVE, ~CRIT,
-    //             ~CRIT, MIRROR_MOVE, ~CRIT,
-    //             ~CRIT, MIRROR_MOVE, ~CRIT,
-    //             ~CRIT, MIRROR_MOVE, ~CRIT,
-    //             ~CRIT, MIRROR_MOVE, ~CRIT,
-    //             ~CRIT, MIRROR_MOVE, ~CRIT,
-    //             ~CRIT, MIRROR_MOVE, ~CRIT,
-    //             ~CRIT, MIRROR_MOVE, ~CRIT,
-    //             ~CRIT, @enumToInt(Move.PinMissile), CRIT, MIN_DMG, HIT, 3, 3,
-    //             NO_CFZ, CRIT, MIN_DMG, HIT,
-    //         },
-    //         // zig fmt: on
-    //         &.{
-    //             .{
-    //                 .species = .Bulbasaur,
-    //                 .moves = &.{.LeechSeed},
-    //             },
-    //             .{
-    //                 .species = .Gengar,
-    //                 .hp = 224,
-    //                 .status = BRN,
-    //                 .moves = &.{ .Metronome, .ConfuseRay, .Toxic },
-    //             },
-    //         },
-    //         &.{
-    //             .{
-    //                 .species = .Bulbasaur,
-    //                 .moves = &.{.LeechSeed},
-    //             },
-    //             .{
-    //                 .species = .Gengar,
-    //                 .status = BRN,
-    //                 .moves = &.{ .Metronome, .ConfuseRay },
-    //             },
-    //         },
-    //     );
-    //     battle.side(.P2).get(2).stats.spe = 317; // make P2 slower to avoid speed ties
+    if (showdown or !trace) return;
+    // TODO: inline Status.init(...) when Zig no longer causes SIGBUS
+    const BRN = 0b10000;
+    const moves = &.{ .LeechSeed, .ConfuseRay, .Metronome };
+    // make P2 slower to avoid speed ties
+    const stats = .{ .hp = EXP, .atk = EXP, .def = EXP, .spe = 0, .spc = EXP };
+    var battle = Battle.init(
+        0,
+        &.{.{ .species = .Aerodactyl, .status = BRN, .moves = moves }},
+        &.{.{ .species = .Aerodactyl, .status = BRN, .stats = stats, .moves = moves }},
+    );
+    battle.rng = data.PRNG{ .src = .{ .seed = .{ 106, 161, 95, 184, 221, 10, 52, 25, 156, 133 } } };
+    try expectEqual(Result.Default, try battle.update(.{}, .{}, NULL));
 
-    //     try expectEqual(Result.Default, try battle.update(.{}, .{}, NULL));
-    //     // P1 switches into Leech Seed
-    //     try expectEqual(Result.Default, try battle.update(swtch(2), move(1), NULL));
-    //     // P2 switches into to P1's Metronome -> Leech Seed
-    //     try expectEqual(Result.Default, try battle.update(move(1), swtch(2), NULL));
-    //     // P1 and P2 confuse each other
-    //     try expectEqual(Result.Default, try battle.update(move(2), move(2), NULL));
-    //     // P1 uses Toxic to noop while P2 uses Metronome -> Solar Beam
-    //     try expectEqual(Result.Default, try battle.update(move(3), move(1), NULL));
+    // P1 and P2 both use Leech Seed
+    try expectEqual(Result.Default, try battle.update(move(1), move(1), NULL));
 
-    //     try expectEqual(Move.SolarBeam, battle.side(.P2).last_selected_move);
-    //     try expectEqual(Move.Metronome, battle.side(.P2).last_used_move);
+    // P1 and P2 both use Confuse Ray
+    try expectEqual(Result.Default, try battle.update(move(2), move(2), NULL));
 
-    //     // BUG: data.MAX_LOGS not enough?
-    //     var buf: [data.MAX_LOGS * 100]u8 = undefined;
-    //     var log = FixedLog{ .writer = stream(&buf).writer() };
-    //     // P1 uses Metronome -> Mirror Move -> ... -> Pin Missile, P2 -> Solar Beam
-    //     try expectEqual(
-    //         Result{ .p1 = .Switch, .p2 = .Pass }, try battle.update(move(1), move(0), log));
-    //     try expect(battle.rng.exhausted());
+    var copy = battle;
+    var p1 = copy.side(.P1);
+    var p2 = copy.side(.P2);
+
+    var expected_buf: [data.MAX_LOGS]u8 = undefined;
+    var actual_buf: [data.MAX_LOGS]u8 = undefined;
+
+    var expected = FixedLog{ .writer = stream(&expected_buf).writer() };
+    var actual = FixedLog{ .writer = stream(&actual_buf).writer() };
+
+    try expected.activate(P1.ident(1), .Confusion);
+    try expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
+    try expected.move(P1.ident(1), Move.FurySwipes, P2.ident(1), Move.Metronome);
+    try expected.crit(P2.ident(1));
+    try expected.resisted(P2.ident(1));
+    p2.get(1).hp -= 17;
+    try expected.damage(P2.ident(1), p2.get(1), .None);
+    p2.get(1).hp -= 17;
+    try expected.damage(P2.ident(1), p2.get(1), .None);
+    p2.get(1).hp -= 17;
+    try expected.damage(P2.ident(1), p2.get(1), .None);
+    p2.get(1).hp -= 17;
+    try expected.damage(P2.ident(1), p2.get(1), .None);
+    p2.get(1).hp -= 17;
+    try expected.damage(P2.ident(1), p2.get(1), .None);
+    try expected.hitcount(P2.ident(1), 5);
+    p1.get(1).hp -= 22;
+    try expected.damage(P1.ident(1), p1.get(1), .Burn);
+    p1.get(1).hp -= 22;
+    try expected.damage(P1.ident(1), p1.get(1), .LeechSeed);
+    p2.get(1).hp += 22;
+    try expected.heal(P2.ident(1), p2.get(1), .Silent);
+    try expected.activate(P2.ident(1), .Confusion);
+    try expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
+    try expected.move(P2.ident(1), Move.MirrorMove, P2.ident(1), Move.Metronome);
+    try expected.move(P2.ident(1), Move.FurySwipes, P1.ident(1), Move.MirrorMove);
+    try expected.crit(P1.ident(1));
+    try expected.resisted(P1.ident(1));
+    p1.get(1).hp -= 18;
+    try expected.damage(P1.ident(1), p1.get(1), .None);
+    p1.get(1).hp -= 18;
+    try expected.damage(P1.ident(1), p1.get(1), .None);
+    p1.get(1).hp -= 18;
+    try expected.damage(P1.ident(1), p1.get(1), .None);
+    p1.get(1).hp -= 18;
+    try expected.damage(P1.ident(1), p1.get(1), .None);
+    p1.get(1).hp -= 18;
+    try expected.damage(P1.ident(1), p1.get(1), .None);
+    try expected.hitcount(P1.ident(1), 5);
+    p2.get(1).hp -= 22;
+    try expected.damage(P2.ident(1), p2.get(1), .Burn);
+    p2.get(1).hp -= 22;
+    try expected.damage(P2.ident(1), p2.get(1), .LeechSeed);
+    p1.get(1).hp += 22;
+    try expected.heal(P1.ident(1), p1.get(1), .Silent);
+    try expected.turn(4);
+
+    // P1 uses Metronome -> Fury Swipes and P2 uses Metronome -> Mirror Move
+    try expectEqual(Result.Default, try battle.update(move(3), move(3), actual));
+
+    try expectLog(&expected_buf, &actual_buf);
 }
 
 fn Test(comptime rolls: anytype) type {
