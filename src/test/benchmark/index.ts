@@ -22,7 +22,7 @@ import {newSeed} from './common';
 
 import * as gen1 from './gen1';
 
-const argv = minimist(process.argv.slice(2), {default: {battles: 100, playouts: 10}});
+const argv = minimist(process.argv.slice(2), {default: {battles: 1000, playouts: 10}});
 argv.seed = argv.seed
   ? argv.seed.split(',').map((s: string) => Number(s))
   : [1, 2, 3, 4];

@@ -177,7 +177,7 @@ as an exercise to the reader.
 
 The benchmarks are run on an `n2d-standard-48` Google Cloud Compute Engine machine with 192 GB of
 memory and an AMD EPYC 7B12 CPU running 64-bit x86 Linux which has undergone the pre-benchmark
-tuning detailed above via the command  `npm run benchmark -- 1000`:
+tuning detailed above via the command  `npm run benchmark -- --battles=1000 --playouts=10`:
 
 | Generation | `libpkmn` | `@pkmn/engine` | `DirectBattle` | `BattleStream` |
 | ---------- | --------- | -------------- | -------------- | -------------- |
