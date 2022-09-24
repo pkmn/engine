@@ -402,7 +402,7 @@ function displaySide(
   console.log('<summary><div class="teamicons">');
   let i = 0;
   for (const pokemon of side.pokemon) {
-    if (i == 3) console.log('</div><div class="teamicons">');
+    if (i === 3) console.log('</div><div class="teamicons">');
     console.log(icon(player, pokemon));
     i++;
   }
@@ -431,7 +431,7 @@ function displayPokemon(gen: Generation, showdown: boolean, pokemon: Pokemon, ac
   console.log(`<strong>${name}&nbsp;<small>L${pokemon.level}</small></strong>`);
   if (active && pokemon.species !== pokemon.stored.species) console.log('</em>');
   console.log('</span>');
-  console.log(`<div class="hpbar">`);
+  console.log('<div class="hpbar">');
   const style = `width: ${width}; border-right-width: ${percent === 100 ? 1 : 0}px;`;
   console.log(`<div class="hp ${color}" style="${style}"></div>`);
   console.log(`<div class="hptext">${percent}%</div>`);
@@ -526,8 +526,8 @@ function getHP(pokemon: Pokemon) {
     percent = 99;
   }
   const width = (pokemon.hp === 1 && pokemon.stats.hp > 45)
-    ? `1px` : ratio === 1.0
-      ? `var(--hp-bar)` : `calc(${ratio} * var(--hp-bar))`;
+    ? '1px' : ratio === 1.0
+      ? 'var(--hp-bar)' : `calc(${ratio} * var(--hp-bar))`;
   const color = ratio > 0.5 ? '' : ratio > 0.2 ? 'hp-yellow' : 'hp-red';
   return {title, percent, width, color};
 }
