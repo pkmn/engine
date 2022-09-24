@@ -29,6 +29,8 @@ export const STYLES = `
   margin: 4em auto;
   max-width: 1300px;
   line-height: 1.4em;
+  --hp-bar: 151px;
+  --hp-text: 32px;
 }
 details > summary {
   list-style: none;
@@ -105,12 +107,11 @@ th, td {
 }
 .statbar {
   display: none;
-  width: 154px;
+  width: calc(var(--hp-bar) + var(--hp-text));
   padding: 2px 0;
   line-height: normal;
 }
 .statbar .name {
-  margin: 0 -15px;
   display: block;
   text-align: center;
   line-height: 1.25em;
@@ -129,7 +130,7 @@ th, td {
   padding: 1px;
   height: 8px;
   margin: 0 0 0 0;
-  width: 151px;
+  width: calc(var(--hp-bar) + var(--hp-text) + 1px);
   border-radius: 4px;
 }
 .statbar .hpbar .hp {
@@ -162,15 +163,6 @@ th, td {
   height: 12px;
   top: -1px;
   text-align: center;
-}
-.statbar .hpbar .hptextborder {
-  position: absolute;
-  background: transparent;
-  border-top: 1px solid #777777;
-  border-bottom: 1px solid #777777;
-  width: 4px;
-  top: -1px;
-  height: 10px;
 }
 .status, .volatile {
   padding: 0px 1px;
@@ -227,11 +219,8 @@ th, td {
   border-color: #555555;
 }
 .rstatbar .hpbar .hptext {
-  right: -32px;
+  right: 0px;
   border-radius: 0 4px 4px 0;
-}
-.rstatbar .hpbar .hptextborder {
-  right: -3px;
 }
 .moves ul {
   column-count: 2;
@@ -270,6 +259,9 @@ th, td {
 }
 .right .position {
   display: block;
+}
+.teamicons {
+  display: inline-block;
 }
 @media(max-width: 1300px) {
   #content {
@@ -339,6 +331,19 @@ th, td {
     justify-content: space-between;
     margin-top: 0.5em;
   }
+}
+@media(max-width: 550px) {
+  #content {
+    font-size: 0.65em;
+    max-width: 95%;
+    margin: 1em auto;
+    --hp-bar: 101px;
+  }
+}
+@media(max-width: 425px) {
+  .stats {
+    font-size: 0.9em;
+  }
 }`;
 
 export const SCRIPTS = `
@@ -394,11 +399,14 @@ function displaySide(
     console.log('</div>');
   }
   console.log('<details class="team">');
-  console.log('<summary>');
+  console.log('<summary><div class="teamicons">');
+  let i = 0;
   for (const pokemon of side.pokemon) {
+    if (i == 3) console.log('</div><div class="teamicons">');
     console.log(icon(player, pokemon));
+    i++;
   }
-  console.log('</summary>');
+  console.log('</div></summary>');
   for (const pokemon of side.pokemon) {
     displayPokemon(gen, showdown, pokemon, false);
   }
@@ -412,7 +420,7 @@ function displayPokemon(gen: Generation, showdown: boolean, pokemon: Pokemon, ac
   const species = active ? pokemon.species : pokemon.stored.species;
 
   // HP Bar
-  const {title, percent, pixels, color} = getHP(pokemon);
+  const {title, percent, width, color} = getHP(pokemon);
   console.log(`<div class="left" title="${title}">`);
   if (!active) console.log(`<div class="position">${POSITIONS[pokemon.position - 1]}</div>`);
   console.log('<div class="statbar rstatbar" style="display: block; opacity: 1;">');
@@ -423,9 +431,10 @@ function displayPokemon(gen: Generation, showdown: boolean, pokemon: Pokemon, ac
   console.log(`<strong>${name}&nbsp;<small>L${pokemon.level}</small></strong>`);
   if (active && pokemon.species !== pokemon.stored.species) console.log('</em>');
   console.log('</span>');
-  console.log(`<div class="hpbar"><div class="hptext">${percent}%</div>`);
-  const style = `width: ${pixels}px; border-right-width: 0px;`;
+  console.log(`<div class="hpbar">`);
+  const style = `width: ${width}; border-right-width: ${percent === 100 ? 1 : 0}px;`;
   console.log(`<div class="hp ${color}" style="${style}"></div>`);
+  console.log(`<div class="hptext">${percent}%</div>`);
   console.log('</div></div>');
 
   // Sprite & Types
@@ -516,9 +525,11 @@ function getHP(pokemon: Pokemon) {
   if ((percent === 100) && (ratio < 1.0)) {
     percent = 99;
   }
-  const pixels = (pokemon.hp === 1 && pokemon.stats.hp > 45) ? 1 : percent * 150 / 100;
+  const width = (pokemon.hp === 1 && pokemon.stats.hp > 45)
+    ? `1px` : ratio === 1.0
+      ? `var(--hp-bar)` : `calc(${ratio} * var(--hp-bar))`;
   const color = ratio > 0.5 ? '' : ratio > 0.2 ? 'hp-yellow' : 'hp-red';
-  return {title, percent, pixels, color};
+  return {title, percent, width, color};
 }
 
 function displayStatus(pokemon: Pokemon) {
