@@ -414,6 +414,7 @@ function displaySide(
   console.log('</div>');
 }
 
+const STATS = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as const;
 
 function displayPokemon(gen: Generation, showdown: boolean, pokemon: Pokemon, active: boolean) {
   console.log('<div class="pokemon">');
@@ -452,12 +453,12 @@ function displayPokemon(gen: Generation, showdown: boolean, pokemon: Pokemon, ac
   // Stats & Boosts
   console.log('<div class="stats"><table><tr>');
   const stats = active ? pokemon.stats : pokemon.stored.stats;
-  for (const stat in stats) {
+  for (const stat of STATS) {
     if (gen.num === 1 && stat === 'spd') continue;
     console.log(`<th>${gen.stats.display(stat)}</th>`);
   }
   console.log('</tr><tr>');
-  for (const stat in stats) {
+  for (const stat of STATS) {
     if (gen.num === 1 && stat === 'spd') continue;
     const boost = active ? pokemon.boosts[stat as BoostID] : 0;
     console.log(`<td>${displayStat(stats[stat as StatID], boost)}</td>`);
