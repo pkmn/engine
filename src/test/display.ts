@@ -401,11 +401,13 @@ function displaySide(
   console.log('<details class="team">');
   console.log('<summary><div class="teamicons">');
   let i = 0;
+  const buf = [];
   for (const pokemon of side.pokemon) {
-    if (i === 3) console.log('</div><div class="teamicons">');
-    console.log(icon(player, pokemon));
+    if (i === 3) buf.push('</div><div class="teamicons">');
+    buf.push(icon(player, pokemon));
     i++;
   }
+  console.log(buf.join(''));
   console.log('</div></summary>');
   for (const pokemon of side.pokemon) {
     displayPokemon(gen, showdown, pokemon, false);
