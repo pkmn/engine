@@ -236,6 +236,7 @@ th, td {
   display: flex;
   padding: 0 1em;
   justify-content: space-between;
+  text-align: center;
   width: 100%;
 }
 .types {
