@@ -192,7 +192,7 @@ fn dump() !void {
     var bw = std.io.bufferedWriter(out.writer());
     var w = bw.writer();
 
-    if (out.isTty()) {
+    if (out.isTty() or !pkmn.options.trace) {
         try w.print("seed: 0x{X}\n", .{last});
     } else {
         try w.writeIntNative(u64, last);
