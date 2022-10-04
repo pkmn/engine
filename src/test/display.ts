@@ -3,6 +3,7 @@ import {Sprites, Icons} from '@pkmn/img';
 
 import {Battle, Pokemon, Side} from '../pkg';
 
+
 const POSITIONS = ['a', 'b', 'c', 'd', 'e', 'f'];
 const VOLATILES: {[id in keyof Pokemon['volatiles']]: [string, 'good' | 'bad' | 'neutral']} = {
   bide: ['Bide', 'good'],
@@ -201,7 +202,7 @@ th, td {
 .volatile {
   display: inline-block;
   padding: 0 5px;
-  margin: 2px 0;
+  margin: 2px
 }
 .volatile.bad {
   background: #FFE5E0;
@@ -301,9 +302,6 @@ th, td {
     justify-content: center;
     flex-wrap: wrap;
   }
-  .volatile {
-    margin: 2px;
-  }
   .left .position {
     display: block;
   }
@@ -357,22 +355,24 @@ for (const details of document.getElementsByTagName('details')) {
 }`;
 
 export function displayBattle(gen: Generation, showdown: boolean, battle: Battle) {
-  console.log('<div class="battle">');
+  const buf = [];
+  buf.push('<div class="battle">');
   if (battle.turn) {
-    console.log('<div class="details">');
-    console.log(`<h2>Turn ${battle.turn}</h2>`);
-    console.log('<div class="inner">');
-    console.log(`<div><strong>Last Damage:</strong> ${battle.lastDamage}</div>`);
-    console.log(`<div><strong>Seed:</strong> ${battle.prng.join(', ')}</div>`);
-    console.log('</div>');
-    console.log('</div>');
+    buf.push('<div class="details">');
+    buf.push(`<h2>Turn ${battle.turn}</h2>`);
+    buf.push('<div class="inner">');
+    buf.push(`<div><strong>Last Damage:</strong> ${battle.lastDamage}</div>`);
+    buf.push(`<div><strong>Seed:</strong> ${battle.prng.join(', ')}</div>`);
+    buf.push('</div>');
+    buf.push('</div>');
   }
-  console.log('<div class="sides">');
+  buf.push('<div class="sides">');
   const [p1, p2] = Array.from(battle.sides);
-  displaySide(gen, showdown, !!battle.turn, 'p1', p1);
-  displaySide(gen, showdown, !!battle.turn, 'p2', p2);
-  console.log('</div>');
-  console.log('</div>');
+  buf.push(displaySide(gen, showdown, !!battle.turn, 'p1', p1));
+  buf.push(displaySide(gen, showdown, !!battle.turn, 'p2', p2));
+  buf.push('</div>');
+  buf.push('</div>');
+  return buf.join('');
 }
 
 function displaySide(
@@ -382,105 +382,108 @@ function displaySide(
   player: 'p1' | 'p2',
   side: Side,
 ) {
-  console.log(`<div class="side ${player}">`);
+  const buf = [];
+  buf.push(`<div class="side ${player}">`);
   if (started) {
-    console.log('<div class="details">');
+    buf.push('<div class="details">');
     const used = side.lastUsedMove ? gen.moves.get(side.lastUsedMove)!.name : '<em>None</em>';
-    console.log(`<div><strong>Last Used</strong><br />${used}</div>`);
+    buf.push(`<div><strong>Last Used</strong><br />${used}</div>`);
     const selected =
       side.lastSelectedMove ? gen.moves.get(side.lastSelectedMove)!.name : '<em>None</em>';
     const index =
       side.lastSelectedIndex ? ` (${side.lastSelectedIndex})` : '';
-    console.log(`<div><strong>Last Selected</strong><br />${selected}${index}</div>`);
-    console.log('</div>');
+    buf.push(`<div><strong>Last Selected</strong><br />${selected}${index}</div>`);
+    buf.push('</div>');
   }
   if (side.active) {
-    console.log('<div class="active">');
-    displayPokemon(gen, showdown, side.active, true);
-    console.log('</div>');
+    buf.push('<div class="active">');
+    buf.push(displayPokemon(gen, showdown, side.active, true));
+    buf.push('</div>');
   }
-  console.log('<details class="team">');
-  console.log('<summary><div class="teamicons">');
+  buf.push('<details class="team">');
+  buf.push('<summary><div class="teamicons">');
   let i = 0;
-  const buf = [];
+  const b = [];
   for (const pokemon of side.pokemon) {
     if (i === 3) buf.push('</div><div class="teamicons">');
-    buf.push(icon(player, pokemon));
+    b.push(icon(player, pokemon));
     i++;
   }
-  console.log(buf.join(''));
-  console.log('</div></summary>');
+  buf.push(b.join(''));
+  buf.push('</div></summary>');
   for (const pokemon of side.pokemon) {
-    displayPokemon(gen, showdown, pokemon, false);
+    buf.push(displayPokemon(gen, showdown, pokemon, false));
   }
-  console.log('</details>');
-  console.log('</div>');
+  buf.push('</details>');
+  buf.push('</div>');
+  return buf.join('');
 }
 
 const STATS = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as const;
 
 function displayPokemon(gen: Generation, showdown: boolean, pokemon: Pokemon, active: boolean) {
-  console.log('<div class="pokemon">');
+  const buf = [];
+  buf.push('<div class="pokemon">');
   const species = active ? pokemon.species : pokemon.stored.species;
 
   // HP Bar
   const {title, percent, width, color} = getHP(pokemon);
-  console.log(`<div class="left" title="${title}">`);
-  if (!active) console.log(`<div class="position">${POSITIONS[pokemon.position - 1]}</div>`);
-  console.log('<div class="statbar rstatbar" style="display: block; opacity: 1;">');
-  console.log('<span class="name">');
-  if (pokemon.status) console.log(displayStatus(pokemon));
+  buf.push(`<div class="left" title="${title}">`);
+  if (!active) buf.push(`<div class="position">${POSITIONS[pokemon.position - 1]}</div>`);
+  buf.push('<div class="statbar rstatbar" style="display: block; opacity: 1;">');
+  buf.push('<span class="name">');
+  if (pokemon.status) buf.push(displayStatus(pokemon));
   let name: string = gen.species.get(species)!.name;
   if (active && pokemon.species !== pokemon.stored.species) name = `<em>${name}</em>`;
-  console.log(`<strong>${name}&nbsp;<small>L${pokemon.level}</small></strong>`);
-  if (active && pokemon.species !== pokemon.stored.species) console.log('</em>');
-  console.log('</span>');
-  console.log('<div class="hpbar">');
+  buf.push(`<strong>${name}&nbsp;<small>L${pokemon.level}</small></strong>`);
+  if (active && pokemon.species !== pokemon.stored.species) buf.push('</em>');
+  buf.push('</span>');
+  buf.push('<div class="hpbar">');
   const style = `width: ${width}; border-right-width: ${percent === 100 ? 1 : 0}px;`;
-  console.log(`<div class="hp ${color}" style="${style}"></div>`);
-  console.log(`<div class="hptext">${percent}%</div>`);
-  console.log('</div></div>');
+  buf.push(`<div class="hp ${color}" style="${style}"></div>`);
+  buf.push(`<div class="hptext">${percent}%</div>`);
+  buf.push('</div></div>');
 
   // Sprite & Types
-  console.log(sprite(showdown, species, pokemon.hp === 0));
+  buf.push(sprite(showdown, species, pokemon.hp === 0));
   const types = active ? pokemon.types : pokemon.stored.types;
-  console.log('<div class="types">');
-  console.log(typicon(types[0]));
-  if (types[0] !== types[1]) console.log(typicon(types[1]));
-  console.log('</div>');
-  console.log('</div>');
+  buf.push('<div class="types">');
+  buf.push(typicon(types[0]));
+  if (types[0] !== types[1]) buf.push(typicon(types[1]));
+  buf.push('</div>');
+  buf.push('</div>');
 
-  console.log('<div class="right">');
-  if (!active) console.log(`<div class="position">${POSITIONS[pokemon.position - 1]}</div>`);
+  buf.push('<div class="right">');
+  if (!active) buf.push(`<div class="position">${POSITIONS[pokemon.position - 1]}</div>`);
 
   // Stats & Boosts
-  console.log('<div class="stats"><table><tr>');
+  buf.push('<div class="stats"><table><tr>');
   const stats = active ? pokemon.stats : pokemon.stored.stats;
   for (const stat of STATS) {
     if (gen.num === 1 && stat === 'spd') continue;
-    console.log(`<th>${gen.stats.display(stat)}</th>`);
+    buf.push(`<th>${gen.stats.display(stat)}</th>`);
   }
-  console.log('</tr><tr>');
+  buf.push('</tr><tr>');
   for (const stat of STATS) {
     if (gen.num === 1 && stat === 'spd') continue;
     const boost = active ? pokemon.boosts[stat as BoostID] : 0;
-    console.log(`<td>${displayStat(stats[stat as StatID], boost)}</td>`);
+    buf.push(`<td>${displayStat(stats[stat as StatID], boost)}</td>`);
   }
-  console.log('</tr></table>');
+  buf.push('</tr></table>');
   if (active) {
-    console.log('<div class="boosts">');
+    buf.push('<div class="boosts">');
     if (pokemon.boosts.accuracy) {
-      console.log(`<div><strong>Accuracy:</strong> ${displayBoost(pokemon.boosts.accuracy)}</div>`);
+      buf.push(`<div><strong>Accuracy:</strong> ${displayBoost(pokemon.boosts.accuracy)}</div>`);
     }
     if (pokemon.boosts.evasion) {
-      console.log(`<div><strong>Evasion:</strong> ${displayBoost(pokemon.boosts.evasion)}</div>`);
+      buf.push(`<div><strong>Evasion:</strong> ${displayBoost(pokemon.boosts.evasion)}</div>`);
     }
-    console.log('</div>');
+    buf.push('</div>');
   }
-  console.log('</div>');
+  buf.push('</div>');
 
   // Moves
-  console.log('<div class="moves"><ul>');
+  buf.push('<div class="moves"><ul>');
   const moves = active ? pokemon.moves : pokemon.stored.moves;
   for (const move of moves) {
     const name = gen.moves.get(move.id)!.name;
@@ -489,13 +492,13 @@ function displayPokemon(gen: Generation, showdown: boolean, pokemon: Pokemon, ac
     const title =
       (move as any).disabled ? `title="Disabled: ${(move as any).disabled as number}"` : '';
     const pp = `<small>(${move.pp}/${maxpp})</small>`;
-    console.log(`<li class="${disabled}" ${title}>${name} ${pp}</li>`);
+    buf.push(`<li class="${disabled}" ${title}>${name} ${pp}</li>`);
   }
-  console.log('</ul></div>');
+  buf.push('</ul></div>');
 
   // Volatiles
   if (active) {
-    console.log('<div class="volatiles">');
+    buf.push('<div class="volatiles">');
     for (const v in pokemon.volatiles) {
       const volatile = v as keyof Pokemon['volatiles'];
       const [name, type] = VOLATILES[volatile]!;
@@ -513,13 +516,25 @@ function displayPokemon(gen: Generation, showdown: boolean, pokemon: Pokemon, ac
         data = `${pokemon.volatiles[volatile]!.player}${slot}`;
       }
       data = (data ? `${name}: ${data}` : name).replace(' ', '&nbsp;');
-      console.log(`<span class="volatile ${type}">${data}</span>`);
+      buf.push(`<span class="volatile ${type}">${data}</span>`);
     }
-    console.log('</div>');
+    buf.push('</div>');
   }
 
-  console.log('</div>');
-  console.log('</div>');
+  buf.push('</div>');
+  buf.push('</div>');
+  return buf.join('');
+}
+
+export function escapeHTML(str: string) {
+	return (str
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&apos;')
+		.replace(/\//g, '&#x2f;')
+		.replace(/\n/g, '<br />'));
 }
 
 function getHP(pokemon: Pokemon) {

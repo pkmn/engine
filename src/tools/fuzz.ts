@@ -3,13 +3,15 @@ import 'source-map-support/register';
 import {execFile} from 'child_process';
 import {promisify} from 'util';
 
+import {minify} from 'html-minifier';
+
 import {Dex} from '@pkmn/sim';
 import {Generation, Generations, GenerationNum} from '@pkmn/data';
 
 
 import {Battle, Result, Choice, Log, ParsedLine, Names} from '../pkg';
 import {Lookup, Data, LAYOUT, LE} from '../pkg/data';
-import {STYLES, displayBattle, SCRIPTS} from '../test/display';
+import {STYLES, displayBattle, escapeHTML, SCRIPTS} from '../test/display';
 import * as gen1 from '../pkg/gen1';
 
 const run = promisify(execFile);
@@ -39,15 +41,17 @@ const display = (
   log: ParsedLine[],
   seed?: bigint,
 ) => {
-  if (seed) console.log(`<h1>0x${seed.toString(16).toUpperCase()}</h1>`);
-  console.log('<div class="log">');
-  console.log(`<pre><code>|${log.map(compact).join('\n|')}</code></pre>`);
-  console.log('</div>');
-  displayBattle(gen, showdown, battle);
-  console.log('<div class="sides" style="text-align: center;">');
-  console.log(`<pre class="side"><code>${result.p1} -&gt; ${pretty(c1)}</code></pre>`);
-  console.log(`<pre class="side"><code>${result.p2} -&gt; ${pretty(c2)}</code></pre>`);
-  console.log('</div>');
+  const buf = [];
+  if (seed) buf.push(`<h1>0x${seed.toString(16).toUpperCase()}</h1>`);
+  buf.push('<div class="log">');
+  buf.push(`<pre><code>|${log.map(compact).join('\n|')}</code></pre>`);
+  buf.push('</div>');
+  buf.push(displayBattle(gen, showdown, battle));
+  buf.push('<div class="sides" style="text-align: center;">');
+  buf.push(`<pre class="side"><code>${result.p1} -&gt; ${pretty(c1)}</code></pre>`);
+  buf.push(`<pre class="side"><code>${result.p2} -&gt; ${pretty(c2)}</code></pre>`);
+  buf.push('</div>');
+  return buf.join('');
 };
 
 class SpeciesNames implements Names {
@@ -114,7 +118,9 @@ class SpeciesNames implements Names {
     const data = Array.from(stdout);
     if (!data.length) process.exit(1);
 
-    console.log(
+    const buf = [];
+
+    buf.push(
       '<!doctype html><html lang=en><head>' +
         '<meta charset="utf-8">' +
         '<meta name="viewport" content="width=device-width, initial-scale=1">' +
@@ -159,21 +165,22 @@ class SpeciesNames implements Names {
       }
       offset += r.value;
 
-      display(gen, showdown, result, c1, c2, battle, parsed, first ? seed : undefined);
+      buf.push(display(gen, showdown, result, c1, c2, battle, parsed, first ? seed : undefined));
       first = false;
     }
 
     if (end > 0) {
       const logs = Array.from(log.parse(Data.view(data.slice(head, head + end))));
-      console.log('<div class="log">');
-      console.log(`<pre><code>|${logs.map(compact).join('\n|')}</code></pre>`);
-      console.log('</div>');
+      buf.push('<div class="log">');
+      buf.push(`<pre><code>|${logs.map(compact).join('\n|')}</code></pre>`);
+      buf.push('</div>');
     }
 
-    console.log('<hr />');
-    console.log(`<pre class="error"><code>${error}</pre></code>`);
-    console.log(`</div><script>${SCRIPTS}</script></body></html>`);
+    buf.push('<hr />');
+    buf.push(`<pre class="error"><code>${escapeHTML(error)}</pre></code>`);
+    buf.push(`</div><script>${SCRIPTS}</script></body></html>`);
 
+    console.log(minify(buf.join(''), {minifyCSS: true, minifyJS: true}));
     process.exit(1);
   }
 })().catch(err => {
