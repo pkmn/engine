@@ -1,13 +1,13 @@
 const std = @import("std");
 const builtin = @import("builtin");
-const build_options = @import("build_options");
 
-const data = @import("../common/data.zig");
+const data = @import("./data.zig");
+const options = @import("./options.zig");
 
 const assert = std.debug.assert;
 const print = std.debug.print;
 
-const trace = build_options.trace;
+const trace = options.trace;
 
 const Player = data.Player;
 const ID = data.ID;

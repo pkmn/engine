@@ -91,7 +91,7 @@ pub fn benchmark(
     while (i < n and (if (duration) |d| elapsed.read() < d else true)) : (i += 1) {
         if (fuzz) last = random.src.seed;
 
-        const opt = .{ .cleric = !fuzz or showdown, .block = fuzz and showdown };
+        const opt = .{ .cleric = showdown or !fuzz, .block = showdown and fuzz };
         var original = switch (gen) {
             1 => pkmn.gen1.helpers.Battle.random(&random, opt),
             else => unreachable,
@@ -192,7 +192,7 @@ fn dump() !void {
     var bw = std.io.bufferedWriter(out.writer());
     var w = bw.writer();
 
-    if (out.isTty() or !pkmn.options.trace) {
+    if (!pkmn.options.trace or out.isTty()) {
         try w.print("seed: 0x{X}\n", .{last});
     } else {
         try w.writeIntNative(u64, last);

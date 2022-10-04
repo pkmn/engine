@@ -630,7 +630,7 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
             battle.active(player.foe()),
             if (move.effect == .Trapping) side.last_selected_move else null,
         );
-        if (battle.last_damage != 0 or showdown) {
+        if (showdown or battle.last_damage != 0) {
             _ = try applyDamage(battle, player.foe(), player.foe(), move, .None, log);
         }
         return .done;
@@ -779,10 +779,10 @@ fn doMove(battle: anytype, player: Player, mslot: u4, from: ?Move, log: anytype)
     var miss = showdown and (move.target != .Self and
         !(move.effect == .Sleep and foe.active.volatiles.Recharging) and
         !moveHit(battle, player, move, &immune, &mist));
-    assert(!immune or (showdown and move.effect == .Trapping));
+    assert((showdown and move.effect == .Trapping) or !immune);
 
     const skip = (move.bp == 0 and move.effect != .OHKO) or immune;
-    if (!miss and (!showdown or (!skip or counter))) blk: {
+    if ((!showdown or (!skip or counter)) and !miss) blk: {
         if (showdown and move.effect.isMulti()) {
             Effects.multiHit(battle, player, move);
             hits = side.active.volatiles.attacks;
@@ -828,8 +828,8 @@ fn doMove(battle: anytype, player: Player, mslot: u4, from: ?Move, log: anytype)
     else
         (!moveHit(battle, player, move, &immune, &mist) or battle.last_damage == 0);
 
-    assert(miss or battle.last_damage > 0 or skip or showdown);
-    assert(!(ohko and immune) or (!showdown and miss));
+    assert(showdown or miss or battle.last_damage > 0 or skip);
+    assert((!showdown and miss) or !(ohko and immune));
     assert(!immune or miss or move.effect == .Trapping);
 
     if (!showdown or !miss) {
@@ -865,7 +865,7 @@ fn doMove(battle: anytype, player: Player, mslot: u4, from: ?Move, log: anytype)
             if (showdown and foe.active.volatiles.Invulnerable) return null;
             try Effects.explode(battle, player);
             // Pokémon Showdown does not build Rage after missing Self-Destruct/Explosion
-            if (foe.stored().hp == 0 or showdown) return null;
+            if (showdown or foe.stored().hp == 0) return null;
             if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
                 try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
             }
@@ -1207,7 +1207,7 @@ fn applyDamage(
     reason: Damage,
     log: anytype,
 ) !bool {
-    assert(battle.last_damage != 0 or showdown);
+    assert(showdown or battle.last_damage != 0);
 
     var target = battle.side(target_player);
     // GLITCH: Substitute + Confusion glitch
@@ -1388,7 +1388,7 @@ fn faint(battle: anytype, player: Player, log: anytype, done: bool) !?Result {
 
     var foe_volatiles = &foe.active.volatiles;
     foe_volatiles.MultiHit = false;
-    if (foe_volatiles.Bide and !showdown) {
+    if (!showdown and foe_volatiles.Bide) {
         assert(!foe_volatiles.Thrashing and !foe_volatiles.Rage);
         // Pokémon Showdown should zero foe_volatiles.state here unconditionally
         foe_volatiles.state = foe_volatiles.state & 255;
