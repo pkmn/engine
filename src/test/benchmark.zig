@@ -57,10 +57,7 @@ pub fn main() !void {
         const random = csprng.random();
         break :seed random.int(usize);
     };
-    const playouts = if (args.len == 5) std.fmt.parseUnsigned(usize, args[4], 10) catch
-        errorAndExit("playouts", args[4], args[0], fuzz) else null;
-
-    try benchmark(allocator, gen, seed, battles, playouts, duration);
+    try benchmark(allocator, gen, seed, battles, duration);
 }
 
 pub fn benchmark(
@@ -68,7 +65,6 @@ pub fn benchmark(
     gen: u8,
     seed: u64,
     battles: ?usize,
-    playouts: ?usize,
     duration: ?usize,
 ) !void {
     std.debug.assert(gen >= 1 and gen <= 8);
@@ -92,7 +88,7 @@ pub fn benchmark(
         if (fuzz) last = random.src.seed;
 
         const opt = .{ .cleric = showdown or !fuzz, .block = showdown and fuzz };
-        var original = switch (gen) {
+        var battle = switch (gen) {
             1 => pkmn.gen1.helpers.Battle.random(&random, opt),
             else => unreachable,
         };
@@ -109,52 +105,47 @@ pub fn benchmark(
             log = pkmn.Log(std.ArrayList(u8).Writer){ .writer = buf.?.writer() };
         }
 
-        var j: usize = 0;
-        var m = playouts orelse 1;
-        while (j < m and (if (duration) |d| elapsed.read() < d else true)) : (j += 1) {
-            var battle = original;
-            switch (gen) {
-                1 => battle.rng = pkmn.gen1.helpers.prng(&random),
-                else => unreachable,
-            }
-            std.debug.assert(!showdown or battle.side(.P1).get(1).hp > 0);
-            std.debug.assert(!showdown or battle.side(.P2).get(1).hp > 0);
-
-            var c1 = pkmn.Choice{};
-            var c2 = pkmn.Choice{};
-
-            var p1 = pkmn.PSRNG.init(random.newSeed());
-            var p2 = pkmn.PSRNG.init(random.newSeed());
-
-            var timer = try Timer.start();
-
-            var result = try if (save)
-                battle.update(c1, c2, log.?)
-            else
-                battle.update(c1, c2, pkmn.protocol.NULL);
-
-            while (result.type == .None) : (result = try if (save)
-                battle.update(c1, c2, log.?)
-            else
-                battle.update(c1, c2, pkmn.protocol.NULL))
-            {
-                c1 = options[p1.range(u8, 0, battle.choices(.P1, result.p1, &options))];
-                c2 = options[p2.range(u8, 0, battle.choices(.P2, result.p2, &options))];
-
-                if (save) {
-                    std.debug.assert(buf.?.items.len <= max);
-                    try data.?.append(.{
-                        .result = result,
-                        .c1 = c1,
-                        .c2 = c2,
-                        .state = try allocator.dupe(u8, std.mem.toBytes(battle)[0..]),
-                        .log = buf.?.toOwnedSlice(),
-                    });
-                }
-            }
-            time += timer.read();
-            turns += battle.turn;
+        switch (gen) {
+            1 => battle.rng = pkmn.gen1.helpers.prng(&random),
+            else => unreachable,
         }
+        std.debug.assert(!showdown or battle.side(.P1).get(1).hp > 0);
+        std.debug.assert(!showdown or battle.side(.P2).get(1).hp > 0);
+
+        var c1 = pkmn.Choice{};
+        var c2 = pkmn.Choice{};
+
+        var p1 = pkmn.PSRNG.init(random.newSeed());
+        var p2 = pkmn.PSRNG.init(random.newSeed());
+
+        var timer = try Timer.start();
+
+        var result = try if (save)
+            battle.update(c1, c2, log.?)
+        else
+            battle.update(c1, c2, pkmn.protocol.NULL);
+
+        while (result.type == .None) : (result = try if (save)
+            battle.update(c1, c2, log.?)
+        else
+            battle.update(c1, c2, pkmn.protocol.NULL))
+        {
+            c1 = options[p1.range(u8, 0, battle.choices(.P1, result.p1, &options))];
+            c2 = options[p2.range(u8, 0, battle.choices(.P2, result.p2, &options))];
+
+            if (save) {
+                std.debug.assert(buf.?.items.len <= max);
+                try data.?.append(.{
+                    .result = result,
+                    .c1 = c1,
+                    .c2 = c2,
+                    .state = try allocator.dupe(u8, std.mem.toBytes(battle)[0..]),
+                    .log = buf.?.toOwnedSlice(),
+                });
+            }
+        }
+        time += timer.read();
+        turns += battle.turn;
     }
     if (data != null) deinit(allocator);
     if (battles != null) try out.print("{d},{d},{d}\n", .{ time, turns, random.src.seed });
@@ -171,7 +162,7 @@ fn usageAndExit(cmd: []const u8, fuzz: bool) noreturn {
     if (fuzz) {
         err.print("Usage: {s} <GEN> <DURATION> <SEED?>\n", .{cmd}) catch {};
     } else {
-        err.print("Usage: {s} <GEN> <BATTLES> <SEED?> <PLAYOUTS?>\n", .{cmd}) catch {};
+        err.print("Usage: {s} <GEN> <BATTLES> <SEED?>\n", .{cmd}) catch {};
     }
     std.process.exit(1);
 }

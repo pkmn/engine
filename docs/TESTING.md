@@ -91,8 +91,8 @@ Benchmarking the pkmn engine vs. Pokémon Showdown is slightly more complicated 
 tool like [`hyperfine`](https://github.com/sharkdp/hyperfine) due to the need to account for the
 runtime overhead and warmup period required by V8 (`hyperfine --warmup` is intended to help with
 disk caching, not JIT warmup). As such, a [custom benchmark tool](`../src/tools/benchmark`) exists
-which can be used to run the benchmark. The benchmark measures how long it takes to play M playouts
-of N randomly generated battles, excluding any set up time and time spent warming up the JS
+which can be used to run the benchmark. The benchmark measures how long it takes to play out
+N randomly generated battles, excluding any set up time and time spent warming up the JS
 configurations. This benchmark scenario is useful for approximating the [Monte Carlo tree search
 (MCTS)](https://en.wikipedia.org/wiki/Monte_Carlo_tree_search) use case where various battles are
 played out each turn to the end numerous times to determine the best course of action.
@@ -177,7 +177,7 @@ as an exercise to the reader.
 
 The benchmarks are run on an `n2d-standard-48` Google Cloud Compute Engine machine with 192 GB of
 memory and an AMD EPYC 7B12 CPU running 64-bit x86 Linux which has undergone the pre-benchmark
-tuning detailed above via the command  `npm run benchmark -- --battles=1000 --playouts=10`:
+tuning detailed above via the command  `npm run benchmark -- --battles=10000`:
 
 | Generation | `libpkmn` | `@pkmn/engine` | `DirectBattle` | `BattleStream` |
 | ---------- | --------- | -------------- | -------------- | -------------- |

@@ -22,7 +22,7 @@ import {newSeed} from './common';
 
 import * as gen1 from './gen1';
 
-const argv = minimist(process.argv.slice(2), {default: {battles: 1000, playouts: 10}});
+const argv = minimist(process.argv.slice(2), {default: {battles: 10000}});
 argv.seed = argv.seed
   ? argv.seed.split(',').map((s: string) => Number(s))
   : [1, 2, 3, 4];
@@ -49,7 +49,7 @@ const serialize = (seed: PRNGSeed) =>
 
 interface Configuration {
   warmup?: boolean;
-  run(format: ID, prng: PRNG, battles: number, playouts: number):
+  run(format: ID, prng: PRNG, battles: number):
   Promise<readonly [number, number, string]>;
 }
 
@@ -104,7 +104,7 @@ class DirectBattle extends Battle {
 const CONFIGURATIONS: {[name: string]: Configuration} = {
   'BattleStream': {
     warmup: true,
-    async run(format, prng, battles, playouts) {
+    async run(format, prng, battles) {
       const gen = GENS.get(+format[3] as GenerationNum);
       const newAI = (
         playerStream: Streams.ObjectReadWriteStream<string>,
@@ -123,31 +123,29 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
 
       for (let i = 0; i < battles; i++) {
         const options = gen1.Battle.options(gen, prng);
-        for (let j = 0; j < playouts; j++) {
-          const battleStream = new BattleStreams.BattleStream();
-          const streams = BattleStreams.getPlayerStreams(battleStream);
+        const battleStream = new BattleStreams.BattleStream();
+        const streams = BattleStreams.getPlayerStreams(battleStream);
 
-          const spec = {formatid: format, seed: newSeed(prng)};
-          const p1spec = {name: 'Player A', team: Teams.pack(options.p1.team as PokemonSet[])};
-          const p2spec = {name: 'Player B', team: Teams.pack(options.p2.team as PokemonSet[])};
-          const start = `>start ${JSON.stringify(spec)}\n` +
-            `>player p1 ${JSON.stringify(p1spec)}\n` +
-            `>player p2 ${JSON.stringify(p2spec)}`;
+        const spec = {formatid: format, seed: newSeed(prng)};
+        const p1spec = {name: 'Player A', team: Teams.pack(options.p1.team as PokemonSet[])};
+        const p2spec = {name: 'Player B', team: Teams.pack(options.p2.team as PokemonSet[])};
+        const start = `>start ${JSON.stringify(spec)}\n` +
+          `>player p1 ${JSON.stringify(p1spec)}\n` +
+          `>player p2 ${JSON.stringify(p2spec)}`;
 
-          const p1 = newAI(streams.p1, battleStream, 'p1', new PRNG(newSeed(prng))).start();
-          const p2 = newAI(streams.p2, battleStream, 'p2', new PRNG(newSeed(prng))).start();
+        const p1 = newAI(streams.p1, battleStream, 'p1', new PRNG(newSeed(prng))).start();
+        const p2 = newAI(streams.p2, battleStream, 'p2', new PRNG(newSeed(prng))).start();
 
-          const begin = process.hrtime.bigint();
-          try {
-            await streams.omniscient.write(start);
-            await streams.omniscient.readAll();
-            await Promise.all([streams.omniscient.writeEnd(), p1, p2]);
-            const battle = battleStream.battle!;
-            if (!battle.ended) throw new Error(`Unfinished ${format} battle ${i} + ${j}`);
-            turns += battle.turn;
-          } finally {
-            duration += process.hrtime.bigint() - begin;
-          }
+        const begin = process.hrtime.bigint();
+        try {
+          await streams.omniscient.write(start);
+          await streams.omniscient.readAll();
+          await Promise.all([streams.omniscient.writeEnd(), p1, p2]);
+          const battle = battleStream.battle!;
+          if (!battle.ended) throw new Error(`Unfinished ${format} battle ${i}`);
+          turns += battle.turn;
+        } finally {
+          duration += process.hrtime.bigint() - begin;
         }
       }
 
@@ -156,7 +154,7 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
   },
   'DirectBattle': {
     warmup: true,
-    run(format, prng, battles, playouts) {
+    run(format, prng, battles) {
       const gen = GENS.get(+format[3] as GenerationNum);
 
       let choices: (battle: Battle, id: SideID) => string[];
@@ -176,29 +174,27 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
 
       for (let i = 0; i < battles; i++) {
         const options = gen1.Battle.options(gen, prng);
-        for (let j = 0; j < playouts; j++) {
-          const config = {formatid: format, seed: newSeed(prng)};
-          const battle = new Battle(config);
+        const config = {formatid: format, seed: newSeed(prng)};
+        const battle = new Battle(config);
 
-          const p1 = new PRNG(newSeed(prng));
-          const p2 = new PRNG(newSeed(prng));
+        const p1 = new PRNG(newSeed(prng));
+        const p2 = new PRNG(newSeed(prng));
 
-          // NOTE: We must serialize the team as PS mutates it which will cause drift
-          const team1 = Teams.pack(options.p1.team as PokemonSet[]);
-          const team2 = Teams.pack(options.p2.team as PokemonSet[]);
+        // NOTE: We must serialize the team as PS mutates it which will cause drift
+        const team1 = Teams.pack(options.p1.team as PokemonSet[]);
+        const team2 = Teams.pack(options.p2.team as PokemonSet[]);
 
-          battle.setPlayer('p1', {name: 'Player A', team: team1});
-          const begin = process.hrtime.bigint();
-          try {
-            battle.setPlayer('p2', {name: 'Player B', team: team2});
-            while (!battle.ended) {
-              choose(battle, 'p1', p1);
-              choose(battle, 'p2', p2);
-            }
-            turns += battle.turn;
-          } finally {
-            duration += process.hrtime.bigint() - begin;
+        battle.setPlayer('p1', {name: 'Player A', team: team1});
+        const begin = process.hrtime.bigint();
+        try {
+          battle.setPlayer('p2', {name: 'Player B', team: team2});
+          while (!battle.ended) {
+            choose(battle, 'p1', p1);
+            choose(battle, 'p2', p2);
           }
+          turns += battle.turn;
+        } finally {
+          duration += process.hrtime.bigint() - begin;
         }
       }
 
@@ -212,13 +208,12 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
     },
   },
   'libpkmn': {
-    run(format, prng, battles, playouts) {
+    run(format, prng, battles) {
       const stdout = execFileSync('zig', [
         'build', '-Dshowdown=true', 'benchmark', '--',
         format[3], // TODO: support doubles
         battles.toString(),
         serialize(prng.seed),
-        playouts.toString(),
       ], {encoding: 'utf8'});
 
       const [duration, turn, seed] = stdout.split(',');
@@ -240,13 +235,13 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
         // Must use a different PRNG than the one used for the actual test
         const prng = new PRNG(argv.seed.slice());
         // We ignore the result - only the data from the actual test matters
-        await config.run(format, prng, Math.max(Math.floor(argv.battles / 10), 1), argv.playouts);
+        await config.run(format, prng, Math.max(Math.floor(argv.battles / 10), 1));
         // @ts-ignore
         if (global.gc) global.gc();
       }
 
       const prng = new PRNG(argv.seed.slice());
-      const [duration, turns, seed] = await config.run(format, prng, argv.battles, argv.playouts);
+      const [duration, turns, seed] = await config.run(format, prng, argv.battles);
       if (!control.seed) {
         control.turns = turns;
         control.seed = seed;
