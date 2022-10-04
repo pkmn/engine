@@ -55,7 +55,7 @@ const Player = new class {
       const m = prng.randomChance(1, 100) ? prng.next(1, 3 + 1) : 4;
       for (let j = 0; j < m; j++) {
         let move: ID;
-        while (moves.includes((move = lookup.moveByNum(prng.next(1, 165 + 1)))) ||
+        while (moves.includes((move = lookup.moveByNum(prng.next(1, 164 + 1)))) ||
           BLOCKLIST.includes(move));
         moves.push(move);
       }

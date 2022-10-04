@@ -177,7 +177,7 @@ pub const Pokemon = struct {
         while (i < n) : (i += 1) {
             var m: Move = .None;
             sample: while (true) {
-                m = @intToEnum(Move, rand.range(u8, 1, 165 + 1));
+                m = @intToEnum(Move, rand.range(u8, 1, 164 + 1));
                 if (opt.block and blocked(m)) continue :sample;
                 var j: u4 = 0;
                 while (j < i) : (j += 1) {
