@@ -305,7 +305,7 @@ describe('Gen 1', () => {
       TIE(2), SS_EACH, SS_EACH, METRONOME('Fly'), SRF_USE, SS_EACH,
       METRONOME('Mirror Move'), METRONOME('Mirror Move'), METRONOME('Dig'),
       SRF_USE, SS_EACH, SS_RES, SS_RES, SS_RES, SS_EACH, GLM, GLM,
-      GLM, GLM, GLM, GLM, SRF_RES, TIE(1), SS_EACH, SS_EACH, SS_RUN, SS_EACH,
+      GLM, GLM, GLM, GLM, TIE(1), SS_EACH, SS_EACH, SS_RUN, SS_EACH,
       SS_RUN, HIT, NO_CRIT, MIN_DMG, SS_EACH, SS_RES, SS_EACH,
       SRF_RES, SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG, SS_EACH,
       METRONOME('Swift'), SRF_USE, NO_CRIT, MIN_DMG, SS_EACH, SS_EACH,
@@ -3791,7 +3791,7 @@ describe('Gen 1', () => {
       SRF_RES, HIT, NO_CRIT, MIN_DMG, SRF_USE, HIT, NO_CRIT, MIN_DMG,
       SRF_RES, SRF_RUN, NO_CRIT, MIN_DMG, SRF_USE, NO_CRIT, MIN_DMG,
       SRF_RES, SRF_USE, SS_RES, SS_RES, GLM, GLM,
-      GLM, GLM, GLM, GLM, SRF_RES, SRF_RES, SS_RUN, SS_RUN, HIT, NO_CRIT, MIN_DMG,
+      GLM, GLM, GLM, GLM, SRF_RES, SS_RUN, SS_RUN, HIT, NO_CRIT, MIN_DMG,
     ], [
       {species: 'Fearow', evs, moves: ['Mirror Move', 'Peck', 'Fly']},
     ], [
@@ -4477,7 +4477,7 @@ describe('Gen 1', () => {
       const battle = startBattle([
         METRONOME('Skull Bash'), SRF_USE,
         METRONOME('Mirror Move'), METRONOME('Mirror Move'), METRONOME('Fly'), SRF_USE, SS_RES, GLM,
-        GLM, GLM, SRF_RES, SS_RUN, MISS,
+        GLM, GLM, SS_RUN, MISS,
       ], [
         {species: 'Clefairy', evs, moves: ['Metronome']},
       ], [
@@ -4525,6 +4525,7 @@ describe('Gen 1', () => {
       ]);
 
       battle.makeChoices('move 1', 'move 1');
+
       verify(battle, [
         '|move|p1a: Clefable|Metronome|p1a: Clefable',
         '|move|p1a: Clefable|Pound|p2a: Clefairy|[from]Metronome',

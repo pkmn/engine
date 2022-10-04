@@ -4581,7 +4581,7 @@ test "Infinite Metronome" {
         // zig fmt: off
             if (showdown) .{
                 skull_bash, NOP, mirror_move, mirror_move, fly, NOP, NOP, NOP,
-                NOP, NOP, NOP, NOP, ~HIT,
+                NOP, NOP, NOP, ~HIT,
             } else .{
                 ~CRIT, skull_bash, ~CRIT, mirror_move, ~CRIT, ~CRIT, mirror_move, ~CRIT, ~CRIT, fly,
                 ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, ~HIT
@@ -4679,7 +4679,7 @@ test "MirrorMove effect" {
             NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, ~CRIT, MIN_DMG,
             NOP, NOP, ~CRIT, MIN_DMG, NOP, ~CRIT, MIN_DMG,
             NOP, NOP, NOP, NOP, NOP, NOP,
-            NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG,
+            NOP, NOP, NOP, NOP, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG,
         } else .{
             ~CRIT, ~CRIT, ~CRIT, MIN_DMG, HIT, ~CRIT, ~CRIT, MIN_DMG, HIT,
             ~CRIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
