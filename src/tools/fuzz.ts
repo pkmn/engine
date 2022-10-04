@@ -39,14 +39,14 @@ const display = (
   c2: Choice,
   battle: Battle,
   log: ParsedLine[],
-  seed?: bigint,
+  seed: bigint | Battle,
 ) => {
   const buf = [];
-  if (seed) buf.push(`<h1>0x${seed.toString(16).toUpperCase()}</h1>`);
+  if (typeof seed === 'bigint') buf.push(`<h1>0x${seed.toString(16).toUpperCase()}</h1>`);
   buf.push('<div class="log">');
   buf.push(`<pre><code>|${log.map(compact).join('\n|')}</code></pre>`);
   buf.push('</div>');
-  buf.push(displayBattle(gen, showdown, battle));
+  buf.push(displayBattle(gen, showdown, battle, typeof seed === 'bigint' ? undefined : seed));
   buf.push('<div class="sides" style="text-align: center;">');
   buf.push(`<pre class="side"><code>${result.p1} -&gt; ${pretty(c1)}</code></pre>`);
   buf.push(`<pre class="side"><code>${result.p2} -&gt; ${pretty(c2)}</code></pre>`);
@@ -148,7 +148,7 @@ class SpeciesNames implements Names {
     const seed = view.getBigUint64(0, LE);
     const end = view.getUint8(8);
 
-    let first = true;
+    let last: Battle | undefined = undefined;
     for (let offset = head + end; offset < data.length; offset += (3 + size)) {
       const result = Result.parse(data[offset]);
       const c1 = Choice.parse(data[offset + 1]);
@@ -165,8 +165,8 @@ class SpeciesNames implements Names {
       }
       offset += r.value;
 
-      buf.push(display(gen, showdown, result, c1, c2, battle, parsed, first ? seed : undefined));
-      first = false;
+      buf.push(display(gen, showdown, result, c1, c2, battle, parsed, last ?? seed));
+      last = battle;
     }
 
     if (end > 0) {

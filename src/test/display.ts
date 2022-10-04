@@ -154,6 +154,17 @@ th, td {
   border-bottom-color: #a3260d;
   border-right-color: #a3260d;
 }
+.statbar .hpbar .prevhp {
+  background: #BBEECC;
+  height: 8px;
+  border-radius: 3px;
+}
+.statbar .hpbar .prevhp-yellow {
+  background-color: #fcf4ca;
+}
+.statbar .hpbar .prevhp-red {
+  background-color: #facec5;
+}
 .statbar .hpbar .hptext {
   position: absolute;
   background: #777777;
@@ -178,6 +189,7 @@ th, td {
   border: 0;
   border-radius: 3px;
   text-transform: uppercase;
+  margin: 0 2px;
 }
 .status.brn {
   background: #EE5533;
@@ -354,7 +366,7 @@ for (const details of document.getElementsByTagName('details')) {
   });
 }`;
 
-export function displayBattle(gen: Generation, showdown: boolean, battle: Battle) {
+export function displayBattle(gen: Generation, showdown: boolean, battle: Battle, last?: Battle) {
   const buf = [];
   buf.push('<div class="battle">');
   if (battle.turn) {
@@ -368,8 +380,9 @@ export function displayBattle(gen: Generation, showdown: boolean, battle: Battle
   }
   buf.push('<div class="sides">');
   const [p1, p2] = Array.from(battle.sides);
-  buf.push(displaySide(gen, showdown, !!battle.turn, 'p1', p1));
-  buf.push(displaySide(gen, showdown, !!battle.turn, 'p2', p2));
+  const [o1, o2] = last ? Array.from(last.sides) : [undefined, undefined];
+  buf.push(displaySide(gen, showdown, !!battle.turn, 'p1', p1, o1));
+  buf.push(displaySide(gen, showdown, !!battle.turn, 'p2', p2, o2));
   buf.push('</div>');
   buf.push('</div>');
   return buf.join('');
@@ -381,6 +394,7 @@ function displaySide(
   started: boolean,
   player: 'p1' | 'p2',
   side: Side,
+  last?: Side,
 ) {
   const buf = [];
   buf.push(`<div class="side ${player}">`);
@@ -397,7 +411,16 @@ function displaySide(
   }
   if (side.active) {
     buf.push('<div class="active">');
-    buf.push(displayPokemon(gen, showdown, side.active, true));
+    let prev = undefined;
+    if (last) {
+      for (const pokemon of last.pokemon) {
+        if (pokemon.position === side.active.position) {
+          prev = pokemon;
+          break;
+        }
+      }
+    }
+    buf.push(displayPokemon(gen, showdown, side.active, true, prev));
     buf.push('</div>');
   }
   buf.push('<details class="team">');
@@ -421,7 +444,13 @@ function displaySide(
 
 const STATS = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as const;
 
-function displayPokemon(gen: Generation, showdown: boolean, pokemon: Pokemon, active: boolean) {
+function displayPokemon(
+  gen: Generation,
+  showdown: boolean,
+  pokemon: Pokemon,
+  active: boolean,
+  last?: Pokemon,
+) {
   const buf = [];
   buf.push('<div class="pokemon">');
   const species = active ? pokemon.species : pokemon.stored.species;
@@ -440,7 +469,16 @@ function displayPokemon(gen: Generation, showdown: boolean, pokemon: Pokemon, ac
   buf.push('</span>');
   buf.push('<div class="hpbar">');
   const style = `width: ${width}; border-right-width: ${percent === 100 ? 1 : 0}px;`;
-  buf.push(`<div class="hp ${color}" style="${style}"></div>`);
+  const hp = `<div class="hp ${color}" style="${style}"></div>`;
+  if (last && last.position === pokemon.position && pokemon.hp < last.hp) {
+    const prev = getHP(last);
+    const style = `width: ${prev.width}; border-right-width: ${prev.percent === 100 ? 1 : 0}px;`;
+    buf.push(`<div class="prevhp ${prev.color ? 'prev' + prev.color : ''}" style="${style}">`);
+    buf.push(hp);
+    buf.push('</div>');
+  } else {
+    buf.push(hp);
+  }
   buf.push(`<div class="hptext">${percent}%</div>`);
   buf.push('</div></div>');
 
@@ -527,14 +565,14 @@ function displayPokemon(gen: Generation, showdown: boolean, pokemon: Pokemon, ac
 }
 
 export function escapeHTML(str: string) {
-	return (str
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;')
-		.replace(/'/g, '&apos;')
-		.replace(/\//g, '&#x2f;')
-		.replace(/\n/g, '<br />'));
+  return (str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+    .replace(/\//g, '&#x2f;')
+    .replace(/\n/g, '<br />'));
 }
 
 function getHP(pokemon: Pokemon) {
