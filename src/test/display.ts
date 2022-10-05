@@ -428,7 +428,7 @@ function displaySide(
   let i = 0;
   const b = [];
   for (const pokemon of side.pokemon) {
-    if (i === 3) buf.push('</div><div class="teamicons">');
+    if (i === 3) b.push('</div><div class="teamicons">');
     b.push(icon(player, pokemon));
     i++;
   }
