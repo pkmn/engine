@@ -359,9 +359,9 @@ th, td {
 
 export const SCRIPTS = `
 for (const details of document.getElementsByTagName('details')) {
-  details.addEventListener('toggle', () => {
+  details.addEventListener('toggle', e => {
     for (const d of details.parentElement.parentElement.getElementsByTagName('details')) {
-      d.open = details.open;
+      if (d.open !== details.open) d.open = details.open;
     }
   });
 }`;
