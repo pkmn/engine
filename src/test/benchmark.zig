@@ -146,6 +146,7 @@ pub fn benchmark(
         }
         time += timer.read();
         turns += battle.turn;
+        std.debug.assert(!showdown or result.type != .Error);
     }
     if (data != null) deinit(allocator);
     if (battles != null) try out.print("{d},{d},{d}\n", .{ time, turns, random.src.seed });
