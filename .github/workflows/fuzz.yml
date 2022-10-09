@@ -1,7 +1,7 @@
 name: Fuzz
 on:
   schedule:
-    - cron: '36 * * * *'
+    - cron: '36 */6 * * *'
   push:
     branches: [ main ]
   pull_request:

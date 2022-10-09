@@ -385,7 +385,7 @@ export class Pokemon implements Gen1.Pokemon {
           };
         } else if (volatile === 'transform') {
           const {player, id} =
-            decodeIdentRaw((this.data.getUint8(off + (OFFSETS.Volatiles.transform >> 3))) >> 4);
+            decodeIdentRaw((this.data.getUint8(off + (OFFSETS.Volatiles.transform >> 3))) & 0x0F);
           volatiles[volatile] = {player, slot: this.battle.side(player).slot(id)!};
         } else {
           volatiles[volatile] = {};
@@ -419,8 +419,12 @@ export class Pokemon implements Gen1.Pokemon {
     const pp = this.data.getUint8(off + ((slot << 1) - 1));
     const byte = this.data.getUint8(this.offset.active +
       OFFSETS.ActivePokemon.volatiles +
-      (OFFSETS.Volatiles.disabled >> 3));
-    const disabled = ((byte & 0x0F) === slot) ? byte >> 4 : undefined;
+      (OFFSETS.Volatiles.disabled_move >> 3));
+    const disabled = ((byte & 0b111) === slot)
+      ? this.data.getUint8(this.offset.active +
+      OFFSETS.ActivePokemon.volatiles +
+      (OFFSETS.Volatiles.disabled_duration >> 3)) >> 4
+      : undefined;
     return {id, pp, disabled};
   }
 
@@ -503,7 +507,7 @@ export class Pokemon implements Gen1.Pokemon {
     if (!this.active) return 0;
 
     const off = this.offset.active + OFFSETS.ActivePokemon.volatiles;
-    return this.data.getUint8(off + (OFFSETS.Volatiles.toxic >> 3)) & 0x0F;
+    return this.data.getUint8(off + (OFFSETS.Volatiles.toxic >> 3)) >> 3;
   }
 
   toJSON(): Gen1.Pokemon {
@@ -614,13 +618,13 @@ export class Pokemon implements Gen1.Pokemon {
 
     off = offset + OFFSETS.ActivePokemon.moves;
     let slot = 1;
+    const disabled = {duration: 0, move: 0};
     for (const ms of pokemon.moves) {
       data.setUint8(off++, lookup.moveByID(ms.id));
       data.setUint8(off++, ms.pp);
       if (ms.disabled !== undefined) {
-        data.setUint8(offset +
-          OFFSETS.ActivePokemon.volatiles +
-          (OFFSETS.Volatiles.disabled >> 3), slot | (ms.disabled << 4));
+        disabled.duration = ms.disabled;
+        disabled.move = slot;
       }
       slot++;
     }
@@ -659,8 +663,10 @@ export class Pokemon implements Gen1.Pokemon {
       const id = Array.from(side.pokemon)[volatiles.transform.slot - 1].position;
       transform = (+!!(volatiles.transform.player === 'p2') << 3) | id;
     }
+    data.setUint8(off + (OFFSETS.Volatiles.transform >> 3),
+      (transform | (disabled.duration << 4)));
     data.setUint8(off + (OFFSETS.Volatiles.toxic >> 3),
-      (pokemon.statusData.toxic ?? 0) | (transform << 4));
+      (disabled.move | ((pokemon.statusData.toxic ?? 0) << 3)));
 
     off = offset + OFFSETS.ActivePokemon.boosts;
     const boosts = pokemon.boosts;

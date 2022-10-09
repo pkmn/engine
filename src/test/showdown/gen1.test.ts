@@ -975,78 +975,102 @@ describe('Gen 1', () => {
   });
 
   test('Poison effect', () => {
-    const battle = startBattle([
-      SRF_RES, HIT, SRF_RES, HIT, SRF_RES, HIT, SS_MOD, SRF_RES, HIT, SS_MOD,
-    ], [
-      {species: 'Jolteon', evs, moves: ['Toxic', 'Substitute']},
-      {species: 'Abra', evs, moves: ['Teleport']},
-    ], [
-      {species: 'Venomoth', evs, moves: ['Teleport', 'Toxic']},
-      {species: 'Drowzee', evs, moves: ['Poison Gas', 'Teleport']},
-    ]);
+    {
+      const battle = startBattle([
+        SRF_RES, HIT, SRF_RES, HIT, SRF_RES, HIT, SS_MOD, SRF_RES, HIT, SS_MOD,
+      ], [
+        {species: 'Jolteon', evs, moves: ['Toxic', 'Substitute']},
+        {species: 'Abra', evs, moves: ['Teleport']},
+      ], [
+        {species: 'Venomoth', evs, moves: ['Teleport', 'Toxic']},
+        {species: 'Drowzee', evs, moves: ['Poison Gas', 'Teleport']},
+      ]);
 
-    let jolteon = battle.p1.pokemon[0].hp;
-    let abra = battle.p1.pokemon[1].hp;
-    let drowzee = battle.p2.pokemon[1].hp;
+      let jolteon = battle.p1.pokemon[0].hp;
+      let abra = battle.p1.pokemon[1].hp;
+      let drowzee = battle.p2.pokemon[1].hp;
 
-    // Poison-type Pokémon cannot be poisoned
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p2.pokemon[0].status).toBe('');
+      // Poison-type Pokémon cannot be poisoned
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].status).toBe('');
 
-    // Substitute blocks poison
-    battle.makeChoices('move 2', 'move 2');
-    expect(battle.p1.pokemon[0].hp).toBe(jolteon -= 83);
-    expect(battle.p1.pokemon[0].status).toBe('');
+      // Substitute blocks poison
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(jolteon -= 83);
+      expect(battle.p1.pokemon[0].status).toBe('');
 
-    // Toxic damage increases each turn
-    battle.makeChoices('move 1', 'switch 2');
-    expect(battle.p2.pokemon[0].hp).toBe(drowzee);
-    expect(battle.p2.pokemon[0].status).toBe('tox');
+      // Toxic damage increases each turn
+      battle.makeChoices('move 1', 'switch 2');
+      expect(battle.p2.pokemon[0].hp).toBe(drowzee);
+      expect(battle.p2.pokemon[0].status).toBe('tox');
 
-    battle.makeChoices('switch 2', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(abra);
-    expect(battle.p1.pokemon[0].status).toBe('psn');
-    expect(battle.p2.pokemon[0].hp).toBe(drowzee -= 20);
+      battle.makeChoices('switch 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(abra);
+      expect(battle.p1.pokemon[0].status).toBe('psn');
+      expect(battle.p2.pokemon[0].hp).toBe(drowzee -= 20);
 
-    battle.makeChoices('move 1', 'move 2');
-    expect(battle.p1.pokemon[0].hp).toBe(abra -= 15);
-    expect(battle.p2.pokemon[0].hp).toBe(drowzee -= 40);
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(abra -= 15);
+      expect(battle.p2.pokemon[0].hp).toBe(drowzee -= 40);
 
-    battle.makeChoices('move 1', 'move 2');
-    expect(battle.p1.pokemon[0].hp).toBe(abra -= 15);
-    expect(battle.p2.pokemon[0].hp).toBe(drowzee -= 60);
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(abra -= 15);
+      expect(battle.p2.pokemon[0].hp).toBe(drowzee -= 60);
 
-    verify(battle, [
-      '|move|p1a: Jolteon|Toxic|p2a: Venomoth',
-      '|-immune|p2a: Venomoth',
-      '|move|p2a: Venomoth|Teleport|p2a: Venomoth',
-      '|turn|2',
-      '|move|p1a: Jolteon|Substitute|p1a: Jolteon',
-      '|-start|p1a: Jolteon|Substitute',
-      '|-damage|p1a: Jolteon|250/333',
-      '|move|p2a: Venomoth|Toxic|p1a: Jolteon',
-      '|-fail|p1a: Jolteon',
-      '|turn|3',
-      '|switch|p2a: Drowzee|Drowzee|323/323',
-      '|move|p1a: Jolteon|Toxic|p2a: Drowzee',
-      '|-status|p2a: Drowzee|tox',
-      '|turn|4',
-      '|switch|p1a: Abra|Abra|253/253',
-      '|move|p2a: Drowzee|Poison Gas|p1a: Abra',
-      '|-status|p1a: Abra|psn',
-      '|-damage|p2a: Drowzee|303/323 tox|[from] psn',
-      '|turn|5',
-      '|move|p1a: Abra|Teleport|p1a: Abra',
-      '|-damage|p1a: Abra|238/253 psn|[from] psn',
-      '|move|p2a: Drowzee|Teleport|p2a: Drowzee',
-      '|-damage|p2a: Drowzee|263/323 tox|[from] psn',
-      '|turn|6',
-      '|move|p1a: Abra|Teleport|p1a: Abra',
-      '|-damage|p1a: Abra|223/253 psn|[from] psn',
-      '|move|p2a: Drowzee|Teleport|p2a: Drowzee',
-      '|-damage|p2a: Drowzee|203/323 tox|[from] psn',
-      '|turn|7',
-    ]);
+      verify(battle, [
+        '|move|p1a: Jolteon|Toxic|p2a: Venomoth',
+        '|-immune|p2a: Venomoth',
+        '|move|p2a: Venomoth|Teleport|p2a: Venomoth',
+        '|turn|2',
+        '|move|p1a: Jolteon|Substitute|p1a: Jolteon',
+        '|-start|p1a: Jolteon|Substitute',
+        '|-damage|p1a: Jolteon|250/333',
+        '|move|p2a: Venomoth|Toxic|p1a: Jolteon',
+        '|-fail|p1a: Jolteon',
+        '|turn|3',
+        '|switch|p2a: Drowzee|Drowzee|323/323',
+        '|move|p1a: Jolteon|Toxic|p2a: Drowzee',
+        '|-status|p2a: Drowzee|tox',
+        '|turn|4',
+        '|switch|p1a: Abra|Abra|253/253',
+        '|move|p2a: Drowzee|Poison Gas|p1a: Abra',
+        '|-status|p1a: Abra|psn',
+        '|-damage|p2a: Drowzee|303/323 tox|[from] psn',
+        '|turn|5',
+        '|move|p1a: Abra|Teleport|p1a: Abra',
+        '|-damage|p1a: Abra|238/253 psn|[from] psn',
+        '|move|p2a: Drowzee|Teleport|p2a: Drowzee',
+        '|-damage|p2a: Drowzee|263/323 tox|[from] psn',
+        '|turn|6',
+        '|move|p1a: Abra|Teleport|p1a: Abra',
+        '|-damage|p1a: Abra|223/253 psn|[from] psn',
+        '|move|p2a: Drowzee|Teleport|p2a: Drowzee',
+        '|-damage|p2a: Drowzee|203/323 tox|[from] psn',
+        '|turn|7',
+      ]);
+    }
+    {
+      const battle = startBattle([SRF_RES, SRF_RES, HIT, SS_MOD, HIT], [
+        {species: 'Clefable', evs, moves: ['Toxic', 'Recover']},
+      ], [
+        {species: 'Diglett', level: 14, moves: ['Leech Seed', 'Recover']},
+      ]);
+
+      expect(battle.p2.active[0].maxhp).toBe(31);
+
+      battle.makeChoices('move 1', 'move 1');
+      for (let i = 0; i < 29; i++) {
+        battle.makeChoices('move 2', 'move 2');
+      }
+
+      expect(battle.ended).toBe(false);
+      expect(battle.p2.active[0].volatiles.residualdmg.counter).toBe(30);
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.ended).toBe(true);
+
+      expect((battle.prng as FixedRNG).exhausted()).toBe(true);
+    }
   });
 
   test('PoisonChance effect', () => {

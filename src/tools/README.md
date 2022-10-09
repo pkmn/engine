@@ -45,5 +45,5 @@ This folder contains miscellaneous scripts and tools useful for working on the p
   `serde.zig` and pretty prints the buffer so that it can be easily copied and pasted into JS
   source files for testing.
 
-      $ zig build serialize -- <GEN> <SEED?>
+      $ zig build serde -- <GEN> <SEED?>
       $ npm run compile && node build/tools/serde 1

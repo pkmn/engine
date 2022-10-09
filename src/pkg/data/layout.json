@@ -76,9 +76,10 @@
         "attacks": 21,
         "state": 24,
         "substitute": 40,
-        "disabled": 48,
-        "toxic": 56,
-        "transform": 60
+        "transform": 48,
+        "disabled_duration": 52,
+        "disabled_move": 56,
+        "toxic": 59
       }
     }
   }

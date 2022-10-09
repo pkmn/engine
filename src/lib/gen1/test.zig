@@ -1133,84 +1133,110 @@ test "Twineedle effect" {
 // Move.Toxic
 // Move.{PoisonPowder,PoisonGas}
 test "Poison effect" {
-    // (Badly) Poisons the target.
-    var t = Test((if (showdown)
-        (.{ NOP, HIT, NOP, HIT, NOP, HIT, NOP, NOP, HIT, NOP })
-    else
-        (.{ HIT, HIT }))).init(
-        &.{
-            .{ .species = .Jolteon, .moves = &.{ .Toxic, .Substitute } },
-            .{ .species = .Abra, .moves = &.{.Teleport} },
-        },
-        &.{
-            .{ .species = .Venomoth, .moves = &.{ .Teleport, .Toxic } },
-            .{ .species = .Drowzee, .moves = &.{ .PoisonGas, .Teleport } },
-        },
-    );
-    defer t.deinit();
+    {
+        // (Badly) Poisons the target.
+        var t = Test((if (showdown)
+            (.{ NOP, HIT, NOP, HIT, NOP, HIT, NOP, NOP, HIT, NOP })
+        else
+            (.{ HIT, HIT }))).init(
+            &.{
+                .{ .species = .Jolteon, .moves = &.{ .Toxic, .Substitute } },
+                .{ .species = .Abra, .moves = &.{.Teleport} },
+            },
+            &.{
+                .{ .species = .Venomoth, .moves = &.{ .Teleport, .Toxic } },
+                .{ .species = .Drowzee, .moves = &.{ .PoisonGas, .Teleport } },
+            },
+        );
+        defer t.deinit();
 
-    try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(1), null);
-    try t.log.expected.immune(P2.ident(1), .None);
-    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
-    try t.log.expected.turn(2);
+        try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(1), null);
+        try t.log.expected.immune(P2.ident(1), .None);
+        try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+        try t.log.expected.turn(2);
 
-    // Poison-type Pokémon cannot be poisoned
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        // Poison-type Pokémon cannot be poisoned
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-    try t.log.expected.move(P1.ident(1), Move.Substitute, P1.ident(1), null);
-    try t.log.expected.start(P1.ident(1), .Substitute);
-    t.expected.p1.get(1).hp -= 83;
-    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-    try t.log.expected.move(P2.ident(1), Move.Toxic, P1.ident(1), null);
-    try t.log.expected.fail(P1.ident(1), .None);
-    try t.log.expected.turn(3);
+        try t.log.expected.move(P1.ident(1), Move.Substitute, P1.ident(1), null);
+        try t.log.expected.start(P1.ident(1), .Substitute);
+        t.expected.p1.get(1).hp -= 83;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.move(P2.ident(1), Move.Toxic, P1.ident(1), null);
+        try t.log.expected.fail(P1.ident(1), .None);
+        try t.log.expected.turn(3);
 
-    // Substitute blocks poison
-    try expectEqual(Result.Default, try t.update(move(2), move(2)));
-    try expectEqual(@as(u8, 0), t.actual.p1.get(1).status);
+        // Substitute blocks poison
+        try expectEqual(Result.Default, try t.update(move(2), move(2)));
+        try expectEqual(@as(u8, 0), t.actual.p1.get(1).status);
 
-    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
-    try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(2), null);
-    t.expected.p2.get(2).status = Status.init(.PSN);
-    try t.log.expected.status(P2.ident(2), t.expected.p2.get(2).status, .None);
-    try t.log.expected.turn(4);
+        try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+        try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(2), null);
+        t.expected.p2.get(2).status = Status.init(.PSN);
+        try t.log.expected.status(P2.ident(2), t.expected.p2.get(2).status, .None);
+        try t.log.expected.turn(4);
 
-    // Toxic damage increases each turn
-    try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
-    try expectEqual(t.expected.p2.get(2).status, t.actual.p2.get(1).status);
-    try expect(t.actual.p2.active.volatiles.Toxic);
+        // Toxic damage increases each turn
+        try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+        try expectEqual(t.expected.p2.get(2).status, t.actual.p2.get(1).status);
+        try expect(t.actual.p2.active.volatiles.Toxic);
 
-    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
-    try t.log.expected.move(P2.ident(2), Move.PoisonGas, P1.ident(2), null);
-    t.expected.p1.get(2).status = Status.init(.PSN);
-    try t.log.expected.status(P1.ident(2), t.expected.p1.get(2).status, .None);
-    t.expected.p2.get(2).hp -= 20;
-    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .Poison);
-    try t.log.expected.turn(5);
+        try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+        try t.log.expected.move(P2.ident(2), Move.PoisonGas, P1.ident(2), null);
+        t.expected.p1.get(2).status = Status.init(.PSN);
+        try t.log.expected.status(P1.ident(2), t.expected.p1.get(2).status, .None);
+        t.expected.p2.get(2).hp -= 20;
+        try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .Poison);
+        try t.log.expected.turn(5);
 
-    try expectEqual(Result.Default, try t.update(swtch(2), move(1)));
-    try expectEqual(t.expected.p1.get(2).status, t.actual.p1.get(1).status);
+        try expectEqual(Result.Default, try t.update(swtch(2), move(1)));
+        try expectEqual(t.expected.p1.get(2).status, t.actual.p1.get(1).status);
 
-    try t.log.expected.move(P1.ident(2), Move.Teleport, P1.ident(2), null);
-    t.expected.p1.get(2).hp -= 15;
-    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .Poison);
-    try t.log.expected.move(P2.ident(2), Move.Teleport, P2.ident(2), null);
-    t.expected.p2.get(2).hp -= 40;
-    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .Poison);
-    try t.log.expected.turn(6);
+        try t.log.expected.move(P1.ident(2), Move.Teleport, P1.ident(2), null);
+        t.expected.p1.get(2).hp -= 15;
+        try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .Poison);
+        try t.log.expected.move(P2.ident(2), Move.Teleport, P2.ident(2), null);
+        t.expected.p2.get(2).hp -= 40;
+        try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .Poison);
+        try t.log.expected.turn(6);
 
-    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+        try expectEqual(Result.Default, try t.update(move(1), move(2)));
 
-    try t.log.expected.move(P1.ident(2), Move.Teleport, P1.ident(2), null);
-    t.expected.p1.get(2).hp -= 15;
-    try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .Poison);
-    try t.log.expected.move(P2.ident(2), Move.Teleport, P2.ident(2), null);
-    t.expected.p2.get(2).hp -= 60;
-    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .Poison);
-    try t.log.expected.turn(7);
+        try t.log.expected.move(P1.ident(2), Move.Teleport, P1.ident(2), null);
+        t.expected.p1.get(2).hp -= 15;
+        try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .Poison);
+        try t.log.expected.move(P2.ident(2), Move.Teleport, P2.ident(2), null);
+        t.expected.p2.get(2).hp -= 60;
+        try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .Poison);
+        try t.log.expected.turn(7);
 
-    try expectEqual(Result.Default, try t.update(move(1), move(2)));
-    try t.verify();
+        try expectEqual(Result.Default, try t.update(move(1), move(2)));
+        try t.verify();
+    }
+    {
+        var battle = Battle.fixed(
+            if (showdown) (.{ NOP, NOP, HIT, NOP, HIT }) else (.{ HIT, HIT }),
+            &.{.{ .species = .Clefable, .moves = &.{ .Toxic, .Recover } }},
+            &.{.{
+                .species = .Diglett,
+                .level = 14,
+                .stats = .{},
+                .moves = &.{ .LeechSeed, .Recover },
+            }},
+        );
+        try expectEqual(Result.Default, try battle.update(.{}, .{}, NULL));
+        try expectEqual(@as(u16, 31), battle.side(.P2).active.stats.hp);
+
+        try expectEqual(Result.Default, try battle.update(move(1), move(1), NULL));
+        var i: usize = 0;
+        while (i < 29) : (i += 1) {
+            try expectEqual(Result.Default, try battle.update(move(2), move(2), NULL));
+        }
+        try expectEqual(@as(u5, 30), battle.side(.P2).active.volatiles.toxic);
+
+        try expectEqual(Result.Win, try battle.update(move(2), move(2), NULL));
+        try expect(battle.rng.exhausted());
+    }
 }
 
 // Move.PoisonSting
@@ -3238,7 +3264,7 @@ test "Disable effect" {
 
     // Disable can end immediately
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try expectEqual(@as(u4, 0), t.actual.p2.active.volatiles.disabled.move);
+    try expectEqual(@as(u4, 0), t.actual.p2.active.volatiles.disabled_move);
 
     var n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(
@@ -3264,7 +3290,8 @@ test "Disable effect" {
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(4) }, choices[0..n]);
 
-    t.actual.p2.active.volatiles.disabled = .{};
+    t.actual.p2.active.volatiles.disabled_duration = 0;
+    t.actual.p2.active.volatiles.disabled_move = 0;
     t.actual.p2.active.move(2).pp = 1;
     t.actual.p2.get(1).move(2).pp = 1;
 
@@ -3275,7 +3302,7 @@ test "Disable effect" {
 
     // Can be disabled for many turns
     try expectEqual(Result.Default, try t.update(move(1), move(4)));
-    try expectEqual(@as(u4, 4), t.actual.p2.active.volatiles.disabled.duration);
+    try expectEqual(@as(u4, 4), t.actual.p2.active.volatiles.disabled_duration);
 
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2), move(3) }, choices[0..n]);
@@ -3290,7 +3317,7 @@ test "Disable effect" {
 
     // Disable fails if a move is already disabled
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try expectEqual(@as(u4, 3), t.actual.p2.active.volatiles.disabled.duration);
+    try expectEqual(@as(u4, 3), t.actual.p2.active.volatiles.disabled_duration);
 
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2), move(3) }, choices[0..n]);
@@ -3307,7 +3334,7 @@ test "Disable effect" {
 
     // Haze clears disable
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
-    try expectEqual(@as(u4, 0), t.actual.p2.active.volatiles.disabled.move);
+    try expectEqual(@as(u4, 0), t.actual.p2.active.volatiles.disabled_move);
 
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(3), move(4) }, choices[0..n]);
@@ -4339,7 +4366,7 @@ test "Haze effect" {
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
     try expectEqual(@as(u16, 278), t.actual.p1.active.stats.spe);
-    try expectEqual(@as(u4, 1), t.actual.p2.active.volatiles.toxic);
+    try expectEqual(@as(u5, 1), t.actual.p2.active.volatiles.toxic);
 
     try t.log.expected.move(P1.ident(1), Move.Agility, P1.ident(1), null);
     try t.log.expected.boost(P1.ident(1), .Speed, 2);
@@ -4357,7 +4384,7 @@ test "Haze effect" {
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
     try expectEqual(@as(i4, 2), t.actual.p1.active.boosts.spe);
     try expectEqual(@as(u16, 139), t.actual.p1.active.stats.spe);
-    try expectEqual(@as(u4, 2), t.actual.p2.active.volatiles.toxic);
+    try expectEqual(@as(u5, 2), t.actual.p2.active.volatiles.toxic);
 
     try t.log.expected.move(P2.ident(1), Move.DoubleTeam, P2.ident(1), null);
     try t.log.expected.boost(P2.ident(1), .Evasion, 1);
@@ -4374,7 +4401,7 @@ test "Haze effect" {
     try expectEqual(Result.Default, try t.update(move(3), move(3)));
     try expectEqual(@as(i4, 1), t.actual.p2.active.boosts.evasion);
     try expect(t.actual.p2.active.volatiles.Confusion);
-    try expectEqual(@as(u4, 3), t.actual.p2.active.volatiles.toxic);
+    try expectEqual(@as(u5, 3), t.actual.p2.active.volatiles.toxic);
 
     try t.log.expected.activate(P2.ident(1), .Confusion);
     try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
@@ -4399,7 +4426,7 @@ test "Haze effect" {
     try expect(!t.actual.p1.active.volatiles.LeechSeed);
     try expectEqual(@as(i4, 0), t.actual.p1.active.boosts.spe);
     try expectEqual(@as(u16, 278), t.actual.p1.active.stats.spe);
-    try expectEqual(@as(u4, 4), t.actual.p2.active.volatiles.toxic);
+    try expectEqual(@as(u5, 4), t.actual.p2.active.volatiles.toxic);
     try expect(!t.actual.p2.active.volatiles.Confusion);
     try expectEqual(@as(i4, 0), t.actual.p2.active.boosts.evasion);
 
@@ -4418,8 +4445,8 @@ test "Haze effect" {
 
     try expectEqual(Result.Default, try t.update(move(4), move(4)));
     // BUG: Pokémon Showdown increments the counter so long as the residualdmg counter is present
-    // try expectEqual(@as(u4, if (showdown) 5 else 4), t.actual.p2.active.volatiles.toxic);
-    try expectEqual(@as(u4, 4), t.actual.p2.active.volatiles.toxic);
+    // try expectEqual(@as(u5, if (showdown) 5 else 4), t.actual.p2.active.volatiles.toxic);
+    try expectEqual(@as(u5, 4), t.actual.p2.active.volatiles.toxic);
 
     try t.log.expected.move(P1.ident(1), Move.Agility, P1.ident(1), null);
     try t.log.expected.boost(P1.ident(1), .Speed, 2);
@@ -6374,14 +6401,14 @@ test "Toxic counter glitches" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(2)));
-    try expectEqual(@as(u4, 0), t.actual.p2.active.volatiles.toxic);
+    try expectEqual(@as(u5, 0), t.actual.p2.active.volatiles.toxic);
 
     try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
     try t.log.expected.cant(P2.ident(1), .Sleep);
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(3), forced));
-    try expectEqual(@as(u4, 0), t.actual.p2.active.volatiles.toxic);
+    try expectEqual(@as(u5, 0), t.actual.p2.active.volatiles.toxic);
 
     try t.log.expected.move(P1.ident(1), Move.LeechSeed, P2.ident(1), null);
     try t.log.expected.start(P2.ident(1), .LeechSeed);
@@ -6392,7 +6419,7 @@ test "Toxic counter glitches" {
     try t.log.expected.turn(4);
 
     try expectEqual(Result.Default, try t.update(move(2), forced));
-    try expectEqual(@as(u4, 1), t.actual.p2.active.volatiles.toxic);
+    try expectEqual(@as(u5, 1), t.actual.p2.active.volatiles.toxic);
 
     try t.log.expected.move(P1.ident(1), Move.FireBlast, P2.ident(1), null);
     t.expected.p2.get(1).hp -= 96;
@@ -6407,7 +6434,7 @@ test "Toxic counter glitches" {
     try t.log.expected.turn(5);
 
     try expectEqual(Result.Default, try t.update(move(4), move(1)));
-    try expectEqual(@as(u4, 3), t.actual.p2.active.volatiles.toxic);
+    try expectEqual(@as(u5, 3), t.actual.p2.active.volatiles.toxic);
 
     try t.verify();
 }
@@ -6843,7 +6870,7 @@ test "Hyper Beam + Sleep move glitch" {
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
     try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
     try expect(t.actual.p2.active.volatiles.Toxic);
-    try expectEqual(@as(u4, 1), t.actual.p2.active.volatiles.toxic);
+    try expectEqual(@as(u5, 1), t.actual.p2.active.volatiles.toxic);
 
     try t.log.expected.move(P1.ident(1), Move.Hypnosis, P2.ident(1), null);
     t.expected.p2.get(1).status = Status.slp(2);
@@ -6854,7 +6881,7 @@ test "Hyper Beam + Sleep move glitch" {
 
     try expectEqual(Result.Default, try t.update(move(2), move(if (showdown) 1 else 0)));
     try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
-    try expectEqual(@as(u4, 1), t.actual.p2.active.volatiles.toxic);
+    try expectEqual(@as(u5, 1), t.actual.p2.active.volatiles.toxic);
 
     try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
     try t.log.expected.curestatus(P2.ident(1), t.expected.p2.get(1).status, .Message);
@@ -6880,7 +6907,7 @@ test "Hyper Beam + Sleep move glitch" {
     try expectEqual(Result.Default, try t.update(move(4), move(1)));
     try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
     try expect(t.actual.p2.active.volatiles.Toxic);
-    try expectEqual(@as(u4, 2), t.actual.p2.active.volatiles.toxic);
+    try expectEqual(@as(u5, 2), t.actual.p2.active.volatiles.toxic);
 
     try t.verify();
 }

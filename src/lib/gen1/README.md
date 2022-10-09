@@ -196,15 +196,15 @@ additional information is stored in `Move.Data` (`targets`) about what Pokémon 
 battles were introduced). More specifically, a move's "targeting" status is required in various
 places to determine how many frames to advance the RNG by.
 
-| pkmn         | Pokémon Showdown     |
-| ------------ | -------------------- |
-| `AllOthers`  | `allAdjacent`        |
-| (`Self`)     | `allyTeam`           |
-| (`Other`)    | `any`                |
-| `Other`      | `normal`             |
-| `RandomFoe`  | `randomNormal`       |
-| `Depends`    | `scripted`           |
-| `Self`       | `self`               |
+| pkmn        | Pokémon Showdown |
+| ----------- | ---------------- |
+| `AllOthers` | `allAdjacent`    |
+| (`Self`)    | `allyTeam`       |
+| (`Other`)   | `any`            |
+| `Other`     | `normal`         |
+| `RandomFoe` | `randomNormal`   |
+| `Depends`   | `scripted`       |
+| `Self`      | `self`           |
 
 ### `Species` / `Species.Data`
 
@@ -231,24 +231,24 @@ to be stored at each address of an array).
 The information of each field (in terms of [bits of
 entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as follows:
 
-| Data            | Range   | Bits |     | Data              | Range    | Bits |
-| --------------- | ------- | ---- | --- | ----------------- | -------- | ---- |
-| **seed**        | 0...255 | 8    |     | **turn**          | 1...1000 | 10   |
-| **team index**  | 1...6   | 3    |     | **move index**    | 1...4    | 2    |
-| **species**     | 1...151 | 8    |     | **move**          | 1...165  | 8    |
-| **stat**        | 1...999 | 10   |     | **boost**         | 0...13   | 4    |
-| **level**       | 1...100 | 7    |     | **volatiles**     | *18*     | 18   |
-| **bide**        | 0...703 | 11   |     | **substitute**    | 0...179  | 8    |
-| **confusion**   | 0...5   | 3    |     | **toxic**         | 0...15   | 4    |
-| **multi hits**  | 0...5   | 3    |     | **base power**    | 0...40   | 6    |
-| **base PP**     | 1...8   | 3    |     | **PP Ups**        | 0...3    | 2    |
-| **PP**          | 0...64  | 7    |     | **HP / damage**   | 0...704  | 10   |
-| **status**      | 0...13  | 4    |     | **effectiveness** | 0...3    | 2    |
-| **type**        | 0...15  | 4    |     | **accuracy**      | 6...20   | 4    |
-| **disabled**    | 0...7   | 3    |     | **DVs**           | 0...15   | 4    |
-| **move effect** | 0..66   | 7    |     | **attacks**       | 0..4     | 3    |
-| **crit chance** | 7..65   | 6    |     | **transform**     | 0..15    | 4    |
-| **target**      | 0..4    | 3    |     |                   |          |      |
+| Data            | Range     | Bits |     | Data              | Range    | Bits |
+| --------------- | --------- | ---- | --- | ----------------- | -------- | ---- |
+| **seed**        | 0...255   | 8    |     | **turn**          | 1...1000 | 10   |
+| **team index**  | 1...6     | 3    |     | **move index**    | 1...4    | 2    |
+| **species**     | 1...151   | 8    |     | **move**          | 1...165  | 8    |
+| **stat**        | 1...999   | 10   |     | **boost**         | 0...13   | 4    |
+| **level**       | 1...100   | 7    |     | **volatiles**     | *18*     | 18   |
+| **bide**        | 0...65635 | 16   |     | **substitute**    | 0...179  | 8    |
+| **confusion**   | 0...5     | 3    |     | **toxic**         | 0...31   | 5    |
+| **multi hits**  | 0...5     | 3    |     | **base power**    | 0...40   | 6    |
+| **base PP**     | 1...8     | 3    |     | **PP Ups**        | 0...3    | 2    |
+| **PP**          | 0...64    | 7    |     | **HP / damage**   | 0...704  | 10   |
+| **status**      | 0...13    | 4    |     | **effectiveness** | 0...3    | 2    |
+| **type**        | 0...15    | 4    |     | **accuracy**      | 6...20   | 4    |
+| **disabled**    | 0...8     | 4    |     | **DVs**           | 0...15   | 4    |
+| **move effect** | 0..66     | 7    |     | **attacks**       | 0..4     | 3    |
+| **crit chance** | 7..65     | 6    |     | **transform**     | 0..15    | 4    |
+| **target**      | 0..4      | 3    |     |                   |          |      |
 
 From this we can determine the minimum bits[^1] required to store each data structure to determine
 how much overhead the representations above have after taking into consideration [alignment &
@@ -259,7 +259,7 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
   level (`7`)
   - `type` can be computed from the base `Species` information
 - **`ActivePokemon`**: 4× stats (`40`) + 4× move slot (`60`) + 6× boosts (`24`) + volatile data
-  (`29`) + volatiles (`18`) + species (`8`) + types (`8`) + disabled (`5`) + transform (`4`)
+  (`35`) + volatiles (`18`) + species (`8`) + types (`8`) + disabled (`6`) + transform (`4`)
   - the active Pokémon's stats/species/move slots/types may change in the case of Transform
   - the active Pokémon's types may change due to Conversion
   - the active Pokémon's level and current and max HP can always be referred to the `Pokemon`
@@ -276,9 +276,9 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 | Data              | Actual bits | Minimum bits | Overhead |
 | ----------------- | ----------- | ------------ | -------- |
 | `Pokemon`         | 192         | 139          | 38.1%    |
-| `ActivePokemon`   | 256         | 196          | 30.6%    |
-| `Side`            | 1472        | 1049         | 40.3%    |
-| `Battle`          | 3088        | 2202         | 40.2%    |
+| `ActivePokemon`   | 256         | 203          | 26.1%    |
+| `Side`            | 1472        | 1056         | 39.4%    |
+| `Battle`          | 3088        | 2216         | 39.4%    |
 | `Type.CHART`      | 1800        | 450          | 300.0%   |
 | `Moves.DATA`      | 5280        | 3960         | 33.3%    |
 | `Species.CHANCES` | 1208        | 906          | 33.3%    |
@@ -410,10 +410,11 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 | 21    | 24  | `attacks`           | The number of attacks remaining                             |
 | 24    | 40  | `state`             | A union of either: <ul><li>the total accumulated damage from Bide</li><li>the overwritten accuracy of certain moves</li></ul> |
 | 40    | 48  | `substitute`        | The remaining HP of the Substitute                          |
-| 48    | 52  | `disabled.move`     | The move slot (1-4) the is disabled                         |
-| 52    | 56  | `disabled.duration` | The remaining turns the move is disabled                    |
-| 56    | 60  | `toxic`             | The number of turns toxic damage has been accumulating      |
-| 60    | 64  | `transform`         | The identity of whom the active Pokémon is transformed into |
+| 48    | 52  | `transform`         | The identity of whom the active Pokémon is transformed into |
+| 52    | 56  | `disabled_duration` | The remaining turns the move is disabled                    |
+| 56    | 59  | `disabled_move`     | The move slot (1-4) the is disabled                         |
+| 59    | 64  | `toxic`             | The number of turns toxic damage has been accumulating      |
+
 
 ### `Pokemon`
 

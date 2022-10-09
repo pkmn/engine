@@ -219,7 +219,7 @@ fn selectMove(
     if (choice.data == 0) {
         const struggle = ok: {
             for (side.active.moves) |move, i| {
-                if (move.pp > 0 and volatiles.disabled.move != i + 1) break :ok false;
+                if (move.pp > 0 and volatiles.disabled_move != i + 1) break :ok false;
             }
             break :ok true;
         };
@@ -241,7 +241,7 @@ fn saveMove(battle: anytype, player: Player, choice: ?Choice) u8 {
         if (c.data == 0) {
             side.last_selected_move = .Struggle;
         } else {
-            assert(showdown or side.active.volatiles.disabled.move != c.data);
+            assert(showdown or side.active.volatiles.disabled_move != c.data);
             const move = side.active.move(c.data);
             // You cannot *select* a move with 0 PP (except on Pokémon Showdown where that is
             // sometimes required...), but a 0 PP move can be used automatically
@@ -509,10 +509,10 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
         return .done;
     }
 
-    if (volatiles.disabled.duration > 0) {
-        volatiles.disabled.duration -= 1;
-        if (volatiles.disabled.duration == 0) {
-            volatiles.disabled.move = 0;
+    if (volatiles.disabled_duration > 0) {
+        volatiles.disabled_duration -= 1;
+        if (volatiles.disabled_duration == 0) {
+            volatiles.disabled_move = 0;
             try log.end(ident, .Disable);
         }
     }
@@ -560,9 +560,9 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
         }
     }
 
-    if (volatiles.disabled.move != 0) {
+    if (volatiles.disabled_move != 0) {
         // A Pokémon that transforms after being disabled may end up with less move slots
-        const m = active.moves[volatiles.disabled.move - 1].id;
+        const m = active.moves[volatiles.disabled_move - 1].id;
         if (m != .None and m == side.last_selected_move) {
             try log.disabled(ident, side.last_selected_move);
             return .done;
@@ -1691,7 +1691,7 @@ pub const Effects = struct {
         // Pokémon Showdown handles hit/miss earlier in doMove
         if (!showdown and !try checkHit(battle, player, move, log)) return;
 
-        if (volatiles.disabled.move != 0) return try log.fail(foe_ident, .None);
+        if (volatiles.disabled_move != 0) return try log.fail(foe_ident, .None);
 
         var n: u4 = 0;
         for (foe.active.moves) |m| {
@@ -1702,13 +1702,13 @@ pub const Effects = struct {
         // but diverging from Pokémon Showdown here would mostly just be pedantic
         if (n == 0) return try log.fail(foe_ident, .None);
 
-        volatiles.disabled.move = randomMoveSlot(&battle.rng, &foe.active.moves, n);
-        volatiles.disabled.duration = @truncate(u4, if (showdown)
+        volatiles.disabled_move = @truncate(u3, randomMoveSlot(&battle.rng, &foe.active.moves, n));
+        volatiles.disabled_duration = @truncate(u4, if (showdown)
             battle.rng.range(u8, 1, 9)
         else
             (battle.rng.next() & 7) + 1);
 
-        try log.startEffect(foe_ident, .Disable, foe.active.move(volatiles.disabled.move).id);
+        try log.startEffect(foe_ident, .Disable, foe.active.move(volatiles.disabled_move).id);
     }
 
     fn drainHP(battle: anytype, player: Player, log: anytype) !void {
@@ -2416,8 +2416,9 @@ fn speedTie(battle: anytype) bool {
 
 fn clearVolatiles(active: *ActivePokemon, ident: ID, log: anytype) !void {
     var volatiles = &active.volatiles;
-    if (volatiles.disabled.move != 0) {
-        volatiles.disabled = .{};
+    if (volatiles.disabled_move != 0) {
+        volatiles.disabled_move = 0;
+        volatiles.disabled_duration = 0;
         try log.end(ident, .DisableSilent);
     }
     if (volatiles.Confusion) {
@@ -2618,7 +2619,7 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
                 const m = active.moves[slot - 1];
                 if (m.id == .None) break;
                 if (m.pp == 0) continue;
-                if (active.volatiles.disabled.move == slot) continue;
+                if (active.volatiles.disabled_move == slot) continue;
                 out[n] = .{ .type = .Move, .data = slot };
                 n += 1;
             }
