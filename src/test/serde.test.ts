@@ -19,7 +19,7 @@ describe('serialize/deserialize', () => {
   it.todo('create');
 
   // TODO: reenable once no longer flakey on Windows due to Zig cache bugs
-  it.skip('restore', async () => {
+  (process.platform === 'win32' ? it.skip : it)('restore', async () => {
     const rng = new PRNG([1, 2, 3, 4]);
     for (const gen of new Generations(Dex as any)) {
       if (gen.num > 1) break;

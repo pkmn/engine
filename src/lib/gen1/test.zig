@@ -74,7 +74,7 @@ const forced = move(@boolToInt(showdown));
 // General
 
 test "start (first fainted)" {
-    if (showdown) return;
+    if (showdown) return error.SkipZigTest;
 
     var t = Test(.{}).init(
         &.{
@@ -97,7 +97,7 @@ test "start (first fainted)" {
 }
 
 test "start (all fainted)" {
-    if (showdown) return;
+    if (showdown) return error.SkipZigTest;
     // Win
     {
         var t = Test(.{}).init(
@@ -312,7 +312,161 @@ test "turn order (priority)" {
 }
 
 test "turn order (basic speed tie)" {
-    return error.SkipZigTest;
+    const TIE_1 = MIN;
+    const TIE_2 = MAX;
+    // Start
+    {
+        var t = Test((if (showdown) (.{NOP} ** 7) else (.{}))).init(
+            &.{.{ .species = .Tauros, .moves = &.{.HyperBeam} }},
+            &.{.{ .species = .Tauros, .moves = &.{.HyperBeam} }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.switched(P1.ident(1), t.actual.p1.get(1));
+        try t.log.expected.switched(P2.ident(1), t.actual.p2.get(1));
+        try t.log.expected.turn(1);
+
+        try expectEqual(Result.Default, try t.battle.actual.update(.{}, .{}, t.log.actual));
+
+        try t.verify();
+    }
+    // Move vs. Move
+    {
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                NOP, NOP, NOP, NOP, NOP, NOP, NOP,
+                NOP, NOP, TIE_1, NOP,
+                NOP, HIT, ~CRIT, MIN_DMG,
+                NOP, HIT, ~CRIT, MAX_DMG,
+                NOP, NOP,
+            } else .{
+                TIE_1, ~CRIT, MIN_DMG, HIT, ~CRIT, MAX_DMG, HIT
+            }
+        // zig fmt: on
+        ).init(
+            &.{.{ .species = .Tauros, .moves = &.{.HyperBeam} }},
+            &.{.{ .species = .Tauros, .moves = &.{.HyperBeam} }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 166;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.mustrecharge(P1.ident(1));
+        try t.log.expected.move(P2.ident(1), Move.HyperBeam, P1.ident(1), null);
+        t.expected.p1.get(1).hp -= 196;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.mustrecharge(P2.ident(1));
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        try t.verify();
+    }
+    // Faint vs. Pass
+    {
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                NOP, NOP, NOP, NOP, NOP, NOP, NOP,
+                NOP, NOP, TIE_1, NOP,
+                NOP, HIT, ~CRIT, MIN_DMG,
+                NOP, HIT, CRIT, MAX_DMG,
+                NOP, NOP, NOP,
+            } else .{
+                TIE_1, ~CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, HIT
+            }
+        // zig fmt: on
+        ).init(
+            &.{
+                .{ .species = .Tauros, .moves = &.{.HyperBeam} },
+                .{ .species = .Tauros, .moves = &.{.HyperBeam} },
+            },
+            &.{.{ .species = .Tauros, .moves = &.{.HyperBeam} }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 166;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.mustrecharge(P1.ident(1));
+        try t.log.expected.move(P2.ident(1), Move.HyperBeam, P1.ident(1), null);
+        try t.log.expected.crit(P1.ident(1));
+        t.expected.p1.get(1).hp = 0;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.faint(P1.ident(1), true);
+
+        try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(move(1), move(1)));
+
+        try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(swtch(2), .{}));
+
+        try t.verify();
+    }
+    // Switch vs. Switch
+    {
+        var t = Test((if (showdown) (.{NOP} ** 7) ++ .{ TIE_2, NOP, NOP } else (.{}))).init(
+            &.{
+                .{ .species = .Tauros, .moves = &.{.HyperBeam} },
+                .{ .species = .Starmie, .moves = &.{.Surf} },
+            },
+            &.{
+                .{ .species = .Tauros, .moves = &.{.HyperBeam} },
+                .{ .species = .Alakazam, .moves = &.{.Psychic} },
+            },
+        );
+        defer t.deinit();
+
+        if (showdown) {
+            try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+            try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+        } else {
+            try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+            try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+        }
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(swtch(2), swtch(2)));
+
+        try t.verify();
+    }
+    // Move vs. Switch
+    {
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                NOP, NOP, NOP, NOP, NOP, NOP, NOP,
+                NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG,
+            } else .{
+                ~CRIT, MIN_DMG, HIT
+            }
+        // zig fmt: on
+        ).init(
+            &.{
+                .{ .species = .Tauros, .moves = &.{.HyperBeam} },
+                .{ .species = .Starmie, .moves = &.{.Surf} },
+            },
+            &.{
+                .{ .species = .Tauros, .moves = &.{.HyperBeam} },
+                .{ .species = .Alakazam, .moves = &.{.Psychic} },
+            },
+        );
+        defer t.deinit();
+
+        try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+        try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(2), null);
+        t.expected.p2.get(2).hp -= 255;
+        try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+        try t.log.expected.mustrecharge(P1.ident(1));
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+
+        try t.verify();
+    }
 }
 
 test "turn order (complex speed tie)" {
@@ -626,7 +780,7 @@ test "end turn (turn limit)" {
 }
 
 test "Endless Battle Clause (initial)" {
-    if (!showdown) return;
+    if (!showdown) return error.SkipZigTest;
 
     var t = Test(.{}).init(
         &.{.{ .species = .Gengar, .moves = &.{.Tackle} }},
@@ -646,7 +800,7 @@ test "Endless Battle Clause (initial)" {
 }
 
 test "Endless Battle Clause (basic)" {
-    if (!showdown) return;
+    if (!showdown) return error.SkipZigTest;
     {
         var t = Test(.{}).init(
             &.{.{ .species = .Mew, .moves = &.{.Transform} }},
@@ -668,7 +822,8 @@ test "Endless Battle Clause (basic)" {
         try t.verify();
     }
     {
-        var t = Test(.{ NOP, NOP }).init(
+        // FIXME: var t = Test(.{ NOP, NOP }).init(
+        var t = Test(.{ NOP, NOP, NOP }).init(
             &.{
                 .{ .species = .Mew, .moves = &.{.Transform} },
                 .{ .species = .Muk, .moves = &.{.Pound} },
@@ -7620,7 +7775,7 @@ test "Psywave infinite loop" {
 // Miscellaneous
 
 test "MAX_LOGS" {
-    if (showdown or !trace) return;
+    if (showdown or !trace) return error.SkipZigTest;
     // TODO: inline Status.init(...) when Zig no longer causes SIGBUS
     const BRN = 0b10000;
     const moves = &.{ .LeechSeed, .ConfuseRay, .Metronome };

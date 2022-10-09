@@ -312,7 +312,10 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     if (c1.type == .Pass) return .P2;
     if (c2.type == .Pass) return .P1;
 
-    if ((c1.type == .Switch) != (c2.type == .Switch)) return if (c1.type == .Switch) .P1 else .P2;
+    if ((c1.type == .Switch) != (c2.type == .Switch)) {
+        if (showdown and speedTie(battle)) battle.rng.advance(1);
+        return if (c1.type == .Switch) .P1 else .P2;
+    }
 
     const m1 = battle.side(.P1).last_selected_move;
     const m2 = battle.side(.P2).last_selected_move;
@@ -334,6 +337,9 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
             battle.rng.range(u8, 0, 2) == 0
         else
             battle.rng.next() < Gen12.percent(50) + 1;
+
+        if (showdown) battle.rng.advance(1);
+
         return if (p1) .P1 else .P2;
     }
 
@@ -376,6 +382,8 @@ fn executeMove(
     run: u8,
     log: anytype,
 ) !?Result {
+    if (showdown and speedTie(battle)) battle.rng.advance(1);
+
     var side = battle.side(player);
 
     if (choice.type == .Switch) {
@@ -1453,6 +1461,8 @@ fn endTurn(battle: anytype, pass: bool, log: anytype) @TypeOf(log).Error!Result 
         return Result.Tie;
     }
 
+    if (showdown and speedTie(battle)) battle.rng.advance(if (battle.turn == 0) 7 else 2);
+
     battle.turn += 1;
 
     if (showdown and battle.turn >= 1000) {
@@ -2397,6 +2407,11 @@ fn isLocked(side: *const Side) bool {
 fn isForced(active: ActivePokemon) bool {
     return active.volatiles.Recharging or active.volatiles.Rage or
         active.volatiles.Thrashing or active.volatiles.Charging;
+}
+
+fn speedTie(battle: anytype) bool {
+    assert(showdown);
+    return battle.side(.P1).active.stats.spe == battle.side(.P2).active.stats.spe;
 }
 
 fn clearVolatiles(active: *ActivePokemon, ident: ID, log: anytype) !void {

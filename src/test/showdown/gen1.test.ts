@@ -251,6 +251,41 @@ describe('Gen 1', () => {
         '|turn|2',
       ]);
     }
+    // Faint vs. Pass
+    {
+      const battle = startBattle([
+        INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
+        SRF_RES, SRF_RES, TIE(1),
+        SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG,
+        SS_EACH, HIT, CRIT, MAX_DMG,
+        SS_EACH, SS_EACH, SS_EACH,
+      ], [
+        {species: 'Tauros', evs, moves: ['Hyper Beam']},
+        {species: 'Tauros', evs, moves: ['Hyper Beam']},
+      ], [
+        {species: 'Tauros', evs, moves: ['Hyper Beam']},
+      ]);
+
+      const p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(0);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp - 166);
+
+      battle.makeChoices('switch 2', '');
+
+      verify(battle, [
+        '|move|p1a: Tauros|Hyper Beam|p2a: Tauros',
+        '|-damage|p2a: Tauros|187/353',
+        '|-mustrecharge|p1a: Tauros',
+        '|move|p2a: Tauros|Hyper Beam|p1a: Tauros',
+        '|-crit|p1a: Tauros',
+        '|-damage|p1a: Tauros|0 fnt',
+        '|faint|p1a: Tauros',
+        '|switch|p1a: Tauros|Tauros|353/353',
+        '|turn|2',
+      ]);
+    }
     // Switch vs. Switch
     {
       const battle = startBattle([
