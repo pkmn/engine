@@ -62,7 +62,7 @@ const ignore = std.ComptimeStringMap(Ignored, .{
 });
 
 // Windows has trouble with the symlink so we need to hardcode the logic to skip it
-const LIBS = "src\\examples\\zig\\libs";
+const LIBS = "src\\examples\\zig\\lib";
 
 fn ignored(raw_path: []const u8, line: u32, allocator: Allocator) !bool {
     var path = try allocator.dupe(u8, raw_path);

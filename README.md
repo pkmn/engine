@@ -85,7 +85,7 @@ adding the following to your `build.zig`:
 
 ```zig
 const std = @import("std");
-const pkmn = @import("libs/pkmn/build.zig");
+const pkmn = @import("lib/pkmn/build.zig");
 
 pub fn build(b: *std.build.Builder) void {
     ...

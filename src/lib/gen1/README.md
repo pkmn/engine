@@ -28,35 +28,35 @@ list of additional reference [**resources**](#resources).
 
 The following information is required to simulate a Generation I Pokémon battle:
 
-| pkmn                           | Pokémon Red (pret)                 | Pokémon Showdown                       |
-| ------------------------------ | ---------------------------------- | -------------------------------------- |
-| `battle.seed`                  | `Random{Add,Sub}`                  | `battle.seed`                          |
-| `battle.turn`                  | -                                  | `battle.turn`                          |
-| `battle.last_damage`           | `Damage`                           | `battle.lastDamage`                    |
-| `side.{active,pokemon}`        | `PlayerMonNumber`/`BattleMon`      | `side.active`                          |
-| `side.team`                    | `PartyMons`                        | `side.pokemon`                         |
-| `side.last_used_move`          | `PlayerUsedMove`                   | `pokemon.lastMove`                     |
-| `side.last_selected_move`      | `PlayerSelectedMove`               | `side.lastSelectedMove`                |
-| `battle.last_selected_indexes` | `PlayerMoveListIndex`              | -                                      |
-| `side.order`                   | -                                  | `pokemon.position`                     |
-| `{pokemon,active}.moves`       | `{party,battle}_struct.{Moves,PP}` | `pokemon.{baseMoveSlots,moveSlots}`    |
-| `{pokemon,active}.hp`          | `{party,battle}_struct.HP`         | `pokemon.hp`                           |
-| `{pokemon,active}.status`      | `{party,battle}_struct.Status`     | `pokemon.status`                       |
-| `{pokemon,active}.level`       | `PlayerMonUnmodifiedLevel`         | `pokemon.level`                        |
-| `pokemon.species`              | `party_struct.Species`             | `pokemon.baseSpecies`                  |
-| `pokemon.stats`                | `box_struct.Stats`                 | `pokemon.baseStoredStats`              |
-| `active.stats`                 | `battle_struct.Stats`              | `pokemon.modifiedStats`                |
-| `volatiles.transform`          | `PlayerMonUnmodified*`             | `pokemon.storedStats`                  |
-| `active.species`               | `battle_struct.Species`            | `pokemon.species`                      |
-| `{pokemon,active}.types`       | `{party,battle}_struct.Type`       | `pokemon.types`                        |
-| `active.boosts`                | `PlayerMon*Mod`                    | `pokemon.boosts`                       |
-| `active.volatiles`             | `PlayerBattleStatus{1,2,3}`        | `pokemon.volatiles`                    |
-| `volatiles.state`              | `PlayerBideAccumulatedDamage`      | `volatiles.bide.totalDamage`           |
-| `volatiles.attacks`            | `PlayerNumAttacksLeft`             | `volatiles.{bide,lockedmove}.duration` |
-| `volatiles.confusion`          | `PlayerConfusedCounter`            | `volatiles.confusion.duration`         |
-| `volatiles.toxic`              | `PlayerToxicCounter`               | `volatiles.residualdmg.counter`        |
-| `volatiles.substitute`         | `PlayerSubstituteHP`               | `volatiles.substitute.hp`              |
-| `volatiles.disabled`           | `PlayerDisabledMove{,Number}`      | `moveSlots.disabled`                   |
+| pkmn                                 | Pokémon Red (pret)                 | Pokémon Showdown                       |
+| ------------------------------------ | ---------------------------------- | -------------------------------------- |
+| `battle.seed`                        | `Random{Add,Sub}`                  | `battle.seed`                          |
+| `battle.turn`                        | -                                  | `battle.turn`                          |
+| `battle.last_damage`                 | `Damage`                           | `battle.lastDamage`                    |
+| `side.{active,pokemon}`              | `PlayerMonNumber`/`BattleMon`      | `side.active`                          |
+| `side.team`                          | `PartyMons`                        | `side.pokemon`                         |
+| `side.last_used_move`                | `PlayerUsedMove`                   | `pokemon.lastMove`                     |
+| `side.last_selected_move`            | `PlayerSelectedMove`               | `side.lastSelectedMove`                |
+| `battle.last_selected_indexes`       | `PlayerMoveListIndex`              | -                                      |
+| `side.order`                         | -                                  | `pokemon.position`                     |
+| `{pokemon,active}.moves`             | `{party,battle}_struct.{Moves,PP}` | `pokemon.{baseMoveSlots,moveSlots}`    |
+| `{pokemon,active}.hp`                | `{party,battle}_struct.HP`         | `pokemon.hp`                           |
+| `{pokemon,active}.status`            | `{party,battle}_struct.Status`     | `pokemon.status`                       |
+| `{pokemon,active}.level`             | `PlayerMonUnmodifiedLevel`         | `pokemon.level`                        |
+| `pokemon.species`                    | `party_struct.Species`             | `pokemon.baseSpecies`                  |
+| `pokemon.stats`                      | `box_struct.Stats`                 | `pokemon.baseStoredStats`              |
+| `active.stats`                       | `battle_struct.Stats`              | `pokemon.modifiedStats`                |
+| `volatiles.transform`                | `PlayerMonUnmodified*`             | `pokemon.storedStats`                  |
+| `active.species`                     | `battle_struct.Species`            | `pokemon.species`                      |
+| `{pokemon,active}.types`             | `{party,battle}_struct.Type`       | `pokemon.types`                        |
+| `active.boosts`                      | `PlayerMon*Mod`                    | `pokemon.boosts`                       |
+| `active.volatiles`                   | `PlayerBattleStatus{1,2,3}`        | `pokemon.volatiles`                    |
+| `volatiles.state`                    | `PlayerBideAccumulatedDamage`      | `volatiles.bide.totalDamage`           |
+| `volatiles.attacks`                  | `PlayerNumAttacksLeft`             | `volatiles.{bide,lockedmove}.duration` |
+| `volatiles.confusion`                | `PlayerConfusedCounter`            | `volatiles.confusion.duration`         |
+| `volatiles.toxic`                    | `PlayerToxicCounter`               | `volatiles.residualdmg.counter`        |
+| `volatiles.substitute`               | `PlayerSubstituteHP`               | `volatiles.substitute.hp`              |
+| `volatiles.disabled_{move,duration}` | `PlayerDisabledMove{,Number}`      | `volatiles.disable.{move,time}`        |
 
 - Pokémon Showdown does not implement the correct Generation I RNG and as such its `seed` is
   different
@@ -200,7 +200,7 @@ places to determine how many frames to advance the RNG by.
 | ----------- | ---------------- |
 | `AllOthers` | `allAdjacent`    |
 | (`Self`)    | `allyTeam`       |
-| (`Other`)   | `any`            |
+| `Any`       | `any`            |
 | `Other`     | `normal`         |
 | `RandomFoe` | `randomNormal`   |
 | `Depends`   | `scripted`       |
@@ -415,7 +415,6 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 | 56    | 59  | `disabled_move`     | The move slot (1-4) the is disabled                         |
 | 59    | 64  | `toxic`             | The number of turns toxic damage has been accumulating      |
 
-
 ### `Pokemon`
 
 | Start | End | Data            | Description                                |
@@ -621,7 +620,7 @@ speed ties, etc) that Pokémon Showdown cannot replicate due to everything descr
 | **Damage** (range)     left  | `randomizeDamage`        | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X' \geq  217$ where $X'$ is $X$ with its bits rotated right once</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[217, 256\right)$</dd></dl>|
 | **Hit / Miss**           | `checkHit`               | Hit if $X < scaledAccuracy$ |
 | **Burn** (chance)        | `Effects.burnChance`     | Trigger if $X < 26$ ($77$ for Fire Blast) |
-| **Confusion** (chance)   | `Effects.confusion`      | <dl><dt>Pokémon Red</dt><dd>Trigger if $X< 25$</dd><dt>Pokémon Showdown</dt><dd>Trigger if $X < 26$</dd></dl> These differ due to a [bug in Pokémon Showdown](#bug) |
+| **Confusion** (chance)   | `Effects.confusion`      | <dl><dt>Pokémon Red</dt><dd>Trigger if $X< 25$</dd><dt>Pokémon Showdown</dt><dd>Trigger if $X < 26$</dd></dl> These differ due to a [bug in Pokémon Showdown](#bugs) |
 | **Confusion** (duration) | `Effects.confusion`      | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[2, 6\right)$ turns</dd></dl> |
 | **Confusion** (self-hit) | `beforeMove`             | Trigger if $X \geq 128$ |            |
 | **Flinch** (chance)      | `Effects.flinchChance`   | Trigger if $X < 26$ ($77$ for Stomp / Headbutt / Rolling Kick / Low Kick) |
