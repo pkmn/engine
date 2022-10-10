@@ -65,7 +65,7 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     var r2: u8 = 0;
 
     const pass = showdown and (c1.type == .Pass or c2.type == .Pass);
-    if (showdown and !pass) checkLocked(battle, 2);
+    if (showdown and !pass) checkLocked(battle, 2, false);
     if (selectMove(battle, .P1, c1, c2, &f1, &r1)) |r| return r;
     if (selectMove(battle, .P2, c2, c1, &f2, &r2)) |r| return r;
     if (showdown) checkChange(battle);
@@ -111,12 +111,19 @@ fn findFirstAlive(side: *const Side) u8 {
     return 0;
 }
 
-fn checkLocked(battle: anytype, n: u2) void {
+fn checkLocked(battle: anytype, n: u2, check: bool) void {
     assert(showdown);
+    const p1 = battle.side(.P1);
+    const p2 = battle.side(.P2);
     // Emitting |request| advances the RNG on Pokémon Showdown if the side has a "locked" move,
     // but the RNG advances by 2 during choice verification because getLockedMove gets called twice
-    battle.rng.advance(n * (@as(u3, @boolToInt(isLocked(battle.side(.P1)))) +
-        @as(u3, @boolToInt(isLocked(battle.side(.P2))))));
+    battle.rng.advance(n * (@as(u3, @boolToInt(isLocked(p1, true))) +
+        @as(u3, @boolToInt(isLocked(p2, true)))));
+    // Bonus RNG advance if both players were locked at the beginning of the turn (ie. we don't care
+    // if they're still currently Charging) and speed tie during the checkResidual step
+    if (check and isLocked(p1, false) and isLocked(p2, false) and speedTie(battle)) {
+        battle.rng.advance(1);
+    }
 }
 
 fn checkChange(battle: anytype) void {
@@ -312,10 +319,9 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     if (c1.type == .Pass) return .P2;
     if (c2.type == .Pass) return .P1;
 
-    if ((c1.type == .Switch) != (c2.type == .Switch)) {
-        if (showdown and speedTie(battle)) battle.rng.advance(1);
-        return if (c1.type == .Switch) .P1 else .P2;
-    }
+    defer if (showdown and speedTie(battle)) battle.rng.advance(1);
+
+    if ((c1.type == .Switch) != (c2.type == .Switch)) return if (c1.type == .Switch) .P1 else .P2;
 
     const m1 = battle.side(.P1).last_selected_move;
     const m2 = battle.side(.P2).last_selected_move;
@@ -337,9 +343,6 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
             battle.rng.range(u8, 0, 2) == 0
         else
             battle.rng.next() < Gen12.percent(50) + 1;
-
-        if (showdown) battle.rng.advance(1);
-
         return if (p1) .P1 else .P2;
     }
 
@@ -362,11 +365,13 @@ fn doTurn(
 
     if (try executeMove(battle, player, player_choice, player_from, player_run, log)) |r| return r;
     if (foe_choice.type == .Pass) return null;
+    if (showdown and player_choice.type == .Switch and speedTie(battle)) battle.rng.advance(2);
     if (try checkFaint(battle, foe_player, log)) |r| return r;
     try handleResidual(battle, player, log);
     if (try checkFaint(battle, player, log)) |r| return r;
 
     if (try executeMove(battle, foe_player, foe_choice, foe_from, foe_run, log)) |r| return r;
+    if (showdown and foe_choice.type == .Switch and speedTie(battle)) battle.rng.advance(2);
     if (try checkFaint(battle, player, log)) |r| return r;
     try handleResidual(battle, foe_player, log);
     if (try checkFaint(battle, foe_player, log)) |r| return r;
@@ -659,7 +664,7 @@ fn canMove(
     var side = battle.side(player);
     const player_ident = battle.active(player);
     const move = Move.get(side.last_selected_move);
-    const locked = showdown and isLocked(side);
+    const locked = showdown and isLocked(side, true);
     const special = from != null and (from.? == .MirrorMove or from.? == .Metronome);
 
     var skip = skip_pp;
@@ -1478,9 +1483,9 @@ fn endTurn(battle: anytype, pass: bool, log: anytype) @TypeOf(log).Error!Result 
     // getLockedMove that comes after `|turn|` is logged, but given that the only residual handler
     // for Pokémon Showdown in generation 1 is due to locked moves (which is incorrect, because
     // there should be *no* residual handler in generation 1...), we can repurpose the same logic
-    if (showdown and !pass) checkLocked(battle, 1);
+    if (showdown and !pass) checkLocked(battle, 1, true);
     try log.turn(battle.turn);
-    if (showdown) checkLocked(battle, 1);
+    if (showdown) checkLocked(battle, 1, false);
 
     return Result.Default;
 }
@@ -2399,8 +2404,8 @@ fn statusModify(status: u8, stats: *Stats(u16)) void {
     }
 }
 
-fn isLocked(side: *const Side) bool {
-    return (side.active.volatiles.Charging and
+fn isLocked(side: *const Side, check: bool) bool {
+    return ((side.active.volatiles.Charging or !check) and
         (side.last_selected_move == .Fly or side.last_selected_move == .Dig));
 }
 

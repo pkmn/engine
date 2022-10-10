@@ -408,14 +408,14 @@ test "turn order (basic speed tie)" {
     }
     // Switch vs. Switch
     {
-        var t = Test((if (showdown) (.{NOP} ** 7) ++ .{ TIE_2, NOP, NOP } else (.{}))).init(
+        var t = Test((if (showdown) (.{NOP} ** 7) ++ .{TIE_2} ++ (.{NOP} ** 9) else (.{}))).init(
             &.{
-                .{ .species = .Tauros, .moves = &.{.HyperBeam} },
-                .{ .species = .Starmie, .moves = &.{.Surf} },
+                .{ .species = .Zapdos, .moves = &.{.DrillPeck} },
+                .{ .species = .Dodrio, .moves = &.{.FuryAttack} },
             },
             &.{
-                .{ .species = .Tauros, .moves = &.{.HyperBeam} },
-                .{ .species = .Alakazam, .moves = &.{.Psychic} },
+                .{ .species = .Raichu, .moves = &.{.Thunderbolt} },
+                .{ .species = .Mew, .moves = &.{.Psychic} },
             },
         );
         defer t.deinit();
@@ -470,7 +470,86 @@ test "turn order (basic speed tie)" {
 }
 
 test "turn order (complex speed tie)" {
-    return error.SkipZigTest;
+    const TIE_1 = MIN;
+    const TIE_2 = MAX;
+    const fly = comptime metronome(.Fly);
+    const dig = comptime metronome(.Dig);
+    const swift = comptime metronome(.Swift);
+    const petal_dance = comptime metronome(.PetalDance);
+    const THRASH_3 = if (showdown) comptime ranged(1, 5 - 3) - 1 else MIN;
+
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, NOP, NOP, NOP, NOP, NOP,
+            TIE_2, NOP, NOP, fly, NOP, NOP,
+            dig, NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP,
+            NOP, NOP, NOP, NOP, TIE_1, NOP, NOP, NOP, NOP,
+            NOP, HIT, ~CRIT, MIN_DMG, NOP, NOP, NOP,
+            NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, NOP,
+            swift, NOP, ~CRIT, MIN_DMG, NOP, NOP,
+            NOP, NOP, NOP, NOP, NOP, petal_dance,
+            NOP, HIT, ~CRIT, MIN_DMG, THRASH_3, NOP, NOP,
+        } else .{
+            TIE_2, ~CRIT, fly, ~CRIT, dig,
+            TIE_1, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT,
+            ~CRIT, MIN_DMG, HIT, ~CRIT, swift, ~CRIT, MIN_DMG,
+            ~CRIT, petal_dance, THRASH_3, ~CRIT, MIN_DMG, HIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Clefable, .moves = &.{ .Metronome, .QuickAttack } }},
+        &.{
+            .{ .species = .Clefable, .moves = &.{.Metronome} },
+            .{ .species = .Farfetchd, .moves = &.{.Metronome} },
+        },
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
+    try t.log.expected.move(P2.ident(1), Move.Fly, .{}, Move.Metronome);
+    try t.log.expected.laststill();
+    try t.log.expected.prepare(P2.ident(1), Move.Fly);
+    try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
+    try t.log.expected.move(P1.ident(1), Move.Dig, .{}, Move.Metronome);
+    try t.log.expected.laststill();
+    try t.log.expected.prepare(P1.ident(1), Move.Dig);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.Dig, P2.ident(1), Move.Dig);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P1.ident(1));
+    try t.log.expected.move(P2.ident(1), Move.Fly, P1.ident(1), Move.Fly);
+    t.expected.p1.get(1).hp -= 50;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(forced, forced));
+
+    try t.log.expected.move(P1.ident(1), Move.QuickAttack, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 43;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
+    try t.log.expected.move(P2.ident(1), Move.Swift, P1.ident(1), Move.Metronome);
+    t.expected.p1.get(1).hp -= 64;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
+    try t.log.expected.move(P1.ident(1), Move.PetalDance, P2.ident(2), Move.Metronome);
+    try t.log.expected.resisted(P2.ident(2));
+    t.expected.p2.get(2).hp -= 32;
+    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+    try t.log.expected.turn(5);
+
+    try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+
+    try t.verify();
 }
 
 test "turn order (switch vs. move)" {

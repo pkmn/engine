@@ -289,20 +289,21 @@ describe('Gen 1', () => {
     // Switch vs. Switch
     {
       const battle = startBattle([
-        INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, TIE(2), SS_EACH, SS_EACH,
+        INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, TIE(2), SS_EACH,
+        SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
       ], [
-        {species: 'Tauros', evs, moves: ['Hyper Beam']},
-        {species: 'Starmie', evs, moves: ['Surf']},
+        {species: 'Zapdos', evs, moves: ['Drill Peck']},
+        {species: 'Dodrio', evs, moves: ['Fury Attack']},
       ], [
-        {species: 'Tauros', evs, moves: ['Hyper Beam']},
-        {species: 'Alakazam', evs, moves: ['Psychic']},
+        {species: 'Raichu', evs, moves: ['Thunderbolt']},
+        {species: 'Mew', evs, moves: ['Psychic']},
       ]);
 
       battle.makeChoices('switch 2', 'switch 2');
 
       verify(battle, [
-        '|switch|p2a: Alakazam|Alakazam|313/313',
-        '|switch|p1a: Starmie|Starmie|323/323',
+        '|switch|p2a: Mew|Mew|403/403',
+        '|switch|p1a: Dodrio|Dodrio|323/323',
         '|turn|2',
       ]);
     }
@@ -338,8 +339,7 @@ describe('Gen 1', () => {
     const battle = startBattle([
       INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
       TIE(2), SS_EACH, SS_EACH, METRONOME('Fly'), SRF_USE, SS_EACH,
-      METRONOME('Mirror Move'), METRONOME('Mirror Move'), METRONOME('Dig'),
-      SRF_USE, SS_EACH, SS_RES, SS_RES, SS_RES, SS_EACH, GLM, GLM,
+      METRONOME('Dig'), SRF_USE, SS_EACH, SS_RES, SS_RES, SS_RES, SS_EACH, GLM, GLM,
       GLM, GLM, GLM, GLM, TIE(1), SS_EACH, SS_EACH, SS_RUN, SS_EACH,
       SS_RUN, HIT, NO_CRIT, MIN_DMG, SS_EACH, SS_RES, SS_EACH,
       SRF_RES, SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG, SS_EACH,
@@ -373,10 +373,6 @@ describe('Gen 1', () => {
       '|move|p2a: Clefable|Fly||[from]Metronome|[still]',
       '|-prepare|p2a: Clefable|Fly',
       '|move|p1a: Clefable|Metronome|p1a: Clefable',
-      '|move|p1a: Clefable|Mirror Move|p1a: Clefable|[from]Metronome',
-      '|move|p1a: Clefable|Metronome|p1a: Clefable|[from]Mirror Move',
-      '|move|p1a: Clefable|Mirror Move|p1a: Clefable|[from]Metronome',
-      '|move|p1a: Clefable|Metronome|p1a: Clefable|[from]Mirror Move',
       '|move|p1a: Clefable|Dig||[from]Metronome|[still]',
       '|-prepare|p1a: Clefable|Dig',
       '|turn|2',
