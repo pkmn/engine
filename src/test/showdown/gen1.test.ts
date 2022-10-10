@@ -4204,7 +4204,6 @@ describe('Gen 1', () => {
       // expect(choices(battle, 'p2')).toEqual(['move 1']);
       expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
 
-
       verify(battle, [
         '|move|p1a: Voltorb|Disable|p2a: Goldeen',
         '|-start|p2a: Goldeen|Disable|Water Gun',

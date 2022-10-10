@@ -5264,8 +5264,65 @@ test "Substitute effect" {
 
 // Pokémon Showdown Bugs
 
-test "Disable + Transfom bug" {
-    return error.SkipZigTest; // TODO
+test "Disable + Transform bug" {
+    const DISABLE_MOVE_2 = if (showdown) comptime ranged(2, 4) - 1 else 1;
+    const DISABLE_DURATION_5 = comptime ranged(5, 9 - 1) - 1;
+    {
+        var t = Test((if (showdown)
+            (.{ NOP, NOP, HIT, DISABLE_MOVE_2, DISABLE_DURATION_5, NOP, NOP })
+        else
+            (.{ ~CRIT, HIT, DISABLE_MOVE_2, DISABLE_DURATION_5 }))).init(
+            &.{.{ .species = .Voltorb, .moves = &.{ .Disable, .Teleport } }},
+            &.{.{ .species = .Goldeen, .moves = &.{ .Transform, .WaterGun, .Teleport, .Haze } }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P1.ident(1), Move.Disable, P2.ident(1), null);
+        try t.log.expected.startEffect(P2.ident(1), .Disable, Move.WaterGun);
+        try t.log.expected.move(P2.ident(1), Move.Transform, P1.ident(1), null);
+        try t.log.expected.transform(P2.ident(1), P1.ident(1));
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        var n = t.battle.actual.choices(.P2, .Move, &choices);
+        // BUG: Pokémon Showdown saves move identity instead of slot
+        // if (showdown) {
+        // try expectEqualSlices(Choice, &[_]Choice{move(1), move(2)}, choices[0..n]);
+        // } else {
+        try expectEqualSlices(Choice, &[_]Choice{move(1)}, choices[0..n]);
+        // }
+
+        try t.verify();
+    }
+    {
+        var t = Test((if (showdown)
+            (.{ NOP, NOP, HIT, DISABLE_MOVE_2, DISABLE_DURATION_5, NOP, NOP })
+        else
+            (.{ ~CRIT, HIT, DISABLE_MOVE_2, DISABLE_DURATION_5 }))).init(
+            &.{.{ .species = .Voltorb, .moves = &.{ .Disable, .WaterGun, .Teleport } }},
+            &.{.{ .species = .Goldeen, .moves = &.{ .Transform, .Teleport, .WaterGun, .Haze } }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P1.ident(1), Move.Disable, P2.ident(1), null);
+        try t.log.expected.startEffect(P2.ident(1), .Disable, Move.Teleport);
+        try t.log.expected.move(P2.ident(1), Move.Transform, P1.ident(1), null);
+        try t.log.expected.transform(P2.ident(1), P1.ident(1));
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        var n = t.battle.actual.choices(.P2, .Move, &choices);
+        // BUG: Pokémon Showdown saves move identity instead of slot
+        // if (showdown) {
+        // try expectEqualSlices(Choice, &[_]Choice{move(1), move(2)}, choices[0..n]);
+        // } else {
+        try expectEqualSlices(Choice, &[_]Choice{ move(1), move(3) }, choices[0..n]);
+        // }
+
+        try t.verify();
+    }
 }
 
 test "Disable + Bide bug" {
