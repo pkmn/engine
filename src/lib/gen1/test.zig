@@ -5168,7 +5168,155 @@ test "Transform effect" {
     // The user transforms into the target. The target's current stats, stat stages, types, moves,
     // DVs, species, and sprite are copied. The user's level and HP remain the same and each copied
     // move receives only 5 PP. This move can hit a target using Dig or Fly.
-    return error.SkipZigTest;
+    const TIE_2 = MAX;
+    const no_crit = if (showdown) comptime ranged(Species.chance(.Articuno), 256) else 6;
+
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, ~HIT, NOP, NOP,
+            // NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, ~HIT,
+            NOP, NOP, TIE_2, NOP, NOP, HIT, no_crit, MIN_DMG, NOP, HIT, no_crit, MIN_DMG, NOP, NOP,
+            // NOP, NOP, HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG,
+            TIE_2, NOP, NOP, NOP, NOP, NOP, NOP,
+        } else .{
+            ~CRIT, ~CRIT, ~CRIT, MIN_DMG, ~HIT, TIE_2,
+            no_crit, MIN_DMG, HIT, no_crit, MIN_DMG, HIT,
+            TIE_2, ~CRIT, ~CRIT, ~CRIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{
+            .{ .species = .Mew, .level = 50, .moves = &.{ .SwordsDance, .Transform } },
+            .{ .species = .Ditto, .moves = &.{ .SwordsDance, .Transform } },
+        },
+        &.{.{ .species = .Articuno, .moves = &.{ .Agility, .Fly, .Peck } }},
+    );
+    defer t.deinit();
+
+    const pp = t.expected.p1.get(1).move(2).pp;
+
+    try t.log.expected.move(P2.ident(1), Move.Agility, P2.ident(1), null);
+    try t.log.expected.boost(P2.ident(1), .Speed, 2);
+    try t.log.expected.move(P1.ident(1), Move.SwordsDance, P1.ident(1), null);
+    try t.log.expected.boost(P1.ident(1), .Attack, 2);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(@as(i4, 2), t.actual.p1.active.boosts.atk);
+    try expectEqual(@as(i4, 2), t.actual.p2.active.boosts.spe);
+
+    try t.log.expected.move(P2.ident(1), Move.Fly, .{}, null);
+    try t.log.expected.laststill();
+    try t.log.expected.prepare(P2.ident(1), Move.Fly);
+    try t.log.expected.move(P1.ident(1), Move.Transform, P2.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P1.ident(1));
+    try t.log.expected.turn(3);
+
+    // Smogon/Bulbapedia is incorrect - Transform does not hit an invulnerable target
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+
+    try t.log.expected.move(P2.ident(1), Move.Fly, P1.ident(1), Move.Fly);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    try t.log.expected.move(P1.ident(1), Move.Transform, P2.ident(1), null);
+    try t.log.expected.transform(P1.ident(1), P2.ident(1));
+    try t.log.expected.turn(4);
+
+    // Transform should copy species, types, stats, and boosts but not level or HP
+    try expectEqual(Result.Default, try t.update(move(2), forced));
+    try expectEqual(pp - 2, t.actual.p1.get(1).move(2).pp);
+
+    try expectEqual(Species.Articuno, t.actual.p1.active.species);
+    try expectEqual(t.actual.p2.active.types, t.actual.p1.active.types);
+    try expectEqual(@as(u8, 50), t.actual.p1.get(1).level);
+
+    // BUG: Pokémon Showdown does wonky things with stats
+    inline for (@typeInfo(@TypeOf(t.actual.p1.get(1).stats)).Struct.fields) |field| {
+        if (!std.mem.eql(u8, field.name, "hp")) {
+            // if (showdown) {
+            //     try expectEqual(
+            //         @field(t.actual.p2.get(1).stats, field.name),
+            //         @field(t.actual.p1.get(1).stats, field.name),
+            //     );
+            // } else {
+            try expectEqual(
+                @field(t.actual.p2.active.stats, field.name),
+                @field(t.actual.p1.active.stats, field.name),
+            );
+            try expect(@field(t.actual.p2.get(1).stats, field.name) !=
+                @field(t.actual.p1.get(1).stats, field.name));
+            // }
+        }
+    }
+    // try expectEqual(@as(u16, if (showdown) 268 else 151), t.actual.p1.get(1).stats.spe);
+    try expectEqual(@as(u16, 151), t.actual.p1.get(1).stats.spe);
+    try expectEqual(@as(u16, 268), t.actual.p2.get(1).stats.spe);
+    try expectEqual(t.actual.p2.active.boosts, t.actual.p1.active.boosts);
+
+    const moves = [_]Move{ .Agility, .Fly, .Peck, .None };
+    const pps = [_]u8{ 5, 5, 5, 0 };
+    for (t.actual.p1.active.moves) |m, i| {
+        try expectEqual(moves[i], m.id);
+        try expectEqual(pps[i], m.pp);
+    }
+
+    try t.log.expected.move(P2.ident(1), Move.Peck, P1.ident(1), null);
+    // t.expected.p1.get(1).hp -= if (showdown) 69 else 35;
+    t.expected.p1.get(1).hp -= 35;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Peck, P2.ident(1), null);
+    try t.log.expected.crit(P2.ident(1));
+    // t.expected.p2.get(1).hp -= if (showdown) 35 else 20;
+    t.expected.p2.get(1).hp -= 20; // crit = uses untransformed stats
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(5);
+
+    // Transformed Pokémon should retain their original crit rate (and this should speed tie...)
+    try expectEqual(Result.Default, try t.update(move(3), move(3)));
+
+    try t.log.expected.move(P2.ident(1), Move.Agility, P2.ident(1), null);
+    try t.log.expected.boost(P2.ident(1), .Speed, 2);
+    try t.log.expected.move(P1.ident(1), Move.Agility, P1.ident(1), null);
+    try t.log.expected.boost(P1.ident(1), .Speed, 2);
+    try t.log.expected.turn(6);
+
+    // Stats get wonky on Pokémon Showdown...
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    inline for (@typeInfo(@TypeOf(t.actual.p1.get(1).stats)).Struct.fields) |field| {
+        if (!std.mem.eql(u8, field.name, "hp")) {
+            // if (showdown) {
+            //     try expectEqual(
+            //         @field(t.actual.p2.get(1).stats, field.name),
+            //         @field(t.actual.p1.get(1).stats, field.name),
+            //     );
+            // } else {
+            try expectEqual(
+                @field(t.actual.p2.active.stats, field.name),
+                @field(t.actual.p1.active.stats, field.name),
+            );
+            try expect(@field(t.actual.p2.get(1).stats, field.name) !=
+                @field(t.actual.p1.get(1).stats, field.name));
+            // }
+        }
+    }
+    // try expectEqual(@as(u16, if (showdown) 136 else 151), t.actual.p1.get(1).stats.spe);
+    try expectEqual(@as(u16, 151), t.actual.p1.get(1).stats.spe);
+    try expectEqual(@as(u16, 268), t.actual.p2.get(1).stats.spe);
+    try expectEqual(t.actual.p2.active.boosts, t.actual.p1.active.boosts);
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.move(P2.ident(1), Move.Agility, P2.ident(1), null);
+    try t.log.expected.boost(P2.ident(1), .Speed, 2);
+    try t.log.expected.turn(7);
+
+    try expectEqual(Result.Default, try t.update(swtch(2), move(1)));
+    try expectEqual(Species.Mew, t.actual.p1.get(2).species);
+    try expectEqual(pp - 2, t.actual.p1.get(2).move(2).pp);
+
+    try t.verify();
 }
 
 // Move.Conversion

@@ -4032,12 +4032,11 @@ describe('Gen 1', () => {
     expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
     expect(battle.p2.pokemon[0].boosts.spe).toBe(2);
 
-    // Pokémon Showdown is bugged and doesn't let Transform hit while Flying
+    // Smogon/Bulbapedia is incorrect - Transform does not hit an invulnerable target
     battle.makeChoices('move 2', 'move 2');
 
     // Transform should copy species, types, stats, and boosts but not level or HP
     battle.makeChoices('move 2', 'move 1');
-    // expect(battle.p1.pokemon[0].baseMoveSlots[1].pp).toBe(pp - 1);
     expect(battle.p1.pokemon[0].baseMoveSlots[1].pp).toBe(pp - 2);
 
     expect(battle.p1.pokemon[0].species.name).toBe('Articuno');
@@ -4045,6 +4044,8 @@ describe('Gen 1', () => {
     expect(battle.p1.pokemon[0].level).toBe(50);
     // expect(battle.p1.pokemon[0].modifiedStats).toEqual(battle.p2.pokemon[0].modifiedStats);
     // expect(battle.p1.pokemon[0].storedStats).not.toEqual(battle.p2.pokemon[0].storedStats);
+    expect(battle.p1.pokemon[0].storedStats.spe).toBe(268);
+    expect(battle.p2.pokemon[0].storedStats.spe).toBe(268);
     expect(battle.p1.pokemon[0].storedStats).toEqual(battle.p2.pokemon[0].storedStats);
     expect(battle.p1.pokemon[0].boosts).toEqual(battle.p2.pokemon[0].boosts);
 
@@ -4056,10 +4057,6 @@ describe('Gen 1', () => {
     battle.makeChoices('move 3', 'move 3');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 69);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 35);
-    const spe1 = battle.p1.pokemon[0].storedStats.spe;
-    const spe2 = battle.p2.pokemon[0].storedStats.spe;
-    expect(spe1).toEqual(spe2);
-    expect(spe2).toBe(268);
 
     // Stats get wonky on Pokémon Showdown...
     battle.makeChoices('move 1', 'move 1');

@@ -44,7 +44,6 @@
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jest": "^27.1.0",
     "jest": "^29.1.2",
-    "json-stringify-pretty-compact": "3.0.0",
     "html-minifier": "^4.0.0",
     "minimist": "^1.2.6",
     "mustache": "^4.2.0",
