@@ -52,7 +52,8 @@ export class Lookup {
   private readonly typesByName: {[key in TypeName]: number};
   private readonly species: ID[];
   private readonly moves: ID[];
-  private readonly items: ID[];
+  private readonly itemsByNum: ID[];
+  private readonly itemsByID: {[id: string]: number};
 
   static get(gen: Generation) {
     const lookup = LOOKUPS[gen.num - 1];
@@ -75,9 +76,14 @@ export class Lookup {
       this.moves[move.num - 1] = move.id;
     }
     if (gen.num === 1) {
-      this.items = [];
+      this.itemsByNum = [];
+      this.itemsByID = {};
     } else {
-      this.items = IDS[gen.num - 1 as 1].items;
+      this.itemsByNum = IDS[gen.num - 1 as 1].items;
+      this.itemsByID = {} as {[id: string]: number};
+      for (let i = 0; i < this.itemsByNum.length; i++) {
+        this.itemsByID[this.itemsByNum[i]] = i;
+      }
     }
   }
 
@@ -106,10 +112,10 @@ export class Lookup {
   }
 
   itemByNum(num: number): ID {
-    return this.items[num - 1];
+    return this.itemsByNum[num - 1];
   }
 
   itemByID(id: ID | undefined): number {
-    return id ? this.gen.items.get(id)!.num : 0;
+    return id ? this.itemsByID[id] : 0;
   }
 }

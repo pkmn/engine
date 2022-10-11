@@ -168,3 +168,4 @@ export class Result {
 }
 
 export * from './protocol';
+export {Lookup} from './data';

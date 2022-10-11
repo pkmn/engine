@@ -8,7 +8,6 @@ import {minify} from 'html-minifier';
 import {Dex} from '@pkmn/sim';
 import {Generation, Generations, GenerationNum} from '@pkmn/data';
 
-
 import {Battle, Result, Choice, Log, ParsedLine, Names} from '../pkg';
 import {Lookup, Data, LAYOUT, LE} from '../pkg/data';
 import {STYLES, displayBattle, escapeHTML, SCRIPTS} from '../test/display';
