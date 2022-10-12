@@ -116,6 +116,6 @@ export class Lookup {
   }
 
   itemByID(id: ID | undefined): number {
-    return id ? this.itemsByID[id] : 0;
+    return id ? this.itemsByID[id] + 1 : 0;
   }
 }

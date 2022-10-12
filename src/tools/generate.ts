@@ -628,7 +628,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         values.push(s);
       }
     }
-    for (const type of types.reverse()) {
+    for (const type of types.slice(0).reverse()) {
       if (type === '???') {
         values.unshift('PolkadotBow, // ??? (Normal)');
       } else {
