@@ -22,7 +22,9 @@ pub const Species = enum({{{ Species.type }}}) {
 
     comptime {
         assert(@sizeOf(Species) == {{{ Species.size }}});
-    }{{{ Species.chanceFn }}}
+    }
+
+    pub const size = {{{ Species.num }}};{{{ Species.chanceFn }}}
 
     // @test-only
     pub fn get(id: Species) Data {

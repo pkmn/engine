@@ -58,6 +58,8 @@ pub const Type = enum(u8) {
         assert(@sizeOf(@TypeOf(CHART)) == 324);
     }
 
+    pub const size = 18;
+
     pub inline fn special(self: Type) bool {
         return @enumToInt(self) >= @enumToInt(Type.Fire);
     }

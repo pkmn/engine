@@ -1832,6 +1832,8 @@ pub const Move = enum(u8) {
         assert(@sizeOf(@TypeOf(DATA)) == 660);
     }
 
+    pub const size = 165;
+
     pub inline fn get(id: Move) Data {
         assert(id != .None and id != .SKIP_TURN);
         return DATA[@enumToInt(id) - 1];

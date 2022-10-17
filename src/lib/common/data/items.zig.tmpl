@@ -16,6 +16,8 @@ pub const Item = enum({{{ Item.type }}}) {
         assert(@sizeOf(Item) == {{{ Item.size }}});
     }
 
+    pub const size = {{{ Item.num }}};
+
     pub inline fn boost(item: Item) ?Type {
         assert(item != .None);
         if (item == .PolkadotBow) return .Normal;

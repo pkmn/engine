@@ -24,6 +24,8 @@ pub const Type = enum({{{ Type.type }}}) {
         assert(@sizeOf(@TypeOf(CHART)) == {{{ Type.chartSize }}});
     }
 
+    pub const size = {{{ Type.num }}};
+
     pub inline fn special(self: Type) bool {
         return @enumToInt(self) >= @enumToInt(Type.Fire);
     }

@@ -1086,6 +1086,8 @@ pub const Species = enum(u8) {
         assert(@sizeOf(Species) == 1);
     }
 
+    pub const size = 151;
+
     pub inline fn chance(id: Species) u8 {
         assert(id != .None);
         return CHANCES[@enumToInt(id) - 1];

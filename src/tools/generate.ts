@@ -484,6 +484,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       Move: {
         type: 'u8',
         values: moves.map(m => m.split(' ')[0]).join(',\n    ') + SENTINEL,
+        num: moves.length,
         size: 1,
         Data,
         data: MOVES.join(',\n        '),
@@ -547,6 +548,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       Species: {
         type: 'u8',
         values: species.join(',\n    '),
+        num: species.length,
         size: 1,
         chances,
         Data,
@@ -657,6 +659,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       Item: {
         type: 'u8',
         values: values.join('\n    '),
+        num: values.length,
         size: 1,
         boosts: boosts.length,
         mail: offset.mail,
@@ -745,6 +748,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       Move: {
         type: 'u8',
         values: moves.map(m => m.split(' ')[0]).join(',\n    '),
+        num: moves.length,
         size: 1,
         Data,
         data: MOVES.join(',\n        '),
@@ -799,6 +803,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       Species: {
         type: 'u8',
         values: species.join(',\n    '),
+        num: species.length,
         size: 1,
         Data,
         data: SPECIES.join(',\n        '),

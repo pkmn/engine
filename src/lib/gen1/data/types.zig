@@ -52,6 +52,8 @@ pub const Type = enum(u4) {
         assert(@sizeOf(@TypeOf(CHART)) == 225);
     }
 
+    pub const size = 15;
+
     pub inline fn special(self: Type) bool {
         return @enumToInt(self) >= @enumToInt(Type.Fire);
     }

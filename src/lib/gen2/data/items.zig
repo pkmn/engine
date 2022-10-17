@@ -210,6 +210,8 @@ pub const Item = enum(u8) {
         assert(@sizeOf(Item) == 1);
     }
 
+    pub const size = 195;
+
     pub inline fn boost(item: Item) ?Type {
         assert(item != .None);
         if (item == .PolkadotBow) return .Normal;

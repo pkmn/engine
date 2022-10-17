@@ -1784,6 +1784,8 @@ pub const Species = enum(u8) {
         assert(@sizeOf(Species) == 1);
     }
 
+    pub const size = 251;
+
     // @test-only
     pub fn get(id: Species) Data {
         assert(id != .None);
