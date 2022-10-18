@@ -140,6 +140,7 @@ function filter(raw: string[]) {
 const METHOD = /^ {4}at ((?:\w|\.)+) /;
 const NON_TERMINAL = new Set([
   'FixedRNG.next', 'FixedRNG.randomChance', 'FixedRNG.sample', 'FixedRNG.shuffle',
+  'FixedRNG.locations', // artificial method FixedRNG.next gets folded into by babel-jest
   'Battle.random', 'Battle.randomChance', 'Battle.sample', 'locations',
 ]);
 
