@@ -9,6 +9,9 @@ const data = @import("data.zig");
 
 const assert = std.debug.assert;
 
+// TODO: switch to @min when min Zig version >= 0.10.0
+const minimum = std.math.min;
+
 const expectEqual = std.testing.expectEqual;
 
 const Choice = common.Choice;
@@ -142,7 +145,7 @@ pub const Pokemon = struct {
         for (p.moves) |m, j| {
             pokemon.moves[j].id = m;
             // NB: PP can be at most 61 legally (though can overflow to 63)
-            pokemon.moves[j].pp = @truncate(u8, @minimum(Move.pp(m) / 5 * 8, 61));
+            pokemon.moves[j].pp = @truncate(u8, minimum(Move.pp(m) / 5 * 8, 61));
         }
         if (p.hp) |hp| {
             pokemon.hp = hp;
@@ -188,7 +191,7 @@ pub const Pokemon = struct {
             const pp_ups =
                 if (!opt.cleric and rand.chance(u8, 1, 10)) rand.range(u2, 0, 2 + 1) else 3;
             // NB: PP can be at most 61 legally (though can overflow to 63)
-            const max_pp = @truncate(u8, @minimum(Move.pp(m) / 5 * (5 + @as(u8, pp_ups)), 61));
+            const max_pp = @truncate(u8, minimum(Move.pp(m) / 5 * (5 + @as(u8, pp_ups)), 61));
             ms[i] = .{
                 .id = m,
                 .pp = if (opt.cleric) max_pp else rand.range(u8, 0, max_pp + 1),

@@ -10,6 +10,10 @@ const data = @import("data.zig");
 
 const assert = std.debug.assert;
 
+// TODO: switch to @max & @min when min Zig version >= 0.10.0
+const maximum = std.math.max;
+const minimum = std.math.min;
+
 const expectEqual = std.testing.expectEqual;
 
 const Choice = common.Choice;
@@ -1014,10 +1018,10 @@ fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data) bool {
     chance = if (side.active.volatiles.FocusEnergy)
         chance / 2
     else
-        @minimum(chance * 2, 255);
+        minimum(chance * 2, 255);
 
     chance = if (move.effect == .HighCritical)
-        @minimum(chance * 4, 255)
+        minimum(chance * 4, 255)
     else
         chance / 2;
 
@@ -1061,14 +1065,14 @@ fn calcDamage(
     // zig fmt: on
 
     if (atk > 255 or def > 255) {
-        atk = @maximum((atk / 4) & 255, 1);
+        atk = maximum((atk / 4) & 255, 1);
         // GLITCH: not adjusted to be a min of 1 on cartridge (can lead to division-by-zero freeze)
-        def = @maximum((def / 4) & 255, if (showdown) 1 else 0);
+        def = maximum((def / 4) & 255, if (showdown) 1 else 0);
     }
 
     const lvl = @as(u32, side.stored().level * @as(u2, if (crit) 2 else 1));
 
-    def = @as(u32, if (move.effect == .Explode) @maximum(def / 2, 1) else def);
+    def = @as(u32, if (move.effect == .Explode) maximum(def / 2, 1) else def);
 
     if (def == 0) return false;
 
@@ -1077,9 +1081,9 @@ fn calcDamage(
     d *%= atk;
     d /= def;
     d /= 50;
-    d = @minimum(997, d);
+    d = minimum(997, d);
     // Pokémon Showdown incorrectly clamps damage here between 1 and 997 instead 0 and 997
-    if (showdown) d = @maximum(d, 1);
+    if (showdown) d = maximum(d, 1);
     d += 2;
 
     battle.last_damage = @truncate(u16, d);
@@ -1135,7 +1139,7 @@ fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
     if (!try checkHit(battle, player, move, log)) return null;
 
     battle.last_damage = switch (side.last_selected_move) {
-        .SuperFang => @maximum(battle.foe(player).active.stats.hp / 2, 1),
+        .SuperFang => maximum(battle.foe(player).active.stats.hp / 2, 1),
         .SeismicToss, .NightShade => side.stored().level,
         .SonicBoom => 20,
         .DragonRage => 40,
@@ -1336,7 +1340,7 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool, mist
         accuracy = accuracy * boost[0] / boost[1];
         boost = BOOSTS[@intCast(u4, @as(i8, -foe.active.boosts.evasion) + 6)];
         accuracy = accuracy * boost[0] / boost[1];
-        accuracy = @minimum(255, @maximum(1, accuracy));
+        accuracy = minimum(255, maximum(1, accuracy));
 
         state.* = accuracy;
 
@@ -1422,20 +1426,20 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
 
     const brn = Status.is(stored.status, .BRN);
     if (brn or Status.is(stored.status, .PSN)) {
-        var damage = @maximum(stored.stats.hp / 16, 1);
+        var damage = maximum(stored.stats.hp / 16, 1);
 
         if (volatiles.Toxic) {
             volatiles.toxic += 1;
             damage *= volatiles.toxic;
         }
 
-        stored.hp -= @minimum(damage, stored.hp);
+        stored.hp -= minimum(damage, stored.hp);
         // Pokémon Showdown uses damageOf here but its not relevant in Generation I
         try log.damage(ident, stored, if (brn) Damage.Burn else Damage.Poison);
     }
 
     if (volatiles.LeechSeed) {
-        var damage = @maximum(stored.stats.hp / 16, 1);
+        var damage = maximum(stored.stats.hp / 16, 1);
 
         // GLITCH: Leech Seed + Toxic glitch
         if (volatiles.Toxic) {
@@ -1443,7 +1447,7 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
             damage *= volatiles.toxic;
         }
 
-        stored.hp -= @minimum(damage, stored.hp);
+        stored.hp -= minimum(damage, stored.hp);
 
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
@@ -1454,7 +1458,7 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
 
         const before = foe_stored.hp;
         // Uncapped damage is added back to the foe
-        foe_stored.hp = @minimum(foe_stored.hp + damage, foe_stored.stats.hp);
+        foe_stored.hp = minimum(foe_stored.hp + damage, foe_stored.stats.hp);
         // Pokémon Showdown uses the less specific heal here instead of drain... because reasons?
         if (foe_stored.hp > before) try log.heal(foe_ident, foe_stored, .Silent);
     }
@@ -1623,7 +1627,7 @@ pub const Effects = struct {
 
         if (showdown) battle.rng.advance(1);
         foe_stored.status = Status.init(.BRN);
-        foe.active.stats.atk = @maximum(foe.active.stats.atk / 2, 1);
+        foe.active.stats.atk = maximum(foe.active.stats.atk / 2, 1);
 
         try log.status(battle.active(player.foe()), foe_stored.status, .None);
     }
@@ -1721,13 +1725,13 @@ pub const Effects = struct {
         var side = battle.side(player);
         var stored = side.stored();
 
-        const drain = @maximum(battle.last_damage / 2, 1);
+        const drain = maximum(battle.last_damage / 2, 1);
         // Pokémon Showdown doesn't update `Battle.lastDamage` here which only matters for the
         // self-Counter glitch (Grass/Bug move damage would not be Counter-able otherwise)
         if (!showdown) battle.last_damage = drain;
 
         if (stored.hp == stored.stats.hp) return;
-        stored.hp = @minimum(stored.stats.hp, stored.hp + drain);
+        stored.hp = minimum(stored.stats.hp, stored.hp + drain);
 
         try log.drain(battle.active(player), stored, battle.active(player.foe()));
     }
@@ -1856,7 +1860,7 @@ pub const Effects = struct {
             try log.statusFrom(ident, stored.status, Move.Rest);
             stored.hp = stored.stats.hp;
         } else {
-            stored.hp = @minimum(stored.stats.hp, stored.hp + (stored.stats.hp / 2));
+            stored.hp = minimum(stored.stats.hp, stored.hp + (stored.stats.hp / 2));
         }
         try log.heal(ident, stored, if (rest) Heal.Silent else Heal.None);
     }
@@ -1974,7 +1978,7 @@ pub const Effects = struct {
 
         if (showdown) battle.rng.advance(1);
         foe_stored.status = Status.init(.PAR);
-        foe.active.stats.spe = @maximum(foe.active.stats.spe / 4, 1);
+        foe.active.stats.spe = maximum(foe.active.stats.spe / 4, 1);
 
         try log.status(foe_ident, foe_stored.status, .None);
     }
@@ -1999,7 +2003,7 @@ pub const Effects = struct {
 
         if (showdown) battle.rng.advance(1);
         foe_stored.status = Status.init(.PAR);
-        foe.active.stats.spe = @maximum(foe.active.stats.spe / 4, 1);
+        foe.active.stats.spe = maximum(foe.active.stats.spe / 4, 1);
 
         try log.status(battle.active(player.foe()), foe_stored.status, .None);
     }
@@ -2057,9 +2061,9 @@ pub const Effects = struct {
         var side = battle.side(player);
         var stored = side.stored();
 
-        const damage = @intCast(i16, @maximum(battle.last_damage /
+        const damage = @intCast(i16, maximum(battle.last_damage /
             @as(u8, if (side.last_selected_move == .Struggle) 2 else 4), 1));
-        stored.hp = @intCast(u16, @maximum(@intCast(i16, stored.hp) - damage, 0));
+        stored.hp = @intCast(u16, maximum(@intCast(i16, stored.hp) - damage, 0));
 
         try log.damageOf(battle.active(player), stored, .RecoilOf, battle.active(player.foe()));
     }
@@ -2221,62 +2225,62 @@ pub const Effects = struct {
                 assert(boosts.atk >= -6 and boosts.atk <= 6);
                 if (boosts.atk == 6) return try log.fail(ident, .None);
                 const n: u2 = if (move.effect == .AttackUp2) 2 else 1;
-                boosts.atk = @truncate(i4, @minimum(6, @as(i8, boosts.atk) + n));
+                boosts.atk = @truncate(i4, minimum(6, @as(i8, boosts.atk) + n));
                 if (!showdown and stats.atk == MAX_STAT_VALUE) {
                     boosts.atk -= 1;
                     return try log.fail(ident, .None);
                 }
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.atk) + 6)];
                 const stat = unmodifiedStats(battle, player).atk;
-                stats.atk = @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
+                stats.atk = minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
                 try log.boost(ident, if (move.effect == .Rage) .Rage else .Attack, n);
             },
             .DefenseUp1, .DefenseUp2 => {
                 assert(boosts.def >= -6 and boosts.def <= 6);
                 if (boosts.def == 6) return try log.fail(ident, .None);
                 const n: u2 = if (move.effect == .DefenseUp2) 2 else 1;
-                boosts.def = @truncate(i4, @minimum(6, @as(i8, boosts.def) + n));
+                boosts.def = @truncate(i4, minimum(6, @as(i8, boosts.def) + n));
                 if (!showdown and stats.def == MAX_STAT_VALUE) {
                     boosts.def -= 1;
                     return try log.fail(ident, .None);
                 }
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.def) + 6)];
                 const stat = unmodifiedStats(battle, player).def;
-                stats.def = @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
+                stats.def = minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
                 try log.boost(ident, .Defense, n);
             },
             .SpeedUp2 => {
                 assert(boosts.spe >= -6 and boosts.spe <= 6);
                 if (boosts.spe == 6) return try log.fail(ident, .None);
-                boosts.spe = @truncate(i4, @minimum(6, @as(i8, boosts.spe) + 2));
+                boosts.spe = @truncate(i4, minimum(6, @as(i8, boosts.spe) + 2));
                 if (!showdown and stats.spe == MAX_STAT_VALUE) {
                     boosts.spe -= 1;
                     return try log.fail(ident, .None);
                 }
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.spe) + 6)];
                 const stat = unmodifiedStats(battle, player).spe;
-                stats.spe = @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
+                stats.spe = minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
                 try log.boost(ident, .Speed, 2);
             },
             .SpecialUp1, .SpecialUp2 => {
                 assert(boosts.spc >= -6 and boosts.spc <= 6);
                 if (boosts.spc == 6) return try log.fail(ident, .None);
                 const n: u2 = if (move.effect == .SpecialUp2) 2 else 1;
-                boosts.spc = @truncate(i4, @minimum(6, @as(i8, boosts.spc) + n));
+                boosts.spc = @truncate(i4, minimum(6, @as(i8, boosts.spc) + n));
                 if (!showdown and stats.spc == MAX_STAT_VALUE) {
                     boosts.spc -= 1;
                     return try log.fail(ident, .None);
                 }
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.spc) + 6)];
                 const stat = unmodifiedStats(battle, player).spc;
-                stats.spc = @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
+                stats.spc = minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
                 try log.boost(ident, .SpecialAttack, n);
                 try log.boost(ident, .SpecialDefense, n);
             },
             .EvasionUp1 => {
                 assert(boosts.evasion >= -6 and boosts.evasion <= 6);
                 if (boosts.evasion == 6) return try log.fail(ident, .None);
-                boosts.evasion = @truncate(i4, @minimum(6, @as(i8, boosts.evasion) + 1));
+                boosts.evasion = @truncate(i4, minimum(6, @as(i8, boosts.evasion) + 1));
                 try log.boost(ident, .Evasion, 1);
             },
             else => unreachable,
@@ -2311,7 +2315,7 @@ pub const Effects = struct {
             .AttackDown1, .AttackDownChance => {
                 assert(boosts.atk >= -6 and boosts.atk <= 6);
                 if (boosts.atk == -6) return try log.fail(foe_ident, .None);
-                boosts.atk = @truncate(i4, @maximum(-6, @as(i8, boosts.atk) - 1));
+                boosts.atk = @truncate(i4, maximum(-6, @as(i8, boosts.atk) - 1));
                 if (!showdown and stats.atk == 1) {
                     boosts.atk += 1;
                     return try log.fail(foe_ident, .None);
@@ -2319,9 +2323,9 @@ pub const Effects = struct {
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.atk) + 6)];
                 const stat = unmodifiedStats(battle, player.foe()).atk;
                 if (showdown) {
-                    stats.atk = @maximum(1, @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]));
+                    stats.atk = maximum(1, minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]));
                 } else {
-                    stats.atk = @maximum(1, stat * mod[0] / mod[1]);
+                    stats.atk = maximum(1, stat * mod[0] / mod[1]);
                 }
                 try log.unboost(foe_ident, .Attack, 1);
             },
@@ -2329,7 +2333,7 @@ pub const Effects = struct {
                 assert(boosts.def >= -6 and boosts.def <= 6);
                 if (boosts.def == -6) return try log.fail(foe_ident, .None);
                 const n: u2 = if (move.effect == .DefenseDown2) 2 else 1;
-                boosts.def = @truncate(i4, @maximum(-6, @as(i8, boosts.def) - n));
+                boosts.def = @truncate(i4, maximum(-6, @as(i8, boosts.def) - n));
                 if (!showdown and stats.def == 1) {
                     boosts.def += 1;
                     return try log.fail(foe_ident, .None);
@@ -2337,16 +2341,16 @@ pub const Effects = struct {
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.def) + 6)];
                 const stat = unmodifiedStats(battle, player.foe()).def;
                 if (showdown) {
-                    stats.def = @maximum(1, @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]));
+                    stats.def = maximum(1, minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]));
                 } else {
-                    stats.def = @maximum(1, stat * mod[0] / mod[1]);
+                    stats.def = maximum(1, stat * mod[0] / mod[1]);
                 }
                 try log.unboost(foe_ident, .Defense, n);
             },
             .SpeedDown1, .SpeedDownChance => {
                 assert(boosts.spe >= -6 and boosts.spe <= 6);
                 if (boosts.spe == -6) return try log.fail(foe_ident, .None);
-                boosts.spe = @truncate(i4, @maximum(-6, @as(i8, boosts.spe) - 1));
+                boosts.spe = @truncate(i4, maximum(-6, @as(i8, boosts.spe) - 1));
                 if (!showdown and stats.spe == 1) {
                     boosts.spe += 1;
                     return try log.fail(foe_ident, .None);
@@ -2354,9 +2358,9 @@ pub const Effects = struct {
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.spe) + 6)];
                 const stat = unmodifiedStats(battle, player.foe()).spe;
                 if (showdown) {
-                    stats.spe = @maximum(1, @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]));
+                    stats.spe = maximum(1, minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]));
                 } else {
-                    stats.spe = @maximum(1, stat * mod[0] / mod[1]);
+                    stats.spe = maximum(1, stat * mod[0] / mod[1]);
                 }
                 try log.unboost(foe_ident, .Speed, 1);
                 assert(boosts.spe >= -6);
@@ -2364,7 +2368,7 @@ pub const Effects = struct {
             .SpecialDownChance => {
                 assert(boosts.spc >= -6 and boosts.spc <= 6);
                 if (boosts.spc == -6) return try log.fail(foe_ident, .None);
-                boosts.spc = @truncate(i4, @maximum(-6, @as(i8, boosts.spc) - 1));
+                boosts.spc = @truncate(i4, maximum(-6, @as(i8, boosts.spc) - 1));
                 if (!showdown and stats.spc == 1) {
                     boosts.spc += 1;
                     return try log.fail(foe_ident, .None);
@@ -2372,9 +2376,9 @@ pub const Effects = struct {
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.spc) + 6)];
                 const stat = unmodifiedStats(battle, player.foe()).spc;
                 if (showdown) {
-                    stats.spc = @maximum(1, @minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]));
+                    stats.spc = maximum(1, minimum(MAX_STAT_VALUE, stat * mod[0] / mod[1]));
                 } else {
-                    stats.spc = @maximum(1, stat * mod[0] / mod[1]);
+                    stats.spc = maximum(1, stat * mod[0] / mod[1]);
                 }
                 try log.unboost(foe_ident, .SpecialAttack, 1);
                 try log.unboost(foe_ident, .SpecialDefense, 1);
@@ -2382,7 +2386,7 @@ pub const Effects = struct {
             .AccuracyDown1 => {
                 assert(boosts.accuracy >= -6 and boosts.accuracy <= 6);
                 if (boosts.accuracy == -6) return try log.fail(foe_ident, .None);
-                boosts.accuracy = @truncate(i4, @maximum(-6, @as(i8, boosts.accuracy) - 1));
+                boosts.accuracy = @truncate(i4, maximum(-6, @as(i8, boosts.accuracy) - 1));
                 try log.unboost(foe_ident, .Accuracy, 1);
             },
             else => unreachable,
@@ -2402,9 +2406,9 @@ fn unmodifiedStats(battle: anytype, who: Player) *Stats(u16) {
 
 fn statusModify(status: u8, stats: *Stats(u16)) void {
     if (Status.is(status, .PAR)) {
-        stats.spe = @maximum(stats.spe / 4, 1);
+        stats.spe = maximum(stats.spe / 4, 1);
     } else if (Status.is(status, .BRN)) {
-        stats.atk = @maximum(stats.atk / 2, 1);
+        stats.atk = maximum(stats.atk / 2, 1);
     }
 }
 

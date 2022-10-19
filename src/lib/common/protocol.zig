@@ -7,6 +7,9 @@ const options = @import("./options.zig");
 const assert = std.debug.assert;
 const print = std.debug.print;
 
+// TODO: switch to @min when min Zig version >= 0.10.0
+const minimum = std.math.min;
+
 const trace = options.trace;
 
 const Player = data.Player;
@@ -821,7 +824,7 @@ pub fn expectLog(formatter: Formatter, expected: []const u8, actual: []const u8)
 }
 
 fn expectEqualBytes(expected: []const u8, actual: []const u8) !void {
-    const len = @minimum(expected.len, actual.len);
+    const len = minimum(expected.len, actual.len);
     var i: usize = 0;
     while (i < len) : (i += 1) {
         if (expected[i] != actual[i]) {
