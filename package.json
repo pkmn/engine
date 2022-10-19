@@ -26,7 +26,7 @@
     "src/bin/install-pkmn-engine"
   ],
   "dependencies": {
-    "@pkmn/data": "^0.5.28",
+    "@pkmn/data": "^0.6.1",
     "@pkmn/protocol": "^0.4.3"
   },
   "devDependencies": {
@@ -34,12 +34,12 @@
     "@babel/preset-typescript": "^7.18.6",
     "@pkmn/eslint-config": "^2.11.0",
     "@pkmn/img": "^0.1.20",
-    "@pkmn/sim": "^0.5.28",
+    "@pkmn/sim": "^0.6.1",
     "@types/html-minifier": "^4.0.2",
     "@types/jest": "^29.2.0",
     "@types/minimist": "^1.2.2",
     "@types/mustache": "^4.2.1",
-    "@types/node": "^18.11.0",
+    "@types/node": "^18.11.2",
     "@typescript-eslint/eslint-plugin": "^5.40.1",
     "@typescript-eslint/parser": "^5.40.1",
     "eslint": "^8.25.0",

@@ -1,5 +1,5 @@
 // TODO: separate into test/integration script that can be run by CI and takes a duration param
-import {Generations, Generation, GenerationNum} from '@pkmn/data';
+import {Generations, Generation} from '@pkmn/data';
 import {Dex, PRNG, PRNGSeed, BattleStreams, ID} from '@pkmn/sim';
 import {
   AIOptions,
@@ -128,7 +128,7 @@ describe('integration', () => {
     const opts: ExhaustiveRunnerOptions =
       {format: '', prng: [1, 2, 3, 4], runner: o => new Runner(o).run()};
     for (const format of FORMATS) {
-      const gen = new Generations(Dex as any).get(+format.charAt(3) as GenerationNum);
+      const gen = new Generations(Dex as any).get(format.charAt(3));
       opts.format = format;
       opts.possible = possibilities(gen);
       expect(await (new ExhaustiveRunner(opts).run())).toBe(0);

@@ -821,7 +821,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
   if (mkdir(CACHE)) UPDATE = true;
 
   for (const n in GEN) {
-    const gen = gens.get(+n as GenerationNum);
+    const gen = gens.get(n);
 
     const out = path.join(ROOT, 'src', 'lib', `gen${gen.num}`, 'data');
     const cache = path.join(CACHE, `gen${gen.num}`);

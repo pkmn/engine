@@ -6,7 +6,7 @@ import {promisify} from 'util';
 import {minify} from 'html-minifier';
 
 import {Dex} from '@pkmn/sim';
-import {Generation, Generations, GenerationNum} from '@pkmn/data';
+import {Generation, Generations} from '@pkmn/data';
 
 import {Battle, Result, Choice, Log, ParsedLine, Names} from '../pkg';
 import {Lookup, Data, LAYOUT, LE} from '../pkg/data';
@@ -87,7 +87,7 @@ class SpeciesNames implements Names {
   const showdown = mode === 'showdown';
 
   const gens = new Generations(Dex as any);
-  const gen = gens.get(+process.argv[3] as GenerationNum);
+  const gen = gens.get(process.argv[3]);
   const lookup = Lookup.get(gen);
   const size = LAYOUT[gen.num - 1].sizes.Battle;
   const names = new SpeciesNames(gen);

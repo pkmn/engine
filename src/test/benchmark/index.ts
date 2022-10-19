@@ -2,7 +2,7 @@ import 'source-map-support/register';
 
 import {execFileSync} from 'child_process';
 
-import {GenerationNum, Generations, PokemonSet} from '@pkmn/data';
+import {Generations, PokemonSet} from '@pkmn/data';
 import {
   Battle,
   BattleStreams,
@@ -105,7 +105,7 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
   'BattleStream': {
     warmup: true,
     async run(format, prng, battles) {
-      const gen = GENS.get(+format[3] as GenerationNum);
+      const gen = GENS.get(format[3]);
       const newAI = (
         playerStream: Streams.ObjectReadWriteStream<string>,
         battleStream: BattleStreams.BattleStream,
@@ -155,7 +155,7 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
   'DirectBattle': {
     warmup: true,
     run(format, prng, battles) {
-      const gen = GENS.get(+format[3] as GenerationNum);
+      const gen = GENS.get(format[3]);
 
       let choices: (battle: Battle, id: SideID) => string[];
       switch (gen.num) {
