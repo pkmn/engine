@@ -14,8 +14,8 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     it('Lookup.species', () => {
-      expect(lookup.specieByID('gengar' as ID)).toBe(94);
-      expect(lookup.specieByNum(151)).toBe('mew');
+      expect(lookup.speciesByID('gengar' as ID)).toBe(94);
+      expect(lookup.speciesByNum(151)).toBe('mew');
     });
 
     it('Lookup.move', () => {

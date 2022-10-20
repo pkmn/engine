@@ -87,6 +87,15 @@ export class Lookup {
     }
   }
 
+  get sizes() {
+    return {
+      types: this.typesByNum.length,
+      species: this.species.length,
+      moves: this.moves.length,
+      items: this.itemsByNum.length,
+    };
+  }
+
   typeByNum(num: number): TypeName {
     return this.typesByNum[num];
   }
@@ -95,11 +104,11 @@ export class Lookup {
     return this.typesByName[name];
   }
 
-  specieByNum(num: number): ID {
+  speciesByNum(num: number): ID {
     return this.species[num - 1];
   }
 
-  specieByID(id: ID | undefined): number {
+  speciesByID(id: ID | undefined): number {
     return id ? this.gen.species.get(id)!.num : 0;
   }
 

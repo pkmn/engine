@@ -467,7 +467,7 @@ export class Pokemon implements Gen1.Pokemon {
     if (!this.active) return this.stored.species;
 
     const off = this.offset.active + OFFSETS.ActivePokemon.species;
-    return this.lookup.specieByNum(this.data.getUint8(off));
+    return this.lookup.speciesByNum(this.data.getUint8(off));
   }
 
   get types(): readonly [TypeName, TypeName] {
@@ -674,7 +674,7 @@ export class Pokemon implements Gen1.Pokemon {
     data.setUint8(off++, encodeSigned(boosts.spe) | (encodeSigned(boosts.spa) << 4));
     data.setUint8(off++, encodeSigned(boosts.accuracy) | (encodeSigned(boosts.evasion) << 4));
 
-    data.setUint8(offset + OFFSETS.ActivePokemon.species, lookup.specieByID(pokemon.species));
+    data.setUint8(offset + OFFSETS.ActivePokemon.species, lookup.speciesByID(pokemon.species));
     data.setUint8(offset + OFFSETS.ActivePokemon.types, encodeTypes(lookup, pokemon.types));
   }
 }
@@ -725,7 +725,7 @@ export class StoredPokemon {
   }
 
   get species(): ID {
-    return this.lookup.specieByNum(this.data.getUint8(this.offset + OFFSETS.Pokemon.species));
+    return this.lookup.speciesByNum(this.data.getUint8(this.offset + OFFSETS.Pokemon.species));
   }
 
   get types(): readonly [TypeName, TypeName] {

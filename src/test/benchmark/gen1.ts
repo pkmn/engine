@@ -33,7 +33,7 @@ const Player = new class {
     const team: Partial<PokemonSet>[] = [];
     const n = prng.randomChance(1, 100) ? prng.next(1, 5 + 1) : 6;
     for (let i = 0; i < n; i++) {
-      const species = lookup.specieByNum(prng.next(1, 151 + 1));
+      const species = lookup.speciesByNum(prng.next(1, 151 + 1));
       const level = prng.randomChance(1, 20) ? prng.next(1, 99 + 1) : 100;
 
       const ivs = {} as StatsTable;

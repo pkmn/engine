@@ -402,7 +402,7 @@ function decodeDetails(
   gen: Generation,
   lookup: Lookup,
 ): Protocol.PokemonDetails {
-  const species = gen.species.get(lookup.specieByNum(data.getUint8(offset++)))!.name;
+  const species = gen.species.get(lookup.speciesByNum(data.getUint8(offset++)))!.name;
   const level = data.getUint8(offset);
   return (level === 100 ? species : `${species}, L${level}`) as Protocol.PokemonDetails;
 }
