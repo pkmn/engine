@@ -8,6 +8,16 @@ for (const gen of new Generations(Dex as any)) {
 
   const lookup = Lookup.get(gen);
   describe(`Gen ${gen.num}`, () => {
+    it('Lookup.sizes', () => {
+      const i = gen.num - 1;
+      expect(lookup.sizes).toEqual({
+        types: [15, 18][i],
+        species: [151, 251][i],
+        moves: [165, 251][i],
+        items: [0, 195][i],
+      });
+    });
+
     it('Lookup.type', () => {
       expect(lookup.typeByName('Rock')).toBe(5);
       expect(lookup.typeByNum(14)).toBe(gen.num === 1 ? 'Dragon' : 'Psychic');
