@@ -3,7 +3,6 @@ import {Sprites, Icons} from '@pkmn/img';
 
 import {Battle, Pokemon, Side} from '../pkg';
 
-
 const POSITIONS = ['a', 'b', 'c', 'd', 'e', 'f'];
 const VOLATILES: {[id in keyof Pokemon['volatiles']]: [string, 'good' | 'bad' | 'neutral']} = {
   bide: ['Bide', 'good'],
