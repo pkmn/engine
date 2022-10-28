@@ -178,7 +178,7 @@ pub fn build(b: *Builder) !void {
 
 fn tool(
     b: *Builder,
-    pkgs: []Pkg,
+    pkgs: []const Pkg,
     path: []const u8,
     showdown: bool,
     strip: bool,
