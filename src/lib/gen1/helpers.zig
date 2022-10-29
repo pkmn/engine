@@ -41,8 +41,9 @@ pub const Battle = struct {
         p1: []const Pokemon,
         p2: []const Pokemon,
     ) data.Battle(data.PRNG) {
+        var rand = PSRNG.init(seed);
         return .{
-            .rng = prng(&PSRNG.init(seed)),
+            .rng = prng(&rand),
             .sides = .{ Side.init(p1), Side.init(p2) },
         };
     }

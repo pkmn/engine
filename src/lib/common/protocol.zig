@@ -555,7 +555,7 @@ pub const Kind = enum { Move, Species, Type, Status };
 pub const Formatter = fn (Kind, u8) []const u8;
 
 // @test-only
-pub fn format(formatter: Formatter, a: []const u8, b: ?[]const u8, color: bool) void {
+pub fn format(comptime formatter: Formatter, a: []const u8, b: ?[]const u8, color: bool) void {
     print("\n", .{});
 
     var i: usize = 0;
@@ -801,7 +801,7 @@ fn printc(
 }
 
 // @test-only
-pub fn expectLog(formatter: Formatter, expected: []const u8, actual: []const u8) !void {
+pub fn expectLog(comptime formatter: Formatter, expected: []const u8, actual: []const u8) !void {
     if (!trace) return;
     const color = color: {
         if (std.process.hasEnvVarConstant("ZIG_DEBUG_COLOR")) {

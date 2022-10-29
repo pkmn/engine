@@ -157,8 +157,11 @@ test "switching (order)" {
     var expected_buf: [22]u8 = undefined;
     var actual_buf: [22]u8 = undefined;
 
-    var expected = FixedLog{ .writer = stream(&expected_buf).writer() };
-    var actual = FixedLog{ .writer = stream(&actual_buf).writer() };
+    var expected_stream = stream(&expected_buf);
+    var actual_stream = stream(&actual_buf);
+
+    var expected = FixedLog{ .writer = expected_stream.writer() };
+    var actual = FixedLog{ .writer = actual_stream.writer() };
 
     try expected.switched(P1.ident(3), p1.pokemon[2]);
     try expected.switched(P2.ident(2), p2.pokemon[1]);
@@ -844,8 +847,11 @@ test "end turn (turn limit)" {
     var expected_buf: [size]u8 = undefined;
     var actual_buf: [size]u8 = undefined;
 
-    var expected = FixedLog{ .writer = stream(&expected_buf).writer() };
-    var actual = FixedLog{ .writer = stream(&actual_buf).writer() };
+    var expected_stream = stream(&expected_buf);
+    var actual_stream = stream(&actual_buf);
+
+    var expected = FixedLog{ .writer = expected_stream.writer() };
+    var actual = FixedLog{ .writer = actual_stream.writer() };
 
     const slot = if (showdown) 2 else 1;
     try expected.switched(P1.ident(slot), t.expected.p1.get(slot));
@@ -8226,8 +8232,11 @@ fn Test(comptime rolls: anytype) type {
             var expected_buf: [22]u8 = undefined;
             var actual_buf: [22]u8 = undefined;
 
-            var expected = FixedLog{ .writer = stream(&expected_buf).writer() };
-            var actual = FixedLog{ .writer = stream(&actual_buf).writer() };
+            var expected_stream = stream(&expected_buf);
+            var actual_stream = stream(&actual_buf);
+
+            var expected = FixedLog{ .writer = expected_stream.writer() };
+            var actual = FixedLog{ .writer = actual_stream.writer() };
 
             try expected.switched(P1.ident(1), self.actual.p1.get(1));
             try expected.switched(P2.ident(1), self.actual.p2.get(1));
