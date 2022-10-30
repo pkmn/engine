@@ -25,7 +25,6 @@ export namespace Gen1 {
     prng: readonly number[];
   }
 
-  // TODO: rename to active/team/pokemon?
   export interface Side {
     active: Pokemon | undefined;
     pokemon: Iterable<Pokemon>;
