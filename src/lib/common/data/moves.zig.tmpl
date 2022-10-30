@@ -64,8 +64,5 @@ pub const Move = enum({{{ Move.type }}}) {
 
     pub inline fn frames(id: Move, event: Event) u8 {
         {{{ Move.frames }}}
-    }
-
-    // @test-only
-    {{{ Move.ppFn }}}
+    }{{{ Move.ppFn }}}
 };

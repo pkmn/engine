@@ -8119,8 +8119,11 @@ test "MAX_LOGS" {
     var expected_buf: [data.MAX_LOGS]u8 = undefined;
     var actual_buf: [data.MAX_LOGS]u8 = undefined;
 
-    var expected = FixedLog{ .writer = stream(&expected_buf).writer() };
-    var actual = FixedLog{ .writer = stream(&actual_buf).writer() };
+    var expected_stream = stream(&expected_buf);
+    var actual_stream = stream(&actual_buf);
+
+    var expected = FixedLog{ .writer = expected_stream.writer() };
+    var actual = FixedLog{ .writer = actual_stream.writer() };
 
     try expected.activate(P1.ident(1), .Confusion);
     try expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);

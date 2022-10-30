@@ -465,7 +465,9 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const PP = [_]u8{
         ${PP.join('\n        ')},
     };\n`;
-    const ppFn = `pub fn pp(id: Move) u8 {
+    const ppFn = `\n
+    // @test-only
+    pub fn pp(id: Move) u8 {
         assert(id != .None);
         return PP[@enumToInt(id) - 1];
     }`;
@@ -689,7 +691,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       const [name, effect] = m.split(' ');
       if (effect !== 'None') EFFECTS.add(effect);
       const move = gen.moves.get(name)!;
-      const pp = move.pp === 1 ? '0, // = 1' : `${move.pp / 5}, // * 5 = ${move.pp}`;
       const chance = move.secondary?.chance
         ? `${move.secondary.chance / 10}, // * 10 = ${move.secondary.chance}`
         : '';
@@ -698,9 +699,9 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         '        .{\n' +
         `            .effect = .${effect},\n` +
         `            .bp = ${move.basePower},\n` +
-        `            .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
-        `            .pp = ${pp}\n` +
-        `            .acc = ${acc / 5 - 6}, // ${acc}%\n` +
+        `            .type = .${move.type === '???' ? '@"???"' : move.type},\n` +
+        `            .pp = ${move.pp},\n` +
+        `            .accuracy = ${acc},\n` +
         `            .target = .${TARGETS[move.target]},\n` +
         (chance ? `            .chance = ${chance}\n` : '') +
         '        }');
@@ -709,17 +710,14 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         effect: Effect,
         bp: u8,
         type: Type,
-        pp: u4, // pp / 5
-        acc: u4, // accuracy / 5 - 6
+        pp: u8,
+        accuracy: u8,
         target: Target,
-        chance: u4 = 0, // chance / 10
+        chance: u8 = 0,
+        _: u8 = 0,
 
         comptime {
-            assert(@sizeOf(Data) == 5);
-        }
-
-        pub inline fn accuracy(self: Data) u8 {
-            return (@as(u8, self.acc) + 6) * 5;
+            assert(@sizeOf(Data) == 8);
         }
     };`;
 
@@ -730,10 +728,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         comptime {
             assert(@sizeOf(Effect) == 1);
         }\n` + '    };\n';
-
-    const ppFn = `pub fn pp(id: Move) u8 {
-        return Move.get(id).pp * 5;
-    }`;
 
     const frames = `return @as(u8, @boolToInt(switch (event) {
             .resolve => switch (id) {
@@ -752,11 +746,10 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         size: 1,
         Data,
         data: MOVES.join(',\n        '),
-        dataSize: MOVES.length * 5,
+        dataSize: MOVES.length * 8,
         assert: 'assert(id != .None);',
         Effect,
         frames,
-        ppFn,
       },
     });
 
