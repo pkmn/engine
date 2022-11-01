@@ -1,4 +1,4 @@
-This folder contains miscellaneous scripts and tools useful for working on the pkmn engine:
+This directory contains miscellaneous scripts and tools useful for working on the pkmn engine:
 
 - [`fuzz.ts`](fuzz.ts): Runs the [fuzz test](../../docs/TESTING.md#Fuzz) with the correct flags to
   allow for easily debugging the binary output produced in the event of a crash crash via a [debug
