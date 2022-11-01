@@ -901,39 +901,36 @@ describe('Gen 1', () => {
     const no_proc = {key: HIT.key, value: proc.value + 1};
 
     const battle = startBattle([
-      SRF_RES, HIT, CRIT, MAX_DMG, proc,
-      SRF_RES, HIT, NO_CRIT, MIN_DMG, proc, SS_MOD, no_proc,
-      SRF_RES, HIT, NO_CRIT, MIN_DMG, no_proc, proc, SS_MOD,
-      SRF_RES, HIT, NO_CRIT, MIN_DMG, proc, proc,
+      SRF_RES, HIT, CRIT, MAX_DMG,
+      SRF_RES, HIT, NO_CRIT, MIN_DMG, no_proc,
+      SRF_RES, HIT, NO_CRIT, MIN_DMG, proc, SS_MOD,
+      SRF_RES, HIT, NO_CRIT, MIN_DMG, proc,
     ], [
       {species: 'Beedrill', evs, moves: ['Twineedle']},
     ], [
       {species: 'Voltorb', evs, moves: ['Substitute', 'Teleport']},
-      {species: 'Electrode', evs, moves: ['Explosion']},
       {species: 'Weezing', evs, moves: ['Explosion']},
     ]);
 
     let voltorb = battle.p2.pokemon[0].hp;
-    const electrode = battle.p2.pokemon[1].hp;
-    const weezing = battle.p2.pokemon[2].hp;
+    const weezing = battle.p2.pokemon[1].hp;
 
     // Breaking a target's Substitute ends the move
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p2.pokemon[0].hp).toBe(voltorb -= 70);
     expect(battle.p2.pokemon[0].status).toBe('');
 
-    // On Pokémon Showdown the first hit can poison the tatget
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(voltorb -= (36 * 2));
+    expect(battle.p2.pokemon[0].status).toBe('');
+
+    // The second hit can poison the target
     battle.makeChoices('move 1', 'move 2');
     expect(battle.p2.pokemon[0].hp).toBe(voltorb - (36 * 2));
     expect(battle.p2.pokemon[0].status).toBe('psn');
 
-    // The second hit can always poison the target
-    battle.makeChoices('move 1', 'switch 2');
-    expect(battle.p2.pokemon[0].hp).toBe(electrode - (30 * 2));
-    expect(battle.p2.pokemon[0].status).toBe('psn');
-
     // Poison types cannot be poisoned
-    battle.makeChoices('move 1', 'switch 3');
+    battle.makeChoices('move 1', 'switch 2');
     expect(battle.p2.pokemon[0].hp).toBe(weezing - (45 * 2));
     expect(battle.p2.pokemon[0].status).toBe('');
 
@@ -949,16 +946,15 @@ describe('Gen 1', () => {
       '|move|p2a: Voltorb|Teleport|p2a: Voltorb',
       '|move|p1a: Beedrill|Twineedle|p2a: Voltorb',
       '|-damage|p2a: Voltorb|177/283',
-      '|-status|p2a: Voltorb|psn',
-      '|-damage|p2a: Voltorb|141/283 psn',
+      '|-damage|p2a: Voltorb|141/283',
       '|-hitcount|p2a: Voltorb|2',
       '|turn|3',
-      '|switch|p2a: Electrode|Electrode|323/323',
-      '|move|p1a: Beedrill|Twineedle|p2a: Electrode',
-      '|-damage|p2a: Electrode|293/323',
-      '|-damage|p2a: Electrode|263/323',
-      '|-status|p2a: Electrode|psn',
-      '|-hitcount|p2a: Electrode|2',
+      '|move|p2a: Voltorb|Teleport|p2a: Voltorb',
+      '|move|p1a: Beedrill|Twineedle|p2a: Voltorb',
+      '|-damage|p2a: Voltorb|105/283',
+      '|-damage|p2a: Voltorb|69/283',
+      '|-status|p2a: Voltorb|psn',
+      '|-hitcount|p2a: Voltorb|2',
       '|turn|4',
       '|switch|p2a: Weezing|Weezing|333/333',
       '|move|p1a: Beedrill|Twineedle|p2a: Weezing',

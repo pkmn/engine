@@ -950,10 +950,6 @@ fn doMove(battle: anytype, player: Player, mslot: u4, from: ?Move, log: anytype)
         }
         // If the substitute breaks during a multi-hit attack, the attack ends
         if (nullified) break;
-        // Twineedle can also poison on the first hit on Pokémon Showdown (second hit below)
-        if (showdown and hit == 1 and move.effect == .Twineedle) {
-            try moveEffect(battle, player, Move.get(.PoisonSting), mslot, log);
-        }
     }
 
     if (side.active.volatiles.MultiHit) {
@@ -972,7 +968,9 @@ fn doMove(battle: anytype, player: Player, mslot: u4, from: ?Move, log: anytype)
     // if an effect was intended to "always happen" it will still get skipped.
     if (nullified) {
         // Pokémon Showdown rolls for secondary chance even if the effect would be nullified
-        if (showdown and move.effect.isSecondaryChance()) battle.rng.advance(1);
+        if (showdown and move.effect.isSecondaryChance() and move.effect != .Twineedle) {
+            battle.rng.advance(1);
+        }
         return null;
     }
 

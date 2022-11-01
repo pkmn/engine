@@ -1129,10 +1129,10 @@ test "Twineedle effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, HIT, CRIT, MAX_DMG, PROC,
-            NOP, HIT, ~CRIT, MIN_DMG, PROC, NOP, NO_PROC,
-            NOP, HIT, ~CRIT, MIN_DMG, NO_PROC, PROC, NOP,
-            NOP, HIT, ~CRIT, MIN_DMG, PROC, PROC,
+            NOP, HIT, CRIT, MAX_DMG,
+            NOP, HIT, ~CRIT, MIN_DMG, NO_PROC,
+            NOP, HIT, ~CRIT, MIN_DMG, PROC, NOP,
+            NOP, HIT, ~CRIT, MIN_DMG, PROC,
         } else .{
             CRIT, MAX_DMG, HIT,
             ~CRIT, MIN_DMG, HIT, NO_PROC,
@@ -1144,7 +1144,6 @@ test "Twineedle effect" {
         &.{.{ .species = .Beedrill, .moves = &.{.Twineedle} }},
         &.{
             .{ .species = .Voltorb, .moves = &.{ .Substitute, .Teleport } },
-            .{ .species = .Electrode, .moves = &.{.Explosion} },
             .{ .species = .Weezing, .moves = &.{.Explosion} },
         },
     );
@@ -1167,51 +1166,46 @@ test "Twineedle effect" {
     try t.log.expected.move(P1.ident(1), Move.Twineedle, P2.ident(1), null);
     t.expected.p2.get(1).hp -= 36;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    if (showdown) {
-        t.expected.p2.get(1).status = Status.init(.PSN);
-        try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
-    }
     t.expected.p2.get(1).hp -= 36;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.hitcount(P2.ident(1), 2);
     try t.log.expected.turn(3);
 
-    // On Pokémon Showdown the first hit can poison the target
     try expectEqual(Result.Default, try t.update(move(1), move(2)));
-    if (showdown) try expectEqual(t.actual.p2.get(1).status, Status.init(.PSN));
+    try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
 
-    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
-    try t.log.expected.move(P1.ident(1), Move.Twineedle, P2.ident(2), null);
-    t.expected.p2.get(2).hp -= 30;
-    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
-    t.expected.p2.get(2).hp -= 30;
-    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
-    t.expected.p2.get(2).status = Status.init(.PSN);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.move(P1.ident(1), Move.Twineedle, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 36;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    t.expected.p2.get(1).hp -= 36;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    t.expected.p2.get(1).status = Status.init(.PSN);
     if (showdown) {
-        try t.log.expected.status(P2.ident(2), t.expected.p2.get(2).status, .None);
-        try t.log.expected.hitcount(P2.ident(2), 2);
+        try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+        try t.log.expected.hitcount(P2.ident(1), 2);
     } else {
-        try t.log.expected.hitcount(P2.ident(2), 2);
-        try t.log.expected.status(P2.ident(2), t.expected.p2.get(2).status, .None);
+        try t.log.expected.hitcount(P2.ident(1), 2);
+        try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
     }
     try t.log.expected.turn(4);
 
     // The second hit can always poison the target
-    try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
-    try expectEqual(t.expected.p2.get(2).status, t.actual.p2.get(1).status);
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
 
-    try t.log.expected.switched(P2.ident(3), t.expected.p2.get(3));
-    try t.log.expected.move(P1.ident(1), Move.Twineedle, P2.ident(3), null);
-    try t.log.expected.supereffective(P2.ident(3));
-    t.expected.p2.get(3).hp -= 45;
-    try t.log.expected.damage(P2.ident(3), t.expected.p2.get(3), .None);
-    t.expected.p2.get(3).hp -= 45;
-    try t.log.expected.damage(P2.ident(3), t.expected.p2.get(3), .None);
-    try t.log.expected.hitcount(P2.ident(3), 2);
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.move(P1.ident(1), Move.Twineedle, P2.ident(2), null);
+    try t.log.expected.supereffective(P2.ident(2));
+    t.expected.p2.get(2).hp -= 45;
+    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+    t.expected.p2.get(2).hp -= 45;
+    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+    try t.log.expected.hitcount(P2.ident(2), 2);
     try t.log.expected.turn(5);
 
     // Poison types cannot be poisoned
-    try expectEqual(Result.Default, try t.update(move(1), swtch(3)));
+    try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
     try t.verify();
 }
 
