@@ -3407,7 +3407,7 @@ describe('Gen 1', () => {
   });
 
   test('Mimic effect', () => {
-    const battle = startBattle([SRF_RES, MIMIC(3, 3)], [
+    const battle = startBattle([SRF_RES, HIT, MIMIC(3, 3)], [
       {species: 'Mr. Mime', evs, moves: ['Mimic']},
       {species: 'Abra', evs, moves: ['Teleport']},
     ], [
@@ -3761,7 +3761,7 @@ describe('Gen 1', () => {
       METRONOME('Petal Dance'), SRF_USE, HIT, NO_CRIT, MIN_DMG, THRASH(3),
       SRF_RES, SRF_RES, SRF_RUN, MISS,
       SRF_RES, SRF_RES, SRF_RUN, MISS, CFZ(2),
-      CFZ_CAN, METRONOME('Mimic'), SRF_USE, MIMIC(2, 2), METRONOME('Disable'),
+      CFZ_CAN, METRONOME('Mimic'), SRF_USE, HIT, MIMIC(2, 2), METRONOME('Disable'),
       SRF_USE, HIT, DISABLE_MOVE(2, 3), DISABLE_DURATION(3),
       METRONOME('Rage'), SRF_USE, HIT, NO_CRIT, MIN_DMG,
       METRONOME('Swift'), SRF_USE, NO_CRIT, MIN_DMG,
@@ -4624,7 +4624,7 @@ describe('Gen 1', () => {
   test('Mimic infinite PP bug', () => {
     // Mimic first
     {
-      const battle = startBattle([SRF_RES, MIMIC(2, 2), ...Array(18).fill(SRF_RES)], [
+      const battle = startBattle([SRF_RES, HIT, MIMIC(2, 2), ...Array(18).fill(SRF_RES)], [
         {species: 'Gengar', evs, moves: ['Teleport', 'Mega Kick']},
       ], [
         {species: 'Gengar', level: 99, evs, moves: ['Mimic', 'Mega Kick', 'Teleport']},
@@ -4655,7 +4655,7 @@ describe('Gen 1', () => {
     }
     // Mimicked move first
     {
-      const battle = startBattle([SRF_RES, MIMIC(2, 2), ...Array(18).fill(SRF_RES)], [
+      const battle = startBattle([SRF_RES, HIT, MIMIC(2, 2), ...Array(18).fill(SRF_RES)], [
         {species: 'Gengar', evs, moves: ['Teleport', 'Mega Kick']},
       ], [
         {species: 'Gengar', level: 99, evs, moves: ['Mega Kick', 'Mimic', 'Teleport']},

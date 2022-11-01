@@ -1911,7 +1911,6 @@ pub const Effects = struct {
 
         // Pokémon Showdown incorrectly replaces the existing Mimic's slot instead of mslot
         var oslot = mslot;
-        // Pokémon Showdown considers Mimic to never miss instead of having 100% accuracy
         if (showdown) {
             const has_mimic = has_mimic: {
                 for (side.active.moves) |m, i| {
@@ -1923,9 +1922,8 @@ pub const Effects = struct {
                 break :has_mimic false;
             };
             if (!has_mimic) return;
-        } else if (!try checkHit(battle, player, move, log)) {
-            return;
         }
+        if (!try checkHit(battle, player, move, log)) return;
 
         const rslot = randomMoveSlot(&battle.rng, &foe.active.moves, 0);
         side.active.move(oslot).id = foe.active.move(rslot).id;

@@ -4233,7 +4233,7 @@ test "Mimic effect" {
     // even if the user already knows that move. The copied move keeps the remaining PP for this
     // move, regardless of the copied move's maximum PP. Whenever one PP is used for a copied move,
     // one PP is used for this move.
-    var t = Test((if (showdown) .{ NOP, MAX } else .{ HIT, 2 })).init(
+    var t = Test((if (showdown) .{ NOP, HIT, MAX } else .{ HIT, 2 })).init(
         &.{
             .{ .species = .MrMime, .moves = &.{.Mimic} },
             .{ .species = .Abra, .moves = &.{.Teleport} },
@@ -4689,7 +4689,8 @@ test "Metronome effect" {
             wrap, NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
             petal_dance, NOP, HIT, ~CRIT, MIN_DMG, THRASH_3,
             NOP, NOP, NOP, ~HIT, NOP, NOP, NOP, ~HIT, CFZ_2,
-            CFZ_CAN, mimic, NOP, MIMIC_2, disable, NOP, HIT, DISABLE_MOVE_2, DISABLE_DURATION_3,
+            CFZ_CAN, mimic, NOP, HIT, MIMIC_2, disable, NOP, HIT,
+            DISABLE_MOVE_2, DISABLE_DURATION_3,
             rage, NOP, HIT, ~CRIT, MIN_DMG, swift, NOP, ~CRIT, MIN_DMG,
         } else .{
             ~CRIT, wrap, MIN_WRAP, ~CRIT, MIN_DMG, HIT,
@@ -5874,7 +5875,7 @@ test "Mimic infinite PP bug" {
     {
         var battle = Battle.fixed(
             if (showdown)
-                (.{ NOP, MAX } ++ .{NOP} ** 15)
+                (.{ NOP, HIT, MAX } ++ .{NOP} ** 15)
             else
                 (.{ HIT, 1 } ++ .{ ~CRIT, HIT } ** 15),
             &.{.{ .species = .Gengar, .moves = &.{ .Teleport, .MegaKick } }},
@@ -5912,7 +5913,7 @@ test "Mimic infinite PP bug" {
     {
         var battle = Battle.fixed(
             if (showdown)
-                (.{ NOP, MAX } ++ .{NOP} ** 15)
+                (.{ NOP, HIT, MAX } ++ .{NOP} ** 15)
             else
                 (.{ HIT, 1 } ++ .{ ~CRIT, HIT } ** 15),
             &.{.{ .species = .Gengar, .moves = &.{ .Teleport, .MegaKick } }},
