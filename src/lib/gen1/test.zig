@@ -907,7 +907,6 @@ test "Endless Battle Clause (basic)" {
         try t.verify();
     }
     {
-        // FIXME: var t = Test(.{ NOP, NOP }).init(
         var t = Test(.{ NOP, NOP, NOP }).init(
             &.{
                 .{ .species = .Mew, .moves = &.{.Transform} },
@@ -5175,10 +5174,10 @@ test "Transform effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
+            // NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, ~HIT, NOP,
             NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, ~HIT, NOP, NOP,
-            // NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, ~HIT,
             NOP, NOP, TIE_2, NOP, NOP, HIT, no_crit, MIN_DMG, NOP, HIT, no_crit, MIN_DMG, NOP, NOP,
-            // NOP, NOP, HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG,
+            // TIE_2, NOP, NOP, NOP, NOP, NOP, NOP, NOP,
             TIE_2, NOP, NOP, NOP, NOP, NOP, NOP,
         } else .{
             ~CRIT, ~CRIT, ~CRIT, MIN_DMG, ~HIT, TIE_2,
@@ -5264,17 +5263,15 @@ test "Transform effect" {
     }
 
     try t.log.expected.move(P2.ident(1), Move.Peck, P1.ident(1), null);
-    // t.expected.p1.get(1).hp -= if (showdown) 69 else 35;
     t.expected.p1.get(1).hp -= 35;
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
     try t.log.expected.move(P1.ident(1), Move.Peck, P2.ident(1), null);
     try t.log.expected.crit(P2.ident(1));
-    // t.expected.p2.get(1).hp -= if (showdown) 35 else 20;
     t.expected.p2.get(1).hp -= 20; // crit = uses untransformed stats
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.turn(5);
 
-    // Transformed Pokémon should retain their original crit rate (and this should speed tie...)
+    // Transformed Pokémon should retain their original crit rate (and this should speed tie)
     try expectEqual(Result.Default, try t.update(move(3), move(3)));
 
     try t.log.expected.move(P2.ident(1), Move.Agility, P2.ident(1), null);
@@ -5303,7 +5300,7 @@ test "Transform effect" {
             // }
         }
     }
-    // try expectEqual(@as(u16, if (showdown) 136 else 151), t.actual.p1.get(1).stats.spe);
+    // try expectEqual(@as(u16, if (showdown) 268 else 151), t.actual.p1.get(1).stats.spe);
     try expectEqual(@as(u16, 151), t.actual.p1.get(1).stats.spe);
     try expectEqual(@as(u16, 268), t.actual.p2.get(1).stats.spe);
     try expectEqual(t.actual.p2.active.boosts, t.actual.p1.active.boosts);

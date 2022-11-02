@@ -703,7 +703,7 @@ describe('Gen 1', () => {
       expect(battle.ended).toBe(true);
     }
     {
-      const battle = startBattle([SRF_RES, SRF_RES], [
+      const battle = startBattle([SRF_RES, SRF_RES, SS_EACH], [
         {species: 'Mew', evs, moves: ['Transform']},
         {species: 'Muk', evs, moves: ['Pound']},
       ], [
@@ -4011,8 +4011,10 @@ describe('Gen 1', () => {
       value: ranged(Math.floor(gen.species.get('Articuno')!.baseStats.spe / 2), 256),
     };
     const battle = startBattle([
-      SRF_RES, SRF_RES, SS_RES, GLM, GLM, GLM, SRF_RES, SRF_RES, SS_RUN, MISS,
-      SRF_RES, SRF_RES, HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG,
+      SRF_RES, SRF_RES, SS_RES, GLM, GLM, GLM, SRF_RES, SRF_RES, SS_RUN, MISS, SS_EACH,
+      SRF_RES, SRF_RES, TIE(2), SS_EACH, SS_EACH, HIT, no_crit, MIN_DMG, SS_EACH,
+      HIT, no_crit, MIN_DMG, SS_EACH, SS_EACH,
+      TIE(2), SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
     ], [
       {species: 'Mew', level: 50, evs, moves: ['Swords Dance', 'Transform']},
       {species: 'Ditto', evs, moves: ['Swords Dance', 'Transform']},
@@ -4038,7 +4040,7 @@ describe('Gen 1', () => {
     expect(battle.p1.pokemon[0].species.name).toBe('Articuno');
     expect(battle.p1.pokemon[0].types).toEqual(battle.p2.pokemon[0].types);
     expect(battle.p1.pokemon[0].level).toBe(50);
-    // expect(battle.p1.pokemon[0].modifiedStats).toEqual(battle.p2.pokemon[0].modifiedStats);
+    expect(battle.p1.pokemon[0].modifiedStats).toEqual(battle.p2.pokemon[0].modifiedStats);
     // expect(battle.p1.pokemon[0].storedStats).not.toEqual(battle.p2.pokemon[0].storedStats);
     expect(battle.p1.pokemon[0].storedStats.spe).toBe(268);
     expect(battle.p2.pokemon[0].storedStats.spe).toBe(268);
@@ -4049,23 +4051,23 @@ describe('Gen 1', () => {
     expect(battle.p1.pokemon[0].moveSlots.map(m => m.move)).toEqual(['Agility', 'Fly', 'Peck']);
     expect(battle.p1.pokemon[0].moveSlots.map(m => m.pp)).toEqual([5, 5, 5]);
 
-    // Transformed Pokémon should retain their original crit rate (and this should speed tie...)
+    // Transformed Pokémon should retain their original crit rate (and this should speed tie)
     battle.makeChoices('move 3', 'move 3');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 69);
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 35);
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 35);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 20);
 
     // Stats get wonky on Pokémon Showdown...
     battle.makeChoices('move 1', 'move 1');
-    // expect(battle.p1.pokemon[0].modifiedStats).toEqual(battle.p2.pokemon[0].modifiedStats);
+    expect(battle.p1.pokemon[0].modifiedStats).toEqual(battle.p2.pokemon[0].modifiedStats);
     // expect(battle.p1.pokemon[0].storedStats).not.toEqual(battle.p2.pokemon[0].storedStats);
-    expect(battle.p1.pokemon[0].storedStats.spe).toBe(136);
+    // expect(battle.p1.pokemon[0].storedStats.spe).toBe(151);
+    expect(battle.p1.pokemon[0].storedStats.spe).toBe(268);
     expect(battle.p2.pokemon[0].storedStats.spe).toBe(268);
     expect(battle.p1.pokemon[0].boosts).toEqual(battle.p2.pokemon[0].boosts);
 
     battle.makeChoices('switch 2', 'move 1');
     expect(battle.p1.pokemon[1].species.name).toBe('Mew');
-    // expect(battle.p1.pokemon[1].modifiedStats).toEqual(battle.p1.pokemon[0].storedStats);
-    // expect(battle.p1.pokemon[1].moveSlots[1].pp).toBe(pp - 1);
+    expect(battle.p1.pokemon[1].modifiedStats).toEqual(battle.p1.pokemon[1].storedStats);
     expect(battle.p1.pokemon[1].moveSlots[1].pp).toBe(pp - 2);
 
     verify(battle, [
@@ -4085,10 +4087,10 @@ describe('Gen 1', () => {
       '|-transform|p1a: Mew|p2a: Articuno',
       '|turn|4',
       '|move|p2a: Articuno|Peck|p1a: Mew',
-      '|-damage|p1a: Mew|137/206',
+      '|-damage|p1a: Mew|171/206',
       '|move|p1a: Mew|Peck|p2a: Articuno',
       '|-crit|p2a: Articuno',
-      '|-damage|p2a: Articuno|348/383',
+      '|-damage|p2a: Articuno|363/383',
       '|turn|5',
       '|move|p2a: Articuno|Agility|p2a: Articuno',
       '|-boost|p2a: Articuno|spe|2',
