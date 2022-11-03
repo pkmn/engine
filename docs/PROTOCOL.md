@@ -646,7 +646,7 @@ Determining the maximum amount of bytes in a single update (i.e. bytes logged by
 with each player's `Choice`) per generation is non-trivial and could vary greatly depending on the
 constraints:
 
-- **Standard**: The most restrictive constaint supported is one which considers Pokémon Showdown's
+- **Standard**: The most restrictive constraint supported is one which considers Pokémon Showdown's
   "Standard" restrictions for competitive formats - Species Clause, Cleric Clause, movepool legality
   and bans, etc.
 - **Cartridge**: Cartridge legality still enforces anything that can be legitimately obtained on the
@@ -662,17 +662,27 @@ Furthermore, a **lax** vs. **strict** interpretation of the RNG can be applied -
 conceivable sequence of events should be considered or only those which can be obtained in practice
 via the actual RNG (on either the catridge or Pokémon Showdown).
 
-**"Cartridge" constraints with a lax consideration of the RNG** are used for the purposes of
-defining the maximum size constants (though taking a strict intepretation of the RNG is required in
-some cases to be able to conservatively set the upper bounds in specific scenarios). The maximum
-size of the "fuzzing" use-case is also outlined below (though not encoded in a constant).
+In general, the constants will be defined such that they will be guaranteed to be sufficient under
+**cartridge constraints with a lax consideration of the RNG** (though taking a strict intepretation
+of the RNG is required in some cases to be able to conservatively set the upper bounds in specific
+scenarios). In practice, the constants will usually be defined to handle "hackmons" legality as that
+is what is useful for the engines fuzz testing - see the precise definitions below for exact
+details. In most cases these scenarios have been derived with help from the [Z3 theorem
+prover](https://github.com/Z3Prover/z3).
 
 *The following maximum log size scenarios were developed with help from
 [**@gigalh128**](https://github.com/gigalh128).*
 
 ### Generation I
 
-TODO
+The `MAX_LOGS` constant in Generation I is determined to be **180**. Acheiving this requires two
+burned Aerodactyl with Leech Seed, Confuse Ray, and Metronome where one is slower than the other. On
+the first two turns of the battle the Aerodactyl both use Leech Seed followed by Confuse Ray, and
+then in the turn where the maximum single turn logs output is to be reached, the faster Aerodactyl
+uses Metronome to proc a critical hit Fury Swipes that hits 5 times and the slower Aerodactyl uses
+Metronome to proc Mirror Move to then also procs a critical hit Fury Swipes that hits 5 times. The
+initial battle seed required to acheive this is output is $\{106, 161, 95, 184, 221, 10, 52, 25,
+156, 133\}$.
 
 <details><summary>Details</summary>
 
@@ -729,9 +739,9 @@ opponent is locked into a charging move from a previous Metronome call).
 
 There are then two hypothetical scenarios we need to consider to determine upper bound on the
 maximum log size of a single update - one where a single player gets to benefit from the Metronome →
-Mirror Move → ... → Metronome → multi hit move and the other side is locked into a charging move or
-one where both players simply call a multi hit move through a single iteration of Metronome → Mirror
-Move → multi hit.
+Mirror Move → ... → Metronome → multi-hit move and the other side is locked into a charging move or
+one where both players simply call a multi-hit move through a single iteration of Metronome → Mirror
+Move → multi-hit.
 
 - **Scenario 1:** recursion + charge move (188 bytes)
   - `|-activate|` confusion: 2×3 bytes
@@ -748,7 +758,7 @@ Move → multi hit.
   - `|-heal|` Leech Seed: 2×8 bytes
   - `|turn|`: 3 bytes
   - `0x00`: 1 byte (end of buffer)
-- **Scenario 2:** both multi hit (186 bytes)
+- **Scenario 2:** both multi-hit (186 bytes)
   - `|-activate|` confusion: 2×3 bytes
   - `|move|` Metronome → `|move|` Mirror Move -> `|move|` multi-hit: 2×5 + 4×6 bytes
   - `|-crit|`: 2×2 bytes
@@ -762,6 +772,16 @@ Move → multi hit.
   - `0x00`: 1 byte (end of buffer)
 
 </details>
+
+[Z3](../src/tools/max_logs.py) can then be used to test out these scenarios - we can quickly see
+that despite 10 levels of recursive Metronome → Mirror Move being possible in a vaccuum if we are
+able to control the intiial seed, there is no way to acheive the first scenario after burning
+through the rolls on the first two turns of setup and if we need to be able to proc specific
+Metronome rolls after. For the second scenario we run into the problem of needing an extra turn of
+setup for Player 1 to be able to Mirror Move a multi-hit move which also takes us too far away from
+the initial seed to be able to set up the rest of the scenario. However, by slightly compromising
+and not requiring Player 1 to proc Mirror Move only lose 6 bytes and thus arrive at 180 bytes for
+the maximum log size for Generation I.
 
 ### Generation II
 
