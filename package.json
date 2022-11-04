@@ -27,16 +27,14 @@
   ],
   "dependencies": {
     "@pkmn/data": "^0.6.2",
-    "@pkmn/protocol": "^0.5.0"
+    "@pkmn/protocol": "^0.5.1"
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.19.4",
-    "@babel/preset-typescript": "^7.18.6",
     "@pkmn/eslint-config": "^2.12.0",
     "@pkmn/img": "^0.1.20",
     "@pkmn/sim": "^0.6.2",
     "@types/html-minifier": "^4.0.2",
-    "@types/jest": "^29.2.1",
+    "@types/jest": "^29.2.2",
     "@types/minimist": "^1.2.2",
     "@types/mustache": "^4.2.1",
     "@types/node": "^18.11.9",
@@ -50,6 +48,7 @@
     "minimist": "^1.2.7",
     "mustache": "^4.2.0",
     "source-map-support": "^0.5.21",
+    "ts-jest": "^29.0.3",
     "typescript": "^4.8.4"
   },
   "scripts": {
@@ -68,6 +67,7 @@
     "collectCoverageFrom": [ "src/pkg/*.ts"],
     "coverageDirectory": "coverage/js",
     "coverageProvider": "v8",
+    "preset": "ts-jest",
     "verbose": false,
     "testEnvironment": "node",
     "testRegex": "src/pkg/.*\\.test\\.ts$",
@@ -75,12 +75,6 @@
     "moduleNameMapper": {
       "^@pkmn/sim/(.*)$": "<rootDir>/node_modules/@pkmn/sim/build/sim/$1"
     }
-  },
-  "babel": {
-    "presets": [
-        "@babel/preset-typescript",
-        ["@babel/preset-env", {"targets": {"node": "current"}}]
-    ]
   },
   "eslintConfig": {
     "extends": "@pkmn",
