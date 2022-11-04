@@ -5832,9 +5832,10 @@ test "Counter via Metronome bug" {
     }
 }
 
+// Fixed by smogon/pokemon-showdown#8963
 test "Hyper Beam + Substitute bug" {
     var t = Test(if (showdown)
-        (.{ NOP, HIT, ~CRIT, MAX_DMG, NOP, HIT, ~CRIT, MAX_DMG })
+        (.{ NOP, HIT, ~CRIT, MAX_DMG, NOP, NOP })
     else
         (.{ ~CRIT, MAX_DMG, HIT })).init(
         &.{.{ .species = .Abra, .moves = &.{.HyperBeam} }},
@@ -5848,19 +5849,14 @@ test "Hyper Beam + Substitute bug" {
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), null);
     try t.log.expected.activate(P2.ident(1), .Substitute);
-    if (!showdown) try t.log.expected.mustrecharge(P1.ident(1));
+    try t.log.expected.mustrecharge(P1.ident(1));
     try t.log.expected.turn(2);
 
     // Should require recharge if it doesn't knock out the Substitute
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
     try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
-    if (showdown) {
-        try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), null);
-        try t.log.expected.end(P2.ident(1), .Substitute);
-    } else {
-        try t.log.expected.cant(P1.ident(1), .Recharge);
-    }
+    try t.log.expected.cant(P1.ident(1), .Recharge);
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(forced, move(2)));

@@ -4591,8 +4591,9 @@ describe('Gen 1', () => {
     }
   });
 
+  // Fixed by smogon/pokemon-showdown#8963
   test('Hyper Beam + Substitute bug', () => {
-    const battle = startBattle([SRF_RES, HIT, NO_CRIT, MAX_DMG, SRF_RES, HIT, NO_CRIT, MAX_DMG], [
+    const battle = startBattle([SRF_RES, HIT, NO_CRIT, MAX_DMG, SRF_RES, SRF_RUN], [
       {species: 'Abra', evs, moves: ['Hyper Beam']},
     ], [
       {species: 'Jolteon', evs, moves: ['Substitute', 'Teleport']},
@@ -4607,7 +4608,7 @@ describe('Gen 1', () => {
 
     battle.makeChoices('move 1', 'move 2');
     expect(battle.p2.pokemon[0].hp).toBe(p2hp);
-    expect(battle.p2.pokemon[0].volatiles['substitute']).toBeUndefined();
+    expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBeGreaterThan(0);
 
     verify(battle, [
       '|move|p2a: Jolteon|Substitute|p2a: Jolteon',
@@ -4615,10 +4616,10 @@ describe('Gen 1', () => {
       '|-damage|p2a: Jolteon|250/333',
       '|move|p1a: Abra|Hyper Beam|p2a: Jolteon',
       '|-activate|p2a: Jolteon|Substitute|[damage]',
+      '|-mustrecharge|p1a: Abra',
       '|turn|2',
       '|move|p2a: Jolteon|Teleport|p2a: Jolteon',
-      '|move|p1a: Abra|Hyper Beam|p2a: Jolteon',
-      '|-end|p2a: Jolteon|Substitute',
+      '|cant|p1a: Abra|recharge',
       '|turn|3',
     ]);
   });

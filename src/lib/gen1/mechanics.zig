@@ -562,7 +562,7 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
                 const move = Move.get(.Pound);
                 if (!calcDamage(battle, player, player, move, false)) return .err;
                 // Skipping adjustDamage / randomizeDamage / checkHit
-                _ = try applyDamage(battle, player, player.foe(), move, .Confusion, log);
+                _ = try applyDamage(battle, player, player.foe(), .Confusion, log);
 
                 return .done;
             }
@@ -622,7 +622,7 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
             return .done;
         }
 
-        _ = try applyDamage(battle, player.foe(), player.foe(), Move.get(.Bide), .None, log);
+        _ = try applyDamage(battle, player.foe(), player.foe(), .None, log);
         return .done;
     }
 
@@ -648,7 +648,7 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
             if (move.effect == .Trapping) side.last_selected_move else null,
         );
         if (showdown or battle.last_damage != 0) {
-            _ = try applyDamage(battle, player.foe(), player.foe(), move, .None, log);
+            _ = try applyDamage(battle, player.foe(), player.foe(), .None, log);
         }
         return .done;
     }
@@ -876,7 +876,7 @@ fn doMove(battle: anytype, player: Player, mslot: u4, from: ?Move, log: anytype)
             // Recoil is supposed to be damage/8 but damage will always be 0 here
             assert(battle.last_damage == 0);
             battle.last_damage = 1;
-            _ = try applyDamage(battle, player, player.foe(), move, .None, log);
+            _ = try applyDamage(battle, player, player.foe(), .None, log);
         } else if (move.effect == .Explode) {
             // Pokémon Showdown does not execute the Explode effect if the target is Invulnerable
             if (showdown and foe.active.volatiles.Invulnerable) return null;
@@ -940,7 +940,7 @@ fn doMove(battle: anytype, player: Player, mslot: u4, from: ?Move, log: anytype)
             // Pokémon Showdown clears last_damage when attacking a Substitute so subsequent
             // hits would return 0 if we didn't reset the damage before applying it again
             battle.last_damage = damage;
-            nullified = try applyDamage(battle, player.foe(), player.foe(), move, .None, log);
+            nullified = try applyDamage(battle, player.foe(), player.foe(), .None, log);
         }
         if (hit == 0 and ohko) try log.ohko();
         hit += 1;
@@ -1160,7 +1160,7 @@ fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
 
     if (battle.last_damage == 0) return if (showdown) null else Result.Error;
 
-    _ = try applyDamage(battle, player.foe(), player.foe(), move, .None, log);
+    _ = try applyDamage(battle, player.foe(), player.foe(), .None, log);
     return null;
 }
 
@@ -1210,7 +1210,7 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
     // Pokémon Showdown calls checkHit before Counter
     if (!showdown and !try checkHit(battle, player, move, log)) return null;
 
-    _ = try applyDamage(battle, player.foe(), player.foe(), move, .None, log);
+    _ = try applyDamage(battle, player.foe(), player.foe(), .None, log);
     return null;
 }
 
@@ -1218,7 +1218,6 @@ fn applyDamage(
     battle: anytype,
     target_player: Player,
     sub_player: Player,
-    move: Move.Data,
     reason: Damage,
     log: anytype,
 ) !bool {
@@ -1243,8 +1242,7 @@ fn applyDamage(
             subbed.active.volatiles.substitute -= @truncate(u8, battle.last_damage);
             try log.activate(battle.active(sub_player), .Substitute);
             if (showdown) battle.last_damage = 0;
-            // Attacking a Substitute with Hyper Beam never causes a recharge on Pokémon Showdown
-            return showdown and move.effect == .HyperBeam;
+            return false;
         }
     }
 
