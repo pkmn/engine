@@ -4854,24 +4854,28 @@ describe('Gen 1', () => {
 
   test('Thrashing + Substitute bugs', () => {
     // Thrash should lock the user into the move even if it hits a Substitute
+    // Fixed by smogon/pokemon-showdown#8963
     {
-      const battle = startBattle([SRF_RES, SRF_RUN, HIT, NO_CRIT, MIN_DMG, SRF_RES, HIT, SS_MOD], [
+      const battle = startBattle([
+        SRF_RES, SRF_RUN, HIT, NO_CRIT, MIN_DMG, THRASH(4),
+        SRF_RES, SRF_RES, SRF_RUN, HIT, NO_CRIT, MIN_DMG,
+      ], [
         {species: 'Nidoking', level: 50, evs, moves: ['Thrash', 'Thunder Wave']},
       ], [
         {species: 'Vileplume', evs, moves: ['Substitute', 'Teleport']},
       ]);
 
       let p2hp = battle.p2.pokemon[0].hp;
+      let subhp = 89;
 
       battle.makeChoices('move 1', 'move 1');
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 88);
-      expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(89 - 18);
+      expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(subhp -= 18);
 
-      // expect(choices(battle, 'p1')).toEqual(['move 1']);
-      expect(choices(battle, 'p1')).toEqual(['move 1', 'move 2']);
+      expect(choices(battle, 'p1')).toEqual(['move 1']);
 
-      battle.makeChoices('move 2', 'move 2');
-      expect(battle.p2.pokemon[0].status).toBe('par');
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(subhp -= 18);
 
       verify(battle, [
         '|move|p2a: Vileplume|Substitute|p2a: Vileplume',
@@ -4880,9 +4884,9 @@ describe('Gen 1', () => {
         '|move|p1a: Nidoking|Thrash|p2a: Vileplume',
         '|-activate|p2a: Vileplume|Substitute|[damage]',
         '|turn|2',
-        '|move|p2a: Vileplume|Teleport|p2a: Vileplume',
-        '|move|p1a: Nidoking|Thunder Wave|p2a: Vileplume',
-        '|-status|p2a: Vileplume|par',
+        "|move|p2a: Vileplume|Teleport|p2a: Vileplume",
+        '|move|p1a: Nidoking|Thrash|p2a: Vileplume|[from]Thrash',
+        '|-activate|p2a: Vileplume|Substitute|[damage]',
         '|turn|3',
       ]);
     }

@@ -896,24 +896,6 @@ fn doMove(battle: anytype, player: Player, mslot: u4, from: ?Move, log: anytype)
             }
         }
         return null;
-    } else if (showdown) {
-        // These should be handled much earlier but Pokémon Showdown does it here... ¯\_(ツ)_/¯
-        if (move.effect == .Thrashing) {
-            if (side.active.volatiles.Thrashing) {
-                thrashed = handleThrashing(battle, &side.active);
-            } else if (!foe.active.volatiles.Substitute) {
-                // Pokémon Showdown doesn't lock into Thrashing if move hits a Substitute
-                Effects.thrashing(battle, player);
-            }
-        } else if (move.effect == .Trapping) {
-            Effects.trapping(battle, player);
-            if (immune) {
-                battle.last_damage = 0;
-                // Pokémon Showdown logs |-damage| here instead of |-immune| because logic...
-                try log.damage(battle.active(player.foe()), foe.stored(), .None);
-                return null;
-            }
-        }
     }
 
     // On the cartridge MultiHit doesn't get set up until after damage has been applied for the
@@ -960,6 +942,24 @@ fn doMove(battle: anytype, player: Player, mslot: u4, from: ?Move, log: anytype)
             try Effects.poison(battle, player, Move.get(.PoisonSting), log);
         }
         try log.hitcount(battle.active(player.foe()), hit);
+    } else if (showdown) {
+        // These should be handled much earlier but Pokémon Showdown does it here... ¯\_(ツ)_/¯
+        if (move.effect == .Thrashing) {
+            if (side.active.volatiles.Thrashing) {
+                thrashed = handleThrashing(battle, &side.active);
+            } else if (!nullified) {
+                // Pokémon Showdown doesn't lock into Thrashing if move hits a Substitute
+                Effects.thrashing(battle, player);
+            }
+        } else if (move.effect == .Trapping) {
+            Effects.trapping(battle, player);
+            if (immune) {
+                battle.last_damage = 0;
+                // Pokémon Showdown logs |-damage| here instead of |-immune| because logic...
+                try log.damage(battle.active(player.foe()), foe.stored(), .None);
+                return null;
+            }
+        }
     }
 
     if (showdown and thrashed) try log.start(battle.active(player), .ConfusionSilent);

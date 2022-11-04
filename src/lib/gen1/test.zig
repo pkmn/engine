@@ -6170,9 +6170,10 @@ test "Thrashing + Substitute bugs" {
     const THRASH_3 = if (showdown) comptime ranged(1, 5 - 3) - 1 else MIN;
 
     // Thrash should lock the user into the move even if it hits a Substitute
+    // Fixed by smogon/pokemon-showdown#8963
     {
         var t = Test((if (showdown)
-            (.{ NOP, NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, NOP })
+            (.{ NOP, NOP, HIT, ~CRIT, MIN_DMG, THRASH_3, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG })
         else
             (.{ THRASH_3, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
             &.{.{ .species = .Nidoking, .level = 50, .moves = &.{ .Thrash, .ThunderWave } }},
@@ -6194,24 +6195,15 @@ test "Thrashing + Substitute bugs" {
         try expectEqual(@as(u8, subhp), t.actual.p2.active.volatiles.substitute);
 
         var n = t.battle.actual.choices(.P1, .Move, &choices);
-        try expectEqualSlices(Choice, if (showdown)
-            &[_]Choice{ move(1), move(2) }
-        else
-            &[_]Choice{move(0)}, choices[0..n]);
+        try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
         try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
-        if (showdown) {
-            try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
-            t.expected.p2.get(1).status = Status.init(.PAR);
-            try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
-        } else {
-            try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
-            try t.log.expected.activate(P2.ident(1), .Substitute);
-            subhp -= 18;
-        }
+        try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
+        try t.log.expected.activate(P2.ident(1), .Substitute);
+        subhp -= 18;
         try t.log.expected.turn(3);
 
-        try expectEqual(Result.Default, try t.update(move(if (showdown) 2 else 0), move(2)));
+        try expectEqual(Result.Default, try t.update(forced, move(2)));
         try expectEqual(@as(u8, subhp), t.actual.p2.active.volatiles.substitute);
 
         try t.verify();
