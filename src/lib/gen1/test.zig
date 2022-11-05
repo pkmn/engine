@@ -5950,6 +5950,7 @@ test "Mirror Move + Wrap bug" {
     try t.verify();
 }
 
+// Fixed by smogon/pokemon-showdown#8966
 test "Mirror Move recharge bug" {
     var t = Test((if (showdown)
         (.{ HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MAX_DMG })
@@ -5971,7 +5972,6 @@ test "Mirror Move recharge bug" {
     try t.log.expected.move(P2.ident(1), Move.HyperBeam, P1.ident(1), Move.MirrorMove);
     t.expected.p1.get(1).hp = 0;
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-    if (showdown) try t.log.expected.mustrecharge(P2.ident(1));
     try t.log.expected.faint(P1.ident(1), true);
 
     try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(move(1), move(1)));
@@ -5983,19 +5983,11 @@ test "Mirror Move recharge bug" {
 
     var n = t.battle.actual.choices(.P2, .Move, &choices);
     // Mirror Move should not apply Hyper Beam recharge upon KOing a Pokemon
-    if (showdown) {
-        try expectEqualSlices(Choice, &[_]Choice{move(1)}, choices[0..n]);
-    } else {
-        try expectEqualSlices(Choice, &[_]Choice{ move(1), move(2) }, choices[0..n]);
-    }
+    try expectEqualSlices(Choice, &[_]Choice{ move(1), move(2) }, choices[0..n]);
 
     try t.log.expected.move(P1.ident(2), Move.Teleport, P1.ident(2), null);
-    if (showdown) {
-        try t.log.expected.cant(P2.ident(1), .Recharge);
-    } else {
-        try t.log.expected.move(P2.ident(1), Move.MirrorMove, P2.ident(1), null);
-        try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), Move.MirrorMove);
-    }
+    try t.log.expected.move(P2.ident(1), Move.MirrorMove, P2.ident(1), null);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), Move.MirrorMove);
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));

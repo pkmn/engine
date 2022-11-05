@@ -4680,8 +4680,7 @@ describe('Gen 1', () => {
     battle.makeChoices('switch 2', '');
 
     // Mirror Move should not apply Hyper Beam recharge upon KOing a Pokemon
-    // expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
-    expect(choices(battle, 'p2')).toEqual(['move 1']);
+    expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
 
     battle.makeChoices('move 1', 'move 1');
     expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
@@ -4693,12 +4692,12 @@ describe('Gen 1', () => {
       '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
       '|move|p2a: Pidgeot|Hyper Beam|p1a: Kadabra|[from]Mirror Move',
       '|-damage|p1a: Kadabra|0 fnt',
-      '|-mustrecharge|p2a: Pidgeot',
       '|faint|p1a: Kadabra',
       '|switch|p1a: Haunter|Haunter|293/293',
       '|turn|2',
       '|move|p1a: Haunter|Teleport|p1a: Haunter',
-      '|cant|p2a: Pidgeot|recharge',
+      '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
+      '|move|p2a: Pidgeot|Teleport|p2a: Pidgeot|[from]Mirror Move',
       '|turn|3',
     ]);
   });

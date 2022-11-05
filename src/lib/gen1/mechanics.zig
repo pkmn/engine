@@ -418,7 +418,7 @@ fn executeMove(
 
     if (!skip_can and !try canMove(battle, player, mslot, auto, skip_pp, from, log)) return null;
 
-    return doMove(battle, player, mslot, from, log);
+    return doMove(battle, player, mslot, log);
 }
 
 const BeforeMove = union(enum) { done, skip_can, skip_pp, ok, err };
@@ -691,7 +691,7 @@ fn decrementPP(side: *Side, mslot: u4, auto: bool) void {
 }
 
 // Pokémon Showdown does hit/multi/crit/damage instead of crit/damage/hit/multi
-fn doMove(battle: anytype, player: Player, mslot: u4, from: ?Move, log: anytype) !?Result {
+fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
     var side = battle.side(player);
     const foe = battle.foe(player);
 
@@ -929,10 +929,7 @@ fn doMove(battle: anytype, player: Player, mslot: u4, from: ?Move, log: anytype)
     // setup before the loop means we can avoid having to waste time doing no-op handler searches.
     if (move.effect.alwaysHappens()) try moveEffect(battle, player, move, mslot, log);
 
-    // Pokémon Showdown still forces Hyper Beam to recharge when it KOs its opponent if it
-    // was called via another move (eg. Mirror Move).
-    const bypass = showdown and from != null and side.last_selected_move == .HyperBeam;
-    if (foe.stored().hp == 0 and !bypass) {
+    if (foe.stored().hp == 0) {
         // Pokémon Showdown rolls for secondary chance even if the target fainted
         if (showdown and move.effect.isSecondaryChance()) battle.rng.advance(1);
         return null;
@@ -1214,7 +1211,7 @@ fn mirrorMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result
     side.last_selected_move = foe.last_used_move;
 
     if (!try canMove(battle, player, mslot, false, true, .MirrorMove, log)) return null;
-    return doMove(battle, player, mslot, .MirrorMove, log);
+    return doMove(battle, player, mslot, log);
 }
 
 fn metronome(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
@@ -1234,7 +1231,7 @@ fn metronome(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result 
     };
 
     if (!try canMove(battle, player, mslot, false, true, .Metronome, log)) return null;
-    return doMove(battle, player, mslot, .Metronome, log);
+    return doMove(battle, player, mslot, log);
 }
 
 fn checkHit(battle: anytype, player: Player, move: Move.Data, log: anytype) !bool {
