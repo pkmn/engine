@@ -154,10 +154,6 @@ for (const group in GROUPS) {
   }
 }
 
-// NB:  all/allySide/allyTeam/self  = All/Field/AllySide/Self dont advance frames
-// TODO: determine frames for adjacentAlly/adjacentAllyOrSelf/adjacentFoe/allies
-// NB: beforeTurnCallback = extra advance (Counter, Mirror Coat, Pursuit)
-// NB: validTargetLoc: allAdjacentFoes/FoeSide (allies)= Foes (Allies) = advance
 const TARGETS: {[target in MoveTarget]: string} = {
   adjacentAlly: 'Ally',
   adjacentAllyOrSelf: 'AllyOrSelf',
@@ -475,12 +471,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       ',\n\n    // Sentinel used when Pokémon\'s turn should be skipped (eg. trapped)\n' +
       '    SKIP_TURN = 0xFF';
 
-    const frames = `if (id == .Counter and event == .resolve) return 2;
-        return @as(u8, @boolToInt(switch (event) {
-            .resolve => get(id).target.resolves(),
-            .run => get(id).target.runs(),
-        }));`;
-
     template('moves', dirs.out, {
       gen: gen.num,
       Move: {
@@ -493,7 +483,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         dataSize: MOVES.length * 4,
         Effect,
         assert: 'assert(id != .None and id != .SKIP_TURN);',
-        frames,
         ppData,
         ppFn,
       },
@@ -729,14 +718,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
             assert(@sizeOf(Effect) == 1);
         }\n` + '    };\n';
 
-    const frames = `return @as(u8, @boolToInt(switch (event) {
-            .resolve => switch (id) {
-                .Counter, .MirrorCoat, .Pursuit => 2,
-                else => get(id).target.resolves(),
-            },
-            .run => get(id).target.runs(),
-        }));`;
-
     template('moves', dirs.out, {
       gen: gen.num,
       Move: {
@@ -749,7 +730,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         dataSize: MOVES.length * 8,
         assert: 'assert(id != .None);',
         Effect,
-        frames,
       },
     });
 

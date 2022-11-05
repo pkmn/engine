@@ -20,9 +20,6 @@ export const ROLLS: {[category: string]: {[name: string]: Roll}} = {
     MAX_DMG: {key: ['Battle.random', 'BattleActions.getDamage'], value: MAX},
   },
   nops: {
-    SRF_RES: {key: ['Side.randomFoe', 'BattleQueue.resolveAction'], value: NOP},
-    SRF_RUN: {key: ['Side.randomFoe', 'BattleActions.runMove'], value: NOP},
-    SRF_USE: {key: ['Side.randomFoe', 'BattleActions.useMove'], value: NOP},
     SS_MOD: {key: ['Battle.speedSort', 'Pokemon.setStatus'], value: NOP},
     SS_RES: {key: ['Battle.speedSort', 'Battle.residualEvent'], value: NOP},
     SS_RUN: {key: ['Battle.speedSort', 'Battle.runEvent'], value: NOP},

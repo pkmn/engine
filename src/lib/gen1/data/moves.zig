@@ -1639,7 +1639,6 @@ pub const Move = enum(u8) {
         Depends,
         Other,
         Any,
-        // TODO: resolve or resolve + run?
         Allies,
         Ally,
         AllyOrSelf,
@@ -1648,14 +1647,6 @@ pub const Move = enum(u8) {
         Foes,
         FoeSide,
         RandomFoe,
-
-        pub inline fn resolves(target: Target) bool {
-            return @enumToInt(target) >= @enumToInt(Target.AllOthers);
-        }
-
-        pub inline fn runs(target: Target) bool {
-            return @enumToInt(target) >= @enumToInt(Target.Foes);
-        }
     };
 
     // @test-only
@@ -1840,14 +1831,6 @@ pub const Move = enum(u8) {
     }
 
     const Event = enum { resolve, run };
-
-    pub inline fn frames(id: Move, event: Event) u8 {
-        if (id == .Counter and event == .resolve) return 2;
-        return @as(u8, @boolToInt(switch (event) {
-            .resolve => get(id).target.resolves(),
-            .run => get(id).target.runs(),
-        }));
-    }
 
     // @test-only
     pub fn pp(id: Move) u8 {

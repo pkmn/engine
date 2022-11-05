@@ -29,7 +29,6 @@ pub const Move = enum({{{ Move.type }}}) {
         Depends,
         Other,
         Any,
-        // TODO: resolve or resolve + run?
         Allies,
         Ally,
         AllyOrSelf,
@@ -38,14 +37,6 @@ pub const Move = enum({{{ Move.type }}}) {
         Foes,
         FoeSide,
         RandomFoe,
-
-        pub inline fn resolves(target: Target) bool {
-            return @enumToInt(target) >= @enumToInt(Target.AllOthers);
-        }
-
-        pub inline fn runs(target: Target) bool {
-            return @enumToInt(target) >= @enumToInt(Target.Foes);
-        }
     };
 {{{ Move.ppData }}}
     comptime {
@@ -60,9 +51,5 @@ pub const Move = enum({{{ Move.type }}}) {
         return DATA[@enumToInt(id) - 1];
     }
 
-    const Event = enum { resolve, run };
-
-    pub inline fn frames(id: Move, event: Event) u8 {
-        {{{ Move.frames }}}
-    }{{{ Move.ppFn }}}
+    const Event = enum { resolve, run };{{{ Move.ppFn }}}
 };

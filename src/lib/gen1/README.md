@@ -194,7 +194,7 @@ In order to workaround various [Pokémon Showdown bugs](#bugs) and to support it
 additional information is stored in `Move.Data` (`targets`) about what Pokémon Showdown believes the
 `Move.Target` to be (despite the concept of targeting not existing until Generation III when Doubles
 battles were introduced). More specifically, a move's "targeting" status is required in various
-places to determine how many frames to advance the RNG by.
+places to determine which protocol messages to print.
 
 | pkmn        | Pokémon Showdown |
 | ----------- | ---------------- |
@@ -440,7 +440,7 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 
 ## Bugs
 
-In addition to its alternative [RNG semantics](#RNG), Pokémon Showdown's implemention of the first
+In addition to its alternative [RNG semantics](#rng), Pokémon Showdown's implemention of the first
 generation of Pokémon contains a number bugs, [many of which are known and have been documented on
 Smogon](https://www.smogon.com/forums/threads/rby-tradebacks-bug-report-thread.3524844/#post-5933177):
 
@@ -593,13 +593,6 @@ mode, the implications of these differences are outlined below:
     generations where there are no event listeners for the `Update` event)
   - adding the artificial `beforeTurn` "action" will also advance the RNG in the same way the
     `runUnnerve` and `runSwitch` actions do
-- **`Battle.getRandomTarget()`**: Pokémon Showdown randomly determines a target (causing the RNG to
-  advance a frame) in cases where the target of a move is required but has not been specified,
-  though erroneously applies this logic in singles battles where only one target is possible. This
-  spuriously and inefficiently advances the RNG and results in inconsistencies if a player specifies
-  `move 1 1` instead of `move 1`. This primarily happens during move selection, though moves used
-  via other moves (i.e. Metronome or MirrorMove) can also advance the RNG frame for this same
-  reason.
 - **`Pokemon.getLockedMove()`**: Pokémon Showdown runs the `onLockMove` event (causing the RNG frame
   to advance) when calling `Pokemon.getLockedMove()` while building up the `|request|` object for
   both sides in `endTurn` and in other scenarios (`checkFaint`, certain circumstances with Metronome
@@ -617,7 +610,7 @@ speed ties, etc) that Pokémon Showdown cannot replicate due to everything descr
 | ------------------------ | ------------------------ | ----------- |
 | **Speed Tie**            | `turnOrder`              | Player 1 if $X < 127$, otherwise Player 2 |
 | **Critical Hit**         | `checkCriticalHit`       | <dl><dt>Pokémon Red</dt><dd>Inflict a critical hit if $X' < chance$ where $X'$ is $X$ with its bits rotated left three times</dd><dt>Pokémon Showdown</dt><dd>Critical hit if $X < chance$</dd></dl> |
-| **Damage** (range)     left  | `randomizeDamage`        | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X' \geq  217$ where $X'$ is $X$ with its bits rotated right once</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[217, 256\right)$</dd></dl>|
+| **Damage** (range)       | `randomizeDamage`        | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X' \geq  217$ where $X'$ is $X$ with its bits rotated right once</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[217, 256\right)$</dd></dl>|
 | **Hit / Miss**           | `checkHit`               | Hit if $X < scaledAccuracy$ |
 | **Burn** (chance)        | `Effects.burnChance`     | Trigger if $X < 26$ ($77$ for Fire Blast) |
 | **Confusion** (chance)   | `Effects.confusion`      | <dl><dt>Pokémon Red</dt><dd>Trigger if $X< 25$</dd><dt>Pokémon Showdown</dt><dd>Trigger if $X < 26$</dd></dl> These differ due to a [bug in Pokémon Showdown](#bugs) |
@@ -631,7 +624,7 @@ speed ties, etc) that Pokémon Showdown cannot replicate due to everything descr
 | **Sleep** (duration)     | `Effects.sleep`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X \land 7 \neq 0$</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[1, 8\right)$</dd></dl> |
 | **Bide** (duration)      | `Effects.bide`           | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 1\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[3, 5\right) - 1$ turns</dd></dl> |
 | **Disable** (move)       | `Effects.disable`        | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X \land 3$ is the index of a non-empty move slot</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, \|movesSlots\|\right)$</dd></dl> |
-| **Disable** (duration)   | `Effects.disable`        | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 7\right) + 1$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[1, 6\right)$ turns</dd></dl> Disable duration is [incorrect in Pokémon Showdown](#bug) |
+| **Disable** (duration)   | `Effects.disable`        | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 7\right) + 1$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[1, 6\right)$ turns</dd></dl> Disable duration is [incorrect in Pokémon Showdown](#bugs) |
 | **Metronome** (move)     | `metronome`              | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X$ matches the index of a move which is not Struggle or Metronome</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, \|validMoves\|\right)$, where $validMoves$ is ordered set of moves with  Struggle and Metronome removed <i>(indexes of moves > Metronome will be shifted down)</i></dd></dl> |
 | **Mimic** (move)         | `Effects.mimic`          |<dl><dt>Pokémon Red</dt><dd>Continue generating until $X \land 3$ is the index of a non-empty move slot</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, \|movesSlots\|\right)$</dd></dl> |
 | **Psywave** (power)      | `specialDamage`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X < {3\over2} \cdot level$</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, {3\over2} \cdot level\right)$</dd></dl> |

@@ -65,19 +65,15 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     var f1: ?Move = null;
     var f2: ?Move = null;
 
-    var r1: u8 = 0;
-    var r2: u8 = 0;
-
     const pass = showdown and (c1.type == .Pass or c2.type == .Pass);
     if (showdown and !pass) checkLocked(battle, 2, false);
-    if (selectMove(battle, .P1, c1, c2, &f1, &r1)) |r| return r;
-    if (selectMove(battle, .P2, c2, c1, &f2, &r2)) |r| return r;
-    if (showdown) checkChange(battle);
+    if (selectMove(battle, .P1, c1, c2, &f1)) |r| return r;
+    if (selectMove(battle, .P2, c2, c1, &f2)) |r| return r;
 
     if (turnOrder(battle, c1, c2) == .P1) {
-        if (try doTurn(battle, .P1, c1, f1, r1, .P2, c2, f2, r2, log)) |r| return r;
+        if (try doTurn(battle, .P1, c1, f1, .P2, c2, f2, log)) |r| return r;
     } else {
-        if (try doTurn(battle, .P2, c2, f2, r2, .P1, c1, f1, r1, log)) |r| return r;
+        if (try doTurn(battle, .P2, c2, f2, .P1, c1, f1, log)) |r| return r;
     }
 
     var p1 = battle.side(.P1);
@@ -130,20 +126,12 @@ fn checkLocked(battle: anytype, n: u2, check: bool) void {
     }
 }
 
-fn checkChange(battle: anytype) void {
-    assert(showdown);
-    // Thrashing moves call changeAction onBeforeTurn which advances the RNG due to resolve (again)
-    battle.rng.advance(@as(u2, @boolToInt(battle.side(.P1).active.volatiles.Thrashing)) +
-        @as(u2, @boolToInt(battle.side(.P2).active.volatiles.Thrashing)));
-}
-
 fn selectMove(
     battle: anytype,
     player: Player,
     choice: Choice,
     foe_choice: Choice,
     from: *?Move,
-    run: *u8,
 ) ?Result {
     if (choice.type == .Pass) return null;
 
@@ -155,18 +143,10 @@ fn selectMove(
         (choice.type == .Move and choice.data == @boolToInt(showdown)));
 
     // pre-battle menu
-    if (volatiles.Recharging) {
-        if (showdown) {
-            // The placeholder "move" 'recharge' has no target which
-            // results in both resolveAction and runAction frame advances
-            battle.rng.advance(1);
-            run.* = 1;
-        }
-        return null;
-    }
+    if (volatiles.Recharging) return null;
     if (volatiles.Rage) {
         from.* = side.last_used_move;
-        if (showdown) run.* = saveMove(battle, player, null);
+        if (showdown) saveMove(battle, player, null);
         return null;
     }
     volatiles.Flinch = false;
@@ -176,7 +156,7 @@ fn selectMove(
         // last_selected_move (last_used_move will differ if the move was proc-ed via Metronome /
         // Mirror Move but they will be equivalent at this point on Pokémon Showdown).
         from.* = side.last_selected_move;
-        if (showdown) run.* = saveMove(battle, player, null);
+        if (showdown) saveMove(battle, player, null);
         return null;
     }
 
@@ -186,7 +166,7 @@ fn selectMove(
     // pre-move select
     if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP) or volatiles.Bide) {
         assert(showdown or choice.data == 0);
-        if (showdown) run.* = saveMove(battle, player, choice);
+        if (showdown) saveMove(battle, player, choice);
         return null;
     }
     if (volatiles.Trapping) {
@@ -199,7 +179,7 @@ fn selectMove(
             // still set the selected move will not actually be used, it will just be reported as
             // having been used (this differs from how Pokémon Showdown works, but its impossible
             // to replicate the incorrect behavior with the correct mechanisms).
-            run.* = saveMove(battle, player, choice);
+            saveMove(battle, player, choice);
         } else {
             assert(choice.data == 0);
             // GLITCH: https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
@@ -218,7 +198,7 @@ fn selectMove(
 
     if (battle.foe(player).active.volatiles.Trapping) {
         if (showdown) {
-            run.* = saveMove(battle, player, choice);
+            saveMove(battle, player, choice);
         } else {
             assert(choice.data == 0);
             side.last_selected_move = .SKIP_TURN;
@@ -236,15 +216,15 @@ fn selectMove(
         };
 
         assert(struggle);
-        run.* = saveMove(battle, player, choice);
+        saveMove(battle, player, choice);
     } else {
-        run.* = saveMove(battle, player, choice);
+        saveMove(battle, player, choice);
     }
 
     return null;
 }
 
-fn saveMove(battle: anytype, player: Player, choice: ?Choice) u8 {
+fn saveMove(battle: anytype, player: Player, choice: ?Choice) void {
     var side = battle.side(player);
 
     if (choice) |c| {
@@ -266,19 +246,6 @@ fn saveMove(battle: anytype, player: Player, choice: ?Choice) u8 {
             }
         }
     }
-
-    if (!showdown) return 0;
-
-    // getRandomTarget arbitrarily advances the RNG during resolveAction and runAction, unless it
-    // is the execution turn of a non-self target twoturnmove move that was proc-ed via useMove
-    const advance = !(side.active.volatiles.Charging and
-        Move.get(side.last_selected_move).effect == .Charge and
-        Move.get(side.last_selected_move).target != .Self and
-        side.last_used_move != .None and
-        Move.get(side.last_used_move).effect != .Charge);
-    if (advance) battle.rng.advance(Move.frames(side.last_selected_move, .resolve));
-
-    return Move.frames(side.last_selected_move, .run);
 }
 
 fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anytype) !void {
@@ -358,23 +325,21 @@ fn doTurn(
     player: Player,
     player_choice: Choice,
     player_from: ?Move,
-    player_run: u8,
     foe_player: Player,
     foe_choice: Choice,
     foe_from: ?Move,
-    foe_run: u8,
     log: anytype,
 ) !?Result {
     assert(player_choice.type != .Pass);
 
-    if (try executeMove(battle, player, player_choice, player_from, player_run, log)) |r| return r;
+    if (try executeMove(battle, player, player_choice, player_from, log)) |r| return r;
     if (foe_choice.type == .Pass) return null;
     if (showdown and player_choice.type == .Switch and speedTie(battle)) battle.rng.advance(2);
     if (try checkFaint(battle, foe_player, log)) |r| return r;
     try handleResidual(battle, player, log);
     if (try checkFaint(battle, player, log)) |r| return r;
 
-    if (try executeMove(battle, foe_player, foe_choice, foe_from, foe_run, log)) |r| return r;
+    if (try executeMove(battle, foe_player, foe_choice, foe_from, log)) |r| return r;
     if (showdown and foe_choice.type == .Switch and speedTie(battle)) battle.rng.advance(2);
     if (try checkFaint(battle, player, log)) |r| return r;
     try handleResidual(battle, foe_player, log);
@@ -388,7 +353,6 @@ fn executeMove(
     player: Player,
     choice: Choice,
     from: ?Move,
-    run: u8,
     log: anytype,
 ) !?Result {
     if (showdown and speedTie(battle)) battle.rng.advance(1);
@@ -441,12 +405,6 @@ fn executeMove(
             }
         }
     }
-
-    // getRandomTarget arbitrarily advances the RNG during runAction, though we need to decide by
-    // how much when processing choices in selectMove because at this point we may have lost some
-    // state (eg. no longer recharging Hyper Beam after being put to sleep, but Pokémon Showdown
-    // still requires the advance because it added an action to its queue during commitDecisions)
-    if (showdown) battle.rng.advance(run);
 
     var skip_can = false;
     var skip_pp = false;
@@ -669,7 +627,6 @@ fn canMove(
     const player_ident = battle.active(player);
     const move = Move.get(side.last_selected_move);
     const locked = showdown and isLocked(side, true);
-    const special = from != null and (from.? == .MirrorMove or from.? == .Metronome);
 
     var skip = skip_pp;
     if (side.active.volatiles.Charging) {
@@ -677,9 +634,6 @@ fn canMove(
         side.active.volatiles.Invulnerable = false;
         if (showdown) skip = true;
     } else if (move.effect == .Charge) {
-        if (showdown and special) {
-            battle.rng.advance(Move.frames(side.last_selected_move, .resolve));
-        }
         try log.move(player_ident, side.last_selected_move, .{}, from);
         try Effects.charge(battle, player, log);
         // Pokémon Showdown thinks that the first turn of charging counts as using a move
@@ -694,13 +648,9 @@ fn canMove(
     // Getting a "locked" move advances the RNG due to a speed sort in Pokémon Showdown's runMove
     if (locked) battle.rng.advance(1);
 
+    const special = from != null and (from.? == .MirrorMove or from.? == .Metronome);
     if (!showdown or !special) side.last_used_move = side.last_selected_move;
     if (!skip) decrementPP(side, mslot, auto);
-
-    // Metronome / Mirror Move call getRandomTarget if the move they proc targets (max once)
-    if (showdown and special) {
-        battle.rng.advance(@boolToInt(Move.get(side.last_selected_move).target.resolves()));
-    }
 
     const target = if (move.target == .Self) player else player.foe();
     try log.move(player_ident, side.last_selected_move, battle.active(target), from);

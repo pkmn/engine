@@ -251,10 +251,10 @@ test "turn order (priority)" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
-            NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+            HIT, ~CRIT, MIN_DMG, HIT,
         } else .{
             ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
             ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
@@ -339,7 +339,7 @@ test "turn order (basic speed tie)" {
         // zig fmt: off
             if (showdown) .{
                 NOP, NOP, NOP, NOP, NOP, NOP, NOP,
-                NOP, NOP, TIE_1, NOP,
+                TIE_1, NOP,
                 NOP, HIT, ~CRIT, MIN_DMG,
                 NOP, HIT, ~CRIT, MAX_DMG,
                 NOP, NOP,
@@ -373,7 +373,7 @@ test "turn order (basic speed tie)" {
         // zig fmt: off
             if (showdown) .{
                 NOP, NOP, NOP, NOP, NOP, NOP, NOP,
-                NOP, NOP, TIE_1, NOP,
+                TIE_1, NOP,
                 NOP, HIT, ~CRIT, MIN_DMG,
                 NOP, HIT, CRIT, MAX_DMG,
                 NOP, NOP, NOP,
@@ -442,7 +442,7 @@ test "turn order (basic speed tie)" {
         // zig fmt: off
             if (showdown) .{
                 NOP, NOP, NOP, NOP, NOP, NOP, NOP,
-                NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG,
+                NOP, NOP, HIT, ~CRIT, MIN_DMG,
             } else .{
                 ~CRIT, MIN_DMG, HIT
             }
@@ -485,14 +485,14 @@ test "turn order (complex speed tie)" {
     // zig fmt: off
         if (showdown) .{
             NOP, NOP, NOP, NOP, NOP, NOP, NOP,
-            TIE_2, NOP, NOP, fly, NOP, NOP,
-            dig, NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP,
+            TIE_2, NOP, NOP, fly, NOP,
+            dig, NOP, NOP, NOP, NOP, NOP, NOP, NOP,
             NOP, NOP, NOP, NOP, TIE_1, NOP, NOP, NOP, NOP,
             NOP, HIT, ~CRIT, MIN_DMG, NOP, NOP, NOP,
-            NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, NOP,
-            swift, NOP, ~CRIT, MIN_DMG, NOP, NOP,
+            NOP, NOP, HIT, ~CRIT, MIN_DMG, NOP,
+            swift, ~CRIT, MIN_DMG, NOP, NOP,
             NOP, NOP, NOP, NOP, NOP, petal_dance,
-            NOP, HIT, ~CRIT, MIN_DMG, THRASH_3, NOP, NOP,
+            HIT, ~CRIT, MIN_DMG, THRASH_3, NOP, NOP,
         } else .{
             TIE_2, ~CRIT, fly, ~CRIT, dig,
             TIE_1, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT,
@@ -557,7 +557,7 @@ test "turn order (complex speed tie)" {
 
 test "turn order (switch vs. move)" {
     var t = Test(if (showdown)
-        (.{ NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, ~CRIT, MIN_DMG })
+        (.{ HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG })
     else
         (.{ ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT })).init(
         &.{
@@ -624,7 +624,7 @@ test "accuracy (normal)" {
     const miss = hit + 1;
 
     var t = Test(if (showdown)
-        (.{ NOP, NOP, hit, CRIT, MAX_DMG, miss })
+        (.{ hit, CRIT, MAX_DMG, miss })
     else
         (.{ CRIT, MAX_DMG, hit, ~CRIT, MIN_DMG, miss })).init(
         &.{.{ .species = .Hitmonchan, .moves = &.{.MegaPunch} }},
@@ -651,8 +651,7 @@ test "damage calc" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, NO_BRN,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG
+            HIT, ~CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, NO_BRN, HIT, ~CRIT, MIN_DMG
         } else .{
             ~CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, HIT, NO_BRN, ~CRIT, HIT, ~CRIT, MIN_DMG, HIT
         }
@@ -695,7 +694,7 @@ test "fainting (single)" {
     // Switch
     {
         var t = Test(if (showdown)
-            (.{ NOP, NOP, HIT, HIT, ~CRIT, MAX_DMG })
+            (.{ HIT, HIT, ~CRIT, MAX_DMG })
         else
             (.{ HIT, ~CRIT, MAX_DMG, HIT })).init(
             &.{.{ .species = .Venusaur, .moves = &.{.LeechSeed} }},
@@ -729,7 +728,7 @@ test "fainting (single)" {
     }
     // Win
     {
-        var t = Test(if (showdown) .{ NOP, NOP, HIT } else .{HIT}).init(
+        var t = Test(.{HIT}).init(
             &.{.{ .species = .Dratini, .hp = 1, .status = BRN, .moves = &.{.DragonRage} }},
             &.{.{ .species = .Slowpoke, .hp = 1, .moves = &.{.WaterGun} }},
         );
@@ -746,10 +745,7 @@ test "fainting (single)" {
     }
     // Lose
     {
-        var t = Test(if (showdown)
-            (.{ NOP, NOP, NOP, ~CRIT, MIN_DMG, HIT })
-        else
-            (.{ ~CRIT, MIN_DMG, HIT })).init(
+        var t = Test((.{ ~CRIT, MIN_DMG, HIT })).init(
             &.{.{ .species = .Jolteon, .hp = 1, .moves = &.{.Swift} }},
             &.{.{ .species = .Dratini, .status = BRN, .moves = &.{.DragonRage} }},
         );
@@ -773,7 +769,7 @@ test "fainting (double)" {
     // Switch
     {
         var t = Test(if (showdown)
-            (.{ NOP, NOP, HIT, CRIT, MAX_DMG })
+            (.{ HIT, CRIT, MAX_DMG })
         else
             (.{ CRIT, MAX_DMG, HIT })).init(
             &.{
@@ -801,7 +797,7 @@ test "fainting (double)" {
     // Tie
     {
         var t = Test(if (showdown)
-            (.{ NOP, NOP, HIT, CRIT, MAX_DMG })
+            (.{ HIT, CRIT, MAX_DMG })
         else
             (.{ CRIT, MAX_DMG, HIT })).init(
             &.{.{ .species = .Weezing, .hp = 1, .moves = &.{.Explosion} }},
@@ -907,7 +903,7 @@ test "Endless Battle Clause (basic)" {
         try t.verify();
     }
     {
-        var t = Test(.{ NOP, NOP, NOP }).init(
+        var t = Test(.{NOP}).init(
             &.{
                 .{ .species = .Mew, .moves = &.{.Transform} },
                 .{ .species = .Muk, .moves = &.{.Pound} },
@@ -964,7 +960,7 @@ test "HighCritical effect" {
     const no_crit = if (showdown) comptime ranged(Species.chance(.Machop), 256) else 3;
 
     var t = Test(if (showdown)
-        (.{ NOP, NOP, HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG })
+        (.{ HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG })
     else
         (.{ no_crit, MIN_DMG, HIT, no_crit, MIN_DMG, HIT })).init(
         &.{.{ .species = .Machop, .moves = &.{.KarateChop} }},
@@ -993,7 +989,7 @@ test "FocusEnergy effect" {
     const crit = if (showdown) comptime ranged(Species.chance(.Machoke), 256) - 1 else 2;
 
     var t = Test(if (showdown)
-        (.{ NOP, HIT, crit, MIN_DMG, NOP, HIT, crit, MIN_DMG })
+        (.{ HIT, crit, MIN_DMG, HIT, crit, MIN_DMG })
     else
         (.{ ~CRIT, crit, MIN_DMG, HIT, crit, MIN_DMG, HIT, ~CRIT })).init(
         &.{.{ .species = .Machoke, .moves = &.{ .FocusEnergy, .Strength } }},
@@ -1043,7 +1039,7 @@ test "MultiHit effect" {
     const hit5 = MAX;
 
     var t = Test(if (showdown)
-        (.{ NOP, HIT, hit3, ~CRIT, MAX_DMG, NOP, HIT, hit5, ~CRIT, MAX_DMG })
+        (.{ HIT, hit3, ~CRIT, MAX_DMG, HIT, hit5, ~CRIT, MAX_DMG })
     else
         (.{ ~CRIT, MAX_DMG, HIT, hit3, ~CRIT, MAX_DMG, HIT, hit5, hit5 })).init(
         &.{.{ .species = .Kangaskhan, .moves = &.{.CometPunch} }},
@@ -1086,7 +1082,7 @@ test "DoubleHit effect" {
     // Hits twice. Damage is calculated once for the first hit and used for both hits. If the first
     // hit breaks the target's substitute, the move ends.
     var t = Test(if (showdown)
-        (.{ NOP, HIT, ~CRIT, MAX_DMG, NOP, HIT, ~CRIT, MAX_DMG })
+        (.{ HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, MAX_DMG })
     else
         (.{ ~CRIT, MAX_DMG, HIT, ~CRIT, MAX_DMG, HIT })).init(
         &.{.{ .species = .Marowak, .moves = &.{.Bonemerang} }},
@@ -1128,10 +1124,10 @@ test "Twineedle effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, HIT, CRIT, MAX_DMG,
-            NOP, HIT, ~CRIT, MIN_DMG, NO_PROC,
-            NOP, HIT, ~CRIT, MIN_DMG, PROC, NOP,
-            NOP, HIT, ~CRIT, MIN_DMG, PROC,
+            HIT, CRIT, MAX_DMG,
+            HIT, ~CRIT, MIN_DMG, NO_PROC,
+            HIT, ~CRIT, MIN_DMG, PROC, NOP,
+            HIT, ~CRIT, MIN_DMG, PROC,
         } else .{
             CRIT, MAX_DMG, HIT,
             ~CRIT, MIN_DMG, HIT, NO_PROC,
@@ -1214,7 +1210,7 @@ test "Poison effect" {
     {
         // (Badly) Poisons the target.
         var t = Test((if (showdown)
-            (.{ NOP, HIT, NOP, HIT, NOP, HIT, NOP, NOP, HIT, NOP })
+            (.{ HIT, HIT, HIT, NOP, HIT, NOP })
         else
             (.{ HIT, HIT }))).init(
             &.{
@@ -1293,7 +1289,7 @@ test "Poison effect" {
     }
     {
         var battle = Battle.fixed(
-            if (showdown) (.{ NOP, NOP, HIT, NOP, HIT }) else (.{ HIT, HIT }),
+            if (showdown) (.{ HIT, NOP, HIT }) else (.{ HIT, HIT }),
             &.{.{ .species = .Clefable, .moves = &.{ .Toxic, .Recover } }},
             &.{.{
                 .species = .Diglett,
@@ -1327,10 +1323,10 @@ test "PoisonChance effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, LO_PROC, HIT, ~CRIT, MIN_DMG, HI_PROC,
-            NOP, HIT, ~CRIT, MAX_DMG, HI_PROC,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC, NOP,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC,
+            HIT, ~CRIT, MIN_DMG, LO_PROC, HIT, ~CRIT, MIN_DMG, HI_PROC,
+            HIT, ~CRIT, MAX_DMG, HI_PROC,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC, NOP,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC,
         } else .{
             ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, HI_PROC,
             ~CRIT, MAX_DMG, HIT,
@@ -1408,10 +1404,10 @@ test "BurnChance effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HI_PROC,
-            NOP, HIT, ~CRIT, MIN_DMG, HI_PROC,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC, NOP,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HI_PROC,
+            HIT, ~CRIT, MIN_DMG, HI_PROC,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC, NOP,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC,
         } else .{
             ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, HI_PROC,
             ~CRIT, MIN_DMG, HIT,
@@ -1489,16 +1485,15 @@ test "FreezeChance effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, NOP,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, FRZ, PAR_CANT,
-            NOP, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
-            NOP, NOP, HIT,
-            NOP, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
-            NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
-            NOP, NOP,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, ~HIT,
-            NOP, ~HIT,
-            NOP, HIT, ~CRIT, MIN_DMG, FRZ,
+            HIT, ~CRIT, MIN_DMG, HIT, NOP,
+            HIT, ~CRIT, MIN_DMG, FRZ, PAR_CANT,
+            HIT, ~CRIT, MIN_DMG, FRZ, NOP,
+            HIT,
+            HIT, ~CRIT, MIN_DMG, FRZ, NOP,
+            HIT, ~CRIT, MIN_DMG, MIN_WRAP,
+            HIT, ~CRIT, MIN_DMG, ~HIT,
+            ~HIT,
+            HIT, ~CRIT, MIN_DMG, FRZ,
         } else .{
             ~CRIT, MIN_DMG, HIT, HIT,
             ~CRIT, MIN_DMG, HIT, PAR_CANT,
@@ -1660,12 +1655,12 @@ test "Paralyze effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, ~HIT, HIT, NOP,
-            NOP, NOP, HIT, NO_PROC, HIT, NOP,
-            NOP, PROC,
-            NOP, NOP, HIT, NO_PROC, HIT, NOP,
-            NOP, NO_PROC,
-            NOP, NO_PROC, HIT, NOP,
+            ~HIT, HIT, NOP,
+            HIT, NO_PROC, HIT, NOP,
+            PROC,
+            HIT, NO_PROC, HIT, NOP,
+            NO_PROC,
+            NO_PROC, HIT, NOP,
         } else .{
             ~HIT, HIT,
             NO_PROC, HIT,
@@ -1761,10 +1756,10 @@ test "ParalyzeChance effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HI_PROC, HIT, ~CRIT, MIN_DMG, HI_PROC, NOP,
-            NOP, PAR_CAN, HIT, ~CRIT, MIN_DMG, LO_PROC,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HI_PROC, PAR_CANT, NOP,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+            HIT, ~CRIT, MIN_DMG, HI_PROC, HIT, ~CRIT, MIN_DMG, HI_PROC, NOP,
+            PAR_CAN, HIT, ~CRIT, MIN_DMG, LO_PROC,
+            HIT, ~CRIT, MIN_DMG, HI_PROC, PAR_CANT,
         } else .{
             ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
             ~CRIT, MIN_DMG, HIT, HI_PROC, ~CRIT, MIN_DMG, HIT, HI_PROC,
@@ -1850,17 +1845,9 @@ test "Sleep effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, HIT, NOP, SLP_1,
-            NOP, NOP, HIT, NOP, SLP_2,
-            NOP, HIT, NOP,
-            NOP, HIT,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG,
+            HIT, NOP, SLP_1, HIT, NOP, SLP_2, HIT, NOP, HIT, HIT, ~CRIT, MIN_DMG,
         } else .{
-            ~CRIT, HIT, SLP_1,
-            ~CRIT, HIT, SLP_2,
-            ~CRIT, HIT, SLP_2,
-            ~CRIT,
-            ~CRIT, MIN_DMG, HIT,
+            ~CRIT, HIT, SLP_1, ~CRIT, HIT, SLP_2, ~CRIT, HIT, SLP_2, ~CRIT, ~CRIT, MIN_DMG, HIT,
         }
     // zig fmt: on
     ).init(
@@ -1938,7 +1925,7 @@ test "Confusion effect" {
     const CFZ_CANT = if (showdown) CFZ_CAN + 1 else MAX;
 
     var t = Test((if (showdown)
-        (.{ NOP, HIT, NOP, HIT, NOP, HIT, CFZ_3, NOP, CFZ_CANT, HIT, NOP, CFZ_CAN, HIT, NOP, HIT })
+        (.{ HIT, HIT, HIT, CFZ_3, CFZ_CANT, HIT, CFZ_CAN, HIT, HIT })
     else
         (.{ HIT, ~CRIT, HIT, CFZ_3, CFZ_CANT, HIT, CFZ_CAN, ~CRIT, HIT, ~CRIT, HIT }))).init(
         &.{.{ .species = .Haunter, .moves = &.{ .ConfuseRay, .NightShade } }},
@@ -2021,9 +2008,9 @@ test "ConfusionChance effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, HIT, ~CRIT, MAX_DMG, PROC,
-            NOP, HIT, ~CRIT, MAX_DMG, PROC,
-            NOP, HIT, ~CRIT, MAX_DMG, NO_PROC, CFZ_3,
+            HIT, ~CRIT, MAX_DMG, PROC,
+            HIT, ~CRIT, MAX_DMG, PROC,
+            HIT, ~CRIT, MAX_DMG, NO_PROC, CFZ_3,
         } else .{
             ~CRIT, MAX_DMG, HIT, NO_PROC,
             ~CRIT, MAX_DMG, HIT,
@@ -2085,13 +2072,13 @@ test "FlinchChance effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, HIT, ~CRIT, MIN_DMG, HI_PROC,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HI_PROC, HIT, ~CRIT, MIN_DMG, HI_PROC,
-            NOP, NOP, HIT, ~CRIT, MAX_DMG, LO_PROC, HIT, ~CRIT, MIN_DMG,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, LO_PROC, NOP,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, LO_PROC,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HI_PROC,
-            NOP, NOP, ~HIT, ~HIT,
+            HIT, ~CRIT, MIN_DMG, HI_PROC,
+            HIT, ~CRIT, MIN_DMG, HI_PROC, HIT, ~CRIT, MIN_DMG, HI_PROC,
+            HIT, ~CRIT, MAX_DMG, LO_PROC, HIT, ~CRIT, MIN_DMG,
+            HIT, ~CRIT, MIN_DMG, LO_PROC,
+            HIT, ~CRIT, MIN_DMG, LO_PROC,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HI_PROC,
+            ~HIT, ~HIT,
         } else .{
             ~CRIT, MIN_DMG, HIT, HI_PROC,
             ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, HI_PROC,
@@ -2199,9 +2186,9 @@ test "StatDown effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
-            NOP, NOP, HIT, NOP, HIT,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+            HIT, HIT,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
         } else .{
             ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
             ~CRIT, HIT, ~CRIT, HIT,
@@ -2258,9 +2245,9 @@ test "StatDownChance effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_PROC, HIT, ~CRIT, MIN_DMG, PROC,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_PROC, HIT, ~CRIT, MIN_DMG, PROC,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_PROC, HIT, ~CRIT, MIN_DMG, NO_PROC,
+            HIT, ~CRIT, MIN_DMG, NO_PROC, HIT, ~CRIT, MIN_DMG, PROC,
+            HIT, ~CRIT, MIN_DMG, NO_PROC, HIT, ~CRIT, MIN_DMG, PROC,
+            HIT, ~CRIT, MIN_DMG, NO_PROC, HIT, ~CRIT, MIN_DMG, NO_PROC,
         } else .{
             ~CRIT, MIN_DMG, HIT, NO_PROC, ~CRIT, MIN_DMG, HIT, PROC,
             ~CRIT, MIN_DMG, HIT, NO_PROC, ~CRIT, MIN_DMG, HIT, PROC,
@@ -2326,8 +2313,8 @@ test "StatUp effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
         } else .{
             ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
             ~CRIT, ~CRIT,
@@ -2376,7 +2363,7 @@ test "StatUp effect" {
 test "OHKO effect" {
     // Deals 65535 damage to the target. Fails if the target's Speed is greater than the user's.
     var t = Test(if (showdown)
-        (.{ NOP, NOP, ~HIT, NOP, NOP, HIT })
+        (.{ ~HIT, HIT })
     else
         (.{ ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT })).init(
         &.{
@@ -2410,7 +2397,7 @@ test "OHKO effect" {
 test "Charge effect" {
     // This attack charges on the first turn and executes on the second.
     var t = Test((if (showdown)
-        (.{ NOP, NOP, HIT, ~CRIT, MIN_DMG, NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG })
+        (.{ HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG })
     else
         (.{ ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
         &.{
@@ -2468,7 +2455,6 @@ test "Fly/Dig effect" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                NOP, NOP, NOP, NOP,
                 NOP, NOP, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
             } else .{
                 ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
@@ -2522,8 +2508,8 @@ test "Fly/Dig effect" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                NOP, HIT, NOP, NOP, NOP, NOP, NOP, NOP, NOP,
-                NOP, NOP, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG,
+                HIT, NOP, NOP, NOP, NOP, NOP,
+                NOP, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG,
             } else .{
                 HIT, ~CRIT, MIN_DMG, HIT
             }
@@ -2592,7 +2578,7 @@ test "Fly/Dig effect" {
 // Move.{Whirlwind,Roar,Teleport}
 test "SwitchAndTeleport effect" {
     // No competitive use.
-    var t = Test(if (showdown) .{ NOP, HIT, NOP, ~HIT } else .{}).init(
+    var t = Test(if (showdown) .{ HIT, ~HIT } else .{}).init(
         &.{.{ .species = .Abra, .moves = &.{.Teleport} }},
         &.{.{ .species = .Pidgey, .moves = &.{.Whirlwind} }},
     );
@@ -2654,11 +2640,11 @@ test "Trapping effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
-            NOP, HIT, ~CRIT, MAX_DMG, MIN_WRAP,
-            NOP, NOP, NOP, HIT, NOP,
-            NOP, PAR_CAN, HIT, MAX_WRAP, NOP, PAR_CAN,
-            NOP, PAR_CANT, PAR_CAN,
+            HIT, ~CRIT, MIN_DMG, MIN_WRAP,
+            HIT, ~CRIT, MAX_DMG, MIN_WRAP,
+            HIT, NOP,
+            PAR_CAN, HIT, MAX_WRAP, PAR_CAN,
+            PAR_CANT, PAR_CAN,
         } else .{
             MIN_WRAP, ~CRIT, MIN_DMG, HIT,
             MIN_WRAP, ~CRIT, MAX_DMG, HIT,
@@ -2801,7 +2787,7 @@ test "JumpKick effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, ~HIT, HIT, CRIT, MAX_DMG, NOP, NOP, ~HIT, ~HIT,
+            ~HIT, HIT, CRIT, MAX_DMG, ~HIT, ~HIT,
         } else .{
             ~CRIT, MIN_DMG, ~HIT, CRIT, MAX_DMG, HIT, ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, ~HIT,
         }
@@ -2857,7 +2843,7 @@ test "Recoil effect" {
     // rounded down, but not less than 1 HP. If this move breaks the target's substitute, the user
     // does not take any recoil damage.
     var t = Test(if (showdown)
-        (.{ NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, ~CRIT, MAX_DMG, NOP, HIT, ~CRIT, MIN_DMG })
+        (.{ HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, MIN_DMG })
     else
         (.{ ~CRIT, MIN_DMG, HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, MIN_DMG, HIT })).init(
         &.{
@@ -2916,9 +2902,7 @@ test "Struggle effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, HIT, ~CRIT, MIN_DMG,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
         } else .{
             ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT,
         }
@@ -3004,11 +2988,11 @@ test "Thrashing effect" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, THRASH_3, HIT, CFZ_5,
-                NOP, NOP, NOP, NOP, CFZ_CAN, ~HIT, NOP, ~HIT, THRASH_3,
-                NOP, NOP, NOP, NOP, NOP, CFZ_CAN, HIT, ~CRIT, MIN_DMG, CFZ_5, NOP, HIT, ~CRIT,
-                MIN_DMG, NOP, NOP, NOP, CFZ_CAN, HIT, NOP, NOP, PAR_CANT,
-                NOP, NOP, CFZ_CAN, HIT, NOP, PAR_CAN, HIT, ~CRIT, MAX_DMG, THRASH_3,
+                HIT, ~CRIT, MIN_DMG, THRASH_3, HIT, CFZ_5,
+                CFZ_CAN, ~HIT, ~HIT, THRASH_3,
+                CFZ_CAN, HIT, ~CRIT, MIN_DMG, CFZ_5, HIT, ~CRIT,
+                MIN_DMG, CFZ_CAN, HIT, NOP, PAR_CANT,
+                CFZ_CAN, HIT, PAR_CAN, HIT, ~CRIT, MAX_DMG, THRASH_3,
             } else .{
                 THRASH_3, ~CRIT, MIN_DMG, HIT, HIT, CFZ_5,
                 CFZ_CAN, ~CRIT, MIN_DMG, ~HIT, THRASH_3, ~CRIT, MIN_DMG, ~HIT,
@@ -3122,7 +3106,7 @@ test "Thrashing effect" {
     // immune
     {
         var t = Test((if (showdown)
-            (.{ NOP, NOP, HIT, ~CRIT, MIN_DMG, THRASH_3, NOP, NOP, NOP, NOP, NOP, NOP, CFZ_5 })
+            (.{ HIT, ~CRIT, MIN_DMG, THRASH_3, CFZ_5 })
         else
             (.{ THRASH_3, ~CRIT, MIN_DMG, HIT, ~CRIT, HIT, CFZ_5, ~CRIT, HIT }))).init(
             &.{.{ .species = .Mankey, .moves = &.{ .Thrash, .Scratch } }},
@@ -3167,7 +3151,7 @@ test "Thrashing effect" {
 // Move.{SonicBoom,DragonRage}
 test "FixedDamage effect" {
     // Deals X HP of damage to the target. This move ignores type immunity.
-    var t = Test(if (showdown) .{ NOP, NOP, HIT, HIT, NOP } else .{ HIT, HIT, HIT }).init(
+    var t = Test(if (showdown) .{ HIT, HIT } else .{ HIT, HIT, HIT }).init(
         &.{.{ .species = .Voltorb, .moves = &.{.SonicBoom} }},
         &.{
             .{ .species = .Dratini, .moves = &.{.DragonRage} },
@@ -3203,7 +3187,7 @@ test "FixedDamage effect" {
 // Move.{SeismicToss,NightShade}
 test "LevelDamage effect" {
     // Deals damage to the target equal to the user's level. This move ignores type immunity.
-    var t = Test((if (showdown) .{ NOP, NOP, HIT, HIT } else .{ HIT, HIT })).init(
+    var t = Test(.{ HIT, HIT }).init(
         &.{.{ .species = .Gastly, .level = 22, .moves = &.{.NightShade} }},
         &.{.{ .species = .Clefairy, .level = 16, .moves = &.{.SeismicToss} }},
     );
@@ -3226,7 +3210,7 @@ test "Psywave effect" {
     // Deals damage to the target equal to a random number from 1 to (user's level * 1.5 - 1),
     // rounded down, but not less than 1 HP.
     var t = Test((if (showdown)
-        (.{ NOP, NOP, HIT, MAX_DMG, HIT, MIN_DMG })
+        (.{ HIT, MAX_DMG, HIT, MIN_DMG })
     else
         (.{ HIT, 88, 87, HIT, 255, 0 }))).init(
         &.{.{ .species = .Gengar, .level = 59, .moves = &.{.Psywave} }},
@@ -3253,7 +3237,7 @@ test "SuperFang effect" {
     // Deals damage to the target equal to half of its current HP, rounded down, but not less than 1
     // HP. This move ignores type immunity.
     var t = Test((if (showdown)
-        (.{ NOP, NOP, HIT, HIT, NOP, NOP, HIT })
+        (.{ HIT, HIT, HIT })
     else
         (.{ HIT, HIT, ~CRIT, MIN_DMG, HIT }))).init(
         &.{
@@ -3307,12 +3291,12 @@ test "Disable effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, HIT, DISABLE_MOVE_1, DISABLE_DURATION_1, HIT, ~CRIT, MIN_DMG,
-            NOP, NOP, HIT, DISABLE_MOVE_2, DISABLE_DURATION_5, HIT, ~CRIT, MIN_DMG,
-            NOP, NOP, HIT, DISABLE_MOVE_4, DISABLE_DURATION_5,
-            NOP, NOP, HIT, HIT, ~CRIT, MIN_DMG,
-            NOP, HIT, ~CRIT, MIN_DMG,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, NO_FRZ,
+            HIT, DISABLE_MOVE_1, DISABLE_DURATION_1, HIT, ~CRIT, MIN_DMG,
+            HIT, DISABLE_MOVE_2, DISABLE_DURATION_5, HIT, ~CRIT, MIN_DMG,
+            HIT, DISABLE_MOVE_4, DISABLE_DURATION_5,
+            HIT, HIT, ~CRIT, MIN_DMG,
+            HIT, ~CRIT, MIN_DMG,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, NO_FRZ,
         } else .{
             ~CRIT, HIT, DISABLE_MOVE_1, DISABLE_DURATION_1, ~CRIT, MIN_DMG, HIT,
             ~CRIT, HIT, DISABLE_MOVE_2, DISABLE_DURATION_5, ~CRIT, MIN_DMG, HIT,
@@ -3442,10 +3426,10 @@ test "Mist effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, HIT, ~CRIT, MIN_DMG, PROC,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT,
-            NOP, HIT, ~CRIT, MIN_DMG,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT,
+            HIT, ~CRIT, MIN_DMG, PROC,
+            HIT, ~CRIT, MIN_DMG, HIT,
+            HIT, ~CRIT, MIN_DMG,
+            HIT, ~CRIT, MIN_DMG, HIT,
         } else .{
             ~CRIT, MIN_DMG, HIT, PROC,
             ~CRIT, MIN_DMG, HIT, ~CRIT,
@@ -3516,14 +3500,9 @@ test "HyperBeam effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, HIT, ~CRIT, MAX_DMG,
-            NOP, HIT, ~CRIT, MAX_DMG,
-            NOP, HIT, ~CRIT, MIN_DMG,
-            NOP, NOP,
+            HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, MIN_DMG,
         } else .{
-            ~CRIT, MAX_DMG, HIT,
-            ~CRIT,MAX_DMG, HIT,
-            ~CRIT, MIN_DMG, HIT,
+            ~CRIT, MAX_DMG, HIT, ~CRIT,MAX_DMG, HIT, ~CRIT, MIN_DMG, HIT,
         }
     // zig fmt: on
     ).init(
@@ -3620,17 +3599,16 @@ test "Counter effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_PROC, HIT,
-            NOP, NOP, NOP, HIT, MIN_HITS, ~CRIT, MIN_DMG, HIT,
-            NOP, NOP, NOP, NOP, HIT, HIT,
-            NOP, NOP, NOP, HIT, HIT,
-            NOP, NOP, NOP, HIT, MIN_HITS, ~CRIT, MIN_DMG, HIT,
-            NOP, NOP, HIT,
-            NOP, NOP, HIT,
-            NOP, NOP, NOP, HIT, HIT,
-            NOP, NOP, HIT,
-            NOP, NOP, NOP, HIT, NOP, SLP_3,
-            NOP, NOP,
+            HIT, ~CRIT, MIN_DMG, NO_PROC, HIT,
+            HIT, MIN_HITS, ~CRIT, MIN_DMG, HIT,
+            HIT, HIT,
+            HIT, HIT,
+            HIT, MIN_HITS, ~CRIT, MIN_DMG, HIT,
+            HIT,
+            HIT,
+            HIT, HIT,
+            HIT,
+            HIT, NOP, SLP_3,
         } else .{
             ~CRIT, MIN_DMG, HIT, NO_PROC, ~CRIT,
             ~CRIT, MIN_DMG, HIT, MIN_HITS, ~CRIT, HIT,
@@ -3781,7 +3759,7 @@ test "Heal effect" {
     // current HP + 1) is divisible by 256.
     // https://pkmn.cc/bulba-glitch-1#HP_re covery_move_failure
     var t = Test((if (showdown)
-        (.{ NOP, NOP, HIT, CRIT, MAX_DMG, HIT, ~CRIT, MIN_DMG })
+        (.{ HIT, CRIT, MAX_DMG, HIT, ~CRIT, MIN_DMG })
     else
         (.{ CRIT, MAX_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
         &.{.{ .species = .Alakazam, .moves = &.{ .Recover, .MegaKick } }},
@@ -3834,8 +3812,8 @@ test "Rest effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, HIT, NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_PROC, NOP, MAX,
-            NOP, HIT, ~CRIT, MIN_DMG,
+            HIT, NOP, HIT, ~CRIT, MIN_DMG, NO_PROC, NOP, MAX,
+            HIT, ~CRIT, MIN_DMG,
         } else .{
             HIT, ~CRIT, MIN_DMG, HIT, NO_PROC, ~CRIT, MIN_DMG, HIT
         }
@@ -3915,7 +3893,7 @@ test "Rest effect" {
 test "DrainHP effect" {
     // The user recovers 1/2 the HP lost by the target, rounded down.
     var t = Test((if (showdown)
-        (.{ NOP, HIT, ~CRIT, MIN_DMG, NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG })
+        (.{ HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG })
     else
         (.{ ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
         &.{
@@ -3965,7 +3943,7 @@ test "DreamEater effect" {
     // by the target, rounded down, but not less than 1 HP. If this move breaks the target's
     // substitute, the user does not recover any HP.
     var t = Test((if (showdown)
-        (.{ NOP, NOP, HIT, NOP, MAX, NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, ~CRIT, MIN_DMG })
+        (.{ HIT, NOP, MAX, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG })
     else
         (.{ ~CRIT, MIN_DMG, ~CRIT, HIT, MAX, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
         &.{.{ .species = .Hypno, .hp = 100, .moves = &.{ .DreamEater, .Hypnosis } }},
@@ -4023,7 +4001,7 @@ test "LeechSeed effect" {
     // target switches out or any Pokemon uses Haze, this effect ends. Grass-type Pokemon are immune
     // to this move.
     var t = Test((if (showdown)
-        (.{ NOP, NOP, ~HIT, NOP, HIT, NOP, NOP, HIT, HIT, NOP, HIT })
+        (.{ ~HIT, HIT, HIT, HIT, HIT })
     else
         (.{ HIT, ~HIT, HIT, HIT, HIT, HIT }))).init(
         &.{
@@ -4114,7 +4092,7 @@ test "LeechSeed effect" {
 // Move.PayDay
 test "PayDay effect" {
     // "Scatters coins"
-    var t = Test((if (showdown) .{ NOP, HIT, ~CRIT, MAX_DMG } else .{ ~CRIT, MAX_DMG, HIT })).init(
+    var t = Test((if (showdown) .{ HIT, ~CRIT, MAX_DMG } else .{ ~CRIT, MAX_DMG, HIT })).init(
         &.{.{ .species = .Meowth, .moves = &.{.PayDay} }},
         &.{.{ .species = .Slowpoke, .moves = &.{.Teleport} }},
     );
@@ -4145,10 +4123,10 @@ test "Rage effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, ~HIT,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5,
-            NOP, NOP, ~HIT,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+            HIT, ~CRIT, MIN_DMG, ~HIT,
+            HIT, ~CRIT, MIN_DMG, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5,
+            ~HIT,
         } else .{
             ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
             ~CRIT, MIN_DMG, HIT, ~CRIT, ~HIT,
@@ -4232,7 +4210,7 @@ test "Mimic effect" {
     // even if the user already knows that move. The copied move keeps the remaining PP for this
     // move, regardless of the copied move's maximum PP. Whenever one PP is used for a copied move,
     // one PP is used for this move.
-    var t = Test((if (showdown) .{ NOP, HIT, MAX } else .{ HIT, 2 })).init(
+    var t = Test((if (showdown) .{ HIT, MAX } else .{ HIT, 2 })).init(
         &.{
             .{ .species = .MrMime, .moves = &.{.Mimic} },
             .{ .species = .Abra, .moves = &.{.Teleport} },
@@ -4285,7 +4263,7 @@ test "LightScreen effect" {
     // While the user remains active, its Special is doubled when taking damage. Critical hits
     // ignore this effect. If any Pokemon uses Haze, this effect ends.
     var t = Test((if (showdown)
-        (.{ NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, CRIT, MIN_DMG })
+        (.{ HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, CRIT, MIN_DMG })
     else
         (.{ ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, CRIT, MIN_DMG, HIT }))).init(
         &.{.{ .species = .Chansey, .moves = &.{ .LightScreen, .Teleport } }},
@@ -4342,7 +4320,7 @@ test "Reflect effect" {
     // While the user remains active, its Defense is doubled when taking damage. Critical hits
     // ignore this protection. This effect can be removed by Haze.
     var t = Test((if (showdown)
-        (.{ NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, CRIT, MIN_DMG })
+        (.{ HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, CRIT, MIN_DMG })
     else
         (.{ ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, CRIT, MIN_DMG, HIT }))).init(
         &.{.{ .species = .Chansey, .moves = &.{ .Reflect, .Teleport } }},
@@ -4411,10 +4389,10 @@ test "Haze effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, HIT, NOP, HIT,
-            NOP, HIT, NOP, NOP, PAR_CAN, HIT, CFZ_5,
+            HIT, NOP, HIT,
+            HIT, NOP, PAR_CAN, HIT, CFZ_5,
             CFZ_CAN, PAR_CAN, haze,
-            PAR_CAN, ember, NOP, HIT, ~CRIT, MIN_DMG, PROC, NOP, PAR_CAN,
+            PAR_CAN, ember, HIT, ~CRIT, MIN_DMG, PROC, NOP, PAR_CAN,
         } else .{
             HIT, HIT, ~CRIT, HIT, ~CRIT, PAR_CAN, HIT, CFZ_5,
             CFZ_CAN, PAR_CAN, ~CRIT, haze,
@@ -4566,9 +4544,9 @@ test "Bide effect" {
     var t = Test(
     // zig fmt: off
     if (showdown) .{
-        NOP, BIDE_3, HIT, NOP, HIT, NOP, NOP, NOP,
-        NOP, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, BIDE_3, NOP, HIT,
-        NOP, HIT, CFZ_3, CFZ_CAN,
+        BIDE_3, HIT, HIT, NOP, NOP,
+        NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, BIDE_3, HIT,
+        HIT, CFZ_3, CFZ_CAN,
     } else .{
         ~CRIT, BIDE_3, HIT, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, BIDE_3, HIT, HIT, CFZ_3, CFZ_CAN,
     }
@@ -4685,12 +4663,12 @@ test "Metronome effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            wrap, NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
-            petal_dance, NOP, HIT, ~CRIT, MIN_DMG, THRASH_3,
-            NOP, NOP, NOP, ~HIT, NOP, NOP, NOP, ~HIT, CFZ_2,
-            CFZ_CAN, mimic, NOP, HIT, MIMIC_2, disable, NOP, HIT,
+            wrap, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
+            petal_dance, HIT, ~CRIT, MIN_DMG, THRASH_3,
+            ~HIT, ~HIT, CFZ_2,
+            CFZ_CAN, mimic, HIT, MIMIC_2, disable, HIT,
             DISABLE_MOVE_2, DISABLE_DURATION_3,
-            rage, NOP, HIT, ~CRIT, MIN_DMG, swift, NOP, ~CRIT, MIN_DMG,
+            rage, HIT, ~CRIT, MIN_DMG, swift, ~CRIT, MIN_DMG,
         } else .{
             ~CRIT, wrap, MIN_WRAP, ~CRIT, MIN_DMG, HIT,
             ~CRIT, petal_dance, THRASH_3, ~CRIT, MIN_DMG, HIT,
@@ -4830,106 +4808,6 @@ test "Metronome effect" {
     try t.verify();
 }
 
-test "Infinite Metronome" {
-    const skull_bash = comptime metronome(.SkullBash);
-    const mirror_move = comptime metronome(.MirrorMove);
-    const fly = comptime metronome(.Fly);
-    const pound = comptime metronome(.Pound);
-
-    // Charge
-    {
-        var t = Test(
-        // zig fmt: off
-            if (showdown) .{
-                skull_bash, NOP, mirror_move, mirror_move, fly, NOP, NOP, NOP,
-                NOP, NOP, NOP, ~HIT,
-            } else .{
-                ~CRIT, skull_bash, ~CRIT, mirror_move, ~CRIT, ~CRIT, mirror_move, ~CRIT, ~CRIT, fly,
-                ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, ~HIT
-            }
-        // zig fmt: on
-        ).init(
-            &.{.{ .species = .Clefairy, .moves = &.{.Metronome} }},
-            &.{.{ .species = .Clefable, .moves = &.{.Metronome} }},
-        );
-        defer t.deinit();
-
-        try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
-        try t.log.expected.move(P2.ident(1), Move.SkullBash, .{}, Move.Metronome);
-        try t.log.expected.laststill();
-        try t.log.expected.prepare(P2.ident(1), Move.SkullBash);
-        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
-        try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
-        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
-        try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
-        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
-        try t.log.expected.move(P1.ident(1), Move.Fly, .{}, Move.Metronome);
-        try t.log.expected.laststill();
-        try t.log.expected.prepare(P1.ident(1), Move.Fly);
-        try t.log.expected.turn(2);
-
-        try expectEqual(Result.Default, try t.update(move(1), move(1)));
-
-        try expectEqual(@as(u8, 15), t.actual.p1.active.move(1).pp);
-        try expectEqual(@as(u8, 15), t.actual.p1.active.move(1).pp);
-
-        try t.log.expected.move(P2.ident(1), Move.SkullBash, P1.ident(1), Move.SkullBash);
-        try t.log.expected.lastmiss();
-        try t.log.expected.miss(P2.ident(1));
-        try t.log.expected.move(P1.ident(1), Move.Fly, P2.ident(1), Move.Fly);
-        try t.log.expected.lastmiss();
-        try t.log.expected.miss(P1.ident(1));
-        try t.log.expected.turn(3);
-
-        try expectEqual(Result.Default, try t.update(forced, forced));
-
-        const pp = if (showdown) 15 else 14;
-        try expectEqual(@as(u8, pp), t.actual.p1.active.move(1).pp);
-        try expectEqual(@as(u8, pp), t.actual.p1.active.move(1).pp);
-
-        try t.verify();
-    }
-    // non-Charge
-    {
-        var t = Test(
-        // zig fmt: off
-            if (showdown) .{
-                pound, NOP, HIT, ~CRIT, MIN_DMG, mirror_move, mirror_move, fly, NOP, NOP, NOP,
-            } else .{
-                ~CRIT, pound, ~CRIT, MIN_DMG, HIT, ~CRIT, mirror_move, ~CRIT, ~CRIT, MIN_DMG, HIT,
-            }
-        // zig fmt: on
-        ).init(
-            &.{.{ .species = .Clefairy, .moves = &.{.Metronome} }},
-            &.{.{ .species = .Clefable, .moves = &.{.Metronome} }},
-        );
-        defer t.deinit();
-
-        try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
-        try t.log.expected.move(P2.ident(1), Move.Pound, P1.ident(1), Move.Metronome);
-        t.expected.p1.get(1).hp -= 54;
-        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
-        try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
-        if (showdown) {
-            try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
-            try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
-            try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
-            try t.log.expected.move(P1.ident(1), Move.Fly, .{}, Move.Metronome);
-            try t.log.expected.laststill();
-            try t.log.expected.prepare(P1.ident(1), Move.Fly);
-        } else {
-            try t.log.expected.move(P1.ident(1), Move.Pound, P2.ident(1), Move.MirrorMove);
-            t.expected.p2.get(1).hp -= 34;
-            try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-        }
-        try t.log.expected.turn(2);
-
-        try expectEqual(Result.Default, try t.update(move(1), move(1)));
-        try t.verify();
-    }
-}
-
 // Move.MirrorMove
 test "MirrorMove effect" {
     // The user uses the last move used by the target. Fails if the target has not made a move, or
@@ -4937,10 +4815,10 @@ test "MirrorMove effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, ~CRIT, MIN_DMG,
-            NOP, NOP, ~CRIT, MIN_DMG, NOP, ~CRIT, MIN_DMG,
-            NOP, NOP, NOP, NOP, NOP, NOP,
-            NOP, NOP, NOP, NOP, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+            ~CRIT, MIN_DMG, ~CRIT, MIN_DMG,
+            NOP, NOP, NOP, NOP,
+            NOP, NOP, NOP, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG,
         } else .{
             ~CRIT, ~CRIT, ~CRIT, MIN_DMG, HIT, ~CRIT, ~CRIT, MIN_DMG, HIT,
             ~CRIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
@@ -5079,7 +4957,7 @@ test "Explode effect" {
     // The user faints after using this move, unless the target's substitute was broken by the
     // damage. The target's Defense is halved during damage calculation.
     var t = Test((if (showdown)
-        (.{ NOP, HIT, NOP, NOP, HIT, ~CRIT, MAX_DMG, NOP, HIT, ~CRIT, MAX_DMG, NOP })
+        (.{ HIT, NOP, HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, MAX_DMG })
     else
         (.{ HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, HIT }))).init(
         &.{
@@ -5142,10 +5020,7 @@ test "Explode effect" {
 // Move.Swift
 test "Swift effect" {
     // This move does not check accuracy and hits even if the target is using Dig or Fly.
-    var t = Test(if (showdown)
-        (.{ NOP, NOP, NOP, ~CRIT, MIN_DMG, NOP, NOP })
-    else
-        (.{ ~CRIT, MIN_DMG })).init(
+    var t = Test(if (showdown) (.{ ~CRIT, MIN_DMG, NOP, NOP }) else (.{ ~CRIT, MIN_DMG })).init(
         &.{.{ .species = .Eevee, .moves = &.{.Swift} }},
         &.{.{ .species = .Diglett, .moves = &.{.Dig} }},
     );
@@ -5174,10 +5049,11 @@ test "Transform effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            // NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, ~HIT, NOP,
-            NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, ~HIT, NOP, NOP,
-            NOP, NOP, TIE_2, NOP, NOP, HIT, no_crit, MIN_DMG, NOP, HIT, no_crit, MIN_DMG, NOP, NOP,
-            // TIE_2, NOP, NOP, NOP, NOP, NOP, NOP, NOP,
+            // NOP, NOP, NOP, NOP, NOP, ~HIT, NOP,
+            NOP, NOP, NOP, NOP, NOP, ~HIT, NOP, NOP,
+            TIE_2, NOP, NOP, HIT, no_crit, MIN_DMG, NOP,
+            HIT, no_crit, MIN_DMG, NOP, NOP,
+            // TIE_2, NOP, NOP, NOP, NOP, NOP, NOP, NOP
             TIE_2, NOP, NOP, NOP, NOP, NOP, NOP,
         } else .{
             ~CRIT, ~CRIT, ~CRIT, MIN_DMG, ~HIT, TIE_2,
@@ -5320,7 +5196,7 @@ test "Transform effect" {
 // Move.Conversion
 test "Conversion effect" {
     // Causes the user's types to become the same as the current types of the target.
-    var t = Test(if (showdown) .{NOP} else .{}).init(
+    var t = Test(.{}).init(
         &.{.{ .species = .Porygon, .moves = &.{.Conversion} }},
         &.{.{ .species = .Slowbro, .moves = &.{.Teleport} }},
     );
@@ -5350,7 +5226,7 @@ test "Substitute effect" {
     // remaining to create a substitute, or if it already has a substitute. The user will create a
     // substitute and then faint if its current HP is exactly 1/4 of its maximum HP.
     var t = Test((if (showdown)
-        (.{ NOP, HIT, NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, NOP, HIT })
+        (.{ HIT, HIT, ~CRIT, MIN_DMG, HIT, HIT })
     else
         (.{ ~CRIT, ~CRIT, MIN_DMG, HIT, ~CRIT, HIT, ~CRIT, HIT }))).init(
         &.{
@@ -5415,7 +5291,7 @@ test "Disable + Transform bug" {
     const DISABLE_DURATION_5 = comptime ranged(5, 9 - 1) - 1;
     {
         var t = Test((if (showdown)
-            (.{ NOP, NOP, HIT, DISABLE_MOVE_2, DISABLE_DURATION_5, NOP, NOP })
+            (.{ HIT, DISABLE_MOVE_2, DISABLE_DURATION_5, NOP, NOP })
         else
             (.{ ~CRIT, HIT, DISABLE_MOVE_2, DISABLE_DURATION_5 }))).init(
             &.{.{ .species = .Voltorb, .moves = &.{ .Disable, .Teleport } }},
@@ -5443,7 +5319,7 @@ test "Disable + Transform bug" {
     }
     {
         var t = Test((if (showdown)
-            (.{ NOP, NOP, HIT, DISABLE_MOVE_2, DISABLE_DURATION_5, NOP, NOP })
+            (.{ HIT, DISABLE_MOVE_2, DISABLE_DURATION_5, NOP, NOP })
         else
             (.{ ~CRIT, HIT, DISABLE_MOVE_2, DISABLE_DURATION_5 }))).init(
             &.{.{ .species = .Voltorb, .moves = &.{ .Disable, .WaterGun, .Teleport } }},
@@ -5477,7 +5353,7 @@ test "Disable + Bide bug" {
     const DISABLE_DURATION_5 = comptime ranged(5, 9 - 1) - 1;
 
     var t = Test((if (showdown)
-        (.{ BIDE_3, NOP, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5 }) // NOP, NOP, NOP, NOP
+        (.{ BIDE_3, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5 }) // NOP, NOP,
     else
         (.{ ~CRIT, BIDE_3, ~CRIT, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5 }))).init(
         &.{.{ .species = .Voltorb, .moves = &.{ .Teleport, .Disable } }},
@@ -5518,7 +5394,7 @@ test "Charge + Sleep bug" {
     const SLP_1 = if (showdown) comptime ranged(1, 8 - 1) else 1;
 
     var t = Test((if (showdown)
-        (.{ NOP, NOP, HIT, NOP, SLP_1, NOP, NOP })
+        (.{ HIT, NOP, SLP_1 })
     else
         (.{ ~CRIT, HIT, SLP_1, ~CRIT, MIN_DMG, HIT }))).init(
         &.{.{ .species = .Venusaur, .moves = &.{ .SolarBeam, .Tackle } }},
@@ -5571,10 +5447,7 @@ test "Charge + Sleep bug" {
 }
 
 test "Explosion invulnerability bug" {
-    var t = Test((if (showdown)
-        (.{ NOP, NOP, NOP, NOP })
-    else
-        (.{ ~CRIT, MIN_DMG }))).init(
+    var t = Test((if (showdown) (.{ NOP, NOP }) else (.{ ~CRIT, MIN_DMG }))).init(
         &.{.{ .species = .Dugtrio, .moves = &.{.Dig} }},
         &.{.{ .species = .Golem, .moves = &.{.Explosion} }},
     );
@@ -5603,10 +5476,7 @@ test "Explosion invulnerability bug" {
 test "Bide + Substitute bug" {
     const BIDE_2 = MIN;
 
-    var t = Test((if (showdown)
-        (.{ BIDE_2, NOP, HIT, NOP, HIT })
-    else
-        (.{ ~CRIT, BIDE_2, HIT, HIT }))).init(
+    var t = Test((if (showdown) (.{ BIDE_2, HIT, HIT }) else (.{ ~CRIT, BIDE_2, HIT, HIT }))).init(
         &.{.{ .species = .Voltorb, .moves = &.{ .SonicBoom, .Substitute } }},
         &.{.{ .species = .Chansey, .moves = &.{ .Bide, .Teleport } }},
     );
@@ -5651,7 +5521,7 @@ test "Counter + Substitute bug" {
     // https://www.youtube.com/watch?v=_cEVqYFoBhE
     const NO_PAR = MAX;
     var t = Test((if (showdown)
-        (.{ NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_PAR, HIT })
+        (.{ HIT, ~CRIT, MIN_DMG, NO_PAR, HIT })
     else
         (.{ ~CRIT, MIN_DMG, HIT, ~CRIT, HIT }))).init(
         &.{.{ .species = .Snorlax, .moves = &.{ .Reflect, .BodySlam } }},
@@ -5689,17 +5559,10 @@ test "Counter + Substitute bug" {
 
 test "Counter + sleep = Desync Clause Mod bug" {
     const SLP_8 = MAX;
-    var t = Test(
-    // zig fmt: off
-        if (showdown) .{
-            NOP, NOP, HIT, HIT, NOP, SLP_8, NOP, NOP, HIT,
-            NOP, HIT, ~CRIT, MIN_DMG, NOP, NOP, NOP, HIT,
-        } else .{
-            HIT, ~CRIT, HIT, SLP_8, ~CRIT,
-            ~CRIT, MIN_DMG, HIT, ~CRIT, HIT,
-        }
-    // zig fmt: on
-    ).init(
+    var t = Test(if (showdown)
+        (.{ HIT, HIT, NOP, SLP_8, HIT, HIT, ~CRIT, MIN_DMG, HIT })
+    else
+        (.{ HIT, ~CRIT, HIT, SLP_8, ~CRIT, ~CRIT, MIN_DMG, HIT, ~CRIT, HIT })).init(
         &.{
             .{ .species = .Alakazam, .moves = &.{ .SeismicToss, .Psychic } },
             .{ .species = .Snorlax, .moves = &.{.BodySlam} },
@@ -5769,7 +5632,7 @@ test "Counter via Metronome bug" {
     // Counter first
     {
         var t = Test((if (showdown)
-            (.{ NOP, HIT, NOP, counter, NOP, HIT, HIT })
+            (.{ HIT, counter, HIT, HIT })
         else
             (.{ HIT, ~CRIT, counter, ~CRIT, HIT }))).init(
             &.{.{ .species = .Snorlax, .moves = &.{.SeismicToss} }},
@@ -5805,7 +5668,7 @@ test "Counter via Metronome bug" {
     // Counter second
     {
         var t = Test((if (showdown)
-            (.{ NOP, HIT, counter, NOP, HIT })
+            (.{ HIT, counter, HIT })
         else
             (.{ HIT, ~CRIT, counter, ~CRIT }))).init(
             &.{.{ .species = .Alakazam, .moves = &.{.SeismicToss} }},
@@ -5832,12 +5695,108 @@ test "Counter via Metronome bug" {
     }
 }
 
+test "Infinite Metronome" {
+    const skull_bash = comptime metronome(.SkullBash);
+    const mirror_move = comptime metronome(.MirrorMove);
+    const fly = comptime metronome(.Fly);
+    const pound = comptime metronome(.Pound);
+
+    // Charge
+    {
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                skull_bash, mirror_move, mirror_move, fly, NOP, NOP, NOP, NOP, NOP, ~HIT,
+            } else .{
+                ~CRIT, skull_bash, ~CRIT, mirror_move, ~CRIT, ~CRIT, mirror_move, ~CRIT, ~CRIT, fly,
+                ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, ~HIT
+            }
+        // zig fmt: on
+        ).init(
+            &.{.{ .species = .Clefairy, .moves = &.{.Metronome} }},
+            &.{.{ .species = .Clefable, .moves = &.{.Metronome} }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
+        try t.log.expected.move(P2.ident(1), Move.SkullBash, .{}, Move.Metronome);
+        try t.log.expected.laststill();
+        try t.log.expected.prepare(P2.ident(1), Move.SkullBash);
+        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
+        try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
+        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
+        try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
+        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
+        try t.log.expected.move(P1.ident(1), Move.Fly, .{}, Move.Metronome);
+        try t.log.expected.laststill();
+        try t.log.expected.prepare(P1.ident(1), Move.Fly);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        try expectEqual(@as(u8, 15), t.actual.p1.active.move(1).pp);
+        try expectEqual(@as(u8, 15), t.actual.p1.active.move(1).pp);
+
+        try t.log.expected.move(P2.ident(1), Move.SkullBash, P1.ident(1), Move.SkullBash);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P2.ident(1));
+        try t.log.expected.move(P1.ident(1), Move.Fly, P2.ident(1), Move.Fly);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P1.ident(1));
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(forced, forced));
+
+        const pp = if (showdown) 15 else 14;
+        try expectEqual(@as(u8, pp), t.actual.p1.active.move(1).pp);
+        try expectEqual(@as(u8, pp), t.actual.p1.active.move(1).pp);
+
+        try t.verify();
+    }
+    // non-Charge
+    {
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                pound, HIT, ~CRIT, MIN_DMG, mirror_move, mirror_move, fly, NOP, NOP,
+            } else .{
+                ~CRIT, pound, ~CRIT, MIN_DMG, HIT, ~CRIT, mirror_move, ~CRIT, ~CRIT, MIN_DMG, HIT,
+            }
+        // zig fmt: on
+        ).init(
+            &.{.{ .species = .Clefairy, .moves = &.{.Metronome} }},
+            &.{.{ .species = .Clefable, .moves = &.{.Metronome} }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
+        try t.log.expected.move(P2.ident(1), Move.Pound, P1.ident(1), Move.Metronome);
+        t.expected.p1.get(1).hp -= 54;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
+        try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
+        if (showdown) {
+            try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
+            try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
+            try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
+            try t.log.expected.move(P1.ident(1), Move.Fly, .{}, Move.Metronome);
+            try t.log.expected.laststill();
+            try t.log.expected.prepare(P1.ident(1), Move.Fly);
+        } else {
+            try t.log.expected.move(P1.ident(1), Move.Pound, P2.ident(1), Move.MirrorMove);
+            t.expected.p2.get(1).hp -= 34;
+            try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        }
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try t.verify();
+    }
+}
+
 // Fixed by smogon/pokemon-showdown#8963
 test "Hyper Beam + Substitute bug" {
-    var t = Test(if (showdown)
-        (.{ NOP, HIT, ~CRIT, MAX_DMG, NOP, NOP })
-    else
-        (.{ ~CRIT, MAX_DMG, HIT })).init(
+    var t = Test(if (showdown) (.{ HIT, ~CRIT, MAX_DMG }) else (.{ ~CRIT, MAX_DMG, HIT })).init(
         &.{.{ .species = .Abra, .moves = &.{.HyperBeam} }},
         &.{.{ .species = .Jolteon, .moves = &.{ .Substitute, .Teleport } }},
     );
@@ -5868,7 +5827,7 @@ test "Mimic infinite PP bug" {
     {
         var battle = Battle.fixed(
             if (showdown)
-                (.{ NOP, HIT, MAX } ++ .{NOP} ** 15)
+                (.{ HIT, MAX })
             else
                 (.{ HIT, 1 } ++ .{ ~CRIT, HIT } ** 15),
             &.{.{ .species = .Gengar, .moves = &.{ .Teleport, .MegaKick } }},
@@ -5906,7 +5865,7 @@ test "Mimic infinite PP bug" {
     {
         var battle = Battle.fixed(
             if (showdown)
-                (.{ NOP, HIT, MAX } ++ .{NOP} ** 15)
+                (.{ HIT, MAX })
             else
                 (.{ HIT, 1 } ++ .{ ~CRIT, HIT } ** 15),
             &.{.{ .species = .Gengar, .moves = &.{ .Teleport, .MegaKick } }},
@@ -5947,8 +5906,8 @@ test "Mirror Move + Wrap bug" {
     const MIN_WRAP = MIN;
 
     var t = Test((if (showdown)
-        (.{ NOP, ~HIT, NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP, NOP, NOP, NOP })
-        // (.{ NOP, ~HIT, NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP, NOP, NOP, NOP, HIT, NOP, MIN_DMG })
+        (.{ ~HIT, HIT, ~CRIT, MIN_DMG, MIN_WRAP })
+        // (.{ ~HIT, HIT, ~CRIT, MIN_DMG, MIN_WRAP, HIT, ~CRIT, MIN_DMG })
     else
         (.{ MIN_WRAP, ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_WRAP, ~CRIT, MIN_DMG, HIT }))).init(
         &.{.{ .species = .Tentacruel, .moves = &.{ .Wrap, .Surf } }},
@@ -5993,7 +5952,7 @@ test "Mirror Move + Wrap bug" {
 
 test "Mirror Move recharge bug" {
     var t = Test((if (showdown)
-        (.{ NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, ~CRIT, MAX_DMG, NOP, NOP })
+        (.{ HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MAX_DMG })
     else
         (.{ ~CRIT, MIN_DMG, HIT, ~CRIT, ~CRIT, MAX_DMG, HIT, ~CRIT }))).init(
         &.{
@@ -6054,11 +6013,11 @@ test "Wrap locking + KOs bug" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, PROC, NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
-            // NOP, NOP, HIT, NOP, NOP, HIT, ~CRIT, MIN_DMG, PROC, NOP,
-            NOP, NOP, HIT, ~HIT, NOP, NOP, HIT, ~CRIT, MIN_DMG, PROC, NOP, ~HIT,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
-            NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
+            HIT, ~CRIT, MIN_DMG, PROC, NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
+            // HIT, HIT, ~CRIT, MIN_DMG, PROC, NOP,
+            HIT, ~HIT, HIT, ~CRIT, MIN_DMG, PROC, NOP, ~HIT,
+            HIT, ~CRIT, MIN_DMG, MIN_WRAP,
+            HIT, ~CRIT, MIN_DMG, MIN_WRAP,
         } else .{
             ~CRIT, MIN_DMG, HIT, PROC, MIN_WRAP, ~CRIT, MIN_DMG, HIT,
             HIT, ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, HIT, PROC, ~CRIT, MIN_DMG, ~HIT,
@@ -6173,7 +6132,7 @@ test "Thrashing + Substitute bugs" {
     // Fixed by smogon/pokemon-showdown#8963
     {
         var t = Test((if (showdown)
-            (.{ NOP, NOP, HIT, ~CRIT, MIN_DMG, THRASH_3, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG })
+            (.{ HIT, ~CRIT, MIN_DMG, THRASH_3, HIT, ~CRIT, MIN_DMG })
         else
             (.{ THRASH_3, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
             &.{.{ .species = .Nidoking, .level = 50, .moves = &.{ .Thrash, .ThunderWave } }},
@@ -6211,7 +6170,7 @@ test "Thrashing + Substitute bugs" {
     // Thrash should lock the user into the move even if it breaks a Substitute
     {
         var t = Test((if (showdown)
-            (.{ NOP, NOP, HIT, ~CRIT, MAX_DMG, NOP, HIT, NOP })
+            (.{ HIT, ~CRIT, MAX_DMG, HIT, NOP })
         else
             (.{ THRASH_3, ~CRIT, MAX_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
             &.{.{ .species = .Nidoking, .moves = &.{ .Thrash, .ThunderWave } }},
@@ -6259,7 +6218,7 @@ test "0 damage glitch" {
     // https://pkmn.cc/bulba-glitch-1#0_damage_glitch
     // https://www.youtube.com/watch?v=fxNzPeLlPTU
     var t = Test(if (showdown)
-        (.{ NOP, NOP, NOP, HIT, HIT, ~CRIT, NOP, NOP, HIT, NOP, NOP, NOP, HIT, HIT, ~CRIT })
+        (.{ HIT, HIT, ~CRIT, HIT, HIT, HIT, ~CRIT })
     else
         (.{ ~CRIT, HIT, ~CRIT, HIT, ~CRIT, HIT, ~CRIT, HIT, ~CRIT, HIT })).init(
         &.{.{ .species = .Bulbasaur, .moves = &.{.Growl} }},
@@ -6311,7 +6270,7 @@ test "0 damage glitch" {
 test "1/256 miss glitch" {
     // https://pkmn.cc/bulba-glitch-1#1.2F256_miss_glitch
     var t = Test(if (showdown)
-        (.{ NOP, NOP, ~HIT, ~HIT })
+        (.{ ~HIT, ~HIT })
     else
         (.{ CRIT, MAX_DMG, ~HIT, CRIT, MAX_DMG, ~HIT })).init(
         &.{.{ .species = .Jigglypuff, .moves = &.{.Pound} }},
@@ -6340,7 +6299,7 @@ test "Bide damage accumulation glitches" {
     // Non-damaging move/action damage accumulation
     {
         var t = Test((if (showdown)
-            (.{ NOP, BIDE_2, NOP, HIT, ~CRIT, MIN_DMG })
+            (.{ BIDE_2, HIT, ~CRIT, MIN_DMG })
         else
             (.{ ~CRIT, BIDE_2, ~CRIT, MIN_DMG, HIT }))).init(
             &.{
@@ -6379,7 +6338,7 @@ test "Bide damage accumulation glitches" {
     // Fainted Pokémon damage accumulation desync
     {
         var t = Test((if (showdown)
-            (.{ NOP, HIT, NOP, NOP, BIDE_2, HIT, ~CRIT, MIN_DMG, NOP, HIT, ~CRIT, MIN_DMG })
+            (.{ HIT, NOP, BIDE_2, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG })
         else
             (.{ HIT, ~CRIT, BIDE_2, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
             &.{
@@ -6464,9 +6423,7 @@ test "Counter glitches" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                NOP, HIT, NOP,
-                NOP, NOP, PAR_CAN, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
-                NOP, NOP, NOP, PAR_CANT, HIT,
+                HIT, NOP, PAR_CAN, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, PAR_CANT, HIT,
             } else .{
                 ~CRIT, HIT,
                 PAR_CAN, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
@@ -6519,9 +6476,7 @@ test "Counter glitches" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                NOP, HIT, NOP,
-                NOP, NOP, PAR_CAN, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
-                NOP, NOP, PAR_CANT, HIT,
+                HIT, NOP, PAR_CAN, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, PAR_CANT, HIT,
             } else .{
                 ~CRIT, HIT,
                 PAR_CAN, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
@@ -6581,8 +6536,8 @@ test "Freeze top move selection glitch" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, HIT, ~CRIT, MIN_DMG, FRZ, NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_BRN,
-            NOP, HIT, ~CRIT, MIN_DMG, NO_BRN,
+            HIT, ~CRIT, MIN_DMG, FRZ, NOP, HIT, ~CRIT, MIN_DMG, NO_BRN,
+            HIT, ~CRIT, MIN_DMG, NO_BRN,
         } else .{
             ~CRIT, MIN_DMG, HIT, FRZ, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
         }
@@ -6653,7 +6608,7 @@ test "Toxic counter glitches" {
     // https://glitchcity.wiki/Leech_Seed_and_Toxic_stacking
     const BRN = comptime ranged(77, 256) - 1;
     var t = Test(if (showdown)
-        (.{ NOP, HIT, NOP, NOP, NOP, NOP, HIT, NOP, HIT, ~CRIT, MIN_DMG, BRN, NOP })
+        (.{ HIT, NOP, NOP, NOP, HIT, HIT, ~CRIT, MIN_DMG, BRN, NOP })
     else
         (.{ HIT, HIT, ~CRIT, MIN_DMG, HIT, BRN })).init(
         &.{.{ .species = .Venusaur, .moves = &.{ .Toxic, .LeechSeed, .Teleport, .FireBlast } }},
@@ -6717,8 +6672,8 @@ test "Defrost move forcing" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, HIT, ~CRIT, MIN_DMG, NOP, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_BRN, HIT, ~CRIT, MIN_DMG,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
+            HIT, ~CRIT, MIN_DMG, NO_BRN, HIT, ~CRIT, MIN_DMG,
         } else .{
             ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, FRZ, ~CRIT, MIN_DMG, HIT,
         }
@@ -6793,17 +6748,10 @@ test "Division by 0" {
 
     // Attack/Special > 255 vs. Defense/Special stat < 4.
     {
-        var t = Test(
-        // zig fmt: off
-            if (showdown) .{
-                NOP, NOP, HIT, NOP, HIT, NOP, NOP, ~HIT,
-                NOP, NOP, ~HIT, NOP, NOP, HIT, ~CRIT, MIN_DMG,
-            } else .{
-                ~CRIT, HIT, ~CRIT, HIT, ~CRIT, ~HIT,
-                ~CRIT, ~CRIT, ~HIT, ~CRIT,
-            }
-        // zig fmt: on
-        ).init(
+        var t = Test(if (showdown)
+            (.{ HIT, HIT, ~HIT, ~HIT, HIT, ~CRIT, MIN_DMG })
+        else
+            (.{ ~CRIT, HIT, ~CRIT, HIT, ~CRIT, ~HIT, ~CRIT, ~CRIT, ~HIT, ~CRIT })).init(
             &.{
                 .{ .species = .Cloyster, .level = 65, .moves = &.{.Screech} },
                 .{ .species = .Parasect, .moves = &.{ .SwordsDance, .LeechLife } },
@@ -6857,8 +6805,7 @@ test "Division by 0" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                NOP, HIT, ~CRIT, MAX_DMG, NOP, HIT, ~CRIT, MAX_DMG,
-                NOP, HIT, NOP, HIT, ~CRIT, MAX_DMG,
+                HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, MAX_DMG, HIT, HIT, ~CRIT, MAX_DMG,
             } else .{
                 ~CRIT, ~CRIT, MAX_DMG, HIT, ~CRIT, ~CRIT, MAX_DMG, HIT,
                 ~CRIT, HIT, ~CRIT,
@@ -6927,8 +6874,7 @@ test "Division by 0" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                NOP, HIT, ~CRIT, MAX_DMG, NOP, HIT, ~CRIT, MAX_DMG,
-                NOP, HIT, NOP, HIT, ~CRIT, MAX_DMG,
+                HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, MAX_DMG, HIT,  HIT, ~CRIT, MAX_DMG,
             } else .{
                 ~CRIT, ~CRIT, MAX_DMG, HIT, ~CRIT, ~CRIT, MAX_DMG, HIT,
                 ~CRIT, HIT, ~CRIT, MAX_DMG, HIT,
@@ -7001,10 +6947,9 @@ test "Hyper Beam + Freeze permanent helplessness" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
-            NOP, NOP, NOP, NOP,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_BRN, ~HIT,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, NO_BRN, ~HIT,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
+            HIT, ~CRIT, MIN_DMG, NO_BRN, ~HIT,
+            HIT, ~CRIT, MIN_DMG, NO_BRN, ~HIT,
         } else .{
             ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, FRZ,
             ~CRIT, MIN_DMG, HIT, NO_BRN, ~CRIT, MIN_DMG, HIT, NO_BRN,
@@ -7111,9 +7056,7 @@ test "Hyper Beam + Sleep move glitch" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, HIT, NOP, HIT, ~CRIT, MIN_DMG,
-            NOP, NOP, NOP, SLP_2, NOP, NOP,
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, PROC, NOP, ~HIT,
+            HIT, NOP, HIT, ~CRIT, MIN_DMG, NOP, SLP_2, HIT, ~CRIT, MIN_DMG, PROC, NOP, ~HIT,
         } else .{
             HIT, ~CRIT, MIN_DMG, HIT,
             ~CRIT, SLP_2,
@@ -7188,7 +7131,7 @@ test "Hyper Beam automatic selection glitch" {
 
     // zig fmt: off
     var t = Test((if (showdown)
-        (.{ NOP, NOP, ~HIT, HIT, ~CRIT, MIN_DMG, NOP, NOP, ~HIT, NOP })
+        (.{ ~HIT, HIT, ~CRIT, MIN_DMG, ~HIT })
     else
         (.{ MIN_WRAP, ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, HIT,
             MIN_WRAP, ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, HIT }))).init(
@@ -7241,12 +7184,12 @@ test "Invulnerability glitch" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, HIT, NOP,
-            NOP, NOP, PAR_CAN, NOP, NOP,
-            NOP, NOP, NOP, NOP, PAR_CANT, HIT, ~CRIT, MIN_DMG, NOP,
-            NOP, PAR_CAN, NOP, ~CRIT, MIN_DMG,
-            NOP, NOP, PAR_CAN, NOP, NOP,
-            NOP, NOP, NOP, NOP, PAR_CAN, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, NOP,
+            HIT, NOP,
+            PAR_CAN, NOP, NOP,
+            NOP, NOP, PAR_CANT, HIT, ~CRIT, MIN_DMG, NOP,
+            PAR_CAN, ~CRIT, MIN_DMG,
+            PAR_CAN, NOP, NOP,
+            NOP, NOP, PAR_CAN, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, NOP,
         } else .{
             ~CRIT, HIT,
             PAR_CAN, ~CRIT, MIN_DMG,
@@ -7344,7 +7287,7 @@ test "Stat modification errors" {
     const NO_PROC = PROC + 1;
     {
         var t = Test((if (showdown)
-            (.{ NOP, NOP, HIT, HIT, NOP, NOP, NO_PROC, HIT, NOP, NO_PROC, HIT })
+            (.{ HIT, HIT, NOP, NO_PROC, HIT, NO_PROC, HIT })
         else
             (.{ ~CRIT, HIT, HIT, NO_PROC, ~CRIT, HIT, ~CRIT, ~CRIT, NO_PROC, ~CRIT, HIT }))).init(
             &.{.{
@@ -7397,7 +7340,7 @@ test "Stat modification errors" {
     }
     {
         var t = Test((if (showdown)
-            (.{ NOP, HIT, NOP, NOP, NO_PROC, NOP, HIT, NOP, PROC, NOP, HIT, NOP, NOP, HIT, PROC })
+            (.{ HIT, NOP, NO_PROC, HIT, PROC, HIT, HIT, PROC })
         else
             (.{ HIT, NO_PROC, ~CRIT, ~CRIT, HIT, PROC, ~CRIT, HIT, ~CRIT, HIT, PROC }))).init(
             &.{
@@ -7470,7 +7413,7 @@ test "Stat down modifier overflow glitch" {
     // 342 -> 1026
     {
         var t = Test((if (showdown)
-            (.{ NOP, HIT, ~CRIT, MIN_DMG, PROC, NOP, HIT, ~CRIT, MIN_DMG, NO_PROC })
+            (.{ HIT, ~CRIT, MIN_DMG, PROC, HIT, ~CRIT, MIN_DMG, NO_PROC })
         else
             (.{ ~CRIT, ~CRIT, ~CRIT, ~CRIT, MIN_DMG, HIT, PROC, ~CRIT }))).init(
             &.{.{
@@ -7562,7 +7505,7 @@ test "Stat down modifier overflow glitch" {
     // 343 -> 1029
     {
         var t = Test((if (showdown)
-            (.{ NOP, HIT, ~CRIT, MIN_DMG, PROC, NOP, HIT, ~CRIT, MIN_DMG, NO_PROC })
+            (.{ HIT, ~CRIT, MIN_DMG, PROC, HIT, ~CRIT, MIN_DMG, NO_PROC })
         else
             (.{ ~CRIT, ~CRIT, ~CRIT, ~CRIT, MIN_DMG, HIT, PROC, ~CRIT, MIN_DMG, HIT }))).init(
             &.{.{
@@ -7660,7 +7603,7 @@ test "Struggle bypassing / Switch PP underflow" {
     const MIN_WRAP = MIN;
 
     var t = Test((if (showdown)
-        (.{ NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP, NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP })
+        (.{ HIT, ~CRIT, MIN_DMG, MIN_WRAP, HIT, ~CRIT, MIN_DMG, MIN_WRAP })
     else
         (.{ MIN_WRAP, ~CRIT, MIN_DMG, HIT, MIN_WRAP, ~CRIT, MIN_DMG, HIT }))).init(
         &.{
@@ -7705,16 +7648,10 @@ test "Trapping sleep glitch" {
     const MIN_WRAP = MIN;
     const SLP_5 = if (showdown) comptime ranged(5, 8 - 1) else 5;
 
-    var t = Test(
-    // zig fmt: off
-        if (showdown) .{
-            NOP, NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP, NOP, NOP,
-            NOP, HIT, NOP, SLP_5, NOP, NOP, HIT,
-        } else .{
-            MIN_WRAP, ~CRIT, MIN_DMG, HIT, ~CRIT, HIT, SLP_5, ~CRIT,
-        }
-    // zig fmt: on
-    ).init(
+    var t = Test(if (showdown)
+        (.{ HIT, ~CRIT, MIN_DMG, MIN_WRAP, HIT, NOP, SLP_5, HIT })
+    else
+        (.{ MIN_WRAP, ~CRIT, MIN_DMG, HIT, ~CRIT, HIT, SLP_5, ~CRIT })).init(
         &.{
             .{ .species = .Weepinbell, .moves = &.{ .Wrap, .SleepPowder } },
             .{ .species = .Gloom, .moves = &.{.Absorb} },
@@ -7791,7 +7728,7 @@ test "Partial trapping move Mirror Move glitch" {
     const MIN_WRAP = MIN;
 
     var t = Test((if (showdown)
-        (.{ NOP, ~HIT, NOP, NOP, HIT, ~CRIT, MAX_DMG, MIN_WRAP, NOP })
+        (.{ ~HIT, HIT, ~CRIT, MAX_DMG, MIN_WRAP })
     else
         (.{ ~CRIT, MIN_WRAP, ~CRIT, MAX_DMG, ~HIT, ~CRIT, MIN_WRAP, ~CRIT, MAX_DMG, HIT }))).init(
         &.{.{ .species = .Pidgeot, .moves = &.{ .Agility, .MirrorMove } }},
@@ -7844,9 +7781,9 @@ test "Rage and Thrash / Petal Dance accuracy bug" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, NOP, HIT_255, ~CRIT, MIN_DMG, THRASH_4,
-            NOP, NOP, NOP, HIT_168, ~CRIT, MIN_DMG,
-            NOP, NOP, NOP, MISS_84, ~CRIT, MIN_DMG,
+            HIT_255, ~CRIT, MIN_DMG, THRASH_4,
+            HIT_168, ~CRIT, MIN_DMG,
+            MISS_84, ~CRIT, MIN_DMG,
         } else .{
             THRASH_4, ~CRIT, MIN_DMG, HIT_255, ~CRIT,
             ~CRIT, MIN_DMG, HIT_168, ~CRIT,
@@ -7903,10 +7840,7 @@ test "Rage and Thrash / Petal Dance accuracy bug" {
 test "Substitute HP drain bug" {
     // https://pkmn.cc/bulba-glitch-1#Substitute_HP_drain_bug
     // https://glitchcity.wiki/Substitute_drain_move_not_missing_glitch
-    var t = Test((if (showdown)
-        (.{ NOP, HIT, ~CRIT, MIN_DMG })
-    else
-        (.{ ~CRIT, MIN_DMG, HIT }))).init(
+    var t = Test((if (showdown) (.{ HIT, ~CRIT, MIN_DMG }) else (.{ ~CRIT, MIN_DMG, HIT }))).init(
         &.{.{ .species = .Butterfree, .moves = &.{.MegaDrain} }},
         &.{.{ .species = .Jolteon, .moves = &.{.Substitute} }},
     );
@@ -7955,7 +7889,7 @@ test "Substitute + Confusion glitch" {
     // Confused Pokémon has Substitute
     {
         var t = Test((if (showdown)
-            (.{ NOP, HIT, CFZ_5, CFZ_CAN, NOP, NOP, HIT, NOP, CFZ_CANT })
+            (.{ HIT, CFZ_5, CFZ_CAN, HIT, CFZ_CANT })
         else
             (.{ HIT, CFZ_5, CFZ_CAN, CFZ_CANT }))).init(
             &.{.{ .species = .Bulbasaur, .level = 6, .moves = &.{ .Substitute, .Growl } }},
@@ -7989,7 +7923,7 @@ test "Substitute + Confusion glitch" {
     // Both Pokémon have Substitutes
     {
         var t = Test((if (showdown)
-            (.{ NOP, HIT, ~CRIT, MIN_DMG, NOP, NOP, HIT, CFZ_5, CFZ_CANT, CFZ_CAN, NOP, CFZ_CANT })
+            (.{ HIT, ~CRIT, MIN_DMG, HIT, CFZ_5, CFZ_CANT, CFZ_CAN, CFZ_CANT })
         else
             (.{ ~CRIT, MIN_DMG, HIT, HIT, CFZ_5, CFZ_CANT, CFZ_CAN, CFZ_CANT }))).init(
             &.{.{ .species = .Bulbasaur, .level = 6, .moves = &.{ .Substitute, .Tackle } }},
@@ -8049,10 +7983,7 @@ test "Substitute + Confusion glitch" {
 
 test "Psywave infinite loop" {
     // https://pkmn.cc/bulba-glitch-1#Psywave_infinite_loop
-    var t = Test((if (showdown)
-        (.{ NOP, NOP, NOP, HIT, HIT, MAX_DMG })
-    else
-        (.{ ~CRIT, HIT, HIT }))).init(
+    var t = Test((if (showdown) (.{ HIT, HIT, MAX_DMG }) else (.{ ~CRIT, HIT, HIT }))).init(
         &.{.{ .species = .Charmander, .level = 1, .moves = &.{.Psywave} }},
         &.{.{ .species = .Rattata, .level = 3, .moves = &.{.TailWhip} }},
     );

@@ -401,17 +401,6 @@ test "Move" {
     try expect(Move.Effect.isSecondaryChance(.Twineedle));
     try expect(Move.Effect.isSecondaryChance(.PoisonChance2));
     try expect(!Move.Effect.isSecondaryChance(.Disable));
-
-    try expectEqual(@as(u8, 0), Move.frames(.Bide, .resolve));
-    try expectEqual(@as(u8, 1), Move.frames(.Tackle, .resolve));
-    try expectEqual(@as(u8, 2), Move.frames(.Counter, .resolve));
-    try expectEqual(@as(u8, 0), Move.frames(.Counter, .run));
-    try expectEqual(@as(u8, 1), Move.frames(.Swift, .run));
-
-    try expect(!Move.get(.Bide).target.resolves());
-    try expect(Move.get(.Tackle).target.resolves());
-    try expect(!Move.get(.Counter).target.runs());
-    try expect(Move.get(.Swift).target.runs());
 }
 
 pub const Species = species.Species;
