@@ -119,8 +119,8 @@ fn checkLocked(battle: anytype, n: u2, check: bool) void {
     // but the RNG advances by 2 during choice verification because getLockedMove gets called twice
     battle.rng.advance(n * (@as(u3, @boolToInt(isLocked(p1, true))) +
         @as(u3, @boolToInt(isLocked(p2, true)))));
-    // Bonus RNG advance if both players were locked at the beginning of the turn (ie. we don't care
-    // if they're still currently Charging) and speed tie during the checkResidual step
+    // Bonus RNG advance if both players were locked at the beginning of the turn (i.e. we don't
+    // care if they're still currently Charging) and speed tie during the checkResidual step
     if (check and isLocked(p1, false) and isLocked(p2, false) and speedTie(battle)) {
         battle.rng.advance(1);
     }
@@ -1172,7 +1172,7 @@ fn applyDamage(
     var target = battle.side(target_player);
     // GLITCH: Substitute + Confusion glitch
     // We check if the target has a Substitute but then apply damage to the "sub player" which
-    // isn't guaranteed to be the same (eg. crash or confusion damage) or to even have a Substitute
+    // isn't guaranteed to be the same (e.g. crash or confusion damage) or to even have a Substitute
     if (target.active.volatiles.Substitute) {
         var subbed = battle.side(sub_player);
         if (!subbed.active.volatiles.Substitute) return false;

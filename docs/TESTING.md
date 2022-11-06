@@ -10,7 +10,7 @@ testing the pkmn engine requires a little extra work. Helper functions exist to 
 of the boilerplate from the library's unit tests:
 
 - `Test`: the main helper type for testing, a test can be initialized with `Test(rolls).init(p1,
-  p2)` (`Test.deinit()` should be `defer`-ed immediatley after initialization to free resources),
+  p2)` (`Test.deinit()` should be `defer`-ed immediately after initialization to free resources),
   expected updates and logs can be tracked on the `expected` fields and finally the `actual` state
   can be `verify`-ed at the end of the test.
 - `Battle.fixed`: under the hood, `Test` uses this helper to create a battle with a `FixedRNG` that
@@ -24,7 +24,7 @@ of the boilerplate from the library's unit tests:
 ### `showdown`
 
 In order to verify Pokémon Showdown's behavior, many of the pkmn engine's unit tests are mirrored in
-the [`showdown/`](../src/test/showdown/) directory. It should be emphasized that these are tests
+the [`showdown`](../src/test/showdown/) directory. It should be emphasized that these are tests
 against Pokémon Showdown, **not** the pkmn engine (engine code is not being tested). Pokémon
 Showdown's own unit tests are inadequate for the pkmn engine's purposes as they mostly cover the
 latest generation, do not use a fixed RNG, and do not verify logs (both of which are crucial for
@@ -48,12 +48,12 @@ several reasons:
   'rules'](https://github.com/smogon/pokemon-showdown/blob/master/config/CUSTOM-RULES.md)
 - the ordering of keyword arguments in Pokémon Showdown is not strictly defined
 - several of Pokémon Showdown's protocol messages are redundant/implementation specific
-- pkmn always returns a single 'stream' and always includes exact HP (ie. Pokémon Showdown's
-  "omniscient stream") - other streams of information must be computed from this
+- pkmn always returns a single "stream" and always includes exact HP (i.e. Pokémon Showdown's
+  "omniscient" stream) - other streams of information must be computed from this
 - [despite what it may claim](https://pokemonshowdown.com/pages/rng), Pokémon Showdown does **not**
   implement the correct pseudo-random number generator for each format (it implements the Generation
   V & VI PRNG and applies it to all generations and performs a different amount of calls, with
-  different arguments and in different order than the cartridge).
+  different arguments and in different order than the cartridge)
 
 The integration test contains logic to configure Pokémon Showdown to produce the correct results and
 for massaging the output from the pkmn engine into something which can be compared to Pokémon
@@ -66,7 +66,7 @@ being in agreement **they may both be incorrect** when it comes to the actual ca
     cartridge code.
     [Examples](https://github.com/jsettlem/elo_world_pokemon_red/blob/master/battle_x_as_y.py) exist
     of scripting battles to run on the cartridge via an emulator, though the fact that integration
-    testing the engine properly requires support for "link battling" and the ability to detect
+    testing the engine properly requires support for "link" battling and the ability to detect
     desyncs makes such a goal decidedly nontrivial.
 
 ### `blocklist.json`
@@ -91,14 +91,14 @@ Benchmarking the pkmn engine vs. Pokémon Showdown is slightly more complicated 
 tool like [`hyperfine`](https://github.com/sharkdp/hyperfine) due to the need to account for the
 runtime overhead and warmup period required by V8 (`hyperfine --warmup` is intended to help with
 disk caching, not JIT warmup). As such, a [custom benchmark tool](`../src/tools/benchmark`) exists
-which can be used to run the benchmark. The benchmark measures how long it takes to play out
-N randomly generated battles, excluding any set up time and time spent warming up the JS
-configurations. This benchmark scenario is useful for approximating the [Monte Carlo tree search
-(MCTS)](https://en.wikipedia.org/wiki/Monte_Carlo_tree_search) use case where various battles are
+which can be used to run the benchmark. The benchmark measures how long it takes to play out N
+randomly generated battles, excluding any set up time and time spent warming up the JS
+configurations. This benchmark scenario is useful for approximating the [Monte Carlo tree
+search](https://en.wikipedia.org/wiki/Monte_Carlo_tree_search) use case where various battles are
 played out each turn to the end numerous times to determine the best course of action.
 
 Before running the benchmark, care needs to be taken to set up the environment to be as stable as
-possible, eg. [disabling CPU performance scaling, Intel Turbo Boost,
+possible, e.g. [disabling CPU performance scaling, Intel Turbo Boost,
 etc](https://github.com/travisdowns/uarch-bench/blob/master/uarch-bench.sh). The benchmark tool
 measures 4 different configurations:
 
@@ -159,14 +159,14 @@ that we:
 Note that how long a given battle takes is heavily dependent on the teams in question. The benchmark
 runs on teams that have effectively been generated using ["Challenge
 Cup"](https://bulbapedia.bulbagarden.net/wiki/Challenge_Cup) semantics, and because this includes
-numerous sub-optimal moves (eg. Thunder Shock in addition to Thunderbolt, instead of just the
+numerous sub-optimal moves (e.g. Thunder Shock in addition to Thunderbolt, instead of just the
 latter) it is expected to take substantially longer than more traditional ["Random Battle"
 sets](https://github.com/pkmn/randbats) or handcrafted teams. **Experimentally the random sets used
 by the benchmark are expected to be roughly 2-3× slower than what would be typical in practice.**
 
 [^2]: It is possible to remain in sync between configurations which can inspect `Battle` and those
 that can't by always saving the raw result returned by the last RNG call and reapplying it to the
-next request in the event of an "[Unavailable choice]" error (eg. call the RNG and get back `r`,
+next request in the event of an "[Unavailable choice]" error (e.g. call the RNG and get back `r`,
 attempt to choose the `r % N`-th choice, get rejected, on the next request do not generate a new `r`
 but instead now make the `r % M`-th choice where `M` is the actual available choices post
 rejection). Since it isn't especially important to demonstrate how much slower the (already slow)
@@ -235,8 +235,8 @@ Vulnerabilities:
 The [integration](#integration) tests and [benchmark](#benchmark) are also used for
 [fuzzing](https://en.wikipedia.org/wiki/Fuzzing). A [GitHub workflow](../.github/workflows/fuzz.yml)
 exists to run these tests on a schedule from random seeds for various durations to attempt to
-uncover latent bugs. The fuzz tests differ from the benchmark in that they runs for predefined time
-durations as opposed to a given number of battles, never performs more than a single playout per
-battle, and enable the [blocked](#blocklistjson) effects that are usually excluded in `-Dshowdown`
-compatability mode. When run with the `-Dtrace` flag, additional binary data will be dumped on
-crashes to allow for debugging with the help of [`fuzz.ts`](../src/tools/fuzz.ts).
+uncover latent bugs. The fuzz tests differ from the benchmark in that they run for predefined time
+durations as opposed to a given number of battles and enable the [blocked](#blocklistjson) effects
+that are usually excluded in `-Dshowdown` compatability mode. When run with the `-Dtrace` flag,
+additional binary data will be dumped on crashes to allow for debugging with the help of
+[`fuzz.ts`](../src/tools/fuzz.ts).

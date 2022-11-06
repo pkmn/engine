@@ -61,7 +61,7 @@ class Runner {
     // TODO: compare to @pkmn/engine data
     // TODO: add buf to output if doesn't compare
     // TODO: verify binary protocol round trip
-    // TODO: SUPPORT COMPARING VARIABLES (eg. last_damage, last_selected_move)
+    // TODO: SUPPORT COMPARING VARIABLES (e.g. last_damage, last_selected_move)
 
     // BUG: streams.p2.writeEnd ?
   }

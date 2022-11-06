@@ -176,7 +176,7 @@ pub const Move = enum(u8) {
     Substitute,
     Struggle,
 
-    // Sentinel used when Pokémon's turn should be skipped (eg. trapped)
+    // Sentinel used when Pokémon's turn should be skipped (e.g. trapped)
     SKIP_TURN = 0xFF,
 
     pub const Data = packed struct {

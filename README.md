@@ -124,13 +124,13 @@ correctness, and may change meaning or behavior without warning. Use at your own
 pub const pkmn_options = .{ .showdown = true, .trace = true };
 ```
 
-The `pkmn()` function in the engine's `build.zig` can then be used to simplify adding the `pkmn`
-package to your project.
+The `pkmn` function in the engine's `build.zig` can be used to simplify adding the `pkmn` package to
+your project.
 
 ## Usage
 
 *The snippets below are meant to merely illustrate in broad strokes how the pkmn engine can be used
-\- the [`examples`](src/examples) contains fully commented and runnable code.*
+\- the [`examples`](src/examples) directory contains fully commented and runnable code.*
 
 ### C
 
@@ -199,7 +199,7 @@ engine running in the browser.
 
 The `pkmn` Zig package should be relatively straightforward to use once installed correctly. Helper
 methods exist to simplify state instantiation, and any `Writer` can be used when logging is enabled
-to allow for easily printing eg. to standard out or a buffer.
+to allow for easily printing e.g. to standard out or a buffer.
 
 ```zig
 const std = @import("std");
@@ -227,7 +227,7 @@ std.debug.print("{}", .{result.type});
 
 ## Status
 
-The simulation engine is currently expected to be developed over multiple stages:
+The engine is currently expected to be developed over multiple stages:
 
 | Stage   | Deliverables                                    |
 | ------- | ----------------------------------------------- |
@@ -245,7 +245,7 @@ Currently, most of the foundational work from stage 0 is done:
 **Stage 1 is currently in progress** and will see the implementation of the actual Generation I & II
 battle engines, followed by Generation III & IV in stage 2. The implementation of further Pokémon
 generations is in scope for the project but should not be considered as part of the immediate
-roadmap (ie. exploring the options for broadening support for old generation APIs will be given
+roadmap (i.e. exploring the options for broadening support for old generation APIs will be given
 higher priority than implementing more modern generations). Furthermore, implementation of modern
 generations is soft-blocked on the [availability of high quality
 decompilations](https://github.com/orgs/pret/repositories) of the original games in question.

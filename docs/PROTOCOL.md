@@ -2,20 +2,22 @@
 
 At a high level, the pkmn engine updates a battle's state based on both player's choices, returning
 a result which indicates whether the battle has ended and what each player's options are. A
-non-terminal result can be fed into a battle's `choices` method which returns all legal choices[^1],
-though the state of the engine may also be inspected directly to determine information about the
-battle and what choices are possible. By [design](DESIGN.md), each generation's data structures are
-different, but the precise layout of the battle information is outlined in the respective
-documentation.
+non-terminal result can be fed into a generation's `choices` method which returns all legal
+actions[^1], though the state of the engine may also be inspected directly to determine information
+about the battle and which moves are possible. By [design](DESIGN.md), each generation's data
+structures are different, but the precise layout of the battle information is outlined in the
+respective documentation.
 
 More information about a battle can be generated via the `-Dtrace` flag when building the engine.
 This flag enables the engine to write the wire protocol described in this document to a `Log`.
-Generally, this `Log` should be a `FixedBufferStream` `Writer` backed by a statically allocated
-fixed-size array that gets `reset` after each `update` as the maximum number of bytes written by a
-single `update` call is bounded to a [relatively small number of bytes](#size) per generation,
-though since any `Writer` implementation is allowed this `Log` could instead write to standard
-output (Note that in Zig the standard out writer is not buffered by default - you must use a
-[`BufferedWriter`](https://zig.news/kristoff/how-to-add-buffering-to-a-writer-reader-in-zig-7jd)
+Generally, this `Log` should be a
+[`FixedBufferStream`](https://ziglang.org/documentation/master/std/#root;io.FixedBufferStream)
+[`Writer`](https://ziglang.org/documentation/master/std/#root;io.Writer) backed by a statically
+allocated fixed-size array that gets `reset` after each `update` as the maximum number of bytes
+written by a single `update` call is bounded to a [relatively small number of bytes](#size) per
+generation, though since any `Writer` implementation is allowed this `Log` could instead write to
+standard output (note that in Zig the standard out writer is not buffered by default - you must use
+a [`BufferedWriter`](https://zig.news/kristoff/how-to-add-buffering-to-a-writer-reader-in-zig-7jd)
 wrapper to acheive reasonable performance).
 
 The engine's wire protocol essentially amounts to a stripped down binary translation of [Pokémon
@@ -30,11 +32,10 @@ will called out below where applicable.
 
 [^1]: The `choices` method leaks information in certain cases where legal decisions would not be
 known to a user until after having already attempted a choice (e.g. that a Pokémon has been trapped
-or has had a move has been blocked due to an opponent's use of
+or has had a move that has been blocked due to an opponent's use of
 [Imprison](https://bulbapedia.bulbagarden.net/wiki/Imprison_(move))). This is a non-issue for the
 use case of games being played out randomly via a machine, but a simulator for human players built
-on top of the pkmn engine would need to provide an alternative implementation of the `choices`
-function.
+on top of the pkmn engine would need to provide an alternative implementation of `choices`.
 
 ## Overview
 
@@ -88,7 +89,7 @@ Pokémon Showdown's documentation:
 
 Identity works a little differently in the pkmn engine, given that nicknames are not part of the
 engine. While the given player, position letter and identity of the Pokémon in question are all
-still encoded, the identity takes the form of a single bit-packed native-endian byte:
+still encoded, the identity takes the form of a single bit-packed byte:
 
 - the most significant 3 bits are always `0`
 - the 4th most signficiant bit is `0` if the position is `a` and `1` if the position is `b` (only
@@ -104,16 +105,16 @@ nicknames.
 
 ### `LastStill`/`LastMiss`
 
-Unfortunately, Pokémon Showdown's protocol does not allow for translating one message at a time. The
-`|move|` message can be modified by a message with the `LastStill` (`0x01`) or `LastMiss` (`0x02`)
-`ArgType`. In the Pokémon Showdown simulator the `attrLastStill` method is used to modify a batched
-`|move|` message before it is written with other messages as a single chunk, but the pkmn engine
-streams out writes immediately and does not perform batching, meaning code parsing the engine's
-protocol is required to do the batching instead.
+Unfortunately, Pokémon Showdown's protocol does not allow for translating a single message at a time
+in isolation. The `|move|` message can be modified by a message with the `LastStill` (`0x01`) or
+`LastMiss` (`0x02`) `ArgType`. In the Pokémon Showdown simulator the `attrLastMove` method is used
+to modify a batched `|move|` message before it is written with other messages as a single chunk, but
+the pkmn engine streams out writes immediately and does not perform batching, meaning code parsing
+the engine's protocol is required to do the batching instead.
 
-When interepreting a buffer written by the pkmn `Log`, if a `LastStill` (`0x01`) byte is
-encountered, if there is a previous `|move|` message in the same buffer that occured earlier, append
-a `[still]` keyword arg to it. Similarly, if a `LastMiss` (`0x02`) byte is encountered, append a
+When interepreting a buffer written by the pkmn `Log`: if a `LastStill` (`0x01`) byte is encountered
+and if there is a previous `|move|` message in the same buffer that occured earlier, append a
+`[still]` keyword arg to it. Similarly, if a `LastMiss` (`0x02`) byte is encountered, append a
 `[miss]` to the last seen `|move|` message if present.
 
 ## Messages
@@ -130,9 +131,9 @@ a `[still]` keyword arg to it. Similarly, if a `LastMiss` (`0x02`) byte is encou
       +---------------+---------------+
 
 `Source` is the [`PokemonIdent`](#pokemonident) of the Pokémon that used the `Move` on the
-[`PokemonIdent`](#pokemonident) `Target` for `Reason`.  If `Reason` is `0x02` then the following
-byte which indicate which `Move` the `|move|` is `[from]`. This message may be modified later on by
-a `LastStill` or `LastMiss` message in the same buffer (see above).
+[`PokemonIdent`](#pokemonident) `Target` for `Reason`.  If `Reason` is `0x02` then the next byte
+will indicate which `Move` the `|move|` is `[from]`. This message may be modified later on by a
+`LastStill` or `LastMiss` message in the same buffer (see above).
 
 <details><summary>Reason</summary>
 
@@ -244,7 +245,7 @@ The battle has ended in a tie.
 
 The Pokémon identified by [`Ident`](#pokemonident) has taken damage and now has the `Current HP`,
 `Max HP` and `Status`. If `Reason` is in `0x04` then the following byte indicates the
-[`PokemonIdent`](#pokemonident) of the source `[of]` the damage.
+[`PokemonIdent`](#pokemonident) is the source `[of]` the damage.
 
 <details><summary>Reason</summary>
 
@@ -295,7 +296,7 @@ then the damage was healed `[from]` a draining move indicated by the subsequent 
       +---------------+
 
 The Pokémon identified by [`Ident`](#pokemonident) has been inflicted with `Status`. If `Reason` is
-`0x02` then the following byte which indicate which `Move` the `Status` is `[from]`.
+`0x02` then the next byte will indicate which `Move` the `Status` is `[from]`.
 
 <details><summary>Reason</summary>
 
@@ -635,12 +636,12 @@ identified by the `Target` [`PokemonIdent`](#pokemonident).
 ## Size
 
 As mentioned above, any `Writer` can be used to back the protocol `Log`, and as such something like
-an `ArrayList.Writer` can be used to support arbitrary amounts of data being written to the log each
-update. For performance reasons it is desirable to be able to preallocate a fixed size buffer for
-this, where the recommended size is determined by `pkmn.LOGS_SIZE` which is guaranteed to be able to
-handle at least `pkmn.MAX_LOGS` bytes (these constants are defined to be the maximum of all
-generations - each generation also has its own parallel constants that can be used instead, e.g.
-`pkmn.gen1.LOGS_SIZE`).
+an [`ArrayList.Writer`](https://ziglang.org/documentation/master/std/#root;ArrayList) can be used to
+support arbitrary amounts of data being written to the log each update. For performance reasons it
+is desirable to be able to preallocate a fixed size buffer for this, where the recommended size is
+determined by `pkmn.LOGS_SIZE` which is guaranteed to be able to handle at least `pkmn.MAX_LOGS`
+bytes (these constants are defined to be the maximum of all generations - each generation also has
+its own parallel constants that can be used instead, e.g. `pkmn.gen1.LOGS_SIZE`).
 
 Determining the maximum amount of bytes in a single update (i.e. bytes logged by a call to `update`
 with each player's `Choice`) per generation is non-trivial and could vary greatly depending on the
@@ -652,8 +653,9 @@ constraints:
 - **Cartridge**: Cartridge legality still enforces anything that can be legitimately obtained on the
   cartridge and used in link battles, but does not enforce any of Pokémon Showdown's clauses or
   mods.
-- **"Hackmons"**: A step further than cartridge legality, removing restrictions on moves / items /
-  abilities / types / stats / etc - anything which can be hacked into the game before the battle.
+- [**"Hackmons"**](https://www.smogon.com/articles/pure-hackmons-introduction): A step further than
+  cartridge legality, removing restrictions on moves / items / abilities / types / stats / etc -
+  anything which can be hacked into the game before the battle.
 - **Fuzzing**: Used for testing, the same "hackmons" constraints but also allowing for arbitrary
   in-battle manipulation as well to be able to set impossible combinations of volatiles statuses or
   side conditions etc.
@@ -666,8 +668,8 @@ In general, the constants will be defined such that they will be guaranteed to b
 **cartridge constraints with a lax consideration of the RNG** (though taking a strict intepretation
 of the RNG is required in some cases to be able to conservatively set the upper bounds in specific
 scenarios). In practice, the constants will usually be defined to handle "hackmons" legality as that
-is what is useful for the engines fuzz testing - see the precise definitions below for exact
-details. In most cases these scenarios have been derived with help from the [Z3 theorem
+is what is useful for the engine's fuzz testing - see the precise definitions below for exact
+details. In most cases these scenarios have been derived with the [Z3 theorem
 prover](https://github.com/Z3Prover/z3).
 
 *The following maximum log size scenarios were developed with help from
@@ -678,10 +680,10 @@ prover](https://github.com/Z3Prover/z3).
 The `MAX_LOGS` constant in Generation I is determined to be **180**. Acheiving this requires two
 burned Aerodactyl with Leech Seed, Confuse Ray, and Metronome where one is slower than the other. On
 the first two turns of the battle the Aerodactyl both use Leech Seed followed by Confuse Ray, and
-then in the turn where the maximum single turn logs output is to be reached, the faster Aerodactyl
-uses Metronome to proc a critical hit Fury Swipes that hits 5 times and the slower Aerodactyl uses
-Metronome to proc Mirror Move to then also procs a critical hit Fury Swipes that hits 5 times. The
-initial battle seed required to acheive this is output is $\{106, 161, 95, 184, 221, 10, 52, 25,
+then in the turn where the maximum single update output is to be reached, the faster Aerodactyl uses
+Metronome to proc a critical hit Fury Swipes that hits 5 times and the slower Aerodactyl uses
+Metronome to proc Mirror Move which then also procs a critical hit Fury Swipes that hits 5 times.
+The initial battle seed required to acheive this is output is $\{106, 161, 95, 184, 221, 10, 52, 25,
 156, 133\}$.
 
 <details><summary>Details</summary>
@@ -694,15 +696,15 @@ In order to maximize log message size in Generation I several observations need 
 - `|move|` should `|-crit|` and either be `|-supereffective|` or `|-resisted|` in order to use up
   more bytes
 - before a `|move|` a Pokémon can activate confusion, and after residual damage from a poison or
-  burn status and Leech Seed can be triggered
+  burn status, Leech Seed can be triggered
 - neither Pokémon can `|faint|` at the end. While intially it might seem like having both
   `|faint|` and causing one side to `|win|` would be optimal (two `|faint|` messages and one `|win|`
   is 6 bytes total, a single `|faint|` and a `|turn|` message is 5 bytes), if a side faints you
   miss out on a round of damage and healing from Leech Seed which is 16 bytes
 - Substitute activating actually reduces the size of the log as `|-activate|` replaces the larger
-  `|-damage|` messages, and in Generation I if the substitute breaks it nullifies the rest of the
+  `|-damage|` messages, and in Generation I if a substitute breaks it nullifies the rest of the
   move's effects
-- ultimately a `MuliHit` move is optimal as it can generate 5 `|-damage|` messages and a
+- ultimately a `MultiHit` move is optimal as it can generate 5 `|-damage|` messages and a
   `|-hitcount|`
 
 The most important observation is that **Metronome and Mirror Move can be used in tandem to rack up
@@ -720,7 +722,7 @@ Metronome → Mirror Move calls would be ${1 \over 163}^N$ (given Metronome can 
 moves), which while vanishingly small as $N$ increases is still possible. However, both Pokémon Red
 and Pokémon Showdown use *pseudo*-random number generators and thus in order to find our way out of
 this potential infinite recursion we must strictly consider what is actually possibly with the RNG,
-and not just what is possible in theory.
+and not just what would be possible in theory.
 
 In Pokémon Showdown there are several frame advances between each call (e.g. a consequential roll to
 hit, an advance to retarget, etc) and setting up the RNG to accomplish arbitrary recursion is not
@@ -730,9 +732,9 @@ move to use and the seed can be used to set up 10 arbitrary values. Define $X$, 
 that $X' = 5X+1 \bmod 256$ and $X'' = 5X'+1 \bmod 256$. We want $X'' = 119$ as that will cause
 Metronome to use Mirror Move, so $X' = 126$ and $X = 25$.
 
-Thus we can start with a seed of `[25, 126, 56, 25, 126, 56, 25, 126, 56, 25]` to achieve 10 levels
-of recursive Metronome → Mirror Move calls from the output values. This is an **upper bound** (in
-reality it would be impossible to set up the rest of the battle, do 10 rounds of recursion, and
+Thus we can start with a seed of $\{25, 126, 56, 25, 126, 56, 25, 126, 56, 25\}$ to achieve 10
+levels of recursive Metronome → Mirror Move calls from the output values. This is an **upper bound**
+(in reality it would be impossible to set up the rest of the battle, do 10 rounds of recursion, and
 still have optimal rolls on the other side to be able to obtain maximum log size) and only applies
 to a single player (as mentioned above the only way to have Mirror Move copy Metronome is if the
 opponent is locked into a charging move from a previous Metronome call).
@@ -771,17 +773,17 @@ Move → multi-hit.
   - `|turn|`: 3 bytes
   - `0x00`: 1 byte (end of buffer)
 
-</details>
+[Z3](../src/tools/max_logs.py) can be used to test out these scenarios - we can quickly see that
+despite 10 levels of recursive Metronome → Mirror Move being possible in a vaccuum if we are able to
+control the initial seed, there is no way to acheive the first scenario after burning through the
+rolls on the first two turns of setup and if we need to be able to proc specific Metronome rolls
+after. For the second scenario we run into the problem of needing an extra turn of setup for Player
+1 to be able to Mirror Move a multi-hit move which also takes us too far away from the initial seed
+to be able to set up the rest of the scenario. However, by slightly compromising and not requiring
+Player 1 to proc Mirror Move only lose 6 bytes and thus arrive at 180 bytes for the maximum log size
+for Generation I.
 
-[Z3](../src/tools/max_logs.py) can then be used to test out these scenarios - we can quickly see
-that despite 10 levels of recursive Metronome → Mirror Move being possible in a vaccuum if we are
-able to control the intiial seed, there is no way to acheive the first scenario after burning
-through the rolls on the first two turns of setup and if we need to be able to proc specific
-Metronome rolls after. For the second scenario we run into the problem of needing an extra turn of
-setup for Player 1 to be able to Mirror Move a multi-hit move which also takes us too far away from
-the initial seed to be able to set up the rest of the scenario. However, by slightly compromising
-and not requiring Player 1 to proc Mirror Move only lose 6 bytes and thus arrive at 180 bytes for
-the maximum log size for Generation I.
+</details>
 
 ### Generation II
 
