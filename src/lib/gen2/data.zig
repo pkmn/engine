@@ -1,17 +1,34 @@
 const std = @import("std");
+const builtin = @import("builtin");
 
-const rng = @import("../common/rng.zig");
+const data = @import("../common/data.zig");
 const options = @import("../common/options.zig");
-const gen1 = @import("../gen1/data.zig");
+const rng = @import("../common/rng.zig");
 
 const items = @import("data/items.zig");
 const moves = @import("data/moves.zig");
 const species = @import("data/species.zig");
 const types = @import("data/types.zig");
 
+const gen1 = @import("../gen1/data.zig");
+
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 const expect = std.testing.expect;
+
+pub const MAX_OPTIONS: usize = 9; // move 1..4, switch 2..6
+pub const MAX_LOGS: usize = 180; // TODO
+
+pub const OPTIONS_SIZE = if (builtin.mode == .ReleaseSmall)
+    MAX_OPTIONS
+else
+    std.math.ceilPowerOfTwo(usize, MAX_OPTIONS) catch unreachable;
+pub const LOG_SIZE = if (builtin.mode == .ReleaseSmall)
+    MAX_LOGS
+else
+    std.math.ceilPowerOfTwo(usize, MAX_LOGS) catch unreachable;
+
+pub const Player = data.Player;
 
 const showdown = options.showdown;
 
@@ -19,28 +36,31 @@ pub const PRNG = rng.PRNG(2);
 
 pub fn Battle(comptime RNG: anytype) type {
     return extern struct {
-        rng: RNG,
+        const Self = @This();
+
         sides: [2]Side,
+        rng: RNG,
         turn: u16 = 0,
         field: Field = .{},
 
-        pub fn p1(self: *Battle) *Side {
-            return &self.sides[0];
+        pub inline fn side(self: *Self, player: Player) *Side {
+            return &self.sides[@enumToInt(player)];
         }
 
-        pub fn p2(self: *Battle) *Side {
-            return &self.sides[1];
+        pub inline fn foe(self: *Self, player: Player) *Side {
+            return &self.sides[@enumToInt(player.foe())];
         }
     };
 }
 
 // TODO
-// test "Battle" {
-//     try expectEqual(if (showdown) 440 else 444, @sizeOf(Battle(PRNG)));
-// }
+test "Battle" {
+    try expectEqual(496, @sizeOf(Battle(PRNG)));
+}
 
-const Field = extern struct {
-    weather: Weather.Data = .{},
+const Field = packed struct {
+    weather: Weather = .None,
+    weather_duration: u4 = 0,
 
     comptime {
         assert(@sizeOf(Field) == 1);
@@ -52,21 +72,13 @@ const Weather = enum(u4) {
     Rain,
     Sun,
     Sandstorm,
-
-    const Data = packed struct {
-        id: Weather = .None,
-        duration: u4 = 0,
-
-        comptime {
-            assert(@sizeOf(Data) == 1);
-        }
-    };
 };
 
 const Side = extern struct {
     pokemon: [6]Pokemon = [_]Pokemon{.{}} ** 6,
     active: ActivePokemon = .{},
-    // TODO: conditions: Conditions,
+    conditions: Conditions,
+    _: u16 = 0,
 
     const Conditions = packed struct {
         Spikes: bool = false,
@@ -87,30 +99,37 @@ const Side = extern struct {
         assert(@sizeOf(Side) == 240);
     }
 
-    pub fn get(self: *const Side, slot: u8) *Pokemon {
-        assert(slot > 0 and slot < 7);
-        return self.pokemon[slot - 1];
+    pub inline fn get(self: *const Side, slot: u8) *Pokemon {
+        assert(slot > 0 and slot <= 6);
+        const id = self[slot - 1].position;
+        assert(id > 0 and id <= 6);
+        return &self.pokemon[id - 1];
+    }
+
+    pub inline fn stored(self: *Side) *Pokemon {
+        return self.get(1);
     }
 };
 
 // NOTE: IVs (Gender & Hidden Power) and Happiness are stored only in Pokemon
 const ActivePokemon = extern struct {
-    volatiles: Volatile = .{},
+    volatiles: Volatile align(4) = .{},
     stats: Stats(u16) = .{},
-    _: u32 = 0, // TODO
     moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
     boosts: Boosts = .{},
     species: Species = .None,
     item: Item = .None,
     last_move: Move = .None,
-    position: u8 = 0,
-
-    // FIXME move to volatiles?
-    // trapped: bool = false,
-    // switching: bool = false,
+    _: u8 = 0,
 
     comptime {
-        assert(@sizeOf(ActivePokemon) == 48);
+        assert(@sizeOf(ActivePokemon) == 44);
+    }
+
+    pub inline fn move(self: *ActivePokemon, mslot: u8) *MoveSlot {
+        assert(mslot > 0 and mslot <= 4);
+        assert(self.moves[mslot - 1].id != .None);
+        return &self.moves[mslot - 1];
     }
 };
 
@@ -129,6 +148,12 @@ const Pokemon = extern struct {
 
     comptime {
         assert(@sizeOf(Pokemon) == 32);
+    }
+
+    pub inline fn move(self: *Pokemon, mslot: u8) *MoveSlot {
+        assert(mslot > 0 and mslot <= 4);
+        assert(self.moves[mslot - 1].id != .None);
+        return &self.moves[mslot - 1];
     }
 };
 
@@ -158,7 +183,7 @@ const MoveSlot = extern struct {
     pp: u8 = 0,
 
     comptime {
-        assert(@sizeOf(MoveSlot) == @sizeOf(u16));
+        assert(@sizeOf(MoveSlot) == 2);
     }
 };
 
@@ -195,21 +220,24 @@ const Volatile = packed struct {
     DestinyBond: bool = false,
     BeatUp: bool = false,
 
-    _: u12 = 0,
+    trapped: bool = false,
+    switching: bool = false,
 
+    _: u6 = 0,
+
+    wrap: u4 = 0,
     future_sight: FutureSight = .{},
     bide: u16 = 0,
     disabled: Disabled = .{},
     rage: u8 = 0,
     substitute: u8 = 0,
+    toxic: u8 = 0,
     confusion: u4 = 0,
     encore: u4 = 0,
     fury_cutter: u4 = 0,
     perish_song: u4 = 0,
     protect: u4 = 0,
     rollout: u4 = 0,
-    toxic: u4 = 0,
-    wrap: u4 = 0,
 
     const Disabled = packed struct {
         move: u4 = 0,
@@ -227,7 +255,6 @@ const Volatile = packed struct {
 };
 
 pub fn Stats(comptime T: type) type {
-    // TODO: switch on T and use packed struct if not power of 2?
     return extern struct {
         hp: T = 0,
         atk: T = 0,
