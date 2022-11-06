@@ -802,11 +802,10 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
     if (!showdown or !miss) {
         if (move.effect == .MirrorMove) return mirrorMove(battle, player, mslot, log);
         if (move.effect == .Metronome) return metronome(battle, player, mslot, log);
-    }
-
-    if ((!showdown or !miss) and move.effect.onEnd()) {
-        try moveEffect(battle, player, move, mslot, log);
-        return null;
+        if (move.effect.onEnd()) {
+            try moveEffect(battle, player, move, mslot, log);
+            return null;
+        }
     }
 
     var thrashed = false;

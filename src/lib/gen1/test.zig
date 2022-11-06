@@ -5422,6 +5422,7 @@ test "Charge + Sleep bug" {
 
     try expectEqual(Result.Default, try t.update(forced, move(2)));
 
+    // The charging move should be forced and should execute instead of preparing again
     n = t.battle.actual.choices(.P1, .Move, &choices);
     try expectEqualSlices(
         Choice,
@@ -7084,7 +7085,7 @@ test "Hyper Beam + Sleep move glitch" {
     try t.log.expected.cant(P2.ident(1), .Sleep);
     try t.log.expected.turn(3);
 
-    try expectEqual(Result.Default, try t.update(move(2), move(if (showdown) 1 else 0)));
+    try expectEqual(Result.Default, try t.update(move(2), forced));
     try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
     try expectEqual(@as(u5, 1), t.actual.p2.active.volatiles.toxic);
 

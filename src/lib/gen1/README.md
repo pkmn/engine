@@ -58,12 +58,12 @@ The following information is required to simulate a Generation I Pokémon battle
 | `volatiles.substitute`               | `PlayerSubstituteHP`               | `volatiles.substitute.hp`              |
 | `volatiles.disabled_{move,duration}` | `PlayerDisabledMove{,Number}`      | `volatiles.disable.{move,time}`        |
 
-- Pokémon Showdown does not implement the correct Generation I RNG and as such its `seed` is
+- Pokémon Showdown [does not implement the correct Generation I RNG](#rng) and as such its `seed` is
   different
 - `battle.turn` only needs to be tracked in order to be compatible with the Pokémon Showdown
   protocol
 - Pokémon Showdown tracks several last used move variables (`Battle.lastMove`, `Side.lastMove`, and
-  `Pokemon.lastMove`), none of switch accurately match the `PlayerUsedMove` variable from the
+  `Pokemon.lastMove`), none of which accurately match the `PlayerUsedMove` variable from the
   cartridge (`Side.lastMove` should be what is used, but is used by Pokémon Showdown only for
   Counter and is not set and cleared in the correct locations. `Pokemon.lastMove` matches
   `PlayerUsedMove` more often so is what the engine attempts to model, despite the implications for
@@ -82,7 +82,7 @@ The following information is required to simulate a Generation I Pokémon battle
 - Pokémon Red's `PlayerMove*` tracks information that is stored in the `Move` class
 - Pokémon Red's `PlayerStatsToDouble`/`PlayerStatsToHalve` are constants which are always 0
 - pkmn does not store the DVs/stat experience of Pokémon as they are expected to already be
-  accounted for in the `Pokemon` `stats` and never need to be referenced in-battle (though the `DVs`
+  accounted for in the `Pokemon` `stats` and never need to be referenced in-battle (though a `DVs`
   struct exists to simplify generating legal test data)
 - Instead of storing unmodified stats like Pokémon Red or Pokémon Showdown, pkmn simply tracks the
   identity of the Pokémon that has been transformed into in the `active.volatiles.transform` field.
@@ -98,8 +98,8 @@ The following information is required to simulate a Generation I Pokémon battle
 store general information about the battle. Unlike in Pokémon Showdown there is a distinction
 between the data structure for the "active" Pokémon and its party members (see below).
 
-Due to padding constraints, the index of the last selected move for a side is stored on `Battle`
-directly in `last_selected_indexes` instead of in `Side`.
+Due to layout constraints, the index of the last selected move for a side is stored in what would
+otherwise be the padding bytes of`Battle` (the `last_selected_indexes` field) instead of in `Side`.
 
 ### `Pokemon` / `ActivePokemon`
 
@@ -166,8 +166,8 @@ boolean flags that are cleared when the Pokémon faints or switches out:
 [Confusion](https://pkmn.cc/bulba/Confusion_(status_condition)) (duration),
 [Toxic](https://pkmn.cc/bulba/Toxic_(move)) (counter),
 [Transform](https://pkmn.cc/bulba/Transform_(move)) (identity), and
-[Disable](https://pkmn.cc/bulba/Disable_(move)) (move and duration), and multi attacks all require
-additional information that is also stored in the `Volatiles` structure.
+[Disable](https://pkmn.cc/bulba/Disable_(move)) (move and duration), and multi-hit attacks all
+require additional information that is also stored in the `Volatiles` structure.
 
 The `state` field of `Volatiles` is effectively treated as a union:
 
@@ -386,34 +386,34 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 
 > **NOTE:** The offsets in the following table represent *bits* and **not** bytes.
 
-| Start | End | Data                | Description                                                 |
-| ----- | --- | ------------------- | ----------------------------------------------------------- |
-| 0     | 1   | `Bide`              | Whether the "Bide" volatile status is present               |
-| 1     | 2   | `Thrashing`         | Whether the "Thrashing" volatile status is present          |
-| 2     | 3   | `MultiHit`          | Whether the "MultiHit" volatile status is present           |
-| 3     | 4   | `Flinch`            | Whether the "Flinch" volatile status is present             |
-| 4     | 5   | `Charging`          | Whether the "Charging" volatile status is present           |
-| 5     | 6   | `Trapping`          | Whether the "Trapping" volatile status is present           |
-| 6     | 7   | `Invulnerable`      | Whether the "Invulnerable" volatile status is present       |
-| 7     | 8   | `Confusion`         | Whether the "Confusion" volatile status is present          |
-| 8     | 9   | `Mist`              | Whether the "Mist" volatile status is present               |
-| 9     | 10  | `FocusEnergy`       | Whether the "FocusEnergy" volatile status is present        |
-| 10    | 11  | `Substitute`        | Whether the "Substitute" volatile status is present         |
-| 11    | 12  | `Recharging`        | Whether the "Recharging" volatile status is present         |
-| 12    | 13  | `Rage`              | Whether the "Rage" volatile status is present               |
-| 13    | 14  | `LeechSeed`         | Whether the "LeechSeed" volatile status is present          |
-| 14    | 15  | `Toxic`             | Whether the "Toxic" volatile status is present              |
-| 15    | 16  | `LightScreen`       | Whether the "LightScreen" volatile status is present        |
-| 16    | 17  | `Reflect`           | Whether the "Reflect" volatile status is present            |
-| 17    | 18  | `Transform`         | Whether the "Transform" volatile status is present          |
-| 18    | 21  | `confusion`         | The remaining turns of confusion                            |
-| 21    | 24  | `attacks`           | The number of attacks remaining                             |
+| Start | End | Data                | Description                                                                                                                   |
+| ----- | --- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 0     | 1   | `Bide`              | Whether the "Bide" volatile status is present                                                                                 |
+| 1     | 2   | `Thrashing`         | Whether the "Thrashing" volatile status is present                                                                            |
+| 2     | 3   | `MultiHit`          | Whether the "MultiHit" volatile status is present                                                                             |
+| 3     | 4   | `Flinch`            | Whether the "Flinch" volatile status is present                                                                               |
+| 4     | 5   | `Charging`          | Whether the "Charging" volatile status is present                                                                             |
+| 5     | 6   | `Trapping`          | Whether the "Trapping" volatile status is present                                                                             |
+| 6     | 7   | `Invulnerable`      | Whether the "Invulnerable" volatile status is present                                                                         |
+| 7     | 8   | `Confusion`         | Whether the "Confusion" volatile status is present                                                                            |
+| 8     | 9   | `Mist`              | Whether the "Mist" volatile status is present                                                                                 |
+| 9     | 10  | `FocusEnergy`       | Whether the "FocusEnergy" volatile status is present                                                                          |
+| 10    | 11  | `Substitute`        | Whether the "Substitute" volatile status is present                                                                           |
+| 11    | 12  | `Recharging`        | Whether the "Recharging" volatile status is present                                                                           |
+| 12    | 13  | `Rage`              | Whether the "Rage" volatile status is present                                                                                 |
+| 13    | 14  | `LeechSeed`         | Whether the "LeechSeed" volatile status is present                                                                            |
+| 14    | 15  | `Toxic`             | Whether the "Toxic" volatile status is present                                                                                |
+| 15    | 16  | `LightScreen`       | Whether the "LightScreen" volatile status is present                                                                          |
+| 16    | 17  | `Reflect`           | Whether the "Reflect" volatile status is present                                                                              |
+| 17    | 18  | `Transform`         | Whether the "Transform" volatile status is present                                                                            |
+| 18    | 21  | `confusion`         | The remaining turns of confusion                                                                                              |
+| 21    | 24  | `attacks`           | The number of attacks remaining                                                                                               |
 | 24    | 40  | `state`             | A union of either: <ul><li>the total accumulated damage from Bide</li><li>the overwritten accuracy of certain moves</li></ul> |
-| 40    | 48  | `substitute`        | The remaining HP of the Substitute                          |
-| 48    | 52  | `transform`         | The identity of whom the active Pokémon is transformed into |
-| 52    | 56  | `disabled_duration` | The remaining turns the move is disabled                    |
-| 56    | 59  | `disabled_move`     | The move slot (1-4) the is disabled                         |
-| 59    | 64  | `toxic`             | The number of turns toxic damage has been accumulating      |
+| 40    | 48  | `substitute`        | The remaining HP of the Substitute                                                                                            |
+| 48    | 52  | `transform`         | The identity of whom the active Pokémon is transformed into                                                                   |
+| 52    | 56  | `disabled_duration` | The remaining turns the move is disabled                                                                                      |
+| 56    | 59  | `disabled_move`     | The move slot (1-4) the is disabled                                                                                           |
+| 59    | 64  | `toxic`             | The number of turns toxic damage has been accumulating                                                                        |
 
 ### `Pokemon`
 
@@ -444,73 +444,77 @@ In addition to its alternative [RNG semantics](#rng), Pokémon Showdown's implem
 generation of Pokémon contains a number bugs, [many of which are known and have been documented on
 Smogon](https://www.smogon.com/forums/threads/rby-tradebacks-bug-report-thread.3524844/#post-5933177):
 
-- **Haze**: Haze should remove the toxic volatile and leave the toxic counter unchanged, not reset
-  the toxic counter. Furthermore, Haze should clear a specific set of volatiles, not clear all
-  volatiles indiscriminately (including artificial implementation-defined volatiles like
-  `brnattackdrop`). Finally, if Haze resets a foe's sleep or freeze status it should still be
-  prevented from moving for the turn.
-- **Mimic**: Pokémon Showdown considers Mimic to not have to check to hit instead of having 100%
-  accuracy (which can 1/256 miss). It also checks that the user of Mimic has Mimic in one of their
-  move slots, which means Mimic legally called via Metronome or Mirror Move will only work if the
-  user also has Mimic (and the moved mimicked by Mimic called via Metronome / Mirror Move will
-  erroneously override the Mimic move slot instead of the Metronome / Mirror Move move slot).
-  Furthermore, because Pokémon Showdown deducts PP based on a move's name instead of slot, if Mimic
-  copies a move the Pokémon already knows, PP deduction for using either the original move of the
-  mimicked move will instead deduct PP for whichever appears at the lower move slot and the PP will
-  be allowed to go negative (effectively allowing for infinite PP use).
+- Moves on Pokémon Showdown can do 0 damage instead of failing or causing a division-by-zero freeze.
+  Pokémon Showdown also clamps the raw damage range before modifiers are applied to be between 1 and
+  997 instead of 0 and 997. The [0 damage glitch](https://pkmn.cc/bulba-glitch-1#0_damage_glitch) is
+  thus not correctly implemented by Pokémon Showdown (and will occasionally even do *positive*
+  damage in these scenarios).
+- Pokémon Showdown considers total type effectiveness instead of applying effectiveness modifiers
+  iteratively, resulting in subtly difference damage results when both of a Pokémon's types are
+  relevant (eg. Aurora Beam vs. Articuno)
+- Pokémon Showdown checks for type and OHKO immunity before accuracy.
+- Stat modification is incorrectly implemented by Pokémon Showdown, as evident by its failure to
+  handle the [stat down modifier overflow glitch](https://www.youtube.com/watch?v=y2AOm7r39Jg)
+
+Beyond the general bugs listed above, several move effects are implemented incorrectly by Pokémon
+Showdown. Some of these moves are [too fundamentally broken to be implemented](#unimplementable) by
+the pkmn engine, but the following moves have their broken behavior preserved in `-Dshowdown` mode:
+
 - **Psybeam** / **Confusion**: the secondary chance of these moves causing confusion is not 26/256
-  like most "10%" chance moves but instead **25/256**.
+  like most "10%" chance moves but instead **25/256**. Furthermore, Substitute incorrectly prevents
+  the secondary chance of these moves from triggering confusion at all.
 - **Thrash** / **Petal Dance** / **Rage**: On the cartridge (but not on Pokémon Showdown) these
   moves have glitchy behavior where the the scaled accuracy after accuracy/evasion modifiers have
   been applied should overwrite the original accuracy of the move for as long as the move's lock
-  lasts.
+  lasts. Furthermore, Pokémon Showdown handles thrashing moves in the wrong order, does not lock the
+  user into the move if it hits or breaks a Substitute, and fails to lock a thrashing Pokémon into
+  the move if it hits a substitute.
 - **Self-Destruct** / **Explosion**: these both should cause their target to continue building Rage
   even if they miss (most sources erroneously claim a move needs to hit to cause Rage to build but
-  the `EXPLODE_EFFECT` is special-cased in the original game code).
-- **`lastDamage`**: Pokémon Showdown's tracking of `wDamage` (`battle.last_damage` in the pkmn
-  engine) is incorrect as it confuses its `Pokemon.lastDamage` field with the `Battle.lastDamage`
-  field its Counter / Substitute / Bide implementations rely on. The main consequences are that
-  `Battle.lastDamage` does not get zeroed appropriately at the beginning of executing a move
-  (`Pokemon.lastDamage` is zeroed instead) and that draining moves impact on last damage gets
-  ignored.
-  - `Battle.lastDamage` (Counter)
-    - updated in `spreadDamage` for non-recoil/**drain**/status moves
-    - zeroed in `useMove` after `tryMoveHit`
-    - used by Counter to determine success and damage
-  - `Pokemon.lastDamage` (Substitute)
-    - zeroed at the start of `runMove` between `BeforeMove` and deducting PP
-    - zeroed in `tryMoveHit` after determining the move hit
-    - read and updated by Substitute
-  - `effectState.lastDamage` (Bide):
-    - updated by Bide, use to determine the amount of damage the move eventually does
+  the `EXPLODE_EFFECT` is special-cased in the original game code). Furthermore, these moves should
+  not execute the self-KO effect if their target is invulnerable due to Fly / Dig.
 - **Disable**: Pokémon Showdown can possibly disable moves with 0 PP and lasts 1-6 turns instead of
   1-8. Furthermore, Disable should cause their target to continue building Rage even if it misses.
 - **Freeze** / **Sleep**: Pokémon Showdown requires a move to be selected when a Pokémon is frozen
   or sleeping and uses that in the event that the status is removed while on the cartridge no
-  selection is possible and no turn exists for the thawed/woken Pokémon to act except in the case
-  of a Fire-type move thawing a slower Pokémon (which should result in the [Freeze top move
-  selection glitch](https://glitchcity.wiki/Freeze_top_move_selection_glitch)).
+  selection is possible and no turn exists for the thawed/woken Pokémon to act except in the case of
+  a Fire-type move thawing a slower Pokémon (which should result in the [Freeze top move selection
+  glitch](https://glitchcity.wiki/Freeze_top_move_selection_glitch), which is not implemented and
+  would also likely be incorrect if it were to be implemented due to how Pokémon Showdown
+  incorrectly saves arbitrary moves with its choice selection semantics). Furthermore, charging /
+  thrashing volatiles should not cleared if the user misses a turn due to sleep / freeze.
 - **Hyper Beam**: due to improperly implemented selection mechanics, the [Hyper Beam
   automatic-selection glitch](https://glitchcity.wiki/Hyper_Beam_automatic_selection_glitch) does
   not exist on Pokémon Showdown. Furthermore, Hyper Beam's recharging turn should be cancelled if a
   Pokémon would have been flinched (even if the Pokémon doing the flinching was slower) or if the
-  target fainted, even if called via Metronome or Mirror Move.
+  target fainted, even if called via Metronome or Mirror Move. Finally, Hyper Beam being able to
+  cause [Freeze permanent
+  helplessness](https://pkmn.cc/bulba-glitch-1#Hyper_Beam_.2B_Freeze_permanent_helplessness) is not
+  implement by Pokémon Showdown.
 - **Roar** / **Whirlwind**: these moves can miss on Pokémon Showdown (and advance the RNG when
   checking) which is incorrect (these moves should always fail, but do not check accuracy or advance
   the RNG).
 - **Sonic Boom**: this move incorrectly fails to ignore type immunity on Pokémon Showdown.
-- **Substitute**: on Pokémon Showdown Substitute does not block burn, paralysis, or freeze secondary
-  effects and does erroneously block secondary effect confusion.
 - **Fly** / **Dig**: these should not clear the "invulnerability" volatile if the Pokémon using them
   is interrupted due to being fully paralyzed (Bulbapeda incorrectly claims that hurting itself in
   confusion will also result in this glitch which is incorrect). The "invulnerability" volatile
   should then only be reset if the Pokémon switches or successfully completes Fly or Dig (and not
-  any other "charge" move, as incorrectly claimed by Bulbapedia).
-- **Twineedle**: on Pokémon Showdown Twineedle can poison on both hits as opposed to how in the
-  original game only the second hit can poison.
-- **Mirror Move**: Mirror Move should not copy a "charge" move during its first turn of charging but
-  should instead copy the move that was used prior to the "charge" move being used (i.e. "charging"
-  should not set the last used move).
+  any other "charge" move, as incorrectly claimed by Bulbapedia). Pokémon Showdown also deducts PP
+  and updates the last used move on the wrong turn of all charging moves (counting the first
+  "preparation" turn as having used the move instead of the "execution" turn). Finally, if a Pokémon
+  is put to sleep while "preparing" they will incorrectly prepare again after waking instead of
+  executing the move.
+
+In addition to numerous cases where Pokémon Showdown uses the wrong type of message (eg. `|-fail`
+vs. `|-miss|` vs. `|-immune|`, eg. in the case of Leech Seed) which are not documented here, Pokémon
+Showdown sometimes gets message ordering incorrect (which does not effect the outcome
+of the battle, only pedantic UI correctness):
+
+- **Haze**: Haze clears the status/volatiles in an incorrect order
+- **Twinneedle**: the `|-hitcount|` ("Hit 2 times") should come before the `|-status|` message, not
+  after
+- **Thrash** / **Petal Dance**: confusion silently gets applied before the final hit lands, not
+  after
 
 Pokémon Showdown also implements a number of modifications to the cartridge (usually but not always
 called out in the `|rule|` section at the beginning of a battle's log):
@@ -549,14 +553,97 @@ the correction to [Poison/Burn animation with 0
 HP](https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Poison.2FBurn_animation_with_0_HP) are all
 left up to a client to support.
 
+### Unimplementable
+
+Numerous moves on Pokémon Showdown broken not simply due to local issues in the implementation of
+their effects but instead due to **global issues** related to fundamental mechanics. For example,
+Pokémon Showdown's tracking of `wDamage` (`battle.last_damage` in the pkmn engine) is incorrect as
+it confuses its `Pokemon.lastDamage` field with the `Battle.lastDamage` field its Counter /
+Substitute / Bide implementations rely on. The main consequences are that `Battle.lastDamage` does
+not get zeroed appropriately at the beginning of executing a move (`Pokemon.lastDamage` is zeroed
+instead) and that draining moves' impact on last damage gets ignored.
+
+- `Battle.lastDamage` (Counter)
+  - updated in `spreadDamage` for non-recoil/**drain**/status moves
+  - zeroed in `useMove` after `tryMoveHit`
+  - used by Counter to determine success and damage
+- `Pokemon.lastDamage` (Substitute)
+  - zeroed at the start of `runMove` between `BeforeMove` and deducting PP
+  - zeroed in `tryMoveHit` after determining the move hit
+  - read and updated by Substitute
+- `effectState.lastDamage` (Bide):
+  - updated by Bide, use to determine the amount of damage the move eventually does
+
+Further global engine issues such as [broken move
+selection](https://www.smogon.com/forums/threads/rby-fight-button-simulation-improvements-fix-partial-trapping-improve-counter.3673280/#post-8655897),
+using move name instead of slot to determine move identity, implementing volatiles statuses
+incorrectly, not understanding how moves which call other moves work, or not implementing stat
+modification properly means that it isn't possible to completely implement Pokémon Showdown's
+behavior for the following moves (the pkmn engine attempts to reproduce as much of the behavior that
+can be reproduced without making data structure changes or dramatically deviating from the correct
+control flow):
+
+- **Wrap**: Partial trapping moves like Wrap are implemented on Pokémon Showdown with an artifical
+  `partialtrappinglock` volatile as opposed to how it works on the cartridge which simply relies on
+  the `Trapping` volatile of the opponent. This mistake results in partial trapping choice locking
+  not being respected when the trapping move was initiated via another move such as Metronome or
+  Mirror Move, and for wrap locking misbehaving when the target is knocked out. Trapping moves also
+  have some local implementation issues - on Pokémon Showdown a trapped Pokémon still gets a turn
+  under the [trapping sleep glitch](https://glitchcity.wiki/Trapping_move_and_sleep_glitch), Wrap
+  does 0 damage against Ghost-type Pokémon instead of properly respecting immunity, and trapping
+  effects are handled in the wrong order in the code.
+- **Mimic**: Pokémon Showdown checks that the user of Mimic has Mimic in one of their
+  move slots, which means Mimic legally called via Metronome or Mirror Move will only work if the
+  user also has Mimic (and the moved mimicked by Mimic called via Metronome / Mirror Move will
+  erroneously override the Mimic move slot instead of the Metronome / Mirror Move move slot).
+  Furthermore, because Pokémon Showdown deducts PP based on a move's name instead of slot, if Mimic
+  copies a move the Pokémon already knows, PP deduction for using either the original move of the
+  mimicked move will instead deduct PP for whichever appears at the lower move slot and the PP will
+  be allowed to go negative (effectively allowing for infinite PP use).
+- **Mirror Move**: Mirror Move should not copy a "charge" move during its first turn of charging but
+  should instead copy the move that was used prior to the "charge" move being used (i.e. "charging"
+  should not set the last used move). Partial trapping moves misbehave when used via Mirror Move
+  (though Pokémon Showdown has its own weird behavior and does not implement the [partial trapping
+  move Mirror Move
+  glitch](https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch) that exists
+  on the cartridge).
+- **Metronome**: In addition to the issues with partial trapping moves or Counter, Metronome and
+  Mirror Move cannot mutually call each other more than 3 times in a row without causing the Pokémon
+  Showdown simulator to crash due to defensive safety checks that do not exist on the cartridge.
+- **Counter**: In addition to the `last_damage` issues covered above (which among other things means
+  that Sonic Boom zeros Counter damage, Counter fails into Substitute, and draining moves don't
+  factor into self-Counter damage on Pokémon Showdown), Counter can be called with Metronome at
+  regular priority (as opposed to failing as it would on cartridge) and choices made while sleeping
+  (which should not have been registered) can erroneously ause Counter to trigger Desync Clause Mod
+  behavior.
+- **Toxic**: Pokémon Showdown uses a `residualdmg` volatile to track the state of the Toxic counter.
+  Unfortunately this is insufficient for fully implementing Toxic's bugged behavior, as the counter
+  should only be incremented if the Pokémon in question has the Toxic volatile status as well. Since
+  Pokémon Showdown does not implement Toxic as a volatile status but instead as a non-volatile
+  status like it becomes in Generation III and beyond, Pokémon Showdown cannot know when it should
+  be incrementing the `residualdmg` counter and thus increments it whenever it happens to be
+  present, resulting in higher Toxic accumulation in buggy situations than would occur on the
+  cartridge.
+- **Bide**: In addition to the `last_damage` issues covered above (which result in Bide often
+  inflicting the wrong amount of accumulated damage), on Pokémon Showdown Bide can erroneously last
+  an extra turn depending on whether the foe faints, Bide cannot be disabled by Disable while in
+  effect, Bide's accumulated damage is not zeroed when an opponennt faints, and the opponent having
+  a Substitute blanks the damage unleashed by Bide.
+- **Transform**: Due to how Pokémon Showdown implements stat modifications, Transform-ed Pokémon can
+  end up with incorrect stats after modifiers (boosts and statuses) are applied. Furthermore,
+  Transform screws up the effect of Disable, because on Pokémon Showdown, Disable prevents moves of
+  a given *name* from being used (eg. "Water Gun") as opposed to moves in a specific *slot* (the 2nd
+  move slot), and a Pokémon's moves can change after Transform (this is not an issue with Disable +
+  Mimic because Mimic happens to replace the same slot).
+
 ## RNG
 
-**The pkmn engine aims to match the cartridge's RNG frame-accurately**, in that provided with the same
-intial seed it should produce the exact same battle as the on the Pokémon Red cartidge. **Pokémon
-Showdown does not correctly implement frame-accurate RNG in any generation**, and along with the
-[bugs](#bugs) discussed above this results in large differences in the codebase. Because the pkmn
-engine aims to be as compatible with Pokémon Showdown as possible when in `-Dshowdown` compatibility
-mode, the implications of these differences are outlined below:
+**The pkmn engine aims to match the cartridge's RNG frame-accurately**, in that provided with the
+same intial seed and inputs it should produce the exact same battle playout as the Pokémon Red
+cartidge. **Pokémon Showdown does not correctly implement frame-accurate RNG in any generation**,
+and along with the [bugs](#bugs) discussed above this results in large differences in the codebase.
+Because the pkmn engine aims to be as compatible with Pokémon Showdown as possible when in
+`-Dshowdown` compatibility mode, the implications of these differences are outlined below:
 
 - **RNG**: Pokémon Showdown uses the RNG from Generation V & VI in every generation, despite
   the seeds and algorithm being different. Pokémon Red uses a simple 8-bit RNG with 10 distinct
@@ -566,7 +653,7 @@ mode, the implications of these differences are outlined below:
   is required is often different than on the cartridge, so even if Pokémon Showdown were using the
   correct RNG the values would still diverge.
 - **Bias**: Pokémon Showdown often needs to reduce its 32-bit output range to a smaller range in
-  order, and does so using a [biased interger multiplication
+  order to implement various effects, and does so using a [biased interger multiplication
   method](http://www.pcg-random.org/posts/bounded-rands.html) as opposed to debiasing via rejection
   sampling to ensure uniformity as is done on the cartridge. This means that certain values are
   fractionally more likely to be chosen than others, though this bias is usually quite small (e.g.
@@ -597,6 +684,12 @@ mode, the implications of these differences are outlined below:
   to advance) when calling `Pokemon.getLockedMove()` while building up the `|request|` object for
   both sides in `endTurn` and in other scenarios (`checkFaint`, certain circumstances with Metronome
   or Mirror Move, etc).
+- **Effects**: Pokémon Showdown occasionally incorrectly inserts RNG calls in move effect handlers
+  when they are not relevant:
+  - Whirlwind / Roar roll to hit and can "miss" as opposed to simply failing
+  - moves with a secondary chance effect (except Twinneedle) still roll to see if the effect should
+    proc even in situations where the effect doesn't happen (eg. when the effect would be nullified
+    by Substitute or if the target fainted)
 
 Finally, the **initial 10-byte seed for link battles on Pokémon Red cannot include bytes larger than
 the `SERIAL_PREAMBLE_BYTE`**, so must be in the range $\left[0, 252\right]$. This has implications
@@ -606,33 +699,35 @@ implications**](https://www.smogon.com/forums/threads/rby-tradebacks-bug-report-
 glitch](https://glitchcity.wiki/1/256_miss_glitch) cannot happen, Player 1 is more likely to win
 speed ties, etc) that Pokémon Showdown cannot replicate due to everything described above.
 
-| Type                     | Location                 | Description |
-| ------------------------ | ------------------------ | ----------- |
-| **Speed Tie**            | `turnOrder`              | Player 1 if $X < 127$, otherwise Player 2 |
-| **Critical Hit**         | `checkCriticalHit`       | <dl><dt>Pokémon Red</dt><dd>Inflict a critical hit if $X' < chance$ where $X'$ is $X$ with its bits rotated left three times</dd><dt>Pokémon Showdown</dt><dd>Critical hit if $X < chance$</dd></dl> |
-| **Damage** (range)       | `randomizeDamage`        | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X' \geq  217$ where $X'$ is $X$ with its bits rotated right once</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[217, 256\right)$</dd></dl>|
-| **Hit / Miss**           | `checkHit`               | Hit if $X < scaledAccuracy$ |
-| **Burn** (chance)        | `Effects.burnChance`     | Trigger if $X < 26$ ($77$ for Fire Blast) |
-| **Confusion** (chance)   | `Effects.confusion`      | <dl><dt>Pokémon Red</dt><dd>Trigger if $X< 25$</dd><dt>Pokémon Showdown</dt><dd>Trigger if $X < 26$</dd></dl> These differ due to a [bug in Pokémon Showdown](#bugs) |
-| **Confusion** (duration) | `Effects.confusion`      | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[2, 6\right)$ turns</dd></dl> |
-| **Confusion** (self-hit) | `beforeMove`             | Trigger if $X \geq 128$ |            |
-| **Flinch** (chance)      | `Effects.flinchChance`   | Trigger if $X < 26$ ($77$ for Stomp / Headbutt / Rolling Kick / Low Kick) |
-| **Freeze** (chance)      | `Effects.freezeChance`   | Trigger if $X < 26$ |
-| **Paralysis** (chance)   | `Effects.paralyzeChance` | Trigger if $X< 26$ ($77$ for Body Slam / Lick) |
-| **Paralysis** (full)     | `beforeMove`             | Trigger if $X < 63$ |
-| **Poison** (chance)      | `Effects.poison`         | Trigger if $X < 52$ ($103$ for Smog / Sludge) |
-| **Sleep** (duration)     | `Effects.sleep`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X \land 7 \neq 0$</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[1, 8\right)$</dd></dl> |
-| **Bide** (duration)      | `Effects.bide`           | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 1\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[3, 5\right) - 1$ turns</dd></dl> |
-| **Disable** (move)       | `Effects.disable`        | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X \land 3$ is the index of a non-empty move slot</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, \|movesSlots\|\right)$</dd></dl> |
-| **Disable** (duration)   | `Effects.disable`        | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 7\right) + 1$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[1, 6\right)$ turns</dd></dl> Disable duration is [incorrect in Pokémon Showdown](#bugs) |
+All of places in the link battle code where randomness is required are outlined below:
+
+| Type                     | Location                 | Description                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------------ | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Speed Tie**            | `turnOrder`              | Player 1 if $X < 127$, otherwise Player 2                                                                                                                                                                                                                                                                                                                       |
+| **Critical Hit**         | `checkCriticalHit`       | <dl><dt>Pokémon Red</dt><dd>Inflict a critical hit if $X' < chance$ where $X'$ is $X$ with its bits rotated left three times</dd><dt>Pokémon Showdown</dt><dd>Critical hit if $X < chance$</dd></dl>                                                                                                                                                            |
+| **Damage** (range)       | `randomizeDamage`        | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X' \geq  217$ where $X'$ is $X$ with its bits rotated right once</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[217, 256\right)$</dd></dl>                                                                                                                                                       |
+| **Hit / Miss**           | `checkHit`               | Hit if $X < scaledAccuracy$                                                                                                                                                                                                                                                                                                                                     |
+| **Burn** (chance)        | `Effects.burnChance`     | Trigger if $X < 26$ ($77$ for Fire Blast)                                                                                                                                                                                                                                                                                                                       |
+| **Confusion** (chance)   | `Effects.confusion`      | <dl><dt>Pokémon Red</dt><dd>Trigger if $X< 25$</dd><dt>Pokémon Showdown</dt><dd>Trigger if $X < 26$</dd></dl> These differ due to a [bug in Pokémon Showdown](#bugs)                                                                                                                                                                                            |
+| **Confusion** (duration) | `Effects.confusion`      | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[2, 6\right)$ turns</dd></dl>                                                                                                                                                                                                     |
+| **Confusion** (self-hit) | `beforeMove`             | Trigger if $X \geq 128$                                                                                                                                                                                                                                                                                                                                         |  |
+| **Flinch** (chance)      | `Effects.flinchChance`   | Trigger if $X < 26$ ($77$ for Stomp / Headbutt / Rolling Kick / Low Kick)                                                                                                                                                                                                                                                                                       |
+| **Freeze** (chance)      | `Effects.freezeChance`   | Trigger if $X < 26$                                                                                                                                                                                                                                                                                                                                             |
+| **Paralysis** (chance)   | `Effects.paralyzeChance` | Trigger if $X< 26$ ($77$ for Body Slam / Lick)                                                                                                                                                                                                                                                                                                                  |
+| **Paralysis** (full)     | `beforeMove`             | Trigger if $X < 63$                                                                                                                                                                                                                                                                                                                                             |
+| **Poison** (chance)      | `Effects.poison`         | Trigger if $X < 52$ ($103$ for Smog / Sludge)                                                                                                                                                                                                                                                                                                                   |
+| **Sleep** (duration)     | `Effects.sleep`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X \land 7 \neq 0$</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[1, 8\right)$</dd></dl>                                                                                                                                                                                                          |
+| **Bide** (duration)      | `Effects.bide`           | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 1\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[3, 5\right) - 1$ turns</dd></dl>                                                                                                                                                                                                 |
+| **Disable** (move)       | `Effects.disable`        | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X \land 3$ is the index of a non-empty move slot</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, \|movesSlots\|\right)$</dd></dl>                                                                                                                                                              |
+| **Disable** (duration)   | `Effects.disable`        | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 7\right) + 1$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[1, 6\right)$ turns</dd></dl> Disable duration is [incorrect in Pokémon Showdown](#bugs)                                                                                                                                          |
 | **Metronome** (move)     | `metronome`              | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X$ matches the index of a move which is not Struggle or Metronome</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, \|validMoves\|\right)$, where $validMoves$ is ordered set of moves with  Struggle and Metronome removed <i>(indexes of moves > Metronome will be shifted down)</i></dd></dl> |
-| **Mimic** (move)         | `Effects.mimic`          |<dl><dt>Pokémon Red</dt><dd>Continue generating until $X \land 3$ is the index of a non-empty move slot</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, \|movesSlots\|\right)$</dd></dl> |
-| **Psywave** (power)      | `specialDamage`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X < {3\over2} \cdot level$</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, {3\over2} \cdot level\right)$</dd></dl> |
-| **Thrash** (rampage)     | `Effects.thrash`         | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 1\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[2, 4\right)$ turns</dd></dl> |
-| **Thrash** (confusion)   | `beforeMove`             |  <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[2, 6\right)$ turns</dd></dl> |
-| **Trapping** (duration)  | `Effects.trapping`       | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 1$ further turns if $\left(X \land 3\right) < 2$<br /> otherwise last for $\left(Y \land 3\right) + 1$ further turns (reroll)</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \{2, 2, 2, 3, 3, 3, 4, 5\} - 1$ further turns</dd></dl> |
-| **Multi-Hit** (hits)     | `Effects.multiHit`       | *Ibid.* |
-| **Unboost** (chance)     | `Effects.unboost`        | Trigger if $X < 85$ |
+| **Mimic** (move)         | `Effects.mimic`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X \land 3$ is the index of a non-empty move slot</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, \|movesSlots\|\right)$</dd></dl>                                                                                                                                                              |
+| **Psywave** (power)      | `specialDamage`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X < {3\over2} \cdot level$</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, {3\over2} \cdot level\right)$</dd></dl>                                                                                                                                                                             |
+| **Thrash** (rampage)     | `Effects.thrash`         | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 1\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[2, 4\right)$ turns</dd></dl>                                                                                                                                                                                                     |
+| **Thrash** (confusion)   | `beforeMove`             | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[2, 6\right)$ turns</dd></dl>                                                                                                                                                                                                     |
+| **Trapping** (duration)  | `Effects.trapping`       | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 1$ further turns if $\left(X \land 3\right) < 2$<br /> otherwise last for $\left(Y \land 3\right) + 1$ further turns (reroll)</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \{2, 2, 2, 3, 3, 3, 4, 5\} - 1$ further turns</dd></dl>                                                           |
+| **Multi-Hit** (hits)     | `Effects.multiHit`       | *Ibid.*                                                                                                                                                                                                                                                                                                                                                         |
+| **Unboost** (chance)     | `Effects.unboost`        | Trigger if $X < 85$                                                                                                                                                                                                                                                                                                                                             |
 
 *In the table above,* $X$ *is always in the range* $\left[0, 256\right)$ *for Pokémon Red and for
 Pokémon Showdown is always **scaled** from the 32-bit output range of the RNG to either be in that
@@ -640,17 +735,13 @@ range or to whichever range is specified by the description.*
 
 ## Details
 
-TODO
-
-### Naming
-
-- **`p1`** & **`p2`** always correspond to the `Side` of `Player.P1` and `Player.P2` respectively
-- **`player`** is the executing turn `Player` (`hWhoseTurn`) and **`player.foe()`** is their
-  opponent
-- if `player` (executing turn player) is present then **`side`** will always correspond to their
-  `Side` and **`foe`** the opposing `Side`, however `side` can refer to an arbitrary `Side` object
-  if there is no `player` in scope (eg. in helper functions)
-- **`target_player`** is a target `Player` whose corresponding `Side` is  **`target`**
+The engine's Generation I mechanics code loosely mirrors the structure and naming of the pret
+decompilation of the Pokémon Red source, though has been simplified (eg. a single method for both
+sides as opposed to having separate duplicated code for each) and optimized. Furthermore, the
+control flow has been modified to handle both the correct Pokémon Red order of operations and
+Pokémon Showdown's order when in compatibility mode - as such, there are many `if (showdown)` blocks
+which handle Pokémon Showdown's divergent behavior (this is most evident in `doMove`). The following
+table provides a rough mapping between pkmn and Pokémon Red methods:
 
 | pkmn                      | Pokémon Red (pret)                                      |
 | ------------------------- | ------------------------------------------------------- |
@@ -681,12 +772,26 @@ TODO
 | `handleResidual`          | `HandlePoisonBurnLeechSeed`                             |
 | `endTurn` / `checkEBC`    | -                                                       |
 
+Pokémon Red groups move effect handlers together into several groups, these have also been renamed for clarification in the pkmn engine:
+
 | pkmn            | Pokémon Red (pret)        |
 | --------------- | ------------------------- |
 | `onBeforeMove`  | `ResidualEffects1`        |
 | `onEndMove`     | `ResidualEffects2`        |
 | `alwaysHappens` | `AlwaysHappensSideEffect` |
 | `isSpecial`     | `SpecialEffects`          |
+
+### Naming
+
+The pkmn engine attempts to adhere to certain naming conventions:
+
+- **`p1`** & **`p2`** always correspond to the `Side` of `Player.P1` and `Player.P2` respectively
+- **`player`** is the executing turn `Player` (`hWhoseTurn`) and **`player.foe()`** is their
+  opponent
+- if `player` (executing turn player) is present then **`side`** will always correspond to their
+  `Side` and **`foe`** the opposing `Side`, however `side` can refer to an arbitrary `Side` object
+  if there is no `player` in scope (eg. in helper functions)
+- **`target_player`** is a target `Player` whose corresponding `Side` is  **`target`**
 
 ## Resources
 
