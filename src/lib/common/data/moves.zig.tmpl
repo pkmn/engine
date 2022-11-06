@@ -18,7 +18,7 @@ pub const Move = enum({{{ Move.type }}}) {
         {{{ Move.data }}},
     };
 {{{ Move.Effect }}}
-    const Target = enum(u4) {
+    const Target = enum({{{ Move.targetType }}}) {
         // none
         All,
         AllySide,

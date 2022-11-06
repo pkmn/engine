@@ -482,6 +482,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         data: MOVES.join(',\n        '),
         dataSize: MOVES.length * 4,
         Effect,
+        targetType: 'u4',
         assert: 'assert(id != .None and id != .SKIP_TURN);',
         ppData,
         ppFn,
@@ -695,7 +696,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         (chance ? `            .chance = ${chance}\n` : '') +
         '        }');
     }
-    let Data = `pub const Data = packed struct {
+    // pp/accuracy/target/chance could all be u4, but packed struct needs to be power of 2
+    let Data = `pub const Data = extern struct {
         effect: Effect,
         bp: u8,
         type: Type,
@@ -703,10 +705,9 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         accuracy: u8,
         target: Target,
         chance: u8 = 0,
-        _: u8 = 0,
 
         comptime {
-            assert(@sizeOf(Data) == 8);
+            assert(@sizeOf(Data) == 7);
         }
     };`;
 
@@ -727,9 +728,10 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         size: 1,
         Data,
         data: MOVES.join(',\n        '),
-        dataSize: MOVES.length * 8,
+        dataSize: MOVES.length * 7,
         assert: 'assert(id != .None);',
         Effect,
+        targetType: 'u8',
       },
     });
 

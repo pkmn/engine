@@ -262,7 +262,7 @@ pub const Move = enum(u8) {
     Whirlpool,
     BeatUp,
 
-    pub const Data = packed struct {
+    pub const Data = extern struct {
         effect: Effect,
         bp: u8,
         type: Type,
@@ -270,10 +270,9 @@ pub const Move = enum(u8) {
         accuracy: u8,
         target: Target,
         chance: u8 = 0,
-        _: u8 = 0,
 
         comptime {
-            assert(@sizeOf(Data) == 8);
+            assert(@sizeOf(Data) == 7);
         }
     };
 
@@ -2737,7 +2736,7 @@ pub const Move = enum(u8) {
         }
     };
 
-    const Target = enum(u4) {
+    const Target = enum(u8) {
         // none
         All,
         AllySide,
@@ -2760,7 +2759,7 @@ pub const Move = enum(u8) {
 
     comptime {
         assert(@sizeOf(Move) == 1);
-        assert(@sizeOf(@TypeOf(DATA)) == 2008);
+        assert(@sizeOf(@TypeOf(DATA)) == 1757);
     }
 
     pub const size = 251;
