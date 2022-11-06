@@ -601,7 +601,7 @@ pub const Move = enum(u8) {
         },
         // TakeDown
         .{
-            .effect = .RecoilHit,
+            .effect = .Recoil,
             .bp = 90,
             .type = .Normal,
             .pp = 20,
@@ -619,7 +619,7 @@ pub const Move = enum(u8) {
         },
         // DoubleEdge
         .{
-            .effect = .RecoilHit,
+            .effect = .Recoil,
             .bp = 120,
             .type = .Normal,
             .pp = 15,
@@ -721,7 +721,7 @@ pub const Move = enum(u8) {
         },
         // SonicBoom
         .{
-            .effect = .StaticDamage,
+            .effect = .FixedDamage,
             .bp = 0,
             .type = .Normal,
             .pp = 20,
@@ -882,7 +882,7 @@ pub const Move = enum(u8) {
         },
         // Submission
         .{
-            .effect = .RecoilHit,
+            .effect = .Recoil,
             .bp = 80,
             .type = .Fighting,
             .pp = 25,
@@ -1027,7 +1027,7 @@ pub const Move = enum(u8) {
         },
         // DragonRage
         .{
-            .effect = .StaticDamage,
+            .effect = .FixedDamage,
             .bp = 0,
             .type = .Dragon,
             .pp = 10,
@@ -1320,7 +1320,7 @@ pub const Move = enum(u8) {
         },
         // Haze
         .{
-            .effect = .ResetStats,
+            .effect = .Haze,
             .bp = 0,
             .type = .Ice,
             .pp = 30,
@@ -1374,7 +1374,7 @@ pub const Move = enum(u8) {
         },
         // SelfDestruct
         .{
-            .effect = .Selfdestruct,
+            .effect = .Explode,
             .bp = 200,
             .type = .Normal,
             .pp = 5,
@@ -1679,7 +1679,7 @@ pub const Move = enum(u8) {
         },
         // Explosion
         .{
-            .effect = .Selfdestruct,
+            .effect = .Explode,
             .bp = 250,
             .type = .Normal,
             .pp = 5,
@@ -1790,7 +1790,7 @@ pub const Move = enum(u8) {
         },
         // Struggle
         .{
-            .effect = .RecoilHit,
+            .effect = .Recoil,
             .bp = 50,
             .type = .Normal,
             .pp = 1,
@@ -2408,7 +2408,7 @@ pub const Move = enum(u8) {
         },
         // MetalClaw
         .{
-            .effect = .AttackDownChance,
+            .effect = .AttackUpChance,
             .bp = 50,
             .type = .Steel,
             .pp = 35,
@@ -2537,7 +2537,7 @@ pub const Move = enum(u8) {
         },
         // AncientPower
         .{
-            .effect = .BoostAllChance,
+            .effect = .AllStatUpChance,
             .bp = 60,
             .type = .Rock,
             .pp = 5,
@@ -2598,18 +2598,19 @@ pub const Move = enum(u8) {
         None,
         AccuracyDown1,
         AccuracyDownChance,
+        AllStatUpChance,
         AlwaysHit,
         AttackDown1,
         AttackDown2,
         AttackDownChance,
         AttackUp1,
         AttackUp2,
+        AttackUpChance,
         Attract,
         BatonPass,
         BeatUp,
         BellyDrum,
         Bide,
-        BoostAllChance,
         BurnChance,
         Confusion,
         ConfusionChance,
@@ -2634,7 +2635,9 @@ pub const Move = enum(u8) {
         Endure,
         EvasionDown1,
         EvasionUp1,
+        Explode,
         FalseSwipe,
+        FixedDamage,
         FlameWheel,
         FlinchChance,
         Fly,
@@ -2646,6 +2649,7 @@ pub const Move = enum(u8) {
         FuryCutter,
         FutureSight,
         Gust,
+        Haze,
         Heal,
         HealBell,
         HiddenPower,
@@ -2685,16 +2689,14 @@ pub const Move = enum(u8) {
         RainDance,
         RapidSpin,
         RazorWind,
-        RecoilHit,
+        Recoil,
         Reflect,
-        ResetStats,
         Return,
         Reversal,
         Rollout,
         SacredFire,
         Safeguard,
         Sandstorm,
-        Selfdestruct,
         Sketch,
         SkullBash,
         SkyAttack,
@@ -2712,7 +2714,6 @@ pub const Move = enum(u8) {
         Spikes,
         Spite,
         Splash,
-        StaticDamage,
         Stomp,
         Substitute,
         SunnyDay,

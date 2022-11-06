@@ -344,6 +344,8 @@ test "Types" {
     try expectEqual(Effectiveness.Immune, Type.effectiveness(.Poison, .Steel));
 }
 
+pub const DVs = gen1.DVs;
+
 // TODO DEBUG
 comptime {
     std.testing.refAllDecls(@This());

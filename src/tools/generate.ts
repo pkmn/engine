@@ -62,6 +62,7 @@ const NAMES: { [constant: string]: string } = {
   TWISTEDSPOON: 'TwistedSpoon',
   WHT_APRICORN: 'WhiteApricorn',
   YLW_APRICORN: 'YellowApricorn',
+  RESTORE_PP: 'RestorePP',
   // Moves
   SMELLING_SALT: 'SmellingSalts',
   // Effects
@@ -76,10 +77,10 @@ const NAMES: { [constant: string]: string } = {
   EFFECT_LEECH_HIT: 'DrainHP',
   EFFECT_ACCURACY_DOWN_HIT: 'AccuracyDownChance',
   EFFECT_ACCURACY_DOWN: 'AccuracyDown1',
-  EFFECT_ALL_UP_HIT: 'BoostAllChance',
+  EFFECT_ALL_UP_HIT: 'AllStatUpChance',
   EFFECT_ATTACK_DOWN_HIT: 'AttackDownChance',
   EFFECT_ATTACK_DOWN: 'AttackDown1',
-  EFFECT_ATTACK_UP_HIT: 'AttackDownChance',
+  EFFECT_ATTACK_UP_HIT: 'AttackUpChance',
   EFFECT_ATTACK_UP: 'AttackUp1',
   EFFECT_BURN_HIT: 'BurnChance',
   EFFECT_CONFUSE_HIT: 'ConfusionChance',
@@ -97,14 +98,16 @@ const NAMES: { [constant: string]: string } = {
   EFFECT_POISON_MULTI_HIT: 'Twineedle',
   EFFECT_PRIORITY_HIT: 'Priority',
   EFFECT_RAMPAGE: 'Thrashing',
-  EFFECT_RECOILD_HIT: 'Recoil',
+  EFFECT_RECOIL_HIT: 'Recoil',
+  EFFECT_STATIC_DAMAGE: 'FixedDamage',
   THRASH_PETAL_DANCE_EFFECT: 'Thrashing',
-  EFFECT_SELF_DESTRUCT: 'Explode',
+  EFFECT_SELFDESTRUCT: 'Explode',
   EFFECT_SP_ATK_UP: 'SpAtkUp1',
   EFFECT_SP_DEF_DOWN_HIT: 'SpDefDownChance',
   EFFECT_SPEED_DOWN: 'SpeedDown1',
   EFFECT_SPEED_DOWN_HIT: 'SpeedDownChance',
   EFFECT_TRAP_TARGET: 'Trapping',
+  EFFECT_RESET_STATS: 'Haze',
 };
 
 const STAT_DOWN = [
@@ -291,25 +294,32 @@ const getOrUpdate = async (
 const NO_EFFECT = 'No additional effect.';
 
 const moveTests = (gen: Generation, moves: string[]) => {
-  const effects: {[name: string]: string[]} = {};
+  const effects: {[effect: string]: string[]} = {};
+  const descs: {[effect: string]: string} = {};
   for (const m of moves) {
-    const name = m.split(' ')[0];
+    const [name, effect] = m.split(' ');
     const move = gen.moves.get(name)!;
     if ([move.shortDesc, move.desc].includes(NO_EFFECT)) continue;
-    effects[move.desc] = effects[move.desc] || [];
-    effects[move.desc].push(name);
+    effects[effect] = effects[effect] || [];
+    effects[effect].push(name);
+    descs[effect] = move.desc;
   }
 
   const buf = [];
-  for (const desc in effects) {
-    const key = effects[desc].length === 1 ? effects[desc][0] : `{${effects[desc].join(',')}}`;
-    buf.push(`test "Move.${key}" {\n    // ${desc}\n    return error.SkipZigTest;\n}\n`);
+  for (const effect in effects) {
+    const key = effects[effect].length === 1
+      ? effects[effect][0]
+      : `{${effects[effect].join(',')}}`;
+    const desc = descs[effect];
+    buf.push(`// Move.${key}`);
+    buf.push(`test "${effect} effect" {\n    // ${desc}\n    return error.SkipZigTest;\n}\n`);
   }
   console.log(buf.join('\n'));
 };
 
 const itemTests = (gen: Generation, items: string[]) => {
-  const effects: {[name: string]: string[]} = {};
+  const effects: {[effect: string]: string[]} = {};
+  const descs: {[effect: string]: string} = {};
   for (const value of items) {
     const [name, held] = value.split(' ');
     const item = gen.items.get(name);
@@ -318,15 +328,20 @@ const itemTests = (gen: Generation, items: string[]) => {
       effects.Mail.push(name);
       continue;
     }
-    if (!item || held === 'NONE') continue;
-    effects[item.desc] = effects[item.desc] || [];
-    effects[item.desc].push(name);
+    if (!item || held === 'None') continue;
+    effects[held] = effects[held] || [];
+    effects[held].push(name);
+    descs[held] = item.desc;
   }
 
   const buf = [];
-  for (const desc in effects) {
-    const key = effects[desc].length === 1 ? effects[desc][0] : `{${effects[desc].join(',')}}`;
-    buf.push(`test "Item.${key}" {\n    // ${desc}\n    return error.SkipZigTest;\n}\n`);
+  for (const effect in effects) {
+    const key = effects[effect].length === 1
+      ? effects[effect][0]
+      : `{${effects[effect].join(',')}}`;
+    const desc = descs[effect];
+    buf.push(`// Item.${key}`);
+    buf.push(`test "${effect} effect" {\n    // ${desc}\n    return error.SkipZigTest;\n}\n`);
   }
   console.log(buf.join('\n'));
 };
@@ -592,8 +607,10 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       const match = /^; ([A-Z]\w+)/.exec(last);
       if (!match || match[1].startsWith('HM') || match[1].startsWith('ITEM_')) return undefined;
       if (line.includes('KEY_ITEM')) return undefined;
+      if (last.startsWith('; BUG:')) return undefined;
 
-      const held = /HELD_(\w+),/.exec(line)![1];
+      const m = /HELD_(\w+),/.exec(line)!;
+      const held = NAMES[m[1]] || constToEnum(m[1]);
       const name = match[1].startsWith('TM')
         ? `${match[1]}`
         : (NAMES[match[1]] || constToEnum(match[1]));
@@ -605,7 +622,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const boosts: [string, TypeName][] = [];
     for (const item of items) {
       const [name, held] = item.split(' ');
-      if (held === 'NONE') {
+      if (held === 'None') {
         if (name.endsWith('Mail')) {
           mail.push(`${name},`);
         } else {
@@ -616,8 +633,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       const s = `${name}, // ${held}`;
       if (name.endsWith('Berry')) {
         berries.push(s);
-      } else if (held.endsWith('_BOOST')) {
-        boosts.push([name, gen.types.get(held.slice(0, held.indexOf('_')))!.name]);
+      } else if (held.endsWith('Boost')) {
+        boosts.push([name, gen.types.get(held.slice(0, -5))!.name]);
       } else {
         values.push(s);
       }

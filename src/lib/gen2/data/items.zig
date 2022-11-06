@@ -30,7 +30,7 @@ pub const Item = enum(u8) {
     BlackGlasses, // Dark
     MasterBall,
     UltraBall,
-    BrightPowder, // BRIGHTPOWDER
+    BrightPowder, // BrightPowder
     GreatBall,
     PokeBall,
     TownMap,
@@ -60,7 +60,7 @@ pub const Item = enum(u8) {
     RareCandy,
     XAccuracy,
     LeafStone,
-    MetalPowder, // METAL_POWDER
+    MetalPowder, // MetalPowder
     Nugget,
     PokeDoll,
     FullHeal,
@@ -85,29 +85,29 @@ pub const Item = enum(u8) {
     MaxEther,
     Elixir,
     MoomooMilk,
-    QuickClaw, // QUICK_CLAW
+    QuickClaw, // QuickClaw
     GoldLeaf,
-    KingsRock, // FLINCH
+    KingsRock, // Flinch
     RedApricorn,
     TinyMushroom,
     BigMushroom,
     BlueApricorn,
-    AmuletCoin, // AMULET_COIN
+    AmuletCoin, // AmuletCoin
     YellowApricorn,
     GreenApricorn,
-    CleanseTag, // CLEANSE_TAG
+    CleanseTag, // CleanseTag
     WhiteApricorn,
     BlackApricorn,
     PinkApricorn,
     SlowpokeTail,
     Stick,
-    SmokeBall, // ESCAPE
+    SmokeBall, // Escape
     Pearl,
     BigPearl,
     Everstone,
     RageCandyBar,
     ThickClub,
-    FocusBand, // FOCUS_BAND
+    FocusBand, // FocusBand
     EnergyPowder,
     EnergyRoot,
     HealPowder,
@@ -115,10 +115,10 @@ pub const Item = enum(u8) {
     LuckyEgg,
     Stardust,
     StarPiece,
-    BerryJuice, // BERRY
-    ScopeLens, // CRITICAL_UP
+    BerryJuice, // Berry
+    ScopeLens, // CriticalUp
     DragonFang,
-    Leftovers, // LEFTOVERS
+    Leftovers, // Leftovers
     BerserkGene,
     SacredAsh,
     HeavyBall,
@@ -195,16 +195,16 @@ pub const Item = enum(u8) {
     BlueSkyMail,
     MusicMail,
     MirageMail,
-    PSNCureBerry, // HEAL_POISON
-    PRZCureBerry, // HEAL_PARALYZE
-    BurntBerry, // HEAL_FREEZE
-    IceBerry, // HEAL_BURN
-    BitterBerry, // HEAL_CONFUSION
-    MintBerry, // HEAL_SLEEP
-    MiracleBerry, // HEAL_STATUS
-    MysteryBerry, // RESTORE_PP
-    Berry, // BERRY
-    GoldBerry, // BERRY
+    PSNCureBerry, // HealPoison
+    PRZCureBerry, // HealParalyze
+    BurntBerry, // HealFreeze
+    IceBerry, // HealBurn
+    BitterBerry, // HealConfusion
+    MintBerry, // HealSleep
+    MiracleBerry, // HealStatus
+    MysteryBerry, // RestorePP
+    Berry, // Berry
+    GoldBerry, // Berry
 
     comptime {
         assert(@sizeOf(Item) == 1);

@@ -1207,8 +1207,8 @@ test "Twineedle effect" {
 // Move.Toxic
 // Move.{PoisonPowder,PoisonGas}
 test "Poison effect" {
+    // (Badly) Poisons the target.
     {
-        // (Badly) Poisons the target.
         var t = Test((if (showdown)
             (.{ HIT, HIT, HIT, NOP, HIT, NOP })
         else
@@ -2182,7 +2182,7 @@ test "FlinchChance effect" {
 // Move.{SandAttack,Smokescreen,Kinesis,Flash}: AccuracyDown1
 // Move.Screech: DefenseDown2
 test "StatDown effect" {
-    // Lowers the target's X by Y stage(s).
+    // Lowers the target's X stat by Y stage(s).
     var t = Test(
     // zig fmt: off
         if (showdown) .{
@@ -2238,7 +2238,7 @@ test "StatDown effect" {
 // Move.{BubbleBeam,Constrict,Bubble}: SpeedDownChance
 // Move.Psychic: SpecialDownChance
 test "StatDownChance effect" {
-    // Has a 33% chance to lower the target's X by 1 stage.
+    // Has a 33% chance to lower the target's X stat by 1 stage.
     const PROC = comptime ranged(85, 256) - 1;
     const NO_PROC = PROC + 1;
 
@@ -2309,7 +2309,7 @@ test "StatDownChance effect" {
 // Move.Agility: SpeedUp2
 // Move.Amnesia: SpecialUp2
 test "StatUp effect" {
-    // Raises the target's X by Y stage(s).
+    // Raises the target's X stat by Y stage(s).
     var t = Test(
     // zig fmt: off
         if (showdown) .{
