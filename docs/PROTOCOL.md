@@ -18,7 +18,7 @@ written by a single `update` call is bounded to a [relatively small number of by
 generation, though since any `Writer` implementation is allowed this `Log` could instead write to
 standard output (note that in Zig the standard out writer is not buffered by default - you must use
 a [`BufferedWriter`](https://zig.news/kristoff/how-to-add-buffering-to-a-writer-reader-in-zig-7jd)
-wrapper to acheive reasonable performance).
+wrapper to achieve reasonable performance).
 
 The engine's wire protocol essentially amounts to a stripped down binary translation of [Pokémon
 Showdown's simulator
@@ -659,7 +659,7 @@ the first two turns of the battle the Aerodactyl both use Leech Seed followed by
 then in the turn where the maximum single update output is to be reached, the faster Aerodactyl uses
 Metronome to proc a critical hit Fury Swipes that hits 5 times and the slower Aerodactyl uses
 Metronome to proc Mirror Move which then also procs a critical hit Fury Swipes that hits 5 times.
-The initial battle seed required to acheive this is output is $\{106, 161, 95, 184, 221, 10, 52, 25,
+The initial battle seed required to achieve this is output is $\{106, 161, 95, 184, 221, 10, 52, 25,
 156, 133\}$.
 
 <details><summary>Details</summary>
@@ -751,7 +751,7 @@ Move → multi-hit.
 
 [Z3](../src/tools/max_logs.py) can be used to test out these scenarios - we can quickly see that
 despite 10 levels of recursive Metronome → Mirror Move being possible in a vaccuum if we are able to
-control the initial seed, there is no way to acheive the first scenario after burning through the
+control the initial seed, there is no way to achieve the first scenario after burning through the
 rolls on the first two turns of setup and if we need to be able to proc specific Metronome rolls
 after. For the second scenario we run into the problem of needing an extra turn of setup for Player
 1 to be able to Mirror Move a multi-hit move which also takes us too far away from the initial seed
