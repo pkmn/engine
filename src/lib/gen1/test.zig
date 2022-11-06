@@ -2212,9 +2212,9 @@ test "StatDown effect" {
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
 
     try t.log.expected.move(P1.ident(1), Move.Screech, P2.ident(1), null);
-    try t.log.expected.unboost(P2.ident(1), .Defense, 2);
+    try t.log.expected.boost(P2.ident(1), .Defense, -2);
     try t.log.expected.move(P2.ident(1), Move.StringShot, P1.ident(1), null);
-    try t.log.expected.unboost(P1.ident(1), .Speed, 1);
+    try t.log.expected.boost(P1.ident(1), .Speed, -1);
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
@@ -2267,7 +2267,7 @@ test "StatDownChance effect" {
     try t.log.expected.move(P2.ident(1), Move.BubbleBeam, P1.ident(1), null);
     t.expected.p1.get(1).hp -= 57;
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-    try t.log.expected.unboost(P1.ident(1), .Speed, 1);
+    try t.log.expected.boost(P1.ident(1), .Speed, -1);
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
@@ -2280,8 +2280,8 @@ test "StatDownChance effect" {
     try t.log.expected.resisted(P2.ident(1));
     t.expected.p2.get(1).hp -= 60;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    try t.log.expected.unboost(P2.ident(1), .SpecialAttack, 1);
-    try t.log.expected.unboost(P2.ident(1), .SpecialDefense, 1);
+    try t.log.expected.boost(P2.ident(1), .SpecialAttack, -1);
+    try t.log.expected.boost(P2.ident(1), .SpecialDefense, -1);
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
@@ -3448,7 +3448,7 @@ test "Mist effect" {
     try t.log.expected.move(P2.ident(1), Move.AuroraBeam, P1.ident(1), null);
     t.expected.p1.get(1).hp -= if (showdown) 43 else 42;
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-    try t.log.expected.unboost(P1.ident(1), .Attack, 1);
+    try t.log.expected.boost(P1.ident(1), .Attack, -1);
     try t.log.expected.turn(2);
 
     // Mist doesn't protect against secondary effects
@@ -3482,7 +3482,7 @@ test "Mist effect" {
     t.expected.p2.get(1).hp -= 48;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.move(P2.ident(1), Move.Growl, P1.ident(1), null);
-    try t.log.expected.unboost(P1.ident(1), .Attack, 1);
+    try t.log.expected.boost(P1.ident(1), .Attack, -1);
     try t.log.expected.turn(5);
 
     // Haze ends Mist's effect
@@ -5264,7 +5264,7 @@ test "Substitute effect" {
 
     try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
     try t.log.expected.move(P2.ident(1), Move.Flash, P1.ident(2), null);
-    try t.log.expected.unboost(P1.ident(2), .Accuracy, 1);
+    try t.log.expected.boost(P1.ident(2), .Accuracy, -1);
     try t.log.expected.turn(4);
 
     // Disappears when switching out
@@ -5272,7 +5272,7 @@ test "Substitute effect" {
     try expect(!t.actual.p1.active.volatiles.Substitute);
 
     try t.log.expected.move(P2.ident(1), Move.Flash, P1.ident(2), null);
-    try t.log.expected.unboost(P1.ident(2), .Accuracy, 1);
+    try t.log.expected.boost(P1.ident(2), .Accuracy, -1);
     try t.log.expected.move(P1.ident(2), Move.Substitute, P1.ident(2), null);
     try t.log.expected.start(P1.ident(2), .Substitute);
     try t.log.expected.turn(5);
@@ -6223,7 +6223,7 @@ test "0 damage glitch" {
     defer t.deinit();
 
     try t.log.expected.move(P1.ident(1), Move.Growl, P2.ident(1), null);
-    try t.log.expected.unboost(P2.ident(1), .Attack, 1);
+    try t.log.expected.boost(P2.ident(1), .Attack, -1);
     try t.log.expected.move(P2.ident(1), Move.VineWhip, P1.ident(1), null);
     if (showdown) {
         try t.log.expected.resisted(P1.ident(1));
@@ -6239,13 +6239,13 @@ test "0 damage glitch" {
 
     try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
     try t.log.expected.move(P1.ident(1), Move.Growl, P2.ident(2), null);
-    try t.log.expected.unboost(P2.ident(2), .Attack, 1);
+    try t.log.expected.boost(P2.ident(2), .Attack, -1);
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
 
     try t.log.expected.move(P1.ident(1), Move.Growl, P2.ident(2), null);
-    try t.log.expected.unboost(P2.ident(2), .Attack, 1);
+    try t.log.expected.boost(P2.ident(2), .Attack, -1);
     try t.log.expected.move(P2.ident(2), Move.VineWhip, P1.ident(1), null);
     if (showdown) {
         try t.log.expected.resisted(P1.ident(1));
@@ -6754,9 +6754,9 @@ test "Division by 0" {
         defer t.deinit();
 
         try t.log.expected.move(P1.ident(1), Move.Screech, P2.ident(1), null);
-        try t.log.expected.unboost(P2.ident(1), .Defense, 2);
+        try t.log.expected.boost(P2.ident(1), .Defense, -2);
         try t.log.expected.move(P2.ident(1), Move.TailWhip, P1.ident(1), null);
-        try t.log.expected.unboost(P1.ident(1), .Defense, 1);
+        try t.log.expected.boost(P1.ident(1), .Defense, -1);
         try t.log.expected.turn(2);
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
@@ -6844,7 +6844,7 @@ test "Division by 0" {
         try t.log.expected.move(P1.ident(1), Move.Reflect, P1.ident(1), null);
         try t.log.expected.start(P1.ident(1), .Reflect);
         try t.log.expected.move(P2.ident(1), Move.SandAttack, P1.ident(1), null);
-        try t.log.expected.unboost(P1.ident(1), .Accuracy, 1);
+        try t.log.expected.boost(P1.ident(1), .Accuracy, -1);
         try t.log.expected.turn(4);
 
         try expectEqual(Result.Default, try t.update(move(2), move(2)));
@@ -6913,7 +6913,7 @@ test "Division by 0" {
         try t.log.expected.move(P1.ident(1), Move.Reflect, P1.ident(1), null);
         try t.log.expected.start(P1.ident(1), .Reflect);
         try t.log.expected.move(P2.ident(1), Move.SandAttack, P1.ident(1), null);
-        try t.log.expected.unboost(P1.ident(1), .Accuracy, 1);
+        try t.log.expected.boost(P1.ident(1), .Accuracy, -1);
         try t.log.expected.turn(4);
 
         try expectEqual(Result.Default, try t.update(move(2), move(2)));
@@ -7298,7 +7298,7 @@ test "Stat modification errors" {
         try expectEqual(@as(u16, 84), t.actual.p2.active.stats.spe);
 
         try t.log.expected.move(P2.ident(1), Move.SandAttack, P1.ident(1), null);
-        try t.log.expected.unboost(P1.ident(1), .Accuracy, 1);
+        try t.log.expected.boost(P1.ident(1), .Accuracy, -1);
         try t.log.expected.move(P1.ident(1), Move.StunSpore, P2.ident(1), null);
         try t.log.expected.status(P2.ident(1), Status.init(.PAR), .None);
         try t.log.expected.turn(2);
@@ -7308,7 +7308,7 @@ test "Stat modification errors" {
         try expectEqual(@as(u16, 21), t.actual.p2.active.stats.spe);
 
         try t.log.expected.move(P2.ident(1), Move.SandAttack, P1.ident(1), null);
-        try t.log.expected.unboost(P1.ident(1), .Accuracy, 1);
+        try t.log.expected.boost(P1.ident(1), .Accuracy, -1);
         try t.log.expected.move(P1.ident(1), Move.Growth, P1.ident(1), null);
         try t.log.expected.boost(P1.ident(1), .SpecialAttack, 1);
         try t.log.expected.boost(P1.ident(1), .SpecialDefense, 1);
@@ -7322,7 +7322,7 @@ test "Stat modification errors" {
         try t.log.expected.boost(P1.ident(1), .SpecialAttack, 1);
         try t.log.expected.boost(P1.ident(1), .SpecialDefense, 1);
         try t.log.expected.move(P2.ident(1), Move.SandAttack, P1.ident(1), null);
-        try t.log.expected.unboost(P1.ident(1), .Accuracy, 1);
+        try t.log.expected.boost(P1.ident(1), .Accuracy, -1);
         try t.log.expected.turn(4);
 
         try expectEqual(Result.Default, try t.update(move(2), move(1)));
@@ -7370,7 +7370,7 @@ test "Stat modification errors" {
         try t.log.expected.move(P1.ident(2), Move.Withdraw, P1.ident(2), null);
         try t.log.expected.boost(P1.ident(2), .Defense, 1);
         try t.log.expected.move(P2.ident(1), Move.TailWhip, P1.ident(2), null);
-        try t.log.expected.unboost(P1.ident(2), .Defense, 1);
+        try t.log.expected.boost(P1.ident(2), .Defense, -1);
         try t.log.expected.turn(3);
 
         try expectEqual(Result.Default, try t.update(move(1), move(2)));
@@ -7379,7 +7379,7 @@ test "Stat modification errors" {
 
         try t.log.expected.cant(P1.ident(2), .Paralysis);
         try t.log.expected.move(P2.ident(1), Move.TailWhip, P1.ident(2), null);
-        try t.log.expected.unboost(P1.ident(2), .Defense, 1);
+        try t.log.expected.boost(P1.ident(2), .Defense, -1);
         try t.log.expected.turn(4);
 
         try expectEqual(Result.Default, try t.update(move(1), move(2)));
@@ -7387,7 +7387,7 @@ test "Stat modification errors" {
         try expectEqual(@as(u16, 8), t.actual.p2.active.stats.spe);
 
         try t.log.expected.move(P2.ident(1), Move.StringShot, P1.ident(2), null);
-        try t.log.expected.unboost(P1.ident(2), .Speed, 1);
+        try t.log.expected.boost(P1.ident(2), .Speed, -1);
         try t.log.expected.cant(P1.ident(2), .Paralysis);
         try t.log.expected.turn(5);
 
@@ -7471,8 +7471,8 @@ test "Stat down modifier overflow glitch" {
         try t.log.expected.resisted(P2.ident(1));
         t.expected.p2.get(1).hp -= 2;
         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-        try t.log.expected.unboost(P2.ident(1), .SpecialAttack, 1);
-        try t.log.expected.unboost(P2.ident(1), .SpecialDefense, 1);
+        try t.log.expected.boost(P2.ident(1), .SpecialAttack, -1);
+        try t.log.expected.boost(P2.ident(1), .SpecialDefense, -1);
         try t.log.expected.turn(5);
 
         try expectEqual(Result.Default, try t.update(move(2), move(2)));
@@ -7558,8 +7558,8 @@ test "Stat down modifier overflow glitch" {
         try t.log.expected.resisted(P2.ident(1));
         t.expected.p2.get(1).hp -= 2;
         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-        try t.log.expected.unboost(P2.ident(1), .SpecialAttack, 1);
-        try t.log.expected.unboost(P2.ident(1), .SpecialDefense, 1);
+        try t.log.expected.boost(P2.ident(1), .SpecialAttack, -1);
+        try t.log.expected.boost(P2.ident(1), .SpecialDefense, -1);
         try t.log.expected.turn(5);
 
         try expectEqual(Result.Default, try t.update(move(2), move(2)));
@@ -7983,7 +7983,7 @@ test "Psywave infinite loop" {
     defer t.deinit();
 
     try t.log.expected.move(P2.ident(1), Move.TailWhip, P1.ident(1), null);
-    try t.log.expected.unboost(P1.ident(1), .Defense, 1);
+    try t.log.expected.boost(P1.ident(1), .Defense, -1);
     try t.log.expected.move(P1.ident(1), Move.Psywave, P2.ident(1), null);
 
     const result = if (showdown) Result.Default else Result.Error;

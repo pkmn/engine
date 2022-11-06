@@ -2267,7 +2267,7 @@ pub const Effects = struct {
                 } else {
                     stats.atk = maximum(1, stat * mod[0] / mod[1]);
                 }
-                try log.unboost(foe_ident, .Attack, 1);
+                try log.boost(foe_ident, .Attack, -1);
             },
             .DefenseDown1, .DefenseDown2, .DefenseDownChance => {
                 assert(boosts.def >= -6 and boosts.def <= 6);
@@ -2285,7 +2285,7 @@ pub const Effects = struct {
                 } else {
                     stats.def = maximum(1, stat * mod[0] / mod[1]);
                 }
-                try log.unboost(foe_ident, .Defense, n);
+                try log.boost(foe_ident, .Defense, -@as(i8, n));
             },
             .SpeedDown1, .SpeedDownChance => {
                 assert(boosts.spe >= -6 and boosts.spe <= 6);
@@ -2302,7 +2302,7 @@ pub const Effects = struct {
                 } else {
                     stats.spe = maximum(1, stat * mod[0] / mod[1]);
                 }
-                try log.unboost(foe_ident, .Speed, 1);
+                try log.boost(foe_ident, .Speed, -1);
                 assert(boosts.spe >= -6);
             },
             .SpecialDownChance => {
@@ -2320,14 +2320,14 @@ pub const Effects = struct {
                 } else {
                     stats.spc = maximum(1, stat * mod[0] / mod[1]);
                 }
-                try log.unboost(foe_ident, .SpecialAttack, 1);
-                try log.unboost(foe_ident, .SpecialDefense, 1);
+                try log.boost(foe_ident, .SpecialAttack, -1);
+                try log.boost(foe_ident, .SpecialDefense, -1);
             },
             .AccuracyDown1 => {
                 assert(boosts.accuracy >= -6 and boosts.accuracy <= 6);
                 if (boosts.accuracy == -6) return try log.fail(foe_ident, .None);
                 boosts.accuracy = @truncate(i4, maximum(-6, @as(i8, boosts.accuracy) - 1));
-                try log.unboost(foe_ident, .Accuracy, 1);
+                try log.boost(foe_ident, .Accuracy, -1);
             },
             else => unreachable,
         }

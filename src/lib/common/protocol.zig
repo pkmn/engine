@@ -35,7 +35,6 @@ pub const ArgType = enum(u8) {
     Status,
     CureStatus,
     Boost,
-    Unboost,
     ClearAllBoost,
     Fail,
     Miss,
@@ -386,24 +385,14 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn boost(self: Self, ident: ID, reason: Boost, num: u8) Error!void {
+        pub fn boost(self: Self, ident: ID, reason: Boost, num: i8) Error!void {
             if (!trace) return;
+            assert(num != 0 and (reason != .Rage or num > 0));
             try self.writer.writeAll(&.{
                 @enumToInt(ArgType.Boost),
                 @bitCast(u8, ident),
                 @enumToInt(reason),
-                num,
-            });
-        }
-
-        pub fn unboost(self: Self, ident: ID, reason: Boost, num: u8) Error!void {
-            if (!trace) return;
-            assert(reason != .Rage);
-            try self.writer.writeAll(&.{
-                @enumToInt(ArgType.Unboost),
-                @bitCast(u8, ident),
-                @enumToInt(reason),
-                num,
+                @intCast(u8, num + 6),
             });
         }
 
@@ -577,7 +566,6 @@ pub fn format(comptime formatter: Formatter, a: []const u8, b: ?[]const u8, colo
             .Status => "|-status|",
             .CureStatus => "|-curestatus|",
             .Boost => "|-boost|",
-            .Unboost => "|-unboost|",
             .ClearAllBoost => "|-clearallboost|",
             .Fail => "|-fail|",
             .Miss => "|-miss|",
@@ -712,7 +700,7 @@ pub fn format(comptime formatter: Formatter, a: []const u8, b: ?[]const u8, colo
                 printc(" {s}", .{formatter(.Status, a[i])}, a, b, &i, 1, color);
                 printc(" {s}", .{@tagName(@intToEnum(CureStatus, a[i]))}, a, b, &i, 1, color);
             },
-            .Boost, .Unboost => {
+            .Boost => {
                 const id = ID.from(@truncate(u4, a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {s}", .{@tagName(@intToEnum(Boost, a[i]))}, a, b, &i, 1, color);
@@ -1097,17 +1085,15 @@ test "|-curestatus|" {
 
 test "|-boost|" {
     try log.boost(p2.ident(6), .Speed, 2);
-    try expectLog1(&.{ N(ArgType.Boost), 0b1110, N(Boost.Speed), 2 }, buf[0..4]);
+    try expectLog1(&.{ N(ArgType.Boost), 0b1110, N(Boost.Speed), 8 }, buf[0..4]);
     stream.reset();
 
     try log.boost(p1.ident(2), .Rage, 1);
-    try expectLog1(&.{ N(ArgType.Boost), 0b0010, N(Boost.Rage), 1 }, buf[0..4]);
+    try expectLog1(&.{ N(ArgType.Boost), 0b0010, N(Boost.Rage), 7 }, buf[0..4]);
     stream.reset();
-}
 
-test "|-unboost|" {
-    try log.unboost(p2.ident(3), .Defense, 2);
-    try expectLog1(&.{ N(ArgType.Unboost), 0b1011, N(Boost.Defense), 2 }, buf[0..4]);
+    try log.boost(p2.ident(3), .Defense, -2);
+    try expectLog1(&.{ N(ArgType.Boost), 0b1011, N(Boost.Defense), 4 }, buf[0..4]);
     stream.reset();
 }
 

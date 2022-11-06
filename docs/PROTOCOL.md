@@ -327,7 +327,7 @@ The Pokémon identified by [`Ident`](#pokemonident) has recovered from `Status`.
 | `0x02` | `\|[silent]` |
 </details>
 
-### `|-boost|` (`0x0E`)
+### `|-boost|` / `|-unboost|` (`0x0E`)
 
     Byte/     0       |       1       |       2       |       3       |
        /              |               |               |               |
@@ -336,8 +336,8 @@ The Pokémon identified by [`Ident`](#pokemonident) has recovered from `Status`.
      0| 0x0E          | Ident         | Reason        | Num           |
       +---------------+---------------+---------------+---------------+
 
-The Pokémon identified by [`Ident`](#pokemonident) has gained `Num` boosts in a stat indicated by
-the `Reason`.
+The Pokémon identified by [`Ident`](#pokemonident) has been (un)boosted by `Num` - 6 in a stat
+indicated by the `Reason`.
 
 <details><summary>Reason</summary>
 
@@ -353,48 +353,24 @@ the `Reason`.
 | `0x07` | `evasion`          |
 </details>
 
-### `|-unboost|` (`0x0F`)
-
-    Byte/     0       |       1       |       2       |       3       |
-       /              |               |               |               |
-      |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
-      +---------------+---------------+---------------+---------------+
-     0| 0x0F          | Ident         | Reason        | Num           |
-      +---------------+---------------+---------------+---------------+
-
-Equivalent to `|-boost|` above, but for negative stat changes.
-
-<details><summary>Reason</summary>
-
-| Raw    | Description |
-| ------ | ----------- |
-| `0x01` | `atk`       |
-| `0x02` | `def`       |
-| `0x03` | `spe`       |
-| `0x04` | `spa`       |
-| `0x05` | `spd`       |
-| `0x06` | `accuracy`  |
-| `0x07` | `evasion`   |
-</details>
-
-### `|-clearallboost|` (`0x10`)
+### `|-clearallboost|` (`0x0F`)
 
     Byte/     0       |
        /              |
       |0 1 2 3 4 5 6 7|
       +---------------+
-     0| 0x10          |
+     0| 0x0F          |
       +---------------+
 
 Clears all boosts from all Pokémon on both sides.
 
-### `|-fail|` (`0x11`)
+### `|-fail|` (`0x10`)
 
     Byte/     0       |       1       |       2       |
        /              |               |               |
       |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
       +---------------+---------------+---------------+
-     0| 0x11          | Ident         | Reason        |
+     0| 0x10          | Ident         | Reason        |
       +---------------+---------------+---------------+
 
 An action denoted by `Reason` used by the Pokémon identified by [`Ident`](#pokemonident) has failed
@@ -415,58 +391,58 @@ due to its own mechanics.
 | `0x08` | `move: Substitute\|[weak]` |
 </details>
 
-### `|-miss|` (`0x12`)
+### `|-miss|` (`0x11`)
 
     Byte/     0       |       1       |
        /              |               |
       |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
       +---------------+---------------+
-     0| 0x12          | Ident         |
+     0| 0x11          | Ident         |
       +---------------+---------------+
 
 A move used by the Pokémon identified by [`Ident`](#pokemonident) missed.
 
-### `|-hitcount|` (`0x13`)
+### `|-hitcount|` (`0x12`)
 
     Byte/     0       |       1       |       2       |
        /              |               |               |
       |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
       +---------------+---------------+---------------+
-     0| 0x13          | Ident         | Num           |
+     0| 0x12          | Ident         | Num           |
       +---------------+---------------+---------------+
 
 A multi-hit move hit the Pokémon identified by [`Ident`](#pokemonident) `Num` times.
 
-### `|-prepare|` (`0x14`)
+### `|-prepare|` (`0x13`)
 
     Byte/     0       |       1       |       2       |
        /              |               |               |
       |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
       +---------------+---------------+---------------+
-     0| 0x14          | Ident         | Move          |
+     0| 0x13          | Ident         | Move          |
       +---------------+---------------+---------------+
 
 The Pokémon identified by [`Ident`](#pokemonident) is preparing to charge `Move`.
 
-### `|-mustrecharge|` (`0x15`)
+### `|-mustrecharge|` (`0x14`)
 
     Byte/     0       |       1       |
        /              |               |
       |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
       +---------------+---------------+
-     0| 0x15          | Ident         |
+     0| 0x14          | Ident         |
       +---------------+---------------+
 
 The Pokémon identified by [`Ident`](#pokemonident) must spend the turn recharging from a previous
 move.
 
-### `|-activate|` (`0x16`)
+### `|-activate|` (`0x15`)
 
     Byte/     0       |       1       |       2       |
        /              |               |               |
       |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
       +---------------+---------------+---------------+
-     0| 0x16          | Ident         | Reason        |
+     0| 0x15          | Ident         | Reason        |
       +---------------+---------------+---------------+
 
 A miscellaneous effect indicated by `Reason` has activated on the Pokémon identified by
@@ -485,24 +461,24 @@ A miscellaneous effect indicated by `Reason` has activated on the Pokémon ident
 | `0x06` | `\|\|move: Splash`     |
 </details>
 
-### `|-fieldactivate|` (`0x17`)
+### `|-fieldactivate|` (`0x16`)
 
     Byte/     0       |
        /              |
       |0 1 2 3 4 5 6 7|
       +---------------+
-     0| 0x17          |
+     0| 0x16          |
       +---------------+
 
 A field condition has activated.
 
-### `|-start|` (`0x18`)
+### `|-start|` (`0x17`)
 
     Byte/     0       |       1       |       2       |       3       |
        /              |               |               |               |
       |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
       +---------------+---------------+---------------+---------------+
-     0| 0x18          | Ident         | Reason        | Move/Types?   |
+     0| 0x17          | Ident         | Reason        | Move/Types?   |
       +---------------+---------------+---------------+---------------+
 
 A volatile status from `Reason` has been inflicted on the Pokémon identified by
@@ -528,13 +504,13 @@ which has been disabled/mimicked.
 | `0x0B` | `Mimic\|`                                        | Yes         |
 </details>
 
-### `|-end|` (`0x19`)
+### `|-end|` (`0x18`)
 
     Byte/     0       |       1       |       2       |
        /              |               |               |
       |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
       +---------------+---------------+---------------+
-     0| 0x19          | Ident         | Reason        |
+     0| 0x18          | Ident         | Reason        |
       +---------------+---------------+---------------+
 
 A volatile status from `Reason` inflicted on the Pokémon identified by [`Ident`](#pokemonident) has
@@ -558,18 +534,29 @@ ended.
 | `0x0B` | `reflect\|[silent]`     |
 </details>
 
-### `|-ohko|` (`0x1A`)
+### `|-ohko|` (`0x19`)
 
     Byte/     0       |
        /              |
       |0 1 2 3 4 5 6 7|
       +---------------+
-     0| 0x1A          |
+     0| 0x19          |
       +---------------+
 
 A OHKO move was used sucessfully.
 
-### `|-crit|` (`0x1B`)
+### `|-crit|` (`0x1A`)
+
+    Byte/     0       |       1       |
+       /              |               |
+      |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
+      +---------------+---------------+
+     0| 0x1A          | Ident         |
+      +---------------+---------------+
+
+A move has dealt a critical hit against the Pokémon identified by [`Ident`](#pokemonident).
+
+### `|-supereffective|` (`0x1B`)
 
     Byte/     0       |       1       |
        /              |               |
@@ -578,9 +565,9 @@ A OHKO move was used sucessfully.
      0| 0x1B          | Ident         |
       +---------------+---------------+
 
-A move has dealt a critical hit against the Pokémon identified by [`Ident`](#pokemonident).
+A move was supereffective against the Pokémon identified by [`Ident`](#pokemonident).
 
-### `|-supereffective|` (`0x1C`)
+### `|-resisted|` (`0x1C`)
 
     Byte/     0       |       1       |
        /              |               |
@@ -589,26 +576,15 @@ A move has dealt a critical hit against the Pokémon identified by [`Ident`](#po
      0| 0x1C          | Ident         |
       +---------------+---------------+
 
-A move was supereffective against the Pokémon identified by [`Ident`](#pokemonident).
-
-### `|-resisted|` (`0x1D`)
-
-    Byte/     0       |       1       |
-       /              |               |
-      |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
-      +---------------+---------------+
-     0| 0x1D          | Ident         |
-      +---------------+---------------+
-
 A move was not very effective against the Pokémon identified by [`Ident`](#pokemonident).
 
-### `|-immune|` (`0x1E`)
+### `|-immune|` (`0x1D`)
 
     Byte/     0       |       1       |       2       |
        /              |               |               |
       |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
       +---------------+---------------+---------------+
-     0| 0x1E          | Ident         | Reason        |
+     0| 0x1D          | Ident         | Reason        |
       +---------------+---------------+---------------+
 
 The Pokémon identified by [`Ident`](#pokemonident) is immune to a move.
@@ -621,13 +597,13 @@ The Pokémon identified by [`Ident`](#pokemonident) is immune to a move.
 | `0x01` | `\|[ohko]`  |
 </details>
 
-### `|-transform|` (`0x1F`)
+### `|-transform|` (`0x1E`)
 
     Byte/     0       |       1       |       2       |
        /              |               |               |
       |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
       +---------------+---------------+---------------+
-     0| 0x1F          | Source        | Target        |
+     0| 0x1E          | Source        | Target        |
       +---------------+---------------+---------------+
 
 `Source` is the [`PokemonIdent`](#pokemonident) of the Pokémon that transformed into the Pokémon

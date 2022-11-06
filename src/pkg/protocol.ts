@@ -264,21 +264,15 @@ export const DECODERS: {[key: number]: Decoder} = {
     const ident = decodeIdent(this.names, data.getUint8(offset++));
     const reason = data.getUint8(offset++);
     const boost = BOOSTS[reason];
-    const kwArgs = {} as Writeable<Protocol.BattleArgsKWArgs['|-boost|']>;
+    const kwArgs = {} as Writeable<Protocol.BattleArgsKWArgs['|-boost|' | '|-unboost|']>;
     if (reason === PROTOCOL.Boost.Rage) {
       kwArgs.from = 'Rage' as Protocol.MoveName;
     }
-    const num = data.getUint8(offset++).toString() as Protocol.Num;
-    const args = ['-boost', ident, boost, num] as Protocol.Args['|-boost|'];
+    const n = data.getUint8(offset++) - 6;
+    const type = n > 0 ? '-boost' : '-unboost';
+    const num = Math.abs(n).toString() as Protocol.Num;
+    const args = [type, ident, boost, num] as Protocol.Args['|-boost|' | '|-unboost|'];
     return {offset, line: {args, kwArgs}};
-  },
-  [ArgType.Unboost](offset, data) {
-    const ident = decodeIdent(this.names, data.getUint8(offset++));
-    const reason = data.getUint8(offset++);
-    const boost = BOOSTS[reason];
-    const num = data.getUint8(offset++).toString() as Protocol.Num;
-    const args = ['-unboost', ident, boost, num] as Protocol.Args['|-unboost|'];
-    return {offset, line: {args, kwArgs: {}}};
   },
   [ArgType.ClearAllBoost](offset) {
     const args = ['-clearallboost'] as Protocol.Args['|-clearallboost|'];

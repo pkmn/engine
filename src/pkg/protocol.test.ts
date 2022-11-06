@@ -135,15 +135,12 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     it('|-boost|', () => {
-      expect(Array.from(log.parse(Data.view([ArgType.Boost, 0b1110, PROTOCOL.Boost.Speed, 2]))))
+      expect(Array.from(log.parse(Data.view([ArgType.Boost, 0b1110, PROTOCOL.Boost.Speed, 8]))))
         .toEqual(parse('|-boost|p2a: Fuudin|spe|2'));
-      expect(Array.from(log.parse(Data.view([ArgType.Boost, 0b0010, PROTOCOL.Boost.Rage, 1]))))
+      expect(Array.from(log.parse(Data.view([ArgType.Boost, 0b0010, PROTOCOL.Boost.Rage, 7]))))
         .toEqual(parse('|-boost|p1a: Hitokage|atk|1|[from]Rage'));
-    });
-
-    it('|-unboost|', () => {
-      const data = Data.view([ArgType.Unboost, 0b1011, PROTOCOL.Boost.Defense, 2]);
-      expect(Array.from(log.parse(data))).toEqual(parse('|-unboost|p2a: Kabigon|def|2'));
+      expect(Array.from(log.parse(Data.view([ArgType.Boost, 0b1011, PROTOCOL.Boost.Defense, 4]))))
+        .toEqual(parse('|-unboost|p2a: Kabigon|def|2'));
     });
 
     it('|-clearallboost|', () => {
