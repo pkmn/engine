@@ -21,6 +21,7 @@ const showdown = options.showdown;
 const PSRNG = rng.PSRNG;
 
 const DVs = data.DVs;
+const Item = data.Item;
 const Move = data.Move;
 const MoveSlot = data.MoveSlot;
 const Species = data.Species;
@@ -60,17 +61,11 @@ pub const Battle = struct {
     }
 
     pub fn random(rand: *PSRNG, opt: Options) data.Battle(data.PRNG) {
-        var p1: u4 = 0;
-        var p2: u4 = 0;
-        var battle: data.Battle(data.PRNG) = .{
+        return .{
             .rng = prng(rand),
             .turn = 0,
-            .last_damage = 0,
             .sides = .{ Side.random(rand, opt), Side.random(rand, opt) },
         };
-        battle.last_selected_indexes.p1 = p1;
-        battle.last_selected_indexes.p2 = p2;
-        return battle;
     }
 };
 
@@ -111,7 +106,7 @@ pub const Side = struct {
         var i: u4 = 0;
         while (i < n) : (i += 1) {
             side.pokemon[i] = Pokemon.random(rand, opt);
-            // FIXME side.order[i] = i + 1;
+            side.pokemon[i].position = i + 1;
         }
 
         return side;
@@ -120,14 +115,14 @@ pub const Side = struct {
 
 pub const EXP = 0xFFFF;
 
-// FIXME
 pub const Pokemon = struct {
     species: Species,
+    item: Item,
     moves: []const Move,
     hp: ?u16 = null,
     status: u8 = 0,
     level: u8 = 100,
-    stats: Stats(u16) = .{ .hp = EXP, .atk = EXP, .def = EXP, .spe = EXP, .spc = EXP },
+    stats: Stats(u16) = .{ .hp = EXP, .atk = EXP, .def = EXP, .spe = EXP, .spa = EXP, .spd = EXP },
 
     pub fn init(p: Pokemon) data.Pokemon {
         var pokemon = data.Pokemon{};
@@ -142,6 +137,7 @@ pub const Pokemon = struct {
                 p.level,
             );
         }
+        pokemon.item = p.item;
         assert(p.moves.len > 0 and p.moves.len <= 4);
         for (p.moves) |m, j| {
             pokemon.moves[j].id = m;

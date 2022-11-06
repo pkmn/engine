@@ -33,6 +33,7 @@ export const ranged = (n: number, d: number) => n * Math.floor(0x100000000 / d);
 
 const MODS: {[gen: number]: string[]} = {
   1: ['Endless Battle Clause', 'Sleep Clause Mod', 'Freeze Clause Mod'],
+  2: ['Endless Battle Clause', 'Sleep Clause Mod', 'Freeze Clause Mod'],
 };
 
 export function formatFor(gen: Generation) {

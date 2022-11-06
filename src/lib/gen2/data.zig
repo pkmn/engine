@@ -12,6 +12,8 @@ const types = @import("data/types.zig");
 
 const gen1 = @import("../gen1/data.zig");
 
+const mechanics = @import("mechanics.zig");
+
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 const expect = std.testing.expect;
@@ -28,7 +30,10 @@ pub const LOG_SIZE = if (builtin.mode == .ReleaseSmall)
 else
     std.math.ceilPowerOfTwo(usize, MAX_LOGS) catch unreachable;
 
+pub const Choice = data.Choice;
+pub const ID = data.ID;
 pub const Player = data.Player;
+pub const Result = data.Result;
 
 const showdown = options.showdown;
 
@@ -49,6 +54,18 @@ pub fn Battle(comptime RNG: anytype) type {
 
         pub inline fn foe(self: *Self, player: Player) *Side {
             return &self.sides[@enumToInt(player.foe())];
+        }
+
+        pub inline fn active(self: *Self, player: Player) ID {
+            return player.ident(@truncate(u3, self.side(player).pokemon[0].position));
+        }
+
+        pub fn update(self: *Self, c1: Choice, c2: Choice, log: anytype) !Result {
+            return mechanics.update(self, c1, c2, log);
+        }
+
+        pub fn choices(self: *Self, player: Player, request: Choice.Type, out: []Choice) u8 {
+            return mechanics.choices(self, player, request, out);
         }
     };
 }
@@ -101,7 +118,7 @@ const Side = extern struct {
 
     pub inline fn get(self: *const Side, slot: u8) *Pokemon {
         assert(slot > 0 and slot <= 6);
-        const id = self[slot - 1].position;
+        const id = self.pokemon[slot - 1].position;
         assert(id > 0 and id <= 6);
         return &self.pokemon[id - 1];
     }
@@ -345,8 +362,3 @@ test "Types" {
 }
 
 pub const DVs = gen1.DVs;
-
-// TODO DEBUG
-comptime {
-    std.testing.refAllDecls(@This());
-}

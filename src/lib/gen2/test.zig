@@ -433,7 +433,6 @@ test "StatDownChance effect" {
     return error.SkipZigTest;
 }
 
-
 // Move.{Meditate,Sharpen}: AttackUp1
 // Move.SwordsDance: AttackUp2
 // Move.{Harden,Withdraw}: DefenseUp1
@@ -1157,7 +1156,6 @@ test "MAX_LOGS" {
     if (showdown or !trace) return error.SkipZigTest;
     return error.SkipZigTest;
 }
-
 
 fn Test(comptime rolls: anytype) type {
     return struct {
