@@ -5,6 +5,8 @@ const options = @import("../common/options.zig");
 const protocol = @import("../common/protocol.zig");
 const rng = @import("../common/rng.zig");
 
+const gen1 = @import("../gen1/data.zig");
+
 const data = @import("data.zig");
 
 const assert = std.debug.assert;
@@ -122,6 +124,7 @@ pub const Pokemon = struct {
     hp: ?u16 = null,
     status: u8 = 0,
     level: u8 = 100,
+    dvs: gen1.DVs = .{},
     stats: Stats(u16) = .{ .hp = EXP, .atk = EXP, .def = EXP, .spe = EXP, .spa = EXP, .spd = EXP },
 
     pub fn init(p: Pokemon) data.Pokemon {
@@ -129,19 +132,24 @@ pub const Pokemon = struct {
         pokemon.species = p.species;
         const species = Species.get(p.species);
         inline for (std.meta.fields(@TypeOf(pokemon.stats))) |field| {
+            const hp = std.mem.eql(u8, field.name, "hp");
+            const spc = std.mem.eql(u8, field.name, "spa") or std.mem.eql(u8, field.name, "spd");
             @field(pokemon.stats, field.name) = Stats(u16).calc(
                 field.name,
                 @field(species.stats, field.name),
-                0xF,
+                if (hp) p.dvs.hp() else if (spc) p.dvs.spc else @field(p.dvs, field.name),
                 @field(p.stats, field.name),
                 p.level,
             );
         }
         assert(p.moves.len > 0 and p.moves.len <= 4);
         for (p.moves) |m, j| {
-            pokemon.moves[j].id = m;
-            // NB: PP can be at most 61 legally (though can overflow to 63)
-            pokemon.moves[j].pp = @truncate(u8, minimum(Move.pp(m) / 5 * 8, 61));
+            pokemon.moves[j] = .{
+                .id = m,
+                .pp_ups = 3,
+                // NB: PP can be at most 61 legally (though can overflow to 63)
+                .pp = @truncate(u8, minimum(Move.pp(m) / 5 * 8, 61)),
+            };
         }
         pokemon.item = p.item;
         if (p.hp) |hp| {
@@ -152,6 +160,7 @@ pub const Pokemon = struct {
         pokemon.status = p.status;
         pokemon.types = species.types;
         pokemon.level = p.level;
+        pokemon.dvs = DVs.from(p.dvs);
         return pokemon;
     }
 
@@ -160,12 +169,14 @@ pub const Pokemon = struct {
         const species = Species.get(s);
         const lvl = if (rand.chance(u8, 1, 20)) rand.range(u8, 1, 99 + 1) else 100;
         var stats: Stats(u16) = .{};
-        const dvs = DVs.random(rand);
+        const dvs = gen1.DVs.random(rand);
         inline for (std.meta.fields(@TypeOf(stats))) |field| {
+            const hp = std.mem.eql(u8, field.name, "hp");
+            const spc = std.mem.eql(u8, field.name, "spa") or std.mem.eql(u8, field.name, "spd");
             @field(stats, field.name) = Stats(u16).calc(
                 field.name,
                 @field(species.stats, field.name),
-                if (field.field_type != u4) dvs.hp() else @field(dvs, field.name),
+                if (hp) dvs.hp() else if (spc) dvs.spc else @field(dvs, field.name),
                 if (rand.chance(u8, 1, 20)) rand.range(u8, 0, 255 + 1) else 255,
                 lvl,
             );
@@ -191,13 +202,16 @@ pub const Pokemon = struct {
             const max_pp = @truncate(u8, minimum(Move.pp(m) / 5 * (5 + @as(u8, pp_ups)), 61));
             ms[i] = .{
                 .id = m,
+                .pp_ups = pp_ups,
                 .pp = if (opt.cleric) max_pp else rand.range(u8, 0, max_pp + 1),
             };
         }
-
+        // Pokémon Showdown does not support Mail or most items without in-battle held item effects
+        const maxItem = @enumToInt(if (showdown) Item.UpGrade else Item.MirageMail);
         return .{
             .species = s,
             .types = species.types,
+            .dvs = DVs.from(dvs),
             .level = lvl,
             .stats = stats,
             .hp = if (opt.cleric) stats.hp else rand.range(u16, 0, stats.hp + 1),
@@ -205,6 +219,8 @@ pub const Pokemon = struct {
                 0 | (@as(u8, 1) << rand.range(u3, 1, 6 + 1))
             else
                 0,
+            .happiness = if (rand.chance(u8, 1, 10 + 1)) rand.range(u8, 0, 255) else 255,
+            .item = @intToEnum(Item, rand.range(u8, 0, 1 + maxItem)),
             .moves = ms,
         };
     }

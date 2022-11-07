@@ -169,7 +169,10 @@ pub const Pokemon = struct {
             @field(stats, field.name) = Stats(u16).calc(
                 field.name,
                 @field(species.stats, field.name),
-                if (field.field_type != u4) dvs.hp() else @field(dvs, field.name),
+                if (comptime std.mem.eql(u8, field.name, "hp"))
+                    dvs.hp()
+                else
+                    @field(dvs, field.name),
                 if (rand.chance(u8, 1, 20)) rand.range(u8, 0, 255 + 1) else 255,
                 lvl,
             );

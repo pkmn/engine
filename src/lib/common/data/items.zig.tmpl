@@ -24,13 +24,13 @@ pub const Item = enum({{{ Item.type }}}) {
         return if (@enumToInt(item) <= {{{ Item.boosts }}}) @intToEnum(Type, @enumToInt(item) - 1) else null;
     }
 
-    pub inline fn mail(item: Item) bool {
-        assert(item != .None);
-        return @enumToInt(item) > {{{ Item.mail }}} and @enumToInt(item) <= {{{ Item.berry }}};
-    }
-
     pub inline fn berry(item: Item) bool {
         assert(item != .None);
-        return @enumToInt(item) > {{{ Item.berry }}};
+        return @enumToInt(item) > {{{ Item.effect }}} and @enumToInt(item) <= {{{ Item.berry }}};
+    }
+
+    pub inline fn mail(item: Item) bool {
+        assert(item != .None);
+        return @enumToInt(item) >= {{{ Item.mail }}};
     }
 };

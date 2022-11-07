@@ -616,17 +616,22 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         : (NAMES[match[1]] || constToEnum(match[1]));
       return `${name} ${held}`;
     });
-    const values: string[] = [];
+    const SPECIAL = ['ThickClub', 'LightBall', 'BerserkGene', 'Stick'];
+    const NO_EFFECTS = ['AmuletCoin', 'CleanseTag', 'SmokeBall'];
+    const nothing: {present: string[]; missing: string[]} = {present: [], missing: []};
+    const effects: string[] = [];
     const mail: string[] = [];
     const berries: string[] = [];
     const boosts: [string, TypeName][] = [];
     for (const item of items) {
       const [name, held] = item.split(' ');
-      if (held === 'None') {
-        if (name.endsWith('Mail')) {
+      if (held === 'None' || NO_EFFECTS.includes(name)) {
+        if (SPECIAL.includes(name)) {
+          effects.push(`${name},`);
+        } else if (name.endsWith('Mail')) {
           mail.push(`${name},`);
         } else {
-          values.push(`${name},`);
+          nothing[gen.items.get(name) ? 'present' : 'missing'].push(`${name},`);
         }
         continue;
       }
@@ -636,32 +641,45 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       } else if (held.endsWith('Boost')) {
         boosts.push([name, gen.types.get(held.slice(0, -5))!.name]);
       } else {
-        values.push(s);
+        effects.push(s);
       }
     }
-    for (const type of types.slice(0).reverse()) {
+    const values: string[] = [];
+    for (const type of types) {
       if (type === '???') {
-        values.unshift('PolkadotBow, // ??? (Normal)');
+        values.push('PolkadotBow, // ??? (Normal)');
       } else {
         for (const [n, t] of boosts) {
           if (t === type) {
-            values.unshift(`${n}, // ${t}`);
+            values.push(`${n}, // ${t}`);
             break;
           }
         }
       }
     }
-    const offset = {mail: 0, berries: 0};
+    const offset = {effect: 0, berry: 0, mail: 0};
+    for (const s of effects) {
+      values.push(s);
+    }
+    offset.effect = values.length;
+    for (const s of berries) {
+      values.push(s);
+    }
+    offset.berry = values.length;
+    for (const s of nothing.present) {
+      values.push(s);
+    }
+    values.push('// Pokémon Showdown excludes the following items');
+    for (const s of nothing.missing) {
+      values.push(s);
+    }
     offset.mail = values.length;
     for (const s of mail) {
       values.push(s);
     }
-    offset.berries = values.length;
-    for (const s of berries) {
-      values.push(s);
-    }
     for (const value of values) {
-      IDS[1].items.push(toID(value.split(' ')[0]));
+      const id = toID(value.split(' ')[0]);
+      if (id) IDS[1].items.push(id);
     }
     template('items', dirs.out, {
       gen: gen.num,
@@ -671,8 +689,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         num: values.length,
         size: 1,
         boosts: boosts.length,
-        mail: offset.mail,
-        berry: offset.berries,
+        ...offset,
       },
     });
 

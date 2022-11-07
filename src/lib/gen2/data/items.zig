@@ -28,13 +28,51 @@ pub const Item = enum(u8) {
     NeverMeltIce, // Ice
     DragonScale, // Dragon
     BlackGlasses, // Dark
+    BrightPowder, // BrightPowder
+    MetalPowder, // MetalPowder
+    QuickClaw, // QuickClaw
+    KingsRock, // Flinch
+    Stick,
+    ThickClub,
+    FocusBand, // FocusBand
+    BerryJuice, // Berry
+    ScopeLens, // CriticalUp
+    Leftovers, // Leftovers
+    BerserkGene,
+    LightBall,
+    PSNCureBerry, // HealPoison
+    PRZCureBerry, // HealParalyze
+    BurntBerry, // HealFreeze
+    IceBerry, // HealBurn
+    BitterBerry, // HealConfusion
+    MintBerry, // HealSleep
+    MiracleBerry, // HealStatus
+    MysteryBerry, // RestorePP
+    Berry, // Berry
+    GoldBerry, // Berry
     MasterBall,
     UltraBall,
-    BrightPowder, // BrightPowder
     GreatBall,
     PokeBall,
-    TownMap,
     MoonStone,
+    FireStone,
+    ThunderStone,
+    WaterStone,
+    LuckyPunch,
+    LeafStone,
+    EnergyPowder,
+    DragonFang,
+    HeavyBall,
+    LevelBall,
+    LureBall,
+    FastBall,
+    FriendBall,
+    MoonBall,
+    LoveBall,
+    SunStone,
+    UpGrade,
+    // Pokémon Showdown excludes the following items
+    TownMap,
     Antidote,
     BurnHeal,
     IceHeal,
@@ -48,19 +86,13 @@ pub const Item = enum(u8) {
     EscapeRope,
     Repel,
     MaxElixir,
-    FireStone,
-    ThunderStone,
-    WaterStone,
     HPUp,
     Protein,
     Iron,
     Carbos,
-    LuckyPunch,
     Calcium,
     RareCandy,
     XAccuracy,
-    LeafStone,
-    MetalPowder, // MetalPowder
     Nugget,
     PokeDoll,
     FullHeal,
@@ -85,54 +117,33 @@ pub const Item = enum(u8) {
     MaxEther,
     Elixir,
     MoomooMilk,
-    QuickClaw, // QuickClaw
     GoldLeaf,
-    KingsRock, // Flinch
     RedApricorn,
     TinyMushroom,
     BigMushroom,
     BlueApricorn,
-    AmuletCoin, // AmuletCoin
+    AmuletCoin,
     YellowApricorn,
     GreenApricorn,
-    CleanseTag, // CleanseTag
+    CleanseTag,
     WhiteApricorn,
     BlackApricorn,
     PinkApricorn,
     SlowpokeTail,
-    Stick,
-    SmokeBall, // Escape
+    SmokeBall,
     Pearl,
     BigPearl,
     Everstone,
     RageCandyBar,
-    ThickClub,
-    FocusBand, // FocusBand
-    EnergyPowder,
     EnergyRoot,
     HealPowder,
     RevivalHerb,
     LuckyEgg,
     Stardust,
     StarPiece,
-    BerryJuice, // Berry
-    ScopeLens, // CriticalUp
-    DragonFang,
-    Leftovers, // Leftovers
-    BerserkGene,
     SacredAsh,
-    HeavyBall,
-    LevelBall,
-    LureBall,
-    FastBall,
-    LightBall,
-    FriendBall,
-    MoonBall,
-    LoveBall,
     NormalBox,
     GorgeousBox,
-    SunStone,
-    UpGrade,
     ParkBall,
     BrickPiece,
     TM01,
@@ -195,22 +206,12 @@ pub const Item = enum(u8) {
     BlueSkyMail,
     MusicMail,
     MirageMail,
-    PSNCureBerry, // HealPoison
-    PRZCureBerry, // HealParalyze
-    BurntBerry, // HealFreeze
-    IceBerry, // HealBurn
-    BitterBerry, // HealConfusion
-    MintBerry, // HealSleep
-    MiracleBerry, // HealStatus
-    MysteryBerry, // RestorePP
-    Berry, // Berry
-    GoldBerry, // Berry
 
     comptime {
         assert(@sizeOf(Item) == 1);
     }
 
-    pub const size = 195;
+    pub const size = 196;
 
     pub inline fn boost(item: Item) ?Type {
         assert(item != .None);
@@ -218,13 +219,13 @@ pub const Item = enum(u8) {
         return if (@enumToInt(item) <= 18) @intToEnum(Type, @enumToInt(item) - 1) else null;
     }
 
-    pub inline fn mail(item: Item) bool {
-        assert(item != .None);
-        return @enumToInt(item) > 175 and @enumToInt(item) <= 185;
-    }
-
     pub inline fn berry(item: Item) bool {
         assert(item != .None);
-        return @enumToInt(item) > 185;
+        return @enumToInt(item) > 30 and @enumToInt(item) <= 40;
+    }
+
+    pub inline fn mail(item: Item) bool {
+        assert(item != .None);
+        return @enumToInt(item) >= 186;
     }
 };
