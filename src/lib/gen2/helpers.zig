@@ -117,8 +117,8 @@ pub const EXP = 0xFFFF;
 
 pub const Pokemon = struct {
     species: Species,
-    item: Item,
     moves: []const Move,
+    item: Item = .None,
     hp: ?u16 = null,
     status: u8 = 0,
     level: u8 = 100,
@@ -137,13 +137,13 @@ pub const Pokemon = struct {
                 p.level,
             );
         }
-        pokemon.item = p.item;
         assert(p.moves.len > 0 and p.moves.len <= 4);
         for (p.moves) |m, j| {
             pokemon.moves[j].id = m;
             // NB: PP can be at most 61 legally (though can overflow to 63)
             pokemon.moves[j].pp = @truncate(u8, minimum(Move.pp(m) / 5 * 8, 61));
         }
+        pokemon.item = p.item;
         if (p.hp) |hp| {
             pokemon.hp = hp;
         } else {

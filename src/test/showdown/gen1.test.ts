@@ -49,6 +49,8 @@ const METRONOME = (move: string) => ({
 const evs = {hp: 255, atk: 255, def: 255, spa: 255, spd: 255, spe: 255};
 
 describe('Gen 1', () => {
+  // General
+
   test('start (first fainted)', () => {
     const battle = startBattle([], [
       {species: 'Pikachu', evs, moves: ['Thunder Shock']},

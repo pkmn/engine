@@ -2111,7 +2111,7 @@ pub const Effects = struct {
         const foe = battle.foe(player);
         const foe_ident = battle.active(player.foe());
 
-        // FIXME: https://discord.com/channels/689316505560809576/689316506265321535/1038974397396033556
+        // FIXME: livid-washed research
         if (foe.active.volatiles.Invulnerable) {
             try log.lastmiss();
             return log.miss(battle.active(player));

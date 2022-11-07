@@ -40,6 +40,11 @@ export function formatFor(gen: Generation) {
   return `gen${gen.num}customgame@@@${MODS[gen.num].join(',')}` as ID;
 }
 
+function fix(gen: Generation, set: Partial<PokemonSet>) {
+  if (gen.num >= 2) set.gender = set.gender || gen.species.get(set.species!)!.gender || 'M';
+  return set as PokemonSet;
+}
+
 export function createStartBattle(gen: Generation) {
   const formatid = formatFor(gen);
   return (
@@ -52,8 +57,8 @@ export function createStartBattle(gen: Generation) {
     (battle as any).debugMode = false;
     (battle as any).prng = new FixedRNG(rolls);
     if (fn) battle.started = true;
-    battle.setPlayer('p1', {team: p1 as PokemonSet[]});
-    battle.setPlayer('p2', {team: p2 as PokemonSet[]});
+    battle.setPlayer('p1', {team: p1.map(p => fix(gen, p))});
+    battle.setPlayer('p2', {team: p2.map(p => fix(gen, p))});
     if (fn) {
       fn(battle);
       battle.started = false;
