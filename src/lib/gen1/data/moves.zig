@@ -1516,7 +1516,7 @@ pub const Move = enum(u8) {
 
     pub const Effect = enum(u8) {
         None,
-        // onBeginMove
+        // onBegin
         Confusion,
         Conversion,
         FocusEnergy,

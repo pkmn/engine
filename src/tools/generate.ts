@@ -132,7 +132,7 @@ const ALWAYS_HAPPEN_SPECIAL = [
 
 const GROUPS: { [constant: string]: string[] } = {
   // data/battle/residual_effects_1.asm
-  onBeginMove: [
+  onBegin: [
     'Conversion', 'Haze', 'SwitchAndTeleport', 'Mist', 'FocusEnergy', 'Confusion', 'Heal',
     'Transform', 'LightScreen', 'Reflect', 'Poison', 'Paralyze', 'Substitute', 'Mimic',
     'LeechSeed', 'Splash',
@@ -369,7 +369,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const MOVES: string[] = [];
     const PP: string[] = [];
     const EFFECTS: { [key: string]: Set<string>} = {
-      onBeginMove: new Set(),
+      onBegin: new Set(),
       onEnd: new Set(),
       isSpecial: new Set(),
       isMulti: new Set(),
@@ -403,14 +403,14 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
     };`;
 
-    const begin = EFFECTS.onBeginMove.size;
+    const begin = EFFECTS.onBegin.size;
     const end = begin + EFFECTS.onEnd.size;
     const special = end + EFFECTS.isSpecial.size;
     const multi = special + EFFECTS.isMulti.size;
     const effects: string[] = [];
     // Sort STAT_DOWN/ALWAYS_HAPPEN_* specially so that they can be sub-range checked
     for (const group in EFFECTS) {
-      effects.push(`${group === 'onBeginMove' ? '' : '        '}// ${group}`);
+      effects.push(`${group === 'onBegin' ? '' : '        '}// ${group}`);
       const sorted = group === 'onEnd'
         ? [...STAT_DOWN, ...Array.from(EFFECTS[group]).filter(e => !STAT_DOWN.includes(e)).sort()]
         : group === 'isSpecial'
