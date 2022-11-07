@@ -2,6 +2,7 @@ const std = @import("std");
 const builtin = @import("builtin");
 
 const data = @import("../common/data.zig");
+const DEBUG = @import("../common/debug.zig").print;
 const options = @import("../common/options.zig");
 const rng = @import("../common/rng.zig");
 
@@ -128,7 +129,7 @@ const Side = extern struct {
     }
 };
 
-// NOTE: IVs (Gender & Hidden Power) and Happiness are stored only in Pokemon
+// NOTE: DVs (Gender & Hidden Power) and Happiness are stored only in Pokemon
 const ActivePokemon = extern struct {
     volatiles: Volatile align(4) = .{},
     stats: Stats(u16) = .{},
@@ -154,7 +155,7 @@ const Pokemon = extern struct {
     stats: Stats(u16) = .{},
     moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
     types: Types = .{},
-    ivs: IVs = .{},
+    dvs: DVs = .{},
     hp: u16 = 0,
     status: u8 = 0,
     species: Species = .None,
@@ -174,26 +175,67 @@ const Pokemon = extern struct {
     }
 };
 
-pub const Gender = enum(u1) {
+pub const Gender = enum(u2) {
     Male,
     Female,
+    Unknown,
 };
 
-const IVs = packed struct {
+const DVs = packed struct {
     gender: Gender = .Male,
-    power: u7 = 70,
+    pow: u6 = 40,
     type: Type = .Dark,
 
-    pub fn init(g: Gender, p: u7, t: Type) IVs {
-        assert(p >= 31 and p <= 70);
+    pub fn init(g: Gender, p: u6, t: Type) DVs {
+        assert(p >= 1 and p <= 40);
         assert(t != .Normal and t != .@"???");
-        return IVs{ .gender = g, .power = p, .type = t };
+        return DVs{ .gender = g, .pow = p, .type = t };
+    }
+
+    pub inline fn power(dvs: DVs) u8 {
+        return @as(u8, dvs.pow) + 30;
+    }
+
+    pub fn from(specie: Species, dvs: gen1.DVs) DVs {
+        const ratio = Species.get(specie).ratio;
+        const g: Gender = switch (ratio) {
+            0x00 => .Male,
+            0xFE => .Female,
+            0xFF => .Unknown,
+            else => if ((@as(u8, dvs.atk) << 4 | dvs.spe) < ratio) Gender.Female else Gender.Male,
+        };
+        const p = @truncate(u6, 1 + ((5 * @as(u8, (dvs.atk & 0b1000) | ((dvs.def & 0b1000)) >> 1 |
+            ((dvs.spe & 0b1000)) >> 2 | ((dvs.spc & 0b1000)) >> 3) + (dvs.spc & 0b0011)) >> 1));
+        var t = @as(u8, dvs.def & 0b0011) + (@as(u8, dvs.atk & 0b0011) << 2) + 1;
+        if (t >= @enumToInt(Type.@"???")) t = t + 1;
+        return DVs{ .gender = g, .pow = p, .type = @intToEnum(Type, t) };
     }
 
     comptime {
-        assert(@sizeOf(IVs) == 2);
+        assert(@sizeOf(DVs) == 2);
     }
 };
+
+test "DVs" {
+    var dvs = DVs.from(.Mewtwo, .{ .def = 13 });
+    try expectEqual(Gender.Unknown, dvs.gender);
+    try expectEqual(Type.Ice, dvs.type);
+    try expectEqual(@as(u8, 70), dvs.power());
+
+    dvs = DVs.from(.Pikachu, .{ .spc = 14 });
+    try expectEqual(Gender.Male, dvs.gender);
+    try expectEqual(Type.Dark, dvs.type);
+    try expectEqual(@as(u8, 69), dvs.power());
+
+    dvs = DVs.from(.Cyndaquil, .{ .atk = 1, .def = 3, .spe = 10, .spc = 9 });
+    try expectEqual(Gender.Female, dvs.gender);
+    dvs = DVs.from(.Cyndaquil, .{ .atk = 14, .def = 7, .spe = 11, .spc = 2 });
+    try expectEqual(Gender.Male, dvs.gender);
+    dvs = DVs.from(.Sandshrew, .{ .atk = 7, .def = 10, .spe = 10, .spc = 10 });
+    try expectEqual(Gender.Female, dvs.gender);
+    dvs = DVs.from(.Sandshrew, .{ .atk = 6, .def = 15, .spe = 7, .spc = 5 });
+    try expectEqual(Gender.Female, dvs.gender);
+}
 
 const MoveSlot = extern struct {
     id: Move = .None,
@@ -360,5 +402,3 @@ test "Types" {
     try expectEqual(Effectiveness.Neutral, Type.effectiveness(.Normal, .Grass));
     try expectEqual(Effectiveness.Immune, Type.effectiveness(.Poison, .Steel));
 }
-
-pub const DVs = gen1.DVs;
