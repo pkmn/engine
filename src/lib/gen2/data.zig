@@ -237,9 +237,10 @@ test "DVs" {
     try expectEqual(Gender.Female, dvs.gender);
 }
 
-const MoveSlot = extern struct {
+const MoveSlot = packed struct {
     id: Move = .None,
-    pp: u8 = 0,
+    pp_ups: u2 = 3,
+    pp: u6 = 0,
 
     comptime {
         assert(@sizeOf(MoveSlot) == 2);
