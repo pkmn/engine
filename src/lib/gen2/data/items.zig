@@ -71,7 +71,17 @@ pub const Item = enum(u8) {
     LoveBall,
     SunStone,
     UpGrade,
-    // Pokémon Showdown excludes the following items
+    // Pokémon Showdown excludes the following items (minus "Mail")
+    FlowerMail,
+    SurfMail,
+    LightBlueMail,
+    PortrailMail,
+    LovelyMail,
+    EonMail,
+    MorphMail,
+    BlueSkyMail,
+    MusicMail,
+    MirageMail,
     TownMap,
     Antidote,
     BurnHeal,
@@ -196,16 +206,6 @@ pub const Item = enum(u8) {
     TM48,
     TM49,
     TM50,
-    FlowerMail,
-    SurfMail,
-    LightBlueMail,
-    PortrailMail,
-    LovelyMail,
-    EonMail,
-    MorphMail,
-    BlueSkyMail,
-    MusicMail,
-    MirageMail,
 
     comptime {
         assert(@sizeOf(Item) == 1);
@@ -226,6 +226,6 @@ pub const Item = enum(u8) {
 
     pub inline fn mail(item: Item) bool {
         assert(item != .None);
-        return @enumToInt(item) >= 186;
+        return @enumToInt(item) > 61 and @enumToInt(item) <= 71;
     }
 };

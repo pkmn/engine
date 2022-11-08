@@ -206,8 +206,8 @@ pub const Pokemon = struct {
                 .pp = if (opt.cleric) max_pp else rand.range(u8, 0, max_pp + 1),
             };
         }
-        // Pokémon Showdown does not support Mail or most items without in-battle held item effects
-        const maxItem = @enumToInt(if (showdown) Item.UpGrade else Item.MirageMail);
+        // Pokémon Showdown does not support most items without in-battle held item effects
+        const maxItem = @enumToInt(if (showdown) Item.FlowerMail else Item.TM50);
         return .{
             .species = s,
             .types = species.types,

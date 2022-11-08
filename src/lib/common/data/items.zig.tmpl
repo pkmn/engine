@@ -31,6 +31,6 @@ pub const Item = enum({{{ Item.type }}}) {
 
     pub inline fn mail(item: Item) bool {
         assert(item != .None);
-        return @enumToInt(item) >= {{{ Item.mail }}};
+        return @enumToInt(item) > {{{ Item.present }}} and @enumToInt(item) <= {{{ Item.mail }}};
     }
 };

@@ -101,6 +101,16 @@
       "loveball",
       "sunstone",
       "upgrade",
+      "flowermail",
+      "surfmail",
+      "lightbluemail",
+      "portrailmail",
+      "lovelymail",
+      "eonmail",
+      "morphmail",
+      "blueskymail",
+      "musicmail",
+      "miragemail",
       "townmap",
       "antidote",
       "burnheal",
@@ -224,17 +234,7 @@
       "tm47",
       "tm48",
       "tm49",
-      "tm50",
-      "flowermail",
-      "surfmail",
-      "lightbluemail",
-      "portrailmail",
-      "lovelymail",
-      "eonmail",
-      "morphmail",
-      "blueskymail",
-      "musicmail",
-      "miragemail"
+      "tm50"
     ]
   }
 ]

@@ -657,7 +657,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
       }
     }
-    const offset = {effect: 0, berry: 0, mail: 0};
+    const offset = {effect: 0, berry: 0, present: 0, mail: 0};
     for (const s of effects) {
       values.push(s);
     }
@@ -669,12 +669,13 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     for (const s of nothing.present) {
       values.push(s);
     }
-    values.push('// Pokémon Showdown excludes the following items');
-    for (const s of nothing.missing) {
+    offset.present = values.length;
+    values.push('// Pokémon Showdown excludes the following items (minus "Mail")');
+    for (const s of mail) {
       values.push(s);
     }
-    offset.mail = values.length;
-    for (const s of mail) {
+    offset.mail = values.length - 1; // account for comment
+    for (const s of nothing.missing) {
       values.push(s);
     }
     for (const value of values) {
