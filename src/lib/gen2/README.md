@@ -71,7 +71,7 @@ wPlayerMinimized
 
 `Battle` and `Side` are analogous to the classes of the
 [same](https://github.com/smogon/pokemon-showdown/blob/master/sim/battle.ts)
-[name](https://github.com/smogon/pokemon-showdown/blob/master/sim/name.ts) in Pokémon Showdown and
+[name](https://github.com/smogon/pokemon-showdown/blob/master/sim/side.ts) in Pokémon Showdown and
 store general information about the battle. Unlike in Pokémon Showdown there is a distinction
 between the data structure for the "active" Pokémon and its party members (see below).
 
@@ -80,7 +80,7 @@ between the data structure for the "active" Pokémon and its party members (see 
 Similar to the cartridge, in order to save space different information is stored depending on
 whether a [Pokémon](https://pkmn.cc/bulba/Pok%c3%a9mon_data_structure_%28Generation_II%29) is
 actively participating in battle vs. is switched out (pret's [`battle_struct` vs.
-`party_struct`](https://pkmn.cc/pokecrystal/macros/wram.asm)). In Pokémon Showdown, all the Pokemon
+`party_struct`](https://pkmn.cc/pokecrystal/macros/ram.asm)). In Pokémon Showdown, all the Pokemon
 are represented by the same
 [`Pokemon`](https://github.com/smogon/pokemon-showdown/blob/master/sim/pokemon.ts) class, and static
 party information is saved in fields beginning with "`stored`" or "`base`".
@@ -168,7 +168,7 @@ sentinel value to indicate `null`.
 ### `Species`
 
 `Species` just serves as an identifier for a unique [Pokémon
-species](https://pkmn.cc/bulba/Pok%C3%A9mon_species_data_structure_(Generation_II)) as the base
+species](https://pkmn.cc/bulba/Pokémon_species_data_structure_(Generation_II)) as the base
 stats of a species are already accounted for in the computed stats in the `Pokemon` structure and
 nothing in battle requires these to be recomputed. Similarly, Type is unnecessary to include as it
 is also already present in the `Pokemon` struct. `Species.None` exists as a special sentinel value

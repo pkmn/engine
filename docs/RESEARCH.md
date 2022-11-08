@@ -33,11 +33,11 @@
   - [`decrement_pp.asm`](https://pkmn.cc/pokered/engine/battle/decrement_pp.asm)
   - [`effects.asm`](https://pkmn.cc/pokered/engine/battle/effects.asm)
 - `wram.asm`
-  - [macros](https://pkmn.cc/pokered/macros/wram.asm)
-  - [unmodified stats and mods](https://pkmn.cc/pokered/wram.asm#L525)
-  - [active move](https://pkmn.cc/pokered/wram.asm#L1156)
-  - [battle data](https://pkmn.cc/pokered/wram.asm#L1232)
-    - ["battle status" (volatiles)](https://pkmn.cc/pokered/wram.asm#L1261-L1284)
+  - [macros](https://pkmn.cc/pokered/macros/ram.asm)
+  - [unmodified stats and mods](https://pkmn.cc/pokered/ram/wram.asm#L525)
+  - [active move](https://pkmn.cc/pokered/ram/wram.asm#L1148)
+  - [battle data](https://pkmn.cc/pokered/ram/wram.asm#L1206)
+    - ["battle status" (volatiles)](https://pkmn.cc/pokered/ram/wram.asm#L1253-L1276)
 
 ### [Gen 2](https://github.com/pret/pokecrystal/)
 
@@ -81,8 +81,8 @@
   - [`effect_commands.asm`](https://pkmn.cc/pokecrystal/engine/battle/effect_commands.asm)
   - [`/home/battle_vars.asm`](https://pkmn.cc/pokecrystal/home/battle_vars.asm)
 - `wram.asm`
-  - [battle data](https://pkmn.cc/pokecrystal/wram.asm#L352-L621),
-    [macros](https://pkmn.cc/pokecrystal/macros/wram.asm)
+  - [battle data](https://pkmn.cc/pokecrystal/ram/wram.asm#L352-L621),
+    [macros](https://pkmn.cc/pokecrystal/macros/ram.asm)
 - random ([`Random`](https://pkmn.cc/pokecrystal/home/random.asm),
   [`BattleRandom`](https://pkmn.cc/pokecrystal/engine/battle/core.asm#L6881-L6947))
 
@@ -147,9 +147,6 @@ TODO
   Mechanics](https://glitchcity.wiki/Luck_manipulation_(Generation_I)#Mechanics_of_the_RNG)
 - [Pokémon Yellow DSUM
   Manipulation](http://wiki.pokemonspeedruns.com/index.php/Pokémon_Red/Blue/Yellow_DSum_Manipulation)
-- [Pokémon Gen 1 TAS Resources](http://tasvideos.org/GameResources/GBx/PokemonGen1.html)
-- [Pokémon Gen 2 TAS Resources](http://tasvideos.org/GameResources/GBx/PokemonGen2.html)
-- [Pokémon Gen 3 TAS Resources](http://tasvideos.org/GameResources/GBx/PokemonGen3/RNG.html)
 
 ### Glitches
 
