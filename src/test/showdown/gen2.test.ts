@@ -716,9 +716,169 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('DoubleHit effect');
-  test.todo('TripleKick effect');
-  test.todo('Twineedle effect');
+  test('DoubleHit effect', () => {
+    const battle = startBattle([
+      QKC, HIT, NO_CRIT, MAX_DMG, NO_CRIT, MIN_DMG,
+      QKC, HIT, CRIT, MAX_DMG, NO_CRIT, MIN_DMG, QKC,
+    ], [
+      {species: 'Marowak', evs, moves: ['Bonemerang']},
+    ], [
+      {species: 'Slowpoke', evs, moves: ['Substitute', 'Teleport']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = p2hp - 73 - 62 - 95);
+
+    // Move continues after breaking the target's Substitute
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 62);
+
+    verify(battle, [
+      '|move|p1a: Marowak|Bonemerang|p2a: Slowpoke',
+      '|-damage|p2a: Slowpoke|310/383',
+      '|-damage|p2a: Slowpoke|248/383',
+      '|-hitcount|p2a: Slowpoke|2',
+      '|move|p2a: Slowpoke|Substitute|p2a: Slowpoke',
+      '|-start|p2a: Slowpoke|Substitute',
+      '|-damage|p2a: Slowpoke|153/383',
+      '|turn|2',
+      '|move|p1a: Marowak|Bonemerang|p2a: Slowpoke',
+      '|-crit|p2a: Slowpoke',
+      '|-end|p2a: Slowpoke|Substitute',
+      '|-damage|p2a: Slowpoke|91/383',
+      '|-hitcount|p2a: Slowpoke|2',
+      '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
+      '|turn|3',
+    ]);
+  });
+
+  test('TripleKick effect effect', () => {
+    const key = ['Battle.random', 'BattleActions.tryMoveHit'];
+    const hit2 = {key, value: ranged(2, 3 + 1)};
+    const hit3 = {key, value: MAX};
+    const battle = startBattle([
+      QKC, HIT, hit2, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG,
+      QKC, HIT, hit3, CRIT, MAX_DMG, CRIT, MAX_DMG, NO_CRIT, MIN_DMG, QKC,
+    ], [
+      {species: 'Hitmontop', evs, moves: ['Triple Kick']},
+    ], [
+      {species: 'Bayleef', evs, moves: ['Substitute', 'Teleport']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = p2hp - 13 - 25 - 80);
+
+    // Move continues after breaking the target's Substitute
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 38);
+
+    verify(battle, [
+      '|move|p1a: Hitmontop|Triple Kick|p2a: Bayleef',
+      '|-damage|p2a: Bayleef|310/323',
+      '|-damage|p2a: Bayleef|285/323',
+      '|-hitcount|p2a: Bayleef|2',
+      '|move|p2a: Bayleef|Substitute|p2a: Bayleef',
+      '|-start|p2a: Bayleef|Substitute',
+      '|-damage|p2a: Bayleef|205/323',
+      '|turn|2',
+      '|move|p1a: Hitmontop|Triple Kick|p2a: Bayleef',
+      '|-crit|p2a: Bayleef',
+      '|-activate|p2a: Bayleef|Substitute|[damage]',
+      '|-crit|p2a: Bayleef',
+      '|-end|p2a: Bayleef|Substitute',
+      '|-damage|p2a: Bayleef|167/323',
+      '|-hitcount|p2a: Bayleef|3',
+      '|move|p2a: Bayleef|Teleport|p2a: Bayleef',
+      '|turn|3',
+    ]);
+  });
+
+
+  test('Twineedle effect', () => {
+    const proc = {key: HIT.key, value: ranged(51, 256) - 1};
+    const no_proc = {key: HIT.key, value: proc.value + 1};
+
+    const battle = startBattle([
+      QKC, CRIT, MAX_DMG, NO_CRIT, MIN_DMG, proc, SS_MOD,
+      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, no_proc,
+      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MAX_DMG, proc, SS_MOD,
+      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, proc, QKC,
+    ], [
+      {species: 'Beedrill', evs, moves: ['Twineedle']},
+    ], [
+      {species: 'Voltorb', evs, moves: ['Substitute']},
+      {species: 'Magnemite', evs, moves: ['Teleport']},
+      {species: 'Weezing', evs, moves: ['Explosion']},
+    ]);
+
+    const voltorb = battle.p2.pokemon[0].hp;
+    let magnemite = battle.p2.pokemon[1].hp;
+    const weezing = battle.p2.pokemon[2].hp;
+
+    // Breaking a target's Substitute should nullify the poison chance
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(voltorb - 70 - 36);
+    // expect(battle.p2.pokemon[0].status).toBe('');
+    expect(battle.p2.pokemon[0].status).toBe('psn');
+
+    battle.makeChoices('move 1', 'switch 2');
+    expect(battle.p2.pokemon[0].hp).toBe(magnemite -= (15 * 2));
+    expect(battle.p2.pokemon[0].status).toBe('');
+
+    // The second hit can poison the target, even if they're Steel-type
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(magnemite - 15 - 18 - 31);
+    expect(battle.p2.pokemon[0].status).toBe('psn');
+
+    // Poison types cannot be poisoned
+    battle.makeChoices('move 1', 'switch 3');
+    expect(battle.p2.pokemon[0].hp).toBe(weezing - (11 * 2));
+    expect(battle.p2.pokemon[0].status).toBe('');
+
+    verify(battle, [
+      '|move|p2a: Voltorb|Substitute|p2a: Voltorb',
+      '|-start|p2a: Voltorb|Substitute',
+      '|-damage|p2a: Voltorb|213/283',
+      '|move|p1a: Beedrill|Twineedle|p2a: Voltorb',
+      '|-crit|p2a: Voltorb',
+      '|-end|p2a: Voltorb|Substitute',
+      '|-damage|p2a: Voltorb|177/283',
+      '|-status|p2a: Voltorb|psn',
+      '|-hitcount|p2a: Voltorb|2',
+      '|turn|2',
+      '|switch|p2a: Magnemite|Magnemite|253/253',
+      '|move|p1a: Beedrill|Twineedle|p2a: Magnemite',
+      '|-resisted|p2a: Magnemite',
+      '|-damage|p2a: Magnemite|238/253',
+      '|-resisted|p2a: Magnemite',
+      '|-damage|p2a: Magnemite|223/253',
+      '|-hitcount|p2a: Magnemite|2',
+      '|turn|3',
+      '|move|p1a: Beedrill|Twineedle|p2a: Magnemite',
+      '|-resisted|p2a: Magnemite',
+      '|-damage|p2a: Magnemite|208/253',
+      '|-resisted|p2a: Magnemite',
+      '|-damage|p2a: Magnemite|190/253',
+      '|-status|p2a: Magnemite|psn',
+      '|-hitcount|p2a: Magnemite|2',
+      '|move|p2a: Magnemite|Teleport|p2a: Magnemite',
+      '|-damage|p2a: Magnemite|159/253 psn|[from] psn',
+      '|turn|4',
+      '|switch|p2a: Weezing|Weezing, M|333/333',
+      '|move|p1a: Beedrill|Twineedle|p2a: Weezing',
+      '|-resisted|p2a: Weezing',
+      '|-damage|p2a: Weezing|322/333',
+      '|-resisted|p2a: Weezing',
+      '|-damage|p2a: Weezing|311/333',
+      '|-hitcount|p2a: Weezing|2',
+      '|turn|5',
+    ]);
+  });
+
   test.todo('Poison effect');
   test.todo('PoisonChance effect');
   test.todo('BurnChance effect');
