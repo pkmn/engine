@@ -665,7 +665,57 @@ describe('Gen 2', () => {
   });
 
   test.todo('FocusEnergy effect');
-  test.todo('MultiHit effect');
+
+  test('MultiHit effect', () => {
+    const key = ['Battle.sample', 'BattleActions.tryMoveHit'];
+    const hit3 = {key, value: 0x60000000};
+    const hit5 = {key, value: MAX};
+    const battle = startBattle([
+      QKC, HIT, hit3, NO_CRIT, MIN_DMG, NO_CRIT, MAX_DMG, CRIT, MIN_DMG,
+      QKC, HIT, hit5, NO_CRIT, MAX_DMG, CRIT, MIN_DMG, NO_CRIT, MIN_DMG,
+      NO_CRIT, MIN_DMG, NO_CRIT, MAX_DMG, QKC,
+    ], [
+      {species: 'Kangaskhan', evs, moves: ['Comet Punch']},
+    ], [
+      {species: 'Slowpoke', evs, moves: ['Substitute', 'Teleport']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+    let pp = battle.p1.pokemon[0].moveSlots[0].pp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = p2hp - 26 - 31 - 51 - 95);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+
+    // Move continues after breaking the target's Substitute
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp - 26 - 31);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+
+    verify(battle, [
+      '|move|p1a: Kangaskhan|Comet Punch|p2a: Slowpoke',
+      '|-damage|p2a: Slowpoke|357/383',
+      '|-damage|p2a: Slowpoke|326/383',
+      '|-crit|p2a: Slowpoke',
+      '|-damage|p2a: Slowpoke|275/383',
+      '|-hitcount|p2a: Slowpoke|3',
+      '|move|p2a: Slowpoke|Substitute|p2a: Slowpoke',
+      '|-start|p2a: Slowpoke|Substitute',
+      '|-damage|p2a: Slowpoke|180/383',
+      '|turn|2',
+      '|move|p1a: Kangaskhan|Comet Punch|p2a: Slowpoke',
+      '|-activate|p2a: Slowpoke|Substitute|[damage]',
+      '|-crit|p2a: Slowpoke',
+      '|-activate|p2a: Slowpoke|Substitute|[damage]',
+      '|-end|p2a: Slowpoke|Substitute',
+      '|-damage|p2a: Slowpoke|154/383',
+      '|-damage|p2a: Slowpoke|123/383',
+      '|-hitcount|p2a: Slowpoke|5',
+      '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
+      '|turn|3',
+    ]);
+  });
+
   test.todo('DoubleHit effect');
   test.todo('TripleKick effect');
   test.todo('Twineedle effect');
@@ -894,6 +944,28 @@ describe('Gen 2', () => {
   test.todo('DrainHP effect');
   test.todo('DreamEater effect');
   test.todo('LeechSeed effect');
+
+  test('PayDay effect', () => {
+    const battle = startBattle([QKC, NO_CRIT, MAX_DMG, QKC], [
+      {species: 'Meowth', evs, moves: ['Pay Day']},
+    ], [
+      {species: 'Slowpoke', evs, moves: ['Teleport']},
+    ]);
+
+    const p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp - 43);
+
+    verify(battle, [
+      '|move|p1a: Meowth|Pay Day|p2a: Slowpoke',
+      '|-damage|p2a: Slowpoke|340/383',
+      '|-fieldactivate|move: Pay Day',
+      '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
+      '|turn|2',
+    ]);
+  });
+
   test.todo('Rage effect');
   test.todo('Mimic effect');
   test.todo('LightScreen effect');

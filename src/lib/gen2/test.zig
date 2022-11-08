@@ -284,7 +284,7 @@ test "HighCritical effect" {
 test "FocusEnergy effect" {
     // Raises the user's chance for a critical hit by 1 stage. Fails if the user already has the
     // effect. Baton Pass can be used to transfer this effect to an ally.
-    return error.SkipZigTest;
+    return error.SkipZigTest; // TODO: Haze no longer affects Focus Energy.
 }
 
 // Move.{DoubleSlap,CometPunch,FuryAttack,PinMissile,SpikeCannon,Barrage,FurySwipes,BoneRush}
