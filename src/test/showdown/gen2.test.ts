@@ -1287,11 +1287,160 @@ describe('Gen 2', () => {
   test.todo('HyperBeam effect');
   test.todo('Counter effect');
   test.todo('MirrorCoat effect');
-  test.todo('Heal effect');
+
+  test('Heal effect', () => {
+    const battle = startBattle([QKC, QKC, QKC], [
+      {species: 'Alakazam', evs, moves: ['Recover']},
+    ], [
+      {species: 'Chansey', evs, moves: ['Soft-Boiled']},
+    ]);
+
+    battle.p1.pokemon[0].hp = 1;
+    battle.p2.pokemon[0].hp = 448;
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp += 157);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp += 255);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp += 155);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+    verify(battle, [
+      '|move|p1a: Alakazam|Recover|p1a: Alakazam',
+      '|-heal|p1a: Alakazam|158/313',
+      '|move|p2a: Chansey|Soft-Boiled|p2a: Chansey',
+      '|-heal|p2a: Chansey|703/703',
+      '|turn|2',
+      '|move|p1a: Alakazam|Recover|p1a: Alakazam',
+      '|-heal|p1a: Alakazam|313/313',
+      '|move|p2a: Chansey|Soft-Boiled|p2a: Chansey',
+      '|-fail|p2a: Chansey',
+      '|turn|3',
+    ]);
+  });
+
   test.todo('WeatherHeal effect');
   test.todo('Rest effect');
-  test.todo('DrainHP effect');
-  test.todo('DreamEater effect');
+
+  test('DrainHP effect', () => {
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
+    ], [
+      {species: 'Slowpoke', evs, moves: ['Teleport']},
+      {species: 'Butterfree', evs, moves: ['Mega Drain']},
+    ], [
+      {species: 'Parasect', evs, moves: ['Leech Life']},
+    ]);
+
+    battle.p1.pokemon[0].hp = 1;
+    battle.p2.pokemon[0].hp = 300;
+
+    let p1hp = battle.p1.pokemon[1].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    // Heals at least 1 HP
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(0);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp += 1);
+
+    battle.makeChoices('switch 2', '');
+
+    // Heals 1/2 of the damage dealt unless the user is at full health
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 16);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = p2hp - 6 + 8);
+
+    verify(battle, [
+      '|move|p2a: Parasect|Leech Life|p1a: Slowpoke',
+      '|-supereffective|p1a: Slowpoke',
+      '|-damage|p1a: Slowpoke|0 fnt',
+      '|-heal|p2a: Parasect|301/323|[from] drain|[of] p1a: Slowpoke',
+      '|faint|p1a: Slowpoke',
+      '|switch|p1a: Butterfree|Butterfree, M|323/323',
+      '|turn|2',
+      '|move|p1a: Butterfree|Mega Drain|p2a: Parasect',
+      '|-resisted|p2a: Parasect',
+      '|-damage|p2a: Parasect|295/323',
+      '|move|p2a: Parasect|Leech Life|p1a: Butterfree',
+      '|-resisted|p1a: Butterfree',
+      '|-damage|p1a: Butterfree|307/323',
+      '|-heal|p2a: Parasect|303/323|[from] drain|[of] p1a: Butterfree',
+      '|turn|3',
+    ]);
+  });
+
+  test('DreamEater effect', () => {
+    const battle = startBattle([
+      QKC,  QKC, NO_CRIT, MIN_DMG, SS_MOD, SLP(5), QKC,
+      QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, QKC,
+    ], [
+      {species: 'Hypno', evs, moves: ['Dream Eater', 'Confusion']},
+    ], [
+      {species: 'Wigglytuff', evs, moves: ['Substitute', 'Rest', 'Teleport']},
+    ]);
+
+    battle.p1.pokemon[0].hp = 100;
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    // Fails unless the target is sleeping
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 120);
+    expect(battle.p2.pokemon[0].status).toBe('');
+
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp += 120);
+    expect(battle.p2.pokemon[0].status).toBe('slp');
+
+    // Substitute blocks Dream Eater
+    battle.makeChoices('move 1', 'move 3');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+    expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBeGreaterThan(0);
+
+    battle.makeChoices('move 2', 'move 3');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+    expect(battle.p1.pokemon[0].volatiles['substitute']).toBeUndefined();
+
+    // Heals 1/2 of the damage dealt
+    battle.makeChoices('move 1', 'move 3');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp += 66);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 133);
+
+    verify(battle, [
+      '|move|p1a: Hypno|Dream Eater|p2a: Wigglytuff',
+      '|-immune|p2a: Wigglytuff',
+      '|move|p2a: Wigglytuff|Substitute|p2a: Wigglytuff',
+      '|-start|p2a: Wigglytuff|Substitute',
+      '|-damage|p2a: Wigglytuff|363/483',
+      '|turn|2',
+      '|move|p1a: Hypno|Confusion|p2a: Wigglytuff',
+      '|-activate|p2a: Wigglytuff|Substitute|[damage]',
+      '|move|p2a: Wigglytuff|Rest|p2a: Wigglytuff',
+      '|-status|p2a: Wigglytuff|slp|[from] move: Rest',
+      '|-heal|p2a: Wigglytuff|483/483 slp|[silent]',
+      '|turn|3',
+      '|move|p1a: Hypno|Dream Eater|p2a: Wigglytuff',
+      '|-immune|p2a: Wigglytuff',
+      '|cant|p2a: Wigglytuff|slp',
+      '|turn|4',
+      '|move|p1a: Hypno|Confusion|p2a: Wigglytuff',
+      '|-end|p2a: Wigglytuff|Substitute',
+      '|cant|p2a: Wigglytuff|slp',
+      '|turn|5',
+      '|move|p1a: Hypno|Dream Eater|p2a: Wigglytuff',
+      '|-damage|p2a: Wigglytuff|350/483 slp',
+      '|-heal|p1a: Hypno|166/373|[from] drain|[of] p2a: Wigglytuff',
+      '|-curestatus|p2a: Wigglytuff|slp|[msg]',
+      '|move|p2a: Wigglytuff|Teleport|p2a: Wigglytuff',
+      '|turn|6',
+    ]);
+  });
+
   test.todo('LeechSeed effect');
 
   test('PayDay effect', () => {
@@ -1317,8 +1466,153 @@ describe('Gen 2', () => {
 
   test.todo('Rage effect');
   test.todo('Mimic effect');
-  test.todo('LightScreen effect');
-  test.todo('Reflect effect');
+
+  test('LightScreen effect', () => {
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG,
+      QKC, CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG,
+      QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, QKC
+    ], [
+      {species: 'Chansey', evs, moves: ['Light Screen', 'Teleport']},
+      {species: 'Blissey', evs, moves: ['Teleport']},
+    ], [
+      {species: 'Vaporeon', evs, moves: ['Water Gun', 'Haze']},
+    ]);
+
+    let chansey = battle.p1.pokemon[0].hp;
+    let blissey = battle.p1.pokemon[1].hp;
+
+    // Water Gun does normal damage before Light Screen
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.sideConditions['lightscreen']).toBeDefined();
+    expect(battle.p1.pokemon[0].hp).toEqual(chansey -= 45);
+
+    // Water Gun's damage is reduced after Light Screen
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toEqual(chansey -= 23);
+
+    // Critical hits ignore Light Screen
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toEqual(chansey -= 89);
+
+    // Teammates benefit as well, not removed by Haze
+    battle.makeChoices('switch 2', 'move 1');
+    expect(battle.p1.sideConditions['lightscreen']).toBeDefined();
+    expect(battle.p1.pokemon[0].hp).toEqual(blissey -= 20);
+
+    // Ends after 5 turns
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toEqual(blissey -= 20);
+    expect(battle.p1.sideConditions['lightscreen']).toBeUndefined();
+
+    // Returns to normal damage
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toEqual(blissey -= 38);
+
+    verify(battle, [
+      '|move|p2a: Vaporeon|Water Gun|p1a: Chansey',
+      '|-damage|p1a: Chansey|658/703',
+      '|move|p1a: Chansey|Light Screen|p1a: Chansey',
+      '|-sidestart|p1: Player 1|move: Light Screen',
+      '|turn|2',
+      '|move|p2a: Vaporeon|Water Gun|p1a: Chansey',
+      '|-damage|p1a: Chansey|635/703',
+      '|move|p1a: Chansey|Teleport|p1a: Chansey',
+      '|turn|3',
+      '|move|p2a: Vaporeon|Water Gun|p1a: Chansey',
+      '|-crit|p1a: Chansey',
+      '|-damage|p1a: Chansey|546/703',
+      '|move|p1a: Chansey|Teleport|p1a: Chansey',
+      '|turn|4',
+      '|switch|p1a: Blissey|Blissey, F|713/713',
+      '|move|p2a: Vaporeon|Water Gun|p1a: Blissey',
+      '|-damage|p1a: Blissey|693/713',
+      '|turn|5',
+      '|move|p2a: Vaporeon|Water Gun|p1a: Blissey',
+      '|-damage|p1a: Blissey|673/713',
+      '|move|p1a: Blissey|Teleport|p1a: Blissey',
+      '|-sideend|p1: Player 1|move: Light Screen',
+      '|turn|6',
+      '|move|p2a: Vaporeon|Water Gun|p1a: Blissey',
+      '|-damage|p1a: Blissey|635/713',
+      '|move|p1a: Blissey|Teleport|p1a: Blissey',
+      '|turn|7',
+    ]);
+  });
+
+  test('Reflect effect', () => {
+    const battle = startBattle([
+      QKC, HIT, NO_CRIT, MIN_DMG, QKC, HIT, NO_CRIT, MIN_DMG,
+      QKC, HIT, CRIT, MIN_DMG, QKC, HIT, NO_CRIT, MIN_DMG,
+      QKC, HIT, NO_CRIT, MIN_DMG, QKC, HIT, NO_CRIT, MIN_DMG, QKC
+    ], [
+      {species: 'Chansey', evs, moves: ['Reflect', 'Teleport']},
+      {species: 'Blissey', evs, moves: ['Teleport']},
+    ], [
+      {species: 'Vaporeon', evs, moves: ['Tackle', 'Haze']},
+    ]);
+
+    let chansey = battle.p1.pokemon[0].hp;
+    let blissey = battle.p1.pokemon[1].hp;
+
+    // Tackle does normal damage before Reflect
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.sideConditions['reflect']).toBeDefined();
+    expect(battle.p1.pokemon[0].hp).toEqual(chansey -= 54);
+
+    // Tackle's damage is reduced after Reflect
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toEqual(chansey -= 28);
+
+    // Critical hits ignore Reflect
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toEqual(chansey -= 107);
+
+    // Teammates benefit as well, not removed by Haze
+    battle.makeChoices('switch 2', 'move 1');
+    expect(battle.p1.sideConditions['reflect']).toBeDefined();
+    expect(battle.p1.pokemon[0].hp).toEqual(blissey -= 25);
+
+    // Ends after 5 turns
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toEqual(blissey -= 25);
+    expect(battle.p1.sideConditions['reflect']).toBeUndefined();
+
+    // Returns to normal damage
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toEqual(blissey -= 49);
+
+    verify(battle, [
+      '|move|p2a: Vaporeon|Tackle|p1a: Chansey',
+      '|-damage|p1a: Chansey|649/703',
+      '|move|p1a: Chansey|Reflect|p1a: Chansey',
+      '|-sidestart|p1: Player 1|Reflect',
+      '|turn|2',
+      '|move|p2a: Vaporeon|Tackle|p1a: Chansey',
+      '|-damage|p1a: Chansey|621/703',
+      '|move|p1a: Chansey|Teleport|p1a: Chansey',
+      '|turn|3',
+      '|move|p2a: Vaporeon|Tackle|p1a: Chansey',
+      '|-crit|p1a: Chansey',
+      '|-damage|p1a: Chansey|514/703',
+      '|move|p1a: Chansey|Teleport|p1a: Chansey',
+      '|turn|4',
+      '|switch|p1a: Blissey|Blissey, F|713/713',
+      '|move|p2a: Vaporeon|Tackle|p1a: Blissey',
+      '|-damage|p1a: Blissey|688/713',
+      '|turn|5',
+      '|move|p2a: Vaporeon|Tackle|p1a: Blissey',
+      '|-damage|p1a: Blissey|663/713',
+      '|move|p1a: Blissey|Teleport|p1a: Blissey',
+      '|-sideend|p1: Player 1|Reflect',
+      '|turn|6',
+      '|move|p2a: Vaporeon|Tackle|p1a: Blissey',
+      '|-damage|p1a: Blissey|614/713',
+      '|move|p1a: Blissey|Teleport|p1a: Blissey',
+      '|turn|7',
+    ]);
+  });
+
   test.todo('Haze effect');
   test.todo('Bide effect');
   test.todo('Metronome effect');
