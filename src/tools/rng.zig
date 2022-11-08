@@ -154,12 +154,12 @@ pub fn main() !void {
         const mod = @as(u2, (if (param < @enumToInt(pkmn.gen1.Move.Metronome) - 1) 1 else 2));
         try w.print("0x{X:0>8}", .{((param - mod) + 1) * (0x100000000 / range) - 1});
     } else if (tool == .distribution) {
-        const range: u64 = 8;
+        const range: f64 = 6;
         try w.print("0x{X:0>8} 0x{X:0>8} 0x{X:0>8} 0x{X:0>8}", .{
-            0 * (0x100000000 / range),
-            3 * (0x100000000 / range),
-            6 * (0x100000000 / range),
-            7 * (0x100000000 / range),
+            @floatToInt(u64, @ceil(0 * (0x100000000 / range))),
+            @floatToInt(u64, @ceil(2 * (0x100000000 / range))),
+            @floatToInt(u64, @ceil(4 * (0x100000000 / range))),
+            @floatToInt(u64, @ceil(5 * (0x100000000 / range))),
         });
     } else {
         var range: u64 = switch (tool) {

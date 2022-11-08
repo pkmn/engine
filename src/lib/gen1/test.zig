@@ -1035,7 +1035,7 @@ test "MultiHit effect" {
     // Hits two to five times. Has a 3/8 chance to hit two or three times, and a 1/8 chance to hit
     // four or five times. Damage is calculated once for the first hit and used for every hit. If
     // one of the hits breaks the target's substitute, the move ends.
-    const hit3 = if (showdown) 0x60000000 else 1;
+    const hit3 = if (showdown) 0x55555556 else 1;
     const hit5 = MAX;
 
     var t = Test(if (showdown)

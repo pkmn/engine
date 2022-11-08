@@ -2422,7 +2422,7 @@ fn handleThrashing(battle: anytype, active: *ActivePokemon) bool {
     return true;
 }
 
-const DISTRIBUTION = [_]u3{ 2, 2, 2, 3, 3, 3, 4, 5 };
+const DISTRIBUTION = [_]u3{ 2, 2, 3, 3, 4, 5 };
 
 fn distribution(battle: anytype) u3 {
     if (showdown) return DISTRIBUTION[battle.rng.range(u8, 0, DISTRIBUTION.len)];

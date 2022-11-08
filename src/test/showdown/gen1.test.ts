@@ -813,7 +813,7 @@ describe('Gen 1', () => {
 
   test('MultiHit effect', () => {
     const key = ['Battle.sample', 'BattleActions.tryMoveHit'];
-    const hit3 = {key, value: 3 * (0x100000000 / 8) - 1};
+    const hit3 = {key, value: 0x55555556};
     const hit5 = {key, value: MAX};
     const battle = startBattle([HIT, hit3, NO_CRIT, MAX_DMG, HIT, hit5, NO_CRIT, MAX_DMG], [
       {species: 'Kangaskhan', evs, moves: ['Comet Punch']},
