@@ -14,6 +14,7 @@ const {SS_MOD, SS_RES, SS_RUN, SS_EACH, INS, GLM} = ROLLS.nops;
 
 const QKC = {key: ['Battle.randomChance', 'Battle.nextTurn'], value: MIN};
 const QKCs = (n: number) => Array(n).fill(QKC);
+const PROC_SEC = {key: ['Battle.randomChance', 'BattleActions.moveHit'], value: MIN};
 const TIE = (n: 1 | 2) =>
   ({key: ['Battle.speedSort', 'BattleQueue.sort'], value: ranged(n, 2) - 1});
 const SLP = (n: number) =>
@@ -620,9 +621,113 @@ describe('Gen 2', () => {
 
   // Items
 
-  test.todo('ThickClub effect');
-  test.todo('LightBall effect');
-  test.todo('BerserkGene effect');
+  test('ThickClub effect', () => {
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, PROC_SEC,
+      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
+    ], [
+      {species: 'Marowak', item: 'Thick Club', evs, moves: ['Strength']},
+    ], [
+      {species: 'Teddiursa', evs, moves: ['Thief', 'Scratch']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 22);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 151);
+
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 36);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 75);
+
+    verify(battle, [
+      '|move|p1a: Marowak|Strength|p2a: Teddiursa',
+      '|-damage|p2a: Teddiursa|172/323',
+      '|move|p2a: Teddiursa|Thief|p1a: Marowak',
+      '|-damage|p1a: Marowak|301/323',
+      '|-item|p2a: Teddiursa|Thick Club|[from] move: Thief|[of] p1a: Marowak',
+      '|turn|2',
+      '|move|p1a: Marowak|Strength|p2a: Teddiursa',
+      '|-damage|p2a: Teddiursa|97/323',
+      '|move|p2a: Teddiursa|Scratch|p1a: Marowak',
+      '|-damage|p1a: Marowak|265/323',
+      '|turn|3',
+    ]);
+  });
+
+  test('LightBall effect', () => {
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, PROC_SEC,
+      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, PROC_SEC, QKC,
+    ], [
+      {species: 'Pikachu', item: 'Light Ball', evs, moves: ['Surf']},
+    ], [
+      {species: 'Ursaring', evs, moves: ['Thief']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 40);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 109);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 40);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 55);
+
+    verify(battle, [
+      '|move|p1a: Pikachu|Surf|p2a: Ursaring',
+      '|-damage|p2a: Ursaring|274/383',
+      '|move|p2a: Ursaring|Thief|p1a: Pikachu',
+      '|-damage|p1a: Pikachu|233/273',
+      '|-item|p2a: Ursaring|Light Ball|[from] move: Thief|[of] p1a: Pikachu',
+      '|turn|2',
+      '|move|p1a: Pikachu|Surf|p2a: Ursaring',
+      '|-damage|p2a: Ursaring|219/383',
+      '|move|p2a: Ursaring|Thief|p1a: Pikachu',
+      '|-damage|p1a: Pikachu|193/273',
+      '|turn|3',
+    ]);
+  });
+
+  test('BerserkGene effect', () => {
+    const battle = startBattle([
+      QKC, QKC, CFZ_CAN, NO_CRIT, MIN_DMG, QKC
+    ], [
+      {species: 'Magby', evs, moves: ['Flamethrower']},
+      {species: 'Cleffa', item: 'Berserk Gene', evs, moves: ['Pound']},
+    ], [
+      {species: 'Smoochum', evs, moves: ['Teleport']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('switch 2', 'move 1');
+    expect(battle.p1.pokemon[0].item).toBe('');
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
+    expect(battle.p1.pokemon[0].volatiles['confusion']).toBeDefined();
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
+
+    verify(battle, [
+      '|switch|p1a: Cleffa|Cleffa, M|303/303',
+      '|-enditem|p1a: Cleffa|Berserk Gene',
+      '|-boost|p1a: Cleffa|atk|2|[from] item: Berserk Gene',
+      '|-start|p1a: Cleffa|confusion',
+      '|move|p2a: Smoochum|Teleport|p2a: Smoochum',
+      '|turn|2',
+      '|move|p2a: Smoochum|Teleport|p2a: Smoochum',
+      '|-activate|p1a: Cleffa|confusion',
+      '|move|p1a: Cleffa|Pound|p2a: Smoochum',
+      '|-damage|p2a: Smoochum|193/293',
+      '|turn|3',
+    ]);
+  });
+
   test.todo('Stick effect');
   test.todo('Boost effect');
   test.todo('BrightPowder effect');
@@ -630,11 +735,92 @@ describe('Gen 2', () => {
   test.todo('QuickClaw effect');
   test.todo('Flinch effect');
   test.todo('CriticalUp effect');
-  test.todo('Leftovers effect');
+
+  test('Leftovers effect', () => {
+    const battle = startBattle([QKC, NO_CRIT, MIN_DMG, QKC], [
+      {species: 'Scizor', item: 'Leftovers', evs, moves: ['False Swipe']},
+    ], [
+      {species: 'Magikarp', level: 2,  item: 'Leftovers', evs, moves: ['Dragon Rage']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp - 40 + 21);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp - 13 + 1);
+
+    verify(battle, [
+      '|move|p1a: Scizor|False Swipe|p2a: Magikarp',
+      '|-damage|p2a: Magikarp|1/14',
+      '|move|p2a: Magikarp|Dragon Rage|p1a: Scizor',
+      '|-damage|p1a: Scizor|303/343',
+      '|-heal|p1a: Scizor|324/343|[from] item: Leftovers',
+      '|-heal|p2a: Magikarp|2/14|[from] item: Leftovers',
+      '|turn|2',
+    ]);
+  });
+
   test.todo('HealStatus effect');
-  test.todo('Berry effect');
+
+  test('Berry effect', () => {
+    const battle = startBattle([QKC, QKC, QKC], [
+      {species: 'Togepi', evs, moves: ['Seismic Toss']},
+    ], [
+      {species: 'Tyrogue', item: 'Gold Berry', evs, moves: ['Teleport']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
+    expect(battle.p2.pokemon[0].item).toBe('goldberry');
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp - 100 + 30);
+    expect(battle.p2.pokemon[0].item).toBe('');
+
+    verify(battle, [
+      '|move|p2a: Tyrogue|Teleport|p2a: Tyrogue',
+      '|move|p1a: Togepi|Seismic Toss|p2a: Tyrogue',
+      '|-damage|p2a: Tyrogue|173/273',
+      '|turn|2',
+      '|move|p2a: Tyrogue|Teleport|p2a: Tyrogue',
+      '|move|p1a: Togepi|Seismic Toss|p2a: Tyrogue',
+      '|-damage|p2a: Tyrogue|73/273',
+      '|-enditem|p2a: Tyrogue|Gold Berry|[eat]',
+      '|-heal|p2a: Tyrogue|103/273|[from] item: Gold Berry',
+      '|turn|3',
+    ]);
+  });
+
   test.todo('RestorePP effect');
-  test.todo('Mail effect');
+
+  test('Mail effect', () => {
+    const battle = startBattle([QKC, NO_CRIT, MIN_DMG, PROC_SEC, QKC], [
+      {species: 'Spinarak', item: 'Mail', evs, moves: ['Teleport']},
+    ], [
+      {species: 'Houndour', evs, moves: ['Thief']},
+    ]);
+
+    const p1hp = battle.p1.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp - 63);
+
+    // expect(battle.p1.pokemon[0].item).toBe('mail');
+    // expect(battle.p2.pokemon[0].item).toBe('');
+    expect(battle.p1.pokemon[0].item).toBe('');
+    expect(battle.p2.pokemon[0].item).toBe('mail');
+
+    verify(battle, [
+      '|move|p2a: Houndour|Thief|p1a: Spinarak',
+      '|-damage|p1a: Spinarak|220/283',
+      '|-item|p2a: Houndour|Mail|[from] move: Thief|[of] p1a: Spinarak',
+      '|move|p1a: Spinarak|Teleport|p1a: Spinarak',
+      '|turn|2',
+    ]);
+  });
 
   // Moves
 
@@ -800,7 +986,6 @@ describe('Gen 2', () => {
       '|turn|3',
     ]);
   });
-
 
   test('Twineedle effect', () => {
     const proc = {key: HIT.key, value: ranged(51, 256) - 1};
@@ -1145,7 +1330,44 @@ describe('Gen 2', () => {
   test.todo('Conversion2 effect');
   test.todo('Substitute effect');
   test.todo('Sketch effect');
-  test.todo('Thief effect');
+
+  test('Thief effect', () => {
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, PROC_SEC,
+      QKC, NO_CRIT, MIN_DMG, PROC_SEC, QKC,
+    ], [
+      {species: 'Snubbull', evs, moves: ['Teleport']},
+      {species: 'Granbull', item: 'Dragon Fang', evs, moves: ['Crunch']},
+    ], [
+      {species: 'Sneasel', evs, moves: ['Thief']},
+    ]);
+
+    let snubbull = battle.p1.pokemon[0].hp;
+    let granbull = battle.p1.pokemon[1].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(snubbull -= 41);
+    expect(battle.p1.pokemon[0].item).toBe('');
+    expect(battle.p2.pokemon[0].item).toBe('');
+
+    battle.makeChoices('switch 2', 'move 1');
+     expect(battle.p1.pokemon[0].hp).toBe(granbull -= 34);
+     expect(battle.p1.pokemon[0].item).toBe('');
+     expect(battle.p2.pokemon[0].item).toBe('dragonfang');
+
+    verify(battle, [
+      '|move|p2a: Sneasel|Thief|p1a: Snubbull',
+      '|-damage|p1a: Snubbull|282/323',
+      '|move|p1a: Snubbull|Teleport|p1a: Snubbull',
+      '|turn|2',
+      '|switch|p1a: Granbull|Granbull, M|383/383',
+      '|move|p2a: Sneasel|Thief|p1a: Granbull',
+      '|-damage|p1a: Granbull|349/383',
+      '|-item|p2a: Sneasel|Dragon Fang|[from] move: Thief|[of] p1a: Granbull',
+      '|turn|3',
+    ]);
+  });
+
   test.todo('MeanLook effect');
   test.todo('LockOn effect');
   test.todo('Nightmare effect');
