@@ -822,6 +822,8 @@ describe('Gen 2', () => {
     ]);
   });
 
+  test.todo('FocusBand effect');
+
   // Moves
 
   test('HighCritical effect', () => {

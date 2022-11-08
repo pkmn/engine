@@ -255,7 +255,7 @@ test "QuickClaw effect" {
 // Item.KingsRock
 test "Flinch effect" {
     // Holder's attacks without a chance to make the target flinch gain a 10% chance to make the
-    // target flinch. Evolves Poliwhirl into Politoed and Slowpoke into Slowking when traded.
+    // target flinch.
     return error.SkipZigTest;
 }
 
@@ -292,7 +292,13 @@ test "RestorePP effect" {
 // Item.{FlowerMail,SurfMail,LightBlueMail,PortrailMail,LovelyMail,EonMail}
 // Item.{MorphMail,BlueSkyMail,MusicMail,MirageMail}
 test "Mail effect" {
-    // undefined
+    // Cannot be taken from a Pokemon.
+    return error.SkipZigTest;
+}
+
+// Item.FocusBand
+test "FocusBand effect" {
+    // Holder has a ~11.7% chance to survive an attack that would KO it with 1 HP.
     return error.SkipZigTest;
 }
 
@@ -308,7 +314,7 @@ test "HighCritical effect" {
 test "FocusEnergy effect" {
     // Raises the user's chance for a critical hit by 1 stage. Fails if the user already has the
     // effect. Baton Pass can be used to transfer this effect to an ally.
-    return error.SkipZigTest; // TODO: Haze no longer affects Focus Energy.
+    return error.SkipZigTest;
 }
 
 // Move.{DoubleSlap,CometPunch,FuryAttack,PinMissile,SpikeCannon,Barrage,FurySwipes,BoneRush}
