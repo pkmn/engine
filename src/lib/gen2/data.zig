@@ -96,7 +96,8 @@ const Side = extern struct {
     pokemon: [6]Pokemon = [_]Pokemon{.{}} ** 6,
     active: ActivePokemon = .{},
     conditions: Conditions,
-    _: u16 = 0,
+    last_used_move: Move = .None,
+    _: u8 = 0,
 
     const Conditions = packed struct {
         Spikes: bool = false,
@@ -281,9 +282,10 @@ const Volatile = packed struct {
     BeatUp: bool = false,
 
     trapped: bool = false,
+    switched: bool = false,
     switching: bool = false,
 
-    _: u6 = 0,
+    _: u5 = 0,
 
     wrap: u4 = 0,
     future_sight: FutureSight = .{},
