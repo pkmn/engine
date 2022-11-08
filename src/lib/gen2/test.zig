@@ -202,6 +202,30 @@ test "choices" {
 
 // Items
 
+// Item.ThickClub
+test "ThickClub effect" {
+    // If held by a Cubone or a Marowak, its Attack is doubled.
+    return error.SkipZigTest;
+}
+
+// Item.LightBall
+test "LightBall effect" {
+    // If held by a Pikachu, its Special Attack is doubled.
+    return error.SkipZigTest;
+}
+
+// Item.BerserkGene
+test "BerserkGene effect" {
+    // On switch-in, raises holder's Attack by 2 and confuses it. Single use.
+    return error.SkipZigTest;
+}
+
+// Item.Stick
+test "Stick effect" {
+    // If held by a Farfetch’d, its critical hit ratio is always at stage 2.
+    return error.SkipZigTest;
+}
+
 // Item.{PinkBow,BlackBelt,SharpBeak,PoisonBarb,SoftSand,HardStone,SilverPowder,SpellTag,MetalCoat}
 // Item.{PolkadotBow,Charcoal,MysticWater,MiracleSeed,Magnet,TwistedSpoon,NeverMeltIce,DragonScale}
 // Item.BlackGlasses

@@ -620,6 +620,10 @@ describe('Gen 2', () => {
 
   // Items
 
+  test.todo('ThickClub effect');
+  test.todo('LightBall effect');
+  test.todo('BerserkGene effect');
+  test.todo('Stick effect');
   test.todo('Boost effect');
   test.todo('BrightPowder effect');
   test.todo('MetalPowder effect');
