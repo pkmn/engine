@@ -27,10 +27,14 @@ const MIMIC = (m: number, n = 4) =>
   ({key: ['Battle.sample', 'Battle.singleEvent'], value: ranged(m, n) - 1});
 const BIDE = (n: 2 | 3) =>
   ({key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: ranged(n - 2, 5 - 3)});
+const DRAG = (m: number, n = 5) => ({
+  key: ['Battle.getRandomSwitchable', 'BattleActions.dragIn'], value: ranged(m - 1, n)});
 const NO_PAR = {key: HIT.key, value: MAX};
 const PAR_CANT = {key: 'Battle.onBeforeMove', value: ranged(1, 4) - 1};
 const PAR_CAN = {key: 'Battle.onBeforeMove', value: PAR_CANT.value + 1};
 const FRZ = {key: HIT.key, value: ranged(25, 256) - 1};
+const THAW = {key: ['Battle.randomChance', 'Battle.onResidual'], value: ranged(25, 256) - 1};
+const NO_THAW = {key: THAW.key, value: THAW.value + 1};
 const CFZ = (n: number) =>
   ({key: ['Battle.onStart', 'Pokemon.addVolatile'], value: ranged(n - 1, 6 - 2) - 1});
 const CFZ_CAN = {key: 'Battle.onBeforeMove', value: ranged(128, 256) - 1};
@@ -1679,21 +1683,19 @@ describe('Gen 2', () => {
   });
 
   test('FreezeChance effect', () => {
-    const thaw = {key: ['Battle.randomChance', 'Battle.onResidual'], value: ranged(25, 256) - 1};
-    const no_thaw = {key: thaw.key, value: thaw.value + 1};
     const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, SS_MOD,
       QKC, HIT, NO_CRIT, MIN_DMG, FRZ, PAR_CANT,
-      QKC, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD, no_thaw,
-      QKC, no_thaw,
+      QKC, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD, NO_THAW,
+      QKC, NO_THAW,
       QKC, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
-      QKC, HIT, NO_CRIT, MIN_DMG, wrap, no_thaw,
-      QKC, HIT, NO_CRIT, MIN_DMG, no_thaw,
+      QKC, HIT, NO_CRIT, MIN_DMG, wrap, NO_THAW,
+      QKC, HIT, NO_CRIT, MIN_DMG, NO_THAW,
       QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG,
       QKC, MISS,
       QKC, HIT, CRIT, MAX_DMG,
-      QKC, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD, thaw, QKC,
+      QKC, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD, THAW, QKC,
     ], [
       {species: 'Starmie', evs, moves: ['Ice Beam']},
       {species: 'Magmar', evs, moves: ['Ice Beam', 'Flamethrower', 'Substitute', 'Recover']},
@@ -1734,7 +1736,7 @@ describe('Gen 2', () => {
     expect(battle.p1.pokemon[0].hp).toBe(lickitung -= 171);
     expect(battle.p1.pokemon[0].status).toBe('');
 
-    // Fire Spin does not thaw frozen Pokémon
+    // Fire Spin does not THAW frozen Pokémon
     battle.makeChoices('switch 3', 'move 3');
     expect(battle.p1.pokemon[0].hp).toBe(magmar -= 26);
     expect(battle.p1.pokemon[0].status).toBe('frz');
@@ -1742,7 +1744,7 @@ describe('Gen 2', () => {
     battle.makeChoices('move 1', 'move 3');
     expect(battle.p1.pokemon[0].hp).toBe(magmar -= 26);
 
-    // Other Fire moves thaw frozen Pokémon
+    // Other Fire moves THAW frozen Pokémon
     battle.makeChoices('move 1', 'move 4');
     expect(battle.p1.pokemon[0].hp).toBe(magmar -= 41);
     expect(battle.p1.pokemon[0].status).toBe('');
@@ -1755,7 +1757,7 @@ describe('Gen 2', () => {
     expect(battle.p1.pokemon[0].hp).toBe(magmar += 167);
     expect(battle.p1.pokemon[0].status).toBe('');
 
-    // Can thaw naturally but miss turn
+    // Can THAW naturally but miss turn
     battle.makeChoices('move 4', 'move 2');
     expect(battle.p1.pokemon[0].hp).toBe(magmar -= 79);
     expect(battle.p1.pokemon[0].status).toBe('');
@@ -1984,7 +1986,72 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('TriAttack effect');
+  test('TriAttack effect', () => {
+    const proc = {key: HIT.key, value: ranged(51, 256) - 1};
+    const no_proc = {key: proc.key, value: proc.value + 1};
+
+    const par = {key: ['Battle.random', 'Battle.singleEvent'], value: ranged(1, 3)};
+    const frz = {key: par.key, value: ranged(2, 3)};
+    const brn = {key: par.key, value: ranged(3, 3)};
+
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, frz, proc, SS_MOD, NO_THAW,
+      QKC, NO_CRIT, MIN_DMG, brn, no_proc, MISS,
+      QKC, NO_CRIT, MIN_DMG, par, proc, SS_MOD,
+      QKC, NO_CRIT, MIN_DMG, par, proc, QKC,
+    ], [
+      {species: 'Porygon2', evs, moves: ['Tri-Attack']},
+    ], [
+      {species: 'Swinub', evs, moves: ['Blizzard']},
+      {species: 'Mareep', evs, moves: ['Thundershock']},
+      {species: 'Togepi', evs, moves: ['Metronome']},
+    ]);
+
+    let swinub = battle.p2.pokemon[0].hp;
+    let mareep = battle.p2.pokemon[1].hp;
+    let togepi = battle.p2.pokemon[2].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].status).toBe('frz');
+    expect(battle.p2.pokemon[0].hp).toBe(swinub -= 125);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].status).toBe('');
+    expect(battle.p2.pokemon[0].hp).toBe(swinub -= 125);
+
+    battle.makeChoices('move 1', 'switch 2');
+    expect(battle.p2.pokemon[0].status).toBe('par');
+    expect(battle.p2.pokemon[0].hp).toBe(mareep -= 125);
+
+    battle.makeChoices('move 1', 'switch 3');
+    // expect(battle.p2.pokemon[0].status).toBe('brn');
+    expect(battle.p2.pokemon[0].status).toBe('');
+    expect(battle.p2.pokemon[0].hp).toBe(togepi -= 97);
+
+    verify(battle, [
+      '|move|p1a: Porygon2|Tri Attack|p2a: Swinub',
+      '|-damage|p2a: Swinub|178/303',
+      '|-status|p2a: Swinub|frz',
+      '|cant|p2a: Swinub|frz',
+      '|turn|2',
+      '|move|p1a: Porygon2|Tri Attack|p2a: Swinub',
+      '|-damage|p2a: Swinub|53/303 frz',
+      '|-curestatus|p2a: Swinub|frz|[msg]',
+      '|move|p2a: Swinub|Blizzard|p1a: Porygon2|[miss]',
+      '|-miss|p2a: Swinub',
+      '|turn|3',
+      '|switch|p2a: Mareep|Mareep, M|313/313',
+      '|move|p1a: Porygon2|Tri Attack|p2a: Mareep',
+      '|-damage|p2a: Mareep|188/313',
+      '|-status|p2a: Mareep|par',
+      '|turn|4',
+      '|switch|p2a: Togepi|Togepi, M|273/273',
+      '|move|p1a: Porygon2|Tri Attack|p2a: Togepi',
+      '|-damage|p2a: Togepi|176/273',
+      '|turn|5',
+    ]);
+  });
+
   test.todo('Sleep effect');
 
   test('Confusion effect', () => {
@@ -2058,9 +2125,171 @@ describe('Gen 2', () => {
   });
 
   test.todo('ConfusionChance effect');
-  test.todo('FlinchChance effect');
-  test.todo('Snore effect');
-  test.todo('Stomp effect');
+
+  test('FlinchChance effect', () => {
+    const lo_proc = {key: HIT.key, value: ranged(25, 256) - 1};
+    const hi_proc = {key: HIT.key, value: ranged(76, 256) - 1};
+
+    const battle = startBattle([
+      QKC, HIT, NO_CRIT, MIN_DMG, hi_proc,
+      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, hi_proc,
+      QKC, NO_CRIT, MAX_DMG, HIT, NO_CRIT, MIN_DMG,
+      QKC, HIT, NO_CRIT, MIN_DMG, lo_proc,
+      QKC, HIT, NO_CRIT, MIN_DMG, lo_proc,
+      QKC, HIT, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, hi_proc, SS_RES,
+      QKC, NO_CRIT, MIN_DMG, lo_proc, QKC,
+    ], [
+      {species: 'Raticate', evs, moves: ['Hyper Fang', 'Headbutt', 'Hyper Beam']},
+    ], [
+      {species: 'Marowak', evs, moves: ['Headbutt', 'Hyper Beam', 'Substitute']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    // Moves have different flinch rates
+    battle.makeChoices('move 1', 'move 3');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 72 - 80));
+
+    // Substitute blocks flinch, flinch doesn't prevent movement when slower
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 60);
+
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 128);
+
+    // Flinch prevents movement but counts as recharge turn
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 72);
+
+    // Can prevent movement even without recharge
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 72);
+
+    // (need to artificially recover HP to survive Raticate's Hyper Beam)
+    p2hp = battle.p2.pokemon[0].hp = 323;
+    battle.makeChoices('move 3', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 60);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 133);
+    expect(choices(battle, 'p1')).toEqual(['move 1']);
+
+    // Flinch does not clear recharge
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 60);
+
+    verify(battle, [
+      '|move|p1a: Raticate|Hyper Fang|p2a: Marowak',
+      '|-damage|p2a: Marowak|251/323',
+      '|move|p2a: Marowak|Substitute|p2a: Marowak',
+      '|-start|p2a: Marowak|Substitute',
+      '|-damage|p2a: Marowak|171/323',
+      '|turn|2',
+      '|move|p1a: Raticate|Headbutt|p2a: Marowak',
+      '|-activate|p2a: Marowak|Substitute|[damage]',
+      '|move|p2a: Marowak|Headbutt|p1a: Raticate',
+      '|-damage|p1a: Raticate|253/313',
+      '|turn|3',
+      '|move|p1a: Raticate|Headbutt|p2a: Marowak',
+      '|-end|p2a: Marowak|Substitute',
+      '|move|p2a: Marowak|Hyper Beam|p1a: Raticate',
+      '|-damage|p1a: Raticate|125/313',
+      '|-mustrecharge|p2a: Marowak',
+      '|turn|4',
+      '|move|p1a: Raticate|Hyper Fang|p2a: Marowak',
+      '|-damage|p2a: Marowak|99/323',
+      '|cant|p2a: Marowak|recharge',
+      '|turn|5',
+      '|move|p1a: Raticate|Hyper Fang|p2a: Marowak',
+      '|-damage|p2a: Marowak|27/323',
+      '|cant|p2a: Marowak|flinch',
+      '|turn|6',
+      '|move|p1a: Raticate|Hyper Beam|p2a: Marowak',
+      '|-damage|p2a: Marowak|190/323',
+      '|-mustrecharge|p1a: Raticate',
+      '|move|p2a: Marowak|Headbutt|p1a: Raticate',
+      '|-damage|p1a: Raticate|65/313',
+      '|turn|7',
+      '|cant|p1a: Raticate|recharge',
+      '|move|p2a: Marowak|Headbutt|p1a: Raticate',
+      '|-damage|p1a: Raticate|5/313',
+      '|turn|8',
+    ]);
+  });
+
+  test('Snore effect', () => {
+    const proc = {key: HIT.key, value: ranged(76, 256) - 1};
+    const no_proc = {key: HIT.key, value: proc.value + 1};
+    const battle = startBattle([
+      QKC, HIT, SS_MOD, SLP(5), QKC, NO_CRIT, HIT, no_proc, HIT, QKC, NO_CRIT, HIT, proc, QKC,
+    ], [
+      {species: 'Heracross', evs, moves: ['Snore']},
+    ], [
+      {species: 'Bellossom', evs, moves: ['Sleep Powder', 'Teleport']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].status).toBe('slp');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 38);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 38);
+
+    verify(battle, [
+      '|move|p1a: Heracross|Snore|p2a: Bellossom',
+      '|move|p2a: Bellossom|Sleep Powder|p1a: Heracross',
+      '|-status|p1a: Heracross|slp|[from] move: Sleep Powder',
+      '|turn|2',
+      '|cant|p1a: Heracross|slp',
+      '|move|p1a: Heracross|Snore|p2a: Bellossom',
+      '|-damage|p2a: Bellossom|315/353',
+      '|move|p2a: Bellossom|Sleep Powder|p1a: Heracross',
+      '|-fail|p1a: Heracross|slp',
+      '|turn|3',
+      '|cant|p1a: Heracross|slp',
+      '|move|p1a: Heracross|Snore|p2a: Bellossom',
+      '|-damage|p2a: Bellossom|277/353',
+      '|cant|p2a: Bellossom|flinch',
+      '|turn|4',
+    ]);
+  });
+
+  test('Stomp effect', () => {
+    const proc = {key: HIT.key, value: ranged(76, 256) - 1};
+    const no_proc = {key: HIT.key, value: proc.value + 1};
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, no_proc, QKC, HIT, NO_CRIT, MIN_DMG, proc, QKC,
+    ], [
+      {species: 'Miltank', evs, moves: ['Stomp']},
+    ], [
+      {species: 'Blissey', evs, moves: ['Minimize']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 155);
+    expect(battle.p2.pokemon[0].boosts.evasion).toBe(1);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 308);
+
+    verify(battle, [
+      '|move|p1a: Miltank|Stomp|p2a: Blissey',
+      '|-damage|p2a: Blissey|558/713',
+      '|move|p2a: Blissey|Minimize|p2a: Blissey',
+      '|-boost|p2a: Blissey|evasion|1',
+      '|turn|2',
+      '|move|p1a: Miltank|Stomp|p2a: Blissey',
+      '|-damage|p2a: Blissey|250/713',
+      '|cant|p2a: Blissey|flinch',
+      '|turn|3',
+    ]);
+  });
 
   test('StatDown effect', () => {
     const battle = startBattle([
@@ -2210,9 +2439,127 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('DefenseCurl effect');
-  test.todo('StatUpChance effect');
-  test.todo('AllStatUpChance effect');
+  test('DefenseCurl effect', () => {
+    const battle = startBattle([
+      QKC, HIT, NO_CRIT, MIN_DMG, QKC, MISS, QKC, QKC, HIT, NO_CRIT, MIN_DMG, QKC,
+    ], [
+      {species: 'Miltank', evs, moves: ['Rollout', 'Defense Curl']},
+    ], [
+      {species: 'Blissey', evs, moves: ['Teleport']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 48);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].boosts.def).toBe(0);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].boosts.def).toBe(1);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 96);
+
+    verify(battle, [
+      '|move|p1a: Miltank|Rollout|p2a: Blissey',
+      '|-damage|p2a: Blissey|665/713',
+      '|move|p2a: Blissey|Teleport|p2a: Blissey',
+      '|turn|2',
+      '|move|p1a: Miltank|Rollout|p2a: Blissey|[miss]',
+      '|-miss|p1a: Miltank',
+      '|move|p2a: Blissey|Teleport|p2a: Blissey',
+      '|turn|3',
+      '|move|p1a: Miltank|Defense Curl|p1a: Miltank',
+      '|-boost|p1a: Miltank|def|1',
+      '|move|p2a: Blissey|Teleport|p2a: Blissey',
+      '|turn|4',
+      '|move|p1a: Miltank|Rollout|p2a: Blissey',
+      '|-damage|p2a: Blissey|569/713',
+      '|move|p2a: Blissey|Teleport|p2a: Blissey',
+      '|turn|5',
+    ]);
+  });
+
+  test('StatUpChance effect', () => {
+    const proc = {key: HIT.key, value: ranged(25, 256) - 1};
+    const no_proc = {key: proc.key, value: proc.value + 1};
+
+    const battle = startBattle([
+      QKC, HIT, NO_CRIT, MIN_DMG, proc, HIT, NO_CRIT, MIN_DMG, no_proc, QKC,
+    ], [
+      {species: 'Skarmory', evs, moves: ['Metal Claw']},
+    ], [
+      {species: 'Gligar', evs, moves: ['Steel Wing']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 17);
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(0);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 31);
+    expect(battle.p2.pokemon[0].boosts.def).toBe(1);
+
+    verify(battle, [
+      '|move|p2a: Gligar|Steel Wing|p1a: Skarmory',
+      '|-resisted|p1a: Skarmory',
+      '|-damage|p1a: Skarmory|316/333',
+      '|-boost|p2a: Gligar|def|1',
+      '|move|p1a: Skarmory|Metal Claw|p2a: Gligar',
+      '|-damage|p2a: Gligar|302/333',
+      '|turn|2',
+    ]);
+  });
+
+  test('AllStatUpChance effect', () => {
+    const proc = {key: HIT.key, value: ranged(25, 256) - 1};
+    const no_proc = {key: proc.key, value: proc.value + 1};
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, no_proc, QKC, NO_CRIT, MIN_DMG, proc, QKC,
+    ], [
+      {species: 'Aerodactyl', evs, moves: ['Ancient Power']},
+    ], [
+      {species: 'Skarmory', evs, moves: ['Spikes']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 54);
+    for (const stat of gen.stats) {
+      if (stat === 'hp') continue;
+      expect(battle.p1.pokemon[0].boosts[stat]).toBe(0);
+    }
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 54);
+    for (const stat of gen.stats) {
+      if (stat === 'hp') continue;
+      expect(battle.p1.pokemon[0].boosts[stat]).toBe(1);
+    }
+
+    verify(battle, [
+      '|move|p1a: Aerodactyl|Ancient Power|p2a: Skarmory',
+      '|-damage|p2a: Skarmory|279/333',
+      '|move|p2a: Skarmory|Spikes|p1a: Aerodactyl',
+      '|-sidestart|p1: Player 1|Spikes',
+      '|turn|2',
+      '|move|p1a: Aerodactyl|Ancient Power|p2a: Skarmory',
+      '|-damage|p2a: Skarmory|225/333',
+      '|-boost|p1a: Aerodactyl|atk|1',
+      '|-boost|p1a: Aerodactyl|def|1',
+      '|-boost|p1a: Aerodactyl|spa|1',
+      '|-boost|p1a: Aerodactyl|spd|1',
+      '|-boost|p1a: Aerodactyl|spe|1',
+      '|move|p2a: Skarmory|Spikes|p1a: Aerodactyl',
+      '|-fail|p1a: Aerodactyl',
+      '|turn|3',
+    ]);
+  });
 
   test('OHKO effect', () => {
     const battle = startBattle([QKC, MISS, QKC, HIT], [
@@ -2247,7 +2594,26 @@ describe('Gen 2', () => {
   test.todo('Fly/Dig effect');
   test.todo('Gust/Earthquake effect');
   test.todo('Twister effect');
-  test.todo('ForceSwitch effect');
+
+  test('ForceSwitch effect', () => {
+    const battle = startBattle([QKC, DRAG(1, 1), QKC], [
+      {species: 'Zapdos', evs, moves: ['Whirlwind']},
+    ], [
+      {species: 'Raikou', evs, moves: ['Roar']},
+      {species: 'Tyranitar', evs, moves: ['Roar']},
+    ]);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].species.name).toBe('Tyranitar');
+
+    verify(battle, [
+      '|move|p2a: Raikou|Roar|p1a: Zapdos',
+      '|-fail|p1a: Zapdos',
+      '|move|p1a: Zapdos|Whirlwind|p2a: Raikou',
+      '|drag|p2a: Tyranitar|Tyranitar, M|403/403',
+      '|turn|2',
+    ]);
+  });
 
   test('Teleport effect', () => {
     const battle = startBattle([QKC, QKC], [
@@ -2286,7 +2652,72 @@ describe('Gen 2', () => {
   test.todo('Trapping effect');
   test.todo('JumpKick effect');
   test.todo('RecoilHit effect');
-  test.todo('Struggle effect');
+
+  test('Struggle effect', () => {
+    const battle = startBattle([
+      QKC, QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, QKC,
+    ], [
+      {species: 'Abra', evs, moves: ['Substitute', 'Teleport']},
+      {species: 'Golem', evs, moves: ['Harden']},
+    ], [
+      {species: 'Arcanine', evs, moves: ['Teleport']},
+    ]);
+
+    battle.p1.pokemon[0].hp = 64;
+    battle.p2.pokemon[0].moveSlots[0].pp = 1;
+
+    const p1hp = battle.p1.pokemon[1].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    // Struggle only becomes an option if the user has no PP left
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(0);
+
+    // Still deals recoil damage if the move breaks the target's Substitute
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(1);
+    // expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 15);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 1);
+    expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(0);
+
+    // Struggle recoil inflicts at least 1 HP
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(0);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 1);
+
+    battle.makeChoices('switch 2', '');
+
+    // Deals typeless damage and inflicts 1/4 of damage dealt to user as recoil
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp - 33);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 8);
+
+    verify(battle, [
+      '|move|p2a: Arcanine|Teleport|p2a: Arcanine',
+      '|move|p1a: Abra|Substitute|p1a: Abra',
+      '|-start|p1a: Abra|Substitute',
+      '|-damage|p1a: Abra|1/253',
+      '|turn|2',
+      '|move|p2a: Arcanine|Struggle|p1a: Abra',
+      '|-end|p1a: Abra|Substitute',
+      '|-damage|p2a: Arcanine|382/383|[from] Recoil|[of] p1a: Abra',
+      '|move|p1a: Abra|Teleport|p1a: Abra',
+      '|turn|3',
+      '|move|p2a: Arcanine|Struggle|p1a: Abra',
+      '|-damage|p1a: Abra|0 fnt',
+      '|-damage|p2a: Arcanine|381/383|[from] Recoil|[of] p1a: Abra',
+      '|faint|p1a: Abra',
+      '|switch|p1a: Golem|Golem, M|363/363',
+      '|turn|4',
+      '|move|p2a: Arcanine|Struggle|p1a: Golem',
+      '|-damage|p1a: Golem|330/363',
+      '|-damage|p2a: Arcanine|373/383|[from] Recoil|[of] p1a: Golem',
+      '|move|p1a: Golem|Harden|p1a: Golem',
+      '|-boost|p1a: Golem|def|1',
+      '|turn|5',
+    ]);
+  });
+
   test.todo('Thrashing effect');
 
   test('FixedDamage effect', () => {
