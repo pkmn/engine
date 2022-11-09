@@ -392,7 +392,7 @@ test "Paralyze effect" {
 
 // Move.{ThunderPunch,BodySlam,ThunderShock,Thunderbolt,Lick,ZapCannon,Spark,DragonBreath}
 test "ParalyzeChance effect" {
-    // Has a 30% chance to paralyze the target.
+    // Has a X% chance to paralyze the target.
     return error.SkipZigTest;
 }
 

@@ -285,3 +285,5 @@ win: _
 - TODO: randomChance rate different than gen 1?
 - Twineedle shouldn't be able to inflict poison if it breaks a substitute
 - Mail should not be stolen by Thief
+- RNG for crit is 1/16 and not 17/256?
+- MetalPowder should still boost after transformed
