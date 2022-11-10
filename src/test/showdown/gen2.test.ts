@@ -629,11 +629,13 @@ describe('Gen 2', () => {
   test('ThickClub effect', () => {
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, PROC_SEC,
-      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
+      QKC, NO_CRIT, MIN_DMG, SS_EACH, SS_EACH,
+      QKC, TIE(2), SS_EACH, SS_EACH, NO_CRIT, MIN_DMG, SS_EACH, NO_CRIT, MIN_DMG,
+      SS_EACH, SS_EACH, QKC,
     ], [
       {species: 'Marowak', item: 'Thick Club', evs, moves: ['Strength']},
     ], [
-      {species: 'Teddiursa', evs, moves: ['Thief', 'Scratch']},
+      {species: 'Teddiursa', evs, moves: ['Thief', 'Transform']},
     ]);
 
     let p1hp = battle.p1.pokemon[0].hp;
@@ -644,8 +646,13 @@ describe('Gen 2', () => {
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 151);
 
     battle.makeChoices('move 1', 'move 2');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 36);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 75);
+
+    // Only provides boost if original species is correct
+    battle.makeChoices('move 1', 'move 1');
+    // expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 47);
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 94);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 47);
 
     verify(battle, [
       '|move|p1a: Marowak|Strength|p2a: Teddiursa',
@@ -656,20 +663,27 @@ describe('Gen 2', () => {
       '|turn|2',
       '|move|p1a: Marowak|Strength|p2a: Teddiursa',
       '|-damage|p2a: Teddiursa|97/323',
-      '|move|p2a: Teddiursa|Scratch|p1a: Marowak',
-      '|-damage|p1a: Marowak|265/323',
+      '|move|p2a: Teddiursa|Transform|p1a: Marowak',
+      '|-transform|p2a: Teddiursa|p1a: Marowak',
       '|turn|3',
+      '|move|p2a: Teddiursa|Strength|p1a: Marowak',
+      '|-damage|p1a: Marowak|207/323',
+      '|move|p1a: Marowak|Strength|p2a: Teddiursa',
+      '|-damage|p2a: Teddiursa|50/323',
+      '|turn|4',
     ]);
   });
 
   test('LightBall effect', () => {
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, PROC_SEC,
-      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, PROC_SEC, QKC,
+      QKC, NO_CRIT, MIN_DMG, SS_EACH, SS_EACH,
+      QKC, TIE(2), SS_EACH, SS_EACH, NO_CRIT, MIN_DMG, SS_EACH, NO_CRIT, MIN_DMG,
+      SS_EACH, SS_EACH, QKC,
     ], [
       {species: 'Pikachu', item: 'Light Ball', evs, moves: ['Surf']},
     ], [
-      {species: 'Ursaring', evs, moves: ['Thief']},
+      {species: 'Ursaring', evs, moves: ['Thief', 'Transform']},
     ]);
 
     let p1hp = battle.p1.pokemon[0].hp;
@@ -679,9 +693,14 @@ describe('Gen 2', () => {
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 40);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 109);
 
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 40);
+    battle.makeChoices('move 1', 'move 2');
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 55);
+
+    // Only provides boost if original species is correct
+    battle.makeChoices('move 1', 'move 1');
+    // expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 76);
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 154);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 76);
 
     verify(battle, [
       '|move|p1a: Pikachu|Surf|p2a: Ursaring',
@@ -692,9 +711,14 @@ describe('Gen 2', () => {
       '|turn|2',
       '|move|p1a: Pikachu|Surf|p2a: Ursaring',
       '|-damage|p2a: Ursaring|219/383',
-      '|move|p2a: Ursaring|Thief|p1a: Pikachu',
-      '|-damage|p1a: Pikachu|193/273',
+      '|move|p2a: Ursaring|Transform|p1a: Pikachu',
+      '|-transform|p2a: Ursaring|p1a: Pikachu',
       '|turn|3',
+      '|move|p2a: Ursaring|Surf|p1a: Pikachu',
+      '|-damage|p1a: Pikachu|79/273',
+      '|move|p1a: Pikachu|Surf|p2a: Ursaring',
+      '|-damage|p2a: Ursaring|143/383',
+      '|turn|4',
     ]);
   });
 
@@ -737,11 +761,13 @@ describe('Gen 2', () => {
     const no_crit = {key: CRIT.key, value: ranged(4, 16) - 1};
     const battle = startBattle([
       QKC, HIT, no_crit, MIN_DMG, no_crit, MIN_DMG, PROC_SEC,
-      QKC, HIT, no_crit, MIN_DMG, no_crit, MIN_DMG, PROC_SEC, QKC,
+      QKC, HIT, no_crit, MIN_DMG, SS_EACH, SS_EACH,
+      QKC, TIE(2), SS_EACH, SS_EACH, HIT, no_crit, MIN_DMG, SS_EACH, HIT, no_crit, MIN_DMG,
+      SS_EACH, SS_EACH, QKC,
     ], [
-      {species: 'Farfetchd', item: 'Stick', evs, moves: ['Cut']},
+      {species: 'Farfetch’d', item: 'Stick', evs, moves: ['Cut']},
     ], [
-      {species: 'Totodile', evs, moves: ['Thief']},
+      {species: 'Totodile', evs, moves: ['Thief', 'Transform']},
     ]);
 
     let p1hp = battle.p1.pokemon[0].hp;
@@ -751,9 +777,15 @@ describe('Gen 2', () => {
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 25);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 109);
 
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 25);
+    battle.makeChoices('move 1', 'move 2');
+    // expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 25);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 56);
+
+    // Only provides boost if original species is correct
+    battle.makeChoices('move 1', 'move 1');
+    // expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 61);
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 119);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 61);
 
     verify(battle, [
       '|move|p1a: Farfetch’d|Cut|p2a: Totodile',
@@ -765,9 +797,15 @@ describe('Gen 2', () => {
       '|turn|2',
       '|move|p1a: Farfetch’d|Cut|p2a: Totodile',
       '|-damage|p2a: Totodile|138/303',
-      '|move|p2a: Totodile|Thief|p1a: Farfetch’d',
-      '|-damage|p1a: Farfetch’d|257/307',
+      '|move|p2a: Totodile|Transform|p1a: Farfetch’d',
+      '|-transform|p2a: Totodile|p1a: Farfetch’d',
       '|turn|3',
+      '|move|p2a: Totodile|Cut|p1a: Farfetch’d',
+      '|-crit|p1a: Farfetch’d',
+      '|-damage|p1a: Farfetch’d|163/307',
+      '|move|p1a: Farfetch’d|Cut|p2a: Totodile',
+      '|-damage|p2a: Totodile|77/303',
+      '|turn|4',
     ]);
   });
 
@@ -1114,14 +1152,25 @@ describe('Gen 2', () => {
 
   test('FocusBand effect', () => {
     const band = {key: HIT.key, value: ranged(30, 256) - 1};
+    const no_band = {key: band.key, value: band.value + 1};
     const confusion = {key: HIT.key, value: ranged(25, 256) - 1};
-    const battle = startBattle([QKC, CRIT, MAX_DMG, band, confusion, CFZ(5), CFZ_CANT], [
-      {species: 'Igglybuff', item: 'Focus Band', evs, moves: ['Teleport']},
+    const battle = startBattle([
+      QKC, CRIT, MAX_DMG, band, confusion, CFZ(5), CFZ_CANT,
+      QKC, NO_CRIT, MIN_DMG, band, NO_CRIT, MIN_DMG, no_band,
     ], [
-      {species: 'Espeon', evs, moves: ['Psybeam']},
+      {species: 'Igglybuff', item: 'Focus Band', evs, moves: ['Teleport']},
+      {species: 'Cleffa', level: 5, item: 'Focus Band', evs, moves: ['Teleport']},
+    ], [
+      {species: 'Espeon', evs, moves: ['Psybeam', 'Double Kick']},
     ]);
 
     battle.makeChoices('move 1', 'move 1');
+    battle.makeChoices('switch 2', '');
+
+    // If Focus Band activates from a multi-hit move, the holder does not faint from any hit
+    battle.makeChoices('move 1', 'move 2');
+    // expect(battle.p1.pokemon[0].hp).toBe(1);
+    expect(battle.p1.pokemon[0].hp).toBe(0);
 
     verify(battle, [
       '|move|p2a: Espeon|Psybeam|p1a: Igglybuff',
@@ -1132,6 +1181,16 @@ describe('Gen 2', () => {
       '|-activate|p1a: Igglybuff|confusion',
       '|-damage|p1a: Igglybuff|0 fnt|[from] confusion',
       '|faint|p1a: Igglybuff',
+      '|switch|p1a: Cleffa|Cleffa, L5, M|24/24',
+      '|turn|2',
+      '|move|p2a: Espeon|Double Kick|p1a: Cleffa',
+      '|-supereffective|p1a: Cleffa',
+      '|-activate|p1a: Cleffa|item: Focus Band',
+      '|-damage|p1a: Cleffa|1/24',
+      '|-supereffective|p1a: Cleffa',
+      '|-damage|p1a: Cleffa|0 fnt',
+      '|-hitcount|p1a: Cleffa|2',
+      '|faint|p1a: Cleffa',
       '|win|Player 2',
     ]);
   });
@@ -2562,28 +2621,68 @@ describe('Gen 2', () => {
   });
 
   test('OHKO effect', () => {
-    const battle = startBattle([QKC, MISS, QKC, HIT], [
-      {species: 'Kingler', level: 99, evs, moves: ['Guillotine']},
-      {species: 'Tauros', evs, moves: ['Horn Drill']},
+    const hit = {key: HIT.key, value: ranged(176, 256) - 1};
+    const miss = {key: hit.key, value: hit.value + 1};
+    const battle = startBattle([
+      QKC, QKC, miss, QKC, miss, SS_RES, QKC, hit, QKC, MISS, QKC,
+    ], [
+      {species: 'Krabby', level: 5, evs, moves: ['Guillotine']},
+      {species: 'Nidoking', level: 50, evs, moves: ['Horn Drill', 'Dig']},
+      {species: 'Tauros', evs, moves: ['Counter']},
     ], [
       {species: 'Dugtrio', evs, moves: ['Fissure']},
+      {species: 'Rhydon', evs, moves: ['Fissure']},
     ]);
 
+    // 100% accurate if the level gap is large enough
     battle.makeChoices('move 1', 'move 1');
-    battle.makeChoices('move 1', 'move 1');
-
     expect(battle.p1.pokemon[0].hp).toBe(0);
 
+    battle.makeChoices('switch 2', '');
+
+    // Can't OHKO a higher level Pokémon
+    battle.makeChoices('move 1', 'move 1');
+
+    battle.makeChoices('move 2', 'move 1');
+
+    // Fissure can still hit while underground
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(0);
+
+    battle.makeChoices('switch 3', '');
+
+    // Should be able to Counter a missed OHKO move
+    battle.makeChoices('move 1', 'move 1');
+    // expect(battle.p2.pokemon[0].hp).toBe(0);
+
     verify(battle, [
-      '|move|p2a: Dugtrio|Fissure|p1a: Kingler|[miss]',
-      '|-miss|p2a: Dugtrio',
-      '|move|p1a: Kingler|Guillotine|p2a: Dugtrio',
-      '|-immune|p2a: Dugtrio|[ohko]',
-      '|turn|2',
-      '|move|p2a: Dugtrio|Fissure|p1a: Kingler',
-      '|-damage|p1a: Kingler|0 fnt',
+      '|move|p2a: Dugtrio|Fissure|p1a: Krabby',
+      '|-damage|p1a: Krabby|0 fnt',
       '|-ohko',
-      '|faint|p1a: Kingler',
+      '|faint|p1a: Krabby',
+      '|switch|p1a: Nidoking|Nidoking, L50, M|187/187',
+      '|turn|2',
+      '|move|p2a: Dugtrio|Fissure|p1a: Nidoking|[miss]',
+      '|-miss|p2a: Dugtrio',
+      '|move|p1a: Nidoking|Horn Drill|p2a: Dugtrio',
+      '|-immune|p2a: Dugtrio|[ohko]',
+      '|turn|3',
+      '|move|p2a: Dugtrio|Fissure|p1a: Nidoking|[miss]',
+      '|-miss|p2a: Dugtrio',
+      '|move|p1a: Nidoking|Dig||[still]',
+      '|-prepare|p1a: Nidoking|Dig',
+      '|turn|4',
+      '|move|p2a: Dugtrio|Fissure|p1a: Nidoking',
+      '|-damage|p1a: Nidoking|0 fnt',
+      '|-ohko',
+      '|faint|p1a: Nidoking',
+      '|switch|p1a: Tauros|Tauros, M|353/353',
+      '|turn|5',
+      '|move|p2a: Dugtrio|Fissure|p1a: Tauros|[miss]',
+      '|-miss|p2a: Dugtrio',
+      '|move|p1a: Tauros|Counter|p2a: Dugtrio',
+      '|-fail|p2a: Dugtrio',
+      '|turn|6',
     ]);
   });
 

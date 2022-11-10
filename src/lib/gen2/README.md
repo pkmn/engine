@@ -290,3 +290,5 @@ win: _
 - Tri Attack should be able to status Normal-type
 - Struggle recoil into Substitute only 1 HP
 - Substitute "activates" even though doesnt take damage for jump crash damage
+- Pokémon specific items after Transform
+- OHKO moves that miss should be Counterable
