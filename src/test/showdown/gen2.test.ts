@@ -54,6 +54,7 @@ const METRONOME = (move: string) => ({
 });
 
 const evs = {hp: 255, atk: 255, def: 255, spa: 255, spd: 255, spe: 255};
+const slow = {...evs, spe: 0};
 
 describe('Gen 2', () => {
   // General
@@ -771,7 +772,6 @@ describe('Gen 2', () => {
   });
 
   test('Boost effect', () => {
-    const slow = {...evs, spe: 0};
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG,
       QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
@@ -1757,7 +1757,7 @@ describe('Gen 2', () => {
     expect(battle.p1.pokemon[0].hp).toBe(magmar += 167);
     expect(battle.p1.pokemon[0].status).toBe('');
 
-    // Can THAW naturally but miss turn
+    // Can thaw naturally but miss turn
     battle.makeChoices('move 4', 'move 2');
     expect(battle.p1.pokemon[0].hp).toBe(magmar -= 79);
     expect(battle.p1.pokemon[0].status).toBe('');
@@ -2587,31 +2587,171 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('SkyAttack effect');
-  test.todo('SkullBash effect');
-  test.todo('RazorWind effect');
+  test('SkyAttack effect', () => {
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, QKC,
+    ], [
+      {species: 'Hoothoot', evs, moves: ['Sky Attack', 'Peck']},
+      {species: 'Ivysaur', evs, moves: ['Vine Whip']},
+    ], [
+      {species: 'Psyduck', evs, moves: ['Scratch', 'Water Gun']},
+      {species: 'Horsea', evs, moves: ['Bubble']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    let pp = battle.p1.pokemon[0].moveSlots[0].pp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 37);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+
+    expect(choices(battle, 'p1')).toEqual(['move 1']);
+    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 37);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 123);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
+
+    verify(battle, [
+      '|move|p2a: Psyduck|Scratch|p1a: Hoothoot',
+      '|-damage|p1a: Hoothoot|286/323',
+      '|move|p1a: Hoothoot|Sky Attack||[still]',
+      '|-prepare|p1a: Hoothoot|Sky Attack',
+      '|turn|2',
+      '|move|p2a: Psyduck|Scratch|p1a: Hoothoot',
+      '|-damage|p1a: Hoothoot|249/323',
+      '|move|p1a: Hoothoot|Sky Attack|p2a: Psyduck',
+      '|-damage|p2a: Psyduck|180/303',
+      '|turn|3',
+    ]);
+  });
+
+  test('SkullBash effect', () => {
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
+    ], [
+      {species: 'Wartortle', evs, moves: ['Skull Bash', 'Water Gun']},
+      {species: 'Ivysaur', evs, moves: ['Vine Whip']},
+    ], [
+      {species: 'Psyduck', evs, moves: ['Scratch', 'Water Gun']},
+      {species: 'Horsea', evs, moves: ['Bubble']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    let pp = battle.p1.pokemon[0].moveSlots[0].pp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 16);
+    expect(battle.p1.pokemon[0].boosts.def).toBe(1);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+
+    expect(choices(battle, 'p1')).toEqual(['move 1']);
+    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 16);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 83);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
+
+    verify(battle, [
+      '|move|p1a: Wartortle|Skull Bash||[still]',
+      '|-prepare|p1a: Wartortle|Skull Bash',
+      '|-boost|p1a: Wartortle|def|1',
+      '|move|p2a: Psyduck|Scratch|p1a: Wartortle',
+      '|-damage|p1a: Wartortle|305/321',
+      '|turn|2',
+      '|move|p1a: Wartortle|Skull Bash|p2a: Psyduck',
+      '|-damage|p2a: Psyduck|220/303',
+      '|move|p2a: Psyduck|Scratch|p1a: Wartortle',
+      '|-damage|p1a: Wartortle|289/321',
+      '|turn|3',
+    ]);
+  });
+
+  test('RazorWind effect', () => {
+    const crit2 = {key: CRIT.key, value: ranged(2, 16)};
+    const battle = startBattle([
+      QKC, crit2, MIN_DMG, QKC, HIT, crit2, MIN_DMG, crit2, MIN_DMG, QKC,
+    ], [
+      {species: 'Feraligatr', evs, moves: ['Razor Wind', 'Water Gun']},
+      {species: 'Ivysaur', evs, moves: ['Vine Whip']},
+    ], [
+      {species: 'Psyduck', evs, moves: ['Scratch', 'Water Gun']},
+      {species: 'Horsea', evs, moves: ['Bubble']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    let pp = battle.p1.pokemon[0].moveSlots[0].pp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 20);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+
+    expect(choices(battle, 'p1')).toEqual(['move 1']);
+    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 20);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 183);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
+
+    verify(battle, [
+      '|move|p1a: Feraligatr|Razor Wind||[still]',
+      '|-prepare|p1a: Feraligatr|Razor Wind',
+      '|move|p2a: Psyduck|Scratch|p1a: Feraligatr',
+      '|-damage|p1a: Feraligatr|353/373',
+      '|turn|2',
+      '|move|p1a: Feraligatr|Razor Wind|p2a: Psyduck',
+      '|-crit|p2a: Psyduck',
+      '|-damage|p2a: Psyduck|120/303',
+      '|move|p2a: Psyduck|Scratch|p1a: Feraligatr',
+      '|-damage|p1a: Feraligatr|333/373',
+      '|turn|3',
+    ]);
+  });
+
   test.todo('Solarbeam effect');
-  test.todo('Fly/Dig effect');
+  test.todo('Fly effect');
+  test.todo('Dig effect');
   test.todo('Gust/Earthquake effect');
   test.todo('Twister effect');
 
   test('ForceSwitch effect', () => {
-    const battle = startBattle([QKC, DRAG(1, 1), QKC], [
+    const battle = startBattle([QKC, DRAG(1, 1), QKC, DRAG(1, 1), QKC], [
       {species: 'Zapdos', evs, moves: ['Whirlwind']},
     ], [
       {species: 'Raikou', evs, moves: ['Roar']},
-      {species: 'Tyranitar', evs, moves: ['Roar']},
+      {species: 'Lugia', evs, moves: ['Fly']},
     ]);
 
     battle.makeChoices('move 1', 'move 1');
-    expect(battle.p2.pokemon[0].species.name).toBe('Tyranitar');
+    expect(battle.p2.pokemon[0].species.name).toBe('Lugia');
+
+    // Whirlwind can hit through Fly invulnerability
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].species.name).toBe('Raikou');
 
     verify(battle, [
       '|move|p2a: Raikou|Roar|p1a: Zapdos',
       '|-fail|p1a: Zapdos',
       '|move|p1a: Zapdos|Whirlwind|p2a: Raikou',
-      '|drag|p2a: Tyranitar|Tyranitar, M|403/403',
+      '|drag|p2a: Lugia|Lugia|415/415',
       '|turn|2',
+      '|move|p2a: Lugia|Fly||[still]',
+      '|-prepare|p2a: Lugia|Fly',
+      '|move|p1a: Zapdos|Whirlwind|p2a: Lugia',
+      '|drag|p2a: Raikou|Raikou|383/383',
+      '|turn|3',
     ]);
   });
 
@@ -2650,8 +2790,116 @@ describe('Gen 2', () => {
   });
 
   test.todo('Trapping effect');
-  test.todo('JumpKick effect');
-  test.todo('RecoilHit effect');
+
+  test('JumpKick effect', () => {
+    const battle = startBattle([
+      QKC, QKC, MISS, CRIT, MIN_DMG, HIT, CRIT, MAX_DMG,
+      QKC, MISS, NO_CRIT, MIN_DMG, MISS, NO_CRIT, MAX_DMG, QKC,
+    ], [
+      {species: 'Hitmonlee', evs, moves: ['Jump Kick', 'Substitute']},
+    ], [
+      {species: 'Hitmonlee', level: 99, evs, moves: ['High Jump Kick', 'Substitute']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 75);
+    expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(75);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 75);
+    expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(75);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 31);
+    expect(battle.p1.pokemon[0].volatiles['substitute']).toBeUndefined();
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+    expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(75);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 15);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 21);
+    expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(75);
+
+    verify(battle, [
+      '|move|p1a: Hitmonlee|Substitute|p1a: Hitmonlee',
+      '|-start|p1a: Hitmonlee|Substitute',
+      '|-damage|p1a: Hitmonlee|228/303',
+      '|move|p2a: Hitmonlee|Substitute|p2a: Hitmonlee',
+      '|-start|p2a: Hitmonlee|Substitute',
+      '|-damage|p2a: Hitmonlee|225/300',
+      '|turn|2',
+      '|move|p1a: Hitmonlee|Jump Kick|p2a: Hitmonlee|[miss]',
+      '|-miss|p1a: Hitmonlee',
+      '|-damage|p1a: Hitmonlee|197/303',
+      '|move|p2a: Hitmonlee|High Jump Kick|p1a: Hitmonlee',
+      '|-crit|p1a: Hitmonlee',
+      '|-end|p1a: Hitmonlee|Substitute',
+      '|turn|3',
+      '|move|p1a: Hitmonlee|Jump Kick|p2a: Hitmonlee|[miss]',
+      '|-miss|p1a: Hitmonlee',
+      '|-damage|p1a: Hitmonlee|182/303',
+      '|move|p2a: Hitmonlee|High Jump Kick|p1a: Hitmonlee|[miss]',
+      '|-miss|p2a: Hitmonlee',
+      '|-damage|p2a: Hitmonlee|204/300',
+      '|turn|4',
+    ]);
+  });
+
+  test('Recoil effect', () => {
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, QKC, HIT, NO_CRIT, MAX_DMG, QKC, NO_CRIT, MIN_DMG, QKC,
+    ], [
+      {species: 'Slowpoke', evs, moves: ['Teleport']},
+      {species: 'Rhydon', evs, moves: ['Take Down', 'Teleport']},
+    ], [
+      {species: 'Tauros', evs, moves: ['Double Edge', 'Substitute']},
+    ]);
+
+    battle.p1.pokemon[0].hp = 1;
+
+    let p1hp = battle.p1.pokemon[1].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    // Recoil inflicts at least 1 HP
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(0);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 1);
+
+    battle.makeChoices('switch 2', '');
+
+    // Still receives damage if the move breaks the target's Substitute, though only 1 HP
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 1);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 88);
+
+    // Inflicts 1/4 of damage dealt to user as recoil
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 57);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 14);
+
+    verify(battle, [
+      '|move|p2a: Tauros|Double-Edge|p1a: Slowpoke',
+      '|-damage|p1a: Slowpoke|0 fnt',
+      '|-damage|p2a: Tauros|352/353|[from] Recoil|[of] p1a: Slowpoke',
+      '|faint|p1a: Slowpoke',
+      '|switch|p1a: Rhydon|Rhydon, M|413/413',
+      '|turn|2',
+      '|move|p2a: Tauros|Substitute|p2a: Tauros',
+      '|-start|p2a: Tauros|Substitute',
+      '|-damage|p2a: Tauros|264/353',
+      '|move|p1a: Rhydon|Take Down|p2a: Tauros',
+      '|-end|p2a: Tauros|Substitute',
+      '|-damage|p1a: Rhydon|412/413|[from] Recoil|[of] p2a: Tauros',
+      '|turn|3',
+      '|move|p2a: Tauros|Double-Edge|p1a: Rhydon',
+      '|-resisted|p1a: Rhydon',
+      '|-damage|p1a: Rhydon|355/413',
+      '|-damage|p2a: Tauros|250/353|[from] Recoil|[of] p1a: Rhydon',
+      '|move|p1a: Rhydon|Teleport|p1a: Rhydon',
+      '|turn|4',
+    ]);
+  });
 
   test('Struggle effect', () => {
     const battle = startBattle([
@@ -2838,7 +3086,68 @@ describe('Gen 2', () => {
   });
 
   test.todo('Disable effect');
-  test.todo('Mist effect');
+
+  test('Mist effect', () => {
+    const proc = {key: HIT.key, value: ranged(25, 256) - 1};
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, proc, QKC, NO_CRIT, MIN_DMG,
+      QKC, NO_CRIT, MIN_DMG, QKC, QKC
+    ], [
+      {species: 'Articuno', evs, moves: ['Mist', 'Peck', 'Baton Pass']},
+      {species: 'Suicune', evs, moves: ['Surf']},
+    ], [
+      {species: 'Vaporeon', evs, moves: ['Aurora Beam', 'Growl', 'Haze']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    // Mist protects against secondary effects
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 43);
+    expect(battle.p1.pokemon[0].volatiles['mist']).toBeDefined();
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(0);
+
+    // Mist protects against primary stat lowering effects
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(0);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 48);
+
+    battle.makeChoices('move 2', 'move 3');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 48);
+
+    // Haze doesn't end Mist's effect / Mist can be passed via Baton Pass
+    battle.makeChoices('move 3', 'move 2');
+    battle.makeChoices('switch 2', '');
+
+    expect(battle.p1.pokemon[0].volatiles['mist']).toBeDefined();
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(0);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+    verify(battle, [
+      '|move|p1a: Articuno|Mist|p1a: Articuno',
+      '|-start|p1a: Articuno|Mist',
+      '|move|p2a: Vaporeon|Aurora Beam|p1a: Articuno',
+      '|-damage|p1a: Articuno|340/383',
+      '|turn|2',
+      '|move|p1a: Articuno|Peck|p2a: Vaporeon',
+      '|-damage|p2a: Vaporeon|415/463',
+      '|move|p2a: Vaporeon|Growl|p1a: Articuno',
+      '|-activate|p1a: Articuno|move: Mist',
+      '|turn|3',
+      '|move|p1a: Articuno|Peck|p2a: Vaporeon',
+      '|-damage|p2a: Vaporeon|367/463',
+      '|move|p2a: Vaporeon|Haze|p2a: Vaporeon',
+      '|-clearallboost',
+      '|turn|4',
+      '|move|p1a: Articuno|Baton Pass|p1a: Articuno',
+      '|switch|p1a: Suicune|Suicune|403/403',
+      '|move|p2a: Vaporeon|Growl|p1a: Suicune',
+      '|-activate|p1a: Suicune|move: Mist',
+      '|turn|5',
+    ]);
+  });
+
   test.todo('HyperBeam effect');
   test.todo('Counter effect');
   test.todo('MirrorCoat effect');
@@ -3178,7 +3487,23 @@ describe('Gen 2', () => {
   test.todo('Conversion effect');
   test.todo('Conversion2 effect');
   test.todo('Substitute effect');
-  test.todo('Sketch effect');
+
+  test('Teleport effect', () => {
+    const battle = startBattle([QKC, QKC], [
+      {species: 'Smeargle', evs, moves: ['Sketch']},
+    ], [
+      {species: 'Abra', evs, moves: ['Teleport']},
+    ]);
+
+    battle.makeChoices('move 1', 'move 1');
+
+    verify(battle, [
+      '|move|p2a: Abra|Teleport|p2a: Abra',
+      '|move|p1a: Smeargle|Sketch|p2a: Abra',
+      '|-nothing',
+      '|turn|2',
+    ]);
+  });
 
   test('Thief effect', () => {
     const battle = startBattle([
@@ -3217,29 +3542,418 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('MeanLook effect');
+  test('MeanLook effect', () => {
+    const battle = startBattle([QKC, QKC, QKC, QKC, QKC], [
+      {species: 'Umbreon', evs, moves: ['Mean Look', 'Baton Pass']},
+      {species: 'Spinarak', evs, moves: ['Teleport']},
+    ], [
+      {species: 'Espeon', evs, moves: ['Teleport', 'Baton Pass']},
+      {species: 'Ledyba', evs, moves: ['Teleport']},
+    ]);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
+
+    battle.makeChoices('move 2', 'move 1');
+    battle.makeChoices('switch 2', '');
+    expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
+
+    battle.makeChoices('move 1', 'move 2');
+    battle.makeChoices('', 'switch 2');
+    expect(choices(battle, 'p2')).toEqual(['move 1']);
+
+    battle.makeChoices('switch 2', 'move 1');
+    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1']);
+
+    verify(battle, [
+      '|move|p2a: Espeon|Teleport|p2a: Espeon',
+      '|move|p1a: Umbreon|Mean Look|p2a: Espeon',
+      '|-activate|p2a: Espeon|trapped',
+      '|turn|2',
+      '|move|p2a: Espeon|Teleport|p2a: Espeon',
+      '|move|p1a: Umbreon|Baton Pass|p1a: Umbreon',
+      '|switch|p1a: Spinarak|Spinarak, M|283/283',
+      '|turn|3',
+      '|move|p2a: Espeon|Baton Pass|p2a: Espeon',
+      '|switch|p2a: Ledyba|Ledyba, M|283/283',
+      '|move|p1a: Spinarak|Teleport|p1a: Spinarak',
+      '|turn|4',
+      '|switch|p1a: Umbreon|Umbreon, M|393/393',
+      '|move|p2a: Ledyba|Teleport|p2a: Ledyba',
+      '|turn|5',
+    ]);
+  });
+
   test.todo('LockOn effect');
   test.todo('Nightmare effect');
   test.todo('Curse effect');
-  test.todo('Reversal effect');
-  test.todo('Spite effect');
+
+  test('Reversal', () => {
+    const battle = startBattle([QKC, QKC, QKC, QKC, QKC, QKC], [
+      {species: 'Hitmontop', evs, moves: ['Reversal']},
+    ], [
+      {species: 'Sudowoodo', evs, moves: ['Flail']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 19);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 48);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 19);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 48);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 36);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 48);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 36);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 48);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 88);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 92);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+    expect(battle.p2.pokemon[0].hp).toBe(0);
+
+    verify(battle, [
+      '|move|p1a: Hitmontop|Reversal|p2a: Sudowoodo',
+      '|-supereffective|p2a: Sudowoodo',
+      '|-damage|p2a: Sudowoodo|295/343',
+      '|move|p2a: Sudowoodo|Flail|p1a: Hitmontop',
+      '|-damage|p1a: Hitmontop|284/303',
+      '|turn|2',
+      '|move|p1a: Hitmontop|Reversal|p2a: Sudowoodo',
+      '|-supereffective|p2a: Sudowoodo',
+      '|-damage|p2a: Sudowoodo|247/343',
+      '|move|p2a: Sudowoodo|Flail|p1a: Hitmontop',
+      '|-damage|p1a: Hitmontop|265/303',
+      '|turn|3',
+      '|move|p1a: Hitmontop|Reversal|p2a: Sudowoodo',
+      '|-supereffective|p2a: Sudowoodo',
+      '|-damage|p2a: Sudowoodo|199/343',
+      '|move|p2a: Sudowoodo|Flail|p1a: Hitmontop',
+      '|-damage|p1a: Hitmontop|229/303',
+      '|turn|4',
+      '|move|p1a: Hitmontop|Reversal|p2a: Sudowoodo',
+      '|-supereffective|p2a: Sudowoodo',
+      '|-damage|p2a: Sudowoodo|151/343',
+      '|move|p2a: Sudowoodo|Flail|p1a: Hitmontop',
+      '|-damage|p1a: Hitmontop|193/303',
+      '|turn|5',
+      '|move|p1a: Hitmontop|Reversal|p2a: Sudowoodo',
+      '|-supereffective|p2a: Sudowoodo',
+      '|-damage|p2a: Sudowoodo|59/343',
+      '|move|p2a: Sudowoodo|Flail|p1a: Hitmontop',
+      '|-damage|p1a: Hitmontop|105/303',
+      '|turn|6',
+      '|move|p1a: Hitmontop|Reversal|p2a: Sudowoodo',
+      '|-supereffective|p2a: Sudowoodo',
+      '|-damage|p2a: Sudowoodo|0 fnt',
+      '|faint|p2a: Sudowoodo',
+      '|win|Player 1',
+    ]);
+  });
+
+  test('Spite effect', () => {
+    const spite2 = {key: ['Battle.onHit', 'Battle.singleEvent'], value: ranged(0, 4)};
+    const spite3 = {key: spite2.key, value: ranged(1, 4)};
+    const battle = startBattle([
+      QKC, spite2, MISS, QKC, spite2, MISS, QKC, spite3, MISS, QKC, spite2, QKC,
+    ], [
+      {species: 'Misdreavus', evs, moves: ['Spite']},
+    ], [
+      {species: 'Ampharos', evs, moves: ['Zap Cannon', 'Teleport']},
+    ]);
+
+    let pp = battle.p2.pokemon[0].moveSlots[0].pp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(pp -= 3);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(pp -= 4);
+
+    battle.makeChoices('move 1', 'move 2');
+
+    verify(battle, [
+      '|move|p1a: Misdreavus|Spite|p2a: Ampharos',
+      '|-fail|p2a: Ampharos',
+      '|move|p2a: Ampharos|Zap Cannon|p1a: Misdreavus|[miss]',
+      '|-miss|p2a: Ampharos',
+      '|turn|2',
+      '|move|p1a: Misdreavus|Spite|p2a: Ampharos',
+      '|-activate|p2a: Ampharos|move: Spite|zapcannon|2',
+      '|move|p2a: Ampharos|Zap Cannon|p1a: Misdreavus|[miss]',
+      '|-miss|p2a: Ampharos',
+      '|turn|3',
+      '|move|p1a: Misdreavus|Spite|p2a: Ampharos',
+      '|-activate|p2a: Ampharos|move: Spite|zapcannon|3',
+      '|move|p2a: Ampharos|Zap Cannon|p1a: Misdreavus|[miss]',
+      '|-miss|p2a: Ampharos',
+      '|turn|4',
+      '|move|p1a: Misdreavus|Spite|p2a: Ampharos',
+      '|-fail|p2a: Ampharos',
+      '|move|p2a: Ampharos|Teleport|p2a: Ampharos',
+      '|turn|5',
+    ]);
+  });
+
   test.todo('Protect effect');
   test.todo('Endure effect');
   test.todo('BellyDrum effect');
-  test.todo('Spikes effect');
-  test.todo('RapidSpin effect');
+
+  test('Spikes effect', () => {
+    const battle = startBattle([QKC, QKC, QKC, NO_CRIT, MIN_DMG, QKC], [
+      {species: 'Pineco', evs, moves: ['Spikes', 'Teleport']},
+    ], [
+      {species: 'Forretress', evs, moves: ['Rapid Spin']},
+      {species: 'Mantine', evs, moves: ['Fly']},
+    ]);
+
+    const pineco = battle.p1.pokemon[0].hp;
+    const forretress = battle.p2.pokemon[0].hp;
+    const mantine = battle.p2.pokemon[1].hp;
+
+    battle.makeChoices('move 1', 'switch 2');
+    expect(battle.p2.sideConditions['spikes']).toBeDefined();
+    expect(battle.p2.pokemon[0].hp).toBe(mantine);
+
+    battle.makeChoices('move 1', 'switch 2');
+    expect(battle.p2.pokemon[0].hp).toBe(forretress - 44);
+
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(pineco - 15);
+    expect(battle.p2.sideConditions['spikes']).toBeUndefined();
+
+    verify(battle, [
+      '|switch|p2a: Mantine|Mantine, M|333/333',
+      '|move|p1a: Pineco|Spikes|p2a: Mantine',
+      '|-sidestart|p2: Player 2|Spikes',
+      '|turn|2',
+      '|switch|p2a: Forretress|Forretress, M|353/353',
+      '|-damage|p2a: Forretress|309/353|[from] Spikes',
+      '|move|p1a: Pineco|Spikes|p2a: Forretress',
+      '|-fail|p2a: Forretress',
+      '|turn|3',
+      '|move|p2a: Forretress|Rapid Spin|p1a: Pineco',
+      '|-damage|p1a: Pineco|288/303',
+      '|-sideend|p2: Player 2|Spikes|[from] move: Rapid Spin|[of] p2a: Forretress',
+      '|move|p1a: Pineco|Teleport|p1a: Pineco',
+      '|turn|4',
+    ]);
+  });
+
+  test('RapidSpin effect', () => {
+    const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
+    const battle = startBattle([
+      QKC, QKC, HIT, QKC, HIT, NO_CRIT, MIN_DMG, wrap, NO_CRIT, MIN_DMG, QKC,
+    ], [
+      {species: 'Venusaur', evs, moves: ['Spikes', 'Leech Seed', 'Wrap']},
+    ], [
+      {species: 'Donphan', evs, moves: ['Defense Curl', 'Rapid Spin']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.sideConditions['spikes']).toBeDefined();
+
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 47);
+    expect(battle.p2.pokemon[0].volatiles['leechseed']).toBeDefined();
+
+    battle.makeChoices('move 3', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 19);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 5);
+    expect(battle.p2.sideConditions['spikes']).toBeUndefined();
+    expect(battle.p2.pokemon[0].volatiles['leechseed']).toBeUndefined();
+    expect(battle.p2.pokemon[0].volatiles['partiallytrapped']).toBeUndefined();
+
+    verify(battle, [
+      '|move|p1a: Venusaur|Spikes|p2a: Donphan',
+      '|-sidestart|p2: Player 2|Spikes',
+      '|move|p2a: Donphan|Defense Curl|p2a: Donphan',
+      '|-boost|p2a: Donphan|def|1',
+      '|turn|2',
+      '|move|p1a: Venusaur|Leech Seed|p2a: Donphan',
+      '|-start|p2a: Donphan|move: Leech Seed',
+      '|move|p2a: Donphan|Defense Curl|p2a: Donphan',
+      '|-boost|p2a: Donphan|def|1',
+      '|-damage|p2a: Donphan|336/383|[from] Leech Seed|[of] p1a: Venusaur',
+      '|turn|3',
+      '|move|p1a: Venusaur|Wrap|p2a: Donphan',
+      '|-damage|p2a: Donphan|331/383',
+      '|-activate|p2a: Donphan|move: Wrap|[of] p1a: Venusaur',
+      '|move|p2a: Donphan|Rapid Spin|p1a: Venusaur',
+      '|-damage|p1a: Venusaur|344/363',
+      '|-end|p2a: Donphan|Leech Seed|[from] move: Rapid Spin|[of] p2a: Donphan',
+      '|-sideend|p2: Player 2|Spikes|[from] move: Rapid Spin|[of] p2a: Donphan',
+      '|-end|p2a: Donphan|Wrap|[partiallytrapped]',
+      '|turn|4',
+    ]);
+  });
+
   test.todo('Foresight effect');
-  test.todo('DestinyBond effect');
+
+  test('DestinyBond effect', () => {
+    const battle = startBattle([QKC, CRIT, MAX_DMG, QKC, NO_CRIT, MIN_DMG], [
+      {species: 'Misdreavus', evs, moves: ['Destiny Bond']},
+    ], [
+      {species: 'Tyranitar', evs, moves: ['Earthquake']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    const p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 284);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(0);
+    expect(battle.p2.pokemon[0].hp).toBe(0);
+
+    verify(battle, [
+      '|move|p1a: Misdreavus|Destiny Bond|p1a: Misdreavus',
+      '|-singlemove|p1a: Misdreavus|Destiny Bond',
+      '|move|p2a: Tyranitar|Earthquake|p1a: Misdreavus',
+      '|-crit|p1a: Misdreavus',
+      '|-damage|p1a: Misdreavus|39/323',
+      '|turn|2',
+      '|move|p1a: Misdreavus|Destiny Bond|p1a: Misdreavus',
+      '|-singlemove|p1a: Misdreavus|Destiny Bond',
+      '|move|p2a: Tyranitar|Earthquake|p1a: Misdreavus',
+      '|-damage|p1a: Misdreavus|0 fnt',
+      '|faint|p1a: Misdreavus',
+      '|-activate|p1a: Misdreavus|move: Destiny Bond',
+      '|faint|p2a: Tyranitar',
+      '|tie',
+    ]);
+  });
+
+
   test.todo('PerishSong effect');
   test.todo('Rollout effect');
-  test.todo('FalseSwipe effect');
-  test.todo('Swagger effect');
+
+  test('FalseSwipe effect', () => {
+    const battle = startBattle([QKC, NO_CRIT, MAX_DMG, QKC, NO_CRIT, MAX_DMG, QKC], [
+      {species: 'Scizor', evs, moves: ['False Swipe']},
+    ], [
+      {species: 'Phanpy', level: 3, evs, moves: ['Defense Curl']},
+    ]);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(1);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(1);
+
+    verify(battle, [
+      '|move|p1a: Scizor|False Swipe|p2a: Phanpy',
+      '|-damage|p2a: Phanpy|1/21',
+      '|move|p2a: Phanpy|Defense Curl|p2a: Phanpy',
+      '|-boost|p2a: Phanpy|def|1',
+      '|turn|2',
+      '|move|p1a: Scizor|False Swipe|p2a: Phanpy',
+      '|-damage|p2a: Phanpy|1/21',
+      '|move|p2a: Phanpy|Defense Curl|p2a: Phanpy',
+      '|-boost|p2a: Phanpy|def|1',
+      '|turn|3',
+    ]);
+  });
+
+  test('Swagger effect', () => {
+    const battle = startBattle([QKC, HIT, CFZ(5), QKC, CFZ_CANT, HIT, QKC, CFZ_CANT, HIT, QKC], [
+      {species: 'Scyther', evs, moves: ['Swords Dance']},
+    ], [
+      {species: 'Aipom', evs, moves: ['Swagger']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(4);
+    expect(battle.p1.pokemon[0].volatiles['confusion']).toBeDefined();
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 126);
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(6);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 132);
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(6);
+
+    verify(battle, [
+      '|move|p1a: Scyther|Swords Dance|p1a: Scyther',
+      '|-boost|p1a: Scyther|atk|2',
+      '|move|p2a: Aipom|Swagger|p1a: Scyther',
+      '|-boost|p1a: Scyther|atk|2',
+      '|-start|p1a: Scyther|confusion',
+      '|turn|2',
+      '|-activate|p1a: Scyther|confusion',
+      '|-damage|p1a: Scyther|217/343|[from] confusion',
+      '|move|p2a: Aipom|Swagger|p1a: Scyther',
+      '|-boost|p1a: Scyther|atk|2',
+      '|turn|3',
+      '|-activate|p1a: Scyther|confusion',
+      '|-damage|p1a: Scyther|85/343|[from] confusion',
+      '|move|p2a: Aipom|Swagger|p1a: Scyther',
+      '|-miss|p2a: Aipom',
+      '|turn|4',
+    ]);
+  });
+
   test.todo('FuryCutter effect');
   test.todo('Attract effect');
   test.todo('SleepTalk effect');
   test.todo('HealBell effect');
-  test.todo('Return effect');
-  test.todo('Frustration effect');
+
+  test('Return/Frustration effect', () => {
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
+    ], [
+      {species: 'Granbull', happiness: 200, evs, moves: ['Return', 'Frustration']},
+    ], [
+      {species: 'Granbull', happiness: 100, evs: slow, moves: ['Return', 'Frustration']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toEqual(p1hp -= 91);
+    expect(battle.p2.pokemon[0].hp).toEqual(p2hp -= 118);
+
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toEqual(p1hp -= 59);
+    expect(battle.p2.pokemon[0].hp).toEqual(p2hp -= 34);
+
+    verify(battle, [
+      '|move|p1a: Granbull|Return|p2a: Granbull',
+      '|-damage|p2a: Granbull|265/383',
+      '|move|p2a: Granbull|Frustration|p1a: Granbull',
+      '|-damage|p1a: Granbull|292/383',
+      '|turn|2',
+      '|move|p1a: Granbull|Frustration|p2a: Granbull',
+      '|-damage|p2a: Granbull|231/383',
+      '|move|p2a: Granbull|Return|p1a: Granbull',
+      '|-damage|p1a: Granbull|233/383',
+      '|turn|3',
+    ]);
+  });
+
   test.todo('Present effect');
   test.todo('Safeguard effect');
   test.todo('PainSplit effect');

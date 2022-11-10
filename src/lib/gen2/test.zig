@@ -356,7 +356,7 @@ test "Poison effect" {
 
 // Move.{PoisonSting,Smog,Sludge,SludgeBomb}
 test "PoisonChance effect" {
-    // Has a 30% chance to poison the target.
+    // Has a X% chance to poison the target.
     return error.SkipZigTest;
 }
 
@@ -423,7 +423,7 @@ test "ConfusionChance effect" {
 
 // Move.{RollingKick,Headbutt,Bite,LowKick,BoneClub,RockSlide,HyperFang}
 test "FlinchChance effect" {
-    // Has a 10% chance to make the target flinch.
+    // Has a X% chance to make the target flinch.
     return error.SkipZigTest;
 }
 
@@ -502,7 +502,7 @@ test "AllStatUpChance effect" {
 test "OHKO effect" {
     // Deals 65535 damage to the target. This attack's accuracy out of 256 is equal to the lesser of
     // (2 * (user's level - target's level) + 76) and 255, before applying accuracy and evasiveness
-    // modifiers. Fails if the target is at a higher level. Can hit a target using Dig.
+    // modifiers. Fails if the target is at a higher level.
     return error.SkipZigTest;
 }
 
@@ -533,8 +533,16 @@ test "Solarbeam effect" {
     return error.SkipZigTest;
 }
 
-// Move.{Fly,Dig}
-test "Fly/Dig effect" {
+// Fly.Dig
+test "Fly effect" {
+    // This attack charges on the first turn and executes on the second. On the first turn, the user
+    // avoids all attacks other than Gust, Thunder, Twister, and Whirlwind, and Gust and Twister
+    // have doubled power when used against it.
+    return error.SkipZigTest;
+}
+
+// Move.Dig
+test "Dig effect" {
     // This attack charges on the first turn and executes on the second. On the first turn, the user
     // avoids all attacks other than Earthquake, Fissure, and Magnitude, the user is unaffected by
     // weather, and Earthquake and Magnitude have doubled power when used against the user.
@@ -1031,15 +1039,9 @@ test "HealBell effect" {
     return error.SkipZigTest;
 }
 
-// Move.Return
-test "Return effect" {
-    // Power is equal to the greater of (user's Happiness * 2/5), rounded down, or 1.
-    return error.SkipZigTest;
-}
-
-// Move.Frustration
-test "Frustration effect" {
-    // Power is equal to the greater of ((255 - user's Happiness) * 2/5), rounded down, or 1.
+// Move.{Return,Frustration}
+test "Return/Frustration effect" {
+    // Power is equal to the greater of ([255 -] user's Happiness * 2/5), rounded down, or 1.
     return error.SkipZigTest;
 }
 

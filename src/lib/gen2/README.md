@@ -289,3 +289,4 @@ win: _
 - MetalPowder should still boost after transformed
 - Tri Attack should be able to status Normal-type
 - Struggle recoil into Substitute only 1 HP
+- Substitute "activates" even though doesnt take damage for jump crash damage
