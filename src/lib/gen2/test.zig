@@ -1178,9 +1178,101 @@ test "BeatUp effect" {
 
 // Glitches
 
-// TODO: https://bulbapedia.bulbagarden.net/wiki/List_of_glitches_(Generation_II)
-// TODO: https://glitchcity.wiki/Category:Generation_II_glitches
-// TODO: https://www.youtube.com/c/Crystal_2/videos
+test "Spikes 0 HP glitch" {
+    // Perish Song and Spikes can leave a Pokémon with 0 HP and not faint
+    // https://pkmn.cc/bulba-glitch-2#Sandstorm_Spikes_glitch
+    // https://www.youtube.com/watch?v=1IiPWw5fMf8&t=85
+    // https://www.youtube.com/watch?v=u7GHUpISEP8
+    return error.SkipZigTest;
+}
+
+test "Thick Club wrap around glitch" {
+    // Thick Club and Light Ball can make (Special) Attack wrap around above 1024
+    // https://www.youtube.com/watch?v=rGqu3d3pdok&t=450
+    return error.SkipZigTest;
+}
+
+test "Metal Powder increased damage glitch" {
+    // Metal Powder can increase damage taken with boosted (Special) Defense
+    // https://www.youtube.com/watch?v=rGqu3d3pdok&t=450
+    return error.SkipZigTest;
+}
+
+test "Reflect / Light Screen wrap around glitch" {
+    // Reflect and Light Screen can make (Special) Defense wrap around above 1024
+    return error.SkipZigTest;
+}
+
+test "Secondary chance 1/256 glitch" {
+    // Moves with a 100% secondary effect chance will not trigger it in 1/256 uses
+    // https://www.youtube.com/watch?v=mHkyO5T5wZU&t=206
+    return error.SkipZigTest;
+}
+test "Belly Drum failure glitch" {
+    // Belly Drum sharply boosts Attack even with under 50% HP
+    // https://pkmn.cc/bulba-glitch-2#Belly_Drum_effect
+    // https://www.youtube.com/watch?v=zuCLMikWo4Y
+    return error.SkipZigTest;
+}
+
+test "Berserk Gene confusion duration glitch" {
+    // Berserk Gene's confusion lasts for 256 turns or the previous Pokémon's confusion count
+    // https://youtube.com/watch?v=Pru3mohq20A
+    return error.SkipZigTest;
+}
+
+test "Confusion self-hit damage glitch" {
+    // "Confusion damage is affected by type-boosting items and Explosion/Self-Destruct doubling
+    // https://twitter.com/crystal_rby/status/874626362287562752
+    return error.SkipZigTest;
+}
+
+test "Defense lowering after breaking Substitute glitch" {
+    // Moves that lower Defense can do so after breaking a Substitute
+    // https://www.youtube.com/watch?v=OGwKPRJLaaI
+    return error.SkipZigTest;
+}
+test "PP Up + Disable freeze" {
+    // A Disabled but PP Up–enhanced move may not trigger Struggle
+    // https://www.youtube.com/watch?v=1v9x4SgMggs
+    return error.SkipZigTest;
+}
+
+test "Lock-On / Mind Reader oversight" {
+    // Lock-On and Mind Reader don't always bypass Fly and Dig"
+    // https://pkmn.cc/bulba-glitch-2#Lock-On.2FMind_Reader_oversight
+    return error.SkipZigTest;
+}
+
+test "Beat Up desync" {
+    // Beat Up can desynchronize link battles
+    // https://www.youtube.com/watch?v=202-iAsrIa8
+    return error.SkipZigTest;
+}
+
+test "Beat Up partyless glitch" {
+    // "Beat Up works incorrectly with only one Pokémon in the party
+    return error.SkipZigTest;
+}
+test "Beat Up Kings Rock failure glitch" {
+    // Beat Up may trigger Kings Rock even if it failed
+    return error.SkipZigTest;
+}
+
+test "Return/Frustration 0 damage glitch" {
+    // Return and Frustration deal no damage when the user's happiness is low or high, respectively
+    return error.SkipZigTest;
+}
+
+test "Switching <4 max HP freeze" {
+    // Switching out or switching against a Pokémon with max HP below 4 freezes the game
+    return error.SkipZigTest;
+}
+
+test "Stat increase post KO glitch" {
+    // Moves that do damage and increase your stats do not increase stats after a KO
+    return error.SkipZigTest;
+}
 
 // Miscellaneous
 

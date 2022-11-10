@@ -3976,5 +3976,21 @@ describe('Gen 2', () => {
 
   // Glitches
 
-  // TODO
+  test.todo('Spikes 0 HP glitch');
+  test.todo('Thick Club wrap around glitch');
+  test.todo('Metal Powder increased damage glitch');
+  test.todo('Reflect / Light Screen wrap around glitch');
+  test.todo('Secondary chance 1/256 glitch');
+  test.todo('Belly Drum failure glitch');
+  test.todo('Berserk Gene confusion duration glitch');
+  test.todo('Confusion self-hit damage glitch');
+  test.todo('Defense lowering after breaking Substitute glitch');
+  test.todo('PP Up + Disable freeze');
+  test.todo('Lock-On / Mind Reader oversight');
+  test.todo('Beat Up desync');
+  test.todo('Beat Up partyless glitch');
+  test.todo('Beat Up Kings Rock failure glitch');
+  test.todo('Return/Frustration 0 damage glitch');
+  test.todo('Switching <4 max HP freeze');
+  test.todo('Stat increase post KO glitch');
 });
