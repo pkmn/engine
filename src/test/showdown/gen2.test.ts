@@ -3148,7 +3148,96 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('HyperBeam effect');
+  test('HyperBeam effect', () => {
+    const battle = startBattle([
+      QKC, HIT, NO_CRIT, MAX_DMG, QKC, QKC, HIT, NO_CRIT, MAX_DMG,
+      QKC, QKC, HIT, NO_CRIT, MIN_DMG, QKC,
+    ], [
+      {species: 'Tauros', evs, moves: ['Hyper Beam', 'Body Slam']},
+      {species: 'Exeggutor', evs, moves: ['Sleep Powder']},
+    ], [
+      {species: 'Jolteon', evs, moves: ['Substitute', 'Teleport']},
+      {species: 'Chansey', evs, moves: ['Teleport', 'Soft-Boiled']},
+    ]);
+
+    battle.p2.pokemon[0].hp = 100;
+
+    let jolteon = battle.p2.pokemon[0].hp;
+    let chansey = battle.p2.pokemon[1].hp;
+
+    let pp = battle.p1.pokemon[0].moveSlots[0].pp;
+
+    // Requires recharge if it knocks out a Substitute
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(jolteon -= 83);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+
+    expect(choices(battle, 'p1')).toEqual(['move 1']);
+    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(jolteon);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
+
+    expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+
+    // Requires a recharge if it knocks out opponent
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(0);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+
+    expect(choices(battle, 'p1')).toEqual([]);
+    expect(choices(battle, 'p2')).toEqual(['switch 2']);
+
+    battle.makeChoices('', 'switch 2');
+
+    expect(choices(battle, 'p1')).toEqual(['move 1']);
+    expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(chansey);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
+
+    expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+    expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(chansey -= 442);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+
+    expect(choices(battle, 'p1')).toEqual(['move 1']);
+    expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
+
+    verify(battle, [
+      '|move|p2a: Jolteon|Substitute|p2a: Jolteon',
+      '|-start|p2a: Jolteon|Substitute',
+      '|-damage|p2a: Jolteon|17/333',
+      '|move|p1a: Tauros|Hyper Beam|p2a: Jolteon',
+      '|-end|p2a: Jolteon|Substitute',
+      '|-mustrecharge|p1a: Tauros',
+      '|turn|2',
+      '|move|p2a: Jolteon|Teleport|p2a: Jolteon',
+      '|cant|p1a: Tauros|recharge',
+      '|turn|3',
+      '|move|p2a: Jolteon|Teleport|p2a: Jolteon',
+      '|move|p1a: Tauros|Hyper Beam|p2a: Jolteon',
+      '|-damage|p2a: Jolteon|0 fnt',
+      '|-mustrecharge|p1a: Tauros',
+      '|faint|p2a: Jolteon',
+      '|switch|p2a: Chansey|Chansey, F|703/703',
+      '|turn|4',
+      '|cant|p1a: Tauros|recharge',
+      '|move|p2a: Chansey|Teleport|p2a: Chansey',
+      '|turn|5',
+      '|move|p1a: Tauros|Hyper Beam|p2a: Chansey',
+      '|-damage|p2a: Chansey|261/703',
+      '|-mustrecharge|p1a: Tauros',
+      '|move|p2a: Chansey|Teleport|p2a: Chansey',
+      '|turn|6',
+    ]);
+  });
+
   test.todo('Counter effect');
   test.todo('MirrorCoat effect');
 
@@ -3477,15 +3566,201 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('Haze effect');
+  test('Haze effect', () => {
+    const battle = startBattle([
+      QKC, HIT, SS_MOD, HIT, QKC, HIT, SS_MOD,
+      QKC, PAR_CAN, HIT, CFZ(5), QKC, CFZ_CAN, PAR_CAN, QKC,
+    ], [
+      {species: 'Golbat', evs, moves: ['Toxic', 'Agility', 'Confuse Ray', 'Haze']},
+    ], [
+      {species: 'Exeggutor', evs, moves: ['Leech Seed', 'Stun Spore', 'Double Team', 'Teleport']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].volatiles['leechseed']).toBeDefined();
+    expect(battle.p2.pokemon[0].status).toBe('tox');
+    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(1);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 24);
+
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 44);
+    expect(battle.p1.pokemon[0].boosts.spe).toBe(2);
+    expect(battle.p1.pokemon[0].status).toBe('par');
+    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(2);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp + 24 - 48));
+
+    battle.makeChoices('move 3', 'move 3');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 44);
+    expect(battle.p2.pokemon[0].boosts.evasion).toBe(1);
+    expect(battle.p2.pokemon[0].volatiles['confusion']).toBeDefined();
+    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(3);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 72 + 44));
+
+    battle.makeChoices('move 4', 'move 4');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 44);
+    expect(battle.p1.pokemon[0].status).toBe('par');
+    expect(battle.p1.pokemon[0].volatiles['leechseed']).toBeDefined();
+    expect(battle.p1.pokemon[0].boosts.spe).toBe(0);
+    expect(battle.p2.pokemon[0].status).toBe('tox');
+    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(4);
+    expect(battle.p2.pokemon[0].volatiles['confusion']).toBeDefined();
+    expect(battle.p2.pokemon[0].boosts.evasion).toBe(0);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 96 + 44));
+
+    verify(battle, [
+      '|move|p1a: Golbat|Toxic|p2a: Exeggutor',
+      '|-status|p2a: Exeggutor|tox',
+      '|move|p2a: Exeggutor|Leech Seed|p1a: Golbat',
+      '|-start|p1a: Golbat|move: Leech Seed',
+      '|-damage|p2a: Exeggutor|369/393 tox|[from] psn',
+      '|turn|2',
+      '|move|p1a: Golbat|Agility|p1a: Golbat',
+      '|-boost|p1a: Golbat|spe|2',
+      '|-damage|p1a: Golbat|309/353|[from] Leech Seed|[of] p2a: Exeggutor',
+      '|-heal|p2a: Exeggutor|393/393 tox|[silent]',
+      '|move|p2a: Exeggutor|Stun Spore|p1a: Golbat',
+      '|-status|p1a: Golbat|par',
+      '|-damage|p2a: Exeggutor|345/393 tox|[from] psn',
+      '|turn|3',
+      '|move|p2a: Exeggutor|Double Team|p2a: Exeggutor',
+      '|-boost|p2a: Exeggutor|evasion|1',
+      '|-damage|p2a: Exeggutor|273/393 tox|[from] psn',
+      '|move|p1a: Golbat|Confuse Ray|p2a: Exeggutor',
+      '|-start|p2a: Exeggutor|confusion',
+      '|-damage|p1a: Golbat|265/353 par|[from] Leech Seed|[of] p2a: Exeggutor',
+      '|-heal|p2a: Exeggutor|317/393 tox|[silent]',
+      '|turn|4',
+      '|-activate|p2a: Exeggutor|confusion',
+      '|move|p2a: Exeggutor|Teleport|p2a: Exeggutor',
+      '|-damage|p2a: Exeggutor|221/393 tox|[from] psn',
+      '|move|p1a: Golbat|Haze|p1a: Golbat',
+      '|-clearallboost',
+      '|-damage|p1a: Golbat|221/353 par|[from] Leech Seed|[of] p2a: Exeggutor',
+      '|-heal|p2a: Exeggutor|265/393 tox|[silent]',
+      '|turn|5',
+    ]);
+  });
+
   test.todo('Bide effect');
   test.todo('Metronome effect');
   test.todo('MirrorMove effect');
-  test.todo('Explode effect');
+
+  test('Explode effect', () => {
+    const battle = startBattle([
+      QKC, HIT, SS_MOD, QKC, NO_CRIT, MAX_DMG, QKC, NO_CRIT, MAX_DMG, QKC,
+    ], [
+      {species: 'Electrode', level: 80, evs, moves: ['Explosion', 'Toxic']},
+      {species: 'Steelix', evs, moves: ['Explosion']},
+      {species: 'Onix', evs, moves: ['Self-Destruct']},
+    ], [
+      {species: 'Chansey', evs, moves: ['Substitute', 'Teleport']},
+      {species: 'Gengar', evs, moves: ['Night Shade']},
+    ]);
+
+    const electrode = battle.p1.pokemon[0].hp;
+    const steelix = battle.p1.pokemon[1].hp;
+    const onix = battle.p1.pokemon[2].hp;
+    let chansey = battle.p2.pokemon[0].hp;
+    const gengar = battle.p2.pokemon[1].hp;
+
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(electrode);
+    expect(battle.p2.pokemon[0].hp).toBe(chansey = chansey - 175 - 43);
+
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(chansey);
+
+    battle.makeChoices('switch 2', '');
+    expect(battle.p1.pokemon[0].hp).toBe(steelix);
+    expect(battle.p2.pokemon[0].hp).toBe(chansey);
+
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(0);
+    expect(battle.p2.pokemon[0].hp).toBe(0);
+
+    battle.makeChoices('switch 3', 'switch 2');
+    expect(battle.p1.pokemon[0].hp).toBe(onix);
+    expect(battle.p2.pokemon[0].hp).toBe(gengar);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(0);
+    expect(battle.p2.pokemon[0].hp).toBe(gengar);
+
+    verify(battle, [
+      '|move|p1a: Electrode|Toxic|p2a: Chansey',
+      '|-status|p2a: Chansey|tox',
+      '|move|p2a: Chansey|Substitute|p2a: Chansey',
+      '|-start|p2a: Chansey|Substitute',
+      '|-damage|p2a: Chansey|528/703 tox',
+      '|-damage|p2a: Chansey|485/703 tox|[from] psn',
+      '|turn|2',
+      '|move|p1a: Electrode|Explosion|p2a: Chansey',
+      '|-end|p2a: Chansey|Substitute',
+      '|faint|p1a: Electrode',
+      '|switch|p1a: Steelix|Steelix, M|353/353',
+      '|turn|3',
+      '|move|p2a: Chansey|Teleport|p2a: Chansey',
+      '|-damage|p2a: Chansey|399/703 tox|[from] psn',
+      '|move|p1a: Steelix|Explosion|p2a: Chansey',
+      '|-damage|p2a: Chansey|0 fnt',
+      '|faint|p1a: Steelix',
+      '|faint|p2a: Chansey',
+      '|switch|p2a: Gengar|Gengar, M|323/323',
+      '|switch|p1a: Onix|Onix, M|273/273',
+      '|turn|4',
+      '|move|p2a: Gengar|Night Shade|p1a: Onix',
+      '|-damage|p1a: Onix|173/273',
+      '|move|p1a: Onix|Self-Destruct|p2a: Gengar',
+      '|-immune|p2a: Gengar',
+      '|faint|p1a: Onix',
+      '|win|Player 2',
+    ]);
+  });
+
   test.todo('AlwaysHit effect');
   test.todo('Transform effect');
-  test.todo('Conversion effect');
-  test.todo('Conversion2 effect');
+
+  test('Conversion effect', () => {
+    const proc = {key: ['Battle.sample', 'Battle.singleEvent'], value: ranged(0, 2)};
+    const battle = startBattle([QKC, proc, QKC], [
+      {species: 'Porygon', evs, moves: ['Conversion', 'Sharpen']},
+    ], [
+      {species: 'Porygon2', evs, moves: ['Conversion', 'Curse', 'Ice Beam', 'Thunderbolt']},
+    ]);
+
+    battle.makeChoices('move 1', 'move 1');
+
+    verify(battle, [
+      '|move|p2a: Porygon2|Conversion|p2a: Porygon2',
+      '|-start|p2a: Porygon2|typechange|Ice',
+      '|move|p1a: Porygon|Conversion|p1a: Porygon',
+      '|-fail|p1a: Porygon',
+      '|turn|2',
+    ]);
+  });
+
+  test('Conversion2 effect', () => {
+    const proc = {key: ['Battle.sample', 'Battle.singleEvent'], value: MAX};
+    const battle = startBattle([QKC, proc, QKC], [
+      {species: 'Porygon2', evs, moves: ['Conversion2']},
+    ], [
+      {species: 'Porygon2', evs: slow, moves: ['Conversion2']},
+    ]);
+
+    battle.makeChoices('move 1', 'move 1');
+
+    verify(battle, [
+      '|move|p1a: Porygon2|Conversion 2|p2a: Porygon2',
+      '|-fail|p2a: Porygon2',
+      '|move|p2a: Porygon2|Conversion 2|p1a: Porygon2',
+      '|-start|p2a: Porygon2|typechange|Rock',
+      '|turn|2',
+    ]);
+  });
+
   test.todo('Substitute effect');
 
   test('Sketch effect', () => {
