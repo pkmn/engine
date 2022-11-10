@@ -12,10 +12,11 @@ import {Lookup} from './data';
 import * as gen1 from './gen1';
 
 export type Slot = 1 | 2 | 3 | 4 | 5 | 6;
-export interface Battle extends Gen1.Battle {}
-export interface Side extends Gen1.Side {}
-export interface Pokemon extends Gen1.Pokemon {}
-export interface MoveSlot extends Gen1.MoveSlot {}
+
+export type Battle = Gen1.Battle;
+export type Side = Gen1.Side;
+export type Pokemon = Gen1.Pokemon;
+export type MoveSlot = Gen1.MoveSlot;
 
 export namespace Gen1 {
   export interface Battle {
@@ -122,10 +123,8 @@ export interface Result {
   p2: Choice['type'];
 }
 
-export class Battle {
-  private constructor() {}
-
-  static create(gen: Generation, options: CreateOptions) {
+export const Battle = new class {
+  create(gen: Generation, options: CreateOptions) {
     const lookup = Lookup.get(gen);
     switch (gen.num) {
     case 1: return gen1.Battle.create(gen, lookup, options);
@@ -133,14 +132,14 @@ export class Battle {
     }
   }
 
-  static restore(gen: Generation, battle: Battle, options: RestoreOptions) {
+  restore(gen: Generation, battle: Battle, options: RestoreOptions) {
     const lookup = Lookup.get(gen);
     switch (gen.num) {
     case 1: return gen1.Battle.restore(gen, lookup, battle, options);
     default: throw new Error(`Unsupported gen ${gen.num}`);
     }
   }
-}
+};
 
 export class Choice {
   static Types = ['pass', 'move', 'switch'] as const;
