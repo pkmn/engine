@@ -1,4 +1,4 @@
-import {Generation, StatusName, TypeName, BoostID, ID} from '@pkmn/data';
+import {Generation, StatusName, TypeName, BoostID, ID, GenderName} from '@pkmn/data';
 import {Protocol} from '@pkmn/protocol';
 
 import {PlayerOptions} from './index';
@@ -11,35 +11,49 @@ export interface ParsedLine {
   kwArgs: Protocol.BattleArgsKWArgType;
 }
 
-export class Names {
-  p1: SideNames;
-  p2: SideNames;
+export class Info {
+  p1: SideInfo;
+  p2: SideInfo;
 
-  constructor(sides: {p1: PlayerOptions; p2: PlayerOptions}) {
-    this.p1 = new SideNames(sides.p1);
-    this.p2 = new SideNames(sides.p2);
+  constructor(gen: Generation, sides: {p1: PlayerOptions; p2: PlayerOptions}) {
+    this.p1 = new SideInfo(gen, sides.p1);
+    this.p2 = new SideInfo(gen, sides.p2);
   }
 }
 
-export class SideNames {
+export class SideInfo {
   name: string;
-  team: string[];
+  team: PokemonInfo[];
 
-  constructor(player: PlayerOptions) {
+  constructor(gen: Generation, player: PlayerOptions) {
     this.name = player.name;
-    this.team = player.team.map(p => p.name ?? p.species!);
+    this.team = player.team.map(p => {
+      const species = gen.species.get(p.species!)!;
+      const name = p.name ?? species.name;
+      const fallback = gen.num === 1 ? undefined
+        : gen.num === 2 ? gen.stats.toDV(p.ivs?.atk ?? 31) >= species.genderRatio.F * 16 ? 'M' : 'F'
+        : 'M';
+      const gender = (p.gender ?? species.gender ?? fallback) as GenderName;
+      return {species: species.name, name, gender, shiny: p.shiny};
+    });
   }
+}
+
+export interface PokemonInfo {
+  name: string;
+  gender?: GenderName;
+  shiny?: boolean;
 }
 
 export class Log {
   readonly gen: Generation;
   readonly lookup: Lookup;
-  readonly names: Names;
+  readonly info: Info;
 
-  constructor(gen: Generation, lookup: Lookup, names: Names) {
+  constructor(gen: Generation, lookup: Lookup, info: Info) {
     this.gen = gen;
     this.lookup = lookup;
-    this.names = names;
+    this.info = info;
   }
 
   *parse(data: DataView): Iterable<ParsedLine> {
@@ -153,11 +167,11 @@ const END = {
 
 export const DECODERS: {[key: number]: Decoder} = {
   [ArgType.Move](offset, data) {
-    const source = decodeIdent(this.names, data.getUint8(offset++));
+    const source = decodeIdent(this.info, data.getUint8(offset++));
     const m = data.getUint8(offset++);
     const {player, id} = decodeIdentRaw(data.getUint8(offset++));
-    const target =
-      id === 0 ? '' : `${player}a: ${this.names[player].team[id - 1]}` as Protocol.PokemonIdent;
+    const target = id === 0
+      ? '' : `${player}a: ${this.info[player].team[id - 1].name}` as Protocol.PokemonIdent;
     const reason = data.getUint8(offset++);
     const move = reason === PROTOCOL.Move.Recharge
       ? 'recharge' : this.gen.moves.get(this.lookup.moveByNum(m))!.name;
@@ -167,7 +181,7 @@ export const DECODERS: {[key: number]: Decoder} = {
     return {offset, line: {args, kwArgs}};
   },
   [ArgType.Switch](offset, data) {
-    const ident = decodeIdent(this.names, data.getUint8(offset++));
+    const ident = decodeIdent(this.info, data.getUint8(offset++));
     const details = decodeDetails(offset, data, this.gen, this.lookup);
     offset += 2;
     const hpStatus = decodeHPStatus(offset, data);
@@ -176,7 +190,7 @@ export const DECODERS: {[key: number]: Decoder} = {
     return {offset, line: {args, kwArgs: {}}};
   },
   [ArgType.Cant](offset, data) {
-    const ident = decodeIdent(this.names, data.getUint8(offset++));
+    const ident = decodeIdent(this.info, data.getUint8(offset++));
     const reason = data.getUint8(offset++);
     let args: Protocol.Args['|cant|'];
     if (reason === PROTOCOL.Cant.Disable) {
@@ -188,7 +202,7 @@ export const DECODERS: {[key: number]: Decoder} = {
     return {offset, line: {args, kwArgs: {}}};
   },
   [ArgType.Faint](offset, data) {
-    return decodeProtocol('faint', offset, data, this.names);
+    return decodeProtocol('faint', offset, data, this.info);
   },
   [ArgType.Turn](offset, data) {
     const turn = data.getUint16(offset, LE).toString() as Protocol.Num;
@@ -198,7 +212,7 @@ export const DECODERS: {[key: number]: Decoder} = {
   [ArgType.Win](offset, data) {
     const player = data.getUint8(offset++) ? 'p2' : 'p1';
     const args =
-      ['win', this.names[player].name as Protocol.Username] as Protocol.Args['|win|'];
+      ['win', this.info[player].name as Protocol.Username] as Protocol.Args['|win|'];
     return {offset, line: {args, kwArgs: {}}};
   },
   [ArgType.Tie](offset) {
@@ -206,27 +220,27 @@ export const DECODERS: {[key: number]: Decoder} = {
     return {offset, line};
   },
   [ArgType.Damage](offset, data) {
-    const ident = decodeIdent(this.names, data.getUint8(offset++));
+    const ident = decodeIdent(this.info, data.getUint8(offset++));
     const hpStatus = decodeHPStatus(offset, data);
     offset += 5;
     const reason = data.getUint8(offset++);
     const kwArgs = {} as Writeable<Protocol.BattleArgsKWArgs['|-damage|']>;
     if (reason > PROTOCOL.Damage.None) kwArgs.from = DAMAGE[reason];
     if (reason === PROTOCOL.Damage.RecoilOf) {
-      kwArgs.of = decodeIdent(this.names, data.getUint8(offset++));
+      kwArgs.of = decodeIdent(this.info, data.getUint8(offset++));
     }
     const args = ['-damage', ident, hpStatus] as Protocol.Args['|-damage|'];
     return {offset, line: {args, kwArgs}};
   },
   [ArgType.Heal](offset, data) {
-    const ident = decodeIdent(this.names, data.getUint8(offset++));
+    const ident = decodeIdent(this.info, data.getUint8(offset++));
     const hpStatus = decodeHPStatus(offset, data);
     offset += 5;
     const reason = data.getUint8(offset++);
     const kwArgs = {} as Writeable<Protocol.BattleArgsKWArgs['|-heal|']>;
     if (reason === PROTOCOL.Heal.Drain) {
       kwArgs.from = 'drain' as Protocol.EffectName;
-      kwArgs.of = decodeIdent(this.names, data.getUint8(offset++));
+      kwArgs.of = decodeIdent(this.info, data.getUint8(offset++));
     } else if (reason === PROTOCOL.Heal.Silent) {
       kwArgs.silent = true;
     }
@@ -234,7 +248,7 @@ export const DECODERS: {[key: number]: Decoder} = {
     return {offset, line: {args, kwArgs}};
   },
   [ArgType.Status](offset, data) {
-    const ident = decodeIdent(this.names, data.getUint8(offset++));
+    const ident = decodeIdent(this.info, data.getUint8(offset++));
     const status = decodeStatus(data.getUint8(offset++));
     const reason = data.getUint8(offset++);
     const kwArgs = {} as Writeable<Protocol.BattleArgsKWArgs['|-status|']>;
@@ -248,7 +262,7 @@ export const DECODERS: {[key: number]: Decoder} = {
     return {offset, line: {args, kwArgs}};
   },
   [ArgType.CureStatus](offset, data) {
-    const ident = decodeIdent(this.names, data.getUint8(offset++));
+    const ident = decodeIdent(this.info, data.getUint8(offset++));
     const status = decodeStatus(data.getUint8(offset++));
     const reason = data.getUint8(offset++);
     const kwArgs = {} as Writeable<Protocol.BattleArgsKWArgs['|-curestatus|']>;
@@ -261,7 +275,7 @@ export const DECODERS: {[key: number]: Decoder} = {
     return {offset, line: {args, kwArgs}};
   },
   [ArgType.Boost](offset, data) {
-    const ident = decodeIdent(this.names, data.getUint8(offset++));
+    const ident = decodeIdent(this.info, data.getUint8(offset++));
     const reason = data.getUint8(offset++);
     const boost = BOOSTS[reason];
     const kwArgs = {} as Writeable<Protocol.BattleArgsKWArgs['|-boost|' | '|-unboost|']>;
@@ -279,7 +293,7 @@ export const DECODERS: {[key: number]: Decoder} = {
     return {offset, line: {args, kwArgs: {}}};
   },
   [ArgType.Fail](offset, data) {
-    const ident = decodeIdent(this.names, data.getUint8(offset++));
+    const ident = decodeIdent(this.info, data.getUint8(offset++));
     const reason = data.getUint8(offset++);
     let args: Protocol.Args['|-fail|'];
     const kwArgs = {} as Writeable<Protocol.BattleArgsKWArgs['|-fail|']>;
@@ -295,25 +309,25 @@ export const DECODERS: {[key: number]: Decoder} = {
     return {offset, line: {args, kwArgs}};
   },
   [ArgType.Miss](offset, data) {
-    return decodeProtocol('-miss', offset, data, this.names);
+    return decodeProtocol('-miss', offset, data, this.info);
   },
   [ArgType.HitCount](offset, data) {
-    const ident = decodeIdent(this.names, data.getUint8(offset++));
+    const ident = decodeIdent(this.info, data.getUint8(offset++));
     const num = data.getUint8(offset++).toString() as Protocol.Num;
     const args = ['-hitcount', ident, num] as Protocol.Args['|-hitcount|'];
     return {offset, line: {args, kwArgs: {}}};
   },
   [ArgType.Prepare](offset, data) {
-    const source = decodeIdent(this.names, data.getUint8(offset++));
+    const source = decodeIdent(this.info, data.getUint8(offset++));
     const move = this.gen.moves.get(this.lookup.moveByNum(data.getUint8(offset++)))!.name;
     const args = ['-prepare', source, move] as Protocol.Args['|-prepare|'];
     return {offset, line: {args, kwArgs: {}}};
   },
   [ArgType.MustRecharge](offset, data) {
-    return decodeProtocol('-mustrecharge', offset, data, this.names);
+    return decodeProtocol('-mustrecharge', offset, data, this.info);
   },
   [ArgType.Activate](offset, data) {
-    const ident = decodeIdent(this.names, data.getUint8(offset++));
+    const ident = decodeIdent(this.info, data.getUint8(offset++));
     const reason = data.getUint8(offset++);
     const args = reason === PROTOCOL.Activate.Splash
       ? ['-activate', '', ACTIVATE[reason]] as Protocol.Args['|-activate|']
@@ -327,7 +341,7 @@ export const DECODERS: {[key: number]: Decoder} = {
     return {offset, line: {args, kwArgs: {}}};
   },
   [ArgType.Start](offset, data) {
-    const ident = decodeIdent(this.names, data.getUint8(offset++));
+    const ident = decodeIdent(this.info, data.getUint8(offset++));
     const reason = data.getUint8(offset++);
     let args: Protocol.Args['|-start|'];
     const kwArgs = {} as Writeable<Protocol.BattleArgsKWArgs['|-start|']>;
@@ -348,7 +362,7 @@ export const DECODERS: {[key: number]: Decoder} = {
     return {offset, line: {args, kwArgs}};
   },
   [ArgType.End](offset, data) {
-    const ident = decodeIdent(this.names, data.getUint8(offset++));
+    const ident = decodeIdent(this.info, data.getUint8(offset++));
     const reason = data.getUint8(offset++);
     const args = ['-end', ident, END[reason]] as Protocol.Args['|-end|'];
     const kwArgs = reason >= PROTOCOL.End.DisableSilent ? {silent: true} : {};
@@ -358,36 +372,36 @@ export const DECODERS: {[key: number]: Decoder} = {
     return {offset, line: {args: ['-ohko'] as Protocol.Args['|-ohko|'], kwArgs: {}}};
   },
   [ArgType.Crit](offset, data) {
-    return decodeProtocol('-crit', offset, data, this.names);
+    return decodeProtocol('-crit', offset, data, this.info);
   },
   [ArgType.SuperEffective](offset, data) {
-    return decodeProtocol('-supereffective', offset, data, this.names);
+    return decodeProtocol('-supereffective', offset, data, this.info);
   },
   [ArgType.Resisted](offset, data) {
-    return decodeProtocol('-resisted', offset, data, this.names);
+    return decodeProtocol('-resisted', offset, data, this.info);
   },
   [ArgType.Immune](offset, data) {
-    const ident = decodeIdent(this.names, data.getUint8(offset++));
+    const ident = decodeIdent(this.info, data.getUint8(offset++));
     const reason = data.getUint8(offset++);
     const kwArgs = reason === PROTOCOL.Immune.OHKO ? {ohko: true} : {};
     return {offset, line: {args: ['-immune', ident] as Protocol.Args['|-immune|'], kwArgs}};
   },
   [ArgType.Transform](offset, data) {
-    const source = decodeIdent(this.names, data.getUint8(offset++));
-    const target = decodeIdent(this.names, data.getUint8(offset++));
+    const source = decodeIdent(this.info, data.getUint8(offset++));
+    const target = decodeIdent(this.info, data.getUint8(offset++));
     const args = ['-transform', source, target] as Protocol.Args['|-transform|'];
     return {offset, line: {args, kwArgs: {}}};
   },
 };
 
-function decodeProtocol(type: string, offset: number, data: DataView, names: Names) {
-  const ident = decodeIdent(names, data.getUint8(offset++));
+function decodeProtocol(type: string, offset: number, data: DataView, info: Info) {
+  const ident = decodeIdent(info, data.getUint8(offset++));
   return {offset, line: {args: [type, ident] as Protocol.BattleArgType, kwArgs: {}}};
 }
 
-function decodeIdent(names: Names, byte: number): Protocol.PokemonIdent {
+function decodeIdent(info: Info, byte: number): Protocol.PokemonIdent {
   const {player, id} = decodeIdentRaw(byte);
-  return `${player}a: ${names[player].team[id - 1]}` as Protocol.PokemonIdent;
+  return `${player}a: ${info[player].team[id - 1].name}` as Protocol.PokemonIdent;
 }
 
 function decodeDetails(

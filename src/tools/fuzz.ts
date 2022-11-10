@@ -8,7 +8,7 @@ import {minify} from 'html-minifier';
 import {Dex} from '@pkmn/sim';
 import {Generation, Generations} from '@pkmn/data';
 
-import {Battle, Result, Choice, Log, ParsedLine, Names} from '../pkg';
+import {Battle, Result, Choice, Log, ParsedLine, Info, SideInfo} from '../pkg';
 import {Lookup, Data, LAYOUT, LE} from '../pkg/data';
 import {STYLES, displayBattle, escapeHTML, SCRIPTS} from '../test/display';
 import * as gen1 from '../pkg/gen1';
@@ -53,7 +53,7 @@ const display = (
   return buf.join('');
 };
 
-class SpeciesNames implements Names {
+class SpeciesNames implements Info {
   gen: Generation;
   battle!: Battle;
 
@@ -65,16 +65,16 @@ class SpeciesNames implements Names {
     const [p1] = Array.from(this.battle.sides);
     const team = Array.from(p1.pokemon)
       .sort((a, b) => a.position - b.position)
-      .map(p => this.gen.species.get(p.stored.species)!.name);
-    return {name: 'Player 1', team};
+      .map(p => ({species: p.stored.species}));
+    return new SideInfo(this.gen, {name: 'Player 1', team});
   }
 
   get p2() {
     const [, p2] = Array.from(this.battle.sides);
     const team = Array.from(p2.pokemon)
       .sort((a, b) => a.position - b.position)
-      .map(p => this.gen.species.get(p.stored.species)!.name);
-    return {name: 'Player 2', team};
+      .map(p => ({species: p.stored.species}));
+    return new SideInfo(this.gen, {name: 'Player 2', team});
   }
 }
 

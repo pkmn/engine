@@ -1,20 +1,27 @@
-import {Dex} from '@pkmn/sim';
+import * as fs from 'fs';
+import * as path from 'path';
+
 import {Generations} from '@pkmn/data';
+import {Protocol} from '@pkmn/protocol';
+import {Dex} from '@pkmn/sim';
+import {PokemonSet, Team} from '@pkmn/sets';
 
 import {LE, PROTOCOL, Data, Lookup} from './data';
-import {Log} from './protocol';
-import {Protocol} from '@pkmn/protocol';
+import {Info, Log} from './protocol';
 
 const ArgType = PROTOCOL.ArgType;
+const teams = path.resolve(__dirname, '..', 'examples', 'js', 'teams');
+const team = (p: 'p1' | 'p2') =>
+  Team.import(fs.readFileSync(path.join(teams, `${p}.txt`), 'utf8'), Dex as any)!.team;
 
-const NAMES = {
+const INFO = {
   p1: {
     name: 'Player A' as Protocol.Username,
-    team: ['Fushigidane', 'Hitokage', 'Zenigame', 'Pikachuu', 'Koratta', 'Poppo'],
+    team: team('p1') as PokemonSet[],
   },
   p2: {
     name: 'Player B' as Protocol.Username,
-    team: ['Kentarosu', 'Rakkii', 'Kabigon', 'Nasshii', 'Sutaamii', 'Fuudin'],
+    team: team('p2') as PokemonSet[],
   },
 };
 
@@ -25,7 +32,7 @@ for (const gen of new Generations(Dex as any)) {
   if (gen.num > 1) break;
 
   describe(`Gen ${gen.num}`, () => {
-    const log = new Log(gen, Lookup.get(gen), NAMES);
+    const log = new Log(gen, Lookup.get(gen), new Info(gen, INFO));
 
     it('|move|', () => {
       const move = (s: string) => gen.moves.get(s)!.num;

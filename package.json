@@ -32,6 +32,7 @@
   "devDependencies": {
     "@pkmn/eslint-config": "^2.12.0",
     "@pkmn/img": "^0.1.20",
+    "@pkmn/sets": "^4.0.0",
     "@pkmn/sim": "^0.6.3",
     "@types/html-minifier": "^4.0.2",
     "@types/jest": "^29.2.2",
