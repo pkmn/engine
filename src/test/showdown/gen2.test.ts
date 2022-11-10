@@ -3091,7 +3091,7 @@ describe('Gen 2', () => {
     const proc = {key: HIT.key, value: ranged(25, 256) - 1};
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, proc, QKC, NO_CRIT, MIN_DMG,
-      QKC, NO_CRIT, MIN_DMG, QKC, QKC
+      QKC, NO_CRIT, MIN_DMG, QKC, QKC,
     ], [
       {species: 'Articuno', evs, moves: ['Mist', 'Peck', 'Baton Pass']},
       {species: 'Suicune', evs, moves: ['Surf']},
@@ -3488,7 +3488,7 @@ describe('Gen 2', () => {
   test.todo('Conversion2 effect');
   test.todo('Substitute effect');
 
-  test('Teleport effect', () => {
+  test('Sketch effect', () => {
     const battle = startBattle([QKC, QKC], [
       {species: 'Smeargle', evs, moves: ['Sketch']},
     ], [
