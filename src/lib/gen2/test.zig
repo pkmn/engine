@@ -1122,6 +1122,14 @@ test "Sandstorm effect" {
     return error.SkipZigTest;
 }
 
+// Move.SunnyDay
+test "SunnyDay effect" {
+    // For 5 turns, the weather becomes Sunny Day, even if the current weather is Sunny Day. The
+    // damage of Fire-type attacks is multiplied by 1.5 and the damage of Water-type attacks is
+    // multiplied by 0.5 during the effect.
+    return error.SkipZigTest;
+}
+
 // Move.RainDance
 test "RainDance effect" {
     // For 5 turns, the weather becomes Rain Dance, even if the current weather is Rain Dance. The
@@ -1135,14 +1143,6 @@ test "Thunder effect" {
     // Has a 30% chance to paralyze the target. This move can hit a target using Fly. If the weather
     // is Rain Dance, this move does not check accuracy. If the weather is Sunny Day, this move's
     // accuracy is 50%.
-    return error.SkipZigTest;
-}
-
-// Move.SunnyDay
-test "SunnyDay effect" {
-    // For 5 turns, the weather becomes Sunny Day, even if the current weather is Sunny Day. The
-    // damage of Fire-type attacks is multiplied by 1.5 and the damage of Water-type attacks is
-    // multiplied by 0.5 during the effect.
     return error.SkipZigTest;
 }
 

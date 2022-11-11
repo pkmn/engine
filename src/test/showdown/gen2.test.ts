@@ -434,9 +434,9 @@ describe('Gen 2', () => {
   });
 
   test('damage calc', () => {
-    const NO_BRN = {key: HIT.key, value: ranged(77, 256)};
+    const no_brn = {key: HIT.key, value: ranged(25, 256)};
     const battle = startBattle([
-      QKC, NO_CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, NO_BRN, QKC, NO_CRIT, MIN_DMG, QKC,
+      QKC, NO_CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, no_brn, QKC, NO_CRIT, MIN_DMG, QKC,
     ], [
       {species: 'Starmie', evs, moves: ['Water Gun', 'Thunderbolt']},
     ], [
@@ -2819,10 +2819,136 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('Solarbeam effect');
+  test('SolarBeam effect', () => {
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG,
+      QKC, QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG,
+    ], [
+      {species: 'Sunflora', evs, moves: ['Solar Beam', 'Vine Whip']},
+      {species: 'Ivysaur', evs, moves: ['Vine Whip']},
+    ], [
+      {species: 'Qwilfish', evs, moves: ['Scratch', 'Water Gun', 'Rain Dance', 'Sunny Day']},
+      {species: 'Horsea', evs, moves: ['Bubble']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    let pp = battle.p1.pokemon[0].moveSlots[0].pp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 40);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+
+    expect(choices(battle, 'p1')).toEqual(['move 1']);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 40);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 192);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
+
+    battle.makeChoices('move 1', 'move 3');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+
+    battle.makeChoices('move 1', 'move 3');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 95);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
+
+    battle.makeChoices('move 1', 'move 4');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+    expect(battle.p2.pokemon[0].hp).toBe(0);
+
+    verify(battle, [
+      '|move|p2a: Qwilfish|Scratch|p1a: Sunflora',
+      '|-damage|p1a: Sunflora|313/353',
+      '|move|p1a: Sunflora|Solar Beam||[still]',
+      '|-prepare|p1a: Sunflora|Solar Beam',
+      '|turn|2',
+      '|move|p2a: Qwilfish|Scratch|p1a: Sunflora',
+      '|-damage|p1a: Sunflora|273/353',
+      '|move|p1a: Sunflora|Solar Beam|p2a: Qwilfish',
+      '|-damage|p2a: Qwilfish|141/333',
+      '|turn|3',
+      '|move|p2a: Qwilfish|Rain Dance|p2a: Qwilfish',
+      '|-weather|RainDance',
+      '|move|p1a: Sunflora|Solar Beam||[still]',
+      '|-prepare|p1a: Sunflora|Solar Beam',
+      '|-weather|RainDance|[upkeep]',
+      '|turn|4',
+      '|move|p2a: Qwilfish|Rain Dance|p2a: Qwilfish',
+      '|-weather|RainDance',
+      '|move|p1a: Sunflora|Solar Beam|p2a: Qwilfish',
+      '|-damage|p2a: Qwilfish|46/333',
+      '|-weather|RainDance|[upkeep]',
+      '|turn|5',
+      '|move|p2a: Qwilfish|Sunny Day|p2a: Qwilfish',
+      '|-weather|SunnyDay',
+      '|move|p1a: Sunflora|Solar Beam||[still]',
+      '|-prepare|p1a: Sunflora|Solar Beam',
+      '|-anim|p1a: Sunflora|Solar Beam|p2a: Qwilfish',
+      '|-damage|p2a: Qwilfish|0 fnt',
+      '|faint|p2a: Qwilfish',
+    ]);
+  });
+
   test.todo('Fly effect');
   test.todo('Dig effect');
-  test.todo('Gust/Earthquake effect');
+
+  test('Gust/Earthquake effect', () => {
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, SS_RES,
+      QKC, MISS, SS_RES, QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
+    ], [
+      {species: 'Mew', evs, moves: ['Earthquake', 'Fly']},
+    ], [
+      {species: 'Suicune', evs, moves: ['Gust', 'Dig']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 25);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 65);
+
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 49);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 37);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 130);
+
+    verify(battle, [
+      '|move|p1a: Mew|Earthquake|p2a: Suicune',
+      '|-damage|p2a: Suicune|338/403',
+      '|move|p2a: Suicune|Gust|p1a: Mew',
+      '|-damage|p1a: Mew|378/403',
+      '|turn|2',
+      '|move|p1a: Mew|Fly||[still]',
+      '|-prepare|p1a: Mew|Fly',
+      '|move|p2a: Suicune|Gust|p1a: Mew',
+      '|-damage|p1a: Mew|329/403',
+      '|turn|3',
+      '|move|p1a: Mew|Fly|p2a: Suicune|[miss]',
+      '|-miss|p1a: Mew',
+      '|move|p2a: Suicune|Dig||[still]',
+      '|-prepare|p2a: Suicune|Dig',
+      '|turn|4',
+      '|move|p1a: Mew|Earthquake|p2a: Suicune',
+      '|-damage|p2a: Suicune|208/403',
+      '|move|p2a: Suicune|Dig|p1a: Mew',
+      '|-damage|p1a: Mew|292/403',
+      '|turn|5',
+    ]);
+  });
+
   test.todo('Twister effect');
 
   test('ForceSwitch effect', () => {
@@ -3375,7 +3501,72 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('WeatherHeal effect');
+  test('WeatherHeal effect', () => {
+    const no_brn = {key: HIT.key, value: ranged(25, 256)};
+    const battle = startBattle([
+      QKC, CRIT, MIN_DMG, no_brn, QKC, QKC, QKC, CRIT, MAX_DMG, no_brn, QKC, QKC,
+    ], [
+      {species: 'Sunkern', evs, moves: ['Synthesis', 'Sunny Day']},
+    ], [
+      {species: 'Wooper', evs, moves: ['Flamethrower', 'Rain Dance', 'Ember', 'Teleport']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+
+    // Fails if at full health
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 255);
+
+    // Heals 50% regularly
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp += 131);
+
+    // Heals 25% in non-Sunny weather
+    battle.makeChoices('move 1', 'move 4');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp += 65);
+
+    battle.makeChoices('move 2', 'move 3');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 192);
+
+    // Heals 100% in Sunny weather
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp += 251);
+
+    verify(battle, [
+      '|move|p1a: Sunkern|Synthesis|p1a: Sunkern',
+      '|move|p2a: Wooper|Flamethrower|p1a: Sunkern',
+      '|-crit|p1a: Sunkern',
+      '|-supereffective|p1a: Sunkern',
+      '|-damage|p1a: Sunkern|8/263',
+      '|turn|2',
+      '|move|p1a: Sunkern|Synthesis|p1a: Sunkern',
+      '|-heal|p1a: Sunkern|139/263',
+      '|move|p2a: Wooper|Rain Dance|p2a: Wooper',
+      '|-weather|RainDance',
+      '|-weather|RainDance|[upkeep]',
+      '|turn|3',
+      '|move|p1a: Sunkern|Synthesis|p1a: Sunkern',
+      '|-heal|p1a: Sunkern|204/263',
+      '|move|p2a: Wooper|Teleport|p2a: Wooper',
+      '|-weather|RainDance|[upkeep]',
+      '|turn|4',
+      '|move|p1a: Sunkern|Sunny Day|p1a: Sunkern',
+      '|-weather|SunnyDay',
+      '|move|p2a: Wooper|Ember|p1a: Sunkern',
+      '|-crit|p1a: Sunkern',
+      '|-supereffective|p1a: Sunkern',
+      '|-damage|p1a: Sunkern|12/263',
+      '|-weather|SunnyDay|[upkeep]',
+      '|turn|5',
+      '|move|p1a: Sunkern|Synthesis|p1a: Sunkern',
+      '|-heal|p1a: Sunkern|263/263',
+      '|move|p2a: Wooper|Rain Dance|p2a: Wooper',
+      '|-weather|RainDance',
+      '|-weather|RainDance|[upkeep]',
+      '|turn|6',
+    ]);
+  });
+
   test.todo('Rest effect');
 
   test('DrainHP effect', () => {
@@ -4218,7 +4409,110 @@ describe('Gen 2', () => {
 
 
   test.todo('PerishSong effect');
-  test.todo('Rollout effect');
+
+  test('Rollout effect', () => {
+    const proc = {key: ['Battle.sample', 'Battle.singleEvent'], value: MIN};
+    const battle = startBattle([
+      QKC, HIT, NO_CRIT, MIN_DMG,
+      QKC, MISS,
+      QKC, HIT, NO_CRIT, MIN_DMG,
+      QKC, HIT, NO_CRIT, MIN_DMG,
+      QKC, HIT, NO_CRIT, MIN_DMG,
+      QKC, HIT, NO_CRIT, MIN_DMG,
+      QKC, HIT, NO_CRIT, MIN_DMG,
+      QKC, HIT, SS_MOD, SLP(5),
+      QKC, proc, HIT, NO_CRIT, MIN_DMG,
+      QKC, QKC,
+    ], [
+      {species: 'Shuckle', evs, moves: ['Rollout', 'Sleep Talk']},
+      {species: 'Pupitar', evs, moves: ['Harden']},
+    ], [
+      {species: 'Blissey', evs, moves: ['Soft-Boiled', 'Sing']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 34);
+
+    expect(choices(battle, 'p1')).toEqual(['move 1']);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp += 34);
+
+    expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+
+    for (let i = 0; i < 5; i++) {
+      battle.makeChoices('move 1', 'move 1');
+    }
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 516);
+
+    expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+
+    battle.makeChoices('move 1', 'move 2');
+
+    // Does not lock-in if called via Sleep Talk
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = p2hp + 357 - 34);
+
+    expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp += 193);
+
+    verify(battle, [
+      '|move|p2a: Blissey|Soft-Boiled|p2a: Blissey',
+      '|-fail|p2a: Blissey',
+      '|move|p1a: Shuckle|Rollout|p2a: Blissey',
+      '|-damage|p2a: Blissey|679/713',
+      '|turn|2',
+      '|move|p2a: Blissey|Soft-Boiled|p2a: Blissey',
+      '|-heal|p2a: Blissey|713/713',
+      '|move|p1a: Shuckle|Rollout|p2a: Blissey|[miss]',
+      '|-miss|p1a: Shuckle',
+      '|turn|3',
+      '|move|p2a: Blissey|Soft-Boiled|p2a: Blissey',
+      '|-fail|p2a: Blissey',
+      '|move|p1a: Shuckle|Rollout|p2a: Blissey',
+      '|-damage|p2a: Blissey|679/713',
+      '|turn|4',
+      '|move|p2a: Blissey|Soft-Boiled|p2a: Blissey',
+      '|-heal|p2a: Blissey|713/713',
+      '|move|p1a: Shuckle|Rollout|p2a: Blissey',
+      '|-damage|p2a: Blissey|647/713',
+      '|turn|5',
+      '|move|p2a: Blissey|Soft-Boiled|p2a: Blissey',
+      '|-heal|p2a: Blissey|713/713',
+      '|move|p1a: Shuckle|Rollout|p2a: Blissey',
+      '|-damage|p2a: Blissey|583/713',
+      '|turn|6',
+      '|move|p2a: Blissey|Soft-Boiled|p2a: Blissey',
+      '|-heal|p2a: Blissey|713/713',
+      '|move|p1a: Shuckle|Rollout|p2a: Blissey',
+      '|-damage|p2a: Blissey|455/713',
+      '|turn|7',
+      '|move|p2a: Blissey|Soft-Boiled|p2a: Blissey',
+      '|-heal|p2a: Blissey|713/713',
+      '|move|p1a: Shuckle|Rollout|p2a: Blissey',
+      '|-damage|p2a: Blissey|197/713',
+      '|turn|8',
+      '|move|p2a: Blissey|Sing|p1a: Shuckle',
+      '|-status|p1a: Shuckle|slp|[from] move: Sing',
+      '|cant|p1a: Shuckle|slp',
+      '|turn|9',
+      '|move|p2a: Blissey|Soft-Boiled|p2a: Blissey',
+      '|-heal|p2a: Blissey|554/713',
+      '|cant|p1a: Shuckle|slp',
+      '|move|p1a: Shuckle|Sleep Talk|p1a: Shuckle',
+      '|move|p1a: Shuckle|Rollout|p2a: Blissey|[from]Sleep Talk',
+      '|-damage|p2a: Blissey|520/713',
+      '|turn|10',
+      '|move|p2a: Blissey|Soft-Boiled|p2a: Blissey',
+      '|-heal|p2a: Blissey|713/713',
+      '|cant|p1a: Shuckle|slp',
+      '|turn|11',
+    ]);
+  });
 
   test('FalseSwipe effect', () => {
     const battle = startBattle([QKC, NO_CRIT, MAX_DMG, QKC, NO_CRIT, MAX_DMG, QKC], [
@@ -4289,8 +4583,177 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('FuryCutter effect');
-  test.todo('Attract effect');
+  test('Fury Cutter effect', () => {
+    const proc = {key: ['Battle.sample', 'Battle.singleEvent'], value: MIN};
+    const battle = startBattle([
+      QKC, HIT, NO_CRIT, MIN_DMG,
+      QKC, MISS,
+      QKC, HIT, NO_CRIT, MIN_DMG,
+      QKC, HIT, NO_CRIT, MIN_DMG,
+      QKC, HIT, NO_CRIT, MIN_DMG,
+      QKC, HIT, NO_CRIT, MIN_DMG,
+      QKC, HIT, NO_CRIT, MIN_DMG,
+      QKC, HIT, SS_MOD, SLP(5),
+      QKC, proc, HIT, NO_CRIT, MIN_DMG,
+      QKC, QKC,
+    ], [
+      {species: 'Shuckle', evs, moves: ['Fury Cutter', 'Sleep Talk']},
+      {species: 'Pupitar', evs, moves: ['Harden']},
+    ], [
+      {species: 'Blissey', evs, moves: ['Soft-Boiled', 'Sing']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 12);
+
+    expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp += 12);
+
+    for (let i = 0; i < 5; i++) {
+      battle.makeChoices('move 1', 'move 1');
+    }
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 173);
+
+    battle.makeChoices('move 1', 'move 2');
+
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = p2hp + 173 - 12);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp += 12);
+
+    verify(battle, [
+      '|move|p2a: Blissey|Soft-Boiled|p2a: Blissey',
+      '|-fail|p2a: Blissey',
+      '|move|p1a: Shuckle|Fury Cutter|p2a: Blissey',
+      '|-damage|p2a: Blissey|701/713',
+      '|turn|2',
+      '|move|p2a: Blissey|Soft-Boiled|p2a: Blissey',
+      '|-heal|p2a: Blissey|713/713',
+      '|move|p1a: Shuckle|Fury Cutter|p2a: Blissey|[miss]',
+      '|-miss|p1a: Shuckle',
+      '|turn|3',
+      '|move|p2a: Blissey|Soft-Boiled|p2a: Blissey',
+      '|-fail|p2a: Blissey',
+      '|move|p1a: Shuckle|Fury Cutter|p2a: Blissey',
+      '|-damage|p2a: Blissey|701/713',
+      '|turn|4',
+      '|move|p2a: Blissey|Soft-Boiled|p2a: Blissey',
+      '|-heal|p2a: Blissey|713/713',
+      '|move|p1a: Shuckle|Fury Cutter|p2a: Blissey',
+      '|-damage|p2a: Blissey|691/713',
+      '|turn|5',
+      '|move|p2a: Blissey|Soft-Boiled|p2a: Blissey',
+      '|-heal|p2a: Blissey|713/713',
+      '|move|p1a: Shuckle|Fury Cutter|p2a: Blissey',
+      '|-damage|p2a: Blissey|669/713',
+      '|turn|6',
+      '|move|p2a: Blissey|Soft-Boiled|p2a: Blissey',
+      '|-heal|p2a: Blissey|713/713',
+      '|move|p1a: Shuckle|Fury Cutter|p2a: Blissey',
+      '|-damage|p2a: Blissey|626/713',
+      '|turn|7',
+      '|move|p2a: Blissey|Soft-Boiled|p2a: Blissey',
+      '|-heal|p2a: Blissey|713/713',
+      '|move|p1a: Shuckle|Fury Cutter|p2a: Blissey',
+      '|-damage|p2a: Blissey|540/713',
+      '|turn|8',
+      '|move|p2a: Blissey|Sing|p1a: Shuckle',
+      '|-status|p1a: Shuckle|slp|[from] move: Sing',
+      '|cant|p1a: Shuckle|slp',
+      '|turn|9',
+      '|move|p2a: Blissey|Soft-Boiled|p2a: Blissey',
+      '|-heal|p2a: Blissey|713/713',
+      '|cant|p1a: Shuckle|slp',
+      '|move|p1a: Shuckle|Sleep Talk|p1a: Shuckle',
+      '|move|p1a: Shuckle|Fury Cutter|p2a: Blissey|[from]Sleep Talk',
+      '|-damage|p2a: Blissey|701/713',
+      '|turn|10',
+      '|move|p2a: Blissey|Soft-Boiled|p2a: Blissey',
+      '|-heal|p2a: Blissey|713/713',
+      '|cant|p1a: Shuckle|slp',
+      '|turn|11',
+    ]);
+  });
+
+  test('Attract effect', () => {
+    const can = {key: 'Battle.onBeforeMove', value: MAX};
+    const cant = {key: 'Battle.onBeforeMove', value: MIN};
+    const battle = startBattle([QKC, QKC, QKC, QKC, QKC, cant, QKC, can, QKC, QKC], [
+      {species: 'Smoochum', evs, moves: ['Attract', 'Teleport']},
+    ], [
+      {species: 'Blissey', evs, moves: ['Teleport']},
+      {species: 'Celebi', evs, moves: ['Teleport']},
+      {species: 'Nidoking', evs, moves: ['Substitute', 'Baton Pass']},
+      {species: 'Tyrogue', evs, moves: ['Meditate']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[2].hp;
+
+    // Can't attract same gender
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].volatiles['attract']).toBeUndefined();
+
+    // Can't attract Pokémon with unknown gender
+    battle.makeChoices('move 1', 'switch 2');
+    expect(battle.p2.pokemon[0].volatiles['attract']).toBeUndefined();
+
+    battle.makeChoices('move 2', 'switch 3');
+
+    // Can attract Pokémon through a Substitute
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 91);
+    expect(battle.p2.pokemon[0].volatiles['attract']).toBeDefined();
+
+    // Infatuated Pokémon are sometimes prevented from moving
+    battle.makeChoices('move 1', 'move 2');
+
+    battle.makeChoices('move 2', 'move 2');
+    battle.makeChoices('', 'switch 4');
+
+    // Infatuation is not preserved after Baton Pass
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p2.pokemon[0].volatiles['attract']).toBeUndefined();
+
+    verify(battle, [
+      '|move|p1a: Smoochum|Attract|p2a: Blissey',
+      '|-fail|p2a: Blissey',
+      '|move|p2a: Blissey|Teleport|p2a: Blissey',
+      '|turn|2',
+      '|switch|p2a: Celebi|Celebi|403/403',
+      '|move|p1a: Smoochum|Attract|p2a: Celebi',
+      '|-fail|p2a: Celebi',
+      '|turn|3',
+      '|switch|p2a: Nidoking|Nidoking, M|365/365',
+      '|move|p1a: Smoochum|Teleport|p1a: Smoochum',
+      '|turn|4',
+      '|move|p2a: Nidoking|Substitute|p2a: Nidoking',
+      '|-start|p2a: Nidoking|Substitute',
+      '|-damage|p2a: Nidoking|274/365',
+      '|move|p1a: Smoochum|Attract|p2a: Nidoking',
+      '|-start|p2a: Nidoking|Attract',
+      '|turn|5',
+      '|-activate|p2a: Nidoking|move: Attract|[of] p1a: Smoochum',
+      '|cant|p2a: Nidoking|Attract',
+      '|move|p1a: Smoochum|Attract|p2a: Nidoking',
+      '|-fail|p2a: Nidoking',
+      '|turn|6',
+      '|-activate|p2a: Nidoking|move: Attract|[of] p1a: Smoochum',
+      '|move|p2a: Nidoking|Baton Pass|p2a: Nidoking',
+      '|switch|p2a: Tyrogue|Tyrogue, M|273/273',
+      '|move|p1a: Smoochum|Teleport|p1a: Smoochum',
+      '|turn|7',
+      '|move|p1a: Smoochum|Teleport|p1a: Smoochum',
+      '|move|p2a: Tyrogue|Meditate|p2a: Tyrogue',
+      '|-boost|p2a: Tyrogue|atk|1',
+      '|turn|8',
+    ]);
+  });
+
   test.todo('SleepTalk effect');
   test.todo('HealBell effect');
 
@@ -4335,12 +4798,227 @@ describe('Gen 2', () => {
   test.todo('BatonPass effect');
   test.todo('Encore effect');
   test.todo('Pursuit effect');
-  test.todo('HiddenPower effect');
+
+  test('HiddenPower effect', () => {
+    const grass69 = {hp: 0, atk: 28, def: 20, spe: 20, spa: 20, spd: 20};
+    const ground31 = {hp: 12, atk: 8, def: 6, spe: 6, spa: 8, spd: 8};
+    const battle = startBattle([QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC], [
+      {species: 'Raikou', evs, ivs: grass69, moves: ['Hidden Power']},
+    ], [
+      {species: 'Zapdos', evs, ivs: ground31, moves: ['Hidden Power']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 51);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 30);
+
+    verify(battle, [
+      '|move|p1a: Raikou|Hidden Power|p2a: Zapdos',
+      '|-resisted|p2a: Zapdos',
+      '|-damage|p2a: Zapdos|335/365',
+      '|move|p2a: Zapdos|Hidden Power|p1a: Raikou',
+      '|-supereffective|p1a: Raikou',
+      '|-damage|p1a: Raikou|302/353',
+      '|turn|2',
+    ]);
+  });
+
   test.todo('Sandstorm effect');
-  test.todo('RainDance effect');
+
+  test('SunnyDay effect', () => {
+    const no_brn = {key: HIT.key, value: ranged(25, 256)};
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, no_brn, QKC, NO_CRIT, MIN_DMG,
+      QKC, QKC, QKC, QKC, QKC, NO_CRIT, MIN_DMG, QKC,
+    ], [
+      {species: 'Bellossom', evs, moves: ['Sunny Day', 'Teleport']},
+    ], [
+      {species: 'Tyrogue', evs, moves: ['Fire Punch', 'Water Gun', 'Teleport']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 93);
+    expect(battle.field.weather).toBe('sunnyday');
+    expect(battle.field.weatherState.duration).toBe(4);
+
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 4);
+    expect(battle.field.weather).toBe('sunnyday');
+    expect(battle.field.weatherState.duration).toBe(4);
+
+    for (let i = 0; i < 4; i++) {
+      battle.makeChoices('move 2', 'move 3');
+      const duration = 3 - i;
+      expect(battle.field.weather).toBe(duration ? 'sunnyday' : '');
+      expect(battle.field.weatherState.duration).toEqual(duration || undefined);
+    }
+
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 8);
+
+    verify(battle, [
+      '|move|p1a: Bellossom|Sunny Day|p1a: Bellossom',
+      '|-weather|SunnyDay',
+      '|move|p2a: Tyrogue|Fire Punch|p1a: Bellossom',
+      '|-supereffective|p1a: Bellossom',
+      '|-damage|p1a: Bellossom|260/353',
+      '|-weather|SunnyDay|[upkeep]',
+      '|turn|2',
+      '|move|p1a: Bellossom|Sunny Day|p1a: Bellossom',
+      '|-weather|SunnyDay',
+      '|move|p2a: Tyrogue|Water Gun|p1a: Bellossom',
+      '|-resisted|p1a: Bellossom',
+      '|-damage|p1a: Bellossom|256/353',
+      '|-weather|SunnyDay|[upkeep]',
+      '|turn|3',
+      '|move|p1a: Bellossom|Teleport|p1a: Bellossom',
+      '|move|p2a: Tyrogue|Teleport|p2a: Tyrogue',
+      '|-weather|SunnyDay|[upkeep]',
+      '|turn|4',
+      '|move|p1a: Bellossom|Teleport|p1a: Bellossom',
+      '|move|p2a: Tyrogue|Teleport|p2a: Tyrogue',
+      '|-weather|SunnyDay|[upkeep]',
+      '|turn|5',
+      '|move|p1a: Bellossom|Teleport|p1a: Bellossom',
+      '|move|p2a: Tyrogue|Teleport|p2a: Tyrogue',
+      '|-weather|SunnyDay|[upkeep]',
+      '|turn|6',
+      '|move|p1a: Bellossom|Teleport|p1a: Bellossom',
+      '|move|p2a: Tyrogue|Teleport|p2a: Tyrogue',
+      '|-weather|none',
+      '|turn|7',
+      '|move|p1a: Bellossom|Teleport|p1a: Bellossom',
+      '|move|p2a: Tyrogue|Water Gun|p1a: Bellossom',
+      '|-resisted|p1a: Bellossom',
+      '|-damage|p1a: Bellossom|248/353',
+      '|turn|8',
+    ]);
+  });
+
+  test('RainDance effect', () => {
+    const no_brn = {key: HIT.key, value: ranged(25, 256)};
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, no_brn, QKC, NO_CRIT, MIN_DMG,
+      QKC, QKC, QKC, QKC, QKC, NO_CRIT, MIN_DMG, QKC,
+    ], [
+      {species: 'Bellossom', evs, moves: ['Rain Dance', 'Teleport']},
+    ], [
+      {species: 'Tyrogue', evs, moves: ['Fire Punch', 'Water Gun', 'Teleport']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 30);
+    expect(battle.field.weather).toBe('raindance');
+    expect(battle.field.weatherState.duration).toBe(4);
+
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 12);
+    expect(battle.field.weather).toBe('raindance');
+    expect(battle.field.weatherState.duration).toBe(4);
+
+    for (let i = 0; i < 4; i++) {
+      battle.makeChoices('move 2', 'move 3');
+      const duration = 3 - i;
+      expect(battle.field.weather).toBe(duration ? 'raindance' : '');
+      expect(battle.field.weatherState.duration).toEqual(duration || undefined);
+    }
+
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 8);
+
+    verify(battle, [
+      '|move|p1a: Bellossom|Rain Dance|p1a: Bellossom',
+      '|-weather|RainDance',
+      '|move|p2a: Tyrogue|Fire Punch|p1a: Bellossom',
+      '|-supereffective|p1a: Bellossom',
+      '|-damage|p1a: Bellossom|323/353',
+      '|-weather|RainDance|[upkeep]',
+      '|turn|2',
+      '|move|p1a: Bellossom|Rain Dance|p1a: Bellossom',
+      '|-weather|RainDance',
+      '|move|p2a: Tyrogue|Water Gun|p1a: Bellossom',
+      '|-resisted|p1a: Bellossom',
+      '|-damage|p1a: Bellossom|311/353',
+      '|-weather|RainDance|[upkeep]',
+      '|turn|3',
+      '|move|p1a: Bellossom|Teleport|p1a: Bellossom',
+      '|move|p2a: Tyrogue|Teleport|p2a: Tyrogue',
+      '|-weather|RainDance|[upkeep]',
+      '|turn|4',
+      '|move|p1a: Bellossom|Teleport|p1a: Bellossom',
+      '|move|p2a: Tyrogue|Teleport|p2a: Tyrogue',
+      '|-weather|RainDance|[upkeep]',
+      '|turn|5',
+      '|move|p1a: Bellossom|Teleport|p1a: Bellossom',
+      '|move|p2a: Tyrogue|Teleport|p2a: Tyrogue',
+      '|-weather|RainDance|[upkeep]',
+      '|turn|6',
+      '|move|p1a: Bellossom|Teleport|p1a: Bellossom',
+      '|move|p2a: Tyrogue|Teleport|p2a: Tyrogue',
+      '|-weather|none',
+      '|turn|7',
+      '|move|p1a: Bellossom|Teleport|p1a: Bellossom',
+      '|move|p2a: Tyrogue|Water Gun|p1a: Bellossom',
+      '|-resisted|p1a: Bellossom',
+      '|-damage|p1a: Bellossom|303/353',
+      '|turn|8',
+    ]);
+  });
+
   test.todo('Thunder effect');
-  test.todo('SunnyDay effect');
-  test.todo('PsychUp effect');
+
+  test('PsychUp effect', () => {
+    const battle = startBattle([QKC, QKC, QKC, SS_RES, QKC], [
+      {species: 'Stantler', evs, moves: ['Psych Up', 'Teleport']},
+    ], [
+      {species: 'Chikorita', evs, moves: ['Swords Dance', 'Minimize', 'Protect']},
+    ]);
+
+    // Fails if no stat changes to copy
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(0);
+    expect(battle.p1.pokemon[0].boosts.evasion).toBe(0);
+    expect(battle.p2.pokemon[0].boosts.atk).toBe(2);
+    expect(battle.p2.pokemon[0].boosts.evasion).toBe(0);
+
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(0);
+    expect(battle.p1.pokemon[0].boosts.evasion).toBe(0);
+    expect(battle.p2.pokemon[0].boosts.atk).toBe(2);
+    expect(battle.p2.pokemon[0].boosts.evasion).toBe(1);
+
+    // Bypasses accuracy and protect
+    battle.makeChoices('move 1', 'move 3');
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
+    expect(battle.p1.pokemon[0].boosts.evasion).toBe(1);
+    expect(battle.p2.pokemon[0].boosts.atk).toBe(2);
+    expect(battle.p2.pokemon[0].boosts.evasion).toBe(1);
+
+    verify(battle, [
+      '|move|p1a: Stantler|Psych Up|p2a: Chikorita',
+      '|-copyboost|p1a: Stantler|p2a: Chikorita|[from] move: Psych Up',
+      '|move|p2a: Chikorita|Swords Dance|p2a: Chikorita',
+      '|-boost|p2a: Chikorita|atk|2',
+      '|turn|2',
+      '|move|p1a: Stantler|Teleport|p1a: Stantler',
+      '|move|p2a: Chikorita|Minimize|p2a: Chikorita',
+      '|-boost|p2a: Chikorita|evasion|1',
+      '|turn|3',
+      '|move|p2a: Chikorita|Protect|p2a: Chikorita',
+      '|-singleturn|p2a: Chikorita|Protect',
+      '|move|p1a: Stantler|Psych Up|p2a: Chikorita',
+      '|-copyboost|p1a: Stantler|p2a: Chikorita|[from] move: Psych Up',
+      '|turn|4',
+    ]);
+  });
+
   test.todo('FutureSight effect');
   test.todo('BeatUp effect');
 
