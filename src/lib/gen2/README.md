@@ -292,3 +292,10 @@ win: _
 - Substitute "activates" even though doesnt take damage for jump crash damage
 - Pokémon specific items after Transform
 - OHKO moves that miss should be Counterable
+- Defense lowering after breaking Substitute glitch
+- Beserk Gene copies previous mons confusion counter
+- Type boosting items w/ Confusion self-hit
+- Spikes 0 HP glitch
+- PP Up + Disable freeze
+- Beat Up partyless should fail but should still be able to trigger Kings Rock
+- Beat Up desync

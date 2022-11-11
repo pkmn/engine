@@ -1,4 +1,4 @@
-import {Battle, Dex, PRNG} from '@pkmn/sim';
+import {Battle, Dex, PRNG, ID} from '@pkmn/sim';
 import {Generations} from '@pkmn/data';
 
 import {MIN, MAX, ROLLS, ranged, formatFor, createStartBattle, FixedRNG, verify} from './helpers';
@@ -20,7 +20,7 @@ const TIE = (n: 1 | 2) =>
 const SLP = (n: number) =>
   ({key: ['Battle.random', 'Pokemon.setStatus'], value: ranged(n, 8 - 1)});
 const DISABLE_DURATION = (n: number) =>
-  ({key: ['Battle.onStart', 'Pokemon.addVolatile'], value: ranged(n, 9 - 1) - 1});
+  ({key: ['Battle.random', 'Battle.durationCallback'], value: ranged(n, 9 - 1) - 1});
 const DISABLE_MOVE = (m: number, n = 4) =>
   ({key: ['Battle.onStart', 'Pokemon.addVolatile'], value: ranged(m, n) - 1});
 const MIMIC = (m: number, n = 4) =>
@@ -737,7 +737,7 @@ describe('Gen 2', () => {
     battle.makeChoices('switch 2', 'move 1');
     expect(battle.p1.pokemon[0].item).toBe('');
     expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
-    expect(battle.p1.pokemon[0].volatiles['confusion']).toBeDefined();
+    expect(battle.p1.pokemon[0].volatiles['confusion'].time).toBe(256);
 
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
@@ -5028,21 +5028,575 @@ describe('Gen 2', () => {
 
   // Glitches
 
-  test.todo('Spikes 0 HP glitch');
-  test.todo('Thick Club wrap around glitch');
-  test.todo('Metal Powder increased damage glitch');
-  test.todo('Reflect / Light Screen wrap around glitch');
-  test.todo('Secondary chance 1/256 glitch');
-  test.todo('Belly Drum failure glitch');
-  test.todo('Berserk Gene confusion duration glitch');
-  test.todo('Confusion self-hit damage glitch');
-  test.todo('Defense lowering after breaking Substitute glitch');
-  test.todo('PP Up + Disable freeze');
-  test.todo('Lock-On / Mind Reader oversight');
-  test.todo('Beat Up desync');
-  test.todo('Beat Up partyless glitch');
-  test.todo('Beat Up Kings Rock failure glitch');
-  test.todo('Return/Frustration 0 damage glitch');
-  test.todo('Switching <4 max HP freeze');
-  test.todo('Stat increase post KO glitch');
+  test('Spikes 0 HP glitch', () => {
+    const battle = startBattle([QKC, QKC, QKC, QKC], [
+      {species: 'Misdreavus', evs, moves: ['Perish Song']},
+      {species: 'Weezing', evs, moves: ['Pain Split']},
+      {species: 'Furret', evs, moves: ['Slam']},
+    ], [
+      {species: 'Forretress', evs, moves: ['Spikes']},
+      {species: 'Unown', evs, moves: ['Teleport']},
+    ]);
+
+    battle.p1.pokemon[1].hp = 1;
+
+    battle.makeChoices('move 1', 'move 1');
+    battle.makeChoices('move 1', 'move 1');
+    battle.makeChoices('move 1', 'move 1');
+    battle.makeChoices('move 1', 'switch 2');
+    battle.makeChoices('switch 2', '');
+    expect(battle.p1.pokemon[0].hp).toBe(0);
+
+    // expect(choices(battle, 'p1')).toEqual(['switch 3', 'move 1']);
+    expect(choices(battle, 'p1')).toEqual(['switch 3']);
+
+    // battle.makeChoices('move 1', 'move 1');
+
+    verify(battle, [
+      '|move|p1a: Misdreavus|Perish Song|p1a: Misdreavus',
+      '|-start|p1a: Misdreavus|perish3|[silent]',
+      '|-start|p2a: Forretress|perish3|[silent]',
+      '|-fieldactivate|move: Perish Song',
+      '|move|p2a: Forretress|Spikes|p1a: Misdreavus',
+      '|-sidestart|p1: Player 1|Spikes',
+      '|-start|p1a: Misdreavus|perish3',
+      '|-start|p2a: Forretress|perish3',
+      '|turn|2',
+      '|move|p1a: Misdreavus|Perish Song|p1a: Misdreavus',
+      '|-fail|p1a: Misdreavus',
+      '|move|p2a: Forretress|Spikes|p1a: Misdreavus',
+      '|-fail|p1a: Misdreavus',
+      '|-start|p1a: Misdreavus|perish2',
+      '|-start|p2a: Forretress|perish2',
+      '|turn|3',
+      '|move|p1a: Misdreavus|Perish Song|p1a: Misdreavus',
+      '|-fail|p1a: Misdreavus',
+      '|move|p2a: Forretress|Spikes|p1a: Misdreavus',
+      '|-fail|p1a: Misdreavus',
+      '|-start|p1a: Misdreavus|perish1',
+      '|-start|p2a: Forretress|perish1',
+      '|turn|4',
+      '|switch|p2a: Unown|Unown|299/299',
+      '|move|p1a: Misdreavus|Perish Song|p1a: Misdreavus',
+      '|-start|p2a: Unown|perish3|[silent]',
+      '|-fieldactivate|move: Perish Song',
+      '|-start|p1a: Misdreavus|perish0',
+      '|-start|p2a: Unown|perish3',
+      '|faint|p1a: Misdreavus',
+      '|switch|p1a: Weezing|Weezing, M|1/333',
+      '|-damage|p1a: Weezing|0 fnt|[from] Spikes',
+      '|faint|p1a: Weezing',
+    ]);
+  });
+
+  test('Thick Club wrap around glitch', () => {
+    const battle = startBattle([QKC, QKC, NO_CRIT, MIN_DMG, QKC], [
+      {species: 'Marowak', item: 'Thick Club', evs, moves: ['Swords Dance', 'Earthquake']},
+    ], [
+      {species: 'Ursaring', level: 44, evs, moves: ['Teleport']},
+    ]);
+    const p2hp = battle.p2.pokemon[0].hp;
+
+    expect(battle.p1.pokemon[0].getStat('atk')).toBe(516);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
+    expect(battle.p1.pokemon[0].getStat('atk')).toBe(1032);
+
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp - 10);
+
+    verify(battle, [
+      '|move|p1a: Marowak|Swords Dance|p1a: Marowak',
+      '|-boost|p1a: Marowak|atk|2',
+      '|move|p2a: Ursaring|Teleport|p2a: Ursaring',
+      '|turn|2',
+      '|move|p1a: Marowak|Earthquake|p2a: Ursaring',
+      '|-damage|p2a: Ursaring|164/174',
+      '|move|p2a: Ursaring|Teleport|p2a: Ursaring',
+      '|turn|3',
+    ]);
+  });
+
+  test('Metal Powder increased damage glitch', () => {
+    const battle = startBattle([
+      QKC, SS_EACH, SS_EACH, SS_EACH,
+      QKC, TIE(1), SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
+      QKC, TIE(1), SS_EACH, SS_EACH, NO_CRIT, MIN_DMG, SS_EACH,
+      NO_CRIT, MIN_DMG, SS_EACH, SS_EACH, QKC,
+    ], [
+      {species: 'Ditto', item: 'Metal Powder', evs, moves: ['Transform']},
+    ], [
+      {species: 'Slowbro', evs, moves: ['Amnesia', 'Surf']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    expect(battle.p2.pokemon[0].getStat('spd')).toBe(258);
+
+    battle.makeChoices('move 1', 'move 1');
+    // expect(battle.p1.pokemon[0].getStat('spd')).toBe(516);
+    expect(battle.p1.pokemon[0].getStat('spd')).toBe(258);
+    expect(battle.p2.pokemon[0].boosts.spd).toBe(2);
+    expect(battle.p2.pokemon[0].getStat('spd')).toBe(516);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].boosts.spd).toBe(2);
+    // expect(battle.p1.pokemon[0].getStat('spd')).toBe(1032);
+    expect(battle.p1.pokemon[0].getStat('spd')).toBe(516);
+    expect(battle.p2.pokemon[0].boosts.spd).toBe(4);
+    expect(battle.p2.pokemon[0].getStat('spd')).toBe(774);
+
+    battle.makeChoices('move 2', 'move 2');
+    // TODO: expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 29);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 20);
+
+    verify(battle, [
+      '|move|p1a: Ditto|Transform|p2a: Slowbro',
+      '|-transform|p1a: Ditto|p2a: Slowbro',
+      '|move|p2a: Slowbro|Amnesia|p2a: Slowbro',
+      '|-boost|p2a: Slowbro|spd|2',
+      '|turn|2',
+      '|move|p1a: Ditto|Amnesia|p1a: Ditto',
+      '|-boost|p1a: Ditto|spd|2',
+      '|move|p2a: Slowbro|Amnesia|p2a: Slowbro',
+      '|-boost|p2a: Slowbro|spd|2',
+      '|turn|3',
+      '|move|p1a: Ditto|Surf|p2a: Slowbro',
+      '|-resisted|p2a: Slowbro',
+      '|-damage|p2a: Slowbro|373/393',
+      '|move|p2a: Slowbro|Surf|p1a: Ditto',
+      '|-resisted|p1a: Ditto',
+      '|-damage|p1a: Ditto|270/299',
+      '|turn|4',
+    ]);
+  });
+
+  test('Reflect / Light Screen wrap around glitch', () => {
+    const battle = startBattle([QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, QKC], [
+      {species: 'Octillery', evs, moves: ['Water Gun']},
+    ], [
+      {species: 'Jumpluff', evs, moves: ['Amnesia', 'Light Screen']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 12);
+    expect(battle.p2.pokemon[0].boosts.spd).toBe(2);
+    expect(battle.p2.pokemon[0].getStat('spd')).toBe(536);
+
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 137);
+    expect(battle.p2.pokemon[0].getStat('spd')).toBe(1072);
+
+    verify(battle, [
+      '|move|p2a: Jumpluff|Amnesia|p2a: Jumpluff',
+      '|-boost|p2a: Jumpluff|spd|2',
+      '|move|p1a: Octillery|Water Gun|p2a: Jumpluff',
+      '|-resisted|p2a: Jumpluff',
+      '|-damage|p2a: Jumpluff|341/353',
+      '|turn|2',
+      '|move|p2a: Jumpluff|Light Screen|p2a: Jumpluff',
+      '|-sidestart|p2: Player 2|move: Light Screen',
+      '|move|p1a: Octillery|Water Gun|p2a: Jumpluff',
+      '|-resisted|p2a: Jumpluff',
+      '|-damage|p2a: Jumpluff|204/353',
+      '|turn|3',
+    ]);
+  });
+
+  test('Secondary chance 1/256 glitch', () => {
+    const no_proc = {key: PROC_SEC.key, value: MAX};
+    const battle = startBattle([QKC, NO_CRIT, MIN_DMG, no_proc, QKC], [
+      {species: 'Abra', level: 10, evs, moves: ['Thief']},
+    ], [
+      {species: 'Snubbull', item: 'Leftovers', level: 10, evs, moves: ['Teleport']},
+    ]);
+
+    const p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp - 7 + 2);
+
+    verify(battle, [
+      '|move|p1a: Abra|Thief|p2a: Snubbull',
+      '|-damage|p2a: Snubbull|34/41',
+      '|move|p2a: Snubbull|Teleport|p2a: Snubbull',
+      '|-heal|p2a: Snubbull|36/41|[from] item: Leftovers',
+      '|turn|2',
+    ]);
+  });
+
+  test('Belly Drum failure glitch', () => {
+    const battle = startBattle([QKC, NO_CRIT, MIN_DMG, QKC, QKC, NO_CRIT, MIN_DMG, QKC], [
+      {species: 'Poliwag', level: 6, evs, moves: ['Strength', 'Belly Drum']},
+    ], [
+      {species: 'Magnemite', level: 16, evs, moves: ['Teleport']},
+    ]);
+
+    battle.p1.pokemon[0].hp = 7;
+
+    const p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toEqual(p1hp);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 1);
+
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toEqual(p1hp);
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toEqual(p1hp);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 2);
+
+    verify(battle, [
+      '|move|p2a: Magnemite|Teleport|p2a: Magnemite',
+      '|move|p1a: Poliwag|Strength|p2a: Magnemite',
+      '|-resisted|p2a: Magnemite',
+      '|-damage|p2a: Magnemite|47/48',
+      '|turn|2',
+      '|move|p2a: Magnemite|Teleport|p2a: Magnemite',
+      '|move|p1a: Poliwag|Belly Drum|p1a: Poliwag',
+      '|-boost|p1a: Poliwag|atk|2|[silent]',
+      '|-fail|p1a: Poliwag',
+      '|turn|3',
+      '|move|p2a: Magnemite|Teleport|p2a: Magnemite',
+      '|move|p1a: Poliwag|Strength|p2a: Magnemite',
+      '|-resisted|p2a: Magnemite',
+      '|-damage|p2a: Magnemite|45/48',
+      '|turn|4',
+    ]);
+  });
+
+  test('Berserk Gene confusion duration glitch', () => {
+    const battle = startBattle([QKC, HIT, CFZ(3), CFZ_CANT, QKC, QKC], [
+      {species: 'Yanma', evs, moves: ['Supersonic', 'Teleport']},
+    ], [
+      {species: 'Dunsparce', evs, moves: ['Hyper Beam']},
+      {species: 'Corsola', item: 'Berserk Gene', evs, moves: ['Surf']},
+    ]);
+
+    const p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp - 35);
+    expect(battle.p2.pokemon[0].volatiles['confusion'].time).toBe(2);
+
+    battle.makeChoices('move 2', 'switch 2');
+    // expect(battle.p2.pokemon[0].volatiles['confusion'].time).toBe(2);
+    expect(battle.p2.pokemon[0].volatiles['confusion'].time).toBe(256);
+
+    verify(battle, [
+      '|move|p1a: Yanma|Supersonic|p2a: Dunsparce',
+      '|-start|p2a: Dunsparce|confusion',
+      '|-activate|p2a: Dunsparce|confusion',
+      '|-damage|p2a: Dunsparce|368/403|[from] confusion',
+      '|turn|2',
+      '|switch|p2a: Corsola|Corsola, M|313/313',
+      '|-enditem|p2a: Corsola|Berserk Gene',
+      '|-boost|p2a: Corsola|atk|2|[from] item: Berserk Gene',
+      '|-start|p2a: Corsola|confusion',
+      '|move|p1a: Yanma|Teleport|p1a: Yanma',
+      '|turn|3',
+    ]);
+  });
+
+  test('Confusion self-hit damage glitch', () => {
+    const battle = startBattle([QKC, CFZ(5), CFZ_CANT, QKC, CFZ_CANT, QKC, CFZ_CANT, QKC], [
+      {species: 'Crobat', evs, moves: ['Confuse Ray']},
+    ], [
+      {species: 'Golem', item: 'Poison Barb', evs, moves: ['Rollout', 'Toxic', 'Self-Destruct']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 31);
+
+    battle.makeChoices('move 1', 'move 2');
+    // expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 34);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 31);
+
+    battle.makeChoices('move 1', 'move 3');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 62);
+
+    verify(battle, [
+      '|move|p1a: Crobat|Confuse Ray|p2a: Golem',
+      '|-start|p2a: Golem|confusion',
+      '|-activate|p2a: Golem|confusion',
+      '|-damage|p2a: Golem|332/363|[from] confusion',
+      '|turn|2',
+      '|move|p1a: Crobat|Confuse Ray|p2a: Golem',
+      '|-fail|p2a: Golem',
+      '|-activate|p2a: Golem|confusion',
+      '|-damage|p2a: Golem|301/363|[from] confusion',
+      '|turn|3',
+      '|move|p1a: Crobat|Confuse Ray|p2a: Golem',
+      '|-fail|p2a: Golem',
+      '|-activate|p2a: Golem|confusion',
+      '|-damage|p2a: Golem|239/363|[from] confusion',
+      '|turn|4',
+    ]);
+  });
+
+  test('Defense lowering after breaking Substitute glitch', () => {
+    const battle = startBattle([
+      QKC, QKC, HIT, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MAX_DMG, QKC,
+    ], [
+      {species: 'Krabby', level: 20, evs, moves: ['Substitute']},
+    ], [
+      {species: 'Poliwrath', evs, moves: ['Teleport', 'Dynamic Punch', 'Rock Smash']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 15);
+
+    // Usually moves with secondary chances do not trigger when breaking a Subtitute
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 15);
+
+    // DefenseDownChance moves *should* still have a chance of triggering
+    battle.makeChoices('move 1', 'move 3');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 15);
+    // expect(battle.p1.pokemon[0].boosts.def).toBe(-1);
+    expect(battle.p1.pokemon[0].boosts.def).toBe(0);
+
+    verify(battle, [
+      '|move|p2a: Poliwrath|Teleport|p2a: Poliwrath',
+      '|move|p1a: Krabby|Substitute|p1a: Krabby',
+      '|-start|p1a: Krabby|Substitute',
+      '|-damage|p1a: Krabby|45/60',
+      '|turn|2',
+      '|move|p2a: Poliwrath|Dynamic Punch|p1a: Krabby',
+      '|-end|p1a: Krabby|Substitute',
+      '|move|p1a: Krabby|Substitute|p1a: Krabby',
+      '|-start|p1a: Krabby|Substitute',
+      '|-damage|p1a: Krabby|30/60',
+      '|turn|3',
+      '|move|p2a: Poliwrath|Rock Smash|p1a: Krabby',
+      '|-end|p1a: Krabby|Substitute',
+      '|move|p1a: Krabby|Substitute|p1a: Krabby',
+      '|-start|p1a: Krabby|Substitute',
+      '|-damage|p1a: Krabby|15/60',
+      '|turn|4',
+    ]);
+  });
+
+  test('PP Up + Disable freeze', () => {
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, HIT, DISABLE_DURATION(5),
+      QKC, NO_CRIT, MIN_DMG, HIT, QKC,
+    ], [
+      {species: 'Nidoking', evs, moves: ['Earthquake', 'Thunder', 'Fire Blast', 'Shadow Ball']},
+    ], [
+      {species: 'Drowzee', evs, moves: ['Disable']},
+    ]);
+
+    battle.p1.pokemon[0].moveSlots[1].pp = 0;
+    battle.p1.pokemon[0].moveSlots[2].pp = 0;
+    battle.p1.pokemon[0].moveSlots[3].pp = 0;
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 161);
+
+    // Game should freeze here
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 54);
+
+    verify(battle, [
+      '|move|p1a: Nidoking|Earthquake|p2a: Drowzee',
+      '|-damage|p2a: Drowzee|162/323',
+      '|move|p2a: Drowzee|Disable|p1a: Nidoking',
+      '|-start|p1a: Nidoking|Disable|Earthquake',
+      '|turn|2',
+      '|move|p1a: Nidoking|Struggle|p2a: Drowzee',
+      '|-damage|p2a: Drowzee|108/323',
+      '|-damage|p1a: Nidoking|352/365|[from] Recoil|[of] p2a: Drowzee',
+      '|move|p2a: Drowzee|Disable|p1a: Nidoking',
+      '|-fail|p1a: Nidoking',
+      '|turn|3',
+    ]);
+  });
+
+  test('Lock-On / Mind Reader oversight', () => {
+    const battle = startBattle([
+      QKC, QKC, NO_CRIT, MIN_DMG, SS_RES, QKC, NO_CRIT, MIN_DMG, QKC, SS_RES, QKC,
+    ], [
+      {species: 'Hitmontop', evs, moves: ['Lock-On', 'Strength', 'Attract']},
+    ], [
+      {species: 'Miltank', evs, moves: ['Milk Drink', 'Dig']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].volatiles['lockon']).toBeDefined();
+
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 54);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 39);
+    expect(battle.p1.pokemon[0].volatiles['lockon']).toBeDefined();
+
+    battle.makeChoices('move 3', 'move 2');
+    expect(battle.p2.pokemon[0].volatiles['attract']).toBeUndefined();
+
+    verify(battle, [
+      '|move|p2a: Miltank|Milk Drink|p2a: Miltank',
+      '|-fail|p2a: Miltank',
+      '|move|p1a: Hitmontop|Lock-On|p2a: Miltank',
+      '|-activate|p1a: Hitmontop|move: Lock-On|[of] p2a: Miltank',
+      '|turn|2',
+      '|move|p2a: Miltank|Dig||[still]',
+      '|-prepare|p2a: Miltank|Dig',
+      '|move|p1a: Hitmontop|Strength|p2a: Miltank',
+      '|-damage|p2a: Miltank|339/393',
+      '|turn|3',
+      '|move|p2a: Miltank|Dig|p1a: Hitmontop',
+      '|-damage|p1a: Hitmontop|264/303',
+      '|move|p1a: Hitmontop|Lock-On|p2a: Miltank',
+      '|-activate|p1a: Hitmontop|move: Lock-On|[of] p2a: Miltank',
+      '|turn|4',
+      '|move|p2a: Miltank|Dig||[still]',
+      '|-prepare|p2a: Miltank|Dig',
+      '|move|p1a: Hitmontop|Attract|p2a: Miltank|[miss]',
+      '|-miss|p1a: Hitmontop',
+      '|turn|5',
+    ]);
+  });
+
+  test('Beat Up desync', () => {
+    const battle = startBattle([
+      QKC, HIT, NO_CRIT, MIN_DMG,
+      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, MISS, QKC,
+    ], [
+      {species: 'Typhlosion', evs, moves: ['Flame Wheel']},
+      {species: 'Sneasel', evs, moves: ['Beat Up']},
+      {species: 'Lugia', evs, moves: ['Aeroblast']},
+    ], [
+      {species: 'Blissey', evs, moves: ['Egg Bomb']},
+    ]);
+
+    const p1hp = battle.p1.pokemon[1].hp;
+    const p2hp = battle.p2.pokemon[0].hp;
+
+    // Lugia's HP is Sneasel's position in the party mod 256
+    battle.p1.pokemon[2].status = 'frz' as ID;
+    battle.p1.pokemon[2].hp = 1;
+
+    battle.makeChoices('switch 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp - 62);
+
+    // Should execute Typhlosion's hit, Sneasel's hit and then desync on Lugia's
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp - 68 - 61);
+
+    verify(battle, [
+      '|switch|p1a: Sneasel|Sneasel, M|313/313',
+      '|move|p2a: Blissey|Egg Bomb|p1a: Sneasel',
+      '|-damage|p1a: Sneasel|251/313',
+      '|turn|2',
+      '|move|p1a: Sneasel|Beat Up|p2a: Blissey',
+      '|-activate|p1a: Sneasel|move: Beat Up|[of] Sneasel',
+      '|-damage|p2a: Blissey|645/713',
+      '|-activate|p1a: Sneasel|move: Beat Up|[of] Typhlosion',
+      '|-damage|p2a: Blissey|584/713',
+      '|-hitcount|p2a: Blissey|2',
+      '|move|p2a: Blissey|Egg Bomb|p1a: Sneasel|[miss]',
+      '|-miss|p2a: Blissey',
+      '|turn|3',
+    ]);
+  });
+
+  test('Beat Up Kings Rock failure glitch', () => {
+    const proc =
+      {key: ['Battle.randomChance', 'BattleActions.moveHit'], value: ranged(30, 256) - 1};
+    const battle = startBattle([QKC, NO_CRIT, MIN_DMG, proc, QKC], [
+      {species: 'Houndoom', item: 'Kings Rock', evs, moves: ['Beat Up']},
+    ], [
+      {species: 'Skiploom', evs, moves: ['Return']},
+    ]);
+    const p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    // Beat Up can fail with no party but Kings Rock can still trigger
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+    // expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 14);
+
+    verify(battle, [
+      '|move|p1a: Houndoom|Beat Up|p2a: Skiploom',
+      '|-activate|p1a: Houndoom|move: Beat Up|[of] Houndoom',
+      '|-damage|p2a: Skiploom|299/313',
+      '|-hitcount|p2a: Skiploom|1',
+      '|cant|p2a: Skiploom|flinch',
+      '|turn|2',
+    ]);
+  });
+
+  test('Return/Frustration 0 damage glitch', () => {
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC, QKC,
+    ], [
+      {species: 'Granbull', happiness: 255, evs, moves: ['Return', 'Frustration']},
+    ], [
+      {species: 'Granbull', happiness: 0, evs: slow, moves: ['Return', 'Frustration']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toEqual(p1hp -= 150);
+    expect(battle.p2.pokemon[0].hp).toEqual(p2hp -= 150);
+
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toEqual(p1hp);
+    expect(battle.p2.pokemon[0].hp).toEqual(p2hp);
+
+    verify(battle, [
+      '|move|p1a: Granbull|Return|p2a: Granbull',
+      '|-damage|p2a: Granbull|233/383',
+      '|move|p2a: Granbull|Frustration|p1a: Granbull',
+      '|-damage|p1a: Granbull|233/383',
+      '|turn|2',
+      '|move|p1a: Granbull|Frustration|p2a: Granbull',
+      '|move|p2a: Granbull|Return|p1a: Granbull',
+      '|turn|3',
+    ]);
+  });
+
+  test('Stat increase post KO glitch', () => {
+    const battle = startBattle([QKC, HIT, NO_CRIT, MIN_DMG, QKC], [
+      {species: 'Skarmory', evs, moves: ['Metal Claw']},
+    ], [
+      {species: 'Sentret', level: 5, evs, moves: ['Tackle']},
+      {species: 'Typhlosion', evs, moves: ['Flame Wheel']},
+    ]);
+
+    battle.makeChoices('move 1', 'move 1');
+    battle.makeChoices('', 'switch 2');
+
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(0);
+
+    verify(battle, [
+      '|move|p1a: Skarmory|Metal Claw|p2a: Sentret',
+      '|-damage|p2a: Sentret|0 fnt',
+      '|faint|p2a: Sentret',
+      '|switch|p2a: Typhlosion|Typhlosion, M|359/359',
+      '|turn|2',
+    ]);
+  });
 });

@@ -484,7 +484,7 @@ test "DefenseCurl effect" {
     return error.SkipZigTest;
 }
 
-// Move.MetaClaw: AttackUpChance
+// Move.MetalClaw: AttackUpChance
 // Move.SteelWing: DefenseUpChance
 test "StatUpChance effect" {
     // Has a X% chance to raise the target's Y stat by Z stage(s).
@@ -1250,22 +1250,15 @@ test "Beat Up desync" {
     return error.SkipZigTest;
 }
 
-test "Beat Up partyless glitch" {
-    // "Beat Up works incorrectly with only one Pokémon in the party
-    return error.SkipZigTest;
-}
 test "Beat Up Kings Rock failure glitch" {
-    // Beat Up may trigger Kings Rock even if it failed
+    // Beat Up may trigger Kings Rock even if it failed (due to having no party)
     return error.SkipZigTest;
 }
 
 test "Return/Frustration 0 damage glitch" {
     // Return and Frustration deal no damage when the user's happiness is low or high, respectively
-    return error.SkipZigTest;
-}
-
-test "Switching <4 max HP freeze" {
-    // Switching out or switching against a Pokémon with max HP below 4 freezes the game
+    // https://www.youtube.com/watch?v=r_2EwJnNKwU
+    // https://www.youtube.com/watch?v=JafUJzoIa_s
     return error.SkipZigTest;
 }
 
