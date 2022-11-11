@@ -1198,7 +1198,7 @@ describe('Gen 2', () => {
   // Moves
 
   test('HighCritical effect', () => {
-    const no_crit = {key: CRIT.key, value: ranged(2, 16) - 1};
+    const no_crit = {key: CRIT.key, value: ranged(4, 16) - 1};
     // Regular non-crit roll is still a crit for high critical moves
     const battle = startBattle([QKC, no_crit, MIN_DMG, no_crit, MIN_DMG, QKC], [
       {species: 'Machop', evs, moves: ['Karate Chop']},
@@ -2651,7 +2651,7 @@ describe('Gen 2', () => {
 
     battle.makeChoices('switch 3', '');
 
-    // Should be able to Counter a missed OHKO move
+    // Should be able to Counter a missed Fissure / Horn Drill (but not Guillotine)
     battle.makeChoices('move 1', 'move 1');
     // expect(battle.p2.pokemon[0].hp).toBe(0);
 
