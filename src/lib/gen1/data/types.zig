@@ -68,7 +68,7 @@ pub const Types = packed struct {
     type2: Type = .Normal,
 
     comptime {
-        assert(@bitSizeOf(Types) == 8);
+        assert(@sizeOf(Types) == 1);
     }
 
     pub inline fn immune(self: Types, t: Type) bool {

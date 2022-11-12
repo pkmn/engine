@@ -74,7 +74,7 @@ pub const Types = extern struct {
     type2: Type = .Normal,
 
     comptime {
-        assert(@bitSizeOf(Types) == 16);
+        assert(@sizeOf(Types) == 2);
     }
 
     pub inline fn immune(self: Types, t: Type) bool {

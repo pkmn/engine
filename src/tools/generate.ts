@@ -577,7 +577,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       },
       Types: {
         qualifier: 'packed',
-        bitSize: 8,
+        size: 1,
       },
     });
   },
@@ -597,7 +597,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       },
       Types: {
         qualifier: 'extern',
-        bitSize: 16,
+        size: 2,
       },
     });
 

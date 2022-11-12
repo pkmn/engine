@@ -40,7 +40,7 @@ pub const Types = {{{ Types.qualifier }}} struct {
     type2: Type = .Normal,
 
     comptime {
-        assert(@bitSizeOf(Types) == {{{ Types.bitSize }}});
+        assert(@sizeOf(Types) == {{{ Types.size }}});
     }
 
     pub inline fn immune(self: Types, t: Type) bool {
