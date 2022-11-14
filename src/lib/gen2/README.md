@@ -299,3 +299,7 @@ win: _
 - PP Up + Disable freeze
 - Beat Up partyless should fail but should still be able to trigger Kings Rock
 - Beat Up desync
+- Lock-on accuracy should be 100 not true, should be passed
+- Pain Split 100 accuracy not true
+- Foresight ignoring accuracy/evasiveness stages
+- Disable duration?

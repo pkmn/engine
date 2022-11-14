@@ -890,7 +890,6 @@ describe('Gen 1', () => {
   test('Twineedle effect', () => {
     const proc = {key: HIT.key, value: ranged(52, 256) - 1};
     const no_proc = {key: HIT.key, value: proc.value + 1};
-
     const battle = startBattle([
       HIT, CRIT, MAX_DMG,
       HIT, NO_CRIT, MIN_DMG, no_proc,
@@ -1057,7 +1056,6 @@ describe('Gen 1', () => {
   test('PoisonChance effect', () => {
     const lo_proc = {key: HIT.key, value: ranged(52, 256) - 1};
     const hi_proc = {key: HIT.key, value: ranged(103, 256) - 1};
-
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, lo_proc, HIT, NO_CRIT, MIN_DMG, hi_proc,
       HIT, NO_CRIT, MAX_DMG, hi_proc,
@@ -1126,7 +1124,6 @@ describe('Gen 1', () => {
   test('BurnChance effect', () => {
     const lo_proc = {key: HIT.key, value: ranged(26, 256) - 1};
     const hi_proc = {key: HIT.key, value: ranged(77, 256) - 1};
-
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, hi_proc,
       HIT, NO_CRIT, MIN_DMG, hi_proc,
@@ -1386,7 +1383,6 @@ describe('Gen 1', () => {
   test('ParalyzeChance effect', () => {
     const lo_proc = {key: HIT.key, value: ranged(26, 256) - 1};
     const hi_proc = {key: HIT.key, value: ranged(77, 256) - 1};
-
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
       HIT, NO_CRIT, MIN_DMG, hi_proc, HIT, NO_CRIT, MIN_DMG, hi_proc, SS_MOD,
@@ -1637,7 +1633,6 @@ describe('Gen 1', () => {
   test('FlinchChance effect', () => {
     const lo_proc = {key: HIT.key, value: ranged(26, 256) - 1};
     const hi_proc = {key: HIT.key, value: ranged(77, 256) - 1};
-
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, hi_proc,
       HIT, NO_CRIT, MIN_DMG, hi_proc, HIT, NO_CRIT, MIN_DMG, hi_proc,
@@ -3711,7 +3706,6 @@ describe('Gen 1', () => {
 
   test('Metronome effect', () => {
     const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
-
     const battle = startBattle([
       METRONOME('Wrap'), HIT, NO_CRIT, MIN_DMG, wrap,
       METRONOME('Petal Dance'), HIT, NO_CRIT, MIN_DMG, THRASH(3),

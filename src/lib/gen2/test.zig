@@ -533,19 +533,13 @@ test "Solarbeam effect" {
     return error.SkipZigTest;
 }
 
-// Fly.Dig
+// Move.{Fly,Dig}
 test "Fly effect" {
-    // This attack charges on the first turn and executes on the second. On the first turn, the user
-    // avoids all attacks other than Gust, Thunder, Twister, and Whirlwind, and Gust and Twister
-    // have doubled power when used against it.
-    return error.SkipZigTest;
-}
-
-// Move.Dig
-test "Dig effect" {
-    // This attack charges on the first turn and executes on the second. On the first turn, the user
-    // avoids all attacks other than Earthquake, Fissure, and Magnitude, the user is unaffected by
-    // weather, and Earthquake and Magnitude have doubled power when used against the user.
+    // This attack charges on the first turn and executes on the second. Fly: On the first turn, the
+    // user avoids all attacks other than Gust, Thunder, Twister, and Whirlwind, and Gust and
+    // Twister have doubled power when used against it. Dig: On the first turn, the user avoids all
+    // attacks other than Earthquake, Fissure, and Magnitude, the user is unaffected by weather, and
+    // Earthquake and Magnitude have doubled power when used against the user.
     return error.SkipZigTest;
 }
 
