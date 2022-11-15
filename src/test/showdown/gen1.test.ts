@@ -47,6 +47,7 @@ const METRONOME = (move: string) => ({
 });
 
 const evs = {hp: 255, atk: 255, def: 255, spa: 255, spd: 255, spe: 255};
+const slow = {...evs, spe: 0};
 
 describe('Gen 1', () => {
   // General
@@ -4332,6 +4333,47 @@ describe('Gen 1', () => {
       '|-damage|p1a: Snorlax|0 fnt',
       '|faint|p1a: Snorlax',
       '|win|Player 2',
+    ]);
+  });
+
+  // Fixed by smogon/pokemon-showdown#8974
+  test('Simultaneous Counter bug', () => {
+    const battle = startBattle([HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, HIT, HIT], [
+      {species: 'Golem', evs, moves: ['Strength']},
+      {species: 'Chansey', evs, moves: ['Counter']},
+    ], [
+      {species: 'Tauros', evs, moves: ['Strength']},
+      {species: 'Snorlax', evs, moves: ['Counter']},
+    ]);
+
+    const p1hp = battle.p1.pokemon[0].hp;
+    const p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp - 35);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp - 63);
+
+    battle.makeChoices('switch 2', 'switch 2');
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(battle.p1.pokemon[0].maxhp);
+    expect(battle.p2.pokemon[0].hp).toBe(battle.p2.pokemon[0].maxhp);
+
+    verify(battle, [
+      '|move|p2a: Tauros|Strength|p1a: Golem',
+      '|-resisted|p1a: Golem',
+      '|-damage|p1a: Golem|328/363',
+      '|move|p1a: Golem|Strength|p2a: Tauros',
+      '|-damage|p2a: Tauros|290/353',
+      '|turn|2',
+      '|switch|p2a: Snorlax|Snorlax|523/523',
+      '|switch|p1a: Chansey|Chansey|703/703',
+      '|turn|3',
+      '|move|p1a: Chansey|Counter|p2a: Snorlax',
+      '|-fail|p1a: Chansey',
+      '|move|p2a: Snorlax|Counter|p1a: Chansey',
+      '|-fail|p2a: Snorlax',
+      '|turn|4',
     ]);
   });
 

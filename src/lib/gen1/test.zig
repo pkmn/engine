@@ -5554,6 +5554,59 @@ test "Counter + Substitute bug" {
     try t.verify();
 }
 
+// Fixed by smogon/pokemon-showdown#8974
+test "Simultaneous Counter bug" {
+    var t = Test((if (showdown)
+        (.{ HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, HIT })
+    else
+        (.{ ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT }))).init(
+        &.{
+            .{ .species = .Golem, .moves = &.{.Strength} },
+            .{ .species = .Chansey, .moves = &.{.Counter} },
+        },
+        &.{
+            .{ .species = .Tauros, .moves = &.{.Strength} },
+            .{ .species = .Snorlax, .moves = &.{.Counter} },
+        },
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P2.ident(1), Move.Strength, P1.ident(1), null);
+    try t.log.expected.resisted(P1.ident(1));
+    t.expected.p1.get(1).hp -= 35;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Strength, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 63;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    if (showdown) {
+        try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+        try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    } else {
+        try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+        try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    }
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(swtch(2), swtch(2)));
+
+    try t.log.expected.move(P1.ident(2), Move.Counter, P2.ident(2), null);
+    if (showdown) {
+        try t.log.expected.fail(P1.ident(2), .None);
+        try t.log.expected.move(P2.ident(2), Move.Counter, P1.ident(2), null);
+        try t.log.expected.fail(P2.ident(2), .None);
+        try t.log.expected.turn(4);
+    }
+
+    const result = if (showdown) Result.Default else Result.Error;
+    try expectEqual(result, try t.update(move(1), move(1)));
+
+    try t.verify();
+}
+
 test "Counter + sleep = Desync Clause Mod bug" {
     const SLP_8 = MAX;
     var t = Test(if (showdown)
