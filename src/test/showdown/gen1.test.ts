@@ -47,7 +47,6 @@ const METRONOME = (move: string) => ({
 });
 
 const evs = {hp: 255, atk: 255, def: 255, spa: 255, spd: 255, spe: 255};
-const slow = {...evs, spe: 0};
 
 describe('Gen 1', () => {
   // General
@@ -3959,7 +3958,8 @@ describe('Gen 1', () => {
       value: ranged(Math.floor(gen.species.get('Articuno')!.baseStats.spe / 2), 256),
     };
     const battle = startBattle([
-      SS_RES, GLM, GLM, GLM, SS_RUN, MISS, SS_EACH,
+      SS_RES, SS_EACH, GLM, GLM, GLM, TIE(1), SS_EACH, SS_EACH, SS_EACH,
+      SS_RUN, MISS, SS_EACH, SS_EACH,
       TIE(2), SS_EACH, SS_EACH, HIT, no_crit, MIN_DMG, SS_EACH,
       HIT, no_crit, MIN_DMG, SS_EACH, SS_EACH,
       TIE(2), SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
@@ -3978,13 +3978,11 @@ describe('Gen 1', () => {
     expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
     expect(battle.p2.pokemon[0].boosts.spe).toBe(2);
 
-    // Smogon/Bulbapedia is incorrect - Transform does not hit an invulnerable target
+    // Transform can hit an invulnerable target
     battle.makeChoices('move 2', 'move 2');
+    expect(battle.p1.pokemon[0].baseMoveSlots[1].pp).toBe(pp - 1);
 
     // Transform should copy species, types, stats, and boosts but not level or HP
-    battle.makeChoices('move 2', 'move 1');
-    expect(battle.p1.pokemon[0].baseMoveSlots[1].pp).toBe(pp - 2);
-
     expect(battle.p1.pokemon[0].species.name).toBe('Articuno');
     expect(battle.p1.pokemon[0].types).toEqual(battle.p2.pokemon[0].types);
     expect(battle.p1.pokemon[0].level).toBe(50);
@@ -3998,6 +3996,8 @@ describe('Gen 1', () => {
     expect(battle.p1.pokemon[0].moveSlots).toHaveLength(3);
     expect(battle.p1.pokemon[0].moveSlots.map(m => m.move)).toEqual(['Agility', 'Fly', 'Peck']);
     expect(battle.p1.pokemon[0].moveSlots.map(m => m.pp)).toEqual([5, 5, 5]);
+
+    battle.makeChoices('move 3', 'move 1');
 
     // Transformed Pokémon should retain their original crit rate (and this should speed tie)
     battle.makeChoices('move 3', 'move 3');
@@ -4016,7 +4016,7 @@ describe('Gen 1', () => {
     battle.makeChoices('switch 2', 'move 1');
     expect(battle.p1.pokemon[1].species.name).toBe('Mew');
     expect(battle.p1.pokemon[1].modifiedStats).toEqual(battle.p1.pokemon[1].storedStats);
-    expect(battle.p1.pokemon[1].moveSlots[1].pp).toBe(pp - 2);
+    expect(battle.p1.pokemon[1].moveSlots[1].pp).toBe(pp - 1);
 
     verify(battle, [
       '|move|p2a: Articuno|Agility|p2a: Articuno',
@@ -4026,13 +4026,13 @@ describe('Gen 1', () => {
       '|turn|2',
       '|move|p2a: Articuno|Fly||[still]',
       '|-prepare|p2a: Articuno|Fly',
-      '|move|p1a: Mew|Transform|p2a: Articuno|[miss]',
-      '|-miss|p1a: Mew',
-      '|turn|3',
-      '|move|p2a: Articuno|Fly|p1a: Mew|[from]Fly|[miss]',
-      '|-miss|p2a: Articuno',
       '|move|p1a: Mew|Transform|p2a: Articuno',
       '|-transform|p1a: Mew|p2a: Articuno',
+      '|turn|3',
+      '|move|p1a: Mew|Peck|p2a: Articuno|[miss]',
+      '|-miss|p1a: Mew',
+      '|move|p2a: Articuno|Fly|p1a: Mew|[from]Fly|[miss]',
+      '|-miss|p2a: Articuno',
       '|turn|4',
       '|move|p2a: Articuno|Peck|p1a: Mew',
       '|-damage|p1a: Mew|171/206',

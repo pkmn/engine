@@ -5043,21 +5043,23 @@ test "Transform effect" {
     // The user transforms into the target. The target's current stats, stat stages, types, moves,
     // DVs, species, and sprite are copied. The user's level and HP remain the same and each copied
     // move receives only 5 PP. This move can hit a target using Dig or Fly.
+    const TIE_1 = MIN;
     const TIE_2 = MAX;
     const no_crit = if (showdown) comptime ranged(Species.chance(.Articuno), 256) else 6;
 
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            // NOP, NOP, NOP, NOP, NOP, ~HIT, NOP,
-            NOP, NOP, NOP, NOP, NOP, ~HIT, NOP, NOP,
+            // NOP, NOP, NOP, NOP, NOP,
+            NOP, NOP, NOP, NOP, NOP, NOP,
+            TIE_1, NOP, NOP, NOP, NOP, ~HIT, NOP, NOP,
             TIE_2, NOP, NOP, HIT, no_crit, MIN_DMG, NOP,
             HIT, no_crit, MIN_DMG, NOP, NOP,
             // TIE_2, NOP, NOP, NOP, NOP, NOP, NOP, NOP
             TIE_2, NOP, NOP, NOP, NOP, NOP, NOP,
         } else .{
-            ~CRIT, ~CRIT, ~CRIT, MIN_DMG, ~HIT, TIE_2,
-            no_crit, MIN_DMG, HIT, no_crit, MIN_DMG, HIT,
+            ~CRIT, ~CRIT, TIE_1, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, ~HIT,
+            TIE_2, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG, HIT,
             TIE_2, ~CRIT, ~CRIT, ~CRIT,
         }
     // zig fmt: on
@@ -5086,23 +5088,14 @@ test "Transform effect" {
     try t.log.expected.laststill();
     try t.log.expected.prepare(P2.ident(1), Move.Fly);
     try t.log.expected.move(P1.ident(1), Move.Transform, P2.ident(1), null);
-    try t.log.expected.lastmiss();
-    try t.log.expected.miss(P1.ident(1));
+    try t.log.expected.transform(P1.ident(1), P2.ident(1));
     try t.log.expected.turn(3);
 
-    // Smogon/Bulbapedia is incorrect - Transform does not hit an invulnerable target
+    // Transform can hit an invulnerable target
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
 
-    try t.log.expected.move(P2.ident(1), Move.Fly, P1.ident(1), Move.Fly);
-    try t.log.expected.lastmiss();
-    try t.log.expected.miss(P2.ident(1));
-    try t.log.expected.move(P1.ident(1), Move.Transform, P2.ident(1), null);
-    try t.log.expected.transform(P1.ident(1), P2.ident(1));
-    try t.log.expected.turn(4);
-
     // Transform should copy species, types, stats, and boosts but not level or HP
-    try expectEqual(Result.Default, try t.update(move(2), forced));
-    try expectEqual(pp - 2, t.actual.p1.get(1).move(2).pp);
+    try expectEqual(pp - 1, t.actual.p1.get(1).move(2).pp);
 
     try expectEqual(Species.Articuno, t.actual.p1.active.species);
     try expectEqual(t.actual.p2.active.types, t.actual.p1.active.types);
@@ -5137,6 +5130,16 @@ test "Transform effect" {
         try expectEqual(moves[i], m.id);
         try expectEqual(pps[i], m.pp);
     }
+
+    try t.log.expected.move(P1.ident(1), Move.Peck, P2.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P1.ident(1));
+    try t.log.expected.move(P2.ident(1), Move.Fly, P1.ident(1), Move.Fly);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(3), forced));
 
     try t.log.expected.move(P2.ident(1), Move.Peck, P1.ident(1), null);
     t.expected.p1.get(1).hp -= 35;
@@ -5188,7 +5191,7 @@ test "Transform effect" {
 
     try expectEqual(Result.Default, try t.update(swtch(2), move(1)));
     try expectEqual(Species.Mew, t.actual.p1.get(2).species);
-    try expectEqual(pp - 2, t.actual.p1.get(2).move(2).pp);
+    try expectEqual(pp - 1, t.actual.p1.get(2).move(2).pp);
 
     try t.verify();
 }
