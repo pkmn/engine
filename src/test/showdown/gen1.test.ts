@@ -4303,6 +4303,7 @@ describe('Gen 1', () => {
     ]);
   });
 
+  // Fixed by smogon/pokemon-showdown#8969
   test('Counter + Substitute bug', () => {
     const battle = startBattle([HIT, NO_CRIT, MIN_DMG, NO_PAR, HIT], [
       {species: 'Snorlax', evs, moves: ['Reflect', 'Body Slam']},
@@ -4310,15 +4311,13 @@ describe('Gen 1', () => {
       {species: 'Chansey', evs, moves: ['Substitute', 'Counter']},
     ]);
 
-    const p1hp = battle.p1.pokemon[0].hp;
-    let p2hp = battle.p2.pokemon[0].hp;
+    const p2hp = battle.p2.pokemon[0].hp;
 
     battle.makeChoices('move 1', 'move 1');
 
     battle.makeChoices('move 2', 'move 2');
-    // expect(battle.p1.pokemon[0].hp).toBe(0);
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp);
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 175);
+    expect(battle.p1.pokemon[0].hp).toBe(0);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp - 175);
 
     verify(battle, [
       '|move|p2a: Chansey|Substitute|p2a: Chansey',
@@ -4330,8 +4329,9 @@ describe('Gen 1', () => {
       '|move|p1a: Snorlax|Body Slam|p2a: Chansey',
       '|-end|p2a: Chansey|Substitute',
       '|move|p2a: Chansey|Counter|p1a: Snorlax',
-      '|-fail|p2a: Chansey',
-      '|turn|3',
+      '|-damage|p1a: Snorlax|0 fnt',
+      '|faint|p1a: Snorlax',
+      '|win|Player 2',
     ]);
   });
 

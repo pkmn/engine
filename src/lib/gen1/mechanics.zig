@@ -1181,13 +1181,11 @@ fn applyDamage(
             subbed.active.volatiles.Substitute = false;
             // battle.last_damage is not updated with the amount of HP the Substitute had
             try log.end(battle.active(sub_player), .Substitute);
-            if (showdown) battle.last_damage = 0;
             return true;
         } else {
             // Safe to truncate since less than subbed.volatiles.substitute which is a u8
             subbed.active.volatiles.substitute -= @truncate(u8, battle.last_damage);
             try log.activate(battle.active(sub_player), .Substitute);
-            if (showdown) battle.last_damage = 0;
             return false;
         }
     }

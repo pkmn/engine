@@ -5518,6 +5518,7 @@ test "Bide + Substitute bug" {
     try t.verify();
 }
 
+// Fixed by smogon/pokemon-showdown#8969
 test "Counter + Substitute bug" {
     // https://www.youtube.com/watch?v=_cEVqYFoBhE
     const NO_PAR = MAX;
@@ -5543,17 +5544,12 @@ test "Counter + Substitute bug" {
     try t.log.expected.move(P1.ident(1), Move.BodySlam, P2.ident(1), null);
     try t.log.expected.end(P2.ident(1), .Substitute);
     try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(1), null);
-    if (showdown) {
-        try t.log.expected.fail(P2.ident(1), .None);
-        try t.log.expected.turn(3);
-    } else {
-        t.expected.p1.get(1).hp = 0;
-        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-        try t.log.expected.faint(P1.ident(1), false);
-        try t.log.expected.win(.P2);
-    }
+    t.expected.p1.get(1).hp = 0;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.faint(P1.ident(1), false);
+    try t.log.expected.win(.P2);
 
-    try expectEqual(if (showdown) Result.Default else Result.Lose, try t.update(move(2), move(2)));
+    try expectEqual(Result.Lose, try t.update(move(2), move(2)));
 
     try t.verify();
 }

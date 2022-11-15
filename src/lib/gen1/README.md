@@ -591,11 +591,10 @@ control flow):
   does 0 damage against Ghost-type Pokémon instead of properly respecting immunity, and trapping
   effects are handled in the wrong order in the code.
 - **Counter**: In addition to the `last_damage` issues covered above (which among other things means
-  that Sonic Boom zeros Counter damage, Counter fails into Substitute, and draining moves don't
-  factor into self-Counter damage on Pokémon Showdown), Counter can be called with Metronome at
-  regular priority (as opposed to failing as it would on cartridge) and choices made while sleeping
-  (which should not have been registered) can erroneously cause Counter to trigger Desync Clause Mod
-  behavior.
+  that Sonic Boom zeros Counter damage and draining moves don't factor into self-Counter damage on
+  Pokémon Showdown), Counter can be called with Metronome at regular priority (as opposed to failing
+  as it would on cartridge) and choices made while sleeping (which should not have been registered)
+  can erroneously cause Counter to trigger Desync Clause Mod behavior.
 - **Mimic**: Pokémon Showdown checks that the user of Mimic has Mimic in one of their move slots,
   which means Mimic legally called via Metronome or Mirror Move will only work if the user also has
   Mimic (and the moved mimicked by Mimic called via Metronome / Mirror Move will erroneously
