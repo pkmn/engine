@@ -3714,7 +3714,7 @@ describe('Gen 1', () => {
       CFZ_CAN, METRONOME('Mimic'), HIT, MIMIC(2, 2), METRONOME('Disable'),
       HIT, DISABLE_MOVE(2, 3), DISABLE_DURATION(3),
       METRONOME('Rage'), HIT, NO_CRIT, MIN_DMG,
-      METRONOME('Swift'), NO_CRIT, MIN_DMG,
+      METRONOME('Quick Attack'), HIT, NO_CRIT, MIN_DMG,
     ], [
       {species: 'Clefable', evs, moves: ['Metronome', 'Teleport']},
     ], [
@@ -3742,9 +3742,10 @@ describe('Gen 1', () => {
     battle.makeChoices('move 1', 'move 1');
     expect(choices(battle, 'p2')).toEqual(['move 1', 'move 3']);
 
+    // Quick Attack via Metronome only executes at normal priority
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 19);
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 72);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 48);
     expect(choices(battle, 'p2')).toEqual(['move 1']);
 
     verify(battle, [
@@ -3780,8 +3781,8 @@ describe('Gen 1', () => {
       '|move|p2a: Primeape|Rage|p1a: Clefable|[from]Metronome',
       '|-damage|p1a: Clefable|319/393',
       '|move|p1a: Clefable|Metronome|p1a: Clefable',
-      '|move|p1a: Clefable|Swift|p2a: Primeape|[from]Metronome',
-      '|-damage|p2a: Primeape|261/333',
+      '|move|p1a: Clefable|Quick Attack|p2a: Primeape|[from]Metronome',
+      '|-damage|p2a: Primeape|285/333',
       '|-boost|p2a: Primeape|atk|1|[from] Rage',
       '|turn|7',
     ]);
@@ -5594,36 +5595,74 @@ describe('Gen 1', () => {
   });
 
   test('Hyper Beam automatic selection glitch', () => {
-    const battle = startBattle([MISS, HIT, NO_CRIT, MIN_DMG, MISS], [
-      {species: 'Chansey', evs, moves: ['Hyper Beam', 'Soft-Boiled']},
-    ], [
-      {species: 'Tentacool', evs, moves: ['Wrap']},
-    ]);
+    // Regular
+    {
+      const battle = startBattle([MISS, HIT, NO_CRIT, MIN_DMG, MISS], [
+        {species: 'Chansey', evs, moves: ['Hyper Beam', 'Soft-Boiled']},
+      ], [
+        {species: 'Tentacool', evs, moves: ['Wrap']},
+      ]);
 
-    battle.p1.pokemon[0].moveSlots[0].pp = 1;
+      battle.p1.pokemon[0].moveSlots[0].pp = 1;
 
-    const p2hp = battle.p2.pokemon[0].hp;
+      const p2hp = battle.p2.pokemon[0].hp;
 
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(0);
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp - 105);
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(0);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp - 105);
 
-    // Missing should cause Hyper Beam to be automatically selected and underflow
-    battle.makeChoices('move 1', 'move 1');
-    // expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(63);
+      // Missing should cause Hyper Beam to be automatically selected and underflow
+      battle.makeChoices('move 1', 'move 1');
+      // expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(63);
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(0);
 
-    verify(battle, [
-      '|move|p2a: Tentacool|Wrap|p1a: Chansey|[miss]',
-      '|-miss|p2a: Tentacool',
-      '|move|p1a: Chansey|Hyper Beam|p2a: Tentacool',
-      '|-damage|p2a: Tentacool|178/283',
-      '|-mustrecharge|p1a: Chansey',
-      '|turn|2',
-      '|move|p2a: Tentacool|Wrap|p1a: Chansey|[miss]',
-      '|-miss|p2a: Tentacool',
-      '|cant|p1a: Chansey|recharge',
-      '|turn|3',
-    ]);
+      verify(battle, [
+        '|move|p2a: Tentacool|Wrap|p1a: Chansey|[miss]',
+        '|-miss|p2a: Tentacool',
+        '|move|p1a: Chansey|Hyper Beam|p2a: Tentacool',
+        '|-damage|p2a: Tentacool|178/283',
+        '|-mustrecharge|p1a: Chansey',
+        '|turn|2',
+        '|move|p2a: Tentacool|Wrap|p1a: Chansey|[miss]',
+        '|-miss|p2a: Tentacool',
+        '|cant|p1a: Chansey|recharge',
+        '|turn|3',
+      ]);
+    }
+    // via Metronome
+    {
+      const battle = startBattle([MISS, METRONOME('Hyper Beam'), HIT, NO_CRIT, MIN_DMG, MISS], [
+        {species: 'Chansey', evs, moves: ['Metronome', 'Soft-Boiled']},
+      ], [
+        {species: 'Tentacool', evs, moves: ['Wrap']},
+      ]);
+
+      battle.p1.pokemon[0].moveSlots[0].pp = 1;
+
+      const p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(0);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp - 105);
+
+      // Missing should cause Hyper Beam to be automatically selected and underflow
+      battle.makeChoices('move 1', 'move 1');
+      // expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(63);
+
+      verify(battle, [
+        '|move|p2a: Tentacool|Wrap|p1a: Chansey|[miss]',
+        '|-miss|p2a: Tentacool',
+        '|move|p1a: Chansey|Metronome|p1a: Chansey',
+        '|move|p1a: Chansey|Hyper Beam|p2a: Tentacool|[from]Metronome',
+        '|-damage|p2a: Tentacool|178/283',
+        '|-mustrecharge|p1a: Chansey',
+        '|turn|2',
+        '|move|p2a: Tentacool|Wrap|p1a: Chansey|[miss]',
+        '|-miss|p2a: Tentacool',
+        '|cant|p1a: Chansey|recharge',
+        '|turn|3',
+      ]);
+    }
   });
 
   test('Invulnerability glitch', () => {

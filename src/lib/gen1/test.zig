@@ -4658,7 +4658,7 @@ test "Metronome effect" {
     const mimic = comptime metronome(.Mimic);
     const disable = comptime metronome(.Disable);
     const rage = comptime metronome(.Rage);
-    const swift = comptime metronome(.Swift);
+    const quick_attack = comptime metronome(.QuickAttack);
 
     var t = Test(
     // zig fmt: off
@@ -4668,7 +4668,7 @@ test "Metronome effect" {
             ~HIT, ~HIT, CFZ_2,
             CFZ_CAN, mimic, HIT, MIMIC_2, disable, HIT,
             DISABLE_MOVE_2, DISABLE_DURATION_3,
-            rage, HIT, ~CRIT, MIN_DMG, swift, ~CRIT, MIN_DMG,
+            rage, HIT, ~CRIT, MIN_DMG, quick_attack, HIT, ~CRIT, MIN_DMG,
         } else .{
             ~CRIT, wrap, MIN_WRAP, ~CRIT, MIN_DMG, HIT,
             ~CRIT, petal_dance, THRASH_3, ~CRIT, MIN_DMG, HIT,
@@ -4777,8 +4777,8 @@ test "Metronome effect" {
         t.expected.p1.get(1).hp -= 19;
         try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
         try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
-        try t.log.expected.move(P1.ident(1), Move.Swift, P2.ident(1), Move.Metronome);
-        t.expected.p2.get(1).hp -= 72;
+        try t.log.expected.move(P1.ident(1), Move.QuickAttack, P2.ident(1), Move.Metronome);
+        t.expected.p2.get(1).hp -= 48;
         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
         try t.log.expected.boost(P2.ident(1), .Rage, 1);
     } else {
@@ -7174,50 +7174,102 @@ test "Hyper Beam automatic selection glitch" {
     // https://glitchcity.wiki/Hyper_Beam_automatic_selection_glitch
     const MIN_WRAP = MIN;
 
-    // zig fmt: off
-    var t = Test((if (showdown)
-        (.{ ~HIT, HIT, ~CRIT, MIN_DMG, ~HIT })
-    else
-        (.{ MIN_WRAP, ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, HIT,
-            MIN_WRAP, ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, HIT }))).init(
-    // zig fmt: on
-        &.{.{ .species = .Chansey, .moves = &.{ .HyperBeam, .SoftBoiled } }},
-        &.{.{ .species = .Tentacool, .moves = &.{.Wrap} }},
-    );
-    defer t.deinit();
+    // Regular
+    {
+        // zig fmt: off
+        var t = Test((if (showdown)
+            (.{ ~HIT, HIT, ~CRIT, MIN_DMG, ~HIT })
+        else
+            (.{ MIN_WRAP, ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, HIT,
+                MIN_WRAP, ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, HIT }))).init(
+        // zig fmt: on
+            &.{.{ .species = .Chansey, .moves = &.{ .HyperBeam, .SoftBoiled } }},
+            &.{.{ .species = .Tentacool, .moves = &.{.Wrap} }},
+        );
+        defer t.deinit();
 
-    t.actual.p1.get(1).move(1).pp = 1;
+        t.actual.p1.get(1).move(1).pp = 1;
 
-    try t.log.expected.move(P2.ident(1), Move.Wrap, P1.ident(1), null);
-    try t.log.expected.lastmiss();
-    try t.log.expected.miss(P2.ident(1));
-    try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), null);
-    t.expected.p2.get(1).hp -= 105;
-    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    try t.log.expected.mustrecharge(P1.ident(1));
-    try t.log.expected.turn(2);
-
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try expectEqual(@as(u8, 0), t.actual.p1.get(1).move(1).pp);
-
-    try t.log.expected.move(P2.ident(1), Move.Wrap, P1.ident(1), null);
-    try t.log.expected.lastmiss();
-    try t.log.expected.miss(P2.ident(1));
-    if (showdown) {
-        try t.log.expected.cant(P1.ident(1), .Recharge);
-    } else {
+        try t.log.expected.move(P2.ident(1), Move.Wrap, P1.ident(1), null);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P2.ident(1));
         try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), null);
         t.expected.p2.get(1).hp -= 105;
         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
         try t.log.expected.mustrecharge(P1.ident(1));
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(@as(u8, 0), t.actual.p1.get(1).move(1).pp);
+
+        try t.log.expected.move(P2.ident(1), Move.Wrap, P1.ident(1), null);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P2.ident(1));
+        if (showdown) {
+            try t.log.expected.cant(P1.ident(1), .Recharge);
+        } else {
+            try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), null);
+            t.expected.p2.get(1).hp -= 105;
+            try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+            try t.log.expected.mustrecharge(P1.ident(1));
+        }
+        try t.log.expected.turn(3);
+
+        // Missing should cause Hyper Beam to be automatically selected and underflow
+        try expectEqual(Result.Default, try t.update(forced, move(1)));
+        try expectEqual(@as(u8, if (showdown) 0 else 63), t.actual.p1.get(1).move(1).pp);
+
+        try t.verify();
     }
-    try t.log.expected.turn(3);
+    // via Metronome
+    {
+        const hyper_beam = comptime metronome(.HyperBeam);
+        // zig fmt: off
+        var t = Test((if (showdown)
+            (.{ ~HIT, hyper_beam, HIT, ~CRIT, MIN_DMG, ~HIT })
+        else
+            (.{ MIN_WRAP, ~CRIT, MIN_DMG, ~HIT, ~CRIT, hyper_beam, ~CRIT, MIN_DMG, HIT,
+                MIN_WRAP, ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, HIT }))).init(
+        // zig fmt: on
+            &.{.{ .species = .Chansey, .moves = &.{ .Metronome, .SoftBoiled } }},
+            &.{.{ .species = .Tentacool, .moves = &.{.Wrap} }},
+        );
+        defer t.deinit();
 
-    // Missing should cause Hyper Beam to be automatically selected and underflow
-    try expectEqual(Result.Default, try t.update(forced, move(1)));
-    if (!showdown) try expectEqual(@as(u8, 63), t.actual.p1.get(1).move(1).pp);
+        t.actual.p1.get(1).move(1).pp = 1;
 
-    try t.verify();
+        try t.log.expected.move(P2.ident(1), Move.Wrap, P1.ident(1), null);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P2.ident(1));
+        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
+        try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), Move.Metronome);
+        t.expected.p2.get(1).hp -= 105;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.mustrecharge(P1.ident(1));
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(@as(u8, 0), t.actual.p1.get(1).move(1).pp);
+
+        try t.log.expected.move(P2.ident(1), Move.Wrap, P1.ident(1), null);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P2.ident(1));
+        if (showdown) {
+            try t.log.expected.cant(P1.ident(1), .Recharge);
+        } else {
+            try t.log.expected.move(P1.ident(1), Move.HyperBeam, P2.ident(1), null);
+            t.expected.p2.get(1).hp -= 105;
+            try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+            try t.log.expected.mustrecharge(P1.ident(1));
+        }
+        try t.log.expected.turn(3);
+
+        // Missing should cause Hyper Beam to be automatically selected and underflow
+        try expectEqual(Result.Default, try t.update(forced, move(1)));
+        try expectEqual(@as(u8, if (showdown) 0 else 63), t.actual.p1.get(1).move(1).pp);
+
+        try t.verify();
+    }
 }
 
 test "Invulnerability glitch" {
@@ -7647,45 +7699,94 @@ test "Struggle bypassing / Switch PP underflow" {
     // https://glitchcity.wiki/Switch_PP_underflow_glitch
     const MIN_WRAP = MIN;
 
-    var t = Test((if (showdown)
-        (.{ HIT, ~CRIT, MIN_DMG, MIN_WRAP, HIT, ~CRIT, MIN_DMG, MIN_WRAP })
-    else
-        (.{ MIN_WRAP, ~CRIT, MIN_DMG, HIT, MIN_WRAP, ~CRIT, MIN_DMG, HIT }))).init(
-        &.{
-            .{ .species = .Victreebel, .moves = &.{ .Wrap, .VineWhip } },
-            .{ .species = .Seel, .moves = &.{.Bubble} },
-        },
-        &.{
-            .{ .species = .Kadabra, .moves = &.{.Teleport} },
-            .{ .species = .MrMime, .moves = &.{.Teleport} },
-        },
-    );
-    defer t.deinit();
+    // Regular
+    {
+        var t = Test((if (showdown)
+            (.{ HIT, ~CRIT, MIN_DMG, MIN_WRAP, HIT, ~CRIT, MIN_DMG, MIN_WRAP })
+        else
+            (.{ MIN_WRAP, ~CRIT, MIN_DMG, HIT, MIN_WRAP, ~CRIT, MIN_DMG, HIT }))).init(
+            &.{
+                .{ .species = .Victreebel, .moves = &.{ .Wrap, .VineWhip } },
+                .{ .species = .Seel, .moves = &.{.Bubble} },
+            },
+            &.{
+                .{ .species = .Kadabra, .moves = &.{.Teleport} },
+                .{ .species = .MrMime, .moves = &.{.Teleport} },
+            },
+        );
+        defer t.deinit();
 
-    t.actual.p1.get(1).move(1).pp = 1;
+        t.actual.p1.get(1).move(1).pp = 1;
 
-    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
-    try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(1), null);
-    t.expected.p2.get(1).hp -= 22;
-    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    try t.log.expected.turn(2);
+        try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+        try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 22;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.turn(2);
 
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try expectEqual(@as(u8, 0), t.actual.p1.get(1).move(1).pp);
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(@as(u8, 0), t.actual.p1.get(1).move(1).pp);
 
-    const n = t.battle.actual.choices(.P1, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), forced }, choices[0..n]);
+        const n = t.battle.actual.choices(.P1, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{ swtch(2), forced }, choices[0..n]);
 
-    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
-    try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(2), if (showdown) null else Move.Wrap);
-    t.expected.p2.get(2).hp -= 16;
-    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
-    try t.log.expected.turn(3);
+        try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+        const from = if (showdown) null else Move.Wrap;
+        try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(2), from);
+        t.expected.p2.get(2).hp -= 16;
+        try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+        try t.log.expected.turn(3);
 
-    try expectEqual(Result.Default, try t.update(forced, swtch(2)));
-    try expectEqual(@as(u8, 63), t.actual.p1.get(1).move(1).pp);
+        try expectEqual(Result.Default, try t.update(forced, swtch(2)));
+        try expectEqual(@as(u8, 63), t.actual.p1.get(1).move(1).pp);
 
-    try t.verify();
+        try t.verify();
+    }
+    // via Metronome
+    if (!showdown) {
+        const wrap = comptime metronome(.Wrap);
+        const swift = comptime metronome(.Swift);
+        var t = Test(
+            .{ ~CRIT, wrap, MIN_WRAP, ~CRIT, MIN_DMG, HIT, ~CRIT, swift, ~CRIT, MIN_DMG },
+        ).init(
+            &.{
+                .{ .species = .Victreebel, .moves = &.{ .Metronome, .VineWhip } },
+                .{ .species = .Seel, .moves = &.{.Bubble} },
+            },
+            &.{
+                .{ .species = .Kadabra, .moves = &.{.Teleport} },
+                .{ .species = .MrMime, .moves = &.{.Teleport} },
+            },
+        );
+        defer t.deinit();
+
+        t.actual.p1.get(1).move(1).pp = 1;
+
+        try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
+        try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(1), Move.Metronome);
+        t.expected.p2.get(1).hp -= 22;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(@as(u8, 0), t.actual.p1.get(1).move(1).pp);
+
+        const n = t.battle.actual.choices(.P1, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{ swtch(2), forced }, choices[0..n]);
+
+        try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.Wrap);
+        try t.log.expected.move(P1.ident(1), Move.Swift, P2.ident(2), Move.Metronome);
+        t.expected.p2.get(2).hp -= 59;
+        try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(forced, swtch(2)));
+        try expectEqual(@as(u8, 63), t.actual.p1.get(1).move(1).pp);
+
+        try t.verify();
+    }
 }
 
 test "Trapping sleep glitch" {
