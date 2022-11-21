@@ -1035,7 +1035,7 @@ test "MultiHit effect" {
     // Hits two to five times. Has a 3/8 chance to hit two or three times, and a 1/8 chance to hit
     // four or five times. Damage is calculated once for the first hit and used for every hit. If
     // one of the hits breaks the target's substitute, the move ends.
-    const hit3 = if (showdown) 0x55555556 else 1;
+    const hit3 = if (showdown) 0x60000000 else 1;
     const hit5 = MAX;
 
     var t = Test(if (showdown)
@@ -3151,7 +3151,7 @@ test "Thrashing effect" {
 // Move.{SonicBoom,DragonRage}
 test "FixedDamage effect" {
     // Deals X HP of damage to the target. This move ignores type immunity.
-    var t = Test(if (showdown) .{ HIT, HIT } else .{ HIT, HIT, HIT }).init(
+    var t = Test(.{ HIT, HIT, HIT }).init(
         &.{.{ .species = .Voltorb, .moves = &.{.SonicBoom} }},
         &.{
             .{ .species = .Dratini, .moves = &.{.DragonRage} },
@@ -3172,12 +3172,8 @@ test "FixedDamage effect" {
 
     try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
     try t.log.expected.move(P1.ident(1), Move.SonicBoom, P2.ident(2), null);
-    if (showdown) {
-        try t.log.expected.immune(P2.ident(2), .None);
-    } else {
-        t.expected.p2.get(2).hp -= 20;
-        try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
-    }
+    t.expected.p2.get(2).hp -= 20;
+    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
@@ -4165,16 +4161,17 @@ test "Rage effect" {
     if (!showdown) try t.log.expected.boost(P1.ident(1), .Rage, 1);
     try t.log.expected.lastmiss();
     try t.log.expected.miss(P2.ident(1));
+    if (showdown) try t.log.expected.boost(P1.ident(1), .Rage, 1);
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(forced, move(2)));
-    try expectEqual(@as(i4, if (showdown) 1 else 2), t.actual.p1.active.boosts.atk);
+    try expectEqual(@as(i4, 2), t.actual.p1.active.boosts.atk);
 
     n = t.battle.actual.choices(.P1, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
     try t.log.expected.move(P1.ident(1), Move.Rage, P2.ident(1), Move.Rage);
-    t.expected.p2.get(1).hp -= if (showdown) 25 else 34;
+    t.expected.p2.get(1).hp -= 34;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.move(P2.ident(1), Move.Disable, P1.ident(1), null);
     try t.log.expected.boost(P1.ident(1), .Rage, 1);
@@ -4182,7 +4179,7 @@ test "Rage effect" {
     try t.log.expected.turn(4);
 
     try expectEqual(Result.Default, try t.update(forced, move(2)));
-    try expectEqual(@as(i4, if (showdown) 2 else 3), t.actual.p1.active.boosts.atk);
+    try expectEqual(@as(i4, 3), t.actual.p1.active.boosts.atk);
 
     n = t.battle.actual.choices(.P1, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
@@ -4191,13 +4188,13 @@ test "Rage effect" {
     try t.log.expected.move(P2.ident(1), Move.SelfDestruct, P1.ident(1), null);
     try t.log.expected.lastmiss();
     try t.log.expected.miss(P2.ident(1));
-    if (!showdown) try t.log.expected.boost(P1.ident(1), .Rage, 1);
+    try t.log.expected.boost(P1.ident(1), .Rage, 1);
     t.expected.p2.get(1).hp = 0;
     try t.log.expected.faint(P2.ident(1), false);
     try t.log.expected.win(.P1);
 
     try expectEqual(Result.Win, try t.update(forced, move(3)));
-    try expectEqual(@as(i4, if (showdown) 2 else 4), t.actual.p1.active.boosts.atk);
+    try expectEqual(@as(i4, 4), t.actual.p1.active.boosts.atk);
 
     try expectEqual(@as(u8, 31), t.actual.p1.active.move(1).pp);
 
@@ -4664,6 +4661,7 @@ test "Metronome effect" {
     // zig fmt: off
         if (showdown) .{
             wrap, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
+            // petal_dance, HIT, THRASH_3, NOP,
             petal_dance, HIT, ~CRIT, MIN_DMG, THRASH_3,
             ~HIT, ~HIT, CFZ_2,
             CFZ_CAN, mimic, HIT, MIMIC_2, disable, HIT,
@@ -4701,18 +4699,11 @@ test "Metronome effect" {
         choices[0..n],
     );
 
-    // BUG: can't implement Pokémon Showdown's broken partialtrappinglock mechanics
-    // try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
-    // try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), Move.Metronome);
-    // t.expected.p1.get(1).hp -= 41;
-    // try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-    // try t.log.expected.cant(P1.ident(1), .Trapped);
-    // try t.log.expected.turn(3);
-
-    // try expectEqual(Result.Default, try t.update(move(1), move(1)));
-
     if (showdown) {
-        try t.log.expected.move(P2.ident(1), Move.Metronome, P1.ident(1), null);
+        // try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
+        // try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), Move.Metronome);
+        // BUG: can't implement Pokémon Showdown's broken partialtrappinglock mechanics
+        try t.log.expected.move(P2.ident(1), Move.Metronome, P1.ident(1), Move.Metronome);
     } else {
         try t.log.expected.move(P2.ident(1), Move.Wrap, P1.ident(1), Move.Wrap);
     }
@@ -5960,7 +5951,7 @@ test "Mirror Move + Wrap bug" {
 
     var t = Test((if (showdown)
         (.{ ~HIT, HIT, ~CRIT, MIN_DMG, MIN_WRAP })
-        // (.{ ~HIT, HIT, ~CRIT, MIN_DMG, MIN_WRAP, HIT, ~CRIT, MIN_DMG })
+        // (.{ ~HIT, HIT, ~CRIT, MIN_DMG, MIN_WRAP, HIT })
     else
         (.{ MIN_WRAP, ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_WRAP, ~CRIT, MIN_DMG, HIT }))).init(
         &.{.{ .species = .Tentacruel, .moves = &.{ .Wrap, .Surf } }},
@@ -5987,12 +5978,10 @@ test "Mirror Move + Wrap bug" {
 
     try t.log.expected.cant(P1.ident(1), .Trapped);
     if (showdown) {
-        try t.log.expected.move(P2.ident(1), Move.Gust, P1.ident(1), null);
+        try t.log.expected.move(P2.ident(1), Move.Gust, P1.ident(1), Move.Gust);
     } else {
         try t.log.expected.move(P2.ident(1), Move.Wrap, P1.ident(1), Move.Wrap);
     }
-    // BUG: can't implement Pokémon Showdown's broken partialtrappinglock mechanics
-    // t.expected.p1.get(1).hp -= 49;
     t.expected.p1.get(1).hp -= 20;
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
     try t.log.expected.turn(3);
@@ -6059,7 +6048,6 @@ test "Wrap locking + KOs bug" {
     // zig fmt: off
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, PROC, NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
-            // HIT, HIT, ~CRIT, MIN_DMG, PROC, NOP,
             HIT, ~HIT, HIT, ~CRIT, MIN_DMG, PROC, NOP, ~HIT,
             HIT, ~CRIT, MIN_DMG, MIN_WRAP,
             HIT, ~CRIT, MIN_DMG, MIN_WRAP,
@@ -6105,14 +6093,9 @@ test "Wrap locking + KOs bug" {
     try t.log.expected.move(P1.ident(2), Move.DragonRage, P2.ident(1), null);
     t.expected.p2.get(1).hp -= 40;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    // BUG: can't implement Pokémon Showdown's broken partialtrappinglock mechanics
-    // if (showdown) {
-    //     try t.log.expected.cant(P2.ident(1), .Trapped);
-    // } else {
     try t.log.expected.move(P2.ident(1), Move.PoisonSting, P1.ident(2), null);
     try t.log.expected.lastmiss();
     try t.log.expected.miss(P2.ident(1));
-    // }
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
@@ -6123,13 +6106,9 @@ test "Wrap locking + KOs bug" {
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     t.expected.p2.get(1).status = Status.init(.BRN);
     try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
-    // if (showdown) {
-    //     try t.log.expected.cant(P2.ident(1), .Trapped);
-    // } else {
     try t.log.expected.move(P2.ident(1), Move.PoisonSting, P1.ident(2), null);
     try t.log.expected.lastmiss();
     try t.log.expected.miss(P2.ident(1));
-    // }
     t.expected.p2.get(1).hp -= 20;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Burn);
     try t.log.expected.turn(4);
@@ -6153,12 +6132,7 @@ test "Wrap locking + KOs bug" {
 
     // Trapper should not still be locked into Wrap after residual KO
     const n = t.battle.actual.choices(.P1, .Move, &choices);
-    // BUG: further Pokémon Showdown's partialtrappinglock brokeness
-    // if (showdown) {
-    //     try expectEqualSlices(Choice, &[_]Choice{move(3)}, choices[0..n]);
-    // } else {
     try expectEqualSlices(Choice, &[_]Choice{ move(1), move(2), move(3) }, choices[0..n]);
-    // }
 
     try t.log.expected.move(P1.ident(2), Move.Wrap, P2.ident(2), null);
     t.expected.p2.get(2).hp -= 21;

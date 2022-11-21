@@ -286,8 +286,6 @@ win: _
 - Twineedle shouldn't be able to inflict poison if it breaks a substitute
 - Mail should not be stolen by Thief
 - RNG for crit is 1/16 and not 17/256?
-- MetalPowder should still boost after transformed
-- Tri Attack should be able to status Normal-type
 - Struggle recoil into Substitute only 1 HP
 - Substitute "activates" even though doesnt take damage for jump crash damage
 - Pokémon specific items after Transform

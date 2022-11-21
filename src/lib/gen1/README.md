@@ -472,7 +472,6 @@ the pkmn engine, but the following moves have their broken behavior preserved in
   even if they miss (most sources erroneously claim a move needs to hit to cause Rage to build but
   the `EXPLODE_EFFECT` is special-cased in the original game code). Furthermore, these moves should
   not execute the self-KO effect if their target is invulnerable due to Fly / Dig.
-- **Disable**: Disable should cause its target to continue building Rage even if it misses.
 - **Freeze** / **Sleep**: Pokémon Showdown requires a move to be selected when a Pokémon is frozen
   or sleeping and uses that in the event that the status is removed while on the cartridge no
   selection is possible and no turn exists for the thawed/woken Pokémon to act except in the case of
@@ -484,15 +483,13 @@ the pkmn engine, but the following moves have their broken behavior preserved in
 - **Hyper Beam**: due to improperly implemented selection mechanics, the [Hyper Beam
   automatic-selection glitch](https://glitchcity.wiki/Hyper_Beam_automatic_selection_glitch) does
   not exist on Pokémon Showdown. Furthermore, Hyper Beam's recharging turn should be cancelled if a
-  Pokémon would have been flinched (even if the Pokémon doing the flinching was slower) or if the
-  target fainted, even if called via Metronome or Mirror Move. Finally, Hyper Beam being able to
-  cause [Freeze permanent
+  Pokémon would have been flinched (even if the Pokémon doing the flinching was slower). Finally,
+  Hyper Beam being able to cause [Freeze permanent
   helplessness](https://pkmn.cc/bulba-glitch-1#Hyper_Beam_.2B_Freeze_permanent_helplessness) is not
   implement by Pokémon Showdown.
 - **Roar** / **Whirlwind**: these moves can miss on Pokémon Showdown (and advance the RNG when
   checking) which is incorrect (these moves should always fail, but do not check accuracy or advance
   the RNG).
-- **Sonic Boom**: this move incorrectly fails to ignore type immunity on Pokémon Showdown.
 - **Fly** / **Dig**: these should not clear the "invulnerability" volatile if the Pokémon using them
   is interrupted due to being fully paralyzed (Bulbapeda incorrectly claims that hurting itself in
   confusion will also result in this glitch which is not the case). The "invulnerability" volatile
@@ -508,6 +505,7 @@ vs. `|-miss|` vs. `|-immune|`, e.g. in the case of Leech Seed) which are not doc
 Showdown sometimes gets message ordering incorrect (which does not effect the outcome
 of the battle, only pedantic UI correctness):
 
+- **Rage**: Rage should report the `|-boost|` before the Disable `|-miss|`, not after.
 - **Haze**: Haze clears the status/volatiles in an incorrect order.
 - **Twinneedle**: the `|-hitcount|` ("Hit 2 times") should come before the `|-status|` message, not
   after.
@@ -584,17 +582,17 @@ control flow):
 - **Wrap**: Partial trapping moves like Wrap are implemented on Pokémon Showdown with an artifical
   `partialtrappinglock` volatile as opposed to how it works on the cartridge which simply relies on
   the `Trapping` volatile of the opponent. This mistake results in partial trapping choice locking
-  not being respected when the trapping move was initiated via another move such as Metronome or
-  Mirror Move, and for wrap locking misbehaving when the target is knocked out. Trapping moves also
-  have some local implementation issues - on Pokémon Showdown a trapped Pokémon still gets a turn
-  under the [trapping sleep glitch](https://glitchcity.wiki/Trapping_move_and_sleep_glitch), Wrap
-  does 0 damage against Ghost-type Pokémon instead of properly respecting immunity, and trapping
-  effects are handled in the wrong order in the code.
+  not being reported properly when the trapping move was initiated via another move such as
+  Metronome or Mirror Move. Trapping moves also have some local implementation issues - on Pokémon
+  Showdown a trapped Pokémon still gets a turn under the [trapping sleep
+  glitch](https://glitchcity.wiki/Trapping_move_and_sleep_glitch), Wrap does 0 damage against
+  Ghost-type Pokémon instead of properly respecting immunity, and trapping effects are handled in
+  the wrong order in the code.
 - **Counter**: In addition to the `last_damage` issues covered above (which among other things means
   that Sonic Boom zeros Counter damage and draining moves don't factor into self-Counter damage on
-  Pokémon Showdown), Counter can be called with Metronome at regular priority (as opposed to failing
-  as it would on cartridge) and choices made while sleeping (which should not have been registered)
-  can erroneously cause Counter to trigger Desync Clause Mod behavior.
+  Pokémon Showdown), on Pokémon Showdown Counter can be called with Metronome at regular priority
+  (as opposed to failing as it would on cartridge) and choices made while sleeping (which should not
+  have been registered) can erroneously cause Counter to trigger Desync Clause Mod behavior.
 - **Mimic**: Pokémon Showdown checks that the user of Mimic has Mimic in one of their move slots,
   which means Mimic legally called via Metronome or Mirror Move will only work if the user also has
   Mimic (and the moved mimicked by Mimic called via Metronome / Mirror Move will erroneously

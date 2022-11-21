@@ -642,8 +642,7 @@ describe('Gen 2', () => {
 
     // Only provides boost if original species is correct
     battle.makeChoices('move 1', 'move 1');
-    // expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 47);
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 94);
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 47);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 47);
 
     verify(battle, [
@@ -659,7 +658,7 @@ describe('Gen 2', () => {
       '|-transform|p2a: Teddiursa|p1a: Marowak',
       '|turn|3',
       '|move|p2a: Teddiursa|Strength|p1a: Marowak',
-      '|-damage|p1a: Marowak|207/323',
+      '|-damage|p1a: Marowak|254/323',
       '|move|p1a: Marowak|Strength|p2a: Teddiursa',
       '|-damage|p2a: Teddiursa|50/323',
       '|turn|4',
@@ -690,8 +689,7 @@ describe('Gen 2', () => {
 
     // Only provides boost if original species is correct
     battle.makeChoices('move 1', 'move 1');
-    // expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 76);
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 154);
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 76);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 76);
 
     verify(battle, [
@@ -707,7 +705,7 @@ describe('Gen 2', () => {
       '|-transform|p2a: Ursaring|p1a: Pikachu',
       '|turn|3',
       '|move|p2a: Ursaring|Surf|p1a: Pikachu',
-      '|-damage|p1a: Pikachu|79/273',
+      '|-damage|p1a: Pikachu|157/273',
       '|move|p1a: Pikachu|Surf|p2a: Ursaring',
       '|-damage|p2a: Ursaring|143/383',
       '|turn|4',
@@ -892,11 +890,10 @@ describe('Gen 2', () => {
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 107);
 
     battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 48);
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 32);
 
     battle.makeChoices('move 1', 'move 2');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 57);
-    // TODO: expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 0);
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 38);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 48);
 
     verify(battle, [
@@ -908,13 +905,13 @@ describe('Gen 2', () => {
       '|-transform|p1a: Ditto|p2a: Slowking',
       '|move|p2a: Slowking|Surf|p1a: Ditto',
       '|-resisted|p1a: Ditto',
-      '|-damage|p1a: Ditto|144/299',
+      '|-damage|p1a: Ditto|160/299',
       '|turn|3',
       '|move|p1a: Ditto|Surf|p2a: Slowking',
       '|-resisted|p2a: Slowking',
       '|-damage|p2a: Slowking|345/393',
       '|move|p2a: Slowking|Strength|p1a: Ditto',
-      '|-damage|p1a: Ditto|87/299',
+      '|-damage|p1a: Ditto|122/299',
       '|turn|4',
     ]);
   });
@@ -2042,7 +2039,7 @@ describe('Gen 2', () => {
       QKC, NO_CRIT, MIN_DMG, frz, proc, SS_MOD, NO_THAW,
       QKC, NO_CRIT, MIN_DMG, brn, no_proc, MISS,
       QKC, NO_CRIT, MIN_DMG, par, proc, SS_MOD,
-      QKC, NO_CRIT, MIN_DMG, par, proc, QKC,
+      QKC, NO_CRIT, MIN_DMG, brn, proc, SS_MOD, QKC,
     ], [
       {species: 'Porygon2', evs, moves: ['Tri-Attack']},
     ], [
@@ -2068,8 +2065,7 @@ describe('Gen 2', () => {
     expect(battle.p2.pokemon[0].hp).toBe(mareep -= 125);
 
     battle.makeChoices('move 1', 'switch 3');
-    // expect(battle.p2.pokemon[0].status).toBe('brn');
-    expect(battle.p2.pokemon[0].status).toBe('');
+    expect(battle.p2.pokemon[0].status).toBe('brn');
     expect(battle.p2.pokemon[0].hp).toBe(togepi -= 97);
 
     verify(battle, [
@@ -2092,6 +2088,7 @@ describe('Gen 2', () => {
       '|switch|p2a: Togepi|Togepi, M|273/273',
       '|move|p1a: Porygon2|Tri Attack|p2a: Togepi',
       '|-damage|p2a: Togepi|176/273',
+      '|-status|p2a: Togepi|brn',
       '|turn|5',
     ]);
   });
@@ -6373,49 +6370,46 @@ describe('Gen 2', () => {
     ], [
       {species: 'Ditto', item: 'Metal Powder', evs, moves: ['Transform']},
     ], [
-      {species: 'Slowbro', evs, moves: ['Amnesia', 'Surf']},
+      {species: 'Steelix', evs, moves: ['Harden', 'Strength']},
     ]);
 
     let p1hp = battle.p1.pokemon[0].hp;
     let p2hp = battle.p2.pokemon[0].hp;
 
-    expect(battle.p2.pokemon[0].getStat('spd')).toBe(258);
+    expect(battle.p2.pokemon[0].getStat('def')).toBe(498);
 
     battle.makeChoices('move 1', 'move 1');
-    // expect(battle.p1.pokemon[0].getStat('spd')).toBe(516);
-    expect(battle.p1.pokemon[0].getStat('spd')).toBe(258);
-    expect(battle.p2.pokemon[0].boosts.spd).toBe(2);
-    expect(battle.p2.pokemon[0].getStat('spd')).toBe(516);
+    expect(battle.p1.pokemon[0].getStat('def')).toBe(747);
+    expect(battle.p2.pokemon[0].boosts.def).toBe(1);
+    expect(battle.p2.pokemon[0].getStat('def')).toBe(747);
 
     battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].boosts.spd).toBe(2);
-    // expect(battle.p1.pokemon[0].getStat('spd')).toBe(1032);
-    expect(battle.p1.pokemon[0].getStat('spd')).toBe(516);
-    expect(battle.p2.pokemon[0].boosts.spd).toBe(4);
-    expect(battle.p2.pokemon[0].getStat('spd')).toBe(774);
+    expect(battle.p1.pokemon[0].boosts.def).toBe(1);
+    expect(battle.p1.pokemon[0].getStat('def')).toBe(1120);
+    expect(battle.p2.pokemon[0].boosts.def).toBe(2);
+    expect(battle.p2.pokemon[0].getStat('def')).toBe(996);
 
     battle.makeChoices('move 2', 'move 2');
-    // TODO: expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 0);
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 29);
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 20);
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 79);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 8);
 
     verify(battle, [
-      '|move|p1a: Ditto|Transform|p2a: Slowbro',
-      '|-transform|p1a: Ditto|p2a: Slowbro',
-      '|move|p2a: Slowbro|Amnesia|p2a: Slowbro',
-      '|-boost|p2a: Slowbro|spd|2',
+      '|move|p1a: Ditto|Transform|p2a: Steelix',
+      '|-transform|p1a: Ditto|p2a: Steelix',
+      '|move|p2a: Steelix|Harden|p2a: Steelix',
+      '|-boost|p2a: Steelix|def|1',
       '|turn|2',
-      '|move|p1a: Ditto|Amnesia|p1a: Ditto',
-      '|-boost|p1a: Ditto|spd|2',
-      '|move|p2a: Slowbro|Amnesia|p2a: Slowbro',
-      '|-boost|p2a: Slowbro|spd|2',
+      '|move|p1a: Ditto|Harden|p1a: Ditto',
+      '|-boost|p1a: Ditto|def|1',
+      '|move|p2a: Steelix|Harden|p2a: Steelix',
+      '|-boost|p2a: Steelix|def|1',
       '|turn|3',
-      '|move|p1a: Ditto|Surf|p2a: Slowbro',
-      '|-resisted|p2a: Slowbro',
-      '|-damage|p2a: Slowbro|373/393',
-      '|move|p2a: Slowbro|Surf|p1a: Ditto',
+      '|move|p1a: Ditto|Strength|p2a: Steelix',
+      '|-resisted|p2a: Steelix',
+      '|-damage|p2a: Steelix|345/353',
+      '|move|p2a: Steelix|Strength|p1a: Ditto',
       '|-resisted|p1a: Ditto',
-      '|-damage|p1a: Ditto|270/299',
+      '|-damage|p1a: Ditto|220/299',
       '|turn|4',
     ]);
   });

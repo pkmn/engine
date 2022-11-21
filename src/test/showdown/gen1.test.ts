@@ -813,7 +813,7 @@ describe('Gen 1', () => {
 
   test('MultiHit effect', () => {
     const key = ['Battle.sample', 'BattleActions.tryMoveHit'];
-    const hit3 = {key, value: 0x55555556};
+    const hit3 = {key, value: 0x60000000};
     const hit5 = {key, value: MAX};
     const battle = startBattle([HIT, hit3, NO_CRIT, MAX_DMG, HIT, hit5, NO_CRIT, MAX_DMG], [
       {species: 'Kangaskhan', evs, moves: ['Comet Punch']},
@@ -2491,7 +2491,7 @@ describe('Gen 1', () => {
   });
 
   test('FixedDamage effect', () => {
-    const battle = startBattle([HIT, HIT], [
+    const battle = startBattle([HIT, HIT, HIT], [
       {species: 'Voltorb', evs, moves: ['Sonic Boom']},
     ], [
       {species: 'Dratini', evs, moves: ['Dragon Rage']},
@@ -2506,7 +2506,7 @@ describe('Gen 1', () => {
     battle.makeChoices('move 1', 'switch 2');
 
     expect(battle.p1.pokemon[0].hp).toEqual(p1hp - 40);
-    expect(battle.p2.pokemon[0].hp).toEqual(p2hp2);
+    expect(battle.p2.pokemon[0].hp).toEqual(p2hp2 - 20);
     expect(battle.p2.pokemon[1].hp).toEqual(p2hp1 - 20);
 
     verify(battle, [
@@ -2517,7 +2517,7 @@ describe('Gen 1', () => {
       '|turn|2',
       '|switch|p2a: Gastly|Gastly|263/263',
       '|move|p1a: Voltorb|Sonic Boom|p2a: Gastly',
-      '|-immune|p2a: Gastly',
+      '|-damage|p2a: Gastly|243/263',
       '|turn|3',
     ]);
   });
@@ -3310,8 +3310,7 @@ describe('Gen 1', () => {
 
     battle.makeChoices('move 1', 'move 2');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp);
-    // expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
-    expect(battle.p1.pokemon[0].boosts.atk).toBe(1);
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 25);
     expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
 
@@ -3319,17 +3318,15 @@ describe('Gen 1', () => {
 
     battle.makeChoices('move 1', 'move 2');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp);
-    // expect(battle.p1.pokemon[0].boosts.atk).toBe(3);
-    expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 25);
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(3);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 34);
     expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
 
     expect(choices(battle, 'p1')).toEqual(['move 1']);
 
     battle.makeChoices('move 1', 'move 3');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp);
-    // expect(battle.p1.pokemon[0].boosts.atk).toBe(4);
-    expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(4);
     expect(battle.p2.pokemon[0].hp).toBe(0);
     expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
 
@@ -3344,16 +3341,18 @@ describe('Gen 1', () => {
       '|-damage|p2a: Grimer|321/363',
       '|move|p2a: Grimer|Disable|p1a: Charmeleon|[miss]',
       '|-miss|p2a: Grimer',
+      '|-boost|p1a: Charmeleon|atk|1|[from] Rage',
       '|turn|3',
       '|move|p1a: Charmeleon|Rage|p2a: Grimer|[from]Rage',
-      '|-damage|p2a: Grimer|296/363',
+      '|-damage|p2a: Grimer|287/363',
       '|move|p2a: Grimer|Disable|p1a: Charmeleon',
-      '|-boost|p1a: Charmeleon|atk|1|[from] Rage',
       '|-start|p1a: Charmeleon|Disable|Rage',
+      '|-boost|p1a: Charmeleon|atk|1|[from] Rage',
       '|turn|4',
       '|cant|p1a: Charmeleon|Disable|Rage',
       '|move|p2a: Grimer|Self-Destruct|p1a: Charmeleon|[miss]',
       '|-miss|p2a: Grimer',
+      '|-boost|p1a: Charmeleon|atk|1|[from] Rage',
       '|faint|p2a: Grimer',
       '|win|Player 1',
     ]);
@@ -3708,7 +3707,7 @@ describe('Gen 1', () => {
     const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
     const battle = startBattle([
       METRONOME('Wrap'), HIT, NO_CRIT, MIN_DMG, wrap,
-      METRONOME('Petal Dance'), HIT, NO_CRIT, MIN_DMG, THRASH(3),
+      METRONOME('Petal Dance'), HIT, THRASH(3), SS_RES,
       MISS,
       MISS, CFZ(2),
       CFZ_CAN, METRONOME('Mimic'), HIT, MIMIC(2, 2), METRONOME('Disable'),
@@ -3731,7 +3730,7 @@ describe('Gen 1', () => {
     expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2', 'move 3']);
 
     battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 41);
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 14);
     expect(choices(battle, 'p2')).toEqual(['move 1']);
 
     battle.makeChoices('move 2', 'move 1');
@@ -3756,7 +3755,7 @@ describe('Gen 1', () => {
       '|turn|2',
       '|move|p2a: Primeape|Metronome|p2a: Primeape',
       '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from]Metronome',
-      '|-damage|p1a: Clefable|338/393',
+      '|-damage|p1a: Clefable|365/393',
       '|cant|p1a: Clefable|partiallytrapped',
       '|turn|3',
       '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from]Petal Dance|[miss]',
@@ -3779,7 +3778,7 @@ describe('Gen 1', () => {
       '|-end|p2a: Primeape|confusion',
       '|move|p2a: Primeape|Metronome|p2a: Primeape',
       '|move|p2a: Primeape|Rage|p1a: Clefable|[from]Metronome',
-      '|-damage|p1a: Clefable|319/393',
+      '|-damage|p1a: Clefable|346/393',
       '|move|p1a: Clefable|Metronome|p1a: Clefable',
       '|move|p1a: Clefable|Quick Attack|p2a: Primeape|[from]Metronome',
       '|-damage|p2a: Primeape|285/333',
@@ -4665,9 +4664,7 @@ describe('Gen 1', () => {
   });
 
   test('Mirror Move + Wrap bug', () => {
-    const battle = startBattle([
-      MISS, HIT, NO_CRIT, MIN_DMG, MIN_WRAP, HIT, NO_CRIT, MIN_DMG,
-    ], [
+    const battle = startBattle([MISS, HIT, NO_CRIT, MIN_DMG, MIN_WRAP, HIT], [
       {species: 'Tentacruel', evs, moves: ['Wrap', 'Surf']},
     ], [
       {species: 'Pidgeot', evs, moves: ['Mirror Move', 'Gust']},
@@ -4684,7 +4681,7 @@ describe('Gen 1', () => {
     expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
 
     battle.makeChoices('move 2', 'move 2');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 49);
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 20);
 
     verify(battle, [
       '|move|p1a: Tentacruel|Wrap|p2a: Pidgeot|[miss]',
@@ -4694,8 +4691,8 @@ describe('Gen 1', () => {
       '|-damage|p1a: Tentacruel|343/363',
       '|turn|2',
       '|cant|p1a: Tentacruel|partiallytrapped',
-      '|move|p2a: Pidgeot|Gust|p1a: Tentacruel',
-      '|-damage|p1a: Tentacruel|294/363',
+      '|move|p2a: Pidgeot|Gust|p1a: Tentacruel|[from]Gust',
+      '|-damage|p1a: Tentacruel|323/363',
       '|turn|3',
     ]);
   });
@@ -4745,9 +4742,9 @@ describe('Gen 1', () => {
     const proc = {key: HIT.key, value: MIN};
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, proc, SS_MOD, HIT, NO_CRIT, MIN_DMG, MIN_WRAP,
-      HIT, HIT, NO_CRIT, MIN_DMG, proc, SS_MOD,
+      HIT, MISS, HIT, NO_CRIT, MIN_DMG, proc, SS_MOD, MISS,
       HIT, NO_CRIT, MIN_DMG, MIN_WRAP,
-      HIT, NO_CRIT, MIN_DMG, REWRAP,
+      HIT, NO_CRIT, MIN_DMG, MIN_WRAP,
     ], [
       {species: 'Dragonair', evs, moves: ['Wrap']},
       {species: 'Dragonite', evs, moves: ['Dragon Rage', 'Ember', 'Wrap']},
@@ -4782,8 +4779,7 @@ describe('Gen 1', () => {
     battle.makeChoices('', 'switch 2');
 
     // Trapper should not still be locked into Wrap after residual KO
-    // expect(choices(battle, 'p1')).toEqual(['move 1', 'move 2', 'move 3']);
-    expect(choices(battle, 'p1')).toEqual(['move 3']);
+    expect(choices(battle, 'p1')).toEqual(['move 1', 'move 2', 'move 3']);
 
     battle.makeChoices('move 3', 'move 1');
     expect(battle.p2.pokemon[0].hp).toBe(kakuna -= 21);
@@ -4800,13 +4796,15 @@ describe('Gen 1', () => {
       '|turn|2',
       '|move|p1a: Dragonite|Dragon Rage|p2a: Beedrill',
       '|-damage|p2a: Beedrill|153/333',
-      '|cant|p2a: Beedrill|partiallytrapped',
+      '|move|p2a: Beedrill|Poison Sting|p1a: Dragonite|[miss]',
+      '|-miss|p2a: Beedrill',
       '|turn|3',
       '|move|p1a: Dragonite|Ember|p2a: Beedrill',
       '|-supereffective|p2a: Beedrill',
       '|-damage|p2a: Beedrill|62/333',
       '|-status|p2a: Beedrill|brn',
-      '|cant|p2a: Beedrill|partiallytrapped',
+      '|move|p2a: Beedrill|Poison Sting|p1a: Dragonite|[miss]',
+      '|-miss|p2a: Beedrill',
       '|-damage|p2a: Beedrill|42/333 brn|[from] brn|[of] p1a: Dragonite',
       '|turn|4',
       '|move|p1a: Dragonite|Wrap|p2a: Beedrill',

@@ -598,12 +598,11 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
     if (volatiles.Trapping) {
         assert(volatiles.attacks > 0);
         volatiles.attacks -= 1;
-        const move = Move.get(side.last_selected_move);
         try log.move(
             battle.active(player),
             side.last_selected_move,
             battle.active(player.foe()),
-            if (move.effect == .Trapping) side.last_selected_move else null,
+            side.last_selected_move,
         );
         if (showdown or battle.last_damage != 0) {
             _ = try applyDamage(battle, player.foe(), player.foe(), .None, log);
@@ -712,8 +711,7 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
         const eff1 = @enumToInt(move.type.effectiveness(foe.active.types.type1));
         const eff2 = @enumToInt(move.type.effectiveness(foe.active.types.type2));
         // Sonic Boom incorrectly checks type immunity on Pokémon Showdown
-        if (move.target != .Self and (eff1 == 0 or eff2 == 0) and
-            !(special and m != .SonicBoom) or
+        if (move.target != .Self and (eff1 == 0 or eff2 == 0) and !special or
             (m == .DreamEater and !Status.is(foe.stored().status, .SLP)))
         {
             if (move.effect == .Trapping) {
@@ -830,18 +828,22 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
             // Pokémon Showdown does not execute the Explode effect if the target is Invulnerable
             if (showdown and foe.active.volatiles.Invulnerable) return null;
             try Effects.explode(battle, player);
-            // Pokémon Showdown does not build Rage after missing Self-Destruct/Explosion
-            if (showdown or foe.stored().hp == 0) return null;
             if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
                 try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
             }
-        } else if (showdown and move.effect == .Thrashing) {
-            if (side.active.volatiles.Thrashing) {
-                if (handleThrashing(battle, &side.active)) {
-                    try log.start(battle.active(player), .ConfusionSilent);
+        } else if (showdown) {
+            if (move.effect == .Thrashing) {
+                if (side.active.volatiles.Thrashing) {
+                    if (handleThrashing(battle, &side.active)) {
+                        try log.start(battle.active(player), .ConfusionSilent);
+                    }
+                } else {
+                    Effects.thrashing(battle, player);
                 }
-            } else {
-                Effects.thrashing(battle, player);
+            } else if (move.effect == .Disable) {
+                if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
+                    try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
+                }
             }
         }
         return null;
