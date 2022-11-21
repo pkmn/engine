@@ -1,9 +1,9 @@
 {
   "dependencies": {
-    "@pkmn/data": "^0.6.4",
-    "@pkmn/dex": "^0.6.4",
+    "@pkmn/data": "^0.7.1",
+    "@pkmn/dex": "^0.7.1",
     "@pkmn/engine": "file:../../..",
-    "@pkmn/sets": "^4.0.0"
+    "@pkmn/sets": "^5.0.0"
   },
   "devDependencies": {
     "parcel": "^2.8.0"
