@@ -20,7 +20,7 @@
     "target": "esnext",
     "tsBuildInfoFile": ".tsbuildinfo",
     "paths": {
-      "@pkmn/sim/*": ["node_modules/@pkmn/sim/build/sim/*"]
+      "@pkmn/sim/*": ["node_modules/@pkmn/sim/build/types/sim/*"]
     }
   }
 }
