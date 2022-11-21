@@ -428,7 +428,7 @@ function displaySide(
   const b = [];
   for (const pokemon of side.pokemon) {
     if (i === 3) b.push('</div><div class="teamicons">');
-    b.push(icon(player, pokemon));
+    b.push(icon(gen, player, pokemon));
     i++;
   }
   buf.push(b.join(''));
@@ -611,11 +611,41 @@ function displayBoost(boost: number) {
   return `<span class="bad">${boost}</span>`;
 }
 
-function icon(player: 'p1' | 'p2', pokemon: Pokemon) {
-  const icon = Icons.getPokemon(
-    pokemon.stored.species, {side: player, fainted: pokemon.hp === 0, domain: 'pkmn.cc'}
-  );
-  return `<span style="${icon.style}"></span>`;
+function icon(gen: Generation, player: 'p1' | 'p2', pokemon: Pokemon) {
+  const fainted = pokemon.hp === 0;
+  // custom icon sheet for old gen sprites
+  if (gen.num <= 2) {
+    const size = 24;
+    const url = 'https://pkmn.cc/sprites/gsicons-sheet.png';
+    const num = gen.species.get(pokemon.stored.species)!.num - 1;
+    const top = -Math.floor(num / 17) * size;
+    const left = -(num % 17) * size;
+    const css: {[attr: string]: string} = {
+      display: 'inline-block',
+      width: `${size}px`,
+      height: `${size}px`,
+      imageRendering: 'pixelated',
+      background: `transparent url(${url}) no-repeat scroll ${left}px ${top}px`,
+      margin: `${(30 - size) / 2}px ${(40 - size) / 2}px`,
+    };
+    if (fainted) {
+      css.opacity = '0.3';
+      css.filter = 'grayscale(100%) brightness(.5)';
+    }
+    return `<span style="${toStyle(css)}"></span>`;
+  } else {
+    const icon =
+      Icons.getPokemon(pokemon.stored.species, {side: player, fainted, domain: 'pkmn.cc'});
+    return `<span style="${icon.style}"></span>`;
+  }
+}
+
+function toStyle(css: {[attr: string]: number | string}) {
+  const style = [];
+  for (const attr in css) {
+    style.push(`${attr === 'imageRendering' ? 'image-rendering' : attr}:${css[attr]}`);
+  }
+  return `${style.join(';')};`;
 }
 
 function sprite(showdown: boolean, species: ID, fainted: boolean) {
