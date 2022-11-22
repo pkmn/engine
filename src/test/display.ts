@@ -611,10 +611,9 @@ function displayBoost(boost: number) {
   return `<span class="bad">${boost}</span>`;
 }
 
-function icon(player: 'p1' | 'p2', pokemon: Pokemon) {
-  const icon = Icons.getPokemon(
-    pokemon.stored.species, {side: player, fainted: pokemon.hp === 0, domain: 'pkmn.cc'}
-  );
+function icon(side: 'p1' | 'p2', pokemon: Pokemon) {
+  const fainted = pokemon.hp === 0;
+  const icon = Icons.getPokemon(pokemon.stored.species, {side, fainted, domain: 'pkmn.cc'});
   return `<span style="${icon.style}"></span>`;
 }
 
