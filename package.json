@@ -27,21 +27,21 @@
     "node": ">=16.0.0"
   },
   "dependencies": {
-    "@pkmn/data": "^0.7.1",
-    "@pkmn/protocol": "^0.6.0"
+    "@pkmn/data": "^0.7.3",
+    "@pkmn/protocol": "^0.6.2"
   },
   "devDependencies": {
     "@pkmn/eslint-config": "^2.12.0",
     "@pkmn/img": "^0.2.0",
     "@pkmn/sets": "^5.0.0",
-    "@pkmn/sim": "^0.7.1",
+    "@pkmn/sim": "^0.7.3",
     "@types/html-minifier": "^4.0.2",
     "@types/jest": "^29.2.3",
     "@types/minimist": "^1.2.2",
-    "@types/mustache": "^4.2.1",
+    "@types/mustache": "^4.2.2",
     "@types/node": "^18.11.9",
-    "@typescript-eslint/eslint-plugin": "^5.43.0",
-    "@typescript-eslint/parser": "^5.43.0",
+    "@typescript-eslint/eslint-plugin": "^5.44.0",
+    "@typescript-eslint/parser": "^5.44.0",
     "eslint": "^8.28.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jest": "^27.1.5",
