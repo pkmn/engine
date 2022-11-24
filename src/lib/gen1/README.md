@@ -385,34 +385,34 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 
 > **NOTE:** The offsets in the following table represent *bits* and **not** bytes.
 
-| Start | End | Data                | Description                                                                                                                   |
-| ----- | --- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| 0     | 1   | `Bide`              | Whether the "Bide" volatile status is present                                                                                 |
-| 1     | 2   | `Thrashing`         | Whether the "Thrashing" volatile status is present                                                                            |
-| 2     | 3   | `MultiHit`          | Whether the "MultiHit" volatile status is present                                                                             |
-| 3     | 4   | `Flinch`            | Whether the "Flinch" volatile status is present                                                                               |
-| 4     | 5   | `Charging`          | Whether the "Charging" volatile status is present                                                                             |
-| 5     | 6   | `Trapping`          | Whether the "Trapping" volatile status is present                                                                             |
-| 6     | 7   | `Invulnerable`      | Whether the "Invulnerable" volatile status is present                                                                         |
-| 7     | 8   | `Confusion`         | Whether the "Confusion" volatile status is present                                                                            |
-| 8     | 9   | `Mist`              | Whether the "Mist" volatile status is present                                                                                 |
-| 9     | 10  | `FocusEnergy`       | Whether the "FocusEnergy" volatile status is present                                                                          |
-| 10    | 11  | `Substitute`        | Whether the "Substitute" volatile status is present                                                                           |
-| 11    | 12  | `Recharging`        | Whether the "Recharging" volatile status is present                                                                           |
-| 12    | 13  | `Rage`              | Whether the "Rage" volatile status is present                                                                                 |
-| 13    | 14  | `LeechSeed`         | Whether the "LeechSeed" volatile status is present                                                                            |
-| 14    | 15  | `Toxic`             | Whether the "Toxic" volatile status is present                                                                                |
-| 15    | 16  | `LightScreen`       | Whether the "LightScreen" volatile status is present                                                                          |
-| 16    | 17  | `Reflect`           | Whether the "Reflect" volatile status is present                                                                              |
-| 17    | 18  | `Transform`         | Whether the "Transform" volatile status is present                                                                            |
-| 18    | 21  | `confusion`         | The remaining turns of confusion                                                                                              |
-| 21    | 24  | `attacks`           | The number of attacks remaining                                                                                               |
+| Start | End | Data                | Description                                                 |
+| ----- | --- | ------------------- | ----------------------------------------------------------- |
+| 0     | 1   | `Bide`              | Whether the "Bide" volatile status is present               |
+| 1     | 2   | `Thrashing`         | Whether the "Thrashing" volatile status is present          |
+| 2     | 3   | `MultiHit`          | Whether the "MultiHit" volatile status is present           |
+| 3     | 4   | `Flinch`            | Whether the "Flinch" volatile status is present             |
+| 4     | 5   | `Charging`          | Whether the "Charging" volatile status is present           |
+| 5     | 6   | `Trapping`          | Whether the "Trapping" volatile status is present           |
+| 6     | 7   | `Invulnerable`      | Whether the "Invulnerable" volatile status is present       |
+| 7     | 8   | `Confusion`         | Whether the "Confusion" volatile status is present          |
+| 8     | 9   | `Mist`              | Whether the "Mist" volatile status is present               |
+| 9     | 10  | `FocusEnergy`       | Whether the "FocusEnergy" volatile status is present        |
+| 10    | 11  | `Substitute`        | Whether the "Substitute" volatile status is present         |
+| 11    | 12  | `Recharging`        | Whether the "Recharging" volatile status is present         |
+| 12    | 13  | `Rage`              | Whether the "Rage" volatile status is present               |
+| 13    | 14  | `LeechSeed`         | Whether the "LeechSeed" volatile status is present          |
+| 14    | 15  | `Toxic`             | Whether the "Toxic" volatile status is present              |
+| 15    | 16  | `LightScreen`       | Whether the "LightScreen" volatile status is present        |
+| 16    | 17  | `Reflect`           | Whether the "Reflect" volatile status is present            |
+| 17    | 18  | `Transform`         | Whether the "Transform" volatile status is present          |
+| 18    | 21  | `confusion`         | The remaining turns of confusion                            |
+| 21    | 24  | `attacks`           | The number of attacks remaining                             |
 | 24    | 40  | `state`             | A union of either: <ul><li>the total accumulated damage from Bide</li><li>the overwritten accuracy of certain moves</li></ul> |
-| 40    | 48  | `substitute`        | The remaining HP of the Substitute                                                                                            |
-| 48    | 52  | `transform`         | The identity of whom the active Pokémon is transformed into                                                                   |
-| 52    | 56  | `disabled_duration` | The remaining turns the move is disabled                                                                                      |
-| 56    | 59  | `disabled_move`     | The move slot (1-4) the is disabled                                                                                           |
-| 59    | 64  | `toxic`             | The number of turns toxic damage has been accumulating                                                                        |
+| 40    | 48  | `substitute`        | The remaining HP of the Substitute                          |
+| 48    | 52  | `transform`         | The identity of whom the active Pokémon is transformed into |
+| 52    | 56  | `disabled_duration` | The remaining turns the move is disabled                    |
+| 56    | 59  | `disabled_move`     | The move slot (1-4) the is disabled                         |
+| 59    | 64  | `toxic`             | The number of turns toxic damage has been accumulating      |
 
 ### `Pokemon`
 
@@ -459,19 +459,12 @@ Beyond the general bugs listed above, several move effects are implemented incor
 Showdown. Some of these moves are [too fundamentally broken to be implemented](#unimplementable) by
 the pkmn engine, but the following moves have their broken behavior preserved in `-Dshowdown` mode:
 
-- **Psybeam** / **Confusion**: the secondary chance of these moves causing confusion is not 26/256
-  like most "10% chance moves" but instead 25/256. Furthermore, Substitute incorrectly prevents the
-  secondary chance of these moves from triggering confusion at all.
 - **Thrash** / **Petal Dance** / **Rage**: On the cartridge (but not on Pokémon Showdown) these
   moves have [glitchy behavior](https://www.youtube.com/watch?v=NC5gbJeExbs) where the the scaled
   accuracy after accuracy/evasion modifiers have been applied should overwrite the original accuracy
   of the move for as long as the move's lock lasts. Furthermore, Pokémon Showdown handles thrashing
   moves in the wrong order, does not lock the user into the move if it hits or breaks a substitute,
   and fails to lock a thrashing Pokémon into the move if it hits a substitute.
-- **Self-Destruct** / **Explosion**: these both should cause their target to continue building Rage
-  even if they miss (most sources erroneously claim a move needs to hit to cause Rage to build but
-  the `EXPLODE_EFFECT` is special-cased in the original game code). Furthermore, these moves should
-  not execute the self-KO effect if their target is invulnerable due to Fly / Dig.
 - **Freeze** / **Sleep**: Pokémon Showdown requires a move to be selected when a Pokémon is frozen
   or sleeping and uses that in the event that the status is removed while on the cartridge no
   selection is possible and no turn exists for the thawed/woken Pokémon to act except in the case of
@@ -697,33 +690,33 @@ speed ties, etc) that Pokémon Showdown cannot replicate due to everything descr
 
 All of places in the link battle code where randomness is required are outlined below:
 
-| Type                     | Location                 | Description                                                                                                                                                                                                                                                                                                                                                     |
-| ------------------------ | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Speed Tie**            | `turnOrder`              | Player 1 if $X < 127$, otherwise Player 2                                                                                                                                                                                                                                                                                                                       |
-| **Critical Hit**         | `checkCriticalHit`       | <dl><dt>Pokémon Red</dt><dd>Inflict a critical hit if $X' < chance$ where $X'$ is $X$ with its bits rotated left three times</dd><dt>Pokémon Showdown</dt><dd>Critical hit if $X < chance$</dd></dl>                                                                                                                                                            |
-| **Damage** (range)       | `randomizeDamage`        | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X' \geq  217$ where $X'$ is $X$ with its bits rotated right once</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[217, 256\right)$</dd></dl>                                                                                                                                                       |
-| **Hit / Miss**           | `checkHit`               | Hit if $X < scaledAccuracy$                                                                                                                                                                                                                                                                                                                                     |
-| **Burn** (chance)        | `Effects.burnChance`     | Trigger if $X < 26$ ($77$ for Fire Blast)                                                                                                                                                                                                                                                                                                                       |
-| **Confusion** (chance)   | `Effects.confusion`      | <dl><dt>Pokémon Red</dt><dd>Trigger if $X< 25$</dd><dt>Pokémon Showdown</dt><dd>Trigger if $X < 26$</dd></dl> These differ due to a [bug in Pokémon Showdown](#bugs)                                                                                                                                                                                            |
-| **Confusion** (duration) | `Effects.confusion`      | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[2, 6\right)$ turns</dd></dl>                                                                                                                                                                                                     |
-| **Confusion** (self-hit) | `beforeMove`             | Trigger if $X \geq 128$                                                                                                                                                                                                                                                                                                                                         |  |
-| **Flinch** (chance)      | `Effects.flinchChance`   | Trigger if $X < 26$ ($77$ for Stomp / Headbutt / Rolling Kick / Low Kick)                                                                                                                                                                                                                                                                                       |
-| **Freeze** (chance)      | `Effects.freezeChance`   | Trigger if $X < 26$                                                                                                                                                                                                                                                                                                                                             |
-| **Paralysis** (chance)   | `Effects.paralyzeChance` | Trigger if $X< 26$ ($77$ for Body Slam / Lick)                                                                                                                                                                                                                                                                                                                  |
-| **Paralysis** (full)     | `beforeMove`             | Trigger if $X < 63$                                                                                                                                                                                                                                                                                                                                             |
-| **Poison** (chance)      | `Effects.poison`         | Trigger if $X < 52$ ($103$ for Smog / Sludge)                                                                                                                                                                                                                                                                                                                   |
-| **Sleep** (duration)     | `Effects.sleep`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X \land 7 \neq 0$</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[1, 8\right)$</dd></dl>                                                                                                                                                                                                          |
-| **Bide** (duration)      | `Effects.bide`           | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 1\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[3, 5\right) - 1$ turns</dd></dl>                                                                                                                                                                                                 |
-| **Disable** (move)       | `Effects.disable`        | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X \land 3$ is the index of a non-empty move slot</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, \|movesSlots\|\right)$</dd></dl>                                                                                                                                                              |
-| **Disable** (duration)   | `Effects.disable`        | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 7\right) + 1$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[1, 6\right)$ turns</dd></dl> Disable duration is [incorrect in Pokémon Showdown](#bugs)                                                                                                                                          |
+| Type                     | Location                 | Description                                                                                                                                                                                               |
+| ------------------------ | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Speed Tie**            | `turnOrder`              | Player 1 if $X < 127$, otherwise Player 2                                                                                                                                                                 |
+| **Critical Hit**         | `checkCriticalHit`       | <dl><dt>Pokémon Red</dt><dd>Inflict a critical hit if $X' < chance$ where $X'$ is $X$ with its bits rotated left three times</dd><dt>Pokémon Showdown</dt><dd>Critical hit if $X < chance$</dd></dl>      |
+| **Damage** (range)       | `randomizeDamage`        | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X' \geq  217$ where $X'$ is $X$ with its bits rotated right once</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[217, 256\right)$</dd></dl> |
+| **Hit / Miss**           | `checkHit`               | Hit if $X < scaledAccuracy$                                                                                                                                                                               |
+| **Burn** (chance)        | `Effects.burnChance`     | Trigger if $X < 26$ ($77$ for Fire Blast)                                                                                                                                                                 |
+| **Confusion** (chance)   | `Effects.confusion`      | Trigger if $X< 25$                                                                                                                                                                                        |
+| **Confusion** (duration) | `Effects.confusion`      | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[2, 6\right)$ turns</dd></dl>                                               |
+| **Confusion** (self-hit) | `beforeMove`             | Trigger if $X \geq 128$                                                                                                                                                                                   |
+| **Flinch** (chance)      | `Effects.flinchChance`   | Trigger if $X < 26$ ($77$ for Stomp / Headbutt / Rolling Kick / Low Kick)                                                                                                                                 |
+| **Freeze** (chance)      | `Effects.freezeChance`   | Trigger if $X < 26$                                                                                                                                                                                       |
+| **Paralysis** (chance)   | `Effects.paralyzeChance` | Trigger if $X< 26$ ($77$ for Body Slam / Lick)                                                                                                                                                            |
+| **Paralysis** (full)     | `beforeMove`             | Trigger if $X < 63$                                                                                                                                                                                       |
+| **Poison** (chance)      | `Effects.poison`         | Trigger if $X < 52$ ($103$ for Smog / Sludge)                                                                                                                                                             |
+| **Sleep** (duration)     | `Effects.sleep`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X \land 7 \neq 0$</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[1, 8\right)$</dd></dl>                                                    |
+| **Bide** (duration)      | `Effects.bide`           | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 1\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[3, 5\right) - 1$ turns</dd></dl>                                           |
+| **Disable** (move)       | `Effects.disable`        | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X \land 3$ is the index of a non-empty move slot</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, \|movesSlots\|\right)$</dd></dl>        |
+| **Disable** (duration)   | `Effects.disable`        | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 7\right) + 1$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[1, 9\right)$ turns</dd></dl>                                               |
 | **Metronome** (move)     | `metronome`              | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X$ matches the index of a move which is not Struggle or Metronome</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, \|validMoves\|\right)$, where $validMoves$ is ordered set of moves with  Struggle and Metronome removed <i>(indexes of moves > Metronome will be shifted down)</i></dd></dl> |
-| **Mimic** (move)         | `Effects.mimic`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X \land 3$ is the index of a non-empty move slot</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, \|movesSlots\|\right)$</dd></dl>                                                                                                                                                              |
-| **Psywave** (power)      | `specialDamage`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X < {3\over2} \cdot level$</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, {3\over2} \cdot level\right)$</dd></dl>                                                                                                                                                                             |
-| **Thrash** (rampage)     | `Effects.thrash`         | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 1\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[2, 4\right)$ turns</dd></dl>                                                                                                                                                                                                     |
-| **Thrash** (confusion)   | `beforeMove`             | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[2, 6\right)$ turns</dd></dl>                                                                                                                                                                                                     |
-| **Trapping** (duration)  | `Effects.trapping`       | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 1$ further turns if $\left(X \land 3\right) < 2$<br /> otherwise last for $\left(Y \land 3\right) + 1$ further turns (reroll)</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \{2, 2, 3, 3, 4, 5\} - 1$ further turns</dd></dl>                                                           |
-| **Multi-Hit** (hits)     | `Effects.multiHit`       | *Ibid.*                                                                                                                                                                                                                                                                                                                                                         |
-| **Unboost** (chance)     | `Effects.unboost`        | Trigger if $X < 85$                                                                                                                                                                                                                                                                                                                                             |
+| **Mimic** (move)         | `Effects.mimic`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X \land 3$ is the index of a non-empty move slot</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, \|movesSlots\|\right)$</dd></dl>        |
+| **Psywave** (power)      | `specialDamage`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X < {3\over2} \cdot level$</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, {3\over2} \cdot level\right)$</dd></dl>                       |
+| **Thrash** (rampage)     | `Effects.thrash`         | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 1\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[2, 4\right)$ turns</dd></dl>                                               |
+| **Thrash** (confusion)   | `beforeMove`             | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[2, 6\right)$ turns</dd></dl>                                               |
+| **Trapping** (duration)  | `Effects.trapping`       | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 1$ further turns if $\left(X \land 3\right) < 2$<br /> otherwise last for $\left(Y \land 3\right) + 1$ further turns (reroll)</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \{2, 2, 3, 3, 4, 5\} - 1$ further turns</dd></dl> |
+| **Multi-Hit** (hits)     | `Effects.multiHit`       | *Ibid.*                                                                                                                                                                                                   |
+| **Unboost** (chance)     | `Effects.unboost`        | Trigger if $X < 85$                                                                                                                                                                                       |
 
 *In the table above,* $X$ *is always in the range* $\left[0, 256\right)$ *for Pokémon Red and for
 Pokémon Showdown is always **scaled** from the 32-bit output range of the RNG to either be in that

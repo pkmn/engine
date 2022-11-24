@@ -825,8 +825,6 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
             battle.last_damage = 1;
             _ = try applyDamage(battle, player, player.foe(), .None, log);
         } else if (move.effect == .Explode) {
-            // Pokémon Showdown does not execute the Explode effect if the target is Invulnerable
-            if (showdown and foe.active.volatiles.Invulnerable) return null;
             try Effects.explode(battle, player);
             if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
                 try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
@@ -1587,25 +1585,23 @@ pub const Effects = struct {
 
     fn confusion(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
         var foe = battle.foe(player);
+        const sub = foe.active.volatiles.Substitute;
 
         if (move.effect == .ConfusionChance) {
-            // Substitute incorrectly blocks secondary effect confusion on Pokémon Showdown
-            if (showdown and foe.active.volatiles.Substitute) return battle.rng.advance(1);
             const chance = if (showdown)
-                // Due to a Pokémon Showdown bug this is incorrectly 26 instead of 25
-                battle.rng.chance(u8, 26, 256)
+                battle.rng.chance(u8, 25, 256)
             else
                 battle.rng.next() < Gen12.percent(10);
-            if (!chance) return;
+            if (!chance) return if (showdown and sub) battle.rng.advance(1);
         } else {
             if (showdown) {
                 if (!try checkHit(battle, player, move, log)) {
                     return;
-                } else if (foe.active.volatiles.Substitute) {
+                } else if (sub) {
                     return log.fail(battle.active(player.foe()), .None);
                 }
             } else {
-                if (foe.active.volatiles.Substitute) {
+                if (sub) {
                     return log.fail(battle.active(player.foe()), .None);
                 } else if (!try checkHit(battle, player, move, log)) {
                     return;
@@ -1621,6 +1617,8 @@ pub const Effects = struct {
             (battle.rng.next() & 3) + 2);
 
         try log.start(battle.active(player.foe()), .Confusion);
+        // Substitute results in a bonus roll on Pokémon Showdown (and above)
+        if (showdown and move.effect == .ConfusionChance and sub) battle.rng.advance(1);
     }
 
     fn conversion(battle: anytype, player: Player, log: anytype) !void {

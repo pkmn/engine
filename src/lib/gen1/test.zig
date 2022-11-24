@@ -2003,22 +2003,23 @@ test "ConfusionChance effect" {
     // Has a 10% chance to confuse the target.
     const PROC = comptime ranged(25, 256) - 1;
     const NO_PROC = PROC + 1;
-    const CFZ_3 = if (showdown) comptime ranged(2, 6 - 2) - 1 else 1;
+    const CFZ_2 = MIN;
+    const CFZ_CAN = if (showdown) comptime ranged(128, 256) - 1 else MIN;
 
     var t = Test(
     // zig fmt: off
         if (showdown) .{
+            HIT, ~CRIT, MAX_DMG, PROC, CFZ_2, NO_PROC, CFZ_CAN,
             HIT, ~CRIT, MAX_DMG, PROC,
-            HIT, ~CRIT, MAX_DMG, PROC,
-            HIT, ~CRIT, MAX_DMG, NO_PROC, CFZ_3,
+            HIT, ~CRIT, MAX_DMG, NO_PROC,
         } else .{
-            ~CRIT, MAX_DMG, HIT, NO_PROC,
+            ~CRIT, MAX_DMG, HIT, PROC, CFZ_2, CFZ_CAN, ~CRIT,
             ~CRIT, MAX_DMG, HIT,
-            ~CRIT, ~CRIT, MAX_DMG, HIT, NO_PROC,
+            ~CRIT, ~CRIT, MAX_DMG, HIT, NO_PROC
         }
     // zig fmt: on
     ).init(
-        &.{.{ .species = .Venomoth, .moves = &.{.Psybeam} }},
+        &.{.{ .species = .Venomoth, .moves = &.{ .Psybeam, .Teleport } }},
         &.{.{ .species = .Jolteon, .moves = &.{ .Substitute, .Agility } }},
     );
     defer t.deinit();
@@ -2029,35 +2030,41 @@ test "ConfusionChance effect" {
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.move(P1.ident(1), Move.Psybeam, P2.ident(1), null);
     try t.log.expected.activate(P2.ident(1), .Substitute);
+    try t.log.expected.start(P2.ident(1), .Confusion);
     try t.log.expected.turn(2);
 
-    // Substitute blocks ConfusionChance on Pokémon Showdown
+    // ConfusionChance works through substitute if it doesn't break
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try expect(!t.actual.p2.active.volatiles.Confusion);
+    try expect(t.actual.p2.active.volatiles.Confusion);
 
+    try t.log.expected.activate(P2.ident(1), .Confusion);
+    try t.log.expected.move(P2.ident(1), Move.Agility, P2.ident(1), null);
+    try t.log.expected.boost(P2.ident(1), .Speed, 2);
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+
+    try t.log.expected.end(P2.ident(1), .Confusion);
     try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
     try t.log.expected.fail(P2.ident(1), .Substitute);
     try t.log.expected.move(P1.ident(1), Move.Psybeam, P2.ident(1), null);
     try t.log.expected.end(P2.ident(1), .Substitute);
-    try t.log.expected.turn(3);
+    try t.log.expected.turn(4);
 
+    // Can't confuse after breaking the substitute
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expect(!t.actual.p2.active.volatiles.Confusion);
 
     try t.log.expected.move(P2.ident(1), Move.Agility, P2.ident(1), null);
     try t.log.expected.boost(P2.ident(1), .Speed, 2);
     try t.log.expected.move(P1.ident(1), Move.Psybeam, P2.ident(1), null);
     t.expected.p2.get(1).hp -= 49;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    if (showdown) try t.log.expected.start(P2.ident(1), .Confusion);
-    try t.log.expected.turn(4);
+    try t.log.expected.turn(5);
 
-    // Pokémon Showdown procs on 26 instead of 25, so NO_PROC will still proc
     try expectEqual(Result.Default, try t.update(move(1), move(2)));
-    if (showdown) {
-        try expect(t.actual.p2.active.volatiles.Confusion);
-    } else {
-        try expect(!t.actual.p2.active.volatiles.Confusion);
-    }
+    try expect(!t.actual.p2.active.volatiles.Confusion);
 
     try t.verify();
 }
@@ -5441,8 +5448,9 @@ test "Charge + Sleep bug" {
     try t.verify();
 }
 
+// Fixed by smogon/pokemon-showdown#9034
 test "Explosion invulnerability bug" {
-    var t = Test((if (showdown) (.{ NOP, NOP }) else (.{ ~CRIT, MIN_DMG }))).init(
+    var t = Test((if (showdown) (.{}) else (.{ ~CRIT, MIN_DMG }))).init(
         &.{.{ .species = .Dugtrio, .moves = &.{.Dig} }},
         &.{.{ .species = .Golem, .moves = &.{.Explosion} }},
     );
@@ -5454,16 +5462,11 @@ test "Explosion invulnerability bug" {
     try t.log.expected.move(P2.ident(1), Move.Explosion, P1.ident(1), null);
     try t.log.expected.lastmiss();
     try t.log.expected.miss(P2.ident(1));
-    if (showdown) {
-        try t.log.expected.turn(2);
-    } else {
-        t.expected.p2.get(1).hp = 0;
-        try t.log.expected.faint(P2.ident(1), false);
-        try t.log.expected.win(.P1);
-    }
+    t.expected.p2.get(1).hp = 0;
+    try t.log.expected.faint(P2.ident(1), false);
+    try t.log.expected.win(.P1);
 
-    const result = if (showdown) Result.Default else Result.Win;
-    try expectEqual(result, try t.update(move(1), move(1)));
+    try expectEqual(Result.Win, try t.update(move(1), move(1)));
 
     try t.verify();
 }

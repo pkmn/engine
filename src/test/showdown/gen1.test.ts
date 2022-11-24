@@ -1585,29 +1585,31 @@ describe('Gen 1', () => {
     const proc = {key: HIT.key, value: ranged(25, 256) - 1};
     const no_proc = {key: proc.key, value: proc.value + 1};
     const battle = startBattle([
+      HIT, NO_CRIT, MAX_DMG, proc, CFZ(2), no_proc, CFZ_CAN,
       HIT, NO_CRIT, MAX_DMG, proc,
-      HIT, NO_CRIT, MAX_DMG, proc,
-      HIT, NO_CRIT, MAX_DMG, no_proc, CFZ(3),
+      HIT, NO_CRIT, MAX_DMG, no_proc,
     ], [
-      {species: 'Venomoth', evs, moves: ['Psybeam']},
+      {species: 'Venomoth', evs, moves: ['Psybeam', 'Teleport']},
     ], [
       {species: 'Jolteon', evs, moves: ['Substitute', 'Agility']},
     ]);
 
     let p2hp = battle.p2.pokemon[0].hp;
 
-    // Substitute blocks ConfusionChance on Pokémon Showdown
+    // ConfusionChance works through substitute if it doesn't break
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 83);
-    expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
+    expect(battle.p2.pokemon[0].volatiles['confusion']).toBeDefined();
 
+    battle.makeChoices('move 2', 'move 2');
+
+    // Can't confuse after breaking the substitute
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p2.pokemon[0].hp).toBe(p2hp);
 
-    // Pokémon Showdown procs on 26 instead of 25, so no_proc will still proc
     battle.makeChoices('move 1', 'move 2');
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 49);
-    expect(battle.p2.pokemon[0].volatiles['confusion']).toBeDefined();
+    expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
 
     verify(battle, [
       '|move|p2a: Jolteon|Substitute|p2a: Jolteon',
@@ -1615,18 +1617,24 @@ describe('Gen 1', () => {
       '|-damage|p2a: Jolteon|250/333',
       '|move|p1a: Venomoth|Psybeam|p2a: Jolteon',
       '|-activate|p2a: Jolteon|Substitute|[damage]',
+      '|-start|p2a: Jolteon|confusion',
       '|turn|2',
+      '|-activate|p2a: Jolteon|confusion',
+      '|move|p2a: Jolteon|Agility|p2a: Jolteon',
+      '|-boost|p2a: Jolteon|spe|2',
+      '|move|p1a: Venomoth|Teleport|p1a: Venomoth',
+      '|turn|3',
+      '|-end|p2a: Jolteon|confusion',
       '|move|p2a: Jolteon|Substitute|p2a: Jolteon',
       '|-fail|p2a: Jolteon|move: Substitute',
       '|move|p1a: Venomoth|Psybeam|p2a: Jolteon',
       '|-end|p2a: Jolteon|Substitute',
-      '|turn|3',
+      '|turn|4',
       '|move|p2a: Jolteon|Agility|p2a: Jolteon',
       '|-boost|p2a: Jolteon|spe|2',
       '|move|p1a: Venomoth|Psybeam|p2a: Jolteon',
       '|-damage|p2a: Jolteon|201/333',
-      '|-start|p2a: Jolteon|confusion',
-      '|turn|4',
+      '|turn|5',
     ]);
   });
 
@@ -4240,8 +4248,9 @@ describe('Gen 1', () => {
     ]);
   });
 
+  // Fixed by smogon/pokemon-showdown#9034
   test('Explosion invulnerability bug', () => {
-    const battle = startBattle([SS_RES, GLM], [
+    const battle = startBattle([], [
       {species: 'Dugtrio', evs, moves: ['Dig']},
     ], [
       {species: 'Golem', evs, moves: ['Explosion']},
@@ -4249,14 +4258,15 @@ describe('Gen 1', () => {
 
     battle.makeChoices('move 1', 'move 1');
     // Explode effects should cause the user to faint if the target is invulnerable
-    // expect(battle.p2.pokemon[0].hp).toBe(0);
+    expect(battle.p2.pokemon[0].hp).toBe(0);
 
     verify(battle, [
       '|move|p1a: Dugtrio|Dig||[still]',
       '|-prepare|p1a: Dugtrio|Dig',
       '|move|p2a: Golem|Explosion|p1a: Dugtrio|[miss]',
       '|-miss|p2a: Golem',
-      '|turn|2',
+      '|faint|p2a: Golem',
+      '|win|Player 1',
     ]);
   });
 
