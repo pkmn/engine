@@ -463,8 +463,7 @@ the pkmn engine, but the following moves have their broken behavior preserved in
   moves have [glitchy behavior](https://www.youtube.com/watch?v=NC5gbJeExbs) where the the scaled
   accuracy after accuracy/evasion modifiers have been applied should overwrite the original accuracy
   of the move for as long as the move's lock lasts. Furthermore, Pokémon Showdown handles thrashing
-  moves in the wrong order, does not lock the user into the move if it hits or breaks a substitute,
-  and fails to lock a thrashing Pokémon into the move if it hits a substitute.
+  moves in the wrong order and does not lock the user into the move if it hits or breaks a substitute.
 - **Freeze** / **Sleep**: Pokémon Showdown requires a move to be selected when a Pokémon is frozen
   or sleeping and uses that in the event that the status is removed while on the cartridge no
   selection is possible and no turn exists for the thawed/woken Pokémon to act except in the case of
