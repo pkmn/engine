@@ -361,7 +361,7 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 | 2     | 4   | `stats.atk`                        | The active Pokémon's modified Attack stat                   |
 | 4     | 6   | `stats.def`                        | The active Pokémon's modified Defense stat                  |
 | 6     | 8   | `stats.spe`                        | The active Pokémon's modified Speed stat                    |
-| 7     | 10  | `stats.spc`                        | The active Pokémon's modified Special stat                  |
+| 8     | 10  | `stats.spc`                        | The active Pokémon's modified Special stat                  |
 | 10    | 11  | `species`                          | The active Pokémon's species                                |
 | 11    | 12  | `type1`/`type2`                    | The active Pokémon's types                                  |
 | 12    | 13  | `boosts.atk`/`boosts.def`          | The active Pokémon's Attack and Defense boosts              |
@@ -422,7 +422,7 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 | 2     | 4   | `stats.atk`     | The Pokémon's unmodified Attack stat       |
 | 4     | 6   | `stats.def`     | The Pokémon's unmodified Defense stat      |
 | 6     | 8   | `stats.spe`     | The Pokémon's unmodified Speed stat        |
-| 7     | 10  | `stats.spc`     | The Pokémon's unmodified Special stat      |
+| 8     | 10  | `stats.spc`     | The Pokémon's unmodified Special stat      |
 | 10    | 11  | `moves[0].id`   | The Pokémon's first stored move            |
 | 11    | 12  | `moves[0].pp`   | The PP of the Pokémon's first stored move  |
 | 12    | 13  | `moves[1].id`   | The Pokémon's second stored move           |
