@@ -16,6 +16,9 @@ var data: ?std.ArrayList(Data) = null;
 var buf: ?std.ArrayList(u8) = null;
 var last: u64 = 0;
 
+// type of ArrayList's toOwnedSlice changed from []u8 to ![]u8 due to ziglang/zig#13535
+const ret = @typeInfo(@TypeOf(@field(std.ArrayList(u8), "toOwnedSlice"))).Fn.return_type;
+
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer std.debug.assert(!gpa.deinit());
@@ -140,7 +143,7 @@ pub fn benchmark(
                     .c1 = c1,
                     .c2 = c2,
                     .state = try allocator.dupe(u8, std.mem.toBytes(battle)[0..]),
-                    .log = buf.?.toOwnedSlice(),
+                    .log = if (ret == []u8) buf.?.toOwnedSlice() else try buf.?.toOwnedSlice(),
                 });
             }
         }
