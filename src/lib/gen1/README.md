@@ -474,9 +474,7 @@ the pkmn engine, but the following moves have their broken behavior preserved in
   thrashing volatiles should not be cleared if the user misses a turn due to freeze / sleep.
 - **Hyper Beam**: due to improperly implemented selection mechanics, the [Hyper Beam
   automatic-selection glitch](https://glitchcity.wiki/Hyper_Beam_automatic_selection_glitch) does
-  not exist on Pokémon Showdown. Furthermore, Hyper Beam's recharging turn should be cancelled if a
-  Pokémon would have been flinched (even if the Pokémon doing the flinching was slower). Finally,
-  Hyper Beam being able to cause [Freeze permanent
+  not exist on Pokémon Showdown.Finally, Hyper Beam being able to cause [Freeze permanent
   helplessness](https://pkmn.cc/bulba-glitch-1#Hyper_Beam_.2B_Freeze_permanent_helplessness) is not
   implement by Pokémon Showdown.
 - **Roar** / **Whirlwind**: these moves can miss on Pokémon Showdown (and advance the RNG when
