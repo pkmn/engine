@@ -103,6 +103,7 @@ const FORMATS = [
   // 'gen6customgame', 'gen6doublescustomgame',
   // 'gen7customgame', 'gen7doublescustomgame',
   // 'gen8customgame', 'gen8doublescustomgame',
+  // 'gen9customgame', 'gen9doublescustomgame',
 ];
 
 function possibilities(gen: Generation) {
@@ -114,7 +115,8 @@ function possibilities(gen: Generation) {
   const abilities = gen.num < 3
     ? [] : Array.from(gen.abilities).filter(a => !blocked.abilities?.includes(a.id as ID));
   const moves = Array.from(gen.moves).filter(m => !blocked.moves?.includes(m.id as ID) &&
-    (m.id !== 'struggle' && (m.id === 'hiddenpower' || m.id.slice(0, 11) !== 'hiddenpower')));
+    (!['struggle', 'revivalblessing'].includes(m.id) &&
+      (m.id === 'hiddenpower' || m.id.slice(0, 11) !== 'hiddenpower')));
   return {
     pokemon: pokemon.map(p => p.id as ID),
     items: items.map(i => i.id as ID),
