@@ -673,9 +673,6 @@ Because the pkmn engine aims to be as compatible with Pokémon Showdown as possi
 - **Effects**: Pokémon Showdown occasionally incorrectly inserts RNG calls in move effect handlers
   when they are not relevant:
   - Roar / Whirlwind roll to hit and can "miss" as opposed to simply failing
-  - moves with a secondary chance effect (except Twinneedle) still roll to see if the effect should
-    proc even in situations where the effect doesn't happen (e.g. when the effect would be nullified
-    by Substitute or if the target fainted)
 
 Finally, the **initial 10-byte seed for link battles on Pokémon Red cannot include bytes larger than
 the `SERIAL_PREAMBLE_BYTE`**, so must be in the range $\left[0, 252\right]$. This has implications

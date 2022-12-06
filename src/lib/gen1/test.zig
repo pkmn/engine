@@ -1324,7 +1324,7 @@ test "PoisonChance effect" {
     // zig fmt: off
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, LO_PROC, HIT, ~CRIT, MIN_DMG, HI_PROC,
-            HIT, ~CRIT, MAX_DMG, HI_PROC,
+            HIT, ~CRIT, MAX_DMG,
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC, NOP,
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC,
         } else .{
@@ -1405,7 +1405,7 @@ test "BurnChance effect" {
     // zig fmt: off
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HI_PROC,
-            HIT, ~CRIT, MIN_DMG, HI_PROC,
+            HIT, ~CRIT, MIN_DMG,
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC, NOP,
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC,
         } else .{
@@ -1493,7 +1493,7 @@ test "FreezeChance effect" {
             HIT, ~CRIT, MIN_DMG, MIN_WRAP,
             HIT, ~CRIT, MIN_DMG, ~HIT,
             ~HIT,
-            HIT, ~CRIT, MIN_DMG, FRZ,
+            HIT, ~CRIT, MIN_DMG,
         } else .{
             ~CRIT, MIN_DMG, HIT, HIT,
             ~CRIT, MIN_DMG, HIT, PAR_CANT,
@@ -2009,8 +2009,8 @@ test "ConfusionChance effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            HIT, ~CRIT, MAX_DMG, PROC, CFZ_2, NO_PROC, CFZ_CAN,
-            HIT, ~CRIT, MAX_DMG, PROC,
+            HIT, ~CRIT, MAX_DMG, PROC, CFZ_2, CFZ_CAN,
+            HIT, ~CRIT, MAX_DMG,
             HIT, ~CRIT, MAX_DMG, NO_PROC,
         } else .{
             ~CRIT, MAX_DMG, HIT, PROC, CFZ_2, CFZ_CAN, ~CRIT,
@@ -2080,8 +2080,8 @@ test "FlinchChance effect" {
     // zig fmt: off
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, HI_PROC,
-            HIT, ~CRIT, MIN_DMG, HI_PROC, HIT, ~CRIT, MIN_DMG, HI_PROC,
-            HIT, ~CRIT, MAX_DMG, LO_PROC, HIT, ~CRIT, MIN_DMG,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HI_PROC,
+            HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, MIN_DMG,
             HIT, ~CRIT, MIN_DMG, LO_PROC,
             HIT, ~CRIT, MIN_DMG, LO_PROC,
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HI_PROC,
@@ -5518,9 +5518,8 @@ test "Bide + Substitute bug" {
 // Fixed by smogon/pokemon-showdown#8969
 test "Counter + Substitute bug" {
     // https://www.youtube.com/watch?v=_cEVqYFoBhE
-    const NO_PAR = MAX;
     var t = Test((if (showdown)
-        (.{ HIT, ~CRIT, MIN_DMG, NO_PAR, HIT })
+        (.{ HIT, ~CRIT, MIN_DMG, HIT })
     else
         (.{ ~CRIT, MIN_DMG, HIT, ~CRIT, HIT }))).init(
         &.{.{ .species = .Snorlax, .moves = &.{ .Reflect, .BodySlam } }},
@@ -6558,7 +6557,7 @@ test "Freeze top move selection glitch" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            HIT, ~CRIT, MIN_DMG, FRZ, NOP, HIT, ~CRIT, MIN_DMG, NO_BRN,
+            HIT, ~CRIT, MIN_DMG, FRZ, NOP, HIT, ~CRIT, MIN_DMG,
             HIT, ~CRIT, MIN_DMG, NO_BRN,
         } else .{
             ~CRIT, MIN_DMG, HIT, FRZ, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,

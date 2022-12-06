@@ -915,24 +915,14 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
 
     // Substitute being broken nullifies the move's effect completely so even
     // if an effect was intended to "always happen" it will still get skipped.
-    if (nullified) {
-        // Pokémon Showdown rolls for secondary chance even if the effect would be nullified
-        if (showdown and move.effect.isSecondaryChance() and move.effect != .Twineedle) {
-            battle.rng.advance(1);
-        }
-        return null;
-    }
+    if (nullified) return null;
 
     // On the cartridge, "always happen" effect handlers are called in the applyDamage loop above,
     // but this is only done to setup the MultiHit looping in the first place. Moving the MultiHit
     // setup before the loop means we can avoid having to waste time doing no-op handler searches.
     if (move.effect.alwaysHappens()) try moveEffect(battle, player, move, mslot, log);
 
-    if (foe.stored().hp == 0) {
-        // Pokémon Showdown rolls for secondary chance even if the target fainted
-        if (showdown and move.effect.isSecondaryChance()) battle.rng.advance(1);
-        return null;
-    }
+    if (foe.stored().hp == 0) return null;
 
     if (!move.effect.isSpecial()) {
         // On the cartridge Rage is not considered to be "special" and thus gets executed for a
@@ -1543,7 +1533,7 @@ pub const Effects = struct {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
 
-        if (foe.active.volatiles.Substitute) return if (showdown) battle.rng.advance(1);
+        if (foe.active.volatiles.Substitute) return;
 
         if (Status.any(foe_stored.status)) {
             if (showdown and !foe.active.types.includes(move.type)) battle.rng.advance(1);
@@ -1592,7 +1582,7 @@ pub const Effects = struct {
                 battle.rng.chance(u8, 25, 256)
             else
                 battle.rng.next() < Gen12.percent(10);
-            if (!chance) return if (showdown and sub) battle.rng.advance(1);
+            if (!chance) return;
         } else {
             if (showdown) {
                 if (!try checkHit(battle, player, move, log)) {
@@ -1617,8 +1607,6 @@ pub const Effects = struct {
             (battle.rng.next() & 3) + 2);
 
         try log.start(battle.active(player.foe()), .Confusion);
-        // Substitute results in a bonus roll on Pokémon Showdown (and above)
-        if (showdown and move.effect == .ConfusionChance and sub) battle.rng.advance(1);
     }
 
     fn conversion(battle: anytype, player: Player, log: anytype) !void {
@@ -1688,7 +1676,7 @@ pub const Effects = struct {
     fn flinchChance(battle: anytype, player: Player, move: Move.Data) void {
         var volatiles = &battle.foe(player).active.volatiles;
 
-        if (volatiles.Substitute) return if (showdown) return battle.rng.advance(1);
+        if (volatiles.Substitute) return;
 
         const chance = if (showdown)
             battle.rng.chance(u8, @as(u8, if (move.effect == .FlinchChance1) 26 else 77), 256)
@@ -1717,7 +1705,9 @@ pub const Effects = struct {
         var foe_stored = foe.stored();
         const foe_ident = battle.active(player.foe());
 
-        if (foe.active.volatiles.Substitute or Status.any(foe_stored.status)) {
+        if (foe.active.volatiles.Substitute) return;
+
+        if (Status.any(foe_stored.status)) {
             return if (showdown and !foe.active.types.includes(move.type)) battle.rng.advance(1);
         }
 
@@ -1954,11 +1944,12 @@ pub const Effects = struct {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
         const foe_ident = battle.active(player.foe());
+        const sub = foe.active.volatiles.Substitute;
 
         if (showdown and move.effect == .Poison and !try checkHit(battle, player, move, log)) {
             return;
-        } else if (foe.active.volatiles.Substitute or Status.any(foe_stored.status)) {
-            if (move.effect != .Poison) return if (showdown) battle.rng.advance(1);
+        } else if (sub or Status.any(foe_stored.status)) {
+            if (move.effect != .Poison) return if (showdown and !sub) battle.rng.advance(1);
             return log.fail(foe_ident, if (Status.is(foe_stored.status, .PSN)) .Poison else .None);
         } else if (foe.active.types.includes(.Poison)) {
             if (move.effect != .Poison) return if (showdown) battle.rng.advance(1);

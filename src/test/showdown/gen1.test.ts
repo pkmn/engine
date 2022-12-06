@@ -1058,7 +1058,7 @@ describe('Gen 1', () => {
     const hi_proc = {key: HIT.key, value: ranged(103, 256) - 1};
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, lo_proc, HIT, NO_CRIT, MIN_DMG, hi_proc,
-      HIT, NO_CRIT, MAX_DMG, hi_proc,
+      HIT, NO_CRIT, MAX_DMG,
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc, SS_MOD,
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc,
     ], [
@@ -1126,7 +1126,7 @@ describe('Gen 1', () => {
     const hi_proc = {key: HIT.key, value: ranged(77, 256) - 1};
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, hi_proc,
-      HIT, NO_CRIT, MIN_DMG, hi_proc,
+      HIT, NO_CRIT, MIN_DMG,
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc, SS_MOD,
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc,
     ], [
@@ -1199,7 +1199,7 @@ describe('Gen 1', () => {
       HIT, NO_CRIT, MIN_DMG, MIN_WRAP,
       HIT, NO_CRIT, MIN_DMG, MISS,
       MISS,
-      HIT, NO_CRIT, MIN_DMG, FRZ,
+      HIT, NO_CRIT, MIN_DMG,
     ], [
       {species: 'Starmie', evs, moves: ['Ice Beam']},
       {species: 'Magmar', evs, moves: ['Ice Beam', 'Flamethrower', 'Substitute']},
@@ -1386,7 +1386,7 @@ describe('Gen 1', () => {
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
       HIT, NO_CRIT, MIN_DMG, hi_proc, HIT, NO_CRIT, MIN_DMG, hi_proc, SS_MOD,
-      PAR_CAN, HIT, NO_CRIT, MIN_DMG, lo_proc,
+      PAR_CAN, HIT, NO_CRIT, MIN_DMG,
       HIT, NO_CRIT, MIN_DMG, hi_proc, PAR_CANT,
     ], [
       {species: 'Jolteon', evs, moves: ['Body Slam', 'Thundershock']},
@@ -1585,8 +1585,8 @@ describe('Gen 1', () => {
     const proc = {key: HIT.key, value: ranged(25, 256) - 1};
     const no_proc = {key: proc.key, value: proc.value + 1};
     const battle = startBattle([
-      HIT, NO_CRIT, MAX_DMG, proc, CFZ(2), no_proc, CFZ_CAN,
-      HIT, NO_CRIT, MAX_DMG, proc,
+      HIT, NO_CRIT, MAX_DMG, proc, CFZ(2), CFZ_CAN,
+      HIT, NO_CRIT, MAX_DMG,
       HIT, NO_CRIT, MAX_DMG, no_proc,
     ], [
       {species: 'Venomoth', evs, moves: ['Psybeam', 'Teleport']},
@@ -1643,8 +1643,8 @@ describe('Gen 1', () => {
     const hi_proc = {key: HIT.key, value: ranged(77, 256) - 1};
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, hi_proc,
-      HIT, NO_CRIT, MIN_DMG, hi_proc, HIT, NO_CRIT, MIN_DMG, hi_proc,
-      HIT, NO_CRIT, MAX_DMG, lo_proc, HIT, NO_CRIT, MIN_DMG,
+      HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, hi_proc,
+      HIT, NO_CRIT, MAX_DMG, HIT, NO_CRIT, MIN_DMG,
       HIT, NO_CRIT, MIN_DMG, lo_proc,
       HIT, NO_CRIT, MIN_DMG, lo_proc,
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, hi_proc,
@@ -4316,7 +4316,7 @@ describe('Gen 1', () => {
 
   // Fixed by smogon/pokemon-showdown#8969
   test('Counter + Substitute bug', () => {
-    const battle = startBattle([HIT, NO_CRIT, MIN_DMG, NO_PAR, HIT], [
+    const battle = startBattle([HIT, NO_CRIT, MIN_DMG, HIT], [
       {species: 'Snorlax', evs, moves: ['Reflect', 'Body Slam']},
     ], [
       {species: 'Chansey', evs, moves: ['Substitute', 'Counter']},
@@ -5163,7 +5163,7 @@ describe('Gen 1', () => {
   test('Freeze top move selection glitch', () => {
     const NO_BRN = {key: FRZ.key, value: FRZ.value + 1};
     const battle = startBattle([
-      HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD, HIT, NO_CRIT, MIN_DMG, NO_BRN,
+      HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD, HIT, NO_CRIT, MIN_DMG,
       HIT, NO_CRIT, MIN_DMG, NO_BRN,
     ], [
       {species: 'Slowbro', evs, moves: ['Psychic', 'Amnesia', 'Teleport']},

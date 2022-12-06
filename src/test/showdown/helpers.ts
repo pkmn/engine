@@ -83,14 +83,15 @@ export class FixedRNG extends PRNG {
   next(from?: number, to?: number): number {
     if (this.index >= this.rolls.length) throw new Error('Insufficient number of rolls provided');
     const roll = this.rolls[this.index++];
+    const n = this.index;
     const where = locations();
     const locs = where.join(', ');
     if (Array.isArray(roll.key)) {
       if (!roll.key.every(k => where.includes(k))) {
-        throw new Error(`Expected roll for (${roll.key.join(', ')}) but got (${locs})`);
+        throw new Error(`Expected roll ${n} to be (${roll.key.join(', ')}) but got (${locs})`);
       }
     } else if (!where.includes(roll.key)) {
-      throw new Error(`Expected roll for (${roll.key}) but got (${locs})`);
+      throw new Error(`Expected roll ${n} to be (${roll.key}) but got (${locs})`);
     }
     let result = roll.value;
     if (from) from = Math.floor(from);
