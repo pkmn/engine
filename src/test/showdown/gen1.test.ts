@@ -5835,11 +5835,10 @@ describe('Gen 1', () => {
 
   test('Stat down modifier overflow glitch', () => {
     const proc = {key: HIT.key, value: ranged(85, 256) - 1};
-    const no_proc = {key: proc.key, value: proc.value + 1};
     // 342 -> 1026
     {
       const spc342 = {...evs, spa: 12, spd: 12};
-      const battle = startBattle([HIT, NO_CRIT, MIN_DMG, proc, HIT, NO_CRIT, MIN_DMG, no_proc], [
+      const battle = startBattle([HIT, NO_CRIT, MIN_DMG, proc, HIT, NO_CRIT, MIN_DMG], [
         {species: 'Porygon', level: 58, moves: ['Recover', 'Psychic']},
       ], [
         {species: 'Mewtwo', level: 99, evs: spc342, moves: ['Amnesia', 'Recover']},
@@ -5859,19 +5858,16 @@ describe('Gen 1', () => {
 
       battle.makeChoices('move 1', 'move 1');
       expect(battle.p2.pokemon[0].modifiedStats!.spa).toBe(999);
-      // expect(battle.p2.pokemon[0].boosts.spa).toBe(5);
-      expect(battle.p2.pokemon[0].boosts.spa).toBe(6);
+      expect(battle.p2.pokemon[0].boosts.spa).toBe(5);
 
       battle.makeChoices('move 2', 'move 2');
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 2);
-      // expect(battle.p2.pokemon[0].modifiedStats!.spa).toBe(1026);
-      expect(battle.p2.pokemon[0].modifiedStats!.spa).toBe(999);
-      // expect(battle.p2.pokemon[0].boosts.spa).toBe(4);
-      expect(battle.p2.pokemon[0].boosts.spa).toBe(5);
+      expect(battle.p2.pokemon[0].modifiedStats!.spa).toBe(1026);
+      expect(battle.p2.pokemon[0].boosts.spa).toBe(4);
 
       // Division by 0
       battle.makeChoices('move 2', 'move 2');
-      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+      expect(battle.p2.pokemon[0].hp).toBe(0);
 
       verify(battle, [
         '|move|p2a: Mewtwo|Amnesia|p2a: Mewtwo',
@@ -5888,7 +5884,9 @@ describe('Gen 1', () => {
         '|turn|3',
         '|move|p2a: Mewtwo|Amnesia|p2a: Mewtwo',
         '|-boost|p2a: Mewtwo|spd|2',
+        '|-unboost|p2a: Mewtwo|spd|1',
         '|-boost|p2a: Mewtwo|spa|2',
+        '|-unboost|p2a: Mewtwo|spa|1',
         '|move|p1a: Porygon|Recover|p1a: Porygon',
         '|-fail|p1a: Porygon',
         '|turn|4',
@@ -5904,13 +5902,14 @@ describe('Gen 1', () => {
         '|-heal|p2a: Mewtwo|410/410',
         '|move|p1a: Porygon|Psychic|p2a: Mewtwo',
         '|-resisted|p2a: Mewtwo',
-        '|-damage|p2a: Mewtwo|408/410',
-        '|turn|6',
+        '|-damage|p2a: Mewtwo|0 fnt',
+        '|faint|p2a: Mewtwo',
+        '|win|Player 1',
       ]);
     }
     // 343 -> 1029
     {
-      const battle = startBattle([HIT, NO_CRIT, MIN_DMG, proc, HIT, NO_CRIT, MIN_DMG, no_proc], [
+      const battle = startBattle([HIT, NO_CRIT, MIN_DMG, proc, HIT, NO_CRIT, MIN_DMG], [
         {species: 'Porygon', level: 58, moves: ['Recover', 'Psychic']},
       ], [
         {species: 'Mewtwo', moves: ['Amnesia', 'Recover']},
@@ -5930,20 +5929,16 @@ describe('Gen 1', () => {
 
       battle.makeChoices('move 1', 'move 1');
       expect(battle.p2.pokemon[0].modifiedStats!.spa).toBe(999);
-      // expect(battle.p2.pokemon[0].boosts.spa).toBe(5);
-      expect(battle.p2.pokemon[0].boosts.spa).toBe(6);
+      expect(battle.p2.pokemon[0].boosts.spa).toBe(5);
 
       battle.makeChoices('move 2', 'move 2');
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 2);
-      // expect(battle.p2.pokemon[0].modifiedStats!.spa).toBe(1029);
-      expect(battle.p2.pokemon[0].modifiedStats!.spa).toBe(999);
-      // expect(battle.p2.pokemon[0].boosts.spa).toBe(4);
-      expect(battle.p2.pokemon[0].boosts.spa).toBe(5);
+      expect(battle.p2.pokemon[0].modifiedStats!.spa).toBe(1029);
+      expect(battle.p2.pokemon[0].boosts.spa).toBe(4);
 
       // Overflow means Mewtwo gets KOed
       battle.makeChoices('move 2', 'move 2');
-      // expect(battle.p2.pokemon[0].hp).toBe(0);
-      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+      expect(battle.p2.pokemon[0].hp).toBe(0);
 
       verify(battle, [
         '|move|p2a: Mewtwo|Amnesia|p2a: Mewtwo',
@@ -5960,7 +5955,9 @@ describe('Gen 1', () => {
         '|turn|3',
         '|move|p2a: Mewtwo|Amnesia|p2a: Mewtwo',
         '|-boost|p2a: Mewtwo|spd|2',
+        '|-unboost|p2a: Mewtwo|spd|1',
         '|-boost|p2a: Mewtwo|spa|2',
+        '|-unboost|p2a: Mewtwo|spa|1',
         '|move|p1a: Porygon|Recover|p1a: Porygon',
         '|-fail|p1a: Porygon',
         '|turn|4',
@@ -5976,8 +5973,9 @@ describe('Gen 1', () => {
         '|-heal|p2a: Mewtwo|352/352',
         '|move|p1a: Porygon|Psychic|p2a: Mewtwo',
         '|-resisted|p2a: Mewtwo',
-        '|-damage|p2a: Mewtwo|350/352',
-        '|turn|6',
+        '|-damage|p2a: Mewtwo|0 fnt',
+        '|faint|p2a: Mewtwo',
+        '|win|Player 1',
       ]);
     }
   });

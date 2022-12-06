@@ -446,8 +446,6 @@ Smogon](https://www.smogon.com/forums/threads/rby-tradebacks-bug-report-thread.3
 - moves on Pokémon Showdown can do 0 damage instead of failing or causing a [division-by-zero
   freeze](https://pkmn.cc/bulba-glitch-1#Division_by_0).
 - Pokémon Showdown checks for type and OHKO immunity before accuracy.
-- Stat modification is incorrectly implemented by Pokémon Showdown, as evident by its failure to
-  handle the [stat down modifier overflow glitch](https://www.youtube.com/watch?v=y2AOm7r39Jg).
 
 Beyond the general bugs listed above, several move effects are implemented incorrectly by Pokémon
 Showdown. Some of these moves are [too fundamentally broken to be implemented](#unimplementable) by

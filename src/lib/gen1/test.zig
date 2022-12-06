@@ -7471,11 +7471,10 @@ test "Stat modification errors" {
 test "Stat down modifier overflow glitch" {
     // https://www.youtube.com/watch?v=y2AOm7r39Jg
     const PROC = comptime ranged(85, 256) - 1;
-    const NO_PROC = PROC + 1;
     // 342 -> 1026
     {
         var t = Test((if (showdown)
-            (.{ HIT, ~CRIT, MIN_DMG, PROC, HIT, ~CRIT, MIN_DMG, NO_PROC })
+            (.{ HIT, ~CRIT, MIN_DMG, PROC, HIT, ~CRIT, MIN_DMG })
         else
             (.{ ~CRIT, ~CRIT, ~CRIT, ~CRIT, MIN_DMG, HIT, PROC, ~CRIT }))).init(
             &.{.{
@@ -7521,7 +7520,9 @@ test "Stat down modifier overflow glitch" {
         try t.log.expected.move(P2.ident(1), Move.Amnesia, P2.ident(1), null);
         if (showdown) {
             try t.log.expected.boost(P2.ident(1), .SpecialAttack, 2);
+            try t.log.expected.boost(P2.ident(1), .SpecialAttack, -1);
             try t.log.expected.boost(P2.ident(1), .SpecialDefense, 2);
+            try t.log.expected.boost(P2.ident(1), .SpecialDefense, -1);
         } else {
             try t.log.expected.fail(P2.ident(1), .None);
         }
@@ -7532,7 +7533,7 @@ test "Stat down modifier overflow glitch" {
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
         try expectEqual(@as(u16, 999), t.actual.p2.active.stats.spc);
-        try expectEqual(@as(i4, if (showdown) 6 else 5), t.actual.p2.active.boosts.spc);
+        try expectEqual(@as(i4, 5), t.actual.p2.active.boosts.spc);
 
         try t.log.expected.move(P2.ident(1), Move.Recover, P2.ident(1), null);
         try t.log.expected.fail(P2.ident(1), .None);
@@ -7545,8 +7546,8 @@ test "Stat down modifier overflow glitch" {
         try t.log.expected.turn(5);
 
         try expectEqual(Result.Default, try t.update(move(2), move(2)));
-        try expectEqual(@as(u16, if (showdown) 999 else 1026), t.actual.p2.active.stats.spc);
-        try expectEqual(@as(i4, if (showdown) 5 else 4), t.actual.p2.active.boosts.spc);
+        try expectEqual(@as(u16, 1026), t.actual.p2.active.stats.spc);
+        try expectEqual(@as(i4, 4), t.actual.p2.active.boosts.spc);
 
         try t.log.expected.move(P2.ident(1), Move.Recover, P2.ident(1), null);
         t.expected.p2.get(1).hp += 2;
@@ -7554,20 +7555,21 @@ test "Stat down modifier overflow glitch" {
         try t.log.expected.move(P1.ident(1), Move.Psychic, P2.ident(1), null);
         if (showdown) {
             try t.log.expected.resisted(P2.ident(1));
-            t.expected.p2.get(1).hp -= 2;
+            t.expected.p2.get(1).hp = 0;
             try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-            try t.log.expected.turn(6);
+            try t.log.expected.faint(P2.ident(1), false);
+            try t.log.expected.win(.P1);
         }
 
         // Division by 0
-        const result = if (showdown) Result.Default else Result.Error;
+        const result = if (showdown) Result.Win else Result.Error;
         try expectEqual(result, try t.update(move(2), move(2)));
         try t.verify();
     }
     // 343 -> 1029
     {
         var t = Test((if (showdown)
-            (.{ HIT, ~CRIT, MIN_DMG, PROC, HIT, ~CRIT, MIN_DMG, NO_PROC })
+            (.{ HIT, ~CRIT, MIN_DMG, PROC, HIT, ~CRIT, MIN_DMG })
         else
             (.{ ~CRIT, ~CRIT, ~CRIT, ~CRIT, MIN_DMG, HIT, PROC, ~CRIT, MIN_DMG, HIT }))).init(
             &.{.{
@@ -7608,7 +7610,9 @@ test "Stat down modifier overflow glitch" {
         try t.log.expected.move(P2.ident(1), Move.Amnesia, P2.ident(1), null);
         if (showdown) {
             try t.log.expected.boost(P2.ident(1), .SpecialAttack, 2);
+            try t.log.expected.boost(P2.ident(1), .SpecialAttack, -1);
             try t.log.expected.boost(P2.ident(1), .SpecialDefense, 2);
+            try t.log.expected.boost(P2.ident(1), .SpecialDefense, -1);
         } else {
             try t.log.expected.fail(P2.ident(1), .None);
         }
@@ -7619,7 +7623,7 @@ test "Stat down modifier overflow glitch" {
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
         try expectEqual(@as(u16, 999), t.actual.p2.active.stats.spc);
-        try expectEqual(@as(i4, if (showdown) 6 else 5), t.actual.p2.active.boosts.spc);
+        try expectEqual(@as(i4, 5), t.actual.p2.active.boosts.spc);
 
         try t.log.expected.move(P2.ident(1), Move.Recover, P2.ident(1), null);
         try t.log.expected.fail(P2.ident(1), .None);
@@ -7632,29 +7636,22 @@ test "Stat down modifier overflow glitch" {
         try t.log.expected.turn(5);
 
         try expectEqual(Result.Default, try t.update(move(2), move(2)));
-        try expectEqual(@as(u16, if (showdown) 999 else 1029), t.actual.p2.active.stats.spc);
-        try expectEqual(@as(i4, if (showdown) 5 else 4), t.actual.p2.active.boosts.spc);
+        try expectEqual(@as(u16, 1029), t.actual.p2.active.stats.spc);
+        try expectEqual(@as(i4, 4), t.actual.p2.active.boosts.spc);
 
         try t.log.expected.move(P2.ident(1), Move.Recover, P2.ident(1), null);
         t.expected.p2.get(1).hp += 2;
         try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .None);
         try t.log.expected.move(P1.ident(1), Move.Psychic, P2.ident(1), null);
-        if (showdown) {
-            try t.log.expected.resisted(P2.ident(1));
-            t.expected.p2.get(1).hp -= 2;
-            try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-            try t.log.expected.turn(6);
-        } else {
-            try t.log.expected.resisted(P2.ident(1));
-            t.expected.p2.get(1).hp = 0;
-            try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-            try t.log.expected.faint(P2.ident(1), false);
-            try t.log.expected.win(.P1);
-        }
+
+        try t.log.expected.resisted(P2.ident(1));
+        t.expected.p2.get(1).hp = 0;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.faint(P2.ident(1), false);
+        try t.log.expected.win(.P1);
 
         // Overflow means Mewtwo gets KOed
-        const result = if (showdown) Result.Default else Result.Win;
-        try expectEqual(result, try t.update(move(2), move(2)));
+        try expectEqual(Result.Win, try t.update(move(2), move(2)));
         try t.verify();
     }
 }
