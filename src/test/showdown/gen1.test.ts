@@ -3797,6 +3797,7 @@ describe('Gen 1', () => {
   test('MirrorMove effect', () => {
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+      HIT, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG,
       NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG,
       SS_RES, SS_RES, GLM, GLM,
       GLM, GLM, GLM, GLM, SS_RUN, SS_RUN, HIT, NO_CRIT, MIN_DMG,
@@ -3812,28 +3813,43 @@ describe('Gen 1', () => {
 
     // Can't Mirror Move if no move has been used or if Mirror Move is last used
     battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.lastMove!.id).toBe('mirrormove');
+    expect(battle.p2.lastMove!.id).toBe('mirrormove');
 
     // Can Mirror Move regular attacks
     battle.makeChoices('move 2', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 44);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 43);
+    expect(battle.p1.lastMove!.id).toBe('peck');
+    expect(battle.p2.lastMove!.id).toBe('peck');
 
-    // Pokémon Showdown sets last_used_move incorrectly, this should succeed
-    expect(battle.p2.lastMove!.id).toBe('mirrormove'); // should be 'peck'
     battle.makeChoices('move 1', 'move 2');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 74);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 43);
+    expect(battle.p1.lastMove!.id).toBe('peck');
+    expect(battle.p2.lastMove!.id).toBe('swift');
 
-    expect(battle.p1.lastMove!.id).toBe('mirrormove'); // should be 'peck'
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 74);
+    expect(battle.p1.lastMove!.id).toBe('swift');
+    expect(battle.p2.lastMove!.id).toBe('swift');
 
     // Should actually copy Swift and not Fly
     battle.makeChoices('move 3', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 74);
+    expect(battle.p1.lastMove!.id).toBe('fly');
+    expect(battle.p2.lastMove!.id).toBe('fly');
+
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 86);
+    expect(battle.p1.lastMove!.id).toBe('fly');
+    expect(battle.p2.lastMove!.id).toBe('fly');
 
     // Switching resets last used moves
     battle.makeChoices('move 1', 'switch 2');
+    expect(battle.p1.lastMove!.id).toBe('mirrormove');
+    // expect(battle.p2.lastMove!.id).toBe('');
+    expect(battle.p2.lastMove!.id).toBe('fly');
 
     expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(28);
     expect(battle.p2.pokemon[1].moveSlots[0].pp).toBe(28);
@@ -3851,15 +3867,17 @@ describe('Gen 1', () => {
       '|-damage|p1a: Fearow|289/333',
       '|turn|3',
       '|move|p1a: Fearow|Mirror Move|p1a: Fearow',
-      '|-fail|p1a: Fearow',
+      '|move|p1a: Fearow|Peck|p2a: Pidgeot|[from]Mirror Move',
+      '|-damage|p2a: Pidgeot|283/369',
       '|move|p2a: Pidgeot|Swift|p1a: Fearow',
       '|-damage|p1a: Fearow|215/333',
       '|turn|4',
       '|move|p1a: Fearow|Mirror Move|p1a: Fearow',
       '|move|p1a: Fearow|Swift|p2a: Pidgeot|[from]Mirror Move',
-      '|-damage|p2a: Pidgeot|252/369',
+      '|-damage|p2a: Pidgeot|209/369',
       '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
-      '|-fail|p2a: Pidgeot',
+      '|move|p2a: Pidgeot|Swift|p1a: Fearow|[from]Mirror Move',
+      '|-damage|p1a: Fearow|141/333',
       '|turn|5',
       '|move|p1a: Fearow|Fly||[still]',
       '|-prepare|p1a: Fearow|Fly',
@@ -3870,7 +3888,7 @@ describe('Gen 1', () => {
       '|move|p1a: Fearow|Fly|p2a: Pidgeot|[from]Fly|[miss]',
       '|-miss|p1a: Fearow',
       '|move|p2a: Pidgeot|Fly|p1a: Fearow|[from]Fly',
-      '|-damage|p1a: Fearow|129/333',
+      '|-damage|p1a: Fearow|55/333',
       '|turn|7',
       '|switch|p2a: Pidgeotto|Pidgeotto|329/329',
       '|move|p1a: Fearow|Mirror Move|p1a: Fearow',
@@ -4506,10 +4524,11 @@ describe('Gen 1', () => {
   test('Infinite Metronome', () => {
     // Charge
     {
+      // Pokémon Showdown is unable to perform infinite Metronome <-> Mirror Move recursion
       const battle = startBattle([
-        METRONOME('Skull Bash'),
-        METRONOME('Mirror Move'), METRONOME('Mirror Move'), METRONOME('Fly'), SS_RES, GLM,
-        GLM, GLM, SS_RUN, MISS,
+        METRONOME('Skull Bash'), METRONOME('Mirror Move'),
+        // METRONOME('Mirror Move'), METRONOME('Fly'), SS_RES, GLM, GLM, GLM, SS_RUN, MISS,
+        MISS, MISS,
       ], [
         {species: 'Clefairy', evs, moves: ['Metronome']},
       ], [
@@ -4532,15 +4551,12 @@ describe('Gen 1', () => {
         '|-prepare|p2a: Clefable|Skull Bash',
         '|move|p1a: Clefairy|Metronome|p1a: Clefairy',
         '|move|p1a: Clefairy|Mirror Move|p1a: Clefairy|[from]Metronome',
-        '|move|p1a: Clefairy|Metronome|p1a: Clefairy|[from]Mirror Move',
-        '|move|p1a: Clefairy|Mirror Move|p1a: Clefairy|[from]Metronome',
-        '|move|p1a: Clefairy|Metronome|p1a: Clefairy|[from]Mirror Move',
-        '|move|p1a: Clefairy|Fly||[from]Metronome|[still]',
-        '|-prepare|p1a: Clefairy|Fly',
+        '|move|p1a: Clefairy|Skull Bash||[from]Mirror Move|[still]',
+        '|-prepare|p1a: Clefairy|Skull Bash',
         '|turn|2',
         '|move|p2a: Clefable|Skull Bash|p1a: Clefairy|[from]Skull Bash|[miss]',
         '|-miss|p2a: Clefable',
-        '|move|p1a: Clefairy|Fly|p2a: Clefable|[from]Fly|[miss]',
+        '|move|p1a: Clefairy|Skull Bash|p2a: Clefable|[from]Skull Bash|[miss]',
         '|-miss|p1a: Clefairy',
         '|turn|3',
       ]);
@@ -4548,8 +4564,7 @@ describe('Gen 1', () => {
     // non-Charge
     {
       const battle = startBattle([
-        METRONOME('Pound'), HIT, NO_CRIT, MIN_DMG,
-        METRONOME('Mirror Move'), METRONOME('Mirror Move'), METRONOME('Fly'), SS_RES, GLM,
+        METRONOME('Pound'), HIT, NO_CRIT, MIN_DMG, METRONOME('Mirror Move'), HIT, NO_CRIT, MIN_DMG,
       ], [
         {species: 'Clefable', evs, moves: ['Metronome']},
       ], [
@@ -4564,11 +4579,8 @@ describe('Gen 1', () => {
         '|-damage|p2a: Clefairy|289/343',
         '|move|p2a: Clefairy|Metronome|p2a: Clefairy',
         '|move|p2a: Clefairy|Mirror Move|p2a: Clefairy|[from]Metronome',
-        '|move|p2a: Clefairy|Metronome|p2a: Clefairy|[from]Mirror Move',
-        '|move|p2a: Clefairy|Mirror Move|p2a: Clefairy|[from]Metronome',
-        '|move|p2a: Clefairy|Metronome|p2a: Clefairy|[from]Mirror Move',
-        '|move|p2a: Clefairy|Fly||[from]Metronome|[still]',
-        '|-prepare|p2a: Clefairy|Fly',
+        '|move|p2a: Clefairy|Pound|p1a: Clefable|[from]Mirror Move',
+        '|-damage|p1a: Clefable|359/393',
         '|turn|2',
       ]);
     }
@@ -5092,8 +5104,7 @@ describe('Gen 1', () => {
       expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 67 + 9));
 
       battle.makeChoices('move 2', 'move 3');
-      // expect(battle.p1.pokemon[0].hp).toBe(p1hp -= (2 * 9));
-      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= (2 * 19));
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= (2 * 9));
       expect(battle.p2.pokemon[0].hp).toBe(p2hp);
 
       verify(battle, [
@@ -5110,7 +5121,7 @@ describe('Gen 1', () => {
         '|turn|3',
         '|cant|p1a: Jolteon|par',
         '|move|p2a: Chansey|Counter|p1a: Jolteon',
-        '|-damage|p1a: Jolteon|276/333 par',
+        '|-damage|p1a: Jolteon|296/333 par',
         '|turn|4',
       ]);
     }

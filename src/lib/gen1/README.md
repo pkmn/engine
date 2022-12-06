@@ -517,15 +517,15 @@ called out in the `|rule|` section at the beginning of a battle's log):
   first](https://www.smogon.com/forums/threads/gen-3-on-ps-final-fixes.3527268/post-5989318).
 
 Pokémon Showdown enforces several clauses *before* the battle: **Cleric Clause** (all Pokémon must
-have full HP and PP, and not have any status conditions prior to the battle), **Tradeback Clause**
-(Pokémon may not have moves obtained from trading back from Pokémon Gold/Silver/Crystal, though may
-have DV spreads which would otherwise be unobtainable), **Species Clause** (players may not have
-more than one of the same Pokémon species on their team) and bans specific moves via **Evasion
-Clause**, **OHKO Clause**, and the **Invulnerability Clause** - none of these are implemented by the
-pkmn engine as they can all be accomplished at a higher level by the client. Similarly, Pokémon
-Showdown's UI mods, the **HP Percentage Mod** which displays the HP percentage of a Pokémon instead
-of pixel information and the **Move Effectiveness Mod** which corrects for the [dual-type damage
-misinformation
+have full HP and PP, and not have any status conditions prior to the battle), **Stat Tradeback
+Clause** (Pokémon may not have moves obtained from trading back from Pokémon Gold/Silver/Crystal,
+though may have DV spreads which would otherwise be unobtainable), **Species Clause** (players may
+not have more than one of the same Pokémon species on their team) and bans specific moves via
+**Evasion Clause**, **OHKO Clause**, and the **Invulnerability Clause** - none of these are
+implemented by the pkmn engine as they can all be accomplished at a higher level by the client.
+Similarly, Pokémon Showdown's UI mods, the **HP Percentage Mod** which displays the HP percentage of
+a Pokémon instead of pixel information and the **Move Effectiveness Mod** which corrects for the
+[dual-type damage misinformation
 glitch](https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Dual-type_damage_misinformation) or
 the correction to [Poison/Burn animation with 0
 HP](https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Poison.2FBurn_animation_with_0_HP) are all
@@ -537,12 +537,10 @@ Numerous moves on Pokémon Showdown are broken not simply due to local issues in
 of their effects but instead due to **global issues** related to fundamental mechanics. For example,
 Pokémon Showdown's tracking of `wDamage` (`battle.last_damage` in the pkmn engine) is incorrect as
 it confuses its `Pokemon.lastDamage` field with the `Battle.lastDamage` field its Counter /
-Substitute / Bide implementations rely on. The main consequences are that `Battle.lastDamage` does
-not get zeroed appropriately at the beginning of executing a move (`Pokemon.lastDamage` is zeroed
-instead) and that draining moves' impact on last damage gets ignored.
+Substitute / Bide implementations rely on.
 
 - `Battle.lastDamage` (Counter)
-  - updated in `spreadDamage` for non-recoil/**drain**/status moves
+  - updated in `spreadDamage` for non-status moves
   - zeroed in `useMove` after `tryMoveHit`
   - used by Counter to determine success and damage
 - `Pokemon.lastDamage` (Substitute)
@@ -555,11 +553,10 @@ instead) and that draining moves' impact on last damage gets ignored.
 Further global engine issues such as [broken move
 selection](https://www.smogon.com/forums/threads/rby-fight-button-simulation-improvements-fix-partial-trapping-improve-counter.3673280/#post-8655897),
 using move name instead of slot to determine move identity, implementing volatiles statuses
-incorrectly, not understanding how moves which call other moves work, or not implementing stat
-modification properly means that it isn't possible to completely implement Pokémon Showdown's
-behavior for the following moves (the pkmn engine attempts to reproduce as much of the behavior that
-can be reproduced without making data structure changes or dramatically deviating from the correct
-control flow):
+incorrectly or not understanding how moves which call other moves work means that it isn't possible
+to completely implement Pokémon Showdown's behavior for the following moves (the pkmn engine
+attempts to reproduce as much of the behavior that can be reproduced without making data structure
+changes or dramatically deviating from the correct control flow):
 
 - **Wrap**: Partial trapping moves like Wrap are implemented on Pokémon Showdown with an artifical
   `partialtrappinglock` volatile as opposed to how it works on the cartridge which simply relies on
@@ -570,11 +567,11 @@ control flow):
   glitch](https://glitchcity.wiki/Trapping_move_and_sleep_glitch), Wrap does 0 damage against
   Ghost-type Pokémon instead of properly respecting immunity, and trapping effects are handled in
   the wrong order in the code.
-- **Counter**: In addition to the `last_damage` issues covered above (which among other things means
-  that Sonic Boom zeros Counter damage and draining moves don't factor into self-Counter damage on
-  Pokémon Showdown), on Pokémon Showdown Counter can be called with Metronome at regular priority
-  (as opposed to failing as it would on cartridge) and choices made while sleeping (which should not
-  have been registered) can erroneously cause Counter to trigger Desync Clause Mod behavior.
+- **Counter**: In addition to the `last_damage` issues covered above (which among other
+  things means that Sonic Boom zeros Counter damage), on Pokémon Showdown Counter can be called with
+  Metronome at regular priority (as opposed to failing as it would on cartridge) and choices made
+  while sleeping (which should not have been registered) can erroneously cause Counter to trigger
+  Desync Clause Mod behavior.
 - **Mimic**: Pokémon Showdown checks that the user of Mimic has Mimic in one of their move slots,
   which means Mimic legally called via Metronome or Mirror Move will only work if the user also has
   Mimic (and the moved mimicked by Mimic called via Metronome / Mirror Move will erroneously
@@ -583,16 +580,15 @@ control flow):
   the Pokémon already knows, PP deduction for using either the original move of the mimicked move
   will instead deduct PP for whichever appears at the lower move slot index and the PP will be
   allowed to go negative (effectively allowing for infinite PP use).
-- **Mirror Move**: Mirror Move should not copy a "charge" move during its first turn of charging but
-  should instead copy the move that was used prior to the "charge" move being used (i.e. "charging"
-  should not set the last used move). Partial trapping moves misbehave when used via Mirror Move
-  (though Pokémon Showdown has its own weird behavior and does not implement the [partial trapping
-  move Mirror Move
+- **Mirror Move**: Partial trapping moves misbehave when used via Mirror Move (though Pokémon
+  Showdown has its own weird behavior and does not implement the [partial trapping move Mirror Move
   glitch](https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch) that exists
   on the cartridge).
 - **Metronome**: In addition to the issues with partial trapping moves or Counter, Metronome and
-  Mirror Move cannot mutually call each other more than 3 times in a row without causing the Pokémon
-  Showdown simulator to crash due to defensive safety checks that do not exist on the cartridge.
+  Mirror Move cannot mutually call each other due to broken tracking of the last used move with
+  respect to charging moves, and even with this bug fixed they cannot mutually call each other
+  more than 3 times in a row without causing the Pokémon Showdown simulator to crash due to
+  defensive safety checks that do not exist on the cartridge.
 - **Bide**: In addition to the `last_damage` issues covered above (which result in Bide often
   inflicting the wrong amount of accumulated damage), on Pokémon Showdown Bide can erroneously last
   an extra turn depending on whether the foe faints, Bide cannot be disabled by Disable while in

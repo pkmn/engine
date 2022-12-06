@@ -152,10 +152,6 @@ fn selectMove(
     }
     volatiles.Flinch = false;
     if (volatiles.Thrashing or volatiles.Charging) {
-        // Pokémon Showdown uses last_used_move here because it overwrites it on the first turn of
-        // the Charging effect but on the cartridge we don't have that data so we fall back to the
-        // last_selected_move (last_used_move will differ if the move was proc-ed via Metronome /
-        // Mirror Move but they will be equivalent at this point on Pokémon Showdown).
         from.* = side.last_selected_move;
         if (showdown) saveMove(battle, player, null);
         return null;
@@ -628,6 +624,10 @@ fn canMove(
     const move = Move.get(side.last_selected_move);
     const locked = showdown and isLocked(side, true);
 
+    const foe_last = battle.foe(player).last_used_move;
+    const special = from != null and (from.? == .Metronome and
+        (from.? == .MirrorMove and !(foe_last == .None or foe_last == .MirrorMove)));
+
     var skip = skip_pp;
     if (side.active.volatiles.Charging) {
         side.active.volatiles.Charging = false;
@@ -639,7 +639,7 @@ fn canMove(
         // Pokémon Showdown thinks that the first turn of charging counts as using a move
         // and so decrements PP now instead of when actually resolving the attack (above)
         if (showdown) {
-            side.last_used_move = from orelse side.last_selected_move;
+            if (!special) side.last_used_move = side.last_selected_move;
             if (!skip) decrementPP(side, mslot, auto);
         }
         return false;
@@ -647,8 +647,6 @@ fn canMove(
 
     // Getting a "locked" move advances the RNG due to a speed sort in Pokémon Showdown's runMove
     if (locked) battle.rng.advance(1);
-
-    const special = from != null and (from.? == .MirrorMove or from.? == .Metronome);
     if (!showdown or !special) side.last_used_move = side.last_selected_move;
     if (!skip) decrementPP(side, mslot, auto);
 
@@ -1646,9 +1644,7 @@ pub const Effects = struct {
         var stored = side.stored();
 
         const drain = maximum(battle.last_damage / 2, 1);
-        // Pokémon Showdown doesn't update `Battle.lastDamage` here which only matters for the
-        // self-Counter glitch (Grass/Bug move damage would not be Counter-able otherwise)
-        if (!showdown) battle.last_damage = drain;
+        battle.last_damage = drain;
 
         if (stored.hp == stored.stats.hp) return;
         stored.hp = minimum(stored.stats.hp, stored.hp + drain);
@@ -2326,7 +2322,7 @@ pub const Effects = struct {
                 boosts.spc = @truncate(i4, maximum(-6, @as(i8, boosts.spc) - 1));
                 if (stats.spc == 1) {
                     boosts.spc += 1;
-                     if (showdown) {
+                    if (showdown) {
                         try log.boost(foe_ident, .SpecialAttack, -1);
                         try log.boost(foe_ident, .SpecialAttack, 1);
                         try log.boost(foe_ident, .SpecialDefense, -1);
