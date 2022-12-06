@@ -1016,8 +1016,6 @@ fn calcDamage(
     d /= def;
     d /= 50;
     d = minimum(997, d);
-    // Pokémon Showdown incorrectly clamps damage here between 1 and 997 instead 0 and 997
-    if (showdown) d = maximum(d, 1);
     d += 2;
 
     battle.last_damage = @truncate(u16, d);
@@ -1038,18 +1036,11 @@ fn adjustDamage(battle: anytype, player: Player) u16 {
     const eff1: u16 = @enumToInt(move.type.effectiveness(types.type1));
     const eff2: u16 = @enumToInt(move.type.effectiveness(types.type2));
 
-    const total = if (types.type1 == types.type2) eff1 * neutral else eff1 * eff2;
-    // Pokémon Showdown considers the "total type" effectiveness instead of the individual types
-    if (showdown and total == Effectiveness.neutral) {
-        battle.last_damage = d;
-        return total;
-    }
-
     if (eff1 != neutral) d = d *% eff1 / 10;
     if (types.type1 != types.type2 and eff2 != neutral) d = d *% eff2 / 10;
 
     battle.last_damage = d;
-    return total;
+    return if (types.type1 == types.type2) eff1 * neutral else eff1 * eff2;
 }
 
 fn randomizeDamage(battle: anytype) void {

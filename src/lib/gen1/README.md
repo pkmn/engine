@@ -444,13 +444,7 @@ generation of Pokémon contains a number bugs, [many of which are known and have
 Smogon](https://www.smogon.com/forums/threads/rby-tradebacks-bug-report-thread.3524844/#post-5933177):
 
 - moves on Pokémon Showdown can do 0 damage instead of failing or causing a [division-by-zero
-  freeze](https://pkmn.cc/bulba-glitch-1#Division_by_0). Pokémon Showdown also clamps the raw damage
-  range before modifiers are applied to be between 1 and 997 instead of 0 and 997. The [0 damage
-  glitch](https://pkmn.cc/bulba-glitch-1#0_damage_glitch) is thus not correctly implemented by
-  Pokémon Showdown (which will occasionally even do *positive* damage in these scenarios).
-- Pokémon Showdown considers total type effectiveness instead of applying effectiveness modifiers
-  iteratively, resulting in subtly difference damage results when both of a Pokémon's types are
-  relevant (e.g. Aurora Beam vs. Articuno).
+  freeze](https://pkmn.cc/bulba-glitch-1#Division_by_0).
 - Pokémon Showdown checks for type and OHKO immunity before accuracy.
 - Stat modification is incorrectly implemented by Pokémon Showdown, as evident by its failure to
   handle the [stat down modifier overflow glitch](https://www.youtube.com/watch?v=y2AOm7r39Jg).

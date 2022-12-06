@@ -3449,7 +3449,7 @@ test "Mist effect" {
     try t.log.expected.move(P1.ident(1), Move.Mist, P1.ident(1), null);
     try t.log.expected.start(P1.ident(1), .Mist);
     try t.log.expected.move(P2.ident(1), Move.AuroraBeam, P1.ident(1), null);
-    t.expected.p1.get(1).hp -= if (showdown) 43 else 42;
+    t.expected.p1.get(1).hp -= 42;
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
     try t.log.expected.boost(P1.ident(1), .Attack, -1);
     try t.log.expected.turn(2);
@@ -6246,7 +6246,6 @@ test "0 damage glitch" {
     try t.log.expected.move(P2.ident(1), Move.VineWhip, P1.ident(1), null);
     if (showdown) {
         try t.log.expected.resisted(P1.ident(1));
-        t.expected.p1.get(1).hp -= 1;
         try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
     } else {
         try t.log.expected.lastmiss();
@@ -6702,8 +6701,7 @@ test "Defrost move forcing" {
     // Set up P2's last_selected_move to be Vine Whip
     try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
     try t.log.expected.move(P2.ident(1), Move.VineWhip, P1.ident(1), null);
-    // Pokémon Showdown adjusts min damage from 0 to 1 meaning its after the +2
-    t.expected.p1.get(1).hp -= if (showdown) 3 else 2;
+    t.expected.p1.get(1).hp -= 2;
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
     try t.log.expected.turn(2);
 
@@ -6844,7 +6842,7 @@ test "Division by 0" {
         try t.log.expected.move(P1.ident(1), Move.Withdraw, P1.ident(1), null);
         try t.log.expected.boost(P1.ident(1), .Defense, 1);
         try t.log.expected.move(P2.ident(1), Move.Gust, P1.ident(1), null);
-        t.expected.p1.get(1).hp -= if (showdown) 4 else 3;
+        t.expected.p1.get(1).hp -= 3;
         try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
         try t.log.expected.turn(2);
 
@@ -6853,7 +6851,7 @@ test "Division by 0" {
         try t.log.expected.move(P1.ident(1), Move.Withdraw, P1.ident(1), null);
         try t.log.expected.boost(P1.ident(1), .Defense, 1);
         try t.log.expected.move(P2.ident(1), Move.Gust, P1.ident(1), null);
-        t.expected.p1.get(1).hp -= if (showdown) 4 else 3;
+        t.expected.p1.get(1).hp -= 3;
         try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
         try t.log.expected.turn(3);
 
@@ -6913,7 +6911,7 @@ test "Division by 0" {
         try t.log.expected.move(P1.ident(1), Move.Withdraw, P1.ident(1), null);
         try t.log.expected.boost(P1.ident(1), .Defense, 1);
         try t.log.expected.move(P2.ident(1), Move.Gust, P1.ident(1), null);
-        t.expected.p1.get(1).hp -= if (showdown) 4 else 3;
+        t.expected.p1.get(1).hp -= 3;
         try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
         try t.log.expected.turn(2);
 
@@ -6922,7 +6920,7 @@ test "Division by 0" {
         try t.log.expected.move(P1.ident(1), Move.Withdraw, P1.ident(1), null);
         try t.log.expected.boost(P1.ident(1), .Defense, 1);
         try t.log.expected.move(P2.ident(1), Move.Gust, P1.ident(1), null);
-        t.expected.p1.get(1).hp -= if (showdown) 4 else 3;
+        t.expected.p1.get(1).hp -= 3;
         try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
         try t.log.expected.turn(3);
 

@@ -2731,7 +2731,7 @@ describe('Gen 1', () => {
 
     // Mist doesn't protect against secondary effects
     battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 43);
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 42);
     expect(battle.p1.pokemon[0].volatiles['mist']).toBeDefined();
     expect(battle.p1.pokemon[0].boosts.atk).toBe(-1);
 
@@ -2753,7 +2753,7 @@ describe('Gen 1', () => {
       '|move|p1a: Articuno|Mist|p1a: Articuno',
       '|-start|p1a: Articuno|Mist',
       '|move|p2a: Vaporeon|Aurora Beam|p1a: Articuno',
-      '|-damage|p1a: Articuno|340/383',
+      '|-damage|p1a: Articuno|341/383',
       '|-unboost|p1a: Articuno|atk|1',
       '|turn|2',
       '|move|p1a: Articuno|Peck|p2a: Vaporeon',
@@ -4912,19 +4912,18 @@ describe('Gen 1', () => {
     const p1hp = battle.p1.pokemon[0].hp;
 
     battle.makeChoices('move 1', 'move 1');
-    // expect(battle.p1.pokemon[0].hp).toEqual(p1hp);
-    expect(battle.p1.pokemon[0].hp).toEqual(p1hp - 1);
+    expect(battle.p1.pokemon[0].hp).toEqual(p1hp);
+
     battle.makeChoices('move 1', 'switch 2');
     battle.makeChoices('move 1', 'move 1');
-    // expect(battle.p1.pokemon[0].hp).toEqual(p1hp);
-    expect(battle.p1.pokemon[0].hp).toEqual(p1hp - 1);
+    expect(battle.p1.pokemon[0].hp).toEqual(p1hp);
 
     verify(battle, [
       '|move|p1a: Bulbasaur|Growl|p2a: Bellsprout',
       '|-unboost|p2a: Bellsprout|atk|1',
       '|move|p2a: Bellsprout|Vine Whip|p1a: Bulbasaur',
       '|-resisted|p1a: Bulbasaur',
-      '|-damage|p1a: Bulbasaur|292/293',
+      '|-damage|p1a: Bulbasaur|293/293',
       '|turn|2',
       '|switch|p2a: Chansey|Chansey, L2|22/22',
       '|move|p1a: Bulbasaur|Growl|p2a: Chansey',
@@ -4934,7 +4933,7 @@ describe('Gen 1', () => {
       '|-unboost|p2a: Chansey|atk|1',
       '|move|p2a: Chansey|Vine Whip|p1a: Bulbasaur',
       '|-resisted|p1a: Bulbasaur',
-      '|-damage|p1a: Bulbasaur|292/293',
+      '|-damage|p1a: Bulbasaur|293/293',
       '|turn|4',
     ]);
   });
@@ -5279,8 +5278,7 @@ describe('Gen 1', () => {
 
     // Set up P2's last_selected_move to be Vine Whip
     battle.makeChoices('move 1', 'move 1');
-    // expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 2);
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 3);
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 2);
 
     // Switching clears last_used_move but not last_selected_move
     battle.makeChoices('move 2', 'switch 2');
@@ -5300,7 +5298,7 @@ describe('Gen 1', () => {
     verify(battle, [
       '|move|p1a: Hypno|Teleport|p1a: Hypno',
       '|move|p2a: Bulbasaur|Vine Whip|p1a: Hypno',
-      '|-damage|p1a: Hypno|188/191',
+      '|-damage|p1a: Hypno|189/191',
       '|turn|2',
       '|switch|p2a: Poliwrath|Poliwrath, L40|159/159',
       '|move|p1a: Hypno|Ice Punch|p2a: Poliwrath',
@@ -5313,7 +5311,7 @@ describe('Gen 1', () => {
       '|-damage|p2a: Poliwrath|113/159 frz',
       '|-curestatus|p2a: Poliwrath|frz|[msg]',
       '|move|p2a: Poliwrath|Water Gun|p1a: Hypno',
-      '|-damage|p1a: Hypno|176/191',
+      '|-damage|p1a: Hypno|177/191',
       '|turn|4',
     ]);
   });
@@ -5377,12 +5375,10 @@ describe('Gen 1', () => {
       expect(battle.p1.pokemon[0].storedStats.def).toBe(256);
 
       battle.makeChoices('move 1', 'move 1');
-      // expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 3);
-      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 4);
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 3);
 
       battle.makeChoices('move 1', 'move 1');
-      // expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 3);
-      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 4);
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 3);
       expect(battle.p1.pokemon[0].modifiedStats!.def).toBe(512);
 
       battle.makeChoices('move 2', 'move 2');
@@ -5395,12 +5391,12 @@ describe('Gen 1', () => {
         '|move|p1a: Cloyster|Withdraw|p1a: Cloyster',
         '|-boost|p1a: Cloyster|def|1',
         '|move|p2a: Pidgey|Gust|p1a: Cloyster',
-        '|-damage|p1a: Cloyster|153/157',
+        '|-damage|p1a: Cloyster|154/157',
         '|turn|2',
         '|move|p1a: Cloyster|Withdraw|p1a: Cloyster',
         '|-boost|p1a: Cloyster|def|1',
         '|move|p2a: Pidgey|Gust|p1a: Cloyster',
-        '|-damage|p1a: Cloyster|149/157',
+        '|-damage|p1a: Cloyster|151/157',
         '|turn|3',
         '|move|p1a: Cloyster|Reflect|p1a: Cloyster',
         '|-start|p1a: Cloyster|Reflect',
@@ -5410,7 +5406,7 @@ describe('Gen 1', () => {
         '|move|p1a: Cloyster|Reflect|p1a: Cloyster',
         '|-fail|p1a: Cloyster',
         '|move|p2a: Pidgey|Gust|p1a: Cloyster',
-        '|-damage|p1a: Cloyster|137/157',
+        '|-damage|p1a: Cloyster|139/157',
         '|turn|5',
       ]);
     }
@@ -5430,12 +5426,10 @@ describe('Gen 1', () => {
       expect(battle.p1.pokemon[0].storedStats.def).toBe(257);
 
       battle.makeChoices('move 1', 'move 1');
-      // expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 3);
-      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 4);
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 3);
 
       battle.makeChoices('move 1', 'move 1');
-      // expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 3);
-      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 4);
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 3);
       expect(battle.p1.pokemon[0].modifiedStats!.def).toBe(514);
 
       battle.makeChoices('move 2', 'move 2');
@@ -5448,12 +5442,12 @@ describe('Gen 1', () => {
         '|move|p1a: Cloyster|Withdraw|p1a: Cloyster',
         '|-boost|p1a: Cloyster|def|1',
         '|move|p2a: Pidgey|Gust|p1a: Cloyster',
-        '|-damage|p1a: Cloyster|153/157',
+        '|-damage|p1a: Cloyster|154/157',
         '|turn|2',
         '|move|p1a: Cloyster|Withdraw|p1a: Cloyster',
         '|-boost|p1a: Cloyster|def|1',
         '|move|p2a: Pidgey|Gust|p1a: Cloyster',
-        '|-damage|p1a: Cloyster|149/157',
+        '|-damage|p1a: Cloyster|151/157',
         '|turn|3',
         '|move|p1a: Cloyster|Reflect|p1a: Cloyster',
         '|-start|p1a: Cloyster|Reflect',
@@ -5463,7 +5457,7 @@ describe('Gen 1', () => {
         '|move|p1a: Cloyster|Reflect|p1a: Cloyster',
         '|-fail|p1a: Cloyster',
         '|move|p2a: Pidgey|Gust|p1a: Cloyster',
-        '|-damage|p1a: Cloyster|137/157',
+        '|-damage|p1a: Cloyster|139/157',
         '|turn|5',
       ]);
     }
