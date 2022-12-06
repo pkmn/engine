@@ -2382,9 +2382,12 @@ fn clearVolatiles(active: *ActivePokemon, ident: ID, log: anytype) !void {
         try log.end(ident, .LeechSeed);
     }
     if (volatiles.Toxic) {
-        // volatiles.toxic is left unchanged
         volatiles.Toxic = false;
-        // no protocol for clearing Toxic because Pokémon Showdown considers it a status
+        // volatiles.toxic is left unchanged, except on Pokémon Showdown which clears it
+        if (showdown) {
+            volatiles.toxic = 0;
+            try log.end(ident, .Toxic);
+        }
     }
     if (volatiles.LightScreen) {
         volatiles.LightScreen = false;

@@ -212,6 +212,7 @@ pub const End = enum(u8) {
     Mist,
     FocusEnergy,
     LeechSeed,
+    Toxic,
     LightScreen,
     Reflect,
 };

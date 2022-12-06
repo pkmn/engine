@@ -223,7 +223,6 @@ fn blocked(m: Move) bool {
     return switch (m) {
         .Bind,
         .Counter,
-        .Toxic,
         .Mimic,
         .Bide,
         .Metronome,

@@ -3558,21 +3558,20 @@ describe('Gen 1', () => {
     expect(battle.p1.pokemon[0].boosts.spe).toBe(0);
     expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(278);
     expect(battle.p2.pokemon[0].status).toBe('');
-    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(4);
+    // expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(4);
+    expect(battle.p2.pokemon[0].volatiles['residualdmg']).toBeUndefined();
     expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
     expect(battle.p2.pokemon[0].boosts.evasion).toBe(0);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 96);
 
     battle.makeChoices('move 4', 'move 4');
-    // expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(4);
-    expect(battle.p2.pokemon[0].volatiles['residualdmg'].counter).toBe(5);
-    // expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 42 - 96));
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 42 - 120));
+    expect(battle.p2.pokemon[0].volatiles['residualdmg']).toBeUndefined();
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = (p2hp - 42 - 24));
 
     battle.makeChoices('move 2', 'move 4');
     expect(battle.p1.pokemon[0].boosts.spe).toBe(2);
     expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(556);
-    expect(battle.p2.pokemon[0].hp).toBe(0);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 24);
 
     verify(battle, [
       '|move|p1a: Golbat|Toxic|p2a: Exeggutor',
@@ -3607,6 +3606,7 @@ describe('Gen 1', () => {
       '|-end|p1a: Golbat|move: Leech Seed|[silent]',
       '|-curestatus|p2a: Exeggutor|tox|[silent]',
       '|-end|p2a: Exeggutor|confusion|[silent]',
+      '|-end|p2a: Exeggutor|Toxic counter|[silent]',
       '|turn|5',
       '|move|p1a: Golbat|Metronome|p1a: Golbat',
       '|move|p1a: Golbat|Ember|p2a: Exeggutor|[from]Metronome',
@@ -3614,14 +3614,13 @@ describe('Gen 1', () => {
       '|-damage|p2a: Exeggutor|155/393',
       '|-status|p2a: Exeggutor|brn',
       '|move|p2a: Exeggutor|Teleport|p2a: Exeggutor',
-      '|-damage|p2a: Exeggutor|35/393 brn|[from] brn',
+      '|-damage|p2a: Exeggutor|131/393 brn|[from] brn',
       '|turn|6',
       '|move|p1a: Golbat|Agility|p1a: Golbat',
       '|-boost|p1a: Golbat|spe|2',
       '|move|p2a: Exeggutor|Teleport|p2a: Exeggutor',
-      '|-damage|p2a: Exeggutor|0 fnt|[from] brn',
-      '|faint|p2a: Exeggutor',
-      '|win|Player 1',
+      '|-damage|p2a: Exeggutor|107/393 brn|[from] brn',
+      '|turn|7',
     ]);
   });
 

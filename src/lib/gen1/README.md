@@ -601,14 +601,6 @@ control flow):
 - **Metronome**: In addition to the issues with partial trapping moves or Counter, Metronome and
   Mirror Move cannot mutually call each other more than 3 times in a row without causing the Pokémon
   Showdown simulator to crash due to defensive safety checks that do not exist on the cartridge.
-- **Toxic**: Pokémon Showdown uses a `residualdmg` volatile to track the state of the Toxic counter.
-  Unfortunately this is insufficient for fully implementing Toxic's bugged behavior, as the counter
-  should only be incremented if the Pokémon in question has the Toxic volatile status as well. Since
-  Pokémon Showdown does not implement Toxic as a volatile status but instead as a non-volatile
-  status like it becomes in Generation III and beyond, Pokémon Showdown cannot know when it should
-  be incrementing the `residualdmg` counter and thus increments it whenever it happens to be
-  present, resulting in higher Toxic accumulation in buggy situations than would occur on the
-  cartridge.
 - **Bide**: In addition to the `last_damage` issues covered above (which result in Bide often
   inflicting the wrong amount of accumulated damage), on Pokémon Showdown Bide can erroneously last
   an extra turn depending on whether the foe faints, Bide cannot be disabled by Disable while in

@@ -249,13 +249,13 @@ The Pokémon identified by [`Ident`](#pokemonident) has taken damage and now has
 
 <details><summary>Reason</summary>
 
-| Raw    | Description              | `[of]`? |
-| ------ | ------------------------ | ------- |
-| `0x00` | None                     | No      |
-| `0x01` | `psn`                    | No      |
-| `0x02` | `brn`                    | No      |
-| `0x03` | `confusion`              | No      |
-| `0x04` | `Recoil\|[of]`           | Yes     |
+| Raw    | Description    | `[of]`? |
+| ------ | -------------- | ------- |
+| `0x00` | None           | No      |
+| `0x01` | `psn`          | No      |
+| `0x02` | `brn`          | No      |
+| `0x03` | `confusion`    | No      |
+| `0x04` | `Recoil\|[of]` | Yes     |
 
 </details>
 
@@ -518,20 +518,20 @@ ended.
 
 <details><summary>Reason</summary>
 
-| Raw    | Description             |
-| ------ | ----------------------- |
-| `0x00` | `Disable`               |
-| `0x01` | `confusion`             |
-| `0x02` | `move: Bide`            |
-| `0x03` | `Substitute`            |
-| `0x04` | `Disable\|[silent]`     |
-| `0x05` | `confusion\|[silent]`   |
-| `0x06` | `mist\|[silent]`        |
-| `0x07` | `focusenergy\|[silent]` |
-| `0x08` | `leechseed\|[silent]`   |
-| `0x09` | `toxic\|[silent]`       |
-| `0x0A` | `lightscreen\|[silent]` |
-| `0x0B` | `reflect\|[silent]`     |
+| Raw    | Description               |
+| ------ | ------------------------- |
+| `0x00` | `Disable`                 |
+| `0x01` | `confusion`               |
+| `0x02` | `move: Bide`              |
+| `0x03` | `Substitute`              |
+| `0x04` | `Disable\|[silent]`       |
+| `0x05` | `confusion\|[silent]`     |
+| `0x06` | `mist\|[silent]`          |
+| `0x07` | `focusenergy\|[silent]`   |
+| `0x08` | `leechseed\|[silent]`     |
+| `0x09` | `Toxic counter\|[silent]` |
+| `0x0A` | `lightscreen\|[silent]`   |
+| `0x0B` | `reflect\|[silent]`       |
 </details>
 
 ### `|-ohko|` (`0x19`)

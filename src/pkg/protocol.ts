@@ -161,6 +161,7 @@ const END = {
   [PROTOCOL.End.Mist]: 'Mist' as ID,
   [PROTOCOL.End.FocusEnergy]: 'move: Focus Energy' as ID,
   [PROTOCOL.End.LeechSeed]: 'move: Leech Seed' as ID,
+  [PROTOCOL.End.Toxic]: 'Toxic counter' as Protocol.EffectName,
   [PROTOCOL.End.LightScreen]: 'Light Screen' as ID,
   [PROTOCOL.End.Reflect]: 'Reflect' as ID,
 };

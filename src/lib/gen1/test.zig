@@ -4480,13 +4480,14 @@ test "Haze effect" {
     }
     t.expected.p2.get(1).status = 0;
     try t.log.expected.end(P2.ident(1), .ConfusionSilent);
+    if (showdown) try t.log.expected.end(P2.ident(1), .Toxic);
     try t.log.expected.turn(5);
 
     try expectEqual(Result.Default, try t.update(move(4), move(4)));
     try expect(!t.actual.p1.active.volatiles.LeechSeed);
     try expectEqual(@as(i4, 0), t.actual.p1.active.boosts.spe);
     try expectEqual(@as(u16, 278), t.actual.p1.active.stats.spe);
-    try expectEqual(@as(u5, 4), t.actual.p2.active.volatiles.toxic);
+    try expectEqual(@as(u5, if (showdown) 0 else 4), t.actual.p2.active.volatiles.toxic);
     try expect(!t.actual.p2.active.volatiles.Confusion);
     try expectEqual(@as(i4, 0), t.actual.p2.active.boosts.evasion);
 
@@ -4498,30 +4499,20 @@ test "Haze effect" {
     t.expected.p2.get(1).status = Status.init(.BRN);
     try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
     try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
-    // t.expected.p2.get(1).hp -= if (showdown) 120 else 24;
     t.expected.p2.get(1).hp -= 24;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Burn);
     try t.log.expected.turn(6);
 
     try expectEqual(Result.Default, try t.update(move(4), move(4)));
-    // BUG: Pokémon Showdown increments the counter so long as the residualdmg counter is present
-    // try expectEqual(@as(u5, if (showdown) 5 else 4), t.actual.p2.active.volatiles.toxic);
-    try expectEqual(@as(u5, 4), t.actual.p2.active.volatiles.toxic);
+    try expectEqual(@as(u5, if (showdown) 0 else 4), t.actual.p2.active.volatiles.toxic);
 
     try t.log.expected.move(P1.ident(1), Move.Agility, P1.ident(1), null);
     try t.log.expected.boost(P1.ident(1), .Speed, 2);
     try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
-    // t.expected.p2.get(1).hp = if (showdown) 0 else (t.expected.p2.get(1).hp - 24);
     t.expected.p2.get(1).hp -= 24;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Burn);
-    // if (showdown) {
-    //     try t.log.expected.faint(P2.ident(1), false);
-    //     try t.log.expected.win(.P1);
-    // } else {
     try t.log.expected.turn(7);
-    // }
 
-    // const result = if (showdown) Result.Win else Result.Default;
     const result = Result.Default;
     try expectEqual(result, try t.update(move(2), move(4)));
     try expectEqual(@as(i4, 2), t.actual.p1.active.boosts.spe);
