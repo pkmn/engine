@@ -50,7 +50,7 @@ $ zig build --prefix /usr/local -Drelease-fast
 The Zig website has [installation instructions](https://ziglang.org/learn/getting-started/) which
 walk through how to install Zig on each platform - the engine code should work on Zig v0.9.0 or
 greater, ~~though tracks Zig's master branch so this may change in the future if breaking language
-changes are introduced~~ and usualy tracks Zig's master branch, but **currently is pinned to
+changes are introduced~~ and usually tracks Zig's master branch, but **currently is pinned to
 v0.11.0-dev.537+36da3000c as due to several Zig compiler bugs the engine is forced to rely on the
 [obsolete `-fstage1` flag](https://github.com/ziglang/zig/pull/13560)**:
 
