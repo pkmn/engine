@@ -583,7 +583,8 @@ changes or dramatically deviating from the correct control flow):
 - **Mirror Move**: Partial trapping moves misbehave when used via Mirror Move (though Pokémon
   Showdown has its own weird behavior and does not implement the [partial trapping move Mirror Move
   glitch](https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch) that exists
-  on the cartridge).
+  on the cartridge). Furthermore, Mirror Move copies the wrong move on Pokémon Showdown during the
+  first turn of a two-turn charging move.
 - **Metronome**: In addition to the issues with partial trapping moves or Counter, Metronome and
   Mirror Move cannot mutually call each other due to broken tracking of the last used move with
   respect to charging moves, and even with this bug fixed they cannot mutually call each other
