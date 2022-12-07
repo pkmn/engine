@@ -3,6 +3,8 @@ const std = @import("std");
 const Builder = std.build.Builder;
 const Pkg = std.build.Pkg;
 
+const use_stage1 = @hasField(std.build.LibExeObjStep, "use_stage1");
+
 pub fn pkg(b: *Builder, build_options: Pkg) Pkg {
     const dirname = comptime std.fs.path.dirname(@src().file) orelse ".";
     const source = .{ .path = dirname ++ "/src/lib/pkmn.zig" };
@@ -19,7 +21,6 @@ pub fn build(b: *Builder) !void {
 
     const strip = b.option(bool, "strip", "Strip debugging symbols from binary") orelse false;
     const stage2 = b.option(bool, "stage2", "Use the Zig stage2 compiler") orelse false;
-    const stage1 = @hasField(std.build.LibExeObjStep, "use_stage1") and !stage2;
 
     var parser = std.json.Parser.init(b.allocator, false);
     defer parser.deinit();
@@ -50,7 +51,7 @@ pub fn build(b: *Builder) !void {
         static_lib.addIncludeDir("src/include");
     }
     static_lib.strip = strip;
-    if (stage1) static_lib.use_stage1 = true;
+    if (use_stage1 and !stage2) static_lib.use_stage1 = true;
     static_lib.install();
 
     const versioned = .{ .versioned = try std.builtin.Version.parse(version) };
@@ -64,7 +65,7 @@ pub fn build(b: *Builder) !void {
         dynamic_lib.addIncludeDir("src/include");
     }
     dynamic_lib.strip = strip;
-    if (stage1) dynamic_lib.use_stage1 = true;
+    if (use_stage1 and !stage2) dynamic_lib.use_stage1 = true;
     dynamic_lib.install();
 
     const node_headers = b.option([]const u8, "node-headers", "Path to node-headers");
@@ -82,7 +83,7 @@ pub fn build(b: *Builder) !void {
         node_lib.linkLibC();
         node_lib.linker_allow_shlib_undefined = true;
         node_lib.strip = strip;
-        if (stage1) node_lib.use_stage1 = true;
+        if (use_stage1 and !stage2) node_lib.use_stage1 = true;
         // Always emit to build/lib because this is where the driver code expects to find it
         // TODO: find alternative to emit_to that works properly with .install()
         node_lib.emit_bin = .{ .emit_to = b.fmt("build/lib/{s}", .{name}) };
@@ -139,7 +140,7 @@ pub fn build(b: *Builder) !void {
     tests.setTarget(target);
     tests.single_threaded = true;
     tests.strip = strip;
-    if (stage1) tests.use_stage1 = true;
+    if (use_stage1 and !stage2) tests.use_stage1 = true;
     if (test_bin) |bin| {
         tests.name = std.fs.path.basename(bin);
         if (std.fs.path.dirname(bin)) |dir| tests.setOutputDir(dir);
@@ -151,7 +152,7 @@ pub fn build(b: *Builder) !void {
 
     const format = b.addFmt(&.{"."});
     const lint_exe = b.addExecutable("lint", "src/tools/lint.zig");
-    if (stage1) lint_exe.use_stage1 = true;
+    if (use_stage1 and !stage2) lint_exe.use_stage1 = true;
     if (test_step) |ts| ts.dependOn(&lint_exe.step);
     const lint = lint_exe.run();
     lint.step.dependOn(b.getInstallStep());
@@ -161,21 +162,21 @@ pub fn build(b: *Builder) !void {
         .strip = true,
         .test_step = test_step,
         .mode = .ReleaseFast,
-        .stage1 = stage1,
+        .stage2 = stage2,
     });
     const fuzz = tool(b, &.{pkmn}, "src/test/benchmark.zig", .{
         .showdown = showdown,
         .strip = false,
         .test_step = test_step,
         .mode = null,
-        .stage1 = stage1,
+        .stage2 = stage2,
     });
     const config = .{
         .showdown = showdown,
         .strip = strip,
         .test_step = test_step,
         .mode = null,
-        .stage1 = stage1,
+        .stage2 = stage2,
     };
     const rng = tool(b, &.{pkmn}, "src/tools/rng.zig", config);
     const serde = tool(b, &.{pkmn}, "src/tools/serde.zig", config);
@@ -196,7 +197,7 @@ const Config = struct {
     strip: bool,
     test_step: ?*std.build.Step,
     mode: ?std.builtin.Mode,
-    stage1: bool,
+    stage2: bool,
 };
 
 fn tool(
@@ -215,7 +216,7 @@ fn tool(
     exe.setBuildMode(config.mode orelse b.standardReleaseOptions());
     exe.single_threaded = true;
     exe.strip = config.strip;
-    if (config.stage1) exe.use_stage1 = true;
+    if (use_stage1 and config.stage2) exe.use_stage1 = true;
     if (config.test_step) |ts| ts.dependOn(&exe.step);
 
     const run_exe = exe.run();
