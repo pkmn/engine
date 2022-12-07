@@ -1,7 +1,8 @@
 name: Tests
 on:
-  schedule:
-    - cron: '0 2 * * *'
+  # TODO: reenable when tracking master
+  # schedule:
+  #   - cron: '0 2 * * *'
   push:
     branches: [ main ]
   pull_request:
@@ -13,7 +14,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         options: ['', '-Dtrace', '-Dshowdown', '-Dshowdown -Dtrace']
-        zig: [local, 0.11.0-dev.537+36da3000c] # TODO: master
+        zig: [local, 0.11.0-dev.251+7c527c6df] # TODO: master
     runs-on: ${{matrix.os}}
     steps:
       - uses: actions/checkout@v3
