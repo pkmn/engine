@@ -24,7 +24,8 @@ pub fn main() !void {
     };
 
     // Use Zig's system PRNG (pkmn.PRNG is another option with a slightly different API)
-    var random = std.rand.DefaultPrng.init(seed).random();
+    var prng = std.rand.DefaultPrng.init(seed);
+    var random = prng.random();
     // Preallocate a small buffer for the choice options throughout the battle
     var options: [pkmn.OPTIONS_SIZE]pkmn.Choice = undefined;
 
@@ -55,7 +56,8 @@ pub fn main() !void {
     // written to if -Dtrace is enabled - pkmn.protocol.NULL can be used to turn all of the
     // logging into no-ops.
     var buf: [pkmn.LOG_SIZE]u8 = undefined;
-    var log = pkmn.protocol.FixedLog{ .writer = std.io.fixedBufferStream(&buf).writer() };
+    var stream = std.io.fixedBufferStream(&buf);
+    var log = pkmn.protocol.FixedLog{ .writer = stream.writer() };
 
     var c1 = pkmn.Choice{};
     var c2 = pkmn.Choice{};
@@ -67,8 +69,11 @@ pub fn main() !void {
 
         // battle.choices determines what the possible options are - the simplest way to
         // choose an option here is to just use the system PRNG to pick one at random
-        c1 = options[random.uintLessThan(u8, battle.choices(.P1, result.p1, &options))];
-        c2 = options[random.uintLessThan(u8, battle.choices(.P2, result.p2, &options))];
+        // TODO: ziglang/zig#13415
+        const n1 = random.uintLessThan(u8, battle.choices(.P1, result.p1, &options));
+        c1 = options[n1];
+        const n2 = random.uintLessThan(u8, battle.choices(.P2, result.p2, &options));
+        c2 = options[n2];
     }
 
     // The result is from the perspective of P1

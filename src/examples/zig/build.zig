@@ -22,8 +22,10 @@ pub fn build(b: *std.build.Builder) void {
 
     const build_options = options.getPackage("build_options");
 
+    const stage2 = b.option(bool, "stage2", "Use the Zig stage2 compiler") orelse false;
+
     const exe = b.addExecutable("zig", "example.zig");
-    if (@hasField(std.build.LibExeObjStep, "use_stage1")) exe.use_stage1 = true;
+    if (@hasField(std.build.LibExeObjStep, "use_stage1") and !stage2) exe.use_stage1 = true;
     exe.setTarget(target);
     exe.setBuildMode(mode);
     exe.addPackage(pkmn.pkg(b, build_options));

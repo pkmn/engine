@@ -133,8 +133,11 @@ pub fn benchmark(
         else
             battle.update(c1, c2, pkmn.protocol.NULL))
         {
-            c1 = options[p1.range(u8, 0, battle.choices(.P1, result.p1, &options))];
-            c2 = options[p2.range(u8, 0, battle.choices(.P2, result.p2, &options))];
+            // TODO: ziglang/zig#13415
+            const n1 = p1.range(u8, 0, battle.choices(.P1, result.p1, &options));
+            c1 = options[n1];
+            const n2 = p2.range(u8, 0, battle.choices(.P2, result.p2, &options));
+            c2 = options[n2];
 
             if (save) {
                 std.debug.assert(buf.?.items.len <= max);

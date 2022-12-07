@@ -3,8 +3,6 @@ const std = @import("std");
 const Builder = std.build.Builder;
 const Pkg = std.build.Pkg;
 
-const use_stage1 = @hasField(std.build.LibExeObjStep, "use_stage1");
-
 pub fn pkg(b: *Builder, build_options: Pkg) Pkg {
     const dirname = comptime std.fs.path.dirname(@src().file) orelse ".";
     const source = .{ .path = dirname ++ "/src/lib/pkmn.zig" };
@@ -19,6 +17,10 @@ pub fn build(b: *Builder) !void {
     const mode = b.standardReleaseOptions();
     const target = b.standardTargetOptions(.{});
 
+    const strip = b.option(bool, "strip", "Strip debugging symbols from binary") orelse false;
+    const stage2 = b.option(bool, "stage2", "Use the Zig stage2 compiler") orelse false;
+    const stage1 = @hasField(std.build.LibExeObjStep, "use_stage1") and !stage2;
+
     var parser = std.json.Parser.init(b.allocator, false);
     defer parser.deinit();
     var tree = try parser.parse(@embedFile("package.json"));
@@ -27,7 +29,6 @@ pub fn build(b: *Builder) !void {
 
     const showdown =
         b.option(bool, "showdown", "Enable Pokémon Showdown compatability mode") orelse false;
-    const strip = b.option(bool, "strip", "Strip debugging symbols from binary") orelse false;
     const trace = b.option(bool, "trace", "Enable trace logs") orelse false;
 
     const options = b.addOptions();
@@ -49,7 +50,7 @@ pub fn build(b: *Builder) !void {
         static_lib.addIncludeDir("src/include");
     }
     static_lib.strip = strip;
-    if (use_stage1) static_lib.use_stage1 = true;
+    if (stage1) static_lib.use_stage1 = true;
     static_lib.install();
 
     const versioned = .{ .versioned = try std.builtin.Version.parse(version) };
@@ -63,7 +64,7 @@ pub fn build(b: *Builder) !void {
         dynamic_lib.addIncludeDir("src/include");
     }
     dynamic_lib.strip = strip;
-    if (use_stage1) dynamic_lib.use_stage1 = true;
+    if (stage1) dynamic_lib.use_stage1 = true;
     dynamic_lib.install();
 
     const node_headers = b.option([]const u8, "node-headers", "Path to node-headers");
@@ -81,7 +82,7 @@ pub fn build(b: *Builder) !void {
         node_lib.linkLibC();
         node_lib.linker_allow_shlib_undefined = true;
         node_lib.strip = strip;
-        if (use_stage1) node_lib.use_stage1 = true;
+        if (stage1) node_lib.use_stage1 = true;
         // Always emit to build/lib because this is where the driver code expects to find it
         // TODO: find alternative to emit_to that works properly with .install()
         node_lib.emit_bin = .{ .emit_to = b.fmt("build/lib/{s}", .{name}) };
@@ -138,7 +139,7 @@ pub fn build(b: *Builder) !void {
     tests.setTarget(target);
     tests.single_threaded = true;
     tests.strip = strip;
-    if (use_stage1) tests.use_stage1 = true;
+    if (stage1) tests.use_stage1 = true;
     if (test_bin) |bin| {
         tests.name = std.fs.path.basename(bin);
         if (std.fs.path.dirname(bin)) |dir| tests.setOutputDir(dir);
@@ -150,21 +151,35 @@ pub fn build(b: *Builder) !void {
 
     const format = b.addFmt(&.{"."});
     const lint_exe = b.addExecutable("lint", "src/tools/lint.zig");
-    if (use_stage1) lint_exe.use_stage1 = true;
+    if (stage1) lint_exe.use_stage1 = true;
     if (test_step) |ts| ts.dependOn(&lint_exe.step);
     const lint = lint_exe.run();
     lint.step.dependOn(b.getInstallStep());
 
-    const benchmark =
-        tool(b, &.{pkmn}, "src/test/benchmark.zig", showdown, true, test_step, .ReleaseFast);
-    const fuzz =
-        tool(b, &.{pkmn}, "src/test/benchmark.zig", showdown, false, test_step, null);
-    const rng =
-        tool(b, &.{pkmn}, "src/tools/rng.zig", showdown, strip, test_step, null);
-    const serde =
-        tool(b, &.{pkmn}, "src/tools/serde.zig", showdown, strip, test_step, null);
-    const protocol =
-        tool(b, &.{pkmn}, "src/tools/protocol.zig", showdown, strip, test_step, null);
+    const benchmark = tool(b, &.{pkmn}, "src/test/benchmark.zig", .{
+        .showdown = showdown,
+        .strip = true,
+        .test_step = test_step,
+        .mode = .ReleaseFast,
+        .stage1 = stage1,
+    });
+    const fuzz = tool(b, &.{pkmn}, "src/test/benchmark.zig", .{
+        .showdown = showdown,
+        .strip = false,
+        .test_step = test_step,
+        .mode = null,
+        .stage1 = stage1,
+    });
+    const config = .{
+        .showdown = showdown,
+        .strip = strip,
+        .test_step = test_step,
+        .mode = null,
+        .stage1 = stage1,
+    };
+    const rng = tool(b, &.{pkmn}, "src/tools/rng.zig", config);
+    const serde = tool(b, &.{pkmn}, "src/tools/serde.zig", config);
+    const protocol = tool(b, &.{pkmn}, "src/tools/protocol.zig", config);
 
     b.step("benchmark", "Run benchmark code").dependOn(&benchmark.step);
     b.step("format", "Format source files").dependOn(&format.step);
@@ -176,27 +191,32 @@ pub fn build(b: *Builder) !void {
     b.step("test", "Run all tests").dependOn(&tests.step);
 }
 
-fn tool(
-    b: *Builder,
-    pkgs: []const Pkg,
-    path: []const u8,
+const Config = struct {
     showdown: bool,
     strip: bool,
     test_step: ?*std.build.Step,
     mode: ?std.builtin.Mode,
+    stage1: bool,
+};
+
+fn tool(
+    b: *Builder,
+    pkgs: []const Pkg,
+    path: []const u8,
+    config: Config,
 ) *std.build.RunStep {
     var name = std.fs.path.basename(path);
     const index = std.mem.lastIndexOfScalar(u8, name, '.');
     if (index) |i| name = name[0..i];
-    if (showdown) name = b.fmt("{s}-showdown", .{name});
+    if (config.showdown) name = b.fmt("{s}-showdown", .{name});
 
     const exe = b.addExecutable(name, path);
     for (pkgs) |p| exe.addPackage(p);
-    exe.setBuildMode(mode orelse b.standardReleaseOptions());
+    exe.setBuildMode(config.mode orelse b.standardReleaseOptions());
     exe.single_threaded = true;
-    exe.strip = strip;
-    if (use_stage1) exe.use_stage1 = true;
-    if (test_step) |ts| ts.dependOn(&exe.step);
+    exe.strip = config.strip;
+    if (config.stage1) exe.use_stage1 = true;
+    if (config.test_step) |ts| ts.dependOn(&exe.step);
 
     const run_exe = exe.run();
     run_exe.step.dependOn(b.getInstallStep());
