@@ -9,41 +9,38 @@ const gen = gens.get(2);
 const choices = gen2.Choices.sim;
 const startBattle = createStartBattle(gen);
 
-const {HIT, MISS, CRIT, NO_CRIT, MIN_DMG, MAX_DMG} = ROLLS.basic;
+const {HIT, MISS, CRIT, NO_CRIT, MIN_DMG, MAX_DMG, TIE, DRAG} = ROLLS.basic({
+  hit: 'data/mods/gen2/scripts.ts:253:62',
+  crit: 'data/mods/gen2/scripts.ts:552:27',
+  dmg: 'data/mods/gen2/scripts.ts:711:27',
+});
 const {SS_MOD, SS_RES, SS_EACH, INS} = ROLLS.nops;
 
-const QKC = {key: ['Battle.randomChance', 'Battle.nextTurn'], value: MAX};
+const QKC = {key: 'sim/battle.ts:1581:49', value: MAX};
 const QKCs = (n: number) => Array(n).fill(QKC);
-const PROC_SEC = {key: ['Battle.randomChance', 'BattleActions.moveHit'], value: MIN};
-const TIE = (n: 1 | 2) =>
-  ({key: ['Battle.speedSort', 'BattleQueue.sort'], value: ranged(n, 2) - 1});
-const SLP = (n: number) =>
-  ({key: ['Battle.random', 'Pokemon.setStatus'], value: ranged(n, 8 - 1)});
+const SECONDARY = (value: number) => ({key: 'data/mods/gen2/scripts.ts:464:66', value});
+const PROC_SEC = SECONDARY(MIN);
+const SLP = (n: number) => ({key: 'data/mods/gen2/conditions.ts:37:33', value: ranged(n, 8 - 1)});
 const DISABLE_DURATION = (n: number) =>
-  ({key: ['Battle.random', 'Battle.durationCallback'], value: ranged(n - 2, 6) - 1});
-const PAR_CANT = {key: 'Battle.onBeforeMove', value: ranged(1, 4) - 1};
-const PAR_CAN = {key: 'Battle.onBeforeMove', value: PAR_CANT.value + 1};
-const FRZ = {key: HIT.key, value: ranged(25, 256) - 1};
-const THAW = {key: ['Battle.randomChance', 'Battle.onResidual'], value: ranged(25, 256) - 1};
-const NO_THAW = {key: THAW.key, value: THAW.value + 1};
+  ({key: 'data/mods/gen3/moves.ts:209:17', value: ranged(n - 2, 6) - 1});
+const PAR_CANT = {key: 'data/mods/gen2/conditions.ts:21:13', value: ranged(1, 4) - 1};
+const PAR_CAN = {...PAR_CANT, value: PAR_CANT.value + 1};
+const FRZ = SECONDARY(ranged(25, 256) - 1);
+const THAW = {key: 'data/mods/gen2/conditions.ts:77:13', value: ranged(25, 256) - 1};
+const NO_THAW = {...THAW, value: THAW.value + 1};
 const CFZ = (n: number) =>
-  ({key: ['Battle.onStart', 'Pokemon.addVolatile'], value: ranged(n - 1, 6 - 2) - 1});
-const CFZ_CAN = {key: 'Battle.onBeforeMove', value: ranged(128, 256) - 1};
-const CFZ_CANT = {key: 'Battle.onBeforeMove', value: CFZ_CAN.value + 1};
+  ({key: 'data/mods/gen2/conditions.ts:127:34', value: ranged(n - 1, 6 - 2) - 1});
+const CFZ_CAN = {key: 'data/mods/gen2/conditions.ts:137:13', value: ranged(128, 256) - 1};
+const CFZ_CANT = {...CFZ_CAN, value: CFZ_CAN.value + 1};
 const THRASH = (n: 2 | 3) =>
-  ({key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: ranged(n, 4) - 1});
-const NO_METRONOME = [
+  ({key: 'data/mods/gen2/conditions.ts:169:16', value: ranged(n, 4) - 1});
+const MIN_WRAP = {key: 'data/mods/gen2/conditions.ts:160:16', value: MIN};
+const METRONOME = ROLLS.metronome(gen, [
   'Counter', 'Destiny Bond', 'Detect', 'Endure', 'Metronome', 'Mimic',
   'Mirror Coat', 'Protect', 'Sketch', 'Sleep Talk', 'Struggle', 'Thief',
-];
-const METRONOME = (move: string, exclude: string[] = []) => {
-  const moves: string[] = Array.from(gen.moves)
-    .filter(m => !m.realMove && !NO_METRONOME.includes(m.name) && !exclude.includes(m.name))
-    .sort((a, b) => a.num - b.num)
-    .map(m => m.name);
-  const value = ranged(moves.indexOf(move) + 1, moves.length) - 1;
-  return {key: ['Battle.sample', 'Battle.singleEvent'], value};
-};
+]);
+const STATUS = {key: 'sim/pokemon.ts:1606:40', value: HIT.value};
+
 
 const evs = {hp: 255, atk: 255, def: 255, spa: 255, spd: 255, spe: 255};
 const slow = {...evs, spe: 0};
@@ -400,8 +397,8 @@ describe('Gen 2', () => {
   });
 
   test('accuracy (normal)', () => {
-    const hit = {key: HIT.key, value: ranged(Math.floor(85 * 255 / 100), 256) - 1};
-    const miss = {key: MISS.key, value: hit.value + 1};
+    const hit = {...HIT, value: ranged(Math.floor(85 * 255 / 100), 256) - 1};
+    const miss = {...MISS, value: hit.value + 1};
     const battle = startBattle([QKC, hit, CRIT, MAX_DMG, miss, QKC], [
       {species: 'Hitmonchan', evs, moves: ['Mega Punch']},
     ], [
@@ -426,7 +423,7 @@ describe('Gen 2', () => {
   });
 
   test('damage calc', () => {
-    const no_brn = {key: HIT.key, value: ranged(25, 256)};
+    const no_brn = SECONDARY(ranged(25, 256));
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, no_brn, QKC, NO_CRIT, MIN_DMG, QKC,
     ], [
@@ -748,7 +745,7 @@ describe('Gen 2', () => {
   });
 
   test('Stick effect', () => {
-    const no_crit = {key: CRIT.key, value: ranged(4, 16) - 1};
+    const no_crit = {...CRIT, value: ranged(4, 16) - 1};
     const battle = startBattle([
       QKC, HIT, no_crit, MIN_DMG, no_crit, MIN_DMG, PROC_SEC,
       QKC, HIT, no_crit, MIN_DMG, SS_EACH, SS_EACH,
@@ -838,7 +835,7 @@ describe('Gen 2', () => {
 
   test('BrightPowder effect', () => {
     // Mega Punch would hit if not for Bright Powder
-    const hit = {key: HIT.key, value: ranged(Math.floor(85 * 255 / 100), 256) - 1};
+    const hit = {...HIT, value: ranged(Math.floor(85 * 255 / 100), 256) - 1};
     const battle = startBattle([QKC, hit, MISS, QKC, NO_CRIT, MIN_DMG, QKC], [
       {species: 'Umbreon', item: 'Bright Powder', evs, moves: ['Mega Punch', 'Teleport']},
     ], [
@@ -917,8 +914,8 @@ describe('Gen 2', () => {
   });
 
   test('QuickClaw effect', () => {
-    const proc = {key: QKC.key, value: ranged(60, 256) - 1};
-    const no_proc = {key: QKC.key, value: proc.value + 1};
+    const proc = {...QKC, value: ranged(60, 256) - 1};
+    const no_proc = {...QKC, value: proc.value + 1};
     const battle = startBattle([
       no_proc, NO_CRIT, MIN_DMG, proc, NO_CRIT, MIN_DMG, proc, NO_CRIT, MIN_DMG, no_proc,
     ], [
@@ -957,7 +954,7 @@ describe('Gen 2', () => {
   test.todo('Flinch effect');
 
   test('CriticalUp effect', () => {
-    const no_crit = {key: CRIT.key, value: ranged(2, 16) - 1};
+    const no_crit = {...CRIT, value: ranged(2, 16) - 1};
     const battle = startBattle([
       QKC, HIT, no_crit, MIN_DMG, no_crit, MIN_DMG, PROC_SEC,
       QKC, HIT, no_crit, MIN_DMG, no_crit, MIN_DMG, PROC_SEC, QKC,
@@ -1140,9 +1137,9 @@ describe('Gen 2', () => {
   });
 
   test('FocusBand effect', () => {
-    const band = {key: HIT.key, value: ranged(30, 256) - 1};
-    const no_band = {key: band.key, value: band.value + 1};
-    const confusion = {key: HIT.key, value: ranged(25, 256) - 1};
+    const band = {key: 'data/mods/gen2/items.ts:60:13', value: ranged(30, 256) - 1};
+    const no_band = {...band, value: band.value + 1};
+    const confusion = SECONDARY(ranged(25, 256) - 1);
     const battle = startBattle([
       QKC, CRIT, MAX_DMG, band, confusion, CFZ(5), CFZ_CANT,
       QKC, NO_CRIT, MIN_DMG, band, NO_CRIT, MIN_DMG, no_band,
@@ -1187,7 +1184,7 @@ describe('Gen 2', () => {
   // Moves
 
   test('HighCritical effect', () => {
-    const no_crit = {key: CRIT.key, value: ranged(4, 16) - 1};
+    const no_crit = {...CRIT, value: ranged(4, 16) - 1};
     // Regular non-crit roll is still a crit for high critical moves
     const battle = startBattle([QKC, no_crit, MIN_DMG, no_crit, MIN_DMG, QKC], [
       {species: 'Machop', evs, moves: ['Karate Chop']},
@@ -1216,9 +1213,8 @@ describe('Gen 2', () => {
   test.todo('FocusEnergy effect');
 
   test('MultiHit effect', () => {
-    const key = ['Battle.sample', 'BattleActions.tryMoveHit'];
-    const hit3 = {key, value: 0x60000000};
-    const hit5 = {key, value: MAX};
+    const hit3 = {key: 'data/mods/gen2/scripts.ts:265:26', value: 0x60000000};
+    const hit5 = {...hit3, value: MAX};
     const battle = startBattle([
       QKC, HIT, hit3, NO_CRIT, MIN_DMG, NO_CRIT, MAX_DMG, CRIT, MIN_DMG,
       QKC, HIT, hit5, NO_CRIT, MAX_DMG, CRIT, MIN_DMG, NO_CRIT, MIN_DMG,
@@ -1303,10 +1299,9 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test('TripleKick effect effect', () => {
-    const key = ['Battle.random', 'BattleActions.tryMoveHit'];
-    const hit2 = {key, value: ranged(2, 3 + 1)};
-    const hit3 = {key, value: MAX};
+  test('TripleKick effect', () => {
+    const hit2 = {key: 'data/mods/gen2/scripts.ts:267:26', value: ranged(2, 3 + 1)};
+    const hit3 = {...hit2, value: MAX};
     const battle = startBattle([
       QKC, HIT, hit2, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG,
       QKC, HIT, hit3, CRIT, MAX_DMG, CRIT, MAX_DMG, NO_CRIT, MIN_DMG, QKC,
@@ -1347,8 +1342,8 @@ describe('Gen 2', () => {
   });
 
   test('Twineedle effect', () => {
-    const proc = {key: HIT.key, value: ranged(51, 256) - 1};
-    const no_proc = {key: HIT.key, value: proc.value + 1};
+    const proc = SECONDARY(ranged(51, 256) - 1);
+    const no_proc = SECONDARY(proc.value + 1);
 
     const battle = startBattle([
       QKC, CRIT, MAX_DMG, NO_CRIT, MIN_DMG, proc, SS_MOD,
@@ -1527,8 +1522,8 @@ describe('Gen 2', () => {
   });
 
   test('PoisonChance effect', () => {
-    const proc = {key: HIT.key, value: ranged(76, 256) - 1};
-    const no_proc = {key: HIT.key, value: proc.value + 1};
+    const proc = SECONDARY(ranged(76, 256) - 1);
+    const no_proc = SECONDARY(proc.value + 1);
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, proc, NO_CRIT, MIN_DMG, no_proc,
       QKC, NO_CRIT, MAX_DMG,
@@ -1594,8 +1589,8 @@ describe('Gen 2', () => {
   });
 
   test('BurnChance effect', () => {
-    const proc = {key: HIT.key, value: ranged(25, 256) - 1};
-    const no_proc = {key: HIT.key, value: proc.value + 1};
+    const proc = SECONDARY(ranged(25, 256) - 1);
+    const no_proc = SECONDARY(proc.value + 1);
     const battle = startBattle([
       QKC, HIT, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, no_proc,
       QKC, HIT, NO_CRIT, MIN_DMG,
@@ -1662,7 +1657,7 @@ describe('Gen 2', () => {
   });
 
   test('FlameWheel effect', () => {
-    const proc = {key: HIT.key, value: ranged(25, 256) - 1};
+    const proc = SECONDARY(ranged(25, 256) - 1);
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, proc, SS_MOD, NO_CRIT, MIN_DMG, proc, SS_MOD, QKC,
     ], [
@@ -1695,8 +1690,8 @@ describe('Gen 2', () => {
   });
 
   test('SacredFire effect', () => {
-    const lo_proc = {key: HIT.key, value: ranged(25, 256) - 1};
-    const hi_proc = {key: HIT.key, value: ranged(127, 256) - 1};
+    const lo_proc = SECONDARY(ranged(25, 256) - 1);
+    const hi_proc = SECONDARY(ranged(127, 256) - 1);
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, lo_proc, SS_MOD, HIT, NO_CRIT, MIN_DMG, hi_proc, SS_MOD, QKC,
     ], [
@@ -1727,14 +1722,13 @@ describe('Gen 2', () => {
   });
 
   test('FreezeChance effect', () => {
-    const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, SS_MOD,
       QKC, HIT, NO_CRIT, MIN_DMG, FRZ, PAR_CANT,
       QKC, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD, NO_THAW,
       QKC, NO_THAW,
       QKC, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
-      QKC, HIT, NO_CRIT, MIN_DMG, wrap, NO_THAW,
+      QKC, HIT, NO_CRIT, MIN_DMG, MIN_WRAP, NO_THAW,
       QKC, HIT, NO_CRIT, MIN_DMG, NO_THAW,
       QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG,
       QKC, MISS,
@@ -1879,7 +1873,7 @@ describe('Gen 2', () => {
 
   test('Paralyze effect', () => {
     const battle = startBattle([
-      QKC, MISS, HIT,
+      QKC, MISS, STATUS,
       QKC, PAR_CAN, HIT, SS_MOD,
       QKC, PAR_CANT,
       QKC, HIT, PAR_CAN,
@@ -1945,8 +1939,8 @@ describe('Gen 2', () => {
   });
 
   test('ParalyzeChance effect', () => {
-    const lo_proc = {key: HIT.key, value: ranged(25, 256) - 1};
-    const hi_proc = {key: HIT.key, value: ranged(76, 256) - 1};
+    const lo_proc = SECONDARY(ranged(25, 256) - 1);
+    const hi_proc = SECONDARY(ranged(76, 256) - 1);
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, hi_proc, SS_MOD, PAR_CAN, NO_CRIT, MIN_DMG, hi_proc,
       QKC, QKC, NO_CRIT, MIN_DMG, lo_proc, SS_MOD,
@@ -2030,11 +2024,11 @@ describe('Gen 2', () => {
   });
 
   test('TriAttack effect', () => {
-    const proc = {key: HIT.key, value: ranged(51, 256) - 1};
-    const no_proc = {key: proc.key, value: proc.value + 1};
-    const par = {key: ['Battle.random', 'Battle.singleEvent'], value: ranged(1, 3)};
-    const frz = {key: par.key, value: ranged(2, 3)};
-    const brn = {key: par.key, value: ranged(3, 3)};
+    const proc = SECONDARY(ranged(51, 256) - 1);
+    const no_proc = {...proc, value: proc.value + 1};
+    const par = {key: 'data/mods/gen2/moves.ts:953:49', value: ranged(1, 3)};
+    const frz = {...par, value: ranged(2, 3)};
+    const brn = {...par, value: ranged(3, 3)};
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, frz, proc, SS_MOD, NO_THAW,
       QKC, NO_CRIT, MIN_DMG, brn, no_proc, MISS,
@@ -2168,8 +2162,8 @@ describe('Gen 2', () => {
   test.todo('ConfusionChance effect');
 
   test('FlinchChance effect', () => {
-    const lo_proc = {key: HIT.key, value: ranged(25, 256) - 1};
-    const hi_proc = {key: HIT.key, value: ranged(76, 256) - 1};
+    const lo_proc = SECONDARY(ranged(25, 256) - 1);
+    const hi_proc = SECONDARY(ranged(76, 256) - 1);
     const battle = startBattle([
       QKC, HIT, NO_CRIT, MIN_DMG, hi_proc,
       QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, hi_proc,
@@ -2257,10 +2251,11 @@ describe('Gen 2', () => {
   });
 
   test('Snore effect', () => {
-    const proc = {key: HIT.key, value: ranged(76, 256) - 1};
-    const no_proc = {key: HIT.key, value: proc.value + 1};
+    const proc = SECONDARY(ranged(76, 256) - 1);
+    const no_proc = {...proc, value: proc.value + 1};
     const battle = startBattle([
-      QKC, HIT, SS_MOD, SLP(5), QKC, NO_CRIT, HIT, no_proc, HIT, QKC, NO_CRIT, HIT, proc, QKC,
+      QKC, HIT, SS_MOD, SLP(5), QKC, NO_CRIT, MIN_DMG, no_proc, HIT,
+      QKC, NO_CRIT, MIN_DMG, proc, QKC,
     ], [
       {species: 'Heracross', evs, moves: ['Snore']},
     ], [
@@ -2299,8 +2294,8 @@ describe('Gen 2', () => {
   });
 
   test('Stomp effect', () => {
-    const proc = {key: HIT.key, value: ranged(76, 256) - 1};
-    const no_proc = {key: HIT.key, value: proc.value + 1};
+    const proc = SECONDARY(ranged(76, 256) - 1);
+    const no_proc = SECONDARY(proc.value + 1);
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, no_proc, QKC, HIT, NO_CRIT, MIN_DMG, proc, QKC,
     ], [
@@ -2379,8 +2374,8 @@ describe('Gen 2', () => {
   });
 
   test('StatDownChance effect', () => {
-    const proc = {key: HIT.key, value: ranged(25, 256) - 1};
-    const no_proc = {key: proc.key, value: proc.value + 1};
+    const proc = SECONDARY(ranged(25, 256) - 1);
+    const no_proc = {...proc, value: proc.value + 1};
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, no_proc, NO_CRIT, MIN_DMG, proc,
       QKC, NO_CRIT, MIN_DMG, no_proc, NO_CRIT, MIN_DMG, proc,
@@ -2524,8 +2519,8 @@ describe('Gen 2', () => {
   });
 
   test('StatUpChance effect', () => {
-    const proc = {key: HIT.key, value: ranged(25, 256) - 1};
-    const no_proc = {key: proc.key, value: proc.value + 1};
+    const proc = SECONDARY(ranged(25, 256) - 1);
+    const no_proc = {...proc, value: proc.value + 1};
     const battle = startBattle([
       QKC, HIT, NO_CRIT, MIN_DMG, proc, HIT, NO_CRIT, MIN_DMG, no_proc, QKC,
     ], [
@@ -2555,8 +2550,8 @@ describe('Gen 2', () => {
   });
 
   test('AllStatUpChance effect', () => {
-    const proc = {key: HIT.key, value: ranged(25, 256) - 1};
-    const no_proc = {key: proc.key, value: proc.value + 1};
+    const proc = SECONDARY(ranged(25, 256) - 1);
+    const no_proc = {...proc, value: proc.value + 1};
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, no_proc, QKC, NO_CRIT, MIN_DMG, proc, QKC,
     ], [
@@ -2601,8 +2596,8 @@ describe('Gen 2', () => {
   });
 
   test('OHKO effect', () => {
-    const hit = {key: HIT.key, value: ranged(176, 256) - 1};
-    const miss = {key: hit.key, value: hit.value + 1};
+    const hit = {...HIT, value: ranged(176, 256) - 1};
+    const miss = {...MISS, value: hit.value + 1};
     const battle = startBattle([
       QKC, QKC, miss, QKC, miss, SS_RES, QKC, hit, QKC, MISS, QKC,
     ], [
@@ -2755,7 +2750,7 @@ describe('Gen 2', () => {
   });
 
   test('RazorWind effect', () => {
-    const crit2 = {key: CRIT.key, value: ranged(2, 16)};
+    const crit2 = {...CRIT, value: ranged(2, 16)};
     const battle = startBattle([
       QKC, crit2, MIN_DMG, QKC, HIT, crit2, MIN_DMG, crit2, MIN_DMG, QKC,
     ], [
@@ -3028,8 +3023,8 @@ describe('Gen 2', () => {
   });
 
   test('Twister effect', () => {
-    const proc = {key: HIT.key, value: ranged(51, 256) - 1};
-    const no_proc = {key: proc.key, value: proc.value + 1};
+    const proc = SECONDARY(ranged(51, 256) - 1);
+    const no_proc = {...proc, value: proc.value + 1};
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, no_proc, SS_RES, QKC, NO_CRIT, MIN_DMG, proc, QKC,
     ], [
@@ -3062,9 +3057,7 @@ describe('Gen 2', () => {
   });
 
   test('ForceSwitch effect', () => {
-    const drag = (m: number, n = 5) => ({
-      key: ['Battle.getRandomSwitchable', 'BattleActions.dragIn'], value: ranged(m - 1, n)});
-    const battle = startBattle([QKC, drag(1, 1), QKC, drag(1, 1), QKC], [
+    const battle = startBattle([QKC, DRAG(1, 1), QKC, DRAG(1, 1), QKC], [
       {species: 'Zapdos', evs, moves: ['Whirlwind']},
     ], [
       {species: 'Raikou', evs, moves: ['Roar']},
@@ -3127,10 +3120,9 @@ describe('Gen 2', () => {
   });
 
   test('Trapping effect', () => {
-    const min_wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
     const battle = startBattle([
-      QKC, QKC, HIT, NO_CRIT, MIN_DMG, min_wrap, QKC, QKC, HIT,
-      NO_CRIT, MIN_DMG, QKC, HIT, NO_CRIT, MIN_DMG, min_wrap, QKC, QKC,
+      QKC, QKC, HIT, NO_CRIT, MIN_DMG, MIN_WRAP, QKC, QKC, HIT,
+      NO_CRIT, MIN_DMG, QKC, HIT, NO_CRIT, MIN_DMG, MIN_WRAP, QKC, QKC,
     ], [
       {species: 'Shuckle', evs, moves: ['Wrap', 'Teleport']},
       {species: 'Scizor', evs, moves: ['Metal Claw']},
@@ -3439,8 +3431,8 @@ describe('Gen 2', () => {
   });
 
   test('Psywave effect', () => {
-    const PSY_MAX = {key: 'Battle.damageCallback', value: MAX};
-    const PSY_MIN = {key: 'Battle.damageCallback', value: MIN};
+    const PSY_MAX = {key: 'data/mods/gen2/moves.ts:594:16', value: MAX};
+    const PSY_MIN = {...PSY_MAX, value: MIN};
     const battle = startBattle([QKC, HIT, PSY_MAX, HIT, PSY_MIN, QKC], [
       {species: 'Gengar', evs, level: 59, moves: ['Psywave']},
     ], [
@@ -3500,7 +3492,7 @@ describe('Gen 2', () => {
   });
 
   test('Disable effect', () => {
-    const proc = {key: ['Battle.sample', 'Battle.singleEvent'], value: MIN};
+    const proc = {key: 'data/mods/gen2/moves.ts:779:40', value: MIN};
     const battle = startBattle([
       QKC, HIT, QKC, HIT, DISABLE_DURATION(3), QKC, HIT,
       SS_MOD, SLP(2), proc, QKC, HIT, DISABLE_DURATION(3), QKC,
@@ -3554,7 +3546,7 @@ describe('Gen 2', () => {
   });
 
   test('Mist effect', () => {
-    const proc = {key: HIT.key, value: ranged(25, 256) - 1};
+    const proc = SECONDARY(ranged(25, 256) - 1);
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, proc, QKC, NO_CRIT, MIN_DMG,
       QKC, NO_CRIT, MIN_DMG, QKC, QKC,
@@ -3743,7 +3735,7 @@ describe('Gen 2', () => {
   });
 
   test('WeatherHeal effect', () => {
-    const no_brn = {key: HIT.key, value: ranged(25, 256)};
+    const no_brn = SECONDARY(ranged(25, 256));
     const battle = startBattle([
       QKC, CRIT, MIN_DMG, no_brn, QKC, QKC, QKC, CRIT, MAX_DMG, no_brn, QKC, QKC,
     ], [
@@ -4255,7 +4247,7 @@ describe('Gen 2', () => {
   test.todo('Transform effect');
 
   test('Conversion effect', () => {
-    const proc = {key: ['Battle.sample', 'Battle.singleEvent'], value: ranged(0, 2)};
+    const proc = {key: 'data/mods/gen3/moves.ts:153:22', value: ranged(0, 2)};
     const battle = startBattle([QKC, proc, QKC], [
       {species: 'Porygon', evs, moves: ['Conversion', 'Sharpen']},
     ], [
@@ -4274,7 +4266,7 @@ describe('Gen 2', () => {
   });
 
   test('Conversion2 effect', () => {
-    const proc = {key: ['Battle.sample', 'Battle.singleEvent'], value: MAX};
+    const proc = {key: 'data/moves.ts:2832:28', value: MAX};
     const battle = startBattle([QKC, proc, QKC], [
       {species: 'Porygon2', evs, moves: ['Conversion2']},
     ], [
@@ -4468,8 +4460,8 @@ describe('Gen 2', () => {
   });
 
   test('Spite effect', () => {
-    const spite2 = {key: ['Battle.onHit', 'Battle.singleEvent'], value: ranged(0, 4)};
-    const spite3 = {key: spite2.key, value: ranged(1, 4)};
+    const spite2 = {key: 'data/mods/gen3/moves.ts:581:22', value: ranged(0, 4)};
+    const spite3 = {...spite2, value: ranged(1, 4)};
     const battle = startBattle([
       QKC, spite2, MISS, QKC, spite2, MISS, QKC, spite3, MISS, QKC, spite2, QKC,
     ], [
@@ -4517,8 +4509,8 @@ describe('Gen 2', () => {
   test.todo('Protect effect');
 
   test('Endure effect', () => {
-    const proc2 = {key: 'Battle.onStallMove', value: ranged(127, 255)};
-    const no_proc3 = {key: proc2.key, value: ranged(63, 255) + 1};
+    const proc2 = {key: 'data/mods/gen2/conditions.ts:227:16', value: ranged(127, 255)};
+    const no_proc3 = {...proc2, value: ranged(63, 255) + 1};
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, SS_RES,
       QKC, proc2, NO_CRIT, MIN_DMG, SS_RES,
@@ -4631,9 +4623,8 @@ describe('Gen 2', () => {
   });
 
   test('RapidSpin effect', () => {
-    const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
     const battle = startBattle([
-      QKC, QKC, HIT, QKC, HIT, NO_CRIT, MIN_DMG, wrap, NO_CRIT, MIN_DMG, QKC,
+      QKC, QKC, HIT, QKC, HIT, NO_CRIT, MIN_DMG, MIN_WRAP, NO_CRIT, MIN_DMG, QKC,
     ], [
       {species: 'Venusaur', evs, moves: ['Spikes', 'Leech Seed', 'Wrap']},
     ], [
@@ -4682,8 +4673,8 @@ describe('Gen 2', () => {
   });
 
   test('Foresight effect', () => {
-    const hit = {key: HIT.key, value: ranged(Math.floor(90 * 255 / 100), 256) - 1};
-    const no_proc = {key: HIT.key, value: ranged(76, 256)};
+    const hit = {...HIT, value: ranged(Math.floor(90 * 255 / 100), 256) - 1};
+    const no_proc = SECONDARY(ranged(76, 256));
     const battle = startBattle([
       QKC, MISS, QKC, HIT, QKC, hit, QKC, HIT, QKC, QKC, HIT, NO_CRIT, MIN_DMG, no_proc, QKC,
     ], [
@@ -4866,7 +4857,7 @@ describe('Gen 2', () => {
   });
 
   test('Rollout effect', () => {
-    const proc = {key: ['Battle.sample', 'Battle.singleEvent'], value: MIN};
+    const proc = {key: 'data/mods/gen2/moves.ts:779:40', value: MIN};
     const battle = startBattle([
       QKC, HIT, NO_CRIT, MIN_DMG,
       QKC, MISS,
@@ -5038,8 +5029,8 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test('Fury Cutter effect', () => {
-    const proc = {key: ['Battle.sample', 'Battle.singleEvent'], value: MIN};
+  test('FuryCutter effect', () => {
+    const proc = {key: 'data/mods/gen2/moves.ts:779:40', value: MIN};
     const battle = startBattle([
       QKC, HIT, NO_CRIT, MIN_DMG,
       QKC, MISS,
@@ -5136,8 +5127,8 @@ describe('Gen 2', () => {
   });
 
   test('Attract effect', () => {
-    const can = {key: 'Battle.onBeforeMove', value: MAX};
-    const cant = {key: 'Battle.onBeforeMove', value: MIN};
+    const can = {key: 'data/moves.ts:749:14', value: MAX};
+    const cant = {...can, value: MIN};
     const battle = startBattle([QKC, QKC, QKC, QKC, QKC, cant, QKC, can, QKC, QKC], [
       {species: 'Smoochum', evs, moves: ['Attract', 'Teleport']},
     ], [
@@ -5210,7 +5201,7 @@ describe('Gen 2', () => {
   });
 
   test('SleepTalk effect', () => {
-    const SLP_TLK = (value: number) => ({key: ['Battle.sample', 'Battle.singleEvent'], value});
+    const SLP_TLK = (value: number) => ({key: 'data/mods/gen2/moves.ts:779:40', value});
     const moves = ['Sleep Talk', 'Vital Throw', 'Razor Wind', 'Metronome'];
     const battle = startBattle([
       QKC, SS_MOD, SLP(5), QKC, SLP_TLK(MAX), QKC, SLP_TLK(MIN), QKC, SLP_TLK(MAX),
@@ -5364,9 +5355,9 @@ describe('Gen 2', () => {
   });
 
   test('Present effect', () => {
-    const present = {key: ['Battle.random', 'Battle.onModifyMove'], value: ranged(1, 10) - 1};
-    const present40 = {key: present.key, value: ranged(6, 10) - 1};
-    const present120 = {key: present.key, value: ranged(10, 10) - 1};
+    const present = {key: 'data/moves.ts:14138:22', value: ranged(1, 10) - 1};
+    const present40 = {...present, value: ranged(6, 10) - 1};
+    const present120 = {...present, value: ranged(10, 10) - 1};
     const battle = startBattle([
       QKC, present, HIT,
       QKC, present, HIT, present40, HIT, NO_CRIT, MIN_DMG,
@@ -5569,8 +5560,8 @@ describe('Gen 2', () => {
   });
 
   test('Magnitude effect', () => {
-    const mag8 = {key: ['Battle.random', 'Battle.onModifyMove'], value: ranged(85, 100) - 1};
-    const mag5 = {key: mag8.key, value: ranged(15, 100) - 1};
+    const mag8 = {key: 'data/moves.ts:11040:19', value: ranged(85, 100) - 1};
+    const mag5 = {...mag8, value: ranged(15, 100) - 1};
     const battle = startBattle([
       QKC, mag8, NO_CRIT, MIN_DMG, SS_RES, QKC, mag5, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
     ], [
@@ -5834,7 +5825,7 @@ describe('Gen 2', () => {
   });
 
   test('SunnyDay effect', () => {
-    const no_brn = {key: HIT.key, value: ranged(25, 256)};
+    const no_brn = SECONDARY(ranged(25, 256));
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, no_brn, QKC, NO_CRIT, MIN_DMG,
       QKC, QKC, QKC, QKC, QKC, NO_CRIT, MIN_DMG, QKC,
@@ -5906,7 +5897,7 @@ describe('Gen 2', () => {
   });
 
   test('RainDance effect', () => {
-    const no_brn = {key: HIT.key, value: ranged(25, 256)};
+    const no_brn = SECONDARY(ranged(25, 256));
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, no_brn, QKC, NO_CRIT, MIN_DMG,
       QKC, QKC, QKC, QKC, QKC, NO_CRIT, MIN_DMG, QKC,
@@ -5978,9 +5969,9 @@ describe('Gen 2', () => {
   });
 
   test('Thunder effect', () => {
-    const proc = {key: HIT.key, value: ranged(76, 256) - 1};
-    const acc70 = {key: HIT.key, value: ranged(Math.floor(70 * 255 / 100), 256) - 1};
-    const acc50 = {key: MISS.key, value: ranged(Math.floor(50 * 255 / 100), 256) - 1};
+    const proc = SECONDARY(ranged(76, 256) - 1);
+    const acc70 = {...HIT, value: ranged(Math.floor(70 * 255 / 100), 256) - 1};
+    const acc50 = {...MISS, value: ranged(Math.floor(50 * 255 / 100), 256) - 1};
     const battle = startBattle([
       QKC, acc70, NO_CRIT, MIN_DMG, proc, SS_MOD, PAR_CAN,
       QKC, NO_CRIT, MIN_DMG, proc, PAR_CAN, SS_RES,
@@ -6098,9 +6089,9 @@ describe('Gen 2', () => {
   });
 
   test('FutureSight effect', () => {
-    const hit = {key: 'BattleActions.hitStepAccuracy', value: 0xE6666667 - 1};
-    const miss = {key: hit.key, value: hit.value + 1};
-    const band = {key: ['Battle.randomChance', 'Battle.onDamage'], value: ranged(30, 256) - 1};
+    const hit = {key: 'data/mods/gen4/scripts.ts:144:43', value: 0xE6666667 - 1};
+    const miss = {...hit, value: hit.value + 1};
+    const band = {key: 'data/mods/gen2/items.ts:60:13', value: ranged(30, 256) - 1};
     const battle = startBattle([
       QKC, MAX_DMG, QKC, QKC, miss, QKC, MIN_DMG, QKC, QKC, hit, band, QKC,
     ], [
@@ -6167,10 +6158,10 @@ describe('Gen 2', () => {
   });
 
   test('BeatUp effect', () => {
-    const band = {key: HIT.key, value: ranged(30, 256) - 1};
-    const no_band = {key: band.key, value: band.value + 1};
-    const kings = band;
-    const no_kings = no_band;
+    const band = {key: 'data/mods/gen2/items.ts:60:13', value: ranged(30, 256) - 1};
+    const no_band = {...band, value: band.value + 1};
+    const kings = SECONDARY(band.value);
+    const no_kings = SECONDARY(no_band.value);
     // TODO: should proc kings rock each hit, should end on sub, should have focus band work
     const battle = startBattle([
       QKC, QKC, NO_CRIT, MIN_DMG, no_band, NO_CRIT, MIN_DMG, no_band, no_kings,
@@ -6449,7 +6440,7 @@ describe('Gen 2', () => {
   });
 
   test('Secondary chance 1/256 glitch', () => {
-    const no_proc = {key: PROC_SEC.key, value: MAX};
+    const no_proc = {...PROC_SEC, value: MAX};
     const battle = startBattle([QKC, NO_CRIT, MIN_DMG, no_proc, QKC], [
       {species: 'Abra', level: 10, evs, moves: ['Thief']},
     ], [
@@ -6760,8 +6751,7 @@ describe('Gen 2', () => {
   });
 
   test('Beat Up Kings Rock failure glitch', () => {
-    const proc =
-      {key: ['Battle.randomChance', 'BattleActions.moveHit'], value: ranged(30, 256) - 1};
+    const proc = SECONDARY(ranged(30, 256) - 1);
     const battle = startBattle([QKC, NO_CRIT, MIN_DMG, proc, QKC], [
       {species: 'Houndoom', item: 'Kings Rock', evs, moves: ['Beat Up']},
     ], [

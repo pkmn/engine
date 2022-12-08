@@ -9,42 +9,39 @@ const gen = gens.get(1);
 const choices = gen1.Choices.sim;
 const startBattle = createStartBattle(gen);
 
-const {HIT, MISS, CRIT, NO_CRIT, MIN_DMG, MAX_DMG} = ROLLS.basic;
-const {SS_MOD, SS_RES, SS_RUN, SS_EACH, INS, GLM} = ROLLS.nops;
-
-const TIE = (n: 1 | 2) =>
-  ({key: ['Battle.speedSort', 'BattleQueue.sort'], value: ranged(n, 2) - 1});
-const SLP = (n: number) =>
-  ({key: ['Battle.random', 'Pokemon.setStatus'], value: ranged(n, 8 - 1)});
-const DISABLE_DURATION = (n: number) =>
-  ({key: ['Battle.onStart', 'Pokemon.addVolatile'], value: ranged(n, 9 - 1) - 1});
-const DISABLE_MOVE = (m: number, n = 4) =>
-  ({key: ['Battle.onStart', 'Pokemon.addVolatile'], value: ranged(m, n) - 1});
-const MIMIC = (m: number, n = 4) =>
-  ({key: ['Battle.sample', 'Battle.singleEvent'], value: ranged(m, n) - 1});
-const BIDE = (n: 2 | 3) =>
-  ({key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: ranged(n - 2, 5 - 3)});
-const NO_PAR = {key: HIT.key, value: MAX};
-const PAR_CANT = {key: 'Battle.onBeforeMove', value: ranged(63, 256) - 1};
-const PAR_CAN = {key: 'Battle.onBeforeMove', value: PAR_CANT.value + 1};
-const FRZ = {key: HIT.key, value: ranged(26, 256) - 1};
-const CFZ = (n: number) =>
-  ({key: ['Battle.onStart', 'Pokemon.addVolatile'], value: ranged(n - 1, 6 - 2) - 1});
-const CFZ_CAN = {key: 'Battle.onBeforeMove', value: ranged(128, 256) - 1};
-const CFZ_CANT = {key: 'Battle.onBeforeMove', value: CFZ_CAN.value + 1};
-const THRASH = (n: 3 | 4) =>
-  ({key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: ranged(n - 2, 5 - 3) - 1});
-const MIN_WRAP = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
-const MAX_WRAP = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MAX};
-const REWRAP = {key: ['Battle.sample', 'BattleActions.runMove'], value: MIN};
-const MOVES: string[] = Array.from(gen.moves)
-  .sort((a, b) => a.num - b.num)
-  .map(m => m.name)
-  .filter(m => !['Struggle', 'Metronome'].includes(m));
-const METRONOME = (move: string) => ({
-  key: ['Battle.sample', 'Battle.singleEvent'],
-  value: ranged(MOVES.indexOf(move) + 1, MOVES.length) - 1,
+const {HIT, MISS, CRIT, NO_CRIT, MIN_DMG, MAX_DMG, TIE} = ROLLS.basic({
+  hit: 'data/mods/gen1/scripts.ts:385:42',
+  crit: 'data/mods/gen1/scripts.ts:780:27',
+  dmg: 'data/mods/gen1/scripts.ts:897:27',
 });
+const {SS_MOD, SS_RES, SS_EACH, INS, GLM} = ROLLS.nops;
+
+const SS_RUN = {key: 'data/mods/gen1/scripts.ts:139:33', value: SS_MOD.value};
+const SECONDARY = (value: number) => ({key: 'data/mods/gen1/scripts.ts:669:25', value});
+const SLP = (n: number) =>
+  ({key: 'data/mods/gen1/conditions.ts:61:38', value: ranged(n, 8 - 1)});
+const DISABLE_MOVE = (m: number, n = 4) =>
+  ({key: 'data/mods/gen1/moves.ts:289:27', value: ranged(m, n) - 1});
+const DISABLE_DURATION = (n: number) =>
+  ({key: 'data/mods/gen1/moves.ts:293:34', value: ranged(n, 9 - 1) - 1});
+const MIMIC = (m: number, n = 4) =>
+  ({key: 'data/mods/gen1/moves.ts:540:24', value: ranged(m, n) - 1});
+const BIDE = (n: 2 | 3) =>
+  ({key: 'data/mods/gen1/moves.ts:41:17', value: ranged(n - 2, 5 - 3)});
+const NO_PAR = SECONDARY(MAX);
+const PAR_CANT = {key: 'data/mods/gen1/conditions.ts:38:13', value: ranged(63, 256) - 1};
+const PAR_CAN = {...PAR_CANT, value: PAR_CANT.value + 1};
+const FRZ = SECONDARY(ranged(26, 256) - 1);
+const CFZ = (n: number) =>
+  ({key: 'data/mods/gen1/conditions.ts:131:33', value: ranged(n - 1, 6 - 2) - 1});
+const CFZ_CAN = {key: 'data/mods/gen1/conditions.ts:144:14', value: ranged(128, 256) - 1};
+const CFZ_CANT = {...CFZ_CAN, value: CFZ_CAN.value + 1};
+const THRASH = (n: 3 | 4) =>
+  ({key: 'data/mods/gen1/conditions.ts:230:16', value: ranged(n - 2, 5 - 3) - 1});
+const MIN_WRAP = {key: 'data/mods/gen1/conditions.ts:199:26', value: MIN};
+const MAX_WRAP = {...MIN_WRAP, value: MAX};
+const REWRAP = {key: 'data/mods/gen1/scripts.ts:214:38', value: MIN};
+const METRONOME = ROLLS.metronome(gen, ['Metronome', 'Struggle']);
 
 const evs = {hp: 255, atk: 255, def: 255, spa: 255, spd: 255, spe: 255};
 
@@ -458,8 +455,8 @@ describe('Gen 1', () => {
   });
 
   test('accuracy (normal)', () => {
-    const hit = {key: HIT.key, value: ranged(Math.floor(85 * 255 / 100), 256) - 1};
-    const miss = {key: MISS.key, value: hit.value + 1};
+    const hit = {...HIT, value: ranged(Math.floor(85 * 255 / 100), 256) - 1};
+    const miss = {...MISS, value: hit.value + 1};
     const battle = startBattle([hit, CRIT, MAX_DMG, miss], [
       {species: 'Hitmonchan', evs, moves: ['Mega Punch']},
     ], [
@@ -484,7 +481,7 @@ describe('Gen 1', () => {
   });
 
   test('damage calc', () => {
-    const NO_BRN = {key: HIT.key, value: ranged(77, 256)};
+    const NO_BRN = SECONDARY(ranged(77, 256));
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, NO_BRN, HIT, NO_CRIT, MIN_DMG,
     ], [
@@ -739,10 +736,8 @@ describe('Gen 1', () => {
   // Moves
 
   test('HighCritical effect', () => {
-    const no_crit = {
-      key: CRIT.key,
-      value: ranged(Math.floor(gen.species.get('Machop')!.baseStats.spe / 2), 256),
-    };
+    const no_crit =
+      {...CRIT, value: ranged(Math.floor(gen.species.get('Machop')!.baseStats.spe / 2), 256)};
     // Regular non-crit roll is still a crit for high critical moves
     const battle = startBattle([HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG], [
       {species: 'Machop', evs, moves: ['Karate Chop']},
@@ -770,7 +765,7 @@ describe('Gen 1', () => {
 
   test('FocusEnergy effect', () => {
     const value = ranged(Math.floor(gen.species.get('Machoke')!.baseStats.spe / 2), 256) - 1;
-    const crit = {key: CRIT.key, value};
+    const crit = {...CRIT, value};
     const battle = startBattle([HIT, crit, MIN_DMG, HIT, crit, MIN_DMG], [
       {species: 'Machoke', evs, moves: ['Focus Energy', 'Strength']},
     ], [
@@ -812,9 +807,8 @@ describe('Gen 1', () => {
   });
 
   test('MultiHit effect', () => {
-    const key = ['Battle.sample', 'BattleActions.tryMoveHit'];
-    const hit3 = {key, value: 0x60000000};
-    const hit5 = {key, value: MAX};
+    const hit3 = {key: 'data/mods/gen1/scripts.ts:400:27', value: 0x60000000};
+    const hit5 = {...hit3, value: MAX};
     const battle = startBattle([HIT, hit3, NO_CRIT, MAX_DMG, HIT, hit5, NO_CRIT, MAX_DMG], [
       {species: 'Kangaskhan', evs, moves: ['Comet Punch']},
     ], [
@@ -888,8 +882,8 @@ describe('Gen 1', () => {
   });
 
   test('Twineedle effect', () => {
-    const proc = {key: HIT.key, value: ranged(52, 256) - 1};
-    const no_proc = {key: HIT.key, value: proc.value + 1};
+    const proc = SECONDARY(ranged(52, 256) - 1);
+    const no_proc = SECONDARY(proc.value + 1);
     const battle = startBattle([
       HIT, CRIT, MAX_DMG,
       HIT, NO_CRIT, MIN_DMG, no_proc,
@@ -1054,8 +1048,8 @@ describe('Gen 1', () => {
   });
 
   test('PoisonChance effect', () => {
-    const lo_proc = {key: HIT.key, value: ranged(52, 256) - 1};
-    const hi_proc = {key: HIT.key, value: ranged(103, 256) - 1};
+    const lo_proc = SECONDARY(ranged(52, 256) - 1);
+    const hi_proc = SECONDARY(ranged(103, 256) - 1);
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, lo_proc, HIT, NO_CRIT, MIN_DMG, hi_proc,
       HIT, NO_CRIT, MAX_DMG,
@@ -1122,8 +1116,8 @@ describe('Gen 1', () => {
   });
 
   test('BurnChance effect', () => {
-    const lo_proc = {key: HIT.key, value: ranged(26, 256) - 1};
-    const hi_proc = {key: HIT.key, value: ranged(77, 256) - 1};
+    const lo_proc = SECONDARY(ranged(26, 256) - 1);
+    const hi_proc = SECONDARY(ranged(77, 256) - 1);
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, hi_proc,
       HIT, NO_CRIT, MIN_DMG,
@@ -1381,8 +1375,7 @@ describe('Gen 1', () => {
   });
 
   test('ParalyzeChance effect', () => {
-    const lo_proc = {key: HIT.key, value: ranged(26, 256) - 1};
-    const hi_proc = {key: HIT.key, value: ranged(77, 256) - 1};
+    const hi_proc = SECONDARY(ranged(77, 256) - 1);
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
       HIT, NO_CRIT, MIN_DMG, hi_proc, HIT, NO_CRIT, MIN_DMG, hi_proc, SS_MOD,
@@ -1582,10 +1575,10 @@ describe('Gen 1', () => {
   });
 
   test('ConfusionChance effect', () => {
-    const proc = {key: HIT.key, value: ranged(25, 256) - 1};
-    const no_proc = {key: proc.key, value: proc.value + 1};
+    const sub_proc = {key: 'data/mods/gen1/moves.ts:864:50', value: ranged(25, 256) - 1};
+    const no_proc = SECONDARY(sub_proc.value + 1);
     const battle = startBattle([
-      HIT, NO_CRIT, MAX_DMG, proc, CFZ(2), CFZ_CAN,
+      HIT, NO_CRIT, MAX_DMG, sub_proc, CFZ(2), CFZ_CAN,
       HIT, NO_CRIT, MAX_DMG,
       HIT, NO_CRIT, MAX_DMG, no_proc,
     ], [
@@ -1639,8 +1632,8 @@ describe('Gen 1', () => {
   });
 
   test('FlinchChance effect', () => {
-    const lo_proc = {key: HIT.key, value: ranged(26, 256) - 1};
-    const hi_proc = {key: HIT.key, value: ranged(77, 256) - 1};
+    const lo_proc = SECONDARY(ranged(26, 256) - 1);
+    const hi_proc = SECONDARY(ranged(77, 256) - 1);
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, hi_proc,
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, hi_proc,
@@ -1775,8 +1768,8 @@ describe('Gen 1', () => {
   });
 
   test('StatDownChance effect', () => {
-    const proc = {key: HIT.key, value: ranged(85, 256) - 1};
-    const no_proc = {key: proc.key, value: proc.value + 1};
+    const proc = SECONDARY(ranged(85, 256) - 1);
+    const no_proc = SECONDARY(proc.value + 1);
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, no_proc, HIT, NO_CRIT, MIN_DMG, proc,
       HIT, NO_CRIT, MIN_DMG, no_proc, HIT, NO_CRIT, MIN_DMG, proc,
@@ -2555,8 +2548,8 @@ describe('Gen 1', () => {
   });
 
   test('Psywave effect', () => {
-    const PSY_MAX = {key: 'Battle.damageCallback', value: MAX};
-    const PSY_MIN = {key: 'Battle.damageCallback', value: MIN};
+    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:617:32', value: MAX};
+    const PSY_MIN = {...PSY_MAX, value: MIN};
     const battle = startBattle([HIT, PSY_MAX, HIT, PSY_MIN], [
       {species: 'Gengar', evs, level: 59, moves: ['Psywave']},
     ], [
@@ -2615,7 +2608,7 @@ describe('Gen 1', () => {
   });
 
   test('Disable effect', () => {
-    const NO_FRZ = {key: HIT.key, value: ranged(26, 256)};
+    const NO_FRZ = SECONDARY(ranged(26, 256));
     const battle = startBattle([
       HIT, DISABLE_MOVE(1), DISABLE_DURATION(1), HIT, NO_CRIT, MIN_DMG,
       HIT, DISABLE_MOVE(2), DISABLE_DURATION(5), HIT, NO_CRIT, MIN_DMG,
@@ -2714,7 +2707,7 @@ describe('Gen 1', () => {
   });
 
   test('Mist effect', () => {
-    const proc = {key: HIT.key, value: ranged(85, 256) - 1};
+    const proc = SECONDARY(ranged(85, 256) - 1);
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, proc,
       HIT, NO_CRIT, MIN_DMG, HIT,
@@ -2854,7 +2847,7 @@ describe('Gen 1', () => {
   });
 
   test('Counter effect', () => {
-    const hit2 = {key: ['Battle.sample', 'BattleActions.tryMoveHit'], value: MIN};
+    const hit2 = {key: 'data/mods/gen1/scripts.ts:400:27', value: MIN};
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, NO_PAR, HIT,
       HIT, hit2, NO_CRIT, MIN_DMG, HIT,
@@ -3515,7 +3508,7 @@ describe('Gen 1', () => {
   });
 
   test('Haze effect', () => {
-    const proc = {key: HIT.key, value: MIN};
+    const proc = SECONDARY(MIN);
     const battle = startBattle([
       HIT, SS_MOD, HIT,
       HIT, SS_MOD, PAR_CAN, HIT, CFZ(5),
@@ -3711,9 +3704,8 @@ describe('Gen 1', () => {
   });
 
   test('Metronome effect', () => {
-    const wrap = {key: ['Battle.durationCallback', 'Pokemon.addVolatile'], value: MIN};
     const battle = startBattle([
-      METRONOME('Wrap'), HIT, NO_CRIT, MIN_DMG, wrap,
+      METRONOME('Wrap'), HIT, NO_CRIT, MIN_DMG, MIN_WRAP,
       METRONOME('Petal Dance'), HIT, THRASH(3), SS_RES,
       MISS,
       MISS, CFZ(2),
@@ -3979,7 +3971,7 @@ describe('Gen 1', () => {
 
   test('Transform effect', () => {
     const no_crit = {
-      key: CRIT.key,
+      ...CRIT,
       value: ranged(Math.floor(gen.species.get('Articuno')!.baseStats.spe / 2), 256),
     };
     const battle = startBattle([
@@ -4200,8 +4192,9 @@ describe('Gen 1', () => {
   });
 
   test('Disable + Bide bug', () => {
+    const next = {key: 'sim/battle.ts:1479:10', value: SS_RUN.value};
     const battle = startBattle([
-      BIDE(3), HIT, DISABLE_MOVE(1, 2), DISABLE_DURATION(5), SS_RUN, SS_RUN,
+      BIDE(3), HIT, DISABLE_MOVE(1, 2), DISABLE_DURATION(5), next, next,
     ], [
       {species: 'Voltorb', evs, moves: ['Teleport', 'Disable']},
     ], [
@@ -4760,7 +4753,7 @@ describe('Gen 1', () => {
   });
 
   test('Wrap locking + KOs bug', () => {
-    const proc = {key: HIT.key, value: MIN};
+    const proc = SECONDARY(MIN);
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, proc, SS_MOD, HIT, NO_CRIT, MIN_DMG, MIN_WRAP,
       HIT, MISS, HIT, NO_CRIT, MIN_DMG, proc, SS_MOD, MISS,
@@ -5170,7 +5163,7 @@ describe('Gen 1', () => {
   });
 
   test('Freeze top move selection glitch', () => {
-    const NO_BRN = {key: FRZ.key, value: FRZ.value + 1};
+    const NO_BRN = {...FRZ, value: FRZ.value + 1};
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD, HIT, NO_CRIT, MIN_DMG,
       HIT, NO_CRIT, MIN_DMG, NO_BRN,
@@ -5227,7 +5220,7 @@ describe('Gen 1', () => {
   });
 
   test('Toxic counter glitches', () => {
-    const BRN = {key: HIT.key, value: ranged(77, 256) - 1};
+    const BRN = SECONDARY(ranged(77, 256) - 1);
     const battle = startBattle([
       HIT, SS_MOD, SS_MOD, SLP(5), HIT, HIT, NO_CRIT, MIN_DMG, BRN, SS_MOD,
     ], [
@@ -5273,7 +5266,7 @@ describe('Gen 1', () => {
   });
 
   test('Defrost move forcing', () => {
-    const NO_BRN = {key: FRZ.key, value: FRZ.value + 1};
+    const NO_BRN = {...FRZ, value: FRZ.value + 1};
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
       HIT, NO_CRIT, MIN_DMG, NO_BRN, HIT, NO_CRIT, MIN_DMG,
@@ -5475,7 +5468,7 @@ describe('Gen 1', () => {
   });
 
   test('Hyper Beam + Freeze permanent helplessness', () => {
-    const NO_BRN = {key: FRZ.key, value: FRZ.value + 1};
+    const NO_BRN = {...FRZ, value: FRZ.value + 1};
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
       HIT, NO_CRIT, MIN_DMG, NO_BRN, MISS,
@@ -5845,7 +5838,7 @@ describe('Gen 1', () => {
   });
 
   test('Stat down modifier overflow glitch', () => {
-    const proc = {key: HIT.key, value: ranged(85, 256) - 1};
+    const proc = SECONDARY(ranged(85, 256) - 1);
     // 342 -> 1026
     {
       const spc342 = {...evs, spa: 12, spd: 12};
@@ -6120,8 +6113,8 @@ describe('Gen 1', () => {
   });
 
   test('Rage and Thrash / Petal Dance accuracy bug', () => {
-    const hit = (n: number) => ({key: HIT.key, value: ranged(n, 256) - 1});
-    const miss = (n: number) => ({key: HIT.key, value: hit(n).value + 1});
+    const hit = (n: number) => ({...HIT, value: ranged(n, 256) - 1});
+    const miss = (n: number) => ({...HIT, value: hit(n).value + 1});
     const battle = startBattle([
       hit(255), NO_CRIT, MIN_DMG, THRASH(4),
       hit(168), NO_CRIT, MIN_DMG,
@@ -6314,7 +6307,7 @@ describe('Gen 1', () => {
   });
 
   test('Psywave infinite loop', () => {
-    const PSY_MAX = {key: 'Battle.damageCallback', value: MAX};
+    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:617:32', value: MAX};
     const battle = startBattle([HIT, HIT, PSY_MAX], [
       {species: 'Charmander', evs, level: 1, moves: ['Psywave']},
     ], [

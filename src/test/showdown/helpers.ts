@@ -2,7 +2,7 @@ import {Battle, ID, PRNG, PRNGSeed} from '@pkmn/sim';
 import {Generation, PokemonSet} from '@pkmn/data';
 
 export interface Roll {
-  key: string | string[];
+  key: string;
   value: number;
 }
 
@@ -10,22 +10,38 @@ export const MIN = 0;
 export const MAX = 0xFFFFFFFF;
 export const NOP = 42;
 
-export const ROLLS: {[category: string]: {[name: string]: Roll}} = {
-  basic: {
-    HIT: {key: 'BattleActions.tryMoveHit', value: MIN},
-    MISS: {key: 'BattleActions.tryMoveHit', value: MAX},
-    CRIT: {key: ['Battle.randomChance', 'BattleActions.getDamage'], value: MIN},
-    NO_CRIT: {key: ['Battle.randomChance', 'BattleActions.getDamage'], value: MAX},
-    MIN_DMG: {key: ['Battle.random', 'BattleActions.getDamage'], value: MIN},
-    MAX_DMG: {key: ['Battle.random', 'BattleActions.getDamage'], value: MAX},
+export const ROLLS = {
+  basic(keys: {hit: string; crit: string; dmg: string}) {
+    return {
+      HIT: {key: keys.hit, value: MIN},
+      MISS: {key: keys.hit, value: MAX},
+      CRIT: {key: keys.crit, value: MIN},
+      NO_CRIT: {key: keys.crit, value: MAX},
+      MIN_DMG: {key: keys.dmg, value: MIN},
+      MAX_DMG: {key: keys.dmg, value: MAX},
+      TIE: (n: 1 | 2) =>
+        ({key: 'sim/battle-queue.ts:404:15', value: ranged(n, 2) - 1}),
+      DRAG: (m: number, n = 5) =>
+        ({key: 'sim/battle.ts:1367:36', value: ranged(m - 1, n)}),
+    };
   },
   nops: {
-    SS_MOD: {key: ['Battle.speedSort', 'Pokemon.setStatus'], value: NOP},
-    SS_RES: {key: ['Battle.speedSort', 'Battle.residualEvent'], value: NOP},
-    SS_RUN: {key: ['Battle.speedSort', 'Battle.runEvent'], value: NOP},
-    SS_EACH: {key: ['Battle.speedSort', 'Battle.eachEvent'], value: NOP},
-    INS: {key: ['BattleQueue.insertChoice', 'BattleActions.switchIn'], value: NOP},
-    GLM: {key: 'Pokemon.getLockedMove', value: NOP},
+    SS_MOD: {key: 'sim/pokemon.ts:1606:40', value: NOP},
+    SS_RES: {key: 'sim/battle.ts:471:8', value: NOP},
+    SS_EACH: {key: 'sim/battle.ts:441:8', value: NOP},
+    INS: {key: 'sim/battle-queue.ts:384:70', value: NOP},
+    GLM: {key: 'sim/pokemon.ts:905:34', value: NOP},
+  },
+  metronome(gen: Generation, exclude: string[]) {
+    const all: string[] = Array.from(gen.moves)
+      .filter(m => !m.realMove && !exclude.includes(m.name))
+      .sort((a, b) => a.num - b.num)
+      .map(m => m.name);
+    return (move: string, skip: string[] = []) => {
+      const moves = all.filter(m => !skip.includes(m));
+      const value = ranged(moves.indexOf(move) + 1, moves.length) - 1;
+      return {key: 'data/moves.ts:11935:23', value};
+    };
   },
 };
 
@@ -84,14 +100,9 @@ export class FixedRNG extends PRNG {
     if (this.index >= this.rolls.length) throw new Error('Insufficient number of rolls provided');
     const roll = this.rolls[this.index++];
     const n = this.index;
-    const where = locations();
-    const locs = where.join(', ');
-    if (Array.isArray(roll.key)) {
-      if (!roll.key.every(k => where.includes(k))) {
-        throw new Error(`Expected roll ${n} to be (${roll.key.join(', ')}) but got (${locs})`);
-      }
-    } else if (!where.includes(roll.key)) {
-      throw new Error(`Expected roll ${n} to be (${roll.key}) but got (${locs})`);
+    const where = location();
+    if (roll.key !== where) {
+      throw new Error(`Expected roll ${n} to be (${roll.key}) but got (${where})`);
     }
     let result = roll.value;
     if (from) from = Math.floor(from);
@@ -141,27 +152,20 @@ function filter(raw: string[]) {
   return filtered;
 }
 
-const METHOD = /^ {4}at ((?:\w|\.)+) /;
+const METHOD = /^ {4}at ((?:\w|\.)+) \((.*\d)\)/;
 const NON_TERMINAL = new Set([
   'FixedRNG.next', 'FixedRNG.randomChance', 'FixedRNG.sample', 'FixedRNG.shuffle',
-  'Battle.random', 'Battle.randomChance', 'Battle.sample', 'locations',
+  'Battle.random', 'Battle.randomChance', 'Battle.sample', 'location', 'Battle.speedSort',
+  'Battle.runEvent',
 ]);
 
-function locations() {
-  const results = [];
-  let last: string | undefined = undefined;
+function location() {
   for (const line of new Error().stack!.split('\n').slice(1)) {
     const match = METHOD.exec(line);
     if (!match) continue;
-    const m = match[1];
-    if (NON_TERMINAL.has(m)) {
-      last = m;
-      continue;
-    }
-    if (!results.length && last) results.push(last);
-    results.push(m);
+    if (!NON_TERMINAL.has(match[1])) return match[2].replace(/.*@pkmn\/sim\//, '');
   }
-  return results;
+  throw new Error('Unknown location');
 }
 
 export function verify(battle: Battle, expected: string[]) {
