@@ -1,3 +1,5 @@
+import * as path from 'path';
+
 import {Battle, ID, PRNG, PRNGSeed} from '@pkmn/sim';
 import {Generation, PokemonSet} from '@pkmn/data';
 
@@ -163,7 +165,9 @@ function location() {
   for (const line of new Error().stack!.split('\n').slice(1)) {
     const match = METHOD.exec(line);
     if (!match) continue;
-    if (!NON_TERMINAL.has(match[1])) return match[2].replace(/.*@pkmn\/sim\//, '');
+    if (!NON_TERMINAL.has(match[1])) {
+      return match[2].replaceAll(path.sep, '/').replace(/.*@pkmn\/sim\//, '');
+    }
   }
   throw new Error('Unknown location');
 }
