@@ -49,16 +49,8 @@ $ zig build --prefix /usr/local -Drelease-fast
 
 The Zig website has [installation instructions](https://ziglang.org/learn/getting-started/) which
 walk through how to install Zig on each platform - the engine code should work on Zig v0.9.0 or
-greater, ~~though tracks Zig's master branch so this may change in the future if breaking language
-changes are introduced~~ and usually tracks Zig's master branch, but **currently is pinned to
-v0.11.0-dev.251+7c527c6df as due to several Zig compiler bugs the engine is forced to rely on the
-[obsolete `-fstage1` flag](https://github.com/ziglang/zig/pull/13560)**:
-
-- [self referential array memory corruption (#13415)](https://github.com/ziglang/zig/issues/13415)
-- [list of declarations returned from `@typeInfo` wrong when using `usingnamespace`
-  (#12403)](https://github.com/ziglang/zig/issues/12403)
-- [regression in package entry path resolution
-  (#13784)](https://github.com/ziglang/zig/issues/13784)
+greater, though tracks Zig's master branch so this may change in the future if breaking language
+changes are introduced:
 
 `libpkmn` can be built with `-Dshowdown` to instead produce the Pokémon Showdown compatible
 `libpkmn-showdown` library. Furthermore, trace logging can be enabled through `-Dtrace`. The

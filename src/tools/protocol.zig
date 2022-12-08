@@ -1,3 +1,4 @@
+// BUG: /ziglang/zig#12403
 const std = @import("std");
 
 const pkmn = @import("pkmn");
