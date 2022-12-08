@@ -8226,10 +8226,7 @@ fn Test(comptime rolls: anytype) type {
             p2: *data.Side,
         },
 
-        pub fn init(
-            pokemon1: []const Pokemon,
-            pokemon2: []const Pokemon,
-        ) *Self {
+        pub fn init(pokemon1: []const Pokemon, pokemon2: []const Pokemon) *Self {
             var t = std.testing.allocator.create(Self) catch unreachable;
 
             t.battle.expected = Battle.fixed(rolls, pokemon1, pokemon2);
