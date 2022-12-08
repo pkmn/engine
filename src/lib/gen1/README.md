@@ -595,12 +595,10 @@ changes or dramatically deviating from the correct control flow):
   an extra turn depending on whether the foe faints, Bide cannot be disabled by Disable while in
   effect, Bide's accumulated damage is not zeroed when an opponennt faints, and the opponent having
   a Substitute blanks the damage unleashed by Bide.
-- **Transform**: Due to how Pokémon Showdown implements stat modifications, Transform-ed Pokémon can
-  end up with incorrect stats after modifiers (boosts and statuses) are applied. Furthermore,
-  Transform screws up the effect of Disable, because on Pokémon Showdown, Disable prevents moves of
-  a given *name* from being used (e.g. "Water Gun") as opposed to moves in a specific *slot* (e.g.
-  the 2nd move slot), and a Pokémon's moves can change after Transform (this is not an issue with
-  Disable + Mimic because Mimic happens to replace the same slot).
+- **Transform**:  Transform screws up the effect of Disable, because on Pokémon Showdown, Disable
+  prevents moves of a given *name* from being used (e.g. "Water Gun") as opposed to moves in a
+  specific *slot* (e.g. the 2nd move slot), and a Pokémon's moves can change after Transform (this
+  is not an issue with Disable + Mimic because Mimic happens to replace the same slot).
 
 ## RNG
 

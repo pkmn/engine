@@ -5096,27 +5096,14 @@ test "Transform effect" {
     try expectEqual(t.actual.p2.active.types, t.actual.p1.active.types);
     try expectEqual(@as(u8, 50), t.actual.p1.get(1).level);
 
-    // BUG: Pokémon Showdown does wonky things with stats
     inline for (@typeInfo(@TypeOf(t.actual.p1.get(1).stats)).Struct.fields) |field| {
         if (!std.mem.eql(u8, field.name, "hp")) {
-            // if (showdown) {
-            //     try expectEqual(
-            //         @field(t.actual.p2.get(1).stats, field.name),
-            //         @field(t.actual.p1.get(1).stats, field.name),
-            //     );
-            // } else {
             try expectEqual(
                 @field(t.actual.p2.active.stats, field.name),
                 @field(t.actual.p1.active.stats, field.name),
             );
-            try expect(@field(t.actual.p2.get(1).stats, field.name) !=
-                @field(t.actual.p1.get(1).stats, field.name));
-            // }
         }
     }
-    // try expectEqual(@as(u16, if (showdown) 268 else 151), t.actual.p1.get(1).stats.spe);
-    try expectEqual(@as(u16, 151), t.actual.p1.get(1).stats.spe);
-    try expectEqual(@as(u16, 268), t.actual.p2.get(1).stats.spe);
     try expectEqual(t.actual.p2.active.boosts, t.actual.p1.active.boosts);
 
     const moves = [_]Move{ .Agility, .Fly, .Peck, .None };
@@ -5154,29 +5141,16 @@ test "Transform effect" {
     try t.log.expected.boost(P1.ident(1), .Speed, 2);
     try t.log.expected.turn(6);
 
-    // Stats get wonky on Pokémon Showdown...
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
     inline for (@typeInfo(@TypeOf(t.actual.p1.get(1).stats)).Struct.fields) |field| {
         if (!std.mem.eql(u8, field.name, "hp")) {
-            // if (showdown) {
-            //     try expectEqual(
-            //         @field(t.actual.p2.get(1).stats, field.name),
-            //         @field(t.actual.p1.get(1).stats, field.name),
-            //     );
-            // } else {
             try expectEqual(
                 @field(t.actual.p2.active.stats, field.name),
                 @field(t.actual.p1.active.stats, field.name),
             );
-            try expect(@field(t.actual.p2.get(1).stats, field.name) !=
-                @field(t.actual.p1.get(1).stats, field.name));
-            // }
         }
     }
-    // try expectEqual(@as(u16, if (showdown) 268 else 151), t.actual.p1.get(1).stats.spe);
-    try expectEqual(@as(u16, 151), t.actual.p1.get(1).stats.spe);
-    try expectEqual(@as(u16, 268), t.actual.p2.get(1).stats.spe);
     try expectEqual(t.actual.p2.active.boosts, t.actual.p1.active.boosts);
 
     try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));

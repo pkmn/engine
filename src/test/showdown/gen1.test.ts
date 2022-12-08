@@ -4004,10 +4004,6 @@ describe('Gen 1', () => {
     expect(battle.p1.pokemon[0].types).toEqual(battle.p2.pokemon[0].types);
     expect(battle.p1.pokemon[0].level).toBe(50);
     expect(battle.p1.pokemon[0].modifiedStats).toEqual(battle.p2.pokemon[0].modifiedStats);
-    // expect(battle.p1.pokemon[0].storedStats).not.toEqual(battle.p2.pokemon[0].storedStats);
-    expect(battle.p1.pokemon[0].storedStats.spe).toBe(268);
-    expect(battle.p2.pokemon[0].storedStats.spe).toBe(268);
-    expect(battle.p1.pokemon[0].storedStats).toEqual(battle.p2.pokemon[0].storedStats);
     expect(battle.p1.pokemon[0].boosts).toEqual(battle.p2.pokemon[0].boosts);
 
     expect(battle.p1.pokemon[0].moveSlots).toHaveLength(3);
@@ -4021,13 +4017,8 @@ describe('Gen 1', () => {
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 35);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 20);
 
-    // Stats get wonky on Pokémon Showdown...
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].modifiedStats).toEqual(battle.p2.pokemon[0].modifiedStats);
-    // expect(battle.p1.pokemon[0].storedStats).not.toEqual(battle.p2.pokemon[0].storedStats);
-    // expect(battle.p1.pokemon[0].storedStats.spe).toBe(151);
-    expect(battle.p1.pokemon[0].storedStats.spe).toBe(268);
-    expect(battle.p2.pokemon[0].storedStats.spe).toBe(268);
     expect(battle.p1.pokemon[0].boosts).toEqual(battle.p2.pokemon[0].boosts);
 
     battle.makeChoices('switch 2', 'move 1');
