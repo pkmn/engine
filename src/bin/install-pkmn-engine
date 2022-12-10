@@ -94,10 +94,9 @@ const unpack = async (input, output) => {
   }
 };
 
-// https://github.com/coilhq/tigerbeetle/blob/main/scripts/install_zig.sh
-const install = async () => {
+const find = zig => {
   try {
-    const {zig_exe, version} = JSON.parse(sh('zig', ['env']));
+    const {zig_exe, version} = JSON.parse(sh(zig, ['env']));
     const [major, minor, patch] = version.split('.').map(n => parseInt(n));
     if (major > ZIG_VERSION.major ||
       (major >= ZIG_VERSION.major && minor > ZIG_VERSION.minor) ||
@@ -110,6 +109,19 @@ const install = async () => {
   } catch (err) {
     if (err.code !== 'ENOENT') throw err;
   }
+};
+
+// https://github.com/coilhq/tigerbeetle/blob/main/scripts/install_zig.sh
+const install = async () => {
+  // Is there an existing compatible system Zig executable in the PATH?
+  const system = find('zig');
+  if (system) return system;
+
+  const dir = path.join(ROOT, 'build', 'bin');
+  const zig = `${dir}/zig/zig`;
+
+  // Has a previous version of this script installed a compatible version locally?
+  if (find(zig)) return zig;
 
   const arch = process.arch === 'x64'
     ? 'x86_64' : process.arch === 'arm64'
@@ -118,14 +130,15 @@ const install = async () => {
     ? 'macos' : process.platform === 'win32'
       ? 'windows' : process.platform;
 
-  const dir = path.join(ROOT, 'build', 'bin');
   try {
     fs.mkdirSync(dir, {recursive: true});
   } catch (err) {
     if (err.code !== 'EEXIST') throw err;
   }
 
-  const url = JSON.parse(await fetch(INDEX))[VERSION][`${arch}-${platform}`].tarball;
+  const index = JSON.parse(await fetch(INDEX));
+  const version = Object.keys(index)[1];
+  const url = index[version][`${arch}-${platform}`].tarball;
 
   let base = path.basename(url);
   const archive = `${dir}/${path.basename(url)}`;
@@ -143,13 +156,12 @@ const install = async () => {
 
   fs.renameSync(`${dir}/${base}`, `${dir}/zig`);
 
-  const zig = `${dir}/zig/zig`;
   try {
     fs.chmodSync(zig, 0o755);
   } catch (err) {
     if (err.code !== 'ENOENT') throw err;
   }
-  console.log(`Zig v${VERSION} executable:`, zig);
+  console.log(`Zig v${version} executable:`, zig);
 
   return zig;
 };
