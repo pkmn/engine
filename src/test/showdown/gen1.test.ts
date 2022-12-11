@@ -10,14 +10,14 @@ const choices = gen1.Choices.sim;
 const startBattle = createStartBattle(gen);
 
 const {HIT, MISS, CRIT, NO_CRIT, MIN_DMG, MAX_DMG, TIE} = ROLLS.basic({
-  hit: 'data/mods/gen1/scripts.ts:385:42',
-  crit: 'data/mods/gen1/scripts.ts:780:27',
-  dmg: 'data/mods/gen1/scripts.ts:897:27',
+  hit: 'data/mods/gen1/scripts.ts:380:42',
+  crit: 'data/mods/gen1/scripts.ts:778:27',
+  dmg: 'data/mods/gen1/scripts.ts:895:27',
 });
 const {SS_MOD, SS_RES, SS_EACH, INS, GLM} = ROLLS.nops;
 
-const SS_RUN = {key: 'data/mods/gen1/scripts.ts:139:33', value: SS_MOD.value};
-const SECONDARY = (value: number) => ({key: 'data/mods/gen1/scripts.ts:669:25', value});
+const SS_RUN = {key: 'data/mods/gen1/scripts.ts:144:33', value: SS_MOD.value};
+const SECONDARY = (value: number) => ({key: 'data/mods/gen1/scripts.ts:667:25', value});
 const SLP = (n: number) =>
   ({key: 'data/mods/gen1/conditions.ts:61:38', value: ranged(n, 8 - 1)});
 const DISABLE_MOVE = (m: number, n = 4) =>
@@ -40,7 +40,7 @@ const THRASH = (n: 3 | 4) =>
   ({key: 'data/mods/gen1/conditions.ts:230:16', value: ranged(n - 2, 5 - 3) - 1});
 const MIN_WRAP = {key: 'data/mods/gen1/conditions.ts:199:26', value: MIN};
 const MAX_WRAP = {...MIN_WRAP, value: MAX};
-const REWRAP = {key: 'data/mods/gen1/scripts.ts:214:38', value: MIN};
+const REWRAP = {key: 'data/mods/gen1/scripts.ts:219:38', value: MIN};
 const METRONOME = ROLLS.metronome(gen, ['Metronome', 'Struggle']);
 
 const evs = {hp: 255, atk: 255, def: 255, spa: 255, spd: 255, spe: 255};
@@ -807,7 +807,7 @@ describe('Gen 1', () => {
   });
 
   test('MultiHit effect', () => {
-    const hit3 = {key: 'data/mods/gen1/scripts.ts:400:27', value: 0x60000000};
+    const hit3 = {key: 'data/mods/gen1/scripts.ts:395:27', value: 0x60000000};
     const hit5 = {...hit3, value: MAX};
     const battle = startBattle([HIT, hit3, NO_CRIT, MAX_DMG, HIT, hit5, NO_CRIT, MAX_DMG], [
       {species: 'Kangaskhan', evs, moves: ['Comet Punch']},
@@ -2847,7 +2847,7 @@ describe('Gen 1', () => {
   });
 
   test('Counter effect', () => {
-    const hit2 = {key: 'data/mods/gen1/scripts.ts:400:27', value: MIN};
+    const hit2 = {key: 'data/mods/gen1/scripts.ts:395:27', value: MIN};
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, NO_PAR, HIT,
       HIT, hit2, NO_CRIT, MIN_DMG, HIT,
@@ -2887,9 +2887,9 @@ describe('Gen 1', () => {
     expect(battle.p1.pokemon[0].hp).toBe(voltorb);
     expect(battle.p2.pokemon[0].hp).toBe(chansey);
 
-    // Works on fixed damage moves, but Sonic Boom fails on Pokémon Showdown
+    // Works on fixed damage moves including Sonic Boom
     battle.makeChoices('move 4', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(voltorb);
+    expect(battle.p1.pokemon[0].hp).toBe(voltorb -= 40);
     expect(battle.p2.pokemon[0].hp).toBe(chansey -= 20);
 
     battle.makeChoices('move 2', 'move 1');
@@ -2900,11 +2900,11 @@ describe('Gen 1', () => {
     battle.makeChoices('switch 2', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(gengar -= 68);
 
-    // Pokémon Showdown claims certain zero damage moves like Teleport should not reset it
+    // Certain zero damage moves like Teleport should not reset it
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(gengar);
 
-    // Fixed damage works with Seismic Toss on Pokémon Showdown
+    // Fixed damage works with Seismic Toss
     battle.makeChoices('move 2', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(gengar -= 200);
     expect(battle.p2.pokemon[0].hp).toBe(chansey -= 100);
@@ -2940,14 +2940,14 @@ describe('Gen 1', () => {
       '|move|p1a: Voltorb|Sonic Boom|p2a: Chansey',
       '|-damage|p2a: Chansey|580/703',
       '|move|p2a: Chansey|Counter|p1a: Voltorb',
-      '|-fail|p2a: Chansey',
+      '|-damage|p1a: Voltorb|209/283',
       '|turn|5',
       '|move|p1a: Voltorb|Double Slap|p2a: Chansey',
       '|-damage|p2a: Chansey|563/703',
       '|-damage|p2a: Chansey|546/703',
       '|-hitcount|p2a: Chansey|2',
       '|move|p2a: Chansey|Counter|p1a: Voltorb',
-      '|-damage|p1a: Voltorb|215/283',
+      '|-damage|p1a: Voltorb|175/283',
       '|turn|6',
       '|switch|p1a: Gengar|Gengar|323/323',
       '|move|p2a: Chansey|Counter|p1a: Gengar',
@@ -4183,7 +4183,7 @@ describe('Gen 1', () => {
   });
 
   test('Disable + Bide bug', () => {
-    const next = {key: 'sim/battle.ts:1479:10', value: SS_RUN.value};
+    const next = {key: 'sim/battle.ts:1483:10', value: SS_RUN.value};
     const battle = startBattle([
       BIDE(3), HIT, DISABLE_MOVE(1, 2), DISABLE_DURATION(5), next, next,
     ], [
@@ -4456,14 +4456,14 @@ describe('Gen 1', () => {
         {species: 'Chansey', evs, moves: ['Teleport', 'Metronome']},
       ]);
 
-      let p1hp = battle.p1.pokemon[0].hp;
+      const p1hp = battle.p1.pokemon[0].hp;
       let p2hp = battle.p2.pokemon[0].hp;
 
       battle.makeChoices('move 1', 'move 1');
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
 
       battle.makeChoices('move 1', 'move 2');
-      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 200);
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
 
       verify(battle, [
@@ -4473,7 +4473,7 @@ describe('Gen 1', () => {
         '|turn|2',
         '|move|p2a: Chansey|Metronome|p2a: Chansey',
         '|move|p2a: Chansey|Counter|p1a: Snorlax|[from]Metronome',
-        '|-damage|p1a: Snorlax|323/523',
+        '|-fail|p2a: Chansey',
         '|move|p1a: Snorlax|Seismic Toss|p2a: Chansey',
         '|-damage|p2a: Chansey|503/703',
         '|turn|3',
@@ -4487,11 +4487,11 @@ describe('Gen 1', () => {
         {species: 'Chansey', evs, moves: ['Metronome']},
       ]);
 
-      let p1hp = battle.p1.pokemon[0].hp;
+      const p1hp = battle.p1.pokemon[0].hp;
       let p2hp = battle.p2.pokemon[0].hp;
 
       battle.makeChoices('move 1', 'move 1');
-      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 200);
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
 
       verify(battle, [
@@ -4499,7 +4499,7 @@ describe('Gen 1', () => {
         '|-damage|p2a: Chansey|603/703',
         '|move|p2a: Chansey|Metronome|p2a: Chansey',
         '|move|p2a: Chansey|Counter|p1a: Alakazam|[from]Metronome',
-        '|-damage|p1a: Alakazam|113/313',
+        '|-fail|p2a: Chansey',
         '|turn|2',
       ]);
     }

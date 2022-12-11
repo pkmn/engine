@@ -709,7 +709,6 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
         const m = side.last_selected_move;
         const eff1 = @enumToInt(move.type.effectiveness(foe.active.types.type1));
         const eff2 = @enumToInt(move.type.effectiveness(foe.active.types.type2));
-        // Sonic Boom incorrectly checks type immunity on Pokémon Showdown
         if (move.target != .Self and (eff1 == 0 or eff2 == 0) and !special or
             (m == .DreamEater and !Status.is(foe.stored().status, .SLP)))
         {
@@ -758,8 +757,7 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
 
         if (counter) return counterDamage(battle, player, move, log);
 
-        // Pokémon Showdown has broken `Battle.lastDamage` handling
-        if (!showdown) battle.last_damage = 0;
+        battle.last_damage = 0;
 
         // Disassembly does a check to allow 0 BP MultiHit moves but this isn't possible in practice
         assert(move.effect != .MultiHit or move.bp > 0);
@@ -783,9 +781,8 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
         }
     }
 
-    if (showdown and skip and move.effect != .Bide and move.effect != .Metronome) {
-        battle.last_damage = 0;
-    }
+    // Due to control flow shenanigans we need to clear last_damage for Pokémon Showdown
+    if (showdown and skip and move.effect != .Bide) battle.last_damage = 0;
 
     miss = if (showdown or skip)
         miss
@@ -856,7 +853,6 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
 
     var nullified = false;
     var hit: u4 = 0;
-    const damage = battle.last_damage;
     while (hit < hits) {
         if (hit == 0) {
             if (crit) try log.crit(battle.active(player.foe()));
@@ -866,12 +862,7 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
                 try log.resisted(battle.active(player.foe()));
             }
         }
-        if (!skip) {
-            // Pokémon Showdown clears last_damage when attacking a Substitute so subsequent
-            // hits would return 0 if we didn't reset the damage before applying it again
-            battle.last_damage = damage;
-            nullified = try applyDamage(battle, player.foe(), player.foe(), .None, log);
-        }
+        if (!skip) nullified = try applyDamage(battle, player.foe(), player.foe(), .None, log);
         if (hit == 0 and ohko) try log.ohko();
         hit += 1;
         if (foe.stored().hp == 0) break;
@@ -1108,13 +1099,11 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
         foe.last_selected_move);
 
     const used = foe_last_used_move.bp > 0 and
-        !(showdown and foe.last_used_move == .SonicBoom) and
         foe.last_used_move != .Counter and
         (foe_last_used_move.type == .Normal or
         foe_last_used_move.type == .Fighting);
 
     const selected = foe_last_selected_move.bp > 0 and
-        !(showdown and foe.last_selected_move == .SonicBoom) and
         foe.last_selected_move != .Counter and
         (foe_last_selected_move.type == .Normal or
         foe_last_selected_move.type == .Fighting);

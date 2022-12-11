@@ -534,23 +534,8 @@ left up to a client to support.
 ### Unimplementable
 
 Numerous moves on Pokémon Showdown are broken not simply due to local issues in the implementation
-of their effects but instead due to **global issues** related to fundamental mechanics. For example,
-Pokémon Showdown's tracking of `wDamage` (`battle.last_damage` in the pkmn engine) is incorrect as
-it confuses its `Pokemon.lastDamage` field with the `Battle.lastDamage` field its Counter /
-Substitute / Bide implementations rely on.
-
-- `Battle.lastDamage` (Counter)
-  - updated in `spreadDamage` for non-status moves
-  - zeroed in `useMove` after `tryMoveHit`
-  - used by Counter to determine success and damage
-- `Pokemon.lastDamage` (Substitute)
-  - zeroed at the start of `runMove` between `BeforeMove` and deducting PP
-  - zeroed in `tryMoveHit` after determining the move hit
-  - read and updated by Substitute
-- `effectState.lastDamage` (Bide):
-  - updated by Bide, use to determine the amount of damage the move eventually does
-
-Further global engine issues such as [broken move
+of their effects but instead due to **global issues** related to fundamental mechanics such as
+[broken move
 selection](https://www.smogon.com/forums/threads/rby-fight-button-simulation-improvements-fix-partial-trapping-improve-counter.3673280/#post-8655897),
 using move name instead of slot to determine move identity, implementing volatiles statuses
 incorrectly or not understanding how moves which call other moves work means that it isn't possible
@@ -567,11 +552,8 @@ changes or dramatically deviating from the correct control flow):
   glitch](https://glitchcity.wiki/Trapping_move_and_sleep_glitch), Wrap does 0 damage against
   Ghost-type Pokémon instead of properly respecting immunity, and trapping effects are handled in
   the wrong order in the code.
-- **Counter**: In addition to the `last_damage` issues covered above (which among other
-  things means that Sonic Boom zeros Counter damage), on Pokémon Showdown Counter can be called with
-  Metronome at regular priority (as opposed to failing as it would on cartridge) and choices made
-  while sleeping (which should not have been registered) can erroneously cause Counter to trigger
-  Desync Clause Mod behavior.
+- **Counter**: On Pokémon Showdown hoices made while sleeping (which should not have been
+  registered) can erroneously cause Counter to trigger Desync Clause Mod behavior.
 - **Mimic**: Pokémon Showdown checks that the user of Mimic has Mimic in one of their move slots,
   which means Mimic legally called via Metronome or Mirror Move will only work if the user also has
   Mimic (and the moved mimicked by Mimic called via Metronome / Mirror Move will erroneously
@@ -590,11 +572,12 @@ changes or dramatically deviating from the correct control flow):
   respect to charging moves, and even with this bug fixed they cannot mutually call each other
   more than 3 times in a row without causing the Pokémon Showdown simulator to crash due to
   defensive safety checks that do not exist on the cartridge.
-- **Bide**: In addition to the `last_damage` issues covered above (which result in Bide often
-  inflicting the wrong amount of accumulated damage), on Pokémon Showdown Bide can erroneously last
-  an extra turn depending on whether the foe faints, Bide cannot be disabled by Disable while in
-  effect, Bide's accumulated damage is not zeroed when an opponennt faints, and the opponent having
-  a Substitute blanks the damage unleashed by Bide.
+- **Bide**: Pokémon Showdown's Bide implementation uses its own `lastDamage` field instead of using
+  the `Battle.last_damage` field which results in Bide often inflicting the wrong amount of
+  accumulated damage). Furthermore, on Pokémon Showdown Bide can erroneously last an extra turn
+  depending on whether the foe faints, Bide cannot be disabled by Disable while in effect, Bide's
+  accumulated damage is not zeroed when an opponennt faints, and the opponent having a Substitute
+  blanks the damage unleashed by Bide.
 - **Transform**:  Transform screws up the effect of Disable, because on Pokémon Showdown, Disable
   prevents moves of a given *name* from being used (e.g. "Water Gun") as opposed to moves in a
   specific *slot* (e.g. the 2nd move slot), and a Pokémon's moves can change after Transform (this

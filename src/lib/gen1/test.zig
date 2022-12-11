@@ -3675,15 +3675,11 @@ test "Counter effect" {
     t.expected.p2.get(1).hp -= 20;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(1), null);
-    if (showdown) {
-        try t.log.expected.fail(P2.ident(1), .None);
-    } else {
-        t.expected.p1.get(1).hp -= 40;
-        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-    }
+    t.expected.p1.get(1).hp -= 40;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
     try t.log.expected.turn(5);
 
-    // Works on fixed damage moves, but Sonic Boom fails on Pokémon Showdown
+    // Works on fixed damage moves including Sonic Boom
     try expectEqual(Result.Default, try t.update(move(4), move(1)));
 
     try t.log.expected.move(P1.ident(1), Move.DoubleSlap, P2.ident(1), null);
@@ -3713,7 +3709,7 @@ test "Counter effect" {
     try t.log.expected.fail(P2.ident(1), .None);
     try t.log.expected.turn(8);
 
-    // Pokémon Showdown claims certain zero damage moves like Teleport should not reset it
+    // Certain zero damage moves like Teleport should not reset it
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
     try t.log.expected.move(P1.ident(2), Move.SeismicToss, P2.ident(1), null);
@@ -3724,7 +3720,7 @@ test "Counter effect" {
     try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
     try t.log.expected.turn(9);
 
-    // Fixed damage works with Seismic Toss on Pokémon Showdown
+    // Fixed damage works with Seismic Toss
     try expectEqual(Result.Default, try t.update(move(2), move(1)));
 
     try t.log.expected.switched(P1.ident(3), t.expected.p1.get(3));
@@ -5643,6 +5639,7 @@ test "Counter + sleep = Desync Clause Mod bug" {
     try t.verify();
 }
 
+// Fixed by smogon/pokemon-showdown#9156
 test "Counter via Metronome bug" {
     const counter = comptime metronome(.Counter);
 
@@ -5667,12 +5664,7 @@ test "Counter via Metronome bug" {
 
         try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
         try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(1), Move.Metronome);
-        if (showdown) {
-            t.expected.p1.get(1).hp -= 200;
-            try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-        } else {
-            try t.log.expected.fail(P2.ident(1), .None);
-        }
+        try t.log.expected.fail(P2.ident(1), .None);
         try t.log.expected.move(P1.ident(1), Move.SeismicToss, P2.ident(1), null);
         t.expected.p2.get(1).hp -= 100;
         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
@@ -5698,12 +5690,7 @@ test "Counter via Metronome bug" {
         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
         try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
         try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(1), Move.Metronome);
-        if (showdown) {
-            t.expected.p1.get(1).hp -= 200;
-            try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-        } else {
-            try t.log.expected.fail(P2.ident(1), .None);
-        }
+        try t.log.expected.fail(P2.ident(1), .None);
         try t.log.expected.turn(2);
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));

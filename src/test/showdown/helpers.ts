@@ -24,7 +24,7 @@ export const ROLLS = {
       TIE: (n: 1 | 2) =>
         ({key: 'sim/battle-queue.ts:404:15', value: ranged(n, 2) - 1}),
       DRAG: (m: number, n = 5) =>
-        ({key: 'sim/battle.ts:1367:36', value: ranged(m - 1, n)}),
+        ({key: 'sim/battle.ts:1371:36', value: ranged(m - 1, n)}),
     };
   },
   nops: {
@@ -42,7 +42,7 @@ export const ROLLS = {
     return (move: string, skip: string[] = []) => {
       const moves = all.filter(m => !skip.includes(m));
       const value = ranged(moves.indexOf(move) + 1, moves.length) - 1;
-      return {key: 'data/moves.ts:11935:23', value};
+      return {key: 'data/moves.ts:11939:23', value};
     };
   },
 };
