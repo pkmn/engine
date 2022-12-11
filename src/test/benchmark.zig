@@ -18,6 +18,9 @@ var last: u64 = 0;
 
 // type of ArrayList's toOwnedSlice changed from []u8 to ![]u8 due to ziglang/zig#13535
 const ret = @typeInfo(@TypeOf(@field(std.ArrayList(u8), "toOwnedSlice"))).Fn.return_type;
+// isAlpha was removed in favor of isAlphabetic in ziglang/zig#13370
+const isAlphabetic =
+    if (@hasDecl(std.ascii, "isAlphabetic")) std.ascii.isAlphabetic else std.ascii.isAlpha;
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -35,7 +38,7 @@ pub fn main() !void {
 
     var battles: ?usize = null;
     var duration: ?usize = null;
-    if (args[2].len > 1 and std.ascii.isAlpha(args[2][args[2].len - 1])) {
+    if (args[2].len > 1 and isAlphabetic(args[2][args[2].len - 1])) {
         fuzz = true;
         const end = args[2].len - 1;
         const mod: usize = switch (args[2][end]) {
