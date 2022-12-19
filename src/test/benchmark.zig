@@ -218,7 +218,9 @@ fn dump() !void {
     try bw.flush();
 }
 
-pub usingnamespace if (@typeInfo(@TypeOf(std.builtin.default_panic)).Fn.args.len == 3) struct {
+const default = @typeInfo(@TypeOf(std.builtin.default_panic)).Fn;
+const params = if (@hasField(@TypeOf(default), "params")) default.params else default.args;
+pub usingnamespace if (params.len == 3) struct {
     pub fn panic(
         msg: []const u8,
         error_return_trace: ?*std.builtin.StackTrace,
