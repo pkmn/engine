@@ -552,7 +552,7 @@ changes or dramatically deviating from the correct control flow):
   glitch](https://glitchcity.wiki/Trapping_move_and_sleep_glitch), Wrap does 0 damage against
   Ghost-type Pokémon instead of properly respecting immunity, and trapping effects are handled in
   the wrong order in the code.
-- **Counter**: On Pokémon Showdown hoices made while sleeping (which should not have been
+- **Counter**: On Pokémon Showdown choices made while sleeping (which should not have been
   registered) can erroneously cause Counter to trigger Desync Clause Mod behavior.
 - **Mimic**: Pokémon Showdown checks that the user of Mimic has Mimic in one of their move slots,
   which means Mimic legally called via Metronome or Mirror Move will only work if the user also has
