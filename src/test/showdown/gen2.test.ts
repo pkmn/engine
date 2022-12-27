@@ -611,7 +611,25 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('choices');
+  test('choices', () => {
+    const random = new PRNG([1, 2, 3, 4]);
+    const battle = new Battle({
+      formatid: formatFor(gen), ...gen2.Battle.options(gen, random) as any,
+    });
+
+    expect(choices(battle, 'p1')).toEqual([
+      'switch 2', 'switch 3', 'switch 4', 'switch 5', 'switch 6',
+      'move 1', 'move 2', 'move 3', 'move 4',
+    ]);
+
+    battle.p1.activeRequest!.forceSwitch = true;
+    expect(choices(battle, 'p1')).toEqual([
+      'switch 2', 'switch 3', 'switch 4', 'switch 5', 'switch 6',
+    ]);
+
+    battle.p1.activeRequest!.wait = true;
+    expect(choices(battle, 'p1')).toEqual([]);
+  });
 
   // Items
 

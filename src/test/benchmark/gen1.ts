@@ -47,7 +47,7 @@ const Player = new class {
       const evs = {} as StatsTable;
       for (const stat of gen.stats) {
         if (stat === 'spd') break;
-        ivs[stat] = prng.randomChance(1, 20) ? prng.next(0, 255 + 1) : 255;
+        evs[stat] = prng.randomChance(1, 20) ? prng.next(0, 255 + 1) : 255;
       }
       evs.spd = evs.spa;
 

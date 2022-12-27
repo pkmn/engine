@@ -35,7 +35,6 @@ const Log = protocol.Log(std.io.FixedBufferStream([]u8).Writer);
 
 pub const Options = struct {
     cleric: bool = showdown,
-    block: bool = showdown,
 };
 
 pub const Battle = struct {
@@ -165,9 +164,13 @@ pub const Pokemon = struct {
     }
 
     pub fn random(rand: *PSRNG, opt: Options) data.Pokemon {
-        const s = @intToEnum(Species, rand.range(u8, 1, 151 + 1));
+        const s = @intToEnum(Species, rand.range(u8, 1, Species.size + 1));
         const species = Species.get(s);
         const lvl = if (rand.chance(u8, 1, 20)) rand.range(u8, 1, 99 + 1) else 100;
+        // Pokémon Showdown does not support most items without in-battle held item effects
+        const max_item = @enumToInt(if (showdown) Item.FlowerMail else Item.TM50);
+        const item = if (rand.chance(u8, 1, 10)) 0 else rand.range(u8, 1, max_item + 1);
+
         var stats: Stats(u16) = .{};
         const dvs = gen1.DVs.random(rand);
         inline for (std.meta.fields(@TypeOf(stats))) |field| {
@@ -189,7 +192,6 @@ pub const Pokemon = struct {
             var m: Move = .None;
             sample: while (true) {
                 m = @intToEnum(Move, rand.range(u8, 1, 164 + 1));
-                if (opt.block and blocked(m)) continue :sample;
                 var j: u4 = 0;
                 while (j < i) : (j += 1) {
                     if (ms[j].id == m) continue :sample;
@@ -206,8 +208,6 @@ pub const Pokemon = struct {
                 .pp = if (opt.cleric) max_pp else rand.range(u8, 0, max_pp + 1),
             };
         }
-        // Pokémon Showdown does not support most items without in-battle held item effects
-        const maxItem = @enumToInt(if (showdown) Item.FlowerMail else Item.TM50);
         return .{
             .species = s,
             .types = species.types,
@@ -220,17 +220,11 @@ pub const Pokemon = struct {
             else
                 0,
             .happiness = if (rand.chance(u8, 1, 10 + 1)) rand.range(u8, 0, 255) else 255,
-            .item = @intToEnum(Item, rand.range(u8, 0, 1 + maxItem)),
+            .item = item,
             .moves = ms,
         };
     }
 };
-
-// cat src/test/blocklist.json | jq '."2".moves'
-fn blocked(m: Move) bool {
-    _ = m;
-    return false;
-}
 
 pub fn move(slot: u4) Choice {
     return .{ .type = .Move, .data = slot };
