@@ -31,8 +31,8 @@ const Player = new class {
     for (let i = 0; i < n; i++) {
       const species = lookup.speciesByNum(prng.next(1, 251 + 1));
       const level = prng.randomChance(1, 20) ? prng.next(1, 99 + 1) : 100;
-      const item = prng.randomChance(1, 10) ? undefined :
-        lookup.itemByNum(prng.next(1, 62 + 1));
+      const item = prng.randomChance(1, 10) ? undefined
+        : lookup.itemByNum(prng.next(1, 62 + 1));
 
       const ivs = {} as StatsTable;
       for (const stat of gen.stats) {

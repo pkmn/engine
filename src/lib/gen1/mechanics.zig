@@ -688,6 +688,18 @@ fn decrementPP(side: *Side, mslot: u4, auto: bool) void {
     assert(active.move(mslot).pp == side.stored().move(mslot).pp);
 }
 
+fn incrementPP(side: *Side, mslot: u4) void {
+    var active = &side.active;
+    const volatiles = &active.volatiles;
+
+    active.move(mslot).pp +%= 1;
+    // GLITCH: No check for Transform means an empty/incorrect stored slot can get incremented
+    if (showdown and volatiles.Transform) return;
+
+    assert(mslot > 0 and mslot <= 4);
+    side.stored().moves[mslot - 1].pp +%= 1;
+}
+
 // Pokémon Showdown does hit/multi/crit/damage instead of crit/damage/hit/multi
 fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
     var side = battle.side(player);
@@ -924,6 +936,8 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
         // puts the |-status| message before |-hitcount| instead of after.
         if (move.effect == .Twineedle) {
             if (!showdown) try Effects.poison(battle, player, Move.get(.PoisonSting), log);
+        } else if (move.effect == .Disable) {
+            return Effects.disable(battle, player, move, log);
         } else {
             try moveEffect(battle, player, move, mslot, log);
         }
@@ -1169,14 +1183,16 @@ fn mirrorMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result
     var side = battle.side(player);
     const foe = battle.foe(player);
 
+    side.last_selected_move = foe.last_used_move;
+
     if (foe.last_used_move == .None or foe.last_used_move == .MirrorMove) {
         try log.fail(battle.active(player), .None);
         return null;
     }
 
-    side.last_selected_move = foe.last_used_move;
+    incrementPP(side, mslot);
 
-    if (!try canMove(battle, player, mslot, false, true, .MirrorMove, log)) return null;
+    if (!try canMove(battle, player, mslot, false, false, .MirrorMove, log)) return null;
     return doMove(battle, player, mslot, log);
 }
 
@@ -1196,7 +1212,9 @@ fn metronome(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result 
         }
     };
 
-    if (!try canMove(battle, player, mslot, false, true, .Metronome, log)) return null;
+    incrementPP(side, mslot);
+
+    if (!try canMove(battle, player, mslot, false, false, .Metronome, log)) return null;
     return doMove(battle, player, mslot, log);
 }
 
@@ -1455,7 +1473,6 @@ fn moveEffect(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: 
         .BurnChance1, .BurnChance2 => Effects.burnChance(battle, player, move, log),
         .Confusion, .ConfusionChance => Effects.confusion(battle, player, move, log),
         .Conversion => Effects.conversion(battle, player, log),
-        .Disable => Effects.disable(battle, player, move, log),
         .DrainHP, .DreamEater => Effects.drainHP(battle, player, log),
         .Explode => Effects.explode(battle, player),
         .FlinchChance1, .FlinchChance2 => Effects.flinchChance(battle, player, move),
@@ -1600,24 +1617,38 @@ pub const Effects = struct {
         return log.typechange(battle.active(player), foe.active.types);
     }
 
-    fn disable(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
+    fn disable(battle: anytype, player: Player, move: Move.Data, log: anytype) !?Result {
         var foe = battle.foe(player);
         var volatiles = &foe.active.volatiles;
         const foe_ident = battle.active(player.foe());
 
         // Pokémon Showdown handles hit/miss earlier in doMove
-        if (!showdown and !try checkHit(battle, player, move, log)) return;
+        if (!showdown and !try checkHit(battle, player, move, log)) return null;
 
-        if (volatiles.disabled_move != 0) return try log.fail(foe_ident, .None);
+        if (volatiles.disabled_move != 0) {
+            try log.fail(foe_ident, .None);
+            return null;
+        }
 
         var n: u4 = 0;
+        var err = true;
         for (foe.active.moves) |m| {
-            if (m.pp > 0) n += 1;
+            if (m.pp > 0) {
+                n += 1;
+                if (m.id != .None) err = false;
+            }
         }
 
         // Technically this is still considered simply a "miss" on the cartridge,
         // but diverging from Pokémon Showdown here would mostly just be pedantic
-        if (n == 0) return try log.fail(foe_ident, .None);
+        if (n == 0) {
+            try log.fail(foe_ident, .None);
+            return null;
+        } else if (err) {
+            // GLITCH: Transform + Mirror Move / Metronome PP softlock
+            assert(!showdown);
+            return Result.Error;
+        }
 
         volatiles.disabled_move = @truncate(u3, randomMoveSlot(&battle.rng, &foe.active.moves, n));
         volatiles.disabled_duration = @truncate(u4, if (showdown)
@@ -1626,6 +1657,7 @@ pub const Effects = struct {
             (battle.rng.next() & 7) + 1);
 
         try log.startEffect(foe_ident, .Disable, foe.active.move(volatiles.disabled_move).id);
+        return null;
     }
 
     fn drainHP(battle: anytype, player: Player, log: anytype) !void {
@@ -2585,6 +2617,12 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
             }
             // Struggle (Pokémon Showdown would use 'move 1' here)
             if (n == before) {
+                // GLITCH: Transform + Mirror Move / Metronome PP softlock
+                if (!showdown) {
+                    while (slot <= 4) : (slot += 1) {
+                        if (active.moves[slot - 1].pp != 0) return n;
+                    }
+                }
                 out[n] = .{ .type = .Move, .data = 0 };
                 n += 1;
             }

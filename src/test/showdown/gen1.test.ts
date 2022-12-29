@@ -3807,6 +3807,8 @@ describe('Gen 1', () => {
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.lastMove!.id).toBe('mirrormove');
     expect(battle.p2.lastMove!.id).toBe('mirrormove');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(31);
+    expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(31);
 
     // Can Mirror Move regular attacks
     battle.makeChoices('move 2', 'move 1');
@@ -3814,37 +3816,43 @@ describe('Gen 1', () => {
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 43);
     expect(battle.p1.lastMove!.id).toBe('peck');
     expect(battle.p2.lastMove!.id).toBe('peck');
+    expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(30);
 
     battle.makeChoices('move 1', 'move 2');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 74);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 43);
     expect(battle.p1.lastMove!.id).toBe('peck');
     expect(battle.p2.lastMove!.id).toBe('swift');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(30);
 
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 74);
     expect(battle.p1.lastMove!.id).toBe('swift');
     expect(battle.p2.lastMove!.id).toBe('swift');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(29);
+    expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(29);
 
     // Should actually copy Swift and not Fly
     battle.makeChoices('move 3', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 74);
     expect(battle.p1.lastMove!.id).toBe('fly');
     expect(battle.p2.lastMove!.id).toBe('fly');
+    // expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(29);
+    expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(28);
 
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 86);
     expect(battle.p1.lastMove!.id).toBe('fly');
     expect(battle.p2.lastMove!.id).toBe('fly');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(29);
+    expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(28);
 
     // Switching resets last used moves
     battle.makeChoices('move 1', 'switch 2');
     expect(battle.p1.lastMove!.id).toBe('mirrormove');
     // expect(battle.p2.lastMove!.id).toBe('');
     expect(battle.p2.lastMove!.id).toBe('fly');
-
     expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(28);
-    expect(battle.p2.pokemon[1].moveSlots[0].pp).toBe(28);
 
     verify(battle, [
       '|move|p1a: Fearow|Mirror Move|p1a: Fearow',
@@ -6318,4 +6326,6 @@ describe('Gen 1', () => {
       '|turn|2',
     ]);
   });
+
+  test.todo('Transform + Mirror Move/Metronome PP error');
 });

@@ -4832,6 +4832,8 @@ test "MirrorMove effect" {
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
     try expectEqual(Move.MirrorMove, t.actual.p1.last_used_move);
     try expectEqual(Move.MirrorMove, t.actual.p2.last_used_move);
+    try expectEqual(@as(u8, 31), t.actual.p1.get(1).move(1).pp);
+    try expectEqual(@as(u8, 31), t.actual.p2.get(1).move(1).pp);
 
     try t.log.expected.move(P1.ident(1), Move.Peck, P2.ident(1), null);
     t.expected.p2.get(1).hp -= 43;
@@ -4846,6 +4848,7 @@ test "MirrorMove effect" {
     try expectEqual(Result.Default, try t.update(move(2), move(1)));
     try expectEqual(Move.Peck, t.actual.p1.last_used_move);
     try expectEqual(Move.Peck, t.actual.p2.last_used_move);
+    try expectEqual(@as(u8, 30), t.actual.p2.get(1).move(1).pp);
 
     try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), null);
     try t.log.expected.move(P1.ident(1), Move.Peck, P2.ident(1), Move.MirrorMove);
@@ -4860,6 +4863,7 @@ test "MirrorMove effect" {
     try expectEqual(Result.Default, try t.update(move(1), move(2)));
     try expectEqual(Move.Peck, t.actual.p1.last_used_move);
     try expectEqual(Move.Swift, t.actual.p2.last_used_move);
+    try expectEqual(@as(u8, 30), t.actual.p1.get(1).move(1).pp);
 
     try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), null);
     try t.log.expected.move(P1.ident(1), Move.Swift, P2.ident(1), Move.MirrorMove);
@@ -4874,6 +4878,8 @@ test "MirrorMove effect" {
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
     try expectEqual(Move.Swift, t.actual.p1.last_used_move);
     try expectEqual(Move.Swift, t.actual.p2.last_used_move);
+    try expectEqual(@as(u8, 29), t.actual.p1.get(1).move(1).pp);
+    try expectEqual(@as(u8, 29), t.actual.p2.get(1).move(1).pp);
 
     try t.log.expected.move(P1.ident(1), Move.Fly, .{}, null);
     try t.log.expected.laststill();
@@ -4894,6 +4900,7 @@ test "MirrorMove effect" {
     try expectEqual(Result.Default, try t.update(move(3), move(1)));
     try expectEqual(if (showdown) Move.Fly else Move.Swift, t.actual.p1.last_used_move);
     try expectEqual(if (showdown) Move.Fly else Move.Swift, t.actual.p2.last_used_move);
+    try expectEqual(@as(u8, 28), t.actual.p2.get(1).move(1).pp);
 
     try t.log.expected.move(P1.ident(1), Move.Fly, P2.ident(1), Move.Fly);
     try t.log.expected.lastmiss();
@@ -4913,6 +4920,7 @@ test "MirrorMove effect" {
     try expectEqual(Result.Default, try t.update(forced, move(1)));
     try expectEqual(Move.Fly, t.actual.p1.last_used_move);
     try expectEqual(if (showdown) Move.Fly else Move.MirrorMove, t.actual.p2.last_used_move);
+    try expectEqual(@as(u8, 28), t.actual.p2.get(1).move(1).pp);
 
     if (!showdown) {
         try t.log.expected.move(P1.ident(1), Move.Peck, P2.ident(1), null);
@@ -4936,9 +4944,7 @@ test "MirrorMove effect" {
     try expectEqual(Move.MirrorMove, t.actual.p1.last_used_move);
     const last = Move.None; //if (showdown) Move.Fly else Move.None;
     try expectEqual(last, t.actual.p2.last_used_move);
-
     try expectEqual(@as(u8, 28), t.actual.p1.get(1).move(1).pp);
-    try expectEqual(@as(u8, if (showdown) 28 else 26), t.actual.p2.get(2).move(1).pp);
 
     try t.verify();
 }
@@ -5744,8 +5750,9 @@ test "Infinite Metronome" {
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-        try expectEqual(@as(u8, 15), t.actual.p1.active.move(1).pp);
-        try expectEqual(@as(u8, 15), t.actual.p1.active.move(1).pp);
+        const pp = if (showdown) 15 else 16;
+        try expectEqual(@as(u8, pp), t.actual.p1.active.move(1).pp);
+        try expectEqual(@as(u8, pp), t.actual.p1.active.move(1).pp);
 
         try t.log.expected.move(P2.ident(1), Move.SkullBash, P1.ident(1), Move.SkullBash);
         try t.log.expected.lastmiss();
@@ -5757,9 +5764,8 @@ test "Infinite Metronome" {
 
         try expectEqual(Result.Default, try t.update(forced, forced));
 
-        const pp = if (showdown) 15 else 14;
-        try expectEqual(@as(u8, pp), t.actual.p1.active.move(1).pp);
-        try expectEqual(@as(u8, pp), t.actual.p1.active.move(1).pp);
+        try expectEqual(@as(u8, 15), t.actual.p1.active.move(1).pp);
+        try expectEqual(@as(u8, 15), t.actual.p1.active.move(1).pp);
 
         try t.verify();
     }
@@ -8070,6 +8076,12 @@ test "Psywave infinite loop" {
 
     try expectEqual(result, try t.update(move(1), move(1)));
     try t.verify();
+}
+
+test "Transform + Mirror Move/Metronome PP error" {
+    // https://pkmn.cc/bulba/Transform_glitches#Transform_.2B_Mirror_Move.2FMetronome_PP_error
+    // https://www.youtube.com/watch?v=_c7tQkSyz7E
+    return error.SkipZigTest; // TODO
 }
 
 // Miscellaneous

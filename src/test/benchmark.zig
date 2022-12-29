@@ -89,8 +89,8 @@ pub fn benchmark(
     var out = std.io.getStdOut().writer();
 
     var i: usize = 0;
-    var n = battles orelse std.math.maxInt(usize);
-    while (i < n and (if (duration) |d| elapsed.read() < d else true)) : (i += 1) {
+    var num = battles orelse std.math.maxInt(usize);
+    while (i < num and (if (duration) |d| elapsed.read() < d else true)) : (i += 1) {
         if (fuzz) last = random.src.seed;
 
         const opt = .{ .cleric = showdown or !fuzz, .block = showdown and fuzz };
@@ -136,11 +136,12 @@ pub fn benchmark(
         else
             battle.update(c1, c2, pkmn.protocol.NULL))
         {
-            // TODO: ziglang/zig#13415
-            const n1 = p1.range(u8, 0, battle.choices(.P1, result.p1, &options));
-            c1 = options[n1];
-            const n2 = p2.range(u8, 0, battle.choices(.P2, result.p2, &options));
-            c2 = options[n2];
+            var n = battle.choices(.P1, result.p1, &options);
+            if (n == 0) break;
+            c1 = options[p1.range(u8, 0, n)];
+            n = battle.choices(.P2, result.p2, &options);
+            if (n == 0) break;
+            c2 = options[p2.range(u8, 0, n)];
 
             if (save) {
                 std.debug.assert(buf.?.items.len <= max);
