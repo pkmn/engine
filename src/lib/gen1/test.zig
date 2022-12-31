@@ -8081,7 +8081,194 @@ test "Psywave infinite loop" {
 test "Transform + Mirror Move/Metronome PP error" {
     // https://pkmn.cc/bulba/Transform_glitches#Transform_.2B_Mirror_Move.2FMetronome_PP_error
     // https://www.youtube.com/watch?v=_c7tQkSyz7E
-    return error.SkipZigTest; // TODO
+    const TIE_1 = MIN;
+    const TIE_2 = MAX;
+
+    // PP
+    {
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                NOP, HIT, NOP, NOP, TIE_2, NOP, NOP, HIT, NOP, HIT, NOP, NOP,
+            } else .{
+                ~CRIT, HIT, TIE_2, ~CRIT, HIT, ~CRIT, ~CRIT, HIT,
+            }
+        // zig fmt: on
+        ).init(
+            &.{.{ .species = .Mew, .moves = &.{ .Transform, .IceBeam, .Psychic } }},
+            &.{.{ .species = .Spearow, .moves = &.{ .Growl, .Leer, .MirrorMove } }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P1.ident(1), Move.Transform, P2.ident(1), null);
+        try t.log.expected.transform(P1.ident(1), P2.ident(1));
+        try t.log.expected.move(P2.ident(1), Move.Growl, P1.ident(1), null);
+        try t.log.expected.boost(P1.ident(1), .Attack, -1);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(@as(u8, 16), t.actual.p1.get(1).move(3).pp);
+
+        try t.log.expected.move(P2.ident(1), Move.Growl, P1.ident(1), null);
+        try t.log.expected.boost(P1.ident(1), .Attack, -1);
+        try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), null);
+        try t.log.expected.move(P1.ident(1), Move.Growl, P2.ident(1), Move.MirrorMove);
+        try t.log.expected.boost(P2.ident(1), .Attack, -1);
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(move(3), move(1)));
+        try expectEqual(@as(u8, if (showdown) 16 else 17), t.actual.p1.get(1).move(3).pp);
+
+        try t.verify();
+    }
+    // Struggle softlock
+    {
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                // FIXME: HIT, NOP,
+                NOP, HIT, NOP, NOP,
+                TIE_1, NOP, NOP, HIT, NOP, HIT, NOP, NOP,
+                NOP, NOP, HIT, ~HIT, HIT, ~CRIT, MIN_DMG, HIT,
+            } else .{
+                ~CRIT, HIT, TIE_1, ~CRIT, ~CRIT, HIT, ~CRIT, HIT,
+                ~CRIT, HIT, ~CRIT, MIN_DMG, ~HIT,
+            }
+        // zig fmt: on
+        ).init(
+            &.{
+                .{ .species = .Ditto, .level = 34, .moves = &.{.Transform} },
+                .{ .species = .Koffing, .moves = &.{.Explosion} },
+            },
+            &.{.{ .species = .Spearow, .level = 23, .moves = &.{ .Growl, .Leer, .MirrorMove } }},
+        );
+        defer t.deinit();
+
+        t.actual.p1.get(1).move(1).pp = 1;
+        try t.start();
+
+        var n = t.battle.actual.choices(.P1, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1) }, choices[0..n]);
+
+        try t.log.expected.move(P1.ident(1), Move.Transform, P2.ident(1), null);
+        try t.log.expected.transform(P1.ident(1), P2.ident(1));
+        try t.log.expected.move(P2.ident(1), Move.Growl, P1.ident(1), null);
+        try t.log.expected.boost(P1.ident(1), .Attack, -1);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), null);
+        try t.log.expected.move(P1.ident(1), Move.Growl, P2.ident(1), Move.MirrorMove);
+        try t.log.expected.boost(P2.ident(1), .Attack, -1);
+        try t.log.expected.move(P2.ident(1), Move.Growl, P1.ident(1), null);
+        try t.log.expected.boost(P1.ident(1), .Attack, -1);
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(move(3), move(1)));
+
+        try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+        try t.log.expected.move(P2.ident(1), Move.Growl, P1.ident(2), null);
+        try t.log.expected.boost(P1.ident(2), .Attack, -1);
+        try t.log.expected.turn(4);
+
+        try expectEqual(Result.Default, try t.update(swtch(2), move(1)));
+
+        try t.log.expected.move(P1.ident(2), Move.Explosion, P2.ident(1), null);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P1.ident(2));
+        t.expected.p1.get(2).hp = 0;
+        try t.log.expected.faint(P1.ident(2), true);
+
+        try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(move(1), move(1)));
+
+        try t.log.expected.switched(P1.ident(1), t.expected.p1.get(1));
+        try t.log.expected.turn(5);
+
+        try expectEqual(Result.Default, try t.update(swtch(2), .{}));
+
+        n = t.battle.actual.choices(.P1, .Move, &choices);
+        try expectEqual(@as(u8, @boolToInt(showdown)), n);
+        if (showdown) {
+            try expectEqualSlices(Choice, &[_]Choice{move(0)}, choices[0..n]);
+            try expectEqual(Result.Default, try t.update(move(0), move(1)));
+
+            try t.log.expected.move(P1.ident(1), Move.Struggle, P2.ident(1), null);
+            t.expected.p2.get(1).hp -= 34;
+            try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+            t.expected.p1.get(1).hp -= 17;
+            try t.log.expected.damageOf(P1.ident(1), t.expected.p1.get(1), .RecoilOf, P2.ident(1));
+            try t.log.expected.move(P2.ident(1), Move.Growl, P1.ident(1), null);
+            try t.log.expected.boost(P1.ident(1), .Attack, -1);
+            try t.log.expected.turn(6);
+        }
+
+        try t.verify();
+    }
+    // Disable softlock
+    {
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                // FIXME: HIT, NOP,
+                NOP, HIT, NOP, NOP,
+                TIE_1, NOP, NOP, HIT, NOP, HIT, NOP, NOP,
+                TIE_1, NOP, NOP, HIT,
+            } else .{
+                ~CRIT, HIT, TIE_1, ~CRIT, ~CRIT, HIT, ~CRIT, HIT,
+                ~CRIT, HIT,
+            }
+        // zig fmt: on
+        ).init(
+            &.{
+                .{ .species = .Ditto, .level = 34, .moves = &.{.Transform} },
+                .{ .species = .Koffing, .moves = &.{.Explosion} },
+            },
+            &.{
+                .{ .species = .Spearow, .level = 23, .moves = &.{ .Growl, .Leer, .MirrorMove } },
+                .{ .species = .Drowzee, .level = 23, .moves = &.{.Disable} },
+            },
+        );
+        defer t.deinit();
+
+        t.actual.p1.get(1).move(1).pp = 1;
+        try t.start();
+
+        try t.log.expected.move(P1.ident(1), Move.Transform, P2.ident(1), null);
+        try t.log.expected.transform(P1.ident(1), P2.ident(1));
+        try t.log.expected.move(P2.ident(1), Move.Growl, P1.ident(1), null);
+        try t.log.expected.boost(P1.ident(1), .Attack, -1);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), null);
+        try t.log.expected.move(P1.ident(1), Move.Growl, P2.ident(1), Move.MirrorMove);
+        try t.log.expected.boost(P2.ident(1), .Attack, -1);
+        try t.log.expected.move(P2.ident(1), Move.Growl, P1.ident(1), null);
+        try t.log.expected.boost(P1.ident(1), .Attack, -1);
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(move(3), move(1)));
+
+        try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+        try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+        try t.log.expected.turn(4);
+
+        try expectEqual(Result.Default, try t.update(swtch(2), swtch(2)));
+
+        try t.log.expected.switched(P1.ident(1), t.expected.p1.get(1));
+        try t.log.expected.move(P2.ident(2), Move.Disable, P1.ident(1), null);
+        if (showdown) {
+            try t.log.expected.fail(P1.ident(1), .None);
+            try t.log.expected.turn(5);
+        }
+
+        const result = if (showdown) Result.Default else Result.Error;
+        try expectEqual(result, try t.update(swtch(2), move(1)));
+
+        try t.verify();
+    }
 }
 
 // Miscellaneous

@@ -6327,5 +6327,141 @@ describe('Gen 1', () => {
     ]);
   });
 
-  test.todo('Transform + Mirror Move/Metronome PP error');
+  test('Transform + Mirror Move/Metronome PP error', () => {
+    // PP
+    {
+      const battle = startBattle([
+        SS_EACH, HIT, SS_EACH, SS_EACH, TIE(2), SS_EACH, SS_EACH,
+        HIT, SS_EACH, HIT, SS_EACH, SS_EACH,
+      ], [
+        {species: 'Mew', evs, moves: ['Transform', 'Ice Beam', 'Psychic']},
+      ], [
+        {species: 'Spearow', evs, moves: ['Growl', 'Leer', 'Mirror Move']},
+      ]);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].baseMoveSlots[2].pp).toBe(16);
+
+      battle.makeChoices('move 3', 'move 1');
+      // expect(battle.p1.pokemon[0].baseMoveSlots[2].pp).toBe(17);
+      expect(battle.p1.pokemon[0].baseMoveSlots[2].pp).toBe(16);
+
+      verify(battle, [
+        '|move|p1a: Mew|Transform|p2a: Spearow',
+        '|-transform|p1a: Mew|p2a: Spearow',
+        '|move|p2a: Spearow|Growl|p1a: Mew',
+        '|-unboost|p1a: Mew|atk|1',
+        '|turn|2',
+        '|move|p2a: Spearow|Growl|p1a: Mew',
+        '|-unboost|p1a: Mew|atk|1',
+        '|move|p1a: Mew|Mirror Move|p1a: Mew',
+        '|move|p1a: Mew|Growl|p2a: Spearow|[from]Mirror Move',
+        '|-unboost|p2a: Spearow|atk|1',
+        '|turn|3',
+      ]);
+    }
+    // Struggle softlock
+    {
+      const battle = startBattle([
+        HIT, SS_EACH, TIE(1), SS_EACH, SS_EACH, HIT, SS_EACH, HIT, SS_EACH, SS_EACH,
+        SS_EACH, SS_EACH, HIT, MISS, HIT, NO_CRIT, MIN_DMG, HIT,
+      ], [
+        {species: 'Ditto', level: 34, evs, moves: ['Transform']},
+        {species: 'Koffing', evs, moves: ['Explosion']},
+      ], [
+        {species: 'Spearow', level: 23, evs, moves: ['Growl', 'Leer', 'Mirror Move']},
+      ], b => {
+        b.p1.pokemon[0].moveSlots[0].pp = 1;
+      });
+
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1']);
+
+      battle.makeChoices('move 1', 'move 1');
+      battle.makeChoices('move 3', 'move 1');
+      battle.makeChoices('switch 2', 'move 1');
+      battle.makeChoices('move 1', 'move 1');
+      battle.makeChoices('switch 2', '');
+
+      // expect(choices(battle, 'p1')).toEqual([]);
+      expect(choices(battle, 'p1')).toEqual(['move 1']);
+
+      battle.makeChoices('move 1', 'move 1');
+
+      verify(battle, [
+        '|switch|p1a: Ditto|Ditto, L34|108/108',
+        '|switch|p2a: Spearow|Spearow, L23|72/72',
+        '|turn|1',
+        '|move|p1a: Ditto|Transform|p2a: Spearow',
+        '|-transform|p1a: Ditto|p2a: Spearow',
+        '|move|p2a: Spearow|Growl|p1a: Ditto',
+        '|-unboost|p1a: Ditto|atk|1',
+        '|turn|2',
+        '|move|p1a: Ditto|Mirror Move|p1a: Ditto',
+        '|move|p1a: Ditto|Growl|p2a: Spearow|[from]Mirror Move',
+        '|-unboost|p2a: Spearow|atk|1',
+        '|move|p2a: Spearow|Growl|p1a: Ditto',
+        '|-unboost|p1a: Ditto|atk|1',
+        '|turn|3',
+        '|switch|p1a: Koffing|Koffing|283/283',
+        '|move|p2a: Spearow|Growl|p1a: Koffing',
+        '|-unboost|p1a: Koffing|atk|1',
+        '|turn|4',
+        '|move|p1a: Koffing|Explosion|p2a: Spearow|[miss]',
+        '|-miss|p1a: Koffing',
+        '|faint|p1a: Koffing',
+        '|switch|p1a: Ditto|Ditto, L34|108/108',
+        '|turn|5',
+        '|move|p1a: Ditto|Struggle|p2a: Spearow',
+        '|-damage|p2a: Spearow|38/72',
+        '|-damage|p1a: Ditto|91/108|[from] Recoil|[of] p2a: Spearow',
+        '|move|p2a: Spearow|Growl|p1a: Ditto',
+        '|-unboost|p1a: Ditto|atk|1',
+        '|turn|6',
+      ]);
+    }
+    // Disable softlock
+    {
+      const battle = startBattle([
+        HIT, SS_EACH, TIE(1), SS_EACH, SS_EACH, HIT, SS_EACH, HIT, SS_EACH, SS_EACH,
+        TIE(1), SS_EACH, SS_EACH, HIT,
+      ], [
+        {species: 'Ditto', level: 34, evs, moves: ['Transform']},
+        {species: 'Koffing', evs, moves: ['Explosion']},
+      ], [
+        {species: 'Spearow', level: 23, evs, moves: ['Growl', 'Leer', 'Mirror Move']},
+        {species: 'Drowzee', level: 23, evs, moves: ['Disable']},
+      ], b => {
+        b.p1.pokemon[0].moveSlots[0].pp = 1;
+      });
+
+      battle.makeChoices('move 1', 'move 1');
+      battle.makeChoices('move 3', 'move 1');
+      battle.makeChoices('switch 2', 'switch 2');
+      battle.makeChoices('switch 2', 'move 1');
+
+      verify(battle, [
+        '|switch|p1a: Ditto|Ditto, L34|108/108',
+        '|switch|p2a: Spearow|Spearow, L23|72/72',
+        '|turn|1',
+        '|move|p1a: Ditto|Transform|p2a: Spearow',
+        '|-transform|p1a: Ditto|p2a: Spearow',
+        '|move|p2a: Spearow|Growl|p1a: Ditto',
+        '|-unboost|p1a: Ditto|atk|1',
+        '|turn|2',
+        '|move|p1a: Ditto|Mirror Move|p1a: Ditto',
+        '|move|p1a: Ditto|Growl|p2a: Spearow|[from]Mirror Move',
+        '|-unboost|p2a: Spearow|atk|1',
+        '|move|p2a: Spearow|Growl|p1a: Ditto',
+        '|-unboost|p1a: Ditto|atk|1',
+        '|turn|3',
+        '|switch|p1a: Koffing|Koffing|283/283',
+        '|switch|p2a: Drowzee|Drowzee, L23|81/81',
+        '|turn|4',
+        '|switch|p1a: Ditto|Ditto, L34|108/108',
+        '|move|p2a: Drowzee|Disable|p1a: Ditto',
+        '|-fail|p1a: Ditto',
+        '|turn|5',
+      ]);
+    }
+  });
 });
