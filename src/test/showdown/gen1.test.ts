@@ -335,64 +335,89 @@ describe('Gen 1', () => {
   });
 
   test('turn order (complex speed tie)', () => {
-    const battle = startBattle([
-      INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
-      TIE(2), SS_EACH, SS_EACH, METRONOME('Fly'), SS_EACH,
-      METRONOME('Dig'), SS_EACH, SS_RES, SS_RES, SS_RES, SS_EACH, GLM, GLM,
-      GLM, GLM, GLM, GLM, TIE(1), SS_EACH, SS_EACH, SS_RUN, SS_EACH,
-      SS_RUN, HIT, NO_CRIT, MIN_DMG, SS_EACH, SS_RES, SS_EACH,
-      SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG, SS_EACH,
-      METRONOME('Swift'), NO_CRIT, MIN_DMG, SS_EACH, SS_EACH,
-      SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, METRONOME('Petal Dance'),
-      HIT, NO_CRIT, MIN_DMG, THRASH(3), SS_EACH, SS_EACH,
-    ], [
-      {species: 'Clefable', evs, moves: ['Metronome', 'Quick Attack']},
-    ], [
-      {species: 'Clefable', evs, moves: ['Metronome']},
-      {species: 'Farfetch’d', evs, moves: ['Metronome']},
-    ]);
+    // multiple events
+    {
+      const battle = startBattle([
+        INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
+        TIE(2), SS_EACH, SS_EACH, METRONOME('Fly'), SS_EACH,
+        METRONOME('Dig'), SS_EACH, SS_RES, SS_RES, SS_RES, SS_EACH, GLM, GLM,
+        GLM, GLM, GLM, GLM, TIE(1), SS_EACH, SS_EACH, SS_RUN, SS_EACH,
+        SS_RUN, HIT, NO_CRIT, MIN_DMG, SS_EACH, SS_RES, SS_EACH,
+        SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG, SS_EACH,
+        METRONOME('Swift'), NO_CRIT, MIN_DMG, SS_EACH, SS_EACH,
+        SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, METRONOME('Petal Dance'),
+        HIT, NO_CRIT, MIN_DMG, THRASH(3), SS_EACH, SS_EACH,
+      ], [
+        {species: 'Clefable', evs, moves: ['Metronome', 'Quick Attack']},
+      ], [
+        {species: 'Clefable', evs, moves: ['Metronome']},
+        {species: 'Farfetch’d', evs, moves: ['Metronome']},
+      ]);
 
-    let p1hp = battle.p1.pokemon[0].hp;
-    let p2hp1 = battle.p2.pokemon[0].hp;
-    let p2hp2 = battle.p2.pokemon[1].hp;
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp1 = battle.p2.pokemon[0].hp;
+      let p2hp2 = battle.p2.pokemon[1].hp;
 
-    battle.makeChoices('move 1', 'move 1');
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 50);
+      battle.makeChoices('move 1', 'move 1');
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 50);
 
-    battle.makeChoices('move 2', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 64);
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp1 -= 43);
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 64);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp1 -= 43);
 
-    battle.makeChoices('move 1', 'switch 2');
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp2 -= 32);
+      battle.makeChoices('move 1', 'switch 2');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp2 -= 32);
 
-    verify(battle, [
-      '|move|p2a: Clefable|Metronome|p2a: Clefable',
-      '|move|p2a: Clefable|Fly||[from]Metronome|[still]',
-      '|-prepare|p2a: Clefable|Fly',
-      '|move|p1a: Clefable|Metronome|p1a: Clefable',
-      '|move|p1a: Clefable|Dig||[from]Metronome|[still]',
-      '|-prepare|p1a: Clefable|Dig',
-      '|turn|2',
-      '|move|p1a: Clefable|Dig|p2a: Clefable|[from]Dig|[miss]',
-      '|-miss|p1a: Clefable',
-      '|move|p2a: Clefable|Fly|p1a: Clefable|[from]Fly',
-      '|-damage|p1a: Clefable|343/393',
-      '|turn|3',
-      '|move|p1a: Clefable|Quick Attack|p2a: Clefable',
-      '|-damage|p2a: Clefable|350/393',
-      '|move|p2a: Clefable|Metronome|p2a: Clefable',
-      '|move|p2a: Clefable|Swift|p1a: Clefable|[from]Metronome',
-      '|-damage|p1a: Clefable|279/393',
-      '|turn|4',
-      '|switch|p2a: Farfetch’d|Farfetch’d|307/307',
-      '|move|p1a: Clefable|Metronome|p1a: Clefable',
-      '|move|p1a: Clefable|Petal Dance|p2a: Farfetch’d|[from]Metronome',
-      '|-resisted|p2a: Farfetch’d',
-      '|-damage|p2a: Farfetch’d|275/307',
-      '|turn|5',
-    ]);
+      verify(battle, [
+        '|move|p2a: Clefable|Metronome|p2a: Clefable',
+        '|move|p2a: Clefable|Fly||[from]Metronome|[still]',
+        '|-prepare|p2a: Clefable|Fly',
+        '|move|p1a: Clefable|Metronome|p1a: Clefable',
+        '|move|p1a: Clefable|Dig||[from]Metronome|[still]',
+        '|-prepare|p1a: Clefable|Dig',
+        '|turn|2',
+        '|move|p1a: Clefable|Dig|p2a: Clefable|[from]Dig|[miss]',
+        '|-miss|p1a: Clefable',
+        '|move|p2a: Clefable|Fly|p1a: Clefable|[from]Fly',
+        '|-damage|p1a: Clefable|343/393',
+        '|turn|3',
+        '|move|p1a: Clefable|Quick Attack|p2a: Clefable',
+        '|-damage|p2a: Clefable|350/393',
+        '|move|p2a: Clefable|Metronome|p2a: Clefable',
+        '|move|p2a: Clefable|Swift|p1a: Clefable|[from]Metronome',
+        '|-damage|p1a: Clefable|279/393',
+        '|turn|4',
+        '|switch|p2a: Farfetch’d|Farfetch’d|307/307',
+        '|move|p1a: Clefable|Metronome|p1a: Clefable',
+        '|move|p1a: Clefable|Petal Dance|p2a: Farfetch’d|[from]Metronome',
+        '|-resisted|p2a: Farfetch’d',
+        '|-damage|p2a: Farfetch’d|275/307',
+        '|turn|5',
+      ]);
+    }
+    // beforeTurnMove
+    {
+      const NOP = TIE(2);
+      const battle = startBattle([
+        INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, NOP, TIE(1),
+        SS_EACH, SS_EACH, SS_EACH, SS_EACH, HIT, SS_EACH, HIT, SS_EACH, SS_EACH,
+      ], [
+        {species: 'Chansey', evs, moves: ['Counter']},
+      ], [
+        {species: 'Chansey', evs, moves: ['Counter']},
+      ]);
+
+      battle.makeChoices('move 1', 'move 1');
+
+      verify(battle, [
+        '|move|p1a: Chansey|Counter|p2a: Chansey',
+        '|-fail|p1a: Chansey',
+        '|move|p2a: Chansey|Counter|p1a: Chansey',
+        '|-fail|p2a: Chansey',
+        '|turn|2',
+      ]);
+    }
   });
 
   test('turn order (switch vs. move)', () => {
