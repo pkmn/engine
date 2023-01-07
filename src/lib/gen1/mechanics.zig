@@ -270,7 +270,7 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     if (c1.type == .Pass) return .P2;
     if (c2.type == .Pass) return .P1;
 
-    defer if (showdown and speedTie(battle)) battle.rng.advance(1);
+    defer if (showdown and speedTie(battle)) battle.rng.advance(2); // beforeTurn × 2
 
     if ((c1.type == .Switch) != (c2.type == .Switch)) return if (c1.type == .Switch) .P1 else .P2;
 
@@ -314,13 +314,11 @@ fn doTurn(
 
     if (try executeMove(battle, player, player_choice, player_from, log)) |r| return r;
     if (foe_choice.type == .Pass) return null;
-    if (showdown and player_choice.type == .Switch and speedTie(battle)) battle.rng.advance(2);
     if (try checkFaint(battle, foe_player, log)) |r| return r;
     try handleResidual(battle, player, log);
     if (try checkFaint(battle, player, log)) |r| return r;
 
     if (try executeMove(battle, foe_player, foe_choice, foe_from, log)) |r| return r;
-    if (showdown and foe_choice.type == .Switch and speedTie(battle)) battle.rng.advance(2);
     if (try checkFaint(battle, player, log)) |r| return r;
     try handleResidual(battle, foe_player, log);
     if (try checkFaint(battle, foe_player, log)) |r| return r;
@@ -335,8 +333,6 @@ fn executeMove(
     from: ?Move,
     log: anytype,
 ) !?Result {
-    if (showdown and speedTie(battle)) battle.rng.advance(1);
-
     var side = battle.side(player);
 
     if (choice.type == .Switch) {
@@ -1371,7 +1367,13 @@ fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
         return Result.Tie;
     }
 
-    if (showdown and speedTie(battle)) battle.rng.advance(if (battle.turn == 0) 7 else 2);
+    if (showdown and speedTie(battle)) {
+        if (battle.turn == 0) {
+           battle.rng.advance(7); // insertChoice × 2 + start + runUnnerve × 2 + runSwitch × 2
+        } else {
+            // TODO
+        }
+    }
 
     battle.turn += 1;
 
