@@ -22,16 +22,16 @@ export const ROLLS = {
       MIN_DMG: {key: keys.dmg, value: MIN},
       MAX_DMG: {key: keys.dmg, value: MAX},
       TIE: (n: 1 | 2) =>
-        ({key: 'sim/battle-queue.ts:404:15', value: ranged(n, 2) - 1}),
+        ({key: 'sim/battle-queue.ts:405:15', value: ranged(n, 2) - 1}),
       DRAG: (m: number, n = 5) =>
         ({key: 'sim/battle.ts:1371:36', value: ranged(m - 1, n)}),
     };
   },
   nops: {
-    SS_MOD: {key: 'sim/pokemon.ts:1606:40', value: NOP},
+    SS_MOD: {key: 'sim/pokemon.ts:1613:40', value: NOP},
     SS_RES: {key: 'sim/battle.ts:471:8', value: NOP},
     SS_EACH: {key: 'sim/battle.ts:441:8', value: NOP},
-    INS: {key: 'sim/battle-queue.ts:384:70', value: NOP},
+    INS: {key: 'sim/battle-queue.ts:385:70', value: NOP},
     GLM: {key: 'sim/pokemon.ts:905:34', value: NOP},
   },
   metronome(gen: Generation, exclude: string[]) {
@@ -42,7 +42,7 @@ export const ROLLS = {
     return (move: string, skip: string[] = []) => {
       const moves = all.filter(m => !skip.includes(m));
       const value = ranged(moves.indexOf(move) + 1, moves.length) - 1;
-      return {key: 'data/moves.ts:11939:23', value};
+      return {key: 'data/moves.ts:11962:23', value};
     };
   },
 };

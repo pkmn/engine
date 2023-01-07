@@ -39,8 +39,7 @@ const METRONOME = ROLLS.metronome(gen, [
   'Counter', 'Destiny Bond', 'Detect', 'Endure', 'Metronome', 'Mimic',
   'Mirror Coat', 'Protect', 'Sketch', 'Sleep Talk', 'Struggle', 'Thief',
 ]);
-const STATUS = {key: 'sim/pokemon.ts:1606:40', value: HIT.value};
-
+const STATUS = {key: 'sim/pokemon.ts:1613:40', value: HIT.value};
 
 const evs = {hp: 255, atk: 255, def: 255, spa: 255, spd: 255, spe: 255};
 const slow = {...evs, spe: 0};
@@ -5373,7 +5372,7 @@ describe('Gen 2', () => {
   });
 
   test('Present effect', () => {
-    const present = {key: 'data/moves.ts:14142:22', value: ranged(1, 10) - 1};
+    const present = {key: 'data/moves.ts:14165:22', value: ranged(1, 10) - 1};
     const present40 = {...present, value: ranged(6, 10) - 1};
     const present120 = {...present, value: ranged(10, 10) - 1};
     const battle = startBattle([
@@ -5578,7 +5577,7 @@ describe('Gen 2', () => {
   });
 
   test('Magnitude effect', () => {
-    const mag8 = {key: 'data/moves.ts:11044:19', value: ranged(85, 100) - 1};
+    const mag8 = {key: 'data/moves.ts:11070:19', value: ranged(85, 100) - 1};
     const mag5 = {...mag8, value: ranged(15, 100) - 1};
     const battle = startBattle([
       QKC, mag8, NO_CRIT, MIN_DMG, SS_RES, QKC, mag5, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,

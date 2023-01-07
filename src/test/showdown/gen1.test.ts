@@ -10,22 +10,22 @@ const choices = gen1.Choices.sim;
 const startBattle = createStartBattle(gen);
 
 const {HIT, MISS, CRIT, NO_CRIT, MIN_DMG, MAX_DMG, TIE} = ROLLS.basic({
-  hit: 'data/mods/gen1/scripts.ts:380:42',
-  crit: 'data/mods/gen1/scripts.ts:778:27',
-  dmg: 'data/mods/gen1/scripts.ts:895:27',
+  hit: 'data/mods/gen1/scripts.ts:389:42',
+  crit: 'data/mods/gen1/scripts.ts:787:27',
+  dmg: 'data/mods/gen1/scripts.ts:904:27',
 });
 const {SS_MOD, SS_RES, SS_EACH, INS, GLM} = ROLLS.nops;
 
-const SS_RUN = {key: 'data/mods/gen1/scripts.ts:144:33', value: SS_MOD.value};
-const SECONDARY = (value: number) => ({key: 'data/mods/gen1/scripts.ts:667:25', value});
+const SS_RUN = {key: 'data/mods/gen1/scripts.ts:146:33', value: SS_MOD.value};
+const SECONDARY = (value: number) => ({key: 'data/mods/gen1/scripts.ts:676:25', value});
 const SLP = (n: number) =>
-  ({key: 'data/mods/gen1/conditions.ts:61:38', value: ranged(n, 8 - 1)});
+  ({key: 'data/mods/gen1/conditions.ts:63:38', value: ranged(n, 8 - 1)});
 const DISABLE_MOVE = (m: number, n = 4) =>
-  ({key: 'data/mods/gen1/moves.ts:289:27', value: ranged(m, n) - 1});
+  ({key: 'data/mods/gen1/moves.ts:243:27', value: ranged(m, n) - 1});
 const DISABLE_DURATION = (n: number) =>
-  ({key: 'data/mods/gen1/moves.ts:293:34', value: ranged(n, 9 - 1) - 1});
+  ({key: 'data/mods/gen1/moves.ts:247:34', value: ranged(n, 9 - 1) - 1});
 const MIMIC = (m: number, n = 4) =>
-  ({key: 'data/mods/gen1/moves.ts:540:24', value: ranged(m, n) - 1});
+  ({key: 'data/mods/gen1/moves.ts:489:24', value: ranged(m, n) - 1});
 const BIDE = (n: 2 | 3) =>
   ({key: 'data/mods/gen1/moves.ts:41:17', value: ranged(n - 2, 5 - 3)});
 const NO_PAR = SECONDARY(MAX);
@@ -33,14 +33,14 @@ const PAR_CANT = {key: 'data/mods/gen1/conditions.ts:38:13', value: ranged(63, 2
 const PAR_CAN = {...PAR_CANT, value: PAR_CANT.value + 1};
 const FRZ = SECONDARY(ranged(26, 256) - 1);
 const CFZ = (n: number) =>
-  ({key: 'data/mods/gen1/conditions.ts:131:33', value: ranged(n - 1, 6 - 2) - 1});
-const CFZ_CAN = {key: 'data/mods/gen1/conditions.ts:144:14', value: ranged(128, 256) - 1};
+  ({key: 'data/mods/gen1/conditions.ts:133:33', value: ranged(n - 1, 6 - 2) - 1});
+const CFZ_CAN = {key: 'data/mods/gen1/conditions.ts:146:14', value: ranged(128, 256) - 1};
 const CFZ_CANT = {...CFZ_CAN, value: CFZ_CAN.value + 1};
 const THRASH = (n: 3 | 4) =>
   ({key: 'data/mods/gen1/conditions.ts:230:16', value: ranged(n - 2, 5 - 3) - 1});
 const MIN_WRAP = {key: 'data/mods/gen1/conditions.ts:199:26', value: MIN};
 const MAX_WRAP = {...MIN_WRAP, value: MAX};
-const REWRAP = {key: 'data/mods/gen1/scripts.ts:219:38', value: MIN};
+const REWRAP = {key: 'data/mods/gen1/scripts.ts:228:38', value: MIN};
 const METRONOME = ROLLS.metronome(gen, ['Metronome', 'Struggle']);
 
 const evs = {hp: 255, atk: 255, def: 255, spa: 255, spd: 255, spe: 255};
@@ -832,7 +832,7 @@ describe('Gen 1', () => {
   });
 
   test('MultiHit effect', () => {
-    const hit3 = {key: 'data/mods/gen1/scripts.ts:395:27', value: 0x60000000};
+    const hit3 = {key: 'data/mods/gen1/scripts.ts:404:27', value: 0x60000000};
     const hit5 = {...hit3, value: MAX};
     const battle = startBattle([HIT, hit3, NO_CRIT, MAX_DMG, HIT, hit5, NO_CRIT, MAX_DMG], [
       {species: 'Kangaskhan', evs, moves: ['Comet Punch']},
@@ -1600,7 +1600,7 @@ describe('Gen 1', () => {
   });
 
   test('ConfusionChance effect', () => {
-    const sub_proc = {key: 'data/mods/gen1/moves.ts:864:50', value: ranged(25, 256) - 1};
+    const sub_proc = {key: 'data/mods/gen1/moves.ts:841:50', value: ranged(25, 256) - 1};
     const no_proc = SECONDARY(sub_proc.value + 1);
     const battle = startBattle([
       HIT, NO_CRIT, MAX_DMG, sub_proc, CFZ(2), CFZ_CAN,
@@ -2573,7 +2573,7 @@ describe('Gen 1', () => {
   });
 
   test('Psywave effect', () => {
-    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:617:32', value: MAX};
+    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:566:32', value: MAX};
     const PSY_MIN = {...PSY_MAX, value: MIN};
     const battle = startBattle([HIT, PSY_MAX, HIT, PSY_MIN], [
       {species: 'Gengar', evs, level: 59, moves: ['Psywave']},
@@ -2872,7 +2872,7 @@ describe('Gen 1', () => {
   });
 
   test('Counter effect', () => {
-    const hit2 = {key: 'data/mods/gen1/scripts.ts:395:27', value: MIN};
+    const hit2 = {key: 'data/mods/gen1/scripts.ts:404:27', value: MIN};
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, NO_PAR, HIT,
       HIT, hit2, NO_CRIT, MIN_DMG, HIT,
@@ -6331,7 +6331,7 @@ describe('Gen 1', () => {
   });
 
   test('Psywave infinite loop', () => {
-    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:617:32', value: MAX};
+    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:566:32', value: MAX};
     const battle = startBattle([HIT, HIT, PSY_MAX], [
       {species: 'Charmander', evs, level: 1, moves: ['Psywave']},
     ], [
