@@ -66,8 +66,6 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     var f1: ?Move = null;
     var f2: ?Move = null;
 
-    const pass = showdown and (c1.type == .Pass or c2.type == .Pass);
-    if (showdown and !pass) checkLocked(battle, 2, false);
     if (selectMove(battle, .P1, c1, c2, &f1)) |r| return r;
     if (selectMove(battle, .P2, c2, c1, &f2)) |r| return r;
 
@@ -86,7 +84,7 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
         p2.active.volatiles.Trapping = false;
     }
 
-    return endTurn(battle, pass, log);
+    return endTurn(battle, log);
 }
 
 fn start(battle: anytype, log: anytype) !Result {
@@ -104,27 +102,12 @@ fn start(battle: anytype, log: anytype) !Result {
     try switchIn(battle, .P1, p1_slot, true, log);
     try switchIn(battle, .P2, p2_slot, true, log);
 
-    return endTurn(battle, true, log);
+    return endTurn(battle, log);
 }
 
 fn findFirstAlive(side: *const Side) u8 {
     for (side.pokemon) |pokemon, i| if (pokemon.hp > 0) return side.order[i];
     return 0;
-}
-
-fn checkLocked(battle: anytype, n: u2, check: bool) void {
-    assert(showdown);
-    const p1 = battle.side(.P1);
-    const p2 = battle.side(.P2);
-    // Emitting |request| advances the RNG on Pokémon Showdown if the side has a "locked" move,
-    // but the RNG advances by 2 during choice verification because getLockedMove gets called twice
-    battle.rng.advance(n * (@as(u3, @boolToInt(isLocked(p1, true))) +
-        @as(u3, @boolToInt(isLocked(p2, true)))));
-    // Bonus RNG advance if both players were locked at the beginning of the turn (i.e. we don't
-    // care if they're still currently Charging) and speed tie during the checkResidual step
-    if (check and isLocked(p1, false) and isLocked(p2, false) and speedTie(battle)) {
-        battle.rng.advance(1);
-    }
 }
 
 fn selectMove(
@@ -546,8 +529,7 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
             volatiles.Charging = false;
             volatiles.Trapping = false;
             // GLITCH: Invulnerable is not cleared, resulting in permanent Fly/Dig invulnerability
-            // (Pokémon Showdown unintentionally patches this glitch, preventing invulnerability)
-            if (showdown) volatiles.Invulnerable = false;
+            volatiles.Invulnerable = false;
             try log.cant(ident, .Paralysis);
             return .done;
         }
@@ -632,16 +614,9 @@ fn canMove(
     if (side.active.volatiles.Charging) {
         side.active.volatiles.Charging = false;
         side.active.volatiles.Invulnerable = false;
-        if (showdown) skip = true;
     } else if (move.effect == .Charge) {
         try log.move(player_ident, side.last_selected_move, .{}, from);
         try Effects.charge(battle, player, log);
-        // Pokémon Showdown thinks that the first turn of charging counts as using a move
-        // and so decrements PP now instead of when actually resolving the attack (above)
-        if (showdown) {
-            if (!special) side.last_used_move = side.last_selected_move;
-            if (!skip) decrementPP(side, mslot, auto);
-        }
         return false;
     }
 
@@ -1332,10 +1307,9 @@ fn faint(battle: anytype, player: Player, log: anytype, done: bool) !?Result {
 
     var foe_volatiles = &foe.active.volatiles;
     foe_volatiles.MultiHit = false;
-    if (!showdown and foe_volatiles.Bide) {
+    if (foe_volatiles.Bide) {
         assert(!foe_volatiles.Thrashing and !foe_volatiles.Rage);
-        // Pokémon Showdown should zero foe_volatiles.state here unconditionally
-        foe_volatiles.state = foe_volatiles.state & 255;
+        foe_volatiles.state = if (showdown) 0 else foe_volatiles.state & 255;
         if (foe_volatiles.state != 0) return Result.Error;
     }
 
@@ -1391,7 +1365,7 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
     }
 }
 
-fn endTurn(battle: anytype, pass: bool, log: anytype) @TypeOf(log).Error!Result {
+fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
     if (showdown and options.ebc and checkEBC(battle)) {
         try log.tie();
         return Result.Tie;
@@ -1408,15 +1382,7 @@ fn endTurn(battle: anytype, pass: bool, log: anytype) @TypeOf(log).Error!Result 
         return Result.Error;
     }
 
-    // Pokémon Showdown's "lockedmove" condition has a residual handler meaning at the end of the
-    // turn (but before the `|turn|` protocol message) it will cause the RNG to advance due to speed
-    // sorting any residual events. Technically this is different than the RNG advance due to
-    // getLockedMove that comes after `|turn|` is logged, but given that the only residual handler
-    // for Pokémon Showdown in generation 1 is due to locked moves (which is incorrect, because
-    // there should be *no* residual handler in generation 1...), we can repurpose the same logic
-    if (showdown and !pass) checkLocked(battle, 1, true);
     try log.turn(battle.turn);
-    if (showdown) checkLocked(battle, 1, false);
 
     return Result.Default;
 }
