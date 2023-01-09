@@ -10,21 +10,21 @@ const choices = gen1.Choices.sim;
 const startBattle = createStartBattle(gen);
 
 const {HIT, MISS, CRIT, NO_CRIT, MIN_DMG, MAX_DMG, TIE} = ROLLS.basic({
-  hit: 'data/mods/gen1/scripts.ts:389:42',
-  crit: 'data/mods/gen1/scripts.ts:787:27',
-  dmg: 'data/mods/gen1/scripts.ts:904:27',
+  hit: 'data/mods/gen1/scripts.ts:390:42',
+  crit: 'data/mods/gen1/scripts.ts:788:27',
+  dmg: 'data/mods/gen1/scripts.ts:908:27',
 });
 const {SS_MOD, SS_RES, SS_EACH, INS} = ROLLS.nops;
 
-const SECONDARY = (value: number) => ({key: 'data/mods/gen1/scripts.ts:676:25', value});
+const SECONDARY = (value: number) => ({key: 'data/mods/gen1/scripts.ts:677:25', value});
 const SLP = (n: number) =>
   ({key: 'data/mods/gen1/conditions.ts:63:38', value: ranged(n, 8 - 1)});
 const DISABLE_MOVE = (m: number, n = 4) =>
-  ({key: 'data/mods/gen1/moves.ts:243:27', value: ranged(m, n) - 1});
+  ({key: 'data/mods/gen1/moves.ts:253:27', value: ranged(m, n) - 1});
 const DISABLE_DURATION = (n: number) =>
-  ({key: 'data/mods/gen1/moves.ts:247:34', value: ranged(n, 9 - 1) - 1});
+  ({key: 'data/mods/gen1/moves.ts:257:34', value: ranged(n, 9 - 1) - 1});
 const MIMIC = (m: number, n = 4) =>
-  ({key: 'data/mods/gen1/moves.ts:489:24', value: ranged(m, n) - 1});
+  ({key: 'data/mods/gen1/moves.ts:499:24', value: ranged(m, n) - 1});
 const BIDE = (n: 2 | 3) =>
   ({key: 'data/mods/gen1/moves.ts:40:34', value: ranged(n - 2, 4 - 2)});
 const NO_PAR = SECONDARY(MAX);
@@ -39,7 +39,7 @@ const THRASH = (n: 3 | 4) =>
   ({key: 'data/mods/gen1/conditions.ts:230:16', value: ranged(n - 2, 5 - 3) - 1});
 const MIN_WRAP = {key: 'data/mods/gen1/conditions.ts:199:26', value: MIN};
 const MAX_WRAP = {...MIN_WRAP, value: MAX};
-const REWRAP = {key: 'data/mods/gen1/scripts.ts:228:38', value: MIN};
+const REWRAP = {key: 'data/mods/gen1/scripts.ts:229:38', value: MIN};
 const METRONOME = ROLLS.metronome(gen, ['Metronome', 'Struggle']);
 
 const evs = {hp: 255, atk: 255, def: 255, spa: 255, spd: 255, spe: 255};
@@ -375,9 +375,9 @@ describe('Gen 1', () => {
         '|move|p1a: Clefable|Dig||[from]Metronome|[still]',
         '|-prepare|p1a: Clefable|Dig',
         '|turn|2',
-        '|move|p1a: Clefable|Dig|p2a: Clefable|[miss]',
+        '|move|p1a: Clefable|Dig|p2a: Clefable|[from]Dig|[miss]',
         '|-miss|p1a: Clefable',
-        '|move|p2a: Clefable|Fly|p1a: Clefable',
+        '|move|p2a: Clefable|Fly|p1a: Clefable|[from]Fly',
         '|-damage|p1a: Clefable|343/393',
         '|turn|3',
         '|move|p1a: Clefable|Quick Attack|p2a: Clefable',
@@ -830,7 +830,7 @@ describe('Gen 1', () => {
   });
 
   test('MultiHit effect', () => {
-    const hit3 = {key: 'data/mods/gen1/scripts.ts:404:27', value: 0x60000000};
+    const hit3 = {key: 'data/mods/gen1/scripts.ts:405:27', value: 0x60000000};
     const hit5 = {...hit3, value: MAX};
     const battle = startBattle([HIT, hit3, NO_CRIT, MAX_DMG, HIT, hit5, NO_CRIT, MAX_DMG], [
       {species: 'Kangaskhan', evs, moves: ['Comet Punch']},
@@ -1598,7 +1598,7 @@ describe('Gen 1', () => {
   });
 
   test('ConfusionChance effect', () => {
-    const sub_proc = {key: 'data/mods/gen1/moves.ts:841:50', value: ranged(25, 256) - 1};
+    const sub_proc = {key: 'data/mods/gen1/moves.ts:851:50', value: ranged(25, 256) - 1};
     const no_proc = SECONDARY(sub_proc.value + 1);
     const battle = startBattle([
       HIT, NO_CRIT, MAX_DMG, sub_proc, CFZ(2), CFZ_CAN,
@@ -1953,7 +1953,7 @@ describe('Gen 1', () => {
       '|move|p2a: Psyduck|Scratch|p1a: Wartortle',
       '|-damage|p1a: Wartortle|298/321',
       '|turn|2',
-      '|move|p1a: Wartortle|Skull Bash|p2a: Psyduck',
+      '|move|p1a: Wartortle|Skull Bash|p2a: Psyduck|[from]Skull Bash',
       '|-damage|p2a: Psyduck|220/303',
       '|move|p2a: Psyduck|Scratch|p1a: Wartortle',
       '|-damage|p1a: Wartortle|275/321',
@@ -1998,7 +1998,7 @@ describe('Gen 1', () => {
         '|move|p2a: Lickitung|Strength|p1a: Pidgeot|[miss]',
         '|-miss|p2a: Lickitung',
         '|turn|2',
-        '|move|p1a: Pidgeot|Fly|p2a: Lickitung',
+        '|move|p1a: Pidgeot|Fly|p2a: Lickitung|[from]Fly',
         '|-damage|p2a: Lickitung|304/383',
         '|move|p2a: Lickitung|Strength|p1a: Pidgeot',
         '|-damage|p1a: Pidgeot|295/369',
@@ -2054,7 +2054,7 @@ describe('Gen 1', () => {
         '|faint|p2a: Shellder',
         '|switch|p2a: Arcanine|Arcanine|383/383',
         '|turn|5',
-        '|move|p1a: Ninetales|Dig|p2a: Arcanine',
+        '|move|p1a: Ninetales|Dig|p2a: Arcanine|[from]Dig',
         '|-supereffective|p2a: Arcanine',
         '|-damage|p2a: Arcanine|242/383',
         '|move|p2a: Arcanine|Teleport|p2a: Arcanine',
@@ -2572,7 +2572,7 @@ describe('Gen 1', () => {
   });
 
   test('Psywave effect', () => {
-    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:566:32', value: MAX};
+    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:576:32', value: MAX};
     const PSY_MIN = {...PSY_MAX, value: MIN};
     const battle = startBattle([HIT, PSY_MAX, HIT, PSY_MIN], [
       {species: 'Gengar', evs, level: 59, moves: ['Psywave']},
@@ -2871,7 +2871,7 @@ describe('Gen 1', () => {
   });
 
   test('Counter effect', () => {
-    const hit2 = {key: 'data/mods/gen1/scripts.ts:404:27', value: MIN};
+    const hit2 = {key: 'data/mods/gen1/scripts.ts:405:27', value: MIN};
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, NO_PAR, HIT,
       HIT, hit2, NO_CRIT, MIN_DMG, HIT,
@@ -3659,7 +3659,7 @@ describe('Gen 1', () => {
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
 
-    // FIXME: expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1']);
+    expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1']);
 
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
@@ -3703,7 +3703,7 @@ describe('Gen 1', () => {
       '|-end|p1a: Chansey|Bide',
       '|-damage|p2a: Dugtrio|153/273',
       '|turn|5',
-      '|move|p2a: Dugtrio|Dig|p1a: Chansey',
+      '|move|p2a: Dugtrio|Dig|p1a: Chansey|[from]Dig',
       '|-damage|p1a: Chansey|407/703',
       '|move|p1a: Chansey|Bide|p1a: Chansey',
       '|-start|p1a: Chansey|Bide',
@@ -3905,7 +3905,7 @@ describe('Gen 1', () => {
       '|move|p2a: Pidgeot|Swift|p1a: Fearow|[from]Mirror Move',
       '|-damage|p1a: Fearow|67/333',
       '|turn|6',
-      '|move|p1a: Fearow|Fly|p2a: Pidgeot|[miss]',
+      '|move|p1a: Fearow|Fly|p2a: Pidgeot|[from]Fly|[miss]',
       '|-miss|p1a: Fearow',
       '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
       '|move|p2a: Pidgeot|Fly||[from]Mirror Move|[still]',
@@ -3913,7 +3913,7 @@ describe('Gen 1', () => {
       '|turn|7',
       '|move|p1a: Fearow|Peck|p2a: Pidgeot|[miss]',
       '|-miss|p1a: Fearow',
-      '|move|p2a: Pidgeot|Fly|p1a: Fearow|[miss]',
+      '|move|p2a: Pidgeot|Fly|p1a: Fearow|[from]Fly|[miss]',
       '|-miss|p2a: Pidgeot',
       '|turn|8',
       '|switch|p2a: Pidgeotto|Pidgeotto|329/329',
@@ -4072,7 +4072,7 @@ describe('Gen 1', () => {
       '|turn|3',
       '|move|p1a: Mew|Peck|p2a: Articuno|[miss]',
       '|-miss|p1a: Mew',
-      '|move|p2a: Articuno|Fly|p1a: Mew|[miss]',
+      '|move|p2a: Articuno|Fly|p1a: Mew|[from]Fly|[miss]',
       '|-miss|p2a: Articuno',
       '|turn|4',
       '|move|p2a: Articuno|Peck|p1a: Mew',
@@ -4215,9 +4215,12 @@ describe('Gen 1', () => {
     }
   });
 
-  // FIXME: Fixed by smogon/pokemon-showdown#9201 & smogon/pokemon-showdown#9301
-  test.skip('Disable + Bide bug', () => {
-    const battle = startBattle([BIDE(3), HIT, DISABLE_MOVE(1, 2), DISABLE_DURATION(5)], [
+  // Fixed by smogon/pokemon-showdown#9201 & smogon/pokemon-showdown#9301
+  test('Disable + Bide bug', () => {
+    const SS_RUN = {key: 'sim/battle.ts:1483:10', value: SS_MOD.value};
+    const battle = startBattle([
+      BIDE(3), HIT, DISABLE_MOVE(1, 2), DISABLE_DURATION(5), SS_RUN, SS_RUN,
+    ], [
       {species: 'Voltorb', evs, moves: ['Teleport', 'Disable']},
     ], [
       {species: 'Golem', evs, moves: ['Bide', 'Flash']},
@@ -4240,7 +4243,7 @@ describe('Gen 1', () => {
       '|cant|p2a: Golem|Disable|Bide',
       '|turn|3',
       '|move|p1a: Voltorb|Teleport|p1a: Voltorb',
-      '|-activate|p2a: Golem|Bide',
+      '|cant|p2a: Golem|Disable|Bide',
       '|turn|4',
     ]);
   });
@@ -4276,7 +4279,7 @@ describe('Gen 1', () => {
       '|-curestatus|p1a: Venusaur|slp|[msg]',
       '|move|p2a: Snorlax|Teleport|p2a: Snorlax',
       '|turn|3',
-      '|move|p1a: Venusaur|Solar Beam|p2a: Snorlax',
+      '|move|p1a: Venusaur|Solar Beam|p2a: Snorlax|[from]Solar Beam',
       '|-damage|p2a: Snorlax|355/523',
       '|move|p2a: Snorlax|Teleport|p2a: Snorlax',
       '|turn|4',
@@ -4575,9 +4578,9 @@ describe('Gen 1', () => {
         '|move|p1a: Clefairy|Fly||[from]Metronome|[still]',
         '|-prepare|p1a: Clefairy|Fly',
         '|turn|2',
-        '|move|p2a: Clefable|Skull Bash|p1a: Clefairy|[miss]',
+        '|move|p2a: Clefable|Skull Bash|p1a: Clefairy|[from]Skull Bash|[miss]',
         '|-miss|p2a: Clefable',
-        '|move|p1a: Clefairy|Fly|p2a: Clefable|[miss]',
+        '|move|p1a: Clefairy|Fly|p2a: Clefable|[from]Fly|[miss]',
         '|-miss|p1a: Clefairy',
         '|turn|3',
       ]);
@@ -5744,7 +5747,7 @@ describe('Gen 1', () => {
       '|move|p2a: Pikachu|Thunder Shock|p1a: Fearow|[miss]',
       '|-miss|p2a: Pikachu',
       '|turn|6',
-      '|move|p1a: Fearow|Fly|p2a: Pikachu',
+      '|move|p1a: Fearow|Fly|p2a: Pikachu|[from]Fly',
       '|-resisted|p2a: Pikachu',
       '|-damage|p2a: Pikachu|11/141',
       '|move|p2a: Pikachu|Thunder Shock|p1a: Fearow',
@@ -6316,7 +6319,7 @@ describe('Gen 1', () => {
   });
 
   test('Psywave infinite loop', () => {
-    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:566:32', value: MAX};
+    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:576:32', value: MAX};
     const battle = startBattle([HIT, HIT, PSY_MAX], [
       {species: 'Charmander', evs, level: 1, moves: ['Psywave']},
     ], [
