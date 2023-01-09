@@ -487,9 +487,8 @@ test "turn order (complex speed tie)" {
             if (showdown) .{
                 NOP, NOP, NOP, NOP, NOP, NOP, NOP,
                 TIE_2, NOP, NOP, fly, NOP,
-                dig, NOP, NOP, NOP, NOP, NOP, NOP, NOP,
-                NOP, NOP, NOP, NOP, TIE_1, NOP, NOP, NOP, NOP,
-                NOP, HIT, ~CRIT, MIN_DMG, NOP, NOP, NOP,
+                dig, NOP, NOP, TIE_1, NOP, NOP, NOP,
+                HIT, ~CRIT, MIN_DMG, NOP, NOP,
                 NOP, NOP, HIT, ~CRIT, MIN_DMG, NOP,
                 swift, ~CRIT, MIN_DMG, NOP, NOP,
                 NOP, NOP, NOP, NOP, NOP, petal_dance,
@@ -522,10 +521,12 @@ test "turn order (complex speed tie)" {
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-        try t.log.expected.move(P1.ident(1), Move.Dig, P2.ident(1), Move.Dig);
+        var from = if (showdown) null else Move.Dig;
+        try t.log.expected.move(P1.ident(1), Move.Dig, P2.ident(1), from);
         try t.log.expected.lastmiss();
         try t.log.expected.miss(P1.ident(1));
-        try t.log.expected.move(P2.ident(1), Move.Fly, P1.ident(1), Move.Fly);
+        from = if (showdown) null else Move.Fly;
+        try t.log.expected.move(P2.ident(1), Move.Fly, P1.ident(1), from);
         t.expected.p1.get(1).hp -= 50;
         try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
         try t.log.expected.turn(3);
@@ -2460,14 +2461,15 @@ test "Charge effect" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try expectEqual(if (showdown) pp - 1 else pp, t.actual.p1.active.move(1).pp);
+    try expectEqual(pp, t.actual.p1.active.move(1).pp);
 
     var n = t.battle.actual.choices(.P1, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
 
-    try t.log.expected.move(P1.ident(1), Move.SkullBash, P2.ident(1), Move.SkullBash);
+    const from = if (showdown) null else Move.SkullBash;
+    try t.log.expected.move(P1.ident(1), Move.SkullBash, P2.ident(1), from);
     t.expected.p2.get(1).hp -= 83;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.move(P2.ident(1), Move.Scratch, P1.ident(1), null);
@@ -2490,15 +2492,10 @@ test "Fly/Dig effect" {
 
     // normal
     {
-        var t = Test(
-        // zig fmt: off
-            if (showdown) .{
-                NOP, NOP, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
-            } else .{
-                ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
-            }
-        // zig fmt: on
-        ).init(
+        var t = Test((if (showdown)
+            (.{ HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG })
+        else
+            (.{ ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
             &.{
                 .{ .species = .Pidgeot, .moves = &.{ .Fly, .SandAttack } },
                 .{ .species = .Metapod, .moves = &.{.Harden} },
@@ -2521,14 +2518,15 @@ test "Fly/Dig effect" {
         try t.log.expected.turn(2);
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
-        try expectEqual(if (showdown) pp - 1 else pp, t.actual.p1.active.move(1).pp);
+        try expectEqual(pp, t.actual.p1.active.move(1).pp);
 
         var n = t.battle.actual.choices(.P1, .Move, &choices);
         try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
         n = t.battle.actual.choices(.P2, .Move, &choices);
         try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
 
-        try t.log.expected.move(P1.ident(1), Move.Fly, P2.ident(1), Move.Fly);
+        const from = if (showdown) null else Move.Fly;
+        try t.log.expected.move(P1.ident(1), Move.Fly, P2.ident(1), from);
         t.expected.p2.get(1).hp -= 79;
         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
         try t.log.expected.move(P2.ident(1), Move.Strength, P1.ident(1), null);
@@ -2543,16 +2541,10 @@ test "Fly/Dig effect" {
     }
     // fainting
     {
-        var t = Test(
-        // zig fmt: off
-            if (showdown) .{
-                HIT, NOP, NOP, NOP, NOP, NOP,
-                NOP, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG,
-            } else .{
-                HIT, ~CRIT, MIN_DMG, HIT
-            }
-        // zig fmt: on
-        ).init(
+        var t = Test((if (showdown)
+            (.{ HIT, NOP, HIT, ~CRIT, MIN_DMG })
+        else
+            (.{ HIT, ~CRIT, MIN_DMG, HIT }))).init(
             &.{
                 .{ .species = .Seadra, .hp = 31, .moves = &.{.Toxic} },
                 .{ .species = .Ninetales, .moves = &.{.Dig} },
@@ -2600,7 +2592,8 @@ test "Fly/Dig effect" {
 
         try expectEqual(Result.Default, try t.update(.{}, swtch(2)));
 
-        try t.log.expected.move(P1.ident(2), Move.Dig, P2.ident(2), Move.Dig);
+        const from = if (showdown) null else Move.Dig;
+        try t.log.expected.move(P1.ident(2), Move.Dig, P2.ident(2), from);
         try t.log.expected.supereffective(P2.ident(2));
         t.expected.p2.get(2).hp -= 141;
         try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
@@ -3028,9 +3021,9 @@ test "Thrashing effect" {
             if (showdown) .{
                 HIT, ~CRIT, MIN_DMG, THRASH_3, HIT, CFZ_5,
                 CFZ_CAN, ~HIT, ~HIT, THRASH_3,
-                CFZ_CAN, HIT, ~CRIT, MIN_DMG, CFZ_5, HIT, ~CRIT,
-                MIN_DMG, CFZ_CAN, HIT, NOP, PAR_CANT,
-                CFZ_CAN, HIT, PAR_CAN, HIT, ~CRIT, MAX_DMG, THRASH_3,
+                CFZ_CAN, HIT, ~CRIT, MIN_DMG, CFZ_5, HIT, ~CRIT, MIN_DMG,
+                CFZ_CAN, HIT, NOP, PAR_CANT, CFZ_5,
+                CFZ_CAN, HIT, CFZ_CAN, PAR_CAN, HIT, ~CRIT, MAX_DMG, THRASH_3,
             } else .{
                 THRASH_3, ~CRIT, MIN_DMG, HIT, HIT, CFZ_5,
                 CFZ_CAN, ~CRIT, MIN_DMG, ~HIT, THRASH_3, ~CRIT, MIN_DMG, ~HIT,
@@ -3118,11 +3111,16 @@ test "Thrashing effect" {
         t.expected.p2.get(1).status = Status.init(.PAR);
         try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
         try t.log.expected.cant(P2.ident(1), .Paralysis);
+        if (showdown) try t.log.expected.start(P2.ident(1), .ConfusionSilent);
         try t.log.expected.turn(5);
 
         // Thrashing doesn't confuse you if the user is prevented from moving
         try expectEqual(Result.Default, try t.update(move(2), forced));
-        try expect(!t.actual.p2.active.volatiles.Confusion);
+        if (showdown) {
+            try expectEqual(@as(u3, 5), t.actual.p2.active.volatiles.confusion);
+        } else {
+            try expect(!t.actual.p2.active.volatiles.Confusion);
+        }
 
         n = t.battle.actual.choices(.P1, .Move, &choices);
         try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
@@ -3132,6 +3130,7 @@ test "Thrashing effect" {
         try t.log.expected.activate(P1.ident(1), .Confusion);
         try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
         try t.log.expected.fail(P2.ident(1), .Paralysis);
+        if (showdown) try t.log.expected.activate(P1.ident(1), .Confusion);
         try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), null);
         t.expected.p1.get(1).hp -= 108;
         try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
@@ -4566,9 +4565,7 @@ test "Bide effect" {
     var t = Test(
     // zig fmt: off
     if (showdown) .{
-        BIDE_3, HIT, HIT, NOP, NOP,
-        NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG, BIDE_3, HIT,
-        HIT, CFZ_3, CFZ_CAN,
+        BIDE_3, HIT, HIT, HIT, ~CRIT, MIN_DMG, BIDE_3, HIT, HIT, CFZ_3, CFZ_CAN,
     } else .{
         ~CRIT, BIDE_3, HIT, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, BIDE_3, HIT, HIT, CFZ_3, CFZ_CAN,
     }
@@ -4596,6 +4593,7 @@ test "Bide effect" {
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
     var n = t.battle.actual.choices(.P1, .Move, &choices);
+    // FIXME: move(2) also allowed on PS due to regression from smogon/pokemon-showdown#9201
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), forced }, choices[0..n]);
 
     try t.log.expected.activate(P1.ident(1), .Bide);
@@ -4616,7 +4614,6 @@ test "Bide effect" {
     try t.log.expected.laststill();
     try t.log.expected.prepare(P2.ident(2), Move.Dig);
     try t.log.expected.end(P1.ident(1), .Bide);
-    // BUG: Pokémon Showdown doesn't accumulate damage during Fly/Dig prepare so should be 80 here
     t.expected.p2.get(2).hp -= 120;
     try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
     try t.log.expected.turn(5);
@@ -4626,7 +4623,8 @@ test "Bide effect" {
     n = t.battle.actual.choices(.P1, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
 
-    try t.log.expected.move(P2.ident(2), Move.Dig, P1.ident(1), Move.Dig);
+    const from = if (showdown) null else Move.Dig;
+    try t.log.expected.move(P2.ident(2), Move.Dig, P1.ident(1), from);
     t.expected.p1.get(1).hp -= 256;
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
     try t.log.expected.move(P1.ident(1), Move.Bide, P1.ident(1), null);
@@ -4834,8 +4832,7 @@ test "MirrorMove effect" {
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
             HIT, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG,
             ~CRIT, MIN_DMG, ~CRIT, MIN_DMG,
-            NOP, NOP, NOP, NOP,
-            NOP, NOP, NOP, NOP, NOP, NOP, HIT, ~CRIT, MIN_DMG,
+            ~CRIT, MIN_DMG, ~HIT, ~HIT,
         } else .{
             ~CRIT, ~CRIT, ~CRIT, MIN_DMG, HIT, ~CRIT, ~CRIT, MIN_DMG, HIT,
             ~CRIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
@@ -4890,7 +4887,6 @@ test "MirrorMove effect" {
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
     try t.log.expected.turn(4);
 
-    // Pokémon Showdown sets last_used_move incorrectly, this should succeed
     try expectEqual(Result.Default, try t.update(move(1), move(2)));
     try expectEqual(Move.Peck, t.actual.p1.last_used_move);
     try expectEqual(Move.Swift, t.actual.p2.last_used_move);
@@ -4916,65 +4912,52 @@ test "MirrorMove effect" {
     try t.log.expected.laststill();
     try t.log.expected.prepare(P1.ident(1), Move.Fly);
     try t.log.expected.move(P2.ident(1), Move.MirrorMove, P2.ident(1), null);
-    if (showdown) {
-        try t.log.expected.move(P2.ident(1), Move.Fly, .{}, Move.MirrorMove);
-        try t.log.expected.laststill();
-        try t.log.expected.prepare(P2.ident(1), Move.Fly);
-    } else {
-        try t.log.expected.move(P2.ident(1), Move.Swift, P1.ident(1), Move.MirrorMove);
-        t.expected.p1.get(1).hp -= 74;
-        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-    }
+    try t.log.expected.move(P2.ident(1), Move.Swift, P1.ident(1), Move.MirrorMove);
+    t.expected.p1.get(1).hp -= 74;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
     try t.log.expected.turn(6);
 
     // Should actually copy Swift and not Fly
     try expectEqual(Result.Default, try t.update(move(3), move(1)));
-    try expectEqual(if (showdown) Move.Fly else Move.Swift, t.actual.p1.last_used_move);
-    try expectEqual(if (showdown) Move.Fly else Move.Swift, t.actual.p2.last_used_move);
+    try expectEqual(Move.Swift, t.actual.p1.last_used_move);
+    try expectEqual(Move.Swift, t.actual.p2.last_used_move);
+    try expectEqual(@as(u8, 29), t.actual.p2.get(1).move(1).pp);
     try expectEqual(@as(u8, 28), t.actual.p2.get(1).move(1).pp);
 
-    try t.log.expected.move(P1.ident(1), Move.Fly, P2.ident(1), Move.Fly);
+    const from = if (showdown) null else Move.Fly;
+    try t.log.expected.move(P1.ident(1), Move.Fly, P2.ident(1), from);
     try t.log.expected.lastmiss();
     try t.log.expected.miss(P1.ident(1));
-    if (showdown) {
-        try t.log.expected.move(P2.ident(1), Move.Fly, P1.ident(1), Move.Fly);
-        t.expected.p1.get(1).hp -= 86;
-        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-    } else {
-        try t.log.expected.move(P2.ident(1), Move.MirrorMove, P2.ident(1), null);
-        try t.log.expected.move(P2.ident(1), Move.Fly, .{}, Move.MirrorMove);
-        try t.log.expected.laststill();
-        try t.log.expected.prepare(P2.ident(1), Move.Fly);
-    }
+    try t.log.expected.move(P2.ident(1), Move.MirrorMove, P2.ident(1), null);
+    try t.log.expected.move(P2.ident(1), Move.Fly, .{}, Move.MirrorMove);
+    try t.log.expected.laststill();
+    try t.log.expected.prepare(P2.ident(1), Move.Fly);
     try t.log.expected.turn(7);
 
     try expectEqual(Result.Default, try t.update(forced, move(1)));
     try expectEqual(Move.Fly, t.actual.p1.last_used_move);
-    try expectEqual(if (showdown) Move.Fly else Move.MirrorMove, t.actual.p2.last_used_move);
+    try expectEqual(Move.MirrorMove, t.actual.p2.last_used_move);
     try expectEqual(@as(u8, 28), t.actual.p2.get(1).move(1).pp);
 
-    if (!showdown) {
-        try t.log.expected.move(P1.ident(1), Move.Peck, P2.ident(1), null);
-        try t.log.expected.lastmiss();
-        try t.log.expected.miss(P1.ident(1));
-        try t.log.expected.move(P2.ident(1), Move.Fly, P1.ident(1), Move.Fly);
-        try t.log.expected.lastmiss();
-        try t.log.expected.miss(P2.ident(1));
-        try t.log.expected.turn(8);
+    try t.log.expected.move(P1.ident(1), Move.Peck, P2.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P1.ident(1));
+    try t.log.expected.move(P2.ident(1), Move.Fly, P1.ident(1), from);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    try t.log.expected.turn(8);
 
-        try expectEqual(Result.Default, try t.update(move(2), forced));
-    }
+    try expectEqual(Result.Default, try t.update(move(2), forced));
 
     try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
     try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), null);
     try t.log.expected.fail(P1.ident(1), .None);
-    try t.log.expected.turn(if (showdown) 8 else 9);
+    try t.log.expected.turn(9);
 
     // Switching resets last used moves
     try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
     try expectEqual(Move.MirrorMove, t.actual.p1.last_used_move);
-    const last = Move.None; //if (showdown) Move.Fly else Move.None;
-    try expectEqual(last, t.actual.p2.last_used_move);
+    try expectEqual(Move.None, t.actual.p2.last_used_move);
     try expectEqual(@as(u8, 28), t.actual.p1.get(1).move(1).pp);
 
     try t.verify();
@@ -5048,7 +5031,7 @@ test "Explode effect" {
 // Move.Swift
 test "Swift effect" {
     // This move does not check accuracy and hits even if the target is using Dig or Fly.
-    var t = Test(if (showdown) (.{ ~CRIT, MIN_DMG, NOP, NOP }) else (.{ ~CRIT, MIN_DMG })).init(
+    var t = Test(.{ ~CRIT, MIN_DMG }).init(
         &.{.{ .species = .Eevee, .moves = &.{.Swift} }},
         &.{.{ .species = .Diglett, .moves = &.{.Dig} }},
     );
@@ -5078,9 +5061,7 @@ test "Transform effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            // FIXME: NOP, NOP, NOP, NOP, NOP,
-            NOP, NOP, NOP, NOP, NOP, NOP,
-            TIE_1, NOP, NOP, NOP, NOP, ~HIT, NOP, NOP,
+            NOP, TIE_1, NOP, NOP, NOP, ~HIT, NOP, NOP,
             TIE_2, NOP, NOP, HIT, no_crit, MIN_DMG, NOP,
             HIT, no_crit, MIN_DMG, NOP, NOP,
             // FIXME: TIE_2, NOP, NOP, NOP, NOP, NOP, NOP, NOP
@@ -5146,10 +5127,11 @@ test "Transform effect" {
         try expectEqual(pps[i], m.pp);
     }
 
+    const from = if (showdown) null else Move.Fly;
     try t.log.expected.move(P1.ident(1), Move.Peck, P2.ident(1), null);
     try t.log.expected.lastmiss();
     try t.log.expected.miss(P1.ident(1));
-    try t.log.expected.move(P2.ident(1), Move.Fly, P1.ident(1), Move.Fly);
+    try t.log.expected.move(P2.ident(1), Move.Fly, P1.ident(1), from);
     try t.log.expected.lastmiss();
     try t.log.expected.miss(P2.ident(1));
     try t.log.expected.turn(4);
@@ -5352,13 +5334,14 @@ test "Disable + Transform bug" {
     }
 }
 
+// FIXME: Fixed by smogon/pokemon-showdown#9201 & smogon/pokemon-showdown#9301
 test "Disable + Bide bug" {
     const BIDE_3 = MAX;
     const DISABLE_MOVE_1 = if (showdown) comptime ranged(1, 2) - 1 else 0;
     const DISABLE_DURATION_5 = comptime ranged(5, 9 - 1) - 1;
 
     var t = Test((if (showdown)
-        (.{ BIDE_3, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5 }) // BUG: NOP, NOP,
+        (.{ BIDE_3, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5 })
     else
         (.{ ~CRIT, BIDE_3, ~CRIT, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5 }))).init(
         &.{.{ .species = .Voltorb, .moves = &.{ .Teleport, .Disable } }},
@@ -5395,11 +5378,12 @@ test "Disable + Bide bug" {
     try t.verify();
 }
 
+// Fixed by smogon/pokemon-showdown#9243
 test "Charge + Sleep bug" {
     const SLP_1 = if (showdown) comptime ranged(1, 8 - 1) else 1;
 
     var t = Test((if (showdown)
-        (.{ HIT, NOP, SLP_1 })
+        (.{ HIT, NOP, SLP_1, HIT, ~CRIT, MIN_DMG })
     else
         (.{ ~CRIT, HIT, SLP_1, ~CRIT, MIN_DMG, HIT }))).init(
         &.{.{ .species = .Venusaur, .moves = &.{ .SolarBeam, .Tackle } }},
@@ -5429,21 +5413,11 @@ test "Charge + Sleep bug" {
 
     // The charging move should be forced and should execute instead of preparing again
     n = t.battle.actual.choices(.P1, .Move, &choices);
-    try expectEqualSlices(
-        Choice,
-        if (showdown) &[_]Choice{ move(1), move(2) } else &[_]Choice{forced},
-        choices[0..n],
-    );
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
-    if (showdown) {
-        try t.log.expected.move(P1.ident(1), Move.SolarBeam, .{}, null);
-        try t.log.expected.laststill();
-        try t.log.expected.prepare(P1.ident(1), Move.SolarBeam);
-    } else {
-        try t.log.expected.move(P1.ident(1), Move.SolarBeam, P2.ident(1), Move.SolarBeam);
-        t.expected.p2.get(1).hp -= 168;
-        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    }
+    try t.log.expected.move(P1.ident(1), Move.SolarBeam, P2.ident(1), Move.SolarBeam);
+    t.expected.p2.get(1).hp -= 168;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
     try t.log.expected.turn(4);
 
@@ -5475,6 +5449,7 @@ test "Explosion invulnerability bug" {
     try t.verify();
 }
 
+// Fixed by smogon/pokemon-showdown#9201
 test "Bide + Substitute bug" {
     const BIDE_2 = MIN;
 
@@ -5508,13 +5483,10 @@ test "Bide + Substitute bug" {
     t.expected.p2.get(1).hp -= 20;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.end(P2.ident(1), .Bide);
-    // BUG: On Pokémon Showdown the opponent having a Substitute blanks Bide
-    // if (!showdown) try t.log.expected.end(P1.ident(1), .Substitute);
     try t.log.expected.end(P1.ident(1), .Substitute);
     try t.log.expected.turn(4);
 
     try expectEqual(Result.Default, try t.update(move(1), forced));
-    // if (showdown) try expectEqual(@as(u8, 71), t.actual.p1.active.volatiles.substitute);
 
     try t.verify();
 }
@@ -5736,6 +5708,7 @@ test "Counter via Metronome bug" {
     }
 }
 
+// Fixed by smogon/pokemon-showdown#9243
 test "Infinite Metronome" {
     const skull_bash = comptime metronome(.SkullBash);
     const mirror_move = comptime metronome(.MirrorMove);
@@ -5747,7 +5720,7 @@ test "Infinite Metronome" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                skull_bash, mirror_move, ~HIT, ~HIT,
+                skull_bash, mirror_move, mirror_move, fly, ~HIT,
             } else .{
                 ~CRIT, skull_bash, ~CRIT, mirror_move, ~CRIT, ~CRIT, mirror_move, ~CRIT, ~CRIT, fly,
                 ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, ~HIT
@@ -5765,30 +5738,25 @@ test "Infinite Metronome" {
         try t.log.expected.prepare(P2.ident(1), Move.SkullBash);
         try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
         try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
-        if (showdown) {
-            try t.log.expected.move(P1.ident(1), Move.SkullBash, .{}, Move.MirrorMove);
-        } else {
-            try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
-            try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
-            try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
-            try t.log.expected.move(P1.ident(1), Move.Fly, .{}, Move.Metronome);
-        }
+        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
+        try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
+        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
+        try t.log.expected.move(P1.ident(1), Move.Fly, .{}, Move.Metronome);
         try t.log.expected.laststill();
-        const used = if (showdown) Move.SkullBash else Move.Fly;
-        try t.log.expected.prepare(P1.ident(1), used);
+        try t.log.expected.prepare(P1.ident(1), Move.Fly);
 
         try t.log.expected.turn(2);
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-        const pp = if (showdown) 15 else 16;
-        try expectEqual(@as(u8, pp), t.actual.p1.active.move(1).pp);
-        try expectEqual(@as(u8, pp), t.actual.p1.active.move(1).pp);
+        try expectEqual(@as(u8, 16), t.actual.p1.active.move(1).pp);
+        try expectEqual(@as(u8, 16), t.actual.p1.active.move(1).pp);
 
+        const from = if (showdown) null else Move.Fly;
         try t.log.expected.move(P2.ident(1), Move.SkullBash, P1.ident(1), Move.SkullBash);
         try t.log.expected.lastmiss();
         try t.log.expected.miss(P2.ident(1));
-        try t.log.expected.move(P1.ident(1), used, P2.ident(1), used);
+        try t.log.expected.move(P1.ident(1), Move.Fly, P2.ident(1), from);
         try t.log.expected.lastmiss();
         try t.log.expected.miss(P1.ident(1));
         try t.log.expected.turn(3);
@@ -6302,6 +6270,7 @@ test "1/256 miss glitch" {
     try t.verify();
 }
 
+// Fixed by smogon/pokemon-showdown#9201
 test "Bide damage accumulation glitches" {
     // https://glitchcity.wiki/Bide_fainted_Pokémon_damage_accumulation_glitch
     // https://glitchcity.wiki/Bide_non-damaging_move/action_damage_accumulation_glitch
@@ -6339,7 +6308,7 @@ test "Bide damage accumulation glitches" {
 
         try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
         try t.log.expected.end(P2.ident(1), .Bide);
-        t.expected.p1.get(2).hp -= 72; // BUG: 36 on Pokémon Showdown
+        t.expected.p1.get(2).hp -= 72;
         try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
         try t.log.expected.turn(4);
 
@@ -6400,23 +6369,6 @@ test "Bide damage accumulation glitches" {
             try t.log.expected.turn(4);
 
             try expectEqual(Result.Default, try t.update(swtch(2), .{}));
-            try expectEqual(@as(u16, 191), t.actual.p2.active.volatiles.state);
-
-            // BUG: On Pokémon Showdown if the Bide user goes first it lasts an extra turn
-            // try t.log.expected.activate(P2.ident(1), .Bide);
-            // try t.log.expected.move(P1.ident(2), Move.DefenseCurl, P1.ident(2), null);
-            // try t.log.expected.boost(P1.ident(2), .Defense, 1);
-            // try t.log.expected.turn(5);
-
-            // try expectEqual(Result.Default, try t.update(move(1), move(2)));
-
-            try t.log.expected.end(P2.ident(1), .Bide);
-            t.expected.p1.get(2).hp = 0;
-            try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
-            try t.log.expected.faint(P1.ident(2), false);
-            try t.log.expected.win(.P2);
-
-            try expectEqual(Result.Lose, try t.update(move(1), move(2)));
         }
 
         try t.verify();
@@ -7248,11 +7200,11 @@ test "Invulnerability glitch" {
     // zig fmt: off
         if (showdown) .{
             HIT, NOP,
-            PAR_CAN, NOP, NOP,
-            NOP, NOP, PAR_CANT, HIT, ~CRIT, MIN_DMG, NOP,
+            PAR_CAN,
+            PAR_CANT,
             PAR_CAN, ~CRIT, MIN_DMG,
-            PAR_CAN, NOP, NOP,
-            NOP, NOP, PAR_CAN, NOP, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, NOP,
+            PAR_CAN,
+            PAR_CAN, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, NOP,
         } else .{
             ~CRIT, HIT,
             PAR_CAN, ~CRIT, MIN_DMG,
@@ -7294,14 +7246,8 @@ test "Invulnerability glitch" {
 
     try t.log.expected.cant(P1.ident(1), .Paralysis);
     try t.log.expected.move(P2.ident(1), Move.ThunderShock, P1.ident(1), null);
-    if (showdown) {
-        try t.log.expected.supereffective(P1.ident(1));
-        t.expected.p1.get(1).hp -= 25;
-        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-    } else {
-        try t.log.expected.lastmiss();
-        try t.log.expected.miss(P2.ident(1));
-    }
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
     try t.log.expected.turn(4);
 
     // After Fly is interrupted by Paralysis, Invulnerability should be preserved

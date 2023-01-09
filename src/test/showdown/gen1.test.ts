@@ -14,9 +14,8 @@ const {HIT, MISS, CRIT, NO_CRIT, MIN_DMG, MAX_DMG, TIE} = ROLLS.basic({
   crit: 'data/mods/gen1/scripts.ts:787:27',
   dmg: 'data/mods/gen1/scripts.ts:904:27',
 });
-const {SS_MOD, SS_RES, SS_EACH, INS, GLM} = ROLLS.nops;
+const {SS_MOD, SS_RES, SS_EACH, INS} = ROLLS.nops;
 
-const SS_RUN = {key: 'data/mods/gen1/scripts.ts:146:33', value: SS_MOD.value};
 const SECONDARY = (value: number) => ({key: 'data/mods/gen1/scripts.ts:676:25', value});
 const SLP = (n: number) =>
   ({key: 'data/mods/gen1/conditions.ts:63:38', value: ranged(n, 8 - 1)});
@@ -27,7 +26,7 @@ const DISABLE_DURATION = (n: number) =>
 const MIMIC = (m: number, n = 4) =>
   ({key: 'data/mods/gen1/moves.ts:489:24', value: ranged(m, n) - 1});
 const BIDE = (n: 2 | 3) =>
-  ({key: 'data/mods/gen1/moves.ts:41:17', value: ranged(n - 2, 5 - 3)});
+  ({key: 'data/mods/gen1/moves.ts:40:34', value: ranged(n - 2, 4 - 2)});
 const NO_PAR = SECONDARY(MAX);
 const PAR_CANT = {key: 'data/mods/gen1/conditions.ts:38:13', value: ranged(63, 256) - 1};
 const PAR_CAN = {...PAR_CANT, value: PAR_CANT.value + 1};
@@ -340,9 +339,8 @@ describe('Gen 1', () => {
       const battle = startBattle([
         INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
         TIE(2), SS_EACH, SS_EACH, METRONOME('Fly'), SS_EACH,
-        METRONOME('Dig'), SS_EACH, SS_RES, SS_RES, SS_RES, SS_EACH, GLM, GLM,
-        GLM, GLM, GLM, GLM, TIE(1), SS_EACH, SS_EACH, SS_RUN, SS_EACH,
-        SS_RUN, HIT, NO_CRIT, MIN_DMG, SS_EACH, SS_RES, SS_EACH,
+        METRONOME('Dig'), SS_EACH, SS_EACH, TIE(1), SS_EACH, SS_EACH, SS_EACH,
+        HIT, NO_CRIT, MIN_DMG, SS_EACH, SS_EACH,
         SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG, SS_EACH,
         METRONOME('Swift'), NO_CRIT, MIN_DMG, SS_EACH, SS_EACH,
         SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, METRONOME('Petal Dance'),
@@ -377,9 +375,9 @@ describe('Gen 1', () => {
         '|move|p1a: Clefable|Dig||[from]Metronome|[still]',
         '|-prepare|p1a: Clefable|Dig',
         '|turn|2',
-        '|move|p1a: Clefable|Dig|p2a: Clefable|[from]Dig|[miss]',
+        '|move|p1a: Clefable|Dig|p2a: Clefable|[miss]',
         '|-miss|p1a: Clefable',
-        '|move|p2a: Clefable|Fly|p1a: Clefable|[from]Fly',
+        '|move|p2a: Clefable|Fly|p1a: Clefable',
         '|-damage|p1a: Clefable|343/393',
         '|turn|3',
         '|move|p1a: Clefable|Quick Attack|p2a: Clefable',
@@ -1939,7 +1937,7 @@ describe('Gen 1', () => {
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 23);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp);
-    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
 
     expect(choices(battle, 'p1')).toEqual(['move 1']);
     expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
@@ -1947,7 +1945,7 @@ describe('Gen 1', () => {
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 23);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 83);
-    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
 
     verify(battle, [
       '|move|p1a: Wartortle|Skull Bash||[still]',
@@ -1955,7 +1953,7 @@ describe('Gen 1', () => {
       '|move|p2a: Psyduck|Scratch|p1a: Wartortle',
       '|-damage|p1a: Wartortle|298/321',
       '|turn|2',
-      '|move|p1a: Wartortle|Skull Bash|p2a: Psyduck|[from]Skull Bash',
+      '|move|p1a: Wartortle|Skull Bash|p2a: Psyduck',
       '|-damage|p2a: Psyduck|220/303',
       '|move|p2a: Psyduck|Scratch|p1a: Wartortle',
       '|-damage|p1a: Wartortle|275/321',
@@ -1967,7 +1965,7 @@ describe('Gen 1', () => {
     // normal
     {
       const battle = startBattle([
-        SS_RES, GLM, GLM, GLM, SS_RUN, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+        HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
       ], [
         {species: 'Pidgeot', evs, moves: ['Fly', 'Sand-Attack']},
         {species: 'Metapod', evs, moves: ['Harden']},
@@ -1984,7 +1982,7 @@ describe('Gen 1', () => {
       battle.makeChoices('move 1', 'move 1');
       expect(battle.p1.pokemon[0].hp).toBe(p1hp);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp);
-      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
 
       expect(choices(battle, 'p1')).toEqual(['move 1']);
       expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
@@ -1992,7 +1990,7 @@ describe('Gen 1', () => {
       battle.makeChoices('move 1', 'move 1');
       expect(battle.p2.pokemon[0].hp).toBe(p2hp - 79);
       expect(battle.p1.pokemon[0].hp).toBe(p1hp - 74);
-      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
 
       verify(battle, [
         '|move|p1a: Pidgeot|Fly||[still]',
@@ -2000,7 +1998,7 @@ describe('Gen 1', () => {
         '|move|p2a: Lickitung|Strength|p1a: Pidgeot|[miss]',
         '|-miss|p2a: Lickitung',
         '|turn|2',
-        '|move|p1a: Pidgeot|Fly|p2a: Lickitung|[from]Fly',
+        '|move|p1a: Pidgeot|Fly|p2a: Lickitung',
         '|-damage|p2a: Lickitung|304/383',
         '|move|p2a: Lickitung|Strength|p1a: Pidgeot',
         '|-damage|p1a: Pidgeot|295/369',
@@ -2010,8 +2008,7 @@ describe('Gen 1', () => {
     // fainting
     {
       const battle = startBattle([
-        HIT, SS_MOD, SS_RES, GLM, GLM, GLM,
-        GLM, GLM, GLM, SS_RUN, HIT, NO_CRIT, MIN_DMG,
+        HIT, SS_MOD, HIT, NO_CRIT, MIN_DMG,
       ], [
         {species: 'Seadra', evs, moves: ['Toxic']},
         {species: 'Ninetales', evs, moves: ['Dig']},
@@ -2057,7 +2054,7 @@ describe('Gen 1', () => {
         '|faint|p2a: Shellder',
         '|switch|p2a: Arcanine|Arcanine|383/383',
         '|turn|5',
-        '|move|p1a: Ninetales|Dig|p2a: Arcanine|[from]Dig',
+        '|move|p1a: Ninetales|Dig|p2a: Arcanine',
         '|-supereffective|p2a: Arcanine',
         '|-damage|p2a: Arcanine|242/383',
         '|move|p2a: Arcanine|Teleport|p2a: Arcanine',
@@ -2382,10 +2379,9 @@ describe('Gen 1', () => {
       const battle = startBattle([
         HIT, NO_CRIT, MIN_DMG, THRASH(3), HIT, CFZ(5),
         CFZ_CAN, MISS, MISS, THRASH(3),
-        CFZ_CAN, HIT, NO_CRIT,
-        MIN_DMG, CFZ(5), HIT, NO_CRIT, MIN_DMG,
-        CFZ_CAN, HIT, SS_MOD, PAR_CANT,
-        CFZ_CAN, HIT, PAR_CAN, HIT, NO_CRIT, MAX_DMG, THRASH(3),
+        CFZ_CAN, HIT, NO_CRIT, MIN_DMG, CFZ(5), HIT, NO_CRIT, MIN_DMG,
+        CFZ_CAN, HIT, SS_MOD, PAR_CANT, CFZ(5),
+        CFZ_CAN, HIT, CFZ_CAN, PAR_CAN, HIT, NO_CRIT, MAX_DMG, THRASH(3),
       ], [
         {species: 'Nidoking', evs, moves: ['Thrash', 'Thunder Wave']},
         {species: 'Nidoqueen', evs, moves: ['Poison Sting']},
@@ -2434,7 +2430,8 @@ describe('Gen 1', () => {
       expect(battle.p1.pokemon[0].hp).toBe(p1hp);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp);
       expect(battle.p2.pokemon[0].status).toBe('par');
-      expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
+      // expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
+      expect(battle.p2.pokemon[0].volatiles['confusion'].time).toBe(5);
 
       expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
       expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
@@ -2466,10 +2463,12 @@ describe('Gen 1', () => {
         '|move|p1a: Nidoking|Thunder Wave|p2a: Vileplume',
         '|-status|p2a: Vileplume|par',
         '|cant|p2a: Vileplume|par',
+        '|-start|p2a: Vileplume|confusion|[silent]',
         '|turn|5',
         '|-activate|p1a: Nidoking|confusion',
         '|move|p1a: Nidoking|Thunder Wave|p2a: Vileplume',
         '|-fail|p2a: Vileplume|par',
+        '|-activate|p2a: Vileplume|confusion',
         '|move|p2a: Vileplume|Petal Dance|p1a: Nidoking',
         '|-damage|p1a: Nidoking|166/365',
         '|turn|6',
@@ -3644,9 +3643,7 @@ describe('Gen 1', () => {
 
   test('Bide effect', () => {
     const battle = startBattle([
-      BIDE(3), HIT, HIT, SS_RES, GLM,
-      GLM, GLM, SS_RUN, HIT, NO_CRIT, MIN_DMG, BIDE(3), HIT,
-      HIT, CFZ(3), CFZ_CAN,
+      BIDE(3), HIT, HIT, HIT, NO_CRIT, MIN_DMG, BIDE(3), HIT, HIT, CFZ(3), CFZ_CAN,
     ], [
       {species: 'Chansey', evs, moves: ['Bide', 'Teleport']},
       {species: 'Onix', evs, moves: ['Bide']},
@@ -3662,7 +3659,7 @@ describe('Gen 1', () => {
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
 
-    expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1']);
+    // FIXME: expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1']);
 
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
@@ -3672,8 +3669,7 @@ describe('Gen 1', () => {
 
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(chansey);
-    // expect(battle.p2.pokemon[0].hp).toBe(dugtrio -= 120);
-    expect(battle.p2.pokemon[0].hp).toBe(dugtrio -= 80);
+    expect(battle.p2.pokemon[0].hp).toBe(dugtrio -= 120);
 
     expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
 
@@ -3705,9 +3701,9 @@ describe('Gen 1', () => {
       '|move|p2a: Dugtrio|Dig||[still]',
       '|-prepare|p2a: Dugtrio|Dig',
       '|-end|p1a: Chansey|Bide',
-      '|-damage|p2a: Dugtrio|193/273',
+      '|-damage|p2a: Dugtrio|153/273',
       '|turn|5',
-      '|move|p2a: Dugtrio|Dig|p1a: Chansey|[from]Dig',
+      '|move|p2a: Dugtrio|Dig|p1a: Chansey',
       '|-damage|p1a: Chansey|407/703',
       '|move|p1a: Chansey|Bide|p1a: Chansey',
       '|-start|p1a: Chansey|Bide',
@@ -3816,8 +3812,7 @@ describe('Gen 1', () => {
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
       HIT, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG,
       NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG,
-      SS_RES, SS_RES, GLM, GLM,
-      GLM, GLM, GLM, GLM, SS_RUN, SS_RUN, HIT, NO_CRIT, MIN_DMG,
+      NO_CRIT, MIN_DMG, MISS, MISS,
     ], [
       {species: 'Fearow', evs, moves: ['Mirror Move', 'Peck', 'Fly']},
     ], [
@@ -3830,8 +3825,8 @@ describe('Gen 1', () => {
 
     // Can't Mirror Move if no move has been used or if Mirror Move is last used
     battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.lastMove!.id).toBe('mirrormove');
-    expect(battle.p2.lastMove!.id).toBe('mirrormove');
+    expect(battle.p1.pokemon[0].lastMove!.id).toBe('mirrormove');
+    expect(battle.p2.pokemon[0].lastMove!.id).toBe('mirrormove');
     expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(31);
     expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(31);
 
@@ -3839,44 +3834,44 @@ describe('Gen 1', () => {
     battle.makeChoices('move 2', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 44);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 43);
-    expect(battle.p1.lastMove!.id).toBe('peck');
-    expect(battle.p2.lastMove!.id).toBe('peck');
+    expect(battle.p1.pokemon[0].lastMove!.id).toBe('peck');
+    expect(battle.p2.pokemon[0].lastMove!.id).toBe('peck');
     expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(30);
 
     battle.makeChoices('move 1', 'move 2');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 74);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 43);
-    expect(battle.p1.lastMove!.id).toBe('peck');
-    expect(battle.p2.lastMove!.id).toBe('swift');
+    expect(battle.p1.pokemon[0].lastMove!.id).toBe('peck');
+    expect(battle.p2.pokemon[0].lastMove!.id).toBe('swift');
     expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(30);
 
     battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 74);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 74);
-    expect(battle.p1.lastMove!.id).toBe('swift');
-    expect(battle.p2.lastMove!.id).toBe('swift');
+    expect(battle.p1.pokemon[0].lastMove!.id).toBe('swift');
+    expect(battle.p2.pokemon[0].lastMove!.id).toBe('swift');
     expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(29);
     expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(29);
 
     // Should actually copy Swift and not Fly
     battle.makeChoices('move 3', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 74);
-    expect(battle.p1.lastMove!.id).toBe('fly');
-    expect(battle.p2.lastMove!.id).toBe('fly');
-    // expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(29);
-    expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(28);
-
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 86);
-    expect(battle.p1.lastMove!.id).toBe('fly');
-    expect(battle.p2.lastMove!.id).toBe('fly');
+    expect(battle.p1.pokemon[0].lastMove!.id).toBe('swift');
+    expect(battle.p2.pokemon[0].lastMove!.id).toBe('swift');
     expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(29);
     expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(28);
 
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].lastMove!.id).toBe('fly');
+    expect(battle.p2.pokemon[0].lastMove!.id).toBe('mirrormove');
+    expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(28);
+
+    battle.makeChoices('move 2', 'move 1');
+
     // Switching resets last used moves
     battle.makeChoices('move 1', 'switch 2');
-    expect(battle.p1.lastMove!.id).toBe('mirrormove');
-    // expect(battle.p2.lastMove!.id).toBe('');
-    expect(battle.p2.lastMove!.id).toBe('fly');
+    expect(battle.p1.pokemon[0].lastMove!.id).toBe('mirrormove');
+    expect(battle.p2.pokemon[0].lastMove).toBeNull();
     expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(28);
 
     verify(battle, [
@@ -3907,18 +3902,24 @@ describe('Gen 1', () => {
       '|move|p1a: Fearow|Fly||[still]',
       '|-prepare|p1a: Fearow|Fly',
       '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
+      '|move|p2a: Pidgeot|Swift|p1a: Fearow|[from]Mirror Move',
+      '|-damage|p1a: Fearow|67/333',
+      '|turn|6',
+      '|move|p1a: Fearow|Fly|p2a: Pidgeot|[miss]',
+      '|-miss|p1a: Fearow',
+      '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
       '|move|p2a: Pidgeot|Fly||[from]Mirror Move|[still]',
       '|-prepare|p2a: Pidgeot|Fly',
-      '|turn|6',
-      '|move|p1a: Fearow|Fly|p2a: Pidgeot|[from]Fly|[miss]',
-      '|-miss|p1a: Fearow',
-      '|move|p2a: Pidgeot|Fly|p1a: Fearow|[from]Fly',
-      '|-damage|p1a: Fearow|55/333',
       '|turn|7',
+      '|move|p1a: Fearow|Peck|p2a: Pidgeot|[miss]',
+      '|-miss|p1a: Fearow',
+      '|move|p2a: Pidgeot|Fly|p1a: Fearow|[miss]',
+      '|-miss|p2a: Pidgeot',
+      '|turn|8',
       '|switch|p2a: Pidgeotto|Pidgeotto|329/329',
       '|move|p1a: Fearow|Mirror Move|p1a: Fearow',
       '|-fail|p1a: Fearow',
-      '|turn|8',
+      '|turn|9',
     ]);
   });
 
@@ -3982,7 +3983,7 @@ describe('Gen 1', () => {
   });
 
   test('Swift effect', () => {
-    const battle = startBattle([NO_CRIT, MIN_DMG, SS_RES, GLM], [
+    const battle = startBattle([NO_CRIT, MIN_DMG], [
       {species: 'Eevee', evs, moves: ['Swift']},
     ], [
       {species: 'Diglett', evs, moves: ['Dig']},
@@ -4008,8 +4009,7 @@ describe('Gen 1', () => {
       value: ranged(Math.floor(gen.species.get('Articuno')!.baseStats.spe / 2), 256),
     };
     const battle = startBattle([
-      SS_RES, SS_EACH, GLM, GLM, GLM, TIE(1), SS_EACH, SS_EACH, SS_EACH,
-      SS_RUN, MISS, SS_EACH, SS_EACH,
+      SS_EACH, TIE(1), SS_EACH, SS_EACH, SS_EACH, MISS, SS_EACH, SS_EACH,
       TIE(2), SS_EACH, SS_EACH, HIT, no_crit, MIN_DMG, SS_EACH,
       HIT, no_crit, MIN_DMG, SS_EACH, SS_EACH,
       TIE(2), SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
@@ -4072,7 +4072,7 @@ describe('Gen 1', () => {
       '|turn|3',
       '|move|p1a: Mew|Peck|p2a: Articuno|[miss]',
       '|-miss|p1a: Mew',
-      '|move|p2a: Articuno|Fly|p1a: Mew|[from]Fly|[miss]',
+      '|move|p2a: Articuno|Fly|p1a: Mew|[miss]',
       '|-miss|p2a: Articuno',
       '|turn|4',
       '|move|p2a: Articuno|Peck|p1a: Mew',
@@ -4215,11 +4215,9 @@ describe('Gen 1', () => {
     }
   });
 
-  test('Disable + Bide bug', () => {
-    const next = {key: 'sim/battle.ts:1483:10', value: SS_RUN.value};
-    const battle = startBattle([
-      BIDE(3), HIT, DISABLE_MOVE(1, 2), DISABLE_DURATION(5), next, next,
-    ], [
+  // FIXME: Fixed by smogon/pokemon-showdown#9201 & smogon/pokemon-showdown#9301
+  test.skip('Disable + Bide bug', () => {
+    const battle = startBattle([BIDE(3), HIT, DISABLE_MOVE(1, 2), DISABLE_DURATION(5)], [
       {species: 'Voltorb', evs, moves: ['Teleport', 'Disable']},
     ], [
       {species: 'Golem', evs, moves: ['Bide', 'Flash']},
@@ -4247,12 +4245,15 @@ describe('Gen 1', () => {
     ]);
   });
 
+  // Fixed by smogon/pokemon-showdown#9243
   test('Charge + Sleep bug', () => {
-    const battle = startBattle([HIT, SS_MOD, SLP(1)], [
+    const battle = startBattle([HIT, SS_MOD, SLP(1), HIT, NO_CRIT, MIN_DMG], [
       {species: 'Venusaur', evs, moves: ['Solar Beam', 'Tackle']},
     ], [
       {species: 'Snorlax', evs, moves: ['Lovely Kiss', 'Teleport']},
     ]);
+
+    const p2hp = battle.p2.pokemon[0].hp;
 
     battle.makeChoices('move 1', 'move 1');
 
@@ -4261,10 +4262,10 @@ describe('Gen 1', () => {
     battle.makeChoices('move 1', 'move 2');
 
     // The charging move should be forced and should execute instead of preparing again
-    // expect(choices(battle, 'p1')).toEqual(['move 1']);
-    expect(choices(battle, 'p1')).toEqual(['move 1', 'move 2']);
+    expect(choices(battle, 'p1')).toEqual(['move 1']);
 
     battle.makeChoices('move 1', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp - 168);
 
     verify(battle, [
       '|move|p1a: Venusaur|Solar Beam||[still]',
@@ -4275,8 +4276,8 @@ describe('Gen 1', () => {
       '|-curestatus|p1a: Venusaur|slp|[msg]',
       '|move|p2a: Snorlax|Teleport|p2a: Snorlax',
       '|turn|3',
-      '|move|p1a: Venusaur|Solar Beam||[still]',
-      '|-prepare|p1a: Venusaur|Solar Beam',
+      '|move|p1a: Venusaur|Solar Beam|p2a: Snorlax',
+      '|-damage|p2a: Snorlax|355/523',
       '|move|p2a: Snorlax|Teleport|p2a: Snorlax',
       '|turn|4',
     ]);
@@ -4304,6 +4305,7 @@ describe('Gen 1', () => {
     ]);
   });
 
+  // Fixed by smogon/pokemon-showdown#9201
   test('Bide + Substitute bug', () => {
     const battle = startBattle([BIDE(2), HIT, HIT], [
       {species: 'Voltorb', evs, moves: ['Sonic Boom', 'Substitute']},
@@ -4326,8 +4328,7 @@ describe('Gen 1', () => {
 
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp);
-    // expect(battle.p1.pokemon[0].volatiles['substitute']).toBeUndefined();
-    expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(71);
+    expect(battle.p1.pokemon[0].volatiles['substitute']).toBeUndefined();
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 20);
 
     verify(battle, [
@@ -4344,6 +4345,7 @@ describe('Gen 1', () => {
       '|move|p1a: Voltorb|Sonic Boom|p2a: Chansey',
       '|-damage|p2a: Chansey|663/703',
       '|-end|p2a: Chansey|Bide',
+      '|-end|p1a: Voltorb|Substitute',
       '|turn|4',
     ]);
   });
@@ -4538,14 +4540,13 @@ describe('Gen 1', () => {
     }
   });
 
+  // Fixed by smogon/pokemon-showdown#9243
   test('Infinite Metronome', () => {
     // Charge
     {
-      // Pokémon Showdown is unable to perform infinite Metronome <-> Mirror Move recursion
       const battle = startBattle([
         METRONOME('Skull Bash'), METRONOME('Mirror Move'),
-        // METRONOME('Mirror Move'), METRONOME('Fly'), SS_RES, GLM, GLM, GLM, SS_RUN, MISS,
-        MISS, MISS,
+        METRONOME('Mirror Move'), METRONOME('Fly'), MISS,
       ], [
         {species: 'Clefairy', evs, moves: ['Metronome']},
       ], [
@@ -4554,8 +4555,8 @@ describe('Gen 1', () => {
 
       battle.makeChoices('move 1', 'move 1');
 
-      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(15);
-      expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(15);
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(16);
+      expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(16);
 
       battle.makeChoices('move 1', 'move 1');
 
@@ -4568,12 +4569,15 @@ describe('Gen 1', () => {
         '|-prepare|p2a: Clefable|Skull Bash',
         '|move|p1a: Clefairy|Metronome|p1a: Clefairy',
         '|move|p1a: Clefairy|Mirror Move|p1a: Clefairy|[from]Metronome',
-        '|move|p1a: Clefairy|Skull Bash||[from]Mirror Move|[still]',
-        '|-prepare|p1a: Clefairy|Skull Bash',
+        '|move|p1a: Clefairy|Metronome|p1a: Clefairy|[from]Mirror Move',
+        '|move|p1a: Clefairy|Mirror Move|p1a: Clefairy|[from]Metronome',
+        '|move|p1a: Clefairy|Metronome|p1a: Clefairy|[from]Mirror Move',
+        '|move|p1a: Clefairy|Fly||[from]Metronome|[still]',
+        '|-prepare|p1a: Clefairy|Fly',
         '|turn|2',
-        '|move|p2a: Clefable|Skull Bash|p1a: Clefairy|[from]Skull Bash|[miss]',
+        '|move|p2a: Clefable|Skull Bash|p1a: Clefairy|[miss]',
         '|-miss|p2a: Clefable',
-        '|move|p1a: Clefairy|Skull Bash|p2a: Clefable|[from]Skull Bash|[miss]',
+        '|move|p1a: Clefairy|Fly|p2a: Clefable|[miss]',
         '|-miss|p1a: Clefairy',
         '|turn|3',
       ]);
@@ -4990,6 +4994,7 @@ describe('Gen 1', () => {
     ]);
   });
 
+  // Fixed by smogon/pokemon-showdown#9201
   test('Bide damage accumulation glitches', () => {
     // Non-damaging move/action damage accumulation
     {
@@ -5010,8 +5015,7 @@ describe('Gen 1', () => {
       expect(battle.p2.pokemon[0].hp).toBe(p2hp);
 
       battle.makeChoices('switch 2', 'move 1');
-      // expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 72);
-      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 36);
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 72);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp);
 
       verify(battle, [
@@ -5025,7 +5029,7 @@ describe('Gen 1', () => {
         '|turn|3',
         '|switch|p1a: Snorlax|Snorlax, L80|420/420',
         '|-end|p2a: Chansey|Bide',
-        '|-damage|p1a: Snorlax|384/420',
+        '|-damage|p1a: Snorlax|348/420',
         '|turn|4',
       ]);
     }
@@ -5052,21 +5056,12 @@ describe('Gen 1', () => {
       battle.makeChoices('move 2', 'move 2');
       expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 60);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 191);
-      expect(battle.p2.pokemon[0].volatiles['bide'].totalDamage).toBe(191);
 
       battle.makeChoices('move 2', 'move 2');
       expect(battle.p1.pokemon[0].hp).toBe(0);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 191);
-      expect(battle.p2.pokemon[0].volatiles['bide'].totalDamage).toBe(382);
 
       battle.makeChoices('switch 2', '');
-
-      battle.makeChoices('move 1', 'move 2');
-      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
-      expect(battle.p2.pokemon[0].volatiles['bide'].totalDamage).toBe(382);
-
-      battle.makeChoices('move 1', 'move 2');
-      expect(battle.p1.pokemon[0].hp).toBe(0);
 
       verify(battle, [
         '|move|p2a: Chansey|Toxic|p1a: Wigglytuff',
@@ -5087,14 +5082,6 @@ describe('Gen 1', () => {
         '|faint|p1a: Wigglytuff',
         '|switch|p1a: Snorlax|Snorlax|523/523',
         '|turn|4',
-        '|-activate|p2a: Chansey|Bide',
-        '|move|p1a: Snorlax|Defense Curl|p1a: Snorlax',
-        '|-boost|p1a: Snorlax|def|1',
-        '|turn|5',
-        '|-end|p2a: Chansey|Bide',
-        '|-damage|p1a: Snorlax|0 fnt',
-        '|faint|p1a: Snorlax',
-        '|win|Player 2',
       ]);
     }
   });
@@ -5697,11 +5684,11 @@ describe('Gen 1', () => {
   test('Invulnerability glitch', () => {
     const battle = startBattle([
       HIT, SS_MOD,
-      PAR_CAN, SS_RES, GLM,
-      GLM, GLM, PAR_CANT, HIT, NO_CRIT, MIN_DMG, NO_PAR,
+      PAR_CAN,
+      PAR_CANT,
       PAR_CAN, NO_CRIT, MIN_DMG,
-      PAR_CAN, SS_RES, GLM,
-      GLM, GLM, PAR_CAN, SS_RUN, HIT,
+      PAR_CAN,
+      PAR_CAN, HIT,
       NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, NO_PAR,
     ], [
       {species: 'Fearow', evs, moves: ['Agility', 'Fly']},
@@ -5719,8 +5706,7 @@ describe('Gen 1', () => {
 
     // After Fly is interrupted by Paralysis, Invulnerability should be preserved
     battle.makeChoices('move 1', 'move 2');
-    // expect(battle.p1.pokemon[0].hp).toBe(p1hp);
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 25);
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp);
 
     // Swift should still be able to hit
     battle.makeChoices('move 1', 'move 3');
@@ -5745,26 +5731,25 @@ describe('Gen 1', () => {
       '|-miss|p2a: Pikachu',
       '|turn|3',
       '|cant|p1a: Fearow|par',
-      '|move|p2a: Pikachu|Thunder Shock|p1a: Fearow',
-      '|-supereffective|p1a: Fearow',
-      '|-damage|p1a: Fearow|308/333 par',
+      '|move|p2a: Pikachu|Thunder Shock|p1a: Fearow|[miss]',
+      '|-miss|p2a: Pikachu',
       '|turn|4',
       '|move|p1a: Fearow|Agility|p1a: Fearow',
       '|-boost|p1a: Fearow|spe|2',
       '|move|p2a: Pikachu|Swift|p1a: Fearow',
-      '|-damage|p1a: Fearow|297/333 par',
+      '|-damage|p1a: Fearow|322/333 par',
       '|turn|5',
       '|move|p1a: Fearow|Fly||[still]',
       '|-prepare|p1a: Fearow|Fly',
       '|move|p2a: Pikachu|Thunder Shock|p1a: Fearow|[miss]',
       '|-miss|p2a: Pikachu',
       '|turn|6',
-      '|move|p1a: Fearow|Fly|p2a: Pikachu|[from]Fly',
+      '|move|p1a: Fearow|Fly|p2a: Pikachu',
       '|-resisted|p2a: Pikachu',
       '|-damage|p2a: Pikachu|11/141',
       '|move|p2a: Pikachu|Thunder Shock|p1a: Fearow',
       '|-supereffective|p1a: Fearow',
-      '|-damage|p1a: Fearow|272/333 par',
+      '|-damage|p1a: Fearow|297/333 par',
       '|turn|7',
     ]);
   });
