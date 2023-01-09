@@ -5,7 +5,7 @@
    - unoptimized - exact layout tweaked in step 11
 3. **[Generate](../src/tools/generate.ts) data** files
    - reorder enums for performance
-   - update [`Lookup`](../src/pkg/data.ts) if necessary
+   - update [`Lookup`](../src/pkg/data.ts) if neccessary
 4. **[Generate](../src/tools/generate.ts) test** files
    - reorganize logically and to match previous generations
    - add in cases for known Pokémon Showdown bugs and cartridge glitches
@@ -42,3 +42,13 @@
 16. Ensure **[integration tests](../src/test/integration.test.ts)** pass
 17. **[Benchmark](../src/test/benchmark.zig)** new generation
 18. Finalize **documentation** for generation
+
+## Updating `@pkmn/sim` dependency
+
+1. **Bump** pinned `@pkmn/sim` version in [`package.json](../package.json) and run `npm install`
+2. Run `npm run test:integration`, **update rolls and behavior of Pokémon Showdown tests** in
+   [`src/test/showdown`](src/test/showdown
+3. **Update Zig mechanics tests to match** the updates applied to the integration tests
+4. **Update Zig engine code** to cause the updated mechanics tests to pass
+5. **Update documentation** to match new behavior/bugs
+6. **Remove effects from [`blocklist.json`](../src/test/blocklist.json)** and helpers if neccessary
