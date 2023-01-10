@@ -2483,7 +2483,6 @@ test "Charge effect" {
 
 // Move.{Fly,Dig}
 test "Fly/Dig effect" {
-    if (showdown) return error.SkipZigTest; // FIXME
     // This attack charges on the first turn and executes on the second. On the first turn, the user
     // avoids all attacks other than Bide, Swift, and Transform. If the user is fully paralyzed on
     // the second turn, it continues avoiding attacks until it switches out or successfully executes
@@ -4547,7 +4546,6 @@ test "Haze effect" {
 
 // Move.Bide
 test "Bide effect" {
-    if (showdown) return error.SkipZigTest; // FIXME
     // The user spends two or three turns locked into this move and then, on the second or third
     // turn after using this move, the user attacks the opponent, inflicting double the damage in HP
     // it lost during those turns. This move ignores type immunity and cannot be avoided even if the

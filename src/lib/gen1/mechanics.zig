@@ -599,7 +599,6 @@ fn canMove(
     var side = battle.side(player);
     const player_ident = battle.active(player);
     const move = Move.get(side.last_selected_move);
-    const locked = showdown and isLocked(side, true);
 
     const foe_last = battle.foe(player).last_used_move;
     const special = from != null and (from.? == .Metronome and
@@ -615,8 +614,6 @@ fn canMove(
         return false;
     }
 
-    // Getting a "locked" move advances the RNG due to a speed sort in Pokémon Showdown's runMove
-    if (locked) battle.rng.advance(1);
     if (!showdown or !special) side.last_used_move = side.last_selected_move;
     if (!skip) decrementPP(side, mslot, auto);
 
@@ -1485,7 +1482,7 @@ pub const Effects = struct {
         assert(!side.active.volatiles.Thrashing and !side.active.volatiles.Rage);
         side.active.volatiles.state = 0;
         side.active.volatiles.attacks = @truncate(u3, if (showdown)
-            battle.rng.range(u4, 3, 5) - 1
+            battle.rng.range(u4, 2, 4)
         else
             (battle.rng.next() & 1) + 2);
 
@@ -2353,11 +2350,6 @@ fn statusModify(status: u8, stats: *Stats(u16)) void {
     } else if (Status.is(status, .BRN)) {
         stats.atk = maximum(stats.atk / 2, 1);
     }
-}
-
-fn isLocked(side: *const Side, check: bool) bool {
-    return ((side.active.volatiles.Charging or !check) and
-        (side.last_selected_move == .Fly or side.last_selected_move == .Dig));
 }
 
 fn isForced(active: ActivePokemon) bool {
