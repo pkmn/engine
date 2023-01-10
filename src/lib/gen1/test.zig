@@ -319,7 +319,8 @@ test "turn order (basic speed tie)" {
     const TIE_2 = MAX;
     // Start
     {
-        var t = Test((if (showdown) (.{NOP} ** 7) else (.{}))).init(
+        // BUG: var t = Test((if (showdown) (.{NOP} ** 7) else (.{}))).init(
+        var t = Test(.{}).init(
             &.{.{ .species = .Tauros, .moves = &.{.HyperBeam} }},
             &.{.{ .species = .Tauros, .moves = &.{.HyperBeam} }},
         );
@@ -338,11 +339,12 @@ test "turn order (basic speed tie)" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                NOP, NOP, NOP, NOP, NOP, NOP, NOP,
-                TIE_1, NOP,
-                NOP, HIT, ~CRIT, MIN_DMG,
-                NOP, HIT, ~CRIT, MAX_DMG,
-                NOP, NOP,
+                // BUG: NOP, NOP, NOP, NOP, NOP, NOP, NOP,
+                //      TIE_1, NOP,
+                //      NOP, HIT, ~CRIT, MIN_DMG,
+                //      NOP, HIT, ~CRIT, MAX_DMG,
+                //      NOP, NOP,
+                TIE_1, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MAX_DMG,
             } else .{
                 TIE_1, ~CRIT, MIN_DMG, HIT, ~CRIT, MAX_DMG, HIT
             }
@@ -372,11 +374,12 @@ test "turn order (basic speed tie)" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                NOP, NOP, NOP, NOP, NOP, NOP, NOP,
-                TIE_1, NOP,
-                NOP, HIT, ~CRIT, MIN_DMG,
-                NOP, HIT, CRIT, MAX_DMG,
-                NOP, NOP, NOP,
+                // BUG: NOP, NOP, NOP, NOP, NOP, NOP, NOP,
+                //      TIE_1, NOP,
+                //      NOP, HIT, ~CRIT, MIN_DMG,
+                //      NOP, HIT, CRIT, MAX_DMG,
+                //      NOP, NOP, NOP,
+                TIE_1, HIT, ~CRIT, MIN_DMG, HIT, CRIT, MAX_DMG,
             } else .{
                 TIE_1, ~CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, HIT
             }
@@ -411,7 +414,8 @@ test "turn order (basic speed tie)" {
     }
     // Switch vs. Switch
     {
-        var t = Test((if (showdown) (.{NOP} ** 7) ++ .{TIE_2} ++ (.{NOP} ** 9) else (.{}))).init(
+        // BUG: if (showdown) (.{NOP} ** 7) ++ .{TIE_2} ++ (.{NOP} ** 9)
+        var t = Test((if (showdown) (.{TIE_2}) else (.{}))).init(
             &.{
                 .{ .species = .Zapdos, .moves = &.{.DrillPeck} },
                 .{ .species = .Dodrio, .moves = &.{.FuryAttack} },
@@ -441,8 +445,9 @@ test "turn order (basic speed tie)" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                NOP, NOP, NOP, NOP, NOP, NOP, NOP,
-                NOP, NOP, HIT, ~CRIT, MIN_DMG,
+                // BUG: NOP, NOP, NOP, NOP, NOP, NOP, NOP,
+                //      NOP, NOP, HIT, ~CRIT, MIN_DMG,
+                HIT, ~CRIT, MIN_DMG,
             } else .{
                 ~CRIT, MIN_DMG, HIT
             }
@@ -473,7 +478,6 @@ test "turn order (basic speed tie)" {
 }
 
 test "turn order (complex speed tie)" {
-    if (showdown) return error.SkipZigTest; // FIXME
     const TIE_1 = MIN;
     const TIE_2 = MAX;
     {
@@ -486,14 +490,16 @@ test "turn order (complex speed tie)" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                NOP, NOP, NOP, NOP, NOP, NOP, NOP,
-                TIE_2, NOP, NOP, fly, NOP,
-                dig, NOP, NOP, TIE_1, NOP, NOP, NOP,
-                HIT, ~CRIT, MIN_DMG, NOP, NOP,
-                NOP, NOP, HIT, ~CRIT, MIN_DMG, NOP,
-                swift, ~CRIT, MIN_DMG, NOP, NOP,
-                NOP, NOP, NOP, NOP, NOP, petal_dance,
-                HIT, ~CRIT, MIN_DMG, THRASH_3, NOP, NOP,
+                // BUG: NOP, NOP, NOP, NOP, NOP, NOP, NOP,
+                //      TIE_2, NOP, NOP, fly, NOP,
+                //      dig, NOP, NOP, TIE_1, NOP, NOP, NOP,
+                //      HIT, ~CRIT, MIN_DMG, NOP, NOP,
+                //      NOP, NOP, HIT, ~CRIT, MIN_DMG, NOP,
+                //      swift, ~CRIT, MIN_DMG, NOP, NOP,
+                //      NOP, NOP, NOP, NOP, NOP, petal_dance,
+                //      HIT, ~CRIT, MIN_DMG, THRASH_3, NOP, NOP,
+                TIE_2, fly, dig, TIE_1, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+                swift, ~CRIT, MIN_DMG, petal_dance, HIT, ~CRIT, MIN_DMG, THRASH_3,
             } else .{
                 TIE_2, ~CRIT, fly, ~CRIT, dig,
                 TIE_1, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT,
@@ -560,8 +566,9 @@ test "turn order (complex speed tie)" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, TIE_1,
-                NOP, NOP, NOP, NOP, HIT, NOP, HIT, NOP, NOP,
+                // BUG: NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, TIE_1,
+                //     NOP, NOP, NOP, NOP, HIT, NOP, HIT, NOP, NOP,
+                TIE_1, HIT, HIT,
             } else .{
                 TIE_1, ~CRIT, ~CRIT,
             }
@@ -932,7 +939,8 @@ test "Endless Battle Clause (basic)" {
         try t.verify();
     }
     {
-        var t = Test(.{NOP}).init(
+        // BUG:  var t = Test(.{NOP}).init(
+        var t = Test(.{}).init(
             &.{
                 .{ .species = .Mew, .moves = &.{.Transform} },
                 .{ .species = .Muk, .moves = &.{.Pound} },
@@ -5061,10 +5069,11 @@ test "Transform effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            NOP, TIE_1, NOP, NOP, NOP, ~HIT, NOP, NOP,
-            TIE_2, NOP, NOP, HIT, no_crit, MIN_DMG, NOP,
-            HIT, no_crit, MIN_DMG, NOP, NOP,
-            TIE_2, NOP, NOP, NOP, NOP, NOP, NOP, NOP
+            // BUG: NOP, TIE_1, NOP, NOP, NOP, ~HIT, NOP, NOP,
+            //      TIE_2, NOP, NOP, HIT, no_crit, MIN_DMG, NOP,
+            //      HIT, no_crit, MIN_DMG, NOP, NOP,
+            //      TIE_2, NOP, NOP, NOP, NOP, NOP, NOP, NOP
+            TIE_1, ~HIT, TIE_2, HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG, TIE_2,
         } else .{
             ~CRIT, ~CRIT, TIE_1, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, ~HIT,
             TIE_2, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG, HIT,
@@ -5272,13 +5281,12 @@ test "Substitute effect" {
 // Pokémon Showdown Bugs
 
 test "Disable + Transform bug" {
-    if (showdown) return error.SkipZigTest; // FIXME
-
     const DISABLE_MOVE_2 = if (showdown) comptime ranged(2, 4) - 1 else 1;
     const DISABLE_DURATION_5 = comptime ranged(5, 9 - 1) - 1;
     {
         var t = Test((if (showdown)
-            (.{ HIT, DISABLE_MOVE_2, DISABLE_DURATION_5, NOP, NOP })
+            // BUG: (.{ HIT, DISABLE_MOVE_2, DISABLE_DURATION_5, NOP, NOP })
+            (.{ HIT, DISABLE_MOVE_2, DISABLE_DURATION_5 })
         else
             (.{ ~CRIT, HIT, DISABLE_MOVE_2, DISABLE_DURATION_5 }))).init(
             &.{.{ .species = .Voltorb, .moves = &.{ .Disable, .Teleport } }},
@@ -5306,7 +5314,8 @@ test "Disable + Transform bug" {
     }
     {
         var t = Test((if (showdown)
-            (.{ HIT, DISABLE_MOVE_2, DISABLE_DURATION_5, NOP, NOP })
+            // BUG: (.{ HIT, DISABLE_MOVE_2, DISABLE_DURATION_5, NOP, NOP })
+            (.{ HIT, DISABLE_MOVE_2, DISABLE_DURATION_5 })
         else
             (.{ ~CRIT, HIT, DISABLE_MOVE_2, DISABLE_DURATION_5 }))).init(
             &.{.{ .species = .Voltorb, .moves = &.{ .Disable, .WaterGun, .Teleport } }},
@@ -5336,13 +5345,13 @@ test "Disable + Transform bug" {
 
 // Fixed by smogon/pokemon-showdown#9201 & smogon/pokemon-showdown#9301
 test "Disable + Bide bug" {
-    if (showdown) return error.SkipZigTest; // FIXME
     const BIDE_3 = MAX;
     const DISABLE_MOVE_1 = if (showdown) comptime ranged(1, 2) - 1 else 0;
     const DISABLE_DURATION_5 = comptime ranged(5, 9 - 1) - 1;
 
     var t = Test((if (showdown)
-        (.{ BIDE_3, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5, NOP, NOP })
+        // BUG: (.{ BIDE_3, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5, NOP, NOP })
+        (.{ BIDE_3, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5 })
     else
         (.{ ~CRIT, BIDE_3, ~CRIT, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5 }))).init(
         &.{.{ .species = .Voltorb, .moves = &.{ .Teleport, .Disable } }},
@@ -8061,7 +8070,8 @@ test "Transform + Mirror Move/Metronome PP error" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                NOP, HIT, NOP, NOP, TIE_2, NOP, NOP, HIT, NOP, HIT, NOP, NOP,
+                // BUG: NOP, HIT, NOP, NOP, TIE_2, NOP, NOP, HIT, NOP, HIT, NOP, NOP,
+                HIT, TIE_2, HIT, HIT,
             } else .{
                 ~CRIT, HIT, TIE_2, ~CRIT, HIT, ~CRIT, ~CRIT, HIT,
             }
@@ -8098,8 +8108,9 @@ test "Transform + Mirror Move/Metronome PP error" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                HIT, NOP, TIE_1, NOP, NOP, HIT, NOP, HIT, NOP, NOP,
-                NOP, NOP, HIT, ~HIT, HIT, ~CRIT, MIN_DMG, HIT,
+                // BUG: HIT, NOP, TIE_1, NOP, NOP, HIT, NOP, HIT, NOP, NOP,
+                //      NOP, NOP, HIT, ~HIT, HIT, ~CRIT, MIN_DMG, HIT,
+                HIT, TIE_1, HIT, HIT, HIT, ~HIT, HIT, ~CRIT, MIN_DMG, HIT,
             } else .{
                 ~CRIT, HIT, TIE_1, ~CRIT, ~CRIT, HIT, ~CRIT, HIT,
                 ~CRIT, HIT, ~CRIT, MIN_DMG, ~HIT,
@@ -8180,8 +8191,8 @@ test "Transform + Mirror Move/Metronome PP error" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                HIT, NOP, TIE_1, NOP, NOP, HIT, NOP, HIT, NOP, NOP,
-                TIE_1, NOP, NOP, HIT,
+                // BUG: HIT, NOP, TIE_1, NOP, NOP, HIT, NOP, HIT, NOP, NOP, TIE_1, NOP, NOP, HIT,
+                HIT, TIE_1, HIT, HIT, TIE_1, HIT,
             } else .{
                 ~CRIT, HIT, TIE_1, ~CRIT, ~CRIT, HIT, ~CRIT, HIT,
                 ~CRIT, HIT,

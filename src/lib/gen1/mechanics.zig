@@ -102,9 +102,6 @@ fn start(battle: anytype, log: anytype) !Result {
     try switchIn(battle, .P1, p1_slot, true, log);
     try switchIn(battle, .P2, p2_slot, true, log);
 
-    // insertChoice × 2 + start + runUnnerve × 2 + runSwitch × 2
-    if (showdown and speedTie(battle)) battle.rng.advance(7);
-
     return endTurn(battle, log);
 }
 
@@ -273,15 +270,10 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     if (c1.type == .Pass) return .P2;
     if (c2.type == .Pass) return .P1;
 
+    if ((c1.type == .Switch) != (c2.type == .Switch)) return if (c1.type == .Switch) .P1 else .P2;
+
     const m1 = battle.side(.P1).last_selected_move;
     const m2 = battle.side(.P2).last_selected_move;
-
-    // beforeTurn × 2 + (beforeTurnMove? + beforeTurnMove?)
-    defer if (showdown and speedTie(battle))
-        battle.rng.advance(2 + @as(u3, @boolToInt(m1 == .Counter)) +
-            @as(u3, @boolToInt(m2 == .Counter)));
-
-    if ((c1.type == .Switch) != (c2.type == .Switch)) return if (c1.type == .Switch) .P1 else .P2;
 
     if ((m1 == .QuickAttack) != (m2 == .QuickAttack)) return if (m1 == .QuickAttack) .P1 else .P2;
     if ((m1 == .Counter) != (m2 == .Counter)) return if (m1 == .Counter) .P2 else .P1;
@@ -318,24 +310,16 @@ fn doTurn(
 ) !?Result {
     assert(player_choice.type != .Pass);
 
-    var tie = showdown and speedTie(battle);
-    if (try executeMove(battle, player, player_choice, player_from, &tie, log)) |r| return r;
-    if (foe_choice.type == .Pass) {
-        if (tie) battle.rng.advance(1); // move | runSwitch
-        return null;
-    }
+    if (try executeMove(battle, player, player_choice, player_from, log)) |r| return r;
+    if (foe_choice.type == .Pass) return null;
     if (try checkFaint(battle, foe_player, log)) |r| return r;
     try handleResidual(battle, player, log);
     if (try checkFaint(battle, player, log)) |r| return r;
-    if (tie) battle.rng.advance(1); // move | runSwitch
 
-    if (try executeMove(battle, foe_player, foe_choice, foe_from, &tie, log)) |r| return r;
+    if (try executeMove(battle, foe_player, foe_choice, foe_from, log)) |r| return r;
     if (try checkFaint(battle, player, log)) |r| return r;
     try handleResidual(battle, foe_player, log);
     if (try checkFaint(battle, foe_player, log)) |r| return r;
-    if (tie) battle.rng.advance(1); // move | runSwitch
-
-    if (showdown and speedTie(battle)) battle.rng.advance(1); // residual
 
     return null;
 }
@@ -345,15 +329,12 @@ fn executeMove(
     player: Player,
     choice: Choice,
     from: ?Move,
-    tie: *bool,
     log: anytype,
 ) !?Result {
     var side = battle.side(player);
 
     if (choice.type == .Switch) {
         try switchIn(battle, player, choice.data, false, log);
-        tie.* = showdown and speedTie(battle);
-        if (tie.*) battle.rng.advance(2); // switch + runUnnerve
         return null;
     }
 
@@ -2365,11 +2346,6 @@ fn statusModify(status: u8, stats: *Stats(u16)) void {
 fn isForced(active: ActivePokemon) bool {
     return active.volatiles.Recharging or active.volatiles.Rage or
         active.volatiles.Thrashing or active.volatiles.Charging;
-}
-
-fn speedTie(battle: anytype) bool {
-    assert(showdown);
-    return battle.side(.P1).active.stats.spe == battle.side(.P2).active.stats.spe;
 }
 
 fn clearVolatiles(active: *ActivePokemon, ident: ID, log: anytype) !void {
