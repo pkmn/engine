@@ -224,7 +224,6 @@ fn blocked(m: Move) bool {
         .Bind,
         .Counter,
         .Mimic,
-        .Bide,
         .Metronome,
         .MirrorMove,
         .Transform,

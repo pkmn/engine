@@ -37,7 +37,7 @@ The following information is required to simulate a Generation I Pokémon battle
 | `side.team`                          | `PartyMons`                        | `side.pokemon`                         |
 | `side.last_used_move`                | `PlayerUsedMove`                   | `pokemon.lastMove`                     |
 | `side.last_selected_move`            | `PlayerSelectedMove`               | `side.lastSelectedMove`                |
-| `battle.last_selected_indexes`       | `PlayerMoveListIndex`              | -                                      |
+| `battle.last_selected_indexes`       | `PlayerMoveListIndex`              | `side.lastMove`                        |
 | `side.order`                         | -                                  | `pokemon.position`                     |
 | `{pokemon,active}.moves`             | `{party,battle}_struct.{Moves,PP}` | `pokemon.{baseMoveSlots,moveSlots}`    |
 | `{pokemon,active}.hp`                | `{party,battle}_struct.HP`         | `pokemon.hp`                           |
@@ -455,32 +455,28 @@ the pkmn engine, but the following moves have their broken behavior preserved in
   moves have [glitchy behavior](https://www.youtube.com/watch?v=NC5gbJeExbs) where the the scaled
   accuracy after accuracy/evasion modifiers have been applied should overwrite the original accuracy
   of the move for as long as the move's lock lasts. Furthermore, Pokémon Showdown handles thrashing
-  moves in the wrong order and does not lock the user into the move if it hits or breaks a substitute.
+  moves in the wrong order and does not lock the user into the move if it hits or breaks a
+  substitute.
+  *[smogon/pokemon-showdown#9243](https://github.com/smogon/pokemon-showdown/issues/9243) introduced
+  a bug where you can still get confused from Thrash when prevented from moving - this incorrect
+  behavior is not currently implemented in the engine as it is expected to be fixed soon on Pokémon
+  Showdown.*
 - **Freeze** / **Sleep**: Pokémon Showdown requires a move to be selected when a Pokémon is frozen
   or sleeping and uses that in the event that the status is removed while on the cartridge no
   selection is possible and no turn exists for the thawed/woken Pokémon to act except in the case of
   a Fire-type move thawing a slower Pokémon (which should result in the [Freeze top move selection
   glitch](https://glitchcity.wiki/Freeze_top_move_selection_glitch), which is not implemented and
   would also likely be incorrect if it were to be implemented due to how Pokémon Showdown
-  incorrectly saves arbitrary moves with its choice selection semantics). Furthermore, charging /
-  thrashing volatiles should not be cleared if the user misses a turn due to freeze / sleep.
+  incorrectly saves arbitrary moves with its choice selection semantics). Furthermore, thrashing
+  volatiles should not be cleared if the user misses a turn due to freeze / sleep.
 - **Hyper Beam**: due to improperly implemented selection mechanics, the [Hyper Beam
   automatic-selection glitch](https://glitchcity.wiki/Hyper_Beam_automatic_selection_glitch) does
-  not exist on Pokémon Showdown.Finally, Hyper Beam being able to cause [Freeze permanent
+  not exist on Pokémon Showdown. Additionally, Hyper Beam being able to cause [Freeze permanent
   helplessness](https://pkmn.cc/bulba-glitch-1#Hyper_Beam_.2B_Freeze_permanent_helplessness) is not
   implement by Pokémon Showdown.
 - **Roar** / **Whirlwind**: these moves can miss on Pokémon Showdown (and advance the RNG when
   checking) which is incorrect (these moves should always fail, but do not check accuracy or advance
   the RNG).
-- **Fly** / **Dig**: these should not clear the "invulnerability" volatile if the Pokémon using them
-  is interrupted due to being fully paralyzed (Bulbapeda incorrectly claims that hurting itself in
-  confusion will also result in this glitch which is not the case). The "invulnerability" volatile
-  should then only be reset if the Pokémon switches or successfully completes Fly or Dig (and not
-  any other "charge" move, as incorrectly claimed by Bulbapedia). Pokémon Showdown also deducts PP
-  and updates the last used move on the wrong turn of all charging moves (counting the first
-  "preparation" turn as having used the move instead of the "execution" turn). Finally, if a Pokémon
-  is put to sleep while "preparing" they will incorrectly prepare again after waking instead of
-  executing the move.
 
 In addition to numerous cases where Pokémon Showdown uses the wrong type of message (e.g. `|-fail`
 vs. `|-miss|` vs. `|-immune|`, e.g. in the case of Leech Seed) which are not documented here, Pokémon
@@ -565,19 +561,10 @@ changes or dramatically deviating from the correct control flow):
 - **Mirror Move**: Partial trapping moves misbehave when used via Mirror Move (though Pokémon
   Showdown has its own weird behavior and does not implement the [partial trapping move Mirror Move
   glitch](https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch) that exists
-  on the cartridge). Furthermore, Mirror Move copies the wrong move on Pokémon Showdown during the
-  first turn of a two-turn charging move.
-- **Metronome**: In addition to the issues with partial trapping moves or Counter, Metronome and
-  Mirror Move cannot mutually call each other due to broken tracking of the last used move with
-  respect to charging moves, and even with this bug fixed they cannot mutually call each other
-  more than 3 times in a row without causing the Pokémon Showdown simulator to crash due to
-  defensive safety checks that do not exist on the cartridge.
-- **Bide**: Pokémon Showdown's Bide implementation uses its own `lastDamage` field instead of using
-  the `Battle.last_damage` field which results in Bide often inflicting the wrong amount of
-  accumulated damage). Furthermore, on Pokémon Showdown Bide can erroneously last an extra turn
-  depending on whether the foe faints, Bide cannot be disabled by Disable while in effect, Bide's
-  accumulated damage is not zeroed when an opponennt faints, and the opponent having a Substitute
-  blanks the damage unleashed by Bide.
+  on the cartridge).
+- **Metronome**: In addition to the issues with partial trapping moves, Metronome and Mirror Move
+  cannot mutually call each other more than 3 times in a row without causing the Pokémon Showdown
+  simulator to crash due to defensive safety checks that do not exist on the cartridge.
 - **Transform**:  Transform screws up the effect of Disable, because on Pokémon Showdown, Disable
   prevents moves of a given *name* from being used (e.g. "Water Gun") as opposed to moves in a
   specific *slot* (e.g. the 2nd move slot), and a Pokémon's moves can change after Transform (this
