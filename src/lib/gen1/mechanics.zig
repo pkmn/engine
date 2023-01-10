@@ -380,6 +380,13 @@ fn executeMove(
                 auto = true;
             }
         }
+    } else if (showdown and side.active.volatiles.Charging) {
+        // Incorrect mslot with Pokémon Showdown choice semantics so we need to recover from index
+        assert(mslot == 1);
+        mslot = @truncate(u4, if (player == .P1)
+            battle.last_selected_indexes.p1
+        else
+            battle.last_selected_indexes.p2);
     }
 
     var skip_can = false;

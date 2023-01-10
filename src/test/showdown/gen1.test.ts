@@ -3836,6 +3836,7 @@ describe('Gen 1', () => {
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 43);
     expect(battle.p1.pokemon[0].lastMove!.id).toBe('peck');
     expect(battle.p2.pokemon[0].lastMove!.id).toBe('peck');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(31);
     expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(30);
 
     battle.makeChoices('move 1', 'move 2');
@@ -3843,6 +3844,7 @@ describe('Gen 1', () => {
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 43);
     expect(battle.p1.pokemon[0].lastMove!.id).toBe('peck');
     expect(battle.p2.pokemon[0].lastMove!.id).toBe('swift');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(30);
     expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(30);
 
     battle.makeChoices('move 1', 'move 1');
@@ -3864,9 +3866,12 @@ describe('Gen 1', () => {
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].lastMove!.id).toBe('fly');
     expect(battle.p2.pokemon[0].lastMove!.id).toBe('mirrormove');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(29);
     expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(28);
 
     battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(29);
+    expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(27);
 
     // Switching resets last used moves
     battle.makeChoices('move 1', 'switch 2');
