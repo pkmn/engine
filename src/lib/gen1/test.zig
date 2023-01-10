@@ -2998,7 +2998,6 @@ test "Struggle effect" {
 
 // Move.{Thrash,PetalDance}
 test "Thrashing effect" {
-    if (showdown) return error.SkipZigTest; // FIXME
     // Whether or not this move is successful, the user spends three or four turns locked into this
     // move and becomes confused immediately after its move on the last turn of the effect, even if
     // it is already confused. If the user is prevented from moving, the effect ends without causing
@@ -3019,8 +3018,11 @@ test "Thrashing effect" {
                 HIT, ~CRIT, MIN_DMG, THRASH_3, HIT, CFZ_5,
                 CFZ_CAN, ~HIT, ~HIT, THRASH_3,
                 CFZ_CAN, HIT, ~CRIT, MIN_DMG, CFZ_5, HIT, ~CRIT, MIN_DMG,
-                CFZ_CAN, HIT, NOP, PAR_CANT, CFZ_5,
-                CFZ_CAN, HIT, CFZ_CAN, PAR_CAN, HIT, ~CRIT, MAX_DMG, THRASH_3,
+                // BUG: Regression from mogon/pokemon-showdown#9243
+                // CFZ_CAN, HIT, NOP, PAR_CANT, CFZ_5,
+                // CFZ_CAN, HIT, CFZ_CAN, PAR_CAN, HIT, ~CRIT, MAX_DMG, THRASH_3,
+                MIN_DMG, CFZ_CAN, HIT, PAR_CANT,
+                CFZ_CAN, HIT, PAR_CAN, HIT, ~CRIT, MAX_DMG, THRASH_3,
             } else .{
                 THRASH_3, ~CRIT, MIN_DMG, HIT, HIT, CFZ_5,
                 CFZ_CAN, ~CRIT, MIN_DMG, ~HIT, THRASH_3, ~CRIT, MIN_DMG, ~HIT,
@@ -3108,16 +3110,17 @@ test "Thrashing effect" {
         t.expected.p2.get(1).status = Status.init(.PAR);
         try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
         try t.log.expected.cant(P2.ident(1), .Paralysis);
-        if (showdown) try t.log.expected.start(P2.ident(1), .ConfusionSilent);
+        // BUG: if (showdown) try t.log.expected.start(P2.ident(1), .ConfusionSilent);
         try t.log.expected.turn(5);
 
         // Thrashing doesn't confuse you if the user is prevented from moving
         try expectEqual(Result.Default, try t.update(move(2), forced));
-        if (showdown) {
-            try expectEqual(@as(u3, 5), t.actual.p2.active.volatiles.confusion);
-        } else {
-            try expect(!t.actual.p2.active.volatiles.Confusion);
-        }
+        // BUG: Regression from mogon/pokemon-showdown#9243
+        // if (showdown) {
+        //     try expectEqual(@as(u3, 5), t.actual.p2.active.volatiles.confusion);
+        // } else {
+        try expect(!t.actual.p2.active.volatiles.Confusion);
+        // }
 
         n = t.battle.actual.choices(.P1, .Move, &choices);
         try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
@@ -3127,7 +3130,7 @@ test "Thrashing effect" {
         try t.log.expected.activate(P1.ident(1), .Confusion);
         try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
         try t.log.expected.fail(P2.ident(1), .Paralysis);
-        if (showdown) try t.log.expected.activate(P1.ident(1), .Confusion);
+        // BUG: if (showdown) try t.log.expected.activate(P1.ident(1), .Confusion);
         try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), null);
         t.expected.p1.get(1).hp -= 108;
         try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
