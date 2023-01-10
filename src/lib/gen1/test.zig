@@ -315,7 +315,6 @@ test "turn order (priority)" {
 }
 
 test "turn order (basic speed tie)" {
-    if (showdown) return error.SkipZigTest; // FIXME
     const TIE_1 = MIN;
     const TIE_2 = MAX;
     // Start
@@ -932,7 +931,6 @@ test "Endless Battle Clause (basic)" {
         try expectEqual(Result.Tie, try t.battle.actual.update(.{}, .{}, t.log.actual));
         try t.verify();
     }
-    if (showdown) return error.SkipZigTest; // FIXME
     {
         var t = Test(.{NOP}).init(
             &.{
@@ -1767,7 +1765,7 @@ test "Paralyze effect" {
     // Primary paralysis ignores Substitute
     try expectEqual(Result.Default, try t.update(move(2), move(3)));
 
-    // // Paralysis lowers speed
+    // Paralysis lowers speed
     try expectEqual(Status.init(.PAR), t.actual.p2.stored().status);
     try expectEqual(@as(u16, 79), t.actual.p2.active.stats.spe);
     try expectEqual(@as(u16, 318), t.actual.p2.stored().stats.spe);
@@ -4113,7 +4111,7 @@ test "LeechSeed effect" {
     try t.log.expected.heal(P1.ident(2), t.expected.p1.get(2), .Silent);
     try t.log.expected.faint(P2.ident(2), true);
 
-    // // Leech Seed's uncapped damage is added back
+    // Leech Seed's uncapped damage is added back
     try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(move(2), move(1)));
     try t.verify();
 }
@@ -5053,7 +5051,6 @@ test "Swift effect" {
 
 // Move.Transform
 test "Transform effect" {
-    if (showdown) return error.SkipZigTest; // FIXME
     // The user transforms into the target. The target's current stats, stat stages, types, moves,
     // DVs, species, and sprite are copied. The user's level and HP remain the same and each copied
     // move receives only 5 PP. This move can hit a target using Dig or Fly.
@@ -8054,7 +8051,6 @@ test "Psywave infinite loop" {
 }
 
 test "Transform + Mirror Move/Metronome PP error" {
-    if (showdown) return error.SkipZigTest; // FIXME
     // https://pkmn.cc/bulba/Transform_glitches#Transform_.2B_Mirror_Move.2FMetronome_PP_error
     // https://www.youtube.com/watch?v=_c7tQkSyz7E
     const TIE_1 = MIN;

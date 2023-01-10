@@ -610,7 +610,7 @@ Because the pkmn engine aims to be as compatible with Pokémon Showdown as possi
   call](https://www.smogon.com/forums/threads/adv-switch-priority.3622189/), speed ties in Pokémon
   Showdown actually result in a large number of spurious frame advancements due to the internal
   implementation details of Pokémon Showdown's event/"action" system:
-  - `switchIn` creates `runUnnerve` (in every generation, not just in generations where the
+  - The `switch` acton  creates `runUnnerve` (in every generation, not just in generations where the
     [Unnerve](https://pkmn.cc/bulba/Unnerve_(Ability)) ability exists) and `runSwitch` "actions" and
     then calls the RNG when further actions are added by the opposing player to determine where to
     sort them relative to each other (despite this ordering having no importance in Generation I)
@@ -618,10 +618,10 @@ Because the pkmn engine aims to be as compatible with Pokémon Showdown as possi
     generations where there are no event listeners for the `Update` event)
   - adding the artificial `beforeTurn` "action" will also advance the RNG in the same way the
     `runUnnerve` and `runSwitch` actions do
-- **`Pokemon.getLockedMove`**: Pokémon Showdown runs the `onLockMove` event (causing the RNG frame
-  to advance) when calling `Pokemon.getLockedMove` while building up the `|request|` object for both
-  sides in `endTurn` and in other scenarios (`checkFaint`, certain circumstances with Metronome or
-  Mirror Move, etc).
+  - Counter has a  callback which results in a `beforeTurnMove` handler being added to the queue
+    which may also cause RNG advances
+  - Disable and Bide both use `onDisableMove` which gets run by Pokémon Showdown in the `nextTurn`
+    function which can cause speed sorts
 - **Effects**: Pokémon Showdown occasionally incorrectly inserts RNG calls in move effect handlers
   when they are not relevant:
   - Roar / Whirlwind roll to hit and can "miss" as opposed to simply failing
