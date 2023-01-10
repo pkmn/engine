@@ -418,20 +418,14 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
             try log.cant(ident, .Sleep);
         }
         side.last_used_move = .None;
-        if (showdown) {
-            volatiles.Charging = false;
-            volatiles.Thrashing = false;
-        }
+        if (showdown) volatiles.Thrashing = false;
         return .done;
     }
 
     if (Status.is(stored.status, .FRZ)) {
         try log.cant(ident, .Freeze);
         side.last_used_move = .None;
-        if (showdown) {
-            volatiles.Charging = false;
-            volatiles.Thrashing = false;
-        }
+        if (showdown) volatiles.Thrashing = false;
         return .done;
     }
 

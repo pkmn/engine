@@ -5371,7 +5371,6 @@ test "Disable + Bide bug" {
 
 // Fixed by smogon/pokemon-showdown#9243
 test "Charge + Sleep bug" {
-    if (showdown) return error.SkipZigTest; // FIXME
     const SLP_1 = if (showdown) comptime ranged(1, 8 - 1) else 1;
 
     var t = Test((if (showdown)
