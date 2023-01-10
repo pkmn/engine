@@ -264,6 +264,8 @@ The pkmn engine is distributed under the terms of the [MIT License](LICENSE).
 
 [^1]: In the case of Pokémon Showdown, only bugs which stem from a misimplementation of specific
   effects are reproduced in the engine, bugs which are the result of a misunderstanding of the
-  fundamental mechanics of Pokémon are not. In practical terms, 99.99% of games played out in the
-  pkmn engine and on the Pokémon Showdown simulator will be the same, it is only in a very obscure
-  and well documented set of circumstances where the two implementations diverge.
+  fundamental mechanics of Pokémon or which simply arise due to specific Pokémon Showdown
+  implementation details that are not replicable without making the same (incorrect) architectural
+  choices are not. In practical terms, most games played out in the pkmn engine and on the Pokémon
+  Showdown simulator will be the same, it is only in a well defined and and documented set of
+  circumstances where the two implementations diverge.

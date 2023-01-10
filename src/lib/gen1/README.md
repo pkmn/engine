@@ -573,6 +573,11 @@ changes or dramatically deviating from the correct control flow):
   softlocks](https://pkmn.cc/bulba/Transform_glitches#Transform_.2B_Mirror_Move.2FMetronome_PP_error)
   which Pokémon Showdown does not implement.
 
+Importantly, Pokémon Showdown's **speed-tie RNG mechanics are unimplementable** in the pkmn engine
+as they rely on internal implementation decisions made by Pokémon Showdown that are impossible to
+replicate without also mimicking Pokémon Showdown's (incorrect) event and "action" systems (see
+below).
+
 ## RNG
 
 **The pkmn engine aims to match the cartridge's RNG frame-accurately**, in that provided with the
@@ -609,13 +614,18 @@ Because the pkmn engine aims to be as compatible with Pokémon Showdown as possi
 - **Speed-ties**: In addition to [breaking switch-in speed ties with an RNG
   call](https://www.smogon.com/forums/threads/adv-switch-priority.3622189/), speed ties in Pokémon
   Showdown actually result in a large number of spurious frame advancements due to the internal
-  implementation details of Pokémon Showdown's event/"action" system:
+  implementation details of Pokémon Showdown's event and "action" systems. Ultimately, without
+  keeping track of all of the handlers for the internal events Pokémon Showdown invents and
+  implementing the same "action" system, matching Pokémon Showdown's RNG in the presence of speed
+  ties proves impossible:
   - The `switch` acton  creates `runUnnerve` (in every generation, not just in generations where the
     [Unnerve](https://pkmn.cc/bulba/Unnerve_(Ability)) ability exists) and `runSwitch` "actions" and
     then calls the RNG when further actions are added by the opposing player to determine where to
     sort them relative to each other (despite this ordering having no importance in Generation I)
   - executing the "actions" also advances the RNG due to `eachEvent('Update', ...)` calls (even in
-    generations where there are no event listeners for the `Update` event)
+    generations where there are no event listeners for the `Update` event), though whether or not
+    these result in speed tie rolls depends on a Pokémon's "action speed" which is computed and
+    cached at specific locations.
   - adding the artificial `beforeTurn` "action" will also advance the RNG in the same way the
     `runUnnerve` and `runSwitch` actions do
   - Counter has a  callback which results in a `beforeTurnMove` handler being added to the queue

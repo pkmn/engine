@@ -92,6 +92,14 @@ class RawBattleStream extends BattleStreams.BattleStream {
     this.rawInputLog.push(message);
     super._write(message);
   }
+
+  _writeLine(type: string, message: string) {
+    super._writeLine(type, message);
+    if (type === 'start') {
+      // TODO: override BattleQueue#insertChoice and PRNG#shuffle
+      // this.battle!.prng.shuffle = ...
+    }
+  }
 }
 
 const FORMATS = [

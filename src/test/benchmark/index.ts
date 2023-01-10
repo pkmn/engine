@@ -101,6 +101,8 @@ class DirectBattle extends Battle {
   }
 }
 
+// TODO: override BattleQueue#insertChoice and PRNG#shuffle for BattleStream & DirectBattle
+// TODO: save seeds and use same seeds without speed ties across all configurations
 const CONFIGURATIONS: {[name: string]: Configuration} = {
   'BattleStream': {
     warmup: true,
@@ -175,7 +177,7 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
       for (let i = 0; i < battles; i++) {
         const options = gen1.Battle.options(gen, prng);
         const config = {formatid: format, seed: newSeed(prng)};
-        const battle = new Battle(config);
+        const battle = new DirectBattle(config);
 
         const p1 = new PRNG(newSeed(prng));
         const p2 = new PRNG(newSeed(prng));

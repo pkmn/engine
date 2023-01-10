@@ -85,6 +85,31 @@ of Pokémon Showdown's behavior for these effects as possible, it is usually jus
 cases which would require large amounts of coding or additional state to implement the same faulty
 behavior where these effects break down.
 
+### Speed Ties
+
+Given that it is infeasible for the pkmn engine to implement Pokémon Showdown's incorrect speed tie
+mechanics, both the [integration](#integration) tests and [benchmark](#benchmark) are designed to
+work around speed ties in order to still obtain useful results. For integration testing we can
+simply compare Pokémon Showdown and the pkmn engine in lockstep up until a speed tie is detected,
+but for benchmarking we need a more sophisticated approach:
+
+1. ~~Generate scenarios which can never cause a speed tie.~~ This is ultimately too limiting, as
+  without banning everything that can modify speed within a battle (paralysis inducing moves, speed
+  boosting moves, Transform) there is no good way to ensure speed ties will not occur. Furthermore,
+  in Pokémon Showdown, both players simply happening to switch at the same time is sufficient to
+  cause a speed tie advance.
+2. ~~Don't worry about the benchmarks playing out a different sequence of battles.~~ In order for
+   the comparison to be fair we need to be testing the exact same thing across the various
+   implementations (see below).
+3. Run battles on Pokémon Showdown and determine if a speed tie occured at any point, if not, save
+  the seeds and run those battle on the engine.
+
+Option 3 is the only viable approach, though isn't without issues (tracking all of the seeds results
+in some memory overhead which cant impact the benchmarking results). In order to implement the
+Pokémon Showdown side, `BattleQueue.insertChoice` and `PRNG.shuffle` (both which potentially advance
+the RNG when speed ties are encountered) must be overwritten to `throw` and logic needs to be added
+to keep track of which seeds are safe.
+
 ## Benchmark
 
 Benchmarking the pkmn engine vs. Pokémon Showdown is slightly more complicated than simply using a
@@ -108,7 +133,7 @@ measures 4 different configurations:
   1. A special `RandomPlayerAI` is used that directly inspects the `Battle` to avoid making
      unavailable choices and matches the AI used by all of the other configurations.
   2. The `Battle` within the `BattleStream` is directly inspected in order to more easily grab the
-     turn count.
+     turn count and also to error out on [speed ties](#speed-ties).
 
   Pokémon Showdown's root `pokemon-showdown` binary is technically the blessed approach to using
   the simulator, but `BattleStream` is effectively the same thing but without the (sizeable) I/O
@@ -129,6 +154,8 @@ measures 4 different configurations:
   Pokémon Showdown can be run (there is room for further optimization by simplifying choice parsing
   to to not perform any verification, though this is signficantly less trivial than the
   aforementioned optimizations). This is closer to how the pkmn engine runs with `-Dtrace` disabled.
+  Finally, `DirectBattle` is instrumented to error out on [speed ties](#speed-ties) as covered
+  above.
 
 - **`@pkmn/engine`**: this configuration uses the `@pmn/engine` driver package to run battles with
   the pkmn engine.
