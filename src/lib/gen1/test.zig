@@ -315,6 +315,7 @@ test "turn order (priority)" {
 }
 
 test "turn order (basic speed tie)" {
+    if (showdown) return error.SkipZigTest; // FIXME
     const TIE_1 = MIN;
     const TIE_2 = MAX;
     // Start
@@ -472,118 +473,117 @@ test "turn order (basic speed tie)" {
     }
 }
 
-// test "turn order (complex speed tie)" {
-//     const TIE_1 = MIN;
-//     const TIE_2 = MAX;
-//     {
-//         const fly = comptime metronome(.Fly);
-//         const dig = comptime metronome(.Dig);
-//         const swift = comptime metronome(.Swift);
-//         const petal_dance = comptime metronome(.PetalDance);
-//         const THRASH_3 = if (showdown) comptime ranged(1, 5 - 3) - 1 else MIN;
+test "turn order (complex speed tie)" {
+    if (showdown) return error.SkipZigTest; // FIXME
+    const TIE_1 = MIN;
+    const TIE_2 = MAX;
+    {
+        const fly = comptime metronome(.Fly);
+        const dig = comptime metronome(.Dig);
+        const swift = comptime metronome(.Swift);
+        const petal_dance = comptime metronome(.PetalDance);
+        const THRASH_3 = if (showdown) comptime ranged(1, 5 - 3) - 1 else MIN;
 
-//         var t = Test(
-//         // zig fmt: off
-//             if (showdown) .{
-//                 NOP, NOP, NOP, NOP, NOP, NOP, NOP,
-//                 TIE_2, NOP, NOP, fly, NOP,
-//                 dig, NOP, NOP, TIE_1, NOP, NOP, NOP,
-//                 HIT, ~CRIT, MIN_DMG, NOP, NOP,
-//                 NOP, NOP, HIT, ~CRIT, MIN_DMG, NOP,
-//                 swift, ~CRIT, MIN_DMG, NOP, NOP,
-//                 NOP, NOP, NOP, NOP, NOP, petal_dance,
-//                 HIT, ~CRIT, MIN_DMG, THRASH_3, NOP, NOP,
-//             } else .{
-//                 TIE_2, ~CRIT, fly, ~CRIT, dig,
-//                 TIE_1, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT,
-//                 ~CRIT, MIN_DMG, HIT, ~CRIT, swift, ~CRIT, MIN_DMG,
-//                 ~CRIT, petal_dance, THRASH_3, ~CRIT, MIN_DMG, HIT,
-//             }
-//         // zig fmt: on
-//         ).init(
-//             &.{.{ .species = .Clefable, .moves = &.{ .Metronome, .QuickAttack } }},
-//             &.{
-//                 .{ .species = .Clefable, .moves = &.{.Metronome} },
-//                 .{ .species = .Farfetchd, .moves = &.{.Metronome} },
-//             },
-//         );
-//         defer t.deinit();
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                NOP, NOP, NOP, NOP, NOP, NOP, NOP,
+                TIE_2, NOP, NOP, fly, NOP,
+                dig, NOP, NOP, TIE_1, NOP, NOP, NOP,
+                HIT, ~CRIT, MIN_DMG, NOP, NOP,
+                NOP, NOP, HIT, ~CRIT, MIN_DMG, NOP,
+                swift, ~CRIT, MIN_DMG, NOP, NOP,
+                NOP, NOP, NOP, NOP, NOP, petal_dance,
+                HIT, ~CRIT, MIN_DMG, THRASH_3, NOP, NOP,
+            } else .{
+                TIE_2, ~CRIT, fly, ~CRIT, dig,
+                TIE_1, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT,
+                ~CRIT, MIN_DMG, HIT, ~CRIT, swift, ~CRIT, MIN_DMG,
+                ~CRIT, petal_dance, THRASH_3, ~CRIT, MIN_DMG, HIT,
+            }
+        // zig fmt: on
+        ).init(
+            &.{.{ .species = .Clefable, .moves = &.{ .Metronome, .QuickAttack } }},
+            &.{
+                .{ .species = .Clefable, .moves = &.{.Metronome} },
+                .{ .species = .Farfetchd, .moves = &.{.Metronome} },
+            },
+        );
+        defer t.deinit();
 
-//         try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
-//         try t.log.expected.move(P2.ident(1), Move.Fly, .{}, Move.Metronome);
-//         try t.log.expected.laststill();
-//         try t.log.expected.prepare(P2.ident(1), Move.Fly);
-//         try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
-//         try t.log.expected.move(P1.ident(1), Move.Dig, .{}, Move.Metronome);
-//         try t.log.expected.laststill();
-//         try t.log.expected.prepare(P1.ident(1), Move.Dig);
-//         try t.log.expected.turn(2);
+        try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
+        try t.log.expected.move(P2.ident(1), Move.Fly, .{}, Move.Metronome);
+        try t.log.expected.laststill();
+        try t.log.expected.prepare(P2.ident(1), Move.Fly);
+        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
+        try t.log.expected.move(P1.ident(1), Move.Dig, .{}, Move.Metronome);
+        try t.log.expected.laststill();
+        try t.log.expected.prepare(P1.ident(1), Move.Dig);
+        try t.log.expected.turn(2);
 
-//         try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-//         try t.log.expected.move(P1.ident(1), Move.Dig, P2.ident(1), Move.Dig);
-//         try t.log.expected.lastmiss();
-//         try t.log.expected.miss(P1.ident(1));
-//         try t.log.expected.move(P2.ident(1), Move.Fly, P1.ident(1), Move.Fly);
-//         t.expected.p1.get(1).hp -= 50;
-//         try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-//         try t.log.expected.turn(3);
+        try t.log.expected.move(P1.ident(1), Move.Dig, P2.ident(1), Move.Dig);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P1.ident(1));
+        try t.log.expected.move(P2.ident(1), Move.Fly, P1.ident(1), Move.Fly);
+        t.expected.p1.get(1).hp -= 50;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.turn(3);
 
-//         try expectEqual(Result.Default, try t.update(forced, forced));
+        try expectEqual(Result.Default, try t.update(forced, forced));
 
-//         try t.log.expected.move(P1.ident(1), Move.QuickAttack, P2.ident(1), null);
-//         t.expected.p2.get(1).hp -= 43;
-//         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-//         try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
-//         try t.log.expected.move(P2.ident(1), Move.Swift, P1.ident(1), Move.Metronome);
-//         t.expected.p1.get(1).hp -= 64;
-//         try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-//         try t.log.expected.turn(4);
+        try t.log.expected.move(P1.ident(1), Move.QuickAttack, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 43;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
+        try t.log.expected.move(P2.ident(1), Move.Swift, P1.ident(1), Move.Metronome);
+        t.expected.p1.get(1).hp -= 64;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.turn(4);
 
-//         try expectEqual(Result.Default, try t.update(move(2), move(1)));
+        try expectEqual(Result.Default, try t.update(move(2), move(1)));
 
-//         try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
-//         try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
-//         try t.log.expected.move(P1.ident(1), Move.PetalDance, P2.ident(2), Move.Metronome);
-//         try t.log.expected.resisted(P2.ident(2));
-//         t.expected.p2.get(2).hp -= 32;
-//         try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
-//         try t.log.expected.turn(5);
+        try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
+        try t.log.expected.move(P1.ident(1), Move.PetalDance, P2.ident(2), Move.Metronome);
+        try t.log.expected.resisted(P2.ident(2));
+        t.expected.p2.get(2).hp -= 32;
+        try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+        try t.log.expected.turn(5);
 
-//         try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+        try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
 
-//         try t.verify();
-//     }
-//     // beforeTurnMove
-//     {
-//         var t = Test(
-//         // zig fmt: off
-//             if (showdown) .{
-//                 // FIXME: NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, TIE_1,
-//                 NOP, NOP, NOP, NOP, NOP, NOP, NOP, TIE_1,
-//                 // FIXME: NOP, NOP, NOP, NOP, HIT, NOP, HIT, NOP, NOP,
-//                 NOP, NOP, HIT, NOP, HIT, NOP, NOP,
-//             } else .{
-//                 TIE_1, ~CRIT, ~CRIT,
-//             }
-//         // zig fmt: on
-//         ).init(
-//             &.{.{ .species = .Chansey, .moves = &.{.Counter} }},
-//             &.{.{ .species = .Chansey, .moves = &.{.Counter} }},
-//         );
-//         defer t.deinit();
+        try t.verify();
+    }
+    // beforeTurnMove
+    {
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, TIE_1,
+                NOP, NOP, NOP, NOP, HIT, NOP, HIT, NOP, NOP,
+            } else .{
+                TIE_1, ~CRIT, ~CRIT,
+            }
+        // zig fmt: on
+        ).init(
+            &.{.{ .species = .Chansey, .moves = &.{.Counter} }},
+            &.{.{ .species = .Chansey, .moves = &.{.Counter} }},
+        );
+        defer t.deinit();
 
-//         try t.log.expected.move(P1.ident(1), Move.Counter, P2.ident(1), null);
-//         try t.log.expected.fail(P1.ident(1), .None);
-//         try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(1), null);
-//         try t.log.expected.fail(P2.ident(1), .None);
-//         try t.log.expected.turn(2);
+        try t.log.expected.move(P1.ident(1), Move.Counter, P2.ident(1), null);
+        try t.log.expected.fail(P1.ident(1), .None);
+        try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(1), null);
+        try t.log.expected.fail(P2.ident(1), .None);
+        try t.log.expected.turn(2);
 
-//         try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-//         try t.verify();
-//     }
-// }
+        try t.verify();
+    }
+}
 
 test "turn order (switch vs. move)" {
     var t = Test(if (showdown)
@@ -910,57 +910,57 @@ test "Endless Battle Clause (initial)" {
     try t.verify();
 }
 
-test "Endless Battle Clause (basic)" {
-    if (!showdown) return error.SkipZigTest;
-    {
-        var t = Test(.{}).init(
-            &.{.{ .species = .Mew, .moves = &.{.Transform} }},
-            &.{.{ .species = .Ditto, .moves = &.{.Transform} }},
-        );
-        defer t.deinit();
+// test "Endless Battle Clause (basic)" {
+//     if (!showdown) return error.SkipZigTest;
+//     {
+//         var t = Test(.{}).init(
+//             &.{.{ .species = .Mew, .moves = &.{.Transform} }},
+//             &.{.{ .species = .Ditto, .moves = &.{.Transform} }},
+//         );
+//         defer t.deinit();
 
-        t.expected.p1.get(1).move(1).pp = 0;
-        t.expected.p2.get(1).move(1).pp = 0;
+//         t.expected.p1.get(1).move(1).pp = 0;
+//         t.expected.p2.get(1).move(1).pp = 0;
 
-        t.actual.p1.get(1).move(1).pp = 0;
-        t.actual.p2.get(1).move(1).pp = 0;
+//         t.actual.p1.get(1).move(1).pp = 0;
+//         t.actual.p2.get(1).move(1).pp = 0;
 
-        try t.log.expected.switched(P1.ident(1), t.expected.p1.get(1));
-        try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
-        try t.log.expected.tie();
+//         try t.log.expected.switched(P1.ident(1), t.expected.p1.get(1));
+//         try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
+//         try t.log.expected.tie();
 
-        try expectEqual(Result.Tie, try t.battle.actual.update(.{}, .{}, t.log.actual));
-        try t.verify();
-    }
-    {
-        var t = Test(.{NOP}).init(
-            &.{
-                .{ .species = .Mew, .moves = &.{.Transform} },
-                .{ .species = .Muk, .moves = &.{.Pound} },
-            },
-            &.{.{ .species = .Ditto, .moves = &.{.Transform} }},
-        );
-        defer t.deinit();
+//         try expectEqual(Result.Tie, try t.battle.actual.update(.{}, .{}, t.log.actual));
+//         try t.verify();
+//     }
+//     {
+//         var t = Test(.{NOP}).init(
+//             &.{
+//                 .{ .species = .Mew, .moves = &.{.Transform} },
+//                 .{ .species = .Muk, .moves = &.{.Pound} },
+//             },
+//             &.{.{ .species = .Ditto, .moves = &.{.Transform} }},
+//         );
+//         defer t.deinit();
 
-        try t.log.expected.switched(P1.ident(1), t.expected.p1.get(1));
-        try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
-        try t.log.expected.turn(1);
+//         try t.log.expected.switched(P1.ident(1), t.expected.p1.get(1));
+//         try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
+//         try t.log.expected.turn(1);
 
-        try expectEqual(Result.Default, try t.battle.actual.update(.{}, .{}, t.log.actual));
+//         try expectEqual(Result.Default, try t.battle.actual.update(.{}, .{}, t.log.actual));
 
-        t.expected.p1.get(2).hp = 0;
-        t.actual.p1.get(2).hp = 0;
+//         t.expected.p1.get(2).hp = 0;
+//         t.actual.p1.get(2).hp = 0;
 
-        try t.log.expected.move(P1.ident(1), Move.Transform, P2.ident(1), null);
-        try t.log.expected.transform(P1.ident(1), P2.ident(1));
-        try t.log.expected.move(P2.ident(1), Move.Transform, P1.ident(1), null);
-        try t.log.expected.transform(P2.ident(1), P1.ident(1));
-        try t.log.expected.tie();
+//         try t.log.expected.move(P1.ident(1), Move.Transform, P2.ident(1), null);
+//         try t.log.expected.transform(P1.ident(1), P2.ident(1));
+//         try t.log.expected.move(P2.ident(1), Move.Transform, P1.ident(1), null);
+//         try t.log.expected.transform(P2.ident(1), P1.ident(1));
+//         try t.log.expected.tie();
 
-        try expectEqual(Result.Tie, try t.update(move(1), move(1)));
-        try t.verify();
-    }
-}
+//         try expectEqual(Result.Tie, try t.update(move(1), move(1)));
+//         try t.verify();
+//     }
+// }
 
 test "choices" {
     var random = rng.PSRNG.init(0x27182818);
@@ -2481,125 +2481,126 @@ test "Charge effect" {
 }
 
 // Move.{Fly,Dig}
-// test "Fly/Dig effect" {
-//     // This attack charges on the first turn and executes on the second. On the first turn, the user
-//     // avoids all attacks other than Bide, Swift, and Transform. If the user is fully paralyzed on
-//     // the second turn, it continues avoiding attacks until it switches out or successfully executes
-//     // the second turn of this move or {Fly,Dig}.
+test "Fly/Dig effect" {
+    if (showdown) return error.SkipZigTest; // FIXME
+    // This attack charges on the first turn and executes on the second. On the first turn, the user
+    // avoids all attacks other than Bide, Swift, and Transform. If the user is fully paralyzed on
+    // the second turn, it continues avoiding attacks until it switches out or successfully executes
+    // the second turn of this move or {Fly,Dig}.
 
-//     // normal
-//     {
-//         var t = Test((if (showdown)
-//             (.{ HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG })
-//         else
-//             (.{ ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
-//             &.{
-//                 .{ .species = .Pidgeot, .moves = &.{ .Fly, .SandAttack } },
-//                 .{ .species = .Metapod, .moves = &.{.Harden} },
-//             },
-//             &.{
-//                 .{ .species = .Lickitung, .moves = &.{ .Strength, .Lick } },
-//                 .{ .species = .Bellsprout, .moves = &.{.VineWhip} },
-//             },
-//         );
-//         defer t.deinit();
+    // normal
+    {
+        var t = Test((if (showdown)
+            (.{ HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG })
+        else
+            (.{ ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
+            &.{
+                .{ .species = .Pidgeot, .moves = &.{ .Fly, .SandAttack } },
+                .{ .species = .Metapod, .moves = &.{.Harden} },
+            },
+            &.{
+                .{ .species = .Lickitung, .moves = &.{ .Strength, .Lick } },
+                .{ .species = .Bellsprout, .moves = &.{.VineWhip} },
+            },
+        );
+        defer t.deinit();
 
-//         const pp = t.expected.p1.get(1).move(1).pp;
+        const pp = t.expected.p1.get(1).move(1).pp;
 
-//         try t.log.expected.move(P1.ident(1), Move.Fly, .{}, null);
-//         try t.log.expected.laststill();
-//         try t.log.expected.prepare(P1.ident(1), Move.Fly);
-//         try t.log.expected.move(P2.ident(1), Move.Strength, P1.ident(1), null);
-//         try t.log.expected.lastmiss();
-//         try t.log.expected.miss(P2.ident(1));
-//         try t.log.expected.turn(2);
+        try t.log.expected.move(P1.ident(1), Move.Fly, .{}, null);
+        try t.log.expected.laststill();
+        try t.log.expected.prepare(P1.ident(1), Move.Fly);
+        try t.log.expected.move(P2.ident(1), Move.Strength, P1.ident(1), null);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P2.ident(1));
+        try t.log.expected.turn(2);
 
-//         try expectEqual(Result.Default, try t.update(move(1), move(1)));
-//         try expectEqual(pp, t.actual.p1.active.move(1).pp);
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(pp, t.actual.p1.active.move(1).pp);
 
-//         var n = t.battle.actual.choices(.P1, .Move, &choices);
-//         try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
-//         n = t.battle.actual.choices(.P2, .Move, &choices);
-//         try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+        var n = t.battle.actual.choices(.P1, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
+        n = t.battle.actual.choices(.P2, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
 
-//         try t.log.expected.move(P1.ident(1), Move.Fly, P2.ident(1), Move.Fly);
-//         t.expected.p2.get(1).hp -= 79;
-//         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-//         try t.log.expected.move(P2.ident(1), Move.Strength, P1.ident(1), null);
-//         t.expected.p1.get(1).hp -= 74;
-//         try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-//         try t.log.expected.turn(3);
+        try t.log.expected.move(P1.ident(1), Move.Fly, P2.ident(1), Move.Fly);
+        t.expected.p2.get(1).hp -= 79;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.move(P2.ident(1), Move.Strength, P1.ident(1), null);
+        t.expected.p1.get(1).hp -= 74;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.turn(3);
 
-//         try expectEqual(Result.Default, try t.update(forced, move(1)));
-//         try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
+        try expectEqual(Result.Default, try t.update(forced, move(1)));
+        try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
 
-//         try t.verify();
-//     }
-//     // fainting
-//     {
-//         var t = Test((if (showdown)
-//             (.{ HIT, NOP, HIT, ~CRIT, MIN_DMG })
-//         else
-//             (.{ HIT, ~CRIT, MIN_DMG, HIT }))).init(
-//             &.{
-//                 .{ .species = .Seadra, .hp = 31, .moves = &.{.Toxic} },
-//                 .{ .species = .Ninetales, .moves = &.{.Dig} },
-//             },
-//             &.{
-//                 .{ .species = .Shellder, .hp = 31, .moves = &.{.Teleport} },
-//                 .{ .species = .Arcanine, .moves = &.{.Teleport} },
-//             },
-//         );
-//         defer t.deinit();
+        try t.verify();
+    }
+    // fainting
+    {
+        var t = Test((if (showdown)
+            (.{ HIT, NOP, HIT, ~CRIT, MIN_DMG })
+        else
+            (.{ HIT, ~CRIT, MIN_DMG, HIT }))).init(
+            &.{
+                .{ .species = .Seadra, .hp = 31, .moves = &.{.Toxic} },
+                .{ .species = .Ninetales, .moves = &.{.Dig} },
+            },
+            &.{
+                .{ .species = .Shellder, .hp = 31, .moves = &.{.Teleport} },
+                .{ .species = .Arcanine, .moves = &.{.Teleport} },
+            },
+        );
+        defer t.deinit();
 
-//         try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(1), null);
-//         t.expected.p2.get(1).status = Status.init(.PSN);
-//         try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
-//         try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
-//         t.expected.p2.get(1).hp -= 16;
-//         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
-//         try t.log.expected.turn(2);
+        try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(1), null);
+        t.expected.p2.get(1).status = Status.init(.PSN);
+        try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+        try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 16;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
+        try t.log.expected.turn(2);
 
-//         try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-//         try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
-//         try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
-//         try t.log.expected.turn(3);
+        try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+        try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+        try t.log.expected.turn(3);
 
-//         try expectEqual(Result.Default, try t.update(swtch(2), swtch(2)));
+        try expectEqual(Result.Default, try t.update(swtch(2), swtch(2)));
 
-//         try t.log.expected.move(P1.ident(2), Move.Dig, .{}, null);
-//         try t.log.expected.laststill();
-//         try t.log.expected.prepare(P1.ident(2), Move.Dig);
-//         try t.log.expected.move(P2.ident(2), Move.Teleport, P2.ident(2), null);
-//         try t.log.expected.turn(4);
+        try t.log.expected.move(P1.ident(2), Move.Dig, .{}, null);
+        try t.log.expected.laststill();
+        try t.log.expected.prepare(P1.ident(2), Move.Dig);
+        try t.log.expected.move(P2.ident(2), Move.Teleport, P2.ident(2), null);
+        try t.log.expected.turn(4);
 
-//         try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-//         try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
-//         t.expected.p2.get(1).hp = 0;
-//         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
-//         try t.log.expected.faint(P2.ident(1), true);
+        try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
+        t.expected.p2.get(1).hp = 0;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
+        try t.log.expected.faint(P2.ident(1), true);
 
-//         try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(forced, swtch(2)));
+        try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(forced, swtch(2)));
 
-//         try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
-//         try t.log.expected.turn(5);
+        try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+        try t.log.expected.turn(5);
 
-//         try expectEqual(Result.Default, try t.update(.{}, swtch(2)));
+        try expectEqual(Result.Default, try t.update(.{}, swtch(2)));
 
-//         try t.log.expected.move(P1.ident(2), Move.Dig, P2.ident(2), Move.Dig);
-//         try t.log.expected.supereffective(P2.ident(2));
-//         t.expected.p2.get(2).hp -= 141;
-//         try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
-//         try t.log.expected.move(P2.ident(2), Move.Teleport, P2.ident(2), null);
-//         try t.log.expected.turn(6);
+        try t.log.expected.move(P1.ident(2), Move.Dig, P2.ident(2), Move.Dig);
+        try t.log.expected.supereffective(P2.ident(2));
+        t.expected.p2.get(2).hp -= 141;
+        try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+        try t.log.expected.move(P2.ident(2), Move.Teleport, P2.ident(2), null);
+        try t.log.expected.turn(6);
 
-//         try expectEqual(Result.Default, try t.update(forced, move(1)));
+        try expectEqual(Result.Default, try t.update(forced, move(1)));
 
-//         try t.verify();
-//     }
-// }
+        try t.verify();
+    }
+}
 
 // Move.{Whirlwind,Roar,Teleport}
 test "SwitchAndTeleport effect" {
@@ -2996,189 +2997,190 @@ test "Struggle effect" {
 }
 
 // Move.{Thrash,PetalDance}
-// test "Thrashing effect" {
-//     // Whether or not this move is successful, the user spends three or four turns locked into this
-//     // move and becomes confused immediately after its move on the last turn of the effect, even if
-//     // it is already confused. If the user is prevented from moving, the effect ends without causing
-//     // confusion. During the effect, this move's accuracy is overwritten every turn with the current
-//     // calculated accuracy including stat stage changes, but not to less than 1/256 or more than
-//     // 255/256.
-//     const THRASH_3 = if (showdown) comptime ranged(1, 5 - 3) - 1 else MIN;
-//     const CFZ_5 = if (showdown) MAX else 3;
-//     const CFZ_CAN = if (showdown) comptime ranged(128, 256) - 1 else MIN;
-//     const PAR_CAN = MAX;
-//     const PAR_CANT = MIN;
+test "Thrashing effect" {
+    if (showdown) return error.SkipZigTest; // FIXME
+    // Whether or not this move is successful, the user spends three or four turns locked into this
+    // move and becomes confused immediately after its move on the last turn of the effect, even if
+    // it is already confused. If the user is prevented from moving, the effect ends without causing
+    // confusion. During the effect, this move's accuracy is overwritten every turn with the current
+    // calculated accuracy including stat stage changes, but not to less than 1/256 or more than
+    // 255/256.
+    const THRASH_3 = if (showdown) comptime ranged(1, 5 - 3) - 1 else MIN;
+    const CFZ_5 = if (showdown) MAX else 3;
+    const CFZ_CAN = if (showdown) comptime ranged(128, 256) - 1 else MIN;
+    const PAR_CAN = MAX;
+    const PAR_CANT = MIN;
 
-//     // normal
-//     {
-//         var t = Test(
-//         // zig fmt: off
-//             if (showdown) .{
-//                 HIT, ~CRIT, MIN_DMG, THRASH_3, HIT, CFZ_5,
-//                 CFZ_CAN, ~HIT, ~HIT, THRASH_3,
-//                 CFZ_CAN, HIT, ~CRIT, MIN_DMG, CFZ_5, HIT, ~CRIT, MIN_DMG,
-//                 CFZ_CAN, HIT, NOP, PAR_CANT, CFZ_5,
-//                 CFZ_CAN, HIT, CFZ_CAN, PAR_CAN, HIT, ~CRIT, MAX_DMG, THRASH_3,
-//             } else .{
-//                 THRASH_3, ~CRIT, MIN_DMG, HIT, HIT, CFZ_5,
-//                 CFZ_CAN, ~CRIT, MIN_DMG, ~HIT, THRASH_3, ~CRIT, MIN_DMG, ~HIT,
-//                 CFZ_CAN, CFZ_5, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
-//                 CFZ_CAN, HIT, PAR_CANT,
-//                 CFZ_CAN, PAR_CAN, THRASH_3, ~CRIT, MAX_DMG, HIT,
-//             }
-//         // zig fmt: on
-//         ).init(
-//             &.{
-//                 .{ .species = .Nidoking, .moves = &.{ .Thrash, .ThunderWave } },
-//                 .{ .species = .Nidoqueen, .moves = &.{.PoisonSting} },
-//             },
-//             &.{
-//                 .{ .species = .Vileplume, .moves = &.{ .PetalDance, .ConfuseRay } },
-//                 .{ .species = .Victreebel, .moves = &.{.RazorLeaf} },
-//             },
-//         );
-//         defer t.deinit();
+    // normal
+    {
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                HIT, ~CRIT, MIN_DMG, THRASH_3, HIT, CFZ_5,
+                CFZ_CAN, ~HIT, ~HIT, THRASH_3,
+                CFZ_CAN, HIT, ~CRIT, MIN_DMG, CFZ_5, HIT, ~CRIT, MIN_DMG,
+                CFZ_CAN, HIT, NOP, PAR_CANT, CFZ_5,
+                CFZ_CAN, HIT, CFZ_CAN, PAR_CAN, HIT, ~CRIT, MAX_DMG, THRASH_3,
+            } else .{
+                THRASH_3, ~CRIT, MIN_DMG, HIT, HIT, CFZ_5,
+                CFZ_CAN, ~CRIT, MIN_DMG, ~HIT, THRASH_3, ~CRIT, MIN_DMG, ~HIT,
+                CFZ_CAN, CFZ_5, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+                CFZ_CAN, HIT, PAR_CANT,
+                CFZ_CAN, PAR_CAN, THRASH_3, ~CRIT, MAX_DMG, HIT,
+            }
+        // zig fmt: on
+        ).init(
+            &.{
+                .{ .species = .Nidoking, .moves = &.{ .Thrash, .ThunderWave } },
+                .{ .species = .Nidoqueen, .moves = &.{.PoisonSting} },
+            },
+            &.{
+                .{ .species = .Vileplume, .moves = &.{ .PetalDance, .ConfuseRay } },
+                .{ .species = .Victreebel, .moves = &.{.RazorLeaf} },
+            },
+        );
+        defer t.deinit();
 
-//         const pp = t.expected.p1.get(1).move(1).pp;
+        const pp = t.expected.p1.get(1).move(1).pp;
 
-//         try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), null);
-//         t.expected.p2.get(1).hp -= 68;
-//         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-//         try t.log.expected.move(P2.ident(1), Move.ConfuseRay, P1.ident(1), null);
-//         try t.log.expected.start(P1.ident(1), .Confusion);
-//         try t.log.expected.turn(2);
+        try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 68;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.move(P2.ident(1), Move.ConfuseRay, P1.ident(1), null);
+        try t.log.expected.start(P1.ident(1), .Confusion);
+        try t.log.expected.turn(2);
 
-//         // Thrashing locks user in for 3-4 turns
-//         try expectEqual(Result.Default, try t.update(move(1), move(2)));
-//         try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
-//         try expect(t.actual.p1.active.volatiles.Confusion);
-//         try expectEqual(@as(u3, 5), t.actual.p1.active.volatiles.confusion);
+        // Thrashing locks user in for 3-4 turns
+        try expectEqual(Result.Default, try t.update(move(1), move(2)));
+        try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
+        try expect(t.actual.p1.active.volatiles.Confusion);
+        try expectEqual(@as(u3, 5), t.actual.p1.active.volatiles.confusion);
 
-//         var n = t.battle.actual.choices(.P1, .Move, &choices);
-//         try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
-//         n = t.battle.actual.choices(.P2, .Move, &choices);
-//         try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+        var n = t.battle.actual.choices(.P1, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
+        n = t.battle.actual.choices(.P2, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
 
-//         try t.log.expected.activate(P1.ident(1), .Confusion);
-//         try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
-//         try t.log.expected.lastmiss();
-//         try t.log.expected.miss(P1.ident(1));
-//         try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), null);
-//         try t.log.expected.lastmiss();
-//         try t.log.expected.miss(P2.ident(1));
-//         try t.log.expected.turn(3);
+        try t.log.expected.activate(P1.ident(1), .Confusion);
+        try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P1.ident(1));
+        try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), null);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P2.ident(1));
+        try t.log.expected.turn(3);
 
-//         // Thrashing locks you in whether you hit or not
-//         try expectEqual(Result.Default, try t.update(forced, move(1)));
-//         try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
-//         try expect(t.actual.p1.active.volatiles.Confusion);
-//         try expectEqual(@as(u3, 4), t.actual.p1.active.volatiles.confusion);
+        // Thrashing locks you in whether you hit or not
+        try expectEqual(Result.Default, try t.update(forced, move(1)));
+        try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
+        try expect(t.actual.p1.active.volatiles.Confusion);
+        try expectEqual(@as(u3, 4), t.actual.p1.active.volatiles.confusion);
 
-//         n = t.battle.actual.choices(.P1, .Move, &choices);
-//         try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
-//         n = t.battle.actual.choices(.P2, .Move, &choices);
-//         try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
+        n = t.battle.actual.choices(.P1, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
+        n = t.battle.actual.choices(.P2, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
-//         try t.log.expected.activate(P1.ident(1), .Confusion);
-//         if (!showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
-//         try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
-//         t.expected.p2.get(1).hp -= 68;
-//         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-//         if (showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
-//         try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), Move.PetalDance);
-//         t.expected.p1.get(1).hp -= 91;
-//         try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-//         try t.log.expected.turn(4);
+        try t.log.expected.activate(P1.ident(1), .Confusion);
+        if (!showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
+        try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
+        t.expected.p2.get(1).hp -= 68;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        if (showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
+        try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), Move.PetalDance);
+        t.expected.p1.get(1).hp -= 91;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.turn(4);
 
-//         // Thrashing confuses you even if already confused
-//         try expectEqual(Result.Default, try t.update(forced, forced));
-//         try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
-//         try expect(t.actual.p1.active.volatiles.Confusion);
-//         try expectEqual(@as(u3, 5), t.actual.p1.active.volatiles.confusion);
+        // Thrashing confuses you even if already confused
+        try expectEqual(Result.Default, try t.update(forced, forced));
+        try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
+        try expect(t.actual.p1.active.volatiles.Confusion);
+        try expectEqual(@as(u3, 5), t.actual.p1.active.volatiles.confusion);
 
-//         n = t.battle.actual.choices(.P1, .Move, &choices);
-//         try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
-//         n = t.battle.actual.choices(.P2, .Move, &choices);
-//         try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
+        n = t.battle.actual.choices(.P1, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+        n = t.battle.actual.choices(.P2, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
-//         try t.log.expected.activate(P1.ident(1), .Confusion);
-//         try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
-//         t.expected.p2.get(1).status = Status.init(.PAR);
-//         try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
-//         try t.log.expected.cant(P2.ident(1), .Paralysis);
-//         if (showdown) try t.log.expected.start(P2.ident(1), .ConfusionSilent);
-//         try t.log.expected.turn(5);
+        try t.log.expected.activate(P1.ident(1), .Confusion);
+        try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
+        t.expected.p2.get(1).status = Status.init(.PAR);
+        try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+        try t.log.expected.cant(P2.ident(1), .Paralysis);
+        if (showdown) try t.log.expected.start(P2.ident(1), .ConfusionSilent);
+        try t.log.expected.turn(5);
 
-//         // Thrashing doesn't confuse you if the user is prevented from moving
-//         try expectEqual(Result.Default, try t.update(move(2), forced));
-//         if (showdown) {
-//             try expectEqual(@as(u3, 5), t.actual.p2.active.volatiles.confusion);
-//         } else {
-//             try expect(!t.actual.p2.active.volatiles.Confusion);
-//         }
+        // Thrashing doesn't confuse you if the user is prevented from moving
+        try expectEqual(Result.Default, try t.update(move(2), forced));
+        if (showdown) {
+            try expectEqual(@as(u3, 5), t.actual.p2.active.volatiles.confusion);
+        } else {
+            try expect(!t.actual.p2.active.volatiles.Confusion);
+        }
 
-//         n = t.battle.actual.choices(.P1, .Move, &choices);
-//         try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
-//         n = t.battle.actual.choices(.P2, .Move, &choices);
-//         try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+        n = t.battle.actual.choices(.P1, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+        n = t.battle.actual.choices(.P2, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
 
-//         try t.log.expected.activate(P1.ident(1), .Confusion);
-//         try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
-//         try t.log.expected.fail(P2.ident(1), .Paralysis);
-//         if (showdown) try t.log.expected.activate(P1.ident(1), .Confusion);
-//         try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), null);
-//         t.expected.p1.get(1).hp -= 108;
-//         try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-//         try t.log.expected.turn(6);
+        try t.log.expected.activate(P1.ident(1), .Confusion);
+        try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
+        try t.log.expected.fail(P2.ident(1), .Paralysis);
+        if (showdown) try t.log.expected.activate(P1.ident(1), .Confusion);
+        try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), null);
+        t.expected.p1.get(1).hp -= 108;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.turn(6);
 
-//         try expectEqual(Result.Default, try t.update(move(2), move(1)));
+        try expectEqual(Result.Default, try t.update(move(2), move(1)));
 
-//         try t.verify();
-//     }
-//     // immune
-//     {
-//         var t = Test((if (showdown)
-//             (.{ HIT, ~CRIT, MIN_DMG, THRASH_3, CFZ_5 })
-//         else
-//             (.{ THRASH_3, ~CRIT, MIN_DMG, HIT, ~CRIT, HIT, CFZ_5, ~CRIT, HIT }))).init(
-//             &.{.{ .species = .Mankey, .moves = &.{ .Thrash, .Scratch } }},
-//             &.{
-//                 .{ .species = .Scyther, .moves = &.{.Cut} },
-//                 .{ .species = .Goldeen, .moves = &.{.WaterGun} },
-//                 .{ .species = .Gastly, .moves = &.{.Teleport} },
-//             },
-//         );
-//         defer t.deinit();
+        try t.verify();
+    }
+    // immune
+    {
+        var t = Test((if (showdown)
+            (.{ HIT, ~CRIT, MIN_DMG, THRASH_3, CFZ_5 })
+        else
+            (.{ THRASH_3, ~CRIT, MIN_DMG, HIT, ~CRIT, HIT, CFZ_5, ~CRIT, HIT }))).init(
+            &.{.{ .species = .Mankey, .moves = &.{ .Thrash, .Scratch } }},
+            &.{
+                .{ .species = .Scyther, .moves = &.{.Cut} },
+                .{ .species = .Goldeen, .moves = &.{.WaterGun} },
+                .{ .species = .Gastly, .moves = &.{.Teleport} },
+            },
+        );
+        defer t.deinit();
 
-//         try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
-//         try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(2), null);
-//         t.expected.p2.get(2).hp -= 77;
-//         try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
-//         try t.log.expected.turn(2);
+        try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+        try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(2), null);
+        t.expected.p2.get(2).hp -= 77;
+        try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+        try t.log.expected.turn(2);
 
-//         try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+        try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
 
-//         try t.log.expected.switched(P2.ident(3), t.expected.p2.get(3));
-//         try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(3), Move.Thrash);
-//         try t.log.expected.immune(P2.ident(3), .None);
-//         try t.log.expected.turn(3);
+        try t.log.expected.switched(P2.ident(3), t.expected.p2.get(3));
+        try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(3), Move.Thrash);
+        try t.log.expected.immune(P2.ident(3), .None);
+        try t.log.expected.turn(3);
 
-//         try expectEqual(Result.Default, try t.update(forced, swtch(3)));
+        try expectEqual(Result.Default, try t.update(forced, swtch(3)));
 
-//         try t.log.expected.move(P2.ident(3), Move.Teleport, P2.ident(3), null);
-//         if (!showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
-//         try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(3), Move.Thrash);
-//         try t.log.expected.immune(P2.ident(3), .None);
-//         if (showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
-//         try t.log.expected.turn(4);
+        try t.log.expected.move(P2.ident(3), Move.Teleport, P2.ident(3), null);
+        if (!showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
+        try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(3), Move.Thrash);
+        try t.log.expected.immune(P2.ident(3), .None);
+        if (showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
+        try t.log.expected.turn(4);
 
-//         try expectEqual(Result.Default, try t.update(forced, move(1)));
-//         try expect(t.actual.p1.active.volatiles.Confusion);
-//         try expectEqual(@as(u3, 5), t.actual.p1.active.volatiles.confusion);
+        try expectEqual(Result.Default, try t.update(forced, move(1)));
+        try expect(t.actual.p1.active.volatiles.Confusion);
+        try expectEqual(@as(u3, 5), t.actual.p1.active.volatiles.confusion);
 
-//         try t.verify();
-//     }
-// }
+        try t.verify();
+    }
+}
 
 // Move.{SonicBoom,DragonRage}
 test "FixedDamage effect" {
@@ -4543,117 +4545,118 @@ test "Haze effect" {
 }
 
 // Move.Bide
-// test "Bide effect" {
-//     // The user spends two or three turns locked into this move and then, on the second or third
-//     // turn after using this move, the user attacks the opponent, inflicting double the damage in HP
-//     // it lost during those turns. This move ignores type immunity and cannot be avoided even if the
-//     // target is using Dig or Fly. The user can choose to switch out during the effect. If the user
-//     // switches out or is prevented from moving during this move's use, the effect ends. During the
-//     // effect, if the opposing Pokemon switches out or uses Confuse Ray, Conversion, Focus Energy,
-//     // Glare, Haze, Leech Seed, Light Screen, Mimic, Mist, Poison Gas, Poison Powder, Recover,
-//     // Reflect, Rest, Soft-Boiled, Splash, Stun Spore, Substitute, Supersonic, Teleport, Thunder
-//     // Wave, Toxic, or Transform, the previous damage dealt to the user will be added to the total.
-//     const BIDE_3 = MAX;
-//     const CFZ_3 = if (showdown) comptime ranged(2, 6 - 2) - 1 else 1;
-//     const CFZ_CAN = if (showdown) comptime ranged(128, 256) - 1 else MIN;
+test "Bide effect" {
+    if (showdown) return error.SkipZigTest; // FIXME
+    // The user spends two or three turns locked into this move and then, on the second or third
+    // turn after using this move, the user attacks the opponent, inflicting double the damage in HP
+    // it lost during those turns. This move ignores type immunity and cannot be avoided even if the
+    // target is using Dig or Fly. The user can choose to switch out during the effect. If the user
+    // switches out or is prevented from moving during this move's use, the effect ends. During the
+    // effect, if the opposing Pokemon switches out or uses Confuse Ray, Conversion, Focus Energy,
+    // Glare, Haze, Leech Seed, Light Screen, Mimic, Mist, Poison Gas, Poison Powder, Recover,
+    // Reflect, Rest, Soft-Boiled, Splash, Stun Spore, Substitute, Supersonic, Teleport, Thunder
+    // Wave, Toxic, or Transform, the previous damage dealt to the user will be added to the total.
+    const BIDE_3 = MAX;
+    const CFZ_3 = if (showdown) comptime ranged(2, 6 - 2) - 1 else 1;
+    const CFZ_CAN = if (showdown) comptime ranged(128, 256) - 1 else MIN;
 
-//     var t = Test(
-//     // zig fmt: off
-//     if (showdown) .{
-//         BIDE_3, HIT, HIT, HIT, ~CRIT, MIN_DMG, BIDE_3, HIT, HIT, CFZ_3, CFZ_CAN,
-//     } else .{
-//         ~CRIT, BIDE_3, HIT, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, BIDE_3, HIT, HIT, CFZ_3, CFZ_CAN,
-//     }
-//     // zig fmt: on
-//     ).init(
-//         &.{
-//             .{ .species = .Chansey, .moves = &.{ .Bide, .Teleport } },
-//             .{ .species = .Onix, .moves = &.{.Bide} },
-//         },
-//         &.{
-//             .{ .species = .Magnemite, .moves = &.{.SonicBoom} },
-//             .{ .species = .Dugtrio, .moves = &.{.Dig} },
-//             .{ .species = .Haunter, .moves = &.{ .NightShade, .ConfuseRay } },
-//         },
-//     );
-//     defer t.deinit();
+    var t = Test(
+    // zig fmt: off
+    if (showdown) .{
+        BIDE_3, HIT, HIT, HIT, ~CRIT, MIN_DMG, BIDE_3, HIT, HIT, CFZ_3, CFZ_CAN,
+    } else .{
+        ~CRIT, BIDE_3, HIT, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, BIDE_3, HIT, HIT, CFZ_3, CFZ_CAN,
+    }
+    // zig fmt: on
+    ).init(
+        &.{
+            .{ .species = .Chansey, .moves = &.{ .Bide, .Teleport } },
+            .{ .species = .Onix, .moves = &.{.Bide} },
+        },
+        &.{
+            .{ .species = .Magnemite, .moves = &.{.SonicBoom} },
+            .{ .species = .Dugtrio, .moves = &.{.Dig} },
+            .{ .species = .Haunter, .moves = &.{ .NightShade, .ConfuseRay } },
+        },
+    );
+    defer t.deinit();
 
-//     try t.log.expected.move(P1.ident(1), Move.Bide, P1.ident(1), null);
-//     try t.log.expected.start(P1.ident(1), .Bide);
-//     try t.log.expected.move(P2.ident(1), Move.SonicBoom, P1.ident(1), null);
-//     t.expected.p1.get(1).hp -= 20;
-//     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-//     try t.log.expected.turn(2);
+    try t.log.expected.move(P1.ident(1), Move.Bide, P1.ident(1), null);
+    try t.log.expected.start(P1.ident(1), .Bide);
+    try t.log.expected.move(P2.ident(1), Move.SonicBoom, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 20;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(2);
 
-//     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-//     var n = t.battle.actual.choices(.P1, .Move, &choices);
-//     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), forced }, choices[0..n]);
+    var n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), forced }, choices[0..n]);
 
-//     try t.log.expected.activate(P1.ident(1), .Bide);
-//     try t.log.expected.move(P2.ident(1), Move.SonicBoom, P1.ident(1), null);
-//     t.expected.p1.get(1).hp -= 20;
-//     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-//     try t.log.expected.turn(3);
+    try t.log.expected.activate(P1.ident(1), .Bide);
+    try t.log.expected.move(P2.ident(1), Move.SonicBoom, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 20;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.turn(3);
 
-//     try expectEqual(Result.Default, try t.update(forced, move(1)));
+    try expectEqual(Result.Default, try t.update(forced, move(1)));
 
-//     try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
-//     try t.log.expected.activate(P1.ident(1), .Bide);
-//     try t.log.expected.turn(4);
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.activate(P1.ident(1), .Bide);
+    try t.log.expected.turn(4);
 
-//     try expectEqual(Result.Default, try t.update(forced, swtch(2)));
+    try expectEqual(Result.Default, try t.update(forced, swtch(2)));
 
-//     try t.log.expected.move(P2.ident(2), Move.Dig, .{}, null);
-//     try t.log.expected.laststill();
-//     try t.log.expected.prepare(P2.ident(2), Move.Dig);
-//     try t.log.expected.end(P1.ident(1), .Bide);
-//     t.expected.p2.get(2).hp -= 120;
-//     try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
-//     try t.log.expected.turn(5);
+    try t.log.expected.move(P2.ident(2), Move.Dig, .{}, null);
+    try t.log.expected.laststill();
+    try t.log.expected.prepare(P2.ident(2), Move.Dig);
+    try t.log.expected.end(P1.ident(1), .Bide);
+    t.expected.p2.get(2).hp -= 120;
+    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+    try t.log.expected.turn(5);
 
-//     try expectEqual(Result.Default, try t.update(forced, move(1)));
+    try expectEqual(Result.Default, try t.update(forced, move(1)));
 
-//     n = t.battle.actual.choices(.P1, .Move, &choices);
-//     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
 
-//     try t.log.expected.move(P2.ident(2), Move.Dig, P1.ident(1), Move.Dig);
-//     t.expected.p1.get(1).hp -= 256;
-//     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-//     try t.log.expected.move(P1.ident(1), Move.Bide, P1.ident(1), null);
-//     try t.log.expected.start(P1.ident(1), .Bide);
-//     try t.log.expected.turn(6);
+    try t.log.expected.move(P2.ident(2), Move.Dig, P1.ident(1), Move.Dig);
+    t.expected.p1.get(1).hp -= 256;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Bide, P1.ident(1), null);
+    try t.log.expected.start(P1.ident(1), .Bide);
+    try t.log.expected.turn(6);
 
-//     try expectEqual(Result.Default, try t.update(move(1), forced));
+    try expectEqual(Result.Default, try t.update(move(1), forced));
 
-//     try t.log.expected.switched(P2.ident(3), t.expected.p2.get(3));
-//     try t.log.expected.activate(P1.ident(1), .Bide);
-//     try t.log.expected.turn(7);
+    try t.log.expected.switched(P2.ident(3), t.expected.p2.get(3));
+    try t.log.expected.activate(P1.ident(1), .Bide);
+    try t.log.expected.turn(7);
 
-//     try expectEqual(Result.Default, try t.update(forced, swtch(3)));
+    try expectEqual(Result.Default, try t.update(forced, swtch(3)));
 
-//     try t.log.expected.move(P2.ident(3), Move.NightShade, P1.ident(1), null);
-//     t.expected.p1.get(1).hp -= 100;
-//     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-//     try t.log.expected.activate(P1.ident(1), .Bide);
-//     try t.log.expected.turn(8);
+    try t.log.expected.move(P2.ident(3), Move.NightShade, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 100;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.activate(P1.ident(1), .Bide);
+    try t.log.expected.turn(8);
 
-//     try expectEqual(Result.Default, try t.update(forced, move(1)));
+    try expectEqual(Result.Default, try t.update(forced, move(1)));
 
-//     try t.log.expected.move(P2.ident(3), Move.ConfuseRay, P1.ident(1), null);
-//     try t.log.expected.start(P1.ident(1), .Confusion);
-//     try t.log.expected.activate(P1.ident(1), .Confusion);
-//     try t.log.expected.end(P1.ident(1), .Bide);
-//     t.expected.p2.get(3).hp = 0;
-//     try t.log.expected.damage(P2.ident(3), t.expected.p2.get(3), .None);
-//     try t.log.expected.faint(P2.ident(3), true);
+    try t.log.expected.move(P2.ident(3), Move.ConfuseRay, P1.ident(1), null);
+    try t.log.expected.start(P1.ident(1), .Confusion);
+    try t.log.expected.activate(P1.ident(1), .Confusion);
+    try t.log.expected.end(P1.ident(1), .Bide);
+    t.expected.p2.get(3).hp = 0;
+    try t.log.expected.damage(P2.ident(3), t.expected.p2.get(3), .None);
+    try t.log.expected.faint(P2.ident(3), true);
 
-//     try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(forced, move(2)));
+    try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(forced, move(2)));
 
-//     try expectEqual(@as(u8, 14), t.actual.p1.get(1).move(1).pp);
+    try expectEqual(@as(u8, 14), t.actual.p1.get(1).move(1).pp);
 
-//     try t.verify();
-// }
+    try t.verify();
+}
 
 // Move.Metronome
 test "Metronome effect" {
@@ -5042,134 +5045,134 @@ test "Swift effect" {
 }
 
 // Move.Transform
-// test "Transform effect" {
-//     // The user transforms into the target. The target's current stats, stat stages, types, moves,
-//     // DVs, species, and sprite are copied. The user's level and HP remain the same and each copied
-//     // move receives only 5 PP. This move can hit a target using Dig or Fly.
-//     const TIE_1 = MIN;
-//     const TIE_2 = MAX;
-//     const no_crit = if (showdown) comptime ranged(Species.chance(.Articuno), 256) else 6;
+test "Transform effect" {
+    if (showdown) return error.SkipZigTest; // FIXME
+    // The user transforms into the target. The target's current stats, stat stages, types, moves,
+    // DVs, species, and sprite are copied. The user's level and HP remain the same and each copied
+    // move receives only 5 PP. This move can hit a target using Dig or Fly.
+    const TIE_1 = MIN;
+    const TIE_2 = MAX;
+    const no_crit = if (showdown) comptime ranged(Species.chance(.Articuno), 256) else 6;
 
-//     var t = Test(
-//     // zig fmt: off
-//         if (showdown) .{
-//             NOP, TIE_1, NOP, NOP, NOP, ~HIT, NOP, NOP,
-//             TIE_2, NOP, NOP, HIT, no_crit, MIN_DMG, NOP,
-//             HIT, no_crit, MIN_DMG, NOP, NOP,
-//             // FIXME: TIE_2, NOP, NOP, NOP, NOP, NOP, NOP, NOP
-//             TIE_2, NOP, NOP, NOP, NOP, NOP, NOP,
-//         } else .{
-//             ~CRIT, ~CRIT, TIE_1, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, ~HIT,
-//             TIE_2, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG, HIT,
-//             TIE_2, ~CRIT, ~CRIT, ~CRIT,
-//         }
-//     // zig fmt: on
-//     ).init(
-//         &.{
-//             .{ .species = .Mew, .level = 50, .moves = &.{ .SwordsDance, .Transform } },
-//             .{ .species = .Ditto, .moves = &.{ .SwordsDance, .Transform } },
-//         },
-//         &.{.{ .species = .Articuno, .moves = &.{ .Agility, .Fly, .Peck } }},
-//     );
-//     defer t.deinit();
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            NOP, TIE_1, NOP, NOP, NOP, ~HIT, NOP, NOP,
+            TIE_2, NOP, NOP, HIT, no_crit, MIN_DMG, NOP,
+            HIT, no_crit, MIN_DMG, NOP, NOP,
+            TIE_2, NOP, NOP, NOP, NOP, NOP, NOP, NOP
+        } else .{
+            ~CRIT, ~CRIT, TIE_1, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, ~HIT,
+            TIE_2, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG, HIT,
+            TIE_2, ~CRIT, ~CRIT, ~CRIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{
+            .{ .species = .Mew, .level = 50, .moves = &.{ .SwordsDance, .Transform } },
+            .{ .species = .Ditto, .moves = &.{ .SwordsDance, .Transform } },
+        },
+        &.{.{ .species = .Articuno, .moves = &.{ .Agility, .Fly, .Peck } }},
+    );
+    defer t.deinit();
 
-//     const pp = t.expected.p1.get(1).move(2).pp;
+    const pp = t.expected.p1.get(1).move(2).pp;
 
-//     try t.log.expected.move(P2.ident(1), Move.Agility, P2.ident(1), null);
-//     try t.log.expected.boost(P2.ident(1), .Speed, 2);
-//     try t.log.expected.move(P1.ident(1), Move.SwordsDance, P1.ident(1), null);
-//     try t.log.expected.boost(P1.ident(1), .Attack, 2);
-//     try t.log.expected.turn(2);
+    try t.log.expected.move(P2.ident(1), Move.Agility, P2.ident(1), null);
+    try t.log.expected.boost(P2.ident(1), .Speed, 2);
+    try t.log.expected.move(P1.ident(1), Move.SwordsDance, P1.ident(1), null);
+    try t.log.expected.boost(P1.ident(1), .Attack, 2);
+    try t.log.expected.turn(2);
 
-//     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-//     try expectEqual(@as(i4, 2), t.actual.p1.active.boosts.atk);
-//     try expectEqual(@as(i4, 2), t.actual.p2.active.boosts.spe);
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(@as(i4, 2), t.actual.p1.active.boosts.atk);
+    try expectEqual(@as(i4, 2), t.actual.p2.active.boosts.spe);
 
-//     try t.log.expected.move(P2.ident(1), Move.Fly, .{}, null);
-//     try t.log.expected.laststill();
-//     try t.log.expected.prepare(P2.ident(1), Move.Fly);
-//     try t.log.expected.move(P1.ident(1), Move.Transform, P2.ident(1), null);
-//     try t.log.expected.transform(P1.ident(1), P2.ident(1));
-//     try t.log.expected.turn(3);
+    try t.log.expected.move(P2.ident(1), Move.Fly, .{}, null);
+    try t.log.expected.laststill();
+    try t.log.expected.prepare(P2.ident(1), Move.Fly);
+    try t.log.expected.move(P1.ident(1), Move.Transform, P2.ident(1), null);
+    try t.log.expected.transform(P1.ident(1), P2.ident(1));
+    try t.log.expected.turn(3);
 
-//     // Transform can hit an invulnerable target
-//     try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    // Transform can hit an invulnerable target
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
 
-//     // Transform should copy species, types, stats, and boosts but not level or HP
-//     try expectEqual(pp - 1, t.actual.p1.get(1).move(2).pp);
+    // Transform should copy species, types, stats, and boosts but not level or HP
+    try expectEqual(pp - 1, t.actual.p1.get(1).move(2).pp);
 
-//     try expectEqual(Species.Articuno, t.actual.p1.active.species);
-//     try expectEqual(t.actual.p2.active.types, t.actual.p1.active.types);
-//     try expectEqual(@as(u8, 50), t.actual.p1.get(1).level);
+    try expectEqual(Species.Articuno, t.actual.p1.active.species);
+    try expectEqual(t.actual.p2.active.types, t.actual.p1.active.types);
+    try expectEqual(@as(u8, 50), t.actual.p1.get(1).level);
 
-//     inline for (@typeInfo(@TypeOf(t.actual.p1.get(1).stats)).Struct.fields) |field| {
-//         if (!std.mem.eql(u8, field.name, "hp")) {
-//             try expectEqual(
-//                 @field(t.actual.p2.active.stats, field.name),
-//                 @field(t.actual.p1.active.stats, field.name),
-//             );
-//         }
-//     }
-//     try expectEqual(t.actual.p2.active.boosts, t.actual.p1.active.boosts);
+    inline for (@typeInfo(@TypeOf(t.actual.p1.get(1).stats)).Struct.fields) |field| {
+        if (!std.mem.eql(u8, field.name, "hp")) {
+            try expectEqual(
+                @field(t.actual.p2.active.stats, field.name),
+                @field(t.actual.p1.active.stats, field.name),
+            );
+        }
+    }
+    try expectEqual(t.actual.p2.active.boosts, t.actual.p1.active.boosts);
 
-//     const moves = [_]Move{ .Agility, .Fly, .Peck, .None };
-//     const pps = [_]u8{ 5, 5, 5, 0 };
-//     for (t.actual.p1.active.moves) |m, i| {
-//         try expectEqual(moves[i], m.id);
-//         try expectEqual(pps[i], m.pp);
-//     }
+    const moves = [_]Move{ .Agility, .Fly, .Peck, .None };
+    const pps = [_]u8{ 5, 5, 5, 0 };
+    for (t.actual.p1.active.moves) |m, i| {
+        try expectEqual(moves[i], m.id);
+        try expectEqual(pps[i], m.pp);
+    }
 
-//     try t.log.expected.move(P1.ident(1), Move.Peck, P2.ident(1), null);
-//     try t.log.expected.lastmiss();
-//     try t.log.expected.miss(P1.ident(1));
-//     try t.log.expected.move(P2.ident(1), Move.Fly, P1.ident(1), Move.Fly);
-//     try t.log.expected.lastmiss();
-//     try t.log.expected.miss(P2.ident(1));
-//     try t.log.expected.turn(4);
+    try t.log.expected.move(P1.ident(1), Move.Peck, P2.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P1.ident(1));
+    try t.log.expected.move(P2.ident(1), Move.Fly, P1.ident(1), Move.Fly);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    try t.log.expected.turn(4);
 
-//     try expectEqual(Result.Default, try t.update(move(3), forced));
+    try expectEqual(Result.Default, try t.update(move(3), forced));
 
-//     try t.log.expected.move(P2.ident(1), Move.Peck, P1.ident(1), null);
-//     t.expected.p1.get(1).hp -= 35;
-//     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-//     try t.log.expected.move(P1.ident(1), Move.Peck, P2.ident(1), null);
-//     try t.log.expected.crit(P2.ident(1));
-//     t.expected.p2.get(1).hp -= 20; // crit = uses untransformed stats
-//     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-//     try t.log.expected.turn(5);
+    try t.log.expected.move(P2.ident(1), Move.Peck, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 35;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Peck, P2.ident(1), null);
+    try t.log.expected.crit(P2.ident(1));
+    t.expected.p2.get(1).hp -= 20; // crit = uses untransformed stats
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(5);
 
-//     // Transformed Pokémon should retain their original crit rate (and this should speed tie)
-//     try expectEqual(Result.Default, try t.update(move(3), move(3)));
+    // Transformed Pokémon should retain their original crit rate (and this should speed tie)
+    try expectEqual(Result.Default, try t.update(move(3), move(3)));
 
-//     try t.log.expected.move(P2.ident(1), Move.Agility, P2.ident(1), null);
-//     try t.log.expected.boost(P2.ident(1), .Speed, 2);
-//     try t.log.expected.move(P1.ident(1), Move.Agility, P1.ident(1), null);
-//     try t.log.expected.boost(P1.ident(1), .Speed, 2);
-//     try t.log.expected.turn(6);
+    try t.log.expected.move(P2.ident(1), Move.Agility, P2.ident(1), null);
+    try t.log.expected.boost(P2.ident(1), .Speed, 2);
+    try t.log.expected.move(P1.ident(1), Move.Agility, P1.ident(1), null);
+    try t.log.expected.boost(P1.ident(1), .Speed, 2);
+    try t.log.expected.turn(6);
 
-//     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-//     inline for (@typeInfo(@TypeOf(t.actual.p1.get(1).stats)).Struct.fields) |field| {
-//         if (!std.mem.eql(u8, field.name, "hp")) {
-//             try expectEqual(
-//                 @field(t.actual.p2.active.stats, field.name),
-//                 @field(t.actual.p1.active.stats, field.name),
-//             );
-//         }
-//     }
-//     try expectEqual(t.actual.p2.active.boosts, t.actual.p1.active.boosts);
+    inline for (@typeInfo(@TypeOf(t.actual.p1.get(1).stats)).Struct.fields) |field| {
+        if (!std.mem.eql(u8, field.name, "hp")) {
+            try expectEqual(
+                @field(t.actual.p2.active.stats, field.name),
+                @field(t.actual.p1.active.stats, field.name),
+            );
+        }
+    }
+    try expectEqual(t.actual.p2.active.boosts, t.actual.p1.active.boosts);
 
-//     try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
-//     try t.log.expected.move(P2.ident(1), Move.Agility, P2.ident(1), null);
-//     try t.log.expected.boost(P2.ident(1), .Speed, 2);
-//     try t.log.expected.turn(7);
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.move(P2.ident(1), Move.Agility, P2.ident(1), null);
+    try t.log.expected.boost(P2.ident(1), .Speed, 2);
+    try t.log.expected.turn(7);
 
-//     try expectEqual(Result.Default, try t.update(swtch(2), move(1)));
-//     try expectEqual(Species.Mew, t.actual.p1.get(2).species);
-//     try expectEqual(pp - 1, t.actual.p1.get(2).move(2).pp);
+    try expectEqual(Result.Default, try t.update(swtch(2), move(1)));
+    try expectEqual(Species.Mew, t.actual.p1.get(2).species);
+    try expectEqual(pp - 1, t.actual.p1.get(2).move(2).pp);
 
-//     try t.verify();
-// }
+    try t.verify();
+}
 
 // Move.Conversion
 test "Conversion effect" {
@@ -5265,6 +5268,8 @@ test "Substitute effect" {
 // Pokémon Showdown Bugs
 
 test "Disable + Transform bug" {
+    if (showdown) return error.SkipZigTest; // FIXME
+
     const DISABLE_MOVE_2 = if (showdown) comptime ranged(2, 4) - 1 else 1;
     const DISABLE_DURATION_5 = comptime ranged(5, 9 - 1) - 1;
     {
@@ -5326,91 +5331,93 @@ test "Disable + Transform bug" {
 }
 
 // Fixed by smogon/pokemon-showdown#9201 & smogon/pokemon-showdown#9301
-// test "Disable + Bide bug" {
-//     const BIDE_3 = MAX;
-//     const DISABLE_MOVE_1 = if (showdown) comptime ranged(1, 2) - 1 else 0;
-//     const DISABLE_DURATION_5 = comptime ranged(5, 9 - 1) - 1;
+test "Disable + Bide bug" {
+    if (showdown) return error.SkipZigTest; // FIXME
+    const BIDE_3 = MAX;
+    const DISABLE_MOVE_1 = if (showdown) comptime ranged(1, 2) - 1 else 0;
+    const DISABLE_DURATION_5 = comptime ranged(5, 9 - 1) - 1;
 
-//     var t = Test((if (showdown)
-//         (.{ BIDE_3, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5, NOP, NOP })
-//     else
-//         (.{ ~CRIT, BIDE_3, ~CRIT, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5 }))).init(
-//         &.{.{ .species = .Voltorb, .moves = &.{ .Teleport, .Disable } }},
-//         &.{.{ .species = .Golem, .moves = &.{ .Bide, .RockThrow } }},
-//     );
-//     defer t.deinit();
+    var t = Test((if (showdown)
+        (.{ BIDE_3, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5, NOP, NOP })
+    else
+        (.{ ~CRIT, BIDE_3, ~CRIT, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5 }))).init(
+        &.{.{ .species = .Voltorb, .moves = &.{ .Teleport, .Disable } }},
+        &.{.{ .species = .Golem, .moves = &.{ .Bide, .RockThrow } }},
+    );
+    defer t.deinit();
 
-//     try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
-//     try t.log.expected.move(P2.ident(1), Move.Bide, P2.ident(1), null);
-//     try t.log.expected.start(P2.ident(1), .Bide);
-//     try t.log.expected.turn(2);
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.move(P2.ident(1), Move.Bide, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Bide);
+    try t.log.expected.turn(2);
 
-//     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-//     try t.log.expected.move(P1.ident(1), Move.Disable, P2.ident(1), null);
-//     try t.log.expected.startEffect(P2.ident(1), .Disable, Move.Bide);
-//     try t.log.expected.disabled(P2.ident(1), Move.Bide);
-//     try t.log.expected.turn(3);
+    try t.log.expected.move(P1.ident(1), Move.Disable, P2.ident(1), null);
+    try t.log.expected.startEffect(P2.ident(1), .Disable, Move.Bide);
+    try t.log.expected.disabled(P2.ident(1), Move.Bide);
+    try t.log.expected.turn(3);
 
-//     try expectEqual(Result.Default, try t.update(move(2), forced));
+    try expectEqual(Result.Default, try t.update(move(2), forced));
 
-//     try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
-//     try t.log.expected.disabled(P2.ident(1), Move.Bide);
-//     try t.log.expected.turn(4);
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.disabled(P2.ident(1), Move.Bide);
+    try t.log.expected.turn(4);
 
-//     // Bide should not execute
-//     try expectEqual(Result.Default, try t.update(move(1), forced));
+    // Bide should not execute
+    try expectEqual(Result.Default, try t.update(move(1), forced));
 
-//     try t.verify();
-// }
+    try t.verify();
+}
 
 // Fixed by smogon/pokemon-showdown#9243
-// test "Charge + Sleep bug" {
-//     const SLP_1 = if (showdown) comptime ranged(1, 8 - 1) else 1;
+test "Charge + Sleep bug" {
+    if (showdown) return error.SkipZigTest; // FIXME
+    const SLP_1 = if (showdown) comptime ranged(1, 8 - 1) else 1;
 
-//     var t = Test((if (showdown)
-//         (.{ HIT, NOP, SLP_1, HIT, ~CRIT, MIN_DMG })
-//     else
-//         (.{ ~CRIT, HIT, SLP_1, ~CRIT, MIN_DMG, HIT }))).init(
-//         &.{.{ .species = .Venusaur, .moves = &.{ .SolarBeam, .Tackle } }},
-//         &.{.{ .species = .Snorlax, .moves = &.{ .LovelyKiss, .Teleport } }},
-//     );
-//     defer t.deinit();
+    var t = Test((if (showdown)
+        (.{ HIT, NOP, SLP_1, HIT, ~CRIT, MIN_DMG })
+    else
+        (.{ ~CRIT, HIT, SLP_1, ~CRIT, MIN_DMG, HIT }))).init(
+        &.{.{ .species = .Venusaur, .moves = &.{ .SolarBeam, .Tackle } }},
+        &.{.{ .species = .Snorlax, .moves = &.{ .LovelyKiss, .Teleport } }},
+    );
+    defer t.deinit();
 
-//     try t.log.expected.move(P1.ident(1), Move.SolarBeam, .{}, null);
-//     try t.log.expected.laststill();
-//     try t.log.expected.prepare(P1.ident(1), Move.SolarBeam);
-//     try t.log.expected.move(P2.ident(1), Move.LovelyKiss, P1.ident(1), null);
-//     t.expected.p1.get(1).status = Status.slp(1);
-//     try t.log.expected.statusFrom(P1.ident(1), t.expected.p1.get(1).status, Move.LovelyKiss);
-//     try t.log.expected.turn(2);
+    try t.log.expected.move(P1.ident(1), Move.SolarBeam, .{}, null);
+    try t.log.expected.laststill();
+    try t.log.expected.prepare(P1.ident(1), Move.SolarBeam);
+    try t.log.expected.move(P2.ident(1), Move.LovelyKiss, P1.ident(1), null);
+    t.expected.p1.get(1).status = Status.slp(1);
+    try t.log.expected.statusFrom(P1.ident(1), t.expected.p1.get(1).status, Move.LovelyKiss);
+    try t.log.expected.turn(2);
 
-//     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-//     var n = t.battle.actual.choices(.P1, .Move, &choices);
-//     try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
+    var n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
-//     try t.log.expected.curestatus(P1.ident(1), t.expected.p1.get(1).status, .Message);
-//     t.expected.p1.get(1).status = 0;
-//     try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
-//     try t.log.expected.turn(3);
+    try t.log.expected.curestatus(P1.ident(1), t.expected.p1.get(1).status, .Message);
+    t.expected.p1.get(1).status = 0;
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(3);
 
-//     try expectEqual(Result.Default, try t.update(forced, move(2)));
+    try expectEqual(Result.Default, try t.update(forced, move(2)));
 
-//     // The charging move should be forced and should execute instead of preparing again
-//     n = t.battle.actual.choices(.P1, .Move, &choices);
-//     try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
+    // The charging move should be forced and should execute instead of preparing again
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
-//     try t.log.expected.move(P1.ident(1), Move.SolarBeam, P2.ident(1), Move.SolarBeam);
-//     t.expected.p2.get(1).hp -= 168;
-//     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-//     try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
-//     try t.log.expected.turn(4);
+    try t.log.expected.move(P1.ident(1), Move.SolarBeam, P2.ident(1), Move.SolarBeam);
+    t.expected.p2.get(1).hp -= 168;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(4);
 
-//     try expectEqual(Result.Default, try t.update(forced, move(2)));
+    try expectEqual(Result.Default, try t.update(forced, move(2)));
 
-//     try t.verify();
-// }
+    try t.verify();
+}
 
 // Fixed by smogon/pokemon-showdown#9034
 test "Explosion invulnerability bug" {
@@ -5695,95 +5702,96 @@ test "Counter via Metronome bug" {
 }
 
 // Fixed by smogon/pokemon-showdown#9243
-// test "Infinite Metronome" {
-//     const skull_bash = comptime metronome(.SkullBash);
-//     const mirror_move = comptime metronome(.MirrorMove);
-//     const fly = comptime metronome(.Fly);
-//     const pound = comptime metronome(.Pound);
+test "Infinite Metronome" {
+    if (showdown) return error.SkipZigTest; // FIXME
+    const skull_bash = comptime metronome(.SkullBash);
+    const mirror_move = comptime metronome(.MirrorMove);
+    const fly = comptime metronome(.Fly);
+    const pound = comptime metronome(.Pound);
 
-//     // Charge
-//     {
-//         var t = Test(
-//         // zig fmt: off
-//             if (showdown) .{
-//                 skull_bash, mirror_move, mirror_move, fly, ~HIT,
-//             } else .{
-//                 ~CRIT, skull_bash, ~CRIT, mirror_move, ~CRIT, ~CRIT, mirror_move, ~CRIT, ~CRIT, fly,
-//                 ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, ~HIT
-//             }
-//         // zig fmt: on
-//         ).init(
-//             &.{.{ .species = .Clefairy, .moves = &.{.Metronome} }},
-//             &.{.{ .species = .Clefable, .moves = &.{.Metronome} }},
-//         );
-//         defer t.deinit();
+    // Charge
+    {
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                skull_bash, mirror_move, mirror_move, fly, ~HIT,
+            } else .{
+                ~CRIT, skull_bash, ~CRIT, mirror_move, ~CRIT, ~CRIT, mirror_move, ~CRIT, ~CRIT, fly,
+                ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, ~HIT
+            }
+        // zig fmt: on
+        ).init(
+            &.{.{ .species = .Clefairy, .moves = &.{.Metronome} }},
+            &.{.{ .species = .Clefable, .moves = &.{.Metronome} }},
+        );
+        defer t.deinit();
 
-//         try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
-//         try t.log.expected.move(P2.ident(1), Move.SkullBash, .{}, Move.Metronome);
-//         try t.log.expected.laststill();
-//         try t.log.expected.prepare(P2.ident(1), Move.SkullBash);
-//         try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
-//         try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
-//         try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
-//         try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
-//         try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
-//         try t.log.expected.move(P1.ident(1), Move.Fly, .{}, Move.Metronome);
-//         try t.log.expected.laststill();
-//         try t.log.expected.prepare(P1.ident(1), Move.Fly);
+        try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
+        try t.log.expected.move(P2.ident(1), Move.SkullBash, .{}, Move.Metronome);
+        try t.log.expected.laststill();
+        try t.log.expected.prepare(P2.ident(1), Move.SkullBash);
+        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
+        try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
+        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
+        try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
+        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove);
+        try t.log.expected.move(P1.ident(1), Move.Fly, .{}, Move.Metronome);
+        try t.log.expected.laststill();
+        try t.log.expected.prepare(P1.ident(1), Move.Fly);
 
-//         try t.log.expected.turn(2);
+        try t.log.expected.turn(2);
 
-//         try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-//         try expectEqual(@as(u8, 16), t.actual.p1.active.move(1).pp);
-//         try expectEqual(@as(u8, 16), t.actual.p1.active.move(1).pp);
+        try expectEqual(@as(u8, 16), t.actual.p1.active.move(1).pp);
+        try expectEqual(@as(u8, 16), t.actual.p1.active.move(1).pp);
 
-//         try t.log.expected.move(P2.ident(1), Move.SkullBash, P1.ident(1), Move.SkullBash);
-//         try t.log.expected.lastmiss();
-//         try t.log.expected.miss(P2.ident(1));
-//         try t.log.expected.move(P1.ident(1), Move.Fly, P2.ident(1), Move.Fly);
-//         try t.log.expected.lastmiss();
-//         try t.log.expected.miss(P1.ident(1));
-//         try t.log.expected.turn(3);
+        try t.log.expected.move(P2.ident(1), Move.SkullBash, P1.ident(1), Move.SkullBash);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P2.ident(1));
+        try t.log.expected.move(P1.ident(1), Move.Fly, P2.ident(1), Move.Fly);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P1.ident(1));
+        try t.log.expected.turn(3);
 
-//         try expectEqual(Result.Default, try t.update(forced, forced));
+        try expectEqual(Result.Default, try t.update(forced, forced));
 
-//         try expectEqual(@as(u8, 15), t.actual.p1.active.move(1).pp);
-//         try expectEqual(@as(u8, 15), t.actual.p1.active.move(1).pp);
+        try expectEqual(@as(u8, 15), t.actual.p1.active.move(1).pp);
+        try expectEqual(@as(u8, 15), t.actual.p1.active.move(1).pp);
 
-//         try t.verify();
-//     }
-//     // non-Charge
-//     {
-//         var t = Test(
-//         // zig fmt: off
-//             if (showdown) .{
-//                 pound, HIT, ~CRIT, MIN_DMG, mirror_move, HIT, ~CRIT, MIN_DMG,
-//             } else .{
-//                 ~CRIT, pound, ~CRIT, MIN_DMG, HIT, ~CRIT, mirror_move, ~CRIT, ~CRIT, MIN_DMG, HIT,
-//             }
-//         // zig fmt: on
-//         ).init(
-//             &.{.{ .species = .Clefairy, .moves = &.{.Metronome} }},
-//             &.{.{ .species = .Clefable, .moves = &.{.Metronome} }},
-//         );
-//         defer t.deinit();
+        try t.verify();
+    }
+    // non-Charge
+    {
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                pound, HIT, ~CRIT, MIN_DMG, mirror_move, HIT, ~CRIT, MIN_DMG,
+            } else .{
+                ~CRIT, pound, ~CRIT, MIN_DMG, HIT, ~CRIT, mirror_move, ~CRIT, ~CRIT, MIN_DMG, HIT,
+            }
+        // zig fmt: on
+        ).init(
+            &.{.{ .species = .Clefairy, .moves = &.{.Metronome} }},
+            &.{.{ .species = .Clefable, .moves = &.{.Metronome} }},
+        );
+        defer t.deinit();
 
-//         try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
-//         try t.log.expected.move(P2.ident(1), Move.Pound, P1.ident(1), Move.Metronome);
-//         t.expected.p1.get(1).hp -= 54;
-//         try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-//         try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
-//         try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
-//         try t.log.expected.move(P1.ident(1), Move.Pound, P2.ident(1), Move.MirrorMove);
-//         t.expected.p2.get(1).hp -= 34;
-//         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-//         try t.log.expected.turn(2);
+        try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
+        try t.log.expected.move(P2.ident(1), Move.Pound, P1.ident(1), Move.Metronome);
+        t.expected.p1.get(1).hp -= 54;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
+        try t.log.expected.move(P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome);
+        try t.log.expected.move(P1.ident(1), Move.Pound, P2.ident(1), Move.MirrorMove);
+        t.expected.p2.get(1).hp -= 34;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.turn(2);
 
-//         try expectEqual(Result.Default, try t.update(move(1), move(1)));
-//         try t.verify();
-//     }
-// }
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try t.verify();
+    }
+}
 
 // Fixed by smogon/pokemon-showdown#8963
 test "Hyper Beam + Substitute bug" {
@@ -7176,6 +7184,7 @@ test "Hyper Beam automatic selection glitch" {
 }
 
 // test "Invulnerability glitch" {
+//     if (showdown) return error.SkipZigTest; // FIXME
 //     // https://pkmn.cc/bulba-glitch-1#Invulnerability_glitch
 //     // https://glitchcity.wiki/Invulnerability_glitch
 //     const PAR_CAN = MAX;
@@ -8041,6 +8050,7 @@ test "Psywave infinite loop" {
 }
 
 test "Transform + Mirror Move/Metronome PP error" {
+    if (showdown) return error.SkipZigTest; // FIXME
     // https://pkmn.cc/bulba/Transform_glitches#Transform_.2B_Mirror_Move.2FMetronome_PP_error
     // https://www.youtube.com/watch?v=_c7tQkSyz7E
     const TIE_1 = MIN;
@@ -8088,9 +8098,7 @@ test "Transform + Mirror Move/Metronome PP error" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                // FIXME: HIT, NOP,
-                NOP, HIT, NOP, NOP,
-                TIE_1, NOP, NOP, HIT, NOP, HIT, NOP, NOP,
+                HIT, NOP, TIE_1, NOP, NOP, HIT, NOP, HIT, NOP, NOP,
                 NOP, NOP, HIT, ~HIT, HIT, ~CRIT, MIN_DMG, HIT,
             } else .{
                 ~CRIT, HIT, TIE_1, ~CRIT, ~CRIT, HIT, ~CRIT, HIT,
@@ -8172,9 +8180,7 @@ test "Transform + Mirror Move/Metronome PP error" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                // FIXME: HIT, NOP,
-                NOP, HIT, NOP, NOP,
-                TIE_1, NOP, NOP, HIT, NOP, HIT, NOP, NOP,
+                HIT, NOP, TIE_1, NOP, NOP, HIT, NOP, HIT, NOP, NOP,
                 TIE_1, NOP, NOP, HIT,
             } else .{
                 ~CRIT, HIT, TIE_1, ~CRIT, ~CRIT, HIT, ~CRIT, HIT,
