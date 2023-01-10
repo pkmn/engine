@@ -3018,7 +3018,7 @@ test "Thrashing effect" {
                 HIT, ~CRIT, MIN_DMG, THRASH_3, HIT, CFZ_5,
                 CFZ_CAN, ~HIT, ~HIT, THRASH_3,
                 CFZ_CAN, HIT, ~CRIT, MIN_DMG, CFZ_5, HIT, ~CRIT, MIN_DMG,
-                // BUG: Regression from mogon/pokemon-showdown#9243
+                // BUG: regression from smogon/pokemon-showdown#9243
                 // CFZ_CAN, HIT, NOP, PAR_CANT, CFZ_5,
                 // CFZ_CAN, HIT, CFZ_CAN, PAR_CAN, HIT, ~CRIT, MAX_DMG, THRASH_3,
                 MIN_DMG, CFZ_CAN, HIT, PAR_CANT,
@@ -3115,7 +3115,7 @@ test "Thrashing effect" {
 
         // Thrashing doesn't confuse you if the user is prevented from moving
         try expectEqual(Result.Default, try t.update(move(2), forced));
-        // BUG: Regression from mogon/pokemon-showdown#9243
+        // BUG: regression from smogon/pokemon-showdown#9243
         // if (showdown) {
         //     try expectEqual(@as(u3, 5), t.actual.p2.active.volatiles.confusion);
         // } else {

@@ -1366,7 +1366,7 @@ fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
 
     if (showdown and speedTie(battle)) {
         if (battle.turn == 0) {
-           battle.rng.advance(7); // insertChoice × 2 + start + runUnnerve × 2 + runSwitch × 2
+            battle.rng.advance(7); // insertChoice × 2 + start + runUnnerve × 2 + runSwitch × 2
         } else {
             // TODO
         }
