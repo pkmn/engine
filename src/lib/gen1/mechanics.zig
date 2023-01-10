@@ -525,7 +525,6 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
             volatiles.Charging = false;
             volatiles.Trapping = false;
             // GLITCH: Invulnerable is not cleared, resulting in permanent Fly/Dig invulnerability
-            volatiles.Invulnerable = false;
             try log.cant(ident, .Paralysis);
             return .done;
         }
