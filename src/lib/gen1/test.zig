@@ -5701,7 +5701,6 @@ test "Counter via Metronome bug" {
 
 // Fixed by smogon/pokemon-showdown#9243
 test "Infinite Metronome" {
-    if (showdown) return error.SkipZigTest; // FIXME
     const skull_bash = comptime metronome(.SkullBash);
     const mirror_move = comptime metronome(.MirrorMove);
     const fly = comptime metronome(.Fly);
@@ -7182,7 +7181,6 @@ test "Hyper Beam automatic selection glitch" {
 }
 
 test "Invulnerability glitch" {
-    if (showdown) return error.SkipZigTest; // FIXME
     // https://pkmn.cc/bulba-glitch-1#Invulnerability_glitch
     // https://glitchcity.wiki/Invulnerability_glitch
     const PAR_CAN = MAX;
