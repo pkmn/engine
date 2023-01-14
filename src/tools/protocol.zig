@@ -1,4 +1,3 @@
-// BUG: /ziglang/zig#12403
 const std = @import("std");
 
 const pkmn = @import("pkmn");
@@ -38,7 +37,7 @@ pub fn main() !void {
     switch (tool) {
         .markdown => {
             inline for (@typeInfo(protocol).Struct.decls) |decl| {
-                if (@TypeOf(@field(protocol, decl.name)) == type) {
+                if (decl.is_pub and @TypeOf(@field(protocol, decl.name)) == type) {
                     switch (@typeInfo(@field(protocol, decl.name))) {
                         .Enum => |e| {
                             try w.print(
@@ -60,7 +59,7 @@ pub fn main() !void {
             var outer = false;
             try w.writeAll("{\n");
             inline for (@typeInfo(protocol).Struct.decls) |decl| {
-                if (@TypeOf(@field(protocol, decl.name)) == type) {
+                if (decl.is_pub and @TypeOf(@field(protocol, decl.name)) == type) {
                     if (comptime std.mem.eql(u8, decl.name, "Kind")) continue;
                     switch (@typeInfo(@field(protocol, decl.name))) {
                         .Enum => |e| {
