@@ -2178,7 +2178,52 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('ConfusionChance effect');
+  test('ConfusionChance effect', () => {
+    const proc = SECONDARY(ranged(25, 256) - 1);
+    const battle = startBattle([
+      QKC, NO_CRIT, MAX_DMG,
+      QKC, NO_CRIT, MAX_DMG,
+      QKC, NO_CRIT, MAX_DMG, proc, CFZ(2), QKC,
+    ], [
+      {species: 'Venomoth', evs, moves: ['Psybeam', 'Teleport']},
+    ], [
+      {species: 'Jolteon', evs, moves: ['Substitute', 'Teleport']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    // Substitute blocks ConfusionChance
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 83);
+    expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+    expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
+
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 54);
+    expect(battle.p2.pokemon[0].volatiles['confusion']).toBeDefined();
+
+    verify(battle, [
+      '|move|p2a: Jolteon|Substitute|p2a: Jolteon',
+      '|-start|p2a: Jolteon|Substitute',
+      '|-damage|p2a: Jolteon|250/333',
+      '|move|p1a: Venomoth|Psybeam|p2a: Jolteon',
+      '|-activate|p2a: Jolteon|Substitute|[damage]',
+      '|turn|2',
+      '|move|p2a: Jolteon|Substitute|p2a: Jolteon',
+      '|-fail|p2a: Jolteon|move: Substitute',
+      '|move|p1a: Venomoth|Psybeam|p2a: Jolteon',
+      '|-end|p2a: Jolteon|Substitute',
+      '|turn|3',
+      '|move|p2a: Jolteon|Teleport|p2a: Jolteon',
+      '|move|p1a: Venomoth|Psybeam|p2a: Jolteon',
+      '|-damage|p2a: Jolteon|196/333',
+      '|-start|p2a: Jolteon|confusion',
+      '|turn|4',
+    ]);
+  });
 
   test('FlinchChance effect', () => {
     const lo_proc = SECONDARY(ranged(25, 256) - 1);
@@ -4262,7 +4307,39 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('AlwaysHit effect');
+  test('AlwaysHit effect', () => {
+    const battle = startBattle([QKC, NO_CRIT, MIN_DMG, SS_RES, QKC, NO_CRIT, MIN_DMG, QKC], [
+      {species: 'Eevee', evs, moves: ['Swift']},
+    ], [
+      {species: 'Larvitar', evs, moves: ['Dig']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 34);
+
+    // Misses invulnerable opponents
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 74);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+    verify(battle, [
+      '|move|p1a: Eevee|Swift|p2a: Larvitar',
+      '|-resisted|p2a: Larvitar',
+      '|-damage|p2a: Larvitar|269/303',
+      '|move|p2a: Larvitar|Dig||[still]',
+      '|-prepare|p2a: Larvitar|Dig',
+      '|turn|2',
+      '|move|p1a: Eevee|Swift|p2a: Larvitar|[miss]',
+      '|-miss|p1a: Eevee',
+      '|move|p2a: Larvitar|Dig|p1a: Eevee',
+      '|-damage|p1a: Eevee|239/313',
+      '|turn|3',
+    ]);
+  });
+
   test.todo('Transform effect');
 
   test('Conversion effect', () => {
@@ -4401,8 +4478,131 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('LockOn effect');
-  test.todo('Nightmare effect');
+  test('LockOn effect', () => {
+    const battle = startBattle([
+      QKC, SS_RES, QKC, CRIT, MAX_DMG, QKC, QKC, QKC, MISS, QKC, QKC, SS_RES, QKC,
+    ], [
+      {species: 'Machamp', evs, moves: ['Lock-On', 'Dynamic Punch']},
+      {species: 'Octillery', evs, moves: ['Lock-On', 'Zap Cannon']},
+    ], [
+      {species: 'Dunsparce', evs, moves: ['Dig']},
+      {species: 'Abra', evs, moves: ['Teleport', 'Protect']},
+    ]);
+
+    battle.makeChoices('move 1', 'move 1');
+
+    // Lock-On skips to-hit rolls
+    battle.makeChoices('move 2', 'move 1');
+
+    battle.makeChoices('', 'switch 2');
+
+    battle.makeChoices('move 1', 'move 1');
+    battle.makeChoices('switch 2', 'move 1');
+
+    // Lock-On doesn't last through switching
+    battle.makeChoices('move 2', 'move 1');
+    battle.makeChoices('move 1', 'move 1');
+
+    // Lock-On doesn't bypass protect
+    battle.makeChoices('move 2', 'move 2');
+
+    verify(battle, [
+      '|move|p1a: Machamp|Lock-On|p2a: Dunsparce',
+      '|-activate|p1a: Machamp|move: Lock-On|[of] p2a: Dunsparce',
+      '|move|p2a: Dunsparce|Dig||[still]',
+      '|-prepare|p2a: Dunsparce|Dig',
+      '|turn|2',
+      '|move|p1a: Machamp|Dynamic Punch|p2a: Dunsparce',
+      '|-crit|p2a: Dunsparce',
+      '|-supereffective|p2a: Dunsparce',
+      '|-damage|p2a: Dunsparce|0 fnt',
+      '|faint|p2a: Dunsparce',
+      '|switch|p2a: Abra|Abra, M|253/253',
+      '|turn|3',
+      '|move|p2a: Abra|Teleport|p2a: Abra',
+      '|move|p1a: Machamp|Lock-On|p2a: Abra',
+      '|-activate|p1a: Machamp|move: Lock-On|[of] p2a: Abra',
+      '|turn|4',
+      '|switch|p1a: Octillery|Octillery, M|353/353',
+      '|move|p2a: Abra|Teleport|p2a: Abra',
+      '|turn|5',
+      '|move|p2a: Abra|Teleport|p2a: Abra',
+      '|move|p1a: Octillery|Zap Cannon|p2a: Abra|[miss]',
+      '|-miss|p1a: Octillery',
+      '|turn|6',
+      '|move|p2a: Abra|Teleport|p2a: Abra',
+      '|move|p1a: Octillery|Lock-On|p2a: Abra',
+      '|-activate|p1a: Octillery|move: Lock-On|[of] p2a: Abra',
+      '|turn|7',
+      '|move|p2a: Abra|Protect|p2a: Abra',
+      '|-singleturn|p2a: Abra|Protect',
+      '|move|p1a: Octillery|Zap Cannon|p2a: Abra',
+      '|-activate|p2a: Abra|Protect',
+      '|turn|8',
+    ]);
+  });
+
+  test('Nightmare effect', () => {
+    let p2hp = 0;
+    const battle = startBattle([QKC, QKC, SS_MOD, SLP(2), QKC, QKC, QKC, QKC], [
+      {species: 'Misdreavus', evs, moves: ['Nightmare', 'Teleport']},
+    ], [
+      {species: 'Jolteon', evs, moves: ['Sand-Attack', 'Rest', 'Teleport']},
+    ], b => {
+      p2hp = b.p2.pokemon[0].hp;
+      b.p2.pokemon[0].hp = 1;
+    });
+
+    // Fails when foe is not sleeping
+    battle.makeChoices('move 1', 'move 1');
+
+    // Bypasses accuracy and always hits when foe is sleeping
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+    // Damage equal to one quarter maximum HP each turn
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 83);
+
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 83);
+
+    // Nightmare ends when foe wakes up
+    battle.makeChoices('move 2', 'move 3');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+    verify(battle, [
+      '|switch|p1a: Misdreavus|Misdreavus, M|323/323',
+      '|switch|p2a: Jolteon|Jolteon, M|1/333',
+      '|turn|1',
+      '|move|p2a: Jolteon|Sand Attack|p1a: Misdreavus',
+      '|-unboost|p1a: Misdreavus|accuracy|1',
+      '|move|p1a: Misdreavus|Nightmare|p2a: Jolteon',
+      '|-fail|p2a: Jolteon',
+      '|turn|2',
+      '|move|p2a: Jolteon|Rest|p2a: Jolteon',
+      '|-status|p2a: Jolteon|slp|[from] move: Rest',
+      '|-heal|p2a: Jolteon|333/333 slp|[silent]',
+      '|move|p1a: Misdreavus|Nightmare|p2a: Jolteon',
+      '|-start|p2a: Jolteon|Nightmare',
+      '|turn|3',
+      '|cant|p2a: Jolteon|slp',
+      '|-damage|p2a: Jolteon|250/333 slp|[from] Nightmare|[of] p1a: Misdreavus',
+      '|move|p1a: Misdreavus|Nightmare|p2a: Jolteon',
+      '|-fail|p2a: Jolteon',
+      '|turn|4',
+      '|cant|p2a: Jolteon|slp',
+      '|-damage|p2a: Jolteon|167/333 slp|[from] Nightmare|[of] p1a: Misdreavus',
+      '|move|p1a: Misdreavus|Teleport|p1a: Misdreavus',
+      '|turn|5',
+      '|-curestatus|p2a: Jolteon|slp|[msg]',
+      '|-end|p2a: Jolteon|Nightmare|[silent]',
+      '|move|p2a: Jolteon|Teleport|p2a: Jolteon',
+      '|move|p1a: Misdreavus|Teleport|p1a: Misdreavus',
+      '|turn|6',
+    ]);
+  });
+
   test.todo('Curse effect');
 
   test('Reversal', () => {
