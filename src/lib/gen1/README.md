@@ -226,6 +226,16 @@ effectiveness - like the cartridge, effectiveness is stored as as `0`, `5`, `10`
 (technically only a 2-bit value is required, but as with `Types` Zig only allows a mininum of a byte
 to be stored at each address of an array).
 
+The 'precedence' of the various type matchups matters beyond just the [dual-type damage
+misinformation
+glitch](https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Dual-type_damage_misinformation - type
+effectiveness modifiers are applied based off of the (haphazard) ordering of the effectiveness table
+as opposed to first applying modifiers for a species's first type and then second type. The engine
+maintains a `Type.PRECEDENCE` table with just the matchups that are relevant in game (certain type
+combinations cannot crop up with the limited Generation I species pool and as such are pruned for
+efficiency) and only looks up precedence when necessary to minimize expensive searches. Pokémon
+Showdown does not implement type precedence.
+
 ## Information
 
 The information of each field (in terms of [bits of
@@ -268,6 +278,7 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
   - `order` does not need to be stored as the party can always be rearranged as switches occur
 - **`Battle`**: 6× `Side` + seed (10× `8` + `4`) + turn (`10`) + last damage (`10`)
 - **`Type.CHART`**: attacking types (`15`) × defending types (`15`) × effectiveness (`2`)[^2]
+- **`Type.PRECEDENCE`**: 29× attacking type (`4`) + defending type (`4`) pairs
 - **`Moves.DATA`**: 165× base power (`6`) + effect (`7`) + accuracy (`4`) + type (`4`) + target
   (`3`)
 - **`Species.CHANCES`**: 151× crit chance (`6`)
@@ -279,15 +290,16 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 | `Side`            | 1472        | 1056         | 33.3%    |
 | `Battle`          | 3088        | 2216         | 33.6%    |
 | `Type.CHART`      | 1800        | 450          | 300.0%   |
+| `Type.PRECEDENCE` | 232         | 322          | 0.0%     |
 | `Moves.DATA`      | 5280        | 3960         | 33.3%    |
 | `Species.CHANCES` | 1208        | 906          | 33.3%    |
 
-In the case of `Type.CHART`/`Moves.DATA`/`Species.CHANCES`, technically only the values which are
-used by any given simulation are required, which could be as low as 1 in both circumstances (e.g.
-all Normal Pokémon each only using the single move Tackle), though taking into consideration the
-worst case all Pokémon types are required and 48 moves. The `Moves.DATA` array could be eliminated
-and instead the `Move` data actually required by each `Pokemon` could be placed beside the
-`MoveSlot`, though this is both less general and adds unnecessary complexity.
+In the case of `Type.CHART`/`Type.PRECEDENCE`/`Moves.DATA`/`Species.CHANCES`, technically only the
+values which are used by any given simulation are required, which could be as low as 1 in both
+circumstances (e.g. all Normal Pokémon each only using the single move Tackle), though taking into
+consideration the worst case all Pokémon types are required and 48 moves. The `Moves.DATA` array
+could be eliminated and instead the `Move` data actually required by each `Pokemon` could be placed
+beside the `MoveSlot`, though this is both less general and adds unnecessary complexity.
 
 [^1]: For data with lower cardinality it is possible to save memory by ordinalizing the values and
 turning them into indices into a lookup table (e.g. encode all possible move base powers in a lookup
@@ -301,6 +313,7 @@ effectiveness](https://github.com/pret/pokered/blob/master/data/types/type_match
 as 82× attacking type (`4`) + defending type (`4`) + non-Normal effectiveness (`2`). This would
 avoid having to do two memory lookups at the cost of a longer time scannning, but the second lookup
 should already be fast due to locality of reference meaning it will likely already be in the cache.
+This approach would also render `Type.PRECEDENCE` unnecessary.
 
 ## Layout
 
@@ -445,6 +458,7 @@ Smogon](https://www.smogon.com/forums/threads/rby-tradebacks-bug-report-thread.3
 
 - moves on Pokémon Showdown can do 0 damage instead of failing or causing a [division-by-zero
   freeze](https://pkmn.cc/bulba-glitch-1#Division_by_0).
+- Pokémon Showdown does not implement type effectiveness precedence correctly.
 - Pokémon Showdown checks for type and OHKO immunity before accuracy.
 
 Beyond the general bugs listed above, several move effects are implemented incorrectly by Pokémon

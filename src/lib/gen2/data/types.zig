@@ -53,9 +53,31 @@ pub const Type = enum(u8) {
         [_]Effectiveness{ N, R, N, N, N, N, N, S, R, N, N, N, N, N, S, N, N, R }, // Dark
     };
 
+    const PRECEDENCE = [_]u8{
+        1, // Normal
+        7, // Fighting
+        10, // Flying
+        8, // Poison
+        9, // Ground
+        13, // Rock
+        12, // Bug
+        14, // Ghost
+        17, // Steel
+        0, // ???
+        2, // Fire
+        3, // Water
+        5, // Grass
+        4, // Electric
+        11, // Psychic
+        6, // Ice
+        15, // Dragon
+        16, // Dark
+    };
+
     comptime {
         assert(@bitSizeOf(Type) == 8);
         assert(@sizeOf(@TypeOf(CHART)) == 324);
+        assert(@sizeOf(@TypeOf(PRECEDENCE)) == 18);
     }
 
     pub const size = 18;
@@ -66,6 +88,10 @@ pub const Type = enum(u8) {
 
     pub inline fn effectiveness(t1: Type, t2: Type) Effectiveness {
         return CHART[@enumToInt(t1)][@enumToInt(t2)];
+    }
+
+    pub inline fn precedence(self: Type) u8 {
+        return PRECEDENCE[@enumToInt(self)];
     }
 };
 

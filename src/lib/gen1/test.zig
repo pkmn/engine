@@ -724,6 +724,29 @@ test "damage calc" {
     try t.verify();
 }
 
+test "type precedence" {
+    const NO_PROC = MAX;
+    var t = Test((if (showdown)
+        (.{ HIT, HIT, ~CRIT, MAX_DMG, NO_PROC })
+    else
+        (.{ ~CRIT, HIT, ~CRIT, MAX_DMG, HIT }))).init(
+        &.{.{ .species = .Sandshrew, .moves = &.{.PoisonSting} }},
+        &.{.{ .species = .Weedle, .moves = &.{.StringShot} }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P2.ident(1), Move.StringShot, P1.ident(1), null);
+    try t.log.expected.boost(P1.ident(1), .Speed, -1);
+    try t.log.expected.move(P1.ident(1), Move.PoisonSting, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= if (showdown) 21 else 20;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.verify();
+}
+
 test "fainting (single)" {
     // TODO: inline Status.init(...) when Zig no longer causes SIGBUS
     const BRN = 0b10000;

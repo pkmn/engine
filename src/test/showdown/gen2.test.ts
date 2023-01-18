@@ -461,6 +461,8 @@ describe('Gen 2', () => {
     ]);
   });
 
+  test.todo('type precedence');
+
   test('fainting (single)', () => {
     // Switch
     {

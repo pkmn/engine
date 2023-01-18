@@ -19,9 +19,12 @@ pub const Type = enum({{{ Type.type }}}) {
         {{{ Type.chart }}}
     };
 
+    {{{ Type.precedence }}}
+
     comptime {
         assert(@bitSizeOf(Type) == {{{ Type.bitSize }}});
         assert(@sizeOf(@TypeOf(CHART)) == {{{ Type.chartSize }}});
+        assert(@sizeOf(@TypeOf(PRECEDENCE)) == {{{ Type.precedenceSize }}});
     }
 
     pub const size = {{{ Type.num }}};
@@ -33,6 +36,8 @@ pub const Type = enum({{{ Type.type }}}) {
     pub inline fn effectiveness(t1: Type, t2: Type) Effectiveness {
         return CHART[@enumToInt(t1)][@enumToInt(t2)];
     }
+
+    {{{ Type.precedenceFn }}}
 };
 
 pub const Types = {{{ Types.qualifier }}} struct {

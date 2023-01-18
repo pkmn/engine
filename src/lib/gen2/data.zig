@@ -401,6 +401,9 @@ test "Types" {
     try expect(!Type.Steel.special());
     try expect(Type.Dark.special());
 
+    try expectEqual(@as(u8, 3), Type.Water.precedence());
+    try expect(Type.Bug.precedence() > Type.Poison.precedence());
+
     try expectEqual(Effectiveness.Super, Type.effectiveness(.Ghost, .Psychic));
     try expectEqual(Effectiveness.Super, Type.effectiveness(.Water, .Fire));
     try expectEqual(Effectiveness.Resisted, Type.effectiveness(.Fire, .Water));

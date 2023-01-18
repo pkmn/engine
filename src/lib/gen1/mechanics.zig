@@ -38,6 +38,7 @@ const Side = data.Side;
 const Species = data.Species;
 const Stats = data.Stats;
 const Status = data.Status;
+const Type = data.Type;
 
 // zig fmt: off
 const BOOSTS = &[_][2]u8{
@@ -1006,8 +1007,19 @@ fn adjustDamage(battle: anytype, player: Player) u16 {
     const eff1: u16 = @enumToInt(move.type.effectiveness(types.type1));
     const eff2: u16 = @enumToInt(move.type.effectiveness(types.type2));
 
-    if (eff1 != neutral) d = d *% eff1 / 10;
-    if (types.type1 != types.type2 and eff2 != neutral) d = d *% eff2 / 10;
+    // Type effectiveness matchup precedence only matters with (NVE, SE)
+    if (!showdown and (eff1 + eff2) == Effectiveness.mismatch and
+        Type.precedence(move.type, types.type1) > Type.precedence(move.type, types.type2))
+    {
+        assert(eff2 != neutral);
+        d = d *% eff2 / 10;
+        assert(types.type1 != types.type2);
+        assert(eff1 != neutral);
+        d = d *% eff1 / 10;
+    } else {
+        if (eff1 != neutral) d = d *% eff1 / 10;
+        if (types.type1 != types.type2 and eff2 != neutral) d = d *% eff2 / 10;
+    }
 
     battle.last_damage = d;
     return if (types.type1 == types.type2) eff1 * neutral else eff1 * eff2;

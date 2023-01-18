@@ -31,6 +31,12 @@ const IDS: IDs = [
   },
 ];
 
+// https://pkmn.cc/pokecrystal/data/types/type_matchups.asm
+const TYPE_PRECEDENCE = [
+  '???', 'Normal', 'Fire', 'Water', 'Electric', 'Grass', 'Ice', 'Fighting', 'Poison',
+  'Ground', 'Flying', 'Psychic', 'Bug', 'Rock', 'Ghost', 'Dragon', 'Dark', 'Steel',
+];
+
 const NAMES: { [constant: string]: string } = {
   // Items
   BLACKBELT_I: 'BlackBelt',
@@ -565,6 +571,44 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     });
 
     // Types
+    url = `${pret}/data/types/type_matchups.asm`;
+    const matchups = await getOrUpdate('types', dirs.cache, url, update, line => {
+      const match = /db ([A-Z_]+),\s+([A-Z_]+),\s+[A-Z_]+/.exec(line);
+      if (!match) return undefined;
+      const attacker = gen.types.get(match[1] === 'PSYCHIC_TYPE' ? 'PSYCHIC' : match[1])!;
+      const defender = gen.types.get(match[2] === 'PSYCHIC_TYPE' ? 'PSYCHIC' : match[2])!;
+      return [attacker.name, defender.name].join(' ');
+    });
+
+    const relevant = new Set();
+    for (const s of gen.species) {
+      if (s.types.length < 2) continue;
+      for (const type of gen.types) {
+        const e1 = type.effectiveness[s.types[0]];
+        const e2 = type.effectiveness[s.types[1]!];
+        if (e1 + e2 === 2.5) {
+          relevant.add([type.name, s.types[0]].join(' '));
+          relevant.add([type.name, s.types[1]].join(' '));
+        }
+      }
+    }
+
+    const precedence = [];
+    for (const matchup of matchups) {
+      if (relevant.has(matchup)) {
+        const [t1, t2] = matchup.split(' ');
+        precedence.push(`        .{ .type1 = .${t1}, .type2 = .${t2} },`);
+      }
+    }
+
+    const precedenceFn =
+    `pub fn precedence(t1: Type, t2: Type) u8 {
+        for (PRECEDENCE) |matchup, i| {
+            if (matchup.type1 == t1 and matchup.type2 == t2) return @truncate(u8, i);
+        }
+        unreachable;
+    }`;
+
     const types = IDS[0].types;
     template('types', dirs.out, {
       Type: {
@@ -574,6 +618,9 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         num: types.length,
         chart: getTypeChart(gen, types).join('\n        '),
         chartSize: types.length * types.length,
+        precedence: `const PRECEDENCE = [_]Types{\n${precedence.join('\n')}\n    };`,
+        precedenceSize: precedence.length,
+        precedenceFn,
       },
       Types: {
         qualifier: 'packed',
@@ -586,6 +633,17 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
     // Types
     const types = IDS[1].types;
+
+    const precedence = [];
+    for (const type of types) {
+      precedence.push(`        ${TYPE_PRECEDENCE.indexOf(type)}, // ${type}`);
+    }
+
+    const precedenceFn =
+    `pub inline fn precedence(self: Type) u8 {
+        return PRECEDENCE[@enumToInt(self)];
+    }`;
+
     template('types', dirs.out, {
       Type: {
         type: 'u8',
@@ -594,6 +652,9 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         num: types.length,
         chart: getTypeChart(gen, types).join('\n        '),
         chartSize: types.length * types.length,
+        precedence: `const PRECEDENCE = [_]u8{\n${precedence.join('\n')}\n    };`,
+        precedenceSize: precedence.length,
+        precedenceFn,
       },
       Types: {
         qualifier: 'extern',

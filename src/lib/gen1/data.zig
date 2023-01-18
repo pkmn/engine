@@ -420,6 +420,7 @@ pub const Effectiveness = enum(u8) {
     Super = 20,
 
     pub const neutral: u16 = @enumToInt(Effectiveness.Neutral) * @enumToInt(Effectiveness.Neutral);
+    pub const mismatch: u16 = @enumToInt(Effectiveness.Resisted) + @enumToInt(Effectiveness.Super);
 
     comptime {
         assert(@sizeOf(Effectiveness) == 1);
@@ -437,6 +438,10 @@ test "Types" {
     try expectEqual(Effectiveness.Super, Type.Water.effectiveness(.Fire));
     try expectEqual(Effectiveness.Resisted, Type.effectiveness(.Fire, .Water));
     try expectEqual(Effectiveness.Neutral, Type.effectiveness(.Normal, .Grass));
+
+    try expectEqual(@as(u8, 3), Type.precedence(.Water, .Water));
+    try expectEqual(@as(u8, 26), Type.precedence(.Bug, .Ghost));
+    try expect(Type.precedence(.Poison, .Bug) > Type.precedence(.Poison, .Poison));
 
     const t: Types = .{ .type1 = .Rock, .type2 = .Ground };
     try expect(!t.immune(.Grass));

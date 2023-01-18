@@ -47,9 +47,42 @@ pub const Type = enum(u4) {
         [_]Effectiveness{ N, N, N, N, N, N, N, N, N, N, N, N, N, N, S }, // Dragon
     };
 
+    const PRECEDENCE = [_]Types{
+        .{ .type1 = .Fire, .type2 = .Ice },
+        .{ .type1 = .Grass, .type2 = .Water },
+        .{ .type1 = .Water, .type2 = .Rock },
+        .{ .type1 = .Water, .type2 = .Water },
+        .{ .type1 = .Electric, .type2 = .Electric },
+        .{ .type1 = .Ice, .type2 = .Ice },
+        .{ .type1 = .Fire, .type2 = .Water },
+        .{ .type1 = .Electric, .type2 = .Flying },
+        .{ .type1 = .Grass, .type2 = .Ground },
+        .{ .type1 = .Grass, .type2 = .Poison },
+        .{ .type1 = .Grass, .type2 = .Rock },
+        .{ .type1 = .Grass, .type2 = .Flying },
+        .{ .type1 = .Ice, .type2 = .Water },
+        .{ .type1 = .Ice, .type2 = .Flying },
+        .{ .type1 = .Fighting, .type2 = .Normal },
+        .{ .type1 = .Fighting, .type2 = .Flying },
+        .{ .type1 = .Fighting, .type2 = .Psychic },
+        .{ .type1 = .Fighting, .type2 = .Rock },
+        .{ .type1 = .Fighting, .type2 = .Ice },
+        .{ .type1 = .Poison, .type2 = .Grass },
+        .{ .type1 = .Poison, .type2 = .Poison },
+        .{ .type1 = .Poison, .type2 = .Bug },
+        .{ .type1 = .Ground, .type2 = .Grass },
+        .{ .type1 = .Ground, .type2 = .Bug },
+        .{ .type1 = .Ground, .type2 = .Poison },
+        .{ .type1 = .Bug, .type2 = .Flying },
+        .{ .type1 = .Bug, .type2 = .Ghost },
+        .{ .type1 = .Bug, .type2 = .Poison },
+        .{ .type1 = .Electric, .type2 = .Dragon },
+    };
+
     comptime {
         assert(@bitSizeOf(Type) == 4);
         assert(@sizeOf(@TypeOf(CHART)) == 225);
+        assert(@sizeOf(@TypeOf(PRECEDENCE)) == 29);
     }
 
     pub const size = 15;
@@ -60,6 +93,13 @@ pub const Type = enum(u4) {
 
     pub inline fn effectiveness(t1: Type, t2: Type) Effectiveness {
         return CHART[@enumToInt(t1)][@enumToInt(t2)];
+    }
+
+    pub fn precedence(t1: Type, t2: Type) u8 {
+        for (PRECEDENCE) |matchup, i| {
+            if (matchup.type1 == t1 and matchup.type2 == t2) return @truncate(u8, i);
+        }
+        unreachable;
     }
 };
 

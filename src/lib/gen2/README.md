@@ -182,6 +182,11 @@ Generation I. `Effectiveness` serves as an enum for tracking a moves effectivene
 cartridge, effectiveness is stored as as `0`, `5`, `10`, and `20` (technically only a 4-bit value is
 required, but Zig only allows a mininum of a byte to be stored at each address of an array).
 
+Type effectiveness modifiers are applied based off of the ordering of the effectiveness table as
+opposed to first applying modifiers for a species's first type and then second type. The engine
+maintains a `Type.PRECEDENCE` table to allow for reordering type effectiveness modifier application
+where necessary.
+
 ## Information
 
 The information of each field (in terms of [bits of
@@ -301,3 +306,4 @@ win: _
 - Pain Split 100 accuracy not true
 - Foresight ignoring accuracy/evasiveness stages
 - Disable duration?
+- type effectiveness precedence

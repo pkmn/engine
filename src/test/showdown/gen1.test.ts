@@ -543,6 +543,29 @@ describe('Gen 1', () => {
     ]);
   });
 
+  test('type precedence', () => {
+    const no_proc = SECONDARY(MAX);
+    const battle = startBattle([HIT, HIT, NO_CRIT, MAX_DMG, no_proc], [
+      {species: 'Sandshrew', evs, moves: ['Poison Sting']},
+    ], [
+      {species: 'Weedle', evs, moves: ['String Shot']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    // expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 20);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 21);
+
+    verify(battle, [
+      '|move|p2a: Weedle|String Shot|p1a: Sandshrew',
+      '|-unboost|p1a: Sandshrew|spe|1',
+      '|move|p1a: Sandshrew|Poison Sting|p2a: Weedle',
+      '|-damage|p2a: Weedle|262/283',
+      '|turn|2',
+    ]);
+  });
+
   test('fainting (single)', () => {
     // Switch
     {

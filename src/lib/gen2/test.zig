@@ -150,6 +150,10 @@ test "damage calc" {
     return error.SkipZigTest;
 }
 
+test "type precedence" {
+    return error.SkipZigTest;
+}
+
 test "fainting (single)" {
     // Switch
     {
