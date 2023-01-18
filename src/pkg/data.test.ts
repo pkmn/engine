@@ -37,8 +37,8 @@ for (const gen of new Generations(Dex as any)) {
       it('Lookup.item', () => {
         expect(lookup.itemByID('leftovers' as ID)).toBe(28);
         expect(lookup.itemByNum(24)).toBe('thickclub');
-        expect(lookup.itemByID('mail' as ID)).toBe(62);
-        expect(lookup.itemByNum(62)).toBe('mail');
+        expect(lookup.itemByID('mail' as ID)).toBe(61);
+        expect(lookup.itemByNum(61)).toBe('mail');
       });
     }
   });

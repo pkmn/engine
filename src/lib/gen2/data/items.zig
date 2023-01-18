@@ -60,7 +60,6 @@ pub const Item = enum(u8) {
     WaterStone,
     LuckyPunch,
     LeafStone,
-    EnergyPowder,
     DragonFang,
     HeavyBall,
     LevelBall,
@@ -145,6 +144,7 @@ pub const Item = enum(u8) {
     BigPearl,
     Everstone,
     RageCandyBar,
+    EnergyPowder,
     EnergyRoot,
     HealPowder,
     RevivalHerb,
@@ -226,6 +226,6 @@ pub const Item = enum(u8) {
 
     pub inline fn mail(item: Item) bool {
         assert(item != .None);
-        return @enumToInt(item) > 61 and @enumToInt(item) <= 71;
+        return @enumToInt(item) > 60 and @enumToInt(item) <= 70;
     }
 };
