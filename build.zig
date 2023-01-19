@@ -178,7 +178,6 @@ pub fn build(b: *Builder) !void {
         .mode = null,
         .stage2 = stage2,
     };
-    const rng = tool(b, &.{pkmn}, "src/tools/rng.zig", config);
     const serde = tool(b, &.{pkmn}, "src/tools/serde.zig", config);
     const protocol = tool(b, &.{pkmn}, "src/tools/protocol.zig", config);
 
@@ -187,7 +186,6 @@ pub fn build(b: *Builder) !void {
     b.step("fuzz", "Run fuzz tester").dependOn(&fuzz.step);
     b.step("lint", "Lint source files").dependOn(&lint.step);
     b.step("protocol", "Run protocol dump tool").dependOn(&protocol.step);
-    b.step("rng", "Run RNG calculator tool").dependOn(&rng.step);
     b.step("serde", "Run serialization/deserialization tool").dependOn(&serde.step);
     b.step("test", "Run all tests").dependOn(&tests.step);
 }
