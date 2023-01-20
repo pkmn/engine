@@ -63,6 +63,7 @@
     "fuzz": "npm run compile && node build/tools/fuzz",
     "generate": "npm run compile && node build/tools/generate",
     "benchmark": "npm run compile && node build/test/benchmark",
+    "integration": "npm run compile && node build/test/integration",
     "postinstall": "node src/bin/install-pkmn-engine"
   },
   "jest": {

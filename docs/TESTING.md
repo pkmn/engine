@@ -32,9 +32,10 @@ matching Pokémon Showdown's RNG and output).
 
 ## Integration
 
-The [integration test](../src/test/integration.test.ts) exists to ensure the pkmn engine compiled in
-Pokémon Showdown compatibility mode with `-Dshowdown` produces comparable output to Pokémon
-Showdown. For each supported generation, both Pokémon Showdown and the pkmn engine are run with an
+The [integration test](../src/test/integration/index.test.ts) exists to ensure the pkmn engine
+compiled in Pokémon Showdown compatibility mode with `-Dshowdown` produces comparable output to
+Pokémon Showdown. For each supported generation, both Pokémon Showdown and the pkmn engine are run
+with an
 [`ExhaustiveRunner`](https://github.com/smogon/pokemon-showdown/blob/master/sim/tools/exhaustive-runner.ts)
 that attempts to use as many different effects as possible in the battles it randomly simulates and
 the results are collected. While Pokémon Showdown always produces its text protocol streams, pkmn

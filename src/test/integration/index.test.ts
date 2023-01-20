@@ -1,7 +1,7 @@
 import {Generations} from '@pkmn/data';
 import {Dex} from '@pkmn/sim';
 
-import {run} from './integration';
+import {run} from './common';
 
 describe('integration', () => {
   it('test', async () => {

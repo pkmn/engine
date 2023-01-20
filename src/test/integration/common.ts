@@ -15,7 +15,7 @@ import {
   RunnerOptions,
 } from '@pkmn/sim/tools';
 
-import blocklistJSON from './blocklist.json';
+import blocklistJSON from '../blocklist.json';
 
 const BLOCKLIST = blocklistJSON as {[gen: number]: Partial<ExhaustiveRunnerPossibilites>};
 
