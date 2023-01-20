@@ -30,6 +30,7 @@ class Runner {
 
     this.prng = (options.prng && !Array.isArray(options.prng))
       ? options.prng : new PRNG(options.prng);
+
     this.p1options = options.p1options;
     this.p2options = options.p2options;
   }
@@ -100,7 +101,7 @@ class RawBattleStream extends BattleStreams.BattleStream {
 
 const FORMATS = [
   'gen1customgame',
-  // 'gen2customgame',
+  'gen2customgame',
   // 'gen3customgame', 'gen3doublescustomgame',
   // 'gen4customgame', 'gen4doublescustomgame',
   // 'gen5customgame', 'gen5doublescustomgame',
@@ -129,9 +130,11 @@ function possibilities(gen: Generation) {
   };
 }
 
-export async function run(gens: Generations, prng: PRNG | PRNGSeed, maxFailures = 1, cycles = 1) {
+export async function run(
+  gens: Generations, prng: PRNG | PRNGSeed, maxFailures = 1, cycles = 1, log = false
+) {
   const opts: ExhaustiveRunnerOptions =
-    {format: '', prng, maxFailures, cycles, runner: o => new Runner(o).run()};
+    {format: '', prng, maxFailures, log, cycles, runner: o => new Runner(o).run()};
 
   let failures = 0;
   for (const format of FORMATS) {
@@ -140,6 +143,7 @@ export async function run(gens: Generations, prng: PRNG | PRNGSeed, maxFailures 
     opts.format = format;
     opts.possible = possibilities(gen);
     failures += await (new ExhaustiveRunner(opts).run());
+    if (log) process.stdout.write('\n');
     if (failures >= maxFailures) break;
   }
 
