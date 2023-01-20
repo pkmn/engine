@@ -153,7 +153,7 @@ export async function run(gens: Generations, options: Options) {
       opts.possible = possibilities(gen);
       failures += await (new ExhaustiveRunner(opts).run());
       if (opts.log) process.stdout.write('\n');
-      if (failures >= opts.maxFailures!) break;
+      if (failures >= opts.maxFailures!) return failures;
     }
   } while (Date.now() - start < (options.duration || 0));
 
