@@ -14,7 +14,6 @@ const {HIT, MISS, CRIT, NO_CRIT, MIN_DMG, MAX_DMG, TIE} = ROLLS.basic({
   crit: 'data/mods/gen1/scripts.ts:788:27',
   dmg: 'data/mods/gen1/scripts.ts:908:27',
 });
-const {SS_MOD, SS_RES, SS_EACH, INS} = ROLLS.nops;
 
 const SECONDARY = (value: number) => ({key: 'data/mods/gen1/scripts.ts:677:25', value});
 const SLP = (n: number) =>
@@ -220,13 +219,7 @@ describe('Gen 1', () => {
   test('turn order (basic speed tie)', () => {
     // Move vs. Move
     {
-      const battle = startBattle([
-        INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
-        TIE(1),
-        SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG,
-        SS_EACH, HIT, NO_CRIT, MAX_DMG,
-        SS_EACH, SS_EACH,
-      ], [
+      const battle = startBattle([TIE(1), HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MAX_DMG], [
         {species: 'Tauros', evs, moves: ['Hyper Beam']},
       ], [
         {species: 'Tauros', evs, moves: ['Hyper Beam']},
@@ -251,13 +244,7 @@ describe('Gen 1', () => {
     }
     // Faint vs. Pass
     {
-      const battle = startBattle([
-        INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
-        TIE(1),
-        SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG,
-        SS_EACH, HIT, CRIT, MAX_DMG,
-        SS_EACH, SS_EACH, SS_EACH,
-      ], [
+      const battle = startBattle([TIE(1), HIT, NO_CRIT, MIN_DMG, HIT, CRIT, MAX_DMG], [
         {species: 'Tauros', evs, moves: ['Hyper Beam']},
         {species: 'Tauros', evs, moves: ['Hyper Beam']},
       ], [
@@ -286,10 +273,7 @@ describe('Gen 1', () => {
     }
     // Switch vs. Switch
     {
-      const battle = startBattle([
-        INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, TIE(2), SS_EACH,
-        SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
-      ], [
+      const battle = startBattle([TIE(2)], [
         {species: 'Zapdos', evs, moves: ['Drill Peck']},
         {species: 'Dodrio', evs, moves: ['Fury Attack']},
       ], [
@@ -307,10 +291,7 @@ describe('Gen 1', () => {
     }
     // Move vs. Switch
     {
-      const battle = startBattle([
-        INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
-        SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG,
-      ], [
+      const battle = startBattle([HIT, NO_CRIT, MIN_DMG], [
         {species: 'Tauros', evs, moves: ['Hyper Beam']},
         {species: 'Starmie', evs, moves: ['Surf']},
       ], [
@@ -337,14 +318,11 @@ describe('Gen 1', () => {
     // multiple events
     {
       const battle = startBattle([
-        INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
-        TIE(2), SS_EACH, SS_EACH, METRONOME('Fly'), SS_EACH,
-        METRONOME('Dig'), SS_EACH, SS_EACH, TIE(1), SS_EACH, SS_EACH, SS_EACH,
-        HIT, NO_CRIT, MIN_DMG, SS_EACH, SS_EACH,
-        SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG, SS_EACH,
-        METRONOME('Swift'), NO_CRIT, MIN_DMG, SS_EACH, SS_EACH,
-        SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, METRONOME('Petal Dance'),
-        HIT, NO_CRIT, MIN_DMG, THRASH(3), SS_EACH, SS_EACH,
+
+        TIE(2), METRONOME('Fly'), METRONOME('Dig'), TIE(1),
+        HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+        METRONOME('Swift'), NO_CRIT, MIN_DMG, METRONOME('Petal Dance'),
+        HIT, NO_CRIT, MIN_DMG, THRASH(3),
       ], [
         {species: 'Clefable', evs, moves: ['Metronome', 'Quick Attack']},
       ], [
@@ -397,10 +375,7 @@ describe('Gen 1', () => {
     // beforeTurnMove
     {
       const NOP = TIE(2);
-      const battle = startBattle([
-        INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, NOP, TIE(1),
-        SS_EACH, SS_EACH, SS_EACH, SS_EACH, HIT, SS_EACH, HIT, SS_EACH, SS_EACH,
-      ], [
+      const battle = startBattle([NOP, TIE(1), HIT, HIT], [
         {species: 'Chansey', evs, moves: ['Counter']},
       ], [
         {species: 'Chansey', evs, moves: ['Counter']},
@@ -745,7 +720,7 @@ describe('Gen 1', () => {
       expect(battle.ended).toBe(true);
     }
     {
-      const battle = startBattle([SS_EACH], [
+      const battle = startBattle([], [
         {species: 'Mew', evs, moves: ['Transform']},
         {species: 'Muk', evs, moves: ['Pound']},
       ], [
@@ -933,7 +908,7 @@ describe('Gen 1', () => {
     const battle = startBattle([
       HIT, CRIT, MAX_DMG,
       HIT, NO_CRIT, MIN_DMG, no_proc,
-      HIT, NO_CRIT, MIN_DMG, proc, SS_MOD,
+      HIT, NO_CRIT, MIN_DMG, proc,
       HIT, NO_CRIT, MIN_DMG, proc,
     ], [
       {species: 'Beedrill', evs, moves: ['Twineedle']},
@@ -998,7 +973,7 @@ describe('Gen 1', () => {
 
   test('Poison effect', () => {
     {
-      const battle = startBattle([HIT, HIT, HIT, SS_MOD, HIT, SS_MOD], [
+      const battle = startBattle([HIT, HIT, HIT, HIT], [
         {species: 'Jolteon', evs, moves: ['Toxic', 'Substitute']},
         {species: 'Abra', evs, moves: ['Teleport']},
       ], [
@@ -1070,7 +1045,7 @@ describe('Gen 1', () => {
       ]);
     }
     {
-      const battle = startBattle([HIT, SS_MOD, HIT], [
+      const battle = startBattle([HIT, HIT], [
         {species: 'Clefable', evs, moves: ['Toxic', 'Recover']},
       ], [
         {species: 'Diglett', level: 14, moves: ['Leech Seed', 'Recover']},
@@ -1099,7 +1074,7 @@ describe('Gen 1', () => {
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, lo_proc, HIT, NO_CRIT, MIN_DMG, hi_proc,
       HIT, NO_CRIT, MAX_DMG,
-      HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc, SS_MOD,
+      HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc,
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc,
     ], [
       {species: 'Tentacruel', evs, moves: ['Poison Sting', 'Sludge']},
@@ -1167,7 +1142,7 @@ describe('Gen 1', () => {
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, hi_proc,
       HIT, NO_CRIT, MIN_DMG,
-      HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc, SS_MOD,
+      HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc,
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, lo_proc,
     ], [
       {species: 'Charizard', evs, moves: ['Ember', 'Fire Blast']},
@@ -1231,11 +1206,11 @@ describe('Gen 1', () => {
 
   test('FreezeChance effect', () => {
     const battle = startBattle([
-      HIT, NO_CRIT, MIN_DMG, HIT, SS_MOD,
+      HIT, NO_CRIT, MIN_DMG, HIT,
       HIT, NO_CRIT, MIN_DMG, FRZ, PAR_CANT,
-      HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
+      HIT, NO_CRIT, MIN_DMG, FRZ,
       HIT,
-      HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
+      HIT, NO_CRIT, MIN_DMG, FRZ,
       HIT, NO_CRIT, MIN_DMG, MIN_WRAP,
       HIT, NO_CRIT, MIN_DMG, MISS,
       MISS,
@@ -1356,12 +1331,12 @@ describe('Gen 1', () => {
 
   test('Paralyze effect', () => {
     const battle = startBattle([
-      MISS, HIT, SS_MOD,
-      HIT, PAR_CAN, HIT, SS_MOD,
+      MISS, HIT,
+      HIT, PAR_CAN, HIT,
       PAR_CANT,
-      HIT, PAR_CAN, HIT, SS_MOD,
+      HIT, PAR_CAN, HIT,
       PAR_CAN,
-      PAR_CAN, HIT, SS_MOD,
+      PAR_CAN, HIT,
     ], [
       {species: 'Arbok', evs, moves: ['Glare']},
       {species: 'Dugtrio', evs, moves: ['Earthquake', 'Substitute']},
@@ -1424,7 +1399,7 @@ describe('Gen 1', () => {
     const hi_proc = SECONDARY(ranged(77, 256) - 1);
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
-      HIT, NO_CRIT, MIN_DMG, hi_proc, HIT, NO_CRIT, MIN_DMG, hi_proc, SS_MOD,
+      HIT, NO_CRIT, MIN_DMG, hi_proc, HIT, NO_CRIT, MIN_DMG, hi_proc,
       PAR_CAN, HIT, NO_CRIT, MIN_DMG,
       HIT, NO_CRIT, MIN_DMG, hi_proc, PAR_CANT,
     ], [
@@ -1496,7 +1471,7 @@ describe('Gen 1', () => {
 
   test('Sleep effect', () => {
     const battle = startBattle([
-      HIT, SS_MOD, SLP(1), HIT, SS_MOD, SLP(2), HIT, SS_MOD, HIT, HIT, NO_CRIT, MIN_DMG,
+      HIT, SLP(1), HIT, SLP(2), HIT, HIT, HIT, NO_CRIT, MIN_DMG,
     ], [
       {species: 'Parasect', evs, moves: ['Spore', 'Cut']},
     ], [
@@ -2030,9 +2005,7 @@ describe('Gen 1', () => {
     }
     // fainting
     {
-      const battle = startBattle([
-        HIT, SS_MOD, HIT, NO_CRIT, MIN_DMG,
-      ], [
+      const battle = startBattle([HIT, HIT, NO_CRIT, MIN_DMG], [
         {species: 'Seadra', evs, moves: ['Toxic']},
         {species: 'Ninetales', evs, moves: ['Dig']},
       ], [
@@ -2127,7 +2100,7 @@ describe('Gen 1', () => {
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, MIN_WRAP,
       HIT, NO_CRIT, MAX_DMG, REWRAP,
-      HIT, SS_MOD,
+      HIT,
       PAR_CAN, HIT, MAX_WRAP, PAR_CAN,
       PAR_CANT, PAR_CAN,
     ], [
@@ -2403,7 +2376,7 @@ describe('Gen 1', () => {
         HIT, NO_CRIT, MIN_DMG, THRASH(3), HIT, CFZ(5),
         CFZ_CAN, MISS, MISS, THRASH(3),
         CFZ_CAN, HIT, NO_CRIT, MIN_DMG, CFZ(5), HIT, NO_CRIT, MIN_DMG,
-        CFZ_CAN, HIT, SS_MOD, PAR_CANT, CFZ(5),
+        CFZ_CAN, HIT, PAR_CANT, CFZ(5),
         CFZ_CAN, HIT, CFZ_CAN, PAR_CAN, HIT, NO_CRIT, MAX_DMG, THRASH(3),
       ], [
         {species: 'Nidoking', evs, moves: ['Thrash', 'Thunder Wave']},
@@ -2905,7 +2878,7 @@ describe('Gen 1', () => {
       HIT,
       HIT, HIT,
       HIT,
-      HIT, SS_MOD, SLP(3),
+      HIT, SLP(3),
     ], [
       {species: 'Voltorb', evs, moves: ['Thunderbolt', 'Double Slap', 'Counter', 'Sonic Boom']},
       {species: 'Gengar', evs, moves: ['Teleport', 'Seismic Toss']},
@@ -3072,7 +3045,7 @@ describe('Gen 1', () => {
 
   test('Rest effect', () => {
     const battle = startBattle([
-      HIT, SS_MOD, HIT, NO_CRIT, MIN_DMG, PAR_CAN, SS_MOD, SLP(5),
+      HIT, HIT, NO_CRIT, MIN_DMG, PAR_CAN, SLP(5),
       HIT, NO_CRIT, MIN_DMG,
     ], [
       {species: 'Porygon', evs, moves: ['Thunder Wave', 'Tackle', 'Rest']},
@@ -3182,7 +3155,7 @@ describe('Gen 1', () => {
 
   test('DreamEater effect', () => {
     const battle = startBattle([
-      HIT, SS_MOD, SLP(5), HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+      HIT, SLP(5), HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
     ], [
       {species: 'Hypno', evs, moves: ['Dream Eater', 'Hypnosis']},
     ], [
@@ -3557,10 +3530,10 @@ describe('Gen 1', () => {
   test('Haze effect', () => {
     const proc = SECONDARY(MIN);
     const battle = startBattle([
-      HIT, SS_MOD, HIT,
-      HIT, SS_MOD, PAR_CAN, HIT, CFZ(5),
+      HIT, HIT,
+      HIT, PAR_CAN, HIT, CFZ(5),
       CFZ_CAN, PAR_CAN, METRONOME('Haze'),
-      PAR_CAN, METRONOME('Ember'), HIT, NO_CRIT, MIN_DMG, proc, SS_MOD,
+      PAR_CAN, METRONOME('Ember'), HIT, NO_CRIT, MIN_DMG, proc,
       PAR_CAN,
     ], [
       {species: 'Golbat', evs, moves: ['Toxic', 'Agility', 'Confuse Ray', 'Metronome']},
@@ -3750,7 +3723,7 @@ describe('Gen 1', () => {
   test('Metronome effect', () => {
     const battle = startBattle([
       METRONOME('Wrap'), HIT, NO_CRIT, MIN_DMG, MIN_WRAP,
-      METRONOME('Petal Dance'), HIT, THRASH(3), SS_RES,
+      METRONOME('Petal Dance'), HIT, THRASH(3),
       MISS,
       MISS, CFZ(2),
       CFZ_CAN, METRONOME('Mimic'), HIT, MIMIC(2, 2), METRONOME('Disable'),
@@ -3952,7 +3925,7 @@ describe('Gen 1', () => {
   });
 
   test('Explode effect', () => {
-    const battle = startBattle([HIT, SS_MOD, HIT, NO_CRIT, MAX_DMG, HIT, NO_CRIT, MAX_DMG], [
+    const battle = startBattle([HIT, HIT, NO_CRIT, MAX_DMG, HIT, NO_CRIT, MAX_DMG], [
       {species: 'Electrode', level: 80, evs, moves: ['Explosion', 'Toxic']},
       {species: 'Onix', evs, moves: ['Self-Destruct']},
     ], [
@@ -4037,10 +4010,7 @@ describe('Gen 1', () => {
       value: ranged(Math.floor(gen.species.get('Articuno')!.baseStats.spe / 2), 256),
     };
     const battle = startBattle([
-      SS_EACH, TIE(1), SS_EACH, SS_EACH, SS_EACH, MISS, SS_EACH, SS_EACH,
-      TIE(2), SS_EACH, SS_EACH, HIT, no_crit, MIN_DMG, SS_EACH,
-      HIT, no_crit, MIN_DMG, SS_EACH, SS_EACH,
-      TIE(2), SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
+      TIE(1), MISS, TIE(2), HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG, TIE(2),
     ], [
       {species: 'Mew', level: 50, evs, moves: ['Swords Dance', 'Transform']},
       {species: 'Ditto', evs, moves: ['Swords Dance', 'Transform']},
@@ -4200,7 +4170,7 @@ describe('Gen 1', () => {
 
   test('Disable + Transform bug', () => {
     {
-      const battle = startBattle([HIT, DISABLE_MOVE(2), DISABLE_DURATION(5), SS_EACH, SS_EACH], [
+      const battle = startBattle([HIT, DISABLE_MOVE(2), DISABLE_DURATION(5)], [
         {species: 'Voltorb', evs, moves: ['Disable', 'Teleport']},
       ], [
         {species: 'Goldeen', evs, moves: ['Transform', 'Water Gun', 'Teleport', 'Haze']},
@@ -4221,7 +4191,7 @@ describe('Gen 1', () => {
       ]);
     }
     {
-      const battle = startBattle([HIT, DISABLE_MOVE(2), DISABLE_DURATION(5), SS_EACH, SS_EACH], [
+      const battle = startBattle([HIT, DISABLE_MOVE(2), DISABLE_DURATION(5)], [
         {species: 'Voltorb', evs, moves: ['Disable', 'Water Gun', 'Teleport']},
       ], [
         {species: 'Goldeen', evs, moves: ['Transform', 'Teleport', 'Water Gun', 'Haze']},
@@ -4245,10 +4215,7 @@ describe('Gen 1', () => {
 
   // Fixed by smogon/pokemon-showdown#9201 & smogon/pokemon-showdown#9301
   test('Disable + Bide bug', () => {
-    const SS_RUN = {key: 'sim/battle.ts:1483:10', value: SS_MOD.value};
-    const battle = startBattle([
-      BIDE(3), HIT, DISABLE_MOVE(1, 2), DISABLE_DURATION(5), SS_RUN, SS_RUN,
-    ], [
+    const battle = startBattle([BIDE(3), HIT, DISABLE_MOVE(1, 2), DISABLE_DURATION(5)], [
       {species: 'Voltorb', evs, moves: ['Teleport', 'Disable']},
     ], [
       {species: 'Golem', evs, moves: ['Bide', 'Flash']},
@@ -4278,7 +4245,7 @@ describe('Gen 1', () => {
 
   // Fixed by smogon/pokemon-showdown#9243
   test('Charge + Sleep bug', () => {
-    const battle = startBattle([HIT, SS_MOD, SLP(1), HIT, NO_CRIT, MIN_DMG], [
+    const battle = startBattle([HIT, SLP(1), HIT, NO_CRIT, MIN_DMG], [
       {species: 'Venusaur', evs, moves: ['Solar Beam', 'Tackle']},
     ], [
       {species: 'Snorlax', evs, moves: ['Lovely Kiss', 'Teleport']},
@@ -4456,7 +4423,7 @@ describe('Gen 1', () => {
 
   test('Counter + sleep = Desync Clause Mod bug', () => {
     const battle = startBattle([
-      HIT, HIT, SS_MOD, SLP(8), HIT, HIT, NO_CRIT, MIN_DMG, HIT,
+      HIT, HIT, SLP(8), HIT, HIT, NO_CRIT, MIN_DMG, HIT,
     ], [
       {species: 'Alakazam', evs, moves: ['Seismic Toss', 'Psychic']},
       {species: 'Snorlax', evs, moves: ['Body Slam']},
@@ -4814,8 +4781,8 @@ describe('Gen 1', () => {
   test('Wrap locking + KOs bug', () => {
     const proc = SECONDARY(MIN);
     const battle = startBattle([
-      HIT, NO_CRIT, MIN_DMG, proc, SS_MOD, HIT, NO_CRIT, MIN_DMG, MIN_WRAP,
-      HIT, MISS, HIT, NO_CRIT, MIN_DMG, proc, SS_MOD, MISS,
+      HIT, NO_CRIT, MIN_DMG, proc, HIT, NO_CRIT, MIN_DMG, MIN_WRAP,
+      HIT, MISS, HIT, NO_CRIT, MIN_DMG, proc, MISS,
       HIT, NO_CRIT, MIN_DMG, MIN_WRAP,
       HIT, NO_CRIT, MIN_DMG, MIN_WRAP,
     ], [
@@ -4931,7 +4898,7 @@ describe('Gen 1', () => {
     }
     // Thrash should lock the user into the move even if it breaks a Substitute
     {
-      const battle = startBattle([HIT, NO_CRIT, MAX_DMG, HIT, SS_MOD], [
+      const battle = startBattle([HIT, NO_CRIT, MAX_DMG, HIT], [
         {species: 'Nidoking', evs, moves: ['Thrash', 'Thunder Wave']},
       ], [
         {species: 'Abra', evs, moves: ['Substitute', 'Teleport']},
@@ -5067,7 +5034,7 @@ describe('Gen 1', () => {
     // Fainted Pokémon damage accumulation desync
     {
       const battle = startBattle([
-        HIT, SS_MOD, BIDE(2), HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+        HIT, BIDE(2), HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
       ], [
         {species: 'Wigglytuff', evs, moves: ['Teleport', 'Tri Attack']},
         {species: 'Snorlax', evs, moves: ['Defense Curl']},
@@ -5121,7 +5088,7 @@ describe('Gen 1', () => {
     // self-Counter
     {
       const battle = startBattle([
-        HIT, SS_MOD, PAR_CAN, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, PAR_CANT, HIT,
+        HIT, PAR_CAN, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, PAR_CANT, HIT,
       ], [
         {species: 'Jolteon', evs, moves: ['Agility', 'Tackle']},
       ], [
@@ -5163,7 +5130,7 @@ describe('Gen 1', () => {
     // Desync
     {
       const battle = startBattle([
-        HIT, SS_MOD, PAR_CAN, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, PAR_CANT, HIT,
+        HIT, PAR_CAN, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, PAR_CANT, HIT,
       ], [
         {species: 'Jolteon', evs, moves: ['Agility', 'Tackle']},
       ], [
@@ -5207,7 +5174,7 @@ describe('Gen 1', () => {
   test('Freeze top move selection glitch', () => {
     const NO_BRN = {...FRZ, value: FRZ.value + 1};
     const battle = startBattle([
-      HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD, HIT, NO_CRIT, MIN_DMG,
+      HIT, NO_CRIT, MIN_DMG, FRZ, HIT, NO_CRIT, MIN_DMG,
       HIT, NO_CRIT, MIN_DMG, NO_BRN,
     ], [
       {species: 'Slowbro', evs, moves: ['Psychic', 'Amnesia', 'Teleport']},
@@ -5263,9 +5230,7 @@ describe('Gen 1', () => {
 
   test('Toxic counter glitches', () => {
     const BRN = SECONDARY(ranged(77, 256) - 1);
-    const battle = startBattle([
-      HIT, SS_MOD, SS_MOD, SLP(5), HIT, HIT, NO_CRIT, MIN_DMG, BRN, SS_MOD,
-    ], [
+    const battle = startBattle([HIT, SLP(5), HIT, HIT, NO_CRIT, MIN_DMG, BRN], [
       {species: 'Venusaur', evs, moves: ['Toxic', 'Leech Seed', 'Teleport', 'Fire Blast']},
     ], [
       {species: 'Clefable', evs, moves: ['Teleport', 'Rest']},
@@ -5310,7 +5275,7 @@ describe('Gen 1', () => {
   test('Defrost move forcing', () => {
     const NO_BRN = {...FRZ, value: FRZ.value + 1};
     const battle = startBattle([
-      HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
+      HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, FRZ,
       HIT, NO_CRIT, MIN_DMG, NO_BRN, HIT, NO_CRIT, MIN_DMG,
     ], [
       {species: 'Hypno', level: 50, evs, moves: ['Teleport', 'Ice Punch', 'Fire Punch']},
@@ -5512,7 +5477,7 @@ describe('Gen 1', () => {
   test('Hyper Beam + Freeze permanent helplessness', () => {
     const NO_BRN = {...FRZ, value: FRZ.value + 1};
     const battle = startBattle([
-      HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
+      HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, FRZ,
       HIT, NO_CRIT, MIN_DMG, NO_BRN, MISS,
       HIT, NO_CRIT, MIN_DMG, NO_BRN, MISS,
     ], [
@@ -5588,7 +5553,7 @@ describe('Gen 1', () => {
   test('Hyper Beam + Sleep move glitch', () => {
     const BRN = FRZ;
     const battle = startBattle([
-      HIT, SS_MOD, HIT, NO_CRIT, MIN_DMG, SS_MOD, SLP(2), HIT, NO_CRIT, MIN_DMG, BRN, SS_MOD, MISS,
+      HIT, HIT, NO_CRIT, MIN_DMG, SLP(2), HIT, NO_CRIT, MIN_DMG, BRN, MISS,
     ], [
       {species: 'Hypno', evs, moves: ['Toxic', 'Hypnosis', 'Teleport', 'Fire Punch']},
     ], [
@@ -5714,7 +5679,7 @@ describe('Gen 1', () => {
 
   test('Invulnerability glitch', () => {
     const battle = startBattle([
-      HIT, SS_MOD,
+      HIT,
       PAR_CAN,
       PAR_CANT,
       PAR_CAN, NO_CRIT, MIN_DMG,
@@ -5787,7 +5752,7 @@ describe('Gen 1', () => {
 
   test('Stat modification errors', () => {
     {
-      const battle = startBattle([HIT, HIT, SS_MOD, PAR_CAN, HIT, PAR_CAN, HIT], [
+      const battle = startBattle([HIT, HIT, PAR_CAN, HIT, PAR_CAN, HIT], [
         {species: 'Bulbasaur', level: 6, moves: ['Stun Spore', 'Growth']},
       ], [
         {species: 'Pidgey', level: 56, moves: ['Sand-Attack']},
@@ -5829,7 +5794,7 @@ describe('Gen 1', () => {
       ]);
     }
     {
-      const battle = startBattle([HIT, SS_MOD, PAR_CAN, HIT, PAR_CANT, HIT, HIT, PAR_CANT], [
+      const battle = startBattle([HIT, PAR_CAN, HIT, PAR_CANT, HIT, HIT, PAR_CANT], [
         {species: 'Bulbasaur', level: 6, moves: ['Stun Spore', 'Growth']},
         {species: 'Cloyster', level: 82, moves: ['Withdraw']},
       ], [
@@ -6064,7 +6029,7 @@ describe('Gen 1', () => {
   });
 
   test('Trapping sleep glitch', () => {
-    const battle = startBattle([HIT, NO_CRIT, MIN_DMG, MIN_WRAP, HIT, SS_MOD, SLP(5), HIT], [
+    const battle = startBattle([HIT, NO_CRIT, MIN_DMG, MIN_WRAP, HIT, SLP(5), HIT], [
       {species: 'Weepinbell', evs, moves: ['Wrap', 'Sleep Powder']},
       {species: 'Gloom', evs, moves: ['Absorb']},
     ], [
@@ -6371,10 +6336,7 @@ describe('Gen 1', () => {
   test('Transform + Mirror Move/Metronome PP error', () => {
     // PP
     {
-      const battle = startBattle([
-        SS_EACH, HIT, SS_EACH, SS_EACH, TIE(2), SS_EACH, SS_EACH,
-        HIT, SS_EACH, HIT, SS_EACH, SS_EACH,
-      ], [
+      const battle = startBattle([HIT, TIE(2), HIT, HIT], [
         {species: 'Mew', evs, moves: ['Transform', 'Ice Beam', 'Psychic']},
       ], [
         {species: 'Spearow', evs, moves: ['Growl', 'Leer', 'Mirror Move']},
@@ -6403,10 +6365,7 @@ describe('Gen 1', () => {
     }
     // Struggle softlock
     {
-      const battle = startBattle([
-        HIT, SS_EACH, TIE(1), SS_EACH, SS_EACH, HIT, SS_EACH, HIT, SS_EACH, SS_EACH,
-        SS_EACH, SS_EACH, HIT, MISS, HIT, NO_CRIT, MIN_DMG, HIT,
-      ], [
+      const battle = startBattle([HIT, TIE(1), HIT, HIT, HIT, MISS, HIT, NO_CRIT, MIN_DMG, HIT], [
         {species: 'Ditto', level: 34, evs, moves: ['Transform']},
         {species: 'Koffing', evs, moves: ['Explosion']},
       ], [
@@ -6462,10 +6421,7 @@ describe('Gen 1', () => {
     }
     // Disable softlock
     {
-      const battle = startBattle([
-        HIT, SS_EACH, TIE(1), SS_EACH, SS_EACH, HIT, SS_EACH, HIT, SS_EACH, SS_EACH,
-        TIE(1), SS_EACH, SS_EACH, HIT,
-      ], [
+      const battle = startBattle([HIT, TIE(1), HIT, HIT, TIE(1), HIT], [
         {species: 'Ditto', level: 34, evs, moves: ['Transform']},
         {species: 'Koffing', evs, moves: ['Explosion']},
       ], [

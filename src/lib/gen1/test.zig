@@ -319,7 +319,6 @@ test "turn order (basic speed tie)" {
     const TIE_2 = MAX;
     // Start
     {
-        // BUG: var t = Test((if (showdown) (.{NOP} ** 7) else (.{}))).init(
         var t = Test(.{}).init(
             &.{.{ .species = .Tauros, .moves = &.{.HyperBeam} }},
             &.{.{ .species = .Tauros, .moves = &.{.HyperBeam} }},
@@ -336,20 +335,10 @@ test "turn order (basic speed tie)" {
     }
     // Move vs. Move
     {
-        var t = Test(
-        // zig fmt: off
-            if (showdown) .{
-                // BUG: NOP, NOP, NOP, NOP, NOP, NOP, NOP,
-                //      TIE_1, NOP,
-                //      NOP, HIT, ~CRIT, MIN_DMG,
-                //      NOP, HIT, ~CRIT, MAX_DMG,
-                //      NOP, NOP,
-                TIE_1, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MAX_DMG,
-            } else .{
-                TIE_1, ~CRIT, MIN_DMG, HIT, ~CRIT, MAX_DMG, HIT
-            }
-        // zig fmt: on
-        ).init(
+        var t = Test(if (showdown)
+            (.{ TIE_1, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MAX_DMG })
+        else
+            (.{ TIE_1, ~CRIT, MIN_DMG, HIT, ~CRIT, MAX_DMG, HIT })).init(
             &.{.{ .species = .Tauros, .moves = &.{.HyperBeam} }},
             &.{.{ .species = .Tauros, .moves = &.{.HyperBeam} }},
         );
@@ -371,20 +360,10 @@ test "turn order (basic speed tie)" {
     }
     // Faint vs. Pass
     {
-        var t = Test(
-        // zig fmt: off
-            if (showdown) .{
-                // BUG: NOP, NOP, NOP, NOP, NOP, NOP, NOP,
-                //      TIE_1, NOP,
-                //      NOP, HIT, ~CRIT, MIN_DMG,
-                //      NOP, HIT, CRIT, MAX_DMG,
-                //      NOP, NOP, NOP,
-                TIE_1, HIT, ~CRIT, MIN_DMG, HIT, CRIT, MAX_DMG,
-            } else .{
-                TIE_1, ~CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, HIT
-            }
-        // zig fmt: on
-        ).init(
+        var t = Test(if (showdown)
+            (.{ TIE_1, HIT, ~CRIT, MIN_DMG, HIT, CRIT, MAX_DMG })
+        else
+            (.{ TIE_1, ~CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, HIT })).init(
             &.{
                 .{ .species = .Tauros, .moves = &.{.HyperBeam} },
                 .{ .species = .Tauros, .moves = &.{.HyperBeam} },
@@ -414,7 +393,6 @@ test "turn order (basic speed tie)" {
     }
     // Switch vs. Switch
     {
-        // BUG: if (showdown) (.{NOP} ** 7) ++ .{TIE_2} ++ (.{NOP} ** 9)
         var t = Test((if (showdown) (.{TIE_2}) else (.{}))).init(
             &.{
                 .{ .species = .Zapdos, .moves = &.{.DrillPeck} },
@@ -442,17 +420,7 @@ test "turn order (basic speed tie)" {
     }
     // Move vs. Switch
     {
-        var t = Test(
-        // zig fmt: off
-            if (showdown) .{
-                // BUG: NOP, NOP, NOP, NOP, NOP, NOP, NOP,
-                //      NOP, NOP, HIT, ~CRIT, MIN_DMG,
-                HIT, ~CRIT, MIN_DMG,
-            } else .{
-                ~CRIT, MIN_DMG, HIT
-            }
-        // zig fmt: on
-        ).init(
+        var t = Test(if (showdown) .{ HIT, ~CRIT, MIN_DMG } else .{ ~CRIT, MIN_DMG, HIT }).init(
             &.{
                 .{ .species = .Tauros, .moves = &.{.HyperBeam} },
                 .{ .species = .Starmie, .moves = &.{.Surf} },
@@ -490,14 +458,6 @@ test "turn order (complex speed tie)" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                // BUG: NOP, NOP, NOP, NOP, NOP, NOP, NOP,
-                //      TIE_2, NOP, NOP, fly, NOP,
-                //      dig, NOP, NOP, TIE_1, NOP, NOP, NOP,
-                //      HIT, ~CRIT, MIN_DMG, NOP, NOP,
-                //      NOP, NOP, HIT, ~CRIT, MIN_DMG, NOP,
-                //      swift, ~CRIT, MIN_DMG, NOP, NOP,
-                //      NOP, NOP, NOP, NOP, NOP, petal_dance,
-                //      HIT, ~CRIT, MIN_DMG, THRASH_3, NOP, NOP,
                 TIE_2, fly, dig, TIE_1, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
                 swift, ~CRIT, MIN_DMG, petal_dance, HIT, ~CRIT, MIN_DMG, THRASH_3,
             } else .{
@@ -563,17 +523,7 @@ test "turn order (complex speed tie)" {
     }
     // beforeTurnMove
     {
-        var t = Test(
-        // zig fmt: off
-            if (showdown) .{
-                // BUG: NOP, NOP, NOP, NOP, NOP, NOP, NOP, NOP, TIE_1,
-                //     NOP, NOP, NOP, NOP, HIT, NOP, HIT, NOP, NOP,
-                TIE_1, HIT, HIT,
-            } else .{
-                TIE_1, ~CRIT, ~CRIT,
-            }
-        // zig fmt: on
-        ).init(
+        var t = Test(if (showdown) .{ NOP, TIE_1, HIT, HIT } else .{ TIE_1, ~CRIT, ~CRIT }).init(
             &.{.{ .species = .Chansey, .moves = &.{.Counter} }},
             &.{.{ .species = .Chansey, .moves = &.{.Counter} }},
         );
@@ -962,7 +912,6 @@ test "Endless Battle Clause (basic)" {
         try t.verify();
     }
     {
-        // BUG:  var t = Test(.{NOP}).init(
         var t = Test(.{}).init(
             &.{
                 .{ .species = .Mew, .moves = &.{.Transform} },
@@ -1186,7 +1135,7 @@ test "Twineedle effect" {
         if (showdown) .{
             HIT, CRIT, MAX_DMG,
             HIT, ~CRIT, MIN_DMG, NO_PROC,
-            HIT, ~CRIT, MIN_DMG, PROC, NOP,
+            HIT, ~CRIT, MIN_DMG, PROC,
             HIT, ~CRIT, MIN_DMG, PROC,
         } else .{
             CRIT, MAX_DMG, HIT,
@@ -1269,10 +1218,7 @@ test "Twineedle effect" {
 test "Poison effect" {
     // (Badly) Poisons the target.
     {
-        var t = Test((if (showdown)
-            (.{ HIT, HIT, HIT, NOP, HIT, NOP })
-        else
-            (.{ HIT, HIT }))).init(
+        var t = Test((if (showdown) .{ HIT, HIT, HIT, HIT } else .{ HIT, HIT })).init(
             &.{
                 .{ .species = .Jolteon, .moves = &.{ .Toxic, .Substitute } },
                 .{ .species = .Abra, .moves = &.{.Teleport} },
@@ -1349,7 +1295,7 @@ test "Poison effect" {
     }
     {
         var battle = Battle.fixed(
-            if (showdown) (.{ HIT, NOP, HIT }) else (.{ HIT, HIT }),
+            .{ HIT, HIT },
             &.{.{ .species = .Clefable, .moves = &.{ .Toxic, .Recover } }},
             &.{.{
                 .species = .Diglett,
@@ -1385,7 +1331,7 @@ test "PoisonChance effect" {
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, LO_PROC, HIT, ~CRIT, MIN_DMG, HI_PROC,
             HIT, ~CRIT, MAX_DMG,
-            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC, NOP,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC,
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC,
         } else .{
             ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, HI_PROC,
@@ -1466,7 +1412,7 @@ test "BurnChance effect" {
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HI_PROC,
             HIT, ~CRIT, MIN_DMG,
-            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC, NOP,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC,
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, LO_PROC,
         } else .{
             ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, HI_PROC,
@@ -1545,11 +1491,11 @@ test "FreezeChance effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            HIT, ~CRIT, MIN_DMG, HIT, NOP,
+            HIT, ~CRIT, MIN_DMG, HIT,
             HIT, ~CRIT, MIN_DMG, FRZ, PAR_CANT,
-            HIT, ~CRIT, MIN_DMG, FRZ, NOP,
+            HIT, ~CRIT, MIN_DMG, FRZ,
             HIT,
-            HIT, ~CRIT, MIN_DMG, FRZ, NOP,
+            HIT, ~CRIT, MIN_DMG, FRZ,
             HIT, ~CRIT, MIN_DMG, MIN_WRAP,
             HIT, ~CRIT, MIN_DMG, ~HIT,
             ~HIT,
@@ -1715,12 +1661,12 @@ test "Paralyze effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            ~HIT, HIT, NOP,
-            HIT, NO_PROC, HIT, NOP,
+            ~HIT, HIT,
+            HIT, NO_PROC, HIT,
             PROC,
-            HIT, NO_PROC, HIT, NOP,
+            HIT, NO_PROC, HIT,
             NO_PROC,
-            NO_PROC, HIT, NOP,
+            NO_PROC, HIT,
         } else .{
             ~HIT, HIT,
             NO_PROC, HIT,
@@ -1817,7 +1763,7 @@ test "ParalyzeChance effect" {
     // zig fmt: off
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
-            HIT, ~CRIT, MIN_DMG, HI_PROC, HIT, ~CRIT, MIN_DMG, HI_PROC, NOP,
+            HIT, ~CRIT, MIN_DMG, HI_PROC, HIT, ~CRIT, MIN_DMG, HI_PROC,
             PAR_CAN, HIT, ~CRIT, MIN_DMG, LO_PROC,
             HIT, ~CRIT, MIN_DMG, HI_PROC, PAR_CANT,
         } else .{
@@ -1905,7 +1851,7 @@ test "Sleep effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            HIT, NOP, SLP_1, HIT, NOP, SLP_2, HIT, NOP, HIT, HIT, ~CRIT, MIN_DMG,
+            HIT, SLP_1, HIT, SLP_2, HIT, HIT, HIT, ~CRIT, MIN_DMG,
         } else .{
             ~CRIT, HIT, SLP_1, ~CRIT, HIT, SLP_2, ~CRIT, HIT, SLP_2, ~CRIT, ~CRIT, MIN_DMG, HIT,
         }
@@ -2568,7 +2514,7 @@ test "Fly/Dig effect" {
     // fainting
     {
         var t = Test((if (showdown)
-            (.{ HIT, NOP, HIT, ~CRIT, MIN_DMG })
+            (.{ HIT, HIT, ~CRIT, MIN_DMG })
         else
             (.{ HIT, ~CRIT, MIN_DMG, HIT }))).init(
             &.{
@@ -2698,7 +2644,7 @@ test "Trapping effect" {
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, MIN_WRAP,
             HIT, ~CRIT, MAX_DMG, MIN_WRAP,
-            HIT, NOP,
+            HIT,
             PAR_CAN, HIT, MAX_WRAP, PAR_CAN,
             PAR_CANT, PAR_CAN,
         } else .{
@@ -3048,9 +2994,9 @@ test "Thrashing effect" {
                 CFZ_CAN, ~HIT, ~HIT, THRASH_3,
                 CFZ_CAN, HIT, ~CRIT, MIN_DMG, CFZ_5, HIT, ~CRIT, MIN_DMG,
                 // BUG: regression from smogon/pokemon-showdown#9243
-                // CFZ_CAN, HIT, NOP, PAR_CANT, CFZ_5,
+                // CFZ_CAN, HIT, PAR_CANT, CFZ_5,
                 // CFZ_CAN, HIT, CFZ_CAN, PAR_CAN, HIT, ~CRIT, MAX_DMG, THRASH_3,
-                MIN_DMG, CFZ_CAN, HIT, PAR_CANT,
+                MIN_DMG, CFZ_CAN, HIT,
                 CFZ_CAN, HIT, PAR_CAN, HIT, ~CRIT, MAX_DMG, THRASH_3,
             } else .{
                 THRASH_3, ~CRIT, MIN_DMG, HIT, HIT, CFZ_5,
@@ -3670,7 +3616,7 @@ test "Counter effect" {
             HIT,
             HIT, HIT,
             HIT,
-            HIT, NOP, SLP_3,
+            HIT, SLP_3,
         } else .{
             ~CRIT, MIN_DMG, HIT, NO_PROC, ~CRIT,
             ~CRIT, MIN_DMG, HIT, MIN_HITS, ~CRIT, HIT,
@@ -3867,16 +3813,10 @@ test "Rest effect" {
     const PROC = comptime ranged(63, 256) - 1;
     const NO_PROC = PROC + 1;
 
-    var t = Test(
-    // zig fmt: off
-        if (showdown) .{
-            HIT, NOP, HIT, ~CRIT, MIN_DMG, NO_PROC, NOP, MAX,
-            HIT, ~CRIT, MIN_DMG,
-        } else .{
-            HIT, ~CRIT, MIN_DMG, HIT, NO_PROC, ~CRIT, MIN_DMG, HIT
-        }
-    // zig fmt: on
-    ).init(
+    var t = Test((if (showdown)
+        (.{ HIT, HIT, ~CRIT, MIN_DMG, NO_PROC, MAX, HIT, ~CRIT, MIN_DMG })
+    else
+        (.{ HIT, ~CRIT, MIN_DMG, HIT, NO_PROC, ~CRIT, MIN_DMG, HIT }))).init(
         &.{
             .{ .species = .Porygon, .moves = &.{ .ThunderWave, .Tackle, .Rest } },
             .{ .species = .Dragonair, .moves = &.{.Slam} },
@@ -4001,7 +3941,7 @@ test "DreamEater effect" {
     // by the target, rounded down, but not less than 1 HP. If this move breaks the target's
     // substitute, the user does not recover any HP.
     var t = Test((if (showdown)
-        (.{ HIT, NOP, MAX, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG })
+        (.{ HIT, MAX, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG })
     else
         (.{ ~CRIT, MIN_DMG, ~CRIT, HIT, MAX, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
         &.{.{ .species = .Hypno, .hp = 100, .moves = &.{ .DreamEater, .Hypnosis } }},
@@ -4448,10 +4388,10 @@ test "Haze effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            HIT, NOP, HIT,
-            HIT, NOP, PAR_CAN, HIT, CFZ_5,
+            HIT, HIT,
+            HIT, PAR_CAN, HIT, CFZ_5,
             CFZ_CAN, PAR_CAN, haze,
-            PAR_CAN, ember, HIT, ~CRIT, MIN_DMG, PROC, NOP, PAR_CAN,
+            PAR_CAN, ember, HIT, ~CRIT, MIN_DMG, PROC, PAR_CAN,
         } else .{
             HIT, HIT, ~CRIT, HIT, ~CRIT, PAR_CAN, HIT, CFZ_5,
             CFZ_CAN, PAR_CAN, ~CRIT, haze,
@@ -4711,7 +4651,7 @@ test "Metronome effect" {
     // zig fmt: off
         if (showdown) .{
             wrap, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
-            // BUG: petal_dance, HIT, THRASH_3, NOP,
+            // BUG: petal_dance, HIT, THRASH_3,
             petal_dance, HIT, ~CRIT, MIN_DMG, THRASH_3,
             ~HIT, ~HIT, CFZ_2,
             CFZ_CAN, mimic, HIT, MIMIC_2, disable, HIT,
@@ -4999,7 +4939,7 @@ test "Explode effect" {
     // The user faints after using this move, unless the target's substitute was broken by the
     // damage. The target's Defense is halved during damage calculation.
     var t = Test((if (showdown)
-        (.{ HIT, NOP, HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, MAX_DMG })
+        (.{ HIT, HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, MAX_DMG })
     else
         (.{ HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, HIT }))).init(
         &.{
@@ -5092,10 +5032,6 @@ test "Transform effect" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            // BUG: NOP, TIE_1, NOP, NOP, NOP, ~HIT, NOP, NOP,
-            //      TIE_2, NOP, NOP, HIT, no_crit, MIN_DMG, NOP,
-            //      HIT, no_crit, MIN_DMG, NOP, NOP,
-            //      TIE_2, NOP, NOP, NOP, NOP, NOP, NOP, NOP
             TIE_1, ~HIT, TIE_2, HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG, TIE_2,
         } else .{
             ~CRIT, ~CRIT, TIE_1, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, ~HIT,
@@ -5308,7 +5244,6 @@ test "Disable + Transform bug" {
     const DISABLE_DURATION_5 = comptime ranged(5, 9 - 1) - 1;
     {
         var t = Test((if (showdown)
-            // BUG: (.{ HIT, DISABLE_MOVE_2, DISABLE_DURATION_5, NOP, NOP })
             (.{ HIT, DISABLE_MOVE_2, DISABLE_DURATION_5 })
         else
             (.{ ~CRIT, HIT, DISABLE_MOVE_2, DISABLE_DURATION_5 }))).init(
@@ -5337,7 +5272,6 @@ test "Disable + Transform bug" {
     }
     {
         var t = Test((if (showdown)
-            // BUG: (.{ HIT, DISABLE_MOVE_2, DISABLE_DURATION_5, NOP, NOP })
             (.{ HIT, DISABLE_MOVE_2, DISABLE_DURATION_5 })
         else
             (.{ ~CRIT, HIT, DISABLE_MOVE_2, DISABLE_DURATION_5 }))).init(
@@ -5373,7 +5307,6 @@ test "Disable + Bide bug" {
     const DISABLE_DURATION_5 = comptime ranged(5, 9 - 1) - 1;
 
     var t = Test((if (showdown)
-        // BUG: (.{ BIDE_3, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5, NOP, NOP })
         (.{ BIDE_3, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5 })
     else
         (.{ ~CRIT, BIDE_3, ~CRIT, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5 }))).init(
@@ -5411,7 +5344,7 @@ test "Charge + Sleep bug" {
     const SLP_1 = if (showdown) comptime ranged(1, 8 - 1) else 1;
 
     var t = Test((if (showdown)
-        (.{ HIT, NOP, SLP_1, HIT, ~CRIT, MIN_DMG })
+        (.{ HIT, SLP_1, HIT, ~CRIT, MIN_DMG })
     else
         (.{ ~CRIT, HIT, SLP_1, ~CRIT, MIN_DMG, HIT }))).init(
         &.{.{ .species = .Venusaur, .moves = &.{ .SolarBeam, .Tackle } }},
@@ -5610,7 +5543,7 @@ test "Simultaneous Counter bug" {
 test "Counter + sleep = Desync Clause Mod bug" {
     const SLP_8 = MAX;
     var t = Test(if (showdown)
-        (.{ HIT, HIT, NOP, SLP_8, HIT, HIT, ~CRIT, MIN_DMG, HIT })
+        (.{ HIT, HIT, SLP_8, HIT, HIT, ~CRIT, MIN_DMG, HIT })
     else
         (.{ HIT, ~CRIT, HIT, SLP_8, ~CRIT, ~CRIT, MIN_DMG, HIT, ~CRIT, HIT })).init(
         &.{
@@ -6036,8 +5969,8 @@ test "Wrap locking + KOs bug" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            HIT, ~CRIT, MIN_DMG, PROC, NOP, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
-            HIT, ~HIT, HIT, ~CRIT, MIN_DMG, PROC, NOP, ~HIT,
+            HIT, ~CRIT, MIN_DMG, PROC, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
+            HIT, ~HIT, HIT, ~CRIT, MIN_DMG, PROC, ~HIT,
             HIT, ~CRIT, MIN_DMG, MIN_WRAP,
             HIT, ~CRIT, MIN_DMG, MIN_WRAP,
         } else .{
@@ -6178,7 +6111,7 @@ test "Thrashing + Substitute bugs" {
     // Thrash should lock the user into the move even if it breaks a Substitute
     {
         var t = Test((if (showdown)
-            (.{ HIT, ~CRIT, MAX_DMG, HIT, NOP })
+            (.{ HIT, ~CRIT, MAX_DMG, HIT })
         else
             (.{ THRASH_3, ~CRIT, MAX_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
             &.{.{ .species = .Nidoking, .moves = &.{ .Thrash, .ThunderWave } }},
@@ -6346,7 +6279,7 @@ test "Bide damage accumulation glitches" {
     // Fainted Pokémon damage accumulation desync
     {
         var t = Test((if (showdown)
-            (.{ HIT, NOP, BIDE_2, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG })
+            (.{ HIT, BIDE_2, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG })
         else
             (.{ HIT, ~CRIT, BIDE_2, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
             &.{
@@ -6414,7 +6347,7 @@ test "Counter glitches" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                HIT, NOP, PAR_CAN, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, PAR_CANT, HIT,
+                HIT, PAR_CAN, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, PAR_CANT, HIT,
             } else .{
                 ~CRIT, HIT,
                 PAR_CAN, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
@@ -6467,7 +6400,7 @@ test "Counter glitches" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                HIT, NOP, PAR_CAN, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, PAR_CANT, HIT,
+                HIT, PAR_CAN, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, PAR_CANT, HIT,
             } else .{
                 ~CRIT, HIT,
                 PAR_CAN, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
@@ -6527,7 +6460,7 @@ test "Freeze top move selection glitch" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            HIT, ~CRIT, MIN_DMG, FRZ, NOP, HIT, ~CRIT, MIN_DMG,
+            HIT, ~CRIT, MIN_DMG, FRZ, HIT, ~CRIT, MIN_DMG,
             HIT, ~CRIT, MIN_DMG, NO_BRN,
         } else .{
             ~CRIT, MIN_DMG, HIT, FRZ, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
@@ -6599,7 +6532,7 @@ test "Toxic counter glitches" {
     // https://glitchcity.wiki/Leech_Seed_and_Toxic_stacking
     const BRN = comptime ranged(77, 256) - 1;
     var t = Test(if (showdown)
-        (.{ HIT, NOP, NOP, NOP, HIT, HIT, ~CRIT, MIN_DMG, BRN, NOP })
+        (.{ HIT, NOP, HIT, HIT, ~CRIT, MIN_DMG, BRN })
     else
         (.{ HIT, HIT, ~CRIT, MIN_DMG, HIT, BRN })).init(
         &.{.{ .species = .Venusaur, .moves = &.{ .Toxic, .LeechSeed, .Teleport, .FireBlast } }},
@@ -6663,7 +6596,7 @@ test "Defrost move forcing" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, FRZ,
             HIT, ~CRIT, MIN_DMG, NO_BRN, HIT, ~CRIT, MIN_DMG,
         } else .{
             ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, FRZ, ~CRIT, MIN_DMG, HIT,
@@ -6937,7 +6870,7 @@ test "Hyper Beam + Freeze permanent helplessness" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, FRZ, NOP,
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, FRZ,
             HIT, ~CRIT, MIN_DMG, NO_BRN, ~HIT,
             HIT, ~CRIT, MIN_DMG, NO_BRN, ~HIT,
         } else .{
@@ -7046,7 +6979,7 @@ test "Hyper Beam + Sleep move glitch" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            HIT, NOP, HIT, ~CRIT, MIN_DMG, NOP, SLP_2, HIT, ~CRIT, MIN_DMG, PROC, NOP, ~HIT,
+            HIT, HIT, ~CRIT, MIN_DMG, SLP_2, HIT, ~CRIT, MIN_DMG, PROC, ~HIT,
         } else .{
             HIT, ~CRIT, MIN_DMG, HIT,
             ~CRIT, SLP_2,
@@ -7226,7 +7159,7 @@ test "Invulnerability glitch" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            HIT, NOP,
+            HIT,
             PAR_CAN,
             PAR_CANT,
             PAR_CAN, ~CRIT, MIN_DMG,
@@ -7323,7 +7256,7 @@ test "Stat modification errors" {
     const NO_PROC = PROC + 1;
     {
         var t = Test((if (showdown)
-            (.{ HIT, HIT, NOP, NO_PROC, HIT, NO_PROC, HIT })
+            (.{ HIT, HIT, NO_PROC, HIT, NO_PROC, HIT })
         else
             (.{ ~CRIT, HIT, HIT, NO_PROC, ~CRIT, HIT, ~CRIT, ~CRIT, NO_PROC, ~CRIT, HIT }))).init(
             &.{.{
@@ -7376,7 +7309,7 @@ test "Stat modification errors" {
     }
     {
         var t = Test((if (showdown)
-            (.{ HIT, NOP, NO_PROC, HIT, PROC, HIT, HIT, PROC })
+            (.{ HIT, NO_PROC, HIT, PROC, HIT, HIT, PROC })
         else
             (.{ HIT, NO_PROC, ~CRIT, ~CRIT, HIT, PROC, ~CRIT, HIT, ~CRIT, HIT, PROC }))).init(
             &.{
@@ -7731,7 +7664,7 @@ test "Trapping sleep glitch" {
     const SLP_5 = if (showdown) comptime ranged(5, 8 - 1) else 5;
 
     var t = Test(if (showdown)
-        (.{ HIT, ~CRIT, MIN_DMG, MIN_WRAP, HIT, NOP, SLP_5, HIT })
+        (.{ HIT, ~CRIT, MIN_DMG, MIN_WRAP, HIT, SLP_5, HIT })
     else
         (.{ MIN_WRAP, ~CRIT, MIN_DMG, HIT, ~CRIT, HIT, SLP_5, ~CRIT })).init(
         &.{
@@ -8090,16 +8023,10 @@ test "Transform + Mirror Move/Metronome PP error" {
 
     // PP
     {
-        var t = Test(
-        // zig fmt: off
-            if (showdown) .{
-                // BUG: NOP, HIT, NOP, NOP, TIE_2, NOP, NOP, HIT, NOP, HIT, NOP, NOP,
-                HIT, TIE_2, HIT, HIT,
-            } else .{
-                ~CRIT, HIT, TIE_2, ~CRIT, HIT, ~CRIT, ~CRIT, HIT,
-            }
-        // zig fmt: on
-        ).init(
+        var t = Test((if (showdown)
+            (.{ HIT, TIE_2, HIT, HIT })
+        else
+            (.{ ~CRIT, HIT, TIE_2, ~CRIT, HIT, ~CRIT, ~CRIT, HIT }))).init(
             &.{.{ .species = .Mew, .moves = &.{ .Transform, .IceBeam, .Psychic } }},
             &.{.{ .species = .Spearow, .moves = &.{ .Growl, .Leer, .MirrorMove } }},
         );
@@ -8131,8 +8058,6 @@ test "Transform + Mirror Move/Metronome PP error" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                // BUG: HIT, NOP, TIE_1, NOP, NOP, HIT, NOP, HIT, NOP, NOP,
-                //      NOP, NOP, HIT, ~HIT, HIT, ~CRIT, MIN_DMG, HIT,
                 HIT, TIE_1, HIT, HIT, HIT, ~HIT, HIT, ~CRIT, MIN_DMG, HIT,
             } else .{
                 ~CRIT, HIT, TIE_1, ~CRIT, ~CRIT, HIT, ~CRIT, HIT,
@@ -8211,17 +8136,10 @@ test "Transform + Mirror Move/Metronome PP error" {
     }
     // Disable softlock
     {
-        var t = Test(
-        // zig fmt: off
-            if (showdown) .{
-                // BUG: HIT, NOP, TIE_1, NOP, NOP, HIT, NOP, HIT, NOP, NOP, TIE_1, NOP, NOP, HIT,
-                HIT, TIE_1, HIT, HIT, TIE_1, HIT,
-            } else .{
-                ~CRIT, HIT, TIE_1, ~CRIT, ~CRIT, HIT, ~CRIT, HIT,
-                ~CRIT, HIT,
-            }
-        // zig fmt: on
-        ).init(
+        var t = Test((if (showdown)
+            (.{ HIT, TIE_1, HIT, HIT, TIE_1, HIT })
+        else
+            (.{ ~CRIT, HIT, TIE_1, ~CRIT, ~CRIT, HIT, ~CRIT, HIT, ~CRIT, HIT }))).init(
             &.{
                 .{ .species = .Ditto, .level = 34, .moves = &.{.Transform} },
                 .{ .species = .Koffing, .moves = &.{.Explosion} },

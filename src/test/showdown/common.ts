@@ -31,7 +31,6 @@ export const ROLLS = {
     };
   },
   nops: {
-    SS_MOD: {key: 'sim/pokemon.ts:1613:40', value: NOP},
     SS_RES: {key: 'sim/battle.ts:471:8', value: NOP},
     SS_EACH: {key: 'sim/battle.ts:441:8', value: NOP},
     INS: {key: 'sim/battle-queue.ts:385:70', value: NOP},
@@ -201,7 +200,7 @@ function fixSet(gen: Generation, set: Partial<PokemonSet>) {
 }
 
 export function createStartBattle(gen: Generation) {
-  // TODO: patch.generation(gen);
+  patch.generation(gen);
   const formatid = formatFor(gen);
   return (
     rolls: Roll[],
@@ -210,7 +209,7 @@ export function createStartBattle(gen: Generation) {
     fn?: (b: Battle) => void,
   ) => {
     const battle = new Battle({formatid, strictChoices: true});
-    // TODO: patch.battle(battle);
+    patch.battle(battle);
     (battle as any).debugMode = false;
     (battle as any).prng = new FixedRNG(rolls);
     if (fn) battle.started = true;

@@ -155,7 +155,7 @@ export async function run(gens: Generations, options: Options) {
       if (opts.log) process.stdout.write('\n');
       if (failures >= opts.maxFailures!) break;
     }
-  } while (Date.now() - start < (options.duration || 0))
+  } while (Date.now() - start < (options.duration || 0));
 
   return failures;
 }

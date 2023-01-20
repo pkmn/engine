@@ -289,6 +289,8 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     const spe1 = battle.side(.P1).active.stats.spe;
     const spe2 = battle.side(.P2).active.stats.spe;
     if (spe1 == spe2) {
+        // Pokémon Showdown's beforeTurnCallback shenanigans
+        if (showdown and m1 == .Counter and m2 == .Counter) battle.rng.advance(1);
         const p1 = if (showdown)
             battle.rng.range(u8, 0, 2) == 0
         else
@@ -1518,7 +1520,6 @@ pub const Effects = struct {
                 Gen12.percent(30));
         if (!chance) return;
 
-        if (showdown) battle.rng.advance(1);
         foe_stored.status = Status.init(.BRN);
         foe.active.stats.atk = maximum(foe.active.stats.atk / 2, 1);
 
@@ -1694,10 +1695,7 @@ pub const Effects = struct {
         if (!chance) return;
 
         // Freeze Clause Mod
-        if (showdown) {
-            battle.rng.advance(1);
-            for (foe.pokemon) |p| if (Status.is(p.status, .FRZ)) return;
-        }
+        if (showdown) for (foe.pokemon) |p| if (Status.is(p.status, .FRZ)) return;
 
         foe_stored.status = Status.init(.FRZ);
         // GLITCH: Hyper Beam recharging status is not cleared
@@ -1759,9 +1757,8 @@ pub const Effects = struct {
 
         const rest = side.last_selected_move == .Rest;
         if (rest) {
-            // Adding the sleep status runs the sleep condition handler to roll duration as well
-            // as rolling for the the "speed tie" between Sleep Clause Mod / Freeze Clause Mod
-            if (showdown) battle.rng.advance(2);
+            // Adding the sleep status runs the sleep condition handler to roll duration
+            if (showdown) battle.rng.advance(1);
             stored.status = Status.slf(2);
             try log.statusFrom(ident, stored.status, Move.Rest);
             stored.hp = stored.stats.hp;
@@ -1880,7 +1877,6 @@ pub const Effects = struct {
             if (!try checkHit(battle, player, move, log)) return;
         }
 
-        if (showdown) battle.rng.advance(1);
         foe_stored.status = Status.init(.PAR);
         foe.active.stats.spe = maximum(foe.active.stats.spe / 4, 1);
 
@@ -1905,7 +1901,6 @@ pub const Effects = struct {
                 Gen12.percent(30));
         if (!chance) return;
 
-        if (showdown) battle.rng.advance(1);
         foe_stored.status = Status.init(.PAR);
         foe.active.stats.spe = maximum(foe.active.stats.spe / 4, 1);
 
@@ -1945,7 +1940,6 @@ pub const Effects = struct {
             if (!chance) return;
         }
 
-        if (showdown) battle.rng.advance(1);
         foe_stored.status = Status.init(.PSN);
         if (battle.side(player).last_selected_move == .Toxic) {
             foe.active.volatiles.Toxic = true;
@@ -2004,7 +1998,6 @@ pub const Effects = struct {
 
         // Sleep Clause Mod
         if (showdown) {
-            battle.rng.advance(1);
             for (foe.pokemon) |p| {
                 if (Status.is(p.status, .SLP) and !Status.is(p.status, .SLF)) return;
             }

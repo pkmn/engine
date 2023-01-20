@@ -14,7 +14,6 @@ const {HIT, MISS, CRIT, NO_CRIT, MIN_DMG, MAX_DMG, TIE, DRAG} = ROLLS.basic({
   crit: 'data/mods/gen2/scripts.ts:552:27',
   dmg: 'data/mods/gen2/scripts.ts:711:27',
 });
-const {SS_MOD, SS_RES, SS_EACH, INS} = ROLLS.nops;
 
 const QKC = {key: 'sim/battle.ts:1585:49', value: MAX};
 const QKCs = (n: number) => Array(n).fill(QKC);
@@ -39,7 +38,6 @@ const METRONOME = ROLLS.metronome(gen, [
   'Counter', 'Destiny Bond', 'Detect', 'Endure', 'Metronome', 'Mimic',
   'Mirror Coat', 'Protect', 'Sketch', 'Sleep Talk', 'Struggle', 'Thief',
 ]);
-const STATUS = {key: 'sim/pokemon.ts:1613:40', value: HIT.value};
 
 const evs = {hp: 255, atk: 255, def: 255, spa: 255, spd: 255, spe: 255};
 const slow = {...evs, spe: 0};
@@ -221,11 +219,7 @@ describe('Gen 2', () => {
     // Move vs. Move
     {
       const battle = startBattle([
-        INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, QKC,
-        TIE(1),
-        SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG,
-        SS_EACH, HIT, NO_CRIT, MAX_DMG,
-        SS_EACH, SS_RES, SS_EACH, QKC,
+        QKC, TIE(1), HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MAX_DMG, QKC,
       ], [
         {species: 'Tauros', evs, moves: ['Hyper Beam']},
       ], [
@@ -252,11 +246,7 @@ describe('Gen 2', () => {
     // Faint vs. Pass
     {
       const battle = startBattle([
-        INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, QKC,
-        TIE(1),
-        SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG,
-        SS_EACH, HIT, CRIT, MAX_DMG,
-        SS_EACH, SS_EACH, SS_EACH, SS_EACH, QKC,
+        QKC, TIE(1), HIT, NO_CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, QKC,
       ], [
         {species: 'Tauros', evs, moves: ['Hyper Beam']},
         {species: 'Tauros', evs, moves: ['Hyper Beam']},
@@ -287,10 +277,7 @@ describe('Gen 2', () => {
     }
     // Switch vs. Switch
     {
-      const battle = startBattle([
-        INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, QKC, TIE(2), SS_EACH,
-        SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, QKC,
-      ], [
+      const battle = startBattle([QKC, TIE(2), QKC], [
         {species: 'Zapdos', evs, moves: ['Drill Peck']},
         {species: 'Dodrio', evs, moves: ['Fury Attack']},
       ], [
@@ -308,10 +295,7 @@ describe('Gen 2', () => {
     }
     // Move vs. Switch
     {
-      const battle = startBattle([
-        INS, INS, SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH, QKC,
-        SS_EACH, SS_EACH, HIT, NO_CRIT, MIN_DMG, QKC,
-      ], [
+      const battle = startBattle([QKC, HIT, NO_CRIT, MIN_DMG, QKC], [
         {species: 'Tauros', evs, moves: ['Hyper Beam']},
         {species: 'Starmie', evs, moves: ['Surf']},
       ], [
@@ -637,9 +621,8 @@ describe('Gen 2', () => {
   test('ThickClub effect', () => {
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, PROC_SEC,
-      QKC, NO_CRIT, MIN_DMG, SS_EACH, SS_EACH,
-      QKC, TIE(2), SS_EACH, SS_EACH, NO_CRIT, MIN_DMG, SS_EACH, NO_CRIT, MIN_DMG,
-      SS_EACH, SS_EACH, QKC,
+      QKC, NO_CRIT, MIN_DMG,
+      QKC, TIE(2), NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
     ], [
       {species: 'Marowak', item: 'Thick Club', evs, moves: ['Strength']},
     ], [
@@ -684,9 +667,8 @@ describe('Gen 2', () => {
   test('LightBall effect', () => {
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, PROC_SEC,
-      QKC, NO_CRIT, MIN_DMG, SS_EACH, SS_EACH,
-      QKC, TIE(2), SS_EACH, SS_EACH, NO_CRIT, MIN_DMG, SS_EACH, NO_CRIT, MIN_DMG,
-      SS_EACH, SS_EACH, QKC,
+      QKC, NO_CRIT, MIN_DMG,
+      QKC, TIE(2), NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
     ], [
       {species: 'Pikachu', item: 'Light Ball', evs, moves: ['Surf']},
     ], [
@@ -767,9 +749,8 @@ describe('Gen 2', () => {
     const no_crit = {...CRIT, value: ranged(4, 16) - 1};
     const battle = startBattle([
       QKC, HIT, no_crit, MIN_DMG, no_crit, MIN_DMG, PROC_SEC,
-      QKC, HIT, no_crit, MIN_DMG, SS_EACH, SS_EACH,
-      QKC, TIE(2), SS_EACH, SS_EACH, HIT, no_crit, MIN_DMG, SS_EACH, HIT, no_crit, MIN_DMG,
-      SS_EACH, SS_EACH, QKC,
+      QKC, HIT, no_crit, MIN_DMG,
+      QKC, TIE(2), HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG, QKC,
     ], [
       {species: 'Farfetch’d', item: 'Stick', evs, moves: ['Cut']},
     ], [
@@ -889,9 +870,8 @@ describe('Gen 2', () => {
   test('MetalPowder effect', () => {
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG,
-      QKC, SS_EACH, NO_CRIT, MIN_DMG, SS_EACH, SS_EACH,
-      QKC, TIE(1), SS_EACH, SS_EACH, NO_CRIT, MIN_DMG,
-      SS_EACH, NO_CRIT, MIN_DMG, SS_EACH, SS_EACH, QKC,
+      QKC, NO_CRIT, MIN_DMG,
+      QKC, TIE(1), NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
     ], [
       {species: 'Jumpluff', evs, moves: ['Cotton Spore']},
       {species: 'Ditto', item: 'Metal Powder', evs, moves: ['Transform']},
@@ -1037,7 +1017,7 @@ describe('Gen 2', () => {
   });
 
   test('HealStatus effect', () => {
-    const battle = startBattle([QKC, HIT, SS_MOD, SS_MOD, QKC, CFZ(5), SS_MOD, QKC], [
+    const battle = startBattle([QKC, HIT, QKC, CFZ(5), QKC], [
       {species: 'Flaaffy', item: 'Bitter Berry', evs, moves: ['Thunder Wave']},
     ], [
       {species: 'Girafarig', item: 'PRZ Cure Berry', evs, moves: ['Toxic', 'Confuse Ray']},
@@ -1365,9 +1345,9 @@ describe('Gen 2', () => {
     const no_proc = SECONDARY(proc.value + 1);
 
     const battle = startBattle([
-      QKC, CRIT, MAX_DMG, NO_CRIT, MIN_DMG, proc, SS_MOD,
+      QKC, CRIT, MAX_DMG, NO_CRIT, MIN_DMG, proc,
       QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, no_proc,
-      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MAX_DMG, proc, SS_MOD,
+      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MAX_DMG, proc,
       QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, proc, QKC,
     ], [
       {species: 'Beedrill', evs, moves: ['Twineedle']},
@@ -1444,7 +1424,7 @@ describe('Gen 2', () => {
   test('Poison effect', () => {
     {
       const battle = startBattle([
-        QKC, HIT, QKC, HIT, QKC, HIT, SS_MOD, QKC, HIT, SS_MOD, QKC, QKC, QKC,
+        QKC, HIT, QKC, HIT, QKC, HIT, QKC, HIT, QKC, QKC, QKC,
       ], [
         {species: 'Jolteon', evs, moves: ['Toxic', 'Substitute']},
         {species: 'Abra', evs, moves: ['Teleport']},
@@ -1517,7 +1497,7 @@ describe('Gen 2', () => {
       ]);
     }
     {
-      const battle = startBattle([QKC, HIT, SS_MOD, HIT, ...QKCs(30)], [
+      const battle = startBattle([QKC, HIT, HIT, ...QKCs(30)], [
         {species: 'Clefable', evs, moves: ['Toxic', 'Recover']},
       ], [
         {species: 'Diglett', level: 14, moves: ['Leech Seed', 'Recover']},
@@ -1546,7 +1526,7 @@ describe('Gen 2', () => {
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, proc, NO_CRIT, MIN_DMG, no_proc,
       QKC, NO_CRIT, MAX_DMG,
-      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, proc, SS_MOD,
+      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, proc,
       QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, proc, QKC,
     ], [
       {species: 'Tentacruel', evs, moves: ['Poison Sting', 'Sludge']},
@@ -1613,7 +1593,7 @@ describe('Gen 2', () => {
     const battle = startBattle([
       QKC, HIT, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, no_proc,
       QKC, HIT, NO_CRIT, MIN_DMG,
-      QKC, HIT, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, proc, SS_MOD,
+      QKC, HIT, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, proc,
       QKC, HIT, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, proc, QKC,
     ], [
       {species: 'Charizard', evs, moves: ['Ember', 'Fire Blast']},
@@ -1678,7 +1658,7 @@ describe('Gen 2', () => {
   test('FlameWheel effect', () => {
     const proc = SECONDARY(ranged(25, 256) - 1);
     const battle = startBattle([
-      QKC, NO_CRIT, MIN_DMG, proc, SS_MOD, NO_CRIT, MIN_DMG, proc, SS_MOD, QKC,
+      QKC, NO_CRIT, MIN_DMG, proc, NO_CRIT, MIN_DMG, proc, QKC,
     ], [
       {species: 'Quilava', evs, moves: ['Flame Wheel']},
     ], [
@@ -1712,7 +1692,7 @@ describe('Gen 2', () => {
     const lo_proc = SECONDARY(ranged(25, 256) - 1);
     const hi_proc = SECONDARY(ranged(127, 256) - 1);
     const battle = startBattle([
-      QKC, NO_CRIT, MIN_DMG, lo_proc, SS_MOD, HIT, NO_CRIT, MIN_DMG, hi_proc, SS_MOD, QKC,
+      QKC, NO_CRIT, MIN_DMG, lo_proc, HIT, NO_CRIT, MIN_DMG, hi_proc, QKC,
     ], [
       {species: 'Ho-Oh', evs, moves: ['Sacred Fire']},
     ], [
@@ -1742,17 +1722,17 @@ describe('Gen 2', () => {
 
   test('FreezeChance effect', () => {
     const battle = startBattle([
-      QKC, NO_CRIT, MIN_DMG, SS_MOD,
+      QKC, NO_CRIT, MIN_DMG,
       QKC, HIT, NO_CRIT, MIN_DMG, FRZ, PAR_CANT,
-      QKC, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD, NO_THAW,
+      QKC, HIT, NO_CRIT, MIN_DMG, FRZ, NO_THAW,
       QKC, NO_THAW,
-      QKC, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD,
+      QKC, HIT, NO_CRIT, MIN_DMG, FRZ,
       QKC, HIT, NO_CRIT, MIN_DMG, MIN_WRAP, NO_THAW,
       QKC, HIT, NO_CRIT, MIN_DMG, NO_THAW,
       QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG,
       QKC, MISS,
       QKC, HIT, CRIT, MAX_DMG,
-      QKC, HIT, NO_CRIT, MIN_DMG, FRZ, SS_MOD, THAW, QKC,
+      QKC, HIT, NO_CRIT, MIN_DMG, FRZ, THAW, QKC,
     ], [
       {species: 'Starmie', evs, moves: ['Ice Beam']},
       {species: 'Magmar', evs, moves: ['Ice Beam', 'Flamethrower', 'Substitute', 'Recover']},
@@ -1892,8 +1872,8 @@ describe('Gen 2', () => {
 
   test('Paralyze effect', () => {
     const battle = startBattle([
-      QKC, MISS, STATUS,
-      QKC, PAR_CAN, HIT, SS_MOD,
+      QKC, MISS,
+      QKC, PAR_CAN, HIT,
       QKC, PAR_CANT,
       QKC, HIT, PAR_CAN,
       QKC,
@@ -1961,8 +1941,8 @@ describe('Gen 2', () => {
     const lo_proc = SECONDARY(ranged(25, 256) - 1);
     const hi_proc = SECONDARY(ranged(76, 256) - 1);
     const battle = startBattle([
-      QKC, NO_CRIT, MIN_DMG, hi_proc, SS_MOD, PAR_CAN, NO_CRIT, MIN_DMG, hi_proc,
-      QKC, QKC, NO_CRIT, MIN_DMG, lo_proc, SS_MOD,
+      QKC, NO_CRIT, MIN_DMG, hi_proc, PAR_CAN, NO_CRIT, MIN_DMG, hi_proc,
+      QKC, QKC, NO_CRIT, MIN_DMG, lo_proc,
       QKC, PAR_CAN, NO_CRIT, MIN_DMG,
       QKC, NO_CRIT, MIN_DMG, lo_proc, PAR_CANT,
       QKC, QKC,
@@ -2049,10 +2029,10 @@ describe('Gen 2', () => {
     const frz = {...par, value: ranged(2, 3)};
     const brn = {...par, value: ranged(3, 3)};
     const battle = startBattle([
-      QKC, NO_CRIT, MIN_DMG, frz, proc, SS_MOD, NO_THAW,
+      QKC, NO_CRIT, MIN_DMG, frz, proc, NO_THAW,
       QKC, NO_CRIT, MIN_DMG, brn, no_proc, MISS,
-      QKC, NO_CRIT, MIN_DMG, par, proc, SS_MOD,
-      QKC, NO_CRIT, MIN_DMG, brn, proc, SS_MOD, QKC,
+      QKC, NO_CRIT, MIN_DMG, par, proc,
+      QKC, NO_CRIT, MIN_DMG, brn, proc, QKC,
     ], [
       {species: 'Porygon2', evs, moves: ['Tri-Attack']},
     ], [
@@ -2234,7 +2214,7 @@ describe('Gen 2', () => {
       QKC, NO_CRIT, MAX_DMG, HIT, NO_CRIT, MIN_DMG,
       QKC, HIT, NO_CRIT, MIN_DMG, lo_proc,
       QKC, HIT, NO_CRIT, MIN_DMG, lo_proc,
-      QKC, HIT, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, hi_proc, SS_RES,
+      QKC, HIT, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, hi_proc,
       QKC, NO_CRIT, MIN_DMG, lo_proc, QKC,
     ], [
       {species: 'Raticate', evs, moves: ['Hyper Fang', 'Headbutt', 'Hyper Beam']},
@@ -2318,7 +2298,7 @@ describe('Gen 2', () => {
     const proc = SECONDARY(ranged(76, 256) - 1);
     const no_proc = {...proc, value: proc.value + 1};
     const battle = startBattle([
-      QKC, HIT, SS_MOD, SLP(5), QKC, NO_CRIT, MIN_DMG, no_proc, HIT,
+      QKC, HIT, SLP(5), QKC, NO_CRIT, MIN_DMG, no_proc, HIT,
       QKC, NO_CRIT, MIN_DMG, proc, QKC,
     ], [
       {species: 'Heracross', evs, moves: ['Snore']},
@@ -2663,7 +2643,7 @@ describe('Gen 2', () => {
     const hit = {...HIT, value: ranged(176, 256) - 1};
     const miss = {...MISS, value: hit.value + 1};
     const battle = startBattle([
-      QKC, QKC, miss, QKC, miss, SS_RES, QKC, hit, QKC, MISS, QKC,
+      QKC, QKC, miss, QKC, miss, QKC, hit, QKC, MISS, QKC,
     ], [
       {species: 'Krabby', level: 5, evs, moves: ['Guillotine']},
       {species: 'Nidoking', level: 50, evs, moves: ['Horn Drill', 'Dig']},
@@ -2936,7 +2916,7 @@ describe('Gen 2', () => {
     // normal
     {
       const battle = startBattle([
-        QKC, SS_RES, QKC, HIT, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
+        QKC, QKC, HIT, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
       ], [
         {species: 'Pidgeot', evs, moves: ['Fly', 'Sand-Attack']},
         {species: 'Metapod', evs, moves: ['Harden']},
@@ -2979,7 +2959,7 @@ describe('Gen 2', () => {
     // fainting
     {
       const battle = startBattle([
-        QKC, HIT, SS_MOD, QKC, QKC, SS_RES, QKC, SS_RES, QKC, SS_RES, QKC,
+        QKC, HIT, QKC, QKC, QKC, QKC, QKC,
       ], [
         {species: 'Seadra', evs, moves: ['Toxic']},
         {species: 'Ninetales', evs, moves: ['Dig']},
@@ -3035,8 +3015,8 @@ describe('Gen 2', () => {
 
   test('Gust/Earthquake effect', () => {
     const battle = startBattle([
-      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, SS_RES,
-      QKC, MISS, SS_RES, QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
+      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG,
+      QKC, MISS, QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
     ], [
       {species: 'Mew', evs, moves: ['Earthquake', 'Fly']},
     ], [
@@ -3090,7 +3070,7 @@ describe('Gen 2', () => {
     const proc = SECONDARY(ranged(51, 256) - 1);
     const no_proc = {...proc, value: proc.value + 1};
     const battle = startBattle([
-      QKC, NO_CRIT, MIN_DMG, no_proc, SS_RES, QKC, NO_CRIT, MIN_DMG, proc, QKC,
+      QKC, NO_CRIT, MIN_DMG, no_proc, QKC, NO_CRIT, MIN_DMG, proc, QKC,
     ], [
       {species: 'Kingdra', evs, moves: ['Twister']},
     ], [
@@ -3559,7 +3539,7 @@ describe('Gen 2', () => {
     const proc = {key: 'data/mods/gen2/moves.ts:770:40', value: MIN};
     const battle = startBattle([
       QKC, HIT, QKC, HIT, DISABLE_DURATION(3), QKC, HIT,
-      SS_MOD, SLP(2), proc, QKC, HIT, DISABLE_DURATION(3), QKC,
+      SLP(2), proc, QKC, HIT, DISABLE_DURATION(3), QKC,
     ], [
       {species: 'Hypno', evs, moves: ['Disable', 'Hypnosis']},
     ], [
@@ -3915,7 +3895,7 @@ describe('Gen 2', () => {
 
   test('DreamEater effect', () => {
     const battle = startBattle([
-      QKC, QKC, NO_CRIT, MIN_DMG, SS_MOD, SLP(5), QKC,
+      QKC, QKC, NO_CRIT, MIN_DMG, SLP(5), QKC,
       QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, QKC,
     ], [
       {species: 'Hypno', evs, moves: ['Dream Eater', 'Confusion']},
@@ -4155,7 +4135,7 @@ describe('Gen 2', () => {
 
   test('Haze effect', () => {
     const battle = startBattle([
-      QKC, HIT, SS_MOD, HIT, QKC, HIT, SS_MOD,
+      QKC, HIT, HIT, QKC, HIT,
       QKC, PAR_CAN, HIT, CFZ(5), QKC, CFZ_CAN, PAR_CAN, QKC,
     ], [
       {species: 'Golbat', evs, moves: ['Toxic', 'Agility', 'Confuse Ray', 'Haze']},
@@ -4237,7 +4217,7 @@ describe('Gen 2', () => {
 
   test('Explode effect', () => {
     const battle = startBattle([
-      QKC, HIT, SS_MOD, QKC, NO_CRIT, MAX_DMG, QKC, NO_CRIT, MAX_DMG, QKC,
+      QKC, HIT, QKC, NO_CRIT, MAX_DMG, QKC, NO_CRIT, MAX_DMG, QKC,
     ], [
       {species: 'Electrode', level: 80, evs, moves: ['Explosion', 'Toxic']},
       {species: 'Steelix', evs, moves: ['Explosion']},
@@ -4308,7 +4288,7 @@ describe('Gen 2', () => {
   });
 
   test('AlwaysHit effect', () => {
-    const battle = startBattle([QKC, NO_CRIT, MIN_DMG, SS_RES, QKC, NO_CRIT, MIN_DMG, QKC], [
+    const battle = startBattle([QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, QKC], [
       {species: 'Eevee', evs, moves: ['Swift']},
     ], [
       {species: 'Larvitar', evs, moves: ['Dig']},
@@ -4480,7 +4460,7 @@ describe('Gen 2', () => {
 
   test('LockOn effect', () => {
     const battle = startBattle([
-      QKC, SS_RES, QKC, CRIT, MAX_DMG, QKC, QKC, QKC, MISS, QKC, QKC, SS_RES, QKC,
+      QKC, QKC, CRIT, MAX_DMG, QKC, QKC, QKC, MISS, QKC, QKC, QKC,
     ], [
       {species: 'Machamp', evs, moves: ['Lock-On', 'Dynamic Punch']},
       {species: 'Octillery', evs, moves: ['Lock-On', 'Zap Cannon']},
@@ -4544,7 +4524,7 @@ describe('Gen 2', () => {
 
   test('Nightmare effect', () => {
     let p2hp = 0;
-    const battle = startBattle([QKC, QKC, SS_MOD, SLP(2), QKC, QKC, QKC, QKC], [
+    const battle = startBattle([QKC, QKC, SLP(2), QKC, QKC, QKC, QKC], [
       {species: 'Misdreavus', evs, moves: ['Nightmare', 'Teleport']},
     ], [
       {species: 'Jolteon', evs, moves: ['Sand-Attack', 'Rest', 'Teleport']},
@@ -4731,8 +4711,8 @@ describe('Gen 2', () => {
     const proc2 = {key: 'data/mods/gen2/conditions.ts:227:16', value: ranged(127, 255)};
     const no_proc3 = {...proc2, value: ranged(63, 255) + 1};
     const battle = startBattle([
-      QKC, NO_CRIT, MIN_DMG, SS_RES,
-      QKC, proc2, NO_CRIT, MIN_DMG, SS_RES,
+      QKC, NO_CRIT, MIN_DMG,
+      QKC, proc2, NO_CRIT, MIN_DMG,
       QKC, no_proc3, NO_CRIT, MIN_DMG,
     ], [
       {species: 'Charmander', level: 10, evs, moves: ['Endure']},
@@ -5022,25 +5002,25 @@ describe('Gen 2', () => {
       '|-fieldactivate|move: Perish Song',
       '|move|p2a: Togetic|Baton Pass|p2a: Togetic',
       '|switch|p2a: Furret|Furret, M|373/373|[from] Baton Pass',
-      '|-start|p2a: Furret|perish3',
       '|-start|p1a: Politoed|perish3',
+      '|-start|p2a: Furret|perish3',
       '|turn|2',
       '|move|p2a: Furret|Teleport|p2a: Furret',
       '|move|p1a: Politoed|Teleport|p1a: Politoed',
-      '|-start|p2a: Furret|perish2',
       '|-start|p1a: Politoed|perish2',
+      '|-start|p2a: Furret|perish2',
       '|turn|3',
       '|move|p2a: Furret|Teleport|p2a: Furret',
       '|move|p1a: Politoed|Teleport|p1a: Politoed',
-      '|-start|p2a: Furret|perish1',
       '|-start|p1a: Politoed|perish1',
+      '|-start|p2a: Furret|perish1',
       '|turn|4',
       '|move|p2a: Furret|Teleport|p2a: Furret',
       '|move|p1a: Politoed|Teleport|p1a: Politoed',
-      '|-start|p2a: Furret|perish0',
       '|-start|p1a: Politoed|perish0',
-      '|faint|p2a: Furret',
+      '|-start|p2a: Furret|perish0',
       '|faint|p1a: Politoed',
+      '|faint|p2a: Furret',
       '|switch|p2a: Togetic|Togetic, M|313/313',
       '|switch|p1a: Celebi|Celebi|403/403',
       '|turn|5',
@@ -5085,7 +5065,7 @@ describe('Gen 2', () => {
       QKC, HIT, NO_CRIT, MIN_DMG,
       QKC, HIT, NO_CRIT, MIN_DMG,
       QKC, HIT, NO_CRIT, MIN_DMG,
-      QKC, HIT, SS_MOD, SLP(5),
+      QKC, HIT, SLP(5),
       QKC, proc, HIT, NO_CRIT, MIN_DMG,
       QKC, QKC,
     ], [
@@ -5258,7 +5238,7 @@ describe('Gen 2', () => {
       QKC, HIT, NO_CRIT, MIN_DMG,
       QKC, HIT, NO_CRIT, MIN_DMG,
       QKC, HIT, NO_CRIT, MIN_DMG,
-      QKC, HIT, SS_MOD, SLP(5),
+      QKC, HIT, SLP(5),
       QKC, proc, HIT, NO_CRIT, MIN_DMG,
       QKC, QKC,
     ], [
@@ -5423,10 +5403,10 @@ describe('Gen 2', () => {
     const SLP_TLK = (value: number) => ({key: 'data/mods/gen2/moves.ts:770:40', value});
     const moves = ['Sleep Talk', 'Vital Throw', 'Razor Wind', 'Metronome'];
     const battle = startBattle([
-      QKC, SS_MOD, SLP(5), QKC, SLP_TLK(MAX), QKC, SLP_TLK(MIN), QKC, SLP_TLK(MAX),
-      QKC, SS_MOD, SLP(5), QKC, SLP_TLK(MIN), NO_CRIT, MIN_DMG, QKC, SLP_TLK(MAX),
-      METRONOME('Fly', moves), SS_RES, QKC, QKC, SLP_TLK(MAX), METRONOME('Spore', moves),
-      SS_MOD, SLP(5), QKC,
+      QKC, SLP(5), QKC, SLP_TLK(MAX), QKC, SLP_TLK(MIN), QKC, SLP_TLK(MAX),
+      QKC, SLP(5), QKC, SLP_TLK(MIN), NO_CRIT, MIN_DMG, QKC, SLP_TLK(MAX),
+      METRONOME('Fly', moves), QKC, QKC, SLP_TLK(MAX), METRONOME('Spore', moves),
+      SLP(5), QKC,
     ], [
       {species: 'Togetic', evs, moves: ['Sleep Talk', 'Teleport', 'Rest']},
       {species: 'Marill', evs, moves},
@@ -5624,10 +5604,10 @@ describe('Gen 2', () => {
   test('Safeguard effect', () => {
     const battle = startBattle([
       QKC, CFZ(5), CFZ_CAN,
-      QKC, CFZ_CAN, HIT, SS_MOD, SS_MOD, SS_RES,
-      QKC, SS_RES,
-      QKC, CFZ_CAN, NO_CRIT, MIN_DMG, THRASH(2), SS_RES,
-      QKC, CFZ_CAN, SS_MOD, SS_MOD, SLP(5), NO_CRIT, MIN_DMG, SS_RES,
+      QKC, CFZ_CAN, HIT,
+      QKC,
+      QKC, CFZ_CAN, NO_CRIT, MIN_DMG, THRASH(2),
+      QKC, CFZ_CAN, SLP(5), NO_CRIT, MIN_DMG,
       QKC, QKC,
     ], [
       {species: 'Wobbuffet', evs, moves: ['Safeguard', 'Toxic']},
@@ -5782,7 +5762,7 @@ describe('Gen 2', () => {
     const mag8 = {key: 'data/moves.ts:11070:19', value: ranged(85, 100) - 1};
     const mag5 = {...mag8, value: ranged(15, 100) - 1};
     const battle = startBattle([
-      QKC, mag8, NO_CRIT, MIN_DMG, SS_RES, QKC, mag5, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
+      QKC, mag8, NO_CRIT, MIN_DMG, QKC, mag5, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
     ], [
       {species: 'Diglett', evs, moves: ['Magnitude']},
     ], [
@@ -5820,7 +5800,7 @@ describe('Gen 2', () => {
   test('BatonPass effect', () => {
     const battle = startBattle([
       QKC, QKC, QKC, HIT, CFZ(5), QKC, CFZ_CAN, NO_CRIT, MIN_DMG,
-      QKC, CFZ_CAN, HIT, NO_CRIT, MIN_DMG, PROC_SEC, SS_MOD, PAR_CAN,
+      QKC, CFZ_CAN, HIT, NO_CRIT, MIN_DMG, PROC_SEC, PAR_CAN,
     ], [
       {species: 'Celebi', evs, moves: ['Swords Dance', 'Perish Song', 'Lock-On', 'Baton Pass']},
       {species: 'Lanturn', evs, moves: ['Zap Cannon']},
@@ -5972,7 +5952,7 @@ describe('Gen 2', () => {
 
   test('Sandstorm effect', () => {
     const battle = startBattle([
-      QKC, QKC, SS_RES, QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC, QKC, QKC,
+      QKC, QKC, QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC, QKC, QKC,
     ], [
       {species: 'Quagsire', evs, moves: ['Sandstorm', 'Teleport', 'Surf']},
     ], [
@@ -6192,9 +6172,9 @@ describe('Gen 2', () => {
     const acc70 = {...HIT, value: ranged(Math.floor(70 * 255 / 100), 256) - 1};
     const acc50 = {...MISS, value: ranged(Math.floor(50 * 255 / 100), 256) - 1};
     const battle = startBattle([
-      QKC, acc70, NO_CRIT, MIN_DMG, proc, SS_MOD, PAR_CAN,
-      QKC, NO_CRIT, MIN_DMG, proc, PAR_CAN, SS_RES,
-      QKC, PAR_CANT, QKC, QKC, acc50, NO_CRIT, MIN_DMG, proc, SS_MOD, SS_RES, QKC,
+      QKC, acc70, NO_CRIT, MIN_DMG, proc, PAR_CAN,
+      QKC, NO_CRIT, MIN_DMG, proc, PAR_CAN,
+      QKC, PAR_CANT, QKC, QKC, acc50, NO_CRIT, MIN_DMG, proc, QKC,
     ], [
       {species: 'Remoraid', evs, moves: ['Thunder', 'Sunny Day']},
     ], [
@@ -6263,7 +6243,7 @@ describe('Gen 2', () => {
   });
 
   test('PsychUp effect', () => {
-    const battle = startBattle([QKC, QKC, QKC, SS_RES, QKC], [
+    const battle = startBattle([QKC, QKC, QKC, QKC], [
       {species: 'Stantler', evs, moves: ['Psych Up', 'Teleport']},
     ], [
       {species: 'Chikorita', evs, moves: ['Swords Dance', 'Minimize', 'Protect']},
@@ -6573,10 +6553,7 @@ describe('Gen 2', () => {
 
   test('Metal Powder increased damage glitch', () => {
     const battle = startBattle([
-      QKC, SS_EACH, SS_EACH, SS_EACH,
-      QKC, TIE(1), SS_EACH, SS_EACH, SS_EACH, SS_EACH, SS_EACH,
-      QKC, TIE(1), SS_EACH, SS_EACH, NO_CRIT, MIN_DMG, SS_EACH,
-      NO_CRIT, MIN_DMG, SS_EACH, SS_EACH, QKC,
+      QKC, QKC, TIE(1), QKC, TIE(1), NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
     ], [
       {species: 'Ditto', item: 'Metal Powder', evs, moves: ['Transform']},
     ], [
@@ -6879,7 +6856,7 @@ describe('Gen 2', () => {
 
   test('Lock-On / Mind Reader oversight', () => {
     const battle = startBattle([
-      QKC, QKC, NO_CRIT, MIN_DMG, SS_RES, QKC, NO_CRIT, MIN_DMG, QKC, SS_RES, QKC,
+      QKC, QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, QKC, QKC,
     ], [
       {species: 'Hitmontop', evs, moves: ['Lock-On', 'Strength', 'Attract']},
     ], [
