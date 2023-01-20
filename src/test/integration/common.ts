@@ -15,6 +15,8 @@ import {
   RunnerOptions,
 } from '@pkmn/sim/tools';
 
+import {patch} from '../showdown/helpers';
+
 import blocklistJSON from '../blocklist.json';
 
 const BLOCKLIST = blocklistJSON as {[gen: number]: Partial<ExhaustiveRunnerPossibilites>};
@@ -93,15 +95,13 @@ class RawBattleStream extends BattleStreams.BattleStream {
 
   _writeLine(type: string, message: string) {
     super._writeLine(type, message);
-    if (type === 'start') {
-      // TODO: patch this.battle
-    }
+    if (type === 'start') patch.battle(this.battle!, true);
   }
 }
 
 const FORMATS = [
   'gen1customgame',
-  'gen2customgame',
+  // 'gen2customgame',
   // 'gen3customgame', 'gen3doublescustomgame',
   // 'gen4customgame', 'gen4doublescustomgame',
   // 'gen5customgame', 'gen5doublescustomgame',
@@ -133,7 +133,7 @@ function possibilities(gen: Generation) {
 type Options = Pick<ExhaustiveRunnerOptions, 'log' | 'maxFailures' | 'cycles'> & {
   prng: PRNG | PRNGSeed;
   gen?: GenerationNum;
-}
+};
 
 export async function run(gens: Generations, options: Options) {
   const opts: ExhaustiveRunnerOptions = {
@@ -145,7 +145,7 @@ export async function run(gens: Generations, options: Options) {
   for (const format of FORMATS) {
     const gen = gens.get(format.charAt(3));
     if (options.gen && gen.num !== options.gen) continue;
-    // TODO: patch gen
+    patch.generation(gen);
     opts.format = format;
     opts.possible = possibilities(gen);
     failures += await (new ExhaustiveRunner(opts).run());
