@@ -6,6 +6,6 @@ import {run} from './common';
 describe('integration', () => {
   it('test', async () => {
     const gens = new Generations(Dex as any);
-    expect(await run(gens, [1, 2, 3, 4])).toBe(0);
+    expect(await run(gens, {prng: [1, 2, 3, 4]})).toBe(0);
   });
 });

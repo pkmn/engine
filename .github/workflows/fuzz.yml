@@ -20,5 +20,6 @@ jobs:
         with:
           version: master
       - run: npm install
-      # TODO: add integration tests!
       - run: zig build -Dstage2 -Drelease-safe ${{matrix.options}} fuzz -- ${{matrix.gen}} 15m
+      - run: npm run integration -- --gen=${{matrix.gen}} --cycles=100
+        if: ${{ matrix.options != '' }}

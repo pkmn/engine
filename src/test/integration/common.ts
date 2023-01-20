@@ -5,7 +5,7 @@
 // - verify binary protocol round trip
 // - handle invalid choices by RandomPlayerAI
 
-import {Generations, Generation} from '@pkmn/data';
+import {Generations, Generation, GenerationNum} from '@pkmn/data';
 import {PRNG, PRNGSeed, BattleStreams, ID} from '@pkmn/sim';
 import {
   AIOptions,
@@ -130,21 +130,27 @@ function possibilities(gen: Generation) {
   };
 }
 
-export async function run(
-  gens: Generations, prng: PRNG | PRNGSeed, maxFailures = 1, cycles = 1, log = false
-) {
-  const opts: ExhaustiveRunnerOptions =
-    {format: '', prng, maxFailures, log, cycles, runner: o => new Runner(o).run()};
+type Options = Pick<ExhaustiveRunnerOptions, 'log' | 'maxFailures' | 'cycles'> & {
+  prng: PRNG | PRNGSeed;
+  gen?: GenerationNum;
+}
+
+export async function run(gens: Generations, options: Options) {
+  const opts: ExhaustiveRunnerOptions = {
+    cycles: 1, maxFailures: 1, log: false, ...options,
+    runner: o => new Runner(o).run(), format: '',
+  };
 
   let failures = 0;
   for (const format of FORMATS) {
     const gen = gens.get(format.charAt(3));
+    if (options.gen && gen.num !== options.gen) continue;
     // TODO: patch gen
     opts.format = format;
     opts.possible = possibilities(gen);
     failures += await (new ExhaustiveRunner(opts).run());
-    if (log) process.stdout.write('\n');
-    if (failures >= maxFailures) break;
+    if (opts.log) process.stdout.write('\n');
+    if (failures >= opts.maxFailures!) break;
   }
 
   return failures;

@@ -34,7 +34,7 @@
     "@pkmn/eslint-config": "^2.14.0",
     "@pkmn/img": "^0.2.5",
     "@pkmn/sets": "^5.0.3",
-    "@pkmn/sim": "0.7.15",
+    "@pkmn/sim": "0.7.16",
     "@types/html-minifier": "^4.0.2",
     "@types/jest": "^29.2.5",
     "@types/minimist": "^1.2.2",
