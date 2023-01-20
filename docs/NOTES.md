@@ -21,7 +21,7 @@
      [documentation](PROTOCOL.md), [driver](../src/pkg/protocol.ts), and tests
    - [generate](../src/tools/protocol.zig) updated [`protocol.json`](../src/pkg/data/protocol.json)
 8. Adjust **mechanics for Pokémon Showdown** compatability
-   - track RNG differences and update [tool](../src/tools/rng.zig) and generation documentation
+   - track RNG differences and update generation documentation
    - ensure all bugs are tracked in documentation
    - [blocklist](../src/test/blocklist.json) any unimplementable effects
 9. **Unit test the engine** in both cartridge and Pokémon Showdown compatability mode
@@ -39,15 +39,15 @@
     - matching code required in [benchmark helpers](../src/tools/benchmark)
 15. Ensure **[fuzz tests](../src/test/benchmark.zig)** pass
     - update [`fuzz.ts`](../src/tools/fuzz.ts) and [`display.ts`](../src/test/display.ts)
-16. Ensure **[integration tests](../src/test/integration.test.ts)** pass
+16. Ensure **[integration tests](../src/test/integration/)** pass
 17. **[Benchmark](../src/test/benchmark.zig)** new generation
 18. Finalize **documentation** for generation
 
 ## Updating `@pkmn/sim` dependency
 
-1. **Bump** pinned `@pkmn/sim` version in [`package.json](../package.json) and run `npm install`
+1. **Bump** pinned `@pkmn/sim` version in [`package.json`](../package.json) and run `npm install`
 2. Run `npm run test:integration`, **update rolls and behavior of Pokémon Showdown tests** in
-   [`src/test/showdown`](src/test/showdown
+   [`src/test/showdown`](src/test/showdown)
 3. **Update Zig mechanics tests to match** the updates applied to the integration tests
 4. **Update Zig engine code** to cause the updated mechanics tests to pass
 5. **Update documentation** to match new behavior/bugs
