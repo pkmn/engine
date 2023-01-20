@@ -4,17 +4,7 @@ import {execFileSync} from 'child_process';
 
 import {Generations, PokemonSet} from '@pkmn/data';
 import {
-  Battle,
-  BattleStreams,
-  Dex,
-  ID,
-  PRNG,
-  PRNGSeed,
-  Pokemon,
-  Side,
-  SideID,
-  Streams,
-  Teams,
+  Battle, BattleStreams, Dex, ID, PRNG, PRNGSeed, Pokemon, Side, SideID, Streams, Teams,
 } from '@pkmn/sim';
 import minimist from 'minimist';
 
@@ -101,8 +91,7 @@ class DirectBattle extends Battle {
   }
 }
 
-// TODO: override BattleQueue#insertChoice and PRNG#shuffle for BattleStream & DirectBattle
-// TODO: save seeds and use same seeds without speed ties across all configurations
+// TODO: patch BattleStream and DirectBattle
 const CONFIGURATIONS: {[name: string]: Configuration} = {
   'BattleStream': {
     warmup: true,
