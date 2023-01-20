@@ -101,7 +101,7 @@ class RawBattleStream extends BattleStreams.BattleStream {
 
 const FORMATS = [
   'gen1customgame',
-  // 'gen2customgame',
+  'gen2customgame',
   // 'gen3customgame', 'gen3doublescustomgame',
   // 'gen4customgame', 'gen4doublescustomgame',
   // 'gen5customgame', 'gen5doublescustomgame',

@@ -162,10 +162,42 @@ export const patch = {
     // Add priorities to mods to avoid speed ties - ordering is arbitrary
     (gen.dex.data as any).Rulesets['sleepclausemod'].onSetStatusPriority = -999;
     (gen.dex.data as any).Rulesets['freezeclausemod'].onSetStatusPriority = -998;
-    if (gen.num === 1) {
+
+    const conditions = {
       // Add priority to avoid speed ties with Bide's onDisableMove handler
-      (gen.dex.conditions.getByID('disable' as ID) as any).onDisableMovePriority = 7;
+      1: {'disable': {onDisableMovePriority: 7}},
+      2: {
+        // Type-boosting items need an onBasePowerPriority... for their nop handler
+        'item: Pink Bow': {onBasePowerPriority: 15},
+        'item: Polkadot Bow': {onBasePowerPriority: 15},
+        // Inherited from Gen 4, doesn't actually use onBasePowerPriority...
+        'item: Light Ball': {onBasePowerPriority: -999},
+        'attract': {
+          // Confusion -> Attraction -> Disable -> Paralysis, but Paralysis has been given (2)?
+          onBeforeMovePriority: 4,
+          // Cure attraction before berries proc
+          onUpdatePriority: 1,
+        },
+        // Arbitrarily make trapped higher priority than partiallytrapped
+        'trapped': {onTrapPokemonPriority: 1},
+        // Minimize damage increase happens after damage calc and item boosts
+        'minimize': {onSourceModifyDamagePriority: -1},
+        // Give Disable priority over Encore and Bide
+        'disable': {onDisableMovePriority: 1, onBeforeMovePriority: 1},
+        // Order doesn't matter for crit ratio since addition is commutative
+        'focusenergy': {onModifyCritRatioPriority: 1},
+        // Match onAfterMoveSelfPriority
+        'residualdmg': {onAfterSwitchInSelfPriority: 100},
+      },
+    };
+
+    for (const [name, fields] of Object.entries((conditions as any)[gen.num])) {
+      const condition = gen.dex.conditions.get(name);
+      for (const field in fields as any) {
+        (condition as any)[field] = (fields as any)[field];
+      }
     }
+
     return gen;
   },
   battle: (battle: Battle, prng = false) => {
