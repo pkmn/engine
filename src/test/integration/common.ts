@@ -15,7 +15,7 @@ import {
   RunnerOptions,
 } from '@pkmn/sim/tools';
 
-import {patch} from '../showdown/helpers';
+import {patch} from '../showdown/common';
 
 import blocklistJSON from '../blocklist.json';
 

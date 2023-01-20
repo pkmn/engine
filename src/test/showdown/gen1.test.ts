@@ -1,7 +1,7 @@
 import {Battle, Dex, PRNG} from '@pkmn/sim';
 import {Generations} from '@pkmn/data';
 
-import {MIN, MAX, ROLLS, ranged, formatFor, createStartBattle, FixedRNG, verify} from './helpers';
+import {MIN, MAX, ROLLS, ranged, formatFor, createStartBattle, FixedRNG, verify} from './common';
 import * as gen1 from '../benchmark/gen1';
 
 const gens = new Generations(Dex as any);
