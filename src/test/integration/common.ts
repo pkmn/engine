@@ -133,6 +133,7 @@ function possibilities(gen: Generation) {
 type Options = Pick<ExhaustiveRunnerOptions, 'log' | 'maxFailures' | 'cycles'> & {
   prng: PRNG | PRNGSeed;
   gen?: GenerationNum;
+  duration?: number;
 };
 
 export async function run(gens: Generations, options: Options) {
@@ -142,16 +143,19 @@ export async function run(gens: Generations, options: Options) {
   };
 
   let failures = 0;
-  for (const format of FORMATS) {
-    const gen = gens.get(format.charAt(3));
-    if (options.gen && gen.num !== options.gen) continue;
-    patch.generation(gen);
-    opts.format = format;
-    opts.possible = possibilities(gen);
-    failures += await (new ExhaustiveRunner(opts).run());
-    if (opts.log) process.stdout.write('\n');
-    if (failures >= opts.maxFailures!) break;
-  }
+  const start = Date.now();
+  do {
+    for (const format of FORMATS) {
+      const gen = gens.get(format.charAt(3));
+      if (options.gen && gen.num !== options.gen) continue;
+      patch.generation(gen);
+      opts.format = format;
+      opts.possible = possibilities(gen);
+      failures += await (new ExhaustiveRunner(opts).run());
+      if (opts.log) process.stdout.write('\n');
+      if (failures >= opts.maxFailures!) break;
+    }
+  } while (Date.now() - start < (options.duration || 0))
 
   return failures;
 }

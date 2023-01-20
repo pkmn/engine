@@ -21,6 +21,5 @@ jobs:
           version: master
       - run: npm install
       - run: zig build -Dstage2 -Drelease-safe ${{matrix.options}} fuzz -- ${{matrix.gen}} 15m
-      # TODO: change to time based instead of fixed cycles
-      - run: npm run integration -- --gen=${{matrix.gen}} --cycles=1000
+      - run: npm run integration -- --gen=${{matrix.gen}} --duration=15m
         if: ${{ matrix.options != '' }}
