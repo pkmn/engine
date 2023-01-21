@@ -1,7 +1,8 @@
 import * as path from 'path';
 
 import {
-  Battle, ID, PRNG, PRNGSeed, BattleQueue, ActionChoice, Effect, Pokemon, Side, Field,
+  Battle, BattleStreams, ID, PRNG, PRNGSeed, BattleQueue,
+  ActionChoice, Effect, Pokemon, Side, Field,
 } from '@pkmn/sim';
 import {Generation, PokemonSet} from '@pkmn/data';
 
@@ -214,6 +215,13 @@ export const patch = {
     return battle;
   },
 };
+
+export class PatchedBattleStream extends BattleStreams.BattleStream {
+  _writeLine(type: string, message: string) {
+    super._writeLine(type, message);
+    if (type === 'start') patch.battle(this.battle!, true);
+  }
+}
 
 export const ranged = (n: number, d: number) => n * Math.floor(0x100000000 / d);
 

@@ -1,6 +1,5 @@
 // TODO: actually use @pkmn/engine
-// - separate into test/integration script that can be run by CI and takes a duration param
-// - feed input from rawBattleStream.rawInputLog into @pkmn/engine & compare to @pkmn/engine data
+// - feed input from rawBattleStream.rawInputLog into @pkmn/engine & compare
 // - add buf to output if doesn't compare
 // - verify binary protocol round trip
 // - handle invalid choices by RandomPlayerAI
@@ -8,14 +7,11 @@
 import {Generations, Generation, GenerationNum} from '@pkmn/data';
 import {PRNG, PRNGSeed, BattleStreams, ID} from '@pkmn/sim';
 import {
-  AIOptions,
-  ExhaustiveRunner,
-  ExhaustiveRunnerOptions,
-  ExhaustiveRunnerPossibilites,
-  RunnerOptions,
+  AIOptions, ExhaustiveRunner, ExhaustiveRunnerOptions,
+  ExhaustiveRunnerPossibilites, RunnerOptions,
 } from '@pkmn/sim/tools';
 
-import {patch} from '../showdown/common';
+import {PatchedBattleStream, patch} from '../showdown/common';
 
 import blocklistJSON from '../blocklist.json';
 
@@ -78,7 +74,7 @@ class Runner {
   }
 }
 
-class RawBattleStream extends BattleStreams.BattleStream {
+class RawBattleStream extends PatchedBattleStream {
   readonly format: string;
   readonly rawInputLog: string[];
 
@@ -91,11 +87,6 @@ class RawBattleStream extends BattleStreams.BattleStream {
   _write(message: string) {
     this.rawInputLog.push(message);
     super._write(message);
-  }
-
-  _writeLine(type: string, message: string) {
-    super._writeLine(type, message);
-    if (type === 'start') patch.battle(this.battle!, true);
   }
 }
 

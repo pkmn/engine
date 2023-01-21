@@ -8,6 +8,7 @@ import {
 } from '@pkmn/sim';
 import minimist from 'minimist';
 
+import {PatchedBattleStream, patch} from '../showdown/common';
 import {newSeed} from './common';
 
 import * as gen1 from './gen1';
@@ -97,6 +98,8 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
     warmup: true,
     async run(format, prng, battles) {
       const gen = GENS.get(format[3]);
+      patch.generation(gen);
+
       const newAI = (
         playerStream: Streams.ObjectReadWriteStream<string>,
         battleStream: BattleStreams.BattleStream,
@@ -114,7 +117,7 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
 
       for (let i = 0; i < battles; i++) {
         const options = gen1.Battle.options(gen, prng);
-        const battleStream = new BattleStreams.BattleStream();
+        const battleStream = new PatchedBattleStream();
         const streams = BattleStreams.getPlayerStreams(battleStream);
 
         const spec = {formatid: format, seed: newSeed(prng)};
@@ -147,6 +150,7 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
     warmup: true,
     run(format, prng, battles) {
       const gen = GENS.get(format[3]);
+      patch.generation(gen);
 
       let choices: (battle: Battle, id: SideID) => string[];
       switch (gen.num) {
@@ -167,6 +171,7 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
         const options = gen1.Battle.options(gen, prng);
         const config = {formatid: format, seed: newSeed(prng)};
         const battle = new DirectBattle(config);
+        patch.battle(battle);
 
         const p1 = new PRNG(newSeed(prng));
         const p2 = new PRNG(newSeed(prng));
@@ -237,9 +242,9 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
         control.turns = turns;
         control.seed = seed;
       } else if (turns !== control.turns) {
-        throw new Error(`Expected ${control.turns} turns and received ${turns}`);
+        throw new Error(`Expected ${control.turns} turns and received ${turns} (${name})`);
       } else if (seed !== control.seed) {
-        throw new Error(`Expected a final seed of ${control.seed} but received ${seed}`);
+        throw new Error(`Expected a final seed of ${control.seed} but received ${seed} (${name})`);
       }
 
       stats[format][name] = duration;
