@@ -31,12 +31,6 @@ export const ROLLS = {
         ({key: 'sim/battle.ts:1377:36', value: ranged(m - 1, n)}),
     };
   },
-  nops: {
-    SS_RES: {key: 'sim/battle.ts:471:8', value: NOP},
-    SS_EACH: {key: 'sim/battle.ts:441:8', value: NOP},
-    INS: {key: 'sim/battle-queue.ts:385:70', value: NOP},
-    GLM: {key: 'sim/pokemon.ts:905:34', value: NOP},
-  },
   metronome(gen: Generation, exclude: string[]) {
     const all: string[] = Array.from(gen.moves)
       .filter(m => !m.realMove && !exclude.includes(m.name))
@@ -158,6 +152,12 @@ function residualEvent(this: Battle, eventid: string, relayVar?: any) {
   }
 }
 
+// NOTE: These "patches" are not all suitable for upstreaming - each of these patches works around a
+// core issue with Pokémon Showdown, but attempts to do so in the easiest/most minimally intrustive
+// way as opposed to the most *correct* way. eg. instead of assigning "priorities" to no-op
+// handlers, the handlers in question should be removed entirely (which can be accomplished by
+// disabling inheritance or setting them to `null`). Similarly, in many places order should be used
+// instead, or multiple other conditions should be changed as opposed to the ones chosen here etc.
 export const patch = {
   generation: (gen: Generation) => {
     // Add priorities to mods to avoid speed ties - ordering is arbitrary

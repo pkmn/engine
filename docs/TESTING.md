@@ -21,21 +21,56 @@ of the boilerplate from the library's unit tests:
   expect(battle.rng.exhausted())` - unexpectedly unused rolls could point to bugs (`Test.verify()`
   will automatically check that the `rng` is exhausted).
 
+### Patches
+
+The pkmn engine aims to match Pokémon Showdown when run in `-Dshowdown` compatibility mode, but
+unfortunately it is impossible to match Pokémon Showdown's behavior without also duplicating its
+incorrect architecture and event/handler/action system due to how this architecture results in many
+artificial "speed ties" which cause RNG frame advances. This is deemed to be out of scope for the
+pkmn engine, as it seeks to match Pokémon Showdown purely for practical reasons (to leverage for
+integration testing purposes/to provide more "accurate" playouts for AI applications built to play
+on Pokémon Showdown) only, and adding the byzantine logic and fields required to be able to
+perfectly replicate Pokémon Showdown's bugs simply distracts from the goal of building an optimal
+Pokémon battle engine.
+
+In order to reconcile this, the pkmn engine instead aims to match a *patched* version of Pokémon
+Showdown, where minimal changes have been made to Pokémon Showdown to improve correctness and
+eliminate unnecessary nondeterministic elements:
+
+- `Battle#eachEvent` and `Battle#residualEvent` have been changed to not perform a
+  `Battle#speedSort` in Generation I and II, which should result in events being executed in the
+  order they are added, ultimately resulting in Player 1's events occuring before Player 2's
+  regardless of speed, effectively recreating the cartridge's default "host" ordering semantics
+- `BattleQueue#insertChoice` is patched to also obey "host" ordering in Generation I and II
+- "priorities" have been added to various handler functions to break speed ties and ensure that
+  there either no unnecessary rolls or events deterministically get resolved in the order they are
+  resolved on the cartridge
+
+These patches do **not** fix Pokémon Showdown implementation bugs beyond a subset of speed tie
+semantics, and do **not** fix all issues regarding unnecessary RNG frame advances from speed ties
+(eg. moves with a `beforeTurnCallback` on Pokémon Showdown will still potentially result in
+speed tie rolls), they simply aim to make minimally intrusive changes that allow for Pokémon
+Showdown behavior to be reproduced by the pkmn engine. These patches should also strictly result in
+a performance improvement compared to vanilla Pokémon Showdown, as they cause Pokémon Showdown to
+perform less sorting and RNG frame advances than it otherwise would, which effectively
+[steelmans](https://en.wikipedia.org/wiki/Straw_man#Steelmanning) the implementation for
+benchmarking purposes.
+
 ### `showdown`
 
 In order to verify Pokémon Showdown's behavior, many of the pkmn engine's unit tests are mirrored in
 the [`showdown`](../src/test/showdown/) directory. It should be emphasized that these are tests
-against Pokémon Showdown, **not** the pkmn engine (engine code is not being tested). Pokémon
-Showdown's own unit tests are inadequate for the pkmn engine's purposes as they mostly cover the
-latest generation, do not use a fixed RNG, and do not verify logs (both of which are crucial for
-matching Pokémon Showdown's RNG and output).
+against [patched](#patches) Pokémon Showdown, **not** the pkmn engine (engine code is not being
+tested). Pokémon Showdown's own unit tests are inadequate for the pkmn engine's purposes as they
+mostly cover the latest generation, do not use a fixed RNG, and do not verify logs (both of which
+are crucial for matching Pokémon Showdown's RNG and output).
 
 ## Integration
 
 The [integration test](../src/test/integration/index.test.ts) exists to ensure the pkmn engine
 compiled in Pokémon Showdown compatibility mode with `-Dshowdown` produces comparable output to
-Pokémon Showdown. For each supported generation, both Pokémon Showdown and the pkmn engine are run
-with an
+[patched](#patches) Pokémon Showdown. For each supported generation, both Pokémon Showdown and the
+pkmn engine are run with an
 [`ExhaustiveRunner`](https://github.com/smogon/pokemon-showdown/blob/master/sim/tools/exhaustive-runner.ts)
 that attempts to use as many different effects as possible in the battles it randomly simulates and
 the results are collected. While Pokémon Showdown always produces its text protocol streams, pkmn
@@ -70,13 +105,17 @@ being in agreement **they may both be incorrect** when it comes to the actual ca
     testing the engine properly requires support for "link" battling and the ability to detect
     desyncs makes such a goal decidedly nontrivial.
 
+The integration test also supports being run in standalone mode for various durations, eg. `npm run
+integration -- --duration=15m` which can be useful for [fuzzing](#fuzz) purposes.
+
 ### `blocklist.json`
 
-Some of Pokémon Showdown's bugs are too convoluted to be implemented in the pkmn engine. The engine
-tries its best to reproduce the behavior of even the most misunderstood and broken mechanics of
-Pokémon Showdown, but in the same way that implementing the cartridge behavior correctly is
-difficult starting from Pokémon Showdown's architecture, implementing Pokémon Showdown's mechanics
-is also difficult starting from an architecture that mirrors the cartridge.
+Some of Pokémon Showdown's bugs are too convoluted to be implemented in the pkmn engine, even after
+[patches](#patches) are applied. The engine tries its best to reproduce the behavior of even the
+most misunderstood and broken mechanics of Pokémon Showdown, but in the same way that implementing
+the cartridge behavior correctly is difficult starting from Pokémon Showdown's architecture,
+implementing Pokémon Showdown's mechanics is also difficult starting from an architecture that
+mirrors the cartridge.
 
 In cases where the pkmn engine cannot reproduce 100% of the behavior of Pokémon Showdown for the
 purposes of lockstep integration tests or benchmarking, the offending Pokémon / Items / Abilities /
@@ -85,31 +124,6 @@ Moves will be blocked from inclusion by their presence in the
 of Pokémon Showdown's behavior for these effects as possible, it is usually just the extreme edge
 cases which would require large amounts of coding or additional state to implement the same faulty
 behavior where these effects break down.
-
-### Speed Ties
-
-Given that it is infeasible for the pkmn engine to implement Pokémon Showdown's incorrect speed tie
-mechanics, both the [integration](#integration) tests and [benchmark](#benchmark) are designed to
-work around speed ties in order to still obtain useful results. For integration testing we can
-simply compare Pokémon Showdown and the pkmn engine in lockstep up until a speed tie is detected,
-but for benchmarking we need a more sophisticated approach:
-
-1. ~~Generate scenarios which can never cause a speed tie.~~ This is ultimately too limiting, as
-  without banning everything that can modify speed within a battle (paralysis inducing moves, speed
-  boosting moves, Transform) there is no good way to ensure speed ties will not occur. Furthermore,
-  in Pokémon Showdown, both players simply happening to switch at the same time is sufficient to
-  cause a speed tie advance.
-2. ~~Don't worry about the benchmarks playing out a different sequence of battles.~~ In order for
-   the comparison to be fair we need to be testing the exact same thing across the various
-   implementations (see below).
-3. Run battles on Pokémon Showdown and determine if a speed tie occured at any point, if not, save
-  the seeds and run those battle on the engine.
-
-Option 3 is the only viable approach, though isn't without issues (tracking all of the seeds results
-in some memory overhead which cant impact the benchmarking results). In order to implement the
-Pokémon Showdown side, `BattleQueue.insertChoice` and `PRNG.shuffle` (both which potentially advance
-the RNG when speed ties are encountered) must be overwritten to `throw` and logic needs to be added
-to keep track of which seeds are safe.
 
 ## Benchmark
 
@@ -134,7 +148,7 @@ measures 4 different configurations:
   1. A special `RandomPlayerAI` is used that directly inspects the `Battle` to avoid making
      unavailable choices and matches the AI used by all of the other configurations.
   2. The `Battle` within the `BattleStream` is directly inspected in order to more easily grab the
-     turn count and also to error out on [speed ties](#speed-ties).
+     turn count and also to [patch fix various speed ties](#patches).
 
   Pokémon Showdown's root `pokemon-showdown` binary is technically the blessed approach to using
   the simulator, but `BattleStream` is effectively the same thing but without the (sizeable) I/O
@@ -155,8 +169,7 @@ measures 4 different configurations:
   Pokémon Showdown can be run (there is room for further optimization by simplifying choice parsing
   to to not perform any verification, though this is signficantly less trivial than the
   aforementioned optimizations). This is closer to how the pkmn engine runs with `-Dtrace` disabled.
-  Finally, `DirectBattle` is instrumented to error out on [speed ties](#speed-ties) as covered
-  above.
+  Finally, `DirectBattle` is [patched](#patches) to eliminate unnecessary as covered above.
 
 - **`@pkmn/engine`**: this configuration uses the `@pmn/engine` driver package to run battles with
   the pkmn engine.

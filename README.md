@@ -22,8 +22,9 @@ implementation of both Pokémon battles as defined by the original game code, an
 Showdown](https://pokemonshowdown.com/)[^1] simulator which represents Pokémon battling as practically
 interpreted online.
 
-The pkmn engine is up to [**XXXX× faster**](docs/TESTING.md#results) than the [Pokémon Showdown
-simulator code](https://github.com/smogon/pokemon-showdown) when playing out supported formats in
+The pkmn engine is up to [**XXXX× faster**](docs/TESTING.md#results) than the
+[patched](docs/TESTING.md#patches)[Pokémon Showdown simulator
+code](https://github.com/smogon/pokemon-showdown) when playing out supported formats in
 compatability mode and is extensively [tested](docs/TESTING.md) and [documented](docs). Note,
 however, that the engine is **not a fully-featured simulator** but is instead a low-level library
 which can be used as a building block for more advanced use cases.
@@ -266,6 +267,9 @@ The pkmn engine is distributed under the terms of the [MIT License](LICENSE).
   effects are reproduced in the engine, bugs which are the result of a misunderstanding of the
   fundamental mechanics of Pokémon or which simply arise due to specific Pokémon Showdown
   implementation details that are not replicable without making the same (incorrect) architectural
-  choices are not. In practical terms, most games played out in the pkmn engine and on the Pokémon
-  Showdown simulator will be the same, it is only in a well defined and and documented set of
-  circumstances where the two implementations diverge.
+  choices are not. Furthermore, the "Pokémon Showdown" code referenced by this project includes
+  several [patches](docs/testing.md#patches) to improve accuracy and smooth over some of the more
+  egregious implementation issues.  In practical terms, the vast majority of games played out in the
+  pkmn engine's compatibility mode and on this patched Pokémon Showdown simulator will be the same,
+  it is only in a well defined and and documented set of circumstances where the two implementations
+  diverge.
