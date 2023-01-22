@@ -28,7 +28,7 @@ export const ROLLS = {
       MAX_DMG: {key: keys.dmg, value: MAX},
       TIE: (n: 1 | 2) => ({key: tie, value: ranged(n, 2) - 1}),
       DRAG: (m: number, n = 5) =>
-        ({key: 'sim/battle.ts:1371:36', value: ranged(m - 1, n)}),
+        ({key: 'sim/battle.ts:1377:36', value: ranged(m - 1, n)}),
     };
   },
   nops: {
@@ -45,7 +45,7 @@ export const ROLLS = {
     return (move: string, skip: string[] = []) => {
       const moves = all.filter(m => !skip.includes(m));
       const value = ranged(moves.indexOf(move) + 1, moves.length) - 1;
-      return {key: 'data/moves.ts:11962:23', value};
+      return {key: 'data/moves.ts:11954:23', value};
     };
   },
 };

@@ -426,14 +426,12 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
             try log.cant(ident, .Sleep);
         }
         side.last_used_move = .None;
-        if (showdown) volatiles.Thrashing = false;
         return .done;
     }
 
     if (Status.is(stored.status, .FRZ)) {
         try log.cant(ident, .Freeze);
         side.last_used_move = .None;
-        if (showdown) volatiles.Thrashing = false;
         return .done;
     }
 
@@ -568,6 +566,9 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
             try log.start(battle.active(player), .ConfusionSilent);
         }
         try log.move(ident, side.last_selected_move, battle.active(player.foe()), from);
+        if (showdown and handleThrashing(battle, active)) {
+            try log.start(battle.active(player), .Confusion);
+        }
         return .skip_can;
     }
 
@@ -627,13 +628,11 @@ fn canMove(
         return false;
     }
 
-    // Pokémon Showdown handles these after hit/miss checks and damage calculation
-    if (!showdown) {
-        if (move.effect == .Thrashing) {
-            Effects.thrashing(battle, player);
-        } else if (move.effect == .Trapping) {
-            Effects.trapping(battle, player);
-        }
+    if (move.effect == .Thrashing) {
+        Effects.thrashing(battle, player);
+    } else if (!showdown and move.effect == .Trapping) {
+        // Pokémon Showdown handles this after hit/miss checks and damage calculation
+        Effects.trapping(battle, player);
     }
 
     return true;
@@ -699,14 +698,6 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
                 try log.immune(battle.active(player.foe()), .None);
                 if (move.effect == .Explode) {
                     try Effects.explode(battle, player);
-                } else if (move.effect == .Thrashing) {
-                    if (side.active.volatiles.Thrashing) {
-                        if (handleThrashing(battle, &side.active)) {
-                            try log.start(battle.active(player), .ConfusionSilent);
-                        }
-                    } else {
-                        Effects.thrashing(battle, player);
-                    }
                 }
                 return null;
             }
@@ -783,7 +774,6 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
         }
     }
 
-    var thrashed = false;
     if (miss) {
         const foe_ident = battle.active(player.foe());
         if (!showdown and move.effect == .OHKO and side.active.stats.spe < foe.active.stats.spe) {
@@ -807,15 +797,7 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
                 try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
             }
         } else if (showdown) {
-            if (move.effect == .Thrashing) {
-                if (side.active.volatiles.Thrashing) {
-                    if (handleThrashing(battle, &side.active)) {
-                        try log.start(battle.active(player), .ConfusionSilent);
-                    }
-                } else {
-                    Effects.thrashing(battle, player);
-                }
-            } else if (move.effect == .Disable) {
+            if (move.effect == .Disable) {
                 if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
                     try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
                 }
@@ -863,15 +845,8 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
         }
         try log.hitcount(battle.active(player.foe()), hit);
     } else if (showdown) {
-        // These should be handled much earlier but Pokémon Showdown does it here... ¯\_(ツ)_/¯
-        if (move.effect == .Thrashing) {
-            if (side.active.volatiles.Thrashing) {
-                thrashed = handleThrashing(battle, &side.active);
-            } else if (!nullified) {
-                // Pokémon Showdown doesn't lock into Thrashing if move hits a Substitute
-                Effects.thrashing(battle, player);
-            }
-        } else if (move.effect == .Trapping) {
+        // This should be handled much earlier but Pokémon Showdown does it here... ¯\_(ツ)_/¯
+        if (move.effect == .Trapping) {
             Effects.trapping(battle, player);
             if (immune) {
                 battle.last_damage = 0;
@@ -881,8 +856,6 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
             }
         }
     }
-
-    if (showdown and thrashed) try log.start(battle.active(player), .ConfusionSilent);
 
     // Substitute being broken nullifies the move's effect completely so even
     // if an effect was intended to "always happen" it will still get skipped.
@@ -1239,10 +1212,7 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool, mist
         var state = &side.active.volatiles.state;
         const overwritten = (move.effect == .Thrashing or move.effect == .Rage) and state.* > 0;
         assert(!overwritten or (0 < state.* and state.* <= 255 and !side.active.volatiles.Bide));
-        var accuracy = if (!showdown and overwritten)
-            state.*
-        else
-            @as(u16, Gen12.percent(move.accuracy));
+        var accuracy = if (overwritten) state.* else @as(u16, Gen12.percent(move.accuracy));
         var boost = BOOSTS[@intCast(u4, @as(i8, side.active.boosts.accuracy) + 6)];
         accuracy = accuracy * boost[0] / boost[1];
         boost = BOOSTS[@intCast(u4, @as(i8, -foe.active.boosts.evasion) + 6)];
@@ -2059,7 +2029,7 @@ pub const Effects = struct {
         volatiles.Thrashing = true;
         volatiles.state = 0;
         volatiles.attacks = @truncate(u3, if (showdown)
-            battle.rng.range(u8, 3, 5) - 1
+            battle.rng.range(u8, 2, 4)
         else
             (battle.rng.next() & 1) + 2);
     }

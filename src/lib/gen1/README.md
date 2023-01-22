@@ -465,16 +465,6 @@ Beyond the general bugs listed above, several move effects are implemented incor
 Showdown. Some of these moves are [too fundamentally broken to be implemented](#unimplementable) by
 the pkmn engine, but the following moves have their broken behavior preserved in `-Dshowdown` mode:
 
-- **Thrash** / **Petal Dance** / **Rage**: On the cartridge (but not on Pokémon Showdown) these
-  moves have [glitchy behavior](https://www.youtube.com/watch?v=NC5gbJeExbs) where the the scaled
-  accuracy after accuracy/evasion modifiers have been applied should overwrite the original accuracy
-  of the move for as long as the move's lock lasts. Furthermore, Pokémon Showdown handles thrashing
-  moves in the wrong order and does not lock the user into the move if it hits or breaks a
-  substitute.
-  *[smogon/pokemon-showdown#9243](https://github.com/smogon/pokemon-showdown/issues/9243) introduced
-  a bug where you can still get confused from Thrash when prevented from moving - this incorrect
-  behavior is not currently implemented in the engine as it is expected to be fixed soon on Pokémon
-  Showdown.*
 - **Freeze** / **Sleep**: Pokémon Showdown requires a move to be selected when a Pokémon is frozen
   or sleeping and uses that in the event that the status is removed while on the cartridge no
   selection is possible and no turn exists for the thawed/woken Pokémon to act except in the case of
@@ -501,7 +491,7 @@ of the battle, only pedantic UI correctness):
 - **Haze**: Haze clears the status/volatiles in an incorrect order.
 - **Twinneedle**: the `|-hitcount|` ("Hit 2 times") should come before the `|-status|` message, not
   after.
-- **Thrash** / **Petal Dance**: confusion should silently get applied before the final hit lands,
+- **Thrash** / **Petal Dance**: confusion should silently get applied before the `|move|` message,
   not after.
 
 Pokémon Showdown also implements a number of modifications to the cartridge (usually but not always

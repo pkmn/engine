@@ -453,13 +453,13 @@ test "turn order (complex speed tie)" {
         const dig = comptime metronome(.Dig);
         const swift = comptime metronome(.Swift);
         const petal_dance = comptime metronome(.PetalDance);
-        const THRASH_3 = if (showdown) comptime ranged(1, 5 - 3) - 1 else MIN;
+        const THRASH_3 = if (showdown) comptime ranged(1, 4 - 2) - 1 else MIN;
 
         var t = Test(
         // zig fmt: off
             if (showdown) .{
                 TIE_2, fly, dig, TIE_1, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
-                swift, ~CRIT, MIN_DMG, petal_dance, HIT, ~CRIT, MIN_DMG, THRASH_3,
+                swift, ~CRIT, MIN_DMG, petal_dance, THRASH_3, HIT, ~CRIT, MIN_DMG,
             } else .{
                 TIE_2, ~CRIT, fly, ~CRIT, dig,
                 TIE_1, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT,
@@ -2979,7 +2979,7 @@ test "Thrashing effect" {
     // confusion. During the effect, this move's accuracy is overwritten every turn with the current
     // calculated accuracy including stat stage changes, but not to less than 1/256 or more than
     // 255/256.
-    const THRASH_3 = if (showdown) comptime ranged(1, 5 - 3) - 1 else MIN;
+    const THRASH_3 = if (showdown) comptime ranged(1, 4 - 2) - 1 else MIN;
     const CFZ_5 = if (showdown) MAX else 3;
     const CFZ_CAN = if (showdown) comptime ranged(128, 256) - 1 else MIN;
     const PAR_CAN = MAX;
@@ -2990,14 +2990,11 @@ test "Thrashing effect" {
         var t = Test(
         // zig fmt: off
             if (showdown) .{
-                HIT, ~CRIT, MIN_DMG, THRASH_3, HIT, CFZ_5,
-                CFZ_CAN, ~HIT, ~HIT, THRASH_3,
-                CFZ_CAN, HIT, ~CRIT, MIN_DMG, CFZ_5, HIT, ~CRIT, MIN_DMG,
-                // BUG: regression from smogon/pokemon-showdown#9243
-                // CFZ_CAN, HIT, PAR_CANT, CFZ_5,
-                // CFZ_CAN, HIT, CFZ_CAN, PAR_CAN, HIT, ~CRIT, MAX_DMG, THRASH_3,
-                MIN_DMG, CFZ_CAN, HIT,
-                CFZ_CAN, HIT, PAR_CAN, HIT, ~CRIT, MAX_DMG, THRASH_3,
+                THRASH_3, HIT, ~CRIT, MIN_DMG, HIT, CFZ_5,
+                CFZ_CAN, ~HIT, THRASH_3, ~HIT,
+                CFZ_CAN, CFZ_5, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+                CFZ_CAN, HIT, PAR_CANT,
+                CFZ_CAN, HIT, PAR_CAN, THRASH_3, HIT, ~CRIT, MAX_DMG,
             } else .{
                 THRASH_3, ~CRIT, MIN_DMG, HIT, HIT, CFZ_5,
                 CFZ_CAN, ~CRIT, MIN_DMG, ~HIT, THRASH_3, ~CRIT, MIN_DMG, ~HIT,
@@ -3061,9 +3058,9 @@ test "Thrashing effect" {
         try t.log.expected.activate(P1.ident(1), .Confusion);
         if (!showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
         try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
+        if (showdown) try t.log.expected.start(P1.ident(1), .Confusion);
         t.expected.p2.get(1).hp -= 68;
         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-        if (showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
         try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), Move.PetalDance);
         t.expected.p1.get(1).hp -= 91;
         try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
@@ -3085,17 +3082,11 @@ test "Thrashing effect" {
         t.expected.p2.get(1).status = Status.init(.PAR);
         try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
         try t.log.expected.cant(P2.ident(1), .Paralysis);
-        // BUG: if (showdown) try t.log.expected.start(P2.ident(1), .ConfusionSilent);
         try t.log.expected.turn(5);
 
         // Thrashing doesn't confuse you if the user is prevented from moving
         try expectEqual(Result.Default, try t.update(move(2), forced));
-        // BUG: regression from smogon/pokemon-showdown#9243
-        // if (showdown) {
-        //     try expectEqual(@as(u3, 5), t.actual.p2.active.volatiles.confusion);
-        // } else {
         try expect(!t.actual.p2.active.volatiles.Confusion);
-        // }
 
         n = t.battle.actual.choices(.P1, .Move, &choices);
         try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
@@ -3105,7 +3096,6 @@ test "Thrashing effect" {
         try t.log.expected.activate(P1.ident(1), .Confusion);
         try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
         try t.log.expected.fail(P2.ident(1), .Paralysis);
-        // BUG: if (showdown) try t.log.expected.activate(P1.ident(1), .Confusion);
         try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), null);
         t.expected.p1.get(1).hp -= 108;
         try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
@@ -3118,7 +3108,7 @@ test "Thrashing effect" {
     // immune
     {
         var t = Test((if (showdown)
-            (.{ HIT, ~CRIT, MIN_DMG, THRASH_3, CFZ_5 })
+            (.{ THRASH_3, HIT, ~CRIT, MIN_DMG, CFZ_5 })
         else
             (.{ THRASH_3, ~CRIT, MIN_DMG, HIT, ~CRIT, HIT, CFZ_5, ~CRIT, HIT }))).init(
             &.{.{ .species = .Mankey, .moves = &.{ .Thrash, .Scratch } }},
@@ -3148,8 +3138,8 @@ test "Thrashing effect" {
         try t.log.expected.move(P2.ident(3), Move.Teleport, P2.ident(3), null);
         if (!showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
         try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(3), Move.Thrash);
+        if (showdown) try t.log.expected.start(P1.ident(1), .Confusion);
         try t.log.expected.immune(P2.ident(3), .None);
-        if (showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
         try t.log.expected.turn(4);
 
         try expectEqual(Result.Default, try t.update(forced, move(1)));
@@ -4633,7 +4623,7 @@ test "Bide effect" {
 test "Metronome effect" {
     // A random move is selected for use, other than Metronome or Struggle.
     const MIN_WRAP = MIN;
-    const THRASH_3 = if (showdown) comptime ranged(1, 5 - 3) - 1 else MIN;
+    const THRASH_3 = if (showdown) comptime ranged(1, 4 - 2) - 1 else MIN;
     const CFZ_2 = MIN;
     const CFZ_CAN = if (showdown) comptime ranged(128, 256) - 1 else MIN;
     const MIMIC_2 = if (showdown) MAX else 1;
@@ -4651,9 +4641,9 @@ test "Metronome effect" {
     // zig fmt: off
         if (showdown) .{
             wrap, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
-            // BUG: petal_dance, HIT, THRASH_3,
-            petal_dance, HIT, ~CRIT, MIN_DMG, THRASH_3,
-            ~HIT, ~HIT, CFZ_2,
+            // BUG: tackle, HIT,
+            petal_dance, THRASH_3, HIT, ~CRIT, MIN_DMG,
+            ~HIT, CFZ_2, ~HIT,
             CFZ_CAN, mimic, HIT, MIMIC_2, disable, HIT,
             DISABLE_MOVE_2, DISABLE_DURATION_3,
             rage, HIT, ~CRIT, MIN_DMG, quick_attack, HIT, ~CRIT, MIN_DMG,
@@ -4691,7 +4681,7 @@ test "Metronome effect" {
 
     if (showdown) {
         // try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
-        // try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), Move.Metronome);
+        // try t.log.expected.move(P2.ident(1), Move.Tackle, P1.ident(1), Move.Metronome);
         // BUG: can't implement Pokémon Showdown's broken partialtrappinglock mechanics
         try t.log.expected.move(P2.ident(1), Move.Metronome, P1.ident(1), Move.Metronome);
     } else {
@@ -4726,9 +4716,9 @@ test "Metronome effect" {
 
     if (!showdown) try t.log.expected.start(P2.ident(1), .ConfusionSilent);
     try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), Move.PetalDance);
+    if (showdown) try t.log.expected.start(P2.ident(1), .Confusion);
     try t.log.expected.lastmiss();
     try t.log.expected.miss(P2.ident(1));
-    if (showdown) try t.log.expected.start(P2.ident(1), .ConfusionSilent);
     try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
     try t.log.expected.turn(6);
 
@@ -6067,13 +6057,13 @@ test "Wrap locking + KOs bug" {
 }
 
 test "Thrashing + Substitute bugs" {
-    const THRASH_3 = if (showdown) comptime ranged(1, 5 - 3) - 1 else MIN;
+    const THRASH_3 = if (showdown) comptime ranged(1, 4 - 2) - 1 else MIN;
 
     // Thrash should lock the user into the move even if it hits a Substitute
     // Fixed by smogon/pokemon-showdown#8963
     {
         var t = Test((if (showdown)
-            (.{ HIT, ~CRIT, MIN_DMG, THRASH_3, HIT, ~CRIT, MIN_DMG })
+            (.{ THRASH_3, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG })
         else
             (.{ THRASH_3, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
             &.{.{ .species = .Nidoking, .level = 50, .moves = &.{ .Thrash, .ThunderWave } }},
@@ -6109,9 +6099,10 @@ test "Thrashing + Substitute bugs" {
         try t.verify();
     }
     // Thrash should lock the user into the move even if it breaks a Substitute
+    // Fixed by smogon/pokemon-showdown#9315
     {
         var t = Test((if (showdown)
-            (.{ HIT, ~CRIT, MAX_DMG, HIT })
+            (.{ THRASH_3, HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, MIN_DMG })
         else
             (.{ THRASH_3, ~CRIT, MAX_DMG, HIT, ~CRIT, MIN_DMG, HIT }))).init(
             &.{.{ .species = .Nidoking, .moves = &.{ .Thrash, .ThunderWave } }},
@@ -6130,24 +6121,15 @@ test "Thrashing + Substitute bugs" {
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
         var n = t.battle.actual.choices(.P1, .Move, &choices);
-        try expectEqualSlices(Choice, if (showdown)
-            &[_]Choice{ move(1), move(2) }
-        else
-            &[_]Choice{move(0)}, choices[0..n]);
+        try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
         try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
-        if (showdown) {
-            try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
-            t.expected.p2.get(1).status = Status.init(.PAR);
-            try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
-        } else {
-            try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
-            t.expected.p2.get(1).hp -= 142;
-            try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-        }
+        try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
+        t.expected.p2.get(1).hp -= 142;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
         try t.log.expected.turn(3);
 
-        try expectEqual(Result.Default, try t.update(move(if (showdown) 2 else 0), move(2)));
+        try expectEqual(Result.Default, try t.update(forced, move(2)));
 
         try t.verify();
     }
@@ -7796,9 +7778,9 @@ test "Rage and Thrash / Petal Dance accuracy bug" {
     var t = Test(
     // zig fmt: off
         if (showdown) .{
-            HIT_255, ~CRIT, MIN_DMG, THRASH_4,
+            THRASH_4, HIT_255, ~CRIT, MIN_DMG,
             HIT_168, ~CRIT, MIN_DMG,
-            MISS_84, ~CRIT, MIN_DMG,
+            MISS_84,
         } else .{
             THRASH_4, ~CRIT, MIN_DMG, HIT_255, ~CRIT,
             ~CRIT, MIN_DMG, HIT_168, ~CRIT,
@@ -7834,14 +7816,8 @@ test "Rage and Thrash / Petal Dance accuracy bug" {
     try expectEqual(Result.Default, try t.update(forced, move(1)));
 
     try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
-    if (showdown) {
-        try t.log.expected.resisted(P2.ident(1));
-        t.expected.p2.get(1).hp -= 22;
-        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    } else {
-        try t.log.expected.lastmiss();
-        try t.log.expected.miss(P1.ident(1));
-    }
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P1.ident(1));
     try t.log.expected.move(P2.ident(1), Move.DoubleTeam, P2.ident(1), null);
     try t.log.expected.boost(P2.ident(1), .Evasion, 1);
     try t.log.expected.turn(4);

@@ -10,12 +10,12 @@ const choices = gen1.Choices.sim;
 const startBattle = createStartBattle(gen);
 
 const {HIT, MISS, CRIT, NO_CRIT, MIN_DMG, MAX_DMG, TIE} = ROLLS.basic({
-  hit: 'data/mods/gen1/scripts.ts:390:42',
-  crit: 'data/mods/gen1/scripts.ts:788:27',
-  dmg: 'data/mods/gen1/scripts.ts:908:27',
+  hit: 'data/mods/gen1/scripts.ts:411:42',
+  crit: 'data/mods/gen1/scripts.ts:810:27',
+  dmg: 'data/mods/gen1/scripts.ts:930:27',
 });
 
-const SECONDARY = (value: number) => ({key: 'data/mods/gen1/scripts.ts:677:25', value});
+const SECONDARY = (value: number) => ({key: 'data/mods/gen1/scripts.ts:699:25', value});
 const SLP = (n: number) =>
   ({key: 'data/mods/gen1/conditions.ts:63:38', value: ranged(n, 8 - 1)});
 const DISABLE_MOVE = (m: number, n = 4) =>
@@ -35,10 +35,10 @@ const CFZ = (n: number) =>
 const CFZ_CAN = {key: 'data/mods/gen1/conditions.ts:146:14', value: ranged(128, 256) - 1};
 const CFZ_CANT = {...CFZ_CAN, value: CFZ_CAN.value + 1};
 const THRASH = (n: 3 | 4) =>
-  ({key: 'data/mods/gen1/conditions.ts:230:16', value: ranged(n - 2, 5 - 3) - 1});
+  ({key: 'data/mods/gen1/conditions.ts:226:33', value: ranged(n - 2, 4 - 2) - 1});
 const MIN_WRAP = {key: 'data/mods/gen1/conditions.ts:199:26', value: MIN};
 const MAX_WRAP = {...MIN_WRAP, value: MAX};
-const REWRAP = {key: 'data/mods/gen1/scripts.ts:229:38', value: MIN};
+const REWRAP = {key: 'data/mods/gen1/scripts.ts:227:38', value: MIN};
 const METRONOME = ROLLS.metronome(gen, ['Metronome', 'Struggle']);
 
 const evs = {hp: 255, atk: 255, def: 255, spa: 255, spd: 255, spe: 255};
@@ -322,7 +322,7 @@ describe('Gen 1', () => {
         TIE(2), METRONOME('Fly'), METRONOME('Dig'), TIE(1),
         HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
         METRONOME('Swift'), NO_CRIT, MIN_DMG, METRONOME('Petal Dance'),
-        HIT, NO_CRIT, MIN_DMG, THRASH(3),
+        THRASH(3), HIT, NO_CRIT, MIN_DMG,
       ], [
         {species: 'Clefable', evs, moves: ['Metronome', 'Quick Attack']},
       ], [
@@ -828,7 +828,7 @@ describe('Gen 1', () => {
   });
 
   test('MultiHit effect', () => {
-    const hit3 = {key: 'data/mods/gen1/scripts.ts:405:27', value: 0x60000000};
+    const hit3 = {key: 'data/mods/gen1/scripts.ts:426:27', value: 0x60000000};
     const hit5 = {...hit3, value: MAX};
     const battle = startBattle([HIT, hit3, NO_CRIT, MAX_DMG, HIT, hit5, NO_CRIT, MAX_DMG], [
       {species: 'Kangaskhan', evs, moves: ['Comet Punch']},
@@ -1596,7 +1596,7 @@ describe('Gen 1', () => {
   });
 
   test('ConfusionChance effect', () => {
-    const sub_proc = {key: 'data/mods/gen1/moves.ts:851:50', value: ranged(25, 256) - 1};
+    const sub_proc = {key: 'data/mods/gen1/moves.ts:855:50', value: ranged(25, 256) - 1};
     const no_proc = SECONDARY(sub_proc.value + 1);
     const battle = startBattle([
       HIT, NO_CRIT, MAX_DMG, sub_proc, CFZ(2), CFZ_CAN,
@@ -2373,11 +2373,11 @@ describe('Gen 1', () => {
     // normal
     {
       const battle = startBattle([
-        HIT, NO_CRIT, MIN_DMG, THRASH(3), HIT, CFZ(5),
-        CFZ_CAN, MISS, MISS, THRASH(3),
-        CFZ_CAN, HIT, NO_CRIT, MIN_DMG, CFZ(5), HIT, NO_CRIT, MIN_DMG,
-        CFZ_CAN, HIT, PAR_CANT, CFZ(5),
-        CFZ_CAN, HIT, CFZ_CAN, PAR_CAN, HIT, NO_CRIT, MAX_DMG, THRASH(3),
+        THRASH(3), HIT, NO_CRIT, MIN_DMG, HIT, CFZ(5),
+        CFZ_CAN, MISS, THRASH(3), MISS,
+        CFZ_CAN, CFZ(5), HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+        CFZ_CAN, HIT, PAR_CANT,
+        CFZ_CAN, HIT, PAR_CAN, THRASH(3), HIT, NO_CRIT, MAX_DMG,
       ], [
         {species: 'Nidoking', evs, moves: ['Thrash', 'Thunder Wave']},
         {species: 'Nidoqueen', evs, moves: ['Poison Sting']},
@@ -2426,8 +2426,7 @@ describe('Gen 1', () => {
       expect(battle.p1.pokemon[0].hp).toBe(p1hp);
       expect(battle.p2.pokemon[0].hp).toBe(p2hp);
       expect(battle.p2.pokemon[0].status).toBe('par');
-      // expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
-      expect(battle.p2.pokemon[0].volatiles['confusion'].time).toBe(5);
+      expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
 
       expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
       expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
@@ -2450,8 +2449,8 @@ describe('Gen 1', () => {
         '|turn|3',
         '|-activate|p1a: Nidoking|confusion',
         '|move|p1a: Nidoking|Thrash|p2a: Vileplume|[from]Thrash',
+        '|-start|p1a: Nidoking|confusion',
         '|-damage|p2a: Vileplume|217/353',
-        '|-start|p1a: Nidoking|confusion|[silent]',
         '|move|p2a: Vileplume|Petal Dance|p1a: Nidoking|[from]Petal Dance',
         '|-damage|p1a: Nidoking|274/365',
         '|turn|4',
@@ -2459,12 +2458,10 @@ describe('Gen 1', () => {
         '|move|p1a: Nidoking|Thunder Wave|p2a: Vileplume',
         '|-status|p2a: Vileplume|par',
         '|cant|p2a: Vileplume|par',
-        '|-start|p2a: Vileplume|confusion|[silent]',
         '|turn|5',
         '|-activate|p1a: Nidoking|confusion',
         '|move|p1a: Nidoking|Thunder Wave|p2a: Vileplume',
         '|-fail|p2a: Vileplume|par',
-        '|-activate|p2a: Vileplume|confusion',
         '|move|p2a: Vileplume|Petal Dance|p1a: Nidoking',
         '|-damage|p1a: Nidoking|166/365',
         '|turn|6',
@@ -2472,7 +2469,7 @@ describe('Gen 1', () => {
     }
     // immune
     {
-      const battle = startBattle([HIT, NO_CRIT, MIN_DMG, THRASH(3), CFZ(5)], [
+      const battle = startBattle([THRASH(3), HIT, NO_CRIT, MIN_DMG, CFZ(5)], [
         {species: 'Mankey', evs, moves: ['Thrash', 'Scratch']},
       ], [
         {species: 'Scyther', evs, moves: ['Cut']},
@@ -2504,8 +2501,8 @@ describe('Gen 1', () => {
         '|turn|3',
         '|move|p2a: Gastly|Teleport|p2a: Gastly',
         '|move|p1a: Mankey|Thrash|p2a: Gastly|[from]Thrash',
+        '|-start|p1a: Mankey|confusion',
         '|-immune|p2a: Gastly',
-        '|-start|p1a: Mankey|confusion|[silent]',
         '|turn|4',
       ]);
     }
@@ -2568,7 +2565,7 @@ describe('Gen 1', () => {
   });
 
   test('Psywave effect', () => {
-    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:576:32', value: MAX};
+    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:580:32', value: MAX};
     const PSY_MIN = {...PSY_MAX, value: MIN};
     const battle = startBattle([HIT, PSY_MAX, HIT, PSY_MIN], [
       {species: 'Gengar', evs, level: 59, moves: ['Psywave']},
@@ -2867,7 +2864,7 @@ describe('Gen 1', () => {
   });
 
   test('Counter effect', () => {
-    const hit2 = {key: 'data/mods/gen1/scripts.ts:405:27', value: MIN};
+    const hit2 = {key: 'data/mods/gen1/scripts.ts:426:27', value: MIN};
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, NO_PAR, HIT,
       HIT, hit2, NO_CRIT, MIN_DMG, HIT,
@@ -3723,9 +3720,9 @@ describe('Gen 1', () => {
   test('Metronome effect', () => {
     const battle = startBattle([
       METRONOME('Wrap'), HIT, NO_CRIT, MIN_DMG, MIN_WRAP,
-      METRONOME('Petal Dance'), HIT, THRASH(3),
-      MISS,
-      MISS, CFZ(2),
+      METRONOME('Tackle'), HIT,
+      METRONOME('Petal Dance'), THRASH(3), HIT, NO_CRIT, MIN_DMG,
+      MISS, CFZ(2), MISS,
       CFZ_CAN, METRONOME('Mimic'), HIT, MIMIC(2, 2), METRONOME('Disable'),
       HIT, DISABLE_MOVE(2, 3), DISABLE_DURATION(3),
       METRONOME('Rage'), HIT, NO_CRIT, MIN_DMG,
@@ -3747,6 +3744,9 @@ describe('Gen 1', () => {
 
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 14);
+
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 41);
     expect(choices(battle, 'p2')).toEqual(['move 1']);
 
     battle.makeChoices('move 2', 'move 1');
@@ -3770,19 +3770,24 @@ describe('Gen 1', () => {
       '|cant|p1a: Clefable|partiallytrapped',
       '|turn|2',
       '|move|p2a: Primeape|Metronome|p2a: Primeape',
-      '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from]Metronome',
+      '|move|p2a: Primeape|Tackle|p1a: Clefable|[from]Metronome',
       '|-damage|p1a: Clefable|365/393',
       '|cant|p1a: Clefable|partiallytrapped',
       '|turn|3',
-      '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from]Petal Dance|[miss]',
-      '|-miss|p2a: Primeape',
+      '|move|p2a: Primeape|Metronome|p2a: Primeape',
+      '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from]Metronome',
+      '|-damage|p1a: Clefable|324/393',
       '|move|p1a: Clefable|Teleport|p1a: Clefable',
       '|turn|4',
       '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from]Petal Dance|[miss]',
       '|-miss|p2a: Primeape',
-      '|-start|p2a: Primeape|confusion|[silent]',
       '|move|p1a: Clefable|Teleport|p1a: Clefable',
       '|turn|5',
+      '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from]Petal Dance|[miss]',
+      '|-start|p2a: Primeape|confusion',
+      '|-miss|p2a: Primeape',
+      '|move|p1a: Clefable|Teleport|p1a: Clefable',
+      '|turn|6',
       '|-activate|p2a: Primeape|confusion',
       '|move|p2a: Primeape|Metronome|p2a: Primeape',
       '|move|p2a: Primeape|Mimic|p1a: Clefable|[from]Metronome',
@@ -3790,16 +3795,16 @@ describe('Gen 1', () => {
       '|move|p1a: Clefable|Metronome|p1a: Clefable',
       '|move|p1a: Clefable|Disable|p2a: Primeape|[from]Metronome',
       '|-start|p2a: Primeape|Disable|Teleport',
-      '|turn|6',
+      '|turn|7',
       '|-end|p2a: Primeape|confusion',
       '|move|p2a: Primeape|Metronome|p2a: Primeape',
       '|move|p2a: Primeape|Rage|p1a: Clefable|[from]Metronome',
-      '|-damage|p1a: Clefable|346/393',
+      '|-damage|p1a: Clefable|305/393',
       '|move|p1a: Clefable|Metronome|p1a: Clefable',
       '|move|p1a: Clefable|Quick Attack|p2a: Primeape|[from]Metronome',
       '|-damage|p2a: Primeape|285/333',
       '|-boost|p2a: Primeape|atk|1|[from] Rage',
-      '|turn|7',
+      '|turn|8',
     ]);
   });
 
@@ -4865,7 +4870,7 @@ describe('Gen 1', () => {
     // Thrash should lock the user into the move even if it hits a Substitute
     // Fixed by smogon/pokemon-showdown#8963
     {
-      const battle = startBattle([HIT, NO_CRIT, MIN_DMG, THRASH(4), HIT, NO_CRIT, MIN_DMG], [
+      const battle = startBattle([THRASH(3), HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG], [
         {species: 'Nidoking', level: 50, evs, moves: ['Thrash', 'Thunder Wave']},
       ], [
         {species: 'Vileplume', evs, moves: ['Substitute', 'Teleport']},
@@ -4897,8 +4902,9 @@ describe('Gen 1', () => {
       ]);
     }
     // Thrash should lock the user into the move even if it breaks a Substitute
+    // Fixed by smogon/pokemon-showdown#9315
     {
-      const battle = startBattle([HIT, NO_CRIT, MAX_DMG, HIT], [
+      const battle = startBattle([THRASH(3), HIT, NO_CRIT, MAX_DMG, HIT, NO_CRIT, MIN_DMG], [
         {species: 'Nidoking', evs, moves: ['Thrash', 'Thunder Wave']},
       ], [
         {species: 'Abra', evs, moves: ['Substitute', 'Teleport']},
@@ -4909,11 +4915,10 @@ describe('Gen 1', () => {
       battle.makeChoices('move 1', 'move 1');
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 63);
 
-      // expect(choices(battle, 'p1')).toEqual(['move 1']);
-      expect(choices(battle, 'p1')).toEqual(['move 1', 'move 2']);
+      expect(choices(battle, 'p1')).toEqual(['move 1']);
 
-      battle.makeChoices('move 2', 'move 2');
-      expect(battle.p2.pokemon[0].status).toBe('par');
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 142);
 
       verify(battle, [
         '|move|p2a: Abra|Substitute|p2a: Abra',
@@ -4923,8 +4928,8 @@ describe('Gen 1', () => {
         '|-end|p2a: Abra|Substitute',
         '|turn|2',
         '|move|p2a: Abra|Teleport|p2a: Abra',
-        '|move|p1a: Nidoking|Thunder Wave|p2a: Abra',
-        '|-status|p2a: Abra|par',
+        '|move|p1a: Nidoking|Thrash|p2a: Abra|[from]Thrash',
+        '|-damage|p2a: Abra|48/253',
         '|turn|3',
       ]);
     }
@@ -6121,9 +6126,7 @@ describe('Gen 1', () => {
     const hit = (n: number) => ({...HIT, value: ranged(n, 256) - 1});
     const miss = (n: number) => ({...HIT, value: hit(n).value + 1});
     const battle = startBattle([
-      hit(255), NO_CRIT, MIN_DMG, THRASH(4),
-      hit(168), NO_CRIT, MIN_DMG,
-      miss(84), NO_CRIT, MIN_DMG, // should miss!
+      THRASH(4), hit(255), NO_CRIT, MIN_DMG, hit(168), NO_CRIT, MIN_DMG, miss(84),
     ], [
       {species: 'Nidoking', evs, moves: ['Thrash']},
     ], [
@@ -6142,7 +6145,7 @@ describe('Gen 1', () => {
 
     // should miss!
     battle.makeChoices('move 1', 'move 1');
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 22);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
 
     verify(battle, [
       '|move|p1a: Nidoking|Thrash|p2a: Onix',
@@ -6157,9 +6160,8 @@ describe('Gen 1', () => {
       '|move|p2a: Onix|Double Team|p2a: Onix',
       '|-boost|p2a: Onix|evasion|1',
       '|turn|3',
-      '|move|p1a: Nidoking|Thrash|p2a: Onix|[from]Thrash',
-      '|-resisted|p2a: Onix',
-      '|-damage|p2a: Onix|207/273',
+      '|move|p1a: Nidoking|Thrash|p2a: Onix|[from]Thrash|[miss]',
+      '|-miss|p1a: Nidoking',
       '|move|p2a: Onix|Double Team|p2a: Onix',
       '|-boost|p2a: Onix|evasion|1',
       '|turn|4',
@@ -6312,7 +6314,7 @@ describe('Gen 1', () => {
   });
 
   test('Psywave infinite loop', () => {
-    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:576:32', value: MAX};
+    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:580:32', value: MAX};
     const battle = startBattle([HIT, HIT, PSY_MAX], [
       {species: 'Charmander', evs, level: 1, moves: ['Psywave']},
     ], [
