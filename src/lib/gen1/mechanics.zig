@@ -2039,12 +2039,6 @@ pub const Effects = struct {
         const foe = battle.foe(player);
         const foe_ident = battle.active(player.foe());
 
-        // FIXME: livid-washed research
-        // if (foe.active.volatiles.Invulnerable) {
-        //     try log.lastmiss();
-        //     return log.miss(battle.active(player));
-        // }
-
         side.active.volatiles.Transform = true;
         // foe could themselves be transformed
         side.active.volatiles.transform = if (foe.active.volatiles.transform != 0)
