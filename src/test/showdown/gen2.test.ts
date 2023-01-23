@@ -3416,7 +3416,127 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('Thrashing effect');
+  test('Thrashing effect', () => {
+    // normal
+    {
+      const battle = startBattle([
+        QKC, HIT, CFZ(5), QKC, CFZ_CAN, NO_CRIT, MIN_DMG, THRASH(2), MISS, THRASH(3),
+        QKC, CFZ_CAN, NO_CRIT, MIN_DMG, CFZ(5), MISS, QKC, CFZ_CAN, PAR_CANT, QKC,
+      ], [
+        {species: 'Nidoking', evs, moves: ['Thrash', 'Thunder Wave', 'Sand-Attack']},
+        {species: 'Nidoqueen', evs, moves: ['Poison Sting']},
+      ], [
+        {species: 'Vileplume', evs, moves: ['Petal Dance', 'Confuse Ray']},
+        {species: 'Victreebel', evs, moves: ['Razor Leaf']},
+      ]);
+
+      const p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      let pp = battle.p1.pokemon[0].moveSlots[0].pp;
+
+
+      battle.makeChoices('move 3', 'move 2');
+      expect(battle.p1.pokemon[0].volatiles['confusion'].time).toBe(5);
+      expect(battle.p2.pokemon[0].boosts.accuracy).toBe(-1);
+
+      // Thrashing locks user in for 2-3 turns whether you hit or not
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+      expect(battle.p1.pokemon[0].volatiles['confusion'].time).toBe(4);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 68);
+
+      expect(choices(battle, 'p1')).toEqual(['move 1']);
+      expect(choices(battle, 'p2')).toEqual(['move 1']);
+
+      // Thrashing confuses you even if already confused
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p1.pokemon[0].volatiles['confusion'].time).toBe(5);
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 68);
+
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2', 'move 3']);
+      expect(choices(battle, 'p2')).toEqual(['move 1']);
+
+      // Thrashing doesn't confuse you if the user is prevented from moving
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+      expect(battle.p2.pokemon[0].status).toBe('par');
+      expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
+
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2', 'move 3']);
+      expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+
+      verify(battle, [
+        '|move|p1a: Nidoking|Sand Attack|p2a: Vileplume',
+        '|-unboost|p2a: Vileplume|accuracy|1',
+        '|move|p2a: Vileplume|Confuse Ray|p1a: Nidoking',
+        '|-start|p1a: Nidoking|confusion',
+        '|turn|2',
+        '|-activate|p1a: Nidoking|confusion',
+        '|move|p1a: Nidoking|Thrash|p2a: Vileplume',
+        '|-damage|p2a: Vileplume|285/353',
+        '|move|p2a: Vileplume|Petal Dance|p1a: Nidoking|[miss]',
+        '|-miss|p2a: Vileplume',
+        '|turn|3',
+        '|-activate|p1a: Nidoking|confusion',
+        '|move|p1a: Nidoking|Thrash|p2a: Vileplume',
+        '|-damage|p2a: Vileplume|217/353',
+        '|-start|p1a: Nidoking|confusion|[silent]',
+        '|move|p2a: Vileplume|Petal Dance|p1a: Nidoking|[miss]',
+        '|-miss|p2a: Vileplume',
+        '|turn|4',
+        '|-activate|p1a: Nidoking|confusion',
+        '|move|p1a: Nidoking|Thunder Wave|p2a: Vileplume',
+        '|-status|p2a: Vileplume|par',
+        '|cant|p2a: Vileplume|par',
+        '|turn|5',
+      ]);
+    }
+    // immune
+    {
+      const battle = startBattle([QKC, NO_CRIT, MIN_DMG, THRASH(3), QKC, QKC, CFZ(5), QKC], [
+        {species: 'Mankey', evs, moves: ['Thrash', 'Scratch']},
+      ], [
+        {species: 'Scyther', evs, moves: ['Cut']},
+        {species: 'Goldeen', evs, moves: ['Water Gun']},
+        {species: 'Gastly', evs, moves: ['Teleport']},
+      ]);
+
+
+      let goldeen = battle.p2.pokemon[1].hp;
+      const gastly = battle.p2.pokemon[2].hp;
+
+      battle.makeChoices('move 1', 'switch 2');
+      expect(battle.p2.pokemon[0].hp).toBe(goldeen -= 77);
+
+      battle.makeChoices('move 1', 'switch 3');
+      expect(battle.p2.pokemon[0].hp).toBe(gastly);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(gastly);
+      expect(battle.p1.pokemon[0].volatiles['confusion'].time).toBe(5);
+
+      verify(battle, [
+        '|switch|p2a: Goldeen|Goldeen, M|293/293',
+        '|move|p1a: Mankey|Thrash|p2a: Goldeen',
+        '|-damage|p2a: Goldeen|216/293',
+        '|turn|2',
+        '|switch|p2a: Gastly|Gastly, M|263/263',
+        '|move|p1a: Mankey|Thrash|p2a: Gastly',
+        '|-immune|p2a: Gastly',
+        '|turn|3',
+        '|move|p2a: Gastly|Teleport|p2a: Gastly',
+        '|move|p1a: Mankey|Thrash|p2a: Gastly',
+        '|-immune|p2a: Gastly',
+        '|-start|p1a: Mankey|confusion|[silent]',
+        '|turn|4',
+      ]);
+    }
+  });
 
   test('FixedDamage effect', () => {
     const battle = startBattle([QKC, HIT, QKC, QKC], [
