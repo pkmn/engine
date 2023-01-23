@@ -4844,7 +4844,75 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('Protect effect');
+  test('Protect effect', () => {
+    const no_protect = {key: 'data/mods/gen2/conditions.ts:227:16', value: ranged(127, 255) + 1};
+    const battle = startBattle([
+      QKC, QKC, HIT, QKC, NO_CRIT, MIN_DMG, QKC, QKC, no_protect, NO_CRIT, MIN_DMG, QKC,
+    ], [
+      {species: 'Raikou', evs, moves: ['Protect', 'Toxic', 'Thunderbolt']},
+    ], [
+      {species: 'Slowpoke', evs, moves: ['Protect', 'Substitute', 'Surf']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    // Protect blocks all effects of moves
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p2.active[0].status).toBe('');
+
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p2.active[0].status).toBe('tox');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = p2hp - 95 - 23);
+
+    // Fails when used behind Substitute
+    battle.makeChoices('move 3', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 46);
+    expect(battle.p2.pokemon[0].volatiles['substitute']).toBeUndefined();
+
+    // Protect fails if used second
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 69);
+
+    // Protect has an increased chance of failing on successive uses
+    battle.makeChoices('move 1', 'move 3');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 62);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 92);
+
+    verify(battle, [
+      '|move|p2a: Slowpoke|Protect|p2a: Slowpoke',
+      '|-singleturn|p2a: Slowpoke|Protect',
+      '|move|p1a: Raikou|Toxic|p2a: Slowpoke',
+      '|-activate|p2a: Slowpoke|Protect',
+      '|turn|2',
+      '|move|p1a: Raikou|Toxic|p2a: Slowpoke',
+      '|-status|p2a: Slowpoke|tox',
+      '|move|p2a: Slowpoke|Substitute|p2a: Slowpoke',
+      '|-start|p2a: Slowpoke|Substitute',
+      '|-damage|p2a: Slowpoke|288/383 tox',
+      '|-damage|p2a: Slowpoke|265/383 tox|[from] psn',
+      '|turn|3',
+      '|move|p2a: Slowpoke|Protect|p2a: Slowpoke',
+      '|-fail|p2a: Slowpoke',
+      '|-damage|p2a: Slowpoke|219/383 tox|[from] psn',
+      '|move|p1a: Raikou|Thunderbolt|p2a: Slowpoke',
+      '|-supereffective|p2a: Slowpoke',
+      '|-end|p2a: Slowpoke|Substitute',
+      '|turn|4',
+      '|move|p1a: Raikou|Protect|p1a: Raikou',
+      '|-singleturn|p1a: Raikou|Protect',
+      '|move|p2a: Slowpoke|Protect|p2a: Slowpoke',
+      '|-fail|p2a: Slowpoke',
+      '|-damage|p2a: Slowpoke|150/383 tox|[from] psn',
+      '|turn|5',
+      '|move|p1a: Raikou|Protect|p1a: Raikou',
+      '|-fail|p1a: Raikou',
+      '|move|p2a: Slowpoke|Surf|p1a: Raikou',
+      '|-damage|p1a: Raikou|321/383',
+      '|-damage|p2a: Slowpoke|58/383 tox|[from] psn',
+      '|turn|6',
+    ]);
+  });
 
   test('Endure effect', () => {
     const proc2 = {key: 'data/mods/gen2/conditions.ts:227:16', value: ranged(127, 255)};
