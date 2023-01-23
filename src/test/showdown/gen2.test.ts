@@ -4724,7 +4724,7 @@ describe('Gen 2', () => {
     }
   });
 
-  test('Reversal', () => {
+  test('Reversal effect', () => {
     const battle = startBattle([QKC, QKC, QKC, QKC, QKC, QKC], [
       {species: 'Hitmontop', evs, moves: ['Reversal']},
     ], [
