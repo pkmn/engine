@@ -318,7 +318,6 @@ describe('Gen 1', () => {
     // multiple events
     {
       const battle = startBattle([
-
         TIE(2), METRONOME('Fly'), METRONOME('Dig'), TIE(1),
         HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
         METRONOME('Swift'), NO_CRIT, MIN_DMG, METRONOME('Petal Dance'),
