@@ -3964,7 +3964,79 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('Rest effect');
+  test('Rest effect', () => {
+    const proc = {key: 'data/mods/gen2/moves.ts:770:40', value: MIN};
+    const battle = startBattle([
+      QKC, HIT, QKC, QKC, SLP(8), NO_CRIT, MIN_DMG, QKC, proc, QKC, QKC, QKC, QKC,
+    ], [
+      {species: 'Sunflora', evs, moves: ['Toxic', 'Teleport', 'Pound']},
+    ], [
+      {species: 'Dewgong', evs, moves: ['Rest', 'Safeguard', 'Sleep Talk']},
+    ]);
+
+    const p2hp = battle.p2.pokemon[0].hp;
+
+    // Fails at full HP
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+    expect(battle.p2.pokemon[0].status).toBe('tox');
+
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp - 23);
+
+    // Works through Safeguard, puts user to sleep to fully heal HP and removes status
+    battle.makeChoices('move 3', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp - 28);
+    expect(battle.p2.pokemon[0].status).toBe('slp');
+
+    // Can still be called through Sleep Talk to restore HP and reset sleep turns
+    battle.makeChoices('move 2', 'move 3');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+    battle.makeChoices('move 2', 'move 1');
+    battle.makeChoices('move 2', 'move 1');
+
+    // Can attack on the 3rd turn
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p2.pokemon[0].status).toBe('');
+
+    verify(battle, [
+      '|move|p2a: Dewgong|Rest|p2a: Dewgong',
+      '|-fail|p2a: Dewgong',
+      '|move|p1a: Sunflora|Toxic|p2a: Dewgong',
+      '|-status|p2a: Dewgong|tox',
+      '|turn|2',
+      '|move|p2a: Dewgong|Rest|p2a: Dewgong',
+      '|-fail|p2a: Dewgong',
+      '|-damage|p2a: Dewgong|360/383 tox|[from] psn',
+      '|move|p1a: Sunflora|Teleport|p1a: Sunflora',
+      '|turn|3',
+      '|move|p2a: Dewgong|Rest|p2a: Dewgong',
+      '|-status|p2a: Dewgong|slp|[from] move: Rest',
+      '|-heal|p2a: Dewgong|383/383 slp|[silent]',
+      '|move|p1a: Sunflora|Pound|p2a: Dewgong',
+      '|-damage|p2a: Dewgong|355/383 slp',
+      '|turn|4',
+      '|cant|p2a: Dewgong|slp',
+      '|move|p2a: Dewgong|Sleep Talk|p2a: Dewgong',
+      '|move|p2a: Dewgong|Rest|p2a: Dewgong|[from]Sleep Talk',
+      '|-status|p2a: Dewgong|slp|[from] move: Rest',
+      '|-heal|p2a: Dewgong|383/383 slp|[silent]',
+      '|move|p1a: Sunflora|Teleport|p1a: Sunflora',
+      '|turn|5',
+      '|cant|p2a: Dewgong|slp',
+      '|move|p1a: Sunflora|Teleport|p1a: Sunflora',
+      '|turn|6',
+      '|cant|p2a: Dewgong|slp',
+      '|move|p1a: Sunflora|Teleport|p1a: Sunflora',
+      '|turn|7',
+      '|-curestatus|p2a: Dewgong|slp|[msg]',
+      '|move|p2a: Dewgong|Safeguard|p2a: Dewgong',
+      '|-sidestart|p2: Player 2|Safeguard',
+      '|move|p1a: Sunflora|Teleport|p1a: Sunflora',
+      '|turn|8',
+    ]);
+  });
 
   test('DrainHP effect', () => {
     const battle = startBattle([
