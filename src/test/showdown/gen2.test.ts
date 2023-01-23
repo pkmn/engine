@@ -5724,7 +5724,79 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('HealBell effect');
+  test('HealBell effect', () => {
+    const proc = SECONDARY(ranged(25, 256) - 1);
+    const battle = startBattle([
+      QKC, HIT, SLP(8), QKC, HIT, QKC, QKC, CRIT, MAX_DMG, QKC, NO_CRIT, MIN_DMG, proc, QKC,
+    ], [
+      {species: 'Houndoom', evs, moves: ['Toxic', 'Teleport', 'Ember']},
+    ], [
+      {species: 'Igglybuff', evs, moves: ['Rest']},
+      {species: 'Miltank', evs, moves: ['Heal Bell', 'Substitute', 'Counter']},
+    ], b => {
+      b.p2.pokemon[0].hp = 1;
+    });
+
+    let p2hp = battle.p2.pokemon[1].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].status).toBe('slp');
+
+    battle.makeChoices('move 1', 'switch 2');
+    expect(battle.p2.pokemon[0].status).toBe('tox');
+
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = p2hp - 98 - 24);
+    expect(battle.p2.active[0].volatiles.residualdmg.counter).toBe(1);
+
+    // Heal Bell works behind a Substitute and cures the entire team's statuses
+    battle.makeChoices('move 3', 'move 1');
+    expect(battle.p2.pokemon[0].status).toBe('');
+    expect(battle.p2.active[0].volatiles.residualdmg.counter).toBe(1);
+    expect(battle.p2.pokemon[1].status).toBe('');
+
+    // Residual damage counter doesn't get cleared
+    battle.makeChoices('move 3', 'move 3');
+    expect(battle.p2.pokemon[0].status).toBe('brn');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = p2hp - 58 - 48);
+    // expect(battle.p2.active[0].volatiles.residualdmg.counter).toBe(1);
+    expect(battle.p2.active[0].volatiles.residualdmg.counter).toBe(2);
+
+    verify(battle, [
+      '|switch|p1a: Houndoom|Houndoom, M|353/353',
+      '|switch|p2a: Igglybuff|Igglybuff, M|1/383',
+      '|turn|1',
+      '|move|p1a: Houndoom|Toxic|p2a: Igglybuff',
+      '|-status|p2a: Igglybuff|tox',
+      '|move|p2a: Igglybuff|Rest|p2a: Igglybuff',
+      '|-status|p2a: Igglybuff|slp|[from] move: Rest',
+      '|-heal|p2a: Igglybuff|383/383 slp|[silent]',
+      '|turn|2',
+      '|switch|p2a: Miltank|Miltank, F|393/393',
+      '|move|p1a: Houndoom|Toxic|p2a: Miltank',
+      '|-status|p2a: Miltank|tox',
+      '|turn|3',
+      '|move|p2a: Miltank|Substitute|p2a: Miltank',
+      '|-start|p2a: Miltank|Substitute',
+      '|-damage|p2a: Miltank|295/393 tox',
+      '|-damage|p2a: Miltank|271/393 tox|[from] psn',
+      '|move|p1a: Houndoom|Teleport|p1a: Houndoom',
+      '|turn|4',
+      '|move|p2a: Miltank|Heal Bell|p2a: Miltank',
+      '|-cureteam|p2a: Miltank|[from] move: Heal Bell',
+      '|move|p1a: Houndoom|Ember|p2a: Miltank',
+      '|-crit|p2a: Miltank',
+      '|-end|p2a: Miltank|Substitute',
+      '|turn|5',
+      '|move|p1a: Houndoom|Ember|p2a: Miltank',
+      '|-damage|p2a: Miltank|213/393',
+      '|-status|p2a: Miltank|brn',
+      '|move|p2a: Miltank|Counter|p1a: Houndoom',
+      '|-fail|p1a: Houndoom',
+      '|-damage|p2a: Miltank|165/393 brn|[from] brn|[of] p1a: Houndoom',
+      '|turn|6',
+    ]);
+  });
 
   test('Return/Frustration effect', () => {
     const battle = startBattle([
