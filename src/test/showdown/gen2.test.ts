@@ -520,7 +520,28 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('type precedence');
+  test('type precedence', () => {
+    const battle = startBattle([QKC, NO_CRIT, MAX_DMG, QKC], [
+      {species: 'Heracross', evs, moves: ['Mach Punch']},
+    ], [
+      {species: 'Skarmory', evs, moves: ['Sand Attack']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    // Super effective vs. Type 1 + Resist vs Type 2 of higher precedence
+    battle.makeChoices('move 1', 'move 1');
+    // expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 48);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 49);
+
+    verify(battle, [
+      '|move|p1a: Heracross|Mach Punch|p2a: Skarmory',
+      '|-damage|p2a: Skarmory|284/333',
+      '|move|p2a: Skarmory|Sand Attack|p1a: Heracross',
+      '|-unboost|p1a: Heracross|accuracy|1',
+      '|turn|2',
+    ]);
+  });
 
   test('fainting (single)', () => {
     // Switch
