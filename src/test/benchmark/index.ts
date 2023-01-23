@@ -29,6 +29,7 @@ const FORMATS = [
   // 'gen6customgame', 'gen6doublescustomgame',
   // 'gen7customgame', 'gen7doublescustomgame',
   // 'gen8customgame', 'gen8doublescustomgame',
+  // 'gen9customgame', 'gen9doublescustomgame',
 ] as ID[];
 
 const toMillis = (duration: bigint) => Number(duration / BigInt(1e6));
@@ -261,7 +262,7 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
     return out;
   };
 
-  const NAMES = ['RBY', 'GSC', 'ADV', 'DPP', 'BW', 'XY', 'SM', 'SS'];
+  const NAMES = ['RBY', 'GSC', 'ADV', 'DPP', 'BW', 'XY', 'SM', 'SS', 'SV'];
   const configs = Object.keys(CONFIGURATIONS).reverse();
   console.log(`|Generation|\`${configs.join('`|`')}\`|`);
   for (const format of FORMATS) {
