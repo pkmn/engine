@@ -4707,7 +4707,149 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('Bide effect');
+  test('Bide effect', () => {
+    const bide = (n: 2 | 3) =>
+      ({key: 'data/mods/gen2/moves.ts:56:17', value: ranged(n - 2, 5 - 3)});
+    const battle = startBattle([
+      QKC, bide(3), HIT, QKC, HIT, QKC, QKC, QKC, NO_CRIT, MIN_DMG, bide(3),
+      QKC, QKC, QKC, CFZ(2), CFZ_CAN, QKC, bide(3), QKC, HIT, SLP(2), QKC,
+      QKC, bide(2), HIT, QKC, HIT, QKC, HIT, QKC,
+
+      // BIDE(3), HIT, HIT, HIT, NO_CRIT, MIN_DMG, BIDE(3), HIT, HIT, CFZ(3), CFZ_CAN,
+    ], [
+      {species: 'Chansey', evs, moves: ['Bide', 'Teleport']},
+      {species: 'Onix', evs, moves: ['Bide']},
+    ], [
+      {species: 'Magnemite', evs, moves: ['Sonic Boom']},
+      {species: 'Dugtrio', evs, moves: ['Dig']},
+      {species: 'Haunter', evs, moves: ['Dragon Rage', 'Confuse Ray', 'Hypnosis']},
+    ]);
+
+    let chansey = battle.p1.pokemon[0].hp;
+    let magnemite = battle.p2.pokemon[0].hp;
+    const dugtrio = battle.p2.pokemon[1].hp;
+    const haunter = battle.p2.pokemon[2].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
+
+    expect(choices(battle, 'p1')).toEqual(['move 1']);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
+
+    battle.makeChoices('move 1', 'switch 2');
+    expect(battle.p1.pokemon[0].hp).toBe(chansey);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(dugtrio);
+
+    expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 154);
+
+    battle.makeChoices('move 1', 'switch 3');
+    expect(battle.p1.pokemon[0].hp).toBe(chansey);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 40);
+
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(chansey);
+
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(haunter);
+
+    battle.makeChoices('move 1', 'move 3');
+    expect(battle.p1.pokemon[0].hp).toBe(chansey);
+    expect(battle.p1.pokemon[0].status).toBe('slp');
+
+    battle.makeChoices('move 1', 'switch 2');
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
+    expect(battle.p1.pokemon[0].status).toBe('');
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
+    expect(battle.p2.pokemon[0].hp).toBe(magnemite -= 80);
+
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(12);
+
+    verify(battle, [
+      '|move|p1a: Chansey|Bide|p1a: Chansey',
+      '|-start|p1a: Chansey|move: Bide',
+      '|move|p2a: Magnemite|Sonic Boom|p1a: Chansey',
+      '|-damage|p1a: Chansey|683/703',
+      '|turn|2',
+      '|-activate|p1a: Chansey|move: Bide',
+      '|move|p2a: Magnemite|Sonic Boom|p1a: Chansey',
+      '|-damage|p1a: Chansey|663/703',
+      '|turn|3',
+      '|switch|p2a: Dugtrio|Dugtrio, M|273/273',
+      '|-activate|p1a: Chansey|move: Bide',
+      '|turn|4',
+      '|move|p2a: Dugtrio|Dig||[still]|[miss]',
+      '|-prepare|p2a: Dugtrio|Dig',
+      '|-end|p1a: Chansey|move: Bide',
+      '|-miss|p1a: Chansey',
+      '|-end|p1a: Chansey|move: Bide|[silent]',
+      '|turn|5',
+      '|move|p2a: Dugtrio|Dig|p1a: Chansey',
+      '|-damage|p1a: Chansey|509/703',
+      '|move|p1a: Chansey|Bide|p1a: Chansey',
+      '|-start|p1a: Chansey|move: Bide',
+      '|turn|6',
+      '|switch|p2a: Haunter|Haunter, M|293/293',
+      '|-activate|p1a: Chansey|move: Bide',
+      '|turn|7',
+      '|move|p2a: Haunter|Dragon Rage|p1a: Chansey',
+      '|-damage|p1a: Chansey|469/703',
+      '|-activate|p1a: Chansey|move: Bide',
+      '|turn|8',
+      '|move|p2a: Haunter|Confuse Ray|p1a: Chansey',
+      '|-start|p1a: Chansey|confusion',
+      '|-activate|p1a: Chansey|confusion',
+      '|-end|p1a: Chansey|move: Bide',
+      '|-immune|p2a: Haunter',
+      '|-end|p1a: Chansey|move: Bide|[silent]',
+      '|turn|9',
+      '|move|p2a: Haunter|Confuse Ray|p1a: Chansey',
+      '|-fail|p1a: Chansey',
+      '|-end|p1a: Chansey|confusion',
+      '|move|p1a: Chansey|Bide|p1a: Chansey',
+      '|-start|p1a: Chansey|move: Bide',
+      '|turn|10',
+      '|move|p2a: Haunter|Hypnosis|p1a: Chansey',
+      '|-status|p1a: Chansey|slp|[from] move: Hypnosis',
+      '|cant|p1a: Chansey|slp',
+      '|-end|p1a: Chansey|move: Bide|[silent]',
+      '|turn|11',
+      '|switch|p2a: Magnemite|Magnemite|253/253',
+      '|cant|p1a: Chansey|slp',
+      '|turn|12',
+      '|-curestatus|p1a: Chansey|slp|[msg]',
+      '|move|p1a: Chansey|Bide|p1a: Chansey',
+      '|-start|p1a: Chansey|move: Bide',
+      '|move|p2a: Magnemite|Sonic Boom|p1a: Chansey',
+      '|-damage|p1a: Chansey|449/703',
+      '|turn|13',
+      '|-activate|p1a: Chansey|move: Bide',
+      '|move|p2a: Magnemite|Sonic Boom|p1a: Chansey',
+      '|-damage|p1a: Chansey|429/703',
+      '|turn|14',
+      '|-end|p1a: Chansey|move: Bide',
+      '|-damage|p2a: Magnemite|173/253',
+      '|-end|p1a: Chansey|move: Bide|[silent]',
+      '|move|p2a: Magnemite|Sonic Boom|p1a: Chansey',
+      '|-damage|p1a: Chansey|409/703',
+      '|turn|15',
+    ]);
+  });
 
   test('Metronome effect', () => {
     const battle = startBattle([
