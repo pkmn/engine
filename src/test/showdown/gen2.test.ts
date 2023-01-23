@@ -4253,7 +4253,78 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('Mimic effect');
+  test('Mimic effect', () => {
+    const battle = startBattle([
+      QKC, QKC, NO_CRIT, MIN_DMG, QKC, QKC, NO_CRIT, MIN_DMG, QKC, QKC, QKC,
+    ], [
+      {species: 'Mr. Mime', evs, moves: ['Mimic', 'Teleport']},
+      {species: 'Abra', evs, moves: ['Teleport']},
+    ], [
+      {species: 'Jigglypuff', evs, moves: ['Blizzard', 'Surf', 'Teleport']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    let pp = battle.p1.pokemon[0].moveSlots[0].pp;
+
+    expect(battle.p1.pokemon[0].moveSlots[0].move).toBe('Mimic');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
+
+    // Fails if the target does not have a last used move
+    battle.makeChoices('move 1', 'move 3');
+    expect(battle.p1.pokemon[0].moveSlots[0].move).toBe('Mimic');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+
+    // Fails to copy any move the user already knows
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p1.pokemon[0].moveSlots[0].move).toBe('Mimic');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 39);
+
+    // Copies the targets last used move and gives it 5 PP
+    battle.makeChoices('move 1', 'move 3');
+    expect(battle.p1.pokemon[0].moveSlots[0].move).toBe('Surf');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(5);
+    expect(battle.p1.pokemon[0].baseMoveSlots[0].pp).toBe(pp -= 1);
+
+    battle.makeChoices('move 1', 'move 3');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(4);
+    expect(battle.p1.pokemon[0].baseMoveSlots[0].pp).toBe(pp);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 137);
+
+    battle.makeChoices('switch 2', 'move 3');
+    battle.makeChoices('switch 2', 'move 3');
+
+    expect(battle.p1.pokemon[0].moveSlots[0].move).toBe('Mimic');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
+
+    verify(battle, [
+      '|move|p1a: Mr. Mime|Mimic|p2a: Jigglypuff',
+      '|-fail|p2a: Jigglypuff',
+      '|move|p2a: Jigglypuff|Teleport|p2a: Jigglypuff',
+      '|turn|2',
+      '|move|p1a: Mr. Mime|Mimic|p2a: Jigglypuff',
+      '|-fail|p2a: Jigglypuff',
+      '|move|p2a: Jigglypuff|Surf|p1a: Mr. Mime',
+      '|-damage|p1a: Mr. Mime|244/283',
+      '|turn|3',
+      '|move|p1a: Mr. Mime|Mimic|p2a: Jigglypuff',
+      '|-activate|p1a: Mr. Mime|move: Mimic|Surf',
+      '|move|p2a: Jigglypuff|Teleport|p2a: Jigglypuff',
+      '|turn|4',
+      '|move|p1a: Mr. Mime|Surf|p2a: Jigglypuff',
+      '|-damage|p2a: Jigglypuff|296/433',
+      '|move|p2a: Jigglypuff|Teleport|p2a: Jigglypuff',
+      '|turn|5',
+      '|switch|p1a: Abra|Abra, M|253/253',
+      '|move|p2a: Jigglypuff|Teleport|p2a: Jigglypuff',
+      '|turn|6',
+      '|switch|p1a: Mr. Mime|Mr. Mime, M|244/283',
+      '|move|p2a: Jigglypuff|Teleport|p2a: Jigglypuff',
+      '|turn|7',
+    ]);
+  });
 
   test('LightScreen effect', () => {
     const battle = startBattle([
