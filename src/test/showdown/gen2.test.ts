@@ -4708,7 +4708,70 @@ describe('Gen 2', () => {
   });
 
   test.todo('Bide effect');
-  test.todo('Metronome effect');
+
+  test('Metronome effect', () => {
+    const battle = startBattle([
+      QKC, METRONOME('Wrap'), HIT, NO_CRIT, MIN_DMG, MIN_WRAP,
+      METRONOME('Petal Dance'), NO_CRIT, MIN_DMG, THRASH(2), QKC,
+      NO_CRIT, MIN_DMG, CFZ(2), QKC, METRONOME('Disable'), HIT, DISABLE_DURATION(3),
+      CFZ_CAN, METRONOME('Quick Attack'), NO_CRIT, MIN_DMG, QKC,
+    ], [
+      {species: 'Clefable', evs, moves: ['Metronome', 'Teleport']},
+    ], [
+      {species: 'Primeape', evs, moves: ['Metronome', 'Mimic', 'Fury Swipes']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp = p1hp - 14 - 24);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 57);
+
+    // Still get stuck into Thrashing
+    expect(choices(battle, 'p1')).toEqual(['move 1']);
+    expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2', 'move 3']);
+
+
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 24);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 57);
+
+    // Quick Attack via Metronome only executes at normal priority
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 48);
+
+    verify(battle, [
+      '|move|p2a: Primeape|Metronome|p2a: Primeape',
+      '|move|p2a: Primeape|Wrap|p1a: Clefable|[from]Metronome',
+      '|-damage|p1a: Clefable|379/393',
+      '|-activate|p1a: Clefable|move: Wrap|[of] p2a: Primeape',
+      '|move|p1a: Clefable|Metronome|p1a: Clefable',
+      '|move|p1a: Clefable|Petal Dance|p2a: Primeape|[from]Metronome',
+      '|-damage|p2a: Primeape|276/333',
+      '|-damage|p1a: Clefable|355/393|[from] move: Wrap|[partiallytrapped]',
+      '|turn|2',
+      '|move|p2a: Primeape|Mimic|p1a: Clefable',
+      '|-fail|p1a: Clefable',
+      '|move|p1a: Clefable|Petal Dance|p2a: Primeape',
+      '|-damage|p2a: Primeape|219/333',
+      '|-start|p1a: Clefable|confusion|[silent]',
+      '|-damage|p1a: Clefable|331/393|[from] move: Wrap|[partiallytrapped]',
+      '|turn|3',
+      '|move|p2a: Primeape|Metronome|p2a: Primeape',
+      '|move|p2a: Primeape|Disable|p1a: Clefable|[from]Metronome',
+      '|-fail|p1a: Clefable',
+      '|-activate|p1a: Clefable|confusion',
+      '|move|p1a: Clefable|Metronome|p1a: Clefable',
+      '|move|p1a: Clefable|Quick Attack|p2a: Primeape|[from]Metronome',
+      '|-damage|p2a: Primeape|171/333',
+      '|-end|p1a: Clefable|Wrap|[partiallytrapped]',
+      '|turn|4',
+    ]);
+  });
+
+
   test.todo('MirrorMove effect');
 
   test('Explode effect', () => {
