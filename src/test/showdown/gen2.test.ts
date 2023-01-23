@@ -4583,7 +4583,146 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('Curse effect');
+  test('Curse effect', () => {
+    // Ghost
+    // {
+    //   const battle = startBattle([QKC, QKC, QKC, QKC, QKC], [
+    //     {species: 'Misdreavus', level: 98, evs, moves: ['Curse']},
+    //     {species: 'Jolteon', evs, moves: ['Substitute']},
+    //   ], [
+    //     {species: 'Furret', evs, moves: ['Protect', 'Teleport']},
+    //     {species: 'Gastly', evs, moves: ['Curse']},
+    //   ]);
+
+    //   let p1hp = battle.p1.pokemon[0].hp;
+    //   let p2hp = battle.p2.pokemon[0].hp;
+
+    //   // Hits through Protect, subtracts half user's health
+    //   battle.makeChoices('move 1', 'move 1');
+    //   expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 158);
+    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+    //   // Fails when already Cursed, damages 1/4 HP
+    //   battle.makeChoices('move 1', 'move 2');
+    //   expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 93);
+
+    //   // Can cause user's HP to drop to 0 but is still successful
+    //   battle.makeChoices('move 1', 'switch 2');
+    //   expect(battle.p1.pokemon[0].hp).toBe(0);
+    //   expect(battle.p2.pokemon[0].volatiles['curse']).toBeDefined();
+
+    //   battle.makeChoices('switch 2', '');
+
+    //   // Blocked by Substitute
+    //   battle.makeChoices('move 1', 'move 1');
+    //   expect(battle.p1.pokemon[1].volatiles['curse']).toBeUndefined();
+
+    //   verify(battle, [
+    //     '|move|p2a: Furret|Protect|p2a: Furret',
+    //     '|-singleturn|p2a: Furret|Protect',
+    //     '|move|p1a: Misdreavus|Curse|p2a: Furret',
+    //     '|-start|p2a: Furret|Curse|[of] p1a: Misdreavus',
+    //     '|-damage|p1a: Misdreavus|158/316',
+    //     '|turn|2',
+    //     '|move|p2a: Furret|Teleport|p2a: Furret',
+    //     '|-damage|p2a: Furret|280/373|[from] Curse',
+    //     '|move|p1a: Misdreavus|Curse|p2a: Furret',
+    //     '|-fail|p2a: Furret',
+    //     '|turn|3',
+    //     '|switch|p2a: Gastly|Gastly, M|263/263',
+    //     '|move|p1a: Misdreavus|Curse|p2a: Gastly',
+    //     '|-start|p2a: Gastly|Curse|[of] p1a: Misdreavus',
+    //     '|-damage|p1a: Misdreavus|0 fnt',
+    //     '|faint|p1a: Misdreavus',
+    //     '|switch|p1a: Jolteon|Jolteon, M|333/333',
+    //     '|turn|4',
+    //     '|move|p1a: Jolteon|Substitute|p1a: Jolteon',
+    //     '|-start|p1a: Jolteon|Substitute',
+    //     '|-damage|p1a: Jolteon|250/333',
+    //     '|move|p2a: Gastly|Curse|p1a: Jolteon',
+    //     '|-fail|p1a: Jolteon',
+    //     '|-damage|p2a: Gastly|198/263|[from] Curse|[of] p1a: Jolteon',
+    //     '|turn|5',
+    //   ]);
+    // }
+    // Non-Ghost
+    {
+      const curse = {key: 'data/mods/gen2/scripts.ts:441:59', value: 0};
+      const battle = startBattle([QKC, QKC, QKC, QKC, QKC, curse, QKC, curse, QKC, curse, QKC], [
+        {species: 'Snorlax', evs, moves: ['Swords Dance', 'Iron Defense', 'Curse']},
+      ], [
+        {species: 'Slowpoke', evs, moves: ['Teleport']},
+      ]);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].boosts.atk).toBe(4);
+
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].boosts.def).toBe(2);
+
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].boosts.def).toBe(4);
+
+      battle.makeChoices('move 3', 'move 1');
+      expect(battle.p1.pokemon[0].boosts.atk).toBe(5);
+      expect(battle.p1.pokemon[0].boosts.def).toBe(5);
+      expect(battle.p1.pokemon[0].boosts.spe).toBe(-1);
+
+      battle.makeChoices('move 3', 'move 1');
+      // expect(battle.p1.pokemon[0].boosts.atk).toBe(6);
+      expect(battle.p1.pokemon[0].boosts.atk).toBe(5);
+      expect(battle.p1.pokemon[0].boosts.def).toBe(6);
+      expect(battle.p1.pokemon[0].boosts.spe).toBe(-2);
+
+      // Curse should fail if Attack and Defense are both at +6, even if Speed isn't at -6
+      battle.makeChoices('move 3', 'move 1');
+      // expect(battle.p1.pokemon[0].boosts.atk).toBe(6);
+      expect(battle.p1.pokemon[0].boosts.atk).toBe(5);
+      expect(battle.p1.pokemon[0].boosts.def).toBe(6);
+      // expect(battle.p1.pokemon[0].boosts.spe).toBe(-2);
+      expect(battle.p1.pokemon[0].boosts.spe).toBe(-3);
+
+      verify(battle, [
+        '|move|p1a: Snorlax|Swords Dance|p1a: Snorlax',
+        '|-boost|p1a: Snorlax|atk|2',
+        '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
+        '|turn|2',
+        '|move|p1a: Snorlax|Swords Dance|p1a: Snorlax',
+        '|-boost|p1a: Snorlax|atk|2',
+        '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
+        '|turn|3',
+        '|move|p1a: Snorlax|Iron Defense|p1a: Snorlax',
+        '|-boost|p1a: Snorlax|def|2',
+        '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
+        '|turn|4',
+        '|move|p1a: Snorlax|Iron Defense|p1a: Snorlax',
+        '|-boost|p1a: Snorlax|def|2',
+        '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
+        '|turn|5',
+        '|move|p1a: Snorlax|Curse|p1a: Snorlax',
+        '|-unboost|p1a: Snorlax|spe|1',
+        '|-boost|p1a: Snorlax|atk|1',
+        '|-boost|p1a: Snorlax|def|1',
+        '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
+        '|turn|6',
+        '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
+        '|move|p1a: Snorlax|Curse|p1a: Snorlax',
+        '|-unboost|p1a: Snorlax|spe|1',
+        '|-boost|p1a: Snorlax|atk|0',
+        '|-boost|p1a: Snorlax|def|1',
+        '|turn|7',
+        '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
+        '|move|p1a: Snorlax|Curse|p1a: Snorlax',
+        '|-unboost|p1a: Snorlax|spe|1',
+        '|-boost|p1a: Snorlax|atk|0',
+        '|-boost|p1a: Snorlax|def|0',
+        '|turn|8',
+      ]);
+    }
+  });
 
   test('Reversal', () => {
     const battle = startBattle([QKC, QKC, QKC, QKC, QKC, QKC], [
