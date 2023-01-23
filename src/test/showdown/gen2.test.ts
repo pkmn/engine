@@ -1305,7 +1305,68 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('FocusEnergy effect');
+  test('FocusEnergy effect', () => {
+    const no_crit = {...CRIT, value: ranged(2, 16) - 1};
+    const battle = startBattle([
+      QKC, no_crit, MIN_DMG, QKC, QKC, no_crit, MIN_DMG, QKC, QKC, QKC, no_crit, MIN_DMG, QKC,
+    ], [
+      {species: 'Scyther', evs, moves: ['Strength', 'Focus Energy', 'Baton Pass']},
+      {species: 'Pinsir', evs, moves: ['Strength']},
+    ], [
+      {species: 'Weezing', evs, moves: ['Teleport', 'Haze']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 55);
+
+    battle.makeChoices('move 2', 'move 1');
+
+    // Increases critical hit rate
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 108);
+
+    // Does not get cleared by Haze
+    battle.makeChoices('move 2', 'move 1');
+    battle.makeChoices('move 3', 'move 1');
+
+    battle.makeChoices('switch 2', '');
+
+    // Gets transferred by Baton Pass
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 119);
+
+    verify(battle, [
+      '|move|p1a: Scyther|Strength|p2a: Weezing',
+      '|-damage|p2a: Weezing|278/333',
+      '|move|p2a: Weezing|Teleport|p2a: Weezing',
+      '|turn|2',
+      '|move|p1a: Scyther|Focus Energy|p1a: Scyther',
+      '|-start|p1a: Scyther|move: Focus Energy',
+      '|move|p2a: Weezing|Teleport|p2a: Weezing',
+      '|turn|3',
+      '|move|p1a: Scyther|Strength|p2a: Weezing',
+      '|-crit|p2a: Weezing',
+      '|-damage|p2a: Weezing|170/333',
+      '|move|p2a: Weezing|Haze|p2a: Weezing',
+      '|-clearallboost',
+      '|turn|4',
+      '|move|p1a: Scyther|Focus Energy|p1a: Scyther',
+      '|-fail|p1a: Scyther',
+      '|move|p2a: Weezing|Teleport|p2a: Weezing',
+      '|turn|5',
+      '|move|p1a: Scyther|Baton Pass|p1a: Scyther',
+      '|switch|p1a: Pinsir|Pinsir, M|333/333|[from] Baton Pass',
+      '|move|p2a: Weezing|Teleport|p2a: Weezing',
+      '|turn|6',
+      '|move|p1a: Pinsir|Strength|p2a: Weezing',
+      '|-crit|p2a: Weezing',
+      '|-damage|p2a: Weezing|51/333',
+      '|move|p2a: Weezing|Teleport|p2a: Weezing',
+      '|turn|7',
+    ]);
+  });
 
   test('MultiHit effect', () => {
     const hit3 = {key: 'data/mods/gen2/scripts.ts:265:26', value: 0x60000000};
