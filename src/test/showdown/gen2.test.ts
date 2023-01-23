@@ -4176,7 +4176,83 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('Rage effect');
+  test('Rage effect', () => {
+    const no_brn = SECONDARY(ranged(25, 256));
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG,
+      QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG,
+      QKC, NO_CRIT, MIN_DMG, no_brn, NO_CRIT, MIN_DMG,
+      QKC, NO_CRIT, MIN_DMG, HIT, DISABLE_DURATION(5), QKC,
+    ], [
+      {species: 'Charmeleon', evs, moves: ['Rage', 'Flamethrower']},
+      {species: 'Doduo', evs, moves: ['Drill Peck']},
+    ], [
+      {species: 'Grimer', evs, moves: ['Pound', 'Disable', 'Self-Destruct']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    let pp = battle.p1.pokemon[0].moveSlots[0].pp;
+
+    // Rage increases attack when hit by a move but does not lock-in
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 35);
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(1);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 17);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+
+    expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+
+    // When used consecutively, the damage Rage deals is multiplied by a separate counter
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 35);
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 25);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 35);
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 135);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
+
+    // Disable does not proc Rage, the Rage counter gets reset when the user ceases to use Rage
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 34);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+
+    verify(battle, [
+      '|move|p1a: Charmeleon|Rage|p2a: Grimer',
+      '|-damage|p2a: Grimer|346/363',
+      '|-singlemove|p1a: Charmeleon|Rage',
+      '|move|p2a: Grimer|Pound|p1a: Charmeleon',
+      '|-damage|p1a: Charmeleon|284/319',
+      '|-boost|p1a: Charmeleon|atk|1',
+      '|turn|2',
+      '|move|p1a: Charmeleon|Rage|p2a: Grimer',
+      '|-damage|p2a: Grimer|321/363',
+      '|-singlemove|p1a: Charmeleon|Rage',
+      '|move|p2a: Grimer|Pound|p1a: Charmeleon',
+      '|-damage|p1a: Charmeleon|249/319',
+      '|-boost|p1a: Charmeleon|atk|1',
+      '|turn|3',
+      '|move|p1a: Charmeleon|Flamethrower|p2a: Grimer',
+      '|-damage|p2a: Grimer|186/363',
+      '|move|p2a: Grimer|Pound|p1a: Charmeleon',
+      '|-damage|p1a: Charmeleon|214/319',
+      '|turn|4',
+      '|move|p1a: Charmeleon|Rage|p2a: Grimer',
+      '|-damage|p2a: Grimer|152/363',
+      '|-singlemove|p1a: Charmeleon|Rage',
+      '|move|p2a: Grimer|Disable|p1a: Charmeleon',
+      '|-start|p1a: Charmeleon|Disable|Rage',
+      '|turn|5',
+    ]);
+  });
+
   test.todo('Mimic effect');
 
   test('LightScreen effect', () => {
