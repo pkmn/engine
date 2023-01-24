@@ -1046,7 +1046,74 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('Flinch effect');
+  test('Flinch effect', () => {
+    const item = 'Kings Rock';
+    const hit3 = {key: 'data/mods/gen2/scripts.ts:265:26', value: 0x60000000};
+    const rock = {key: 'data/mods/gen2/scripts.ts:464:66', value: ranged(30, 256) - 1};
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MAX_DMG, SLP(8),
+      QKC, HIT, hit3, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, rock,
+      QKC, MISS, QKC, NO_CRIT, MIN_DMG, rock, QKC,
+    ], [
+      {species: 'Dunsparce', item, evs, moves: ['Earthquake', 'Strength', 'Fury Swipes']},
+    ], [
+      {species: 'Snorlax', evs, moves: ['Substitute', 'Rest', 'Teleport']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    // Not all moves are eligible for causing flinches
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp = p2hp - 75 - 130);
+    expect(battle.p2.pokemon[0].volatiles['substitute']).toBeDefined();
+
+    // Substitute protects from flinching
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p2.pokemon[0].status).toBe('slp');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp += 205);
+
+    // Can flinch even when sleeping, only last roll of MultiHit can proc
+    battle.makeChoices('move 3', 'move 3');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 21);
+
+    battle.makeChoices('move 3', 'move 3');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 91);
+
+    verify(battle, [
+      '|move|p1a: Dunsparce|Earthquake|p2a: Snorlax',
+      '|-damage|p2a: Snorlax|448/523',
+      '|move|p2a: Snorlax|Substitute|p2a: Snorlax',
+      '|-start|p2a: Snorlax|Substitute',
+      '|-damage|p2a: Snorlax|318/523',
+      '|turn|2',
+      '|move|p1a: Dunsparce|Strength|p2a: Snorlax',
+      '|-activate|p2a: Snorlax|Substitute|[damage]',
+      '|move|p2a: Snorlax|Rest|p2a: Snorlax',
+      '|-status|p2a: Snorlax|slp|[from] move: Rest',
+      '|-heal|p2a: Snorlax|523/523 slp|[silent]',
+      '|turn|3',
+      '|move|p1a: Dunsparce|Fury Swipes|p2a: Snorlax',
+      '|-activate|p2a: Snorlax|Substitute|[damage]',
+      '|-end|p2a: Snorlax|Substitute',
+      '|-damage|p2a: Snorlax|502/523 slp',
+      '|-hitcount|p2a: Snorlax|3',
+      '|cant|p2a: Snorlax|slp',
+      '|turn|4',
+      '|move|p1a: Dunsparce|Fury Swipes|p2a: Snorlax|[miss]',
+      '|-miss|p1a: Dunsparce',
+      '|cant|p2a: Snorlax|slp',
+      '|turn|5',
+      '|move|p1a: Dunsparce|Strength|p2a: Snorlax',
+      '|-damage|p2a: Snorlax|411/523 slp',
+      '|-curestatus|p2a: Snorlax|slp|[msg]',
+      '|cant|p2a: Snorlax|flinch',
+      '|turn|6',
+    ]);
+  });
+
 
   test('CriticalUp effect', () => {
     const no_crit = {...CRIT, value: ranged(2, 16) - 1};
