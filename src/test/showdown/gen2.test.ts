@@ -4913,8 +4913,141 @@ describe('Gen 2', () => {
     ]);
   });
 
+  test('MirrorMove effect', () => {
+    const battle = startBattle([
+      QKC, QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG,
+      QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, QKC,
+      QKC, MISS, QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
+      QKC, NO_CRIT, MIN_DMG, QKC, TIE(1), NO_CRIT, MIN_DMG, QKC,
+    ], [
+      {species: 'Fearow', evs, moves: ['Mirror Move', 'Peck', 'Fly', 'Transform']},
+    ], [
+      {species: 'Pidgeot', evs, moves: ['Mirror Move', 'Swift']},
+      {species: 'Pidgeotto', evs, moves: ['Gust', 'Mirror Move']},
+    ]);
 
-  test.todo('MirrorMove effect');
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    // Can't Mirror Move if no move has been used or if Mirror Move is last used
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].lastMove!.id).toBe('mirrormove');
+    expect(battle.p2.pokemon[0].lastMove!.id).toBe('mirrormove');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(31);
+    expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(31);
+
+    // Can Mirror Move regular attacks
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 44);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 43);
+    expect(battle.p1.pokemon[0].lastMove!.id).toBe('peck');
+    expect(battle.p2.pokemon[0].lastMove!.id).toBe('mirrormove');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(31);
+    expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(30);
+
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 74);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+    expect(battle.p1.pokemon[0].lastMove!.id).toBe('mirrormove');
+    expect(battle.p2.pokemon[0].lastMove!.id).toBe('swift');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(30);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(30);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 74);
+    expect(battle.p1.pokemon[0].lastMove!.id).toBe('mirrormove');
+    expect(battle.p2.pokemon[0].lastMove!.id).toBe('mirrormove');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(29);
+    expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(29);
+
+    battle.makeChoices('move 3', 'move 1');
+    expect(battle.p1.pokemon[0].lastMove!.id).toBe('fly');
+    expect(battle.p2.pokemon[0].lastMove!.id).toBe('mirrormove');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(29);
+    expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(28);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].lastMove!.id).toBe('fly');
+    expect(battle.p2.pokemon[0].lastMove!.id).toBe('fly');
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(29);
+    expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(28);
+
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 44);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 43);
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(29);
+    expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(27);
+
+    // Switching resets last used moves
+    battle.makeChoices('move 1', 'switch 2');
+    expect(battle.p1.pokemon[0].lastMove!.id).toBe('mirrormove');
+    expect(battle.p2.pokemon[0].lastMove).toBeNull();
+    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(28);
+
+    battle.makeChoices('move 4', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 46);
+
+    // Mirror Move will always fail when used by a transformed Pokémon.
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 46);
+
+    verify(battle, [
+      '|move|p1a: Fearow|Mirror Move|p1a: Fearow',
+      '|-fail|p1a: Fearow',
+      '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
+      '|-fail|p2a: Pidgeot',
+      '|turn|2',
+      '|move|p1a: Fearow|Peck|p2a: Pidgeot',
+      '|-damage|p2a: Pidgeot|326/369',
+      '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
+      '|move|p2a: Pidgeot|Peck|p1a: Fearow|[from]Mirror Move',
+      '|-damage|p1a: Fearow|289/333',
+      '|turn|3',
+      '|move|p1a: Fearow|Mirror Move|p1a: Fearow',
+      '|-fail|p1a: Fearow',
+      '|move|p2a: Pidgeot|Swift|p1a: Fearow',
+      '|-damage|p1a: Fearow|215/333',
+      '|turn|4',
+      '|move|p1a: Fearow|Mirror Move|p1a: Fearow',
+      '|move|p1a: Fearow|Swift|p2a: Pidgeot|[from]Mirror Move',
+      '|-damage|p2a: Pidgeot|252/369',
+      '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
+      '|-fail|p2a: Pidgeot',
+      '|turn|5',
+      '|move|p1a: Fearow|Fly||[still]',
+      '|-prepare|p1a: Fearow|Fly',
+      '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
+      '|move|p2a: Pidgeot|Fly||[from]Mirror Move|[still]',
+      '|-prepare|p2a: Pidgeot|Fly',
+      '|turn|6',
+      '|move|p1a: Fearow|Fly|p2a: Pidgeot|[miss]',
+      '|-miss|p1a: Fearow',
+      '|move|p2a: Pidgeot|Fly|p1a: Fearow|[miss]',
+      '|-miss|p2a: Pidgeot',
+      '|turn|7',
+      '|move|p1a: Fearow|Peck|p2a: Pidgeot',
+      '|-damage|p2a: Pidgeot|209/369',
+      '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
+      '|move|p2a: Pidgeot|Peck|p1a: Fearow|[from]Mirror Move',
+      '|-damage|p1a: Fearow|171/333',
+      '|turn|8',
+      '|switch|p2a: Pidgeotto|Pidgeotto, M|329/329',
+      '|move|p1a: Fearow|Mirror Move|p1a: Fearow',
+      '|-fail|p1a: Fearow',
+      '|turn|9',
+      '|move|p1a: Fearow|Transform|p2a: Pidgeotto',
+      '|-transform|p1a: Fearow|p2a: Pidgeotto',
+      '|move|p2a: Pidgeotto|Gust|p1a: Fearow',
+      '|-damage|p1a: Fearow|125/333',
+      '|turn|10',
+      '|move|p1a: Fearow|Mirror Move|p1a: Fearow',
+      '|-fail|p1a: Fearow',
+      '|move|p2a: Pidgeotto|Gust|p1a: Fearow',
+      '|-damage|p1a: Fearow|79/333',
+      '|turn|11',
+    ]);
+  });
 
   test('Explode effect', () => {
     const battle = startBattle([
