@@ -5154,7 +5154,85 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('Transform effect');
+  test('Transform effect', () => {
+    const battle = startBattle([
+      QKC, QKC, QKC, MISS, QKC, TIE(2), NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC, TIE(2), QKC, QKC,
+    ], [
+      {species: 'Mew', level: 50, evs, moves: ['Swords Dance', 'Transform']},
+      {species: 'Ditto', evs, moves: ['Swords Dance', 'Transform']},
+    ], [
+      {species: 'Articuno', evs, moves: ['Agility', 'Fly', 'Peck']},
+    ]);
+
+    let pp = battle.p1.pokemon[0].moveSlots[1].pp;
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(2);
+    expect(battle.p2.pokemon[0].boosts.spe).toBe(2);
+
+    // Transform cannot hit an invulnerable target
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p1.pokemon[0].species.name).toBe('Mew');
+    expect(battle.p1.pokemon[0].baseMoveSlots[1].pp).toBe(pp -= 1);
+
+    battle.makeChoices('move 2', 'move 1');
+    // Transform should copy species, types, stats, and boosts but not level or HP
+    expect(battle.p1.pokemon[0].species.name).toBe('Articuno');
+    expect(battle.p1.pokemon[0].types).toEqual(battle.p2.pokemon[0].types);
+    expect(battle.p1.pokemon[0].level).toBe(50);
+    expect(battle.p1.pokemon[0].boosts).toEqual(battle.p2.pokemon[0].boosts);
+
+    expect(battle.p1.pokemon[0].moveSlots).toHaveLength(3);
+    expect(battle.p1.pokemon[0].moveSlots.map(m => m.move)).toEqual(['Agility', 'Fly', 'Peck']);
+    expect(battle.p1.pokemon[0].moveSlots.map(m => m.pp)).toEqual([5, 5, 5]);
+    expect(battle.p1.pokemon[0].baseMoveSlots[1].pp).toBe(pp -= 1);
+
+    battle.makeChoices('move 3', 'move 3');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 35);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 18);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].boosts).toEqual(battle.p2.pokemon[0].boosts);
+
+    battle.makeChoices('switch 2', 'move 1');
+    expect(battle.p1.pokemon[1].species.name).toBe('Mew');
+    expect(battle.p1.pokemon[1].moveSlots[1].pp).toBe(pp);
+
+    verify(battle, [
+      '|move|p2a: Articuno|Agility|p2a: Articuno',
+      '|-boost|p2a: Articuno|spe|2',
+      '|move|p1a: Mew|Swords Dance|p1a: Mew',
+      '|-boost|p1a: Mew|atk|2',
+      '|turn|2',
+      '|move|p2a: Articuno|Fly||[still]',
+      '|-prepare|p2a: Articuno|Fly',
+      '|move|p1a: Mew|Transform|p2a: Articuno|[miss]',
+      '|-miss|p1a: Mew',
+      '|turn|3',
+      '|move|p2a: Articuno|Fly|p1a: Mew|[miss]',
+      '|-miss|p2a: Articuno',
+      '|move|p1a: Mew|Transform|p2a: Articuno',
+      '|-transform|p1a: Mew|p2a: Articuno',
+      '|turn|4',
+      '|move|p2a: Articuno|Peck|p1a: Mew',
+      '|-damage|p1a: Mew|171/206',
+      '|move|p1a: Mew|Peck|p2a: Articuno',
+      '|-damage|p2a: Articuno|365/383',
+      '|turn|5',
+      '|move|p2a: Articuno|Agility|p2a: Articuno',
+      '|-boost|p2a: Articuno|spe|2',
+      '|move|p1a: Mew|Agility|p1a: Mew',
+      '|-boost|p1a: Mew|spe|2',
+      '|turn|6',
+      '|switch|p1a: Ditto|Ditto|299/299',
+      '|move|p2a: Articuno|Agility|p2a: Articuno',
+      '|-boost|p2a: Articuno|spe|2',
+      '|turn|7',
+    ]);
+  });
 
   test('Conversion effect', () => {
     const proc = {key: 'data/mods/gen3/moves.ts:147:22', value: ranged(0, 2)};

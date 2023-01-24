@@ -4021,6 +4021,7 @@ describe('Gen 1', () => {
     ], [
       {species: 'Articuno', evs, moves: ['Agility', 'Fly', 'Peck']},
     ]);
+
     const pp = battle.p1.pokemon[0].moveSlots[1].pp;
 
     let p1hp = battle.p1.pokemon[0].hp;
