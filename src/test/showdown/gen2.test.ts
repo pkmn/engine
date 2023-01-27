@@ -4377,7 +4377,136 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('LeechSeed effect');
+  test('LeechSeed effect', () => {
+    const battle = startBattle([
+      QKC, MISS, QKC, HIT, QKC, HIT, QKC, HIT, QKC, HIT,
+      QKC, HIT, HIT, QKC, NO_CRIT, MIN_DMG, QKC, HIT, QKC,
+    ], [
+      {species: 'Venusaur', evs, moves: ['Leech Seed']},
+      {species: 'Donphan', evs, moves: ['Night Shade', 'Haze', 'Leech Seed', 'Rapid Spin']},
+    ], [
+      {species: 'Gengar', evs, moves: ['Leech Seed', 'Substitute', 'Toxic', 'Baton Pass']},
+      {species: 'Bayleef', evs, moves: ['Teleport']},
+      {species: 'Slowbro', evs, moves: ['Teleport']},
+    ]);
+
+    battle.p1.pokemon[0].hp = 1;
+    battle.p2.pokemon[2].hp = 1;
+
+    let venusaur = battle.p1.pokemon[0].hp;
+    let donphan = battle.p1.pokemon[1].hp;
+    let gengar = battle.p2.pokemon[0].hp;
+    let bayleef = battle.p2.pokemon[1].hp;
+    const slowbro = battle.p2.pokemon[2].hp;
+
+    // Leed Seed can miss / Grass-type Pokémon are immune
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(venusaur);
+    expect(battle.p2.pokemon[0].hp).toBe(gengar);
+    expect(battle.p1.pokemon[0].volatiles['leechseed']).toBeUndefined();
+    expect(battle.p2.pokemon[0].volatiles['leechseed']).toBeUndefined();
+
+    // Leech Seed blocks Substitute
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(gengar -= 80);
+    expect(battle.p2.pokemon[0].volatiles['leechseed']).toBeUndefined();
+
+    battle.makeChoices('switch 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(donphan);
+    expect(battle.p2.pokemon[0].hp).toBe(gengar);
+    expect(battle.p1.pokemon[0].volatiles['leechseed']).toBeDefined();
+
+    // Leech Seed fails if already seeded / heals back damage
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(donphan -= 47);
+    expect(battle.p2.pokemon[0].hp).toBe(gengar += 47);
+
+    //  Leech Seed no longer interacts with Toxic damage or Haze
+    battle.makeChoices('move 2', 'move 3');
+    expect(battle.p1.pokemon[0].hp).toBe(donphan = donphan - 23 - 47);
+    expect(battle.p2.pokemon[0].hp).toBe(gengar += 33);
+
+    // Leech Seed does not |-heal| when at full health
+    battle.makeChoices('move 3', 'move 3');
+    expect(battle.p1.pokemon[0].hp).toBe(donphan = donphan - 46 - 47);
+    expect(battle.p2.pokemon[0].hp).toBe(gengar);
+    expect(battle.p2.pokemon[0].volatiles['leechseed']).toBeDefined();
+
+    // Rapid Spin breaks Leech Seed / Leech Seed is Baton Passed even to Grass-types
+    battle.makeChoices('move 4', 'move 4');
+    battle.makeChoices('', 'switch 2');
+    expect(battle.p1.pokemon[0].hp).toBe(donphan -= 69);
+    expect(battle.p2.pokemon[0].hp).toBe(bayleef -= 20);
+    expect(battle.p1.pokemon[0].volatiles['leechseed']).toBeUndefined();
+    expect(battle.p2.pokemon[0].volatiles['leechseed']).toBeDefined();
+
+    // Switching breaks Leech Seed
+    battle.makeChoices('move 3', 'switch 3');
+    expect(battle.p1.pokemon[0].hp).toBe(donphan -= 92);
+    expect(battle.p2.pokemon[0].hp).toBe(slowbro);
+    expect(battle.p2.pokemon[0].volatiles['leechseed']).toBeDefined();
+
+    // Leech Seed's healing is based on capped damage
+    battle.makeChoices('switch 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(venusaur += 1);
+    expect(battle.p2.pokemon[0].hp).toBe(0);
+
+    verify(battle, [
+      '|move|p2a: Gengar|Leech Seed|p1a: Venusaur',
+      '|-immune|p1a: Venusaur',
+      '|move|p1a: Venusaur|Leech Seed|p2a: Gengar|[miss]',
+      '|-miss|p1a: Venusaur',
+      '|turn|2',
+      '|move|p2a: Gengar|Substitute|p2a: Gengar',
+      '|-start|p2a: Gengar|Substitute',
+      '|-damage|p2a: Gengar|243/323',
+      '|move|p1a: Venusaur|Leech Seed|p2a: Gengar',
+      '|-activate|p2a: Gengar|Substitute|[block] Leech Seed',
+      '|turn|3',
+      '|switch|p1a: Donphan|Donphan, M|383/383',
+      '|move|p2a: Gengar|Leech Seed|p1a: Donphan',
+      '|-start|p1a: Donphan|move: Leech Seed',
+      '|turn|4',
+      '|move|p2a: Gengar|Leech Seed|p1a: Donphan',
+      '|move|p1a: Donphan|Night Shade|p2a: Gengar',
+      '|-end|p2a: Gengar|Substitute',
+      '|-damage|p1a: Donphan|336/383|[from] Leech Seed|[of] p2a: Gengar',
+      '|-heal|p2a: Gengar|290/323|[silent]',
+      '|turn|5',
+      '|move|p2a: Gengar|Toxic|p1a: Donphan',
+      '|-status|p1a: Donphan|tox',
+      '|move|p1a: Donphan|Haze|p1a: Donphan',
+      '|-clearallboost',
+      '|-damage|p1a: Donphan|313/383 tox|[from] psn',
+      '|-damage|p1a: Donphan|266/383 tox|[from] Leech Seed|[of] p2a: Gengar',
+      '|-heal|p2a: Gengar|323/323|[silent]',
+      '|turn|6',
+      '|move|p2a: Gengar|Toxic|p1a: Donphan',
+      '|-fail|p1a: Donphan|tox',
+      '|move|p1a: Donphan|Leech Seed|p2a: Gengar',
+      '|-start|p2a: Gengar|move: Leech Seed',
+      '|-damage|p1a: Donphan|220/383 tox|[from] psn',
+      '|-damage|p1a: Donphan|173/383 tox|[from] Leech Seed|[of] p2a: Gengar',
+      '|turn|7',
+      '|move|p2a: Gengar|Baton Pass|p2a: Gengar',
+      '|switch|p2a: Bayleef|Bayleef, M|323/323|[from] Baton Pass',
+      '|move|p1a: Donphan|Rapid Spin|p2a: Bayleef',
+      '|-damage|p2a: Bayleef|303/323',
+      '|-end|p1a: Donphan|Leech Seed|[from] move: Rapid Spin|[of] p1a: Donphan',
+      '|-damage|p1a: Donphan|104/383 tox|[from] psn',
+      '|turn|8',
+      '|switch|p2a: Slowbro|Slowbro, M|1/393',
+      '|move|p1a: Donphan|Leech Seed|p2a: Slowbro',
+      '|-start|p2a: Slowbro|move: Leech Seed',
+      '|-damage|p1a: Donphan|12/383 tox|[from] psn',
+      '|turn|9',
+      '|switch|p1a: Venusaur|Venusaur, M|1/363',
+      '|move|p2a: Slowbro|Teleport|p2a: Slowbro',
+      '|-damage|p2a: Slowbro|0 fnt|[from] Leech Seed|[of] p1a: Venusaur',
+      '|-heal|p1a: Venusaur|2/363|[silent]',
+      '|faint|p2a: Slowbro',
+    ]);
+  });
 
   test('PayDay effect', () => {
     const battle = startBattle([QKC, NO_CRIT, MAX_DMG, QKC], [
