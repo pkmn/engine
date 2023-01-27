@@ -19,7 +19,8 @@ const QKC = {key: 'sim/battle.ts:1591:49', value: MAX};
 const QKCs = (n: number) => Array(n).fill(QKC);
 const SECONDARY = (value: number) => ({key: 'data/mods/gen2/scripts.ts:464:66', value});
 const PROC_SEC = SECONDARY(MIN);
-const SLP = (n: number) => ({key: 'data/mods/gen2/conditions.ts:37:33', value: ranged(n, 8 - 1)});
+const SLP = (n: number) =>
+  ({key: 'data/mods/gen2/conditions.ts:37:33', value: ranged(n, 8 - 2) - 1});
 const DISABLE_DURATION = (n: number) =>
   ({key: 'data/mods/gen3/moves.ts:203:17', value: ranged(n - 2, 6) - 1});
 const PAR_CANT = {key: 'data/mods/gen2/conditions.ts:21:13', value: ranged(1, 4) - 1};
@@ -2310,7 +2311,87 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('Sleep effect');
+  test('Sleep effect', () => {
+    const battle = startBattle([
+      QKC, SLP(1), QKC, HIT, NO_CRIT, MIN_DMG, QKC, SLP(2), QKC, QKC, QKC, HIT,
+      NO_CRIT, MIN_DMG, QKC, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, QKC,
+    ], [
+      {species: 'Parasect', evs, moves: ['Spore', 'Cut']},
+    ], [
+      {species: 'Geodude', evs, moves: ['Tackle']},
+      {species: 'Slowpoke', evs, moves: ['Water Gun']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    // Always must sleep for at least one turn
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].status).toBe('slp');
+
+    // Pokemon can make a move the turn it wakes up
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 26);
+    expect(battle.p2.pokemon[0].status).toBe('');
+
+    // Can be put to sleep for multiple turns
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].status).toBe('slp');
+
+    // Sleep Clause Mod prevents multiple Pokémon from being put to sleep
+    battle.makeChoices('move 1', 'switch 2');
+    expect(battle.p2.pokemon[0].status).toBe('');
+
+    // Can't sleep someone already sleeping, turns only decrement while in battle
+    battle.makeChoices('move 1', 'switch 2');
+    expect(battle.p2.pokemon[0].status).toBe('slp');
+
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 17);
+    expect(battle.p2.pokemon[0].status).toBe('slp');
+
+    // Eventually wakes up
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 26);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 17);
+    expect(battle.p2.pokemon[0].status).toBe('');
+
+    verify(battle, [
+      '|move|p1a: Parasect|Spore|p2a: Geodude',
+      '|-status|p2a: Geodude|slp|[from] move: Spore',
+      '|cant|p2a: Geodude|slp',
+      '|turn|2',
+      '|move|p1a: Parasect|Spore|p2a: Geodude',
+      '|-fail|p2a: Geodude|slp',
+      '|-curestatus|p2a: Geodude|slp|[msg]',
+      '|move|p2a: Geodude|Tackle|p1a: Parasect',
+      '|-damage|p1a: Parasect|297/323',
+      '|turn|3',
+      '|move|p1a: Parasect|Spore|p2a: Geodude',
+      '|-status|p2a: Geodude|slp|[from] move: Spore',
+      '|cant|p2a: Geodude|slp',
+      '|turn|4',
+      '|switch|p2a: Slowpoke|Slowpoke, M|383/383',
+      '|move|p1a: Parasect|Spore|p2a: Slowpoke',
+      '|turn|5',
+      '|switch|p2a: Geodude|Geodude, M|283/283 slp',
+      '|move|p1a: Parasect|Spore|p2a: Geodude',
+      '|-fail|p2a: Geodude|slp',
+      '|turn|6',
+      '|move|p1a: Parasect|Cut|p2a: Geodude',
+      '|-resisted|p2a: Geodude',
+      '|-damage|p2a: Geodude|266/283 slp',
+      '|cant|p2a: Geodude|slp',
+      '|turn|7',
+      '|move|p1a: Parasect|Cut|p2a: Geodude',
+      '|-resisted|p2a: Geodude',
+      '|-damage|p2a: Geodude|249/283 slp',
+      '|-curestatus|p2a: Geodude|slp|[msg]',
+      '|move|p2a: Geodude|Tackle|p1a: Parasect',
+      '|-damage|p1a: Parasect|271/323',
+      '|turn|8',
+    ]);
+  });
 
   test('Confusion effect', () => {
     const battle = startBattle([QKC, QKC, QKC, CFZ(3), QKC, CFZ_CANT, QKC, CFZ_CAN, QKC, QKC], [
