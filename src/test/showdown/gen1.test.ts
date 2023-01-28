@@ -4125,7 +4125,7 @@ describe('Gen 1', () => {
     battle.p1.pokemon[1].maxhp = 3;
 
     let mewtwo = battle.p1.pokemon[0].hp;
-    const mew = battle.p1.pokemon[1].hp;
+    const abra = battle.p1.pokemon[1].hp;
 
     // Takes 1/4 of maximum HP to make a Substitute with that HP + 1, protects against stat down
     battle.makeChoices('move 1', 'move 1');
@@ -4139,12 +4139,12 @@ describe('Gen 1', () => {
 
     // Disappears when switching out
     battle.makeChoices('switch 2', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(mew);
+    expect(battle.p1.pokemon[0].hp).toBe(abra);
     expect(battle.p1.pokemon[0].volatiles['substitute']).toBeUndefined();
 
     // Can get "free" Substitutes if 3 or less max HP
     battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(mew);
+    expect(battle.p1.pokemon[0].hp).toBe(abra);
     expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(1);
 
     verify(battle, [

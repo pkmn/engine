@@ -30,7 +30,7 @@ const THAW = {key: 'data/mods/gen2/conditions.ts:77:13', value: ranged(25, 256) 
 const NO_THAW = {...THAW, value: THAW.value + 1};
 const CFZ = (n: number) =>
   ({key: 'data/mods/gen2/conditions.ts:127:34', value: ranged(n - 1, 6 - 2) - 1});
-const CFZ_CAN = {key: 'data/mods/gen2/conditions.ts:137:13', value: ranged(128, 256) - 1};
+const CFZ_CAN = {key: 'data/mods/gen2/conditions.ts:137:13', value: ranged(1, 2) - 1};
 const CFZ_CANT = {...CFZ_CAN, value: CFZ_CAN.value + 1};
 const THRASH = (n: 2 | 3) =>
   ({key: 'data/mods/gen2/conditions.ts:169:16', value: ranged(n, 4) - 1});
@@ -2394,73 +2394,171 @@ describe('Gen 2', () => {
   });
 
   test('Confusion effect', () => {
-    const battle = startBattle([QKC, QKC, QKC, CFZ(3), QKC, CFZ_CANT, QKC, CFZ_CAN, QKC, QKC], [
-      {species: 'Haunter', evs, moves: ['Confuse Ray', 'Night Shade']},
-    ], [
-      {species: 'Gengar', evs, moves: ['Substitute', 'Agility']},
-    ]);
+    {
+      const battle = startBattle([QKC, QKC, QKC, CFZ(3), QKC, CFZ_CANT, QKC, CFZ_CAN, QKC, QKC], [
+        {species: 'Haunter', evs, moves: ['Confuse Ray', 'Night Shade']},
+      ], [
+        {species: 'Gengar', evs, moves: ['Substitute', 'Agility']},
+      ]);
 
-    let p2hp = battle.p2.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
 
-    // Confusion is blocked by Substitute
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 80);
-    expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
+      // Confusion is blocked by Substitute
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 80);
+      expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
 
-    battle.makeChoices('move 2', 'move 1');
+      battle.makeChoices('move 2', 'move 1');
 
-    battle.makeChoices('move 1', 'move 2');
-    expect(battle.p2.pokemon[0].volatiles['confusion']).toBeDefined();
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p2.pokemon[0].volatiles['confusion']).toBeDefined();
 
-    // Can't confuse a Pokémon that already has a confusion
-    battle.makeChoices('move 1', 'move 2');
-    // Confused Pokémon can hurt themselves in confusion (typeless damage)
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 37);
+      // Can't confuse a Pokémon that already has a confusion
+      battle.makeChoices('move 1', 'move 2');
+      // Confused Pokémon can hurt themselves in confusion (typeless damage)
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 37);
 
-    // Pokémon can still successfully move despite being confused
-    battle.makeChoices('move 2', 'move 2');
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
+      // Pokémon can still successfully move despite being confused
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
 
-    // Pokémon snap out of confusion
-    battle.makeChoices('move 2', 'move 2');
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
-    expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
+      // Pokémon snap out of confusion
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
+      expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
 
-    verify(battle, [
-      '|move|p2a: Gengar|Substitute|p2a: Gengar',
-      '|-start|p2a: Gengar|Substitute',
-      '|-damage|p2a: Gengar|243/323',
-      '|move|p1a: Haunter|Confuse Ray|p2a: Gengar',
-      '|-activate|p2a: Gengar|Substitute|[block] Confuse Ray',
-      '|turn|2',
-      '|move|p2a: Gengar|Substitute|p2a: Gengar',
-      '|-fail|p2a: Gengar|move: Substitute',
-      '|move|p1a: Haunter|Night Shade|p2a: Gengar',
-      '|-end|p2a: Gengar|Substitute',
-      '|turn|3',
-      '|move|p2a: Gengar|Agility|p2a: Gengar',
-      '|-boost|p2a: Gengar|spe|2',
-      '|move|p1a: Haunter|Confuse Ray|p2a: Gengar',
-      '|-start|p2a: Gengar|confusion',
-      '|turn|4',
-      '|-activate|p2a: Gengar|confusion',
-      '|-damage|p2a: Gengar|206/323|[from] confusion',
-      '|move|p1a: Haunter|Confuse Ray|p2a: Gengar',
-      '|-fail|p2a: Gengar',
-      '|turn|5',
-      '|-activate|p2a: Gengar|confusion',
-      '|move|p2a: Gengar|Agility|p2a: Gengar',
-      '|-boost|p2a: Gengar|spe|2',
-      '|move|p1a: Haunter|Night Shade|p2a: Gengar',
-      '|-damage|p2a: Gengar|106/323',
-      '|turn|6',
-      '|-end|p2a: Gengar|confusion',
-      '|move|p2a: Gengar|Agility|p2a: Gengar',
-      '|-boost|p2a: Gengar|spe|2',
-      '|move|p1a: Haunter|Night Shade|p2a: Gengar',
-      '|-damage|p2a: Gengar|6/323',
-      '|turn|7',
-    ]);
+      verify(battle, [
+        '|move|p2a: Gengar|Substitute|p2a: Gengar',
+        '|-start|p2a: Gengar|Substitute',
+        '|-damage|p2a: Gengar|243/323',
+        '|move|p1a: Haunter|Confuse Ray|p2a: Gengar',
+        '|-activate|p2a: Gengar|Substitute|[block] Confuse Ray',
+        '|turn|2',
+        '|move|p2a: Gengar|Substitute|p2a: Gengar',
+        '|-fail|p2a: Gengar|move: Substitute',
+        '|move|p1a: Haunter|Night Shade|p2a: Gengar',
+        '|-end|p2a: Gengar|Substitute',
+        '|turn|3',
+        '|move|p2a: Gengar|Agility|p2a: Gengar',
+        '|-boost|p2a: Gengar|spe|2',
+        '|move|p1a: Haunter|Confuse Ray|p2a: Gengar',
+        '|-start|p2a: Gengar|confusion',
+        '|turn|4',
+        '|-activate|p2a: Gengar|confusion',
+        '|-damage|p2a: Gengar|206/323|[from] confusion',
+        '|move|p1a: Haunter|Confuse Ray|p2a: Gengar',
+        '|-fail|p2a: Gengar',
+        '|turn|5',
+        '|-activate|p2a: Gengar|confusion',
+        '|move|p2a: Gengar|Agility|p2a: Gengar',
+        '|-boost|p2a: Gengar|spe|2',
+        '|move|p1a: Haunter|Night Shade|p2a: Gengar',
+        '|-damage|p2a: Gengar|106/323',
+        '|turn|6',
+        '|-end|p2a: Gengar|confusion',
+        '|move|p2a: Gengar|Agility|p2a: Gengar',
+        '|-boost|p2a: Gengar|spe|2',
+        '|move|p1a: Haunter|Night Shade|p2a: Gengar',
+        '|-damage|p2a: Gengar|6/323',
+        '|turn|7',
+      ]);
+    }
+    // Confused Pokémon has Substitute
+    {
+      const battle = startBattle([QKC, HIT, CFZ(5), CFZ_CAN, QKC, HIT, CFZ_CANT, QKC], [
+        {species: 'Bulbasaur', level: 6, evs, moves: ['Substitute', 'Growl']},
+      ], [
+        {species: 'Zubat', level: 10, evs, moves: ['Supersonic']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 6);
+      expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(6);
+
+      // Confusion self-hit bypasses own Substitute
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 5);
+      expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(6);
+
+      verify(battle, [
+        '|move|p2a: Zubat|Supersonic|p1a: Bulbasaur',
+        '|-start|p1a: Bulbasaur|confusion',
+        '|-activate|p1a: Bulbasaur|confusion',
+        '|move|p1a: Bulbasaur|Substitute|p1a: Bulbasaur',
+        '|-start|p1a: Bulbasaur|Substitute',
+        '|-damage|p1a: Bulbasaur|20/26',
+        '|turn|2',
+        '|move|p2a: Zubat|Supersonic|p1a: Bulbasaur',
+        '|-activate|p1a: Bulbasaur|Substitute|[block] Supersonic',
+        '|-activate|p1a: Bulbasaur|confusion',
+        '|-damage|p1a: Bulbasaur|15/26|[from] confusion',
+        '|turn|3',
+      ]);
+    }
+    // Both Pokémon have Substitutes
+    {
+      const battle = startBattle([
+        QKC, HIT, NO_CRIT, MIN_DMG, QKC, HIT, CFZ(5), CFZ_CANT, QKC, CFZ_CAN, QKC, CFZ_CANT, QKC,
+      ], [
+        {species: 'Bulbasaur', level: 6, evs, moves: ['Substitute', 'Tackle']},
+      ], [
+        {species: 'Zubat', level: 10, evs, moves: ['Supersonic', 'Substitute']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+      const sub1 = 6;
+      let sub2 = 9;
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= sub2);
+      expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(sub2 -= 3);
+
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 5);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+      expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(sub2);
+
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= sub1);
+      expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(sub1);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+      expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(sub2);
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 5);
+      expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(sub1);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+      expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(sub2);
+
+      verify(battle, [
+        '|move|p2a: Zubat|Substitute|p2a: Zubat',
+        '|-start|p2a: Zubat|Substitute',
+        '|-damage|p2a: Zubat|28/37',
+        '|move|p1a: Bulbasaur|Tackle|p2a: Zubat',
+        '|-activate|p2a: Zubat|Substitute|[damage]',
+        '|turn|2',
+        '|move|p2a: Zubat|Supersonic|p1a: Bulbasaur',
+        '|-start|p1a: Bulbasaur|confusion',
+        '|-activate|p1a: Bulbasaur|confusion',
+        '|-damage|p1a: Bulbasaur|21/26|[from] confusion',
+        '|turn|3',
+        '|move|p2a: Zubat|Substitute|p2a: Zubat',
+        '|-fail|p2a: Zubat|move: Substitute',
+        '|-activate|p1a: Bulbasaur|confusion',
+        '|move|p1a: Bulbasaur|Substitute|p1a: Bulbasaur',
+        '|-start|p1a: Bulbasaur|Substitute',
+        '|-damage|p1a: Bulbasaur|15/26',
+        '|turn|4',
+        '|move|p2a: Zubat|Substitute|p2a: Zubat',
+        '|-fail|p2a: Zubat|move: Substitute',
+        '|-activate|p1a: Bulbasaur|confusion',
+        '|-damage|p1a: Bulbasaur|10/26|[from] confusion',
+        '|turn|5',
+      ]);
+    }
   });
 
   test('ConfusionChance effect', () => {
@@ -3472,13 +3570,14 @@ describe('Gen 2', () => {
     const battle = startBattle([
       QKC, QKC, HIT, NO_CRIT, MIN_DMG, MIN_WRAP, QKC, QKC, HIT,
       NO_CRIT, MIN_DMG, QKC, HIT, NO_CRIT, MIN_DMG, MIN_WRAP, QKC, QKC,
+      HIT, NO_CRIT, MIN_DMG, MIN_WRAP, QKC, HIT, NO_CRIT, MIN_DMG, QKC,
     ], [
       {species: 'Shuckle', evs, moves: ['Wrap', 'Teleport']},
-      {species: 'Scizor', evs, moves: ['Metal Claw']},
+      {species: 'Scizor', evs, moves: ['Metal Claw', 'Clamp']},
     ], [
       {species: 'Misdreavus', evs, moves: ['Teleport']},
       {species: 'Elekid', evs, moves: ['Teleport']},
-      {species: 'Cleffa', evs, moves: ['Teleport']},
+      {species: 'Cleffa', evs, moves: ['Teleport', 'Substitute']},
     ]);
 
     const misdreavus = battle.p2.pokemon[0].hp;
@@ -3511,9 +3610,20 @@ describe('Gen 2', () => {
 
     battle.makeChoices('switch 2', 'move 1');
 
-    expect(choices(battle, 'p2')).toEqual(['switch 2', 'switch 3', 'move 1']);
+    expect(choices(battle, 'p2')).toEqual(['switch 2', 'switch 3', 'move 1', 'move 2']);
 
-    // TODO verify can escape
+    // Creating a Substitute will cause the user to escape a Trapping move
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(cleffa = cleffa - 26 - 75);
+
+    expect(choices(battle, 'p2')).toEqual(['switch 2', 'switch 3', 'move 1', 'move 2']);
+
+    // Trapping moves will not trap the target if it is behind a Substitute
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(cleffa);
+
+    expect(choices(battle, 'p2')).toEqual(['switch 2', 'switch 3', 'move 1', 'move 2']);
+
     verify(battle, [
       '|move|p2a: Misdreavus|Teleport|p2a: Misdreavus',
       '|move|p1a: Shuckle|Wrap|p2a: Misdreavus',
@@ -3543,6 +3653,17 @@ describe('Gen 2', () => {
       '|switch|p1a: Scizor|Scizor, M|343/343',
       '|move|p2a: Cleffa|Teleport|p2a: Cleffa',
       '|turn|7',
+      '|move|p1a: Scizor|Clamp|p2a: Cleffa',
+      '|-damage|p2a: Cleffa|250/303',
+      '|-activate|p2a: Cleffa|move: Clamp|[of] p1a: Scizor',
+      '|move|p2a: Cleffa|Substitute|p2a: Cleffa',
+      '|-start|p2a: Cleffa|Substitute',
+      '|-damage|p2a: Cleffa|175/303',
+      '|turn|8',
+      '|move|p1a: Scizor|Clamp|p2a: Cleffa',
+      '|-activate|p2a: Cleffa|Substitute|[damage]',
+      '|move|p2a: Cleffa|Teleport|p2a: Cleffa',
+      '|turn|9',
     ]);
   });
 
@@ -4165,8 +4286,81 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('Counter effect');
-  test.todo('MirrorCoat effect');
+  test('Counter effect', () => {
+    {
+      // TODO
+    }
+    // Substitute
+    {
+      const battle = startBattle([QKC, QKC, NO_CRIT, MIN_DMG, QKC], [
+        {species: 'Snorlax', evs, moves: ['Reflect', 'Body Slam']},
+      ], [
+        {species: 'Chansey', evs, moves: ['Substitute', 'Counter']},
+      ]);
+
+      const p1hp = battle.p1.pokemon[0].hp;
+      const p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp - 175);
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp - 175);
+
+      verify(battle, [
+        '|move|p2a: Chansey|Substitute|p2a: Chansey',
+        '|-start|p2a: Chansey|Substitute',
+        '|-damage|p2a: Chansey|528/703',
+        '|move|p1a: Snorlax|Reflect|p1a: Snorlax',
+        '|-sidestart|p1: Player 1|Reflect',
+        '|turn|2',
+        '|move|p1a: Snorlax|Body Slam|p2a: Chansey',
+        '|-end|p2a: Chansey|Substitute',
+        '|move|p2a: Chansey|Counter|p1a: Snorlax',
+        '|-damage|p1a: Snorlax|523/523',
+        '|turn|3',
+      ]);
+    }
+  });
+
+  test('MirrorCoat effect', () => {
+    {
+      // TODO
+    }
+    // Substitute
+    {
+      const battle = startBattle([QKC, QKC, NO_CRIT, MIN_DMG, QKC], [
+        {species: 'Ho-Oh', evs, moves: ['Light Screen', 'Flamethrower']},
+      ], [
+        {species: 'Alakazam', evs, moves: ['Substitute', 'Mirror Coat']},
+      ]);
+
+      const p1hp = battle.p1.pokemon[0].hp;
+      const p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp - 78);
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp - 78);
+
+      verify(battle, [
+        '|move|p2a: Alakazam|Substitute|p2a: Alakazam',
+        '|-start|p2a: Alakazam|Substitute',
+        '|-damage|p2a: Alakazam|235/313',
+        '|move|p1a: Ho-Oh|Light Screen|p1a: Ho-Oh',
+        '|-sidestart|p1: Player 1|move: Light Screen',
+        '|turn|2',
+        '|move|p1a: Ho-Oh|Flamethrower|p2a: Alakazam',
+        '|-end|p2a: Alakazam|Substitute',
+        '|move|p2a: Alakazam|Mirror Coat|p1a: Ho-Oh',
+        '|-damage|p1a: Ho-Oh|415/415',
+        '|turn|3',
+      ]);
+    }
+  });
 
   test('Heal effect', () => {
     const battle = startBattle([QKC, QKC, QKC], [
@@ -4345,10 +4539,10 @@ describe('Gen 2', () => {
 
   test('DrainHP effect', () => {
     const battle = startBattle([
-      QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
+      QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC, QKC,
     ], [
       {species: 'Slowpoke', evs, moves: ['Teleport']},
-      {species: 'Butterfree', evs, moves: ['Mega Drain']},
+      {species: 'Butterfree', evs, moves: ['Mega Drain', 'Substitute']},
     ], [
       {species: 'Parasect', evs, moves: ['Leech Life']},
     ]);
@@ -4371,6 +4565,10 @@ describe('Gen 2', () => {
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 16);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp = p2hp - 6 + 8);
 
+    // Draining moves always miss against Substitute
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 80);
+
     verify(battle, [
       '|move|p2a: Parasect|Leech Life|p1a: Slowpoke',
       '|-supereffective|p1a: Slowpoke',
@@ -4387,6 +4585,12 @@ describe('Gen 2', () => {
       '|-damage|p1a: Butterfree|307/323',
       '|-heal|p2a: Parasect|303/323|[from] drain|[of] p1a: Butterfree',
       '|turn|3',
+      '|move|p1a: Butterfree|Substitute|p1a: Butterfree',
+      '|-start|p1a: Butterfree|Substitute',
+      '|-damage|p1a: Butterfree|227/323',
+      '|move|p2a: Parasect|Leech Life|p1a: Butterfree',
+      '|-miss|p2a: Parasect',
+      '|turn|4',
     ]);
   });
 
@@ -4987,143 +5191,194 @@ describe('Gen 2', () => {
   test('Bide effect', () => {
     const bide = (n: 2 | 3) =>
       ({key: 'data/mods/gen2/moves.ts:56:17', value: ranged(n - 2, 5 - 3)});
-    const battle = startBattle([
-      QKC, bide(3), HIT, QKC, HIT, QKC, QKC, QKC, NO_CRIT, MIN_DMG, bide(3),
-      QKC, QKC, QKC, CFZ(2), CFZ_CAN, QKC, bide(3), QKC, HIT, SLP(2), QKC,
-      QKC, bide(2), HIT, QKC, HIT, QKC, HIT, QKC,
-    ], [
-      {species: 'Chansey', evs, moves: ['Bide', 'Teleport']},
-      {species: 'Onix', evs, moves: ['Bide']},
-    ], [
-      {species: 'Magnemite', evs, moves: ['Sonic Boom']},
-      {species: 'Dugtrio', evs, moves: ['Dig']},
-      {species: 'Haunter', evs, moves: ['Dragon Rage', 'Confuse Ray', 'Hypnosis']},
-    ]);
+    {
+      const battle = startBattle([
+        QKC, bide(3), HIT, QKC, HIT, QKC, QKC, QKC, NO_CRIT, MIN_DMG, bide(3),
+        QKC, QKC, QKC, CFZ(2), CFZ_CAN, QKC, bide(3), QKC, HIT, SLP(2), QKC,
+        QKC, bide(2), HIT, QKC, HIT, QKC, HIT, QKC,
+      ], [
+        {species: 'Chansey', evs, moves: ['Bide', 'Teleport']},
+        {species: 'Onix', evs, moves: ['Bide']},
+      ], [
+        {species: 'Magnemite', evs, moves: ['Sonic Boom']},
+        {species: 'Dugtrio', evs, moves: ['Dig']},
+        {species: 'Haunter', evs, moves: ['Dragon Rage', 'Confuse Ray', 'Hypnosis']},
+      ]);
 
-    let chansey = battle.p1.pokemon[0].hp;
-    let magnemite = battle.p2.pokemon[0].hp;
-    const dugtrio = battle.p2.pokemon[1].hp;
-    const haunter = battle.p2.pokemon[2].hp;
+      let chansey = battle.p1.pokemon[0].hp;
+      let magnemite = battle.p2.pokemon[0].hp;
+      const dugtrio = battle.p2.pokemon[1].hp;
+      const haunter = battle.p2.pokemon[2].hp;
 
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
 
-    expect(choices(battle, 'p1')).toEqual(['move 1']);
+      expect(choices(battle, 'p1')).toEqual(['move 1']);
 
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
 
-    battle.makeChoices('move 1', 'switch 2');
-    expect(battle.p1.pokemon[0].hp).toBe(chansey);
+      battle.makeChoices('move 1', 'switch 2');
+      expect(battle.p1.pokemon[0].hp).toBe(chansey);
 
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p2.pokemon[0].hp).toBe(dugtrio);
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(dugtrio);
 
-    expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
 
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 154);
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(chansey -= 154);
 
-    battle.makeChoices('move 1', 'switch 3');
-    expect(battle.p1.pokemon[0].hp).toBe(chansey);
+      battle.makeChoices('move 1', 'switch 3');
+      expect(battle.p1.pokemon[0].hp).toBe(chansey);
 
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 40);
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(chansey -= 40);
 
-    battle.makeChoices('move 1', 'move 2');
-    expect(battle.p1.pokemon[0].hp).toBe(chansey);
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(chansey);
 
-    battle.makeChoices('move 1', 'move 2');
-    expect(battle.p2.pokemon[0].hp).toBe(haunter);
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p2.pokemon[0].hp).toBe(haunter);
 
-    battle.makeChoices('move 1', 'move 3');
-    expect(battle.p1.pokemon[0].hp).toBe(chansey);
-    expect(battle.p1.pokemon[0].status).toBe('slp');
+      battle.makeChoices('move 1', 'move 3');
+      expect(battle.p1.pokemon[0].hp).toBe(chansey);
+      expect(battle.p1.pokemon[0].status).toBe('slp');
 
-    battle.makeChoices('move 1', 'switch 2');
+      battle.makeChoices('move 1', 'switch 2');
 
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
-    expect(battle.p1.pokemon[0].status).toBe('');
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
+      expect(battle.p1.pokemon[0].status).toBe('');
 
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
 
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
-    expect(battle.p2.pokemon[0].hp).toBe(magnemite -= 80);
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
+      expect(battle.p2.pokemon[0].hp).toBe(magnemite -= 80);
 
-    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(12);
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(12);
 
-    verify(battle, [
-      '|move|p1a: Chansey|Bide|p1a: Chansey',
-      '|-start|p1a: Chansey|move: Bide',
-      '|move|p2a: Magnemite|Sonic Boom|p1a: Chansey',
-      '|-damage|p1a: Chansey|683/703',
-      '|turn|2',
-      '|-activate|p1a: Chansey|move: Bide',
-      '|move|p2a: Magnemite|Sonic Boom|p1a: Chansey',
-      '|-damage|p1a: Chansey|663/703',
-      '|turn|3',
-      '|switch|p2a: Dugtrio|Dugtrio, M|273/273',
-      '|-activate|p1a: Chansey|move: Bide',
-      '|turn|4',
-      '|move|p2a: Dugtrio|Dig||[still]|[miss]',
-      '|-prepare|p2a: Dugtrio|Dig',
-      '|-end|p1a: Chansey|move: Bide',
-      '|-miss|p1a: Chansey',
-      '|-end|p1a: Chansey|move: Bide|[silent]',
-      '|turn|5',
-      '|move|p2a: Dugtrio|Dig|p1a: Chansey',
-      '|-damage|p1a: Chansey|509/703',
-      '|move|p1a: Chansey|Bide|p1a: Chansey',
-      '|-start|p1a: Chansey|move: Bide',
-      '|turn|6',
-      '|switch|p2a: Haunter|Haunter, M|293/293',
-      '|-activate|p1a: Chansey|move: Bide',
-      '|turn|7',
-      '|move|p2a: Haunter|Dragon Rage|p1a: Chansey',
-      '|-damage|p1a: Chansey|469/703',
-      '|-activate|p1a: Chansey|move: Bide',
-      '|turn|8',
-      '|move|p2a: Haunter|Confuse Ray|p1a: Chansey',
-      '|-start|p1a: Chansey|confusion',
-      '|-activate|p1a: Chansey|confusion',
-      '|-end|p1a: Chansey|move: Bide',
-      '|-immune|p2a: Haunter',
-      '|-end|p1a: Chansey|move: Bide|[silent]',
-      '|turn|9',
-      '|move|p2a: Haunter|Confuse Ray|p1a: Chansey',
-      '|-fail|p1a: Chansey',
-      '|-end|p1a: Chansey|confusion',
-      '|move|p1a: Chansey|Bide|p1a: Chansey',
-      '|-start|p1a: Chansey|move: Bide',
-      '|turn|10',
-      '|move|p2a: Haunter|Hypnosis|p1a: Chansey',
-      '|-status|p1a: Chansey|slp|[from] move: Hypnosis',
-      '|cant|p1a: Chansey|slp',
-      '|-end|p1a: Chansey|move: Bide|[silent]',
-      '|turn|11',
-      '|switch|p2a: Magnemite|Magnemite|253/253',
-      '|cant|p1a: Chansey|slp',
-      '|turn|12',
-      '|-curestatus|p1a: Chansey|slp|[msg]',
-      '|move|p1a: Chansey|Bide|p1a: Chansey',
-      '|-start|p1a: Chansey|move: Bide',
-      '|move|p2a: Magnemite|Sonic Boom|p1a: Chansey',
-      '|-damage|p1a: Chansey|449/703',
-      '|turn|13',
-      '|-activate|p1a: Chansey|move: Bide',
-      '|move|p2a: Magnemite|Sonic Boom|p1a: Chansey',
-      '|-damage|p1a: Chansey|429/703',
-      '|turn|14',
-      '|-end|p1a: Chansey|move: Bide',
-      '|-damage|p2a: Magnemite|173/253',
-      '|-end|p1a: Chansey|move: Bide|[silent]',
-      '|move|p2a: Magnemite|Sonic Boom|p1a: Chansey',
-      '|-damage|p1a: Chansey|409/703',
-      '|turn|15',
-    ]);
+      verify(battle, [
+        '|move|p1a: Chansey|Bide|p1a: Chansey',
+        '|-start|p1a: Chansey|move: Bide',
+        '|move|p2a: Magnemite|Sonic Boom|p1a: Chansey',
+        '|-damage|p1a: Chansey|683/703',
+        '|turn|2',
+        '|-activate|p1a: Chansey|move: Bide',
+        '|move|p2a: Magnemite|Sonic Boom|p1a: Chansey',
+        '|-damage|p1a: Chansey|663/703',
+        '|turn|3',
+        '|switch|p2a: Dugtrio|Dugtrio, M|273/273',
+        '|-activate|p1a: Chansey|move: Bide',
+        '|turn|4',
+        '|move|p2a: Dugtrio|Dig||[still]|[miss]',
+        '|-prepare|p2a: Dugtrio|Dig',
+        '|-end|p1a: Chansey|move: Bide',
+        '|-miss|p1a: Chansey',
+        '|-end|p1a: Chansey|move: Bide|[silent]',
+        '|turn|5',
+        '|move|p2a: Dugtrio|Dig|p1a: Chansey',
+        '|-damage|p1a: Chansey|509/703',
+        '|move|p1a: Chansey|Bide|p1a: Chansey',
+        '|-start|p1a: Chansey|move: Bide',
+        '|turn|6',
+        '|switch|p2a: Haunter|Haunter, M|293/293',
+        '|-activate|p1a: Chansey|move: Bide',
+        '|turn|7',
+        '|move|p2a: Haunter|Dragon Rage|p1a: Chansey',
+        '|-damage|p1a: Chansey|469/703',
+        '|-activate|p1a: Chansey|move: Bide',
+        '|turn|8',
+        '|move|p2a: Haunter|Confuse Ray|p1a: Chansey',
+        '|-start|p1a: Chansey|confusion',
+        '|-activate|p1a: Chansey|confusion',
+        '|-end|p1a: Chansey|move: Bide',
+        '|-immune|p2a: Haunter',
+        '|-end|p1a: Chansey|move: Bide|[silent]',
+        '|turn|9',
+        '|move|p2a: Haunter|Confuse Ray|p1a: Chansey',
+        '|-fail|p1a: Chansey',
+        '|-end|p1a: Chansey|confusion',
+        '|move|p1a: Chansey|Bide|p1a: Chansey',
+        '|-start|p1a: Chansey|move: Bide',
+        '|turn|10',
+        '|move|p2a: Haunter|Hypnosis|p1a: Chansey',
+        '|-status|p1a: Chansey|slp|[from] move: Hypnosis',
+        '|cant|p1a: Chansey|slp',
+        '|-end|p1a: Chansey|move: Bide|[silent]',
+        '|turn|11',
+        '|switch|p2a: Magnemite|Magnemite|253/253',
+        '|cant|p1a: Chansey|slp',
+        '|turn|12',
+        '|-curestatus|p1a: Chansey|slp|[msg]',
+        '|move|p1a: Chansey|Bide|p1a: Chansey',
+        '|-start|p1a: Chansey|move: Bide',
+        '|move|p2a: Magnemite|Sonic Boom|p1a: Chansey',
+        '|-damage|p1a: Chansey|449/703',
+        '|turn|13',
+        '|-activate|p1a: Chansey|move: Bide',
+        '|move|p2a: Magnemite|Sonic Boom|p1a: Chansey',
+        '|-damage|p1a: Chansey|429/703',
+        '|turn|14',
+        '|-end|p1a: Chansey|move: Bide',
+        '|-damage|p2a: Magnemite|173/253',
+        '|-end|p1a: Chansey|move: Bide|[silent]',
+        '|move|p2a: Magnemite|Sonic Boom|p1a: Chansey',
+        '|-damage|p1a: Chansey|409/703',
+        '|turn|15',
+      ]);
+    }
+    // Bide + Substitute
+    {
+      const battle = startBattle([QKC, QKC, bide(2), QKC, QKC, QKC], [
+        {species: 'Snorlax', evs, moves: ['Seismic Toss']},
+      ], [
+        {species: 'Chansey', evs, moves: ['Substitute', 'Bide', 'Teleport']},
+      ]);
+
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 175);
+
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
+
+      // Damage dealt to a Substitute is not considered for the damage Bide deals
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 200);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
+
+      verify(battle, [
+        '|move|p2a: Chansey|Substitute|p2a: Chansey',
+        '|-start|p2a: Chansey|Substitute',
+        '|-damage|p2a: Chansey|528/703',
+        '|move|p1a: Snorlax|Seismic Toss|p2a: Chansey',
+        '|-activate|p2a: Chansey|Substitute|[damage]',
+        '|turn|2',
+        '|move|p2a: Chansey|Bide|p2a: Chansey',
+        '|-start|p2a: Chansey|move: Bide',
+        '|move|p1a: Snorlax|Seismic Toss|p2a: Chansey',
+        '|-end|p2a: Chansey|Substitute',
+        '|turn|3',
+        '|-activate|p2a: Chansey|move: Bide',
+        '|move|p1a: Snorlax|Seismic Toss|p2a: Chansey',
+        '|-damage|p2a: Chansey|428/703',
+        '|turn|4',
+        '|-end|p2a: Chansey|move: Bide',
+        '|-damage|p1a: Snorlax|323/523',
+        '|-end|p2a: Chansey|move: Bide|[silent]',
+        '|move|p1a: Snorlax|Seismic Toss|p2a: Chansey',
+        '|-damage|p2a: Chansey|328/703',
+        '|turn|5',
+      ]);
+    }
   });
 
   test('Metronome effect', () => {
@@ -5346,6 +5601,7 @@ describe('Gen 2', () => {
     expect(battle.p1.pokemon[0].hp).toBe(electrode);
     expect(battle.p2.pokemon[0].hp).toBe(chansey = chansey - 175 - 43);
 
+    // Breaking a Substitute with Explosion/Self-Destruct still causes the user to faint
     battle.makeChoices('move 1', 'move 2');
     expect(battle.p2.pokemon[0].hp).toBe(chansey);
 
@@ -5547,7 +5803,79 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('Substitute effect');
+  test('Substitute effect', () => {
+    const battle = startBattle([
+      QKC, HIT, QKC, NO_CRIT, MIN_DMG, QKC, HIT, QKC, QKC, HIT, NO_CRIT, MAX_DMG, QKC,
+    ], [
+      {species: 'Mewtwo', evs, moves: ['Substitute', 'Teleport']},
+      {species: 'Abra', level: 2, moves: ['Substitute', 'Psychic']},
+    ], [
+      {species: 'Electabuzz', moves: ['Flash', 'Strength', 'Substitute', 'Baton Pass']},
+      {species: 'Blissey', moves: ['Teleport']},
+    ]);
+
+    battle.p1.pokemon[1].hp = 3;
+
+    let mewtwo = battle.p1.pokemon[0].hp;
+    const abra = battle.p1.pokemon[1].hp;
+    let electabuzz = battle.p2.pokemon[0].hp;
+
+    // Takes 1/4 of maximum HP to make a Substitute with that HP, protects against stat down
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(mewtwo -= 103);
+    expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(103);
+
+    // Can't make a Substitute if you already have one, absorbs damage
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(mewtwo);
+    expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(61);
+
+    // Disappears when switching out
+    battle.makeChoices('switch 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(abra);
+    expect(battle.p1.pokemon[0].volatiles['substitute']).toBeUndefined();
+
+    // Can be too weak to create a Substitute
+    battle.makeChoices('move 1', 'move 3');
+    expect(battle.p1.pokemon[0].hp).toBe(abra);
+    expect(battle.p2.pokemon[0].hp).toBe(electabuzz -= 67);
+    expect(battle.p1.pokemon[0].volatiles['substitute']).toBeUndefined();
+    expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(67);
+
+    // A Substitute can be passed by Baton Pass, and it will keep whatever HP it has remaining
+    battle.makeChoices('move 2', 'move 4');
+    battle.makeChoices('', 'switch 2');
+    expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(63);
+
+    verify(battle, [
+      '|move|p1a: Mewtwo|Substitute|p1a: Mewtwo',
+      '|-start|p1a: Mewtwo|Substitute',
+      '|-damage|p1a: Mewtwo|312/415',
+      '|move|p2a: Electabuzz|Flash|p1a: Mewtwo',
+      '|-activate|p1a: Mewtwo|Substitute|[block] Flash',
+      '|turn|2',
+      '|move|p1a: Mewtwo|Substitute|p1a: Mewtwo',
+      '|-fail|p1a: Mewtwo|move: Substitute',
+      '|move|p2a: Electabuzz|Strength|p1a: Mewtwo',
+      '|-activate|p1a: Mewtwo|Substitute|[damage]',
+      '|turn|3',
+      '|switch|p1a: Abra|Abra, L2, M|3/13',
+      '|move|p2a: Electabuzz|Flash|p1a: Abra',
+      '|-unboost|p1a: Abra|accuracy|1',
+      '|turn|4',
+      '|move|p2a: Electabuzz|Substitute|p2a: Electabuzz',
+      '|-start|p2a: Electabuzz|Substitute',
+      '|-damage|p2a: Electabuzz|203/270',
+      '|move|p1a: Abra|Substitute|p1a: Abra',
+      '|-fail|p1a: Abra|move: Substitute|[weak]',
+      '|turn|5',
+      '|move|p2a: Electabuzz|Baton Pass|p2a: Electabuzz',
+      '|switch|p2a: Blissey|Blissey, F|650/650|[from] Baton Pass',
+      '|move|p1a: Abra|Psychic|p2a: Blissey',
+      '|-activate|p2a: Blissey|Substitute|[damage]',
+      '|turn|6',
+    ]);
+  });
 
   test('Sketch effect', () => {
     const battle = startBattle([QKC, QKC], [
@@ -5569,25 +5897,32 @@ describe('Gen 2', () => {
   test('Thief effect', () => {
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, PROC_SEC,
-      QKC, NO_CRIT, MIN_DMG, PROC_SEC, QKC,
+      QKC, NO_CRIT, MIN_DMG, PROC_SEC,
+      QKC, NO_CRIT, MIN_DMG, QKC,
     ], [
       {species: 'Snubbull', evs, moves: ['Teleport']},
-      {species: 'Granbull', item: 'Dragon Fang', evs, moves: ['Crunch']},
+      {species: 'Granbull', item: 'Dragon Fang', evs, moves: ['Thief']},
     ], [
-      {species: 'Sneasel', evs, moves: ['Thief']},
+      {species: 'Sneasel', evs, moves: ['Thief', 'Substitute']},
     ]);
 
-    let snubbull = battle.p1.pokemon[0].hp;
-    let granbull = battle.p1.pokemon[1].hp;
+    const snubbull = battle.p1.pokemon[0].hp;
+    const granbull = battle.p1.pokemon[1].hp;
+    const sneasel = battle.p2.pokemon[0].hp;
 
     battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(snubbull -= 41);
+    expect(battle.p1.pokemon[0].hp).toBe(snubbull - 41);
     expect(battle.p1.pokemon[0].item).toBe('');
     expect(battle.p2.pokemon[0].item).toBe('');
 
     battle.makeChoices('switch 2', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(granbull -= 34);
+    expect(battle.p1.pokemon[0].hp).toBe(granbull - 34);
     expect(battle.p1.pokemon[0].item).toBe('');
+    expect(battle.p2.pokemon[0].item).toBe('dragonfang');
+
+    // Thief cannot steal an item from a Pokémon behind a Substitute
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(sneasel - 78);
     expect(battle.p2.pokemon[0].item).toBe('dragonfang');
 
     verify(battle, [
@@ -5600,6 +5935,13 @@ describe('Gen 2', () => {
       '|-damage|p1a: Granbull|349/383',
       '|-item|p2a: Sneasel|Dragon Fang|[from] move: Thief|[of] p1a: Granbull',
       '|turn|3',
+      '|move|p2a: Sneasel|Substitute|p2a: Sneasel',
+      '|-start|p2a: Sneasel|Substitute',
+      '|-damage|p2a: Sneasel|235/313',
+      '|move|p1a: Granbull|Thief|p2a: Sneasel',
+      '|-resisted|p2a: Sneasel',
+      '|-activate|p2a: Sneasel|Substitute|[damage]',
+      '|turn|4',
     ]);
   });
 
@@ -5647,13 +5989,13 @@ describe('Gen 2', () => {
 
   test('LockOn effect', () => {
     const battle = startBattle([
-      QKC, QKC, CRIT, MAX_DMG, QKC, QKC, QKC, MISS, QKC, QKC, QKC,
+      QKC, QKC, CRIT, MAX_DMG, QKC, QKC, QKC, MISS, QKC, QKC, QKC, QKC,
     ], [
       {species: 'Machamp', evs, moves: ['Lock-On', 'Dynamic Punch']},
       {species: 'Octillery', evs, moves: ['Lock-On', 'Zap Cannon']},
     ], [
       {species: 'Dunsparce', evs, moves: ['Dig']},
-      {species: 'Abra', evs, moves: ['Teleport', 'Protect']},
+      {species: 'Abra', evs, moves: ['Teleport', 'Protect', 'Substitute']},
     ]);
 
     battle.makeChoices('move 1', 'move 1');
@@ -5670,8 +6012,11 @@ describe('Gen 2', () => {
     battle.makeChoices('move 2', 'move 1');
     battle.makeChoices('move 1', 'move 1');
 
-    // Lock-On doesn't bypass protect
+    // Lock-On doesn't bypass Protect
     battle.makeChoices('move 2', 'move 2');
+
+    // Substitute blocks Lock-On
+    battle.makeChoices('move 1', 'move 3');
 
     verify(battle, [
       '|move|p1a: Machamp|Lock-On|p2a: Dunsparce',
@@ -5706,15 +6051,21 @@ describe('Gen 2', () => {
       '|move|p1a: Octillery|Zap Cannon|p2a: Abra',
       '|-activate|p2a: Abra|Protect',
       '|turn|8',
+      '|move|p2a: Abra|Substitute|p2a: Abra',
+      '|-start|p2a: Abra|Substitute',
+      '|-damage|p2a: Abra|190/253',
+      '|move|p1a: Octillery|Lock-On|p2a: Abra',
+      '|-activate|p2a: Abra|Substitute|[block] Lock-On',
+      '|turn|9',
     ]);
   });
 
   test('Nightmare effect', () => {
     let p2hp = 0;
-    const battle = startBattle([QKC, QKC, SLP(2), QKC, QKC, QKC, QKC], [
+    const battle = startBattle([QKC, QKC, SLP(2), QKC, QKC, QKC, QKC, QKC, SLP(2), QKC], [
       {species: 'Misdreavus', evs, moves: ['Nightmare', 'Teleport']},
     ], [
-      {species: 'Jolteon', evs, moves: ['Sand-Attack', 'Rest', 'Teleport']},
+      {species: 'Jolteon', evs, moves: ['Sand-Attack', 'Rest', 'Teleport', 'Substitute']},
     ], b => {
       p2hp = b.p2.pokemon[0].hp;
       b.p2.pokemon[0].hp = 1;
@@ -5737,6 +6088,12 @@ describe('Gen 2', () => {
     // Nightmare ends when foe wakes up
     battle.makeChoices('move 2', 'move 3');
     expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+    battle.makeChoices('move 2', 'move 4');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 83);
+
+    // Substitute blocks Nightmare
+    battle.makeChoices('move 1', 'move 2');
 
     verify(battle, [
       '|switch|p1a: Misdreavus|Misdreavus, M|323/323',
@@ -5767,6 +6124,17 @@ describe('Gen 2', () => {
       '|move|p2a: Jolteon|Teleport|p2a: Jolteon',
       '|move|p1a: Misdreavus|Teleport|p1a: Misdreavus',
       '|turn|6',
+      '|move|p2a: Jolteon|Substitute|p2a: Jolteon',
+      '|-start|p2a: Jolteon|Substitute',
+      '|-damage|p2a: Jolteon|84/333',
+      '|move|p1a: Misdreavus|Teleport|p1a: Misdreavus',
+      '|turn|7',
+      '|move|p2a: Jolteon|Rest|p2a: Jolteon',
+      '|-status|p2a: Jolteon|slp|[from] move: Rest',
+      '|-heal|p2a: Jolteon|333/333 slp|[silent]',
+      '|move|p1a: Misdreavus|Nightmare|p2a: Jolteon',
+      '|-activate|p2a: Jolteon|Substitute|[block] Nightmare',
+      '|turn|8',
     ]);
   });
 
@@ -6554,40 +6922,57 @@ describe('Gen 2', () => {
   });
 
   test('FalseSwipe effect', () => {
-    const battle = startBattle([QKC, NO_CRIT, MAX_DMG, QKC, NO_CRIT, MAX_DMG, QKC], [
-      {species: 'Scizor', evs, moves: ['False Swipe']},
+    const battle = startBattle([QKC, QKC, NO_CRIT, MAX_DMG, QKC, NO_CRIT, MAX_DMG, QKC], [
+      {species: 'Scizor', evs, moves: ['False Swipe', 'Teleport']},
     ], [
-      {species: 'Phanpy', level: 3, evs, moves: ['Defense Curl']},
+      {species: 'Phanpy', level: 3, evs, moves: ['Defense Curl', 'Substitute']},
     ]);
 
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 5);
+    expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(5);
+
+    // False Swipe does not leave Substitute at 1 HP
     battle.makeChoices('move 1', 'move 1');
-    expect(battle.p2.pokemon[0].hp).toBe(1);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+    expect(battle.p2.pokemon[0].volatiles['substitute']).toBeUndefined();
 
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p2.pokemon[0].hp).toBe(1);
 
     verify(battle, [
-      '|move|p1a: Scizor|False Swipe|p2a: Phanpy',
-      '|-damage|p2a: Phanpy|1/21',
-      '|move|p2a: Phanpy|Defense Curl|p2a: Phanpy',
-      '|-boost|p2a: Phanpy|def|1',
+      '|move|p1a: Scizor|Teleport|p1a: Scizor',
+      '|move|p2a: Phanpy|Substitute|p2a: Phanpy',
+      '|-start|p2a: Phanpy|Substitute',
+      '|-damage|p2a: Phanpy|16/21',
       '|turn|2',
       '|move|p1a: Scizor|False Swipe|p2a: Phanpy',
-      '|-damage|p2a: Phanpy|1/21',
+      '|-end|p2a: Phanpy|Substitute',
       '|move|p2a: Phanpy|Defense Curl|p2a: Phanpy',
       '|-boost|p2a: Phanpy|def|1',
       '|turn|3',
+      '|move|p1a: Scizor|False Swipe|p2a: Phanpy',
+      '|-damage|p2a: Phanpy|1/21',
+      '|move|p2a: Phanpy|Defense Curl|p2a: Phanpy',
+      '|-boost|p2a: Phanpy|def|1',
+      '|turn|4',
     ]);
   });
 
   test('Swagger effect', () => {
-    const battle = startBattle([QKC, HIT, CFZ(5), QKC, CFZ_CANT, HIT, QKC, CFZ_CANT, HIT, QKC], [
-      {species: 'Scyther', evs, moves: ['Swords Dance']},
+    const battle = startBattle([
+      QKC, HIT, CFZ(3), QKC, CFZ_CANT, HIT, QKC, CFZ_CANT, HIT, QKC, MISS, QKC, HIT, QKC,
     ], [
-      {species: 'Aipom', evs, moves: ['Swagger']},
+      {species: 'Scyther', evs, moves: ['Swords Dance', 'Swagger']},
+    ], [
+      {species: 'Aipom', evs, moves: ['Swagger', 'Substitute']},
     ]);
 
     let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
 
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp);
@@ -6601,6 +6986,15 @@ describe('Gen 2', () => {
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 132);
     expect(battle.p1.pokemon[0].boosts.atk).toBe(6);
+
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 78);
+    expect(battle.p2.pokemon[0].volatiles['substitute']).toBeDefined();
+
+    // Attack is still sharply raised behind a Substitute but confusion is not inflicted
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p2.pokemon[0].boosts.atk).toBe(2);
+    expect(battle.p2.pokemon[0].volatiles['confusion']).toBeUndefined();
 
     verify(battle, [
       '|move|p1a: Scyther|Swords Dance|p1a: Scyther',
@@ -6619,6 +7013,18 @@ describe('Gen 2', () => {
       '|move|p2a: Aipom|Swagger|p1a: Scyther',
       '|-miss|p2a: Aipom',
       '|turn|4',
+      '|-end|p1a: Scyther|confusion',
+      '|move|p1a: Scyther|Swagger|p2a: Aipom|[miss]',
+      '|-miss|p1a: Scyther',
+      '|move|p2a: Aipom|Substitute|p2a: Aipom',
+      '|-start|p2a: Aipom|Substitute',
+      '|-damage|p2a: Aipom|235/313',
+      '|turn|5',
+      '|move|p1a: Scyther|Swagger|p2a: Aipom',
+      '|-boost|p2a: Aipom|atk|2',
+      '|move|p2a: Aipom|Substitute|p2a: Aipom',
+      '|-fail|p2a: Aipom|move: Substitute',
+      '|turn|6',
     ]);
   });
 
@@ -7358,22 +7764,34 @@ describe('Gen 2', () => {
   test.todo('Encore effect');
 
   test('Pursuit effect', () => {
-    const battle = startBattle([QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, QKC], [
-      {species: 'Larvitar', evs, moves: ['Pursuit']},
+    const battle = startBattle([
+      QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, QKC, QKC, NO_CRIT, MAX_DMG, QKC,
+    ], [
+      {species: 'Larvitar', evs, moves: ['Pursuit', 'Teleport']},
     ], [
       {species: 'Chinchou', evs, moves: ['Teleport']},
-      {species: 'Cyndaquil', evs, moves: ['Ember']},
+      {species: 'Cyndaquil', evs, moves: ['Substitute']},
+      {species: 'Sunkern', evs, moves: ['Absorb']},
     ]);
 
     battle.p2.pokemon[0].hp = 79;
-    const p2hp = battle.p2.pokemon[0].hp;
+    const chinchou = battle.p2.pokemon[0].hp;
+    const cyndaquil = battle.p2.pokemon[1].hp;
+    const sunkern = battle.p2.pokemon[2].hp;
 
     battle.makeChoices('move 1', 'move 1');
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp - 27);
+    expect(battle.p2.pokemon[0].hp).toBe(chinchou - 27);
 
     // Double damage if switching out, but will still switch even if it faints
     battle.makeChoices('move 1', 'switch 2');
     expect(battle.p2.pokemon[1].hp).toBe(0);
+
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(cyndaquil - 70);
+
+    // Substitute takes Pursuit damage when switching out
+    battle.makeChoices('move 1', 'switch 3');
+    expect(battle.p2.pokemon[0].hp).toBe(sunkern);
 
     verify(battle, [
       '|move|p2a: Chinchou|Teleport|p2a: Chinchou',
@@ -7386,6 +7804,16 @@ describe('Gen 2', () => {
       '|faint|p2a: Chinchou',
       '|switch|p2a: Cyndaquil|Cyndaquil, M|281/281',
       '|turn|3',
+      '|move|p2a: Cyndaquil|Substitute|p2a: Cyndaquil',
+      '|-start|p2a: Cyndaquil|Substitute',
+      '|-damage|p2a: Cyndaquil|211/281',
+      '|move|p1a: Larvitar|Teleport|p1a: Larvitar',
+      '|turn|4',
+      '|-activate|p2a: Cyndaquil|move: Pursuit',
+      '|move|p1a: Larvitar|Pursuit|p2a: Cyndaquil|[from]Pursuit',
+      '|-activate|p2a: Cyndaquil|Substitute|[damage]',
+      '|switch|p2a: Sunkern|Sunkern, M|263/263',
+      '|turn|5',
     ]);
   });
 
@@ -7758,16 +8186,17 @@ describe('Gen 2', () => {
     const miss = {...hit, value: hit.value + 1};
     const band = {key: 'data/mods/gen2/items.ts:60:13', value: ranged(30, 256) - 1};
     const battle = startBattle([
-      QKC, MAX_DMG, QKC, QKC, miss, QKC, MIN_DMG, QKC, QKC, hit, band, QKC,
+      QKC, MAX_DMG, QKC, QKC, miss, QKC, MIN_DMG, QKC,
+      QKC, hit, band, QKC, MAX_DMG, QKC, QKC, hit, QKC,
     ], [
       {species: 'Girafarig', evs, moves: ['Future Sight']},
-      {species: 'Magcargo', evs, moves: ['Fire Blast']},
+      {species: 'Magcargo', evs, moves: ['Fire Blast', 'Future Sight', 'Teleport']},
     ], [
-      {species: 'Blissey', evs, moves: ['Teleport']},
+      {species: 'Blissey', evs, moves: ['Teleport', 'Substitute']},
       {species: 'Houndour', level: 5, item: 'Focus Band', evs, moves: ['Protect']},
     ]);
 
-    const blissey = battle.p2.pokemon[0].hp;
+    let blissey = battle.p2.pokemon[0].hp;
     const houndour = battle.p2.pokemon[1].hp;
 
     // Schedules an attack for 2 turns in the future
@@ -7778,7 +8207,7 @@ describe('Gen 2', () => {
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p2.pokemon[0].hp).toBe(blissey);
 
-    // Can miss (should show up on 3rd term as having "failed")
+    // Can miss (should show up on 3rd turn as having "failed")
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p2.pokemon[0].hp).toBe(blissey);
 
@@ -7791,6 +8220,16 @@ describe('Gen 2', () => {
     // Uses original user's stats vs. original targets, can hit Dark, respects Focus Band
     battle.makeChoices('switch 2', 'move 1');
     expect(battle.p2.pokemon[0].hp).toBe(1);
+
+    battle.makeChoices('move 2', 'switch 2');
+    expect(battle.p2.pokemon[0].hp).toBe(blissey);
+
+    battle.makeChoices('move 3', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(blissey -= 178);
+
+    // Substitute takes damage from Future Sight
+    battle.makeChoices('move 3', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(blissey);
 
     verify(battle, [
       '|move|p1a: Girafarig|Future Sight|p2a: Blissey',
@@ -7819,6 +8258,20 @@ describe('Gen 2', () => {
       '|-activate|p2a: Houndour|item: Focus Band',
       '|-damage|p2a: Houndour|1/24',
       '|turn|7',
+      '|switch|p2a: Blissey|Blissey, F|713/713',
+      '|move|p1a: Magcargo|Future Sight|p2a: Blissey',
+      '|-start|p1a: Magcargo|Future Sight',
+      '|turn|8',
+      '|move|p2a: Blissey|Substitute|p2a: Blissey',
+      '|-start|p2a: Blissey|Substitute',
+      '|-damage|p2a: Blissey|535/713',
+      '|move|p1a: Magcargo|Teleport|p1a: Magcargo',
+      '|turn|9',
+      '|move|p2a: Blissey|Teleport|p2a: Blissey',
+      '|move|p1a: Magcargo|Teleport|p1a: Magcargo',
+      '|-end|p2a: Blissey|move: Future Sight',
+      '|-activate|p2a: Blissey|Substitute|[damage]',
+      '|turn|10',
     ]);
   });
 
@@ -7827,7 +8280,6 @@ describe('Gen 2', () => {
     const no_band = {...band, value: band.value + 1};
     const kings = SECONDARY(band.value);
     const no_kings = SECONDARY(no_band.value);
-    // TODO: should proc kings rock each hit, should end on sub, should have focus band work
     const battle = startBattle([
       QKC, QKC, NO_CRIT, MIN_DMG, no_band, NO_CRIT, MIN_DMG, no_band, no_kings,
       QKC, QKC, CRIT, MAX_DMG, NO_CRIT, MIN_DMG, band, kings, QKC,
