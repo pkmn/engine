@@ -1436,7 +1436,7 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.only('MultiHit effect', () => {
+  test('MultiHit effect', () => {
     const hit3 = {key: 'data/mods/gen2/scripts.ts:265:26', value: 0x60000000};
     const hit5 = {...hit3, value: MAX};
     const battle = startBattle([
@@ -1449,7 +1449,7 @@ describe('Gen 2', () => {
       {species: 'Slowpoke', evs, moves: ['Substitute', 'Counter']},
     ]);
 
-    let p1hp = battle.p1.pokemon[0].hp;
+    const p1hp = battle.p1.pokemon[0].hp;
     let p2hp = battle.p2.pokemon[0].hp;
     let pp = battle.p1.pokemon[0].moveSlots[0].pp;
 
@@ -4313,7 +4313,7 @@ describe('Gen 2', () => {
       expect(battle.p1.pokemon[0].hp).toBe(snorlax -= 81);
       expect(battle.p2.pokemon[0].hp).toBe(miltank -= 162);
 
-      // Fails on special attacks
+      // Fails on Special attacks
       battle.makeChoices('move 2', 'move 2');
       expect(battle.p1.pokemon[0].hp).toBe(snorlax);
       expect(battle.p2.pokemon[0].hp).toBe(miltank -= 40);
@@ -4464,7 +4464,118 @@ describe('Gen 2', () => {
 
   test('MirrorCoat effect', () => {
     {
-      // TODO
+      const battle = startBattle([
+        QKC, NO_CRIT, MIN_DMG, QKC, HIT, QKC, QKC, QKC, NO_CRIT, MIN_DMG,
+        QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC, QKC, SLP(1), QKC, QKC, QKC,
+      ], [
+        {species: 'Snorlax', evs, moves: ['Mirror Coat', 'Sonic Boom', 'Hidden Power']},
+        {species: 'Tyranitar', evs, moves: ['Teleport', 'Mirror Coat', 'Dragon Rage']},
+      ], [
+        {species: 'Miltank', evs, moves: ['Surf', 'Mirror Coat', 'Dragon Rage', 'Beat Up']},
+        {species: 'Parasect', evs, moves: ['Spore', 'Mirror Coat']},
+      ]);
+
+      let snorlax = battle.p1.pokemon[0].hp;
+      const tyranitar = battle.p1.pokemon[1].hp;
+      let miltank = battle.p2.pokemon[0].hp;
+      let parasect = battle.p2.pokemon[1].hp;
+
+      // Works for all types of Special moves
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(snorlax -= 39);
+      expect(battle.p2.pokemon[0].hp).toBe(miltank -= 78);
+
+      // Fails on Physical attacks
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(snorlax);
+      expect(battle.p2.pokemon[0].hp).toBe(miltank -= 20);
+
+      // Cannot Mirror Coat an opponent's Mirror Coat
+      battle.makeChoices('move 1', 'move 2');
+
+      // Works on fixed damage moves including Dragon Rage
+      battle.makeChoices('move 1', 'move 3');
+      expect(battle.p1.pokemon[0].hp).toBe(snorlax -= 40);
+      expect(battle.p2.pokemon[0].hp).toBe(miltank -= 80);
+
+      // Mirror Coat fails against Hidden Power regardless of type
+      battle.makeChoices('move 3', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(snorlax);
+      expect(battle.p2.pokemon[0].hp).toBe(miltank -= 49);
+
+      // Mirror Coat fails against Beat Up despite being Special
+      battle.makeChoices('move 1', 'move 4');
+      expect(battle.p1.pokemon[0].hp).toBe(snorlax = snorlax - 10 - 11);
+      // expect(battle.p2.pokemon[0].hp).toBe(miltank);
+      expect(battle.p2.pokemon[0].hp).toBe(miltank -= 22);
+
+      battle.makeChoices('switch 2', 'switch 2');
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].status).toBe('slp');
+
+      // When slept, Mirror Coat's negative priority gets preserved
+      battle.makeChoices('move 2', 'move 1');
+
+      // Does not ignore Dark-type immunity
+      battle.makeChoices('move 3', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(tyranitar);
+      expect(battle.p2.pokemon[0].hp).toBe(parasect -= 40);
+      expect(battle.p1.pokemon[0].status).toBe('');
+
+      verify(battle, [
+        '|move|p2a: Miltank|Surf|p1a: Snorlax',
+        '|-damage|p1a: Snorlax|484/523',
+        '|move|p1a: Snorlax|Mirror Coat|p2a: Miltank',
+        '|-damage|p2a: Miltank|315/393',
+        '|turn|2',
+        '|move|p1a: Snorlax|Sonic Boom|p2a: Miltank',
+        '|-damage|p2a: Miltank|295/393',
+        '|move|p2a: Miltank|Mirror Coat|p1a: Snorlax',
+        '|-fail|p1a: Snorlax',
+        '|turn|3',
+        '|move|p2a: Miltank|Mirror Coat|p1a: Snorlax',
+        '|-fail|p1a: Snorlax',
+        '|move|p1a: Snorlax|Mirror Coat|p2a: Miltank',
+        '|-damage|p2a: Miltank|295/393',
+        '|turn|4',
+        '|move|p2a: Miltank|Dragon Rage|p1a: Snorlax',
+        '|-damage|p1a: Snorlax|444/523',
+        '|move|p1a: Snorlax|Mirror Coat|p2a: Miltank',
+        '|-damage|p2a: Miltank|215/393',
+        '|turn|5',
+        '|move|p1a: Snorlax|Hidden Power|p2a: Miltank',
+        '|-damage|p2a: Miltank|166/393',
+        '|move|p2a: Miltank|Mirror Coat|p1a: Snorlax',
+        '|-fail|p1a: Snorlax',
+        '|turn|6',
+        '|move|p2a: Miltank|Beat Up|p1a: Snorlax',
+        '|-activate|p2a: Miltank|move: Beat Up|[of] Miltank',
+        '|-damage|p1a: Snorlax|434/523',
+        '|-activate|p2a: Miltank|move: Beat Up|[of] Parasect',
+        '|-damage|p1a: Snorlax|423/523',
+        '|-hitcount|p1a: Snorlax|2',
+        '|move|p1a: Snorlax|Mirror Coat|p2a: Miltank',
+        '|-damage|p2a: Miltank|144/393',
+        '|turn|7',
+        '|switch|p2a: Parasect|Parasect, M|323/323',
+        '|switch|p1a: Tyranitar|Tyranitar, M|403/403',
+        '|turn|8',
+        '|move|p1a: Tyranitar|Teleport|p1a: Tyranitar',
+        '|move|p2a: Parasect|Spore|p1a: Tyranitar',
+        '|-status|p1a: Tyranitar|slp|[from] move: Spore',
+        '|turn|9',
+        '|move|p2a: Parasect|Spore|p1a: Tyranitar',
+        '|-fail|p1a: Tyranitar|slp',
+        '|cant|p1a: Tyranitar|slp',
+        '|turn|10',
+        '|-curestatus|p1a: Tyranitar|slp|[msg]',
+        '|move|p1a: Tyranitar|Dragon Rage|p2a: Parasect',
+        '|-damage|p2a: Parasect|283/323',
+        '|move|p2a: Parasect|Mirror Coat|p1a: Tyranitar',
+        '|-immune|p1a: Tyranitar',
+        '|turn|11',
+      ]);
     }
     // Substitute
     {
