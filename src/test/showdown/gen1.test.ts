@@ -2932,7 +2932,7 @@ describe('Gen 1', () => {
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p2.pokemon[0].status).toBe('slp');
 
-    // When slept, Counters negative priority gets preserved
+    // When slept, Counter's negative priority gets preserved
     battle.makeChoices('move 2', 'move 1');
 
     verify(battle, [

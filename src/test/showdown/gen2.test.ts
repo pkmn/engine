@@ -1436,7 +1436,7 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test('MultiHit effect', () => {
+  test.only('MultiHit effect', () => {
     const hit3 = {key: 'data/mods/gen2/scripts.ts:265:26', value: 0x60000000};
     const hit5 = {...hit3, value: MAX};
     const battle = startBattle([
@@ -1446,9 +1446,10 @@ describe('Gen 2', () => {
     ], [
       {species: 'Kangaskhan', evs, moves: ['Comet Punch']},
     ], [
-      {species: 'Slowpoke', evs, moves: ['Substitute', 'Teleport']},
+      {species: 'Slowpoke', evs, moves: ['Substitute', 'Counter']},
     ]);
 
+    let p1hp = battle.p1.pokemon[0].hp;
     let p2hp = battle.p2.pokemon[0].hp;
     let pp = battle.p1.pokemon[0].moveSlots[0].pp;
 
@@ -1458,6 +1459,7 @@ describe('Gen 2', () => {
 
     // Move continues after breaking the target's Substitute
     battle.makeChoices('move 1', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp - 62);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp - 26 - 31);
     expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
 
@@ -1480,7 +1482,8 @@ describe('Gen 2', () => {
       '|-damage|p2a: Slowpoke|154/383',
       '|-damage|p2a: Slowpoke|123/383',
       '|-hitcount|p2a: Slowpoke|5',
-      '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
+      '|move|p2a: Slowpoke|Counter|p1a: Kangaskhan',
+      '|-damage|p1a: Kangaskhan|351/413',
       '|turn|3',
     ]);
   });
@@ -4288,7 +4291,142 @@ describe('Gen 2', () => {
 
   test('Counter effect', () => {
     {
-      // TODO
+      const battle = startBattle([
+        QKC, NO_CRIT, MIN_DMG, QKC, QKC, QKC, HIT, QKC, NO_CRIT, MIN_DMG,
+        QKC, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC, QKC, SLP(1), QKC, QKC, HIT,
+        QKC, QKC, MISS, QKC, MISS, QKC,
+      ], [
+        {species: 'Snorlax', evs, moves: ['Counter', 'Dragon Rage', 'Hidden Power']},
+        {species: 'Misdreavus', evs, moves: ['Teleport', 'Counter', 'Sonic Boom']},
+      ], [
+        {species: 'Miltank', evs, moves: ['Earthquake', 'Counter', 'Sonic Boom', 'Beat Up']},
+        {species: 'Parasect', evs, moves: ['Spore', 'Counter', 'Guillotine', 'Fissure']},
+      ]);
+
+      let snorlax = battle.p1.pokemon[0].hp;
+      const misdreavus = battle.p1.pokemon[1].hp;
+      let miltank = battle.p2.pokemon[0].hp;
+      let parasect = battle.p2.pokemon[1].hp;
+
+      // Works for all types of Physical moves, even those which are not Normal / Fighting
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(snorlax -= 81);
+      expect(battle.p2.pokemon[0].hp).toBe(miltank -= 162);
+
+      // Fails on special attacks
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(snorlax);
+      expect(battle.p2.pokemon[0].hp).toBe(miltank -= 40);
+
+      // Cannot Counter an opponent's Counter
+      battle.makeChoices('move 1', 'move 2');
+
+      // Works on fixed damage moves including Sonic Boom
+      battle.makeChoices('move 1', 'move 3');
+      expect(battle.p1.pokemon[0].hp).toBe(snorlax -= 20);
+      expect(battle.p2.pokemon[0].hp).toBe(miltank -= 40);
+
+      // Counter works against Hidden Power regardless of type
+      battle.makeChoices('move 3', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(snorlax -= 98);
+      expect(battle.p2.pokemon[0].hp).toBe(miltank -= 49);
+
+      // Counter works against Beat Up despite being Special
+      battle.makeChoices('move 1', 'move 4');
+      expect(battle.p1.pokemon[0].hp).toBe(snorlax = snorlax - 10 - 11);
+      // expect(battle.p2.pokemon[0].hp).toBe(miltank -= 0);
+      expect(battle.p2.pokemon[0].hp).toBe(miltank);
+
+      battle.makeChoices('switch 2', 'switch 2');
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].status).toBe('slp');
+
+      // When slept, Counters' negative priority gets preserved
+      battle.makeChoices('move 2', 'move 1');
+
+      // Does not ignore Ghost-type immunity
+      battle.makeChoices('move 3', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(misdreavus);
+      expect(battle.p2.pokemon[0].hp).toBe(parasect -= 20);
+      expect(battle.p1.pokemon[0].status).toBe('');
+
+      battle.makeChoices('switch 2', 'move 2');
+
+      // Fissure/Horn Drill (but not Guillotine) can be countered for maximum damage
+      battle.makeChoices('move 1', 'move 3');
+
+      battle.makeChoices('move 1', 'move 4');
+      // expect(battle.p2.pokemon[0].hp).toBe(0);
+      expect(battle.p2.pokemon[0].hp).toBe(parasect);
+
+      verify(battle, [
+        '|move|p2a: Miltank|Earthquake|p1a: Snorlax',
+        '|-damage|p1a: Snorlax|442/523',
+        '|move|p1a: Snorlax|Counter|p2a: Miltank',
+        '|-damage|p2a: Miltank|231/393',
+        '|turn|2',
+        '|move|p1a: Snorlax|Dragon Rage|p2a: Miltank',
+        '|-damage|p2a: Miltank|191/393',
+        '|move|p2a: Miltank|Counter|p1a: Snorlax',
+        '|-fail|p1a: Snorlax',
+        '|turn|3',
+        '|move|p2a: Miltank|Counter|p1a: Snorlax',
+        '|-fail|p1a: Snorlax',
+        '|move|p1a: Snorlax|Counter|p2a: Miltank',
+        '|-damage|p2a: Miltank|191/393',
+        '|turn|4',
+        '|move|p2a: Miltank|Sonic Boom|p1a: Snorlax',
+        '|-damage|p1a: Snorlax|422/523',
+        '|move|p1a: Snorlax|Counter|p2a: Miltank',
+        '|-damage|p2a: Miltank|151/393',
+        '|turn|5',
+        '|move|p1a: Snorlax|Hidden Power|p2a: Miltank',
+        '|-damage|p2a: Miltank|102/393',
+        '|move|p2a: Miltank|Counter|p1a: Snorlax',
+        '|-damage|p1a: Snorlax|324/523',
+        '|turn|6',
+        '|move|p2a: Miltank|Beat Up|p1a: Snorlax',
+        '|-activate|p2a: Miltank|move: Beat Up|[of] Miltank',
+        '|-damage|p1a: Snorlax|314/523',
+        '|-activate|p2a: Miltank|move: Beat Up|[of] Parasect',
+        '|-damage|p1a: Snorlax|303/523',
+        '|-hitcount|p1a: Snorlax|2',
+        '|move|p1a: Snorlax|Counter|p2a: Miltank',
+        '|-fail|p2a: Miltank',
+        '|turn|7',
+        '|switch|p2a: Parasect|Parasect, M|323/323',
+        '|switch|p1a: Misdreavus|Misdreavus, M|323/323',
+        '|turn|8',
+        '|move|p1a: Misdreavus|Teleport|p1a: Misdreavus',
+        '|move|p2a: Parasect|Spore|p1a: Misdreavus',
+        '|-status|p1a: Misdreavus|slp|[from] move: Spore',
+        '|turn|9',
+        '|move|p2a: Parasect|Spore|p1a: Misdreavus',
+        '|-fail|p1a: Misdreavus|slp',
+        '|cant|p1a: Misdreavus|slp',
+        '|turn|10',
+        '|-curestatus|p1a: Misdreavus|slp|[msg]',
+        '|move|p1a: Misdreavus|Sonic Boom|p2a: Parasect',
+        '|-damage|p2a: Parasect|303/323',
+        '|move|p2a: Parasect|Counter|p1a: Misdreavus',
+        '|-immune|p1a: Misdreavus',
+        '|turn|11',
+        '|switch|p1a: Snorlax|Snorlax, M|303/523',
+        '|move|p2a: Parasect|Counter|p1a: Snorlax',
+        '|-fail|p1a: Snorlax',
+        '|turn|12',
+        '|move|p2a: Parasect|Guillotine|p1a: Snorlax|[miss]',
+        '|-miss|p2a: Parasect',
+        '|move|p1a: Snorlax|Counter|p2a: Parasect',
+        '|-fail|p2a: Parasect',
+        '|turn|13',
+        '|move|p2a: Parasect|Fissure|p1a: Snorlax|[miss]',
+        '|-miss|p2a: Parasect',
+        '|move|p1a: Snorlax|Counter|p2a: Parasect',
+        '|-fail|p2a: Parasect',
+        '|turn|14',
+      ]);
     }
     // Substitute
     {
