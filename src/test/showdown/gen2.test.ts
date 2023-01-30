@@ -7761,7 +7761,99 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test.todo('Encore effect');
+  test('Encore effect', () => {
+    const encore = (n: number) =>
+      ({key: 'data/mods/gen2/moves.ts:190:17', value: ranged(n - 3, 7 - 3) - 1});
+
+    const battle = startBattle([
+      QKC, encore(3), QKC, encore(3), encore(3), QKC, QKC, encore(3), QKC,
+      QKC, encore(5), QKC, HIT, DISABLE_DURATION(5), QKC, NO_CRIT, MIN_DMG, QKC,
+    ], [
+      {species: 'Togetic', evs, moves: ['Substitute', 'Encore', 'Teleport', 'Disable']},
+    ], [
+      {species: 'Skiploom', evs, moves: ['Encore']},
+      {species: 'Clefable', evs, moves: ['Encore', 'Rest']},
+    ]);
+
+    battle.p1.pokemon[0].moveSlots[0].pp = 1;
+    battle.p1.pokemon[0].moveSlots[2].pp = 3;
+
+    const p1hp = battle.p1.pokemon[0].hp;
+    const p2hp = battle.p2.pokemon[1].hp;
+
+    // Fails if the target has not made a move
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp - 78);
+
+    // Fails if the opponent's move has 0 PP / fails to Encore specific moves
+    battle.makeChoices('move 2', 'move 1');
+
+    battle.makeChoices('move 3', 'switch 2');
+
+    // Encore can hit through a Substitute / if last move was before the Encore user switched
+    battle.makeChoices('move 2', 'move 1');
+
+    expect(choices(battle, 'p1')).toEqual(['move 3']);
+
+    // Prevents the target from changing moves / fails if the target is already under the effect
+    battle.makeChoices('move 3', 'move 1');
+
+    // Ends when the target runs out of PP / Encore can be used against Rest
+    battle.makeChoices('move 2', 'move 2');
+
+    expect(choices(battle, 'p1')).toEqual(['move 2', 'move 4']);
+    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 2']);
+
+    battle.makeChoices('move 4', 'move 2');
+
+    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1']);
+
+    // Forced to use Struggle until the effects of Disable or Encore have worn off
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp - 1);
+
+    verify(battle, [
+      '|move|p2a: Skiploom|Encore|p1a: Togetic',
+      '|-fail|p1a: Togetic',
+      '|move|p1a: Togetic|Substitute|p1a: Togetic',
+      '|-start|p1a: Togetic|Substitute',
+      '|-damage|p1a: Togetic|235/313',
+      '|turn|2',
+      '|move|p2a: Skiploom|Encore|p1a: Togetic',
+      '|-fail|p1a: Togetic',
+      '|move|p1a: Togetic|Encore|p2a: Skiploom',
+      '|-fail|p2a: Skiploom',
+      '|turn|3',
+      '|switch|p2a: Clefable|Clefable, M|393/393',
+      '|move|p1a: Togetic|Teleport|p1a: Togetic',
+      '|turn|4',
+      '|move|p2a: Clefable|Encore|p1a: Togetic',
+      '|-start|p1a: Togetic|Encore',
+      '|move|p1a: Togetic|Teleport|p1a: Togetic',
+      '|turn|5',
+      '|move|p2a: Clefable|Encore|p1a: Togetic',
+      '|-fail|p1a: Togetic',
+      '|move|p1a: Togetic|Teleport|p1a: Togetic',
+      '|-end|p1a: Togetic|Encore',
+      '|turn|6',
+      '|move|p2a: Clefable|Rest|p2a: Clefable',
+      '|-fail|p2a: Clefable',
+      '|move|p1a: Togetic|Encore|p2a: Clefable',
+      '|-start|p2a: Clefable|Encore',
+      '|turn|7',
+      '|move|p2a: Clefable|Rest|p2a: Clefable',
+      '|-fail|p2a: Clefable',
+      '|move|p1a: Togetic|Disable|p2a: Clefable',
+      '|-start|p2a: Clefable|Disable|Rest',
+      '|turn|8',
+      '|move|p2a: Clefable|Struggle|p1a: Togetic',
+      '|-activate|p1a: Togetic|Substitute|[damage]',
+      '|-damage|p2a: Clefable|392/393|[from] Recoil|[of] p1a: Togetic',
+      '|move|p1a: Togetic|Encore|p2a: Clefable',
+      '|-fail|p2a: Clefable',
+      '|turn|9',
+    ]);
+  });
 
   test('Pursuit effect', () => {
     const battle = startBattle([
