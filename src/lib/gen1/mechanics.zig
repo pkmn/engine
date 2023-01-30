@@ -567,7 +567,7 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
         }
         try log.move(ident, side.last_selected_move, battle.active(player.foe()), from);
         if (showdown and handleThrashing(battle, active)) {
-            try log.start(battle.active(player), .Confusion);
+            try log.start(battle.active(player), .ConfusionSilent);
         }
         return .skip_can;
     }

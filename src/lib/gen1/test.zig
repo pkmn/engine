@@ -3058,7 +3058,7 @@ test "Thrashing effect" {
         try t.log.expected.activate(P1.ident(1), .Confusion);
         if (!showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
         try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
-        if (showdown) try t.log.expected.start(P1.ident(1), .Confusion);
+        if (showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
         t.expected.p2.get(1).hp -= 68;
         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
         try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), Move.PetalDance);
@@ -3138,7 +3138,7 @@ test "Thrashing effect" {
         try t.log.expected.move(P2.ident(3), Move.Teleport, P2.ident(3), null);
         if (!showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
         try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(3), Move.Thrash);
-        if (showdown) try t.log.expected.start(P1.ident(1), .Confusion);
+        if (showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
         try t.log.expected.immune(P2.ident(3), .None);
         try t.log.expected.turn(4);
 
@@ -4716,7 +4716,7 @@ test "Metronome effect" {
 
     if (!showdown) try t.log.expected.start(P2.ident(1), .ConfusionSilent);
     try t.log.expected.move(P2.ident(1), Move.PetalDance, P1.ident(1), Move.PetalDance);
-    if (showdown) try t.log.expected.start(P2.ident(1), .Confusion);
+    if (showdown) try t.log.expected.start(P2.ident(1), .ConfusionSilent);
     try t.log.expected.lastmiss();
     try t.log.expected.miss(P2.ident(1));
     try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
