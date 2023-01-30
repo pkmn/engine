@@ -1649,7 +1649,6 @@ pub const Move = enum(u8) {
         RandomFoe,
     };
 
-    // @test-only
     const PP = [_]u8{
         35, // Pound
         25, // KarateChop
@@ -1832,7 +1831,6 @@ pub const Move = enum(u8) {
 
     const Event = enum { resolve, run };
 
-    // @test-only
     pub fn pp(id: Move) u8 {
         assert(id != .None);
         return PP[@enumToInt(id) - 1];

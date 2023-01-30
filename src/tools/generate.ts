@@ -435,12 +435,10 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     };\n`;
 
     const ppData = `
-    // @test-only
     const PP = [_]u8{
         ${PP.join('\n        ')},
     };\n`;
     const ppFn = `\n
-    // @test-only
     pub fn pp(id: Move) u8 {
         assert(id != .None);
         return PP[@enumToInt(id) - 1];
@@ -499,8 +497,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         '        }');
       CHANCES.push(`${Math.floor(s.baseStats.spe / 2)}, // ${name}`);
     }
-    Data = `// @test-only
-    pub const Data = struct {
+    Data = `pub const Data = struct {
         stats: Stats(u8),
         types: Types,
     };`;
@@ -820,8 +817,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .ratio = ${convertGenderRatio(s)}\n` +
         '        }');
     }
-    Data = `// @test-only
-    pub const Data = struct {
+    Data = `pub const Data = struct {
         stats: Stats(u8),
         types: Types,
         ratio: u8,

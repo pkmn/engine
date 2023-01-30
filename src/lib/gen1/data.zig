@@ -197,7 +197,6 @@ pub const Status = enum(u8) {
         return num > 0;
     }
 
-    // @test-only
     pub fn name(num: u8) []const u8 {
         if (Status.is(num, .SLF)) return "SLF";
         if (Status.is(num, .SLP)) return "SLP";
@@ -294,7 +293,6 @@ test "Volatiles" {
     try expectEqual(@as(u4, 3), volatiles.attacks);
 }
 
-// @test-only
 pub const Stat = enum { hp, atk, def, spe, spc };
 
 pub fn Stats(comptime T: type) type {
@@ -305,7 +303,6 @@ pub fn Stats(comptime T: type) type {
         spe: T = 0,
         spc: T = 0,
 
-        // @test-only
         pub fn calc(comptime stat: []const u8, base: T, dv: u4, exp: u16, level: u8) T {
             assert(level > 0 and level <= 100);
             const core: u32 = (2 *% (@as(u32, base) +% dv)) +% @as(u32, (std.math.sqrt(exp) / 4));
@@ -451,7 +448,6 @@ test "Types" {
     try expect(t.includes(.Rock));
 }
 
-// @test-only
 pub const DVs = struct {
     atk: u4 = 15,
     def: u4 = 15,

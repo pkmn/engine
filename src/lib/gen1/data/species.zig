@@ -317,13 +317,11 @@ pub const Species = enum(u8) {
         50, // Mew
     };
 
-    // @test-only
     pub const Data = struct {
         stats: Stats(u8),
         types: Types,
     };
 
-    // @test-only
     const DATA = [_]Data{
         // Bulbasaur
         .{
@@ -1093,7 +1091,6 @@ pub const Species = enum(u8) {
         return CHANCES[@enumToInt(id) - 1];
     }
 
-    // @test-only
     pub fn get(id: Species) Data {
         assert(id != .None);
         return DATA[@enumToInt(id) - 1];
