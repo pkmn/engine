@@ -2099,19 +2099,16 @@ describe('Gen 2', () => {
   });
 
   test('Paralyze effect', () => {
+    const curse = {key: 'data/mods/gen2/scripts.ts:441:59', value: 0};
     const battle = startBattle([
-      QKC, MISS,
-      QKC, PAR_CAN, HIT,
-      QKC, PAR_CANT,
-      QKC, HIT, PAR_CAN,
-      QKC,
-      QKC, HIT, QKC,
+      QKC, MISS, QKC, PAR_CAN, HIT, QKC, PAR_CANT,	QKC, HIT, PAR_CAN,
+      QKC, QKC, HIT, QKC, QKC, HIT,	QKC, PAR_CAN, QKC, PAR_CAN, curse, QKC,
     ], [
-      {species: 'Arbok', evs, moves: ['Glare']},
-      {species: 'Dugtrio', evs, moves: ['Earthquake', 'Substitute']},
+      {species: 'Arbok', evs, moves: ['Glare', 'Curse']},
+      {species: 'Dugtrio', evs, moves: ['Earthquake', 'Substitute', 'Teleport', 'Baton Pass']},
     ], [
       {species: 'Magneton', evs, moves: ['Thunder Wave']},
-      {species: 'Gengar', evs, moves: ['Toxic', 'Thunder Wave', 'Glare']},
+      {species: 'Gengar', evs, moves: ['Toxic', 'Thunder Wave', 'Glare', 'Night Shade']},
     ]);
 
     // Glare can miss
@@ -2132,6 +2129,22 @@ describe('Gen 2', () => {
     battle.makeChoices('switch 2', 'move 2');
     // Substitute blocks paralysis
     battle.makeChoices('move 2', 'move 3');
+
+    battle.makeChoices('move 3', 'move 4');
+    battle.makeChoices('move 3', 'move 3');
+
+    expect(battle.p1.pokemon[0].status).toBe('par');
+
+    // Baton Pass from one paralyzed Pokémon to another should not reduce speed until recalculated
+    battle.makeChoices('move 4', 'move 2');
+    battle.makeChoices('switch 2', '');
+
+    // expect(battle.p1.pokemon[0].getStat('spe')).toBe(258);
+    expect(battle.p1.pokemon[0].getStat('spe')).toBe(64);
+
+    battle.makeChoices('move 2', 'move 2');
+
+    expect(battle.p1.pokemon[0].getStat('spe')).toBe(42);
 
     verify(battle, [
       '|move|p1a: Arbok|Glare|p2a: Magneton|[miss]',
@@ -2162,6 +2175,26 @@ describe('Gen 2', () => {
       '|move|p2a: Gengar|Glare|p1a: Dugtrio',
       '|-activate|p1a: Dugtrio|Substitute|[block] Glare',
       '|turn|7',
+      '|move|p1a: Dugtrio|Teleport|p1a: Dugtrio',
+      '|move|p2a: Gengar|Night Shade|p1a: Dugtrio',
+      '|-end|p1a: Dugtrio|Substitute',
+      '|turn|8',
+      '|move|p1a: Dugtrio|Teleport|p1a: Dugtrio',
+      '|move|p2a: Gengar|Glare|p1a: Dugtrio',
+      '|-status|p1a: Dugtrio|par',
+      '|turn|9',
+      '|move|p2a: Gengar|Thunder Wave|p1a: Dugtrio',
+      '|-immune|p1a: Dugtrio',
+      '|move|p1a: Dugtrio|Baton Pass|p1a: Dugtrio',
+      '|switch|p1a: Arbok|Arbok, M|323/323 par|[from] Baton Pass',
+      '|turn|10',
+      '|move|p2a: Gengar|Thunder Wave|p1a: Arbok',
+      '|-fail|p1a: Arbok|par',
+      '|move|p1a: Arbok|Curse|p1a: Arbok',
+      '|-unboost|p1a: Arbok|spe|1',
+      '|-boost|p1a: Arbok|atk|1',
+      '|-boost|p1a: Arbok|def|1',
+      '|turn|11',
     ]);
   });
 
