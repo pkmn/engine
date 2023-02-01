@@ -216,17 +216,14 @@ test "switching (reset)" {
 }
 
 test "switching (brn/par)" {
-    // TODO: inline Status.init(...) when Zig no longer causes SIGBUS
-    const BRN = 0b10000;
-    const PAR = 0b1000000;
     var t = Test(.{}).init(
         &.{
             .{ .species = .Pikachu, .moves = &.{.ThunderShock} },
-            .{ .species = .Bulbasaur, .status = BRN, .moves = &.{.Tackle} },
+            .{ .species = .Bulbasaur, .status = Status.init(.BRN), .moves = &.{.Tackle} },
         },
         &.{
             .{ .species = .Charmander, .moves = &.{.Scratch} },
-            .{ .species = .Squirtle, .status = PAR, .moves = &.{.Tackle} },
+            .{ .species = .Squirtle, .status = Status.init(.PAR), .moves = &.{.Tackle} },
         },
     );
     defer t.deinit();
@@ -698,8 +695,7 @@ test "type precedence" {
 }
 
 test "fainting (single)" {
-    // TODO: inline Status.init(...) when Zig no longer causes SIGBUS
-    const BRN = 0b10000;
+    const BRN = Status.init(.BRN);
     // Switch
     {
         var t = Test(if (showdown)
@@ -8171,8 +8167,7 @@ test "Transform + Mirror Move/Metronome PP error" {
 
 test "MAX_LOGS" {
     if (showdown or !trace) return error.SkipZigTest;
-    // TODO: inline Status.init(...) when Zig no longer causes SIGBUS
-    const BRN = 0b10000;
+    const BRN = Status.init(.BRN);
     const moves = &.{ .LeechSeed, .ConfuseRay, .Metronome };
     // make P2 slower to avoid speed ties
     const stats = .{ .hp = EXP, .atk = EXP, .def = EXP, .spe = 0, .spc = EXP };

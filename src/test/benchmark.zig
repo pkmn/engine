@@ -16,12 +16,6 @@ var data: ?std.ArrayList(Data) = null;
 var buf: ?std.ArrayList(u8) = null;
 var last: u64 = 0;
 
-// type of ArrayList's toOwnedSlice changed from []u8 to ![]u8 due to ziglang/zig#13535
-const ret = @typeInfo(@TypeOf(@field(std.ArrayList(u8), "toOwnedSlice"))).Fn.return_type;
-// isAlpha was removed in favor of isAlphabetic in ziglang/zig#13370
-const isAlphabetic =
-    if (@hasDecl(std.ascii, "isAlphabetic")) std.ascii.isAlphabetic else std.ascii.isAlpha;
-
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer std.debug.assert(!gpa.deinit());
@@ -38,7 +32,7 @@ pub fn main() !void {
 
     var battles: ?usize = null;
     var duration: ?usize = null;
-    if (args[2].len > 1 and isAlphabetic(args[2][args[2].len - 1])) {
+    if (args[2].len > 1 and std.ascii.isAlphabetic(args[2][args[2].len - 1])) {
         fuzz = true;
         const end = args[2].len - 1;
         const mod: usize = switch (args[2][end]) {
@@ -150,7 +144,7 @@ pub fn benchmark(
                     .c1 = c1,
                     .c2 = c2,
                     .state = try allocator.dupe(u8, std.mem.toBytes(battle)[0..]),
-                    .log = if (ret == []u8) buf.?.toOwnedSlice() else try buf.?.toOwnedSlice(),
+                    .log = try buf.?.toOwnedSlice(),
                 });
             }
         }
@@ -219,20 +213,11 @@ fn dump() !void {
     try bw.flush();
 }
 
-const default = @typeInfo(@TypeOf(std.builtin.default_panic)).Fn;
-const params = if (@hasField(@TypeOf(default), "params")) default.params else default.args;
-pub usingnamespace if (params.len == 3) struct {
-    pub fn panic(
-        msg: []const u8,
-        error_return_trace: ?*std.builtin.StackTrace,
-        ret_addr: ?usize,
-    ) noreturn {
-        dump() catch unreachable;
-        std.builtin.default_panic(msg, error_return_trace, ret_addr);
-    }
-} else struct {
-    pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) noreturn {
-        dump() catch unreachable;
-        std.builtin.default_panic(msg, error_return_trace);
-    }
-};
+pub fn panic(
+    msg: []const u8,
+    error_return_trace: ?*std.builtin.StackTrace,
+    ret_addr: ?usize,
+) noreturn {
+    dump() catch unreachable;
+    std.builtin.default_panic(msg, error_return_trace, ret_addr);
+}

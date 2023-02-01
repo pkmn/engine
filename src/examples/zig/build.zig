@@ -3,7 +3,7 @@ const pkmn = @import("lib/pkmn/build.zig");
 
 pub fn build(b: *std.build.Builder) void {
     const target = b.standardTargetOptions(.{});
-    const mode = b.standardReleaseOptions();
+    const optimize = b.standardOptimizeOption(.{});
 
     const showdown = b.option(
         bool,
@@ -22,12 +22,12 @@ pub fn build(b: *std.build.Builder) void {
 
     const build_options = options.getPackage("build_options");
 
-    const stage2 = b.option(bool, "stage2", "Use the Zig stage2 compiler") orelse false;
-
-    const exe = b.addExecutable("zig", "example.zig");
-    if (@hasField(std.build.LibExeObjStep, "use_stage1") and !stage2) exe.use_stage1 = true;
-    exe.setTarget(target);
-    exe.setBuildMode(mode);
+    const exe = b.addExecutable(.{
+        .name = "example",
+        .root_source_file = .{ .path = "example.zig" },
+        .optimize = optimize,
+        .target = target,
+    });
     exe.addPackage(pkmn.pkg(b, build_options));
     exe.install();
 

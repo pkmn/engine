@@ -10,10 +10,6 @@ const data = @import("data.zig");
 
 const assert = std.debug.assert;
 
-// TODO: switch to @max & @min when min Zig version >= 0.10.0
-const maximum = std.math.max;
-const minimum = std.math.min;
-
 const expectEqual = std.testing.expectEqual;
 
 const Choice = common.Choice;

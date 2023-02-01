@@ -45,11 +45,11 @@ latest `zig` compiler, see `zig build --help` for build options:
 $ curl https://github.com/pkmn/engine/archive/refs/heads/main.zip -o engine.zip
 $ unzip engine.zip
 $ cd engine
-$ zig build --prefix /usr/local -Drelease-fast
+$ zig build --prefix /usr/local -Doptimize=ReleaseFast
 ```
 
 The Zig website has [installation instructions](https://ziglang.org/learn/getting-started/) which
-walk through how to install Zig on each platform - the engine code should work on Zig v0.9.0 or
+walk through how to install Zig on each platform - the engine code should work on Zig v0.11.0 or
 greater, though tracks Zig's master branch so this may change in the future if breaking language
 changes are introduced:
 
@@ -79,7 +79,7 @@ build the add-ons manually and place the artifacts in the expected paths.**
 
 ### `pkmn`
 
-Until the [Zig package manager](https://github.com/ziglang/zig/issues/943) is completed, the
+Until the [Zig package manager](https://github.com/ziglang/zig/projects/4) is completed, the
 recommended way of using the `pkmn` package in Zig is by either copying this repository into your
 project or by using [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) and then
 adding the following to your `build.zig`:

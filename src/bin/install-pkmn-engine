@@ -7,7 +7,7 @@ const fs = require('fs');
 const {execFileSync} = require('child_process');
 const {pipeline} = require('stream/promises');
 
-const ZIG_VERSION = {major: 0, minor: 9, patch: 0};
+const ZIG_VERSION = {major: 0, minor: 11, patch: 0};
 const VERSION = `${ZIG_VERSION.major}.${ZIG_VERSION.minor}.${ZIG_VERSION.patch}`;
 const INDEX = 'https://ziglang.org/download/index.json';
 const ROOT = path.resolve(__dirname, '../..');
@@ -137,7 +137,8 @@ const install = async () => {
   }
 
   const index = JSON.parse(await fetch(INDEX));
-  const version = Object.keys(index)[1];
+   // TODO: switch back to index 1 once v0.11.0 is released
+  const version = Object.keys(index)[0];
   const url = index[version][`${arch}-${platform}`].tarball;
 
   let base = path.basename(url);
@@ -202,8 +203,10 @@ const headers = async () => {
 
   // FIXME: need to detect original flags by trying to require pkmn.node/pkmn-showdown.node library
   // and checking constants to know whether to build with -Dshowdown/-Dtrace + build and embed WASM
-  console.log('Building build/lib/pkmn.node');
-  sh(zig, ['build', '-Dshowdown', '-Drelease-fast', `-Dnode-headers=${include}`, '-Dstrip']);
+  console.log('Building build/lib/pkmn-showdown.node');
+  sh(zig, [
+    'build', '-Dshowdown', '-Doptimize=ReleaseFast', `-Dnode-headers=${include}`, '-Dstrip',
+  ]);
 })().catch(e => {
   console.error(e);
   process.exit(1);

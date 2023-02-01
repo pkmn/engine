@@ -19,13 +19,7 @@ pub fn main() !void {
 fn checkFormat(file_path: []const u8, allocator: Allocator) !bool {
     const argv = &.{ "zig", "fmt", "--check", file_path };
 
-    // TODO: ziglang/zig@a0a2ce92 changed ChildProcess initialization
-    const allocates = @hasDecl(std.ChildProcess, "deinit");
-    var child_process: ?std.ChildProcess =
-        if (allocates) null else std.ChildProcess.init(argv, allocator);
-    var child = if (allocates) try std.ChildProcess.init(argv, allocator) else &child_process.?;
-    defer if (allocates) child.deinit();
-
+    var child = std.ChildProcess.init(argv, allocator);
     const term = child.spawnAndWait() catch |err| {
         const stderr = std.io.getStdErr().writer();
         try stderr.print("Unable to spawn 'zig fmt': {s}\n", .{@errorName(err)});
@@ -89,14 +83,10 @@ fn lintDir(
 ) LintError!bool {
     var err = false;
 
-    // TODO: ziglang/zig@2b67f56c replaced iterate param with openIterableDir
-    var iterable_dir = if (@hasDecl(std.fs.Dir, "openIterableDir"))
-        try parent_dir.openIterableDir(parent_sub_path, .{})
-    else
-        try parent_dir.openDir(parent_sub_path, .{ .iterate = true });
+    var iterable_dir = try parent_dir.openIterableDir(parent_sub_path, .{});
     defer iterable_dir.close();
 
-    var dir = if (@hasDecl(std.fs.Dir, "openIterableDir")) iterable_dir.dir else iterable_dir;
+    var dir = iterable_dir.dir;
 
     const stat = try dir.stat();
     if (try seen.fetchPut(allocator, stat.inode, {})) |_| return err;
