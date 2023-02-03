@@ -20,6 +20,6 @@ jobs:
         with:
           version: master
       - run: npm install
-      - run: zig build -Dstage2 -Doptimize=ReleaseSafe ${{matrix.options}} fuzz -- ${{matrix.gen}} 15m
+      - run: zig build -Doptimize=ReleaseSafe ${{matrix.options}} fuzz -- ${{matrix.gen}} 15m
       - run: npm run integration -- --gen=${{matrix.gen}} --duration=15m
         if: ${{ matrix.options != '' }}
