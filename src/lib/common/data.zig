@@ -17,7 +17,7 @@ pub const Player = enum(u1) {
     }
 };
 
-test "Player" {
+test Player {
     try expectEqual(Player.P2, Player.P1.foe());
     try expectEqual(@as(u8, 0b0001), @bitCast(u8, Player.P1.ident(1)));
     try expectEqual(@as(u8, 0b1101), @bitCast(u8, Player.P2.ident(5)));
@@ -41,7 +41,7 @@ pub const ID = packed struct {
     }
 };
 
-test "ID" {
+test ID {
     try expectEqual(@as(u8, 0b0001), @bitCast(u8, ID{ .player = .P1, .id = 1 }));
     try expectEqual(@as(u8, 0b1101), @bitCast(u8, ID{ .player = .P2, .id = 5 }));
     const id = ID{ .player = .P2, .id = 4 };
@@ -64,7 +64,7 @@ pub const Choice = packed struct {
     }
 };
 
-test "Choice" {
+test Choice {
     const p1: Choice = .{ .type = .Move, .data = 4 };
     const p2: Choice = .{ .type = .Switch, .data = 5 };
     try expectEqual(5, p2.data);
@@ -97,7 +97,7 @@ pub const Result = packed struct {
     }
 };
 
-test "Result" {
+test Result {
     try expectEqual(0b0101_0000, @bitCast(u8, Result.Default));
     try expectEqual(0b1000_0000, @bitCast(u8, Result{ .p2 = .Switch }));
 }

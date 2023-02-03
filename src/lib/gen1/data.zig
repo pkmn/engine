@@ -69,7 +69,7 @@ pub fn Battle(comptime RNG: anytype) type {
     };
 }
 
-test "Battle" {
+test Battle {
     try expectEqual(384, @sizeOf(Battle(PRNG)));
 }
 
@@ -208,7 +208,7 @@ pub const Status = enum(u8) {
     }
 };
 
-test "Status" {
+test Status {
     try expect(!Status.any(0));
 
     try expect(Status.is(Status.init(.PSN), .PSN));
@@ -264,7 +264,7 @@ pub const Volatiles = packed struct {
     }
 };
 
-test "Volatiles" {
+test Volatiles {
     var volatiles = Volatiles{};
     volatiles.Confusion = true;
     volatiles.confusion = 2;
@@ -312,7 +312,7 @@ pub fn Stats(comptime T: type) type {
     };
 }
 
-test "Stats" {
+test Stats {
     try expectEqual(5, @sizeOf(Stats(u8)));
     const stats = Stats(u16){ .atk = 2, .spe = 3 };
     try expectEqual(2, stats.atk);
@@ -334,7 +334,7 @@ pub const Boosts = packed struct {
     }
 };
 
-test "Boosts" {
+test Boosts {
     const boosts = Boosts{ .spc = -6 };
     try expectEqual(0, boosts.atk);
     try expectEqual(-6, boosts.spc);
@@ -342,7 +342,7 @@ test "Boosts" {
 
 pub const Move = moves.Move;
 
-test "Move" {
+test Move {
     try expectEqual(2, @enumToInt(Move.KarateChop));
     const move = Move.get(.Fissure);
     try expectEqual(Move.Effect.OHKO, move.effect);
@@ -402,7 +402,7 @@ test "Move" {
 
 pub const Species = species.Species;
 
-test "Species" {
+test Species {
     try expectEqual(2, @enumToInt(Species.Ivysaur));
     try expectEqual(@as(u8, 100), Species.get(.Mew).stats.def);
 }
@@ -424,7 +424,7 @@ pub const Effectiveness = enum(u8) {
     }
 };
 
-test "Types" {
+test Types {
     try expectEqual(14, @enumToInt(Type.Dragon));
     try expectEqual(20, @enumToInt(Effectiveness.Super));
 
@@ -468,7 +468,7 @@ pub const DVs = struct {
     }
 };
 
-test "DVs" {
+test DVs {
     var dvs = DVs{ .spc = 15, .spe = 15 };
     try expectEqual(@as(u4, 15), dvs.hp());
     dvs = DVs{

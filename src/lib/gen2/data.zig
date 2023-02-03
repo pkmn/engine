@@ -72,7 +72,7 @@ pub fn Battle(comptime RNG: anytype) type {
 }
 
 // TODO
-test "Battle" {
+test Battle {
     try expectEqual(496, @sizeOf(Battle(PRNG)));
 }
 
@@ -217,7 +217,7 @@ const DVs = packed struct {
     }
 };
 
-test "DVs" {
+test DVs {
     var dvs = DVs.from(.Mewtwo, .{ .def = 13 });
     try expectEqual(Gender.Unknown, dvs.gender);
     try expectEqual(Type.Ice, dvs.type);
@@ -327,7 +327,7 @@ pub fn Stats(comptime T: type) type {
     };
 }
 
-test "Stats" {
+test Stats {
     try expectEqual(12, @sizeOf(Stats(u16)));
     const stats = Stats(u8){ .spd = 2, .spe = 3 };
     try expectEqual(2, stats.spd);
@@ -349,7 +349,7 @@ pub const Boosts = packed struct {
     }
 };
 
-test "Boosts" {
+test Boosts {
     const boosts = Boosts{ .spd = -6 };
     try expectEqual(0, boosts.atk);
     try expectEqual(-6, boosts.spd);
@@ -357,7 +357,7 @@ test "Boosts" {
 
 pub const Item = items.Item;
 
-test "Item" {
+test Item {
     try expect(Item.boost(.MasterBall) == null);
     try expectEqual(Type.Normal, Item.boost(.PinkBow).?);
     try expectEqual(Type.Normal, Item.boost(.PolkadotBow).?);
@@ -376,7 +376,7 @@ test "Item" {
 
 pub const Move = moves.Move;
 
-test "Moves" {
+test Move {
     try expectEqual(251, @enumToInt(Move.BeatUp));
     const move = Move.get(.DynamicPunch);
     try expectEqual(Move.Effect.ConfusionChance, move.effect);
@@ -386,7 +386,7 @@ test "Moves" {
 
 pub const Species = species.Species;
 
-test "Species" {
+test Species {
     try expectEqual(152, @enumToInt(Species.Chikorita));
     try expectEqual(@as(u8, 100), Species.get(.Celebi).stats.spd);
 }
@@ -395,7 +395,7 @@ pub const Type = types.Type;
 pub const Types = types.Types;
 pub const Effectiveness = gen1.Effectiveness;
 
-test "Types" {
+test Types {
     try expectEqual(13, @enumToInt(Type.Electric));
 
     try expect(!Type.Steel.special());

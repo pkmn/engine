@@ -64,7 +64,7 @@ pub const PSRNG = extern struct {
     }
 };
 
-test "PSRNG" {
+test PSRNG {
     var psrng = PSRNG{ .src = .{ .seed = 0x0001000200030004 } };
     try expectEqual(@as(u8, 121), psrng.range(u8, 0, 256));
     try expectEqual(false, psrng.chance(u8, 128, 256)); // 226 < 128
@@ -92,7 +92,7 @@ pub const Gen12 = extern struct {
     }
 };
 
-test "Generation I & II" {
+test Gen12 {
     const expected = [_]u8{ 6, 11, 16, 21, 26, 31, 36, 41, 46, 51, 31, 56, 81 };
     var rng = Gen12{ .seed = .{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 } };
     for (expected) |e| {
@@ -124,7 +124,7 @@ pub const Gen34 = extern struct {
 };
 
 // https://pkmn.cc/PokeFinder/Source/Tests/RNG/LCRNGTest.cpp
-test "Generation III & IV" {
+test Gen34 {
     const data = [_][3]u32{
         .{ 0x00000000, 5, 0x8E425287 }, .{ 0x00000000, 10, 0xEF2CF4B2 },
         .{ 0x80000000, 5, 0x0E425287 }, .{ 0x80000000, 10, 0x6F2CF4B2 },
@@ -157,7 +157,7 @@ pub const Gen56 = extern struct {
 };
 
 // https://pkmn.cc/PokeFinder/Source/Tests/RNG/LCRNG64Test.cpp
-test "Generation V & VI" {
+test Gen56 {
     const data = [_][3]u64{
         .{ 0x0000000000000000, 5, 0xC83FB970153A9227 },
         .{ 0x0000000000000000, 10, 0x67795501267F125A },
@@ -218,7 +218,7 @@ pub fn FixedRNG(comptime gen: comptime_int, comptime len: usize) type {
     };
 }
 
-test "FixedRNG" {
+test FixedRNG {
     const Type = if (showdown) u32 else u8;
     const expected = [_]Type{ 42, 255, 0 };
     var rng = FixedRNG(1, expected.len){ .rolls = expected };
