@@ -132,7 +132,7 @@ pub fn main() !void {
 fn print(w: anytype, name: []const u8, comptime T: type, comptime bits: bool) !void {
     try w.print("      \"{s}\": {{\n", .{name});
     var inner = false;
-    inline for (std.meta.fields(T)) |field| {
+    inline for (@typeInfo(T).Struct.fields) |field| {
         if (field.name[0] != '_') {
             if (inner) try w.writeAll(",\n");
             const offset = @bitOffsetOf(T, field.name);

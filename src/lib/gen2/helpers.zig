@@ -127,7 +127,7 @@ pub const Pokemon = struct {
         var pokemon = data.Pokemon{};
         pokemon.species = p.species;
         const species = Species.get(p.species);
-        inline for (std.meta.fields(@TypeOf(pokemon.stats))) |field| {
+        inline for (@typeInfo(@TypeOf(pokemon.stats)).Struct.fields) |field| {
             const hp = std.mem.eql(u8, field.name, "hp");
             const spc = std.mem.eql(u8, field.name, "spa") or std.mem.eql(u8, field.name, "spd");
             @field(pokemon.stats, field.name) = Stats(u16).calc(
@@ -170,7 +170,7 @@ pub const Pokemon = struct {
 
         var stats: Stats(u16) = .{};
         const dvs = gen1.DVs.random(rand);
-        inline for (std.meta.fields(@TypeOf(stats))) |field| {
+        inline for (@typeInfo(@TypeOf(stats)).Struct.fields) |field| {
             const hp = std.mem.eql(u8, field.name, "hp");
             const spc = std.mem.eql(u8, field.name, "spa") or std.mem.eql(u8, field.name, "spd");
             @field(stats, field.name) = Stats(u16).calc(
