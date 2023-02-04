@@ -206,10 +206,11 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
   },
   'libpkmn': {
     run(format, prng, battles) {
+      const warmup = Math.max(Math.floor(battles / 10));
       const stdout = execFileSync('zig', [
         'build', '-Dshowdown=true', 'benchmark', '--',
         format[3], // TODO: support doubles
-        battles.toString(),
+        `${warmup}/${battles}`,
         serialize(prng.seed),
       ], {encoding: 'utf8'});
 

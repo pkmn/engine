@@ -30,6 +30,7 @@ pub fn main() !void {
         errorAndExit("gen", args[1], args[0], fuzz);
     if (gen < 1 or gen > 9) errorAndExit("gen", args[1], args[0], fuzz);
 
+    var warmup: ?usize = null;
     var battles: ?usize = null;
     var duration: ?usize = null;
     if (args[2].len > 1 and std.ascii.isAlphabetic(args[2][args[2].len - 1])) {
@@ -45,7 +46,15 @@ pub fn main() !void {
         duration = mod * (std.fmt.parseUnsigned(usize, args[2][0..end], 10) catch
             errorAndExit("duration", args[2], args[0], fuzz)) * std.time.ns_per_s;
     } else {
-        battles = std.fmt.parseUnsigned(usize, args[2], 10) catch
+        var arg: []u8 = args[2];
+        const index = std.mem.indexOfScalar(u8, arg, '/');
+        if (index) |i| {
+            warmup = std.fmt.parseUnsigned(usize, arg[0..i], 10) catch
+                errorAndExit("warmup", args[2], args[0], fuzz);
+            if (warmup.? == 0) errorAndExit("warmup", args[2], args[0], fuzz);
+            arg = arg[(i + 1)..arg.len];
+        }
+        battles = std.fmt.parseUnsigned(usize, arg, 10) catch
             errorAndExit("battles", args[2], args[0], fuzz);
         if (battles.? == 0) errorAndExit("battles", args[2], args[0], fuzz);
     }
@@ -57,13 +66,14 @@ pub fn main() !void {
         const random = csprng.random();
         break :seed random.int(usize);
     };
-    try benchmark(allocator, gen, seed, battles, duration);
+    try benchmark(allocator, gen, seed, warmup, battles, duration);
 }
 
 pub fn benchmark(
     allocator: Allocator,
     gen: u8,
     seed: u64,
+    warmup: ?usize,
     battles: ?usize,
     duration: ?usize,
 ) !void {
@@ -83,9 +93,11 @@ pub fn benchmark(
     var out = std.io.getStdOut().writer();
 
     var i: usize = 0;
-    var num = battles orelse std.math.maxInt(usize);
+    var w = warmup orelse 0;
+    var num = if (battles) |b| b + w else std.math.maxInt(usize);
     while (i < num and (if (duration) |d| elapsed.read() < d else true)) : (i += 1) {
         if (fuzz) last = random.src.seed;
+        if (warmup != null and i == w) random = pkmn.PSRNG.init(seed);
 
         const opt = .{ .cleric = showdown or !fuzz, .block = showdown and fuzz };
         var battle = switch (gen) {
@@ -148,8 +160,12 @@ pub fn benchmark(
                 });
             }
         }
-        time += timer.read();
-        turns += battle.turn;
+
+        const t = timer.read();
+        if (i >= w) {
+            time += t;
+            turns += battle.turn;
+        }
         std.debug.assert(!showdown or result.type != .Error);
     }
     if (data != null) deinit(allocator);
