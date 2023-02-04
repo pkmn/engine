@@ -35,7 +35,7 @@ class Random {
 // const battle = Battle.create(gens.get(1), options);
 // while (!(result = battle.update(c1, c2))) {
 //   c1 = random.next(battle.choices('p1', result));
-//   c2 = random.nexy(battle.choices('p2', result));
+//   c2 = random.next(battle.choices('p2', result));
 // }
 
 // console.log(result);

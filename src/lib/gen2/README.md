@@ -109,7 +109,7 @@ below).
 
 #### `Volatile` / `VolatileData`
 
-Active Pokémon can have have ["volatile" status
+Active Pokémon can have ["volatile" status
 conditions](https://pkmn.cc/bulba/Status_condition#Volatile_status) (called ['sub
 status'](https://pkmn.cc/pokecrystal/constants/battle_constants.asm#L166-L212) bits in pret), all of
 which are boolean flags that are cleared when the Pokémon faints or switches out:
@@ -177,10 +177,10 @@ to indicate `null`.
 ### `Type` / `Types` / `Effectiveness`
 
 The [Pokémon types](https://pkmn.cc/bulba/Type) are enumerated by `Type`. `Types` represents a tuple
-of 2 types, which takes the form of a packed struct isntead of `[2]Type` for symmetry with
+of 2 types, which takes the form of a packed struct instead of `[2]Type` for symmetry with
 Generation I. `Effectiveness` serves as an enum for tracking a moves effectiveness - like the
-cartridge, effectiveness is stored as as `0`, `5`, `10`, and `20` (technically only a 4-bit value is
-required, but Zig only allows a mininum of a byte to be stored at each address of an array).
+cartridge, effectiveness is stored as `0`, `5`, `10`, and `20` (technically only a 4-bit value is
+required, but Zig only allows a minimum of a byte to be stored at each address of an array).
 
 Type effectiveness modifiers are applied based off of the ordering of the effectiveness table as
 opposed to first applying modifiers for a species's first type and then second type. The engine

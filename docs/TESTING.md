@@ -39,7 +39,7 @@ eliminate unnecessary nondeterministic elements:
 
 - `Battle#eachEvent` and `Battle#residualEvent` have been changed to not perform a
   `Battle#speedSort` in Generation I and II, which should result in events being executed in the
-  order they are added, ultimately resulting in Player 1's events occuring before Player 2's
+  order they are added, ultimately resulting in Player 1's events occurring before Player 2's
   regardless of speed, effectively recreating the cartridge's default "host" ordering semantics
 - `BattleQueue#insertChoice` is patched to also obey "host" ordering in Generation I and II
 - "priorities" have been added to various handler functions to break speed ties and ensure that
@@ -53,7 +53,7 @@ speed tie rolls), they simply aim to make minimally intrusive changes that allow
 Showdown behavior to be reproduced by the pkmn engine. These patches should also strictly result in
 a performance improvement compared to vanilla Pokémon Showdown, as they cause Pokémon Showdown to
 perform less sorting and RNG frame advances than it otherwise would, which effectively
-[steelmans](https://en.wikipedia.org/wiki/Straw_man#Steelmanning) the implementation for
+["steelmans"](https://en.wikipedia.org/wiki/Straw_man#Steelmanning) the implementation for
 benchmarking purposes.
 
 ### `showdown`
@@ -159,7 +159,7 @@ measures 4 different configurations:
 - **`DirectBattle`**: this configuration introduces the concept of a `DirectBattle` which
   overrides the Pokémon Showdown `Battle` class to strip out unused functionality:
 
-    1. methods which add to the battle log are overriden to drop any messages immediately
+    1. methods which add to the battle log are overridden to drop any messages immediately
     2. `sendUpdates` is overridden to not send any updates
     3. `makeRequest` avoids serializing the request for each side  
   
@@ -167,7 +167,7 @@ measures 4 different configurations:
   about 10% faster and obviates needing to care about races. This configuration minimizes string
   processing overhead and unnecessary delays due to `async` calls and is as close to as fast as
   Pokémon Showdown can be run (there is room for further optimization by simplifying choice parsing
-  to to not perform any verification, though this is signficantly less trivial than the
+  to not perform any verification, though this is significantly less trivial than the
   aforementioned optimizations). This is closer to how the pkmn engine runs with `-Dtrace` disabled.
   Finally, `DirectBattle` is [patched](#patches) to eliminate unnecessary as covered above.
 
@@ -280,6 +280,6 @@ The [integration](#integration) tests and [benchmark](#benchmark) are also used 
 exists to run these tests on a schedule from random seeds for various durations to attempt to
 uncover latent bugs. The fuzz tests differ from the benchmark in that they run for predefined time
 durations as opposed to a given number of battles and enable the [blocked](#blocklistjson) effects
-that are usually excluded in `-Dshowdown` compatability mode. When run with the `-Dtrace` flag,
+that are usually excluded in `-Dshowdown` compatibility mode. When run with the `-Dtrace` flag,
 additional binary data will be dumped on crashes to allow for debugging with the help of
 [`fuzz.ts`](../src/tools/fuzz.ts).

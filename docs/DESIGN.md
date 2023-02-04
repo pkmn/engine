@@ -41,7 +41,7 @@ tradeoff performance for any other feature. This principle leads to the followin
 - serialization either consists of simply treating structures as an array of bytes or, in the case
   of the log [protocol](PROTOCOL.md), writing bytes in the fastest way possible. As a result, the
   engine's **protocol and API changes depending on the system**, as all integers will be written
-  using **native-endianess** as that is guaranteed to be the fastest to read and write on any
+  using **native-endianness** as that is guaranteed to be the fastest to read and write on any
   particular system.
 - **no strings** are used in the engine - strings are to be dealt with by higher levels (e.g. in
   driver code) and as a result the engine just has to deal with small and efficient primitive data
@@ -148,10 +148,10 @@ hours):
   substantially more complicated as it contains branches and hooks for all other generations (and
   the simpler code for other generations must **pay the price for all of the modern generation
   code**). Furthermore, it becomes difficult to determine where exactly code for a specific older
-  generation lives, as the funtionality may be inherited from newer generations (which is counter
+  generation lives, as the functionality may be inherited from newer generations (which is counter
   intuitive to how the game mechanics actually evolved).
 - Pokémon Showdown is built around a custom **generic event system** with an intricate bubbling and
-  priority system. This system is very powerful, though event dispatch is very expensive and the
+  priority system. This system is very powerful, though event dispatch is expensive and the
   slowest part of the engine. While this bottleneck has been improved since it was first
   [identified](https://pkmn.cc/optimize), the pattern of **searching for handlers is slow** and a
   model where handlers are pre-registered instead of searched for would be a large improvement (i.e.
@@ -171,7 +171,7 @@ hours):
 - Pokémon Showdown's **data layer is fully featured** and designed to support a plethora of use
   cases beyond what is specifically required for implementing a Pokémon battle. This data is useful
   for various additional tools and features, but the more **general API results in bloat** that
-  hinders performance.  In a similar vein, many of Pokémon Showdown's core classes are designed for
+  hinders performance. In a similar vein, many of Pokémon Showdown's core classes are designed for
   convenience and for developer ergonomics as opposed to performance (e.g. no distinction between
   the `ActivePokémon`'s fields and a `Pokémon` in the party, resulting in redundant data being
   stored and filling up cache lines).
@@ -202,4 +202,4 @@ hours):
   standard input/output streams (which incurs **syscall overhead**).
 
 Ultimately, the Pokémon Showdown's design choices may result in a flexible engine which is easy to
-expand upon, but its architecture is fundamentally at odds with acheiving peak performance.
+expand upon, but its architecture is fundamentally at odds with achieving peak performance.

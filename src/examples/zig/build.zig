@@ -8,7 +8,7 @@ pub fn build(b: *std.build.Builder) void {
     const showdown = b.option(
         bool,
         "showdown",
-        "Enable Pokémon Showdown compatability mode",
+        "Enable Pokémon Showdown compatibility mode",
     ) orelse false;
     const trace = b.option(
         bool,

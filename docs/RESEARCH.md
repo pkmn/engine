@@ -106,7 +106,7 @@
   - [battle](https://pkmn.cc/pokeemerald/include/constants/battle.h) /
     [misc](https://pkmn.cc/pokeemerald/include/constants/battle_script_commands.h)
 - `src/data/`
-  - [species data](https://pkmn.cc/pokeemerald/src/data/pokemon/base_stats.h)
+  - [species data](https://pkmn.cc/pokeemerald/src/data/pokemon/species_info.h)
     - [evolutions](https://pkmn.cc/pokeemerald/src/data/pokemon/evolution.h) / [egg
       moves](https://pkmn.cc/pokeemerald/src/data/pokemon/egg_moves.h) / [level
       up](https://pkmn.cc/pokeemerald/src/data/pokemon/level_up_learnsets.h)

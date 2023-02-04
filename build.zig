@@ -21,7 +21,7 @@ pub fn build(b: *std.Build) !void {
     const version = tree.root.Object.get("version").?.String;
 
     const showdown =
-        b.option(bool, "showdown", "Enable Pokémon Showdown compatability mode") orelse false;
+        b.option(bool, "showdown", "Enable Pokémon Showdown compatibility mode") orelse false;
     const trace = b.option(bool, "trace", "Enable trace logs") orelse false;
 
     const options = b.addOptions();

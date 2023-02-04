@@ -135,7 +135,7 @@ Showdown's "Sleep Clause Mod".
 
 #### `Volatiles`
 
-Active Pokémon can have have ["volatile" status
+Active Pokémon can have ["volatile" status
 conditions](https://pkmn.cc/bulba/Status_condition#Volatile_status) (called ["battle
 status"](https://pkmn.cc/pokered/constants/battle_constants.asm#L73) bits in pret), all of which are
 boolean flags that are cleared when the Pokémon faints or switches out:
@@ -222,14 +222,14 @@ species is necessary for computing critical hit probability.
 The [Pokémon types](https://pkmn.cc/bulba/Type) are enumerated by `Type`. `Types` represents a tuple
 of 2 types, but due to limitations in Zig this can't be represented as a `[2]Type` array and thus
 instead takes the form of a packed struct. `Effectiveness` serves as an enum for tracking a moves
-effectiveness - like the cartridge, effectiveness is stored as as `0`, `5`, `10`, and `20`
-(technically only a 2-bit value is required, but as with `Types` Zig only allows a mininum of a byte
+effectiveness - like the cartridge, effectiveness is stored as `0`, `5`, `10`, and `20`
+(technically only a 2-bit value is required, but as with `Types` Zig only allows a minimum of a byte
 to be stored at each address of an array).
 
 The 'precedence' of the various type matchups matters beyond just the [dual-type damage
 misinformation
 glitch](https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Dual-type_damage_misinformation - type
-effectiveness modifiers are applied based off of the (haphazard) ordering of the effectiveness table
+effectiveness modifiers are applied based on the (haphazard) ordering of the effectiveness table
 as opposed to first applying modifiers for a species's first type and then second type. The engine
 maintains a `Type.PRECEDENCE` table with just the matchups that are relevant in game (certain type
 combinations cannot crop up with the limited Generation I species pool and as such are pruned for
@@ -311,7 +311,7 @@ uncached memory lookups, not total memory usage.
 [store values which are not normal
 effectiveness](https://github.com/pret/pokered/blob/master/data/types/type_matchups.asm) in 820 bits
 as 82× attacking type (`4`) + defending type (`4`) + non-Normal effectiveness (`2`). This would
-avoid having to do two memory lookups at the cost of a longer time scannning, but the second lookup
+avoid having to do two memory lookups at the cost of a longer time scanning, but the second lookup
 should already be fast due to locality of reference meaning it will likely already be in the cache.
 This approach would also render `Type.PRECEDENCE` unnecessary.
 
@@ -336,7 +336,7 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 | 372     | 373-376 | `last_selected_indexes` | The slot index of the last selected moves for each side |
 | 373-376 | 384     | `rng`                   | The RNG state                                           |
 
-- the current `turn` is 2 bytes, written in native-endianess
+- the current `turn` is 2 bytes, written in native-endianness
 - `last_selected_indexes` layout depends on whether or not Pokémon Showdown compatibility mode is
   enabled (`-Dshowdown`):
   - if `showdown` is enabled bytes 372 and 373 are used to store the last selected move index of
@@ -345,7 +345,7 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
     `side[1]`'s in its second 4 bits
 - the `rng` depends on whether or not Pokémon Showdown compatibility mode is enabled (`-Dshowdown`):
   - if `showdown` is enabled, the RNG state begins on byte 376 and consists of a 64-bit seed,
-    written in native-endianess
+    written in native-endianness
   - otherwise the RNG state begins on byte 373 and consists of the 10 bytes of the seed followed by
     the index pointing to which byte of the seed is currently being used
 
@@ -391,7 +391,7 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 | 30    | 31  | `moves[3].id`                      | The active Pokémon's fourth move                            |
 | 31    | 32  | `moves[4].pp`                      | The PP of the active Pokémon's fourth move                  |
 
-- the active Pokémon's `stats.hp` is always identical to the the corresponding stored Pokémon's `stats.hp`
+- the active Pokémon's `stats.hp` is always identical to the corresponding stored Pokémon's `stats.hp`
 - `boosts` and `types` includes bytes which store two 4-bit fields each
 
 #### `Volatiles`
@@ -452,7 +452,7 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 
 ## Bugs
 
-In addition to its alternative [RNG semantics](#rng), Pokémon Showdown's implemention of the first
+In addition to its alternative [RNG semantics](#rng), Pokémon Showdown's implementation of the first
 generation of Pokémon contains a number bugs, [many of which are known and have been documented on
 Smogon](https://www.smogon.com/forums/threads/rby-tradebacks-bug-report-thread.3524844/#post-5933177):
 
@@ -489,7 +489,7 @@ of the battle, only pedantic UI correctness):
 
 - **Rage**: Rage should report the `|-boost|` before the Disable `|-miss|`, not after.
 - **Haze**: Haze clears the status/volatiles in an incorrect order.
-- **Twinneedle**: the `|-hitcount|` ("Hit 2 times") should come before the `|-status|` message, not
+- **Twineedle**: the `|-hitcount|` ("Hit 2 times") should come before the `|-status|` message, not
   after.
 - **Thrash** / **Petal Dance**: confusion should silently get applied before the `|move|` message,
   not after.
@@ -543,7 +543,7 @@ to completely implement Pokémon Showdown's behavior for the following moves (th
 attempts to reproduce as much of the behavior that can be reproduced without making data structure
 changes or dramatically deviating from the correct control flow):
 
-- **Wrap**: Partial trapping moves like Wrap are implemented on Pokémon Showdown with an artifical
+- **Wrap**: Partial trapping moves like Wrap are implemented on Pokémon Showdown with an artificial
   `partialtrappinglock` volatile as opposed to how it works on the cartridge which simply relies on
   the `Trapping` volatile of the opponent. This mistake results in partial trapping choice locking
   not being reported properly when the trapping move was initiated via another move such as
@@ -585,11 +585,11 @@ below).
 ## RNG
 
 **The pkmn engine aims to match the cartridge's RNG frame-accurately**, in that provided with the
-same intial seed and inputs it should produce the exact same battle playout as the Pokémon Red
-cartridge. **Pokémon Showdown does not correctly implement frame-accurate RNG in any generation**,
-and along with the [bugs](#bugs) discussed above this results in large differences in the codebase.
-Because the pkmn engine aims to be as compatible with Pokémon Showdown as possible when in
-`-Dshowdown` compatibility mode, the implications of these differences are outlined below:
+same initial seed and inputs it should produce the same battle playout as the Pokémon Red cartridge.
+**Pokémon Showdown does not correctly implement frame-accurate RNG in any generation**, and along
+with the [bugs](#bugs) discussed above this results in large differences in the codebase. Because
+the pkmn engine aims to be as compatible with Pokémon Showdown as possible when in `-Dshowdown`
+compatibility mode, the implications of these differences are outlined below:
 
 - **RNG**: Pokémon Showdown uses the RNG from Generation V & VI in every generation, despite
   the seeds and algorithm being different. Pokémon Red uses a simple 8-bit RNG with 10 distinct
@@ -600,7 +600,7 @@ Because the pkmn engine aims to be as compatible with Pokémon Showdown as possi
   Showdown were using the correct RNG the values would still diverge (including using a completely
   incorrect distribution for multi-hit moves).
 - **Bias**: Pokémon Showdown often needs to reduce its 32-bit output range to a smaller range in
-  order to implement various effects, and does so using a [biased interger multiplication
+  order to implement various effects, and does so using a [biased integer multiplication
   method](http://www.pcg-random.org/posts/bounded-rands.html) as opposed to debiasing via rejection
   sampling to ensure uniformity as is done on the cartridge. This means that certain values are
   fractionally more likely to be chosen than others, though this bias is usually quite small (e.g.
@@ -622,7 +622,7 @@ Because the pkmn engine aims to be as compatible with Pokémon Showdown as possi
   keeping track of all of the handlers for the internal events Pokémon Showdown invents and
   implementing the same "action" system, matching Pokémon Showdown's RNG in the presence of speed
   ties proves impossible, and thus the reference Pokémon Showdown implementation pkmn engine aims to
-  match hasß been [patched](../../../docs/TESTING.md#patches) to change this behavior.
+  match has been [patched](../../../docs/TESTING.md#patches) to change this behavior.
 - **Effects**: Pokémon Showdown occasionally incorrectly inserts RNG calls in move effect handlers
   when they are not relevant:
   - Roar / Whirlwind roll to hit and can "miss" as opposed to simply failing

@@ -5,7 +5,7 @@
    - unoptimized - exact layout tweaked in step 11
 3. **[Generate](../src/tools/generate.ts) data** files
    - reorder enums for performance
-   - update [`Lookup`](../src/pkg/data.ts) if neccessary
+   - update [`Lookup`](../src/pkg/data.ts) if necessary
 4. **[Generate](../src/tools/generate.ts) test** files
    - reorganize logically and to match previous generations
    - add in cases for known Pokémon Showdown bugs and cartridge glitches
@@ -20,11 +20,11 @@
    - update [protocol](../src/lib/common/protocol.zig) as necessary, also updating
      [documentation](PROTOCOL.md), [driver](../src/pkg/protocol.ts), and tests
    - [generate](../src/tools/protocol.zig) updated [`protocol.json`](../src/pkg/data/protocol.json)
-8. Adjust **mechanics for Pokémon Showdown** compatability
+8. Adjust **mechanics for Pokémon Showdown** compatibility
    - track RNG differences and update generation documentation
    - ensure all bugs are tracked in documentation
    - [blocklist](../src/test/blocklist.json) any unimplementable effects
-9. **Unit test the engine** in both cartridge and Pokémon Showdown compatability mode
+9. **Unit test the engine** in both cartridge and Pokémon Showdown compatibility mode
 10. Implement a **`MAX_LOGS` unit test**
     - document in [`PROTOCOL.md`](PROTOCOL.md)
     - validate with [`max_logs.py`](../src/tools/max_logs.py)

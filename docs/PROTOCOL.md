@@ -24,9 +24,9 @@ The engine's wire protocol essentially amounts to a stripped down binary transla
 Showdown's simulator
 protocol](https://github.com/smogon/pokemon-showdown/blob/master/sim/SIM-PROTOCOL.md), with certain
 redundant messages (e.g. `|upkeep|` or `|`) removed, and others subtly tweaked (there is no
-`|split|` message - the "ominprescient" stream of information is always provided and other streams
+`|split|` message - the "omniprescient" stream of information is always provided and other streams
 must be recreated by driver code). Like the rest of the pkmn engine, the protocol uses
-**native-endianess**. While the protocol may change slightly depending on the generation in question
+**native-endianness**. While the protocol may change slightly depending on the generation in question
 (e.g. a `Move` requires more than a single byte to encode after Generation I & II), any differences
 will called out below where applicable.
 
@@ -43,7 +43,7 @@ With `-Dtrace` enabled, [messages](#messages) are written to the `Log` provided.
 each message is an integer representing the `ArgType` of the message, followed by 0 or more bytes
 containing the payload of the message. Game objects such as moves, species, abilities, items, types,
 etc are written as their internal identifier which usually matches their public facing number, but
-in cases where these differ the [`ids.json`](src/pkg/data/ids.json) can  be used to decode them.  A
+in cases where these differ the [`ids.json`](src/pkg/data/ids.json) can  be used to decode them. A
 [`protocol.json`](../src/pkg/data/protocol.json) containing a human-readable lookup for the
 `ArgType` and various "[reason](#reason)" enums (see below) is generated from the library code and
 can be used for similar purposes.
@@ -92,9 +92,9 @@ engine. While the given player, position letter and identity of the Pokémon in 
 still encoded, the identity takes the form of a single bit-packed byte:
 
 - the most significant 3 bits are always `0`
-- the 4th most signficiant bit is `0` if the position is `a` and `1` if the position is `b` (only
+- the 4th most significant bit is `0` if the position is `a` and `1` if the position is `b` (only
   relevant in doubles battles)
-- the 5th most signficant bit is `0` for player 1 and `1` for player 2.
+- the 5th most significant bit is `0` for player 1 and `1` for player 2.
 - the lowest 3 bits represent the slot (`1` through `6` inclusive) of the Pokémon's original
   location within the party (i.e. the order a player's team was initially in when the battle
   started, before any Pokémon were switched).
@@ -112,8 +112,8 @@ to modify a batched `|move|` message before it is written with other messages as
 the pkmn engine streams out writes immediately and does not perform batching, meaning code parsing
 the engine's protocol is required to do the batching instead.
 
-When interepreting a buffer written by the pkmn `Log`: if a `LastStill` (`0x01`) byte is encountered
-and if there is a previous `|move|` message in the same buffer that occured earlier, append a
+When interpreting a buffer written by the pkmn `Log`: if a `LastStill` (`0x01`) byte is encountered
+and if there is a previous `|move|` message in the same buffer that occurred earlier, append a
 `[still]` keyword arg to it. Similarly, if a `LastMiss` (`0x02`) byte is encountered, append a
 `[miss]` to the last seen `|move|` message if present.
 
@@ -131,7 +131,7 @@ and if there is a previous `|move|` message in the same buffer that occured earl
       +---------------+---------------+
 
 `Source` is the [`PokemonIdent`](#pokemonident) of the Pokémon that used the `Move` on the
-[`PokemonIdent`](#pokemonident) `Target` for `Reason`.  If `Reason` is `0x02` then the next byte
+[`PokemonIdent`](#pokemonident) `Target` for `Reason`. If `Reason` is `0x02` then the next byte
 will indicate which `Move` the `|move|` is `[from]`. This message may be modified later on by a
 `LastStill` or `LastMiss` message in the same buffer (see above).
 
@@ -641,7 +641,7 @@ conceivable sequence of events should be considered or only those which can be o
 via the actual RNG (on either the catridge or Pokémon Showdown).
 
 In general, the constants will be defined such that they will be guaranteed to be sufficient under
-**cartridge constraints with a lax consideration of the RNG** (though taking a strict intepretation
+**cartridge constraints with a lax consideration of the RNG** (though taking a strict interpretation
 of the RNG is required in some cases to be able to conservatively set the upper bounds in specific
 scenarios). In practice, the constants will usually be defined to handle "hackmons" legality as that
 is what is useful for the engine's fuzz testing - see the precise definitions below for exact
@@ -653,7 +653,7 @@ prover](https://github.com/Z3Prover/z3).
 
 ### Generation I
 
-The `MAX_LOGS` constant in Generation I is determined to be **180**. Acheiving this requires two
+The `MAX_LOGS` constant in Generation I is determined to be **180**. Achieving this requires two
 burned Aerodactyl with Leech Seed, Confuse Ray, and Metronome where one is slower than the other. On
 the first two turns of the battle the Aerodactyl both use Leech Seed followed by Confuse Ray, and
 then in the turn where the maximum single update output is to be reached, the faster Aerodactyl uses
@@ -673,7 +673,7 @@ In order to maximize log message size in Generation I several observations need 
   more bytes
 - before a `|move|` a Pokémon can activate confusion, and after residual damage from a poison or
   burn status, Leech Seed can be triggered
-- neither Pokémon can `|faint|` at the end. While intially it might seem like having both
+- neither Pokémon can `|faint|` at the end. While initially it might seem like having both
   `|faint|` and causing one side to `|win|` would be optimal (two `|faint|` messages and one `|win|`
   is 6 bytes total, a single `|faint|` and a `|turn|` message is 5 bytes), if a side faints you
   miss out on a round of damage and healing from Leech Seed which is 16 bytes
@@ -687,9 +687,9 @@ The most important observation is that **Metronome and Mirror Move can be used i
 arbitrary increases in log size via mutual recursion**. Metronome and Mirror Move handlers both
 contain checks to prevent infinite self-recursion, but do not check for each other, meaning a
 Pokémon can use Metronome to proc Mirror Move to copy their opponent's Metronome to proc Mirror Move
-again etc. However, since Mirror Move works off of the `last_used_move` field and Metronome using
+again etc. However, since Mirror Move works based on the `last_used_move` field and Metronome using
 a new move overwrites this field, Mirror Move copying an opponent's original Metronome will only
-work if a charging move is triggered by the intial Metronome, meaning the other player can not also
+work if a charging move is triggered by the initial Metronome, meaning the other player can not also
 perform this loop (and can actually not use a move on their turn at all, as they would then be
 locked in by the previous turn's charging move used via Metronome).
 
@@ -701,7 +701,7 @@ this potential infinite recursion we must strictly consider what is actually pos
 and not just what would be possible in theory.
 
 In Pokémon Showdown there are several frame advances between each call (e.g. a consequential roll to
-hit, an advance to retarget, etc) and setting up the RNG to accomplish arbitrary recursion is not
+hit, an advance to re-target, etc) and setting up the RNG to accomplish arbitrary recursion is not
 feasible in practice. However, in Pokémon Red there is only an inconsequential (i.e. the value is
 ignored) critical hit roll for both Metronome and Mirror Move between each roll to determine which
 move to use and the seed can be used to set up 10 arbitrary values. Define $X$, $X'$, and $X''$ such
@@ -750,7 +750,7 @@ Move → multi-hit.
   - `0x00`: 1 byte (end of buffer)
 
 [Z3](../src/tools/max_logs.py) can be used to test out these scenarios - we can quickly see that
-despite 10 levels of recursive Metronome → Mirror Move being possible in a vaccuum if we are able to
+despite 10 levels of recursive Metronome → Mirror Move being possible in a vacuum if we are able to
 control the initial seed, there is no way to achieve the first scenario after burning through the
 rolls on the first two turns of setup and if we need to be able to proc specific Metronome rolls
 after. For the second scenario we run into the problem of needing an extra turn of setup for Player

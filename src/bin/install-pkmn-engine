@@ -76,7 +76,7 @@ const unpack = async (input, output) => {
     if (input.endsWith('.zip')) {
       sh('7z', ['x', input, '-o' + output]);
     } else {
-      // 7z is braindead and requires two commands to unpack the .tar.{gz,xz} file
+      // 7z is brain-dead and requires two commands to unpack the .tar.{gz,xz} file
       const tar = input.slice(0, -3);
       sh('7z', ['x', input, '-o' + tar]);
       sh('7z', ['x', tar, '-o' + output]);

@@ -2453,7 +2453,7 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
             // Pokémon Showdown instead produces a list with a single move that must be chosen.
             //
             // Given that no input is allowed on the cartridge 'Pass' seems like it would be logical
-            // here when not in compatability mode, but the engine needs to be able to differentiate
+            // here when not in compatibility mode, but the engine needs to be able to differentiate
             // between passing while waiting for an opponent's forced switch after fainting and
             // passing due to being forced into using a move. Instead of introducing another option
             // we simply repurpose Move with no move slot, even though pedantically this is not
