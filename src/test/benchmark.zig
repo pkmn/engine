@@ -28,7 +28,7 @@ pub fn main() !void {
 
     const gen = std.fmt.parseUnsigned(u8, args[1], 10) catch
         errorAndExit("gen", args[1], args[0], fuzz);
-    if (gen < 1 or gen > 8) errorAndExit("gen", args[1], args[0], fuzz);
+    if (gen < 1 or gen > 9) errorAndExit("gen", args[1], args[0], fuzz);
 
     var battles: ?usize = null;
     var duration: ?usize = null;
@@ -67,7 +67,7 @@ pub fn benchmark(
     battles: ?usize,
     duration: ?usize,
 ) !void {
-    std.debug.assert(gen >= 1 and gen <= 8);
+    std.debug.assert(gen >= 1 and gen <= 9);
 
     const fuzz = duration != null;
     const showdown = pkmn.options.showdown;

@@ -15,7 +15,7 @@ pub fn main() !void {
 
     const gen = std.fmt.parseUnsigned(u8, args[1], 10) catch
         errorAndExit("gen", args[1], args[0]);
-    if (gen < 1 or gen > 8) errorAndExit("gen", args[1], args[0]);
+    if (gen < 1 or gen > 9) errorAndExit("gen", args[1], args[0]);
     const seed = if (args.len > 2) std.fmt.parseUnsigned(u64, args[2], 10) catch
         errorAndExit("seed", args[2], args[0]) else null;
 
