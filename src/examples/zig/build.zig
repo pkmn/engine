@@ -20,15 +20,13 @@ pub fn build(b: *std.build.Builder) void {
     options.addOption(bool, "showdown", showdown);
     options.addOption(bool, "trace", trace);
 
-    const build_options = options.getPackage("build_options");
-
     const exe = b.addExecutable(.{
         .name = "example",
         .root_source_file = .{ .path = "example.zig" },
         .optimize = optimize,
         .target = target,
     });
-    exe.addPackage(pkmn.pkg(b, build_options));
+    exe.addModule("pkmn", pkmn.module(b, options.createModule()));
     exe.install();
 
     const run_cmd = exe.run();

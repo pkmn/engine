@@ -1,11 +1,11 @@
 const std = @import("std");
 
-const Pkg = std.build.Pkg;
-
-pub fn pkg(b: *std.Build, build_options: Pkg) Pkg {
+pub fn module(b: *std.Build, build_options: *std.Build.Module) *std.Build.Module {
     const dirname = comptime std.fs.path.dirname(@src().file) orelse ".";
-    const source = .{ .path = dirname ++ "/src/lib/pkmn.zig" };
-    return b.dupePkg(Pkg{ .name = "pkmn", .source = source, .dependencies = &.{build_options} });
+    return b.createModule(.{
+        .source_file = .{ .path = dirname ++ "/src/lib/pkmn.zig" },
+        .dependencies = &.{.{ .name = "build_options", .module = build_options }},
+    });
 }
 
 pub fn build(b: *std.Build) !void {
@@ -28,8 +28,7 @@ pub fn build(b: *std.Build) !void {
     options.addOption(bool, "showdown", showdown);
     options.addOption(bool, "trace", trace);
 
-    const build_options = options.getPackage("build_options");
-    const pkmn = pkg(b, build_options);
+    const pkmn = .{ .name = "pkmn", .module = module(b, options.createModule()) };
 
     const lib = if (showdown) "pkmn-showdown" else "pkmn";
 
@@ -192,7 +191,7 @@ const Config = struct {
 
 fn tool(
     b: *std.Build,
-    pkgs: []const Pkg,
+    deps: []const std.Build.ModuleDependency,
     path: []const u8,
     config: Config,
 ) *std.Build.RunStep {
@@ -207,7 +206,7 @@ fn tool(
         .target = config.target,
         .optimize = config.optimize,
     });
-    for (pkgs) |p| exe.addPackage(p);
+    for (deps) |dep| exe.addModule(dep.name, dep.module);
     exe.single_threaded = true;
     exe.strip = config.strip;
     if (config.test_step) |ts| ts.dependOn(&exe.step);
