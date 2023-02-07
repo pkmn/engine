@@ -23,7 +23,7 @@ pub fn main() !void {
         std.process.exit(1);
     };
 
-    // Use Zig's system PRNG (pkmn.PRNG is another option with a slightly different API)
+    // Use Zig's system PRNG (pkmn.PSRNG is another option with a slightly different API)
     var prng = std.rand.DefaultPrng.init(seed);
     var random = prng.random();
     // Preallocate a small buffer for the choice options throughout the battle
@@ -67,14 +67,13 @@ pub fn main() !void {
         // Here we would do something with the log data in buf if -Dtrace were enabled
         // _ = buf;
 
-        // battle.choices determines what the possible options are - the simplest way to
-        // choose an option here is to just use the system PRNG to pick one at random
+        // battle.choices determines what the possible options are - the simplest way to choose an
+        // option here is to just use the system PRNG to pick one at random
         //
-        // Technically in Generation 1 only, due to the Transform + Mirror Move/Metronome PP error
-        // if the battle contains Pokémon with a combination of Transform, Mirror Move/Metronome,
-        // and Disable its possible that there are no available choices (softlock) which means we
-        // should check the return value of battle.choices is greater than 0, but our battle setup
-        // does not need to account for that possibility
+        // Technically due to Generation I's Transform + Mirror Move/Metronome PP error if the
+        // battle contains Pokémon with a combination of Transform, Mirror Move/Metronome, and
+        // Disable its possible that there are no available choices (softlock), though this is
+        // impossible here given that our example battle involves none of these moves
         // TODO: ziglang/zig#13415
         const n1 = random.uintLessThan(u8, battle.choices(.P1, result.p1, &options));
         c1 = options[n1];

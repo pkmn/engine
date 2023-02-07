@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "pkmn.h"
+#include <pkmn.h>
 
 pkmn_choice choose(
    pkmn_gen1_battle *battle,
@@ -13,13 +13,13 @@ pkmn_choice choose(
    pkmn_choice options[])
 {
    uint8_t n = pkmn_gen1_battle_choices(battle, player, request, options);
-   // Technically in Generation 1 only, due to the Transform + Mirror Move/Metronome PP error if the
+   // Technically due to Generation I's Transform + Mirror Move/Metronome PP error if the
    // battle contains Pokémon with a combination of Transform, Mirror Move/Metronome, and Disable
-   // its possible that there are no available choices (softlock), but our battle setup does not
-   // need to account for that possibility
+   // its possible that there are no available choices (softlock), though this is impossible here
+   // given that our example battle involves none of these moves
    assert(n > 0);
-   // pkmn_gen1_battle_choices determines what the possible options are - the simplest way to choose
-   // an option here is to just use the system PRNG to pick one at random
+   // pkmn_gen1_battle_choices determines what the possible options are - the simplest way to
+   // choose an option here is to just use the PSRNG to pick one at random
    return options[pkmn_psrng_next(random) * n];
 }
 
@@ -36,6 +36,7 @@ int main(int argc, char **argv)
    if (errno) {
       fprintf(stderr, "Invalid seed: %s\n", argv[1]);
       fprintf(stderr, "Usage: %s <seed>\n", argv[0]);
+      return 1;
    }
 
    // We could use C's srand() and rand() function but for point of example
@@ -45,8 +46,9 @@ int main(int argc, char **argv)
    // Preallocate a small buffer for the choice options throughout the battle
    pkmn_choice options[PKMN_OPTIONS_SIZE];
 
-   // libpkmn doesn't provide any helpers for initializing the Battle structure
-   // (the library is intended to be wrapped by something with a higher level API)
+   // libpkmn doesn't provide any helpers for initializing the battle structure
+   // (the library is intended to be wrapped by something with a higher level API).
+   // This setup borrows the serialized state of the setup from the Zig example
    pkmn_gen1_battle battle = { {
       0x25, 0x01, 0xc4, 0x00, 0xc4, 0x00, 0xbc, 0x00, 0xe4, 0x00, 0x4f, 0x18, 0x0e, 0x30, 0x4b, 0x28,
       0x22, 0x18, 0x25, 0x01, 0x00, 0x01, 0x3a, 0x64, 0x19, 0x01, 0xca, 0x00, 0xb8, 0x00, 0xe4, 0x00,
@@ -74,6 +76,9 @@ int main(int argc, char **argv)
       0x00, 0x00, 0x00, 0x00, 0x00, 0x2e, 0xdb, 0x7d, 0x61, 0xcb, 0xba, 0x0d, 0x1e, 0x7e, 0x9e, 0x00,
    } };
 
+   // Preallocate a buffer for trace logs - PKMN_LOGS_SIZE is guaranteed to be large enough for a
+   // single update. This will only be written to if -Dtrace is enabled - NULL can be used to turn
+   // all of the logging into no-ops
    uint8_t buf[PKMN_LOGS_SIZE];
 
    pkmn_result result;
@@ -88,10 +93,16 @@ int main(int argc, char **argv)
    }
    // The only error that can occur is if we didn't provide a large enough buffer, but
    // PKMN_MAX_LOGS is guaranteed to be large enough so errors here are impossible. Note
-   // however that this is tracking a different kind of error than PKMN_RESULT_ERROR.
+   // however that this is tracking a different kind of error than PKMN_RESULT_ERROR
    assert(!pkmn_error(result));
 
-   const turns = 42; // TODO
+   // The battle is written in native endianness so we need to do a bit-hack to
+   // figure out the system's endianess before we can read the 16-bit turn data
+   volatile uint32_t endian = 0x01234567;
+   const turns = (*((uint8_t *)(&endian))) == 0x67
+      ? battle.bytes[348] | battle.bytes[349] << 8
+      : battle.bytes[348] << 8 | battle.bytes[349];
+
    // The result is from the perspective of P1
    switch (pkmn_result_type(result)) {
       case PKMN_RESULT_WIN: {
@@ -107,7 +118,7 @@ int main(int argc, char **argv)
          break;
       }
       case PKMN_RESULT_ERROR: {
-         printf("Battle encounded an error after %d turns\n", turns);
+         printf("Battle encountered an error after %d turns\n", turns);
          break;
       }
    }

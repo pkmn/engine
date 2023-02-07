@@ -3,13 +3,11 @@ const pkmn = @import("../pkmn.zig");
 
 const assert = std.debug.assert;
 
-const ERROR = 0b1000;
+const ERROR = @bitCast(pkmn.Result, 0b1100);
 
 export const PKMN_OPTIONS: pkmn.Options = .{
     .showdown = pkmn.options.showdown,
     .trace = pkmn.options.trace,
-    .advance = pkmn.options.advance,
-    .ebc = pkmn.options.ebc,
 };
 
 export const PKMN_MAX_OPTIONS = pkmn.MAX_OPTIONS;
@@ -22,23 +20,22 @@ export fn pkmn_choice_init(choice: pkmn.Choice.Type, data: u8) pkmn.Choice {
     return .{ .type = choice, .data = data };
 }
 
-export fn pkmn_result_type(result: u8) pkmn.Result.Type {
-    if (pkmn_error(result)) return .Error;
-    return @bitCast(pkmn.Result.Type, @as(u8, result)).type;
+export fn pkmn_result_type(result: pkmn.Result) pkmn.Result.Type {
+    return result.type;
 }
 
-export fn pkmn_result_p1(result: u8) pkmn.Choice.Type {
+export fn pkmn_result_p1(result: pkmn.Result) pkmn.Choice.Type {
     assert(!pkmn_error(result));
-    return @bitCast(pkmn.Result.Type, @as(u8, result)).p1;
+    return result.p1;
 }
 
 export fn pkmn_result_p2(result: u8) pkmn.Choice.Type {
     assert(!pkmn_error(result));
-    return @bitCast(pkmn.Result.Type, @as(u8, result)).p2;
+    return result.p2;
 }
 
 export fn pkmn_error(result: u8) bool {
-    return (result & ERROR) > 0;
+    return result == ERROR;
 }
 
 export fn pkmn_psrng_init(prng: *pkmn.PSRNG, seed: u64) pkmn.PSRNG {
@@ -59,13 +56,15 @@ export fn pkmn_gen1_battle_update(
     c1: pkmn.Choice,
     c2: pkmn.Choice,
     buf: ?[*]u8,
-) u8 {
-    if (buf) |b| {
-        var stream = std.io.fixedBufferStream(&b);
-        var log = pkmn.protocol.FixedLog{ .writer = stream.writer() };
-        return @bitCast(u8, battle.update(c1, c2, log)) catch return ERROR;
+) pkmn.Result {
+    if (pkmn.options.trace) {
+        if (buf) |b| {
+            var stream = std.io.fixedBufferStream(&b);
+            var log = pkmn.protocol.FixedLog{ .writer = stream.writer() };
+            return battle.update(c1, c2, log) catch return ERROR;
+        }
     }
-    return @bitCast(u8, battle.update(c1, c2, null) catch unreachable);
+    return battle.update(c1, c2, null) catch unreachable;
 }
 
 export fn pkmn_gen1_battle_choices(
