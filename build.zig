@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 
 pub fn module(b: *std.Build, build_options: *std.Build.Module) *std.Build.Module {
     const dirname = comptime std.fs.path.dirname(@src().file) orelse ".";
@@ -13,6 +14,7 @@ pub fn build(b: *std.Build) !void {
     const optimize = b.standardOptimizeOption(.{});
 
     const strip = b.option(bool, "strip", "Strip debugging symbols from binary") orelse false;
+    const cmd = b.findProgram(&[_][]const u8{"strip"}, &[_][]const u8{}) catch null;
 
     var parser = std.json.Parser.init(b.allocator, false);
     defer parser.deinit();
@@ -42,7 +44,7 @@ pub fn build(b: *std.Build) !void {
     static_lib.setMainPkgPath("./");
     static_lib.addIncludePath("src/include");
     static_lib.bundle_compiler_rt = true;
-    static_lib.strip = strip;
+    maybeStrip(b, static_lib, b.getInstallStep(), strip, cmd, null);
     static_lib.install();
 
     const dynamic_lib = b.addSharedLibrary(.{
@@ -55,7 +57,7 @@ pub fn build(b: *std.Build) !void {
     dynamic_lib.addOptions("build_options", options);
     static_lib.setMainPkgPath("./");
     dynamic_lib.addIncludePath("src/include");
-    dynamic_lib.strip = strip;
+    maybeStrip(b, dynamic_lib, b.getInstallStep(), strip, cmd, null);
     dynamic_lib.install();
 
     const node_headers = b.option([]const u8, "node-headers", "Path to node-headers");
@@ -72,10 +74,11 @@ pub fn build(b: *std.Build) !void {
         node_lib.addSystemIncludePath(headers);
         node_lib.linkLibC();
         node_lib.linker_allow_shlib_undefined = true;
-        node_lib.strip = strip;
+        const out = b.fmt("build/lib/{s}", .{name});
+        maybeStrip(b, node_lib, b.getInstallStep(), strip, cmd, out);
         // Always emit to build/lib because this is where the driver code expects to find it
         // TODO: find alternative to emit_to that works properly with .install()
-        node_lib.emit_bin = .{ .emit_to = b.fmt("build/lib/{s}", .{name}) };
+        node_lib.emit_bin = .{ .emit_to = out };
         b.getInstallStep().dependOn(&node_lib.step);
     }
 
@@ -131,7 +134,7 @@ pub fn build(b: *std.Build) !void {
     tests.setFilter(test_filter);
     tests.addOptions("build_options", options);
     tests.single_threaded = true;
-    tests.strip = strip;
+    maybeStrip(b, tests, &tests.step, strip, cmd, null);
     if (test_bin) |bin| {
         tests.name = std.fs.path.basename(bin);
         if (std.fs.path.dirname(bin)) |dir| tests.setOutputDir(dir);
@@ -151,6 +154,7 @@ pub fn build(b: *std.Build) !void {
     const benchmark = tool(b, &.{pkmn}, "src/test/benchmark.zig", .{
         .showdown = showdown,
         .strip = true,
+        .cmd = cmd,
         .test_step = test_step,
         .target = target,
         .optimize = .ReleaseFast,
@@ -158,6 +162,7 @@ pub fn build(b: *std.Build) !void {
     const fuzz = tool(b, &.{pkmn}, "src/test/benchmark.zig", .{
         .showdown = showdown,
         .strip = false,
+        .cmd = cmd,
         .test_step = test_step,
         .target = target,
         .optimize = optimize,
@@ -165,6 +170,7 @@ pub fn build(b: *std.Build) !void {
     const config = .{
         .showdown = showdown,
         .strip = strip,
+        .cmd = cmd,
         .test_step = test_step,
         .target = target,
         .optimize = optimize,
@@ -181,9 +187,35 @@ pub fn build(b: *std.Build) !void {
     b.step("test", "Run all tests").dependOn(&tests.step);
 }
 
+fn maybeStrip(
+    b: *std.Build,
+    artifact: *std.Build.CompileStep,
+    step: *std.Build.Step,
+    strip: bool,
+    cmd: ?[]const u8,
+    out: ?[]const u8,
+) void {
+    artifact.strip = strip;
+    if (!strip or cmd == null) return;
+    // Using `strip -r -u` for dynamic libraries is supposed to work on macOS but doesn't...
+    const mac = builtin.os.tag == .macos;
+    if (mac and artifact.isDynamicLibrary()) return;
+    // Assuming GNU strip, which complains "illegal pathname found in archive member"...
+    if (!mac and artifact.isStaticLibrary()) return;
+    const sh = b.addSystemCommand(&[_][]const u8{ cmd.?, if (mac) "-x" else "-s" });
+    if (out) |path| {
+        sh.addArg(path);
+        sh.step.dependOn(&artifact.step);
+    } else {
+        sh.addArtifactArg(artifact);
+    }
+    step.dependOn(&sh.step);
+}
+
 const Config = struct {
     showdown: bool,
     strip: bool,
+    cmd: ?[]const u8,
     test_step: ?*std.Build.Step,
     target: std.zig.CrossTarget,
     optimize: std.builtin.OptimizeMode,
@@ -208,12 +240,12 @@ fn tool(
     });
     for (deps) |dep| exe.addModule(dep.name, dep.module);
     exe.single_threaded = true;
-    exe.strip = config.strip;
     if (config.test_step) |ts| ts.dependOn(&exe.step);
 
-    const run_exe = exe.run();
-    run_exe.step.dependOn(b.getInstallStep());
-    if (b.args) |args| run_exe.addArgs(args);
+    const run = exe.run();
+    maybeStrip(b, exe, &run.step, config.strip, config.cmd, null);
+    run.step.dependOn(b.getInstallStep());
+    if (b.args) |args| run.addArgs(args);
 
-    return run_exe;
+    return run;
 }

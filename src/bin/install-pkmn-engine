@@ -131,6 +131,11 @@ const install = async () => {
       ? 'windows' : process.platform;
 
   try {
+    await fs.promises.rm(dir, {recursive: true});
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw err;
+  }
+  try {
     fs.mkdirSync(dir, {recursive: true});
   } catch (err) {
     if (err.code !== 'EEXIST') throw err;
