@@ -30,7 +30,7 @@ pub fn main() !void {
     var options: [pkmn.OPTIONS_SIZE]pkmn.Choice = undefined;
 
     // pkmn.gen1.Battle can be tedious to initialize - the helper constructor used here
-    // fills in missing fields with intelligent defaults to cut down on boilerplate.
+    // fills in missing fields with intelligent defaults to cut down on boilerplate
     var battle = pkmn.gen1.helpers.Battle.init(
         random.int(u64),
         &.{
@@ -54,7 +54,7 @@ pub fn main() !void {
     // Preallocate a buffer for the log and create a Log handler which will write to it.
     // pkmn.LOG_SIZE is guaranteed to be large enough for a single update. This will only be
     // written to if -Dtrace is enabled - pkmn.protocol.NULL can be used to turn all of the
-    // logging into no-ops.
+    // logging into no-ops
     var buf: [pkmn.LOG_SIZE]u8 = undefined;
     var stream = std.io.fixedBufferStream(&buf);
     var log = pkmn.protocol.FixedLog{ .writer = stream.writer() };
@@ -69,11 +69,20 @@ pub fn main() !void {
 
         // battle.choices determines what the possible options are - the simplest way to
         // choose an option here is to just use the system PRNG to pick one at random
+        //
+        // Technically in Generation 1 only, due to the Transform + Mirror Move/Metronome PP error
+        // if the battle contains Pokémon with a combination of Transform, Mirror Move/Metronome,
+        // and Disable its possible that there are no available choices (softlock) which means we
+        // should check the return value of battle.choices is greater than 0, but our battle setup
+        // does not need to account for that possibility
         // TODO: ziglang/zig#13415
         const n1 = random.uintLessThan(u8, battle.choices(.P1, result.p1, &options));
         c1 = options[n1];
         const n2 = random.uintLessThan(u8, battle.choices(.P2, result.p2, &options));
         c2 = options[n2];
+
+        // Reset the stream to cause the buffer to get reused
+        stream.reset();
     }
 
     // The result is from the perspective of P1
