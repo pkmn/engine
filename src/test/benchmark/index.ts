@@ -7,6 +7,7 @@ import {
   Battle, BattleStreams, Dex, ID, PRNG, PRNGSeed, Pokemon, Side, SideID, Streams, Teams,
 } from '@pkmn/sim';
 import minimist from 'minimist';
+import {Stats} from 'trakr';
 
 import {PatchedBattleStream, patch} from '../showdown/common';
 import {newSeed} from './common';
@@ -206,40 +207,31 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
   },
   'libpkmn': {
     run(format, prng, battles) {
-      const warmup = Math.max(Math.floor(battles / 10));
-      const stdout = execFileSync('zig', [
-        'build', '-Dshowdown=true', 'benchmark', '--',
-        format[3], // TODO: support doubles
-        `${warmup}/${battles}`,
-        serialize(prng.seed),
-      ], {encoding: 'utf8'});
-
-      const [duration, turn, seed] = stdout.split(',');
-      return Promise.resolve([toMillis(BigInt(duration)), Number(turn), seed.trim()]);
+      const [duration, turn, seed] = libpkmn(format, prng, battles);
+      return Promise.resolve([toMillis(duration), turn, seed]);
     },
   },
 };
 
-(async () => {
-  const stats: {[format: string]: {[config: string]: number}} = {};
-  for (const format of FORMATS) {
-    stats[format] = {};
-    const control = {turns: 0, seed: ''};
+const libpkmn = (format: ID, prng: PRNG, battles: number, showdown = true) => {
+  const warmup = Math.max(Math.floor(battles / 10));
+  const stdout = execFileSync('zig', [
+    'build', `-Dshowdown=${showdown.toString()}`, 'benchmark', '--',
+    format[3], // TODO: support doubles
+    `${warmup}/${battles}`,
+    serialize(prng.seed),
+  ], {encoding: 'utf8'});
+  const [duration, turn, seed] = stdout.split(',');
+  return [BigInt(duration), Number(turn), seed.trim()] as const;
+};
 
-    for (const name in CONFIGURATIONS) {
-      const config = CONFIGURATIONS[name];
+const NAMES = ['RBY', 'GSC', 'ADV', 'DPP', 'BW', 'XY', 'SM', 'SS', 'SV'];
+const generationName = (format: ID) => format.includes('doubles')
+  ? `${NAMES[+format[3] - 1]} (doubles)`
+  : NAMES[+format[3] - 1];
 
-      if (config.warmup) {
-        // Must use a different PRNG than the one used for the actual test
-        const prng = new PRNG(argv.seed.slice());
-        // We ignore the result - only the data from the actual test matters
-        await config.run(format, prng, Math.max(Math.floor(argv.battles / 10), 1));
-        // @ts-ignore
-        if (global.gc) global.gc();
-      }
-
-      const prng = new PRNG(argv.seed.slice());
-      const [duration, turns, seed] = await config.run(format, prng, argv.battles);
+const compare =
+    (name: string, control: {turns: number; seed: string}, turns: number, seed: string) => {
       if (!control.seed) {
         control.turns = turns;
         control.seed = seed;
@@ -248,29 +240,72 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
       } else if (seed !== control.seed) {
         throw new Error(`Expected a final seed of ${control.seed} but received ${seed} (${name})`);
       }
+    };
 
-      stats[format][name] = duration;
-    }
-  }
-
-  const display = (durations: {[config: string]: number}) => {
-    const out = {} as {[config: string]: string};
-    const min = Math.min(...Object.values(durations));
-    for (const config in durations) {
-      out[config] = `${(durations[config] / 1000).toFixed(2)}s`;
-      if (durations[config] !== min) out[config] += ` (${(durations[config] / min).toFixed(2)}×)`;
-    }
-    return out;
-  };
-
-  const NAMES = ['RBY', 'GSC', 'ADV', 'DPP', 'BW', 'XY', 'SM', 'SS', 'SV'];
-  const configs = Object.keys(CONFIGURATIONS).reverse();
-  console.log(`|Generation|\`${configs.join('`|`')}\`|`);
+if (argv.iterations) {
+  const entries = [];
   for (const format of FORMATS) {
-    const name = format.includes('doubles')
-      ? `${NAMES[+format[3] - 1]} (doubles)`
-      : NAMES[+format[3] - 1];
-    const processed = display(stats[format]);
-    console.log(`|${name}|${configs.map(c => processed[c]).join('|')}|`);
+    const name = generationName(format);
+    const control = {turns: 0, seed: ''};
+    const durations = new Array(argv.iterations);
+    for (let i = 0; i < argv.iterations; i++) {
+      const prng = new PRNG(argv.seed.slice());
+      const [duration, turns, seed] = libpkmn(format, prng, argv.battles);
+      if (duration > Number.MAX_SAFE_INTEGER) throw new Error(`duration out of range: ${duration}`);
+      durations[i] = Number(duration);
+      compare(name, control, turns, seed);
+    }
+    const stats = Stats.compute(durations);
+    entries.push({
+      name,
+      unit: 'ns/iter',
+      value: stats.avg,
+      range: stats.var,
+    });
   }
-})();
+  console.log(JSON.stringify(entries, null, 2));
+} else {
+  (async () => {
+    const stats: {[format: string]: {[config: string]: number}} = {};
+    for (const format of FORMATS) {
+      stats[format] = {};
+      const control = {turns: 0, seed: ''};
+
+      for (const name in CONFIGURATIONS) {
+        const config = CONFIGURATIONS[name];
+
+        if (config.warmup) {
+          // Must use a different PRNG than the one used for the actual test
+          const prng = new PRNG(argv.seed.slice());
+          // We ignore the result - only the data from the actual test matters
+          await config.run(format, prng, Math.max(Math.floor(argv.battles / 10), 1));
+          // @ts-ignore
+          if (global.gc) global.gc();
+        }
+
+        const prng = new PRNG(argv.seed.slice());
+        const [duration, turns, seed] = await config.run(format, prng, argv.battles);
+        compare(name, control, turns, seed);
+        stats[format][name] = duration;
+      }
+    }
+
+    const display = (durations: {[config: string]: number}) => {
+      const out = {} as {[config: string]: string};
+      const min = Math.min(...Object.values(durations));
+      for (const config in durations) {
+        out[config] = `${(durations[config] / 1000).toFixed(2)}s`;
+        if (durations[config] !== min) out[config] += ` (${(durations[config] / min).toFixed(2)}×)`;
+      }
+      return out;
+    };
+
+    const configs = Object.keys(CONFIGURATIONS).reverse();
+    console.log(`|Generation|\`${configs.join('`|`')}\`|`);
+    for (const format of FORMATS) {
+      const name = generationName(format);
+      const processed = display(stats[format]);
+      console.log(`|${name}|${configs.map(c => processed[c]).join('|')}|`);
+    }
+  })();
+}
