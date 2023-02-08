@@ -226,9 +226,11 @@ const libpkmn = (format: ID, prng: PRNG, battles: number, showdown = true) => {
 };
 
 const NAMES = ['RBY', 'GSC', 'ADV', 'DPP', 'BW', 'XY', 'SM', 'SS', 'SV'];
-const generationName = (format: ID) => format.includes('doubles')
-  ? `${NAMES[+format[3] - 1]} (doubles)`
-  : NAMES[+format[3] - 1];
+const generationName = (format: ID, showdown?: boolean) => {
+  const tags = showdown ? ['showdown'] : [];
+  if (format.includes('doubles')) tags.push('doubles');
+  return `${NAMES[+format[3] - 1]}${tags.length ? ` (${tags.join(', ')})` : ''}`;
+};
 
 const compare =
     (name: string, control: {turns: number; seed: string}, turns: number, seed: string) => {
@@ -261,27 +263,29 @@ const clean = (samples: number[], n = 3) => {
 
 if (argv.iterations) {
   const entries = [];
-  for (const format of FORMATS) {
-    const name = generationName(format);
-    const control = {turns: 0, seed: ''};
-    const samples = new Array(argv.iterations);
-    for (let i = 0; i < argv.iterations; i++) {
-      const prng = new PRNG(argv.seed.slice());
-      const [duration, turns, seed] = libpkmn(format, prng, argv.battles);
-      samples[i] = Math.round(1e9 / (Number(duration) / argv.battles));
-      compare(name, control, turns, seed);
+  for (const showdown of [true, false]) {
+    for (const format of FORMATS) {
+      const name = generationName(format, showdown);
+      const control = {turns: 0, seed: ''};
+      const samples = new Array(argv.iterations);
+      for (let i = 0; i < argv.iterations; i++) {
+        const prng = new PRNG(argv.seed.slice());
+        const [duration, turns, seed] = libpkmn(format, prng, argv.battles, showdown);
+        samples[i] = Math.round(1e9 / (Number(duration) / argv.battles));
+        compare(name, control, turns, seed);
+      }
+      const [cleaned, outliers] = clean(samples);
+      const stats = Stats.compute(cleaned);
+      let extra = `[${stats.min}..${stats.max}]`;
+      if (outliers.length) extra += ` (dropped: ${outliers.sort().join(', ')})`;
+      entries.push({
+        name,
+        unit: 'battles/sec',
+        value: Math.round(stats.avg),
+        range: `±${stats.rme.toFixed(2)}%`,
+        extra,
+      });
     }
-    const [cleaned, outliers] = clean(samples);
-    const stats = Stats.compute(cleaned);
-    let extra = `[${stats.min}..${stats.max}]`;
-    if (outliers.length) extra += ` (dropped: ${outliers.sort().join(', ')})`;
-    entries.push({
-      name,
-      unit: 'battles/sec',
-      value: Math.round(stats.avg),
-      range: `±${stats.rme.toFixed(2)}%`,
-      extra,
-    });
   }
   console.log(JSON.stringify(entries, null, 2));
 } else {
@@ -329,4 +333,3 @@ if (argv.iterations) {
     }
   })();
 }
-
