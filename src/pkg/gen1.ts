@@ -1,16 +1,7 @@
 // TODO: stage2 changes to packed struct breaks last_selected_index/boosts/volatiles
 import {
-  BoostID,
-  BoostsTable,
-  Generation,
-  ID,
-  toID,
-  PokemonSet,
-  SideID,
-  StatID,
-  StatsTable,
-  StatusName,
-  TypeName,
+  BoostID, BoostsTable, Generation, ID, toID, PokemonSet,
+  SideID, StatID, StatsTable, StatusName, TypeName,
 } from '@pkmn/data';
 
 import {Gen1, Slot, BattleOptions, CreateOptions, RestoreOptions} from './index';

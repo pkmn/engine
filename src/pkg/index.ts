@@ -1,11 +1,5 @@
 import {
-  BoostsTable,
-  Generation,
-  ID,
-  PokemonSet,
-  StatsTable,
-  StatusName,
-  TypeName,
+  BoostsTable, Generation, ID, PokemonSet, StatsTable, StatusName, TypeName,
 } from '@pkmn/data';
 
 import {Lookup} from './data';
