@@ -84,7 +84,7 @@ class DirectBattle extends Battle {
 
     const requests = this.getRequests(type);
     for (let i = 0; i < this.sides.length; i++) {
-      // NOTE: avoiding needlessly stringifying the |sideupdate|
+      // NOTE: avoiding needlessly stringify-ing the |sideupdate|
       this.sides[i].activeRequest = requests[i];
     }
 
@@ -242,25 +242,45 @@ const compare =
       }
     };
 
+// Separate outliers from clean samples using MAD outlier detection with what is approximately a
+// three-sigma cutoff (corresponding to roughly ~99.7% of values assuming the data is normally
+// distributed), as out forth in "Detecting outliers: Do not use standard deviation around the mean,
+// use absolute deviation around the median" - C. Leys et al
+const clean = (samples: number[], n = 3) => {
+  const stats = Stats.compute(samples);
+  const deviations = samples.map(s => Math.abs(s - stats.p50));
+  const mad = Stats.median(deviations);
+  const b = n * 1.4826;
+  const cleaned: number[] = [];
+  const outliers: number[] = [];
+  for (let i = 0; i < samples.length; i++) {
+    (deviations[i] / mad > b ? outliers : cleaned).push(samples[i]);
+  }
+  return [cleaned, outliers];
+};
+
 if (argv.iterations) {
   const entries = [];
   for (const format of FORMATS) {
     const name = generationName(format);
     const control = {turns: 0, seed: ''};
-    const durations = new Array(argv.iterations);
+    const samples = new Array(argv.iterations);
     for (let i = 0; i < argv.iterations; i++) {
       const prng = new PRNG(argv.seed.slice());
       const [duration, turns, seed] = libpkmn(format, prng, argv.battles);
-      if (duration > Number.MAX_SAFE_INTEGER) throw new Error(`duration out of range: ${duration}`);
-      durations[i] = Number(duration);
+      samples[i] = Math.round(1e9 / (Number(duration) / argv.battles));
       compare(name, control, turns, seed);
     }
-    const stats = Stats.compute(durations);
+    const [cleaned, outliers] = clean(samples);
+    const stats = Stats.compute(cleaned);
+    let extra = `[${stats.min}..${stats.max}]`;
+    if (outliers.length) extra += ` (dropped: ${outliers.sort().join(', ')})`;
     entries.push({
       name,
-      unit: 'ns/iter',
-      value: stats.avg,
-      range: stats.var,
+      unit: 'battles/sec',
+      value: Math.round(stats.avg),
+      range: `±${stats.rme.toFixed(2)}%`,
+      extra,
     });
   }
   console.log(JSON.stringify(entries, null, 2));
@@ -309,3 +329,4 @@ if (argv.iterations) {
     }
   })();
 }
+
