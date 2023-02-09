@@ -181,7 +181,7 @@ fn errorAndExit(msg: []const u8, arg: []const u8, cmd: []const u8, fuzz: bool) n
 fn usageAndExit(cmd: []const u8, fuzz: bool) noreturn {
     const err = std.io.getStdErr().writer();
     if (fuzz) {
-        err.print("Usage: {s} <GEN> <DURATION> <SEED?>\n", .{cmd}) catch {};
+        err.print("Usage: {s} <GEN> <(WARMUP/)DURATION> <SEED?>\n", .{cmd}) catch {};
     } else {
         err.print("Usage: {s} <GEN> <BATTLES> <SEED?>\n", .{cmd}) catch {};
     }
