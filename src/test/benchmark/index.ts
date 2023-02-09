@@ -276,7 +276,7 @@ if (argv.iterations) {
       }
       const [cleaned, outliers] = clean(samples);
       const stats = Stats.compute(cleaned);
-      let extra = `[${stats.min}..${stats.max}]`;
+      let extra = `[${stats.min} .. ${stats.max}]`;
       if (outliers.length) extra += ` (dropped: ${outliers.sort().join(', ')})`;
       entries.push({
         name,

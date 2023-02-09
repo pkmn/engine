@@ -139,7 +139,7 @@ played out each turn to the end numerous times to determine the best course of a
 
 Before running the benchmark, care needs to be taken to set up the environment to be as stable as
 possible, e.g. [disabling CPU performance scaling, Intel Turbo Boost,
-etc](https://github.com/travisdowns/uarch-bench/blob/master/uarch-bench.sh). The benchmark tool
+etc](https://easyperf.net/blog/2019/08/02/Perf-measurement-environment-on-Linux). The benchmark tool
 measures 4 different configurations:
 
 - **`BattleStream`**: this configuration attempts to use Pokémon Showdown's
@@ -219,7 +219,7 @@ as an exercise to the reader.
 The results for the table below come from running the benchmarks against
 [pkmn/engine@d71a279](https://github.com/pkmn/engine/commit/d71a279) on an `n2d-standard-48` Google
 Cloud Compute Engine machine with 192 GB of memory and an AMD EPYC 7B12 CPU running 64-bit x86 Linux
-which has undergone the pre-benchmark tuning detailed above via the command `npm run benchmark --
+which has undergone the pre-benchmark tuning detailed below via the command `npm run benchmark --
 --battles=10000`:
 
 | Generation | `libpkmn` | `@pkmn/engine` | `DirectBattle` | `BattleStream` |
@@ -272,20 +272,52 @@ Vulnerabilities:
   Srbds:                 Not affected
   Tsx async abort:       Not affected
 <pre></details>
+<details><summary>Tuning</summary>
+
+```sh
+#!/bin/bash -ex
+
+function cleanup() {
+    # Turn back on hyperthreading
+    for cpu in /sys/devices/system/cpu/cpu{1,2,3,4}*
+    do
+      echo 1 >  $cpu/online
+    done
+}
+trap cleanup EXIT
+
+# Turn off hyperthreading based on /sys/devices/system/cpu/cpu*/topology/thread_siblings
+for cpu in /sys/devices/system/cpu/cpu2{4,5,6,7,8,9} /sys/devices/system/cpu/cpu3{0,1,2,3,4,5,6,7,8,9} /sys/devices/system/cpu/cpu4{0,1,2,3,4,5,6,7}
+do
+  echo 0 >  $cpu/online
+done
+
+# Sadly we are unable to disable CPU boosting or change the CPU governor to performance
+
+# TODO: Set CPU affinity via cset (sudo cset shield -c N1,N2 -k on)
+# TODO: Set process priority (sudo nice -n -19)
+# TODO: run command (npm run --silent benchmark -- --iterations=50 --battles=100000 or vs. PS)
+
+# Drop filesystem cache
+echo 3 | sudo tee /proc/sys/vm/drop_caches
+sync
+```
+
+</details>
 
 ### Regression
 
 In addition to being used to compare the pkmn engine to Pokémon Showdown, the [benchmark
 tool](../src/test/benchmark/index.ts) has an alternative mode used by a [benchmark
 workflow](../.github/workflows/benchmark.yml) which allows it to [track performance over
-time](https://pkmn.github.io/engine/benchmark/) and detect regressions in the engine's performance.
-When the `--iterations` flag is used the tool will instead run multiple iterations of battle
-playouts from the same seed against the engine and output JSON to be used for comparison against
-prior runs. In order to minimize noise, the mean of all the iterations is reported, after outliers
-have been removed. The absolute numbers tracked on GitHub need to be taken with a grain of salt, as
-they come from running on an underpowered job runner which potentially has multiple conflicting jobs
-from other users running concurrently - the [numbers](#results) reported above should more
-accurately reflect the true performance of the engine on a tuned system.
+time](https://pkmn.github.io/engine/) and detect regressions in the engine's performance. When the
+`--iterations` flag is used the tool will instead run multiple iterations of battle playouts from
+the same seed against the engine and output JSON to be used for comparison against prior runs. In
+order to minimize noise, the mean of all the iterations is reported, after outliers have been
+removed. The absolute numbers tracked on GitHub need to be taken with a grain of salt, as they come
+from running on an underpowered job runner which potentially has multiple conflicting jobs from
+other users running concurrently - the [numbers](#results) reported above should more accurately
+reflect the true performance of the engine on a tuned system.
 
 ## Fuzz
 

@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - run: lscpu
       - run: npm install
       - run: echo "${GITHUB_WORKSPACE}/build/bin/zig" >> $GITHUB_PATH
       - run: npm run --silent benchmark -- --iterations=50 --battles=100000 | tee benchmark.json
@@ -17,10 +18,9 @@ jobs:
         with:
           tool: 'customBiggerIsBetter'
           output-file-path: benchmark.json
-          benchmark-data-dir-path: benchmark
-          alert-threshold: '150%' # TODO
+          benchmark-data-dir-path: ''
+          alert-threshold: '120%'
           github-token: ${{ secrets.GITHUB_TOKEN }}
           comment-on-alert: true
-          fail-on-alert: true
           auto-push: true
           save-data-file: ${{ github.event_name != 'pull_request' }}
