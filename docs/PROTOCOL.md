@@ -749,15 +749,15 @@ Move → multi-hit.
   - `|turn|`: 3 bytes
   - `0x00`: 1 byte (end of buffer)
 
-[Z3](../src/tools/max_logs.py) can be used to test out these scenarios - we can quickly see that
-despite 10 levels of recursive Metronome → Mirror Move being possible in a vacuum if we are able to
-control the initial seed, there is no way to achieve the first scenario after burning through the
-rolls on the first two turns of setup and if we need to be able to proc specific Metronome rolls
-after. For the second scenario we run into the problem of needing an extra turn of setup for Player
-1 to be able to Mirror Move a multi-hit move which also takes us too far away from the initial seed
-to be able to set up the rest of the scenario. However, by slightly compromising and not requiring
-Player 1 to proc Mirror Move only lose 6 bytes and thus arrive at 180 bytes for the maximum log size
-for Generation I.
+[Z3](../src/tools/logs.py) can be used to test out these scenarios - we can quickly see that despite
+10 levels of recursive Metronome → Mirror Move being possible in a vacuum if we are able to control
+the initial seed, there is no way to achieve the first scenario after burning through the rolls on
+the first two turns of setup and if we need to be able to proc specific Metronome rolls after. For
+the second scenario we run into the problem of needing an extra turn of setup for Player 1 to be
+able to Mirror Move a multi-hit move which also takes us too far away from the initial seed to be
+able to set up the rest of the scenario. However, by slightly compromising and not requiring Player
+1 to proc Mirror Move only lose 6 bytes and thus arrive at 180 bytes for the maximum log size for
+Generation I.
 
 </details>
 
