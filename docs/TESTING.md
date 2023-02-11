@@ -275,32 +275,38 @@ Vulnerabilities:
 <details><summary>Tuning</summary>
 
 ```sh
-#!/bin/bash -ex
+#!/bin/bash
 
 function cleanup() {
     # Turn back on hyperthreading
-    for cpu in /sys/devices/system/cpu/cpu{1,2,3,4}*
+    for cpu in {1..47}
     do
-      echo 1 >  $cpu/online
+      echo 1 > /sys/devices/system/cpu/cpu$cpu/online
     done
+
+    # remove CPU shielding
+    cset shield --reset >/dev/null 2>&1
 }
 trap cleanup EXIT
 
 # Turn off hyperthreading based on /sys/devices/system/cpu/cpu*/topology/thread_siblings
-for cpu in /sys/devices/system/cpu/cpu2{4,5,6,7,8,9} /sys/devices/system/cpu/cpu3{0,1,2,3,4,5,6,7,8,9} /sys/devices/system/cpu/cpu4{0,1,2,3,4,5,6,7}
+for cpu in {24..47}
 do
-  echo 0 >  $cpu/online
+  echo 0 > /sys/devices/system/cpu/cpu$cpu/online
 done
 
 # Sadly we are unable to disable CPU boosting or change the CPU governor to performance
 
-# TODO: Set CPU affinity via cset (sudo cset shield -c N1,N2 -k on)
-# TODO: Set process priority (sudo nice -n -19)
-# TODO: run command (npm run --silent benchmark -- --iterations=50 --battles=100000 or vs. PS)
+# Set up a shield and move all threads (including kernel threads) out
+cset shield -c 1-9 -k on >/dev/null 2>&1
 
 # Drop filesystem cache
-echo 3 | sudo tee /proc/sys/vm/drop_caches
+echo 3 > /proc/sys/vm/drop_caches
 sync
+
+# Run benchmark command within shield at highest possible priority
+# (can add '--battles=100000 --iterations=50' flags to execute regression benchmark)
+cset shield --exec -- nice -n -19 node build/test/benchmark
 ```
 
 </details>

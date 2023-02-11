@@ -2,7 +2,7 @@
 
 1. **[Research](./RESEARCH.md)** the data structures and code flow
 2. Add a `data.zig` file with **basic data types** (`Battle`, `Side`, `Pokemon`, ...) and fields
-   - unoptimized - exact layout tweaked in step 11
+   - un-optimized - exact layout tweaked in step 11
 3. **[Generate](../src/tools/generate.ts) data** files
    - reorder enums for performance
    - update [`Lookup`](../src/pkg/data.ts) if necessary
@@ -51,4 +51,4 @@
 3. **Update Zig mechanics tests to match** the updates applied to the integration tests
 4. **Update Zig engine code** to cause the updated mechanics tests to pass
 5. **Update documentation** to match new behavior/bugs
-6. **Remove effects from [`blocklist.json`](../src/test/blocklist.json)** and helpers if neccessary
+6. **Remove effects from [`blocklist.json`](../src/test/blocklist.json)** and helpers if necessary
