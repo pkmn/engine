@@ -5,7 +5,10 @@ const assert = std.debug.assert;
 
 const ERROR = @bitCast(pkmn.Result, 0b1100);
 
-export const PKMN_OPTIONS: pkmn.Options = .{
+export const PKMN_OPTIONS: extern struct {
+    showdown: bool = false,
+    trace: bool = false,
+} = .{
     .showdown = pkmn.options.showdown,
     .trace = pkmn.options.trace,
 };
