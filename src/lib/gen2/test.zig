@@ -579,7 +579,7 @@ test "Splash effect" {
 }
 
 // Move.{Bind,Wrap,FireSpin,Clamp,Whirlpool}
-test "Trapping effect" {
+test "Binding effect" {
     // Prevents the target from switching for two to five turns. Causes damage to the target equal
     // to 1/16 of its maximum HP, rounded down, at the end of each turn during effect. The target
     // can still switch out if it uses Baton Pass. The effect ends if either the user or the target

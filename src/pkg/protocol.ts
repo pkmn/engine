@@ -95,7 +95,7 @@ const CANT: {[reason: number]: Protocol.Reason} = {
   [PROTOCOL.Cant.Sleep]: 'slp',
   [PROTOCOL.Cant.Freeze]: 'frz',
   [PROTOCOL.Cant.Paralysis]: 'par',
-  [PROTOCOL.Cant.Trapped]: 'partiallytrapped',
+  [PROTOCOL.Cant.Bound]: 'partiallytrapped',
   [PROTOCOL.Cant.Flinch]: 'flinch',
   [PROTOCOL.Cant.Recharge]: 'recharge',
   [PROTOCOL.Cant.PP]: 'nopp',

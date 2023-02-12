@@ -453,7 +453,7 @@ pub const Move = enum(u8) {
         },
         // Bind
         .{
-            .effect = .Trapping,
+            .effect = .Binding,
             .bp = 15,
             .type = .Normal,
             .pp = 20,
@@ -592,7 +592,7 @@ pub const Move = enum(u8) {
         },
         // Wrap
         .{
-            .effect = .Trapping,
+            .effect = .Binding,
             .bp = 15,
             .type = .Normal,
             .pp = 20,
@@ -1036,7 +1036,7 @@ pub const Move = enum(u8) {
         },
         // FireSpin
         .{
-            .effect = .Trapping,
+            .effect = .Binding,
             .bp = 15,
             .type = .Fire,
             .pp = 15,
@@ -1451,7 +1451,7 @@ pub const Move = enum(u8) {
         },
         // Clamp
         .{
-            .effect = .Trapping,
+            .effect = .Binding,
             .bp = 35,
             .type = .Water,
             .pp = 10,
@@ -2576,7 +2576,7 @@ pub const Move = enum(u8) {
         },
         // Whirlpool
         .{
-            .effect = .Trapping,
+            .effect = .Binding,
             .bp = 15,
             .type = .Water,
             .pp = 15,
@@ -2611,6 +2611,7 @@ pub const Move = enum(u8) {
         BeatUp,
         BellyDrum,
         Bide,
+        Binding,
         BurnChance,
         Confusion,
         ConfusionChance,
@@ -2726,7 +2727,6 @@ pub const Move = enum(u8) {
         Thunder,
         Toxic,
         Transform,
-        Trapping,
         TriAttack,
         TripleKick,
         Twineedle,

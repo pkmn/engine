@@ -2621,7 +2621,7 @@ test "Splash effect" {
 }
 
 // Move.{Bind,Wrap,FireSpin,Clamp}
-test "Trapping effect" {
+test "Binding effect" {
     // The user spends two to five turns using this move. Has a 3/8 chance to last two or three
     // turns, and a 1/8 chance to last four or five turns. The damage calculated for the first turn
     // is used for every other turn. The user cannot select a move and the target cannot execute a
@@ -2669,7 +2669,7 @@ test "Trapping effect" {
     try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(1), null);
     t.expected.p2.get(1).hp -= 10;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    try t.log.expected.cant(P2.ident(1), .Trapped);
+    try t.log.expected.cant(P2.ident(1), .Bound);
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
@@ -2704,7 +2704,7 @@ test "Trapping effect" {
     try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(2), Move.Wrap);
     t.expected.p2.get(2).hp -= 15;
     try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
-    try t.log.expected.cant(P2.ident(2), .Trapped);
+    try t.log.expected.cant(P2.ident(2), .Bound);
     try t.log.expected.turn(4);
 
     try expectEqual(Result.Default, try t.update(forced, forced));
@@ -2745,7 +2745,7 @@ test "Trapping effect" {
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, p2_choices, choices[0..n]);
 
-    try t.log.expected.cant(P2.ident(3), .Trapped);
+    try t.log.expected.cant(P2.ident(3), .Bound);
     try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(3), Move.Wrap);
     if (showdown) try t.log.expected.damage(P2.ident(3), t.expected.p2.get(3), .None);
     try t.log.expected.turn(7);
@@ -2759,7 +2759,7 @@ test "Trapping effect" {
 
     try expectEqual(Result.Default, try t.update(forced, forced));
 
-    try t.log.expected.cant(P2.ident(3), .Trapped);
+    try t.log.expected.cant(P2.ident(3), .Bound);
     try t.log.expected.cant(P1.ident(1), .Paralysis);
     try t.log.expected.turn(8);
 
@@ -4662,7 +4662,7 @@ test "Metronome effect" {
     try t.log.expected.move(P2.ident(1), Move.Wrap, P1.ident(1), Move.Metronome);
     t.expected.p1.get(1).hp -= 14;
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-    try t.log.expected.cant(P1.ident(1), .Trapped);
+    try t.log.expected.cant(P1.ident(1), .Bound);
     try t.log.expected.turn(2);
 
     // Pokémon Showdown partial trapping lock doesn't work with Metronome...
@@ -4685,7 +4685,7 @@ test "Metronome effect" {
     }
     t.expected.p1.get(1).hp -= 14;
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-    try t.log.expected.cant(P1.ident(1), .Trapped);
+    try t.log.expected.cant(P1.ident(1), .Bound);
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(forced, forced));
@@ -5884,7 +5884,7 @@ test "Mirror Move + Wrap bug" {
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, expected, choices[0..n]);
 
-    try t.log.expected.cant(P1.ident(1), .Trapped);
+    try t.log.expected.cant(P1.ident(1), .Bound);
     if (showdown) {
         try t.log.expected.move(P2.ident(1), Move.Gust, P1.ident(1), Move.Gust);
     } else {
@@ -5990,7 +5990,7 @@ test "Wrap locking + KOs bug" {
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .Poison);
     try t.log.expected.faint(P1.ident(1), true);
 
-    // Target should not still be trapped after the Trapper faints from residual damage
+    // Target should not still be bound after the user faints from residual damage
     try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(move(1), move(1)));
 
     try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
@@ -6026,7 +6026,7 @@ test "Wrap locking + KOs bug" {
     try t.log.expected.move(P1.ident(2), Move.Wrap, P2.ident(1), null);
     t.expected.p2.get(1).hp -= 23;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    try t.log.expected.cant(P2.ident(1), .Trapped);
+    try t.log.expected.cant(P2.ident(1), .Bound);
     t.expected.p2.get(1).hp = 0;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Burn);
     try t.log.expected.faint(P2.ident(1), true);
@@ -6038,14 +6038,14 @@ test "Wrap locking + KOs bug" {
 
     try expectEqual(Result.Default, try t.update(.{}, swtch(2)));
 
-    // Trapper should not still be locked into Wrap after residual KO
+    // User should not still be locked into Wrap after residual KO
     const n = t.battle.actual.choices(.P1, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ move(1), move(2), move(3) }, choices[0..n]);
 
     try t.log.expected.move(P1.ident(2), Move.Wrap, P2.ident(2), null);
     t.expected.p2.get(2).hp -= 21;
     try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
-    try t.log.expected.cant(P2.ident(2), .Trapped);
+    try t.log.expected.cant(P2.ident(2), .Bound);
     try t.log.expected.turn(6);
 
     try expectEqual(Result.Default, try t.update(move(3), move(1)));
@@ -7659,7 +7659,7 @@ test "Trapping sleep glitch" {
     try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(1), null);
     t.expected.p2.get(1).hp -= 11;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    try t.log.expected.cant(P2.ident(1), .Trapped);
+    try t.log.expected.cant(P2.ident(1), .Bound);
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
@@ -7676,7 +7676,7 @@ test "Trapping sleep glitch" {
     try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(1), Move.Wrap);
     t.expected.p2.get(1).hp -= 11;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    try t.log.expected.cant(P2.ident(1), .Trapped);
+    try t.log.expected.cant(P2.ident(1), .Bound);
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(forced, forced));
@@ -7746,7 +7746,7 @@ test "Partial trapping move Mirror Move glitch" {
     try t.log.expected.resisted(P2.ident(1));
     t.expected.p2.get(1).hp -= 5;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    try t.log.expected.cant(P2.ident(1), .Trapped);
+    try t.log.expected.cant(P2.ident(1), .Bound);
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(2), move(1)));

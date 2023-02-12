@@ -224,7 +224,7 @@ const GEN1: pkmn.gen1.Battle(pkmn.gen1.PRNG) = .{
             .types = .{ .type1 = .Water, .type2 = .Water },
             .volatiles = .{
                 .Bide = true,
-                .Trapping = true,
+                .Binding = true,
                 .Transform = true,
                 .attacks = 2,
                 .state = 100,

@@ -176,7 +176,7 @@ pub const Move = enum(u8) {
     Substitute,
     Struggle,
 
-    // Sentinel used when Pokémon's turn should be skipped (e.g. trapped)
+    // Sentinel used when Pokémon's turn should be skipped (e.g. bound)
     SKIP_TURN = 0xFF,
 
     pub const Data = packed struct {
@@ -346,7 +346,7 @@ pub const Move = enum(u8) {
         },
         // Bind
         .{
-            .effect = .Trapping,
+            .effect = .Binding,
             .bp = 15,
             .type = .Normal,
             .accuracy = 75,
@@ -466,7 +466,7 @@ pub const Move = enum(u8) {
         },
         // Wrap
         .{
-            .effect = .Trapping,
+            .effect = .Binding,
             .bp = 15,
             .type = .Normal,
             .accuracy = 85,
@@ -850,7 +850,7 @@ pub const Move = enum(u8) {
         },
         // FireSpin
         .{
-            .effect = .Trapping,
+            .effect = .Binding,
             .bp = 15,
             .type = .Fire,
             .accuracy = 70,
@@ -1210,7 +1210,7 @@ pub const Move = enum(u8) {
         },
         // Clamp
         .{
-            .effect = .Trapping,
+            .effect = .Binding,
             .bp = 35,
             .type = .Water,
             .accuracy = 75,
@@ -1557,12 +1557,12 @@ pub const Move = enum(u8) {
         PayDay,
         Rage,
         Recoil,
+        Binding,
         Charge,
         SpecialDamage,
         SuperFang,
         Swift,
         Thrashing,
-        Trapping,
         // isMulti
         DoubleHit,
         MultiHit,

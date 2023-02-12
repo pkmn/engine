@@ -113,7 +113,7 @@ pub const Cant = enum(u8) {
     Sleep,
     Freeze,
     Paralysis,
-    Trapped,
+    Bound,
     Flinch,
     Disable,
     Recharge,
@@ -946,8 +946,8 @@ test "|switch|" {
 }
 
 test "|cant|" {
-    try log.cant(p2.ident(6), .Trapped);
-    try expectLog1(&.{ N(ArgType.Cant), 0b1110, N(Cant.Trapped) }, buf[0..3]);
+    try log.cant(p2.ident(6), .Bound);
+    try expectLog1(&.{ N(ArgType.Cant), 0b1110, N(Cant.Bound) }, buf[0..3]);
     stream.reset();
 
     try log.disabled(p1.ident(2), M.Earthquake);

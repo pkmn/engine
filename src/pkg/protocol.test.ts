@@ -64,7 +64,7 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     it('|cant|', () => {
-      expect(Array.from(log.parse(Data.view([ArgType.Cant, 0b1110, PROTOCOL.Cant.Trapped]))))
+      expect(Array.from(log.parse(Data.view([ArgType.Cant, 0b1110, PROTOCOL.Cant.Bound]))))
         .toEqual(parse('|cant|p2a: Fuudin|partiallytrapped'));
       const eq = gen.moves.get('Earthquake')!.num;
       expect(Array.from(log.parse(Data.view([ArgType.Cant, 0b0010, PROTOCOL.Cant.Disable, eq]))))
@@ -269,7 +269,7 @@ for (const gen of new Generations(Dex as any)) {
 
     it('chunk', () => {
       const data = Data.view([
-        ArgType.Cant, 0b1110, PROTOCOL.Cant.Trapped,
+        ArgType.Cant, 0b1110, PROTOCOL.Cant.Bound,
         ArgType.Move, 0b0101, 1, 0b1110, PROTOCOL.Move.None,
         ArgType.Miss, 0b0101,
         ArgType.LastMiss,

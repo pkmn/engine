@@ -233,7 +233,7 @@ pub const Volatiles = packed struct {
     MultiHit: bool = false,
     Flinch: bool = false,
     Charging: bool = false,
-    Trapping: bool = false,
+    Binding: bool = false,
     Invulnerable: bool = false,
     Confusion: bool = false,
 
@@ -383,13 +383,13 @@ test Move {
     try expect(Move.Effect.isSpecial(.MultiHit));
     try expect(!Move.Effect.isSpecial(.Twineedle));
 
-    try expect(!Move.Effect.isMulti(.Trapping));
+    try expect(!Move.Effect.isMulti(.Thrashing));
     try expect(Move.Effect.isMulti(.DoubleHit));
     try expect(Move.Effect.isMulti(.MultiHit));
     try expect(Move.Effect.isMulti(.Twineedle));
     try expect(!Move.Effect.isMulti(.AttackDownChance));
 
-    try expect(!Move.Effect.isStatDownChance(.Trapping));
+    try expect(!Move.Effect.isStatDownChance(.Thrashing));
     try expect(Move.Effect.isStatDownChance(.AttackDownChance));
     try expect(Move.Effect.isStatDownChance(.SpecialDownChance));
     try expect(!Move.Effect.isStatDownChance(.BurnChance1));

@@ -216,7 +216,7 @@ pub const Pokemon = struct {
 
 // cat src/test/blocklist.json | jq '."1".moves'
 fn blocked(m: Move) bool {
-    if (Move.get(m).effect == .Trapping) return true;
+    if (Move.get(m).effect == .Binding) return true;
     return switch (m) {
         .Bind,
         .Counter,

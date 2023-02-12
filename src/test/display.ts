@@ -9,7 +9,7 @@ const VOLATILES: {[id in keyof Pokemon['volatiles']]: [string, 'good' | 'bad' | 
   thrashing: ['Thrashing', 'neutral'],
   flinch: ['Flinch', 'bad'],
   charging: ['Charging', 'good'],
-  trapping: ['Trapping', 'bad'],
+  binding: ['Binding', 'bad'],
   invulnerable: ['Invulnerable', 'good'],
   confusion: ['Confusion', 'bad'],
   mist: ['Mist', 'good'],
@@ -540,7 +540,7 @@ function displayPokemon(
       const volatile = v as keyof Pokemon['volatiles'];
       const [name, type] = VOLATILES[volatile]!;
       let data = '';
-      if (['trapping', 'confusion', 'substitute', 'rage'].includes(volatile)) {
+      if (['binding', 'confusion', 'substitute', 'rage'].includes(volatile)) {
         data = Object.values(pokemon.volatiles[volatile]!)[0].toString();
       } else if (volatile === 'bide') {
         const val = pokemon.volatiles[volatile]!;

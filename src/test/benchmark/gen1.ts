@@ -159,14 +159,14 @@ export const Choices = new class {
         }
       }
 
-      const trapping = active.volatiles['partialtrappinglock'];
+      const binding = active.volatiles['partialtrappinglock'];
       const before = options.length;
       let slot = 0;
       for (const move of active.moveSlots) {
         slot++;
-        // Pokémon Showdown expect us to select 0 PP moves when trapping as it disables
+        // Pokémon Showdown expect us to select 0 PP moves when binding as it disables
         // everything but the move we are to use (and forced trapping moves underflow)
-        if ((move.pp === 0 && !trapping) || move.disabled) continue;
+        if ((move.pp === 0 && !binding) || move.disabled) continue;
         options.push(`move ${slot}`);
       }
       if (options.length === before) {

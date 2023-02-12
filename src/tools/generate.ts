@@ -54,12 +54,12 @@ const NAMES: { [constant: string]: string } = {
   // Effects
   NO_ADDITIONAL_EFFECT: 'None', EFFECT_NORMAL_HIT: 'None', FLY_EFFECT: 'Charge',
   TWO_TO_FIVE_ATTACKS_EFFECT: 'MultiHit', ATTACK_TWICE_EFFECT: 'DoubleHit', OHKO_EFFECT: 'OHKO',
-  EFFECT_OHKO: 'OHKO', DRAIN_HP_EFFECT: 'DrainHP', EFFECT_LEECH_HIT: 'DrainHP',
-  EFFECT_ACCURACY_DOWN_HIT: 'AccuracyDownChance', EFFECT_ACCURACY_DOWN: 'AccuracyDown1',
-  EFFECT_ALL_UP_HIT: 'AllStatUpChance', EFFECT_ATTACK_DOWN_HIT: 'AttackDownChance',
-  EFFECT_ATTACK_DOWN: 'AttackDown1', EFFECT_ATTACK_UP_HIT: 'AttackUpChance',
-  EFFECT_ATTACK_UP: 'AttackUp1', EFFECT_BURN_HIT: 'BurnChance',
-  EFFECT_CONFUSE_HIT: 'ConfusionChance', EFFECT_CONFUSE: 'Confusion',
+  TRAPPING_EFFECT: 'Binding', EFFECT_OHKO: 'OHKO', DRAIN_HP_EFFECT: 'DrainHP',
+  EFFECT_LEECH_HIT: 'DrainHP', EFFECT_ACCURACY_DOWN_HIT: 'AccuracyDownChance',
+  EFFECT_ACCURACY_DOWN: 'AccuracyDown1', EFFECT_ALL_UP_HIT: 'AllStatUpChance',
+  EFFECT_ATTACK_DOWN_HIT: 'AttackDownChance', EFFECT_ATTACK_DOWN: 'AttackDown1',
+  EFFECT_ATTACK_UP_HIT: 'AttackUpChance', EFFECT_ATTACK_UP: 'AttackUp1',
+  EFFECT_BURN_HIT: 'BurnChance', EFFECT_CONFUSE_HIT: 'ConfusionChance', EFFECT_CONFUSE: 'Confusion',
   EFFECT_DEFENSE_DOWN_HIT: 'DefenseDownChance', EFFECT_DEFENSE_DOWN: 'DefenseDown1',
   EFFECT_DEFENSE_UP_HIT: 'DefenseUpChance', EFFECT_DEFENSE_UP: 'DefenseUp1',
   EFFECT_EVASION_DOWN: 'EvasionDown1', EFFECT_EVASION_UP: 'EvasionUp1',
@@ -70,7 +70,7 @@ const NAMES: { [constant: string]: string } = {
   THRASH_PETAL_DANCE_EFFECT: 'Thrashing', EFFECT_SELFDESTRUCT: 'Explode',
   EFFECT_SP_ATK_UP: 'SpAtkUp1', EFFECT_SP_DEF_DOWN_HIT: 'SpDefDownChance',
   EFFECT_SPEED_DOWN: 'SpeedDown1', EFFECT_SPEED_DOWN_HIT: 'SpeedDownChance',
-  EFFECT_TRAP_TARGET: 'Trapping', EFFECT_RESET_STATS: 'Haze',
+  EFFECT_TRAP_TARGET: 'Binding', EFFECT_RESET_STATS: 'Haze',
 };
 
 const STAT_DOWN = [
@@ -108,7 +108,7 @@ const GROUPS: { [constant: string]: string[] } = {
   // data/battle/special_effects.asm
   isSpecial: [
     ...ALWAYS_HAPPEN_SPECIAL, 'Swift', 'Charge',
-    'SuperFang', 'SpecialDamage', 'Thrashing', 'Trapping',
+    'SuperFang', 'SpecialDamage', 'Thrashing', 'Binding',
   ],
   // custom group used as an optimization/simplification by the engine
   isMulti: ['DoubleHit', 'MultiHit', 'Twineedle'],
@@ -444,7 +444,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         return PP[@enumToInt(id) - 1];
     }`;
     const SENTINEL =
-      ',\n\n    // Sentinel used when Pokémon\'s turn should be skipped (e.g. trapped)\n' +
+      ',\n\n    // Sentinel used when Pokémon\'s turn should be skipped (e.g. bound)\n' +
       '    SKIP_TURN = 0xFF';
 
     template('moves', dirs.out, {

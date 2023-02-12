@@ -59,7 +59,7 @@
         "MultiHit": 2,
         "Flinch": 3,
         "Charging": 4,
-        "Trapping": 5,
+        "Binding": 5,
         "Invulnerable": 6,
         "Confusion": 7,
         "Mist": 8,

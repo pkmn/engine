@@ -3602,7 +3602,7 @@ describe('Gen 2', () => {
     ]);
   });
 
-  test('Trapping effect', () => {
+  test('Binding effect', () => {
     const battle = startBattle([
       QKC, QKC, HIT, NO_CRIT, MIN_DMG, MIN_WRAP, QKC, QKC, HIT,
       NO_CRIT, MIN_DMG, QKC, HIT, NO_CRIT, MIN_DMG, MIN_WRAP, QKC, QKC,
@@ -3648,13 +3648,13 @@ describe('Gen 2', () => {
 
     expect(choices(battle, 'p2')).toEqual(['switch 2', 'switch 3', 'move 1', 'move 2']);
 
-    // Creating a Substitute will cause the user to escape a Trapping move
+    // Creating a Substitute will cause the user to escape a Binding move
     battle.makeChoices('move 2', 'move 2');
     expect(battle.p2.pokemon[0].hp).toBe(cleffa = cleffa - 26 - 75);
 
     expect(choices(battle, 'p2')).toEqual(['switch 2', 'switch 3', 'move 1', 'move 2']);
 
-    // Trapping moves will not trap the target if it is behind a Substitute
+    // Binding moves will not trap the target if it is behind a Substitute
     battle.makeChoices('move 2', 'move 1');
     expect(battle.p2.pokemon[0].hp).toBe(cleffa);
 

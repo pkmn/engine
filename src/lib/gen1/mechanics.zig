@@ -74,11 +74,11 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
 
     var p1 = battle.side(.P1);
     if (p1.active.volatiles.attacks == 0) {
-        p1.active.volatiles.Trapping = false;
+        p1.active.volatiles.Binding = false;
     }
     var p2 = battle.side(.P2);
     if (p2.active.volatiles.attacks == 0) {
-        p2.active.volatiles.Trapping = false;
+        p2.active.volatiles.Binding = false;
     }
 
     return endTurn(battle, log);
@@ -146,16 +146,16 @@ fn selectMove(
         if (showdown) saveMove(battle, player, choice);
         return null;
     }
-    if (volatiles.Trapping) {
+    if (volatiles.Binding) {
         from.* = side.last_used_move;
         if (showdown) {
             if (foe_choice.type == .Switch) from.* = null;
             // Pokémon Showdown overwrites Mirror Move with whatever was selected - really this
             // should set side.last_selected_move = last.id to reuse Mirror Move and fail in order
-            // to satisfy the conditions of the Desync Clause Mod. However, because Trapping is
-            // still set the selected move will not actually be used, it will just be reported as
-            // having been used (this differs from how Pokémon Showdown works, but its impossible
-            // to replicate the incorrect behavior with the correct mechanisms).
+            // to satisfy the conditions of the Desync Clause Mod. However, because Binding is still
+            // set the selected move will not actually be used, it will just be reported as having
+            // been used (this differs from how Pokémon Showdown works, but its impossible to
+            // replicate the incorrect behavior with the correct mechanisms).
             saveMove(battle, player, choice);
         } else {
             assert(choice.data == 0);
@@ -173,7 +173,7 @@ fn selectMove(
         return null;
     }
 
-    if (battle.foe(player).active.volatiles.Trapping) {
+    if (battle.foe(player).active.volatiles.Binding) {
         if (showdown) {
             saveMove(battle, player, choice);
         } else {
@@ -256,7 +256,7 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anyty
 
     statusModify(incoming.status, &active.stats);
 
-    foe.active.volatiles.Trapping = false;
+    foe.active.volatiles.Binding = false;
 
     try log.switched(battle.active(player), incoming);
 }
@@ -339,10 +339,10 @@ fn executeMove(
 
     if (side.last_selected_move == .SKIP_TURN) {
         // Pokémon Showdown overwrites the SKIP_TURN sentinel with its botched move select,
-        // Trapping instead gets handled in beforeMove after sleep and freeze
+        // Binding instead gets handled in beforeMove after sleep and freeze
         assert(!showdown);
-        if (battle.foe(player).active.volatiles.Trapping) {
-            try log.cant(battle.active(player), .Trapped);
+        if (battle.foe(player).active.volatiles.Binding) {
+            try log.cant(battle.active(player), .Bound);
         }
         return null;
     }
@@ -350,7 +350,7 @@ fn executeMove(
     assert(choice.type == .Move);
     var mslot = choice.data;
     var auto = showdown and side.last_selected_move != .None and
-        Move.get(side.last_selected_move).effect == .Trapping;
+        Move.get(side.last_selected_move).effect == .Binding;
 
     // GLITCH: Freeze top move selection desync & PP underflow shenanigans
     if (mslot == 0 and side.last_selected_move != .None and side.last_selected_move != .Struggle) {
@@ -431,8 +431,8 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
         return .done;
     }
 
-    if (foe.active.volatiles.Trapping) {
-        try log.cant(ident, .Trapped);
+    if (foe.active.volatiles.Binding) {
+        try log.cant(ident, .Bound);
         return .done;
     }
 
@@ -485,7 +485,7 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
                 volatiles.MultiHit = false;
                 volatiles.Flinch = false;
                 volatiles.Charging = false;
-                volatiles.Trapping = false;
+                volatiles.Binding = false;
                 volatiles.Invulnerable = false;
 
                 // calcDamage just needs a 40 BP physical move, its not actually Pound
@@ -519,7 +519,7 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
             volatiles.Bide = false;
             volatiles.Thrashing = false;
             volatiles.Charging = false;
-            volatiles.Trapping = false;
+            volatiles.Binding = false;
             // GLITCH: Invulnerable is not cleared, resulting in permanent Fly/Dig invulnerability
             try log.cant(ident, .Paralysis);
             return .done;
@@ -568,7 +568,7 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
         return .skip_can;
     }
 
-    if (volatiles.Trapping) {
+    if (volatiles.Binding) {
         assert(volatiles.attacks > 0);
         volatiles.attacks -= 1;
         try log.move(
@@ -626,9 +626,9 @@ fn canMove(
 
     if (move.effect == .Thrashing) {
         Effects.thrashing(battle, player);
-    } else if (!showdown and move.effect == .Trapping) {
+    } else if (!showdown and move.effect == .Binding) {
         // Pokémon Showdown handles this after hit/miss checks and damage calculation
-        Effects.trapping(battle, player);
+        Effects.binding(battle, player);
     }
 
     return true;
@@ -688,7 +688,7 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
         if (move.target != .Self and (eff1 == 0 or eff2 == 0) and !special or
             (m == .DreamEater and !Status.is(foe.stored().status, .SLP)))
         {
-            if (move.effect == .Trapping) {
+            if (move.effect == .Binding) {
                 immune = true;
             } else {
                 try log.immune(battle.active(player.foe()), .None);
@@ -710,7 +710,7 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
     var miss = showdown and (move.target != .Self and
         !(move.effect == .Sleep and foe.active.volatiles.Recharging) and
         !moveHit(battle, player, move, &immune, &mist));
-    assert((showdown and move.effect == .Trapping) or !immune);
+    assert((showdown and move.effect == .Binding) or !immune);
 
     const skip = (move.bp == 0 and move.effect != .OHKO) or immune;
     if ((!showdown or (!skip or counter)) and !miss) blk: {
@@ -759,7 +759,7 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
 
     assert(showdown or miss or battle.last_damage > 0 or skip);
     assert((!showdown and miss) or !(ohko and immune));
-    assert(!immune or miss or move.effect == .Trapping);
+    assert(!immune or miss or move.effect == .Binding);
 
     if (!showdown or !miss) {
         if (move.effect == .MirrorMove) return mirrorMove(battle, player, mslot, log);
@@ -842,8 +842,8 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
         try log.hitcount(battle.active(player.foe()), hit);
     } else if (showdown) {
         // This should be handled much earlier but Pokémon Showdown does it here... ¯\_(ツ)_/¯
-        if (move.effect == .Trapping) {
-            Effects.trapping(battle, player);
+        if (move.effect == .Binding) {
+            Effects.binding(battle, player);
             if (immune) {
                 battle.last_damage = 0;
                 // Pokémon Showdown logs |-damage| here instead of |-immune| because logic...
@@ -1224,7 +1224,7 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool, mist
 
     if (!miss) return true;
     battle.last_damage = 0;
-    side.active.volatiles.Trapping = false;
+    side.active.volatiles.Binding = false;
     return false;
 }
 
@@ -2051,12 +2051,12 @@ pub const Effects = struct {
         try log.transform(battle.active(player), foe_ident);
     }
 
-    fn trapping(battle: anytype, player: Player) void {
+    fn binding(battle: anytype, player: Player) void {
         var side = battle.side(player);
         var foe = battle.foe(player);
 
-        if (side.active.volatiles.Trapping) return;
-        side.active.volatiles.Trapping = true;
+        if (side.active.volatiles.Binding) return;
+        side.active.volatiles.Binding = true;
         // GLITCH: Hyper Beam automatic selection glitch if Recharging gets cleared on miss
         // (Pokémon Showdown unitentionally patches this glitch, preventing automatic selection)
         if (!showdown) foe.active.volatiles.Recharging = false;
@@ -2473,12 +2473,12 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
                 n += 1;
             }
 
-            const limited = active.volatiles.Bide or active.volatiles.Trapping;
+            const limited = active.volatiles.Bide or active.volatiles.Binding;
             // On the cartridge, all of these happen after "FIGHT" (indicating you are not
             // switching) but before you are allowed to select a move. Pokémon Showdown instead
             // either disables all other moves in the case of limited or requires you to select a
-            // move normally if sleeping/frozen/trapped.
-            if (!showdown and (limited or foe.active.volatiles.Trapping or
+            // move normally if sleeping/frozen/bound.
+            if (!showdown and (limited or foe.active.volatiles.Binding or
                 Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP)))
             {
                 out[n] = .{ .type = .Move, .data = 0 };
@@ -2487,7 +2487,7 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
             }
 
             slot = 1;
-            // Pokémon Showdown handles Bide and Trapping moves by checking if the move in question
+            // Pokémon Showdown handles Bide and Binding moves by checking if the move in question
             // is present in the Pokémon's moveset (which means moves called via Metronome / Mirror
             // Move will not result in forcing the subsequent use unless the user also had the
             // proc-ed move in their moveset) and disabling all other moves.

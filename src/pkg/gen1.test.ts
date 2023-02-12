@@ -102,7 +102,7 @@ describe('Gen 1', () => {
     expect(p2.active!.boosts.evasion).toBe(0);
     expect(p2.active!.volatiles).toEqual({
       bide: {duration: 2, damage: 100},
-      trapping: {duration: 2},
+      binding: {duration: 2},
       transform: {player: 'p1', slot: 2},
     });
     expect(p2.active!.forced).toBe(false);

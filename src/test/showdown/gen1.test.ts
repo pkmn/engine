@@ -2095,7 +2095,7 @@ describe('Gen 1', () => {
     ]);
   });
 
-  test('Trapping effect', () => {
+  test('Binding effect', () => {
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, MIN_WRAP,
       HIT, NO_CRIT, MAX_DMG, REWRAP,
@@ -4810,7 +4810,7 @@ describe('Gen 1', () => {
 
     battle.makeChoices('switch 2', '');
 
-    // Target should not still be trapped after the Trapper faints from residual damage
+    // Target should not still be bound after the user faints from residual damage
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p2.pokemon[0].hp).toBe(beedrill -= 40);
 
@@ -4823,7 +4823,7 @@ describe('Gen 1', () => {
 
     battle.makeChoices('', 'switch 2');
 
-    // Trapper should not still be locked into Wrap after residual KO
+    // User should not still be locked into Wrap after residual KO
     expect(choices(battle, 'p1')).toEqual(['move 1', 'move 2', 'move 3']);
 
     battle.makeChoices('move 3', 'move 1');

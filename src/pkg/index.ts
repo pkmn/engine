@@ -60,7 +60,7 @@ export namespace Gen1 {
     multihit?: unknown;
     flinch?: unknown;
     charging?: unknown;
-    trapping?: {duration: number};
+    binding?: {duration: number};
     invulnerable?: unknown;
     confusion?: {duration: number};
     mist?: unknown;

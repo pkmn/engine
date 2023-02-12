@@ -48,7 +48,7 @@ The following information is required to simulate a Generation II Pokémon battl
 | `volatiles.data.protect`       | `PlayerProtectCount`              | `volatiles.stall.counter`             |
 | `volatiles.data.future_sight`  | `PlayerFutureSight{Damage,Count}` | `slotConditions[i].futuremove`        |
 | `volatiles.data.rage`          | `PlayerRageCounter`               | **BUG**                               |
-| `volatiles.data.wrap`          | `PlayerWrapCount`                 | `volatiles.partiallytrapped.duration` |
+| `volatiles.data.bind`          | `PlayerWrapCount`                 | `volatiles.partiallytrapped.duration` |
 |                                | `PlayerCharging`                  |                                       |
 |                                | `PlayerJustGotFrozen`             |                                       |
 |                                |                                   |                                       |

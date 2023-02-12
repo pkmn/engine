@@ -287,7 +287,7 @@ const Volatile = packed struct {
 
     _: u5 = 0,
 
-    wrap: u4 = 0,
+    bind: u4 = 0,
     future_sight: FutureSight = .{},
     bide: u16 = 0,
     disabled: Disabled = .{},

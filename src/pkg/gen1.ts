@@ -25,14 +25,14 @@ if ((VOLATILES.Thrashing >> 3) !== (VOLATILES.Charging >> 3)) {
   throw new Error('Thrashing and Charging expected to be in the same byte');
 } else if ((VOLATILES.Rage >> 3) !== (VOLATILES.Recharging >> 3)) {
   throw new Error('Rage and Recharging expected to be in the same byte');
-} else if ((VOLATILES.Bide >> 3) !== (VOLATILES.Trapping >> 3)) {
-  throw new Error('Bide and Trapping expected to be in the same byte');
+} else if ((VOLATILES.Bide >> 3) !== (VOLATILES.binding >> 3)) {
+  throw new Error('Bide and Binding expected to be in the same byte');
 }
 
 const MASKS = {
   forced1: (1 << (VOLATILES.Thrashing & 7)) | (1 << (VOLATILES.Charging & 7)),
   forced2: (1 << (VOLATILES.Rage & 7)) | (1 << (VOLATILES.Recharging & 7)),
-  limited: (1 << (VOLATILES.Bide & 7)) | (1 << (VOLATILES.Trapping & 7)),
+  limited: (1 << (VOLATILES.Bide & 7)) | (1 << (VOLATILES.Binding & 7)),
 };
 
 // TODO: bindings
@@ -354,7 +354,7 @@ export class Pokemon implements Gen1.Pokemon {
             duration: (this.data.getUint8(off + (OFFSETS.Volatiles.attacks >> 3)) >> 5) & 0b111,
             damage: this.data.getUint16(off + (OFFSETS.Volatiles.state >> 3), LE),
           };
-        } else if (volatile === 'trapping') {
+        } else if (volatile === 'binding') {
           volatiles[volatile] = {
             duration: (this.data.getUint8(off + (OFFSETS.Volatiles.attacks >> 3)) >> 5) & 0b111,
           };
@@ -627,7 +627,7 @@ export class Pokemon implements Gen1.Pokemon {
     data.setUint8(off + (Pokemon.Volatiles.Bide >> 3),
       +!!volatiles.bide | (+!!volatiles.thrashing << 1) |
        (+!!volatiles.multihit << 2) | (+!!volatiles.flinch << 3) |
-       (+!!volatiles.charging << 4) | (+!!volatiles.trapping << 5) |
+       (+!!volatiles.charging << 4) | (+!!volatiles.binding << 5) |
        (+!!volatiles.invulnerable << 6) | (+!!volatiles.confusion << 7));
 
     data.setUint8(off + (Pokemon.Volatiles.Mist >> 3),
@@ -637,7 +637,7 @@ export class Pokemon implements Gen1.Pokemon {
        (+!!pokemon.statusData.toxic << 6) | (+!!volatiles.lightscreen << 7));
 
     const confusion = volatiles.confusion?.duration ?? 0;
-    const attacks = volatiles.trapping?.duration ??
+    const attacks = volatiles.binding?.duration ??
       volatiles.thrashing?.duration ?? 0;
     data.setUint8(off + (Pokemon.Volatiles.Reflect >> 3),
       +!!volatiles.reflect | (+!!volatiles.transform << 1) |

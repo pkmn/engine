@@ -147,7 +147,7 @@ boolean flags that are cleared when the Pokémon faints or switches out:
 | `MultiHit`     | `ATTACKING_MULTIPLE_TIMES` | `Move#multihit`    |
 | `Flinch`       | `FLINCHED`                 | `flinch`           |
 | `Charging`     | `CHARGING_UP`              | `twoturnmove`      |
-| `Trapping`     | `USING_TRAPPING_MOVE`      | `partiallytrapped` |
+| `Binding`      | `USING_TRAPPING_MOVE`      | `partiallytrapped` |
 | `Invulnerable` | `INVULNERABLE`             | `Move#onLockMove`  |
 | `Confusion`    | `CONFUSED`                 | `confusion`        |
 | `Mist`         | `PROTECTED_BY_MIST`        | `mist`             |
@@ -405,7 +405,7 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 | 2     | 3   | `MultiHit`          | Whether the "MultiHit" volatile status is present           |
 | 3     | 4   | `Flinch`            | Whether the "Flinch" volatile status is present             |
 | 4     | 5   | `Charging`          | Whether the "Charging" volatile status is present           |
-| 5     | 6   | `Trapping`          | Whether the "Trapping" volatile status is present           |
+| 5     | 6   | `Binding`           | Whether the "Binding" volatile status is present            |
 | 6     | 7   | `Invulnerable`      | Whether the "Invulnerable" volatile status is present       |
 | 7     | 8   | `Confusion`         | Whether the "Confusion" volatile status is present          |
 | 8     | 9   | `Mist`              | Whether the "Mist" volatile status is present               |
@@ -543,15 +543,15 @@ to completely implement Pokémon Showdown's behavior for the following moves (th
 attempts to reproduce as much of the behavior that can be reproduced without making data structure
 changes or dramatically deviating from the correct control flow):
 
-- **Wrap**: Partial trapping moves like Wrap are implemented on Pokémon Showdown with an artificial
+- **Wrap**: Binding moves like Wrap are implemented on Pokémon Showdown with an artificial
   `partialtrappinglock` volatile as opposed to how it works on the cartridge which simply relies on
-  the `Trapping` volatile of the opponent. This mistake results in partial trapping choice locking
-  not being reported properly when the trapping move was initiated via another move such as
-  Metronome or Mirror Move. Trapping moves also have some local implementation issues - on Pokémon
-  Showdown a trapped Pokémon still gets a turn under the [trapping sleep
+  the `Binding` volatile of the opponent. This mistake results in choice locking not being reported
+  properly when the binding move was initiated via another move such as Metronome or Mirror Move.
+  Binding moves also have some local implementation issues - on Pokémon Showdown a bound Pokémon
+  still gets a turn under the [trapping sleep
   glitch](https://glitchcity.wiki/Trapping_move_and_sleep_glitch), Wrap does 0 damage against
-  Ghost-type Pokémon instead of properly respecting immunity, and trapping effects are handled in
-  the wrong order in the code.
+  Ghost-type Pokémon instead of properly respecting immunity, and binding effects are handled in the
+  wrong order in the code.
 - **Counter**: On Pokémon Showdown choices made while sleeping (which should not have been
   registered) can erroneously cause Counter to trigger Desync Clause Mod behavior.
 - **Mimic**: Pokémon Showdown checks that the user of Mimic has Mimic in one of their move slots,
@@ -562,13 +562,13 @@ changes or dramatically deviating from the correct control flow):
   the Pokémon already knows, PP deduction for using either the original move of the mimicked move
   will instead deduct PP for whichever appears at the lower move slot index and the PP will be
   allowed to go negative (effectively allowing for infinite PP use).
-- **Mirror Move**: Partial trapping moves misbehave when used via Mirror Move (though Pokémon
-  Showdown has its own weird behavior and does not implement the [partial trapping move Mirror Move
+- **Mirror Move**: Binding moves misbehave when used via Mirror Move (though Pokémon Showdown has
+  its own weird behavior and does not implement the [partial trapping move Mirror Move
   glitch](https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch) that exists
   on the cartridge).
-- **Metronome**: In addition to the issues with partial trapping moves, Metronome and Mirror Move
-  cannot mutually call each other more than 3 times in a row without causing the Pokémon Showdown
-  simulator to crash due to defensive safety checks that do not exist on the cartridge.
+- **Metronome**: In addition to the issues with binding moves, Metronome and Mirror Move cannot
+  mutually call each other more than 3 times in a row without causing the Pokémon Showdown simulator
+  to crash due to defensive safety checks that do not exist on the cartridge.
 - **Transform**:  Transform screws up the effect of Disable, because on Pokémon Showdown, Disable
   prevents moves of a given *name* from being used (e.g. "Water Gun") as opposed to moves in a
   specific *slot* (e.g. the 2nd move slot), and a Pokémon's moves can change after Transform (this
@@ -661,7 +661,7 @@ All of places in the link battle code where randomness is required are outlined 
 | **Psywave** (power)      | `specialDamage`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X < {3\over2} \cdot level$</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, {3\over2} \cdot level\right)$</dd></dl>                       |
 | **Thrash** (rampage)     | `Effects.thrash`         | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 1\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[2, 4\right)$ turns</dd></dl>                                               |
 | **Thrash** (confusion)   | `beforeMove`             | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[2, 6\right)$ turns</dd></dl>                                               |
-| **Trapping** (duration)  | `Effects.trapping`       | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 1$ further turns if $\left(X \land 3\right) < 2$<br /> otherwise last for $\left(Y \land 3\right) + 1$ further turns (reroll)</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \{2, 2, 3, 3, 4, 5\} - 1$ further turns</dd></dl> |
+| **Binding** (duration)   | `Effects.binding`        | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 1$ further turns if $\left(X \land 3\right) < 2$<br /> otherwise last for $\left(Y \land 3\right) + 1$ further turns (reroll)</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \{2, 2, 3, 3, 4, 5\} - 1$ further turns</dd></dl> |
 | **Multi-Hit** (hits)     | `Effects.multiHit`       | *Ibid.*                                                                                                                                                                                                   |
 | **Unboost** (chance)     | `Effects.unboost`        | Trigger if $X < 85$                                                                                                                                                                                       |
 
