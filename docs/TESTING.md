@@ -65,6 +65,53 @@ tested). Pokémon Showdown's own unit tests are inadequate for the pkmn engine's
 mostly cover the latest generation, do not use a fixed RNG, and do not verify logs (both of which
 are crucial for matching Pokémon Showdown's RNG and output).
 
+### Guidelines
+
+The following guidelines should be taken into consideration when adding new unit tests:
+
+1. Support should be added to the [`generate`](../src/tools/generate.ts) tool for the generation in
+  question - `npm run generate  -- tests <GEN>` is used to first generate stubs for all of the
+  effects that need to be tested (the generated stubs will need to be massaged quite a bit, but
+  serve as a good first rough draft).
+2. Tests should be ordered such that they match the order from previous generations as closely as
+   possible, and new effects should be grouped with similar effects. General engine/battle flow test
+   cases should also be preserved from past generations where applicable.
+3. Effects should have all of the behavior outlined in their descriptions on
+   [Bulbapedia](https://bulbapedia.bulbagarden.net) and [Smogon](https://smogon.com/dex) tested
+   (though these sources should not be assumed to be correct). Additionally, any reported Pokémon
+   Showdown bugs and all documented cartridge glitches should be tested.
+4. Copy as much as possible from previous generations' test cases - preserving the original test
+   makes it easier to see how much of the behavior has changed vs. remained over the generations. If
+   the behavior has significantly diverged then coming up with a brand new test case might be
+   preferable.
+5. Ideally, every species, item, move, ability, etc should show up at least once in the test file -
+   try to use as diverse a range of options as possible, though prefer movesets which are "natural"
+   (choose similarly tiered species using moves that occur in their movesets, prefer that
+   "signature" [moves](https://bulbapedia.bulbagarden.net/wiki/Signature_move) and
+   [abilities](https://bulbapedia.bulbagarden.net/wiki/Signature_Ability) are present on the
+   correct evolutionary lines, etc).
+6. If creating a test for a Pokémon Showdown bug or a video demonstrating a glitch, prefer to match
+   the original reproduction's setup.
+7. Prefer most tests use the "default" stats (level 100, full stat experience in Generation I & II
+   and no Effort Values in Generation III+, etc).
+8. Long test cases that demonstrate the majority of an effects behavior are preferable to
+   individually scoped testing (this is contrary to most testing best practices, but minimizing the
+   amount of setup necessary is deemed preferable to the alternative).
+9. For complex effects which interact with a wide variety of other effects (eg. Substitute, Baton
+   Pass), prefer to test just the "base" functionality in the complex effect's test case and its
+   various interactions with other effects in the test case demonstrating the other effect's
+   behavior.
+10. Avoid unnecessary rolls and log messages. Fall back on moves like Teleport where reasonable  and
+    avoid test setups involving speed ties unless speed ties are specifically being tested.
+11. Avoid performing artificial alterations of the battle state mid-test unless required. Tests
+    which require status should acquire it as part of the test (Pokémon Showdown's cleric clause
+    means starting the battle with status is difficult), and HP/PP should ideally be manipulated
+    before the test begins.
+12. Minimize the number of sub-tests that are created - they should only be necessary if they
+    involve a vastly different setup than the primary test case.
+13. If behavior differs in single vs. double battle styles, test both. Otherwise choose a mix of
+    single and double battles for testing.
+
 ## Integration
 
 The [integration test](../src/test/integration/index.test.ts) exists to ensure the pkmn engine
