@@ -13,7 +13,7 @@ jobs:
       - run: lscpu
       - run: npm install
       - run: echo "${GITHUB_WORKSPACE}/build/bin/zig" >> $GITHUB_PATH
-      - run: npm run --silent benchmark -- --iterations=50 --battles=100000 | tee benchmark.json
+      - run: npm run --silent benchmark -- --iterations=50 --battles=100000 --normalize | tee benchmark.json
       - uses: benchmark-action/github-action-benchmark@v1
         with:
           tool: 'customBiggerIsBetter'
