@@ -13,7 +13,10 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    const dynamic = b.option(bool, "dynamic", "Build a dynamic library") orelse false;
     const strip = b.option(bool, "strip", "Strip debugging symbols from binary") orelse false;
+    const pic = b.option(bool, "pic", "Force position independent code") orelse false;
+
     const cmd = b.findProgram(&[_][]const u8{"strip"}, &[_][]const u8{}) catch null;
 
     var parser = std.json.Parser.init(b.allocator, false);
@@ -34,31 +37,35 @@ pub fn build(b: *std.Build) !void {
 
     const lib = if (showdown) "pkmn-showdown" else "pkmn";
 
-    const static_lib = b.addStaticLibrary(.{
-        .name = lib,
-        .root_source_file = .{ .path = "src/lib/binding/c.zig" },
-        .optimize = optimize,
-        .target = target,
-    });
-    static_lib.addOptions("build_options", options);
-    static_lib.setMainPkgPath("./");
-    static_lib.addIncludePath("src/include");
-    static_lib.bundle_compiler_rt = true;
-    maybeStrip(b, static_lib, b.getInstallStep(), strip, cmd, null);
-    static_lib.install();
-
-    const dynamic_lib = b.addSharedLibrary(.{
-        .name = lib,
-        .root_source_file = .{ .path = "src/lib/binding/c.zig" },
-        .version = try std.builtin.Version.parse(version),
-        .optimize = optimize,
-        .target = target,
-    });
-    dynamic_lib.addOptions("build_options", options);
-    static_lib.setMainPkgPath("./");
-    dynamic_lib.addIncludePath("src/include");
-    maybeStrip(b, dynamic_lib, b.getInstallStep(), strip, cmd, null);
-    dynamic_lib.install();
+    if (dynamic) {
+        const dynamic_lib = b.addSharedLibrary(.{
+            .name = lib,
+            .root_source_file = .{ .path = "src/lib/binding/c.zig" },
+            .version = try std.builtin.Version.parse(version),
+            .optimize = optimize,
+            .target = target,
+        });
+        dynamic_lib.addOptions("build_options", options);
+        dynamic_lib.setMainPkgPath("./");
+        dynamic_lib.addIncludePath("src/include");
+        maybeStrip(b, dynamic_lib, b.getInstallStep(), strip, cmd, null);
+        if (pic) dynamic_lib.force_pic = pic;
+        dynamic_lib.install();
+    } else {
+        const static_lib = b.addStaticLibrary(.{
+            .name = lib,
+            .root_source_file = .{ .path = "src/lib/binding/c.zig" },
+            .optimize = optimize,
+            .target = target,
+        });
+        static_lib.addOptions("build_options", options);
+        static_lib.setMainPkgPath("./");
+        static_lib.addIncludePath("src/include");
+        static_lib.bundle_compiler_rt = true;
+        maybeStrip(b, static_lib, b.getInstallStep(), strip, cmd, null);
+        if (pic) static_lib.force_pic = pic;
+        static_lib.install();
+    }
 
     const node_headers = b.option([]const u8, "node-headers", "Path to node-headers");
     if (node_headers) |headers| {
@@ -76,6 +83,7 @@ pub fn build(b: *std.Build) !void {
         node_lib.linker_allow_shlib_undefined = true;
         const out = b.fmt("build/lib/{s}", .{name});
         maybeStrip(b, node_lib, b.getInstallStep(), strip, cmd, out);
+        if (pic) node_lib.force_pic = pic;
         // Always emit to build/lib because this is where the driver code expects to find it
         // TODO: find alternative to emit_to that works properly with .install()
         node_lib.emit_bin = .{ .emit_to = out };
@@ -131,6 +139,7 @@ pub fn build(b: *std.Build) !void {
     tests.addOptions("build_options", options);
     tests.single_threaded = true;
     maybeStrip(b, tests, &tests.step, strip, cmd, null);
+    if (pic) tests.force_pic = pic;
     if (test_bin) |bin| {
         tests.name = std.fs.path.basename(bin);
         if (std.fs.path.dirname(bin)) |dir| tests.setOutputDir(dir);
@@ -149,6 +158,7 @@ pub fn build(b: *std.Build) !void {
 
     const benchmark = tool(b, &.{pkmn}, "src/test/benchmark.zig", .{
         .showdown = showdown,
+        .pic = pic,
         .strip = true,
         .cmd = cmd,
         .test_step = test_step,
@@ -157,6 +167,7 @@ pub fn build(b: *std.Build) !void {
     });
     const fuzz = tool(b, &.{pkmn}, "src/test/benchmark.zig", .{
         .showdown = showdown,
+        .pic = pic,
         .strip = false,
         .cmd = cmd,
         .test_step = test_step,
@@ -165,6 +176,7 @@ pub fn build(b: *std.Build) !void {
     });
     const config = .{
         .showdown = showdown,
+        .pic = pic,
         .strip = strip,
         .cmd = cmd,
         .test_step = test_step,
@@ -210,6 +222,7 @@ fn maybeStrip(
 
 const Config = struct {
     showdown: bool,
+    pic: bool,
     strip: bool,
     cmd: ?[]const u8,
     test_step: ?*std.Build.Step,
@@ -236,6 +249,7 @@ fn tool(
     });
     for (deps) |dep| exe.addModule(dep.name, dep.module);
     exe.single_threaded = true;
+    if (config.pic) exe.force_pic = config.pic;
     if (config.test_step) |ts| ts.dependOn(&exe.step);
 
     const run = exe.run();

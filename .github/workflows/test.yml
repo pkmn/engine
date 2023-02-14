@@ -39,4 +39,8 @@ jobs:
       - run: npm test
       - run: npm run test:integration
       - run: npm run lint
-      - run: make example
+      - run: zig build ${{matrix.options}} -p build
+      - run: make example options="${{matrix.options}}"
+      - run: make clean && node src/bin/install-pkmn-engine --zig
+      - run: zig build ${{matrix.options}} -p build -Ddynamic
+      - run: make c-example options="${{matrix.options}}" dynamic=true

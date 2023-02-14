@@ -44,7 +44,7 @@ extern const size_t PKMN_MAX_LOGS;
  * The optimal size in bytes required to hold the largest amount of log data possible
  * from a single update. At least as large as PKMN_MAX_LOGS.
  */
-extern const size_t PKMN_LOGS_SIZE;
+extern const size_t PKMN_LOG_SIZE;
 
 /** Identifier for a single player. */
 typedef enum pkmn_player {
@@ -110,7 +110,7 @@ extern const size_t PKMN_GEN1_MAX_LOGS;
  * The optimal size in bytes required to hold the largest amount of log data possible
  * from a single Generation I update. At least as large as PKMN_GEN1_MAX_LOGS.
  */
-extern const size_t PKMN_GEN1_LOGS_SIZE;
+extern const size_t PKMN_GEN1_LOG_SIZE;
 
 /** Generation I Pokémon Battle (see src/lib/gen1/README.md#layout for details). */
 PKMN_OPAQUE(PKMN_GEN1_BATTLE_SIZE) pkmn_gen1_battle;
@@ -124,8 +124,8 @@ pkmn_result pkmn_gen1_battle_update(
   pkmn_choice c2,
   uint8_t *buf);
 /**
- * Fills in out with the possible choices for the player given the request and Generation I battle
- * state and returns the number of choices available.
+ * Fills in out with at most len possible choices for the player given the request and Generation I
+ * battle state and returns the number of choices available.
  *
  * This function may return 0 due to how the Transform + Mirror Move/Metronome PP error interacts
  * with Disable, in which case there are no possible choices for the player to make (i.e. on the
@@ -137,7 +137,8 @@ uint8_t pkmn_gen1_battle_choices(
   pkmn_gen1_battle *battle,
   pkmn_player player,
   pkmn_choice_kind request,
-  pkmn_choice out[]);
+  pkmn_choice out[],
+  size_t len);
 
 #undef PKMN_OPAQUE
 

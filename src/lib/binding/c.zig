@@ -3,7 +3,7 @@ const pkmn = @import("../pkmn.zig");
 
 const assert = std.debug.assert;
 
-const ERROR = @bitCast(pkmn.Result, 0b1100);
+const ERROR: u8 = 0b1100;
 
 export const PKMN_OPTIONS: extern struct {
     showdown: bool = false,
@@ -16,32 +16,36 @@ export const PKMN_OPTIONS: extern struct {
 export const PKMN_MAX_OPTIONS = pkmn.MAX_OPTIONS;
 export const PKMN_OPTIONS_SIZE = pkmn.OPTIONS_SIZE;
 export const PKMN_MAX_LOGS = pkmn.MAX_LOGS;
-export const PKMN_LOGS_SIZE = pkmn.LOGS_SIZE;
+export const PKMN_LOG_SIZE = pkmn.LOG_SIZE;
 
-export fn pkmn_choice_init(choice: pkmn.Choice.Type, data: u8) pkmn.Choice {
+export fn pkmn_choice_init(choice: u8, data: u8) u8 {
+    assert(choice <= @typeInfo(pkmn.Choice.Type).Enum.fields.len);
     assert(data <= 6);
-    return .{ .type = choice, .data = data };
+    return @bitCast(u8, pkmn.Choice{
+        .type = @intToEnum(pkmn.Choice.Type, choice),
+        .data = @truncate(u4, data),
+    });
 }
 
-export fn pkmn_result_type(result: pkmn.Result) pkmn.Result.Type {
-    return result.type;
+export fn pkmn_result_type(result: u8) u8 {
+    return @enumToInt(@bitCast(pkmn.Result, result).type);
 }
 
-export fn pkmn_result_p1(result: pkmn.Result) pkmn.Choice.Type {
+export fn pkmn_result_p1(result: u8) u8 {
     assert(!pkmn_error(result));
-    return result.p1;
+    return @enumToInt(@bitCast(pkmn.Result, result).p1);
 }
 
-export fn pkmn_result_p2(result: u8) pkmn.Choice.Type {
+export fn pkmn_result_p2(result: u8) u8 {
     assert(!pkmn_error(result));
-    return result.p2;
+    return @enumToInt(@bitCast(pkmn.Result, result).p2);
 }
 
 export fn pkmn_error(result: u8) bool {
     return result == ERROR;
 }
 
-export fn pkmn_psrng_init(prng: *pkmn.PSRNG, seed: u64) pkmn.PSRNG {
+export fn pkmn_psrng_init(prng: *pkmn.PSRNG, seed: u64) void {
     prng.src = .{ .seed = seed };
 }
 
@@ -52,7 +56,7 @@ export fn pkmn_psrng_next(prng: *pkmn.PSRNG) u32 {
 export const PKMN_GEN1_MAX_OPTIONS = pkmn.gen1.MAX_OPTIONS;
 export const PKMN_GEN1_OPTIONS_SIZE = pkmn.gen1.OPTIONS_SIZE;
 export const PKMN_GEN1_MAX_LOGS = pkmn.gen1.MAX_LOGS;
-export const PKMN_GEN1_LOGS_SIZE = pkmn.gen1.LOGS_SIZE;
+export const PKMN_GEN1_LOG_SIZE = pkmn.gen1.LOG_SIZE;
 
 export fn pkmn_gen1_battle_update(
     battle: *pkmn.gen1.Battle(pkmn.gen1.PRNG),
@@ -67,14 +71,22 @@ export fn pkmn_gen1_battle_update(
             return battle.update(c1, c2, log) catch return ERROR;
         }
     }
-    return battle.update(c1, c2, null) catch unreachable;
+    return battle.update(c1, c2, pkmn.protocol.NULL) catch unreachable;
 }
 
 export fn pkmn_gen1_battle_choices(
     battle: *pkmn.gen1.Battle(pkmn.gen1.PRNG),
-    player: pkmn.Player,
-    request: pkmn.Choice.Type,
+    player: u8,
+    request: u8,
     out: [*]u8,
+    len: usize,
 ) u8 {
-    return battle.choices(player, request, out);
+    assert(player <= @typeInfo(pkmn.Player).Enum.fields.len);
+    assert(request <= @typeInfo(pkmn.Choice.Type).Enum.fields.len);
+    assert(!pkmn.options.showdown or len > 0);
+    return battle.choices(
+        @intToEnum(pkmn.Player, player),
+        @intToEnum(pkmn.Choice.Type, request),
+        @ptrCast([]pkmn.Choice, out[0..len]),
+    );
 }

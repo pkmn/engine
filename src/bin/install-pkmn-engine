@@ -208,8 +208,8 @@ const headers = async () => {
 
 (async () => {
   const zig = await install();
+  if (process.argv[2] === '--zig') process.exit(0);
   const include = await headers();
-
   // FIXME: need to detect original flags by trying to require pkmn.node/pkmn-showdown.node library
   // and checking constants to know whether to build with -Dshowdown/-Dtrace + build and embed WASM
   console.log('Building build/lib/pkmn-showdown.node');

@@ -86,7 +86,7 @@ check: test lint
 .PHONY: c-example
 c-example:
 	$(MAKE) -C src/examples/c
-	./src/examples/c/example
+	./src/examples/c/example 1234
 
 src/examples/js/node_modules:
 	npm -C src/examples/js install
@@ -104,19 +104,22 @@ example: c-example js-example zig-example
 
 .PHONY: integration
 # TODO: integration: check example
-integration: check zig-example
+integration: check c-example zig-example
 	npm run test:integration
 
 .PHONY: benchmark
 benchmark:
 	npm run benchmark
 
-.PHONY: clean
-clean:
-	rm -rf zig-* build .tsbuildinfo .eslintcache
+.PHONY: clean-example
+clean-example:
 	$(MAKE) clean -C src/examples/c
 	rm -rf src/examples/js/.parcel* src/examples/js/dist
 	rm -rf src/examples/zig/zig-*
+
+.PHONY: clean
+clean: clean-example
+	rm -rf zig-* build .tsbuildinfo .eslintcache
 
 .PHONY: release
 release:
