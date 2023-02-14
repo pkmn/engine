@@ -171,7 +171,7 @@ const install = async () => {
   } catch (err) {
     if (err.code !== 'ENOENT') throw err;
   }
-  console.log(`Zig v${version} executable:`, zig);
+  console.log(`Zig${version === 'master' ? '' : ` v${version}`} executable:`, zig);
 
   return zig;
 };
