@@ -27,7 +27,7 @@
 9. **Unit test the engine** in both cartridge and Pokémon Showdown compatibility mode
 10. Implement a **`MAX_LOGS` unit test**
     - document in [`PROTOCOL.md`](PROTOCOL.md)
-    - validate with [`logs.py`](../src/tools/logs.py)
+    - validate with Z3
 11. **Optimize data structures**
     - [generate](../src/tools/protocol.zig) updated [`layout.json`](../src/pkg/data/layout.json) and
      [`offsets.json`](../src/pkg/data/offsets.json)
