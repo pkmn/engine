@@ -78,13 +78,14 @@ pub fn prng(rand: *PSRNG) data.PRNG {
         .src = .{
             .seed = if (showdown)
                 rand.newSeed()
-            else .{
-                rand.range(u8, 0, max), rand.range(u8, 0, max),
-                rand.range(u8, 0, max), rand.range(u8, 0, max),
-                rand.range(u8, 0, max), rand.range(u8, 0, max),
-                rand.range(u8, 0, max), rand.range(u8, 0, max),
-                rand.range(u8, 0, max), rand.range(u8, 0, max),
-            },
+            else
+                .{
+                    rand.range(u8, 0, max), rand.range(u8, 0, max),
+                    rand.range(u8, 0, max), rand.range(u8, 0, max),
+                    rand.range(u8, 0, max), rand.range(u8, 0, max),
+                    rand.range(u8, 0, max), rand.range(u8, 0, max),
+                    rand.range(u8, 0, max), rand.range(u8, 0, max),
+                },
         },
     };
 }
