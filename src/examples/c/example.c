@@ -20,7 +20,7 @@ pkmn_choice choose(
    assert(n > 0);
    // pkmn_gen1_battle_choices determines what the possible options are - the simplest way to
    // choose an option here is to just use the PSRNG to pick one at random
-   return options[pkmn_psrng_next(random) * n];
+   return options[(uint64_t)pkmn_psrng_next(random) * n / 0x100000000];
 }
 
 int main(int argc, char **argv)
@@ -100,8 +100,8 @@ int main(int argc, char **argv)
    // figure out the system's endianess before we can read the 16-bit turn data
    volatile uint32_t endian = 0x01234567;
    uint16_t turns = (*((uint8_t *)(&endian))) == 0x67
-      ? battle.bytes[348] | battle.bytes[349] << 8
-      : battle.bytes[348] << 8 | battle.bytes[349];
+      ? battle.bytes[368] | battle.bytes[369] << 8
+      : battle.bytes[368] << 8 | battle.bytes[369];
 
    // The result is from the perspective of P1
    switch (pkmn_result_type(result)) {
