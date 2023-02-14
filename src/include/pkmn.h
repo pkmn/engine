@@ -116,13 +116,14 @@ extern const size_t PKMN_GEN1_LOG_SIZE;
 PKMN_OPAQUE(PKMN_GEN1_BATTLE_SIZE) pkmn_gen1_battle;
 /**
  * Returns the result of applying Player 1's choice c1 and Player 2's choice c2 to the Generation I
- * battle. Writes trace logs to buf if buf is not NULL and trace logging is enabled.
+ * battle. Writes up to len trace logs to buf if buf is not NULL and trace logging is enabled.
  */
 pkmn_result pkmn_gen1_battle_update(
   pkmn_gen1_battle *battle,
   pkmn_choice c1,
   pkmn_choice c2,
-  uint8_t *buf);
+  uint8_t *buf,
+  size_t len);
 /**
  * Fills in out with at most len possible choices for the player given the request and Generation I
  * battle state and returns the number of choices available.

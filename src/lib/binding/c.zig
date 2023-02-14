@@ -1,5 +1,6 @@
 const std = @import("std");
 const pkmn = @import("../pkmn.zig");
+const DEBUG = @import("../common/debug.zig").print;
 
 const assert = std.debug.assert;
 
@@ -63,12 +64,13 @@ export fn pkmn_gen1_battle_update(
     c1: pkmn.Choice,
     c2: pkmn.Choice,
     buf: ?[*]u8,
+    len: usize,
 ) pkmn.Result {
     if (pkmn.options.trace) {
         if (buf) |b| {
-            var stream = std.io.fixedBufferStream(&b);
+            var stream = std.io.fixedBufferStream(b[0..len]);
             var log = pkmn.protocol.FixedLog{ .writer = stream.writer() };
-            return battle.update(c1, c2, log) catch return ERROR;
+            return battle.update(c1, c2, log) catch return @bitCast(pkmn.Result, ERROR);
         }
     }
     return battle.update(c1, c2, pkmn.protocol.NULL) catch unreachable;

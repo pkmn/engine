@@ -145,7 +145,7 @@ pkmn_battle battle = ...;
 uint8_t buf[PKMN_LOG_SIZE];
 pkmn_result result;
 pkmn_choice c1 = 0, c2 = 0;
-while (!pkmn_result_type(result = pkmn_battle_update(&battle, c1, c2, buf))) {
+while (!pkmn_result_type(result = pkmn_battle_update(&battle, c1, c2, buf, PKMN_LOG_SIZE))) {
   c1 = choose(PKMN_PLAYER_P1, pkmn_result_p1(result));
   c2 = choose(PKMN_PLAYER_P2, pkmn_result_p2(result));
 }
