@@ -4,7 +4,9 @@ import {
   SideID, StatID, StatsTable, StatusName, TypeName,
 } from '@pkmn/data';
 
-import {Gen1, Slot, BattleOptions, CreateOptions, RestoreOptions} from './index';
+import {
+  API, Gen1, Slot, BattleOptions, CreateOptions, RestoreOptions, Choice, Result,
+} from './index';
 import {LAYOUT, LE, Lookup} from './data';
 import {decodeIdentRaw, decodeStatus, decodeTypes} from './protocol';
 
@@ -57,6 +59,70 @@ export class Battle implements Gen1.Battle {
     this.cache = [undefined, undefined];
   }
 
+  update(): Result {
+    // TODO: also need a Buffer/DataView in order to capture trace logs
+    throw new Error('TODO');
+  }
+
+  choices(id: SideID, request: 'move' | 'switch' | 'pass'): Choice[] {
+    switch (request) {
+    case 'pass': {
+      return [{type: 'pass', data: 0}];
+    }
+    case 'switch': {
+      const options: Choice[] = [];
+      const side = this.side(id);
+      for (let slot = 2; slot <= 6; slot++) {
+        const pokemon = side.get(slot as Slot);
+        if (!pokemon || pokemon.hp === 0) continue;
+        options.push({type: 'switch', data: slot});
+      }
+      return options.length === 0 ? [{type: 'pass', data: 0}] : options;
+    }
+    case 'move': {
+      const options: Choice[] = [];
+
+      const side = this.side(id);
+      const active = side.active!;
+
+      if (active.forced) {
+        return [{type: 'move', data: 0}];
+      }
+
+      for (let slot = 2; slot <= 6; slot++) {
+        const pokemon = side.get(slot as Slot);
+        if (!pokemon || pokemon.hp === 0) continue;
+        options.push({type: 'switch', data: slot});
+      }
+
+      let slot = 0;
+      if (active.limited) {
+        const last = side.lastSelectedMove!;
+        for (const move of active.moves) {
+          if (move.id === last) {
+            options.push({type: 'move', data: move.pp === 0 && move.id === 'bide' ? 0 : slot});
+            return options;
+          }
+        }
+      }
+
+      slot = 0;
+      const before = options.length;
+      for (const move of active.moves) {
+        slot++;
+        if (move.pp === 0 || move.disabled) continue;
+        options.push({type: 'move', data: slot});
+      }
+      if (options.length === before) {
+        // Struggle (Pokémon Showdown would use `move 1` here)
+        options.push({type: 'move', data: 0});
+      }
+
+      return options;
+    }
+    }
+  }
+
   get sides() {
     return this._sides();
   }
@@ -106,7 +172,7 @@ export class Battle implements Gen1.Battle {
     return seed;
   }
 
-  toJSON(): Gen1.Battle {
+  toJSON(): Omit<Gen1.Battle, keyof API> {
     return {
       sides: Array.from(this.sides).map(s => s.toJSON()),
       turn: this.turn,

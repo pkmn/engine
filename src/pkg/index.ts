@@ -1,5 +1,5 @@
 import {
-  BoostsTable, Generation, ID, PokemonSet, StatsTable, StatusName, TypeName,
+  BoostsTable, Generation, ID, PokemonSet, SideID, StatsTable, StatusName, TypeName,
 } from '@pkmn/data';
 
 import {Lookup} from './data';
@@ -12,8 +12,13 @@ export type Side = Gen1.Side;
 export type Pokemon = Gen1.Pokemon;
 export type MoveSlot = Gen1.MoveSlot;
 
+export interface API {
+  update(c1: Choice, c2: Choice): Result;
+  choices(id: SideID, request: Choice['type']): Choice[];
+}
+
 export namespace Gen1 {
-  export interface Battle {
+  export interface Battle extends API {
     sides: Iterable<Side>;
     turn: number;
     lastDamage: number;
