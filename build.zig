@@ -37,7 +37,28 @@ pub fn build(b: *std.Build) !void {
 
     const lib = if (showdown) "pkmn-showdown" else "pkmn";
 
-    if (dynamic) {
+    const node_headers = b.option([]const u8, "node-headers", "Path to node-headers");
+    if (node_headers) |headers| {
+        const name = b.fmt("{s}.node", .{lib});
+        const node_lib = b.addSharedLibrary(.{
+            .name = name,
+            .root_source_file = .{ .path = "src/lib/binding/node.zig" },
+            .optimize = optimize,
+            .target = target,
+        });
+        node_lib.addOptions("build_options", options);
+        node_lib.setMainPkgPath("./");
+        node_lib.addSystemIncludePath(headers);
+        node_lib.linkLibC();
+        node_lib.linker_allow_shlib_undefined = true;
+        const out = b.fmt("build/lib/{s}", .{name});
+        maybeStrip(b, node_lib, b.getInstallStep(), strip, cmd, out);
+        if (pic) node_lib.force_pic = pic;
+        // Always emit to build/lib because this is where the driver code expects to find it
+        // TODO: find alternative to emit_to that works properly with .install()
+        node_lib.emit_bin = .{ .emit_to = out };
+        b.getInstallStep().dependOn(&node_lib.step);
+    } else if (dynamic) {
         const dynamic_lib = b.addSharedLibrary(.{
             .name = lib,
             .root_source_file = .{ .path = "src/lib/binding/c.zig" },
@@ -67,35 +88,14 @@ pub fn build(b: *std.Build) !void {
         static_lib.install();
     }
 
-    const node_headers = b.option([]const u8, "node-headers", "Path to node-headers");
-    if (node_headers) |headers| {
-        const name = b.fmt("{s}.node", .{lib});
-        const node_lib = b.addSharedLibrary(.{
-            .name = name,
-            .root_source_file = .{ .path = "src/lib/binding/node.zig" },
-            .optimize = optimize,
-            .target = target,
-        });
-        node_lib.addOptions("build_options", options);
-        node_lib.setMainPkgPath("./");
-        node_lib.addSystemIncludePath(headers);
-        node_lib.linkLibC();
-        node_lib.linker_allow_shlib_undefined = true;
-        const out = b.fmt("build/lib/{s}", .{name});
-        maybeStrip(b, node_lib, b.getInstallStep(), strip, cmd, out);
-        if (pic) node_lib.force_pic = pic;
-        // Always emit to build/lib because this is where the driver code expects to find it
-        // TODO: find alternative to emit_to that works properly with .install()
-        node_lib.emit_bin = .{ .emit_to = out };
-        b.getInstallStep().dependOn(&node_lib.step);
+    if (node_headers == null) {
+        const header = b.addInstallFileWithDir(
+            .{ .path = "src/include/pkmn.h" },
+            .header,
+            "pkmn.h",
+        );
+        b.getInstallStep().dependOn(&header.step);
     }
-
-    const header = b.addInstallFileWithDir(
-        .{ .path = "src/include/pkmn.h" },
-        .header,
-        "pkmn.h",
-    );
-    b.getInstallStep().dependOn(&header.step);
     {
         const pc = b.fmt("lib{s}.pc", .{lib});
         const file = try b.cache_root.join(b.allocator, &.{pc});
