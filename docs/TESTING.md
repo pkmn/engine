@@ -361,16 +361,11 @@ cset shield --exec -- nice -n -19 node build/test/benchmark
 ### Regression
 
 In addition to being used to compare the pkmn engine to Pokémon Showdown, the [benchmark
-tool](../src/test/benchmark/index.ts) has an alternative mode used by a [benchmark
-workflow](../.github/workflows/benchmark.yml) which allows it to [track performance over
-time](https://pkmn.github.io/engine/) and detect regressions in the engine's performance. When the
-`--iterations` flag is used the tool will instead run multiple iterations of battle playouts from
-the same seed against the engine and output JSON to be used for comparison against prior runs. In
-order to minimize noise, the mean of all the iterations is reported, after outliers have been
-removed. The absolute numbers tracked on GitHub need to be taken with a grain of salt, as GitHub
-runners range wildly in terms of performance due to different CPUs (which `--normalize` attempts to
-paper over by crudely trying to map everything to a 3.00 GHz baseline) and because there are
-potentially multiple conflicting jobs from other users running concurrently.
+tool](../src/test/benchmark/index.ts) has an alternative mode that allows it to better detect
+regressions in the engine's performance. When the `--iterations` flag is used the tool will instead
+run multiple iterations of battle playouts from the same seed against the engine and output JSON to
+be used for comparison against prior runs. In order to minimize noise, the mean of all the
+iterations is reported, after outliers have been removed.
 
 ## Fuzz
 

@@ -1,6 +1,5 @@
 import 'source-map-support/register';
 
-import {cpus} from 'os';
 import {execFileSync} from 'child_process';
 
 import {Generations, PokemonSet} from '@pkmn/data';
@@ -263,7 +262,6 @@ const clean = (samples: number[], n = 3) => {
 };
 
 if (argv.iterations) {
-  const C = 3000 / cpus()[0].speed;
   const entries = [];
   for (const showdown of [true, false]) {
     for (const format of FORMATS) {
@@ -273,8 +271,7 @@ if (argv.iterations) {
       for (let i = 0; i < argv.iterations; i++) {
         const prng = new PRNG(argv.seed.slice());
         const [duration, turns, seed] = libpkmn(format, prng, argv.battles, showdown);
-        const sample = Math.round(1e9 / (Number(duration) / argv.battles));
-        samples[i] = argv.normalize ? Math.round(sample * C) : sample;
+        samples[i] = Math.round(1e9 / (Number(duration) / argv.battles));
         compare(name, control, turns, seed);
       }
       const [cleaned, outliers] = clean(samples);
@@ -283,7 +280,7 @@ if (argv.iterations) {
       if (outliers.length) extra += ` (dropped: ${outliers.sort().join(', ')})`;
       entries.push({
         name,
-        unit: `${argv.normalize ? '~' : ''}battles/sec`,
+        unit: 'battles/sec',
         value: Math.round(stats.avg),
         range: `±${stats.rme.toFixed(2)}%`,
         extra,
