@@ -13,7 +13,7 @@ const VERSION = `${ZIG_VERSION.major}.${ZIG_VERSION.minor}.${ZIG_VERSION.patch}$
 const INDEX = 'https://ziglang.org/download/index.json';
 const ROOT = path.resolve(__dirname, '../..');
 
-const sh = (cmd, args) => execFileSync(cmd, args, {encoding: 'utf8'});
+const sh = (cmd, args) => execFileSync(cmd, args, {encoding: 'utf8', cwd: ROOT});
 
 // This is hardly the browser fetch API, but it works for our primitive needs
 const fetch = url => new Promise((resolve, reject) => {
@@ -46,7 +46,7 @@ const unpack7 = (input, output) => new Promise((resolve, reject) => {
   } catch (err) {
     if (err.code !== 'MODULE_NOT_FOUND') throw err;
     console.log('Installing 7zip-min package locally to unpack the archive...');
-    execFileSync('npm', ['install', '7zip-min', '--no-audit', '--no-save'], { cwd: ROOT });
+    sh('npm', ['install', '7zip-min', '--no-audit', '--no-save']);
   }
 
   // Node won't let us used the package we just installed above before v16 because pain
