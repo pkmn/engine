@@ -253,7 +253,6 @@ fn tool(
     if (config.test_step) |ts| ts.dependOn(&exe.step);
 
     const run = exe.run();
-    run.condition = .always;
     maybeStrip(b, exe, &run.step, config.strip, config.cmd, null);
     run.step.dependOn(b.getInstallStep());
     if (b.args) |args| run.addArgs(args);
