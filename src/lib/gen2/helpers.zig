@@ -90,8 +90,7 @@ pub const Side = struct {
         assert(ps.len > 0 and ps.len <= 6);
         var side = data.Side{};
 
-        var i: u4 = 0;
-        while (i < ps.len) : (i += 1) {
+        for (0..ps.len) |i| {
             side.pokemon[i] = Pokemon.init(ps[i]);
             // FIXME side.order[i] = i + 1;
         }
@@ -102,8 +101,7 @@ pub const Side = struct {
         const n = if (rand.chance(u8, 1, 100)) rand.range(u4, 1, 5 + 1) else 6;
         var side = data.Side{};
 
-        var i: u4 = 0;
-        while (i < n) : (i += 1) {
+        for (0..n) |i| {
             side.pokemon[i] = Pokemon.random(rand, opt);
             side.pokemon[i].position = i + 1;
         }
@@ -140,7 +138,7 @@ pub const Pokemon = struct {
             );
         }
         assert(p.moves.len > 0 and p.moves.len <= 4);
-        for (p.moves) |m, j| {
+        for (p.moves, 0..) |m, j| {
             pokemon.moves[j] = .{
                 .id = m,
                 .pp_ups = 3,
@@ -184,16 +182,12 @@ pub const Pokemon = struct {
         }
 
         var ms = [_]MoveSlot{.{}} ** 4;
-        var i: u4 = 0;
         const n = if (rand.chance(u8, 1, 100)) rand.range(u4, 1, 3 + 1) else 4;
-        while (i < n) : (i += 1) {
+        for (0..n) |i| {
             var m: Move = .None;
             sample: while (true) {
                 m = @intToEnum(Move, rand.range(u8, 1, 164 + 1));
-                var j: u4 = 0;
-                while (j < i) : (j += 1) {
-                    if (ms[j].id == m) continue :sample;
-                }
+                for (0..i) |j| if (ms[j].id == m) continue :sample;
                 break;
             }
             const pp_ups =

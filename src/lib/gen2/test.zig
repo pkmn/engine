@@ -1347,8 +1347,8 @@ fn Test(comptime rolls: anytype) type {
 
         pub fn verify(t: *Self) !void {
             if (trace) try expectLog(t.buf.expected.items, t.buf.actual.items);
-            for (t.expected.p1.pokemon) |p, i| try expectEqual(p.hp, t.actual.p1.pokemon[i].hp);
-            for (t.expected.p2.pokemon) |p, i| try expectEqual(p.hp, t.actual.p2.pokemon[i].hp);
+            for (t.expected.p1.pokemon, 0..) |p, i| try expectEqual(p.hp, t.actual.p1.pokemon[i].hp);
+            for (t.expected.p2.pokemon, 0..) |p, i| try expectEqual(p.hp, t.actual.p2.pokemon[i].hp);
             try expect(t.battle.actual.rng.exhausted());
         }
     };

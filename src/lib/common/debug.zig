@@ -13,7 +13,7 @@ pub fn print(value: anytype) void {
         switch (@typeInfo(@TypeOf(value))) {
             .Struct => |info| {
                 if (info.is_tuple) {
-                    inline for (info.fields) |f, i| {
+                    inline for (info.fields, 0..) |f, i| {
                         inspect(@field(value, f.name));
                         if (i < info.fields.len - 1) stderr.writeAll(" ") catch return;
                     }

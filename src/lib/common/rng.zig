@@ -43,8 +43,7 @@ pub const PSRNG = extern struct {
 
     pub fn advance(self: *PSRNG, n: usize) void {
         if (!options.advance) return;
-        var i: usize = 0;
-        while (i < n) : (i += 1) self.src.advance();
+        for (0..n) |_| self.src.advance();
     }
 
     pub fn range(self: *PSRNG, comptime T: type, from: T, to: Bound(T)) T {
@@ -131,10 +130,7 @@ test Gen34 {
     };
     for (data) |d| {
         var rng = Gen34{ .seed = d[0] };
-        var i: usize = 0;
-        while (i < d[1]) : (i += 1) {
-            _ = rng.next();
-        }
+        for (0..d[1]) |_| _ = rng.next();
         try expectEqual(d[2], rng.seed);
     }
 }
@@ -166,10 +162,7 @@ test Gen56 {
     };
     for (data) |d| {
         var rng = Gen56{ .seed = d[0] };
-        var i: usize = 0;
-        while (i < d[1]) : (i += 1) {
-            _ = rng.next();
-        }
+        for (0..d[1]) |_| _ = rng.next();
         try expectEqual(d[2], rng.seed);
     }
 }
@@ -192,8 +185,7 @@ pub fn FixedRNG(comptime gen: comptime_int, comptime len: usize) type {
 
         pub fn advance(self: *Self, n: usize) void {
             assert(showdown);
-            var i: usize = 0;
-            while (i < n) : (i += 1) _ = self.next();
+            for (0..n) |_| _ = self.next();
         }
 
         pub fn range(self: *Self, comptime T: type, from: T, to: Bound(T)) T {

@@ -103,7 +103,7 @@ fn start(battle: anytype, log: anytype) !Result {
 }
 
 fn findFirstAlive(side: *const Side) u8 {
-    for (side.pokemon) |pokemon, i| if (pokemon.hp > 0) return side.order[i];
+    for (side.pokemon, 0..) |pokemon, i| if (pokemon.hp > 0) return side.order[i];
     return 0;
 }
 
@@ -186,7 +186,7 @@ fn selectMove(
     // move select
     if (choice.data == 0) {
         const struggle = ok: {
-            for (side.active.moves) |move, i| {
+            for (side.active.moves, 0..) |move, i| {
                 if (move.pp > 0 and volatiles.disabled_move != i + 1) break :ok false;
             }
             break :ok true;
@@ -1349,7 +1349,7 @@ fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
 }
 
 fn checkEBC(battle: anytype) bool {
-    for (battle.sides) |side, i| {
+    for (battle.sides, 0..) |side, i| {
         var foe_all_ghosts = true;
         var foe_all_transform = true;
 
@@ -1682,7 +1682,7 @@ pub const Effects = struct {
 
         // Pokémon Showdown clears P1 then P2 instead of status -> side -> foe
         if (showdown) {
-            for (battle.sides) |*s, i| {
+            for (&battle.sides, 0..) |*s, i| {
                 const p = @intToEnum(Player, i);
                 // Pokémon Showdown incorrectly does not prevent sleep/freeze from moving
                 if (p != player and Status.any(s.stored().status)) {
@@ -1776,7 +1776,7 @@ pub const Effects = struct {
         var oslot = mslot;
         if (showdown) {
             const has_mimic = has_mimic: {
-                for (side.active.moves) |m, i| {
+                for (side.active.moves, 0..) |m, i| {
                     if (m.id == .Mimic) {
                         oslot = @truncate(u8, i + 1);
                         break :has_mimic true;
@@ -2043,7 +2043,7 @@ pub const Effects = struct {
         side.active.species = foe.active.species;
         side.active.types = foe.active.types;
         side.active.boosts = foe.active.boosts;
-        for (foe.active.moves) |m, i| {
+        for (foe.active.moves, 0..) |m, i| {
             side.active.moves[i].id = m.id;
             side.active.moves[i].pp = if (m.id != .None) 5 else 0;
         }
@@ -2400,8 +2400,7 @@ fn randomMoveSlot(rand: anytype, moves: []MoveSlot, check_pp: u4) u4 {
 test "RNG agreement" {
     if (!showdown) return;
     var expected: [256]u32 = undefined;
-    var i: usize = 0;
-    while (i < expected.len) : (i += 1) {
+    for (0..expected.len) |i| {
         expected[i] = @truncate(u32, i * 0x1000000);
     }
 
@@ -2411,8 +2410,7 @@ test "RNG agreement" {
     var brn = rng.FixedRNG(1, expected.len){ .rolls = expected };
     var eff = rng.FixedRNG(1, expected.len){ .rolls = expected };
 
-    i = 0;
-    while (i < expected.len) : (i += 1) {
+    for (0..expected.len) |i| {
         try expectEqual(spe.range(u8, 0, 2) == 0, i < Gen12.percent(50) + 1);
         try expectEqual(!cfz.chance(u8, 128, 256), i >= Gen12.percent(50) + 1);
         try expectEqual(par.chance(u8, 63, 256), i < Gen12.percent(25));

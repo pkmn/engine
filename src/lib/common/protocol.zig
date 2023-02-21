@@ -808,9 +808,7 @@ pub fn expectLog(comptime formatter: Formatter, expected: []const u8, actual: []
 }
 
 fn expectEqualBytes(expected: []const u8, actual: []const u8) !void {
-    const len = @min(expected.len, actual.len);
-    var i: usize = 0;
-    while (i < len) : (i += 1) {
+    for (0..@min(expected.len, actual.len)) |i| {
         if (expected[i] != actual[i]) {
             print(
                 "index {} incorrect. expected 0x{X:0>2}, found 0x{X:0>2}\n",

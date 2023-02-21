@@ -832,8 +832,7 @@ test "end turn (turn limit)" {
     defer t.deinit();
 
     var max: u16 = if (showdown) 1000 else 65535;
-    var i: usize = 0;
-    while (i < max - 1) : (i += 1) {
+    for (0..(max - 1)) |_| {
         try expectEqual(Result.Default, try t.battle.actual.update(swtch(2), swtch(2), NULL));
     }
     try expectEqual(max - 1, t.battle.actual.turn);
@@ -1298,10 +1297,7 @@ test "Poison effect" {
         try expectEqual(@as(u16, 31), battle.side(.P2).active.stats.hp);
 
         try expectEqual(Result.Default, try battle.update(move(1), move(1), NULL));
-        var i: usize = 0;
-        while (i < 29) : (i += 1) {
-            try expectEqual(Result.Default, try battle.update(move(2), move(2), NULL));
-        }
+        for (0..29) |_| try expectEqual(Result.Default, try battle.update(move(2), move(2), NULL));
         try expectEqual(@as(u5, 30), battle.side(.P2).active.volatiles.toxic);
 
         try expectEqual(Result.Win, try battle.update(move(2), move(2), NULL));
@@ -5069,7 +5065,7 @@ test "Transform effect" {
 
     const moves = [_]Move{ .Agility, .Fly, .Peck, .None };
     const pps = [_]u8{ 5, 5, 5, 0 };
-    for (t.actual.p1.active.moves) |m, i| {
+    for (t.actual.p1.active.moves, 0..) |m, i| {
         try expectEqual(moves[i], m.id);
         try expectEqual(pps[i], m.pp);
     }
@@ -5790,11 +5786,8 @@ test "Mimic infinite PP bug" {
         try expectEqual(@as(u8, 8), battle.side(.P2).active.move(2).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(2).pp);
 
-        var i: usize = 1;
         // BUG: can't implement Pokémon Showdown's negative PP so need to stop iterating early
-        while (i < 16) : (i += 1) {
-            try expectEqual(Result.Default, try battle.update(move(1), move(1), NULL));
-        }
+        for (1..16) |_| try expectEqual(Result.Default, try battle.update(move(1), move(1), NULL));
         try expectEqual(@as(u8, 0), battle.side(.P2).active.move(1).pp);
         try expectEqual(@as(u8, 0), battle.side(.P2).get(1).move(1).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).active.move(2).pp);
@@ -5828,11 +5821,8 @@ test "Mimic infinite PP bug" {
         try expectEqual(@as(u8, 15), battle.side(.P2).active.move(2).pp);
         try expectEqual(@as(u8, 15), battle.side(.P2).get(1).move(2).pp);
 
-        var i: usize = 1;
         // BUG: can't implement Pokémon Showdown's negative PP so need to stop iterating early
-        while (i < 16) : (i += 1) {
-            try expectEqual(Result.Default, try battle.update(move(1), move(2), NULL));
-        }
+        for (1..16) |_| try expectEqual(Result.Default, try battle.update(move(1), move(2), NULL));
         // BUG: Pokémon Showdown decrements the wrong slot here
         try expectEqual(@as(u8, 8), battle.side(.P2).active.move(1).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(1).pp);
@@ -8320,8 +8310,12 @@ fn Test(comptime rolls: anytype) type {
 
         pub fn verify(t: *Self) !void {
             if (trace) try expectLog(t.buf.expected.items, t.buf.actual.items);
-            for (t.expected.p1.pokemon) |p, i| try expectEqual(p.hp, t.actual.p1.pokemon[i].hp);
-            for (t.expected.p2.pokemon) |p, i| try expectEqual(p.hp, t.actual.p2.pokemon[i].hp);
+            for (t.expected.p1.pokemon, 0..) |p, i| {
+                try expectEqual(p.hp, t.actual.p1.pokemon[i].hp);
+            }
+            for (t.expected.p2.pokemon, 0..) |p, i| {
+                try expectEqual(p.hp, t.actual.p2.pokemon[i].hp);
+            }
             try expect(t.battle.actual.rng.exhausted());
         }
     };
