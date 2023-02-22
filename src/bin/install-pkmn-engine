@@ -181,7 +181,6 @@ const headers = async () => {
   const include = path.resolve(process.execPath, '../../include/node');
   if (fs.existsSync(path.join(include, 'node.h'))) {
     console.log('Node headers:', include);
-
     return include;
   } else {
     console.log(`Could not find node headers at ${include}, downloading...`);
@@ -206,16 +205,44 @@ const headers = async () => {
   return dest;
 };
 
+const lib = async() => {
+  const library = path.resolve(process.execPath, '../node.lib');
+  if (fs.existsSync(path.join(library, 'node.h'))) {
+    console.log('Node import library:', library);
+    return library;
+  } else {
+    console.log(`Could not find node import library at ${library}, downloading...`);
+  }
+
+  const dir = path.join(ROOT, 'build', 'lib');
+  try {
+    fs.mkdirSync(dir, {recursive: true});
+  } catch (err) {
+    if (err.code !== 'EEXIST') throw err;
+  }
+
+  const url = new URL('./win-x64/node.lib', process.release.headersUrl).href;
+  const dest = `${dir}/${path.basename(url)}`;
+
+  console.log(`Downloading Node import library from ${url} to ${dest}`);
+  await download(url, dest);
+  console.log('Node import library:', dest);
+
+  return dest;
+};
+
 (async () => {
   const zig = await install();
   if (process.argv[2] === '--zig') process.exit(0);
-  const include = await headers();
+
+  const args = ['build', '-Dshowdown', '-Doptimize=ReleaseFast', '-Dstrip'];
+  args.push(`-Dnode-headers=${await headers()}`);
+  if (process.platform === 'win32') args.push(`-Dnode-import-library=${await lib()}`);
+
   // FIXME: need to detect original flags by trying to require pkmn.node/pkmn-showdown.node library
   // and checking constants to know whether to build with -Dshowdown/-Dtrace + build and embed WASM
   console.log('Building build/lib/pkmn-showdown.node');
-  sh(zig, [
-    'build', '-Dshowdown', '-Doptimize=ReleaseFast', `-Dnode-headers=${include}`, '-Dstrip',
-  ]);
+  sh(zig, args);
 })().catch(e => {
   console.error(e);
   process.exit(1);

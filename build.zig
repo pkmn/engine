@@ -1,6 +1,8 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
+const NativeTargetInfo = std.zig.system.NativeTargetInfo;
+
 pub fn module(b: *std.Build, build_options: *std.Build.Module) *std.Build.Module {
     const dirname = comptime std.fs.path.dirname(@src().file) orelse ".";
     return b.createModule(.{
@@ -38,6 +40,8 @@ pub fn build(b: *std.Build) !void {
     const lib = if (showdown) "pkmn-showdown" else "pkmn";
 
     const node_headers = b.option([]const u8, "node-headers", "Path to node-headers");
+    const node_import_lib =
+        b.option([]const u8, "node-import-library", "Path to node import library (Windows)");
     if (node_headers) |headers| {
         const name = b.fmt("{s}.node", .{lib});
         const node_lib = b.addSharedLibrary(.{
@@ -50,6 +54,12 @@ pub fn build(b: *std.Build) !void {
         node_lib.setMainPkgPath("./");
         node_lib.addSystemIncludePath(headers);
         node_lib.linkLibC();
+        if (node_import_lib) |il| {
+            node_lib.addObjectFile(il);
+        } else if ((try NativeTargetInfo.detect(target)).target.os.tag == .windows) {
+            std.debug.print("Must provide --node-import-library path on Windows", .{});
+            std.process.exit(1);
+        }
         node_lib.linker_allow_shlib_undefined = true;
         const out = b.fmt("build/lib/{s}", .{name});
         maybeStrip(b, node_lib, b.getInstallStep(), strip, cmd, out);

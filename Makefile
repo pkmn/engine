@@ -86,9 +86,7 @@ check: test lint
 .PHONY: c-example
 c-example:
 	$(MAKE) -C src/examples/c
-ifneq ($(OS),Windows_NT)
 	./src/examples/c/example 1234
-endif
 
 src/examples/js/node_modules:
 	npm -C src/examples/js install
