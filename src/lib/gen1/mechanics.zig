@@ -620,7 +620,7 @@ fn canMove(
     try log.move(player_ident, side.last_selected_move, battle.active(target), from);
 
     if (move.effect.onBegin()) {
-        try moveEffect(battle, player, move, mslot, log);
+        try onBegin(battle, player, move, mslot, log);
         return false;
     }
 
@@ -765,7 +765,7 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
         if (move.effect == .MirrorMove) return mirrorMove(battle, player, mslot, log);
         if (move.effect == .Metronome) return metronome(battle, player, mslot, log);
         if (move.effect.onEnd()) {
-            try moveEffect(battle, player, move, mslot, log);
+            try onEnd(battle, player, move, log);
             return null;
         }
     }
@@ -860,7 +860,7 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
     // On the cartridge, "always happen" effect handlers are called in the applyDamage loop above,
     // but this is only done to setup the MultiHit looping in the first place. Moving the MultiHit
     // setup before the loop means we can avoid having to waste time doing no-op handler searches.
-    if (move.effect.alwaysHappens()) try moveEffect(battle, player, move, mslot, log);
+    if (move.effect.alwaysHappens()) try alwaysHappens(battle, player, move, log);
 
     if (foe.stored().hp == 0) return null;
 
@@ -877,7 +877,7 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
         } else if (move.effect == .Disable) {
             return Effects.disable(battle, player, move, log);
         } else {
-            try moveEffect(battle, player, move, mslot, log);
+            try moveEffect(battle, player, move, log);
         }
     }
 
@@ -1394,42 +1394,69 @@ fn checkEBC(battle: anytype) bool {
     return false;
 }
 
-fn moveEffect(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: anytype) !void {
+inline fn onBegin(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: anytype) !void {
+    assert(move.effect.onBegin());
     return switch (move.effect) {
-        .Bide => Effects.bide(battle, player, log),
-        .BurnChance1, .BurnChance2 => Effects.burnChance(battle, player, move, log),
-        .Confusion, .ConfusionChance => Effects.confusion(battle, player, move, log),
+        .Confusion => Effects.confusion(battle, player, move, log),
         .Conversion => Effects.conversion(battle, player, log),
-        .DrainHP, .DreamEater => Effects.drainHP(battle, player, log),
-        .Explode => Effects.explode(battle, player),
-        .FlinchChance1, .FlinchChance2 => Effects.flinchChance(battle, player, move),
         .FocusEnergy => Effects.focusEnergy(battle, player, log),
-        .FreezeChance => Effects.freezeChance(battle, player, move, log),
         .Haze => Effects.haze(battle, player, log),
         .Heal => Effects.heal(battle, player, log),
-        .HyperBeam => Effects.hyperBeam(battle, player, log),
         .LeechSeed => Effects.leechSeed(battle, player, move, log),
         .LightScreen => Effects.lightScreen(battle, player, log),
         .Mimic => Effects.mimic(battle, player, move, mslot, log),
         .Mist => Effects.mist(battle, player, log),
-        .MultiHit, .DoubleHit, .Twineedle => Effects.multiHit(battle, player, move),
         .Paralyze => Effects.paralyze(battle, player, move, log),
-        .ParalyzeChance1, .ParalyzeChance2 => Effects.paralyzeChance(battle, player, move, log),
-        .PayDay => Effects.payDay(log),
-        .Poison, .PoisonChance1, .PoisonChance2 => Effects.poison(battle, player, move, log),
-        .Rage => Effects.rage(battle, player),
-        .Recoil => Effects.recoil(battle, player, log),
+        .Poison => Effects.poison(battle, player, move, log),
         .Reflect => Effects.reflect(battle, player, log),
-        .Sleep => Effects.sleep(battle, player, move, log),
         .Splash => Effects.splash(battle, player, log),
         .Substitute => Effects.substitute(battle, player, log),
         .SwitchAndTeleport => Effects.switchAndTeleport(battle, player, move, log),
         .Transform => Effects.transform(battle, player, log),
+        else => unreachable,
+    };
+}
+
+inline fn onEnd(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
+    assert(move.effect.onEnd());
+    return switch (move.effect) {
+        .Bide => Effects.bide(battle, player, log),
         // zig fmt: off
         .AttackUp1, .AttackUp2, .DefenseUp1, .DefenseUp2,
         .EvasionUp1, .SpecialUp1, .SpecialUp2, .SpeedUp2 =>
             Effects.boost(battle, player, move, log),
-        .AccuracyDown1, .AttackDown1, .DefenseDown1, .DefenseDown2, .SpeedDown1,
+        .AccuracyDown1, .AttackDown1, .DefenseDown1, .DefenseDown2, .SpeedDown1 =>
+            Effects.unboost(battle, player, move, log),
+        // zig fmt: on
+        .Sleep => Effects.sleep(battle, player, move, log),
+        else => unreachable,
+    };
+}
+
+inline fn alwaysHappens(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
+    assert(move.effect.alwaysHappens());
+    return switch (move.effect) {
+        .DrainHP, .DreamEater => Effects.drainHP(battle, player, log),
+        .Explode => Effects.explode(battle, player),
+        .PayDay => Effects.payDay(log),
+        .Rage => Effects.rage(battle, player),
+        .Recoil => Effects.recoil(battle, player, log),
+        .JumpKick, .Binding => {},
+        else => unreachable,
+    };
+}
+
+inline fn moveEffect(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
+    return switch (move.effect) {
+        .BurnChance1, .BurnChance2 => Effects.burnChance(battle, player, move, log),
+        .ConfusionChance => Effects.confusion(battle, player, move, log),
+        .FlinchChance1, .FlinchChance2 => Effects.flinchChance(battle, player, move),
+        .FreezeChance => Effects.freezeChance(battle, player, move, log),
+        .HyperBeam => Effects.hyperBeam(battle, player, log),
+        .MultiHit, .DoubleHit, .Twineedle => Effects.multiHit(battle, player, move),
+        .ParalyzeChance1, .ParalyzeChance2 => Effects.paralyzeChance(battle, player, move, log),
+        .PoisonChance1, .PoisonChance2 => Effects.poison(battle, player, move, log),
+        // zig fmt: off
         .AttackDownChance, .DefenseDownChance, .SpecialDownChance, .SpeedDownChance =>
             Effects.unboost(battle, player, move, log),
         // zig fmt: on
