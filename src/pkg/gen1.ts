@@ -1,4 +1,3 @@
-// TODO: stage2 changes to packed struct breaks last_selected_index/boosts/volatiles
 import {
   BoostID, BoostsTable, Generation, ID, toID, PokemonSet,
   SideID, StatID, StatsTable, StatusName, TypeName,

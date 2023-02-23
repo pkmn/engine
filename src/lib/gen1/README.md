@@ -446,8 +446,8 @@ Documentation wire protocol used for logging traces when `-Dtrace` is enabled ca
 | 17    | 18  | `moves[4].pp`   | The PP of the Pokémon's fourth stored move |
 | 18    | 20  | `hp`            | The Pokémon's current HP                   |
 | 20    | 21  | `status`        | The Pokémon's current status               |
-| 21    | 20  | `species`       | The Pokémon's stored species               |
-| 22    | 22  | `type1`/`type2` | The Pokémon's stored types                 |
+| 21    | 22  | `species`       | The Pokémon's stored species               |
+| 22    | 23  | `type1`/`type2` | The Pokémon's stored types                 |
 | 23    | 24  | `level`         | The Pokémon's level                        |
 
 ## Bugs
