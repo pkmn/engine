@@ -344,8 +344,6 @@ export class Side implements Gen1.Side {
   }
 }
 
-const BOOSTS = {atk: 0, def: 0, spe: 0, spa: 0, spd: 0, accuracy: 0, evasion: 0};
-
 export class Pokemon implements Gen1.Pokemon {
   static Volatiles = VOLATILES;
 
@@ -378,7 +376,7 @@ export class Pokemon implements Gen1.Pokemon {
     return started(this.data) && this.position === this.data.getUint8(this.offset.order);
   }
 
-  stat(stat: StatID): number {
+  stat(stat: StatID | 'spc'): number {
     if (!this.active) return this.stored.stat(stat);
 
     const off = this.offset.active + OFFSETS.ActivePokemon.stats + OFFSETS.Stats[stat];
@@ -387,14 +385,15 @@ export class Pokemon implements Gen1.Pokemon {
 
   get stats(): StatsTable {
     if (!this.active) return this.stored.stats;
-
-    const stats: Partial<StatsTable> = {};
-    for (const s in OFFSETS.Stats) {
-      if (s === 'spc') continue;
-      const stat = s as StatID;
-      stats[stat] = this.stat(stat);
-    }
-    return stats as StatsTable;
+    const spc = this.stat('spc');
+    return {
+      hp: this.stat('hp'),
+      atk: this.stat('atk'),
+      def: this.stat('def'),
+      spe: this.stat('spe'),
+      spa: spc,
+      spd: spc,
+    };
   }
 
   volatile(bit: number): boolean {
@@ -510,9 +509,9 @@ export class Pokemon implements Gen1.Pokemon {
   }
 
   get boosts(): BoostsTable {
-    if (!this.active) return BOOSTS;
+    const boosts = {atk: 0, def: 0, spe: 0, spa: 0, spd: 0, accuracy: 0, evasion: 0};
+    if (!this.active) return boosts;
 
-    const boosts: Partial<BoostsTable> = {};
     for (const b in OFFSETS.Boosts) {
       if (b === 'spc') continue;
       const boost = b as BoostID;
@@ -748,18 +747,20 @@ export class StoredPokemon {
     this.offset = offset;
   }
 
-  stat(stat: StatID): number {
+  stat(stat: StatID | 'spc'): number {
     return this.data.getUint16(this.offset + OFFSETS.Pokemon.stats + OFFSETS.Stats[stat], LE);
   }
 
   get stats(): StatsTable {
-    const stats: Partial<StatsTable> = {};
-    for (const s in OFFSETS.Stats) {
-      if (s === 'spc') continue;
-      const stat = s as StatID;
-      stats[stat] = this.stat(stat);
-    }
-    return stats as StatsTable;
+    const spc = this.stat('spc');
+    return {
+      hp: this.stat('hp'),
+      atk: this.stat('atk'),
+      def: this.stat('def'),
+      spe: this.stat('spe'),
+      spa: spc,
+      spd: spc,
+    };
   }
 
   move(slot: 1 | 2 | 3 | 4): {id: ID; pp: number} | undefined {
