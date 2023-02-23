@@ -31,7 +31,6 @@ jobs:
         if: ${{ matrix.zig == 'local' && matrix.os != 'windows-latest' }}
       - run: echo "${env:GITHUB_WORKSPACE}/build/bin/zig" >> $env:GITHUB_PATH
         if: ${{ matrix.zig == 'local' && matrix.os == 'windows-latest' }}
-      - run: zig build ${{matrix.options}} -p build
       - run: zig build test ${{matrix.options}}
       - run: zig build test ${{matrix.options}} -Doptimize=ReleaseFast
       - run: zig build lint
