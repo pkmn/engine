@@ -228,12 +228,12 @@ to be stored at each address of an array).
 
 The 'precedence' of the various type matchups matters beyond just the [dual-type damage
 misinformation
-glitch](https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Dual-type_damage_misinformation - type
-effectiveness modifiers are applied based on the (haphazard) ordering of the effectiveness table
-as opposed to first applying modifiers for a species's first type and then second type. The engine
-maintains a `Type.PRECEDENCE` table with just the matchups that are relevant in game (certain type
-combinations cannot crop up with the limited Generation I species pool and as such are pruned for
-efficiency) and only looks up precedence when necessary to minimize expensive searches. Pokémon
+glitch](https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Dual-type_damage_misinformation) -
+type effectiveness modifiers are applied based on the (haphazard) ordering of the effectiveness
+table as opposed to first applying modifiers for a species's first type and then second type. The
+engine maintains a `Type.PRECEDENCE` table with just the matchups that are relevant in game (certain
+type combinations cannot crop up with the limited Generation I species pool and as such are pruned
+for efficiency) and only looks up precedence when necessary to minimize expensive searches. Pokémon
 Showdown does not implement type precedence.
 
 ## Information
@@ -290,7 +290,7 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 | `Side`            | 1472        | 1056         | 33.3%    |
 | `Battle`          | 3088        | 2216         | 33.6%    |
 | `Type.CHART`      | 1800        | 450          | 300.0%   |
-| `Type.PRECEDENCE` | 232         | 322          | 0.0%     |
+| `Type.PRECEDENCE` | 232         | 232          | 0.0%     |
 | `Moves.DATA`      | 5280        | 3960         | 33.3%    |
 | `Species.CHANCES` | 1208        | 906          | 33.3%    |
 
@@ -322,7 +322,7 @@ as clients must directly probe the engine's state through these structures (i.e.
 does not produce an equivalent to Pokémon Showdown's `|request|` protocol message, this information
 must be gleaned through the `Battle` state).
 
-Documentation wire protocol used for logging traces when `-Dtrace` is enabled can be found in
+Documentation of the wire protocol used for logging traces when `-Dtrace` is enabled can be found in
 [PROTOCOL.md](../../../docs/PROTOCOL.md).
 
 ### `Battle`
