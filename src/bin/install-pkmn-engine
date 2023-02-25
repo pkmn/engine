@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 'use strict';
 
-const https = require('https');
-const path = require('path');
 const fs = require('fs');
+const https = require('https');
+const os = require('os');
+const path = require('path');
 const {execFileSync} = require('child_process');
 const {pipeline} = require('stream/promises');
 
@@ -121,7 +122,7 @@ const install = async () => {
   if (system) return system;
 
   const dir = path.join(ROOT, 'build', 'bin');
-  const zig = `${dir}/zig/zig`;
+  const zig = path.join(dir, 'zig', 'zig');
 
   // Has a previous version of this script installed a compatible version locally?
   if (find(zig)) return zig;
@@ -149,7 +150,7 @@ const install = async () => {
   const url = index[version][`${arch}-${platform}`].tarball;
 
   let base = path.basename(url);
-  const archive = `${dir}/${path.basename(url)}`;
+  const archive = path.join(dir, path.basename(url));
 
   console.log(`Downloading Zig tarball from ${url} to ${archive}`);
   await download(url, archive);
@@ -162,7 +163,7 @@ const install = async () => {
     base = base.slice(0, -7);
   }
 
-  fs.renameSync(`${dir}/${base}`, `${dir}/zig`);
+  fs.renameSync(path.join(dir, base), path.join(dir, 'zig'));
 
   try {
     fs.chmodSync(zig, 0o755);
@@ -175,15 +176,22 @@ const install = async () => {
 };
 
 // https://github.com/coilhq/tigerbeetle-node/blob/main/scripts/download_node_headers.sh
-const headers = async () => {
-  const include = path.resolve(process.execPath, '../../include/node');
+const downloadHeaders = async () => {
+  const include = path.resolve(process.execPath, '..', '..', 'include', 'node');
   if (fs.existsSync(path.join(include, 'node.h'))) {
     console.log('Node headers:', include);
     return include;
-  } else {
-    console.log(`Could not find node headers at ${include}, downloading...`);
   }
+
   const dir = path.join(ROOT, 'build', 'include');
+  const dest = path.join(dir, `node-${process.version}`, 'include', 'node');
+  if (fs.existsSync(path.join(dest, 'node.h'))) {
+    console.log('Node headers:', dest);
+    return dest;
+  } else {
+    console.log(`Could not find Node headers at ${include}, downloading...`);
+  }
+
   try {
     fs.mkdirSync(dir, {recursive: true});
   } catch (err) {
@@ -191,36 +199,39 @@ const headers = async () => {
   }
 
   const url = process.release.headersUrl;
-  const targz = `${dir}/${path.basename(url)}`;
+  const targz = path.join(dir, path.basename(url));
 
   console.log(`Downloading Node headers from ${url} to ${targz}`);
   await download(url, targz);
   await unpack(targz, dir);
 
-  const dest = `${dir}/node-${process.version}/include/node`;
   console.log('Node headers:', dest);
 
   return dest;
 };
 
-const lib = async () => {
-  const library = path.resolve(process.execPath, '../node.lib');
+const downloadImportLib = async () => {
+  const library = path.resolve(process.execPath, '..', 'node.lib');
   if (fs.existsSync(path.join(library, 'node.h'))) {
     console.log('Node import library:', library);
     return library;
-  } else {
-    console.log(`Could not find node import library at ${library}, downloading...`);
   }
 
   const dir = path.join(ROOT, 'build', 'lib');
+  const url = new URL('./win-x64/node.lib', process.release.headersUrl).href;
+  const dest = path.join(dir, path.basename(url));
+  if (fs.existsSync(path.join(dest))) {
+    console.log('Node import library:', dest);
+    return dest;
+  } else {
+    console.log(`Could not find Node import library at ${library}, downloading...`);
+  }
+
   try {
     fs.mkdirSync(dir, {recursive: true});
   } catch (err) {
     if (err.code !== 'EEXIST') throw err;
   }
-
-  const url = new URL('./win-x64/node.lib', process.release.headersUrl).href;
-  const dest = `${dir}/${path.basename(url)}`;
 
   console.log(`Downloading Node import library from ${url} to ${dest}`);
   await download(url, dest);
@@ -230,17 +241,83 @@ const lib = async () => {
 };
 
 (async () => {
+  const options = (process.argv[2] || '').startsWith('--options=')
+    ? process.argv[2].slice(10).split(' ') : undefined;
+  if (process.argv.length > 3 ||
+    process.argv.length === 3 && !(process.argv[2] === '--zig' || options)) {
+    console.error('Invalid arguments');
+    process.exit(1);
+  }
+
   const zig = await install();
   if (process.argv[2] === '--zig') process.exit(0);
 
-  const args = ['build', '-Dshowdown', '-Doptimize=ReleaseFast', '-Dstrip'];
-  args.push(`-Dnode-headers=${await headers()}`);
-  if (process.platform === 'win32') args.push(`-Dnode-import-library=${await lib()}`);
+  let tmp;
+  try {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'pkmn-'));
+  } catch {
+    console.error('Unable to create temporary directory');
+    process.exit(1);
+  }
 
-  // FIXME: need to detect original flags by trying to require pkmn.node/pkmn-showdown.node library
-  // and checking constants to know whether to build with -Dshowdown/-Dtrace + build and embed WASM
-  console.log('Building build/lib/pkmn-showdown.node');
-  sh(zig, args);
+  // Determine which configurations to build based on prior runs (see below for if there were no
+  // previous runs) - try to build the same configurations as before (unless --options overridden).
+  // We also track whether any of the configurations require Node headers/import libraries
+  let node = false;
+  const configs = new Map();
+  const libs = path.join(ROOT, 'build', 'lib');
+  if (fs.existsSync(libs)) {
+    for (const file of fs.readdirSync(libs)) {
+      // If we don't copy the addon before loading it Windows will return an EBUSY error
+      // when we later attempt to clobber it (Linux and macOS don't seem to care)
+      const copy = path.join(tmp, file);
+      fs.copyFileSync(path.join(libs, file), copy);
+
+      const opts = options || [];
+      const type = path.extname(file).slice(1);
+      if (type === 'node') {
+        node = true;
+        if (!options) {
+          const addon = require(copy);
+          if (addon.options.showdown) opts.push('-Dshowdown');
+          if (addon.options.trace) opts.push('-Dtrace');
+        }
+      } else if (type === 'wasm') {
+        // TODO: load wasm
+      } else {
+        continue;
+      }
+      const key = `${type} ${opts.sort().join(' ')}`;
+      if (!configs.has(key)) configs.set(key, {type, options: opts});
+    }
+  }
+
+  // If there haven't been any builds, build both a Node and WASM extension with
+  // either the default options or whatever was passed in
+  if (!configs.size) {
+    node = true;
+    configs.set('node', {type: 'node', options: options || ['-Dshowdown']});
+    configs.set('wasm', {type: 'wasm', options: options || ['-Dshowdown']});
+  }
+
+  const headers = node ? await downloadHeaders() : undefined;
+  const lib = node && process.platform === 'win32' ? await downloadImportLib() : undefined;
+  for (const config of configs.values()) {
+    const opts = config.options.filter(Boolean);
+    const args = ['build', '-Doptimize=ReleaseFast', '-Dstrip', ...opts];
+    if (config.type === 'node') {
+      args.push(`-Dnode-headers=${headers}`);
+      if (process.platform === 'win32') args.push(`-Dnode-import-library=${lib}`);
+    } else {
+      args.push('-Dwasm');
+    }
+    const suffix =
+      opts.includes('-Dshowdown') || opts.includes('-Dshowdown=true') ? '-showdown' : '';
+    const flags = opts.length ? ` (${opts.join(' ')})` : '';
+    const artifact = path.join('build', 'lib', `pkmn${suffix}.${config.type}${flags}`);
+    console.log(`Building ${artifact}`);
+    sh(zig, args);
+  }
 })().catch(e => {
   console.error(e);
   process.exit(1);
