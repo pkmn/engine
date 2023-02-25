@@ -66,16 +66,16 @@ The driver code can be installed from [npm](https://www.npmjs.com/package/@pkmn/
 $ npm install @pkmn/engine
 ```
 
-The driver depends on being able to find compiled Node/WASM add-ons in
+The driver depends on being able to find compiled Node/WASM addons in
 `node_modules/@pkmn/engine/build/lib` in order to be useful. When you install the package a
 [`postinstall` lifecycle script](https://docs.npmjs.com/cli/v8/using-npm/scripts) will run
 [`install-pkmn-engine`](src/bin/install-pkmn-engine) which will check for a compatible `zig`
 compiler (see above regarding minimum version) and download one to
 `node_module/@pkmn/engine/build/bin` if it can't find one, as well as looking for (and downloading,
-if necessary) the required Node headers needed to successfully build the add-ons natively.
+if necessary) the required Node headers needed to successfully build the addons natively.
 
 **If you have configured NPM to ignore scripts you must either run `install-pkmn-engine` manually or
-build the add-ons manually and place the artifacts in the expected paths.**
+build the addons manually and place the artifacts in the expected paths.**
 
 ### `pkmn`
 
