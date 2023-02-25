@@ -11,9 +11,16 @@ pub fn main() !void {
     defer arena.deinit();
     const allocator = arena.allocator();
 
+    const build = try checkBuild(allocator);
     const format = try checkFormat(PATH, allocator);
     const lint = try lintDir(PATH, fs.cwd(), PATH, allocator);
-    std.process.exit(@boolToInt(format or lint));
+    std.process.exit(@boolToInt(build or format or lint));
+}
+
+fn checkBuild(allocator: Allocator) !bool {
+    if (try checkFormat("build.zig", allocator)) return true;
+    if (try lintFile("build.zig", fs.cwd(), "build.zig", allocator)) return true;
+    return false;
 }
 
 fn checkFormat(file_path: []const u8, allocator: Allocator) !bool {

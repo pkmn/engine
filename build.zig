@@ -72,7 +72,7 @@ pub fn build(b: *std.Build) !void {
         // TODO: switch to whatever ziglang/zig/issues#2231 comes up with
         lib.emit_bin = .{ .emit_to = out };
         b.getInstallStep().dependOn(&lib.step);
-     } else if (wasm) {
+    } else if (wasm) {
         const lib = b.addSharedLibrary(.{
             .name = name,
             .root_source_file = .{ .path = "src/lib/binding/wasm.zig" },
