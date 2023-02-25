@@ -56,9 +56,7 @@ const unpack7 = (input, output) => new Promise((resolve, reject) => {
   }
 
   // Actually use 7zip now that we've installed it
-  require('7zip-min').unpack(input, output, err => {
-    err ? reject(err) : resolve();
-  });
+  require('7zip-min').unpack(input, output, err => err ? reject(err) : resolve());
 });
 
 // Unpacking is kind of an unholy abomination because we don't know what tool we're going to use
@@ -103,7 +101,7 @@ const find = zig => {
     const compatible = major > ZIG_VERSION.major ||
       (major >= ZIG_VERSION.major && minor > ZIG_VERSION.minor) ||
       (major >= ZIG_VERSION.major && minor >= ZIG_VERSION.minor && patch >= ZIG_VERSION.patch &&
-        (!ZIG_VERSION.dev || (dev && dev >=  ZIG_VERSION.dev)));
+        (!ZIG_VERSION.dev || (dev && dev >= ZIG_VERSION.dev)));
 
     if (compatible) {
       console.log('Found existing compatible Zig executable:', zig_exe);
@@ -205,7 +203,7 @@ const headers = async () => {
   return dest;
 };
 
-const lib = async() => {
+const lib = async () => {
   const library = path.resolve(process.execPath, '../node.lib');
   if (fs.existsSync(path.join(library, 'node.h'))) {
     console.log('Node import library:', library);

@@ -84,8 +84,8 @@
     "typescript": "^4.9.5"
   },
   "scripts": {
-    "lint": "eslint --cache src --ext ts,js",
-    "fix": "eslint --fix src --ext ts,js",
+    "lint": "eslint --cache src --ext ts,js && && eslint src/bin/install-pkmn-engine",
+    "fix": "eslint --fix src --ext ts,js && eslint --fix src/bin/install-pkmn-engine",
     "compile": "tsc -p .",
     "build": "npm run compile",
     "test": "jest",
