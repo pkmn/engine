@@ -15,6 +15,10 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    const node_headers = b.option([]const u8, "node-headers", "Path to node-headers");
+    const node_import_lib =
+        b.option([]const u8, "node-import-library", "Path to node import library (Windows)");
+    const wasm = b.option(bool, "wasm", "Build a WASM library") orelse false;
     const dynamic = b.option(bool, "dynamic", "Build a dynamic library") orelse false;
     const strip = b.option(bool, "strip", "Strip debugging symbols from binary") orelse false;
     const pic = b.option(bool, "pic", "Force position independent code") orelse false;
@@ -26,6 +30,9 @@ pub fn build(b: *std.Build) !void {
     var tree = try parser.parse(@embedFile("package.json"));
     defer tree.deinit();
     const version = tree.root.Object.get("version").?.String;
+    const description = tree.root.Object.get("description").?.String;
+    var repository = std.mem.split(u8, tree.root.Object.get("repository").?.String, ":");
+    std.debug.assert(std.mem.eql(u8, repository.first(), "github"));
 
     const showdown =
         b.option(bool, "showdown", "Enable Pokémon Showdown compatibility mode") orelse false;
@@ -36,95 +43,109 @@ pub fn build(b: *std.Build) !void {
     options.addOption(bool, "trace", trace);
 
     const pkmn = .{ .name = "pkmn", .module = module(b, options.createModule()) };
+    const name = if (showdown) "pkmn-showdown" else "pkmn";
 
-    const lib = if (showdown) "pkmn-showdown" else "pkmn";
-
-    const node_headers = b.option([]const u8, "node-headers", "Path to node-headers");
-    const node_import_lib =
-        b.option([]const u8, "node-import-library", "Path to node import library (Windows)");
+    var c = false;
     if (node_headers) |headers| {
-        const name = b.fmt("{s}.node", .{lib});
-        const node_lib = b.addSharedLibrary(.{
-            .name = name,
+        const addon = b.fmt("{s}.node", .{name});
+        const lib = b.addSharedLibrary(.{
+            .name = addon,
             .root_source_file = .{ .path = "src/lib/binding/node.zig" },
             .optimize = optimize,
             .target = target,
         });
-        node_lib.addOptions("build_options", options);
-        node_lib.setMainPkgPath("./");
-        node_lib.addSystemIncludePath(headers);
-        node_lib.linkLibC();
+        lib.addOptions("build_options", options);
+        lib.setMainPkgPath("./");
+        lib.addSystemIncludePath(headers);
+        lib.linkLibC();
         if (node_import_lib) |il| {
-            node_lib.addObjectFile(il);
+            lib.addObjectFile(il);
         } else if ((try NativeTargetInfo.detect(target)).target.os.tag == .windows) {
             std.debug.print("Must provide --node-import-library path on Windows", .{});
             std.process.exit(1);
         }
-        node_lib.linker_allow_shlib_undefined = true;
-        const out = b.fmt("build/lib/{s}", .{name});
-        maybeStrip(b, node_lib, b.getInstallStep(), strip, cmd, out);
-        if (pic) node_lib.force_pic = pic;
+        lib.linker_allow_shlib_undefined = true;
+        const out = b.fmt("build/lib/{s}", .{addon});
+        maybeStrip(b, lib, b.getInstallStep(), strip, cmd, out);
+        if (pic) lib.force_pic = pic;
         // Always emit to build/lib because this is where the driver code expects to find it
-        // TODO: find alternative to emit_to that works properly with .install()
-        node_lib.emit_bin = .{ .emit_to = out };
-        b.getInstallStep().dependOn(&node_lib.step);
+        // TODO: switch to whatever ziglang/zig/issues#2231 comes up with
+        lib.emit_bin = .{ .emit_to = out };
+        b.getInstallStep().dependOn(&lib.step);
+     } else if (wasm) {
+        const lib = b.addSharedLibrary(.{
+            .name = name,
+            .root_source_file = .{ .path = "src/lib/binding/wasm.zig" },
+            .optimize = switch (optimize) {
+                .ReleaseFast, .ReleaseSafe => .ReleaseSmall,
+                else => optimize,
+            },
+            .target = .{ .cpu_arch = .wasm32, .os_tag = .freestanding },
+        });
+        lib.addOptions("build_options", options);
+        lib.setMainPkgPath("./");
+        lib.rdynamic = true;
+        lib.strip = strip;
+        if (pic) lib.force_pic = pic;
+        lib.install();
     } else if (dynamic) {
-        const dynamic_lib = b.addSharedLibrary(.{
-            .name = lib,
+        const lib = b.addSharedLibrary(.{
+            .name = name,
             .root_source_file = .{ .path = "src/lib/binding/c.zig" },
             .version = try std.builtin.Version.parse(version),
             .optimize = optimize,
             .target = target,
         });
-        dynamic_lib.addOptions("build_options", options);
-        dynamic_lib.setMainPkgPath("./");
-        dynamic_lib.addIncludePath("src/include");
-        maybeStrip(b, dynamic_lib, b.getInstallStep(), strip, cmd, null);
-        if (pic) dynamic_lib.force_pic = pic;
-        dynamic_lib.install();
+        lib.addOptions("build_options", options);
+        lib.setMainPkgPath("./");
+        lib.addIncludePath("src/include");
+        maybeStrip(b, lib, b.getInstallStep(), strip, cmd, null);
+        if (pic) lib.force_pic = pic;
+        lib.install();
+        c = true;
     } else {
-        const static_lib = b.addStaticLibrary(.{
-            .name = lib,
+        const lib = b.addStaticLibrary(.{
+            .name = name,
             .root_source_file = .{ .path = "src/lib/binding/c.zig" },
             .optimize = optimize,
             .target = target,
         });
-        static_lib.addOptions("build_options", options);
-        static_lib.setMainPkgPath("./");
-        static_lib.addIncludePath("src/include");
-        static_lib.bundle_compiler_rt = true;
-        maybeStrip(b, static_lib, b.getInstallStep(), strip, cmd, null);
-        if (pic) static_lib.force_pic = pic;
-        static_lib.install();
+        lib.addOptions("build_options", options);
+        lib.setMainPkgPath("./");
+        lib.addIncludePath("src/include");
+        lib.bundle_compiler_rt = true;
+        maybeStrip(b, lib, b.getInstallStep(), strip, cmd, null);
+        if (pic) lib.force_pic = pic;
+        lib.install();
+        c = true;
     }
 
-    if (node_headers == null) {
+    if (c) {
         const header = b.addInstallFileWithDir(
             .{ .path = "src/include/pkmn.h" },
             .header,
             "pkmn.h",
         );
         b.getInstallStep().dependOn(&header.step);
-    }
-    {
-        const pc = b.fmt("lib{s}.pc", .{lib});
+
+        const pc = b.fmt("lib{s}.pc", .{name});
         const file = try b.cache_root.join(b.allocator, &.{pc});
         const pkgconfig_file = try std.fs.cwd().createFile(file, .{});
 
-        const suffix = if (showdown) " Showdown!" else "";
+        const dirname = comptime std.fs.path.dirname(@src().file) orelse ".";
         const writer = pkgconfig_file.writer();
         try writer.print(
-            \\prefix={0s}
+            \\prefix={0s}/{1s}
             \\includedir=${{prefix}}/include
             \\libdir=${{prefix}}/lib
             \\
-            \\Name: lib{1s}
-            \\URL: https://github.com/pkmn/engine
-            \\Description: Library for simulating Pokémon{2s} battles.
-            \\Version: {3s}
+            \\Name: lib{2s}
+            \\URL: https://github.com/{3s}
+            \\Description: {4s}
+            \\Version: {5s}
             \\Cflags: -I${{includedir}}
-            \\Libs: -L${{libdir}} -l{1s}
-        , .{ b.install_prefix, lib, suffix, version });
+            \\Libs: -L${{libdir}} -l{2s}
+        , .{ dirname, b.install_path, name, repository.next().?, description, version });
         defer pkgconfig_file.close();
 
         b.installFile(file, b.fmt("share/pkgconfig/{s}", .{pc}));

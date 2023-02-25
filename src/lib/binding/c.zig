@@ -1,6 +1,5 @@
 const std = @import("std");
 const pkmn = @import("../pkmn.zig");
-const DEBUG = @import("../common/debug.zig").print;
 
 const assert = std.debug.assert;
 

@@ -1,15 +1,17 @@
 {
   "dependencies": {
-    "@pkmn/data": "^0.7.1",
-    "@pkmn/dex": "^0.7.1",
+    "@pkmn/data": "^0.7.23",
+    "@pkmn/dex": "^0.7.23",
     "@pkmn/engine": "file:../../..",
-    "@pkmn/sets": "^5.0.0"
+    "@pkmn/sets": "^5.0.3"
   },
   "devDependencies": {
-    "parcel": "^2.8.0"
+    "parcel": "^2.8.3",
+    "vite": "^4.1.4"
   },
   "scripts": {
     "start": "node example.js",
-    "start:web": "parcel index.html"
+    "start:parcel": "parcel index.html",
+    "start:vite": "TODO"
   }
 }

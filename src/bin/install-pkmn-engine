@@ -278,9 +278,10 @@ const downloadImportLib = async () => {
       if (type === 'node') {
         node = true;
         if (!options) {
-          const addon = require(copy);
-          if (addon.options.showdown) opts.push('-Dshowdown');
-          if (addon.options.trace) opts.push('-Dtrace');
+          // FIXME
+          // const addon = require(copy);
+          // if (addon.options.showdown) opts.push('-Dshowdown');
+          // if (addon.options.trace) opts.push('-Dtrace');
         }
       } else if (type === 'wasm') {
         // TODO: load wasm

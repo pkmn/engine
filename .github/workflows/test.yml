@@ -32,7 +32,7 @@ jobs:
         if: ${{ matrix.zig == 'local' && matrix.os == 'windows-latest' }}
       - run: zig build test ${{matrix.options}}
       - run: zig build test ${{matrix.options}} -Doptimize=ReleaseFast
-      - run: npm exec install-zigpkg -- --options=""
+      - run: npm exec install-pkmn-engine -- --options=""
       - run: npm run compile
       - run: npm test
       - run: npm run test:integration

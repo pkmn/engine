@@ -89,7 +89,7 @@ c-example:
 	./src/examples/c/example 1234
 
 src/examples/js/node_modules:
-	npm -C src/examples/js install
+	npm -C src/examples/js install --install-links=false
 
 .PHONY: js-example
 js-example: src/examples/js/node_modules
@@ -103,8 +103,7 @@ zig-example:
 example: c-example js-example zig-example
 
 .PHONY: integration
-# TODO: integration: check example
-integration: check c-example zig-example
+integration: build check example
 	npm run test:integration
 
 .PHONY: benchmark
