@@ -58,6 +58,7 @@
     "@pkmn/sets": "^5.0.3",
     "@pkmn/sim": "0.7.22",
     "@types/html-minifier": "^4.0.2",
+    "@types/jest": "^29.4.0",
     "@types/minimist": "^1.2.2",
     "@types/mustache": "^4.2.2",
     "@types/node": "^18.14.1",
@@ -91,6 +92,7 @@
   "eslintConfig": {
     "extends": "@pkmn",
     "ignorePatterns": ["dist/", "node_modules/", "src/examples/zig"],
+    "settings": {"jest": {"version": 29}},
     "overrides": [{
       "files": ["src/pkg/index.ts", "src/test/display.ts"],
       "rules": {
