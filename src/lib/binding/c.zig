@@ -5,10 +5,7 @@ const assert = std.debug.assert;
 
 const ERROR: u8 = 0b1100;
 
-export const PKMN_OPTIONS: extern struct {
-    showdown: bool = false,
-    trace: bool = false,
-} = .{
+export const PKMN_OPTIONS: extern struct { showdown: bool, trace: bool } = .{
     .showdown = pkmn.options.showdown,
     .trace = pkmn.options.trace,
 };
