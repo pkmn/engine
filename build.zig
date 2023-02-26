@@ -3,11 +3,16 @@ const builtin = @import("builtin");
 
 const NativeTargetInfo = std.zig.system.NativeTargetInfo;
 
-pub fn module(b: *std.Build, build_options: *std.Build.Module) *std.Build.Module {
+pub const Options = struct { showdown: ?bool = null, trace: ?bool = null };
+
+pub fn module(b: *std.Build, options: Options) *std.Build.Module {
     const dirname = comptime std.fs.path.dirname(@src().file) orelse ".";
+    const build_options = b.addOptions();
+    build_options.addOption(?bool, "showdown", options.showdown);
+    build_options.addOption(?bool, "trace", options.trace);
     return b.createModule(.{
         .source_file = .{ .path = dirname ++ "/src/lib/pkmn.zig" },
-        .dependencies = &.{.{ .name = "build_options", .module = build_options }},
+        .dependencies = &.{.{ .name = "pkmn_options", .module = build_options.createModule() }},
     });
 }
 
@@ -39,10 +44,9 @@ pub fn build(b: *std.Build) !void {
     const trace = b.option(bool, "trace", "Enable trace logs") orelse false;
 
     const options = b.addOptions();
-    options.addOption(bool, "showdown", showdown);
-    options.addOption(bool, "trace", trace);
+    options.addOption(?bool, "showdown", showdown);
+    options.addOption(?bool, "trace", trace);
 
-    const pkmn = .{ .name = "pkmn", .module = module(b, options.createModule()) };
     const name = if (showdown) "pkmn-showdown" else "pkmn";
 
     var c = false;
@@ -54,7 +58,7 @@ pub fn build(b: *std.Build) !void {
             .optimize = optimize,
             .target = target,
         });
-        lib.addOptions("build_options", options);
+        lib.addOptions("pkmn_options", options);
         lib.setMainPkgPath("./");
         lib.addSystemIncludePath(headers);
         lib.linkLibC();
@@ -82,7 +86,7 @@ pub fn build(b: *std.Build) !void {
             },
             .target = .{ .cpu_arch = .wasm32, .os_tag = .freestanding },
         });
-        lib.addOptions("build_options", options);
+        lib.addOptions("pkmn_options", options);
         lib.setMainPkgPath("./");
         lib.rdynamic = true;
         lib.strip = strip;
@@ -108,7 +112,7 @@ pub fn build(b: *std.Build) !void {
             .optimize = optimize,
             .target = target,
         });
-        lib.addOptions("build_options", options);
+        lib.addOptions("pkmn_options", options);
         lib.setMainPkgPath("./");
         lib.addIncludePath("src/include");
         maybeStrip(b, lib, b.getInstallStep(), strip, cmd, null);
@@ -122,7 +126,7 @@ pub fn build(b: *std.Build) !void {
             .optimize = optimize,
             .target = target,
         });
-        lib.addOptions("build_options", options);
+        lib.addOptions("pkmn_options", options);
         lib.setMainPkgPath("./");
         lib.addIncludePath("src/include");
         lib.bundle_compiler_rt = true;
@@ -179,7 +183,7 @@ pub fn build(b: *std.Build) !void {
     });
     tests.setMainPkgPath("./");
     tests.setFilter(test_filter);
-    tests.addOptions("build_options", options);
+    tests.addOptions("pkmn_options", options);
     tests.single_threaded = true;
     maybeStrip(b, tests, &tests.step, strip, cmd, null);
     if (pic) tests.force_pic = pic;
@@ -198,6 +202,11 @@ pub fn build(b: *std.Build) !void {
     if (test_step) |ts| ts.dependOn(&lint_exe.step);
     const lint = lint_exe.run();
     lint.step.dependOn(b.getInstallStep());
+
+    const pkmn = .{
+        .name = "pkmn",
+        .module = module(b, .{ .showdown = showdown, .trace = trace }),
+    };
 
     var exes = std.ArrayList(*std.Build.CompileStep).init(b.allocator);
     const benchmark = tool(b, &.{pkmn}, "src/test/benchmark.zig", .{

@@ -5,20 +5,8 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const showdown = b.option(
-        bool,
-        "showdown",
-        "Enable Pokémon Showdown compatibility mode",
-    ) orelse false;
-    const trace = b.option(
-        bool,
-        "trace",
-        "Enable trace logs",
-    ) orelse false;
-
-    const options = b.addOptions();
-    options.addOption(bool, "showdown", showdown);
-    options.addOption(bool, "trace", trace);
+    const showdown = b.option(bool, "showdown", "Enable Pokémon Showdown compatibility mode");
+    const trace = b.option(bool, "trace", "Enable trace logs");
 
     const exe = b.addExecutable(.{
         .name = "example",
@@ -26,7 +14,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .target = target,
     });
-    exe.addModule("pkmn", pkmn.module(b, options.createModule()));
+    exe.addModule("pkmn", pkmn.module(b, .{ .showdown = showdown, .trace = trace }));
     exe.install();
 
     const run_cmd = exe.run();

@@ -91,42 +91,22 @@ const pkmn = @import("lib/pkmn/build.zig");
 
 pub fn build(b: *std.build.Builder) void {
     ...
-    const showdown = b.option(
-        bool,
-        "showdown",
-        "Enable Pokémon Showdown compatibility mode",
-    ) orelse false;
-    const trace = b.option(
-        bool,
-        "trace",
-        "Enable trace logs",
-    ) orelse false;
-
-    const options = b.addOptions();
-    options.addOption(bool, "showdown", showdown);
-    options.addOption(bool, "trace", trace);
-
-    ...
-    exe.addModule("pkmn", pkmn.module(b, options.createModule()));
+    exe.addModule("pkmn", pkmn.module(b, .{ .showdown = true, .trace = true }));
     ...
 }
 ```
 
-You must provide a `build_options` package to use the `pkmn` package due to Zig not currently
-[supporting conditional inclusion](https://github.com/ziglang/zig/issues/8025), however, you may set
-options via an `pkmn_options` [root source file
-declaration](https://ziglang.org/documentation/master/#Root-Source-File) (i.e. the `pkmn` package
-needs a `build_options` package to be defined, but you can set options via the root declaration
-instead of via build flags). There are several undocumented internal options that can be tweaked as
-well via build or root options, though these options are not officially supported, affect
-correctness, and may change meaning or behavior without warning. Use at your own risk.
+The engine's `build.zig` exposes a `module` function that takes an options struct to allow for
+configuring whether or not Pokémon Showdown compatibility mode or trace logs should be enabled.
+Alternatively, you may set options via a `pkmn_options` [root source file
+declaration](https://ziglang.org/documentation/master/#Root-Source-File). There are several
+undocumented internal options that can be tweaked as well via build or root options, though these
+options are not officially supported, affect correctness, and may change meaning or behavior without
+warning. Use at your own risk.
 
 ```zig
 pub const pkmn_options = .{ .showdown = true, .trace = true };
 ```
-
-The `pkmn` function in the engine's `build.zig` can be used to simplify adding the `pkmn` package to
-your project.
 
 ## Usage
 

@@ -1,11 +1,11 @@
-const build_options = @import("build_options");
+const build_options = @import("pkmn_options");
 const root = @import("root");
 
 pub const Options = struct {
-    showdown: bool = false,
-    trace: bool = false,
-    advance: bool = true,
-    ebc: bool = true,
+    showdown: ?bool = null,
+    trace: ?bool = null,
+    advance: ?bool = null,
+    ebc: ?bool = null,
 };
 
 pub const showdown = get("showdown", false);
@@ -21,13 +21,13 @@ fn get(comptime name: []const u8, default: bool) bool {
         root_enable = @field(@as(Options, root.pkmn_options), name);
     }
     if (@hasDecl(build_options, name)) {
-        build_enable = @as(bool, @field(build_options, name));
+        build_enable = @as(?bool, @field(build_options, name));
     }
     if (build_enable != null and root_enable != null) {
         if (build_enable.? != root_enable.?) {
             const r = name ++ " (" ++ (if (root_enable.?) "false" else "true") ++ ")";
             const b = name ++ " (" ++ (if (build_enable.?) "false" else "true") ++ ")";
-            @compileError("root.pkmn_options." ++ r ++ " != build_options." ++ b ++ ".");
+            @compileError("root decl pkmn_options." ++ r ++ " != build option " ++ b ++ ".");
         }
     }
 
