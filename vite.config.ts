@@ -5,5 +5,6 @@ export default defineConfig({
     watch: false,
     globals: true,
     exclude: ['node_modules', 'build', 'src/examples'],
+    coverage: {reportsDirectory: 'coverage/js'},
   }
 });

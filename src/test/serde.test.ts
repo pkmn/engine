@@ -32,7 +32,7 @@ describe('serialize/deserialize', () => {
           const battle = new gen1.Battle(lookup, data, {showdown});
           const restored = gen1.Battle.restore(gen, lookup, battle, {showdown});
 
-          expect(JSON.stringify(restored, null, 2)).toEqual(JSON.stringify(battle, null, 2));
+          expect(restored.toJSON()).toEqual(battle.toJSON());
         }
       }
     }

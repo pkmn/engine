@@ -20,8 +20,7 @@ for (const gen of new Generations(Dex as any)) {
       const options = random(gen);
       const battle = Battle.create(gen, options);
       const restored = Battle.restore(gen, battle, options);
-      // NOTE: Jest object diffing toJSON is super slow so we compare strings instead...
-      expect(JSON.stringify(restored)).toEqual(JSON.stringify(battle));
+      expect(restored.toJSON()).toEqual(battle.toJSON());
     });
 
     it('Choice.parse', () => {

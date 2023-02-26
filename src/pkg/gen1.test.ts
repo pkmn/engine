@@ -41,8 +41,7 @@ describe('Gen 1', () => {
   it('serialize/deserialize', () => {
     const battle = new Battle(lookup, new DataView(BUFFER.buffer), {});
     const restored = Battle.restore(gen, lookup, battle, {});
-    // NOTE: Jest object diffing toJSON is super slow so we compare strings instead...
-    expect(JSON.stringify(restored, null, 2)).toEqual(JSON.stringify(battle, null, 2));
+    expect(restored.toJSON()).toEqual(battle.toJSON());
 
     expect(battle.turn).toBe(609);
     expect(battle.lastDamage).toBe(84);
