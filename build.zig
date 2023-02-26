@@ -69,7 +69,7 @@ pub fn build(b: *std.Build) !void {
         maybeStrip(b, lib, b.getInstallStep(), strip, cmd, out);
         if (pic) lib.force_pic = pic;
         // Always emit to build/lib because this is where the driver code expects to find it
-        // TODO: switch to whatever ziglang/zig/issues#2231 comes up with
+        // TODO: switch to whatever ziglang/zig#2231 comes up with
         lib.emit_bin = .{ .emit_to = out };
         b.getInstallStep().dependOn(&lib.step);
     } else if (wasm) {
@@ -199,6 +199,7 @@ pub fn build(b: *std.Build) !void {
     const lint = lint_exe.run();
     lint.step.dependOn(b.getInstallStep());
 
+    var exes = std.ArrayList(*std.Build.CompileStep).init(b.allocator);
     const benchmark = tool(b, &.{pkmn}, "src/test/benchmark.zig", .{
         .showdown = showdown,
         .pic = pic,
@@ -207,8 +208,10 @@ pub fn build(b: *std.Build) !void {
         .test_step = test_step,
         .target = target,
         .optimize = .ReleaseFast,
+        .exes = &exes,
     });
     const fuzz = tool(b, &.{pkmn}, "src/test/benchmark.zig", .{
+        .name = "fuzz",
         .showdown = showdown,
         .pic = pic,
         .strip = false,
@@ -216,6 +219,7 @@ pub fn build(b: *std.Build) !void {
         .test_step = test_step,
         .target = target,
         .optimize = optimize,
+        .exes = &exes,
     });
     const config = .{
         .showdown = showdown,
@@ -225,6 +229,7 @@ pub fn build(b: *std.Build) !void {
         .test_step = test_step,
         .target = target,
         .optimize = optimize,
+        .exes = &exes,
     };
     const serde = tool(b, &.{pkmn}, "src/tools/serde.zig", config);
     const protocol = tool(b, &.{pkmn}, "src/tools/protocol.zig", config);
@@ -236,6 +241,7 @@ pub fn build(b: *std.Build) !void {
     b.step("protocol", "Run protocol dump tool").dependOn(&protocol.step);
     b.step("serde", "Run serialization/deserialization tool").dependOn(&serde.step);
     b.step("test", "Run all tests").dependOn(&tests.step);
+    b.step("tools", "Install tools").dependOn(&ToolsStep.create(b, &exes).step);
 }
 
 fn maybeStrip(
@@ -271,6 +277,8 @@ const Config = struct {
     test_step: ?*std.Build.Step,
     target: std.zig.CrossTarget,
     optimize: std.builtin.OptimizeMode,
+    name: ?[]const u8 = null,
+    exes: *std.ArrayList(*std.Build.CompileStep),
 };
 
 fn tool(
@@ -282,7 +290,7 @@ fn tool(
     var name = std.fs.path.basename(path);
     const index = std.mem.lastIndexOfScalar(u8, name, '.');
     if (index) |i| name = name[0..i];
-    if (config.showdown) name = b.fmt("{s}-showdown", .{name});
+    if (config.showdown) name = b.fmt("{s}-showdown", .{config.name orelse name});
 
     const exe = b.addExecutable(.{
         .name = name,
@@ -294,11 +302,25 @@ fn tool(
     exe.single_threaded = true;
     if (config.pic) exe.force_pic = config.pic;
     if (config.test_step) |ts| ts.dependOn(&exe.step);
+    config.exes.append(exe) catch @panic("OOM");
 
     const run = exe.run();
     maybeStrip(b, exe, &run.step, config.strip, config.cmd, null);
-    run.step.dependOn(b.getInstallStep());
     if (b.args) |args| run.addArgs(args);
 
     return run;
 }
+
+const ToolsStep = struct {
+    step: std.Build.Step,
+
+    fn make(_: *std.build.Step) !void {}
+
+    pub fn create(b: *std.Build, exes: *std.ArrayList(*std.Build.CompileStep)) *ToolsStep {
+        const self = b.allocator.create(ToolsStep) catch @panic("OOM");
+        const step = std.Build.Step.init(.custom, "Install tools", b.allocator, ToolsStep.make);
+        self.* = ToolsStep{ .step = step };
+        for (exes.items) |t| self.step.dependOn(&b.addInstallArtifact(t).step);
+        return self;
+    }
+};

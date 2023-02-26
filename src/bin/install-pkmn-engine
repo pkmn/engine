@@ -12,7 +12,7 @@ const ZIG_VERSION = {major: 0, minor: 11, patch: 0, dev: 1711};
 const DEV = ZIG_VERSION.dev ? `-dev.${ZIG_VERSION.dev}` : '';
 const VERSION = `${ZIG_VERSION.major}.${ZIG_VERSION.minor}.${ZIG_VERSION.patch}${DEV}`;
 const INDEX = 'https://ziglang.org/download/index.json';
-const ROOT = path.resolve(__dirname, '../..');
+const ROOT = path.resolve(__dirname, '..', '..');
 
 const sh = (cmd, args) => execFileSync(cmd, args, {encoding: 'utf8', cwd: ROOT});
 
