@@ -87,6 +87,18 @@ pub fn build(b: *std.Build) !void {
         lib.rdynamic = true;
         lib.strip = strip;
         if (pic) lib.force_pic = pic;
+        const opt = b.findProgram(
+            &[_][]const u8{"wasm-opt"},
+            &[_][]const u8{"./node_modules/.bin"},
+        ) catch null;
+        if (optimize != .Debug and opt != null) {
+            const out = b.fmt("build/lib/{s}.wasm", .{name});
+            const sh = b.addSystemCommand(&[_][]const u8{ opt.?, "-O4" });
+            sh.addArtifactArg(lib);
+            sh.addArg("-o");
+            sh.addFileSourceArg(.{ .path = out });
+            b.getInstallStep().dependOn(&sh.step);
+        }
         lib.install();
     } else if (dynamic) {
         const lib = b.addSharedLibrary(.{
