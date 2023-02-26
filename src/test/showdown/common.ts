@@ -1,8 +1,8 @@
 import * as path from 'path';
 
 import {
-  Battle, BattleStreams, ID, PRNG, PRNGSeed, BattleQueue,
-  ActionChoice, Effect, Pokemon, Side, Field,
+  Battle, BattleStreams, ID, PRNG, PRNGSeed, BattleQueue, Side,
+  ActionChoice, Effect, Pokemon, Field, extractChannelMessages,
 } from '@pkmn/sim';
 import {Generation, PokemonSet} from '@pkmn/data';
 
@@ -28,7 +28,7 @@ export const ROLLS = {
       MAX_DMG: {key: keys.dmg, value: MAX},
       TIE: (n: 1 | 2) => ({key: tie, value: ranged(n, 2) - 1}),
       DRAG: (m: number, n = 5) =>
-        ({key: 'sim/battle.ts:1377:36', value: ranged(m - 1, n)}),
+        ({key: 'sim/battle.ts:1410:36', value: ranged(m - 1, n)}),
     };
   },
   metronome(gen: Generation, exclude: string[]) {
@@ -320,7 +320,7 @@ const FILTER = new Set([
 ]);
 
 function filter(raw: string[]) {
-  const log = Battle.extractUpdateForSide(raw.join('\n'), 'omniscient').split('\n');
+  const log = extractChannelMessages(raw.join('\n'), [-1])[-1];
   const filtered = [];
   for (const line of log) {
     const i = line.indexOf('|', 1);
