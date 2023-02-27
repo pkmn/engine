@@ -151,8 +151,7 @@ import {Battle} from '@pkmn/engine';
 const gens = new Generations(Dex);
 const battle = Battle.create(...);
 
-const choose = (options: Choice[]) =>
-  options[Math.floor(Math.random() * options.length];
+const choose = (cs: Choice[]) => cs[Math.floor(Math.random() * cs.length)];
 
 let result: Result;
 let c1: Choice, c2: Choice;
