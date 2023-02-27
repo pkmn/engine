@@ -47,9 +47,10 @@ tradeoff performance for any other feature. This principle leads to the followin
   driver code) and as a result the engine just has to deal with small and efficient primitive data
   types. All identifiers can be represented as small `enum` values which can be used to index
   directly into arrays of data where necessary with no additional hashing or indirection required.
-- the engine **never allocates** - given the fact the engine only implements the existing Pokémon
-  battle systems (which were designed to run on constrained hardware), the engine can get away with
-  requiring users to preallocate fixed size buffers and uses **no dynamic memory**.
+- the engine **never dynamically allocates memory** - given the fact the engine only implements the
+  existing Pokémon battle systems (which were designed to run on constrained hardware), the engine
+  can get away with requiring users to preallocate fixed size buffers and never needs to allocate
+  memory on demand.
 - data is structured such that in most cases **lookups are not required** (i.e. range checks are
   used instead) or can be done with an efficient linear search. In extreme cases, [perfect
   hashing](https://en.wikipedia.org/wiki/Perfect_hash_function) is utilized to avoid ever having to
