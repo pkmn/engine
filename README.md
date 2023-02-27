@@ -133,7 +133,7 @@ while (!pkmn_result_type(result = pkmn_battle_update(&battle, c1, c2, buf, PKMN_
 if (pkmn_error(result)) exit(1);
 ```
 
-[(full code)](src/examples/c)
+[(full code)](src/examples/c/example.c)
 
 ### JavaScript / TypeScript
 
@@ -163,7 +163,7 @@ while (!(result = battle.update(c1, c2)).type) {
 console.log(result);
 ```
 
-[(full code)](src/examples/js)
+[(full code)](src/examples/js/example.js)
 
 The `Battle` interface is designed to be zero-copy compatible with other `@pkmn` packages -
 equivalently named types in [`@pkmn/client`](https://www.npmjs.com/package/@pkmn/client),
@@ -204,7 +204,7 @@ while (result.type == .None) : (result = try battle.update(c1, c2, log)) {
 std.debug.print("{}", .{result.type});
 ```
 
-[(full code)](src/examples/zig)
+[(full code)](src/examples/zig/example.zig)
 
 ## Status
 
