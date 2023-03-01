@@ -338,7 +338,8 @@ Documentation of the wire protocol used for logging traces when `-Dtrace` is ena
 
 - the current `turn` is 2 bytes, written in native-endianness
 - `last_selected_indexes` layout depends on whether or not Pokémon Showdown compatibility mode is
-  enabled (`-Dshowdown`):
+  enabled (`-Dshowdown`). In either case it stores a move "slot", where 0 is used as an empty value and
+  1-4 represent actual moves:
   - if `showdown` is enabled bytes 372 and 373 are used to store the last selected move index of
     `side[0]` and bytes 374 and 375 store the last selected move index of `side[1]`
   - otherwise byte 372 stores the last selected move index of `side[0]` in its first 4 bits and
@@ -364,7 +365,10 @@ Documentation of the wire protocol used for logging traces when `-Dtrace` is ena
 | 182   | 183 | `last_selected_move`       | The last move the player selected       |
 | 183   | 184 | `last_used_move`           | The last move the player used           |
 
-- `order` is a 6 byte array where `order[i]` represents the position of `pokemon[i]`
+- `order` is a 6 byte array where `order[i]` represents the "slot" of `pokemon[i]`, where the slot
+  is usually a unique value from 1-6 but can be 0 in situations where a player brings less than six
+  Pokémon to battle (note however that if `order[i]` is 0 than for all j > 0 `order[i+j]` **must**
+  equal 0).
 
 ### `ActivePokemon`
 
@@ -389,7 +393,7 @@ Documentation of the wire protocol used for logging traces when `-Dtrace` is ena
 | 28    | 29  | `moves[2].id`                      | The active Pokémon's third move                             |
 | 29    | 30  | `moves[2].pp`                      | The PP of the active Pokémon's third move                   |
 | 30    | 31  | `moves[3].id`                      | The active Pokémon's fourth move                            |
-| 31    | 32  | `moves[4].pp`                      | The PP of the active Pokémon's fourth move                  |
+| 31    | 32  | `moves[3].pp`                      | The PP of the active Pokémon's fourth move                  |
 
 - the active Pokémon's `stats.hp` is always identical to the corresponding stored Pokémon's `stats.hp`
 - `boosts` and `types` includes bytes which store two 4-bit fields each
@@ -443,7 +447,7 @@ Documentation of the wire protocol used for logging traces when `-Dtrace` is ena
 | 14    | 15  | `moves[2].id`   | The Pokémon's third stored move            |
 | 15    | 16  | `moves[2].pp`   | The PP of the Pokémon's third stored move  |
 | 16    | 17  | `moves[3].id`   | The Pokémon's fourth stored move           |
-| 17    | 18  | `moves[4].pp`   | The PP of the Pokémon's fourth stored move |
+| 17    | 18  | `moves[3].pp`   | The PP of the Pokémon's fourth stored move |
 | 18    | 20  | `hp`            | The Pokémon's current HP                   |
 | 20    | 21  | `status`        | The Pokémon's current status               |
 | 21    | 22  | `species`       | The Pokémon's stored species               |
