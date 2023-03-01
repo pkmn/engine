@@ -211,7 +211,15 @@ std.debug.print("{}", .{result.type});
 Developers who wish to use the engine in other languages should find writing bindings against
 [`libpkmn`](#libpkmn) relatively straightforward based on the existing documentation, though to
 simplify the process even further [`src/data`](src/data) contains JSON dumps of all of the Pokémon
-data, structure sizes and offsets, and protocol information used by the reference driver code.
+data, structure sizes and offsets, and protocol information used by the reference driver code. The
+following is a list of known `libpkmn` bindings written by developers outside of the [pkmn
+organization](https://github.com/pkmn) that may be helpful (though note that these projects may not
+necessarily be up-to-date/complete/correct - inclusion in this list does not imply endorsement):
+
+| Language   | License   | URL                                     |
+| ---------- | --------- | --------------------------------------- |
+| **C++**    | `BSL-1.0` | https://github.com/pasyg/engine-wrapper |
+| **Python** | `MIT`     | https://github.com/AnnikaCodes/pykmn    |
 
 ## Status
 
