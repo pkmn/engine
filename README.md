@@ -31,8 +31,8 @@ which can be used as a building block for more advanced use cases.
 
 ## Installation
 
-This repository hosts both the engine code (written in [Zig](https://ziglang.org/)) and driver code
-(written in [TypeScript](https://www.typescriptlang.org/)).
+This repository hosts both the engine code (written in [Zig](https://ziglang.org/)) and the
+reference driver code (written in [TypeScript](https://www.typescriptlang.org/)).
 
 ### `libpkmn`
 
