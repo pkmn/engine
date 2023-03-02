@@ -5,8 +5,12 @@ import * as path from 'path';
 import * as https from 'https';
 
 import * as mustache from 'mustache';
+import stringify from 'json-stringify-pretty-compact';
 
-import {Generations, Generation, GenerationNum, TypeName, Specie, MoveTarget} from '@pkmn/data';
+import {
+  Generations, Generation, GenerationNum, TypeName,
+  StatsTable, ItemName, Specie, MoveTarget,
+} from '@pkmn/data';
 import {Dex, toID} from '@pkmn/sim';
 
 import type {IDs} from '../pkg/data';
@@ -15,20 +19,42 @@ const ROOT = path.resolve(__dirname, '..', '..');
 const TEMPLATES = path.join(ROOT, 'src', 'lib', 'common', 'data');
 const CACHE = path.join(ROOT, '.cache');
 
-const IDS: IDs = [
-  {
-    types: [
-      'Normal', 'Fighting', 'Flying', 'Poison', 'Ground', 'Rock', 'Bug', 'Ghost',
-      'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Ice', 'Dragon',
-    ] as TypeName[],
-  },
-  {
-    types: [
-      'Normal', 'Fighting', 'Flying', 'Poison', 'Ground', 'Rock', 'Bug', 'Ghost', 'Steel',
-      '???', 'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Ice', 'Dragon', 'Dark',
-    ] as TypeName[],
-    items: [],
-  },
+const IDS: IDs =
+[{
+  types: [
+    'Normal', 'Fighting', 'Flying', 'Poison', 'Ground', 'Rock', 'Bug', 'Ghost',
+    'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Ice', 'Dragon',
+  ] as TypeName[],
+}, {
+  types: [
+    'Normal', 'Fighting', 'Flying', 'Poison', 'Ground', 'Rock', 'Bug', 'Ghost', 'Steel',
+    '???', 'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Ice', 'Dragon', 'Dark',
+  ] as TypeName[],
+  items: [],
+}];
+const DATA: [{
+  types: TypeName[];
+  species: {
+    [name: string]: {
+      stats: Omit<StatsTable, 'spa' | 'spd'> & {spc: number};
+      types: TypeName[];
+    };
+  };
+  moves: {[name: string]: number};
+}, {
+  types: TypeName[];
+  species: {
+    [name: string]: {
+      stats: StatsTable;
+      types: TypeName[];
+      gender: number;
+    };
+  };
+  moves: {[name: string]: number};
+  items: ItemName[];
+}] = [
+  {types: IDS[0].types, species: {}, moves: {}},
+  {types: IDS[1].types, species: {}, moves: {}, items: []},
 ];
 
 // https://pkmn.cc/pokecrystal/data/types/type_matchups.asm
@@ -353,6 +379,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .target = .${TARGETS[move.target]},\n` +
         '        }');
       PP.push(`${move.pp}, // ${name}`);
+      DATA[0].moves[move.name] = move.pp;
     }
     let Data = `pub const Data = packed struct {
         effect: Effect,
@@ -496,6 +523,16 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .types = .{ .type1 = .${types[0]}, .type2 = .${types[1]} },\n` +
         '        }');
       CHANCES.push(`${Math.floor(s.baseStats.spe / 2)}, // ${name}`);
+      DATA[0].species[s.name] = {
+        stats: {
+          hp: s.baseStats.hp,
+          atk: s.baseStats.atk,
+          def: s.baseStats.def,
+          spe: s.baseStats.spe,
+          spc: s.baseStats.spa,
+        },
+        types: s.types,
+      };
     }
     Data = `pub const Data = struct {
         stats: Stats(u8),
@@ -557,7 +594,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
     const precedenceFn =
     `pub fn precedence(t1: Type, t2: Type) u8 {
-        for (PRECEDENCE) |matchup, i| {
+        for (PRECEDENCE, 0..) |matchup, i| {
             if (matchup.type1 == t1 and matchup.type2 == t2) return @truncate(u8, i);
         }
         unreachable;
@@ -694,8 +731,13 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       values.push(s);
     }
     for (const value of values) {
-      const id = toID(value.split(' ')[0]);
-      if (id) IDS[1].items.push(id);
+      const symbol = value.split(' ')[0];
+      const id = toID(symbol);
+      if (id) {
+        IDS[1].items.push(id);
+        const name = symbol.replace(/(?<!^)([A-Z])([a-z])/g, ' $1$2').slice(0, -1);
+        DATA[1].items.push(name as ItemName);
+      }
     }
     template('items', dirs.out, {
       gen: gen.num,
@@ -745,6 +787,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .target = .${TARGETS[move.target]},\n` +
         (chance ? `            .chance = ${chance}\n` : '') +
         '        }');
+      DATA[1].moves[move.name] = move.pp;
     }
     // pp/accuracy/target/chance could all be u4, but packed struct needs to be power of 2
     let Data = `pub const Data = extern struct {
@@ -803,6 +846,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       const s = gen.species.get(name)!;
       const t = s.types.length === 1
         ? [s.types[0], s.types[0]] : s.types;
+      const ratio = convertGenderRatio(s);
       SPECIES.push(`// ${name}\n` +
         '        .{\n' +
         '            .stats = .{ ' +
@@ -814,8 +858,20 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
                         `.spd = ${s.baseStats.spd}` +
                       ' },\n' +
         `            .types = .{ .type1 = .${t[0]}, .type2 = .${t[1]} },\n` +
-        `            .ratio = ${convertGenderRatio(s)}\n` +
+        `            .ratio = ${ratio}\n` +
         '        }');
+      DATA[1].species[s.name] = {
+        stats: {
+          hp: s.baseStats.hp,
+          atk: s.baseStats.atk,
+          def: s.baseStats.def,
+          spe: s.baseStats.spe,
+          spa: s.baseStats.spa,
+          spd: s.baseStats.spa,
+        },
+        types: s.types,
+        gender: Number(ratio.split(',')[0]),
+      };
     }
     Data = `pub const Data = struct {
         stats: Stats(u8),
@@ -859,6 +915,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
   const idsJSON = path.join(ROOT, 'src', 'pkg', 'data', 'ids.json');
   fs.writeFileSync(idsJSON, JSON.stringify(IDS, null, 2));
+  const dataJSON = path.join(ROOT, 'src', 'data', 'data.json');
+  fs.writeFileSync(dataJSON, stringify(DATA, {maxLength: 100}));
 })().catch((err: any) => {
   console.error(err);
   process.exit(1);

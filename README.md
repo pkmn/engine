@@ -206,6 +206,13 @@ std.debug.print("{}", .{result.type});
 
 [(full code)](src/examples/zig/example.zig)
 
+### Other
+
+Developers who wish to use the engine in other languages should find writing bindings against
+[`libpkmn`](#libpkmn) relatively straightforward based on the existing documentation, though to
+simplify the process even further [`src/data`](src/data) contains JSON dumps of all of the Pokémon
+data, structure sizes and offsets, and protocol information used by the reference driver code.
+
 ## Status
 
 The engine is currently expected to be developed over multiple stages:
