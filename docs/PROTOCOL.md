@@ -44,9 +44,9 @@ each message is an integer representing the `ArgType` of the message, followed b
 containing the payload of the message. Game objects such as moves, species, abilities, items, types,
 etc are written as their internal identifier which usually matches their public facing number, but
 in cases where these differ the [`ids.json`](src/pkg/data/ids.json) can  be used to decode them. A
-[`protocol.json`](../src/pkg/data/protocol.json) containing a human-readable lookup for the
-`ArgType` and various "[reason](#reason)" enums (see below) is generated from the library code and
-can be used for similar purposes.
+[`protocol.json`](../src/data/protocol.json) containing a human-readable lookup for the `ArgType`
+and various "[reason](#reason)" enums (see below) is generated from the library code and can be used
+for similar purposes.
 
 Because each protocol message is a fixed length, parsing can be terminated when a `0x00` byte is
 read when the leading `ArgType` header byte of a message is expected. Note that a `0x00` byte may

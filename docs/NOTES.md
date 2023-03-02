@@ -19,7 +19,7 @@
 7. Implement **mechanics** in `mechanics.zig` based on cartridge research
    - update [protocol](../src/lib/common/protocol.zig) as necessary, also updating
      [documentation](PROTOCOL.md), [driver](../src/pkg/protocol.ts), and tests
-   - [generate](../src/tools/protocol.zig) updated [`protocol.json`](../src/pkg/data/protocol.json)
+   - [generate](../src/tools/protocol.zig) updated [`protocol.json`](../src/data/protocol.json)
 8. Adjust **mechanics for Pokémon Showdown** compatibility
    - track RNG differences and update generation documentation
    - ensure all bugs are tracked in documentation
@@ -29,8 +29,8 @@
     - document in [`PROTOCOL.md`](PROTOCOL.md)
     - validate with Z3
 11. **Optimize data structures**
-    - [generate](../src/tools/protocol.zig) updated [`layout.json`](../src/pkg/data/layout.json) and
-     [`offsets.json`](../src/pkg/data/offsets.json)
+    - [generate](../src/tools/protocol.zig) updated [`layout.json`](../src/data/layout.json) and
+     [`offsets.json`](../src/data/offsets.json)
 12. Implement **driver serialization/deserialization** and writes tests
 13. **Expose API** for new generation
     - update [`pkmn.zig`](../src/lib/pkmn.zig) and [bindings](../src/lib/bindings)

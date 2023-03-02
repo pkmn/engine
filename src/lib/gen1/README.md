@@ -320,7 +320,8 @@ This approach would also render `Type.PRECEDENCE` unnecessary.
 The precise layout of the engine's data structures is important to those implementing driver code,
 as clients must directly probe the engine's state through these structures (i.e. the pkmn engine
 does not produce an equivalent to Pokémon Showdown's `|request|` protocol message, this information
-must be gleaned through the `Battle` state).
+must be gleaned through the `Battle` state). Useful size and offset information can be found in
+the [`layout.json`](../../data/layout.json) which exists to simplify writing driver code.
 
 Documentation of the wire protocol used for logging traces when `-Dtrace` is enabled can be found in
 [PROTOCOL.md](../../../docs/PROTOCOL.md).

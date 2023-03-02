@@ -29,10 +29,10 @@ This directory contains miscellaneous scripts and tools useful for working on th
   decode the pkmn [protocol](../../docs/PROTOCOL.md):
 
       $ zig build protocol -- markdown > tmp/protocol.md
-      $ zig build protocol -- <protocol|layout> > src/pkg/data/<protocol|layout>.json
+      $ zig build protocol -- <protocol|layout> > src/data/<protocol|layout>.json
 
-  Results can be found in [`protocol.json`](../pkg/data/protocol.json) /
-  [`layout.json`](../pkg/data/layout.json).
+  Results can be found in [`protocol.json`](../data/protocol.json) /
+  [`layout.json`](../data/layout.json).
 
 - [`serde.zig`](serde.zig)/[`serde.ts`](serde.ts): Serializes/deserializes a randomly generated
   `Battle` for the provided generation to stdout, optionally for a specific seed. `serde.ts` wraps
