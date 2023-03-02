@@ -64,6 +64,7 @@ const ignore = std.ComptimeStringMap(Ignored, .{
 
 // Windows has trouble with the symlink so we need to hardcode the logic to skip it
 const LIBS = "src\\examples\\zig\\lib";
+const MODULES = "src\\examples\\js\\node_modules";
 
 fn ignored(raw_path: []const u8, line: u32, allocator: Allocator) !bool {
     var path = try allocator.dupe(u8, raw_path);
@@ -108,7 +109,7 @@ fn lintDir(
         if (is_dir or std.mem.endsWith(u8, entry.name, ".zig")) {
             const full_path = try fs.path.join(allocator, &[_][]const u8{ file_path, entry.name });
             defer allocator.free(full_path);
-            if (std.mem.eql(u8, full_path, LIBS)) continue;
+            if (std.mem.eql(u8, full_path, LIBS) or std.mem.eql(u8, full_path, MODULES)) continue;
 
             var e = false;
             if (is_dir) {

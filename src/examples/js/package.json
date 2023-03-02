@@ -6,12 +6,14 @@
     "@pkmn/sets": "^5.0.3"
   },
   "devDependencies": {
-    "parcel": "^2.8.3",
+    "parcel": "^2.4.1",
+    "typescript": "^4.9.5",
     "vite": "^4.1.4"
   },
   "scripts": {
-    "start": "node example.js",
+    "prestart": "tsc -p .",
+    "start": "node build/example.js",
     "start:parcel": "parcel index.html",
-    "start:vite": "TODO"
+    "start:vite": "vite"
   }
 }

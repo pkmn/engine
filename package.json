@@ -93,9 +93,13 @@
   },
   "eslintConfig": {
     "extends": "@pkmn",
-    "ignorePatterns": ["dist/", "node_modules/", "src/examples/zig"],
+    "ignorePatterns": ["dist/", "node_modules/", "src/examples/zig", "build/"],
+    "env": {"es6": true, "node": true, "browser": true},
     "settings": {"jest": {"version": 29}},
     "overrides": [{
+      "files": ["**/*.ts"],
+      "parserOptions": {"project": ["./tsconfig.json", "./src/examples/js/tsconfig.json"]}
+    }, {
       "files": ["src/pkg/index.ts", "src/test/display.ts"],
       "rules": {
         "@typescript-eslint/no-empty-interface": "off",

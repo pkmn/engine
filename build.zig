@@ -88,6 +88,7 @@ pub fn build(b: *std.Build) !void {
         });
         lib.addOptions("pkmn_options", options);
         lib.setMainPkgPath("./");
+        lib.stack_size = std.wasm.page_size;
         lib.rdynamic = true;
         lib.strip = strip;
         if (pic) lib.force_pic = pic;

@@ -163,7 +163,7 @@ while (!(result = battle.update(c1, c2)).type) {
 console.log(result);
 ```
 
-[(full code)](src/examples/js/example.js)
+[(full code)](src/examples/js/example.ts)
 
 The `Battle` interface is designed to be zero-copy compatible with other `@pkmn` packages -
 equivalently named types in [`@pkmn/client`](https://www.npmjs.com/package/@pkmn/client),

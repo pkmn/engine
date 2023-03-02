@@ -268,25 +268,26 @@ const downloadImportLib = async () => {
   const libs = path.join(ROOT, 'build', 'lib');
   if (fs.existsSync(libs)) {
     for (const file of fs.readdirSync(libs)) {
+      const type = path.extname(file).slice(1);
+      if (type !== 'node' && type !== 'wasm') continue;
       // If we don't copy the addon before loading it Windows will return an EBUSY error
       // when we later attempt to clobber it (Linux and macOS don't seem to care)
       const copy = path.join(tmp, file);
       fs.copyFileSync(path.join(libs, file), copy);
 
       const opts = options || [];
-      const type = path.extname(file).slice(1);
       if (type === 'node') {
         node = true;
         if (!options) {
-          // FIXME
-          // const addon = require(copy);
-          // if (addon.options.showdown) opts.push('-Dshowdown');
-          // if (addon.options.trace) opts.push('-Dtrace');
+          const addon = require(copy);
+          if (addon.options.showdown) opts.push('-Dshowdown');
+          if (addon.options.trace) opts.push('-Dtrace');
         }
-      } else if (type === 'wasm') {
-        // TODO: load wasm
       } else {
-        continue;
+        const addon = await WebAssembly.instantiate(fs.readFileSync(copy));
+        const values = new Uint8Array(addon.instance.exports.memory.buffer);
+        if (values[addon.instance.exports.SHOWDOWN.value]) opts.push('-Dshowdown');
+        if (values[addon.instance.exports.TRACE.value]) opts.push('-Dtrace');
       }
       const key = `${type} ${opts.sort().join(' ')}`;
       if (!configs.has(key)) configs.set(key, {type, options: opts});
@@ -305,7 +306,7 @@ const downloadImportLib = async () => {
   const lib = node && process.platform === 'win32' ? await downloadImportLib() : undefined;
   for (const config of configs.values()) {
     const opts = config.options.filter(Boolean);
-    const args = ['build', '-Doptimize=ReleaseFast', '-Dstrip', ...opts];
+    const args = ['build', '-p', 'build', '-Doptimize=ReleaseFast', '-Dstrip', ...opts];
     if (config.type === 'node') {
       args.push(`-Dnode-headers=${headers}`);
       if (process.platform === 'win32') args.push(`-Dnode-import-library=${lib}`);
