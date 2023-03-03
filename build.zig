@@ -24,6 +24,8 @@ pub fn build(b: *std.Build) !void {
     const node_import_lib =
         b.option([]const u8, "node-import-library", "Path to node import library (Windows)");
     const wasm = b.option(bool, "wasm", "Build a WASM library") orelse false;
+    const wasm_stack_size =
+        b.option(u64, "wasm-stack-size", "The size of WASM stack") orelse std.wasm.page_size;
     const dynamic = b.option(bool, "dynamic", "Build a dynamic library") orelse false;
     const strip = b.option(bool, "strip", "Strip debugging symbols from binary") orelse false;
     const pic = b.option(bool, "pic", "Force position independent code") orelse false;
@@ -88,7 +90,7 @@ pub fn build(b: *std.Build) !void {
         });
         lib.addOptions("pkmn_options", options);
         lib.setMainPkgPath("./");
-        lib.stack_size = std.wasm.page_size;
+        lib.stack_size = wasm_stack_size;
         lib.rdynamic = true;
         lib.strip = strip;
         if (pic) lib.force_pic = pic;
