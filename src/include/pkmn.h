@@ -85,6 +85,10 @@ typedef enum pkmn_choice_kind {
 } pkmn_choice_kind;
 /** Returns a choice initialized for a specific type with the provided data. data must be <= 6. */
 pkmn_choice pkmn_choice_init(pkmn_choice_kind type, uint8_t data);
+/** The choice type of the choice. */
+pkmn_choice_kind pkmn_choice_type(pkmn_choice choice);
+/** The choice data of the choice. */
+uint8_t pkmn_choice_data(pkmn_choice choice);
 
 /** The result of updating a battle. */
 typedef uint8_t pkmn_result;
@@ -149,7 +153,9 @@ pkmn_result pkmn_gen1_battle_update(
   size_t len);
 /**
  * Fills in out with at most len possible choices for the player given the request and Generation I
- * battle state and returns the number of choices available.
+ * battle state and returns the number of choices available. Note that reading values in out which
+ * occur at indexes > the return value of this function could result in reading potentially garbage
+ * data.
  *
  * This function may return 0 due to how the Transform + Mirror Move/Metronome PP error interacts
  * with Disable, in which case there are no possible choices for the player to make (i.e. on the

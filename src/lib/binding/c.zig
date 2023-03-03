@@ -24,6 +24,14 @@ export fn pkmn_choice_init(choice: u8, data: u8) u8 {
     });
 }
 
+export fn pkmn_choice_type(choice: u8) u8 {
+    return @as(u8, @enumToInt(@bitCast(pkmn.Choice, choice).type));
+}
+
+export fn pkmn_choice_data(choice: u8) u8 {
+    return @as(u8, @bitCast(pkmn.Choice, choice).data);
+}
+
 export fn pkmn_result_type(result: u8) u8 {
     return @enumToInt(@bitCast(pkmn.Result, result).type);
 }

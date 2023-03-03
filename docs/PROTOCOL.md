@@ -1,12 +1,12 @@
 # Protocol
 
-At a high level, the pkmn engine updates a battle's state based on both player's choices, returning
-a result which indicates whether the battle has ended and what each player's options are. A
-non-terminal result can be fed into a generation's `choices` method which returns all legal
-actions[^1], though the state of the engine may also be inspected directly to determine information
-about the battle and which moves are possible. By [design](DESIGN.md), each generation's data
-structures are different, but the precise layout of the battle information is outlined in the
-respective documentation.
+At a high level, the pkmn engine updates a battle's state based on both players'
+[choices](#choices), returning a [result](#result) which indicates whether the battle has ended and
+what each players' options are. A non-terminal result can be fed into a generation's `choices`
+method which returns all legal actions[^1], though the state of the engine may also be inspected
+directly to determine information about the battle and which moves are possible. By
+[design](DESIGN.md), each generation's data structures are different, but the precise layout of the
+battle information is outlined in the respective documentation.
 
 More information about a battle can be generated via the `-Dtrace` flag when building the engine.
 This flag enables the engine to write the wire protocol described in this document to a `Log`.
@@ -36,6 +36,57 @@ or has had a move that has been blocked due to an opponent's use of
 [Imprison](https://bulbapedia.bulbagarden.net/wiki/Imprison_(move))). This is a non-issue for the
 use case of games being played out randomly via a machine, but a simulator for human players built
 on top of the pkmn engine would need to provide an alternative implementation of `choices`.
+
+### Choices
+
+The valid options returned by `choices` can be one of three types: `pass`, which will only ever
+occurs in situations where only the other player gets to make a decision (e.g. when choosing which
+Pokémon to switch to after their active Pokémon faints or uses Baton Pass etc), and `move` or
+`switch`, which require additional data. These are comparable to the similarly named choice commands
+in [Pokémon Showdown's own
+SIM-PROTOCOL](https://github.com/smogon/pokemon-showdown/blob/master/sim/SIM-PROTOCOL.md#possible-choices).
+
+| Raw    | Type     | Data? |
+| ------ | -------- | ----- |
+| `0x00` | `pass`   | No    |
+| `0x01` | `move`   | 0-4   |
+| `0x02` | `switch` | 2-6   |
+
+`switch` takes a 1-based Pokémon slot number of an eligible party member (which must be greater than
+1 as you can never switch in the active Pokémon) and `move` takes a 1-based move slot number, though
+is expected to be 0 in certain scenarios where the cartridge does not present an option to select a
+move after signalling the intent to fight (e.g. during Wrap or Bide in Generation I)[^2]. Determining
+exactly which choice options are available is subtle and should be left to the engine - choices not
+present in the array filled in by `choices` are invalid and may corrupt the battle state or cause
+the engine to crash.
+
+[^2]: The data value for a move choice `move` must be in the range of 1-4 when in Pokémon Showdown
+    compatibility mode as its choice selection behavior is different (i.e. incorrect).
+
+### Result
+
+Each battle update returns a result object that is made up of three things - a result type and a
+choice type for either player. Any result other than `None` means that the battle is considered to
+be over and no further updates can be made and may result in crashes.
+
+| Raw    | Description      |
+| ------ | ---------------- |
+| `0x00` | None             |
+| `0x01` | Player 1 Wins    |
+| `0x02` | Player 2 Wins    |
+| `0x03` | Player 1 & 2 Tie |
+| `0x04` | Error            |
+
+`Error` can only be returned due to a desync/glitch, and since Pokémon Showdown mods its engine code
+to avoid these this value cannot be returned from an update in `-Dshowdown` mode. However, the
+`libpkmn` C API will also set an update's result to `Error` if `-Dtrace` logging is enabled and the
+buffer it has been provided runs out of space regardless of which mode its in.
+
+The choice types included in the result match those described [above](#choices), though they are
+more akin to what Pokémon Showdown calls a sides `requestType` which determines which [choice
+request](https://github.com/smogon/pokemon-showdown/blob/master/sim/SIM-PROTOCOL.md#choice-requests)
+the side gets. In the pkmn engine the choice type from a result for a given side should similarly be
+provided to the `choices` function to determine which choice options exist for the side.
 
 ## Overview
 
