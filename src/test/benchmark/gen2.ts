@@ -1,5 +1,5 @@
 import * as sim from '@pkmn/sim';
-import {Generation, PokemonSet, SideID, StatsTable, ID} from '@pkmn/data';
+import {Generation, PokemonSet, StatsTable, ID} from '@pkmn/data';
 
 import * as engine from '../../pkg';
 // import * as gen2 from '../../pkg/gen2';
@@ -65,7 +65,7 @@ const Player = new class {
 };
 
 export const Choices = new class {
-  sim(this: void, battle: sim.Battle, id: SideID): string[] {
+  sim(this: void, battle: sim.Battle, id: engine.Player): string[] {
     const request = battle[id]!.activeRequest;
     if (!request || request.wait) return [];
 
@@ -117,13 +117,13 @@ export const Choices = new class {
 
 export class RandomPlayerAI extends sim.BattleStreams.BattlePlayer {
   readonly battleStream: sim.BattleStreams.BattleStream;
-  readonly id: SideID;
+  readonly id: engine.Player;
   readonly prng: sim.PRNG;
 
   constructor(
     playerStream: sim.Streams.ObjectReadWriteStream<string>,
     battleStream: sim.BattleStreams.BattleStream,
-    id: SideID,
+    id: engine.Player,
     prng: sim.PRNG
   ) {
     super(playerStream);

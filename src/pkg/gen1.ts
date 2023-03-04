@@ -1,13 +1,15 @@
 import {
   BoostID, BoostsTable, Generation, ID, toID, PokemonSet,
-  SideID, StatID, StatsTable, StatusName, TypeName,
+  StatID, StatsTable, StatusName, TypeName,
 } from '@pkmn/data';
 
 import {
-  API, Gen1, Slot, BattleOptions, CreateOptions, RestoreOptions, Choice, Result,
+  API, Gen1, Slot, BattleOptions, CreateOptions, RestoreOptions, Choice, Result, Player,
 } from './index';
 import {LAYOUT, LE, Lookup} from './data';
 import {decodeIdentRaw, decodeStatus, decodeTypes} from './protocol';
+
+import * as addon from './addon';
 
 const SIZES = LAYOUT[0].sizes;
 const OFFSETS = LAYOUT[0].offsets;
@@ -36,16 +38,12 @@ const MASKS = {
   limited: (1 << (VOLATILES.Bide & 7)) | (1 << (VOLATILES.Binding & 7)),
 };
 
-// TODO: bindings
-// - support both WASM and node (autodetect which to use)
-// - support multiple implementations (pkmn-showdown.node and pkmn.node), possibly both
-// - binding should expose whether it was build with showon (also in name) and trace
-// integration test = only debug and -Dshowdown -Dtrace
 export class Battle implements Gen1.Battle {
   readonly options: BattleOptions;
 
   private readonly lookup: Lookup;
   private readonly data: DataView;
+  private readonly buf: ArrayBuffer | undefined;
 
   private readonly cache: [Side?, Side?];
 
@@ -54,17 +52,18 @@ export class Battle implements Gen1.Battle {
 
     this.lookup = lookup;
     this.data = data;
+    this.buf = options.log ? new ArrayBuffer(addon.size(1, 'log')) : undefined;
 
     this.cache = [undefined, undefined];
   }
 
-  update(): Result {
-    // TODO: also need a Buffer/DataView in order to capture trace logs
-    throw new Error('TODO');
+  update(c1?: Choice, c2?: Choice): Result {
+    return addon.update(1, !!this.options.showdown, this.data.buffer, c1, c2, this.buf);
   }
 
-  choices(id: SideID, request: 'move' | 'switch' | 'pass'): Choice[] {
-    switch (request) {
+  // TODO: make native
+  choices(id: Player, result: Result): Choice[] {
+    switch (result[id]) {
     case 'pass': {
       return [{type: 'pass', data: 0}];
     }
@@ -122,6 +121,13 @@ export class Battle implements Gen1.Battle {
     }
   }
 
+  get log() {
+    if (!this.buf) {
+      throw new Error('Attempt to access logs of a battle initialized without logging enabled');
+    }
+    return new DataView(this.buf);
+  }
+
   get sides() {
     return this._sides();
   }
@@ -131,13 +137,13 @@ export class Battle implements Gen1.Battle {
     yield this.side('p2');
   }
 
-  side(id: SideID): Side {
+  side(id: Player): Side {
     const i = id === 'p1' ? 0 : 1;
     const side = this.cache[i];
     return side ?? (this.cache[i] = new Side(this, this.lookup, this.data, id as 'p1' | 'p2'));
   }
 
-  foe(side: SideID): Side {
+  foe(side: Player): Side {
     return this.side(side === 'p1' ? 'p2' : 'p1');
   }
 

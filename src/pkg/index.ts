@@ -1,10 +1,12 @@
 import {
-  BoostsTable, Generation, ID, PokemonSet, SideID, StatsTable, StatusName, TypeName,
+  BoostsTable, Generation, ID, PokemonSet, StatsTable, StatusName, TypeName,
 } from '@pkmn/data';
 
 import {Lookup} from './data';
+import * as addon from './addon';
 import * as gen1 from './gen1';
 
+export type Player = 'p1' | 'p2';
 export type Slot = 1 | 2 | 3 | 4 | 5 | 6;
 
 export type Battle = Gen1.Battle;
@@ -14,7 +16,7 @@ export type MoveSlot = Gen1.MoveSlot;
 
 export interface API {
   update(c1: Choice, c2: Choice): Result;
-  choices(id: SideID, request: Choice['type']): Choice[];
+  choices(id: Player, result: Result): Choice[];
 }
 
 export namespace Gen1 {
@@ -112,18 +114,19 @@ export interface PlayerOptions {
 }
 
 export interface Choice {
-  type: 'move' | 'switch' | 'pass';
+  type: 'pass' | 'move' | 'switch';
   data: number;
 }
 
 export interface Result {
-  type: 'none' | 'win' | 'lose' | 'tie' | 'error';
+  type: undefined | 'win' | 'lose' | 'tie' | 'error';
   p1: Choice['type'];
   p2: Choice['type'];
 }
 
 export const Battle = new class {
   create(gen: Generation, options: CreateOptions) {
+    addon.check(options.showdown);
     const lookup = Lookup.get(gen);
     switch (gen.num) {
     case 1: return gen1.Battle.create(gen, lookup, options);
@@ -132,6 +135,7 @@ export const Battle = new class {
   }
 
   restore(gen: Generation, battle: Battle, options: RestoreOptions) {
+    addon.check(options.showdown);
     const lookup = Lookup.get(gen);
     switch (gen.num) {
     case 1: return gen1.Battle.restore(gen, lookup, battle, options);
@@ -148,10 +152,28 @@ export class Choice {
   static parse(byte: number): Choice {
     return {type: Choice.Types[byte & 0b11], data: byte >> 4};
   }
+
+  static encode(choice?: Choice): number {
+    return (choice
+      ? (choice.data << 4 | (choice.type === 'pass' ? 0 : choice.type === 'move' ? 1 : 2))
+      : 0);
+  }
+
+  static pass(): Choice {
+    return {type: 'pass', data: 0};
+  }
+
+  static move(data: 0 | 1 | 2 | 3 | 4): Choice {
+    return {type: 'move', data};
+  }
+
+  static switch(data: 2 | 3 | 4 | 5 | 6): Choice {
+    return {type: 'switch', data};
+  }
 }
 
 export class Result {
-  static Types = ['none', 'win', 'lose', 'tie', 'error'] as const;
+  static Types = [undefined, 'win', 'lose', 'tie', 'error'] as const;
 
   private constructor() {}
 

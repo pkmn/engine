@@ -41,7 +41,7 @@ export class SideInfo {
 
 export interface PokemonInfo {
   name: string;
-  gender?: GenderName;
+  gender?: string;
   shiny?: boolean;
 }
 

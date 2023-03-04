@@ -50,7 +50,7 @@ int main(int argc, char **argv)
    // libpkmn doesn't provide any helpers for initializing the battle structure
    // (the library is intended to be wrapped by something with a higher level API).
    // This setup borrows the serialized state of the setup from the Zig example,
-   // though will end up with a different result because it's using a different RNG.
+   // though will end up with a different result because it's using a different RNG
    pkmn_gen1_battle battle = { {
       0x25, 0x01, 0xc4, 0x00, 0xc4, 0x00, 0xbc, 0x00, 0xe4, 0x00, 0x4f, 0x18, 0x0e, 0x30, 0x4b, 0x28,
       0x22, 0x18, 0x25, 0x01, 0x00, 0x01, 0x3a, 0x64, 0x19, 0x01, 0xca, 0x00, 0xb8, 0x00, 0xe4, 0x00,

@@ -10,7 +10,7 @@ import {LE, PROTOCOL, Data, Lookup} from './data';
 import {Info, Log} from './protocol';
 
 const ArgType = PROTOCOL.ArgType;
-const teams = path.resolve(__dirname, '..', 'examples', 'js', 'teams');
+const teams = path.resolve(__dirname, 'fixtures');
 const team = (p: 'p1' | 'p2') =>
   Team.import(fs.readFileSync(path.join(teams, `${p}.txt`), 'utf8'), Dex as any)!.team;
 

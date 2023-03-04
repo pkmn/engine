@@ -24,8 +24,13 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     it('Choice.parse', () => {
-      expect(Choice.parse(0b0100_0001)).toEqual({type: 'move', data: 4});
-      expect(Choice.parse(0b0101_0010)).toEqual({type: 'switch', data: 5});
+      expect(Choice.parse(0b0100_0001)).toEqual(Choice.move(4));
+      expect(Choice.parse(0b0101_0010)).toEqual(Choice.switch(5));
+    });
+
+    it('Choice.encode', () => {
+      expect(Choice.encode(Choice.move(4))).toBe(0b0100_0001);
+      expect(Choice.encode(Choice.switch(5))).toBe(0b0101_0010);
     });
 
     it('Result.parse', () => {

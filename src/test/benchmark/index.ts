@@ -12,6 +12,7 @@ import {Stats} from 'trakr';
 import {PatchedBattleStream, patch} from '../showdown/common';
 import {newSeed} from './common';
 
+import * as engine from '../../pkg';
 import * as gen1 from './gen1';
 
 const argv = minimist(process.argv.slice(2), {default: {battles: 10000}});
@@ -105,7 +106,7 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
       const newAI = (
         playerStream: Streams.ObjectReadWriteStream<string>,
         battleStream: BattleStreams.BattleStream,
-        id: SideID,
+        id: engine.Player,
         rand: PRNG
       ): BattleStreams.BattlePlayer => {
         switch (gen.num) {
@@ -154,13 +155,13 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
       const gen = GENS.get(format[3]);
       patch.generation(gen);
 
-      let choices: (battle: Battle, id: SideID) => string[];
+      let choices: (battle: Battle, id: engine.Player) => string[];
       switch (gen.num) {
       case 1: choices = gen1.Choices.sim; break;
       default: throw new Error(`Unsupported gen: ${gen.num}`);
       }
 
-      const choose = (battle: Battle, id: SideID, rand: PRNG) => {
+      const choose = (battle: Battle, id: engine.Player, rand: PRNG) => {
         const options = choices(battle, id);
         const choice = options[rand.next(options.length)];
         if (choice) battle.choose(id, choice);
