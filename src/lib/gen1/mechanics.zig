@@ -398,7 +398,7 @@ fn executeMove(
 
     if (!skip_can and !try canMove(battle, player, mslot, auto, skip_pp, from, log)) return null;
 
-    return doMove(battle, player, mslot, log);
+    return doMove(battle, player, mslot, auto, log);
 }
 
 const BeforeMove = union(enum) { done, skip_can, skip_pp, ok, err };
@@ -644,11 +644,11 @@ fn decrementPP(side: *Side, mslot: u4, auto: bool) void {
     if (volatiles.Bide or volatiles.MultiHit) return;
 
     assert(active.move(mslot).pp > 0 or auto);
-    active.move(mslot).pp = @intCast(u6, active.move(mslot).pp -% 1);
+    active.move(mslot).pp = @intCast(u6, active.move(mslot).pp) -% 1;
     if (volatiles.Transform) return;
 
     assert(side.stored().move(mslot).pp > 0 or auto);
-    side.stored().move(mslot).pp = @intCast(u6, side.stored().move(mslot).pp -% 1);
+    side.stored().move(mslot).pp = @intCast(u6, side.stored().move(mslot).pp) -% 1;
     assert(active.move(mslot).pp == side.stored().move(mslot).pp);
 }
 
@@ -656,16 +656,16 @@ fn incrementPP(side: *Side, mslot: u4) void {
     var active = &side.active;
     const volatiles = &active.volatiles;
 
-    active.move(mslot).pp +%= 1;
+    active.move(mslot).pp = @intCast(u6, active.move(mslot).pp) +% 1;
     // GLITCH: No check for Transform means an empty/incorrect stored slot can get incremented
     if (showdown and volatiles.Transform) return;
 
     assert(mslot > 0 and mslot <= 4);
-    side.stored().moves[mslot - 1].pp +%= 1;
+    side.stored().moves[mslot - 1].pp = @intCast(u6, side.stored().moves[mslot - 1].pp) +% 1;
 }
 
 // Pokémon Showdown does hit/multi/crit/damage instead of crit/damage/hit/multi
-fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
+fn doMove(battle: anytype, player: Player, mslot: u4, auto: bool, log: anytype) !?Result {
     var side = battle.side(player);
     const foe = battle.foe(player);
 
@@ -762,8 +762,8 @@ fn doMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
     assert(!immune or miss or move.effect == .Binding);
 
     if (!showdown or !miss) {
-        if (move.effect == .MirrorMove) return mirrorMove(battle, player, mslot, log);
-        if (move.effect == .Metronome) return metronome(battle, player, mslot, log);
+        if (move.effect == .MirrorMove) return mirrorMove(battle, player, mslot, auto, log);
+        if (move.effect == .Metronome) return metronome(battle, player, mslot, auto, log);
         if (move.effect.onEnd()) {
             try onEnd(battle, player, move, log);
             return null;
@@ -1120,7 +1120,7 @@ fn applyDamage(
     return false;
 }
 
-fn mirrorMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
+fn mirrorMove(battle: anytype, player: Player, mslot: u4, auto: bool, log: anytype) !?Result {
     var side = battle.side(player);
     const foe = battle.foe(player);
 
@@ -1133,11 +1133,11 @@ fn mirrorMove(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result
 
     incrementPP(side, mslot);
 
-    if (!try canMove(battle, player, mslot, false, false, .MirrorMove, log)) return null;
-    return doMove(battle, player, mslot, log);
+    if (!try canMove(battle, player, mslot, auto, false, .MirrorMove, log)) return null;
+    return doMove(battle, player, mslot, auto, log);
 }
 
-fn metronome(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result {
+fn metronome(battle: anytype, player: Player, mslot: u4, auto: bool, log: anytype) !?Result {
     var side = battle.side(player);
 
     side.last_selected_move = if (showdown) blk: {
@@ -1155,8 +1155,8 @@ fn metronome(battle: anytype, player: Player, mslot: u4, log: anytype) !?Result 
 
     incrementPP(side, mslot);
 
-    if (!try canMove(battle, player, mslot, false, false, .Metronome, log)) return null;
-    return doMove(battle, player, mslot, log);
+    if (!try canMove(battle, player, mslot, auto, false, .Metronome, log)) return null;
+    return doMove(battle, player, mslot, auto, log);
 }
 
 fn checkHit(battle: anytype, player: Player, move: Move.Data, log: anytype) !bool {
