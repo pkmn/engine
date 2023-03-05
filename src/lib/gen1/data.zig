@@ -56,7 +56,7 @@ pub fn Battle(comptime RNG: anytype) type {
         }
 
         pub inline fn active(self: *Self, player: Player) ID {
-            return player.ident(@truncate(u3, self.side(player).order[0]));
+            return player.ident(@intCast(u3, self.side(player).order[0]));
         }
 
         pub fn update(self: *Self, c1: Choice, c2: Choice, log: anytype) !Result {
@@ -307,7 +307,7 @@ pub fn Stats(comptime T: type) type {
             assert(level > 0 and level <= 100);
             const core: u32 = (2 *% (@as(u32, base) +% dv)) +% @as(u32, (std.math.sqrt(exp) / 4));
             const factor: u32 = if (std.mem.eql(u8, stat, "hp")) level + 10 else 5;
-            return @truncate(T, core *% @as(u32, level) / 100 +% factor);
+            return @intCast(T, core *% @as(u32, level) / 100 +% factor);
         }
     };
 }

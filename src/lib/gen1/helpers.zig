@@ -97,7 +97,7 @@ pub const Side = struct {
 
         for (0..ps.len) |i| {
             side.pokemon[i] = Pokemon.init(ps[i]);
-            side.order[i] = @truncate(u4, i) + 1;
+            side.order[i] = @intCast(u4, i) + 1;
         }
         return side;
     }
@@ -108,7 +108,7 @@ pub const Side = struct {
 
         for (0..n) |i| {
             side.pokemon[i] = Pokemon.random(rand, opt);
-            side.order[i] = @truncate(u4, i) + 1;
+            side.order[i] = @intCast(u4, i) + 1;
         }
 
         return side;
@@ -142,7 +142,7 @@ pub const Pokemon = struct {
         for (p.moves, 0..) |m, j| {
             pokemon.moves[j].id = m;
             // NB: PP can be at most 61 legally (though can overflow to 63)
-            pokemon.moves[j].pp = @truncate(u8, @min(Move.pp(m) / 5 * 8, 61));
+            pokemon.moves[j].pp = @intCast(u8, @min(Move.pp(m) / 5 * 8, 61));
         }
         if (p.hp) |hp| {
             pokemon.hp = hp;
@@ -187,7 +187,7 @@ pub const Pokemon = struct {
             const pp_ups =
                 if (!opt.cleric and rand.chance(u8, 1, 10)) rand.range(u2, 0, 2 + 1) else 3;
             // NB: PP can be at most 61 legally (though can overflow to 63)
-            const max_pp = @truncate(u8, @min(Move.pp(m) / 5 * (5 + @as(u8, pp_ups)), 61));
+            const max_pp = @intCast(u8, @min(Move.pp(m) / 5 * (5 + @as(u8, pp_ups)), 61));
             ms[i] = .{
                 .id = m,
                 .pp = if (opt.cleric) max_pp else rand.range(u8, 0, max_pp + 1),

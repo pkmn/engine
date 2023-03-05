@@ -20,7 +20,7 @@ export fn pkmn_choice_init(choice: u8, data: u8) u8 {
     assert(data <= 6);
     return @bitCast(u8, pkmn.Choice{
         .type = @intToEnum(pkmn.Choice.Type, choice),
-        .data = @truncate(u4, data),
+        .data = @intCast(u4, data),
     });
 }
 

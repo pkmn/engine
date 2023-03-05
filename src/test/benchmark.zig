@@ -212,7 +212,7 @@ fn dump() !void {
 
     if (data) |ds| {
         if (buf) |b| {
-            try w.writeByte(@truncate(u8, b.items.len));
+            try w.writeByte(@intCast(u8, b.items.len));
             try w.writeAll(b.items);
         } else {
             try w.writeByte(0);

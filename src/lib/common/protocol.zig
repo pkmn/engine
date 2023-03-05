@@ -592,17 +592,17 @@ pub fn format(comptime formatter: Formatter, a: []const u8, b: ?[]const u8, colo
             .OHKO,
             => {},
             .Move => {
-                const source = ID.from(@truncate(u4, a[i]));
+                const source = ID.from(@intCast(u4, a[i]));
                 printc(" {s}({d})", .{ @tagName(source.player), source.id }, a, b, &i, 1, color);
                 printc(" {s}", .{formatter(.Move, a[i])}, a, b, &i, 1, color);
-                const target = ID.from(@truncate(u4, a[i]));
+                const target = ID.from(@intCast(u4, a[i]));
                 printc(" {s}({d})", .{ @tagName(target.player), target.id }, a, b, &i, 1, color);
                 const reason = @intToEnum(Move, a[i]);
                 printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
                 if (reason == .From) printc(" {s}", .{formatter(.Move, a[i])}, a, b, &i, 1, color);
             },
             .Switch => {
-                const id = ID.from(@truncate(u4, a[i]));
+                const id = ID.from(@intCast(u4, a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {s}", .{formatter(.Species, a[i])}, a, b, &i, 1, color);
                 printc(" L{d}", .{a[i]}, a, b, &i, 1, color);
@@ -623,7 +623,7 @@ pub fn format(comptime formatter: Formatter, a: []const u8, b: ?[]const u8, colo
                 printc(" {s}", .{formatter(.Status, a[i])}, a, b, &i, 1, color);
             },
             .Cant => {
-                const id = ID.from(@truncate(u4, a[i]));
+                const id = ID.from(@intCast(u4, a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 const reason = @intToEnum(Cant, a[i]);
                 printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
@@ -638,7 +638,7 @@ pub fn format(comptime formatter: Formatter, a: []const u8, b: ?[]const u8, colo
             .SuperEffective,
             .Resisted,
             => {
-                const id = ID.from(@truncate(u4, a[i]));
+                const id = ID.from(@intCast(u4, a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
             },
             .Turn => {
@@ -650,7 +650,7 @@ pub fn format(comptime formatter: Formatter, a: []const u8, b: ?[]const u8, colo
             },
             .Win => printc(" {s}", .{@tagName(@intToEnum(Player, a[i]))}, a, b, &i, 1, color),
             .Damage, .Heal => {
-                var id = ID.from(@truncate(u4, a[i]));
+                var id = ID.from(@intCast(u4, a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 switch (endian) {
                     .Big => {
@@ -671,20 +671,20 @@ pub fn format(comptime formatter: Formatter, a: []const u8, b: ?[]const u8, colo
                     const reason = a[i];
                     printc(" {s}", .{@tagName(@intToEnum(Damage, reason))}, a, b, &i, 1, color);
                     if (reason == @enumToInt(Damage.RecoilOf)) {
-                        id = ID.from(@truncate(u4, a[i]));
+                        id = ID.from(@intCast(u4, a[i]));
                         printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                     }
                 } else {
                     const reason = @intToEnum(Heal, a[i]);
                     printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
                     if (reason == .Drain) {
-                        id = ID.from(@truncate(u4, a[i]));
+                        id = ID.from(@intCast(u4, a[i]));
                         printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                     }
                 }
             },
             .Status => {
-                const id = ID.from(@truncate(u4, a[i]));
+                const id = ID.from(@intCast(u4, a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {s}", .{formatter(.Status, a[i])}, a, b, &i, 1, color);
                 const reason = @intToEnum(Status, a[i]);
@@ -692,39 +692,39 @@ pub fn format(comptime formatter: Formatter, a: []const u8, b: ?[]const u8, colo
                 if (reason == .From) printc(" {s}", .{formatter(.Move, a[i])}, a, b, &i, 1, color);
             },
             .CureStatus => {
-                const id = ID.from(@truncate(u4, a[i]));
+                const id = ID.from(@intCast(u4, a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {s}", .{formatter(.Status, a[i])}, a, b, &i, 1, color);
                 printc(" {s}", .{@tagName(@intToEnum(CureStatus, a[i]))}, a, b, &i, 1, color);
             },
             .Boost => {
-                const id = ID.from(@truncate(u4, a[i]));
+                const id = ID.from(@intCast(u4, a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {s}", .{@tagName(@intToEnum(Boost, a[i]))}, a, b, &i, 1, color);
                 printc(" {d}", .{a[i]}, a, b, &i, 1, color);
             },
             .Fail => {
-                const id = ID.from(@truncate(u4, a[i]));
+                const id = ID.from(@intCast(u4, a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {s}", .{@tagName(@intToEnum(Fail, a[i]))}, a, b, &i, 1, color);
             },
             .HitCount => {
-                const id = ID.from(@truncate(u4, a[i]));
+                const id = ID.from(@intCast(u4, a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {d}", .{a[i]}, a, b, &i, 1, color);
             },
             .Prepare => {
-                const id = ID.from(@truncate(u4, a[i]));
+                const id = ID.from(@intCast(u4, a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {s}", .{formatter(.Move, a[i])}, a, b, &i, 1, color);
             },
             .Activate => {
-                const id = ID.from(@truncate(u4, a[i]));
+                const id = ID.from(@intCast(u4, a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {s}", .{@tagName(@intToEnum(Activate, a[i]))}, a, b, &i, 1, color);
             },
             .Start => {
-                const id = ID.from(@truncate(u4, a[i]));
+                const id = ID.from(@intCast(u4, a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 const reason = a[i];
                 printc(" {s}", .{@tagName(@intToEnum(Start, reason))}, a, b, &i, 1, color);
@@ -740,19 +740,19 @@ pub fn format(comptime formatter: Formatter, a: []const u8, b: ?[]const u8, colo
                 }
             },
             .End => {
-                const id = ID.from(@truncate(u4, a[i]));
+                const id = ID.from(@intCast(u4, a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {s}", .{@tagName(@intToEnum(End, a[i]))}, a, b, &i, 1, color);
             },
             .Immune => {
-                const id = ID.from(@truncate(u4, a[i]));
+                const id = ID.from(@intCast(u4, a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {s}", .{@tagName(@intToEnum(Immune, a[i]))}, a, b, &i, 1, color);
             },
             .Transform => {
-                const source = ID.from(@truncate(u4, a[i]));
+                const source = ID.from(@intCast(u4, a[i]));
                 printc(" {s}({d})", .{ @tagName(source.player), source.id }, a, b, &i, 1, color);
-                const target = ID.from(@truncate(u4, a[i]));
+                const target = ID.from(@intCast(u4, a[i]));
                 printc(" {s}({d})", .{ @tagName(target.player), target.id }, a, b, &i, 1, color);
             },
             else => unreachable,

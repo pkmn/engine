@@ -34,8 +34,8 @@ fn bindings(env: c.napi_env) c.napi_value {
 }
 
 fn bind(env: c.napi_env, gen: anytype) c.napi_value {
-    const options_size = @truncate(u32, gen.OPTIONS_SIZE);
-    const logs_size = @truncate(u32, gen.LOGS_SIZE);
+    const options_size = @intCast(u32, gen.OPTIONS_SIZE);
+    const logs_size = @intCast(u32, gen.LOGS_SIZE);
     var object = Object.init(env);
     const properties = [_]c.napi_property_descriptor{
         Property.init("OPTIONS_SIZE", .{ .value = Number.init(env, options_size) }),

@@ -58,7 +58,7 @@ pub fn Battle(comptime RNG: anytype) type {
         }
 
         pub inline fn active(self: *Self, player: Player) ID {
-            return player.ident(@truncate(u3, self.side(player).pokemon[0].position));
+            return player.ident(@intCast(u3, self.side(player).pokemon[0].position));
         }
 
         pub fn update(self: *Self, c1: Choice, c2: Choice, log: anytype) !Result {
@@ -205,7 +205,7 @@ const DVs = packed struct {
             0xFF => .Unknown,
             else => if ((@as(u8, dvs.atk) << 4 | dvs.spe) < ratio) Gender.Female else Gender.Male,
         };
-        const p = @truncate(u6, 1 + ((5 * @as(u8, (dvs.atk & 0b1000) | ((dvs.def & 0b1000)) >> 1 |
+        const p = @intCast(u6, 1 + ((5 * @as(u8, (dvs.atk & 0b1000) | ((dvs.def & 0b1000)) >> 1 |
             ((dvs.spe & 0b1000)) >> 2 | ((dvs.spc & 0b1000)) >> 3) + (dvs.spc & 0b0011)) >> 1));
         var t = @as(u8, dvs.def & 0b0011) + (@as(u8, dvs.atk & 0b0011) << 2) + 1;
         if (t >= @enumToInt(Type.@"???")) t = t + 1;

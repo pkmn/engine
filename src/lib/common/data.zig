@@ -33,7 +33,7 @@ pub const ID = packed struct {
     }
 
     pub inline fn int(self: ID) u4 {
-        return @truncate(u4, @bitCast(u8, self));
+        return @intCast(u4, @bitCast(u8, self));
     }
 
     pub inline fn from(id: u4) ID {

@@ -595,7 +595,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const precedenceFn =
     `pub fn precedence(t1: Type, t2: Type) u8 {
         for (PRECEDENCE, 0..) |matchup, i| {
-            if (matchup.type1 == t1 and matchup.type2 == t2) return @truncate(u8, i);
+            if (matchup.type1 == t1 and matchup.type2 == t2) return @intCast(u8, i);
         }
         unreachable;
     }`;

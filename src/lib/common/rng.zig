@@ -47,7 +47,7 @@ pub const PSRNG = extern struct {
     }
 
     pub fn range(self: *PSRNG, comptime T: type, from: T, to: Bound(T)) T {
-        return @truncate(T, @as(u64, self.src.next()) * (to - from) / divisor + from);
+        return @intCast(T, @as(u64, self.src.next()) * (to - from) / divisor + from);
     }
 
     pub fn chance(self: *PSRNG, comptime T: type, numerator: T, denominator: Bound(T)) bool {
@@ -80,7 +80,7 @@ pub const Gen12 = extern struct {
     }
 
     pub fn percent(p: u8) u8 {
-        return @truncate(u8, (@as(u16, p) * 0xFF) / 100);
+        return @intCast(u8, (@as(u16, p) * 0xFF) / 100);
     }
 
     pub fn next(self: *Gen12) u8 {
@@ -114,7 +114,7 @@ pub const Gen34 = extern struct {
 
     pub fn next(self: *Gen34) u16 {
         self.advance();
-        return @truncate(u16, self.seed >> 16);
+        return @intCast(u16, self.seed >> 16);
     }
 
     pub fn advance(self: *Gen34) void {
@@ -144,7 +144,7 @@ pub const Gen56 = extern struct {
 
     pub fn next(self: *Gen56) u32 {
         self.advance();
-        return @truncate(u32, self.seed >> 32);
+        return @intCast(u32, self.seed >> 32);
     }
 
     pub fn advance(self: *Gen56) void {
@@ -190,7 +190,7 @@ pub fn FixedRNG(comptime gen: comptime_int, comptime len: usize) type {
 
         pub fn range(self: *Self, comptime T: type, from: T, to: Bound(T)) T {
             assert(showdown);
-            return @truncate(T, @as(u64, self.next()) * (to - from) / divisor + from);
+            return @intCast(T, @as(u64, self.next()) * (to - from) / divisor + from);
         }
 
         pub fn chance(
