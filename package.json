@@ -107,14 +107,13 @@
       }
     }, {
       "files": ["src/pkg/addon.ts"],
-      "rules": {
-        "@typescript-eslint/no-var-requires": "off"
-      }
+      "rules": {"@typescript-eslint/no-var-requires": "off"}
     },{
       "files": ["src/test/benchmark/*.ts"],
-      "rules": {
-        "@typescript-eslint/no-unused-vars": "off"
-      }
+      "rules": {"@typescript-eslint/no-unused-vars": "off"}
+    }, {
+      "files": ["src/test/integration/index.test.ts"],
+      "rules": {"jest/no-standalone-expect": "off"}
     }, {
       "files": ["src/test/showdown/**"],
       "rules": {

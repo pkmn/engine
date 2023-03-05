@@ -6,11 +6,11 @@ import {Choice, Result} from '.';
 
 const ROOT = path.join(__dirname, '..', '..');
 
-interface Binding {
-  OPTIONS_SIZE: number;
-  LOGS_SIZE: number;
-  update(battle: ArrayBuffer, c1: number, c2: number, log: ArrayBuffer | undefined): number;
-  // TODO: choices(battle: ArrayBuffer, p: number, c: number): Choice[];
+let ADDON: AddOn | undefined = undefined;
+
+interface AddOn {
+  showdown?: Bindings<true>;
+  pkmn?: Bindings<false>;
 }
 
 interface Bindings<T extends boolean> {
@@ -18,8 +18,12 @@ interface Bindings<T extends boolean> {
   bindings: Binding[];
 }
 
-interface AddOn { showdown?: Bindings<true>; pkmn?: Bindings<false> }
-let ADDON: AddOn | undefined = undefined;
+interface Binding {
+  OPTIONS_SIZE: number;
+  LOGS_SIZE: number;
+  update(battle: ArrayBuffer, c1: number, c2: number, log: ArrayBuffer | undefined): number;
+  // TODO: choices(battle: ArrayBuffer, p: number, c: number): Choice[];
+}
 
 function load() {
   if (ADDON) return ADDON;
@@ -49,6 +53,13 @@ export function check(showdown?: boolean) {
   }
 }
 
+export function supports(mode: 'showdown' | 'pkmn', trace?: boolean) {
+  if (!load()[mode]) return false;
+  if (trace === undefined) return true;
+  return ADDON![mode]!.options.trace === trace;
+}
+
+// TODO: compare performance of skipping the load check and simply asserting `ADDON!`
 export function update(
   gen: GenerationNum,
   showdown: boolean,
