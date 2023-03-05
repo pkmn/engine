@@ -19,7 +19,9 @@ jobs:
       - uses: goto-bus-stop/setup-zig@v2
         with:
           version: master
-      - run: npm install
+      - run: npm install --ignore-scripts
       - run: zig build -Doptimize=ReleaseSafe ${{matrix.options}} fuzz -- ${{matrix.gen}} 15m
-      - run: npm run integration -- --gen=${{matrix.gen}} --duration=15m
+      - run: |
+          node src/bin/install-pkmn-engine --options="-Dshowdown -Dtrace"
+          npm run integration -- --gen=${{matrix.gen}} --duration=15m
         if: ${{ matrix.options != '' }}

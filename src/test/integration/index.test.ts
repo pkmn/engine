@@ -4,6 +4,7 @@ import {Dex} from '@pkmn/sim';
 import {run} from './common';
 
 describe('integration', () => {
+  // TODO: skip if not -Dshowdown and -Dtrace!
   it('test', async () => {
     const gens = new Generations(Dex as any);
     expect(await run(gens, {prng: [1, 2, 3, 4]})).toBe(0);
