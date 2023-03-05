@@ -323,7 +323,7 @@ The Pokémon identified by [`Ident`](#pokemonident) has taken damage and now has
      8| [of]?         |
       +---------------+
 
-Equivalent to `|-boost|` above, but the Pokémon has healed damage instead. If `Reason` is `0x02`
+Equivalent to `|-damage|` above, but the Pokémon has healed damage instead. If `Reason` is `0x02`
 then the damage was healed `[from]` a draining move indicated by the subsequent byte `[of]`.
 
 <details><summary>Reason</summary>
