@@ -58,16 +58,13 @@ extern const size_t PKMN_MAX_OPTIONS;
  * At least as large as PKMN_MAX_OPTIONS.
  */
 extern const size_t PKMN_OPTIONS_SIZE;
-/**
- * The minimum size in bytes required to hold the largest amount of log data possible
- * from a single update.
- */
+/** The maximum number of bytes possibly logged by a single update. */
 extern const size_t PKMN_MAX_LOGS;
 /**
  * The optimal size in bytes required to hold the largest amount of log data possible
  * from a single update. At least as large as PKMN_MAX_LOGS.
  */
-extern const size_t PKMN_LOG_SIZE;
+extern const size_t PKMN_LOGS_SIZE;
 
 /** Identifier for a single player. */
 typedef enum pkmn_player {
@@ -128,16 +125,13 @@ extern const size_t PKMN_GEN1_MAX_OPTIONS;
  *  At least as large as PKMN_GEN1_MAX_OPTIONS.
  */
 extern const size_t PKMN_GEN1_OPTIONS_SIZE;
-/**
- * The minimum size in bytes required to hold the largest amount of log data possible
- * from a single Generation I update.
- */
+/** The maximum number of bytes possibly logged by a single Generation I update. */
 extern const size_t PKMN_GEN1_MAX_LOGS;
 /**
  * The optimal size in bytes required to hold the largest amount of log data possible
  * from a single Generation I update. At least as large as PKMN_GEN1_MAX_LOGS.
  */
-extern const size_t PKMN_GEN1_LOG_SIZE;
+extern const size_t PKMN_GEN1_LOGS_SIZE;
 
 /** Generation I Pokémon Battle (see src/lib/gen1/README.md#layout for details). */
 PKMN_OPAQUE(PKMN_GEN1_BATTLE_SIZE) pkmn_gen1_battle;
@@ -149,7 +143,7 @@ pkmn_result pkmn_gen1_battle_update(
   pkmn_gen1_battle *battle,
   pkmn_choice c1,
   pkmn_choice c2,
-  uint8_t *buf,
+  uint8_t buf[],
   size_t len);
 /**
  * Fills in out with at most len possible choices for the player given the request and Generation I

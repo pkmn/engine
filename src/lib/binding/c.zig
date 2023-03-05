@@ -13,7 +13,7 @@ export const PKMN_OPTIONS: extern struct { showdown: bool, trace: bool } = .{
 export const PKMN_MAX_OPTIONS = pkmn.MAX_OPTIONS;
 export const PKMN_OPTIONS_SIZE = pkmn.OPTIONS_SIZE;
 export const PKMN_MAX_LOGS = pkmn.MAX_LOGS;
-export const PKMN_LOG_SIZE = pkmn.LOG_SIZE;
+export const PKMN_LOGS_SIZE = pkmn.LOGS_SIZE;
 
 export fn pkmn_choice_init(choice: u8, data: u8) u8 {
     assert(choice <= @typeInfo(pkmn.Choice.Type).Enum.fields.len);
@@ -61,7 +61,7 @@ export fn pkmn_psrng_next(prng: *pkmn.PSRNG) u32 {
 export const PKMN_GEN1_MAX_OPTIONS = pkmn.gen1.MAX_OPTIONS;
 export const PKMN_GEN1_OPTIONS_SIZE = pkmn.gen1.OPTIONS_SIZE;
 export const PKMN_GEN1_MAX_LOGS = pkmn.gen1.MAX_LOGS;
-export const PKMN_GEN1_LOG_SIZE = pkmn.gen1.LOG_SIZE;
+export const PKMN_GEN1_LOGS_SIZE = pkmn.gen1.LOGS_SIZE;
 
 export fn pkmn_gen1_battle_update(
     battle: *pkmn.gen1.Battle(pkmn.gen1.PRNG),

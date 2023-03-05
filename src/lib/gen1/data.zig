@@ -23,7 +23,7 @@ pub const OPTIONS_SIZE = if (builtin.mode == .ReleaseSmall)
     MAX_OPTIONS
 else
     std.math.ceilPowerOfTwo(usize, MAX_OPTIONS) catch unreachable;
-pub const LOG_SIZE = if (builtin.mode == .ReleaseSmall)
+pub const LOGS_SIZE = if (builtin.mode == .ReleaseSmall)
     MAX_LOGS
 else
     std.math.ceilPowerOfTwo(usize, MAX_LOGS) catch unreachable;

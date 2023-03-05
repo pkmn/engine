@@ -8,7 +8,7 @@ const ROOT = path.join(__dirname, '..', '..');
 
 interface Binding {
   OPTIONS_SIZE: number;
-  LOG_SIZE: number;
+  LOGS_SIZE: number;
   update(battle: ArrayBuffer, c1: number, c2: number, log: ArrayBuffer | undefined): number;
   // TODO: choices(battle: ArrayBuffer, p: number, c: number): Choice[];
 }
@@ -64,6 +64,6 @@ export function update(
 export function size(gen: GenerationNum, type: 'options' | 'log') {
   const addon = load();
   const bindings = (addon.showdown ?? addon.pkmn)!.bindings[gen - 1]!;
-  return type === 'options' ? bindings.OPTIONS_SIZE : bindings.LOG_SIZE;
+  return type === 'options' ? bindings.OPTIONS_SIZE : bindings.LOGS_SIZE;
 }
 

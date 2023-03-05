@@ -81,7 +81,7 @@ int main(int argc, char **argv)
    // Preallocate a buffer for trace logs - PKMN_LOGS_SIZE is guaranteed to be large enough for a
    // single update. This will only be written to if -Dtrace is enabled - NULL can be used to turn
    // all of the logging into no-ops
-   size_t size = PKMN_LOG_SIZE;
+   size_t size = PKMN_LOGS_SIZE;
    uint8_t buf[size];
 
    pkmn_result result;

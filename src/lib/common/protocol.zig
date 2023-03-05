@@ -840,7 +840,7 @@ const gen1 = struct {
     pub const helpers = @import("../gen1/helpers.zig");
 };
 
-var buf: [gen1.LOG_SIZE]u8 = undefined;
+var buf: [gen1.LOGS_SIZE]u8 = undefined;
 var stream = std.io.fixedBufferStream(&buf);
 var log: FixedLog = .{ .writer = stream.writer() };
 

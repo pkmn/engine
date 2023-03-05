@@ -35,11 +35,11 @@ fn bindings(env: c.napi_env) c.napi_value {
 
 fn bind(env: c.napi_env, gen: anytype) c.napi_value {
     const options_size = @truncate(u32, gen.OPTIONS_SIZE);
-    const log_size = @truncate(u32, gen.LOG_SIZE);
+    const logs_size = @truncate(u32, gen.LOGS_SIZE);
     var object = Object.init(env);
     const properties = [_]c.napi_property_descriptor{
         Property.init("OPTIONS_SIZE", .{ .value = Number.init(env, options_size) }),
-        Property.init("LOG_SIZE", .{ .value = Number.init(env, log_size) }),
+        Property.init("LOGS_SIZE", .{ .value = Number.init(env, logs_size) }),
         Property.init("update", .{ .method = update(gen) }),
     };
     assert(c.napi_define_properties(env, object, properties.len, &properties) == c.napi_ok);
@@ -71,10 +71,10 @@ fn update(gen: anytype) c.napi_callback {
                 c.napi_undefined, c.napi_null => battle.update(c1, c2, pkmn.protocol.NULL),
                 else => result: {
                     assert(c.napi_get_arraybuffer_info(env, argv[3], &data, &len) == c.napi_ok);
-                    assert(len == gen.LOG_SIZE);
+                    assert(len == gen.LOGS_SIZE);
                     assert(data != null);
 
-                    var buf = @ptrCast([*]u8, data.?)[0..gen.LOG_SIZE];
+                    var buf = @ptrCast([*]u8, data.?)[0..gen.LOGS_SIZE];
                     var stream = std.io.fixedBufferStream(buf);
                     var log = pkmn.protocol.FixedLog{ .writer = stream.writer() };
                     break :result battle.update(c1, c2, log);
