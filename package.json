@@ -89,7 +89,7 @@
     "generate": "npm run compile && node build/tools/generate",
     "benchmark": "npm run compile && node build/test/benchmark",
     "integration": "npm run compile && node build/test/integration",
-    "postinstall": "src/bin/install-pkmn-engine"
+    "postinstall": "node src/bin/install-pkmn-engine"
   },
   "eslintConfig": {
     "extends": "@pkmn",

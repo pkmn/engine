@@ -32,13 +32,13 @@ jobs:
         if: ${{ matrix.zig == 'local' && matrix.os == 'windows-latest' }}
       - run: zig build test ${{matrix.options}}
       - run: zig build test ${{matrix.options}} -Doptimize=ReleaseFast
-      - run: npm exec install-pkmn-engine -- --options=""
+      - run: node src/bin/install-pkmn-engine --options=""
       - run: npm run compile
       - run: npm test
       - run: npm run test:integration
       - run: zig build ${{matrix.options}} -p build
       - run: make example options="${{matrix.options}}"
       - run: make lint
-      - run: make clean && npm exec install-pkmn-engine -- --zig
+      - run: make clean && node src/bin/install-pkmn-engine --zig
       - run: zig build ${{matrix.options}} -p build -Ddynamic
       - run: make c-example options="${{matrix.options}}" dynamic=true

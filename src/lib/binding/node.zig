@@ -61,8 +61,7 @@ fn update(gen: anytype) c.napi_callback {
             assert(data != null);
 
             var aligned = @alignCast(@alignOf(*gen.Battle(gen.PRNG)), data.?);
-            var ptr = @ptrCast(*gen.Battle(gen.PRNG), aligned);
-            var battle = @bitCast(gen.Battle(gen.PRNG), ptr.*);
+            var battle = @ptrCast(*gen.Battle(gen.PRNG), aligned);
             const c1 = @bitCast(pkmn.Choice, Number.get(env, argv[1], u8));
             const c2 = @bitCast(pkmn.Choice, Number.get(env, argv[2], u8));
 
@@ -71,12 +70,14 @@ fn update(gen: anytype) c.napi_callback {
             const result = switch (vtype) {
                 c.napi_undefined, c.napi_null => battle.update(c1, c2, pkmn.protocol.NULL),
                 else => result: {
-                    // var d = undefined;
-                    // assert(c.napi_ok == c.napi_get_arraybuffer_info(env, argv[3], &d, gen.LOG_SIZE));
-                    // var stream = std.io.fixedBufferStream(@bitCast([gen.LOG_SIZE]u8, buf.*));
-                    // var log = pkmn.protocol.FixedLog{ .writer = stream.writer() };
-                    // break :result battle.update(c1, c2, log);
-                    break :result battle.update(c1, c2, pkmn.protocol.NULL);
+                    assert(c.napi_get_arraybuffer_info(env, argv[3], &data, &len) == c.napi_ok);
+                    assert(len == gen.LOG_SIZE);
+                    assert(data != null);
+
+                    var buf = @ptrCast([*]u8, data.?)[0..gen.LOG_SIZE];
+                    var stream = std.io.fixedBufferStream(buf);
+                    var log = pkmn.protocol.FixedLog{ .writer = stream.writer() };
+                    break :result battle.update(c1, c2, log);
                 },
             } catch unreachable;
 

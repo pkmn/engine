@@ -1,6 +1,6 @@
 import 'source-map-support/register';
 
-import {Generations, PokemonSet} from '@pkmn/data';
+import {Generations} from '@pkmn/data';
 import {Dex} from '@pkmn/dex';
 import {Battle, Choice, Log, Lookup, Result} from '@pkmn/engine';
 import {Team} from '@pkmn/sets';
@@ -19,12 +19,10 @@ class Random {
 
   // https://gist.github.com/tommyettinger/46a874533244883189143505d203312c
   next(max: number) {
-    let z = (this.seed += 0x9e3779b9);
-    z ^= z >>> 16;
-    z = Math.imul(z, 0x21f0aaad);
-    z ^= z >>> 15;
-    z = Math.imul(z, 0x735a2d97);
-    z ^= z >>> 15;
+    let z = (this.seed += 0x6d2b79f5 | 0);
+    z = Math.imul(z ^ (z >>> 15), z | 1);
+    z = z ^ (z + Math.imul(z ^ (z >>> 7), z | 61));
+    z = (z ^ (z >>> 14)) >>> 0;
     const n = z / 0x100000000;
     // A more general `next` implementation would return n, but since we need it only for making
     // choices we can instead specialize the function to return a number between [0, max)
@@ -44,7 +42,7 @@ const P1 = Team.unpack(
   'Pikachuu|Pikachu||-|Thunderbolt,ThunderWave,Surf,SeismicToss|||||||]' +
   'Koratta|Rattata||-|SuperFang,BodySlam,Blizzard,Thunderbolt|||||||]' +
   'Poppo|Pidgey||-|DoubleEdge,QuickAttack,WingAttack,MirrorMove|||||||', Dex
-);
+)!.team;
 
 const P2 = Team.unpack(
   'Kentarosu|Tauros||-|BodySlam,HyperBeam,Blizzard,Earthquake|||||||]' +
@@ -53,7 +51,7 @@ const P2 = Team.unpack(
   'Nasshii|Exeggutor||-|SleepPowder,Psychic,Explosion,DoubleEdge|||||||]' +
   'Sutaamii|Starmie||-|Recover,ThunderWave,Blizzard,Thunderbolt|||||||]' +
   'Fuudin|Alakazam||-|Psychic,SeismicToss,ThunderWave,Recover|||||||', Dex
-);
+)!.team;
 
 // Enabling logging means we are required to pass names for our players. NB: Logging
 // still will not actually take place unless we also build with -Dtrace! If we don't run:
@@ -67,8 +65,8 @@ const P2 = Team.unpack(
 const gens = new Generations(Dex);
 const gen = gens.get(1);
 const options = {
-  p1: {name: 'Player A', team: P1!.team as PokemonSet[]},
-  p2: {name: 'Player B', team: P2!.team as PokemonSet[]},
+  p1: {name: 'Player A', team: P1},
+  p2: {name: 'Player B', team: P2},
   seed: [1, 2, 3, 4],
   showdown: true,
   log: true,
@@ -84,7 +82,7 @@ const display = () => {
 const random = new Random();
 const choose = (choices: Choice[]) => choices[random.next(choices.length)];
 
-// For convenience the engine actually is written so that passing in a undefined is equivalent
+// For convenience the engine actually is written so that passing in undefined is equivalent
 // to Choice.pass() but to appease the TypeScript compiler we're going to be explicit here
 let result: Result, c1 = Choice.pass(), c2 = Choice.pass();
 while (!(result = battle.update(c1, c2)).type) {
@@ -98,7 +96,7 @@ while (!(result = battle.update(c1, c2)).type) {
   c1 = choose(battle.choices('p1', result));
   c2 = choose(battle.choices('p2', result));
 }
-// Display any logs that were produced during the last update
+// Remember to display any logs that were produced during the last update
 display();
 
 // The result is from the perspective of P1

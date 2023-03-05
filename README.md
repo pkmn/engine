@@ -177,9 +177,8 @@ engine running in the browser.
 
 ### Zig
 
-The `pkmn` Zig package should be relatively straightforward to use once installed correctly. Helper
-methods exist to simplify state instantiation, and any `Writer` can be used when logging is enabled
-to allow for easily printing e.g. to standard out or a buffer.
+The `pkmn` Zig package exposes helper methods to simplify state instantiation and any `Writer` can
+be used when logging is enabled to allow for easily printing e.g. to standard out or a buffer.
 
 ```zig
 const std = @import("std");

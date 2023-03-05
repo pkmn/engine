@@ -34,8 +34,8 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     it('Result.parse', () => {
-      expect(Result.parse(0b0101_0000)).toEqual({type: 'none', p1: 'move', p2: 'move'});
-      expect(Result.parse(0b1000_0000)).toEqual({type: 'none', p1: 'pass', p2: 'switch'});
+      expect(Result.parse(0b0101_0000)).toEqual({type: undefined, p1: 'move', p2: 'move'});
+      expect(Result.parse(0b1000_0000)).toEqual({type: undefined, p1: 'pass', p2: 'switch'});
     });
   });
 }
