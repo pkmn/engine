@@ -39,88 +39,34 @@ const MASKS = {
 };
 
 export class Battle implements Gen1.Battle {
-  readonly options: BattleOptions;
+  readonly config: BattleOptions;
   readonly log?: DataView;
 
   private readonly lookup: Lookup;
   private readonly data: DataView;
+  private readonly options: ArrayBuffer;
   private readonly buf: ArrayBuffer | undefined;
 
   private readonly cache: [Side?, Side?];
 
-  constructor(lookup: Lookup, data: DataView, options: BattleOptions) {
-    this.options = options;
+  constructor(lookup: Lookup, data: DataView, config: BattleOptions) {
+    this.config = config;
 
     this.lookup = lookup;
     this.data = data;
-    this.buf = options.log ? new ArrayBuffer(addon.size(1, 'log')) : undefined;
-    this.log = options.log ? new DataView(this.buf!) : undefined;
+    this.options = new ArrayBuffer(addon.size(1, 'options'));
+    this.buf = config.log ? new ArrayBuffer(addon.size(1, 'log')) : undefined;
+    this.log = config.log ? new DataView(this.buf!) : undefined;
 
     this.cache = [undefined, undefined];
   }
 
   update(c1?: Choice, c2?: Choice): Result {
-    return addon.update(1, !!this.options.showdown, this.data.buffer, c1, c2, this.buf);
+    return addon.update(1, !!this.config.showdown, this.data.buffer, c1, c2, this.buf);
   }
 
-  // TODO: make native
   choices(id: Player, result: Result): Choice[] {
-    switch (result[id]) {
-    case 'pass': {
-      return [{type: 'pass', data: 0}];
-    }
-    case 'switch': {
-      const options: Choice[] = [];
-      const side = this.side(id);
-      for (let slot = 2; slot <= 6; slot++) {
-        const pokemon = side.get(slot as Slot);
-        if (!pokemon || pokemon.hp === 0) continue;
-        options.push({type: 'switch', data: slot});
-      }
-      return options.length === 0 ? [{type: 'pass', data: 0}] : options;
-    }
-    case 'move': {
-      const options: Choice[] = [];
-
-      const side = this.side(id);
-      const active = side.active!;
-
-      if (active.forced) {
-        return [{type: 'move', data: 0}];
-      }
-
-      for (let slot = 2; slot <= 6; slot++) {
-        const pokemon = side.get(slot as Slot);
-        if (!pokemon || pokemon.hp === 0) continue;
-        options.push({type: 'switch', data: slot});
-      }
-
-      let slot = 0;
-      if (active.limited) {
-        const last = side.lastSelectedMove!;
-        for (const move of active.moves) {
-          if (move.id === last) {
-            options.push({type: 'move', data: move.pp === 0 && move.id === 'bide' ? 0 : slot});
-            return options;
-          }
-        }
-      }
-
-      slot = 0;
-      const before = options.length;
-      for (const move of active.moves) {
-        slot++;
-        if (move.pp === 0 || move.disabled) continue;
-        options.push({type: 'move', data: slot});
-      }
-      if (options.length === before) {
-        // Struggle (Pokémon Showdown would use `move 1` here)
-        options.push({type: 'move', data: 0});
-      }
-
-      return options;
-    }
-    }
+    return addon.choices(1, !!this.config.showdown, this.data.buffer, id, result, this.options);
   }
 
   get sides() {
@@ -151,10 +97,10 @@ export class Battle implements Gen1.Battle {
   }
 
   get prng(): readonly number[] {
-    const offset = OFFSETS.Battle.last_selected_indexes + (this.options.showdown ? 4 : 1);
+    const offset = OFFSETS.Battle.last_selected_indexes + (this.config.showdown ? 4 : 1);
     // Pokémon Showdown's PRNGSeed is always big-endian
     const seed: number[] = [0, 0, 0, 0];
-    if (this.options.showdown) {
+    if (this.config.showdown) {
       seed[LE ? 3 : 0] = this.data.getUint16(offset, LE);
       seed[LE ? 2 : 1] = this.data.getUint16(offset + 2, LE);
       seed[LE ? 1 : 2] = this.data.getUint16(offset + 4, LE);
@@ -287,7 +233,7 @@ export class Side implements Gen1.Side {
 
   get lastSelectedIndex(): 1 | 2 | 3 | 4 | undefined {
     let m: number;
-    if (this.battle.options.showdown) {
+    if (this.battle.config.showdown) {
       const off = this.id === 'p1' ? 0 : 2;
       m = this.data.getUint16(OFFSETS.Battle.last_selected_indexes + off, LE);
     } else {

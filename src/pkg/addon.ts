@@ -2,7 +2,7 @@ import * as path from 'path';
 
 import {GenerationNum} from '@pkmn/data';
 
-import {Choice, Result} from '.';
+import {Choice, Player, Result} from '.';
 
 const ROOT = path.join(__dirname, '..', '..');
 
@@ -22,7 +22,7 @@ interface Binding {
   OPTIONS_SIZE: number;
   LOGS_SIZE: number;
   update(battle: ArrayBuffer, c1: number, c2: number, log: ArrayBuffer | undefined): number;
-  // TODO: choices(battle: ArrayBuffer, p: number, c: number): Choice[];
+  choices(battle: ArrayBuffer, player: number, request: number, options: ArrayBuffer): number;
 }
 
 function load() {
@@ -70,6 +70,23 @@ export function update(
 ) {
   return Result.parse(load()[showdown ? 'showdown' : 'pkmn']!.bindings[gen - 1]
     .update(battle, Choice.encode(c1), Choice.encode(c2), log));
+}
+
+export function choices(
+  gen: GenerationNum,
+  showdown: boolean,
+  battle: ArrayBuffer,
+  player: Player,
+  result: Result,
+  buf: ArrayBuffer,
+) {
+  const request = result[player] === 'pass' ? 0 : result[player] === 'move' ? 1 : 2;
+  const n = load()[showdown ? 'showdown' : 'pkmn']!.bindings[gen - 1]
+    .choices(battle, +(player !== 'p1'), request, buf);
+  const options = new Array<Choice>(n);
+  const data = new Uint8Array(buf);
+  for (let i = 0; i < n; i++) options[i] = Choice.parse(data[i]);
+  return options;
 }
 
 export function size(gen: GenerationNum, type: 'options' | 'log') {

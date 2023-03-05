@@ -2,6 +2,7 @@ import * as sim from '@pkmn/sim';
 import {Generation, PokemonSet, StatsTable, ID} from '@pkmn/data';
 
 import * as engine from '../../pkg';
+import * as gen1 from '../../pkg/gen1';
 import {Lookup} from '../../pkg/data';
 import {newSeed} from './common';
 
@@ -67,6 +68,65 @@ const Player = new class {
 };
 
 export const Choices = new class {
+  engine(battle: gen1.Battle, id: engine.Player, result: engine.Result): engine.Choice[] {
+    switch (result[id]) {
+    case 'pass': {
+      return [{type: 'pass', data: 0}];
+    }
+    case 'switch': {
+      const options: engine.Choice[] = [];
+      const side = battle.side(id);
+      for (let slot = 2; slot <= 6; slot++) {
+        const pokemon = side.get(slot as engine.Slot);
+        if (!pokemon || pokemon.hp === 0) continue;
+        options.push({type: 'switch', data: slot});
+      }
+      return options.length === 0 ? [{type: 'pass', data: 0}] : options;
+    }
+    case 'move': {
+      const options: engine.Choice[] = [];
+
+      const side = battle.side(id);
+      const active = side.active!;
+
+      if (active.forced) {
+        return [{type: 'move', data: 0}];
+      }
+
+      for (let slot = 2; slot <= 6; slot++) {
+        const pokemon = side.get(slot as engine.Slot);
+        if (!pokemon || pokemon.hp === 0) continue;
+        options.push({type: 'switch', data: slot});
+      }
+
+      let slot = 0;
+      if (active.limited) {
+        const last = side.lastSelectedMove!;
+        for (const move of active.moves) {
+          if (move.id === last) {
+            options.push({type: 'move', data: move.pp === 0 && move.id === 'bide' ? 0 : slot});
+            return options;
+          }
+        }
+      }
+
+      slot = 0;
+      const before = options.length;
+      for (const move of active.moves) {
+        slot++;
+        if (move.pp === 0 || move.disabled) continue;
+        options.push({type: 'move', data: slot});
+      }
+      if (options.length === before) {
+        // Struggle (Pokémon Showdown would use `move 1` here)
+        options.push({type: 'move', data: 0});
+      }
+
+      return options;
+    }
+    }
+  }
+
   sim(this: void, battle: sim.Battle, id: engine.Player): string[] {
     const request = battle[id]!.activeRequest;
     if (!request || request.wait) return [];

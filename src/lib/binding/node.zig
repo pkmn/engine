@@ -41,6 +41,7 @@ fn bind(env: c.napi_env, gen: anytype) c.napi_value {
         Property.init("OPTIONS_SIZE", .{ .value = Number.init(env, options_size) }),
         Property.init("LOGS_SIZE", .{ .value = Number.init(env, logs_size) }),
         Property.init("update", .{ .method = update(gen) }),
+        Property.init("choices", .{ .method = choices(gen) }),
     };
     assert(c.napi_define_properties(env, object, properties.len, &properties) == c.napi_ok);
     return object;
@@ -82,6 +83,37 @@ fn update(gen: anytype) c.napi_callback {
             } catch unreachable;
 
             return Number.init(env, @bitCast(u8, result));
+        }
+    }.call;
+}
+
+fn choices(gen: anytype) c.napi_callback {
+    return struct {
+        fn call(env: c.napi_env, info: c.napi_callback_info) callconv(.C) c.napi_value {
+            var argc: usize = 4;
+            var argv: [4]c.napi_value = undefined;
+            assert(c.napi_get_cb_info(env, info, &argc, &argv, null, null) == c.napi_ok);
+            assert(argc == 4);
+
+            var data: ?*anyopaque = undefined;
+            var len: usize = 0;
+            assert(c.napi_get_arraybuffer_info(env, argv[0], &data, &len) == c.napi_ok);
+            assert(len == @sizeOf(gen.Battle(gen.PRNG)));
+            assert(data != null);
+
+            var aligned = @alignCast(@alignOf(*gen.Battle(gen.PRNG)), data.?);
+            var battle = @ptrCast(*gen.Battle(gen.PRNG), aligned);
+
+            const player = @intToEnum(pkmn.Player, Number.get(env, argv[1], u8));
+            const request = @intToEnum(pkmn.Choice.Type, Number.get(env, argv[2], u8));
+
+            assert(c.napi_get_arraybuffer_info(env, argv[3], &data, &len) == c.napi_ok);
+            assert(len == gen.OPTIONS_SIZE);
+            assert(data != null);
+
+            var out = @ptrCast([*]pkmn.Choice, data.?)[0..gen.OPTIONS_SIZE];
+            const n = battle.choices(player, request, out);
+            return Number.init(env, @bitCast(u8, n));
         }
     }.call;
 }
