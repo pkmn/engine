@@ -306,7 +306,8 @@ The Pokémon identified by [`Ident`](#pokemonident) has taken damage and now has
 | `0x01` | `psn`          | No      |
 | `0x02` | `brn`          | No      |
 | `0x03` | `confusion`    | No      |
-| `0x04` | `Recoil\|[of]` | Yes     |
+| `0x04` | `Leech Seed`   | No      |
+| `0x05` | `Recoil\|[of]` | Yes     |
 
 </details>
 

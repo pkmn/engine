@@ -19,7 +19,7 @@ pub const ArgType = enum(u8) {
     LastStill,
     LastMiss,
 
-    // Gen 1expect
+    // Gen 1
     Move,
     Switch,
     Cant,
