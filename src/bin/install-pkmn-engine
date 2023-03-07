@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
+const crypto = require('crypto');
 const fs = require('fs');
 const https = require('https');
 const os = require('os');
@@ -30,10 +31,23 @@ const fetch = url => new Promise((resolve, reject) => {
   req.end();
 });
 
-const download = (url, dest) => new Promise((resolve, reject) => {
+const download = (url, dest, shasum) => new Promise((resolve, reject) => {
   const req = https.request(url, res => {
     if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode}`));
-    resolve(pipeline(res, fs.createWriteStream(dest)));
+    if (shasum) {
+      resolve(pipeline(res, async function* (source) {
+        const hash = crypto.createHash('sha256');
+        for await (const chunk of source) {
+          hash.update(chunk);
+          yield chunk;
+        }
+        if (hash.digest('hex') !== shasum) {
+          throw new Error(`SHA-256 hash of Zig tarball from ${url} does not match expected value`);
+        }
+      }, fs.createWriteStream(dest)));
+    } else {
+     resolve(pipeline(res, fs.createWriteStream(dest)));
+    }
   });
   req.on('error', reject);
   req.end();
@@ -147,32 +161,37 @@ const install = async () => {
 
   const index = JSON.parse(await fetch(INDEX));
   const version = Object.keys(index)[+!ZIG_VERSION.dev];
-  const url = index[version][`${arch}-${platform}`].tarball;
+  const release = index[version][`${arch}-${platform}`];
+  const url = release.tarball;
 
   let base = path.basename(url);
   const archive = path.join(dir, path.basename(url));
 
   console.log(`Downloading Zig tarball from ${url} to ${archive}`);
-  await download(url, archive);
-
-  console.log(`Extracting tarball and installing to ${dir}`);
-  await unpack(archive, dir);
-  if (archive.endsWith('.zip')) {
-    base = base.slice(0, -4);
-  } else {
-    base = base.slice(0, -7);
-  }
-
-  fs.renameSync(path.join(dir, base), path.join(dir, 'zig'));
-
   try {
-    fs.chmodSync(zig, 0o755);
-  } catch (err) {
-    if (err.code !== 'ENOENT') throw err;
-  }
-  console.log(`Zig${version === 'master' ? '' : ` v${version}`} executable:`, zig);
+    await download(url, archive, release.shasum);
 
-  return zig;
+    console.log(`Extracting tarball and installing to ${dir}`);
+    await unpack(archive, dir);
+    if (archive.endsWith('.zip')) {
+      base = base.slice(0, -4);
+    } else {
+      base = base.slice(0, -7);
+    }
+
+    fs.renameSync(path.join(dir, base), path.join(dir, 'zig'));
+
+    try {
+      fs.chmodSync(zig, 0o755);
+    } catch (err) {
+      if (err.code !== 'ENOENT') throw err;
+    }
+    console.log(`Zig${version === 'master' ? '' : ` v${version}`} executable:`, zig);
+
+    return zig;
+  } finally {
+      try { fs.rmSync(archive); } catch {}
+  }
 };
 
 // https://github.com/coilhq/tigerbeetle-node/blob/main/scripts/download_node_headers.sh
