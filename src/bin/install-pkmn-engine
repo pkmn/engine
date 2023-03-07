@@ -6,6 +6,7 @@ const fs = require('fs');
 const https = require('https');
 const os = require('os');
 const path = require('path');
+const tty = require('tty');
 const {execFileSync} = require('child_process');
 const {pipeline} = require('stream/promises');
 
@@ -46,7 +47,7 @@ const download = (url, dest, shasum) => new Promise((resolve, reject) => {
         }
       }, fs.createWriteStream(dest)));
     } else {
-     resolve(pipeline(res, fs.createWriteStream(dest)));
+      resolve(pipeline(res, fs.createWriteStream(dest)));
     }
   });
   req.on('error', reject);
@@ -186,11 +187,18 @@ const install = async () => {
     } catch (err) {
       if (err.code !== 'ENOENT') throw err;
     }
-    console.log(`Zig${version === 'master' ? '' : ` v${version}`} executable:`, zig);
+    console.log(`Zig${version === 'master' ? '' : ` v${version}`} executable:`, zig,
+      '(this version of Zig will be retained to speed up future updates)');
+    const [pre, post] = tty.isatty(1) ? ['\x1b[1m\x1b[35m', '\x1b[0m'] : ['', ''];
+    console.log(
+      `${pre}Consider moving the ${path.dirname(zig)} directory and adding it to your PATH`,
+      `to use Zig on other projects, or delete this if you wish to save space.${post}`
+    );
 
     return zig;
   } finally {
-      try { fs.rmSync(archive); } catch {}
+    console.log(`Cleaning up ${archive}`);
+    try { fs.rmSync(archive); } catch {}
   }
 };
 
