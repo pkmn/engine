@@ -74,7 +74,7 @@ const options = {
 const battle = Battle.create(gen, options);
 const log = new Log(gen, Lookup.get(gen), options);
 const display = () => {
-  for (const line of log.parse(battle.log)) {
+  for (const line of log.parse(battle.log!)) {
     console.log(line);
   }
 };

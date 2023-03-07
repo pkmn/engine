@@ -40,6 +40,7 @@ const MASKS = {
 
 export class Battle implements Gen1.Battle {
   readonly options: BattleOptions;
+  readonly log?: DataView;
 
   private readonly lookup: Lookup;
   private readonly data: DataView;
@@ -53,6 +54,7 @@ export class Battle implements Gen1.Battle {
     this.lookup = lookup;
     this.data = data;
     this.buf = options.log ? new ArrayBuffer(addon.size(1, 'log')) : undefined;
+    this.log = options.log ? new DataView(this.buf!) : undefined;
 
     this.cache = [undefined, undefined];
   }
@@ -119,13 +121,6 @@ export class Battle implements Gen1.Battle {
       return options;
     }
     }
-  }
-
-  get log() {
-    if (!this.buf) {
-      throw new Error('Attempt to access logs of a battle initialized without logging enabled');
-    }
-    return new DataView(this.buf);
   }
 
   get sides() {
