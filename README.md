@@ -253,7 +253,7 @@ necessarily be up-to-date/complete/correct - inclusion in this list does not imp
 | Language   | License   | URL                                     |
 | ---------- | --------- | --------------------------------------- |
 | **C++**    | `BSL-1.0` | https://github.com/pasyg/engine-wrapper |
-| **Python** | `MIT`     | https://github.com/AnnikaCodes/pykmn    |
+| **Python** | `MIT`     | https://github.com/AnnikaCodes/PyKMN    |
 
 ## Status
 
