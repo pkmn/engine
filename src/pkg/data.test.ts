@@ -8,7 +8,7 @@ for (const gen of new Generations(Dex as any)) {
 
   const lookup = Lookup.get(gen);
   describe(`Gen ${gen.num}`, () => {
-    it('Lookup.sizes', () => {
+    test('Lookup.sizes', () => {
       const i = gen.num - 1;
       expect(lookup.sizes).toEqual({
         types: [15, 18][i],
@@ -18,23 +18,23 @@ for (const gen of new Generations(Dex as any)) {
       });
     });
 
-    it('Lookup.type', () => {
+    test('Lookup.type', () => {
       expect(lookup.typeByName('Rock')).toBe(5);
       expect(lookup.typeByNum(14)).toBe(gen.num === 1 ? 'Dragon' : 'Psychic');
     });
 
-    it('Lookup.species', () => {
+    test('Lookup.species', () => {
       expect(lookup.speciesByID('gengar' as ID)).toBe(94);
       expect(lookup.speciesByNum(151)).toBe('mew');
     });
 
-    it('Lookup.move', () => {
+    test('Lookup.move', () => {
       expect(lookup.moveByID('lowkick' as ID)).toBe(67);
       expect(lookup.moveByNum(133)).toBe('amnesia');
     });
 
     if (gen.num > 1) {
-      it('Lookup.item', () => {
+      test('Lookup.item', () => {
         expect(lookup.itemByID('leftovers' as ID)).toBe(28);
         expect(lookup.itemByNum(24)).toBe('thickclub');
         expect(lookup.itemByID('mail' as ID)).toBe(61);

@@ -34,7 +34,7 @@ for (const gen of new Generations(Dex as any)) {
   describe(`Gen ${gen.num}`, () => {
     const log = new Log(gen, Lookup.get(gen), new Info(gen, INFO));
 
-    it('|move|', () => {
+    test('|move|', () => {
       const move = (s: string) => gen.moves.get(s)!.num;
       expect(Array.from(log.parse(Data.view(
         [ArgType.Move, 0b1100, move('Thunderbolt'), 0b0101, PROTOCOL.Move.None]
@@ -50,7 +50,7 @@ for (const gen of new Generations(Dex as any)) {
       )))).toEqual(parse('|move|p2a: Nasshii|Water Gun|p1a: Koratta|[miss]'));
     });
 
-    it('|switch|', () => {
+    test('|switch|', () => {
       const start = [ArgType.Switch, 0b1011, gen.species.get('Snorlax')!.num];
       let hp = LE ? [200, 0, 144, 1] : [0, 200, 1, 144];
       expect(Array.from(log.parse(Data.view([...start, 91, ...hp, 0b1000000]))))
@@ -63,7 +63,7 @@ for (const gen of new Generations(Dex as any)) {
         .toEqual(parse('|switch|p2a: Kabigon|Snorlax|400/400'));
     });
 
-    it('|cant|', () => {
+    test('|cant|', () => {
       expect(Array.from(log.parse(Data.view([ArgType.Cant, 0b1110, PROTOCOL.Cant.Bound]))))
         .toEqual(parse('|cant|p2a: Fuudin|partiallytrapped'));
       const eq = gen.moves.get('Earthquake')!.num;
@@ -71,27 +71,27 @@ for (const gen of new Generations(Dex as any)) {
         .toEqual(parse('|cant|p1a: Hitokage|Disable|Earthquake'));
     });
 
-    it('|faint|', () => {
+    test('|faint|', () => {
       const data = Data.view([ArgType.Faint, 0b1010]);
       expect(Array.from(log.parse(data))).toEqual(parse('|faint|p2a: Rakkii'));
     });
 
-    it('|turn|', () => {
+    test('|turn|', () => {
       const data = Data.view(LE ? [ArgType.Turn, 42, 0] : [ArgType.Turn, 0, 42]);
       expect(Array.from(log.parse(data))).toEqual(parse('|turn|42'));
     });
 
-    it('|win|', () => {
+    test('|win|', () => {
       expect(Array.from(log.parse(Data.view([ArgType.Win, 0])))).toEqual(parse('|win|Player A'));
       expect(Array.from(log.parse(Data.view([ArgType.Win, 1])))).toEqual(parse('|win|Player B'));
     });
 
-    it('|tie|', () => {
+    test('|tie|', () => {
       const data = Data.view([ArgType.Tie]);
       expect(Array.from(log.parse(data))).toEqual(parse('|tie'));
     });
 
-    it('|-damage|', () => {
+    test('|-damage|', () => {
       let hp = LE ? [100, 2, 191, 2] : [2, 100, 2, 191];
       expect(Array.from(
         log.parse(Data.view([ArgType.Damage, 0b1010, ...hp, 1, PROTOCOL.Damage.None]))
@@ -105,7 +105,7 @@ for (const gen of new Generations(Dex as any)) {
       )).toEqual(parse('|-damage|p2a: Rakkii|100/256 psn|[from] Recoil|[of] p1a: Fushigidane'));
     });
 
-    it('|-heal|', () => {
+    test('|-heal|', () => {
       let hp = LE ? [100, 2, 191, 2] : [2, 100, 2, 191];
       expect(Array.from(
         log.parse(Data.view([ArgType.Heal, 0b1010, ...hp, 1, PROTOCOL.Heal.None]))
@@ -119,7 +119,7 @@ for (const gen of new Generations(Dex as any)) {
       )).toEqual(parse('|-heal|p2a: Rakkii|100/256|[from] drain|[of] p1a: Fushigidane'));
     });
 
-    it('|-status|', () => {
+    test('|-status|', () => {
       expect(Array.from(
         log.parse(Data.view([ArgType.Status, 0b1110, 0b10000, PROTOCOL.Status.None]))
       )).toEqual(parse('|-status|p2a: Fuudin|brn'));
@@ -132,7 +132,7 @@ for (const gen of new Generations(Dex as any)) {
       )).toEqual(parse('|-status|p1a: Fushigidane|par|[from] move: Body Slam'));
     });
 
-    it('|-curestatus|', () => {
+    test('|-curestatus|', () => {
       expect(Array.from(
         log.parse(Data.view([ArgType.CureStatus, 0b1110, 0b111, PROTOCOL.CureStatus.Message]))
       )).toEqual(parse('|-curestatus|p2a: Fuudin|slp|[msg]'));
@@ -141,7 +141,7 @@ for (const gen of new Generations(Dex as any)) {
       )).toEqual(parse('|-curestatus|p1a: Hitokage|psn|[silent]'));
     });
 
-    it('|-boost|', () => {
+    test('|-boost|', () => {
       expect(Array.from(log.parse(Data.view([ArgType.Boost, 0b1110, PROTOCOL.Boost.Speed, 8]))))
         .toEqual(parse('|-boost|p2a: Fuudin|spe|2'));
       expect(Array.from(log.parse(Data.view([ArgType.Boost, 0b0010, PROTOCOL.Boost.Rage, 7]))))
@@ -150,12 +150,12 @@ for (const gen of new Generations(Dex as any)) {
         .toEqual(parse('|-unboost|p2a: Kabigon|def|2'));
     });
 
-    it('|-clearallboost|', () => {
+    test('|-clearallboost|', () => {
       const data = Data.view([ArgType.ClearAllBoost]);
       expect(Array.from(log.parse(data))).toEqual(parse('|-clearallboost'));
     });
 
-    it('|-fail|', () => {
+    test('|-fail|', () => {
       expect(Array.from(log.parse(Data.view([ArgType.Fail, 0b1110, PROTOCOL.Fail.None]))))
         .toEqual(parse('|-fail|p2a: Fuudin'));
       expect(Array.from(log.parse(Data.view([ArgType.Fail, 0b1110, PROTOCOL.Fail.Sleep]))))
@@ -166,27 +166,27 @@ for (const gen of new Generations(Dex as any)) {
         .toEqual(parse('|-fail|p2a: Fuudin|move: Substitute|[weak]'));
     });
 
-    it('|-miss|', () => {
+    test('|-miss|', () => {
       const data = Data.view([ArgType.Miss, 0b1100]);
       expect(Array.from(log.parse(data))).toEqual(parse('|-miss|p2a: Nasshii'));
     });
 
-    it('|-hitcount|', () => {
+    test('|-hitcount|', () => {
       const data = Data.view([ArgType.HitCount, 0b1001, 5]);
       expect(Array.from(log.parse(data))).toEqual(parse('|-hitcount|p2a: Kentarosu|5'));
     });
 
-    it('|-prepare|', () => {
+    test('|-prepare|', () => {
       const data = Data.view([ArgType.Prepare, 0b1010, gen.moves.get('dig')!.num]);
       expect(Array.from(log.parse(data))).toEqual(parse('|-prepare|p2a: Rakkii|Dig'));
     });
 
-    it('|-mustrecharge|', () => {
+    test('|-mustrecharge|', () => {
       const data = Data.view([ArgType.MustRecharge, 0b0110]);
       expect(Array.from(log.parse(data))).toEqual(parse('|-mustrecharge|p1a: Poppo'));
     });
 
-    it('|-activate|', () => {
+    test('|-activate|', () => {
       expect(
         Array.from(log.parse(Data.view([ArgType.Activate, 0b0010, PROTOCOL.Activate.Struggle])))
       ).toEqual(parse('|-activate|p1a: Hitokage|move: Struggle'));
@@ -198,12 +198,12 @@ for (const gen of new Generations(Dex as any)) {
       ).toEqual(parse('|-nothing'));
     });
 
-    it('|-fieldactivate|', () => {
+    test('|-fieldactivate|', () => {
       const data = Data.view([ArgType.FieldActivate]);
       expect(Array.from(log.parse(data))).toEqual(parse('|-fieldactivate|move: Pay Day'));
     });
 
-    it('|-start|', () => {
+    test('|-start|', () => {
       expect(Array.from(log.parse(Data.view([ArgType.Start, 0b1110, PROTOCOL.Start.Bide]))))
         .toEqual(parse('|-start|p2a: Fuudin|Bide'));
       expect(Array.from(
@@ -228,46 +228,46 @@ for (const gen of new Generations(Dex as any)) {
       )).toEqual(parse('|-start|p1a: Hitokage|Mimic|Surf'));
     });
 
-    it('|-end|', () => {
+    test('|-end|', () => {
       expect(Array.from(log.parse(Data.view([ArgType.End, 0b1110, PROTOCOL.End.Bide]))))
         .toEqual(parse('|-end|p2a: Fuudin|move: Bide'));
       expect(Array.from(log.parse(Data.view([ArgType.End, 0b0010, PROTOCOL.End.ConfusionSilent]))))
         .toEqual(parse('|-end|p1a: Hitokage|confusion|[silent]'));
     });
 
-    it('|-ohko|', () => {
+    test('|-ohko|', () => {
       const data = Data.view([ArgType.OHKO]);
       expect(Array.from(log.parse(data))).toEqual(parse('|-ohko'));
     });
 
-    it('|-crit|', () => {
+    test('|-crit|', () => {
       const data = Data.view([ArgType.Crit, 0b1101]);
       expect(Array.from(log.parse(data))).toEqual(parse('|-crit|p2a: Sutaamii'));
     });
 
-    it('|-supereffective|', () => {
+    test('|-supereffective|', () => {
       const data = Data.view([ArgType.SuperEffective, 0b0001]);
       expect(Array.from(log.parse(data))).toEqual(parse('|-supereffective|p1a: Fushigidane'));
     });
 
-    it('|-resisted|', () => {
+    test('|-resisted|', () => {
       const data = Data.view([ArgType.Resisted, 0b1010]);
       expect(Array.from(log.parse(data))).toEqual(parse('|-resisted|p2a: Rakkii'));
     });
 
-    it('|-immune|', () => {
+    test('|-immune|', () => {
       expect(Array.from(log.parse(Data.view([ArgType.Immune, 0b0011, PROTOCOL.Immune.None]))))
         .toEqual(parse('|-immune|p1a: Zenigame'));
       expect(Array.from(log.parse(Data.view([ArgType.Immune, 0b1010, PROTOCOL.Immune.OHKO]))))
         .toEqual(parse('|-immune|p2a: Rakkii|[ohko]'));
     });
 
-    it('|-transform|', () => {
+    test('|-transform|', () => {
       const data = Data.view([ArgType.Transform, 0b1100, 0b0101]);
       expect(Array.from(log.parse(data))).toEqual(parse('|-transform|p2a: Nasshii|p1a: Koratta'));
     });
 
-    it('chunk', () => {
+    test('chunk', () => {
       const data = Data.view([
         ArgType.Cant, 0b1110, PROTOCOL.Cant.Bound,
         ArgType.Move, 0b0101, 1, 0b1110, PROTOCOL.Move.None,

@@ -38,7 +38,7 @@ describe('Gen 1', () => {
   const gen = gens.get(1);
   const lookup = Lookup.get(gen);
 
-  it('serialize/deserialize', () => {
+  test('serialize/deserialize', () => {
     const battle = new Battle(lookup, new DataView(BUFFER.buffer), {});
     const restored = Battle.restore(gen, lookup, battle, {});
     expect(restored.toJSON()).toEqual(battle.toJSON());
