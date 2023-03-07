@@ -126,7 +126,7 @@ export interface Result {
 
 export const Battle = new class {
   create(gen: Generation, options: CreateOptions) {
-    addon.check(options.showdown);
+    addon.check(!!options.showdown);
     const lookup = Lookup.get(gen);
     switch (gen.num) {
     case 1: return gen1.Battle.create(gen, lookup, options);
@@ -135,7 +135,7 @@ export const Battle = new class {
   }
 
   restore(gen: Generation, battle: Battle, options: RestoreOptions) {
-    addon.check(options.showdown);
+    addon.check(!!options.showdown);
     const lookup = Lookup.get(gen);
     switch (gen.num) {
     case 1: return gen1.Battle.restore(gen, lookup, battle, options);

@@ -54,19 +54,19 @@ export class Battle implements Gen1.Battle {
 
     this.lookup = lookup;
     this.data = data;
-    this.options = new ArrayBuffer(addon.size(1, 'options'));
-    this.buf = config.log ? new ArrayBuffer(addon.size(1, 'log')) : undefined;
+    this.options = new ArrayBuffer(addon.size(0, 'options'));
+    this.buf = config.log ? new ArrayBuffer(addon.size(0, 'log')) : undefined;
     this.log = config.log ? new DataView(this.buf!) : undefined;
 
     this.cache = [undefined, undefined];
   }
 
   update(c1?: Choice, c2?: Choice): Result {
-    return addon.update(1, !!this.config.showdown, this.data.buffer, c1, c2, this.buf);
+    return addon.update(0, !!this.config.showdown, this.data.buffer, c1, c2, this.buf);
   }
 
   choices(id: Player, result: Result): Choice[] {
-    return addon.choices(1, !!this.config.showdown, this.data.buffer, id, result, this.options);
+    return addon.choices(0, !!this.config.showdown, this.data.buffer, id, result[id], this.options);
   }
 
   get sides() {

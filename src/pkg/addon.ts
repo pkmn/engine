@@ -1,17 +1,10 @@
 import * as path from 'path';
 
-import {GenerationNum} from '@pkmn/data';
-
 import {Choice, Player, Result} from '.';
 
 const ROOT = path.join(__dirname, '..', '..');
 
-let ADDON: AddOn | undefined = undefined;
-
-interface AddOn {
-  showdown?: Bindings<true>;
-  pkmn?: Bindings<false>;
-}
+let ADDON: [Bindings<false>?, Bindings<true>?] | undefined = undefined;
 
 interface Bindings<T extends boolean> {
   options: { showdown: T; trace: boolean };
@@ -40,59 +33,56 @@ function load() {
   if (!pkmn && !showdown) {
     throw new Error('Could not find native addons - did you run `npx install-pkmn-engine`?');
   }
-  return (ADDON = {pkmn, showdown});
+  return (ADDON = [pkmn, showdown]);
 }
 
-export function check(showdown?: boolean) {
-  if (!load()[showdown ? 'showdown' : 'pkmn']) {
-    const opts = ADDON![showdown ? 'pkmn' : 'showdown']!.options.trace ? ['-Dtrace'] : [];
+export function check(showdown: boolean) {
+  if (!load()[+showdown]) {
+    const opts = ADDON![+!showdown]!.options.trace ? ['-Dtrace'] : [];
     if (showdown) opts.push('-Dshowdown');
     throw new Error(
       `@pkmn/engine has ${showdown ? 'not' : 'only'} been configured to support Pokémon Showdown.` +
-      `\n(running \`npx install-pkmn-engine -- --options='${opts.join(' ')}'\` can fix this issue).`
+      `\n(running \`npx install-pkmn-engine --options='${opts.join(' ')}'\` can fix this issue).`
     );
   }
 }
 
-export function supports(mode: 'showdown' | 'pkmn', trace?: boolean) {
-  if (!load()[mode]) return false;
+export function supports(showdown: boolean, trace?: boolean) {
+  if (!load()[+showdown]) return false;
   if (trace === undefined) return true;
-  return ADDON![mode]!.options.trace === trace;
+  return ADDON![+showdown]!.options.trace === trace;
 }
 
-// TODO: compare performance of skipping the load check and simply asserting `ADDON!`
 export function update(
-  gen: GenerationNum,
+  index: number,
   showdown: boolean,
   battle: ArrayBuffer,
   c1?: Choice,
   c2?: Choice,
   log?: ArrayBuffer,
 ) {
-  return Result.parse(load()[showdown ? 'showdown' : 'pkmn']!.bindings[gen - 1]
+  return Result.parse(ADDON![+showdown]!.bindings[index]
     .update(battle, Choice.encode(c1), Choice.encode(c2), log));
 }
 
 export function choices(
-  gen: GenerationNum,
+  index: number,
   showdown: boolean,
   battle: ArrayBuffer,
   player: Player,
-  result: Result,
+  choice: Choice['type'],
   buf: ArrayBuffer,
 ) {
-  const request = result[player] === 'pass' ? 0 : result[player] === 'move' ? 1 : 2;
-  const n = load()[showdown ? 'showdown' : 'pkmn']!.bindings[gen - 1]
-    .choices(battle, +(player !== 'p1'), request, buf);
+  const request = choice[0] === 'p' ? 0 : choice[0] === 'm' ? 1 : 2;
+  const n = ADDON![+showdown]!.bindings[index].choices(battle, +(player !== 'p1'), request, buf);
   const options = new Array<Choice>(n);
   const data = new Uint8Array(buf);
   for (let i = 0; i < n; i++) options[i] = Choice.parse(data[i]);
   return options;
 }
 
-export function size(gen: GenerationNum, type: 'options' | 'log') {
-  const addon = load();
-  const bindings = (addon.showdown ?? addon.pkmn)!.bindings[gen - 1]!;
-  return type === 'options' ? bindings.OPTIONS_SIZE : bindings.LOGS_SIZE;
+export function size(index: number, type: 'options' | 'log') {
+  const bindings = (ADDON![1] ?? ADDON![0])!.bindings[index]!;
+  return type[0] === 'o' ? bindings.OPTIONS_SIZE : bindings.LOGS_SIZE;
 }
 

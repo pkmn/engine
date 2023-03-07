@@ -1,6 +1,7 @@
 import {Dex} from '@pkmn/sim';
 import {Generations} from '@pkmn/data';
 
+import * as addon from './addon';
 import {LAYOUT, Data, Lookup} from './data';
 import {Battle} from './gen1';
 
@@ -39,6 +40,8 @@ describe('Gen 1', () => {
   const lookup = Lookup.get(gen);
 
   test('serialize/deserialize', () => {
+    expect(addon.supports(true)).toBe(true);
+
     const battle = new Battle(lookup, new DataView(BUFFER.buffer), {});
     const restored = Battle.restore(gen, lookup, battle, {});
     expect(restored.toJSON()).toEqual(battle.toJSON());
