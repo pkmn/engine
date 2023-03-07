@@ -56,6 +56,7 @@ export class Lookup {
   private readonly itemsByID: {[id: string]: number};
 
   static get(gen: Generation) {
+    if (gen.num > 2) throw new Error(`Unsupported gen ${gen.num}`);
     const lookup = LOOKUPS[gen.num - 1];
     return lookup || (LOOKUPS[gen.num - 1] = new Lookup(gen));
   }

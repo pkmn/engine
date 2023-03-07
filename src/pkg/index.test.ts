@@ -13,7 +13,16 @@ function random(gen: Generation) {
 }
 
 for (const gen of new Generations(Dex as any)) {
-  if (gen.num > 1) break;
+  if (gen.num > 1) {
+    describe(`Gen ${gen.num}`, () => {
+      test('Battle.create/restore', () => {
+        const options = {showdown: true} as any;
+        expect(() => Battle.create(gen, options)).toThrow('Unsupported gen');
+        expect(() => Battle.restore(gen, {} as any, options)).toThrow('Unsupported gen');
+      });
+    });
+    continue;
+  }
 
   describe(`Gen ${gen.num}`, () => {
     test('Battle.create/restore', () => {
@@ -29,6 +38,7 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('Choice.encode', () => {
+      expect(Choice.encode()).toBe(Choice.encode(Choice.pass()));
       expect(Choice.encode(Choice.move(4))).toBe(0b0100_0001);
       expect(Choice.encode(Choice.switch(5))).toBe(0b0101_0010);
     });
