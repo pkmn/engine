@@ -47,9 +47,10 @@ export function check(showdown?: boolean) {
   if (!load()[showdown ? 'showdown' : 'pkmn']) {
     const opts = ADDON![showdown ? 'pkmn' : 'showdown']!.options.trace ? ['-Dtrace'] : [];
     if (showdown) opts.push('-Dshowdown');
-    throw new Error(`@pkmn/engine has ${showdown ? 'not ' : ''}been configured ` +
-      `to ${showdown ? 'only ' : ''}support Pokémon Showdown compatibility mode.\n` +
-      `(running \`npx install-pkmn-engine -- --options='${opts.join(' ')}'\` can fix this issue).`);
+    throw new Error(
+      `@pkmn/engine has ${showdown ? 'not' : 'only'} been configured to support Pokémon Showdown.` +
+      `\n(running \`npx install-pkmn-engine -- --options='${opts.join(' ')}'\` can fix this issue).`
+    );
   }
 }
 
