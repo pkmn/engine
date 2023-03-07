@@ -24,11 +24,9 @@ function load() {
   let showdown: Bindings<true> | undefined = undefined;
   try {
     pkmn = require(path.join(ROOT, 'build', 'lib', 'pkmn.node')) as Bindings<false>;
-    if (pkmn.options.showdown) throw new Error();
   } catch { }
   try {
     showdown = require(path.join(ROOT, 'build', 'lib', 'pkmn-showdown.node')) as Bindings<true>;
-    if (!showdown.options.showdown) throw new Error();
   } catch { }
   if (!pkmn && !showdown) {
     throw new Error('Could not find native addons - did you run `npx install-pkmn-engine`?');

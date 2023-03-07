@@ -260,7 +260,8 @@ export class Side implements Gen1.Side {
     data: DataView,
     offset: number
   ) {
-    for (let i = 0; i < 6; i++) {
+    const n = Math.min(6, team.length);
+    for (let i = 0; i < n; i++) {
       const poke = team[i];
       Pokemon.init(gen, lookup, poke, data, offset, i);
       data.setUint8(offset + OFFSETS.Side.order + i, i + 1);

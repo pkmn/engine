@@ -38,6 +38,7 @@ describe('Gen 1', () => {
   const gens = new Generations(Dex as any);
   const gen = gens.get(1);
   const lookup = Lookup.get(gen);
+  addon.check(true);
 
   test('serialize/deserialize', () => {
     expect(addon.supports(true)).toBe(true);
@@ -56,6 +57,7 @@ describe('Gen 1', () => {
     const p1 = battle.side('p1');
     expect(p1.lastUsedMove).toBe('spikecannon');
     expect(p1.lastSelectedIndex).toBe(2);
+    expect(p1.slot(7)).toBeUndefined();
 
     const slot1 = p1.active!;
     const slot2 = p1.get(2)!;
@@ -83,6 +85,10 @@ describe('Gen 1', () => {
     expect(slot2.species).toBe('squirtle');
     expect(slot2.stored.species).toBe('squirtle');
     expect(slot2.types).toEqual(['Water', 'Water']);
+    expect(slot2.stat('def')).toBe(168);
+    expect(slot2.volatile(1)).toBe(false);
+    expect(slot2.forced).toBe(false);
+    expect(slot2.limited).toBe(false);
     expect(slot2.hp).toBe(21);
     expect(slot2.status).toBe('slp');
     expect(slot2.statusData.self).toBe(true);
@@ -90,6 +96,7 @@ describe('Gen 1', () => {
     expect(slot2.active).toBe(false);
 
     const p2 = battle.foe('p1');
+    expect(battle.foe('p2')).toBe(p1);
     expect(p2.lastSelectedIndex).toBe(1);
     expect(p2.lastSelectedMove).toBe('drillpeck');
     expect(p2.active!.species).toBe('squirtle');
@@ -122,5 +129,26 @@ describe('Gen 1', () => {
     expect(slot2.boosts.spd).toBe(-2);
     expect(slot2.species).toBe('caterpie');
     expect(slot2.stored.species).toBe('squirtle');
+  });
+
+  test('choices/update', () => {
+    const battle = Battle.create(gen, lookup, {
+      p1: {team: [{species: 'Gengar', moves: ['Night Shade', 'Psychic']}]},
+      p2: {team: [
+        {species: 'Clefable', moves: ['Seismic Toss']},
+        {species: 'Snorlax', moves: ['Rest']},
+      ]},
+      seed: [1, 2, 3, 4],
+      showdown: true,
+    });
+    const result = {type: undefined, p1: 'move', p2: 'move'} as const;
+    expect(battle.update(undefined, undefined)).toEqual(result);
+
+    expect(battle.choices('p1', result))
+      .toEqual([{type: 'move', data: 1}, {type: 'move', data: 2}]);
+    expect(battle.choices('p2', result))
+      .toEqual([{type: 'switch', data: 2}, {type: 'move', data: 1}]);
+    expect(battle.update({type: 'move', data: 1}, {type: 'switch', data: 2}))
+      .toEqual(result);
   });
 });
