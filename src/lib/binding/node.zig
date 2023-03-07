@@ -139,12 +139,6 @@ const Boolean = struct {
         assert(c.napi_get_boolean(env, value, &result) == c.napi_ok);
         return result;
     }
-
-    // fn get(env: c.napi_env, value: c.napi_value) !bool {
-    //     var result: u32 = undefined;
-    //     assert(c.napi_get_value_bool(env, value, &result) == c.napi_ok);
-    //     return result;
-    // }
 };
 
 const Number = struct {
