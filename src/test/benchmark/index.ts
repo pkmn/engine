@@ -21,18 +21,7 @@ argv.seed = argv.seed
   : [1, 2, 3, 4];
 
 const GENS = new Generations(Dex as any);
-
-const FORMATS = [
-  'gen1customgame',
-  // 'gen2customgame',
-  // 'gen3customgame', 'gen3doublescustomgame',
-  // 'gen4customgame', 'gen4doublescustomgame',
-  // 'gen5customgame', 'gen5doublescustomgame',
-  // 'gen6customgame', 'gen6doublescustomgame',
-  // 'gen7customgame', 'gen7doublescustomgame',
-  // 'gen8customgame', 'gen8doublescustomgame',
-  // 'gen9customgame', 'gen9doublescustomgame',
-] as ID[];
+const FORMATS = ['gen1customgame'] as ID[];
 
 const toMillis = (duration: bigint) => Number(duration / BigInt(1e6));
 const serialize = (seed: PRNGSeed) =>
@@ -95,7 +84,6 @@ class DirectBattle extends Battle {
   }
 }
 
-// TODO: patch BattleStream and DirectBattle
 const CONFIGURATIONS: {[name: string]: Configuration} = {
   'BattleStream': {
     warmup: true,
@@ -123,7 +111,7 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
         const battleStream = new PatchedBattleStream();
         const streams = BattleStreams.getPlayerStreams(battleStream);
 
-        const spec = {formatid: format, seed: newSeed(prng)};
+        const spec = {formatid: format, seed: options.seed as PRNGSeed};
         const p1spec = {name: 'Player A', team: Teams.pack(options.p1.team as PokemonSet[])};
         const p2spec = {name: 'Player B', team: Teams.pack(options.p2.team as PokemonSet[])};
         const start = `>start ${JSON.stringify(spec)}\n` +
@@ -172,7 +160,7 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
 
       for (let i = 0; i < battles; i++) {
         const options = gen1.Battle.options(gen, prng);
-        const config = {formatid: format, seed: newSeed(prng)};
+        const config = {formatid: format, seed: options.seed as PRNGSeed};
         const battle = new DirectBattle(config);
         patch.battle(battle);
 
@@ -202,8 +190,37 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
   },
   '@pkmn/engine': {
     warmup: true,
-    run() {
-      return Promise.resolve([0, 0, 'TODO']);
+    run(format, prng, battles) {
+      const gen = GENS.get(format[3]);
+      let duration = 0n;
+      let turns = 0;
+
+      for (let i = 0; i < battles; i++) {
+        const options = gen1.Battle.options(gen, prng);
+        const battle = engine.Battle.create(gen, options);
+
+        const p1 = new PRNG(newSeed(prng));
+        const p2 = new PRNG(newSeed(prng));
+
+        let c1 = engine.Choice.pass();
+        let c2 = engine.Choice.pass();
+
+        const choose = (rand: PRNG, choices: engine.Choice[]) => choices[rand.next(choices.length)];
+
+        let result: engine.Result;
+        const begin = process.hrtime.bigint();
+        try {
+          while (!(result = battle.update(c1, c2)).type) {
+            c1 = choose(p1, battle.choices('p1', result));
+            c2 = choose(p2, battle.choices('p2', result));
+          }
+          turns += battle.turn;
+        } finally {
+          duration += process.hrtime.bigint() - begin;
+        }
+      }
+
+      return Promise.resolve([toMillis(duration), turns, serialize(prng.seed)] as const);
     },
   },
   'libpkmn': {
