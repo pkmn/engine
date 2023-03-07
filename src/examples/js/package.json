@@ -14,6 +14,7 @@
   "scripts": {
     "prestart": "tsc -p .",
     "start": "node build/example.js",
+    "start:web": "npm run start:vite",
     "start:parcel": "parcel index.html",
     "start:vite": "vite"
   }

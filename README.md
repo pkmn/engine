@@ -95,7 +95,7 @@ pub fn build(b: *std.build.Builder) void {
 }
 ```
 
-The engine's `build.zig` exposes a `module` function that takes an options struct to allow for
+The engine's `build.zig` exposes a `module` function that takes an options structure to allow for
 configuring whether or not Pokémon Showdown compatibility mode or trace logs should be enabled.
 Alternatively, you may set options via a `pkmn_options` [root source file
 declaration](https://ziglang.org/documentation/master/#Root-Source-File). There are several
@@ -108,6 +108,30 @@ pub const pkmn_options = .{ .showdown = true, .trace = true };
 ```
 
 ## Usage
+
+For each Pokémon generation, the engine provides a battle structure with two functions - a function
+to `update` the battle's state based on both players' choices and a function that defines which
+`choices` are valid at that decision point (at the beginning of a battle both player's must "pass"
+as their first choice in order to switch in the first member of their party). If `-Dtrace` logging
+is enabled each update will produce logs which can be decoded into a buffer (`LOGS_SIZE` constants
+are provided to make it easy to allocate a buffer of the correct size). Each `update` will return a
+result to indicate either that the battle has terminated or which types of choices will be available
+for each player.
+
+Unlike [Pokémon Showdown's
+SIM-PROTOCOL](https://github.com/smogon/pokemon-showdown/blob/master/sim/SIM-PROTOCOL.md#choice-requests)
+that provides a rich request object at each decision point, the pkmn engine computes the possible
+choices on demand based on the result of the previous `update` and the battle state (`OPTIONS_SIZE`
+is a good size to initialize the buffer passed to `choices`). **Attempting to update the battle with
+a choice not present in the options returned by `choices` is undefined behavior and may corrupt
+state or cause the engine to crash.**
+
+Battles may be played out from any point but to freshly initialize a battle which is yet to start
+the turn count and active Pokémon should be zeroed out (driver code should handle this for you).
+Most driver code should also provide helpers to make initialize a battle convenient - check the
+respective documentation and examples for the bindings being used. The engine's [protocol
+documentation](docs/PROTOCOL.md) goes into greater detail on the specifics of updates and the
+potential logs that may result.
 
 *The snippets below are meant to merely illustrate in broad strokes how the pkmn engine can be used
 \- the [`examples`](src/examples) directory contains fully commented and runnable code.*
@@ -133,6 +157,11 @@ if (pkmn_error(result)) exit(1);
 ```
 
 [(full code)](src/examples/c/example.c)
+
+The C API does not export any helpers for creating or accessing the opaque battle objects - it is
+instead intended to be used as the foundation for more ergonomic bindings in [other
+languages](#other) (the lack of namespaces in C is the main contributing factor to the sparseness of
+what `libpkmn` chooses to expose).
 
 ### JavaScript / TypeScript
 
@@ -164,11 +193,13 @@ console.log(result);
 
 [(full code)](src/examples/js/example.ts)
 
-The `Battle` interface is designed to be zero-copy compatible with other `@pkmn` packages -
-equivalently named types in [`@pkmn/client`](https://www.npmjs.com/package/@pkmn/client),
-[`@pkmn/epoke`](https://www.npmjs.com/package/@pkmn/epoke),
-[`@pkmn/dmg`](https://www.npmjs.com/package/@pkmn/dmg) should "just work" (however, until all of
-these libraries reach v1.0.0 they are likely to require some massaging).
+By default, the `@pkmn/engine` package will compile the engine with `-Dshowdown`, though by running
+`install-pkmn-engine` directly and passing in `--options` you can override this default and build
+different configurations of the extension for the driver to use. The driver can support
+configurations both with and without Pokémon Showdown compatibility simultaneously if present. On
+update, the post-install script will attempt to rebuild whichever extensions it finds with the same
+configuration parameters that were originally used meaning updating to the newest version of the
+library should be seamless.
 
 Despite relying on the native engine code, the `@pkmn/engine` code is designed to also work in
 browsers which support [WebAssembly](https://webassembly.org/). Running `npm run start:web` from the
@@ -203,6 +234,11 @@ std.debug.print("{}", .{result.type});
 ```
 
 [(full code)](src/examples/zig/example.zig)
+
+The Zig package also supports some APIs which are difficult to expose elsewhere such as the
+`FixedRNG` which allows you to fully specify the exact RNG frames (which can be useful for ensuring
+certain outcomes/effects always occur) for a battle, though doing so will change the size of the
+`Battle` object.
 
 ### Other
 
