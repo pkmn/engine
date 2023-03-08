@@ -152,7 +152,7 @@ for (const gen of new Generations(Dex as any)) {
 
     test('|-clearallboost|', () => {
       const data = Data.view([ArgType.ClearAllBoost]);
-      expect(Array.from(log.parse(data))).toEqual(parse('|-clearallboost'));
+      expect(Array.from(log.parse(data))).toEqual(parse('|-clearallboost|[silent]'));
     });
 
     test('|-fail|', () => {

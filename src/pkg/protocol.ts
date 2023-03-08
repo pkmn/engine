@@ -284,7 +284,8 @@ DECODERS[ArgType.Boost] = function (offset, data) {
 };
 DECODERS[ArgType.ClearAllBoost] = function (offset) {
   const args = ['-clearallboost'] as Protocol.Args['|-clearallboost|'];
-  return {offset, line: {args, kwArgs: {}}};
+  const kwArgs = this.gen.num === 1 ? {silent: true} as const : {};
+  return {offset, line: {args, kwArgs}};
 };
 DECODERS[ArgType.Fail] = function (offset, data) {
   const ident = decodeIdent(this.info, data.getUint8(offset++));
