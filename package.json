@@ -100,7 +100,7 @@
       "files": ["**/*.ts"],
       "parserOptions": {"project": ["./tsconfig.json", "./src/examples/js/tsconfig.json"]}
     }, {
-      "files": ["src/pkg/index.ts", "src/test/display.ts"],
+      "files": ["src/pkg/index.ts", "src/test/display.ts", "src/test/integration/common.ts"],
       "rules": {
         "@typescript-eslint/no-empty-interface": "off",
         "@typescript-eslint/no-shadow": "off"

@@ -2,7 +2,7 @@ import {strict as assert} from 'assert';
 
 import {Generations, Generation, GenerationNum} from '@pkmn/data';
 import {Protocol} from '@pkmn/protocol';
-import {PRNG, PRNGSeed, BattleStreams, ID, State} from '@pkmn/sim';
+import {PRNG, PRNGSeed, BattleStreams, ID} from '@pkmn/sim';
 import {
   AIOptions, ExhaustiveRunner, ExhaustiveRunnerOptions,
   ExhaustiveRunnerPossibilites, RunnerOptions,
@@ -64,7 +64,7 @@ class Runner {
 
     const options = {
       p1: {name: 'Bot 1', team: this.p1options!.team!},
-      p2: {name: 'Bot 2', team: this.p1options!.team!},
+      p2: {name: 'Bot 2', team: this.p2options!.team!},
       seed: spec.seed,
       showdown: true,
       log: true,
@@ -90,10 +90,7 @@ class Runner {
       } else if (result.type) {
         throw new Error('Battle ended in error which should be impossible with -Dshowdown');
       } else {
-        assert.deepStrictEqual(
-          Array.from(Protocol.parse(normalize(chunk))),
-          Array.from(log.parse(battle.log!)),
-        );
+        assert.deepStrictEqual(parse(chunk), Array.from(log.parse(battle.log!)));
       }
       [c1, c2, input] = nextChoices(battle, result, rawBattleStream.rawInputLog, input);
     }
@@ -130,23 +127,34 @@ class RawBattleStream extends PatchedBattleStream {
   }
 }
 
-function normalize(chunk: string) {
-  return State.normalizeLog(chunk) as string; // TODO
+// TODO: can we always infer done/start/upkeep?
+const SKIP = new Set([
+  't:', 'gametype', 'player', 'teamsize', 'gen', 'tier',
+  'rule', 'done', 'start', 'upkeep', 'debug',
+]);
+
+function parse(chunk: string) {
+  const buf: Array<{args: Protocol.ArgType; kwArgs: Protocol.KWArgType}> = [];
+  for (const {args, kwArgs} of Protocol.parse(chunk)) {
+    if (SKIP.has(args[0])) continue;
+    buf.push({args, kwArgs});
+  }
+  return buf;
 }
 
-const SKIP = /^>(version|start|player)/;
+const IGNORE = /^>(version|start|player)/;
 const MATCH = /^>(p1|p2) (?:(pass)|((move) ([1-4]))|((switch) ([2-6])))/;
-
 function nextChoices(battle: engine.Battle, result: engine.Result, input: string[], index: number) {
-  // let c1: engine.Choice;
-  // let c2: engine.Choice;
+  const choices: {p1: engine.Choice | undefined; p2: engine.Choice | undefined} =
+    {p1: undefined, p2: undefined};
 
-  while (index < input.length) {
+  while (index < input.length && !(choices.p1 && choices.p2)) {
     const m = MATCH.exec(input[index]);
     if (!m) {
-      if (!SKIP.test(input[index])) {
+      if (!IGNORE.test(input[index])) {
         throw new Error(`Unexpected input ${index}: '${input[index]}'`);
       } else {
+        index++;
         continue;
       }
     }
@@ -154,13 +162,34 @@ function nextChoices(battle: engine.Battle, result: engine.Result, input: string
     const type = (m[2] ?? m[4] ?? m[7]) as engine.Choice['type'];
     const data = +(m[5] ?? m[8] ?? 0);
 
+    const choice = choices[player];
+    if (choice) {
+      throw new Error(`Already have choice for ${player}: ` +
+      `'${choice.type === 'pass' ? choice.type : `${choice.type} ${choice.data}`}' vs. ` +
+      `'${type === 'pass' ? type : `${type} ${data}`}' `);
+    }
+
+    for (const choice of battle.choices(player, result)) {
+      if (choice.type === type && choice.data === data) {
+        choices[player] = choice;
+        break;
+      }
+      // The RandomPlayerAI made an "unavailable" choice, in which case we simply
+      // continue to the next input to determine what the *actual* choice was
+    }
+
     index++;
   }
 
-  const c1 = engine.Choice.pass(); // TODO
-  const c2 = engine.Choice.pass(); // TODO
+  const unresolved = [];
+  if (!choices.p1) unresolved.push('p1');
+  if (!choices.p2) unresolved.push('p2');
 
-  return [c1, c2, index] as const;
+  if (unresolved.length) {
+    throw new Error(`Unable to resolve choices for ${unresolved.join(', ')}`);
+  }
+
+  return [choices.p1!, choices.p2!, index] as const;
 }
 
 function possibilities(gen: Generation) {
