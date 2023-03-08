@@ -14,13 +14,15 @@ pkmn_choice choose(
    pkmn_choice options[])
 {
    uint8_t n = pkmn_gen1_battle_choices(battle, player, request, options, PKMN_OPTIONS_SIZE);
-   // Technically due to Generation I's Transform + Mirror Move/Metronome PP error if the
-   // battle contains Pokémon with a combination of Transform, Mirror Move/Metronome, and Disable
-   // its possible that there are no available choices (softlock), though this is impossible here
-   // given that our example battle involves none of these moves
+   // Technically due to Generation I's Transform + Mirror Move/Metronome PP
+   // error if the battle contains Pokémon with a combination of Transform,
+   // Mirror Move/Metronome, and Disable its possible that there are no
+   // available choices (softlock), though this is impossible here given that
+   // our example battle involves none of these moves
    assert(n > 0);
-   // pkmn_gen1_battle_choices determines what the possible options are - the simplest way to
-   // choose an option here is to just use the PSRNG to pick one at random
+   // pkmn_gen1_battle_choices determines what the possible options are - the
+   // simplest way to choose an option here is to just use the PSRNG to pick one
+   // at random
    return options[(uint64_t)pkmn_psrng_next(random) * n / 0x100000000];
 }
 
@@ -48,9 +50,10 @@ int main(int argc, char **argv)
    pkmn_choice options[PKMN_OPTIONS_SIZE];
 
    // libpkmn doesn't provide any helpers for initializing the battle structure
-   // (the library is intended to be wrapped by something with a higher level API).
-   // This setup borrows the serialized state of the setup from the Zig example,
-   // though will end up with a different result because it's using a different RNG
+   // (the library is intended to be wrapped by something with a higher level
+   // API). This setup borrows the serialized state of the setup from the Zig
+   // example, though will end up with a different result because it's using a
+   // different RNG
    pkmn_gen1_battle battle = { {
       0x25, 0x01, 0xc4, 0x00, 0xc4, 0x00, 0xbc, 0x00, 0xe4, 0x00, 0x4f, 0x18, 0x0e, 0x30, 0x4b, 0x28,
       0x22, 0x18, 0x25, 0x01, 0x00, 0x01, 0x3a, 0x64, 0x19, 0x01, 0xca, 0x00, 0xb8, 0x00, 0xe4, 0x00,
@@ -78,25 +81,28 @@ int main(int argc, char **argv)
       0x00, 0x00, 0x00, 0x00, 0x00, 0x2e, 0xdb, 0x7d, 0x61, 0xcb, 0xba, 0x0d, 0x1e, 0x7e, 0x9e, 0x00,
    } };
 
-   // Preallocate a buffer for trace logs - PKMN_LOGS_SIZE is guaranteed to be large enough for a
-   // single update. This will only be written to if -Dtrace is enabled - NULL can be used to turn
-   // all of the logging into no-ops
+   // Preallocate a buffer for trace logs - PKMN_LOGS_SIZE is guaranteed to be
+   // large enough for a single update. This will only be written to if -Dtrace
+   // is enabled - NULL can be used to turn all of the logging into no-ops
    size_t size = PKMN_LOGS_SIZE;
    uint8_t buf[size];
 
    pkmn_result result;
-   // Pedantically these *should* be pkmn_choice_init(PKMN_CHOICE_PASS, 0), but libpkmn
-   // commits to always ensuring the pass choice is 0 so we can simplify things here
+   // Pedantically these *should* be pkmn_choice_init(PKMN_CHOICE_PASS, 0), but
+   // libpkmn commits to always ensuring the pass choice is 0 so we can simplify
+   // things here
    pkmn_choice c1 = 0, c2 = 0;
-   // We're also taking advantage of the fact that the PKMN_RESULT_NONE is guaranteed
-   // to be 0, so we don't actually need to check "!= PKMN_RESULT_NONE"
+   // We're also taking advantage of the fact that the PKMN_RESULT_NONE is
+   // guaranteed to be 0, so we don't actually need to check "!=
+   // PKMN_RESULT_NONE"
    while (!pkmn_result_type(result = pkmn_gen1_battle_update(&battle, c1, c2, buf, size))) {
       c1 = choose(&battle, &random, PKMN_PLAYER_P1, pkmn_result_p1(result), options);
       c2 = choose(&battle, &random, PKMN_PLAYER_P2, pkmn_result_p2(result), options);
    }
-   // The only error that can occur is if we didn't provide a large enough buffer, but
-   // PKMN_MAX_LOGS is guaranteed to be large enough so errors here are impossible. Note
-   // however that this is tracking a different kind of error than PKMN_RESULT_ERROR
+   // The only error that can occur is if we didn't provide a large enough
+   // buffer, but PKMN_MAX_LOGS is guaranteed to be large enough so errors here
+   // are impossible. Note however that this is tracking a different kind of
+   // error than PKMN_RESULT_ERROR
    assert(!pkmn_error(result));
 
    // The battle is written in native endianness so we need to do a bit-hack to

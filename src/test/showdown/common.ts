@@ -152,11 +152,13 @@ function residualEvent(this: Battle, eventid: string, relayVar?: any) {
   }
 }
 
-// NOTE: These "patches" are not all suitable for upstreaming - each of these patches works around a
-// core issue with Pokémon Showdown, but attempts to do so in the easiest/most minimally intrustive
-// way as opposed to the most *correct* way. eg. instead of assigning "priorities" to no-op
-// handlers, the handlers in question should be removed entirely (which can be accomplished by
-// disabling inheritance or setting them to `null`). Similarly, in many places order should be used
+// NOTE: These "patches" are not all suitable for upstreaming - each of these
+// patches works around a core issue with Pokémon Showdown, but attempts to do
+// so in the easiest/most minimally intrustive way as opposed to the most
+// *correct* way. eg. instead of assigning "priorities" to no-op handlers, the
+// handlers in question should be removed entirely (which can be accomplished by
+// disabling inheritance or setting them to `null`). Similarly, in many places
+// order should be used
 // instead, or multiple other conditions should be changed as opposed to the ones chosen here etc.
 export const patch = {
   generation: (gen: Generation) => {

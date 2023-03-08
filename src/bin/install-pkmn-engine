@@ -287,9 +287,10 @@ const downloadImportLib = async () => {
     process.exit(1);
   }
 
-  // Determine which configurations to build based on prior runs (see below for if there were no
-  // previous runs) - try to build the same configurations as before (unless --options overridden).
-  // We also track whether any of the configurations require Node headers/import libraries
+  // Determine which configurations to build based on prior runs (see below for
+  // if there were no previous runs) - try to build the same configurations as
+  // before (unless --options overridden). We also track whether any of the
+  // configurations require Node headers/import libraries
   let node = false;
   const configs = new Map();
   const libs = path.join(ROOT, 'build', 'lib');
@@ -297,8 +298,9 @@ const downloadImportLib = async () => {
     for (const file of fs.readdirSync(libs)) {
       const type = path.extname(file).slice(1);
       if (type !== 'node' && type !== 'wasm') continue;
-      // If we don't copy the addon before loading it Windows will return an EBUSY error
-      // when we later attempt to clobber it (Linux and macOS don't seem to care)
+      // If we don't copy the addon before loading it Windows will return an
+      // EBUSY error when we later attempt to clobber it (Linux and macOS don't
+      // seem to care)
       const copy = path.join(tmp, file);
       fs.copyFileSync(path.join(libs, file), copy);
 

@@ -1,6 +1,7 @@
-# This Makefile exists to orchestrate Zig's `build.zig` and JavaScript's `package.json`. In many
-# cases you will still want to invoke `zig build` or `npm run` directly for more targeted
-# execution, but to have one set of commands that covers everything, see below.
+# This Makefile exists to orchestrate Zig's `build.zig` and JavaScript's
+# `package.json`. In many cases you will still want to invoke `zig build` or
+# `npm run` directly for more targeted execution, but to have one set of
+# commands that covers everything, see below.
 
 .PHONY: default
 default: check

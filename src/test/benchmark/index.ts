@@ -262,10 +262,11 @@ const compare =
       }
     };
 
-// Separate outliers from clean samples using MAD outlier detection with what is approximately a
-// three-sigma cutoff (corresponding to roughly ~99.7% of values assuming the data is normally
-// distributed), as out forth in "Detecting outliers: Do not use standard deviation around the mean,
-// use absolute deviation around the median" - C. Leys et al
+// Separate outliers from clean samples using MAD outlier detection with what is
+// approximately a three-sigma cutoff (corresponding to roughly ~99.7% of values
+// assuming the data is normally distributed), as out forth in "Detecting
+// outliers: Do not use standard deviation around the mean, use absolute
+// deviation around the median" - C. Leys et al
 const clean = (samples: number[], n = 3) => {
   const stats = Stats.compute(samples);
   const deviations = samples.map(s => Math.abs(s - stats.p50));

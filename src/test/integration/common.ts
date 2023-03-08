@@ -16,22 +16,26 @@ import blocklistJSON from '../blocklist.json';
 const FORMATS = ['gen1customgame'];
 const BLOCKLIST = blocklistJSON as {[gen: number]: Partial<ExhaustiveRunnerPossibilites>};
 
-// We first play out a normal battle with Pokémon Showdown, saving the raw input log and each of the
-// chunks that are output. We then set up a battle with the @pkmn/engine (configured with -Dshowdown
-// and -Dtrace) and confirm that the engine produces the same chunks of output given the same input.
+// We first play out a normal battle with Pokémon Showdown, saving the raw input
+// log and each of the chunks that are output. We then set up a battle with the
+// @pkmn/engine (configured with -Dshowdown and -Dtrace) and confirm that the
+// engine produces the same chunks of output given the same input.
 //
 // The are several challenges:
 //
-//   - we need to patch Pokémon Showdown to make its speed ties sane (PatchedBattleStream/patch)
-//   - we need to ensure the ExhaustiveRunner doesn't generate teams with moves that are too
-//     broken for the engine to be able to match (possibilities) and we need to massage the
-//     teams it produces to ensure they are legal for the generation in question (fixTeams)
-//   - Pokémon Showdown's output contains a bunch of protocol messages which are redundant so
-//     we need to filter these out, and we also only want to compare parsed output because
-//     the raw output produced by Pokémon Showdown needs to get parsed first anyway (parse)
-//   - the RandomPlayerAI can sometimes make "unavailable" choices because it doesn't have perfect
-//     information, only we can't apply those choices to the engine as that will result in
-//     undefined behavior (nextChoices)
+//   - we need to patch Pokémon Showdown to make its speed ties sane
+//     (PatchedBattleStream/patch)
+//   - we need to ensure the ExhaustiveRunner doesn't generate teams with moves
+//     that are too broken for the engine to be able to match (possibilities)
+//     and we need to massage the teams it produces to ensure they are legal for
+//     the generation in question (fixTeams)
+//   - Pokémon Showdown's output contains a bunch of protocol messages which are
+//     redundant so we need to filter these out, and we also only want to
+//     compare parsed output because the raw output produced by Pokémon Showdown
+//     needs to get parsed first anyway (parse)
+//   - the RandomPlayerAI can sometimes make "unavailable" choices because it
+//     doesn't have perfect information, only we can't apply those choices to
+//     the engine as that will result in undefined behavior (nextChoices)
 class Runner {
   private readonly gen: Generation;
   private readonly format: string;
@@ -106,7 +110,10 @@ class Runner {
       } else if (result.type) {
         throw new Error('Battle ended in error which should be impossible with -Dshowdown');
       } else {
-        assert.deepStrictEqual(parse(this.gen, chunk), Array.from(log.parse(battle.log!)));
+        console.debug(chunk);
+        const parsed = Array.from(log.parse(battle.log!));
+        console.debug(parsed);
+        assert.deepStrictEqual(parse(this.gen, chunk), parsed);
       }
       [c1, c2, input] = nextChoices(battle, result, rawBattleStream.rawInputLog, input);
     }
@@ -186,9 +193,9 @@ function fixHPStatus(gen: Generation, hpStatus: Protocol.PokemonHPStatus) {
 const IGNORE = /^>(version|start|player)/;
 const MATCH = /^>(p1|p2) (?:(pass)|((move) ([1-4]))|((switch) ([2-6])))/;
 function nextChoices(battle: engine.Battle, result: engine.Result, input: string[], index: number) {
-  // The RandomPlayerAI doesn't sent "pass" on wait requests so we need to figure out when it would
-  // be forced to pass and fill those in. Otherwise we set the choice to undefined and determine
-  // the choice from the input log
+  // The RandomPlayerAI doesn't sent "pass" on wait requests so we need to
+  // figure out when it would be forced to pass and fill those in. Otherwise we
+  // set the choice to undefined and determine the choice from the input log
   const initial = (player: engine.Player) => {
     const options = battle.choices(player, result);
     return (options.length === 1 && options[0].type === 'pass') ? engine.Choice.pass() : undefined;
@@ -197,12 +204,14 @@ function nextChoices(battle: engine.Battle, result: engine.Result, input: string
   const choices: {p1: engine.Choice | undefined; p2: engine.Choice | undefined} =
     {p1: initial('p1'), p2: initial('p2')};
 
-  // Until we don't have choices for both players we iterate over the input log since our last index
-  // and try to parse out choices from the raw input. If we find an choice for a player that already
-  // has one assigned then the engine and Pokémon Showdown disagree on the possible options (the
-  // engine either thought the player is forced to "pass" and assigned a choice above, or we
-  // received two inputs for one player and zero for the other meaning the other player should have
-  // passed but didn't *or* the player made an unavailable choice which we didn't skip as invalid)
+  // Until we don't have choices for both players we iterate over the input log
+  // since our last index and try to parse out choices from the raw input. If we
+  // find an choice for a player that already has one assigned then the engine
+  // and Pokémon Showdown disagree on the possible options (the engine either
+  // thought the player is forced to "pass" and assigned a choice above, or we
+  // received two inputs for one player and zero for the other meaning the other
+  // player should have passed but didn't *or* the player made an unavailable
+  // choice which we didn't skip as invalid)
   while (index < input.length && !(choices.p1 && choices.p2)) {
     const m = MATCH.exec(input[index]);
     if (!m) {
@@ -224,9 +233,10 @@ function nextChoices(battle: engine.Battle, result: engine.Result, input: string
       `'${type === 'pass' ? type : `${type} ${data}`}' `);
     }
 
-    // Ensure the choice we parsed from the input log is actually valid for the player - its
-    // possible that the RandomPlayerAI made an "unavailable" choice, in which case we simply
-    // continue to the next input to determine what the *actual* choice should be
+    // Ensure the choice we parsed from the input log is actually valid for the
+    // player - its possible that the RandomPlayerAI made an "unavailable"
+    // choice, in which case we simply continue to the next input to determine
+    // what the *actual* choice should be
     for (const choice of battle.choices(player, result)) {
       if (choice.type === type && choice.data === data) {
         choices[player] = choice;
@@ -237,8 +247,8 @@ function nextChoices(battle: engine.Battle, result: engine.Result, input: string
     index++;
   }
 
-  // If we iterated through the entire input log and still don't have a choice for
-  //  both players then we screwed up somehow
+  // If we iterated through the entire input log and still don't have a choice
+  // for both players then we screwed up somehow
   const unresolved = [];
   if (!choices.p1) unresolved.push('p1');
   if (!choices.p2) unresolved.push('p2');
@@ -249,9 +259,10 @@ function nextChoices(battle: engine.Battle, result: engine.Result, input: string
   return [choices.p1!, choices.p2!, index] as const;
 }
 
-// The ExhaustiveRunner does not do a good job at ensuring the sets it generates are legal for
-// old generations - these usually get corrected for formats which run through the TeamValidator,
-// but custom games bypass this so we need to massage the fault set data ourselves
+// The ExhaustiveRunner does not do a good job at ensuring the sets it generates
+// are legal for old generations - these usually get corrected for formats which
+// run through the TeamValidator, but custom games bypass this so we need to
+// massage the fault set data ourselves
 function fixTeam(gen: Generation, options: AIOptions) {
   for (const pokemon of options.team!) {
     if (gen.num === 1) {
@@ -263,8 +274,9 @@ function fixTeam(gen: Generation, options: AIOptions) {
   return options;
 }
 
-// This is a fork of the possibilities function upstream that has been extended to also enforce the
-// BLOCKLIST - this is used to build up the various "pools" of effects to proc during testing
+// This is a fork of the possibilities function upstream that has been extended
+// to also enforce the BLOCKLIST - this is used to build up the various "pools"
+// of effects to proc during testing
 function possibilities(gen: Generation) {
   const blocked = BLOCKLIST[gen.num] || {};
   const pokemon = Array.from(gen.species).filter(p => !blocked.pokemon?.includes(p.id as ID) &&

@@ -3,22 +3,23 @@
  *
  * Copyright (c) 2021-2023 pkmn contributors
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
- * the Software without restriction, including without limitation the rights to
- * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
- * the Software, and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- *  copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 #ifndef LIBPKMN_H
@@ -33,8 +34,9 @@ extern "C" {
 #include <stdint.h>
 
 /**
- * Defines an opaque pkmn type. These are given a size so that they may be statically allocated but
- * must either be initialized with an init() function or manually depending on the type in question.
+ * Defines an opaque pkmn type. These are given a size so that they may be
+ * statically allocated but must either be initialized with an init() function
+ * or manually depending on the type in question.
  */
 #define PKMN_OPAQUE(n) typedef struct { uint8_t bytes[n]; }
 
@@ -54,15 +56,15 @@ extern const pkmn_options PKMN_OPTIONS;
 /** The minimum size in bytes required to hold all choice options. */
 extern const size_t PKMN_MAX_OPTIONS;
 /**
- * The optimal size in bytes required to hold all choice options.
- * At least as large as PKMN_MAX_OPTIONS.
+ * The optimal size in bytes required to hold all choice options. At least as
+ * large as PKMN_MAX_OPTIONS.
  */
 extern const size_t PKMN_OPTIONS_SIZE;
 /** The maximum number of bytes possibly logged by a single update. */
 extern const size_t PKMN_MAX_LOGS;
 /**
- * The optimal size in bytes required to hold the largest amount of log data possible
- * from a single update. At least as large as PKMN_MAX_LOGS.
+ * The optimal size in bytes required to hold the largest amount of log data
+ * possible from a single update. At least as large as PKMN_MAX_LOGS.
  */
 extern const size_t PKMN_LOGS_SIZE;
 
@@ -80,7 +82,8 @@ typedef enum pkmn_choice_kind {
   PKMN_CHOICE_MOVE = 1,
   PKMN_CHOICE_SWITCH = 2,
 } pkmn_choice_kind;
-/** Returns a choice initialized for a specific type with the provided data. data must be <= 6. */
+/** Returns a choice initialized for a specific type with the provided data.
+ * data must be <= 6. */
 pkmn_choice pkmn_choice_init(pkmn_choice_kind type, uint8_t data);
 /** The choice type of the choice. */
 pkmn_choice_kind pkmn_choice_type(pkmn_choice choice);
@@ -104,10 +107,11 @@ pkmn_choice_kind pkmn_result_p1(pkmn_result result);
 /** The choice type of the result for Player 2. */
 pkmn_choice_kind pkmn_result_p2(pkmn_result result);
 /**
- * Whether or not the update resulted in an error being thrown. This can only happen if libpkmn was
- * built with trace logging enabled and the buffer provided to the update function was not large
- * enough to hold all of the data (which is only possible if the buffer being used was smaller than
- * generation in question's MAX_LOGS bytes).
+ * Whether or not the update resulted in an error being thrown. This can only
+ * happen if libpkmn was built with trace logging enabled and the buffer
+ * provided to the update function was not large enough to hold all of the data
+ * (which is only possible if the buffer being used was smaller than generation
+ * in question's MAX_LOGS bytes).
  */
 bool pkmn_error(pkmn_result result);
 
@@ -121,23 +125,25 @@ uint32_t pkmn_psrng_next(pkmn_psrng *psrng);
 /** The minimum size in bytes required to hold the all Generation I choice options. */
 extern const size_t PKMN_GEN1_MAX_OPTIONS;
 /**
- * The optimal size in bytes required to hold the all Generation I choice options.
- *  At least as large as PKMN_GEN1_MAX_OPTIONS.
+ * The optimal size in bytes required to hold the all Generation I choice
+ * options. At least as large as PKMN_GEN1_MAX_OPTIONS.
  */
 extern const size_t PKMN_GEN1_OPTIONS_SIZE;
 /** The maximum number of bytes possibly logged by a single Generation I update. */
 extern const size_t PKMN_GEN1_MAX_LOGS;
 /**
- * The optimal size in bytes required to hold the largest amount of log data possible
- * from a single Generation I update. At least as large as PKMN_GEN1_MAX_LOGS.
+ * The optimal size in bytes required to hold the largest amount of log data
+ * possible from a single Generation I update. At least as large as
+ * PKMN_GEN1_MAX_LOGS.
  */
 extern const size_t PKMN_GEN1_LOGS_SIZE;
 
 /** Generation I Pokémon Battle (see src/lib/gen1/README.md#layout for details). */
 PKMN_OPAQUE(PKMN_GEN1_BATTLE_SIZE) pkmn_gen1_battle;
 /**
- * Returns the result of applying Player 1's choice c1 and Player 2's choice c2 to the Generation I
- * battle. Writes up to len trace logs to buf if buf is not NULL and trace logging is enabled.
+ * Returns the result of applying Player 1's choice c1 and Player 2's choice c2
+ * to the Generation I battle. Writes up to len trace logs to buf if buf is not
+ * NULL and trace logging is enabled.
  */
 pkmn_result pkmn_gen1_battle_update(
   pkmn_gen1_battle *battle,
@@ -146,16 +152,18 @@ pkmn_result pkmn_gen1_battle_update(
   uint8_t buf[],
   size_t len);
 /**
- * Fills in out with at most len possible choices for the player given the request and Generation I
- * battle state and returns the number of choices available. Note that reading values in out which
- * occur at indexes > the return value of this function could result in reading potentially garbage
+ * Fills in out with at most len possible choices for the player given the
+ * request and Generation I battle state and returns the number of choices
+ * available. Note that reading values in out which occur at indexes > the
+ * return value of this function could result in reading potentially garbage
  * data.
  *
- * This function may return 0 due to how the Transform + Mirror Move/Metronome PP error interacts
- * with Disable, in which case there are no possible choices for the player to make (i.e. on the
- * cartridge a soft-lock occurs).
+ * This function may return 0 due to how the Transform + Mirror Move/Metronome
+ * PP error interacts with Disable, in which case there are no possible choices
+ * for the player to make (i.e. on the cartridge a soft-lock occurs).
  *
- * This function will always return a number of choices > 0 if PKMN_OPTIONS.showdown is true.
+ * This function will always return a number of choices > 0 if
+ * PKMN_OPTIONS.showdown is true.
  */
 uint8_t pkmn_gen1_battle_choices(
   pkmn_gen1_battle *battle,
