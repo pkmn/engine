@@ -9,7 +9,7 @@ import {
 } from '@pkmn/sim/tools';
 
 import * as engine from '../../pkg';
-import {PatchedBattleStream, patch} from '../showdown/common';
+import {PatchedBattleStream, patch, FILTER} from '../showdown/common';
 
 import blocklistJSON from '../blocklist.json';
 
@@ -128,15 +128,10 @@ class RawBattleStream extends PatchedBattleStream {
 }
 
 // TODO: can we always infer done/start/upkeep?
-const SKIP = new Set([
-  't:', 'gametype', 'player', 'teamsize', 'gen', 'tier',
-  'rule', 'done', 'start', 'upkeep', 'debug',
-]);
-
 function parse(chunk: string) {
   const buf: Array<{args: Protocol.ArgType; kwArgs: Protocol.KWArgType}> = [];
   for (const {args, kwArgs} of Protocol.parse(chunk)) {
-    if (SKIP.has(args[0])) continue;
+    if (FILTER.has(args[0])) continue;
     buf.push({args, kwArgs});
   }
   return buf;
