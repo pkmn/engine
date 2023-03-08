@@ -16,6 +16,22 @@ import blocklistJSON from '../blocklist.json';
 const FORMATS = ['gen1customgame'];
 const BLOCKLIST = blocklistJSON as {[gen: number]: Partial<ExhaustiveRunnerPossibilites>};
 
+// We first play out a normal battle with Pokémon Showdown, saving the raw input log and each of the
+// chunks that are output. We then set up a battle with the @pkmn/engine (configured with -Dshowdown
+// and -Dtrace) and confirm that the engine produces the same chunks of output given the same input.
+//
+// The are several challenges:
+//
+//   - we need to patch Pokémon Showdown to make its speed ties sane (PatchedBattleStream/patch)
+//   - we need to ensure the ExhaustiveRunner doesn't generate teams with moves that are too
+//     broken for the engine to be able to match (possibilities) and we need to massage the
+//     teams it produces to ensure they are legal for the generation in question (fixTeams)
+//   - Pokémon Showdown's output contains a bunch of protocol messages which are redundant so
+//     we need to filter these out, and we also only want to compare parsed output because
+//     the raw output produced by Pokémon Showdown needs to get parsed first anyway (parse)
+//   - the RandomPlayerAI can sometimes make "unavailable" choices because it doesn't have perfect
+//     information, only we can't apply those choices to the engine as that will result in
+//     undefined behavior (nextChoices)
 class Runner {
   private readonly gen: Generation;
   private readonly format: string;
@@ -127,6 +143,7 @@ class RawBattleStream extends PatchedBattleStream {
   }
 }
 
+// Filter out redundant messages and parse the protocol into its final form
 // TODO: can we always infer done/start/upkeep?
 function parse(chunk: string) {
   const buf: Array<{args: Protocol.ArgType; kwArgs: Protocol.KWArgType}> = [];
@@ -137,6 +154,8 @@ function parse(chunk: string) {
   return buf;
 }
 
+// Figure out the next valid choices for the players given the input log
+// TODO
 const IGNORE = /^>(version|start|player)/;
 const MATCH = /^>(p1|p2) (?:(pass)|((move) ([1-4]))|((switch) ([2-6])))/;
 function nextChoices(battle: engine.Battle, result: engine.Result, input: string[], index: number) {
@@ -187,6 +206,9 @@ function nextChoices(battle: engine.Battle, result: engine.Result, input: string
   return [choices.p1!, choices.p2!, index] as const;
 }
 
+// The ExhaustiveRunner does not do a good job at ensuring the sets it generates are legal for
+// old generations - these usually get corrected for formats which run through the TeamValidator,
+// but custom games bypass this so we need to massage the fault set data ourselves
 function fixTeam(gen: Generation, options: AIOptions) {
   for (const pokemon of options.team!) {
     if (gen.num === 1) {
@@ -197,6 +219,9 @@ function fixTeam(gen: Generation, options: AIOptions) {
   }
   return options;
 }
+
+// This is a fork of the possibilities function upstream that has been extended to also enforce the
+// BLOCKLIST - this is used to build up the various "pools" of effects to proc during testing
 function possibilities(gen: Generation) {
   const blocked = BLOCKLIST[gen.num] || {};
   const pokemon = Array.from(gen.species).filter(p => !blocked.pokemon?.includes(p.id as ID) &&
