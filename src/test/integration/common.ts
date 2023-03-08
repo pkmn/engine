@@ -353,6 +353,8 @@ type Options = Pick<ExhaustiveRunnerOptions, 'log' | 'maxFailures' | 'cycles'> &
 export async function run(gens: Generations, options: Options) {
   const opts: ExhaustiveRunnerOptions = {
     cycles: 1, maxFailures: 1, log: false, ...options, format: '',
+    cmd: (cycles: number, format: string, seed: string) =>
+      `npm run integration -- --cycles=${cycles} --format=${format} --seed=${seed}`
   };
 
   let failures = 0;
