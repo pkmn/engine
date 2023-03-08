@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang=en>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="https://pokemonshowdown.com/favicon.ico">
+    <title>Pokémon Showdown</title>
+    <script type="text/plain" class="battle-log-data">{{ output }}</script>
+    <script src="https://play.pokemonshowdown.com/js/replay-embed.js"></script>
+  </head>
+  <body>
+    <div id="content">
+      <h1>{{ seed }}</h1>
+      <div class="wrapper replay-wrapper" style="max-width:1180px;margin:0 auto">
+        <div class="battle"></div>
+        <div class="battle-log"></div>
+        <div class="replay-controls"></div>
+        <div class="replay-controls-2"></div>
+      </div>
+      <details class="debug-log input-log"><summary>Input</summary>
+        <pre>{{ input }}</pre>
+      </details>
+      <details open class="debug-log"><summary>Output</summary>
+        <pre>{{ output }}</pre>
+      </details>
+    </div>
+    <style>
+      body {
+        overflow-y: scroll;
+        font-family: "Roboto", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+      }
+      #content {
+        margin: 4em auto;
+      }
+      h1, summary, .replay-controls  {
+        text-align: center !important;
+        line-height: 1.4em;
+      }
+      .debug-log {
+        margin: 0 auto;
+        display: flex;
+        justify-content: center;
+        max-width: 400px;
+        line-height: 1.4em;
+      }
+      .input-log {
+        max-width: 100px;
+      }
+      .replay-wrapper {
+        padding-top: 440px !important;
+      }
+      .replay-controls {
+        top: 389px;
+      }
+      button.startsoundchooser, .replay-controls-2 {
+        display: none !important;
+      }
+    </style>
+    <script>
+      window.addEventListener('load', () => { BattleSound.muted  = true; });
+    </script>
+  </body>
+</html>

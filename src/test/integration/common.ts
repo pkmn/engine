@@ -1,4 +1,9 @@
+import * as fs from 'fs';
+import * as path from 'path';
+import * as tty from 'tty';
 import {strict as assert} from 'assert';
+
+import * as mustache from 'mustache';
 
 import {Generations, Generation, GenerationNum} from '@pkmn/data';
 import {Protocol} from '@pkmn/protocol';
@@ -13,6 +18,8 @@ import {PatchedBattleStream, patch, FILTER} from '../showdown/common';
 
 import blocklistJSON from '../blocklist.json';
 
+const ROOT = path.resolve(__dirname, '..', '..', '..');
+const TEMPLATES = path.join(ROOT, 'src', 'test', 'integration');
 const FORMATS = ['gen1customgame'];
 const BLOCKLIST = blocklistJSON as {[gen: number]: Partial<ExhaustiveRunnerPossibilites>};
 
@@ -55,72 +62,100 @@ class Runner {
   }
 
   async run() {
-    const rawBattleStream = new RawBattleStream(this.format);
-    const streams = BattleStreams.getPlayerStreams(rawBattleStream);
-
-    const spec = {formatid: this.format, seed: this.prng.seed};
-    const p1spec = {name: 'Bot 1', ...this.p1options};
-    const p2spec = {name: 'Bot 2', ...this.p2options};
-
-    const p1 = this.p1options.createAI(streams.p2, {
-      seed: newSeed(this.prng), move: 0.7, mega: 0.6, ...this.p1options,
-    }).start();
-    const p2 = this.p2options.createAI(streams.p1, {
-      seed: newSeed(this.prng), move: 0.7, mega: 0.6, ...this.p2options,
-    }).start();
-
-    const start = streams.omniscient.write(
-      `>start ${JSON.stringify(spec)}\n` +
-      `>player p1 ${JSON.stringify(p1spec)}\n` +
-      `>player p2 ${JSON.stringify(p2spec)}`
-    );
-
     const buf = [];
-    for await (const chunk of streams.omniscient) {
-      buf.push(chunk);
-    }
+    const rawBattleStream = new RawBattleStream(this.format);
+    const seed = this.prng.seed;
+    try {
+      const streams = BattleStreams.getPlayerStreams(rawBattleStream);
 
-    await Promise.all([streams.p2.writeEnd(), p1, p2, start]);
+      const spec = {formatid: this.format, seed: this.prng.seed};
+      const p1spec = {name: 'Bot 1', ...this.p1options};
+      const p2spec = {name: 'Bot 2', ...this.p2options};
 
-    const options = {
-      p1: {name: 'Bot 1', team: this.p1options.team!},
-      p2: {name: 'Bot 2', team: this.p2options.team!},
-      seed: spec.seed,
-      showdown: true,
-      log: true,
-    };
-    const battle = engine.Battle.create(this.gen, options);
-    const log = new engine.Log(this.gen, engine.Lookup.get(this.gen), options);
+      const p1 = this.p1options.createAI(streams.p2, {
+        seed: newSeed(this.prng), move: 0.7, mega: 0.6, ...this.p1options,
+      }).start();
+      const p2 = this.p2options.createAI(streams.p1, {
+        seed: newSeed(this.prng), move: 0.7, mega: 0.6, ...this.p2options,
+      }).start();
 
-    let c1 = engine.Choice.pass();
-    let c2 = engine.Choice.pass();
+      const start = streams.omniscient.write(
+        `>start ${JSON.stringify(spec)}\n` +
+        `>player p1 ${JSON.stringify(p1spec)}\n` +
+        `>player p2 ${JSON.stringify(p2spec)}`
+      );
 
-    let input = 0;
 
-    let result: engine.Result = {type: undefined, p1: 'pass', p2: 'pass'};
-    for (const chunk of buf) {
-      assert.equal(result.type, undefined);
-      result = battle.update(c1, c2);
-      if (result.type === 'win') {
-        assert.equal(rawBattleStream.battle!.winner, options.p1.name);
-      } else if (result.type === 'lose') {
-        assert.equal(rawBattleStream.battle!.winner, options.p2.name);
-      } else if (result.type === 'tie') {
-        assert.equal(rawBattleStream.battle!.winner, '');
-      } else if (result.type) {
-        throw new Error('Battle ended in error which should be impossible with -Dshowdown');
-      } else {
-        console.debug(chunk);
-        const parsed = Array.from(log.parse(battle.log!));
-        console.debug(parsed);
-        assert.deepStrictEqual(parse(this.gen, chunk), parsed);
+      for await (const chunk of streams.omniscient) {
+        buf.push(chunk);
       }
-      [c1, c2, input] = nextChoices(battle, result, rawBattleStream.rawInputLog, input);
-    }
 
-    assert.equal(rawBattleStream.rawInputLog.length, input);
-    assert.notEqual(result.type, undefined);
+      await Promise.all([streams.p2.writeEnd(), p1, p2, start]);
+
+      const options = {
+        p1: {name: 'Bot 1', team: this.p1options.team!},
+        p2: {name: 'Bot 2', team: this.p2options.team!},
+        seed: spec.seed,
+        showdown: true,
+        log: true,
+      };
+      const battle = engine.Battle.create(this.gen, options);
+      const log = new engine.Log(this.gen, engine.Lookup.get(this.gen), options);
+
+      let c1 = engine.Choice.pass();
+      let c2 = engine.Choice.pass();
+
+      let input = 0;
+
+      let result: engine.Result = {type: undefined, p1: 'pass', p2: 'pass'};
+      for (const chunk of buf) {
+        assert.equal(result.type, undefined);
+        result = battle.update(c1, c2);
+        if (result.type === 'win') {
+          assert.equal(rawBattleStream.battle!.winner, options.p1.name);
+        } else if (result.type === 'lose') {
+          assert.equal(rawBattleStream.battle!.winner, options.p2.name);
+        } else if (result.type === 'tie') {
+          assert.equal(rawBattleStream.battle!.winner, '');
+        } else if (result.type) {
+          throw new Error('Battle ended in error with -Dshowdown');
+        } else {
+          assert.deepStrictEqual(parse(this.gen, chunk), Array.from(log.parse(battle.log!)));
+        }
+        [c1, c2, input] =
+          nextChoices(battle, result, rawBattleStream.rawInputLog, input);
+      }
+
+      assert.equal(rawBattleStream.rawInputLog.length, input);
+      assert.notEqual(result.type, undefined);
+    } catch (err: any) {
+      try {
+        dump(`0x${toBigInt(seed).toString(16).toUpperCase()}`, {
+          input: rawBattleStream.rawInputLog.slice(3).join('\n'),
+          output: buf.join('\n'),
+        });
+      } catch (e) {
+        console.error(e);
+      }
+      throw err;
+    }
   }
+}
+
+function dump(seed: string, showdown: {input: string; output: string}) {
+  const color = (s: string) => tty.isatty(2) ? `\x1b[36m${s}\x1b[0m` : s;
+  const dir = path.join(ROOT, 'logs');
+  try {
+    fs.mkdirSync(dir, {recursive: true});
+  } catch (err: any) {
+    if (err.code !== 'EEXIST') throw err;
+  }
+  const file = path.join(dir, `${seed}.showdown.html`);
+  fs.writeFileSync(file, mustache.render(
+    fs.readFileSync(path.join(TEMPLATES, 'showdown.html.tmpl'), 'utf8'),
+    {seed, ...showdown}
+  ));
+  console.error('\n\nPokémon Showdown:', color(file));
 }
 
 class RawBattleStream extends PatchedBattleStream {
@@ -318,3 +353,7 @@ export async function run(gens: Generations, options: Options) {
 export const newSeed = (prng: PRNG) => [
   prng.next(0x10000), prng.next(0x10000), prng.next(0x10000), prng.next(0x10000),
 ] as PRNGSeed;
+
+export const toBigInt = (seed: PRNGSeed) =>
+  ((BigInt(seed[0]) << 48n) | (BigInt(seed[1]) << 32n) |
+   (BigInt(seed[2]) << 16n) | BigInt(seed[3]));

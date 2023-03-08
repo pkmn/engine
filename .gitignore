@@ -25,6 +25,4 @@ dist/
 # Project
 .cache
 src/examples/c/example
-index.html
-benchmark.sh
-
+logs/

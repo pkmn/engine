@@ -10,7 +10,7 @@ import minimist from 'minimist';
 import {Stats} from 'trakr';
 
 import {PatchedBattleStream, patch} from '../showdown/common';
-import {newSeed} from '../integration/common';
+import {newSeed, toBigInt} from '../integration/common';
 
 import * as engine from '../../pkg';
 import * as gen1 from './gen1';
@@ -24,11 +24,7 @@ const GENS = new Generations(Dex as any);
 const FORMATS = ['gen1customgame'] as ID[];
 
 const toMillis = (duration: bigint) => Number(duration / BigInt(1e6));
-const serialize = (seed: PRNGSeed) =>
-  ((BigInt(seed[0]) << 48n) |
-    (BigInt(seed[1]) << 32n) |
-    (BigInt(seed[2]) << 16n) |
-    BigInt(seed[3])).toString();
+const serialize = (seed: PRNGSeed) => toBigInt(seed).toString();
 
 interface Configuration {
   warmup?: boolean;
