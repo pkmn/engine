@@ -26,7 +26,7 @@ class Random {
     z = z ^ (z + Math.imul(z ^ (z >>> 7), z | 61));
     z = (z ^ (z >>> 14)) >>> 0;
     const n = z / 0x100000000;
-    // A more general `next` implementation would return n, but since we need it
+    // A more general next implementation would return n, but since we need it
     // only for making choices we can instead specialize the function to return
     // a number between [0, max)
     return Math.floor(n * max);
@@ -85,7 +85,7 @@ const display = () => {
 };
 
 const random = new Random();
-const choose = (choices: Choice[]) => choices[random.next(choices.length)];
+const choose = random.next.bind(random);
 
 // For convenience the engine actually is written so that passing in undefined
 // is equivalent to Choice.pass() but to appease the TypeScript compiler we're
@@ -101,8 +101,13 @@ while (!(result = battle.update(c1, c2)).type) {
   // Mirror Move/Metronome, and Disable its possible that there are no available
   // choices (softlock), though this is impossible here given that our example
   // battle involves none of these moves
-  c1 = choose(battle.choices('p1', result));
-  c2 = choose(battle.choices('p2', result));
+  //
+  // Battles expose a choices method if we wish to see all the available
+  // choices, but if we don't care about which one is chosen because we're doing
+  // so randomly (e.g. during a MCTS simulation) we can opt for the faster
+  // special-cased choose method instead
+  c1 = battle.choose('p1', result, choose);
+  c2 = battle.choose('p2', result, choose);
 }
 // Remember to display any logs that were produced during the last update
 display();

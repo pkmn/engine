@@ -17,6 +17,7 @@ export type MoveSlot = Gen1.MoveSlot;
 export interface API {
   update(c1: Choice, c2: Choice): Result;
   choices(id: Player, result: Result): Choice[];
+  choose(id: Player, result: Result, fn: (n: number) => number): Choice;
 }
 
 export namespace Gen1 {

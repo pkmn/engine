@@ -73,10 +73,42 @@ export function choices(
 ) {
   const request = choice[0] === 'p' ? 0 : choice[0] === 'm' ? 1 : 2;
   const n = ADDON![+showdown]!.bindings[index].choices(battle, +(player !== 'p1'), request, buf);
+  // The top-level API signature means our hands our tied with respect to
+  // writing really fast bindings here. The simplest approach would be to return
+  // the ArrayBuffer the bindings populate as well as its size and only decode a
+  // Choice after the selection. However, given that we need to return
+  // `Choices[]` we need to decode all of them even if they're not all being
+  // used which is wasteful. This shouldn't be *that* bad as its a very small
+  // list, but its still wasted work. Switching the top-level API to return an
+  // Iterable<Choice> doesn't help as we need both the length and the ability to
+  // randomly access it, so the best way to make the current API fast would be
+  // to have the Zig bindings create Choice objects directly, only that won't
+  // scale well as it would require us to basically rewrite the low-level
+  // choices function for each generation within node.zig. We could do something
+  // really galaxy-brained and return some sort of frankenstein subclass of
+  // Array backed by ArrayBuffer which would lazily decode the Choice on access,
+  // but thats ultimately not worth the effort. You can't have both a high-level
+  // idiomatic API and performance here, hence why the choose function below
+  // exists.
   const options = new Array<Choice>(n);
   const data = new Uint8Array(buf);
   for (let i = 0; i < n; i++) options[i] = Choice.parse(data[i]);
   return options;
+}
+
+export function choose(
+  index: number,
+  showdown: boolean,
+  battle: ArrayBuffer,
+  player: Player,
+  choice: Choice['type'],
+  buf: ArrayBuffer,
+  fn: (n: number) => number,
+) {
+  const request = choice[0] === 'p' ? 0 : choice[0] === 'm' ? 1 : 2;
+  const n = ADDON![+showdown]!.bindings[index].choices(battle, +(player !== 'p1'), request, buf);
+  const data = new Uint8Array(buf);
+  return Choice.parse(data[fn(n)]);
 }
 
 export function size(index: number, type: 'options' | 'log') {

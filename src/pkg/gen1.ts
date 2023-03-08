@@ -69,6 +69,12 @@ export class Battle implements Gen1.Battle {
     return addon.choices(0, !!this.config.showdown, this.data.buffer, id, result[id], this.options);
   }
 
+  choose(id: Player, result: Result, fn: (n: number) => number): Choice {
+    return addon.choose(
+      0, !!this.config.showdown, this.data.buffer, id, result[id], this.options, fn
+    );
+  }
+
   get sides() {
     return this._sides();
   }
