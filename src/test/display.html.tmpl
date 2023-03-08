@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang=en>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="https://pkmn.cc/favicon.ico">
+    <title>@pkmn/engine</title>
+    <style>
+      #content {
+        font-family: "Roboto", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+        margin: 4em auto;
+        max-width: 1300px;
+        line-height: 1.4em;
+        --hp-bar: 151px;
+        --hp-text: 32px;
+      }
+      details > summary {
+        list-style: none;
+      }
+      details > summary::-webkit-details-marker {
+        display: none;
+      }
+      .battle > .details {
+        background: #eee;
+        border-bottom: 3px solid black;
+        padding: 0 0.5em;
+        display: flex;
+        justify-content: space-between;
+      }
+      .inner {
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+      }
+      .side > .details {
+        padding: 0.5em;
+        display: flex;
+        justify-content: space-between;
+        text-align: center;
+        flex: 0 1 auto;
+      }
+      .active {
+        flex: 1 1 auto;
+      }
+      details {
+        flex: 0 1 auto;
+      }
+      .sides {
+        display: flex;
+      }
+      .side {
+        flex: 1;
+        display: flex;
+        flex-flow: column;
+      }
+      .side.p1 {
+        border-right: 1px solid black;
+      }
+      .battle {
+        border: 3px solid black;
+      }
+      summary {
+        border-top: 1px solid black;
+        text-align: center;
+        padding: 0.25em;
+      }
+      .good {
+        color: green;
+      }
+      .bad {
+        color: red;
+      }
+      .pokemon {
+        position: relative;
+        padding: 0.5em;
+        border-top: 1px solid black;
+        display: flex;
+      }
+      table {
+        border-collapse: collapse;
+        border-style: hidden;
+        border-spacing: 0px;
+        line-height: 1.5em;
+      }
+      th, td {
+        border: 1px solid black;
+        padding: 0 0.5em;
+      }
+      .statbar {
+        display: none;
+        width: calc(var(--hp-bar) + var(--hp-text));
+        padding: 2px 0;
+        line-height: normal;
+      }
+      .statbar .name {
+        display: block;
+        text-align: center;
+        line-height: 1.25em;
+      }
+      .statbar strong {
+        color: #222222;
+        text-shadow:
+          #FFFFFF 1px 1px 0, #FFFFFF 1px -1px 0,
+          #FFFFFF -1px 1px 0, #FFFFFF -1px -1px 0;
+      }
+      .statbar strong small {
+        font-weight: normal;
+      }
+      .statbar .hpbar {
+        position: relative;
+        border: 1px solid #777777;
+        background: #FCFEFF;
+        padding: 1px;
+        height: 8px;
+        margin: 0 0 0 0;
+        width: calc(var(--hp-bar) + var(--hp-text) + 1px);
+        border-radius: 4px;
+      }
+      .statbar .hpbar .hp {
+        height: 4px;
+        border-top: 2px solid #00dd60;
+        background: #00bb51;
+        border-bottom: 2px solid #007734;
+        border-right: 1px solid #007734;
+        border-radius: 3px;
+      }
+      .statbar .hpbar .hp-yellow {
+        border-top-color: #f8e379;
+        background-color: #f5d538;
+        border-bottom-color: #be9f0a;
+        border-right-color: #be9f0a;
+      }
+      .statbar .hpbar .hp-red {
+        border-top-color: #f37f67;
+        background-color: #ee4928;
+        border-bottom-color: #a3260d;
+        border-right-color: #a3260d;
+      }
+      .statbar .hpbar .prevhp {
+        background: #BBEECC;
+        height: 8px;
+        border-radius: 3px;
+      }
+      .statbar .hpbar .prevhp-yellow {
+        background-color: #fcf4ca;
+      }
+      .statbar .hpbar .prevhp-red {
+        background-color: #facec5;
+      }
+      .statbar .hpbar .hptext {
+        position: absolute;
+        background: #777777;
+        color: #EEEEEE;
+        text-shadow: #000000 0 1px 0;
+        font-size: 10px;
+        width: 32px;
+        height: 12px;
+        top: -1px;
+        text-align: center;
+      }
+      .status, .volatile {
+        padding: 0px 1px;
+        border: 1px solid #FF4400;
+        border-radius: 3px;
+      }
+      .status {
+        min-height: 10px;
+        font-size: 7pt;
+        vertical-align: middle;
+        padding: 1px 2px;
+        border: 0;
+        border-radius: 3px;
+        text-transform: uppercase;
+        margin: 0 2px;
+      }
+      .status.brn {
+        background: #EE5533;
+        color: #FFFFFF;
+      }
+      .status.psn {
+        background: #A4009A;
+        color: #FFFFFF;
+      }
+      .status.par {
+        background: #9AA400;
+        color: #FFFFFF;
+      }
+      .status.slp {
+        background: #AA77AA;
+        color: #FFFFFF;
+      }
+      .status.frz {
+        background: #009AA4;
+        color: #FFFFFF;
+      }
+      .volatile {
+        display: inline-block;
+        padding: 0 5px;
+        margin: 2px
+      }
+      .volatile.bad {
+        background: #FFE5E0;
+        color: #FF4400;
+        border-color: #FF4400;
+      }
+      .volatile.good {
+        background: #E5FFE0;
+        color: #33AA00;
+        border-color: #33AA00;
+      }
+      .volatile.neutral {
+        background: #F0F0F0;
+        color: #555555;
+        border-color: #555555;
+      }
+      .rstatbar .hpbar .hptext {
+        right: 0px;
+        border-radius: 0 4px 4px 0;
+      }
+      .moves ul {
+        column-count: 2;
+        column-gap: 2em;
+      }
+      .left {
+        padding-right: 32px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .stats {
+        display: flex;
+        padding: 0 1em;
+        justify-content: space-between;
+        text-align: center;
+        width: 100%;
+      }
+      .types {
+        display: inherit;
+      }
+      .disabled {
+        color: #AAAAAA;
+      }
+      .log {
+        display: flex;
+        justify-content: center;
+        padding-bottom: 2em;
+      }
+      .position {
+        position: absolute;
+        right: 10px;
+        color: #AAAAAA;
+      }
+      .left .position {
+        display: none;
+      }
+      .right .position {
+        display: block;
+      }
+      .teamicons {
+        display: inline-block;
+      }
+      @media(max-width: 1300px) {
+        #content {
+          font-size: 0.85em;
+          max-width: 95%;
+          margin: 2em auto;
+        }
+      }
+      @media(max-width: 1200px) {
+        .moves ul {
+          column-count: 1;
+        }
+      }
+      @media(max-width: 1100px) {
+        .pokemon {
+          flex-direction: column;
+        }
+        .stats {
+          justify-content: center;
+          padding: 0;
+        }
+        .boosts {
+          margin-left: 5px;
+        }
+        .moves ul {
+          column-count: 2;
+        }
+        .left {
+          padding-right: 0;
+        }
+        .right {
+          padding-top: 1em;
+        }
+        .volatiles {
+          display: flex;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+        .left .position {
+          display: block;
+        }
+        .right .position {
+          display: none;
+        }
+      }
+      @media(max-width: 800px) {
+        .moves {
+          display: flex;
+          justify-content: center;
+        }
+        .moves ul {
+          column-count: 1;
+          display: inline-block;
+          padding: 0;
+        }
+      }
+      @media(max-width: 680px) {
+        .stats {
+          flex-direction: column;
+          padding: 0;
+        }
+        .boosts {
+          display: flex;
+          justify-content: space-between;
+          margin-top: 0.5em;
+        }
+      }
+      @media(max-width: 550px) {
+        #content {
+          font-size: 0.65em;
+          max-width: 95%;
+          margin: 1em auto;
+          --hp-bar: 101px;
+        }
+      }
+      @media(max-width: 425px) {
+        .stats {
+          font-size: 0.9em;
+        }
+      }
+      {{ styles }}
+    </style>
+  </head>
+  <body>
+    <div id="content">{{{ content }}}</div>
+    <script>
+      for (const details of document.getElementsByTagName('details')) {
+        details.addEventListener('toggle', e => {
+          for (const d of details.parentElement.parentElement.getElementsByTagName('details')) {
+            if (d.open !== details.open) d.open = details.open;
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

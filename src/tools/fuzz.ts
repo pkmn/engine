@@ -3,14 +3,13 @@ import 'source-map-support/register';
 import {execFile} from 'child_process';
 import {promisify} from 'util';
 
-import {minify} from 'html-minifier';
-
 import {Dex} from '@pkmn/sim';
 import {Generation, Generations} from '@pkmn/data';
 
 import {Battle, Result, Choice, Log, ParsedLine, Info, SideInfo} from '../pkg';
 import {Lookup, Data, LAYOUT, LE} from '../pkg/data';
-import {STYLES, displayBattle, escapeHTML, SCRIPTS} from '../test/display';
+import {render, displayBattle, escapeHTML} from '../test/display';
+import * as addon from '../pkg/addon';
 import * as gen1 from '../pkg/gen1';
 
 const run = promisify(execFile);
@@ -93,6 +92,7 @@ class SpeciesNames implements Info {
   const names = new SpeciesNames(gen);
   const log = new Log(gen, lookup, names);
   const deserialize = (buf: number[]): Battle => {
+    addon.check(showdown);
     switch (gen.num) {
     case 1: return new gen1.Battle(lookup, Data.view(buf), {showdown});
     default: throw new Error(`Unsupported gen: ${gen.num}`);
@@ -117,35 +117,13 @@ class SpeciesNames implements Info {
     const data = Array.from(stdout);
     if (!data.length) process.exit(1);
 
-    const buf = [];
-
-    buf.push(
-      '<!doctype html><html lang=en><head>' +
-        '<meta charset="utf-8">' +
-        '<meta name="viewport" content="width=device-width, initial-scale=1">' +
-        '<link rel="icon" href="https://pkmn.cc/favicon.ico">' +
-        '<title>@pkmn/engine</title>' +
-        `<style>${STYLES}
-        h1 {
-          text-align: center;
-        }
-        .error {
-          overflow: auto;
-          scrollbar-width: none;
-        }
-        .error::-webkit-scrollbar {
-          display: none;
-        }
-        </style>` +
-      '</head><body><div id="content">'
-    );
-
-
     const view = Data.view(data);
 
     const head = 8 + 1;
     const seed = view.getBigUint64(0, LE);
     const end = view.getUint8(8);
+
+    const buf = [];
 
     let last: Battle | undefined = undefined;
     for (let offset = head + end; offset < data.length; offset += (3 + size)) {
@@ -177,9 +155,21 @@ class SpeciesNames implements Info {
 
     buf.push('<hr />');
     buf.push(`<pre class="error"><code>${escapeHTML(error)}</pre></code>`);
-    buf.push(`</div><script>${SCRIPTS}</script></body></html>`);
 
-    console.log(minify(buf.join(''), {minifyCSS: true, minifyJS: true}));
+    console.log(render(buf.join(''), {
+      styles: `
+        h1 {
+          text-align: center;
+        }
+        .error {
+          overflow: auto;
+          scrollbar-width: none;
+        }
+        .error::-webkit-scrollbar {
+          display: none;
+        }`,
+    }));
+
     process.exit(1);
   }
 })().catch(err => {

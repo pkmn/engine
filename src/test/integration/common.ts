@@ -4,6 +4,7 @@ import * as tty from 'tty';
 import {strict as assert} from 'assert';
 
 import * as mustache from 'mustache';
+import {minify} from 'html-minifier';
 
 import {Generations, Generation, GenerationNum} from '@pkmn/data';
 import {Protocol} from '@pkmn/protocol';
@@ -19,7 +20,7 @@ import {PatchedBattleStream, patch, FILTER} from '../showdown/common';
 import blocklistJSON from '../blocklist.json';
 
 const ROOT = path.resolve(__dirname, '..', '..', '..');
-const TEMPLATES = path.join(ROOT, 'src', 'test', 'integration');
+const TEMPLATE = path.join(ROOT, 'src', 'test', 'integration', 'showdown.html.tmpl');
 const FORMATS = ['gen1customgame'];
 const BLOCKLIST = blocklistJSON as {[gen: number]: Partial<ExhaustiveRunnerPossibilites>};
 
@@ -84,7 +85,6 @@ class Runner {
         `>player p1 ${JSON.stringify(p1spec)}\n` +
         `>player p2 ${JSON.stringify(p2spec)}`
       );
-
 
       for await (const chunk of streams.omniscient) {
         buf.push(chunk);
@@ -151,9 +151,9 @@ function dump(seed: string, showdown: {input: string; output: string}) {
     if (err.code !== 'EEXIST') throw err;
   }
   const file = path.join(dir, `${seed}.showdown.html`);
-  fs.writeFileSync(file, mustache.render(
-    fs.readFileSync(path.join(TEMPLATES, 'showdown.html.tmpl'), 'utf8'),
-    {seed, ...showdown}
+  fs.writeFileSync(file, minify(
+    mustache.render(fs.readFileSync(TEMPLATE, 'utf8'), {seed, ...showdown}),
+    {minifyCSS: true, minifyJS: true}
   ));
   console.error('\n\nPokémon Showdown:', color(file));
 }
