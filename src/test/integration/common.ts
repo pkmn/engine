@@ -63,10 +63,10 @@ class Runner {
     const p2spec = {name: 'Bot 2', ...this.p2options};
 
     const p1 = this.p1options.createAI(streams.p2, {
-      seed: this.newSeed(), move: 0.7, mega: 0.6, ...this.p1options,
+      seed: newSeed(this.prng), move: 0.7, mega: 0.6, ...this.p1options,
     }).start();
     const p2 = this.p2options.createAI(streams.p1, {
-      seed: this.newSeed(), move: 0.7, mega: 0.6, ...this.p2options,
+      seed: newSeed(this.prng), move: 0.7, mega: 0.6, ...this.p2options,
     }).start();
 
     const start = streams.omniscient.write(
@@ -120,17 +120,6 @@ class Runner {
 
     assert.equal(rawBattleStream.rawInputLog.length, input);
     assert.notEqual(result.type, undefined);
-  }
-
-  // Same as PRNG#generatedSeed, only deterministic.
-  // NOTE: advances this.prng's seed by 4.
-  newSeed(): PRNGSeed {
-    return [
-      this.prng.next(0x10000),
-      this.prng.next(0x10000),
-      this.prng.next(0x10000),
-      this.prng.next(0x10000),
-    ];
   }
 }
 
@@ -325,3 +314,7 @@ export async function run(gens: Generations, options: Options) {
 
   return failures;
 }
+
+export const newSeed = (prng: PRNG) => [
+  prng.next(0x10000), prng.next(0x10000), prng.next(0x10000), prng.next(0x10000),
+] as PRNGSeed;

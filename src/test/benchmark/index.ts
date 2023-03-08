@@ -10,7 +10,7 @@ import minimist from 'minimist';
 import {Stats} from 'trakr';
 
 import {PatchedBattleStream, patch} from '../showdown/common';
-import {newSeed} from './common';
+import {newSeed} from '../integration/common';
 
 import * as engine from '../../pkg';
 import * as gen1 from './gen1';
