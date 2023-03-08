@@ -15,7 +15,7 @@ import {
 } from '@pkmn/sim/tools';
 
 import * as engine from '../../pkg';
-import {render, display, compact, escapeHTML} from '../display';
+import {Frame, display} from '../display';
 import {PatchedBattleStream, patch, FILTER} from '../showdown/common';
 
 import blocklistJSON from '../blocklist.json';
@@ -26,14 +26,6 @@ const ANSI = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-
 
 const FORMATS = ['gen1customgame'];
 const BLOCKLIST = blocklistJSON as {[gen: number]: Partial<ExhaustiveRunnerPossibilites>};
-
-interface Frame {
-  result: engine.Result;
-  c1: engine.Choice;
-  c2: engine.Choice;
-  battle: Omit<engine.Battle, keyof engine.API>;
-  parsed: engine.ParsedLine[];
-}
 
 // We first play out a normal battle with Pokémon Showdown, saving the raw input
 // log and each of the chunks that are output. We then set up a battle with the
@@ -186,20 +178,7 @@ function dump(
   console.error('\n\nPokémon Showdown:', color(file));
 
   file = path.join(dir, `${hex}.pkmn.html`);
-  const buf = [];
-  let last: Omit<engine.Battle, keyof engine.API> | undefined = undefined;
-  for (const {result, c1, c2, battle, parsed} of frames) {
-    buf.push(display(gen, true, result, c1, c2, battle, parsed, last ?? seed));
-    last = battle;
-  }
-  if (parsed) {
-    buf.push('<div class="log">');
-    buf.push(`<pre><code>|${parsed.map(compact).join('\n|')}</code></pre>`);
-    buf.push('</div>');
-  }
-  buf.push('<hr />');
-  buf.push(`<pre class="error"><code>${escapeHTML(error)}</pre></code>`);
-  fs.writeFileSync(file, render(buf.join('')));
+  fs.writeFileSync(file, display(gen, error, seed, frames, parsed));
   console.error('@pkmn/engine:    ', color(file));
 }
 

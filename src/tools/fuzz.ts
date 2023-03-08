@@ -8,7 +8,7 @@ import {Generation, Generations} from '@pkmn/data';
 
 import {Battle, Result, Choice, Log, ParsedLine, Info, SideInfo} from '../pkg';
 import {Lookup, Data, LAYOUT, LE} from '../pkg/data';
-import {render, display, compact, escapeHTML} from '../test/display';
+import {Frame, display} from '../test/display';
 import * as addon from '../pkg/addon';
 import * as gen1 from '../pkg/gen1';
 
@@ -91,8 +91,7 @@ class SpeciesNames implements Info {
     const seed = view.getBigUint64(0, LE);
     const end = view.getUint8(8);
 
-    const buf = [];
-    let last: Battle | undefined = undefined;
+    const frames: Frame[] = [];
     for (let offset = head + end; offset < data.length; offset += (3 + size)) {
       const result = Result.parse(data[offset]);
       const c1 = Choice.parse(data[offset + 1]);
@@ -109,21 +108,12 @@ class SpeciesNames implements Info {
       }
       offset += r.value;
 
-      buf.push(display(gen, showdown, result, c1, c2, battle, parsed, last ?? seed));
-      last = battle;
+      frames.push({result, c1, c2, battle, parsed});
     }
 
-    if (end > 0) {
-      const logs = Array.from(log.parse(Data.view(data.slice(head, head + end))));
-      buf.push('<div class="log">');
-      buf.push(`<pre><code>|${logs.map(compact).join('\n|')}</code></pre>`);
-      buf.push('</div>');
-    }
-
-    buf.push('<hr />');
-    buf.push(`<pre class="error"><code>${escapeHTML(error)}</pre></code>`);
-
-    console.log(render(buf.join('')));
+    console.log(display(gen, error, seed, frames, end > 0
+      ? Array.from(log.parse(Data.view(data.slice(head, head + end))))
+      : undefined));
 
     process.exit(1);
   }

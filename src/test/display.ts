@@ -36,11 +36,42 @@ const pretty = (choice: Choice) =>
 
 const format = (kwVal: any) => typeof kwVal === 'boolean' ? '' : ` ${kwVal as string}`;
 
-export const compact = (line: ParsedLine) =>
+const compact = (line: ParsedLine) =>
   [...line.args, ...Object.keys(line.kwArgs)
     .map(k => `[${k}]${format((line.kwArgs as any)[k])}`)].join('|');
 
+export interface Frame {
+  result: Result;
+  c1: Choice;
+  c2: Choice;
+  battle: Omit<Battle, keyof API>;
+  parsed: ParsedLine[];
+}
+
 export function display(
+  gen: Generation,
+  error: string,
+  seed: bigint,
+  frames: Iterable<Frame>,
+  parsed?: ParsedLine[]
+) {
+  const buf = [];
+  let last: Omit<Battle, keyof API> | undefined = undefined;
+  for (const {result, c1, c2, battle, parsed} of frames) {
+    buf.push(displayFrame(gen, true, result, c1, c2, battle, parsed, last ?? seed));
+    last = battle;
+  }
+  if (parsed) {
+    buf.push('<div class="log">');
+    buf.push(`<pre><code>|${parsed.map(compact).join('\n|')}</code></pre>`);
+    buf.push('</div>');
+  }
+  buf.push('<hr />');
+  buf.push(`<pre class="error"><code>${escapeHTML(error)}</pre></code>`);
+  return render(buf.join(''));
+}
+
+function displayFrame(
   gen: Generation,
   showdown: boolean,
   result: Result,
@@ -63,7 +94,7 @@ export function display(
   return buf.join('');
 }
 
-export function displayBattle(
+function displayBattle(
   gen: Generation,
   showdown: boolean,
   battle: Omit<Battle, keyof API>,
@@ -90,7 +121,7 @@ export function displayBattle(
   return buf.join('');
 }
 
-export function render(content: string) {
+function render(content: string) {
   return minify(
     mustache.render(fs.readFileSync(TEMPLATE, 'utf8'), {content}),
     {minifyCSS: true, minifyJS: true}
@@ -273,7 +304,7 @@ function displayPokemon(
   return buf.join('');
 }
 
-export function escapeHTML(str: string) {
+function escapeHTML(str: string) {
   return (str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
