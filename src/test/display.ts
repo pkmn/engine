@@ -6,7 +6,7 @@ import {minify} from 'html-minifier';
 import {BoostID, Generation, ID, StatID, TypeName} from '@pkmn/data';
 import {Sprites, Icons} from '@pkmn/img';
 
-import {Battle, Pokemon, Side} from '../pkg';
+import {API, Battle, Pokemon, Side, Result, Choice, ParsedLine} from '../pkg';
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const TEMPLATE = path.join(ROOT, 'src', 'test', 'display.html.tmpl');
@@ -31,7 +31,44 @@ const VOLATILES: {[id in keyof Pokemon['volatiles']]: [string, 'good' | 'bad' | 
   transform: ['Transformed', 'neutral'],
 };
 
-export function displayBattle(gen: Generation, showdown: boolean, battle: Battle, last?: Battle) {
+const pretty = (choice: Choice) =>
+  choice.type === 'pass' ? choice.type : `${choice.type} ${choice.data}`;
+
+const format = (kwVal: any) => typeof kwVal === 'boolean' ? '' : ` ${kwVal as string}`;
+
+export const compact = (line: ParsedLine) =>
+  [...line.args, ...Object.keys(line.kwArgs)
+    .map(k => `[${k}]${format((line.kwArgs as any)[k])}`)].join('|');
+
+export function display(
+  gen: Generation,
+  showdown: boolean,
+  result: Result,
+  c1: Choice,
+  c2: Choice,
+  battle: Omit<Battle, keyof API>,
+  log: ParsedLine[],
+  seed: bigint | Omit<Battle, keyof API>,
+) {
+  const buf = [];
+  if (typeof seed === 'bigint') buf.push(`<h1>0x${seed.toString(16).toUpperCase()}</h1>`);
+  buf.push('<div class="log">');
+  buf.push(`<pre><code>|${log.map(compact).join('\n|')}</code></pre>`);
+  buf.push('</div>');
+  buf.push(displayBattle(gen, showdown, battle, typeof seed === 'bigint' ? undefined : seed));
+  buf.push('<div class="sides" style="text-align: center;">');
+  buf.push(`<pre class="side"><code>${result.p1} -&gt; ${pretty(c1)}</code></pre>`);
+  buf.push(`<pre class="side"><code>${result.p2} -&gt; ${pretty(c2)}</code></pre>`);
+  buf.push('</div>');
+  return buf.join('');
+}
+
+export function displayBattle(
+  gen: Generation,
+  showdown: boolean,
+  battle: Omit<Battle, keyof API>,
+  last?: Omit<Battle, keyof API>,
+) {
   const buf = [];
   buf.push('<div class="battle">');
   if (battle.turn) {
@@ -53,9 +90,9 @@ export function displayBattle(gen: Generation, showdown: boolean, battle: Battle
   return buf.join('');
 }
 
-export function render(content: string, options: {styles?: string}) {
+export function render(content: string) {
   return minify(
-    mustache.render(fs.readFileSync(TEMPLATE, 'utf8'), {content, ...options}),
+    mustache.render(fs.readFileSync(TEMPLATE, 'utf8'), {content}),
     {minifyCSS: true, minifyJS: true}
   );
 }

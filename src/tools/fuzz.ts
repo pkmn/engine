@@ -8,7 +8,7 @@ import {Generation, Generations} from '@pkmn/data';
 
 import {Battle, Result, Choice, Log, ParsedLine, Info, SideInfo} from '../pkg';
 import {Lookup, Data, LAYOUT, LE} from '../pkg/data';
-import {render, displayBattle, escapeHTML} from '../test/display';
+import {render, display, compact, escapeHTML} from '../test/display';
 import * as addon from '../pkg/addon';
 import * as gen1 from '../pkg/gen1';
 
@@ -18,38 +18,6 @@ const usage = (msg?: string): void => {
   if (msg) console.error(msg);
   console.error('Usage: fuzz <pkmn|showdown> <GEN> <DURATION> <SEED?>');
   process.exit(1);
-};
-
-const pretty = (choice: Choice) =>
-  choice.type === 'pass' ? choice.type : `${choice.type} ${choice.data}`;
-
-const format = (kwVal: any) => typeof kwVal === 'boolean' ? '' : ` ${kwVal as string}`;
-
-const compact = (line: ParsedLine) =>
-  [...line.args, ...Object.keys(line.kwArgs)
-    .map(k => `[${k}]${format((line.kwArgs as any)[k])}`)].join('|');
-
-const display = (
-  gen: Generation,
-  showdown: boolean,
-  result: Result,
-  c1: Choice,
-  c2: Choice,
-  battle: Battle,
-  log: ParsedLine[],
-  seed: bigint | Battle,
-) => {
-  const buf = [];
-  if (typeof seed === 'bigint') buf.push(`<h1>0x${seed.toString(16).toUpperCase()}</h1>`);
-  buf.push('<div class="log">');
-  buf.push(`<pre><code>|${log.map(compact).join('\n|')}</code></pre>`);
-  buf.push('</div>');
-  buf.push(displayBattle(gen, showdown, battle, typeof seed === 'bigint' ? undefined : seed));
-  buf.push('<div class="sides" style="text-align: center;">');
-  buf.push(`<pre class="side"><code>${result.p1} -&gt; ${pretty(c1)}</code></pre>`);
-  buf.push(`<pre class="side"><code>${result.p2} -&gt; ${pretty(c2)}</code></pre>`);
-  buf.push('</div>');
-  return buf.join('');
 };
 
 class SpeciesNames implements Info {
@@ -124,7 +92,6 @@ class SpeciesNames implements Info {
     const end = view.getUint8(8);
 
     const buf = [];
-
     let last: Battle | undefined = undefined;
     for (let offset = head + end; offset < data.length; offset += (3 + size)) {
       const result = Result.parse(data[offset]);
@@ -156,19 +123,7 @@ class SpeciesNames implements Info {
     buf.push('<hr />');
     buf.push(`<pre class="error"><code>${escapeHTML(error)}</pre></code>`);
 
-    console.log(render(buf.join(''), {
-      styles: `
-        h1 {
-          text-align: center;
-        }
-        .error {
-          overflow: auto;
-          scrollbar-width: none;
-        }
-        .error::-webkit-scrollbar {
-          display: none;
-        }`,
-    }));
+    console.log(render(buf.join('')));
 
     process.exit(1);
   }

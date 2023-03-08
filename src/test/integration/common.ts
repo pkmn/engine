@@ -15,14 +15,25 @@ import {
 } from '@pkmn/sim/tools';
 
 import * as engine from '../../pkg';
+import {render, display, compact, escapeHTML} from '../display';
 import {PatchedBattleStream, patch, FILTER} from '../showdown/common';
 
 import blocklistJSON from '../blocklist.json';
 
 const ROOT = path.resolve(__dirname, '..', '..', '..');
 const TEMPLATE = path.join(ROOT, 'src', 'test', 'integration', 'showdown.html.tmpl');
+const ANSI = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
+
 const FORMATS = ['gen1customgame'];
 const BLOCKLIST = blocklistJSON as {[gen: number]: Partial<ExhaustiveRunnerPossibilites>};
+
+interface Frame {
+  result: engine.Result;
+  c1: engine.Choice;
+  c2: engine.Choice;
+  battle: Omit<engine.Battle, keyof engine.API>;
+  parsed: engine.ParsedLine[];
+}
 
 // We first play out a normal battle with Pokémon Showdown, saving the raw input
 // log and each of the chunks that are output. We then set up a battle with the
@@ -64,8 +75,10 @@ class Runner {
 
   async run() {
     const buf = [];
+    const frames: Frame[] = [];
     const rawBattleStream = new RawBattleStream(this.format);
     const seed = this.prng.seed;
+    let parsed: engine.ParsedLine[] | undefined = undefined;
     try {
       const streams = BattleStreams.getPlayerStreams(rawBattleStream);
 
@@ -110,7 +123,10 @@ class Runner {
       let result: engine.Result = {type: undefined, p1: 'pass', p2: 'pass'};
       for (const chunk of buf) {
         assert.equal(result.type, undefined);
+
         result = battle.update(c1, c2);
+        parsed = Array.from(log.parse(battle.log!));
+
         if (result.type === 'win') {
           assert.equal(rawBattleStream.battle!.winner, options.p1.name);
         } else if (result.type === 'lose') {
@@ -120,20 +136,22 @@ class Runner {
         } else if (result.type) {
           throw new Error('Battle ended in error with -Dshowdown');
         } else {
-          assert.deepStrictEqual(parse(this.gen, chunk), Array.from(log.parse(battle.log!)));
+          assert.deepStrictEqual(parse(this.gen, chunk), parsed);
         }
+
         [c1, c2, input] =
           nextChoices(battle, result, rawBattleStream.rawInputLog, input);
+        frames.push({result, c1, c2, battle: battle.toJSON(), parsed});
       }
 
       assert.equal(rawBattleStream.rawInputLog.length, input);
       assert.notEqual(result.type, undefined);
     } catch (err: any) {
       try {
-        dump(`0x${toBigInt(seed).toString(16).toUpperCase()}`, {
+        dump(this.gen, err.stack.replace(ANSI, ''), toBigInt(seed), {
           input: rawBattleStream.rawInputLog.slice(3).join('\n'),
           output: buf.join('\n'),
-        });
+        }, frames, parsed);
       } catch (e) {
         console.error(e);
       }
@@ -142,20 +160,47 @@ class Runner {
   }
 }
 
-function dump(seed: string, showdown: {input: string; output: string}) {
+function dump(
+  gen: Generation,
+  error: string,
+  seed: bigint,
+  showdown: {input: string; output: string},
+  frames: Frame[],
+  parsed?: engine.ParsedLine[],
+) {
   const color = (s: string) => tty.isatty(2) ? `\x1b[36m${s}\x1b[0m` : s;
+
   const dir = path.join(ROOT, 'logs');
   try {
     fs.mkdirSync(dir, {recursive: true});
   } catch (err: any) {
     if (err.code !== 'EEXIST') throw err;
   }
-  const file = path.join(dir, `${seed}.showdown.html`);
+
+  const hex = `0x${seed.toString(16).toUpperCase()}`;
+  let file = path.join(dir, `${hex}.showdown.html`);
   fs.writeFileSync(file, minify(
-    mustache.render(fs.readFileSync(TEMPLATE, 'utf8'), {seed, ...showdown}),
+    mustache.render(fs.readFileSync(TEMPLATE, 'utf8'), {seed: hex, ...showdown}),
     {minifyCSS: true, minifyJS: true}
   ));
   console.error('\n\nPokémon Showdown:', color(file));
+
+  file = path.join(dir, `${hex}.pkmn.html`);
+  const buf = [];
+  let last: Omit<engine.Battle, keyof engine.API> | undefined = undefined;
+  for (const {result, c1, c2, battle, parsed} of frames) {
+    buf.push(display(gen, true, result, c1, c2, battle, parsed, last ?? seed));
+    last = battle;
+  }
+  if (parsed) {
+    buf.push('<div class="log">');
+    buf.push(`<pre><code>|${parsed.map(compact).join('\n|')}</code></pre>`);
+    buf.push('</div>');
+  }
+  buf.push('<hr />');
+  buf.push(`<pre class="error"><code>${escapeHTML(error)}</pre></code>`);
+  fs.writeFileSync(file, render(buf.join('')));
+  console.error('@pkmn/engine:    ', color(file));
 }
 
 class RawBattleStream extends PatchedBattleStream {

@@ -102,6 +102,7 @@
     }, {
       "files": ["src/pkg/index.ts", "src/test/display.ts", "src/test/integration/common.ts"],
       "rules": {
+        "no-control-regex": "off",
         "@typescript-eslint/no-empty-interface": "off",
         "@typescript-eslint/no-shadow": "off"
       }

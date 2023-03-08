@@ -338,7 +338,16 @@
           font-size: 0.9em;
         }
       }
-      {{ styles }}
+      h1 {
+        text-align: center;
+      }
+      .error {
+        overflow: auto;
+        scrollbar-width: none;
+      }
+      .error::-webkit-scrollbar {
+        display: none;
+      }
     </style>
   </head>
   <body>
