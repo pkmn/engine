@@ -149,24 +149,29 @@ function parse(gen: Generation, chunk: string) {
   const buf: Array<{args: Protocol.ArgType; kwArgs: Protocol.KWArgType}> = [];
   for (const {args, kwArgs} of Protocol.parse(chunk)) {
     if (FILTER.has(args[0])) continue;
-    const copy = args.slice();
+    const a = args.slice();
+    const kw = {...kwArgs};
     switch (args[0]) {
     case 'switch': {
-      copy[3] = fixHPStatus(gen, args[3]);
+      a[3] = fixHPStatus(gen, args[3]);
       break;
     }
     case '-heal':
     case '-damage': {
-      copy[2] = fixHPStatus(gen, args[2]);
+      a[2] = fixHPStatus(gen, args[2]);
+      const keys = kwArgs as Protocol.KWArgs['|-heal|' | '|-damage|'];
+      if (keys.from && !['drain', 'Recoil'].includes(keys.from)) {
+        delete (kw as any).of;
+      }
       break;
     }
     case '-status':
     case '-curestatus': {
-      copy[2] = args[2] === 'tox' ? 'psn' : args[2];
+      a[2] = args[2] === 'tox' ? 'psn' : args[2];
       break;
     }
     }
-    buf.push({args: copy as Protocol.ArgType, kwArgs});
+    buf.push({args: a as Protocol.ArgType, kwArgs: kw as Protocol.KWArgType});
   }
   return buf;
 }
