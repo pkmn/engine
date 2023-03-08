@@ -120,7 +120,7 @@ for each player.
 
 Unlike [Pokémon Showdown's
 SIM-PROTOCOL](https://github.com/smogon/pokemon-showdown/blob/master/sim/SIM-PROTOCOL.md#choice-requests)
-that provides a rich request object at each decision point, the pkmn engine computes the possible
+which provides a rich request object at each decision point, the pkmn engine computes the possible
 choices on demand based on the result of the previous `update` and the battle state (`OPTIONS_SIZE`
 is a good size to initialize the buffer passed to `choices`). **Attempting to update the battle with
 a choice not present in the options returned by `choices` is undefined behavior and may corrupt
