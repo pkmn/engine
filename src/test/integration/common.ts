@@ -106,7 +106,7 @@ class Runner {
       } else if (result.type) {
         throw new Error('Battle ended in error which should be impossible with -Dshowdown');
       } else {
-        assert.deepStrictEqual(parse(chunk), Array.from(log.parse(battle.log!)));
+        assert.deepStrictEqual(parse(this.gen, chunk), Array.from(log.parse(battle.log!)));
       }
       [c1, c2, input] = nextChoices(battle, result, rawBattleStream.rawInputLog, input);
     }
@@ -145,13 +145,36 @@ class RawBattleStream extends PatchedBattleStream {
 
 // Filter out redundant messages and parse the protocol into its final form
 // TODO: can we always infer done/start/upkeep?
-function parse(chunk: string) {
+function parse(gen: Generation, chunk: string) {
   const buf: Array<{args: Protocol.ArgType; kwArgs: Protocol.KWArgType}> = [];
   for (const {args, kwArgs} of Protocol.parse(chunk)) {
     if (FILTER.has(args[0])) continue;
-    buf.push({args, kwArgs});
+    const copy = args.slice();
+    switch (args[0]) {
+    case 'switch': {
+      copy[3] = fixHPStatus(gen, args[3]);
+      break;
+    }
+    case '-heal':
+    case '-damage': {
+      copy[2] = fixHPStatus(gen, args[2]);
+      break;
+    }
+    case '-status':
+    case '-curestatus': {
+      copy[2] = args[2] === 'tox' ? 'psn' : args[2];
+      break;
+    }
+    }
+    buf.push({args: copy as Protocol.ArgType, kwArgs});
   }
   return buf;
+}
+
+function fixHPStatus(gen: Generation, hpStatus: Protocol.PokemonHPStatus) {
+  return (gen.num < 3 && hpStatus.endsWith('tox')
+    ? `${hpStatus.slice(0, -3)}psn` as Protocol.PokemonHPStatus
+    : hpStatus);
 }
 
 // Figure out the next valid choices for the players given the input log
