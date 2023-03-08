@@ -20,8 +20,8 @@ class Runner {
   private readonly gen: Generation;
   private readonly format: string;
   private readonly prng: PRNG;
-  private readonly p1options?: AIOptions;
-  private readonly p2options?: AIOptions;
+  private readonly p1options: AIOptions;
+  private readonly p2options: AIOptions;
 
   constructor(gen: Generation, options: RunnerOptions) {
     this.gen = gen;
@@ -30,8 +30,8 @@ class Runner {
     this.prng = (options.prng && !Array.isArray(options.prng))
       ? options.prng : new PRNG(options.prng);
 
-    this.p1options = options.p1options;
-    this.p2options = options.p2options;
+    this.p1options = fixTeam(gen, options.p1options!);
+    this.p2options = fixTeam(gen, options.p2options!);
   }
 
   async run() {
@@ -42,11 +42,11 @@ class Runner {
     const p1spec = {name: 'Bot 1', ...this.p1options};
     const p2spec = {name: 'Bot 2', ...this.p2options};
 
-    const p1 = this.p1options!.createAI(streams.p2, {
-      seed: this.newSeed(), move: 0.7, mega: 0.6, ...this.p1options!,
+    const p1 = this.p1options.createAI(streams.p2, {
+      seed: this.newSeed(), move: 0.7, mega: 0.6, ...this.p1options,
     }).start();
-    const p2 = this.p2options!.createAI(streams.p1, {
-      seed: this.newSeed(), move: 0.7, mega: 0.6, ...this.p2options!,
+    const p2 = this.p2options.createAI(streams.p1, {
+      seed: this.newSeed(), move: 0.7, mega: 0.6, ...this.p2options,
     }).start();
 
     const start = streams.omniscient.write(
@@ -63,8 +63,8 @@ class Runner {
     await Promise.all([streams.p2.writeEnd(), p1, p2, start]);
 
     const options = {
-      p1: {name: 'Bot 1', team: this.p1options!.team!},
-      p2: {name: 'Bot 2', team: this.p2options!.team!},
+      p1: {name: 'Bot 1', team: this.p1options.team!},
+      p2: {name: 'Bot 2', team: this.p2options.team!},
       seed: spec.seed,
       showdown: true,
       log: true,
@@ -192,6 +192,16 @@ function nextChoices(battle: engine.Battle, result: engine.Result, input: string
   return [choices.p1!, choices.p2!, index] as const;
 }
 
+function fixTeam(gen: Generation, options: AIOptions) {
+  for (const pokemon of options.team!) {
+    if (gen.num === 1) {
+      pokemon.ivs.spd = pokemon.ivs.spa;
+      pokemon.evs.spd = pokemon.evs.spa;
+      pokemon.nature = '';
+    }
+  }
+  return options;
+}
 function possibilities(gen: Generation) {
   const blocked = BLOCKLIST[gen.num] || {};
   const pokemon = Array.from(gen.species).filter(p => !blocked.pokemon?.includes(p.id as ID) &&
