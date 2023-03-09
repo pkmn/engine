@@ -4,7 +4,7 @@ import {
 } from '@pkmn/data';
 
 import {
-  API, Data, Gen1, Slot, BattleOptions, CreateOptions, RestoreOptions, Choice, Result, Player,
+  Data, Gen1, Slot, BattleOptions, CreateOptions, RestoreOptions, Choice, Result, Player,
 } from './index';
 import {LAYOUT, LE, Lookup} from './data';
 import {decodeIdentRaw, decodeStatus, decodeTypes} from './protocol';
