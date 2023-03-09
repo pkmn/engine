@@ -41,12 +41,14 @@ const BLOCKLIST = blocklistJSON as {[gen: number]: Partial<ExhaustiveRunnerPossi
 //     and we need to massage the teams it produces to ensure they are legal for
 //     the generation in question (fixTeams)
 //   - Pokémon Showdown's output contains a bunch of protocol messages which are
-//     redundant so we need to filter these out, and we also only want to
+//     redundant that need to filter out. Furthermore we also only want to
 //     compare parsed output because the raw output produced by Pokémon Showdown
 //     needs to get parsed first anyway (parse)
 //   - the RandomPlayerAI can sometimes make "unavailable" choices because it
 //     doesn't have perfect information, only we can't apply those choices to
 //     the engine as that will result in undefined behavior (nextChoices)
+//
+// TODO
 class Runner {
   private readonly gen: Generation;
   private readonly format: string;
@@ -202,6 +204,17 @@ class RawBattleStream extends PatchedBattleStream {
 }
 
 // Filter out redundant messages and parse the protocol into its final form
+//
+//   - Pokémon Showdown includes `[of]` on `|-damage|` messages for status
+//     damage but the engine doesn't keep track of this as its redundant
+//     information that requires additional state to support
+//   - Pokémon Showdown protocol includes the `tox` status even in generations
+//     where Toxic is not actually a status. This is only relevant in the
+//     initial `|-status|` message as the text formatter uses this to decide
+//     whether to output "poisoned" vs. "badly poisoned", though this is
+//     possible to accomplish by simply tracking the prior `|move|` message so
+//     isn't necessary
+//
 // TODO: can we always infer done/start/upkeep?
 function parse(gen: Generation, chunk: string) {
   const buf: Array<{args: Protocol.ArgType; kwArgs: Protocol.KWArgType}> = [];
@@ -240,13 +253,15 @@ function fixHPStatus(gen: Generation, hpStatus: Protocol.PokemonHPStatus) {
     : hpStatus);
 }
 
-// Figure out the next valid choices for the players given the input log
 const IGNORE = /^>(version|start|player)/;
 const MATCH = /^>(p1|p2) (?:(pass)|((move) ([1-4]))|((switch) ([2-6])))/;
+
+// Figure out the next valid choices for the players given the input log
 function nextChoices(battle: engine.Battle, result: engine.Result, input: string[], index: number) {
-  // The RandomPlayerAI doesn't sent "pass" on wait requests so we need to
-  // figure out when it would be forced to pass and fill those in. Otherwise we
-  // set the choice to undefined and determine the choice from the input log
+  // The RandomPlayerAI doesn't send "pass" on wait requests (it just does
+  // waits...) so we need to determine when the AI would have been forced to
+  // pass and fill that in. Otherwise we set the choice to undefined and
+  // determine what the choice was by processing the input log
   const initial = (player: engine.Player) => {
     const options = battle.choices(player, result);
     return (options.length === 1 && options[0].type === 'pass') ? engine.Choice.pass() : undefined;
@@ -255,14 +270,14 @@ function nextChoices(battle: engine.Battle, result: engine.Result, input: string
   const choices: {p1: engine.Choice | undefined; p2: engine.Choice | undefined} =
     {p1: initial('p1'), p2: initial('p2')};
 
-  // Until we don't have choices for both players we iterate over the input log
-  // since our last index and try to parse out choices from the raw input. If we
-  // find an choice for a player that already has one assigned then the engine
-  // and Pokémon Showdown disagree on the possible options (the engine either
-  // thought the player is forced to "pass" and assigned a choice above, or we
-  // received two inputs for one player and zero for the other meaning the other
-  // player should have passed but didn't *or* the player made an unavailable
-  // choice which we didn't skip as invalid)
+  // Iterate over the input log from where we last stopped while at least one
+  // player still needs a choice and try to parse out choices from the raw
+  // input. If we find a choice for a player that already has one assigned then
+  // the engine and Pokémon Showdown disagree on the possible options (the
+  // engine either thought the player was forced to "pass" and assigned a choice
+  // above, or we received two inputs for one player and zero for the other
+  // meaning the other player should have passed but didn't, or the player made
+  // an unavailable choice which we didn't skip as invalid)
   while (index < input.length && !(choices.p1 && choices.p2)) {
     const m = MATCH.exec(input[index]);
     if (!m) {
@@ -311,9 +326,9 @@ function nextChoices(battle: engine.Battle, result: engine.Result, input: string
 }
 
 // The ExhaustiveRunner does not do a good job at ensuring the sets it generates
-// are legal for old generations - these usually get corrected for formats which
-// run through the TeamValidator, but custom games bypass this so we need to
-// massage the fault set data ourselves
+// are legal for old generations - these would usually be corrected by the
+// TeamValidator but custom games bypass this so we need to massage the faulty
+// set data ourselves
 function fixTeam(gen: Generation, options: AIOptions) {
   for (const pokemon of options.team!) {
     if (gen.num === 1) {
@@ -325,9 +340,9 @@ function fixTeam(gen: Generation, options: AIOptions) {
   return options;
 }
 
-// This is a fork of the possibilities function upstream that has been extended
-// to also enforce the BLOCKLIST - this is used to build up the various "pools"
-// of effects to proc during testing
+// This is a fork of the possibilities function (which is used to build up the
+// various "pools" of effects to proc during testing) from @pkmn/sim that has
+// been extended to also enforce the engine's BLOCKLIST
 function possibilities(gen: Generation) {
   const blocked = BLOCKLIST[gen.num] || {};
   const pokemon = Array.from(gen.species).filter(p => !blocked.pokemon?.includes(p.id as ID) &&
