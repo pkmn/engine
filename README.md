@@ -297,7 +297,7 @@ The pkmn engine is distributed under the terms of the [MIT License](LICENSE).
   fundamental mechanics of Pokémon or which simply arise due to specific Pokémon Showdown
   implementation details that are not replicable without making the same (incorrect) architectural
   choices are not. Furthermore, the "Pokémon Showdown" code referenced by this project includes
-  several [patches](docs/testing.md#patches) to improve accuracy and smooth over some of the more
+  several [patches](docs/TESTING.md#patches) to improve accuracy and smooth over some of the more
   egregious implementation issues. In practical terms, the vast majority of games played out in the
   pkmn engine's compatibility mode and on this patched Pokémon Showdown simulator will be the same,
   it is only in a well defined and documented set of circumstances where the two implementations
