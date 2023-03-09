@@ -119,7 +119,8 @@ class Runner {
 
         partial.result = result;
         partial.battle = battle.toJSON();
-        partial.parsed = Array.from(log.parse(battle.log!));
+        const parsed = Array.from(log.parse(battle.log!));
+        partial.parsed = parsed;
 
         if (result.type === 'win') {
           assert.equal(rawBattleStream.battle!.winner, options.p1.name);
@@ -134,9 +135,9 @@ class Runner {
         [c1, c2, input] =
           nextChoices(battle, result, rawBattleStream.rawInputLog, input);
         frames.push({c1, c2, ...partial} as Frame);
-
-        assert.deepStrictEqual(parse(this.gen, chunk), partial.parsed);
         partial = {};
+
+        assert.deepStrictEqual(parse(this.gen, chunk), parsed);
       }
 
       assert.equal(rawBattleStream.rawInputLog.length, input);
