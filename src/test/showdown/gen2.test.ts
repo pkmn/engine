@@ -624,7 +624,7 @@ describe('Gen 2', () => {
   test('fainting (double)', () => {
     // Switch
     {
-      const battle = startBattle([QKC, CRIT, MAX_DMG], [
+      const battle = startBattle([QKC, CRIT, MAX_DMG, QKC], [
         {species: 'Weezing', evs, moves: ['Explosion']},
         {species: 'Koffing', evs, moves: ['Self-Destruct']},
       ], [
@@ -636,12 +636,17 @@ describe('Gen 2', () => {
       expect(battle.p1.pokemon[0].hp).toBe(0);
       expect(battle.p2.pokemon[0].hp).toBe(0);
 
+      battle.makeChoices('switch 2', 'switch 2');
+
       verify(battle, [
         '|move|p1a: Weezing|Explosion|p2a: Weedle',
         '|-crit|p2a: Weedle',
         '|-damage|p2a: Weedle|0 fnt',
         '|faint|p1a: Weezing',
         '|faint|p2a: Weedle',
+        '|switch|p1a: Koffing|Koffing, M|283/283',
+        '|switch|p2a: Caterpie|Caterpie, M|293/293',
+        '|turn|2',
       ]);
     }
     // Tie

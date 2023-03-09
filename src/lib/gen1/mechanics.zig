@@ -311,12 +311,12 @@ fn doTurn(
 
     if (try executeMove(battle, player, player_choice, player_from, log)) |r| return r;
     if (foe_choice.type == .Pass) return null;
-    if (try checkFaint(battle, foe_player, log)) |r| return r;
+    if (player_choice.type != .Switch) if (try checkFaint(battle, foe_player, log)) |r| return r;
     try handleResidual(battle, player, log);
     if (try checkFaint(battle, player, log)) |r| return r;
 
     if (try executeMove(battle, foe_player, foe_choice, foe_from, log)) |r| return r;
-    if (try checkFaint(battle, player, log)) |r| return r;
+    if (foe_choice.type != .Switch) if (try checkFaint(battle, player, log)) |r| return r;
     try handleResidual(battle, foe_player, log);
     if (try checkFaint(battle, foe_player, log)) |r| return r;
 

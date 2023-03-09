@@ -630,12 +630,17 @@ describe('Gen 1', () => {
       expect(battle.p1.pokemon[0].hp).toBe(0);
       expect(battle.p2.pokemon[0].hp).toBe(0);
 
+      battle.makeChoices('switch 2', 'switch 2');
+
       verify(battle, [
         '|move|p1a: Weezing|Explosion|p2a: Weedle',
         '|-crit|p2a: Weedle',
         '|-damage|p2a: Weedle|0 fnt',
         '|faint|p2a: Weedle',
         '|faint|p1a: Weezing',
+        '|switch|p1a: Koffing|Koffing|283/283',
+        '|switch|p2a: Caterpie|Caterpie|293/293',
+        '|turn|2',
       ]);
     }
     // Tie

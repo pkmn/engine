@@ -794,6 +794,12 @@ test "fainting (double)" {
         try t.log.expected.faint(P1.ident(1), true);
 
         try expectEqual(Result{ .p1 = .Switch, .p2 = .Switch }, try t.update(move(1), move(1)));
+
+        try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+        try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(swtch(2), swtch(2)));
         try t.verify();
     }
     // Tie
