@@ -146,8 +146,10 @@ describe('Gen 1', () => {
 
     expect(battle.choices('p1', result))
       .toEqual([{type: 'move', data: 1}, {type: 'move', data: 2}]);
+    expect(battle.choose('p2', result, n => n - 1)).toEqual({type: 'move', data: 1});
     expect(battle.choices('p2', result))
       .toEqual([{type: 'switch', data: 2}, {type: 'move', data: 1}]);
+    expect(battle.choose('p2', result, () => 0)).toEqual({type: 'switch', data: 2});
     expect(battle.update({type: 'move', data: 1}, {type: 'switch', data: 2}))
       .toEqual(result);
   });
