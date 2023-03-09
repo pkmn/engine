@@ -167,8 +167,13 @@ export const patch = {
     (gen.dex.data as any).Rulesets['freezeclausemod'].onSetStatusPriority = -998;
 
     const conditions = {
-      // Add priority to avoid speed ties with Bide's onDisableMove handler
-      1: {'disable': {onDisableMovePriority: 7}},
+      1: {
+        // Add priority to avoid speed ties with Bide's onDisableMove handler
+        'disable': {onDisableMovePriority: 7},
+        // Make sure boost ordering is same as Growth (spa,spd) to simplify protocol
+        'move: Amnesia': {boosts: {spa: 2, spd: 2}},
+        'move: Psychic': {secondary: { chance: 33, boosts: {spd: -1, spa: -1}}},
+      },
       2: {
         // Type-boosting items need an onBasePowerPriority... for their nop handler
         'item: Pink Bow': {onBasePowerPriority: 15},
