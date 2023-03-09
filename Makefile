@@ -13,6 +13,7 @@ zig-build:
 
 .PHONY: js-build
 js-build: node_modules
+	node src/bin/install-pkmn-engine --options='-Dshowdown'
 	npm run compile
 
 .PHONY: build
@@ -105,6 +106,7 @@ example: c-example js-example zig-example
 
 .PHONY: integration
 integration: build check example
+	node src/bin/install-pkmn-engine --options='-Dshowdown -Dtrace'
 	npm run test:integration
 
 .PHONY: benchmark
