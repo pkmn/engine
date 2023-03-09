@@ -132,7 +132,7 @@ export class RandomPlayerAI extends sim.BattleStreams.BattlePlayer {
     this.prng = prng;
   }
 
-  receiveRequest(_: sim.AnyObject) {
+  override receiveRequest(_: sim.AnyObject) {
     const options = Choices.sim(this.battleStream.battle!, this.id);
     const choice = options[this.prng.next(options.length)];
     if (choice) this.choose(choice);

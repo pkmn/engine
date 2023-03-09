@@ -219,7 +219,7 @@ export const patch = {
 };
 
 export class PatchedBattleStream extends BattleStreams.BattleStream {
-  _writeLine(type: string, message: string) {
+  override _writeLine(type: string, message: string) {
     super._writeLine(type, message);
     if (type === 'start') patch.battle(this.battle!, true);
   }
@@ -278,7 +278,7 @@ export class FixedRNG extends PRNG {
     this.index = 0;
   }
 
-  next(from?: number, to?: number): number {
+  override next(from?: number, to?: number): number {
     if (this.index >= this.rolls.length) throw new Error('Insufficient number of rolls provided');
     const roll = this.rolls[this.index++];
     const n = this.index;
@@ -299,15 +299,15 @@ export class FixedRNG extends PRNG {
     return result;
   }
 
-  get startingSeed(): PRNGSeed {
+  override get startingSeed(): PRNGSeed {
     throw new Error('Unsupported operation');
   }
 
-  clone(): PRNG {
+  override clone(): PRNG {
     throw new Error('Unsupported operation');
   }
 
-  nextFrame(): PRNGSeed {
+  override nextFrame(): PRNGSeed {
     throw new Error('Unsupported operation');
   }
 

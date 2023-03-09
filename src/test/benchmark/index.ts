@@ -34,14 +34,14 @@ interface Configuration {
 
 class DirectBattle extends Battle {
   // Drop logs to minimize overhead
-  hint(hint: string, once?: boolean, side?: Side) { }
-  addSplit(side: SideID, secret: any[], shared?: any[]) { }
-  add(...parts: (any | (() => { side: SideID; secret: string; shared: string }))[]) { }
-  addMove(...args: any[]) { }
-  retargetLastMove(newTarget: Pokemon) { }
+  override hint(hint: string, once?: boolean, side?: Side) { }
+  override addSplit(side: SideID, secret: any[], shared?: any[]) { }
+  override add(...parts: (any | (() => { side: SideID; secret: string; shared: string }))[]) { }
+  override addMove(...args: any[]) { }
+  override retargetLastMove(newTarget: Pokemon) { }
 
   // Override to avoid wasted |update| and |end| work
-  sendUpdates() {
+  override sendUpdates() {
     this.sentLogPos = this.log.length;
     if (!this.sentEnd && this.ended) {
       this.sentEnd = true;
@@ -49,7 +49,7 @@ class DirectBattle extends Battle {
   }
 
   // Override to not call Side#emitRequest to avoid wasted |sideupdate| work
-  makeRequest(type?: 'teampreview' | 'move' | 'switch' | '') {
+  override makeRequest(type?: 'teampreview' | 'move' | 'switch' | '') {
     if (type) {
       this.requestState = type;
       for (const side of this.sides) {

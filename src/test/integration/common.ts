@@ -195,7 +195,7 @@ function dump(
 class RawBattleStream extends PatchedBattleStream {
   readonly rawInputLog: string[] = [];
 
-  _write(message: string) {
+  override _write(message: string) {
     this.rawInputLog.push(message);
     super._write(message);
   }
