@@ -4,7 +4,7 @@ import {
 } from '@pkmn/data';
 
 import {
-  API, Gen1, Slot, BattleOptions, CreateOptions, RestoreOptions, Choice, Result, Player,
+  API, Data, Gen1, Slot, BattleOptions, CreateOptions, RestoreOptions, Choice, Result, Player,
 } from './index';
 import {LAYOUT, LE, Lookup} from './data';
 import {decodeIdentRaw, decodeStatus, decodeTypes} from './protocol';
@@ -124,7 +124,7 @@ export class Battle implements Gen1.Battle {
     return seed;
   }
 
-  toJSON(): Omit<Gen1.Battle, keyof API> {
+  toJSON(): Data<Gen1.Battle> {
     return {
       sides: Array.from(this.sides).map(s => s.toJSON()),
       turn: this.turn,
@@ -149,7 +149,7 @@ export class Battle implements Gen1.Battle {
   static restore(
     gen: Generation,
     lookup: Lookup,
-    battle: Gen1.Battle,
+    battle: Data<Gen1.Battle>,
     options: RestoreOptions,
   ) {
     const buf = new ArrayBuffer(SIZES.Battle);
@@ -277,7 +277,7 @@ export class Side implements Gen1.Side {
   static encode(
     gen: Generation,
     lookup: Lookup,
-    battle: Gen1.Battle,
+    battle: Data<Gen1.Battle>,
     side: Gen1.Side,
     data: DataView,
     offset: number,
@@ -611,7 +611,7 @@ export class Pokemon implements Gen1.Pokemon {
   static encodeActive(
     gen: Generation,
     lookup: Lookup,
-    battle: Gen1.Battle,
+    battle: Data<Gen1.Battle>,
     pokemon: Gen1.Pokemon | undefined,
     data: DataView,
     offset: number,

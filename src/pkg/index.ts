@@ -20,6 +20,8 @@ export interface API {
   choose(id: Player, result: Result, fn: (n: number) => number): Choice;
 }
 
+export type Data<T extends API> = Omit<T, keyof API>;
+
 export namespace Gen1 {
   export interface Battle extends API {
     sides: Iterable<Side>;

@@ -6,7 +6,7 @@ import {minify} from 'html-minifier';
 import {BoostID, Generation, ID, StatID, TypeName} from '@pkmn/data';
 import {Sprites, Icons} from '@pkmn/img';
 
-import {API, Battle, Pokemon, Side, Result, Choice, ParsedLine} from '../pkg';
+import {Data, Battle, Pokemon, Side, Result, Choice, ParsedLine} from '../pkg';
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const TEMPLATE = path.join(ROOT, 'src', 'test', 'display.html.tmpl');
@@ -45,7 +45,7 @@ export interface Frame {
   result: Result;
   c1: Choice;
   c2: Choice;
-  battle: Omit<Battle, keyof API>;
+  battle: Data<Battle>;
   parsed: ParsedLine[];
 }
 
@@ -57,7 +57,7 @@ export function display(
   partial: Partial<Frame> = {},
 ) {
   const buf = [];
-  let last: Omit<Battle, keyof API> | undefined = undefined;
+  let last: Data<Battle> | undefined = undefined;
   for (const frame of frames) {
     buf.push(displayFrame(gen, true, frame, last ?? seed));
     last = frame.battle;
@@ -72,7 +72,7 @@ function displayFrame(
   gen: Generation,
   showdown: boolean,
   {result, c1, c2, battle, parsed}: Partial<Frame>,
-  seed: bigint | Omit<Battle, keyof API>,
+  seed: bigint | Data<Battle>,
 ) {
   const buf = [];
   if (typeof seed === 'bigint') buf.push(`<h1>0x${seed.toString(16).toUpperCase()}</h1>`);
@@ -98,8 +98,8 @@ function displayFrame(
 function displayBattle(
   gen: Generation,
   showdown: boolean,
-  battle: Omit<Battle, keyof API>,
-  last?: Omit<Battle, keyof API>,
+  battle: Data<Battle>,
+  last?: Data<Battle>,
 ) {
   const buf = [];
   buf.push('<div class="battle">');
