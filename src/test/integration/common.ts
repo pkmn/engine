@@ -11,7 +11,7 @@ import {Protocol} from '@pkmn/protocol';
 import {PRNG, PRNGSeed, BattleStreams, ID} from '@pkmn/sim';
 import {
   AIOptions, ExhaustiveRunner, ExhaustiveRunnerOptions,
-  ExhaustiveRunnerPossibilites, RunnerOptions,
+  ExhaustiveRunnerPossibilities, RunnerOptions,
 } from '@pkmn/sim/tools';
 
 import * as engine from '../../pkg';
@@ -25,7 +25,7 @@ const TEMPLATE = path.join(ROOT, 'src', 'test', 'integration', 'showdown.html.tm
 const ANSI = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
 
 const FORMATS = ['gen1customgame'];
-const BLOCKLIST = blocklistJSON as {[gen: number]: Partial<ExhaustiveRunnerPossibilites>};
+const BLOCKLIST = blocklistJSON as {[gen: number]: Partial<ExhaustiveRunnerPossibilities>};
 
 // We first play out a normal battle with Pokémon Showdown, saving the raw input
 // log and each of the chunks that are output. We then set up a battle with the

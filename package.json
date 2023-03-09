@@ -49,22 +49,22 @@
   "bin": {"install-pkmn-engine": "src/bin/install-pkmn-engine" },
   "publishConfig": {"access": "public"},
   "dependencies": {
-    "@pkmn/data": "^0.7.24",
+    "@pkmn/data": "^0.7.27",
     "@pkmn/protocol": "^0.6.10"
   },
   "devDependencies": {
-    "@pkmn/eslint-config": "^2.15.0",
+    "@pkmn/eslint-config": "^2.16.0",
     "@pkmn/img": "^0.2.7",
     "@pkmn/sets": "^5.0.3",
-    "@pkmn/sim": "0.7.24",
+    "@pkmn/sim": "0.7.27",
     "@types/html-minifier": "^4.0.2",
     "@types/jest": "^29.4.0",
     "@types/minimist": "^1.2.2",
     "@types/mustache": "^4.2.2",
-    "@types/node": "^18.14.2",
-    "@typescript-eslint/eslint-plugin": "^5.53.0",
-    "@typescript-eslint/parser": "^5.53.0",
-    "@vitest/coverage-c8": "^0.29.1",
+    "@types/node": "^18.15.0",
+    "@typescript-eslint/eslint-plugin": "^5.54.1",
+    "@typescript-eslint/parser": "^5.54.1",
+    "@vitest/coverage-c8": "^0.29.2",
     "binaryen": "^112.0.0",
     "eslint": "^8.35.0",
     "eslint-plugin-import": "^2.27.5",
@@ -76,7 +76,7 @@
     "source-map-support": "^0.5.21",
     "trakr": "^0.2.0",
     "typescript": "^4.9.5",
-    "vitest": "^0.29.1"
+    "vitest": "^0.29.2"
   },
   "scripts": {
     "lint": "eslint --cache src --ext ts,js && eslint src/bin/install-pkmn-engine",
