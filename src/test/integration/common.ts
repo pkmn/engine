@@ -68,7 +68,7 @@ class Runner {
   async run() {
     const buf = [];
     const frames: Frame[] = [];
-    const rawBattleStream = new RawBattleStream(this.format);
+    const rawBattleStream = new RawBattleStream();
     const seed = this.prng.seed;
     let partial: Partial<Frame> = {};
     try {
@@ -193,14 +193,7 @@ function dump(
 }
 
 class RawBattleStream extends PatchedBattleStream {
-  readonly format: string;
-  readonly rawInputLog: string[];
-
-  constructor(format: string) {
-    super();
-    this.format = format;
-    this.rawInputLog = [];
-  }
+  readonly rawInputLog: string[] = [];
 
   _write(message: string) {
     this.rawInputLog.push(message);
