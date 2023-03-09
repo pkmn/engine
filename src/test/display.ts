@@ -31,8 +31,9 @@ const VOLATILES: {[id in keyof Pokemon['volatiles']]: [string, 'good' | 'bad' | 
   transform: ['Transformed', 'neutral'],
 };
 
-const pretty = (choice: Choice) =>
-  choice.type === 'pass' ? choice.type : `${choice.type} ${choice.data}`;
+const pretty = (choice?: Choice) => choice
+  ? choice.type === 'pass' ? choice.type : `${choice.type} ${choice.data}`
+  : '???';
 
 const format = (kwVal: any) => typeof kwVal === 'boolean' ? '' : ` ${kwVal as string}`;
 
@@ -53,19 +54,15 @@ export function display(
   error: string,
   seed: bigint,
   frames: Iterable<Frame>,
-  parsed?: ParsedLine[]
+  partial: Partial<Frame> = {},
 ) {
   const buf = [];
   let last: Omit<Battle, keyof API> | undefined = undefined;
-  for (const {result, c1, c2, battle, parsed} of frames) {
-    buf.push(displayFrame(gen, true, result, c1, c2, battle, parsed, last ?? seed));
-    last = battle;
+  for (const frame of frames) {
+    buf.push(displayFrame(gen, true, frame, last ?? seed));
+    last = frame.battle;
   }
-  if (parsed) {
-    buf.push('<div class="log">');
-    buf.push(`<pre><code>|${parsed.map(compact).join('\n|')}</code></pre>`);
-    buf.push('</div>');
-  }
+  buf.push(displayFrame(gen, true, partial, last ?? seed));
   buf.push('<hr />');
   buf.push(`<pre class="error"><code>${escapeHTML(error)}</pre></code>`);
   return render(buf.join(''));
@@ -74,23 +71,27 @@ export function display(
 function displayFrame(
   gen: Generation,
   showdown: boolean,
-  result: Result,
-  c1: Choice,
-  c2: Choice,
-  battle: Omit<Battle, keyof API>,
-  log: ParsedLine[],
+  {result, c1, c2, battle, parsed}: Partial<Frame>,
   seed: bigint | Omit<Battle, keyof API>,
 ) {
   const buf = [];
   if (typeof seed === 'bigint') buf.push(`<h1>0x${seed.toString(16).toUpperCase()}</h1>`);
-  buf.push('<div class="log">');
-  buf.push(`<pre><code>|${log.map(compact).join('\n|')}</code></pre>`);
-  buf.push('</div>');
-  buf.push(displayBattle(gen, showdown, battle, typeof seed === 'bigint' ? undefined : seed));
-  buf.push('<div class="sides" style="text-align: center;">');
-  buf.push(`<pre class="side"><code>${result.p1} -&gt; ${pretty(c1)}</code></pre>`);
-  buf.push(`<pre class="side"><code>${result.p2} -&gt; ${pretty(c2)}</code></pre>`);
-  buf.push('</div>');
+  if (parsed) {
+    buf.push('<div class="log">');
+    buf.push(`<pre><code>|${parsed.map(compact).join('\n|')}</code></pre>`);
+    buf.push('</div>');
+  }
+  if (battle) {
+    buf.push(displayBattle(
+      gen, showdown, battle, typeof seed === 'bigint' ? undefined : seed
+    ));
+  }
+  if (result) {
+    buf.push('<div class="sides" style="text-align: center;">');
+    buf.push(`<pre class="side"><code>${result.p1} -&gt; ${pretty(c1)}</code></pre>`);
+    buf.push(`<pre class="side"><code>${result.p2} -&gt; ${pretty(c2)}</code></pre>`);
+    buf.push('</div>');
+  }
   return buf.join('');
 }
 

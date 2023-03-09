@@ -107,13 +107,14 @@ class SpeciesNames implements Info {
         r = it.next();
       }
       offset += r.value;
-
       frames.push({result, c1, c2, battle, parsed});
     }
 
-    console.log(display(gen, error, seed, frames, end > 0
-      ? Array.from(log.parse(Data.view(data.slice(head, head + end))))
-      : undefined));
+    console.log(display(gen, error, seed, frames, {
+      parsed: end > 0
+        ? Array.from(log.parse(Data.view(data.slice(head, head + end))))
+        : undefined,
+    }));
 
     process.exit(1);
   }

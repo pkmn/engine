@@ -70,7 +70,7 @@ class Runner {
     const frames: Frame[] = [];
     const rawBattleStream = new RawBattleStream(this.format);
     const seed = this.prng.seed;
-    let parsed: engine.ParsedLine[] | undefined = undefined;
+    let partial: Partial<Frame> = {};
     try {
       const streams = BattleStreams.getPlayerStreams(rawBattleStream);
 
@@ -115,9 +115,11 @@ class Runner {
       let result: engine.Result = {type: undefined, p1: 'pass', p2: 'pass'};
       for (const chunk of buf) {
         assert.equal(result.type, undefined);
-
         result = battle.update(c1, c2);
-        parsed = Array.from(log.parse(battle.log!));
+
+        partial.result = result;
+        partial.battle = battle.toJSON();
+        partial.parsed = Array.from(log.parse(battle.log!));
 
         if (result.type === 'win') {
           assert.equal(rawBattleStream.battle!.winner, options.p1.name);
@@ -127,23 +129,29 @@ class Runner {
           assert.equal(rawBattleStream.battle!.winner, '');
         } else if (result.type) {
           throw new Error('Battle ended in error with -Dshowdown');
-        } else {
-          assert.deepStrictEqual(parse(this.gen, chunk), parsed);
         }
 
         [c1, c2, input] =
           nextChoices(battle, result, rawBattleStream.rawInputLog, input);
-        frames.push({result, c1, c2, battle: battle.toJSON(), parsed});
+        frames.push({c1, c2, ...partial} as Frame);
+
+        assert.deepStrictEqual(parse(this.gen, chunk), partial.parsed);
+        partial = {};
       }
 
       assert.equal(rawBattleStream.rawInputLog.length, input);
       assert.notEqual(result.type, undefined);
     } catch (err: any) {
       try {
-        dump(this.gen, err.stack.replace(ANSI, ''), toBigInt(seed), {
-          input: rawBattleStream.rawInputLog.slice(3).join('\n'),
-          output: buf.join('\n'),
-        }, frames, parsed);
+        dump(
+          this.gen,
+          err.stack.replace(ANSI, ''),
+          toBigInt(seed),
+          rawBattleStream.rawInputLog.slice(3).join('\n'),
+          buf.join('\n'),
+          frames,
+          partial,
+        );
       } catch (e) {
         console.error(e);
       }
@@ -156,9 +164,10 @@ function dump(
   gen: Generation,
   error: string,
   seed: bigint,
-  showdown: {input: string; output: string},
+  input: string,
+  output: string,
   frames: Frame[],
-  parsed?: engine.ParsedLine[],
+  partial: Partial<Frame>,
 ) {
   const color = (s: string) => tty.isatty(2) ? `\x1b[36m${s}\x1b[0m` : s;
 
@@ -170,16 +179,16 @@ function dump(
   }
 
   const hex = `0x${seed.toString(16).toUpperCase()}`;
-  let file = path.join(dir, `${hex}.showdown.html`);
+  let file = path.join(dir, `${hex}.pkmn.html`);
+  fs.writeFileSync(file, display(gen, error, seed, frames, partial));
+  console.error('\n\n@pkmn/engine:', color(file));
+
+  file = path.join(dir, `${hex}.showdown.html`);
   fs.writeFileSync(file, minify(
-    mustache.render(fs.readFileSync(TEMPLATE, 'utf8'), {seed: hex, ...showdown}),
+    mustache.render(fs.readFileSync(TEMPLATE, 'utf8'), {seed: hex, input, output}),
     {minifyCSS: true, minifyJS: true}
   ));
-  console.error('\n\nPokémon Showdown:', color(file));
-
-  file = path.join(dir, `${hex}.pkmn.html`);
-  fs.writeFileSync(file, display(gen, error, seed, frames, parsed));
-  console.error('@pkmn/engine:    ', color(file));
+  console.error('Pokémon Showdown:', color(file));
 }
 
 class RawBattleStream extends PatchedBattleStream {
@@ -354,7 +363,7 @@ export async function run(gens: Generations, options: Options) {
   const opts: ExhaustiveRunnerOptions = {
     cycles: 1, maxFailures: 1, log: false, ...options, format: '',
     cmd: (cycles: number, format: string, seed: string) =>
-      `npm run integration -- --cycles=${cycles} --format=${format} --seed=${seed}`
+      `npm run integration -- --cycles=${cycles} --format=${format} --seed=${seed}`,
   };
 
   let failures = 0;
