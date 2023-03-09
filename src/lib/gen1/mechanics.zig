@@ -1567,7 +1567,7 @@ pub const Effects = struct {
         }
 
         battle.side(player).active.types = foe.active.types;
-        return log.typechange(battle.active(player), foe.active.types);
+        return log.typechange(battle.active(player), foe.active.types, battle.active(player.foe()));
     }
 
     fn disable(battle: anytype, player: Player, move: Move.Data, log: anytype) !?Result {

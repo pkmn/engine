@@ -531,28 +531,30 @@ A field condition has activated.
       +---------------+---------------+---------------+---------------+
      0| 0x17          | Ident         | Reason        | Move/Types?   |
       +---------------+---------------+---------------+---------------+
+     4| [of]?         |
+      +---------------+
 
 A volatile status from `Reason` has been inflicted on the Pokémon identified by
-[`Ident`](#pokemonident). If `Reason` is `0x09` then the following byte indicates which `Types` the
-Pokémon has changed to. If `Reason` is `0x0A` or `0x0B` then the following byte indicates the `Move`
-which has been disabled/mimicked.
+[`Ident`](#pokemonident). If `Reason` is `0x09` then the following bytes indicates which `Types` the
+Pokémon has changed to and the target [`PokemonIdent`](#pokemonident) `[of]`. If `Reason` is `0x0A`
+or `0x0B` then the following byte indicates the `Move` which has been disabled/mimicked.
 
 <details><summary>Reason</summary>
 
-| Raw    | Description                                      | Move/Types? |
-| ------ | ------------------------------------------------ | ----------- |
-| `0x00` | `Bide`                                           | No          |
-| `0x01` | `confusion`                                      | No          |
-| `0x02` | `confusion\|[silent]`                            | No          |
-| `0x03` | `move: Focus Energy`                             | No          |
-| `0x04` | `move: Leech Seed`                               | No          |
-| `0x05` | `Light Screen`                                   | No          |
-| `0x06` | `Mist`                                           | No          |
-| `0x07` | `Reflect`                                        | No          |
-| `0x08` | `Substitute`                                     | No          |
-| `0x09` | `typechange\|...\|[from] move: Conversion\|[of]` | Yes         |
-| `0x0A` | `Disable\|`                                      | Yes         |
-| `0x0B` | `Mimic\|`                                        | Yes         |
+| Raw    | Description                                      | Move/Types? | `[of]`? |
+| ------ | ------------------------------------------------ | ----------- | ------- |
+| `0x00` | `Bide`                                           | No          | No      |
+| `0x01` | `confusion`                                      | No          | No      |
+| `0x02` | `confusion\|[silent]`                            | No          | No      |
+| `0x03` | `move: Focus Energy`                             | No          | No      |
+| `0x04` | `move: Leech Seed`                               | No          | No      |
+| `0x05` | `Light Screen`                                   | No          | No      |
+| `0x06` | `Mist`                                           | No          | No      |
+| `0x07` | `Reflect`                                        | No          | No      |
+| `0x08` | `Substitute`                                     | No          | No      |
+| `0x09` | `typechange\|...\|[from] move: Conversion\|[of]` | Yes         | Yes     |
+| `0x0A` | `Disable\|`                                      | Yes         | No      |
+| `0x0B` | `Mimic\|`                                        | Yes         | No      |
 </details>
 
 ### `|-end|` (`0x18`)

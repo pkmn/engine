@@ -456,13 +456,14 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn typechange(self: Self, ident: ID, types: anytype) Error!void {
+        pub fn typechange(self: Self, source: ID, types: anytype, target: ID) Error!void {
             if (!trace) return;
             try self.writer.writeAll(&.{
                 @enumToInt(ArgType.Start),
-                @bitCast(u8, ident),
+                @bitCast(u8, source),
                 @enumToInt(Start.TypeChange),
                 @bitCast(u8, types),
+                @bitCast(u8, target),
             });
         }
 
@@ -1167,12 +1168,18 @@ test "|-start|" {
     try expectLog1(&.{ N(ArgType.Start), 0b0010, N(Start.ConfusionSilent) }, buf[0..3]);
     stream.reset();
 
-    try log.typechange(p2.ident(6), gen1.Types{ .type1 = .Fire, .type2 = .Fire });
-    try expectLog1(&.{ N(ArgType.Start), 0b1110, N(Start.TypeChange), 0b1000_1000 }, buf[0..4]);
+    try log.typechange(p2.ident(6), gen1.Types{ .type1 = .Fire, .type2 = .Fire }, p2.ident(5));
+    try expectLog1(
+        &.{ N(ArgType.Start), 0b1110, N(Start.TypeChange), 0b1000_1000, 0b1101 },
+        buf[0..5],
+    );
     stream.reset();
 
-    try log.typechange(p1.ident(2), gen1.Types{ .type1 = .Bug, .type2 = .Poison });
-    try expectLog1(&.{ N(ArgType.Start), 0b0010, N(Start.TypeChange), 0b0011_0110 }, buf[0..4]);
+    try log.typechange(p1.ident(2), gen1.Types{ .type1 = .Bug, .type2 = .Poison }, p2.ident(4));
+    try expectLog1(
+        &.{ N(ArgType.Start), 0b0010, N(Start.TypeChange), 0b0011_0110, 0b1100 },
+        buf[0..5],
+    );
     stream.reset();
 
     try log.startEffect(p1.ident(2), .Disable, M.Surf);

@@ -209,15 +209,15 @@ for (const gen of new Generations(Dex as any)) {
       expect(Array.from(
         log.parse(Data.view([ArgType.Start, 0b0010, PROTOCOL.Start.ConfusionSilent]))
       )).toEqual(parse('|-start|p1a: Hitokage|confusion|[silent]'));
-      expect(Array.from(
-        log.parse(Data.view([ArgType.Start, 0b1110, PROTOCOL.Start.TypeChange, 0b1000_1000]))
-      )).toEqual(parse(
-        '|-start|p2a: Fuudin|typechange|Fire|[from] move: Conversion|[of] p2a: Fuudin'
+      expect(Array.from(log.parse(Data.view([
+        ArgType.Start, 0b1110, PROTOCOL.Start.TypeChange, 0b1000_1000, 0b1101,
+      ])))).toEqual(parse(
+        '|-start|p2a: Fuudin|typechange|Fire|[from] move: Conversion|[of] p2a: Sutaamii'
       ));
-      expect(Array.from(
-        log.parse(Data.view([ArgType.Start, 0b0010, PROTOCOL.Start.TypeChange, 0b0011_0110]))
-      )).toEqual(parse(
-        '|-start|p1a: Hitokage|typechange|Bug/Poison|[from] move: Conversion|[of] p1a: Hitokage'
+      expect(Array.from(log.parse(Data.view([
+        ArgType.Start, 0b0010, PROTOCOL.Start.TypeChange, 0b0011_0110, 0b1100,
+      ])))).toEqual(parse(
+        '|-start|p1a: Hitokage|typechange|Bug/Poison|[from] move: Conversion|[of] p2a: Nasshii'
       ));
       const surf = gen.moves.get('Surf')!.num;
       expect(Array.from(

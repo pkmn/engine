@@ -5132,7 +5132,11 @@ test "Conversion effect" {
     defer t.deinit();
 
     try t.log.expected.move(P1.ident(1), Move.Conversion, P2.ident(1), null);
-    try t.log.expected.typechange(P1.ident(1), Types{ .type1 = .Water, .type2 = .Psychic });
+    try t.log.expected.typechange(
+        P1.ident(1),
+        Types{ .type1 = .Water, .type2 = .Psychic },
+        P2.ident(1),
+    );
     try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
     try t.log.expected.turn(2);
 

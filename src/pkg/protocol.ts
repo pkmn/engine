@@ -348,7 +348,7 @@ DECODERS[ArgType.Start] = function (offset, data) {
     const t = types[0] === types[1] ? types[0] : types.join('/');
     args = ['-start', ident, 'typechange', t as Protocol.Types];
     kwArgs.from = 'move: Conversion' as Protocol.EffectName;
-    kwArgs.of = ident;
+    kwArgs.of = decodeIdent(this.info, data.getUint8(offset++));
   } else {
     const move = this.gen.moves.get(this.lookup.moveByNum(data.getUint8(offset++)))!.name;
     const effect = reason === PROTOCOL.Start.Disable ? 'Disable' : 'Mimic';
