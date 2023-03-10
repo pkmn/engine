@@ -568,7 +568,7 @@ export class Pokemon implements Gen1.Pokemon {
     for (const m of set.moves!) {
       const move = gen.moves.get(m)!;
       data.setUint8(off++, move.num);
-      data.setUint8(off++, move.pp);
+      data.setUint8(off++, Math.min(move.pp / 5 * 8, gen.num === 1 ? 61 : 64));
     }
 
     data.setUint16(stored + OFFSETS.Pokemon.hp, hp, LE);
