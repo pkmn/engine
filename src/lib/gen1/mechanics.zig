@@ -269,12 +269,6 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
 
     if ((c1.type == .Switch) != (c2.type == .Switch)) return if (c1.type == .Switch) .P1 else .P2;
 
-    const m1 = battle.side(.P1).last_selected_move;
-    const m2 = battle.side(.P2).last_selected_move;
-
-    if ((m1 == .QuickAttack) != (m2 == .QuickAttack)) return if (m1 == .QuickAttack) .P1 else .P2;
-    if ((m1 == .Counter) != (m2 == .Counter)) return if (m1 == .Counter) .P2 else .P1;
-
     // https://www.smogon.com/forums/threads/adv-switch-priority.3622189/
     // > In Gen 1 it's irrelevant [which player switches first] because switches happen instantly on
     // > your own screen without waiting for the other player's choice (and their choice will appear
@@ -285,9 +279,17 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
 
     const spe1 = battle.side(.P1).active.stats.spe;
     const spe2 = battle.side(.P2).active.stats.spe;
+
+    // Pokémon Showdown actually randomly determines order but our patched reference doesn't
+    if (showdown and double_switch) return if (spe1 == spe2) .P1 else if (spe1 > spe2) .P1 else .P2;
+
+    const m1 = battle.side(.P1).last_selected_move;
+    const m2 = battle.side(.P2).last_selected_move;
+
+    if ((m1 == .QuickAttack) != (m2 == .QuickAttack)) return if (m1 == .QuickAttack) .P1 else .P2;
+    if ((m1 == .Counter) != (m2 == .Counter)) return if (m1 == .Counter) .P2 else .P1;
+
     if (spe1 == spe2) {
-        // Pokémon Showdown actually randomly determines order but our patched reference doesn't
-        if (showdown and double_switch) return .P1;
         // Pokémon Showdown's beforeTurnCallback shenanigans
         if (showdown and m1 == .Counter and m2 == .Counter) battle.rng.advance(1);
         const p1 = if (showdown)
