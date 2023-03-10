@@ -215,6 +215,8 @@ fn blocked(m: Move) bool {
     return switch (m) {
         .Counter,
         .Mimic,
+        // FIXME: test and see if this can be removed or document
+        .Bide,
         .Metronome,
         .MirrorMove,
         .Transform,
