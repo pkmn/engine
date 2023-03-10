@@ -40,7 +40,7 @@ The following information is required to simulate a Generation I Pokémon battle
 | `battle.last_selected_indexes`       | `PlayerMoveListIndex`              | `side.lastMove`                        |
 | `side.order`                         | -                                  | `pokemon.position`                     |
 | `{pokemon,active}.moves`             | `{party,battle}_struct.{Moves,PP}` | `pokemon.{baseMoveSlots,moveSlots}`    |
-| `{pokemon,active}.hp`                | `{party,battle}_struct.HP`         | `pokemon.hp`                           |
+| `pokemon.hp`                         | `{party,battle}_struct.HP`         | `pokemon.hp`                           |
 | `{pokemon,active}.status`            | `{party,battle}_struct.Status`     | `pokemon.status`                       |
 | `{pokemon,active}.level`             | `PlayerMonUnmodifiedLevel`         | `pokemon.level`                        |
 | `pokemon.species`                    | `party_struct.Species`             | `pokemon.baseSpecies`                  |

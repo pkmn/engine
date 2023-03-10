@@ -1014,7 +1014,7 @@ fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
     if (!try checkHit(battle, player, move, log)) return null;
 
     battle.last_damage = switch (side.last_selected_move) {
-        .SuperFang => @max(battle.foe(player).active.stats.hp / 2, 1),
+        .SuperFang => @max(battle.foe(player).stored().hp / 2, 1),
         .SeismicToss, .NightShade => side.stored().level,
         .SonicBoom => 20,
         .DragonRage => 40,
