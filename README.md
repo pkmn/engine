@@ -160,8 +160,8 @@ if (pkmn_error(result)) exit(1);
 
 The C API does not export any helpers for creating or accessing the opaque battle objects - it is
 instead intended to be used as the foundation for more ergonomic bindings in [other
-languages](#other) (the lack of namespaces in C is the main contributing factor to the sparseness of
-what `libpkmn` chooses to expose).
+languages](#other) (the lack of namespaces and bit fields having an implementation-defined layout in
+C are the main contributing factors to the sparseness of what `libpkmn` chooses to expose).
 
 ### JavaScript / TypeScript
 
