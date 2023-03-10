@@ -222,7 +222,7 @@ function dump(
 
   const hex = `0x${seed.toString(16).toUpperCase()}`;
   let file = path.join(dir, `${hex}.input.log`);
-  let link =  path.join(dir, 'input.log');
+  let link = path.join(dir, 'input.log');
   fs.writeFileSync(file, input.join('\n'));
   symlink(file, link);
   console.error(box(`npm run integration ${path.relative(CWD, file)}`));
