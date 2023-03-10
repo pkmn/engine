@@ -51,6 +51,7 @@ export interface Frame {
 
 export function display(
   gen: Generation,
+  showdown: boolean,
   error: string,
   seed: bigint,
   frames: Iterable<Frame>,
@@ -59,7 +60,7 @@ export function display(
   const buf = [];
   let last: Data<Battle> | undefined = undefined;
   for (const frame of frames) {
-    buf.push(displayFrame(gen, true, frame, last ?? seed));
+    buf.push(displayFrame(gen, showdown, frame, last ?? seed));
     last = frame.battle;
   }
   buf.push(displayFrame(gen, true, partial, last ?? seed));

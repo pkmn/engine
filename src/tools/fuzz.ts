@@ -60,7 +60,8 @@ class SpeciesNames implements Info {
   const names = new SpeciesNames(gen);
   const log = new Log(gen, lookup, names);
   const deserialize = (buf: number[]): Battle => {
-    addon.check(showdown);
+    // We don't care about the native addon, we just need to load it so other checks don't fail
+    void addon.supports(true);
     switch (gen.num) {
     case 1: return new gen1.Battle(lookup, Data.view(buf), {showdown});
     default: throw new Error(`Unsupported gen: ${gen.num}`);
@@ -110,7 +111,7 @@ class SpeciesNames implements Info {
       frames.push({result, c1, c2, battle, parsed});
     }
 
-    console.log(display(gen, error, seed, frames, {
+    console.log(display(gen, showdown, error, seed, frames, {
       parsed: end > 0
         ? Array.from(log.parse(Data.view(data.slice(head, head + end))))
         : undefined,

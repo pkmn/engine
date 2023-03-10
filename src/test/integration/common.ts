@@ -226,7 +226,7 @@ function dump(
   console.error(box(`npm run integration ${path.relative(CWD, file)}`));
 
   file = path.join(dir, `${hex}.pkmn.html`);
-  fs.writeFileSync(file, display(gen, error, seed, frames, partial));
+  fs.writeFileSync(file, display(gen, true, error, seed, frames, partial));
   console.error('@pkmn/engine:', color(path.relative(CWD, file)));
 
   file = path.join(dir, `${hex}.showdown.html`);
