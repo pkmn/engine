@@ -1279,8 +1279,14 @@ fn faint(battle: anytype, player: Player, log: anytype, done: bool) !?Result {
         if (foe_volatiles.state != 0) return Result.Error;
     }
 
+    // Clearing these is not strictly necessary as provided the battle hasn't ended the side that
+    // just fainted will need to switch in a replacement and all of this gets cleared in switchIn
+    // anyway. However, we would like to ensure the battle state presented to the players at each
+    // decision point is consistent so we avoid "optimizing" this out
     side.active.volatiles = .{};
     side.last_used_move = .None;
+    foe.last_used_move = .None;
+
     try log.faint(battle.active(player), done);
     return null;
 }
