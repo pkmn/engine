@@ -251,7 +251,7 @@ export class Side implements Gen1.Side {
 
   toJSON(): Gen1.Side {
     return {
-      active: this.active,
+      active: this.active?.toJSON(),
       pokemon: Array.from(this.pokemon).map(p => p.toJSON()),
       lastSelectedMove: this.lastSelectedMove,
       lastUsedMove: this.lastUsedMove,
