@@ -109,6 +109,11 @@ integration: clean build check example
 	node src/bin/install-pkmn-engine --options='-Dshowdown -Dtrace'
 	npm run test:integration
 
+.PHONY: debug
+debug:
+	node src/bin/install-pkmn-engine --options='-Dshowdown -Dtrace'
+	npm run integration -- --cycles=1  --maxFailures=1 --seed=$(seed)
+
 .PHONY: benchmark
 benchmark:
 	npm run benchmark
