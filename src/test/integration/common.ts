@@ -150,7 +150,7 @@ class Runner {
           this.gen,
           err.stack.replace(ANSI, ''),
           toBigInt(seed),
-          rawBattleStream.rawInputLog.slice(3).join('\n'),
+          rawBattleStream.rawInputLog,
           buf.join('\n'),
           frames,
           partial,
@@ -167,12 +167,14 @@ function dump(
   gen: Generation,
   error: string,
   seed: bigint,
-  input: string,
+  input: string[],
   output: string,
   frames: Frame[],
   partial: Partial<Frame>,
 ) {
   const color = (s: string) => tty.isatty(2) ? `\x1b[36m${s}\x1b[0m` : s;
+  const box = (s: string) =>
+    `╭${'─'.repeat(s.length + 2)}╮\n│\u00A0${s}\u00A0│\n╰${'─'.repeat(s.length + 2)}╯`;
 
   const dir = path.join(ROOT, 'logs');
   try {
@@ -182,16 +184,23 @@ function dump(
   }
 
   const hex = `0x${seed.toString(16).toUpperCase()}`;
-  let file = path.join(dir, `${hex}.pkmn.html`);
+  let file = path.join(dir, `${hex}.input.log`);
+  fs.writeFileSync(file, input.join('\n'));
+  console.error(`\n\n${box(`npm run integration ${path.relative(process.cwd(), file)}`)}`);
+
+  file = path.join(dir, `${hex}.pkmn.html`);
   fs.writeFileSync(file, display(gen, error, seed, frames, partial));
-  console.error('\n\n@pkmn/engine:', color(file));
+  console.error('@pkmn/engine:', color(path.relative(process.cwd(), file)));
 
   file = path.join(dir, `${hex}.showdown.html`);
   fs.writeFileSync(file, minify(
-    mustache.render(fs.readFileSync(TEMPLATE, 'utf8'), {seed: hex, input, output}),
-    {minifyCSS: true, minifyJS: true}
+    mustache.render(fs.readFileSync(TEMPLATE, 'utf8'), {
+      seed: hex,
+      input: input.slice(3).join('\n'),
+      output,
+    }), {minifyCSS: true, minifyJS: true}
   ));
-  console.error('Pokémon Showdown:', color(file));
+  console.error('Pokémon Showdown:', color(path.relative(process.cwd(), file)), '\n');
 }
 
 class RawBattleStream extends PatchedBattleStream {
