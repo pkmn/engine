@@ -6,9 +6,9 @@ import {strict as assert} from 'assert';
 import * as mustache from 'mustache';
 import {minify} from 'html-minifier';
 
-import {Generations, Generation, GenerationNum} from '@pkmn/data';
+import {Generations, Generation, GenerationNum, PokemonSet} from '@pkmn/data';
 import {Protocol} from '@pkmn/protocol';
-import {PRNG, PRNGSeed, BattleStreams, ID} from '@pkmn/sim';
+import {PRNG, PRNGSeed, BattleStreams, ID, Streams} from '@pkmn/sim';
 import {
   AIOptions, ExhaustiveRunner, ExhaustiveRunnerOptions,
   ExhaustiveRunnerPossibilities, RunnerOptions,
@@ -23,6 +23,8 @@ import blocklistJSON from '../blocklist.json';
 const ROOT = path.resolve(__dirname, '..', '..', '..');
 const TEMPLATE = path.join(ROOT, 'src', 'test', 'integration', 'showdown.html.tmpl');
 const ANSI = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
+
+const CWD = process.env.INIT_CWD || process.env.CWD || process.cwd();
 
 const FORMATS = ['gen1customgame'];
 const BLOCKLIST = blocklistJSON as {[gen: number]: Partial<ExhaustiveRunnerPossibilities>};
@@ -53,8 +55,8 @@ class Runner {
   private readonly gen: Generation;
   private readonly format: string;
   private readonly prng: PRNG;
-  private readonly p1options: AIOptions;
-  private readonly p2options: AIOptions;
+  private readonly p1options: AIOptions & {team: PokemonSet[]};
+  private readonly p2options: AIOptions & {team: PokemonSet[]};
 
   constructor(gen: Generation, options: RunnerOptions) {
     this.gen = gen;
@@ -68,97 +70,132 @@ class Runner {
   }
 
   async run() {
-    const buf = [];
-    const frames: Frame[] = [];
-    const rawBattleStream = new RawBattleStream();
-    const seed = this.prng.seed;
-    let partial: Partial<Frame> = {};
-    try {
-      const streams = BattleStreams.getPlayerStreams(rawBattleStream);
-
-      const spec = {formatid: this.format, seed: this.prng.seed};
-      const p1spec = {name: 'Bot 1', ...this.p1options};
-      const p2spec = {name: 'Bot 2', ...this.p2options};
-
-      const p1 = this.p1options.createAI(streams.p2, {
+    return play(
+      this.gen,
+      {formatid: this.format, seed: this.prng.seed},
+      {spec: {name: 'Bot 1', ...this.p1options}, start: s => this.p1options.createAI(s, {
         seed: newSeed(this.prng), move: 0.7, mega: 0.6, ...this.p1options,
-      }).start();
-      const p2 = this.p2options.createAI(streams.p1, {
+      }).start()},
+      {spec: {name: 'Bot 2', ...this.p2options}, start: s => this.p2options.createAI(s, {
         seed: newSeed(this.prng), move: 0.7, mega: 0.6, ...this.p2options,
-      }).start();
+      }).start()},
+    );
+  }
+}
 
-      const start = streams.omniscient.write(
-        `>start ${JSON.stringify(spec)}\n` +
-        `>player p1 ${JSON.stringify(p1spec)}\n` +
-        `>player p2 ${JSON.stringify(p2spec)}`
+interface PlayerOptions {
+  spec: {name: string; team: PokemonSet[]};
+  start?: (s: Streams.ObjectReadWriteStream<string>) => Promise<void>;
+}
+
+async function play(
+  gen: Generation,
+  spec: {formatid: string; seed: PRNGSeed},
+  p1options: PlayerOptions,
+  p2options: PlayerOptions,
+  input?: string[],
+) {
+  const buf = [];
+  const frames: Frame[] = [];
+  const rawBattleStream = new RawBattleStream();
+  const seed = spec.seed;
+  let partial: Partial<Frame> = {};
+  try {
+    const streams = BattleStreams.getPlayerStreams(rawBattleStream);
+
+    const start = streams.omniscient.write(
+      `>start ${JSON.stringify(spec)}\n` +
+      `>player p1 ${JSON.stringify(p1options.spec)}\n` +
+      `>player p2 ${JSON.stringify(p2options.spec)}`
+    );
+
+    const p1 = input ? replay(streams.p1, '>p1', input) : p1options.start!(streams.p1);
+    const p2 = input ? replay(streams.p2, '>p2', input) : p2options.start!(streams.p2);
+
+    for await (const chunk of streams.omniscient) {
+      buf.push(chunk);
+    }
+
+    await Promise.all([start, p1, p2, streams.p2.writeEnd()]);
+
+    const options =
+      {p1: p1options.spec, p2: p2options.spec, seed: spec.seed, showdown: true, log: true};
+    const battle = engine.Battle.create(gen, options);
+    const log = new engine.Log(gen, engine.Lookup.get(gen), options);
+
+    let c1 = engine.Choice.pass();
+    let c2 = engine.Choice.pass();
+
+    let index = 0;
+
+    let result: engine.Result = {type: undefined, p1: 'pass', p2: 'pass'};
+    for (const chunk of buf) {
+      assert.equal(result.type, undefined);
+      result = battle.update(c1, c2);
+
+      partial.result = result;
+      partial.battle = battle.toJSON();
+      const parsed = Array.from(log.parse(battle.log!));
+      partial.parsed = parsed;
+
+      if (result.type === 'win') {
+        assert.equal(rawBattleStream.battle!.winner, options.p1.name);
+      } else if (result.type === 'lose') {
+        assert.equal(rawBattleStream.battle!.winner, options.p2.name);
+      } else if (result.type === 'tie') {
+        assert.equal(rawBattleStream.battle!.winner, '');
+      } else if (result.type) {
+        throw new Error('Battle ended in error with -Dshowdown');
+      }
+
+      [c1, c2, index] =
+        nextChoices(battle, result, rawBattleStream.rawInputLog, index);
+      frames.push({c1, c2, ...partial} as Frame);
+      partial = {};
+
+      assert.deepStrictEqual(parse(gen, chunk), parsed);
+    }
+
+    assert.equal(rawBattleStream.rawInputLog.length, index);
+    assert.notEqual(result.type, undefined);
+  } catch (err: any) {
+    try {
+      if (!input) console.error('\n');
+      dump(
+        gen,
+        err.stack.replace(ANSI, ''),
+        toBigInt(seed),
+        rawBattleStream.rawInputLog,
+        buf.join('\n'),
+        frames,
+        partial,
       );
+    } catch (e) {
+      console.error(e);
+    }
+    throw err;
+  }
+}
 
-      for await (const chunk of streams.omniscient) {
-        buf.push(chunk);
+async function replay(
+  stream: Streams.ObjectReadWriteStream<string>,
+  prefix: string,
+  log: string[]
+) {
+  let index = 0;
+  let chunk;
+  while ((chunk = await stream.read())) {
+    if (!chunk.startsWith('|request|')) continue;
+    const request = JSON.parse(chunk.substring(9));
+    if (request.wait) continue;
+    while (index < log.length) {
+      if (log[index].startsWith(prefix)) {
+        // Pokémon Showdown is literally designed to be broken
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        stream.write(log[index++].slice(4));
+        break;
       }
-
-      await Promise.all([streams.p2.writeEnd(), p1, p2, start]);
-
-      const options = {
-        p1: {name: 'Bot 1', team: this.p1options.team!},
-        p2: {name: 'Bot 2', team: this.p2options.team!},
-        seed: spec.seed,
-        showdown: true,
-        log: true,
-      };
-      const battle = engine.Battle.create(this.gen, options);
-      const log = new engine.Log(this.gen, engine.Lookup.get(this.gen), options);
-
-      let c1 = engine.Choice.pass();
-      let c2 = engine.Choice.pass();
-
-      let input = 0;
-
-      let result: engine.Result = {type: undefined, p1: 'pass', p2: 'pass'};
-      for (const chunk of buf) {
-        assert.equal(result.type, undefined);
-        result = battle.update(c1, c2);
-
-        partial.result = result;
-        partial.battle = battle.toJSON();
-        const parsed = Array.from(log.parse(battle.log!));
-        partial.parsed = parsed;
-
-        if (result.type === 'win') {
-          assert.equal(rawBattleStream.battle!.winner, options.p1.name);
-        } else if (result.type === 'lose') {
-          assert.equal(rawBattleStream.battle!.winner, options.p2.name);
-        } else if (result.type === 'tie') {
-          assert.equal(rawBattleStream.battle!.winner, '');
-        } else if (result.type) {
-          throw new Error('Battle ended in error with -Dshowdown');
-        }
-
-        [c1, c2, input] =
-          nextChoices(battle, result, rawBattleStream.rawInputLog, input);
-        frames.push({c1, c2, ...partial} as Frame);
-        partial = {};
-
-        assert.deepStrictEqual(parse(this.gen, chunk), parsed);
-      }
-
-      assert.equal(rawBattleStream.rawInputLog.length, input);
-      assert.notEqual(result.type, undefined);
-    } catch (err: any) {
-      try {
-        dump(
-          this.gen,
-          err.stack.replace(ANSI, ''),
-          toBigInt(seed),
-          rawBattleStream.rawInputLog,
-          buf.join('\n'),
-          frames,
-          partial,
-        );
-      } catch (e) {
-        console.error(e);
-      }
-      throw err;
+      index++;
     }
   }
 }
@@ -186,11 +223,11 @@ function dump(
   const hex = `0x${seed.toString(16).toUpperCase()}`;
   let file = path.join(dir, `${hex}.input.log`);
   fs.writeFileSync(file, input.join('\n'));
-  console.error(`\n\n${box(`npm run integration ${path.relative(process.cwd(), file)}`)}`);
+  console.error(box(`npm run integration ${path.relative(CWD, file)}`));
 
   file = path.join(dir, `${hex}.pkmn.html`);
   fs.writeFileSync(file, display(gen, error, seed, frames, partial));
-  console.error('@pkmn/engine:', color(path.relative(process.cwd(), file)));
+  console.error('@pkmn/engine:', color(path.relative(CWD, file)));
 
   file = path.join(dir, `${hex}.showdown.html`);
   fs.writeFileSync(file, minify(
@@ -200,7 +237,7 @@ function dump(
       output,
     }), {minifyCSS: true, minifyJS: true}
   ));
-  console.error('Pokémon Showdown:', color(path.relative(process.cwd(), file)), '\n');
+  console.error('Pokémon Showdown:', color(path.relative(CWD, file)), '\n');
 }
 
 class RawBattleStream extends PatchedBattleStream {
@@ -346,7 +383,7 @@ function fixTeam(gen: Generation, options: AIOptions) {
       pokemon.nature = '';
     }
   }
-  return options;
+  return options as AIOptions & {team: PokemonSet[]};
 }
 
 // This is a fork of the possibilities function (which is used to build up the
@@ -377,7 +414,20 @@ type Options = Pick<ExhaustiveRunnerOptions, 'log' | 'maxFailures' | 'cycles'> &
   duration?: number;
 };
 
-export async function run(gens: Generations, options: Options) {
+export async function run(gens: Generations, options: string | Options) {
+  if (typeof options === 'string') {
+    const log = fs.readFileSync(path.resolve(CWD, options), 'utf8');
+    const gen = gens.get(log.charAt(23));
+    patch.generation(gen);
+
+    const lines = log.split('\n');
+    const spec = JSON.parse(lines[0].slice(7)) as {formatid: string; seed: PRNGSeed};
+    const p1 = {spec: JSON.parse(lines[1].slice(10)) as {name: string; team: PokemonSet[]}};
+    const p2 = {spec: JSON.parse(lines[2].slice(10)) as {name: string; team: PokemonSet[]}};
+    await play(gen, spec, p1, p2, lines.slice(3));
+    return 0;
+  }
+
   const opts: ExhaustiveRunnerOptions = {
     cycles: 1, maxFailures: 1, log: false, ...options, format: '',
     cmd: (cycles: number, format: string, seed: string) =>
