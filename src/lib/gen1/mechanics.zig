@@ -2112,7 +2112,7 @@ pub const Effects = struct {
         switch (move.effect) {
             .AttackUp1, .AttackUp2, .Rage => {
                 assert(boosts.atk >= -6 and boosts.atk <= 6);
-                if (boosts.atk == 6) return try log.fail(ident, .None);
+                if (boosts.atk == 6) return if (!showdown) try log.fail(ident, .None);
                 const n: u2 = if (move.effect == .AttackUp2) 2 else 1;
                 boosts.atk = @intCast(i4, @min(6, @as(i8, boosts.atk) + n));
                 const reason = if (move.effect == .Rage) Boost.Rage else Boost.Attack;
@@ -2133,7 +2133,7 @@ pub const Effects = struct {
             },
             .DefenseUp1, .DefenseUp2 => {
                 assert(boosts.def >= -6 and boosts.def <= 6);
-                if (boosts.def == 6) return try log.fail(ident, .None);
+                if (boosts.def == 6) return if (!showdown) try log.fail(ident, .None);
                 const n: u2 = if (move.effect == .DefenseUp2) 2 else 1;
                 boosts.def = @intCast(i4, @min(6, @as(i8, boosts.def) + n));
                 if (stats.def == MAX_STAT_VALUE) {
@@ -2153,7 +2153,7 @@ pub const Effects = struct {
             },
             .SpeedUp2 => {
                 assert(boosts.spe >= -6 and boosts.spe <= 6);
-                if (boosts.spe == 6) return try log.fail(ident, .None);
+                if (boosts.spe == 6) return if (!showdown) try log.fail(ident, .None);
                 boosts.spe = @intCast(i4, @min(6, @as(i8, boosts.spe) + 2));
                 if (stats.spe == MAX_STAT_VALUE) {
                     boosts.spe -= 1;
@@ -2172,7 +2172,7 @@ pub const Effects = struct {
             },
             .SpecialUp1, .SpecialUp2 => {
                 assert(boosts.spc >= -6 and boosts.spc <= 6);
-                if (boosts.spc == 6) return try log.fail(ident, .None);
+                if (boosts.spc == 6) return if (!showdown) try log.fail(ident, .None);
                 const n: u2 = if (move.effect == .SpecialUp2) 2 else 1;
                 boosts.spc = @intCast(i4, @min(6, @as(i8, boosts.spc) + n));
                 if (stats.spc == MAX_STAT_VALUE) {
@@ -2195,7 +2195,7 @@ pub const Effects = struct {
             },
             .EvasionUp1 => {
                 assert(boosts.evasion >= -6 and boosts.evasion <= 6);
-                if (boosts.evasion == 6) return try log.fail(ident, .None);
+                if (boosts.evasion == 6) return if (!showdown) try log.fail(ident, .None);
                 boosts.evasion = @intCast(i4, @min(6, @as(i8, boosts.evasion) + 1));
                 try log.boost(ident, .Evasion, 1);
             },
@@ -2230,7 +2230,7 @@ pub const Effects = struct {
         switch (move.effect) {
             .AttackDown1, .AttackDownChance => {
                 assert(boosts.atk >= -6 and boosts.atk <= 6);
-                if (boosts.atk == -6) return try log.fail(foe_ident, .None);
+                if (boosts.atk == -6) return if (!showdown) try log.fail(foe_ident, .None);
                 boosts.atk = @intCast(i4, @max(-6, @as(i8, boosts.atk) - 1));
                 if (stats.atk == 1) {
                     boosts.atk += 1;
@@ -2249,7 +2249,7 @@ pub const Effects = struct {
             },
             .DefenseDown1, .DefenseDown2, .DefenseDownChance => {
                 assert(boosts.def >= -6 and boosts.def <= 6);
-                if (boosts.def == -6) return try log.fail(foe_ident, .None);
+                if (boosts.def == -6) return if (!showdown) try log.fail(foe_ident, .None);
                 const n: u2 = if (move.effect == .DefenseDown2) 2 else 1;
                 boosts.def = @intCast(i4, @max(-6, @as(i8, boosts.def) - n));
                 if (stats.def == 1) {
@@ -2269,7 +2269,7 @@ pub const Effects = struct {
             },
             .SpeedDown1, .SpeedDownChance => {
                 assert(boosts.spe >= -6 and boosts.spe <= 6);
-                if (boosts.spe == -6) return try log.fail(foe_ident, .None);
+                if (boosts.spe == -6) return if (!showdown) try log.fail(foe_ident, .None);
                 boosts.spe = @intCast(i4, @max(-6, @as(i8, boosts.spe) - 1));
                 if (stats.spe == 1) {
                     boosts.spe += 1;
@@ -2289,7 +2289,7 @@ pub const Effects = struct {
             },
             .SpecialDownChance => {
                 assert(boosts.spc >= -6 and boosts.spc <= 6);
-                if (boosts.spc == -6) return try log.fail(foe_ident, .None);
+                if (boosts.spc == -6) return if (!showdown) try log.fail(foe_ident, .None);
                 boosts.spc = @intCast(i4, @max(-6, @as(i8, boosts.spc) - 1));
                 if (stats.spc == 1) {
                     boosts.spc += 1;
@@ -2311,7 +2311,7 @@ pub const Effects = struct {
             },
             .AccuracyDown1 => {
                 assert(boosts.accuracy >= -6 and boosts.accuracy <= 6);
-                if (boosts.accuracy == -6) return try log.fail(foe_ident, .None);
+                if (boosts.accuracy == -6) return if (!showdown) try log.fail(foe_ident, .None);
                 boosts.accuracy = @intCast(i4, @max(-6, @as(i8, boosts.accuracy) - 1));
                 try log.boost(foe_ident, .Accuracy, -1);
             },
