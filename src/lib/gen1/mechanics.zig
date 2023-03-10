@@ -280,11 +280,14 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     // > your own screen without waiting for the other player's choice (and their choice will appear
     // > to happen first for them too, unless they attacked in which case your switch happens first)
     // A cartridge-compatible implemention must not advance the RNG so we simply default to P1
-    if (!showdown and c1.type == .Switch and c2.type == .Switch) return .P1;
+    const double_switch = c1.type == .Switch and c2.type == .Switch;
+    if (!showdown and double_switch) return .P1;
 
     const spe1 = battle.side(.P1).active.stats.spe;
     const spe2 = battle.side(.P2).active.stats.spe;
     if (spe1 == spe2) {
+        // Pokémon Showdown actually randomly determines order but our patched reference doesn't
+        if (showdown and double_switch) return .P1;
         // Pokémon Showdown's beforeTurnCallback shenanigans
         if (showdown and m1 == .Counter and m2 == .Counter) battle.rng.advance(1);
         const p1 = if (showdown)
