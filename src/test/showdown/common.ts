@@ -154,7 +154,7 @@ function residualEvent(this: Battle, eventid: string, relayVar?: any) {
 
 // NOTE: These "patches" are not all suitable for upstreaming - each of these
 // patches works around a core issue with Pokémon Showdown, but attempts to do
-// so in the easiest/most minimally intrustive way as opposed to the most
+// so in the easiest/most minimally intrusive way as opposed to the most
 // *correct* way. eg. instead of assigning "priorities" to no-op handlers, the
 // handlers in question should be removed entirely (which can be accomplished by
 // disabling inheritance or setting them to `null`). Similarly, in many places
