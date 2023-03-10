@@ -277,18 +277,18 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     const double_switch = c1.type == .Switch and c2.type == .Switch;
     if (!showdown and double_switch) return .P1;
 
-    const spe1 = battle.side(.P1).active.stats.spe;
-    const spe2 = battle.side(.P2).active.stats.spe;
-
-    // Pokémon Showdown actually randomly determines order but our patched reference doesn't
-    if (showdown and double_switch) return if (spe1 == spe2) .P1 else if (spe1 > spe2) .P1 else .P2;
-
     const m1 = battle.side(.P1).last_selected_move;
     const m2 = battle.side(.P2).last_selected_move;
+    if (!showdown or !double_switch) {
+        if ((m1 == .QuickAttack) != (m2 == .QuickAttack)) {
+            return if (m1 == .QuickAttack) .P1 else .P2;
+        } else if ((m1 == .Counter) != (m2 == .Counter)) {
+            return if (m1 == .Counter) .P2 else .P1;
+        }
+    }
 
-    if ((m1 == .QuickAttack) != (m2 == .QuickAttack)) return if (m1 == .QuickAttack) .P1 else .P2;
-    if ((m1 == .Counter) != (m2 == .Counter)) return if (m1 == .Counter) .P2 else .P1;
-
+    const spe1 = battle.side(.P1).active.stats.spe;
+    const spe2 = battle.side(.P2).active.stats.spe;
     if (spe1 == spe2) {
         // Pokémon Showdown's beforeTurnCallback shenanigans
         if (showdown and m1 == .Counter and m2 == .Counter) battle.rng.advance(1);
