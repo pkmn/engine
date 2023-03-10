@@ -227,7 +227,7 @@ function dump(
 
   file = path.join(dir, `${hex}.pkmn.html`);
   fs.writeFileSync(file, display(gen, true, error, seed, frames, partial));
-  console.error('@pkmn/engine:', color(path.relative(CWD, file)));
+  console.error(' ◦ @pkmn/engine:', color(path.relative(CWD, file)));
 
   file = path.join(dir, `${hex}.showdown.html`);
   fs.writeFileSync(file, minify(
@@ -237,7 +237,7 @@ function dump(
       output,
     }), {minifyCSS: true, minifyJS: true}
   ));
-  console.error('Pokémon Showdown:', color(path.relative(CWD, file)), '\n');
+  console.error(' ◦ Pokémon Showdown:', color(path.relative(CWD, file)), '\n');
 }
 
 class RawBattleStream extends PatchedBattleStream {
