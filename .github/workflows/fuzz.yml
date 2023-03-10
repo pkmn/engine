@@ -23,7 +23,7 @@ jobs:
       - run: zig build -Doptimize=ReleaseSafe ${{matrix.options}} fuzz -- ${{matrix.gen}} 15m
       # - run: |
       #     node src/bin/install-pkmn-engine --options="-Dshowdown -Dtrace"
-      #     npm run integration -- --gen=${{matrix.gen}} --duration=15m
+      #     npm run integration -- --gen=${{matrix.gen}} --duration=15m --maxFailures=5
       #   if: ${{ matrix.options != '' }}
       # - uses: actions/upload-artifact@v3
       #   if: failure()

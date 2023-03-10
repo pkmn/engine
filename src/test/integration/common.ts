@@ -16,7 +16,7 @@ import {
 
 import * as engine from '../../pkg';
 import {Frame, display} from '../display';
-import {PatchedBattleStream, patch, FILTER} from '../showdown/common';
+import {PatchedBattleStream, patch, FILTER, formatFor} from '../showdown/common';
 
 import blocklistJSON from '../blocklist.json';
 
@@ -26,7 +26,6 @@ const ANSI = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-
 
 const CWD = process.env.INIT_CWD || process.env.CWD || process.cwd();
 
-const FORMATS = ['gen1customgame'];
 const BLOCKLIST = blocklistJSON as {[gen: number]: Partial<ExhaustiveRunnerPossibilities>};
 
 // We first play out a normal battle with Pokémon Showdown, saving the raw input
@@ -431,17 +430,17 @@ export async function run(gens: Generations, options: string | Options) {
   const opts: ExhaustiveRunnerOptions = {
     cycles: 1, maxFailures: 1, log: false, ...options, format: '',
     cmd: (cycles: number, format: string, seed: string) =>
-      `npm run integration -- --cycles=${cycles} --format=${format} --seed=${seed}`,
+      `npm run integration -- --cycles=${cycles} --gen=${format[3]} --seed=${seed}`,
   };
 
   let failures = 0;
   const start = Date.now();
   do {
-    for (const format of FORMATS) {
-      const gen = gens.get(format.charAt(3));
+    for (const gen of gens) {
+      if (gen.num > 1) break;
       if (options.gen && gen.num !== options.gen) continue;
       patch.generation(gen);
-      opts.format = format;
+      opts.format = formatFor(gen);
       opts.possible = possibilities(gen);
       failures +=
         await (new ExhaustiveRunner({...opts, runner: o => new Runner(gen, o).run()}).run());

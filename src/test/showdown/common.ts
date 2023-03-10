@@ -233,7 +233,7 @@ const MODS: {[gen: number]: string[]} = {
 };
 
 export function formatFor(gen: Generation) {
-  return `gen${gen.num}customgame@@@${MODS[gen.num].join(',')}` as ID;
+  return `gen${gen.num}customgame@@@${MODS[gen.num].join(',')}` as ID; // o_O "ID"
 }
 
 function fixSet(gen: Generation, set: Partial<PokemonSet>) {

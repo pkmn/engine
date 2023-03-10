@@ -8,7 +8,7 @@ import {run} from './common';
 
 (async () => {
   const gens = new Generations(Dex as any);
-  const argv = minimist(process.argv.slice(2), {default: {maxFailures: 5}});
+  const argv = minimist(process.argv.slice(2));
   if (argv._.length) process.exit(await run(gens, argv._[0]));
   const unit =
     typeof argv.duration === 'string' ? argv.duration[argv.duration.length - 1] : undefined;
