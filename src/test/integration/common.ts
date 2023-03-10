@@ -211,6 +211,7 @@ function dump(
   const color = (s: string) => tty.isatty(2) ? `\x1b[36m${s}\x1b[0m` : s;
   const box = (s: string) =>
     `╭${'─'.repeat(s.length + 2)}╮\n│\u00A0${s}\u00A0│\n╰${'─'.repeat(s.length + 2)}╯`;
+  const pretty = (file: string) => color(path.relative(CWD, file));
 
   const dir = path.join(ROOT, 'logs');
   try {
@@ -221,14 +222,18 @@ function dump(
 
   const hex = `0x${seed.toString(16).toUpperCase()}`;
   let file = path.join(dir, `${hex}.input.log`);
+  let link =  path.join(dir, 'input.log');
   fs.writeFileSync(file, input.join('\n'));
+  symlink(file, link);
   console.error(box(`npm run integration ${path.relative(CWD, file)}`));
 
   file = path.join(dir, `${hex}.pkmn.html`);
+  link = path.join(dir, 'pkmn.html');
   fs.writeFileSync(file, display(gen, true, error, seed, frames, partial));
-  console.error(' ◦ @pkmn/engine:', color(path.relative(CWD, file)));
+  console.error(' ◦ @pkmn/engine:', pretty(symlink(file, link)), '->', pretty(file));
 
   file = path.join(dir, `${hex}.showdown.html`);
+  link = path.join(dir, 'showdown.html');
   fs.writeFileSync(file, minify(
     mustache.render(fs.readFileSync(TEMPLATE, 'utf8'), {
       seed: hex,
@@ -236,7 +241,14 @@ function dump(
       output,
     }), {minifyCSS: true, minifyJS: true}
   ));
-  console.error(' ◦ Pokémon Showdown:', color(path.relative(CWD, file)), '\n');
+
+  console.error(' ◦ Pokémon Showdown:', pretty(symlink(file, link)), '->', pretty(file), '\n');
+}
+
+function symlink(from: string, to: string) {
+  fs.rmSync(to, {force: true});
+  fs.symlinkSync(from, to);
+  return to;
 }
 
 class RawBattleStream extends PatchedBattleStream {
