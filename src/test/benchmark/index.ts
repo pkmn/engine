@@ -104,7 +104,7 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
 
       for (let i = 0; i < battles; i++) {
         const options = gen1.Battle.options(gen, prng);
-        const battleStream = new PatchedBattleStream();
+        const battleStream = new PatchedBattleStream(false);
         const streams = BattleStreams.getPlayerStreams(battleStream);
 
         const spec = {formatid: format, seed: options.seed as PRNGSeed};
