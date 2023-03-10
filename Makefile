@@ -105,7 +105,7 @@ zig-example:
 example: c-example js-example zig-example
 
 .PHONY: integration
-integration: build check example
+integration: clean build check example
 	node src/bin/install-pkmn-engine --options='-Dshowdown -Dtrace'
 	npm run test:integration
 
