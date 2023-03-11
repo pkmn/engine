@@ -204,6 +204,7 @@ export const patch = {
     return gen;
   },
   battle: (battle: Battle, prng = false) => {
+    battle.trunc = battle.dex.trunc.bind(battle.dex);
     battle.queue.insertChoice = insertChoice.bind(battle.queue);
     battle.eachEvent = eachEvent.bind(battle);
     battle.residualEvent = residualEvent.bind(battle);
