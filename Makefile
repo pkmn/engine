@@ -104,15 +104,13 @@ zig-example:
 .PHONY: example
 example: c-example js-example zig-example
 
-.PHONY: integration
-integration: clean build check example
+.PHONY: addon
+addon:
 	node src/bin/install-pkmn-engine --options='-Dshowdown -Dtrace'
-	npm run test:integration
 
-.PHONY: debug
-debug:
-	node src/bin/install-pkmn-engine --options='-Dshowdown -Dtrace'
-	npm run integration -- --cycles=1  --maxFailures=1 --seed=$(seed)
+.PHONY: integration
+integration: clean build check example addon
+	npm run test:integration
 
 .PHONY: benchmark
 benchmark:
@@ -131,4 +129,17 @@ clean: clean-example
 .PHONY: release
 release:
 	@echo "release TODO"
+
+, := ,
+gen := $(or $(gen),1)
+seed := $(or $(seed),1$(,)2$(,)3$(,)4)
+opt := $(if $(filter true,$(showdown)),-Dshowdown,)
+
+.PHONY: t
+t:
+	zig build test -Dtrace -Dtest-file=src/lib/gen$(gen)/test.zig -Dtest-filter="$(filter)" $(opt)
+
+.PHONY: it
+it:
+	npm run integration -- --cycles=1 --maxFailures=1 --gen=$(gen) --seed=$(seed)
 
