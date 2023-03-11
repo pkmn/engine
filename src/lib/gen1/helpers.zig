@@ -214,6 +214,8 @@ fn blocked(m: Move) bool {
     if (Move.get(m).effect == .Binding) return true;
     return switch (m) {
         .Counter,
+        // FIXME: test and see if this can be removed or document
+        .Rage,
         .Mimic,
         // FIXME: test and see if this can be removed or document
         .Bide,

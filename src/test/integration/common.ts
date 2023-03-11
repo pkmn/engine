@@ -281,20 +281,20 @@ type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 //
 // TODO: can we always infer done/start/upkeep?
 function compare(gen: Generation, chunk: string, actual: engine.ParsedLine[]) {
-  const buf: engine.ParsedLine[]= [];
+  const buf: engine.ParsedLine[] = [];
   let i = 0;
   for (const {args, kwArgs} of Protocol.parse(chunk)) {
     if (FILTER.has(args[0])) continue;
-    const a = args.slice() as  Writeable<Protocol.ArgType>;
+    const a = args.slice() as Writeable<Protocol.ArgType>;
     const kw = {...kwArgs} as Protocol.KWArgType;
     switch (args[0]) {
-      case 'move': {
-        const keys = kwArgs as Protocol.KWArgs['|move|'];
-        if (keys.from && !(actual[i].kwArgs as Protocol.KWArgs['|move|']).from) {
-          delete (kw as any).from;
-        }
-        break;
+    case 'move': {
+      const keys = kwArgs as Protocol.KWArgs['|move|'];
+      if (keys.from && !(actual[i].kwArgs as Protocol.KWArgs['|move|']).from) {
+        delete (kw as any).from;
       }
+      break;
+    }
     case 'switch': {
       a[3] = fixHPStatus(gen, args[3]);
       break;
