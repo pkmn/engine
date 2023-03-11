@@ -348,15 +348,14 @@ then the damage was healed `[from]` a draining move indicated by the subsequent 
       +---------------+
 
 The Pokémon identified by [`Ident`](#pokemonident) has been inflicted with `Status`. If `Reason` is
-`0x02` then the next byte will indicate which `Move` the `Status` is `[from]`.
+`0x01` then the next byte will indicate which `Move` the `Status` is `[from]`.
 
 <details><summary>Reason</summary>
 
 | Raw    | Description  | `[from]`? |
 | ------ | ------------ | --------- |
 | `0x00` | None         | No        |
-| `0x01` | `\|[silent]` | No        |
-| `0x02` | `\|[from]`   | Yes       |
+| `0x01` | `\|[from]`   | Yes       |
 </details>
 
 ### `|-curestatus|` (`0x0D`)

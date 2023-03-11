@@ -137,7 +137,6 @@ pub const Damage = enum(u8) {
 
 pub const Status = enum(u8) {
     None,
-    Silent,
     From,
 };
 
@@ -1060,10 +1059,6 @@ test "|-heal|" {
 test "|-status|" {
     try log.status(p2.ident(6), gen1.Status.init(.BRN), .None);
     try expectLog1(&.{ N(ArgType.Status), 0b1110, 0b10000, N(Status.None) }, buf[0..4]);
-    stream.reset();
-
-    try log.status(p1.ident(2), gen1.Status.init(.FRZ), .Silent);
-    try expectLog1(&.{ N(ArgType.Status), 0b0010, 0b100000, N(Status.Silent) }, buf[0..4]);
     stream.reset();
 
     try log.statusFrom(p1.ident(1), gen1.Status.init(.PAR), M.BodySlam);

@@ -274,6 +274,12 @@ type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 //     whether to output "poisoned" vs. "badly poisoned", though this is
 //     possible to accomplish by simply tracking the prior `|move|` message so
 //     isn't necessary
+//   - Similarly, when a Pokémon which was previously badly poisoned switches
+//     back in, a `|-status|IDENT|psn|[silent]` message will be logged. This is
+//     incorrect as Toxic is not actually a status in Gen 1 and the Toxic
+//     volatile gets removed on switch *out* not switch *in*, and as such the
+//     engine does not attempt to reproduce this. If we receive one of these
+//     messages we just verify that its for the scenario we expect and ignore it
 //   - The engine cannot always infer `[from]` on `|move|` and so if we see that
 //     the engine's output is missing it we also need to remove it from Pokémon
 //     Showdown's (we can't just always indiscriminately remove it because we
@@ -310,6 +316,13 @@ function compare(gen: Generation, chunk: string, actual: engine.ParsedLine[]) {
     }
     case '-status':
     case '-curestatus': {
+      if (args[0] === '-status') {
+        const keys = kwArgs as Protocol.KWArgs['|-status|'];
+        if (keys.silent) {
+          assert.strictEqual(args[2], 'psn');
+          continue;
+        }
+      }
       a[2] = args[2] === 'tox' ? 'psn' : args[2];
       break;
     }

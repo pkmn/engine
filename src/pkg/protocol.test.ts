@@ -123,9 +123,6 @@ for (const gen of new Generations(Dex as any)) {
       expect(Array.from(
         log.parse(Data.view([ArgType.Status, 0b1110, 0b10000, PROTOCOL.Status.None]))
       )).toEqual(parse('|-status|p2a: Fuudin|brn'));
-      expect(Array.from(
-        log.parse(Data.view([ArgType.Status, 0b0010, 0b100000, PROTOCOL.Status.Silent]))
-      )).toEqual(parse('|-status|p1a: Hitokage|frz|[silent]'));
       const bs = gen.moves.get('bodyslam')!.num;
       expect(Array.from(
         log.parse(Data.view([ArgType.Status, 0b0001, 0b1000000, PROTOCOL.Status.From, bs]))
