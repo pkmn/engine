@@ -388,10 +388,15 @@ function nextChoices(battle: engine.Battle, result: engine.Result, input: string
 // set data ourselves
 function fixTeam(gen: Generation, options: AIOptions) {
   for (const pokemon of options.team!) {
-    if (gen.num === 1) {
+    const species = gen.species.get(pokemon.species)!;
+    if (gen.num <= 1) {
+      pokemon.ivs.hp = gen.stats.getHPDV(pokemon.ivs);
       pokemon.ivs.spd = pokemon.ivs.spa;
       pokemon.evs.spd = pokemon.evs.spa;
+    } else if (gen.num <= 2) {
       pokemon.nature = '';
+      pokemon.gender = species.gender ??
+        gen.stats.toDV(pokemon.ivs.atk) >= species.genderRatio.F * 16 ? 'M' : 'F';
     }
   }
   return options as AIOptions & {team: PokemonSet[]};
