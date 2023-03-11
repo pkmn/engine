@@ -392,10 +392,13 @@ function fixTeam(gen: Generation, options: AIOptions) {
       pokemon.ivs.hp = gen.stats.getHPDV(pokemon.ivs);
       pokemon.ivs.spd = pokemon.ivs.spa;
       pokemon.evs.spd = pokemon.evs.spa;
-    } else if (gen.num <= 2) {
+    }
+    if (gen.num <= 2) {
       pokemon.nature = '';
-      pokemon.gender = species.gender ??
-        gen.stats.toDV(pokemon.ivs.atk) >= species.genderRatio.F * 16 ? 'M' : 'F';
+      if (gen.num > 1) {
+        pokemon.gender = species.gender ??
+          gen.stats.toDV(pokemon.ivs.atk) >= species.genderRatio.F * 16 ? 'M' : 'F';
+      }
     }
   }
   return options as AIOptions & {team: PokemonSet[]};
