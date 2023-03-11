@@ -135,6 +135,12 @@ gen := $(or $(gen),1)
 seed := $(or $(seed),1$(,)2$(,)3$(,)4)
 opt := $(if $(filter true,$(showdown)),-Dshowdown,)
 
+.PHONY: patch
+patch:
+	sed -i '' 's|"@pkmn/sim":.*",|"@pkmn/sim": "file:../ps/sim",|g' package.json
+	sed -i '' 's|sim/battle-queue.ts:405:15|sim/battle-queue.ts:408:15|g' src/test/showdown/common.ts
+	npm install --install=links=false
+
 .PHONY: t
 t:
 	zig build test -Dtrace -Dtest-file=src/lib/gen$(gen)/test.zig -Dtest-filter="$(filter)" $(opt)
