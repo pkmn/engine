@@ -424,6 +424,7 @@ function fixTeam(gen: Generation, options: AIOptions) {
       pokemon.evs.spd = pokemon.evs.spa;
     }
     if (gen.num <= 2) {
+      delete pokemon.shiny;
       pokemon.nature = '';
       if (gen.num > 1) {
         pokemon.gender = species.gender ??
