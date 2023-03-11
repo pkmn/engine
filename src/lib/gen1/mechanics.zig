@@ -622,7 +622,14 @@ fn canMove(
     if (!skip) decrementPP(side, mslot, auto);
 
     const target = if (move.target == .Self) player else player.foe();
-    try log.move(player_ident, side.last_selected_move, battle.active(target), from);
+    // Pokémon Showdown's protocol for Rage and Binding moves should come with a [from], though we
+    // don't have space to be able to track it in all circumstances and thus usually try to infer it
+    // from side.last_used_move. However, this gets reset by the opponent switching or fainting,
+    // meaning sometimes we lose this information. from is still set because it not being null is
+    // relevant for control flow, but we don't have anything useful to put in the log. This is
+    // regrettable, but this information is more "nice to have" than required
+    const f = if (from != null and from.? == .None) null else from;
+    try log.move(player_ident, side.last_selected_move, battle.active(target), f);
 
     if (move.effect.onBegin()) {
         try onBegin(battle, player, move, mslot, log);

@@ -241,8 +241,14 @@ pub fn Log(comptime Writer: type) type {
             const none = &[_]u8{@enumToInt(Move.None)};
             try self.writer.writeAll(switch (@typeInfo(@TypeOf(from))) {
                 .Null => none,
-                .Optional => if (from) |f| &[_]u8{ @enumToInt(Move.From), @enumToInt(f) } else none,
-                else => &[_]u8{ @enumToInt(Move.From), @enumToInt(from) },
+                .Optional => if (from) |f| blk: {
+                    assert(@enumToInt(f) != 0);
+                    break :blk &[_]u8{ @enumToInt(Move.From), @enumToInt(f) };
+                } else none,
+                else => blk: {
+                    assert(@enumToInt(from) != 0);
+                    break :blk &[_]u8{ @enumToInt(Move.From), @enumToInt(from) };
+                },
             });
         }
 

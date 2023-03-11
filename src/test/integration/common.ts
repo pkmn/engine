@@ -44,7 +44,7 @@ const BLOCKLIST = blocklistJSON as {[gen: number]: Partial<ExhaustiveRunnerPossi
 //   - Pokémon Showdown's output contains a bunch of protocol messages which are
 //     redundant that need to filter out. Furthermore we also only want to
 //     compare parsed output because the raw output produced by Pokémon Showdown
-//     needs to get parsed first anyway (parse)
+//     needs to get parsed first anyway (compare)
 //   - the RandomPlayerAI can sometimes make "unavailable" choices because it
 //     doesn't have perfect information, only we can't apply those choices to
 //     the engine as that will result in undefined behavior (nextChoices)
@@ -152,7 +152,7 @@ async function play(
       frames.push({c1, c2, ...partial} as Frame);
       partial = {};
 
-      assert.deepStrictEqual(parse(gen, chunk), parsed);
+      compare(gen, chunk, parsed);
     }
 
     assert.equal(rawBattleStream.rawInputLog.length, index);
@@ -260,7 +260,10 @@ class RawBattleStream extends PatchedBattleStream {
   }
 }
 
-// Filter out redundant messages and parse the protocol into its final form
+type Writeable<T> = { -readonly [P in keyof T]: T[P] };
+
+// Compare Pokémon Showdown vs. @pkmn/engine output, after parsing the protocol
+// and filtering out redundant messages / smoothing over any differences
 //
 //   - Pokémon Showdown includes `[of]` on `|-damage|` messages for status
 //     damage but the engine doesn't keep track of this as its redundant
@@ -271,15 +274,27 @@ class RawBattleStream extends PatchedBattleStream {
 //     whether to output "poisoned" vs. "badly poisoned", though this is
 //     possible to accomplish by simply tracking the prior `|move|` message so
 //     isn't necessary
+//   - The engine cannot always infer `[from]` on `|move|` and so if we see that
+//     the engine's output is missing it we also need to remove it from Pokémon
+//     Showdown's (we can't just always indiscriminately remove it because we
+//     want to ensure that it matches when present)
 //
 // TODO: can we always infer done/start/upkeep?
-function parse(gen: Generation, chunk: string) {
-  const buf: Array<{args: Protocol.ArgType; kwArgs: Protocol.KWArgType}> = [];
+function compare(gen: Generation, chunk: string, actual: engine.ParsedLine[]) {
+  const buf: engine.ParsedLine[]= [];
+  let i = 0;
   for (const {args, kwArgs} of Protocol.parse(chunk)) {
     if (FILTER.has(args[0])) continue;
-    const a = args.slice();
-    const kw = {...kwArgs};
+    const a = args.slice() as  Writeable<Protocol.ArgType>;
+    const kw = {...kwArgs} as Protocol.KWArgType;
     switch (args[0]) {
+      case 'move': {
+        const keys = kwArgs as Protocol.KWArgs['|move|'];
+        if (keys.from && !(actual[i].kwArgs as Protocol.KWArgs['|move|']).from) {
+          delete (kw as any).from;
+        }
+        break;
+      }
     case 'switch': {
       a[3] = fixHPStatus(gen, args[3]);
       break;
@@ -299,7 +314,8 @@ function parse(gen: Generation, chunk: string) {
       break;
     }
     }
-    buf.push({args: a as Protocol.ArgType, kwArgs: kw as Protocol.KWArgType});
+    assert.deepStrictEqual(actual[i], {args: a, kwArgs: kw});
+    i++;
   }
   return buf;
 }
