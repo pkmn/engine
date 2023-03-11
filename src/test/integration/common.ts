@@ -159,7 +159,6 @@ async function play(
     assert.notEqual(result.type, undefined);
   } catch (err: any) {
     try {
-      if (!input) console.error('\n');
       dump(
         gen,
         err.stack.replace(ANSI, ''),
@@ -461,7 +460,6 @@ export async function run(gens: Generations, options: string | Options) {
       opts.possible = possibilities(gen);
       failures +=
         await (new ExhaustiveRunner({...opts, runner: o => new Runner(gen, o).run()}).run());
-      if (opts.log) process.stdout.write('\n');
       if (failures >= opts.maxFailures!) return failures;
     }
   } while (Date.now() - start < (options.duration || 0));
