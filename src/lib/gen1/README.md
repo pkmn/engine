@@ -498,7 +498,6 @@ of the battle, only pedantic UI correctness):
   after.
 - **Thrash** / **Petal Dance**: confusion should silently get applied before the `|move|` message,
   not after.
-- **Boosts**: there should be a `|-fail|` message if a Pokémon's stats can't go any higher/lower.
 
 Pokémon Showdown also implements a number of modifications to the cartridge (usually but not always
 called out in the `|rule|` section at the beginning of a battle's log):
