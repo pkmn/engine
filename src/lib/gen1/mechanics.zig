@@ -1295,9 +1295,11 @@ fn faint(battle: anytype, player: Player, log: anytype, done: bool) !?Result {
     // just fainted will need to switch in a replacement and all of this gets cleared in switchIn
     // anyway. However, we would like to ensure the battle state presented to the players at each
     // decision point is consistent so we avoid "optimizing" this out
+    // (we do always need to clear status though for Pokémon Showdown's Sleep/Freeze Clause Mod)
     side.active.volatiles = .{};
     side.last_used_move = .None;
     foe.last_used_move = .None;
+    side.stored().status = 0;
 
     try log.faint(battle.active(player), done);
     return null;
