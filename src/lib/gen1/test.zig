@@ -3451,6 +3451,7 @@ test "Mist effect" {
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.move(P2.ident(1), Move.Growl, P1.ident(1), null);
     try t.log.expected.activate(P1.ident(1), .Mist);
+    try t.log.expected.fail(P1.ident(1), .None);
     try t.log.expected.turn(3);
 
     // Mist does protect against primary stat lowering effects
@@ -7402,9 +7403,8 @@ test "Stat down modifier overflow glitch" {
             try t.log.expected.boost(P2.ident(1), .SpecialAttack, -1);
             try t.log.expected.boost(P2.ident(1), .SpecialDefense, 2);
             try t.log.expected.boost(P2.ident(1), .SpecialDefense, -1);
-        } else {
-            try t.log.expected.fail(P2.ident(1), .None);
         }
+        try t.log.expected.fail(P2.ident(1), .None);
 
         try t.log.expected.move(P1.ident(1), Move.Recover, P1.ident(1), null);
         try t.log.expected.fail(P1.ident(1), .None);
@@ -7492,9 +7492,8 @@ test "Stat down modifier overflow glitch" {
             try t.log.expected.boost(P2.ident(1), .SpecialAttack, -1);
             try t.log.expected.boost(P2.ident(1), .SpecialDefense, 2);
             try t.log.expected.boost(P2.ident(1), .SpecialDefense, -1);
-        } else {
-            try t.log.expected.fail(P2.ident(1), .None);
         }
+        try t.log.expected.fail(P2.ident(1), .None);
 
         try t.log.expected.move(P1.ident(1), Move.Recover, P1.ident(1), null);
         try t.log.expected.fail(P1.ident(1), .None);

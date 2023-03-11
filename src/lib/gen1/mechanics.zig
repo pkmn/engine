@@ -783,6 +783,7 @@ fn doMove(battle: anytype, player: Player, mslot: u4, auto: bool, log: anytype) 
             try log.immune(foe_ident, .None);
         } else if (mist) {
             try log.activate(foe_ident, .Mist);
+            try log.fail(foe_ident, .None);
         } else {
             try log.lastmiss();
             try log.miss(battle.active(player));
@@ -1171,7 +1172,9 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data, log: anytype) !boo
     assert(!immune);
     if (mist) {
         assert(!showdown);
-        try log.activate(battle.active(player.foe()), .Mist);
+        const foe_ident = battle.active(player.foe());
+        try log.activate(foe_ident, .Mist);
+        try log.fail(foe_ident, .None);
     } else {
         try log.lastmiss();
         try log.miss(battle.active(player));
@@ -2121,10 +2124,8 @@ pub const Effects = struct {
                     if (showdown) {
                         try log.boost(ident, reason, n);
                         try log.boost(ident, reason, -1);
-                    } else {
-                        try log.fail(ident, .None);
                     }
-                    return;
+                    return try log.fail(ident, .None);
                 }
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.atk) + 6)];
                 const stat = unmodifiedStats(battle, player).atk;
@@ -2141,10 +2142,8 @@ pub const Effects = struct {
                     if (showdown) {
                         try log.boost(ident, .Defense, n);
                         try log.boost(ident, .Defense, -1);
-                    } else {
-                        try log.fail(ident, .None);
                     }
-                    return;
+                    return try log.fail(ident, .None);
                 }
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.def) + 6)];
                 const stat = unmodifiedStats(battle, player).def;
@@ -2160,10 +2159,8 @@ pub const Effects = struct {
                     if (showdown) {
                         try log.boost(ident, .Speed, 2);
                         try log.boost(ident, .Speed, -1);
-                    } else {
-                        try log.fail(ident, .None);
                     }
-                    return;
+                    return try log.fail(ident, .None);
                 }
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.spe) + 6)];
                 const stat = unmodifiedStats(battle, player).spe;
@@ -2182,10 +2179,8 @@ pub const Effects = struct {
                         try log.boost(ident, .SpecialAttack, -1);
                         try log.boost(ident, .SpecialDefense, n);
                         try log.boost(ident, .SpecialDefense, -1);
-                    } else {
-                        try log.fail(ident, .None);
                     }
-                    return;
+                    return try log.fail(ident, .None);
                 }
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.spc) + 6)];
                 const stat = unmodifiedStats(battle, player).spc;
@@ -2237,10 +2232,8 @@ pub const Effects = struct {
                     if (showdown) {
                         try log.boost(foe_ident, .Attack, -1);
                         try log.boost(foe_ident, .Attack, 1);
-                    } else {
-                        try log.fail(foe_ident, .None);
                     }
-                    return;
+                    return try log.fail(foe_ident, .None);
                 }
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.atk) + 6)];
                 const stat = unmodifiedStats(battle, player.foe()).atk;
@@ -2257,10 +2250,8 @@ pub const Effects = struct {
                     if (showdown) {
                         try log.boost(foe_ident, .Defense, -@as(i8, n));
                         try log.boost(foe_ident, .Defense, 1);
-                    } else {
-                        try log.fail(foe_ident, .None);
                     }
-                    return;
+                    return try log.fail(foe_ident, .None);
                 }
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.def) + 6)];
                 const stat = unmodifiedStats(battle, player.foe()).def;
@@ -2276,10 +2267,8 @@ pub const Effects = struct {
                     if (showdown) {
                         try log.boost(foe_ident, .Speed, -1);
                         try log.boost(foe_ident, .Speed, 1);
-                    } else {
-                        try log.fail(foe_ident, .None);
                     }
-                    return;
+                    return try log.fail(foe_ident, .None);
                 }
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.spe) + 6)];
                 const stat = unmodifiedStats(battle, player.foe()).spe;
@@ -2298,10 +2287,8 @@ pub const Effects = struct {
                         try log.boost(foe_ident, .SpecialAttack, 1);
                         try log.boost(foe_ident, .SpecialDefense, -1);
                         try log.boost(foe_ident, .SpecialDefense, 1);
-                    } else {
-                        try log.fail(foe_ident, .None);
                     }
-                    return;
+                    return try log.fail(foe_ident, .None);
                 }
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.spc) + 6)];
                 const stat = unmodifiedStats(battle, player.foe()).spc;
