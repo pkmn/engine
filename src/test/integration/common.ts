@@ -159,6 +159,7 @@ async function play(
     assert.notEqual(result.type, undefined);
   } catch (err: any) {
     try {
+      if (!input) console.error('');
       dump(
         gen,
         err.stack.replace(ANSI, ''),
