@@ -335,7 +335,8 @@ const downloadImportLib = async () => {
   const lib = node && process.platform === 'win32' ? await downloadImportLib() : undefined;
   for (const config of configs.values()) {
     const opts = config.options.filter(Boolean);
-    const args = ['build', '-p', 'build', '-Doptimize=ReleaseFast', '-Dstrip', ...opts];
+    const args = ['build', '-p', 'build', ...opts];
+    if (!process.env.DEBUG_PKMN_ENGINE) args.push('-Doptimize=ReleaseFast', '-Dstrip');
     if (config.type === 'node') {
       args.push(`-Dnode-headers=${headers}`);
       if (process.platform === 'win32') args.push(`-Dnode-import-library=${lib}`);
