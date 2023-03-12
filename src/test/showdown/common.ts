@@ -220,16 +220,9 @@ export const patch = {
 };
 
 export class PatchedBattleStream extends BattleStreams.BattleStream {
-  private readonly prng: boolean;
-
-  constructor(prng = true) {
-    super();
-    this.prng = prng;
-  }
-
   override _writeLine(type: string, message: string) {
     super._writeLine(type, message);
-    if (type === 'start') patch.battle(this.battle!, this.prng);
+    if (type === 'start') patch.battle(this.battle!, true);
   }
 }
 

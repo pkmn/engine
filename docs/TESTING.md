@@ -184,24 +184,24 @@ configurations. This benchmark scenario is useful for approximating the [Monte C
 search](https://en.wikipedia.org/wiki/Monte_Carlo_tree_search) use case where various battles are
 played out each turn to the end numerous times to determine the best course of action.
 
+Notably, the benchmark does not attempt to measure the performance of Pokémon Showdown via either
+its `BattleStream` abstraction or the `pokemon-showdown` binary. The `BattleStream` isn't that
+difficult to use (though you need to use a special `RandomPlayerAI` that directly inspects the
+`Battle` to avoid making unavailable choices and matches the AI used by all of the other
+configuration in addition to directly accessing the `BattleStream`s internal `Battle` object to more
+easily be able to grab the turn count and also to [patch fix various speed ties](#patches).), the
+main concern is that due to Pokémon Showdown's poor handling of promises internally it is fairly
+trivial to encounter race conditions that desync the benchmark. Pokémon Showdown's root
+`pokemon-showdown` binary is technically the blessed approach to using the simulator, but
+`BattleStream` is effectively the same thing but without the (sizeable) I/O overhead. Attempting to
+use the actual `pokemon-showdown` binary is deemed too difficult as there would then be no way to
+inspect the `Battle` in order to avoid making unavailable choices[^2], meaning it would be difficult
+to keep in sync with the other configurations.
+
 Before running the benchmark, care needs to be taken to set up the environment to be as stable as
 possible, e.g. [disabling CPU performance scaling, Intel Turbo Boost,
 etc](https://easyperf.net/blog/2019/08/02/Perf-measurement-environment-on-Linux). The benchmark tool
-measures 4 different configurations:
-
-- **`BattleStream`**: this configuration attempts to use Pokémon Showdown's
-`BattleStream`/`BattlePlayer` APIs mostly as intended, with 2 tweaks:
-
-  1. A special `RandomPlayerAI` is used that directly inspects the `Battle` to avoid making
-     unavailable choices and matches the AI used by all of the other configurations.
-  2. The `Battle` within the `BattleStream` is directly inspected in order to more easily grab the
-     turn count and also to [patch fix various speed ties](#patches).
-
-  Pokémon Showdown's root `pokemon-showdown` binary is technically the blessed approach to using
-  the simulator, but `BattleStream` is effectively the same thing but without the (sizeable) I/O
-  overhead. Attempting to use the actual `pokemon-showdown` binary is deemed too difficult as there
-  would then be no way to inspect the `Battle` in order to avoid making unavailable choices[^2],
-  meaning it would be difficult to keep in sync with the other configurations.
+measures 3 different configurations:
 
 - **`DirectBattle`**: this configuration introduces the concept of a `DirectBattle` which
   overrides the Pokémon Showdown `Battle` class to strip out unused functionality:
@@ -269,12 +269,12 @@ Cloud Compute Engine machine with 192 GB of memory and an AMD EPYC 7B12 CPU runn
 which has undergone the pre-benchmark tuning detailed below via the command `npm run benchmark --
 --battles=10000`:
 
-| Generation | `libpkmn` | `@pkmn/engine` | `DirectBattle` | `BattleStream` |
-| ---------- | --------- | -------------- | -------------- | -------------- |
-| **RBY**    | 1ms       | 2ms (2x)       | 3ms (3x)       | 4ms (4x)       |
-| **GSC**    | 1ms       | 2ms (2x)       | 3ms (3x)       | 4ms (4x)       |
-| **ADV**    | 1ms       | 2ms (2x)       | 3ms (3x)       | 4ms (4x)       |
-| **DPP**    | 1ms       | 2ms (2x)       | 3ms (3x)       | 4ms (4x)       |
+| Generation | `libpkmn` | `@pkmn/engine` | `DirectBattle` |
+| ---------- | --------- | -------------- | -------------- |
+| **RBY**    | 1ms       | 2ms (2x)       | 3ms (3x)       |
+| **GSC**    | 1ms       | 2ms (2x)       | 3ms (3x)       |
+| **ADV**    | 1ms       | 2ms (2x)       | 3ms (3x)       |
+| **DPP**    | 1ms       | 2ms (2x)       | 3ms (3x)       |
 
 <details><summary>CPU Details</summary><pre>
 Architecture:            x86_64

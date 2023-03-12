@@ -3,12 +3,10 @@ import 'source-map-support/register';
 import {execFileSync} from 'child_process';
 
 import {Generations, Generation, PokemonSet} from '@pkmn/data';
-import {
-  Battle, BattleStreams, ID, PRNG, PRNGSeed, Pokemon, Side, SideID, Streams, Teams,
-} from '@pkmn/sim';
+import {Battle, ID, PRNG, PRNGSeed, Pokemon, Side, SideID, Teams} from '@pkmn/sim';
 import {Stats} from 'trakr';
 
-import {PatchedBattleStream, patch, formatFor} from '../showdown/common';
+import {patch, formatFor} from '../showdown/common';
 import {newSeed, toBigInt} from '../integration/common';
 
 import * as engine from '../../pkg';
@@ -72,57 +70,6 @@ class DirectBattle extends Battle {
 }
 
 const CONFIGURATIONS: {[name: string]: Configuration} = {
-  'BattleStream': {
-    warmup: true,
-    async run(gen, format, prng, battles) {
-      patch.generation(gen);
-
-      const newAI = (
-        playerStream: Streams.ObjectReadWriteStream<string>,
-        battleStream: BattleStreams.BattleStream,
-        id: engine.Player,
-        rand: PRNG
-      ): BattleStreams.BattlePlayer => {
-        switch (gen.num) {
-        case 1: return new gen1.RandomPlayerAI(playerStream, battleStream, id, rand);
-        default: throw new Error(`Unsupported gen: ${gen.num}`);
-        }
-      };
-
-      let duration = 0n;
-      let turns = 0;
-
-      for (let i = 0; i < battles; i++) {
-        const options = gen1.Battle.options(gen, prng);
-        const battleStream = new PatchedBattleStream(false);
-        const streams = BattleStreams.getPlayerStreams(battleStream);
-
-        const spec = {formatid: format, seed: options.seed as PRNGSeed};
-        const p1spec = {name: 'Player A', team: Teams.pack(options.p1.team as PokemonSet[])};
-        const p2spec = {name: 'Player B', team: Teams.pack(options.p2.team as PokemonSet[])};
-        const start = `>start ${JSON.stringify(spec)}\n` +
-          `>player p1 ${JSON.stringify(p1spec)}\n` +
-          `>player p2 ${JSON.stringify(p2spec)}`;
-
-        const p1 = newAI(streams.p1, battleStream, 'p1', new PRNG(newSeed(prng))).start();
-        const p2 = newAI(streams.p2, battleStream, 'p2', new PRNG(newSeed(prng))).start();
-
-        const begin = process.hrtime.bigint();
-        try {
-          await streams.omniscient.write(start);
-          await streams.omniscient.readAll();
-          await Promise.all([streams.omniscient.writeEnd(), p1, p2]);
-          const battle = battleStream.battle!;
-          if (!battle.ended) throw new Error(`Unfinished ${format} battle ${i}`);
-          turns += battle.turn;
-        } finally {
-          duration += process.hrtime.bigint() - begin;
-        }
-      }
-
-      return [toMillis(duration), turns, serialize(prng.seed)] as const;
-    },
-  },
   'DirectBattle': {
     warmup: true,
     run(gen, format, prng, battles) {
@@ -314,36 +261,36 @@ export function iterations(
 }
 
 export async function comparison(gens: Generations, battles: number, seed: number[]) {
-    const stats: {[format: string]: {[config: string]: number}} = {};
+  const stats: {[format: string]: {[config: string]: number}} = {};
 
-    for (const gen of gens) {
-      if (gen.num > 1) break;
-      patch.generation(gen);
-      const format = formatFor(gen);
+  for (const gen of gens) {
+    if (gen.num > 1) break;
+    patch.generation(gen);
+    const format = formatFor(gen);
 
-      const name = generationName(format);
-      stats[name] = {};
-      const control = {turns: 0, seed: ''};
+    const name = generationName(format);
+    stats[name] = {};
+    const control = {turns: 0, seed: ''};
 
-      const warmup = Math.min(1000, Math.max(Math.floor(battles / 10), 1));
-      for (const config in CONFIGURATIONS) {
-        const code = CONFIGURATIONS[config];
+    const warmup = Math.min(1000, Math.max(Math.floor(battles / 10), 1));
+    for (const config in CONFIGURATIONS) {
+      const code = CONFIGURATIONS[config];
 
-        if (code.warmup) {
-          // Must use a different PRNG than the one used for the actual test
-          const prng = new PRNG(seed.slice() as PRNGSeed);
-          // We ignore the result - only the data from the actual test matters
-          await code.run(gen, format, prng, warmup);
-          // @ts-ignore
-          if (global.gc) global.gc();
-        }
-
+      if (code.warmup) {
+        // Must use a different PRNG than the one used for the actual test
         const prng = new PRNG(seed.slice() as PRNGSeed);
-        const [duration, turns, final] = await code.run(gen, format, prng, battles);
-        compare(config, control, turns, final);
-        stats[name][config] = duration;
+        // We ignore the result - only the data from the actual test matters
+        await code.run(gen, format, prng, warmup);
+        // @ts-ignore
+        if (global.gc) global.gc();
       }
-    }
 
-    return stats;
+      const prng = new PRNG(seed.slice() as PRNGSeed);
+      const [duration, turns, final] = await code.run(gen, format, prng, battles);
+      compare(config, control, turns, final);
+      stats[name][config] = duration;
+    }
+  }
+
+  return stats;
 }

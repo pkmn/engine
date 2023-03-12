@@ -49,7 +49,9 @@ const BLOCKLIST = blocklistJSON as {[gen: number]: Partial<ExhaustiveRunnerPossi
 //     doesn't have perfect information, only we can't apply those choices to
 //     the engine as that will result in undefined behavior (nextChoices)
 //
-// TODO
+// TODO: further documentation
+//
+// FIXME: deal with racy BattleStream issues!
 class Runner {
   private readonly gen: Generation;
   private readonly format: string;

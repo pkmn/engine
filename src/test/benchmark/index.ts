@@ -13,7 +13,7 @@ import {comparison, iterations} from './common';
   const seed = argv.seed ? argv.seed.split(',').map((s: string) => Number(s)) : [1, 2, 3, 4];
   if (argv.iterations) {
     const entries = iterations(gens, argv.iterations, argv.battles, seed, argv.text);
-    if (argv.text)  {
+    if (argv.text) {
       for (const {name, unit, value, range, extra} of entries) {
         console.log(`${name}: ${value} ± ${range.slice(1)} ${unit} ${extra}`);
       }
