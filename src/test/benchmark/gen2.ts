@@ -44,8 +44,8 @@ const Player = new class {
 
       const evs = {} as StatsTable;
       for (const stat of gen.stats) {
-        if (stat === 'spd') break;
-        evs[stat] = prng.randomChance(1, 20) ? prng.next(0, 255 + 1) : 255;
+        const exp = prng.randomChance(1, 20) ? prng.next(0, 0xFFFF + 1) : 0xFFFF;
+        evs[stat] = Math.floor(Math.min(255, Math.ceil(Math.sqrt(exp))) / 4);
       }
 
       const moves: ID[] = [];

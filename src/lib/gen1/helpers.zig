@@ -170,7 +170,7 @@ pub const Pokemon = struct {
                     dvs.hp()
                 else
                     @field(dvs, field.name),
-                if (rand.chance(u8, 1, 20)) rand.range(u8, 0, 255 + 1) else 255,
+                if (rand.chance(u8, 1, 20)) rand.range(u16, 0, EXP + 1) else EXP,
                 lvl,
             );
         }
