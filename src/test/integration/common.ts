@@ -115,7 +115,7 @@ async function play(
       buf.push(chunk);
     }
 
-    await Promise.all([start, p1, p2, streams.p2.writeEnd()]);
+    await Promise.all([start, p1, p2, streams.omniscient.writeEnd()]);
 
     const options =
       {p1: p1options.spec, p2: p2options.spec, seed: spec.seed, showdown: true, log: true};
