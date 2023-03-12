@@ -195,6 +195,12 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
         const options = gen1.Battle.options(gen, prng);
         const battle = engine.Battle.create(gen, options);
 
+        // The function passed to choose should usually account for the
+        // possibility of zero options being returned in Generation I (otherwise
+        // it will try to 'pass' when it can't pass which will crash), however,
+        // since this code only runs in Pokémon Showdown compatibility mode we
+        // can avoid handling that (and save a branch) as it doesn't implement
+        // the softlock
         let p = new PRNG(newSeed(prng));
         const p1 = p.next.bind(p);
         p = new PRNG(newSeed(prng));
