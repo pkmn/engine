@@ -492,10 +492,15 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
                 volatiles.Charging = false;
                 volatiles.Binding = false;
                 volatiles.Invulnerable = false;
-
-                // calcDamage just needs a 40 BP physical move, its not actually Pound
-                const move = Move.get(.Pound);
-                if (!calcDamage(battle, player, player, move, false)) return .err;
+                {
+                    // This feels (and is) disgusting but the cartridge literally just overwrites
+                    // the opponent's defense with the user's defense and resets it after. As a
+                    // result of this the *opponent's* Reflect impacts confusion self-hit damage
+                    const def = foe.active.stats.def;
+                    foe.active.stats.def = active.stats.def;
+                    defer foe.active.stats.def = def;
+                    if (!calcDamage(battle, player, player.foe(), null, false)) return .err;
+                }
                 // Skipping adjustDamage / randomizeDamage / checkHit
                 _ = try applyDamage(battle, player, player.foe(), .Confusion, log);
 
@@ -914,9 +919,12 @@ fn calcDamage(
     battle: anytype,
     player: Player,
     target_player: Player,
-    move: Move.Data,
+    m: ?Move.Data,
     crit: bool,
 ) bool {
+    // Confusion (indicated when m == null) just needs a 40 BP physical move
+    const cfz = m == null;
+    const move = m orelse Move.get(.Pound);
     assert(move.bp != 0);
 
     const side = battle.side(player);
@@ -932,7 +940,6 @@ fn calcDamage(
         else
             if (special) side.active.stats.spc
             else side.active.stats.atk;
-
     var def: u32 =
         if (crit)
             if (special) target.stored().stats.spc
@@ -940,12 +947,18 @@ fn calcDamage(
         else
             // GLITCH: not capped to MAX_STAT_VALUE, can be 999 * 2 = 1998
             if (special)
-                target.active.stats.spc * @as(u2, if (target.active.volatiles.LightScreen) 2 else 1)
+                target.active.stats.spc *
+                    @as(u2, if (target.active.volatiles.LightScreen) 2 else 1)
+            // Pokémon Showdown doesn't apply the opponent's Reflect to confusion's self-hit
             else
-                target.active.stats.def * @as(u2, if (target.active.volatiles.Reflect) 2 else 1);
+                target.active.stats.def *
+                    @as(u2, if ((!showdown or !cfz) and target.active.volatiles.Reflect) 2 else 1);
     // zig fmt: on
 
-    if (atk > 255 or def > 255) {
+    // Pokémon Showdown erroneously skips this for confusion's self-hit damage, but thankfully we
+    // still will not overflow because the hit is only 40 BP and unboosted (the highest legal
+    // unboosted attack is 366 from a level 100 Dragonite which has a max of 614880 mid-calculation)
+    if ((!showdown or !cfz) and (atk > 255 or def > 255)) {
         atk = @max((atk / 4) & 255, 1);
         // GLITCH: not adjusted to be a min of 1 on cartridge (can lead to division-by-zero freeze)
         def = @max((def / 4) & 255, if (showdown) 1 else 0);

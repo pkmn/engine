@@ -5226,6 +5226,44 @@ test "Substitute effect" {
 
 // Pokémon Showdown Bugs
 
+test "Confusion self-hit bug" {
+    const CFZ_5 = MAX;
+    const CFZ_CAN = if (showdown) comptime ranged(128, 256) - 1 else MIN;
+    const CFZ_CANT = if (showdown) CFZ_CAN + 1 else MAX;
+
+    var t = Test((.{ HIT, CFZ_5, CFZ_CANT, CFZ_CANT })).init(
+        &.{.{ .species = .Jolteon, .moves = &.{ .ConfuseRay, .Reflect } }},
+        &.{.{
+            .species = .Arcanine,
+            .level = 97,
+            .dvs = .{ .hp = 7, .atk = 1, .def = 3, .spe = 0xF, .spc = 0xF },
+            .stats = .{ .hp = 324, .atk = 25281, .def = 900, .spe = EXP, .spc = EXP },
+            .moves = &.{.Flamethrower},
+        }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.ConfuseRay, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Confusion);
+    try t.log.expected.activate(P2.ident(1), .Confusion);
+    t.expected.p2.get(1).hp -= if (showdown) 50 else 49;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Confusion);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.Reflect, P1.ident(1), null);
+    try t.log.expected.start(P1.ident(1), .Reflect);
+    try t.log.expected.activate(P2.ident(1), .Confusion);
+    t.expected.p2.get(1).hp -= if (showdown) 50 else 25;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Confusion);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+
+    try t.verify();
+}
+
 test "Disable + Transform bug" {
     const DISABLE_MOVE_2 = if (showdown) comptime ranged(2, 4) - 1 else 1;
     const DISABLE_DURATION_5 = comptime ranged(5, 9 - 1) - 1;

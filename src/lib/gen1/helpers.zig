@@ -123,6 +123,7 @@ pub const Pokemon = struct {
     hp: ?u16 = null,
     status: u8 = 0,
     level: u8 = 100,
+    dvs: Stats(u8) = .{ .hp = 0xF, .atk = 0xF, .def = 0xF, .spe = 0xF, .spc = 0xF },
     stats: Stats(u16) = .{ .hp = EXP, .atk = EXP, .def = EXP, .spe = EXP, .spc = EXP },
 
     pub fn init(p: Pokemon) data.Pokemon {
@@ -133,7 +134,7 @@ pub const Pokemon = struct {
             @field(pokemon.stats, field.name) = Stats(u16).calc(
                 field.name,
                 @field(species.stats, field.name),
-                0xF,
+                @intCast(u4, @field(p.dvs, field.name)),
                 @field(p.stats, field.name),
                 p.level,
             );

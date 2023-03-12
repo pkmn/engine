@@ -4179,6 +4179,39 @@ describe('Gen 1', () => {
 
   // Pokémon Showdown Bugs
 
+  test('Confusion self-hit bug', () => {
+    const IVS = {hp: 14, atk: 2, def: 6, spa: 31, spd: 31, spe: 31};
+    const EVS = {...evs, hp: 18, atk: 159, def: 30};
+    const battle = startBattle([HIT, CFZ(5), CFZ_CANT, CFZ_CANT], [
+      {species: 'Jolteon', evs, moves: ['Confuse Ray', 'Reflect']},
+    ], [
+      {species: 'Arcanine', level: 97, ivs: IVS, evs: EVS, moves: ['Flamethrower']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    // expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 49);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 50);
+
+    battle.makeChoices('move 2', 'move 1');
+    // expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 25);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 50);
+
+    verify(battle, [
+      '|move|p1a: Jolteon|Confuse Ray|p2a: Arcanine',
+      '|-start|p2a: Arcanine|confusion',
+      '|-activate|p2a: Arcanine|confusion',
+      '|-damage|p2a: Arcanine|249/299|[from] confusion',
+      '|turn|2',
+      '|move|p1a: Jolteon|Reflect|p1a: Jolteon',
+      '|-start|p1a: Jolteon|Reflect',
+      '|-activate|p2a: Arcanine|confusion',
+      '|-damage|p2a: Arcanine|199/299|[from] confusion',
+      '|turn|3',
+    ]);
+  });
+
   test('Disable + Transform bug', () => {
     {
       const battle = startBattle([HIT, DISABLE_MOVE(2), DISABLE_DURATION(5)], [

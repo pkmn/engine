@@ -465,6 +465,8 @@ Smogon](https://www.smogon.com/forums/threads/rby-tradebacks-bug-report-thread.3
   freeze](https://pkmn.cc/bulba-glitch-1#Division_by_0).
 - Pokémon Showdown does not implement type effectiveness precedence correctly.
 - Pokémon Showdown checks for type and OHKO immunity before accuracy.
+- Confusion self-hits use the wrong damage formula resulting in off-by-one errors (and also fail to
+  account for an opponent's Reflect).
 
 Beyond the general bugs listed above, several move effects are implemented incorrectly by Pokémon
 Showdown. Some of these moves are [too fundamentally broken to be implemented](#unimplementable) by
