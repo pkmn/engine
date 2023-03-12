@@ -123,7 +123,7 @@ pub const Pokemon = struct {
     hp: ?u16 = null,
     status: u8 = 0,
     level: u8 = 100,
-    dvs: Stats(u8) = .{ .hp = 0xF, .atk = 0xF, .def = 0xF, .spe = 0xF, .spc = 0xF },
+    dvs: DVs = .{},
     stats: Stats(u16) = .{ .hp = EXP, .atk = EXP, .def = EXP, .spe = EXP, .spc = EXP },
 
     pub fn init(p: Pokemon) data.Pokemon {
@@ -131,10 +131,13 @@ pub const Pokemon = struct {
         pokemon.species = p.species;
         const species = Species.get(p.species);
         inline for (@typeInfo(@TypeOf(pokemon.stats)).Struct.fields) |field| {
+            const hp = comptime std.mem.eql(u8, field.name, "hp");
+            const spc =
+                comptime std.mem.eql(u8, field.name, "spa") or std.mem.eql(u8, field.name, "spd");
             @field(pokemon.stats, field.name) = Stats(u16).calc(
                 field.name,
                 @field(species.stats, field.name),
-                @intCast(u4, @field(p.dvs, field.name)),
+                if (hp) p.dvs.hp() else if (spc) p.dvs.spc else @field(p.dvs, field.name),
                 @field(p.stats, field.name),
                 p.level,
             );

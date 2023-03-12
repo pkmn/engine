@@ -5236,7 +5236,7 @@ test "Confusion self-hit bug" {
         &.{.{
             .species = .Arcanine,
             .level = 97,
-            .dvs = .{ .hp = 7, .atk = 1, .def = 3, .spe = 0xF, .spc = 0xF },
+            .dvs = .{ .atk = 1, .def = 3 },
             .stats = .{ .hp = 324, .atk = 25281, .def = 900, .spe = EXP, .spc = EXP },
             .moves = &.{.Flamethrower},
         }},

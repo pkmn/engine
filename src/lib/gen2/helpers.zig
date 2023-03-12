@@ -127,8 +127,9 @@ pub const Pokemon = struct {
         pokemon.species = p.species;
         const species = Species.get(p.species);
         inline for (@typeInfo(@TypeOf(pokemon.stats)).Struct.fields) |field| {
-            const hp = std.mem.eql(u8, field.name, "hp");
-            const spc = std.mem.eql(u8, field.name, "spa") or std.mem.eql(u8, field.name, "spd");
+            const hp = comptime std.mem.eql(u8, field.name, "hp");
+            const spc =
+                comptime std.mem.eql(u8, field.name, "spa") or std.mem.eql(u8, field.name, "spd");
             @field(pokemon.stats, field.name) = Stats(u16).calc(
                 field.name,
                 @field(species.stats, field.name),
