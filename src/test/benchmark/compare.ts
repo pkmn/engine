@@ -108,7 +108,6 @@ async function compare(gen: Generation, format: ID, original: PRNG, battles: num
       const start = `>start ${JSON.stringify(spec)}\n` +
         `>player p1 ${JSON.stringify(p1spec)}\n` +
         `>player p2 ${JSON.stringify(p2spec)}`;
-      // console.debug(start);
 
       const p1ai = newAI(streams.p1, battleStream, 'p1', new PRNG(newSeed(prngs.stream))).start();
       const p2ai = newAI(streams.p2, battleStream, 'p2', new PRNG(newSeed(prngs.stream))).start();
@@ -158,7 +157,7 @@ async function compare(gen: Generation, format: ID, original: PRNG, battles: num
   const gen = gens.get(1);
   patch.generation(gen);
   const format = formatFor(gen);
-  await compare(gen, format, new PRNG([1, 2, 3, 4]), +(process.argv[2] || 1e6));
+  await compare(gen, format, new PRNG([54074, 50433, 44308, 15191]), +(process.argv[2] || 1e6));
 })().catch(err => {
   console.error(err);
   process.exit(1);

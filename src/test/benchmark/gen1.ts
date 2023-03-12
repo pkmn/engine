@@ -201,6 +201,10 @@ export class RandomPlayerAI extends sim.BattleStreams.BattlePlayer {
   override receiveRequest(_: sim.AnyObject) {
     const options = Choices.sim(this.battleStream.battle!, this.id);
     const choice = options[this.prng.next(options.length)];
-    if (choice) this.choose(choice);
+    // BattlePlayer.choose() orphans the `stream.write` call which means if we receive two requests
+    // quick enough out second choice can clobber our previous one, causing us to desync (Pokémon
+    // Showdown's stream API is literally unusable trash as it only works when being run slowly)
+    // if (choice) this.choose(choice);
+    if (choice) this.battleStream.battle!.choose(this.id, choice);
   }
 }
