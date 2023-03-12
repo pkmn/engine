@@ -465,7 +465,8 @@ type Options = Pick<ExhaustiveRunnerOptions, 'log' | 'maxFailures' | 'cycles'> &
 
 export async function run(gens: Generations, options: string | Options) {
   if (typeof options === 'string') {
-    if (!isNaN(+options)) options = path.join(ROOT, 'logs', `${options}.input.log`);
+    const file = path.join(ROOT, 'logs', `${options}.input.log`);
+    if (fs.existsSync(file)) options = file;
     const log = fs.readFileSync(path.resolve(CWD, options), 'utf8');
     const gen = gens.get(log.charAt(23));
     patch.generation(gen);
