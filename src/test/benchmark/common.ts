@@ -150,9 +150,9 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
         const p1 = new PRNG(newSeed(prng));
         const p2 = new PRNG(newSeed(prng));
 
-        // NOTE: We must serialize the team as PS mutates it which will cause drift
-        const team1 = Teams.pack(options.p1.team as PokemonSet[]);
-        const team2 = Teams.pack(options.p2.team as PokemonSet[]);
+        // NOTE: We must clone the team as PS mutates it which will cause drift
+        const team1 = Teams.unpack(Teams.pack(options.p1.team as PokemonSet[]));
+        const team2 = Teams.unpack(Teams.pack(options.p2.team as PokemonSet[]));
 
         battle.setPlayer('p1', {name: 'Player A', team: team1});
         const begin = process.hrtime.bigint();
