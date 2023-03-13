@@ -8,7 +8,8 @@ import {comparison, iterations} from './common';
 describe('benchmark', () => {
   const gens = new Generations(Dex as any);
 
-  test('iterations', () => {
+  // TODO: Unable to spawn D:\...\benchmark-showdown.exe: InvalidExe
+  (process.platform !== 'win32' ? test : test.skip)('iterations', () => {
     expect(() => iterations(gens, 10, 10, [1, 2, 3, 4])).not.toThrow();
   });
 
