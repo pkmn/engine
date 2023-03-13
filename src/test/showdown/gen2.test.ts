@@ -3,7 +3,7 @@ import {Generations} from '@pkmn/data';
 
 import {
   Choices, MIN, MAX, ROLLS, ranged, formatFor, createStartBattle, FixedRNG, verify,
-} from './common';
+} from '.';
 import * as gen2 from '../benchmark/gen2';
 
 const gens = new Generations(Dex as any);

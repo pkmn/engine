@@ -14,7 +14,7 @@ import {
 import * as engine from '../../pkg';
 import * as addon from '../../pkg/addon';
 import {Frame, ShowdownFrame, display, displayShowdown} from '../display';
-import {Choices, patch, FILTER, formatFor} from '../showdown/common';
+import {Choices, patch, FILTER, formatFor} from '../showdown';
 
 import blocklistJSON from '../showdown/blocklist.json';
 
