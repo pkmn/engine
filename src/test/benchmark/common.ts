@@ -73,8 +73,9 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
   'DirectBattle': {
     warmup: true,
     run(gen, format, prng, battles) {
+      const choices = Choices.get(gen);
       const choose = (battle: Battle, id: engine.Player, rand: PRNG) => {
-        const options = Choices.get(gen, battle, id);
+        const options = choices(battle, id);
         const choice = options[rand.next(options.length)];
         if (choice) battle.choose(id, choice);
       };

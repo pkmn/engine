@@ -154,7 +154,7 @@ function play(
           choices[id] = 'pass';
         } else {
           player.receiveRequest(request);
-          while (!Choices.get(gen, control, id).includes(choices[id])) {
+          while (!Choices.get(gen)(control, id).includes(choices[id])) {
             // making the unavailable request forces activeRequest to get updated
             assert.ok(!control[id].choose(choices[id]));
             player.receiveRequest(control[id]!.activeRequest!);

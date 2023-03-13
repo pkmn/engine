@@ -220,10 +220,10 @@ export const patch = {
 };
 
 export const Choices = new class {
-  get(this: void, gen: Generation, battle: Battle, id: SideID): string[] {
+  get(this: void, gen: Generation): (battle: Battle, id: SideID) => string[] {
     switch (gen.num) {
-    case 1: return Choices.gen1(battle, id);
-    case 2: return Choices.gen2(battle, id);
+    case 1: return Choices.gen1;
+    case 2: return Choices.gen2;
     default: throw new Error(`Unsupported gen ${gen.num}`);
     }
   }

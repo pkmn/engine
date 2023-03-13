@@ -8,7 +8,7 @@ import * as gen2 from '../benchmark/gen2';
 
 const gens = new Generations(Dex as any);
 const gen = gens.get(2);
-const choices = Choices.gen2;
+const choices = Choices.get(gen);
 const startBattle = createStartBattle(gen);
 
 const {HIT, MISS, CRIT, NO_CRIT, MIN_DMG, MAX_DMG, TIE, DRAG} = ROLLS.basic({
