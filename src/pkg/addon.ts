@@ -59,7 +59,7 @@ export function update(
   c2?: Choice,
   log?: ArrayBuffer,
 ) {
-  return Result.parse(ADDON![+showdown]!.bindings[index]
+  return Result.decode(ADDON![+showdown]!.bindings[index]
     .update(battle, Choice.encode(c1), Choice.encode(c2), log));
 }
 
@@ -92,7 +92,7 @@ export function choices(
   // exists.
   const options = new Array<Choice>(n);
   const data = new Uint8Array(buf);
-  for (let i = 0; i < n; i++) options[i] = Choice.parse(data[i]);
+  for (let i = 0; i < n; i++) options[i] = Choice.decode(data[i]);
   return options;
 }
 
@@ -108,7 +108,7 @@ export function choose(
   const request = choice[0] === 'p' ? 0 : choice[0] === 'm' ? 1 : 2;
   const n = ADDON![+showdown]!.bindings[index].choices(battle, +(player !== 'p1'), request, buf);
   const data = new Uint8Array(buf);
-  return Choice.parse(data[fn(n)]);
+  return Choice.decode(data[fn(n)]);
 }
 
 export function size(index: number, type: 'options' | 'log') {

@@ -1,12 +1,14 @@
 import {Battle, Dex, PRNG, ID} from '@pkmn/sim';
 import {Generations} from '@pkmn/data';
 
-import {MIN, MAX, ROLLS, ranged, formatFor, createStartBattle, FixedRNG, verify} from './common';
+import {
+  Choices, MIN, MAX, ROLLS, ranged, formatFor, createStartBattle, FixedRNG, verify,
+} from './common';
 import * as gen2 from '../benchmark/gen2';
 
 const gens = new Generations(Dex as any);
 const gen = gens.get(2);
-const choices = gen2.Choices.sim;
+const choices = Choices.gen2;
 const startBattle = createStartBattle(gen);
 
 const {HIT, MISS, CRIT, NO_CRIT, MIN_DMG, MAX_DMG, TIE, DRAG} = ROLLS.basic({

@@ -149,10 +149,11 @@ export const Battle = new class {
 
 export class Choice {
   static Types = ['pass', 'move', 'switch'] as const;
+  static MATCH = /^(?:(pass)|((move) ([0-4]))|((switch) ([2-6])))$/;
 
   private constructor() {}
 
-  static parse(byte: number): Choice {
+  static decode(byte: number): Choice {
     return {type: Choice.Types[byte & 0b11], data: byte >> 4};
   }
 
@@ -160,6 +161,14 @@ export class Choice {
     return (choice
       ? (choice.data << 4 | (choice.type === 'pass' ? 0 : choice.type === 'move' ? 1 : 2))
       : 0);
+  }
+
+  static parse(choice: string): Choice {
+    const m = Choice.MATCH.exec(choice);
+    if (!m) throw new Error(`Invalid choice: '${choice}`);
+    const type = (m[1] ?? m[3] ?? m[6]) as Choice['type'];
+    const data = +(m[4] ?? m[7] ?? 0);
+    return {type, data};
   }
 
   static pass(): Choice {
@@ -180,7 +189,7 @@ export class Result {
 
   private constructor() {}
 
-  static parse(byte: number): Result {
+  static decode(byte: number): Result {
     return {
       type: Result.Types[byte & 0b1111],
       p1: Choice.Types[(byte >> 4) & 0b11],

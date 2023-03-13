@@ -32,9 +32,9 @@ for (const gen of new Generations(Dex as any)) {
       expect(restored.toJSON()).toEqual(battle.toJSON());
     });
 
-    test('Choice.parse', () => {
-      expect(Choice.parse(0b0100_0001)).toEqual(Choice.move(4));
-      expect(Choice.parse(0b0101_0010)).toEqual(Choice.switch(5));
+    test('Choice.decode', () => {
+      expect(Choice.decode(0b0100_0001)).toEqual(Choice.move(4));
+      expect(Choice.decode(0b0101_0010)).toEqual(Choice.switch(5));
     });
 
     test('Choice.encode', () => {
@@ -43,9 +43,20 @@ for (const gen of new Generations(Dex as any)) {
       expect(Choice.encode(Choice.switch(5))).toBe(0b0101_0010);
     });
 
-    test('Result.parse', () => {
-      expect(Result.parse(0b0101_0000)).toEqual({type: undefined, p1: 'move', p2: 'move'});
-      expect(Result.parse(0b1000_0000)).toEqual({type: undefined, p1: 'pass', p2: 'switch'});
+    test('Choice.parse', () => {
+      expect(() => Choice.parse('foo')).toThrow('Invalid choice');
+      expect(Choice.parse('pass')).toEqual(Choice.pass());
+      expect(() => Choice.parse('pass 2')).toThrow('Invalid choice');
+      expect(Choice.parse('move 2')).toEqual(Choice.move(2));
+      expect(Choice.parse('move 0')).toEqual(Choice.move(0));
+      expect(() => Choice.parse('move 5')).toThrow('Invalid choice');
+      expect(Choice.parse('switch 4')).toEqual(Choice.switch(4));
+      expect(() => Choice.parse('switch 1')).toThrow('Invalid choice');
+    });
+
+    test('Result.decode', () => {
+      expect(Result.decode(0b0101_0000)).toEqual({type: undefined, p1: 'move', p2: 'move'});
+      expect(Result.decode(0b1000_0000)).toEqual({type: undefined, p1: 'pass', p2: 'switch'});
     });
   });
 }

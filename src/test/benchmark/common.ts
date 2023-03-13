@@ -6,7 +6,7 @@ import {Generations, Generation, PokemonSet} from '@pkmn/data';
 import {Battle, ID, PRNG, PRNGSeed, Pokemon, Side, SideID, Teams} from '@pkmn/sim';
 import {Stats} from 'trakr';
 
-import {patch, formatFor} from '../showdown/common';
+import {Choices, patch, formatFor} from '../showdown/common';
 import {newSeed, toBigInt} from '../integration/common';
 
 import * as engine from '../../pkg';
@@ -73,14 +73,8 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
   'DirectBattle': {
     warmup: true,
     run(gen, format, prng, battles) {
-      let choices: (battle: Battle, id: engine.Player) => string[];
-      switch (gen.num) {
-      case 1: choices = gen1.Choices.sim; break;
-      default: throw new Error(`Unsupported gen: ${gen.num}`);
-      }
-
       const choose = (battle: Battle, id: engine.Player, rand: PRNG) => {
-        const options = choices(battle, id);
+        const options = Choices.get(gen, battle, id);
         const choice = options[rand.next(options.length)];
         if (choice) battle.choose(id, choice);
       };

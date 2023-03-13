@@ -1,7 +1,7 @@
 import * as path from 'path';
 
 import {
-  Battle, BattleStreams, ID, PRNG, PRNGSeed, BattleQueue, Side,
+  Battle, ID, PRNG, PRNGSeed, BattleQueue, Side, SideID,
   ActionChoice, Effect, Pokemon, Field, extractChannelMessages,
 } from '@pkmn/sim';
 import {Generation, PokemonSet} from '@pkmn/data';
@@ -219,12 +219,116 @@ export const patch = {
   },
 };
 
-export class PatchedBattleStream extends BattleStreams.BattleStream {
-  override _writeLine(type: string, message: string) {
-    super._writeLine(type, message);
-    if (type === 'start') patch.battle(this.battle!, true);
+export const Choices = new class {
+  get(this: void, gen: Generation, battle: Battle, id: SideID): string[] {
+    switch (gen.num) {
+    case 1: return Choices.gen1(battle, id);
+    case 2: return Choices.gen2(battle, id);
+    default: throw new Error(`Unsupported gen ${gen.num}`);
+    }
   }
-}
+
+  gen1(this: void, battle: Battle, id: SideID): string[] {
+    const request = battle[id]!.activeRequest;
+    if (!request || request.wait) return [];
+
+    if (request.forceSwitch) {
+      const options: string[] = [];
+      const side = battle[id]!;
+      for (let slot = 2; slot <= 6; slot++) {
+        const pokemon = side.pokemon[slot - 1];
+        if (!pokemon || pokemon.hp === 0) continue;
+        options.push(`switch ${slot}`);
+      }
+      return options.length === 0 ? ['pass'] : options;
+    } else if (request.active) {
+      const options: string[] = [];
+
+      const side = battle[id]!;
+      const active = side.active[0];
+
+      // Being "forced" on Pokémon Showdown sets "trapped"
+      if (active.trapped) {
+        const forced = active.trapped && request.active[0].moves.length === 1;
+        if (forced) return ['move 1'];
+      } else {
+        for (let slot = 2; slot <= 6; slot++) {
+          const pokemon = side.pokemon[slot - 1];
+          if (!pokemon || pokemon.hp === 0) continue;
+          options.push(`switch ${slot}`);
+        }
+      }
+
+      const binding = active.volatiles['partialtrappinglock'];
+      const before = options.length;
+      let slot = 0;
+      for (const move of active.moveSlots) {
+        slot++;
+        // Pokémon Showdown expect us to select 0 PP moves when binding as it disables
+        // everything but the move we are to use (and forced trapping moves underflow)
+        if ((move.pp === 0 && !binding) || move.disabled) continue;
+        options.push(`move ${slot}`);
+      }
+      if (options.length === before) {
+        // Struggle
+        options.push('move 1');
+      }
+
+      return options;
+    } else {
+      throw new Error(`Unsupported request: ${JSON.stringify(request)}`);
+    }
+  }
+
+  gen2(this: void, battle: Battle, id: SideID): string[] {
+    const request = battle[id]!.activeRequest;
+    if (!request || request.wait) return [];
+
+    if (request.forceSwitch) {
+      const options: string[] = [];
+      const side = battle[id]!;
+      for (let slot = 2; slot <= 6; slot++) {
+        const pokemon = side.pokemon[slot - 1];
+        if (!pokemon || pokemon.hp === 0) continue;
+        options.push(`switch ${slot}`);
+      }
+      return options.length === 0 ? ['pass'] : options;
+    } else if (request.active) {
+      const options: string[] = [];
+
+      const side = battle[id]!;
+      const active = side.active[0];
+
+      // Being "forced" on Pokémon Showdown sets "trapped"
+      if (active.trapped) {
+        const forced = active.trapped && request.active[0].moves.length === 1;
+        if (forced) return ['move 1'];
+      } else {
+        for (let slot = 2; slot <= 6; slot++) {
+          const pokemon = side.pokemon[slot - 1];
+          if (!pokemon || pokemon.hp === 0) continue;
+          options.push(`switch ${slot}`);
+        }
+      }
+
+      const before = options.length;
+      let slot = 0;
+      for (const move of active.moveSlots) {
+        slot++;
+        if (move.pp === 0 || move.disabled) continue;
+        options.push(`move ${slot}`);
+      }
+      if (options.length === before) {
+        // Struggle
+        options.push('move 1');
+      }
+
+      return options;
+    } else {
+      throw new Error(`Unsupported request: ${JSON.stringify(request)}`);
+    }
+  }
+};
 
 export const ranged = (n: number, d: number) => n * Math.floor(0x100000000 / d);
 

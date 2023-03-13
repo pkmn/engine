@@ -94,9 +94,9 @@ class SpeciesNames implements Info {
 
     const frames: Frame[] = [];
     for (let offset = head + end; offset < data.length; offset += (3 + size)) {
-      const result = Result.parse(data[offset]);
-      const c1 = Choice.parse(data[offset + 1]);
-      const c2 = Choice.parse(data[offset + 2]);
+      const result = Result.decode(data[offset]);
+      const c1 = Choice.decode(data[offset + 1]);
+      const c2 = Choice.decode(data[offset + 2]);
       const battle = deserialize(data.slice(offset + 3, offset + size + 3));
       names.battle = battle;
 
