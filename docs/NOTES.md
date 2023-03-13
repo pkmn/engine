@@ -38,7 +38,7 @@
 14. Write **`helper.zig`** and implement **`choices`** method
     - matching code required in [benchmark helpers](../src/tools/benchmark)
 15. Ensure **[fuzz tests](../src/test/benchmark.zig)** pass
-    - update [`fuzz.ts`](../src/tools/fuzz.ts) and [`display.ts`](../src/test/display.ts)
+    - update [`fuzz.ts`](../src/tools/fuzz.ts) and [`display/`](../src/test/display)
 16. Ensure **[integration tests](../src/test/integration/)** pass
 17. **[Benchmark](../src/test/benchmark.zig)** new generation
 18. Finalize **documentation** for generation

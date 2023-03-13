@@ -2,7 +2,7 @@ This directory contains miscellaneous scripts and tools useful for working on th
 
 - [`fuzz.ts`](fuzz.ts): Runs the [fuzz test](../../docs/TESTING.md#Fuzz) with the correct flags to
   allow for easily debugging the binary output produced in the event of a crash via a [debug
-  UI](https://pkmn.cc/debug.html) rendered by [`display.ts`](../test/display.ts):
+  UI](https://pkmn.cc/debug.html) rendered by [`display/`](../test/display):
 
       $ npm run --silent fuzz  --  <pkmn|showdown> <GEN> <DURATION> <SEED?> > index.html
 

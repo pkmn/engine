@@ -6,10 +6,10 @@ import {minify} from 'html-minifier';
 import {BoostID, Generation, ID, StatID, TypeName} from '@pkmn/data';
 import {Sprites, Icons} from '@pkmn/img';
 
-import {Data, Battle, Pokemon, Side, Result, Choice, ParsedLine} from '../pkg';
+import {Data, Battle, Pokemon, Side, Result, Choice, ParsedLine} from '../../pkg';
 
 const ROOT = path.resolve(__dirname, '..', '..');
-const TEMPLATE = path.join(ROOT, 'src', 'test', 'display.html.tmpl');
+const TEMPLATE = path.join(ROOT, 'src', 'test', 'pkmn.html.tmpl');
 const SHOWDOWN = path.join(ROOT, 'src', 'test', 'showdown.html.tmpl');
 
 const POSITIONS = ['a', 'b', 'c', 'd', 'e', 'f'];
