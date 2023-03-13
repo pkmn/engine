@@ -8,9 +8,9 @@ import * as mustache from 'mustache';
 
 import {Battle, Choice, Data, ParsedLine, Pokemon, Result, Side} from '../../pkg';
 
-const ROOT = path.resolve(__dirname, '..', '..');
-const TEMPLATE = path.join(ROOT, 'src', 'test', 'pkmn.html.tmpl');
-const SHOWDOWN = path.join(ROOT, 'src', 'test', 'showdown.html.tmpl');
+const ROOT = path.resolve(__dirname, '..', '..', '..');
+const template = (s: 'pkmn' | 'showdown') =>
+  path.join(ROOT, 'src', 'test', 'display', `${s}.html.tmpl`);
 
 const POSITIONS = ['a', 'b', 'c', 'd', 'e', 'f'];
 const VOLATILES: {[id in keyof Pokemon['volatiles']]: [string, 'good' | 'bad' | 'neutral']} = {
@@ -42,18 +42,17 @@ const compact = (line: ParsedLine) =>
   [...line.args, ...Object.keys(line.kwArgs)
     .map(k => `[${k}]${format((line.kwArgs as any)[k])}`)].join('|');
 
-export interface Frame {
+export type Frame = {
   result: Result;
   c1: Choice;
   c2: Choice;
+} & ({
   battle: Data<Battle>;
   parsed: ParsedLine[];
-}
-
-export interface ShowdownFrame extends Omit<Frame, 'battle' | 'parsed'> {
+} | {
   seed: number[];
   chunk: string;
-}
+});
 
 export function display(
   gen: Generation,
@@ -63,18 +62,31 @@ export function display(
   frames: Iterable<Frame>,
   partial: Partial<Frame> = {},
 ) {
-  const buf = [];
-  let last: Data<Battle> | undefined = undefined;
+  const output: string[] = [];
+  const buf = [`<h1>0x${seed.toString(16).toUpperCase()}</h1>`];
+
+  let last: Data<Battle> | number[] | undefined = undefined;
   for (const frame of frames) {
-    buf.push(displayFrame(gen, showdown, frame, last ?? seed));
-    last = frame.battle;
+    buf.push(displayFrame(gen, showdown, frame, last));
+    if ('battle' in frame) {
+      last = frame.battle;
+    } else {
+      last = frame.seed;
+      output.push(frame.chunk);
+    }
   }
-  buf.push(displayFrame(gen, true, partial, last ?? seed));
-  buf.push('<hr />');
+  buf.push(displayFrame(gen, true, partial, last));
   buf.push(`<pre class="error"><code>${escapeHTML(error)}</pre></code>`);
 
+  const type = Array.isArray(last) ? 'showdown' : 'pkmn';
   return minify(
-    mustache.render(fs.readFileSync(TEMPLATE, 'utf8'), {content: buf.join('')}),
+    mustache.render(fs.readFileSync(template(type), 'utf8'), type === 'pkmn'
+      ? {content: buf.join('')}
+      : {
+        seed: buf.shift(),
+        content: buf.join(''),
+        output: output.join('\n'),
+      }),
     {minifyCSS: true, minifyJS: true}
   );
 }
@@ -83,21 +95,30 @@ function displayFrame(
   gen: Generation,
   showdown: boolean,
   partial: Partial<Frame>,
-  seed: bigint | Data<Battle>,
+  last?: Data<Battle> | number[],
 ) {
   const buf = [];
-  if (typeof seed === 'bigint') buf.push(`<h1>0x${seed.toString(16).toUpperCase()}</h1>`);
-  if (partial.parsed) {
+  if ('parsed' in partial && partial.parsed) {
     buf.push('<div class="log">');
     buf.push(`<pre><code>|${partial.parsed.map(compact).join('\n|')}</code></pre>`);
     buf.push('</div>');
+  } else if ('chunk' in partial && partial.chunk) {
+    buf.push('<div class="log">');
+    buf.push(`<pre><code>${partial.chunk}</code></pre>`);
+    buf.push('</div>');
   }
-  if (partial.battle) {
-    buf.push(displayBattle(
-      gen, showdown, partial.battle, typeof seed === 'bigint' ? undefined : seed
-    ));
+  if ('battle' in partial && partial.battle) {
+    buf.push(displayBattle(gen, showdown, partial.battle, last as Data<Battle>));
+  } else if ('seed' in partial && partial.seed) {
+    buf.push(`<div class="seed">${partial.seed.join(', ')}</div>`);
   }
-  if (partial.result) buf.push(displayResult(partial));
+  if (partial.result) {
+    const {result, c1, c2} = partial;
+    buf.push('<div class="sides" style="text-align: center;">');
+    buf.push(`<pre class="side"><code>${result.p1} -&gt; ${pretty(c1)}</code></pre>`);
+    buf.push(`<pre class="side"><code>${result.p2} -&gt; ${pretty(c2)}</code></pre>`);
+    buf.push('</div>');
+  }
   return buf.join('');
 }
 
@@ -302,58 +323,6 @@ function displayPokemon(
   buf.push('</div>');
   buf.push('</div>');
   return buf.join('');
-}
-
-function displayResult({result, c1, c2}: Pick<Partial<Frame>, 'result' | 'c1' | 'c2'>) {
-  const buf = [];
-  if (result) {
-    buf.push('<div class="sides" style="text-align: center;">');
-    buf.push(`<pre class="side"><code>${result.p1} -&gt; ${pretty(c1)}</code></pre>`);
-    buf.push(`<pre class="side"><code>${result.p2} -&gt; ${pretty(c2)}</code></pre>`);
-    buf.push('</div>');
-  }
-  return buf.join('');
-}
-
-export function displayShowdown(
-  error: string,
-  seed: bigint,
-  frames: ShowdownFrame[],
-  partial: Partial<ShowdownFrame> = {},
-) {
-  const buf = [];
-  let last: number[] | undefined = undefined;
-  for (const state of frames) {
-    buf.push(displayShowdownFrame(state, last ?? seed));
-    last = state.seed;
-  }
-  buf.push(displayShowdownFrame(partial, last ?? seed));
-  buf.push('<hr />');
-  buf.push(`<pre class="error"><code>${escapeHTML(error)}</pre></code>`);
-
-  // FIXME
-  return minify(
-    mustache.render(fs.readFileSync(SHOWDOWN, 'utf8'), {content: buf.join('')}),
-    {minifyCSS: true, minifyJS: true}
-  );
-}
-
-function displayShowdownFrame(
-  partial: Partial<ShowdownFrame>,
-  start: bigint | number[],
-) {
-  const buf = [];
-  if (typeof start === 'bigint') buf.push(`<h1>0x${start.toString(16).toUpperCase()}</h1>`);
-  if (partial.chunk) {
-    buf.push('<div class="log">');
-    buf.push(`<pre><code>${partial.chunk}</code></pre>`);
-    buf.push('</div>');
-  }
-  if (partial.seed) {
-    buf.push(`<div class='seed'><strong>Seed</strong>${partial.seed.join(', ')}</div>`);
-  }
-  if (partial.result) buf.push(displayResult(partial));
-  return buf;
 }
 
 function escapeHTML(str: string) {

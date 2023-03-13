@@ -16,7 +16,7 @@ import minimist from 'minimist';
 
 import * as engine from '../../pkg';
 import * as addon from '../../pkg/addon';
-import {Frame, ShowdownFrame, display, displayShowdown} from '../display';
+import {Frame, display} from '../display';
 import {Choices, FILTER, formatFor, patch} from '../showdown';
 import blocklistJSON from '../showdown/blocklist.json';
 
@@ -107,13 +107,15 @@ function play(
   p2options: PlayerOptions,
   input?: string[],
 ) {
-  const frames: {pkmn: Frame[]; showdown: ShowdownFrame[]} = {pkmn: [], showdown: []};
+  const frames: {pkmn: Frame[]; showdown: Frame[]} = {pkmn: [], showdown: []};
 
   let c1 = engine.Choice.pass();
   let c2 = engine.Choice.pass();
 
-  const partial: {pkmn: Partial<Frame>; showdown: Partial<ShowdownFrame>} =
-    {pkmn: {c1, c2}, showdown: {c1, c2}};
+  const partial: {
+    pkmn: Partial<Frame> & {battle?: engine.Data<engine.Battle>; parsed?: engine.ParsedLine[]};
+    showdown: Partial<Frame> & {seed?: number[]; chunk?: string};
+  } = {pkmn: {c1, c2}, showdown: {c1, c2}};
 
   // We can't pass p1/p2 via BattleOptions because that would cause the battle to
   // start before we could patch it, desyncing the PRNG due to spurious advances
@@ -122,12 +124,12 @@ function play(
   control.setPlayer('p1', p1options.spec);
   control.setPlayer('p2', p2options.spec);
   partial.showdown.result = toResult(control, p1options.spec.name);
-  partial.showdown.seed = control.prng.seed.slice() as PRNGSeed;
+  partial.showdown.seed = control.prng.seed.slice();
 
   const chunk = control.getDebugLog();
   partial.showdown.chunk = chunk;
   control.log.length = 0;
-  frames.showdown.push(partial.showdown as ShowdownFrame);
+  frames.showdown.push(partial.showdown as Frame);
   partial.showdown = {};
 
   const players = input ? undefined : {
@@ -198,14 +200,14 @@ function play(
 
       [c1, c2] = makeChoices();
       partial.pkmn.c1 = partial.showdown.c1 = c1;
-      partial.pkmn.c2 = partial.showdown.c1 = c1;
+      partial.pkmn.c2 = partial.showdown.c2 = c2;
       const request = partial.showdown.result = toResult(control, p1options.spec.name);
-      partial.showdown.seed = control.prng.seed.slice() as PRNGSeed;
+      partial.showdown.seed = control.prng.seed.slice();
 
       const chunk = control.getDebugLog();
       partial.showdown.chunk = chunk;
       control.log.length = 0;
-      frames.showdown.push(partial.showdown as ShowdownFrame);
+      frames.showdown.push(partial.showdown as Frame);
       partial.showdown = {};
 
       assert.ok(valid('p1', c1));
@@ -251,7 +253,7 @@ function toResult(battle: Battle, name: string) {
       ? battle.winner === '' ? 'tie' : battle.winner === name ? 'win' : 'lose'
       : undefined,
     p1: battle.p1.requestState || 'pass',
-    p2: battle.p1.requestState || 'pass',
+    p2: battle.p2.requestState || 'pass',
   } as engine.Result;
 }
 
@@ -260,8 +262,8 @@ function dump(
   error: string,
   seed: bigint,
   input: string[],
-  frames: {pkmn: Frame[]; showdown: ShowdownFrame[]},
-  partial: {pkmn: Partial<Frame>; showdown: Partial<ShowdownFrame>}
+  frames: {pkmn: Frame[]; showdown: Frame[]},
+  partial: {pkmn: Partial<Frame>; showdown: Partial<Frame>}
 ) {
   const color = (s: string) => tty.isatty(2) ? `\x1b[36m${s}\x1b[0m` : s;
   const box = (s: string) =>
@@ -289,7 +291,7 @@ function dump(
 
   file = path.join(dir, `${hex}.showdown.html`);
   link = path.join(dir, 'showdown.html');
-  fs.writeFileSync(file, displayShowdown(error, seed, frames.showdown, partial.showdown));
+  fs.writeFileSync(file, display(gen, true, error, seed, frames.showdown, partial.showdown));
   console.error(' ◦ Pokémon Showdown:', pretty(symlink(file, link)), '->', pretty(file), '\n');
 }
 

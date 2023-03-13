@@ -10,31 +10,34 @@
   </head>
   <body>
     <div id="content">
-      <h1>{{ seed }}</h1>
+      {{{ seed }}}
       <div class="wrapper replay-wrapper" style="max-width:1180px;margin:0 auto">
         <div class="battle"></div>
         <div class="battle-log"></div>
         <div class="replay-controls"></div>
         <div class="replay-controls-2"></div>
       </div>
-      <details class="debug-log input-log"><summary>Input</summary>
-        <pre>{{ input }}</pre>
-      </details>
-      <details open class="debug-log"><summary>Output</summary>
-        <pre>{{ output }}</pre>
-      </details>
+      <div class="logs">{{{ content }}}</div>
     </div>
     <style>
       body {
-        overflow-y: scroll;
         font-family: "Roboto", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
       }
       #content {
-        margin: 4em auto;
+      margin: 4em auto;
+        max-width: 1300px;
       }
       h1, summary, .replay-controls  {
         text-align: center !important;
         line-height: 1.4em;
+      }
+      .sides {
+        display: flex;
+      }
+      .side {
+        flex: 1;
+        display: flex;
+        flex-flow: column;
       }
       .debug-log {
         margin: 0 auto;
@@ -51,6 +54,26 @@
       }
       .replay-controls {
         top: 389px;
+      }
+      .logs .log {
+        display: flex;
+        justify-content: center;
+        padding-bottom: 2em;
+      }
+      .logs .log pre {
+        max-width: 360px;
+      }
+      .logs code {
+        all: revert;
+        line-height: 1.4em;
+      }
+      .logs .error {
+        margin-top: 5em;
+        padding: 10px 20px;
+      }
+      .seed {
+        text-align: center;
+        font-weight: bold;
       }
       button.startsoundchooser, .replay-controls-2 {
         display: none !important;
