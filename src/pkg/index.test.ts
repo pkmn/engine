@@ -1,16 +1,9 @@
 import {Dex, PRNG} from '@pkmn/sim';
-import {Generation, Generations} from '@pkmn/data';
+import {Generations} from '@pkmn/data';
+
+import {Options} from '../test/benchmark';
 
 import {Battle, Choice, Result} from './index';
-
-import * as gen1 from '../test/benchmark/gen1';
-
-function random(gen: Generation) {
-  switch (gen.num) {
-  case 1: return gen1.Battle.options(gen, new PRNG([1, 2, 3, 4]));
-  default: throw new Error(`Unsupported gen ${gen.num}`);
-  }
-}
 
 for (const gen of new Generations(Dex as any)) {
   if (gen.num > 1) {
@@ -26,7 +19,7 @@ for (const gen of new Generations(Dex as any)) {
 
   describe(`Gen ${gen.num}`, () => {
     test('Battle.create/restore', () => {
-      const options = random(gen);
+      const options = Options.get(gen, new PRNG([1, 2, 3, 4]));
       const battle = Battle.create(gen, options);
       const restored = Battle.restore(gen, battle, options);
       expect(restored.toJSON()).toEqual(battle.toJSON());

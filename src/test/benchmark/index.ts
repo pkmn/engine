@@ -4,18 +4,121 @@ import {execFileSync} from 'child_process';
 
 import minimist from 'minimist';
 
-import {Generations, Generation, PokemonSet} from '@pkmn/data';
-import {Dex, Battle, ID, PRNG, PRNGSeed, Pokemon, Side, SideID, Teams} from '@pkmn/sim';
+import {Generations, Generation, PokemonSet, StatsTable, ID} from '@pkmn/data';
+import {Dex, Battle, PRNG, PRNGSeed, Pokemon, Side, SideID, Teams} from '@pkmn/sim';
 import {Stats} from 'trakr';
 
 import {Choices, patch, formatFor} from '../showdown';
 import {newSeed, toBigInt} from '../integration';
 
 import * as engine from '../../pkg';
-import * as gen1 from './gen1';
+
+import blocklistJSON from '../showdown/blocklist.json';
+
+const BLOCKLIST = blocklistJSON[1].moves as ID[];
 
 const toMillis = (duration: bigint) => Number(duration / BigInt(1e6));
 const serialize = (seed: PRNGSeed) => toBigInt(seed).toString();
+
+export const Options = new class {
+  get(this: void, gen: Generation, prng: PRNG): engine.CreateOptions {
+    return {
+      seed: newSeed(prng),
+      p1: Options.player(gen, prng),
+      p2: Options.player(gen, prng),
+      showdown: true,
+      log: false,
+    };
+  }
+
+  player(gen: Generation, prng: PRNG): Omit<engine.PlayerOptions, 'name'> {
+    switch (gen.num) {
+    case 1: return Options.gen1(gen, prng);
+    case 2: return Options.gen2(gen, prng);
+    default: throw new Error(`Unsupported gen ${gen.num}`);
+    }
+  }
+
+  gen1(this: void, gen: Generation, prng: PRNG): Omit<engine.PlayerOptions, 'name'> {
+    const lookup = engine.Lookup.get(gen);
+
+    const team: Partial<PokemonSet>[] = [];
+    const n = prng.randomChance(1, 100) ? prng.next(1, 5 + 1) : 6;
+    for (let i = 0; i < n; i++) {
+      const species = lookup.speciesByNum(prng.next(1, 151 + 1));
+      const level = prng.randomChance(1, 20) ? prng.next(1, 99 + 1) : 100;
+
+      const ivs = {} as StatsTable;
+      for (const stat of gen.stats) {
+        if (stat === 'hp' || stat === 'spd') continue;
+        ivs[stat] = gen.stats.toIV(prng.randomChance(1, 5) ? prng.next(1, 15 + 1) : 15);
+      }
+      ivs.hp = gen.stats.toIV(gen.stats.getHPDV(ivs));
+      ivs.spd = ivs.spa;
+
+      const evs = {} as StatsTable;
+      for (const stat of gen.stats) {
+        if (stat === 'spd') break;
+        const exp = prng.randomChance(1, 20) ? prng.next(0, 0xFFFF + 1) : 0xFFFF;
+        evs[stat] = Math.floor(Math.min(255, Math.ceil(Math.sqrt(exp))) / 4);
+      }
+      evs.spd = evs.spa;
+
+      const moves: ID[] = [];
+      const m = prng.randomChance(1, 100) ? prng.next(1, 3 + 1) : 4;
+      for (let j = 0; j < m; j++) {
+        let move: ID;
+        while (moves.includes((move = lookup.moveByNum(prng.next(1, 164 + 1)))) ||
+          BLOCKLIST.includes(move));
+        moves.push(move);
+      }
+
+      team.push({species, level, ivs, evs, moves});
+    }
+
+    return {team};
+  }
+
+  gen2(gen: Generation, prng: PRNG): Omit<engine.PlayerOptions, 'name'> {
+    const lookup = engine.Lookup.get(gen);
+
+    const team: Partial<PokemonSet>[] = [];
+    const n = prng.randomChance(1, 100) ? prng.next(1, 5 + 1) : 6;
+    for (let i = 0; i < n; i++) {
+      const species = lookup.speciesByNum(prng.next(1, 251 + 1));
+      const level = prng.randomChance(1, 20) ? prng.next(1, 99 + 1) : 100;
+      const item = prng.randomChance(1, 10) ? undefined
+        : lookup.itemByNum(prng.next(1, 62 + 1));
+
+      const ivs = {} as StatsTable;
+      for (const stat of gen.stats) {
+        if (stat === 'hp' || stat === 'spd') continue;
+        ivs[stat] = gen.stats.toIV(prng.randomChance(1, 5) ? prng.next(1, 15 + 1) : 15);
+      }
+      ivs.hp = gen.stats.toIV(gen.stats.getHPDV(ivs));
+      ivs.spd = ivs.spa;
+
+      const evs = {} as StatsTable;
+      for (const stat of gen.stats) {
+        const exp = prng.randomChance(1, 20) ? prng.next(0, 0xFFFF + 1) : 0xFFFF;
+        evs[stat] = Math.floor(Math.min(255, Math.ceil(Math.sqrt(exp))) / 4);
+      }
+
+      const moves: ID[] = [];
+      const m = prng.randomChance(1, 100) ? prng.next(1, 3 + 1) : 4;
+      for (let j = 0; j < m; j++) {
+        let move: ID;
+        while (moves.includes((move = lookup.moveByNum(prng.next(1, 250 + 1)))));
+        moves.push(move);
+      }
+
+      const happiness = prng.randomChance(1, 10 + 1) ? prng.next(0, 255) : 255;
+      team.push({species, level, item, ivs, evs, moves, happiness});
+    }
+
+    return {team};
+  }
+};
 
 interface Configuration {
   warmup?: boolean;
@@ -86,8 +189,8 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
       let turns = 0;
 
       for (let i = 0; i < battles; i++) {
-        const options = gen1.Battle.options(gen, prng);
-        const config = {formatid: format, seed: options.seed as PRNGSeed};
+        const options = Options.get(gen, prng);
+        const config = {formatid: format as any, seed: options.seed as PRNGSeed};
         const battle = new DirectBattle(config);
         patch.battle(battle);
 
@@ -122,7 +225,7 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
       let turns = 0;
 
       for (let i = 0; i < battles; i++) {
-        const options = gen1.Battle.options(gen, prng);
+        const options = Options.get(gen, prng);
         const battle = engine.Battle.create(gen, options);
 
         // The function passed to choose should usually account for the
@@ -315,7 +418,7 @@ if (require.main === module) {
         for (const config in durations) {
           out[config] = `${(durations[config] / 1000).toFixed(2)}s`;
           if (durations[config] !== min) {
-            out[config] +=` (${(durations[config] / min).toFixed(2)}×)`;
+            out[config] += ` (${(durations[config] / min).toFixed(2)}×)`;
           }
         }
         return out;

@@ -4,7 +4,7 @@ import {Generations} from '@pkmn/data';
 import {
   Choices, MIN, MAX, ROLLS, ranged, formatFor, createStartBattle, FixedRNG, verify,
 } from '.';
-import * as gen2 from '../benchmark/gen2';
+import {Options} from '../benchmark';
 
 const gens = new Generations(Dex as any);
 const gen = gens.get(2);
@@ -703,7 +703,7 @@ describe('Gen 2', () => {
   test('choices', () => {
     const random = new PRNG([1, 2, 3, 4]);
     const battle = new Battle({
-      formatid: formatFor(gen), ...gen2.Battle.options(gen, random) as any,
+      formatid: formatFor(gen), ...Options.get(gen, random) as any,
     });
 
     expect(choices(battle, 'p1')).toEqual([
