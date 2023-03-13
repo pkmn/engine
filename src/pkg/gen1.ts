@@ -24,20 +24,6 @@ for (const v in OFFSETS.Volatiles) {
   }
 }
 
-if ((VOLATILES.Thrashing >> 3) !== (VOLATILES.Charging >> 3)) {
-  throw new Error('Thrashing and Charging expected to be in the same byte');
-} else if ((VOLATILES.Rage >> 3) !== (VOLATILES.Recharging >> 3)) {
-  throw new Error('Rage and Recharging expected to be in the same byte');
-} else if ((VOLATILES.Bide >> 3) !== (VOLATILES.binding >> 3)) {
-  throw new Error('Bide and Binding expected to be in the same byte');
-}
-
-const MASKS = {
-  forced1: (1 << (VOLATILES.Thrashing & 7)) | (1 << (VOLATILES.Charging & 7)),
-  forced2: (1 << (VOLATILES.Rage & 7)) | (1 << (VOLATILES.Recharging & 7)),
-  limited: (1 << (VOLATILES.Bide & 7)) | (1 << (VOLATILES.Binding & 7)),
-};
-
 export class Battle implements Gen1.Battle {
   readonly config: BattleOptions;
   readonly log?: DataView;
@@ -403,20 +389,6 @@ export class Pokemon implements Gen1.Pokemon {
       }
     }
     return volatiles;
-  }
-
-  get forced(): boolean {
-    if (!this.active) return false;
-    const byte1 = this.data.getUint8(this.offset.active + OFFSETS.ActivePokemon.volatiles);
-    if (byte1 & MASKS.forced1) return true;
-    const byte2 = this.data.getUint8(this.offset.active + OFFSETS.ActivePokemon.volatiles);
-    return !!(byte2 & MASKS.forced2);
-  }
-
-  get limited(): boolean {
-    if (!this.active) return false;
-    const byte = this.data.getUint8(this.offset.active + OFFSETS.ActivePokemon.volatiles);
-    return !!(byte & MASKS.limited);
   }
 
   move(slot: 1 | 2 | 3 | 4): Gen1.MoveSlot | undefined {

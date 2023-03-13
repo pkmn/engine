@@ -73,8 +73,6 @@ describe('Gen 1', () => {
       thrashing: {duration: 3, accuracy: 235},
       substitute: {hp: 42},
     });
-    expect(slot1.forced).toBe(true);
-    expect(slot1.limited).toBe(false);
     expect(slot1.stats.atk).toBe(98);
     expect(slot1.stored.stats.atk).toBe(98);
     expect(slot1.boost('spa')).toBe(-2);
@@ -87,8 +85,6 @@ describe('Gen 1', () => {
     expect(slot2.types).toEqual(['Water', 'Water']);
     expect(slot2.stat('def')).toBe(168);
     expect(slot2.volatile(1)).toBe(false);
-    expect(slot2.forced).toBe(false);
-    expect(slot2.limited).toBe(false);
     expect(slot2.hp).toBe(21);
     expect(slot2.status).toBe('slp');
     expect(slot2.statusData.self).toBe(true);
@@ -114,8 +110,7 @@ describe('Gen 1', () => {
       binding: {duration: 2},
       transform: {player: 'p1', slot: 2},
     });
-    expect(p2.active!.forced).toBe(false);
-    expect(p2.active!.limited).toBe(true);
+
     const boosts = Array.from(Object.values(p2.active!.boosts));
     expect(boosts.every(b => b === 0)).toBe(true);
 
