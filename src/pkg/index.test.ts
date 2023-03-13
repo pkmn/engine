@@ -1,5 +1,5 @@
-import {Dex, PRNG} from '@pkmn/sim';
 import {Generations} from '@pkmn/data';
+import {Dex, PRNG} from '@pkmn/sim';
 
 import {Options} from '../test/benchmark';
 

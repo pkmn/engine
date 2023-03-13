@@ -1,12 +1,13 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as mustache from 'mustache';
-import {minify} from 'html-minifier';
+
 
 import {BoostID, Generation, ID, StatID, TypeName} from '@pkmn/data';
-import {Sprites, Icons} from '@pkmn/img';
+import {Icons, Sprites} from '@pkmn/img';
+import {minify} from 'html-minifier';
+import * as mustache from 'mustache';
 
-import {Data, Battle, Pokemon, Side, Result, Choice, ParsedLine} from '../../pkg';
+import {Battle, Choice, Data, ParsedLine, Pokemon, Result, Side} from '../../pkg';
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const TEMPLATE = path.join(ROOT, 'src', 'test', 'pkmn.html.tmpl');

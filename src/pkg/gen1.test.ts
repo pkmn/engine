@@ -1,8 +1,8 @@
-import {Dex} from '@pkmn/sim';
 import {Generations} from '@pkmn/data';
+import {Dex} from '@pkmn/sim';
 
 import * as addon from './addon';
-import {LAYOUT, Data, Lookup} from './data';
+import {Data, LAYOUT, Lookup} from './data';
 import {Battle} from './gen1';
 
 const BUFFER = Data.buffer([

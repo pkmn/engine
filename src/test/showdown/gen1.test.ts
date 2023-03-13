@@ -1,10 +1,11 @@
-import {Battle, Dex, PRNG} from '@pkmn/sim';
 import {Generations} from '@pkmn/data';
+import {Battle, Dex, PRNG} from '@pkmn/sim';
+
+import {Options} from '../benchmark';
 
 import {
-  Choices, MIN, MAX, ROLLS, ranged, formatFor, createStartBattle, FixedRNG, verify,
+  Choices, FixedRNG, MAX, MIN, ROLLS, createStartBattle, formatFor, ranged, verify,
 } from '.';
-import {Options} from '../benchmark';
 
 const gens = new Generations(Dex as any);
 const gen = gens.get(1);

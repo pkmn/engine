@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 'use strict';
 
+const {execFileSync} = require('child_process');
 const crypto = require('crypto');
 const fs = require('fs');
 const https = require('https');
 const os = require('os');
 const path = require('path');
-const tty = require('tty');
-const {execFileSync} = require('child_process');
 const {pipeline} = require('stream/promises');
+const tty = require('tty');
 
 const ZIG_VERSION = {major: 0, minor: 11, patch: 0, dev: 1711};
 const DEV = ZIG_VERSION.dev ? `-dev.${ZIG_VERSION.dev}` : '';

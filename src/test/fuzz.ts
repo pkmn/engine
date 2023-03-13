@@ -3,14 +3,15 @@ import 'source-map-support/register';
 import {execFile} from 'child_process';
 import {promisify} from 'util';
 
-import {Dex} from '@pkmn/sim';
 import {Generation, Generations} from '@pkmn/data';
+import {Dex} from '@pkmn/sim';
 
-import {Battle, Result, Choice, Log, ParsedLine, Info, SideInfo} from '../pkg';
-import {Lookup, Data, LAYOUT, LE} from '../pkg/data';
-import {Frame, display} from './display';
+import {Battle, Choice, Info, Log, ParsedLine, Result, SideInfo} from '../pkg';
 import * as addon from '../pkg/addon';
+import {Data, LAYOUT, LE, Lookup} from '../pkg/data';
 import * as gen1 from '../pkg/gen1';
+
+import {Frame, display} from './display';
 
 const run = promisify(execFile);
 

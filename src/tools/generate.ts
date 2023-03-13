@@ -1,17 +1,17 @@
 import 'source-map-support/register';
 
 import * as fs from 'fs';
-import * as path from 'path';
 import * as https from 'https';
+import * as path from 'path';
 
-import * as mustache from 'mustache';
-import stringify from 'json-stringify-pretty-compact';
 
 import {
-  Generations, Generation, GenerationNum, TypeName,
-  StatsTable, ItemName, Specie, MoveTarget,
+  Generation, GenerationNum, Generations, ItemName,
+  MoveTarget, Specie, StatsTable, TypeName,
 } from '@pkmn/data';
 import {Dex, toID} from '@pkmn/sim';
+import stringify from 'json-stringify-pretty-compact';
+import * as mustache from 'mustache';
 
 import type {IDs} from '../pkg/data';
 

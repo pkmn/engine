@@ -1,10 +1,10 @@
 import * as path from 'path';
 
-import {
-  Battle, ID, PRNG, PRNGSeed, BattleQueue, Side, SideID,
-  ActionChoice, Effect, Pokemon, Field, extractChannelMessages,
-} from '@pkmn/sim';
 import {Generation, PokemonSet} from '@pkmn/data';
+import {
+  ActionChoice, Battle, BattleQueue, Effect, Field, ID, PRNG,
+  PRNGSeed, Pokemon, Side, SideID, extractChannelMessages,
+} from '@pkmn/sim';
 
 export interface Roll {
   key: string;

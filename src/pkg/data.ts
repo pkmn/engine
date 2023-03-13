@@ -1,8 +1,8 @@
-import {ID, TypeName, Generation} from '@pkmn/data';
+import {Generation, ID, TypeName} from '@pkmn/data';
 
 import idsJSON from './data/ids.json';
-import protocolJSON from './data/protocol.json';
 import offsetsJSON from './data/layout.json';
+import protocolJSON from './data/protocol.json';
 
 export const LE = (() => {
   const u8 = new Uint8Array(4);

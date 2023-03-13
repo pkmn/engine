@@ -96,6 +96,17 @@
     "ignorePatterns": ["dist/", "node_modules/", "src/examples/zig", "build/"],
     "env": {"es6": true, "node": true, "browser": true},
     "settings": {"jest": {"version": 29}},
+    "plugins": ["import"],
+    "rules": {
+      "import/order":  ["error", {
+        "newlines-between": "always",
+        "alphabetize": {"order": "asc", "caseInsensitive": true}
+      }],
+      "sort-imports": ["error", {
+        "ignoreDeclarationSort": true,
+        "allowSeparatedGroups": true
+      }]
+    },
     "overrides": [{
       "files": ["**/*.ts"],
       "parserOptions": {"project": ["./tsconfig.json", "./src/examples/js/tsconfig.json"]}

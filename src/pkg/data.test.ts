@@ -1,5 +1,5 @@
-import {Dex} from '@pkmn/sim';
 import {Generations, ID} from '@pkmn/data';
+import {Dex} from '@pkmn/sim';
 
 import {Lookup} from './data';
 

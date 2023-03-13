@@ -2,6 +2,7 @@ import {Generations} from '@pkmn/data';
 import {Dex} from '@pkmn/sim';
 
 import * as addon from '../../pkg/addon';
+
 import {comparison, iterations} from '.';
 
 // Simple smoke tests just to confirm things are wired up correctly and actually execute

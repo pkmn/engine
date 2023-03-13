@@ -3,10 +3,10 @@ import * as path from 'path';
 
 import {Generations} from '@pkmn/data';
 import {Protocol} from '@pkmn/protocol';
-import {Dex} from '@pkmn/sim';
 import {PokemonSet, Team} from '@pkmn/sets';
+import {Dex} from '@pkmn/sim';
 
-import {LE, PROTOCOL, Data, Lookup} from './data';
+import {Data, LE, Lookup, PROTOCOL} from './data';
 import {Info, Log} from './protocol';
 
 const ArgType = PROTOCOL.ArgType;

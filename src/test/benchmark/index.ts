@@ -2,17 +2,15 @@ import 'source-map-support/register';
 
 import {execFileSync} from 'child_process';
 
-import minimist from 'minimist';
 
-import {Generations, Generation, PokemonSet, StatsTable, ID} from '@pkmn/data';
-import {Dex, Battle, PRNG, PRNGSeed, Pokemon, Side, SideID, Teams} from '@pkmn/sim';
+import {Generation, Generations, ID, PokemonSet, StatsTable} from '@pkmn/data';
+import {Battle, Dex, PRNG, PRNGSeed, Pokemon, Side, SideID, Teams} from '@pkmn/sim';
+import minimist from 'minimist';
 import {Stats} from 'trakr';
 
-import {Choices, patch, formatFor} from '../showdown';
-import {newSeed, toBigInt} from '../integration';
-
 import * as engine from '../../pkg';
-
+import {newSeed, toBigInt} from '../integration';
+import {Choices, formatFor, patch} from '../showdown';
 import blocklistJSON from '../showdown/blocklist.json';
 
 const BLOCKLIST = blocklistJSON[1].moves as ID[];

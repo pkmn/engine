@@ -1,8 +1,9 @@
-import {Generation, StatusName, TypeName, BoostID, ID, GenderName} from '@pkmn/data';
+import {BoostID, GenderName, Generation, ID, StatusName, TypeName} from '@pkmn/data';
 import {Protocol} from '@pkmn/protocol';
 
-import {PlayerOptions} from './index';
 import {LE, Lookup, PROTOCOL} from './data';
+
+import {PlayerOptions} from '.';
 
 const ArgType = PROTOCOL.ArgType;
 

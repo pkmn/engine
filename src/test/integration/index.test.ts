@@ -2,6 +2,7 @@ import {Generations} from '@pkmn/data';
 import {Dex} from '@pkmn/sim';
 
 import * as addon from '../../pkg/addon';
+
 import {run} from '.';
 
 describe('integration', () => {

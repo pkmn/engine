@@ -1,25 +1,24 @@
 import 'source-map-support/register';
 
+import * as assert from 'assert/strict';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as tty from 'tty';
-import * as assert from 'assert/strict';
 
-import minimist from 'minimist';
 
-import {Generations, Generation, GenerationNum} from '@pkmn/data';
+import {Generation, GenerationNum, Generations} from '@pkmn/data';
 import {Protocol} from '@pkmn/protocol';
-import {Dex, PRNG, PRNGSeed, Battle, BattleStreams, ID, Streams, Teams} from '@pkmn/sim';
+import {Battle, BattleStreams, Dex, ID, PRNG, PRNGSeed, Streams, Teams} from '@pkmn/sim';
 import {
   AIOptions, ExhaustiveRunner, ExhaustiveRunnerOptions,
   ExhaustiveRunnerPossibilities, RunnerOptions,
 } from '@pkmn/sim/tools';
+import minimist from 'minimist';
 
 import * as engine from '../../pkg';
 import * as addon from '../../pkg/addon';
 import {Frame, ShowdownFrame, display, displayShowdown} from '../display';
-import {Choices, patch, FILTER, formatFor} from '../showdown';
-
+import {Choices, FILTER, formatFor, patch} from '../showdown';
 import blocklistJSON from '../showdown/blocklist.json';
 
 const ROOT = path.resolve(__dirname, '..', '..', '..');

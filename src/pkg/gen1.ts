@@ -1,15 +1,15 @@
 import {
-  BoostID, BoostsTable, Generation, ID, toID, PokemonSet,
-  StatID, StatsTable, StatusName, TypeName,
+  BoostID, BoostsTable, Generation, ID, PokemonSet,
+  StatID, StatsTable, StatusName, TypeName, toID,
 } from '@pkmn/data';
 
-import {
-  Data, Gen1, Slot, BattleOptions, CreateOptions, RestoreOptions, Choice, Result, Player,
-} from './index';
+import * as addon from './addon';
 import {LAYOUT, LE, Lookup} from './data';
 import {decodeIdentRaw, decodeStatus, decodeTypes} from './protocol';
 
-import * as addon from './addon';
+import {
+  BattleOptions, Choice, CreateOptions, Data, Gen1, Player, RestoreOptions, Result, Slot,
+} from '.';
 
 const SIZES = LAYOUT[0].sizes;
 const OFFSETS = LAYOUT[0].offsets;

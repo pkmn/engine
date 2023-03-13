@@ -2,8 +2,8 @@ import {
   BoostsTable, Generation, ID, PokemonSet, StatsTable, StatusName, TypeName,
 } from '@pkmn/data';
 
-import {Lookup} from './data';
 import * as addon from './addon';
+import {Lookup} from './data';
 import * as gen1 from './gen1';
 
 export type Player = 'p1' | 'p2';
