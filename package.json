@@ -85,7 +85,7 @@
     "build": "npm run compile",
     "test": "vitest src/pkg",
     "test:integration": "vitest src/test",
-    "fuzz": "npm run compile && node build/tools/fuzz",
+    "fuzz": "npm run compile && node build/test/fuzz",
     "generate": "npm run compile && node build/tools/generate",
     "benchmark": "npm run compile && node build/test/benchmark",
     "integration": "npm run compile && node build/test/integration",

@@ -1,11 +1,5 @@
 This directory contains miscellaneous scripts and tools useful for working on the pkmn engine:
 
-- [`fuzz.ts`](fuzz.ts): Runs the [fuzz test](../../docs/TESTING.md#Fuzz) with the correct flags to
-  allow for easily debugging the binary output produced in the event of a crash via a [debug
-  UI](https://pkmn.cc/debug.html) rendered by [`display/`](../test/display):
-
-      $ npm run --silent fuzz  --  <pkmn|showdown> <GEN> <DURATION> <SEED?> > index.html
-
 - [`generate.ts`](generate.ts): Generate both the data files for the library based on
   [templates](../lib/common/data) and an [`id.json`](../pkg/data/ids.json) lookup file for decoding
   the serialized data. Produces the data based on information fetched from the decompiled sources

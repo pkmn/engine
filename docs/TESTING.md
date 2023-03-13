@@ -376,4 +376,7 @@ uncover latent bugs. The fuzz tests differ from the benchmark in that they run f
 durations as opposed to a given number of battles and enable the [blocked](#blocklistjson) effects
 that are usually excluded in `-Dshowdown` compatibility mode. When run with the `-Dtrace` flag,
 additional binary data will be dumped on crashes to allow for debugging with the help of
-[`fuzz.ts`](../src/tools/fuzz.ts).
+[`fuzz.ts`](./fuzz.ts) and the [debug UI](https://pkmn.cc/debug.html) rendered
+by [`display`](./display/index.ts). To run the fuzz tool locally use:
+
+  $ npm run --silent fuzz  --  <pkmn|showdown> <GEN> <DURATION> <SEED?> > logs/fuzz.html
