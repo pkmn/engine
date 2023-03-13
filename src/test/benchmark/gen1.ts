@@ -3,7 +3,7 @@ import {Generation, PokemonSet, StatsTable, ID} from '@pkmn/data';
 
 import * as engine from '../../pkg';
 import {Lookup} from '../../pkg/data';
-import {newSeed} from '../integration/common';
+import {newSeed} from '../integration';
 
 import blocklistJSON from '../showdown/blocklist.json';
 

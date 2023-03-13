@@ -7,7 +7,7 @@ import {Battle, ID, PRNG, PRNGSeed, Pokemon, Side, SideID, Teams} from '@pkmn/si
 import {Stats} from 'trakr';
 
 import {Choices, patch, formatFor} from '../showdown';
-import {newSeed, toBigInt} from '../integration/common';
+import {newSeed, toBigInt} from '../integration';
 
 import * as engine from '../../pkg';
 import * as gen1 from './gen1';

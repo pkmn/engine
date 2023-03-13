@@ -2,7 +2,7 @@ import {Generations} from '@pkmn/data';
 import {Dex} from '@pkmn/sim';
 
 import * as addon from '../../pkg/addon';
-import {run} from './common';
+import {run} from '.';
 
 describe('integration', () => {
   (addon.supports(true, true) && Math.random() > 1 ? test : test.skip)('test', async () => {
