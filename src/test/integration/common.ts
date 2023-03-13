@@ -174,7 +174,6 @@ function play(
     partial.result = result;
     partial.battle = battle.toJSON();
     assert.equal(result.type, undefined);
-    assert.deepEqual(battle.prng, control.prng.seed);
 
     const chunk = control.getDebugLog();
     control.log.length = 0;
@@ -193,6 +192,7 @@ function play(
 
     while (!control.ended) {
       assert.equal(result.type, undefined);
+      assert.deepEqual(battle.prng, control.prng.seed);
 
       [c1, c2] = makeChoices();
       partial.c1 = c1;
@@ -204,7 +204,6 @@ function play(
       partial.result = result;
       partial.battle = battle.toJSON();
 
-      assert.deepEqual(battle.prng, control.prng.seed);
       if (result.type === 'win') {
         assert.equal(control.winner, options.p1.name);
       } else if (result.type === 'lose') {
@@ -229,6 +228,7 @@ function play(
     }
 
     assert.notEqual(result.type, undefined);
+    assert.deepEqual(battle.prng, control.prng.seed);
   } catch (err: any) {
     if (!input) {
       try {
