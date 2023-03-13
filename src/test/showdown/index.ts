@@ -203,7 +203,7 @@ export const patch = {
 
     return gen;
   },
-  battle: (battle: Battle, prng = false) => {
+  battle: (battle: Battle, prng = false, debug = false) => {
     battle.trunc = battle.dex.trunc.bind(battle.dex);
     battle.queue.insertChoice = insertChoice.bind(battle.queue);
     battle.eachEvent = eachEvent.bind(battle);
@@ -215,7 +215,19 @@ export const patch = {
         shuffle(items, start, end);
       };
     }
-    return battle;
+    if (debug) {
+      const next = battle.prng.next.bind(battle.prng);
+      battle.prng.next = (from?: number, to?: number) => {
+        const seed = battle.prng.seed.join(',');
+        const result = next(from, to);
+        const roll = (battle.prng.seed[0] << 16 >>> 0) + battle.prng.seed[1];
+        const original = `0x${(roll).toString(16).padStart(8, '0').toUpperCase()}`;
+        battle.add('debug', location(), seed, original);
+        return result;
+      };
+    } else {
+      (battle as any).debugMode = debug;
+    }
   },
 };
 
@@ -443,7 +455,7 @@ const METHOD = /^ {4}at ((?:\w|\.)+) \((.*\d)\)/;
 const NON_TERMINAL = new Set([
   'FixedRNG.next', 'FixedRNG.randomChance', 'FixedRNG.sample', 'FixedRNG.shuffle',
   'Battle.random', 'Battle.randomChance', 'Battle.sample', 'location', 'Battle.speedSort',
-  'Battle.runEvent', 'PRNG.battle.prng.shuffle',
+  'Battle.runEvent', 'PRNG.battle.prng.shuffle', 'PRNG.battle.prng.next',
 ]);
 
 function location() {

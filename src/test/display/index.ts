@@ -42,6 +42,10 @@ const compact = (line: ParsedLine) =>
   [...line.args, ...Object.keys(line.kwArgs)
     .map(k => `[${k}]${format((line.kwArgs as any)[k])}`)].join('|');
 
+const debug = (s: string) => s.startsWith('|debug')
+  ? /^\|debug\|[^|]*:\d/.test(s) ? 'class="debug rng"'
+  : 'class="debug"' : '';
+
 export type Frame = {
   result: Result;
   c1: Choice;
@@ -103,9 +107,11 @@ function displayFrame(
     buf.push(`<pre><code>|${partial.parsed.map(compact).join('\n|')}</code></pre>`);
     buf.push('</div>');
   } else if ('chunk' in partial && partial.chunk) {
-    buf.push('<div class="log">');
-    buf.push(`<pre><code>${partial.chunk}</code></pre>`);
-    buf.push('</div>');
+    buf.push('<div class="log"><pre>');
+    for (const line of partial.chunk.split('\n')) {
+      buf.push(`<code ${debug(line)}>${line}</code><br />`);
+    }
+    buf.push('</pre></div>');
   }
   if ('battle' in partial && partial.battle) {
     buf.push(displayBattle(gen, showdown, partial.battle, last as Data<Battle>));

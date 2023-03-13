@@ -33,8 +33,9 @@ class Runner {
   private readonly prng: PRNG;
   private readonly p1options: AIOptions & {team: string};
   private readonly p2options: AIOptions & {team: string};
+  private readonly debug: boolean;
 
-  constructor(gen: Generation, options: RunnerOptions) {
+  constructor(gen: Generation, options: RunnerOptions, debug?: boolean) {
     this.gen = gen;
     this.format = options.format;
 
@@ -43,6 +44,8 @@ class Runner {
 
     this.p1options = fixTeam(gen, options.p1options!);
     this.p2options = fixTeam(gen, options.p2options!);
+
+    this.debug = !!debug;
   }
 
   run() {
@@ -55,6 +58,8 @@ class Runner {
       {formatid: this.format, seed},
       {spec: {name: 'Bot 1', ...this.p1options}, create: create(this.p1options)},
       {spec: {name: 'Bot 2', ...this.p2options}, create: create(this.p2options)},
+      undefined,
+      this.debug,
     ));
   }
 }
@@ -106,6 +111,7 @@ function play(
   p1options: PlayerOptions,
   p2options: PlayerOptions,
   input?: string[],
+  debug?: boolean,
 ) {
   const frames: {pkmn: Frame[]; showdown: Frame[]} = {pkmn: [], showdown: []};
 
@@ -119,8 +125,8 @@ function play(
 
   // We can't pass p1/p2 via BattleOptions because that would cause the battle to
   // start before we could patch it, desyncing the PRNG due to spurious advances
-  const control = new Battle({formatid: formatid as ID, seed, strictChoices: false});
-  patch.battle(control, true);
+  const control = new Battle({formatid: formatid as ID, seed, strictChoices: false, debug});
+  patch.battle(control, true, debug);
   control.setPlayer('p1', p1options.spec);
   control.setPlayer('p2', p2options.spec);
   partial.showdown.result = toResult(control, p1options.spec.name);
@@ -430,6 +436,7 @@ type Options = Pick<ExhaustiveRunnerOptions, 'log' | 'maxFailures' | 'cycles'> &
   prng: PRNG | PRNGSeed;
   gen?: GenerationNum;
   duration?: number;
+  debug?: boolean;
 };
 
 export async function run(gens: Generations, options: string | Options) {
@@ -445,7 +452,7 @@ export async function run(gens: Generations, options: string | Options) {
     const spec = JSON.parse(lines[0].slice(7)) as {formatid: string; seed: PRNGSeed};
     const p1 = {spec: JSON.parse(lines[1].slice(10)) as {name: string; team: string}};
     const p2 = {spec: JSON.parse(lines[2].slice(10)) as {name: string; team: string}};
-    play(gen, spec, p1, p2, lines.slice(3));
+    play(gen, spec, p1, p2, lines.slice(3), true);
     return 0;
   }
 
@@ -464,8 +471,9 @@ export async function run(gens: Generations, options: string | Options) {
       patch.generation(gen);
       opts.format = formatFor(gen);
       opts.possible = possibilities(gen);
+      const d = (options).debug;
       failures +=
-        await (new ExhaustiveRunner({...opts, runner: o => new Runner(gen, o).run()}).run());
+        await (new ExhaustiveRunner({...opts, runner: o => new Runner(gen, o, d).run()}).run());
       if (failures >= opts.maxFailures!) return failures;
     }
   } while (Date.now() - start < (options.duration || 0));
@@ -489,7 +497,10 @@ if (require.main === module) {
     if (process.argv.length === 3 && process.argv[2][0] !== '-') {
       process.exit(await run(gens, process.argv[2]));
     }
-    const argv = minimist(process.argv.slice(2), {default: {maxFailures: 1}});
+    const argv = minimist(process.argv.slice(2), {
+      boolean: ['debug'],
+      default: {maxFailures: 1, debug: true},
+    });
     const unit =
       typeof argv.duration === 'string' ? argv.duration[argv.duration.length - 1] : undefined;
     const duration =
