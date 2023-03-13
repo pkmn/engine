@@ -3,9 +3,6 @@ import * as path from 'path';
 import * as tty from 'tty';
 import * as assert from 'assert/strict';
 
-import * as mustache from 'mustache';
-import {minify} from 'html-minifier';
-
 import {Generations, Generation, GenerationNum} from '@pkmn/data';
 import {Protocol} from '@pkmn/protocol';
 import {PRNG, PRNGSeed, Battle, BattleStreams, ID, Streams, Teams} from '@pkmn/sim';
@@ -16,13 +13,12 @@ import {
 
 import * as engine from '../../pkg';
 import * as addon from '../../pkg/addon';
-import {Frame, display} from '../display';
+import {Frame, ShowdownFrame, display, displayShowdown} from '../display';
 import {Choices, patch, FILTER, formatFor} from '../showdown/common';
 
 import blocklistJSON from '../blocklist.json';
 
 const ROOT = path.resolve(__dirname, '..', '..', '..');
-const TEMPLATE = path.join(ROOT, 'src', 'test', 'integration', 'showdown.html.tmpl');
 const ANSI = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
 
 const CWD = process.env.INIT_CWD || process.env.CWD || process.cwd();
@@ -109,7 +105,13 @@ function play(
   p2options: PlayerOptions,
   input?: string[],
 ) {
-  const buf: string[] = [];
+  const frames: {pkmn: Frame[]; showdown: ShowdownFrame[]} = {pkmn: [], showdown: []};
+
+  let c1 = engine.Choice.pass();
+  let c2 = engine.Choice.pass();
+
+  const partial: {pkmn: Partial<Frame>; showdown: Partial<ShowdownFrame>} =
+    {pkmn: {c1, c2}, showdown: {c1, c2}};
 
   // We can't pass p1/p2 via BattleOptions because that would cause the battle to
   // start before we could patch it, desyncing the PRNG due to spurious advances
@@ -117,6 +119,14 @@ function play(
   patch.battle(control, true);
   control.setPlayer('p1', p1options.spec);
   control.setPlayer('p2', p2options.spec);
+  partial.showdown.result = toResult(control, p1options.spec.name);
+  partial.showdown.seed = control.prng.seed.slice() as PRNGSeed;
+
+  const chunk = control.getDebugLog();
+  partial.showdown.chunk = chunk;
+  control.log.length = 0;
+  frames.showdown.push(partial.showdown as ShowdownFrame);
+  partial.showdown = {};
 
   const players = input ? undefined : {
     p1: p1options.create!(null! as any),
@@ -156,11 +166,6 @@ function play(
     return [engine.Choice.parse(choices.p1), engine.Choice.parse(choices.p2)];
   };
 
-  let c1 = engine.Choice.pass();
-  let c2 = engine.Choice.pass();
-
-  const frames: Frame[] = [];
-  let partial: Partial<Frame> = {c1, c2};
   try {
     const options = {
       p1: {name: p1options.spec.name, team: Teams.unpack(p1options.spec.team)!},
@@ -171,19 +176,14 @@ function play(
     const log = new engine.Log(gen, engine.Lookup.get(gen), options);
 
     let result = battle.update(c1, c2);
-    partial.result = result;
-    partial.battle = battle.toJSON();
+    partial.pkmn.result = result;
+    partial.pkmn.battle = battle.toJSON();
     assert.equal(result.type, undefined);
 
-    const chunk = control.getDebugLog();
-    control.log.length = 0;
-    buf.push(chunk);
-
     const parsed = Array.from(log.parse(battle.log!));
-    partial.parsed = parsed;
-
-    frames.push(partial as Frame);
-    partial = {};
+    partial.pkmn.parsed = parsed;
+    frames.pkmn.push(partial.pkmn as Frame);
+    partial.pkmn = {};
 
     compare(gen, chunk, parsed);
 
@@ -195,35 +195,29 @@ function play(
       assert.deepEqual(battle.prng, control.prng.seed);
 
       [c1, c2] = makeChoices();
-      partial.c1 = c1;
-      partial.c2 = c2;
-      assert.ok(valid('p1', c1));
-      assert.ok(valid('p2', c2));
-
-      result = battle.update(c1, c2);
-      partial.result = result;
-      partial.battle = battle.toJSON();
-
-      if (result.type === 'win') {
-        assert.equal(control.winner, options.p1.name);
-      } else if (result.type === 'lose') {
-        assert.equal(control.winner, options.p2.name);
-      } else if (result.type === 'tie') {
-        assert.equal(control.winner, '');
-      } else if (result.type) {
-        throw new Error('Battle ended in error with -Dshowdown');
-      }
+      partial.pkmn.c1 = partial.showdown.c1 = c1;
+      partial.pkmn.c2 = partial.showdown.c1 = c1;
+      const request = partial.showdown.result = toResult(control, p1options.spec.name);
+      partial.showdown.seed = control.prng.seed.slice() as PRNGSeed;
 
       const chunk = control.getDebugLog();
+      partial.showdown.chunk = chunk;
       control.log.length = 0;
-      buf.push(chunk);
+      frames.showdown.push(partial.showdown as ShowdownFrame);
+      partial.showdown = {};
+
+      assert.ok(valid('p1', c1));
+      assert.ok(valid('p2', c2));
+      result = battle.update(c1, c2);
+      partial.pkmn.result = result;
+      partial.pkmn.battle = battle.toJSON();
 
       const parsed = Array.from(log.parse(battle.log!));
-      partial.parsed = parsed;
+      partial.pkmn.parsed = parsed;
+      frames.pkmn.push(partial.pkmn as Frame);
+      partial.pkmn = {};
 
-      frames.push(partial as Frame);
-      partial = {};
-
+      assert.deepEqual(result, request);
       compare(gen, chunk, parsed);
     }
 
@@ -238,7 +232,6 @@ function play(
           err.stack.replace(ANSI, ''),
           toBigInt(seed),
           control.inputLog,
-          buf.join('\n'),
           frames,
           partial,
         );
@@ -250,14 +243,23 @@ function play(
   }
 }
 
+function toResult(battle: Battle, name: string) {
+  return {
+    type: battle.ended
+      ? battle.winner === '' ? 'tie' : battle.winner === name ? 'win' : 'lose'
+      : undefined,
+    p1: battle.p1.requestState || 'pass',
+    p2: battle.p1.requestState || 'pass',
+  } as engine.Result;
+}
+
 function dump(
   gen: Generation,
   error: string,
   seed: bigint,
   input: string[],
-  output: string,
-  frames: Frame[],
-  partial: Partial<Frame>,
+  frames: {pkmn: Frame[]; showdown: ShowdownFrame[]},
+  partial: {pkmn: Partial<Frame>; showdown: Partial<ShowdownFrame>}
 ) {
   const color = (s: string) => tty.isatty(2) ? `\x1b[36m${s}\x1b[0m` : s;
   const box = (s: string) =>
@@ -280,19 +282,12 @@ function dump(
 
   file = path.join(dir, `${hex}.pkmn.html`);
   link = path.join(dir, 'pkmn.html');
-  fs.writeFileSync(file, display(gen, true, error, seed, frames, partial));
+  fs.writeFileSync(file, display(gen, true, error, seed, frames.pkmn, partial.pkmn));
   console.error(' ◦ @pkmn/engine:', pretty(symlink(file, link)), '->', pretty(file));
 
   file = path.join(dir, `${hex}.showdown.html`);
   link = path.join(dir, 'showdown.html');
-  fs.writeFileSync(file, minify(
-    mustache.render(fs.readFileSync(TEMPLATE, 'utf8'), {
-      seed: hex,
-      input: input.slice(3).join('\n'),
-      output,
-    }), {minifyCSS: true, minifyJS: true}
-  ));
-
+  fs.writeFileSync(file, displayShowdown(error, seed, frames.showdown, partial.showdown));
   console.error(' ◦ Pokémon Showdown:', pretty(symlink(file, link)), '->', pretty(file), '\n');
 }
 
