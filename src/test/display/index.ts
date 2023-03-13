@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-
 import {BoostID, Generation, ID, StatID, TypeName} from '@pkmn/data';
 import {Icons, Sprites} from '@pkmn/img';
 import {minify} from 'html-minifier';

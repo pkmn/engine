@@ -5,7 +5,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as tty from 'tty';
 
-
 import {Generation, GenerationNum, Generations} from '@pkmn/data';
 import {Protocol} from '@pkmn/protocol';
 import {Battle, BattleStreams, Dex, ID, PRNG, PRNGSeed, Streams, Teams} from '@pkmn/sim';
@@ -479,7 +478,6 @@ export const newSeed = (prng: PRNG) => [
 export const toBigInt = (seed: PRNGSeed) =>
   ((BigInt(seed[0]) << 48n) | (BigInt(seed[1]) << 32n) |
    (BigInt(seed[2]) << 16n) | BigInt(seed[3]));
-
 
 if (require.main === module) {
   (async () => {

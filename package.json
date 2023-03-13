@@ -102,6 +102,7 @@
         "newlines-between": "always",
         "alphabetize": {"order": "asc", "caseInsensitive": true}
       }],
+      "no-multiple-empty-lines": ["error", {"max": 1}],
       "sort-imports": ["error", {
         "ignoreDeclarationSort": true,
         "allowSeparatedGroups": true

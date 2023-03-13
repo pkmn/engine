@@ -1123,7 +1123,6 @@ describe('Gen 2', () => {
     ]);
   });
 
-
   test('CriticalUp effect', () => {
     const no_crit = {...CRIT, value: ranged(2, 16) - 1};
     const battle = startBattle([
@@ -3905,7 +3904,6 @@ describe('Gen 2', () => {
 
       let pp = battle.p1.pokemon[0].moveSlots[0].pp;
 
-
       battle.makeChoices('move 3', 'move 2');
       expect(battle.p1.pokemon[0].volatiles['confusion'].time).toBe(5);
       expect(battle.p2.pokemon[0].boosts.accuracy).toBe(-1);
@@ -3975,7 +3973,6 @@ describe('Gen 2', () => {
         {species: 'Goldeen', evs, moves: ['Water Gun']},
         {species: 'Gastly', evs, moves: ['Teleport']},
       ]);
-
 
       let goldeen = battle.p2.pokemon[1].hp;
       const gastly = battle.p2.pokemon[2].hp;
@@ -5694,7 +5691,6 @@ describe('Gen 2', () => {
     expect(choices(battle, 'p1')).toEqual(['move 1']);
     expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2', 'move 3']);
 
-
     battle.makeChoices('move 1', 'move 2');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 24);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 57);
@@ -7262,7 +7258,6 @@ describe('Gen 2', () => {
 
     let p1hp = battle.p1.pokemon[0].hp;
     let p2hp = battle.p2.pokemon[0].hp;
-
 
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp);

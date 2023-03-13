@@ -4,7 +4,6 @@ import * as fs from 'fs';
 import * as https from 'https';
 import * as path from 'path';
 
-
 import {
   Generation, GenerationNum, Generations, ItemName,
   MoveTarget, Specie, StatsTable, TypeName,

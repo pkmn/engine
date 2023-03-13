@@ -2,7 +2,6 @@ import 'source-map-support/register';
 
 import {execFileSync} from 'child_process';
 
-
 import {Generation, Generations, ID, PokemonSet, StatsTable} from '@pkmn/data';
 import {Battle, Dex, PRNG, PRNGSeed, Pokemon, Side, SideID, Teams} from '@pkmn/sim';
 import minimist from 'minimist';
