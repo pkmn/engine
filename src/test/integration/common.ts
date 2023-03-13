@@ -15,6 +15,7 @@ import {
 } from '@pkmn/sim/tools';
 
 import * as engine from '../../pkg';
+import * as addon from '../../pkg/addon';
 import {Frame, display} from '../display';
 import {Choices, patch, FILTER, formatFor} from '../showdown/common';
 
@@ -433,6 +434,7 @@ type Options = Pick<ExhaustiveRunnerOptions, 'log' | 'maxFailures' | 'cycles'> &
 };
 
 export async function run(gens: Generations, options: string | Options) {
+  if (!addon.supports(true, true)) throw new Error('engine must be built with -Dshowdown -Dtrace');
   if (typeof options === 'string') {
     const file = path.join(ROOT, 'logs', `${options}.input.log`);
     if (fs.existsSync(file)) options = file;
