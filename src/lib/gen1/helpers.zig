@@ -213,7 +213,7 @@ pub const Pokemon = struct {
     }
 };
 
-// cat src/test/blocklist.json | jq '."1".moves'
+// cat src/test/showdown/blocklist.json | jq '."1".moves'
 fn blocked(m: Move) bool {
     if (Move.get(m).effect == .Binding) return true;
     return switch (m) {

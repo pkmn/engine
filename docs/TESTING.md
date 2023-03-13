@@ -167,10 +167,10 @@ mirrors the cartridge.
 In cases where the pkmn engine cannot reproduce 100% of the behavior of Pokémon Showdown for the
 purposes of lockstep integration tests or benchmarking, the offending Pokémon / Items / Abilities /
 Moves will be blocked from inclusion by their presence in the
-[`blocklist.json`](../src/test/blocklist.json) file. Note that the pkmn engine implements as much
-of Pokémon Showdown's behavior for these effects as possible, it is usually just the extreme edge
-cases which would require large amounts of coding or additional state to implement the same faulty
-behavior where these effects break down.
+[`blocklist.json`](../src/test/showdown/blocklist.json) file. Note that the pkmn engine implements
+as much of Pokémon Showdown's behavior for these effects as possible, it is usually just the extreme
+edge cases which would require large amounts of coding or additional state to implement the same
+faulty behavior where these effects break down.
 
 ## Benchmark
 

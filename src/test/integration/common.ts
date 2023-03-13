@@ -16,7 +16,7 @@ import * as addon from '../../pkg/addon';
 import {Frame, ShowdownFrame, display, displayShowdown} from '../display';
 import {Choices, patch, FILTER, formatFor} from '../showdown/common';
 
-import blocklistJSON from '../blocklist.json';
+import blocklistJSON from '../showdown/blocklist.json';
 
 const ROOT = path.resolve(__dirname, '..', '..', '..');
 const ANSI = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;

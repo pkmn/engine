@@ -5,7 +5,7 @@ import * as engine from '../../pkg';
 import {Lookup} from '../../pkg/data';
 import {newSeed} from '../integration/common';
 
-import blocklistJSON from '../blocklist.json';
+import blocklistJSON from '../showdown/blocklist.json';
 
 const BLOCKLIST = blocklistJSON[1].moves as ID[];
 
