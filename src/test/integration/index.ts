@@ -7,7 +7,7 @@ import * as tty from 'tty';
 
 import {Generation, GenerationNum, Generations} from '@pkmn/data';
 import {Protocol} from '@pkmn/protocol';
-import {Battle, BattleStreams, Dex, ID, PRNG, PRNGSeed, Streams, Teams} from '@pkmn/sim';
+import {Battle, BattleStreams, Dex, ID, PRNG, PRNGSeed, Streams, Teams, toID} from '@pkmn/sim';
 import {
   AIOptions, ExhaustiveRunner, ExhaustiveRunnerOptions,
   ExhaustiveRunnerPossibilities, RunnerOptions,
@@ -77,10 +77,11 @@ interface PlayerOptions {
 // @pkmn/engine (-Dshowdown -Dtrace) battle via the ExhaustiveRunner and
 // confirms that the engine produces the same chunks of output given the same
 // input... only a lot of black magic and subterfuge is required to make this
-// happen. First, we support both replaying from a past input log (which must
-// contain "pass" choices - these cannot simply be implied) as well as playing
-// out a battle from a seed. To get the latter to work we have to jump through a
-// number of hoops:
+// happen. First, we support both replaying from a past input log (which
+// necessitates a fromInputLog function that can deal with Pokémon Showdown
+// mutating the raw input by eliding "pass" choices and turning move slot
+// indexes into IDs) as well as playing out a battle from a seed. To get the
+// latter to work we have to jump through a number of hoops:
 //
 //   - we need to patch Pokémon Showdown to make its speed ties sane (patch)
 //   - we need to ensure the ExhaustiveRunner doesn't generate teams with moves
@@ -110,14 +111,13 @@ function play(
   {seed, formatid}: {formatid: string; seed: PRNGSeed},
   p1options: PlayerOptions,
   p2options: PlayerOptions,
-  input?: string[],
+  replay?: string[],
   debug?: boolean,
 ) {
-  const frames: {pkmn: Frame[]; showdown: Frame[]} = {pkmn: [], showdown: []};
-
   let c1 = engine.Choice.pass();
   let c2 = engine.Choice.pass();
 
+  const frames: {pkmn: Frame[]; showdown: Frame[]} = {pkmn: [], showdown: []};
   const partial: {
     pkmn: Partial<Frame> & {battle?: engine.Data<engine.Battle>; parsed?: engine.ParsedLine[]};
     showdown: Partial<Frame> & {seed?: number[]; chunk?: string};
@@ -138,42 +138,47 @@ function play(
   frames.showdown.push(partial.showdown as Frame);
   partial.showdown = {};
 
-  const players = input ? undefined : {
+  const players = replay ? undefined : {
     p1: p1options.create!(null! as any),
     p2: p2options.create!(null! as any),
   };
 
-  const choices = {p1: 'pass', p2: 'pass'};
+  const choices = Choices.get(gen);
+  const chose = {p1: c1, p2: c2};
   if (players) {
-    players.p1.choose = c => { choices.p1 = c; };
-    players.p2.choose = c => { choices.p2 = c; };
+    players.p1.choose = c => { chose.p1 = engine.Choice.parse(c); };
+    players.p2.choose = c => { chose.p2 = engine.Choice.parse(c); };
   }
 
-  let decision = 0;
+  let index = 0;
   const makeChoices = (): [engine.Choice, engine.Choice] => {
-    if (input) {
-      // First 3 lines are start and both players teams
-      choices.p1 = input[decision + 3].slice(4);
-      choices.p2 = input[decision + 4].slice(4);
-      decision++;
+    if (replay) {
+      [chose.p1, chose.p2, index] = fromInputLog(replay, index, {
+        p1: choices(control, 'p1').map(engine.Choice.parse),
+        p2: choices(control, 'p2').map(engine.Choice.parse),
+      }, {
+        p1: control.p1.active[0].moves.map(toID),
+        p2: control.p2.active[0].moves.map(toID),
+      });
     } else {
       for (const id of ['p1', 'p2'] as const) {
         const player = players![id];
         const request = control[id]!.activeRequest;
         if (!request || request.wait) {
-          choices[id] = 'pass';
+          chose[id] = engine.Choice.pass();
         } else {
           player.receiveRequest(request);
-          while (!Choices.get(gen)(control, id).includes(choices[id])) {
+          const c = engine.Choice.format(chose[id]);
+          while (!choices(control, id).includes(c)) {
             // making the unavailable request forces activeRequest to get updated
-            assert.ok(!control[id].choose(choices[id]));
+            assert.ok(!control[id].choose(c));
             player.receiveRequest(control[id]!.activeRequest!);
           }
         }
       }
     }
-    control.makeChoices(choices.p1, choices.p2);
-    return [engine.Choice.parse(choices.p1), engine.Choice.parse(choices.p2)];
+    control.makeChoices(engine.Choice.format(chose.p1), engine.Choice.format(chose.p2));
+    return [chose.p1, chose.p2];
   };
 
   try {
@@ -234,7 +239,7 @@ function play(
     assert.notEqual(result.type, undefined);
     assert.deepEqual(battle.prng, control.prng.seed);
   } catch (err: any) {
-    if (!input) {
+    if (!replay) {
       try {
         console.error('');
         dump(
@@ -431,24 +436,23 @@ function possibilities(gen: Generation) {
     moves: moves.map(m => m.id as ID),
   };
 }
-// Figure out the next valid choices for the players given an input log -
-// *without* "pass" choices. The actual sim.Battle.inputLog elides passes, so
-// this allows us to replay the battle given such a log (though the play
-// function keeps track of its own input log that does contain "pass")
-export function fromInputLog(
-  battle: engine.Battle,
-  result: engine.Result,
+
+const IGNORE = /^>(version(?:-origin)|start|player)/;
+const MATCH = /^>(p1|p2) (?:(pass)|((move) (.*))|((switch) ([2-6])))/;
+
+function fromInputLog(
   input: string[],
   index: number,
+  options: {p1: engine.Choice[]; p2: engine.Choice[]},
+  moves: {p1: ID[]; p2: ID[]},
 ) {
-  // Players don't usually send "pass" on wait requests (they just waits) so we
+  // Players don't usually send "pass" on wait requests (they just wait) so we
   // need to determine when the player would have been forced to pass and fill
   // that in. Otherwise we set the choice to undefined and determine what the
   // choice was by processing the input log
-  const initial = (player: engine.Player) => {
-    const options = battle.choices(player, result);
-    return (options.length === 1 && options[0].type === 'pass') ? engine.Choice.pass() : undefined;
-  };
+  const initial = (player: engine.Player) =>
+    (!options[player].length || options[player].length === 1 && options[player][0].type === 'pass')
+      ? engine.Choice.pass() : undefined;
 
   const choices: {p1: engine.Choice | undefined; p2: engine.Choice | undefined} =
     {p1: initial('p1'), p2: initial('p2')};
@@ -462,32 +466,47 @@ export function fromInputLog(
   // meaning the other player should have passed but didn't, or the player made
   // an unavailable choice which we didn't skip as invalid)
   while (index < input.length && !(choices.p1 && choices.p2)) {
-    if (/^>(version|start|player)/.test(input[index])) {
+    if (IGNORE.test(input[index])) {
       index++;
       continue;
     }
 
-    const m = /^>(p1|p2) (.*)/.exec(input[index]);
+    // We can't simply call engine.Choice.parse on the choice because Pokémon
+    // Showdown oh so helpfully mutates the raw input and replaces move slot
+    // indexes with move IDs :/
+    const m = MATCH.exec(input[index]);
     if (!m) throw new Error(`Unexpected input ${index}: '${input[index]}'`);
 
     const player = m[1] as engine.Player;
-    const {type, data} = engine.Choice.parse(m[2]);
+    const type = (m[2] ?? m[4] ?? m[7]) as engine.Choice['type'];
+    const d = m[5] ?? m[8] ?? '0';
 
-    const choice = choices[player];
-    if (choice) {
+    const data = !isNaN(+d) ? +d : moves[player].indexOf(d as ID) + 1;
+    if (type === 'move' && !data) throw new Error(`Invalid choice data: '${d}'`);
+
+    const choice = {type, data};
+    if (choices[player]) {
       throw new Error(`Already have choice for ${player}: ` +
-      `'${choice.type === 'pass' ? choice.type : `${choice.type} ${choice.data}`}' vs. ` +
-      `'${type === 'pass' ? type : `${type} ${data}`}' `);
+        `'${engine.Choice.format(choices[player]!)}' vs. '${engine.Choice.format(choice)}'`);
     }
 
     // Ensure the choice we parsed from the input log is actually valid for the
     // player - its possible that the RandomPlayerAI made an "unavailable"
     // choice, in which case we simply continue to the next input to determine
-    // what the *actual* choice should be
-    for (const choice of battle.choices(player, result)) {
-      if (choice.type === type && choice.data === data) {
-        choices[player] = choice;
-        break;
+    // what the *actual* choice should be. We also need to handle Pokémon Showdown's
+    // broken forced choice semantics where the move index in the input log gets
+    // translated to an illegal index
+    if (options[player].length === 1 && options[player][0].type === 'move') {
+      if (type !== 'move') {
+        throw new Error(`Invalid choice when move is forced: '${engine.Choice.format(choice)}'`);
+      }
+      choices[player] = options[player][0];
+    } else {
+      for (const option of options[player]) {
+        if (option.type === choice.type && option.data === choice.data) {
+          choices[player] = choice;
+          break;
+        }
       }
     }
 
@@ -526,7 +545,7 @@ export async function run(gens: Generations, options: string | Options) {
     const spec = JSON.parse(lines[0].slice(7)) as {formatid: string; seed: PRNGSeed};
     const p1 = {spec: JSON.parse(lines[1].slice(10)) as {name: string; team: string}};
     const p2 = {spec: JSON.parse(lines[2].slice(10)) as {name: string; team: string}};
-    play(gen, spec, p1, p2, lines.slice(3), true);
+    play(gen, spec, p1, p2, lines, true);
     return 0;
   }
 
