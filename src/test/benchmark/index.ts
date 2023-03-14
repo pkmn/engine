@@ -1,6 +1,7 @@
 import 'source-map-support/register';
 
 import {execFileSync} from 'child_process';
+import * as path from 'path';
 
 import {Generation, Generations, ID, PokemonSet, StatsTable} from '@pkmn/data';
 import {Battle, Dex, PRNG, PRNGSeed, Pokemon, Side, SideID, Teams} from '@pkmn/sim';
@@ -13,9 +14,11 @@ import {Choices, formatFor, patch} from '../showdown';
 import blocklistJSON from '../showdown/blocklist.json';
 
 const BLOCKLIST = blocklistJSON[1].moves as ID[];
+const ROOT = path.resolve(__dirname, '..', '..', '..');
 
 const toMillis = (duration: bigint) => Number(duration / BigInt(1e6));
 const serialize = (seed: PRNGSeed) => toBigInt(seed).toString();
+const sh = (cmd: string, args: string[]) => execFileSync(cmd, args, {encoding: 'utf8'});
 
 export const Options = new class {
   get(this: void, gen: Generation, prng: PRNG): engine.CreateOptions {
@@ -265,12 +268,8 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
 
 const libpkmn = (format: ID, prng: PRNG, battles: number, showdown = true) => {
   const warmup = Math.max(Math.floor(battles / 10));
-  const stdout = execFileSync('zig', [
-    'build', `-Dshowdown=${showdown.toString()}`, 'benchmark', '--',
-    format[3], // TODO: support doubles
-    `${warmup}/${battles}`,
-    serialize(prng.seed),
-  ], {encoding: 'utf8'});
+  const exe = path.resolve(ROOT, 'build', 'bin', `benchmark${showdown ? '-showdown' : ''}`);
+  const stdout = sh(exe, [format[3], `${warmup}/${battles}`, serialize(prng.seed)]);
   const [duration, turn, seed] = stdout.split(',');
   return [BigInt(duration), Number(turn), seed.trim()] as const;
 };
@@ -322,6 +321,7 @@ export function iterations(
   const entries = [];
 
   for (const showdown of [true, false]) {
+    sh('zig', ['build', `-Dshowdown=${showdown.toString()}`, 'tools', '-p', 'build']);
     for (const gen of gens) {
       if (gen.num > 1) break;
       patch.generation(gen);
@@ -359,6 +359,7 @@ export function iterations(
 
 export async function comparison(gens: Generations, battles: number, seed: number[]) {
   const stats: {[format: string]: {[config: string]: number}} = {};
+  sh('zig', ['build', '-Dshowdown=true', 'tools', '-p', 'build']);
 
   for (const gen of gens) {
     if (gen.num > 1) break;
