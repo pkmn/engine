@@ -165,7 +165,7 @@ export class Choice {
 
   static parse(choice: string): Choice {
     const m = Choice.MATCH.exec(choice);
-    if (!m) throw new Error(`Invalid choice: '${choice}`);
+    if (!m) throw new Error(`Invalid choice: '${choice}'`);
     const type = (m[1] ?? m[3] ?? m[6]) as Choice['type'];
     const data = +(m[4] ?? m[7] ?? 0);
     return {type, data};
