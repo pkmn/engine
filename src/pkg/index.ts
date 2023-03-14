@@ -171,6 +171,10 @@ export class Choice {
     return {type, data};
   }
 
+  static format(choice: Choice): string {
+    return choice.type === 'pass' ? choice.type : `${choice.type} ${choice.data}`;
+  }
+
   static pass(): Choice {
     return {type: 'pass', data: 0};
   }

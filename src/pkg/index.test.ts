@@ -47,6 +47,12 @@ for (const gen of new Generations(Dex as any)) {
       expect(() => Choice.parse('switch 1')).toThrow('Invalid choice');
     });
 
+    test('Choice.format', () => {
+      expect(Choice.format(Choice.pass())).toBe('pass');
+      expect(Choice.format(Choice.move(2))).toBe('move 2');
+      expect(Choice.format(Choice.switch(4))).toBe('switch 4');
+    });
+
     test('Result.decode', () => {
       expect(Result.decode(0b0101_0000)).toEqual({type: undefined, p1: 'move', p2: 'move'});
       expect(Result.decode(0b1000_0000)).toEqual({type: undefined, p1: 'pass', p2: 'switch'});
