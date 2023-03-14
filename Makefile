@@ -12,6 +12,7 @@ zig-build:
 	zig build -Dshowdown -Dtrace -p build
 
 .PHONY: js-build
+js-build: export DEBUG_PKMN_ENGINE=true
 js-build: node_modules
 	node src/bin/install-pkmn-engine --options='-Dshowdown'
 	npm run compile
@@ -105,6 +106,7 @@ zig-example:
 example: c-example js-example zig-example
 
 .PHONY: addon
+addon: export DEBUG_PKMN_ENGINE=true
 addon:
 	node src/bin/install-pkmn-engine --options='-Dshowdown -Dtrace'
 
@@ -113,7 +115,9 @@ integration: clean build check example addon
 	npm run test:integration
 
 .PHONY: benchmark
+benchmark: export DEBUG_PKMN_ENGINE=
 benchmark:
+	node src/bin/install-pkmn-engine --options='-Dshowdown'
 	npm run benchmark
 
 .PHONY: clean-example
