@@ -431,6 +431,80 @@ function possibilities(gen: Generation) {
     moves: moves.map(m => m.id as ID),
   };
 }
+// Figure out the next valid choices for the players given an input log -
+// *without* "pass" choices. The actual sim.Battle.inputLog elides passes, so
+// this allows us to replay the battle given such a log (though the play
+// function keeps track of its own input log that does contain "pass")
+export function fromInputLog(
+  battle: engine.Battle,
+  result: engine.Result,
+  input: string[],
+  index: number,
+) {
+  // Players don't usually send "pass" on wait requests (they just waits) so we
+  // need to determine when the player would have been forced to pass and fill
+  // that in. Otherwise we set the choice to undefined and determine what the
+  // choice was by processing the input log
+  const initial = (player: engine.Player) => {
+    const options = battle.choices(player, result);
+    return (options.length === 1 && options[0].type === 'pass') ? engine.Choice.pass() : undefined;
+  };
+
+  const choices: {p1: engine.Choice | undefined; p2: engine.Choice | undefined} =
+    {p1: initial('p1'), p2: initial('p2')};
+
+  // Iterate over the input log from where we last stopped while at least one
+  // player still needs a choice and try to parse out choices from the raw
+  // input. If we find a choice for a player that already has one assigned then
+  // the engine and Pokémon Showdown disagree on the possible options (the
+  // engine either thought the player was forced to "pass" and assigned a choice
+  // above, or we received two inputs for one player and zero for the other
+  // meaning the other player should have passed but didn't, or the player made
+  // an unavailable choice which we didn't skip as invalid)
+  while (index < input.length && !(choices.p1 && choices.p2)) {
+    if (/^>(version|start|player)/.test(input[index])) {
+      index++;
+      continue;
+    }
+
+    const m = /^>(p1|p2) (.*)/.exec(input[index]);
+    if (!m) throw new Error(`Unexpected input ${index}: '${input[index]}'`);
+
+    const player = m[1] as engine.Player;
+    const {type, data} = engine.Choice.parse(m[2]);
+
+    const choice = choices[player];
+    if (choice) {
+      throw new Error(`Already have choice for ${player}: ` +
+      `'${choice.type === 'pass' ? choice.type : `${choice.type} ${choice.data}`}' vs. ` +
+      `'${type === 'pass' ? type : `${type} ${data}`}' `);
+    }
+
+    // Ensure the choice we parsed from the input log is actually valid for the
+    // player - its possible that the RandomPlayerAI made an "unavailable"
+    // choice, in which case we simply continue to the next input to determine
+    // what the *actual* choice should be
+    for (const choice of battle.choices(player, result)) {
+      if (choice.type === type && choice.data === data) {
+        choices[player] = choice;
+        break;
+      }
+    }
+
+    index++;
+  }
+
+  // If we iterated through the entire input log and still don't have a choice
+  // for both players then we screwed up somehow
+  const unresolved = [];
+  if (!choices.p1) unresolved.push('p1');
+  if (!choices.p2) unresolved.push('p2');
+  if (unresolved.length) {
+    throw new Error(`Unable to resolve choices for ${unresolved.join(', ')}`);
+  }
+
+  return [choices.p1!, choices.p2!, index] as const;
+}
 
 type Options = Pick<ExhaustiveRunnerOptions, 'log' | 'maxFailures' | 'cycles'> & {
   prng: PRNG | PRNGSeed;
