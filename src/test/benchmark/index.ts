@@ -348,7 +348,7 @@ export function iterations(
         name,
         unit: 'battles/sec',
         value: Math.round(stats.avg),
-        range: `±${stats.rme.toFixed(2)}%`,
+        range: isNaN(stats.rme) ? 'N/A' : `±${stats.rme.toFixed(2)}%`,
         extra,
       });
     }
