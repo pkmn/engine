@@ -53,7 +53,7 @@
     "@pkmn/protocol": "^0.6.10"
   },
   "devDependencies": {
-    "@pkmn/eslint-config": "^2.16.0",
+    "@pkmn/eslint-config": "^3.0.0-alpha.0",
     "@pkmn/img": "^0.2.7",
     "@pkmn/sets": "^5.0.3",
     "@pkmn/sim": "0.7.29",
@@ -62,13 +62,9 @@
     "@types/minimist": "^1.2.2",
     "@types/mustache": "^4.2.2",
     "@types/node": "^18.15.0",
-    "@typescript-eslint/eslint-plugin": "^5.54.1",
-    "@typescript-eslint/parser": "^5.54.1",
     "@vitest/coverage-c8": "^0.29.2",
     "binaryen": "^112.0.0",
     "eslint": "^8.36.0",
-    "eslint-plugin-import": "^2.27.5",
-    "eslint-plugin-jest": "^27.2.1",
     "html-minifier": "^4.0.0",
     "json-stringify-pretty-compact": "3.0.0",
     "minimist": "^1.2.8",
@@ -95,19 +91,6 @@
     "extends": "@pkmn",
     "ignorePatterns": ["dist/", "node_modules/", "src/examples/zig", "build/"],
     "env": {"es6": true, "node": true, "browser": true},
-    "settings": {"jest": {"version": 29}},
-    "plugins": ["import"],
-    "rules": {
-      "import/order":  ["error", {
-        "newlines-between": "always",
-        "alphabetize": {"order": "asc", "caseInsensitive": true}
-      }],
-      "no-multiple-empty-lines": ["error", {"max": 1}],
-      "sort-imports": ["error", {
-        "ignoreDeclarationSort": true,
-        "allowSeparatedGroups": true
-      }]
-    },
     "overrides": [{
       "files": ["**/*.ts"],
       "parserOptions": {"project": ["./tsconfig.json", "./src/examples/js/tsconfig.json"]}
