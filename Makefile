@@ -111,7 +111,7 @@ addon:
 	node src/bin/install-pkmn-engine --options='-Dshowdown -Dtrace'
 
 .PHONY: integration
-integration: clean build check example addon
+integration: clean build test example lint addon
 	npm run test:integration
 
 .PHONY: benchmark
