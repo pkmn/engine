@@ -99,7 +99,7 @@ pub fn benchmark(
         if (fuzz) last = random.src.seed;
         if (warmup != null and i == w) random = pkmn.PSRNG.init(seed);
 
-        const opt = .{ .cleric = showdown or !fuzz, .block = showdown and fuzz };
+        const opt = .{ .cleric = showdown or !fuzz, .block = showdown and !fuzz };
         var battle = switch (gen) {
             1 => pkmn.gen1.helpers.Battle.random(&random, opt),
             else => unreachable,
@@ -117,10 +117,6 @@ pub fn benchmark(
             log = pkmn.Log(std.ArrayList(u8).Writer){ .writer = buf.?.writer() };
         }
 
-        switch (gen) {
-            1 => battle.rng = pkmn.gen1.helpers.prng(&random),
-            else => unreachable,
-        }
         std.debug.assert(!showdown or battle.side(.P1).get(1).hp > 0);
         std.debug.assert(!showdown or battle.side(.P2).get(1).hp > 0);
 

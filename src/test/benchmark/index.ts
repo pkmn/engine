@@ -60,7 +60,7 @@ export const Options = new class {
       for (const stat of gen.stats) {
         if (stat === 'spd') break;
         const exp = prng.randomChance(1, 20) ? prng.next(0, 0xFFFF + 1) : 0xFFFF;
-        evs[stat] = Math.floor(Math.min(255, Math.ceil(Math.sqrt(exp))) / 4);
+        evs[stat] = Math.min(255, Math.trunc(Math.sqrt(exp)));
       }
       evs.spd = evs.spa;
 
@@ -101,7 +101,7 @@ export const Options = new class {
       const evs = {} as StatsTable;
       for (const stat of gen.stats) {
         const exp = prng.randomChance(1, 20) ? prng.next(0, 0xFFFF + 1) : 0xFFFF;
-        evs[stat] = Math.floor(Math.min(255, Math.ceil(Math.sqrt(exp))) / 4);
+        evs[stat] = Math.min(255, Math.trunc(Math.sqrt(exp)));
       }
 
       const moves: ID[] = [];
@@ -220,7 +220,7 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
   },
   '@pkmn/engine': {
     warmup: true,
-    run(gen, format, prng, battles) {
+    run(gen, _, prng, battles) {
       let duration = 0n;
       let turns = 0;
 
