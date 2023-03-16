@@ -402,7 +402,8 @@ if (require.main === module) {
       const entries = iterations(gens, argv.iterations, argv.battles, seed, argv.text);
       if (argv.text) {
         for (const {name, unit, value, range, extra} of entries) {
-          console.log(`${name}: ${value} ± ${range.slice(1)} ${unit} ${extra}`);
+          const r = range.startsWith('±') ? ` ± ${range.slice(1)}` : '';
+          console.log(`${name}: ${value}${r} ${unit} ${extra}`);
         }
       } else {
         console.log(JSON.stringify(entries, null, 2));
