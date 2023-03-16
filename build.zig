@@ -12,7 +12,7 @@ pub fn module(b: *std.Build, options: Options) *std.Build.Module {
     build_options.addOption(?bool, "trace", options.trace);
     return b.createModule(.{
         .source_file = .{ .path = dirname ++ "/src/lib/pkmn.zig" },
-        .dependencies = &.{.{ .name = "pkmn_options", .module = build_options.createModule() }},
+        .dependencies = &.{.{ .name = "build_options", .module = build_options.createModule() }},
     });
 }
 
@@ -60,7 +60,7 @@ pub fn build(b: *std.Build) !void {
             .optimize = optimize,
             .target = target,
         });
-        lib.addOptions("pkmn_options", options);
+        lib.addOptions("build_options", options);
         lib.setMainPkgPath("./");
         lib.addSystemIncludePath(headers);
         lib.linkLibC();
@@ -88,7 +88,7 @@ pub fn build(b: *std.Build) !void {
             },
             .target = .{ .cpu_arch = .wasm32, .os_tag = .freestanding },
         });
-        lib.addOptions("pkmn_options", options);
+        lib.addOptions("build_options", options);
         lib.setMainPkgPath("./");
         lib.stack_size = wasm_stack_size;
         lib.rdynamic = true;
@@ -115,7 +115,7 @@ pub fn build(b: *std.Build) !void {
             .optimize = optimize,
             .target = target,
         });
-        lib.addOptions("pkmn_options", options);
+        lib.addOptions("build_options", options);
         lib.setMainPkgPath("./");
         lib.addIncludePath("src/include");
         maybeStrip(b, lib, b.getInstallStep(), strip, cmd, null);
@@ -129,7 +129,7 @@ pub fn build(b: *std.Build) !void {
             .optimize = optimize,
             .target = target,
         });
-        lib.addOptions("pkmn_options", options);
+        lib.addOptions("build_options", options);
         lib.setMainPkgPath("./");
         lib.addIncludePath("src/include");
         lib.bundle_compiler_rt = true;
@@ -186,7 +186,7 @@ pub fn build(b: *std.Build) !void {
     });
     tests.setMainPkgPath("./");
     tests.setFilter(test_filter);
-    tests.addOptions("pkmn_options", options);
+    tests.addOptions("build_options", options);
     tests.single_threaded = true;
     maybeStrip(b, tests, &tests.step, strip, cmd, null);
     if (pic) tests.force_pic = pic;

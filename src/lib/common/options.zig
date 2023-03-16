@@ -1,4 +1,4 @@
-const build_options = @import("pkmn_options");
+const build_options = @import("build_options");
 const root = @import("root");
 
 pub const Options = struct {
