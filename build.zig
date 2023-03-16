@@ -299,10 +299,10 @@ fn tool(
     path: []const u8,
     config: Config,
 ) *std.Build.RunStep {
-    var name = std.fs.path.basename(path);
+    var name = config.name orelse std.fs.path.basename(path);
     const index = std.mem.lastIndexOfScalar(u8, name, '.');
     if (index) |i| name = name[0..i];
-    if (config.showdown) name = b.fmt("{s}-showdown", .{config.name orelse name});
+    if (config.showdown) name = b.fmt("{s}-showdown", .{name});
 
     const exe = b.addExecutable(.{
         .name = name,
