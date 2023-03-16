@@ -7,13 +7,22 @@ import {PlayerOptions} from '.';
 
 const ArgType = PROTOCOL.ArgType;
 
+/** A message logged by the engine parsed into Pokémon Showdown's protocol. */
 export interface ParsedLine {
+  /** Positional protocol arguments. */
   args: Protocol.BattleArgType;
+  /** Keyword protocol arguments. */
   kwArgs: Protocol.BattleArgsKWArgType;
 }
 
+/**
+ * Information related to battle required to parse the engine's binary protocol
+ * into Pokémon Showdown's text protocol (e.g. Pokémon nicknames).
+ */
 export class Info {
+  /** Information for Player 1's side. */
   p1: SideInfo;
+  /** Information for Player 2's side. */
   p2: SideInfo;
 
   constructor(gen: Generation, sides: {p1: PlayerOptions; p2: PlayerOptions}) {
@@ -22,8 +31,14 @@ export class Info {
   }
 }
 
+/**
+ * Information used to parse a given side's team into Pokémon Showdown's text
+ * protocol from the engine's binary protocol.
+ */
 export class SideInfo {
+  /** The side's player's name. */
   name: string;
+  /** Information for the side's Pokémon. */
   team: PokemonInfo[];
 
   constructor(gen: Generation, player: PlayerOptions) {
@@ -40,15 +55,28 @@ export class SideInfo {
   }
 }
 
+/**
+ * Information used to parse a given Pokémon into Pokémon Showdown's text
+ * protocol from the engine's binary protocol.
+ */
 export interface PokemonInfo {
+  /** The Pokémon's nickname. */
   name: string;
+  /** The gender of the Pokémon. */
   gender?: string;
+  /** Whether or not the Pokémon is shiny. */
   shiny?: boolean;
 }
 
+/**
+ * Parses the engine's binary protocol into Pokémon Showdown's text protocol.
+ */
 export class Log {
+  /** The generation this Log is able to parse. */
   readonly gen: Generation;
+  /** The lookup table used by the Log. */
   readonly lookup: Lookup;
+  /** The battle information required to parse the engine's binary protocol. */
   readonly info: Info;
 
   constructor(gen: Generation, lookup: Lookup, info: Info) {
@@ -57,6 +85,10 @@ export class Log {
     this.info = info;
   }
 
+  /**
+   * Decode engine's binary protocol `data` and convert it to lines of Pokémon
+   * Showdown's text protocol.
+   */
   *parse(data: DataView): Iterable<ParsedLine> {
     let lines: ParsedLine[] = [];
     let i = 0;
@@ -160,7 +192,7 @@ END[PROTOCOL.End.Toxic] = 'Toxic counter' as Protocol.EffectName;
 END[PROTOCOL.End.LightScreen] = 'Light Screen' as ID;
 END[PROTOCOL.End.Reflect] = 'Reflect' as ID;
 
-export const DECODERS = new Array<Decoder>(ArgType.length);
+const DECODERS = new Array<Decoder>(ArgType.length);
 DECODERS[ArgType.Move] = function (offset, data) {
   const source = decodeIdent(this.info, data.getUint8(offset++));
   const m = data.getUint8(offset++);

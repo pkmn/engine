@@ -46,6 +46,10 @@ export const Data = new class {
 
 const LOOKUPS: Lookup[] = [];
 
+/**
+ * Translation table for encoding/decoding Pokémon Showdown string identifiers
+ * to the identifiers used internally by the pkmn engine.
+ */
 export class Lookup {
   private readonly gen: Generation;
   private readonly typesByNum: TypeName[];
@@ -55,6 +59,7 @@ export class Lookup {
   private readonly itemsByNum: ID[];
   private readonly itemsByID: {[id: string]: number};
 
+  /** Returns a `Lookup` table for a given generation. */
   static get(gen: Generation) {
     if (gen.num > 2) throw new Error(`Unsupported gen ${gen.num}`);
     const lookup = LOOKUPS[gen.num - 1];
@@ -91,6 +96,9 @@ export class Lookup {
     }
   }
 
+  /**
+   * Returns the respective sizes of the various data types in the lookup table.
+   */
   get sizes() {
     return {
       types: this.typesByNum.length,
@@ -100,34 +108,62 @@ export class Lookup {
     };
   }
 
+  /**
+   * Decodes the Pokémon Showdown `TypeName` for a type corresponding to the
+   * identifying `num` returned by the engine.
+   */
   typeByNum(num: number): TypeName {
     return this.typesByNum[num];
   }
 
+  /**
+   * Encodes a `TypeName` to the number used as an identifier by the engine.
+   */
   typeByName(name: TypeName): number {
     return this.typesByName[name];
   }
 
+  /**
+   * Decodes the Pokémon Showdown `ID` for a species corresponding to the
+   * identifying `num` returned by the engine.
+   */
   speciesByNum(num: number): ID {
     return this.species[num - 1];
   }
 
+  /**
+   * Encodes a species `ID` to the number used as an identifier by the engine.
+   */
   speciesByID(id: ID | undefined): number {
     return id ? this.gen.species.get(id)!.num : 0;
   }
 
+  /**
+   * Decodes the Pokémon Showdown `ID` for a move corresponding to the
+   * identifying `num` returned by the engine.
+   */
   moveByNum(num: number): ID {
     return this.moves[num - 1];
   }
 
+  /**
+   * Encodes a move `ID` to the number used as an identifier by the engine.
+   */
   moveByID(id: ID | undefined): number {
     return id ? this.gen.moves.get(id)!.num : 0;
   }
 
+  /**
+   * Decodes the Pokémon Showdown `ID` for an item corresponding to the
+   * identifying `num` returned by the engine.
+   */
   itemByNum(num: number): ID {
     return this.itemsByNum[num - 1];
   }
 
+  /**
+   * Encodes an item `ID` to the number used as an identifier by the engine.
+   */
   itemByID(id: ID | undefined): number {
     return id ? this.itemsByID[id] + 1 : 0;
   }

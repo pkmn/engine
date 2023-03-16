@@ -7,9 +7,7 @@ import * as addon from './addon';
 import {LAYOUT, LE, Lookup} from './data';
 import {decodeIdentRaw, decodeStatus, decodeTypes} from './protocol';
 
-import {
-  BattleOptions, Choice, CreateOptions, Data, Gen1, Player, RestoreOptions, Result, Slot,
-} from '.';
+import {Choice, CreateOptions, Data, Gen1, Player, RestoreOptions, Result, Slot} from '.';
 
 const SIZES = LAYOUT[0].sizes;
 const OFFSETS = LAYOUT[0].offsets;
@@ -25,7 +23,7 @@ for (const v in OFFSETS.Volatiles) {
 }
 
 export class Battle implements Gen1.Battle {
-  readonly config: BattleOptions;
+  readonly config: CreateOptions | RestoreOptions;
   readonly log?: DataView;
 
   private readonly lookup: Lookup;
@@ -35,7 +33,7 @@ export class Battle implements Gen1.Battle {
 
   private readonly cache: [Side?, Side?];
 
-  constructor(lookup: Lookup, data: DataView, config: BattleOptions) {
+  constructor(lookup: Lookup, data: DataView, config: CreateOptions | RestoreOptions) {
     this.config = config;
 
     this.lookup = lookup;
