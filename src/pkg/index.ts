@@ -6,9 +6,12 @@ import * as addon from './addon';
 import {Lookup} from './data';
 import * as gen1 from './gen1';
 
+/** Representation of one of the battle's participants. */
 export type Player = 'p1' | 'p2';
+/** The one-indexed location of a player's Pokémon in battle. */
 export type Slot = 1 | 2 | 3 | 4 | 5 | 6;
 
+/** Root object representing the entire state of a Pokémon battle. */
 export type Battle = Gen1.Battle;
 export type Side = Gen1.Side;
 export type Pokemon = Gen1.Pokemon;
@@ -87,6 +90,7 @@ export namespace Gen1 {
 
 export type BattleOptions = CreateOptions | RestoreOptions;
 
+/** Options for creating a battle via Battle.create. */
 export type CreateOptions = {
   p1: PlayerOptions;
   p2: PlayerOptions;
@@ -101,6 +105,7 @@ export type CreateOptions = {
   log?: false;
 };
 
+/** Options for restoring a battle via Battle.restore. */
 export type RestoreOptions = {
   p1: PlayerOptions;
   p2: PlayerOptions;
@@ -111,23 +116,28 @@ export type RestoreOptions = {
   log?: false;
 };
 
+/** Options about a particular player. */
 export interface PlayerOptions {
   name: string;
   team: Partial<PokemonSet>[];
 }
 
+/** A choice made by a player during battle. */
 export interface Choice {
   type: 'pass' | 'move' | 'switch';
   data: number;
 }
 
+/** The result of the battle - all defined results should be considered terminal. */
 export interface Result {
   type: undefined | 'win' | 'lose' | 'tie' | 'error';
   p1: Choice['type'];
   p2: Choice['type'];
 }
 
+/** Factory for creating Battle objects. */
 export const Battle = new class {
+  /** Create a Battle in the given generation with the provided options. */
   create(gen: Generation, options: CreateOptions) {
     addon.check(!!options.showdown);
     const lookup = Lookup.get(gen);
@@ -137,6 +147,7 @@ export const Battle = new class {
     }
   }
 
+  /** Restore a (possibly in-progress) Battle in the given generation with the provided options. */
   restore(gen: Generation, battle: Battle, options: RestoreOptions) {
     addon.check(!!options.showdown);
     const lookup = Lookup.get(gen);
@@ -147,22 +158,30 @@ export const Battle = new class {
   }
 };
 
+/** Utilities for working with Choice objects. */
 export class Choice {
   static Types = ['pass', 'move', 'switch'] as const;
+  static PASS = {type: 'pass', data: 0} as const;
   static MATCH = /^(?:(pass)|((move) ([0-4]))|((switch) ([2-6])))$/;
 
   private constructor() {}
 
+  /** Decode a Choice from its binary representation. */
   static decode(byte: number): Choice {
     return {type: Choice.Types[byte & 0b11], data: byte >> 4};
   }
 
+  /** Encode a Choice to its binary representation. */
   static encode(choice?: Choice): number {
     return (choice
       ? (choice.data << 4 | (choice.type === 'pass' ? 0 : choice.type === 'move' ? 1 : 2))
       : 0);
   }
 
+  /**
+   * Parse a Pokémon Showdown choice string into a Choice.
+   * Only numeric choice data is supported.
+   */
   static parse(choice: string): Choice {
     const m = Choice.MATCH.exec(choice);
     if (!m) throw new Error(`Invalid choice: '${choice}'`);
@@ -171,28 +190,34 @@ export class Choice {
     return {type, data};
   }
 
+  /** Formats a Choice ino a Pokémon Showdown compatible choice string. */
   static format(choice: Choice): string {
     return choice.type === 'pass' ? choice.type : `${choice.type} ${choice.data}`;
   }
 
+  /** Returns the "pass" Choice. */
   static pass(): Choice {
-    return {type: 'pass', data: 0};
+    return Choice.PASS;
   }
 
+  /** Returns a "move" Choice with the provided data. */
   static move(data: 0 | 1 | 2 | 3 | 4): Choice {
     return {type: 'move', data};
   }
 
+  /** Returns a "switch" Choice with the provided data. */
   static switch(data: 2 | 3 | 4 | 5 | 6): Choice {
     return {type: 'switch', data};
   }
 }
 
+/** Utilities for working with Result objects */
 export class Result {
   static Types = [undefined, 'win', 'lose', 'tie', 'error'] as const;
 
   private constructor() {}
 
+  /** Decode a Result from its binary representation. */
   static decode(byte: number): Result {
     return {
       type: Result.Types[byte & 0b1111],
