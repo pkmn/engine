@@ -109,12 +109,12 @@ pub fn benchmark(
             else => unreachable,
         };
 
-        var log: ?pkmn.Log(std.ArrayList(u8).Writer) = null;
+        var log: ?pkmn.protocol.Log(std.ArrayList(u8).Writer) = null;
         if (save) {
             if (data != null) deinit(allocator);
             data = std.ArrayList(Data).init(allocator);
             buf = std.ArrayList(u8).init(allocator);
-            log = pkmn.Log(std.ArrayList(u8).Writer){ .writer = buf.?.writer() };
+            log = pkmn.protocol.Log(std.ArrayList(u8).Writer){ .writer = buf.?.writer() };
         }
 
         std.debug.assert(!showdown or battle.side(.P1).get(1).hp > 0);

@@ -22,21 +22,28 @@ pub const Choice = @import("common/data.zig").Choice;
 /// considered terminal.
 pub const Result = @import("common/data.zig").Result;
 
-/// Logs protocol information to its Writer during a battle update when
-/// options.trace is enabled.
-pub const Log = @import("common/protocol.zig").Log;
-
 /// Pokémon Showdown's RNG (backed by a Generation V & VI RNG).
 pub const PSRNG = @import("common/rng.zig").PSRNG;
 
+/// Namespace for helpers related to protocol trace logging.
 pub const protocol = if (options.internal) struct {
     pub usingnamespace @import("common/protocol.zig");
 } else struct {
+    /// Logs protocol information to its Writer during a battle update when
+    /// options.trace is enabled.
+    pub const Log = @import("common/protocol.zig").Log;
+    /// Log type backed by std.io.FixedBufferStream Writer. Intended to be
+    /// intialized with a LOGS_SIZE-sized buffer.
     pub const FixedLog = @import("common/protocol.zig").FixedLog;
+    /// Null object pattern implementation of Log backed by a
+    /// std.io.null_writer. Ignores anything sent to it, though trace logging
+    /// should addtionally be turned off entirely by using options.trace.
     pub const NULL = @import("common/protocol.zig").NULL;
 };
 
+/// Namespace for Generation I Pokémon
 pub const gen1 = struct {
     pub usingnamespace @import("gen1/data.zig");
+    /// Provides helpers for initializing Generation I Pokémon battles.
     pub const helpers = @import("gen1/helpers.zig");
 };
