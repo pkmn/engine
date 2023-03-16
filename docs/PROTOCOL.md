@@ -690,7 +690,7 @@ constraints:
 
 Furthermore, a **lax** vs. **strict** interpretation of the RNG can be applied - whether or not any
 conceivable sequence of events should be considered or only those which can be obtained in practice
-via the actual RNG (on either the catridge or Pokémon Showdown).
+via the actual RNG (on either the cartridge or Pokémon Showdown).
 
 In general, the constants will be defined such that they will be guaranteed to be sufficient under
 **cartridge constraints with a lax consideration of the RNG** (though taking a strict interpretation
@@ -815,7 +815,7 @@ only lose 6 bytes and thus arrive at 180 bytes for the maximum log size for Gene
 from z3 import *
 
 # 100% (255) = 131 (SpikeCannon)
-# 85% (215) = 3, 4, 31, 42, 140 (DoubleSlap, CometPunch, FuryAttack, PinMissile, Barage)
+# 85% (215) = 3, 4, 31, 42, 140 (DoubleSlap, CometPunch, FuryAttack, PinMissile, Barrage)
 # 80% (203) = 154 (Fury Swipes)
 
 total = 10 + 14
@@ -848,7 +848,7 @@ s.assert_and_track(((state[14] * 5 + 1) & 3) + 2 == 5, 'Turn 3: P1 Fury Swipes m
 s.assert_and_track(ULT(state[15] * 5 + 1, 128), 'Turn 3: P2 avoid confusion self-hit')
 s.assert_and_track(ULT(state[16] * 5 + 1, 255), 'Turn 3: P2 Metronome crit (any)')
 s.assert_and_track(Or(state[17] * 5 + 1 == 119), 'Turn 3: P2 Metronome proc MirrorMove')
-s.assert_and_track(ULT(state[18] * 5 + 1, 255), 'Turn 3: P2 MirroMove crit (any)')
+s.assert_and_track(ULT(state[18] * 5 + 1, 255), 'Turn 3: P2 MirrorMove crit (any)')
 s.assert_and_track(ULT(RotateLeft(state[19]  * 5 + 1, 3), 65), 'Turn 3: P2 Fury Swipes crits')
 s.assert_and_track(UGE(RotateRight(state[20] * 5 + 1, 1), 217), 'Turn 3: P2 Fury Swipes damage roll')
 s.assert_and_track(ULE(state[21] * 5 + 1, 203), 'Turn 3: P2 Fury Swipes hit')
