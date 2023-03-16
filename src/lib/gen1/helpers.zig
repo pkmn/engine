@@ -27,6 +27,7 @@ const Status = data.Status;
 const ArgType = protocol.ArgType;
 const Log = protocol.Log(std.io.FixedBufferStream([]u8).Writer);
 
+/// Options with dictate
 pub const Options = struct {
     cleric: bool = showdown,
     block: bool = showdown,

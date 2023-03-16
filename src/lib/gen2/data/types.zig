@@ -12,6 +12,7 @@ const N = Effectiveness.Neutral;
 const R = Effectiveness.Resisted;
 const I = Effectiveness.Immune;
 
+/// Representation of a type in Pokémon.
 pub const Type = enum(u8) {
     Normal,
     Fighting,
@@ -80,33 +81,42 @@ pub const Type = enum(u8) {
         assert(@sizeOf(@TypeOf(PRECEDENCE)) == 18);
     }
 
+    /// The number of types in this generation.
     pub const size = 18;
 
+    /// Whether or not this type is considered to be special as opposed to physical.
     pub inline fn special(self: Type) bool {
         return @enumToInt(self) >= @enumToInt(Type.Fire);
     }
 
+    /// The `Effectiveness` of type `t2` vs. type `t1`.
     pub inline fn effectiveness(t1: Type, t2: Type) Effectiveness {
         return CHART[@enumToInt(t1)][@enumToInt(t2)];
     }
 
+    /// The precedence order of type type.
     pub inline fn precedence(self: Type) u8 {
         return PRECEDENCE[@enumToInt(self)];
     }
 };
 
+/// Representation of a Pokémon's typing.
 pub const Types = extern struct {
+    /// A Pokémon's primary type.
     type1: Type = .Normal,
+    /// A Pokémon's secondary type (may be identical to its primary type).
     type2: Type = .Normal,
 
     comptime {
         assert(@sizeOf(Types) == 2);
     }
 
+    /// Whether this typing is immune to type `t`.
     pub inline fn immune(self: Types, t: Type) bool {
         return t.effectiveness(self.type1) == I or t.effectiveness(self.type2) == I;
     }
 
+    /// Whether this typing includes type `t`.
     pub inline fn includes(self: Types, t: Type) bool {
         return self.type1 == t or self.type2 == t;
     }

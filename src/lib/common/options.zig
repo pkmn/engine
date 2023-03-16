@@ -9,8 +9,11 @@ pub const Options = struct {
     internal: ?bool = null,
 };
 
+/// Whether or not Pokémon Showdown compatibility mode is enabled.
 pub const showdown = get("showdown", false);
+/// Whether or not protocol trace logging is enabled.
 pub const trace = get("trace", false);
+
 pub const advance = get("advance", true);
 pub const ebc = get("ebc", true);
 pub const internal = get("internal", false);
