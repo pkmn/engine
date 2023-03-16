@@ -6,12 +6,14 @@ pub const Options = struct {
     trace: ?bool = null,
     advance: ?bool = null,
     ebc: ?bool = null,
+    internal: ?bool = null,
 };
 
 pub const showdown = get("showdown", false);
 pub const trace = get("trace", false);
 pub const advance = get("advance", true);
 pub const ebc = get("ebc", true);
+pub const internal = get("internal", false);
 
 fn get(comptime name: []const u8, default: bool) bool {
     var build_enable: ?bool = null;

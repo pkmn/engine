@@ -29,11 +29,11 @@ pub const Log = @import("common/protocol.zig").Log;
 /// Pokémon Showdown's RNG (backed by a Generation V & VI RNG).
 pub const PSRNG = @import("common/rng.zig").PSRNG;
 
-pub const protocol = struct {
+pub const protocol = if (options.internal) struct {
     pub usingnamespace @import("common/protocol.zig");
-};
-pub const rng = struct {
-    pub usingnamespace @import("common/rng.zig");
+} else struct {
+    pub const FixedLog = @import("common/protocol.zig").FixedLog;
+    pub const NULL = @import("common/protocol.zig").NULL;
 };
 
 pub const gen1 = struct {

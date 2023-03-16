@@ -4,6 +4,8 @@ const pkmn = @import("pkmn");
 
 const protocol = pkmn.protocol;
 
+pub const pkmn_options = pkmn.Options{ .internal = true };
+
 const Tool = enum {
     markdown,
     protocol,
