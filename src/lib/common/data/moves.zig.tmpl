@@ -8,6 +8,7 @@ const assert = std.debug.assert;
 
 const Type = gen{{{ gen }}}.Type;
 
+/// TODO: doc
 pub const Move = enum({{{ Move.type }}}) {
     None,
     {{{ Move.values }}},
@@ -44,8 +45,10 @@ pub const Move = enum({{{ Move.type }}}) {
         assert(@sizeOf(@TypeOf(DATA)) == {{{ Move.dataSize }}});
     }
 
+    /// TODO: doc
     pub const size = {{{ Move.num }}};
 
+    /// TODO: doc
     pub inline fn get(id: Move) Data {
         {{{ Move.assert }}}
         return DATA[@enumToInt(id) - 1];

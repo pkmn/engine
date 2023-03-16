@@ -8,6 +8,7 @@ const assert = std.debug.assert;
 
 const Type = gen2.Type;
 
+/// TODO: doc
 pub const Move = enum(u8) {
     None,
     Pound,
@@ -262,6 +263,7 @@ pub const Move = enum(u8) {
     Whirlpool,
     BeatUp,
 
+    /// TODO: doc
     pub const Data = extern struct {
         effect: Effect,
         bp: u8,
@@ -2594,6 +2596,7 @@ pub const Move = enum(u8) {
         },
     };
 
+    /// TODO: doc
     pub const Effect = enum(u8) {
         None,
         AccuracyDown1,
@@ -2763,8 +2766,10 @@ pub const Move = enum(u8) {
         assert(@sizeOf(@TypeOf(DATA)) == 1757);
     }
 
+    /// TODO: doc
     pub const size = 251;
 
+    /// TODO: doc
     pub inline fn get(id: Move) Data {
         assert(id != .None);
         return DATA[@enumToInt(id) - 1];

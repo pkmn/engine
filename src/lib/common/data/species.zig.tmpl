@@ -9,6 +9,7 @@ const assert = std.debug.assert;
 const Stats = gen{{{ gen }}}.Stats;
 const Types = gen{{{ gen }}}.Types;
 
+/// TODO: doc
 pub const Species = enum({{{ Species.type }}}) {
     None,
     {{{ Species.values }}},
@@ -23,8 +24,10 @@ pub const Species = enum({{{ Species.type }}}) {
         assert(@sizeOf(Species) == {{{ Species.size }}});
     }
 
+    /// TODO: doc
     pub const size = {{{ Species.num }}};{{{ Species.chanceFn }}}
 
+    /// TODO: doc
     pub fn get(id: Species) Data {
         assert(id != .None);
         return DATA[@enumToInt(id) - 1];

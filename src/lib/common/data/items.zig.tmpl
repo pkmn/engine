@@ -8,6 +8,7 @@ const assert = std.debug.assert;
 
 const Type = data.Type;
 
+/// TODO: doc
 pub const Item = enum({{{ Item.type }}}) {
     None,
     {{{ Item.values }}}
@@ -16,19 +17,23 @@ pub const Item = enum({{{ Item.type }}}) {
         assert(@sizeOf(Item) == {{{ Item.size }}});
     }
 
+    /// TODO: doc
     pub const size = {{{ Item.num }}};
 
+    /// TODO: doc
     pub inline fn boost(item: Item) ?Type {
         assert(item != .None);
         if (item == .PolkadotBow) return .Normal;
         return if (@enumToInt(item) <= {{{ Item.boosts }}}) @intToEnum(Type, @enumToInt(item) - 1) else null;
     }
 
+    /// TODO: doc
     pub inline fn berry(item: Item) bool {
         assert(item != .None);
         return @enumToInt(item) > {{{ Item.effect }}} and @enumToInt(item) <= {{{ Item.berry }}};
     }
 
+    /// TODO: doc
     pub inline fn mail(item: Item) bool {
         assert(item != .None);
         return @enumToInt(item) > {{{ Item.present }}} and @enumToInt(item) <= {{{ Item.mail }}};

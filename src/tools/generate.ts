@@ -380,7 +380,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       PP.push(`${move.pp}, // ${name}`);
       DATA[0].moves[move.name] = move.pp;
     }
-    let Data = `pub const Data = packed struct {
+    let Data = `/// TODO: doc
+    pub const Data = packed struct {
         effect: Effect,
         bp: u8,
         accuracy: u8,
@@ -417,6 +418,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const sdc = multi + STAT_DOWN_CHANCE.length;
     const sec = sdc + SECONDARY_CHANCE.length;
     const Effect = `
+    /// TODO: doc
     pub const Effect = enum(u8) {
         None,
         ${effects.join('\n')}
@@ -425,35 +427,43 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
             assert(@sizeOf(Effect) == 1);
         }
 
+        /// TODO: doc
         pub inline fn onBegin(effect: Effect) bool {
             return @enumToInt(effect) > 0 and @enumToInt(effect) <= ${begin};
         }
 
+        /// TODO: doc
         pub inline fn isStatDown(effect: Effect) bool {
             return @enumToInt(effect) > ${begin} and @enumToInt(effect) <= ${sd};
         }
 
+        /// TODO: doc
         pub inline fn onEnd(effect: Effect) bool {
             return @enumToInt(effect) > ${begin} and @enumToInt(effect) <= ${end};
         }
 
+        /// TODO: doc
         pub inline fn alwaysHappens(effect: Effect) bool {
             return @enumToInt(effect) > ${end} and @enumToInt(effect) <= ${ahs};
         }
 
+        /// TODO: doc
         pub inline fn isSpecial(effect: Effect) bool {
             // NB: isSpecial includes isMulti up to Twineedle
             return @enumToInt(effect) > ${end} and @enumToInt(effect) <= ${multi - 1};
         }
 
+        /// TODO: doc
         pub inline fn isMulti(effect: Effect) bool {
             return @enumToInt(effect) > ${special} and @enumToInt(effect) <= ${multi};
         }
 
+        /// TODO: doc
         pub inline fn isStatDownChance(effect: Effect) bool {
             return @enumToInt(effect) > ${multi} and @enumToInt(effect) <= ${sdc};
         }
 
+        /// TODO: doc
         pub inline fn isSecondaryChance(effect: Effect) bool {
             // NB: isSecondaryChance includes isStatDownChance as well as Twineedle
             return (@enumToInt(effect) > ${multi - 1} and @enumToInt(effect) <= ${sec});
@@ -464,7 +474,9 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const PP = [_]u8{
         ${PP.join('\n        ')},
     };\n`;
-    const ppFn = `\n
+    const ppFn = `
+
+    /// TODO: doc
     pub fn pp(id: Move) u8 {
         assert(id != .None);
         return PP[@enumToInt(id) - 1];
@@ -533,7 +545,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         types: s.types,
       };
     }
-    Data = `pub const Data = struct {
+    Data = `/// TODO: doc
+    pub const Data = struct {
         stats: Stats(u8),
         types: Types,
     };`;
@@ -541,7 +554,9 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         ${CHANCES.join('\n        ')}
     };\n
     `;
-    const chanceFn = `\n
+    const chanceFn = `
+
+    /// TODO: doc
     pub inline fn chance(id: Species) u8 {
         assert(id != .None);
         return CHANCES[@enumToInt(id) - 1];
@@ -791,7 +806,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       DATA[1].moves[move.name] = move.pp;
     }
     // pp/accuracy/target/chance could all be u4, but packed struct needs to be power of 2
-    let Data = `pub const Data = extern struct {
+    let Data = `/// TODO: doc
+    pub const Data = extern struct {
         effect: Effect,
         bp: u8,
         type: Type,
@@ -805,7 +821,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
     };`;
 
-    const Effect = `\n    pub const Effect = enum(u8) {
+    const Effect = `\n    /// TODO: doc\n    pub const Effect = enum(u8) {
         None,
         ${Array.from(EFFECTS).sort().join(',\n        ')},
 
@@ -874,7 +890,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         gender: Number(ratio.split(',')[0]),
       };
     }
-    Data = `pub const Data = struct {
+    Data = `/// TODO: doc
+    pub const Data = struct {
         stats: Stats(u8),
         types: Types,
         ratio: u8,

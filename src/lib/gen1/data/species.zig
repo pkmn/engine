@@ -9,6 +9,7 @@ const assert = std.debug.assert;
 const Stats = gen1.Stats;
 const Types = gen1.Types;
 
+/// TODO: doc
 pub const Species = enum(u8) {
     None,
     Bulbasaur,
@@ -317,6 +318,7 @@ pub const Species = enum(u8) {
         50, // Mew
     };
 
+    /// TODO: doc
     pub const Data = struct {
         stats: Stats(u8),
         types: Types,
@@ -1084,13 +1086,16 @@ pub const Species = enum(u8) {
         assert(@sizeOf(Species) == 1);
     }
 
+    /// TODO: doc
     pub const size = 151;
 
+    /// TODO: doc
     pub inline fn chance(id: Species) u8 {
         assert(id != .None);
         return CHANCES[@enumToInt(id) - 1];
     }
 
+    /// TODO: doc
     pub fn get(id: Species) Data {
         assert(id != .None);
         return DATA[@enumToInt(id) - 1];

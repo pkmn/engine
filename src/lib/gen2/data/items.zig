@@ -8,6 +8,7 @@ const assert = std.debug.assert;
 
 const Type = data.Type;
 
+/// TODO: doc
 pub const Item = enum(u8) {
     None,
     PinkBow, // Normal
@@ -211,19 +212,23 @@ pub const Item = enum(u8) {
         assert(@sizeOf(Item) == 1);
     }
 
+    /// TODO: doc
     pub const size = 196;
 
+    /// TODO: doc
     pub inline fn boost(item: Item) ?Type {
         assert(item != .None);
         if (item == .PolkadotBow) return .Normal;
         return if (@enumToInt(item) <= 18) @intToEnum(Type, @enumToInt(item) - 1) else null;
     }
 
+    /// TODO: doc
     pub inline fn berry(item: Item) bool {
         assert(item != .None);
         return @enumToInt(item) > 30 and @enumToInt(item) <= 40;
     }
 
+    /// TODO: doc
     pub inline fn mail(item: Item) bool {
         assert(item != .None);
         return @enumToInt(item) > 60 and @enumToInt(item) <= 70;

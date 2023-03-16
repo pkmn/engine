@@ -8,6 +8,7 @@ const assert = std.debug.assert;
 
 const Type = gen1.Type;
 
+/// TODO: doc
 pub const Move = enum(u8) {
     None,
     Pound,
@@ -179,6 +180,7 @@ pub const Move = enum(u8) {
     // Sentinel used when Pokémon's turn should be skipped (e.g. bound)
     SKIP_TURN = 0xFF,
 
+    /// TODO: doc
     pub const Data = packed struct {
         effect: Effect,
         bp: u8,
@@ -1514,6 +1516,7 @@ pub const Move = enum(u8) {
         },
     };
 
+    /// TODO: doc
     pub const Effect = enum(u8) {
         None,
         // onBegin
@@ -1593,35 +1596,43 @@ pub const Move = enum(u8) {
             assert(@sizeOf(Effect) == 1);
         }
 
+        /// TODO: doc
         pub inline fn onBegin(effect: Effect) bool {
             return @enumToInt(effect) > 0 and @enumToInt(effect) <= 16;
         }
 
+        /// TODO: doc
         pub inline fn isStatDown(effect: Effect) bool {
             return @enumToInt(effect) > 16 and @enumToInt(effect) <= 21;
         }
 
+        /// TODO: doc
         pub inline fn onEnd(effect: Effect) bool {
             return @enumToInt(effect) > 16 and @enumToInt(effect) <= 31;
         }
 
+        /// TODO: doc
         pub inline fn alwaysHappens(effect: Effect) bool {
             return @enumToInt(effect) > 31 and @enumToInt(effect) <= 38;
         }
 
+        /// TODO: doc
         pub inline fn isSpecial(effect: Effect) bool {
             // NB: isSpecial includes isMulti up to Twineedle
             return @enumToInt(effect) > 31 and @enumToInt(effect) <= 46;
         }
 
+        /// TODO: doc
         pub inline fn isMulti(effect: Effect) bool {
             return @enumToInt(effect) > 44 and @enumToInt(effect) <= 47;
         }
 
+        /// TODO: doc
         pub inline fn isStatDownChance(effect: Effect) bool {
             return @enumToInt(effect) > 47 and @enumToInt(effect) <= 51;
         }
 
+        /// TODO: doc
         pub inline fn isSecondaryChance(effect: Effect) bool {
             // NB: isSecondaryChance includes isStatDownChance as well as Twineedle
             return (@enumToInt(effect) > 46 and @enumToInt(effect) <= 61);
@@ -1822,8 +1833,10 @@ pub const Move = enum(u8) {
         assert(@sizeOf(@TypeOf(DATA)) == 660);
     }
 
+    /// TODO: doc
     pub const size = 165;
 
+    /// TODO: doc
     pub inline fn get(id: Move) Data {
         assert(id != .None and id != .SKIP_TURN);
         return DATA[@enumToInt(id) - 1];
@@ -1831,6 +1844,7 @@ pub const Move = enum(u8) {
 
     const Event = enum { resolve, run };
 
+    /// TODO: doc
     pub fn pp(id: Move) u8 {
         assert(id != .None);
         return PP[@enumToInt(id) - 1];

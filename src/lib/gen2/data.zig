@@ -31,10 +31,10 @@ pub const LOGS_SIZE = if (builtin.mode == .ReleaseSmall)
 else
     std.math.ceilPowerOfTwo(usize, MAX_LOGS) catch unreachable;
 
-pub const Choice = data.Choice;
-pub const ID = data.ID;
-pub const Player = data.Player;
-pub const Result = data.Result;
+const Choice = data.Choice;
+const ID = data.ID;
+const Player = data.Player;
+const Result = data.Result;
 
 const showdown = options.showdown;
 
