@@ -2157,6 +2157,7 @@ pub const Effects = struct {
                 if (stats.atk == MAX_STAT_VALUE) {
                     boosts.atk -= 1;
                     if (showdown) {
+                        if (move.effect == .Rage) return;
                         try log.boost(ident, reason, n);
                         try log.boost(ident, reason, -1);
                     }
