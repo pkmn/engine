@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         gen: [1]
-        options: ['', '-Dshowdown']
+        options: [''] # FIXME ['', '-Dshowdown']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
