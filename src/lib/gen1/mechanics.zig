@@ -354,8 +354,9 @@ fn executeMove(
 
     assert(choice.type == .Move);
     var mslot = choice.data;
-    var auto = showdown and side.last_selected_move != .None and
-        Move.get(side.last_selected_move).effect == .Binding;
+    // Sadly, we can't even check `Move.get(side.last_selected_move).effect == .Binding` here
+    // because Pokémon Showdown's Mirror Move implementation clobbers side.last_selected_move
+    var auto = showdown and side.last_selected_move != .None;
 
     // GLITCH: Freeze top move selection desync & PP underflow shenanigans
     if (mslot == 0 and side.last_selected_move != .None and side.last_selected_move != .Struggle) {
