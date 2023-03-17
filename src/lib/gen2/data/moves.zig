@@ -8,7 +8,7 @@ const assert = std.debug.assert;
 
 const Type = gen2.Type;
 
-/// TODO: doc
+/// Representation of a Pokémon move.
 pub const Move = enum(u8) {
     None,
     Pound,
@@ -263,14 +263,21 @@ pub const Move = enum(u8) {
     Whirlpool,
     BeatUp,
 
-    /// TODO: doc
+    /// Data associated with a Pokémon move.
     pub const Data = extern struct {
+        /// The move's effect.
         effect: Effect,
+        /// The move's base power.
         bp: u8,
+        /// The move's type.
         type: Type,
+        /// The move's base PP.
         pp: u8,
+        /// The move's accuracy percentage.
         accuracy: u8,
+        /// The move's targeting behavior.
         target: Target,
+        /// The chance of the move's secondary effect occurring.
         chance: u8 = 0,
 
         comptime {
@@ -2596,7 +2603,7 @@ pub const Move = enum(u8) {
         },
     };
 
-    /// TODO: doc
+    /// Representation of a move's effect.
     pub const Effect = enum(u8) {
         None,
         AccuracyDown1,
@@ -2766,10 +2773,10 @@ pub const Move = enum(u8) {
         assert(@sizeOf(@TypeOf(DATA)) == 1757);
     }
 
-    /// TODO: doc
+    /// The number of Pokémon moves in this generation.
     pub const size = 251;
 
-    /// TODO: doc
+    /// Returns the `Data` corresponding to the move.
     pub inline fn get(id: Move) Data {
         assert(id != .None);
         return DATA[@enumToInt(id) - 1];

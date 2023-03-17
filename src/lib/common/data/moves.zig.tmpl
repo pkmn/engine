@@ -8,7 +8,7 @@ const assert = std.debug.assert;
 
 const Type = gen{{{ gen }}}.Type;
 
-/// TODO: doc
+/// Representation of a Pokémon move.
 pub const Move = enum({{{ Move.type }}}) {
     None,
     {{{ Move.values }}},
@@ -45,10 +45,10 @@ pub const Move = enum({{{ Move.type }}}) {
         assert(@sizeOf(@TypeOf(DATA)) == {{{ Move.dataSize }}});
     }
 
-    /// TODO: doc
+    /// The number of Pokémon moves in this generation.
     pub const size = {{{ Move.num }}};
 
-    /// TODO: doc
+    /// Returns the `Data` corresponding to the move.
     pub inline fn get(id: Move) Data {
         {{{ Move.assert }}}
         return DATA[@enumToInt(id) - 1];

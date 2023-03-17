@@ -9,7 +9,7 @@ const assert = std.debug.assert;
 const Stats = gen2.Stats;
 const Types = gen2.Types;
 
-/// TODO: doc
+/// Representation of a Pokémon species.
 pub const Species = enum(u8) {
     None,
     Bulbasaur,
@@ -264,10 +264,13 @@ pub const Species = enum(u8) {
     HoOh,
     Celebi,
 
-    /// TODO: doc
+    /// Data associated with a Pokémon species.
     pub const Data = struct {
+        /// The base stats of the Pokémon species.
         stats: Stats(u8),
+        /// The typing of the Pokémon species.
         types: Types,
+        /// The gender ratio of the Pokémon species.
         ratio: u8,
     };
 
@@ -1784,10 +1787,10 @@ pub const Species = enum(u8) {
         assert(@sizeOf(Species) == 1);
     }
 
-    /// TODO: doc
+    /// The number of Pokémon species in this generation.
     pub const size = 251;
 
-    /// TODO: doc
+    /// Returns the `Data` corresponding to the species.
     pub fn get(id: Species) Data {
         assert(id != .None);
         return DATA[@enumToInt(id) - 1];

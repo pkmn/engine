@@ -8,7 +8,7 @@ const assert = std.debug.assert;
 
 const Type = gen1.Type;
 
-/// TODO: doc
+/// Representation of a Pokémon move.
 pub const Move = enum(u8) {
     None,
     Pound,
@@ -180,12 +180,16 @@ pub const Move = enum(u8) {
     // Sentinel used when Pokémon's turn should be skipped (e.g. bound)
     SKIP_TURN = 0xFF,
 
-    /// TODO: doc
+    /// Data associated with a Pokémon move.
     pub const Data = packed struct {
         effect: Effect,
+        /// The move's base PP.
         bp: u8,
+        /// The move's accuracy percentage.
         accuracy: u8,
+        /// The move's type.
         type: Type,
+        /// The move's targeting behavior.
         target: Target,
 
         comptime {
@@ -1516,7 +1520,7 @@ pub const Move = enum(u8) {
         },
     };
 
-    /// TODO: doc
+    /// Representation of a move's effect.
     pub const Effect = enum(u8) {
         None,
         // onBegin
@@ -1596,43 +1600,43 @@ pub const Move = enum(u8) {
             assert(@sizeOf(Effect) == 1);
         }
 
-        /// TODO: doc
+        /// Whether this effect activates during the "begin" step of move execution.
         pub inline fn onBegin(effect: Effect) bool {
             return @enumToInt(effect) > 0 and @enumToInt(effect) <= 16;
         }
 
-        /// TODO: doc
+        /// Whether this effect lowers stats.
         pub inline fn isStatDown(effect: Effect) bool {
             return @enumToInt(effect) > 16 and @enumToInt(effect) <= 21;
         }
 
-        /// TODO: doc
+        /// Whether this effect activates during the "end" step of move execution.
         pub inline fn onEnd(effect: Effect) bool {
             return @enumToInt(effect) > 16 and @enumToInt(effect) <= 31;
         }
 
-        /// TODO: doc
+        /// Whether this effect is considered to "always happen".
         pub inline fn alwaysHappens(effect: Effect) bool {
             return @enumToInt(effect) > 31 and @enumToInt(effect) <= 38;
         }
 
-        /// TODO: doc
+        /// Whether this effect is handled specially by the engine.
         pub inline fn isSpecial(effect: Effect) bool {
             // NB: isSpecial includes isMulti up to Twineedle
             return @enumToInt(effect) > 31 and @enumToInt(effect) <= 46;
         }
 
-        /// TODO: doc
+        /// Whether this effect is a multi-hit effect.
         pub inline fn isMulti(effect: Effect) bool {
             return @enumToInt(effect) > 44 and @enumToInt(effect) <= 47;
         }
 
-        /// TODO: doc
+        /// Whether this effect is has chance of lowering stats.
         pub inline fn isStatDownChance(effect: Effect) bool {
             return @enumToInt(effect) > 47 and @enumToInt(effect) <= 51;
         }
 
-        /// TODO: doc
+        /// Whether this effect has a secondary chance.
         pub inline fn isSecondaryChance(effect: Effect) bool {
             // NB: isSecondaryChance includes isStatDownChance as well as Twineedle
             return (@enumToInt(effect) > 46 and @enumToInt(effect) <= 61);
@@ -1833,10 +1837,10 @@ pub const Move = enum(u8) {
         assert(@sizeOf(@TypeOf(DATA)) == 660);
     }
 
-    /// TODO: doc
+    /// The number of Pokémon moves in this generation.
     pub const size = 165;
 
-    /// TODO: doc
+    /// Returns the `Data` corresponding to the move.
     pub inline fn get(id: Move) Data {
         assert(id != .None and id != .SKIP_TURN);
         return DATA[@enumToInt(id) - 1];
@@ -1844,7 +1848,7 @@ pub const Move = enum(u8) {
 
     const Event = enum { resolve, run };
 
-    /// TODO: doc
+    /// Returns the base PP of the move.
     pub fn pp(id: Move) u8 {
         assert(id != .None);
         return PP[@enumToInt(id) - 1];

@@ -380,12 +380,16 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       PP.push(`${move.pp}, // ${name}`);
       DATA[0].moves[move.name] = move.pp;
     }
-    let Data = `/// TODO: doc
+    let Data = `/// Data associated with a Pokémon move.
     pub const Data = packed struct {
         effect: Effect,
+        /// The move's base PP.
         bp: u8,
+        /// The move's accuracy percentage.
         accuracy: u8,
+        /// The move's type.
         type: Type,
+        /// The move's targeting behavior.
         target: Target,
 
         comptime {
@@ -418,7 +422,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const sdc = multi + STAT_DOWN_CHANCE.length;
     const sec = sdc + SECONDARY_CHANCE.length;
     const Effect = `
-    /// TODO: doc
+    /// Representation of a move's effect.
     pub const Effect = enum(u8) {
         None,
         ${effects.join('\n')}
@@ -427,43 +431,43 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
             assert(@sizeOf(Effect) == 1);
         }
 
-        /// TODO: doc
+        /// Whether this effect activates during the "begin" step of move execution.
         pub inline fn onBegin(effect: Effect) bool {
             return @enumToInt(effect) > 0 and @enumToInt(effect) <= ${begin};
         }
 
-        /// TODO: doc
+        /// Whether this effect lowers stats.
         pub inline fn isStatDown(effect: Effect) bool {
             return @enumToInt(effect) > ${begin} and @enumToInt(effect) <= ${sd};
         }
 
-        /// TODO: doc
+        /// Whether this effect activates during the "end" step of move execution.
         pub inline fn onEnd(effect: Effect) bool {
             return @enumToInt(effect) > ${begin} and @enumToInt(effect) <= ${end};
         }
 
-        /// TODO: doc
+        /// Whether this effect is considered to "always happen".
         pub inline fn alwaysHappens(effect: Effect) bool {
             return @enumToInt(effect) > ${end} and @enumToInt(effect) <= ${ahs};
         }
 
-        /// TODO: doc
+        /// Whether this effect is handled specially by the engine.
         pub inline fn isSpecial(effect: Effect) bool {
             // NB: isSpecial includes isMulti up to Twineedle
             return @enumToInt(effect) > ${end} and @enumToInt(effect) <= ${multi - 1};
         }
 
-        /// TODO: doc
+        /// Whether this effect is a multi-hit effect.
         pub inline fn isMulti(effect: Effect) bool {
             return @enumToInt(effect) > ${special} and @enumToInt(effect) <= ${multi};
         }
 
-        /// TODO: doc
+        /// Whether this effect is has chance of lowering stats.
         pub inline fn isStatDownChance(effect: Effect) bool {
             return @enumToInt(effect) > ${multi} and @enumToInt(effect) <= ${sdc};
         }
 
-        /// TODO: doc
+        /// Whether this effect has a secondary chance.
         pub inline fn isSecondaryChance(effect: Effect) bool {
             // NB: isSecondaryChance includes isStatDownChance as well as Twineedle
             return (@enumToInt(effect) > ${multi - 1} and @enumToInt(effect) <= ${sec});
@@ -476,7 +480,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     };\n`;
     const ppFn = `
 
-    /// TODO: doc
+    /// Returns the base PP of the move.
     pub fn pp(id: Move) u8 {
         assert(id != .None);
         return PP[@enumToInt(id) - 1];
@@ -545,9 +549,11 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         types: s.types,
       };
     }
-    Data = `/// TODO: doc
+    Data = `/// Data associated with a Pokémon species.
     pub const Data = struct {
+        /// The base stats of the Pokémon species.
         stats: Stats(u8),
+        /// The typing of the Pokémon species.
         types: Types,
     };`;
     const chances = `const CHANCES = [_]u8{
@@ -556,7 +562,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     `;
     const chanceFn = `
 
-    /// TODO: doc
+    /// The Pokémon's critical hit rate=io out of 256.
     pub inline fn chance(id: Species) u8 {
         assert(id != .None);
         return CHANCES[@enumToInt(id) - 1];
@@ -806,14 +812,21 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       DATA[1].moves[move.name] = move.pp;
     }
     // pp/accuracy/target/chance could all be u4, but packed struct needs to be power of 2
-    let Data = `/// TODO: doc
+    let Data = `/// Data associated with a Pokémon move.
     pub const Data = extern struct {
+        /// The move's effect.
         effect: Effect,
+        /// The move's base power.
         bp: u8,
+        /// The move's type.
         type: Type,
+        /// The move's base PP.
         pp: u8,
+        /// The move's accuracy percentage.
         accuracy: u8,
+        /// The move's targeting behavior.
         target: Target,
+        /// The chance of the move's secondary effect occurring.
         chance: u8 = 0,
 
         comptime {
@@ -821,13 +834,16 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
     };`;
 
-    const Effect = `\n    /// TODO: doc\n    pub const Effect = enum(u8) {
+    const Effect = `
+    /// Representation of a move's effect.
+    pub const Effect = enum(u8) {
         None,
         ${Array.from(EFFECTS).sort().join(',\n        ')},
 
         comptime {
             assert(@sizeOf(Effect) == 1);
-        }\n` + '    };\n';
+        }
+    };\n`;
 
     template('moves', dirs.out, {
       gen: gen.num,
@@ -890,10 +906,13 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         gender: Number(ratio.split(',')[0]),
       };
     }
-    Data = `/// TODO: doc
+    Data = `/// Data associated with a Pokémon species.
     pub const Data = struct {
+        /// The base stats of the Pokémon species.
         stats: Stats(u8),
+        /// The typing of the Pokémon species.
         types: Types,
+        /// The gender ratio of the Pokémon species.
         ratio: u8,
     };`;
     template('species', dirs.out, {

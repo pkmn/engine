@@ -9,7 +9,7 @@ const assert = std.debug.assert;
 const Stats = gen{{{ gen }}}.Stats;
 const Types = gen{{{ gen }}}.Types;
 
-/// TODO: doc
+/// Representation of a Pokémon species.
 pub const Species = enum({{{ Species.type }}}) {
     None,
     {{{ Species.values }}},
@@ -24,10 +24,10 @@ pub const Species = enum({{{ Species.type }}}) {
         assert(@sizeOf(Species) == {{{ Species.size }}});
     }
 
-    /// TODO: doc
+    /// The number of Pokémon species in this generation.
     pub const size = {{{ Species.num }}};{{{ Species.chanceFn }}}
 
-    /// TODO: doc
+    /// Returns the `Data` corresponding to the species.
     pub fn get(id: Species) Data {
         assert(id != .None);
         return DATA[@enumToInt(id) - 1];

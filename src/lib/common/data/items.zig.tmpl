@@ -8,7 +8,7 @@ const assert = std.debug.assert;
 
 const Type = data.Type;
 
-/// TODO: doc
+/// Representation of a held item in Pokémon.
 pub const Item = enum({{{ Item.type }}}) {
     None,
     {{{ Item.values }}}
@@ -17,23 +17,23 @@ pub const Item = enum({{{ Item.type }}}) {
         assert(@sizeOf(Item) == {{{ Item.size }}});
     }
 
-    /// TODO: doc
+    /// The number of held items in this generation.
     pub const size = {{{ Item.num }}};
 
-    /// TODO: doc
+    /// Returns a `Type` boosted by this item or `null` if the item is not a type-boosting item.
     pub inline fn boost(item: Item) ?Type {
         assert(item != .None);
         if (item == .PolkadotBow) return .Normal;
         return if (@enumToInt(item) <= {{{ Item.boosts }}}) @intToEnum(Type, @enumToInt(item) - 1) else null;
     }
 
-    /// TODO: doc
+    /// Whether or not this item is a Berry.
     pub inline fn berry(item: Item) bool {
         assert(item != .None);
         return @enumToInt(item) > {{{ Item.effect }}} and @enumToInt(item) <= {{{ Item.berry }}};
     }
 
-    /// TODO: doc
+    /// Whether or not this item is Mail.
     pub inline fn mail(item: Item) bool {
         assert(item != .None);
         return @enumToInt(item) > {{{ Item.present }}} and @enumToInt(item) <= {{{ Item.mail }}};
