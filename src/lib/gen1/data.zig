@@ -55,17 +55,17 @@ pub fn Battle(comptime RNG: anytype) type {
         turn: u16 = 0,
         /// The last damage dealt by either side.
         last_damage: u16 = 0,
-        /// TODO: doc
+        /// The slot index of the last selected moves for each side
         last_selected_indexes: MoveIndexes = .{},
-        /// TODO: doc
+        /// The pseudo random number generator.
         rng: RNG,
 
-        /// Returns the
+        /// Returns the `Side` for the given `player`.
         pub inline fn side(self: *Self, player: Player) *Side {
             return &self.sides[@enumToInt(player)];
         }
 
-        /// Returns
+        /// Returns the `Side` of the opponent for the given `player`
         pub inline fn foe(self: *Self, player: Player) *Side {
             return &self.sides[@enumToInt(player.foe())];
         }
@@ -101,24 +101,25 @@ test Battle {
     try expectEqual(384, @sizeOf(Battle(PRNG)));
 }
 
-/// TODO: doc
+/// Representation of one side of a Generation I Pokémon battle.
 pub const Side = extern struct {
-    /// TODO: doc
+    /// The player's party in its original order
     pokemon: [6]Pokemon = [_]Pokemon{.{}} ** 6,
-    /// TODO: doc
+    /// The active Pokémon for the side, zero initialized if the battle has yet to start.
+    /// Note that fainted Pokémon are still consider "active" until their replacement switches in.
     active: ActivePokemon = .{},
-    /// TODO: doc
+    /// One-based slot indexes reflecting the current order of the player's party.
     order: [6]u8 = [_]u8{0} ** 6,
-    /// TODO: doc
+    /// The last move the player selected.
     last_selected_move: Move = .None,
-    /// TODO: doc
+    /// The last move the player used.
     last_used_move: Move = .None,
 
     comptime {
         assert(@sizeOf(Side) == 184);
     }
 
-    /// TODO: doc
+    /// Returns the stored `Pokemon` corresponding to the one-indexed party `slot`.
     pub inline fn get(self: *Side, slot: u8) *Pokemon {
         assert(slot > 0 and slot <= 6);
         const id = self.order[slot - 1];
@@ -126,32 +127,32 @@ pub const Side = extern struct {
         return &self.pokemon[id - 1];
     }
 
-    /// TODO: doc
+    /// Returns the stored `Pokemon` corresponding to the `active` Pokémon (slot 1).
     pub inline fn stored(self: *Side) *Pokemon {
         return self.get(1);
     }
 };
 
-/// TODO: doc
+/// Representation of the state for single Generation I Pokémon while active in battle.
 pub const ActivePokemon = extern struct {
-    /// TODO: doc
+    /// The active Pokémon's modified stats.
     stats: Stats(u16) = .{},
-    /// TODO: doc
+    /// The active Pokémon's current species.
     species: Species = .None,
-    /// TODO: doc
+    /// The active Pokémon's current types.
     types: Types = .{},
-    /// TODO: doc
+    /// The active Pokémon's boosts.
     boosts: Boosts = .{},
-    /// TODO: doc
+    /// The active Pokémon's volatile statuses and associated data.
     volatiles: Volatiles = .{},
-    /// TODO: doc
+    /// The active Pokémon's current move slots.
     moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
 
     comptime {
         assert(@sizeOf(ActivePokemon) == 32);
     }
 
-    /// TODO: doc
+    /// Returns the active Pokémon's current move slot located at the one-indexed `mslot`.
     pub inline fn move(self: *ActivePokemon, mslot: u8) *MoveSlot {
         assert(mslot > 0 and mslot <= 4);
         assert(self.moves[mslot - 1].id != .None);
@@ -159,28 +160,28 @@ pub const ActivePokemon = extern struct {
     }
 };
 
-/// TODO: doc
+/// Representation of the state for single Generation I Pokémon while inactive in the party.
 pub const Pokemon = extern struct {
-    /// TODO: doc
+    /// The Pokémon's unmodified stats.
     stats: Stats(u16) = .{},
-    /// TODO: doc
+    /// The Pokémon's original stored move slots.
     moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
-    /// TODO: doc
+    /// The Pokémon's current HP.
     hp: u16 = 0,
-    /// TODO: doc
+    /// The Pokémon's current status.
     status: u8 = 0,
-    /// TODO: doc
+    /// The Pokémon's original species.
     species: Species = .None,
-    /// TODO: doc
+    /// The Pokémon's original types.
     types: Types = .{},
-    /// TODO: doc
+    /// The Pokémon's level.
     level: u8 = 100,
 
     comptime {
         assert(@sizeOf(Pokemon) == 24);
     }
 
-    /// TODO: doc
+    /// Returns the Pokémon's original move slot located at the one-indexed `mslot`.
     pub inline fn move(self: *Pokemon, mslot: u8) *MoveSlot {
         assert(mslot > 0 and mslot <= 4);
         assert(self.moves[mslot - 1].id != .None);
@@ -188,11 +189,11 @@ pub const Pokemon = extern struct {
     }
 };
 
-/// TODO: doc
+/// Representation of a Generation I & II Pokémon's move slot in a battle.
 pub const MoveSlot = extern struct {
-    /// TODO: doc
+    /// The identifier for the move.
     id: Move = .None,
-    /// TODO: doc
+    /// The remaining PP of the move.
     pp: u8 = 0,
 
     comptime {
@@ -202,11 +203,11 @@ pub const MoveSlot = extern struct {
 
 const uindex = if (showdown) u16 else u4;
 
-/// TODO: doc
+/// Representation of the move slot indexes for each side in a Generation I Pokémon battle.
 pub const MoveIndexes = packed struct {
-    /// TODO: doc
+    /// Player 1's move index.
     p1: uindex = 0,
-    /// TODO: doc
+    /// Player 1's move index.
     p2: uindex = 0,
 
     comptime {
@@ -214,7 +215,7 @@ pub const MoveIndexes = packed struct {
     }
 };
 
-/// TODO: doc
+/// Bitfield representation of a Generation I & II Pokémon's major status condition.
 pub const Status = enum(u8) {
     // 0 and 1 bits are also used for SLP
     SLP = 2,
@@ -229,41 +230,41 @@ pub const Status = enum(u8) {
 
     const SLP = 0b111;
 
-    /// TODO: doc
+    /// Whether or not the status `num` is the same as `status`.
     pub inline fn is(num: u8, status: Status) bool {
         if (status == .SLP) return Status.duration(num) > 0;
         return ((num >> @intCast(u3, @enumToInt(status))) & 1) != 0;
     }
 
-    /// TODO: doc
+    /// Initializes a non-sleep `status`. Use `slp` or `slf` to initialize a sleep status.
     pub inline fn init(status: Status) u8 {
         assert(status != .SLP and status != .SLF);
         return @as(u8, 1) << @intCast(u3, @enumToInt(status));
     }
 
-    /// TODO: doc
+    /// Initializes a non-SLF sleep status with duration `dur`.
     pub inline fn slp(dur: u3) u8 {
         assert(dur > 0);
         return @as(u8, dur);
     }
 
-    /// TODO: doc
+    /// Initializes a SLF sleep status with duration `dur`.
     pub inline fn slf(dur: u3) u8 {
         assert(dur > 0);
         return 0x80 | slp(dur);
     }
 
-    /// TODO: doc
+    /// Returns the duration of a sleep status.
     pub inline fn duration(num: u8) u3 {
         return @intCast(u3, num & SLP);
     }
 
-    /// TODO: doc
+    /// Returns whether `num` reflects any status.
     pub inline fn any(num: u8) bool {
         return num > 0;
     }
 
-    /// TODO: doc
+    /// Retunrns a human-readable representation of the status `num`.
     pub fn name(num: u8) []const u8 {
         if (Status.is(num, .SLF)) return "SLF";
         if (Status.is(num, .SLP)) return "SLP";
@@ -294,63 +295,64 @@ test Status {
     try expectEqual(@as(u3, 1), Status.duration(Status.slp(1)));
 }
 
-/// TODO: doc
+/// Bitfield representation of volatile statuses and associated data in Generation I.
 pub const Volatiles = packed struct {
-    /// TODO: doc
+    /// Whether the "Bide" volatile status is present.
     Bide: bool = false,
-    /// TODO: doc
+    /// Whether the "Thrashing" volatile status is present.
     Thrashing: bool = false,
-    /// TODO: doc
+    /// Whether the "MultiHit" volatile status is present.
     MultiHit: bool = false,
-    /// TODO: doc
+    /// Whether the "Flinch" volatile status is present.
     Flinch: bool = false,
-    /// TODO: doc
+    /// Whether the "Charging" volatile status is present.
     Charging: bool = false,
-    /// TODO: doc
+    /// Whether the "Binding" volatile status is present.
     Binding: bool = false,
-    /// TODO: doc
+    /// Whether the "Invulnerable" volatile status is present.
     Invulnerable: bool = false,
-    /// TODO: doc
+    /// Whether the "Confusion" volatile status is present.
     Confusion: bool = false,
 
-    /// TODO: doc
+    /// Whether the "Mist" volatile status is present.
     Mist: bool = false,
-    /// TODO: doc
+    /// Whether the "FocusEnergy" volatile status is present.
     FocusEnergy: bool = false,
-    /// TODO: doc
+    /// Whether the "Substitute" volatile status is present.
     Substitute: bool = false,
-    /// TODO: doc
+    /// Whether the "Recharging" volatile status is present.
     Recharging: bool = false,
-    /// TODO: doc
+    /// Whether the "Rage" volatile status is present.
     Rage: bool = false,
-    /// TODO: doc
+    /// Whether the "LeechSeed" volatile status is present.
     LeechSeed: bool = false,
-    /// TODO: doc
+    /// Whether the "Toxic" volatile status is present.
     Toxic: bool = false,
-    /// TODO: doc
+    /// Whether the "LightScreen" volatile status is present.
     LightScreen: bool = false,
 
-    /// TODO: doc
+    /// Whether the "Reflect" volatile status is present.
     Reflect: bool = false,
-    /// TODO: doc
+    /// Whether the "Transform" volatile status is present.
     Transform: bool = false,
-    /// TODO: doc
+    /// The remaining turns of confusion
     confusion: u3 = 0,
-    /// TODO: doc
+    /// The number of attacks remaining
     attacks: u3 = 0,
 
-    /// TODO: doc
-    // NB: used for both bide and accuracy overwriting!
+    /// A union of either:
+    ///   - the total accumulated damage from Bide
+    ///   - the overwritten accuracy of certain moves
     state: u16 = 0,
-    /// TODO: doc
+    /// The remaining HP of the Substitute.
     substitute: u8 = 0,
-    /// TODO: doc
+    /// The identity of whom the active Pokémon is transformed into.
     transform: u4 = 0,
-    /// TODO: doc
+    /// The remaining turns the move is disabled.
     disabled_duration: u4 = 0,
-    /// TODO: doc
+    /// The move slot (1-4) that is disabled.
     disabled_move: u3 = 0,
-    /// TODO: doc
+    /// The number of turns toxic damage has been accumulating.
     toxic: u5 = 0,
 
     comptime {
@@ -387,10 +389,7 @@ test Volatiles {
     try expectEqual(@as(u4, 3), volatiles.attacks);
 }
 
-/// TODO: doc
-pub const Stat = enum { hp, atk, def, spe, spc };
-
-/// TODO: doc
+/// Representaiton of a Pokémon's stats in Generation I.
 pub fn Stats(comptime T: type) type {
     return extern struct {
         hp: T = 0,
@@ -399,7 +398,7 @@ pub fn Stats(comptime T: type) type {
         spe: T = 0,
         spc: T = 0,
 
-        /// TODO: doc
+        /// Computes the value of `stat` given a `base`, `dv`, stat `exp` and `level`.
         pub fn calc(comptime stat: []const u8, base: T, dv: u4, exp: u16, level: u8) T {
             assert(level > 0 and level <= 100);
             const core: u32 = (2 *% (@as(u32, base) +% dv)) +% @as(u32, (std.math.sqrt(exp) / 4));
@@ -416,19 +415,19 @@ test Stats {
     try expectEqual(0, stats.def);
 }
 
-/// TODO: doc
+/// Representation of a Pokémon's boosts in Generation I.
 pub const Boosts = packed struct {
-    /// TODO: doc
+    /// A Pokémon's Attack boosts.
     atk: i4 = 0,
-    /// TODO: doc
+    /// A Pokémon's Defense boosts.
     def: i4 = 0,
-    /// TODO: doc
+    /// A Pokémon's Speed boosts.
     spe: i4 = 0,
-    /// TODO: doc
+    /// A Pokémon's Special boosts.
     spc: i4 = 0,
-    /// TODO: doc
+    /// A Pokémon's Accuracy boosts.
     accuracy: i4 = 0,
-    /// TODO: doc
+    /// A Pokémon's Evasion boosts.
     evasion: i4 = 0,
 
     _: u8 = 0,
@@ -444,7 +443,7 @@ test Boosts {
     try expectEqual(-6, boosts.spc);
 }
 
-/// TODO: doc
+/// Representation of a Generation I Pokémon move.
 pub const Move = moves.Move;
 
 test Move {
@@ -505,7 +504,7 @@ test Move {
     try expect(!Move.Effect.isSecondaryChance(.Disable));
 }
 
-/// TODO: doc
+/// Representation of a Generation I Pokémon species.
 pub const Species = species.Species;
 
 test Species {
@@ -513,25 +512,21 @@ test Species {
     try expectEqual(@as(u8, 100), Species.get(.Mew).stats.def);
 }
 
-/// TODO: doc
+/// Representation of a Generation I type in Pokémon.
 pub const Type = types.Type;
-/// TODO: doc
+/// Representation of a Generation I Pokémon's typing.
 pub const Types = types.Types;
 
-/// TODO: doc
+/// Modifiers for the effectiveness of a type vs. another type in Pokémon.
 pub const Effectiveness = enum(u8) {
-    /// TODO: doc
     Immune = 0,
-    /// TODO: doc
     Resisted = 5,
-    /// TODO: doc
     Neutral = 10,
-    /// TODO: doc
     Super = 20,
 
-    /// TODO: doc
+    /// Used to determine the effectiness of a neutral damage hit.
     pub const neutral: u16 = @enumToInt(Effectiveness.Neutral) * @enumToInt(Effectiveness.Neutral);
-    /// TODO: doc
+    /// Used to detect whether there is a mismatch in type effectivness (relevant for precedence).
     pub const mismatch: u16 = @enumToInt(Effectiveness.Resisted) + @enumToInt(Effectiveness.Super);
 
     comptime {
@@ -563,23 +558,23 @@ test Types {
     try expect(t.includes(.Rock));
 }
 
-/// TODO: doc
+/// Representation of a Generation I Pokémon's determinant values.
 pub const DVs = struct {
-    /// TODO: doc
+    /// The Attack DV.
     atk: u4 = 15,
-    /// TODO: doc
+    /// The Defense DV.
     def: u4 = 15,
-    /// TODO: doc
+    /// The Speed DV.
     spe: u4 = 15,
-    /// TODO: doc
+    /// The Special DV.
     spc: u4 = 15,
 
-    /// TODO: doc
+    /// The computed HP DV.
     pub fn hp(self: DVs) u4 {
         return (self.atk & 1) << 3 | (self.def & 1) << 2 | (self.spe & 1) << 1 | (self.spc & 1);
     }
 
-    /// TODO: doc
+    /// Produces a random set of DVs given `rand`.
     pub fn random(rand: *rng.PSRNG) DVs {
         return .{
             .atk = if (rand.chance(u8, 1, 5)) rand.range(u4, 1, 15 + 1) else 15,

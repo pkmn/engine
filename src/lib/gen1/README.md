@@ -373,28 +373,28 @@ Documentation of the wire protocol used for logging traces when `-Dtrace` is ena
 
 ### `ActivePokemon`
 
-| Start | End | Data                               | Description                                                 |
-| ----- | --- | ---------------------------------- | ----------------------------------------------------------- |
-| 0     | 2   | `stats.hp`                         | The active Pokémon's computed max HP stat                   |
-| 2     | 4   | `stats.atk`                        | The active Pokémon's modified Attack stat                   |
-| 4     | 6   | `stats.def`                        | The active Pokémon's modified Defense stat                  |
-| 6     | 8   | `stats.spe`                        | The active Pokémon's modified Speed stat                    |
-| 8     | 10  | `stats.spc`                        | The active Pokémon's modified Special stat                  |
-| 10    | 11  | `species`                          | The active Pokémon's species                                |
-| 11    | 12  | `type1`/`type2`                    | The active Pokémon's types                                  |
-| 12    | 13  | `boosts.atk`/`boosts.def`          | The active Pokémon's Attack and Defense boosts              |
-| 13    | 14  | `boosts.spe`/`boosts.spd`          | The active Pokémon's Speed and Special boosts               |
-| 14    | 15  | `boosts.accuracy`/`boosts.evasion` | The active Pokémon's Accuracy and Evasion boosts            |
-| 15    | 16  | -                                  | *Zero padding*                                              |
-| 16    | 24  | [`volatiles`](#volatiles-1)        | The active Pokémon's volatiles statuses and associated data |
-| 24    | 25  | `moves[0].id`                      | The active Pokémon's second move                            |
-| 25    | 26  | `moves[0].pp`                      | The PP of the active Pokémon's first move                   |
-| 26    | 27  | `moves[1].id`                      | The active Pokémon's second move                            |
-| 27    | 28  | `moves[1].pp`                      | The PP of the active Pokémon's second move                  |
-| 28    | 29  | `moves[2].id`                      | The active Pokémon's third move                             |
-| 29    | 30  | `moves[2].pp`                      | The PP of the active Pokémon's third move                   |
-| 30    | 31  | `moves[3].id`                      | The active Pokémon's fourth move                            |
-| 31    | 32  | `moves[3].pp`                      | The PP of the active Pokémon's fourth move                  |
+| Start | End | Data                               | Description                                                |
+| ----- | --- | ---------------------------------- | ---------------------------------------------------------- |
+| 0     | 2   | `stats.hp`                         | The active Pokémon's computed max HP stat                  |
+| 2     | 4   | `stats.atk`                        | The active Pokémon's modified Attack stat                  |
+| 4     | 6   | `stats.def`                        | The active Pokémon's modified Defense stat                 |
+| 6     | 8   | `stats.spe`                        | The active Pokémon's modified Speed stat                   |
+| 8     | 10  | `stats.spc`                        | The active Pokémon's modified Special stat                 |
+| 10    | 11  | `species`                          | The active Pokémon's species                               |
+| 11    | 12  | `type1`/`type2`                    | The active Pokémon's types                                 |
+| 12    | 13  | `boosts.atk`/`boosts.def`          | The active Pokémon's Attack and Defense boosts             |
+| 13    | 14  | `boosts.spe`/`boosts.spd`          | The active Pokémon's Speed and Special boosts              |
+| 14    | 15  | `boosts.accuracy`/`boosts.evasion` | The active Pokémon's Accuracy and Evasion boosts           |
+| 15    | 16  | -                                  | *Zero padding*                                             |
+| 16    | 24  | [`volatiles`](#volatiles-1)        | The active Pokémon's volatile statuses and associated data |
+| 24    | 25  | `moves[0].id`                      | The active Pokémon's second move                           |
+| 25    | 26  | `moves[0].pp`                      | The PP of the active Pokémon's first move                  |
+| 26    | 27  | `moves[1].id`                      | The active Pokémon's second move                           |
+| 27    | 28  | `moves[1].pp`                      | The PP of the active Pokémon's second move                 |
+| 28    | 29  | `moves[2].id`                      | The active Pokémon's third move                            |
+| 29    | 30  | `moves[2].pp`                      | The PP of the active Pokémon's third move                  |
+| 30    | 31  | `moves[3].id`                      | The active Pokémon's fourth move                           |
+| 31    | 32  | `moves[3].pp`                      | The PP of the active Pokémon's fourth moe                  |
 
 - the active Pokémon's `stats.hp` is always identical to the corresponding stored Pokémon's `stats.hp`
 - `boosts` and `types` includes bytes which store two 4-bit fields each
@@ -429,7 +429,7 @@ Documentation of the wire protocol used for logging traces when `-Dtrace` is ena
 | 40    | 48  | `substitute`        | The remaining HP of the Substitute                          |
 | 48    | 52  | `transform`         | The identity of whom the active Pokémon is transformed into |
 | 52    | 56  | `disabled_duration` | The remaining turns the move is disabled                    |
-| 56    | 59  | `disabled_move`     | The move slot (1-4) the is disabled                         |
+| 56    | 59  | `disabled_move`     | The move slot (1-4) that is disabled                        |
 | 59    | 64  | `toxic`             | The number of turns toxic damage has been accumulating      |
 
 ### `Pokemon`
@@ -544,7 +544,7 @@ Numerous moves on Pokémon Showdown are broken not simply due to local issues in
 of their effects but instead due to **global issues** related to fundamental mechanics such as
 [broken move
 selection](https://www.smogon.com/forums/threads/rby-fight-button-simulation-improvements-fix-partial-trapping-improve-counter.3673280/#post-8655897),
-using move name instead of slot to determine move identity, implementing volatiles statuses
+using move name instead of slot to determine move identity, implementing volatile statuses
 incorrectly or not understanding how moves which call other moves work means that it isn't possible
 to completely implement Pokémon Showdown's behavior for the following moves (the pkmn engine
 attempts to reproduce as much of the behavior that can be reproduced without making data structure
