@@ -12,7 +12,7 @@ const N = Effectiveness.Neutral;
 const R = Effectiveness.Resisted;
 const I = Effectiveness.Immune;
 
-/// Representation of a type in Pokémon.
+/// Representation of a Generation II type in Pokémon.
 pub const Type = enum(u8) {
     Normal,
     Fighting,

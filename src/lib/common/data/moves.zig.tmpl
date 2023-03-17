@@ -8,7 +8,7 @@ const assert = std.debug.assert;
 
 const Type = gen{{{ gen }}}.Type;
 
-/// Representation of a Pokémon move.
+/// Representation of a Generation {{{ roman }}} Pokémon move.
 pub const Move = enum({{{ Move.type }}}) {
     None,
     {{{ Move.values }}},

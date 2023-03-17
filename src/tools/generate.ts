@@ -491,6 +491,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
     template('moves', dirs.out, {
       gen: gen.num,
+      roman: 'I',
       Move: {
         type: 'u8',
         values: moves.map(m => m.split(' ')[0]).join(',\n    ') + SENTINEL,
@@ -569,6 +570,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     }`;
     template('species', dirs.out, {
       gen: gen.num,
+      roman: 'I',
       Species: {
         type: 'u8',
         values: species.join(',\n    '),
@@ -623,6 +625,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
     const types = IDS[0].types;
     template('types', dirs.out, {
+      roman: 'I',
       Type: {
         type: 'u4',
         values: types.join(',\n    '),
@@ -658,6 +661,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     }`;
 
     template('types', dirs.out, {
+      roman: 'II',
       Type: {
         type: 'u8',
         values: types.map(t => t === '???' ? '@"???"' : t).join(',\n    '),
@@ -763,6 +767,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     }
     template('items', dirs.out, {
       gen: gen.num,
+      roman: 'II',
       Item: {
         type: 'u8',
         values: values.join('\n    '),
@@ -847,6 +852,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
     template('moves', dirs.out, {
       gen: gen.num,
+      roman: 'II',
       Move: {
         type: 'u8',
         values: moves.map(m => m.split(' ')[0]).join(',\n    '),
@@ -917,6 +923,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     };`;
     template('species', dirs.out, {
       gen: gen.num,
+      roman: 'II',
       Species: {
         type: 'u8',
         values: species.join(',\n    '),

@@ -9,7 +9,7 @@ const assert = std.debug.assert;
 const Stats = gen1.Stats;
 const Types = gen1.Types;
 
-/// Representation of a Pokémon species.
+/// Representation of a Generation I Pokémon species.
 pub const Species = enum(u8) {
     None,
     Bulbasaur,

@@ -8,7 +8,7 @@ const assert = std.debug.assert;
 
 const Type = gen1.Type;
 
-/// Representation of a Pokémon move.
+/// Representation of a Generation I Pokémon move.
 pub const Move = enum(u8) {
     None,
     Pound,

@@ -8,7 +8,7 @@ const assert = std.debug.assert;
 
 const Type = data.Type;
 
-/// Representation of a held item in Pokémon.
+/// Representation of a held item in Generation II Pokémon.
 pub const Item = enum(u8) {
     None,
     PinkBow, // Normal
