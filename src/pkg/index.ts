@@ -20,8 +20,13 @@ export type Pokemon = Gen1.Pokemon;
 /** Representation of a Pokémon's move slot in a battle. */
 export type MoveSlot = Gen1.MoveSlot;
 
-/** Methods supported by a Battle. */
+/** Generic API supported by all Generations of Battle. */
 export interface API {
+  /**
+   * The most recent buffer of binary protocol trace log data filled by `update`
+   * if tracing is enabled, otherwise undefined. Meant to be parsed by `Log`.
+   */
+  log?: DataView;
   /**
   * Returns the result of applying Player 1's choice `c1` and Player 2's choice
   * `c2` to the battle.
@@ -51,6 +56,8 @@ export interface API {
    * outlined above in {@link choices}.
    */
   choose(player: Player, result: Result, fn: (n: number) => number): Choice;
+  /** Returns a copy of the Battle data. */
+  toJSON(): Data<Battle>;
 }
 
 /** Helper type removing API methods from a data type `T`. */
@@ -346,7 +353,7 @@ export interface Result {
 /** Factory for creating Battle objects. */
 export const Battle = new class {
   /** Create a `Battle` in the given generation with the provided options. */
-  create(gen: Generation, options: CreateOptions) {
+  create(gen: Generation, options: CreateOptions): Battle {
     addon.check(!!options.showdown);
     const lookup = Lookup.get(gen);
     switch (gen.num) {
@@ -359,7 +366,7 @@ export const Battle = new class {
    * Restore a (possibly in-progress) `Battle` in the given generation with the
    * provided options.
    */
-  restore(gen: Generation, battle: Battle, options: RestoreOptions) {
+  restore(gen: Generation, battle: Battle, options: RestoreOptions): Battle {
     addon.check(!!options.showdown);
     const lookup = Lookup.get(gen);
     switch (gen.num) {
