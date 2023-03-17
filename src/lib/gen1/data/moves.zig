@@ -1846,8 +1846,6 @@ pub const Move = enum(u8) {
         return DATA[@enumToInt(id) - 1];
     }
 
-    const Event = enum { resolve, run };
-
     /// Returns the base PP of the move.
     pub fn pp(id: Move) u8 {
         assert(id != .None);

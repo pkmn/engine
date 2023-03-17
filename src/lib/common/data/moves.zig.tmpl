@@ -52,7 +52,5 @@ pub const Move = enum({{{ Move.type }}}) {
     pub inline fn get(id: Move) Data {
         {{{ Move.assert }}}
         return DATA[@enumToInt(id) - 1];
-    }
-
-    const Event = enum { resolve, run };{{{ Move.ppFn }}}
+    }{{{ Move.ppFn }}}
 };

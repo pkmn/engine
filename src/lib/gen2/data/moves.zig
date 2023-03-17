@@ -2781,6 +2781,4 @@ pub const Move = enum(u8) {
         assert(id != .None);
         return DATA[@enumToInt(id) - 1];
     }
-
-    const Event = enum { resolve, run };
 };
