@@ -16,4 +16,7 @@ const partition = (array: string[], n: number): string[][] =>
   const arr = Array.from(buf);
   const lines = partition(arr.map(x => `0x${x.toString(16).padStart(2, '0')}`), 16);
   console.log(lines.map(line => line.join(', ')).join(',\n'));
-})();
+})().catch(err => {
+  console.error(err);
+  process.exit(1);
+})
