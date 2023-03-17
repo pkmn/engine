@@ -167,7 +167,10 @@ boolean flags that are cleared when the Pokémon faints or switches out:
 [Toxic](https://pkmn.cc/bulba/Toxic_(move)) (counter),
 [Transform](https://pkmn.cc/bulba/Transform_(move)) (identity), and
 [Disable](https://pkmn.cc/bulba/Disable_(move)) (move and duration), and multi-hit attacks all
-require additional information that is also stored in the `Volatiles` structure.
+require additional information that is also stored in the `Volatiles` structure. `MultiHit` is not
+strictly required to be stored as it should always be 0 after updates barring errors, however it is
+convenient to maintain as it maps neatly to the cartridge and is effectively "free" space-wise due
+to padding.
 
 The `state` field of `Volatiles` is effectively treated as a union:
 
@@ -247,7 +250,7 @@ entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as foll
 | **team index**  | 1...6     | 3    |     | **move index**    | 1...4    | 2    |
 | **species**     | 1...151   | 8    |     | **move**          | 1...165  | 8    |
 | **stat**        | 1...999   | 10   |     | **boost**         | 0...13   | 4    |
-| **level**       | 1...100   | 7    |     | **volatiles**     | *18*     | 18   |
+| **level**       | 1...100   | 7    |     | **volatiles**     | *17*     | 17   |
 | **bide**        | 0...65635 | 16   |     | **substitute**    | 0...179  | 8    |
 | **confusion**   | 0...5     | 3    |     | **toxic**         | 0...31   | 5    |
 | **multi hits**  | 0...5     | 3    |     | **base power**    | 0...40   | 6    |
@@ -268,7 +271,7 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 - **`Pokemon`**: 5× stats (`50`) + 4× move slot (`60`) + HP (`10`) + status (`4`) + species (`8`) +
   types (`8`) + level (`7`)
 - **`ActivePokemon`**: 4× stats (`40`) + 4× move slot (`60`) + 6× boosts (`24`) + volatile data
-  (`35`) + volatiles (`18`) + species (`8`) + types (`8`) + disabled (`6`) + transform (`4`)
+  (`35`) + volatiles (`17`) + species (`8`) + types (`8`) + disabled (`6`) + transform (`4`)
   - the active Pokémon's stats/species/move slots/types may change in the case of Transform
   - the active Pokémon's types may change due to Conversion
   - the active Pokémon's level and current and max HP can always be referred to the `Pokemon`
@@ -286,9 +289,9 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 | Data              | Actual bits | Minimum bits | Overhead |
 | ----------------- | ----------- | ------------ | -------- |
 | `Pokemon`         | 192         | 147          | 30.6%    |
-| `ActivePokemon`   | 256         | 203          | 26.1%    |
-| `Side`            | 1472        | 1056         | 33.3%    |
-| `Battle`          | 3088        | 2216         | 33.6%    |
+| `ActivePokemon`   | 256         | 202          | 26.7%    |
+| `Side`            | 1472        | 1056         | 33.5%    |
+| `Battle`          | 3088        | 2216         | 33.7%    |
 | `Type.CHART`      | 1800        | 450          | 300.0%   |
 | `Type.PRECEDENCE` | 232         | 232          | 0.0%     |
 | `Moves.DATA`      | 5280        | 3960         | 33.3%    |

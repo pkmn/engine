@@ -347,7 +347,7 @@ export class Pokemon implements Gen1.Pokemon {
     const off = this.offset.active + OFFSETS.ActivePokemon.volatiles;
     const volatiles: Gen1.Volatiles = {};
     for (const v in Pokemon.Volatiles) {
-      if (v === 'Toxic') continue;
+      if (v === 'Toxic' || v === 'MultiHit') continue;
       const volatile = toID(v) as keyof Gen1.Volatiles;
 
       if (this.volatile(Pokemon.Volatiles[v])) {
@@ -613,8 +613,7 @@ export class Pokemon implements Gen1.Pokemon {
     const volatiles = pokemon.volatiles;
 
     data.setUint8(off + (Pokemon.Volatiles.Bide >> 3),
-      +!!volatiles.bide | (+!!volatiles.thrashing << 1) |
-       (+!!volatiles.multihit << 2) | (+!!volatiles.flinch << 3) |
+      +!!volatiles.bide | (+!!volatiles.thrashing << 1) | (+!!volatiles.flinch << 3) |
        (+!!volatiles.charging << 4) | (+!!volatiles.binding << 5) |
        (+!!volatiles.invulnerable << 6) | (+!!volatiles.confusion << 7));
 

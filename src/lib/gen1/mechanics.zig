@@ -485,6 +485,7 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
                 battle.rng.next() >= Gen12.percent(50) + 1;
 
             if (confused) {
+                assert(!volatiles.MultiHit);
                 volatiles.state = 0;
                 volatiles.Bide = false;
                 volatiles.Thrashing = false;
@@ -658,8 +659,8 @@ fn decrementPP(side: *Side, mslot: u4, auto: bool) void {
     var active = &side.active;
     const volatiles = &active.volatiles;
 
-    assert(!volatiles.Rage and !volatiles.Thrashing);
-    if (volatiles.Bide or volatiles.MultiHit) return;
+    assert(!volatiles.Rage and !volatiles.Thrashing and !volatiles.MultiHit);
+    if (volatiles.Bide) return;
 
     assert(active.move(mslot).pp > 0 or auto);
     active.move(mslot).pp = @intCast(u6, active.move(mslot).pp) -% 1;
@@ -1276,6 +1277,9 @@ fn checkFaint(
     if (try faint(battle, player, log, !(more or foe_fainted))) |r| return r;
     if (foe_fainted) if (try faint(battle, player.foe(), log, !more)) |r| return r;
 
+    assert(!side.active.volatiles.MultiHit);
+    assert(!foe.active.volatiles.MultiHit);
+
     if (tie) {
         try log.tie();
         return Result.Tie;
@@ -1298,7 +1302,7 @@ fn faint(battle: anytype, player: Player, log: anytype, done: bool) !?Result {
     assert(side.stored().hp == 0);
 
     var foe_volatiles = &foe.active.volatiles;
-    foe_volatiles.MultiHit = false;
+    assert(!foe_volatiles.MultiHit);
     if (foe_volatiles.Bide) {
         assert(!foe_volatiles.Thrashing and !foe_volatiles.Rage);
         foe_volatiles.state = if (showdown) 0 else foe_volatiles.state & 255;
@@ -1366,6 +1370,9 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
 }
 
 fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
+    assert(!battle.side(.P1).active.volatiles.MultiHit);
+    assert(!battle.side(.P2).active.volatiles.MultiHit);
+
     if (showdown and options.ebc and checkEBC(battle)) {
         try log.tie();
         return Result.Tie;
@@ -1490,7 +1497,7 @@ inline fn moveEffect(battle: anytype, player: Player, move: Move.Data, log: anyt
         .FlinchChance1, .FlinchChance2 => Effects.flinchChance(battle, player, move),
         .FreezeChance => Effects.freezeChance(battle, player, move, log),
         .HyperBeam => Effects.hyperBeam(battle, player, log),
-        .MultiHit, .DoubleHit, .Twineedle => Effects.multiHit(battle, player, move),
+        .MultiHit, .DoubleHit, .Twineedle => unreachable,
         .ParalyzeChance1, .ParalyzeChance2 => Effects.paralyzeChance(battle, player, move, log),
         .PoisonChance1, .PoisonChance2 => Effects.poison(battle, player, move, log),
         // zig fmt: off

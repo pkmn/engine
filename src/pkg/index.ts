@@ -189,8 +189,6 @@ export namespace Gen1 {
       /** The thrashing move's current accuracy as a number from 0-255. */
       accuracy: number;
     };
-    /** Whether the "MultiHit" volatile status is present. */
-    multihit?: unknown;
     /** Whether the "Flinch" volatile status is present. */
     flinch?: unknown;
     /** Whether the "Charging" volatile status is present. */
