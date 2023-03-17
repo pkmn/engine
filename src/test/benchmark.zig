@@ -1,3 +1,4 @@
+const builtin = @import("builtin");
 const std = @import("std");
 const pkmn = @import("pkmn");
 
@@ -81,7 +82,7 @@ pub fn benchmark(
 
     const fuzz = duration != null;
     const showdown = pkmn.options.showdown;
-    const save = fuzz and pkmn.options.trace;
+    const save = fuzz and pkmn.options.trace and builtin.mode == .Debug;
 
     var random = pkmn.PSRNG.init(seed);
     var options: [pkmn.OPTIONS_SIZE]pkmn.Choice = undefined;
@@ -200,25 +201,25 @@ fn dump() !void {
     var bw = std.io.bufferedWriter(out.writer());
     var w = bw.writer();
 
-    if (!pkmn.options.trace or out.isTty()) {
-        try w.print("seed: 0x{X}\n", .{last});
+    if (out.isTty() or builtin.mode != .Debug) {
+        try w.print("0x{X}\n", .{last});
     } else {
         try w.writeIntNative(u64, last);
-    }
 
-    if (data) |ds| {
-        if (buf) |b| {
-            try w.writeByte(@intCast(u8, b.items.len));
-            try w.writeAll(b.items);
-        } else {
-            try w.writeByte(0);
-        }
-        for (ds.items) |d| {
-            try w.writeStruct(d.result);
-            try w.writeStruct(d.c1);
-            try w.writeStruct(d.c2);
-            try w.writeAll(d.state);
-            try w.writeAll(d.log);
+        if (data) |ds| {
+            if (buf) |b| {
+                try w.writeByte(@intCast(u8, b.items.len));
+                try w.writeAll(b.items);
+            } else {
+                try w.writeByte(0);
+            }
+            for (ds.items) |d| {
+                try w.writeStruct(d.result);
+                try w.writeStruct(d.c1);
+                try w.writeStruct(d.c2);
+                try w.writeAll(d.state);
+                try w.writeAll(d.log);
+            }
         }
     }
 

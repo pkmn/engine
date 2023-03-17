@@ -1,6 +1,8 @@
 import 'source-map-support/register';
 
 import {execFile} from 'child_process';
+import * as fs from 'fs';
+import * as path from 'path';
 import {promisify} from 'util';
 
 import {Generation, Generations} from '@pkmn/data';
@@ -12,6 +14,8 @@ import {Data, LAYOUT, LE, Lookup} from '../pkg/data';
 import * as gen1 from '../pkg/gen1';
 
 import {Frame, display} from './display';
+
+const ROOT = path.resolve(__dirname, '..', '..');
 
 const run = promisify(execFile);
 
@@ -112,11 +116,23 @@ class SpeciesNames implements Info {
       frames.push({result, c1, c2, battle, parsed});
     }
 
-    console.log(display(gen, showdown, error, seed, frames, {
+    const dir = path.join(ROOT, 'logs');
+    try {
+      fs.mkdirSync(dir, {recursive: true});
+    } catch (e: any) {
+      if (e.code !== 'EEXIST') throw err;
+    }
+
+    const hex = `0x${seed.toString(16).toUpperCase()}`;
+    const file = path.join(dir, `${hex}.fuzz.html`);
+    const link = path.join(dir, 'fuzz.html');
+    fs.writeFileSync(file, display(gen, showdown, error, seed, frames, {
       parsed: end > 0
         ? Array.from(log.parse(Data.view(data.slice(head, head + end))))
         : undefined,
     }));
+    fs.rmSync(link, {force: true});
+    fs.symlinkSync(file, link);
 
     process.exit(1);
   }

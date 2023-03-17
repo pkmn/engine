@@ -6,13 +6,12 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-
 jobs:
   test:
     strategy:
       matrix:
         gen: [1]
-        options: [''] # FIXME ['', '-Dshowdown']
+        options: ['', '-Dshowdown']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -20,13 +19,19 @@ jobs:
         with:
           version: master
       - run: npm install --ignore-scripts
-      - run: zig build -Doptimize=ReleaseSafe ${{matrix.options}} fuzz -- ${{matrix.gen}} 15m
+      - run: zig build -Doptimize=ReleaseSafe -Dtrace ${{matrix.options}} fuzz -- ${{matrix.gen}} 15m | tee seed.txt
+        shell: bash
+      - run: |
+          node src/bin/install-pkmn-engine
+          npm run --silent fuzz -- ${{matrix.options == '' && 'pkmn' || 'showdown' }} ${{matrix.gen}} 1s $(cat seed.txt)
+        if: failure()
       # - run: |
       #     node src/bin/install-pkmn-engine --options="-Dshowdown -Dtrace"
       #     npm run integration -- --gen=${{matrix.gen}} --duration=15m --maxFailures=5 --debug=false
       #   if: ${{ matrix.options != '' }}
-      # - uses: actions/upload-artifact@v3
-      #   if: failure()
-      #   with:
-      #     name: logs
-      #     path: logs/
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: logs
+          path: logs
+          if-no-files-found: error
