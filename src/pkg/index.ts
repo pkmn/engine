@@ -337,9 +337,9 @@ export interface Result {
    * 'error' is not possible when in Pokémon Showdown compatibility mode.
    */
   type: undefined | 'win' | 'lose' | 'tie' | 'error';
-  /**  The choice type of the result for Player 1. */
+  /** The choice type of the result for Player 1. */
   p1: Choice['type'];
-  /**  The choice type of the result for Player 2. */
+  /** The choice type of the result for Player 2. */
   p2: Choice['type'];
 }
 

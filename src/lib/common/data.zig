@@ -3,14 +3,17 @@ const std = @import("std");
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 
+/// Representation of one of the battle's participants.
 pub const Player = enum(u1) {
     P1,
     P2,
 
+    /// Returns a player's opponent.
     pub inline fn foe(self: Player) Player {
         return @intToEnum(Player, ~@enumToInt(self));
     }
 
+    /// Return's an identifier for the player's Pokémon at the one-indexed `id`.
     pub inline fn ident(self: Player, id: u3) ID {
         assert(id > 0 and id <= 6);
         return .{ .id = id, .player = self };
@@ -23,8 +26,11 @@ test Player {
     try expectEqual(@as(u8, 0b1101), @bitCast(u8, Player.P2.ident(5)));
 }
 
+/// An identifier for a specific Pokémon in battle.
 pub const ID = packed struct {
+    /// The one-indexed team slot of the Pokémon
     id: u3 = 0,
+    /// The Pokémon's trainer.
     player: Player = .P1,
     _: u4 = 0,
 
@@ -32,10 +38,12 @@ pub const ID = packed struct {
         assert(@sizeOf(ID) == 1);
     }
 
+    /// Converts the identifier into a number.
     pub inline fn int(self: ID) u4 {
         return @intCast(u4, @bitCast(u8, self));
     }
 
+    /// Decodes the identifier from a number.
     pub inline fn from(id: u4) ID {
         return @bitCast(ID, @as(u8, id));
     }
@@ -48,11 +56,19 @@ test ID {
     try expectEqual(id, ID.from(id.int()));
 }
 
+/// A choice made by a player during battle.
 pub const Choice = packed struct {
+    /// The choice type.
     type: Choice.Type = .Pass,
     _: u2 = 0,
+    /// The choice data:
+    ///
+    ///  - 0 for 'pass'
+    ///  - 0-4 for 'move'
+    ///  - 2-6 for 'switch'
     data: u4 = 0,
 
+    /// All valid choice types.
     pub const Type = enum(u2) {
         Pass,
         Move,
@@ -73,11 +89,17 @@ test Choice {
     try expectEqual(0b0101_0010, @bitCast(u8, p2));
 }
 
+/// The result of the battle - all results other than 'None' should be considered terminal.
 pub const Result = packed struct {
+    /// The type of result from the perspective of Player 1.
+    /// `Error` is not possible when in Pokémon Showdown compatibility mode.
     type: Result.Type = .None,
+    /// The choice type of the result for Player 1.
     p1: Choice.Type = .Pass,
+    /// The choice type of the result for Player 2.
     p2: Choice.Type = .Pass,
 
+    /// All valid result types.
     pub const Type = enum(u4) {
         None,
         Win,
@@ -86,10 +108,15 @@ pub const Result = packed struct {
         Error, // Desync, EBC, etc.
     };
 
+    /// The Tie result.
     pub const Tie: Result = .{ .type = .Tie };
+    /// The Win result.
     pub const Win: Result = .{ .type = .Win };
+    /// The Lost result.
     pub const Lose: Result = .{ .type = .Lose };
+    /// The Error result.
     pub const Error: Result = .{ .type = .Error };
+    /// The default result.
     pub const Default: Result = .{ .p1 = .Move, .p2 = .Move };
 
     comptime {

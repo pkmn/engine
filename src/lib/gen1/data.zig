@@ -16,17 +16,19 @@ const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 const expect = std.testing.expect;
 
-/// TODO: doc
+/// The minimum size in bytes required to hold all Generation I choice options.
 pub const MAX_OPTIONS: usize = 9; // move 1..4, switch 2..6
-/// TODO: doc
+/// The optimal size in bytes required to hold all Generation I choice options.
+/// At least as large as MAX_OPTIONS.
 pub const MAX_LOGS: usize = 180;
 
-/// TODO: doc
+/// The maximum number of bytes possibly logged by a single Generation I update.
 pub const OPTIONS_SIZE = if (builtin.mode == .ReleaseSmall)
     MAX_OPTIONS
 else
     std.math.ceilPowerOfTwo(usize, MAX_OPTIONS) catch unreachable;
-/// TODO: doc
+/// The optimal size in bytes required to hold the largest amount of log data possible from a
+/// single Generation I update. At least as large as MAX_LOGS.
 pub const LOGS_SIZE = if (builtin.mode == .ReleaseSmall)
     MAX_LOGS
 else
@@ -39,46 +41,56 @@ const Result = data.Result;
 
 const showdown = options.showdown;
 
-/// TODO: doc
+/// The pseudo random number generator used by Generation I.
 pub const PRNG = rng.PRNG(1);
 
-/// TODO: doc
+/// Representation of a Generation I battle.
 pub fn Battle(comptime RNG: anytype) type {
     return extern struct {
         const Self = @This();
 
-        /// TODO: doc
+        /// The sides involved in the battle.
         sides: [2]Side,
-        /// TODO: doc
+        /// The battle's current turn number.
         turn: u16 = 0,
-        /// TODO: doc
+        /// The last damage dealt by either side.
         last_damage: u16 = 0,
         /// TODO: doc
         last_selected_indexes: MoveIndexes = .{},
         /// TODO: doc
         rng: RNG,
 
-        /// TODO: doc
+        /// Returns the
         pub inline fn side(self: *Self, player: Player) *Side {
             return &self.sides[@enumToInt(player)];
         }
 
-        /// TODO: doc
+        /// Returns
         pub inline fn foe(self: *Self, player: Player) *Side {
             return &self.sides[@enumToInt(player.foe())];
         }
 
-        /// TODO: doc
+        /// Returns an identifier for the active Pokémon of `player`.
         pub inline fn active(self: *Self, player: Player) ID {
             return player.ident(@intCast(u3, self.side(player).order[0]));
         }
 
-        /// TODO: doc
+        /// Returns the result of applying Player 1's choice `c1` and Player 2's choice `c2` to the
+        /// battle, optionally writing protocol logs to `log` if `options.trace` is enabled.
         pub fn update(self: *Self, c1: Choice, c2: Choice, log: anytype) !Result {
             return mechanics.update(self, c1, c2, log);
         }
 
-        /// TODO: doc
+        /// Fills in at most `out.len` possible choices for the `player` given the previous `result`
+        /// of an `update` and Generation I battle state and returns the number of choices
+        /// available. Note that reading values in `out` which occur at indexes > the return value
+        /// of this function could result in reading potentially garbage data.
+        ///
+        ///  This function may return 0 due to how the Transform + Mirror Move/Metronome PP error
+        /// interacts with Disable, in which case there are no possible choices for the player to
+        /// make (i.e. on the cartridge a soft-lock occurs).
+        ///
+        /// This function will always return a number of choices > 0 if options.showdown is true.
         pub fn choices(self: *Self, player: Player, request: Choice.Type, out: []Choice) u8 {
             return mechanics.choices(self, player, request, out);
         }
