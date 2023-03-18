@@ -120,7 +120,7 @@ class SpeciesNames implements Info {
     try {
       fs.mkdirSync(dir, {recursive: true});
     } catch (e: any) {
-      if (e.code !== 'EEXIST') throw err;
+      if (e.code !== 'EEXIST') throw e;
     }
 
     const hex = `0x${seed.toString(16).toUpperCase()}`;
