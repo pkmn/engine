@@ -132,7 +132,7 @@ clean: clean-example
 
 .PHONY: release
 release:
-	@echo "release TODO"
+	npm run release
 
 , := ,
 gen := $(or $(gen),1)

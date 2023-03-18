@@ -83,6 +83,7 @@
     "test:integration": "vitest src/test",
     "fuzz": "npm run compile && node build/test/fuzz",
     "generate": "npm run compile && node build/tools/generate",
+    "release": "npm run compile && node build/tools/release",
     "benchmark": "npm run compile && node build/test/benchmark",
     "integration": "npm run compile && node build/test/integration",
     "postinstall": "node src/bin/install-pkmn-engine"

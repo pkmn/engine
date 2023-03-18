@@ -19,4 +19,4 @@ const partition = (array: string[], n: number): string[][] =>
 })().catch(err => {
   console.error(err);
   process.exit(1);
-})
+});
