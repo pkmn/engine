@@ -11,7 +11,7 @@ const ROOT = path.resolve(__dirname, '..', '..');
 
 const argv = minimist(process.argv.slice(2), {boolean: ['prod', 'dryRun']});
 
-type Options = Omit<CommonExecOptions, 'encoding'> & {bypass?: boolean};
+type Options = Omit<CommonExecOptions, 'encoding'> & {bypass?: boolean; silent?: boolean};
 const sh = (cmd: string, args?: string[], options: Options = {}) => {
   const cwd = (options.cwd ?? process.cwd()).toString();
   const env = {...process.env, ...options.env};
@@ -19,10 +19,12 @@ const sh = (cmd: string, args?: string[], options: Options = {}) => {
     ? `${Object.entries(options.env).map(([k, v]) => `${k}=${v!}`).join(' ')} ` : '';
   const run = args ? `${e}${cmd} ${args.join(' ')}` : `${e}${cmd}`;
 
-  if (cwd !== process.cwd()) {
-    console.log(`$(cd ${path.relative(process.cwd(), cwd)}; ${run})`);
-  } else {
-    console.log(run);
+  if (!options.silent) {
+    if (cwd !== process.cwd()) {
+      console.log(`$(cd ${path.relative(process.cwd(), cwd)}; ${run})`);
+    } else {
+      console.log(run);
+    }
   }
 
   if (argv.dryRun && !options.bypass) return '';
@@ -34,15 +36,12 @@ const sh = (cmd: string, args?: string[], options: Options = {}) => {
 };
 
 const TARGETS = [
-  // Windows
-  {triple: 'x86_64-windows-gnu', mcpu: 'baseline'},
-  {triple: 'aarch64-windows-gnu', mcpu: 'baseline'},
-  // macOS
-  {triple: 'x86_64-macos-none', mcpu: 'baseline'},
-  {triple: 'aarch64-macos-none', mcpu: 'apple_a14'},
-  // Linux
-  {triple: 'x86_64-linux-musl', mcpu: 'baseline'},
-  {triple: 'aarch64-linux-musl', mcpu: 'baseline'},
+  {label: 'Windows - x86_64', triple: 'x86_64-windows-gnu', mcpu: 'baseline'},
+  {label: 'Windows - ARM64', triple: 'aarch64-windows-gnu', mcpu: 'baseline'},
+  {label: 'macOS - x86_64', triple: 'x86_64-macos-none', mcpu: 'baseline'},
+  {label: 'macOS - ARM64', triple: 'aarch64-macos-none', mcpu: 'apple_a14'},
+  {label: 'Linux - x86_64', triple: 'x86_64-linux-musl', mcpu: 'baseline'},
+  {label: 'Linux - ARM64', triple: 'aarch64-linux-musl', mcpu: 'baseline'},
 ];
 
 try {
@@ -84,7 +83,6 @@ if (!argv.prod) {
   version = `${version}-dev+${HEAD}`;
 }
 
-// xz vs. zip
 for (const {triple, mcpu} of TARGETS) {
   for (const showdown of ['true', 'false']) {
     sh('zig', [
@@ -115,7 +113,7 @@ for (const {triple, mcpu} of TARGETS) {
 }
 
 if (argv.prod) {
-  sh('npm', ['build']);
+  sh('npm', ['run', 'build']);
   sh('npm', ['publish']);
   sh('git', ['tag', `v${version}`]);
   sh('git', ['push', '--tags', 'origin', 'main']);
@@ -144,8 +142,15 @@ if (!argv.prod) {
   sh('gh', ['release', 'delete', 'nightly', '--yes'], {stdio: 'ignore'});
   sh('git', ['push', 'origin', ':nightly']);
 } else {
-  args.push(version, '--title', version);
+  args.push(version, '--title', version, '--verify-tag');
 }
 args.push('--notes-file', path.join(tmp, 'notes'));
-args.push(...fs.readdirSync(release).map(f => path.join(relative, f)));
-sh('gh', args);
+const artifacts = fs.readdirSync(release).map(f => {
+  const file = path.join(release, f);
+  const triple = f.split('-').slice(1, 4).join('-');
+  const label = TARGETS.find(t => t.triple === triple)!.label;
+  return f.endsWith('.sig') ? `${file}#${label} (signature)` : `${file}#${label}`;
+});
+console.log(`gh ${args.join(' ')} ${artifacts.map(a => `'${a}'`).join(' ')}`);
+args.push(...artifacts);
+sh('gh', args, {silent: true});
