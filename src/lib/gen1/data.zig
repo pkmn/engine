@@ -401,7 +401,8 @@ pub fn Stats(comptime T: type) type {
         /// Computes the value of `stat` given a `base`, `dv`, stat `exp` and `level`.
         pub fn calc(comptime stat: []const u8, base: T, dv: u4, exp: u16, level: u8) T {
             assert(level > 0 and level <= 100);
-            const core: u32 = (2 *% (@as(u32, base) +% dv)) +% @as(u32, (std.math.sqrt(exp) / 4));
+            const evs = @min(255, @floatToInt(u16, @ceil(@sqrt(@intToFloat(f32, exp)))));
+            const core: u32 = (2 *% (@as(u32, base) +% dv)) +% (evs / 4);
             const factor: u32 = if (std.mem.eql(u8, stat, "hp")) level + 10 else 5;
             return @intCast(T, core *% @as(u32, level) / 100 +% factor);
         }
@@ -413,6 +414,11 @@ test Stats {
     const stats = Stats(u16){ .atk = 2, .spe = 3 };
     try expectEqual(2, stats.atk);
     try expectEqual(0, stats.def);
+
+    var base = Species.get(.Gyarados).stats;
+    try expectEqual(@as(u16, 127), Stats(u16).calc("hp", base.hp, 0, 5120, 38));
+    base = Species.get(.Pidgeot).stats;
+    try expectEqual(@as(u16, 279), Stats(u16).calc("spe", base.spe, 15, 63001, 100));
 }
 
 /// Representation of a Pokémon's boosts in Generation I.

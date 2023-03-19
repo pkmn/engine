@@ -5237,7 +5237,7 @@ test "Confusion self-hit bug" {
             .species = .Arcanine,
             .level = 97,
             .dvs = .{ .atk = 1, .def = 3 },
-            .stats = .{ .hp = 324, .atk = 25281, .def = 900, .spe = EXP, .spc = EXP },
+            .stats = .{ .hp = 18 * 18, .atk = 159 * 159, .def = 30 * 30, .spe = EXP, .spc = EXP },
             .moves = &.{.Flamethrower},
         }},
     );
@@ -6749,7 +6749,7 @@ test "Division by 0" {
             &.{.{
                 .species = .Cloyster,
                 .level = 64,
-                .stats = .{ .def = 255 },
+                .stats = .{ .def = 12 * 12 },
                 .moves = &.{ .Withdraw, .Reflect },
             }},
             &.{.{
@@ -6818,7 +6818,7 @@ test "Division by 0" {
             &.{.{
                 .species = .Cloyster,
                 .level = 64,
-                .stats = .{ .def = 255 + 85 },
+                .stats = .{ .def = 20 * 20 },
                 .moves = &.{ .Withdraw, .Reflect },
             }},
             &.{.{
@@ -7404,7 +7404,7 @@ test "Stat down modifier overflow glitch" {
             &.{.{
                 .species = .Mewtwo,
                 .level = 99,
-                .stats = .{ .hp = EXP, .atk = EXP, .def = EXP, .spe = EXP, .spc = 255 },
+                .stats = .{ .hp = EXP, .atk = EXP, .def = EXP, .spe = EXP, .spc = 12 * 12 },
                 .moves = &.{ .Amnesia, .Recover },
             }},
         );
