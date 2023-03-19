@@ -308,14 +308,17 @@ function displayPokemon(
       const volatile = v as keyof Pokemon['volatiles'];
       const [name, type] = VOLATILES[volatile]!;
       let data = '';
-      if (['binding', 'confusion', 'substitute', 'rage'].includes(volatile)) {
+      if (['binding', 'confusion', 'substitute'].includes(volatile)) {
         data = Object.values(pokemon.volatiles[volatile]!)[0].toString();
       } else if (volatile === 'bide') {
         const val = pokemon.volatiles[volatile]!;
         data = `${val.duration} (${val.damage})`;
+      } else if (volatile === 'rage') {
+        const val = pokemon.volatiles[volatile]!;
+        data = val.accuracy ? val.accuracy.toString() : '';
       } else if (volatile === 'thrashing') {
         const val = pokemon.volatiles[volatile]!;
-        data = `${val.duration} (${val.accuracy})`;
+        data = `${val.duration}${val.accuracy ? ` (${val.accuracy})` : ''}`;
       } else if (volatile === 'transform') {
         const slot = POSITIONS[pokemon.volatiles[volatile]!.slot];
         data = `${pokemon.volatiles[volatile]!.player}${slot}`;

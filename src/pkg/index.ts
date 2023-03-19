@@ -186,7 +186,10 @@ export namespace Gen1 {
     thrashing?: {
       /** The number of attacks remaining. */
       duration: number;
-      /** The thrashing move's current accuracy as a number from 0-255. */
+      /**
+       * The thrashing move's current overwritten accuracy as a number from 1-255.
+       * 0 if not overwritten. Also note that it may be "overwritten" to its original 255 accuracy.
+       */
       accuracy: number;
     };
     /** Whether the "Flinch" volatile status is present. */
@@ -218,7 +221,10 @@ export namespace Gen1 {
     recharging?: unknown;
     /** Whether the "Rage" volatile status is present. */
     rage?: {
-      /** Rage's current accuracy as a number from 0-255. */
+      /**
+       * Rage's current overwritten accuracy as a number from 1-255. 0 if not overwritten.
+       * Also note that it may be "overwritten" to its original 255 accuracy.
+       */
       accuracy: number;
     };
     /** Whether the "LeechSeed" volatile status is present. */

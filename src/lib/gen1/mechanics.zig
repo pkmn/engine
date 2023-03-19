@@ -1237,7 +1237,7 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool, mist
         accuracy = accuracy * boost[0] / boost[1];
         accuracy = @min(255, @max(1, accuracy));
 
-        state.* = accuracy;
+        if (move.effect == .Thrashing or move.effect == .Rage) state.* = accuracy;
 
         // GLITCH: max accuracy is 255 so 1/256 chance of miss
         break :miss if (showdown)
@@ -1985,6 +1985,7 @@ pub const Effects = struct {
 
     fn rage(battle: anytype, player: Player) !void {
         var volatiles = &battle.side(player).active.volatiles;
+        if (volatiles.Rage) return;
         volatiles.Rage = true;
         assert(!volatiles.Bide);
         volatiles.state = 0;
