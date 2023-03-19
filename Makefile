@@ -133,7 +133,7 @@ clean: clean-example
 
 .PHONY: release
 release:
-	npm run release
+	npm run release -- --prod
 
 , := ,
 gen := $(or $(gen),1)

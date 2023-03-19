@@ -28,6 +28,14 @@ This directory contains miscellaneous scripts and tools useful for working on th
   Results can be found in [`protocol.json`](../data/protocol.json) /
   [`layout.json`](../data/layout.json).
 
+- [`release.ts`](release.ts): Builds versions of `libpkmn` and `libpkmn-showdown` for each supported
+  platform, packages them into archives, and publishes the resulting artifacts. Can be either run to
+  produce a nightly release (which simply uploads to GitHub) or the create an official `--prod`
+  release which additionally signs the builds (which can only be done locally)/publishes to NPM/add
+  a git tag. Supports a `--dryRun` option for just printing out the steps it would take.
+
+      $ npm run release
+
 - [`serde.zig`](serde.zig)/[`serde.ts`](serde.ts): Serializes/deserializes a randomly generated
   `Battle` for the provided generation to stdout, optionally for a specific seed. `serde.ts` wraps
   `serde.zig` and pretty prints the buffer so that it can be easily copied and pasted into JS

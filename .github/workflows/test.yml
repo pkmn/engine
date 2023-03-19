@@ -42,3 +42,15 @@ jobs:
       - run: make clean && node src/bin/install-pkmn-engine --zig
       - run: zig build -j1 ${{matrix.options}} -p build -Ddynamic
       - run: make c-example options="${{matrix.options}}" dynamic=true
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - run: exit 0
+        # DEBUG if: ${{ github.event_name == 'schedule' }}
+      - uses: actions/checkout@v3
+      - uses: goto-bus-stop/setup-zig@v2
+      - run: npm install --ignore-scripts
+      - run: npm run release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
