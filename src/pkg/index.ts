@@ -386,13 +386,13 @@ export class Choice {
 
   /** Decode a choice from its binary representation. */
   static decode(byte: number): Choice {
-    return {type: Choice.Types[byte & 0b11], data: byte >> 4};
+    return {type: Choice.Types[byte & 0b11], data: byte >> 2};
   }
 
   /** Encode a choice to its binary representation. */
   static encode(choice?: Choice): number {
     return (choice
-      ? (choice.data << 4 | (choice.type === 'pass' ? 0 : choice.type === 'move' ? 1 : 2))
+      ? (choice.data << 2 | (choice.type === 'pass' ? 0 : choice.type === 'move' ? 1 : 2))
       : 0);
   }
 

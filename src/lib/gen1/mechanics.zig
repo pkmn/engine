@@ -217,9 +217,9 @@ fn saveMove(battle: anytype, player: Player, choice: ?Choice) void {
 
             side.last_selected_move = move.id;
             if (player == .P1) {
-                battle.last_selected_indexes.p1 = c.data;
+                battle.last_selected_indexes.p1 = @intCast(u4, c.data);
             } else {
-                battle.last_selected_indexes.p2 = c.data;
+                battle.last_selected_indexes.p2 = @intCast(u4, c.data);
             }
         }
     }
@@ -338,7 +338,7 @@ fn executeMove(
     var side = battle.side(player);
 
     if (choice.type == .Switch) {
-        try switchIn(battle, player, choice.data, false, log);
+        try switchIn(battle, player, @intCast(u4, choice.data), false, log);
         return null;
     }
 
@@ -353,7 +353,7 @@ fn executeMove(
     }
 
     assert(choice.type == .Move);
-    var mslot = choice.data;
+    var mslot = @intCast(u4, choice.data);
     // Sadly, we can't even check `Move.get(side.last_selected_move).effect == .Binding` here
     // because Pokémon Showdown's Mirror Move implementation clobbers side.last_selected_move
     var auto = showdown and side.last_selected_move != .None;

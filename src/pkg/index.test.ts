@@ -26,14 +26,14 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('Choice.decode', () => {
-      expect(Choice.decode(0b0100_0001)).toEqual(Choice.move(4));
-      expect(Choice.decode(0b0101_0010)).toEqual(Choice.switch(5));
+      expect(Choice.decode(0b0001_0001)).toEqual(Choice.move(4));
+      expect(Choice.decode(0b0001_0110)).toEqual(Choice.switch(5));
     });
 
     test('Choice.encode', () => {
       expect(Choice.encode()).toBe(Choice.encode(Choice.pass()));
-      expect(Choice.encode(Choice.move(4))).toBe(0b0100_0001);
-      expect(Choice.encode(Choice.switch(5))).toBe(0b0101_0010);
+      expect(Choice.encode(Choice.move(4))).toBe(0b0001_0001);
+      expect(Choice.encode(Choice.switch(5))).toBe(0b0001_0110);
     });
 
     test('Choice.parse', () => {

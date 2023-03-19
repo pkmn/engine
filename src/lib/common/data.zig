@@ -60,13 +60,12 @@ test ID {
 pub const Choice = packed struct {
     /// The choice type.
     type: Choice.Type = .Pass,
-    _: u2 = 0,
     /// The choice data:
     ///
     ///  - 0 for 'pass'
     ///  - 0-4 for 'move'
     ///  - 2-6 for 'switch'
-    data: u4 = 0,
+    data: u6 = 0,
 
     /// All valid choice types.
     pub const Type = enum(u2) {
@@ -85,8 +84,8 @@ test Choice {
     const p2: Choice = .{ .type = .Switch, .data = 5 };
     try expectEqual(5, p2.data);
     try expectEqual(Choice.Type.Move, p1.type);
-    try expectEqual(0b0100_0001, @bitCast(u8, p1));
-    try expectEqual(0b0101_0010, @bitCast(u8, p2));
+    try expectEqual(0b0001_0001, @bitCast(u8, p1));
+    try expectEqual(0b0001_0110, @bitCast(u8, p2));
 }
 
 /// The result of the battle - all results other than 'None' should be considered terminal.
