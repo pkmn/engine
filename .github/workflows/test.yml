@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: exit 0
-        # DEBUG if: ${{ github.event_name == 'schedule' }}
+        if: ${{ github.event_name == 'schedule' }}
       - uses: actions/checkout@v3
       - uses: goto-bus-stop/setup-zig@v2
       - run: npm install --ignore-scripts
