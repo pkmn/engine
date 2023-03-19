@@ -201,7 +201,6 @@ pub fn build(b: *std.Build) !void {
         tests.setExecCmd(&.{ "kcov", "--include-pattern=src/lib", path, null });
     }
     const test_step = if (test_filter != null) null else &tests.step;
-    const test_run = if (test_no_exec) null else tests.run();
 
     const lint_exe =
         b.addExecutable(.{ .name = "lint", .root_source_file = .{ .path = "src/tools/lint.zig" } });
@@ -253,7 +252,7 @@ pub fn build(b: *std.Build) !void {
     b.step("lint", "Lint source files").dependOn(&lint.step);
     b.step("protocol", "Run protocol dump tool").dependOn(&protocol.step);
     b.step("serde", "Run serialization/deserialization tool").dependOn(&serde.step);
-    b.step("test", "Run all tests").dependOn(if (test_run) |t| &t.step else &tests.step);
+    b.step("test", "Run all tests").dependOn(if (test_no_exec) &tests.step else &tests.run().step);
     b.step("tools", "Install tools").dependOn(&ToolsStep.create(b, &exes).step);
 }
 
