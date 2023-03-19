@@ -194,7 +194,7 @@ pub const Pokemon = struct {
             const pp_ups =
                 if (!opt.cleric and rand.chance(u8, 1, 10)) rand.range(u2, 0, 2 + 1) else 3;
             // NB: PP can be at most 61 legally (though can overflow to 63)
-            const max_pp = @intCast(u8, @min(Move.pp(m) / 5 * (5 + @as(u8, pp_ups)), 61));
+            const max_pp = @intCast(u8, Move.pp(m) + @as(u8, pp_ups) * @min(Move.pp(m) / 5, 7));
             ms[i] = .{
                 .id = m,
                 .pp_ups = pp_ups,
