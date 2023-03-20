@@ -2,15 +2,14 @@
 # `package.json`. In many cases you will still want to invoke `zig build` or
 # `npm run` directly for more targeted execution, but to have one set of
 # commands that covers everything, see below.
-# TODO: remove `-j1` once Zig options races are fixed
 
 .PHONY: default
 default: check
 
 .PHONY: zig-build
 zig-build:
-	zig build -j1 -fsummary -Dtrace -p build
-	zig build -j1 -fsummary -Dshowdown -Dtrace -p build
+	zig build -fsummary -Dtrace -p build
+	zig build -fsummary -Dshowdown -Dtrace -p build
 
 .PHONY: js-build
 js-build: export DEBUG_PKMN_ENGINE=true
@@ -59,8 +58,8 @@ fix: zig-fix js-fix
 
 .PHONY: zig-test
 zig-test:
-	zig build -j1 -fsummary -Dtrace test
-	zig build -j1 -fsummary -Dshowdown -Dtrace test
+	zig build -fsummary -Dtrace test
+	zig build -fsummary -Dshowdown -Dtrace test
 
 .PHONY: js-test
 js-test: js-build
@@ -73,8 +72,8 @@ test: zig-test js-test
 zig-coverage:
 	rm -rf coverage/zig
 	mkdir -p coverage/zig
-	zig build -j1 -fsummary test -Dtest-coverage=coverage/zig/pkmn
-	zig build -j1 -fsummary -Dshowdown -Dtrace test -Dtest-coverage=coverage/zig/pkmn-showdown
+	zig build -fsummary test -Dtest-coverage=coverage/zig/pkmn
+	zig build -fsummary -Dshowdown -Dtrace test -Dtest-coverage=coverage/zig/pkmn-showdown
 	kcov --merge coverage/zig/merged coverage/zig/pkmn coverage/zig/pkmn-showdown
 
 .PHONY: js-coverage
@@ -101,7 +100,7 @@ js-example: src/examples/js/node_modules
 
 .PHONY: zig-example
 zig-example:
-	cd src/examples/zig; zig build -j1 -fsummary run -- 1234
+	cd src/examples/zig; zig build -fsummary run -- 1234
 
 .PHONY: example
 example: c-example js-example zig-example
@@ -148,7 +147,7 @@ patch:
 
 .PHONY: t
 t:
-	zig build -j1 -fsummary test -Dtrace -Dtest-file=src/lib/gen$(gen)/test.zig -Dtest-filter="$(filter)" $(opt)
+	zig build -fsummary test -Dtrace -Dtest-file=src/lib/gen$(gen)/test.zig -Dtest-filter="$(filter)" $(opt)
 
 .PHONY: it
 it:
