@@ -181,55 +181,36 @@ pub fn build(b: *std.Build) !void {
         .strip = strip,
         .cmd = cmd,
     };
-
     const tests = TestStep.create(b, options, config);
-    const lint_exe =
-        b.addExecutable(.{ .name = "lint", .root_source_file = .{ .path = "src/tools/lint.zig" } });
-    if (tests.build) tests.step.dependOn(&lint_exe.step);
-    const lint = lint_exe.run();
 
     var exes = std.ArrayList(*std.Build.CompileStep).init(b.allocator);
-    const tools = .{
+    const tools: ToolConfig = .{
         .general = config,
         .tool = .{
-            .pkmn = .{
-                .name = "pkmn",
-                .module = module(b, .{ .showdown = showdown, .trace = trace }),
-            },
             .showdown = showdown,
+            .trace = trace,
             .tests = if (tests.build) tests else null,
             .exes = &exes,
         },
     };
-    const benchmark = tool(b, "src/test/benchmark.zig", .{
-        .general = .{
-            .target = target,
-            .optimize = .ReleaseFast,
-            .pic = pic,
-            .strip = true,
-            .cmd = cmd,
-        },
-        .tool = tools.tool,
-    });
-    const fuzz = tool(b, "src/test/benchmark.zig", .{
-        .general = .{
-            .target = target,
-            .optimize = optimize,
-            .pic = pic,
-            .strip = false,
-            .cmd = cmd,
-        },
-        .tool = .{
-            .name = "fuzz",
-            .pkmn = tools.tool.pkmn,
-            .showdown = showdown,
-            .tests = if (tests.build) tests else null,
-            .exes = &exes,
-        },
-    });
+
+    var benchmark_config = tools;
+    benchmark_config.general.optimize = .ReleaseFast;
+    benchmark_config.general.strip = true;
+    const benchmark = tool(b, "src/test/benchmark.zig", benchmark_config);
+
+    var fuzz_config = tools;
+    fuzz_config.general.strip = false;
+    fuzz_config.tool.name = "fuzz";
+    const fuzz = tool(b, "src/test/benchmark.zig", fuzz_config);
 
     const serde = tool(b, "src/tools/serde.zig", tools);
     const protocol = tool(b, "src/tools/protocol.zig", tools);
+
+    const lint_exe =
+        b.addExecutable(.{ .name = "lint", .root_source_file = .{ .path = "src/tools/lint.zig" } });
+    if (tests.build) tests.step.dependOn(&lint_exe.step);
+    const lint = lint_exe.run();
 
     b.step("benchmark", "Run benchmark code").dependOn(&benchmark.step);
     b.step("fuzz", "Run fuzz tester").dependOn(&fuzz.step);
@@ -321,19 +302,15 @@ const TestStep = struct {
 const ToolConfig = struct {
     general: Config,
     tool: struct {
-        pkmn: std.Build.ModuleDependency,
         showdown: bool,
+        trace: bool,
         tests: ?*TestStep,
         name: ?[]const u8 = null,
         exes: *std.ArrayList(*std.Build.CompileStep),
     },
 };
 
-fn tool(
-    b: *std.Build,
-    path: []const u8,
-    config: ToolConfig,
-) *std.Build.RunStep {
+fn tool(b: *std.Build, path: []const u8, config: ToolConfig) *std.Build.RunStep {
     var name = config.tool.name orelse std.fs.path.basename(path);
     const index = std.mem.lastIndexOfScalar(u8, name, '.');
     if (index) |i| name = name[0..i];
@@ -345,7 +322,10 @@ fn tool(
         .target = config.general.target,
         .optimize = config.general.optimize,
     });
-    exe.addModule(config.tool.pkmn.name, config.tool.pkmn.module);
+    exe.addModule("pkmn", module(b, .{
+        .showdown = config.tool.showdown,
+        .trace = config.tool.trace,
+    }));
     exe.single_threaded = true;
     if (config.general.pic) exe.force_pic = config.general.pic;
     if (config.tool.tests) |ts| ts.step.dependOn(&exe.step);
