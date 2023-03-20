@@ -379,4 +379,4 @@ additional binary data will be dumped on crashes to allow for debugging with the
 [`fuzz.ts`](./fuzz.ts) and the [debug UI](https://pkmn.cc/debug.html) rendered
 by [`display`](./display/index.ts). To run the fuzz tool locally use:
 
-  $ npm run --silent fuzz  --  <pkmn|showdown> <GEN> <DURATION> <SEED?> > logs/fuzz.html
+    $ npm run --silent fuzz  --  <pkmn|showdown> <GEN> <DURATION> <SEED?> > logs/fuzz.html
