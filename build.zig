@@ -174,60 +174,34 @@ pub fn build(b: *std.Build) !void {
         b.installFile(file, b.fmt("share/pkgconfig/{s}", .{pc}));
     }
 
-    const coverage = b.option([]const u8, "test-coverage", "Generate test coverage");
-    const test_file =
-        b.option([]const u8, "test-file", "Input file for test") orelse "src/lib/test.zig";
-    const test_bin = b.option([]const u8, "test-bin", "Emit test binary to");
-    const test_filter = b.option([]const u8, "test-filter", "Skip tests that do not match filter");
-    const test_no_exec =
-        b.option(bool, "test-no-exec", "Compiles test binary without running it") orelse false;
-
-    const tests = b.addTest(.{
-        .root_source_file = .{ .path = test_file },
-        .optimize = optimize,
+    const config = .{
         .target = target,
-    });
-    tests.setMainPkgPath("./");
-    tests.setFilter(test_filter);
-    tests.addOptions("build_options", options);
-    tests.single_threaded = true;
-    maybeStrip(b, tests, &tests.step, strip, cmd);
-    if (pic) tests.force_pic = pic;
-    if (test_bin) |bin| {
-        tests.name = std.fs.path.basename(bin);
-        if (std.fs.path.dirname(bin)) |dir| tests.setOutputDir(dir);
-    }
-    if (coverage) |path| {
-        tests.setExecCmd(&.{ "kcov", "--include-pattern=src/lib", path, null });
-    }
-    const test_step = if (test_filter != null) null else &tests.step;
-
-    const lint_exe =
-        b.addExecutable(.{ .name = "lint", .root_source_file = .{ .path = "src/tools/lint.zig" } });
-    if (test_step) |ts| ts.dependOn(&lint_exe.step);
-    const lint = lint_exe.run();
-
-    const pkmn = .{
-        .name = "pkmn",
-        .module = module(b, .{ .showdown = showdown, .trace = trace }),
+        .optimize = optimize,
+        .pic = pic,
+        .strip = strip,
+        .cmd = cmd,
     };
 
+    const tests = TestStep.create(b, options, config);
+    const lint_exe =
+        b.addExecutable(.{ .name = "lint", .root_source_file = .{ .path = "src/tools/lint.zig" } });
+    if (tests.build) tests.step.dependOn(&lint_exe.step);
+    const lint = lint_exe.run();
+
     var exes = std.ArrayList(*std.Build.CompileStep).init(b.allocator);
-    const config = .{
-        .general = .{
-            .target = target,
-            .optimize = optimize,
-            .pic = pic,
-            .strip = strip,
-            .cmd = cmd,
-        },
+    const tools = .{
+        .general = config,
         .tool = .{
+            .pkmn = .{
+                .name = "pkmn",
+                .module = module(b, .{ .showdown = showdown, .trace = trace }),
+            },
             .showdown = showdown,
-            .test_step = test_step,
+            .tests = if (tests.build) tests else null,
             .exes = &exes,
         },
     };
-    const benchmark = tool(b, &.{pkmn}, "src/test/benchmark.zig", .{
+    const benchmark = tool(b, "src/test/benchmark.zig", .{
         .general = .{
             .target = target,
             .optimize = .ReleaseFast,
@@ -235,9 +209,9 @@ pub fn build(b: *std.Build) !void {
             .strip = true,
             .cmd = cmd,
         },
-        .tool = config.tool,
+        .tool = tools.tool,
     });
-    const fuzz = tool(b, &.{pkmn}, "src/test/benchmark.zig", .{
+    const fuzz = tool(b, "src/test/benchmark.zig", .{
         .general = .{
             .target = target,
             .optimize = optimize,
@@ -247,21 +221,22 @@ pub fn build(b: *std.Build) !void {
         },
         .tool = .{
             .name = "fuzz",
+            .pkmn = tools.tool.pkmn,
             .showdown = showdown,
-            .test_step = test_step,
+            .tests = if (tests.build) tests else null,
             .exes = &exes,
         },
     });
 
-    const serde = tool(b, &.{pkmn}, "src/tools/serde.zig", config);
-    const protocol = tool(b, &.{pkmn}, "src/tools/protocol.zig", config);
+    const serde = tool(b, "src/tools/serde.zig", tools);
+    const protocol = tool(b, "src/tools/protocol.zig", tools);
 
     b.step("benchmark", "Run benchmark code").dependOn(&benchmark.step);
     b.step("fuzz", "Run fuzz tester").dependOn(&fuzz.step);
     b.step("lint", "Lint source files").dependOn(&lint.step);
     b.step("protocol", "Run protocol dump tool").dependOn(&protocol.step);
     b.step("serde", "Run serialization/deserialization tool").dependOn(&serde.step);
-    b.step("test", "Run all tests").dependOn(if (test_no_exec) &tests.step else &tests.run().step);
+    b.step("test", "Run all tests").dependOn(&tests.step);
     b.step("tools", "Install tools").dependOn(&ToolsStep.create(b, &exes).step);
 }
 
@@ -292,11 +267,63 @@ const Config = struct {
     cmd: ?[]const u8,
 };
 
+const TESTS = [_][]const u8{
+    "src/lib/common/test.zig",
+    "src/lib/gen1/test.zig",
+    "src/lib/gen2/test.zig",
+};
+
+const TestStep = struct {
+    step: std.Build.Step,
+    build: bool,
+
+    pub fn create(b: *std.Build, options: *std.Build.OptionsStep, config: Config) *TestStep {
+        const coverage = b.option([]const u8, "test-coverage", "Generate test coverage");
+        const test_file = b.option([]const u8, "test-file", "Input file for test");
+        const test_bin = b.option([]const u8, "test-bin", "Emit test binary to");
+        const test_filter =
+            b.option([]const u8, "test-filter", "Skip tests that do not match filter");
+        const test_no_exec =
+            b.option(bool, "test-no-exec", "Compiles test binary without running it") orelse false;
+
+        const self = b.allocator.create(TestStep) catch @panic("OOM");
+        const step = std.Build.Step.init(.{ .id = .custom, .name = "Run all tests", .owner = b });
+        self.* = TestStep{ .step = step, .build = test_filter == null };
+
+        const paths: []const []const u8 =
+            if (test_file) |t| &.{t} else if (coverage != null) &.{"src/lib/test.zig"} else &TESTS;
+        for (paths) |path| {
+            const tests = b.addTest(.{
+                .name = std.fs.path.basename(std.fs.path.dirname(path).?),
+                .root_source_file = .{ .path = path },
+                .optimize = config.optimize,
+                .target = config.target,
+            });
+            tests.setMainPkgPath("./");
+            tests.setFilter(test_filter);
+            tests.addOptions("build_options", options);
+            tests.single_threaded = true;
+            maybeStrip(b, tests, &tests.step, config.strip, config.cmd);
+            if (config.pic) tests.force_pic = config.pic;
+            if (test_bin) |bin| {
+                tests.name = std.fs.path.basename(bin);
+                if (std.fs.path.dirname(bin)) |dir| tests.setOutputDir(dir);
+            }
+            if (coverage) |c| {
+                tests.setExecCmd(&.{ "kcov", "--include-pattern=src/lib", c, null });
+            }
+            self.step.dependOn(if (test_no_exec) &tests.step else &tests.run().step);
+        }
+        return self;
+    }
+};
+
 const ToolConfig = struct {
     general: Config,
     tool: struct {
+        pkmn: std.Build.ModuleDependency,
         showdown: bool,
-        test_step: ?*std.Build.Step,
+        tests: ?*TestStep,
         name: ?[]const u8 = null,
         exes: *std.ArrayList(*std.Build.CompileStep),
     },
@@ -304,7 +331,6 @@ const ToolConfig = struct {
 
 fn tool(
     b: *std.Build,
-    deps: []const std.Build.ModuleDependency,
     path: []const u8,
     config: ToolConfig,
 ) *std.Build.RunStep {
@@ -319,10 +345,10 @@ fn tool(
         .target = config.general.target,
         .optimize = config.general.optimize,
     });
-    for (deps) |dep| exe.addModule(dep.name, dep.module);
+    exe.addModule(config.tool.pkmn.name, config.tool.pkmn.module);
     exe.single_threaded = true;
     if (config.general.pic) exe.force_pic = config.general.pic;
-    if (config.tool.test_step) |ts| ts.dependOn(&exe.step);
+    if (config.tool.tests) |ts| ts.step.dependOn(&exe.step);
     config.tool.exes.append(exe) catch @panic("OOM");
 
     const run = exe.run();
