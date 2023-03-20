@@ -213,37 +213,46 @@ pub fn build(b: *std.Build) !void {
     };
 
     var exes = std.ArrayList(*std.Build.CompileStep).init(b.allocator);
+    const config = .{
+        .general = .{
+            .target = target,
+            .optimize = optimize,
+            .pic = pic,
+            .strip = strip,
+            .cmd = cmd,
+        },
+        .tool = .{
+            .showdown = showdown,
+            .test_step = test_step,
+            .exes = &exes,
+        },
+    };
     const benchmark = tool(b, &.{pkmn}, "src/test/benchmark.zig", .{
-        .showdown = showdown,
-        .pic = pic,
-        .strip = true,
-        .cmd = cmd,
-        .test_step = test_step,
-        .target = target,
-        .optimize = .ReleaseFast,
-        .exes = &exes,
+        .general = .{
+            .target = target,
+            .optimize = .ReleaseFast,
+            .pic = pic,
+            .strip = true,
+            .cmd = cmd,
+        },
+        .tool = config.tool,
     });
     const fuzz = tool(b, &.{pkmn}, "src/test/benchmark.zig", .{
-        .name = "fuzz",
-        .showdown = showdown,
-        .pic = pic,
-        .strip = false,
-        .cmd = cmd,
-        .test_step = test_step,
-        .target = target,
-        .optimize = optimize,
-        .exes = &exes,
+        .general = .{
+            .target = target,
+            .optimize = optimize,
+            .pic = pic,
+            .strip = false,
+            .cmd = cmd,
+        },
+        .tool = .{
+            .name = "fuzz",
+            .showdown = showdown,
+            .test_step = test_step,
+            .exes = &exes,
+        },
     });
-    const config = .{
-        .showdown = showdown,
-        .pic = pic,
-        .strip = strip,
-        .cmd = cmd,
-        .test_step = test_step,
-        .target = target,
-        .optimize = optimize,
-        .exes = &exes,
-    };
+
     const serde = tool(b, &.{pkmn}, "src/tools/serde.zig", config);
     const protocol = tool(b, &.{pkmn}, "src/tools/protocol.zig", config);
 
@@ -276,42 +285,48 @@ fn maybeStrip(
 }
 
 const Config = struct {
-    showdown: bool,
+    target: std.zig.CrossTarget,
+    optimize: std.builtin.OptimizeMode,
     pic: bool,
     strip: bool,
     cmd: ?[]const u8,
-    test_step: ?*std.Build.Step,
-    target: std.zig.CrossTarget,
-    optimize: std.builtin.OptimizeMode,
-    name: ?[]const u8 = null,
-    exes: *std.ArrayList(*std.Build.CompileStep),
+};
+
+const ToolConfig = struct {
+    general: Config,
+    tool: struct {
+        showdown: bool,
+        test_step: ?*std.Build.Step,
+        name: ?[]const u8 = null,
+        exes: *std.ArrayList(*std.Build.CompileStep),
+    },
 };
 
 fn tool(
     b: *std.Build,
     deps: []const std.Build.ModuleDependency,
     path: []const u8,
-    config: Config,
+    config: ToolConfig,
 ) *std.Build.RunStep {
-    var name = config.name orelse std.fs.path.basename(path);
+    var name = config.tool.name orelse std.fs.path.basename(path);
     const index = std.mem.lastIndexOfScalar(u8, name, '.');
     if (index) |i| name = name[0..i];
-    if (config.showdown) name = b.fmt("{s}-showdown", .{name});
+    if (config.tool.showdown) name = b.fmt("{s}-showdown", .{name});
 
     const exe = b.addExecutable(.{
         .name = name,
         .root_source_file = .{ .path = path },
-        .target = config.target,
-        .optimize = config.optimize,
+        .target = config.general.target,
+        .optimize = config.general.optimize,
     });
     for (deps) |dep| exe.addModule(dep.name, dep.module);
     exe.single_threaded = true;
-    if (config.pic) exe.force_pic = config.pic;
-    if (config.test_step) |ts| ts.dependOn(&exe.step);
-    config.exes.append(exe) catch @panic("OOM");
+    if (config.general.pic) exe.force_pic = config.general.pic;
+    if (config.tool.test_step) |ts| ts.dependOn(&exe.step);
+    config.tool.exes.append(exe) catch @panic("OOM");
 
     const run = exe.run();
-    maybeStrip(b, exe, &run.step, config.strip, config.cmd);
+    maybeStrip(b, exe, &run.step, config.general.strip, config.general.cmd);
     if (b.args) |args| run.addArgs(args);
 
     return run;
