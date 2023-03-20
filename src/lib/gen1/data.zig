@@ -86,7 +86,7 @@ pub fn Battle(comptime RNG: anytype) type {
         /// available. Note that reading values in `out` which occur at indexes > the return value
         /// of this function could result in reading potentially garbage data.
         ///
-        ///  This function may return 0 due to how the Transform + Mirror Move/Metronome PP error
+        /// This function may return 0 due to how the Transform + Mirror Move/Metronome PP error
         /// interacts with Disable, in which case there are no possible choices for the player to
         /// make (i.e. on the cartridge a soft-lock occurs).
         ///
