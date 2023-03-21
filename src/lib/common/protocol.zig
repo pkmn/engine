@@ -542,7 +542,47 @@ pub fn Log(comptime Writer: type) type {
     };
 }
 
-pub const FixedLog = Log(std.io.FixedBufferStream([]u8).Writer);
+pub const FixedLog = Log(ByteStream.Writer);
+
+pub const ByteStream = struct {
+    buffer: []u8,
+    pos: usize = 0,
+
+    pub const Writer = struct {
+        stream: *ByteStream,
+
+        pub const Error = error{NoSpaceLeft};
+
+        pub fn writeAll(self: Writer, bytes: []const u8) Error!void {
+            for (bytes) |b| try self.writeByte(b);
+        }
+
+        pub fn writeByte(self: Writer, byte: u8) Error!void {
+            try self.stream.writeByte(byte);
+        }
+
+        pub fn writeIntNative(self: Writer, comptime T: type, value: T) Error!void {
+            // TODO: rework this to write directly to the buffer?
+            var bytes: [(@typeInfo(T).Int.bits + 7) / 8]u8 = undefined;
+            std.mem.writeIntNative(T, &bytes, value);
+            return self.writeAll(&bytes);
+        }
+    };
+
+    pub fn writer(self: *ByteStream) Writer {
+        return .{ .stream = self };
+    }
+
+    pub fn writeByte(self: *ByteStream, byte: u8) Writer.Error!void {
+        if (self.pos >= self.buffer.len) return error.NoSpaceLeft;
+        self.buffer[self.pos] = byte;
+        self.pos += 1;
+    }
+
+    pub fn reset(self: *ByteStream) void {
+        self.pos = 0;
+    }
+};
 
 pub const Kind = enum { Move, Species, Type, Status };
 pub const Formatter = fn (Kind, u8) []const u8;
@@ -847,7 +887,7 @@ const gen1 = struct {
 };
 
 var buf: [gen1.LOGS_SIZE]u8 = undefined;
-var stream = std.io.fixedBufferStream(&buf);
+var stream = ByteStream{ .buffer = &buf };
 var log: FixedLog = .{ .writer = stream.writer() };
 
 const M = gen1.Move;

@@ -27,9 +27,6 @@ const Species = data.Species;
 const Stats = data.Stats;
 const Status = data.Status;
 
-const ArgType = protocol.ArgType;
-const Log = protocol.Log(std.io.FixedBufferStream([]u8).Writer);
-
 pub const Options = struct {
     cleric: bool = showdown,
 };

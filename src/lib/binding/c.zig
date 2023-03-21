@@ -72,7 +72,7 @@ export fn pkmn_gen1_battle_update(
 ) pkmn.Result {
     if (pkmn.options.trace) {
         if (buf) |b| {
-            var stream = std.io.fixedBufferStream(b[0..len]);
+            var stream = pkmn.protocol.ByteStream{ .buffer = b[0..len] };
             var log = pkmn.protocol.FixedLog{ .writer = stream.writer() };
             return battle.update(c1, c2, log) catch return @bitCast(pkmn.Result, ERROR);
         }

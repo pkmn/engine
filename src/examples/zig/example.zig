@@ -23,13 +23,13 @@ pub fn main() !void {
         std.process.exit(1);
     };
 
-    // Use Zig's system PRNG (pkmn.PSRNG is another option with a slightly different API)
+    // Use Zig's system PRNG (`pkmn.PSRNG` is another option with a slightly different API)
     var prng = std.rand.DefaultPrng.init(seed);
     var random = prng.random();
     // Preallocate a small buffer for the choice options throughout the battle
     var options: [pkmn.OPTIONS_SIZE]pkmn.Choice = undefined;
 
-    // pkmn.gen1.Battle can be tedious to initialize - the helper constructor used here
+    // `pkmn.gen1.Battle` can be tedious to initialize - the helper constructor used here
     // fills in missing fields with intelligent defaults to cut down on boilerplate
     var battle = pkmn.gen1.helpers.Battle.init(
         random.int(u64),
@@ -51,12 +51,15 @@ pub fn main() !void {
         },
     );
 
-    // Preallocate a buffer for the log and create a Log handler which will write to it.
-    // pkmn.LOGS_SIZE is guaranteed to be large enough for a single update. This will only be
-    // written to if -Dtrace is enabled - pkmn.protocol.NULL can be used to turn all of the
-    // logging into no-ops
+    // Preallocate a buffer for the log and create a `Log` handler which will write to it.
+    // `pkmn.LOGS_SIZE` is guaranteed to be large enough for a single update. This will only be
+    // written to if `-Dtrace` is enabled - `pkmn.protocol.NULL` can be used to turn all of the
+    // logging into no-ops. Here we are using the optimized `pkmn.protocol.ByteStream` which
+    // should be more efficient than `pkmn.protocol.Log(std.io.FixedBufferStream([]u8).Writer)`,
+    // though that or a `Log` backed by some other `std.io.Writer` would also work.
     var buf: [pkmn.LOGS_SIZE]u8 = undefined;
-    var stream = std.io.fixedBufferStream(&buf);
+
+    var stream = pkmn.protocol.ByteStream{ .buffer = &buf };
     var log = pkmn.protocol.FixedLog{ .writer = stream.writer() };
 
     var c1 = pkmn.Choice{};
@@ -64,11 +67,11 @@ pub fn main() !void {
 
     var result = try battle.update(c1, c2, log);
     while (result.type == .None) : (result = try battle.update(c1, c2, log)) {
-        // Here we would do something with the log data in buf if -Dtrace were enabled
+        // Here we would do something with the log data in buf if `-Dtrace` were enabled
         // _ = buf;
 
-        // battle.choices determines what the possible options are - the simplest way to choose an
-        // option here is to just use the system PRNG to pick one at random
+        // `battle.choices` determines what the possible options are - the simplest way to choose
+        // an option here is to just use the system PRNG to pick one at random
         //
         // Technically due to Generation I's Transform + Mirror Move/Metronome PP error if the
         // battle contains Pokémon with a combination of Transform, Mirror Move/Metronome, and

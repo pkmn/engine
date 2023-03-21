@@ -6,12 +6,12 @@ pub const Options = options.Options;
 /// The minimum size in bytes required to hold all choice options.
 pub const MAX_OPTIONS = gen1.MAX_OPTIONS;
 /// The optimal size in bytes required to hold all choice options.
-/// At least as large as MAX_OPTIONS.
+/// At least as large as `MAX_OPTIONS`.
 pub const OPTIONS_SIZE = gen1.OPTIONS_SIZE;
 /// The maximum number of bytes possibly logged by a single update.
 pub const MAX_LOGS = gen1.MAX_LOGS;
 /// The optimal size in bytes required to hold the largest amount of log data
-/// possible from a single update. At least as large as MAX_LOGS.
+/// possible from a single update. At least as large as `MAX_LOGS`.
 pub const LOGS_SIZE = gen1.LOGS_SIZE;
 
 /// Representation of one of the battle's participants.
@@ -29,15 +29,20 @@ pub const PSRNG = @import("common/rng.zig").PSRNG;
 pub const protocol = if (options.internal) struct {
     pub usingnamespace @import("common/protocol.zig");
 } else struct {
-    /// Logs protocol information to its Writer during a battle update when
-    /// options.trace is enabled.
+    /// Logs protocol information to its `Writer` during a battle update when
+    /// `options.trace` is enabled.
     pub const Log = @import("common/protocol.zig").Log;
-    /// Log type backed by std.io.FixedBufferStream Writer. Intended to be
-    /// intialized with a LOGS_SIZE-sized buffer.
+    /// Stripped down version of `std.io.FixedBufferStream` optimized for
+    /// efficiently writing the individual protocol bytes. Note that the
+    /// `ByteStream.Writer` is **not** a `std.io.Writer` and should not be
+    /// used for general purpose writing.
+    pub const ByteStream = @import("common/protocol.zig").ByteStream;
+    /// `Log` type backed by the optimized `ByteStream.Writer`. Intended to be
+    /// intialized with a `LOGS_SIZE`-sized buffer.
     pub const FixedLog = @import("common/protocol.zig").FixedLog;
-    /// Null object pattern implementation of Log backed by a
-    /// std.io.null_writer. Ignores anything sent to it, though trace logging
-    /// should addtionally be turned off entirely by using options.trace.
+    /// Null object pattern implementation of `Log` backed by a
+    /// `std.io.null_writer`. Ignores anything sent to it, though trace logging
+    /// should addtionally be turned off entirely by using `options.trace`.
     pub const NULL = @import("common/protocol.zig").NULL;
 };
 

@@ -13,8 +13,6 @@ const ArrayList = std.ArrayList;
 
 const assert = std.debug.assert;
 
-const stream = std.io.fixedBufferStream;
-
 const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
@@ -27,6 +25,7 @@ const showdown = options.showdown;
 const trace = options.trace;
 
 const ArgType = protocol.ArgType;
+const ByteStream = protocol.ByteStream;
 const FixedLog = protocol.FixedLog;
 const Log = protocol.Log;
 const NULL = protocol.NULL;
@@ -1326,8 +1325,8 @@ fn Test(comptime rolls: anytype) type {
             var expected_buf: [22]u8 = undefined;
             var actual_buf: [22]u8 = undefined;
 
-            var expected_stream = stream(&expected_buf);
-            var actual_stream = stream(&actual_buf);
+            var expected_stream = ByteStream{ .buffer = &expected_buf };
+            var actual_stream = ByteStream{ .buffer = &actual_buf };
 
             var expected = FixedLog{ .writer = expected_stream.writer() };
             var actual = FixedLog{ .writer = actual_stream.writer() };

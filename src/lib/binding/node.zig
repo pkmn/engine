@@ -76,7 +76,7 @@ fn update(gen: anytype) c.napi_callback {
                     assert(data != null);
 
                     var buf = @ptrCast([*]u8, data.?)[0..gen.LOGS_SIZE];
-                    var stream = std.io.fixedBufferStream(buf);
+                    var stream = pkmn.protocol.ByteStream{ .buffer = buf };
                     var log = pkmn.protocol.FixedLog{ .writer = stream.writer() };
                     break :result battle.update(c1, c2, log);
                 },
