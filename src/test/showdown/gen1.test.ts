@@ -1913,7 +1913,7 @@ describe('Gen 1', () => {
       {species: 'Tauros', moves: ['Horn Drill']},
     ], [
       {species: 'Dugtrio', evs, moves: ['Fissure']},
-      {species: 'Gengar', evs, moves: ['Teleport']},
+      {species: 'Gengar', evs, moves: ['Dig']},
     ]);
 
     battle.makeChoices('move 1', 'move 1');
@@ -1922,8 +1922,12 @@ describe('Gen 1', () => {
     expect(battle.p1.pokemon[0].hp).toBe(0);
 
     battle.makeChoices('switch 2', '');
+
     // Type-immunity trumps OHKO-immunity
     battle.makeChoices('move 1', 'switch 2');
+
+    // Invulnerability trumps immunity on Pokémon Showdown
+    battle.makeChoices('move 1', 'move 1');
 
     verify(battle, [
       '|move|p2a: Dugtrio|Fissure|p1a: Kingler|[miss]',
@@ -1941,6 +1945,11 @@ describe('Gen 1', () => {
       '|move|p1a: Tauros|Horn Drill|p2a: Gengar',
       '|-immune|p2a: Gengar',
       '|turn|4',
+      '|move|p2a: Gengar|Dig||[still]',
+      '|-prepare|p2a: Gengar|Dig',
+      '|move|p1a: Tauros|Horn Drill|p2a: Gengar|[miss]',
+      '|-miss|p1a: Tauros',
+      '|turn|5',
     ]);
   });
 

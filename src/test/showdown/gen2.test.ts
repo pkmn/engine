@@ -3099,7 +3099,7 @@ describe('Gen 2', () => {
     const hit = {...HIT, value: ranged(176, 256) - 1};
     const miss = {...MISS, value: hit.value + 1};
     const battle = startBattle([
-      QKC, QKC, miss, QKC, miss, QKC, hit, QKC, MISS, QKC, QKC,
+      QKC, QKC, miss, QKC, miss, QKC, hit, QKC, MISS, QKC, QKC, QKC,
     ], [
       {species: 'Krabby', level: 5, evs, moves: ['Guillotine']},
       {species: 'Nidoking', level: 50, evs, moves: ['Horn Drill', 'Dig']},
@@ -3107,7 +3107,7 @@ describe('Gen 2', () => {
     ], [
       {species: 'Dugtrio', evs, moves: ['Fissure']},
       {species: 'Rhydon', evs, moves: ['Fissure']},
-      {species: 'Gengar', evs, moves: ['Teleport']},
+      {species: 'Gengar', evs, moves: ['Dig']},
     ]);
 
     // 100% accurate if the level gap is large enough
@@ -3133,6 +3133,9 @@ describe('Gen 2', () => {
 
     // Type-immunity trumps OHKO-immunity
     battle.makeChoices('move 2', 'switch 3');
+
+    // Invulnerability trumps immunity on Pokémon Showdown
+    battle.makeChoices('move 2', 'move 1');
 
     verify(battle, [
       '|move|p2a: Dugtrio|Fissure|p1a: Krabby',
@@ -3166,6 +3169,11 @@ describe('Gen 2', () => {
       '|move|p1a: Tauros|Horn Drill|p2a: Gengar',
       '|-immune|p2a: Gengar',
       '|turn|7',
+      '|move|p2a: Gengar|Dig||[still]',
+      '|-prepare|p2a: Gengar|Dig',
+      '|move|p1a: Tauros|Horn Drill|p2a: Gengar|[miss]',
+      '|-miss|p1a: Tauros',
+      '|turn|8',
     ]);
   });
 

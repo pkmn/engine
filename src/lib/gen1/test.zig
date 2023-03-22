@@ -2384,14 +2384,14 @@ test "OHKO effect" {
     var t = Test(if (showdown)
         .{ ~HIT, HIT }
     else
-        .{ ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT, ~CRIT, HIT }).init(
+        .{ ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT, ~CRIT, HIT, ~CRIT }).init(
         &.{
             .{ .species = .Kingler, .moves = &.{.Guillotine} },
             .{ .species = .Tauros, .stats = .{}, .moves = &.{.HornDrill} },
         },
         &.{
             .{ .species = .Dugtrio, .moves = &.{.Fissure} },
-            .{ .species = .Gengar, .moves = &.{.Teleport} },
+            .{ .species = .Gengar, .moves = &.{.Dig} },
         },
     );
     defer t.deinit();
@@ -2425,6 +2425,22 @@ test "OHKO effect" {
 
     // Type-immunity trumps OHKO-immunity
     try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+
+    try t.log.expected.move(P2.ident(2), Move.Dig, .{}, null);
+    try t.log.expected.laststill();
+    try t.log.expected.prepare(P2.ident(2), Move.Dig);
+    try t.log.expected.move(P1.ident(2), Move.HornDrill, P2.ident(2), null);
+    if (showdown) {
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P1.ident(2));
+    } else {
+        try t.log.expected.immune(P2.ident(2), .OHKO);
+    }
+    try t.log.expected.turn(5);
+
+    // Invulnerability trumps immunity on Pokémon Showdown
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
     try t.verify();
 }
 
@@ -4024,7 +4040,6 @@ test "DreamEater effect" {
         } else {
             try t.log.expected.immune(P2.ident(1), .None);
         }
-
         try t.log.expected.turn(2);
 
         // Missing due to Invulnerability takes precedence on Pokémon Showdown

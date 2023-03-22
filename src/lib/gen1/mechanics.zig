@@ -776,11 +776,12 @@ fn doMove(battle: anytype, player: Player, mslot: u4, auto: bool, log: anytype) 
 
     if (miss) {
         const foe_ident = battle.active(player.foe());
-        if ((!showdown or !immune) and move.effect == .OHKO and
-            side.active.stats.spe < foe.active.stats.spe)
-        {
+        const invulnerable = showdown and foe.active.volatiles.Invulnerable;
+        ohko = (!showdown or (!immune and !invulnerable)) and
+            move.effect == .OHKO and side.active.stats.spe < foe.active.stats.spe;
+        if (ohko) {
             try log.immune(foe_ident, .OHKO);
-        } else if (immune) {
+        } else if (immune and !invulnerable) {
             try log.immune(foe_ident, .None);
         } else if (mist) {
             try log.activate(foe_ident, .Mist);
@@ -1198,7 +1199,7 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool, mist
     var miss = miss: {
         assert(!side.active.volatiles.Bide);
 
-        // Invulnerability trumps Dream Eater on Pokémon Showdown
+        // Invulnerability trumps everything on Pokémon Showdown
         if (showdown and move.effect != .Swift and foe.active.volatiles.Invulnerable) {
             break :miss true;
         }
@@ -1208,7 +1209,7 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool, mist
             break :miss true;
         }
         if (move.effect == .Swift) return true;
-        if (foe.active.volatiles.Invulnerable) break :miss true;
+        if (!showdown and foe.active.volatiles.Invulnerable) break :miss true;
         // Hyper Beam + Sleep glitch needs to be special cased here due to control flow differences
         if (showdown and move.effect == .Sleep and foe.active.volatiles.Recharging) return true;
 
