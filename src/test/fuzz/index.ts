@@ -14,9 +14,8 @@ import {Data, LAYOUT, LE, Lookup} from '../../pkg/data';
 import * as gen1 from '../../pkg/gen1';
 import {Frame, display} from '../display';
 
-const ROOT = path.resolve(__dirname, '..', '..');
-
-const run = promisify(execFile);
+const ROOT = path.resolve(__dirname, '..', '..', '..');
+const sh = promisify(execFile);
 
 const usage = (msg?: string): void => {
   if (msg) console.error(msg);
@@ -49,22 +48,19 @@ class SpeciesNames implements Info {
   }
 }
 
-(async () => {
-  if (process.argv.length < 4 || process.argv.length > 6) usage(process.argv.length.toString());
-  const mode = process.argv[2];
-  if (mode !== 'pkmn' && mode !== 'showdown') {
-    usage(`Mode must be either 'pkmn' or 'showdown', received '${mode}'`);
-  }
-  const showdown = mode === 'showdown';
-
-  const gens = new Generations(Dex as any);
-  const gen = gens.get(process.argv[3]);
+export async function run(
+  gen: Generation,
+  showdown: boolean,
+  duration: string,
+  seed?: bigint,
+  testing?: boolean,
+) {
   const lookup = Lookup.get(gen);
   const size = LAYOUT[gen.num - 1].sizes.Battle;
   const names = new SpeciesNames(gen);
   const log = new Log(gen, lookup, names);
   const deserialize = (buf: number[]): Battle => {
-    // We don't care about the native addon, we just need to load it so other checks don't fail
+  // We don't care about the native addon, we just need to load it so other checks don't fail
     void addon.supports(true);
     switch (gen.num) {
     case 1: return new gen1.Battle(lookup, Data.view(buf), {showdown});
@@ -72,18 +68,20 @@ class SpeciesNames implements Info {
     }
   };
 
-  const args = ['build', 'fuzz', '-Dtrace'];
+  const args = ['build', '-fno-summary', 'fuzz', '-Dtrace'];
   if (showdown) args.push('-Dshowdown');
-  args.push('--', gen.num.toString(), process.argv[4]);
-  if (process.argv.length > 5) args.push(process.argv[5].toString());
+  args.push('--', gen.num.toString(), duration);
+  if (seed) args.push(seed.toString());
 
   try {
-    await run('zig', args, {encoding: 'buffer'});
+    await sh('zig', args, {encoding: 'buffer'});
+    return true;
   } catch (err: any) {
     const {stdout, stderr} = err as {stdout: Buffer; stderr: Buffer};
     const raw = stderr.toString('utf8');
     const panic = raw.indexOf('panic: ');
     const error = raw.slice(panic);
+    if (testing) throw new Error(raw);
 
     console.error(raw);
 
@@ -93,9 +91,8 @@ class SpeciesNames implements Info {
     const view = Data.view(data);
 
     const head = 8 + 1;
-    const seed = view.getBigUint64(0, LE);
+    seed = view.getBigUint64(0, LE);
     const end = view.getUint8(8);
-
     const frames: Frame[] = [];
     for (let offset = head + end; offset < data.length; offset += (3 + size)) {
       const result = Result.decode(data[offset]);
@@ -125,6 +122,7 @@ class SpeciesNames implements Info {
     const hex = `0x${seed.toString(16).toUpperCase()}`;
     const file = path.join(dir, `${hex}.fuzz.html`);
     const link = path.join(dir, 'fuzz.html');
+
     fs.writeFileSync(file, display(gen, showdown, error, seed, frames, {
       parsed: end > 0
         ? Array.from(log.parse(Data.view(data.slice(head, head + end))))
@@ -133,9 +131,23 @@ class SpeciesNames implements Info {
     fs.rmSync(link, {force: true});
     fs.symlinkSync(file, link);
 
-    process.exit(1);
+    return false;
   }
-})().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+}
+
+if (require.main === module) {
+  (async () => {
+    if (process.argv.length < 4 || process.argv.length > 6) usage(process.argv.length.toString());
+    const mode = process.argv[2];
+    if (mode !== 'pkmn' && mode !== 'showdown') {
+      usage(`Mode must be either 'pkmn' or 'showdown', received '${mode}'`);
+    }
+    const gens = new Generations(Dex as any);
+    const gen = gens.get(process.argv[3]);
+    const seed = process.argv.length > 5 ? BigInt(process.argv[5]) : undefined;
+    await run(gen, mode === 'showdown', process.argv[4], seed);
+  })().catch(err => {
+    console.error(err);
+    process.exit(1);
+  });
+}
