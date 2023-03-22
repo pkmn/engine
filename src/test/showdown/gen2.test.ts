@@ -4882,71 +4882,92 @@ describe('Gen 2', () => {
   });
 
   test('DreamEater effect', () => {
-    const battle = startBattle([
-      QKC, QKC, NO_CRIT, MIN_DMG, SLP(5), QKC,
-      QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, QKC,
-    ], [
-      {species: 'Hypno', evs, moves: ['Dream Eater', 'Confusion']},
-    ], [
-      {species: 'Wigglytuff', evs, moves: ['Substitute', 'Rest', 'Teleport']},
-    ]);
+    {
+      const battle = startBattle([
+        QKC, QKC, NO_CRIT, MIN_DMG, SLP(5), QKC,
+        QKC, NO_CRIT, MIN_DMG, QKC, NO_CRIT, MIN_DMG, QKC,
+      ], [
+        {species: 'Hypno', evs, moves: ['Dream Eater', 'Confusion']},
+      ], [
+        {species: 'Wigglytuff', evs, moves: ['Substitute', 'Rest', 'Teleport']},
+      ]);
 
-    battle.p1.pokemon[0].hp = 100;
+      battle.p1.pokemon[0].hp = 100;
 
-    let p1hp = battle.p1.pokemon[0].hp;
-    let p2hp = battle.p2.pokemon[0].hp;
+      let p1hp = battle.p1.pokemon[0].hp;
+      let p2hp = battle.p2.pokemon[0].hp;
 
-    // Fails unless the target is sleeping
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 120);
-    expect(battle.p2.pokemon[0].status).toBe('');
+      // Fails unless the target is sleeping
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 120);
+      expect(battle.p2.pokemon[0].status).toBe('');
 
-    battle.makeChoices('move 2', 'move 2');
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp += 120);
-    expect(battle.p2.pokemon[0].status).toBe('slp');
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp += 120);
+      expect(battle.p2.pokemon[0].status).toBe('slp');
 
-    // Substitute blocks Dream Eater
-    battle.makeChoices('move 1', 'move 3');
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
-    expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBeGreaterThan(0);
+      // Substitute blocks Dream Eater
+      battle.makeChoices('move 1', 'move 3');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+      expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBeGreaterThan(0);
 
-    battle.makeChoices('move 2', 'move 3');
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
-    expect(battle.p1.pokemon[0].volatiles['substitute']).toBeUndefined();
+      battle.makeChoices('move 2', 'move 3');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+      expect(battle.p1.pokemon[0].volatiles['substitute']).toBeUndefined();
 
-    // Heals 1/2 of the damage dealt
-    battle.makeChoices('move 1', 'move 3');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp += 66);
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 133);
+      // Heals 1/2 of the damage dealt
+      battle.makeChoices('move 1', 'move 3');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp += 66);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 133);
 
-    verify(battle, [
-      '|move|p1a: Hypno|Dream Eater|p2a: Wigglytuff',
-      '|-immune|p2a: Wigglytuff',
-      '|move|p2a: Wigglytuff|Substitute|p2a: Wigglytuff',
-      '|-start|p2a: Wigglytuff|Substitute',
-      '|-damage|p2a: Wigglytuff|363/483',
-      '|turn|2',
-      '|move|p1a: Hypno|Confusion|p2a: Wigglytuff',
-      '|-activate|p2a: Wigglytuff|Substitute|[damage]',
-      '|move|p2a: Wigglytuff|Rest|p2a: Wigglytuff',
-      '|-status|p2a: Wigglytuff|slp|[from] move: Rest',
-      '|-heal|p2a: Wigglytuff|483/483 slp|[silent]',
-      '|turn|3',
-      '|move|p1a: Hypno|Dream Eater|p2a: Wigglytuff',
-      '|-immune|p2a: Wigglytuff',
-      '|cant|p2a: Wigglytuff|slp',
-      '|turn|4',
-      '|move|p1a: Hypno|Confusion|p2a: Wigglytuff',
-      '|-end|p2a: Wigglytuff|Substitute',
-      '|cant|p2a: Wigglytuff|slp',
-      '|turn|5',
-      '|move|p1a: Hypno|Dream Eater|p2a: Wigglytuff',
-      '|-damage|p2a: Wigglytuff|350/483 slp',
-      '|-heal|p1a: Hypno|166/373|[from] drain|[of] p2a: Wigglytuff',
-      '|-curestatus|p2a: Wigglytuff|slp|[msg]',
-      '|move|p2a: Wigglytuff|Teleport|p2a: Wigglytuff',
-      '|turn|6',
-    ]);
+      verify(battle, [
+        '|move|p1a: Hypno|Dream Eater|p2a: Wigglytuff',
+        '|-immune|p2a: Wigglytuff',
+        '|move|p2a: Wigglytuff|Substitute|p2a: Wigglytuff',
+        '|-start|p2a: Wigglytuff|Substitute',
+        '|-damage|p2a: Wigglytuff|363/483',
+        '|turn|2',
+        '|move|p1a: Hypno|Confusion|p2a: Wigglytuff',
+        '|-activate|p2a: Wigglytuff|Substitute|[damage]',
+        '|move|p2a: Wigglytuff|Rest|p2a: Wigglytuff',
+        '|-status|p2a: Wigglytuff|slp|[from] move: Rest',
+        '|-heal|p2a: Wigglytuff|483/483 slp|[silent]',
+        '|turn|3',
+        '|move|p1a: Hypno|Dream Eater|p2a: Wigglytuff',
+        '|-immune|p2a: Wigglytuff',
+        '|cant|p2a: Wigglytuff|slp',
+        '|turn|4',
+        '|move|p1a: Hypno|Confusion|p2a: Wigglytuff',
+        '|-end|p2a: Wigglytuff|Substitute',
+        '|cant|p2a: Wigglytuff|slp',
+        '|turn|5',
+        '|move|p1a: Hypno|Dream Eater|p2a: Wigglytuff',
+        '|-damage|p2a: Wigglytuff|350/483 slp',
+        '|-heal|p1a: Hypno|166/373|[from] drain|[of] p2a: Wigglytuff',
+        '|-curestatus|p2a: Wigglytuff|slp|[msg]',
+        '|move|p2a: Wigglytuff|Teleport|p2a: Wigglytuff',
+        '|turn|6',
+      ]);
+    }
+    // Invulnerable
+    {
+      const battle = startBattle([QKC, QKC], [
+        {species: 'Drowzee', evs, moves: ['Dream Eater']},
+      ], [
+        {species: 'Dugtrio', evs, moves: ['Dig']},
+      ]);
+
+      // Missing due to Invulnerability takes precedence on Pokémon Showdown
+      battle.makeChoices('move 1', 'move 1');
+
+      verify(battle, [
+        '|move|p2a: Dugtrio|Dig||[still]',
+        '|-prepare|p2a: Dugtrio|Dig',
+        '|move|p1a: Drowzee|Dream Eater|p2a: Dugtrio|[miss]',
+        '|-miss|p1a: Drowzee',
+        '|turn|2',
+      ]);
+    }
   });
 
   test('LeechSeed effect', () => {

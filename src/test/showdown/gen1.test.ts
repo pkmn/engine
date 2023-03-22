@@ -3159,54 +3159,75 @@ describe('Gen 1', () => {
   });
 
   test('DreamEater effect', () => {
-    const battle = startBattle([
-      HIT, SLP(5), HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
-    ], [
-      {species: 'Hypno', evs, moves: ['Dream Eater', 'Hypnosis']},
-    ], [
-      {species: 'Wigglytuff', evs, moves: ['Teleport']},
-    ]);
+    {
+      const battle = startBattle([
+        HIT, SLP(5), HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+      ], [
+        {species: 'Hypno', evs, moves: ['Dream Eater', 'Hypnosis']},
+      ], [
+        {species: 'Wigglytuff', evs, moves: ['Teleport']},
+      ]);
 
-    battle.p1.pokemon[0].hp = 100;
-    battle.p2.pokemon[0].hp = 182;
+      battle.p1.pokemon[0].hp = 100;
+      battle.p2.pokemon[0].hp = 182;
 
-    let p1hp = battle.p1.pokemon[0].hp;
+      let p1hp = battle.p1.pokemon[0].hp;
 
-    // Fails unless the target is sleeping
-    battle.makeChoices('move 1', 'move 1');
+      // Fails unless the target is sleeping
+      battle.makeChoices('move 1', 'move 1');
 
-    battle.makeChoices('move 2', 'move 1');
+      battle.makeChoices('move 2', 'move 1');
 
-    // Heals 1/2 of the damage dealt
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp += 90);
-    expect(battle.p2.pokemon[0].hp).toBe(1);
+      // Heals 1/2 of the damage dealt
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp += 90);
+      expect(battle.p2.pokemon[0].hp).toBe(1);
 
-    // Heals at least 1 HP
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(p1hp += 1);
-    expect(battle.p2.pokemon[0].hp).toBe(0);
+      // Heals at least 1 HP
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp += 1);
+      expect(battle.p2.pokemon[0].hp).toBe(0);
 
-    verify(battle, [
-      '|move|p1a: Hypno|Dream Eater|p2a: Wigglytuff',
-      '|-immune|p2a: Wigglytuff',
-      '|move|p2a: Wigglytuff|Teleport|p2a: Wigglytuff',
-      '|turn|2',
-      '|move|p1a: Hypno|Hypnosis|p2a: Wigglytuff',
-      '|-status|p2a: Wigglytuff|slp|[from] move: Hypnosis',
-      '|cant|p2a: Wigglytuff|slp',
-      '|turn|3',
-      '|move|p1a: Hypno|Dream Eater|p2a: Wigglytuff',
-      '|-damage|p2a: Wigglytuff|1/483 slp',
-      '|-heal|p1a: Hypno|190/373|[from] drain|[of] p2a: Wigglytuff',
-      '|cant|p2a: Wigglytuff|slp',
-      '|turn|4',
-      '|move|p1a: Hypno|Dream Eater|p2a: Wigglytuff',
-      '|-damage|p2a: Wigglytuff|0 fnt',
-      '|-heal|p1a: Hypno|191/373|[from] drain|[of] p2a: Wigglytuff',
-      '|faint|p2a: Wigglytuff',
-      '|win|Player 1',
-    ]);
+      verify(battle, [
+        '|move|p1a: Hypno|Dream Eater|p2a: Wigglytuff',
+        '|-immune|p2a: Wigglytuff',
+        '|move|p2a: Wigglytuff|Teleport|p2a: Wigglytuff',
+        '|turn|2',
+        '|move|p1a: Hypno|Hypnosis|p2a: Wigglytuff',
+        '|-status|p2a: Wigglytuff|slp|[from] move: Hypnosis',
+        '|cant|p2a: Wigglytuff|slp',
+        '|turn|3',
+        '|move|p1a: Hypno|Dream Eater|p2a: Wigglytuff',
+        '|-damage|p2a: Wigglytuff|1/483 slp',
+        '|-heal|p1a: Hypno|190/373|[from] drain|[of] p2a: Wigglytuff',
+        '|cant|p2a: Wigglytuff|slp',
+        '|turn|4',
+        '|move|p1a: Hypno|Dream Eater|p2a: Wigglytuff',
+        '|-damage|p2a: Wigglytuff|0 fnt',
+        '|-heal|p1a: Hypno|191/373|[from] drain|[of] p2a: Wigglytuff',
+        '|faint|p2a: Wigglytuff',
+        '|win|Player 1',
+      ]);
+    }
+    // Invulnerable
+    {
+      const battle = startBattle([], [
+        {species: 'Drowzee', evs, moves: ['Dream Eater']},
+      ], [
+        {species: 'Dugtrio', evs, moves: ['Dig']},
+      ]);
+
+      // Missing due to Invulnerability takes precedence on Pokémon Showdown
+      battle.makeChoices('move 1', 'move 1');
+
+      verify(battle, [
+        '|move|p2a: Dugtrio|Dig||[still]',
+        '|-prepare|p2a: Dugtrio|Dig',
+        '|move|p1a: Drowzee|Dream Eater|p2a: Dugtrio|[miss]',
+        '|-miss|p1a: Drowzee',
+        '|turn|2',
+      ]);
+    }
   });
 
   test('LeechSeed effect', () => {

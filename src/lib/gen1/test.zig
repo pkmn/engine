@@ -3922,55 +3922,84 @@ test "DreamEater effect" {
     // The target is unaffected by this move unless it is asleep. The user recovers 1/2 the HP lost
     // by the target, rounded down, but not less than 1 HP. If this move breaks the target's
     // substitute, the user does not recover any HP.
-    var t = Test((if (showdown)
-        .{ HIT, MAX, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG }
-    else
-        .{ ~CRIT, MIN_DMG, ~CRIT, HIT, MAX, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT })).init(
-        &.{.{ .species = .Hypno, .hp = 100, .moves = &.{ .DreamEater, .Hypnosis } }},
-        &.{.{ .species = .Wigglytuff, .hp = 182, .moves = &.{.Teleport} }},
-    );
-    defer t.deinit();
+    {
+        var t = Test((if (showdown)
+            .{ HIT, MAX, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG }
+        else
+            .{ ~CRIT, MIN_DMG, ~CRIT, HIT, MAX, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT })).init(
+            &.{.{ .species = .Hypno, .hp = 100, .moves = &.{ .DreamEater, .Hypnosis } }},
+            &.{.{ .species = .Wigglytuff, .hp = 182, .moves = &.{.Teleport} }},
+        );
+        defer t.deinit();
 
-    try t.log.expected.move(P1.ident(1), Move.DreamEater, P2.ident(1), null);
-    try t.log.expected.immune(P2.ident(1), .None);
-    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
-    try t.log.expected.turn(2);
+        try t.log.expected.move(P1.ident(1), Move.DreamEater, P2.ident(1), null);
+        try t.log.expected.immune(P2.ident(1), .None);
+        try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+        try t.log.expected.turn(2);
 
-    // Fails unless the target is sleeping
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        // Fails unless the target is sleeping
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-    try t.log.expected.move(P1.ident(1), Move.Hypnosis, P2.ident(1), null);
-    t.expected.p2.get(1).status = Status.slp(7);
-    try t.log.expected.statusFrom(P2.ident(1), t.expected.p2.get(1).status, Move.Hypnosis);
-    try t.log.expected.cant(P2.ident(1), .Sleep);
-    try t.log.expected.turn(3);
+        try t.log.expected.move(P1.ident(1), Move.Hypnosis, P2.ident(1), null);
+        t.expected.p2.get(1).status = Status.slp(7);
+        try t.log.expected.statusFrom(P2.ident(1), t.expected.p2.get(1).status, Move.Hypnosis);
+        try t.log.expected.cant(P2.ident(1), .Sleep);
+        try t.log.expected.turn(3);
 
-    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+        try expectEqual(Result.Default, try t.update(move(2), move(1)));
 
-    try t.log.expected.move(P1.ident(1), Move.DreamEater, P2.ident(1), null);
-    t.expected.p2.get(1).hp -= 181;
-    t.expected.p2.get(1).status -= 1;
-    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    t.expected.p1.get(1).hp += 90;
-    try t.log.expected.drain(P1.ident(1), t.expected.p1.get(1), P2.ident(1));
-    try t.log.expected.cant(P2.ident(1), .Sleep);
-    try t.log.expected.turn(4);
+        try t.log.expected.move(P1.ident(1), Move.DreamEater, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 181;
+        t.expected.p2.get(1).status -= 1;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        t.expected.p1.get(1).hp += 90;
+        try t.log.expected.drain(P1.ident(1), t.expected.p1.get(1), P2.ident(1));
+        try t.log.expected.cant(P2.ident(1), .Sleep);
+        try t.log.expected.turn(4);
 
-    // Heals 1/2 of the damage dealt
-    try expectEqual(Result.Default, try t.update(move(1), forced));
+        // Heals 1/2 of the damage dealt
+        try expectEqual(Result.Default, try t.update(move(1), forced));
 
-    try t.log.expected.move(P1.ident(1), Move.DreamEater, P2.ident(1), null);
-    t.expected.p2.get(1).hp -= 1;
-    t.expected.p2.get(1).status -= 1;
-    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    t.expected.p1.get(1).hp += 1;
-    try t.log.expected.drain(P1.ident(1), t.expected.p1.get(1), P2.ident(1));
-    try t.log.expected.faint(P2.ident(1), false);
-    try t.log.expected.win(.P1);
+        try t.log.expected.move(P1.ident(1), Move.DreamEater, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 1;
+        t.expected.p2.get(1).status -= 1;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        t.expected.p1.get(1).hp += 1;
+        try t.log.expected.drain(P1.ident(1), t.expected.p1.get(1), P2.ident(1));
+        try t.log.expected.faint(P2.ident(1), false);
+        try t.log.expected.win(.P1);
 
-    // Heals at least 1 HP
-    try expectEqual(Result.Win, try t.update(move(1), forced));
-    try t.verify();
+        // Heals at least 1 HP
+        try expectEqual(Result.Win, try t.update(move(1), forced));
+        try t.verify();
+    }
+    // Invulnerable
+    {
+        var t = Test(if (showdown) .{} else .{ ~CRIT, MIN_DMG }).init(
+            &.{.{ .species = .Drowzee, .moves = &.{
+                .DreamEater,
+            } }},
+            &.{.{ .species = .Dugtrio, .moves = &.{.Dig} }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P2.ident(1), Move.Dig, .{}, null);
+        try t.log.expected.laststill();
+        try t.log.expected.prepare(P2.ident(1), Move.Dig);
+        try t.log.expected.move(P1.ident(1), Move.DreamEater, P2.ident(1), null);
+        if (showdown) {
+            try t.log.expected.lastmiss();
+            try t.log.expected.miss(P1.ident(1));
+        } else {
+            try t.log.expected.immune(P2.ident(1), .None);
+        }
+
+        try t.log.expected.turn(2);
+
+        // Missing due to Invulnerability takes precedence on Pokémon Showdown
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try t.verify();
+    }
 }
 
 // Move.LeechSeed
