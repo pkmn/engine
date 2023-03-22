@@ -689,7 +689,8 @@ fn doMove(battle: anytype, player: Player, mslot: u4, auto: bool, log: anytype) 
     const foe = battle.foe(player);
 
     var move = Move.get(side.last_selected_move);
-    const special = move.effect == .SuperFang or move.effect == .SpecialDamage;
+    const counter = side.last_selected_move == .Counter;
+    const status = move.bp == 0 and move.effect != .OHKO;
 
     var crit = false;
     var ohko = false;
@@ -697,41 +698,25 @@ fn doMove(battle: anytype, player: Player, mslot: u4, auto: bool, log: anytype) 
     var mist = false;
     var hits: u4 = 1;
     var effectiveness = Effectiveness.neutral;
-    const counter = side.last_selected_move == .Counter;
-
-    // Pokémon Showdown runs type and OHKO immunity checks before the accuracy check
-    if (showdown and !counter) {
-        const m = side.last_selected_move;
-        const eff1 = @enumToInt(move.type.effectiveness(foe.active.types.type1));
-        const eff2 = @enumToInt(move.type.effectiveness(foe.active.types.type2));
-        if (move.target != .Self and (eff1 == 0 or eff2 == 0) and !special or
-            (m == .DreamEater and !Status.is(foe.stored().status, .SLP)))
-        {
-            if (move.effect == .Binding) {
-                immune = true;
-            } else {
-                try log.immune(battle.active(player.foe()), .None);
-                if (move.effect == .Explode) {
-                    try Effects.explode(battle, player);
-                }
-                return null;
-            }
-        }
-        if (move.effect == .OHKO and side.active.stats.spe < foe.active.stats.spe) {
-            try log.immune(battle.active(player.foe()), .OHKO);
-            return null;
-        }
-    }
 
     // The cartridge handles set damage moves in applyDamage but we short circuit to simplify things
-    if (special) return specialDamage(battle, player, move, log);
+    if (move.effect == .SuperFang or move.effect == .SpecialDamage) {
+        return specialDamage(battle, player, move, log);
+    }
 
-    var miss = showdown and (move.target != .Self and
-        !(move.effect == .Sleep and foe.active.volatiles.Recharging) and
-        !moveHit(battle, player, move, &immune, &mist));
-    assert((showdown and move.effect == .Binding) or !immune);
+    // Pokémon Showdown runs invulnerability / immunity checks before checking accuracy - simply
+    // calling moveHit early covers most of that but we also need to check type immunity first
+    var miss = showdown and miss: {
+        immune = move.target != .Self and !status and !counter and
+            (@enumToInt(move.type.effectiveness(foe.active.types.type1)) == 0 or
+            @enumToInt(move.type.effectiveness(foe.active.types.type2)) == 0);
+        if (immune and move.effect != .Binding) break :miss true;
+        if (move.effect == .OHKO and side.active.stats.spe < foe.active.stats.spe) break :miss true;
+        break :miss move.target != .Self and !moveHit(battle, player, move, &immune, &mist);
+    };
+    assert(!immune or miss or (showdown and move.effect == .Binding));
 
-    const skip = (move.bp == 0 and move.effect != .OHKO) or immune;
+    const skip = status or immune;
     if ((!showdown or (!skip or counter)) and !miss) blk: {
         if (showdown and move.effect.isMulti()) {
             Effects.multiHit(battle, player, move);
@@ -739,7 +724,7 @@ fn doMove(battle: anytype, player: Player, mslot: u4, auto: bool, log: anytype) 
         }
 
         // Cartridge rolls for crit even for moves that can't crit (Counter/Metronome/status/OHKO)
-        const check = !showdown or (!counter and move.effect != .OHKO); // TODO: skip?
+        const check = !showdown or (!counter and move.effect != .OHKO);
         if (check) crit = checkCriticalHit(battle, player, move);
 
         if (counter) return counterDamage(battle, player, move, log);
@@ -791,7 +776,7 @@ fn doMove(battle: anytype, player: Player, mslot: u4, auto: bool, log: anytype) 
 
     if (miss) {
         const foe_ident = battle.active(player.foe());
-        if (!showdown and move.effect == .OHKO and side.active.stats.spe < foe.active.stats.spe) {
+        if (move.effect == .OHKO and side.active.stats.spe < foe.active.stats.spe) {
             try log.immune(foe_ident, .OHKO);
         } else if (immune) {
             try log.immune(foe_ident, .None);
@@ -1211,8 +1196,13 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool, mist
     var miss = miss: {
         assert(!side.active.volatiles.Bide);
 
+        // Invulnerability trumps Dream Eater on Pokémon Showdown
+        if (showdown and move.effect != .Swift and foe.active.volatiles.Invulnerable) {
+            break :miss true;
+        }
         if (move.effect == .DreamEater and !Status.is(foe.stored().status, .SLP)) {
             immune.* = true;
+            if (showdown) return false;
             break :miss true;
         }
         if (move.effect == .Swift) return true;
