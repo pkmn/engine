@@ -6,7 +6,7 @@ import * as addon from '../../pkg/addon';
 import {run} from '.';
 
 describe('integration', () => {
-  (addon.supports(true, true) && Math.random() > 1 ? test : test.skip)('test', async () => {
+  (addon.supports(true, true) ? test : test.skip)('test', async () => {
     const gens = new Generations(Dex as any);
     expect(await run(gens, {prng: [1, 2, 3, 4]})).toBe(0);
   });
