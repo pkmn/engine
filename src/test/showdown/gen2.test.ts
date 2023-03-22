@@ -3099,14 +3099,15 @@ describe('Gen 2', () => {
     const hit = {...HIT, value: ranged(176, 256) - 1};
     const miss = {...MISS, value: hit.value + 1};
     const battle = startBattle([
-      QKC, QKC, miss, QKC, miss, QKC, hit, QKC, MISS, QKC,
+      QKC, QKC, miss, QKC, miss, QKC, hit, QKC, MISS, QKC, QKC,
     ], [
       {species: 'Krabby', level: 5, evs, moves: ['Guillotine']},
       {species: 'Nidoking', level: 50, evs, moves: ['Horn Drill', 'Dig']},
-      {species: 'Tauros', evs, moves: ['Counter']},
+      {species: 'Tauros', moves: ['Counter', 'Horn Drill']},
     ], [
       {species: 'Dugtrio', evs, moves: ['Fissure']},
       {species: 'Rhydon', evs, moves: ['Fissure']},
+      {species: 'Gengar', evs, moves: ['Teleport']},
     ]);
 
     // 100% accurate if the level gap is large enough
@@ -3130,6 +3131,9 @@ describe('Gen 2', () => {
     battle.makeChoices('move 1', 'move 1');
     // expect(battle.p2.pokemon[0].hp).toBe(0);
 
+    // Type-immunity trumps OHKO-immunity
+    battle.makeChoices('move 2', 'switch 3');
+
     verify(battle, [
       '|move|p2a: Dugtrio|Fissure|p1a: Krabby',
       '|-damage|p1a: Krabby|0 fnt',
@@ -3151,13 +3155,17 @@ describe('Gen 2', () => {
       '|-damage|p1a: Nidoking|0 fnt',
       '|-ohko',
       '|faint|p1a: Nidoking',
-      '|switch|p1a: Tauros|Tauros, M|353/353',
+      '|switch|p1a: Tauros|Tauros, M|290/290',
       '|turn|5',
       '|move|p2a: Dugtrio|Fissure|p1a: Tauros|[miss]',
       '|-miss|p2a: Dugtrio',
       '|move|p1a: Tauros|Counter|p2a: Dugtrio',
       '|-fail|p2a: Dugtrio',
       '|turn|6',
+      '|switch|p2a: Gengar|Gengar, M|323/323',
+      '|move|p1a: Tauros|Horn Drill|p2a: Gengar',
+      '|-immune|p2a: Gengar',
+      '|turn|7',
     ]);
   });
 

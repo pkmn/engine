@@ -2384,12 +2384,15 @@ test "OHKO effect" {
     var t = Test(if (showdown)
         .{ ~HIT, HIT }
     else
-        .{ ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT }).init(
+        .{ ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, HIT, ~CRIT, HIT }).init(
         &.{
             .{ .species = .Kingler, .moves = &.{.Guillotine} },
-            .{ .species = .Tauros, .moves = &.{.HornDrill} },
+            .{ .species = .Tauros, .stats = .{}, .moves = &.{.HornDrill} },
         },
-        &.{.{ .species = .Dugtrio, .moves = &.{.Fissure} }},
+        &.{
+            .{ .species = .Dugtrio, .moves = &.{.Fissure} },
+            .{ .species = .Gengar, .moves = &.{.Teleport} },
+        },
     );
     defer t.deinit();
 
@@ -2409,6 +2412,19 @@ test "OHKO effect" {
     try t.log.expected.faint(P1.ident(1), true);
 
     try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(move(1), move(1)));
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(swtch(2), .{}));
+
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.move(P1.ident(2), Move.HornDrill, P2.ident(2), null);
+    try t.log.expected.immune(P2.ident(2), if (showdown) .None else .OHKO);
+    try t.log.expected.turn(4);
+
+    // Type-immunity trumps OHKO-immunity
+    try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
     try t.verify();
 }
 

@@ -776,7 +776,9 @@ fn doMove(battle: anytype, player: Player, mslot: u4, auto: bool, log: anytype) 
 
     if (miss) {
         const foe_ident = battle.active(player.foe());
-        if (move.effect == .OHKO and side.active.stats.spe < foe.active.stats.spe) {
+        if ((!showdown or !immune) and move.effect == .OHKO and
+            side.active.stats.spe < foe.active.stats.spe)
+        {
             try log.immune(foe_ident, .OHKO);
         } else if (immune) {
             try log.immune(foe_ident, .None);

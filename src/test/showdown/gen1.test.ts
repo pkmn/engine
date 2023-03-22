@@ -1910,15 +1910,20 @@ describe('Gen 1', () => {
   test('OHKO effect', () => {
     const battle = startBattle([MISS, HIT], [
       {species: 'Kingler', evs, moves: ['Guillotine']},
-      {species: 'Tauros', evs, moves: ['Horn Drill']},
+      {species: 'Tauros', moves: ['Horn Drill']},
     ], [
       {species: 'Dugtrio', evs, moves: ['Fissure']},
+      {species: 'Gengar', evs, moves: ['Teleport']},
     ]);
 
     battle.makeChoices('move 1', 'move 1');
     battle.makeChoices('move 1', 'move 1');
 
     expect(battle.p1.pokemon[0].hp).toBe(0);
+
+    battle.makeChoices('switch 2', '');
+    // Type-immunity trumps OHKO-immunity
+    battle.makeChoices('move 1', 'switch 2');
 
     verify(battle, [
       '|move|p2a: Dugtrio|Fissure|p1a: Kingler|[miss]',
@@ -1930,6 +1935,12 @@ describe('Gen 1', () => {
       '|-damage|p1a: Kingler|0 fnt',
       '|-ohko',
       '|faint|p1a: Kingler',
+      '|switch|p1a: Tauros|Tauros|290/290',
+      '|turn|3',
+      '|switch|p2a: Gengar|Gengar|323/323',
+      '|move|p1a: Tauros|Horn Drill|p2a: Gengar',
+      '|-immune|p2a: Gengar',
+      '|turn|4',
     ]);
   });
 
