@@ -1200,16 +1200,20 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool, mist
         assert(!side.active.volatiles.Bide);
 
         // Invulnerability trumps everything on Pokémon Showdown
-        if (showdown and move.effect != .Swift and foe.active.volatiles.Invulnerable) {
-            break :miss true;
+        if (showdown) {
+            if (move.effect == .Swift) return true;
+            if (foe.active.volatiles.Invulnerable) break :miss true;
         }
         if (move.effect == .DreamEater and !Status.is(foe.stored().status, .SLP)) {
             immune.* = true;
             if (showdown) return false;
             break :miss true;
         }
-        if (move.effect == .Swift) return true;
-        if (!showdown and foe.active.volatiles.Invulnerable) break :miss true;
+        if (!showdown) {
+            if (move.effect == .Swift) return true;
+            if (foe.active.volatiles.Invulnerable) break :miss true;
+        }
+
         // Hyper Beam + Sleep glitch needs to be special cased here due to control flow differences
         if (showdown and move.effect == .Sleep and foe.active.volatiles.Recharging) return true;
 
