@@ -1297,6 +1297,8 @@ fn Test(comptime rolls: anytype) type {
             p2: *data.Side,
         },
 
+        offset: usize,
+
         pub fn init(pokemon1: []const Pokemon, pokemon2: []const Pokemon) *Self {
             var t = std.testing.allocator.create(Self) catch unreachable;
 
@@ -1311,6 +1313,8 @@ fn Test(comptime rolls: anytype) type {
             t.expected.p2 = t.battle.expected.side(.P2);
             t.actual.p1 = t.battle.actual.side(.P1);
             t.actual.p2 = t.battle.actual.side(.P2);
+
+            t.offset = 0;
 
             return t;
         }
@@ -1341,20 +1345,38 @@ fn Test(comptime rolls: anytype) type {
 
         pub fn update(self: *Self, c1: Choice, c2: Choice) !Result {
             if (self.battle.actual.turn == 0) try self.start();
-            return self.battle.actual.update(c1, c2, self.log.actual);
+            const result = self.battle.actual.update(c1, c2, self.log.actual);
+            try self.validate();
+            return result;
         }
 
-        pub fn verify(t: *Self) !void {
-            if (trace) try expectLog(t.buf.expected.items, t.buf.actual.items);
-            for (t.expected.p1.pokemon, 0..) |p, i| try expectEqual(p.hp, t.actual.p1.pokemon[i].hp);
-            for (t.expected.p2.pokemon, 0..) |p, i| try expectEqual(p.hp, t.actual.p2.pokemon[i].hp);
-            try expect(t.battle.actual.rng.exhausted());
+        pub fn verify(self: *Self) !void {
+            try self.validate();
+            try expect(self.battle.actual.rng.exhausted());
+        }
+
+        fn validate(self: *Self) !void {
+            if (trace) {
+                try protocol.expectLog(
+                    formatter,
+                    self.buf.expected.items,
+                    self.buf.actual.items,
+                    self.offset,
+                );
+                self.offset = self.buf.expected.items.len;
+            }
+            for (self.expected.p1.pokemon, 0..) |p, i| {
+                try expectEqual(p.hp, self.actual.p1.pokemon[i].hp);
+            }
+            for (self.expected.p2.pokemon, 0..) |p, i| {
+                try expectEqual(p.hp, self.actual.p2.pokemon[i].hp);
+            }
         }
     };
 }
 
 fn expectLog(expected: []const u8, actual: []const u8) !void {
-    return protocol.expectLog(formatter, expected, actual);
+    return protocol.expectLog(formatter, expected, actual, 0);
 }
 
 fn formatter(kind: protocol.Kind, byte: u8) []const u8 {

@@ -831,7 +831,12 @@ fn printc(
     i.* += n;
 }
 
-pub fn expectLog(comptime formatter: Formatter, expected: []const u8, actual: []const u8) !void {
+pub fn expectLog(
+    comptime formatter: Formatter,
+    expected: []const u8,
+    actual: []const u8,
+    offset: usize,
+) !void {
     if (!trace) return;
     const color = color: {
         if (std.process.hasEnvVarConstant("ZIG_DEBUG_COLOR")) {
@@ -843,7 +848,7 @@ pub fn expectLog(comptime formatter: Formatter, expected: []const u8, actual: []
         }
     };
 
-    expectEqualBytes(expected, actual) catch |err| switch (err) {
+    expectEqualBytes(expected, actual, offset) catch |err| switch (err) {
         error.TestExpectedEqual => {
             format(formatter, expected, null, color);
             format(formatter, actual, expected, color);
@@ -853,8 +858,8 @@ pub fn expectLog(comptime formatter: Formatter, expected: []const u8, actual: []
     };
 }
 
-fn expectEqualBytes(expected: []const u8, actual: []const u8) !void {
-    for (0..@min(expected.len, actual.len)) |i| {
+fn expectEqualBytes(expected: []const u8, actual: []const u8, offset: usize) !void {
+    for (offset..@min(expected.len, actual.len)) |i| {
         if (expected[i] != actual[i]) {
             print(
                 "index {} incorrect. expected 0x{X:0>2}, found 0x{X:0>2}\n",
@@ -894,7 +899,7 @@ const M = gen1.Move;
 const S = gen1.Species;
 
 fn expectLog1(expected: []const u8, actual: []const u8) !void {
-    return expectLog(gen1Formatter, expected, actual);
+    return expectLog(gen1Formatter, expected, actual, 0);
 }
 
 fn gen1Formatter(kind: Kind, byte: u8) []const u8 {

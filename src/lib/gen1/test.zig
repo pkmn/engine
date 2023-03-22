@@ -586,14 +586,14 @@ test "PP deduction" {
     try expectEqual(@as(u8, 32), t.actual.p2.active.move(1).pp);
     try expectEqual(@as(u8, 32), t.actual.p2.stored().move(1).pp);
 
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(Result.Default, try t.battle.actual.update(move(1), move(1), NULL));
 
     try expectEqual(@as(u8, 31), t.actual.p1.active.move(1).pp);
     try expectEqual(@as(u8, 31), t.actual.p1.stored().move(1).pp);
     try expectEqual(@as(u8, 31), t.actual.p2.active.move(1).pp);
     try expectEqual(@as(u8, 31), t.actual.p2.stored().move(1).pp);
 
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(Result.Default, try t.battle.actual.update(move(1), move(1), NULL));
 
     try expectEqual(@as(u8, 30), t.actual.p1.active.move(1).pp);
     try expectEqual(@as(u8, 30), t.actual.p1.stored().move(1).pp);
@@ -2799,11 +2799,11 @@ test "Binding effect" {
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, p2_choices, choices[0..n]);
 
-    try expectEqual(Result.Default, try t.update(forced, forced));
-
     try t.log.expected.cant(P2.ident(3), .Bound);
     try t.log.expected.cant(P1.ident(1), .Paralysis);
     try t.log.expected.turn(8);
+
+    try expectEqual(Result.Default, try t.update(forced, forced));
 
     n = t.battle.actual.choices(.P1, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
@@ -3607,11 +3607,11 @@ test "HyperBeam effect" {
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ move(1), move(2) }, choices[0..n]);
 
-    try expectEqual(Result.Default, try t.update(forced, move(1)));
-
     try t.log.expected.cant(P1.ident(1), .Recharge);
     try t.log.expected.move(P2.ident(2), Move.Teleport, P2.ident(2), null);
     try t.log.expected.turn(5);
+
+    try expectEqual(Result.Default, try t.update(forced, move(1)));
 
     n = t.battle.actual.choices(.P1, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
@@ -8196,9 +8196,6 @@ test "Transform + Mirror Move/Metronome PP error" {
         n = t.battle.actual.choices(.P1, .Move, &choices);
         try expectEqual(@as(u8, @boolToInt(showdown)), n);
         if (showdown) {
-            try expectEqualSlices(Choice, &[_]Choice{move(0)}, choices[0..n]);
-            try expectEqual(Result.Default, try t.update(move(0), move(1)));
-
             try t.log.expected.move(P1.ident(1), Move.Struggle, P2.ident(1), null);
             t.expected.p2.get(1).hp -= 34;
             try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
@@ -8207,6 +8204,9 @@ test "Transform + Mirror Move/Metronome PP error" {
             try t.log.expected.move(P2.ident(1), Move.Growl, P1.ident(1), null);
             try t.log.expected.boost(P1.ident(1), .Attack, -1);
             try t.log.expected.turn(6);
+
+            try expectEqualSlices(Choice, &[_]Choice{move(0)}, choices[0..n]);
+            try expectEqual(Result.Default, try t.update(move(0), move(1)));
         }
 
         try t.verify();
@@ -8382,6 +8382,8 @@ fn Test(comptime rolls: anytype) type {
             p2: *data.Side,
         },
 
+        offset: usize,
+
         pub fn init(pokemon1: []const Pokemon, pokemon2: []const Pokemon) *Self {
             var t = std.testing.allocator.create(Self) catch unreachable;
 
@@ -8396,6 +8398,8 @@ fn Test(comptime rolls: anytype) type {
             t.expected.p2 = t.battle.expected.side(.P2);
             t.actual.p1 = t.battle.actual.side(.P1);
             t.actual.p2 = t.battle.actual.side(.P2);
+
+            t.offset = 0;
 
             return t;
         }
@@ -8426,24 +8430,38 @@ fn Test(comptime rolls: anytype) type {
 
         pub fn update(self: *Self, c1: Choice, c2: Choice) !Result {
             if (self.battle.actual.turn == 0) try self.start();
-            return self.battle.actual.update(c1, c2, self.log.actual);
+            const result = self.battle.actual.update(c1, c2, self.log.actual);
+            try self.validate();
+            return result;
         }
 
-        pub fn verify(t: *Self) !void {
-            if (trace) try expectLog(t.buf.expected.items, t.buf.actual.items);
-            for (t.expected.p1.pokemon, 0..) |p, i| {
-                try expectEqual(p.hp, t.actual.p1.pokemon[i].hp);
+        pub fn verify(self: *Self) !void {
+            try self.validate();
+            try expect(self.battle.actual.rng.exhausted());
+        }
+
+        fn validate(self: *Self) !void {
+            if (trace) {
+                try protocol.expectLog(
+                    formatter,
+                    self.buf.expected.items,
+                    self.buf.actual.items,
+                    self.offset,
+                );
+                self.offset = self.buf.expected.items.len;
             }
-            for (t.expected.p2.pokemon, 0..) |p, i| {
-                try expectEqual(p.hp, t.actual.p2.pokemon[i].hp);
+            for (self.expected.p1.pokemon, 0..) |p, i| {
+                try expectEqual(p.hp, self.actual.p1.pokemon[i].hp);
             }
-            try expect(t.battle.actual.rng.exhausted());
+            for (self.expected.p2.pokemon, 0..) |p, i| {
+                try expectEqual(p.hp, self.actual.p2.pokemon[i].hp);
+            }
         }
     };
 }
 
 fn expectLog(expected: []const u8, actual: []const u8) !void {
-    return protocol.expectLog(formatter, expected, actual);
+    return protocol.expectLog(formatter, expected, actual, 0);
 }
 
 fn formatter(kind: protocol.Kind, byte: u8) []const u8 {
