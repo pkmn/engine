@@ -2820,11 +2820,13 @@ describe('Gen 2', () => {
     const battle = startBattle([
       QKC, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
       QKC, HIT, HIT,
-      QKC, HIT, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
+      QKC, HIT, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG,
+      QKC, HIT, QKC,
     ], [
       {species: 'Ekans', evs, moves: ['Screech', 'Strength']},
     ], [
       {species: 'Caterpie', evs, moves: ['String Shot', 'Tackle']},
+      {species: 'Gastly', evs, moves: ['Night Shade']},
     ]);
 
     let p1hp = battle.p1.pokemon[0].hp;
@@ -2844,6 +2846,10 @@ describe('Gen 2', () => {
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 22);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 149);
 
+    // Ghosts shouldn't be immune
+    battle.makeChoices('move 1', 'switch 2');
+    expect(battle.p2.pokemon[0].boosts.def).toBe(-2);
+
     verify(battle, [
       '|move|p1a: Ekans|Strength|p2a: Caterpie',
       '|-damage|p2a: Caterpie|218/293',
@@ -2860,6 +2866,10 @@ describe('Gen 2', () => {
       '|move|p1a: Ekans|Strength|p2a: Caterpie',
       '|-damage|p2a: Caterpie|69/293',
       '|turn|4',
+      '|switch|p2a: Gastly|Gastly, M|263/263',
+      '|move|p1a: Ekans|Screech|p2a: Gastly',
+      '|-unboost|p2a: Gastly|def|2',
+      '|turn|5',
     ]);
   });
 

@@ -2193,15 +2193,20 @@ test "StatDown effect" {
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
             HIT, HIT,
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+            HIT,
         } else .{
             ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
             ~CRIT, HIT, ~CRIT, HIT,
             ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+            ~CRIT, HIT,
         }
     // zig fmt: on
     ).init(
         &.{.{ .species = .Ekans, .moves = &.{ .Screech, .Strength } }},
-        &.{.{ .species = .Caterpie, .moves = &.{ .StringShot, .Tackle } }},
+        &.{
+            .{ .species = .Caterpie, .moves = &.{ .StringShot, .Tackle } },
+            .{ .species = .Gastly, .moves = &.{.NightShade} },
+        },
     );
     defer t.deinit();
 
@@ -2234,6 +2239,16 @@ test "StatDown effect" {
     try t.log.expected.turn(4);
 
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
+
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.move(P1.ident(1), Move.Screech, P2.ident(2), null);
+    try t.log.expected.boost(P2.ident(2), .Defense, -2);
+    try t.log.expected.turn(5);
+
+    // Type immunity shouldn't matter
+    try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+    try expectEqual(@as(i4, -2), t.actual.p2.active.boosts.def);
+
     try t.verify();
 }
 
