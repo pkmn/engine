@@ -319,16 +319,25 @@ fn doTurn(
 ) !?Result {
     assert(player_choice.type != .Pass);
 
+    var replace = battle.side(player).stored().hp == 0;
     if (try executeMove(battle, player, player_choice, player_from, log)) |r| return r;
-    if (foe_choice.type == .Pass) return null;
-    if (player_choice.type != .Switch) if (try checkFaint(battle, foe_player, log)) |r| return r;
-    try handleResidual(battle, player, log);
-    if (try checkFaint(battle, player, log)) |r| return r;
+    if (!replace) {
+        if (player_choice.type != .Switch) {
+            if (try checkFaint(battle, foe_player, log)) |r| return r;
+        }
+        try handleResidual(battle, player, log);
+        if (try checkFaint(battle, player, log)) |r| return r;
+    } else if (foe_choice.type == .Pass) return null;
 
+    replace = battle.side(foe_player).stored().hp == 0;
     if (try executeMove(battle, foe_player, foe_choice, foe_from, log)) |r| return r;
-    if (foe_choice.type != .Switch) if (try checkFaint(battle, player, log)) |r| return r;
-    try handleResidual(battle, foe_player, log);
-    if (try checkFaint(battle, foe_player, log)) |r| return r;
+    if (!replace) {
+        if (foe_choice.type != .Switch) {
+            if (try checkFaint(battle, player, log)) |r| return r;
+        }
+        try handleResidual(battle, foe_player, log);
+        if (try checkFaint(battle, foe_player, log)) |r| return r;
+    }
 
     return null;
 }
