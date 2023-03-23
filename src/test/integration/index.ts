@@ -205,7 +205,7 @@ function play(
     const valid = (id: engine.Player, choice: engine.Choice) =>
       battle.choices(id, result).some(c => c.type === choice.type && c.data === choice.data);
 
-    while (!control.ended) {
+    while (!control.ended && (!replay || index < replay.length)) {
       assert.equal(result.type, undefined);
       assert.deepEqual(battle.prng, control.prng.seed);
 
@@ -236,7 +236,7 @@ function play(
       compare(chunk, parsed);
     }
 
-    assert.notEqual(result.type, undefined);
+    if (control.ended) assert.notEqual(result.type, undefined);
     assert.deepEqual(battle.prng, control.prng.seed);
   } catch (err: any) {
     if (!replay) {

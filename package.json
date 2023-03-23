@@ -99,6 +99,7 @@
       "files": ["src/pkg/index.ts", "src/test/display/index.ts", "src/test/integration/index.ts"],
       "rules": {
         "no-control-regex": "off",
+        "no-unmodified-loop-condition": "off",
         "@typescript-eslint/no-empty-interface": "off",
         "@typescript-eslint/no-shadow": "off"
       }
