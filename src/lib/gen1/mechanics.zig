@@ -1771,7 +1771,7 @@ pub const Effects = struct {
                     try log.curestatus(foe_ident, foe_stored.status, .Silent);
                     s.stored().status = 0;
                 }
-                try clearVolatiles(&s.active, battle.active(p), log);
+                try clearVolatiles(battle, p, log);
             }
         } else {
             if (Status.any(foe_stored.status)) {
@@ -1781,8 +1781,8 @@ pub const Effects = struct {
                 try log.curestatus(foe_ident, foe_stored.status, .Silent);
                 foe_stored.status = 0;
             }
-            try clearVolatiles(&side.active, player_ident, log);
-            try clearVolatiles(&foe.active, foe_ident, log);
+            try clearVolatiles(battle, player, log);
+            try clearVolatiles(battle, player.foe(), log);
         }
     }
 
@@ -2379,8 +2379,11 @@ fn isForced(active: ActivePokemon) bool {
         active.volatiles.Thrashing or active.volatiles.Charging;
 }
 
-fn clearVolatiles(active: *ActivePokemon, ident: ID, log: anytype) !void {
-    var volatiles = &active.volatiles;
+fn clearVolatiles(battle: anytype, who: Player, log: anytype) !void {
+    var side = battle.side(who);
+    var volatiles = &side.active.volatiles;
+    const ident = battle.active(who);
+
     if (volatiles.disabled_move != 0) {
         volatiles.disabled_move = 0;
         volatiles.disabled_duration = 0;
@@ -2407,6 +2410,10 @@ fn clearVolatiles(active: *ActivePokemon, ident: ID, log: anytype) !void {
         volatiles.Toxic = false;
         // volatiles.toxic is left unchanged, except on Pokémon Showdown which clears it
         if (showdown) {
+            if (side.stored().status == Status.TOX) {
+                side.stored().status = Status.init(.PSN);
+                try log.status(ident, side.stored().status, .None);
+            }
             volatiles.toxic = 0;
             try log.end(ident, .Toxic);
         }
