@@ -1745,7 +1745,6 @@ test "Paralyze effect" {
 // Move.{BodySlam,Lick}: ParalyzeChance2
 test "ParalyzeChance effect" {
     // Has a X% chance to paralyze the target.
-    const LO_PROC = comptime ranged(26, 256) - 1;
     const HI_PROC = comptime ranged(77, 256) - 1;
     const PAR_CAN = MAX;
     const PAR_CANT = MIN;
@@ -1755,7 +1754,7 @@ test "ParalyzeChance effect" {
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
             HIT, ~CRIT, MIN_DMG, HI_PROC, HIT, ~CRIT, MIN_DMG, HI_PROC,
-            PAR_CAN, HIT, ~CRIT, MIN_DMG, LO_PROC,
+            PAR_CAN, HIT, ~CRIT, MIN_DMG,
             HIT, ~CRIT, MIN_DMG, HI_PROC, PAR_CANT,
         } else .{
             ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,

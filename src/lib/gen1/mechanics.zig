@@ -1927,7 +1927,9 @@ pub const Effects = struct {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
 
-        if (foe.active.volatiles.Substitute or Status.any(foe_stored.status)) {
+        if (foe.active.volatiles.Substitute) return;
+
+        if (Status.any(foe_stored.status)) {
             return if (showdown and !foe.active.types.includes(move.type)) battle.rng.advance(1);
         }
 
