@@ -123,6 +123,9 @@ for (const gen of new Generations(Dex as any)) {
       expect(Array.from(
         log.parse(Data.view([ArgType.Status, 0b1110, 0b10000, PROTOCOL.Status.None]))
       )).toEqual(parse('|-status|p2a: Fuudin|brn'));
+      expect(Array.from(
+        log.parse(Data.view([ArgType.Status, 0b1010, 0b01000, PROTOCOL.Status.Silent]))
+      )).toEqual(parse('|-status|p2a: Rakkii|psn|[silent]'));
       const bs = gen.moves.get('bodyslam')!.num;
       expect(Array.from(
         log.parse(Data.view([ArgType.Status, 0b0001, 0b1000000, PROTOCOL.Status.From, bs]))
@@ -134,8 +137,8 @@ for (const gen of new Generations(Dex as any)) {
         log.parse(Data.view([ArgType.CureStatus, 0b1110, 0b111, PROTOCOL.CureStatus.Message]))
       )).toEqual(parse('|-curestatus|p2a: Fuudin|slp|[msg]'));
       expect(Array.from(
-        log.parse(Data.view([ArgType.CureStatus, 0b0010, 0b1000, PROTOCOL.CureStatus.Silent]))
-      )).toEqual(parse('|-curestatus|p1a: Hitokage|psn|[silent]'));
+        log.parse(Data.view([ArgType.CureStatus, 0b0010, 0b10001000, PROTOCOL.CureStatus.Silent]))
+      )).toEqual(parse('|-curestatus|p1a: Hitokage|tox|[silent]'));
     });
 
     test('|-boost|', () => {

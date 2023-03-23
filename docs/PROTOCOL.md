@@ -355,7 +355,8 @@ The Pokémon identified by [`Ident`](#pokemonident) has been inflicted with `Sta
 | Raw    | Description  | `[from]`? |
 | ------ | ------------ | --------- |
 | `0x00` | None         | No        |
-| `0x01` | `\|[from]`   | Yes       |
+| `0x01` | `\|[silent]` | No        |
+| `0x02` | `\|[from]`   | Yes       |
 </details>
 
 ### `|-curestatus|` (`0x0D`)

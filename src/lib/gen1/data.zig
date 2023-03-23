@@ -223,10 +223,18 @@ pub const Status = enum(u8) {
     BRN = 4,
     FRZ = 5,
     PAR = 6,
-    // Gen 1/2 uses Volatiles.Toxic instead of TOX, so the top Status bit is
-    // repurposed to track whether the SLP status was self-inflicted or not
-    // in order to implement Pokémon Showdown's "Sleep Clause Mod"
-    SLF = 7,
+    // In Generation I & II, the "badly poisoned" status is marked with Volatiles.Toxic instead of
+    // being via a TOX status, however we need to use this top bit for Pokémon Showdown quirks:
+    //
+    //   - when combined with a valid sleep duration (or 0), it indicates that the `SLP` status was
+    //     self-inflicted (required in order to implement Pokémon Showdown's "Sleep Clause Mod")
+    //   - when combined with `PSN` it indicates that the Pokémon is actually badly poisoned
+    //     (required in order to send the same incorrect protocol messages as Pokémon Showdown - the
+    //     Toxic volatile alone is not sufficient in compatibility mode because it gets lost on
+    //     switch)
+    EXT = 7,
+
+    pub const TOX = 0b10001000;
 
     const SLP = 0b111;
 
@@ -238,17 +246,17 @@ pub const Status = enum(u8) {
 
     /// Initializes a non-sleep `status`. Use `slp` or `slf` to initialize a sleep status.
     pub inline fn init(status: Status) u8 {
-        assert(status != .SLP and status != .SLF);
+        assert(status != .SLP and status != .EXT);
         return @as(u8, 1) << @intCast(u3, @enumToInt(status));
     }
 
-    /// Initializes a non-SLF sleep status with duration `dur`.
+    /// Initializes a non self-inflicted sleep status with duration `dur`.
     pub inline fn slp(dur: u3) u8 {
         assert(dur > 0);
         return @as(u8, dur);
     }
 
-    /// Initializes a SLF sleep status with duration `dur`.
+    /// Initializes a self-inflicted sleep status with duration `dur`.
     pub inline fn slf(dur: u3) u8 {
         assert(dur > 0);
         return 0x80 | slp(dur);
@@ -266,7 +274,7 @@ pub const Status = enum(u8) {
 
     /// Retunrns a human-readable representation of the status `num`.
     pub fn name(num: u8) []const u8 {
-        if (Status.is(num, .SLF)) return "SLF";
+        if (Status.is(num, .EXT)) return if (num == Status.TOX) "TOX" else "SLF";
         if (Status.is(num, .SLP)) return "SLP";
         if (Status.is(num, .PSN)) return "PSN";
         if (Status.is(num, .BRN)) return "BRN";
@@ -287,11 +295,13 @@ test Status {
 
     try expect(!Status.is(0, .SLP));
     try expect(Status.is(Status.slp(5), .SLP));
-    try expect(!Status.is(Status.slp(5), .SLF));
+    try expect(!Status.is(Status.slp(5), .EXT));
     try expect(!Status.is(Status.slp(7), .PSN));
     try expectEqual(@as(u3, 5), Status.duration(Status.slp(5)));
     try expect(Status.is(Status.slf(2), .SLP));
-    try expect(Status.is(Status.slf(2), .SLF));
+    try expect(Status.is(Status.slf(2), .EXT));
+    try expect(Status.is(Status.TOX, .PSN));
+    try expect(Status.is(Status.TOX, .EXT));
     try expectEqual(@as(u3, 1), Status.duration(Status.slp(1)));
 }
 

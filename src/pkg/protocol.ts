@@ -279,7 +279,9 @@ DECODERS[ArgType.Status] = function (offset, data) {
   const status = decodeStatus(data.getUint8(offset++));
   const reason = data.getUint8(offset++);
   const kwArgs = {} as Writeable<Protocol.BattleArgsKWArgs['|-status|']>;
-  if (reason === PROTOCOL.Status.From) {
+  if (reason === PROTOCOL.CureStatus.Silent) {
+    kwArgs.silent = true;
+  } else if (reason === PROTOCOL.Status.From) {
     const move = this.gen.moves.get(this.lookup.moveByNum(data.getUint8(offset++)))!.name;
     kwArgs.from = `move: ${move}` as Protocol.EffectName;
   }
@@ -459,13 +461,11 @@ export function decodeIdentRaw(byte: number): {player: 'p1' | 'p2'; id: number} 
 
 export function decodeStatus(val: number): StatusName | undefined {
   if (val & 0b111) return 'slp';
-  if ((val >> 3) & 1) return 'psn';
-  if ((val >> 4) & 1) return 'brn';
-  if ((val >> 5) & 1) return 'frz';
-  if ((val >> 6) & 1) return 'par';
-  // NOTE: this bit is also used in Gen I & II to indicate self-inflicted sleep,
-  // but we should already have returned above with 'slp'
   if ((val >> 7) & 1) return 'tox';
+  if ((val >> 6) & 1) return 'par';
+  if ((val >> 5) & 1) return 'frz';
+  if ((val >> 4) & 1) return 'brn';
+  if ((val >> 3) & 1) return 'psn';
   return undefined;
 }
 

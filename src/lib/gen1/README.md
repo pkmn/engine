@@ -129,9 +129,14 @@ bits represent the remaining duration for Sleep. Other status are denoted by the
 individual bits - at most one status should be set at any given time.
 
 In Generation I & II, the "badly poisoned" status (Toxic) is instead treated as a volatile (see
-below), so the upper most bit of `Status` is instead used to track whether or not the Pokémon's
-sleep status is self-inflicted or not, for the purposes of being able to implement Pokémon
-Showdown's "Sleep Clause Mod".
+below), so the upper most bit of `Status` is instead used to track state required to implement Pokémon
+quirks:
+
+  - when combined with a valid sleep duration (or 0), it indicates that the `SLP` status was
+    self-inflicted (required in order to implement Pokémon Showdown's "Sleep Clause Mod")
+  - when combined with `PSN` it indicates that the Pokémon is actually badly poisoned (required in
+    order to send the same incorrect protocol messages as Pokémon Showdown - the Toxic volatile
+    alone is not sufficient in compatibility mode because it gets lost on switch)
 
 #### `Volatiles`
 

@@ -259,6 +259,11 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anyty
     foe.active.volatiles.Binding = false;
 
     try log.switched(battle.active(player), incoming);
+
+    if (showdown and incoming.status == Status.TOX) {
+        incoming.status = Status.init(.PSN);
+        try log.status(battle.active(player), incoming.status, .Silent);
+    }
 }
 
 fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
@@ -419,11 +424,11 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
 
     if (Status.is(stored.status, .SLP)) {
         const status = stored.status;
-        // Even if the SLF bit is set this will still correctly modify the sleep duration
+        // Even if the EXT bit is set this will still correctly modify the sleep duration
         stored.status -= 1;
         if (Status.duration(stored.status) == 0) {
             try log.curestatus(ident, status, .Message);
-            stored.status = 0; // clears SLF if present
+            stored.status = 0; // clears EXT if present
         } else {
             try log.cant(ident, .Sleep);
         }
@@ -1973,6 +1978,7 @@ pub const Effects = struct {
 
         foe_stored.status = Status.init(.PSN);
         if (toxic) {
+            if (showdown) foe_stored.status = Status.TOX;
             foe.active.volatiles.Toxic = true;
             foe.active.volatiles.toxic = 0;
         }
@@ -2031,7 +2037,7 @@ pub const Effects = struct {
         // Sleep Clause Mod
         if (showdown) {
             for (foe.pokemon) |p| {
-                if (Status.is(p.status, .SLP) and !Status.is(p.status, .SLF)) return;
+                if (Status.is(p.status, .SLP) and !Status.is(p.status, .EXT)) return;
             }
         }
         foe.active.volatiles.Recharging = false;

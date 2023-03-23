@@ -200,7 +200,7 @@ function play(
     frames.pkmn.push(partial.pkmn as Frame);
     partial.pkmn = {};
 
-    compare(gen, chunk, parsed);
+    compare(chunk, parsed);
 
     const valid = (id: engine.Player, choice: engine.Choice) =>
       battle.choices(id, result).some(c => c.type === choice.type && c.data === choice.data);
@@ -233,7 +233,7 @@ function play(
       partial.pkmn = {};
 
       assert.deepEqual(result, request);
-      compare(gen, chunk, parsed);
+      compare(chunk, parsed);
     }
 
     assert.notEqual(result.type, undefined);
@@ -317,28 +317,15 @@ type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 // Compare Pokémon Showdown vs. @pkmn/engine output, after parsing the protocol
 // and filtering out redundant messages / smoothing over any differences
 //
-//   - Pokémon Showdown includes `[of]` on `|-damage|` messages for status
-//     damage but the engine doesn't keep track of this as its redundant
+//   - Pokémon Showdown includes `[of]` on `|-damage|` and `|heal|` messages for
+//     status damage but the engine doesn't keep track of this as its redundant
 //     information that requires additional state to support
-//   - Pokémon Showdown protocol includes the `tox` status even in generations
-//     where Toxic is not actually a status. This is only relevant in the
-//     initial `|-status|` message as the text formatter uses this to decide
-//     whether to output "poisoned" vs. "badly poisoned", though this is
-//     possible to accomplish by simply tracking the prior `|move|` message so
-//     isn't necessary
-//   - Similarly, when a Pokémon which was previously badly poisoned switches
-//     back in, a `|-status|IDENT|psn|[silent]` message will be logged. This is
-//     incorrect as Toxic is not actually a status in Gen 1 and the Toxic
-//     volatile gets removed on switch *out* not switch *in*, and as such the
-//     engine does not attempt to reproduce this. If we receive one of these
-//     messages we just verify that its for the scenario we expect and ignore it
-//   - The engine cannot always infer `[from]` on `|move|` and so if we see that
-//     the engine's output is missing it we also need to remove it from Pokémon
-//     Showdown's (we can't just always indiscriminately remove it because we
-//     want to ensure that it matches when present)
+//   - FIXME: The engine cannot always infer `[from]` on `|move|` and so if we
+//     see that the engine's output is missing it we also need to remove it from
+//     Pokémon Showdown's (we can't just always indiscriminately remove it
+//     because we want to ensure that it matches when present)
 //
-// TODO: can we always infer done/start/upkeep?
-function compare(gen: Generation, chunk: string, actual: engine.ParsedLine[]) {
+function compare(chunk: string, actual: engine.ParsedLine[]) {
   const buf: engine.ParsedLine[] = [];
   let i = 0;
   for (const {args, kwArgs} of Protocol.parse(chunk)) {
@@ -353,29 +340,12 @@ function compare(gen: Generation, chunk: string, actual: engine.ParsedLine[]) {
       }
       break;
     }
-    case 'switch': {
-      a[3] = fixHPStatus(gen, args[3]);
-      break;
-    }
     case '-heal':
     case '-damage': {
-      a[2] = fixHPStatus(gen, args[2]);
       const keys = kwArgs as Protocol.KWArgs['|-heal|' | '|-damage|'];
       if (keys.from && !['drain', 'Recoil'].includes(keys.from)) {
         delete (kw as any).of;
       }
-      break;
-    }
-    case '-status':
-    case '-curestatus': {
-      if (args[0] === '-status') {
-        const keys = kwArgs as Protocol.KWArgs['|-status|'];
-        if (keys.silent) {
-          assert.equal(args[2], 'psn');
-          continue;
-        }
-      }
-      a[2] = args[2] === 'tox' ? 'psn' : args[2];
       break;
     }
     }
@@ -383,12 +353,6 @@ function compare(gen: Generation, chunk: string, actual: engine.ParsedLine[]) {
     i++;
   }
   return buf;
-}
-
-function fixHPStatus(gen: Generation, hpStatus: Protocol.PokemonHPStatus) {
-  return (gen.num < 3 && hpStatus.endsWith('tox')
-    ? `${hpStatus.slice(0, -3)}psn` as Protocol.PokemonHPStatus
-    : hpStatus);
 }
 
 // The ExhaustiveRunner does not do a good job at ensuring the sets it generates

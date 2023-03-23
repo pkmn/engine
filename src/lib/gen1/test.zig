@@ -1246,7 +1246,7 @@ test "Poison effect" {
 
         try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
         try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(2), null);
-        t.expected.p2.get(2).status = Status.init(.PSN);
+        t.expected.p2.get(2).status = if (showdown) Status.TOX else Status.init(.PSN);
         try t.log.expected.status(P2.ident(2), t.expected.p2.get(2).status, .None);
         try t.log.expected.turn(4);
 
@@ -2567,7 +2567,7 @@ test "Fly/Dig effect" {
         defer t.deinit();
 
         try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(1), null);
-        t.expected.p2.get(1).status = Status.init(.PSN);
+        t.expected.p2.get(1).status = if (showdown) Status.TOX else Status.init(.PSN);
         try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
         try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
         t.expected.p2.get(1).hp -= 16;
@@ -2591,6 +2591,10 @@ test "Fly/Dig effect" {
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
         try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
+        if (showdown) {
+            t.expected.p2.get(1).status = Status.init(.PSN);
+            try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .Silent);
+        }
         t.expected.p2.get(1).hp = 0;
         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
         try t.log.expected.faint(P2.ident(1), true);
@@ -4468,7 +4472,7 @@ test "Haze effect" {
     defer t.deinit();
 
     try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(1), null);
-    t.expected.p2.get(1).status = Status.init(.PSN);
+    t.expected.p2.get(1).status = if (showdown) Status.TOX else Status.init(.PSN);
     try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
     try t.log.expected.move(P2.ident(1), Move.LeechSeed, P1.ident(1), null);
     try t.log.expected.start(P1.ident(1), .LeechSeed);
@@ -5011,7 +5015,7 @@ test "Explode effect" {
     defer t.deinit();
 
     try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(1), null);
-    t.expected.p2.get(1).status = Status.init(.PSN);
+    t.expected.p2.get(1).status = if (showdown) Status.TOX else Status.init(.PSN);
     try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
     try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
     try t.log.expected.start(P2.ident(1), .Substitute);
@@ -6376,7 +6380,7 @@ test "Bide damage accumulation glitches" {
         defer t.deinit();
 
         try t.log.expected.move(P2.ident(1), Move.Toxic, P1.ident(1), null);
-        t.expected.p1.get(1).status = Status.init(.PSN);
+        t.expected.p1.get(1).status = if (showdown) Status.TOX else Status.init(.PSN);
         try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
         try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
         t.expected.p1.get(1).hp -= 30;
@@ -6626,7 +6630,7 @@ test "Toxic counter glitches" {
     defer t.deinit();
 
     try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(1), null);
-    try t.log.expected.status(P2.ident(1), Status.init(.PSN), .None);
+    try t.log.expected.status(P2.ident(1), if (showdown) Status.TOX else Status.init(.PSN), .None);
     try t.log.expected.move(P2.ident(1), Move.Rest, P2.ident(1), null);
     try t.log.expected.statusFrom(P2.ident(1), Status.slf(2), Move.Rest);
     t.expected.p2.get(1).hp += 1;
@@ -7078,7 +7082,7 @@ test "Hyper Beam + Sleep move glitch" {
     defer t.deinit();
 
     try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(1), null);
-    t.expected.p2.get(1).status = Status.init(.PSN);
+    t.expected.p2.get(1).status = if (showdown) Status.TOX else Status.init(.PSN);
     try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
     try t.log.expected.move(P2.ident(1), Move.HyperBeam, P1.ident(1), null);
     t.expected.p1.get(1).hp -= 217;
