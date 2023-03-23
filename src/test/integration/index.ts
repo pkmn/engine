@@ -202,8 +202,15 @@ function play(
 
     compare(chunk, parsed);
 
-    const valid = (id: engine.Player, choice: engine.Choice) =>
-      battle.choices(id, result).some(c => c.type === choice.type && c.data === choice.data);
+    const valid = (id: engine.Player, choice: engine.Choice) => {
+      const buf = [];
+      for (const c of battle.choices(id, result)) {
+        if (c.type === choice.type && c.data === choice.data) return '';
+        buf.push(`'${engine.Choice.format(c)}'`);
+      }
+      const c = engine.Choice.format(choice);
+      return `'${c}' is not one of ${id.toUpperCase()}'s choices: [${buf.join(', ')}]`;
+    };
 
     while (!control.ended && (!replay || index < replay.length)) {
       assert.equal(result.type, undefined);
@@ -221,8 +228,10 @@ function play(
       frames.showdown.push(partial.showdown as Frame);
       partial.showdown = {};
 
-      assert.ok(valid('p1', c1));
-      assert.ok(valid('p2', c2));
+      let invalid = valid('p1', c1);
+      assert.ok(!invalid, invalid);
+      invalid = valid('p2', c2);
+      assert.ok(!invalid, invalid);
       result = battle.update(c1, c2);
       partial.pkmn.result = result;
       partial.pkmn.battle = battle.toJSON();
