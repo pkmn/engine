@@ -191,6 +191,9 @@ for (const gen of new Generations(Dex as any)) {
         Array.from(log.parse(Data.view([ArgType.Activate, 0b0010, PROTOCOL.Activate.Struggle])))
       ).toEqual(parse('|-activate|p1a: Hitokage|move: Struggle'));
       expect(
+        Array.from(log.parse(Data.view([ArgType.Activate, 0b1100, PROTOCOL.Activate.Mist])))
+      ).toEqual(parse('|-activate|p2a: Nasshii|move: Mist|'));
+      expect(
         Array.from(log.parse(Data.view([ArgType.Activate, 0b1110, PROTOCOL.Activate.Substitute])))
       ).toEqual(parse('|-activate|p2a: Fuudin|Substitute|[damage]'));
       expect(

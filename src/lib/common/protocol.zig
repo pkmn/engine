@@ -1200,6 +1200,10 @@ test "|-activate|" {
     try expectLog1(&.{ N(ArgType.Activate), 0b0010, N(Activate.Struggle) }, buf[0..3]);
     stream.reset();
 
+    try log.activate(p2.ident(4), .Mist);
+    try expectLog1(&.{ N(ArgType.Activate), 0b1100, N(Activate.Mist) }, buf[0..3]);
+    stream.reset();
+
     try log.activate(p2.ident(6), .Substitute);
     try expectLog1(&.{ N(ArgType.Activate), 0b1110, N(Activate.Substitute) }, buf[0..3]);
     stream.reset();

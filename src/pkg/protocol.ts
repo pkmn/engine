@@ -357,9 +357,10 @@ DECODERS[ArgType.MustRecharge] = function (offset, data) {
 DECODERS[ArgType.Activate] = function (offset, data) {
   const ident = decodeIdent(this.info, data.getUint8(offset++));
   const reason = data.getUint8(offset++);
+  const type = reason === PROTOCOL.Activate.Mist ? '-block' : '-activate';
   const args = reason === PROTOCOL.Activate.Splash
-    ? ['-activate', '', ACTIVATE[reason]] as Protocol.Args['|-activate|']
-    : ['-activate', ident, ACTIVATE[reason], ''] as Protocol.Args['|-activate|'];
+    ? [type, '', ACTIVATE[reason]] as Protocol.Args['|-activate|']
+    : [type, ident, ACTIVATE[reason], ''] as Protocol.Args['|-activate|' | '|-block|'];
   const kwArgs = reason === PROTOCOL.Activate.Substitute ? {damage: true} as const : {};
   return {offset, line: {args, kwArgs}};
 };
