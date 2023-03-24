@@ -652,6 +652,38 @@ describe('Gen 2', () => {
         '|turn|2',
       ]);
     }
+    // Switch (boosted)
+    {
+      const battle = startBattle([QKC, QKC, NO_CRIT, MAX_DMG, QKC], [
+        {species: 'Farfetch’d', evs, moves: ['Agility', 'Teleport']},
+        {species: 'Cubone', evs, moves: ['BoneClub']},
+      ], [
+        {species: 'Charmeleon', evs, moves: ['Teleport', 'Explosion']},
+        {species: 'Pikachu', evs, moves: ['Surf']},
+      ]);
+
+      battle.makeChoices('move 1', 'move 1');
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(0);
+      expect(battle.p2.pokemon[0].hp).toBe(0);
+
+      battle.makeChoices('switch 2', 'switch 2');
+
+      verify(battle, [
+        '|move|p2a: Charmeleon|Teleport|p2a: Charmeleon',
+        '|move|p1a: Farfetch’d|Agility|p1a: Farfetch’d',
+        '|-boost|p1a: Farfetch’d|spe|2',
+        '|turn|2',
+        '|move|p1a: Farfetch’d|Teleport|p1a: Farfetch’d',
+        '|move|p2a: Charmeleon|Explosion|p1a: Farfetch’d',
+        '|-damage|p1a: Farfetch’d|0 fnt',
+        '|faint|p2a: Charmeleon',
+        '|faint|p1a: Farfetch’d',
+        '|switch|p2a: Pikachu|Pikachu, M|273/273',
+        '|switch|p1a: Cubone|Cubone, M|303/303',
+        '|turn|3',
+      ]);
+    }
     // Tie
     {
       const battle = startBattle([QKC, CRIT, MAX_DMG], [

@@ -173,6 +173,10 @@ test "fainting (double)" {
     {
         // TODO
     }
+    // Switch (boosted)
+    {
+        // TODO
+    }
     // Tie
     {
         // TODO

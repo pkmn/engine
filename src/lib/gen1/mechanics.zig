@@ -1329,6 +1329,9 @@ fn faint(battle: anytype, player: Player, log: anytype, done: bool) !?Result {
     side.last_used_move = .None;
     foe.last_used_move = .None;
     side.stored().status = 0;
+    // This shouldn't matter, but Pokémon Showdown decides double switching priority based on speed,
+    // and resets a Pokémon's stats when it faints
+    if (showdown) side.active.stats = side.stored().stats;
 
     try log.faint(battle.active(player), done);
     return null;
