@@ -68,7 +68,7 @@ export async function run(
     }
   };
 
-  const args = ['build', '-fno-summary', 'fuzz', '-Dtrace'];
+  const args = ['build', '-j1', '-fno-summary', 'fuzz', '-Dtrace'];
   if (showdown) args.push('-Dshowdown');
   args.push('--', gen.num.toString(), duration);
   if (seed) args.push(seed.toString());
