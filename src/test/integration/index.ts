@@ -127,16 +127,6 @@ function play(
   // start before we could patch it, desyncing the PRNG due to spurious advances
   const control = new Battle({formatid: formatid as ID, seed, strictChoices: false, debug});
   patch.battle(control, true, debug);
-  control.setPlayer('p1', p1options.spec);
-  control.setPlayer('p2', p2options.spec);
-  partial.showdown.result = toResult(control, p1options.spec.name);
-  partial.showdown.seed = control.prng.seed.slice();
-
-  const chunk = control.getDebugLog();
-  partial.showdown.chunk = chunk;
-  control.log.length = 0;
-  frames.showdown.push(partial.showdown as Frame);
-  partial.showdown = {};
 
   const players = replay ? undefined : {
     p1: p1options.create!(null! as any),
@@ -151,7 +141,7 @@ function play(
   }
 
   let index = 0;
-  const makeChoices = (): [engine.Choice, engine.Choice] => {
+  const getChoices = (): [engine.Choice, engine.Choice] => {
     if (replay) {
       [chose.p1, chose.p2, index] = fromInputLog(replay, index, {
         p1: choices(control, 'p1').map(engine.Choice.parse),
@@ -177,32 +167,11 @@ function play(
         }
       }
     }
-    control.makeChoices(engine.Choice.format(chose.p1), engine.Choice.format(chose.p2));
     return [chose.p1, chose.p2];
   };
 
   try {
-    const options = {
-      p1: {name: p1options.spec.name, team: Teams.unpack(p1options.spec.team)!},
-      p2: {name: p2options.spec.name, team: Teams.unpack(p2options.spec.team)!},
-      seed, showdown: true, log: true,
-    };
-    const battle = engine.Battle.create(gen, options);
-    const log = new engine.Log(gen, engine.Lookup.get(gen), options);
-
-    let result = battle.update(c1, c2);
-    partial.pkmn.result = result;
-    partial.pkmn.battle = battle.toJSON();
-    assert.equal(result.type, undefined);
-
-    const parsed = Array.from(log.parse(battle.log!));
-    partial.pkmn.parsed = parsed;
-    frames.pkmn.push(partial.pkmn as Frame);
-    partial.pkmn = {};
-
-    compare(chunk, parsed);
-
-    const valid = (id: engine.Player, choice: engine.Choice) => {
+    const valid = (result: engine.Result, id: engine.Player, choice: engine.Choice) => {
       const buf = [];
       for (const c of battle.choices(id, result)) {
         if (c.type === choice.type && c.data === choice.data) return '';
@@ -212,38 +181,58 @@ function play(
       return `'${c}' is not one of ${id.toUpperCase()}'s choices: [${buf.join(', ')}]`;
     };
 
-    while (!control.ended && (!replay || index < replay.length)) {
-      assert.equal(result.type, undefined);
-      assert.deepEqual(battle.prng, control.prng.seed);
+    const options = {
+      p1: {name: p1options.spec.name, team: Teams.unpack(p1options.spec.team)!},
+      p2: {name: p2options.spec.name, team: Teams.unpack(p2options.spec.team)!},
+      seed, showdown: true, log: true,
+    };
+    const battle = engine.Battle.create(gen, options);
+    const log = new engine.Log(gen, engine.Lookup.get(gen), options);
 
-      [c1, c2] = makeChoices();
-      partial.pkmn.c1 = partial.showdown.c1 = c1;
-      partial.pkmn.c2 = partial.showdown.c2 = c2;
+    let start = true;
+    let result = engine.Result.decode(0);
+    do {
+      if (start) {
+        control.setPlayer('p1', p1options.spec);
+        control.setPlayer('p2', p2options.spec);
+        start = false;
+      } else {
+        control.makeChoices(engine.Choice.format(c1), engine.Choice.format(c2));
+      }
+
       const request = partial.showdown.result = toResult(control, p1options.spec.name);
       partial.showdown.seed = control.prng.seed.slice();
 
       const chunk = control.getDebugLog();
       partial.showdown.chunk = chunk;
       control.log.length = 0;
-      frames.showdown.push(partial.showdown as Frame);
-      partial.showdown = {};
 
-      let invalid = valid('p1', c1);
-      assert.ok(!invalid, invalid);
-      invalid = valid('p2', c2);
-      assert.ok(!invalid, invalid);
       result = battle.update(c1, c2);
       partial.pkmn.result = result;
       partial.pkmn.battle = battle.toJSON();
+      assert.deepEqual(result, request);
 
       const parsed = Array.from(log.parse(battle.log!));
       partial.pkmn.parsed = parsed;
+
+      compare(chunk, parsed);
+      assert.deepEqual(battle.prng, control.prng.seed);
+
+      if (replay && index > replay.length) break;
+      [c1, c2] = getChoices();
+      partial.pkmn.c1 = partial.showdown.c1 = c1;
+      partial.pkmn.c2 = partial.showdown.c2 = c2;
+
+      let invalid = valid(result, 'p1', c1);
+      assert.ok(!invalid, invalid);
+      invalid = valid(result, 'p2', c2);
+      assert.ok(!invalid, invalid);
+
+      frames.showdown.push(partial.showdown as Frame);
+      partial.showdown = {};
       frames.pkmn.push(partial.pkmn as Frame);
       partial.pkmn = {};
-
-      assert.deepEqual(result, request);
-      compare(chunk, parsed);
-    }
+    } while (!control.ended);
 
     if (control.ended) assert.notEqual(result.type, undefined);
     assert.deepEqual(battle.prng, control.prng.seed);
