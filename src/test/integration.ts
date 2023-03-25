@@ -134,19 +134,31 @@ function play(
     p2: p2options.create!(null! as any),
   };
 
+  // The engine requires we use the choice 'move 0' for Struggle but Pokémon
+  // Showdown requires 'move 1'. We work with 'move 0' everywhere because it
+  // contains more information than 'move 1', but we need to remember to map
+  // back to 'move 1' when actual making a choice in a Pokémon Showodwn battle
+  const adjust = (c: string) => c === 'move 0' ? 'move 1' : c;
+
   const choices = Choices.get(gen);
   const chose = {p1: c1, p2: c2};
   if (players) {
-    players.p1.choose = c => { chose.p1 = engine.Choice.parse(c); };
-    players.p2.choose = c => { chose.p2 = engine.Choice.parse(c); };
+    players.p1.choose = c => {
+      const struggle = control.p1.activeRequest!.active?.[0].moves?.[0].id === 'struggle';
+      chose.p1 = struggle ? {type: 'move', data: 0} : engine.Choice.parse(c);
+    };
+    players.p2.choose = c => {
+      const struggle = control.p2.activeRequest!.active?.[0].moves?.[0].id === 'struggle';
+      chose.p2 = struggle ? {type: 'move', data: 0} : engine.Choice.parse(c);
+    };
   }
 
   let index = 0;
   const getChoices = (): [engine.Choice, engine.Choice] => {
     if (replay) {
       [chose.p1, chose.p2, index] = fromInputLog(replay, index, {
-        p1: choices(control, 'p1').map(engine.Choice.parse),
-        p2: choices(control, 'p2').map(engine.Choice.parse),
+        p1: choices(control, 'p1', 'move 0').map(engine.Choice.parse),
+        p2: choices(control, 'p2', 'move 0').map(engine.Choice.parse),
       }, {
         p1: control.p1.active[0].moves.map(toID),
         p2: control.p2.active[0].moves.map(toID),
@@ -160,9 +172,9 @@ function play(
         } else {
           player.receiveRequest(request);
           const c = engine.Choice.format(chose[id]);
-          while (!choices(control, id).includes(c)) {
+          while (!choices(control, id, 'move 0').includes(c)) {
             // making the unavailable request forces activeRequest to get updated
-            assert.ok(!control[id].choose(c));
+            assert.ok(!control[id].choose(adjust(c)));
             player.receiveRequest(control[id]!.activeRequest!);
           }
         }
@@ -198,7 +210,7 @@ function play(
         control.setPlayer('p2', p2options.spec);
         start = false;
       } else {
-        control.makeChoices(engine.Choice.format(c1), engine.Choice.format(c2));
+        control.makeChoices(adjust(engine.Choice.format(c1)), adjust(engine.Choice.format(c2)));
       }
 
       const request = partial.showdown.result = toResult(control, p1options.spec.name);
@@ -451,9 +463,10 @@ function fromInputLog(
     const player = m[1] as engine.Player;
     const type = (m[2] ?? m[4] ?? m[7]) as engine.Choice['type'];
     const d = m[5] ?? m[8] ?? '0';
+    const struggle = d === 'struggle';
 
     const data = !isNaN(+d) ? +d : moves[player].indexOf(d as ID) + 1;
-    if (type === 'move' && !data) throw new Error(`Invalid choice data: '${d}'`);
+    if (type === 'move' && !data && !struggle) throw new Error(`Invalid choice data: '${d}'`);
 
     const choice = {type, data};
     if (choices[player]) {

@@ -232,7 +232,7 @@ export const patch = {
 };
 
 export const Choices = new class {
-  get(this: void, gen: Generation): (battle: Battle, id: SideID) => string[] {
+  get(this: void, gen: Generation): (battle: Battle, id: SideID, struggle?: string) => string[] {
     switch (gen.num) {
     case 1: return Choices.gen1;
     case 2: return Choices.gen2;
@@ -240,7 +240,7 @@ export const Choices = new class {
     }
   }
 
-  gen1(this: void, battle: Battle, id: SideID): string[] {
+  gen1(this: void, battle: Battle, id: SideID, struggle = 'move 1'): string[] {
     const request = battle[id]!.activeRequest;
     if (!request || request.wait) return [];
 
@@ -282,8 +282,7 @@ export const Choices = new class {
         options.push(`move ${slot}`);
       }
       if (options.length === before) {
-        // Struggle
-        options.push('move 1');
+        options.push(struggle);
       }
 
       return options;
@@ -292,7 +291,7 @@ export const Choices = new class {
     }
   }
 
-  gen2(this: void, battle: Battle, id: SideID): string[] {
+  gen2(this: void, battle: Battle, id: SideID, struggle = 'move 1'): string[] {
     const request = battle[id]!.activeRequest;
     if (!request || request.wait) return [];
 
@@ -331,8 +330,7 @@ export const Choices = new class {
         options.push(`move ${slot}`);
       }
       if (options.length === before) {
-        // Struggle
-        options.push('move 1');
+        options.push(struggle);
       }
 
       return options;
