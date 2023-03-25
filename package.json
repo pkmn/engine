@@ -49,20 +49,20 @@
   "bin": {"install-pkmn-engine": "src/bin/install-pkmn-engine" },
   "publishConfig": {"access": "public"},
   "dependencies": {
-    "@pkmn/data": "^0.7.29",
-    "@pkmn/protocol": "^0.6.10"
+    "@pkmn/data": "^0.7.31",
+    "@pkmn/protocol": "^0.6.11"
   },
   "devDependencies": {
     "@pkmn/eslint-config": "^3.0.0-alpha.0",
-    "@pkmn/img": "^0.2.7",
-    "@pkmn/sets": "^5.0.3",
-    "@pkmn/sim": "0.7.29",
+    "@pkmn/img": "^0.2.8",
+    "@pkmn/sets": "^5.0.4",
+    "@pkmn/sim": "0.7.31",
     "@types/html-minifier": "^4.0.2",
     "@types/jest": "^29.5.0",
     "@types/minimist": "^1.2.2",
     "@types/mustache": "^4.2.2",
-    "@types/node": "^18.15.3",
-    "@vitest/coverage-c8": "^0.29.3",
+    "@types/node": "^18.15.8",
+    "@vitest/coverage-c8": "^0.29.7",
     "binaryen": "^112.0.0",
     "eslint": "^8.36.0",
     "html-minifier": "^4.0.0",
@@ -72,7 +72,7 @@
     "source-map-support": "^0.5.21",
     "trakr": "^0.2.0",
     "typescript": "^5.0.2",
-    "vitest": "^0.29.3"
+    "vitest": "^0.29.7"
   },
   "scripts": {
     "lint": "eslint --cache src --ext ts,js && eslint src/bin/install-pkmn-engine",

@@ -13,12 +13,12 @@ const choices = Choices.get(gen);
 const startBattle = createStartBattle(gen);
 
 const {HIT, MISS, CRIT, NO_CRIT, MIN_DMG, MAX_DMG, TIE} = ROLLS.basic({
-  hit: 'data/mods/gen1/scripts.ts:411:42',
-  crit: 'data/mods/gen1/scripts.ts:810:27',
-  dmg: 'data/mods/gen1/scripts.ts:930:27',
+  hit: 'data/mods/gen1/scripts.ts:413:42',
+  crit: 'data/mods/gen1/scripts.ts:812:27',
+  dmg: 'data/mods/gen1/scripts.ts:932:27',
 });
 
-const SECONDARY = (value: number) => ({key: 'data/mods/gen1/scripts.ts:699:25', value});
+const SECONDARY = (value: number) => ({key: 'data/mods/gen1/scripts.ts:701:25', value});
 const SLP = (n: number) =>
   ({key: 'data/mods/gen1/conditions.ts:63:38', value: ranged(n, 8 - 1)});
 const DISABLE_MOVE = (m: number, n = 4) =>
@@ -41,7 +41,7 @@ const THRASH = (n: 3 | 4) =>
   ({key: 'data/mods/gen1/conditions.ts:226:33', value: ranged(n - 2, 4 - 2) - 1});
 const MIN_WRAP = {key: 'data/mods/gen1/conditions.ts:199:26', value: MIN};
 const MAX_WRAP = {...MIN_WRAP, value: MAX};
-const REWRAP = {key: 'data/mods/gen1/scripts.ts:227:38', value: MIN};
+const REWRAP = {key: 'data/mods/gen1/scripts.ts:229:38', value: MIN};
 const METRONOME = ROLLS.metronome(gen, ['Metronome', 'Struggle']);
 
 const evs = {hp: 255, atk: 255, def: 255, spa: 255, spd: 255, spe: 255};
@@ -867,7 +867,7 @@ describe('Gen 1', () => {
   });
 
   test('MultiHit effect', () => {
-    const hit3 = {key: 'data/mods/gen1/scripts.ts:426:27', value: 0x60000000};
+    const hit3 = {key: 'data/mods/gen1/scripts.ts:428:27', value: 0x60000000};
     const hit5 = {...hit3, value: MAX};
     const battle = startBattle([HIT, hit3, NO_CRIT, MAX_DMG, HIT, hit5, NO_CRIT, MAX_DMG], [
       {species: 'Kangaskhan', evs, moves: ['Comet Punch']},
@@ -2934,7 +2934,7 @@ describe('Gen 1', () => {
   });
 
   test('Counter effect', () => {
-    const hit2 = {key: 'data/mods/gen1/scripts.ts:426:27', value: MIN};
+    const hit2 = {key: 'data/mods/gen1/scripts.ts:428:27', value: MIN};
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, NO_PAR, HIT,
       HIT, hit2, NO_CRIT, MIN_DMG, HIT,
