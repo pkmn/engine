@@ -316,18 +316,26 @@ type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 // Compare Pokémon Showdown vs. @pkmn/engine output, after parsing the protocol
 // and filtering out redundant messages / smoothing over any differences
 //
-//   - Pokémon Showdown includes `[of]` on `|-damage|` and `|heal|` messages for
-//     status damage but the engine doesn't keep track of this as its redundant
-//     information that requires additional state to support
+//   - The engine sometimes sends out the `|-status|...|psn|[silent]` message in
+//     the wrong order relative to the `|switch|` message - we can detect those
+//     situations and simply swap the messages
 //   - FIXME: The engine cannot always infer `[from]` on `|move|` and so if we
 //     see that the engine's output is missing it we also need to remove it from
 //     Pokémon Showdown's (we can't just always indiscriminately remove it
 //     because we want to ensure that it matches when present)
+//   - Pokémon Showdown includes `[of]` on `|-damage|` and `|heal|` messages for
+//     status damage but the engine doesn't keep track of this as its redundant
+//     information that requires additional state to support
 //
 function compare(chunk: string, actual: engine.ParsedLine[]) {
   const buf: engine.ParsedLine[] = [];
   let i = 0;
   for (const {args, kwArgs} of Protocol.parse(chunk)) {
+    if (actual[i].args[0] === '-status' && actual[i].args[2] === 'psn' &&
+      (actual[i].kwArgs as Protocol.KWArgs['|-status|']).silent && actual[i + 1] &&
+      actual[i + 1].args[0] === 'switch') {
+      [actual[i], actual[i + 1]] = [actual[i + 1], actual[i]];
+    }
     if (FILTER.has(args[0])) continue;
     const a = args.slice() as Writeable<Protocol.ArgType>;
     const kw = {...kwArgs} as Protocol.KWArgType;

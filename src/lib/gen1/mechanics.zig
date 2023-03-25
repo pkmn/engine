@@ -262,6 +262,8 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anyty
 
     if (showdown and incoming.status == Status.TOX) {
         incoming.status = Status.init(.PSN);
+        // Technically, Pokémon Showdown adds these after *both* Pokémon have switched, but we'd
+        // rather not clutter up turnOrder just for this (incorrect) log message
         try log.status(battle.active(player), incoming.status, .Silent);
     }
 }
