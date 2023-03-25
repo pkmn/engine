@@ -219,7 +219,7 @@ function play(
       compare(chunk, parsed);
       assert.deepEqual(battle.prng, control.prng.seed);
 
-      if (replay && index > replay.length) break;
+      if (replay && index >= replay.length) break;
       [c1, c2] = getChoices();
       partial.pkmn.c1 = partial.showdown.c1 = c1;
       partial.pkmn.c2 = partial.showdown.c2 = c2;
