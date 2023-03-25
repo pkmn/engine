@@ -1348,8 +1348,6 @@ fn faint(battle: anytype, player: Player, log: anytype, done: bool) !?Result {
 fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
     var side = battle.side(player);
     var stored = side.stored();
-    if (stored.hp == 0) return;
-
     const ident = battle.active(player);
     var volatiles = &side.active.volatiles;
 
