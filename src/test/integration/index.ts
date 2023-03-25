@@ -560,7 +560,7 @@ if (require.main === module) {
       typeof argv.duration === 'string' ? argv.duration[argv.duration.length - 1] : undefined;
     const duration =
       unit ? +argv.duration.slice(0, -1) * {s: 1e3, m: 6e4, h: 3.6e6}[unit]! : argv.duration;
-    argv.cycles = argv.cycles ?? duration ? 1 : 10;
+    argv.cycles = argv.cycles ?? (duration ? 1 : 10);
     const seed = argv.seed ? argv.seed.split(',').map((s: string) => Number(s)) : null;
     const options = {prng: new PRNG(seed), log: process.stdout.isTTY, ...argv, duration};
     process.exit(await run(gens, options));
