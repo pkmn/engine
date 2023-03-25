@@ -1,7 +1,7 @@
 import {Generations} from '@pkmn/data';
 import {Dex} from '@pkmn/sim';
 
-import {run} from '.';
+import {run} from './fuzz';
 
 // Simple smoke tests just to confirm things are wired up correctly and actually execute
 for (const gen of new Generations(Dex as any)) {

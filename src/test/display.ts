@@ -6,9 +6,9 @@ import {Icons, Sprites} from '@pkmn/img';
 import {minify} from 'html-minifier';
 import * as mustache from 'mustache';
 
-import {Battle, Choice, Data, ParsedLine, Pokemon, Result, Side} from '../../pkg';
+import {Battle, Choice, Data, ParsedLine, Pokemon, Result, Side} from '../pkg';
 
-const ROOT = path.resolve(__dirname, '..', '..', '..');
+const ROOT = path.resolve(__dirname, '..', '..');
 const template = (s: 'pkmn' | 'showdown') =>
   path.join(ROOT, 'src', 'test', 'display', `${s}.html.tmpl`);
 

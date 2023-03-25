@@ -2,10 +2,9 @@ import {Generations} from '@pkmn/data';
 import {Battle, Dex, PRNG} from '@pkmn/sim';
 
 import {Options} from '../benchmark';
-
 import {
   Choices, FixedRNG, MAX, MIN, ROLLS, createStartBattle, formatFor, ranged, verify,
-} from '.';
+} from '../showdown';
 
 const gens = new Generations(Dex as any);
 const gen = gens.get(1);

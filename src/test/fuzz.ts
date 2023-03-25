@@ -8,13 +8,14 @@ import {promisify} from 'util';
 import {Generation, Generations} from '@pkmn/data';
 import {Dex} from '@pkmn/sim';
 
-import {Battle, Choice, Info, Log, ParsedLine, Result, SideInfo} from '../../pkg';
-import * as addon from '../../pkg/addon';
-import {Data, LAYOUT, LE, Lookup} from '../../pkg/data';
-import * as gen1 from '../../pkg/gen1';
-import {Frame, display} from '../display';
+import {Battle, Choice, Info, Log, ParsedLine, Result, SideInfo} from '../pkg';
+import * as addon from '../pkg/addon';
+import {Data, LAYOUT, LE, Lookup} from '../pkg/data';
+import * as gen1 from '../pkg/gen1';
 
-const ROOT = path.resolve(__dirname, '..', '..', '..');
+import {Frame, display} from './display';
+
+const ROOT = path.resolve(__dirname, '..', '..');
 const sh = promisify(execFile);
 
 const usage = (msg?: string): void => {

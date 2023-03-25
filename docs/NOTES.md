@@ -38,8 +38,8 @@
 14. Write **`helper.zig`** and implement **`choices`** method
     - matching `Choices` code required in [showdown](../src/test/showdown/index.ts)
 15. Ensure **[fuzz tests](../src/test/benchmark.zig)** pass
-    - update [`fuzz`](../src/test/fuzz/index.ts) and [`display`](../src/test/display/index.ts)
-16. Ensure **[integration tests](../src/test/integration/)** pass
+    - update [`fuzz.ts`](../src/test/fuzz.ts) and [`display.ts`](../src/test/display.ts)
+16. Ensure **[integration tests](../src/test/integration.ts)** pass
 17. **[Benchmark](../src/test/benchmark.zig)** new generation
 18. Finalize **documentation** for generation
 

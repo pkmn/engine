@@ -96,7 +96,7 @@
       "files": ["**/*.ts"],
       "parserOptions": {"project": ["./tsconfig.json", "./src/examples/js/tsconfig.json"]}
     }, {
-      "files": ["src/pkg/index.ts", "src/test/display/index.ts", "src/test/integration/index.ts"],
+      "files": ["src/pkg/index.ts", "src/test/display.ts", "src/test/integration.ts"],
       "rules": {
         "no-control-regex": "off",
         "@typescript-eslint/no-empty-interface": "off",
@@ -106,10 +106,10 @@
       "files": ["src/pkg/addon.ts"],
       "rules": {"@typescript-eslint/no-var-requires": "off"}
     },{
-      "files": ["src/test/benchmark/*.ts"],
+      "files": ["src/test/benchmark*.ts"],
       "rules": {"@typescript-eslint/no-unused-vars": "off"}
     }, {
-      "files": ["src/test/*/index.test.ts"],
+      "files": ["src/test/*.test.ts"],
       "rules": {"jest/no-standalone-expect": "off"}
     }, {
       "files": ["src/test/showdown/**"],

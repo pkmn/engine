@@ -14,13 +14,14 @@ import {
 } from '@pkmn/sim/tools';
 import minimist from 'minimist';
 
-import * as engine from '../../pkg';
-import * as addon from '../../pkg/addon';
-import {Frame, display} from '../display';
-import {Choices, FILTER, formatFor, patch} from '../showdown';
-import blocklistJSON from '../showdown/blocklist.json';
+import * as engine from '../pkg';
+import * as addon from '../pkg/addon';
 
-const ROOT = path.resolve(__dirname, '..', '..', '..');
+import {Frame, display} from './display';
+import {Choices, FILTER, formatFor, patch} from './showdown';
+import blocklistJSON from './showdown/blocklist.json';
+
+const ROOT = path.resolve(__dirname, '..', '..');
 const ANSI = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
 
 const CWD = process.env.INIT_CWD || process.env.CWD || process.cwd();

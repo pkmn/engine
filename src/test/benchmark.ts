@@ -8,13 +8,14 @@ import {Battle, Dex, PRNG, PRNGSeed, Pokemon, Side, SideID, Teams} from '@pkmn/s
 import minimist from 'minimist';
 import {Stats} from 'trakr';
 
-import * as engine from '../../pkg';
-import {newSeed, toBigInt} from '../integration';
-import {Choices, formatFor, patch} from '../showdown';
-import blocklistJSON from '../showdown/blocklist.json';
+import * as engine from '../pkg';
+
+import {newSeed, toBigInt} from './integration';
+import {Choices, formatFor, patch} from './showdown';
+import blocklistJSON from './showdown/blocklist.json';
 
 const BLOCKLIST = blocklistJSON[1].moves as ID[];
-const ROOT = path.resolve(__dirname, '..', '..', '..');
+const ROOT = path.resolve(__dirname, '..', '..');
 
 const toMillis = (duration: bigint) => Number(duration / BigInt(1e6));
 const serialize = (seed: PRNGSeed) => toBigInt(seed).toString();

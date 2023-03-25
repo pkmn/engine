@@ -1,9 +1,9 @@
 import {Generations} from '@pkmn/data';
 import {Dex} from '@pkmn/sim';
 
-import * as addon from '../../pkg/addon';
+import * as addon from '../pkg/addon';
 
-import {run} from '.';
+import {run} from './integration';
 
 describe('integration', () => {
   (addon.supports(true, true) ? test : test.skip)('test', async () => {

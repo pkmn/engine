@@ -114,8 +114,8 @@ The following guidelines should be taken into consideration when adding new unit
 
 ## Integration
 
-The [integration test](../src/test/integration/index.test.ts) exists to ensure the pkmn engine
-compiled in Pokémon Showdown compatibility mode with `-Dshowdown` produces comparable output to
+The [integration test](../src/test/integration.test.ts) exists to ensure the pkmn engine compiled in
+Pokémon Showdown compatibility mode with `-Dshowdown` produces comparable output to
 [patched](#patches) Pokémon Showdown. For each supported generation, both Pokémon Showdown and the
 pkmn engine are run with an
 [`ExhaustiveRunner`](https://github.com/smogon/pokemon-showdown/blob/master/sim/tools/exhaustive-runner.ts)
@@ -177,9 +177,9 @@ faulty behavior where these effects break down.
 Benchmarking the pkmn engine vs. Pokémon Showdown is slightly more complicated than simply using a
 tool like [`hyperfine`](https://github.com/sharkdp/hyperfine) due to the need to account for the
 runtime overhead and warmup period required by V8 (`hyperfine --warmup` is intended to help with
-disk caching, not JIT warmup). As such, a [custom benchmark tool](../src/test/benchmark/index.ts)
-exists which can be used to run the benchmark. The benchmark measures how long it takes to play out
-N randomly generated battles, excluding any set up time and time spent warming up the JS
+disk caching, not JIT warmup). As such, a [custom benchmark tool](../src/test/benchmark.ts) exists
+which can be used to run the benchmark. The benchmark measures how long it takes to play out N
+randomly generated battles, excluding any set up time and time spent warming up the JS
 configurations. This benchmark scenario is useful for approximating the [Monte Carlo tree
 search](https://en.wikipedia.org/wiki/Monte_Carlo_tree_search) use case where various battles are
 played out each turn to the end numerous times to determine the best course of action.
@@ -361,11 +361,11 @@ cset shield --exec -- nice -n -19 node build/test/benchmark
 ### Regression
 
 In addition to being used to compare the pkmn engine to Pokémon Showdown, the [benchmark
-tool](../src/test/benchmark/index.ts) has an alternative mode that allows it to better detect
-regressions in the engine's performance. When the `--iterations` flag is used the tool will instead
-run multiple iterations of battle playouts from the same seed against the engine and output JSON to
-be used for comparison against prior runs. In order to minimize noise, the mean of all the
-iterations is reported, after outliers have been removed.
+tool](../src/test/benchmark.ts) has an alternative mode that allows it to better detect regressions
+in the engine's performance. When the `--iterations` flag is used the tool will instead run multiple
+iterations of battle playouts from the same seed against the engine and output JSON to be used for
+comparison against prior runs. In order to minimize noise, the mean of all the iterations is
+reported, after outliers have been removed.
 
 ## Fuzz
 
@@ -376,7 +376,7 @@ uncover latent bugs. The fuzz tests differ from the benchmark in that they run f
 durations as opposed to a given number of battles and enable the [blocked](#blocklistjson) effects
 that are usually excluded in `-Dshowdown` compatibility mode. When run with the `-Dtrace` flag,
 additional binary data will be dumped on crashes to allow for debugging with the help of
-[`fuzz.ts`](./fuzz.ts) and the [debug UI](https://pkmn.cc/debug.html) rendered
-by [`display`](./display/index.ts). To run the fuzz tool locally use:
+[`fuzz.ts`](./fuzz.ts) and the [debug UI](https://pkmn.cc/debug.html) rendered by
+[`display.ts`](./display.ts). To run the fuzz tool locally use:
 
-    $ npm run --silent fuzz  --  <pkmn|showdown> <GEN> <DURATION> <SEED?> > logs/fuzz.html
+    $ npm run --silent fuzz  --  <pkmn|showdown> <GEN> <DURATION> <SEED?>
