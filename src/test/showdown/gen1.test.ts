@@ -5060,6 +5060,112 @@ describe('Gen 1', () => {
     }
   });
 
+  // Fixed by smogon/pokemon-showdown#9475
+  test('Min/max stat recalculation bug', () => {
+    const hi_proc = SECONDARY(ranged(77, 256) - 1);
+    const battle = startBattle([
+      HIT, HIT, PAR_CAN, SLP(5), HIT, HIT, HIT, HIT, NO_CRIT,
+      MIN_DMG, hi_proc, PAR_CAN, SLP(5), HIT, PAR_CAN, HIT, PAR_CAN,
+    ], [
+      {species: 'Jolteon', evs, moves: ['String Shot', 'Thunder Wave', 'Lick', 'Teleport']},
+    ], [
+      {species: 'Omanyte', evs, level: 51, moves: ['Teleport', 'Rest']},
+    ]);
+
+    const p2hp = battle.p2.pokemon[0].hp;
+    battle.p2.pokemon[0].hp = 1;
+    expect(battle.p2.active[0].modifiedStats!.spe).toBe(88);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.active[0].boosts.spe).toBe(-1);
+    expect(battle.p2.active[0].modifiedStats!.spe).toBe(58);
+
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p2.active[0].boosts.spe).toBe(-1);
+    expect(battle.p2.active[0].modifiedStats!.spe).toBe(14);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+    expect(battle.p2.pokemon[0].status).toBe('slp');
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.active[0].boosts.spe).toBe(-2);
+    expect(battle.p2.active[0].modifiedStats!.spe).toBe(44);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.active[0].boosts.spe).toBe(-3);
+    expect(battle.p2.active[0].modifiedStats!.spe).toBe(35);
+    expect(battle.p2.pokemon[0].status).toBe('');
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.active[0].boosts.spe).toBe(-4);
+    expect(battle.p2.active[0].modifiedStats!.spe).toBe(29);
+
+    battle.makeChoices('move 3', 'move 2');
+    expect(battle.p2.active[0].boosts.spe).toBe(-4);
+    expect(battle.p2.active[0].modifiedStats!.spe).toBe(7);
+    expect(battle.p2.pokemon[0].status).toBe('slp');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+
+    battle.makeChoices('move 4', 'move 1');
+    battle.makeChoices('move 4', 'move 1');
+
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p2.active[0].boosts.spe).toBe(-4);
+    expect(battle.p2.active[0].modifiedStats!.spe).toBe(1);
+    expect(battle.p2.pokemon[0].status).toBe('par');
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.active[0].boosts.spe).toBe(-4);
+    expect(battle.p2.active[0].modifiedStats!.spe).toBe(1);
+
+    verify(battle, [
+      '|move|p1a: Jolteon|String Shot|p2a: Omanyte',
+      '|-unboost|p2a: Omanyte|spe|1',
+      '|move|p2a: Omanyte|Teleport|p2a: Omanyte',
+      '|turn|2',
+      '|move|p1a: Jolteon|Thunder Wave|p2a: Omanyte',
+      '|-status|p2a: Omanyte|par',
+      '|move|p2a: Omanyte|Rest|p2a: Omanyte',
+      '|-status|p2a: Omanyte|slp|[from] move: Rest',
+      '|-heal|p2a: Omanyte|144/144 slp|[silent]',
+      '|turn|3',
+      '|move|p1a: Jolteon|String Shot|p2a: Omanyte',
+      '|-unboost|p2a: Omanyte|spe|1',
+      '|cant|p2a: Omanyte|slp',
+      '|turn|4',
+      '|move|p1a: Jolteon|String Shot|p2a: Omanyte',
+      '|-unboost|p2a: Omanyte|spe|1',
+      '|-curestatus|p2a: Omanyte|slp|[msg]',
+      '|turn|5',
+      '|move|p1a: Jolteon|String Shot|p2a: Omanyte',
+      '|-unboost|p2a: Omanyte|spe|1',
+      '|move|p2a: Omanyte|Teleport|p2a: Omanyte',
+      '|turn|6',
+      '|move|p1a: Jolteon|Lick|p2a: Omanyte',
+      '|-damage|p2a: Omanyte|122/144',
+      '|-status|p2a: Omanyte|par',
+      '|move|p2a: Omanyte|Rest|p2a: Omanyte',
+      '|-status|p2a: Omanyte|slp|[from] move: Rest',
+      '|-heal|p2a: Omanyte|144/144 slp|[silent]',
+      '|turn|7',
+      '|move|p1a: Jolteon|Teleport|p1a: Jolteon',
+      '|cant|p2a: Omanyte|slp',
+      '|turn|8',
+      '|move|p1a: Jolteon|Teleport|p1a: Jolteon',
+      '|-curestatus|p2a: Omanyte|slp|[msg]',
+      '|turn|9',
+      '|move|p1a: Jolteon|Thunder Wave|p2a: Omanyte',
+      '|-status|p2a: Omanyte|par',
+      '|move|p2a: Omanyte|Teleport|p2a: Omanyte',
+      '|turn|10',
+      '|move|p1a: Jolteon|String Shot|p2a: Omanyte',
+      '|-unboost|p2a: Omanyte|spe|1',
+      '|-boost|p2a: Omanyte|spe|1',
+      '|-fail|p2a: Omanyte',
+      '|move|p2a: Omanyte|Teleport|p2a: Omanyte',
+      '|turn|11',
+    ]);
+  });
+
   // Glitches
 
   test('0 damage glitch', () => {

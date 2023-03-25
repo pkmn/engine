@@ -3893,7 +3893,7 @@ test "Rest effect" {
     const NO_PROC = PROC + 1;
 
     var t = Test((if (showdown)
-        .{ HIT, HIT, ~CRIT, MIN_DMG, NO_PROC, MAX, HIT, ~CRIT, MIN_DMG }
+        .{ HIT, HIT, ~CRIT, MIN_DMG, NO_PROC, NOP, HIT, ~CRIT, MIN_DMG }
     else
         .{ HIT, ~CRIT, MIN_DMG, HIT, NO_PROC, ~CRIT, MIN_DMG, HIT })).init(
         &.{
@@ -6286,6 +6286,138 @@ test "Thrashing + Substitute bugs" {
 
         try t.verify();
     }
+}
+
+// Fixed by smogon/pokemon-showdown#9475
+test "Min/max stat recalculation bug" {
+    const PAR_CAN = MAX;
+    const HI_PROC = comptime ranged(77, 256) - 1;
+
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            HIT, HIT, PAR_CAN, NOP, HIT, HIT, HIT, HIT, ~CRIT,
+            MIN_DMG, HI_PROC, PAR_CAN, NOP, HIT, PAR_CAN, HIT, PAR_CAN,
+        } else .{
+            ~CRIT, HIT, HIT, PAR_CAN, ~CRIT, HIT, ~CRIT, HIT, ~CRIT, HIT, ~CRIT,
+            MIN_DMG, HIT, HI_PROC, PAR_CAN, HIT, PAR_CAN, ~CRIT, HIT, PAR_CAN,
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Jolteon, .moves = &.{ .StringShot, .ThunderWave, .Lick, .Teleport } }},
+        &.{.{ .species = .Omanyte, .hp = 1, .level = 51, .moves = &.{ .Teleport, .Rest } }},
+    );
+    defer t.deinit();
+    try t.start();
+
+    try expectEqual(@as(u16, 88), t.actual.p2.active.stats.spe);
+
+    try t.log.expected.move(P1.ident(1), Move.StringShot, P2.ident(1), null);
+    try t.log.expected.boost(P2.ident(1), .Speed, -1);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(@as(i4, -1), t.actual.p2.active.boosts.spe);
+    try expectEqual(@as(u16, 58), t.actual.p2.active.stats.spe);
+
+    try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
+    t.expected.p2.get(1).status = Status.init(.PAR);
+    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.move(P2.ident(1), Move.Rest, P2.ident(1), null);
+    t.expected.p2.get(1).hp += 143;
+    t.expected.p2.get(1).status = Status.slf(2);
+    try t.log.expected.statusFrom(P2.ident(1), Status.slf(2), Move.Rest);
+    try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .Silent);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    try expectEqual(@as(i4, -1), t.actual.p2.active.boosts.spe);
+    try expectEqual(@as(u16, 14), t.actual.p2.active.stats.spe);
+
+    try t.log.expected.move(P1.ident(1), Move.StringShot, P2.ident(1), null);
+    try t.log.expected.boost(P2.ident(1), .Speed, -1);
+    try t.log.expected.cant(P2.ident(1), .Sleep);
+    t.expected.p2.get(1).status -= 1;
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(1), forced));
+    try expectEqual(@as(i4, -2), t.actual.p2.active.boosts.spe);
+    try expectEqual(@as(u16, 44), t.actual.p2.active.stats.spe);
+
+    try t.log.expected.move(P1.ident(1), Move.StringShot, P2.ident(1), null);
+    try t.log.expected.boost(P2.ident(1), .Speed, -1);
+    try t.log.expected.curestatus(P2.ident(1), t.expected.p2.get(1).status, .Message);
+    t.expected.p2.get(1).status = 0;
+    try t.log.expected.turn(5);
+
+    try expectEqual(Result.Default, try t.update(move(1), forced));
+    try expectEqual(@as(i4, -3), t.actual.p2.active.boosts.spe);
+    try expectEqual(@as(u16, 35), t.actual.p2.active.stats.spe);
+
+    try t.log.expected.move(P1.ident(1), Move.StringShot, P2.ident(1), null);
+    try t.log.expected.boost(P2.ident(1), .Speed, -1);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(6);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(@as(i4, -4), t.actual.p2.active.boosts.spe);
+    try expectEqual(@as(u16, 29), t.actual.p2.active.stats.spe);
+
+    try t.log.expected.move(P1.ident(1), Move.Lick, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 22;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    t.expected.p2.get(1).status = Status.init(.PAR);
+    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.move(P2.ident(1), Move.Rest, P2.ident(1), null);
+    t.expected.p2.get(1).hp += 22;
+    t.expected.p2.get(1).status = Status.slf(2);
+    try t.log.expected.statusFrom(P2.ident(1), Status.slf(2), Move.Rest);
+    try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .Silent);
+    try t.log.expected.turn(7);
+
+    try expectEqual(Result.Default, try t.update(move(3), move(2)));
+    try expectEqual(@as(i4, -4), t.actual.p2.active.boosts.spe);
+    try expectEqual(@as(u16, 7), t.actual.p2.active.stats.spe);
+
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.cant(P2.ident(1), .Sleep);
+    t.expected.p2.get(1).status -= 1;
+    try t.log.expected.turn(8);
+
+    try expectEqual(Result.Default, try t.update(move(4), forced));
+
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.curestatus(P2.ident(1), t.expected.p2.get(1).status, .Message);
+    t.expected.p2.get(1).status = 0;
+    try t.log.expected.turn(9);
+
+    try expectEqual(Result.Default, try t.update(move(4), forced));
+
+    try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
+    t.expected.p2.get(1).status = Status.init(.PAR);
+    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(10);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    try expectEqual(@as(i4, -4), t.actual.p2.active.boosts.spe);
+    try expectEqual(@as(u16, 1), t.actual.p2.active.stats.spe);
+
+    try t.log.expected.move(P1.ident(1), Move.StringShot, P2.ident(1), null);
+    if (showdown) {
+        try t.log.expected.boost(P2.ident(1), .Speed, -1);
+        try t.log.expected.boost(P2.ident(1), .Speed, 1);
+    }
+    try t.log.expected.fail(P2.ident(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(11);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(@as(i4, -4), t.actual.p2.active.boosts.spe);
+    try expectEqual(@as(u16, 1), t.actual.p2.active.stats.spe);
+
+    try t.verify();
 }
 
 // Glitches
