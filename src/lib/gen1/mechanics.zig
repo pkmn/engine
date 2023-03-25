@@ -321,23 +321,24 @@ fn doTurn(
 ) !?Result {
     assert(player_choice.type != .Pass);
 
+    var residual = true;
     var replace = battle.side(player).stored().hp == 0;
-    if (try executeMove(battle, player, player_choice, player_from, log)) |r| return r;
+    if (try executeMove(battle, player, player_choice, player_from, &residual, log)) |r| return r;
     if (!replace) {
         if (player_choice.type != .Switch) {
             if (try checkFaint(battle, foe_player, log)) |r| return r;
         }
-        try handleResidual(battle, player, log);
+        if (residual) try handleResidual(battle, player, log);
         if (try checkFaint(battle, player, log)) |r| return r;
     } else if (foe_choice.type == .Pass) return null;
 
     replace = battle.side(foe_player).stored().hp == 0;
-    if (try executeMove(battle, foe_player, foe_choice, foe_from, log)) |r| return r;
+    if (try executeMove(battle, foe_player, foe_choice, foe_from, &residual, log)) |r| return r;
     if (!replace) {
         if (foe_choice.type != .Switch) {
             if (try checkFaint(battle, player, log)) |r| return r;
         }
-        try handleResidual(battle, foe_player, log);
+        if (residual) try handleResidual(battle, foe_player, log);
         if (try checkFaint(battle, foe_player, log)) |r| return r;
     }
 
@@ -349,6 +350,7 @@ fn executeMove(
     player: Player,
     choice: Choice,
     from: ?Move,
+    residual: *bool,
     log: anytype,
 ) !?Result {
     var side = battle.side(player);
@@ -420,7 +422,7 @@ fn executeMove(
 
     if (!skip_can and !try canMove(battle, player, mslot, auto, skip_pp, from, log)) return null;
 
-    return doMove(battle, player, mslot, auto, log);
+    return doMove(battle, player, mslot, auto, residual, log);
 }
 
 const BeforeMove = union(enum) { done, skip_can, skip_pp, ok, err };
@@ -701,7 +703,14 @@ fn incrementPP(side: *Side, mslot: u4) void {
 }
 
 // Pokémon Showdown does hit/multi/crit/damage instead of crit/damage/hit/multi
-fn doMove(battle: anytype, player: Player, mslot: u4, auto: bool, log: anytype) !?Result {
+fn doMove(
+    battle: anytype,
+    player: Player,
+    mslot: u4,
+    auto: bool,
+    residual: *bool,
+    log: anytype,
+) !?Result {
     var side = battle.side(player);
     const foe = battle.foe(player);
 
@@ -783,9 +792,11 @@ fn doMove(battle: anytype, player: Player, mslot: u4, auto: bool, log: anytype) 
     assert(!immune or miss or move.effect == .Binding);
 
     if (!showdown or !miss) {
-        if (move.effect == .MirrorMove) return mirrorMove(battle, player, mslot, auto, log);
-        if (move.effect == .Metronome) return metronome(battle, player, mslot, auto, log);
-        if (move.effect.onEnd()) {
+        if (move.effect == .MirrorMove) {
+            return mirrorMove(battle, player, mslot, auto, residual, log);
+        } else if (move.effect == .Metronome) {
+            return metronome(battle, player, mslot, auto, residual, log);
+        } else if (move.effect.onEnd()) {
             try onEnd(battle, player, move, log);
             return null;
         }
@@ -812,6 +823,7 @@ fn doMove(battle: anytype, player: Player, mslot: u4, auto: bool, log: anytype) 
             assert(battle.last_damage == 0);
             battle.last_damage = 1;
             _ = try applyDamage(battle, player, player.foe(), .None, log);
+            if (showdown and side.stored().hp == 0) residual.* = false;
         } else if (move.effect == .Explode) {
             try Effects.explode(battle, player);
             if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
@@ -885,7 +897,7 @@ fn doMove(battle: anytype, player: Player, mslot: u4, auto: bool, log: anytype) 
     // On the cartridge, "always happen" effect handlers are called in the applyDamage loop above,
     // but this is only done to setup the MultiHit looping in the first place. Moving the MultiHit
     // setup before the loop means we can avoid having to waste time doing no-op handler searches.
-    if (move.effect.alwaysHappens()) try alwaysHappens(battle, player, move, log);
+    if (move.effect.alwaysHappens()) try alwaysHappens(battle, player, move, residual, log);
 
     if (foe.stored().hp == 0) return null;
 
@@ -1153,7 +1165,14 @@ fn applyDamage(
     return false;
 }
 
-fn mirrorMove(battle: anytype, player: Player, mslot: u4, auto: bool, log: anytype) !?Result {
+fn mirrorMove(
+    battle: anytype,
+    player: Player,
+    mslot: u4,
+    auto: bool,
+    residual: *bool,
+    log: anytype,
+) !?Result {
     var side = battle.side(player);
     const foe = battle.foe(player);
 
@@ -1167,10 +1186,17 @@ fn mirrorMove(battle: anytype, player: Player, mslot: u4, auto: bool, log: anyty
     incrementPP(side, mslot);
 
     if (!try canMove(battle, player, mslot, auto, false, .MirrorMove, log)) return null;
-    return doMove(battle, player, mslot, auto, log);
+    return doMove(battle, player, mslot, auto, residual, log);
 }
 
-fn metronome(battle: anytype, player: Player, mslot: u4, auto: bool, log: anytype) !?Result {
+fn metronome(
+    battle: anytype,
+    player: Player,
+    mslot: u4,
+    auto: bool,
+    residual: *bool,
+    log: anytype,
+) !?Result {
     var side = battle.side(player);
 
     side.last_selected_move = if (showdown) blk: {
@@ -1189,7 +1215,7 @@ fn metronome(battle: anytype, player: Player, mslot: u4, auto: bool, log: anytyp
     incrementPP(side, mslot);
 
     if (!try canMove(battle, player, mslot, auto, false, .Metronome, log)) return null;
-    return doMove(battle, player, mslot, auto, log);
+    return doMove(battle, player, mslot, auto, residual, log);
 }
 
 fn checkHit(battle: anytype, player: Player, move: Move.Data, log: anytype) !bool {
@@ -1354,7 +1380,7 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
     var volatiles = &side.active.volatiles;
 
     const brn = Status.is(stored.status, .BRN);
-    if (brn or Status.is(stored.status, .PSN)) {
+    if (brn or Status.is(stored.status, .PSN)) blk: {
         var damage = @max(stored.stats.hp / 16, 1);
 
         if (volatiles.Toxic) {
@@ -1362,7 +1388,11 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
             damage *= volatiles.toxic;
         }
 
-        stored.hp -= @min(damage, stored.hp);
+        const amount = @min(damage, stored.hp);
+        if (showdown and amount == 0) break :blk;
+
+        stored.hp -= amount;
+
         // Pokémon Showdown uses damageOf here but its not relevant in Generation I
         try log.damage(ident, stored, if (brn) Damage.Burn else Damage.Poison);
     }
@@ -1376,14 +1406,15 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
             damage *= volatiles.toxic;
         }
 
-        stored.hp -= @min(damage, stored.hp);
+        const amount = @min(damage, stored.hp);
+        stored.hp -= amount;
 
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
         const foe_ident = battle.active(player.foe());
 
         // As above, Pokémon Showdown uses damageOf but its not relevant
-        try log.damage(ident, stored, .LeechSeed);
+        if (amount > 0) try log.damage(ident, stored, .LeechSeed);
 
         const before = foe_stored.hp;
         // Uncapped damage is added back to the foe
@@ -1501,14 +1532,20 @@ inline fn onEnd(battle: anytype, player: Player, move: Move.Data, log: anytype) 
     };
 }
 
-inline fn alwaysHappens(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
+inline fn alwaysHappens(
+    battle: anytype,
+    player: Player,
+    move: Move.Data,
+    residual: *bool,
+    log: anytype,
+) !void {
     assert(move.effect.alwaysHappens());
     return switch (move.effect) {
         .DrainHP, .DreamEater => Effects.drainHP(battle, player, log),
         .Explode => Effects.explode(battle, player),
         .PayDay => Effects.payDay(log),
         .Rage => Effects.rage(battle, player),
-        .Recoil => Effects.recoil(battle, player, log),
+        .Recoil => Effects.recoil(battle, player, residual, log),
         .JumpKick, .Binding => {},
         else => unreachable,
     };
@@ -2026,7 +2063,7 @@ pub const Effects = struct {
         volatiles.state = 0;
     }
 
-    fn recoil(battle: anytype, player: Player, log: anytype) !void {
+    fn recoil(battle: anytype, player: Player, residual: *bool, log: anytype) !void {
         var side = battle.side(player);
         var stored = side.stored();
 
@@ -2035,6 +2072,7 @@ pub const Effects = struct {
         stored.hp = @intCast(u16, @max(@intCast(i16, stored.hp) - damage, 0));
 
         try log.damageOf(battle.active(player), stored, .RecoilOf, battle.active(player.foe()));
+        if (showdown and stored.hp == 0) residual.* = false;
     }
 
     fn reflect(battle: anytype, player: Player, log: anytype) !void {

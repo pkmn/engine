@@ -6940,6 +6940,175 @@ test "Toxic counter glitches" {
     try t.verify();
 }
 
+test "Poison/Burn animation with 0 HP" {
+    // https://pkmn.cc/bulba/List_of_graphical_quirks_(Generation_I)
+
+    // Faint from Recoil (no healing)
+    {
+        var t = Test(if (showdown)
+            .{ HIT, HIT, HIT, ~CRIT, MAX_DMG }
+        else
+            .{ HIT, HIT, ~CRIT, MAX_DMG, HIT }).init(
+            &.{
+                .{ .species = .Ivysaur, .hp = 137, .moves = &.{ .Toxic, .LeechSeed } },
+                .{ .species = .NidoranM, .moves = &.{.HornAttack} },
+            },
+            &.{
+                .{ .species = .Wigglytuff, .hp = 60, .moves = &.{ .Teleport, .DoubleEdge } },
+                .{ .species = .NidoranM, .moves = &.{.DoubleKick} },
+            },
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(1), null);
+        t.expected.p2.get(1).status = if (showdown) Status.TOX else Status.init(.PSN);
+        try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+        try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 30;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(@as(u5, 1), t.actual.p2.active.volatiles.toxic);
+
+        try t.log.expected.move(P1.ident(1), Move.LeechSeed, P2.ident(1), null);
+        try t.log.expected.start(P2.ident(1), .LeechSeed);
+        try t.log.expected.move(P2.ident(1), Move.DoubleEdge, P1.ident(1), null);
+        t.expected.p1.get(1).hp -= 136;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        t.expected.p2.get(1).hp -= 30;
+        try t.log.expected.damageOf(P2.ident(1), t.expected.p2.get(1), .RecoilOf, P1.ident(1));
+        if (!showdown) {
+            try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
+            t.expected.p1.get(1).hp += 90;
+            try t.log.expected.heal(P1.ident(1), t.expected.p1.get(1), .Silent);
+        }
+        try t.log.expected.faint(P2.ident(1), true);
+
+        try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(move(2), move(2)));
+        try t.verify();
+    }
+    // Faint from Crash (no healing on Pokémon Showdown)
+    {
+        var t = Test(if (showdown)
+            .{ HIT, HIT, ~HIT }
+        else
+            .{ HIT, HIT, ~CRIT, MAX_DMG, ~HIT }).init(
+            &.{
+                .{ .species = .Ivysaur, .hp = 1, .moves = &.{ .Toxic, .LeechSeed } },
+                .{ .species = .NidoranM, .moves = &.{.HornAttack} },
+            },
+            &.{
+                .{ .species = .Wigglytuff, .hp = 31, .moves = &.{ .Teleport, .JumpKick } },
+                .{ .species = .NidoranM, .moves = &.{.DoubleKick} },
+            },
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(1), null);
+        t.expected.p2.get(1).status = if (showdown) Status.TOX else Status.init(.PSN);
+        try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+        try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 30;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(@as(u5, 1), t.actual.p2.active.volatiles.toxic);
+
+        try t.log.expected.move(P1.ident(1), Move.LeechSeed, P2.ident(1), null);
+        try t.log.expected.start(P2.ident(1), .LeechSeed);
+        try t.log.expected.move(P2.ident(1), Move.JumpKick, P1.ident(1), null);
+        try t.log.expected.lastmiss();
+        try t.log.expected.miss(P2.ident(1));
+        t.expected.p2.get(1).hp -= 1;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        if (!showdown) {
+            try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
+            t.expected.p1.get(1).hp += 90;
+            try t.log.expected.heal(P1.ident(1), t.expected.p1.get(1), .Silent);
+        }
+        try t.log.expected.faint(P2.ident(1), true);
+
+        try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(move(2), move(2)));
+        try t.verify();
+    }
+    // Faint from Toxic (heals on Pokémon Showdown)
+    {
+        var t = Test(if (showdown) .{ HIT, HIT } else .{ HIT, HIT }).init(
+            &.{
+                .{ .species = .Ivysaur, .hp = 1, .moves = &.{ .Toxic, .LeechSeed } },
+                .{ .species = .NidoranM, .moves = &.{.HornAttack} },
+            },
+            &.{
+                .{ .species = .Wigglytuff, .hp = 60, .moves = &.{ .Teleport, .DoubleEdge } },
+                .{ .species = .NidoranM, .moves = &.{.DoubleKick} },
+            },
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(1), null);
+        t.expected.p2.get(1).status = if (showdown) Status.TOX else Status.init(.PSN);
+        try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+        try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 30;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(@as(u5, 1), t.actual.p2.active.volatiles.toxic);
+
+        try t.log.expected.move(P1.ident(1), Move.LeechSeed, P2.ident(1), null);
+        try t.log.expected.start(P2.ident(1), .LeechSeed);
+        try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 30;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
+        t.expected.p1.get(1).hp += 90;
+        try t.log.expected.heal(P1.ident(1), t.expected.p1.get(1), .Silent);
+        try t.log.expected.faint(P2.ident(1), true);
+
+        try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(move(2), move(1)));
+        try t.verify();
+    }
+    // Faint from confusion self-hit (heals on Pokémon Showdown)
+    {
+        const CFZ_5 = MAX;
+        const CFZ_CANT = if (showdown) comptime ranged(128, 256) else MAX;
+        var t = Test(.{ HIT, CFZ_5, CFZ_CANT, HIT, CFZ_CANT }).init(
+            &.{
+                .{ .species = .Ivysaur, .hp = 1, .moves = &.{ .ConfuseRay, .LeechSeed } },
+                .{ .species = .NidoranM, .moves = &.{.HornAttack} },
+            },
+            &.{
+                .{ .species = .Wigglytuff, .hp = 50, .moves = &.{ .Teleport, .DoubleEdge } },
+                .{ .species = .NidoranM, .moves = &.{.DoubleKick} },
+            },
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P1.ident(1), Move.ConfuseRay, P2.ident(1), null);
+        try t.log.expected.start(P2.ident(1), .Confusion);
+        try t.log.expected.activate(P2.ident(1), .Confusion);
+        t.expected.p2.get(1).hp -= 44;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Confusion);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        try t.log.expected.move(P1.ident(1), Move.LeechSeed, P2.ident(1), null);
+        try t.log.expected.start(P2.ident(1), .LeechSeed);
+        try t.log.expected.activate(P2.ident(1), .Confusion);
+        t.expected.p2.get(1).hp -= 6;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Confusion);
+        t.expected.p1.get(1).hp += 30;
+        try t.log.expected.heal(P1.ident(1), t.expected.p1.get(1), .Silent);
+        try t.log.expected.faint(P2.ident(1), true);
+
+        try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(move(2), move(1)));
+        try t.verify();
+    }
+}
+
 test "Defrost move forcing" {
     // https://pkmn.cc/bulba-glitch-1#Defrost_move_forcing
     const FRZ = comptime ranged(26, 256) - 1;

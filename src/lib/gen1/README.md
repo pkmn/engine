@@ -480,6 +480,8 @@ Beyond the general bugs listed above, several move effects are implemented incor
 Showdown. Some of these moves are [too fundamentally broken to be implemented](#unimplementable) by
 the pkmn engine, but the following moves have their broken behavior preserved in `-Dshowdown` mode:
 
+- **Leech Seed**: Leech Seed fails to heal its source side if a seeded target faints due to
+  recoil/crash damage on Pokémon Showdown.
 - **Freeze** / **Sleep**: Pokémon Showdown requires a move to be selected when a Pokémon is frozen
   or sleeping and uses that in the event that the status is removed while on the cartridge no
   selection is possible and no turn exists for the thawed/woken Pokémon to act except in the case of

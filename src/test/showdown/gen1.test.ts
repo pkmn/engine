@@ -5565,6 +5565,152 @@ describe('Gen 1', () => {
     ]);
   });
 
+  test('Poison/Burn animation with 0 HP', () => {
+    // Faint from Recoil (no healing on Pokémon Showdown)
+    {
+      const battle = startBattle([HIT, HIT, HIT, NO_CRIT, MAX_DMG], [
+        {species: 'Ivysaur', evs, moves: ['Toxic', 'Leech Seed']},
+        {species: 'Nidoran-M', evs, moves: ['Horn Attack']},
+      ], [
+        {species: 'Wigglytuff', evs, moves: ['Teleport', 'Double Edge']},
+        {species: 'Nidoran-F', evs, moves: ['Double Kick']},
+      ]);
+
+      battle.p1.pokemon[0].hp = 137;
+      battle.p2.pokemon[0].hp = 60;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(137);
+      expect(battle.p2.pokemon[0].hp).toBe(30);
+      expect(battle.p2.pokemon[0].status).toBe('tox');
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(1);
+      expect(battle.p2.pokemon[0].hp).toBe(0);
+
+      verify(battle, [
+        '|move|p1a: Ivysaur|Toxic|p2a: Wigglytuff',
+        '|-status|p2a: Wigglytuff|tox',
+        '|move|p2a: Wigglytuff|Teleport|p2a: Wigglytuff',
+        '|-damage|p2a: Wigglytuff|30/483 tox|[from] psn',
+        '|turn|2',
+        '|move|p1a: Ivysaur|Leech Seed|p2a: Wigglytuff',
+        '|-start|p2a: Wigglytuff|move: Leech Seed',
+        '|move|p2a: Wigglytuff|Double-Edge|p1a: Ivysaur',
+        '|-damage|p1a: Ivysaur|1/323',
+        '|-damage|p2a: Wigglytuff|0 fnt|[from] Recoil|[of] p1a: Ivysaur',
+        '|faint|p2a: Wigglytuff',
+      ]);
+    }
+    // Faint from Crash (no healing on Pokémon Showdown)
+    {
+      const battle = startBattle([HIT, HIT, MISS], [
+        {species: 'Ivysaur', evs, moves: ['Toxic', 'Leech Seed']},
+        {species: 'Nidoran-M', evs, moves: ['Horn Attack']},
+      ], [
+        {species: 'Wigglytuff', evs, moves: ['Teleport', 'Jump Kick']},
+        {species: 'Nidoran-F', evs, moves: ['Double Kick']},
+      ]);
+
+      battle.p1.pokemon[0].hp = 1;
+      battle.p2.pokemon[0].hp = 31;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(1);
+      expect(battle.p2.pokemon[0].hp).toBe(1);
+      expect(battle.p2.pokemon[0].status).toBe('tox');
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(1);
+      expect(battle.p2.pokemon[0].hp).toBe(0);
+
+      verify(battle, [
+        '|move|p1a: Ivysaur|Toxic|p2a: Wigglytuff',
+        '|-status|p2a: Wigglytuff|tox',
+        '|move|p2a: Wigglytuff|Teleport|p2a: Wigglytuff',
+        '|-damage|p2a: Wigglytuff|1/483 tox|[from] psn',
+        '|turn|2',
+        '|move|p1a: Ivysaur|Leech Seed|p2a: Wigglytuff',
+        '|-start|p2a: Wigglytuff|move: Leech Seed',
+        '|move|p2a: Wigglytuff|Jump Kick|p1a: Ivysaur|[miss]',
+        '|-miss|p2a: Wigglytuff',
+        '|-damage|p2a: Wigglytuff|0 fnt',
+        '|faint|p2a: Wigglytuff',
+      ]);
+    }
+    // Faint from Toxic (heals on Pokémon Showdown)
+    {
+      const battle = startBattle([HIT, HIT], [
+        {species: 'Ivysaur', evs, moves: ['Toxic', 'Leech Seed']},
+        {species: 'Nidoran-M', evs, moves: ['Horn Attack']},
+      ], [
+        {species: 'Wigglytuff', evs, moves: ['Teleport', 'Double Edge']},
+        {species: 'Nidoran-F', evs, moves: ['Double Kick']},
+      ]);
+
+      battle.p1.pokemon[0].hp = 1;
+      battle.p2.pokemon[0].hp = 60;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(1);
+      expect(battle.p2.pokemon[0].hp).toBe(30);
+      expect(battle.p2.pokemon[0].status).toBe('tox');
+
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(91);
+      expect(battle.p2.pokemon[0].hp).toBe(0);
+
+      verify(battle, [
+        '|move|p1a: Ivysaur|Toxic|p2a: Wigglytuff',
+        '|-status|p2a: Wigglytuff|tox',
+        '|move|p2a: Wigglytuff|Teleport|p2a: Wigglytuff',
+        '|-damage|p2a: Wigglytuff|30/483 tox|[from] psn',
+        '|turn|2',
+        '|move|p1a: Ivysaur|Leech Seed|p2a: Wigglytuff',
+        '|-start|p2a: Wigglytuff|move: Leech Seed',
+        '|move|p2a: Wigglytuff|Teleport|p2a: Wigglytuff',
+        '|-damage|p2a: Wigglytuff|0 fnt|[from] psn',
+        '|-heal|p1a: Ivysaur|91/323|[silent]',
+        '|faint|p2a: Wigglytuff',
+      ]);
+    }
+    // Faint from confusion self-hit (heals on Pokémon Showdown)
+    {
+      const battle = startBattle([HIT, CFZ(5), CFZ_CANT, HIT, CFZ_CANT], [
+        {species: 'Ivysaur', evs, moves: ['Confuse Ray', 'Leech Seed']},
+        {species: 'Nidoran-M', evs, moves: ['Horn Attack']},
+      ], [
+        {species: 'Wigglytuff', evs, moves: ['Teleport', 'Double Edge']},
+        {species: 'Nidoran-F', evs, moves: ['Double Kick']},
+      ]);
+
+      battle.p1.pokemon[0].hp = 1;
+      battle.p2.pokemon[0].hp = 50;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(1);
+      expect(battle.p2.pokemon[0].hp).toBe(6);
+
+      battle.makeChoices('move 2', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(31);
+      expect(battle.p2.pokemon[0].hp).toBe(0);
+
+      verify(battle, [
+        '|move|p1a: Ivysaur|Confuse Ray|p2a: Wigglytuff',
+        '|-start|p2a: Wigglytuff|confusion',
+        '|-activate|p2a: Wigglytuff|confusion',
+        '|-damage|p2a: Wigglytuff|6/483|[from] confusion',
+        '|turn|2',
+        '|move|p1a: Ivysaur|Leech Seed|p2a: Wigglytuff',
+        '|-start|p2a: Wigglytuff|move: Leech Seed',
+        '|-activate|p2a: Wigglytuff|confusion',
+        '|-damage|p2a: Wigglytuff|0 fnt|[from] confusion',
+        '|-heal|p1a: Ivysaur|31/323|[silent]',
+        '|faint|p2a: Wigglytuff',
+      ]);
+    }
+  });
+
   test('Defrost move forcing', () => {
     const NO_BRN = {...FRZ, value: FRZ.value + 1};
     const battle = startBattle([
