@@ -177,6 +177,10 @@ test "fainting (double)" {
     {
         // TODO
     }
+    // Switch (paralyzed)
+    {
+        // TODO
+    }
     // Tie
     {
         // TODO

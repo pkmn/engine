@@ -848,6 +848,51 @@ test "fainting (double)" {
         try expectEqual(Result.Default, try t.update(swtch(2), swtch(2)));
         try t.verify();
     }
+    // Switch (paralyzed)
+    {
+        const PAR_CAN = MAX;
+        var t = Test(if (showdown)
+            .{ HIT, PAR_CAN, HIT, ~CRIT, MAX_DMG }
+        else
+            .{ HIT, PAR_CAN, ~CRIT, MAX_DMG, HIT }).init(
+            &.{
+                .{ .species = .Farfetchd, .moves = &.{ .ThunderWave, .Teleport } },
+                .{ .species = .Cubone, .moves = &.{.BoneClub} },
+            },
+            &.{
+                .{ .species = .Charmeleon, .moves = &.{ .Teleport, .Explosion } },
+                .{ .species = .Pikachu, .moves = &.{.Surf} },
+            },
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+        try t.log.expected.move(P1.ident(1), Move.ThunderWave, P2.ident(1), null);
+        t.expected.p2.get(1).status = Status.init(.PAR);
+        try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
+
+        try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+        try t.log.expected.move(P2.ident(1), Move.Explosion, P1.ident(1), null);
+        t.expected.p2.get(1).status = 0;
+        t.expected.p2.get(1).hp = 0;
+        t.expected.p1.get(1).hp = 0;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.faint(P1.ident(1), false);
+        try t.log.expected.faint(P2.ident(1), true);
+
+        try expectEqual(Result{ .p1 = .Switch, .p2 = .Switch }, try t.update(move(2), move(2)));
+
+        try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+        try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(swtch(2), swtch(2)));
+        try t.verify();
+    }
     // Tie
     {
         var t = Test(if (showdown) .{ HIT, CRIT, MAX_DMG } else .{ CRIT, MAX_DMG, HIT }).init(

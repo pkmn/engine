@@ -1329,10 +1329,17 @@ fn faint(battle: anytype, player: Player, log: anytype, done: bool) !?Result {
     side.active.volatiles = .{};
     side.last_used_move = .None;
     foe.last_used_move = .None;
+    const status = side.stored().status;
+
     side.stored().status = 0;
     // This shouldn't matter, but Pokémon Showdown decides double switching priority based on speed,
-    // and resets a Pokémon's stats when it faints
-    if (showdown) side.active.stats = side.stored().stats;
+    // and resets a Pokémon's stats when it faints... only it still factors in paralysis -_-
+    if (showdown) {
+        side.active.stats.spe = if (Status.is(status, .PAR))
+            @max(side.stored().stats.spe / 4, 1)
+        else
+            side.stored().stats.spe;
+    }
 
     try log.faint(battle.active(player), done);
     return null;
@@ -1692,7 +1699,9 @@ pub const Effects = struct {
         var stored = side.stored();
 
         stored.hp = 0;
-        stored.status = 0;
+        // Pokémon Showdown sets the status to 0 on faint(), and we need to do the same to be able
+        // to correctly implement Pokémon Showdown's dumb speed-based switch mechanics
+        if (!showdown) stored.status = 0;
         side.active.volatiles.LeechSeed = false;
     }
 
