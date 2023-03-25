@@ -2493,22 +2493,33 @@ test "OHKO effect" {
 // Move.{RazorWind,SolarBeam,SkullBash,SkyAttack}
 test "Charge effect" {
     // This attack charges on the first turn and executes on the second.
-    var t = Test((if (showdown)
-        .{ HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG }
-    else
-        .{ ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT })).init(
+    const DISABLE_DURATION_2 = comptime ranged(2, 9 - 1) - 1;
+    const DISABLE_MOVE_2 = if (showdown) MAX else 1;
+
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
+            HIT, DISABLE_MOVE_2, DISABLE_DURATION_2, HIT,
+        } else .{
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+            ~CRIT, HIT, DISABLE_MOVE_2, DISABLE_DURATION_2, ~CRIT, HIT,
+        }
+    // zig fmt: on
+    ).init(
         &.{
-            .{ .species = .Wartortle, .moves = &.{ .SkullBash, .WaterGun } },
+            .{ .species = .Wartortle, .moves = &.{ .WaterGun, .SkullBash } },
             .{ .species = .Ivysaur, .moves = &.{.VineWhip} },
         },
         &.{
-            .{ .species = .Psyduck, .moves = &.{ .Scratch, .WaterGun } },
+            .{ .species = .Psyduck, .moves = &.{ .Scratch, .WaterGun, .Disable } },
             .{ .species = .Horsea, .moves = &.{.Bubble} },
         },
     );
+
     defer t.deinit();
 
-    const pp = t.expected.p1.get(1).move(1).pp;
+    const pp = t.expected.p1.get(1).move(2).pp;
 
     try t.log.expected.move(P1.ident(1), Move.SkullBash, .{}, null);
     try t.log.expected.laststill();
@@ -2518,13 +2529,13 @@ test "Charge effect" {
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
     try t.log.expected.turn(2);
 
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try expectEqual(pp, t.actual.p1.active.move(1).pp);
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    try expectEqual(pp, t.actual.p1.active.move(2).pp);
 
     var n = t.battle.actual.choices(.P1, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
     n = t.battle.actual.choices(.P2, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2), move(3) }, choices[0..n]);
 
     try t.log.expected.move(P1.ident(1), Move.SkullBash, P2.ident(1), Move.SkullBash);
     t.expected.p2.get(1).hp -= 83;
@@ -2535,7 +2546,35 @@ test "Charge effect" {
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(forced, move(1)));
-    try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
+    try expectEqual(pp - 1, t.actual.p1.active.move(2).pp);
+
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2), move(3) }, choices[0..n]);
+
+    try t.log.expected.move(P1.ident(1), Move.SkullBash, .{}, null);
+    try t.log.expected.laststill();
+    try t.log.expected.prepare(P1.ident(1), Move.SkullBash);
+    try t.log.expected.move(P2.ident(1), Move.Disable, P1.ident(1), null);
+    try t.log.expected.startEffect(P1.ident(1), .Disable, Move.SkullBash);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(3)));
+    try expectEqual(pp - 1, t.actual.p1.active.move(2).pp);
+
+    n = t.battle.actual.choices(.P1, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
+    n = t.battle.actual.choices(.P2, .Move, &choices);
+    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2), move(3) }, choices[0..n]);
+
+    try t.log.expected.disabled(P1.ident(1), Move.SkullBash);
+    try t.log.expected.move(P2.ident(1), Move.Disable, P1.ident(1), null);
+    try t.log.expected.fail(P1.ident(1), .None);
+    try t.log.expected.turn(5);
+
+    try expectEqual(Result.Default, try t.update(forced, move(3)));
+    try expectEqual(pp - 1, t.actual.p1.active.move(2).pp);
 
     try t.verify();
 }
@@ -3371,6 +3410,7 @@ test "Disable effect" {
     const DISABLE_DURATION_1 = MIN;
     const DISABLE_DURATION_5 = comptime ranged(5, 9 - 1) - 1;
     const DISABLE_MOVE_1 = if (showdown) comptime ranged(1, 4) - 1 else 0;
+    // Note move "2: here is actually the 3rd slot (Rest) because slot 2 gets set to 0 PP
     const DISABLE_MOVE_2 = if (showdown) comptime ranged(2, 4) - 1 else 2;
     const DISABLE_MOVE_4 = if (showdown) MAX else 3;
 

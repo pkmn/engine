@@ -529,6 +529,7 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
         // A Pokémon that transforms after being disabled may end up with less move slots
         const m = active.moves[volatiles.disabled_move - 1].id;
         if (m != .None and m == side.last_selected_move) {
+            volatiles.Charging = false;
             try log.disabled(ident, side.last_selected_move);
             return .done;
         }

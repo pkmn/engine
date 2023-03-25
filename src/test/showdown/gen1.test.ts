@@ -1988,31 +1988,46 @@ describe('Gen 1', () => {
   test('Charge effect', () => {
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+      HIT, DISABLE_MOVE(2, 2), DISABLE_DURATION(2), HIT,
     ], [
-      {species: 'Wartortle', evs, moves: ['Skull Bash', 'Water Gun']},
+      {species: 'Wartortle', evs, moves: ['Water Gun', 'Skull Bash']},
       {species: 'Ivysaur', evs, moves: ['Vine Whip']},
     ], [
-      {species: 'Psyduck', evs, moves: ['Scratch', 'Water Gun']},
+      {species: 'Psyduck', evs, moves: ['Scratch', 'Water Gun', 'Disable']},
       {species: 'Horsea', evs, moves: ['Bubble']},
     ]);
 
     let p1hp = battle.p1.pokemon[0].hp;
     let p2hp = battle.p2.pokemon[0].hp;
 
-    let pp = battle.p1.pokemon[0].moveSlots[0].pp;
+    let pp = battle.p1.pokemon[0].moveSlots[1].pp;
 
-    battle.makeChoices('move 1', 'move 1');
+    battle.makeChoices('move 2', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 23);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp);
-    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
+    expect(battle.p1.pokemon[0].moveSlots[1].pp).toBe(pp);
 
     expect(choices(battle, 'p1')).toEqual(['move 1']);
-    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
+    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2', 'move 3']);
 
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 23);
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 83);
-    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
+    expect(battle.p1.pokemon[0].moveSlots[1].pp).toBe(pp -= 1);
+
+    expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2', 'move 3']);
+
+    battle.makeChoices('move 2', 'move 3');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+    expect(battle.p1.pokemon[0].moveSlots[1].pp).toBe(pp);
+
+    expect(choices(battle, 'p1')).toEqual(['move 1']);
+    expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2', 'move 3']);
+
+    battle.makeChoices('move 1', 'move 3');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+    expect(battle.p1.pokemon[0].moveSlots[1].pp).toBe(pp);
 
     verify(battle, [
       '|move|p1a: Wartortle|Skull Bash||[still]',
@@ -2025,6 +2040,15 @@ describe('Gen 1', () => {
       '|move|p2a: Psyduck|Scratch|p1a: Wartortle',
       '|-damage|p1a: Wartortle|275/321',
       '|turn|3',
+      '|move|p1a: Wartortle|Skull Bash||[still]',
+      '|-prepare|p1a: Wartortle|Skull Bash',
+      '|move|p2a: Psyduck|Disable|p1a: Wartortle',
+      '|-start|p1a: Wartortle|Disable|Skull Bash',
+      '|turn|4',
+      '|cant|p1a: Wartortle|Disable|Skull Bash',
+      '|move|p2a: Psyduck|Disable|p1a: Wartortle',
+      '|-fail|p1a: Wartortle',
+      '|turn|5',
     ]);
   });
 
