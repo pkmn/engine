@@ -1547,7 +1547,7 @@ inline fn alwaysHappens(
     return switch (move.effect) {
         .DrainHP, .DreamEater => Effects.drainHP(battle, player, log),
         .Explode => Effects.explode(battle, player),
-        .PayDay => Effects.payDay(log),
+        .PayDay => Effects.payDay(battle, player, log),
         .Rage => Effects.rage(battle, player),
         .Recoil => Effects.recoil(battle, player, residual, log),
         .JumpKick, .Binding => {},
@@ -2005,8 +2005,8 @@ pub const Effects = struct {
         try log.status(battle.active(player.foe()), foe_stored.status, .None);
     }
 
-    fn payDay(log: anytype) !void {
-        try log.fieldactivate();
+    fn payDay(battle: anytype, player: Player, log: anytype) !void {
+        if (!showdown or !battle.foe(player).active.volatiles.Substitute) try log.fieldactivate();
     }
 
     fn poison(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {

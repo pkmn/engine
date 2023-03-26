@@ -4282,9 +4282,12 @@ test "LeechSeed effect" {
 // Move.PayDay
 test "PayDay effect" {
     // "Scatters coins"
-    var t = Test((if (showdown) .{ HIT, ~CRIT, MAX_DMG } else .{ ~CRIT, MAX_DMG, HIT })).init(
+    var t = Test((if (showdown)
+        .{ HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, MAX_DMG, HIT, CRIT, MAX_DMG }
+    else
+        .{ ~CRIT, MAX_DMG, HIT, ~CRIT, MAX_DMG, HIT, CRIT, MAX_DMG, HIT })).init(
         &.{.{ .species = .Meowth, .moves = &.{.PayDay} }},
-        &.{.{ .species = .Slowpoke, .moves = &.{.Teleport} }},
+        &.{.{ .species = .Slowpoke, .moves = &.{ .Substitute, .Teleport } }},
     );
     defer t.deinit();
 
@@ -4292,10 +4295,29 @@ test "PayDay effect" {
     t.expected.p2.get(1).hp -= 43;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.fieldactivate();
-    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Substitute);
+    t.expected.p2.get(1).hp -= 95;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.PayDay, P2.ident(1), null);
+    try t.log.expected.activate(P2.ident(1), .Substitute);
+    if (!showdown) try t.log.expected.fieldactivate();
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+
+    try t.log.expected.move(P1.ident(1), Move.PayDay, P2.ident(1), null);
+    try t.log.expected.crit(P2.ident(1));
+    try t.log.expected.end(P2.ident(1), .Substitute);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
     try t.verify();
 }
 

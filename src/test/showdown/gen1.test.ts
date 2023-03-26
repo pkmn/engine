@@ -3428,23 +3428,44 @@ describe('Gen 1', () => {
   });
 
   test('PayDay effect', () => {
-    const battle = startBattle([HIT, NO_CRIT, MAX_DMG], [
+    const battle = startBattle([
+      HIT, NO_CRIT, MAX_DMG, HIT, NO_CRIT, MAX_DMG, HIT, CRIT, MAX_DMG,
+    ], [
       {species: 'Meowth', evs, moves: ['Pay Day']},
     ], [
-      {species: 'Slowpoke', evs, moves: ['Teleport']},
+      {species: 'Slowpoke', evs, moves: ['Substitute', 'Teleport']},
     ]);
 
     const p2hp = battle.p2.pokemon[0].hp;
 
     battle.makeChoices('move 1', 'move 1');
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp - 43);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp - 43 - 95);
+
+    // Pay Day should still scatter coins even if it hits a Substitute
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p2.pokemon[0].volatiles['substitute']).toBeDefined();
+
+    // Pay Day should not scatter coins if it breaks the Substitute
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p2.pokemon[0].volatiles['substitute']).toBeUndefined();
 
     verify(battle, [
       '|move|p1a: Meowth|Pay Day|p2a: Slowpoke',
       '|-damage|p2a: Slowpoke|340/383',
       '|-fieldactivate|move: Pay Day',
-      '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
+      '|move|p2a: Slowpoke|Substitute|p2a: Slowpoke',
+      '|-start|p2a: Slowpoke|Substitute',
+      '|-damage|p2a: Slowpoke|245/383',
       '|turn|2',
+      '|move|p1a: Meowth|Pay Day|p2a: Slowpoke',
+      '|-activate|p2a: Slowpoke|Substitute|[damage]',
+      '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
+      '|turn|3',
+      '|move|p1a: Meowth|Pay Day|p2a: Slowpoke',
+      '|-crit|p2a: Slowpoke',
+      '|-end|p2a: Slowpoke|Substitute',
+      '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
+      '|turn|4',
     ]);
   });
 
