@@ -5530,12 +5530,11 @@ test "Flinch persistence bug" {
     try expectEqual(Result.Default, try t.update(.{}, swtch(2)));
 
     try t.log.expected.switched(P2.ident(3), t.expected.p2.get(3));
-    // FIXME
-    // if (showdown) {
-    //     try t.log.expected.cant(P1.ident(1), .Flinch);
-    // } else {
-    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
-    // }
+    if (showdown) {
+        try t.log.expected.cant(P1.ident(1), .Flinch);
+    } else {
+        try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    }
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(2), swtch(3)));

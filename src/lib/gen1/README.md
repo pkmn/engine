@@ -482,8 +482,12 @@ the pkmn engine, but the following moves have their broken behavior preserved in
 
 - **Leech Seed**: Leech Seed fails to heal its source side if a seeded target faints due to
   recoil/crash damage on Pokémon Showdown.
-- **Pay Day**: Pay Day should still scatter coins if it hits (but doesn't break)
-  and opponent's Substitute but doesn't on Pokémon Showdown.
+- **Pay Day**: Pay Day should still scatter coins if it hits (but doesn't break) and opponent's
+  Substitute but doesn't on Pokémon Showdown.
+- **Flinch**: Flinching does not get cleared during move selection on Pokémon Showdown and is
+  instead cleared in Pokémon Showdown's "residual" phase, meaning the flinch status gets erroneously
+  preserved across fainting (as fainting triggers Pokémon Showdown's "instaswitch" behavior which
+  skips end-of-turn residuals).
 - **Freeze** / **Sleep**: Pokémon Showdown requires a move to be selected when a Pokémon is frozen
   or sleeping and uses that in the event that the status is removed while on the cartridge no
   selection is possible and no turn exists for the thawed/woken Pokémon to act except in the case of

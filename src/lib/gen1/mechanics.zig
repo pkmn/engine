@@ -130,7 +130,8 @@ fn selectMove(
         if (showdown) saveMove(battle, player, null);
         return null;
     }
-    volatiles.Flinch = false;
+    // Pokémon Showdown removes Flinch at the end-of-turn in its residual handler
+    if (!showdown) volatiles.Flinch = false;
     if (volatiles.Thrashing or volatiles.Charging) {
         from.* = side.last_selected_move;
         if (showdown) saveMove(battle, player, null);
@@ -340,6 +341,13 @@ fn doTurn(
         }
         if (residual) try handleResidual(battle, foe_player, log);
         if (try checkFaint(battle, foe_player, log)) |r| return r;
+    }
+
+    // Flinch is bugged on Pokémon Showdown because it gets implemented with a duration which causes
+    // it to get removed in the non-existent "residual" phase instead of during move selection
+    if (showdown) {
+        battle.side(.P1).active.volatiles.Flinch = false;
+        battle.side(.P2).active.volatiles.Flinch = false;
     }
 
     return null;
