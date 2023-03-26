@@ -7013,7 +7013,7 @@ test "Toxic counter glitches" {
 test "Poison/Burn animation with 0 HP" {
     // https://pkmn.cc/bulba/List_of_graphical_quirks_(Generation_I)
 
-    // Faint from Recoil (no healing)
+    // Faint from Recoil (no healing on Pokémon Showdown)
     {
         var t = Test(if (showdown)
             .{ HIT, HIT, HIT, ~CRIT, MAX_DMG }
