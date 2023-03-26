@@ -488,6 +488,9 @@ the pkmn engine, but the following moves have their broken behavior preserved in
   instead cleared in Pokémon Showdown's "residual" phase, meaning the flinch status gets erroneously
   preserved across fainting (as fainting triggers Pokémon Showdown's "instaswitch" behavior which
   skips end-of-turn residuals).
+- **Thrash** / **Petal Dance**: once a Pokémon is locked into a thrashing move they will lose all
+  speed ties on Pokémon Showdown (due to the fact that if they win the speed tie their action will
+  then get "changed" and inserted back into the queue after their opponent's action).
 - **Freeze** / **Sleep**: Pokémon Showdown requires a move to be selected when a Pokémon is frozen
   or sleeping and uses that in the event that the status is removed while on the cartridge no
   selection is possible and no turn exists for the thawed/woken Pokémon to act except in the case of

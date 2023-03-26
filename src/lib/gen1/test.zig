@@ -6442,6 +6442,38 @@ test "Thrashing + Substitute bugs" {
     }
 }
 
+test "Thrashing speed tie bug" {
+    const TIE_1 = MIN;
+    const THRASH_4 = MAX;
+
+    var t = Test((if (showdown)
+        (.{ TIE_1, THRASH_4, HIT, ~CRIT, MIN_DMG, TIE_1, HIT, ~CRIT, MIN_DMG })
+    else
+        (.{ TIE_1, THRASH_4, ~CRIT, MIN_DMG, HIT, TIE_1, ~CRIT, MIN_DMG, HIT }))).init(
+        &.{.{ .species = .Dratini, .moves = &.{.Thrash} }},
+        &.{.{ .species = .Vileplume, .moves = &.{.Teleport} }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 55;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    if (showdown) try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
+    t.expected.p2.get(1).hp -= 55;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    if (!showdown) try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(forced, move(1)));
+    try t.verify();
+}
+
 // Fixed by smogon/pokemon-showdown#9475
 test "Min/max stat recalculation bug" {
     const PAR_CAN = MAX;

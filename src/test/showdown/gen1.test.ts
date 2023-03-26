@@ -5177,6 +5177,36 @@ describe('Gen 1', () => {
     }
   });
 
+  test('Thrashing speed tie bug', () => {
+    const battle = startBattle([
+      TIE(1), THRASH(4), HIT, NO_CRIT, MIN_DMG, TIE(1), HIT, NO_CRIT, MIN_DMG,
+    ], [
+      {species: 'Dratini', evs, moves: ['Thrash']},
+    ], [
+      {species: 'Vileplume', evs, moves: ['Teleport']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 55);
+
+    // Dratini should go first because it wins the speed tie
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 55);
+
+    verify(battle, [
+      '|move|p1a: Dratini|Thrash|p2a: Vileplume',
+      '|-damage|p2a: Vileplume|298/353',
+      '|move|p2a: Vileplume|Teleport|p2a: Vileplume',
+      '|turn|2',
+      '|move|p2a: Vileplume|Teleport|p2a: Vileplume',
+      '|move|p1a: Dratini|Thrash|p2a: Vileplume|[from]Thrash',
+      '|-damage|p2a: Vileplume|243/353',
+      '|turn|3',
+    ]);
+  });
+
   // Fixed by smogon/pokemon-showdown#9475
   test('Min/max stat recalculation bug', () => {
     const hi_proc = SECONDARY(ranged(77, 256) - 1);

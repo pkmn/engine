@@ -300,11 +300,25 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     if (spe1 == spe2) {
         // Pokémon Showdown's beforeTurnCallback shenanigans
         if (showdown and m1 == .Counter and m2 == .Counter) battle.rng.advance(1);
+
         const p1 = if (showdown)
             battle.rng.range(u8, 0, 2) == 0
         else
             battle.rng.next() < Gen12.percent(50) + 1;
-        return if (p1) .P1 else .P2;
+
+        if (!showdown) return if (p1) .P1 else .P2;
+
+        // Pokémon Showdown's "lockedmove" volatile's onBeforeTurn uses BattleQueue#changeAction,
+        // meaning that if a side is locked into a thrashing move and wins the speed tie, it
+        // actually uses its priority to simply insert its actual changed action into the queue,
+        // causing it to then execute *after* the side which should go second...
+        const t1 = battle.side(.P1).active.volatiles.Thrashing;
+        const t2 = battle.side(.P2).active.volatiles.Thrashing;
+        // If *both* sides are thrashing it really should be another speed tie, but we've patched
+        // that out and enforce host ordering of events, so P1 just goes first reqgardless of who
+        // won the original coin flip
+        if (t1 and t2) return .P1;
+        return if (p1) if (t1 and !t2) .P2 else .P1 else if (t2 and !t1) .P1 else .P2;
     }
 
     return if (spe1 > spe2) .P1 else .P2;
