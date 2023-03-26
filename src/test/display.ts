@@ -37,9 +37,13 @@ const pretty = (choice?: Choice) => choice
   : '???';
 
 const format = (kwVal: any) => typeof kwVal === 'boolean' ? '' : ` ${kwVal as string}`;
+const trim = (args: string[]) => {
+  while (args.length && !args[args.length - 1]) args.pop();
+  return args;
+};
 
 const compact = (line: ParsedLine) =>
-  [...line.args, ...Object.keys(line.kwArgs)
+  [...trim(line.args as string[]), ...Object.keys(line.kwArgs)
     .map(k => `[${k}]${format((line.kwArgs as any)[k])}`)].join('|');
 
 const debug = (s: string) => s.startsWith('|debug')
