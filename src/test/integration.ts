@@ -465,7 +465,7 @@ function fromInputLog(
     const d = m[5] ?? m[8] ?? '0';
     const struggle = d === 'struggle';
 
-    const data = !isNaN(+d) ? +d : moves[player].indexOf(d as ID) + 1;
+    const data = d === 'recharge' ? 1 : !isNaN(+d) ? +d : moves[player].indexOf(d as ID) + 1;
     if (type === 'move' && !data && !struggle) throw new Error(`Invalid choice data: '${d}'`);
 
     const choice = {type, data};
