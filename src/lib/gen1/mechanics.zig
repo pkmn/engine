@@ -479,6 +479,8 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
             try log.end(ident, .Disable);
         }
     }
+    // Pokémon Showdown's disable condition has a single onBeforeMove handler
+    if (showdown and try disabled(side, ident, log)) return .done;
 
     // This can only happen if a Pokémon started the battle frozen/sleeping and was thawed/woken
     // before the side had a selected a move - we simply need to assume this leads to a desync
@@ -528,6 +530,8 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
             }
         }
     }
+
+    if (!showdown and try disabled(side, ident, log)) return .done;
 
     if (volatiles.disabled_move != 0) {
         // A Pokémon that transforms after being disabled may end up with less move slots
@@ -2487,6 +2491,19 @@ fn clearVolatiles(battle: anytype, who: Player, log: anytype) !void {
         volatiles.Reflect = false;
         try log.end(ident, .Reflect);
     }
+}
+
+fn disabled(side: *Side, ident: ID, log: anytype) !bool {
+    if (side.active.volatiles.disabled_move != 0) {
+        // A Pokémon that transforms after being disabled may end up with less move slots
+        const m = side.active.moves[side.active.volatiles.disabled_move - 1].id;
+        if (m != .None and m == side.last_selected_move) {
+            side.active.volatiles.Charging = false;
+            try log.disabled(ident, side.last_selected_move);
+            return true;
+        }
+    }
+    return false;
 }
 
 fn handleThrashing(battle: anytype, active: *ActivePokemon) bool {
