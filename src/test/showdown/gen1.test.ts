@@ -4355,6 +4355,45 @@ describe('Gen 1', () => {
     ]);
   });
 
+  test('Flinch persistence bug', () => {
+    const proc = SECONDARY(ranged(77, 256) - 1);
+    const battle = startBattle([HIT, HIT, NO_CRIT, MIN_DMG, proc], [
+      {species: 'Persian', evs, moves: ['Poison Powder', 'Teleport']},
+    ], [
+      {species: 'Arcanine', evs, moves: ['Rolling Kick']},
+      {species: 'Squirtle', evs, moves: ['Water Gun']},
+      {species: 'Rhydon', evs, moves: ['Earthquale']},
+    ]);
+
+    const p1hp = battle.p1.pokemon[0].hp;
+    battle.p2.pokemon[0].hp = 1;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp - 127);
+    expect(battle.p1.pokemon[0].volatiles['flinch']).toBeDefined();
+    expect(battle.p2.pokemon[0].hp).toBe(0);
+
+    battle.makeChoices('', 'switch 2');
+
+    battle.makeChoices('move 2', 'switch 3');
+    // expect(battle.p1.pokemon[0].volatiles['flinch']).toBeUndefined();
+
+    verify(battle, [
+      '|move|p1a: Persian|Poison Powder|p2a: Arcanine',
+      '|-status|p2a: Arcanine|psn',
+      '|move|p2a: Arcanine|Rolling Kick|p1a: Persian',
+      '|-supereffective|p1a: Persian',
+      '|-damage|p1a: Persian|206/333',
+      '|-damage|p2a: Arcanine|0 fnt|[from] psn|[of] p1a: Persian',
+      '|faint|p2a: Arcanine',
+      '|switch|p2a: Squirtle|Squirtle|291/291',
+      '|turn|2',
+      '|switch|p2a: Rhydon|Rhydon|413/413',
+      '|cant|p1a: Persian|flinch',
+      '|turn|3',
+    ]);
+  });
+
   test('Disable + Transform bug', () => {
     {
       const battle = startBattle([HIT, DISABLE_MOVE(2), DISABLE_DURATION(5)], [

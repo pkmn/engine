@@ -5440,7 +5440,7 @@ test "Confusion self-hit bug" {
     const CFZ_CAN = if (showdown) comptime ranged(128, 256) - 1 else MIN;
     const CFZ_CANT = if (showdown) CFZ_CAN + 1 else MAX;
 
-    var t = Test((.{ HIT, CFZ_5, CFZ_CANT, CFZ_CANT })).init(
+    var t = Test(.{ HIT, CFZ_5, CFZ_CANT, CFZ_CANT }).init(
         &.{.{ .species = .Jolteon, .moves = &.{ .ConfuseRay, .Reflect } }},
         &.{.{
             .species = .Arcanine,
@@ -5469,6 +5469,54 @@ test "Confusion self-hit bug" {
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(2), move(1)));
+
+    try t.verify();
+}
+
+test "Flinch persistence bug" {
+    const PROC = comptime ranged(77, 256) - 1;
+
+    var t = Test(if (showdown)
+        .{ HIT, HIT, ~CRIT, MIN_DMG, PROC }
+    else
+        .{ HIT, ~CRIT, MIN_DMG, HIT, PROC }).init(
+        &.{.{ .species = .Persian, .moves = &.{ .PoisonPowder, .Teleport } }},
+        &.{
+            .{ .species = .Arcanine, .hp = 1, .moves = &.{.RollingKick} },
+            .{ .species = .Squirtle, .moves = &.{.WaterGun} },
+            .{ .species = .Rhydon, .moves = &.{.Earthquake} },
+        },
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.PoisonPowder, P2.ident(1), null);
+    t.expected.p2.get(1).status = Status.init(.PSN);
+    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.move(P2.ident(1), Move.RollingKick, P1.ident(1), null);
+    try t.log.expected.supereffective(P1.ident(1));
+    t.expected.p1.get(1).hp -= 127;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    t.expected.p2.get(1).hp = 0;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
+    try t.log.expected.faint(P2.ident(1), true);
+
+    try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(move(1), move(1)));
+
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(.{}, swtch(2)));
+
+    try t.log.expected.switched(P2.ident(3), t.expected.p2.get(3));
+    // FIXME
+    // if (showdown) {
+    //     try t.log.expected.cant(P1.ident(1), .Flinch);
+    // } else {
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    // }
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(2), swtch(3)));
 
     try t.verify();
 }
