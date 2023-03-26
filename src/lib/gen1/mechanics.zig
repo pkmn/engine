@@ -812,7 +812,7 @@ fn doMove(
         } else if (immune and !invulnerable) {
             try log.immune(foe_ident, .None);
         } else if (mist) {
-            try log.activate(foe_ident, .Mist);
+            if (!foe.active.volatiles.Substitute) try log.activate(foe_ident, .Mist);
             try log.fail(foe_ident, .None);
         } else {
             try log.lastmiss();
