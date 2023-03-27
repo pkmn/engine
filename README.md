@@ -230,7 +230,7 @@ while (result.type == .None) : (result = try battle.update(c1, c2, log)) {
     c2 = options[random.uintLessThan(u8, battle.choices(.P2, result.p2, &options))];
 }
 
-std.debug.print("{}", .{result.type});
+std.debug.print("{}\n", .{result.type});
 ```
 
 [(full code)](src/examples/zig/example.zig)
