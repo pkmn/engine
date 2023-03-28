@@ -1856,6 +1856,9 @@ pub const Effects = struct {
                 if (p != player and Status.any(s.stored().status)) {
                     try log.curestatus(foe_ident, foe_stored.status, .Silent);
                     s.stored().status = 0;
+                } else if (showdown and s.stored().status == Status.TOX) {
+                    s.stored().status = Status.init(.PSN);
+                    try log.status(battle.active(p), s.stored().status, .None);
                 }
                 try clearVolatiles(battle, p, log);
             }
@@ -2516,10 +2519,6 @@ fn clearVolatiles(battle: anytype, who: Player, log: anytype) !void {
         volatiles.Toxic = false;
         // volatiles.toxic is left unchanged, except on Pokémon Showdown which clears it
         if (showdown) {
-            if (side.stored().status == Status.TOX) {
-                side.stored().status = Status.init(.PSN);
-                try log.status(ident, side.stored().status, .None);
-            }
             volatiles.toxic = 0;
             try log.end(ident, .Toxic);
         }
