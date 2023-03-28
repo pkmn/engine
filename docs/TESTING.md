@@ -264,7 +264,7 @@ as an exercise to the reader.
 ### Results
 
 The results for the table below come from running the benchmarks against
-[pkmn/engine@d71a279](https://github.com/pkmn/engine/commit/d71a279) on an `n2d-standard-48` Google
+[pkmn/engine@998c5cd1](https://github.com/pkmn/engine/commit/998c5cd1) on an `n2d-standard-48` Google
 Cloud Compute Engine machine with 192 GB of memory and an AMD EPYC 7B12 CPU running 64-bit x86 Linux
 which has undergone the pre-benchmark tuning detailed below via the command `npm run benchmark --
 --battles=10000`:

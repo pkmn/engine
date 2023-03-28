@@ -14,5 +14,5 @@ describe('benchmark', () => {
   });
 
   (addon.supports(true) ? test : test.skip)('comparison', () =>
-    expect(comparison(gens, 10, [1, 2, 3, 4])).resolves.toBeUndefined());
+    expect(comparison(gens, 10, [1, 2, 3, 4])).resolves.toBeDefined());
 });
