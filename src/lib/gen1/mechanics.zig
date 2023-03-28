@@ -482,7 +482,7 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
         return .done;
     }
 
-    if (volatiles.Flinch) {
+    if (!showdown and volatiles.Flinch) {
         volatiles.Flinch = false;
         try log.cant(ident, .Flinch);
         return .done;
@@ -503,6 +503,13 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
     }
     // Pokémon Showdown's disable condition has a single onBeforeMove handler
     if (showdown and try disabled(side, ident, log)) return .done;
+
+    // Pokémon Showdown checks for Flinch *after* instead of before
+    if (showdown and volatiles.Flinch) {
+        volatiles.Flinch = false;
+        try log.cant(ident, .Flinch);
+        return .done;
+    }
 
     // This can only happen if a Pokémon started the battle frozen/sleeping and was thawed/woken
     // before the side had a selected a move - we simply need to assume this leads to a desync
