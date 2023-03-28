@@ -2052,13 +2052,15 @@ pub const Effects = struct {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
         const foe_ident = battle.active(player.foe());
-        const sub = foe.active.volatiles.Substitute;
         const toxic = battle.side(player).last_selected_move == .Toxic;
 
         if (showdown and move.effect == .Poison and !try checkHit(battle, player, move, log)) {
             return;
-        } else if (sub or Status.any(foe_stored.status)) {
-            if (move.effect != .Poison) return if (showdown and !sub) battle.rng.advance(1);
+        } else if (foe.active.volatiles.Substitute) {
+            if (move.effect != .Poison) return;
+            return log.fail(foe_ident, .None);
+        } else if (Status.any(foe_stored.status)) {
+            if (move.effect != .Poison) return if (showdown) battle.rng.advance(1);
             // Pokémon Showdown considers Toxic to be a status even in Generation I and so
             // will not include a fail reason for Toxic vs. Poison or vice-versa...
             return log.fail(foe_ident, if (Status.is(foe_stored.status, .PSN))
