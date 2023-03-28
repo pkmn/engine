@@ -17,7 +17,6 @@ import blocklistJSON from './showdown/blocklist.json';
 const BLOCKLIST = blocklistJSON[1].moves as ID[];
 const ROOT = path.resolve(__dirname, '..', '..');
 
-const toMillis = (duration: bigint) => Number(duration / BigInt(1e6));
 const serialize = (seed: PRNGSeed) => toBigInt(seed).toString();
 const sh = (cmd: string, args: string[]) => execFileSync(cmd, args, {encoding: 'utf8'});
 
@@ -124,7 +123,7 @@ export const Options = new class {
 interface Configuration {
   warmup?: boolean;
   run(gen: Generation, format: ID, prng: PRNG, battles: number):
-  Promise<readonly [number, number, string]>;
+  Promise<readonly [bigint, number, string]>;
 }
 
 class DirectBattle extends Battle {
@@ -180,11 +179,6 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
     warmup: true,
     run(gen, format, prng, battles) {
       const choices = Choices.get(gen);
-      const choose = (battle: Battle, id: engine.Player, rand: PRNG) => {
-        const options = choices(battle, id);
-        const choice = options[rand.next(options.length)];
-        if (choice) battle.choose(id, choice);
-      };
 
       let duration = 0n;
       let turns = 0;
@@ -207,8 +201,11 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
         try {
           battle.setPlayer('p2', {name: 'Player B', team: team2});
           while (!battle.ended) {
-            choose(battle, 'p1', p1);
-            choose(battle, 'p2', p2);
+            let possible = choices(battle, 'p1');
+            const c1 = possible[p1.next(possible.length)];
+            possible = choices(battle, 'p2');
+            const c2 = possible[p2.next(possible.length)];
+            battle.makeChoices(c1, c2);
           }
           turns += battle.turn;
         } finally {
@@ -216,7 +213,7 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
         }
       }
 
-      return Promise.resolve([toMillis(duration), turns, serialize(prng.seed)] as const);
+      return Promise.resolve([duration, turns, serialize(prng.seed)] as const);
     },
   },
   '@pkmn/engine': {
@@ -256,19 +253,19 @@ const CONFIGURATIONS: {[name: string]: Configuration} = {
         }
       }
 
-      return Promise.resolve([toMillis(duration), turns, serialize(prng.seed)] as const);
+      return Promise.resolve([duration, turns, serialize(prng.seed)] as const);
     },
   },
   'libpkmn': {
     run(_, format, prng, battles) {
       const [duration, turn, seed] = libpkmn(format, prng, battles);
-      return Promise.resolve([toMillis(duration), turn, seed]);
+      return Promise.resolve([duration, turn, seed]);
     },
   },
 };
 
 const libpkmn = (format: ID, prng: PRNG, battles: number, showdown = true) => {
-  const warmup = Math.max(Math.floor(battles / 10));
+  const warmup = Math.min(1000, Math.max(Math.floor(battles / 10), 1));
   const exe = path.resolve(ROOT, 'build', 'bin', `benchmark${showdown ? '-showdown' : ''}`);
   const stdout = sh(exe, [format[3], `${warmup}/${battles}`, serialize(prng.seed)]);
   const [duration, turn, seed] = stdout.split(',');
@@ -359,7 +356,7 @@ export function iterations(
 }
 
 export async function comparison(gens: Generations, battles: number, seed: number[]) {
-  const stats: {[format: string]: {[config: string]: number}} = {};
+  const stats: {[format: string]: {[config: string]: bigint}} = {};
   sh('zig', ['build', '-j1', '-Dshowdown=true', 'tools', '-p', 'build']);
 
   for (const gen of gens) {
@@ -394,6 +391,20 @@ export async function comparison(gens: Generations, battles: number, seed: numbe
   return stats;
 }
 
+function pretty(ns: bigint) {
+  if (ns < 1000) return `${dec(Number(ns))} ns`;
+  if (ns < 1_000_000n) return `${dec(Number(ns) / 1e3)} μs`;
+  if (ns < 1_000_000_000n) return `${dec(Number(ns) / 1e6)} ms`;
+  return `${dec(Number(ns) / 1e9, 60)} s`;
+}
+
+function dec(n: number, c = 100) {
+  if (n < 1) return n.toFixed(3);
+  if (n < 10) return n.toFixed(2);
+  if (n < c) return n.toFixed(1);
+  return n.toFixed();
+}
+
 if (require.main === module) {
   (async () => {
     const gens = new Generations(Dex as any);
@@ -412,13 +423,13 @@ if (require.main === module) {
     } else {
       const stats = await comparison(gens, argv.battles, seed);
 
-      const display = (durations: {[config: string]: number}) => {
+      const display = (durations: {[config: string]: bigint}) => {
         const out = {} as {[config: string]: string};
-        const min = Math.min(...Object.values(durations));
+        const min = Object.values(durations).reduce((m, e) => e < m ? e : m);
         for (const config in durations) {
-          out[config] = `${(durations[config] / 1000).toFixed(2)}s`;
+          out[config] = pretty(durations[config]);
           if (durations[config] !== min) {
-            out[config] += ` (${(durations[config] / min).toFixed(2)}×)`;
+            out[config] += ` (${dec(Number(durations[config] * 1000n / min) / 1000)}×)`;
           }
         }
         return out;
@@ -429,6 +440,7 @@ if (require.main === module) {
         if (!configs) {
           configs = Object.keys(stats[name]).reverse();
           console.log(`|Generation|\`${configs.join('`|`')}\`|`);
+          console.log(`|-|${'-|'.repeat(configs.length)}`);
         }
         const processed = display(stats[name]);
         console.log(`|${name}|${configs.map(c => processed[c]).join('|')}|`);

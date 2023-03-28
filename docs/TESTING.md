@@ -269,12 +269,9 @@ Cloud Compute Engine machine with 192 GB of memory and an AMD EPYC 7B12 CPU runn
 which has undergone the pre-benchmark tuning detailed below via the command `npm run benchmark --
 --battles=10000`:
 
-| Generation | `libpkmn` | `@pkmn/engine` | `DirectBattle` |
-| ---------- | --------- | -------------- | -------------- |
-| **RBY**    | 1ms       | 2ms (2x)       | 3ms (3x)       |
-| **GSC**    | 1ms       | 2ms (2x)       | 3ms (3x)       |
-| **ADV**    | 1ms       | 2ms (2x)       | 3ms (3x)       |
-| **DPP**    | 1ms       | 2ms (2x)       | 3ms (3x)       |
+| Generation | `libpkmn` | `@pkmn/engine`  | `DirectBattle` |
+| ---------- | --------- | --------------- | -------------- |
+| RBY        | 3.72 ms   | 47.7 ms (12.8×) | 13.3 s (3578×) |
 
 <details><summary>CPU Details</summary><pre>
 Architecture:            x86_64

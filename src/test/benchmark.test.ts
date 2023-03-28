@@ -13,6 +13,6 @@ describe('benchmark', () => {
     expect(() => iterations(gens, 10, 10, [1, 2, 3, 4])).not.toThrow();
   });
 
-  (addon.supports(true) && Math.random() > 1 ? test : test.skip)('comparison', () =>
+  (addon.supports(true) ? test : test.skip)('comparison', () =>
     expect(comparison(gens, 10, [1, 2, 3, 4])).resolves.toBeUndefined());
 });
