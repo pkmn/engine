@@ -223,12 +223,12 @@ function play(
       result = battle.update(c1, c2);
       partial.pkmn.result = result;
       partial.pkmn.battle = battle.toJSON();
-      assert.deepEqual(result, request);
 
       const parsed = Array.from(log.parse(battle.log!));
       partial.pkmn.parsed = parsed;
 
       compare(chunk, parsed);
+      assert.deepEqual(result, request);
       assert.deepEqual(battle.prng, control.prng.seed);
 
       if (replay && index >= replay.length) break;
