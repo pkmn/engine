@@ -6719,14 +6719,23 @@ describe('Gen 1', () => {
   test('Substitute 1/4 HP glitch', () => {
     const battle = startBattle([], [
       {species: 'Pidgey', level: 3, moves: ['Substitute']},
+      {species: 'Pikachu', level: 6, moves: ['Substitute']},
     ], [
       {species: 'Rattata', level: 4, moves: ['Focus Energy']},
     ]);
 
     battle.p1.pokemon[0].hp = 4;
+    battle.p1.pokemon[1].hp = 5;
 
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(0);
+
+    battle.makeChoices('switch 2', '');
+
+    // Due to rounding, this should also cause the 1/4 HP glitch
+    battle.makeChoices('move 1', 'move 1');
+    // expect(battle.p1.pokemon[0].hp).toBe(0);
+    expect(battle.p1.pokemon[0].hp).toBe(5);
 
     verify(battle, [
       '|move|p2a: Rattata|Focus Energy|p2a: Rattata',
@@ -6735,7 +6744,12 @@ describe('Gen 1', () => {
       '|-start|p1a: Pidgey|Substitute',
       '|-damage|p1a: Pidgey|0 fnt',
       '|faint|p1a: Pidgey',
-      '|win|Player 2',
+      '|switch|p1a: Pikachu|Pikachu, L6|5/22',
+      '|turn|2',
+      '|move|p1a: Pikachu|Substitute|p1a: Pikachu',
+      '|-fail|p1a: Pikachu|move: Substitute|[weak]',
+      '|move|p2a: Rattata|Focus Energy|p2a: Rattata',
+      '|turn|3',
     ]);
   });
 

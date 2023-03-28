@@ -509,6 +509,13 @@ the pkmn engine, but the following moves have their broken behavior preserved in
 - **Roar** / **Whirlwind**: these moves can miss on Pokémon Showdown (and advance the RNG when
   checking) which is incorrect (these moves should always fail, but do not check accuracy or advance
   the RNG).
+- **Substitute**: in addition to the [Substitute + Confusion
+  glitch](https://pkmn.cc/bulba-glitch-1#Substitute_.2B_Confusion_glitch) not being implemented
+  correctly (covered above), the [Substitute 1/4
+  glitch](https://glitchcity.wiki/Substitute_%C2%BC_HP_glitch) also fails in many cases due to
+  Pokémon Showdown implementing the health check based on floating point division instead of integer
+  divison like on the cartridge (meaning the Substitute 1/4 glitch will only occur if the Pokémon's
+  maximum HP is evenly divisible by 4).
 
 In addition to numerous cases where Pokémon Showdown uses the wrong type of message (e.g. `|-fail`
 vs. `|-miss|` vs. `|-immune|`, e.g. in the case of Leech Seed) which are not documented here, Pokémon

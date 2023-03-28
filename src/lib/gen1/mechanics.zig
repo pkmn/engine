@@ -2172,7 +2172,12 @@ pub const Effects = struct {
         assert(side.stored().stats.hp <= 1023);
         // Will be 0 if HP is <= 3 meaning that the user gets a 1 HP Substitute for "free"
         const hp = @intCast(u8, side.stored().stats.hp / 4);
-        if (side.stored().hp < hp) {
+        // Pokénon Showdown incorrectly checks for 1/4 HP based on `target.maxhp / 4` which returns
+        // a floating point value and thus only correctly implements the Substitute 1/4 glitch when
+        // the target's HP is exactly divisible by 4 (here we're using an inlined divCeil routine to
+        // avoid having to convert to floating point)
+        const required_hp = if (showdown) @divFloor(side.stored().stats.hp - 1, 4) + 1 else hp;
+        if (side.stored().hp < required_hp) {
             try log.fail(battle.active(player), .Weak);
             return;
         }
