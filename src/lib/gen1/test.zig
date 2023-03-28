@@ -8518,10 +8518,10 @@ test "Substitute + Confusion glitch" {
     // Confused Pokémon has Substitute
     {
         var t = Test((if (showdown)
-            .{ HIT, CFZ_5, CFZ_CAN, HIT, CFZ_CANT }
+            .{ HIT, CFZ_5, CFZ_CAN, HIT, CFZ_CANT, HIT, CFZ_CANT }
         else
-            .{ HIT, CFZ_5, CFZ_CAN, CFZ_CANT })).init(
-            &.{.{ .species = .Bulbasaur, .level = 6, .moves = &.{ .Substitute, .Growl } }},
+            .{ HIT, CFZ_5, CFZ_CAN, CFZ_CANT, CFZ_CANT })).init(
+            &.{.{ .species = .Bulbasaur, .level = 6, .moves = &.{ .Substitute, .Growl, .Harden } }},
             &.{.{ .species = .Zubat, .level = 10, .moves = &.{.Supersonic} }},
         );
         defer t.deinit();
@@ -8546,6 +8546,17 @@ test "Substitute + Confusion glitch" {
         // If Substitute is up, opponent's sub takes damage for Confusion self-hit or 0 damage
         try expectEqual(Result.Default, try t.update(move(2), move(1)));
         try expectEqual(@as(u8, 7), t.actual.p1.active.volatiles.substitute);
+
+        try t.log.expected.move(P2.ident(1), Move.Supersonic, P1.ident(1), null);
+        try t.log.expected.fail(P1.ident(1), .None);
+        try t.log.expected.activate(P1.ident(1), .Confusion);
+        if (showdown) try t.log.expected.activate(P1.ident(1), .Substitute);
+        try t.log.expected.turn(4);
+
+        // Pokémon Showdown incorrectly applies damage to the confused Pokémon's sub when
+        // selecting a self-targeting move
+        try expectEqual(Result.Default, try t.update(move(3), move(1)));
+        try expectEqual(@as(u8, if (showdown) 2 else 7), t.actual.p1.active.volatiles.substitute);
 
         try t.verify();
     }

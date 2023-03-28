@@ -545,8 +545,15 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
                     defer foe.active.stats.def = def;
                     if (!calcDamage(battle, player, player.foe(), null, false)) return .err;
                 }
+                // Pokémon Showdown incorrectly changes the "target" of the confusion self-hit based
+                // on the targeting behavior of the confused Pokémon's selected move which results
+                // in the wrong behavior with respect to the Substitute + Confusion glitch
+                const target = if (showdown and Move.get(side.last_selected_move).target == .Self)
+                    player
+                else
+                    player.foe();
                 // Skipping adjustDamage / randomizeDamage / checkHit
-                _ = try applyDamage(battle, player, player.foe(), .Confusion, log);
+                _ = try applyDamage(battle, player, target, .Confusion, log);
 
                 return .done;
             }
@@ -1001,8 +1008,8 @@ fn calcDamage(
     // zig fmt: on
 
     // Pokémon Showdown erroneously skips this for confusion's self-hit damage, but thankfully we
-    // still will not overflow because the hit is only 40 BP and unboosted (the highest legal
-    // unboosted attack is 366 from a level 100 Dragonite which has a max of 614880 mid-calculation)
+    // will not overflow because the hit is only 40 BP and unboosted (the highest legal unboosted
+    // attack is 366 from a level 100 Dragonite which has a max of 614,880 mid-calculation)
     if ((!showdown or !cfz) and (atk > 255 or def > 255)) {
         atk = @max((atk / 4) & 255, 1);
         // GLITCH: not adjusted to be a min of 1 on cartridge (can lead to division-by-zero freeze)

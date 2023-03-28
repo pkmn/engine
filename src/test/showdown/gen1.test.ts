@@ -6742,8 +6742,8 @@ describe('Gen 1', () => {
   test('Substitute + Confusion glitch', () => {
     // Confused Pokémon has Substitute
     {
-      const battle = startBattle([HIT, CFZ(5), CFZ_CAN, HIT, CFZ_CANT], [
-        {species: 'Bulbasaur', level: 6, evs, moves: ['Substitute', 'Growl']},
+      const battle = startBattle([HIT, CFZ(5), CFZ_CAN, HIT, CFZ_CANT, HIT, CFZ_CANT], [
+        {species: 'Bulbasaur', level: 6, evs, moves: ['Substitute', 'Growl', 'Harden']},
       ], [
         {species: 'Zubat', level: 10, evs, moves: ['Supersonic']},
       ]);
@@ -6759,6 +6759,13 @@ describe('Gen 1', () => {
       expect(battle.p1.pokemon[0].hp).toBe(p1hp);
       expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(7);
 
+      // Pokémon Showdown incorrectly applies damage to the confused Pokémon's sub when
+      // selecting a self-targeting move
+      battle.makeChoices('move 3', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+      // expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(7);
+      expect(battle.p1.pokemon[0].volatiles['substitute'].hp).toBe(2);
+
       verify(battle, [
         '|move|p2a: Zubat|Supersonic|p1a: Bulbasaur',
         '|-start|p1a: Bulbasaur|confusion',
@@ -6771,6 +6778,11 @@ describe('Gen 1', () => {
         '|-fail|p1a: Bulbasaur',
         '|-activate|p1a: Bulbasaur|confusion',
         '|turn|3',
+        '|move|p2a: Zubat|Supersonic|p1a: Bulbasaur',
+        '|-fail|p1a: Bulbasaur',
+        '|-activate|p1a: Bulbasaur|confusion',
+        '|-activate|p1a: Bulbasaur|Substitute|[damage]',
+        '|turn|4',
       ]);
     }
     // Both Pokémon have Substitutes
