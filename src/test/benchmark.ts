@@ -443,7 +443,7 @@ if (require.main === module) {
           console.log(`|-|${'-|'.repeat(configs.length)}`);
         }
         const processed = display(stats[name]);
-        console.log(`|${name}|${configs.map(c => processed[c]).join('|')}|`);
+        console.log(`|**${name}**|${configs.map(c => processed[c]).join('|')}|`);
       }
     }
   })().catch(err => {

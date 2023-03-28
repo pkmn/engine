@@ -271,7 +271,7 @@ which has undergone the pre-benchmark tuning detailed below via the command `npm
 
 | Generation | `libpkmn` | `@pkmn/engine`  | `DirectBattle` |
 | ---------- | --------- | --------------- | -------------- |
-| RBY        | 3.72 ms   | 47.7 ms (12.8×) | 13.3 s (3578×) |
+| **RBY**    | 3.72 ms   | 47.7 ms (12.8×) | 13.3 s (3578×) |
 
 <details><summary>CPU Details</summary><pre>
 Architecture:            x86_64
