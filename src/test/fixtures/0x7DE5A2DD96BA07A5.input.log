@@ -1,0 +1,34 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[32229,41693,38586,1957]}
+>player p1 {"name":"Bot 1","team":"Jynx|||None|dizzypunch,mist,confuseray,gust||135,197,88,76,76,27|N|1,20,24,2,2,12||98|246]Doduo|||None|boneclub,highjumpkick,seismictoss,visegrip||191,97,133,131,131,231|N|10,,0,4,4,23||58|21]Slowpoke|||None|submission,thunderpunch,mist,icepunch||133,168,228,109,109,185|N|1,12,4,26,26,25||67|136]Snorlax|||None|bonemerang,lightscreen,superfang,sludge||250,28,171,222,222,113|N|7,8,23,6,6,6||91|70]Rattata|||None|triattack,psybeam,thundershock,barrier||171,171,125,160,160,57|N|3,1,8,15,15,22||98|117]Ninetales|||None|slash,smog,bubble,hydropump||70,203,206,80,80,133|N|2,29,17,0,0,15||73|163"}
+>player p2 {"name":"Bot 2","team":"Voltorb|||None|slam,skyattack,guillotine,doubleteam||165,35,97,4,4,58|N|3,12,1,23,23,18||78|177]Magmar|||None|smokescreen,flamethrower,surf,dig||79,90,38,224,224,26|N|13,15,26,10,10,9||92|195]Bellsprout|||None|flash,firepunch,fly,dragonrage||4,92,204,202,202,103|N|4,1,26,8,8,28||74|16]Machamp|||None|amnesia,eggbomb,sandattack,tailwhip||77,24,202,85,85,223|N|6,21,19,17,17,14||77|173]Gyarados|||None|rockthrow,poisonpowder,harden,substitute||60,166,123,151,151,216|N|2,13,1,29,29,2||71|110]Kakuna|||None|furyattack,bubblebeam,cometpunch,doubleedge||176,69,161,61,61,169|N|10,26,28,17,17,15||59|209"}
+>p1 switch 2
+>p2 move doubleteam
+>p1 switch 2
+>p2 switch 2
+>p1 move dizzypunch
+>p2 move smokescreen
+>p1 move mist
+>p2 move surf
+>p1 switch 3
+>p2 move smokescreen
+>p1 move icepunch
+>p2 move smokescreen
+>p1 move thunderpunch
+>p2 switch 2
+>p1 switch 4
+>p2 move slam
+>p1 move bonemerang
+>p2 switch 3
+>p1 move lightscreen
+>p2 move fly
+>p1 move sludge
+>p2 move fly
+>p2 switch 4
+>p1 move lightscreen
+>p2 move amnesia
+>p1 switch 5
+>p2 switch 5
+>p1 move triattack
+>p2 move substitute
+>p1 move psybeam
+>p2 move harden

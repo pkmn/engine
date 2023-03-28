@@ -1,0 +1,31 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[35098,19948,11680,53322]}
+>player p1 {"name":"Bot 1","team":"Horsea|||None|razorleaf,absorb,lovelykiss,doublekick||222,37,81,97,97,11|N|5,29,2,3,3,29||90|136]Hitmonlee|||None|horndrill,aurorabeam,jumpkick,thunderwave||94,129,66,89,89,241|N|5,21,3,,,28||62|67]Ditto|||None|vinewhip,slash,dreameater,ember||3,176,142,43,43,98|N|12,27,27,0,0,4||50|196]Dodrio|||None|leechlife,leechseed,psywave,supersonic||92,199,122,202,202,113|N|3,4,28,26,26,10||92|2]Gyarados|||None|crabhammer,whirlwind,substitute,bite||222,124,93,45,45,200|N|9,18,24,15,15,17||74|118]Farfetch’d|||None|dragonrage,seismictoss,sludge,strength||50,172,199,,,215|N|2,1,5,9,9,22||93|37"}
+>player p2 {"name":"Bot 2","team":"Vulpix|||None|solarbeam,swift,razorwind,splash||231,60,106,81,81,96|N|15,15,15,18,18,15||86|130]Charmander|||None|explosion,toxic,rollingkick,quickattack||187,199,107,73,73,247|N|5,5,30,22,22,21||72|117]Jigglypuff|||None|growth,karatechop,superfang,wingattack||2,95,182,64,64,181|N|1,0,13,7,7,20||88|56]Metapod|||None|megadrain,doubleedge,sonicboom,confusion||8,13,208,126,126,246|N|14,,18,24,24,30||97|253]Tentacruel|||None|leer,furyattack,rest,focusenergy||43,100,98,240,240,101|N|6,8,15,29,29,27||59|51]Sandslash|||None|eggbomb,rest,poisonpowder,scratch||91,185,195,198,198,241|N|4,17,14,8,8,4||96|160"}
+>p1 move razorleaf
+>p2 switch 2
+>p1 move absorb
+>p2 move explosion
+>p1 switch 2
+>p2 switch 2
+>p1 switch 3
+>p2 switch 3
+>p1 move vinewhip
+>p2 move growth
+>p1 move slash
+>p2 move karatechop
+>p1 move dreameater
+>p2 switch 4
+>p1 move ember
+>p2 move megadrain
+>p1 switch 4
+>p1 move leechlife
+>p2 switch 5
+>p1 switch 5
+>p2 move leer
+>p1 move crabhammer
+>p2 move furyattack
+>p2 switch 6
+>p1 move whirlwind
+>p2 move eggbomb
+>p1 move substitute
+>p2 move rest

@@ -1,0 +1,13 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[50189,11282,53496,6237]}
+>player p1 {"name":"Bot 1","team":"Kangaskhan|||None|surf,fireblast,guillotine,absorb||159,149,170,95,95,55|N|8,7,5,21,21,9||82|42]Alakazam|||None|substitute,teleport,mist,megapunch||66,129,38,128,128,202|N|12,30,2,29,29,17||85|139]Koffing|||None|softboiled,stringshot,splash,spikecannon||181,160,218,184,184,68|N|1,24,13,11,11,5||93|68]Drowzee|||None|doubleedge,crabhammer,submission,dragonrage||219,159,58,104,104,53|N|12,,15,8,8,4||90|28]Poliwhirl|||None|dig,bodyslam,psybeam,swordsdance||212,93,239,67,67,157|N|0,16,8,24,24,0||89|108]Exeggcute|||None|karatechop,doublekick,bubble,sandattack||43,152,124,147,147,143|N|6,8,6,8,8,7||66|209"}
+>player p2 {"name":"Bot 2","team":"Venusaur|||None|megadrain,screech,payday,earthquake||169,219,250,222,222,90|N|8,14,1,16,16,28||96|173]Raichu|||None|takedown,thrash,seismictoss,razorwind||193,80,107,91,91,80|N|13,19,10,3,3,17||70|229]Squirtle|||None|whirlwind,scratch,flamethrower,withdraw||80,76,123,132,132,31|N|12,,30,12,12,16||57|37]Charmeleon|||None|megakick,gust,fissure,sharpen||78,136,222,91,91,4|N|7,9,27,11,11,14||91|35]Pidgeotto|||None|leechseed,skyattack,psychic,defensecurl||20,35,100,197,197,135|N|12,2,10,13,13,12||55|236]Machamp|||None|constrict,focusenergy,icepunch,glare||74,67,221,170,170,213|N|0,9,4,17,17,21||64|162"}
+>p1 move surf
+>p2 switch 2
+>p1 switch 2
+>p2 move takedown
+>p1 move substitute
+>p2 switch 2
+>p1 move teleport
+>p2 move megadrain
+>p1 move mist
+>p2 move screech

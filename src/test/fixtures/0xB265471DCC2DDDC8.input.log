@@ -1,0 +1,45 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[45669,18205,52269,56776]}
+>player p1 {"name":"Bot 1","team":"Blastoise|||None|furyattack,explosion,razorwind,guillotine||34,155,140,2,2,98|N|3,29,5,19,19,19||54|182]Onix|||None|harden,acidarmor,doubleteam,withdraw||226,95,83,116,116,84|N|10,27,17,25,25,6||65|0]Nidoran-F|||None|constrict,megadrain,smokescreen,doubleedge||140,137,97,80,80,20|N|4,12,18,4,4,1||68|120]Golduck|||None|headbutt,recover,thunder,icepunch||156,8,4,47,47,141|N|5,16,18,18,18,28||77|94]Dragonite|||None|leechseed,toxic,thunderbolt,screech||32,159,156,49,49,194|N|10,7,24,12,12,10||76|71]Bulbasaur|||None|barrier,sludge,guillotine,selfdestruct||34,227,130,137,137,110|N|0,16,28,13,13,4||68|7"}
+>player p2 {"name":"Bot 2","team":"Arcanine|||None|swordsdance,karatechop,watergun,minimize||117,100,210,184,184,228|N|6,9,23,8,8,15||67|249]Farfetch’d|||None|thrash,megadrain,flash,skyattack||119,218,26,137,137,211|N|14,11,18,21,21,15||67|57]Eevee|||None|doublekick,drillpeck,fissure,tailwhip||211,136,113,205,205,36|N|14,,7,21,21,11||71|6]Flareon|||None|firepunch,tackle,harden,poisonpowder||79,134,251,220,220,68|N|11,,0,23,23,27||89|0]Nidoking|||None|sonicboom,sing,solarbeam,confusion||87,86,217,143,143,2|N|8,14,8,20,20,8||72|136]Sandslash|||None|takedown,explosion,thunderpunch,psywave||223,215,46,238,238,240|N|15,6,15,3,3,||88|125"}
+>p1 switch 2
+>p2 switch 2
+>p1 move harden
+>p2 switch 2
+>p1 switch 2
+>p2 switch 3
+>p1 switch 3
+>p2 move doublekick
+>p1 move constrict
+>p2 move fissure
+>p1 move megadrain
+>p2 move drillpeck
+>p1 switch 4
+>p2 move tailwhip
+>p1 move headbutt
+>p2 move drillpeck
+>p1 move icepunch
+>p2 switch 4
+>p1 switch 5
+>p2 move harden
+>p1 move screech
+>p2 move poisonpowder
+>p1 move leechseed
+>p2 move harden
+>p1 move screech
+>p2 switch 2
+>p1 move toxic
+>p2 move skyattack
+>p1 move screech
+>p2 move skyattack
+>p1 move toxic
+>p2 move megadrain
+>p1 switch 6
+>p2 switch 2
+>p1 switch 3
+>p2 move poisonpowder
+>p1 move furyattack
+>p2 move poisonpowder
+>p1 move explosion
+>p2 move poisonpowder
+>p1 switch 3
+>p2 switch 2

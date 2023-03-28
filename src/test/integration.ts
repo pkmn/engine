@@ -519,8 +519,6 @@ type Options = Pick<ExhaustiveRunnerOptions, 'log' | 'maxFailures' | 'cycles'> &
 export async function run(gens: Generations, options: string | Options) {
   if (!addon.supports(true, true)) throw new Error('engine must be built with -Dshowdown -Dtrace');
   if (typeof options === 'string') {
-    const file = path.join(ROOT, 'logs', `${options}.input.log`);
-    if (fs.existsSync(file)) options = file;
     const log = fs.readFileSync(path.resolve(CWD, options), 'utf8');
     const gen = gens.get(log.charAt(23));
     patch.generation(gen);
@@ -572,7 +570,8 @@ if (require.main === module) {
     // minimist tries to parse all number-like things into numbers which doesn't work because the
     // seed is actually a bigint, meaning we need to special case this without calling minimist
     if (process.argv.length === 3 && process.argv[2][0] !== '-') {
-      process.exit(await run(gens, process.argv[2]));
+      const file = path.join(ROOT, 'logs', `${process.argv[2]}.input.log`);
+      process.exit(await run(gens, fs.existsSync(file) ? file : process.argv[2]));
     }
     const argv = minimist(process.argv.slice(2), {
       boolean: ['debug'],

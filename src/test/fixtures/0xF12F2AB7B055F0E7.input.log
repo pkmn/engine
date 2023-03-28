@@ -1,0 +1,47 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[61743,10935,45141,61671]}
+>player p1 {"name":"Bot 1","team":"Horsea|||None|dig,visegrip,furyswipes,watergun||120,1,209,174,174,72|N|5,21,7,18,18,5||58|54]Hitmonlee|||None|icebeam,doubleteam,bite,fissure||220,13,119,229,229,111|N|11,6,21,18,18,30||81|179]Starmie|||None|lightscreen,fly,poisonsting,selfdestruct||237,20,240,11,11,63|N|15,2,,19,19,30||82|140]Ivysaur|||None|thunderwave,stunspore,superfang,submission||194,123,168,91,91,142|N|6,1,23,8,8,30||98|11]Pikachu|||None|sonicboom,lick,disable,substitute||147,205,139,143,143,105|N|10,7,9,21,21,6||57|62]Kadabra|||None|drillpeck,sludge,wingattack,hyperfang||133,218,55,116,116,200|N|8,14,9,28,28,12||54|216"}
+>player p2 {"name":"Bot 2","team":"Kabutops|||None|gust,toxic,dizzypunch,bonemerang||162,195,66,81,81,51|N|11,26,25,23,23,27||90|32]Charmander|||None|quickattack,nightshade,thunderbolt,cut||107,176,39,126,126,233|N|12,18,27,0,0,17||68|2]Rapidash|||None|withdraw,razorleaf,sing,icepunch||76,149,61,57,57,15|N|7,9,11,15,15,2||89|144]Snorlax|||None|substitute,constrict,furyswipes,smog||115,142,51,163,163,73|N|2,8,21,25,25,15||98|227]Cloyster|||None|thunderpunch,leechlife,drillpeck,barrage||83,72,243,48,48,126|N|6,13,18,1,1,30||68|219]Golduck|||None|skullbash,sludge,hornattack,skyattack||140,172,79,6,6,7|N|15,14,10,19,19,15||76|158"}
+>p1 move dig
+>p2 switch 2
+>p1 move dig
+>p2 switch 2
+>p1 move visegrip
+>p2 move gust
+>p1 move furyswipes
+>p2 move toxic
+>p1 switch 2
+>p2 move dizzypunch
+>p1 move icebeam
+>p2 move bonemerang
+>p1 switch 2
+>p1 move watergun
+>p2 switch 3
+>p1 move dig
+>p2 move withdraw
+>p1 move dig
+>p2 move withdraw
+>p1 switch 3
+>p2 move sing
+>p1 move lightscreen
+>p2 switch 4
+>p1 move fly
+>p2 move substitute
+>p1 move fly
+>p2 switch 5
+>p1 move poisonsting
+>p2 move drillpeck
+>p1 move selfdestruct
+>p2 move barrage
+>p1 switch 4
+>p1 move thunderwave
+>p2 move leechlife
+>p1 switch 5
+>p2 switch 6
+>p1 move sonicboom
+>p2 move sludge
+>p1 move lick
+>p2 move skyattack
+>p1 move disable
+>p2 move skyattack
+>p1 move substitute
+>p2 move sludge

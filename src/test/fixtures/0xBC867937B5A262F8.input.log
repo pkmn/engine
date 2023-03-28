@@ -1,0 +1,32 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[48262,31031,46498,25336]}
+>player p1 {"name":"Bot 1","team":"Kakuna|||None|firepunch,bubble,sludge,thrash||122,225,222,2,2,178|N|3,4,9,3,3,||57|189]Bellsprout|||None|leechseed,rest,megapunch,focusenergy||74,219,77,78,78,160|N|13,10,15,30,30,8||73|111]Paras|||None|leer,stunspore,dig,petaldance||97,40,79,159,159,112|N|2,16,21,0,0,10||73|247]Magikarp|||None|screech,leechlife,spikecannon,acid||164,31,15,198,198,124|N|3,21,12,22,22,22||88|136]Psyduck|||None|fireblast,blizzard,watergun,psybeam||25,47,190,236,236,143|N|11,10,0,27,27,||68|60]Dodrio|||None|bodyslam,triattack,rest,megapunch||116,156,172,182,182,106|N|2,1,1,24,24,10||79|240"}
+>player p2 {"name":"Bot 2","team":"Victreebel|||None|thunder,mist,confusion,eggbomb||76,99,206,4,4,24|N|0,9,13,16,16,17||53|152]Nidoking|||None|sonicboom,aurorabeam,softboiled,flamethrower||120,119,63,203,203,112|N|14,,6,25,25,30||89|55]Farfetch’d|||None|earthquake,dreameater,quickattack,furyswipes||192,212,156,103,103,215|N|1,8,20,27,27,13||54|130]Chansey|||None|barrage,sleeppowder,lowkick,selfdestruct||70,88,153,90,90,86|N|14,6,30,21,21,7||90|84]Kangaskhan|||None|doubleteam,leechseed,growl,doubleslap||24,34,99,68,68,231|N|12,23,10,20,20,1||54|216]Dragonite|||None|cometpunch,seismictoss,bubblebeam,razorwind||205,27,206,168,168,103|N|6,12,3,8,8,23||79|44"}
+>p1 switch 2
+>p2 move mist
+>p1 move leechseed
+>p2 move eggbomb
+>p1 move rest
+>p2 move eggbomb
+>p1 move megapunch
+>p2 move thunder
+>p1 move megapunch
+>p2 move thunder
+>p1 switch 2
+>p2 switch 2
+>p1 move firepunch
+>p2 move softboiled
+>p1 move bubble
+>p2 switch 2
+>p1 move sludge
+>p2 switch 3
+>p1 move thrash
+>p2 switch 4
+>p1 move thrash
+>p2 move lowkick
+>p1 move thrash
+>p2 move selfdestruct
+>p2 switch 5
+>p1 move thrash
+>p2 move leechseed
+>p1 move bubble
+>p2 move growl

@@ -152,8 +152,11 @@ being in agreement **they may both be incorrect** when it comes to the actual ca
     testing the engine properly requires support for "link" battling and the ability to detect
     desyncs makes such a goal decidedly nontrivial.
 
-The integration test also supports being run in standalone mode for various durations, eg. `npm run
-integration -- --duration=15m` which can be useful for [fuzzing](#fuzz) purposes.
+Most integration test failures result in new unit tests being added, though the failing logs are
+also saved as [fixtures](../src/test/fixtures) which can then be replayed to protect against
+[regressions](../src/test/regression.test.ts). The integration test also supports being run in
+standalone mode for various durations, eg. `npm run integration -- --duration=15m` which can be
+useful for [fuzzing](#fuzz) purposes.
 
 ### `blocklist.json`
 

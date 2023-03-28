@@ -1,0 +1,44 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[40954,64202,28654,51971]}
+>player p1 {"name":"Bot 1","team":"Cloyster|||None|razorwind,focusenergy,dragonrage,barrier||66,176,229,189,189,175|N|4,24,26,8,8,17||93|150]Farfetch’d|||None|roar,confusion,tackle,agility||90,60,248,67,67,47|N|15,18,19,2,2,15||61|169]Machamp|||None|solarbeam,recover,stringshot,payday||100,68,61,205,205,106|N|11,30,12,18,18,23||65|170]Charmander|||None|teleport,smog,poisonsting,psybeam||178,,58,243,243,54|N|12,7,19,21,21,25||70|39]Cubone|||None|bubblebeam,sharpen,skyattack,disable||39,54,23,44,44,29|N|8,3,0,16,16,13||93|227]Aerodactyl|||None|substitute,acid,constrict,slash||82,191,9,226,226,159|N|13,11,11,7,7,25||91|12"}
+>player p2 {"name":"Bot 2","team":"Gengar|||None|harden,pound,megakick,wingattack||249,89,140,119,119,167|N|4,28,19,9,9,24||63|104]Charmeleon|||None|submission,vinewhip,skullbash,doubleedge||142,123,166,134,134,185|N|13,22,2,26,26,12||66|53]Clefable|||None|spore,rest,psychic,megapunch||186,35,10,165,165,252|N|12,15,,28,28,16||97|187]Magikarp|||None|explosion,petaldance,supersonic,thunderwave||135,122,202,23,23,94|N|9,26,4,3,3,13||88|32]Tentacool|||None|takedown,icebeam,splash,selfdestruct||75,99,241,167,167,48|N|4,25,7,25,25,25||88|61]Pikachu|||None|cometpunch,haze,eggbomb,reflect||101,248,125,81,81,202|N|15,22,15,11,11,11||84|231"}
+>p1 move razorwind
+>p2 switch 2
+>p1 move razorwind
+>p2 move submission
+>p1 move focusenergy
+>p2 move vinewhip
+>p1 switch 2
+>p2 switch 2
+>p1 move roar
+>p2 move harden
+>p1 move confusion
+>p2 move pound
+>p1 switch 2
+>p2 move megakick
+>p1 switch 3
+>p2 switch 3
+>p1 move solarbeam
+>p2 move spore
+>p1 move recover
+>p2 move rest
+>p1 move stringshot
+>p2 move psychic
+>p1 switch 4
+>p1 move teleport
+>p2 move megapunch
+>p1 switch 5
+>p2 move rest
+>p1 switch 6
+>p2 move megapunch
+>p1 switch 5
+>p2 switch 4
+>p1 switch 2
+>p2 switch 2
+>p1 move tackle
+>p2 move skullbash
+>p1 move agility
+>p2 move skullbash
+>p1 move roar
+>p2 move doubleedge
+>p1 switch 6
+>p2 switch 6

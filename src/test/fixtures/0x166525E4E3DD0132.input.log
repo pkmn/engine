@@ -1,0 +1,25 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[5733,9700,58333,306]}
+>player p1 {"name":"Bot 1","team":"Charizard|||None|scratch,supersonic,quickattack,cut||165,48,50,96,96,135|N|15,14,3,2,2,3||55|94]Poliwrath|||None|poisongas,agility,smog,splash||222,48,76,50,50,71|N|12,27,23,16,16,20||82|176]Zapdos|||None|stringshot,slash,confusion,hyperfang||184,199,171,84,84,102|N|13,22,6,26,26,8||50|65]Kabuto|||None|haze,spore,poisonpowder,lightscreen||250,32,10,152,152,29|N|1,16,25,15,15,8||71|185]Exeggutor|||None|psywave,withdraw,strength,thunderpunch||151,25,38,4,4,159|N|4,8,26,28,28,16||97|193]Dragonair|||None|petaldance,watergun,meditate,bonemerang||52,113,72,246,246,226|N|13,10,,7,7,12||87|44"}
+>player p2 {"name":"Bot 2","team":"Porygon|||None|conversion,harden,highjumpkick,fissure||65,124,3,125,125,93|N|11,6,8,3,3,7||94|153]Mewtwo|||None|recover,karatechop,icebeam,thunderwave||30,44,117,135,135,204|N|5,1,27,11,11,4||64|140]Kakuna|||None|barrage,screech,megakick,doubleteam||11,154,134,28,28,55|N|15,26,19,3,3,||81|10]Bellsprout|||None|vinewhip,payday,leechlife,hydropump||96,44,193,174,174,122|N|12,19,27,20,20,4||88|194]Venusaur|||None|acidarmor,sleeppowder,thrash,superfang||113,150,210,77,77,239|N|3,9,16,11,11,26||93|71]Mew|||None|lowkick,doubleslap,constrict,nightshade||5,240,100,15,15,117|N|14,18,7,21,21,26||70|251"}
+>p1 move scratch
+>p2 switch 2
+>p1 move supersonic
+>p2 move recover
+>p1 move quickattack
+>p2 move karatechop
+>p1 move cut
+>p2 move icebeam
+>p1 switch 2
+>p2 move thunderwave
+>p1 switch 2
+>p2 move thunderwave
+>p1 move scratch
+>p2 switch 2
+>p1 switch 3
+>p2 move conversion
+>p1 move stringshot
+>p2 move harden
+>p1 switch 4
+>p2 move highjumpkick
+>p1 move haze
+>p2 move fissure
