@@ -837,7 +837,8 @@ fn doMove(
 
     if (miss) {
         const foe_ident = battle.active(player.foe());
-        const invulnerable = showdown and foe.active.volatiles.Invulnerable;
+        const invulnerable =
+            showdown and foe.active.volatiles.Invulnerable and move.effect != .Swift;
         ohko = (!showdown or (!immune and !invulnerable)) and
             move.effect == .OHKO and side.active.stats.spe < foe.active.stats.spe;
         if (ohko) {
