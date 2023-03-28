@@ -1902,7 +1902,8 @@ pub const Effects = struct {
         var foe = battle.foe(player);
 
         if (showdown) {
-            if (foe.active.types.includes(.Grass)) {
+            // Invulnerability trumps type immunity on Pokémon Showdown
+            if (!foe.active.volatiles.Invulnerable and foe.active.types.includes(.Grass)) {
                 return log.immune(battle.active(player.foe()), .None);
             }
             if (!try checkHit(battle, player, move, log)) return;
@@ -1951,7 +1952,11 @@ pub const Effects = struct {
                 }
                 break :has_mimic false;
             };
-            if (!has_mimic) return;
+            // If the foe is Invulnerable we still want to fall through to checkHit to be able to
+            // trigger |-miss| instead of |-fail|
+            if (!has_mimic and !foe.active.volatiles.Invulnerable) {
+                return try log.fail(battle.active(player.foe()), .None);
+            }
         }
         if (!try checkHit(battle, player, move, log)) return;
 
@@ -1988,7 +1993,8 @@ pub const Effects = struct {
         const immune = move.type == .Electric and foe.active.types.immune(move.type);
 
         if (showdown) {
-            if (immune) return log.immune(foe_ident, .None);
+            // Invulnerability trumps type immunity on Pokémon Showdown
+            if (immune and !foe.active.volatiles.Invulnerable) return log.immune(foe_ident, .None);
             if (!try checkHit(battle, player, move, log)) return;
         }
         if (Status.any(foe_stored.status)) {
