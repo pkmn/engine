@@ -1480,16 +1480,20 @@ fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
 
 fn checkEBC(battle: anytype) bool {
     for (battle.sides, 0..) |side, i| {
+        const foe = battle.sides[~@intCast(u1, i)];
+
         var foe_all_ghosts = true;
         var foe_all_transform = true;
+        for (foe.order, 0..) |id, j| {
+            if (id == 0) break;
+            const active = j == 0;
+            const pokemon = foe.pokemon[id - 1];
 
-        for (battle.sides[~@intCast(u1, i)].pokemon) |pokemon| {
-            if (pokemon.species == .None) continue;
-
-            const ghost = pokemon.hp == 0 or pokemon.types.includes(.Ghost);
+            const ghost = pokemon.hp == 0 or
+                (if (active) foe.active.types else pokemon.types).includes(.Ghost);
             foe_all_ghosts = foe_all_ghosts and ghost;
             foe_all_transform = foe_all_transform and pokemon.hp == 0 or transform: {
-                for (pokemon.moves) |m| {
+                for (if (active) foe.active.moves else pokemon.moves) |m| {
                     if (m.id == .None) break :transform true;
                     if (m.id != .Transform) break :transform false;
                 }
@@ -1497,10 +1501,14 @@ fn checkEBC(battle: anytype) bool {
             };
         }
 
-        for (side.pokemon) |pokemon| {
+        for (side.order, 0..) |id, j| {
+            if (id == 0) break;
+            const active = j == 0;
+            const pokemon = side.pokemon[id - 1];
+
             if (pokemon.hp == 0 or Status.is(pokemon.status, .FRZ)) continue;
             const transform = foe_all_transform and transform: {
-                for (pokemon.moves) |m| {
+                for (if (active) side.active.moves else pokemon.moves) |m| {
                     if (m.id == .None) break :transform true;
                     if (m.id != .Transform) break :transform false;
                 }
@@ -1508,7 +1516,7 @@ fn checkEBC(battle: anytype) bool {
             };
             if (transform) continue;
             const no_pp = foe_all_ghosts and no_pp: {
-                for (pokemon.moves) |m| {
+                for (if (active) side.active.moves else pokemon.moves) |m| {
                     if (m.pp != 0) break :no_pp false;
                 }
                 break :no_pp true;
