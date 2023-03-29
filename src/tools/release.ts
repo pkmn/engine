@@ -77,7 +77,8 @@ try {
 }
 
 // eslint-disable-next-line
-let version: string = require(path.join(ROOT, 'package.json')).version;
+const json = require(path.join(ROOT, 'package.json'));
+let version: string = json.version;
 if (!argv.prod) {
   const HEAD = sh('git', ['rev-parse', 'HEAD'], {bypass: true}).slice(0, 8);
   version = `${version}-dev+${HEAD}`;
@@ -112,11 +113,26 @@ for (const {triple, mcpu} of TARGETS) {
   if (argv.prod) sh(`echo | minisign -Sm ${archive}`, undefined, {cwd: release, stdio: 'ignore'});
 }
 
+sh('npm', ['run', 'build']);
 if (argv.prod) {
-  sh('npm', ['run', 'build']);
   sh('npm', ['publish']);
   sh('git', ['tag', `v${version}`]);
   sh('git', ['push', '--tags', 'origin', 'main']);
+} else {
+  try {
+    const old = sh('npm', ['info', '@pkmn/engine@dev', 'version']);
+    sh('npm', ['deprecate', `@pkmn/engine@${old}`,
+      'This dev version has been deprecated automatically as a newer version exists.']);
+  } catch {}
+
+  fs.copyFileSync(path.join(ROOT, 'package.json'), path.join(tmp, 'package.json'));
+  try {
+    json.version = version.replace('+', '.');
+    fs.writeFileSync(path.join(ROOT, 'package.json'), JSON.stringify(json, null, 2));
+    sh('npm', ['publish', '--tag=dev']);
+  } finally {
+    fs.copyFileSync(path.join(tmp, 'package.json'), path.join(ROOT, 'package.json'));
+  }
 }
 
 const preamble = argv.prod ? 'Official release of' : 'Automated nightly release of developer';
