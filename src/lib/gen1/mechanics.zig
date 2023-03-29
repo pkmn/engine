@@ -1278,7 +1278,9 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool, mist
             if (move.effect == .Swift) return true;
             if (foe.active.volatiles.Invulnerable) break :miss true;
         }
-        if (move.effect == .DreamEater and !Status.is(foe.stored().status, .SLP)) {
+        if (move.effect == .DreamEater and (!Status.is(foe.stored().status, .SLP) or
+            (showdown and foe.active.volatiles.Substitute)))
+        {
             immune.* = true;
             if (showdown) return false;
             break :miss true;

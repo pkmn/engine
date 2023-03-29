@@ -3280,17 +3280,19 @@ describe('Gen 1', () => {
   test('DreamEater effect', () => {
     {
       const battle = startBattle([
-        HIT, SLP(5), HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
+        HIT, SLP(5), HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, SLP(5),
       ], [
-        {species: 'Hypno', evs, moves: ['Dream Eater', 'Hypnosis']},
+        {species: 'Hypno', evs, moves: ['Dream Eater', 'Hypnosis', 'Teleport']},
       ], [
         {species: 'Wigglytuff', evs, moves: ['Teleport']},
+        {species: 'Gengar', evs, moves: ['Substitute', 'Rest']},
       ]);
 
       battle.p1.pokemon[0].hp = 100;
       battle.p2.pokemon[0].hp = 182;
 
-      let p1hp = battle.p1.pokemon[0].hp;
+      let hypno = battle.p1.pokemon[0].hp;
+      let gengar = battle.p2.pokemon[1].hp;
 
       // Fails unless the target is sleeping
       battle.makeChoices('move 1', 'move 1');
@@ -3299,13 +3301,24 @@ describe('Gen 1', () => {
 
       // Heals 1/2 of the damage dealt
       battle.makeChoices('move 1', 'move 1');
-      expect(battle.p1.pokemon[0].hp).toBe(p1hp += 90);
+      expect(battle.p1.pokemon[0].hp).toBe(hypno += 90);
       expect(battle.p2.pokemon[0].hp).toBe(1);
 
       // Heals at least 1 HP
       battle.makeChoices('move 1', 'move 1');
-      expect(battle.p1.pokemon[0].hp).toBe(p1hp += 1);
+      expect(battle.p1.pokemon[0].hp).toBe(hypno += 1);
       expect(battle.p2.pokemon[0].hp).toBe(0);
+
+      battle.makeChoices('', 'switch 2');
+
+      battle.makeChoices('move 3', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(gengar -= 80);
+      expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(81);
+
+      // Substitute blocks Dream Eater on Pokémon Showdown
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p2.pokemon[0].hp).toBe(gengar += 80);
+      expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(81);
 
       verify(battle, [
         '|move|p1a: Hypno|Dream Eater|p2a: Wigglytuff',
@@ -3325,7 +3338,19 @@ describe('Gen 1', () => {
         '|-damage|p2a: Wigglytuff|0 fnt',
         '|-heal|p1a: Hypno|191/373|[from] drain|[of] p2a: Wigglytuff',
         '|faint|p2a: Wigglytuff',
-        '|win|Player 1',
+        '|switch|p2a: Gengar|Gengar|323/323',
+        '|turn|5',
+        '|move|p2a: Gengar|Substitute|p2a: Gengar',
+        '|-start|p2a: Gengar|Substitute',
+        '|-damage|p2a: Gengar|243/323',
+        '|move|p1a: Hypno|Teleport|p1a: Hypno',
+        '|turn|6',
+        '|move|p2a: Gengar|Rest|p2a: Gengar',
+        '|-status|p2a: Gengar|slp|[from] move: Rest',
+        '|-heal|p2a: Gengar|323/323 slp|[silent]',
+        '|move|p1a: Hypno|Dream Eater|p2a: Gengar',
+        '|-immune|p2a: Gengar',
+        '|turn|7',
       ]);
     }
     // Invulnerable

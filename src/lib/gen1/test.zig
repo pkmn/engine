@@ -4105,13 +4105,23 @@ test "DreamEater effect" {
     // by the target, rounded down, but not less than 1 HP. If this move breaks the target's
     // substitute, the user does not recover any HP.
     {
-        var t = Test((if (showdown)
-            .{ HIT, MAX, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG }
-        else
-            .{ ~CRIT, MIN_DMG, ~CRIT, HIT, MAX, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT })).init(
-            &.{.{ .species = .Hypno, .hp = 100, .moves = &.{ .DreamEater, .Hypnosis } }},
-            &.{.{ .species = .Wigglytuff, .hp = 182, .moves = &.{.Teleport} }},
+        var t = Test(
+        // zig fmt: off
+            if (showdown) .{
+                HIT, MAX, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, NOP,
+            } else .{
+                ~CRIT, MIN_DMG, ~CRIT, HIT, MAX, ~CRIT, MIN_DMG, HIT,
+                ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
+            }
+        // zig fmt: on
+        ).init(
+            &.{.{ .species = .Hypno, .hp = 100, .moves = &.{ .DreamEater, .Hypnosis, .Teleport } }},
+            &.{
+                .{ .species = .Wigglytuff, .hp = 182, .moves = &.{.Teleport} },
+                .{ .species = .Gengar, .moves = &.{ .Substitute, .Rest } },
+            },
         );
+
         defer t.deinit();
 
         try t.log.expected.move(P1.ident(1), Move.DreamEater, P2.ident(1), null);
@@ -4148,11 +4158,44 @@ test "DreamEater effect" {
         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
         t.expected.p1.get(1).hp += 1;
         try t.log.expected.drain(P1.ident(1), t.expected.p1.get(1), P2.ident(1));
-        try t.log.expected.faint(P2.ident(1), false);
-        try t.log.expected.win(.P1);
+        try t.log.expected.faint(P2.ident(1), true);
 
         // Heals at least 1 HP
-        try expectEqual(Result.Win, try t.update(move(1), forced));
+        try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(move(1), forced));
+
+        try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+        try t.log.expected.turn(5);
+
+        try expectEqual(Result.Default, try t.update(.{}, swtch(2)));
+
+        try t.log.expected.move(P2.ident(2), Move.Substitute, P2.ident(2), null);
+        try t.log.expected.start(P2.ident(2), .Substitute);
+        t.expected.p2.get(2).hp -= 80;
+        try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+        try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+        try t.log.expected.turn(6);
+
+        try expectEqual(Result.Default, try t.update(move(3), move(1)));
+        try expectEqual(@as(u8, 81), t.actual.p2.active.volatiles.substitute);
+
+        try t.log.expected.move(P2.ident(2), Move.Rest, P2.ident(2), null);
+        t.expected.p2.get(2).hp += 80;
+        t.expected.p2.get(2).status = Status.slf(2);
+        try t.log.expected.statusFrom(P2.ident(2), t.expected.p2.get(2).status, Move.Rest);
+        try t.log.expected.heal(P2.ident(2), t.expected.p2.get(2), .Silent);
+        try t.log.expected.move(P1.ident(1), Move.DreamEater, P2.ident(2), null);
+        if (showdown) {
+            try t.log.expected.immune(P2.ident(2), .None);
+        } else {
+            try t.log.expected.supereffective(P2.ident(2));
+            try t.log.expected.end(P2.ident(2), .Substitute);
+        }
+        try t.log.expected.turn(7);
+
+        // Substitute blocks Dream Eater on Pokémon Showdown
+        try expectEqual(Result.Default, try t.update(move(1), move(2)));
+        try expectEqual(@as(u8, if (showdown) 81 else 0), t.actual.p2.active.volatiles.substitute);
+
         try t.verify();
     }
     // Invulnerable
@@ -6513,7 +6556,7 @@ test "Min/max stat recalculation bug" {
     try t.log.expected.move(P2.ident(1), Move.Rest, P2.ident(1), null);
     t.expected.p2.get(1).hp += 143;
     t.expected.p2.get(1).status = Status.slf(2);
-    try t.log.expected.statusFrom(P2.ident(1), Status.slf(2), Move.Rest);
+    try t.log.expected.statusFrom(P2.ident(1), t.expected.p2.get(1).status, Move.Rest);
     try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .Silent);
     try t.log.expected.turn(3);
 
