@@ -1761,6 +1761,11 @@ pub const Effects = struct {
         var side = battle.side(player);
         var stored = side.stored();
 
+        if (battle.last_damage == 0) {
+            assert(showdown);
+            return;
+        }
+
         const drain = @max(battle.last_damage / 2, 1);
         battle.last_damage = drain;
 
