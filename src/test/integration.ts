@@ -381,6 +381,8 @@ function compare(chunk: string, actual: engine.ParsedLine[]) {
 function fixTeam(gen: Generation, options: AIOptions) {
   for (const pokemon of options.team!) {
     const species = gen.species.get(pokemon.species)!;
+    // The generator sometimes returns sets with duplicate moves... >_<
+    pokemon.moves = [...new Set(pokemon.moves)];
     if (gen.num <= 1) {
       pokemon.ivs.hp = gen.stats.getHPDV(pokemon.ivs);
       pokemon.ivs.spd = pokemon.ivs.spa;
