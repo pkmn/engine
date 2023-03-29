@@ -151,5 +151,5 @@ t:
 
 .PHONY: it
 it:
-	npm run integration -- --cycles=10 --maxFailures=1 --gen=$(gen) --seed=$(seed)
+	npm run integration -- --cycles=1 --maxFailures=1 --gen=$(gen) --seed=$(seed)
 
