@@ -13,6 +13,7 @@
     "src/lib/binding/node.zig",
     "src/lib/binding/wasm.zig",
     "src/lib/common/data.zig",
+    "src/lib/common/debug.zig",
     "src/lib/common/options.zig",
     "src/lib/common/protocol.zig",
     "src/lib/common/rng.zig",
