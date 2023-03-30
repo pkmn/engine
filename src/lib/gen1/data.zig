@@ -272,7 +272,7 @@ pub const Status = enum(u8) {
         return num > 0;
     }
 
-    /// Retunrns a human-readable representation of the status `num`.
+    /// Returns a human-readable representation of the status `num`.
     pub fn name(num: u8) []const u8 {
         if (Status.is(num, .EXT)) return if (num == Status.TOX) "TOX" else "SLF";
         if (Status.is(num, .SLP)) return "SLP";
