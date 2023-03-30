@@ -2078,7 +2078,7 @@ pub const Effects = struct {
             return log.fail(foe_ident, if (Status.is(foe_stored.status, .PSN))
                 if (!showdown)
                     .Poison
-                else if (toxic == foe.active.volatiles.Toxic)
+                else if (toxic == (foe_stored.status == Status.TOX))
                     if (toxic) .Toxic else .Poison
                 else
                     .None
