@@ -361,7 +361,11 @@ npm install
 export PATH="$(pwd)/build/bin/zig:$PATH"
 ```
 
-We can then run the tuning script as root to perform the benchmark.
+We can then run the tuning script as root to perform the benchmark:
+
+```sh
+sudo --preserve-env=PATH env ./benchmark.sh
+```
 </details>
 <details><summary>Tuning</summary>
 
