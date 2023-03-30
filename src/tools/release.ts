@@ -113,13 +113,13 @@ for (const {triple, mcpu} of TARGETS) {
   if (argv.prod) sh(`echo | minisign -Sm ${archive}`, undefined, {cwd: release, stdio: 'ignore'});
 }
 
+const next = version.replace('+', '.');
 sh('npm', ['run', 'build']);
 if (argv.prod) {
   sh('npm', ['publish']);
   sh('git', ['tag', `v${version}`]);
   sh('git', ['push', '--tags', 'origin', 'main']);
 } else {
-  const next = version.replace('+', '.');
   const old = sh('npm', ['info', '@pkmn/engine@dev', 'version']);
   if (old === next) {
     console.log(`Version v${version} already exists, exiting as there is nothing to do`);
@@ -138,6 +138,8 @@ if (argv.prod) {
 }
 
 const preamble = argv.prod ? 'Official release of' : 'Automated nightly release of developer';
+const npm = 'The corresponding release of the reference TypeScript driver code can be found on ' +
+  `the [npm Registry](https://www.npmjs.com/package/@pkmn/engine/v/${next}).`;
 const key = 'RWQJbSYgSRvYHXIqYwkOzpuV4eQW6roHp8PqUXcQAUk3suFmclEUZZff';
 const sign = argv.prod
   ? 'These archives have been signed with [Minisign](https://jedisct1.github.io/minisign/) with ' +
@@ -146,7 +148,7 @@ const sign = argv.prod
 const notes = `${preamble} version **\`v${version}\`** for` +
   '`libpkmn` and `libpkmn-showdown` (`-Dshowdown`). This release offers only ' +
   'stripped static `-OReleaseFast` versions of these libraries built for popular architectures ' +
-  `and baseline CPU features with \`-Dtrace\` logging enabled.${sign}\n\n` +
+  `and baseline CPU features with \`-Dtrace\` logging enabled. ${npm} ${sign}\n\n` +
   '*[Manually building](https://github.com/pkmn/engine#libpkmn) these libraries from source ' +
   'on your own system is likely to result in better performance when optimized for the native ' +
   'architecture and allows you to tweak exactly which features you need (including support for ' +
