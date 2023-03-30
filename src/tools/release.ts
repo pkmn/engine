@@ -119,15 +119,17 @@ if (argv.prod) {
   sh('git', ['tag', `v${version}`]);
   sh('git', ['push', '--tags', 'origin', 'main']);
 } else {
-  try {
-    const old = sh('npm', ['info', '@pkmn/engine@dev', 'version']);
-    sh('npm', ['deprecate', `@pkmn/engine@${old}`,
-      'This dev version has been deprecated automatically as a newer version exists.']);
-  } catch {}
-
+  const next = version.replace('+', '.');
+  const old = sh('npm', ['info', '@pkmn/engine@dev', 'version']);
+  if (old === next) {
+    console.log(`Version v${version} already exists, exiting as there is nothing to do`);
+    process.exit(0);
+  }
+  sh('npm', ['deprecate', `@pkmn/engine@${old}`,
+    'This dev version has been deprecated automatically as a newer version exists.']);
   fs.copyFileSync(path.join(ROOT, 'package.json'), path.join(tmp, 'package.json'));
   try {
-    json.version = version.replace('+', '.');
+    json.version = next;
     fs.writeFileSync(path.join(ROOT, 'package.json'), JSON.stringify(json, null, 2));
     sh('npm', ['publish', '--tag=dev']);
   } finally {
