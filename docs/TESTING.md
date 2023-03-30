@@ -267,14 +267,18 @@ as an exercise to the reader.
 ### Results
 
 The results for the table below come from running the benchmarks against
-[pkmn/engine@998c5cd1](https://github.com/pkmn/engine/commit/998c5cd1) on an `n2d-standard-48` Google
+[pkmn/engine@9ce6e379](https://github.com/pkmn/engine/commit/9ce6e379) on an `n2d-standard-48` Google
 Cloud Compute Engine machine with 192 GB of memory and an AMD EPYC 7B12 CPU running 64-bit x86 Linux
 which has undergone the pre-benchmark tuning detailed below via the command `npm run benchmark --
 --battles=10000`:
 
-| Generation | `libpkmn` | `@pkmn/engine`  | `DirectBattle` |
-| ---------- | --------- | --------------- | -------------- |
-| **RBY**    | 3.72 ms   | 47.7 ms (12.8×) | 13.3 s (3578×) |
+| Generation | `libpkmn` | `@pkmn/engine` | `DirectBattle` |
+| ---------- | --------- | -------------- | -------------- |
+| **RBY**    | 195 ms    | 737 ms (3.78×) | 618 s (3167×)  |
+
+*It is important to note that the relative performance differences between the various
+configurations depend on the exact choice of machine used for testing (though the orders of
+magnitude seen here are expected to hold).*
 
 <details><summary>CPU Details</summary><pre>
 Architecture:            x86_64
@@ -403,7 +407,6 @@ sync
 # (can add '--battles=100000 --iterations=50' flags to execute regression benchmark)
 cset shield --exec -- nice -n -19 node build/test/benchmark
 ```
-
 </details>
 
 ### Regression
