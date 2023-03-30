@@ -414,7 +414,7 @@ export class Choice {
     return {type, data};
   }
 
-  /** Formats a `Choice` ino a Pokémon Showdown compatible choice string. */
+  /** Formats a `Choice` into a Pokémon Showdown compatible choice string. */
   static format(choice: Choice): string {
     return choice.type === 'pass' ? choice.type : `${choice.type} ${choice.data}`;
   }
