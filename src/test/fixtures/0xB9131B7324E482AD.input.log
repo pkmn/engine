@@ -1,0 +1,13 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[47379,7027,9444,33453]}
+>player p1 {"name":"Bot 1","team":"Abra|||None|pinmissile,substitute,softboiled,crabhammer||143,52,149,5,5,99|N|6,5,27,24,24,14||89|50]Jigglypuff|||None|meditate,glare,flash,fireblast||215,157,209,209,209,240|N|1,8,13,27,27,5||89|179]Dugtrio|||None|poisongas,leechlife,seismictoss,skyattack||224,36,161,150,150,124|N|1,29,0,7,7,5||97|120]Rattata|||None|supersonic,hornattack,psychic,acid||241,43,244,117,117,168|N|5,20,19,10,10,0||55|244]Horsea|||None|quickattack,constrict,stunspore,toxic||142,203,154,211,211,149|N|2,13,17,5,5,23||79|254]Magikarp|||None|megapunch,conversion,bite,thunderpunch||66,158,73,2,2,24|N|6,9,26,29,29,2||73|45"}
+>player p2 {"name":"Bot 2","team":"Charizard|||None|defensecurl,firepunch,razorwind,disable||50,247,61,1,1,200|N|9,3,28,11,11,5||96|141]Bellsprout|||None|sonicboom,psywave,acidarmor,smokescreen||79,204,,31,31,133|N|0,1,13,8,8,12||81|179]Raichu|||None|petaldance,bonemerang,blizzard,growl||194,115,12,72,72,244|N|5,25,3,27,27,1||90|171]Nidoran-M|||None|sharpen,lick,swordsdance,megakick||85,244,43,237,237,151|N|12,26,19,9,9,1||86|125]Rapidash|||None|leechseed,poisonsting,bodyslam,doubleteam||80,165,210,210,210,85|N|3,17,21,10,10,15||86|204]Blastoise|||None|reflect,flamethrower,furyswipes,focusenergy||181,67,149,147,147,251|N|2,25,28,9,9,19||58|97"}
+>p1 switch 2
+>p2 move defensecurl
+>p1 move meditate
+>p2 move firepunch
+>p1 move glare
+>p2 move razorwind
+>p1 switch 2
+>p2 move razorwind
+>p1 move pinmissile
+>p2 move disable
