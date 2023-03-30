@@ -318,7 +318,51 @@ Vulnerabilities:
   Spectre v2:            Mitigation; Retpolines, IBPB conditional, IBRS_FW, STIBP conditional, RSB filling
   Srbds:                 Not affected
   Tsx async abort:       Not affected
-<pre></details>
+</pre></details>
+<details><summary>Setup</summary>
+
+Provision a [spot](https://cloud.google.com/compute/docs/instances/spot) Google Cloud Compute Engine
+instance with a [Minimal Ubuntu LTS](https://wiki.ubuntu.com/Minimal) image that will get deleted after
+after 30 minutes using the [`gcloud` CLI](https://cloud.google.com/sdk/gcloud) and SSH into it:
+
+```sh
+# Configure to auto-terminate for safety; when done we can also manually run:
+#
+#    $ gcloud compute instances stop pkmn-engine-benchmark
+#    $ gcloud compute instances delete pkmn-engine-benchmark
+#
+gcloud beta compute instances create pkmn-engine-benchmark \
+	--zone=us-central1-a \
+	--machine-type=n2d-standard-48 \
+	--image-project=ubuntu-os-cloud \
+	--image-family=ubuntu-minimal-2204-lts \
+	--max-run-duration=30m \
+	--provisioning-model=SPOT \
+	--instance-termination-action=DELETE
+
+# Need to wait a bit before SSH will succeed...
+sleep 15
+gcloud compute ssh pkmn-engine-benchmark
+```
+
+On the VM, install dependencies:
+
+```sh
+# Install system packages
+sudo apt update
+sudo apt --assume-yes install git cpuset
+# Shallow clone the pkmn engine code
+git clone -–depth 1 https://github.com/pkmn/engine.git
+cd engine
+# Set up Node
+curl -fsSL https://raw.githubusercontent.com/tj/n/master/bin/n | sudo bash -s lts
+# Install package dependencies + put the locally installed Zig on the PATH
+npm install
+export PATH="$(pwd)/build/bin/zig:$PATH"
+```
+
+We can then run the tuning script as root to perform the benchmark.
+</details>
 <details><summary>Tuning</summary>
 
 ```sh
