@@ -2529,13 +2529,9 @@ fn clearVolatiles(battle: anytype, who: Player, log: anytype) !void {
         volatiles.LeechSeed = false;
         try log.end(ident, .LeechSeed);
     }
-    if (volatiles.Toxic) {
+    if (!showdown and volatiles.Toxic) {
         volatiles.Toxic = false;
-        // volatiles.toxic is left unchanged, except on Pokémon Showdown which clears it
-        if (showdown) {
-            volatiles.toxic = 0;
-            try log.end(ident, .Toxic);
-        }
+        // volatiles.toxic is left unchanged, except on Pokémon Showdown which clears it (below)
     }
     if (volatiles.LightScreen) {
         volatiles.LightScreen = false;
@@ -2544,6 +2540,12 @@ fn clearVolatiles(battle: anytype, who: Player, log: anytype) !void {
     if (volatiles.Reflect) {
         volatiles.Reflect = false;
         try log.end(ident, .Reflect);
+    }
+    if (showdown and volatiles.Toxic) {
+        volatiles.Toxic = false;
+        // Pokémon Showdown erroneously clears the toxic counter
+        volatiles.toxic = 0;
+        try log.end(ident, .Toxic);
     }
 }
 

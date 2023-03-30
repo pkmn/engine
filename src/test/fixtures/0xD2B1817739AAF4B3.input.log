@@ -1,0 +1,41 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[53937,33143,14762,62643]}
+>player p1 {"name":"Bot 1","team":"Mew|||None|softboiled,acidarmor,doubleslap,swordsdance||25,152,181,248,248,86|N|12,19,2,28,28,12||64|182]Nidorina|||None|headbutt,roar,blizzard,tackle||42,251,54,217,217,39|N|4,20,,20,20,24||75|205]Mankey|||None|splash,boneclub,icepunch,furyattack||108,34,158,226,226,33|N|4,8,3,25,25,9||88|249]Vileplume|||None|toxic,gust,poisonpowder,haze||192,68,170,199,199,144|N|8,22,25,8,8,5||72|153]Eevee|||None|thunderpunch,sleeppowder,rollingkick,jumpkick||163,197,21,137,137,210|N|4,25,11,12,12,29||99|184]Primeape|||None|ember,rest,razorleaf,pinmissile||171,52,24,188,188,45|N|9,10,16,7,7,24||69|53"}
+>player p2 {"name":"Bot 2","team":"Kakuna|||None|psybeam,eggbomb,supersonic,swordsdance||165,104,76,247,247,151|N|7,8,23,10,10,18||81|61]Dratini|||None|focusenergy,skyattack,minimize,lowkick||71,67,164,131,131,224|N|6,25,14,1,1,22||73|86]Exeggcute|||None|doubleteam,growth,barrier,meditate||206,112,241,15,15,204|N|12,,18,1,1,25||77|81]Clefairy|||None|bubblebeam,flash,tailwhip,thunderbolt||142,145,21,220,220,8|N|0,20,21,28,28,0||81|146]Abra|||None|sleeppowder,hydropump,sludge,constrict||230,231,222,166,166,116|N|6,8,6,0,0,7||60|123]Poliwhirl|||None|harden,bite,lightscreen,psywave||249,198,48,251,251,14|N|6,16,27,16,16,19||89|57"}
+>p1 move softboiled
+>p2 switch 2
+>p1 move acidarmor
+>p2 switch 2
+>p1 switch 2
+>p2 move swordsdance
+>p1 switch 2
+>p2 switch 3
+>p1 switch 3
+>p2 switch 4
+>p1 move splash
+>p2 move bubblebeam
+>p1 move boneclub
+>p2 move flash
+>p1 move icepunch
+>p2 switch 5
+>p1 move furyattack
+>p2 move sleeppowder
+>p1 move furyattack
+>p2 switch 6
+>p1 move icepunch
+>p2 move lightscreen
+>p1 move furyattack
+>p2 move lightscreen
+>p1 move furyattack
+>p2 move psywave
+>p1 move boneclub
+>p2 move psywave
+>p1 switch 4
+>p2 move lightscreen
+>p1 move toxic
+>p2 move bite
+>p1 move gust
+>p2 move lightscreen
+>p1 move poisonpowder
+>p2 move bite
+>p1 move haze
+>p2 move psywave
