@@ -3499,12 +3499,13 @@ describe('Gen 1', () => {
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
       HIT, NO_CRIT, MIN_DMG, MISS,
       HIT, NO_CRIT, MIN_DMG, HIT, DISABLE_MOVE(1, 2), DISABLE_DURATION(5),
-      MISS,
+      MISS, HIT, NO_CRIT, MAX_DMG,
     ], [
       {species: 'Charmeleon', evs, moves: ['Rage', 'Flamethrower']},
       {species: 'Doduo', evs, moves: ['Drill Peck']},
     ], [
       {species: 'Grimer', evs, moves: ['Pound', 'Disable', 'Self-Destruct']},
+      {species: 'Tentacruel', evs, moves: ['Surf']},
     ]);
 
     let p1hp = battle.p1.pokemon[0].hp;
@@ -3540,6 +3541,14 @@ describe('Gen 1', () => {
     expect(battle.p1.pokemon[0].hp).toBe(p1hp);
     expect(battle.p1.pokemon[0].boosts.atk).toBe(4);
     expect(battle.p2.pokemon[0].hp).toBe(0);
+
+    battle.makeChoices('', 'switch 2');
+
+    expect(choices(battle, 'p1')).toEqual(['move 1']);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(0);
+
     expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
 
     verify(battle, [
@@ -3566,7 +3575,12 @@ describe('Gen 1', () => {
       '|-miss|p2a: Grimer',
       '|-boost|p1a: Charmeleon|atk|1|[from] Rage',
       '|faint|p2a: Grimer',
-      '|win|Player 1',
+      '|switch|p2a: Tentacruel|Tentacruel|363/363',
+      '|turn|5',
+      '|move|p2a: Tentacruel|Surf|p1a: Charmeleon',
+      '|-supereffective|p1a: Charmeleon',
+      '|-damage|p1a: Charmeleon|0 fnt',
+      '|faint|p1a: Charmeleon',
     ]);
   });
 

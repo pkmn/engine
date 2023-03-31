@@ -1,0 +1,44 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[8386,26008,26341,60705]}
+>player p1 {"name":"Bot 1","team":"Raichu|||None|stringshot,firepunch,strength,poisonsting||,229,73,106,106,49|N|14,26,10,1,1,27||60|23]Weepinbell|||None|hypnosis,psybeam,superfang,jumpkick||37,240,83,99,99,55|N|0,20,8,21,21,21||67|201]Beedrill|||None|reflect,doubleteam,roar,thunderwave||93,131,52,68,68,173|N|4,1,15,28,28,20||52|158]Mew|||None|twineedle,bubble,thunderbolt,toxic||184,141,159,25,25,67|N|2,21,12,4,4,22||56|237]Flareon|||None|dizzypunch,hyperbeam,teleport,whirlwind||18,121,181,38,38,221|N|1,1,20,30,30,17||52|245]Ponyta|||None|absorb,icepunch,megakick,slam||120,238,179,178,178,144|N|9,2,29,10,10,28||82|178"}
+>player p2 {"name":"Bot 2","team":"Weedle|||None|wingattack,flash,doubleedge,tackle||192,60,219,234,234,82|N|3,0,16,7,7,15||78|56]Electrode|||None|slash,psywave,recover,dragonrage||213,115,149,154,154,111|N|9,10,16,26,26,29||98|52]Slowbro|||None|rage,kinesis,sleeppowder,spikecannon||9,90,96,147,147,57|N|10,,21,28,28,3||77|213]Tangela|||None|drillpeck,skullbash,watergun,cometpunch||173,213,219,227,227,90|N|6,9,18,20,20,15||61|254]Rattata|||None|payday,lowkick,icebeam,leechlife||60,223,69,26,26,73|N|8,27,16,9,9,13||70|242]Electabuzz|||None|acidarmor,sludge,barrier,doublekick||179,215,188,14,14,176|N|7,24,6,11,11,14||50|121"}
+>p1 move stringshot
+>p2 move doubleedge
+>p1 move poisonsting
+>p2 switch 2
+>p1 switch 2
+>p2 switch 2
+>p1 move hypnosis
+>p2 move tackle
+>p1 move superfang
+>p2 move tackle
+>p1 move jumpkick
+>p2 switch 3
+>p1 switch 2
+>p2 move rage
+>p1 move strength
+>p2 move rage
+>p1 move firepunch
+>p2 move rage
+>p1 switch 3
+>p1 switch 4
+>p2 move rage
+>p1 switch 5
+>p2 move rage
+>p1 switch 6
+>p2 move rage
+>p1 switch 6
+>p2 move rage
+>p1 switch 2
+>p2 move rage
+>p1 move superfang
+>p2 move rage
+>p1 switch 2
+>p2 move rage
+>p1 move hyperbeam
+>p2 move rage
+>p1 switch 2
+>p1 move hypnosis
+>p2 move rage
+>p1 switch 6
+>p1 move megakick
+>p2 move rage

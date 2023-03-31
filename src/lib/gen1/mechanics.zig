@@ -775,11 +775,13 @@ fn doMove(
     };
     assert(!immune or miss or (showdown and move.effect == .Binding));
 
+    var late = showdown;
     const skip = status or immune;
     if ((!showdown or (!skip or counter)) and !miss) blk: {
         if (showdown and move.effect.isMulti()) {
             Effects.multiHit(battle, player, move);
             hits = side.active.volatiles.attacks;
+            late = false;
         }
 
         // Cartridge rolls for crit even for moves that can't crit (Counter/Metronome/status/OHKO)
@@ -896,7 +898,7 @@ fn doMove(
         if (hit == 0 and ohko) try log.ohko();
         hit += 1;
         if (foe.stored().hp == 0) break;
-        if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
+        if (!late and foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
             try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
         }
         // If the substitute breaks during a multi-hit attack, the attack ends
@@ -934,6 +936,11 @@ fn doMove(
     if (move.effect.alwaysHappens()) try alwaysHappens(battle, player, move, residual, log);
 
     if (foe.stored().hp == 0) return null;
+
+    // Pokémon Showdown builds Rage at the wrong time for non-MultiHit moves
+    if (late and foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
+        try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
+    }
 
     if (!move.effect.isSpecial()) {
         // On the cartridge Rage is not considered to be "special" and thus gets executed for a

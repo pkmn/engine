@@ -4381,12 +4381,12 @@ test "Rage effect" {
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
             HIT, ~CRIT, MIN_DMG, ~HIT,
             HIT, ~CRIT, MIN_DMG, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5,
-            ~HIT,
+            ~HIT, HIT, ~CRIT, MAX_DMG,
         } else .{
             ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT,
             ~CRIT, MIN_DMG, HIT, ~CRIT, ~HIT,
             ~CRIT, MIN_DMG, HIT, ~CRIT, HIT, DISABLE_MOVE_1, DISABLE_DURATION_5,
-            ~CRIT, MIN_DMG, ~HIT,
+            ~CRIT, MIN_DMG, ~HIT, ~CRIT, MAX_DMG, HIT,
         }
     // zig fmt: on
     ).init(
@@ -4394,7 +4394,10 @@ test "Rage effect" {
             .{ .species = .Charmeleon, .moves = &.{ .Rage, .Flamethrower } },
             .{ .species = .Doduo, .moves = &.{.DrillPeck} },
         },
-        &.{.{ .species = .Grimer, .moves = &.{ .Pound, .Disable, .SelfDestruct } }},
+        &.{
+            .{ .species = .Grimer, .moves = &.{ .Pound, .Disable, .SelfDestruct } },
+            .{ .species = .Tentacruel, .moves = &.{.Surf} },
+        },
     );
     defer t.deinit();
 
@@ -4449,12 +4452,23 @@ test "Rage effect" {
     try t.log.expected.miss(P2.ident(1));
     try t.log.expected.boost(P1.ident(1), .Rage, 1);
     t.expected.p2.get(1).hp = 0;
-    try t.log.expected.faint(P2.ident(1), false);
-    try t.log.expected.win(.P1);
+    try t.log.expected.faint(P2.ident(1), true);
 
-    try expectEqual(Result.Win, try t.update(forced, move(3)));
+    try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(forced, move(3)));
     try expectEqual(@as(i4, 4), t.actual.p1.active.boosts.atk);
 
+    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.turn(5);
+
+    try expectEqual(Result.Default, try t.update(.{}, swtch(2)));
+
+    try t.log.expected.move(P2.ident(2), Move.Surf, P1.ident(1), null);
+    try t.log.expected.supereffective(P1.ident(1));
+    t.expected.p1.get(1).hp = 0;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.faint(P1.ident(1), true);
+
+    try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(forced, move(1)));
     try expectEqual(@as(u8, 31), t.actual.p1.active.move(1).pp);
 
     try t.verify();
