@@ -74,7 +74,7 @@ compiler (see above regarding minimum version) and download one to
 `node_module/@pkmn/engine/build/bin` if it can't find one, as well as looking for (and downloading,
 if necessary) the required Node headers needed to successfully build the addons natively.
 
-**If you have configured NPM to `--ignore-scripts` you must either run `npx install-pkmn-engine`
+**If you have configured `npm` to `--ignore-scripts` you must either run `npx install-pkmn-engine`
 directly or build the addons manually and place the artifacts in the expected paths.**
 
 ### `pkmn`

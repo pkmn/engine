@@ -139,7 +139,7 @@ if (argv.prod) {
 
 const preamble = argv.prod ? 'Official release of' : 'Automated nightly release of developer';
 const npm = 'The corresponding release of the reference TypeScript driver code can be found on ' +
-  `the [npm Registry](https://www.npmjs.com/package/@pkmn/engine/v/${next}).`;
+  `the [npm registry](https://www.npmjs.com/package/@pkmn/engine/v/${next}).`;
 const key = 'RWQJbSYgSRvYHXIqYwkOzpuV4eQW6roHp8PqUXcQAUk3suFmclEUZZff';
 const sign = argv.prod
   ? 'These archives have been signed with [Minisign](https://jedisct1.github.io/minisign/) with ' +

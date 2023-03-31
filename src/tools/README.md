@@ -31,7 +31,7 @@ This directory contains miscellaneous scripts and tools useful for working on th
 - [`release.ts`](release.ts): Builds versions of `libpkmn` and `libpkmn-showdown` for each supported
   platform, packages them into archives, and publishes the resulting artifacts. Can be either run to
   produce a nightly release (which simply uploads to GitHub) or the create an official `--prod`
-  release which additionally signs the builds (which can only be done locally)/publishes to NPM/add
+  release which additionally signs the builds (which can only be done locally)/publishes to npm/add
   a git tag. Supports a `--dryRun` option for just printing out the steps it would take.
 
       $ npm run release
