@@ -506,10 +506,12 @@ A miscellaneous effect indicated by `Reason` has activated on the Pokémon ident
 | `0x00` | `Bide`                 |
 | `0x01` | `confusion`            |
 | `0x02` | `move: Haze`           |
-| `0x03` | `move: Mist`           |
+| `0x03` | `move: Mist`\*         |
 | `0x04` | `move: Struggle`       |
 | `0x05` | `Substitute\|[damage]` |
 | `0x06` | `\|\|move: Splash`     |
+
+\**Note that Mist gets "upgraded" to a `|-block|` message by Pokémon Showdown.*
 </details>
 
 ### `|-fieldactivate|` (`0x16`)
