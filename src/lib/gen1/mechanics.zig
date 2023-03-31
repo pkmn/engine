@@ -1084,6 +1084,7 @@ fn randomizeDamage(battle: anytype) void {
 
 fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype) !?Result {
     const side = battle.side(player);
+    const foe = battle.foe(player);
 
     if (!try checkHit(battle, player, move, log)) return null;
 
@@ -1112,6 +1113,9 @@ fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
     if (battle.last_damage == 0) return if (showdown) null else Result.Error;
 
     _ = try applyDamage(battle, player.foe(), player.foe(), .None, log);
+    if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
+        try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
+    }
     return null;
 }
 
