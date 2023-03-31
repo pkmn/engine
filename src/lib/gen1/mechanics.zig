@@ -442,7 +442,9 @@ fn executeMove(
         .err => return @as(?Result, Result.Error),
     }
 
-    if (!skip_can and !try canMove(battle, player, mslot, auto, skip_pp, from, log)) return null;
+    if (!skip_can and !try canMove(battle, player, mslot, auto, skip_pp, from, residual, log)) {
+        return null;
+    }
 
     return doMove(battle, player, mslot, auto, residual, log);
 }
@@ -654,6 +656,7 @@ fn canMove(
     auto: bool,
     skip_pp: bool,
     from: ?Move,
+    residual: *bool,
     log: anytype,
 ) !bool {
     var side = battle.side(player);
@@ -688,7 +691,7 @@ fn canMove(
     try log.move(player_ident, side.last_selected_move, battle.active(target), f);
 
     if (move.effect.onBegin()) {
-        try onBegin(battle, player, move, mslot, log);
+        try onBegin(battle, player, move, mslot, residual, log);
         return false;
     }
 
@@ -1216,7 +1219,7 @@ fn mirrorMove(
 
     incrementPP(side, mslot);
 
-    if (!try canMove(battle, player, mslot, auto, false, .MirrorMove, log)) return null;
+    if (!try canMove(battle, player, mslot, auto, false, .MirrorMove, residual, log)) return null;
     return doMove(battle, player, mslot, auto, residual, log);
 }
 
@@ -1245,7 +1248,7 @@ fn metronome(
 
     incrementPP(side, mslot);
 
-    if (!try canMove(battle, player, mslot, auto, false, .Metronome, log)) return null;
+    if (!try canMove(battle, player, mslot, auto, false, .Metronome, residual, log)) return null;
     return doMove(battle, player, mslot, auto, residual, log);
 }
 
@@ -1534,7 +1537,14 @@ fn checkEBC(battle: anytype) bool {
     return false;
 }
 
-inline fn onBegin(battle: anytype, player: Player, move: Move.Data, mslot: u8, log: anytype) !void {
+inline fn onBegin(
+    battle: anytype,
+    player: Player,
+    move: Move.Data,
+    mslot: u8,
+    residual: *bool,
+    log: anytype,
+) !void {
     assert(move.effect.onBegin());
     return switch (move.effect) {
         .Confusion => Effects.confusion(battle, player, move, log),
@@ -1550,7 +1560,7 @@ inline fn onBegin(battle: anytype, player: Player, move: Move.Data, mslot: u8, l
         .Poison => Effects.poison(battle, player, move, log),
         .Reflect => Effects.reflect(battle, player, log),
         .Splash => Effects.splash(battle, player, log),
-        .Substitute => Effects.substitute(battle, player, log),
+        .Substitute => Effects.substitute(battle, player, residual, log),
         .SwitchAndTeleport => Effects.switchAndTeleport(battle, player, move, log),
         .Transform => Effects.transform(battle, player, log),
         else => unreachable,
@@ -2186,7 +2196,7 @@ pub const Effects = struct {
         try log.activate(battle.active(player), .Splash);
     }
 
-    fn substitute(battle: anytype, player: Player, log: anytype) !void {
+    fn substitute(battle: anytype, player: Player, residual: *bool, log: anytype) !void {
         var side = battle.side(player);
         if (side.active.volatiles.Substitute) {
             try log.fail(battle.active(player), .Substitute);
@@ -2211,7 +2221,10 @@ pub const Effects = struct {
         side.active.volatiles.substitute = hp + 1;
         side.active.volatiles.Substitute = true;
         try log.start(battle.active(player), .Substitute);
-        if (hp > 0) try log.damage(battle.active(player), side.stored(), .None);
+        if (hp > 0) {
+            try log.damage(battle.active(player), side.stored(), .None);
+            if (showdown and side.stored().hp == 0) residual.* = false;
+        }
     }
 
     fn switchAndTeleport(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
