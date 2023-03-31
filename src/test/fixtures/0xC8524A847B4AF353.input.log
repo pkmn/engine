@@ -1,0 +1,29 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[51282,19076,31562,62291]}
+>player p1 {"name":"Bot 1","team":"Rhydon|||None|smokescreen,firepunch,boneclub,doublekick||110,186,29,86,86,51|N|5,16,30,,,5||99|80]Fearow|||None|sleeppowder,tackle,thunderbolt,bide||46,90,200,175,175,180|N|1,12,21,30,30,20||90|93]Omanyte|||None|surf,cometpunch,selfdestruct,submission||50,172,207,36,36,225|N|1,29,1,2,2,17||78|46]Zapdos|||None|absorb,twineedle,recover,drillpeck||197,17,22,196,196,245|N|8,26,16,20,20,16||87|228]Magnemite|||None|thunderpunch,reflect,dizzypunch,wingattack||54,93,52,203,203,143|N|15,,2,7,7,27||55|63]Cubone|||None|guillotine,quickattack,slash,barrier||64,57,176,36,36,39|N|15,7,,30,30,15||81|60"}
+>player p2 {"name":"Bot 2","team":"Arcanine|||None|focusenergy,acid,lick,slam||107,23,159,250,250,214|N|0,8,25,24,24,8||91|89]Koffing|||None|sharpen,fissure,bonemerang,furyattack||194,122,39,137,137,164|N|8,,9,17,17,0||95|243]Magikarp|||None|aurorabeam,triattack,sludge,visegrip||126,86,122,170,170,135|N|0,16,21,29,29,8||84|108]Raticate|||None|pound,substitute,fireblast,kinesis||33,84,158,251,251,129|N|2,5,24,0,0,19||60|14]Weedle|||None|confusion,gust,roar,thrash||91,26,24,72,72,150|N|15,30,,,,||62|49]Tentacool|||None|swift,megadrain,cut,flamethrower||98,30,5,51,51,126|N|1,0,29,18,18,25||72|62"}
+>p1 move smokescreen
+>p2 move focusenergy
+>p1 move firepunch
+>p2 switch 2
+>p1 move boneclub
+>p2 move sharpen
+>p2 switch 2
+>p1 move doublekick
+>p2 move acid
+>p1 move firepunch
+>p2 move lick
+>p1 switch 2
+>p2 switch 3
+>p1 move sleeppowder
+>p2 move aurorabeam
+>p1 move tackle
+>p2 move triattack
+>p1 move thunderbolt
+>p2 move sludge
+>p2 switch 4
+>p1 move bide
+>p2 move pound
+>p1 move bide
+>p2 switch 5
+>p1 move bide
+>p2 move confusion

@@ -577,7 +577,7 @@ ended.
 | ------ | ------------------------- |
 | `0x00` | `Disable`                 |
 | `0x01` | `confusion`               |
-| `0x02` | `move: Bide`              |
+| `0x02` | `Bide`                    |
 | `0x03` | `Substitute`              |
 | `0x04` | `Disable\|[silent]`       |
 | `0x05` | `confusion\|[silent]`     |

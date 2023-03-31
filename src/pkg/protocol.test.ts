@@ -233,7 +233,7 @@ for (const gen of new Generations(Dex as any)) {
 
     test('|-end|', () => {
       expect(Array.from(log.parse(Data.view([ArgType.End, 0b1110, PROTOCOL.End.Bide]))))
-        .toEqual(parse('|-end|p2a: Fuudin|move: Bide'));
+        .toEqual(parse('|-end|p2a: Fuudin|Bide'));
       expect(Array.from(log.parse(Data.view([ArgType.End, 0b0010, PROTOCOL.End.ConfusionSilent]))))
         .toEqual(parse('|-end|p1a: Hitokage|confusion|[silent]'));
     });
