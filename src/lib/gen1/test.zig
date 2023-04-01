@@ -4798,106 +4798,139 @@ test "Bide effect" {
     // Glare, Haze, Leech Seed, Light Screen, Mimic, Mist, Poison Gas, Poison Powder, Recover,
     // Reflect, Rest, Soft-Boiled, Splash, Stun Spore, Substitute, Supersonic, Teleport, Thunder
     // Wave, Toxic, or Transform, the previous damage dealt to the user will be added to the total.
-    const BIDE_3 = MAX;
-    const CFZ_3 = if (showdown) comptime ranged(2, 6 - 2) - 1 else 1;
-    const CFZ_CAN = if (showdown) comptime ranged(128, 256) - 1 else MIN;
+    {
+        const BIDE_3 = MAX;
+        const CFZ_3 = if (showdown) comptime ranged(2, 6 - 2) - 1 else 1;
+        const CFZ_CAN = if (showdown) comptime ranged(128, 256) - 1 else MIN;
 
-    var t = Test(
-    // zig fmt: off
-    if (showdown) .{
-        BIDE_3, HIT, HIT, HIT, ~CRIT, MIN_DMG, BIDE_3, HIT, HIT, CFZ_3, CFZ_CAN,
-    } else .{
-        ~CRIT, BIDE_3, HIT, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, BIDE_3, HIT, HIT, CFZ_3, CFZ_CAN,
+        var t = Test(
+        // zig fmt: off
+        if (showdown) .{
+            BIDE_3, HIT, HIT, HIT, ~CRIT, MIN_DMG, BIDE_3, HIT, HIT, CFZ_3, CFZ_CAN,
+        } else .{
+            ~CRIT, BIDE_3, HIT, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, BIDE_3, HIT, HIT, CFZ_3, CFZ_CAN,
+        }
+        // zig fmt: on
+        ).init(
+            &.{
+                .{ .species = .Chansey, .moves = &.{ .Bide, .Teleport } },
+                .{ .species = .Onix, .moves = &.{.Bide} },
+            },
+            &.{
+                .{ .species = .Magnemite, .moves = &.{.SonicBoom} },
+                .{ .species = .Dugtrio, .moves = &.{.Dig} },
+                .{ .species = .Haunter, .moves = &.{ .NightShade, .ConfuseRay } },
+            },
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P1.ident(1), Move.Bide, P1.ident(1), null);
+        try t.log.expected.start(P1.ident(1), .Bide);
+        try t.log.expected.move(P2.ident(1), Move.SonicBoom, P1.ident(1), null);
+        t.expected.p1.get(1).hp -= 20;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        var n = t.battle.actual.choices(.P1, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{ swtch(2), forced }, choices[0..n]);
+
+        try t.log.expected.activate(P1.ident(1), .Bide);
+        try t.log.expected.move(P2.ident(1), Move.SonicBoom, P1.ident(1), null);
+        t.expected.p1.get(1).hp -= 20;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(forced, move(1)));
+
+        try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+        try t.log.expected.activate(P1.ident(1), .Bide);
+        try t.log.expected.turn(4);
+
+        try expectEqual(Result.Default, try t.update(forced, swtch(2)));
+
+        try t.log.expected.move(P2.ident(2), Move.Dig, .{}, null);
+        try t.log.expected.laststill();
+        try t.log.expected.prepare(P2.ident(2), Move.Dig);
+        try t.log.expected.end(P1.ident(1), .Bide);
+        t.expected.p2.get(2).hp -= 120;
+        try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
+        try t.log.expected.turn(5);
+
+        try expectEqual(Result.Default, try t.update(forced, move(1)));
+
+        n = t.battle.actual.choices(.P1, .Move, &choices);
+        try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
+
+        try t.log.expected.move(P2.ident(2), Move.Dig, P1.ident(1), Move.Dig);
+        t.expected.p1.get(1).hp -= 256;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.move(P1.ident(1), Move.Bide, P1.ident(1), null);
+        try t.log.expected.start(P1.ident(1), .Bide);
+        try t.log.expected.turn(6);
+
+        try expectEqual(Result.Default, try t.update(move(1), forced));
+
+        try t.log.expected.switched(P2.ident(3), t.expected.p2.get(3));
+        try t.log.expected.activate(P1.ident(1), .Bide);
+        try t.log.expected.turn(7);
+
+        try expectEqual(Result.Default, try t.update(forced, swtch(3)));
+
+        try t.log.expected.move(P2.ident(3), Move.NightShade, P1.ident(1), null);
+        t.expected.p1.get(1).hp -= 100;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.activate(P1.ident(1), .Bide);
+        try t.log.expected.turn(8);
+
+        try expectEqual(Result.Default, try t.update(forced, move(1)));
+
+        try t.log.expected.move(P2.ident(3), Move.ConfuseRay, P1.ident(1), null);
+        try t.log.expected.start(P1.ident(1), .Confusion);
+        try t.log.expected.activate(P1.ident(1), .Confusion);
+        try t.log.expected.end(P1.ident(1), .Bide);
+        t.expected.p2.get(3).hp = 0;
+        try t.log.expected.damage(P2.ident(3), t.expected.p2.get(3), .None);
+        try t.log.expected.faint(P2.ident(3), true);
+
+        try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(forced, move(2)));
+        try expectEqual(@as(u8, 14), t.actual.p1.get(1).move(1).pp);
+
+        try t.verify();
     }
-    // zig fmt: on
-    ).init(
-        &.{
-            .{ .species = .Chansey, .moves = &.{ .Bide, .Teleport } },
-            .{ .species = .Onix, .moves = &.{.Bide} },
-        },
-        &.{
-            .{ .species = .Magnemite, .moves = &.{.SonicBoom} },
-            .{ .species = .Dugtrio, .moves = &.{.Dig} },
-            .{ .species = .Haunter, .moves = &.{ .NightShade, .ConfuseRay } },
-        },
-    );
-    defer t.deinit();
+    // failure
+    {
+        const BIDE_2 = MIN;
+        var t = Test((if (showdown) .{ HIT, BIDE_2 } else .{ HIT, ~CRIT, BIDE_2 })).init(
+            &.{.{ .species = .Wartortle, .moves = &.{ .SeismicToss, .Teleport } }},
+            &.{.{ .species = .Pinsir, .level = 50, .moves = &.{.Bide} }},
+        );
+        defer t.deinit();
 
-    try t.log.expected.move(P1.ident(1), Move.Bide, P1.ident(1), null);
-    try t.log.expected.start(P1.ident(1), .Bide);
-    try t.log.expected.move(P2.ident(1), Move.SonicBoom, P1.ident(1), null);
-    t.expected.p1.get(1).hp -= 20;
-    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-    try t.log.expected.turn(2);
+        try t.log.expected.move(P1.ident(1), Move.SeismicToss, P2.ident(1), null);
+        t.expected.p2.get(1).hp -= 100;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.move(P2.ident(1), Move.Bide, P2.ident(1), null);
+        try t.log.expected.start(P2.ident(1), .Bide);
+        try t.log.expected.turn(2);
 
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
 
-    var n = t.battle.actual.choices(.P1, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), forced }, choices[0..n]);
+        try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+        try t.log.expected.activate(P2.ident(1), .Bide);
+        try t.log.expected.turn(3);
 
-    try t.log.expected.activate(P1.ident(1), .Bide);
-    try t.log.expected.move(P2.ident(1), Move.SonicBoom, P1.ident(1), null);
-    t.expected.p1.get(1).hp -= 20;
-    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-    try t.log.expected.turn(3);
+        try expectEqual(Result.Default, try t.update(move(2), forced));
 
-    try expectEqual(Result.Default, try t.update(forced, move(1)));
+        try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+        try t.log.expected.end(P2.ident(1), .Bide);
+        try t.log.expected.fail(P2.ident(1), .None);
+        try t.log.expected.turn(4);
 
-    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
-    try t.log.expected.activate(P1.ident(1), .Bide);
-    try t.log.expected.turn(4);
-
-    try expectEqual(Result.Default, try t.update(forced, swtch(2)));
-
-    try t.log.expected.move(P2.ident(2), Move.Dig, .{}, null);
-    try t.log.expected.laststill();
-    try t.log.expected.prepare(P2.ident(2), Move.Dig);
-    try t.log.expected.end(P1.ident(1), .Bide);
-    t.expected.p2.get(2).hp -= 120;
-    try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .None);
-    try t.log.expected.turn(5);
-
-    try expectEqual(Result.Default, try t.update(forced, move(1)));
-
-    n = t.battle.actual.choices(.P1, .Move, &choices);
-    try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
-
-    try t.log.expected.move(P2.ident(2), Move.Dig, P1.ident(1), Move.Dig);
-    t.expected.p1.get(1).hp -= 256;
-    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-    try t.log.expected.move(P1.ident(1), Move.Bide, P1.ident(1), null);
-    try t.log.expected.start(P1.ident(1), .Bide);
-    try t.log.expected.turn(6);
-
-    try expectEqual(Result.Default, try t.update(move(1), forced));
-
-    try t.log.expected.switched(P2.ident(3), t.expected.p2.get(3));
-    try t.log.expected.activate(P1.ident(1), .Bide);
-    try t.log.expected.turn(7);
-
-    try expectEqual(Result.Default, try t.update(forced, swtch(3)));
-
-    try t.log.expected.move(P2.ident(3), Move.NightShade, P1.ident(1), null);
-    t.expected.p1.get(1).hp -= 100;
-    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
-    try t.log.expected.activate(P1.ident(1), .Bide);
-    try t.log.expected.turn(8);
-
-    try expectEqual(Result.Default, try t.update(forced, move(1)));
-
-    try t.log.expected.move(P2.ident(3), Move.ConfuseRay, P1.ident(1), null);
-    try t.log.expected.start(P1.ident(1), .Confusion);
-    try t.log.expected.activate(P1.ident(1), .Confusion);
-    try t.log.expected.end(P1.ident(1), .Bide);
-    t.expected.p2.get(3).hp = 0;
-    try t.log.expected.damage(P2.ident(3), t.expected.p2.get(3), .None);
-    try t.log.expected.faint(P2.ident(3), true);
-
-    try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(forced, move(2)));
-
-    try expectEqual(@as(u8, 14), t.actual.p1.get(1).move(1).pp);
-
-    try t.verify();
+        try expectEqual(Result.Default, try t.update(move(2), forced));
+        try t.verify();
+    }
 }
 
 // Move.Metronome

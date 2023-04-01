@@ -3843,86 +3843,122 @@ describe('Gen 1', () => {
   });
 
   test('Bide effect', () => {
-    const battle = startBattle([
-      BIDE(3), HIT, HIT, HIT, NO_CRIT, MIN_DMG, BIDE(3), HIT, HIT, CFZ(3), CFZ_CAN,
-    ], [
-      {species: 'Chansey', evs, moves: ['Bide', 'Teleport']},
-      {species: 'Onix', evs, moves: ['Bide']},
-    ], [
-      {species: 'Magnemite', evs, moves: ['Sonic Boom']},
-      {species: 'Dugtrio', evs, moves: ['Dig']},
-      {species: 'Haunter', evs, moves: ['Night Shade', 'Confuse Ray']},
-    ]);
+    {
+      const battle = startBattle([
+        BIDE(3), HIT, HIT, HIT, NO_CRIT, MIN_DMG, BIDE(3), HIT, HIT, CFZ(3), CFZ_CAN,
+      ], [
+        {species: 'Chansey', evs, moves: ['Bide', 'Teleport']},
+        {species: 'Onix', evs, moves: ['Bide']},
+      ], [
+        {species: 'Magnemite', evs, moves: ['Sonic Boom']},
+        {species: 'Dugtrio', evs, moves: ['Dig']},
+        {species: 'Haunter', evs, moves: ['Night Shade', 'Confuse Ray']},
+      ]);
 
-    let chansey = battle.p1.pokemon[0].hp;
-    let dugtrio = battle.p2.pokemon[1].hp;
+      let chansey = battle.p1.pokemon[0].hp;
+      let dugtrio = battle.p2.pokemon[1].hp;
 
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
 
-    expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1']);
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1']);
 
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(chansey -= 20);
 
-    battle.makeChoices('move 1', 'switch 2');
-    expect(battle.p1.pokemon[0].hp).toBe(chansey);
+      battle.makeChoices('move 1', 'switch 2');
+      expect(battle.p1.pokemon[0].hp).toBe(chansey);
 
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(chansey);
-    expect(battle.p2.pokemon[0].hp).toBe(dugtrio -= 120);
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(chansey);
+      expect(battle.p2.pokemon[0].hp).toBe(dugtrio -= 120);
 
-    expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
+      expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
 
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 256);
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(chansey -= 256);
 
-    battle.makeChoices('move 1', 'switch 3');
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p1.pokemon[0].hp).toBe(chansey -= 100);
+      battle.makeChoices('move 1', 'switch 3');
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(chansey -= 100);
 
-    battle.makeChoices('move 1', 'move 2');
-    expect(battle.p2.pokemon[0].hp).toBe(0);
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p2.pokemon[0].hp).toBe(0);
 
-    expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(14);
+      expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(14);
 
-    verify(battle, [
-      '|move|p1a: Chansey|Bide|p1a: Chansey',
-      '|-start|p1a: Chansey|Bide',
-      '|move|p2a: Magnemite|Sonic Boom|p1a: Chansey',
-      '|-damage|p1a: Chansey|683/703',
-      '|turn|2',
-      '|-activate|p1a: Chansey|Bide',
-      '|move|p2a: Magnemite|Sonic Boom|p1a: Chansey',
-      '|-damage|p1a: Chansey|663/703',
-      '|turn|3',
-      '|switch|p2a: Dugtrio|Dugtrio|273/273',
-      '|-activate|p1a: Chansey|Bide',
-      '|turn|4',
-      '|move|p2a: Dugtrio|Dig||[still]',
-      '|-prepare|p2a: Dugtrio|Dig',
-      '|-end|p1a: Chansey|Bide',
-      '|-damage|p2a: Dugtrio|153/273',
-      '|turn|5',
-      '|move|p2a: Dugtrio|Dig|p1a: Chansey|[from]Dig',
-      '|-damage|p1a: Chansey|407/703',
-      '|move|p1a: Chansey|Bide|p1a: Chansey',
-      '|-start|p1a: Chansey|Bide',
-      '|turn|6',
-      '|switch|p2a: Haunter|Haunter|293/293',
-      '|-activate|p1a: Chansey|Bide',
-      '|turn|7',
-      '|move|p2a: Haunter|Night Shade|p1a: Chansey',
-      '|-damage|p1a: Chansey|307/703',
-      '|-activate|p1a: Chansey|Bide',
-      '|turn|8',
-      '|move|p2a: Haunter|Confuse Ray|p1a: Chansey',
-      '|-start|p1a: Chansey|confusion',
-      '|-activate|p1a: Chansey|confusion',
-      '|-end|p1a: Chansey|Bide',
-      '|-damage|p2a: Haunter|0 fnt',
-      '|faint|p2a: Haunter',
-    ]);
+      verify(battle, [
+        '|move|p1a: Chansey|Bide|p1a: Chansey',
+        '|-start|p1a: Chansey|Bide',
+        '|move|p2a: Magnemite|Sonic Boom|p1a: Chansey',
+        '|-damage|p1a: Chansey|683/703',
+        '|turn|2',
+        '|-activate|p1a: Chansey|Bide',
+        '|move|p2a: Magnemite|Sonic Boom|p1a: Chansey',
+        '|-damage|p1a: Chansey|663/703',
+        '|turn|3',
+        '|switch|p2a: Dugtrio|Dugtrio|273/273',
+        '|-activate|p1a: Chansey|Bide',
+        '|turn|4',
+        '|move|p2a: Dugtrio|Dig||[still]',
+        '|-prepare|p2a: Dugtrio|Dig',
+        '|-end|p1a: Chansey|Bide',
+        '|-damage|p2a: Dugtrio|153/273',
+        '|turn|5',
+        '|move|p2a: Dugtrio|Dig|p1a: Chansey|[from]Dig',
+        '|-damage|p1a: Chansey|407/703',
+        '|move|p1a: Chansey|Bide|p1a: Chansey',
+        '|-start|p1a: Chansey|Bide',
+        '|turn|6',
+        '|switch|p2a: Haunter|Haunter|293/293',
+        '|-activate|p1a: Chansey|Bide',
+        '|turn|7',
+        '|move|p2a: Haunter|Night Shade|p1a: Chansey',
+        '|-damage|p1a: Chansey|307/703',
+        '|-activate|p1a: Chansey|Bide',
+        '|turn|8',
+        '|move|p2a: Haunter|Confuse Ray|p1a: Chansey',
+        '|-start|p1a: Chansey|confusion',
+        '|-activate|p1a: Chansey|confusion',
+        '|-end|p1a: Chansey|Bide',
+        '|-damage|p2a: Haunter|0 fnt',
+        '|faint|p2a: Haunter',
+      ]);
+    }
+    // failure
+    {
+      const battle = startBattle([HIT, BIDE(2)], [
+        {species: 'Wartortle', evs, moves: ['Seismic Toss', 'Teleport']},
+      ], [
+        {species: 'Pinsir', level: 50, evs, moves: ['Bide']},
+      ]);
+
+      const p1hp = battle.p1.pokemon[0].hp;
+      const p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp - 100);
+
+      battle.makeChoices('move 2', 'move 1');
+
+      battle.makeChoices('move 2', 'move 1');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+
+      verify(battle, [
+        '|move|p1a: Wartortle|Seismic Toss|p2a: Pinsir',
+        '|-damage|p2a: Pinsir|71/171',
+        '|move|p2a: Pinsir|Bide|p2a: Pinsir',
+        '|-start|p2a: Pinsir|Bide',
+        '|turn|2',
+        '|move|p1a: Wartortle|Teleport|p1a: Wartortle',
+        '|-activate|p2a: Pinsir|Bide',
+        '|turn|3',
+        '|move|p1a: Wartortle|Teleport|p1a: Wartortle',
+        '|-end|p2a: Pinsir|Bide',
+        '|-fail|p2a: Pinsir',
+        '|turn|4',
+      ]);
+    }
   });
 
   test('Metronome effect', () => {

@@ -815,7 +815,7 @@ fn doMove(
     }
 
     // Due to control flow shenanigans we need to clear last_damage for Pokémon Showdown
-    if (showdown and skip and move.effect != .Bide) battle.last_damage = 0;
+    if (showdown and skip) battle.last_damage = 0;
 
     miss = if (showdown or skip)
         miss

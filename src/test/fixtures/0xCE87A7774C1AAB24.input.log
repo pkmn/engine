@@ -1,0 +1,33 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[52871,42871,19482,43812]}
+>player p1 {"name":"Bot 1","team":"Poliwhirl|||None|disable,nightshade,thunderpunch,waterfall||3,43,70,20,20,243|N|5,17,3,3,3,13||75|118]Bulbasaur|||None|poisonsting,hyperbeam,rest,tackle||18,153,166,250,250,58|N|11,2,12,19,19,15||55|26]Chansey|||None|screech,doubleslap,earthquake,rockslide||128,215,120,83,83,|N|11,26,5,27,27,15||80|222]Wartortle|||None|quickattack,thrash,smokescreen,explosion||81,97,244,241,241,21|N|11,11,16,6,6,26||81|222]Mankey|||None|aurorabeam,pound,supersonic,sing||244,35,66,117,117,27|N|6,1,14,4,4,2||74|210]Electrode|||None|guillotine,whirlwind,vinewhip,leechlife||204,86,130,5,5,108|N|9,22,21,15,15,8||71|134"}
+>player p2 {"name":"Bot 2","team":"Ekans|||None|defensecurl,doublekick,glare,hypnosis||155,9,111,8,8,166|N|8,6,13,21,21,17||52|179]Oddish|||None|petaldance,smog,flamethrower,dig||13,171,213,167,167,197|N|3,13,13,2,2,2||55|156]Magnemite|||None|swift,psybeam,thunderwave,swordsdance||153,101,206,48,48,164|N|4,1,3,16,16,0||61|167]Pinsir|||None|bide,rollingkick,surf,payday||246,1,238,61,61,54|N|9,7,5,19,19,1||97|75]Magikarp|||None|dizzypunch,haze,sleeppowder,eggbomb||132,164,180,14,14,69|N|9,18,8,14,14,29||97|128]Haunter|||None|recover,reflect,icebeam,teleport||230,158,229,69,69,100|N|0,17,5,9,9,13||85|156"}
+>p1 switch 2
+>p2 move defensecurl
+>p1 move poisonsting
+>p2 switch 2
+>p1 move hyperbeam
+>p2 move petaldance
+>p1 move recharge
+>p2 move petaldance
+>p1 move rest
+>p2 move petaldance
+>p1 move tackle
+>p2 move smog
+>p1 switch 2
+>p2 switch 2
+>p1 move disable
+>p2 switch 3
+>p1 move nightshade
+>p2 switch 4
+>p1 move thunderpunch
+>p2 switch 6
+>p1 switch 3
+>p2 move recover
+>p1 switch 4
+>p2 switch 6
+>p1 move quickattack
+>p2 move bide
+>p1 move thrash
+>p2 move bide
+>p1 move thrash
+>p2 move bide
