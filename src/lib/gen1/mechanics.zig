@@ -614,6 +614,8 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
         }
 
         _ = try applyDamage(battle, player.foe(), player.foe(), .None, log);
+        try buildRage(battle, player.foe(), log);
+
         return .done;
     }
 
@@ -862,15 +864,9 @@ fn doMove(
             if (showdown and side.stored().hp == 0) residual.* = false;
         } else if (move.effect == .Explode) {
             try Effects.explode(battle, player);
-            if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
-                try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
-            }
-        } else if (showdown) {
-            if (move.effect == .Disable) {
-                if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
-                    try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
-                }
-            }
+            try buildRage(battle, player.foe(), log);
+        } else if (showdown and move.effect == .Disable) {
+            try buildRage(battle, player.foe(), log);
         }
         return null;
     }
@@ -898,9 +894,7 @@ fn doMove(
         if (hit == 0 and ohko) try log.ohko();
         hit += 1;
         if (foe.stored().hp == 0) break;
-        if (!late and foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
-            try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
-        }
+        if (!late) try buildRage(battle, player.foe(), log);
         // If the substitute breaks during a multi-hit attack, the attack ends
         if (nullified) break;
     }
@@ -938,9 +932,7 @@ fn doMove(
     if (foe.stored().hp == 0) return null;
 
     // Pokémon Showdown builds Rage at the wrong time for non-MultiHit moves
-    if (late and foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
-        try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
-    }
+    if (late) try buildRage(battle, player.foe(), log);
 
     if (!move.effect.isSpecial()) {
         // On the cartridge Rage is not considered to be "special" and thus gets executed for a
@@ -1091,7 +1083,6 @@ fn randomizeDamage(battle: anytype) void {
 
 fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype) !?Result {
     const side = battle.side(player);
-    const foe = battle.foe(player);
 
     if (!try checkHit(battle, player, move, log)) return null;
 
@@ -1120,9 +1111,8 @@ fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
     if (battle.last_damage == 0) return if (showdown) null else Result.Error;
 
     _ = try applyDamage(battle, player.foe(), player.foe(), .None, log);
-    if (foe.active.volatiles.Rage and foe.active.boosts.atk < 6) {
-        try Effects.boost(battle, player.foe(), Move.get(.Rage), log);
-    }
+    try buildRage(battle, player.foe(), log);
+
     return null;
 }
 
@@ -2521,7 +2511,7 @@ fn statusModify(status: u8, stats: *Stats(u16)) void {
     }
 }
 
-fn isForced(active: ActivePokemon) bool {
+inline fn isForced(active: ActivePokemon) bool {
     return active.volatiles.Recharging or active.volatiles.Rage or
         active.volatiles.Thrashing or active.volatiles.Charging;
 }
@@ -2584,6 +2574,13 @@ fn disabled(side: *Side, ident: ID, log: anytype) !bool {
         }
     }
     return false;
+}
+
+inline fn buildRage(battle: anytype, who: Player, log: anytype) !void {
+    const side = battle.side(who);
+    if (side.active.volatiles.Rage and side.active.boosts.atk < 6) {
+        try Effects.boost(battle, who, Move.get(.Rage), log);
+    }
 }
 
 fn handleThrashing(battle: anytype, active: *ActivePokemon) bool {
