@@ -120,7 +120,7 @@ if (argv.prod) {
   sh('git', ['tag', `v${version}`]);
   sh('git', ['push', '--tags', 'origin', 'main']);
 } else {
-  const old = sh('npm', ['info', '@pkmn/engine@dev', 'version']);
+  const old = sh('npm', ['info', '@pkmn/engine@dev', 'version']).trim();
   if (old === next) {
     console.log(`Version v${version} already exists, exiting as there is nothing to do`);
     process.exit(0);
