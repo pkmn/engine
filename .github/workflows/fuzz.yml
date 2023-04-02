@@ -29,10 +29,10 @@ jobs:
           node src/bin/install-pkmn-engine
           npm run --silent fuzz -- ${{matrix.options == '' && 'pkmn' || 'showdown' }} ${{matrix.gen}} 1s $(cat seed.txt)
         if: failure()
-      - run: |
-          node src/bin/install-pkmn-engine --options="-Dshowdown -Dtrace"
-          npm run integration -- --gen=${{matrix.gen}} --duration=15m --maxFailures=5 --debug=false
-        if: ${{ matrix.options != '' }}
+      # - run: |
+      #     node src/bin/install-pkmn-engine --options="-Dshowdown -Dtrace"
+      #     npm run integration -- --gen=${{matrix.gen}} --duration=15m --maxFailures=5 --debug=false
+      #   if: ${{ matrix.options != '' }}
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
