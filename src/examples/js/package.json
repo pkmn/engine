@@ -1,14 +1,14 @@
 {
   "dependencies": {
-    "@pkmn/data": "^0.7.34",
-    "@pkmn/dex": "^0.7.34",
+    "@pkmn/data": "^0.7.35",
+    "@pkmn/dex": "^0.7.35",
     "@pkmn/engine": "file:../../..",
     "@pkmn/sets": "^5.0.4"
   },
   "devDependencies": {
     "parcel": "^2.8.3",
     "source-map-support": "^0.5.21",
-    "typescript": "^5.0.2",
+    "typescript": "^5.0.3",
     "vite": "^4.2.1"
   },
   "scripts": {
