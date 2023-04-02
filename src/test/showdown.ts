@@ -432,8 +432,8 @@ export class FixedRNG extends PRNG {
 }
 
 export const FILTER = new Set([
-  't:', 'gametype', 'player', 'teamsize', 'gen', 'message', 'done',
-  'tier', 'rule', 'start', 'upkeep', '-message', '-hint', 'debug', '',
+  '', 't:', 'gametype', 'player', 'teamsize', 'gen', 'message', 'done', 'error',
+  'bigerror', 'tier', 'rule', 'start', 'upkeep', '-message', '-hint', 'debug',
 ]);
 
 function filter(raw: string[]) {
