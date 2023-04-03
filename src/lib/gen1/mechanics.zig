@@ -932,7 +932,7 @@ fn doMove(
     if (foe.stored().hp == 0) return null;
 
     // Pokémon Showdown builds Rage at the wrong time for non-MultiHit moves
-    if (late) try buildRage(battle, player.foe(), log);
+    if (late and move.effect != .Disable) try buildRage(battle, player.foe(), log);
 
     if (!move.effect.isSpecial()) {
         // On the cartridge Rage is not considered to be "special" and thus gets executed for a
@@ -945,7 +945,9 @@ fn doMove(
         if (move.effect == .Twineedle) {
             if (!showdown) try Effects.poison(battle, player, Move.get(.PoisonSting), log);
         } else if (move.effect == .Disable) {
-            return Effects.disable(battle, player, move, log);
+            const result = try Effects.disable(battle, player, move, log);
+            if (showdown) try buildRage(battle, player.foe(), log);
+            return result;
         } else {
             try moveEffect(battle, player, move, log);
         }

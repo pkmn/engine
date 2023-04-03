@@ -1,0 +1,22 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[19175,25659,61794,28012]}
+>player p1 {"name":"Bot 1","team":"Tentacruel|||None|thunderbolt,psychic,toxic,nightshade||178,103,138,163,163,227|N|8,19,28,12,12,1||92|105]Exeggcute|||None|fissure,stringshot,fireblast,poisonsting||6,100,204,60,60,18|N|1,20,24,10,10,12||96|144]Ditto|||None|conversion,roar,disable,bite||97,155,80,85,85,89|N|15,11,14,23,23,23||86|194]Oddish|||None|jumpkick,superfang,tailwhip,teleport||162,222,197,226,226,185|N|11,3,28,10,10,3||53|139]Poliwhirl|||None|solarbeam,acidarmor,dragonrage,swordsdance||146,114,180,139,139,242|N|9,,21,30,30,24||72|81]Flareon|||None|glare,stunspore,slam,skullbash||133,173,116,51,51,108|N|2,29,29,28,28,14||77|37"}
+>player p2 {"name":"Bot 2","team":"Omanyte|||None|rockthrow,sludge,watergun,twineedle||42,155,60,160,160,219|N|9,11,4,3,3,12||90|166]Charmeleon|||None|thunderpunch,dreameater,rage,kinesis||203,247,213,124,124,193|N|15,6,6,19,19,14||88|47]Staryu|||None|lightscreen,drillpeck,stomp,poisonpowder||248,17,200,7,7,232|N|12,19,11,9,9,1||55|141]Graveler|||None|splash,skyattack,quickattack,sonicboom||238,44,54,162,162,238|N|12,7,18,9,9,4||50|190]Nidorino|||None|ember,leechlife,flamethrower,crabhammer||85,52,51,1,1,103|N|15,19,30,7,7,22||74|105]Voltorb|||None|eggbomb,hypnosis,doubleedge,spore||238,3,124,161,161,142|N|14,22,15,20,20,11||74|31"}
+>p1 switch 2
+>p2 move rockthrow
+>p1 move fissure
+>p2 move sludge
+>p1 move stringshot
+>p2 move watergun
+>p1 move fireblast
+>p2 move twineedle
+>p1 move poisonsting
+>p2 move sludge
+>p1 switch 2
+>p1 switch 3
+>p2 switch 2
+>p1 move conversion
+>p2 move thunderpunch
+>p1 move roar
+>p2 move dreameater
+>p1 move disable
+>p2 move rage

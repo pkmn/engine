@@ -4436,8 +4436,9 @@ test "Rage effect" {
     t.expected.p2.get(1).hp -= 34;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
     try t.log.expected.move(P2.ident(1), Move.Disable, P1.ident(1), null);
-    try t.log.expected.boost(P1.ident(1), .Rage, 1);
+    if (!showdown) try t.log.expected.boost(P1.ident(1), .Rage, 1);
     try t.log.expected.startEffect(P1.ident(1), .Disable, Move.Rage);
+    if (showdown) try t.log.expected.boost(P1.ident(1), .Rage, 1);
     try t.log.expected.turn(4);
 
     try expectEqual(Result.Default, try t.update(forced, move(2)));
