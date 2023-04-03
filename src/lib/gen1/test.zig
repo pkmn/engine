@@ -5548,6 +5548,75 @@ test "Substitute effect" {
 
 // Pokémon Showdown Bugs
 
+test "Bide residual bug" {
+    const BIDE_2 = MIN;
+
+    var t = Test((if (showdown)
+        (.{ HIT, HIT, BIDE_2, HIT, HIT })
+    else
+        (.{ HIT, HIT, ~CRIT, BIDE_2, HIT, HIT }))).init(
+        &.{.{ .species = .Jolteon, .moves = &.{ .LeechSeed, .Bide } }},
+        &.{
+            .{ .species = .Sandslash, .hp = 100, .moves = &.{ .Toxic, .SeismicToss } },
+            .{ .species = .Victreebel, .moves = &.{.SolarBeam} },
+        },
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.LeechSeed, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .LeechSeed);
+    try t.log.expected.move(P2.ident(1), Move.Toxic, P1.ident(1), null);
+    t.expected.p1.get(1).status = if (showdown) Status.TOX else Status.init(.PSN);
+    try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+    t.expected.p2.get(1).hp -= 22;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .LeechSeed);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P1.ident(1), Move.Bide, P1.ident(1), null);
+    try t.log.expected.start(P1.ident(1), .Bide);
+    t.expected.p1.get(1).hp -= 20;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .Poison);
+    try t.log.expected.move(P2.ident(1), Move.SeismicToss, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 100;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    t.expected.p2.get(1).hp -= 22;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .LeechSeed);
+    t.expected.p1.get(1).hp += 22;
+    try t.log.expected.heal(P1.ident(1), t.expected.p1.get(1), .Silent);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+
+    try t.log.expected.activate(P1.ident(1), .Bide);
+    t.expected.p1.get(1).hp -= 40;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .Poison);
+    try t.log.expected.move(P2.ident(1), Move.SeismicToss, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 100;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    t.expected.p2.get(1).hp -= 22;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .LeechSeed);
+    t.expected.p1.get(1).hp += 22;
+    try t.log.expected.heal(P1.ident(1), t.expected.p1.get(1), .Silent);
+    try t.log.expected.turn(4);
+
+    const choice = move(if (showdown) 2 else 0);
+    try expectEqual(Result.Default, try t.update(choice, move(2)));
+
+    try t.log.expected.end(P1.ident(1), .Bide);
+    t.expected.p2.get(1).hp = 0;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    if (showdown) {
+        t.expected.p1.get(1).hp -= 60;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .Poison);
+    }
+    try t.log.expected.faint(P2.ident(1), true);
+
+    try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(choice, move(2)));
+    try t.verify();
+}
+
 test "Confusion self-hit bug" {
     const CFZ_5 = MAX;
     const CFZ_CAN = if (showdown) comptime ranged(128, 256) - 1 else MIN;

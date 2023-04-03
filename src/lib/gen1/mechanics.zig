@@ -434,7 +434,7 @@ fn executeMove(
 
     var skip_can = false;
     var skip_pp = false;
-    switch (try beforeMove(battle, player, from, log)) {
+    switch (try beforeMove(battle, player, from, residual, log)) {
         .done => return null,
         .skip_can => skip_can = true,
         .skip_pp => skip_pp = true,
@@ -451,7 +451,13 @@ fn executeMove(
 
 const BeforeMove = union(enum) { done, skip_can, skip_pp, ok, err };
 
-fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !BeforeMove {
+fn beforeMove(
+    battle: anytype,
+    player: Player,
+    from: ?Move,
+    residual: *bool,
+    log: anytype,
+) !BeforeMove {
     var side = battle.side(player);
     const foe = battle.foe(player);
     var active = &side.active;
@@ -615,6 +621,14 @@ fn beforeMove(battle: anytype, player: Player, from: ?Move, log: anytype) !Befor
 
         _ = try applyDamage(battle, player.foe(), player.foe(), .None, log);
         try buildRage(battle, player.foe(), log);
+
+        // For reasons passing understanding, Pokémon Showdown still inflicts residual damage to
+        // Bide's user even if the above damage has caused the foe to faint. It's simpler to always
+        // run residual here regardless of whether the foe fainted and opt-out of the default flow
+        if (showdown) {
+            residual.* = false;
+            try handleResidual(battle, player, log);
+        }
 
         return .done;
     }

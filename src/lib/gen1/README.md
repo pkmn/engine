@@ -482,6 +482,8 @@ Beyond the general bugs listed above, several move effects are implemented incor
 Showdown. Some of these moves are [too fundamentally broken to be implemented](#unimplementable) by
 the pkmn engine, but the following moves have their broken behavior preserved in `-Dshowdown` mode:
 
+- **Bide**: If the opponent faints after Bide inflicts damage on Pokémon Showdown residual damage
+  incorrectly still gets applied to Bide's user.
 - **Leech Seed**: Leech Seed fails to heal its source side if a seeded target faints due to
   recoil/crash damage on Pokémon Showdown.
 - **Pay Day**: Pay Day should still scatter coins if it hits (but doesn't break) and opponent's

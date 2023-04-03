@@ -4418,6 +4418,65 @@ describe('Gen 1', () => {
 
   // Pokémon Showdown Bugs
 
+  test('Bide residual bug', () => {
+    const battle = startBattle([HIT, HIT, BIDE(2), HIT, HIT], [
+      {species: 'Jolteon', evs, moves: ['Leech Seed', 'Bide']},
+    ], [
+      {species: 'Sandslash', evs, moves: ['Toxic', 'Seismic Toss']},
+      {species: 'Victreebel', evs, moves: ['Solar Beam']},
+    ]);
+
+    battle.p2.active[0].hp = 100;
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+    expect(battle.p1.pokemon[0].status).toBe('tox');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 22);
+
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp = p1hp - 20 - 100 + 22);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 22);
+
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp = p1hp - 40 - 100 + 22);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 22);
+
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 60);
+    expect(battle.p2.pokemon[0].hp).toBe(0);
+
+    verify(battle, [
+      '|move|p1a: Jolteon|Leech Seed|p2a: Sandslash',
+      '|-start|p2a: Sandslash|move: Leech Seed',
+      '|move|p2a: Sandslash|Toxic|p1a: Jolteon',
+      '|-status|p1a: Jolteon|tox',
+      '|-damage|p2a: Sandslash|78/353|[from] Leech Seed|[of] p1a: Jolteon',
+      '|turn|2',
+      '|move|p1a: Jolteon|Bide|p1a: Jolteon',
+      '|-start|p1a: Jolteon|Bide',
+      '|-damage|p1a: Jolteon|313/333 tox|[from] psn',
+      '|move|p2a: Sandslash|Seismic Toss|p1a: Jolteon',
+      '|-damage|p1a: Jolteon|213/333 tox',
+      '|-damage|p2a: Sandslash|56/353|[from] Leech Seed|[of] p1a: Jolteon',
+      '|-heal|p1a: Jolteon|235/333 tox|[silent]',
+      '|turn|3',
+      '|-activate|p1a: Jolteon|Bide',
+      '|-damage|p1a: Jolteon|195/333 tox|[from] psn',
+      '|move|p2a: Sandslash|Seismic Toss|p1a: Jolteon',
+      '|-damage|p1a: Jolteon|95/333 tox',
+      '|-damage|p2a: Sandslash|34/353|[from] Leech Seed|[of] p1a: Jolteon',
+      '|-heal|p1a: Jolteon|117/333 tox|[silent]',
+      '|turn|4',
+      '|-end|p1a: Jolteon|Bide',
+      '|-damage|p2a: Sandslash|0 fnt',
+      '|-damage|p1a: Jolteon|57/333 tox|[from] psn',
+      '|faint|p2a: Sandslash',
+    ]);
+  });
+
   test('Confusion self-hit bug', () => {
     const IVS = {hp: 14, atk: 2, def: 6, spa: 31, spd: 31, spe: 31};
     const EVS = {...evs, hp: 18, atk: 159, def: 30};
