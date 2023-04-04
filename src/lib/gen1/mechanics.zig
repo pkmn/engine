@@ -621,7 +621,7 @@ fn beforeMove(
         }
 
         _ = try applyDamage(battle, player.foe(), player.foe(), .None, log);
-        try buildRage(battle, player.foe(), log);
+        if (foe.stored().hp > 0) try buildRage(battle, player.foe(), log);
 
         // For reasons passing understanding, Pokémon Showdown still inflicts residual damage to
         // Bide's user even if the above damage has caused the foe to faint. It's simpler to always

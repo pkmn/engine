@@ -1,0 +1,35 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[35162,22283,29159,39814]}
+>player p1 {"name":"Bot 1","team":"Machoke|||None|blizzard,defensecurl,visegrip,smog||169,101,77,96,96,108|N|9,2,28,2,2,4||72|115]Nidorino|||None|growth,dizzypunch,tailwhip,stomp||35,38,177,32,32,18|N|7,4,26,27,27,3||56|53]Charmander|||None|crabhammer,razorleaf,disable,doubleedge||100,247,213,53,53,210|N|7,9,19,19,19,23||78|27]Ditto|||None|doubleslap,headbutt,tackle,firepunch||156,97,197,43,43,152|N|9,2,0,7,7,28||88|204]Dugtrio|||None|thunder,harden,nightshade,sing||93,130,176,59,59,231|N|13,19,30,10,10,21||68|54]Magneton|||None|bide,poisongas,smokescreen,screech||205,142,219,198,198,182|N|2,5,12,24,24,15||73|60"}
+>player p2 {"name":"Bot 2","team":"Seel|||None|swordsdance,megakick,whirlwind,flamethrower||211,9,49,230,230,17|N|15,6,10,27,27,2||74|9]Koffing|||None|rollingkick,spikecannon,rage,sharpen||11,34,161,208,208,69|N|11,6,9,10,10,23||98|24]Nidorina|||None|seismictoss,hypnosis,lightscreen,amnesia||193,157,153,158,158,139|N|0,29,4,21,21,21||92|105]Jynx|||None|razorwind,lowkick,pinmissile,roar||208,19,100,74,74,155|N|4,1,26,17,17,28||66|45]Weezing|||None|confuseray,surf,thundershock,waterfall||182,101,102,49,49,26|N|15,,27,6,6,6||72|247]Raichu|||None|thrash,triattack,agility,focusenergy||10,181,176,51,51,75|N|4,21,26,0,0,1||72|178"}
+>p1 move blizzard
+>p2 move swordsdance
+>p1 switch 2
+>p2 move megakick
+>p1 switch 2
+>p2 switch 2
+>p1 move defensecurl
+>p2 move rollingkick
+>p1 move visegrip
+>p2 move spikecannon
+>p1 switch 3
+>p2 move rage
+>p1 move crabhammer
+>p2 move rage
+>p1 switch 4
+>p2 move rage
+>p1 move doubleslap
+>p2 move rage
+>p1 move headbutt
+>p2 move rage
+>p1 move tackle
+>p2 move rage
+>p1 switch 5
+>p2 move rage
+>p1 switch 6
+>p2 move rage
+>p1 move bide
+>p2 move rage
+>p1 move bide
+>p2 move rage
+>p1 move bide
+>p2 move rage
