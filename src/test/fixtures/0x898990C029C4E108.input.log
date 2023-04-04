@@ -1,0 +1,13 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[35209,37056,10692,57608]}
+>player p1 {"name":"Bot 1","team":"Sandslash|||None|disable,glare,solarbeam,megadrain||197,252,137,181,181,125|N|11,26,1,19,19,26||58|130]Ponyta|||None|wingattack,thunderwave,fly,barrier||107,137,54,244,244,244|N|15,3,22,10,10,30||79|232]Kingler|||None|explosion,poisonsting,ember,seismictoss||2,212,22,174,174,119|N|6,8,7,17,17,19||96|206]Onix|||None|thunderbolt,headbutt,smog,swift||225,242,224,243,243,129|N|9,27,20,10,10,16||78|63]Charizard|||None|bodyslam,whirlwind,dizzypunch,quickattack||226,171,146,222,222,94|N|1,8,12,2,2,20||69|219]Dragonite|||None|poisonpowder,furyswipes,surf,constrict||237,119,223,64,64,213|N|11,15,21,3,3,18||99|174"}
+>player p2 {"name":"Bot 2","team":"Squirtle|||None|reflect,leer,mist,aurorabeam||12,175,110,211,211,107|N|15,27,30,10,10,15||99|250]Muk|||None|eggbomb,peck,disable,bide||34,61,116,156,156,113|N|15,14,14,30,30,15||97|223]Rapidash|||None|thrash,waterfall,horndrill,highjumpkick||136,50,243,171,171,185|N|0,13,9,17,17,24||91|86]Hitmonchan|||None|boneclub,stunspore,barrage,payday||71,209,30,249,249,175|N|10,,0,29,29,||69|83]Starmie|||None|crabhammer,teleport,thunderpunch,hornattack||166,107,51,8,8,59|N|2,24,1,21,21,18||62|102]Mankey|||None|sharpen,hyperfang,psychic,focusenergy||214,126,198,77,77,75|N|9,11,8,27,27,24||70|48"}
+>p1 move disable
+>p2 switch 2
+>p1 switch 2
+>p2 move disable
+>p1 move wingattack
+>p2 move peck
+>p1 switch 2
+>p2 move bide
+>p1 move disable
+>p2 move bide

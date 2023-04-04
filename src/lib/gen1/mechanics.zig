@@ -2759,7 +2759,9 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
                     if (m.id == .None) break;
                     if (m.id == side.last_selected_move) {
                         // Pokémon Showdown displays Struggle if limited to Bide when out of PP
-                        const s = if (m.pp == 0 and m.id == .Bide) 0 else slot;
+                        const struggle =
+                            m.id == .Bide and (m.pp == 0 or active.volatiles.disabled_move == slot);
+                        const s = if (struggle) 0 else slot;
                         out[n] = .{ .type = .Move, .data = s };
                         n += 1;
                         return n;
