@@ -1127,7 +1127,7 @@ fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
     if (battle.last_damage == 0) return if (showdown) null else Result.Error;
 
     _ = try applyDamage(battle, player.foe(), player.foe(), .None, log);
-    try buildRage(battle, player.foe(), log);
+    if (battle.foe(player).stored().hp > 0) try buildRage(battle, player.foe(), log);
 
     return null;
 }
