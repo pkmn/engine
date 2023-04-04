@@ -1,0 +1,24 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[49651,41379,52214,28203]}
+>player p1 {"name":"Bot 1","team":"Pidgeotto|||None|bite,tailwhip,reflect,icebeam||86,160,146,128,128,68|N|10,22,24,9,9,19||93|56]Clefairy|||None|firepunch,doublekick,psybeam,amnesia||14,57,218,148,148,82|N|8,26,20,24,24,12||86|251]Beedrill|||None|whirlwind,furyswipes,megapunch,razorleaf||206,234,25,51,51,2|N|3,25,24,22,22,10||78|73]Vileplume|||None|conversion,doubleslap,barrier,rest||126,115,202,100,100,70|N|7,13,23,18,18,23||84|181]Cubone|||None|megakick,leechlife,rage,stomp||201,26,189,242,242,34|N|0,5,8,13,13,21||52|149]Raichu|||None|hornattack,earthquake,swift,splash||151,171,54,59,59,13|N|11,26,8,26,26,14||96|246"}
+>player p2 {"name":"Bot 2","team":"Weezing|||None|seismictoss,solarbeam,kinesis,ember||173,215,163,196,196,112|N|0,20,0,13,13,8||66|13]Charmander|||None|swordsdance,recover,peck,thundershock||189,206,197,246,246,115|N|0,21,9,25,25,0||84|5]Drowzee|||None|vinewhip,doubleteam,bonemerang,focusenergy||112,184,81,65,65,113|N|10,15,16,13,13,3||82|165]Kadabra|||None|poisonsting,screech,bide,icepunch||229,63,16,175,175,2|N|1,25,17,6,6,29||87|155]Machop|||None|fly,selfdestruct,blizzard,pound||195,,127,56,56,152|N|3,20,4,,,3||58|225]Slowpoke|||None|skullbash,acidarmor,dig,disable||32,31,3,124,124,86|N|7,28,14,27,27,23||69|18"}
+>p1 move bite
+>p2 move seismictoss
+>p1 move tailwhip
+>p2 move solarbeam
+>p1 move reflect
+>p2 move solarbeam
+>p1 move icebeam
+>p2 move kinesis
+>p2 switch 4
+>p1 switch 2
+>p2 move poisonsting
+>p1 move firepunch
+>p2 move screech
+>p1 move doublekick
+>p2 move bide
+>p1 move psybeam
+>p2 move bide
+>p1 move amnesia
+>p2 move bide
+>p1 move psybeam
+>p2 move bide

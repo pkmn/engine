@@ -347,6 +347,7 @@ fn doTurn(
         if (try checkFaint(battle, player, log)) |r| return r;
     } else if (foe_choice.type == .Pass) return null;
 
+    residual = true;
     replace = battle.side(foe_player).stored().hp == 0;
     if (try executeMove(battle, foe_player, foe_choice, foe_from, &residual, log)) |r| return r;
     if (!replace) {
