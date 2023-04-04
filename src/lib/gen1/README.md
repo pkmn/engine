@@ -467,7 +467,7 @@ Documentation of the wire protocol used for logging traces when `-Dtrace` is ena
 
 In addition to its alternative [RNG semantics](#rng), Pokémon Showdown's implementation of the first
 generation of Pokémon contains a number bugs, [many of which are known and have been documented on
-Smogon](https://www.smogon.com/forums/threads/rby-tradebacks-bug-report-thread.3524844/#post-5933177):
+Smogon](https://www.smogon.com/forums/posts/5933177/show):
 
 - moves on Pokémon Showdown can do 0 damage instead of failing or causing a [division-by-zero
   freeze](https://pkmn.cc/bulba-glitch-1#Division_by_0).
@@ -554,7 +554,7 @@ called out in the `|rule|` section at the beginning of a battle's log):
   `|rule|` section** in Generation I (or II) as the actual order of switches here does not have
   competitive implications like it does in Generation III, but it is still contrary to how the games
   work where the [host (Player 1)'s Pokemon would switch
-  first](https://www.smogon.com/forums/threads/gen-3-on-ps-final-fixes.3527268/post-5989318).
+  first](https://www.smogon.com/forums/posts/5989318/show).
 
 Pokémon Showdown enforces several clauses *before* the battle: **Cleric Clause** (all Pokémon must
 have full HP and PP, and not have any status conditions prior to the battle), **Stat Tradeback
@@ -575,13 +575,12 @@ left up to a client to support.
 
 Numerous moves on Pokémon Showdown are broken not simply due to local issues in the implementation
 of their effects but instead due to **global issues** related to fundamental mechanics such as
-[broken move
-selection](https://www.smogon.com/forums/threads/rby-fight-button-simulation-improvements-fix-partial-trapping-improve-counter.3673280/#post-8655897),
-using move name instead of slot to determine move identity, implementing volatile statuses
-incorrectly or not understanding how moves which call other moves work means that it isn't possible
-to completely implement Pokémon Showdown's behavior for the following moves (the pkmn engine
-attempts to reproduce as much of the behavior that can be reproduced without making data structure
-changes or dramatically deviating from the correct control flow):
+[broken move selection](https://www.smogon.com/forums/posts/8655897/show), using move name instead
+of slot to determine move identity, implementing volatile statuses incorrectly or not understanding
+how moves which call other moves work means that it isn't possible to completely implement Pokémon
+Showdown's behavior for the following moves (the pkmn engine attempts to reproduce as much of the
+behavior that can be reproduced without making data structure changes or dramatically deviating from
+the correct control flow):
 
 - **Wrap**: Binding moves like Wrap are implemented on Pokémon Showdown with an artificial
   `partialtrappinglock` volatile as opposed to how it works on the cartridge which simply relies on
@@ -670,10 +669,10 @@ compatibility mode, the implications of these differences are outlined below:
 Finally, the **initial 10-byte seed for link battles on Pokémon Red cannot include bytes larger than
 the `SERIAL_PREAMBLE_BYTE`**, so must be in the range $\left[0, 252\right]$. This has implications
 on the first 10 random numbers generated during the battle and has [**non-trivial competitive
-implications**](https://www.smogon.com/forums/threads/rby-tradebacks-bug-report-thread.3524844/page-16#post-9068411)
-(at the start of the battle move effects become more likely, the ["1/256-miss"
-glitch](https://glitchcity.wiki/1/256_miss_glitch) cannot happen, Player 1 is more likely to win
-speed ties, etc) that Pokémon Showdown cannot replicate due to everything described above.
+implications**](https://www.smogon.com/forums/posts/9068411/show) (at the start of the battle move
+effects become more likely, the ["1/256-miss" glitch](https://glitchcity.wiki/1/256_miss_glitch)
+cannot happen, Player 1 is more likely to win speed ties, etc) that Pokémon Showdown cannot
+replicate due to everything described above.
 
 All of places in the link battle code where randomness is required are outlined below:
 
@@ -772,11 +771,8 @@ The pkmn engine attempts to adhere to certain naming conventions:
 ## Resources
 
 - [pret/pokered](https://github.com/pret/pokered/) disassembly
-- [Gen I Main Battle
-  Function](https://www.smogon.com/forums/threads/past-gens-research-thread.3506992/#post-5878612) -
-  Crystal_
+- [Gen I Main Battle Function](https://www.smogon.com/forums/posts/5878612/show) - Crystal_
 - [Pokemon Showdown!](https://github.com/smogon/pokemon-showdown)
 - [List of glitches (Generation
   I)](https://bulbapedia.bulbagarden.net/wiki/List_of_glitches_(Generation_I))
-- [Pokémon Showdown RBY
-  Bugs](https://www.smogon.com/forums/threads/rby-tradebacks-bug-report-thread.3524844/#post-5933177)
+- [Pokémon Showdown RBY Bugs](https://www.smogon.com/forums/posts/5933177/show)
