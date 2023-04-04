@@ -511,7 +511,8 @@ the pkmn engine, but the following moves have their broken behavior preserved in
   implement by Pokémon Showdown.
 - **Roar** / **Whirlwind**: these moves can miss on Pokémon Showdown (and advance the RNG when
   checking) which is incorrect (these moves should always fail, but do not check accuracy or advance
-  the RNG).
+  the RNG). More importantly, these moves should *not* cause the tracked last battle damage to be
+  zeroed, but on Pokémon Showdown they do.
 - **Substitute**: in addition to the [Substitute + Confusion
   glitch](https://pkmn.cc/bulba-glitch-1#Substitute_.2B_Confusion_glitch) not being implemented
   correctly (covered above), the [Substitute 1/4

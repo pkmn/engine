@@ -2256,8 +2256,9 @@ pub const Effects = struct {
     fn switchAndTeleport(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
         if (!showdown or battle.side(player).last_selected_move == .Teleport) return;
 
-        // Whirlwind/Roar should not roll to hit but Pokémon Showdown does anyway
+        // Whirlwind/Roar should not roll to hit/reset damage but Pokémon Showdown does anyway
         _ = try checkHit(battle, player, move, log);
+        battle.last_damage = 0;
     }
 
     fn thrashing(battle: anytype, player: Player) void {

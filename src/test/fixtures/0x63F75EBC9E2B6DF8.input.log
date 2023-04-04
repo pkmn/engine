@@ -1,0 +1,19 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[25591,24252,40491,28152]}
+>player p1 {"name":"Bot 1","team":"Ekans|||None|sharpen,poisonsting,earthquake,furyswipes||14,87,176,225,225,43|N|5,1,7,2,2,12||71|104]Exeggcute|||None|horndrill,rollingkick,explosion,nightshade||118,75,27,38,38,147|N|5,4,14,6,6,4||72|75]Eevee|||None|roar,spore,pinmissile,wingattack||123,169,146,15,15,120|N|1,25,1,10,10,20||99|131]Nidoking|||None|furyattack,thunderbolt,dreameater,thunderpunch||216,178,70,247,247,59|N|1,9,1,6,6,17||92|59]Gastly|||None|screech,growth,poisonpowder,lightscreen||159,171,223,137,137,31|N|14,22,11,4,4,11||60|144]Persian|||None|hyperbeam,sleeppowder,substitute,karatechop||126,162,8,44,44,4|N|1,21,9,14,14,29||89|118"}
+>player p2 {"name":"Bot 2","team":"Nidoqueen|||None|guillotine,thunder,hornattack,poisongas||247,201,64,221,221,131|N|12,30,27,24,24,29||95|199]Clefable|||None|bide,defensecurl,stunspore,watergun||98,238,141,94,94,95|N|3,16,16,7,7,7||78|59]Growlithe|||None|megapunch,swordsdance,flash,razorwind||184,150,10,88,88,226|N|1,13,8,10,10,8||52|143]Starmie|||None|strength,sandattack,confusion,bodyslam||125,193,190,135,135,86|N|3,13,29,3,3,18||69|244]Venusaur|||None|sonicboom,seismictoss,acidarmor,growl||67,4,180,161,161,148|N|4,21,11,12,12,12||89|151]Omanyte|||None|mist,focusenergy,stomp,acid||61,219,155,158,158,221|N|11,11,5,23,23,19||75|96"}
+>p1 switch 2
+>p2 move guillotine
+>p1 move horndrill
+>p2 move thunder
+>p1 move rollingkick
+>p2 move hornattack
+>p1 switch 2
+>p2 move poisongas
+>p1 move sharpen
+>p2 switch 2
+>p1 move poisonsting
+>p2 move bide
+>p1 switch 3
+>p2 move bide
+>p1 move roar
+>p2 move bide
