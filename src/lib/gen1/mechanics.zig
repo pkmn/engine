@@ -1452,6 +1452,15 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
     }
 
     if (volatiles.LeechSeed) {
+        var foe = battle.foe(player);
+        var foe_stored = foe.stored();
+        const foe_ident = battle.active(player.foe());
+
+        if (foe_stored.hp == 0) {
+            assert(showdown);
+            return;
+        }
+
         var damage = @max(stored.stats.hp / 16, 1);
 
         // GLITCH: Leech Seed + Toxic glitch
@@ -1460,12 +1469,11 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
             damage *= volatiles.toxic;
         }
 
+        // Pokémon Showdown erroneously updates last damage with uncapped Leech Seed damage
+        if (showdown) battle.last_damage = damage;
+
         const amount = @min(damage, stored.hp);
         stored.hp -= amount;
-
-        var foe = battle.foe(player);
-        var foe_stored = foe.stored();
-        const foe_ident = battle.active(player.foe());
 
         // As above, Pokémon Showdown uses damageOf but its not relevant
         if (amount > 0) try log.damage(ident, stored, .LeechSeed);

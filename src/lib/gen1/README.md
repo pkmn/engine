@@ -485,7 +485,8 @@ the pkmn engine, but the following moves have their broken behavior preserved in
 - **Bide**: If the opponent faints after Bide inflicts damage on Pokémon Showdown residual damage
   incorrectly still gets applied to Bide's user.
 - **Leech Seed**: Leech Seed fails to heal its source side if a seeded target faints due to
-  recoil/crash damage on Pokémon Showdown.
+  recoil/crash damage on Pokémon Showdown. Pokémon Showdown also updates the battle's last damage
+  field with the uncapped Leech Seed damage which has consequences for Bide and Counter.
 - **Pay Day**: Pay Day should still scatter coins if it hits (but doesn't break) and opponent's
   Substitute but doesn't on Pokémon Showdown.
 - **Flinch**: Flinching does not get cleared during move selection on Pokémon Showdown and is
