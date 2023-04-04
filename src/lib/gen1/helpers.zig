@@ -211,16 +211,10 @@ pub const Pokemon = struct {
     }
 };
 
-// cat src/test/showdown/blocklist.json | jq '."1".moves'
 fn blocked(m: Move) bool {
-    if (Move.get(m).effect == .Binding) return true;
+    // Binding moves are borked but only via Mirror Move / Metronome which are already blocked
     return switch (m) {
-        .Counter,
-        .Mimic,
-        .Metronome,
-        .MirrorMove,
-        .Transform,
-        => true,
+        .Mimic, .Metronome, .MirrorMove, .Transform => true,
         else => false,
     };
 }

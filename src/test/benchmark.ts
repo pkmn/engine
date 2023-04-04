@@ -12,9 +12,8 @@ import * as engine from '../pkg';
 
 import {newSeed, toBigInt} from './integration';
 import {Choices, formatFor, patch} from './showdown';
-import blocklistJSON from './showdown/blocklist.json';
 
-const BLOCKLIST = blocklistJSON[1].moves as ID[];
+const BLOCKLIST = ['mimic', 'metronome', 'mirrormove', 'transform'] as ID[];
 const ROOT = path.resolve(__dirname, '..', '..');
 
 const serialize = (seed: PRNGSeed) => toBigInt(seed).toString();

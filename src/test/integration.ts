@@ -8,10 +8,7 @@ import * as tty from 'tty';
 import {Generation, GenerationNum, Generations} from '@pkmn/data';
 import {Protocol} from '@pkmn/protocol';
 import {Battle, BattleStreams, Dex, ID, PRNG, PRNGSeed, Streams, Teams, toID} from '@pkmn/sim';
-import {
-  AIOptions, ExhaustiveRunner, ExhaustiveRunnerOptions,
-  ExhaustiveRunnerPossibilities, RunnerOptions,
-} from '@pkmn/sim/tools';
+import * as sim from '@pkmn/sim/tools';
 import minimist from 'minimist';
 
 import * as engine from '../pkg';
@@ -19,21 +16,20 @@ import * as addon from '../pkg/addon';
 
 import {Frame, render, toText} from './display';
 import {Choices, FILTER, formatFor, patch} from './showdown';
-import blocklistJSON from './showdown/blocklist.json';
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const ANSI = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
 
 const CWD = process.env.INIT_CWD || process.env.CWD || process.cwd();
 
-const BLOCKLIST = blocklistJSON as {[gen: number]: Partial<ExhaustiveRunnerPossibilities>};
-
+type RunnerOptions = sim.RunnerOptions & {usage: sim.ExhaustiveRunnerUsageTracker};
 class Runner {
   private readonly gen: Generation;
   private readonly format: string;
   private readonly prng: PRNG;
-  private readonly p1options: AIOptions & {team: string};
-  private readonly p2options: AIOptions & {team: string};
+  private readonly p1options: sim.AIOptions & {team: string};
+  private readonly p2options: sim.AIOptions & {team: string};
+  private readonly skip: boolean;
   private readonly debug: boolean;
 
   constructor(gen: Generation, options: RunnerOptions, debug?: boolean) {
@@ -43,15 +39,21 @@ class Runner {
     this.prng = (options.prng && !Array.isArray(options.prng))
       ? options.prng : new PRNG(options.prng);
 
-    this.p1options = fixTeam(gen, options.p1options!);
-    this.p2options = fixTeam(gen, options.p2options!);
+    const moves = new Set<ID>();
+    this.p1options = fixTeam(gen, options.p1options!, moves);
+    this.p2options = fixTeam(gen, options.p2options!, moves);
+    this.skip = gen.num === 1 && validate(this.prng, moves, options.usage);
 
     this.debug = !!debug;
   }
 
   run() {
+    // Generated a team which could result in a problematic scenario = skip &
+    // try again! (note that validate marks used to ensure progress)
+    if (this.skip) return Promise.resolve();
+
     const seed = this.prng.seed.slice() as PRNGSeed;
-    const create = (o: AIOptions) => (s: Streams.ObjectReadWriteStream<string>) =>
+    const create = (o: sim.AIOptions) => (s: Streams.ObjectReadWriteStream<string>) =>
       o.createAI(s, {seed: newSeed(this.prng), move: 0.7, mega: 0.6, ...o});
 
     return Promise.resolve(play(
@@ -86,15 +88,17 @@ interface PlayerOptions {
 //
 //   - we need to patch Pokémon Showdown to make its speed ties sane (patch)
 //   - we need to ensure the ExhaustiveRunner doesn't generate teams with moves
-//     that are too broken for the engine to be able to match (possibilities)
-//     and we need to massage the teams it produces to ensure they are legal for
-//     the generation in question (fixTeam)
+//     that are too broken for the engine to be able to match (validate) and we
+//     need to massage the teams it produces to ensure they are legal for the
+//     generation in question (fixTeam)
 //   - we can't use the ExhaustiveRunner/CoordinatedPlayerAI as Pokémon Showdown
 //     intended because its BattleStream abstract is broken by design and the
 //     data races will cause our test fail. Instead, we manually call the AI
 //     player directly and spy on its choices (which is guaranteed not to race
 //     because all calls involved are synchronous) to be able to actually commit
 //     them at the same time with Battle.makeChoices
+//   - we need to check if any problematic interactions have occured which
+//     unimplementable by the engine and simply abort if so
 //   - the CoordinatedPlayerAI can make "unavailable" choices, so we need to
 //     first check whether the choice it chose was valid or not before saving it
 //     (if its invalid we need to call Side.choose knowing that it will fail in
@@ -211,6 +215,7 @@ function play(
         start = false;
       } else {
         control.makeChoices(adjust(engine.Choice.format(c1)), adjust(engine.Choice.format(c2)));
+        if (gen.num === 1 && problematic(control)) return;
       }
 
       const request = partial.showdown.result = toResult(control, p1options.spec.name);
@@ -397,11 +402,18 @@ function compare(chunk: string, actual: engine.ParsedLine[]) {
 // are legal for old generations - these would usually be corrected by the
 // TeamValidator but custom games bypass this so we need to massage the faulty
 // set data ourselves
-function fixTeam(gen: Generation, options: AIOptions) {
+function fixTeam(gen: Generation, options: sim.AIOptions, moves: Set<ID>) {
   for (const pokemon of options.team!) {
     const species = gen.species.get(pokemon.species)!;
     // The generator sometimes returns sets with duplicate moves... >_<
-    pokemon.moves = [...new Set(pokemon.moves)];
+    const deduped = [...new Set(pokemon.moves)];
+    // Pokémon Showdown's Gen 1 Mimic decrements PP from completely the wrong
+    // slot in edge cases if Mimic doesn't come first in the moveset
+    pokemon.moves = gen.num === 1 && deduped.includes('mimic')
+      ? ['mimic', ...deduped.filter(m => m !== 'mimic')]
+      : deduped;
+    // how do you really not have an addAll by now? ffs
+    for (const move of pokemon.moves) moves.add(toID(move));
     if (gen.num <= 1) {
       pokemon.ivs.hp = gen.stats.getHPDV(pokemon.ivs);
       pokemon.ivs.spd = pokemon.ivs.spa;
@@ -416,29 +428,75 @@ function fixTeam(gen: Generation, options: AIOptions) {
       }
     }
   }
-  return {...options, team: Teams.pack(options.team!)!} as AIOptions & {team: string};
+  return {...options, team: Teams.pack(options.team!)!} as sim.AIOptions & {team: string};
 }
 
-// This is a fork of the possibilities function (which is used to build up the
-// various "pools" of effects to proc during testing) from @pkmn/sim that has
-// been extended to also enforce the engine's BLOCKLIST
-function possibilities(gen: Generation) {
-  const blocked = BLOCKLIST[gen.num] || {};
-  const pokemon = Array.from(gen.species).filter(p => !blocked.pokemon?.includes(p.id as ID) &&
-    (p.name !== 'Pichu-Spiky-eared' && p.name.slice(0, 8) !== 'Pikachu-'));
-  const items = gen.num < 2
-    ? [] : Array.from(gen.items).filter(i => !blocked.items?.includes(i.id as ID));
-  const abilities = gen.num < 3
-    ? [] : Array.from(gen.abilities).filter(a => !blocked.abilities?.includes(a.id as ID));
-  const moves = Array.from(gen.moves).filter(m => !blocked.moves?.includes(m.id as ID) &&
-    (!['struggle', 'revivalblessing'].includes(m.id) &&
-      (m.id === 'hiddenpower' || m.id.slice(0, 11) !== 'hiddenpower')));
-  return {
-    pokemon: pokemon.map(p => p.id as ID),
-    items: items.map(i => i.id as ID),
-    abilities: abilities.map(a => a.id as ID),
-    moves: moves.map(m => m.id as ID),
-  };
+const BINDING = ['bind', 'wrap', 'firespin', 'clamp'] as ID[];
+
+// Due to Pokémon Showdown having some bugs which are unimplementable by correct
+// engines, we need to get creative... The easiest solution is to simply never
+// generate sets that include unimplementable moves at the cost of reduced
+// coverage, however, a better approach is to attempt to generate teams and
+// simply skip them if they contain problematic combinations of effects that
+// could lead to issues. We're simplifying things slightly (which will result in
+// false positives) by not considering P1 and P2 moves separately to be able to
+// more precisely determine whether the interactions we're trying to avoid are
+// actually possible, but the added complexity (especially after considering
+// recursion) is definitely not worth the slight increase in coverage it would
+// provide.
+//
+// The crucial part here is that we mark one of the problematic moves as "used"
+// before retrying so that we can make progress and the team generator doesn't
+// get stuck in a loop continually generating teams with the same issues.
+function validate(prng: PRNG, moves: Set<ID>, used: RunnerOptions['usage']) {
+  // Disable and Transform cannot be used together, so if teams have been
+  // generated where both moves are present we simply choose one at random to
+  // consider having been "used" and return true to retry team generation
+  if (moves.has('disable' as ID) && moves.has('transform' as ID)) {
+    used.move(prng.sample(['disable', 'transform'] as ID[]));
+    return true;
+  }
+  // Mirror Move is problematic in battles involving Transform or binding moves
+  if (moves.has('mirrormove' as ID)) {
+    if (moves.has('transform' as ID) || BINDING.some(m => moves.has(m))) {
+      used.move('mirrormove' as ID);
+      return true;
+    }
+  }
+  return false;
+}
+
+const METRONOME = [...BINDING, 'mirrormove', 'transform', 'disable', 'mimic'];
+
+// Mimic is so borked that we need to both ensure that if it appears in a move
+// set it always is in the lowest index (above) *and* that if the infinite PP
+// glitch occurs we simply abort immediately. Metronome also need special
+// treatment because it can theoretically proc any other problematic move. Note
+// that unlike above we don't need to explicitly mark the moves as used because
+// at this point the internal accounting will have already taken care of that,
+// so after retrying the generator should not attempt to use either move again.
+//
+// (Technically we can do away with validate above and always attempt to detect
+// problems here, but we once again avoid doing that to minimize complexity)
+function problematic(battle: Battle) {
+  // PP can go negative on Pokémon Showdown due to Mimic...
+  for (const side of battle.sides) {
+    for (const pokemon of side.active) {
+      for (const move of pokemon.moveSlots) {
+        if (move.pp < 0) return true;
+      }
+    }
+  }
+
+  // Metronome calling any move that contains issues is a problem because it
+  // bypasses the validation logic above which would otherwise disallow it
+  for (const {args, kwArgs} of Protocol.parse(battle.getDebugLog())) {
+    if (args[0] === 'move' && toID((kwArgs as Protocol.KWArgs['|move|']).from) === 'metronome') {
+      if (METRONOME.includes(toID(args[2]))) return true;
+    }
+  }
+
+  return false;
 }
 
 const IGNORE = /^>(version(?:-origin)|start|player)/;
@@ -530,14 +588,14 @@ function fromInputLog(
   return [choices.p1!, choices.p2!, index] as const;
 }
 
-type Options = Pick<ExhaustiveRunnerOptions, 'log' | 'maxFailures' | 'cycles'> & {
+type Flags = Pick<sim.ExhaustiveRunnerOptions, 'log' | 'maxFailures' | 'cycles'> & {
   prng: PRNG | PRNGSeed;
   gen?: GenerationNum;
   duration?: number;
   debug?: boolean;
 };
 
-export async function run(gens: Generations, options: string | Options) {
+export async function run(gens: Generations, options: string | Flags) {
   if (!addon.supports(true, true)) throw new Error('engine must be built with -Dshowdown -Dlog');
   if (typeof options === 'string') {
     const log = fs.readFileSync(path.resolve(CWD, options), 'utf8');
@@ -552,7 +610,7 @@ export async function run(gens: Generations, options: string | Options) {
     return 0;
   }
 
-  const opts: ExhaustiveRunnerOptions = {
+  const opts: sim.ExhaustiveRunnerOptions = {
     cycles: 1, maxFailures: 1, log: false, ...options, format: '',
     cmd: (cycles: number, format: string, seed: string) =>
       `npm run integration -- --cycles=${cycles} --gen=${format[3]} --seed=${seed}`,
@@ -566,10 +624,10 @@ export async function run(gens: Generations, options: string | Options) {
       if (options.gen && gen.num !== options.gen) continue;
       patch.generation(gen);
       opts.format = formatFor(gen);
-      opts.possible = possibilities(gen);
       const d = (options).debug;
-      failures +=
-        await (new ExhaustiveRunner({...opts, runner: o => new Runner(gen, o, d).run()}).run());
+      failures += await (new sim.ExhaustiveRunner({...opts, runner: o =>
+        new Runner(gen, o as RunnerOptions, d).run(),
+      }).run());
       if (failures >= opts.maxFailures!) return failures;
     }
   } while (Date.now() - start < (options.duration || 0));

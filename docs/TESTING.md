@@ -158,7 +158,7 @@ against [regressions](../src/test/regression/). The integration test also suppor
 standalone mode for various durations, eg. `npm run integration -- --duration=15m` which can be
 useful for [fuzzing](#fuzz) purposes.
 
-### `blocklist.json`
+### Unimplementable
 
 Some of Pokémon Showdown's bugs are too convoluted to be implemented in the pkmn engine, even after
 [patches](#patches) are applied. The engine tries its best to reproduce the behavior of even the
@@ -167,13 +167,12 @@ the cartridge behavior correctly is difficult starting from Pokémon Showdown's 
 implementing Pokémon Showdown's mechanics is also difficult starting from an architecture that
 mirrors the cartridge.
 
-In cases where the pkmn engine cannot reproduce 100% of the behavior of Pokémon Showdown for the
-purposes of lockstep integration tests or benchmarking, the offending Pokémon / Items / Abilities /
-Moves will be blocked from inclusion by their presence in the
-[`blocklist.json`](../src/test/showdown/blocklist.json) file. Note that the pkmn engine implements
-as much of Pokémon Showdown's behavior for these effects as possible, it is usually just the extreme
-edge cases which would require large amounts of coding or additional state to implement the same
-faulty behavior where these effects break down.
+For the purposes of the [benchmark](#benchmark) we can simply choose to not generate any sets with
+problematic Pokémon / Items / Abilities / Moves, but for integration testing purposes it makes sense
+to add some complexity in order to be able to test as much as possible (teams are validated before
+starting a battle to ensure we don't start a battle with moves that have issues when used together,
+and during a battle if Pokémon Showdown is observed to be in an undesirable state we simply abort
+and move to the next battle).
 
 ## Benchmark
 
@@ -424,9 +423,9 @@ The [integration](#integration) tests and [benchmark](#benchmark) are also used 
 [fuzzing](https://en.wikipedia.org/wiki/Fuzzing). A [GitHub workflow](../.github/workflows/fuzz.yml)
 exists to run these tests on a schedule from random seeds for various durations to attempt to
 uncover latent bugs. The fuzz tests differ from the benchmark in that they run for predefined time
-durations as opposed to a given number of battles and enable the [blocked](#blocklistjson) effects
-that are usually excluded in `-Dshowdown` compatibility mode. When run with the `-Dlog` flag,
-additional binary data will be dumped on crashes to allow for debugging with the help of
+durations as opposed to a given number of battles and enable the [unimplementable](#unimplementable)
+effects that are usually excluded in `-Dshowdown` compatibility mode. When run with the `-Dlog`
+flag, additional binary data will be dumped on crashes to allow for debugging with the help of
 [`fuzz.ts`](./fuzz.ts) and the [debug UI](https://pkmn.cc/debug.html) rendered by
 [`display.ts`](./display.ts). To run the fuzz tool locally use:
 

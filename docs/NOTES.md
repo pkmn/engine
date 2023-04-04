@@ -23,7 +23,7 @@
 8. Adjust **mechanics for Pokémon Showdown** compatibility
    - track RNG differences and update generation documentation
    - ensure all bugs are tracked in documentation
-   - [blocklist](../src/test/showdown/blocklist.json) any unimplementable effects
+   - add logic to tests to block any unimplementable effects
 9. **Unit test the engine** in both cartridge and Pokémon Showdown compatibility mode
 10. Implement a **`MAX_LOGS` unit test**
     - document in [`PROTOCOL.md`](PROTOCOL.md)
@@ -51,5 +51,4 @@
 3. **Update Zig mechanics tests to match** the updates applied to the integration tests
 4. **Update Zig engine code** to cause the updated mechanics tests to pass
 5. **Update documentation** to match new behavior/bugs
-6. **Remove effects from [`blocklist.json`](../src/test/showdown/blocklist.json)** and helpers if
-   necessary
+6. **Remove effects from blocklists** and helpers if necessary

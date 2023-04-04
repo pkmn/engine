@@ -487,6 +487,8 @@ the pkmn engine, but the following moves have their broken behavior preserved in
 
 - **Bide**: If the opponent faints after Bide inflicts damage on Pokémon Showdown residual damage
   incorrectly still gets applied to Bide's user.
+- **Counter**: On Pokémon Showdown choices made while sleeping (which should not have been
+  registered) can erroneously cause Counter to trigger Desync Clause Mod behavior.
 - **Leech Seed**: Leech Seed fails to heal its source side if a seeded target faints due to
   recoil/crash damage on Pokémon Showdown. Pokémon Showdown also updates the battle's last damage
   field with the uncapped Leech Seed damage if the residual damage is applied which has consequences
@@ -604,8 +606,6 @@ the correct control flow):
   glitch](https://glitchcity.wiki/Trapping_move_and_sleep_glitch), Wrap does 0 damage against
   Ghost-type Pokémon instead of properly respecting immunity, and binding effects are handled in the
   wrong order in the code.
-- **Counter**: On Pokémon Showdown choices made while sleeping (which should not have been
-  registered) can erroneously cause Counter to trigger Desync Clause Mod behavior.
 - **Mimic**: Pokémon Showdown checks that the user of Mimic has Mimic in one of their move slots,
   which means Mimic legally called via Metronome or Mirror Move will only work if the user also has
   Mimic (and the moved mimicked by Mimic called via Metronome / Mirror Move will erroneously
