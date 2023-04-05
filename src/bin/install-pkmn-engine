@@ -355,7 +355,7 @@ const downloadImportLib = async () => {
       const ext = process.platform === 'darwin'
         ? 'dylib' : process.platform === 'win32' ? 'dll' : 'so';
       const actual = path.join('build', 'lib', `${prefix}pkmn${suffix}.node.${ext}`);
-      fs.renameSync(actual, artifact);
+      fs.renameSync(path.join(ROOT, actual), path.join(ROOT, artifact));
     }
   }
 })().catch(e => {
