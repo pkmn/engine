@@ -56,7 +56,6 @@ fn checkFormat(file_path: []const u8, allocator: Allocator) !bool {
 // The full license can be found at https://github.com/coilhq/tigerbeetle/blob/main/LICENSE
 
 const Ignored = union(enum) { lines: []const u32, all };
-
 const ignore = std.ComptimeStringMap(Ignored, .{
     .{ "src/examples/zig/example.zig", .all },
     .{ "src/lib/gen2/test.zig", .all },
