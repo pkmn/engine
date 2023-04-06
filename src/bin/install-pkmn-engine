@@ -211,7 +211,7 @@ const downloadHeaders = async () => {
   }
 
   const dir = path.join(ROOT, 'build', 'include');
-  const dest = path.join(dir, `node-${process.version}`, 'include', 'node');
+  const dest = path.join(dir, 'node');
   if (fs.existsSync(path.join(dest, 'node.h'))) {
     console.log('Node headers:', dest);
     return dest;
@@ -227,18 +227,21 @@ const downloadHeaders = async () => {
 
   const url = process.release.headersUrl;
   const targz = path.join(dir, path.basename(url));
+  const unpacked = path.join(dir, `node-${process.version}`, 'include');
 
   console.log(`Downloading Node headers from ${url} to ${targz}`);
 
   try {
     await download(url, targz);
     await unpack(targz, dir);
+    fs.renameSync(path.join(unpacked, 'node'), dest);
 
     console.log('Node headers:', dest);
 
     return dest;
   } finally {
     try { fs.rmSync(targz); } catch {}
+    try { fs.rmSync(unpacked, {recursive: true}); } catch {}
   }
 };
 
