@@ -229,12 +229,17 @@ const downloadHeaders = async () => {
   const targz = path.join(dir, path.basename(url));
 
   console.log(`Downloading Node headers from ${url} to ${targz}`);
-  await download(url, targz);
-  await unpack(targz, dir);
 
-  console.log('Node headers:', dest);
+  try {
+    await download(url, targz);
+    await unpack(targz, dir);
 
-  return dest;
+    console.log('Node headers:', dest);
+
+    return dest;
+  } finally {
+    try { fs.rmSync(targz); } catch {}
+  }
 };
 
 const downloadImportLib = async () => {
