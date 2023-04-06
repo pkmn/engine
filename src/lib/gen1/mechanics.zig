@@ -2595,9 +2595,14 @@ fn disabled(side: *Side, ident: ID, log: anytype) !bool {
     if (side.active.volatiles.disabled_move != 0) {
         // A Pokémon that transforms after being disabled may end up with less move slots
         const m = side.active.moves[side.active.volatiles.disabled_move - 1].id;
-        if (m != .None and m == side.last_selected_move) {
+        // side.last_selected_move can be Struggle here on Pokemon Showdown we need an extra check
+        const last = if (showdown and m == .Bide and side.active.volatiles.Bide)
+            m
+        else
+            side.last_selected_move;
+        if (m != .None and m == last) {
             side.active.volatiles.Charging = false;
-            try log.disabled(ident, side.last_selected_move);
+            try log.disabled(ident, last);
             return true;
         }
     }
