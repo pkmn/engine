@@ -6782,6 +6782,46 @@ describe('Gen 1', () => {
     ]);
   });
 
+  test('Rage stat modification error bug', () => {
+    const battle = startBattle([HIT, PAR_CAN, HIT, PAR_CAN, HIT, NO_CRIT, MIN_DMG, PAR_CAN, HIT], [
+      {species: 'Charizard', evs, moves: ['Glare', 'Rage']},
+    ], [
+      {species: 'Sandshrew', evs, moves: ['Stun Spore', 'Seismic Toss']},
+    ]);
+
+    const p1hp = battle.p1.pokemon[0].hp;
+    const p2hp = battle.p2.pokemon[0].hp;
+
+    expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(298);
+    expect(battle.p2.pokemon[0].modifiedStats!.spe).toBe(178);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(74);
+    expect(battle.p2.pokemon[0].modifiedStats!.spe).toBe(44);
+
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp - 100);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp - 15);
+    expect(battle.p1.pokemon[0].boosts.atk).toBe(1);
+    expect(battle.p1.pokemon[0].modifiedStats!.spe).toBe(74);
+    // expect(battle.p2.pokemon[0].modifiedStats.spe).toBe(11);
+    expect(battle.p2.pokemon[0].modifiedStats!.spe).toBe(44);
+
+    verify(battle, [
+      '|move|p1a: Charizard|Glare|p2a: Sandshrew',
+      '|-status|p2a: Sandshrew|par',
+      '|move|p2a: Sandshrew|Stun Spore|p1a: Charizard',
+      '|-status|p1a: Charizard|par',
+      '|turn|2',
+      '|move|p1a: Charizard|Rage|p2a: Sandshrew',
+      '|-damage|p2a: Sandshrew|288/303 par',
+      '|move|p2a: Sandshrew|Seismic Toss|p1a: Charizard',
+      '|-damage|p1a: Charizard|259/359 par',
+      '|-boost|p1a: Charizard|atk|1|[from] Rage',
+      '|turn|3',
+    ]);
+  });
+
   test('Rage and Thrash / Petal Dance accuracy bug', () => {
     const hit = (n: number) => ({...HIT, value: ranged(n, 256) - 1});
     const miss = (n: number) => ({...HIT, value: hit(n).value + 1});

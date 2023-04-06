@@ -2343,6 +2343,8 @@ pub const Effects = struct {
                 const stat = unmodifiedStats(battle, player).atk;
                 stats.atk = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
                 try log.boost(ident, reason, n);
+                // Pokémon Showdown doesn't re-apply status modifiers after Rage boosts
+                if (showdown and move.effect == .Rage) return;
             },
             .DefenseUp1, .DefenseUp2 => {
                 assert(boosts.def >= -6 and boosts.def <= 6);

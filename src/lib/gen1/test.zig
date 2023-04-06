@@ -8566,6 +8566,49 @@ test "Partial trapping move Mirror Move glitch" {
     try t.verify();
 }
 
+test "Rage stat modification error bug" {
+    const PAR_CAN = MAX;
+    var t = Test((if (showdown)
+        (.{ HIT, PAR_CAN, HIT, PAR_CAN, HIT, ~CRIT, MIN_DMG, PAR_CAN, HIT })
+    else
+        (.{ HIT, PAR_CAN, HIT, PAR_CAN, ~CRIT, MIN_DMG, HIT, PAR_CAN, HIT }))).init(
+        &.{.{ .species = .Charizard, .moves = &.{ .Glare, .Rage } }},
+        &.{.{ .species = .Sandshrew, .moves = &.{ .StunSpore, .SeismicToss } }},
+    );
+    defer t.deinit();
+    try t.start();
+
+    try expectEqual(@as(u16, 298), t.actual.p1.active.stats.spe);
+    try expectEqual(@as(u16, 178), t.actual.p2.active.stats.spe);
+
+    try t.log.expected.move(P1.ident(1), Move.Glare, P2.ident(1), null);
+    t.expected.p2.get(1).status = Status.init(.PAR);
+    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.move(P2.ident(1), Move.StunSpore, P1.ident(1), null);
+    t.expected.p1.get(1).status = Status.init(.PAR);
+    try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try expectEqual(@as(u16, 74), t.actual.p1.active.stats.spe);
+    try expectEqual(@as(u16, 44), t.actual.p2.active.stats.spe);
+
+    try t.log.expected.move(P1.ident(1), Move.Rage, P2.ident(1), null);
+    t.expected.p2.get(1).hp -= 15;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P2.ident(1), Move.SeismicToss, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 100;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.boost(P1.ident(1), .Rage, 1);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    try expectEqual(@as(u16, 74), t.actual.p1.active.stats.spe);
+    try expectEqual(@as(u16, if (showdown) 44 else 11), t.actual.p2.active.stats.spe);
+
+    try t.verify();
+}
+
 test "Rage and Thrash / Petal Dance accuracy bug" {
     // https://www.youtube.com/watch?v=NC5gbJeExbs
     const THRASH_4 = MAX;
