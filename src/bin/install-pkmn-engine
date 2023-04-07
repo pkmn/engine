@@ -15,8 +15,10 @@ const DEV = ZIG_VERSION.dev ? `-dev.${ZIG_VERSION.dev}` : '';
 const VERSION = `${ZIG_VERSION.major}.${ZIG_VERSION.minor}.${ZIG_VERSION.patch}${DEV}`;
 const INDEX = 'https://ziglang.org/download/index.json';
 const ROOT = path.resolve(__dirname, '..', '..');
+let SILENT = false;
 
 const sh = (cmd, args) => execFileSync(cmd, args, {encoding: 'utf8', cwd: ROOT});
+const log = (...args) => { if (!SILENT) console.log(...args); };
 
 // This is hardly the browser fetch API, but it works for our primitive needs
 const fetch = url => new Promise((resolve, reject) => {
@@ -61,7 +63,7 @@ const unpack7 = (input, output) => new Promise((resolve, reject) => {
     require.resolve('7zip-min');
   } catch (err) {
     if (err.code !== 'MODULE_NOT_FOUND') throw err;
-    console.log('Installing 7zip-min package locally to unpack the archive...');
+    log('Installing 7zip-min package locally to unpack the archive...');
     sh('npm', ['install', '7zip-min', '--no-audit', '--no-save']);
   }
 
@@ -83,7 +85,7 @@ const unpack = async (input, output) => {
       sh('tar', ['xf', input, '-C', output]);
       return;
     } catch {
-      console.log('tar command not found, falling back to 7z');
+      log('tar command not found, falling back to 7z');
     }
   }
   // Try to use a 7z binary if we can, and only install 7zip-min as a last resort
@@ -120,10 +122,10 @@ const find = zig => {
         (!ZIG_VERSION.dev || (dev && dev >= ZIG_VERSION.dev)));
 
     if (compatible) {
-      console.log('Found existing compatible Zig executable:', zig_exe);
+      log('Found existing compatible Zig executable:', zig_exe);
       return zig_exe;
     } else {
-      console.log(`Existing Zig executable is not compatible (${version} < ${VERSION}):`, zig_exe);
+      log(`Existing Zig executable is not compatible (${version} < ${VERSION}):`, zig_exe);
     }
   } catch (err) {
     if (err.code !== 'ENOENT') throw err;
@@ -168,11 +170,11 @@ const install = async () => {
   let base = path.basename(url);
   const archive = path.join(dir, path.basename(url));
 
-  console.log(`Downloading Zig tarball from ${url} to ${archive}`);
+  log(`Downloading Zig tarball from ${url} to ${archive}`);
   try {
     await download(url, archive, release.shasum);
 
-    console.log(`Extracting tarball and installing to ${dir}`);
+    log(`Extracting tarball and installing to ${dir}`);
     await unpack(archive, dir);
     if (archive.endsWith('.zip')) {
       base = base.slice(0, -4);
@@ -187,17 +189,17 @@ const install = async () => {
     } catch (err) {
       if (err.code !== 'ENOENT') throw err;
     }
-    console.log(`Zig${version === 'master' ? '' : ` v${version}`} executable:`, zig,
+    log(`Zig${version === 'master' ? '' : ` v${version}`} executable:`, zig,
       '(this version of Zig will be retained to speed up future updates)');
     const [pre, post] = tty.isatty(1) ? ['\x1b[1m\x1b[35m', '\x1b[0m'] : ['', ''];
-    console.log(
+    log(
       `${pre}Consider moving the ${path.dirname(zig)} directory and adding it to your PATH`,
       `to use Zig on other projects, or delete this if you wish to save space.${post}`
     );
 
     return zig;
   } finally {
-    console.log(`Cleaning up ${archive}`);
+    log(`Cleaning up ${archive}`);
     try { fs.rmSync(archive); } catch {}
   }
 };
@@ -206,17 +208,17 @@ const install = async () => {
 const downloadHeaders = async () => {
   const include = path.resolve(process.execPath, '..', '..', 'include', 'node');
   if (fs.existsSync(path.join(include, 'node.h'))) {
-    console.log('Node headers:', include);
+    log('Node headers:', include);
     return include;
   }
 
   const dir = path.join(ROOT, 'build', 'include');
   const dest = path.join(dir, 'node');
   if (fs.existsSync(path.join(dest, 'node.h'))) {
-    console.log('Node headers:', dest);
+    log('Node headers:', dest);
     return dest;
   } else {
-    console.log(`Could not find Node headers at ${include}, downloading...`);
+    log(`Could not find Node headers at ${include}, downloading...`);
   }
 
   try {
@@ -229,14 +231,14 @@ const downloadHeaders = async () => {
   const targz = path.join(dir, path.basename(url));
   const unpacked = path.join(dir, `node-${process.version}`, 'include');
 
-  console.log(`Downloading Node headers from ${url} to ${targz}`);
+  log(`Downloading Node headers from ${url} to ${targz}`);
 
   try {
     await download(url, targz);
     await unpack(targz, dir);
     fs.renameSync(path.join(unpacked, 'node'), dest);
 
-    console.log('Node headers:', dest);
+    log('Node headers:', dest);
 
     return dest;
   } finally {
@@ -248,7 +250,7 @@ const downloadHeaders = async () => {
 const downloadImportLib = async () => {
   const library = path.resolve(process.execPath, '..', 'node.lib');
   if (fs.existsSync(path.join(library, 'node.h'))) {
-    console.log('Node import library:', library);
+    log('Node import library:', library);
     return library;
   }
 
@@ -256,10 +258,10 @@ const downloadImportLib = async () => {
   const url = new URL('./win-x64/node.lib', process.release.headersUrl).href;
   const dest = path.join(dir, path.basename(url));
   if (fs.existsSync(path.join(dest))) {
-    console.log('Node import library:', dest);
+    log('Node import library:', dest);
     return dest;
   } else {
-    console.log(`Could not find Node import library at ${library}, downloading...`);
+    log(`Could not find Node import library at ${library}, downloading...`);
   }
 
   try {
@@ -268,24 +270,41 @@ const downloadImportLib = async () => {
     if (err.code !== 'EEXIST') throw err;
   }
 
-  console.log(`Downloading Node import library from ${url} to ${dest}`);
+  log(`Downloading Node import library from ${url} to ${dest}`);
   await download(url, dest);
-  console.log('Node import library:', dest);
+  log('Node import library:', dest);
 
   return dest;
 };
 
 (async () => {
-  const options = (process.argv[2] || '').startsWith('--options=')
-    ? process.argv[2].slice(10).split(' ') : undefined;
-  if (process.argv.length > 3 ||
-    process.argv.length === 3 && !(process.argv[2] === '--zig' || options)) {
+  let only = false;
+  let options = undefined;
+  let error = false;
+  for (let i = 2; i < process.argv.length; i++) {
+    switch (process.argv[i]) {
+    case "--silent": {
+      SILENT = true;
+      break;
+    }
+    case "--zig": {
+      if (options || only) error = true;
+      only = true;
+      break;
+    }
+    default: {
+      if (options || only || !process.argv[i].startsWith('--options=')) error = true;
+      options = process.argv[i].slice(10).split(' ');
+    }
+    }
+  }
+  if (error) {
     console.error('Invalid arguments');
     process.exit(1);
   }
 
   const zig = await install();
-  if (process.argv[2] === '--zig') process.exit(0);
+  if (only) process.exit(0);
 
   let tmp;
   try {
@@ -355,7 +374,7 @@ const downloadImportLib = async () => {
       opts.includes('-Dshowdown') || opts.includes('-Dshowdown=true') ? '-showdown' : '';
     const flags = opts.length ? ` (${opts.join(' ')})` : '';
     const artifact = path.join('build', 'lib', `pkmn${suffix}.${config.type}`);
-    console.log(`Building ${artifact}${flags}`);
+    log(`Building ${artifact}${flags}`);
     sh(zig, args);
     // TODO: ziglang/zig#14647 broke emit_to so we get to rename the file ourselves...
     if (config.type === 'node') {
