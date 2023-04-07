@@ -451,9 +451,10 @@ function filter(raw: string[]) {
 
 const METHOD = /^ {4}at ((?:\w|\.)+) \((.*\d)\)/;
 const NON_TERMINAL = new Set([
+  'location', 'PRNG.randomChance', 'PRNG.sample',
   'FixedRNG.next', 'FixedRNG.randomChance', 'FixedRNG.sample', 'FixedRNG.shuffle',
-  'Battle.random', 'Battle.randomChance', 'Battle.sample', 'location', 'Battle.speedSort',
-  'Battle.runEvent', 'PRNG.battle.prng.shuffle', 'PRNG.battle.prng.next',
+  'Battle.random', 'Battle.randomChance', 'Battle.sample', 'Battle.speedSort', 'Battle.runEvent',
+  'PRNG.battle.prng.next', 'PRNG.battle.prng.shuffle',
 ]);
 
 function location() {
