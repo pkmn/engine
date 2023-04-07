@@ -28,7 +28,7 @@ pub fn build(b: *std.Build) !void {
     const strip = b.option(bool, "strip", "Strip debugging symbols from binary") orelse false;
     const pic = b.option(bool, "pic", "Force position independent code") orelse false;
 
-    const cmd = b.findProgram(&[_][]const u8{"strip"}, &[_][]const u8{}) catch null;
+    const cmd = b.findProgram(&.{"strip"}, &.{}) catch null;
 
     var parser = std.json.Parser.init(b.allocator, false);
     defer parser.deinit();
@@ -72,7 +72,7 @@ pub fn build(b: *std.Build) !void {
         maybeStrip(b, lib, b.getInstallStep(), strip, cmd);
         if (pic) lib.force_pic = pic;
         // Always emit to build/lib because this is where the driver code expects to find it
-        // TODO(ziglang/zig#2231): using the following used to work (though be hacky):
+        // TODO(ziglang/zig#2231): using the following used to work (though was hacky):
         //
         //    lib.emit_bin = .{ .emit_to = b.fmt("build/lib/{s}", .{addon}) };
         //    b.getInstallStep().dependOn(&lib.step);
@@ -96,13 +96,10 @@ pub fn build(b: *std.Build) !void {
         lib.rdynamic = true;
         lib.strip = strip;
         if (pic) lib.force_pic = pic;
-        const opt = b.findProgram(
-            &[_][]const u8{"wasm-opt"},
-            &[_][]const u8{"./node_modules/.bin"},
-        ) catch null;
+        const opt = b.findProgram(&.{"wasm-opt"}, &.{"./node_modules/.bin"}) catch null;
         if (optimize != .Debug and opt != null) {
             const out = b.fmt("build/lib/{s}.wasm", .{name});
-            const sh = b.addSystemCommand(&[_][]const u8{ opt.?, "-O4" });
+            const sh = b.addSystemCommand(&.{ opt.?, "-O4" });
             sh.addArtifactArg(lib);
             sh.addArg("-o");
             sh.addFileSourceArg(.{ .path = out });
@@ -233,7 +230,7 @@ fn maybeStrip(
     if (mac and artifact.isDynamicLibrary()) return;
     // Assuming GNU strip, which complains "illegal pathname found in archive member"...
     if (!mac and artifact.isStaticLibrary()) return;
-    const sh = b.addSystemCommand(&[_][]const u8{ cmd.?, if (mac) "-x" else "-s" });
+    const sh = b.addSystemCommand(&.{ cmd.?, if (mac) "-x" else "-s" });
     sh.addArtifactArg(artifact);
     step.dependOn(&sh.step);
 }
@@ -246,7 +243,7 @@ const Config = struct {
     cmd: ?[]const u8,
 };
 
-const TESTS = [_][]const u8{
+const TESTS = .{
     "src/lib/common/test.zig",
     "src/lib/gen1/test.zig",
     "src/lib/gen2/test.zig",
