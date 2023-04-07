@@ -21,11 +21,11 @@ const SECONDARY = (value: number) => ({key: 'data/mods/gen1/scripts.ts:701:25', 
 const SLP = (n: number) =>
   ({key: 'data/mods/gen1/conditions.ts:63:38', value: ranged(n, 8 - 1)});
 const DISABLE_MOVE = (m: number, n = 4) =>
-  ({key: 'data/mods/gen1/moves.ts:253:27', value: ranged(m, n) - 1});
+  ({key: 'data/mods/gen1/moves.ts:249:27', value: ranged(m, n) - 1});
 const DISABLE_DURATION = (n: number) =>
-  ({key: 'data/mods/gen1/moves.ts:257:34', value: ranged(n, 9 - 1) - 1});
+  ({key: 'data/mods/gen1/moves.ts:253:34', value: ranged(n, 9 - 1) - 1});
 const MIMIC = (m: number, n = 4) =>
-  ({key: 'data/mods/gen1/moves.ts:500:24', value: ranged(m, n) - 1});
+  ({key: 'data/mods/gen1/moves.ts:497:24', value: ranged(m, n) - 1});
 const BIDE = (n: 2 | 3) =>
   ({key: 'data/mods/gen1/moves.ts:40:34', value: ranged(n - 2, 4 - 2)});
 const NO_PAR = SECONDARY(MAX);
@@ -1668,7 +1668,7 @@ describe('Gen 1', () => {
   });
 
   test('ConfusionChance effect', () => {
-    const sub_proc = {key: 'data/mods/gen1/moves.ts:860:50', value: ranged(25, 256) - 1};
+    const sub_proc = {key: 'data/mods/gen1/moves.ts:857:50', value: ranged(25, 256) - 1};
     const no_proc = SECONDARY(sub_proc.value + 1);
     const battle = startBattle([
       HIT, NO_CRIT, MAX_DMG, sub_proc, CFZ(2), CFZ_CAN,
@@ -2691,7 +2691,7 @@ describe('Gen 1', () => {
   });
 
   test('Psywave effect', () => {
-    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:581:32', value: MAX};
+    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:578:32', value: MAX};
     const PSY_MIN = {...PSY_MAX, value: MIN};
     const battle = startBattle([HIT, PSY_MAX, HIT, PSY_MIN], [
       {species: 'Gengar', evs, level: 59, moves: ['Psywave']},
@@ -4594,23 +4594,37 @@ describe('Gen 1', () => {
     }
   });
 
-  // Fixed by smogon/pokemon-showdown#9201 & smogon/pokemon-showdown#9301
+  // Fixed by smogon/pokemon-showdown#{9201,9301} & smogon/pokemon-showdown@203fda57
   test('Disable + Bide bug', () => {
-    const battle = startBattle([BIDE(3), HIT, DISABLE_MOVE(1, 2), DISABLE_DURATION(5)], [
-      {species: 'Voltorb', evs, moves: ['Teleport', 'Disable']},
+    const battle = startBattle([
+      HIT, PAR_CAN, BIDE(3), HIT, DISABLE_MOVE(1, 2), DISABLE_DURATION(5),
+    ], [
+      {species: 'Voltorb', evs, moves: ['Glare', 'Disable', 'Teleport']},
     ], [
       {species: 'Golem', evs, moves: ['Bide', 'Flash']},
     ]);
 
     battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.active[0].status).toBe('par');
+    expect(battle.p2.active[0].volatiles['bide'].time).toBe(3);
 
     battle.makeChoices('move 2', 'move 1');
+    expect(battle.p2.active[0].volatiles['disable'].time).toBe(4);
+    expect(battle.p2.active[0].volatiles['bide'].time).toBe(3);
 
     // Bide should not execute when Disabled
-    battle.makeChoices('move 1', 'move 1');
+    battle.makeChoices('move 3', 'move 1');
+    expect(battle.p2.active[0].volatiles['disable'].time).toBe(3);
+    expect(battle.p2.active[0].volatiles['bide'].time).toBe(3);
+
+    // Disabled should trump paralysis
+    battle.makeChoices('move 3', 'move 1');
+    expect(battle.p2.active[0].volatiles['disable'].time).toBe(2);
+    expect(battle.p2.active[0].volatiles['bide'].time).toBe(3);
 
     verify(battle, [
-      '|move|p1a: Voltorb|Teleport|p1a: Voltorb',
+      '|move|p1a: Voltorb|Glare|p2a: Golem',
+      '|-status|p2a: Golem|par',
       '|move|p2a: Golem|Bide|p2a: Golem',
       '|-start|p2a: Golem|Bide',
       '|turn|2',
@@ -4621,6 +4635,9 @@ describe('Gen 1', () => {
       '|move|p1a: Voltorb|Teleport|p1a: Voltorb',
       '|cant|p2a: Golem|Disable|Bide',
       '|turn|4',
+      '|move|p1a: Voltorb|Teleport|p1a: Voltorb',
+      '|cant|p2a: Golem|Disable|Bide',
+      '|turn|5',
     ]);
   });
 
@@ -7040,7 +7057,7 @@ describe('Gen 1', () => {
   });
 
   test('Psywave infinite loop', () => {
-    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:581:32', value: MAX};
+    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:578:32', value: MAX};
     const battle = startBattle([HIT, HIT, PSY_MAX], [
       {species: 'Charmander', evs, level: 1, moves: ['Psywave']},
     ], [
