@@ -85,7 +85,11 @@ export function render(
     }
   }
   buf.push(displayFrame(gen, true, partial, last));
-  if (error) buf.push(`<pre class="error"><code>${escapeHTML(error)}</pre></code>`);
+
+  if (error) {
+    const err = error.replaceAll(ROOT + path.sep, '');
+    buf.push(`<pre class="error"><code>${escapeHTML(err)}</pre></code>`);
+  }
 
   const type = Array.isArray(last) ? 'showdown' : 'pkmn';
   return minify(
