@@ -332,7 +332,9 @@ must be gleaned through the `Battle` state). Useful size and offset information 
 the [`layout.json`](../../data/layout.json) which exists to simplify writing driver code.
 
 Documentation of the wire protocol used for logging traces when `-Dtrace` is enabled can be found in
-[PROTOCOL.md](../../../docs/PROTOCOL.md).
+[PROTOCOL.md](../../../docs/PROTOCOL.md). Note that the
+[`pkmn-debug`](../../../README.md#pkmn-debug) tool exists to display the binary protocol and battle
+data in the browser for ease of debugging.
 
 ### `Battle`
 

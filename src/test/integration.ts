@@ -17,7 +17,7 @@ import minimist from 'minimist';
 import * as engine from '../pkg';
 import * as addon from '../pkg/addon';
 
-import {Frame, display} from './display';
+import {Frame, render} from './display';
 import {Choices, FILTER, formatFor, patch} from './showdown';
 import blocklistJSON from './showdown/blocklist.json';
 
@@ -308,12 +308,12 @@ function dump(
 
   file = path.join(dir, `${hex}.pkmn.html`);
   link = path.join(dir, 'pkmn.html');
-  fs.writeFileSync(file, display(gen, true, error, seed, frames.pkmn, partial.pkmn));
+  fs.writeFileSync(file, render(gen, true, error, seed, frames.pkmn, partial.pkmn));
   console.error(' ◦ @pkmn/engine:', pretty(symlink(file, link)), '->', pretty(file));
 
   file = path.join(dir, `${hex}.showdown.html`);
   link = path.join(dir, 'showdown.html');
-  fs.writeFileSync(file, display(gen, true, error, seed, frames.showdown, partial.showdown));
+  fs.writeFileSync(file, render(gen, true, error, seed, frames.showdown, partial.showdown));
   console.error(' ◦ Pokémon Showdown:', pretty(symlink(file, link)), '->', pretty(file), '\n');
 }
 

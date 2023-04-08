@@ -255,6 +255,30 @@ necessarily be up-to-date/complete/correct - inclusion in this list does not imp
 | **C++**    | `BSL-1.0` | https://github.com/pasyg/engine-wrapper |
 | **Python** | `MIT`     | https://github.com/AnnikaCodes/PyKMN    |
 
+
+#### `pkmn-debug`
+
+The [`@pkmn/engine`](#pkmnengine) package ships with a `pkmn-debug` tool which exists to decode the
+binary data structures and protocols used by the engine and to output a [standalone
+webpage](https://pkmn.cc/debug.html) that can be used for debugging. To use this tool in a folder
+that has the `@pkmn/engine` package installed locally you can use `npx pkmn-debug`, though you may
+also wish to install the package globally to be able to use this tool anywhere without
+[`npx`](https://docs.npmjs.com/cli/v7/commands/npx):
+
+```sh
+$ npm install --global @pkmn/engine
+```
+
+By default, `pkmn-debug` expects to read [binary debug protocol](docs/PROTOCOL.md#debugging) from
+[standard input](https://en.wikipedia.org/wiki/Standard_streams) and output HTML to standard output:
+
+  $ <cmd> | pkmn-debug > index.html
+
+Alternatively, if a single filename argument is passed to the `pkmn-debug` it will read from that
+instead:
+
+  $ pkmn-debug <file> > index.html
+
 ## Status
 
 The engine is currently expected to be developed over multiple stages:

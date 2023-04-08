@@ -62,16 +62,17 @@ export type Frame = {
   chunk: string;
 });
 
-export function display(
+export function render(
   gen: Generation,
   showdown: boolean,
-  error: string,
-  seed: bigint,
+  error: string | undefined,
+  seed: bigint | undefined,
   frames: Iterable<Frame>,
   partial: Partial<Frame> = {},
 ) {
   const output: string[] = [];
-  const buf = [`<h1>0x${seed.toString(16).toUpperCase()}</h1>`];
+  const buf = [];
+  if (seed) buf.push(`<h1>0x${seed.toString(16).toUpperCase()}</h1>`);
 
   let last: Data<Battle> | number[] | undefined = undefined;
   for (const frame of frames) {
@@ -84,7 +85,7 @@ export function display(
     }
   }
   buf.push(displayFrame(gen, true, partial, last));
-  buf.push(`<pre class="error"><code>${escapeHTML(error)}</pre></code>`);
+  if (error) buf.push(`<pre class="error"><code>${escapeHTML(error)}</pre></code>`);
 
   const type = Array.isArray(last) ? 'showdown' : 'pkmn';
   return minify(

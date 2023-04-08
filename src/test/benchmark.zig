@@ -16,6 +16,7 @@ const Data = struct {
 var data: ?std.ArrayList(Data) = null;
 var buf: ?std.ArrayList(u8) = null;
 var last: u64 = 0;
+var gen: u8 = 0;
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -27,7 +28,7 @@ pub fn main() !void {
     defer std.process.argsFree(allocator, args);
     if (args.len < 3 or args.len > 5) usageAndExit(args[0], fuzz);
 
-    const gen = std.fmt.parseUnsigned(u8, args[1], 10) catch
+    gen = std.fmt.parseUnsigned(u8, args[1], 10) catch
         errorAndExit("gen", args[1], args[0], fuzz);
     if (gen < 1 or gen > 9) errorAndExit("gen", args[1], args[0], fuzz);
 
@@ -67,12 +68,11 @@ pub fn main() !void {
         const random = csprng.random();
         break :seed random.int(usize);
     };
-    try benchmark(allocator, gen, seed, warmup, battles, duration);
+    try benchmark(allocator, seed, warmup, battles, duration);
 }
 
 pub fn benchmark(
     allocator: Allocator,
-    gen: u8,
     seed: u64,
     warmup: ?usize,
     battles: ?usize,
@@ -205,6 +205,9 @@ fn dump() !void {
         try w.print("0x{X}\n", .{last});
     } else {
         try w.writeIntNative(u64, last);
+
+        try w.writeByte(@boolToInt(pkmn.options.showdown));
+        try w.writeByte(gen);
 
         if (data) |ds| {
             if (buf) |b| {

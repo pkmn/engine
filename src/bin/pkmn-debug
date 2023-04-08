@@ -1,0 +1,38 @@
+#!/usr/bin/env node
+'use strict';
+
+const {execFileSync} = require('child_process');
+
+const {Generations} = require('@pkmn/data');
+
+const {run} = require('../tools/debug');
+
+if (process.stdin.isTTY) {
+  console.error(`Invalid input`);
+  process.exit(1);
+}
+
+let Dex;
+try {
+  Dex = require('@pkmn/sim').Dex;
+} catch (err) {
+  if (err.code !== 'MODULE_NOT_FOUND') throw err;
+  try {
+    require.resolve('@pkmn/dex');
+  } catch (e) {
+    if (e.code !== 'MODULE_NOT_FOUND') throw e;
+    execFileSync('npm', ['install', '@pkmn/dex', '--global', '--silent']);
+  }
+
+  if (+/^v(\d+)/.exec(process.version)[1] < 16) {
+    console.error('pkmn-debug requires Node v16+');
+    process.exit(1);
+  }
+
+  Dex = require('@pkmn/dex').Dex;
+}
+
+run(new Generations(Dex)).catch(err => {
+  console.error(err.message);
+  process.exit(1);
+});

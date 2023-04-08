@@ -1,5 +1,15 @@
 This directory contains miscellaneous scripts and tools useful for working on the pkmn engine:
 
+- [`debug.ts`](debug.ts): Reads a dump of [binary debug protocol](../../docs/PROTOCOL.md#debugging)
+  from [standard input](https://en.wikipedia.org/wiki/Standard_streams) and outputs the standalone
+  [debug UI webpage](https://pkmn.cc/debug.html):
+
+      $ <cmd> | npm run debug > index.html
+
+  Alternatively, if a single filename argument is passed to the tool it will read from that instead:
+
+      $ npm run debug <file> > index.html
+
 - [`generate.ts`](generate.ts): Generate both the data files for the library based on
   [templates](../lib/common/data) and an [`id.json`](../pkg/data/ids.json) lookup file for decoding
   the serialized data. Produces the data based on information fetched from the decompiled sources

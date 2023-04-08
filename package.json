@@ -48,7 +48,10 @@
     "build/pkg/protocol.js.map"
   ],
   "engines": {"node": ">=16.0.0"},
-  "bin": {"install-pkmn-engine": "src/bin/install-pkmn-engine" },
+  "bin": {
+    "install-pkmn-engine": "src/bin/install-pkmn-engine",
+    "pkmn-debug": "src/bin/pkmn-debug"
+  },
   "publishConfig": {"access": "public"},
   "dependencies": {
     "@pkmn/data": "^0.7.35",
@@ -77,12 +80,13 @@
     "vitest": "^0.29.8"
   },
   "scripts": {
-    "lint": "eslint --cache src --ext ts,js && eslint src/bin/install-pkmn-engine",
-    "fix": "eslint --fix src --ext ts,js && eslint --fix src/bin/install-pkmn-engine",
+    "lint": "eslint --cache src --ext ts,js && eslint src/bin/*",
+    "fix": "eslint --fix src --ext ts,js && eslint --fix src/bin/*",
     "compile": "tsc -p .",
     "build": "npm run compile",
     "test": "vitest src/pkg",
     "test:integration": "vitest src/test",
+    "debug": "npm run compile && node build/tools/debug",
     "fuzz": "npm run compile && node build/test/fuzz",
     "generate": "npm run compile && node build/tools/generate",
     "release": "npm run compile && node build/tools/release",

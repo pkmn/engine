@@ -37,7 +37,49 @@ or has had a move that has been blocked due to an opponent's use of
 use case of games being played out randomly via a machine, but a simulator for human players built
 on top of the pkmn engine would need to provide an alternative implementation of `choices`.
 
-### Choices
+### Debugging
+
+The [`pkmn-debug`](../README.md#pkmn-debug) tool exists to decode the binary battle and log data and
+render HTML to power a [human-readable debug UI](https://pkmn.cc/debug.html). The tool expects the
+following debug information to be provided to it by a binary with `-Dtrace` enabled:
+
+#### Header
+
+Debug logs must start with a two byte header which contains a byte to indicate whether `-Dshowdown`
+compatibility mode was enabled and a byte indicating the
+[generation](https://bulbapedia.bulbagarden.net/wiki/Generation):
+
+
+| Start | End | Description                                       |
+| ----- | --- | ------------------------------------------------- |
+| 0     | 1   | Whether Pokémon Showdown compatibility is enabled |
+| 1     | 2   | A number denoting the Pokémon generation          |
+
+#### Frame
+
+Following the header there maybe be any number of "frames", the last of which may be only partially
+complete:
+
+| Start     | End       | Description                                                                                                               |
+| --------- | --------- | ------------------------------------------------------------------------------------------------------------------------- |
+| 0         | `N`       | `N` bytes of trace log message protocol that are terminated by `0x00` or [EOF](https://en.wikipedia.org/wiki/End-of-file) |
+| `N`+1     | `N`+`B`+1 | The `B` serialized bytes of the updated battle as defined by its respective layout                                        |
+| `N`+`B`+2 | `N`+`B`+3 | The [result](#result) of updating the battle                                                                              |
+| `N`+`B`+3 | `N`+`B`+4 | The next [choice](#choice) for Player 1                                                                                   |
+| `N`+`B`+4 | `N`+`B`+5 | The next [choice](#choice) for Player 2                                                                                   |
+
+It is important to note that by convention the debug logs start with the trace logs that are
+produced **after** first battle update (i.e. both sides `|switch|`-ing in their first Pokémon) -
+**the initial battle state when no Pokémon are active and the inital required choices (pass from
+both sides) and result are not logged.**[^2]
+
+[^2]: In generations with [Team
+Preview](https://bulbapedia.bulbagarden.net/wiki/Appendix:Metagame_terminology#Team_Preview) it is
+likely that the convention around the intitial data frame will change and that a `0x00` dummy byte
+will be used for the pre-battle log, though given that the engine currently does not support these
+later generations such changes are speculative.
+
+### Choice
 
 The valid options returned by `choices` can be one of three types: `pass`, which will only ever
 occurs in situations where only the other player gets to make a decision (e.g. when choosing which
@@ -55,13 +97,13 @@ SIM-PROTOCOL](https://github.com/smogon/pokemon-showdown/blob/master/sim/SIM-PRO
 `switch` takes a 1-based Pokémon slot number of an eligible party member (which must be greater than
 1 as you can never switch in the active Pokémon) and `move` takes a 1-based move slot number, though
 is expected to be 0 in certain scenarios where the cartridge does not present an option to select a
-move after signalling the intent to fight (e.g. during Wrap or Bide in Generation I)[^2]. Determining
+move after signalling the intent to fight (e.g. during Wrap or Bide in Generation I)[^3]. Determining
 exactly which choice options are available is subtle and should be left to the engine - choices not
 present in the array filled in by `choices` are invalid and may corrupt the battle state or cause
 the engine to crash.
 
-[^2]: The data value for a move choice `move` must be in the range of 1-4 when in Pokémon Showdown
-    compatibility mode as its choice selection behavior is different (i.e. incorrect).
+[^3]: The data value for a move choice `move` must be in the range of 1-4 when in Pokémon Showdown
+compatibility mode as its choice selection behavior is different (i.e. incorrect).
 
 ### Result
 
