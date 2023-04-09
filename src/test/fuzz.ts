@@ -40,12 +40,12 @@ export async function run(
     const {stdout, stderr} = err as {stdout: Buffer; stderr: Buffer};
     const raw = stderr.toString('utf8');
     const panic = raw.indexOf('panic: ');
-    if (testing) throw new Error(raw);
+    if (testing || !stdout.length) throw new Error(raw);
 
     console.error(raw);
 
-    seed = LE ? stdout.readBigInt64LE(0) : stdout.readBigInt64BE(0);
-    const output = display(gens, stdout.subarray(8), raw.slice(panic));
+    seed = LE ? stdout.readBigUInt64LE(0) : stdout.readBigUInt64BE(0);
+    const output = display(gens, stdout.subarray(8), raw.slice(panic), seed);
 
     const dir = path.join(ROOT, 'logs');
     try {

@@ -45,15 +45,16 @@ following debug information to be provided to it by a binary with `-Dtrace` enab
 
 #### Header
 
-Debug logs must start with a two byte header which contains a byte to indicate whether `-Dshowdown`
-compatibility mode was enabled and a byte indicating the
-[generation](https://bulbapedia.bulbagarden.net/wiki/Generation):
+Debug logs must start with a header which contains a byte to indicate whether `-Dshowdown`
+compatibility mode was enabled, a byte indicating the
+[generation](https://bulbapedia.bulbagarden.net/wiki/Generation), and the initial battle state:
 
 
-| Start | End | Description                                       |
-| ----- | --- | ------------------------------------------------- |
-| 0     | 1   | Whether Pokémon Showdown compatibility is enabled |
-| 1     | 2   | A number denoting the Pokémon generation          |
+| Start | End | Description                                                                              |
+| ----- | --- | ---------------------------------------------------------------------------------------- |
+| 0     | 1   | Whether Pokémon Showdown compatibility is enabled                                        |
+| 1     | 2   | A number denoting the Pokémon generation                                                 |
+| 2     | B+2 | The $B$ serialized bytes of the initial battle state as defined by its respective layout |
 
 #### Frame
 
@@ -63,7 +64,7 @@ complete:
 | Start | End   | Description                                                                                                               |
 | ----- | ----- | ------------------------------------------------------------------------------------------------------------------------- |
 | 0     | N     | $N$ bytes of trace log message protocol that are terminated by `0x00` or [EOF](https://en.wikipedia.org/wiki/End-of-file) |
-| N+1   | N+B+1 | The $B$ serialized bytes of the updated battle as defined by its respective layout                                        |
+| N+1   | N+B+1 | The $B$ serialized bytes of the updated battle state as defined by its respective layout                                  |
 | N+B+2 | N+B+3 | The [result](#result) of updating the battle                                                                              |
 | N+B+3 | N+B+4 | The next [choice](#choice) for Player 1                                                                                   |
 | N+B+4 | N+B+5 | The next [choice](#choice) for Player 2                                                                                   |

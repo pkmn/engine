@@ -15,6 +15,7 @@ const Frame = struct {
 
 var gen: u8 = 0;
 var last: u64 = 0;
+var initial: []u8 = &.{};
 var buf: ?std.ArrayList(u8) = null;
 var frames: ?std.ArrayList(Frame) = null;
 
@@ -113,6 +114,7 @@ pub fn benchmark(
         var log: ?pkmn.protocol.Log(std.ArrayList(u8).Writer) = null;
         if (save) {
             if (frames != null) deinit(allocator);
+            initial = try allocator.dupe(u8, std.mem.toBytes(battle)[0..]);
             frames = std.ArrayList(Frame).init(allocator);
             buf = std.ArrayList(u8).init(allocator);
             log = pkmn.protocol.Log(std.ArrayList(u8).Writer){ .writer = buf.?.writer() };
@@ -186,13 +188,15 @@ fn usageAndExit(cmd: []const u8, fuzz: bool) noreturn {
 }
 
 fn deinit(allocator: Allocator) void {
+    std.debug.assert(initial.len > 0);
+    allocator.free(initial);
     std.debug.assert(frames != null);
-    std.debug.assert(buf != null);
     for (frames.?.items) |frame| {
         allocator.free(frame.state);
         allocator.free(frame.log);
     }
     frames.?.deinit();
+    std.debug.assert(buf != null);
     buf.?.deinit();
 }
 
@@ -208,6 +212,7 @@ fn dump() !void {
 
         try w.writeByte(@boolToInt(pkmn.options.showdown));
         try w.writeByte(gen);
+        try w.writeAll(initial);
 
         if (frames) |frame| {
             for (frame.items) |d| {

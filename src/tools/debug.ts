@@ -2,7 +2,7 @@ import * as fs from 'fs';
 
 import {Generation, Generations} from '@pkmn/data';
 
-import {Battle, Choice, Info, Log, ParsedLine, Result, SideInfo} from '../pkg';
+import {Battle, Choice, Info, Log, Result, SideInfo} from '../pkg';
 import * as addon from '../pkg/addon';
 import {Data, LAYOUT, Lookup} from '../pkg/data';
 import * as gen1 from '../pkg/gen1';
@@ -10,10 +10,11 @@ import {Frame, render} from '../test/display';
 
 class SpeciesNames implements Info {
   gen: Generation;
-  battle!: Battle;
+  battle: Battle;
 
-  constructor(gen: Generation) {
+  constructor(gen: Generation, battle: Battle) {
     this.gen = gen;
+    this.battle = battle;
   }
 
   get p1() {
@@ -44,8 +45,6 @@ export function display(gens: Generations, data: Buffer, error?: string, seed?: 
 
   const lookup = Lookup.get(gen);
   const size = LAYOUT[gen.num - 1].sizes.Battle;
-  const names = new SpeciesNames(gen);
-  const log = new Log(gen, lookup, names);
   const deserialize = (buf: Buffer): Battle => {
     // We don't care about the native addon, we just need to load it so other checks don't fail
     void addon.supports(true);
@@ -55,7 +54,11 @@ export function display(gens: Generations, data: Buffer, error?: string, seed?: 
     }
   };
 
-  let partial: Partial<Frame> = {};
+  const battle = deserialize(data.subarray(offset, offset += size));
+  const names = new SpeciesNames(gen, battle);
+  const log = new Log(gen, lookup, names);
+
+  let partial: Partial<Frame> | undefined = undefined;
   const frames: Frame[] = [];
   while (offset < view.byteLength) {
     partial = {parsed: []};
@@ -68,7 +71,7 @@ export function display(gens: Generations, data: Buffer, error?: string, seed?: 
     offset += r.value;
     if (offset >= view.byteLength) break;
 
-    partial.battle = names.battle = deserialize(data.subarray(offset, offset += size));
+    partial.battle = deserialize(data.subarray(offset, offset += size));
     if (offset >= view.byteLength) break;
 
     partial.result = Result.decode(data[offset++]);
@@ -80,6 +83,7 @@ export function display(gens: Generations, data: Buffer, error?: string, seed?: 
     partial.c2 = Choice.decode(data[offset++]);
 
     frames.push(partial as Frame);
+    partial = undefined;
   }
 
   return render(gen, showdown, error, seed, frames, partial);
