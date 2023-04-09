@@ -76,10 +76,25 @@ try {
   if (err.code !== 'EEXIST') throw err;
 }
 
+const debug = (files: string[]) => {
+  if (files.includes('src/lib/common/debug.zig')) return true;
+  try {
+    sh('git', ['grep', '@import.*debug\\.zig']);
+  } catch {
+    return false;
+  }
+  return true;
+};
+
 // eslint-disable-next-line
 const json = require(path.join(ROOT, 'package.json'));
 let version: string = json.version;
-if (!argv.prod) {
+if (argv.prod) {
+  if (debug(json.files)) {
+    console.error('Refusing to produce a release containing debug logic');
+    process.exit(1);
+  }
+} else {
   const HEAD = sh('git', ['rev-parse', 'HEAD'], {bypass: true}).slice(0, 8);
   version = `${version}-dev+${HEAD}`;
 }
