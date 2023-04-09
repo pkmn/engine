@@ -43,12 +43,14 @@ const trim = (args: string[]) => {
 };
 
 const compact = (line: ParsedLine) =>
-  [...trim(line.args as string[]), ...Object.keys(line.kwArgs)
+  [...trim(line.args.slice(0) as string[]), ...Object.keys(line.kwArgs)
     .map(k => `[${k}]${format((line.kwArgs as any)[k])}`)].join('|');
 
 const debug = (s: string) => s.startsWith('|debug')
   ? /^\|debug\|[^|]*:\d/.test(s) ? 'class="debug rng"'
   : 'class="debug"' : '';
+
+export const toText = (parsed: ParsedLine[]) => `|${parsed.map(compact).join('\n|')}`;
 
 export type Frame = {
   result: Result;
@@ -113,7 +115,7 @@ function displayFrame(
   const buf = [];
   if ('parsed' in partial && partial.parsed) {
     buf.push('<div class="log">');
-    buf.push(`<pre><code>|${partial.parsed.map(compact).join('\n|')}</code></pre>`);
+    buf.push(`<pre><code>${toText(partial.parsed)}</code></pre>`);
     buf.push('</div>');
   } else if ('chunk' in partial && partial.chunk) {
     buf.push('<div class="log"><pre>');

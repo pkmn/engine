@@ -17,7 +17,7 @@ import minimist from 'minimist';
 import * as engine from '../pkg';
 import * as addon from '../pkg/addon';
 
-import {Frame, render} from './display';
+import {Frame, render, toText} from './display';
 import {Choices, FILTER, formatFor, patch} from './showdown';
 import blocklistJSON from './showdown/blocklist.json';
 
@@ -340,15 +340,17 @@ type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 //     information that requires additional state to support
 //
 function compare(chunk: string, actual: engine.ParsedLine[]) {
+  const diff = `\n\n${toText(actual)}\n\nvs. expected:\n\n${chunk}\n`;
   const buf: engine.ParsedLine[] = [];
   let i = 0;
   for (const {args, kwArgs} of Protocol.parse(chunk)) {
+    if (FILTER.has(args[0])) continue;
+    if (i > actual.length) throw new Error(`Actual logs are missing messages: ${diff}`);
     if (actual[i].args[0] === '-status' && actual[i].args[2] === 'psn' &&
       (actual[i].kwArgs as Protocol.KWArgs['|-status|']).silent && actual[i + 1] &&
       actual[i + 1].args[0] === 'switch') {
       [actual[i], actual[i + 1]] = [actual[i + 1], actual[i]];
     }
-    if (FILTER.has(args[0])) continue;
     const a = args.slice() as Writeable<Protocol.ArgType>;
     const kw = {...kwArgs} as Protocol.KWArgType;
     switch (args[0]) {
@@ -372,6 +374,7 @@ function compare(chunk: string, actual: engine.ParsedLine[]) {
     assert.deepEqual(actual[i], {args: a, kwArgs: kw});
     i++;
   }
+  if (i < actual.length) throw new Error(`Actual logs have additional messages: ${diff}`);
   return buf;
 }
 
