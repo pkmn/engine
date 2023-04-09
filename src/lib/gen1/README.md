@@ -497,6 +497,8 @@ the pkmn engine, but the following moves have their broken behavior preserved in
   skips end-of-turn residuals).
 - **Rage**: Rage boosts should still result in burn/paralysis [stat modification
   errors](https://pkmn.cc/bulba-glitch-1#Stat_modification_errors) but don't on Pokémon Showdown.
+  Furthermore, Pokémon Showdown only builds Rage for Disable/Explosion (hit/miss) when attacking
+  into a Substitute instead of all moves.
 - **Thrash** / **Petal Dance**: once a Pokémon is locked into a thrashing move they will lose all
   speed ties on Pokémon Showdown (due to the fact that if they win the speed tie their action will
   then get "changed" and inserted back into the queue after their opponent's action).

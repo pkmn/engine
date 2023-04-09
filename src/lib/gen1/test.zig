@@ -8587,6 +8587,56 @@ test "Partial trapping move Mirror Move glitch" {
     try t.verify();
 }
 
+test "Rage + Substitute bug" {
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, CRIT, MAX_DMG,
+        } else .{
+            ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, HIT,
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Jigglypuff, .moves = &.{ .Teleport, .Tackle } }},
+        &.{.{ .species = .Electabuzz, .moves = &.{ .Substitute, .Rage } }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Substitute);
+    t.expected.p2.get(1).hp -= 83;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P2.ident(1), Move.Rage, P1.ident(1), null);
+    t.expected.p1.get(1).hp -= 28;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Tackle, P2.ident(1), null);
+    try t.log.expected.activate(P2.ident(1), .Substitute);
+    if (!showdown) try t.log.expected.boost(P2.ident(1), .Rage, 1);
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    try expectEqual(@as(i4, if (showdown) 0 else 1), t.actual.p2.active.boosts.atk);
+
+    try t.log.expected.move(P2.ident(1), Move.Rage, P1.ident(1), Move.Rage);
+    t.expected.p1.get(1).hp -= if (showdown) 28 else 42;
+    try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Tackle, P2.ident(1), null);
+    try t.log.expected.crit(P2.ident(1));
+    try t.log.expected.end(P2.ident(1), .Substitute);
+    if (!showdown) try t.log.expected.boost(P2.ident(1), .Rage, 1);
+    try t.log.expected.turn(4);
+
+    try expectEqual(Result.Default, try t.update(move(2), forced));
+    try expectEqual(@as(i4, if (showdown) 0 else 2), t.actual.p2.active.boosts.atk);
+
+    try t.verify();
+}
+
 test "Rage stat modification error bug" {
     const PAR_CAN = MAX;
     var t = Test((if (showdown)

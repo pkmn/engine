@@ -620,8 +620,9 @@ fn beforeMove(
             return .done;
         }
 
+        const sub = showdown and foe.active.volatiles.Substitute;
         _ = try applyDamage(battle, player.foe(), player.foe(), .None, log);
-        if (foe.stored().hp > 0) try buildRage(battle, player.foe(), log);
+        if (foe.stored().hp > 0 and !sub) try buildRage(battle, player.foe(), log);
 
         // For reasons passing understanding, Pokémon Showdown still inflicts residual damage to
         // Bide's user even if the above damage has caused the foe to faint. It's simpler to always
@@ -894,6 +895,9 @@ fn doMove(
         hits = side.active.volatiles.attacks;
     }
 
+    // Pokémon Showdown only builds Rage for Disable/Explosion (hit/miss) when attacking into a sub
+    const sub = showdown and foe.active.volatiles.Substitute;
+
     var nullified = false;
     var hit: u4 = 0;
     while (hit < hits) {
@@ -909,7 +913,7 @@ fn doMove(
         if (hit == 0 and ohko) try log.ohko();
         hit += 1;
         if (foe.stored().hp == 0) break;
-        if (!late) try buildRage(battle, player.foe(), log);
+        if (!late and !sub) try buildRage(battle, player.foe(), log);
         // If the substitute breaks during a multi-hit attack, the attack ends
         if (nullified) break;
     }
@@ -946,8 +950,8 @@ fn doMove(
 
     if (foe.stored().hp == 0) return null;
 
-    // Pokémon Showdown builds Rage at the wrong time for non-MultiHit moves
-    if (late and move.effect != .Disable) try buildRage(battle, player.foe(), log);
+    // Pokémon Showdown builds Rage at the wrong time for non-MultiHit move
+    if (late and !sub and move.effect != .Disable) try buildRage(battle, player.foe(), log);
 
     if (!move.effect.isSpecial()) {
         // On the cartridge Rage is not considered to be "special" and thus gets executed for a
@@ -1100,11 +1104,12 @@ fn randomizeDamage(battle: anytype) void {
 
 fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype) !?Result {
     const side = battle.side(player);
+    const foe = battle.foe(player);
 
     if (!try checkHit(battle, player, move, log)) return null;
 
     battle.last_damage = switch (side.last_selected_move) {
-        .SuperFang => @max(battle.foe(player).stored().hp / 2, 1),
+        .SuperFang => @max(foe.stored().hp / 2, 1),
         .SeismicToss, .NightShade => side.stored().level,
         .SonicBoom => 20,
         .DragonRage => 40,
@@ -1127,8 +1132,9 @@ fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
 
     if (battle.last_damage == 0) return if (showdown) null else Result.Error;
 
+    const sub = showdown and foe.active.volatiles.Substitute;
     _ = try applyDamage(battle, player.foe(), player.foe(), .None, log);
-    if (battle.foe(player).stored().hp > 0) try buildRage(battle, player.foe(), log);
+    if (battle.foe(player).stored().hp > 0 and !sub) try buildRage(battle, player.foe(), log);
 
     return null;
 }

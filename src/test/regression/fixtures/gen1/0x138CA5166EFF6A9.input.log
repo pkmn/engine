@@ -1,0 +1,11 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[312,51793,26351,63145]}
+>player p1 {"name":"Bot 1","team":"Jigglypuff|||None|leer,thundershock,conversion,quickattack||241,160,234,175,175,252|N|2,17,0,21,21,7||64|172]Persian|||None|peck,minimize,doubleedge,thunderpunch||209,84,55,156,156,225|N|1,25,1,27,27,17||71|37]Snorlax|||None|thunderbolt,flash,horndrill,poisongas||174,151,164,72,72,56|N|8,10,8,16,16,0||72|109]Wartortle|||None|acid,vinewhip,dreameater,smog||221,121,125,176,176,37|N|14,30,27,5,5,30||69|164]Venonat|||None|waterfall,meditate,supersonic,strength||96,65,222,97,97,129|N|13,22,2,,,1||72|40]Marowak|||None|blizzard,focusenergy,roar,thunderwave||94,151,18,197,197,95|N|2,24,17,0,0,19||94|11"}
+>player p2 {"name":"Bot 2","team":"Nidorino|||None|screech,toxic,thunder,pound||173,17,5,249,249,131|N|5,0,19,3,3,9||80|36]Poliwhirl|||None|substitute,rage,solarbeam,doublekick||16,236,232,231,231,182|N|11,7,25,26,26,14||80|45]Parasect|||None|bite,sludge,disable,whirlwind||2,93,3,149,149,134|N|8,15,13,8,8,20||54|236]Weedle|||None|jumpkick,fireblast,leer,meditate||49,36,196,30,30,228|N|6,21,11,16,16,15||67|210]Porygon|||None|doubleslap,megapunch,conversion,wingattack||19,237,57,244,244,239|N|9,10,1,11,11,16||99|107]Ninetales|||None|cometpunch,thrash,razorleaf,earthquake||242,63,168,72,72,205|N|10,23,16,0,0,14||78|31"}
+>p1 move leer
+>p2 switch 2
+>p1 move thundershock
+>p2 move substitute
+>p1 move conversion
+>p2 move rage
+>p1 move quickattack
+>p2 move rage

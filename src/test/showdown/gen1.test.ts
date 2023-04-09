@@ -6799,6 +6799,54 @@ describe('Gen 1', () => {
     ]);
   });
 
+  test('Rage + Substitute bug', () => {
+    const battle = startBattle([
+      HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, HIT, CRIT, MAX_DMG,
+    ], [
+      {species: 'Jigglypuff', evs, moves: ['Teleport', 'Tackle']},
+    ], [
+      {species: 'Electabuzz', evs, moves: ['Substitute', 'Rage']},
+    ]);
+
+    let p1hp = battle.p1.pokemon[0].hp;
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 83);
+
+    battle.makeChoices('move 2', 'move 2');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 28);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+    // expect(battle.p2.pokemon[0].boosts.atk).toBe(1);
+    expect(battle.p2.pokemon[0].boosts.atk).toBe(0);
+
+    battle.makeChoices('move 2', 'move 1');
+    expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 28);
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp);
+    // expect(battle.p2.pokemon[0].boosts.atk).toBe(2);
+    expect(battle.p2.pokemon[0].boosts.atk).toBe(0);
+
+    verify(battle, [
+      '|move|p2a: Electabuzz|Substitute|p2a: Electabuzz',
+      '|-start|p2a: Electabuzz|Substitute',
+      '|-damage|p2a: Electabuzz|250/333',
+      '|move|p1a: Jigglypuff|Teleport|p1a: Jigglypuff',
+      '|turn|2',
+      '|move|p2a: Electabuzz|Rage|p1a: Jigglypuff',
+      '|-damage|p1a: Jigglypuff|405/433',
+      '|move|p1a: Jigglypuff|Tackle|p2a: Electabuzz',
+      '|-activate|p2a: Electabuzz|Substitute|[damage]',
+      '|turn|3',
+      '|move|p2a: Electabuzz|Rage|p1a: Jigglypuff|[from]Rage',
+      '|-damage|p1a: Jigglypuff|377/433',
+      '|move|p1a: Jigglypuff|Tackle|p2a: Electabuzz',
+      '|-crit|p2a: Electabuzz',
+      '|-end|p2a: Electabuzz|Substitute',
+      '|turn|4',
+    ]);
+  });
+
   test('Rage stat modification error bug', () => {
     const battle = startBattle([HIT, PAR_CAN, HIT, PAR_CAN, HIT, NO_CRIT, MIN_DMG, PAR_CAN, HIT], [
       {species: 'Charizard', evs, moves: ['Glare', 'Rage']},
