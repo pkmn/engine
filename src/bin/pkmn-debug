@@ -7,12 +7,7 @@ const {execFileSync} = require('child_process');
 
 const {Generations} = require('@pkmn/data');
 
-const {run} = require('../tools/debug');
-
-if (process.stdin.isTTY) {
-  console.error(`Invalid input`);
-  process.exit(1);
-}
+const {run} = require('../../build/tools/debug');
 
 let Dex;
 try {
