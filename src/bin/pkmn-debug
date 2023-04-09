@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 'use strict';
 
-require('source-map-support').install();
+try {
+  require('source-map-support').install();
+} catch (err) {
+  if (err.code !== 'MODULE_NOT_FOUND') throw err;
+}
 
 const {execFileSync} = require('child_process');
 
