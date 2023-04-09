@@ -1,2 +1,0 @@
-- remove unnecessary copying when dealing with Buffer (ie anything with Data.view)
-- actually support new protocol
