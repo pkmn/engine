@@ -185,6 +185,7 @@ fn selectMove(
     }
 
     // move select
+    volatiles.state = 0;
     if (choice.data == 0) {
         const struggle = ok: {
             for (side.active.moves, 0..) |move, i| {
@@ -1330,17 +1331,21 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool, mist
         }
 
         // GLITCH: Thrash / Petal Dance / Rage get their accuracy overwritten on subsequent hits
-        var state = &side.active.volatiles.state;
-        const overwritten = (move.effect == .Thrashing or move.effect == .Rage) and state.* > 0;
-        assert(!overwritten or (0 < state.* and state.* <= 255 and !side.active.volatiles.Bide));
-        var accuracy = if (overwritten) state.* else @as(u16, Gen12.percent(move.accuracy));
+        const state = side.active.volatiles.state;
+        var overwrite = move.effect == .Rage or move.effect == .Thrashing;
+        const overwritten = overwrite and state > 0;
+        assert(!overwritten or (0 < state and state <= 255 and !side.active.volatiles.Bide));
+
+        var accuracy = if (overwritten) state else @as(u16, Gen12.percent(move.accuracy));
         var boost = BOOSTS[@intCast(u4, @as(i8, side.active.boosts.accuracy) + 6)];
         accuracy = accuracy * boost[0] / boost[1];
         boost = BOOSTS[@intCast(u4, @as(i8, -foe.active.boosts.evasion) + 6)];
         accuracy = accuracy * boost[0] / boost[1];
         accuracy = @min(255, @max(1, accuracy));
 
-        if (move.effect == .Thrashing or move.effect == .Rage) state.* = accuracy;
+        // Pokémon Showdown only overwrites if the volatile is present
+        if (showdown) overwrite = side.active.volatiles.Rage or side.active.volatiles.Thrashing;
+        if (overwrite) side.active.volatiles.state = accuracy;
 
         // GLITCH: max accuracy is 255 so 1/256 chance of miss
         break :miss if (showdown)
@@ -2159,10 +2164,8 @@ pub const Effects = struct {
 
     fn rage(battle: anytype, player: Player) !void {
         var volatiles = &battle.side(player).active.volatiles;
-        if (volatiles.Rage) return;
-        volatiles.Rage = true;
         assert(!volatiles.Bide);
-        volatiles.state = 0;
+        volatiles.Rage = true;
     }
 
     fn recoil(battle: anytype, player: Player, residual: *bool, log: anytype) !void {
@@ -2276,7 +2279,6 @@ pub const Effects = struct {
         assert(!volatiles.Bide);
 
         volatiles.Thrashing = true;
-        volatiles.state = 0;
         volatiles.attacks = @intCast(u3, if (showdown)
             battle.rng.range(u8, 2, 4)
         else
