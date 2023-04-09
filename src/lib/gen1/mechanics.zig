@@ -788,7 +788,10 @@ fn doMove(
             (@enumToInt(move.type.effectiveness(foe.active.types.type1)) == 0 or
             @enumToInt(move.type.effectiveness(foe.active.types.type2)) == 0);
         if (immune and move.effect != .Binding) break :miss true;
-        if (move.effect == .OHKO and side.active.stats.spe < foe.active.stats.spe) break :miss true;
+        if (move.effect == .OHKO and side.active.stats.spe < foe.active.stats.spe) {
+            battle.last_damage = 0;
+            break :miss true;
+        }
         break :miss move.target != .Self and !moveHit(battle, player, move, &immune, &mist);
     };
     assert(!immune or miss or (showdown and move.effect == .Binding));
