@@ -33,7 +33,7 @@ class SpeciesNames implements Info {
   }
 }
 
-export function display(gens: Generations, data: number[], error?: string, seed?: bigint) {
+export function display(gens: Generations, data: Buffer, error?: string, seed?: bigint) {
   if (!data.length) throw new Error('Invalid input');
 
   const view = Data.view(data);
@@ -45,7 +45,7 @@ export function display(gens: Generations, data: number[], error?: string, seed?
   const size = LAYOUT[gen.num - 1].sizes.Battle;
   const names = new SpeciesNames(gen);
   const log = new Log(gen, lookup, names);
-  const deserialize = (buf: number[]): Battle => {
+  const deserialize = (buf: Buffer): Battle => {
     // We don't care about the native addon, we just need to load it so other checks don't fail
     void addon.supports(true);
     switch (gen.num) {
@@ -66,7 +66,7 @@ export function display(gens: Generations, data: number[], error?: string, seed?
     names.battle = battle;
 
     const parsed: ParsedLine[] = [];
-    const it = log.parse(Data.view(data.slice(offset + size + 3)))[Symbol.iterator]();
+    const it = log.parse(Data.view(data.subarray(offset + size + 3)))[Symbol.iterator]();
     let r = it.next();
     while (!r.done) {
       parsed.push(r.value);
@@ -78,7 +78,7 @@ export function display(gens: Generations, data: number[], error?: string, seed?
 
   return render(gen, showdown, error, seed, frames, {
     parsed: end > 0
-      ? Array.from(log.parse(Data.view(data.slice(head, head + end))))
+      ? Array.from(log.parse(Data.view(data.subarray(head, head + end))))
       : undefined,
   });
 }
@@ -100,7 +100,7 @@ export async function run(gens: Generations) {
     }
     input = Buffer.concat(result, length);
   }
-  process.stdout.write(display(gens, Array.from(input)));
+  process.stdout.write(display(gens, input));
 }
 
 if (require.main === module) {

@@ -36,11 +36,9 @@ for (const gen of LAYOUT) {
 }
 
 export const Data = new class {
-  buffer(data: number[]): Buffer {
-    return Buffer.from(new Uint8Array(data).buffer);
-  }
-  view(data: number[]): DataView {
-    return new DataView(this.buffer(data).buffer);
+  view(buf: number[] | Buffer): DataView {
+    buf = Array.isArray(buf) ? Buffer.from(buf) : buf;
+    return new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
   }
 };
 

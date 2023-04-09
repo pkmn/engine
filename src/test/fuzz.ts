@@ -8,7 +8,7 @@ import {promisify} from 'util';
 import {Generations} from '@pkmn/data';
 import {Dex} from '@pkmn/sim';
 
-import {Data, LAYOUT, LE, Lookup} from '../pkg/data';
+import {LE} from '../pkg/data';
 import {display} from '../tools/debug';
 
 const ROOT = path.resolve(__dirname, '..', '..');
@@ -44,11 +44,8 @@ export async function run(
 
     console.error(raw);
 
-    const data = Array.from(stdout.slice(0, 8));
-    const view = Data.view(data);
-    seed = view.getBigUint64(0, LE);
-
-    const output = display(gens, Array.from(stdout.slice(8)), raw.slice(panic));
+    seed = LE ? stdout.readBigInt64LE(0) : stdout.readBigInt64BE(0);
+    const output = display(gens, stdout.subarray(8), raw.slice(panic));
 
     const dir = path.join(ROOT, 'logs');
     try {
