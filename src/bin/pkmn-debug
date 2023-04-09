@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 
+require('source-map-support').install();
+
 const {execFileSync} = require('child_process');
 
 const {Generations} = require('@pkmn/data');
