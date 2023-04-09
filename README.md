@@ -272,12 +272,16 @@ $ npm install --global @pkmn/engine
 By default, `pkmn-debug` expects to read [binary debug protocol](docs/PROTOCOL.md#debugging) from
 [standard input](https://en.wikipedia.org/wiki/Standard_streams) and output HTML to standard output:
 
-  $ <cmd> | pkmn-debug > index.html
+```sh
+$ <cmd> | pkmn-debug > index.html
+```
 
 Alternatively, if a single filename argument is passed to the `pkmn-debug` it will read from that
 instead:
 
-  $ pkmn-debug <file> > index.html
+```sh
+$ pkmn-debug <file> > index.html
+```
 
 ## Status
 
