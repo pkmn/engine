@@ -60,13 +60,13 @@ compatibility mode was enabled and a byte indicating the
 Following the header there maybe be any number of "frames", the last of which may be only partially
 complete:
 
-| Start     | End       | Description                                                                                                               |
-| --------- | --------- | ------------------------------------------------------------------------------------------------------------------------- |
-| 0         | `N`       | `N` bytes of trace log message protocol that are terminated by `0x00` or [EOF](https://en.wikipedia.org/wiki/End-of-file) |
-| `N`+1     | `N`+`B`+1 | The `B` serialized bytes of the updated battle as defined by its respective layout                                        |
-| `N`+`B`+2 | `N`+`B`+3 | The [result](#result) of updating the battle                                                                              |
-| `N`+`B`+3 | `N`+`B`+4 | The next [choice](#choice) for Player 1                                                                                   |
-| `N`+`B`+4 | `N`+`B`+5 | The next [choice](#choice) for Player 2                                                                                   |
+| Start | End   | Description                                                                                                               |
+| ----- | ----- | ------------------------------------------------------------------------------------------------------------------------- |
+| 0     | N     | $N$ bytes of trace log message protocol that are terminated by `0x00` or [EOF](https://en.wikipedia.org/wiki/End-of-file) |
+| N+1   | N+B+1 | The $B$ serialized bytes of the updated battle as defined by its respective layout                                        |
+| N+B+2 | N+B+3 | The [result](#result) of updating the battle                                                                              |
+| N+B+3 | N+B+4 | The next [choice](#choice) for Player 1                                                                                   |
+| N+B+4 | N+B+5 | The next [choice](#choice) for Player 2                                                                                   |
 
 It is important to note that by convention the debug logs start with the trace logs that are
 produced **after** first battle update (i.e. both sides `|switch|`-ing in their first Pokémon) -
