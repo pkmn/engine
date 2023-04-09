@@ -8,30 +8,53 @@ try {
 }
 
 const {execFileSync} = require('child_process');
+const {readFileSync} = require('fs');
+const {join, resolve} = require('path');
 
-const {Generations} = require('@pkmn/data');
+const ROOT = resolve(__dirname, '..', '..');
+const packageJSON = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
 
-const {run} = require('../../build/tools/debug');
+const missing = [];
+for (const dep of ['@pkmn/img', 'html-minifier', 'mustache']) {
+  try {
+    require.resolve(dep);
+  } catch (e) {
+    if (e.code !== 'MODULE_NOT_FOUND') throw e;
+    missing.push(`${dep}@${packageJSON.devDependencies[dep]}`);
+  }
+}
 
-let Dex;
+let Dex = undefined;
 try {
   Dex = require('@pkmn/sim').Dex;
 } catch (err) {
   if (err.code !== 'MODULE_NOT_FOUND') throw err;
   try {
-    require.resolve('@pkmn/dex');
+    Dex = require('@pkmn/dex').Dex;
   } catch (e) {
     if (e.code !== 'MODULE_NOT_FOUND') throw e;
-    execFileSync('npm', ['install', '@pkmn/dex', '--global', '--silent']);
+    missing.push(`@pkmn/dex@${packageJSON.dependencies['@pkmn/data']}`);
   }
+}
 
+if (missing.length) {
   if (+/^v(\d+)/.exec(process.version)[1] < 16) {
     console.error('pkmn-debug requires Node v16+');
     process.exit(1);
   }
 
-  Dex = require('@pkmn/dex').Dex;
+  execFileSync('npm', ['install', ...missing, '--global'], {encoding: 'utf8'});
+
+  const node_modules = execFileSync('npm', ['root', '--global'], {encoding: 'utf8'}).trim();
+  if (!process.env.NODE_PATH || !process.env.NODE_PATH.includes(node_modules)) {
+    console.error(`NODE_PATH must include npm's global node_modules directory: '${node_modules}'`);
+    process.exit(1);
+  }
 }
+
+const {Generations} = require('@pkmn/data');
+
+const {run} = require('../../build/tools/debug');
 
 run(new Generations(Dex)).catch(err => {
   console.error(err.message);
