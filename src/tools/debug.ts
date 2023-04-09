@@ -38,8 +38,9 @@ export function display(gens: Generations, data: Buffer, error?: string, seed?: 
 
   const view = Data.view(data);
 
-  const showdown = !!view.getUint8(0);
-  const gen = gens.get(view.getUint8(1));
+  let offset = 0;
+  const showdown = !!view.getUint8(offset++);
+  const gen = gens.get(view.getUint8(offset++));
 
   const lookup = Lookup.get(gen);
   const size = LAYOUT[gen.num - 1].sizes.Battle;
@@ -54,33 +55,34 @@ export function display(gens: Generations, data: Buffer, error?: string, seed?: 
     }
   };
 
-  const end = view.getUint8(2);
-  const head = 2 /* showdown + gen */ + 1;
-
+  let partial: Partial<Frame> = {};
   const frames: Frame[] = [];
-  for (let offset = head + end; offset < data.length; offset += (3 + size)) {
-    const result = Result.decode(data[offset]);
-    const c1 = Choice.decode(data[offset + 1]);
-    const c2 = Choice.decode(data[offset + 2]);
-    const battle = deserialize(data.slice(offset + 3, offset + size + 3));
-    names.battle = battle;
-
-    const parsed: ParsedLine[] = [];
-    const it = log.parse(Data.view(data.subarray(offset + size + 3)))[Symbol.iterator]();
+  while (offset < view.byteLength) {
+    partial = {parsed: []};
+    const it = log.parse(Data.view(data.subarray(offset)))[Symbol.iterator]();
     let r = it.next();
     while (!r.done) {
-      parsed.push(r.value);
+      partial.parsed!.push(r.value);
       r = it.next();
     }
     offset += r.value;
-    frames.push({result, c1, c2, battle, parsed});
+    if (offset >= view.byteLength) break;
+
+    partial.battle = names.battle = deserialize(data.subarray(offset, offset += size));
+    if (offset >= view.byteLength) break;
+
+    partial.result = Result.decode(data[offset++]);
+    if (offset >= view.byteLength) break;
+
+    partial.c1 = Choice.decode(data[offset++]);
+    if (offset >= view.byteLength) break;
+
+    partial.c2 = Choice.decode(data[offset++]);
+
+    frames.push(partial as Frame);
   }
 
-  return render(gen, showdown, error, seed, frames, {
-    parsed: end > 0
-      ? Array.from(log.parse(Data.view(data.subarray(head, head + end))))
-      : undefined,
-  });
+  return render(gen, showdown, error, seed, frames, partial);
 }
 
 export async function run(gens: Generations) {

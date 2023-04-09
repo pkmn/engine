@@ -5,18 +5,18 @@ const pkmn = @import("pkmn");
 const Timer = std.time.Timer;
 const Allocator = std.mem.Allocator;
 
-const Data = struct {
+const Frame = struct {
+    log: []u8 = &.{},
+    state: []u8,
     result: pkmn.Result = pkmn.Result.Default,
     c1: pkmn.Choice = .{},
     c2: pkmn.Choice = .{},
-    state: []u8,
-    log: []u8 = &.{},
 };
 
-var data: ?std.ArrayList(Data) = null;
-var buf: ?std.ArrayList(u8) = null;
-var last: u64 = 0;
 var gen: u8 = 0;
+var last: u64 = 0;
+var buf: ?std.ArrayList(u8) = null;
+var frames: ?std.ArrayList(Frame) = null;
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -112,8 +112,8 @@ pub fn benchmark(
 
         var log: ?pkmn.protocol.Log(std.ArrayList(u8).Writer) = null;
         if (save) {
-            if (data != null) deinit(allocator);
-            data = std.ArrayList(Data).init(allocator);
+            if (frames != null) deinit(allocator);
+            frames = std.ArrayList(Frame).init(allocator);
             buf = std.ArrayList(u8).init(allocator);
             log = pkmn.protocol.Log(std.ArrayList(u8).Writer){ .writer = buf.?.writer() };
         }
@@ -148,7 +148,7 @@ pub fn benchmark(
 
             if (save) {
                 std.debug.assert(buf.?.items.len <= max);
-                try data.?.append(.{
+                try frames.?.append(.{
                     .result = result,
                     .c1 = c1,
                     .c2 = c2,
@@ -165,7 +165,7 @@ pub fn benchmark(
         }
         std.debug.assert(!showdown or result.type != .Error);
     }
-    if (data != null) deinit(allocator);
+    if (frames != null) deinit(allocator);
     if (battles != null) try out.print("{d},{d},{d}\n", .{ time, turns, random.src.seed });
 }
 
@@ -186,13 +186,13 @@ fn usageAndExit(cmd: []const u8, fuzz: bool) noreturn {
 }
 
 fn deinit(allocator: Allocator) void {
-    std.debug.assert(data != null);
+    std.debug.assert(frames != null);
     std.debug.assert(buf != null);
-    for (data.?.items) |d| {
-        allocator.free(d.state);
-        allocator.free(d.log);
+    for (frames.?.items) |frame| {
+        allocator.free(frame.state);
+        allocator.free(frame.log);
     }
-    data.?.deinit();
+    frames.?.deinit();
     buf.?.deinit();
 }
 
@@ -209,21 +209,16 @@ fn dump() !void {
         try w.writeByte(@boolToInt(pkmn.options.showdown));
         try w.writeByte(gen);
 
-        if (data) |ds| {
-            if (buf) |b| {
-                try w.writeByte(@intCast(u8, b.items.len));
-                try w.writeAll(b.items);
-            } else {
-                try w.writeByte(0);
-            }
-            for (ds.items) |d| {
+        if (frames) |frame| {
+            for (frame.items) |d| {
+                try w.writeAll(d.log);
+                try w.writeAll(d.state);
                 try w.writeStruct(d.result);
                 try w.writeStruct(d.c1);
                 try w.writeStruct(d.c2);
-                try w.writeAll(d.state);
-                try w.writeAll(d.log);
             }
         }
+        if (buf) |b| try w.writeAll(b.items);
     }
 
     try bw.flush();
