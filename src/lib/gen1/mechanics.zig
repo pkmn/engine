@@ -797,7 +797,7 @@ fn doMove(
     };
     assert(!immune or miss or (showdown and move.effect == .Binding));
 
-    var late = showdown;
+    var late = showdown and move.effect != .Explode;
     const skip = status or immune;
     if ((!showdown or (!skip or counter)) and !miss) blk: {
         if (showdown and move.effect.isMulti()) {
@@ -917,7 +917,7 @@ fn doMove(
         if (hit == 0 and ohko) try log.ohko();
         hit += 1;
         if (foe.stored().hp == 0) break;
-        if (!late and !sub) try buildRage(battle, player.foe(), log);
+        if (!late and (!sub or move.effect == .Explode)) try buildRage(battle, player.foe(), log);
         // If the substitute breaks during a multi-hit attack, the attack ends
         if (nullified) break;
     }

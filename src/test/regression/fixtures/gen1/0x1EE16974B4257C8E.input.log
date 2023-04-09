@@ -1,0 +1,20 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[7905,26996,46117,31886]}
+>player p1 {"name":"Bot 1","team":"Charmander|||None|stunspore,thundershock,ember,teleport||67,250,50,187,187,67|N|7,25,23,27,27,22||53|21]Mr. Mime|||None|explosion,hornattack,wingattack,payday||30,180,35,129,129,57|N|15,2,7,,,||75|53]Primeape|||None|tackle,spikecannon,hypnosis,barrage||200,109,35,135,135,176|N|12,19,2,1,1,8||53|230]Squirtle|||None|bodyslam,solarbeam,flamethrower,sonicboom||182,116,124,220,220,183|N|2,25,5,25,25,14||93|73]Graveler|||None|stomp,flash,defensecurl,glare||75,24,80,33,33,65|N|13,23,27,7,7,9||85|90]Jynx|||None|growl,blizzard,tailwhip,leechlife||144,22,118,154,154,239|N|4,20,19,5,5,13||96|224"}
+>player p2 {"name":"Bot 2","team":"Horsea|||None|scratch,acidarmor,swift,lovelykiss||153,13,83,83,83,1|N|14,7,7,4,4,14||78|240]Mankey|||None|substitute,rage,cut,horndrill||36,76,152,95,95,115|N|0,25,13,29,29,25||95|49]Oddish|||None|megapunch,karatechop,quickattack,visegrip||37,131,25,177,177,113|N|1,28,8,11,11,5||78|22]Ninetales|||None|razorwind,dizzypunch,spore,waterfall||176,159,222,104,104,162|N|2,5,24,1,1,11||56|103]Magnemite|||None|kinesis,recover,aurorabeam,slam||70,74,237,68,68,191|N|4,5,22,29,29,5||62|69]Nidorino|||None|earthquake,lightscreen,splash,petaldance||165,238,227,96,96,82|N|0,21,24,29,29,4||65|60"}
+>p1 move stunspore
+>p2 move scratch
+>p1 move thundershock
+>p2 move acidarmor
+>p1 move ember
+>p2 move swift
+>p1 move teleport
+>p2 move lovelykiss
+>p1 move thundershock
+>p2 switch 2
+>p1 move thundershock
+>p2 move substitute
+>p1 move teleport
+>p2 move rage
+>p1 switch 2
+>p1 move explosion
+>p2 move rage
