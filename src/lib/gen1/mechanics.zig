@@ -569,8 +569,12 @@ fn beforeMove(
                     player
                 else
                     player.foe();
+
+                const uncapped = battle.last_damage;
                 // Skipping adjustDamage / randomizeDamage / checkHit
                 _ = try applyDamage(battle, player, target, .Confusion, log);
+                // Pokémon Showdown thinks that Confusion damage is uncapped ¯\_(ツ)_/¯
+                if (showdown) battle.last_damage = uncapped;
 
                 return .done;
             }
@@ -1483,14 +1487,15 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
             damage *= volatiles.toxic;
         }
 
-        // Pokémon Showdown erroneously updates last damage with uncapped Leech Seed damage
-        if (showdown) battle.last_damage = damage;
-
         const amount = @min(damage, stored.hp);
         stored.hp -= amount;
 
         // As above, Pokémon Showdown uses damageOf but its not relevant
-        if (amount > 0) try log.damage(ident, stored, .LeechSeed);
+        if (amount > 0) {
+            try log.damage(ident, stored, .LeechSeed);
+            // Pokémon Showdown erroneously updates last damage with uncapped Leech Seed damage
+            if (showdown) battle.last_damage = damage;
+        }
 
         const before = foe_stored.hp;
         // Uncapped damage is added back to the foe

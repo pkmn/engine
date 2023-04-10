@@ -1,0 +1,32 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[18333,53115,16491,20870]}
+>player p1 {"name":"Bot 1","team":"Geodude|||None|sharpen,psywave,psychic,petaldance||105,173,109,69,69,137|N|10,7,13,4,4,23||67|68]Lickitung|||None|lowkick,wingattack,hornattack,leechlife||161,180,18,24,24,119|N|2,4,9,5,5,22||83|28]Growlithe|||None|bite,conversion,payday,headbutt||219,227,222,113,113,|N|0,16,8,29,29,17||73|17]Graveler|||None|poisonpowder,eggbomb,stomp,doubleteam||167,47,215,105,105,173|N|10,22,29,16,16,23||81|134]Hitmonchan|||None|razorwind,fireblast,surf,furyattack||231,3,174,183,183,143|N|15,10,,7,7,15||61|89]Gengar|||None|hypnosis,superfang,kinesis,blizzard||174,216,55,103,103,178|N|11,30,21,27,27,11||63|92"}
+>player p2 {"name":"Bot 2","team":"Cloyster|||None|bide,sing,hydropump,nightshade||60,217,136,221,221,18|N|0,29,9,12,12,12||97|70]Caterpie|||None|bonemerang,pound,minimize,icebeam||183,64,178,35,35,78|N|14,6,,5,5,27||99|196]Starmie|||None|lightscreen,bubble,splash,firepunch||27,30,235,251,251,158|N|15,,26,19,19,15||77|134]Pidgeotto|||None|smokescreen,thunderbolt,stringshot,highjumpkick||64,28,190,16,16,180|N|14,30,15,0,0,19||70|57]Omanyte|||None|screech,teleport,psywave,wingattack||99,178,196,201,201,63|N|2,5,28,4,4,23||79|68]Muk|||None|focusenergy,fissure,spore,quickattack||198,169,16,132,132,162|N|11,6,25,18,18,10||55|2"}
+>p1 move sharpen
+>p2 switch 2
+>p1 move psywave
+>p2 move pound
+>p1 move psychic
+>p2 move minimize
+>p1 switch 2
+>p2 move minimize
+>p1 switch 2
+>p2 move bonemerang
+>p1 move petaldance
+>p2 move minimize
+>p1 move petaldance
+>p2 move pound
+>p1 move petaldance
+>p2 move pound
+>p1 move psychic
+>p2 move bonemerang
+>p1 move petaldance
+>p2 switch 2
+>p1 move petaldance
+>p2 move nightshade
+>p1 move petaldance
+>p2 move bide
+>p1 move psychic
+>p2 move bide
+>p1 switch 3
+>p1 move payday
+>p2 move bide

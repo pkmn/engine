@@ -478,7 +478,8 @@ Smogon](https://www.smogon.com/forums/posts/5933177/show):
 - Confusion self-hits use the wrong damage formula resulting in off-by-one errors (and also fail to
   account for an opponent's Reflect). Furthermore, the confusion self-hit damage will erroneously be
   inflicted to the confused user's substitute if the confused user had been attempting to use a
-  self-targeting move.
+  self-targeting move. Finally, Pokémon Showdown erroneously considers the *uncapped* self-hit
+  damage for the purposes of tracking the battle's last damage.
 
 Beyond the general bugs listed above, several move effects are implemented incorrectly by Pokémon
 Showdown. Some of these moves are [too fundamentally broken to be implemented](#unimplementable) by
@@ -488,7 +489,8 @@ the pkmn engine, but the following moves have their broken behavior preserved in
   incorrectly still gets applied to Bide's user.
 - **Leech Seed**: Leech Seed fails to heal its source side if a seeded target faints due to
   recoil/crash damage on Pokémon Showdown. Pokémon Showdown also updates the battle's last damage
-  field with the uncapped Leech Seed damage which has consequences for Bide and Counter.
+  field with the uncapped Leech Seed damage if the residual damage is applied which has consequences
+  for Bide and Counter.
 - **Pay Day**: Pay Day should still scatter coins if it hits (but doesn't break) and opponent's
   Substitute but doesn't on Pokémon Showdown.
 - **Flinch**: Flinching does not get cleared during move selection on Pokémon Showdown and is
