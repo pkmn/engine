@@ -5552,9 +5552,9 @@ test "Bide residual bug" {
     const BIDE_2 = MIN;
 
     var t = Test((if (showdown)
-        (.{ HIT, HIT, BIDE_2, HIT, HIT })
+        .{ HIT, HIT, BIDE_2, HIT, HIT }
     else
-        (.{ HIT, HIT, ~CRIT, BIDE_2, HIT, HIT }))).init(
+        .{ HIT, HIT, ~CRIT, BIDE_2, HIT, HIT })).init(
         &.{.{ .species = .Jolteon, .moves = &.{ .LeechSeed, .Bide } }},
         &.{
             .{ .species = .Sandslash, .hp = 100, .moves = &.{ .Toxic, .SeismicToss } },
@@ -6628,9 +6628,9 @@ test "Thrashing speed tie bug" {
     const THRASH_4 = MAX;
 
     var t = Test((if (showdown)
-        (.{ TIE_1, THRASH_4, HIT, ~CRIT, MIN_DMG, TIE_1, HIT, ~CRIT, MIN_DMG })
+        .{ TIE_1, THRASH_4, HIT, ~CRIT, MIN_DMG, TIE_1, HIT, ~CRIT, MIN_DMG }
     else
-        (.{ TIE_1, THRASH_4, ~CRIT, MIN_DMG, HIT, TIE_1, ~CRIT, MIN_DMG, HIT }))).init(
+        .{ TIE_1, THRASH_4, ~CRIT, MIN_DMG, HIT, TIE_1, ~CRIT, MIN_DMG, HIT })).init(
         &.{.{ .species = .Dratini, .moves = &.{.Thrash} }},
         &.{.{ .species = .Vileplume, .moves = &.{.Teleport} }},
     );
@@ -8640,9 +8640,9 @@ test "Rage + Substitute bug" {
 test "Rage stat modification error bug" {
     const PAR_CAN = MAX;
     var t = Test((if (showdown)
-        (.{ HIT, PAR_CAN, HIT, PAR_CAN, HIT, ~CRIT, MIN_DMG, PAR_CAN, HIT })
+        .{ HIT, PAR_CAN, HIT, PAR_CAN, HIT, ~CRIT, MIN_DMG, PAR_CAN, HIT }
     else
-        (.{ HIT, PAR_CAN, HIT, PAR_CAN, ~CRIT, MIN_DMG, HIT, PAR_CAN, HIT }))).init(
+        .{ HIT, PAR_CAN, HIT, PAR_CAN, ~CRIT, MIN_DMG, HIT, PAR_CAN, HIT })).init(
         &.{.{ .species = .Charizard, .moves = &.{ .Glare, .Rage } }},
         &.{.{ .species = .Sandshrew, .moves = &.{ .StunSpore, .SeismicToss } }},
     );
@@ -8743,22 +8743,67 @@ test "Rage and Thrash / Petal Dance accuracy bug" {
 test "Substitute HP drain bug" {
     // https://pkmn.cc/bulba-glitch-1#Substitute_HP_drain_bug
     // https://glitchcity.wiki/Substitute_drain_move_not_missing_glitch
-    var t = Test((if (showdown) .{ HIT, ~CRIT, MIN_DMG } else .{ ~CRIT, MIN_DMG, HIT })).init(
-        &.{.{ .species = .Butterfree, .moves = &.{.MegaDrain} }},
-        &.{.{ .species = .Jolteon, .moves = &.{.Substitute} }},
-    );
-    defer t.deinit();
+    {
+        var t = Test((if (showdown)
+            .{ HIT, ~CRIT, MIN_DMG, HIT, HIT, ~CRIT, MIN_DMG }
+        else
+            .{ ~CRIT, MIN_DMG, HIT, HIT, ~CRIT, MIN_DMG, HIT })).init(
+            &.{.{ .species = .Butterfree, .moves = &.{.MegaDrain} }},
+            &.{.{ .species = .Jolteon, .moves = &.{ .Substitute, .SonicBoom } }},
+        );
+        defer t.deinit();
 
-    try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
-    try t.log.expected.start(P2.ident(1), .Substitute);
-    t.expected.p2.get(1).hp -= 83;
-    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    try t.log.expected.move(P1.ident(1), Move.MegaDrain, P2.ident(1), null);
-    try t.log.expected.activate(P2.ident(1), .Substitute);
-    try t.log.expected.turn(2);
+        try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+        try t.log.expected.start(P2.ident(1), .Substitute);
+        t.expected.p2.get(1).hp -= 83;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.move(P1.ident(1), Move.MegaDrain, P2.ident(1), null);
+        try t.log.expected.activate(P2.ident(1), .Substitute);
+        try t.log.expected.turn(2);
 
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try t.verify();
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+        try t.log.expected.move(P2.ident(1), Move.SonicBoom, P1.ident(1), null);
+        t.expected.p1.get(1).hp -= 20;
+        try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
+        try t.log.expected.move(P1.ident(1), Move.MegaDrain, P2.ident(1), null);
+        try t.log.expected.activate(P2.ident(1), .Substitute);
+        t.expected.p1.get(1).hp += 12;
+        try t.log.expected.drain(P1.ident(1), t.expected.p1.get(1), P2.ident(1));
+        try t.log.expected.turn(3);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(2)));
+        try t.verify();
+    }
+    // Pokémon Showdown incorrectly still heals if the attack did 0 damage
+    {
+        var t = Test((if (showdown) .{ HIT, ~CRIT } else .{ ~CRIT, MIN_DMG })).init(
+            &.{.{ .species = .Sandshrew, .level = 1, .hp = 1, .moves = &.{.Absorb} }},
+            &.{.{ .species = .Venusaur, .moves = &.{.Substitute} }},
+        );
+        defer t.deinit();
+
+        try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+        try t.log.expected.start(P2.ident(1), .Substitute);
+        t.expected.p2.get(1).hp -= 90;
+        try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.move(P1.ident(1), Move.Absorb, P2.ident(1), null);
+        if (showdown) {
+            try t.log.expected.resisted(P2.ident(1));
+            try t.log.expected.activate(P2.ident(1), .Substitute);
+            t.expected.p1.get(1).hp += 1;
+            try t.log.expected.drain(P1.ident(1), t.expected.p1.get(1), P2.ident(1));
+        } else {
+            try t.log.expected.lastmiss();
+            try t.log.expected.miss(P1.ident(1));
+        }
+        try t.log.expected.turn(2);
+
+        try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try expectEqual(@as(u8, 91), t.actual.p2.active.volatiles.substitute);
+
+        try t.verify();
+    }
 }
 
 test "Substitute 1/4 HP glitch" {

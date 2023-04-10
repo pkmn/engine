@@ -530,7 +530,8 @@ the pkmn engine, but the following moves have their broken behavior preserved in
   Pokémon Showdown implementing the health check based on floating point division instead of integer
   divison like on the cartridge (meaning the Substitute 1/4 glitch will only occur if the Pokémon's
   maximum HP is evenly divisible by 4). Finally, Substitute also incorrectly blocks Dream Eater on
-  Pokémon Showdown.
+  Pokémon Showdown and will incorrectly still heal 1 HP for any draining moves if the attack does 0
+  damage.
 
 In addition to numerous cases where Pokémon Showdown uses the wrong type of message (e.g. `|-fail`
 vs. `|-miss|` vs. `|-immune|`, e.g. in the case of Leech Seed) which are not documented here, Pokémon

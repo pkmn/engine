@@ -1815,7 +1815,7 @@ pub const Effects = struct {
 
         if (battle.last_damage == 0) {
             assert(showdown);
-            return;
+            if (!battle.foe(player).active.volatiles.Substitute) return;
         }
 
         const drain = @max(battle.last_damage / 2, 1);

@@ -6934,25 +6934,64 @@ describe('Gen 1', () => {
   });
 
   test('Substitute HP drain bug', () => {
-    const battle = startBattle([HIT, NO_CRIT, MIN_DMG], [
-      {species: 'Butterfree', evs, moves: ['Mega Drain']},
-    ], [
-      {species: 'Jolteon', evs, moves: ['Substitute']},
-    ]);
+    {
+      const battle = startBattle([HIT, NO_CRIT, MIN_DMG, HIT, HIT, NO_CRIT, MIN_DMG], [
+        {species: 'Butterfree', evs, moves: ['Mega Drain']},
+      ], [
+        {species: 'Jolteon', evs, moves: ['Substitute', 'Sonic Boom']},
+      ]);
 
-    const p2hp = battle.p2.pokemon[0].hp;
+      const p1hp = battle.p1.pokemon[0].hp;
+      const p2hp = battle.p2.pokemon[0].hp;
 
-    battle.makeChoices('move 1', 'move 1');
-    expect(battle.p2.pokemon[0].hp).toBe(p2hp - 83);
+      battle.makeChoices('move 1', 'move 1');
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp - 83);
 
-    verify(battle, [
-      '|move|p2a: Jolteon|Substitute|p2a: Jolteon',
-      '|-start|p2a: Jolteon|Substitute',
-      '|-damage|p2a: Jolteon|250/333',
-      '|move|p1a: Butterfree|Mega Drain|p2a: Jolteon',
-      '|-activate|p2a: Jolteon|Substitute|[damage]',
-      '|turn|2',
-    ]);
+      battle.makeChoices('move 1', 'move 2');
+      expect(battle.p1.pokemon[0].hp).toBe(p1hp - 20 + 12);
+
+      verify(battle, [
+        '|move|p2a: Jolteon|Substitute|p2a: Jolteon',
+        '|-start|p2a: Jolteon|Substitute',
+        '|-damage|p2a: Jolteon|250/333',
+        '|move|p1a: Butterfree|Mega Drain|p2a: Jolteon',
+        '|-activate|p2a: Jolteon|Substitute|[damage]',
+        '|turn|2',
+        '|move|p2a: Jolteon|Sonic Boom|p1a: Butterfree',
+        '|-damage|p1a: Butterfree|303/323',
+        '|move|p1a: Butterfree|Mega Drain|p2a: Jolteon',
+        '|-activate|p2a: Jolteon|Substitute|[damage]',
+        '|-heal|p1a: Butterfree|315/323|[from] drain|[of] p2a: Jolteon',
+        '|turn|3',
+      ]);
+    }
+    {
+      const battle = startBattle([HIT, NO_CRIT], [
+        {species: 'Sandshrew', level: 1, evs, moves: ['Absorb']},
+      ], [
+        {species: 'Venusaur', evs, moves: ['Substitute']},
+      ]);
+
+      battle.p1.active[0].hp = 1;
+      const p2hp = battle.p2.pokemon[0].hp;
+
+      battle.makeChoices('move 1', 'move 1');
+      // expect(battle.p1.pokemon[0].hp).toBe(1);
+      expect(battle.p1.pokemon[0].hp).toBe(2);
+      expect(battle.p2.pokemon[0].hp).toBe(p2hp - 90);
+      expect(battle.p2.pokemon[0].volatiles['substitute'].hp).toBe(91);
+
+      verify(battle, [
+        '|move|p2a: Venusaur|Substitute|p2a: Venusaur',
+        '|-start|p2a: Venusaur|Substitute',
+        '|-damage|p2a: Venusaur|273/363',
+        '|move|p1a: Sandshrew|Absorb|p2a: Venusaur',
+        '|-resisted|p2a: Venusaur',
+        '|-activate|p2a: Venusaur|Substitute|[damage]',
+        '|-heal|p1a: Sandshrew|2/12|[from] drain|[of] p2a: Venusaur',
+        '|turn|2',
+      ]);
+    }
   });
 
   test('Substitute 1/4 HP glitch', () => {
