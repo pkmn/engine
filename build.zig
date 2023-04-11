@@ -27,6 +27,7 @@ pub fn build(b: *std.Build) !void {
     const dynamic = b.option(bool, "dynamic", "Build a dynamic library") orelse false;
     const strip = b.option(bool, "strip", "Strip debugging symbols from binary") orelse false;
     const pic = b.option(bool, "pic", "Force position independent code") orelse false;
+    const emit_asm = b.option(bool, "emit-asm", "Output .s (assembly code)") orelse false;
 
     const cmd = b.findProgram(&.{"strip"}, &.{}) catch null;
 
@@ -134,6 +135,7 @@ pub fn build(b: *std.Build) !void {
         lib.bundle_compiler_rt = true;
         maybeStrip(b, lib, b.getInstallStep(), strip, cmd);
         if (pic) lib.force_pic = pic;
+        if (emit_asm) lib.emit_asm = .emit;
         lib.install();
         c = true;
     }
