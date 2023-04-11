@@ -141,7 +141,7 @@ export class Battle implements Gen1.Battle {
     let offset = OFFSETS.Battle.p1;
     const indexes: number[] = [];
     for (const side of battle.sides) {
-      Side.encode(gen, lookup, battle, side, data, offset);
+      Side.encode(gen, !!options.showdown, lookup, battle, side, data, offset);
       offset += SIZES.Side;
       indexes.push(side.lastSelectedIndex ?? 0);
     }
@@ -260,6 +260,7 @@ export class Side implements Gen1.Side {
 
   static encode(
     gen: Generation,
+    showdown: boolean,
     lookup: Lookup,
     battle: Data<Gen1.Battle>,
     side: Gen1.Side,
@@ -269,7 +270,7 @@ export class Side implements Gen1.Side {
     let i = 0;
     for (const pokemon of side.pokemon) {
       const off = offset + OFFSETS.Side.pokemon + SIZES.Pokemon * (pokemon.position - 1);
-      Pokemon.encodeStored(gen, lookup, pokemon, data, off);
+      Pokemon.encodeStored(gen, showdown, lookup, pokemon, data, off);
       data.setUint8(offset + OFFSETS.Side.order + (pokemon.position - 1), i + 1);
       i++;
     }
@@ -471,7 +472,8 @@ export class Pokemon implements Gen1.Pokemon {
   }
 
   get statusData(): { sleep: number; self: boolean; toxic: number } {
-    return {sleep: this.sleep, self: this.self, toxic: this.toxic};
+    const sleep = this.sleep;
+    return {sleep, self: !!sleep && this.ext, toxic: this.toxic};
   }
 
   private get sleep(): number {
@@ -479,7 +481,7 @@ export class Pokemon implements Gen1.Pokemon {
     return val & 0b111;
   }
 
-  private get self(): boolean {
+  private get ext(): boolean {
     return (this.data.getUint8(this.offset.stored + OFFSETS.Pokemon.status) >> 7) === 1;
   }
 
@@ -550,6 +552,7 @@ export class Pokemon implements Gen1.Pokemon {
 
   static encodeStored(
     gen: Generation,
+    showdown: boolean,
     lookup: Lookup,
     pokemon: Gen1.Pokemon,
     data: DataView,
@@ -575,7 +578,7 @@ export class Pokemon implements Gen1.Pokemon {
     data.setUint8(offset + OFFSETS.Pokemon.species, species.num);
     data.setUint8(offset + OFFSETS.Pokemon.types, encodeTypes(lookup, species.types));
     data.setUint8(offset + OFFSETS.Pokemon.level, pokemon.level);
-    data.setUint8(offset + OFFSETS.Pokemon.status, encodeStatus(pokemon));
+    data.setUint8(offset + OFFSETS.Pokemon.status, encodeStatus(pokemon, showdown));
   }
 
   static encodeActive(
@@ -754,17 +757,16 @@ function encodeSigned(n: number) {
   return (n < 0) ? 0b10000 + n : n;
 }
 
-function encodeStatus(pokemon: Gen1.Pokemon): number {
+function encodeStatus(pokemon: Gen1.Pokemon, showdown: boolean): number {
   if (pokemon.statusData.sleep) {
     if (pokemon.status !== 'slp') {
       throw new Error('Pokemon is not asleep but has non-zero sleep turns');
     }
     return (pokemon.statusData.self ? 0x80 : 0) | pokemon.statusData.sleep;
-  } else if (pokemon.statusData.self) {
-    throw new Error('Pokemon is not asleep but has self-inflicted sleep bit set');
   }
   switch (pokemon.status) {
-  case 'tox': case 'psn': return 1 << 3;
+  case 'tox': return showdown ? 0b10001000 : 1 << 3;
+  case 'psn': return 1 << 3;
   case 'brn': return 1 << 4;
   case 'frz': return 1 << 5;
   case 'par': return 1 << 6;
