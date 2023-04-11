@@ -56,6 +56,8 @@ const BOOSTS = &[_][2]u8{
 
 const MAX_STAT_VALUE = 999;
 
+const DISTRIBUTION = [_]u3{ 2, 2, 2, 3, 3, 3, 4, 5 };
+
 pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     assert(c1.type != .Pass or c2.type != .Pass or battle.turn == 0);
     if (battle.turn == 0) return start(battle, log);
@@ -302,11 +304,7 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
         // Pokémon Showdown's beforeTurnCallback shenanigans
         if (showdown and m1 == .Counter and m2 == .Counter) battle.rng.advance(1);
 
-        const p1 = if (showdown)
-            battle.rng.range(u8, 0, 2) == 0
-        else
-            battle.rng.next() < Gen12.percent(50) + 1;
-
+        const p1 = Rolls.speedTie(battle);
         if (!showdown) return if (p1) .P1 else .P2;
 
         // Pokémon Showdown's "lockedmove" volatile's onBeforeTurn uses BattleQueue#changeAction,
@@ -538,12 +536,7 @@ fn beforeMove(
         } else {
             try log.activate(ident, .Confusion);
 
-            const confused = if (showdown)
-                !battle.rng.chance(u8, 128, 256)
-            else
-                battle.rng.next() >= Gen12.percent(50) + 1;
-
-            if (confused) {
+            if (Rolls.confused(battle)) {
                 assert(!volatiles.MultiHit);
                 if (!volatiles.Rage) volatiles.state = 0;
                 volatiles.Bide = false;
@@ -583,22 +576,15 @@ fn beforeMove(
 
     if (!showdown and try disabled(side, ident, log)) return .done;
 
-    if (Status.is(stored.status, .PAR)) {
-        const paralyzed = if (showdown)
-            battle.rng.chance(u8, 63, 256)
-        else
-            battle.rng.next() < Gen12.percent(25);
-
-        if (paralyzed) {
-            if (!volatiles.Rage) volatiles.state = 0;
-            volatiles.Bide = false;
-            volatiles.Thrashing = false;
-            volatiles.Charging = false;
-            volatiles.Binding = false;
-            // GLITCH: Invulnerable is not cleared, resulting in permanent Fly/Dig invulnerability
-            try log.cant(ident, .Paralysis);
-            return .done;
-        }
+    if (Status.is(stored.status, .PAR) and Rolls.paralyzed(battle)) {
+        if (!volatiles.Rage) volatiles.state = 0;
+        volatiles.Bide = false;
+        volatiles.Thrashing = false;
+        volatiles.Charging = false;
+        volatiles.Binding = false;
+        // GLITCH: Invulnerable is not cleared, resulting in permanent Fly/Dig invulnerability
+        try log.cant(ident, .Paralysis);
+        return .done;
     }
 
     if (volatiles.Bide) {
@@ -992,8 +978,7 @@ fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data) bool {
     chance = if (side.active.volatiles.FocusEnergy) chance / 2 else @min(chance * 2, 255);
     chance = if (move.effect == .HighCritical) @min(chance * 4, 255) else chance / 2;
 
-    if (showdown) return battle.rng.chance(u8, @intCast(u8, chance), 256);
-    return std.math.rotl(u8, battle.rng.next(), 3) < chance;
+    return Rolls.criticalHit(battle, chance);
 }
 
 fn calcDamage(
@@ -1097,16 +1082,7 @@ fn adjustDamage(battle: anytype, player: Player) u16 {
 
 fn randomizeDamage(battle: anytype) void {
     if (battle.last_damage <= 1) return;
-
-    const random = if (showdown)
-        battle.rng.range(u8, 217, 256)
-    else loop: {
-        while (true) {
-            const r = std.math.rotr(u8, battle.rng.next(), 1);
-            if (r >= 217) break :loop r;
-        }
-    };
-
+    const random = Rolls.damage(battle);
     battle.last_damage = @intCast(u16, @as(u32, battle.last_damage) *% random / 255);
 }
 
@@ -1124,16 +1100,9 @@ fn specialDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
         // GLITCH: if power = 0 then a desync occurs (or a miss on Pokémon Showdown)
         .Psywave => power: {
             const max = @intCast(u8, @as(u16, side.stored().level) * 3 / 2);
-            if (showdown) {
-                break :power battle.rng.range(u8, 0, max);
-            } else {
-                // GLITCH: Psywave infinite glitch loop
-                if (max <= 1) return Result.Error;
-                while (true) {
-                    const r = battle.rng.next();
-                    if (r < max) break :power r;
-                }
-            }
+            // GLITCH: Psywave infinite glitch loop
+            if (!showdown and max <= 1) return Result.Error;
+            break :power Rolls.psywave(battle, max);
         },
         else => unreachable,
     };
@@ -1265,19 +1234,7 @@ fn metronome(
 ) !?Result {
     var side = battle.side(player);
 
-    side.last_selected_move = if (showdown) blk: {
-        const r = battle.rng.range(u8, 0, @enumToInt(Move.Struggle) - 2);
-        const mod = @as(u2, (if (r < @enumToInt(Move.Metronome) - 1) 1 else 2));
-        break :blk @intToEnum(Move, r + mod);
-    } else loop: {
-        while (true) {
-            const r = battle.rng.next();
-            if (r == 0 or r == @enumToInt(Move.Metronome)) continue;
-            if (r >= @enumToInt(Move.Struggle)) continue;
-            break :loop @intToEnum(Move, r);
-        }
-    };
-
+    side.last_selected_move = Rolls.metronome(battle);
     incrementPP(side, mslot);
 
     if (!try canMove(battle, player, mslot, auto, false, .Metronome, residual, log)) return null;
@@ -1352,10 +1309,7 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool, mist
         if (overwrite) side.active.volatiles.state = accuracy;
 
         // GLITCH: max accuracy is 255 so 1/256 chance of miss
-        break :miss if (showdown)
-            !battle.rng.chance(u8, @intCast(u8, accuracy), 256)
-        else
-            battle.rng.next() >= accuracy;
+        break :miss !Rolls.hit(battle, accuracy);
     };
 
     // Pokémon Showdown reports miss instead of fail for moves blocked by Mist that 1/256 miss
@@ -1582,6 +1536,42 @@ fn checkEBC(battle: anytype) bool {
     return false;
 }
 
+fn disabled(side: *Side, ident: ID, log: anytype) !bool {
+    if (side.active.volatiles.disabled_move != 0) {
+        // A Pokémon that transforms after being disabled may end up with less move slots
+        const m = side.active.moves[side.active.volatiles.disabled_move - 1].id;
+        // side.last_selected_move can be Struggle here on Pokemon Showdown we need an extra check
+        const last = if (showdown and m == .Bide and side.active.volatiles.Bide)
+            m
+        else
+            side.last_selected_move;
+        if (m != .None and m == last) {
+            side.active.volatiles.Charging = false;
+            try log.disabled(ident, last);
+            return true;
+        }
+    }
+    return false;
+}
+
+inline fn buildRage(battle: anytype, who: Player, log: anytype) !void {
+    const side = battle.side(who);
+    if (side.active.volatiles.Rage and side.active.boosts.atk < 6) {
+        try Effects.boost(battle, who, Move.get(.Rage), log);
+    }
+}
+
+fn handleThrashing(battle: anytype, active: *ActivePokemon) bool {
+    var volatiles = &active.volatiles;
+    assert(volatiles.Thrashing);
+    if (volatiles.attacks > 0) return false;
+
+    volatiles.Thrashing = false;
+    volatiles.Confusion = true;
+    volatiles.confusion = Rolls.confusionDuration(battle);
+    return true;
+}
+
 inline fn onBegin(
     battle: anytype,
     player: Player,
@@ -1672,10 +1662,7 @@ pub const Effects = struct {
         side.active.volatiles.Bide = true;
         assert(!side.active.volatiles.Thrashing and !side.active.volatiles.Rage);
         side.active.volatiles.state = 0;
-        side.active.volatiles.attacks = @intCast(u3, if (showdown)
-            battle.rng.range(u4, 2, 4)
-        else
-            (battle.rng.next() & 1) + 2);
+        side.active.volatiles.attacks = Rolls.duration(battle);
 
         try log.start(battle.active(player), .Bide);
     }
@@ -1697,14 +1684,8 @@ pub const Effects = struct {
             return;
         }
 
-        const chance = !foe.active.types.includes(move.type) and if (showdown)
-            battle.rng.chance(u8, @as(u8, if (move.effect == .BurnChance1) 26 else 77), 256)
-        else
-            battle.rng.next() < 1 + (if (move.effect == .BurnChance1)
-                Gen12.percent(10)
-            else
-                Gen12.percent(30));
-        if (!chance) return;
+        if (foe.active.types.includes(move.type)) return;
+        if (!Rolls.secondaryChance(battle, move.effect == .BurnChance1)) return;
 
         foe_stored.status = Status.init(.BRN);
         foe.active.stats.atk = @max(foe.active.stats.atk / 2, 1);
@@ -1728,11 +1709,7 @@ pub const Effects = struct {
         const sub = foe.active.volatiles.Substitute;
 
         if (move.effect == .ConfusionChance) {
-            const chance = if (showdown)
-                battle.rng.chance(u8, 25, 256)
-            else
-                battle.rng.next() < Gen12.percent(10);
-            if (!chance) return;
+            if (!Rolls.confusionChance(battle)) return;
         } else {
             if (showdown) {
                 if (!try checkHit(battle, player, move, log)) {
@@ -1751,10 +1728,7 @@ pub const Effects = struct {
 
         if (foe.active.volatiles.Confusion) return;
         foe.active.volatiles.Confusion = true;
-        foe.active.volatiles.confusion = @intCast(u3, if (showdown)
-            battle.rng.range(u8, 2, 6)
-        else
-            (battle.rng.next() & 3) + 2);
+        foe.active.volatiles.confusion = Rolls.confusionDuration(battle);
 
         try log.start(battle.active(player.foe()), .Confusion);
     }
@@ -1804,11 +1778,8 @@ pub const Effects = struct {
             return Result.Error;
         }
 
-        volatiles.disabled_move = @intCast(u3, randomMoveSlot(&battle.rng, &foe.active.moves, n));
-        volatiles.disabled_duration = @intCast(u4, if (showdown)
-            battle.rng.range(u8, 1, 9)
-        else
-            (battle.rng.next() & 7) + 1);
+        volatiles.disabled_move = @intCast(u3, Rolls.moveSlot(battle, &foe.active.moves, n));
+        volatiles.disabled_duration = Rolls.disableDuration(battle);
 
         try log.startEffect(foe_ident, .Disable, foe.active.move(volatiles.disabled_move).id);
         return null;
@@ -1847,15 +1818,7 @@ pub const Effects = struct {
         var volatiles = &battle.foe(player).active.volatiles;
 
         if (volatiles.Substitute) return;
-
-        const chance = if (showdown)
-            battle.rng.chance(u8, @as(u8, if (move.effect == .FlinchChance1) 26 else 77), 256)
-        else
-            battle.rng.next() < 1 + (if (move.effect == .FlinchChance1)
-                Gen12.percent(10)
-            else
-                Gen12.percent(30));
-        if (!chance) return;
+        if (!Rolls.secondaryChance(battle, move.effect == .FlinchChance1)) return;
 
         volatiles.Flinch = true;
         volatiles.Recharging = false;
@@ -1881,12 +1844,8 @@ pub const Effects = struct {
             return if (showdown and !foe.active.types.includes(move.type)) battle.rng.advance(1);
         }
 
-        const chance = !foe.active.types.includes(move.type) and if (showdown)
-            battle.rng.chance(u8, 26, 256)
-        else
-            battle.rng.next() < 1 + Gen12.percent(10);
-        if (!chance) return;
-
+        if (foe.active.types.includes(move.type)) return;
+        if (!Rolls.secondaryChance(battle, true)) return;
         // Freeze Clause Mod
         if (showdown) for (foe.pokemon) |p| if (Status.is(p.status, .FRZ)) return;
 
@@ -2031,7 +1990,7 @@ pub const Effects = struct {
         }
         if (!try checkHit(battle, player, move, log)) return;
 
-        const rslot = randomMoveSlot(&battle.rng, &foe.active.moves, 0);
+        const rslot = Rolls.moveSlot(battle, &foe.active.moves, 0);
         side.active.move(oslot).id = foe.active.move(rslot).id;
 
         try log.startEffect(battle.active(player), .Mimic, side.active.move(oslot).id);
@@ -2052,7 +2011,8 @@ pub const Effects = struct {
         assert(!side.active.volatiles.MultiHit);
         side.active.volatiles.MultiHit = true;
 
-        side.active.volatiles.attacks = if (move.effect == .MultiHit) distribution(battle) else 2;
+        side.active.volatiles.attacks =
+            if (move.effect == .MultiHit) Rolls.distribution(battle) else 2;
     }
 
     fn paralyze(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
@@ -2096,14 +2056,8 @@ pub const Effects = struct {
         }
 
         // Body Slam can't paralyze a Normal type Pokémon
-        const chance = !foe.active.types.includes(move.type) and if (showdown)
-            battle.rng.chance(u8, @as(u8, if (move.effect == .ParalyzeChance1) 26 else 77), 256)
-        else
-            battle.rng.next() < 1 + (if (move.effect == .ParalyzeChance1)
-                Gen12.percent(10)
-            else
-                Gen12.percent(30));
-        if (!chance) return;
+        if (foe.active.types.includes(move.type)) return;
+        if (!Rolls.secondaryChance(battle, move.effect == .ParalyzeChance1)) return;
 
         foe_stored.status = Status.init(.PAR);
         foe.active.stats.spe = @max(foe.active.stats.spe / 4, 1);
@@ -2146,16 +2100,7 @@ pub const Effects = struct {
 
         if (move.effect == .Poison) {
             if (!showdown and !try checkHit(battle, player, move, log)) return;
-        } else {
-            const chance = if (showdown)
-                battle.rng.chance(u8, @as(u8, if (move.effect == .PoisonChance1) 52 else 103), 256)
-            else
-                battle.rng.next() < 1 + (if (move.effect == .PoisonChance1)
-                    Gen12.percent(20)
-                else
-                    Gen12.percent(40));
-            if (!chance) return;
-        }
+        } else if (!Rolls.poisonChance(battle, move.effect == .PoisonChance1)) return;
 
         foe_stored.status = Status.init(.PSN);
         if (toxic) {
@@ -2222,16 +2167,7 @@ pub const Effects = struct {
         }
         foe.active.volatiles.Recharging = false;
 
-        const duration = @intCast(u3, if (showdown)
-            battle.rng.range(u8, 1, 8)
-        else loop: {
-            while (true) {
-                const r = battle.rng.next() & 7;
-                if (r != 0) break :loop r;
-            }
-        });
-
-        foe_stored.status = Status.slp(duration);
+        foe_stored.status = Status.slp(Rolls.sleep(battle));
         try log.statusFrom(foe_ident, foe_stored.status, battle.side(player).last_selected_move);
     }
 
@@ -2284,10 +2220,7 @@ pub const Effects = struct {
         assert(!volatiles.Bide);
 
         volatiles.Thrashing = true;
-        volatiles.attacks = @intCast(u3, if (showdown)
-            battle.rng.range(u8, 2, 4)
-        else
-            (battle.rng.next() & 1) + 2);
+        volatiles.attacks = Rolls.duration(battle);
     }
 
     fn transform(battle: anytype, player: Player, log: anytype) !void {
@@ -2329,7 +2262,7 @@ pub const Effects = struct {
         // (Pokémon Showdown unitentionally patches this glitch, preventing automatic selection)
         if (!showdown) foe.active.volatiles.Recharging = false;
 
-        side.active.volatiles.attacks = distribution(battle) - 1;
+        side.active.volatiles.attacks = Rolls.distribution(battle) - 1;
     }
 
     fn boost(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
@@ -2440,11 +2373,7 @@ pub const Effects = struct {
         }
 
         if (move.effect.isStatDownChance()) {
-            const chance = if (showdown)
-                battle.rng.chance(u8, 85, 256)
-            else
-                battle.rng.next() < Gen12.percent(33) + 1;
-            if (!chance or foe.active.volatiles.Invulnerable) return;
+            if (!Rolls.unboost(battle) or foe.active.volatiles.Invulnerable) return;
         } else if (!showdown and !try checkHit(battle, player, move, log)) {
             return; // checkHit already checks for Invulnerable
         }
@@ -2606,80 +2535,140 @@ fn clearVolatiles(battle: anytype, who: Player, log: anytype) !void {
     }
 }
 
-fn disabled(side: *Side, ident: ID, log: anytype) !bool {
-    if (side.active.volatiles.disabled_move != 0) {
-        // A Pokémon that transforms after being disabled may end up with less move slots
-        const m = side.active.moves[side.active.volatiles.disabled_move - 1].id;
-        // side.last_selected_move can be Struggle here on Pokemon Showdown we need an extra check
-        const last = if (showdown and m == .Bide and side.active.volatiles.Bide)
-            m
-        else
-            side.last_selected_move;
-        if (m != .None and m == last) {
-            side.active.volatiles.Charging = false;
-            try log.disabled(ident, last);
-            return true;
+pub const Rolls = struct {
+    fn speedTie(battle: anytype) bool {
+        if (showdown) return battle.rng.range(u8, 0, 2) == 0;
+        return battle.rng.next() < Gen12.percent(50) + 1;
+    }
+
+    fn criticalHit(battle: anytype, chance: u16) bool {
+        if (showdown) return battle.rng.chance(u8, @intCast(u8, chance), 256);
+        return std.math.rotl(u8, battle.rng.next(), 3) < chance;
+    }
+
+    fn damage(battle: anytype) u8 {
+        if (showdown) return battle.rng.range(u8, 217, 256);
+        while (true) {
+            const r = std.math.rotr(u8, battle.rng.next(), 1);
+            if (r >= 217) return r;
         }
     }
-    return false;
-}
 
-inline fn buildRage(battle: anytype, who: Player, log: anytype) !void {
-    const side = battle.side(who);
-    if (side.active.volatiles.Rage and side.active.boosts.atk < 6) {
-        try Effects.boost(battle, who, Move.get(.Rage), log);
+    fn hit(battle: anytype, accuracy: u16) bool {
+        if (showdown) return battle.rng.chance(u8, @intCast(u8, accuracy), 256);
+        return battle.rng.next() < accuracy;
     }
-}
 
-fn handleThrashing(battle: anytype, active: *ActivePokemon) bool {
-    var volatiles = &active.volatiles;
-    assert(volatiles.Thrashing);
-    if (volatiles.attacks > 0) return false;
+    fn confusionDuration(battle: anytype) u3 {
+        if (showdown) return @intCast(u3, battle.rng.range(u8, 2, 6));
+        return @intCast(u3, (battle.rng.next() & 3) + 2);
+    }
 
-    volatiles.Thrashing = false;
-    volatiles.Confusion = true;
-    volatiles.confusion = @intCast(u3, if (showdown)
-        battle.rng.range(u8, 2, 6)
-    else
-        (battle.rng.next() & 3) + 2);
+    fn confused(battle: anytype) bool {
+        if (showdown) return !battle.rng.chance(u8, 128, 256);
+        return battle.rng.next() >= Gen12.percent(50) + 1;
+    }
 
-    return true;
-}
+    fn paralyzed(battle: anytype) bool {
+        if (showdown) return battle.rng.chance(u8, 63, 256);
+        return battle.rng.next() < Gen12.percent(25);
+    }
 
-const DISTRIBUTION = [_]u3{ 2, 2, 2, 3, 3, 3, 4, 5 };
+    fn confusionChance(battle: anytype) bool {
+        if (showdown) return battle.rng.chance(u8, 25, 256);
+        return battle.rng.next() < Gen12.percent(10);
+    }
 
-fn distribution(battle: anytype) u3 {
-    if (showdown) return DISTRIBUTION[battle.rng.range(u8, 0, DISTRIBUTION.len)];
-    const r = (battle.rng.next() & 3);
-    return @intCast(u3, (if (r < 2) r else battle.rng.next() & 3) + 2);
-}
+    fn secondaryChance(battle: anytype, low: bool) bool {
+        if (showdown) return battle.rng.chance(u8, @as(u8, if (low) 26 else 77), 256);
+        return battle.rng.next() < 1 + (if (low) Gen12.percent(10) else Gen12.percent(30));
+    }
 
-fn randomMoveSlot(rand: anytype, moves: []MoveSlot, check_pp: u4) u4 {
-    if (showdown) {
-        if (check_pp == 0) {
-            var i: usize = moves.len;
-            while (i > 0) {
-                i -= 1;
-                if (moves[i].id != .None) return rand.range(u4, 0, @intCast(u4, i + 1)) + 1;
-            }
-        } else {
-            var r = rand.range(u4, 0, @intCast(u4, check_pp)) + 1;
-            var i: usize = 0;
-            while (i < moves.len and r > 0) : (i += 1) {
-                if (moves[i].pp > 0) {
-                    r -= 1;
-                    if (r == 0) break;
+    fn poisonChance(battle: anytype, low: bool) bool {
+        if (showdown) return battle.rng.chance(u8, @as(u8, if (low) 52 else 103), 256);
+        return battle.rng.next() < 1 + (if (low) Gen12.percent(20) else Gen12.percent(40));
+    }
+
+    fn sleep(battle: anytype) u3 {
+        if (showdown) return @intCast(u3, battle.rng.range(u8, 1, 8));
+        while (true) {
+            const r = battle.rng.next() & 7;
+            if (r != 0) return @intCast(u3, r);
+        }
+    }
+
+    fn duration(battle: anytype) u3 {
+        if (showdown) return @intCast(u3, battle.rng.range(u4, 2, 4));
+        return @intCast(u3, (battle.rng.next() & 1) + 2);
+    }
+
+    fn moveSlot(battle: anytype, moves: []MoveSlot, check_pp: u4) u4 {
+        if (showdown) {
+            if (check_pp == 0) {
+                var i: usize = moves.len;
+                while (i > 0) {
+                    i -= 1;
+                    if (moves[i].id != .None) {
+                        return battle.rng.range(u4, 0, @intCast(u4, i + 1)) + 1;
+                    }
                 }
+            } else {
+                var r = battle.rng.range(u4, 0, @intCast(u4, check_pp)) + 1;
+                var i: usize = 0;
+                while (i < moves.len and r > 0) : (i += 1) {
+                    if (moves[i].pp > 0) {
+                        r -= 1;
+                        if (r == 0) break;
+                    }
+                }
+                return @intCast(u4, i + 1);
             }
-            return @intCast(u4, i + 1);
+        }
+
+        while (true) {
+            const r = @intCast(u4, battle.rng.next() & 3);
+            if (moves[r].id != .None and (check_pp == 0 or moves[r].pp > 0)) return r + 1;
         }
     }
 
-    while (true) {
-        const r = @intCast(u4, rand.next() & 3);
-        if (moves[r].id != .None and (check_pp == 0 or moves[r].pp > 0)) return r + 1;
+    fn disableDuration(battle: anytype) u4 {
+        if (showdown) return @intCast(u4, battle.rng.range(u8, 1, 9));
+        return @intCast(u4, (battle.rng.next() & 7) + 1);
     }
-}
+
+    fn metronome(battle: anytype) Move {
+        if (showdown) {
+            const r = battle.rng.range(u8, 0, @enumToInt(Move.Struggle) - 2);
+            const mod = @as(u2, (if (r < @enumToInt(Move.Metronome) - 1) 1 else 2));
+            return @intToEnum(Move, r + mod);
+        }
+        while (true) {
+            const r = battle.rng.next();
+            if (r == 0 or r == @enumToInt(Move.Metronome)) continue;
+            if (r >= @enumToInt(Move.Struggle)) continue;
+            return @intToEnum(Move, r);
+        }
+    }
+
+    fn psywave(battle: anytype, max: u8) u8 {
+        if (showdown) return battle.rng.range(u8, 0, max);
+        while (true) {
+            const r = battle.rng.next();
+            if (r < max) return r;
+        }
+    }
+
+    fn distribution(battle: anytype) u3 {
+        if (showdown) return DISTRIBUTION[battle.rng.range(u8, 0, DISTRIBUTION.len)];
+        const r = (battle.rng.next() & 3);
+        return @intCast(u3, (if (r < 2) r else battle.rng.next() & 3) + 2);
+    }
+
+    fn unboost(battle: anytype) bool {
+        if (showdown) return battle.rng.chance(u8, 85, 256);
+        return battle.rng.next() < Gen12.percent(33) + 1;
+    }
+};
 
 test "RNG agreement" {
     if (!showdown) return;
