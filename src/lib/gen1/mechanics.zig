@@ -2536,17 +2536,17 @@ fn clearVolatiles(battle: anytype, who: Player, log: anytype) !void {
 }
 
 pub const Rolls = struct {
-    fn speedTie(battle: anytype) bool {
+    inline fn speedTie(battle: anytype) bool {
         if (showdown) return battle.rng.range(u8, 0, 2) == 0;
         return battle.rng.next() < Gen12.percent(50) + 1;
     }
 
-    fn criticalHit(battle: anytype, chance: u16) bool {
+    inline fn criticalHit(battle: anytype, chance: u16) bool {
         if (showdown) return battle.rng.chance(u8, @intCast(u8, chance), 256);
         return std.math.rotl(u8, battle.rng.next(), 3) < chance;
     }
 
-    fn damage(battle: anytype) u8 {
+    inline fn damage(battle: anytype) u8 {
         if (showdown) return battle.rng.range(u8, 217, 256);
         while (true) {
             const r = std.math.rotr(u8, battle.rng.next(), 1);
@@ -2554,42 +2554,42 @@ pub const Rolls = struct {
         }
     }
 
-    fn hit(battle: anytype, accuracy: u16) bool {
+    inline fn hit(battle: anytype, accuracy: u16) bool {
         if (showdown) return battle.rng.chance(u8, @intCast(u8, accuracy), 256);
         return battle.rng.next() < accuracy;
     }
 
-    fn confusionDuration(battle: anytype) u3 {
+    inline fn confusionDuration(battle: anytype) u3 {
         if (showdown) return @intCast(u3, battle.rng.range(u8, 2, 6));
         return @intCast(u3, (battle.rng.next() & 3) + 2);
     }
 
-    fn confused(battle: anytype) bool {
+    inline fn confused(battle: anytype) bool {
         if (showdown) return !battle.rng.chance(u8, 128, 256);
         return battle.rng.next() >= Gen12.percent(50) + 1;
     }
 
-    fn paralyzed(battle: anytype) bool {
+    inline fn paralyzed(battle: anytype) bool {
         if (showdown) return battle.rng.chance(u8, 63, 256);
         return battle.rng.next() < Gen12.percent(25);
     }
 
-    fn confusionChance(battle: anytype) bool {
+    inline fn confusionChance(battle: anytype) bool {
         if (showdown) return battle.rng.chance(u8, 25, 256);
         return battle.rng.next() < Gen12.percent(10);
     }
 
-    fn secondaryChance(battle: anytype, low: bool) bool {
+    inline fn secondaryChance(battle: anytype, low: bool) bool {
         if (showdown) return battle.rng.chance(u8, @as(u8, if (low) 26 else 77), 256);
         return battle.rng.next() < 1 + (if (low) Gen12.percent(10) else Gen12.percent(30));
     }
 
-    fn poisonChance(battle: anytype, low: bool) bool {
+    inline fn poisonChance(battle: anytype, low: bool) bool {
         if (showdown) return battle.rng.chance(u8, @as(u8, if (low) 52 else 103), 256);
         return battle.rng.next() < 1 + (if (low) Gen12.percent(20) else Gen12.percent(40));
     }
 
-    fn sleep(battle: anytype) u3 {
+    inline fn sleep(battle: anytype) u3 {
         if (showdown) return @intCast(u3, battle.rng.range(u8, 1, 8));
         while (true) {
             const r = battle.rng.next() & 7;
@@ -2597,7 +2597,7 @@ pub const Rolls = struct {
         }
     }
 
-    fn duration(battle: anytype) u3 {
+    inline fn duration(battle: anytype) u3 {
         if (showdown) return @intCast(u3, battle.rng.range(u4, 2, 4));
         return @intCast(u3, (battle.rng.next() & 1) + 2);
     }
@@ -2631,12 +2631,12 @@ pub const Rolls = struct {
         }
     }
 
-    fn disableDuration(battle: anytype) u4 {
+    inline fn disableDuration(battle: anytype) u4 {
         if (showdown) return @intCast(u4, battle.rng.range(u8, 1, 9));
         return @intCast(u4, (battle.rng.next() & 7) + 1);
     }
 
-    fn metronome(battle: anytype) Move {
+    inline fn metronome(battle: anytype) Move {
         if (showdown) {
             const r = battle.rng.range(u8, 0, @enumToInt(Move.Struggle) - 2);
             const mod = @as(u2, (if (r < @enumToInt(Move.Metronome) - 1) 1 else 2));
@@ -2650,7 +2650,7 @@ pub const Rolls = struct {
         }
     }
 
-    fn psywave(battle: anytype, max: u8) u8 {
+    inline fn psywave(battle: anytype, max: u8) u8 {
         if (showdown) return battle.rng.range(u8, 0, max);
         while (true) {
             const r = battle.rng.next();
@@ -2658,13 +2658,13 @@ pub const Rolls = struct {
         }
     }
 
-    fn distribution(battle: anytype) u3 {
+    inline fn distribution(battle: anytype) u3 {
         if (showdown) return DISTRIBUTION[battle.rng.range(u8, 0, DISTRIBUTION.len)];
         const r = (battle.rng.next() & 3);
         return @intCast(u3, (if (r < 2) r else battle.rng.next() & 3) + 2);
     }
 
-    fn unboost(battle: anytype) bool {
+    inline fn unboost(battle: anytype) bool {
         if (showdown) return battle.rng.chance(u8, 85, 256);
         return battle.rng.next() < Gen12.percent(33) + 1;
     }
