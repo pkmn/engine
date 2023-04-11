@@ -78,7 +78,8 @@ pub fn Battle(comptime RNG: anytype) type {
         /// Returns the result of applying Player 1's choice `c1` and Player 2's choice `c2` to the
         /// battle, optionally writing protocol logs to `log` if `options.trace` is enabled.
         pub fn update(self: *Self, c1: Choice, c2: Choice, log: anytype) !Result {
-            return mechanics.update(self, c1, c2, log);
+            const m = mechanics.Mechanics(*Self, @TypeOf(log)){ .battle = self, .log = log };
+            return m.update(c1, c2);
         }
 
         /// Fills in at most `out.len` possible choices for the `player` given the previous `result`
