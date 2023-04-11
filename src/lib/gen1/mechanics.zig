@@ -2356,7 +2356,7 @@ pub const Effects = struct {
                     return try log.fail(ident, .None);
                 }
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.atk) + 6)];
-                const stat = unmodifiedStats(battle, player).atk;
+                const stat = unmodifiedStats(battle, side).atk;
                 stats.atk = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
                 try log.boost(ident, reason, n);
                 // Pokémon Showdown doesn't re-apply status modifiers after Rage boosts
@@ -2376,7 +2376,7 @@ pub const Effects = struct {
                     return try log.fail(ident, .None);
                 }
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.def) + 6)];
-                const stat = unmodifiedStats(battle, player).def;
+                const stat = unmodifiedStats(battle, side).def;
                 stats.def = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
                 try log.boost(ident, .Defense, n);
             },
@@ -2393,7 +2393,7 @@ pub const Effects = struct {
                     return try log.fail(ident, .None);
                 }
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.spe) + 6)];
-                const stat = unmodifiedStats(battle, player).spe;
+                const stat = unmodifiedStats(battle, side).spe;
                 stats.spe = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
                 try log.boost(ident, .Speed, 2);
             },
@@ -2413,7 +2413,7 @@ pub const Effects = struct {
                     return try log.fail(ident, .None);
                 }
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.spc) + 6)];
-                const stat = unmodifiedStats(battle, player).spc;
+                const stat = unmodifiedStats(battle, side).spc;
                 stats.spc = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
                 try log.boost(ident, .SpecialAttack, n);
                 try log.boost(ident, .SpecialDefense, n);
@@ -2466,7 +2466,7 @@ pub const Effects = struct {
                     return try log.fail(foe_ident, .None);
                 }
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.atk) + 6)];
-                const stat = unmodifiedStats(battle, player.foe()).atk;
+                const stat = unmodifiedStats(battle, foe).atk;
                 stats.atk = @max(1, stat * mod[0] / mod[1]);
                 try log.boost(foe_ident, .Attack, -1);
             },
@@ -2484,7 +2484,7 @@ pub const Effects = struct {
                     return try log.fail(foe_ident, .None);
                 }
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.def) + 6)];
-                const stat = unmodifiedStats(battle, player.foe()).def;
+                const stat = unmodifiedStats(battle, foe).def;
                 stats.def = @max(1, stat * mod[0] / mod[1]);
                 try log.boost(foe_ident, .Defense, -@as(i8, n));
             },
@@ -2501,7 +2501,7 @@ pub const Effects = struct {
                     return try log.fail(foe_ident, .None);
                 }
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.spe) + 6)];
-                const stat = unmodifiedStats(battle, player.foe()).spe;
+                const stat = unmodifiedStats(battle, foe).spe;
                 stats.spe = @max(1, stat * mod[0] / mod[1]);
                 try log.boost(foe_ident, .Speed, -1);
                 assert(boosts.spe >= -6);
@@ -2521,7 +2521,7 @@ pub const Effects = struct {
                     return try log.fail(foe_ident, .None);
                 }
                 var mod = BOOSTS[@intCast(u4, @as(i8, boosts.spc) + 6)];
-                const stat = unmodifiedStats(battle, player.foe()).spc;
+                const stat = unmodifiedStats(battle, foe).spc;
                 stats.spc = @max(1, stat * mod[0] / mod[1]);
                 try log.boost(foe_ident, .SpecialAttack, -1);
                 try log.boost(foe_ident, .SpecialDefense, -1);
@@ -2540,8 +2540,7 @@ pub const Effects = struct {
     }
 };
 
-fn unmodifiedStats(battle: anytype, who: Player) *Stats(u16) {
-    const side = battle.side(who);
+fn unmodifiedStats(battle: anytype, side: *Side) *Stats(u16) {
     if (!side.active.volatiles.Transform) return &side.stored().stats;
     const id = ID.from(side.active.volatiles.transform);
     return &battle.side(id.player).pokemon[id.id - 1].stats;
