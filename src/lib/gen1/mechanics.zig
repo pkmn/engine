@@ -316,7 +316,7 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
         const t1 = battle.side(.P1).active.volatiles.Thrashing;
         const t2 = battle.side(.P2).active.volatiles.Thrashing;
         // If *both* sides are thrashing it really should be another speed tie, but we've patched
-        // that out and enforce host ordering of events, so P1 just goes first reqgardless of who
+        // that out and enforce host ordering of events, so P1 just goes first regardless of who
         // won the original coin flip
         if (t1 and t2) return .P1;
         return if (p1) if (t1 and !t2) .P2 else .P1 else if (t2 and !t1) .P1 else .P2;
@@ -573,7 +573,7 @@ fn beforeMove(
                 const uncapped = battle.last_damage;
                 // Skipping adjustDamage / randomizeDamage / checkHit
                 _ = try applyDamage(battle, player, target, .Confusion, log);
-                // Pokémon Showdown thinks that Confusion damage is uncapped ¯\_(ツ)_/¯
+                // Pokémon Showdown thinks that confusion damage is uncapped ¯\_(ツ)_/¯
                 if (showdown) battle.last_damage = uncapped;
 
                 return .done;
