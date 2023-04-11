@@ -86,7 +86,7 @@ pub fn benchmark(
     const save = fuzz and pkmn.options.trace and builtin.mode == .Debug;
 
     var random = pkmn.PSRNG.init(seed);
-    var options: [pkmn.OPTIONS_SIZE]pkmn.Choice = undefined;
+    var choices: [pkmn.CHOICES_SIZE]pkmn.Choice = undefined;
 
     var time: u64 = 0;
     var turns: usize = 0;
@@ -141,12 +141,12 @@ pub fn benchmark(
         else
             battle.update(c1, c2, pkmn.protocol.NULL))
         {
-            var n = battle.choices(.P1, result.p1, &options);
+            var n = battle.choices(.P1, result.p1, &choices);
             if (n == 0) break;
-            c1 = options[p1.range(u8, 0, n)];
-            n = battle.choices(.P2, result.p2, &options);
+            c1 = choices[p1.range(u8, 0, n)];
+            n = battle.choices(.P2, result.p2, &choices);
             if (n == 0) break;
-            c2 = options[p2.range(u8, 0, n)];
+            c2 = choices[p2.range(u8, 0, n)];
 
             if (save) {
                 std.debug.assert(buf.?.items.len <= max);

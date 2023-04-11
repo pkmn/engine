@@ -43,7 +43,7 @@ const Pokemon = helpers.Pokemon;
 const Side = helpers.Side;
 const swtch = helpers.swtch;
 
-const OPTIONS_SIZE = data.OPTIONS_SIZE;
+const CHOICES_SIZE = data.CHOICES_SIZE;
 
 const U = if (showdown) u32 else u8;
 const MIN: U = 0;
@@ -67,7 +67,7 @@ fn ranged(comptime n: u8, comptime d: u9) U {
 const P1 = Player.P1;
 const P2 = Player.P2;
 
-var choices: [OPTIONS_SIZE]Choice = undefined;
+var choices: [CHOICES_SIZE]Choice = undefined;
 const forced = move(@boolToInt(showdown));
 
 // General

@@ -4,10 +4,10 @@ pub const options = @import("common/options.zig");
 pub const Options = options.Options;
 
 /// The minimum size in bytes required to hold all choice options.
-pub const MAX_OPTIONS = gen1.MAX_OPTIONS;
+pub const MAX_CHOICES = gen1.MAX_CHOICES;
 /// The optimal size in bytes required to hold all choice options.
-/// At least as large as `MAX_OPTIONS`.
-pub const OPTIONS_SIZE = gen1.OPTIONS_SIZE;
+/// At least as large as `MAX_CHOICES`.
+pub const CHOICES_SIZE = gen1.CHOICES_SIZE;
 /// The maximum number of bytes possibly logged by a single update.
 pub const MAX_LOGS = gen1.MAX_LOGS;
 /// The optimal size in bytes required to hold the largest amount of log data

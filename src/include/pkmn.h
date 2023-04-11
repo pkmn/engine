@@ -54,12 +54,12 @@ typedef struct {
 extern const pkmn_options PKMN_OPTIONS;
 
 /** The minimum size in bytes required to hold all choice options. */
-extern const size_t PKMN_MAX_OPTIONS;
+extern const size_t PKMN_MAX_CHOICES;
 /**
  * The optimal size in bytes required to hold all choice options. At least as
- * large as PKMN_MAX_OPTIONS.
+ * large as PKMN_MAX_CHOICES.
  */
-extern const size_t PKMN_OPTIONS_SIZE;
+extern const size_t PKMN_CHOICES_SIZE;
 /** The maximum number of bytes possibly logged by a single update. */
 extern const size_t PKMN_MAX_LOGS;
 /**
@@ -123,12 +123,12 @@ void pkmn_psrng_init(pkmn_psrng *psrng, uint64_t seed);
 uint32_t pkmn_psrng_next(pkmn_psrng *psrng);
 
 /** The minimum size in bytes required to hold the all Generation I choice options. */
-extern const size_t PKMN_GEN1_MAX_OPTIONS;
+extern const size_t PKMN_GEN1_MAX_CHOICES;
 /**
  * The optimal size in bytes required to hold the all Generation I choice
- * options. At least as large as PKMN_GEN1_MAX_OPTIONS.
+ * options. At least as large as PKMN_GEN1_MAX_CHOICES.
  */
-extern const size_t PKMN_GEN1_OPTIONS_SIZE;
+extern const size_t PKMN_GEN1_CHOICES_SIZE;
 /** The maximum number of bytes possibly logged by a single Generation I update. */
 extern const size_t PKMN_GEN1_MAX_LOGS;
 /**
@@ -163,7 +163,7 @@ pkmn_result pkmn_gen1_battle_update(
  * for the player to make (i.e. on the cartridge a soft-lock occurs).
  *
  * This function will always return a number of choices > 0 if
- * PKMN_OPTIONS.showdown is true.
+ * PKMN_CHOICES.showdown is true.
  */
 uint8_t pkmn_gen1_battle_choices(
   pkmn_gen1_battle *battle,

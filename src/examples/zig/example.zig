@@ -27,7 +27,7 @@ pub fn main() !void {
     var prng = std.rand.DefaultPrng.init(seed);
     var random = prng.random();
     // Preallocate a small buffer for the choice options throughout the battle
-    var options: [pkmn.OPTIONS_SIZE]pkmn.Choice = undefined;
+    var choices: [pkmn.CHOICES_SIZE]pkmn.Choice = undefined;
 
     // `pkmn.gen1.Battle` can be tedious to initialize - the helper constructor used here
     // fills in missing fields with intelligent defaults to cut down on boilerplate
@@ -78,10 +78,10 @@ pub fn main() !void {
         // Disable its possible that there are no available choices (softlock), though this is
         // impossible here given that our example battle involves none of these moves
         // TODO: ziglang/zig#13415
-        const n1 = random.uintLessThan(u8, battle.choices(.P1, result.p1, &options));
-        c1 = options[n1];
-        const n2 = random.uintLessThan(u8, battle.choices(.P2, result.p2, &options));
-        c2 = options[n2];
+        const n1 = random.uintLessThan(u8, battle.choices(.P1, result.p1, &choices));
+        c1 = choices[n1];
+        const n2 = random.uintLessThan(u8, battle.choices(.P2, result.p2, &choices));
+        c2 = choices[n2];
 
         // Reset the stream to cause the buffer to get reused
         stream.reset();

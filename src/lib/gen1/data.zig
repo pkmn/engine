@@ -17,16 +17,16 @@ const expectEqual = std.testing.expectEqual;
 const expect = std.testing.expect;
 
 /// The minimum size in bytes required to hold all Generation I choice options.
-pub const MAX_OPTIONS: usize = 9; // move 1..4, switch 2..6
+pub const MAX_CHOICES: usize = 9; // move 1..4, switch 2..6
 /// The optimal size in bytes required to hold all Generation I choice options.
-/// At least as large as MAX_OPTIONS.
+/// At least as large as MAX_CHOICES.
 pub const MAX_LOGS: usize = 180;
 
 /// The maximum number of bytes possibly logged by a single Generation I update.
-pub const OPTIONS_SIZE = if (builtin.mode == .ReleaseSmall)
-    MAX_OPTIONS
+pub const CHOICES_SIZE = if (builtin.mode == .ReleaseSmall)
+    MAX_CHOICES
 else
-    std.math.ceilPowerOfTwo(usize, MAX_OPTIONS) catch unreachable;
+    std.math.ceilPowerOfTwo(usize, MAX_CHOICES) catch unreachable;
 /// The optimal size in bytes required to hold the largest amount of log data possible from a
 /// single Generation I update. At least as large as MAX_LOGS.
 pub const LOGS_SIZE = if (builtin.mode == .ReleaseSmall)

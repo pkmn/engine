@@ -10,8 +10,8 @@ export const PKMN_OPTIONS: extern struct { showdown: bool, trace: bool } = .{
     .trace = pkmn.options.trace,
 };
 
-export const PKMN_MAX_OPTIONS = pkmn.MAX_OPTIONS;
-export const PKMN_OPTIONS_SIZE = pkmn.OPTIONS_SIZE;
+export const PKMN_MAX_CHOICES = pkmn.MAX_CHOICES;
+export const PKMN_CHOICES_SIZE = pkmn.CHOICES_SIZE;
 export const PKMN_MAX_LOGS = pkmn.MAX_LOGS;
 export const PKMN_LOGS_SIZE = pkmn.LOGS_SIZE;
 
@@ -58,8 +58,8 @@ export fn pkmn_psrng_next(prng: *pkmn.PSRNG) u32 {
     return prng.next();
 }
 
-export const PKMN_GEN1_MAX_OPTIONS = pkmn.gen1.MAX_OPTIONS;
-export const PKMN_GEN1_OPTIONS_SIZE = pkmn.gen1.OPTIONS_SIZE;
+export const PKMN_GEN1_MAX_CHOICES = pkmn.gen1.MAX_CHOICES;
+export const PKMN_GEN1_CHOICES_SIZE = pkmn.gen1.CHOICES_SIZE;
 export const PKMN_GEN1_MAX_LOGS = pkmn.gen1.MAX_LOGS;
 export const PKMN_GEN1_LOGS_SIZE = pkmn.gen1.LOGS_SIZE;
 

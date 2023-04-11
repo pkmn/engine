@@ -121,7 +121,7 @@ for each player.
 Unlike [Pokémon Showdown's
 SIM-PROTOCOL](https://github.com/smogon/pokemon-showdown/blob/master/sim/SIM-PROTOCOL.md#choice-requests)
 which provides a rich request object at each decision point, the pkmn engine computes the possible
-choices on demand based on the result of the previous `update` and the battle state (`OPTIONS_SIZE`
+choices on demand based on the result of the previous `update` and the battle state (`CHOICES_SIZE`
 is a good size to initialize the buffer passed to `choices`). **Attempting to update the battle with
 a choice not present in the options returned by `choices` is undefined behavior and may corrupt
 state or cause the engine to crash.**
@@ -216,7 +216,7 @@ const std = @import("std");
 const pkmn = @import("pkmn");
 
 var random = std.rand.DefaultPrng.init(seed).random();
-var options: [pkmn.OPTIONS_SIZE]pkmn.Choice = undefined;
+var choices: [pkmn.CHOICES_SIZE]pkmn.Choice = undefined;
 
 var battle = ...
 var log = ...
@@ -226,8 +226,8 @@ var c2 = pkmn.Choice{};
 
 var result = try battle.update(c1, c2, log);
 while (result.type == .None) : (result = try battle.update(c1, c2, log)) {
-    c1 = options[random.uintLessThan(u8, battle.choices(.P1, result.p1, &options))];
-    c2 = options[random.uintLessThan(u8, battle.choices(.P2, result.p2, &options))];
+    c1 = choices[random.uintLessThan(u8, battle.choices(.P1, result.p1, &choices))];
+    c2 = choices[random.uintLessThan(u8, battle.choices(.P2, result.p2, &choices))];
 }
 
 std.debug.print("{}\n", .{result.type});

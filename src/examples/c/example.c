@@ -13,7 +13,7 @@ pkmn_choice choose(
    pkmn_choice_kind request,
    pkmn_choice options[])
 {
-   uint8_t n = pkmn_gen1_battle_choices(battle, player, request, options, PKMN_OPTIONS_SIZE);
+   uint8_t n = pkmn_gen1_battle_choices(battle, player, request, options, PKMN_CHOICES_SIZE);
    // Technically due to Generation I's Transform + Mirror Move/Metronome PP
    // error if the battle contains Pokémon with a combination of Transform,
    // Mirror Move/Metronome, and Disable its possible that there are no
@@ -47,7 +47,7 @@ int main(int argc, char **argv)
    pkmn_psrng random;
    pkmn_psrng_init(&random, seed);
    // Preallocate a small buffer for the choice options throughout the battle
-   pkmn_choice options[PKMN_OPTIONS_SIZE];
+   pkmn_choice choices[PKMN_CHOICES_SIZE];
 
    // libpkmn doesn't provide any helpers for initializing the battle structure
    // (the library is intended to be wrapped by something with a higher level
@@ -96,8 +96,8 @@ int main(int argc, char **argv)
    // guaranteed to be 0, so we don't actually need to check "!=
    // PKMN_RESULT_NONE"
    while (!pkmn_result_type(result = pkmn_gen1_battle_update(&battle, c1, c2, buf, size))) {
-      c1 = choose(&battle, &random, PKMN_PLAYER_P1, pkmn_result_p1(result), options);
-      c2 = choose(&battle, &random, PKMN_PLAYER_P2, pkmn_result_p2(result), options);
+      c1 = choose(&battle, &random, PKMN_PLAYER_P1, pkmn_result_p1(result), choices);
+      c2 = choose(&battle, &random, PKMN_PLAYER_P2, pkmn_result_p2(result), choices);
    }
    // The only error that can occur is if we didn't provide a large enough
    // buffer, but PKMN_MAX_LOGS is guaranteed to be large enough so errors here

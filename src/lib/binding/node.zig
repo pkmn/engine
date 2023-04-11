@@ -34,11 +34,11 @@ fn bindings(env: c.napi_env) c.napi_value {
 }
 
 fn bind(env: c.napi_env, gen: anytype) c.napi_value {
-    const options_size = @intCast(u32, gen.OPTIONS_SIZE);
+    const options_size = @intCast(u32, gen.CHOICES_SIZE);
     const logs_size = @intCast(u32, gen.LOGS_SIZE);
     var object = Object.init(env);
     const properties = [_]c.napi_property_descriptor{
-        Property.init("OPTIONS_SIZE", .{ .value = Number.init(env, options_size) }),
+        Property.init("CHOICES_SIZE", .{ .value = Number.init(env, options_size) }),
         Property.init("LOGS_SIZE", .{ .value = Number.init(env, logs_size) }),
         Property.init("update", .{ .method = update(gen) }),
         Property.init("choices", .{ .method = choices(gen) }),
@@ -108,10 +108,10 @@ fn choices(gen: anytype) c.napi_callback {
             const request = @intToEnum(pkmn.Choice.Type, Number.get(env, argv[2], u8));
 
             assert(c.napi_get_arraybuffer_info(env, argv[3], &data, &len) == c.napi_ok);
-            assert(len == gen.OPTIONS_SIZE);
+            assert(len == gen.CHOICES_SIZE);
             assert(data != null);
 
-            var out = @ptrCast([*]pkmn.Choice, data.?)[0..gen.OPTIONS_SIZE];
+            var out = @ptrCast([*]pkmn.Choice, data.?)[0..gen.CHOICES_SIZE];
             const n = battle.choices(player, request, out);
             return Number.init(env, @bitCast(u8, n));
         }

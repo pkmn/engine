@@ -38,7 +38,7 @@ export class Battle implements Gen1.Battle {
 
     this.lookup = lookup;
     this.data = data;
-    this.options = new ArrayBuffer(addon.size(0, 'options'));
+    this.options = new ArrayBuffer(addon.size(0, 'choices'));
     this.buf = config.log ? new ArrayBuffer(addon.size(0, 'log')) : undefined;
     this.log = config.log ? new DataView(this.buf!) : undefined;
 

@@ -19,13 +19,13 @@ const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 const expect = std.testing.expect;
 
-pub const MAX_OPTIONS: usize = 9; // move 1..4, switch 2..6
+pub const MAX_CHOICES: usize = 9; // move 1..4, switch 2..6
 pub const MAX_LOGS: usize = 180; // TODO
 
-pub const OPTIONS_SIZE = if (builtin.mode == .ReleaseSmall)
-    MAX_OPTIONS
+pub const CHOICES_SIZE = if (builtin.mode == .ReleaseSmall)
+    MAX_CHOICES
 else
-    std.math.ceilPowerOfTwo(usize, MAX_OPTIONS) catch unreachable;
+    std.math.ceilPowerOfTwo(usize, MAX_CHOICES) catch unreachable;
 pub const LOGS_SIZE = if (builtin.mode == .ReleaseSmall)
     MAX_LOGS
 else

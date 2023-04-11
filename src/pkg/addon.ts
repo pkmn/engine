@@ -12,7 +12,7 @@ interface Bindings<T extends boolean> {
 }
 
 interface Binding {
-  OPTIONS_SIZE: number;
+  CHOICES_SIZE: number;
   LOGS_SIZE: number;
   update(battle: ArrayBuffer, c1: number, c2: number, log: ArrayBuffer | undefined): number;
   choices(battle: ArrayBuffer, player: number, request: number, options: ArrayBuffer): number;
@@ -111,8 +111,8 @@ export function choose(
   return Choice.decode(data[fn(n)]);
 }
 
-export function size(index: number, type: 'options' | 'log') {
+export function size(index: number, type: 'choices' | 'log') {
   const bindings = (ADDON![1] ?? ADDON![0])!.bindings[index]!;
-  return type[0] === 'o' ? bindings.OPTIONS_SIZE : bindings.LOGS_SIZE;
+  return type[0] === 'c' ? bindings.CHOICES_SIZE : bindings.LOGS_SIZE;
 }
 
