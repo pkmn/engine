@@ -2229,6 +2229,7 @@ describe('Gen 1', () => {
       HIT,
       PAR_CAN, HIT, MAX_WRAP, PAR_CAN,
       PAR_CANT, PAR_CAN,
+      HIT, MIN_WRAP,
     ], [
       {species: 'Dragonite', evs, moves: ['Wrap', 'Agility']},
       {species: 'Moltres', evs, moves: ['Fire Spin', 'Fire Blast']},
@@ -2288,7 +2289,9 @@ describe('Gen 1', () => {
     expect(choices(battle, 'p1')).toEqual(['switch 2', 'move 1', 'move 2']);
     expect(choices(battle, 'p2')).toEqual(['switch 2', 'switch 3', 'move 1', 'move 2']);
 
-    battle.makeChoices('move 2', 'move 1');
+    battle.makeChoices('move 1', 'move 1');
+
+    battle.makeChoices('switch 2', 'move 1');
 
     verify(battle, [
       '|move|p1a: Dragonite|Wrap|p2a: Cloyster',
@@ -2320,9 +2323,12 @@ describe('Gen 1', () => {
       '|cant|p1a: Dragonite|par',
       '|turn|8',
       '|move|p2a: Gengar|Teleport|p2a: Gengar',
-      '|move|p1a: Dragonite|Agility|p1a: Dragonite',
-      '|-boost|p1a: Dragonite|spe|2',
+      '|move|p1a: Dragonite|Wrap|p2a: Gengar',
+      '|-damage|p2a: Gengar|323/323',
       '|turn|9',
+      '|switch|p1a: Moltres|Moltres|383/383',
+      '|cant|p2a: Gengar|partiallytrapped',
+      '|turn|10',
     ]);
   });
 

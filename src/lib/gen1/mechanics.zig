@@ -62,16 +62,18 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     assert(c1.type != .Pass or c2.type != .Pass or battle.turn == 0);
     if (battle.turn == 0) return start(battle, log);
 
+    var s1 = false;
+    var s2 = false;
     var f1: ?Move = null;
     var f2: ?Move = null;
 
-    if (selectMove(battle, .P1, c1, c2, &f1)) |r| return r;
-    if (selectMove(battle, .P2, c2, c1, &f2)) |r| return r;
+    if (selectMove(battle, .P1, c1, c2, &s1, &f1)) |r| return r;
+    if (selectMove(battle, .P2, c2, c1, &s2, &f2)) |r| return r;
 
     if (turnOrder(battle, c1, c2) == .P1) {
-        if (try doTurn(battle, .P1, c1, f1, .P2, c2, f2, log)) |r| return r;
+        if (try doTurn(battle, .P1, c1, s1, f1, .P2, c2, s2, f2, log)) |r| return r;
     } else {
-        if (try doTurn(battle, .P2, c2, f2, .P1, c1, f1, log)) |r| return r;
+        if (try doTurn(battle, .P2, c2, s2, f2, .P1, c1, s1, f1, log)) |r| return r;
     }
 
     var p1 = battle.side(.P1);
@@ -114,6 +116,7 @@ fn selectMove(
     player: Player,
     choice: Choice,
     foe_choice: Choice,
+    skip_turn: *bool,
     from: *?Move,
 ) ?Result {
     if (choice.type == .Pass) return null;
@@ -177,6 +180,7 @@ fn selectMove(
     }
 
     if (battle.foe(player).active.volatiles.Binding) {
+        skip_turn.* = true;
         if (showdown) {
             saveMove(battle, player, choice);
         } else {
@@ -327,33 +331,37 @@ fn doTurn(
     battle: anytype,
     player: Player,
     player_choice: Choice,
+    player_skip: bool,
     player_from: ?Move,
     foe_player: Player,
     foe_choice: Choice,
+    foe_skip: bool,
     foe_from: ?Move,
     log: anytype,
 ) !?Result {
     assert(player_choice.type != .Pass);
 
-    var residual = true;
+    var res = true;
     var replace = battle.side(player).stored().hp == 0;
-    if (try executeMove(battle, player, player_choice, player_from, &residual, log)) |r| return r;
+    if (try executeMove(battle, player, player_choice, player_skip, player_from, &res, log)) |r|
+        return r;
     if (!replace) {
         if (player_choice.type != .Switch) {
             if (try checkFaint(battle, foe_player, log)) |r| return r;
         }
-        if (residual) try handleResidual(battle, player, log);
+        if (res) try handleResidual(battle, player, log);
         if (try checkFaint(battle, player, log)) |r| return r;
     } else if (foe_choice.type == .Pass) return null;
 
-    residual = true;
+    res = true;
     replace = battle.side(foe_player).stored().hp == 0;
-    if (try executeMove(battle, foe_player, foe_choice, foe_from, &residual, log)) |r| return r;
+    if (try executeMove(battle, foe_player, foe_choice, foe_skip, foe_from, &res, log)) |r|
+        return r;
     if (!replace) {
         if (foe_choice.type != .Switch) {
             if (try checkFaint(battle, player, log)) |r| return r;
         }
-        if (residual) try handleResidual(battle, foe_player, log);
+        if (res) try handleResidual(battle, foe_player, log);
         if (try checkFaint(battle, foe_player, log)) |r| return r;
     }
 
@@ -371,6 +379,7 @@ fn executeMove(
     battle: anytype,
     player: Player,
     choice: Choice,
+    skip: bool,
     from: ?Move,
     residual: *bool,
     log: anytype,
@@ -382,11 +391,11 @@ fn executeMove(
         return null;
     }
 
-    if (side.last_selected_move == .SKIP_TURN) {
-        // Pokémon Showdown overwrites the SKIP_TURN sentinel with its botched move select,
-        // Binding instead gets handled in beforeMove after sleep and freeze
-        assert(!showdown);
-        if (battle.foe(player).active.volatiles.Binding) {
+    // Checking for SKIP_TURN only is the correct approach here, but since Pokémon Showdown
+    // overwrites the SKIP_TURN sentinel with its botched move select we need to add an
+    // additional skip boolean to track that
+    if (skip or side.last_selected_move == .SKIP_TURN) {
+        if (showdown or battle.foe(player).active.volatiles.Binding) {
             try log.cant(battle.active(player), .Bound);
         }
         return null;

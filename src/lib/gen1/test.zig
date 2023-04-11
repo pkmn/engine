@@ -2819,12 +2819,14 @@ test "Binding effect" {
             HIT,
             PAR_CAN, HIT, MAX_WRAP, PAR_CAN,
             PAR_CANT, PAR_CAN,
+            HIT, MIN_WRAP,
         } else .{
             MIN_WRAP, ~CRIT, MIN_DMG, HIT,
             MIN_WRAP, ~CRIT, MAX_DMG, HIT,
             ~CRIT, HIT,
             PAR_CAN, MAX_WRAP, MAX_WRAP, ~CRIT, HIT, PAR_CAN,
             PAR_CANT, PAR_CAN, ~CRIT,
+            MIN_WRAP, ~CRIT, HIT,
         }
     // zig fmt: on
     ).init(
@@ -2945,11 +2947,21 @@ test "Binding effect" {
     try expectEqualSlices(Choice, all_choices, choices[0..n]);
 
     try t.log.expected.move(P2.ident(3), Move.Teleport, P2.ident(3), null);
-    try t.log.expected.move(P1.ident(1), Move.Agility, P1.ident(1), null);
-    try t.log.expected.boost(P1.ident(1), .Speed, 2);
+    try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(3), null);
+    if (showdown) {
+        try t.log.expected.damage(P2.ident(3), t.expected.p2.get(3), .None);
+    } else {
+        try t.log.expected.immune(P2.ident(3), .None);
+    }
     try t.log.expected.turn(9);
 
-    try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
+    if (showdown) try t.log.expected.cant(P2.ident(3), .Bound);
+    try t.log.expected.turn(10);
+
+    try expectEqual(Result.Default, try t.update(swtch(2), forced));
     try t.verify();
 }
 
