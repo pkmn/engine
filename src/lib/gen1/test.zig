@@ -5345,6 +5345,7 @@ test "Transform effect" {
     const TIE_1 = MIN;
     const TIE_2 = MAX;
     const no_crit = if (showdown) comptime ranged(Species.chance(.Articuno), 256) else 6;
+    const DVS = .{ .atk = 0, .def = 0, .spe = 0, .spc = 0 };
 
     var t = Test(
     // zig fmt: off
@@ -5353,13 +5354,13 @@ test "Transform effect" {
         } else .{
             ~CRIT, ~CRIT, TIE_1, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG, ~HIT,
             TIE_2, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG, HIT,
-            TIE_2, ~CRIT, ~CRIT, ~CRIT,
+            TIE_2, ~CRIT, ~CRIT, ~CRIT, ~CRIT, ~CRIT,
         }
     // zig fmt: on
     ).init(
         &.{
             .{ .species = .Mew, .level = 50, .moves = &.{ .SwordsDance, .Transform } },
-            .{ .species = .Ditto, .moves = &.{ .SwordsDance, .Transform } },
+            .{ .species = .Ditto, .dvs = DVS, .moves = &.{.Transform} },
         },
         &.{.{ .species = .Articuno, .moves = &.{ .Agility, .Fly, .Peck } }},
     );
@@ -5459,6 +5460,46 @@ test "Transform effect" {
     try expectEqual(Result.Default, try t.update(swtch(2), move(1)));
     try expectEqual(Species.Mew, t.actual.p1.get(2).species);
     try expectEqual(pp - 1, t.actual.p1.get(2).move(2).pp);
+
+    const stats = t.actual.p1.get(1).stats;
+    try expectEqual(stats, t.actual.p1.active.stats);
+
+    try t.log.expected.move(P2.ident(1), Move.Agility, P2.ident(1), null);
+    try t.log.expected.fail(P2.ident(1), .None);
+    try t.log.expected.move(P1.ident(2), Move.Transform, P2.ident(1), null);
+    try t.log.expected.transform(P1.ident(2), P2.ident(1));
+    try t.log.expected.turn(8);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    inline for (@typeInfo(@TypeOf(t.actual.p1.get(1).stats)).Struct.fields) |field| {
+        if (!std.mem.eql(u8, field.name, "hp")) {
+            try expectEqual(
+                @field(t.actual.p2.active.stats, field.name),
+                @field(t.actual.p1.active.stats, field.name),
+            );
+        }
+    }
+
+    try t.log.expected.switched(P1.ident(1), t.expected.p1.get(1));
+    try t.log.expected.move(P2.ident(1), Move.Agility, P2.ident(1), null);
+    try t.log.expected.fail(P2.ident(1), .None);
+    try t.log.expected.turn(9);
+
+    // Pokémon Showdown incorrectly retrains the Transform target DVs
+    try expectEqual(Result.Default, try t.update(swtch(2), move(1)));
+    if (showdown) {
+        inline for (@typeInfo(@TypeOf(stats)).Struct.fields) |field| {
+            if (!std.mem.eql(u8, field.name, "hp")) {
+                try expectEqual(
+                    // BUG: @field(stats, field.name) + 30,
+                    @field(stats, field.name),
+                    @field(t.actual.p1.get(2).stats, field.name),
+                );
+            }
+        }
+    } else {
+        try expectEqual(stats, t.actual.p1.get(2).stats);
+    }
 
     try t.verify();
 }

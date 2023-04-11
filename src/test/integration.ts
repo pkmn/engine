@@ -449,17 +449,38 @@ const BINDING = ['bind', 'wrap', 'firespin', 'clamp'] as ID[];
 // before retrying so that we can make progress and the team generator doesn't
 // get stuck in a loop continually generating teams with the same issues.
 function validate(prng: PRNG, moves: Set<ID>, used: RunnerOptions['usage']) {
-  // Disable and Transform cannot be used together, so if teams have been
+  const transform = moves.has('transform' as ID);
+  // Transform is too broken upstream to actually fix, so just always skip
+  // for the time being (the logic underneath here that checks transform is
+  // dead-code, but should be relevant if and when transform is unborked)
+  if (transform) {
+    used.move('transform' as ID);
+    return true;
+  }
+  // Transform and Disable cannot be used together, so if teams have been
   // generated where both moves are present we simply choose one at random to
   // consider having been "used" and return true to retry team generation
-  if (moves.has('disable' as ID) && moves.has('transform' as ID)) {
-    used.move(prng.sample(['disable', 'transform'] as ID[]));
+  if (transform && moves.has('disable' as ID)) {
+    used.move(prng.sample(['transform', 'disable']) as ID);
     return true;
   }
   // Mirror Move is problematic in battles involving Transform or binding moves
+  // - we try to avoid always simply punting on Mirror Move and being fair
+  // about which move gets a chance to be tested
+  const binding = BINDING.filter(m => moves.has(m));
   if (moves.has('mirrormove' as ID)) {
-    if (moves.has('transform' as ID) || BINDING.some(m => moves.has(m))) {
+    if (transform && binding.length) {
       used.move('mirrormove' as ID);
+      return true;
+    } else if (transform) {
+      used.move(prng.sample(['mirrormove', 'disable']) as ID);
+      return true;
+    } else if (binding.length) {
+      if (prng.randomChance(1, binding.length + 1)) {
+        for (const m of binding) used.move(m);
+      } else {
+        used.move('mirrormove' as ID);
+      }
       return true;
     }
   }

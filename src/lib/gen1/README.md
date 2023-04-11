@@ -621,11 +621,13 @@ the correct control flow):
 - **Metronome**: In addition to the issues with binding moves, Metronome and Mirror Move cannot
   mutually call each other more than 3 times in a row without causing the Pokémon Showdown simulator
   to crash due to defensive safety checks that do not exist on the cartridge.
-- **Transform**:  Transform screws up the effect of Disable, because on Pokémon Showdown, Disable
-  prevents moves of a given *name* from being used (e.g. "Water Gun") as opposed to moves in a
-  specific *slot* (e.g. the 2nd move slot), and a Pokémon's moves can change after Transform (this
-  is not an issue with Disable + Mimic because Mimic happens to replace the same slot). Furthermore,
-  transforming and then using Mirror Move / Metronome can result in [glitchy behavior and
+- **Transform**: Pokémon Showdown permanently copies the DVs of Transform's target and recomputes
+  stats every switch, corrupting the Transform user's stats. Transform also screws up the effect of
+  Disable, because on Pokémon Showdown, Disable prevents moves of a given *name* from being used
+  (e.g. "Water Gun") as opposed to moves in a specific *slot* (e.g. the 2nd move slot), and a
+  Pokémon's moves can change after Transform (this is not an issue with Disable + Mimic because
+  Mimic happens to replace the same slot). Furthermore, transforming and then using Mirror Move /
+  Metronome can result in [glitchy behavior and
   softlocks](https://pkmn.cc/bulba/Transform_glitches#Transform_.2B_Mirror_Move.2FMetronome_PP_error)
   which Pokémon Showdown does not implement.
 

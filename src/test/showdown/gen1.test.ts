@@ -4260,6 +4260,7 @@ describe('Gen 1', () => {
   });
 
   test('Transform effect', () => {
+    const IVS = {hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0};
     const no_crit = {
       ...CRIT,
       value: ranged(Math.floor(gen.species.get('Articuno')!.baseStats.spe / 2), 256),
@@ -4268,7 +4269,7 @@ describe('Gen 1', () => {
       TIE(1), MISS, TIE(2), HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG, TIE(2),
     ], [
       {species: 'Mew', level: 50, evs, moves: ['Swords Dance', 'Transform']},
-      {species: 'Ditto', evs, moves: ['Swords Dance', 'Transform']},
+      {species: 'Ditto', ivs: IVS, evs, moves: ['Transform']},
     ], [
       {species: 'Articuno', evs, moves: ['Agility', 'Fly', 'Peck']},
     ]);
@@ -4313,6 +4314,19 @@ describe('Gen 1', () => {
     expect(battle.p1.pokemon[1].modifiedStats).toEqual(battle.p1.pokemon[1].storedStats);
     expect(battle.p1.pokemon[1].moveSlots[1].pp).toBe(pp - 1);
 
+    const stats = {...battle.p1.pokemon[0].modifiedStats};
+    console.debug(stats);
+    expect(battle.p1.pokemon[0].modifiedStats).toEqual(stats);
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p1.pokemon[0].modifiedStats).toEqual(battle.p2.pokemon[0].modifiedStats);
+
+    // Pokémon Showdown incorrectly retrains the Transform target DVs
+    battle.makeChoices('switch 2', 'move 1');
+    // expect(battle.p1.pokemon[1].modifiedStats).toEqual(stats);
+    for (const stat in stats) stats[stat as keyof typeof stats]! += 30;
+    expect(battle.p1.pokemon[1].modifiedStats).toEqual(stats);
+
     verify(battle, [
       '|move|p2a: Articuno|Agility|p2a: Articuno',
       '|-boost|p2a: Articuno|spe|2',
@@ -4340,10 +4354,19 @@ describe('Gen 1', () => {
       '|move|p1a: Mew|Agility|p1a: Mew',
       '|-boost|p1a: Mew|spe|2',
       '|turn|6',
-      '|switch|p1a: Ditto|Ditto|299/299',
+      '|switch|p1a: Ditto|Ditto|269/269',
       '|move|p2a: Articuno|Agility|p2a: Articuno',
       '|-boost|p2a: Articuno|spe|2',
       '|turn|7',
+      '|move|p2a: Articuno|Agility|p2a: Articuno',
+      '|-fail|p2a: Articuno',
+      '|move|p1a: Ditto|Transform|p2a: Articuno',
+      '|-transform|p1a: Ditto|p2a: Articuno',
+      '|turn|8',
+      '|switch|p1a: Mew|Mew, L50|171/206',
+      '|move|p2a: Articuno|Agility|p2a: Articuno',
+      '|-fail|p2a: Articuno',
+      '|turn|9',
     ]);
   });
 
