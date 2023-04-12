@@ -80,7 +80,7 @@ pub fn build(b: *std.Build) !void {
         //
         // But ziglang/zig#14647 broke this so we now need to do an install() and then manually
         // rename the file ourself in install-pkmn-engine
-        lib.install();
+        b.installArtifact(lib);
     } else if (wasm) {
         const lib = b.addSharedLibrary(.{
             .name = name,
@@ -106,7 +106,7 @@ pub fn build(b: *std.Build) !void {
             sh.addFileSourceArg(.{ .path = out });
             b.getInstallStep().dependOn(&sh.step);
         }
-        lib.install();
+        b.installArtifact(lib);
     } else if (dynamic) {
         const lib = b.addSharedLibrary(.{
             .name = name,
@@ -120,7 +120,7 @@ pub fn build(b: *std.Build) !void {
         lib.addIncludePath("src/include");
         maybeStrip(b, lib, b.getInstallStep(), strip, cmd);
         if (pic) lib.force_pic = pic;
-        lib.install();
+        b.installArtifact(lib);
         c = true;
     } else {
         const lib = b.addStaticLibrary(.{
@@ -136,7 +136,7 @@ pub fn build(b: *std.Build) !void {
         maybeStrip(b, lib, b.getInstallStep(), strip, cmd);
         if (pic) lib.force_pic = pic;
         if (emit_asm) lib.emit_asm = .emit;
-        lib.install();
+        b.installArtifact(lib);
         c = true;
     }
 
@@ -207,7 +207,7 @@ pub fn build(b: *std.Build) !void {
     const lint_exe =
         b.addExecutable(.{ .name = "lint", .root_source_file = .{ .path = "src/tools/lint.zig" } });
     if (tests.build) tests.step.dependOn(&lint_exe.step);
-    const lint = lint_exe.run();
+    const lint = b.addRunArtifact(lint_exe);
 
     b.step("benchmark", "Run benchmark code").dependOn(&benchmark.step);
     b.step("fuzz", "Run fuzz tester").dependOn(&fuzz.step);
@@ -258,11 +258,8 @@ const TestStep = struct {
     pub fn create(b: *std.Build, options: *std.Build.OptionsStep, config: Config) *TestStep {
         const coverage = b.option([]const u8, "test-coverage", "Generate test coverage");
         const test_file = b.option([]const u8, "test-file", "Input file for test");
-        const test_bin = b.option([]const u8, "test-bin", "Emit test binary to");
         const test_filter =
             b.option([]const u8, "test-filter", "Skip tests that do not match filter");
-        const test_no_exec =
-            b.option(bool, "test-no-exec", "Compiles test binary without running it") orelse false;
 
         const self = b.allocator.create(TestStep) catch @panic("OOM");
         const step = std.Build.Step.init(.{ .id = .custom, .name = "Run all tests", .owner = b });
@@ -276,21 +273,17 @@ const TestStep = struct {
                 .root_source_file = .{ .path = path },
                 .optimize = config.optimize,
                 .target = config.target,
+                .filter = test_filter,
             });
             tests.setMainPkgPath("./");
-            tests.setFilter(test_filter);
             tests.addOptions("build_options", options);
             tests.single_threaded = true;
             maybeStrip(b, tests, &tests.step, config.strip, config.cmd);
             if (config.pic) tests.force_pic = config.pic;
-            if (test_bin) |bin| {
-                tests.name = std.fs.path.basename(bin);
-                if (std.fs.path.dirname(bin)) |dir| tests.setOutputDir(dir);
-            }
             if (coverage) |c| {
                 tests.setExecCmd(&.{ "kcov", "--include-pattern=src/lib", c, null });
             }
-            self.step.dependOn(if (test_no_exec) &tests.step else &tests.run().step);
+            self.step.dependOn(&b.addRunArtifact(tests).step);
         }
         return self;
     }
@@ -328,7 +321,7 @@ fn tool(b: *std.Build, path: []const u8, config: ToolConfig) *std.Build.RunStep 
     if (config.tool.tests) |ts| ts.step.dependOn(&exe.step);
     config.tool.exes.append(exe) catch @panic("OOM");
 
-    const run = exe.run();
+    const run = b.addRunArtifact(exe);
     maybeStrip(b, exe, &run.step, config.general.strip, config.general.cmd);
     if (b.args) |args| run.addArgs(args);
 
