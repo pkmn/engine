@@ -34,11 +34,11 @@ fn bindings(env: c.napi_env) c.napi_value {
 }
 
 fn bind(env: c.napi_env, gen: anytype) c.napi_value {
-    const options_size = @intCast(u32, gen.CHOICES_SIZE);
+    const choices_size = @intCast(u32, gen.CHOICES_SIZE);
     const logs_size = @intCast(u32, gen.LOGS_SIZE);
     var object = Object.init(env);
     const properties = [_]c.napi_property_descriptor{
-        Property.init("CHOICES_SIZE", .{ .value = Number.init(env, options_size) }),
+        Property.init("CHOICES_SIZE", .{ .value = Number.init(env, choices_size) }),
         Property.init("LOGS_SIZE", .{ .value = Number.init(env, logs_size) }),
         Property.init("update", .{ .method = update(gen) }),
         Property.init("choices", .{ .method = choices(gen) }),
