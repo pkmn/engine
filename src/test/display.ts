@@ -94,8 +94,9 @@ export function render(
   }
 
   const type = Array.isArray(last) ? 'showdown' : 'pkmn';
+  const render = ('render' in mustache ? mustache : (mustache as any).default).render;
   return minify(
-    mustache.render(fs.readFileSync(template(type), 'utf8'), type === 'pkmn'
+    render(fs.readFileSync(template(type), 'utf8'), type === 'pkmn'
       ? {content: buf.join('')}
       : {
         seed: buf.shift(),
