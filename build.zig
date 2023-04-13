@@ -1,13 +1,14 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
-pub const Options = struct { showdown: ?bool = null, log: ?bool = null };
+pub const Options = struct { showdown: ?bool = null, log: ?bool = null, chance: ?bool = null };
 
 pub fn module(b: *std.Build, options: Options) *std.Build.Module {
     const dirname = comptime std.fs.path.dirname(@src().file) orelse ".";
     const build_options = b.addOptions();
     build_options.addOption(?bool, "showdown", options.showdown);
     build_options.addOption(?bool, "log", options.log);
+    build_options.addOption(?bool, "chance", options.chance);
     return b.createModule(.{
         .source_file = .{ .path = dirname ++ "/src/lib/pkmn.zig" },
         .dependencies = &.{.{ .name = "build_options", .module = build_options.createModule() }},
@@ -42,10 +43,12 @@ pub fn build(b: *std.Build) !void {
     const showdown =
         b.option(bool, "showdown", "Enable Pokémon Showdown compatibility mode") orelse false;
     const log = b.option(bool, "log", "Enable protocol message logging") orelse false;
+    const chance = b.option(bool, "chance", "Enable update probability tracking") orelse false;
 
     const options = b.addOptions();
     options.addOption(?bool, "showdown", showdown);
     options.addOption(?bool, "log", log);
+    options.addOption(?bool, "chance", chance);
 
     const name = if (showdown) "pkmn-showdown" else "pkmn";
 
@@ -181,10 +184,13 @@ pub fn build(b: *std.Build) !void {
 
     var exes = std.ArrayList(*std.Build.CompileStep).init(b.allocator);
     const tools: ToolConfig = .{
-        .general = config,
-        .tool = .{
+        .options = .{
             .showdown = showdown,
             .log = log,
+            .chance = chance,
+        },
+        .general = config,
+        .tool = .{
             .tests = if (tests.build) tests else null,
             .exes = &exes,
         },
@@ -289,10 +295,9 @@ const TestStep = struct {
 };
 
 const ToolConfig = struct {
+    options: Options,
     general: Config,
     tool: struct {
-        showdown: bool,
-        log: bool,
         tests: ?*TestStep,
         name: ?[]const u8 = null,
         exes: *std.ArrayList(*std.Build.CompileStep),
@@ -303,7 +308,7 @@ fn tool(b: *std.Build, path: []const u8, config: ToolConfig) *std.Build.RunStep 
     var name = config.tool.name orelse std.fs.path.basename(path);
     const index = std.mem.lastIndexOfScalar(u8, name, '.');
     if (index) |i| name = name[0..i];
-    if (config.tool.showdown) name = b.fmt("{s}-showdown", .{name});
+    if (config.options.showdown orelse false) name = b.fmt("{s}-showdown", .{name});
 
     const exe = b.addExecutable(.{
         .name = name,
@@ -311,10 +316,8 @@ fn tool(b: *std.Build, path: []const u8, config: ToolConfig) *std.Build.RunStep 
         .target = config.general.target,
         .optimize = config.general.optimize,
     });
-    exe.addModule("pkmn", module(b, .{
-        .showdown = config.tool.showdown,
-        .log = config.tool.log,
-    }));
+    exe.addModule("pkmn", module(b, config.options));
+
     exe.single_threaded = true;
     if (config.general.pic) exe.force_pic = config.general.pic;
     if (config.tool.tests) |ts| ts.step.dependOn(&exe.step);

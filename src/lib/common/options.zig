@@ -4,6 +4,7 @@ const root = @import("root");
 pub const Options = struct {
     showdown: ?bool = null,
     log: ?bool = null,
+    chance: ?bool = null,
     advance: ?bool = null,
     ebc: ?bool = null,
     internal: ?bool = null,
@@ -13,6 +14,8 @@ pub const Options = struct {
 pub const showdown = get("showdown", false);
 /// Whether or not protocol message logging is enabled.
 pub const log = get("log", false);
+/// Whether or not update probability tracking is enabled.
+pub const chance = get("chance", false);
 
 pub const advance = get("advance", true);
 pub const ebc = get("ebc", true);
