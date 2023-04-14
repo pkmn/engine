@@ -449,7 +449,7 @@ fn executeMove(
     return doMove(battle, player, mslot, auto, residual, log);
 }
 
-const BeforeMove = union(enum) { done, skip_can, skip_pp, ok, err };
+const BeforeMove = enum { done, skip_can, skip_pp, ok, err };
 
 fn beforeMove(
     battle: anytype,
