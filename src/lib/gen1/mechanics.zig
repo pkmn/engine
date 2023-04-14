@@ -1662,7 +1662,7 @@ pub const Effects = struct {
         side.active.volatiles.Bide = true;
         assert(!side.active.volatiles.Thrashing and !side.active.volatiles.Rage);
         side.active.volatiles.state = 0;
-        side.active.volatiles.attacks = Rolls.duration(battle);
+        side.active.volatiles.attacks = Rolls.bideThrashDuration(battle);
 
         try log.start(battle.active(player), .Bide);
     }
@@ -2167,7 +2167,7 @@ pub const Effects = struct {
         }
         foe.active.volatiles.Recharging = false;
 
-        foe_stored.status = Status.slp(Rolls.sleep(battle));
+        foe_stored.status = Status.slp(Rolls.sleepDuration(battle));
         try log.statusFrom(foe_ident, foe_stored.status, battle.side(player).last_selected_move);
     }
 
@@ -2220,7 +2220,7 @@ pub const Effects = struct {
         assert(!volatiles.Bide);
 
         volatiles.Thrashing = true;
-        volatiles.attacks = Rolls.duration(battle);
+        volatiles.attacks = Rolls.bideThrashDuration(battle);
     }
 
     fn transform(battle: anytype, player: Player, log: anytype) !void {
@@ -2589,7 +2589,7 @@ pub const Rolls = struct {
         return battle.rng.next() < 1 + (if (low) Gen12.percent(20) else Gen12.percent(40));
     }
 
-    inline fn sleep(battle: anytype) u3 {
+    inline fn sleepDuration(battle: anytype) u3 {
         if (showdown) return @intCast(u3, battle.rng.range(u8, 1, 8));
         while (true) {
             const r = battle.rng.next() & 7;
@@ -2597,7 +2597,7 @@ pub const Rolls = struct {
         }
     }
 
-    inline fn duration(battle: anytype) u3 {
+    inline fn bideThrashDuration(battle: anytype) u3 {
         if (showdown) return @intCast(u3, battle.rng.range(u4, 2, 4));
         return @intCast(u3, (battle.rng.next() & 1) + 2);
     }
