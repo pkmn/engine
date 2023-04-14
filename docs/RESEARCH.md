@@ -163,7 +163,7 @@ TODO
 - [Gen I Main Battle Function](https://www.smogon.com/forums/posts/5878612/show) - Crystal_
 - [the ultimate POKéMON
   CENTER](https://web.archive.org/web/20170622160244/http:/upcarchive.playker.info/0/upokecenter/content/pokemon-ruby-version-sapphire-version-and-emerald-version-timing-notes.html)
-  - Peter O
+  \- Peter O
 
 ### Benchmarks
 
