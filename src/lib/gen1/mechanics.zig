@@ -512,9 +512,10 @@ fn beforeMove(
     // Pokémon Showdown's disable condition has a single onBeforeMove handler
     if (showdown and try disabled(side, ident, log)) return .done;
 
-    // Pokémon Showdown checks for Flinch *after* instead of before
+    // Pokémon Showdown checks for Flinch *after* instead of before... and doesn't clear Flinch
+    // until its imaginary "residual" phase, meaning Pokémon can sometimes flinch multiple times
+    // from the same original hit
     if (showdown and volatiles.Flinch) {
-        volatiles.Flinch = false;
         try log.cant(ident, .Flinch);
         return .done;
     }
