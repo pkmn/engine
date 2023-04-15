@@ -62,30 +62,30 @@
   },
   "publishConfig": {"access": "public"},
   "dependencies": {
-    "@pkmn/data": "^0.7.36",
+    "@pkmn/data": "^0.7.37",
     "@pkmn/protocol": "^0.6.11"
   },
   "devDependencies": {
     "@pkmn/eslint-config": "^3.0.0",
     "@pkmn/img": "^0.2.8",
     "@pkmn/sets": "^5.0.4",
-    "@pkmn/sim": "0.7.36",
+    "@pkmn/sim": "0.7.37",
     "@types/html-minifier": "^4.0.2",
     "@types/jest": "^29.5.0",
     "@types/minimist": "^1.2.2",
     "@types/mustache": "^4.2.2",
     "@types/node": "^18.15.11",
-    "@vitest/coverage-c8": "^0.29.8",
+    "@vitest/coverage-c8": "^0.30.1",
     "binaryen": "^112.0.0",
-    "eslint": "^8.37.0",
+    "eslint": "^8.38.0",
     "html-minifier": "^4.0.0",
-    "json-stringify-pretty-compact": "3.0.0",
+    "json-stringify-pretty-compact": "4.0.0",
     "minimist": "^1.2.8",
     "mustache": "^4.2.0",
     "source-map-support": "^0.5.21",
     "trakr": "^0.2.0",
-    "typescript": "^5.0.3",
-    "vitest": "^0.29.8"
+    "typescript": "^5.0.4",
+    "vitest": "^0.30.1"
   },
   "scripts": {
     "lint": "eslint --cache src --ext ts,js && eslint src/bin/*",
