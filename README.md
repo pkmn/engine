@@ -250,10 +250,10 @@ following is a list of known `libpkmn` bindings written by developers outside of
 organization](https://github.com/pkmn) that may be helpful (though note that these projects may not
 necessarily be up-to-date/complete/correct - inclusion in this list does not imply endorsement):
 
-| Language   | License   | URL                                     |
-| ---------- | --------- | --------------------------------------- |
-| **C++**    | `BSL-1.0` | https://github.com/pasyg/engine-wrapper |
-| **Python** | `MIT`     | https://github.com/AnnikaCodes/PyKMN    |
+| Language   | License   | URL                                  |
+| ---------- | --------- | ------------------------------------ |
+| **C++**    | `BSL-1.0` | https://github.com/pasyg/wrapsire    |
+| **Python** | `MIT`     | https://github.com/AnnikaCodes/PyKMN |
 
 
 #### `pkmn-debug`
