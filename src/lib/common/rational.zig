@@ -6,20 +6,26 @@ const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 const expectError = std.testing.expectError;
 
-const safe = switch (builtin.mode) {
-    .ReleaseFast, .ReleaseSmall => true,
-    else => false,
-};
-
 /// Specialization of a rational number used by the engine to compute probabilties.
+/// For performance reasons the rational is only reduced lazily and thus `reduce` must be invoked
+/// explicitly before reading.
 pub fn Rational(comptime T: type) type {
     return extern struct {
         const Self = @This();
 
-        /// Numerator. Must always be >= 1.
+        /// Numerator. Must always be >= 1. Not guaranteed to be reduced in all cases.
         p: T = 1,
-        /// Denominator. Must always be >= 1.
+        /// Denominator. Must always be >= 1. Not guaranteed to be reduced in all cases.
         q: T = 1,
+
+        // With floats we can't rely on an overflow bit to let us know when to reduce, so we instead
+        // start reducing when we get sufficiently close to the limit of the mantissa (in our domain
+        // we expect updates to involve numbers < 2**10, so we should be safe not reducing before we
+        // are 2**10 away from "overflowing" the mantissa)
+        const REDUCE = if (@typeInfo(T) == .Float)
+            std.math.pow(T, 2, std.math.floatMantissaBits(T) - 10)
+        else
+            0;
 
         /// Resets the rational back to 1.
         pub fn reset(r: *Self) void {
@@ -30,7 +36,7 @@ pub fn Rational(comptime T: type) type {
         /// Update the rational by multiplying its numerator by p and its denominator by q.
         /// Both p and q must be >= 1, and if computable at comptime must have no common factors.
         pub fn update(r: *Self, p: anytype, q: anytype) (switch (@typeInfo(T)) {
-            .Int => if (safe) error{Overflow} else error{},
+            .Int => error{Overflow},
             .Float => error{},
             else => unreachable,
         })!void {
@@ -46,17 +52,27 @@ pub fn Rational(comptime T: type) type {
 
             switch (@typeInfo(T)) {
                 .Int => {
-                    if (safe) {
-                        r.p = try std.math.mul(T, r.p, p);
-                        r.q = try std.math.mul(T, r.q, q);
-                    } else {
-                        r.p *= p;
-                        r.q *= q;
-                    }
+                    // Greedily attempt to multiply and if it fails, reduce and try again
+                    r.mul(p, q) catch |err| switch (err) {
+                        error.Overflow => {
+                            r.reduce();
+                            try r.mul(p, q);
+                        },
+                        else => unreachable,
+                    };
                 },
                 .Float => {
-                    r.p *= p;
-                    r.q *= q;
+                    // Reduce in situations where we're likely to start losing precision
+                    if (r.q > REDUCE or r.p > REDUCE) r.reduce();
+
+                    r.p *= switch (@typeInfo(@TypeOf(p))) {
+                        .Float, .ComptimeFloat => p,
+                        else => @intToFloat(T, p),
+                    };
+                    r.q *= switch (@typeInfo(@TypeOf(q))) {
+                        .Float, .ComptimeFloat => q,
+                        else => @intToFloat(T, q),
+                    };
 
                     // We should always be dealing with whole numbers
                     assert(std.math.modf(r.p).fpart == 0);
@@ -64,10 +80,10 @@ pub fn Rational(comptime T: type) type {
                 },
                 else => unreachable,
             }
-            r.reduce();
         }
 
-        fn reduce(r: *Self) void {
+        /// Normalize the rational by reducing by the greatest common divisor.
+        pub fn reduce(r: *Self) void {
             const d = gcd(r.p, r.q);
 
             assert(@mod(r.p, d) == 0);
@@ -78,6 +94,11 @@ pub fn Rational(comptime T: type) type {
 
             assert(r.p >= 1);
             assert(r.q >= 1);
+        }
+
+        inline fn mul(r: *Self, p: anytype, q: anytype) !void {
+            r.p = try std.math.mul(T, r.p, p);
+            r.q = try std.math.mul(T, r.q, q);
         }
     };
 }
@@ -117,14 +138,15 @@ test Rational {
         try r.update(c, 256);
         try doTurn(&r);
 
+        r.reduce();
         try expectEqual(Rational(t){ .p = 75383, .q = 35550920704 }, r);
-        if (!safe and t == u64) continue;
 
         try r.update(1, 4);
         if (t == u64) {
             try expectError(error.Overflow, doTurn(&r));
         } else {
             try doTurn(&r);
+            r.reduce();
             try expectEqual(Rational(t){ .p = 5682596689, .q = 2527735925804191711232 }, r);
         }
     }
