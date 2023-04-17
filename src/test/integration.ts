@@ -371,7 +371,22 @@ function compare(chunk: string, actual: engine.ParsedLine[]) {
       break;
     }
     }
-    assert.deepEqual(actual[i], {args: a, kwArgs: kw});
+    try {
+      assert.deepEqual(actual[i], {args: a, kwArgs: kw});
+    } catch (err) {
+      // If both Pokémon that switched in have TOX degrading into PSN we may
+      // need to perform yet another swap because the `|switch|` order is based
+      // on the switched *out* Pokémon's speed and the ``|-status|` message is
+      // based off of the switched *in* Pokémon's speed.
+      if (actual[i].args[0] === '-status' && actual[i].args[2] === 'psn' &&
+      (actual[i].kwArgs as Protocol.KWArgs['|-status|']).silent && actual[i + 1] &&
+      actual[i + 1].args[0] === '-status') {
+        [actual[i], actual[i + 1]] = [actual[i + 1], actual[i]];
+        assert.deepEqual(actual[i], {args: a, kwArgs: kw});
+      } else {
+        throw err;
+      }
+    }
     i++;
   }
   if (i < actual.length) throw new Error(`Actual logs have additional messages: ${diff}`);
