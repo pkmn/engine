@@ -22,13 +22,15 @@ const ANSI = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-
 
 const CWD = process.env.INIT_CWD || process.env.CWD || process.cwd();
 
-type RunnerOptions = sim.RunnerOptions & {usage: sim.ExhaustiveRunnerUsageTracker};
+type RunnerOptions = sim.RunnerOptions & {usage: sim.ExhaustiveRunnerUsageTracker; errors?: Errors};
 class Runner {
   private readonly gen: Generation;
   private readonly format: string;
   private readonly prng: PRNG;
   private readonly p1options: sim.AIOptions & {team: string};
   private readonly p2options: sim.AIOptions & {team: string};
+  private readonly errors?: Errors;
+
   private readonly skip: boolean;
   private readonly debug: boolean;
 
@@ -42,6 +44,7 @@ class Runner {
     const moves = new Set<ID>();
     this.p1options = fixTeam(gen, options.p1options!, moves);
     this.p2options = fixTeam(gen, options.p2options!, moves);
+    this.errors = options.errors;
     this.skip = gen.num === 1 && validate(this.prng, moves, options.usage);
 
     this.debug = !!debug;
@@ -63,6 +66,7 @@ class Runner {
       {spec: {name: 'Bot 2', ...this.p2options}, create: create(this.p2options)},
       undefined,
       this.debug,
+      this.errors,
     ));
   }
 }
@@ -118,6 +122,7 @@ function play(
   p2options: PlayerOptions,
   replay?: string[],
   debug?: boolean,
+  errors?: Errors,
 ) {
   let c1 = engine.Choice.pass();
   let c2 = engine.Choice.pass();
@@ -256,12 +261,16 @@ function play(
     assert.deepEqual(battle.prng, control.prng.seed);
   } catch (err: any) {
     if (!replay) {
+      const num = toBigInt(seed);
+      const stack = err.stack.replace(ANSI, '');
+      errors?.seeds.push(num);
+      errors?.stacks.push(stack);
       try {
         console.error('');
         dump(
           gen,
-          err.stack.replace(ANSI, ''),
-          toBigInt(seed),
+          stack,
+          num,
           control.inputLog,
           frames,
           partial,
@@ -616,7 +625,7 @@ type Flags = Pick<sim.ExhaustiveRunnerOptions, 'log' | 'maxFailures' | 'cycles'>
   debug?: boolean;
 };
 
-export async function run(gens: Generations, options: string | Flags) {
+export async function run(gens: Generations, options: string | Flags, errors?: Errors) {
   if (!addon.supports(true, true)) throw new Error('engine must be built with -Dshowdown -Dlog');
   if (typeof options === 'string') {
     const log = fs.readFileSync(path.resolve(CWD, options), 'utf8');
@@ -633,9 +642,11 @@ export async function run(gens: Generations, options: string | Flags) {
 
   const opts: sim.ExhaustiveRunnerOptions = {
     cycles: 1, maxFailures: 1, log: false, ...options, format: '',
-    cmd: (cycles: number, format: string, seed: string) =>
-      `npm run integration -- --cycles=${cycles} --gen=${format[3]} --seed=${seed}`,
-  };
+    cmd: (cycles: number, format: string, seed: string) => {
+      const c = `npm run integration -- --cycles=${cycles} --gen=${format[3]} --seed=${seed}`;
+      errors?.commands.push(c);
+      return c;
+    }};
 
   let failures = 0;
   const start = Date.now();
@@ -647,7 +658,7 @@ export async function run(gens: Generations, options: string | Flags) {
       opts.format = formatFor(gen);
       const d = (options).debug;
       failures += await (new sim.ExhaustiveRunner({...opts, runner: o =>
-        new Runner(gen, o as RunnerOptions, d).run(),
+        new Runner(gen, {...o, errors} as RunnerOptions, d).run(),
       }).run());
       if (failures >= opts.maxFailures!) return failures;
     }
@@ -664,6 +675,33 @@ export const toBigInt = (seed: PRNGSeed) =>
   ((BigInt(seed[0]) << 48n) | (BigInt(seed[1]) << 32n) |
    (BigInt(seed[2]) << 16n) | BigInt(seed[3]));
 
+class Errors {
+  seeds: bigint[];
+  stacks: string[];
+  commands: string[];
+
+  constructor() {
+    this.seeds = [];
+    this.stacks = [];
+    this.commands = [];
+  }
+
+  toString() {
+    const buf = [];
+    for (let i = 0; i < this.commands.length; i++) {
+      buf.push('- [ ] **TODO**');
+      const seed = `0x${this.seeds[i].toString(16).toUpperCase()}`;
+      buf.push(`  - ${seed} (\`${this.commands[i]}\`)`);
+      buf.push(`    - [pkmn](${seed}.pkmn.html)`);
+      buf.push(`    - [showdown](${seed}.showdown.html)`);
+      buf.push('```diff');
+      buf.push(this.stacks[i]);
+      buf.push('```');
+    }
+    return buf.join('\n');
+  }
+}
+
 if (require.main === module) {
   (async () => {
     const gens = new Generations(Dex as any);
@@ -674,18 +712,29 @@ if (require.main === module) {
       process.exit(await run(gens, fs.existsSync(file) ? file : process.argv[2]));
     }
     const argv = minimist(process.argv.slice(2), {
-      boolean: ['debug'],
+      boolean: ['debug', 'summary'],
       default: {maxFailures: 1, debug: true},
     });
+
     const unit =
       typeof argv.duration === 'string' ? argv.duration[argv.duration.length - 1] : undefined;
     const duration =
       unit ? +argv.duration.slice(0, -1) * {s: 1e3, m: 6e4, h: 3.6e6}[unit]! : argv.duration;
     argv.cycles = argv.cycles ?? (duration ? 1 : 10);
     const prng = new PRNG(argv.seed ? argv.seed.split(',').map((s: string) => Number(s)) : null);
-    console.error('Seed:', prng.seed.join(','));
+    if (!argv.seed) console.error('Seed:', prng.seed.join(','));
     const options = {prng, log: process.stdout.isTTY, ...argv, duration};
-    process.exit(await run(gens, options));
+
+    const errors = argv.summary ? new Errors() : undefined;
+    const code = await run(gens, options, errors);
+    if (code && errors) {
+      const file = path.join(ROOT, 'logs', `${prng.seed.join('-')}.md`);
+      const link = path.join(ROOT, 'logs', 'summary.md');
+      fs.writeFileSync(file, errors.toString());
+      symlink(file, link);
+    }
+
+    process.exit(code);
   })().catch(err => {
     console.error(err);
     process.exit(1);
