@@ -4315,7 +4315,6 @@ describe('Gen 1', () => {
     expect(battle.p1.pokemon[1].moveSlots[1].pp).toBe(pp - 1);
 
     const stats = {...battle.p1.pokemon[0].modifiedStats};
-    console.debug(stats);
     expect(battle.p1.pokemon[0].modifiedStats).toEqual(stats);
 
     battle.makeChoices('move 1', 'move 1');
