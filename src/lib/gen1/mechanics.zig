@@ -70,20 +70,20 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
     if (selectMove(battle, .P1, c1, c2, &s1, &f1)) |r| return r;
     if (selectMove(battle, .P2, c2, c1, &s2, &f2)) |r| return r;
 
+    var p1 = battle.side(.P1);
+    var p2 = battle.side(.P2);
+
+    var r1 = showdown and p1.active.volatiles.Binding and c2.type == .Switch;
+    var r2 = showdown and p2.active.volatiles.Binding and c1.type == .Switch;
+
     if (turnOrder(battle, c1, c2) == .P1) {
-        if (try doTurn(battle, .P1, c1, s1, f1, .P2, c2, s2, f2, log)) |r| return r;
+        if (try doTurn(battle, .P1, c1, r1, s1, f1, .P2, c2, r2, s2, f2, log)) |r| return r;
     } else {
-        if (try doTurn(battle, .P2, c2, s2, f2, .P1, c1, s1, f1, log)) |r| return r;
+        if (try doTurn(battle, .P2, c2, r2, s2, f2, .P1, c1, r1, s1, f1, log)) |r| return r;
     }
 
-    var p1 = battle.side(.P1);
-    if (p1.active.volatiles.attacks == 0) {
-        p1.active.volatiles.Binding = false;
-    }
-    var p2 = battle.side(.P2);
-    if (p2.active.volatiles.attacks == 0) {
-        p2.active.volatiles.Binding = false;
-    }
+    if (p1.active.volatiles.attacks == 0) p1.active.volatiles.Binding = false;
+    if (p2.active.volatiles.attacks == 0) p2.active.volatiles.Binding = false;
 
     return endTurn(battle, log);
 }
@@ -340,10 +340,12 @@ fn doTurn(
     battle: anytype,
     player: Player,
     player_choice: Choice,
+    player_rewrap: bool,
     player_skip: bool,
     player_from: ?Move,
     foe_player: Player,
     foe_choice: Choice,
+    foe_rewrap: bool,
     foe_skip: bool,
     foe_from: ?Move,
     log: anytype,
@@ -356,7 +358,7 @@ fn doTurn(
         battle,
         player,
         player_choice,
-        showdown and foe_choice.type == .Switch,
+        player_rewrap,
         player_skip,
         player_from,
         &residual,
@@ -376,7 +378,7 @@ fn doTurn(
         battle,
         foe_player,
         foe_choice,
-        showdown and player_choice.type == .Switch,
+        foe_rewrap,
         foe_skip,
         foe_from,
         &residual,
@@ -750,7 +752,7 @@ fn canMove(
         Effects.thrashing(battle, player);
     } else if (!showdown and move.effect == .Binding) {
         // Pokémon Showdown handles this after hit/miss checks and damage calculation
-        Effects.binding(battle, player);
+        Effects.binding(battle, player, false);
     }
 
     return true;
@@ -965,8 +967,8 @@ fn doMove(
         try log.hitcount(battle.active(player.foe()), hit);
     } else if (showdown) {
         // This should be handled much earlier but Pokémon Showdown does it here... ¯\_(ツ)_/¯
-        if (move.effect == .Binding and (foe.stored().hp > 0 or !rewrap)) {
-            Effects.binding(battle, player);
+        if (move.effect == .Binding) {
+            Effects.binding(battle, player, rewrap);
             if (immune) {
                 battle.last_damage = 0;
                 // Pokémon Showdown logs |-damage| here instead of |-immune| because logic...
@@ -2299,7 +2301,7 @@ pub const Effects = struct {
         try log.transform(battle.active(player), foe_ident);
     }
 
-    fn binding(battle: anytype, player: Player) void {
+    fn binding(battle: anytype, player: Player, rewrap: bool) void {
         var side = battle.side(player);
         var foe = battle.foe(player);
 
@@ -2307,7 +2309,9 @@ pub const Effects = struct {
         side.active.volatiles.Binding = true;
         // GLITCH: Hyper Beam automatic selection glitch if Recharging gets cleared on miss
         // (Pokémon Showdown unitentionally patches this glitch, preventing automatic selection)
-        if (!showdown) foe.active.volatiles.Recharging = false;
+        if (!showdown) {
+            foe.active.volatiles.Recharging = false;
+        } else if (foe.stored().hp == 0) return if (!rewrap) battle.rng.advance(1);
 
         side.active.volatiles.attacks = Rolls.distribution(battle) - 1;
     }
