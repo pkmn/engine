@@ -53,10 +53,10 @@ pub fn main() !void {
 
     // Preallocate a buffer for the log and create a `Log` handler which will write to it.
     // `pkmn.LOGS_SIZE` is guaranteed to be large enough for a single update. This will only be
-    // written to if `-Dtrace` is enabled - `pkmn.protocol.NULL` can be used to turn all of the
-    // logging into no-ops. Here we are using the optimized `pkmn.protocol.ByteStream` which
-    // should be more efficient than `pkmn.protocol.Log(std.io.FixedBufferStream([]u8).Writer)`,
-    // though that or a `Log` backed by some other `std.io.Writer` would also work.
+    // written to if `-Dlog` is enabled - `pkmn.protocol.NULL` can be used to turn all of the
+    // logging into no-ops. Here we are using the optimized `pkmn.protocol.ByteStream` which should
+    // be more efficient than `pkmn.protocol.Log(std.io.FixedBufferStream([]u8).Writer)`, though
+    // that or a `Log` backed by some other `std.io.Writer` would also work.
     var buf: [pkmn.LOGS_SIZE]u8 = undefined;
 
     var stream = pkmn.protocol.ByteStream{ .buffer = &buf };
@@ -67,7 +67,7 @@ pub fn main() !void {
 
     var result = try battle.update(c1, c2, log);
     while (result.type == .None) : (result = try battle.update(c1, c2, log)) {
-        // Here we would do something with the log data in buf if `-Dtrace` were enabled
+        // Here we would do something with the log data in buf if `-Dlog` were enabled
         // _ = buf;
 
         // `battle.choices` determines what the possible options are - the simplest way to choose

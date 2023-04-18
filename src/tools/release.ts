@@ -108,7 +108,7 @@ for (const {triple, mcpu} of TARGETS) {
       `-Dtarget=${triple}`,
       `-Dcpu=${mcpu}`,
       `-Dshowdown=${showdown}`,
-      '-Dtrace',
+      '-Dlog',
       '-p',
       `release/${triple}`,
     ]);
@@ -163,7 +163,7 @@ const sign = argv.prod
 const notes = `${preamble} version **\`v${version}\`** for` +
   '`libpkmn` and `libpkmn-showdown` (`-Dshowdown`). This release offers only ' +
   'stripped static `-OReleaseFast` versions of these libraries built for popular architectures ' +
-  `and baseline CPU features with \`-Dtrace\` logging enabled. ${npm} ${sign}\n\n` +
+  `and baseline CPU features with \`-Dlog\` protocol message logging enabled. ${npm} ${sign}\n\n` +
   '*[Manually building](https://github.com/pkmn/engine#libpkmn) these libraries from source ' +
   'on your own system is likely to result in better performance when optimized for the native ' +
   'architecture and allows you to tweak exactly which features you need (including support for ' +

@@ -76,7 +76,7 @@ pub fn Battle(comptime RNG: anytype) type {
         }
 
         /// Returns the result of applying Player 1's choice `c1` and Player 2's choice `c2` to the
-        /// battle, optionally writing protocol logs to `log` if `options.trace` is enabled.
+        /// battle, optionally writing protocol message logs to `log` if `options.log` is enabled.
         pub fn update(self: *Self, c1: Choice, c2: Choice, log: anytype) !Result {
             return mechanics.update(self, c1, c2, log);
         }

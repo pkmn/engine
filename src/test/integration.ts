@@ -75,7 +75,7 @@ interface PlayerOptions {
 // US. THIS MESSAGE IS A WARNING ABOUT DANGER.
 //
 // Attempts to play out a Pokémon Showdown battle in lockstep with a
-// @pkmn/engine (-Dshowdown -Dtrace) battle via the ExhaustiveRunner and
+// @pkmn/engine (-Dshowdown -Dlog) battle via the ExhaustiveRunner and
 // confirms that the engine produces the same chunks of output given the same
 // input... only a lot of black magic and subterfuge is required to make this
 // happen. First, we support both replaying from a past input log (which
@@ -538,7 +538,7 @@ type Options = Pick<ExhaustiveRunnerOptions, 'log' | 'maxFailures' | 'cycles'> &
 };
 
 export async function run(gens: Generations, options: string | Options) {
-  if (!addon.supports(true, true)) throw new Error('engine must be built with -Dshowdown -Dtrace');
+  if (!addon.supports(true, true)) throw new Error('engine must be built with -Dshowdown -Dlog');
   if (typeof options === 'string') {
     const log = fs.readFileSync(path.resolve(CWD, options), 'utf8');
     const gen = gens.get(log.charAt(23));

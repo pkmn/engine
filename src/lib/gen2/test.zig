@@ -22,7 +22,7 @@ const Result = common.Result;
 const Choice = common.Choice;
 
 const showdown = options.showdown;
-const trace = options.trace;
+const log = options.log;
 
 const ArgType = protocol.ArgType;
 const ByteStream = protocol.ByteStream;
@@ -1275,7 +1275,7 @@ test "Stat increase post KO glitch" {
 // Miscellaneous
 
 test "MAX_LOGS" {
-    if (showdown or !trace) return error.SkipZigTest;
+    if (showdown or !log) return error.SkipZigTest;
     return error.SkipZigTest;
 }
 
@@ -1364,7 +1364,7 @@ fn Test(comptime rolls: anytype) type {
         }
 
         fn validate(self: *Self) !void {
-            if (trace) {
+            if (log) {
                 try protocol.expectLog(
                     formatter,
                     self.buf.expected.items,

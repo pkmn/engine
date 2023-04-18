@@ -8,8 +8,8 @@ default: check
 
 .PHONY: zig-build
 zig-build:
-	zig build -fsummary -Dtrace -p build
-	zig build -fsummary -Dshowdown -Dtrace -p build
+	zig build -fsummary -Dlog -p build
+	zig build -fsummary -Dshowdown -Dlog -p build
 
 .PHONY: js-build
 js-build: export DEBUG_PKMN_ENGINE=true
@@ -58,8 +58,8 @@ fix: zig-fix js-fix
 
 .PHONY: zig-test
 zig-test:
-	zig build -fsummary -Dtrace test
-	zig build -fsummary -Dshowdown -Dtrace test
+	zig build -fsummary -Dlog test
+	zig build -fsummary -Dshowdown -Dlog test
 
 .PHONY: js-test
 js-test: js-build
@@ -73,7 +73,7 @@ zig-coverage:
 	rm -rf coverage/zig
 	mkdir -p coverage/zig
 	zig build -fsummary test -Dtest-coverage=coverage/zig/pkmn
-	zig build -fsummary -Dshowdown -Dtrace test -Dtest-coverage=coverage/zig/pkmn-showdown
+	zig build -fsummary -Dshowdown -Dlog test -Dtest-coverage=coverage/zig/pkmn-showdown
 	kcov --merge coverage/zig/merged coverage/zig/pkmn coverage/zig/pkmn-showdown
 
 .PHONY: js-coverage
@@ -108,7 +108,7 @@ example: c-example js-example zig-example
 .PHONY: addon
 addon: export DEBUG_PKMN_ENGINE=true
 addon:
-	node src/bin/install-pkmn-engine --options='-Dshowdown -Dtrace'
+	node src/bin/install-pkmn-engine --options='-Dshowdown -Dlog'
 
 .PHONY: integration
 integration: build test example lint addon
@@ -147,7 +147,7 @@ patch:
 
 .PHONY: t
 t:
-	zig build -fsummary test -Dtrace -Dtest-file=src/lib/gen$(gen)/test.zig -Dtest-filter="$(filter)" $(opt)
+	zig build -fsummary test -Dlog -Dtest-file=src/lib/gen$(gen)/test.zig -Dtest-filter="$(filter)" $(opt)
 
 .PHONY: it
 it:

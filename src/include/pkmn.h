@@ -48,7 +48,7 @@ extern "C" {
 /** Compile time options acknowledged by libpkmn. */
 typedef struct {
     bool showdown;
-    bool trace;
+    bool log;
 } pkmn_options;
 /** Compile time options set when libpkmn was built. */
 extern const pkmn_options PKMN_OPTIONS;
@@ -108,10 +108,10 @@ pkmn_choice_kind pkmn_result_p1(pkmn_result result);
 pkmn_choice_kind pkmn_result_p2(pkmn_result result);
 /**
  * Whether or not the update resulted in an error being thrown. This can only
- * happen if libpkmn was built with trace logging enabled and the buffer
- * provided to the update function was not large enough to hold all of the data
- * (which is only possible if the buffer being used was smaller than generation
- * in question's MAX_LOGS bytes).
+ * happen if libpkmn was built with protocol message logging enabled and the
+ * buffer provided to the update function was not large enough to hold all of
+ * the data (which is only possible if the buffer being used was smaller than
+ * generation in question's MAX_LOGS bytes).
  */
 bool pkmn_error(pkmn_result result);
 
@@ -142,8 +142,8 @@ extern const size_t PKMN_GEN1_LOGS_SIZE;
 PKMN_OPAQUE(PKMN_GEN1_BATTLE_SIZE) pkmn_gen1_battle;
 /**
  * Returns the result of applying Player 1's choice c1 and Player 2's choice c2
- * to the Generation I battle. Writes up to len trace logs to buf if buf is not
- * NULL and trace logging is enabled.
+ * to the Generation I battle. Writes up to len protocol message logs to buf if
+ * buf is not NULL and protocol logging is enabled.
  */
 pkmn_result pkmn_gen1_battle_update(
   pkmn_gen1_battle *battle,

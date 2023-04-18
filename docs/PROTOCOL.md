@@ -8,7 +8,7 @@ directly to determine information about the battle and which moves are possible.
 [design](DESIGN.md), each generation's data structures are different, but the precise layout of the
 battle information is outlined in the respective documentation.
 
-More information about a battle can be generated via the `-Dtrace` flag when building the engine.
+More information about a battle can be generated via the `-Dlog` flag when building the engine.
 This flag enables the engine to write the wire protocol described in this document to a `Log`.
 Generally, this `Log` should be a
 [`FixedBufferStream`](https://ziglang.org/documentation/master/std/#root;io.FixedBufferStream)
@@ -41,7 +41,7 @@ on top of the pkmn engine would need to provide an alternative implementation of
 
 The [`pkmn-debug`](../README.md#pkmn-debug) tool exists to decode the binary battle and log data and
 render HTML to power a [human-readable debug UI](https://pkmn.cc/debug.html). The tool expects the
-following debug information to be provided to it by a binary with `-Dtrace` enabled:
+following debug information to be provided to it by a binary with `-Dloh` enabled.
 
 #### Header
 
@@ -63,13 +63,13 @@ complete:
 
 | Start | End   | Description                                                                                                               |
 | ----- | ----- | ------------------------------------------------------------------------------------------------------------------------- |
-| 0     | N     | $N$ bytes of trace log message protocol that are terminated by `0x00` or [EOF](https://en.wikipedia.org/wiki/End-of-file) |
+| 0     | N     | $N$ bytes of log message protocol that are terminated by `0x00` or [EOF](https://en.wikipedia.org/wiki/End-of-file) |
 | N+1   | N+B+1 | The $B$ serialized bytes of the updated battle state as defined by its respective layout                                  |
 | N+B+2 | N+B+3 | The [result](#result) of updating the battle                                                                              |
 | N+B+3 | N+B+4 | The next [choice](#choice) for Player 1                                                                                   |
 | N+B+4 | N+B+5 | The next [choice](#choice) for Player 2                                                                                   |
 
-It is important to note that by convention the debug logs start with the trace logs that are
+It is important to note that by convention the debug logs start with the protocol logs that are
 produced **after** first battle update (i.e. both sides `|switch|`-ing in their first Pokémon) -
 **the initial battle state when no Pokémon are active and the inital required choices (pass from
 both sides) and result are not logged.**[^2]
@@ -122,8 +122,8 @@ be over and no further updates can be made and may result in crashes.
 
 `Error` can only be returned due to a desync/glitch, and since Pokémon Showdown mods its engine code
 to avoid these this value cannot be returned from an update in `-Dshowdown` mode. However, the
-`libpkmn` C API will also set an update's result to `Error` if `-Dtrace` logging is enabled and the
-buffer it has been provided runs out of space regardless of which mode its in.
+`libpkmn` C API will also set an update's result to `Error` if `-Dlog` protocol logging is enabled
+and the buffer it has been provided runs out of space regardless of which mode its in.
 
 The choice types included in the result match those described [above](#choices), though they are
 more akin to what Pokémon Showdown calls a sides `requestType` which determines which [choice
@@ -133,7 +133,7 @@ provided to the `choices` function to determine which choice options exist for t
 
 ## Overview
 
-With `-Dtrace` enabled, [messages](#messages) are written to the `Log` provided. The first byte of
+With `-Dlog` enabled, [messages](#messages) are written to the `Log` provided. The first byte of
 each message is an integer representing the `ArgType` of the message, followed by 0 or more bytes
 containing the payload of the message. Game objects such as moves, species, abilities, items, types,
 etc are written as their internal identifier which usually matches their public facing number, but

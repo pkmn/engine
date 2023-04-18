@@ -21,7 +21,7 @@ fn options(env: c.napi_env) c.napi_value {
     var object = Object.init(env);
     const properties = [_]c.napi_property_descriptor{
         Property.init("showdown", .{ .value = Boolean.init(env, pkmn.options.showdown) }),
-        Property.init("trace", .{ .value = Boolean.init(env, pkmn.options.trace) }),
+        Property.init("log", .{ .value = Boolean.init(env, pkmn.options.log) }),
     };
     assert(c.napi_define_properties(env, object, properties.len, &properties) == c.napi_ok);
     return object;

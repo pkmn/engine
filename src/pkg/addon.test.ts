@@ -9,14 +9,14 @@ describe('AddOn', () => {
 
   test('supports', () => {
     const showdown = true;
-    const trace = true;
+    const log = true;
 
     expect(addon.supports(!showdown)).toBe(false);
-    expect(addon.supports(!showdown, trace)).toBe(false);
-    expect(addon.supports(!showdown, !trace)).toBe(false);
+    expect(addon.supports(!showdown, log)).toBe(false);
+    expect(addon.supports(!showdown, !log)).toBe(false);
 
     expect(addon.supports(showdown)).toBe(true);
-    expect(addon.supports(showdown, trace)).toBe(false);
-    expect(addon.supports(showdown, !trace)).toBe(true);
+    expect(addon.supports(showdown, log)).toBe(false);
+    expect(addon.supports(showdown, !log)).toBe(true);
   });
 });

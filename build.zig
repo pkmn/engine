@@ -1,13 +1,13 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
-pub const Options = struct { showdown: ?bool = null, trace: ?bool = null };
+pub const Options = struct { showdown: ?bool = null, log: ?bool = null };
 
 pub fn module(b: *std.Build, options: Options) *std.Build.Module {
     const dirname = comptime std.fs.path.dirname(@src().file) orelse ".";
     const build_options = b.addOptions();
     build_options.addOption(?bool, "showdown", options.showdown);
-    build_options.addOption(?bool, "trace", options.trace);
+    build_options.addOption(?bool, "log", options.log);
     return b.createModule(.{
         .source_file = .{ .path = dirname ++ "/src/lib/pkmn.zig" },
         .dependencies = &.{.{ .name = "build_options", .module = build_options.createModule() }},
@@ -42,11 +42,11 @@ pub fn build(b: *std.Build) !void {
 
     const showdown =
         b.option(bool, "showdown", "Enable Pokémon Showdown compatibility mode") orelse false;
-    const trace = b.option(bool, "trace", "Enable trace logs") orelse false;
+    const log = b.option(bool, "log", "Enable protocol message logging") orelse false;
 
     const options = b.addOptions();
     options.addOption(?bool, "showdown", showdown);
-    options.addOption(?bool, "trace", trace);
+    options.addOption(?bool, "log", log);
 
     const name = if (showdown) "pkmn-showdown" else "pkmn";
 
@@ -185,7 +185,7 @@ pub fn build(b: *std.Build) !void {
         .general = config,
         .tool = .{
             .showdown = showdown,
-            .trace = trace,
+            .log = log,
             .tests = if (tests.build) tests else null,
             .exes = &exes,
         },
@@ -293,7 +293,7 @@ const ToolConfig = struct {
     general: Config,
     tool: struct {
         showdown: bool,
-        trace: bool,
+        log: bool,
         tests: ?*TestStep,
         name: ?[]const u8 = null,
         exes: *std.ArrayList(*std.Build.CompileStep),
@@ -314,7 +314,7 @@ fn tool(b: *std.Build, path: []const u8, config: ToolConfig) *std.Build.RunStep 
     });
     exe.addModule("pkmn", module(b, .{
         .showdown = config.tool.showdown,
-        .trace = config.tool.trace,
+        .log = config.tool.log,
     }));
     exe.single_threaded = true;
     if (config.general.pic) exe.force_pic = config.general.pic;

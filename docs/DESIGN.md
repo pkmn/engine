@@ -80,7 +80,7 @@ and termination via its `Result` type. However, during play on both the cartridg
 Showdown messages about what has happened are displayed, providing additional information to the
 participants. Given that not all use cases (e.g. random [Monte Carlo tree search
 ](https://en.wikipedia.org/wiki/Monte_Carlo_tree_search) playouts) require this information,
-enabling this output is also opt-in through **`-Dtrace`**. Unlike with the cartridge or Pokémon
+enabling this output is also opt-in through **`-Dlog`**. Unlike with the cartridge or Pokémon
 Showdown this logging is stripped down and utilizes a native binary [protocol](../PROTOCOL.md),
 though contains all of the information required to produce identical logs to either.
 

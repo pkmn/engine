@@ -83,7 +83,7 @@ pub fn benchmark(
 
     const fuzz = duration != null;
     const showdown = pkmn.options.showdown;
-    const save = fuzz and pkmn.options.trace and builtin.mode == .Debug;
+    const save = fuzz and pkmn.options.log and builtin.mode == .Debug;
 
     var random = pkmn.PSRNG.init(seed);
     var choices: [pkmn.CHOICES_SIZE]pkmn.Choice = undefined;

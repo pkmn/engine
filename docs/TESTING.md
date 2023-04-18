@@ -5,7 +5,7 @@ In addition to [unit tests](#unit), the code in [`src/test`](../src/test) contai
 
 ## Unit
 
-Due to the `-Dshowdown` and `-Dtrace` build options and the stochastic nature of Pokémon as a game,
+Due to the `-Dshowdown` and `-Dlog` build options and the stochastic nature of Pokémon as a game,
 testing the pkmn engine requires a little extra work. Helper functions exist to remove the majority
 of the boilerplate from the library's unit tests:
 
@@ -121,7 +121,7 @@ pkmn engine are run with an
 [`ExhaustiveRunner`](https://github.com/smogon/pokemon-showdown/blob/master/sim/tools/exhaustive-runner.ts)
 that attempts to use as many different effects as possible in the battles it randomly simulates and
 the results are collected. While Pokémon Showdown always produces its text protocol streams, pkmn
-must be built specially to opt-in to introspection support (`-Dtrace`).
+must be built specially to opt-in to introspection support (`-Dlog`).
 
 The pkmn [binary protocol](PROTOCOL.md) is not expected to be equivalent to Pokémon Showdown for
 several reasons:
@@ -218,7 +218,7 @@ measures 3 different configurations:
   processing overhead and unnecessary delays due to `async` calls and is as close to as fast as
   Pokémon Showdown can be run (there is room for further optimization by simplifying choice parsing
   to not perform any verification, though this is significantly less trivial than the
-  aforementioned optimizations). This is closer to how the pkmn engine runs with `-Dtrace` disabled.
+  aforementioned optimizations). This is closer to how the pkmn engine runs with `-Dlog` disabled.
   Finally, `DirectBattle` is [patched](#patches) to eliminate unnecessary as covered above.
 
 - **`@pkmn/engine`**: this configuration uses the `@pmn/engine` driver package to run battles with
@@ -228,9 +228,9 @@ measures 3 different configurations:
   interface with JS at all. The benchmark runner invokes
   [`benchmark.zig`](../src/test/benchmark.zig) to directly run the benchmark and report the results.
 
-Both pkmn engine configurations are intended to be used `-Dshowdown` build option but with tracing
-disabled. Both of the Pokémon Showdown configurations are run beforehand for a warmup period to
-ensure the measured duration is representative of the actual best case runtime.
+Both pkmn engine configurations are intended to be used `-Dshowdown` build option but with protocol
+message logging disabled. Both of the Pokémon Showdown configurations are run beforehand for a
+warmup period to ensure the measured duration is representative of the actual best case runtime.
 
 In order to ensure all configurations are testing the same thing, we need to ensure that the exact
 same battles are generated, the same sequence of moves are chosen, and the battle results are match.
@@ -425,7 +425,7 @@ The [integration](#integration) tests and [benchmark](#benchmark) are also used 
 exists to run these tests on a schedule from random seeds for various durations to attempt to
 uncover latent bugs. The fuzz tests differ from the benchmark in that they run for predefined time
 durations as opposed to a given number of battles and enable the [blocked](#blocklistjson) effects
-that are usually excluded in `-Dshowdown` compatibility mode. When run with the `-Dtrace` flag,
+that are usually excluded in `-Dshowdown` compatibility mode. When run with the `-Dlog` flag,
 additional binary data will be dumped on crashes to allow for debugging with the help of
 [`fuzz.ts`](./fuzz.ts) and the [debug UI](https://pkmn.cc/debug.html) rendered by
 [`display.ts`](./display.ts). To run the fuzz tool locally use:

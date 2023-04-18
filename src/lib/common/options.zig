@@ -3,7 +3,7 @@ const root = @import("root");
 
 pub const Options = struct {
     showdown: ?bool = null,
-    trace: ?bool = null,
+    log: ?bool = null,
     advance: ?bool = null,
     ebc: ?bool = null,
     internal: ?bool = null,
@@ -11,8 +11,8 @@ pub const Options = struct {
 
 /// Whether or not Pokémon Showdown compatibility mode is enabled.
 pub const showdown = get("showdown", false);
-/// Whether or not protocol trace logging is enabled.
-pub const trace = get("trace", false);
+/// Whether or not protocol message logging is enabled.
+pub const log = get("log", false);
 
 pub const advance = get("advance", true);
 pub const ebc = get("ebc", true);

@@ -23,8 +23,9 @@ export type MoveSlot = Gen1.MoveSlot;
 /** Generic API supported by all Generations of Battle. */
 export interface API {
   /**
-   * The most recent buffer of binary protocol trace log data filled by `update`
-   * if tracing is enabled, otherwise undefined. Meant to be parsed by `Log`.
+   * The most recent buffer of binary protocol message log data filled by
+   * `update` if logging is enabled, otherwise undefined. Meant to be parsed by
+   * `Log`.
    */
   log?: DataView;
   /**
@@ -261,8 +262,8 @@ export type CreateOptions = {
   /** Player 2's options. */
   p2: PlayerOptions;
   /**
-   * Whether to capture protocol trace logs. Note that if the engine itself was
-   * not build with trace logging enabled then enabling this will have no
+   * Whether to capture protocol message logs. Note that if the engine itself
+   * was not build with protocol logging enabled then enabling this will have no
    * effect.
    */
   log: true;
@@ -272,8 +273,8 @@ export type CreateOptions = {
   /** Player 2's options. */
   p2: Omit<PlayerOptions, 'name'>;
   /**
-   * Whether to capture protocol trace logs. Note that if the engine itself was
-   * not build with trace logging enabled then enabling this will have no
+   * Whether to capture protocol message logs. Note that if the engine itself
+   * was not build with protocol logging enabled then enabling this will have no
    * effect.
    */
   log?: false;
@@ -291,8 +292,8 @@ export type RestoreOptions = {
    */
   showdown?: boolean;
   /**
-   * Whether to capture protocol trace logs. Note that if the engine itself was
-   * not build with trace logging enabled then enabling this will have no
+   * Whether to capture protocol message logs. Note that if the engine itself
+   * was not build with protocol logging enabled then enabling this will have no
    * effect.
    */
   log: true;
@@ -303,8 +304,8 @@ export type RestoreOptions = {
    */
   showdown?: boolean;
   /**
-   * Whether to capture protocol trace logs. Note that if the engine itself was
-   * not build with trace logging enabled then enabling this will have no
+   * Whether to capture protocol message logs. Note that if the engine itself
+   * was not build with protocol logging enabled then enabling this will have no
    * effect.
    */
   log?: false;

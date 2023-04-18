@@ -57,16 +57,16 @@ const P2 = Team.unpack(
 )!.team;
 
 // Enabling logging means we are required to pass names for our players. NB:
-// Logging still will not actually take place unless we also build with -Dtrace!
+// Logging still will not actually take place unless we also build with -Dlog!
 // If we don't run:
 //
-//   npx install-pkmn-engine -- --options='-Dshowdown -Dtrace'
+//   npx install-pkmn-engine -- --options='-Dshowdown -Dlog'
 //
 // beforehand then we will simply run this example with the default
-// configuration (-Dshowdown) and not receive any trace log messages. Similarly,
-// `showdown: true` here only works because the default configuration opts into
-// Pokémon Showdown compatibility mode - if we change around our configuration
-// we will need to change this initialization option as well.
+// configuration (-Dshowdown) and not receive any protocol log messages.
+// Similarly, `showdown: true` here only works because the default configuration
+// opts into Pokémon Showdown compatibility mode - if we change around our
+// configuration we will need to change this initialization option as well.
 const gens = new Generations(Dex);
 const gen = gens.get(1);
 const options = {
@@ -92,8 +92,8 @@ const choose = random.next.bind(random);
 // going to be explicit here
 let result: Result, c1 = Choice.pass(), c2 = Choice.pass();
 while (!(result = battle.update(c1, c2)).type) {
-  // If -Dtrace is enabled we can parse and output the resulting logs since we
-  // initialized the battle to support logging (both `-Dtrace` *and* `log: true`
+  // If -Dlog is enabled we can parse and output the resulting logs since we
+  // initialized the battle to support logging (both `-Dlog` *and* `log: true`
   // are required for logging)
   display();
   // Technically due to Generation I's Transform + Mirror Move/Metronome PP

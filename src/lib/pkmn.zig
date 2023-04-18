@@ -25,12 +25,12 @@ pub const Result = @import("common/data.zig").Result;
 /// Pokémon Showdown's RNG (backed by a Generation V & VI RNG).
 pub const PSRNG = @import("common/rng.zig").PSRNG;
 
-/// Namespace for helpers related to protocol trace logging.
+/// Namespace for helpers related to protocol message logging.
 pub const protocol = if (options.internal) struct {
     pub usingnamespace @import("common/protocol.zig");
 } else struct {
     /// Logs protocol information to its `Writer` during a battle update when
-    /// `options.trace` is enabled.
+    /// `options.log` is enabled.
     pub const Log = @import("common/protocol.zig").Log;
     /// Stripped down version of `std.io.FixedBufferStream` optimized for
     /// efficiently writing the individual protocol bytes. Note that the
@@ -41,8 +41,8 @@ pub const protocol = if (options.internal) struct {
     /// intialized with a `LOGS_SIZE`-sized buffer.
     pub const FixedLog = @import("common/protocol.zig").FixedLog;
     /// Null object pattern implementation of `Log` backed by a
-    /// `std.io.null_writer`. Ignores anything sent to it, though trace logging
-    /// should addtionally be turned off entirely by using `options.trace`.
+    /// `std.io.null_writer`. Ignores anything sent to it, though protocol
+    /// logging should additionally be turned off entirely with `options.log`.
     pub const NULL = @import("common/protocol.zig").NULL;
 };
 

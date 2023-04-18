@@ -54,9 +54,9 @@ build 2560 or greater, though tracks Zig's master branch so this may change in t
 breaking language changes are introduced:
 
 `libpkmn` can be built with `-Dshowdown` to instead produce the Pokémon Showdown compatible
-`libpkmn-showdown` library. Furthermore, trace logging can be enabled through `-Dtrace`. The
-`libpkmn` and `libpkmn-showdown` objects available in the binary release are compiled with and
-without the `-Dtrace` flag respectively.
+`libpkmn-showdown` library. Furthermore, protocol message logging can be enabled through `-Dlog`.
+The `libpkmn` and `libpkmn-showdown` objects available in the binary release are both compiled with
+the `-Dlog` flag by default.
 
 ### `@pkmn/engine`
 
@@ -90,21 +90,21 @@ const pkmn = @import("lib/pkmn/build.zig");
 
 pub fn build(b: *std.build.Builder) void {
     ...
-    exe.addModule("pkmn", pkmn.module(b, .{ .showdown = true, .trace = true }));
+    exe.addModule("pkmn", pkmn.module(b, .{ .showdown = true, .log = true }));
     ...
 }
 ```
 
 The engine's `build.zig` exposes a `module` function that takes an options structure to allow for
-configuring whether or not Pokémon Showdown compatibility mode or trace logs should be enabled.
-Alternatively, you may set options via a `pkmn_options` [root source file
+configuring whether or not Pokémon Showdown compatibility mode or protocol message logging should be
+enabled. Alternatively, you may set options via a `pkmn_options` [root source file
 declaration](https://ziglang.org/documentation/master/#Root-Source-File). There are several
 undocumented internal options that can be tweaked as well via build or root options, though these
 options are not officially supported, affect correctness, and may change meaning or behavior without
 warning. Use at your own risk.
 
 ```zig
-pub const pkmn_options = .{ .showdown = true, .trace = true };
+pub const pkmn_options = .{ .showdown = true, .log = true };
 ```
 
 ## Usage
@@ -112,11 +112,11 @@ pub const pkmn_options = .{ .showdown = true, .trace = true };
 For each Pokémon generation, the engine provides a battle structure with two functions - a function
 to `update` the battle's state based on both players' choices and a function that defines which
 `choices` are valid at that decision point (at the beginning of a battle both player's must "pass"
-as their first choice in order to switch in the first member of their party). If `-Dtrace` logging
-is enabled each update will produce logs which can be decoded into a buffer (`LOGS_SIZE` constants
-are provided to make it easy to allocate a buffer of the correct size). Each `update` will return a
-result to indicate either that the battle has terminated or which types of choices will be available
-for each player.
+as their first choice in order to switch in the first member of their party). If `-Dlog` protocol
+logging is enabled each update will produce logs which can be decoded into a buffer (`LOGS_SIZE`
+constants are provided to make it easy to allocate a buffer of the correct size). Each `update` will
+return a result to indicate either that the battle has terminated or which types of choices will be
+available for each player.
 
 Unlike [Pokémon Showdown's
 SIM-PROTOCOL](https://github.com/smogon/pokemon-showdown/blob/master/sim/SIM-PROTOCOL.md#choice-requests)
@@ -139,7 +139,7 @@ potential logs that may result.
 ### C
 
 [`pkmn.h`](src/include/pkmn.h) exports the C API for `libpkmn`. Symbols are all prefixed with
-`pkmn_` to avoid name collisions. If `-Dtrace` is enabled and logging throws an error then the error
+`pkmn_` to avoid name collisions. If `-Dlog` is enabled and logging throws an error then the error
 will be encoded in the `pkmn_result` and can be checked with `pkmn_error`.
 
 ```c

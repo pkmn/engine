@@ -22,7 +22,7 @@ const Result = common.Result;
 const Choice = common.Choice;
 
 const showdown = options.showdown;
-const trace = options.trace;
+const log = options.log;
 
 const ArgType = protocol.ArgType;
 const ByteStream = protocol.ByteStream;
@@ -9161,7 +9161,7 @@ test "Transform + Mirror Move/Metronome PP error" {
 // Miscellaneous
 
 test "MAX_LOGS" {
-    if (showdown or !trace) return error.SkipZigTest;
+    if (showdown or !log) return error.SkipZigTest;
     const BRN = Status.init(.BRN);
     const moves = &.{ .LeechSeed, .ConfuseRay, .Metronome };
     // make P2 slower to avoid speed ties
@@ -9331,7 +9331,7 @@ fn Test(comptime rolls: anytype) type {
         }
 
         fn validate(self: *Self) !void {
-            if (trace) {
+            if (log) {
                 try protocol.expectLog(
                     formatter,
                     self.buf.expected.items,

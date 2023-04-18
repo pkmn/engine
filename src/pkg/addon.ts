@@ -7,7 +7,7 @@ const ROOT = path.join(__dirname, '..', '..');
 let ADDON: [Bindings<false>?, Bindings<true>?] | undefined = undefined;
 
 interface Bindings<T extends boolean> {
-  options: { showdown: T; trace: boolean };
+  options: { showdown: T; log: boolean };
   bindings: Binding[];
 }
 
@@ -36,7 +36,7 @@ function load() {
 
 export function check(showdown: boolean) {
   if (!load()[+showdown]) {
-    const opts = ADDON![+!showdown]!.options.trace ? ['-Dtrace'] : [];
+    const opts = ADDON![+!showdown]!.options.log ? ['-log'] : [];
     if (showdown) opts.push('-Dshowdown');
     throw new Error(
       `@pkmn/engine has ${showdown ? 'not' : 'only'} been configured to support Pokémon Showdown.` +
@@ -45,10 +45,10 @@ export function check(showdown: boolean) {
   }
 }
 
-export function supports(showdown: boolean, trace?: boolean) {
+export function supports(showdown: boolean, log?: boolean) {
   if (!load()[+showdown]) return false;
-  if (trace === undefined) return true;
-  return ADDON![+showdown]!.options.trace === trace;
+  if (log === undefined) return true;
+  return ADDON![+showdown]!.options.log === log;
 }
 
 export function update(

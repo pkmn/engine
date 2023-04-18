@@ -5,9 +5,9 @@ const assert = std.debug.assert;
 
 const ERROR: u8 = 0b1100;
 
-export const PKMN_OPTIONS: extern struct { showdown: bool, trace: bool } = .{
+export const PKMN_OPTIONS: extern struct { showdown: bool, log: bool } = .{
     .showdown = pkmn.options.showdown,
-    .trace = pkmn.options.trace,
+    .log = pkmn.options.log,
 };
 
 export const PKMN_MAX_CHOICES = pkmn.MAX_CHOICES;
@@ -70,7 +70,7 @@ export fn pkmn_gen1_battle_update(
     buf: ?[*]u8,
     len: usize,
 ) pkmn.Result {
-    if (pkmn.options.trace) {
+    if (pkmn.options.log) {
         if (buf) |b| {
             var stream = pkmn.protocol.ByteStream{ .buffer = b[0..len] };
             var log = pkmn.protocol.FixedLog{ .writer = stream.writer() };

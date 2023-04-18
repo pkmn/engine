@@ -198,7 +198,7 @@ above, PP information isn't strictly necessary in Generation I so is dropped. `M
 a special sentinel value to indicate `null`. Move PP data is only included for testing and is not
 necessary for the actual engine implementation.
 
-In order to workaround various [Pokémon Showdown bugs](#bugs) and to support its protocol in traces,
+In order to workaround various [Pokémon Showdown bugs](#bugs) and to support its protocol in logs,
 additional information is stored in `Move.Data` (`targets`) about what Pokémon Showdown believes the
 `Move.Target` to be (despite the concept of targeting not existing until Generation III when Double
 battles were introduced). More specifically, a move's "targeting" status is required in various
@@ -331,8 +331,8 @@ does not produce an equivalent to Pokémon Showdown's `|request|` protocol messa
 must be gleaned through the `Battle` state). Useful size and offset information can be found in
 the [`layout.json`](../../data/layout.json) which exists to simplify writing driver code.
 
-Documentation of the wire protocol used for logging traces when `-Dtrace` is enabled can be found in
-[PROTOCOL.md](../../../docs/PROTOCOL.md). Note that the
+Documentation of the wire protocol used for protocol message logging when `-Dlog` is enabled can be
+found in [PROTOCOL.md](../../../docs/PROTOCOL.md). Note that the
 [`pkmn-debug`](../../../README.md#pkmn-debug) tool exists to display the binary protocol and battle
 data in the browser for ease of debugging.
 

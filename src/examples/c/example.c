@@ -81,9 +81,10 @@ int main(int argc, char **argv)
       0x00, 0x00, 0x00, 0x00, 0x00, 0x2e, 0xdb, 0x7d, 0x61, 0xcb, 0xba, 0x0d, 0x1e, 0x7e, 0x9e, 0x00,
    } };
 
-   // Preallocate a buffer for trace logs - PKMN_LOGS_SIZE is guaranteed to be
-   // large enough for a single update. This will only be written to if -Dtrace
-   // is enabled - NULL can be used to turn all of the logging into no-ops
+   // Preallocate a buffer for protocol message logs - PKMN_LOGS_SIZE is
+   // guaranteed to be large enough for a single update. This will only be
+   // written to if -Dlog is enabled - NULL can be used to turn all of the
+   // logging into no-ops
    size_t size = PKMN_LOGS_SIZE;
    uint8_t buf[size];
 
@@ -93,8 +94,7 @@ int main(int argc, char **argv)
    // things here
    pkmn_choice c1 = 0, c2 = 0;
    // We're also taking advantage of the fact that the PKMN_RESULT_NONE is
-   // guaranteed to be 0, so we don't actually need to check "!=
-   // PKMN_RESULT_NONE"
+   // guaranteed to be 0, so we don't actually need to check against it here
    while (!pkmn_result_type(result = pkmn_gen1_battle_update(&battle, c1, c2, buf, size))) {
       c1 = choose(&battle, &random, PKMN_PLAYER_P1, pkmn_result_p1(result), choices);
       c2 = choose(&battle, &random, PKMN_PLAYER_P2, pkmn_result_p2(result), choices);

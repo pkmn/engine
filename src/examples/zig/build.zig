@@ -6,7 +6,7 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const showdown = b.option(bool, "showdown", "Enable Pokémon Showdown compatibility mode");
-    const trace = b.option(bool, "trace", "Enable trace logs");
+    const log = b.option(bool, "log", "Enable protocol message logging");
 
     const exe = b.addExecutable(.{
         .name = "example",
@@ -14,7 +14,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .target = target,
     });
-    exe.addModule("pkmn", pkmn.module(b, .{ .showdown = showdown, .trace = trace }));
+    exe.addModule("pkmn", pkmn.module(b, .{ .showdown = showdown, .log = log }));
     b.installArtifact(exe);
 
     const run_cmd = b.addRunArtifact(exe);
