@@ -895,7 +895,7 @@ fn doMove(
             move.effect == .OHKO and side.active.stats.spe < foe.active.stats.spe;
         if (ohko) {
             try log.immune(foe_ident, .OHKO);
-        } else if (immune and !invulnerable) {
+        } else if (immune and !invulnerable and (!showdown or move.effect != .Binding)) {
             try log.immune(foe_ident, .None);
         } else if (mist) {
             if (!foe.active.volatiles.Substitute) try log.activate(foe_ident, .Mist);
