@@ -417,11 +417,12 @@ fn executeMove(
         return null;
     }
 
-    // Checking for SKIP_TURN only is the correct approach here, but since Pokémon Showdown
-    // overwrites the SKIP_TURN sentinel with its botched move select we need to add an
-    // additional skip boolean to track that
-    if (skip or side.last_selected_move == .SKIP_TURN) {
-        if (showdown or battle.foe(player).active.volatiles.Binding) {
+    // This is the correct place to check for SKIP_TURN and abort early, however since Pokémon
+    // Showdown overwrites the SKIP_TURN sentinel with its botched move select we need to add an
+    // additional skip boolean to accomplish the same thing in the Binding check of BeforeMove
+    if (side.last_selected_move == .SKIP_TURN) {
+        assert(!showdown);
+        if (battle.foe(player).active.volatiles.Binding) {
             try log.cant(battle.active(player), .Bound);
         }
         return null;
@@ -469,7 +470,7 @@ fn executeMove(
 
     var skip_can = false;
     var skip_pp = false;
-    switch (try beforeMove(battle, player, from, residual, log)) {
+    switch (try beforeMove(battle, player, skip, from, residual, log)) {
         .done => return null,
         .skip_can => skip_can = true,
         .skip_pp => skip_pp = true,
@@ -489,6 +490,7 @@ const BeforeMove = enum { done, skip_can, skip_pp, ok, err };
 fn beforeMove(
     battle: anytype,
     player: Player,
+    skip: bool,
     from: ?Move,
     residual: *bool,
     log: anytype,
@@ -520,7 +522,7 @@ fn beforeMove(
         return .done;
     }
 
-    if (foe.active.volatiles.Binding) {
+    if (skip or foe.active.volatiles.Binding) {
         try log.cant(ident, .Bound);
         return .done;
     }
