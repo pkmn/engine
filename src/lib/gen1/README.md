@@ -605,7 +605,9 @@ the correct control flow):
   still gets a turn under the [trapping sleep
   glitch](https://glitchcity.wiki/Trapping_move_and_sleep_glitch), Wrap does 0 damage against
   Ghost-type Pokémon instead of properly respecting immunity, and binding effects are handled in the
-  wrong order in the code.
+  wrong order in the code which results in either out of order messaging or, more consequentially,
+  Pokémon using Rage/Bide or Thrashing/Charging moves being incorrectly forced to skip a turn when
+  the Pokémon using the Binding move switches.
 - **Mimic**: Pokémon Showdown checks that the user of Mimic has Mimic in one of their move slots,
   which means Mimic legally called via Metronome or Mirror Move will only work if the user also has
   Mimic (and the moved mimicked by Mimic called via Metronome / Mirror Move will erroneously

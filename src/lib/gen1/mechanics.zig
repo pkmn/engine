@@ -132,14 +132,20 @@ fn selectMove(
     if (volatiles.Recharging) return null;
     if (volatiles.Rage) {
         from.* = side.last_used_move;
-        if (showdown) saveMove(battle, player, null);
+        if (showdown) {
+            if (battle.foe(player).active.volatiles.Binding) skip_turn.* = true;
+            saveMove(battle, player, null);
+        }
         return null;
     }
     // Pokémon Showdown removes Flinch at the end-of-turn in its residual handler
     if (!showdown) volatiles.Flinch = false;
     if (volatiles.Thrashing or volatiles.Charging) {
         from.* = side.last_selected_move;
-        if (showdown) saveMove(battle, player, null);
+        if (showdown) {
+            if (battle.foe(player).active.volatiles.Binding) skip_turn.* = true;
+            saveMove(battle, player, null);
+        }
         return null;
     }
 
@@ -149,7 +155,10 @@ fn selectMove(
     // pre-move select
     if (Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP) or volatiles.Bide) {
         assert(showdown or choice.data == 0);
-        if (showdown) saveMove(battle, player, choice);
+        if (showdown) {
+            if (volatiles.Bide and battle.foe(player).active.volatiles.Binding) skip_turn.* = true;
+            saveMove(battle, player, choice);
+        }
         return null;
     }
     if (volatiles.Binding) {

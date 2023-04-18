@@ -1,0 +1,26 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[63747,23970,38713,12125]}
+>player p1 {"name":"Bot 1","team":"Kabuto|||None|confusion,fly,swordsdance,whirlwind||184,194,197,60,60,68|N|10,10,24,17,17,3||88|156]Hitmonchan|||None|substitute,pound,haze,lick||67,94,169,4,4,219|N|14,18,7,24,24,7||65|120]Goldeen|||None|agility,firepunch,megadrain,submission||222,78,55,239,239,201|N|0,24,1,16,16,4||54|157]Horsea|||None|psychic,skyattack,selfdestruct,quickattack||151,150,209,14,14,199|N|11,15,1,3,3,11||59|161]Flareon|||None|barrage,growth,disable,bubblebeam||185,92,187,152,152,185|N|5,20,,10,10,13||79|110]Kangaskhan|||None|thundershock,poisongas,kinesis,thunderpunch||154,82,27,160,160,10|N|0,4,20,1,1,4||68|138"}
+>player p2 {"name":"Bot 2","team":"Bellsprout|||None|dreameater,earthquake,slam,jumpkick||8,122,243,243,243,152|N|0,28,29,17,17,13||81|46]Charizard|||None|defensecurl,sleeppowder,stringshot,fireblast||178,68,87,94,94,187|N|6,25,15,1,1,22||60|15]Nidoran-F|||None|leechseed,bind,psybeam,visegrip||226,63,90,128,128,11|N|0,0,5,16,16,25||82|171]Kingler|||None|teleport,highjumpkick,aurorabeam,seismictoss||32,94,26,122,122,174|N|9,27,12,14,14,17||53|252]Persian|||None|smokescreen,leer,icepunch,acidarmor||77,171,180,106,106,14|N|4,13,23,12,12,4||84|84]Kabutops|||None|sludge,flamethrower,recover,toxic||167,16,203,252,252,251|N|13,10,,10,10,28||70|36"}
+>p1 move confusion
+>p2 move dreameater
+>p1 switch 2
+>p2 move earthquake
+>p1 switch 2
+>p2 switch 2
+>p1 move fly
+>p2 move defensecurl
+>p1 move fly
+>p2 switch 2
+>p2 switch 3
+>p1 switch 3
+>p2 move leechseed
+>p1 move agility
+>p2 move bind
+>p1 switch 4
+>p2 move psybeam
+>p1 move psychic
+>p2 move visegrip
+>p1 move skyattack
+>p2 move bind
+>p1 move skyattack
+>p2 switch 4

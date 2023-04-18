@@ -1,0 +1,17 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[18689,30102,35728,20553]}
+>player p1 {"name":"Bot 1","team":"Mankey|||None|minimize,fly,softboiled,poisongas||185,250,135,122,122,23|N|11,11,25,26,26,3||71|146]Rhyhorn|||None|superfang,bubble,bind,solarbeam||32,230,75,99,99,167|N|8,6,20,25,25,25||89|215]Zapdos|||None|mimic,smog,recover,rockslide||60,218,101,248,248,81|N|7,25,23,22,22,11||67|182]Poliwhirl|||None|megakick,barrier,skyattack,megapunch||228,158,97,78,78,133|N|4,13,,5,5,1||90|217]Omastar|||None|watergun,seismictoss,stomp,thunderwave||222,74,154,133,133,176|N|5,13,10,14,14,13||55|120]Kakuna|||None|lovelykiss,clamp,mist,sleeppowder||237,76,168,91,91,144|N|8,30,25,0,0,29||58|158"}
+>player p2 {"name":"Bot 2","team":"Arcanine|||None|growth,twineedle,withdraw,rage||78,61,172,229,229,13|N|1,17,1,14,14,16||76|11]Clefairy|||None|triattack,pinmissile,acidarmor,flamethrower||187,153,82,244,244,195|N|4,17,3,29,29,24||79|32]Jynx|||None|fissure,jumpkick,eggbomb,flash||216,108,11,17,17,202|N|6,24,14,5,5,7||74|28]Nidoran-M|||None|blizzard,roar,psychic,growl||111,69,81,63,63,249|N|8,3,5,5,5,12||64|49]Gastly|||None|icebeam,skullbash,cometpunch,rest||75,58,168,36,36,151|N|11,18,12,27,27,19||59|240]Cloyster|||None|hypnosis,confuseray,fireblast,razorwind||252,6,19,132,132,220|N|12,15,,25,25,16||65|29"}
+>p1 move minimize
+>p2 move growth
+>p1 switch 2
+>p2 move twineedle
+>p1 move superfang
+>p2 move withdraw
+>p1 move bubble
+>p2 move rage
+>p1 move bind
+>p2 move rage
+>p1 move bind
+>p2 move rage
+>p1 switch 2
+>p2 move rage
