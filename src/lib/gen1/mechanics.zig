@@ -686,8 +686,11 @@ fn beforeMove(
             side.last_selected_move,
         );
         if (showdown or battle.last_damage != 0) {
+            const sub = showdown and foe.active.volatiles.Substitute;
             _ = try applyDamage(battle, player.foe(), player.foe(), .None, log);
-            try buildRage(battle, player.foe(), log);
+            if (battle.foe(player).stored().hp > 0 and !sub) {
+                try buildRage(battle, player.foe(), log);
+            }
         }
         return .done;
     }
@@ -1198,8 +1201,9 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
     // Pokémon Showdown calls checkHit before Counter
     if (!showdown and !try checkHit(battle, player, move, log)) return null;
 
+    const sub = showdown and foe.active.volatiles.Substitute;
     _ = try applyDamage(battle, player.foe(), player.foe(), .None, log);
-    try buildRage(battle, player.foe(), log);
+    if (battle.foe(player).stored().hp > 0 and !sub) try buildRage(battle, player.foe(), log);
     return null;
 }
 
