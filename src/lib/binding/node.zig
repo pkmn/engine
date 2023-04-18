@@ -26,6 +26,7 @@ fn options(env: c.napi_env) c.napi_value {
         Property.init("showdown", .{ .value = Boolean.init(env, pkmn.options.showdown) }),
         Property.init("log", .{ .value = Boolean.init(env, pkmn.options.log) }),
         Property.init("chance", .{ .value = Boolean.init(env, pkmn.options.chance) }),
+        Property.init("calc", .{ .value = Boolean.init(env, pkmn.options.calc) }),
     };
     assert(c.napi_define_properties(env, object, properties.len, &properties) == c.napi_ok);
     return object;

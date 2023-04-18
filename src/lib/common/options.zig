@@ -5,6 +5,7 @@ pub const Options = struct {
     showdown: ?bool = null,
     log: ?bool = null,
     chance: ?bool = null,
+    calc: ?bool = null,
     advance: ?bool = null,
     ebc: ?bool = null,
     internal: ?bool = null,
@@ -16,6 +17,8 @@ pub const showdown = get("showdown", false);
 pub const log = get("log", false);
 /// Whether or not update probability tracking is enabled.
 pub const chance = get("chance", false);
+/// Whether or not damage calculator support is enabled.
+pub const calc = get("calc", false);
 
 pub const advance = get("advance", true);
 pub const ebc = get("ebc", true);

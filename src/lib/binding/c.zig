@@ -5,10 +5,16 @@ const assert = std.debug.assert;
 
 const ERROR: u8 = 0b1100;
 
-export const PKMN_OPTIONS: extern struct { showdown: bool, log: bool, chance: bool } = .{
+export const PKMN_OPTIONS: extern struct {
+    showdown: bool,
+    log: bool,
+    chance: bool,
+    calc: bool,
+} = .{
     .showdown = pkmn.options.showdown,
     .log = pkmn.options.log,
     .chance = pkmn.options.chance,
+    .calc = pkmn.options.calc,
 };
 
 export const PKMN_MAX_CHOICES = pkmn.MAX_CHOICES;

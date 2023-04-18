@@ -1,7 +1,12 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
-pub const Options = struct { showdown: ?bool = null, log: ?bool = null, chance: ?bool = null };
+pub const Options = struct {
+    showdown: ?bool = null,
+    log: ?bool = null,
+    chance: ?bool = null,
+    calc: ?bool = null,
+};
 
 pub fn module(b: *std.Build, options: Options) *std.Build.Module {
     const dirname = comptime std.fs.path.dirname(@src().file) orelse ".";
@@ -9,6 +14,7 @@ pub fn module(b: *std.Build, options: Options) *std.Build.Module {
     build_options.addOption(?bool, "showdown", options.showdown);
     build_options.addOption(?bool, "log", options.log);
     build_options.addOption(?bool, "chance", options.chance);
+    build_options.addOption(?bool, "calc", options.calc);
     return b.createModule(.{
         .source_file = .{ .path = dirname ++ "/src/lib/pkmn.zig" },
         .dependencies = &.{.{ .name = "build_options", .module = build_options.createModule() }},
@@ -44,11 +50,13 @@ pub fn build(b: *std.Build) !void {
         b.option(bool, "showdown", "Enable Pokémon Showdown compatibility mode") orelse false;
     const log = b.option(bool, "log", "Enable protocol message logging") orelse false;
     const chance = b.option(bool, "chance", "Enable update probability tracking") orelse false;
+    const calc = b.option(bool, "calc", "Enable damage calculator support") orelse false;
 
     const options = b.addOptions();
     options.addOption(?bool, "showdown", showdown);
     options.addOption(?bool, "log", log);
     options.addOption(?bool, "chance", chance);
+    options.addOption(?bool, "calc", calc);
 
     const name = if (showdown) "pkmn-showdown" else "pkmn";
 
@@ -188,6 +196,7 @@ pub fn build(b: *std.Build) !void {
             .showdown = showdown,
             .log = log,
             .chance = chance,
+            .calc = calc,
         },
         .general = config,
         .tool = .{
