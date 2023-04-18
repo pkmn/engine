@@ -1,0 +1,13 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[48324,62968,932,49349]}
+>player p1 {"name":"Bot 1","team":"Parasect|||None|reflect,confusion,bide,supersonic||215,90,165,76,76,15|N|6,21,7,9,9,10||53|225]Jolteon|||None|wrap,tailwhip,thunderpunch,hornattack||217,32,44,49,49,183|N|4,21,18,0,0,17||60|127]Koffing|||None|teleport,defensecurl,splash,stunspore||34,171,67,106,106,53|N|6,0,3,9,9,2||82|113]Machamp|||None|constrict,dizzypunch,lightscreen,dreameater||143,165,206,159,159,10|N|9,11,20,11,11,28||99|204]Pidgeot|||None|psywave,hypnosis,conversion,acidarmor||9,197,215,39,39,103|N|8,23,29,20,20,24||58|55]Raticate|||None|firespin,explosion,lick,flamethrower||121,131,57,2,2,45|N|3,13,21,18,18,23||65|146"}
+>player p2 {"name":"Bot 2","team":"Bellsprout|||None|mimic,surf,lovelykiss,solarbeam||112,34,78,250,250,199|N|11,3,1,11,11,30||88|190]Pidgeotto|||None|rage,metronome,ember,doubleteam||102,125,76,198,198,30|N|9,26,24,6,6,28||53|113]Electabuzz|||None|confuseray,bodyslam,poisongas,icebeam||60,33,200,5,5,200|N|11,15,9,10,10,23||96|215]Hitmonlee|||None|twineedle,swordsdance,rest,sludge||78,13,99,165,165,78|N|5,5,15,26,26,0||86|136]Blastoise|||None|screech,rockslide,dig,scratch||18,148,40,11,11,20|N|13,14,,6,6,25||83|249]Arbok|||None|doubleedge,sonicboom,leer,rockslide||234,10,137,191,191,35|N|13,2,3,7,7,24||74|22"}
+>p1 move reflect
+>p2 switch 2
+>p1 move confusion
+>p2 move rage
+>p1 switch 2
+>p2 move rage
+>p1 move wrap
+>p2 move rage
+>p1 move wrap
+>p2 move rage

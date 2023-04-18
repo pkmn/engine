@@ -1,0 +1,27 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[60822,18697,14203,32398]}
+>player p1 {"name":"Bot 1","team":"Mewtwo|||None|cut,surf,rage,smokescreen||225,24,237,237,237,33|N|1,28,8,11,11,28||97|65]Kabuto|||None|furyswipes,reflect,poisongas,firepunch||172,221,110,237,237,210|N|0,29,12,16,16,4||68|45]Cloyster|||None|crabhammer,stringshot,barrage,selfdestruct||86,5,238,173,173,232|N|14,11,15,25,25,14||75|100]Fearow|||None|bodyslam,bubblebeam,roar,wingattack||68,10,132,102,102,200|N|7,20,30,,,27||73|20]Pikachu|||None|dizzypunch,sing,meditate,seismictoss||13,186,198,189,189,246|N|12,10,15,8,8,13||62|79]Porygon|||None|defensecurl,fly,superfang,rest||40,199,240,234,234,219|N|15,7,22,7,7,19||61|209"}
+>player p2 {"name":"Bot 2","team":"Weepinbell|||None|growl,ember,leechseed,selfdestruct||128,164,127,214,214,183|N|14,27,18,1,1,23||51|141]Machop|||None|swordsdance,strength,whirlwind,twineedle||139,164,43,217,217,60|N|11,30,4,22,22,2||90|0]Pidgeotto|||None|rockthrow,splash,constrict,agility||32,245,119,57,57,41|N|9,11,21,22,22,8||51|207]Poliwag|||None|dig,stringshot,roar,nightshade||36,202,210,189,189,114|N|15,7,15,27,27,19||75|196]Arcanine|||None|fissure,softboiled,counter,acid||221,177,249,123,123,237|N|14,14,27,21,21,14||50|26]Magnemite|||None|barrier,toxic,wrap,triattack||18,112,132,195,195,41|N|2,1,24,21,21,22||92|57"}
+>p1 move cut
+>p2 move growl
+>p1 move surf
+>p2 move ember
+>p2 switch 2
+>p1 move rage
+>p2 move whirlwind
+>p1 move rage
+>p2 move whirlwind
+>p1 move rage
+>p2 switch 3
+>p1 move rage
+>p2 move agility
+>p1 move rage
+>p2 move splash
+>p2 switch 4
+>p1 move rage
+>p2 move stringshot
+>p1 move rage
+>p2 switch 6
+>p1 move rage
+>p2 switch 5
+>p1 move rage
+>p2 move counter

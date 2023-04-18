@@ -661,6 +661,7 @@ fn beforeMove(
         );
         if (showdown or battle.last_damage != 0) {
             _ = try applyDamage(battle, player.foe(), player.foe(), .None, log);
+            try buildRage(battle, player.foe(), log);
         }
         return .done;
     }
@@ -1171,6 +1172,7 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
     if (!showdown and !try checkHit(battle, player, move, log)) return null;
 
     _ = try applyDamage(battle, player.foe(), player.foe(), .None, log);
+    try buildRage(battle, player.foe(), log);
     return null;
 }
 
