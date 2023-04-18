@@ -350,27 +350,43 @@ fn doTurn(
 ) !?Result {
     assert(player_choice.type != .Pass);
 
-    var res = true;
+    var residual = true;
     var replace = battle.side(player).stored().hp == 0;
-    if (try executeMove(battle, player, player_choice, player_skip, player_from, &res, log)) |r|
-        return r;
+    if (try executeMove(
+        battle,
+        player,
+        player_choice,
+        showdown and foe_choice.type == .Switch,
+        player_skip,
+        player_from,
+        &residual,
+        log,
+    )) |r| return r;
     if (!replace) {
         if (player_choice.type != .Switch) {
             if (try checkFaint(battle, foe_player, log)) |r| return r;
         }
-        if (res) try handleResidual(battle, player, log);
+        if (residual) try handleResidual(battle, player, log);
         if (try checkFaint(battle, player, log)) |r| return r;
     } else if (foe_choice.type == .Pass) return null;
 
-    res = true;
+    residual = true;
     replace = battle.side(foe_player).stored().hp == 0;
-    if (try executeMove(battle, foe_player, foe_choice, foe_skip, foe_from, &res, log)) |r|
-        return r;
+    if (try executeMove(
+        battle,
+        foe_player,
+        foe_choice,
+        showdown and player_choice.type == .Switch,
+        foe_skip,
+        foe_from,
+        &residual,
+        log,
+    )) |r| return r;
     if (!replace) {
         if (foe_choice.type != .Switch) {
             if (try checkFaint(battle, player, log)) |r| return r;
         }
-        if (res) try handleResidual(battle, foe_player, log);
+        if (residual) try handleResidual(battle, foe_player, log);
         if (try checkFaint(battle, foe_player, log)) |r| return r;
     }
 
@@ -388,6 +404,7 @@ fn executeMove(
     battle: anytype,
     player: Player,
     choice: Choice,
+    rewrap: bool,
     skip: bool,
     from: ?Move,
     residual: *bool,
@@ -464,7 +481,7 @@ fn executeMove(
         return null;
     }
 
-    return doMove(battle, player, mslot, auto, residual, log);
+    return doMove(battle, player, mslot, rewrap, auto, residual, log);
 }
 
 const BeforeMove = enum { done, skip_can, skip_pp, ok, err };
@@ -769,6 +786,7 @@ fn doMove(
     battle: anytype,
     player: Player,
     mslot: u4,
+    rewrap: bool,
     auto: bool,
     residual: *bool,
     log: anytype,
@@ -860,9 +878,9 @@ fn doMove(
 
     if (!showdown or !miss) {
         if (move.effect == .MirrorMove) {
-            return mirrorMove(battle, player, mslot, auto, residual, log);
+            return mirrorMove(battle, player, mslot, rewrap, auto, residual, log);
         } else if (move.effect == .Metronome) {
-            return metronome(battle, player, mslot, auto, residual, log);
+            return metronome(battle, player, mslot, rewrap, auto, residual, log);
         } else if (move.effect.onEnd()) {
             try onEnd(battle, player, move, log);
             return null;
@@ -942,7 +960,7 @@ fn doMove(
         try log.hitcount(battle.active(player.foe()), hit);
     } else if (showdown) {
         // This should be handled much earlier but Pokémon Showdown does it here... ¯\_(ツ)_/¯
-        if (move.effect == .Binding) {
+        if (move.effect == .Binding and (foe.stored().hp > 0 or !rewrap)) {
             Effects.binding(battle, player);
             if (immune) {
                 battle.last_damage = 0;
@@ -1225,6 +1243,7 @@ fn mirrorMove(
     battle: anytype,
     player: Player,
     mslot: u4,
+    rewrap: bool,
     auto: bool,
     residual: *bool,
     log: anytype,
@@ -1242,13 +1261,14 @@ fn mirrorMove(
     incrementPP(side, mslot);
 
     if (!try canMove(battle, player, mslot, auto, false, .MirrorMove, residual, log)) return null;
-    return doMove(battle, player, mslot, auto, residual, log);
+    return doMove(battle, player, mslot, rewrap, auto, residual, log);
 }
 
 fn metronome(
     battle: anytype,
     player: Player,
     mslot: u4,
+    rewrap: bool,
     auto: bool,
     residual: *bool,
     log: anytype,
@@ -1259,7 +1279,7 @@ fn metronome(
     incrementPP(side, mslot);
 
     if (!try canMove(battle, player, mslot, auto, false, .Metronome, residual, log)) return null;
-    return doMove(battle, player, mslot, auto, residual, log);
+    return doMove(battle, player, mslot, rewrap, auto, residual, log);
 }
 
 fn checkHit(battle: anytype, player: Player, move: Move.Data, log: anytype) !bool {
