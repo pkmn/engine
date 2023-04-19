@@ -524,6 +524,12 @@ fn beforeMove(
         return .done;
     }
 
+    if (showdown and volatiles.Recharging) {
+        volatiles.Recharging = false;
+        try log.cant(ident, .Recharge);
+        return .done;
+    }
+
     if (skip or foe.active.volatiles.Binding) {
         try log.cant(ident, .Bound);
         return .done;
@@ -535,7 +541,7 @@ fn beforeMove(
         return .done;
     }
 
-    if (volatiles.Recharging) {
+    if (!showdown and volatiles.Recharging) {
         volatiles.Recharging = false;
         try log.cant(ident, .Recharge);
         return .done;
