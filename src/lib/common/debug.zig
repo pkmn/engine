@@ -58,6 +58,7 @@ fn inspect(value: anytype) void {
                     @compileError(err);
                 },
             },
+            .Optional => stderr.print("{?}", .{value}) catch return,
             else => stderr.print("{}", .{value}) catch return,
         }
     }
