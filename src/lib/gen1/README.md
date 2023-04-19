@@ -619,7 +619,9 @@ the correct control flow):
 - **Mirror Move**: Binding moves misbehave when used via Mirror Move (though Pokémon Showdown has
   its own weird behavior and does not implement the [partial trapping move Mirror Move
   glitch](https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch) that exists
-  on the cartridge).
+  on the cartridge). Additionally, Pokémon Showdown sets the last used move every turn a Pokémon
+  is Thrashing instead of just on the turn it is actually selected meaning Mirror Move will
+  sometimes successfully mirror a Thrashing move when it should fail.
 - **Metronome**: In addition to the issues with binding moves, Metronome and Mirror Move cannot
   mutually call each other more than 3 times in a row without causing the Pokémon Showdown simulator
   to crash due to defensive safety checks that do not exist on the cartridge.

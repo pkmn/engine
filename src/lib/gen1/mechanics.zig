@@ -680,8 +680,13 @@ fn beforeMove(
             try log.start(battle.active(player), .ConfusionSilent);
         }
         try log.move(ident, side.last_selected_move, battle.active(player.foe()), from);
-        if (showdown and handleThrashing(battle, active)) {
-            try log.start(battle.active(player), .ConfusionSilent);
+        if (showdown) {
+            // This shouldn't actually set last_used_move, but Pokémon Showdown sets last
+            // used in useMove and doesn't have the notion of skipping canMove semantics
+            side.last_used_move = side.last_selected_move;
+            if (handleThrashing(battle, active)) {
+                try log.start(battle.active(player), .ConfusionSilent);
+            }
         }
         return .skip_can;
     }
