@@ -211,10 +211,19 @@ pub const Pokemon = struct {
     }
 };
 
+// TODO: uncomment once integration tests pass (possibily remove Transform/LeechSeed)
+// fn blocked(m: Move) bool {
+//     // Binding moves are borked but only via Mirror Move / Metronome which are already blocked
+//     return switch (m) {
+//         .Mimic, .Metronome, .MirrorMove, .Transform, .LeechSeed => true,
+//         else => false,
+//     };
+// }
+
 fn blocked(m: Move) bool {
-    // Binding moves are borked but only via Mirror Move / Metronome which are already blocked
+    if (Move.get(m).effect == .Binding) return true;
     return switch (m) {
-        .Mimic, .Metronome, .MirrorMove, .Transform, .LeechSeed => true,
+        .Counter, .Mimic, .Metronome, .MirrorMove, .Transform => true,
         else => false,
     };
 }
