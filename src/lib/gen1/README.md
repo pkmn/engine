@@ -607,7 +607,11 @@ the correct control flow):
   Ghost-type Pokémon instead of properly respecting immunity, and binding effects are handled in the
   wrong order in the code which results in either out of order messaging or, more consequentially,
   Pokémon using Rage/Bide or Thrashing/Charging moves being incorrectly forced to skip a turn when
-  the Pokémon using the Binding move switches.
+  the Pokémon using the Binding move switches. The `partialtrappinglock` variable also separately
+  tracks its original damage in order to be able to correctly inflict damage on subsequent turns,
+  however, the pkmn engine isn't able to store this state and so must use the battle's last damage
+  like the cartridge which results in errors from Leech Seed overwriting the last damage on Pokémon
+  Showdown.
 - **Mimic**: Pokémon Showdown checks that the user of Mimic has Mimic in one of their move slots,
   which means Mimic legally called via Metronome or Mirror Move will only work if the user also has
   Mimic (and the moved mimicked by Mimic called via Metronome / Mirror Move will erroneously

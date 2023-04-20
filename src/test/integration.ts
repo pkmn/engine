@@ -473,10 +473,22 @@ function validate(prng: PRNG, moves: Set<ID>, used: RunnerOptions['usage']) {
     used.move(prng.sample(['transform', 'disable']) as ID);
     return true;
   }
+  // Pokémon Showdown separately saves Binding move damage instead of using the
+  // battle's last damage, which only matters because Leech Seed erroneously
+  // overwrites last damage on Pokémon Showdown (which also tramples the damage
+  // in the engine).
+  const binding = BINDING.filter(m => moves.has(m));
+  if (moves.has('leechseed' as ID) && binding.length) {
+    if (prng.randomChance(1, binding.length + 1)) {
+      for (const m of binding) used.move(m);
+    } else {
+      used.move('leechseed' as ID);
+    }
+    return true;
+  }
   // Mirror Move is problematic in battles involving Transform or binding moves
   // - we try to avoid always simply punting on Mirror Move and being fair
   // about which move gets a chance to be tested
-  const binding = BINDING.filter(m => moves.has(m));
   if (moves.has('mirrormove' as ID)) {
     if (transform && binding.length) {
       used.move('mirrormove' as ID);
