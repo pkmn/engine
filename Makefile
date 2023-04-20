@@ -143,6 +143,7 @@ opt := $(if $(filter true,$(showdown)),-Dshowdown,)
 patch:
 	sed -i '' 's|"@pkmn/sim":.*",|"@pkmn/sim": "file:../ps/sim",|g' package.json
 	sed -i '' 's|sim/battle-queue.ts:405:15|sim/battle-queue.ts:408:15|g' src/test/showdown.ts
+	sed -i '' 's|/.*@pkmn\/sim\//|/.*ps\/sim\//|g' src/test/showdown.ts
 	npm install --install=links=false
 
 .PHONY: t
