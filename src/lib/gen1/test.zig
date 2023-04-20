@@ -5485,22 +5485,8 @@ test "Transform effect" {
     try t.log.expected.fail(P2.ident(1), .None);
     try t.log.expected.turn(9);
 
-    // Pokémon Showdown incorrectly retrains the Transform target DVs
     try expectEqual(Result.Default, try t.update(swtch(2), move(1)));
-    if (showdown) {
-        inline for (@typeInfo(@TypeOf(stats)).Struct.fields) |field| {
-            if (!std.mem.eql(u8, field.name, "hp")) {
-                try expectEqual(
-                    // BUG: @field(stats, field.name) + 30,
-                    @field(stats, field.name),
-                    @field(t.actual.p1.get(2).stats, field.name),
-                );
-            }
-        }
-    } else {
-        try expectEqual(stats, t.actual.p1.get(2).stats);
-    }
-
+    try expectEqual(stats, t.actual.p1.get(2).stats);
     try t.verify();
 }
 

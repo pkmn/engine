@@ -490,9 +490,7 @@ the pkmn engine, but the following moves have their broken behavior preserved in
 - **Counter**: On Pokémon Showdown choices made while sleeping (which should not have been
   registered) can erroneously cause Counter to trigger Desync Clause Mod behavior.
 - **Leech Seed**: Leech Seed fails to heal its source side if a seeded target faints due to
-  recoil/crash damage on Pokémon Showdown. Pokémon Showdown also updates the battle's last damage
-  field with the uncapped Leech Seed damage if the residual damage is applied which has consequences
-  for Bide and Counter.
+  recoil/crash damage on Pokémon Showdown.
 - **Pay Day**: Pay Day should still scatter coins if it hits (but doesn't break) and opponent's
   Substitute but doesn't on Pokémon Showdown.
 - **Flinch**: Flinching does not get cleared during move selection on Pokémon Showdown and is
@@ -607,11 +605,7 @@ the correct control flow):
   Ghost-type Pokémon instead of properly respecting immunity, and binding effects are handled in the
   wrong order in the code which results in either out of order messaging or, more consequentially,
   Pokémon using Rage/Bide or Thrashing/Charging moves being incorrectly forced to skip a turn when
-  the Pokémon using the Binding move switches. The `partialtrappinglock` variable also separately
-  tracks its original damage in order to be able to correctly inflict damage on subsequent turns,
-  however, the pkmn engine isn't able to store this state and so must use the battle's last damage
-  like the cartridge which results in errors from Leech Seed overwriting the last damage on Pokémon
-  Showdown.
+  the Pokémon using the Binding move switches.
 - **Mimic**: Pokémon Showdown checks that the user of Mimic has Mimic in one of their move slots,
   which means Mimic legally called via Metronome or Mirror Move will only work if the user also has
   Mimic (and the moved mimicked by Mimic called via Metronome / Mirror Move will erroneously
@@ -629,13 +623,11 @@ the correct control flow):
 - **Metronome**: In addition to the issues with binding moves, Metronome and Mirror Move cannot
   mutually call each other more than 3 times in a row without causing the Pokémon Showdown simulator
   to crash due to defensive safety checks that do not exist on the cartridge.
-- **Transform**: Pokémon Showdown permanently copies the DVs of Transform's target and recomputes
-  stats every switch, corrupting the Transform user's stats. Transform also screws up the effect of
-  Disable, because on Pokémon Showdown, Disable prevents moves of a given *name* from being used
-  (e.g. "Water Gun") as opposed to moves in a specific *slot* (e.g. the 2nd move slot), and a
-  Pokémon's moves can change after Transform (this is not an issue with Disable + Mimic because
-  Mimic happens to replace the same slot). Furthermore, transforming and then using Mirror Move /
-  Metronome can result in [glitchy behavior and
+- **Transform**: Transform screws up the effect of Disable, because on Pokémon Showdown, Disable
+  prevents moves of a given *name* from being used (e.g. "Water Gun") as opposed to moves in a
+  specific *slot* (e.g. the 2nd move slot), and a Pokémon's moves can change after Transform (this
+  is not an issue with Disable + Mimic because Mimic happens to replace the same slot). Furthermore,
+  transforming and then using Mirror Move / Metronome can result in [glitchy behavior and
   softlocks](https://pkmn.cc/bulba/Transform_glitches#Transform_.2B_Mirror_Move.2FMetronome_PP_error)
   which Pokémon Showdown does not implement.
 

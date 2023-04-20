@@ -13,8 +13,8 @@ import * as engine from '../pkg';
 import {newSeed, toBigInt} from './integration';
 import {Choices, formatFor, patch} from './showdown';
 
-// TODO: uncomment once integration tests pass (possibily remove transform/leechseed)
-// const BLOCKLIST = ['mimic', 'metronome', 'mirrormove', 'transform', 'leechseed'] as ID[];
+// TODO: uncomment once integration tests pass
+// const BLOCKLIST = ['mimic', 'metronome', 'mirrormove'] as ID[];
 const BLOCKLIST = [
   'bind', 'wrap', 'counter', 'firespin', 'mimic',
   'metronome', 'mirrormove', 'clamp', 'transform',

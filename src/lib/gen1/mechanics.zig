@@ -524,24 +524,20 @@ fn beforeMove(
         return .done;
     }
 
-    if (showdown and volatiles.Recharging) {
-        volatiles.Recharging = false;
-        try log.cant(ident, .Recharge);
-        return .done;
-    }
-
-    if (!showdown and foe.active.volatiles.Binding) {
+    if (skip or foe.active.volatiles.Binding) {
         try log.cant(ident, .Bound);
         return .done;
     }
 
-    if (!showdown and volatiles.Flinch) {
-        volatiles.Flinch = false;
+    if (volatiles.Flinch) {
+        // Pokémon Showdown doesn't clear Flinch until its imaginary "residual" phase, meaning
+        // Pokémon can sometimes flinch multiple times from the same original hit
+        if (!showdown) volatiles.Flinch = false;
         try log.cant(ident, .Flinch);
         return .done;
     }
 
-    if (!showdown and volatiles.Recharging) {
+    if (volatiles.Recharging) {
         volatiles.Recharging = false;
         try log.cant(ident, .Recharge);
         return .done;
@@ -556,19 +552,6 @@ fn beforeMove(
     }
     // Pokémon Showdown's disable condition has a single onBeforeMove handler
     if (showdown and try disabled(side, ident, log)) return .done;
-
-    if (showdown and skip or foe.active.volatiles.Binding) {
-        try log.cant(ident, .Bound);
-        return .done;
-    }
-
-    // Pokémon Showdown checks for Flinch *after* instead of before... and doesn't clear Flinch
-    // until its imaginary "residual" phase, meaning Pokémon can sometimes flinch multiple times
-    // from the same original hit
-    if (showdown and volatiles.Flinch) {
-        try log.cant(ident, .Flinch);
-        return .done;
-    }
 
     // This can only happen if a Pokémon started the battle frozen/sleeping and was thawed/woken
     // before the side had a selected a move - we simply need to assume this leads to a desync
@@ -1510,11 +1493,7 @@ fn handleResidual(battle: anytype, player: Player, log: anytype) !void {
         stored.hp -= amount;
 
         // As above, Pokémon Showdown uses damageOf but its not relevant
-        if (amount > 0) {
-            try log.damage(ident, stored, .LeechSeed);
-            // Pokémon Showdown erroneously updates last damage with uncapped Leech Seed damage
-            if (showdown) battle.last_damage = damage;
-        }
+        if (amount > 0) try log.damage(ident, stored, .LeechSeed);
 
         const before = foe_stored.hp;
         // Uncapped damage is added back to the foe

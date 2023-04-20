@@ -484,13 +484,6 @@ const BINDING = ['bind', 'wrap', 'firespin', 'clamp'] as ID[];
 // get stuck in a loop continually generating teams with the same issues.
 function validate(prng: PRNG, moves: Set<ID>, used: RunnerOptions['usage']) {
   const transform = moves.has('transform' as ID);
-  // Transform is too broken upstream to actually fix, so just always skip
-  // for the time being (the logic underneath here that checks transform is
-  // dead-code, but should be relevant if and when transform is unborked)
-  if (transform) {
-    used.move('transform' as ID);
-    return true;
-  }
   // Transform and Disable cannot be used together, so if teams have been
   // generated where both moves are present we simply choose one at random to
   // consider having been "used" and return true to retry team generation

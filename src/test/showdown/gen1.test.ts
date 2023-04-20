@@ -37,7 +37,7 @@ const CFZ = (n: number) =>
 const CFZ_CAN = {key: 'data/mods/gen1/conditions.ts:146:14', value: ranged(128, 256) - 1};
 const CFZ_CANT = {...CFZ_CAN, value: CFZ_CAN.value + 1};
 const THRASH = (n: 3 | 4) =>
-  ({key: 'data/mods/gen1/conditions.ts:226:33', value: ranged(n - 2, 4 - 2) - 1});
+  ({key: 'data/mods/gen1/conditions.ts:227:33', value: ranged(n - 2, 4 - 2) - 1});
 const MIN_WRAP = {key: 'data/mods/gen1/conditions.ts:199:26', value: MIN};
 const MAX_WRAP = {...MIN_WRAP, value: MAX};
 const REWRAP = {key: 'data/mods/gen1/scripts.ts:229:38', value: MIN};
@@ -4320,10 +4320,7 @@ describe('Gen 1', () => {
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].modifiedStats).toEqual(battle.p2.pokemon[0].modifiedStats);
 
-    // Pokémon Showdown incorrectly retrains the Transform target DVs
     battle.makeChoices('switch 2', 'move 1');
-    // expect(battle.p1.pokemon[1].modifiedStats).toEqual(stats);
-    for (const stat in stats) stats[stat as keyof typeof stats]! += 30;
     expect(battle.p1.pokemon[1].modifiedStats).toEqual(stats);
 
     verify(battle, [
