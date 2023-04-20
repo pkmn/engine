@@ -214,7 +214,7 @@ pub const Pokemon = struct {
 fn blocked(m: Move) bool {
     // Binding moves are borked but only via Mirror Move / Metronome which are already blocked
     return switch (m) {
-        .Mimic, .Metronome, .MirrorMove, .Transform => true,
+        .Mimic, .Metronome, .MirrorMove, .Transform, .LeechSeed => true,
         else => false,
     };
 }

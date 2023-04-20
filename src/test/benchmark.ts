@@ -13,7 +13,7 @@ import * as engine from '../pkg';
 import {newSeed, toBigInt} from './integration';
 import {Choices, formatFor, patch} from './showdown';
 
-const BLOCKLIST = ['mimic', 'metronome', 'mirrormove', 'transform'] as ID[];
+const BLOCKLIST = ['mimic', 'metronome', 'mirrormove', 'transform', 'leechseed'] as ID[];
 const ROOT = path.resolve(__dirname, '..', '..');
 
 const serialize = (seed: PRNGSeed) => toBigInt(seed).toString();
