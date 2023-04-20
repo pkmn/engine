@@ -123,7 +123,7 @@
       "files": ["src/test/benchmark*.ts"],
       "rules": {"@typescript-eslint/no-unused-vars": "off"}
     }, {
-      "files": ["src/test/*.test.ts"],
+      "files": ["src/test/*.test.ts", "src/test/regression/*.test.ts"],
       "rules": {"jest/no-standalone-expect": "off"}
     }, {
       "files": ["src/test/showdown/**"],
