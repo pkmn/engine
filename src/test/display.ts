@@ -160,8 +160,8 @@ function displayBattle(
   buf.push('<div class="sides">');
   const [p1, p2] = Array.from(battle.sides);
   const [o1, o2] = last ? Array.from(last.sides) : [undefined, undefined];
-  buf.push(displaySide(gen, showdown, !!battle.turn, 'p1', p1, o1));
-  buf.push(displaySide(gen, showdown, !!battle.turn, 'p2', p2, o2));
+  buf.push(displaySide(gen, showdown, battle, 'p1', p1, o1));
+  buf.push(displaySide(gen, showdown, battle, 'p2', p2, o2));
   buf.push('</div>');
   buf.push('</div>');
   return buf.join('');
@@ -170,14 +170,14 @@ function displayBattle(
 function displaySide(
   gen: Generation,
   showdown: boolean,
-  started: boolean,
+  battle: Data<Battle>,
   player: 'p1' | 'p2',
   side: Side,
   last?: Side,
 ) {
   const buf = [];
   buf.push(`<div class="side ${player}">`);
-  if (started) {
+  if (battle.turn) {
     buf.push('<div class="details">');
     const used = side.lastUsedMove ? gen.moves.get(side.lastUsedMove)!.name : '<em>None</em>';
     buf.push(`<div><strong>Last Used</strong><br />${used}</div>`);
@@ -199,7 +199,7 @@ function displaySide(
         }
       }
     }
-    buf.push(displayPokemon(gen, showdown, side.active, true, prev));
+    buf.push(displayPokemon(gen, showdown, battle, side.active, true, prev));
     buf.push('</div>');
   }
   buf.push('<details class="team">');
@@ -214,7 +214,7 @@ function displaySide(
   buf.push(b.join(''));
   buf.push('</div></summary>');
   for (const pokemon of side.pokemon) {
-    buf.push(displayPokemon(gen, showdown, pokemon, false));
+    buf.push(displayPokemon(gen, showdown, battle, pokemon, false));
   }
   buf.push('</details>');
   buf.push('</div>');
@@ -226,6 +226,7 @@ const STATS = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as const;
 function displayPokemon(
   gen: Generation,
   showdown: boolean,
+  battle: Data<Battle>,
   pokemon: Pokemon,
   active: boolean,
   last?: Pokemon,
@@ -332,8 +333,21 @@ function displayPokemon(
         const val = pokemon.volatiles[volatile]!;
         data = `${val.duration}${val.accuracy ? ` (${val.accuracy})` : ''}`;
       } else if (volatile === 'transform') {
-        const slot = POSITIONS[pokemon.volatiles[volatile]!.slot];
-        data = `${pokemon.volatiles[volatile]!.player}${slot}`;
+        const {player, slot} = pokemon.volatiles[volatile]!;
+        const p = +player.charAt(1) - 1;
+        let i = 0;
+        for (const side of battle.sides) {
+          if (i++ === p) {
+            i = 1;
+            for (const poke of side.pokemon) {
+              if (i++ === slot) {
+                data = `${player}${POSITIONS[poke.position - 1]}`;
+                break;
+              }
+            }
+            break;
+          }
+        }
       }
       data = (data ? `${name}: ${data}` : name).replace(' ', '&nbsp;');
       buf.push(`<span class="volatile ${type}">${data}</span>`);
