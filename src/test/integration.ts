@@ -443,7 +443,7 @@ function fixTeam(gen: Generation, options: sim.AIOptions, moves: Set<ID>) {
 // TODO: remove BLOCKLIST + possibilities override once integration tests are passing
 const BLOCKLIST = [
   'bind', 'wrap', 'counter', 'firespin', 'mimic',
-  'metronome', 'mirrormove', 'clamp', 'transform',
+  'metronome', 'mirrormove', 'clamp',
 ] as ID[];
 
 // This is a fork of the possibilities function (which is used to build up the
@@ -484,12 +484,22 @@ const BINDING = ['bind', 'wrap', 'firespin', 'clamp'] as ID[];
 // get stuck in a loop continually generating teams with the same issues.
 function validate(prng: PRNG, moves: Set<ID>, used: RunnerOptions['usage']) {
   const transform = moves.has('transform' as ID);
-  // Transform and Disable cannot be used together, so if teams have been
-  // generated where both moves are present we simply choose one at random to
-  // consider having been "used" and return true to retry team generation
-  if (transform && moves.has('disable' as ID)) {
-    used.move(prng.sample(['transform', 'disable']) as ID);
-    return true;
+  // Transform + Disable and Transform + Haze cannot be used together, so if
+  // teams have been generated where both moves are present we simply choose one
+  // at random to consider having been "used" and return true to retry
+  if (transform) {
+    const disable = moves.has('disable' as ID);
+    const haze = moves.has('haze' as ID);
+    if (disable && haze) {
+      used.move('transform' as ID);
+      return true;
+    } else if (disable) {
+      used.move(prng.sample(['transform', 'disable']) as ID);
+      return true;
+    } else if (haze) {
+      used.move(prng.sample(['transform', 'haze']) as ID);
+      return true;
+    }
   }
   // Pokémon Showdown separately saves Binding move damage instead of using the
   // battle's last damage, which only matters because Leech Seed erroneously

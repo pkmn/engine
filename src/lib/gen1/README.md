@@ -626,8 +626,11 @@ the correct control flow):
 - **Transform**: Transform screws up the effect of Disable, because on Pokémon Showdown, Disable
   prevents moves of a given *name* from being used (e.g. "Water Gun") as opposed to moves in a
   specific *slot* (e.g. the 2nd move slot), and a Pokémon's moves can change after Transform (this
-  is not an issue with Disable + Mimic because Mimic happens to replace the same slot). Furthermore,
-  transforming and then using Mirror Move / Metronome can result in [glitchy behavior and
+  is not an issue with Disable + Mimic because Mimic happens to replace the same slot). Transform
+  also has a bad interaction with Pokémon Showdown's buggy Haze implementation, as Haze on Pokémon
+  Showdown does not copy unmodified stats, leaving the Transformed Pokémon with inccorect stats.
+  Furthermore, transforming and then using Mirror Move / Metronome can result in [glitchy behavior
+  and
   softlocks](https://pkmn.cc/bulba/Transform_glitches#Transform_.2B_Mirror_Move.2FMetronome_PP_error)
   which Pokémon Showdown does not implement.
 
