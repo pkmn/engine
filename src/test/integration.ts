@@ -553,7 +553,7 @@ function problematic(battle: Battle) {
   for (const side of battle.sides) {
     for (const pokemon of side.active) {
       for (const move of pokemon.moveSlots) {
-        if (move.pp < 0) return true;
+        if (move.id === 'mimic' && move.pp <= 0) return true;
       }
     }
   }
