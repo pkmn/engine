@@ -1263,9 +1263,9 @@ fn mirrorMove(
     if (foe.last_used_move == .None or foe.last_used_move == .MirrorMove) {
         try log.fail(battle.active(player), .None);
         return null;
+    } else if (!showdown or foe.last_used_move != .Struggle) {
+        incrementPP(side, mslot);
     }
-
-    incrementPP(side, mslot);
 
     if (!try canMove(battle, player, mslot, auto, false, .MirrorMove, residual, log)) return null;
     return doMove(battle, player, mslot, rewrap, auto, residual, log);
