@@ -2026,9 +2026,9 @@ pub const Effects = struct {
                 }
                 break :has_mimic false;
             };
-            // If the foe is Invulnerable we still want to fall through to checkHit to be able to
-            // trigger |-miss| instead of |-fail|
-            if (!has_mimic and !foe.active.volatiles.Invulnerable) {
+            if (!has_mimic) {
+                // Invulnerable foes or 1/256 miss can trigger |-miss| instead of |-fail|
+                if (!try checkHit(battle, player, move, log)) return;
                 return try log.fail(battle.active(player.foe()), .None);
             }
         }
