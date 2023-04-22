@@ -728,17 +728,27 @@ class Errors {
   }
 
   toString() {
-    const buf = [];
+    const buf = ['<link rel="icon" href="https://pkmn.cc/favicon.ico"><div id="content"></div>'];
+    buf.push('<link href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css" rel="stylesheet" />');
+    buf.push('<style>');
+    buf.push('#content { font-family: Roboto, Helvetica; margin: 2em auto; max-width: 1300px; }');
+    buf.push('ul { font-size: 1.1em; line-height: 1.5em; }');
+    buf.push('</style>');
+    buf.push('<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script><script>');
+    buf.push('document.getElementById("content").innerHTML = marked.parse(`');
     for (let i = 0; i < this.commands.length; i++) {
-      buf.push('- [ ] **TODO**');
+      buf.push('- **TODO**');
       const seed = `0x${this.seeds[i].toString(16).toUpperCase()}`;
-      buf.push(`  - ${seed} (\`${this.commands[i]}\`)`);
+      buf.push(`  - ${seed} (\\\`${this.commands[i]}\\\`)`);
       buf.push(`    - [pkmn](${seed}.pkmn.html)`);
       buf.push(`    - [showdown](${seed}.showdown.html)`);
-      buf.push('```diff');
-      buf.push(this.stacks[i]);
-      buf.push('```');
+      buf.push('\\`\\`\\`diff');
+      buf.push(this.stacks[i].replaceAll(ROOT + path.sep, ''));
+      buf.push('\\`\\`\\`');
     }
+    buf.push('`);</script>');
+    buf.push('<script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>');
+    buf.push('<script src="https://cdn.jsdelivr.net/npm/prismjs/plugins/autoloader/prism-autoloader.min.js"></script>');
     return buf.join('\n');
   }
 }
@@ -769,8 +779,8 @@ if (require.main === module) {
     const errors = argv.summary ? new Errors() : undefined;
     const code = await run(gens, options, errors);
     if (code && errors) {
-      const file = path.join(ROOT, 'logs', `${prng.seed.join('-')}.md`);
-      const link = path.join(ROOT, 'logs', 'summary.md');
+      const file = path.join(ROOT, 'logs', `${prng.seed.join('-')}.html`);
+      const link = path.join(ROOT, 'logs', 'summary.html');
       fs.writeFileSync(file, errors.toString());
       symlink(file, link);
     }
