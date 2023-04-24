@@ -129,7 +129,10 @@ fn selectMove(
         (choice.type == .Move and choice.data == @boolToInt(showdown)));
 
     // pre-battle menu
-    if (volatiles.Recharging) return null;
+    if (volatiles.Recharging) {
+        if (showdown and battle.foe(player).active.volatiles.Binding) skip_turn.* = true;
+        return null;
+    }
     if (volatiles.Rage) {
         from.* = side.last_used_move;
         if (showdown) {

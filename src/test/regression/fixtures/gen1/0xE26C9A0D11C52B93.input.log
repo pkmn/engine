@@ -1,0 +1,25 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[57964,39437,4549,11155]}
+>player p1 {"name":"Bot 1","team":"Golem|||None|slash,thundershock,rest,eggbomb||195,138,96,184,184,162|N|8,19,16,13,13,5||61|211]Paras|||None|psywave,bodyslam,skyattack,leechlife||220,51,219,42,42,123|N|3,9,21,18,18,3||93|225]Blastoise|||None|metronome,recover,toxic,waterfall||34,86,27,177,177,154|N|5,17,6,3,3,29||52|180]Mew|||None|selfdestruct,stomp,lovelykiss,smog||177,3,20,221,221,99|N|0,25,9,4,4,21||87|190]Ekans|||None|pinmissile,submission,rage,peck||88,19,149,233,233,222|N|5,5,27,18,18,17||69|153]Machop|||None|absorb,jumpkick,doubleedge,bide||94,146,158,29,29,122|N|4,16,18,12,12,5||66|131"}
+>player p2 {"name":"Bot 2","team":"Psyduck|||None|hypnosis,megapunch,fissure,softboiled||18,156,126,35,35,155|N|3,13,5,26,26,23||90|167]Sandshrew|||None|clamp,fly,pound,slam||176,202,77,53,53,51|N|4,1,,8,8,28||64|53]Weepinbell|||None|whirlwind,poisonsting,kinesis,sludge||137,104,107,128,128,155|N|9,23,9,3,3,28||99|203]Flareon|||None|doubleslap,poisongas,hyperbeam,twineedle||183,172,110,9,9,4|N|5,1,,30,30,20||97|33]Kabutops|||None|spikecannon,wingattack,dreameater,crabhammer||28,52,218,124,124,77|N|13,23,,10,10,4||83|100]Venomoth|||None|mist,poisonpowder,boneclub,wrap||171,97,218,94,94,63|N|15,22,,18,18,18||77|53"}
+>p1 switch 2
+>p2 move hypnosis
+>p1 move psywave
+>p2 switch 2
+>p1 switch 2
+>p2 move clamp
+>p1 move slash
+>p2 move clamp
+>p1 move thundershock
+>p2 move fly
+>p1 move rest
+>p2 move fly
+>p1 move eggbomb
+>p2 move pound
+>p1 switch 3
+>p2 move slam
+>p1 move metronome
+>p2 move clamp
+>p1 move recharge
+>p2 move clamp
+>p1 move recharge
+>p2 switch 2
