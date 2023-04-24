@@ -6283,6 +6283,56 @@ test "Infinite Metronome" {
     }
 }
 
+test "Mirror Move/Metronome + Substitute bug" {
+    const seismic_toss = comptime metronome(.SeismicToss);
+    const bonemerang = comptime metronome(.Bonemerang);
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            seismic_toss, HIT, ~HIT, bonemerang, HIT, ~CRIT, MIN_DMG
+        } else .{
+            ~CRIT, seismic_toss, HIT,
+            ~CRIT, MIN_DMG, ~HIT, ~CRIT, bonemerang, ~CRIT, MIN_DMG, HIT
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Hitmonchan, .moves = &.{.Metronome} }},
+        &.{.{ .species = .Kadabra, .moves = &.{ .Substitute, .Sludge } }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Substitute);
+    t.expected.p2.get(1).hp -= 70;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
+    try t.log.expected.move(P1.ident(1), Move.SeismicToss, P2.ident(1), Move.Metronome);
+    try t.log.expected.end(P2.ident(1), .Substitute);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+
+    try t.log.expected.move(P2.ident(1), Move.Sludge, P1.ident(1), null);
+    try t.log.expected.lastmiss();
+    try t.log.expected.miss(P2.ident(1));
+    try t.log.expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
+    try t.log.expected.move(P1.ident(1), Move.Bonemerang, P2.ident(1), Move.Metronome);
+    t.expected.p2.get(1).hp -= 71;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    // BUG: Pokémon Showdown's broken useMove mechanics mean subFainted never gets cleared
+    // if (showdown) {
+    //     try t.log.expected.hitcount(P2.ident(1), 1);
+    // } else {
+    t.expected.p2.get(1).hp -= 71;
+    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.hitcount(P2.ident(1), 2);
+    // }
+    try t.log.expected.turn(3);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    try t.verify();
+}
+
 // Fixed by smogon/pokemon-showdown#8963
 test "Hyper Beam + Substitute bug" {
     var t = Test(if (showdown) .{ HIT, ~CRIT, MAX_DMG } else .{ ~CRIT, MAX_DMG, HIT }).init(

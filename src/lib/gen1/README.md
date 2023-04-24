@@ -531,9 +531,13 @@ the pkmn engine, but the following moves have their broken behavior preserved in
   glitch](https://glitchcity.wiki/Substitute_%C2%BC_HP_glitch) also fails in many cases due to
   Pokémon Showdown implementing the health check based on floating point division instead of integer
   divison like on the cartridge (meaning the Substitute 1/4 glitch will only occur if the Pokémon's
-  maximum HP is evenly divisible by 4). Finally, Substitute also incorrectly blocks Dream Eater on
+  maximum HP is evenly divisible by 4). Substitute also incorrectly blocks Dream Eater on
   Pokémon Showdown and will incorrectly still heal 1 HP for any draining moves if the attack does 0
-  damage.
+  damage. Finally, Pokémon Showdown uses a `subFainted` field to track whether a Substitute was
+  broken in order to know when to nullify a move's effect, only it doesn't get cleared at the end of
+  the turn and can result in incorrect behavior on subsequent turns with the moves Mirror Move and
+  Metronome that invoke `runMove` (which is where `subFainted` gets cleared) on the user but skips
+  calling it for the eventual true target.
 
 In addition to numerous cases where Pokémon Showdown uses the wrong type of message (e.g. `|-fail`
 vs. `|-miss|` vs. `|-immune|`, e.g. in the case of Leech Seed) which are not documented here, Pokémon
@@ -614,16 +618,17 @@ the correct control flow):
   the Pokémon already knows, PP deduction for using either the original move of the mimicked move
   will instead deduct PP for whichever appears at the lower move slot index and the PP will be
   allowed to go negative (effectively allowing for infinite PP use).
-- **Mirror Move**: Binding moves misbehave when used via Mirror Move (though Pokémon Showdown has
-  its own weird behavior and does not implement the [partial trapping move Mirror Move
+- **Mirror Move**: As covered above, both Substitute and Binding moves misbehave when used via
+  Mirror Move (though Pokémon Showdown has its own weird behavior and does not implement the
+  [partial trapping move Mirror Move
   glitch](https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch) that exists
-  on the cartridge). Additionally, Pokémon Showdown sets the last used move every turn a Pokémon
-  is Thrashing instead of just on the turn it is actually selected meaning Mirror Move will
-  sometimes successfully mirror a Thrashing move when it should fail. Finally, if Mirror Move copies
+  on the cartridge). Additionally, Pokémon Showdown sets the last used move every turn a Pokémon is
+  Thrashing instead of just on the turn it is actually selected meaning Mirror Move will sometimes
+  successfully mirror a Thrashing move when it should fail. Finally, if Mirror Move copies
   Struggle it should not deduct PP but on Pokémon Showdown it does.
-- **Metronome**: In addition to the issues with binding moves, Metronome and Mirror Move cannot
-  mutually call each other more than 3 times in a row without causing the Pokémon Showdown simulator
-  to crash due to defensive safety checks that do not exist on the cartridge.
+- **Metronome**: In addition to the issues with binding moves and Substitute, Metronome and Mirror
+  Move cannot mutually call each other more than 3 times in a row without causing the Pokémon
+  Showdown simulator to crash due to defensive safety checks that do not exist on the cartridge.
 - **Transform**: Transform screws up the effect of Disable, because on Pokémon Showdown, Disable
   prevents moves of a given *name* from being used (e.g. "Water Gun") as opposed to moves in a
   specific *slot* (e.g. the 2nd move slot), and a Pokémon's moves can change after Transform (this

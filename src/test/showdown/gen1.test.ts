@@ -5028,6 +5028,41 @@ describe('Gen 1', () => {
     }
   });
 
+  test('Mirror Move/Metronome + Substitute bug', () => {
+    const battle = startBattle([
+      METRONOME('Seismic Toss'), HIT, MISS, METRONOME('Bonemerang'), HIT, NO_CRIT, MIN_DMG,
+    ], [
+      {species: 'Hitmonchan', evs, moves: ['Metronome']},
+    ], [
+      {species: 'Kadabra', evs, moves: ['Substitute', 'Sludge']},
+    ]);
+
+    let p2hp = battle.p2.pokemon[0].hp;
+
+    battle.makeChoices('move 1', 'move 1');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 70);
+
+    battle.makeChoices('move 1', 'move 2');
+    expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 71);
+
+    verify(battle, [
+      '|move|p2a: Kadabra|Substitute|p2a: Kadabra',
+      '|-start|p2a: Kadabra|Substitute',
+      '|-damage|p2a: Kadabra|213/283',
+      '|move|p1a: Hitmonchan|Metronome|p1a: Hitmonchan',
+      '|move|p1a: Hitmonchan|Seismic Toss|p2a: Kadabra|[from]Metronome',
+      '|-end|p2a: Kadabra|Substitute',
+      '|turn|2',
+      '|move|p2a: Kadabra|Sludge|p1a: Hitmonchan|[miss]',
+      '|-miss|p2a: Kadabra',
+      '|move|p1a: Hitmonchan|Metronome|p1a: Hitmonchan',
+      '|move|p1a: Hitmonchan|Bonemerang|p2a: Kadabra|[from]Metronome',
+      '|-damage|p2a: Kadabra|142/283',
+      '|-hitcount|p2a: Kadabra|1',
+      '|turn|3',
+    ]);
+  });
+
   // Fixed by smogon/pokemon-showdown#8963
   test('Hyper Beam + Substitute bug', () => {
     const battle = startBattle([HIT, NO_CRIT, MAX_DMG], [

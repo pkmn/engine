@@ -484,6 +484,7 @@ const BINDING = ['bind', 'wrap', 'firespin', 'clamp'] as ID[];
 // get stuck in a loop continually generating teams with the same issues.
 function validate(prng: PRNG, moves: Set<ID>, used: RunnerOptions['usage']) {
   const transform = moves.has('transform' as ID);
+  const substitute = moves.has('substitute' as ID);
   // Transform + Disable and Transform + Haze cannot be used together, so if
   // teams have been generated where both moves are present we simply choose one
   // at random to consider having been "used" and return true to retry
@@ -514,15 +515,18 @@ function validate(prng: PRNG, moves: Set<ID>, used: RunnerOptions['usage']) {
     }
     return true;
   }
-  // Mirror Move is problematic in battles involving Transform or binding moves
+  // Mirror Move is problematic in battles involving Transform/Substitute/binding moves
   // - we try to avoid always simply punting on Mirror Move and being fair
   // about which move gets a chance to be tested
   if (moves.has('mirrormove' as ID)) {
-    if (transform && binding.length) {
+    if (+substitute + +transform + +!!binding.length > 1) {
       used.move('mirrormove' as ID);
       return true;
+    } else if (substitute) {
+      used.move(prng.sample(['mirrormove', 'substitute']) as ID);
+      return true;
     } else if (transform) {
-      used.move(prng.sample(['mirrormove', 'disable']) as ID);
+      used.move(prng.sample(['mirrormove', 'transform']) as ID);
       return true;
     } else if (binding.length) {
       if (prng.randomChance(1, binding.length + 1)) {
@@ -533,10 +537,14 @@ function validate(prng: PRNG, moves: Set<ID>, used: RunnerOptions['usage']) {
       return true;
     }
   }
+  if (substitute && moves.has('metronome' as ID)) {
+    used.move(prng.sample(['metronome', 'substitute']) as ID);
+    return true;
+  }
   return false;
 }
 
-const METRONOME = [...BINDING, 'mirrormove', 'transform', 'disable', 'mimic'];
+const METRONOME = [...BINDING, 'mirrormove', 'transform', 'disable', 'mimic', 'substitute'];
 
 // Mimic is so borked that we need to both ensure that if it appears in a move
 // set it always is in the lowest index (above) *and* that if the infinite PP
