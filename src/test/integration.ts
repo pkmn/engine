@@ -549,12 +549,10 @@ const METRONOME = [...BINDING, 'mirrormove', 'transform', 'disable', 'mimic'];
 // (Technically we can do away with validate above and always attempt to detect
 // problems here, but we once again avoid doing that to minimize complexity)
 function problematic(battle: Battle) {
-  // PP can go negative on Pokémon Showdown due to Mimic...
+  // PP can go negative on Pokémon Showdown due to Mimic
   for (const side of battle.sides) {
     for (const pokemon of side.active) {
-      for (const move of pokemon.moveSlots) {
-        if (move.id === 'mimic' && move.pp <= 0) return true;
-      }
+      if (new Set(pokemon.moves).size !== pokemon.moves.length) return true;
     }
   }
 
