@@ -7,8 +7,8 @@ const expectEqual = std.testing.expectEqual;
 const expectError = std.testing.expectError;
 
 /// Specialization of a rational number used by the engine to compute probabilties.
-/// For performance reasons the rational is only reduced lazily and thus `reduce` must be invoked
-/// explicitly before reading.
+/// For performance reasons the rational is only reduced lazily and thus `reduce` must be
+/// invoked explicitly before reading.
 pub fn Rational(comptime T: type) type {
     return extern struct {
         const Self = @This();
@@ -27,6 +27,13 @@ pub fn Rational(comptime T: type) type {
         else
             0;
 
+        /// Possible error returned by operations on the Rational.
+        pub const Error = switch (@typeInfo(T)) {
+            .Int => error{Overflow},
+            .Float => error{},
+            else => unreachable,
+        };
+
         /// Resets the rational back to 1.
         pub fn reset(r: *Self) void {
             r.p = 1;
@@ -35,11 +42,7 @@ pub fn Rational(comptime T: type) type {
 
         /// Update the rational by multiplying its numerator by p and its denominator by q.
         /// Both p and q must be >= 1, and if computable at comptime must have no common factors.
-        pub fn update(r: *Self, p: anytype, q: anytype) (switch (@typeInfo(T)) {
-            .Int => error{Overflow},
-            .Float => error{},
-            else => unreachable,
-        })!void {
+        pub fn update(r: *Self, p: anytype, q: anytype) Error!void {
             assert(p >= 1);
             assert(q >= 1);
 
@@ -53,10 +56,10 @@ pub fn Rational(comptime T: type) type {
             switch (@typeInfo(T)) {
                 .Int => {
                     // Greedily attempt to multiply and if it fails, reduce and try again
-                    r.mul(p, q) catch |err| switch (err) {
+                    r.multiplication(p, q) catch |err| switch (err) {
                         error.Overflow => {
                             r.reduce();
-                            try r.mul(p, q);
+                            try r.multiplication(p, q);
                         },
                         else => unreachable,
                     };
@@ -82,6 +85,79 @@ pub fn Rational(comptime T: type) type {
             }
         }
 
+        /// Add two rationals using the identity (a/b) + (c/d) = (ad+bc)/(bd).
+        pub fn add(r: *Self, s: *Self) Error!void {
+            switch (@typeInfo(T)) {
+                .Int => {
+                    if (r.q == s.q) {
+                        r.p = std.math.add(T, r.p, s.p) catch |err| switch (err) {
+                            error.Overflow => val: {
+                                r.reduce();
+                                s.reduce();
+                                break :val try std.math.add(T, r.p, s.p);
+                            },
+                            else => unreachable,
+                        };
+                    } else {
+                        r.addition(s.p, s.q) catch |err| switch (err) {
+                            error.Overflow => {
+                                r.reduce();
+                                s.reduce();
+                                try r.addition(s.p, s.q);
+                            },
+                            else => unreachable,
+                        };
+                    }
+                },
+                .Float => {
+                    if (r.q == s.q) {
+                        if (r.p > REDUCE) r.reduce();
+                        if (s.p > REDUCE) s.reduce();
+
+                        r.p += s.p;
+                    } else {
+                        // Always reduce to minimize loss of precision from the multiplications
+                        r.reduce();
+                        s.reduce();
+
+                        r.p = (r.p * s.q) + (r.q * s.p);
+                        r.q *= s.q;
+                    }
+
+                    assert(std.math.modf(r.p).fpart == 0);
+                    assert(std.math.modf(r.q).fpart == 0);
+                },
+                else => unreachable,
+            }
+        }
+
+        /// Multiples two rationals.
+        pub fn mul(r: *Self, s: *Self) Error!void {
+            switch (@typeInfo(T)) {
+                .Int => {
+                    r.multiplication(s.p, s.q) catch |err| switch (err) {
+                        error.Overflow => {
+                            r.reduce();
+                            s.reduce();
+                            try r.multiplication(s.p, s.q);
+                        },
+                        else => unreachable,
+                    };
+                },
+                .Float => {
+                    if (r.q > REDUCE or r.p > REDUCE) r.reduce();
+                    if (s.q > REDUCE or s.p > REDUCE) s.reduce();
+
+                    r.p *= s.p;
+                    r.q *= s.q;
+
+                    assert(std.math.modf(r.p).fpart == 0);
+                    assert(std.math.modf(r.q).fpart == 0);
+                },
+                else => unreachable,
+            }
+        }
+
         /// Normalize the rational by reducing by the greatest common divisor.
         pub fn reduce(r: *Self) void {
             const d = gcd(r.p, r.q);
@@ -96,9 +172,19 @@ pub fn Rational(comptime T: type) type {
             assert(r.q >= 1);
         }
 
-        inline fn mul(r: *Self, p: anytype, q: anytype) !void {
+        inline fn multiplication(r: *Self, p: anytype, q: anytype) !void {
             r.p = try std.math.mul(T, r.p, p);
             r.q = try std.math.mul(T, r.q, q);
+        }
+
+        inline fn addition(r: *Self, p: anytype, q: anytype) !void {
+            // (a/b) + (c/d) = (ad+bc)/(bd)
+            var d = try std.math.mul(T, r.q, q);
+            var n1 = try std.math.mul(T, r.p, q);
+            var n2 = try std.math.mul(T, r.q, p);
+
+            r.p = try std.math.add(T, n1, n2);
+            r.q = d;
         }
     };
 }
@@ -149,6 +235,19 @@ test Rational {
             r.reduce();
             try expectEqual(Rational(t){ .p = 5682596689, .q = 2527735925804191711232 }, r);
         }
+
+        r.reset();
+
+        var s = Rational(t){ .p = 10, .q = 13 };
+        try r.mul(&s);
+        s = Rational(t){ .p = 3, .q = 4 };
+        try r.mul(&s);
+        try expectEqual(Rational(t){ .p = 30, .q = 52 }, r);
+
+        s = Rational(t){ .p = 1, .q = 3 };
+        try r.add(&s);
+        r.reduce();
+        try expectEqual(Rational(t){ .p = 71, .q = 78 }, r);
     }
 }
 
@@ -163,7 +262,7 @@ pub const BigRational = struct {
         return BigRational{ .val = try std.math.big.Rational.init(alloc) };
     }
 
-    /// Frees all memory associated with a Rational.
+    /// Frees all memory associated with a rational.
     pub fn deinit(r: *BigRational) void {
         r.val.deinit();
     }
@@ -183,6 +282,16 @@ pub const BigRational = struct {
         defer s.deinit();
         try s.setRatio(p, q);
         try r.val.mul(r.val, s);
+    }
+
+    /// Adds two rationals.
+    pub fn add(r: *BigRational, s: *const BigRational) !void {
+        try r.val.add(r.val, s.val);
+    }
+
+    /// Multiples two rationals.
+    pub fn mul(r: *BigRational, s: *const BigRational) !void {
+        try r.val.mul(r.val, s.val);
     }
 };
 
@@ -205,5 +314,24 @@ test BigRational {
     try doTurn(&r);
 
     try s.setRatio(5682596689, 2527735925804191711232);
+    try expect((try s.order(r.val)) == .eq);
+
+    try r.reset();
+
+    var t = try BigRational.init(std.testing.allocator);
+    defer t.deinit();
+
+    try t.val.setRatio(10, 13);
+    try r.mul(&t);
+    try t.val.setRatio(3, 4);
+    try r.mul(&t);
+
+    try s.setRatio(15, 26);
+    try expect((try s.order(r.val)) == .eq);
+
+    try t.val.setRatio(1, 3);
+    try r.add(&t);
+
+    try s.setRatio(71, 78);
     try expect((try s.order(r.val)) == .eq);
 }
