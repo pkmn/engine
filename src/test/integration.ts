@@ -613,6 +613,7 @@ function fromInputLog(
     const struggle = d === 'struggle';
 
     const data = d === 'recharge' ? 1 : !isNaN(+d) ? +d : moves[player].indexOf(d as ID) + 1;
+    // BUG: a move could be [from] Metronome and wouldn't be possible to reverse
     if (type === 'move' && !data && !struggle) throw new Error(`Invalid choice data: '${d}'`);
 
     const choice = {type, data};
