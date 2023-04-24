@@ -972,6 +972,8 @@ fn doMove(
                 battle.last_damage = 0;
                 // Pokémon Showdown logs |-damage| here instead of |-immune| because logic...
                 try log.damage(battle.active(player.foe()), foe.stored(), .None);
+                assert(foe.stored().hp > 0);
+                if (!sub) try buildRage(battle, player.foe(), log);
                 return null;
             }
         }
