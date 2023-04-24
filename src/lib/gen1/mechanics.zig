@@ -970,10 +970,14 @@ fn doMove(
             Effects.binding(battle, player, rewrap);
             if (immune) {
                 battle.last_damage = 0;
-                // Pokémon Showdown logs |-damage| here instead of |-immune| because logic...
-                try log.damage(battle.active(player.foe()), foe.stored(), .None);
                 assert(foe.stored().hp > 0);
-                if (!sub) try buildRage(battle, player.foe(), log);
+                // Pokémon Showdown logs |-damage| here instead of |-immune| because logic...
+                if (sub) {
+                    try log.activate(battle.active(player.foe()), .Substitute);
+                } else {
+                    try log.damage(battle.active(player.foe()), foe.stored(), .None);
+                    try buildRage(battle, player.foe(), log);
+                }
                 return null;
             }
         }
