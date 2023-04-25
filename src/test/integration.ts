@@ -441,10 +441,7 @@ function fixTeam(gen: Generation, options: sim.AIOptions, moves: Set<ID>) {
 }
 
 // TODO: remove BLOCKLIST + possibilities override once integration tests are passing
-const BLOCKLIST = [
-  'bind', 'wrap', 'counter', 'firespin', 'mimic',
-  'metronome', 'mirrormove', 'clamp',
-] as ID[];
+const BLOCKLIST = ['counter'] as ID[];
 
 // This is a fork of the possibilities function (which is used to build up the
 // various "pools" of effects to proc during testing) from @pkmn/sim that has
