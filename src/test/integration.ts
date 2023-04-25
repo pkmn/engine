@@ -544,7 +544,8 @@ function validate(prng: PRNG, moves: Set<ID>, used: RunnerOptions['usage']) {
   return false;
 }
 
-const METRONOME = [...BINDING, 'mirrormove', 'transform', 'disable', 'mimic', 'substitute'];
+const METRONOME =
+  [...BINDING, 'mirrormove', 'transform', 'disable', 'mimic', 'substitute', 'haze'];
 
 // Mimic is so borked that we need to both ensure that if it appears in a move
 // set it always is in the lowest index (above) *and* that if the infinite PP
