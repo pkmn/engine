@@ -14,9 +14,9 @@ import {newSeed, toBigInt} from './integration';
 import {Choices, formatFor, patch} from './showdown';
 
 // TODO: uncomment once integration tests pass
-// const BLOCKLIST = ['mimic', 'metronome', 'mirrormove'] as ID[];
+// const BLOCKLIST = ['mimic', 'bide', 'metronome', 'mirrormove'] as ID[];
 const BLOCKLIST = [
-  'bind', 'wrap', 'counter', 'firespin', 'mimic',
+  'bind', 'wrap', 'counter', 'firespin', 'mimic', 'bide',
   'metronome', 'mirrormove', 'clamp', 'transform',
 ] as ID[];
 const ROOT = path.resolve(__dirname, '..', '..');
