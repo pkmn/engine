@@ -181,11 +181,14 @@ function displaySide(
     buf.push('<div class="details">');
     const used = side.lastUsedMove ? gen.moves.get(side.lastUsedMove)!.name : '<em>None</em>';
     buf.push(`<div><strong>Last Used</strong><br />${used}</div>`);
-    const selected =
-      side.lastSelectedMove ? gen.moves.get(side.lastSelectedMove)!.name : '<em>None</em>';
-    const index =
-      side.lastSelectedIndex ? ` (${side.lastSelectedIndex})` : '';
-    buf.push(`<div><strong>Last Selected</strong><br />${selected}${index}</div>`);
+    const selected = side.lastSelectedMove ? gen.moves.get(side.lastSelectedMove)! : undefined;
+    const move = selected?.name ?? '<em>None</em>';
+    const counterable = !!selected && selected.basePower > 0 && selected.id !== 'counter' &&
+      (selected.type === 'Normal' || selected.type === 'Fighting');
+    console.debug(selected?.name, counterable, side.lastMoveCounterable);
+    const mismatch = counterable !== side.lastMoveCounterable ? '*' : '';
+    const index = side.lastMoveIndex ? ` (${side.lastMoveIndex})` : '';
+    buf.push(`<div><strong>Last Selected</strong><br />${move}${mismatch}${index}</div>`);
     buf.push('</div>');
   }
   if (side.active) {

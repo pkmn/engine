@@ -87,7 +87,7 @@ export class Battle implements Gen1.Battle {
   }
 
   get prng(): readonly number[] {
-    const offset = OFFSETS.Battle.last_selected_indexes + (this.config.showdown ? 4 : 1);
+    const offset = OFFSETS.Battle.last_moves + (this.config.showdown ? 4 : 1);
     // Pokémon Showdown's PRNGSeed is always big-endian
     const seed: number[] = [0, 0, 0, 0];
     if (this.config.showdown) {
@@ -139,19 +139,19 @@ export class Battle implements Gen1.Battle {
     const buf = new ArrayBuffer(SIZES.Battle);
     const data = new DataView(buf);
     let offset = OFFSETS.Battle.p1;
-    const indexes: number[] = [];
+    const lastMoves: number[] = [];
     for (const side of battle.sides) {
       Side.encode(gen, !!options.showdown, lookup, battle, side, data, offset);
       offset += SIZES.Side;
-      indexes.push(side.lastSelectedIndex ?? 0);
+      lastMoves.push((side.lastMoveIndex ?? 0) | (+!!side.lastMoveCounterable << 3));
     }
     data.setUint16(OFFSETS.Battle.turn, battle.turn, LE);
     data.setUint16(OFFSETS.Battle.last_damage, battle.lastDamage, LE);
     if (options.showdown) {
-      data.setUint16(OFFSETS.Battle.last_selected_indexes, indexes[0], LE);
-      data.setUint16(OFFSETS.Battle.last_selected_indexes + 2, indexes[1], LE);
+      data.setUint16(OFFSETS.Battle.last_moves, lastMoves[0], LE);
+      data.setUint16(OFFSETS.Battle.last_moves + 2, lastMoves[1], LE);
     } else {
-      data.setUint8(OFFSETS.Battle.last_selected_indexes, (indexes[1] << 4) | indexes[0]);
+      data.setUint8(OFFSETS.Battle.last_moves, (lastMoves[1] << 4) | lastMoves[0]);
     }
     encodePRNG(data, battle.prng);
     return new Battle(lookup, data, options);
@@ -221,16 +221,28 @@ export class Side implements Gen1.Side {
     return m === 0 ? undefined : this.lookup.moveByNum(m);
   }
 
-  get lastSelectedIndex(): 1 | 2 | 3 | 4 | undefined {
+  get lastMoveIndex(): 1 | 2 | 3 | 4 | undefined {
     let m: number;
     if (this.battle.config.showdown) {
       const off = this.id === 'p1' ? 0 : 2;
-      m = this.data.getUint16(OFFSETS.Battle.last_selected_indexes + off, LE);
+      m = this.data.getUint8(OFFSETS.Battle.last_moves + off);
     } else {
-      m = this.data.getUint8(OFFSETS.Battle.last_selected_indexes);
-      m = this.id === 'p1' ? (m & 0xF) : (m >> 4);
+      m = this.data.getUint8(OFFSETS.Battle.last_moves);
+      m = (this.id === 'p1' ? m : (m >> 4)) & 0b111;
     }
     return m === 0 ? undefined : m as 1 | 2 | 3 | 4;
+  }
+
+  get lastMoveCounterable(): boolean {
+    let m: number;
+    if (this.battle.config.showdown) {
+      const off = this.id === 'p1' ? 1 : 3;
+      m = this.data.getUint8(OFFSETS.Battle.last_moves + off);
+    } else {
+      m = this.data.getUint8(OFFSETS.Battle.last_moves);
+      m = (this.id === 'p1' ? m : (m >> 4)) & 0b1000;
+    }
+    return m !== 0;
   }
 
   toJSON(): Gen1.Side {
@@ -239,7 +251,8 @@ export class Side implements Gen1.Side {
       pokemon: Array.from(this.pokemon).map(p => p.toJSON()),
       lastSelectedMove: this.lastSelectedMove,
       lastUsedMove: this.lastUsedMove,
-      lastSelectedIndex: this.lastSelectedIndex,
+      lastMoveIndex: this.lastMoveIndex,
+      lastMoveCounterable: this.lastMoveCounterable,
     };
   }
 

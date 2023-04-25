@@ -55,17 +55,12 @@ pub const Battle = struct {
     }
 
     pub fn random(rand: *PSRNG, opt: Options) data.Battle(data.PRNG) {
-        var p1: u4 = 0;
-        var p2: u4 = 0;
-        var battle: data.Battle(data.PRNG) = .{
+        return .{
             .rng = prng(rand),
             .turn = 0,
             .last_damage = 0,
             .sides = .{ Side.random(rand, opt), Side.random(rand, opt) },
         };
-        battle.last_selected_indexes.p1 = p1;
-        battle.last_selected_indexes.p2 = p2;
-        return battle;
     }
 };
 

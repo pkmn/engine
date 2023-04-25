@@ -28,35 +28,36 @@ list of additional reference [**resources**](#resources).
 
 The following information is required to simulate a Generation I Pokémon battle:
 
-| pkmn                                 | Pokémon Red (pret)                 | Pokémon Showdown                       |
-| ------------------------------------ | ---------------------------------- | -------------------------------------- |
-| `battle.seed`                        | `Random{Add,Sub}`                  | `battle.seed`                          |
-| `battle.turn`                        | -                                  | `battle.turn`                          |
-| `battle.last_damage`                 | `Damage`                           | `battle.lastDamage`                    |
-| `side.{active,pokemon}`              | `PlayerMonNumber`/`BattleMon`      | `side.active`                          |
-| `side.team`                          | `PartyMons`                        | `side.pokemon`                         |
-| `side.last_used_move`                | `PlayerUsedMove`                   | `pokemon.lastMove`                     |
-| `side.last_selected_move`            | `PlayerSelectedMove`               | `side.lastSelectedMove`                |
-| `battle.last_selected_indexes`       | `PlayerMoveListIndex`              | `side.lastMove`                        |
-| `side.order`                         | -                                  | `pokemon.position`                     |
-| `{pokemon,active}.moves`             | `{party,battle}_struct.{Moves,PP}` | `pokemon.{baseMoveSlots,moveSlots}`    |
-| `pokemon.hp`                         | `{party,battle}_struct.HP`         | `pokemon.hp`                           |
-| `{pokemon,active}.status`            | `{party,battle}_struct.Status`     | `pokemon.status`                       |
-| `{pokemon,active}.level`             | `PlayerMonUnmodifiedLevel`         | `pokemon.level`                        |
-| `pokemon.species`                    | `party_struct.Species`             | `pokemon.baseSpecies`                  |
-| `pokemon.stats`                      | `box_struct.Stats`                 | `pokemon.baseStoredStats`              |
-| `active.stats`                       | `battle_struct.Stats`              | `pokemon.modifiedStats`                |
-| `volatiles.transform`                | `PlayerMonUnmodified*`             | `pokemon.storedStats`                  |
-| `active.species`                     | `battle_struct.Species`            | `pokemon.species`                      |
-| `{pokemon,active}.types`             | `{party,battle}_struct.Type`       | `pokemon.types`                        |
-| `active.boosts`                      | `PlayerMon*Mod`                    | `pokemon.boosts`                       |
-| `active.volatiles`                   | `PlayerBattleStatus{1,2,3}`        | `pokemon.volatiles`                    |
-| `volatiles.state`                    | `PlayerBideAccumulatedDamage`      | `volatiles.bide.totalDamage`           |
-| `volatiles.attacks`                  | `PlayerNumAttacksLeft`             | `volatiles.{bide,lockedmove}.duration` |
-| `volatiles.confusion`                | `PlayerConfusedCounter`            | `volatiles.confusion.duration`         |
-| `volatiles.toxic`                    | `PlayerToxicCounter`               | `volatiles.residualdmg.counter`        |
-| `volatiles.substitute`               | `PlayerSubstituteHP`               | `volatiles.substitute.hp`              |
-| `volatiles.disabled_{move,duration}` | `PlayerDisabledMove{,Number}`      | `volatiles.disable.{move,time}`        |
+| pkmn                                    | Pokémon Red (pret)                 | Pokémon Showdown                       |
+| --------------------------------------- | ---------------------------------- | -------------------------------------- |
+| `battle.seed`                           | `Random{Add,Sub}`                  | `battle.seed`                          |
+| `battle.turn`                           | -                                  | `battle.turn`                          |
+| `battle.last_damage`                    | `Damage`                           | `battle.lastDamage`                    |
+| `side.{active,pokemon}`                 | `PlayerMonNumber`/`BattleMon`      | `side.active`                          |
+| `side.team`                             | `PartyMons`                        | `side.pokemon`                         |
+| `side.last_used_move`                   | `PlayerUsedMove`                   | `pokemon.lastMove`                     |
+| `side.last_selected_move`               | `PlayerSelectedMove`               | `side.lastSelectedMove`                |
+| `battle.last_moves.{p1,p2}_index`       | `PlayerMoveListIndex`              | -                                      |
+| `battle.last_moves.{p1,p2}_counterable` | -                                  | `side.lastMove`                        |
+| `side.order`                            | -                                  | `pokemon.position`                     |
+| `{pokemon,active}.moves`                | `{party,battle}_struct.{Moves,PP}` | `pokemon.{baseMoveSlots,moveSlots}`    |
+| `pokemon.hp`                            | `{party,battle}_struct.HP`         | `pokemon.hp`                           |
+| `{pokemon,active}.status`               | `{party,battle}_struct.Status`     | `pokemon.status`                       |
+| `{pokemon,active}.level`                | `PlayerMonUnmodifiedLevel`         | `pokemon.level`                        |
+| `pokemon.species`                       | `party_struct.Species`             | `pokemon.baseSpecies`                  |
+| `pokemon.stats`                         | `box_struct.Stats`                 | `pokemon.baseStoredStats`              |
+| `active.stats`                          | `battle_struct.Stats`              | `pokemon.modifiedStats`                |
+| `volatiles.transform`                   | `PlayerMonUnmodified*`             | `pokemon.storedStats`                  |
+| `active.species`                        | `battle_struct.Species`            | `pokemon.species`                      |
+| `{pokemon,active}.types`                | `{party,battle}_struct.Type`       | `pokemon.types`                        |
+| `active.boosts`                         | `PlayerMon*Mod`                    | `pokemon.boosts`                       |
+| `active.volatiles`                      | `PlayerBattleStatus{1,2,3}`        | `pokemon.volatiles`                    |
+| `volatiles.state`                       | `PlayerBideAccumulatedDamage`      | `volatiles.bide.totalDamage`           |
+| `volatiles.attacks`                     | `PlayerNumAttacksLeft`             | `volatiles.{bide,lockedmove}.duration` |
+| `volatiles.confusion`                   | `PlayerConfusedCounter`            | `volatiles.confusion.duration`         |
+| `volatiles.toxic`                       | `PlayerToxicCounter`               | `volatiles.residualdmg.counter`        |
+| `volatiles.substitute`                  | `PlayerSubstituteHP`               | `volatiles.substitute.hp`              |
+| `volatiles.disabled_{move,duration}`    | `PlayerDisabledMove{,Number}`      | `volatiles.disable.{move,time}`        |
 
 - Pokémon Showdown [does not implement the correct Generation I RNG](#rng) and as such its `seed` is
   different
@@ -68,6 +69,9 @@ The following information is required to simulate a Generation I Pokémon battle
   Counter and is not set and cleared in the correct locations. `Pokemon.lastMove` matches
   `PlayerUsedMove` more often so is what the engine attempts to model, despite the implications for
   Counter)
+- `battle.last_moves` doesn't map precisely to cartridge concepts because it is used to track desyncs
+  which instead are represented on the cartridge as discrepancies between the two separate battle states
+  that exist in the link battle.
 - Pokémon Showdown does not implement the [partial-trapping move Mirror Move
   glitch](https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch) and as such
   does not need to keep track of a player's last selected move index (`PlayerMoveListIndex`)
@@ -98,8 +102,8 @@ The following information is required to simulate a Generation I Pokémon battle
 store general information about the battle. Unlike in Pokémon Showdown there is a distinction
 between the data structure for the "active" Pokémon and its party members (see below).
 
-Due to layout constraints, the index of the last selected move for a side is stored in what would
-otherwise be the padding bytes of`Battle` (the `last_selected_indexes` field) instead of in `Side`.
+Due to layout constraints, details about the last moves for a side are stored in what would
+otherwise be the padding bytes of`Battle` (the `last_moves` field) instead of in `Side`.
 
 ### `Pokemon` / `ActivePokemon`
 
@@ -338,17 +342,17 @@ data in the browser for ease of debugging.
 
 ### `Battle`
 
-| Start   | End     | Data                    | Description                                             |
-| ------- | ------- | ----------------------- | ------------------------------------------------------- |
-| 0       | 184     | [`sides[0]`](#side)     | Player 1's side                                         |
-| 184     | 368     | [`sides[1]`](#side)     | Player 2's side                                         |
-| 368     | 370     | `turn`                  | The current turn number                                 |
-| 370     | 372     | `last_damage`           | The last damage dealt by either side                    |
-| 372     | 373-376 | `last_selected_indexes` | The slot index of the last selected moves for each side |
-| 373-376 | 384     | `rng`                   | The RNG state                                           |
+| Start   | End     | Data                | Description                                             |
+| ------- | ------- | ------------------- | ------------------------------------------------------- |
+| 0       | 184     | [`sides[0]`](#side) | Player 1's side                                         |
+| 184     | 368     | [`sides[1]`](#side) | Player 2's side                                         |
+| 368     | 370     | `turn`              | The current turn number                                 |
+| 370     | 372     | `last_damage`       | The last damage dealt by either side                    |
+| 372     | 373-376 | `last_moves`        | The slot index of the last selected moves for each side |
+| 373-376 | 384     | `rng`               | The RNG state                                           |
 
 - the current `turn` is 2 bytes, written in native-endianness
-- `last_selected_indexes` layout depends on whether or not Pokémon Showdown compatibility mode is
+- `last_moves` layout depends on whether or not Pokémon Showdown compatibility mode is
   enabled (`-Dshowdown`). In either case it stores a move "slot", where 0 is used as an empty value and
   1-4 represent actual moves:
   - if `showdown` is enabled bytes 372 and 373 are used to store the last selected move index of

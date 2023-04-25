@@ -55,8 +55,8 @@ pub fn Battle(comptime RNG: anytype) type {
         turn: u16 = 0,
         /// The last damage dealt by either side.
         last_damage: u16 = 0,
-        /// The slot index of the last selected moves for each side
-        last_selected_indexes: MoveIndexes = .{},
+        /// TODO
+        last_moves: MoveDetails = .{},
         /// The pseudo random number generator.
         rng: RNG,
 
@@ -201,17 +201,19 @@ pub const MoveSlot = extern struct {
     }
 };
 
-const uindex = if (showdown) u16 else u4;
-
-/// Representation of the move slot indexes for each side in a Generation I Pokémon battle.
-pub const MoveIndexes = packed struct {
-    /// Player 1's move index.
-    p1: uindex = 0,
-    /// Player 1's move index.
-    p2: uindex = 0,
+/// TODO
+pub const MoveDetails = packed struct {
+    /// The move slot index of the last move selected in the battle menu by Player 1
+    p1_index: if (showdown) u8 else u3 = 0,
+    /// Whether the last move executed by Player 1 was counterable.
+    p1_counterable: if (showdown) u8 else u1 = 0,
+    /// The move slot index of the last move selected in the battle menu by Player 2
+    p2_index: if (showdown) u8 else u3 = 0,
+    /// Whether the last move executed by Player 2 was counterable.
+    p2_counterable: if (showdown) u8 else u1 = 0,
 
     comptime {
-        assert(@sizeOf(MoveIndexes) == if (showdown) 4 else 1);
+        assert(@sizeOf(MoveDetails) == if (showdown) 4 else 1);
     }
 };
 

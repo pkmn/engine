@@ -100,8 +100,10 @@ export namespace Gen1 {
     lastUsedMove: ID | undefined;
     /** The last move the player selected. */
     lastSelectedMove: ID | undefined;
-    /** The move slot index of the last selected move. */
-    lastSelectedIndex: 1 | 2 | 3 | 4 | undefined;
+    /** The move slot index of the last move selected in the battle menu. */
+    lastMoveIndex: 1 | 2 | 3 | 4 | undefined;
+    /** Whether the last move executed by the player was counterable. */
+    lastMoveCounterable: boolean;
   }
 
   /**

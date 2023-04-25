@@ -180,9 +180,9 @@ fn selectMove(
             // GLITCH: https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
             if (foe_choice.type == .Switch) {
                 const slot = if (player == .P1)
-                    battle.last_selected_indexes.p1
+                    battle.last_moves.p1_index
                 else
-                    battle.last_selected_indexes.p2;
+                    battle.last_moves.p2_index;
                 const last = side.active.move(@intCast(u4, slot));
                 if (last.id == .Metronome) side.last_selected_move = last.id;
                 if (last.id == .MirrorMove) return Result.Error;
@@ -237,9 +237,9 @@ fn saveMove(battle: anytype, player: Player, choice: ?Choice) void {
 
             side.last_selected_move = move.id;
             if (player == .P1) {
-                battle.last_selected_indexes.p1 = @intCast(u4, c.data);
+                battle.last_moves.p1_index = @intCast(u3, c.data);
             } else {
-                battle.last_selected_indexes.p2 = @intCast(u4, c.data);
+                battle.last_moves.p2_index = @intCast(u3, c.data);
             }
         }
     }
@@ -259,9 +259,9 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, log: anyty
     side.order[slot - 1] = out;
 
     if (player == .P1) {
-        battle.last_selected_indexes.p1 = 1;
+        battle.last_moves.p1_index = 1;
     } else {
-        battle.last_selected_indexes.p2 = 1;
+        battle.last_moves.p2_index = 1;
     }
 
     side.last_used_move = .None;
@@ -444,9 +444,9 @@ fn executeMove(
         // choice.data == 0 only happens with Struggle on Pokémon Showdown
         assert(!showdown);
         mslot = @intCast(u4, if (player == .P1)
-            battle.last_selected_indexes.p1
+            battle.last_moves.p1_index
         else
-            battle.last_selected_indexes.p2);
+            battle.last_moves.p2_index);
         const stored = side.stored();
         // GLITCH: Struggle bypass PP underflow via Hyper Beam / Trapping-switch auto selection
         auto = side.last_selected_move == .HyperBeam or side.active.volatiles.Bide or
@@ -468,9 +468,9 @@ fn executeMove(
         // Incorrect mslot with Pokémon Showdown choice semantics so we need to recover from index
         assert(mslot == 1);
         mslot = @intCast(u4, if (player == .P1)
-            battle.last_selected_indexes.p1
+            battle.last_moves.p1_index
         else
-            battle.last_selected_indexes.p2);
+            battle.last_moves.p2_index);
     }
 
     var skip_can = false;
@@ -744,6 +744,19 @@ fn canMove(
     // regrettable, but this information is more "nice to have" than required
     const f = if (from != null and from.? == .None) null else from;
     try log.move(player_ident, side.last_selected_move, battle.active(target), f);
+
+    // The Counter desync is caused by the cartridge not calling GetCurrentMove until now, meaning
+    // in cases where an early return happens the data for a players last selected move does not get
+    // reloaded and HandleCounterMove actually bases its success/failure off of stale information.
+    // This boolean state we track here doesn't exist on the cartridge because it instead manifests
+    // as the desync results from actually having two separate battle states that subtly disagree.
+    const counterable = side.last_selected_move != .Counter and move.bp > 0 and
+        (move.type == .Normal or move.type == .Fighting);
+    if (player == .P1) {
+        battle.last_moves.p1_counterable = @boolToInt(counterable);
+    } else {
+        battle.last_moves.p2_counterable = @boolToInt(counterable);
+    }
 
     if (move.effect.onBegin()) {
         try onBegin(battle, player, move, mslot, residual, log);
@@ -1177,19 +1190,17 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
         return null;
     }
 
-    // Pretend Counter was used as a stand-in when no move has been used to fail below with 0 BP
-    const foe_last_used_move =
-        Move.get(if (foe.last_used_move == .None) .Counter else foe.last_used_move);
+    // Pretend Splash was used as a stand-in when no move has been used to fail below with 0 BP
     const foe_last_selected_move =
         Move.get(if (foe.last_selected_move == .None or foe.last_selected_move == .SKIP_TURN)
-        .Counter
+        .Splash
     else
         foe.last_selected_move);
 
-    const used = foe_last_used_move.bp > 0 and
-        foe.last_used_move != .Counter and
-        (foe_last_used_move.type == .Normal or
-        foe_last_used_move.type == .Fighting);
+    const used = (if (player.foe() == .P1)
+        battle.last_moves.p1_counterable
+    else
+        battle.last_moves.p2_counterable) != 0;
 
     const selected = foe_last_selected_move.bp > 0 and
         foe.last_selected_move != .Counter and
