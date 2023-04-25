@@ -440,28 +440,6 @@ function fixTeam(gen: Generation, options: sim.AIOptions, moves: Set<ID>) {
   return {...options, team: Teams.pack(options.team!)!} as sim.AIOptions & {team: string};
 }
 
-// TODO: remove BLOCKLIST + possibilities override once integration tests are passing
-const BLOCKLIST = ['counter'] as ID[];
-
-// This is a fork of the possibilities function (which is used to build up the
-// various "pools" of effects to proc during testing) from @pkmn/sim that has
-// been extended to also enforce the engine's BLOCKLIST
-function possibilities(gen: Generation) {
-  const pokemon = Array.from(gen.species).filter(p =>
-    p.name !== 'Pichu-Spiky-eared' && p.name.slice(0, 8) !== 'Pikachu-');
-  const items = gen.num < 2 ? [] : Array.from(gen.items);
-  const abilities = gen.num < 3 ? [] : Array.from(gen.abilities);
-  const moves = Array.from(gen.moves).filter(m => !BLOCKLIST.includes(m.id as ID) &&
-    (!['struggle', 'revivalblessing'].includes(m.id) &&
-      (m.id === 'hiddenpower' || m.id.slice(0, 11) !== 'hiddenpower')));
-  return {
-    pokemon: pokemon.map(p => p.id as ID),
-    items: items.map(i => i.id as ID),
-    abilities: abilities.map(a => a.id as ID),
-    moves: moves.map(m => m.id as ID),
-  };
-}
-
 const OHKO = ['guillotine', 'horndrill', 'fissure'] as ID[];
 const BINDING = ['bind', 'wrap', 'firespin', 'clamp'] as ID[];
 
@@ -713,7 +691,6 @@ export async function run(gens: Generations, options: string | Flags, errors?: E
       if (options.gen && gen.num !== options.gen) continue;
       patch.generation(gen);
       opts.format = formatFor(gen);
-      opts.possible = possibilities(gen);
       const d = (options).debug;
       failures += await (new sim.ExhaustiveRunner({...opts, runner: o =>
         new Runner(gen, {...o, errors} as RunnerOptions, d).run(),

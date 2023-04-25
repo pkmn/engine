@@ -352,13 +352,16 @@ data in the browser for ease of debugging.
 | 373-376 | 384     | `rng`               | The RNG state                                           |
 
 - the current `turn` is 2 bytes, written in native-endianness
-- `last_moves` layout depends on whether or not Pokémon Showdown compatibility mode is
-  enabled (`-Dshowdown`). In either case it stores a move "slot", where 0 is used as an empty value and
-  1-4 represent actual moves:
-  - if `showdown` is enabled bytes 372 and 373 are used to store the last selected move index of
-    `side[0]` and bytes 374 and 375 store the last selected move index of `side[1]`
-  - otherwise byte 372 stores the last selected move index of `side[0]` in its first 4 bits and
-    `side[1]`'s in its second 4 bits
+- `last_moves` layout depends on whether or not Pokémon Showdown compatibility mode is enabled
+  (`-Dshowdown`). In either case it stores the last selected move index and last executed move for
+  each player (required to detect desyncs). In the case of the move index, 0 is used as an empty
+  value and 1-4 represent actual moves:
+  - if `showdown` is enabled byte 372 is used to store the last selected move index of `side[0]` and
+    byte 373 is used to store whether or not the side's last executed move would have been considered
+    "counterable"; and bytes 374 and 375 store the same information for `side[1]`
+  - otherwise the first 3 bits of byte 372 stores the last selected move index of `side[0]` and the
+    next bit stores whether that side's last executed move would have been considered "counterable",
+    with the same information for `side[1]`'s being stored in the second 4 bits
 - the `rng` depends on whether or not Pokémon Showdown compatibility mode is enabled (`-Dshowdown`):
   - if `showdown` is enabled, the RNG state begins on byte 376 and consists of a 64-bit seed,
     written in native-endianness

@@ -55,7 +55,7 @@ pub fn Battle(comptime RNG: anytype) type {
         turn: u16 = 0,
         /// The last damage dealt by either side.
         last_damage: u16 = 0,
-        /// TODO
+        /// Details about the last move selected/used by each player required to detect desyncs.
         last_moves: MoveDetails = .{},
         /// The pseudo random number generator.
         rng: RNG,
@@ -201,7 +201,7 @@ pub const MoveSlot = extern struct {
     }
 };
 
-/// TODO
+/// Details required to detect desyncs based on the move last selected/executed by players.
 pub const MoveDetails = packed struct {
     /// The move slot index of the last move selected in the battle menu by Player 1
     p1_index: if (showdown) u8 else u3 = 0,
