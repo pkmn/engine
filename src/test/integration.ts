@@ -521,6 +521,7 @@ function validate(prng: PRNG, moves: Set<ID>, used: RunnerOptions['usage']) {
     } else {
       used.move('bide' as ID);
     }
+    return true;
   }
   // Mirror Move is problematic in battles involving Transform/Substitute/binding moves
   // - we try to avoid always simply punting on Mirror Move and being fair
