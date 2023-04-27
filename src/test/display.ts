@@ -185,7 +185,6 @@ function displaySide(
     const move = selected?.name ?? '<em>None</em>';
     const counterable = !!selected && selected.basePower > 0 && selected.id !== 'counter' &&
       (selected.type === 'Normal' || selected.type === 'Fighting');
-    console.debug(selected?.name, counterable, side.lastMoveCounterable);
     const mismatch = counterable !== side.lastMoveCounterable ? '*' : '';
     const index = side.lastMoveIndex ? ` (${side.lastMoveIndex})` : '';
     buf.push(`<div><strong>Last Selected</strong><br />${move}${mismatch}${index}</div>`);
