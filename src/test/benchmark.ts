@@ -277,9 +277,10 @@ const libpkmn = (format: ID, prng: PRNG, battles: number, showdown = true) => {
 };
 
 const NAMES = ['RBY', 'GSC', 'ADV', 'DPP', 'BW', 'XY', 'SM', 'SS', 'SV'];
-const generationName = (format: ID, showdown?: boolean) => {
+const generationName = (format: ID, showdown?: boolean, log?: boolean) => {
   const tags = showdown ? ['showdown'] : [];
   if (format.includes('doubles')) tags.push('doubles');
+  if (log) tags.push('log');
   return `${NAMES[+format[3] - 1]}${tags.length ? ` (${tags.join(', ')})` : ''}`;
 };
 
@@ -313,6 +314,37 @@ const clean = (samples: number[], n = 3) => {
   return [cleaned, outliers];
 };
 
+export function regression(gens: Generations, num: number, battles: number, seed: number[]) {
+  const row: Array<string | number> = [Math.round(Date.now() / 1000), '7f2014fa2cd6', 1453]; // TODO
+  for (const log of [false, true]) {
+    for (const showdown of [false, true]) {
+      const options = [`-Dshowdown=${showdown.toString()}`, `-Dlog=${log.toString()}`];
+      sh('zig', ['build', '-j1', ...options, 'tools', '-p', 'build']);
+      for (const gen of gens) {
+        if (gen.num > 1) break;
+        patch.generation(gen);
+        const format = formatFor(gen);
+
+        const name = generationName(format, showdown, log);
+        const control = {turns: 0, seed: ''};
+        const samples = new Array(num);
+        for (let i = 0; i < num; i++) {
+          const prng = new PRNG(seed.slice() as PRNGSeed);
+          const [duration, turns, final] = libpkmn(format, prng, battles, showdown);
+          samples[i] = Math.round(1e9 / (Number(duration) / battles));
+          compare(name, control, turns, final);
+        }
+
+        const [cleaned, outliers] = clean(samples);
+        const stats = Stats.compute(cleaned);
+        row.push(Math.round(stats.avg), stats.min, stats.max);
+        row.push(stats.rme, outliers.sort().join(','));
+      }
+    }
+  }
+  console.log(row.join('\t'));
+}
+
 export function iterations(
   gens: Generations,
   num: number,
@@ -322,37 +354,40 @@ export function iterations(
 ) {
   const entries = [];
 
-  for (const showdown of [true, false]) {
-    sh('zig', ['build', '-j1', `-Dshowdown=${showdown.toString()}`, 'tools', '-p', 'build']);
-    for (const gen of gens) {
-      if (gen.num > 1) break;
-      patch.generation(gen);
-      const format = formatFor(gen);
+  for (const log of [true, false]) {
+    for (const showdown of [true, false]) {
+      const options = [`-Dshowdown=${showdown.toString()}`, `-Dlog=${log.toString()}`];
+      sh('zig', ['build', '-j1', ...options, 'tools', '-p', 'build']);
+      for (const gen of gens) {
+        if (gen.num > 1) break;
+        patch.generation(gen);
+        const format = formatFor(gen);
 
-      const name = generationName(format, showdown);
-      const control = {turns: 0, seed: ''};
-      const samples = new Array(num);
-      for (let i = 0; i < num; i++) {
-        const prng = new PRNG(seed.slice() as PRNGSeed);
-        const [duration, turns, final] = libpkmn(format, prng, battles, showdown);
-        samples[i] = Math.round(1e9 / (Number(duration) / battles));
-        compare(name, control, turns, final);
+        const name = generationName(format, showdown, log);
+        const control = {turns: 0, seed: ''};
+        const samples = new Array(num);
+        for (let i = 0; i < num; i++) {
+          const prng = new PRNG(seed.slice() as PRNGSeed);
+          const [duration, turns, final] = libpkmn(format, prng, battles, showdown);
+          samples[i] = Math.round(1e9 / (Number(duration) / battles));
+          compare(name, control, turns, final);
+        }
+
+        const [cleaned, outliers] = clean(samples);
+        const stats = Stats.compute(cleaned);
+        let extra = `[${stats.min} .. ${stats.max}]`;
+        if (outliers.length) {
+          extra += text ? ` (${outliers.length})` : ` (dropped: ${outliers.sort().join(', ')})`;
+        }
+
+        entries.push({
+          name,
+          unit: 'battles/sec',
+          value: Math.round(stats.avg),
+          range: isNaN(stats.rme) ? 'N/A' : `±${stats.rme.toFixed(2)}%`,
+          extra,
+        });
       }
-
-      const [cleaned, outliers] = clean(samples);
-      const stats = Stats.compute(cleaned);
-      let extra = `[${stats.min} .. ${stats.max}]`;
-      if (outliers.length) {
-        extra += text ? ` (${outliers.length})` : ` (dropped: ${outliers.sort().join(', ')})`;
-      }
-
-      entries.push({
-        name,
-        unit: 'battles/sec',
-        value: Math.round(stats.avg),
-        range: isNaN(stats.rme) ? 'N/A' : `±${stats.rme.toFixed(2)}%`,
-        extra,
-      });
     }
   }
 
@@ -412,10 +447,12 @@ function dec(n: number, c = 100) {
 if (require.main === module) {
   (async () => {
     const gens = new Generations(Dex as any);
-    const argv = minimist(process.argv.slice(2), {default: {battles: 10000}});
+    const argv = minimist(process.argv.slice(2), {boolean: ['regression']});
     const seed = argv.seed ? argv.seed.split(',').map((s: string) => Number(s)) : [1, 2, 3, 4];
-    if (argv.iterations) {
-      const entries = iterations(gens, argv.iterations, argv.battles, seed, argv.text);
+    if (argv.regression) {
+      regression(gens, argv.iterations ?? 50, argv.battles ?? 100_000, seed);
+    } else if (argv.iterations) {
+      const entries = iterations(gens, argv.iterations, argv.battles ?? 100_000, seed, argv.text);
       if (argv.text) {
         for (const {name, unit, value, range, extra} of entries) {
           const r = range.startsWith('±') ? ` ± ${range.slice(1)}` : '';
@@ -425,7 +462,7 @@ if (require.main === module) {
         console.log(JSON.stringify(entries, null, 2));
       }
     } else {
-      const stats = await comparison(gens, argv.battles, seed);
+      const stats = await comparison(gens, argv.battles ?? 10_000, seed);
 
       const display = (durations: {[config: string]: bigint}) => {
         const out = {} as {[config: string]: string};

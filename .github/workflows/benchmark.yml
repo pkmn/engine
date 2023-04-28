@@ -1,0 +1,19 @@
+name: Benchmark
+on:
+  workflow_call:
+  # push:
+  #   branches: [ main ]
+jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+  benchmark:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout benchmark branch
+      - uses: actions/checkout@v3
+        with:
+          ref: benchmark
+      - run: TODO # wait until commit matches main branch in description, checkout THAT commit (more could have come in since)
+        timeout-minutes: 60
+      - run: TODO # read very last row, confirm commit hash matches, error based on verdict
