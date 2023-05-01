@@ -643,7 +643,7 @@ the correct control flow):
   specific *slot* (e.g. the 2nd move slot), and a Pokémon's moves can change after Transform (this
   is not an issue with Disable + Mimic because Mimic happens to replace the same slot). Transform
   also has a bad interaction with Pokémon Showdown's buggy Haze implementation, as Haze on Pokémon
-  Showdown does not copy unmodified stats, leaving the Transformed Pokémon with inccorect stats.
+  Showdown does not copy unmodified stats, leaving the Transformed Pokémon with incorrect stats.
   Furthermore, transforming and then using Mirror Move / Metronome can result in [glitchy behavior
   and
   softlocks](https://pkmn.cc/bulba/Transform_glitches#Transform_.2B_Mirror_Move.2FMetronome_PP_error)
