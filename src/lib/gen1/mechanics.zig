@@ -762,7 +762,7 @@ fn canMove(
     return true;
 }
 
-fn setCounterable(battle: anytype,  player: Player, side: *Side, move: Move.Data) void {
+fn setCounterable(battle: anytype, player: Player, side: *Side, move: Move.Data) void {
     // The Counter desync is caused by the cartridge not calling GetCurrentMove until now, meaning
     // in cases where an early return happens the data for a players last selected move does not get
     // reloaded and HandleCounterMove actually bases its success/failure off of stale information.

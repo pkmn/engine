@@ -143,13 +143,20 @@ export class Battle implements Gen1.Battle {
     for (const side of battle.sides) {
       Side.encode(gen, !!options.showdown, lookup, battle, side, data, offset);
       offset += SIZES.Side;
-      lastMoves.push((side.lastMoveIndex ?? 0) | (+!!side.lastMoveCounterable << 3));
+      if (options.showdown) {
+        lastMoves.push(+!!side.lastMoveCounterable);
+        lastMoves.push((side.lastMoveIndex ?? 0));
+      } else {
+        lastMoves.push((+!!side.lastMoveCounterable << 3) | (side.lastMoveIndex ?? 0));
+      }
     }
     data.setUint16(OFFSETS.Battle.turn, battle.turn, LE);
     data.setUint16(OFFSETS.Battle.last_damage, battle.lastDamage, LE);
     if (options.showdown) {
-      data.setUint16(OFFSETS.Battle.last_moves, lastMoves[0], LE);
-      data.setUint16(OFFSETS.Battle.last_moves + 2, lastMoves[1], LE);
+      data.setUint8(OFFSETS.Battle.last_moves, lastMoves[0]);
+      data.setUint8(OFFSETS.Battle.last_moves + 1, lastMoves[1]);
+      data.setUint8(OFFSETS.Battle.last_moves + 2, lastMoves[2]);
+      data.setUint8(OFFSETS.Battle.last_moves + 3, lastMoves[3]);
     } else {
       data.setUint8(OFFSETS.Battle.last_moves, (lastMoves[1] << 4) | lastMoves[0]);
     }
