@@ -1230,7 +1230,7 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, log: anytype)
         return null;
     }
 
-    battle.last_damage = if (battle.last_damage > 0x7FFF) 0xFFFF else battle.last_damage * 2;
+    battle.last_damage *|= 2;
 
     // Pokémon Showdown calls checkHit before Counter
     if (!showdown and !try checkHit(battle, player, move, log)) return null;
