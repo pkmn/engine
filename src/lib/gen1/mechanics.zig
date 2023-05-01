@@ -318,7 +318,9 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
     const spe2 = battle.side(.P2).active.stats.spe;
     if (spe1 == spe2) {
         // Pokémon Showdown's beforeTurnCallback shenanigans
-        if (showdown and m1 == .Counter and m2 == .Counter) battle.rng.advance(1);
+        if (showdown and !double_switch and m1 == .Counter and m2 == .Counter) {
+            battle.rng.advance(1);
+        }
 
         const p1 = Rolls.speedTie(battle);
         if (!showdown) return if (p1) .P1 else .P2;

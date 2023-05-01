@@ -1,0 +1,26 @@
+>start {"formatid":"gen1customgame@@@Endless Battle Clause,Sleep Clause Mod,Freeze Clause Mod","seed":[38718,61570,15877,12473]}
+>player p1 {"name":"Bot 1","team":"Charizard|||None|thunder,blizzard,thundershock,counter||153,33,196,141,141,27|N|5,8,3,27,27,8||95|228]Golbat|||None|kinesis,metronome,pinmissile,glare||37,88,142,68,68,4|N|0,0,5,24,24,8||95|21]Staryu|||None|doubleteam,cometpunch,seismictoss,ember||40,63,185,117,117,218|N|6,21,23,8,8,6||67|82]Magikarp|||None|fireblast,furyswipes,vinewhip,recover||154,25,249,114,114,233|N|11,,1,6,6,||93|247]Cubone|||None|acid,bide,skullbash,fissure||228,158,100,8,8,36|N|9,15,21,2,2,13||80|114]Spearow|||None|doublekick,toxic,boneclub,drillpeck||98,101,68,69,69,222|N|8,10,13,12,12,21||50|82"}
+>player p2 {"name":"Bot 2","team":"Articuno|||None|hyperfang,leechlife,karatechop,waterfall||248,25,12,95,95,123|N|2,9,24,4,4,6||97|158]Tauros|||None|slash,acidarmor,mist,razorleaf||33,198,129,91,91,14|N|5,16,27,18,18,21||89|245]Charmeleon|||None|bite,jumpkick,megapunch,takedown||36,61,195,85,85,145|N|8,7,28,28,28,24||67|138]Golem|||None|mimic,sandattack,wrap,scratch||196,189,124,55,55,4|N|7,9,7,26,26,2||69|54]Voltorb|||None|thunderwave,superfang,confuseray,poisonsting||75,104,31,44,44,246|N|13,11,26,10,10,21||52|235]Gloom|||None|psywave,transform,rockthrow,quickattack||16,90,137,59,59,210|N|13,14,22,,,0||65|168"}
+>p1 switch 2
+>p2 move hyperfang
+>p1 move kinesis
+>p2 switch 2
+>p1 move metronome
+>p2 switch 2
+>p1 move pinmissile
+>p2 move leechlife
+>p1 switch 2
+>p2 switch 3
+>p1 move thunder
+>p2 switch 4
+>p1 move blizzard
+>p2 switch 5
+>p2 switch 6
+>p1 move thundershock
+>p2 move psywave
+>p1 move counter
+>p2 move transform
+>p1 move counter
+>p2 move counter
+>p1 switch 3
+>p2 switch 5
