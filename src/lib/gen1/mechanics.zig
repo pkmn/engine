@@ -1538,12 +1538,12 @@ fn endTurn(battle: anytype, log: anytype) @TypeOf(log).Error!Result {
     assert(!battle.side(.P1).active.volatiles.MultiHit);
     assert(!battle.side(.P2).active.volatiles.MultiHit);
 
+    battle.turn += 1;
+
     if (showdown and options.ebc and checkEBC(battle)) {
         try log.tie();
         return Result.Tie;
     }
-
-    battle.turn += 1;
 
     if (showdown and battle.turn >= 1000) {
         try log.tie();
