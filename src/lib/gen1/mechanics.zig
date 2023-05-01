@@ -728,6 +728,7 @@ fn canMove(
         side.active.volatiles.Invulnerable = false;
     } else if (move.effect == .Charge) {
         try log.move(player_ident, side.last_selected_move, .{}, from);
+        setCounterable(battle, player, side, move);
         try Effects.charge(battle, player, log);
         return false;
     }
@@ -744,19 +745,7 @@ fn canMove(
     // regrettable, but this information is more "nice to have" than required
     const f = if (from != null and from.? == .None) null else from;
     try log.move(player_ident, side.last_selected_move, battle.active(target), f);
-
-    // The Counter desync is caused by the cartridge not calling GetCurrentMove until now, meaning
-    // in cases where an early return happens the data for a players last selected move does not get
-    // reloaded and HandleCounterMove actually bases its success/failure off of stale information.
-    // This boolean state we track here doesn't exist on the cartridge because it instead manifests
-    // as the desync results from actually having two separate battle states that subtly disagree.
-    const counterable = side.last_selected_move != .Counter and move.bp > 0 and
-        (move.type == .Normal or move.type == .Fighting);
-    if (player == .P1) {
-        battle.last_moves.p1_counterable = @boolToInt(counterable);
-    } else {
-        battle.last_moves.p2_counterable = @boolToInt(counterable);
-    }
+    setCounterable(battle, player, side, move);
 
     if (move.effect.onBegin()) {
         try onBegin(battle, player, move, mslot, residual, log);
@@ -771,6 +760,21 @@ fn canMove(
     }
 
     return true;
+}
+
+fn setCounterable(battle: anytype,  player: Player, side: *Side, move: Move.Data) void {
+    // The Counter desync is caused by the cartridge not calling GetCurrentMove until now, meaning
+    // in cases where an early return happens the data for a players last selected move does not get
+    // reloaded and HandleCounterMove actually bases its success/failure off of stale information.
+    // This boolean state we track here doesn't exist on the cartridge because it instead manifests
+    // as the desync results from actually having two separate battle states that subtly disagree
+    const counterable = side.last_selected_move != .Counter and move.bp > 0 and
+        (move.type == .Normal or move.type == .Fighting);
+    if (player == .P1) {
+        battle.last_moves.p1_counterable = @boolToInt(counterable);
+    } else {
+        battle.last_moves.p2_counterable = @boolToInt(counterable);
+    }
 }
 
 fn decrementPP(side: *Side, mslot: u4, auto: bool) void {
