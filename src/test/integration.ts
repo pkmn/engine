@@ -440,7 +440,6 @@ function fixTeam(gen: Generation, options: sim.AIOptions, moves: Set<ID>) {
   return {...options, team: Teams.pack(options.team!)!} as sim.AIOptions & {team: string};
 }
 
-const OHKO = ['guillotine', 'horndrill', 'fissure'] as ID[];
 const BINDING = ['bind', 'wrap', 'firespin', 'clamp'] as ID[];
 
 // Due to Pokémon Showdown having some bugs which are unimplementable by correct
@@ -491,16 +490,6 @@ function validate(prng: PRNG, moves: Set<ID>, used: RunnerOptions['usage']) {
     }
     return true;
   }
-  // Bide's damage can overflow thanks for OHKO moves which Pokémon Showdown doesn't handle
-  const ohko = OHKO.filter(m => moves.has(m));
-  if (moves.has('bide' as ID) && ohko.length) {
-    if (prng.randomChance(1, ohko.length + 1)) {
-      for (const m of ohko) used.move(m);
-    } else {
-      used.move('bide' as ID);
-    }
-    return true;
-  }
   // Mirror Move is problematic in battles involving Transform/Substitute/binding moves
   // - we try to avoid always simply punting on Mirror Move and being fair
   // about which move gets a chance to be tested
@@ -531,7 +520,7 @@ function validate(prng: PRNG, moves: Set<ID>, used: RunnerOptions['usage']) {
 }
 
 const METRONOME = [
-  ...BINDING, ...OHKO, 'mirrormove', 'transform', 'disable', 'mimic', 'substitute', 'haze', 'bide',
+  ...BINDING, 'mirrormove', 'transform', 'disable', 'mimic', 'substitute', 'haze',
 ];
 
 // Mimic is so borked that we need to both ensure that if it appears in a move

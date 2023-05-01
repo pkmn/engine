@@ -492,6 +492,10 @@ Beyond the general bugs listed above, several move effects are implemented incor
 Showdown. Some of these moves are [too fundamentally broken to be implemented](#unimplementable) by
 the pkmn engine, but the following moves have their broken behavior preserved in `-Dshowdown` mode:
 
+- **Bide**: Bide's damage can overflow if OHKO moves are involved because OHKO moves work by setting
+  the damage to 65535 - Pokémon Showdown doesn't implement this overflow and instead lets Bide's
+  damage grow unbounded. Additionally, if the opponent faints after Bide inflicts damage on Pokémon
+  Showdown residual damage incorrectly still gets applied to Bide's user.
 - **Counter**: On Pokémon Showdown choices made while sleeping (which should not have been
   registered) can erroneously cause Counter to trigger Desync Clause Mod behavior.
 - **Leech Seed**: Leech Seed fails to heal its source side if a seeded target faints due to
@@ -604,10 +608,6 @@ Showdown's behavior for the following moves (the pkmn engine attempts to reprodu
 behavior that can be reproduced without making data structure changes or dramatically deviating from
 the correct control flow):
 
-- **Bide**: Bide's damage can overflow if OHKO moves are involved because OHKO moves work by setting
-  the damage to 65535 - Pokémon Showdown doesn't implement this overflow and instead lets Bide's
-  damage grow unbounded. Additionally, if the opponent faints after Bide inflicts damage on Pokémon
-  Showdown residual damage incorrectly still gets applied to Bide's user.
 - **Wrap**: Binding moves like Wrap are implemented on Pokémon Showdown with an artificial
   `partialtrappinglock` volatile as opposed to how it works on the cartridge which simply relies on
   the `Binding` volatile of the opponent. This mistake results in choice locking not being reported

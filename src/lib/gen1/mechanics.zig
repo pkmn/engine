@@ -627,7 +627,14 @@ fn beforeMove(
     if (volatiles.Bide) {
         assert(!volatiles.Thrashing and !volatiles.Rage);
 
-        volatiles.state +%= battle.last_damage;
+        if (showdown) {
+            // Pokémon Showdown doesn't implement Bide potentially overflowing in the event of
+            // OHKO-move damage, but we can fake this incorrect behavior by simply saturating the
+            // addition because 65535 is sufficient to faint any Pokémon anyway
+            volatiles.state +|= battle.last_damage;
+        } else {
+            volatiles.state +%= battle.last_damage;
+        }
 
         assert(volatiles.attacks > 0);
 
