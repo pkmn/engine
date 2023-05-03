@@ -145,11 +145,13 @@ will be encoded in the `pkmn_result` and can be checked with `pkmn_error`.
 ```c
 #include <pkmn.h>
 
-pkmn_battle battle = ...;
 uint8_t buf[PKMN_LOGS_SIZE];
+pkmn_battle_options = .{buf = buf, .len = PKMN_LOGS_SIZE};
+pkmn_battle battle = ...;
+
 pkmn_result result;
 pkmn_choice c1 = 0, c2 = 0;
-while (!pkmn_result_type(result = pkmn_battle_update(&battle, c1, c2, buf, PKMN_LOGS_SIZE))) {
+while (!pkmn_result_type(result = pkmn_battle_update(&battle, c1, c2, &options))) {
   c1 = choose(PKMN_PLAYER_P1, pkmn_result_p1(result));
   c2 = choose(PKMN_PLAYER_P2, pkmn_result_p2(result));
 }
@@ -219,13 +221,13 @@ var random = std.rand.DefaultPrng.init(seed).random();
 var choices: [pkmn.CHOICES_SIZE]pkmn.Choice = undefined;
 
 var battle = ...
-var log = ...
+var options = pkmn.battle.Options(...);
 
 var c1 = pkmn.Choice{};
 var c2 = pkmn.Choice{};
 
-var result = try battle.update(c1, c2, log);
-while (result.type == .None) : (result = try battle.update(c1, c2, log)) {
+var result = try battle.update(c1, c2, &options);
+while (result.type == .None) : (result = try battle.update(c1, c2, &options)) {
     c1 = choices[random.uintLessThan(u8, battle.choices(.P1, result.p1, &choices))];
     c2 = choices[random.uintLessThan(u8, battle.choices(.P2, result.p2, &choices))];
 }

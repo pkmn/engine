@@ -1,8 +1,9 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
+const pkmn = @import("../pkmn.zig");
+
 const data = @import("../common/data.zig");
-const options = @import("../common/options.zig");
 const protocol = @import("../common/protocol.zig");
 const rng = @import("../common/rng.zig");
 
@@ -39,7 +40,7 @@ const ID = data.ID;
 const Player = data.Player;
 const Result = data.Result;
 
-const showdown = options.showdown;
+const showdown = pkmn.options.showdown;
 
 /// The pseudo random number generator used by Generation I.
 pub const PRNG = rng.PRNG(1);
@@ -76,9 +77,10 @@ pub fn Battle(comptime RNG: anytype) type {
         }
 
         /// Returns the result of applying Player 1's choice `c1` and Player 2's choice `c2` to the
-        /// battle, optionally writing protocol message logs to `log` if `options.log` is enabled.
-        pub fn update(self: *Self, c1: Choice, c2: Choice, log: anytype) !Result {
-            return mechanics.update(self, c1, c2, log);
+        /// battle, optionally writing protocol message logs to `options.log` if `pkmn.options.log`
+        /// is enabled.
+        pub fn update(self: *Self, c1: Choice, c2: Choice, options: anytype) !Result {
+            return mechanics.update(self, c1, c2, options);
         }
 
         /// Fills in at most `out.len` possible choices for the `player` given the previous `result`
@@ -90,7 +92,7 @@ pub fn Battle(comptime RNG: anytype) type {
         /// interacts with Disable, in which case there are no possible choices for the player to
         /// make (i.e. on the cartridge a soft-lock occurs).
         ///
-        /// This function will always return a number of choices > 0 if options.showdown is true.
+        /// This function will always return choices > 0 if `pkmn.options.showdown` is true.
         pub fn choices(self: *Self, player: Player, request: Choice.Type, out: []Choice) u8 {
             return mechanics.choices(self, player, request, out);
         }

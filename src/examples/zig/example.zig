@@ -60,17 +60,17 @@ pub fn main() !void {
     var buf: [pkmn.LOGS_SIZE]u8 = undefined;
 
     var stream = pkmn.protocol.ByteStream{ .buffer = &buf };
-    var log = pkmn.protocol.FixedLog{ .writer = stream.writer() };
+    var options = pkmn.battle.Options(pkmn.protocol.FixedLog){ .log = .{ .writer = stream.writer() } };
 
     var c1 = pkmn.Choice{};
     var c2 = pkmn.Choice{};
 
-    var result = try battle.update(c1, c2, log);
-    while (result.type == .None) : (result = try battle.update(c1, c2, log)) {
+    var result = try battle.update(c1, c2, &options);
+    while (result.type == .None) : (result = try battle.update(c1, c2, &options)) {
         // Here we would do something with the log data in buf if `-Dlog` were enabled
         // _ = buf;
 
-        // `battle.choices` determines what the possible options are - the simplest way to choose
+        // `battle.choices` determines what the possible choices are - the simplest way to choose
         // an option here is to just use the system PRNG to pick one at random
         //
         // Technically due to Generation I's Transform + Mirror Move/Metronome PP error if the

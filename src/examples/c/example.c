@@ -11,19 +11,19 @@ pkmn_choice choose(
    pkmn_psrng *random,
    pkmn_player player,
    pkmn_choice_kind request,
-   pkmn_choice options[])
+   pkmn_choice choices[])
 {
-   uint8_t n = pkmn_gen1_battle_choices(battle, player, request, options, PKMN_CHOICES_SIZE);
+   uint8_t n = pkmn_gen1_battle_choices(battle, player, request, choices, PKMN_CHOICES_SIZE);
    // Technically due to Generation I's Transform + Mirror Move/Metronome PP
    // error if the battle contains Pokémon with a combination of Transform,
    // Mirror Move/Metronome, and Disable its possible that there are no
    // available choices (softlock), though this is impossible here given that
    // our example battle involves none of these moves
    assert(n > 0);
-   // pkmn_gen1_battle_choices determines what the possible options are - the
+   // pkmn_gen1_battle_choices determines what the possible choices are - the
    // simplest way to choose an option here is to just use the PSRNG to pick one
    // at random
-   return options[(uint64_t)pkmn_psrng_next(random) * n / 0x100000000];
+   return choices[(uint64_t)pkmn_psrng_next(random) * n / 0x100000000];
 }
 
 int main(int argc, char **argv)
@@ -85,8 +85,8 @@ int main(int argc, char **argv)
    // guaranteed to be large enough for a single update. This will only be
    // written to if -Dlog is enabled - NULL can be used to turn all of the
    // logging into no-ops
-   size_t size = PKMN_LOGS_SIZE;
-   uint8_t buf[size];
+   uint8_t buf[PKMN_LOGS_SIZE];
+   pkmn_gen1_battle_options options = {.buf = buf, .len = PKMN_LOGS_SIZE};
 
    pkmn_result result;
    // Pedantically these *should* be pkmn_choice_init(PKMN_CHOICE_PASS, 0), but
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
    pkmn_choice c1 = 0, c2 = 0;
    // We're also taking advantage of the fact that the PKMN_RESULT_NONE is
    // guaranteed to be 0, so we don't actually need to check against it here
-   while (!pkmn_result_type(result = pkmn_gen1_battle_update(&battle, c1, c2, buf, size))) {
+   while (!pkmn_result_type(result = pkmn_gen1_battle_update(&battle, c1, c2, &options))) {
       c1 = choose(&battle, &random, PKMN_PLAYER_P1, pkmn_result_p1(result), choices);
       c2 = choose(&battle, &random, PKMN_PLAYER_P2, pkmn_result_p2(result), choices);
    }

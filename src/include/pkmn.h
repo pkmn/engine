@@ -138,6 +138,12 @@ extern const size_t PKMN_GEN1_MAX_LOGS;
  */
 extern const size_t PKMN_GEN1_LOGS_SIZE;
 
+/** TODO */
+typedef struct {
+  uint8_t *buf;
+  size_t len;
+} pkmn_gen1_battle_options;
+
 /** Generation I Pokémon Battle (see src/lib/gen1/README.md#layout for details). */
 PKMN_OPAQUE(PKMN_GEN1_BATTLE_SIZE) pkmn_gen1_battle;
 /**
@@ -149,8 +155,7 @@ pkmn_result pkmn_gen1_battle_update(
   pkmn_gen1_battle *battle,
   pkmn_choice c1,
   pkmn_choice c2,
-  uint8_t buf[],
-  size_t len);
+  pkmn_gen1_battle_options *options);
 /**
  * Fills in out with at most len possible choices for the player given the
  * request and Generation I battle state and returns the number of choices

@@ -3,6 +3,9 @@ const pkmn = @import("../pkmn.zig");
 
 const assert = std.debug.assert;
 
+const Options = pkmn.battle.Options(pkmn.protocol.FixedLog);
+const NULL = pkmn.battle.Options(@TypeOf(pkmn.protocol.NULL)){ .log = pkmn.protocol.NULL };
+
 const c = @cImport({
     @cDefine("NAPI_VERSION", "8");
     @cInclude("node_api.h");
@@ -69,7 +72,7 @@ fn update(gen: anytype) c.napi_callback {
             var vtype: c.napi_valuetype = undefined;
             assert(c.napi_typeof(env, argv[3], &vtype) == c.napi_ok);
             const result = switch (vtype) {
-                c.napi_undefined, c.napi_null => battle.update(c1, c2, pkmn.protocol.NULL),
+                c.napi_undefined, c.napi_null => battle.update(c1, c2, &NULL),
                 else => result: {
                     assert(c.napi_get_arraybuffer_info(env, argv[3], &data, &len) == c.napi_ok);
                     assert(len == gen.LOGS_SIZE);
@@ -77,8 +80,8 @@ fn update(gen: anytype) c.napi_callback {
 
                     var buf = @ptrCast([*]u8, data.?)[0..gen.LOGS_SIZE];
                     var stream = pkmn.protocol.ByteStream{ .buffer = buf };
-                    var log = pkmn.protocol.FixedLog{ .writer = stream.writer() };
-                    break :result battle.update(c1, c2, log);
+                    var opts = Options{ .log = .{ .writer = stream.writer() } };
+                    break :result battle.update(c1, c2, &opts);
                 },
             } catch unreachable;
 

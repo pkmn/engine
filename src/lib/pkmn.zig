@@ -46,6 +46,15 @@ pub const protocol = if (options.internal) struct {
     pub const NULL = @import("common/protocol.zig").NULL;
 };
 
+/// TODO
+pub const battle = struct {
+    pub fn Options(comptime Log: type) type {
+        return struct {
+            log: Log,
+        };
+    }
+};
+
 /// Namespace for Generation I Pokémon
 pub const gen1 = struct {
     pub usingnamespace @import("gen1/data.zig");

@@ -83,7 +83,7 @@ pub fn benchmark(
 
     const fuzz = duration != null;
     const showdown = pkmn.options.showdown;
-    const save = fuzz and pkmn.options.log and builtin.mode == .Debug;
+    const save = pkmn.options.log and builtin.mode == .Debug and fuzz;
 
     var random = pkmn.PSRNG.init(seed);
     var choices: [pkmn.CHOICES_SIZE]pkmn.Choice = undefined;
@@ -131,16 +131,8 @@ pub fn benchmark(
 
         var timer = try Timer.start();
 
-        var result = try if (save)
-            battle.update(c1, c2, log.?)
-        else
-            battle.update(c1, c2, pkmn.protocol.NULL);
-
-        while (result.type == .None) : (result = try if (save)
-            battle.update(c1, c2, log.?)
-        else
-            battle.update(c1, c2, pkmn.protocol.NULL))
-        {
+        var result = try update(&battle, c1, c2, log);
+        while (result.type == .None) : (result = try update(&battle, c1, c2, log)) {
             var n = battle.choices(.P1, result.p1, &choices);
             if (n == 0) break;
             c1 = choices[p1.range(u8, 0, n)];
@@ -169,6 +161,21 @@ pub fn benchmark(
     }
     if (frames != null) deinit(allocator);
     if (battles != null) try out.print("{d},{d},{d}\n", .{ time, turns, random.src.seed });
+}
+
+inline fn update(
+    battle: anytype,
+    c1: pkmn.Choice,
+    c2: pkmn.Choice,
+    log: ?pkmn.protocol.Log(std.ArrayList(u8).Writer),
+) !pkmn.Result {
+    if (pkmn.options.log and builtin.mode == .Debug and log != null) {
+        const Options = pkmn.battle.Options(pkmn.protocol.Log(std.ArrayList(u8).Writer));
+        return battle.update(c1, c2, &Options{ .log = log.? });
+    } else {
+        const Options = pkmn.battle.Options(@TypeOf(pkmn.protocol.NULL));
+        return battle.update(c1, c2, &Options{ .log = pkmn.protocol.NULL });
+    }
 }
 
 fn errorAndExit(msg: []const u8, arg: []const u8, cmd: []const u8, fuzz: bool) noreturn {

@@ -1,8 +1,9 @@
 const std = @import("std");
 
+const pkmn = @import("../pkmn.zig");
+
 const common = @import("../common/data.zig");
 const DEBUG = @import("../common/debug.zig").print;
-const options = @import("../common/options.zig");
 const protocol = @import("../common/protocol.zig");
 const rng = @import("../common/rng.zig");
 
@@ -21,14 +22,13 @@ const Player = common.Player;
 const Result = common.Result;
 const Choice = common.Choice;
 
-const showdown = options.showdown;
-const log = options.log;
+const showdown = pkmn.options.showdown;
+const log = pkmn.options.log;
 
 const ArgType = protocol.ArgType;
 const ByteStream = protocol.ByteStream;
 const FixedLog = protocol.FixedLog;
 const Log = protocol.Log;
-const NULL = protocol.NULL;
 
 const Move = data.Move;
 const Species = data.Species;
@@ -54,6 +54,8 @@ const HIT = MIN;
 const CRIT = MIN;
 const MIN_DMG = if (showdown) MIN else 179;
 const MAX_DMG = MAX;
+
+const NULL = pkmn.battle.Options(@TypeOf(protocol.NULL)){ .log = protocol.NULL };
 
 comptime {
     assert(showdown or std.math.rotr(u8, MIN_DMG, 1) == 217);
@@ -91,7 +93,7 @@ test "start (first fainted)" {
     try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
     try t.log.expected.turn(1);
 
-    try expectEqual(Result.Default, try t.battle.actual.update(.{}, .{}, t.log.actual));
+    try expectEqual(Result.Default, try t.battle.actual.update(.{}, .{}, &t.options.actual));
     try t.verify();
 }
 
@@ -105,7 +107,7 @@ test "start (all fainted)" {
         );
         defer t.deinit();
 
-        try expectEqual(Result.Win, try t.battle.actual.update(.{}, .{}, t.log.actual));
+        try expectEqual(Result.Win, try t.battle.actual.update(.{}, .{}, &t.options.actual));
         try t.verify();
     }
     // Lose
@@ -116,7 +118,7 @@ test "start (all fainted)" {
         );
         defer t.deinit();
 
-        try expectEqual(Result.Lose, try t.battle.actual.update(.{}, .{}, t.log.actual));
+        try expectEqual(Result.Lose, try t.battle.actual.update(.{}, .{}, &t.options.actual));
         try t.verify();
     }
     // Tie
@@ -127,7 +129,7 @@ test "start (all fainted)" {
         );
         defer t.deinit();
 
-        try expectEqual(Result.Tie, try t.battle.actual.update(.{}, .{}, t.log.actual));
+        try expectEqual(Result.Tie, try t.battle.actual.update(.{}, .{}, &t.options.actual));
         try t.verify();
     }
 }
@@ -142,15 +144,15 @@ test "switching (order)" {
     const p1 = battle.side(.P1);
     const p2 = battle.side(.P2);
 
-    try expectEqual(Result.Default, try battle.update(swtch(3), swtch(2), NULL));
+    try expectEqual(Result.Default, try battle.update(swtch(3), swtch(2), &NULL));
     try expectOrder(p1, &.{ 3, 2, 1, 4, 5, 6 }, p2, &.{ 2, 1, 3, 4, 5, 6 });
-    try expectEqual(Result.Default, try battle.update(swtch(5), swtch(5), NULL));
+    try expectEqual(Result.Default, try battle.update(swtch(5), swtch(5), &NULL));
     try expectOrder(p1, &.{ 5, 2, 1, 4, 3, 6 }, p2, &.{ 5, 1, 3, 4, 2, 6 });
-    try expectEqual(Result.Default, try battle.update(swtch(6), swtch(3), NULL));
+    try expectEqual(Result.Default, try battle.update(swtch(6), swtch(3), &NULL));
     try expectOrder(p1, &.{ 6, 2, 1, 4, 3, 5 }, p2, &.{ 3, 1, 5, 4, 2, 6 });
-    try expectEqual(Result.Default, try battle.update(swtch(3), swtch(3), NULL));
+    try expectEqual(Result.Default, try battle.update(swtch(3), swtch(3), &NULL));
     try expectOrder(p1, &.{ 1, 2, 6, 4, 3, 5 }, p2, &.{ 5, 1, 3, 4, 2, 6 });
-    try expectEqual(Result.Default, try battle.update(swtch(2), swtch(4), NULL));
+    try expectEqual(Result.Default, try battle.update(swtch(2), swtch(4), &NULL));
     try expectOrder(p1, &.{ 2, 1, 6, 4, 3, 5 }, p2, &.{ 4, 1, 3, 5, 2, 6 });
 
     var expected_buf: [22]u8 = undefined;
@@ -166,7 +168,8 @@ test "switching (order)" {
     try expected.switched(P2.ident(2), p2.pokemon[1]);
     try expected.turn(7);
 
-    try expectEqual(Result.Default, try battle.update(swtch(5), swtch(5), actual));
+    var options = pkmn.battle.Options(FixedLog){ .log = actual };
+    try expectEqual(Result.Default, try battle.update(swtch(5), swtch(5), &options));
     try expectOrder(p1, &.{ 3, 1, 6, 4, 2, 5 }, p2, &.{ 2, 1, 3, 5, 4, 6 });
     try expectLog(&expected_buf, &actual_buf);
 }
@@ -325,7 +328,7 @@ test "turn order (basic speed tie)" {
         try t.log.expected.switched(P2.ident(1), t.actual.p2.get(1));
         try t.log.expected.turn(1);
 
-        try expectEqual(Result.Default, try t.battle.actual.update(.{}, .{}, t.log.actual));
+        try expectEqual(Result.Default, try t.battle.actual.update(.{}, .{}, &t.options.actual));
 
         try t.verify();
     }
@@ -586,14 +589,14 @@ test "PP deduction" {
     try expectEqual(@as(u8, 32), t.actual.p2.active.move(1).pp);
     try expectEqual(@as(u8, 32), t.actual.p2.stored().move(1).pp);
 
-    try expectEqual(Result.Default, try t.battle.actual.update(move(1), move(1), NULL));
+    try expectEqual(Result.Default, try t.battle.actual.update(move(1), move(1), &NULL));
 
     try expectEqual(@as(u8, 31), t.actual.p1.active.move(1).pp);
     try expectEqual(@as(u8, 31), t.actual.p1.stored().move(1).pp);
     try expectEqual(@as(u8, 31), t.actual.p2.active.move(1).pp);
     try expectEqual(@as(u8, 31), t.actual.p2.stored().move(1).pp);
 
-    try expectEqual(Result.Default, try t.battle.actual.update(move(1), move(1), NULL));
+    try expectEqual(Result.Default, try t.battle.actual.update(move(1), move(1), &NULL));
 
     try expectEqual(@as(u8, 30), t.actual.p1.active.move(1).pp);
     try expectEqual(@as(u8, 30), t.actual.p1.stored().move(1).pp);
@@ -930,7 +933,7 @@ test "end turn (turn limit)" {
 
     var max: u16 = if (showdown) 1000 else 65535;
     for (0..(max - 1)) |_| {
-        try expectEqual(Result.Default, try t.battle.actual.update(swtch(2), swtch(2), NULL));
+        try expectEqual(Result.Default, try t.battle.actual.update(swtch(2), swtch(2), &NULL));
     }
     try expectEqual(max - 1, t.battle.actual.turn);
 
@@ -950,7 +953,8 @@ test "end turn (turn limit)" {
     if (showdown) try expected.tie();
 
     const result = if (showdown) Result.Tie else Result.Error;
-    try expectEqual(result, try t.battle.actual.update(swtch(2), swtch(2), actual));
+    var options = pkmn.battle.Options(FixedLog){ .log = actual };
+    try expectEqual(result, try t.battle.actual.update(swtch(2), swtch(2), &options));
     try expectEqual(max, t.battle.actual.turn);
     try expectLog(&expected_buf, &actual_buf);
 }
@@ -971,7 +975,7 @@ test "Endless Battle Clause (initial)" {
     try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
     try t.log.expected.tie();
 
-    try expectEqual(Result.Tie, try t.battle.actual.update(.{}, .{}, t.log.actual));
+    try expectEqual(Result.Tie, try t.battle.actual.update(.{}, .{}, &t.options.actual));
     try t.verify();
 }
 
@@ -994,7 +998,7 @@ test "Endless Battle Clause (basic)" {
         try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
         try t.log.expected.tie();
 
-        try expectEqual(Result.Tie, try t.battle.actual.update(.{}, .{}, t.log.actual));
+        try expectEqual(Result.Tie, try t.battle.actual.update(.{}, .{}, &t.options.actual));
         try t.verify();
     }
     {
@@ -1011,7 +1015,7 @@ test "Endless Battle Clause (basic)" {
         try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
         try t.log.expected.turn(1);
 
-        try expectEqual(Result.Default, try t.battle.actual.update(.{}, .{}, t.log.actual));
+        try expectEqual(Result.Default, try t.battle.actual.update(.{}, .{}, &t.options.actual));
 
         t.expected.p1.get(2).hp = 0;
         t.actual.p1.get(2).hp = 0;
@@ -1030,7 +1034,7 @@ test "Endless Battle Clause (basic)" {
 test "choices" {
     var random = rng.PSRNG.init(0x27182818);
     var battle = Battle.random(&random, .{});
-    try expectEqual(Result.Default, try battle.update(.{}, .{}, NULL));
+    try expectEqual(Result.Default, try battle.update(.{}, .{}, &NULL));
 
     var n = battle.choices(.P1, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{
@@ -1390,14 +1394,14 @@ test "Poison effect" {
                 .moves = &.{ .LeechSeed, .Recover },
             }},
         );
-        try expectEqual(Result.Default, try battle.update(.{}, .{}, NULL));
+        try expectEqual(Result.Default, try battle.update(.{}, .{}, &NULL));
         try expectEqual(@as(u16, 31), battle.side(.P2).active.stats.hp);
 
-        try expectEqual(Result.Default, try battle.update(move(1), move(1), NULL));
-        for (0..29) |_| try expectEqual(Result.Default, try battle.update(move(2), move(2), NULL));
+        try expectEqual(Result.Default, try battle.update(move(1), move(1), &NULL));
+        for (0..29) |_| try expectEqual(Result.Default, try battle.update(move(2), move(2), &NULL));
         try expectEqual(@as(u5, 30), battle.side(.P2).active.volatiles.toxic);
 
-        try expectEqual(Result.Win, try battle.update(move(2), move(2), NULL));
+        try expectEqual(Result.Win, try battle.update(move(2), move(2), &NULL));
         try expect(battle.rng.exhausted());
     }
 }
@@ -6375,22 +6379,22 @@ test "Mimic infinite PP bug" {
                 .{ .species = .Clefable, .moves = &.{.Teleport} },
             },
         );
-        try expectEqual(Result.Default, try battle.update(.{}, .{}, NULL));
+        try expectEqual(Result.Default, try battle.update(.{}, .{}, &NULL));
 
-        try expectEqual(Result.Default, try battle.update(move(1), move(1), NULL));
+        try expectEqual(Result.Default, try battle.update(move(1), move(1), &NULL));
         try expectEqual(@as(u8, 15), battle.side(.P2).active.move(1).pp);
         try expectEqual(@as(u8, 15), battle.side(.P2).get(1).move(1).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).active.move(2).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(2).pp);
 
         // BUG: can't implement Pokémon Showdown's negative PP so need to stop iterating early
-        for (1..16) |_| try expectEqual(Result.Default, try battle.update(move(1), move(1), NULL));
+        for (1..16) |_| try expectEqual(Result.Default, try battle.update(move(1), move(1), &NULL));
         try expectEqual(@as(u8, 0), battle.side(.P2).active.move(1).pp);
         try expectEqual(@as(u8, 0), battle.side(.P2).get(1).move(1).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).active.move(2).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(2).pp);
 
-        try expectEqual(Result.Default, try battle.update(move(1), swtch(2), NULL));
+        try expectEqual(Result.Default, try battle.update(move(1), swtch(2), &NULL));
 
         try expectEqual(@as(u8, 0), battle.side(.P2).get(2).move(1).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).get(2).move(2).pp);
@@ -6410,23 +6414,23 @@ test "Mimic infinite PP bug" {
                 .{ .species = .Clefable, .moves = &.{.Teleport} },
             },
         );
-        try expectEqual(Result.Default, try battle.update(.{}, .{}, NULL));
+        try expectEqual(Result.Default, try battle.update(.{}, .{}, &NULL));
 
-        try expectEqual(Result.Default, try battle.update(move(1), move(2), NULL));
+        try expectEqual(Result.Default, try battle.update(move(1), move(2), &NULL));
         try expectEqual(@as(u8, 8), battle.side(.P2).active.move(1).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(1).pp);
         try expectEqual(@as(u8, 15), battle.side(.P2).active.move(2).pp);
         try expectEqual(@as(u8, 15), battle.side(.P2).get(1).move(2).pp);
 
         // BUG: can't implement Pokémon Showdown's negative PP so need to stop iterating early
-        for (1..16) |_| try expectEqual(Result.Default, try battle.update(move(1), move(2), NULL));
+        for (1..16) |_| try expectEqual(Result.Default, try battle.update(move(1), move(2), &NULL));
         // BUG: Pokémon Showdown decrements the wrong slot here
         try expectEqual(@as(u8, 8), battle.side(.P2).active.move(1).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(1).pp);
         try expectEqual(@as(u8, 0), battle.side(.P2).active.move(2).pp);
         try expectEqual(@as(u8, 0), battle.side(.P2).get(1).move(2).pp);
 
-        try expectEqual(Result.Default, try battle.update(move(1), swtch(2), NULL));
+        try expectEqual(Result.Default, try battle.update(move(1), swtch(2), &NULL));
 
         try expectEqual(@as(u8, 8), battle.side(.P2).get(2).move(1).pp);
         try expectEqual(@as(u8, 0), battle.side(.P2).get(2).move(2).pp);
@@ -9261,13 +9265,13 @@ test "MAX_LOGS" {
         &.{.{ .species = .Aerodactyl, .status = BRN, .stats = stats, .moves = moves }},
     );
     battle.rng = data.PRNG{ .src = .{ .seed = .{ 106, 161, 95, 184, 221, 10, 52, 25, 156, 133 } } };
-    try expectEqual(Result.Default, try battle.update(.{}, .{}, NULL));
+    try expectEqual(Result.Default, try battle.update(.{}, .{}, &NULL));
 
     // P1 and P2 both use Leech Seed
-    try expectEqual(Result.Default, try battle.update(move(1), move(1), NULL));
+    try expectEqual(Result.Default, try battle.update(move(1), move(1), &NULL));
 
     // P1 and P2 both use Confuse Ray
-    try expectEqual(Result.Default, try battle.update(move(2), move(2), NULL));
+    try expectEqual(Result.Default, try battle.update(move(2), move(2), &NULL));
 
     var copy = battle;
     var p1 = copy.side(.P1);
@@ -9330,7 +9334,8 @@ test "MAX_LOGS" {
     try expected.turn(4);
 
     // P1 uses Metronome -> Fury Swipes and P2 uses Metronome -> Mirror Move
-    try expectEqual(Result.Default, try battle.update(move(3), move(3), actual));
+    var options = pkmn.battle.Options(FixedLog){ .log = actual };
+    try expectEqual(Result.Default, try battle.update(move(3), move(3), &options));
 
     try expectLog(&expected_buf, &actual_buf);
 }
@@ -9351,6 +9356,10 @@ fn Test(comptime rolls: anytype) type {
             expected: Log(ArrayList(u8).Writer),
             actual: Log(ArrayList(u8).Writer),
         },
+        options: struct {
+            expected: pkmn.battle.Options(Log(ArrayList(u8).Writer)),
+            actual: pkmn.battle.Options(Log(ArrayList(u8).Writer)),
+        },
 
         expected: struct {
             p1: *data.Side,
@@ -9370,8 +9379,10 @@ fn Test(comptime rolls: anytype) type {
             t.battle.actual = t.battle.expected;
             t.buf.expected = std.ArrayList(u8).init(std.testing.allocator);
             t.buf.actual = std.ArrayList(u8).init(std.testing.allocator);
-            t.log.expected = Log(ArrayList(u8).Writer){ .writer = t.buf.expected.writer() };
-            t.log.actual = Log(ArrayList(u8).Writer){ .writer = t.buf.actual.writer() };
+            t.log.expected = .{ .writer = t.buf.expected.writer() };
+            t.log.actual = .{ .writer = t.buf.actual.writer() };
+            t.options.expected = .{ .log = t.log.expected };
+            t.options.actual = .{ .log = t.log.actual };
 
             t.expected.p1 = t.battle.expected.side(.P1);
             t.expected.p2 = t.battle.expected.side(.P2);
@@ -9403,13 +9414,14 @@ fn Test(comptime rolls: anytype) type {
             try expected.switched(P2.ident(1), self.actual.p2.get(1));
             try expected.turn(1);
 
-            try expectEqual(Result.Default, try self.battle.actual.update(.{}, .{}, actual));
+            var options = pkmn.battle.Options(FixedLog){ .log = actual };
+            try expectEqual(Result.Default, try self.battle.actual.update(.{}, .{}, &options));
             try expectLog(&expected_buf, &actual_buf);
         }
 
         pub fn update(self: *Self, c1: Choice, c2: Choice) !Result {
             if (self.battle.actual.turn == 0) try self.start();
-            const result = self.battle.actual.update(c1, c2, self.log.actual);
+            const result = self.battle.actual.update(c1, c2, &self.options.actual);
             try self.validate();
             return result;
         }

@@ -63,21 +63,29 @@ export const PKMN_GEN1_CHOICES_SIZE = pkmn.gen1.CHOICES_SIZE;
 export const PKMN_GEN1_MAX_LOGS = pkmn.gen1.MAX_LOGS;
 export const PKMN_GEN1_LOGS_SIZE = pkmn.gen1.LOGS_SIZE;
 
+const pkmn_gen1_battle_options = extern struct {
+    buf: ?[*]u8,
+    len: usize,
+};
+
 export fn pkmn_gen1_battle_update(
     battle: *pkmn.gen1.Battle(pkmn.gen1.PRNG),
     c1: pkmn.Choice,
     c2: pkmn.Choice,
-    buf: ?[*]u8,
-    len: usize,
+    options: ?*pkmn_gen1_battle_options,
 ) pkmn.Result {
     if (pkmn.options.log) {
-        if (buf) |b| {
-            var stream = pkmn.protocol.ByteStream{ .buffer = b[0..len] };
-            var log = pkmn.protocol.FixedLog{ .writer = stream.writer() };
-            return battle.update(c1, c2, log) catch return @bitCast(pkmn.Result, ERROR);
+        if (options) |opts| {
+            if (opts.buf) |b| {
+                var stream = pkmn.protocol.ByteStream{ .buffer = b[0..opts.len] };
+                var log = pkmn.protocol.FixedLog{ .writer = stream.writer() };
+                var o = pkmn.battle.Options(pkmn.protocol.FixedLog){ .log = log };
+                return battle.update(c1, c2, &o) catch return @bitCast(pkmn.Result, ERROR);
+            }
         }
     }
-    return battle.update(c1, c2, pkmn.protocol.NULL) catch unreachable;
+    var o = pkmn.battle.Options(@TypeOf(pkmn.protocol.NULL)){ .log = pkmn.protocol.NULL };
+    return battle.update(c1, c2, &o) catch unreachable;
 }
 
 export fn pkmn_gen1_battle_choices(
