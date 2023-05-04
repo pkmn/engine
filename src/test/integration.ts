@@ -541,11 +541,16 @@ function problematic(battle: Battle) {
     }
   }
 
-  // Metronome calling any move that contains issues is a problem because it
-  // bypasses the validation logic above which would otherwise disallow it
   for (const {args, kwArgs} of Protocol.parse(battle.getDebugLog())) {
-    if (args[0] === 'move' && toID((kwArgs as Protocol.KWArgs['|move|']).from) === 'metronome') {
-      if (METRONOME.includes(toID(args[2]))) return true;
+    if (args[0] === 'move') {
+      // Metronome calling any move that contains issues is a problem because it
+      // bypasses the validation logic above which would otherwise disallow it
+      const from = toID((kwArgs as Protocol.KWArgs['|move|']).from);
+      if (from === 'metronome' && METRONOME.includes(toID(args[2]))) return true;
+    } else if (args[0] === '-start') {
+      // Pokémon Showdown doesn't properly handle PP deduction if Transform was
+      // copied by Mimic
+      if (toID(args[2]) === 'mimic' && toID(args[3]) === 'transform') return true;
     }
   }
 

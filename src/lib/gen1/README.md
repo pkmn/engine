@@ -626,7 +626,8 @@ the correct control flow):
   because Pokémon Showdown deducts PP based on a move's name instead of slot, if Mimic copies a move
   the Pokémon already knows, PP deduction for using either the original move of the mimicked move
   will instead deduct PP for whichever appears at the lower move slot index and the PP will be
-  allowed to go negative (effectively allowing for infinite PP use).
+  allowed to go negative (effectively allowing for infinite PP use). Pokémon Showdown also doesn't
+  deduct PP from using Transform if it was copied by Mimic.
 - **Mirror Move**: As covered above, both Substitute and Binding moves misbehave when used via
   Mirror Move (though Pokémon Showdown has its own weird behavior and does not implement the
   [partial trapping move Mirror Move
