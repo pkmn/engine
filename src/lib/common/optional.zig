@@ -4,7 +4,7 @@ const expect = std.testing.expect;
 const assert = std.debug.assert;
 
 // TODO: ziglang/zig#104
-fn Optional(comptime T: type) type {
+pub fn Optional(comptime T: type) type {
     const fields = std.meta.fields(switch (@typeInfo(T)) {
         .Bool => enum { false, true },
         else => T,

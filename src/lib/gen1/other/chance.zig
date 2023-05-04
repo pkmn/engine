@@ -86,7 +86,7 @@ pub const Guide = extern struct {
 
         /// Observed values for various durations that need to be tracked in order to properly
         /// deduplicate transitions with a primary key.
-        pub const Durations = struct {
+        pub const Durations = packed struct {
             /// The number of turns a Pokémon has been observed to be disabled.
             disable: u4 = 0,
             /// The number of turns a Pokémon has been observed to be sleeping.
