@@ -60,8 +60,10 @@ export class SideInfo {
  * protocol from the engine's binary protocol.
  */
 export interface PokemonInfo {
-  /** The Pokémon's nickname. */
-  name: string;
+  /** The Pokémon's nickname. Either this or species must be set. */
+  name?: string;
+  /** The Pokémon's species. Either this or name must be set. */
+  species?: string;
   /** The gender of the Pokémon. */
   gender?: string;
   /** Whether or not the Pokémon is shiny. */
@@ -197,8 +199,9 @@ DECODERS[ArgType.Move] = function (offset, data) {
   const source = decodeIdent(this.info, data.getUint8(offset++));
   const m = data.getUint8(offset++);
   const {player, id} = decodeIdentRaw(data.getUint8(offset++));
+  const set = this.info[player].team[id - 1];
   const target = id === 0
-    ? '' : `${player}a: ${this.info[player].team[id - 1].name}` as Protocol.PokemonIdent;
+    ? '' : `${player}a: ${(set.name || set.species)!}` as Protocol.PokemonIdent;
   const reason = data.getUint8(offset++);
   const move = reason === PROTOCOL.Move.Recharge
     ? 'recharge' : this.gen.moves.get(this.lookup.moveByNum(m))!.name;
@@ -429,7 +432,8 @@ function decodeProtocol(type: string, offset: number, data: DataView, info: Info
 
 function decodeIdent(info: Info, byte: number): Protocol.PokemonIdent {
   const {player, id} = decodeIdentRaw(byte);
-  return `${player}a: ${info[player].team[id - 1].name}` as Protocol.PokemonIdent;
+  const set = info[player].team[id - 1];
+  return `${player}a: ${(set.name || set.species)!}` as Protocol.PokemonIdent;
 }
 
 function decodeDetails(
