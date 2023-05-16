@@ -338,12 +338,16 @@ const downloadImportLib = async () => {
           const addon = require(copy);
           if (addon.options.showdown) opts.push('-Dshowdown');
           if (addon.options.log) opts.push('-Dlog');
+          if (addon.options.chance) opts.push('-Dchance');
+          if (addon.options.calc) opts.push('-Dcalc');
         }
       } else if (!options) {
         const addon = await WebAssembly.instantiate(fs.readFileSync(copy));
         const values = new Uint8Array(addon.instance.exports.memory.buffer);
         if (values[addon.instance.exports.SHOWDOWN.value]) opts.push('-Dshowdown');
         if (values[addon.instance.exports.LOG.value]) opts.push('-Dlog');
+        if (values[addon.instance.exports.CHANCE.value]) opts.push('-Dchance');
+        if (values[addon.instance.exports.CALC.value]) opts.push('-Dcalc');
       }
       const key = `${type} ${opts.sort().join(' ')}`;
       if (!configs.has(key)) configs.set(key, {type, options: opts});
