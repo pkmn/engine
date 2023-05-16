@@ -8,27 +8,27 @@ const Optional = @import("../../common/optional.zig").Optional;
 
 const Move = @import("../data.zig").Move;
 
-/// Information about what RNG events were observed during a battle `update`. This can additionally
-/// be provided as input to the `update` call to override the normal behavior of the RNG in order
-/// to force specific outcomes.
-pub const Guide = extern struct {
-    /// Outline of the RNG activity for Player 1
-    p1: Outline = .{},
-    /// Outline of the RNG activity for Player 2
-    p2: Outline = .{},
+/// Actions taken by a hypothetical "chance player" that convey information about which RNG events
+/// were observed during a battle `update`. This can additionally be provided as input to the
+/// `update` call to override the normal behavior of the RNG in order to force specific outcomes.
+pub const Actions = extern struct {
+    /// Information about the RNG activity for Player 1
+    p1: Action = .{},
+    /// Information about the RNG activity for Player 2
+    p2: Action = .{},
 
-    /// Return a copy of the guide suitable to be used as a unique logical key.
-    pub fn key(guide: Guide) Guide {
+    /// Return a copy suitable to be used as a unique logical key.
+    pub fn key(actions: Actions) Actions {
         // We need to remove the *actual* duration rolls from the key because logically
         // we should not be able to differentiate based on this hidden information and instead
         // want to rely on the observed values tracked in the durations field.
-        guide.p1.duration = 0;
-        guide.p2.duration = 0;
-        return guide;
+        actions.p1.duration = 0;
+        actions.p2.duration = 0;
+        return actions;
     }
 
     /// TODO
-    pub fn eql(a: Guide, b: Guide) Guide {
+    pub fn eql(a: Actions, b: Actions) Actions {
         a.p1.duration = 0;
         a.p2.duration = 0;
         a.p1.max_damage = 0;
@@ -43,11 +43,11 @@ pub const Guide = extern struct {
     }
 
     comptime {
-        assert(@sizeOf(Guide) == 16);
+        assert(@sizeOf(Actions) == 16);
     }
 
     /// Information about the RNG that was observed during a battle `update` for a single player.
-    pub const Outline = packed struct {
+    pub const Action = packed struct {
         /// Observed values of various durations. Does not influence future RNG calls.
         durations: Durations = .{},
 
@@ -102,7 +102,7 @@ pub const Guide = extern struct {
         };
 
         comptime {
-            assert(@sizeOf(Outline) == 8);
+            assert(@sizeOf(Action) == 8);
         }
     };
 };
