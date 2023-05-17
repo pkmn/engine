@@ -1,17 +1,24 @@
 const std = @import("std");
 
 const common = @import("../common/data.zig");
+const optional = @import("../common/optional.zig");
 const options = @import("../common/options.zig");
 const protocol = @import("../common/protocol.zig");
 const rng = @import("../common/rng.zig");
 
 const data = @import("data.zig");
 
+const chance = @import("other/chance.zig");
+
 const assert = std.debug.assert;
 
 const expectEqual = std.testing.expectEqual;
+const expectEqualSlices = std.testing.expectEqualSlices;
 
 const Choice = common.Choice;
+const Player = common.Player;
+
+const Optional = optional.Optional;
 
 const showdown = options.showdown;
 
@@ -24,13 +31,15 @@ const Species = data.Species;
 const Stats = data.Stats;
 const Status = data.Status;
 
-/// Options with dictate
+/// Options which dictate TODO
 pub const Options = struct {
     cleric: bool = showdown,
     block: bool = showdown,
 };
 
+/// TODO
 pub const Battle = struct {
+    /// TODO
     pub fn init(
         seed: u64,
         p1: []const Pokemon,
@@ -43,6 +52,7 @@ pub const Battle = struct {
         };
     }
 
+    /// TODO
     pub fn fixed(
         comptime rolls: anytype,
         p1: []const Pokemon,
@@ -54,6 +64,7 @@ pub const Battle = struct {
         };
     }
 
+    /// TODO
     pub fn random(rand: *PSRNG, opt: Options) data.Battle(data.PRNG) {
         return .{
             .rng = prng(rand),
@@ -83,7 +94,9 @@ fn prng(rand: *PSRNG) data.PRNG {
     };
 }
 
+/// TODO
 pub const Side = struct {
+    /// TODO
     pub fn init(ps: []const Pokemon) data.Side {
         assert(ps.len > 0 and ps.len <= 6);
         var side = data.Side{};
@@ -95,6 +108,7 @@ pub const Side = struct {
         return side;
     }
 
+    /// TODO
     pub fn random(rand: *PSRNG, opt: Options) data.Side {
         const n = if (rand.chance(u8, 1, 100)) rand.range(u4, 1, 5 + 1) else 6;
         var side = data.Side{};
@@ -108,8 +122,10 @@ pub const Side = struct {
     }
 };
 
+/// TODO
 pub const EXP = 0xFFFF;
 
+/// TODO
 pub const Pokemon = struct {
     species: Species,
     moves: []const Move,
@@ -119,6 +135,7 @@ pub const Pokemon = struct {
     dvs: DVs = .{},
     stats: Stats(u16) = .{ .hp = EXP, .atk = EXP, .def = EXP, .spe = EXP, .spc = EXP },
 
+    /// TODO
     pub fn init(p: Pokemon) data.Pokemon {
         var pokemon = data.Pokemon{};
         pokemon.species = p.species;
@@ -152,6 +169,7 @@ pub const Pokemon = struct {
         return pokemon;
     }
 
+    /// TODO
     pub fn random(rand: *PSRNG, opt: Options) data.Pokemon {
         const s = @enumFromInt(Species, rand.range(u8, 1, Species.size + 1));
         const species = Species.get(s);
@@ -214,10 +232,152 @@ fn blocked(m: Move) bool {
     };
 }
 
+/// TODO
 pub fn move(slot: u4) Choice {
     return .{ .type = .Move, .data = slot };
 }
 
+/// TODO
 pub fn swtch(slot: u4) Choice {
     return .{ .type = .Switch, .data = slot };
+}
+
+/// TODO
+pub const Rolls = struct {
+    const MOVE_NONE = [_]Move{.None};
+    const MOVES = init: {
+        var moves: [Move.size - 2]Move = undefined;
+        var i: usize = 0;
+        for (@typeInfo(Move).Enum.fields) |f| {
+            if (!(std.mem.eql(u8, f.name, "None") or
+                std.mem.eql(u8, f.name, "Metronome") or
+                std.mem.eql(u8, f.name, "Struggle") or
+                std.mem.eql(u8, f.name, "SKIP_TURN")))
+            {
+                moves[i] = @field(Move, f.name);
+                i += 1;
+            }
+        }
+        break :init moves;
+    };
+
+    /// TODO
+    pub fn metronome(action: chance.Action) []const Move {
+        return if (@field(action, "metronome") == .None) &MOVE_NONE else &MOVES;
+    }
+
+    const PSYWAVE_NONE = [_]u8{0};
+    const PSYWAVE = init: {
+        var rolls: [150]u8 = undefined;
+        for (0..150) |i| rolls[i] = i + 1;
+        break :init rolls;
+    };
+
+    /// TODO use break base on level
+    pub fn psywave(action: chance.Action) []const u8 {
+        return if (@field(action, "psywave") == 0) &PSYWAVE_NONE else &PSYWAVE;
+    }
+
+    const PLAYER_NONE = [_]Optional(Player){.None};
+    const PLAYERS = [_]Optional(Player){ .P1, .P2 };
+
+    /// TODO call on correct player
+    pub fn speedTie(action: chance.Action) []const Optional(Player) {
+        return if (@field(action, "speed_tie") == .None) &PLAYER_NONE else &PLAYERS;
+    }
+
+    const DAMAGE_NONE = [_]u6{0};
+    const DAMAGE = init: {
+        var rolls: [39]u6 = undefined;
+        for (0..39) |i| rolls[i] = i + 1;
+        break :init rolls;
+    };
+
+    /// TODO set min_damage not max_damage
+    pub fn damage(action: chance.Action) []const u6 {
+        return if (@field(action, "min_damage") == 0) &DAMAGE_NONE else &DAMAGE;
+    }
+
+    const BOOL_NONE = [_]Optional(bool){.None};
+    const BOOLS = [_]Optional(bool){ .false, .true };
+
+    /// TODO
+    pub fn hit(action: chance.Action) []const Optional(bool) {
+        return if (@field(action, "hit") == .None) &BOOL_NONE else &BOOLS;
+    }
+
+    /// TODO
+    pub fn secondaryChance(action: chance.Action) []const Optional(bool) {
+        return if (@field(action, "secondary_chance") == .None) &BOOL_NONE else &BOOLS;
+    }
+
+    /// TODO
+    pub fn criticalHit(action: chance.Action) []const Optional(bool) {
+        return if (@field(action, "critical_hit") == .None) &BOOL_NONE else &BOOLS;
+    }
+
+    /// TODO
+    pub fn cant(action: chance.Action) []const Optional(bool) {
+        return if (@field(action, "cant") == .None) &BOOL_NONE else &BOOLS;
+    }
+
+    const SLOT_NONE = [_]u3{0};
+    const SLOT = [_]u3{ 1, 2, 3, 4 };
+
+    /// TODO make sure not indexing into None
+    pub fn moveSlot(action: chance.Action) []const u3 {
+        return if (@field(action, "move_slot") == 0) &SLOT_NONE else &SLOT;
+    }
+
+    const DISTRIBUTION_NONE = [_]u3{0};
+    const DISTRIBUTION = [_]u3{ 2, 3, 4, 5 };
+
+    /// TODO
+    pub fn distribution(action: chance.Action) []const u3 {
+        return if (@field(action, "distribution") == 0) &DISTRIBUTION_NONE else &DISTRIBUTION;
+    }
+
+    // FIXME duration
+};
+
+test Rolls {
+    var actions = chance.Actions{ .p2 = .{ .metronome = .Surf } };
+    try expectEqualSlices(Move, &.{.None}, Rolls.metronome(actions.p1));
+    try expectEqual(@intToEnum(Move, 24), Rolls.metronome(actions.p2)[23]);
+
+    actions = chance.Actions{ .p2 = .{ .psywave = 79 } };
+    try expectEqualSlices(u8, &.{0}, Rolls.psywave(actions.p1));
+    try expectEqual(@as(u8, 150), Rolls.psywave(actions.p2)[Rolls.psywave(actions.p2).len - 1]);
+
+    actions = chance.Actions{ .p1 = .{ .speed_tie = .P2 } };
+    try expectEqualSlices(Optional(Player), &.{ .P1, .P2 }, Rolls.speedTie(actions.p1));
+    try expectEqualSlices(Optional(Player), &.{.None}, Rolls.speedTie(actions.p2));
+
+    actions = chance.Actions{ .p2 = .{ .min_damage = 5 } };
+    try expectEqualSlices(u6, &.{0}, Rolls.damage(actions.p1));
+    try expectEqual(@as(u6, 1), Rolls.damage(actions.p2)[0]);
+
+    actions = chance.Actions{ .p2 = .{ .hit = .true } };
+    try expectEqualSlices(Optional(bool), &.{.None}, Rolls.hit(actions.p1));
+    try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.hit(actions.p2));
+
+    actions = chance.Actions{ .p1 = .{ .secondary_chance = .true } };
+    try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.secondaryChance(actions.p1));
+    try expectEqualSlices(Optional(bool), &.{.None}, Rolls.secondaryChance(actions.p2));
+
+    actions = chance.Actions{ .p1 = .{ .critical_hit = .true } };
+    try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.criticalHit(actions.p1));
+    try expectEqualSlices(Optional(bool), &.{.None}, Rolls.criticalHit(actions.p2));
+
+    actions = chance.Actions{ .p2 = .{ .cant = .true } };
+    try expectEqualSlices(Optional(bool), &.{.None}, Rolls.cant(actions.p1));
+    try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.cant(actions.p2));
+
+    actions = chance.Actions{ .p2 = .{ .move_slot = 3 } };
+    try expectEqualSlices(u3, &.{0}, Rolls.moveSlot(actions.p1));
+    try expectEqualSlices(u3, &.{ 1, 2, 3, 4 }, Rolls.moveSlot(actions.p2));
+
+    actions = chance.Actions{ .p2 = .{ .distribution = 3 } };
+    try expectEqualSlices(u3, &.{0}, Rolls.distribution(actions.p1));
+    try expectEqualSlices(u3, &.{ 2, 3, 4, 5 }, Rolls.distribution(actions.p2));
 }

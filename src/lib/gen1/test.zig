@@ -9474,6 +9474,7 @@ fn metronome(comptime m: Move) U {
 
 comptime {
     _ = @import("data.zig");
+    _ = @import("helpers.zig");
     _ = @import("mechanics.zig");
     _ = @import("other/chance.zig");
 }
