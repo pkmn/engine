@@ -131,7 +131,7 @@ pub fn Rational(comptime T: type) type {
             }
         }
 
-        /// Multiples two rationals.
+        /// Multiplies two rationals.
         pub fn mul(r: *Self, s: *Self) Error!void {
             switch (@typeInfo(T)) {
                 .Int => {
@@ -161,6 +161,7 @@ pub fn Rational(comptime T: type) type {
         /// Normalize the rational by reducing by the greatest common divisor.
         pub fn reduce(r: *Self) void {
             const d = gcd(r.p, r.q);
+            if (d == 1) return;
 
             assert(@mod(r.p, d) == 0);
             assert(@mod(r.q, d) == 0);
@@ -256,6 +257,9 @@ pub const BigRational = struct {
     /// The underlying rational number.
     val: std.math.big.Rational,
 
+    /// Possible error returned by operations on the rational.
+    pub const Error = error{OutOfMemory};
+
     /// Create a new BigRational wrapper.  A small amount of memory will be allocated on
     /// initialization. Not default initialized to 1 - you must explicitly `reset` first.
     pub fn init(alloc: std.mem.Allocator) !BigRational {
@@ -289,7 +293,7 @@ pub const BigRational = struct {
         try r.val.add(r.val, s.val);
     }
 
-    /// Multiples two rationals.
+    /// Multiplies two rationals.
     pub fn mul(r: *BigRational, s: *const BigRational) !void {
         try r.val.mul(r.val, s.val);
     }
@@ -334,4 +338,24 @@ test BigRational {
 
     try s.setRatio(71, 78);
     try expect((try s.order(r.val)) == .eq);
+}
+
+/// Null object pattern implementation of a Rational.
+pub const Null = struct {
+    /// The Null "rational" cannot return errors.
+    pub const Error = error{};
+    /// Does nothing.
+    pub fn update(r: *Null, p: anytype, q: anytype) Error!void {
+        _ = r;
+        _ = p;
+        _ = q;
+    }
+};
+
+test Null {
+    var r: Null = .{};
+    var c: u8 = 128;
+    try r.update(c, 256);
+    try doTurn(&r);
+    try expectEqual(Null{}, r);
 }
