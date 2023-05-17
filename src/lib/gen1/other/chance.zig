@@ -3,10 +3,27 @@ const std = @import("std");
 const expect = std.testing.expect;
 const assert = std.debug.assert;
 
+const enabled = @import("../../common/options.zig").chance;
+
 const Player = @import("../../common/data.zig").Player;
 const Optional = @import("../../common/optional.zig").Optional;
 
 const Move = @import("../data.zig").Move;
+
+/// TODO
+pub fn Chance(comptime Rational: type) type {
+    return struct {
+        const Self = @This();
+
+        /// TODO
+        probability: Rational,
+        /// TODO
+        actions: Actions = .{},
+
+        /// TODO
+        pub const Error = Rational.Error;
+    };
+}
 
 /// Actions taken by a hypothetical "chance player" that convey information about which RNG events
 /// were observed during a battle `update`. This can additionally be provided as input to the
@@ -19,6 +36,11 @@ pub const Actions = extern struct {
 
     comptime {
         assert(@sizeOf(Actions) == 16);
+    }
+
+    /// TODO
+    pub inline fn get(self: Actions, player: Player) Action {
+        return if (player == .P1) self.p1 else self.p2;
     }
 };
 

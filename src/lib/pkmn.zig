@@ -48,9 +48,11 @@ pub const protocol = if (options.internal) struct {
 
 /// TODO
 pub const battle = struct {
+    // pub fn Options(comptime Log: type, comptime Chance: type) type {
     pub fn Options(comptime Log: type) type {
         return struct {
             log: Log,
+            // chance: Chance,
         };
     }
 };

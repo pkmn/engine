@@ -9,6 +9,8 @@ const rng = @import("../common/rng.zig");
 
 const data = @import("data.zig");
 
+const Action = @import("./other/chance.zig").Action;
+
 const assert = std.debug.assert;
 
 const expectEqual = std.testing.expectEqual;
@@ -19,6 +21,7 @@ const Player = common.Player;
 const Result = common.Result;
 
 const showdown = pkmn.options.showdown;
+const chance = pkmn.options.chance;
 
 const Boost = protocol.Boost;
 const Damage = protocol.Damage;
@@ -77,7 +80,7 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Result
     var r1 = showdown and p1.active.volatiles.Binding and c2.type == .Switch;
     var r2 = showdown and p2.active.volatiles.Binding and c1.type == .Switch;
 
-    if (turnOrder(battle, c1, c2) == .P1) {
+    if (try turnOrder(battle, c1, c2, options) == .P1) {
         if (try doTurn(battle, .P1, c1, r1, s1, f1, .P2, c2, r2, s2, f2, options)) |r| return r;
     } else {
         if (try doTurn(battle, .P2, c2, r2, s2, f2, .P1, c1, r1, s1, f1, options)) |r| return r;
@@ -289,7 +292,7 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, options: a
     }
 }
 
-fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
+fn turnOrder(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Player {
     assert(c1.type != .Pass or c2.type != .Pass);
 
     if (c1.type == .Pass) return .P2;
@@ -323,7 +326,7 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice) Player {
             battle.rng.advance(1);
         }
 
-        const p1 = Rolls.speedTie(battle);
+        const p1 = try Rolls.speedTie(battle, options);
         if (!showdown) return if (p1) .P1 else .P2;
 
         // Pokémon Showdown's "lockedmove" volatile's onBeforeTurn uses BattleQueue#changeAction,
@@ -874,7 +877,7 @@ fn doMove(
 
         // Cartridge rolls for crit even for moves that can't crit (Counter/Metronome/status/OHKO)
         const check = !showdown or (!counter and move.effect != .OHKO);
-        if (check) crit = checkCriticalHit(battle, player, move);
+        if (check) crit = try checkCriticalHit(battle, player, move, options);
 
         if (counter) return counterDamage(battle, player, move, options);
 
@@ -898,7 +901,7 @@ fn doMove(
                 effectiveness = adjustDamage(battle, player);
                 immune = effectiveness == 0;
             }
-            randomizeDamage(battle);
+            try randomizeDamage(battle, player, options);
         }
     }
 
@@ -1053,16 +1056,16 @@ fn doMove(
     return null;
 }
 
-fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data) bool {
+fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data, options: anytype) !bool {
     const side = battle.side(player);
 
     // Base speed is used for the critical hit calculation, even when Transform-ed
-    var chance = @as(u16, Species.chance(side.stored().species));
-    // GLITCH: Focus Energy reduces critical hit chance instead of increasing it
-    chance = if (side.active.volatiles.FocusEnergy) chance / 2 else @min(chance * 2, 255);
-    chance = if (move.effect == .HighCritical) @min(chance * 4, 255) else chance / 2;
+    var rate = @as(u16, Species.chance(side.stored().species));
+    // GLITCH: Focus Energy reduces critical hit rate instead of increasing it
+    rate = if (side.active.volatiles.FocusEnergy) rate / 2 else @min(rate * 2, 255);
+    rate = if (move.effect == .HighCritical) @min(rate * 4, 255) else rate / 2;
 
-    return Rolls.criticalHit(battle, chance);
+    return Rolls.criticalHit(battle, player, rate, options);
 }
 
 fn calcDamage(
@@ -1164,9 +1167,9 @@ fn adjustDamage(battle: anytype, player: Player) u16 {
     return if (types.type1 == types.type2) eff1 * neutral else eff1 * eff2;
 }
 
-fn randomizeDamage(battle: anytype) void {
+fn randomizeDamage(battle: anytype, player: anytype, options: anytype) !void {
     if (battle.last_damage <= 1) return;
-    const random = Rolls.damage(battle);
+    const random = Rolls.damage(battle, player, options);
     battle.last_damage = @intCast(u16, @as(u32, battle.last_damage) *% random / 255);
 }
 
@@ -2652,22 +2655,76 @@ fn clearVolatiles(battle: anytype, who: Player, options: anytype) !void {
 }
 
 pub const Rolls = struct {
-    inline fn speedTie(battle: anytype) bool {
-        if (showdown) return battle.rng.range(u8, 0, 2) == 0;
-        return battle.rng.next() < Gen12.percent(50) + 1;
-    }
+    inline fn speedTie(battle: anytype, options: anytype) !bool {
+        const p1 = if (chance and options.chance.actions.p1.speed_tie != .None)
+            options.chance.actions.p1.speed_tie == .P1
+        else if (showdown)
+            battle.rng.range(u8, 0, 2) == 0
+        else
+            battle.rng.next() < Gen12.percent(50) + 1;
 
-    inline fn criticalHit(battle: anytype, chance: u16) bool {
-        if (showdown) return battle.rng.chance(u8, @intCast(u8, chance), 256);
-        return std.math.rotl(u8, battle.rng.next(), 3) < chance;
-    }
-
-    inline fn damage(battle: anytype) u8 {
-        if (showdown) return battle.rng.range(u8, 217, 256);
-        while (true) {
-            const r = std.math.rotr(u8, battle.rng.next(), 1);
-            if (r >= 217) return r;
+        if (chance) {
+            try options.chance.probability.update(1, 2);
+            const player = if (p1) .P1 else .P2;
+            options.chance.actions.p1.speed_tie = player;
+            options.chance.actions.p2.speed_tie = player;
         }
+
+        return p1;
+    }
+
+    inline fn criticalHit(battle: anytype, player: Player, rate: u16, options: anytype) !bool {
+        const crit = if (chance and options.chance.actions.get(player).critical_hit != .None)
+            options.chance.actions.get(player).critical_hit == .true
+        else if (showdown)
+            battle.rng.chance(u8, @intCast(u8, rate), 256)
+        else
+            std.math.rotl(u8, battle.rng.next(), 3) < rate;
+
+        if (chance) {
+            try options.chance.probability.update(if (crit) rate else 256 - rate, 256);
+            options.chance.actions.get(player).critical_hit = if (crit) .true else .false;
+        }
+
+        return crit;
+    }
+
+    inline fn damage(battle: anytype, player: anytype, options: anytype) u8 {
+        const roll = if (chance and options.chance.actions.get(player).min_damage != 0)
+            216 + options.chance.actions.get(player).min_damage
+        else roll: {
+            if (showdown) break :roll battle.rng.range(u8, 217, 256);
+            while (true) {
+                const r = std.math.rotr(u8, battle.rng.next(), 1);
+                if (r >= 217) break :roll r;
+            }
+        };
+
+        if (chance) {
+            var dmg = @intCast(u16, @as(u32, battle.last_damage) *% roll / 255);
+
+            var min = roll;
+            while (min > 217) {
+                if (@intCast(u16, @as(u32, battle.last_damage) *% (min - 1) / 255) == dmg) {
+                    min -= 1;
+                } else break;
+            }
+            var max = roll;
+            while (max < 255) {
+                if (@intCast(u16, @as(u32, battle.last_damage) *% (max + 1) / 255) == dmg) {
+                    max += 1;
+                } else break;
+            }
+
+            assert(max >= min);
+            assert(min >= 217);
+            try options.chance.probability.update(max - min + 1, 39);
+            const action = options.chance.actions.get(player);
+            action.min_damage = min - 216;
+            action.max_damage = max - 216;
+        }
+
+        return roll;
     }
 
     inline fn hit(battle: anytype, accuracy: u16) bool {
