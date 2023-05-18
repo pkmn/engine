@@ -31,13 +31,13 @@ pub fn build(b: *std.Build) !void {
 
     const cmd = b.findProgram(&.{"strip"}, &.{}) catch null;
 
-    var parser = std.json.Parser.init(b.allocator, false);
+    var parser = std.json.Parser.init(b.allocator, .alloc_if_needed);
     defer parser.deinit();
     var tree = try parser.parse(@embedFile("package.json"));
     defer tree.deinit();
-    const version = tree.root.Object.get("version").?.String;
-    const description = tree.root.Object.get("description").?.String;
-    var repository = std.mem.split(u8, tree.root.Object.get("repository").?.String, ":");
+    const version = tree.root.object.get("version").?.string;
+    const description = tree.root.object.get("description").?.string;
+    var repository = std.mem.split(u8, tree.root.object.get("repository").?.string, ":");
     std.debug.assert(std.mem.eql(u8, repository.first(), "github"));
 
     const showdown =
