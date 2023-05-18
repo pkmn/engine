@@ -84,8 +84,8 @@ pub const Durations = packed struct {
     sleep: u4 = 0,
     /// The number of turns a Pokémon has been observed to be confused.
     confusion: u4 = 0,
-    /// The number of turns a Pokémon has been observed to be storing energy / thrashing.
-    bide_thrash: u4 = 0,
+    /// The number of turns a Pokémon has been observed to be attacking.
+    attacking: u4 = 0,
 
     comptime {
         assert(@sizeOf(Durations) == 2);
