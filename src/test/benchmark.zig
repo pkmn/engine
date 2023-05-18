@@ -171,11 +171,18 @@ inline fn update(
     log: ?pkmn.protocol.Log(std.ArrayList(u8).Writer),
 ) !pkmn.Result {
     if (pkmn.options.log and builtin.mode == .Debug and log != null) {
-        const Options = pkmn.battle.Options(pkmn.protocol.Log(std.ArrayList(u8).Writer), @TypeOf(pkmn.gen1.chance.NULL));
+        const Options = pkmn.battle.Options(
+            pkmn.protocol.Log(std.ArrayList(u8).Writer),
+            @TypeOf(pkmn.gen1.chance.NULL),
+        );
         return battle.update(c1, c2, &Options{ .log = log.?, .chance = pkmn.gen1.chance.NULL });
     } else {
-        const Options = pkmn.battle.Options(@TypeOf(pkmn.protocol.NULL), @TypeOf(pkmn.gen1.chance.NULL));
-        return battle.update(c1, c2, &Options{ .log = pkmn.protocol.NULL, .chance = pkmn.gen1.chance.NULL });
+        const Options =
+            pkmn.battle.Options(@TypeOf(pkmn.protocol.NULL), @TypeOf(pkmn.gen1.chance.NULL));
+        return battle.update(c1, c2, &Options{
+            .log = pkmn.protocol.NULL,
+            .chance = pkmn.gen1.chance.NULL,
+        });
     }
 }
 

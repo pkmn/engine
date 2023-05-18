@@ -196,6 +196,14 @@ pub fn Chance(comptime Rational: type) type {
             try self.probability.update(@as(u8, if (par) 1 else 3), 4);
             self.actions.get(player).paralyzed = if (par) .true else .false;
         }
+
+        pub fn secondaryChance(self: *Self, player: Player, proc: bool, rate: u8) Error!void {
+            if (!enabled) return;
+
+            const n = if (proc) rate else @intCast(u8, 256 - @as(u9, rate));
+            try self.probability.update(n, 256);
+            self.actions.get(player).secondary_chance = if (proc) .true else .false;
+        }
     };
 }
 
@@ -253,12 +261,20 @@ const Null = struct {
         _ = player;
         _ = ok;
     }
+
+    pub fn secondaryChance(self: Self, player: Player, proc: bool, rate: u8) Error!void {
+        _ = self;
+        _ = player;
+        _ = proc;
+        _ = rate;
+    }
 };
 
 fn TypeOf(comptime field: []const u8) type {
     return switch (@typeInfo(Action)) {
         .Struct => |info| blk: {
             for (info.fields) |f| if (std.mem.eql(u8, f.name, field)) break :blk f.type;
+            unreachable;
         },
         else => unreachable,
     };

@@ -1739,7 +1739,7 @@ inline fn moveEffect(battle: anytype, player: Player, move: Move.Data, options: 
     return switch (move.effect) {
         .BurnChance1, .BurnChance2 => Effects.burnChance(battle, player, move, options),
         .ConfusionChance => Effects.confusion(battle, player, move, options),
-        .FlinchChance1, .FlinchChance2 => Effects.flinchChance(battle, player, move),
+        .FlinchChance1, .FlinchChance2 => Effects.flinchChance(battle, player, move, options),
         .FreezeChance => Effects.freezeChance(battle, player, move, options),
         .HyperBeam => Effects.hyperBeam(battle, player, options),
         .MultiHit, .DoubleHit, .Twineedle => unreachable,
@@ -1787,7 +1787,9 @@ pub const Effects = struct {
         }
 
         if (foe.active.types.includes(move.type)) return;
-        if (!Rolls.secondaryChance(battle, move.effect == .BurnChance1)) return;
+        if (!try Rolls.secondaryChance(battle, player, move.effect == .BurnChance1, options)) {
+            return;
+        }
 
         foe_stored.status = Status.init(.BRN);
         foe.active.stats.atk = @max(foe.active.stats.atk / 2, 1);
@@ -1811,7 +1813,7 @@ pub const Effects = struct {
         const sub = foe.active.volatiles.Substitute;
 
         if (move.effect == .ConfusionChance) {
-            if (!Rolls.confusionChance(battle)) return;
+            if (!try Rolls.confusionChance(battle, player, options)) return;
         } else {
             if (showdown) {
                 if (!try checkHit(battle, player, move, options)) {
@@ -1921,11 +1923,13 @@ pub const Effects = struct {
         side.active.volatiles.LeechSeed = false;
     }
 
-    fn flinchChance(battle: anytype, player: Player, move: Move.Data) void {
+    fn flinchChance(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
         var volatiles = &battle.foe(player).active.volatiles;
 
         if (volatiles.Substitute) return;
-        if (!Rolls.secondaryChance(battle, move.effect == .FlinchChance1)) return;
+        if (!try Rolls.secondaryChance(battle, player, move.effect == .FlinchChance1, options)) {
+            return;
+        }
 
         volatiles.Flinch = true;
         volatiles.Recharging = false;
@@ -1952,7 +1956,7 @@ pub const Effects = struct {
         }
 
         if (foe.active.types.includes(move.type)) return;
-        if (!Rolls.secondaryChance(battle, true)) return;
+        if (!try Rolls.secondaryChance(battle, player, true, options)) return;
         // Freeze Clause Mod
         if (showdown) for (foe.pokemon) |p| if (Status.is(p.status, .FRZ)) return;
 
@@ -2168,7 +2172,9 @@ pub const Effects = struct {
 
         // Body Slam can't paralyze a Normal type Pokémon
         if (foe.active.types.includes(move.type)) return;
-        if (!Rolls.secondaryChance(battle, move.effect == .ParalyzeChance1)) return;
+        if (!try Rolls.secondaryChance(battle, player, move.effect == .ParalyzeChance1, options)) {
+            return;
+        }
 
         foe_stored.status = Status.init(.PAR);
         foe.active.stats.spe = @max(foe.active.stats.spe / 4, 1);
@@ -2214,7 +2220,11 @@ pub const Effects = struct {
 
         if (move.effect == .Poison) {
             if (!showdown and !try checkHit(battle, player, move, options)) return;
-        } else if (!Rolls.poisonChance(battle, move.effect == .PoisonChance1)) return;
+        } else {
+            if (!try Rolls.poisonChance(battle, player, move.effect == .PoisonChance1, options)) {
+                return;
+            }
+        }
 
         foe_stored.status = Status.init(.PSN);
         if (toxic) {
@@ -2750,19 +2760,44 @@ pub const Rolls = struct {
         return par;
     }
 
-    inline fn confusionChance(battle: anytype) bool {
-        if (showdown) return battle.rng.chance(u8, 25, 256);
-        return battle.rng.next() < Gen12.percent(10);
+    inline fn confusionChance(battle: anytype, player: Player, options: anytype) !bool {
+        const proc = if (options.chance.overridden(player, "secondary_chance")) |val|
+            val == .true
+        else if (showdown)
+            battle.rng.chance(u8, 25, 256)
+        else
+            battle.rng.next() < Gen12.percent(10);
+
+        try options.chance.secondaryChance(player, proc, 25);
+        return proc;
     }
 
-    inline fn secondaryChance(battle: anytype, low: bool) bool {
-        if (showdown) return battle.rng.chance(u8, @as(u8, if (low) 26 else 77), 256);
-        return battle.rng.next() < 1 + (if (low) Gen12.percent(10) else Gen12.percent(30));
+    inline fn secondaryChance(battle: anytype, player: Player, low: bool, options: anytype) !bool {
+        const rate: u8 = if (low) 26 else 77;
+
+        const proc = if (options.chance.overridden(player, "secondary_chance")) |val|
+            val == .true
+        else if (showdown)
+            battle.rng.chance(u8, rate, 256)
+        else
+            battle.rng.next() < 1 + (if (low) Gen12.percent(10) else Gen12.percent(30));
+
+        try options.chance.secondaryChance(player, proc, rate);
+        return proc;
     }
 
-    inline fn poisonChance(battle: anytype, low: bool) bool {
-        if (showdown) return battle.rng.chance(u8, @as(u8, if (low) 52 else 103), 256);
-        return battle.rng.next() < 1 + (if (low) Gen12.percent(20) else Gen12.percent(40));
+    inline fn poisonChance(battle: anytype, player: Player, low: bool, options: anytype) !bool {
+        const rate: u8 = if (low) 52 else 103;
+
+        const proc = if (options.chance.overridden(player, "secondary_chance")) |val|
+            val == .true
+        else if (showdown)
+            battle.rng.chance(u8, rate, 256)
+        else
+            battle.rng.next() < 1 + (if (low) Gen12.percent(20) else Gen12.percent(40));
+
+        try options.chance.secondaryChance(player, proc, rate);
+        return proc;
     }
 
     inline fn sleepDuration(battle: anytype) u3 {

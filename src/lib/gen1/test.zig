@@ -177,7 +177,10 @@ test "switching (order)" {
     try expected.switched(P2.ident(2), p2.pokemon[1]);
     try expected.turn(7);
 
-    var options = pkmn.battle.Options(FixedLog, @TypeOf(chance.NULL)){ .log = actual, .chance = chance.NULL };
+    var options = pkmn.battle.Options(FixedLog, @TypeOf(chance.NULL)){
+        .log = actual,
+        .chance = chance.NULL,
+    };
     try expectEqual(Result.Default, try battle.update(swtch(5), swtch(5), &options));
     try expectOrder(p1, &.{ 3, 1, 6, 4, 2, 5 }, p2, &.{ 2, 1, 3, 5, 4, 6 });
     try expectLog(&expected_buf, &actual_buf);
@@ -962,7 +965,10 @@ test "end turn (turn limit)" {
     if (showdown) try expected.tie();
 
     const result = if (showdown) Result.Tie else Result.Error;
-    var options = pkmn.battle.Options(FixedLog, @TypeOf(chance.NULL)){ .log = actual, .chance = chance.NULL };
+    var options = pkmn.battle.Options(FixedLog, @TypeOf(chance.NULL)){
+        .log = actual,
+        .chance = chance.NULL,
+    };
     try expectEqual(result, try t.battle.actual.update(swtch(2), swtch(2), &options));
     try expectEqual(max, t.battle.actual.turn);
     try expectLog(&expected_buf, &actual_buf);
@@ -9343,7 +9349,10 @@ test "MAX_LOGS" {
     try expected.turn(4);
 
     // P1 uses Metronome -> Fury Swipes and P2 uses Metronome -> Mirror Move
-    var options = pkmn.battle.Options(FixedLog, @TypeOf(chance.NULL)){ .log = actual, .chance = chance.NULL };
+    var options = pkmn.battle.Options(FixedLog, @TypeOf(chance.NULL)){
+        .log = actual,
+        .chance = chance.NULL,
+    };
     try expectEqual(Result.Default, try battle.update(move(3), move(3), &options));
 
     try expectLog(&expected_buf, &actual_buf);
