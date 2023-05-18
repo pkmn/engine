@@ -3,12 +3,15 @@ const std = @import("std");
 const expect = std.testing.expect;
 const assert = std.debug.assert;
 
-const enabled = @import("../common/options.zig").chance;
+const options = @import("../common/options.zig");
 
 const Player = @import("../common/data.zig").Player;
 const Optional = @import("../common/optional.zig").Optional;
 
 const Move = @import("data.zig").Move;
+
+const enabled = options.chance;
+const showdown = options.showdown;
 
 /// TODO
 pub fn Chance(comptime Rational: type) type {
@@ -19,6 +22,16 @@ pub fn Chance(comptime Rational: type) type {
         probability: Rational,
         /// TODO
         actions: Actions = .{},
+
+        // Due to the fact that critical hit and damage rolls happen before checking to see if a
+        // move hits on the cartridge we need to cache this information and only actually use it to
+        // update probability/actions if the move in question actually lands. We deliberately make
+        // use of the fact that recursive moves may overwrite critical hit information multiple
+        // times as only the last update actually matters for the purposes of the logical results.
+        crit: bool = false,
+        crit_probablity: u8 = 0,
+        min_damage: u6 = 0,
+        max_damage: u6 = 0,
 
         /// TODO
         pub const Error = Rational.Error;
@@ -34,6 +47,27 @@ pub fn Chance(comptime Rational: type) type {
             }) val else null;
         }
 
+        pub fn commit(self: *Self, player: Player) Error!void {
+            assert(!showdown);
+            if (showdown) return;
+            // If the move actually lands we can commit any past critical hit / damage rolls. We
+            // avoid updating anything if there wasn't a damage roll as any "critical hit" not tied
+            // to a damage roll is actually a no-op.
+            if (self.min_damage > 0) {
+                assert(!self.crit or self.crit_probablity > 0);
+                var action = self.actions.get(player);
+                if (self.crit_probablity != 0) {
+                    try self.probability.update(self.crit_probablity, 256);
+                    action.critical_hit = if (self.crit) .true else .false;
+                }
+
+                assert(self.max_damage >= self.min_damage);
+                try self.probability.update(self.max_damage - self.min_damage + 1, 39);
+                action.min_damage = self.min_damage;
+                action.max_damage = self.max_damage;
+            }
+        }
+
         pub fn speedTie(self: *Self, p1: bool) Error!void {
             if (!enabled) return;
 
@@ -45,11 +79,23 @@ pub fn Chance(comptime Rational: type) type {
         pub fn criticalHit(self: *Self, player: Player, crit: bool, rate: u8) Error!void {
             if (!enabled) return;
 
-            // FIXME: need to ensure we don't update if crit is a nop
-            const p = if (crit) rate else @intCast(u8, 256 - @as(u9, rate));
+            const n = if (crit) rate else @intCast(u8, 256 - @as(u9, rate));
+            if (showdown) {
+                try self.probability.update(n, 256);
+                self.actions.get(player).critical_hit = if (crit) .true else .false;
+            } else {
+                self.crit = crit;
+                self.crit_probablity = n;
+            }
+        }
+
+        pub fn hit(self: *Self, player: Player, ok: bool, accuracy: u8) Error!void {
+            if (!enabled) return;
+
+            const p = if (ok) accuracy else @intCast(u8, 256 - @as(u9, accuracy));
             try self.probability.update(p, 256);
-            _ = player;
-            // self.actions.get(player).critical_hit = if (crit) .true else .false;
+            var action = self.actions.get(player);
+            action.hit = if (ok) .true else .false;
         }
 
         pub fn damage(self: *Self, player: Player, base: u32, roll: u8) Error!void {
@@ -72,15 +118,22 @@ pub fn Chance(comptime Rational: type) type {
             assert(max >= min);
             assert(min >= 217);
 
-            try self.probability.update(max - min + 1, 39);
-            var action = self.actions.get(player);
-            action.min_damage = @intCast(u6, min - 216);
-            action.max_damage = @intCast(u6, max - 216);
+            if (showdown) {
+                try self.probability.update(max - min + 1, 39);
+                var action = self.actions.get(player);
+                action.min_damage = @intCast(u6, min - 216);
+                action.max_damage = @intCast(u6, max - 216);
+            } else {
+                self.min_damage = @intCast(u6, min - 216);
+                self.max_damage = @intCast(u6, max - 216);
+            }
         }
     };
 }
 
-pub const NULL = struct {
+pub const NULL = Null{};
+
+const Null = struct {
     const Self = @This();
 
     pub const Error = error{};
@@ -89,6 +142,11 @@ pub const NULL = struct {
         _ = self;
         _ = player;
         return null;
+    }
+
+    pub fn commit(self: Self, player: Player) Error!void {
+        _ = self;
+        _ = player;
     }
 
     pub fn speedTie(self: Self, p1: bool) Error!void {
@@ -109,7 +167,14 @@ pub const NULL = struct {
         _ = base;
         _ = roll;
     }
-}{};
+
+    pub fn hit(self: Self, player: Player, ok: bool, accuracy: u8) Error!void {
+        _ = self;
+        _ = player;
+        _ = ok;
+        _ = accuracy;
+    }
+};
 
 fn TypeOf(comptime field: []const u8) type {
     return switch (@typeInfo(Action)) {

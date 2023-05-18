@@ -861,7 +861,8 @@ fn doMove(
             battle.last_damage = 0;
             break :miss true;
         }
-        break :miss move.target != .Self and !moveHit(battle, player, move, &immune, &mist);
+        break :miss (move.target != .Self and
+            !try moveHit(battle, player, move, &immune, &mist, options));
     };
     assert(!immune or miss or (showdown and move.effect == .Binding));
 
@@ -910,7 +911,7 @@ fn doMove(
     miss = if (showdown or skip)
         miss
     else
-        (!moveHit(battle, player, move, &immune, &mist) or battle.last_damage == 0);
+        (!try moveHit(battle, player, move, &immune, &mist, options) or battle.last_damage == 0);
 
     assert(showdown or miss or battle.last_damage > 0 or skip);
     assert((!showdown and miss) or !(ohko and immune));
@@ -957,6 +958,8 @@ fn doMove(
             try buildRage(battle, player.foe(), options);
         }
         return null;
+    } else if (!showdown) {
+        try options.chance.commit(player);
     }
 
     // On the cartridge MultiHit doesn't get set up until after damage has been applied for the
@@ -1336,7 +1339,7 @@ fn metronome(
 fn checkHit(battle: anytype, player: Player, move: Move.Data, options: anytype) !bool {
     var immune = false;
     var mist = false;
-    if (moveHit(battle, player, move, &immune, &mist)) return true;
+    if (try moveHit(battle, player, move, &immune, &mist, options)) return true;
     assert(!immune);
     if (mist) {
         assert(!showdown);
@@ -1350,7 +1353,14 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data, options: anytype) 
     return false;
 }
 
-fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool, mist: *bool) bool {
+fn moveHit(
+    battle: anytype,
+    player: Player,
+    move: Move.Data,
+    immune: *bool,
+    mist: *bool,
+    options: anytype,
+) !bool {
     var side = battle.side(player);
     const foe = battle.foe(player);
 
@@ -1401,7 +1411,7 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool, mist
         if (overwrite) side.active.volatiles.state = accuracy;
 
         // GLITCH: max accuracy is 255 so 1/256 chance of miss
-        break :miss !Rolls.hit(battle, accuracy);
+        break :miss !try Rolls.hit(battle, player, @intCast(u8, accuracy), options);
     };
 
     // Pokémon Showdown reports miss instead of fail for moves blocked by Mist that 1/256 miss
@@ -2699,9 +2709,16 @@ pub const Rolls = struct {
         return roll;
     }
 
-    inline fn hit(battle: anytype, accuracy: u16) bool {
-        if (showdown) return battle.rng.chance(u8, @intCast(u8, accuracy), 256);
-        return battle.rng.next() < accuracy;
+    inline fn hit(battle: anytype, player: Player, accuracy: u8, options: anytype) !bool {
+        const ok = if (options.chance.overridden(player, "hit")) |val|
+            val == .true
+        else if (showdown)
+            battle.rng.chance(u8, accuracy, 256)
+        else
+            battle.rng.next() < accuracy;
+
+        try options.chance.hit(player, ok, accuracy);
+        return ok;
     }
 
     inline fn confusionDuration(battle: anytype) u3 {
