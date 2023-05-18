@@ -34,7 +34,7 @@ pub fn Chance(comptime Rational: type) type {
             }) val else null;
         }
 
-        pub fn speedTie(self: Self, p1: bool) Error!void {
+        pub fn speedTie(self: *Self, p1: bool) Error!void {
             if (!enabled) return;
 
             try self.probability.update(1, 2);
@@ -42,15 +42,17 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.p2.speed_tie = self.actions.p1.speed_tie;
         }
 
-        pub fn criticalHit(self: Self, player: Player, crit: bool, rate: u8) Error!void {
+        pub fn criticalHit(self: *Self, player: Player, crit: bool, rate: u8) Error!void {
             if (!enabled) return;
 
             // FIXME: need to ensure we don't update if crit is a nop
-            try self.probability.update(if (crit) rate else 256 - rate, 256);
-            self.actions.get(player).critical_hit = if (crit) .true else .false;
+            const p = if (crit) rate else @intCast(u8, 256 - @as(u9, rate));
+            try self.probability.update(p, 256);
+            _ = player;
+            // self.actions.get(player).critical_hit = if (crit) .true else .false;
         }
 
-        pub fn damage(self: Self, player: Player, base: u32, roll: u8) Error!void {
+        pub fn damage(self: *Self, player: Player, base: u32, roll: u8) Error!void {
             if (!enabled) return;
 
             var dmg = @intCast(u16, base *% roll / 255);

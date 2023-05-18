@@ -32,7 +32,9 @@ const ByteStream = protocol.ByteStream;
 const FixedLog = protocol.FixedLog;
 const Log = protocol.Log;
 
-const Chance = chance.Chance(rational.Rational(u64));
+const Rational = rational.Rational;
+
+const Chance = chance.Chance;
 
 const Move = data.Move;
 const Species = data.Species;
@@ -100,7 +102,7 @@ test "start (first fainted)" {
     try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
     try t.log.expected.turn(1);
 
-    try expectEqual(Result.Default, try t.battle.actual.update(.{}, .{}, &t.options.actual));
+    try expectEqual(Result.Default, try t.battle.actual.update(.{}, .{}, &t.options));
     try t.verify();
 }
 
@@ -114,7 +116,7 @@ test "start (all fainted)" {
         );
         defer t.deinit();
 
-        try expectEqual(Result.Win, try t.battle.actual.update(.{}, .{}, &t.options.actual));
+        try expectEqual(Result.Win, try t.battle.actual.update(.{}, .{}, &t.options));
         try t.verify();
     }
     // Lose
@@ -125,7 +127,7 @@ test "start (all fainted)" {
         );
         defer t.deinit();
 
-        try expectEqual(Result.Lose, try t.battle.actual.update(.{}, .{}, &t.options.actual));
+        try expectEqual(Result.Lose, try t.battle.actual.update(.{}, .{}, &t.options));
         try t.verify();
     }
     // Tie
@@ -136,7 +138,7 @@ test "start (all fainted)" {
         );
         defer t.deinit();
 
-        try expectEqual(Result.Tie, try t.battle.actual.update(.{}, .{}, &t.options.actual));
+        try expectEqual(Result.Tie, try t.battle.actual.update(.{}, .{}, &t.options));
         try t.verify();
     }
 }
@@ -335,7 +337,7 @@ test "turn order (basic speed tie)" {
         try t.log.expected.switched(P2.ident(1), t.actual.p2.get(1));
         try t.log.expected.turn(1);
 
-        try expectEqual(Result.Default, try t.battle.actual.update(.{}, .{}, &t.options.actual));
+        try expectEqual(Result.Default, try t.battle.actual.update(.{}, .{}, &t.options));
 
         try t.verify();
     }
@@ -982,7 +984,7 @@ test "Endless Battle Clause (initial)" {
     try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
     try t.log.expected.tie();
 
-    try expectEqual(Result.Tie, try t.battle.actual.update(.{}, .{}, &t.options.actual));
+    try expectEqual(Result.Tie, try t.battle.actual.update(.{}, .{}, &t.options));
     try t.verify();
 }
 
@@ -1005,7 +1007,7 @@ test "Endless Battle Clause (basic)" {
         try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
         try t.log.expected.tie();
 
-        try expectEqual(Result.Tie, try t.battle.actual.update(.{}, .{}, &t.options.actual));
+        try expectEqual(Result.Tie, try t.battle.actual.update(.{}, .{}, &t.options));
         try t.verify();
     }
     {
@@ -1022,7 +1024,7 @@ test "Endless Battle Clause (basic)" {
         try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
         try t.log.expected.turn(1);
 
-        try expectEqual(Result.Default, try t.battle.actual.update(.{}, .{}, &t.options.actual));
+        try expectEqual(Result.Default, try t.battle.actual.update(.{}, .{}, &t.options));
 
         t.expected.p1.get(2).hp = 0;
         t.actual.p1.get(2).hp = 0;
@@ -9363,10 +9365,6 @@ fn Test(comptime rolls: anytype) type {
             expected: Log(ArrayList(u8).Writer),
             actual: Log(ArrayList(u8).Writer),
         },
-        options: struct {
-            expected: pkmn.battle.Options(Log(ArrayList(u8).Writer), @TypeOf(chance.NULL)),
-            actual: pkmn.battle.Options(Log(ArrayList(u8).Writer), @TypeOf(chance.NULL)),
-        },
 
         expected: struct {
             p1: *data.Side,
@@ -9377,6 +9375,7 @@ fn Test(comptime rolls: anytype) type {
             p2: *data.Side,
         },
 
+        options: pkmn.battle.Options(Log(ArrayList(u8).Writer), Chance(Rational(u64))),
         offset: usize,
 
         pub fn init(pokemon1: []const Pokemon, pokemon2: []const Pokemon) *Self {
@@ -9388,14 +9387,13 @@ fn Test(comptime rolls: anytype) type {
             t.buf.actual = std.ArrayList(u8).init(std.testing.allocator);
             t.log.expected = .{ .writer = t.buf.expected.writer() };
             t.log.actual = .{ .writer = t.buf.actual.writer() };
-            t.options.expected = .{ .log = t.log.expected, .chance = chance.NULL };
-            t.options.actual = .{ .log = t.log.actual, .chance = chance.NULL };
 
             t.expected.p1 = t.battle.expected.side(.P1);
             t.expected.p2 = t.battle.expected.side(.P2);
             t.actual.p1 = t.battle.actual.side(.P1);
             t.actual.p2 = t.battle.actual.side(.P2);
 
+            t.options = .{ .log = t.log.actual, .chance = .{ .probability = .{} } };
             t.offset = 0;
 
             return t;
@@ -9421,14 +9419,21 @@ fn Test(comptime rolls: anytype) type {
             try expected.switched(P2.ident(1), self.actual.p2.get(1));
             try expected.turn(1);
 
-            var options = pkmn.battle.Options(FixedLog, @TypeOf(chance.NULL)){ .log = actual, .chance = chance.NULL };
+            var options = pkmn.battle.Options(FixedLog, Chance(Rational(u64))){
+                .log = actual,
+                .chance = .{ .probability = .{} },
+            };
             try expectEqual(Result.Default, try self.battle.actual.update(.{}, .{}, &options));
             try expectLog(&expected_buf, &actual_buf);
+            try expectProbability(u64, options.chance.probability, 1, 1);
         }
 
         pub fn update(self: *Self, c1: Choice, c2: Choice) !Result {
             if (self.battle.actual.turn == 0) try self.start();
-            const result = self.battle.actual.update(c1, c2, &self.options.actual);
+
+            self.options.chance = .{ .probability = .{} };
+            const result = self.battle.actual.update(c1, c2, &self.options);
+
             try self.validate();
             return result;
         }
@@ -9460,6 +9465,11 @@ fn Test(comptime rolls: anytype) type {
 
 fn expectLog(expected: []const u8, actual: []const u8) !void {
     return protocol.expectLog(formatter, expected, actual, 0);
+}
+
+fn expectProbability(comptime T: type, r: Rational(T), p: T, q: T) !void {
+    if (!pkmn.options.chance) return;
+    return expectEqual(Rational(T){ .p = p, .q = q }, r);
 }
 
 fn formatter(kind: protocol.Kind, byte: u8) []const u8 {
