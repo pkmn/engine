@@ -39,8 +39,8 @@ pub const Actions = extern struct {
     }
 
     /// TODO
-    pub inline fn get(self: Actions, player: Player) Action {
-        return if (player == .P1) self.p1 else self.p2;
+    pub inline fn get(self: *Actions, player: Player) *Action {
+        return if (player == .P1) &self.p1 else &self.p2;
     }
 };
 

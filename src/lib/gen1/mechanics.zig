@@ -21,7 +21,6 @@ const Player = common.Player;
 const Result = common.Result;
 
 const showdown = pkmn.options.showdown;
-const chance = pkmn.options.chance;
 
 const Boost = protocol.Boost;
 const Damage = protocol.Damage;
@@ -1169,7 +1168,7 @@ fn adjustDamage(battle: anytype, player: Player) u16 {
 
 fn randomizeDamage(battle: anytype, player: anytype, options: anytype) !void {
     if (battle.last_damage <= 1) return;
-    const random = Rolls.damage(battle, player, options);
+    const random = try Rolls.damage(battle, player, options);
     battle.last_damage = @intCast(u16, @as(u32, battle.last_damage) *% random / 255);
 }
 
@@ -2654,44 +2653,78 @@ fn clearVolatiles(battle: anytype, who: Player, options: anytype) !void {
     }
 }
 
+// inline fn chance(options: anytype) ?@TypeOf(options.chance) {
+//     return if (pkmn.options.chance) options.chance else null;
+// }
+
+const chance = pkmn.options.chance;
+
+fn TypeOf(comptime field: []const u8) type {
+    return switch (@typeInfo(Action)) {
+        .Struct => |info| blk: {
+            for (info.fields) |f| {
+                if (std.mem.eql(u8, f.name, field)) break :blk f.type;
+            }
+        },
+        else => unreachable,
+    };
+}
+
+inline fn overridden(options: anytype, player: Player, comptime field: []const u8) ?TypeOf(field) {
+    if (!chance) return null;
+    if (options.chance) |*c| {
+        const val = @field(if (player == .P1) c.actions.p1 else c.actions.p2, field);
+        if (switch (@typeInfo(@TypeOf(val))) {
+            .Enum => val != .None,
+            .Int => val != 0,
+            else => unreachable,
+        }) return val;
+    }
+    return null;
+}
+
 pub const Rolls = struct {
     inline fn speedTie(battle: anytype, options: anytype) !bool {
-        const p1 = if (chance and options.chance.actions.p1.speed_tie != .None)
-            options.chance.actions.p1.speed_tie == .P1
+        const p1 = if (overridden(options, .P1, "speed_tie")) |player|
+            player == .P1
         else if (showdown)
             battle.rng.range(u8, 0, 2) == 0
         else
             battle.rng.next() < Gen12.percent(50) + 1;
 
         if (chance) {
-            try options.chance.probability.update(1, 2);
-            const player = if (p1) .P1 else .P2;
-            options.chance.actions.p1.speed_tie = player;
-            options.chance.actions.p2.speed_tie = player;
+            if (options.chance) |*c| {
+                try c.probability.update(1, 2);
+                c.actions.p1.speed_tie = if (p1) .P1 else .P2;
+                c.actions.p2.speed_tie = c.actions.p1.speed_tie;
+            }
         }
 
         return p1;
     }
 
     inline fn criticalHit(battle: anytype, player: Player, rate: u16, options: anytype) !bool {
-        const crit = if (chance and options.chance.actions.get(player).critical_hit != .None)
-            options.chance.actions.get(player).critical_hit == .true
+        const crit = if (overridden(options, player, "critical_hit")) |val|
+            val == .true
         else if (showdown)
             battle.rng.chance(u8, @intCast(u8, rate), 256)
         else
             std.math.rotl(u8, battle.rng.next(), 3) < rate;
 
         if (chance) {
-            try options.chance.probability.update(if (crit) rate else 256 - rate, 256);
-            options.chance.actions.get(player).critical_hit = if (crit) .true else .false;
+            if (options.chance) |*c| {
+                // FIXME: need to ensure we don't update if crit is a nop
+                try c.probability.update(if (crit) rate else 256 - rate, 256);
+                c.actions.get(player).critical_hit = if (crit) .true else .false;
+            }
         }
 
         return crit;
     }
 
-    inline fn damage(battle: anytype, player: anytype, options: anytype) u8 {
-        const roll = if (chance and options.chance.actions.get(player).min_damage != 0)
-            216 + options.chance.actions.get(player).min_damage
+    inline fn damage(battle: anytype, player: anytype, options: anytype) !u8 {
+        const roll = if (overridden(options, player, "min_damage")) |min_damage|
+            216 + @as(u8, min_damage)
         else roll: {
             if (showdown) break :roll battle.rng.range(u8, 217, 256);
             while (true) {
@@ -2701,27 +2734,29 @@ pub const Rolls = struct {
         };
 
         if (chance) {
-            var dmg = @intCast(u16, @as(u32, battle.last_damage) *% roll / 255);
+            if (options.chance) |*c| {
+                var dmg = @intCast(u16, @as(u32, battle.last_damage) *% roll / 255);
 
-            var min = roll;
-            while (min > 217) {
-                if (@intCast(u16, @as(u32, battle.last_damage) *% (min - 1) / 255) == dmg) {
-                    min -= 1;
-                } else break;
-            }
-            var max = roll;
-            while (max < 255) {
-                if (@intCast(u16, @as(u32, battle.last_damage) *% (max + 1) / 255) == dmg) {
-                    max += 1;
-                } else break;
-            }
+                var min = roll;
+                while (min > 217) {
+                    if (@intCast(u16, @as(u32, battle.last_damage) *% (min - 1) / 255) == dmg) {
+                        min -= 1;
+                    } else break;
+                }
+                var max = roll;
+                while (max < 255) {
+                    if (@intCast(u16, @as(u32, battle.last_damage) *% (max + 1) / 255) == dmg) {
+                        max += 1;
+                    } else break;
+                }
 
-            assert(max >= min);
-            assert(min >= 217);
-            try options.chance.probability.update(max - min + 1, 39);
-            const action = options.chance.actions.get(player);
-            action.min_damage = min - 216;
-            action.max_damage = max - 216;
+                assert(max >= min);
+                assert(min >= 217);
+                try c.probability.update(max - min + 1, 39);
+                const action = c.actions.get(player);
+                action.min_damage = @intCast(u6, min - 216);
+                action.max_damage = @intCast(u6, max - 216);
+            }
         }
 
         return roll;

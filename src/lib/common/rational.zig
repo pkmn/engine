@@ -339,23 +339,3 @@ test BigRational {
     try s.setRatio(71, 78);
     try expect((try s.order(r.val)) == .eq);
 }
-
-/// Null object pattern implementation of a Rational.
-pub const Null = struct {
-    /// The Null "rational" cannot return errors.
-    pub const Error = error{};
-    /// Does nothing.
-    pub fn update(r: *Null, p: anytype, q: anytype) Error!void {
-        _ = r;
-        _ = p;
-        _ = q;
-    }
-};
-
-test Null {
-    var r: Null = .{};
-    var c: u8 = 128;
-    try r.update(c, 256);
-    try doTurn(&r);
-    try expectEqual(Null{}, r);
-}

@@ -110,6 +110,10 @@ pub fn benchmark(
             1 => pkmn.gen1.MAX_LOGS,
             else => unreachable,
         };
+        var chance = switch (gen) {
+            1 => pkmn.gen1.Chance(pkmn.Rational(u64)),
+            else => unreachable,
+        };
 
         var log: ?pkmn.protocol.Log(std.ArrayList(u8).Writer) = null;
         if (save) {
@@ -131,8 +135,8 @@ pub fn benchmark(
 
         var timer = try Timer.start();
 
-        var result = try update(&battle, c1, c2, log);
-        while (result.type == .None) : (result = try update(&battle, c1, c2, log)) {
+        var result = try update(&battle, c1, c2, log, chance);
+        while (result.type == .None) : (result = try update(&battle, c1, c2, log, chance)) {
             var n = battle.choices(.P1, result.p1, &choices);
             if (n == 0) break;
             c1 = choices[p1.range(u8, 0, n)];
@@ -168,13 +172,14 @@ inline fn update(
     c1: pkmn.Choice,
     c2: pkmn.Choice,
     log: ?pkmn.protocol.Log(std.ArrayList(u8).Writer),
+    chance: type,
 ) !pkmn.Result {
     if (pkmn.options.log and builtin.mode == .Debug and log != null) {
-        const Options = pkmn.battle.Options(pkmn.protocol.Log(std.ArrayList(u8).Writer));
-        return battle.update(c1, c2, &Options{ .log = log.? });
+        const Options = pkmn.battle.Options(pkmn.protocol.Log(std.ArrayList(u8).Writer), chance);
+        return battle.update(c1, c2, &Options{ .log = log.?, .chance = null });
     } else {
         const Options = pkmn.battle.Options(@TypeOf(pkmn.protocol.NULL));
-        return battle.update(c1, c2, &Options{ .log = pkmn.protocol.NULL });
+        return battle.update(c1, c2, &Options{ .log = pkmn.protocol.NULL, .chance = null });
     }
 }
 

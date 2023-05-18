@@ -55,7 +55,7 @@ const CRIT = MIN;
 const MIN_DMG = if (showdown) MIN else 179;
 const MAX_DMG = MAX;
 
-const NULL = pkmn.battle.Options(@TypeOf(protocol.NULL)){ .log = protocol.NULL };
+const NULL = pkmn.battle.Options(@TypeOf(protocol.NULL), pkmn.gen1.Chance(pkmn.Rational(u64))){ .log = protocol.NULL, .chance = null };
 
 comptime {
     assert(showdown or std.math.rotr(u8, MIN_DMG, 1) == 217);
@@ -168,7 +168,7 @@ test "switching (order)" {
     try expected.switched(P2.ident(2), p2.pokemon[1]);
     try expected.turn(7);
 
-    var options = pkmn.battle.Options(FixedLog){ .log = actual };
+    var options = pkmn.battle.Options(FixedLog, pkmn.gen1.Chance(pkmn.Rational(u64))){ .log = actual, .chance = null };
     try expectEqual(Result.Default, try battle.update(swtch(5), swtch(5), &options));
     try expectOrder(p1, &.{ 3, 1, 6, 4, 2, 5 }, p2, &.{ 2, 1, 3, 5, 4, 6 });
     try expectLog(&expected_buf, &actual_buf);
@@ -953,7 +953,7 @@ test "end turn (turn limit)" {
     if (showdown) try expected.tie();
 
     const result = if (showdown) Result.Tie else Result.Error;
-    var options = pkmn.battle.Options(FixedLog){ .log = actual };
+    var options = pkmn.battle.Options(FixedLog, pkmn.gen1.Chance(pkmn.Rational(u64))){ .log = actual, .chance = null };
     try expectEqual(result, try t.battle.actual.update(swtch(2), swtch(2), &options));
     try expectEqual(max, t.battle.actual.turn);
     try expectLog(&expected_buf, &actual_buf);
@@ -9357,8 +9357,8 @@ fn Test(comptime rolls: anytype) type {
             actual: Log(ArrayList(u8).Writer),
         },
         options: struct {
-            expected: pkmn.battle.Options(Log(ArrayList(u8).Writer)),
-            actual: pkmn.battle.Options(Log(ArrayList(u8).Writer)),
+            expected: pkmn.battle.Options(Log(ArrayList(u8).Writer), pkmn.gen1.Chance(pkmn.Rational(u64))),
+            actual: pkmn.battle.Options(Log(ArrayList(u8).Writer), pkmn.gen1.Chance(pkmn.Rational(u64))),
         },
 
         expected: struct {
@@ -9381,8 +9381,8 @@ fn Test(comptime rolls: anytype) type {
             t.buf.actual = std.ArrayList(u8).init(std.testing.allocator);
             t.log.expected = .{ .writer = t.buf.expected.writer() };
             t.log.actual = .{ .writer = t.buf.actual.writer() };
-            t.options.expected = .{ .log = t.log.expected };
-            t.options.actual = .{ .log = t.log.actual };
+            t.options.expected = .{ .log = t.log.expected, .chance = null };
+            t.options.actual = .{ .log = t.log.actual, .chance = null };
 
             t.expected.p1 = t.battle.expected.side(.P1);
             t.expected.p2 = t.battle.expected.side(.P2);
@@ -9414,7 +9414,7 @@ fn Test(comptime rolls: anytype) type {
             try expected.switched(P2.ident(1), self.actual.p2.get(1));
             try expected.turn(1);
 
-            var options = pkmn.battle.Options(FixedLog){ .log = actual };
+            var options = pkmn.battle.Options(FixedLog, pkmn.gen1.Chance(pkmn.Rational(u64))){ .log = actual, .chance = null };
             try expectEqual(Result.Default, try self.battle.actual.update(.{}, .{}, &options));
             try expectLog(&expected_buf, &actual_buf);
         }

@@ -46,13 +46,14 @@ pub const protocol = if (options.internal) struct {
     pub const NULL = @import("common/protocol.zig").NULL;
 };
 
+pub usingnamespace @import("common/rational.zig");
+
 /// TODO
 pub const battle = struct {
-    // pub fn Options(comptime Log: type, comptime Chance: type) type {
-    pub fn Options(comptime Log: type) type {
+    pub fn Options(comptime Log: type, comptime Chance: type) type {
         return struct {
             log: Log,
-            // chance: Chance,
+            chance: ?Chance = null,
         };
     }
 };
@@ -60,6 +61,8 @@ pub const battle = struct {
 /// Namespace for Generation I Pokémon
 pub const gen1 = struct {
     pub usingnamespace @import("gen1/data.zig");
+    /// TODO
+    pub const Chance = @import("gen1/other/chance.zig").Chance;
     /// Provides helpers for initializing Generation I Pokémon battles.
     pub const helpers = @import("gen1/helpers.zig");
 };
