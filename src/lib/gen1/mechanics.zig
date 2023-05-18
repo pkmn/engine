@@ -579,7 +579,7 @@ fn beforeMove(
         } else {
             try log.activate(ident, .Confusion);
 
-            if (Rolls.confused(battle)) {
+            if (try Rolls.confused(battle, player, options)) {
                 assert(!volatiles.MultiHit);
                 if (!volatiles.Rage) volatiles.state = 0;
                 volatiles.Bide = false;
@@ -619,7 +619,7 @@ fn beforeMove(
 
     if (!showdown and try disabled(side, ident, options)) return .done;
 
-    if (Status.is(stored.status, .PAR) and Rolls.paralyzed(battle)) {
+    if (Status.is(stored.status, .PAR) and try Rolls.paralyzed(battle, player, options)) {
         if (!volatiles.Rage) volatiles.state = 0;
         volatiles.Bide = false;
         volatiles.Thrashing = false;
@@ -2726,14 +2726,28 @@ pub const Rolls = struct {
         return @intCast(u3, (battle.rng.next() & 3) + 2);
     }
 
-    inline fn confused(battle: anytype) bool {
-        if (showdown) return !battle.rng.chance(u8, 128, 256);
-        return battle.rng.next() >= Gen12.percent(50) + 1;
+    inline fn confused(battle: anytype, player: Player, options: anytype) !bool {
+        const cfz = if (options.chance.overridden(player, "confused")) |val|
+            val == .true
+        else if (showdown)
+            !battle.rng.chance(u8, 128, 256)
+        else
+            battle.rng.next() >= Gen12.percent(50) + 1;
+
+        try options.chance.confused(player, cfz);
+        return cfz;
     }
 
-    inline fn paralyzed(battle: anytype) bool {
-        if (showdown) return battle.rng.chance(u8, 63, 256);
-        return battle.rng.next() < Gen12.percent(25);
+    inline fn paralyzed(battle: anytype, player: Player, options: anytype) !bool {
+        const par = if (options.chance.overridden(player, "paralyzed")) |val|
+            val == .true
+        else if (showdown)
+            battle.rng.chance(u8, 63, 256)
+        else
+            battle.rng.next() < Gen12.percent(25);
+
+        try options.chance.paralyzed(player, par);
+        return par;
     }
 
     inline fn confusionChance(battle: anytype) bool {

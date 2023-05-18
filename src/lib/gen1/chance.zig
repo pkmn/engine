@@ -164,25 +164,37 @@ pub fn Chance(comptime Rational: type) type {
             }
         }
 
-        pub fn hit(self: *Self, player: Player, ok: bool, accuracy: u8) Error!void {
-            if (!enabled) return;
-
-            const p = if (ok) accuracy else @intCast(u8, 256 - @as(u9, accuracy));
-            try self.probability.update(p, 256);
-            var action = self.actions.get(player);
-            action.hit = if (ok) .true else .false;
-        }
-
         pub fn damage(self: *Self, player: Player, roll: u8) Error!void {
             if (!enabled) return;
 
             if (showdown) {
                 try self.probability.update(1, 39);
-                var action = self.actions.get(player);
-                action.damage = @intCast(u6, roll - 216);
+                self.actions.get(player).damage = @intCast(u6, roll - 216);
             } else {
                 self.damage_roll = @intCast(u6, roll - 216);
             }
+        }
+
+        pub fn hit(self: *Self, player: Player, ok: bool, accuracy: u8) Error!void {
+            if (!enabled) return;
+
+            const p = if (ok) accuracy else @intCast(u8, 256 - @as(u9, accuracy));
+            try self.probability.update(p, 256);
+            self.actions.get(player).hit = if (ok) .true else .false;
+        }
+
+        pub fn confused(self: *Self, player: Player, cfz: bool) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(1, 2);
+            self.actions.get(player).confused = if (cfz) .true else .false;
+        }
+
+        pub fn paralyzed(self: *Self, player: Player, par: bool) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(@as(u8, if (par) 1 else 3), 4);
+            self.actions.get(player).paralyzed = if (par) .true else .false;
         }
     };
 }
@@ -228,6 +240,18 @@ const Null = struct {
         _ = player;
         _ = ok;
         _ = accuracy;
+    }
+
+    pub fn confused(self: Self, player: Player, ok: bool) Error!void {
+        _ = self;
+        _ = player;
+        _ = ok;
+    }
+
+    pub fn paralyzed(self: Self, player: Player, ok: bool) Error!void {
+        _ = self;
+        _ = player;
+        _ = ok;
     }
 };
 
