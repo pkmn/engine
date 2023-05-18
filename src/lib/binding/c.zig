@@ -86,12 +86,19 @@ export fn pkmn_gen1_battle_update(
             if (opts.buf) |b| {
                 var stream = pkmn.protocol.ByteStream{ .buffer = b[0..opts.len] };
                 var log = pkmn.protocol.FixedLog{ .writer = stream.writer() };
-                var o = pkmn.battle.Options(pkmn.protocol.FixedLog){ .log = log };
+                // FIXME
+                var o = pkmn.battle.Options(pkmn.protocol.FixedLog, @TypeOf(pkmn.gen1.chance.NULL)){
+                    .log = log,
+                    .chance = pkmn.gen1.chance.NULL,
+                };
                 return battle.update(c1, c2, &o) catch return @bitCast(pkmn.Result, ERROR);
             }
         }
     }
-    var o = pkmn.battle.Options(@TypeOf(pkmn.protocol.NULL)){ .log = pkmn.protocol.NULL };
+    var o = pkmn.battle.Options(@TypeOf(pkmn.protocol.NULL), @TypeOf(pkmn.gen1.chance.NULL)){
+        .log = pkmn.protocol.NULL,
+        .chance = pkmn.gen1.chance.NULL,
+    };
     return battle.update(c1, c2, &o) catch unreachable;
 }
 

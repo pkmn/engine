@@ -49,7 +49,6 @@ pub fn Chance(comptime Rational: type) type {
 
         pub fn commit(self: *Self, player: Player) Error!void {
             assert(!showdown);
-            if (showdown) return;
             // If the move actually lands we can commit any past critical hit / damage rolls. We
             // avoid updating anything if there wasn't a damage roll as any "critical hit" not tied
             // to a damage roll is actually a no-op.
