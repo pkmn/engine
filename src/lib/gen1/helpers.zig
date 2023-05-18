@@ -6,9 +6,8 @@ const options = @import("../common/options.zig");
 const protocol = @import("../common/protocol.zig");
 const rng = @import("../common/rng.zig");
 
+const chance = @import("chance.zig");
 const data = @import("data.zig");
-
-const chance = @import("other/chance.zig");
 
 const assert = std.debug.assert;
 

@@ -3,12 +3,12 @@ const std = @import("std");
 const expect = std.testing.expect;
 const assert = std.debug.assert;
 
-const enabled = @import("../../common/options.zig").chance;
+const enabled = @import("../common/options.zig").chance;
 
-const Player = @import("../../common/data.zig").Player;
-const Optional = @import("../../common/optional.zig").Optional;
+const Player = @import("../common/data.zig").Player;
+const Optional = @import("../common/optional.zig").Optional;
 
-const Move = @import("../data.zig").Move;
+const Move = @import("data.zig").Move;
 
 /// TODO
 pub fn Chance(comptime Rational: type) type {
@@ -22,6 +22,99 @@ pub fn Chance(comptime Rational: type) type {
 
         /// TODO
         pub const Error = Rational.Error;
+
+        pub fn overridden(self: Self, player: Player, comptime field: []const u8) ?TypeOf(field) {
+            if (!enabled) return null;
+
+            const val = @field(if (player == .P1) self.actions.p1 else self.actions.p2, field);
+            return if (switch (@typeInfo(@TypeOf(val))) {
+                .Enum => val != .None,
+                .Int => val != 0,
+                else => unreachable,
+            }) val else null;
+        }
+
+        pub fn speedTie(self: Self, p1: bool) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(1, 2);
+            self.actions.p1.speed_tie = if (p1) .P1 else .P2;
+            self.actions.p2.speed_tie = self.actions.p1.speed_tie;
+        }
+
+        pub fn criticalHit(self: Self, player: Player, crit: bool, rate: u8) Error!void {
+            if (!enabled) return;
+
+            // FIXME: need to ensure we don't update if crit is a nop
+            try self.probability.update(if (crit) rate else 256 - rate, 256);
+            self.actions.get(player).critical_hit = if (crit) .true else .false;
+        }
+
+        pub fn damage(self: Self, player: Player, base: u32, roll: u8) Error!void {
+            if (!enabled) return;
+
+            var dmg = @intCast(u16, base *% roll / 255);
+
+            var min = roll;
+            while (min > 217) {
+                if (@intCast(u16, base *% (min - 1) / 255) == dmg) {
+                    min -= 1;
+                } else break;
+            }
+            var max = roll;
+            while (max < 255) {
+                if (@intCast(u16, base *% (max + 1) / 255) == dmg) {
+                    max += 1;
+                } else break;
+            }
+            assert(max >= min);
+            assert(min >= 217);
+
+            try self.probability.update(max - min + 1, 39);
+            var action = self.actions.get(player);
+            action.min_damage = @intCast(u6, min - 216);
+            action.max_damage = @intCast(u6, max - 216);
+        }
+    };
+}
+
+pub const NULL = struct {
+    const Self = @This();
+
+    pub const Error = error{};
+
+    pub fn overridden(self: Self, player: Player, comptime field: []const u8) ?TypeOf(field) {
+        _ = self;
+        _ = player;
+        return null;
+    }
+
+    pub fn speedTie(self: Self, p1: bool) Error!void {
+        _ = self;
+        _ = p1;
+    }
+
+    pub fn criticalHit(self: Self, player: Player, crit: bool, rate: u8) Error!void {
+        _ = self;
+        _ = player;
+        _ = crit;
+        _ = rate;
+    }
+
+    pub fn damage(self: Self, player: Player, base: u32, roll: u8) Error!void {
+        _ = self;
+        _ = player;
+        _ = base;
+        _ = roll;
+    }
+}{};
+
+fn TypeOf(comptime field: []const u8) type {
+    return switch (@typeInfo(Action)) {
+        .Struct => |info| blk: {
+            for (info.fields) |f| if (std.mem.eql(u8, f.name, field)) break :blk f.type;
+        },
+        else => unreachable,
     };
 }
 

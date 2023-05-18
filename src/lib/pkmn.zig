@@ -53,7 +53,7 @@ pub const battle = struct {
     pub fn Options(comptime Log: type, comptime Chance: type) type {
         return struct {
             log: Log,
-            chance: ?Chance = null,
+            chance: Chance,
         };
     }
 };
@@ -62,7 +62,12 @@ pub const battle = struct {
 pub const gen1 = struct {
     pub usingnamespace @import("gen1/data.zig");
     /// TODO
-    pub const Chance = @import("gen1/other/chance.zig").Chance;
+    pub const Chance = @import("gen1/chance.zig").Chance;
+    /// TODO
+    pub const chance = struct {
+        /// TODO
+        pub const NULL = @import("gen1/chance.zig").NULL;
+    };
     /// Provides helpers for initializing Generation I Pokémon battles.
     pub const helpers = @import("gen1/helpers.zig");
 };

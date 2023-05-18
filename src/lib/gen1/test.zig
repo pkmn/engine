@@ -5,8 +5,10 @@ const pkmn = @import("../pkmn.zig");
 const common = @import("../common/data.zig");
 const DEBUG = @import("../common/debug.zig").print;
 const protocol = @import("../common/protocol.zig");
+const rational = @import("../common/rational.zig");
 const rng = @import("../common/rng.zig");
 
+const chance = @import("chance.zig");
 const data = @import("data.zig");
 const helpers = @import("helpers.zig");
 
@@ -29,6 +31,8 @@ const ArgType = protocol.ArgType;
 const ByteStream = protocol.ByteStream;
 const FixedLog = protocol.FixedLog;
 const Log = protocol.Log;
+
+const Chance = chance.Chance(rational.Rational(u64));
 
 const Move = data.Move;
 const Species = data.Species;
@@ -55,7 +59,10 @@ const CRIT = MIN;
 const MIN_DMG = if (showdown) MIN else 179;
 const MAX_DMG = MAX;
 
-const NULL = pkmn.battle.Options(@TypeOf(protocol.NULL), pkmn.gen1.Chance(pkmn.Rational(u64))){ .log = protocol.NULL, .chance = null };
+const NULL = pkmn.battle.Options(@TypeOf(protocol.NULL), @TypeOf(chance.NULL)){
+    .log = protocol.NULL,
+    .chance = chance.NULL,
+};
 
 comptime {
     assert(showdown or std.math.rotr(u8, MIN_DMG, 1) == 217);
@@ -168,7 +175,7 @@ test "switching (order)" {
     try expected.switched(P2.ident(2), p2.pokemon[1]);
     try expected.turn(7);
 
-    var options = pkmn.battle.Options(FixedLog, pkmn.gen1.Chance(pkmn.Rational(u64))){ .log = actual, .chance = null };
+    var options = pkmn.battle.Options(FixedLog, @TypeOf(chance.NULL)){ .log = actual, .chance = chance.NULL };
     try expectEqual(Result.Default, try battle.update(swtch(5), swtch(5), &options));
     try expectOrder(p1, &.{ 3, 1, 6, 4, 2, 5 }, p2, &.{ 2, 1, 3, 5, 4, 6 });
     try expectLog(&expected_buf, &actual_buf);
@@ -953,7 +960,7 @@ test "end turn (turn limit)" {
     if (showdown) try expected.tie();
 
     const result = if (showdown) Result.Tie else Result.Error;
-    var options = pkmn.battle.Options(FixedLog, pkmn.gen1.Chance(pkmn.Rational(u64))){ .log = actual, .chance = null };
+    var options = pkmn.battle.Options(FixedLog, @TypeOf(chance.NULL)){ .log = actual, .chance = chance.NULL };
     try expectEqual(result, try t.battle.actual.update(swtch(2), swtch(2), &options));
     try expectEqual(max, t.battle.actual.turn);
     try expectLog(&expected_buf, &actual_buf);
@@ -9334,7 +9341,7 @@ test "MAX_LOGS" {
     try expected.turn(4);
 
     // P1 uses Metronome -> Fury Swipes and P2 uses Metronome -> Mirror Move
-    var options = pkmn.battle.Options(FixedLog){ .log = actual };
+    var options = pkmn.battle.Options(FixedLog, @TypeOf(chance.NULL)){ .log = actual, .chance = chance.NULL };
     try expectEqual(Result.Default, try battle.update(move(3), move(3), &options));
 
     try expectLog(&expected_buf, &actual_buf);
@@ -9357,8 +9364,8 @@ fn Test(comptime rolls: anytype) type {
             actual: Log(ArrayList(u8).Writer),
         },
         options: struct {
-            expected: pkmn.battle.Options(Log(ArrayList(u8).Writer), pkmn.gen1.Chance(pkmn.Rational(u64))),
-            actual: pkmn.battle.Options(Log(ArrayList(u8).Writer), pkmn.gen1.Chance(pkmn.Rational(u64))),
+            expected: pkmn.battle.Options(Log(ArrayList(u8).Writer), @TypeOf(chance.NULL)),
+            actual: pkmn.battle.Options(Log(ArrayList(u8).Writer), @TypeOf(chance.NULL)),
         },
 
         expected: struct {
@@ -9381,8 +9388,8 @@ fn Test(comptime rolls: anytype) type {
             t.buf.actual = std.ArrayList(u8).init(std.testing.allocator);
             t.log.expected = .{ .writer = t.buf.expected.writer() };
             t.log.actual = .{ .writer = t.buf.actual.writer() };
-            t.options.expected = .{ .log = t.log.expected, .chance = null };
-            t.options.actual = .{ .log = t.log.actual, .chance = null };
+            t.options.expected = .{ .log = t.log.expected, .chance = chance.NULL };
+            t.options.actual = .{ .log = t.log.actual, .chance = chance.NULL };
 
             t.expected.p1 = t.battle.expected.side(.P1);
             t.expected.p2 = t.battle.expected.side(.P2);
@@ -9414,7 +9421,7 @@ fn Test(comptime rolls: anytype) type {
             try expected.switched(P2.ident(1), self.actual.p2.get(1));
             try expected.turn(1);
 
-            var options = pkmn.battle.Options(FixedLog, pkmn.gen1.Chance(pkmn.Rational(u64))){ .log = actual, .chance = null };
+            var options = pkmn.battle.Options(FixedLog, @TypeOf(chance.NULL)){ .log = actual, .chance = chance.NULL };
             try expectEqual(Result.Default, try self.battle.actual.update(.{}, .{}, &options));
             try expectLog(&expected_buf, &actual_buf);
         }
@@ -9473,8 +9480,8 @@ fn metronome(comptime m: Move) U {
 }
 
 comptime {
+    _ = @import("chance.zig");
     _ = @import("data.zig");
     _ = @import("helpers.zig");
     _ = @import("mechanics.zig");
-    _ = @import("other/chance.zig");
 }
