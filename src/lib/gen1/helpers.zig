@@ -292,9 +292,8 @@ pub const Rolls = struct {
         break :init rolls;
     };
 
-    /// TODO set min_damage not max_damage
     pub fn damage(action: chance.Action) []const u6 {
-        return if (@field(action, "min_damage") == 0) &DAMAGE_NONE else &DAMAGE;
+        return if (@field(action, "damage") == 0) &DAMAGE_NONE else &DAMAGE;
     }
 
     const BOOL_NONE = [_]Optional(bool){.None};
@@ -316,8 +315,13 @@ pub const Rolls = struct {
     }
 
     /// TODO
-    pub fn cant(action: chance.Action) []const Optional(bool) {
-        return if (@field(action, "cant") == .None) &BOOL_NONE else &BOOLS;
+    pub fn confused(action: chance.Action) []const Optional(bool) {
+        return if (@field(action, "confused") == .None) &BOOL_NONE else &BOOLS;
+    }
+
+    /// TODO
+    pub fn paralyzed(action: chance.Action) []const Optional(bool) {
+        return if (@field(action, "paralyzed") == .None) &BOOL_NONE else &BOOLS;
     }
 
     const SLOT_NONE = [_]u3{0};
@@ -352,7 +356,7 @@ test Rolls {
     try expectEqualSlices(Optional(Player), &.{ .P1, .P2 }, Rolls.speedTie(actions.p1));
     try expectEqualSlices(Optional(Player), &.{.None}, Rolls.speedTie(actions.p2));
 
-    actions = chance.Actions{ .p2 = .{ .min_damage = 5 } };
+    actions = chance.Actions{ .p2 = .{ .damage = 5 } };
     try expectEqualSlices(u6, &.{0}, Rolls.damage(actions.p1));
     try expectEqual(@as(u6, 1), Rolls.damage(actions.p2)[0]);
 
@@ -368,9 +372,13 @@ test Rolls {
     try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.criticalHit(actions.p1));
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.criticalHit(actions.p2));
 
-    actions = chance.Actions{ .p2 = .{ .cant = .true } };
-    try expectEqualSlices(Optional(bool), &.{.None}, Rolls.cant(actions.p1));
-    try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.cant(actions.p2));
+    actions = chance.Actions{ .p2 = .{ .confused = .true } };
+    try expectEqualSlices(Optional(bool), &.{.None}, Rolls.confused(actions.p1));
+    try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.confused(actions.p2));
+
+    actions = chance.Actions{ .p2 = .{ .paralyzed = .true } };
+    try expectEqualSlices(Optional(bool), &.{.None}, Rolls.paralyzed(actions.p1));
+    try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.paralyzed(actions.p2));
 
     actions = chance.Actions{ .p2 = .{ .move_slot = 3 } };
     try expectEqualSlices(u3, &.{0}, Rolls.moveSlot(actions.p1));

@@ -2695,8 +2695,8 @@ pub const Rolls = struct {
     }
 
     inline fn damage(battle: anytype, player: anytype, options: anytype) !u8 {
-        const roll = if (options.chance.overridden(player, "min_damage")) |min_damage|
-            216 + @as(u8, min_damage)
+        const roll = if (options.chance.overridden(player, "damage")) |val|
+            216 + @as(u8, val)
         else roll: {
             if (showdown) break :roll battle.rng.range(u8, 217, 256);
             while (true) {
@@ -2705,7 +2705,7 @@ pub const Rolls = struct {
             }
         };
 
-        try options.chance.damage(player, @as(u32, battle.last_damage), roll);
+        try options.chance.damage(player, roll);
         return roll;
     }
 
