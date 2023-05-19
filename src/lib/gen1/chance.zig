@@ -271,11 +271,6 @@ const Null = struct {
 };
 
 fn TypeOf(comptime field: []const u8) type {
-    return switch (@typeInfo(Action)) {
-        .Struct => |info| blk: {
-            for (info.fields) |f| if (std.mem.eql(u8, f.name, field)) break :blk f.type;
-            unreachable;
-        },
-        else => unreachable,
-    };
+    for (@typeInfo(Action).Struct.fields) |f| if (std.mem.eql(u8, f.name, field)) return f.type;
+    unreachable;
 }
