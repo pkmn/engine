@@ -2673,12 +2673,6 @@ fn clearVolatiles(battle: anytype, who: Player, options: anytype) !void {
     }
 }
 
-// inline fn chance(options: anytype) ?@TypeOf(options.chance) {
-//     return if (pkmn.options.chance) options.chance else null;
-// }
-
-const chance = pkmn.options.chance;
-
 pub const Rolls = struct {
     inline fn speedTie(battle: anytype, options: anytype) !bool {
         const p1 = if (options.chance.overridden(.P1, "speed_tie")) |player|
