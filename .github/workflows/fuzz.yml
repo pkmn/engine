@@ -23,14 +23,14 @@ jobs:
         with:
           version: master
       - run: npm install --ignore-scripts
-      - run: zig build -j1  -Doptimize=ReleaseSafe -Dlog -Dchance ${{matrix.options}} fuzz -- ${{matrix.gen}} 15m | tee seed.txt
+      - run: zig build -j1 -Doptimize=ReleaseSafe -Dlog -Dchance -Dcalc ${{matrix.options}} fuzz -- ${{matrix.gen}} 15m | tee seed.txt
         shell: bash
       - run: |
           node src/bin/install-pkmn-engine
           npm run --silent fuzz -- ${{matrix.options == '' && 'pkmn' || 'showdown' }} ${{matrix.gen}} 1s $(cat seed.txt)
         if: failure()
       - run: |
-          node src/bin/install-pkmn-engine --options="-Dshowdown -Dlog -Dchance"
+          node src/bin/install-pkmn-engine --options="-Dshowdown -Dlog -Dchance -Dcalc"
           npm run integration -- --gen=${{matrix.gen}} --duration=15m --maxFailures=5 --debug=false
         if: ${{ matrix.options != '' }}
       - uses: actions/upload-artifact@v3

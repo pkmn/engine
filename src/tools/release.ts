@@ -109,6 +109,8 @@ for (const {triple, mcpu} of TARGETS) {
       `-Dcpu=${mcpu}`,
       `-Dshowdown=${showdown}`,
       '-Dlog',
+      '-Dchance',
+      '-Dcalc',
       '-p',
       `release/${triple}`,
     ]);
@@ -161,9 +163,9 @@ const sign = argv.prod
     `https:/pkmn.cc/minisign.pub, reproduced below for convenience:\n\n    ${key}`
   : '';
 const notes = `${preamble} version **\`v${version}\`** for` +
-  '`libpkmn` and `libpkmn-showdown` (`-Dshowdown`). This release offers only ' +
-  'stripped static `-OReleaseFast` versions of these libraries built for popular architectures ' +
-  `and baseline CPU features with \`-Dlog\` protocol message logging enabled. ${npm} ${sign}\n\n` +
+  '`libpkmn` and `libpkmn-showdown` (`-Dshowdown`). This release offers only stripped static ' +
+  '`-OReleaseFast` versions of these libraries built for popular architectures and baseline CPU ' +
+  `features with \`-Dlog\`, \`-Dchance\`, and \`-Dcalc\` all enabled. ${npm} ${sign}\n\n` +
   '*[Manually building](https://github.com/pkmn/engine#libpkmn) these libraries from source ' +
   'on your own system is likely to result in better performance when optimized for the native ' +
   'architecture and allows you to tweak exactly which features you need (including support for ' +

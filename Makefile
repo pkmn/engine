@@ -8,8 +8,8 @@ default: check
 
 .PHONY: zig-build
 zig-build:
-	zig build --summary all -Dlog -Dchance -p build
-	zig build --summary all -Dshowdown -Dlog -Dchance -p build
+	zig build --summary all -Dlog -Dchance -Dcalc -p build
+	zig build --summary all -Dshowdown -Dlog -Dchance -Dcalc -p build
 
 .PHONY: js-build
 js-build: export DEBUG_PKMN_ENGINE=true
@@ -58,8 +58,8 @@ fix: zig-fix js-fix
 
 .PHONY: zig-test
 zig-test:
-	zig build --summary all -Dlog -Dchance test
-	zig build --summary all -Dshowdown -Dlog -Dchance test
+	zig build --summary all -Dlog -Dchance -Dcalc test
+	zig build --summary all -Dshowdown -Dlog -Dchance -Dcalc test
 
 .PHONY: js-test
 js-test: js-build
@@ -73,7 +73,7 @@ zig-coverage:
 	rm -rf coverage/zig
 	mkdir -p coverage/zig
 	zig build --summary all test -Dtest-coverage=coverage/zig/pkmn
-	zig build --summary all -Dshowdown -Dlog -Dchance test -Dtest-coverage=coverage/zig/pkmn-showdown
+	zig build --summary all -Dshowdown -Dlog -Dchance -Dcalc test -Dtest-coverage=coverage/zig/pkmn-showdown
 	kcov --merge coverage/zig/merged coverage/zig/pkmn coverage/zig/pkmn-showdown
 
 .PHONY: js-coverage
@@ -148,7 +148,7 @@ patch:
 
 .PHONY: t
 t:
-	zig build --summary all test -Dlog -Dchance -Dtest-file=src/lib/gen$(gen)/test.zig -Dtest-filter="$(filter)" $(opt)
+	zig build --summary all test -Dlog -Dchance -Dcalc -Dtest-file=src/lib/gen$(gen)/test.zig -Dtest-filter="$(filter)" $(opt)
 
 .PHONY: it
 it:

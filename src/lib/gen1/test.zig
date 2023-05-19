@@ -8,6 +8,7 @@ const protocol = @import("../common/protocol.zig");
 const rational = @import("../common/rational.zig");
 const rng = @import("../common/rng.zig");
 
+const calc = @import("calc.zig");
 const chance = @import("chance.zig");
 const data = @import("data.zig");
 const helpers = @import("helpers.zig");
@@ -24,6 +25,8 @@ const Player = common.Player;
 const Result = common.Result;
 const Choice = common.Choice;
 
+const Options = pkmn.battle.Options;
+
 const showdown = pkmn.options.showdown;
 const log = pkmn.options.log;
 
@@ -34,6 +37,7 @@ const Log = protocol.Log;
 
 const Rational = rational.Rational;
 
+const Calc = calc.Calc;
 const Chance = chance.Chance;
 
 const Move = data.Move;
@@ -61,7 +65,7 @@ const CRIT = MIN;
 const MIN_DMG = if (showdown) MIN else 179;
 const MAX_DMG = MAX;
 
-const NULL = pkmn.battle.Options(@TypeOf(protocol.NULL), @TypeOf(chance.NULL)){
+const NULL = Options(@TypeOf(protocol.NULL), @TypeOf(chance.NULL)){
     .log = protocol.NULL,
     .chance = chance.NULL,
 };
@@ -177,7 +181,7 @@ test "switching (order)" {
     try expected.switched(P2.ident(2), p2.pokemon[1]);
     try expected.turn(7);
 
-    var options = pkmn.battle.Options(FixedLog, @TypeOf(chance.NULL)){
+    var options = Options(FixedLog, @TypeOf(chance.NULL)){
         .log = actual,
         .chance = chance.NULL,
     };
@@ -968,7 +972,7 @@ test "end turn (turn limit)" {
     if (showdown) try expected.tie();
 
     const result = if (showdown) Result.Tie else Result.Error;
-    var options = pkmn.battle.Options(FixedLog, @TypeOf(chance.NULL)){
+    var options = Options(FixedLog, @TypeOf(chance.NULL)){
         .log = actual,
         .chance = chance.NULL,
     };
@@ -9352,7 +9356,7 @@ test "MAX_LOGS" {
     try expected.turn(4);
 
     // P1 uses Metronome -> Fury Swipes and P2 uses Metronome -> Mirror Move
-    var options = pkmn.battle.Options(FixedLog, @TypeOf(chance.NULL)){
+    var options = Options(FixedLog, @TypeOf(chance.NULL)){
         .log = actual,
         .chance = chance.NULL,
     };
@@ -9387,7 +9391,7 @@ fn Test(comptime rolls: anytype) type {
             p2: *data.Side,
         },
 
-        options: pkmn.battle.Options(Log(ArrayList(u8).Writer), Chance(Rational(u64))),
+        options: Options(Log(ArrayList(u8).Writer), Chance(Rational(u64))),
         offset: usize,
 
         pub fn init(pokemon1: []const Pokemon, pokemon2: []const Pokemon) *Self {
@@ -9431,7 +9435,7 @@ fn Test(comptime rolls: anytype) type {
             try expected.switched(P2.ident(1), self.actual.p2.get(1));
             try expected.turn(1);
 
-            var options = pkmn.battle.Options(FixedLog, Chance(Rational(u64))){
+            var options = Options(FixedLog, Chance(Rational(u64))){
                 .log = actual,
                 .chance = .{ .probability = .{} },
             };
@@ -9446,7 +9450,25 @@ fn Test(comptime rolls: anytype) type {
             if (self.battle.actual.turn == 0) try self.start();
 
             self.options.chance = .{ .probability = .{} };
-            const result = self.battle.actual.update(c1, c2, &self.options);
+            const result = if (pkmn.options.chance and pkmn.options.calc) result: {
+                // FIXME: uncomment once all RNG is accounted for
+                // const copy = self.battle.actual;
+                // const rand = copy.rng;
+                const actual = self.battle.actual.update(c1, c2, &self.options);
+                // const options = Options(@TypeOf(protocol.NULL), @TypeOf(chance.NULL), Calc){
+                //     .log = protocol.NULL,
+                //     .chance = chance.NULL,
+                //     .calc = .{ .overrides = self.options.chance.actions },
+                // };
+                // const forced = copy.update(c1, c2, &options);
+                // try expectEqual(actual, forced);
+                // // RNG should not have been updated at all because all rolls were overridden
+                // try expectEqual(rand, copy.rng);
+                // // Otherwise the actual battle should match a copy with the same forced RNG
+                // copy.rng = self.battle.actual.rng;
+                // try expectEqual(copy, self.battle.actual);
+                break :result actual;
+            } else self.battle.actual.update(c1, c2, &self.options);
 
             try self.validate();
             return result;
@@ -9510,6 +9532,7 @@ fn metronome(comptime m: Move) U {
 }
 
 comptime {
+    _ = @import("calc.zig");
     _ = @import("chance.zig");
     _ = @import("data.zig");
     _ = @import("helpers.zig");

@@ -114,17 +114,6 @@ pub fn Chance(comptime Rational: type) type {
         /// TODO
         pub const Error = Rational.Error;
 
-        pub fn overridden(self: Self, player: Player, comptime field: []const u8) ?TypeOf(field) {
-            if (!enabled) return null;
-
-            const val = @field(if (player == .P1) self.actions.p1 else self.actions.p2, field);
-            return if (switch (@typeInfo(@TypeOf(val))) {
-                .Enum => val != .None,
-                .Int => val != 0,
-                else => unreachable,
-            }) val else null;
-        }
-
         pub fn commit(self: *Self, player: Player) Error!void {
             assert(!showdown);
             // If the move actually lands we can commit any past critical hit / damage rolls. We
@@ -210,59 +199,51 @@ pub fn Chance(comptime Rational: type) type {
 pub const NULL = Null{};
 
 const Null = struct {
-    const Self = @This();
-
     pub const Error = error{};
 
-    pub fn overridden(self: Self, player: Player, comptime field: []const u8) ?TypeOf(field) {
-        _ = self;
-        _ = player;
-        return null;
-    }
-
-    pub fn commit(self: Self, player: Player) Error!void {
+    pub fn commit(self: Null, player: Player) Error!void {
         _ = self;
         _ = player;
     }
 
-    pub fn speedTie(self: Self, p1: bool) Error!void {
+    pub fn speedTie(self: Null, p1: bool) Error!void {
         _ = self;
         _ = p1;
     }
 
-    pub fn criticalHit(self: Self, player: Player, crit: bool, rate: u8) Error!void {
+    pub fn criticalHit(self: Null, player: Player, crit: bool, rate: u8) Error!void {
         _ = self;
         _ = player;
         _ = crit;
         _ = rate;
     }
 
-    pub fn damage(self: Self, player: Player, roll: u8) Error!void {
+    pub fn damage(self: Null, player: Player, roll: u8) Error!void {
         _ = self;
         _ = player;
         _ = roll;
     }
 
-    pub fn hit(self: Self, player: Player, ok: bool, accuracy: u8) Error!void {
+    pub fn hit(self: Null, player: Player, ok: bool, accuracy: u8) Error!void {
         _ = self;
         _ = player;
         _ = ok;
         _ = accuracy;
     }
 
-    pub fn confused(self: Self, player: Player, ok: bool) Error!void {
+    pub fn confused(self: Null, player: Player, ok: bool) Error!void {
         _ = self;
         _ = player;
         _ = ok;
     }
 
-    pub fn paralyzed(self: Self, player: Player, ok: bool) Error!void {
+    pub fn paralyzed(self: Null, player: Player, ok: bool) Error!void {
         _ = self;
         _ = player;
         _ = ok;
     }
 
-    pub fn secondaryChance(self: Self, player: Player, proc: bool, rate: u8) Error!void {
+    pub fn secondaryChance(self: Null, player: Player, proc: bool, rate: u8) Error!void {
         _ = self;
         _ = player;
         _ = proc;
