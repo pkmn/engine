@@ -2199,6 +2199,9 @@ pub const Effects = struct {
         var side = battle.side(player);
         var stored = side.stored();
 
+        assert(showdown or battle.last_damage > 0);
+        if (showdown and battle.last_damage == 0) return;
+
         const damage = @intCast(i16, @max(battle.last_damage /
             @as(u8, if (side.last_selected_move == .Struggle) 2 else 4), 1));
         stored.hp = @intCast(u16, @max(@intCast(i16, stored.hp) - damage, 0));
