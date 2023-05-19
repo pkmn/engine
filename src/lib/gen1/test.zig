@@ -341,6 +341,7 @@ test "turn order (basic speed tie)" {
         try t.log.expected.turn(1);
 
         try expectEqual(Result.Default, try t.battle.actual.update(.{}, .{}, &t.options));
+        try t.expectProbability(1, 1);
 
         try t.verify();
     }
@@ -366,6 +367,8 @@ test "turn order (basic speed tie)" {
         try t.log.expected.turn(2);
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        // 1/2 * (229/256) ** 2 * (201/256) ** 2 * (1/39) ** 2
+        try t.expectProbability(235407649, 1451698946048);
 
         try t.verify();
     }
@@ -9434,7 +9437,9 @@ fn Test(comptime rolls: anytype) type {
             };
             try expectEqual(Result.Default, try self.battle.actual.update(.{}, .{}, &options));
             try expectLog(&expected_buf, &actual_buf);
-            try expectProbability(u64, options.chance.probability, 1, 1);
+            if (!pkmn.options.chance) {
+                try expectEqual(Rational(u64){ .p = 1, .q = 1 }, options.chance.probability);
+            }
         }
 
         pub fn update(self: *Self, c1: Choice, c2: Choice) !Result {
@@ -9445,6 +9450,17 @@ fn Test(comptime rolls: anytype) type {
 
             try self.validate();
             return result;
+        }
+
+        pub fn expectProbability(self: *Self, p: u64, q: u64) !void {
+            if (!pkmn.options.chance) return;
+
+            self.options.chance.probability.reduce();
+            const r = self.options.chance.probability;
+            if (r.p != p or r.q != q) {
+                std.debug.print("expected {d}/{d}, found {d}/{d}\n", .{ p, q, r.p, r.q });
+                return error.TestExpectedEqual;
+            }
         }
 
         pub fn verify(self: *Self) !void {
@@ -9474,11 +9490,6 @@ fn Test(comptime rolls: anytype) type {
 
 fn expectLog(expected: []const u8, actual: []const u8) !void {
     return protocol.expectLog(formatter, expected, actual, 0);
-}
-
-fn expectProbability(comptime T: type, r: Rational(T), p: T, q: T) !void {
-    if (!pkmn.options.chance) return;
-    return expectEqual(Rational(T){ .p = p, .q = q }, r);
 }
 
 fn formatter(kind: protocol.Kind, byte: u8) []const u8 {
