@@ -358,8 +358,9 @@ const downloadImportLib = async () => {
   // either the default options or whatever was passed in
   if (!configs.size) {
     node = true;
-    configs.set('node', {type: 'node', options: options || ['-Dshowdown']});
-    configs.set('wasm', {type: 'wasm', options: options || ['-Dshowdown']});
+    const DEFAULT = ['-Dshowdown', '-Dlog', '-Dchance', '-Dcalc'];
+    configs.set('node', {type: 'node', options: options || DEFAULT});
+    configs.set('wasm', {type: 'wasm', options: options || DEFAULT});
   }
 
   const headers = node ? await downloadHeaders() : undefined;
