@@ -11,6 +11,7 @@ const moves = @import("data/moves.zig");
 const species = @import("data/species.zig");
 const types = @import("data/types.zig");
 
+const chance = @import("chance.zig");
 const mechanics = @import("mechanics.zig");
 
 const assert = std.debug.assert;
@@ -34,6 +35,12 @@ pub const LOGS_SIZE = if (builtin.mode == .ReleaseSmall)
     MAX_LOGS
 else
     std.math.ceilPowerOfTwo(usize, MAX_LOGS) catch unreachable;
+
+/// TODO
+pub const NULL = pkmn.battle.Options(@TypeOf(protocol.NULL), @TypeOf(chance.NULL)){
+    .log = protocol.NULL,
+    .chance = chance.NULL,
+};
 
 const Choice = data.Choice;
 const ID = data.ID;

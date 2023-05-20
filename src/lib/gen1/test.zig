@@ -45,6 +45,7 @@ const Species = data.Species;
 const Status = data.Status;
 const Type = data.Type;
 const Types = data.Types;
+const NULL = data.NULL;
 
 const Battle = helpers.Battle;
 const EXP = helpers.EXP;
@@ -64,11 +65,6 @@ const HIT = MIN;
 const CRIT = MIN;
 const MIN_DMG = if (showdown) MIN else 179;
 const MAX_DMG = MAX;
-
-const NULL = Options(@TypeOf(protocol.NULL), @TypeOf(chance.NULL)){
-    .log = protocol.NULL,
-    .chance = chance.NULL,
-};
 
 comptime {
     assert(showdown or std.math.rotr(u8, MIN_DMG, 1) == 217);
