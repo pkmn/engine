@@ -1760,7 +1760,7 @@ pub const Effects = struct {
         side.active.volatiles.Bide = true;
         assert(!side.active.volatiles.Thrashing and !side.active.volatiles.Rage);
         side.active.volatiles.state = 0;
-        side.active.volatiles.attacks = Rolls.bideThrashDuration(battle);
+        side.active.volatiles.attacks = Rolls.attackingDuration(battle);
 
         try options.log.start(battle.active(player), .Bide);
     }
@@ -2353,7 +2353,7 @@ pub const Effects = struct {
         assert(!volatiles.Bide);
 
         volatiles.Thrashing = true;
-        volatiles.attacks = Rolls.bideThrashDuration(battle);
+        volatiles.attacks = Rolls.attackingDuration(battle);
     }
 
     fn transform(battle: anytype, player: Player, options: anytype) !void {
@@ -2802,7 +2802,7 @@ pub const Rolls = struct {
         }
     }
 
-    inline fn bideThrashDuration(battle: anytype) u3 {
+    inline fn attackingDuration(battle: anytype) u3 {
         if (showdown) return @intCast(u3, battle.rng.range(u4, 2, 4));
         return @intCast(u3, (battle.rng.next() & 1) + 2);
     }

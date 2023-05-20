@@ -58,7 +58,7 @@ pub const Action = packed struct {
     /// Rolls.{confusionChance,secondaryChance,poisonChance}.
     secondary_chance: Optional(bool) = .None,
     /// If not 0, the value to be returned by
-    /// Rolls.{disableDuration,sleepDuration,confusionDuration,bideThrashDuration}.
+    /// Rolls.{disableDuration,sleepDuration,confusionDuration,attackingDuration}.
     duration: u4 = 0,
     /// If not None, the value to be returned by Rolls.criticalHit.
     critical_hit: Optional(bool) = .None,
