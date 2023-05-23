@@ -23,7 +23,7 @@ jobs:
         with:
           version: master
       - run: npm install --ignore-scripts
-      - run: zig build -Doptimize=ReleaseSafe -Dlog ${{matrix.options}} fuzz -- ${{matrix.gen}} 15m | tee seed.txt
+      - run: zig build -j1 -Doptimize=ReleaseSafe -Dlog ${{matrix.options}} fuzz -- ${{matrix.gen}} 15m | tee seed.txt
         shell: bash
       - run: |
           node src/bin/install-pkmn-engine

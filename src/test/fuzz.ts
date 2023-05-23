@@ -28,7 +28,7 @@ export async function run(
   seed?: bigint,
   testing?: boolean,
 ) {
-  const args = ['build', '-fno-summary', 'fuzz', '-Dlog'];
+  const args = ['build', '-j1', '-fno-summary', 'fuzz', '-Dlog'];
   if (showdown) args.push('-Dshowdown');
   args.push('--', gen.toString(), duration);
   if (seed) args.push(seed.toString());
