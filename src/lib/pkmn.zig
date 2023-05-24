@@ -71,7 +71,7 @@ pub const gen1 = struct {
     };
     // TODO
     pub const Calc = @import("gen1/calc.zig").Calc;
-      /// TODO
+    /// TODO
     pub const calc = struct {
         /// TODO
         pub const NULL = @import("gen1/calc.zig").NULL;

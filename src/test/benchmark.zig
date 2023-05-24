@@ -19,6 +19,8 @@ var initial: []u8 = &.{};
 var buf: ?std.ArrayList(u8) = null;
 var frames: ?std.ArrayList(Frame) = null;
 
+const showdown = pkmn.options.showdown;
+
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer std.debug.assert(gpa.deinit() == .ok);
@@ -82,11 +84,9 @@ pub fn benchmark(
     std.debug.assert(gen >= 1 and gen <= 9);
 
     const fuzz = duration != null;
-    const showdown = pkmn.options.showdown;
     const save = pkmn.options.log and builtin.mode == .Debug and fuzz;
 
     var random = pkmn.PSRNG.init(seed);
-    var choices: [pkmn.CHOICES_SIZE]pkmn.Choice = undefined;
 
     var time: u64 = 0;
     var turns: usize = 0;
@@ -123,73 +123,77 @@ pub fn benchmark(
         std.debug.assert(!showdown or battle.side(.P1).get(1).hp > 0);
         std.debug.assert(!showdown or battle.side(.P2).get(1).hp > 0);
 
-        var c1 = pkmn.Choice{};
-        var c2 = pkmn.Choice{};
+        var t = try run(&battle, &random, save, max, allocator, switch (gen) {
+            1 => if (save)
+                createOptions(log.?, pkmn.gen1.chance.NULL, pkmn.gen1.calc.NULL)
+            else
+                pkmn.gen1.NULL,
+            else => unreachable,
+        });
 
-        var p1 = pkmn.PSRNG.init(random.newSeed());
-        var p2 = pkmn.PSRNG.init(random.newSeed());
-
-        var timer = try Timer.start();
-
-        var result = try update(&battle, c1, c2, log);
-        while (result.type == .None) : (result = try update(&battle, c1, c2, log)) {
-            var n = battle.choices(.P1, result.p1, &choices);
-            if (n == 0) break;
-            c1 = choices[p1.range(u8, 0, n)];
-            n = battle.choices(.P2, result.p2, &choices);
-            if (n == 0) break;
-            c2 = choices[p2.range(u8, 0, n)];
-
-            if (save) {
-                std.debug.assert(buf.?.items.len <= max);
-                try frames.?.append(.{
-                    .result = result,
-                    .c1 = c1,
-                    .c2 = c2,
-                    .state = try allocator.dupe(u8, std.mem.toBytes(battle)[0..]),
-                    .log = try buf.?.toOwnedSlice(),
-                });
-            }
-        }
-
-        const t = timer.read();
         if (i >= w) {
             time += t;
             turns += battle.turn;
         }
-        std.debug.assert(!showdown or result.type != .Error);
     }
     if (frames != null) deinit(allocator);
     if (battles != null) try out.print("{d},{d},{d}\n", .{ time, turns, random.src.seed });
 }
 
-// FIXME
-inline fn update(
+fn run(
     battle: anytype,
-    c1: pkmn.Choice,
-    c2: pkmn.Choice,
-    log: ?pkmn.protocol.Log(std.ArrayList(u8).Writer),
-) !pkmn.Result {
-    if (pkmn.options.log and builtin.mode == .Debug and log != null) {
-        const Options = pkmn.battle.Options(
-            pkmn.protocol.Log(std.ArrayList(u8).Writer),
-            @TypeOf(pkmn.gen1.chance.NULL),
-            @TypeOf(pkmn.gen1.calc.NULL),
-        );
-        return battle.update(c1, c2, &Options{
-            .log = log.?,
-            .chance = pkmn.gen1.chance.NULL,
-            .calc = pkmn.gen1.calc.NULL,
-        });
-    } else {
-        const Options =
-            pkmn.battle.Options(
-            @TypeOf(pkmn.protocol.NULL),
-            @TypeOf(pkmn.gen1.chance.NULL),
-            @TypeOf(pkmn.gen1.calc.NULL),
-        );
-        return battle.update(c1, c2, &Options{ .log = pkmn.protocol.NULL, .chance = pkmn.gen1.chance.NULL, .calc = pkmn.gen1.calc.NULL, });
+    random: *pkmn.PSRNG,
+    save: bool,
+    max: usize,
+    allocator: Allocator,
+    options: anytype,
+) !u64 {
+    var choices: [pkmn.CHOICES_SIZE]pkmn.Choice = undefined;
+
+    var c1 = pkmn.Choice{};
+    var c2 = pkmn.Choice{};
+
+    var p1 = pkmn.PSRNG.init(random.newSeed());
+    var p2 = pkmn.PSRNG.init(random.newSeed());
+
+    var timer = try Timer.start();
+
+    var result = try battle.update(c1, c2, &options);
+    while (result.type == .None) : (result = try battle.update(c1, c2, &options)) {
+        var n = battle.choices(.P1, result.p1, &choices);
+        if (n == 0) break;
+        c1 = choices[p1.range(u8, 0, n)];
+        n = battle.choices(.P2, result.p2, &choices);
+        if (n == 0) break;
+        c2 = choices[p2.range(u8, 0, n)];
+
+        if (save) {
+            std.debug.assert(buf.?.items.len <= max);
+            try frames.?.append(.{
+                .result = result,
+                .c1 = c1,
+                .c2 = c2,
+                .state = try allocator.dupe(u8, std.mem.toBytes(battle)[0..]),
+                .log = try buf.?.toOwnedSlice(),
+            });
+        }
     }
+
+    const t = timer.read();
+    std.debug.assert(!showdown or result.type != .Error);
+    return t;
+}
+
+fn createOptions(
+    log: pkmn.protocol.Log(std.ArrayList(u8).Writer),
+    chance: anytype,
+    calc: anytype,
+) pkmn.battle.Options(@TypeOf(log), @TypeOf(chance), @TypeOf(calc)) {
+    return .{
+        .log = log,
+        .chance = chance,
+        .calc = calc,
+    };
 }
 
 fn errorAndExit(msg: []const u8, arg: []const u8, cmd: []const u8, fuzz: bool) noreturn {
@@ -230,7 +234,6 @@ fn dump() !void {
         try w.print("0x{X}\n", .{last});
     } else {
         try w.writeIntNative(u64, last);
-
         try w.writeByte(@intFromBool(pkmn.options.showdown));
         try w.writeByte(gen);
         try w.writeAll(initial);
