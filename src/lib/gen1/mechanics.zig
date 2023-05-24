@@ -2675,7 +2675,7 @@ fn clearVolatiles(battle: anytype, who: Player, options: anytype) !void {
 
 pub const Rolls = struct {
     inline fn speedTie(battle: anytype, options: anytype) !bool {
-        const p1 = if (options.chance.overridden(.P1, "speed_tie")) |player|
+        const p1 = if (options.calc.overridden(.P1, "speed_tie")) |player|
             player == .P1
         else if (showdown)
             battle.rng.range(u8, 0, 2) == 0
@@ -2687,7 +2687,7 @@ pub const Rolls = struct {
     }
 
     inline fn criticalHit(battle: anytype, player: Player, rate: u8, options: anytype) !bool {
-        const crit = if (options.chance.overridden(player, "critical_hit")) |val|
+        const crit = if (options.calc.overridden(player, "critical_hit")) |val|
             val == .true
         else if (showdown)
             battle.rng.chance(u8, rate, 256)
@@ -2699,7 +2699,7 @@ pub const Rolls = struct {
     }
 
     inline fn damage(battle: anytype, player: anytype, options: anytype) !u8 {
-        const roll = if (options.chance.overridden(player, "damage")) |val|
+        const roll = if (options.calc.overridden(player, "damage")) |val|
             216 + @as(u8, val)
         else roll: {
             if (showdown) break :roll battle.rng.range(u8, 217, 256);
@@ -2714,7 +2714,7 @@ pub const Rolls = struct {
     }
 
     inline fn hit(battle: anytype, player: Player, accuracy: u8, options: anytype) !bool {
-        const ok = if (options.chance.overridden(player, "hit")) |val|
+        const ok = if (options.calc.overridden(player, "hit")) |val|
             val == .true
         else if (showdown)
             battle.rng.chance(u8, accuracy, 256)
@@ -2731,7 +2731,7 @@ pub const Rolls = struct {
     }
 
     inline fn confused(battle: anytype, player: Player, options: anytype) !bool {
-        const cfz = if (options.chance.overridden(player, "confused")) |val|
+        const cfz = if (options.calc.overridden(player, "confused")) |val|
             val == .true
         else if (showdown)
             !battle.rng.chance(u8, 128, 256)
@@ -2743,7 +2743,7 @@ pub const Rolls = struct {
     }
 
     inline fn paralyzed(battle: anytype, player: Player, options: anytype) !bool {
-        const par = if (options.chance.overridden(player, "paralyzed")) |val|
+        const par = if (options.calc.overridden(player, "paralyzed")) |val|
             val == .true
         else if (showdown)
             battle.rng.chance(u8, 63, 256)
@@ -2755,7 +2755,7 @@ pub const Rolls = struct {
     }
 
     inline fn confusionChance(battle: anytype, player: Player, options: anytype) !bool {
-        const proc = if (options.chance.overridden(player, "secondary_chance")) |val|
+        const proc = if (options.calc.overridden(player, "secondary_chance")) |val|
             val == .true
         else if (showdown)
             battle.rng.chance(u8, 25, 256)
@@ -2769,7 +2769,7 @@ pub const Rolls = struct {
     inline fn secondaryChance(battle: anytype, player: Player, low: bool, options: anytype) !bool {
         const rate: u8 = if (low) 26 else 77;
 
-        const proc = if (options.chance.overridden(player, "secondary_chance")) |val|
+        const proc = if (options.calc.overridden(player, "secondary_chance")) |val|
             val == .true
         else if (showdown)
             battle.rng.chance(u8, rate, 256)
@@ -2783,7 +2783,7 @@ pub const Rolls = struct {
     inline fn poisonChance(battle: anytype, player: Player, low: bool, options: anytype) !bool {
         const rate: u8 = if (low) 52 else 103;
 
-        const proc = if (options.chance.overridden(player, "secondary_chance")) |val|
+        const proc = if (options.calc.overridden(player, "secondary_chance")) |val|
             val == .true
         else if (showdown)
             battle.rng.chance(u8, rate, 256)

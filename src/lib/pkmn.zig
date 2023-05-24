@@ -50,10 +50,11 @@ pub usingnamespace @import("common/rational.zig");
 
 /// TODO
 pub const battle = struct {
-    pub fn Options(comptime Log: type, comptime Chance: type) type {
+    pub fn Options(comptime Log: type, comptime Chance: type, comptime Calc: type) type {
         return struct {
             log: Log,
             chance: Chance,
+            calc: Calc,
         };
     }
 };
@@ -67,6 +68,13 @@ pub const gen1 = struct {
     pub const chance = struct {
         /// TODO
         pub const NULL = @import("gen1/chance.zig").NULL;
+    };
+    // TODO
+    pub const Calc = @import("gen1/calc.zig").Calc;
+      /// TODO
+    pub const calc = struct {
+        /// TODO
+        pub const NULL = @import("gen1/calc.zig").NULL;
     };
     /// Provides helpers for initializing Generation I Pokémon battles.
     pub const helpers = @import("gen1/helpers.zig");

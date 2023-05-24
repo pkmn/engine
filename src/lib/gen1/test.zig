@@ -177,9 +177,10 @@ test "switching (order)" {
     try expected.switched(P2.ident(2), p2.pokemon[1]);
     try expected.turn(7);
 
-    var options = Options(FixedLog, @TypeOf(chance.NULL)){
+    var options = Options(FixedLog, @TypeOf(chance.NULL), @TypeOf(calc.NULL)){
         .log = actual,
         .chance = chance.NULL,
+        .calc = calc.NULL,
     };
     try expectEqual(Result.Default, try battle.update(swtch(5), swtch(5), &options));
     try expectOrder(p1, &.{ 3, 1, 6, 4, 2, 5 }, p2, &.{ 2, 1, 3, 5, 4, 6 });
@@ -968,9 +969,10 @@ test "end turn (turn limit)" {
     if (showdown) try expected.tie();
 
     const result = if (showdown) Result.Tie else Result.Error;
-    var options = Options(FixedLog, @TypeOf(chance.NULL)){
+    var options = Options(FixedLog, @TypeOf(chance.NULL), @TypeOf(calc.NULL)){
         .log = actual,
         .chance = chance.NULL,
+        .calc = calc.NULL,
     };
     try expectEqual(result, try t.battle.actual.update(swtch(2), swtch(2), &options));
     try expectEqual(max, t.battle.actual.turn);
@@ -9352,9 +9354,10 @@ test "MAX_LOGS" {
     try expected.turn(4);
 
     // P1 uses Metronome -> Fury Swipes and P2 uses Metronome -> Mirror Move
-    var options = Options(FixedLog, @TypeOf(chance.NULL)){
+    var options = Options(FixedLog, @TypeOf(chance.NULL), @TypeOf(calc.NULL)){
         .log = actual,
         .chance = chance.NULL,
+        .calc = calc.NULL,
     };
     try expectEqual(Result.Default, try battle.update(move(3), move(3), &options));
 
@@ -9387,7 +9390,7 @@ fn Test(comptime rolls: anytype) type {
             p2: *data.Side,
         },
 
-        options: Options(Log(ArrayList(u8).Writer), Chance(Rational(u64))),
+        options: Options(Log(ArrayList(u8).Writer), Chance(Rational(u64)), Calc),
         offset: usize,
 
         pub fn init(pokemon1: []const Pokemon, pokemon2: []const Pokemon) *Self {
@@ -9405,7 +9408,7 @@ fn Test(comptime rolls: anytype) type {
             t.actual.p1 = t.battle.actual.side(.P1);
             t.actual.p2 = t.battle.actual.side(.P2);
 
-            t.options = .{ .log = t.log.actual, .chance = .{ .probability = .{} } };
+            t.options = .{ .log = t.log.actual, .chance = .{ .probability = .{} }, .calc = .{} };
             t.offset = 0;
 
             return t;
@@ -9431,9 +9434,10 @@ fn Test(comptime rolls: anytype) type {
             try expected.switched(P2.ident(1), self.actual.p2.get(1));
             try expected.turn(1);
 
-            var options = Options(FixedLog, Chance(Rational(u64))){
+            var options = Options(FixedLog, Chance(Rational(u64)), Calc){
                 .log = actual,
                 .chance = .{ .probability = .{} },
+                .calc = .{},
             };
             try expectEqual(Result.Default, try self.battle.actual.update(.{}, .{}, &options));
             try expectLog(&expected_buf, &actual_buf);

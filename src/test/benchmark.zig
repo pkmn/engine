@@ -174,15 +174,21 @@ inline fn update(
         const Options = pkmn.battle.Options(
             pkmn.protocol.Log(std.ArrayList(u8).Writer),
             @TypeOf(pkmn.gen1.chance.NULL),
+            @TypeOf(pkmn.gen1.calc.NULL),
         );
-        return battle.update(c1, c2, &Options{ .log = log.?, .chance = pkmn.gen1.chance.NULL });
+        return battle.update(c1, c2, &Options{
+            .log = log.?,
+            .chance = pkmn.gen1.chance.NULL,
+            .calc = pkmn.gen1.calc.NULL,
+        });
     } else {
         const Options =
-            pkmn.battle.Options(@TypeOf(pkmn.protocol.NULL), @TypeOf(pkmn.gen1.chance.NULL));
-        return battle.update(c1, c2, &Options{
-            .log = pkmn.protocol.NULL,
-            .chance = pkmn.gen1.chance.NULL,
-        });
+            pkmn.battle.Options(
+            @TypeOf(pkmn.protocol.NULL),
+            @TypeOf(pkmn.gen1.chance.NULL),
+            @TypeOf(pkmn.gen1.calc.NULL),
+        );
+        return battle.update(c1, c2, &Options{ .log = pkmn.protocol.NULL, .chance = pkmn.gen1.chance.NULL, .calc = pkmn.gen1.calc.NULL, });
     }
 }
 
