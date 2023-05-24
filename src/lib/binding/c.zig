@@ -70,9 +70,15 @@ export const PKMN_GEN1_CHOICES_SIZE = pkmn.gen1.CHOICES_SIZE;
 export const PKMN_GEN1_MAX_LOGS = pkmn.gen1.MAX_LOGS;
 export const PKMN_GEN1_LOGS_SIZE = pkmn.gen1.LOGS_SIZE;
 
-const pkmn_gen1_battle_options = extern struct {
-    buf: ?[*]u8,
+const pkmn_gen1_log_options = extern struct {
+    buf: [*]u8,
     len: usize,
+};
+
+const pkmn_gen1_battle_options = extern struct {
+    log: ?*pkmn_gen1_log_options,
+    chance: ?*pkmn.gen1.Chance(pkmn.Rational(f64)),
+    calc: ?*pkmn.gen1.Calc,
 };
 
 export fn pkmn_gen1_battle_update(
@@ -81,25 +87,31 @@ export fn pkmn_gen1_battle_update(
     c2: pkmn.Choice,
     options: ?*pkmn_gen1_battle_options,
 ) pkmn.Result {
-    if (pkmn.options.log) {
-        if (options) |opts| {
-            if (opts.buf) |b| {
-                var stream = pkmn.protocol.ByteStream{ .buffer = b[0..opts.len] };
-                var log = pkmn.protocol.FixedLog{ .writer = stream.writer() };
-                // FIXME
-                var o = pkmn.battle.Options(pkmn.protocol.FixedLog, @TypeOf(pkmn.gen1.chance.NULL)){
-                    .log = log,
-                    .chance = pkmn.gen1.chance.NULL,
-                };
-                return battle.update(c1, c2, &o) catch return @bitCast(pkmn.Result, ERROR);
+    if (pkmn.options.log or pkmn.options.chance or pkmn.options.calc and options != null) {
+        const opts = options.?;
+        if (pkmn.options.log and opts.log != null) {
+            if (pkmn.options.chance and opts.chance != null) {
+                if (pkmn.options.calc and opts.calc != null) {
+                    // log & chance & calc
+                }
+                // log & chance
             }
+            if (pkmn.options.calc and opts.calc != null) {
+                // log & calc
+            }
+            // log
+        }
+        if (pkmn.options.chance and opts.chance != null) {
+            if (pkmn.options.calc and opts.calc != null) {
+                // chance & calc
+            }
+            // chance
+        }
+        if (pkmn.options.calc and opts.calc != null) {
+            // calc
         }
     }
-    var o = pkmn.battle.Options(@TypeOf(pkmn.protocol.NULL), @TypeOf(pkmn.gen1.chance.NULL)){
-        .log = pkmn.protocol.NULL,
-        .chance = pkmn.gen1.chance.NULL,
-    };
-    return battle.update(c1, c2, &o) catch unreachable;
+    return battle.update(c1, c2, &pkmn.gen1.NULL) catch unreachable;
 }
 
 export fn pkmn_gen1_battle_choices(
