@@ -30,7 +30,7 @@ const Species = data.Species;
 const Stats = data.Stats;
 const Status = data.Status;
 
-/// Options which dictate TODO
+/// Options which determine the range of various values TODO
 pub const Options = struct {
     cleric: bool = showdown,
     block: bool = showdown,

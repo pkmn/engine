@@ -1,6 +1,8 @@
 const builtin = @import("builtin");
 const std = @import("std");
 
+const DEBUG = @import("debug.zig").print;
+
 const assert = std.debug.assert;
 const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
@@ -43,6 +45,7 @@ pub fn Rational(comptime T: type) type {
         /// Update the rational by multiplying its numerator by p and its denominator by q.
         /// Both p and q must be >= 1, and if computable at comptime must have no common factors.
         pub fn update(r: *Self, p: anytype, q: anytype) Error!void {
+            // DEBUG(.{p, q}); // FIXME
             assert(p >= 1);
             assert(q >= 1);
 

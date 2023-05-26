@@ -290,6 +290,8 @@ test "turn order (priority)" {
 
     // Raticate > Chansey
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    // (242/256) ** 2 * (208/256) * (231/256) * (1/39) ** 2
+    try t.expectProbability(1127357, 2617245696);
 
     try t.log.expected.move(P2.ident(1), Move.QuickAttack, P1.ident(1), null);
     t.expected.p1.get(1).hp -= 22;
@@ -301,6 +303,8 @@ test "turn order (priority)" {
 
     // Chansey > Raticate
     try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    // (255/256) * (242/256) * (208/256) * (231/256) * (1/39) ** 2
+    try t.expectProbability(791945, 1744830464);
 
     try t.log.expected.move(P1.ident(1), Move.QuickAttack, P2.ident(1), null);
     t.expected.p2.get(1).hp -= 104;
@@ -312,6 +316,8 @@ test "turn order (priority)" {
 
     // Raticate > Chansey
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    // (255/256) ** 2 * (208/256) * (231/256) * (1/39) ** 2
+    try t.expectProbability(1668975, 3489660928);
 
     try t.log.expected.move(P2.ident(1), Move.Tackle, P1.ident(1), null);
     t.expected.p1.get(1).hp -= 20;
@@ -323,6 +329,8 @@ test "turn order (priority)" {
 
     // Chansey > Raticate
     try expectEqual(Result.Default, try t.update(move(3), move(1)));
+    // (242/256) * (255/256) * (231/256) * (1/39)
+    try t.expectProbability(2375835, 109051904);
     try t.verify();
 }
 
@@ -398,11 +406,14 @@ test "turn order (basic speed tie)" {
         try t.log.expected.faint(P1.ident(1), true);
 
         try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(move(1), move(1)));
+        // 1/2 * (229/256) ** 2 * (201/256) * (55/256) * (1/39) ** 2
+        try t.expectProbability(193245085, 4355096838144);
 
         try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
         try t.log.expected.turn(2);
 
         try expectEqual(Result.Default, try t.update(swtch(2), .{}));
+        try t.expectProbability(1, 1);
 
         try t.verify();
     }
@@ -430,6 +441,7 @@ test "turn order (basic speed tie)" {
         try t.log.expected.turn(2);
 
         try expectEqual(Result.Default, try t.update(swtch(2), swtch(2)));
+        try t.expectProbability(1, if (showdown) 2 else 1);
 
         try t.verify();
     }
@@ -455,11 +467,14 @@ test "turn order (basic speed tie)" {
         try t.log.expected.turn(2);
 
         try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+        // (229/256) * (201/256) * (1/39)
+        try t.expectProbability(15343, 851968);
 
         try t.verify();
     }
 }
 
+// FIXME
 test "turn order (complex speed tie)" {
     const TIE_1 = MIN;
     const TIE_2 = MAX;
@@ -580,6 +595,8 @@ test "turn order (switch vs. move)" {
 
     // Switch > Quick Attack
     try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+    // (255/256) * (208/256) * (1/39)
+    try t.expectProbability(85, 4096);
 
     try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
     try t.log.expected.move(P2.ident(2), Move.QuickAttack, P1.ident(2), null);
@@ -589,6 +606,8 @@ test "turn order (switch vs. move)" {
 
     // Switch > Quick Attack
     try expectEqual(Result.Default, try t.update(swtch(2), move(1)));
+    // (255/256) * (224/256) * (1/39)
+    try t.expectProbability(595, 26624);
     try t.verify();
 }
 
@@ -643,6 +662,8 @@ test "accuracy (normal)" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    // (216/256) * (40/256) * (38/256) * (1/39)
+    try t.expectProbability(855, 1703936);
     try t.verify();
 }
 
@@ -676,6 +697,8 @@ test "damage calc" {
 
     // STAB super effective non-critical min damage vs. non-STAB resisted critical max damage
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    // (255/256) * (216/256) * (199/256) * (22/256) * (1/39) ** 2 * (179/256)
+    try t.expectProbability(299750715, 11613591568384);
 
     try t.log.expected.move(P1.ident(1), Move.Thunderbolt, P2.ident(1), null);
     try t.log.expected.immune(P2.ident(1), .None);
@@ -686,6 +709,9 @@ test "damage calc" {
 
     // immune vs. normal
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    // (255/256) * (234/256) * (1/39)
+    try t.expectProbability(765, 32768);
+
     try t.verify();
 }
 
@@ -708,6 +734,8 @@ test "type precedence" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    // (242/256) * (255/256) * (236/256) * (1/39)
+    try t.expectProbability(606815, 27262976);
 
     try t.verify();
 }

@@ -942,6 +942,7 @@ fn doMove(
             if (!foe.active.volatiles.Substitute) try log.activate(foe_ident, .Mist);
             try log.fail(foe_ident, .None);
         } else {
+            if (!showdown) try options.chance.commit(player);
             try log.lastmiss();
             try log.miss(battle.active(player));
         }
@@ -1191,7 +1192,7 @@ fn specialDamage(battle: anytype, player: Player, move: Move.Data, options: anyt
             const max = @intCast(u8, @as(u16, side.stored().level) * 3 / 2);
             // GLITCH: Psywave infinite glitch loop
             if (!showdown and max <= 1) return Result.Error;
-            break :power Rolls.psywave(battle, max);
+            break :power try Rolls.psywave(battle, player, max, options);
         },
         else => unreachable,
     };
@@ -1327,7 +1328,7 @@ fn metronome(
 ) !?Result {
     var side = battle.side(player);
 
-    side.last_selected_move = Rolls.metronome(battle);
+    side.last_selected_move = try Rolls.metronome(battle, player, options);
     incrementPP(side, mslot);
 
     if (!try canMove(battle, player, mslot, auto, false, .Metronome, residual, options)) {
@@ -1339,7 +1340,11 @@ fn metronome(
 fn checkHit(battle: anytype, player: Player, move: Move.Data, options: anytype) !bool {
     var immune = false;
     var mist = false;
-    if (try moveHit(battle, player, move, &immune, &mist, options)) return true;
+
+    const hit = try moveHit(battle, player, move, &immune, &mist, options);
+    if (!showdown) try options.chance.commit(player);
+    if (hit) return true;
+
     assert(!immune);
     if (mist) {
         assert(!showdown);
@@ -1350,6 +1355,7 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data, options: anytype) 
         try options.log.lastmiss();
         try options.log.miss(battle.active(player));
     }
+
     return false;
 }
 
@@ -2509,7 +2515,8 @@ pub const Effects = struct {
         if (foe.active.volatiles.Substitute) return if (!secondary) log.fail(foe_ident, .None);
 
         if (secondary) {
-            if (!Rolls.unboost(battle) or foe.active.volatiles.Invulnerable) return;
+            const proc = try Rolls.unboost(battle, player, options);
+            if (!proc or foe.active.volatiles.Invulnerable) return;
         } else if (!showdown and !try checkHit(battle, player, move, options)) {
             return; // checkHit already checks for Invulnerable
         }
@@ -2725,11 +2732,6 @@ pub const Rolls = struct {
         return ok;
     }
 
-    inline fn confusionDuration(battle: anytype) u3 {
-        if (showdown) return @intCast(u3, battle.rng.range(u8, 2, 6));
-        return @intCast(u3, (battle.rng.next() & 3) + 2);
-    }
-
     inline fn confused(battle: anytype, player: Player, options: anytype) !bool {
         const cfz = if (options.calc.overridden(player, "confused")) |val|
             val == .true
@@ -2794,6 +2796,55 @@ pub const Rolls = struct {
         return proc;
     }
 
+    inline fn unboost(battle: anytype, player: Player, options: anytype) !bool {
+        const proc = if (options.calc.overridden(player, "secondary_chance")) |val|
+            val == .true
+        else if (showdown)
+            battle.rng.chance(u8, 85, 256)
+        else
+            battle.rng.next() < Gen12.percent(33) + 1;
+
+        try options.chance.secondaryChance(player, proc, 85);
+        return proc;
+    }
+
+    inline fn metronome(battle: anytype, player: Player, options: anytype) !Move {
+        const move = if (options.calc.overridden(player, "metronome")) |val|
+            val
+        else if (showdown) move: {
+            const r = battle.rng.range(u8, 0, @enumToInt(Move.Struggle) - 2);
+            const mod = @as(u2, (if (r < @enumToInt(Move.Metronome) - 1) 1 else 2));
+            break :move @intToEnum(Move, r + mod);
+        } else move: {
+            while (true) {
+                const r = battle.rng.next();
+                if (r == 0 or r == @enumToInt(Move.Metronome)) continue;
+                if (r >= @enumToInt(Move.Struggle)) continue;
+                break :move @intToEnum(Move, r);
+            }
+        };
+
+        try options.chance.metronome(player, move);
+        return move;
+    }
+
+    inline fn psywave(battle: anytype, player: Player, max: u8, options: anytype) !u8 {
+        const power = if (options.calc.overridden(player, "psywave")) |val|
+            val - 1
+        else if (showdown)
+            battle.rng.range(u8, 0, max)
+        else power: {
+            while (true) {
+                const r = battle.rng.next();
+                if (r < max) break :power r;
+            }
+        };
+
+        try options.chance.psywave(player, power, max);
+        return power;
+    }
+
+    // FIXME
     inline fn sleepDuration(battle: anytype) u3 {
         if (showdown) return @intCast(u3, battle.rng.range(u8, 1, 8));
         while (true) {
@@ -2802,11 +2853,32 @@ pub const Rolls = struct {
         }
     }
 
+    // FIXME
+    inline fn disableDuration(battle: anytype) u4 {
+        if (showdown) return @intCast(u4, battle.rng.range(u8, 1, 9));
+        return @intCast(u4, (battle.rng.next() & 7) + 1);
+    }
+
+    // FIXME
+    inline fn confusionDuration(battle: anytype) u3 {
+        if (showdown) return @intCast(u3, battle.rng.range(u8, 2, 6));
+        return @intCast(u3, (battle.rng.next() & 3) + 2);
+    }
+
+    // FIXME
     inline fn attackingDuration(battle: anytype) u3 {
         if (showdown) return @intCast(u3, battle.rng.range(u4, 2, 4));
         return @intCast(u3, (battle.rng.next() & 1) + 2);
     }
 
+    // FIXME
+    inline fn distribution(battle: anytype) u3 {
+        if (showdown) return DISTRIBUTION[battle.rng.range(u8, 0, DISTRIBUTION.len)];
+        const r = (battle.rng.next() & 3);
+        return @intCast(u3, (if (r < 2) r else battle.rng.next() & 3) + 2);
+    }
+
+    // FIXME
     fn moveSlot(battle: anytype, moves: []MoveSlot, check_pp: u4) u4 {
         if (showdown) {
             if (check_pp == 0) {
@@ -2834,44 +2906,6 @@ pub const Rolls = struct {
             const r = @intCast(u4, battle.rng.next() & 3);
             if (moves[r].id != .None and (check_pp == 0 or moves[r].pp > 0)) return r + 1;
         }
-    }
-
-    inline fn disableDuration(battle: anytype) u4 {
-        if (showdown) return @intCast(u4, battle.rng.range(u8, 1, 9));
-        return @intCast(u4, (battle.rng.next() & 7) + 1);
-    }
-
-    inline fn metronome(battle: anytype) Move {
-        if (showdown) {
-            const r = battle.rng.range(u8, 0, @intFromEnum(Move.Struggle) - 2);
-            const mod = @as(u2, (if (r < @intFromEnum(Move.Metronome) - 1) 1 else 2));
-            return @enumFromInt(Move, r + mod);
-        }
-        while (true) {
-            const r = battle.rng.next();
-            if (r == 0 or r == @intFromEnum(Move.Metronome)) continue;
-            if (r >= @intFromEnum(Move.Struggle)) continue;
-            return @enumFromInt(Move, r);
-        }
-    }
-
-    inline fn psywave(battle: anytype, max: u8) u8 {
-        if (showdown) return battle.rng.range(u8, 0, max);
-        while (true) {
-            const r = battle.rng.next();
-            if (r < max) return r;
-        }
-    }
-
-    inline fn distribution(battle: anytype) u3 {
-        if (showdown) return DISTRIBUTION[battle.rng.range(u8, 0, DISTRIBUTION.len)];
-        const r = (battle.rng.next() & 3);
-        return @intCast(u3, (if (r < 2) r else battle.rng.next() & 3) + 2);
-    }
-
-    inline fn unboost(battle: anytype) bool {
-        if (showdown) return battle.rng.chance(u8, 85, 256);
-        return battle.rng.next() < Gen12.percent(33) + 1;
     }
 };
 
