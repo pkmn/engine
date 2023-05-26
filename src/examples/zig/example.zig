@@ -59,8 +59,17 @@ pub fn main() !void {
     // that or a `Log` backed by some other `std.io.Writer` would also work.
     var buf: [pkmn.LOGS_SIZE]u8 = undefined;
 
+    // TODO
     var stream = pkmn.protocol.ByteStream{ .buffer = &buf };
-    var options = pkmn.battle.Options(pkmn.protocol.FixedLog){ .log = .{ .writer = stream.writer() } };
+    var options = pkmn.battle.Options(
+        pkmn.protocol.FixedLog,
+        @TypeOf(pkmn.gen1.chance.NULL),
+        @TypeOf(pkmn.gen1.calc.NULL),
+    ){
+        .log = .{ .writer = stream.writer() },
+        .chance = pkmn.gen1.chance.NULL,
+        .calc = pkmn.gen1.calc.NULL,
+    };
 
     var c1 = pkmn.Choice{};
     var c2 = pkmn.Choice{};

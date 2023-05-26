@@ -123,13 +123,13 @@ pub fn benchmark(
         std.debug.assert(!showdown or battle.side(.P1).get(1).hp > 0);
         std.debug.assert(!showdown or battle.side(.P2).get(1).hp > 0);
 
-        var t = try run(&battle, &random, save, max, allocator, switch (gen) {
-            1 => if (save)
-                createOptions(log.?, pkmn.gen1.chance.NULL, pkmn.gen1.calc.NULL)
-            else
-                pkmn.gen1.NULL,
+        var t = switch (gen) {
+            1 => if (save) blk: {
+                const options = createOptions(log.?, pkmn.gen1.chance.NULL, pkmn.gen1.calc.NULL);
+                break :blk try run(&battle, &random, save, max, allocator, options);
+            } else try run(&battle, &random, save, max, allocator, pkmn.gen1.NULL),
             else => unreachable,
-        });
+        };
 
         if (i >= w) {
             time += t;
