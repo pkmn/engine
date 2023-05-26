@@ -86,7 +86,10 @@ int main(int argc, char **argv)
    // written to if -Dlog is enabled - NULL can be used to turn all of the
    // logging into no-ops
    uint8_t buf[PKMN_LOGS_SIZE];
-   pkmn_gen1_battle_options options = {.buf = buf, .len = PKMN_LOGS_SIZE};
+   // TODO
+   pkmn_gen1_log_options log_options = {.buf = buf, .len = PKMN_LOGS_SIZE};
+   pkmn_gen1_battle_options options;
+   pkmn_gen1_battle_options_set(&options, &log_options, NULL, NULL);
 
    pkmn_result result;
    // Pedantically these *should* be pkmn_choice_init(PKMN_CHOICE_PASS, 0), but
@@ -98,6 +101,8 @@ int main(int argc, char **argv)
    while (!pkmn_result_type(result = pkmn_gen1_battle_update(&battle, c1, c2, &options))) {
       c1 = choose(&battle, &random, PKMN_PLAYER_P1, pkmn_result_p1(result), choices);
       c2 = choose(&battle, &random, PKMN_PLAYER_P2, pkmn_result_p2(result), choices);
+      // TODO
+      pkmn_gen1_battle_options_set(&options, NULL, NULL, NULL);
    }
    // The only error that can occur is if we didn't provide a large enough
    // buffer, but PKMN_MAX_LOGS is guaranteed to be large enough so errors here

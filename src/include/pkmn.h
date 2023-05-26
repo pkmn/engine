@@ -33,6 +33,15 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
+#ifndef float64_t
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+#include <assert.h>
+#include <limits.h>
+static_assert(sizeof(double) * CHAR_BIT == 64, "libpkmn requires IEEE 754 64-bit doubles");
+#endif
+#define float64_t double
+#endif
+
 /**
  * Defines an opaque pkmn type. These are given a size so that they may be
  * statically allocated but must either be initialized with an init() function
@@ -40,15 +49,12 @@ extern "C" {
  */
 #define PKMN_OPAQUE(n) typedef struct { uint8_t bytes[n]; }
 
-/** The size in bytes of the Pokémon Showdown RNG (backed by a Generation V & VI RNG). */
-#define PKMN_PSRNG_SIZE 8
-/** The size in bytes of a Generation I battle. */
-#define PKMN_GEN1_BATTLE_SIZE 384
-
 /** Compile time options acknowledged by libpkmn. */
 typedef struct {
     bool showdown;
     bool log;
+    bool chance;
+    bool calc;
 } pkmn_options;
 /** Compile time options set when libpkmn was built. */
 extern const pkmn_options PKMN_OPTIONS;
@@ -115,12 +121,41 @@ pkmn_choice_kind pkmn_result_p2(pkmn_result result);
  */
 bool pkmn_error(pkmn_result result);
 
+/** The size in bytes of the Pokémon Showdown RNG (backed by a Generation V & VI RNG). */
+#define PKMN_PSRNG_SIZE 8
+/** The size in bytes of the rational number type exposed by libpkmn. */
+#define PKMN_RATIONAL_SIZE 16
+
 /** Pokémon Showdown's RNG (backed by a Generation V & VI RNG). */
 PKMN_OPAQUE(PKMN_PSRNG_SIZE) pkmn_psrng;
 /** Initialize the Pokémon Showdown RNG with the given seed. */
 void pkmn_psrng_init(pkmn_psrng *psrng, uint64_t seed);
 /** Returns the next number produced by the Pokémon Showdown RNG and advances the seed. */
 uint32_t pkmn_psrng_next(pkmn_psrng *psrng);
+
+/**
+ * Specialization of a rational number used by the engine to compute probabilties.
+ * For performance reasons the rational is only reduced lazily and thus reduce
+ * must be invoked explicitly before reading.
+ */
+PKMN_OPAQUE(PKMN_RATIONAL_SIZE) pkmn_rational;
+/** Initializes (or resets) the rational to 1. */
+void pkmn_rational_init(pkmn_rational *rational);
+/** Normalize the rational by reducing by the greatest common divisor. */
+void pkmn_rational_reduce(pkmn_rational *rational);
+/** Returns the numerator of the rational. */
+float64_t pkmn_rational_numerator(pkmn_rational *rational);
+/** Returns the denominator of the rational. */
+float64_t pkmn_rational_denominator(pkmn_rational *rational);
+
+/** The size in bytes of a Generation I battle. */
+#define PKMN_GEN1_BATTLE_SIZE 384
+/** The size in bytes of Generation I battle options. */
+#define PKMN_GEN1_BATTLE_OPTIONS_SIZE 128
+/** The size in bytes of Generation I chance actions. */
+#define PKMN_GEN1_CHANCE_ACTIONS_SIZE 16
+/** TODO: The size in bytes of a Generation I calc summary. */
+#define PKMN_GEN1_CALC_SUMMARY_SIZE 16
 
 /** The minimum size in bytes required to hold the all Generation I choice options. */
 extern const size_t PKMN_GEN1_MAX_CHOICES;
@@ -138,18 +173,59 @@ extern const size_t PKMN_GEN1_MAX_LOGS;
  */
 extern const size_t PKMN_GEN1_LOGS_SIZE;
 
+/** Generation I Pokémon Battle (see src/lib/gen1/README.md#layout for details). */
+PKMN_OPAQUE(PKMN_GEN1_BATTLE_SIZE) pkmn_gen1_battle;
+/** Generation I Pokémon Battle options (fully opaque - uses getters to access). */
+PKMN_OPAQUE(PKMN_GEN1_BATTLE_OPTIONS_SIZE) pkmn_gen1_battle_options;
+/** Generation I Pokémon chance actions (see TODO for details). */
+PKMN_OPAQUE(PKMN_GEN1_CHANCE_ACTIONS_SIZE) pkmn_gen1_chance_actions;
+/** Generation I Pokémon calc summary (see TODO for details). */
+PKMN_OPAQUE(PKMN_GEN1_CALC_SUMMARY_SIZE) pkmn_gen1_calc_summary;
+
 /** TODO */
 typedef struct {
   uint8_t *buf;
   size_t len;
-} pkmn_gen1_battle_options;
+} pkmn_gen1_log_options;
+/** TODO */
+typedef struct {
+  pkmn_rational probability;
+  pkmn_gen1_chance_actions actions;
+} pkmn_gen1_chance_options;
+/** TODO */
+typedef struct {
+  pkmn_gen1_chance_actions overrides;
+} pkmn_gen1_calc_options;
+/** TODO */
+void pkmn_gen1_battle_options_set(
+  pkmn_gen1_battle_options *options,
+  const pkmn_gen1_log_options *log,
+  const pkmn_gen1_chance_options *chance,
+  const pkmn_gen1_calc_options *calc);
+/**
+ * Returns a pointer to a pkmn_rational containing the probability of the
+ * actions taken by a hypothetical "chance player" occuring during a Generation
+ * I battle update.
+ */
+pkmn_rational* pkmn_gen1_battle_options_chance_probability(
+  const pkmn_gen1_battle_options *options);
+/**
+ * Returns a pointer to the actions taken by a hypothetical "chance player"
+ * that convey information about which RNG events were observed during a
+ * Generation I battle update.
+ */
+pkmn_gen1_chance_actions* pkmn_gen1_battle_options_chance_actions(
+  const pkmn_gen1_battle_options *options);
+/**
+ * Returns a pointer to a summary of which information was relevant for
+ * calculating any damage that occured during a Generation I battle update.
+ */
+pkmn_gen1_calc_summary* pkmn_gen1_battle_options_calc_summary(
+  const pkmn_gen1_battle_options *options);
 
-/** Generation I Pokémon Battle (see src/lib/gen1/README.md#layout for details). */
-PKMN_OPAQUE(PKMN_GEN1_BATTLE_SIZE) pkmn_gen1_battle;
 /**
  * Returns the result of applying Player 1's choice c1 and Player 2's choice c2
- * to the Generation I battle. Writes up to len protocol message logs to buf if
- * buf is not NULL and protocol logging is enabled.
+ * to the Generation I battle. TODO
  */
 pkmn_result pkmn_gen1_battle_update(
   pkmn_gen1_battle *battle,

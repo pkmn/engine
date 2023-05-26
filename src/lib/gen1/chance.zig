@@ -97,9 +97,10 @@ pub fn Chance(comptime Rational: type) type {
     return struct {
         const Self = @This();
 
-        /// TODO
+        /// The probability of the actions taken by a hypothetical "chance player" occuring.
         probability: Rational,
-        /// TODO
+        /// The actions taken by a hypothetical "chance player" that convey information about which
+        /// RNG events were observed during a battle `update`.
         actions: Actions = .{},
 
         // Due to the fact that critical hit and damage rolls happen before checking to see if a
@@ -113,6 +114,15 @@ pub fn Chance(comptime Rational: type) type {
 
         /// TODO
         pub const Error = Rational.Error;
+
+        pub fn reset(self: *Self) void {
+            self.probability.reset();
+            self.actions = .{}; // FIXME: don't clear durations
+
+            self.crit = false;
+            self.crit_probablity = 0;
+            self.damage_roll = 0;
+        }
 
         pub fn commit(self: *Self, player: Player) Error!void {
             assert(!showdown);

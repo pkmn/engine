@@ -65,6 +65,22 @@ export fn pkmn_psrng_next(prng: *pkmn.PSRNG) u32 {
     return prng.next();
 }
 
+export fn pkmn_rational_reset(rational: *pkmn.Rational(f64)) void {
+    rational.reset();
+}
+
+export fn pkmn_rational_reduce(rational: *pkmn.Rational(f64)) void {
+    rational.reduce();
+}
+
+export fn pkmn_rational_numerator(rational: *pkmn.Rational(f64)) f64 {
+    return rational.p;
+}
+
+export fn pkmn_rational_denominator(rational: *pkmn.Rational(f64)) f64 {
+    return rational.q;
+}
+
 export const PKMN_GEN1_MAX_CHOICES = pkmn.gen1.MAX_CHOICES;
 export const PKMN_GEN1_CHOICES_SIZE = pkmn.gen1.CHOICES_SIZE;
 export const PKMN_GEN1_MAX_LOGS = pkmn.gen1.MAX_LOGS;
@@ -75,11 +91,72 @@ const pkmn_gen1_log_options = extern struct {
     len: usize,
 };
 
-const pkmn_gen1_battle_options = extern struct {
-    log: ?*pkmn_gen1_log_options,
-    chance: ?*pkmn.gen1.Chance(pkmn.Rational(f64)),
-    calc: ?*pkmn.gen1.Calc,
+const pkmn_gen1_chance_options = extern struct {
+    probability: pkmn.Rational(f64),
+    actions: pkmn.gen1.chance.Actions,
 };
+
+const pkmn_gen1_calc_options = extern struct {
+    overrides: pkmn.gen1.chance.Actions,
+};
+
+const pkmn_gen1_battle_options = struct {
+    stream: pkmn.protocol.ByteStream,
+    log: pkmn.protocol.FixedLog,
+    chance: pkmn.gen1.Chance(pkmn.Rational(f64)),
+    calc: pkmn.gen1.Calc,
+
+    comptime {
+        assert(@sizeOf(pkmn_gen1_battle_options) <= 128);
+    }
+};
+
+export fn pkmn_gen1_battle_options_set(
+    options: *pkmn_gen1_battle_options,
+    log: ?*const pkmn_gen1_log_options,
+    chance: ?*const pkmn_gen1_chance_options,
+    calc: ?*const pkmn_gen1_calc_options,
+) void {
+    if (pkmn.options.log) {
+        if (log) |l| {
+            options.*.stream = .{ .buffer = l.buf[0..l.len] };
+            options.*.log = .{ .writer = options.*.stream.writer() };
+        } else {
+            options.*.stream.reset();
+        }
+    }
+    if (pkmn.options.chance) {
+        if (chance) |c| {
+            options.*.chance = .{
+                .probability = c.probability,
+                .actions = c.actions,
+            };
+        } else {
+            options.*.chance.reset();
+        }
+    }
+    if (pkmn.options.calc and calc != null) {
+        options.*.calc = .{ .overrides = calc.?.overrides };
+    }
+}
+
+export fn pkmn_gen1_battle_options_chance_probability(
+    options: *pkmn_gen1_battle_options,
+) *pkmn.Rational(f64) {
+    return &options.chance.probability;
+}
+
+export fn pkmn_gen1_battle_options_chance_actions(
+    options: *pkmn_gen1_battle_options
+) *pkmn.gen1.chance.Actions {
+    return &options.chance.actions;
+}
+
+export fn pkmn_gen1_battle_options_calc_summary(
+    options: *pkmn_gen1_battle_options
+) *pkmn.gen1.calc.Summary {
+    return &options.calc.summary;
+}
 
 export fn pkmn_gen1_battle_update(
     battle: *pkmn.gen1.Battle(pkmn.gen1.PRNG),
@@ -87,29 +164,8 @@ export fn pkmn_gen1_battle_update(
     c2: pkmn.Choice,
     options: ?*pkmn_gen1_battle_options,
 ) pkmn.Result {
-    if (pkmn.options.log or pkmn.options.chance or pkmn.options.calc and options != null) {
-        const opts = options.?;
-        if (pkmn.options.log and opts.log != null) {
-            if (pkmn.options.chance and opts.chance != null) {
-                if (pkmn.options.calc and opts.calc != null) {
-                    // log & chance & calc
-                }
-                // log & chance
-            }
-            if (pkmn.options.calc and opts.calc != null) {
-                // log & calc
-            }
-            // log
-        }
-        if (pkmn.options.chance and opts.chance != null) {
-            if (pkmn.options.calc and opts.calc != null) {
-                // chance & calc
-            }
-            // chance
-        }
-        if (pkmn.options.calc and opts.calc != null) {
-            // calc
-        }
+    if ((pkmn.options.log or pkmn.options.chance or pkmn.options.calc) and options != null) {
+        return battle.update(c1, c2, options.?) catch return @bitCast(pkmn.Result, ERROR);
     }
     return battle.update(c1, c2, &pkmn.gen1.NULL) catch unreachable;
 }

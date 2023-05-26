@@ -67,12 +67,16 @@ pub const gen1 = struct {
     /// TODO
     pub const chance = struct {
         /// TODO
+        pub const Actions = @import("gen1/chance.zig").Actions;
+        /// TODO
         pub const NULL = @import("gen1/chance.zig").NULL;
     };
     // TODO
     pub const Calc = @import("gen1/calc.zig").Calc;
     /// TODO
     pub const calc = struct {
+        /// TODO
+        pub const Summary = @import("gen1/calc.zig").Summary;
         /// TODO
         pub const NULL = @import("gen1/calc.zig").NULL;
     };
