@@ -119,24 +119,25 @@ export fn pkmn_gen1_battle_options_set(
 ) void {
     if (pkmn.options.log) {
         if (log) |l| {
-            options.*.stream = .{ .buffer = l.buf[0..l.len] };
-            options.*.log = .{ .writer = options.*.stream.writer() };
+            options.stream = .{ .buffer = l.buf[0..l.len] };
+            options.log = .{ .writer = options.stream.writer() };
         } else {
-            options.*.stream.reset();
+            options.stream.reset();
         }
     }
     if (pkmn.options.chance) {
         if (chance) |c| {
-            options.*.chance = .{
-                .probability = c.probability,
-                .actions = c.actions,
-            };
+            options.chance = .{ .probability = c.probability, .actions = c.actions };
         } else {
-            options.*.chance.reset();
+            options.chance.reset();
         }
     }
-    if (pkmn.options.calc and calc != null) {
-        options.*.calc = .{ .overrides = calc.?.overrides };
+    if (pkmn.options.calc) {
+        if (calc) |c| {
+            options.calc = .{ .overrides = c.overrides };
+        } else {
+            options.calc = .{};
+        }
     }
 }
 
@@ -147,13 +148,13 @@ export fn pkmn_gen1_battle_options_chance_probability(
 }
 
 export fn pkmn_gen1_battle_options_chance_actions(
-    options: *pkmn_gen1_battle_options
+    options: *pkmn_gen1_battle_options,
 ) *pkmn.gen1.chance.Actions {
     return &options.chance.actions;
 }
 
 export fn pkmn_gen1_battle_options_calc_summary(
-    options: *pkmn_gen1_battle_options
+    options: *pkmn_gen1_battle_options,
 ) *pkmn.gen1.calc.Summary {
     return &options.calc.summary;
 }
