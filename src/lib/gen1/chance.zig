@@ -111,14 +111,14 @@ pub fn Chance(comptime Rational: type) type {
         // lands. We deliberately make use of the fact that recursive moves may overwrite critical
         // hit information multiple times as only the last update actually matters for the purposes
         // of the logical results.
-        pending: struct {
+        pending: if (showdown) void else struct {
             p1: Pending = .{},
             p2: Pending = .{},
 
             pub inline fn get(self: *@This(), player: Player) *Pending {
                 return if (player == .P1) &self.p1 else &self.p2;
             }
-        } = .{},
+        } = if (showdown) {} else .{},
 
         const Pending = struct {
             crit: bool = false,
