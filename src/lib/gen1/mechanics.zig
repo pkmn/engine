@@ -903,7 +903,7 @@ fn doMove(
                 effectiveness = adjustDamage(battle, player);
                 immune = effectiveness == 0;
             }
-            try randomizeDamage(battle, player, options);
+            try randomizeDamage(battle, player, move.effect == .OHKO, options);
         }
     }
 
@@ -1172,9 +1172,9 @@ fn adjustDamage(battle: anytype, player: Player) u16 {
     return if (types.type1 == types.type2) eff1 * neutral else eff1 * eff2;
 }
 
-fn randomizeDamage(battle: anytype, player: anytype, options: anytype) !void {
+fn randomizeDamage(battle: anytype, player: Player, ohko: bool, options: anytype) !void {
     if (battle.last_damage <= 1) return;
-    const random = try Rolls.damage(battle, player, options);
+    const random = try Rolls.damage(battle, player, ohko, options);
     battle.last_damage = @intCast(u16, @as(u32, battle.last_damage) *% random / 255);
 }
 
@@ -2706,7 +2706,7 @@ pub const Rolls = struct {
         return crit;
     }
 
-    inline fn damage(battle: anytype, player: anytype, options: anytype) !u8 {
+    inline fn damage(battle: anytype, player: anytype, ohko: bool, options: anytype) !u8 {
         const roll = if (options.calc.overridden(player, "damage")) |val|
             216 + @as(u8, val)
         else roll: {
@@ -2717,7 +2717,7 @@ pub const Rolls = struct {
             }
         };
 
-        try options.chance.damage(player, roll);
+        if (!ohko) try options.chance.damage(player, roll);
         return roll;
     }
 

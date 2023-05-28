@@ -1536,6 +1536,8 @@ test "PoisonChance effect" {
 
     // Can't poison Poison-types / moves have different poison chances
     try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    // (255/256) ** 2 * (199/256) * (206/256) * (1/39) ** 2 * (204/256)
+    try t.expectProbability(7552632075, 23227183136768);
     try expectEqual(@as(u8, 0), t.actual.p1.get(1).status);
     try expectEqual(@as(u8, 0), t.actual.p2.get(1).status);
 
@@ -1549,6 +1551,8 @@ test "PoisonChance effect" {
 
     // Substitute prevents poison chance
     try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    // (255/256) * (206/256) * (1/39)
+    try t.expectProbability(8755, 425984);
     try expectEqual(@as(u8, 0), t.actual.p2.get(1).status);
 
     try t.log.expected.move(P2.ident(1), Move.Scratch, P1.ident(1), null);
@@ -1562,6 +1566,8 @@ test "PoisonChance effect" {
     try t.log.expected.turn(4);
 
     try expectEqual(Result.Default, try t.update(move(1), move(3)));
+    // (255/256) ** 2 * (199/256) * (206/256) * (1/39) ** 2 * (52/256)
+    try t.expectProbability(148090825, 1786706395136);
     try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
 
     try t.log.expected.move(P2.ident(1), Move.Scratch, P1.ident(1), null);
@@ -1576,6 +1582,8 @@ test "PoisonChance effect" {
 
     // Can't poison already poisoned Pokémon / poison causes residual damage
     try expectEqual(Result.Default, try t.update(move(1), move(3)));
+    // (255/256) ** 2 * (199/256) * (206/256) * (1/39) ** 2
+    try t.expectProbability(148090825, 362924736512);
     try t.verify();
 }
 
@@ -1617,6 +1625,8 @@ test "BurnChance effect" {
 
     // Can't burn Fire-types / moves have different burn chances
     try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    // (216/256) * (255/256) * (201/256) * (206/256) * (1/39) ** 2 * (230/256)
+    try t.expectProbability(1821346425, 5806795784192);
     try expectEqual(@as(u8, 0), t.actual.p1.get(1).status);
     try expectEqual(@as(u8, 0), t.actual.p2.get(1).status);
 
@@ -1630,6 +1640,8 @@ test "BurnChance effect" {
 
     // Substitute prevents burn chance
     try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    // (216/256) * (206/256) * (1/39)
+    try t.expectProbability(927, 53248);
     try expectEqual(@as(u8, 0), t.actual.p2.get(1).status);
 
     try t.log.expected.move(P2.ident(1), Move.Tackle, P1.ident(1), null);
@@ -1643,6 +1655,8 @@ test "BurnChance effect" {
     try t.log.expected.turn(4);
 
     try expectEqual(Result.Default, try t.update(move(1), move(3)));
+    // (242/256) * (255/256) * (201/256) * (206/256) * (1/39) ** 2 * (26/256)
+    try t.expectProbability(70976785, 1786706395136);
     try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
 
     try t.log.expected.move(P2.ident(1), Move.Tackle, P1.ident(1), null);
@@ -1657,6 +1671,8 @@ test "BurnChance effect" {
 
     // Can't burn already burnt Pokémon / Burn lowers attack and causes residual damage
     try expectEqual(Result.Default, try t.update(move(1), move(3)));
+    // (242/256) * (255/256) * (201/256) * (206/256) * (1/39) ** 2
+    try t.expectProbability(70976785, 181462368256);
     try t.verify();
 }
 
@@ -2020,6 +2036,7 @@ test "ParalyzeChance effect" {
     try t.verify();
 }
 
+// FIXME
 // Move.{Sing,SleepPowder,Hypnosis,LovelyKiss,Spore}
 test "Sleep effect" {
     // Causes the target to fall asleep.
@@ -2406,6 +2423,8 @@ test "StatDown effect" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    // (255/256) * (242/256) * (229/256) * (234/256) * (1/39) ** 2
+    try t.expectProbability(7065795, 13958643712);
 
     try t.log.expected.move(P1.ident(1), Move.Screech, P2.ident(1), null);
     try t.log.expected.boost(P2.ident(1), .Defense, -2);
@@ -2414,6 +2433,8 @@ test "StatDown effect" {
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    // (216/256) * (242/256)
+    try t.expectProbability(3267, 4096);
     try expectEqual(@as(i4, -1), t.actual.p1.active.boosts.spe);
     try expectEqual(@as(i4, -2), t.actual.p2.active.boosts.def);
 
@@ -2426,6 +2447,8 @@ test "StatDown effect" {
     try t.log.expected.turn(4);
 
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    // (255/256) * (242/256) * (229/256) * (234/256) * (1/39) ** 2
+    try t.expectProbability(7065795, 13958643712);
 
     try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
     try t.log.expected.move(P1.ident(1), Move.Screech, P2.ident(2), null);
@@ -2434,6 +2457,7 @@ test "StatDown effect" {
 
     // Type immunity shouldn't matter
     try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+    try t.expectProbability(27, 32);
     try expectEqual(@as(i4, -2), t.actual.p2.active.boosts.def);
 
     try t.verify();
@@ -2477,6 +2501,8 @@ test "StatDownChance effect" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    // (255/256) ** 2 * (196/256) * (199/256) * (1/39) ** 2 * (85/256) * (171/256)
+    try t.expectProbability(1024004921625, 11892317766025216);
     try expectEqual(@as(i4, -1), t.actual.p1.active.boosts.spe);
 
     try t.log.expected.move(P2.ident(1), Move.BubbleBeam, P1.ident(1), null);
@@ -2491,6 +2517,8 @@ test "StatDownChance effect" {
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    // (255/256) ** 2 * (196/256) * (199/256) * (1/39) ** 2 * (85/256) * (171/256)
+    try t.expectProbability(1024004921625, 11892317766025216);
     try expectEqual(@as(i4, -1), t.actual.p2.active.boosts.spc);
 
     try t.log.expected.move(P2.ident(1), Move.BubbleBeam, P1.ident(1), null);
@@ -2503,6 +2531,8 @@ test "StatDownChance effect" {
     try t.log.expected.turn(4);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    // (255/256) ** 2 * (196/256) * (199/256) * (1/39) ** 2 * (171/256) ** 2
+    try t.expectProbability(2060056959975, 11892317766025216);
     try t.verify();
 }
 
@@ -2542,6 +2572,8 @@ test "StatUp effect" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    // (242/256) * (255/256) * (204/256) * (241/256) * (1/39) ** 2
+    try t.expectProbability(42137645, 90731184128);
 
     try t.log.expected.move(P1.ident(1), Move.SwordsDance, P1.ident(1), null);
     try t.log.expected.boost(P1.ident(1), .Attack, 2);
@@ -2550,6 +2582,7 @@ test "StatUp effect" {
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.expectProbability(1, 1);
     try expectEqual(@as(i4, 2), t.actual.p1.active.boosts.atk);
     try expectEqual(@as(i4, 1), t.actual.p2.active.boosts.def);
 
@@ -2562,6 +2595,8 @@ test "StatUp effect" {
     try t.log.expected.turn(4);
 
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    // (242/256) * (255/256) * (204/256) * (241/256) * (1/39) ** 2
+    try t.expectProbability(42137645, 90731184128);
     try t.verify();
 }
 
@@ -2591,6 +2626,7 @@ test "OHKO effect" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.expectProbability(45, 64);
 
     try t.log.expected.move(P2.ident(1), Move.Fissure, P1.ident(1), null);
     t.expected.p1.get(1).hp = 0;
@@ -2599,11 +2635,13 @@ test "OHKO effect" {
     try t.log.expected.faint(P1.ident(1), true);
 
     try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(move(1), move(1)));
+    try t.expectProbability(19, 64);
 
     try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(swtch(2), .{}));
+    try t.expectProbability(1, 1);
 
     try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
     try t.log.expected.move(P1.ident(2), Move.HornDrill, P2.ident(2), null);
@@ -2612,6 +2650,7 @@ test "OHKO effect" {
 
     // Type-immunity trumps OHKO-immunity
     try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+    try t.expectProbability(1, 1);
 
     try t.log.expected.move(P2.ident(2), Move.Dig, .{}, null);
     try t.log.expected.laststill();
@@ -2627,6 +2666,7 @@ test "OHKO effect" {
 
     // Invulnerability trumps immunity on Pokémon Showdown
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.expectProbability(1, 1);
 
     try t.verify();
 }
@@ -2859,6 +2899,7 @@ test "SwitchAndTeleport effect" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.expectProbability(1, 1);
 
     try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
     try t.log.expected.move(P2.ident(1), Move.Whirlwind, P1.ident(1), null);
@@ -2869,6 +2910,7 @@ test "SwitchAndTeleport effect" {
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    if (showdown) try t.expectProbability(5, 32) else try t.expectProbability(1, 1);
 
     try t.verify();
 }
@@ -2889,9 +2931,11 @@ test "Splash effect" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.expectProbability(1, 1);
     try t.verify();
 }
 
+// FIXME
 // Move.{Bind,Wrap,FireSpin,Clamp}
 test "Binding effect" {
     // The user spends two to five turns using this move. Has a 3/8 chance to last two or three
@@ -3507,6 +3551,8 @@ test "Psywave effect" {
     if (showdown) try t.log.expected.turn(2);
 
     try expectEqual(result, try t.update(move(1), move(1)));
+    // (204/256) ** 2 * (1/88) * (1/63)
+    try t.expectProbability(289, 2523136);
     try t.verify();
 }
 
@@ -3535,11 +3581,14 @@ test "SuperFang effect" {
     try t.log.expected.faint(P1.ident(1), true);
 
     try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(move(1), move(1)));
+    // (229/256) ** 2
+    try t.expectProbability(52441, 65536);
 
     try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(swtch(2), .{}));
+    try t.expectProbability(1, 1);
 
     try t.log.expected.move(P1.ident(2), Move.DreamEater, P2.ident(1), null);
     try t.log.expected.immune(P2.ident(1), .None);
@@ -3549,6 +3598,7 @@ test "SuperFang effect" {
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.expectProbability(229, 256);
     try t.verify();
 }
 
