@@ -845,12 +845,15 @@ test "fainting (double)" {
         try t.log.expected.faint(P1.ident(1), true);
 
         try expectEqual(Result{ .p1 = .Switch, .p2 = .Switch }, try t.update(move(1), move(1)));
+        // (255/256) * (30/256) * (1/39)
+        try t.expectProbability(1275, 425984);
 
         try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
         try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
         try t.log.expected.turn(2);
 
         try expectEqual(Result.Default, try t.update(swtch(2), swtch(2)));
+        try t.expectProbability(1, 1);
         try t.verify();
     }
     // Switch (boosted)
@@ -876,6 +879,7 @@ test "fainting (double)" {
         try t.log.expected.turn(2);
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try t.expectProbability(1, 1);
         try expectEqual(@as(i4, 2), t.actual.p1.active.boosts.spe);
 
         try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
@@ -887,6 +891,8 @@ test "fainting (double)" {
         try t.log.expected.faint(P2.ident(1), true);
 
         try expectEqual(Result{ .p1 = .Switch, .p2 = .Switch }, try t.update(move(2), move(2)));
+        // (255/256) * (216/256) * (1/39)
+        try t.expectProbability(2295, 106496);
 
         if (showdown) {
             try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
@@ -898,6 +904,7 @@ test "fainting (double)" {
         try t.log.expected.turn(3);
 
         try expectEqual(Result.Default, try t.update(swtch(2), swtch(2)));
+        try t.expectProbability(1, 1);
         try t.verify();
     }
     // Switch (paralyzed)
@@ -925,6 +932,7 @@ test "fainting (double)" {
         try t.log.expected.turn(2);
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try t.expectProbability(255, 256);
         try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
 
         try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
@@ -937,12 +945,15 @@ test "fainting (double)" {
         try t.log.expected.faint(P2.ident(1), true);
 
         try expectEqual(Result{ .p1 = .Switch, .p2 = .Switch }, try t.update(move(2), move(2)));
+        // (3/4) * (255/256) * (216/256) * (1/39)
+        try t.expectProbability(6885, 425984);
 
         try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
         try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
         try t.log.expected.turn(3);
 
         try expectEqual(Result.Default, try t.update(swtch(2), swtch(2)));
+        try t.expectProbability(1, 1);
         try t.verify();
     }
     // Tie
@@ -963,6 +974,8 @@ test "fainting (double)" {
         try t.log.expected.tie();
 
         try expectEqual(Result.Tie, try t.update(move(1), move(1)));
+        // (255/256) * (30/256) * (1/39)
+        try t.expectProbability(1275, 425984);
         try t.verify();
     }
 }
@@ -1131,6 +1144,8 @@ test "HighCritical effect" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    // (255/256) ** 2 * (136/256) * (239/256) * (1/39) ** 2
+    try t.expectProbability(29355175, 90731184128);
     try t.verify();
 }
 
@@ -1156,6 +1171,7 @@ test "FocusEnergy effect" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.expectProbability(1, 1);
 
     try t.log.expected.move(P1.ident(1), Move.Strength, P2.ident(1), null);
     t.expected.p2.get(1).hp -= 60;
@@ -1168,6 +1184,8 @@ test "FocusEnergy effect" {
 
     // No crit after Focus Energy (https://pkmn.cc/bulba-glitch-1#Critical_hit_ratio_error)
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    // (168/256) * (251/256) * (1/39)
+    try t.expectProbability(1757, 106496);
 
     try t.log.expected.move(P1.ident(1), Move.Strength, P2.ident(1), null);
     try t.log.expected.crit(P2.ident(1));
@@ -1179,9 +1197,12 @@ test "FocusEnergy effect" {
 
     // Crit once Haze removes Focus Energy
     try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    // (255/256) * (22/256) * (1/39)
+    try t.expectProbability(935, 425984);
     try t.verify();
 }
 
+// FIXME
 // Move.{DoubleSlap,CometPunch,FuryAttack,PinMissile,SpikeCannon,Barrage,FurySwipes}
 test "MultiHit effect" {
     // Hits two to five times. Has a 3/8 chance to hit two or three times, and a 1/8 chance to hit
@@ -1255,6 +1276,8 @@ test "DoubleHit effect" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    // (229/256) * (234/256) * (1/39)
+    try t.expectProbability(687, 32768);
 
     try t.log.expected.move(P1.ident(1), Move.Bonemerang, P2.ident(1), null);
     try t.log.expected.end(P2.ident(1), .Substitute);
@@ -1264,6 +1287,8 @@ test "DoubleHit effect" {
 
     // Breaking a target's Substitute ends the move
     try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    // (229/256) * (234/256) * (1/39)
+    try t.expectProbability(687, 32768);
     try t.verify();
 }
 
@@ -1308,6 +1333,8 @@ test "Twineedle effect" {
 
     // Breaking a target's Substitute ends the move
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    // (255/256) * (37/256) * (1/39)
+    try t.expectProbability(3145, 851968);
 
     try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
     try t.log.expected.move(P1.ident(1), Move.Twineedle, P2.ident(1), null);
@@ -1319,6 +1346,8 @@ test "Twineedle effect" {
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    // (255/256) * (219/256) * (1/39) * (204/256)
+    try t.expectProbability(949365, 54525952);
     try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
 
     try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
@@ -1339,6 +1368,8 @@ test "Twineedle effect" {
 
     // The second hit can always poison the target
     try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    // (255/256) * (219/256) * (1/39) * (52/256)
+    try t.expectProbability(18615, 4194304);
     try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
 
     try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
@@ -1353,6 +1384,8 @@ test "Twineedle effect" {
 
     // Poison types cannot be poisoned
     try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+    // (255/256) * (219/256) * (1/39)
+    try t.expectProbability(18615, 851968);
     try t.verify();
 }
 
