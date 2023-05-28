@@ -100,9 +100,9 @@ fn lintDir(
 
     var dir_it = iterable_dir.iterate();
     while (try dir_it.next()) |entry| {
-        if (entry.kind == .SymLink) continue;
+        if (entry.kind == .sym_link) continue;
 
-        const is_dir = entry.kind == .Directory;
+        const is_dir = entry.kind == .directory;
         if (is_dir and std.mem.eql(u8, entry.name, "zig-cache")) continue;
 
         if (is_dir or std.mem.endsWith(u8, entry.name, ".zig")) {

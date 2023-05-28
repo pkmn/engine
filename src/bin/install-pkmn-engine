@@ -10,7 +10,7 @@ const path = require('path');
 const {pipeline} = require('stream/promises');
 const tty = require('tty');
 
-const ZIG_VERSION = {major: 0, minor: 11, patch: 0, dev: 3191};
+const ZIG_VERSION = {major: 0, minor: 11, patch: 0, dev: 3312};
 const DEV = ZIG_VERSION.dev ? `-dev.${ZIG_VERSION.dev}` : '';
 const VERSION = `${ZIG_VERSION.major}.${ZIG_VERSION.minor}.${ZIG_VERSION.patch}${DEV}`;
 const INDEX = 'https://ziglang.org/download/index.json';
