@@ -105,22 +105,32 @@ pub fn Chance(comptime Rational: type) type {
         /// RNG events were observed during a battle `update`.
         actions: Actions = .{},
 
-        // Many of the rolls of the cartridge are potentially no-ops due to a move eventually
-        // missing or the target being immune etc. Instead, we cache information about the rolls and
-        // only actually use it to update probability/actions if the move in question actually
-        // lands. We deliberately make use of the fact that recursive moves may overwrite critical
-        // hit information multiple times as only the last update actually matters for the purposes
-        // of the logical results.
+        // In many cases on both the cartridge and on Pokémon Showdown rolls are made even though
+        // later checks render their result irrelevant (missing when the target is actually immune,
+        // rolling for damage when the move is later revealed to have missed, etc). We can't reorder
+        // the logic to ensure we only ever make rolls when required due to our desire to maintain
+        // RNG frame accuracy, so instead we save these "pending" updates to the probability and
+        // only commit them once we know they are relevant (a naive solution would be to instead
+        // update the probability eagerly and later "undo" the update by multiplying by the inverse
+        // but this would be more costly and also error prone in the presence of
+        // overflow/normalization).
         //
-        // Note that because player's actions are processed sequentially we only need a single
+        // This design deliberately make use of the fact that recursive moves on the cartridge may
+        // overwrite critical hit information multiple times as only the last update actually
+        // matters for the purposes of the logical results.
+        //
+        // Finally, because each player's actions are processed sequentially we only need a single
         // shared structure to track this information (though it needs to be cleared appropriately)
-        pending: if (showdown) void else struct {
+        pending: if (showdown) struct {
+            hit: bool = false,
+            hit_probablity: u8 = 0,
+        } else struct {
             crit: bool = false,
             crit_probablity: u8 = 0,
             damage_roll: u6 = 0,
             hit: bool = false,
             hit_probablity: u8 = 0,
-        } = if (showdown) {} else .{},
+        } = .{},
 
         /// Possible error returned by operations tracking chance probability.
         pub const Error = Rational.Error;
@@ -133,8 +143,6 @@ pub fn Chance(comptime Rational: type) type {
         }
 
         pub fn commit(self: *Self, player: Player, ok: bool) Error!void {
-            assert(!showdown);
-
             var action = self.actions.get(player);
             // Always commit the hit result if we make it here (commit won't be called at all if the
             // target is immune/behind a sub/etc)
@@ -142,6 +150,8 @@ pub fn Chance(comptime Rational: type) type {
                 try self.probability.update(self.pending.hit_probablity, 256);
                 action.hit = if (self.pending.hit) .true else .false;
             }
+
+            if (showdown) return;
 
             // If the move actually lands we can commit any past critical hit / damage rolls. We
             // avoid updating anything if there wasn't a damage roll as any "critical hit" not tied
@@ -197,17 +207,12 @@ pub fn Chance(comptime Rational: type) type {
             }
         }
 
-        pub fn hit(self: *Self, player: Player, ok: bool, accuracy: u8) Error!void {
+        pub fn hit(self: *Self, ok: bool, accuracy: u8) void {
             if (!enabled) return;
 
             const p = if (ok) accuracy else @intCast(u8, 256 - @as(u9, accuracy));
-            if (showdown) {
-                try self.probability.update(p, 256);
-                self.actions.get(player).hit = if (ok) .true else .false;
-            } else {
-                self.pending.hit = ok;
-                self.pending.hit_probablity = p;
-            }
+            self.pending.hit = ok;
+            self.pending.hit_probablity = p;
         }
 
         pub fn confused(self: *Self, player: Player, cfz: bool) Error!void {
@@ -273,8 +278,8 @@ const Null = struct {
         _ = .{ self, player, roll };
     }
 
-    pub fn hit(self: Null, player: Player, ok: bool, accuracy: u8) Error!void {
-        _ = .{ self, player, ok, accuracy };
+    pub fn hit(self: Null, ok: bool, accuracy: u8) void {
+        _ = .{ self, ok, accuracy };
     }
 
     pub fn confused(self: Null, player: Player, ok: bool) Error!void {

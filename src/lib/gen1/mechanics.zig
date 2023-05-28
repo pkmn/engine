@@ -864,7 +864,7 @@ fn doMove(
             break :miss true;
         }
         break :miss (move.target != .Self and
-            !try moveHit(battle, player, move, &immune, &mist, options));
+            !moveHit(battle, player, move, &immune, &mist, options));
     };
     assert(!immune or miss or (showdown and move.effect == .Binding));
 
@@ -913,7 +913,7 @@ fn doMove(
     miss = if (showdown or skip)
         miss
     else
-        (!try moveHit(battle, player, move, &immune, &mist, options) or battle.last_damage == 0);
+        (!moveHit(battle, player, move, &immune, &mist, options) or battle.last_damage == 0);
 
     assert(showdown or miss or battle.last_damage > 0 or skip);
     assert((!showdown and miss) or !(ohko and immune));
@@ -944,7 +944,7 @@ fn doMove(
             if (!foe.active.volatiles.Substitute) try log.activate(foe_ident, .Mist);
             try log.fail(foe_ident, .None);
         } else {
-            if (!showdown) try options.chance.commit(player, false);
+            try options.chance.commit(player, false);
             try log.lastmiss();
             try log.miss(battle.active(player));
         }
@@ -961,7 +961,7 @@ fn doMove(
             try buildRage(battle, player.foe(), options);
         }
         return null;
-    } else if (!showdown) {
+    } else {
         try options.chance.commit(player, true);
     }
 
@@ -1183,6 +1183,7 @@ fn specialDamage(battle: anytype, player: Player, move: Move.Data, options: anyt
     const foe = battle.foe(player);
 
     if (!try checkHit(battle, player, move, options)) return null;
+    try options.chance.commit(player, true);
 
     battle.last_damage = switch (side.last_selected_move) {
         .SuperFang => @max(foe.stored().hp / 2, 1),
@@ -1249,6 +1250,7 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, options: anyt
 
     // Pokémon Showdown calls checkHit before Counter
     if (!showdown and !try checkHit(battle, player, move, options)) return null;
+    try options.chance.commit(player, true);
 
     const sub = showdown and foe.active.volatiles.Substitute;
     _ = try applyDamage(battle, player.foe(), player.foe(), .None, options);
@@ -1343,9 +1345,7 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data, options: anytype) 
     var immune = false;
     var mist = false;
 
-    const hit = try moveHit(battle, player, move, &immune, &mist, options);
-    if (!showdown) try options.chance.commit(player, hit);
-    if (hit) return true;
+    if (moveHit(battle, player, move, &immune, &mist, options)) return true;
 
     assert(!immune);
     if (mist) {
@@ -1354,6 +1354,7 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data, options: anytype) 
         try options.log.activate(foe_ident, .Mist);
         try options.log.fail(foe_ident, .None);
     } else {
+        try options.chance.commit(player, false);
         try options.log.lastmiss();
         try options.log.miss(battle.active(player));
     }
@@ -1361,14 +1362,7 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data, options: anytype) 
     return false;
 }
 
-fn moveHit(
-    battle: anytype,
-    player: Player,
-    move: Move.Data,
-    immune: *bool,
-    mist: *bool,
-    options: anytype,
-) !bool {
+fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool, mist: *bool, options: anytype) bool {
     var side = battle.side(player);
     const foe = battle.foe(player);
 
@@ -1419,7 +1413,7 @@ fn moveHit(
         if (overwrite) side.active.volatiles.state = accuracy;
 
         // GLITCH: max accuracy is 255 so 1/256 chance of miss
-        break :miss !try Rolls.hit(battle, player, @intCast(u8, accuracy), options);
+        break :miss !Rolls.hit(battle, player, @intCast(u8, accuracy), options);
     };
 
     // Pokémon Showdown reports miss instead of fail for moves blocked by Mist that 1/256 miss
@@ -2066,6 +2060,7 @@ pub const Effects = struct {
             }
         }
 
+        try options.chance.commit(player, true);
         foe.active.volatiles.LeechSeed = true;
 
         try options.log.start(battle.active(player.foe()), .LeechSeed);
@@ -2161,6 +2156,7 @@ pub const Effects = struct {
             if (immune) return log.immune(foe_ident, .None);
             if (!try checkHit(battle, player, move, options)) return;
         }
+        try options.chance.commit(player, true);
 
         foe_stored.status = Status.init(.PAR);
         foe.active.stats.spe = @max(foe.active.stats.spe / 4, 1);
@@ -2228,6 +2224,7 @@ pub const Effects = struct {
 
         if (move.effect == .Poison) {
             if (!showdown and !try checkHit(battle, player, move, options)) return;
+            try options.chance.commit(player, true);
         } else {
             if (!try Rolls.poisonChance(battle, player, move.effect == .PoisonChance1, options)) {
                 return;
@@ -2519,8 +2516,10 @@ pub const Effects = struct {
         if (secondary) {
             const proc = try Rolls.unboost(battle, player, options);
             if (!proc or foe.active.volatiles.Invulnerable) return;
-        } else if (!showdown and !try checkHit(battle, player, move, options)) {
-            return; // checkHit already checks for Invulnerable
+        } else {
+             // checkHit already checks for Invulnerable
+            if (!showdown and !try checkHit(battle, player, move, options)) return;
+            try options.chance.commit(player, true);
         }
 
         var stats = &foe.active.stats;
@@ -2722,7 +2721,7 @@ pub const Rolls = struct {
         return roll;
     }
 
-    inline fn hit(battle: anytype, player: Player, accuracy: u8, options: anytype) !bool {
+    inline fn hit(battle: anytype, player: Player, accuracy: u8, options: anytype) bool {
         const ok = if (options.calc.overridden(player, "hit")) |val|
             val == .true
         else if (showdown)
@@ -2730,7 +2729,7 @@ pub const Rolls = struct {
         else
             battle.rng.next() < accuracy;
 
-        try options.chance.hit(player, ok, accuracy);
+        options.chance.hit(ok, accuracy);
         return ok;
     }
 

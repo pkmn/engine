@@ -1413,6 +1413,7 @@ test "Poison effect" {
 
         // Poison-type Pokémon cannot be poisoned
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try t.expectProbability(1, 1);
 
         try t.log.expected.move(P1.ident(1), Move.Substitute, P1.ident(1), null);
         try t.log.expected.start(P1.ident(1), .Substitute);
@@ -1425,6 +1426,7 @@ test "Poison effect" {
         // Substitute blocks poison
         try expectEqual(Result.Default, try t.update(move(2), move(2)));
         try expectEqual(@as(u8, 0), t.actual.p1.get(1).status);
+        try t.expectProbability(1, 1);
 
         try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
         try t.log.expected.move(P1.ident(1), Move.Toxic, P2.ident(2), null);
@@ -1435,6 +1437,7 @@ test "Poison effect" {
         // Toxic damage increases each turn
         try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
         try expectEqual(t.expected.p2.get(2).status, t.actual.p2.get(1).status);
+        try t.expectProbability(27, 32);
         try expect(t.actual.p2.active.volatiles.Toxic);
 
         try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
@@ -1446,6 +1449,7 @@ test "Poison effect" {
         try t.log.expected.turn(5);
 
         try expectEqual(Result.Default, try t.update(swtch(2), move(1)));
+        try t.expectProbability(35, 64);
         try expectEqual(t.expected.p1.get(2).status, t.actual.p1.get(1).status);
 
         try t.log.expected.move(P1.ident(2), Move.Teleport, P1.ident(2), null);
@@ -1457,6 +1461,7 @@ test "Poison effect" {
         try t.log.expected.turn(6);
 
         try expectEqual(Result.Default, try t.update(move(1), move(2)));
+        try t.expectProbability(1, 1);
 
         try t.log.expected.move(P1.ident(2), Move.Teleport, P1.ident(2), null);
         t.expected.p1.get(2).hp -= 15;
@@ -1467,6 +1472,7 @@ test "Poison effect" {
         try t.log.expected.turn(7);
 
         try expectEqual(Result.Default, try t.update(move(1), move(2)));
+        try t.expectProbability(1, 1);
         try t.verify();
     }
     {
