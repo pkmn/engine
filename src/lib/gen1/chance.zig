@@ -254,66 +254,43 @@ const Null = struct {
     pub const Error = error{};
 
     pub fn commit(self: Null, player: Player, ok: bool) Error!void {
-        _ = self;
-        _ = player;
-        _ = ok;
+        _ = .{ self, player, ok };
     }
 
     pub fn speedTie(self: Null, p1: bool) Error!void {
-        _ = self;
-        _ = p1;
+        _ = .{ self, p1 };
     }
 
     pub fn criticalHit(self: Null, player: Player, crit: bool, rate: u8) Error!void {
-        _ = self;
-        _ = player;
-        _ = crit;
-        _ = rate;
+        _ = .{ self, player, crit, rate };
     }
 
     pub fn damage(self: Null, player: Player, roll: u8) Error!void {
-        _ = self;
-        _ = player;
-        _ = roll;
+        _ = .{ self, player, roll };
     }
 
     pub fn hit(self: Null, player: Player, ok: bool, accuracy: u8) Error!void {
-        _ = self;
-        _ = player;
-        _ = ok;
-        _ = accuracy;
+        _ = .{ self, player, ok, accuracy };
     }
 
     pub fn confused(self: Null, player: Player, ok: bool) Error!void {
-        _ = self;
-        _ = player;
-        _ = ok;
+        _ = .{ self, player, ok };
     }
 
     pub fn paralyzed(self: Null, player: Player, ok: bool) Error!void {
-        _ = self;
-        _ = player;
-        _ = ok;
+        _ = .{ self, player, ok };
     }
 
     pub fn secondaryChance(self: Null, player: Player, proc: bool, rate: u8) Error!void {
-        _ = self;
-        _ = player;
-        _ = proc;
-        _ = rate;
+        _ = .{ self, player, proc, rate };
     }
 
     pub fn metronome(self: Null, player: Player, move: Move) Error!void {
-        _ = self;
-        _ = player;
-        _ = move;
+        _ = .{ self, player, move };
     }
 
     pub fn psywave(self: Null, player: Player, power: u8, max: u8) Error!void {
-        _ = self;
-        _ = player;
-        _ = power;
-        _ = max;
+        _ = .{ self, player, power, max };
     }
 };
 
