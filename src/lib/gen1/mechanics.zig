@@ -380,6 +380,8 @@ fn doTurn(
         if (try checkFaint(battle, player, options)) |r| return r;
     } else if (foe_choice.type == .Pass) return null;
 
+    if (!showdown) options.chance.clear();
+
     residual = true;
     replace = battle.side(foe_player).stored().hp == 0;
     if (try executeMove(

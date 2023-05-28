@@ -111,29 +111,24 @@ pub fn Chance(comptime Rational: type) type {
         // lands. We deliberately make use of the fact that recursive moves may overwrite critical
         // hit information multiple times as only the last update actually matters for the purposes
         // of the logical results.
-        pending: if (showdown) void else struct { // FIXME
-            p1: Pending = .{},
-            p2: Pending = .{},
-
-            pub inline fn get(self: *@This(), player: Player) *Pending {
-                return if (player == .P1) &self.p1 else &self.p2;
-            }
-        } = if (showdown) {} else .{},
-
-        const Pending = struct {
+        //
+        // Note that because player's actions are processed sequentially we only need a single
+        // shared structure to track this information (though it needs to be cleared appropriately)
+        pending: if (showdown) void else struct {
             crit: bool = false,
             crit_probablity: u8 = 0,
             damage_roll: u6 = 0,
             hit: bool = false,
             hit_probablity: u8 = 0,
-        };
+        } = if (showdown) {} else .{},
 
         /// Possible error returned by operations tracking chance probability.
         pub const Error = Rational.Error;
 
         pub fn reset(self: *Self) void {
             self.probability.reset();
-            self.actions = .{}; // FIXME: don't clear durations
+            // FIXME: don't clear durations
+            self.actions = .{};
             self.pending = .{};
         }
 
@@ -143,26 +138,31 @@ pub fn Chance(comptime Rational: type) type {
             var action = self.actions.get(player);
             // Always commit the hit result if we make it here (commit won't be called at all if the
             // target is immune/behind a sub/etc)
-            if (self.pending.get(player).hit_probablity != 0) {
-                try self.probability.update(self.pending.get(player).hit_probablity, 256);
-                action.hit = if (self.pending.get(player).hit) .true else .false;
+            if (self.pending.hit_probablity != 0) {
+                try self.probability.update(self.pending.hit_probablity, 256);
+                action.hit = if (self.pending.hit) .true else .false;
             }
 
             // If the move actually lands we can commit any past critical hit / damage rolls. We
             // avoid updating anything if there wasn't a damage roll as any "critical hit" not tied
             // to a damage roll is actually a no-op
-            if (ok and self.pending.get(player).damage_roll > 0) {
-                assert(!self.pending.get(player).crit or
-                    self.pending.get(player).crit_probablity > 0);
+            if (ok and self.pending.damage_roll > 0) {
+                assert(!self.pending.crit or self.pending.crit_probablity > 0);
 
-                if (self.pending.get(player).crit_probablity != 0) {
-                    try self.probability.update(self.pending.get(player).crit_probablity, 256);
-                    action.critical_hit = if (self.pending.get(player).crit) .true else .false;
+                if (self.pending.crit_probablity != 0) {
+                    try self.probability.update(self.pending.crit_probablity, 256);
+                    action.critical_hit = if (self.pending.crit) .true else .false;
                 }
 
                 try self.probability.update(1, 39);
-                action.damage = self.pending.get(player).damage_roll;
+                action.damage = self.pending.damage_roll;
             }
+        }
+
+        pub fn clear(self: *Self) void {
+            if (!enabled) return;
+
+            self.pending = .{};
         }
 
         pub fn speedTie(self: *Self, p1: bool) Error!void {
@@ -181,8 +181,8 @@ pub fn Chance(comptime Rational: type) type {
                 try self.probability.update(n, 256);
                 self.actions.get(player).critical_hit = if (crit) .true else .false;
             } else {
-                self.pending.get(player).crit = crit;
-                self.pending.get(player).crit_probablity = n;
+                self.pending.crit = crit;
+                self.pending.crit_probablity = n;
             }
         }
 
@@ -193,7 +193,7 @@ pub fn Chance(comptime Rational: type) type {
                 try self.probability.update(1, 39);
                 self.actions.get(player).damage = @intCast(u6, roll - 216);
             } else {
-                self.pending.get(player).damage_roll = @intCast(u6, roll - 216);
+                self.pending.damage_roll = @intCast(u6, roll - 216);
             }
         }
 
@@ -205,8 +205,8 @@ pub fn Chance(comptime Rational: type) type {
                 try self.probability.update(p, 256);
                 self.actions.get(player).hit = if (ok) .true else .false;
             } else {
-                self.pending.get(player).hit = ok;
-                self.pending.get(player).hit_probablity = p;
+                self.pending.hit = ok;
+                self.pending.hit_probablity = p;
             }
         }
 
@@ -255,6 +255,10 @@ const Null = struct {
 
     pub fn commit(self: Null, player: Player, ok: bool) Error!void {
         _ = .{ self, player, ok };
+    }
+
+    pub fn clear(self: Null) void {
+        _ = .{self};
     }
 
     pub fn speedTie(self: Null, p1: bool) Error!void {
