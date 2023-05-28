@@ -769,6 +769,8 @@ test "fainting (single)" {
         try t.log.expected.faint(P2.ident(1), true);
 
         try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(move(1), move(1)));
+        // (229/256) * (255/256) * (249/256) * (1/39)
+        try t.expectProbability(4846785, 218103808);
 
         var n = t.battle.actual.choices(.P1, .Pass, &choices);
         try expectEqualSlices(Choice, &[_]Choice{.{}}, choices[0..n]);
@@ -792,6 +794,7 @@ test "fainting (single)" {
         try t.log.expected.win(.P1);
 
         try expectEqual(Result.Win, try t.update(move(1), move(1)));
+        try t.expectProbability(255, 256);
         try t.verify();
     }
     // Lose
@@ -812,6 +815,8 @@ test "fainting (single)" {
         try t.log.expected.win(.P2);
 
         try expectEqual(Result.Lose, try t.update(move(1), move(1)));
+        // (255/256) * (191/256) * (1/39)
+        try t.expectProbability(16235, 851968);
         try t.verify();
     }
 }
@@ -5386,6 +5391,9 @@ test "Swift effect" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    // (229/256) * (1/39)
+    try t.expectProbability(229, 9984);
+
     try t.verify();
 }
 

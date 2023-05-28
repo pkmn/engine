@@ -942,7 +942,7 @@ fn doMove(
             if (!foe.active.volatiles.Substitute) try log.activate(foe_ident, .Mist);
             try log.fail(foe_ident, .None);
         } else {
-            if (!showdown) try options.chance.commit(player);
+            if (!showdown) try options.chance.commit(player, false);
             try log.lastmiss();
             try log.miss(battle.active(player));
         }
@@ -960,7 +960,7 @@ fn doMove(
         }
         return null;
     } else if (!showdown) {
-        try options.chance.commit(player);
+        try options.chance.commit(player, true);
     }
 
     // On the cartridge MultiHit doesn't get set up until after damage has been applied for the
@@ -1342,7 +1342,7 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data, options: anytype) 
     var mist = false;
 
     const hit = try moveHit(battle, player, move, &immune, &mist, options);
-    if (!showdown) try options.chance.commit(player);
+    if (!showdown) try options.chance.commit(player, hit);
     if (hit) return true;
 
     assert(!immune);

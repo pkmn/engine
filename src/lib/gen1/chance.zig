@@ -111,7 +111,7 @@ pub fn Chance(comptime Rational: type) type {
         // lands. We deliberately make use of the fact that recursive moves may overwrite critical
         // hit information multiple times as only the last update actually matters for the purposes
         // of the logical results.
-        pending: if (showdown) void else struct {
+        pending: if (showdown) void else struct { // FIXME
             p1: Pending = .{},
             p2: Pending = .{},
 
@@ -137,7 +137,7 @@ pub fn Chance(comptime Rational: type) type {
             self.pending = .{};
         }
 
-        pub fn commit(self: *Self, player: Player) Error!void {
+        pub fn commit(self: *Self, player: Player, ok: bool) Error!void {
             assert(!showdown);
 
             var action = self.actions.get(player);
@@ -151,7 +151,7 @@ pub fn Chance(comptime Rational: type) type {
             // If the move actually lands we can commit any past critical hit / damage rolls. We
             // avoid updating anything if there wasn't a damage roll as any "critical hit" not tied
             // to a damage roll is actually a no-op
-            if (self.pending.get(player).hit and self.pending.get(player).damage_roll > 0) {
+            if (ok and self.pending.get(player).damage_roll > 0) {
                 assert(!self.pending.get(player).crit or
                     self.pending.get(player).crit_probablity > 0);
 
@@ -253,9 +253,10 @@ pub const NULL = Null{};
 const Null = struct {
     pub const Error = error{};
 
-    pub fn commit(self: Null, player: Player) Error!void {
+    pub fn commit(self: Null, player: Player, ok: bool) Error!void {
         _ = self;
         _ = player;
+        _ = ok;
     }
 
     pub fn speedTie(self: Null, p1: bool) Error!void {
