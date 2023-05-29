@@ -2672,6 +2672,7 @@ test "OHKO effect" {
     try t.verify();
 }
 
+// FIXME
 // Move.{RazorWind,SolarBeam,SkullBash,SkyAttack}
 test "Charge effect" {
     // This attack charges on the first turn and executes on the second.
@@ -2730,8 +2731,8 @@ test "Charge effect" {
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(forced, move(1)));
-    // (255/256) ** 2 * (227/256) * (229/256) (1/39) ** 2
-    try t.expectProbability(19465, 851968);
+    // (255/256) ** 2 * (227/256) * (229/256) * (1/39) ** 2
+    try t.expectProbability(375577175, 725849473024);
     try expectEqual(pp - 1, t.actual.p1.active.move(2).pp);
 
     n = t.battle.actual.choices(.P1, .Move, &choices);
@@ -2800,6 +2801,7 @@ test "Fly/Dig effect" {
         try t.log.expected.turn(2);
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try t.expectProbability(1, 1);
         try expectEqual(pp, t.actual.p1.active.move(1).pp);
 
         var n = t.battle.actual.choices(.P1, .Move, &choices);
@@ -2816,6 +2818,8 @@ test "Fly/Dig effect" {
         try t.log.expected.turn(3);
 
         try expectEqual(Result.Default, try t.update(forced, move(1)));
+        // (242/256) * (255/256) * (211/256) * (241/256) * (1/39) ** 2
+        try t.expectProbability(523002535, 1088774209536);
         try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
 
         try t.verify();
@@ -2846,12 +2850,14 @@ test "Fly/Dig effect" {
         try t.log.expected.turn(2);
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try t.expectProbability(27, 32);
 
         try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
         try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
         try t.log.expected.turn(3);
 
         try expectEqual(Result.Default, try t.update(swtch(2), swtch(2)));
+        try t.expectProbability(1, 1);
 
         try t.log.expected.move(P1.ident(2), Move.Dig, .{}, null);
         try t.log.expected.laststill();
@@ -2860,6 +2866,7 @@ test "Fly/Dig effect" {
         try t.log.expected.turn(4);
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
+        try t.expectProbability(1, 1);
 
         try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
         if (showdown) {
@@ -2871,11 +2878,13 @@ test "Fly/Dig effect" {
         try t.log.expected.faint(P2.ident(1), true);
 
         try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(forced, swtch(2)));
+        try t.expectProbability(1, 1);
 
         try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
         try t.log.expected.turn(5);
 
         try expectEqual(Result.Default, try t.update(.{}, swtch(2)));
+        try t.expectProbability(1, 1);
 
         try t.log.expected.move(P1.ident(2), Move.Dig, P2.ident(2), Move.Dig);
         try t.log.expected.supereffective(P2.ident(2));
@@ -2885,6 +2894,8 @@ test "Fly/Dig effect" {
         try t.log.expected.turn(6);
 
         try expectEqual(Result.Default, try t.update(forced, move(1)));
+        // (255/256) * (206/256) * (1/39)
+        try t.expectProbability(8755, 425984);
 
         try t.verify();
     }
@@ -3140,6 +3151,7 @@ test "JumpKick effect" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    try t.expectProbability(1, 1);
 
     try t.log.expected.move(P1.ident(1), Move.JumpKick, P2.ident(1), null);
     try t.log.expected.lastmiss();
@@ -3152,6 +3164,8 @@ test "JumpKick effect" {
 
     // Jump Kick causes crash damage to the opponent's sub if both Pokémon have one
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    // (14/256) * (229/256) * (43/256) * (1/39)
+    try t.expectProbability(68929, 327155712);
 
     try t.log.expected.move(P1.ident(1), Move.JumpKick, P2.ident(1), null);
     try t.log.expected.lastmiss();
@@ -3165,6 +3179,8 @@ test "JumpKick effect" {
 
     // Jump Kick causes 1 HP crash damage unless only the user who crashed has a Substitute
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    // (14/256) * (27/256)
+    try t.expectProbability(189, 32768);
     try t.verify();
 }
 
@@ -3194,11 +3210,14 @@ test "Recoil effect" {
 
     // Recoil inflicts at least 1 HP
     try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(move(1), move(1)));
+    // (255/256) * (201/256) * (1/39)
+    try t.expectProbability(17085, 851968);
 
     try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(swtch(2), .{}));
+    try t.expectProbability(1, 1);
 
     try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
     try t.log.expected.start(P2.ident(1), .Substitute);
@@ -3210,6 +3229,8 @@ test "Recoil effect" {
 
     // Deals no damage if the move breaks the target's Substitute
     try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    // (216/256) * (236/256) * (1/39)
+    try t.expectProbability(531, 26624);
 
     try t.log.expected.move(P2.ident(1), Move.DoubleEdge, P1.ident(2), null);
     try t.log.expected.resisted(P1.ident(2));
@@ -3222,6 +3243,8 @@ test "Recoil effect" {
 
     // Inflicts 1/4 of damage dealt to user as recoil
     try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    // (255/256) * (201/256) * (1/39)
+    try t.expectProbability(17085, 851968);
     try t.verify();
 }
 
@@ -3258,6 +3281,7 @@ test "Struggle effect" {
 
     // Struggle only becomes an option if the user has no PP left
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.expectProbability(1, 1);
     try expectEqual(@as(u8, 0), t.actual.p2.get(1).move(1).pp);
     const n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{move(0)}, choices[0..n]);
@@ -3269,6 +3293,8 @@ test "Struggle effect" {
 
     // Deals no recoil damage if the move breaks the target's Substitute
     try expectEqual(Result.Default, try t.update(move(2), move(0)));
+    // (255/256) * (209/256) * (1/39)
+    try t.expectProbability(17765, 851968);
 
     try t.log.expected.move(P2.ident(1), Move.Struggle, P1.ident(1), null);
     t.expected.p1.get(1).hp -= 1;
@@ -3279,11 +3305,14 @@ test "Struggle effect" {
 
     // Struggle recoil inflicts at least 1 HP
     try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(move(2), move(0)));
+    // (255/256) * (209/256) * (1/39)
+    try t.expectProbability(17765, 851968);
 
     try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
     try t.log.expected.turn(4);
 
     try expectEqual(Result.Default, try t.update(swtch(2), .{}));
+    try t.expectProbability(1, 1);
 
     try t.log.expected.move(P2.ident(1), Move.Struggle, P1.ident(2), null);
     try t.log.expected.resisted(P1.ident(2));
@@ -3297,9 +3326,12 @@ test "Struggle effect" {
 
     // Respects type effectiveness and inflicts 1/2 of damage dealt to user as recoil
     try expectEqual(Result.Default, try t.update(move(1), move(0)));
+    // (255/256) * (209/256) * (1/39)
+    try t.expectProbability(17765, 851968);
     try t.verify();
 }
 
+// FIXME
 // Move.{Thrash,PetalDance}
 test "Thrashing effect" {
     // Whether or not this move is successful, the user spends three or four turns locked into this
@@ -3500,6 +3532,8 @@ test "FixedDamage effect" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    // (255/256) * (229/256)
+    try t.expectProbability(58395, 65536);
 
     try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
     try t.log.expected.move(P1.ident(1), Move.SonicBoom, P2.ident(2), null);
@@ -3508,6 +3542,7 @@ test "FixedDamage effect" {
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+    try t.expectProbability(229, 256);
     try t.verify();
 }
 
@@ -3529,6 +3564,8 @@ test "LevelDamage effect" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    // (255/256) ** 2
+    try t.expectProbability(65025, 65536);
     try t.verify();
 }
 
@@ -3607,6 +3644,7 @@ test "SuperFang effect" {
     try t.verify();
 }
 
+// FIXME
 // Move.Disable
 test "Disable effect" {
     // For 0 to 7 turns, one of the target's known moves that has at least 1 PP remaining becomes
