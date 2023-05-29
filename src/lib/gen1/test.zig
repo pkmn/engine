@@ -2635,7 +2635,8 @@ test "OHKO effect" {
     try t.log.expected.faint(P1.ident(1), true);
 
     try expectEqual(Result{ .p1 = .Switch, .p2 = .Pass }, try t.update(move(1), move(1)));
-    try t.expectProbability(19, 64);
+    // (76/256) * (196/256) * (1/39)
+    if (showdown) try t.expectProbability(19, 64) else try t.expectProbability(931, 159744);
 
     try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
     try t.log.expected.turn(3);
@@ -2711,6 +2712,8 @@ test "Charge effect" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    // (255/256) * (229/256) * (1/39)
+    try t.expectProbability(19465, 851968);
     try expectEqual(pp, t.actual.p1.active.move(2).pp);
 
     var n = t.battle.actual.choices(.P1, .Move, &choices);
@@ -2727,6 +2730,8 @@ test "Charge effect" {
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(forced, move(1)));
+    // (255/256) ** 2 * (227/256) * (229/256) (1/39) ** 2
+    try t.expectProbability(19465, 851968);
     try expectEqual(pp - 1, t.actual.p1.active.move(2).pp);
 
     n = t.battle.actual.choices(.P1, .Move, &choices);
