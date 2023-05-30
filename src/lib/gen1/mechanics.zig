@@ -62,6 +62,9 @@ const MAX_STAT_VALUE = 999;
 const DISTRIBUTION = [_]u3{ 2, 2, 2, 3, 3, 3, 4, 5 };
 
 pub fn update(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Result {
+    // FIXME std.debug.print("\n", .{});
+    // DEBUG(battle.turn);
+    // std.debug.print("// ", .{});
     assert(c1.type != .Pass or c2.type != .Pass or battle.turn == 0);
     if (battle.turn == 0) return start(battle, options);
 
@@ -380,7 +383,7 @@ fn doTurn(
         if (try checkFaint(battle, player, options)) |r| return r;
     } else if (foe_choice.type == .Pass) return null;
 
-    if (!showdown) options.chance.clear();
+    options.chance.clear();
 
     residual = true;
     replace = battle.side(foe_player).stored().hp == 0;
@@ -1831,6 +1834,7 @@ pub const Effects = struct {
                 }
             }
         }
+        // FIXME commit
 
         if (foe.active.volatiles.Confusion) return;
         foe.active.volatiles.Confusion = true;
@@ -1862,6 +1866,7 @@ pub const Effects = struct {
 
         // Pokémon Showdown handles hit/miss earlier in doMove
         if (!showdown and !try checkHit(battle, player, move, options)) return null;
+        // FIXME commit
 
         if (volatiles.disabled_move != 0) {
             try options.log.fail(foe_ident, .None);
@@ -2102,10 +2107,12 @@ pub const Effects = struct {
             if (!has_mimic) {
                 // Invulnerable foes or 1/256 miss can trigger |-miss| instead of |-fail|
                 if (!try checkHit(battle, player, move, options)) return;
+                // FIXME commit
                 return try options.log.fail(battle.active(player.foe()), .None);
             }
         }
         if (!try checkHit(battle, player, move, options)) return;
+        // FIXME commit
 
         const rslot = Rolls.moveSlot(battle, &foe.active.moves, 0);
         side.active.move(oslot).id = foe.active.move(rslot).id;
@@ -2295,6 +2302,7 @@ pub const Effects = struct {
             // If checkHit in doMove didn't return true Pokémon Showdown wouldn't be in here
             if (!showdown and !try checkHit(battle, player, move, options)) return;
         }
+        // FIXME commit
 
         // Sleep Clause Mod
         if (showdown) {
@@ -2348,7 +2356,8 @@ pub const Effects = struct {
         if (!showdown or battle.side(player).last_selected_move == .Teleport) return;
 
         // Whirlwind/Roar should not roll to hit/reset damage but Pokémon Showdown does anyway
-        _ = try checkHit(battle, player, move, options);
+        if (try checkHit(battle, player, move, options)) try options.chance.commit(player, true);
+
         battle.last_damage = 0;
     }
 
@@ -2517,7 +2526,7 @@ pub const Effects = struct {
             const proc = try Rolls.unboost(battle, player, options);
             if (!proc or foe.active.volatiles.Invulnerable) return;
         } else {
-             // checkHit already checks for Invulnerable
+            // checkHit already checks for Invulnerable
             if (!showdown and !try checkHit(battle, player, move, options)) return;
             try options.chance.commit(player, true);
         }
