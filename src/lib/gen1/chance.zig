@@ -11,6 +11,7 @@ const Player = @import("../common/data.zig").Player;
 const Optional = @import("../common/optional.zig").Optional;
 
 const Move = @import("data.zig").Move;
+const MoveSlot = @import("data.zig").MoveSlot;
 
 const enabled = options.chance;
 const showdown = options.showdown;
@@ -250,6 +251,22 @@ pub fn Chance(comptime Rational: type) type {
             try self.probability.update(1, max);
             self.actions.get(player).psywave = power + 1;
         }
+
+        pub fn moveSlot(self: *Self, player: Player, slot: u4, ms: []MoveSlot, n: u4) Error!void {
+            if (!enabled) return;
+
+            const denominator = if (n != 0) n else denominator: {
+                var i: usize = ms.len;
+                while (i > 0) {
+                    i -= 1;
+                    if (ms[i].id != .None) break :denominator i + 1;
+                }
+                unreachable;
+            };
+
+            try self.probability.update(1, denominator);
+            self.actions.get(player).move_slot = @intCast(u3, slot);
+        }
     };
 }
 
@@ -300,6 +317,10 @@ const Null = struct {
 
     pub fn psywave(self: Null, player: Player, power: u8, max: u8) Error!void {
         _ = .{ self, player, power, max };
+    }
+
+    pub fn moveSlot(self: Null, player: Player, slot: u4, ms: []MoveSlot, n: u4) Error!void {
+        _ = .{ self, player, slot, ms, n };
     }
 };
 

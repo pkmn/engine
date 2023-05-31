@@ -4700,7 +4700,6 @@ test "Rage effect" {
     try t.verify();
 }
 
-// FIXME
 // Move.Mimic
 test "Mimic effect" {
     // While the user remains active, this move is replaced by a random move known by the target,
@@ -4727,6 +4726,7 @@ test "Mimic effect" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(3)));
+    try t.expectProbability(1, 3);
     try expectEqual(Move.Teleport, t.actual.p1.active.move(1).id);
     try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
 
@@ -4735,6 +4735,7 @@ test "Mimic effect" {
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(1), move(3)));
+    try t.expectProbability(1, 1);
     try expectEqual(Move.Teleport, t.actual.p1.active.move(1).id);
     try expectEqual(pp - 2, t.actual.p1.active.move(1).pp);
 
@@ -4743,12 +4744,14 @@ test "Mimic effect" {
     try t.log.expected.turn(4);
 
     try expectEqual(Result.Default, try t.update(swtch(2), move(3)));
+    try t.expectProbability(1, 1);
 
     try t.log.expected.switched(P1.ident(1), t.expected.p1.get(1));
     try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
     try t.log.expected.turn(5);
 
     try expectEqual(Result.Default, try t.update(swtch(2), move(3)));
+    try t.expectProbability(1, 1);
     try expectEqual(Move.Mimic, t.actual.p1.active.move(1).id);
     try expectEqual(pp - 2, t.actual.p1.active.move(1).pp);
 

@@ -1901,7 +1901,8 @@ pub const Effects = struct {
             return Result.Error;
         }
 
-        volatiles.disabled_move = @intCast(u3, Rolls.moveSlot(battle, &foe.active.moves, n));
+        volatiles.disabled_move =
+            @intCast(u3, try Rolls.moveSlot(battle, player, &foe.active.moves, n, options));
         volatiles.disabled_duration = Rolls.disableDuration(battle);
 
         const id = foe.active.move(volatiles.disabled_move).id;
@@ -2122,7 +2123,7 @@ pub const Effects = struct {
         if (!try checkHit(battle, player, move, options)) return;
         // FIXME commit
 
-        const rslot = Rolls.moveSlot(battle, &foe.active.moves, 0);
+        const rslot = try Rolls.moveSlot(battle, player, &foe.active.moves, 0, options);
         side.active.move(oslot).id = foe.active.move(rslot).id;
 
         try options.log.startEffect(battle.active(player), .Mimic, side.active.move(oslot).id);
@@ -2896,34 +2897,46 @@ pub const Rolls = struct {
         return @intCast(u3, (if (r < 2) r else battle.rng.next() & 3) + 2);
     }
 
-    // FIXME
-    fn moveSlot(battle: anytype, moves: []MoveSlot, check_pp: u4) u4 {
-        if (showdown) {
-            if (check_pp == 0) {
-                var i: usize = moves.len;
-                while (i > 0) {
-                    i -= 1;
-                    if (moves[i].id != .None) {
-                        return battle.rng.range(u4, 0, @intCast(u4, i + 1)) + 1;
+    fn moveSlot(
+        battle: anytype,
+        player: Player,
+        moves: []MoveSlot,
+        check_pp: u4,
+        options: anytype,
+    ) !u4 {
+        const slot = if (options.calc.overridden(player, "move_slot")) |val|
+            val
+        else slot: {
+            if (showdown) {
+                if (check_pp == 0) {
+                    var i: usize = moves.len;
+                    while (i > 0) {
+                        i -= 1;
+                        if (moves[i].id != .None) {
+                            break :slot battle.rng.range(u4, 0, @intCast(u4, i + 1)) + 1;
+                        }
                     }
-                }
-            } else {
-                var r = battle.rng.range(u4, 0, @intCast(u4, check_pp)) + 1;
-                var i: usize = 0;
-                while (i < moves.len and r > 0) : (i += 1) {
-                    if (moves[i].pp > 0) {
-                        r -= 1;
-                        if (r == 0) break;
+                } else {
+                    var r = battle.rng.range(u4, 0, @intCast(u4, check_pp)) + 1;
+                    var i: usize = 0;
+                    while (i < moves.len and r > 0) : (i += 1) {
+                        if (moves[i].pp > 0) {
+                            r -= 1;
+                            if (r == 0) break;
+                        }
                     }
+                    break :slot @intCast(u4, i + 1);
                 }
-                return @intCast(u4, i + 1);
             }
-        }
 
-        while (true) {
-            const r = @intCast(u4, battle.rng.next() & 3);
-            if (moves[r].id != .None and (check_pp == 0 or moves[r].pp > 0)) return r + 1;
-        }
+            while (true) {
+                const r = @intCast(u4, battle.rng.next() & 3);
+                if (moves[r].id != .None and (check_pp == 0 or moves[r].pp > 0)) break :slot r + 1;
+            }
+        };
+
+        try options.chance.moveSlot(player, slot, moves, check_pp);
+        return slot;
     }
 };
 
