@@ -16,6 +16,7 @@ const helpers = @import("helpers.zig");
 const ArrayList = std.ArrayList;
 
 const assert = std.debug.assert;
+const print = std.debug.print;
 
 const Allocator = std.mem.Allocator;
 
@@ -9870,7 +9871,7 @@ fn Test(comptime rolls: anytype) type {
             // FIXME
             // self.options.chance.probability.reduce();
             // const r = self.options.chance.probability;
-            // std.debug.print("\ntry t.expectProbability({d}, {d});", .{ r.p, r.q });
+            // print("\ntry t.expectProbability({d}, {d});", .{ r.p, r.q });
 
             try self.validate();
             return result;
@@ -9882,7 +9883,7 @@ fn Test(comptime rolls: anytype) type {
             self.options.chance.probability.reduce();
             const r = self.options.chance.probability;
             if (r.p != p or r.q != q) {
-                std.debug.print("expected {d}/{d}, found {d}/{d}\n", .{ p, q, r.p, r.q });
+                print("expected {d}/{d}, found {d}/{d}\n", .{ p, q, r.p, r.q });
                 return error.TestExpectedEqual;
             }
         }
@@ -9935,9 +9936,13 @@ fn metronome(comptime m: Move) U {
 
 // Transitions
 
-fn transitions(battle: anytype, c1: Choice, c2: Choice, allocator: Allocator) !Rational(u128) {
-    assert(pkmn.options.calc and pkmn.options.chance);
-
+fn transitions(
+    seed: u64,
+    battle: anytype,
+    c1: Choice,
+    c2: Choice,
+    allocator: Allocator,
+) !Rational(u128) {
     const Context = struct {
         pub fn hash(ctx: @This(), k: Actions) u64 {
             _ = ctx;
@@ -9988,9 +9993,16 @@ fn transitions(battle: anytype, c1: Choice, c2: Choice, allocator: Allocator) !R
             };
             b = battle;
             _ = try b.update(c1, c2, &opts);
-            assert(!(try seen.getOrPut(opts.chance.actions)).found_existing);
+            if ((try seen.getOrPut(opts.chance.actions)).found_existing) {
+                print("already seen {} (seed: {d})\n", .{ opts.chance.actions, seed });
+                return error.TestUnexpectedResult;
+            }
+
             try p.add(&opts.chance.probability);
-            assert(p.q >= p.p);
+            if (p.q < p.p) {
+                print("expected proper fraction, found {d}/{d} (seed: {d})\n", .{ p.p, p.q, seed });
+                return error.TestUnexpectedResult;
+            }
 
             if (!ctx.eql(opts.chance.actions, perturbed)) {
                 try frontier.append(opts.chance.actions);
@@ -10006,17 +10018,27 @@ fn transitions(battle: anytype, c1: Choice, c2: Choice, allocator: Allocator) !R
 test "transitions" {
     if (!(pkmn.options.calc and pkmn.options.chance)) return error.SkipZigTest;
 
+    const seed = seed: {
+        var secret: [std.rand.DefaultCsprng.secret_seed_length]u8 = undefined;
+        std.crypto.random.bytes(&secret);
+        var csprng = std.rand.DefaultCsprng.init(secret);
+        const random = csprng.random();
+        break :seed random.int(u64);
+    };
+
     var battle = Battle.init(
-        0x12345678,
+        seed,
         &.{.{ .species = .Charmander, .level = 5, .stats = .{}, .moves = &.{.Scratch} }},
         &.{.{ .species = .Squirtle, .level = 5, .stats = .{}, .moves = &.{.Tackle} }},
     );
     try expectEqual(Result.Default, try battle.update(.{}, .{}, &NULL));
 
-    var p = try transitions(battle, move(1), move(1), std.testing.allocator);
-    p.reduce();
-    try expectEqual(@as(u128, 1), p.p);
-    try expectEqual(@as(u128, 1), p.q);
+    var r = try transitions(seed, battle, move(1), move(1), std.testing.allocator);
+    r.reduce();
+    if (r.p != 1 or r.q != 1) {
+        print("expected 1, found {d}/{d} (seed: {d})\n", .{ r.p, r.q, seed });
+        return error.TestExpectedEqual;
+    }
 }
 
 comptime {
