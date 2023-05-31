@@ -9972,12 +9972,13 @@ fn transitions(battle: anytype, c1: Choice, c2: Choice, allocator: Allocator) !R
         var perturbed = Actions{};
 
         // zig fmt: off
-        for (Rolls.hit(actions.p1)) |p1_hit| { perturbed.p1.hit = p1_hit;
-        for (Rolls.hit(actions.p2)) |p2_hit| { perturbed.p2.hit = p2_hit;
-        for (Rolls.criticalHit(actions.p1)) |p1_crit| { perturbed.p1.critical_hit = p1_crit;
-        for (Rolls.criticalHit(actions.p2)) |p2_crit| { perturbed.p2.critical_hit = p2_crit;
-        for (Rolls.damage(actions.p1)) |p1_dmg| { perturbed.p1.damage = p1_dmg;
-        for (Rolls.damage(actions.p2)) |p2_dmg| { perturbed.p2.damage = p2_dmg;
+        for (Rolls.hit(actions.p1, .None)) |p1_hit| { perturbed.p1.hit = p1_hit; // FIXME
+        for (Rolls.hit(actions.p2, .None)) |p2_hit| { perturbed.p2.hit = p2_hit; // FIXME
+        for (Rolls.criticalHit(actions.p1, p1_hit)) |p1_crit| { perturbed.p1.critical_hit = p1_crit;
+        for (Rolls.criticalHit(actions.p2, p2_hit)) |p2_crit| { perturbed.p2.critical_hit = p2_crit;
+        // TODO: coalesce damage rolls
+        for (Rolls.damage(actions.p1, p1_hit)) |p1_dmg| { perturbed.p1.damage = p1_dmg;
+        for (Rolls.damage(actions.p2, p2_hit)) |p2_dmg| { perturbed.p2.damage = p2_dmg;
             if (ctx.eql(perturbed, actions)) continue;
 
             opts = .{
@@ -10003,20 +10004,19 @@ fn transitions(battle: anytype, c1: Choice, c2: Choice, allocator: Allocator) !R
 
 // FIXME
 test "transitions" {
-    return error.SkipZigTest;
-    // if (!(pkmn.options.calc and pkmn.options.chance)) return error.SkipZigTest;
+    if (!(pkmn.options.calc and pkmn.options.chance)) return error.SkipZigTest;
 
-    // var battle = Battle.init(
-    //     0x12345678,
-    //     &.{.{ .species = .Charmander, .level = 5, .stats = .{}, .moves = &.{.Scratch} }},
-    //     &.{.{ .species = .Squirtle, .level = 5, .stats = .{}, .moves = &.{.Tackle} }},
-    // );
-    // try expectEqual(Result.Default, try battle.update(.{}, .{}, &NULL));
+    var battle = Battle.init(
+        0x12345678,
+        &.{.{ .species = .Charmander, .level = 5, .stats = .{}, .moves = &.{.Scratch} }},
+        &.{.{ .species = .Squirtle, .level = 5, .stats = .{}, .moves = &.{.Tackle} }},
+    );
+    try expectEqual(Result.Default, try battle.update(.{}, .{}, &NULL));
 
-    // var p = try transitions(battle, move(1), move(1), std.testing.allocator);
-    // p.reduce();
-    // try expectEqual(@as(u128, 1), p.p);
-    // try expectEqual(@as(u128, 1), p.q);
+    var p = try transitions(battle, move(1), move(1), std.testing.allocator);
+    p.reduce();
+    try expectEqual(@as(u128, 1), p.p);
+    try expectEqual(@as(u128, 1), p.q);
 }
 
 comptime {
