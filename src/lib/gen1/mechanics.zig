@@ -775,7 +775,7 @@ fn canMove(
         Effects.thrashing(battle, player);
     } else if (!showdown and move.effect == .Binding) {
         // Pokémon Showdown handles this after hit/miss checks and damage calculation
-        Effects.binding(battle, player, false);
+        try Effects.binding(battle, player, false, options);
     }
 
     return true;
@@ -876,7 +876,7 @@ fn doMove(
     const skip = status or immune;
     if ((!showdown or (!skip or counter)) and !miss) blk: {
         if (showdown and move.effect.isMulti()) {
-            Effects.multiHit(battle, player, move);
+            try Effects.multiHit(battle, player, move, options);
             hits = side.active.volatiles.attacks;
             late = false;
         }
@@ -973,7 +973,7 @@ fn doMove(
     // first time but its more convenient and efficient to set it up here (Pokémon Showdown sets
     // it up above before damage calculation).
     if (!showdown and move.effect.isMulti()) {
-        Effects.multiHit(battle, player, move);
+        try Effects.multiHit(battle, player, move, options);
         hits = side.active.volatiles.attacks;
     }
 
@@ -1013,7 +1013,7 @@ fn doMove(
     } else if (showdown) {
         // This should be handled much earlier but Pokémon Showdown does it here... ¯\_(ツ)_/¯
         if (move.effect == .Binding) {
-            Effects.binding(battle, player, rewrap);
+            try Effects.binding(battle, player, rewrap, options);
             if (immune) {
                 battle.last_damage = 0;
                 assert(foe.stored().hp > 0);
@@ -2138,14 +2138,14 @@ pub const Effects = struct {
         try options.log.start(battle.active(player), .Mist);
     }
 
-    fn multiHit(battle: anytype, player: Player, move: Move.Data) void {
+    fn multiHit(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
         var side = battle.side(player);
 
         assert(!side.active.volatiles.MultiHit);
         side.active.volatiles.MultiHit = true;
 
         side.active.volatiles.attacks =
-            if (move.effect == .MultiHit) Rolls.distribution(battle) else 2;
+            if (move.effect == .MultiHit) try Rolls.distribution(battle, player, options) else 2;
     }
 
     fn paralyze(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
@@ -2408,7 +2408,7 @@ pub const Effects = struct {
         try options.log.transform(battle.active(player), foe_ident);
     }
 
-    fn binding(battle: anytype, player: Player, rewrap: bool) void {
+    fn binding(battle: anytype, player: Player, rewrap: bool, options: anytype) !void {
         var side = battle.side(player);
         var foe = battle.foe(player);
 
@@ -2420,7 +2420,7 @@ pub const Effects = struct {
             foe.active.volatiles.Recharging = false;
         } else if (foe.stored().hp == 0) return if (!rewrap) battle.rng.advance(1);
 
-        side.active.volatiles.attacks = Rolls.distribution(battle) - 1;
+        side.active.volatiles.attacks = try Rolls.distribution(battle, player, options) - 1;
     }
 
     fn boost(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
@@ -2890,11 +2890,18 @@ pub const Rolls = struct {
         return @intCast(u3, (battle.rng.next() & 1) + 2);
     }
 
-    // FIXME
-    inline fn distribution(battle: anytype) u3 {
-        if (showdown) return DISTRIBUTION[battle.rng.range(u8, 0, DISTRIBUTION.len)];
-        const r = (battle.rng.next() & 3);
-        return @intCast(u3, (if (r < 2) r else battle.rng.next() & 3) + 2);
+    inline fn distribution(battle: anytype, player: Player, options: anytype) !u3 {
+        const n = if (options.calc.overridden(player, "distribution")) |val|
+            val
+        else if (showdown)
+            DISTRIBUTION[battle.rng.range(u8, 0, DISTRIBUTION.len)]
+        else n: {
+            const r = (battle.rng.next() & 3);
+            break :n @intCast(u3, (if (r < 2) r else battle.rng.next() & 3) + 2);
+        };
+
+        try options.chance.distribution(player, n);
+        return n;
     }
 
     fn moveSlot(

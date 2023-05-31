@@ -1186,7 +1186,6 @@ test "FocusEnergy effect" {
     try t.verify();
 }
 
-// FIXME
 // Move.{DoubleSlap,CometPunch,FuryAttack,PinMissile,SpikeCannon,Barrage,FurySwipes}
 test "MultiHit effect" {
     // Hits two to five times. Has a 3/8 chance to hit two or three times, and a 1/8 chance to hit
@@ -1219,6 +1218,7 @@ test "MultiHit effect" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.expectProbability(5697, 851968); // (216/256) * (211/256) * (1/39) * (3/8)
 
     try t.log.expected.move(P1.ident(1), Move.CometPunch, P2.ident(1), null);
     try t.log.expected.activate(P2.ident(1), .Substitute);
@@ -1231,6 +1231,7 @@ test "MultiHit effect" {
 
     // Breaking a target's Substitute ends the move
     try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    try t.expectProbability(1899, 851968); // (216/256) * (211/256) * (1/39) * (1/8)
     try t.verify();
 }
 

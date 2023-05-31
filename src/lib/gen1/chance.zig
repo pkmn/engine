@@ -252,6 +252,13 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.get(player).psywave = power + 1;
         }
 
+        pub fn distribution(self: *Self, player: Player, n: u3) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(@as(u8, if (n > 3) 1 else 3), 8);
+            self.actions.get(player).distribution = n;
+        }
+
         pub fn moveSlot(self: *Self, player: Player, slot: u4, ms: []MoveSlot, n: u4) Error!void {
             if (!enabled) return;
 
@@ -317,6 +324,10 @@ const Null = struct {
 
     pub fn psywave(self: Null, player: Player, power: u8, max: u8) Error!void {
         _ = .{ self, player, power, max };
+    }
+
+    pub fn distribution(self: Null, player: Player, n: u3) Error!void {
+        _ = .{ self, player, n };
     }
 
     pub fn moveSlot(self: Null, player: Player, slot: u4, ms: []MoveSlot, n: u4) Error!void {
