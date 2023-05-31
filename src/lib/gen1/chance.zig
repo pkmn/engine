@@ -76,6 +76,37 @@ pub const Action = packed struct {
     comptime {
         assert(@sizeOf(Action) == 8);
     }
+
+    pub fn format(
+        self: Action,
+        comptime fmt: []const u8,
+        opts: std.fmt.FormatOptions,
+        writer: anytype,
+    ) !void {
+        _ = fmt;
+        _ = opts;
+
+        try writer.writeByte('<');
+        var printed = false;
+        inline for (@typeInfo(Action).Struct.fields) |field| {
+            const val = @field(self, field.name);
+            switch (@typeInfo(@TypeOf(val))) {
+                .Struct => {}, // FIXME
+                .Enum => if (val != .None) {
+                    if (printed) try writer.writeAll(", ");
+                    try writer.print("{s}:{s}", .{ field.name, @tagName(val) });
+                    printed = true;
+                },
+                .Int => if (val != 0) {
+                    if (printed) try writer.writeAll(", ");
+                    try writer.print("{s}:{d}", .{ field.name, val });
+                    printed = true;
+                },
+                else => unreachable,
+            }
+        }
+        try writer.writeByte('>');
+    }
 };
 
 /// Observed values for various durations that need to be tracked in order to properly

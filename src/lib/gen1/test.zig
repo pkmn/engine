@@ -17,6 +17,8 @@ const ArrayList = std.ArrayList;
 
 const assert = std.debug.assert;
 
+const Allocator = std.mem.Allocator;
+
 const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
@@ -38,6 +40,8 @@ const Log = protocol.Log;
 const Rational = rational.Rational;
 
 const Calc = calc.Calc;
+
+const Actions = chance.Actions;
 const Chance = chance.Chance;
 
 const Move = data.Move;
@@ -51,6 +55,7 @@ const Battle = helpers.Battle;
 const EXP = helpers.EXP;
 const move = helpers.move;
 const Pokemon = helpers.Pokemon;
+const Rolls = helpers.Rolls;
 const Side = helpers.Side;
 const swtch = helpers.swtch;
 
@@ -9926,6 +9931,92 @@ fn metronome(comptime m: Move) U {
     const range: u64 = @intFromEnum(Move.Struggle) - 2;
     const mod = @as(u2, (if (param < @intFromEnum(Move.Metronome) - 1) 1 else 2));
     return comptime ranged((param - mod) + 1, range) - 1;
+}
+
+// Transitions
+
+fn transitions(battle: anytype, c1: Choice, c2: Choice, allocator: Allocator) !Rational(u128) {
+    assert(pkmn.options.calc and pkmn.options.chance);
+
+    const Context = struct {
+        pub fn hash(ctx: @This(), k: Actions) u64 {
+            _ = ctx;
+            return std.hash.Wyhash.hash(0, std.mem.asBytes(&k));
+        }
+        pub fn eql(ctx: @This(), a: Actions, b: Actions) bool {
+            _ = ctx;
+            return std.meta.eql(a, b);
+        }
+    };
+    const ctx: Context = .{};
+    const Set = std.HashMap(Actions, void, Context, std.hash_map.default_max_load_percentage);
+
+    var seen = Set.init(allocator);
+    defer seen.deinit();
+    var frontier = std.ArrayList(Actions).init(allocator);
+    defer frontier.deinit();
+
+    const Opts = Options(@TypeOf(protocol.NULL), Chance(Rational(u128)), Calc);
+    var opts: Opts = .{ .log = protocol.NULL, .chance = .{ .probability = .{} }, .calc = .{} };
+
+    var b = battle;
+    _ = try b.update(c1, c2, &opts);
+    assert(!(try seen.getOrPut(opts.chance.actions)).found_existing);
+    try frontier.append(opts.chance.actions);
+
+    var p: Rational(u128) = opts.chance.probability;
+
+    var i: usize = 0;
+    while (i < frontier.items.len) : (i += 1) {
+        var actions = frontier.items[i];
+        var perturbed = Actions{};
+
+        // zig fmt: off
+        for (Rolls.hit(actions.p1)) |p1_hit| { perturbed.p1.hit = p1_hit;
+        for (Rolls.hit(actions.p2)) |p2_hit| { perturbed.p2.hit = p2_hit;
+        for (Rolls.criticalHit(actions.p1)) |p1_crit| { perturbed.p1.critical_hit = p1_crit;
+        for (Rolls.criticalHit(actions.p2)) |p2_crit| { perturbed.p2.critical_hit = p2_crit;
+        for (Rolls.damage(actions.p1)) |p1_dmg| { perturbed.p1.damage = p1_dmg;
+        for (Rolls.damage(actions.p2)) |p2_dmg| { perturbed.p2.damage = p2_dmg;
+            if (ctx.eql(perturbed, actions)) continue;
+
+            opts = .{
+                .log = protocol.NULL,
+                .chance = .{ .probability = .{} },
+                .calc = .{ .overrides = perturbed },
+            };
+            b = battle;
+            _ = try b.update(c1, c2, &opts);
+            assert(!(try seen.getOrPut(opts.chance.actions)).found_existing);
+            try p.add(&opts.chance.probability);
+            assert(p.q >= p.p);
+
+            if (!ctx.eql(opts.chance.actions, perturbed)) {
+                try frontier.append(opts.chance.actions);
+            }
+        }}}}}}
+        // zig fmt: on
+    }
+
+    return p;
+}
+
+// FIXME
+test "transitions" {
+    return error.SkipZigTest;
+    // if (!(pkmn.options.calc and pkmn.options.chance)) return error.SkipZigTest;
+
+    // var battle = Battle.init(
+    //     0x12345678,
+    //     &.{.{ .species = .Charmander, .level = 5, .stats = .{}, .moves = &.{.Scratch} }},
+    //     &.{.{ .species = .Squirtle, .level = 5, .stats = .{}, .moves = &.{.Tackle} }},
+    // );
+    // try expectEqual(Result.Default, try battle.update(.{}, .{}, &NULL));
+
+    // var p = try transitions(battle, move(1), move(1), std.testing.allocator);
+    // p.reduce();
+    // try expectEqual(@as(u128, 1), p.p);
+    // try expectEqual(@as(u128, 1), p.q);
 }
 
 comptime {
