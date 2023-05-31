@@ -9283,8 +9283,8 @@ test "Substitute HP drain bug" {
         try t.log.expected.turn(2);
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
-        // (236/256) * (255/256)
-        try if (showdown) t.expectProbability(15045, 16384) else try t.expectProbability(255, 256);
+        // (255/256) * (236/256)
+        try if (showdown) t.expectProbability(15045, 16384) else t.expectProbability(255, 256);
         try expectEqual(@as(u8, 91), t.actual.p2.active.volatiles.substitute);
 
         try t.verify();
@@ -9642,7 +9642,7 @@ test "Transform + Mirror Move/Metronome PP error" {
         try t.log.expected.turn(4);
 
         try expectEqual(Result.Default, try t.update(swtch(2), swtch(2)));
-        try t.expectProbability(1, 1);
+        try t.expectProbability(1, if (showdown) 2 else 1);
 
         try t.log.expected.switched(P1.ident(1), t.expected.p1.get(1));
         try t.log.expected.move(P2.ident(2), Move.Disable, P1.ident(1), null);
@@ -9858,9 +9858,10 @@ fn Test(comptime rolls: anytype) type {
                 break :result actual;
             } else self.battle.actual.update(c1, c2, &self.options);
 
-            self.options.chance.probability.reduce();
-            const r = self.options.chance.probability;
-            std.debug.print("\ntry t.expectProbability({d}, {d});", .{ r.p, r.q });
+            // FIXME
+            // self.options.chance.probability.reduce();
+            // const r = self.options.chance.probability;
+            // std.debug.print("\ntry t.expectProbability({d}, {d});", .{ r.p, r.q });
 
             try self.validate();
             return result;
