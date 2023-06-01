@@ -9964,6 +9964,8 @@ fn transitions(
         var perturbed = Actions{};
 
         // zig fmt: off
+        for (Rolls.speedTie(actions.p1)) |tie| {
+            perturbed.p1.speed_tie = tie; perturbed.p2.speed_tie = tie;
         for (Rolls.hit(actions.p1, .None)) |p1_hit| { perturbed.p1.hit = p1_hit; // FIXME
         for (Rolls.hit(actions.p2, .None)) |p2_hit| { perturbed.p2.hit = p2_hit; // FIXME
         for (Rolls.criticalHit(actions.p1, p1_hit)) |p1_crit| { perturbed.p1.critical_hit = p1_crit;
@@ -9980,7 +9982,10 @@ fn transitions(
             _ = try b.update(c1, c2, &opts);
 
             if (actions.matches(opts.chance.actions)) {
-                assert(std.meta.eql(perturbed, opts.chance.actions));
+                if (!std.meta.eql(perturbed, opts.chance.actions)) {
+                    print("{} != {} (seed: {d})\n", .{ perturbed, opts.chance.actions, seed });
+                    return error.TestExpectedEqual;
+                }
                 if ((try seen.getOrPut(opts.chance.actions)).found_existing) {
                     print("already seen {} (seed: {d})\n", .{ opts.chance.actions, seed });
                     return error.TestUnexpectedResult;
@@ -9994,7 +9999,7 @@ fn transitions(
             } else if (!matches(frontier.items, i, opts.chance.actions)) {
                 try frontier.append(opts.chance.actions);
             }
-        }}}}}}
+        }}}}}}}
         // zig fmt: on
     }
 
