@@ -1,8 +1,9 @@
 const builtin = @import("builtin");
 const std = @import("std");
 
-const expect = std.testing.expect;
 const assert = std.debug.assert;
+
+const expect = std.testing.expect;
 
 const DEBUG = @import("../common/debug.zig").print;
 const options = @import("../common/options.zig");
@@ -33,7 +34,55 @@ pub const Actions = extern struct {
     pub inline fn get(self: *Actions, player: Player) *Action {
         return if (player == .P1) &self.p1 else &self.p2;
     }
+
+    pub fn matches(a: Actions, b: Actions) bool {
+        inline for (@typeInfo(Actions).Struct.fields) |player| {
+            inline for (@typeInfo(Action).Struct.fields) |field| {
+                const a_val = @field(@field(a, player.name), field.name);
+                const b_val = @field(@field(b, player.name), field.name);
+
+                switch (@typeInfo(@TypeOf(a_val))) {
+                    .Struct => inline for (@typeInfo(@TypeOf(a_val)).Struct.fields) |f| {
+                        if ((@field(a_val, f.name) > 0) != (@field(b_val, f.name) > 0)) {
+                            return false;
+                        }
+                    },
+                    .Enum => if ((@enumToInt(a_val) > 0) != (@enumToInt(b_val) > 0)) return false,
+                    .Int => if ((a_val > 0) != (b_val > 0)) return false,
+                    else => unreachable,
+                }
+            }
+        }
+        return true;
+    }
+
+    pub fn format(
+        self: Actions,
+        comptime fmt: []const u8,
+        opts: std.fmt.FormatOptions,
+        writer: anytype,
+    ) !void {
+        _ = .{ fmt, opts };
+        try writer.print("<P1 = {s}, P2 = {s}>", .{ self.p1, self.p2 });
+    }
 };
+
+test Actions {
+    const a: Actions = .{ .p1 = .{ .hit = .true, .critical_hit = .false, .damage = 5 } };
+    const b: Actions = .{ .p1 = .{ .hit = .false, .critical_hit = .true, .damage = 6 } };
+    const c: Actions = .{ .p1 = .{ .hit = .true } };
+    const d: Actions = .{ .p2 = .{ .hit = .true, .durations = .{ .sleep = 2 } } };
+    const e: Actions = .{ .p2 = .{ .hit = .false, .durations = .{ .sleep = 4 } } };
+    const f: Actions = .{ .p1 = .{ .hit = .false, .durations = .{ .sleep = 4 } } };
+
+    try expect(a.matches(a));
+    try expect(a.matches(b));
+    try expect(b.matches(a));
+    try expect(!a.matches(c));
+    try expect(!c.matches(a));
+    try expect(d.matches(e));
+    try expect(!d.matches(f));
+}
 
 /// Information about the RNG that was observed during a battle `update` for a single player.
 pub const Action = packed struct {
@@ -83,18 +132,30 @@ pub const Action = packed struct {
         opts: std.fmt.FormatOptions,
         writer: anytype,
     ) !void {
-        _ = fmt;
-        _ = opts;
-
-        try writer.writeByte('<');
+        _ = .{ fmt, opts };
+        try writer.writeByte('(');
         var printed = false;
         inline for (@typeInfo(Action).Struct.fields) |field| {
             const val = @field(self, field.name);
             switch (@typeInfo(@TypeOf(val))) {
-                .Struct => {}, // FIXME
+                .Struct => inline for (@typeInfo(@TypeOf(val)).Struct.fields) |f| {
+                    const v = @field(val, f.name);
+                    if (v != 0) {
+                        if (printed) try writer.writeAll(", ");
+                        try writer.print("{s}:{d}", .{ field.name, v });
+                        printed = true;
+                    }
+                },
                 .Enum => if (val != .None) {
                     if (printed) try writer.writeAll(", ");
-                    try writer.print("{s}:{s}", .{ field.name, @tagName(val) });
+                    if (@TypeOf(val) == Optional(bool)) {
+                        try writer.print("{s}{s}", .{
+                            if (val == .false) "!" else "",
+                            field.name,
+                        });
+                    } else {
+                        try writer.print("{s}:{s}", .{ field.name, @tagName(val) });
+                    }
                     printed = true;
                 },
                 .Int => if (val != 0) {
@@ -105,7 +166,7 @@ pub const Action = packed struct {
                 else => unreachable,
             }
         }
-        try writer.writeByte('>');
+        try writer.writeByte(')');
     }
 };
 

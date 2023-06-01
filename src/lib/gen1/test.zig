@@ -9937,13 +9937,13 @@ fn metronome(comptime m: Move) U {
 // Transitions
 
 fn transitions(
-    seed: u64,
     battle: anytype,
     c1: Choice,
     c2: Choice,
+    seed: u64,
     allocator: Allocator,
 ) !Rational(u128) {
-    const Context = struct {
+    const Set = std.HashMap(Actions, void, struct {
         pub fn hash(ctx: @This(), k: Actions) u64 {
             _ = ctx;
             return std.hash.Wyhash.hash(0, std.mem.asBytes(&k));
@@ -9952,9 +9952,7 @@ fn transitions(
             _ = ctx;
             return std.meta.eql(a, b);
         }
-    };
-    const ctx: Context = .{};
-    const Set = std.HashMap(Actions, void, Context, std.hash_map.default_max_load_percentage);
+    }, std.hash_map.default_max_load_percentage);
 
     var seen = Set.init(allocator);
     defer seen.deinit();
@@ -9966,10 +9964,9 @@ fn transitions(
 
     var b = battle;
     _ = try b.update(c1, c2, &opts);
-    assert(!(try seen.getOrPut(opts.chance.actions)).found_existing);
-    try frontier.append(opts.chance.actions);
 
-    var p: Rational(u128) = opts.chance.probability;
+    var p: Rational(u128) = .{ .p = 0, .q = 1 };
+    try frontier.append(opts.chance.actions);
 
     var i: usize = 0;
     while (i < frontier.items.len) : (i += 1) {
@@ -9984,8 +9981,6 @@ fn transitions(
         // TODO: coalesce damage rolls
         for (Rolls.damage(actions.p1, p1_hit)) |p1_dmg| { perturbed.p1.damage = p1_dmg;
         for (Rolls.damage(actions.p2, p2_hit)) |p2_dmg| { perturbed.p2.damage = p2_dmg;
-            if (ctx.eql(perturbed, actions)) continue;
-
             opts = .{
                 .log = protocol.NULL,
                 .chance = .{ .probability = .{} },
@@ -9993,18 +9988,19 @@ fn transitions(
             };
             b = battle;
             _ = try b.update(c1, c2, &opts);
-            if ((try seen.getOrPut(opts.chance.actions)).found_existing) {
-                print("already seen {} (seed: {d})\n", .{ opts.chance.actions, seed });
-                return error.TestUnexpectedResult;
-            }
 
-            try p.add(&opts.chance.probability);
-            if (p.q < p.p) {
-                print("expected proper fraction, found {d}/{d} (seed: {d})\n", .{ p.p, p.q, seed });
-                return error.TestUnexpectedResult;
-            }
+            if (actions.matches(opts.chance.actions)) {
+                if ((try seen.getOrPut(opts.chance.actions)).found_existing) {
+                    print("already seen {} (seed: {d})\n", .{ opts.chance.actions, seed });
+                    return error.TestUnexpectedResult;
+                }
 
-            if (!ctx.eql(opts.chance.actions, perturbed)) {
+                try p.add(&opts.chance.probability);
+                if (p.q < p.p) {
+                    print("improper fraction {d}/{d} (seed: {d})\n", .{ p.p, p.q, seed });
+                    return error.TestUnexpectedResult;
+                }
+            } else if (!matches(frontier.items, i, opts.chance.actions)) {
                 try frontier.append(opts.chance.actions);
             }
         }}}}}}
@@ -10014,18 +10010,24 @@ fn transitions(
     return p;
 }
 
-// FIXME
+fn matches(frontier: []Actions, i: usize, actions: Actions) bool {
+    for (frontier, 0..) |f, j| {
+        if (i == j) continue;
+        if (f.matches(actions)) return true;
+    }
+    return false;
+}
+
 test "transitions" {
     if (!(pkmn.options.calc and pkmn.options.chance)) return error.SkipZigTest;
 
-    // const seed = seed: {
-    //     var secret: [std.rand.DefaultCsprng.secret_seed_length]u8 = undefined;
-    //     std.crypto.random.bytes(&secret);
-    //     var csprng = std.rand.DefaultCsprng.init(secret);
-    //     const random = csprng.random();
-    //     break :seed random.int(u64);
-    // };
-    const seed = 17595432554311241558;
+    const seed = seed: {
+        var secret: [std.rand.DefaultCsprng.secret_seed_length]u8 = undefined;
+        std.crypto.random.bytes(&secret);
+        var csprng = std.rand.DefaultCsprng.init(secret);
+        const random = csprng.random();
+        break :seed random.int(u64);
+    };
 
     var battle = Battle.init(
         seed,
@@ -10034,7 +10036,7 @@ test "transitions" {
     );
     try expectEqual(Result.Default, try battle.update(.{}, .{}, &NULL));
 
-    var r = try transitions(seed, battle, move(1), move(1), std.testing.allocator);
+    var r = try transitions(battle, move(1), move(1), seed, std.testing.allocator);
     r.reduce();
     if (r.p != 1 or r.q != 1) {
         print("expected 1, found {d}/{d} (seed: {d})\n", .{ r.p, r.q, seed });

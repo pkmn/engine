@@ -359,7 +359,10 @@ test Rolls {
 
     actions = chance.Actions{ .p2 = .{ .psywave = 79 } };
     try expectEqualSlices(u8, &.{0}, Rolls.psywave(actions.p1, .None));
-    try expectEqual(@as(u8, 150), Rolls.psywave(actions.p2, .None)[Rolls.psywave(actions.p2, .None).len - 1]);
+    try expectEqual(
+        @as(u8, 150),
+        Rolls.psywave(actions.p2, .None)[Rolls.psywave(actions.p2, .None).len - 1],
+    );
     try expectEqualSlices(u8, &.{0}, Rolls.psywave(actions.p2, .false));
 
     actions = chance.Actions{ .p1 = .{ .speed_tie = .P2 } };
@@ -377,12 +380,20 @@ test Rolls {
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.hit(actions.p2, .false));
 
     actions = chance.Actions{ .p1 = .{ .secondary_chance = .true } };
-    try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.secondaryChance(actions.p1, .None));
+    try expectEqualSlices(
+        Optional(bool),
+        &.{ .false, .true },
+        Rolls.secondaryChance(actions.p1, .None),
+    );
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.secondaryChance(actions.p1, .false));
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.secondaryChance(actions.p2, .None));
 
     actions = chance.Actions{ .p1 = .{ .critical_hit = .true } };
-    try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.criticalHit(actions.p1, .None));
+    try expectEqualSlices(
+        Optional(bool),
+        &.{ .false, .true },
+        Rolls.criticalHit(actions.p1, .None),
+    );
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.criticalHit(actions.p1, .false));
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.criticalHit(actions.p2, .None));
 
