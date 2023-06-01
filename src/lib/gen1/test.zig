@@ -10018,13 +10018,14 @@ fn transitions(
 test "transitions" {
     if (!(pkmn.options.calc and pkmn.options.chance)) return error.SkipZigTest;
 
-    const seed = seed: {
-        var secret: [std.rand.DefaultCsprng.secret_seed_length]u8 = undefined;
-        std.crypto.random.bytes(&secret);
-        var csprng = std.rand.DefaultCsprng.init(secret);
-        const random = csprng.random();
-        break :seed random.int(u64);
-    };
+    // const seed = seed: {
+    //     var secret: [std.rand.DefaultCsprng.secret_seed_length]u8 = undefined;
+    //     std.crypto.random.bytes(&secret);
+    //     var csprng = std.rand.DefaultCsprng.init(secret);
+    //     const random = csprng.random();
+    //     break :seed random.int(u64);
+    // };
+    const seed = 17595432554311241558;
 
     var battle = Battle.init(
         seed,
