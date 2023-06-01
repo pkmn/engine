@@ -10023,8 +10023,8 @@ test "transitions" {
 
     var battle = Battle.init(
         seed,
-        &.{.{ .species = .Charmander, .level = 5, .stats = .{}, .moves = &.{.Scratch} }},
-        &.{.{ .species = .Squirtle, .level = 5, .stats = .{}, .moves = &.{.Tackle} }},
+        &.{.{ .species = .Charmander, .hp = 5, .level = 5, .stats = .{}, .moves = &.{.Scratch} }},
+        &.{.{ .species = .Squirtle, .hp = 4, .level = 5, .stats = .{}, .moves = &.{.Tackle} }},
     );
     try expectEqual(Result.Default, try battle.update(.{}, .{}, &NULL));
 
