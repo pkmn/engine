@@ -10012,6 +10012,7 @@ fn transitions(
 
 fn matches(frontier: []Actions, i: usize, actions: Actions) bool {
     for (frontier, 0..) |f, j| {
+        // TODO: is skipping this redundant check worth it?
         if (i == j) continue;
         if (f.matches(actions)) return true;
     }
