@@ -9943,17 +9943,7 @@ fn transitions(
     seed: u64,
     allocator: Allocator,
 ) !Rational(u128) {
-    const Set = std.HashMap(Actions, void, struct {
-        pub fn hash(ctx: @This(), k: Actions) u64 {
-            _ = ctx;
-            return std.hash.Wyhash.hash(0, std.mem.asBytes(&k));
-        }
-        pub fn eql(ctx: @This(), a: Actions, b: Actions) bool {
-            _ = ctx;
-            return std.meta.eql(a, b);
-        }
-    }, std.hash_map.default_max_load_percentage);
-
+    const Set = std.AutoHashMap(Actions, void);
     var seen = Set.init(allocator);
     defer seen.deinit();
     var frontier = std.ArrayList(Actions).init(allocator);
@@ -9990,6 +9980,7 @@ fn transitions(
             _ = try b.update(c1, c2, &opts);
 
             if (actions.matches(opts.chance.actions)) {
+                assert(std.meta.eql(perturbed, opts.chance.actions));
                 if ((try seen.getOrPut(opts.chance.actions)).found_existing) {
                     print("already seen {} (seed: {d})\n", .{ opts.chance.actions, seed });
                     return error.TestUnexpectedResult;
