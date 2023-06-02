@@ -303,7 +303,7 @@ pub const Rolls = struct {
 
     /// TODO
     pub fn hit(action: chance.Action, parent: Optional(bool)) []const Optional(bool) {
-        if (parent == .false) return &BOOL_NONE;
+        if (parent == .true) return &BOOL_NONE;
         return if (@field(action, "hit") == .None) &BOOL_NONE else &BOOLS;
     }
 
@@ -326,7 +326,7 @@ pub const Rolls = struct {
 
     /// TODO
     pub fn paralyzed(action: chance.Action, parent: Optional(bool)) []const Optional(bool) {
-        if (parent == .false) return &BOOL_NONE;
+        if (parent == .true) return &BOOL_NONE;
         return if (@field(action, "paralyzed") == .None) &BOOL_NONE else &BOOLS;
     }
 
@@ -377,7 +377,8 @@ test Rolls {
     actions = chance.Actions{ .p2 = .{ .hit = .true } };
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.hit(actions.p1, .None));
     try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.hit(actions.p2, .None));
-    try expectEqualSlices(Optional(bool), &.{.None}, Rolls.hit(actions.p2, .false));
+    try expectEqualSlices(Optional(bool), &.{.None}, Rolls.hit(actions.p2, .true));
+    try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.hit(actions.p2, .false));
 
     actions = chance.Actions{ .p1 = .{ .secondary_chance = .true } };
     try expectEqualSlices(
@@ -404,7 +405,8 @@ test Rolls {
     actions = chance.Actions{ .p2 = .{ .paralyzed = .true } };
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.paralyzed(actions.p1, .None));
     try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.paralyzed(actions.p2, .None));
-    try expectEqualSlices(Optional(bool), &.{.None}, Rolls.paralyzed(actions.p2, .false));
+    try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.paralyzed(actions.p2, .false));
+    try expectEqualSlices(Optional(bool), &.{.None}, Rolls.paralyzed(actions.p2, .true));
 
     actions = chance.Actions{ .p2 = .{ .move_slot = 3 } };
     try expectEqualSlices(u3, &.{0}, Rolls.moveSlot(actions.p1, .None));

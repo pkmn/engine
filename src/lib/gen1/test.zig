@@ -9960,30 +9960,42 @@ fn transitions(
 
     var i: usize = 0;
     while (i < frontier.items.len) : (i += 1) {
-        var actions = frontier.items[i];
-        var perturbed = Actions{};
+        var template = frontier.items[i];
+        var a = Actions{};
 
         // zig fmt: off
-        for (Rolls.speedTie(actions.p1)) |tie| {
-            perturbed.p1.speed_tie = tie; perturbed.p2.speed_tie = tie;
-        for (Rolls.hit(actions.p1, .None)) |p1_hit| { perturbed.p1.hit = p1_hit; // FIXME
-        for (Rolls.hit(actions.p2, .None)) |p2_hit| { perturbed.p2.hit = p2_hit; // FIXME
-        for (Rolls.criticalHit(actions.p1, p1_hit)) |p1_crit| { perturbed.p1.critical_hit = p1_crit;
-        for (Rolls.criticalHit(actions.p2, p2_hit)) |p2_crit| { perturbed.p2.critical_hit = p2_crit;
+        // TODO: special case metronome to reset frontier
+        for (Rolls.speedTie(template.p1)) |tie| { a.p1.speed_tie = tie; a.p2.speed_tie = tie;
+        for (Rolls.confused(template.p1)) |p1_cfz| { a.p1.confused = p1_cfz;
+        for (Rolls.confused(template.p2)) |p2_cfz| { a.p2.confused = p2_cfz;
+        for (Rolls.paralyzed(template.p1, p1_cfz)) |p1_par| { a.p1.paralyzed = p1_par;
+        for (Rolls.paralyzed(template.p2, p2_cfz)) |p2_par| { a.p2.paralyzed = p2_par;
+        for (Rolls.hit(template.p1, p1_par)) |p1_hit| { a.p1.hit = p1_hit;
+        for (Rolls.hit(template.p2, p2_par)) |p2_hit| { a.p2.hit = p2_hit;
+        for (Rolls.psywave(template.p1, p1_hit)) |p1_psywave| { a.p1.psywave = p1_psywave;
+        for (Rolls.psywave(template.p2, p2_hit)) |p2_psywave| { a.p2.psywave = p2_psywave;
+        for (Rolls.criticalHit(template.p1, p1_hit)) |p1_crit| { a.p1.critical_hit = p1_crit;
+        for (Rolls.criticalHit(template.p2, p2_hit)) |p2_crit| { a.p2.critical_hit = p2_crit;
+        for (Rolls.moveSlot(template.p1, p1_hit)) |p1_slot| { a.p1.move_slot = p1_slot;
+        for (Rolls.moveSlot(template.p2, p2_hit)) |p2_slot| { a.p2.move_slot = p2_slot;
+        for (Rolls.distribution(template.p1, p1_hit)) |p1_dist| { a.p1.distribution = p1_dist;
+        for (Rolls.distribution(template.p2, p2_hit)) |p2_dist| { a.p2.distribution = p2_dist;
+        for (Rolls.secondaryChance(template.p1, p1_hit)) |p1_sec| { a.p1.secondary_chance = p1_sec;
+        for (Rolls.secondaryChance(template.p2, p2_hit)) |p2_sec| { a.p2.secondary_chance = p2_sec;
         // TODO: coalesce damage rolls
-        for (Rolls.damage(actions.p1, p1_hit)) |p1_dmg| { perturbed.p1.damage = p1_dmg;
-        for (Rolls.damage(actions.p2, p2_hit)) |p2_dmg| { perturbed.p2.damage = p2_dmg;
+        for (Rolls.damage(template.p1, p1_hit)) |p1_dmg| { a.p1.damage = p1_dmg;
+        for (Rolls.damage(template.p2, p2_hit)) |p2_dmg| { a.p2.damage = p2_dmg;
             opts = .{
                 .log = protocol.NULL,
                 .chance = .{ .probability = .{} },
-                .calc = .{ .overrides = perturbed },
+                .calc = .{ .overrides = a },
             };
             b = battle;
             _ = try b.update(c1, c2, &opts);
 
-            if (actions.matches(opts.chance.actions)) {
-                if (!std.meta.eql(perturbed, opts.chance.actions)) {
-                    print("{} != {} (seed: {d})\n", .{ perturbed, opts.chance.actions, seed });
+            if (opts.chance.actions.matches(template)) {
+                if (!std.meta.eql(opts.chance.actions, a)) {
+                    print("{} != {} (seed: {d})\n", .{ opts.chance.actions, a, seed });
                     return error.TestExpectedEqual;
                 }
                 if ((try seen.getOrPut(opts.chance.actions)).found_existing) {
@@ -9996,17 +10008,17 @@ fn transitions(
                     print("improper fraction {d}/{d} (seed: {d})\n", .{ p.p, p.q, seed });
                     return error.TestUnexpectedResult;
                 }
-            } else if (!matches(frontier.items, i, opts.chance.actions)) {
+            } else if (!matches(opts.chance.actions, i, frontier.items)) {
                 try frontier.append(opts.chance.actions);
             }
-        }}}}}}}
+        }}}}}}}}}}}}}}}}}}}
         // zig fmt: on
     }
 
     return p;
 }
 
-fn matches(frontier: []Actions, i: usize, actions: Actions) bool {
+fn matches(actions: Actions, i: usize, frontier: []Actions) bool {
     for (frontier, 0..) |f, j| {
         // TODO: is skipping this redundant check worth it?
         if (i == j) continue;
