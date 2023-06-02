@@ -31,7 +31,6 @@ const Choice = common.Choice;
 const Options = pkmn.battle.Options;
 
 const showdown = pkmn.options.showdown;
-const log = pkmn.options.log;
 
 const ArgType = protocol.ArgType;
 const ByteStream = protocol.ByteStream;
@@ -9672,7 +9671,7 @@ test "Transform + Mirror Move/Metronome PP error" {
 // Miscellaneous
 
 test "MAX_LOGS" {
-    if (showdown or !log) return error.SkipZigTest;
+    if (showdown or !pkmn.options.log) return error.SkipZigTest;
     const BRN = Status.init(.BRN);
     const moves = &.{ .LeechSeed, .ConfuseRay, .Metronome };
     // make P2 slower to avoid speed ties
@@ -9894,7 +9893,7 @@ fn Test(comptime rolls: anytype) type {
         }
 
         fn validate(self: *Self) !void {
-            if (log) {
+            if (pkmn.options.log) {
                 try protocol.expectLog(
                     formatter,
                     self.buf.expected.items,
@@ -9940,6 +9939,7 @@ fn transitions(
     battle: anytype,
     c1: Choice,
     c2: Choice,
+    actions: Actions,
     seed: u64,
     allocator: Allocator,
 ) !Rational(u128) {
@@ -9949,8 +9949,9 @@ fn transitions(
     var frontier = std.ArrayList(Actions).init(allocator);
     defer frontier.deinit();
 
-    const Opts = Options(@TypeOf(protocol.NULL), Chance(Rational(u128)), Calc);
-    var opts: Opts = .{ .log = protocol.NULL, .chance = .{ .probability = .{} }, .calc = .{} };
+    const log = protocol.NULL;
+    var opts: Options(@TypeOf(log), Chance(Rational(u128)), Calc) =
+        .{ .log = log, .chance = .{ .probability = .{}, .actions = actions }, .calc = .{} };
 
     var b = battle;
     _ = try b.update(c1, c2, &opts);
@@ -9958,13 +9959,16 @@ fn transitions(
     var p: Rational(u128) = .{ .p = 0, .q = 1 };
     try frontier.append(opts.chance.actions);
 
+    // zig fmt: off
+    for (Rolls.metronome(frontier.items[0].p1)) |p1_move| {
+    for (Rolls.metronome(frontier.items[0].p2)) |p2_move| {
+
     var i: usize = 0;
+    assert(frontier.items.len == 1);
     while (i < frontier.items.len) : (i += 1) {
         var template = frontier.items[i];
-        var a = Actions{};
+        var a = Actions{ .p1 = .{ .metronome = p1_move }, .p2 = .{ .metronome = p2_move } };
 
-        // zig fmt: off
-        // TODO: special case metronome to reset frontier
         for (Rolls.speedTie(template.p1)) |tie| { a.p1.speed_tie = tie; a.p2.speed_tie = tie;
         for (Rolls.confused(template.p1)) |p1_cfz| { a.p1.confused = p1_cfz;
         for (Rolls.confused(template.p2)) |p2_cfz| { a.p2.confused = p2_cfz;
@@ -9985,11 +9989,8 @@ fn transitions(
         // TODO: coalesce damage rolls
         for (Rolls.damage(template.p1, p1_hit)) |p1_dmg| { a.p1.damage = p1_dmg;
         for (Rolls.damage(template.p2, p2_hit)) |p2_dmg| { a.p2.damage = p2_dmg;
-            opts = .{
-                .log = protocol.NULL,
-                .chance = .{ .probability = .{} },
-                .calc = .{ .overrides = a },
-            };
+
+            opts = .{ .log = log, .chance = .{ .probability = .{} }, .calc = .{ .overrides = a } };
             b = battle;
             _ = try b.update(c1, c2, &opts);
 
@@ -10011,9 +10012,14 @@ fn transitions(
             } else if (!matches(opts.chance.actions, i, frontier.items)) {
                 try frontier.append(opts.chance.actions);
             }
+
         }}}}}}}}}}}}}}}}}}}
-        // zig fmt: on
     }
+
+    frontier.shrinkRetainingCapacity(1);
+
+    }}
+    // zig fmt: on
 
     return p;
 }
@@ -10045,7 +10051,7 @@ test "transitions" {
     );
     try expectEqual(Result.Default, try battle.update(.{}, .{}, &NULL));
 
-    var r = try transitions(battle, move(1), move(1), seed, std.testing.allocator);
+    var r = try transitions(battle, move(1), move(1), .{}, seed, std.testing.allocator);
     r.reduce();
     if (r.p != 1 or r.q != 1) {
         print("expected 1, found {d}/{d} (seed: {d})\n", .{ r.p, r.q, seed });

@@ -261,7 +261,7 @@ pub const Rolls = struct {
     };
 
     /// TODO
-    pub fn metronome(action: chance.Action) []const Move {
+    pub inline fn metronome(action: chance.Action) []const Move {
         return if (@field(action, "metronome") == .None) &MOVE_NONE else &MOVES;
     }
 
@@ -273,7 +273,7 @@ pub const Rolls = struct {
     };
 
     /// TODO use break base on level
-    pub fn psywave(action: chance.Action, parent: Optional(bool)) []const u8 {
+    pub inline fn psywave(action: chance.Action, parent: Optional(bool)) []const u8 {
         if (parent == .false) return &PSYWAVE_NONE;
         return if (@field(action, "psywave") == 0) &PSYWAVE_NONE else &PSYWAVE;
     }
@@ -282,7 +282,7 @@ pub const Rolls = struct {
     const PLAYERS = [_]Optional(Player){ .P1, .P2 };
 
     /// TODO call on correct player
-    pub fn speedTie(action: chance.Action) []const Optional(Player) {
+    pub inline fn speedTie(action: chance.Action) []const Optional(Player) {
         return if (@field(action, "speed_tie") == .None) &PLAYER_NONE else &PLAYERS;
     }
 
@@ -293,7 +293,7 @@ pub const Rolls = struct {
         break :init rolls;
     };
 
-    pub fn damage(action: chance.Action, parent: Optional(bool)) []const u6 {
+    pub inline fn damage(action: chance.Action, parent: Optional(bool)) []const u6 {
         if (parent == .false) return &DAMAGE_NONE;
         return if (@field(action, "damage") == 0) &DAMAGE_NONE else &DAMAGE;
     }
@@ -302,30 +302,36 @@ pub const Rolls = struct {
     const BOOLS = [_]Optional(bool){ .false, .true };
 
     /// TODO
-    pub fn hit(action: chance.Action, parent: Optional(bool)) []const Optional(bool) {
+    pub inline fn hit(action: chance.Action, parent: Optional(bool)) []const Optional(bool) {
         if (parent == .true) return &BOOL_NONE;
         return if (@field(action, "hit") == .None) &BOOL_NONE else &BOOLS;
     }
 
     /// TODO
-    pub fn secondaryChance(action: chance.Action, parent: Optional(bool)) []const Optional(bool) {
+    pub inline fn secondaryChance(
+        action: chance.Action,
+        parent: Optional(bool),
+    ) []const Optional(bool) {
         if (parent == .false) return &BOOL_NONE;
         return if (@field(action, "secondary_chance") == .None) &BOOL_NONE else &BOOLS;
     }
 
     /// TODO
-    pub fn criticalHit(action: chance.Action, parent: Optional(bool)) []const Optional(bool) {
+    pub inline fn criticalHit(
+        action: chance.Action,
+        parent: Optional(bool),
+    ) []const Optional(bool) {
         if (parent == .false) return &BOOL_NONE;
         return if (@field(action, "critical_hit") == .None) &BOOL_NONE else &BOOLS;
     }
 
     /// TODO
-    pub fn confused(action: chance.Action) []const Optional(bool) {
+    pub inline fn confused(action: chance.Action) []const Optional(bool) {
         return if (@field(action, "confused") == .None) &BOOL_NONE else &BOOLS;
     }
 
     /// TODO
-    pub fn paralyzed(action: chance.Action, parent: Optional(bool)) []const Optional(bool) {
+    pub inline fn paralyzed(action: chance.Action, parent: Optional(bool)) []const Optional(bool) {
         if (parent == .true) return &BOOL_NONE;
         return if (@field(action, "paralyzed") == .None) &BOOL_NONE else &BOOLS;
     }
@@ -335,7 +341,7 @@ pub const Rolls = struct {
     const SLOT = [_]u3{ 1, 2, 3, 4 };
 
     /// TODO
-    pub fn moveSlot(action: chance.Action, parent: Optional(bool)) []const u3 {
+    pub inline fn moveSlot(action: chance.Action, parent: Optional(bool)) []const u3 {
         if (parent == .false) return &SLOT_NONE;
         return if (@field(action, "move_slot") == 0) &SLOT_NONE else &SLOT;
     }
@@ -344,7 +350,7 @@ pub const Rolls = struct {
     const DISTRIBUTION = [_]u3{ 2, 3, 4, 5 };
 
     /// TODO
-    pub fn distribution(action: chance.Action, parent: Optional(bool)) []const u3 {
+    pub inline fn distribution(action: chance.Action, parent: Optional(bool)) []const u3 {
         if (parent == .false) return &DISTRIBUTION_NONE;
         return if (@field(action, "distribution") == 0) &DISTRIBUTION_NONE else &DISTRIBUTION;
     }
