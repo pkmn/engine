@@ -1,11 +1,8 @@
-const builtin = @import("builtin");
 const std = @import("std");
 
 const assert = std.debug.assert;
-
 const expect = std.testing.expect;
 
-const DEBUG = @import("../common/debug.zig").print;
 const options = @import("../common/options.zig");
 
 const Player = @import("../common/data.zig").Player;
@@ -397,8 +394,3 @@ const Null = struct {
         _ = .{ self, player, slot, ms, n };
     }
 };
-
-fn TypeOf(comptime field: []const u8) type {
-    for (@typeInfo(Action).Struct.fields) |f| if (std.mem.eql(u8, f.name, field)) return f.type;
-    unreachable;
-}
