@@ -42,11 +42,6 @@ pub const Actions = extern struct {
                 const b_val = @field(@field(b, player.name), field.name);
 
                 switch (@typeInfo(@TypeOf(a_val))) {
-                    .Struct => inline for (@typeInfo(@TypeOf(a_val)).Struct.fields) |f| {
-                        if ((@field(a_val, f.name) > 0) != (@field(b_val, f.name) > 0)) {
-                            return false;
-                        }
-                    },
                     .Enum => if ((@enumToInt(a_val) > 0) != (@enumToInt(b_val) > 0)) return false,
                     .Int => if ((a_val > 0) != (b_val > 0)) return false,
                     else => unreachable,
@@ -71,24 +66,16 @@ test Actions {
     const a: Actions = .{ .p1 = .{ .hit = .true, .critical_hit = .false, .damage = 5 } };
     const b: Actions = .{ .p1 = .{ .hit = .false, .critical_hit = .true, .damage = 6 } };
     const c: Actions = .{ .p1 = .{ .hit = .true } };
-    const d: Actions = .{ .p2 = .{ .hit = .true, .durations = .{ .sleep = 2 } } };
-    const e: Actions = .{ .p2 = .{ .hit = .false, .durations = .{ .sleep = 4 } } };
-    const f: Actions = .{ .p1 = .{ .hit = .false, .durations = .{ .sleep = 4 } } };
 
     try expect(a.matches(a));
     try expect(a.matches(b));
     try expect(b.matches(a));
     try expect(!a.matches(c));
     try expect(!c.matches(a));
-    try expect(d.matches(e));
-    try expect(!d.matches(f));
 }
 
 /// Information about the RNG that was observed during a battle `update` for a single player.
 pub const Action = packed struct {
-    /// Observed values of various durations. Does not influence future RNG calls.
-    durations: Durations = .{},
-
     /// If not None, the Move to return for Rolls.metronome.
     metronome: Move = .None,
     /// If not 0, psywave - 1 should be returned as the damage roll for Rolls.psywave.
@@ -109,18 +96,27 @@ pub const Action = packed struct {
     /// If not None, the value to be returned for
     /// Rolls.{confusionChance,secondaryChance,poisonChance}.
     secondary_chance: Optional(bool) = .None,
-    /// If not 0, the value to be returned by
-    /// Rolls.{sleepDuration,disableDuration,confusionDuration,attackingDuration}.
-    duration: u4 = 0,
     /// If not None, the value to be returned by Rolls.criticalHit.
     critical_hit: Optional(bool) = .None,
-
     /// If not None, the value to return for Rolls.confused.
     confused: Optional(bool) = .None,
     /// If not None, the value to return for Rolls.paralyzed.
     paralyzed: Optional(bool) = .None,
 
+    // TODO
     _: u4 = 0,
+    /// If not 0, the value to be returned by
+    /// Rolls.{sleepDuration,disableDuration,confusionDuration,attackingDuration}.
+    duration: u4 = 0,
+
+    /// The number of turns a Pokémon has been observed to be sleeping.
+    sleep: u4 = 0,
+    /// The number of turns a Pokémon has been observed to be disabled.
+    disable: u4 = 0,
+    /// The number of turns a Pokémon has been observed to be confused.
+    confusion: u4 = 0,
+    /// The number of turns a Pokémon has been observed to be attacking.
+    attacking: u4 = 0,
 
     comptime {
         assert(@sizeOf(Action) == 8);
@@ -138,14 +134,6 @@ pub const Action = packed struct {
         inline for (@typeInfo(Action).Struct.fields) |field| {
             const val = @field(self, field.name);
             switch (@typeInfo(@TypeOf(val))) {
-                .Struct => inline for (@typeInfo(@TypeOf(val)).Struct.fields) |f| {
-                    const v = @field(val, f.name);
-                    if (v != 0) {
-                        if (printed) try writer.writeAll(", ");
-                        try writer.print("{s}:{d}", .{ field.name, v });
-                        printed = true;
-                    }
-                },
                 .Enum => if (val != .None) {
                     if (printed) try writer.writeAll(", ");
                     if (@TypeOf(val) == Optional(bool)) {
@@ -167,23 +155,6 @@ pub const Action = packed struct {
             }
         }
         try writer.writeByte(')');
-    }
-};
-
-/// Observed values for various durations that need to be tracked in order to properly
-/// deduplicate transitions with a primary key.
-pub const Durations = packed struct {
-    /// The number of turns a Pokémon has been observed to be sleeping.
-    sleep: u4 = 0,
-    /// The number of turns a Pokémon has been observed to be disabled.
-    disable: u4 = 0,
-    /// The number of turns a Pokémon has been observed to be confused.
-    confusion: u4 = 0,
-    /// The number of turns a Pokémon has been observed to be attacking.
-    attacking: u4 = 0,
-
-    comptime {
-        assert(@sizeOf(Durations) == 2);
     }
 };
 
