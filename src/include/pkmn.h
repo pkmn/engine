@@ -154,8 +154,8 @@ float64_t pkmn_rational_denominator(pkmn_rational *rational);
 #define PKMN_GEN1_BATTLE_OPTIONS_SIZE 128
 /** The size in bytes of Generation I chance actions. */
 #define PKMN_GEN1_CHANCE_ACTIONS_SIZE 16
-/** TODO: The size in bytes of a Generation I calc summary. */
-#define PKMN_GEN1_CALC_SUMMARY_SIZE 16
+/** TODO: The size in bytes of a Generation I calc summaries. */
+#define PKMN_GEN1_CALC_SUMMARIES_SIZE 8
 
 /** The minimum size in bytes required to hold the all Generation I choice options. */
 extern const size_t PKMN_GEN1_MAX_CHOICES;
@@ -179,8 +179,8 @@ PKMN_OPAQUE(PKMN_GEN1_BATTLE_SIZE) pkmn_gen1_battle;
 PKMN_OPAQUE(PKMN_GEN1_BATTLE_OPTIONS_SIZE) pkmn_gen1_battle_options;
 /** Generation I Pokémon chance actions (see TODO for details). */
 PKMN_OPAQUE(PKMN_GEN1_CHANCE_ACTIONS_SIZE) pkmn_gen1_chance_actions;
-/** Generation I Pokémon calc summary (see TODO for details). */
-PKMN_OPAQUE(PKMN_GEN1_CALC_SUMMARY_SIZE) pkmn_gen1_calc_summary;
+/** Generation I Pokémon calc summaries (see TODO for details). */
+PKMN_OPAQUE(PKMN_GEN1_CALC_SUMMARIES_SIZE) pkmn_gen1_calc_summaries;
 
 /** TODO */
 typedef struct {
@@ -217,10 +217,9 @@ pkmn_rational* pkmn_gen1_battle_options_chance_probability(
 pkmn_gen1_chance_actions* pkmn_gen1_battle_options_chance_actions(
   const pkmn_gen1_battle_options *options);
 /**
- * Returns a pointer to a summary of which information was relevant for
- * calculating any damage that occured during a Generation I battle update.
+ * Returns a pointer to TODO that occured during a Generation I battle update.
  */
-pkmn_gen1_calc_summary* pkmn_gen1_battle_options_calc_summary(
+pkmn_gen1_calc_summaries* pkmn_gen1_battle_options_calc_summaries(
   const pkmn_gen1_battle_options *options);
 
 /**

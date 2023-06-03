@@ -153,10 +153,10 @@ export fn pkmn_gen1_battle_options_chance_actions(
     return &options.chance.actions;
 }
 
-export fn pkmn_gen1_battle_options_calc_summary(
+export fn pkmn_gen1_battle_options_calc_summaries(
     options: *pkmn_gen1_battle_options,
-) *pkmn.gen1.calc.Summary {
-    return &options.calc.summary;
+) *pkmn.gen1.calc.Summaries {
+    return &options.calc.summaries;
 }
 
 export fn pkmn_gen1_battle_update(
