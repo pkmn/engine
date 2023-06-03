@@ -9996,10 +9996,10 @@ fn transitions(
             b = battle;
             _ = try b.update(c1, c2, &opts);
 
-            p1_dmg.min =
-                try Rolls.coalesce(&opts.chance.probability, .P1, p1_dmg.min, &opts.calc.summaries);
-            p2_dmg.min =
-                try Rolls.coalesce(&opts.chance.probability, .P2, p2_dmg.min, &opts.calc.summaries);
+            // p1_dmg.min = try Rolls.coalesce(
+            //     &opts.chance.probability, .P1, p1_dmg.min, &opts.calc.summaries);
+            // p2_dmg.min = try Rolls.coalesce(
+            //     &opts.chance.probability, .P2, p2_dmg.min, &opts.calc.summaries);
 
             if (opts.chance.actions.matches(template)) {
                 if (!std.meta.eql(opts.chance.actions, a)) {
