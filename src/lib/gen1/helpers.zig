@@ -6,6 +6,7 @@ const options = @import("../common/options.zig");
 const protocol = @import("../common/protocol.zig");
 const rng = @import("../common/rng.zig");
 
+const calc = @import("calc.zig");
 const chance = @import("chance.zig");
 const data = @import("data.zig");
 
@@ -286,16 +287,30 @@ pub const Rolls = struct {
         return if (@field(action, "speed_tie") == .None) &PLAYER_NONE else &PLAYERS;
     }
 
-    const DAMAGE_NONE = [_]u6{0};
-    const DAMAGE = init: {
-        var rolls: [39]u6 = undefined;
-        for (0..39) |i| rolls[i] = i + 1;
-        break :init rolls;
-    };
+    pub const Range = struct { min: u6, max: u6 };
+    pub inline fn damage(action: chance.Action, parent: Optional(bool)) Range {
+        return if (parent == .false or @field(action, "damage") == 0)
+            .{ .min = 0, .max = 1 }
+        else
+            .{ .min = 1, .max = 40 };
+    }
 
-    pub inline fn damage(action: chance.Action, parent: Optional(bool)) []const u6 {
-        if (parent == .false) return &DAMAGE_NONE;
-        return if (@field(action, "damage") == 0) &DAMAGE_NONE else &DAMAGE;
+    // FIXME add tests
+    pub inline fn coalesce(p: anytype, player: Player, roll: u6, summaries: *calc.Summaries) !u6 {
+        if (roll == 0) return roll;
+
+        const summary = summaries.get(player);
+
+        // TODO: does a closed-form solution for this exist?
+        var max = roll;
+        while (max < 39) {
+            if (@intCast(u16, summary.base *% (@as(u8, roll) + 217 + 1) / 255) == summary.damage) {
+                max += 1;
+            } else break;
+        }
+
+        if (max != roll) try p.update(max - roll + 1, 1);
+        return max;
     }
 
     const BOOL_NONE = [_]Optional(bool){.None};
@@ -376,9 +391,9 @@ test Rolls {
     try expectEqualSlices(Optional(Player), &.{.None}, Rolls.speedTie(actions.p2));
 
     actions = chance.Actions{ .p2 = .{ .damage = 5 } };
-    try expectEqualSlices(u6, &.{0}, Rolls.damage(actions.p1, .None));
-    try expectEqual(@as(u6, 1), Rolls.damage(actions.p2, .None)[0]);
-    try expectEqualSlices(u6, &.{0}, Rolls.damage(actions.p2, .false));
+    try expectEqual(Rolls.Range{ .min = 0, .max = 1 }, Rolls.damage(actions.p1, .None));
+    try expectEqual(Rolls.Range{ .min = 1, .max = 40 }, Rolls.damage(actions.p2, .None));
+    try expectEqual(Rolls.Range{ .min = 0, .max = 1 }, Rolls.damage(actions.p2, .false));
 
     actions = chance.Actions{ .p2 = .{ .hit = .true } };
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.hit(actions.p1, .None));

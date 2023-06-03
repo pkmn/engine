@@ -9986,13 +9986,20 @@ fn transitions(
         for (Rolls.distribution(template.p2, p2_hit)) |p2_dist| { a.p2.distribution = p2_dist;
         for (Rolls.secondaryChance(template.p1, p1_hit)) |p1_sec| { a.p1.secondary_chance = p1_sec;
         for (Rolls.secondaryChance(template.p2, p2_hit)) |p2_sec| { a.p2.secondary_chance = p2_sec;
-        // TODO: coalesce damage rolls
-        for (Rolls.damage(template.p1, p1_hit)) |p1_dmg| { a.p1.damage = p1_dmg;
-        for (Rolls.damage(template.p2, p2_hit)) |p2_dmg| { a.p2.damage = p2_dmg;
+
+        var p1_dmg = Rolls.damage(template.p1, p1_hit);
+        while (p1_dmg.min < p1_dmg.max) : (p1_dmg.min += 1) { a.p1.damage = p1_dmg.min;
+        var p2_dmg = Rolls.damage(template.p2, p2_hit);
+        while (p2_dmg.min < p2_dmg.max) : (p2_dmg.min += 1) { a.p2.damage = p2_dmg.min;
 
             opts = .{ .log = log, .chance = .{ .probability = .{} }, .calc = .{ .overrides = a } };
             b = battle;
             _ = try b.update(c1, c2, &opts);
+
+            p1_dmg.min =
+                try Rolls.coalesce(&opts.chance.probability, .P1, p1_dmg.min, &opts.calc.summaries);
+            p2_dmg.min =
+                try Rolls.coalesce(&opts.chance.probability, .P2, p2_dmg.min, &opts.calc.summaries);
 
             if (opts.chance.actions.matches(template)) {
                 if (!std.meta.eql(opts.chance.actions, a)) {
