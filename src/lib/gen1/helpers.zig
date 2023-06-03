@@ -4,6 +4,7 @@ const common = @import("../common/data.zig");
 const optional = @import("../common/optional.zig");
 const options = @import("../common/options.zig");
 const protocol = @import("../common/protocol.zig");
+const rational = @import("../common/rational.zig");
 const rng = @import("../common/rng.zig");
 
 const calc = @import("calc.zig");
@@ -295,16 +296,14 @@ pub const Rolls = struct {
             .{ .min = 1, .max = 40 };
     }
 
-    // FIXME add tests
     pub inline fn coalesce(p: anytype, player: Player, roll: u6, summaries: *calc.Summaries) !u6 {
         if (roll == 0) return roll;
 
         const summary = summaries.get(player);
-
         // TODO: does a closed-form solution for this exist?
         var max = roll;
         while (max < 39) {
-            if (@intCast(u16, summary.base *% (@as(u8, roll) + 217 + 1) / 255) == summary.damage) {
+            if (@intCast(u16, summary.base *% (@as(u8, max) + 216 + 1) / 255) == summary.damage) {
                 max += 1;
             } else break;
         }
@@ -394,6 +393,18 @@ test Rolls {
     try expectEqual(Rolls.Range{ .min = 0, .max = 1 }, Rolls.damage(actions.p1, .None));
     try expectEqual(Rolls.Range{ .min = 1, .max = 40 }, Rolls.damage(actions.p2, .None));
     try expectEqual(Rolls.Range{ .min = 0, .max = 1 }, Rolls.damage(actions.p2, .false));
+
+    var p = rational.Rational(u64){};
+    var summaries = calc.Summaries{ .p1 = .{ .base = 74, .damage = 69 } };
+    try expectEqual(@as(u6, 0), try Rolls.coalesce(&p, .P1, 0, &summaries));
+    try expectEqual(p.p, 1);
+    p.reset();
+    try expectEqual(@as(u6, 25), try Rolls.coalesce(&p, .P1, 22, &summaries));
+    try expectEqual(p.p, 4);
+    p.reset();
+    summaries.p1.damage = 74;
+    try expectEqual(@as(u6, 1), try Rolls.coalesce(&p, .P1, 1, &summaries));
+    try expectEqual(p.p, 1);
 
     actions = chance.Actions{ .p2 = .{ .hit = .true } };
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.hit(actions.p1, .None));
