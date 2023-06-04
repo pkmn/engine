@@ -9989,7 +9989,6 @@ fn transitions(
 
         var p1_dmg = Rolls.damage(template.p1, p1_hit);
         while (p1_dmg.min < p1_dmg.max) : (p1_dmg.min += 1) { a.p1.damage = p1_dmg.min;
-
             var p1_min: u6 = 0;
 
             var p2_dmg = Rolls.damage(template.p2, p2_hit);
@@ -10002,8 +10001,9 @@ fn transitions(
                 b = battle;
                 _ = try b.update(c1, c2, &opts);
 
-                const p1_max = try Rolls.coalesce(q, .P1, p1_dmg.min, &opts.calc.summaries);
-                const p2_max = try Rolls.coalesce(q, .P2, p2_dmg.min, &opts.calc.summaries);
+                const p1_max = if (p1_min != 0) p1_min
+                    else try Rolls.coalesce(.P1, p1_dmg.min, &opts.calc.summaries);
+                const p2_max = try Rolls.coalesce(.P2, p2_dmg.min, &opts.calc.summaries);
 
                 if (opts.chance.actions.matches(template)) {
                     p1_min = p1_max;
@@ -10025,7 +10025,10 @@ fn transitions(
                         }
                     }
 
-                    try p.add(&opts.chance.probability);
+                    if (p1_max != p1_dmg.min) try q.update(p1_max - p1_dmg.min + 1, 1);
+                    if (p2_max != p2_dmg.min) try q.update(p2_max - p2_dmg.min + 1, 1);
+                    try p.add(q);
+
                     if (p.q < p.p) {
                         print("improper fraction {d}/{d} (seed: {d})\n", .{ p.p, p.q, seed });
                         return error.TestUnexpectedResult;
@@ -10038,7 +10041,6 @@ fn transitions(
             }
 
             p1_dmg.min = @max(p1_dmg.min, p1_min);
-
         }}}}}}}}}}}}}}}}}}
     }
 

@@ -296,7 +296,7 @@ pub const Rolls = struct {
             .{ .min = 1, .max = 40 };
     }
 
-    pub inline fn coalesce(p: anytype, player: Player, roll: u6, summaries: *calc.Summaries) !u6 {
+    pub inline fn coalesce(player: Player, roll: u6, summaries: *calc.Summaries) !u6 {
         if (roll == 0) return roll;
 
         const base = summaries.get(player).base;
@@ -304,10 +304,7 @@ pub const Rolls = struct {
 
         const r = 216 + @as(u8, roll);
         // Closed form solution for max damage roll provided by Orion Taylor (orion#8038)!
-        var max = @intCast(u6, @min(255, r + ((254 - ((@as(u32, base) * r) % 255)) / base)) - 216);
-
-        if (max != roll) try p.update(max - roll + 1, 1);
-        return max;
+        return @intCast(u6, @min(255, r + ((254 - ((@as(u32, base) * r) % 255)) / base)) - 216);
     }
 
     const BOOL_NONE = [_]Optional(bool){.None};
@@ -392,17 +389,11 @@ test Rolls {
     try expectEqual(Rolls.Range{ .min = 1, .max = 40 }, Rolls.damage(actions.p2, .None));
     try expectEqual(Rolls.Range{ .min = 0, .max = 1 }, Rolls.damage(actions.p2, .false));
 
-    var p = rational.Rational(u64){};
     var summaries = calc.Summaries{ .p1 = .{ .base = 74, .damage = 69 } };
-    try expectEqual(@as(u6, 0), try Rolls.coalesce(&p, .P1, 0, &summaries));
-    try expectEqual(p.p, 1);
-    p.reset();
-    try expectEqual(@as(u6, 25), try Rolls.coalesce(&p, .P1, 22, &summaries));
-    try expectEqual(p.p, 4);
-    p.reset();
+    try expectEqual(@as(u6, 0), try Rolls.coalesce(.P1, 0, &summaries));
+    try expectEqual(@as(u6, 25), try Rolls.coalesce(.P1, 22, &summaries));
     summaries.p1.damage = 74;
-    try expectEqual(@as(u6, 1), try Rolls.coalesce(&p, .P1, 1, &summaries));
-    try expectEqual(p.p, 1);
+    try expectEqual(@as(u6, 1), try Rolls.coalesce(.P1, 1, &summaries));
 
     actions = chance.Actions{ .p2 = .{ .hit = .true } };
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.hit(actions.p1, .None));
