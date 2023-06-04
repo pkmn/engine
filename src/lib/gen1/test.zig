@@ -9978,14 +9978,14 @@ fn transitions(
         for (Rolls.hit(template.p2, p2_par)) |p2_hit| { a.p2.hit = p2_hit;
         for (Rolls.psywave(template.p1, p1_hit)) |p1_psywave| { a.p1.psywave = p1_psywave;
         for (Rolls.psywave(template.p2, p2_hit)) |p2_psywave| { a.p2.psywave = p2_psywave;
-        for (Rolls.criticalHit(template.p1, p1_hit)) |p1_crit| { a.p1.critical_hit = p1_crit;
-        for (Rolls.criticalHit(template.p2, p2_hit)) |p2_crit| { a.p2.critical_hit = p2_crit;
         for (Rolls.moveSlot(template.p1, p1_hit)) |p1_slot| { a.p1.move_slot = p1_slot;
         for (Rolls.moveSlot(template.p2, p2_hit)) |p2_slot| { a.p2.move_slot = p2_slot;
         for (Rolls.distribution(template.p1, p1_hit)) |p1_dist| { a.p1.distribution = p1_dist;
         for (Rolls.distribution(template.p2, p2_hit)) |p2_dist| { a.p2.distribution = p2_dist;
         for (Rolls.secondaryChance(template.p1, p1_hit)) |p1_sec| { a.p1.secondary_chance = p1_sec;
         for (Rolls.secondaryChance(template.p2, p2_hit)) |p2_sec| { a.p2.secondary_chance = p2_sec;
+        for (Rolls.criticalHit(template.p1, p1_hit)) |p1_crit| { a.p1.critical_hit = p1_crit;
+        for (Rolls.criticalHit(template.p2, p2_hit)) |p2_crit| { a.p2.critical_hit = p2_crit;
 
         var p1_dmg = Rolls.damage(template.p1, p1_hit);
         while (p1_dmg.min < p1_dmg.max) : (p1_dmg.min += 1) { a.p1.damage = p1_dmg.min;
