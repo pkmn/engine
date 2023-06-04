@@ -9989,38 +9989,57 @@ fn transitions(
 
         var p1_dmg = Rolls.damage(template.p1, p1_hit);
         while (p1_dmg.min < p1_dmg.max) : (p1_dmg.min += 1) { a.p1.damage = p1_dmg.min;
-        var p2_dmg = Rolls.damage(template.p2, p2_hit);
-        while (p2_dmg.min < p2_dmg.max) : (p2_dmg.min += 1) { a.p2.damage = p2_dmg.min;
 
-            opts = .{ .log = log, .chance = .{ .probability = .{} }, .calc = .{ .overrides = a } };
-            b = battle;
-            _ = try b.update(c1, c2, &opts);
+            var p1_min: u6 = 0;
 
-            // p1_dmg.min = try Rolls.coalesce(
-            //     &opts.chance.probability, .P1, p1_dmg.min, &opts.calc.summaries);
-            // p2_dmg.min = try Rolls.coalesce(
-            //     &opts.chance.probability, .P2, p2_dmg.min, &opts.calc.summaries);
+            var p2_dmg = Rolls.damage(template.p2, p2_hit);
+            while (p2_dmg.min < p2_dmg.max) : (p2_dmg.min += 1) { a.p2.damage = p2_dmg.min;
 
-            if (opts.chance.actions.matches(template)) {
-                if (!std.meta.eql(opts.chance.actions, a)) {
-                    print("{} != {} (seed: {d})\n", .{ opts.chance.actions, a, seed });
-                    return error.TestExpectedEqual;
+                opts.calc = .{ .overrides = a };
+                opts.chance = .{ .probability = .{} };
+                const q = &opts.chance.probability;
+
+                b = battle;
+                _ = try b.update(c1, c2, &opts);
+
+                const p1_max = try Rolls.coalesce(q, .P1, p1_dmg.min, &opts.calc.summaries);
+                const p2_max = try Rolls.coalesce(q, .P2, p2_dmg.min, &opts.calc.summaries);
+
+                if (opts.chance.actions.matches(template)) {
+                    p1_min = p1_max;
+
+                    if (!std.meta.eql(opts.chance.actions, a)) {
+                        print("{} != {} (seed: {d})\n", .{ opts.chance.actions, a, seed });
+                        return error.TestExpectedEqual;
+                    }
+
+                    for (p1_dmg.min..p1_max + 1) |p1d| {
+                        for (p2_dmg.min..p2_max + 1) |p2d| {
+                            var acts = opts.chance.actions;
+                            acts.p1.damage = @intCast(u6, p1d);
+                            acts.p2.damage = @intCast(u6, p2d);
+                            if ((try seen.getOrPut(acts)).found_existing) {
+                                print("already seen {} (seed: {d})\n", .{ acts, seed });
+                                return error.TestUnexpectedResult;
+                            }
+                        }
+                    }
+
+                    try p.add(&opts.chance.probability);
+                    if (p.q < p.p) {
+                        print("improper fraction {d}/{d} (seed: {d})\n", .{ p.p, p.q, seed });
+                        return error.TestUnexpectedResult;
+                    }
+                } else if (!matches(opts.chance.actions, i, frontier.items)) {
+                    try frontier.append(opts.chance.actions);
                 }
-                if ((try seen.getOrPut(opts.chance.actions)).found_existing) {
-                    print("already seen {} (seed: {d})\n", .{ opts.chance.actions, seed });
-                    return error.TestUnexpectedResult;
-                }
 
-                try p.add(&opts.chance.probability);
-                if (p.q < p.p) {
-                    print("improper fraction {d}/{d} (seed: {d})\n", .{ p.p, p.q, seed });
-                    return error.TestUnexpectedResult;
-                }
-            } else if (!matches(opts.chance.actions, i, frontier.items)) {
-                try frontier.append(opts.chance.actions);
+                p2_dmg.min = p2_max;
             }
 
-        }}}}}}}}}}}}}}}}}}}
+            p1_dmg.min = @max(p1_dmg.min, p1_min);
+
+        }}}}}}}}}}}}}}}}}}
     }
 
     frontier.shrinkRetainingCapacity(1);
@@ -10043,6 +10062,7 @@ fn matches(actions: Actions, i: usize, frontier: []Actions) bool {
 test "transitions" {
     if (!(pkmn.options.calc and pkmn.options.chance)) return error.SkipZigTest;
 
+    // const seed = 0x12345678; // FIXME
     const seed = seed: {
         var secret: [std.rand.DefaultCsprng.secret_seed_length]u8 = undefined;
         std.crypto.random.bytes(&secret);
