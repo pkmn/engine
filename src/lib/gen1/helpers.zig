@@ -299,14 +299,10 @@ pub const Rolls = struct {
     pub inline fn coalesce(p: anytype, player: Player, roll: u6, summaries: *calc.Summaries) !u6 {
         if (roll == 0) return roll;
 
-        const summary = summaries.get(player);
-        // TODO: does a closed-form solution for this exist?
-        var max = roll;
-        while (max < 39) {
-            if (@intCast(u16, summary.base *% (@as(u8, max) + 216 + 1) / 255) == summary.damage) {
-                max += 1;
-            } else break;
-        }
+        const r = 216 + @as(u8, roll);
+        const base = summaries.get(player).base;
+        // Closed form solution for max damage roll provided by Orion Taylor (orion#8038)!
+        var max = @intCast(u6, @min(255, r + ((254 - ((@as(u32, base) * r) % 255)) / base)) - 216);
 
         if (max != roll) try p.update(max - roll + 1, 1);
         return max;
