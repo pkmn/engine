@@ -7208,7 +7208,7 @@ test "0 damage glitch" {
     if (showdown) {
         try t.expectProbability(3836475, 4194304); // (255/256) ** 2 * (236/256)
     } else {
-        try t.expectProbability(65025, 65536); // (255/256) ** 2
+        try t.expectProbability(255, 256);
     }
 
     try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
@@ -7235,7 +7235,7 @@ test "0 damage glitch" {
     if (showdown) {
         try t.expectProbability(15020775, 16777216); // (255/256) ** 2 * (231/256)
     } else {
-        try t.expectProbability(65025, 65536); // (255/256) ** 2
+        try t.expectProbability(255, 256);
     }
 
     try t.verify();
@@ -9293,7 +9293,7 @@ test "Substitute HP drain bug" {
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
         // (255/256) * (236/256)
-        try if (showdown) t.expectProbability(15045, 16384) else t.expectProbability(255, 256);
+        try if (showdown) t.expectProbability(15045, 16384) else t.expectProbability(1, 1);
         try expectEqual(@as(u8, 91), t.actual.p2.active.volatiles.substitute);
 
         try t.verify();

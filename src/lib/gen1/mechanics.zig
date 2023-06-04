@@ -914,10 +914,11 @@ fn doMove(
     // Due to control flow shenanigans we need to clear last_damage for Pokémon Showdown
     if (showdown and skip) battle.last_damage = 0;
 
+    var zero = battle.last_damage == 0;
     miss = if (showdown or skip)
         miss
     else
-        (!moveHit(battle, player, move, &immune, &mist, options) or battle.last_damage == 0);
+        (!moveHit(battle, player, move, &immune, &mist, options) or zero);
 
     assert(showdown or miss or battle.last_damage > 0 or skip);
     assert((!showdown and miss) or !(ohko and immune));
@@ -948,7 +949,7 @@ fn doMove(
             if (!foe.active.volatiles.Substitute) try log.activate(foe_ident, .Mist);
             try log.fail(foe_ident, .None);
         } else {
-            try options.chance.commit(player, false);
+            if (showdown or !zero) try options.chance.commit(player, false);
             try log.lastmiss();
             try log.miss(battle.active(player));
         }
