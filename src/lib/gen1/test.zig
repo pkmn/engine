@@ -9949,6 +9949,8 @@ fn transitions(
     var frontier = std.ArrayList(Actions).init(allocator);
     defer frontier.deinit();
 
+    var n: usize = 0; // DEBUG
+
     const log = protocol.NULL;
     var opts: Options(@TypeOf(log), Chance(Rational(u128)), Calc) =
         .{ .log = log, .chance = .{ .probability = .{}, .actions = actions }, .calc = .{} };
@@ -10001,13 +10003,14 @@ fn transitions(
                 b = battle;
                 _ = try b.update(c1, c2, &opts);
 
+                n += 1;
+                // const p1_max = p1_dmg.min;
+                // const p2_max = p2_dmg.min;
                 const p1_max = if (p1_min != 0) p1_min
                     else try Rolls.coalesce(.P1, p1_dmg.min, &opts.calc.summaries);
                 const p2_max = try Rolls.coalesce(.P2, p2_dmg.min, &opts.calc.summaries);
 
                 if (opts.chance.actions.matches(template)) {
-                    p1_min = p1_max;
-
                     if (!std.meta.eql(opts.chance.actions, a)) {
                         print("{} != {} (seed: {d})\n", .{ opts.chance.actions, a, seed });
                         return error.TestExpectedEqual;
@@ -10037,10 +10040,12 @@ fn transitions(
                     try frontier.append(opts.chance.actions);
                 }
 
+                p1_min = p1_max;
                 p2_dmg.min = p2_max;
             }
 
-            p1_dmg.min = @max(p1_dmg.min, p1_min);
+            assert(p1_min > 0 or p1_dmg.min == 0);
+            p1_dmg.min = p1_min;
         }}}}}}}}}}}}}}}}}}
     }
 
@@ -10048,6 +10053,8 @@ fn transitions(
 
     }}
     // zig fmt: on
+
+    // DEBUG(.{n, seen.count()});
 
     return p;
 }
