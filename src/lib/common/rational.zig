@@ -1,8 +1,6 @@
 const builtin = @import("builtin");
 const std = @import("std");
 
-const DEBUG = @import("debug.zig").print;
-
 const assert = std.debug.assert;
 const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
@@ -175,6 +173,16 @@ pub fn Rational(comptime T: type) type {
 
             assert(r.p >= 1);
             assert(r.q >= 1);
+        }
+
+        pub fn format(
+            self: Self,
+            comptime fmt: []const u8,
+            opts: std.fmt.FormatOptions,
+            writer: anytype,
+        ) !void {
+            _ = .{ fmt, opts };
+            try writer.print("{d}/{d}>", .{ self.p, self.q });
         }
 
         inline fn multiplication(r: *Self, p: anytype, q: anytype) !void {

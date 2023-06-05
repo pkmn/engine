@@ -75,7 +75,9 @@ pub const gen1 = struct {
     // TODO
     pub const Calc = @import("gen1/calc.zig").Calc;
     /// TODO
-    pub const calc = struct {
+    pub const calc = if (options.internal) struct {
+        pub usingnamespace ("gen1/calc.zig");
+    } else struct {
         /// TODO
         pub const Summaries = @import("gen1/calc.zig").Summaries;
         pub const Summary = @import("gen1/calc.zig").Summary;

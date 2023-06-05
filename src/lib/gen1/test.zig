@@ -18,19 +18,18 @@ const ArrayList = std.ArrayList;
 const assert = std.debug.assert;
 const print = std.debug.print;
 
-const Allocator = std.mem.Allocator;
-
 const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 
-const Player = common.Player;
-const Result = common.Result;
-const Choice = common.Choice;
-
 const Options = pkmn.battle.Options;
 
 const showdown = pkmn.options.showdown;
+const log = pkmn.options.log;
+
+const Player = common.Player;
+const Result = common.Result;
+const Choice = common.Choice;
 
 const ArgType = protocol.ArgType;
 const ByteStream = protocol.ByteStream;
@@ -40,8 +39,6 @@ const Log = protocol.Log;
 const Rational = rational.Rational;
 
 const Calc = calc.Calc;
-
-const Actions = chance.Actions;
 const Chance = chance.Chance;
 
 const Move = data.Move;
@@ -55,7 +52,6 @@ const Battle = helpers.Battle;
 const EXP = helpers.EXP;
 const move = helpers.move;
 const Pokemon = helpers.Pokemon;
-const Rolls = helpers.Rolls;
 const Side = helpers.Side;
 const swtch = helpers.swtch;
 
@@ -9671,7 +9667,7 @@ test "Transform + Mirror Move/Metronome PP error" {
 // Miscellaneous
 
 test "MAX_LOGS" {
-    if (showdown or !pkmn.options.log) return error.SkipZigTest;
+    if (showdown or !log) return error.SkipZigTest;
     const BRN = Status.init(.BRN);
     const moves = &.{ .LeechSeed, .ConfuseRay, .Metronome };
     // make P2 slower to avoid speed ties
@@ -9759,6 +9755,28 @@ test "MAX_LOGS" {
     try expectEqual(Result.Default, try battle.update(move(3), move(3), &options));
 
     try expectLog(&expected_buf, &actual_buf);
+}
+
+test "transitions" {
+    if (!pkmn.options.calc or !pkmn.options.chance) return error.SkipZigTest;
+
+    // const seed = 0x12345678; // FIXME
+    const seed = seed: {
+        var secret: [std.rand.DefaultCsprng.secret_seed_length]u8 = undefined;
+        std.crypto.random.bytes(&secret);
+        var csprng = std.rand.DefaultCsprng.init(secret);
+        const random = csprng.random();
+        break :seed random.int(u64);
+    };
+
+    var battle = Battle.init(
+        seed,
+        &.{.{ .species = .Charmander, .hp = 5, .level = 5, .stats = .{}, .moves = &.{.Scratch} }},
+        &.{.{ .species = .Squirtle, .hp = 4, .level = 5, .stats = .{}, .moves = &.{.Tackle} }},
+    );
+    try expectEqual(Result.Default, try battle.update(.{}, .{}, &data.NULL));
+
+    _ = try calc.transitions(battle, move(1), move(1), .{}, seed, std.testing.allocator);
 }
 
 fn Test(comptime rolls: anytype) type {
@@ -9882,7 +9900,7 @@ fn Test(comptime rolls: anytype) type {
             self.options.chance.probability.reduce();
             const r = self.options.chance.probability;
             if (r.p != p or r.q != q) {
-                print("expected {d}/{d}, found {d}/{d}\n", .{ p, q, r.p, r.q });
+                print("expected {d}/{d}, found {}\n", .{ p, q, r });
                 return error.TestExpectedEqual;
             }
         }
@@ -9893,7 +9911,7 @@ fn Test(comptime rolls: anytype) type {
         }
 
         fn validate(self: *Self) !void {
-            if (pkmn.options.log) {
+            if (log) {
                 try protocol.expectLog(
                     formatter,
                     self.buf.expected.items,
@@ -9931,168 +9949,6 @@ fn metronome(comptime m: Move) U {
     const range: u64 = @intFromEnum(Move.Struggle) - 2;
     const mod = @as(u2, (if (param < @intFromEnum(Move.Metronome) - 1) 1 else 2));
     return comptime ranged((param - mod) + 1, range) - 1;
-}
-
-// Transitions
-
-fn transitions(
-    battle: anytype,
-    c1: Choice,
-    c2: Choice,
-    actions: Actions,
-    seed: u64,
-    allocator: Allocator,
-) !Rational(u128) {
-    const Set = std.AutoHashMap(Actions, void);
-    var seen = Set.init(allocator);
-    defer seen.deinit();
-    var frontier = std.ArrayList(Actions).init(allocator);
-    defer frontier.deinit();
-
-    var n: usize = 0; // DEBUG
-
-    const log = protocol.NULL;
-    var opts: Options(@TypeOf(log), Chance(Rational(u128)), Calc) =
-        .{ .log = log, .chance = .{ .probability = .{}, .actions = actions }, .calc = .{} };
-
-    var b = battle;
-    _ = try b.update(c1, c2, &opts);
-
-    var p: Rational(u128) = .{ .p = 0, .q = 1 };
-    try frontier.append(opts.chance.actions);
-
-    // zig fmt: off
-    for (Rolls.metronome(frontier.items[0].p1)) |p1_move| {
-    for (Rolls.metronome(frontier.items[0].p2)) |p2_move| {
-
-    var i: usize = 0;
-    assert(frontier.items.len == 1);
-    while (i < frontier.items.len) : (i += 1) {
-        var template = frontier.items[i];
-        var a = Actions{ .p1 = .{ .metronome = p1_move }, .p2 = .{ .metronome = p2_move } };
-
-        for (Rolls.speedTie(template.p1)) |tie| { a.p1.speed_tie = tie; a.p2.speed_tie = tie;
-        for (Rolls.confused(template.p1)) |p1_cfz| { a.p1.confused = p1_cfz;
-        for (Rolls.confused(template.p2)) |p2_cfz| { a.p2.confused = p2_cfz;
-        for (Rolls.paralyzed(template.p1, p1_cfz)) |p1_par| { a.p1.paralyzed = p1_par;
-        for (Rolls.paralyzed(template.p2, p2_cfz)) |p2_par| { a.p2.paralyzed = p2_par;
-        for (Rolls.hit(template.p1, p1_par)) |p1_hit| { a.p1.hit = p1_hit;
-        for (Rolls.hit(template.p2, p2_par)) |p2_hit| { a.p2.hit = p2_hit;
-        for (Rolls.psywave(template.p1, p1_hit)) |p1_psywave| { a.p1.psywave = p1_psywave;
-        for (Rolls.psywave(template.p2, p2_hit)) |p2_psywave| { a.p2.psywave = p2_psywave;
-        for (Rolls.moveSlot(template.p1, p1_hit)) |p1_slot| { a.p1.move_slot = p1_slot;
-        for (Rolls.moveSlot(template.p2, p2_hit)) |p2_slot| { a.p2.move_slot = p2_slot;
-        for (Rolls.distribution(template.p1, p1_hit)) |p1_dist| { a.p1.distribution = p1_dist;
-        for (Rolls.distribution(template.p2, p2_hit)) |p2_dist| { a.p2.distribution = p2_dist;
-        for (Rolls.secondaryChance(template.p1, p1_hit)) |p1_sec| { a.p1.secondary_chance = p1_sec;
-        for (Rolls.secondaryChance(template.p2, p2_hit)) |p2_sec| { a.p2.secondary_chance = p2_sec;
-        for (Rolls.criticalHit(template.p1, p1_hit)) |p1_crit| { a.p1.critical_hit = p1_crit;
-        for (Rolls.criticalHit(template.p2, p2_hit)) |p2_crit| { a.p2.critical_hit = p2_crit;
-
-        var p1_dmg = Rolls.damage(template.p1, p1_hit);
-        while (p1_dmg.min < p1_dmg.max) : (p1_dmg.min += 1) { a.p1.damage = p1_dmg.min;
-            var p1_min: u6 = 0;
-
-            var p2_dmg = Rolls.damage(template.p2, p2_hit);
-            while (p2_dmg.min < p2_dmg.max) : (p2_dmg.min += 1) { a.p2.damage = p2_dmg.min;
-
-                opts.calc = .{ .overrides = a };
-                opts.chance = .{ .probability = .{} };
-                const q = &opts.chance.probability;
-
-                b = battle;
-                _ = try b.update(c1, c2, &opts);
-
-                n += 1;
-                // const p1_max = p1_dmg.min;
-                // const p2_max = p2_dmg.min;
-                const p1_max = if (p1_min != 0) p1_min
-                    else try Rolls.coalesce(.P1, p1_dmg.min, &opts.calc.summaries);
-                const p2_max = try Rolls.coalesce(.P2, p2_dmg.min, &opts.calc.summaries);
-
-                if (opts.chance.actions.matches(template)) {
-                    if (!std.meta.eql(opts.chance.actions, a)) {
-                        print("{} != {} (seed: {d})\n", .{ opts.chance.actions, a, seed });
-                        return error.TestExpectedEqual;
-                    }
-
-                    for (p1_dmg.min..p1_max + 1) |p1d| {
-                        for (p2_dmg.min..p2_max + 1) |p2d| {
-                            var acts = opts.chance.actions;
-                            acts.p1.damage = @intCast(u6, p1d);
-                            acts.p2.damage = @intCast(u6, p2d);
-                            if ((try seen.getOrPut(acts)).found_existing) {
-                                print("already seen {} (seed: {d})\n", .{ acts, seed });
-                                return error.TestUnexpectedResult;
-                            }
-                        }
-                    }
-
-                    if (p1_max != p1_dmg.min) try q.update(p1_max - p1_dmg.min + 1, 1);
-                    if (p2_max != p2_dmg.min) try q.update(p2_max - p2_dmg.min + 1, 1);
-                    try p.add(q);
-
-                    if (p.q < p.p) {
-                        print("improper fraction {d}/{d} (seed: {d})\n", .{ p.p, p.q, seed });
-                        return error.TestUnexpectedResult;
-                    }
-                } else if (!matches(opts.chance.actions, i, frontier.items)) {
-                    try frontier.append(opts.chance.actions);
-                }
-
-                p1_min = p1_max;
-                p2_dmg.min = p2_max;
-            }
-
-            assert(p1_min > 0 or p1_dmg.min == 0);
-            p1_dmg.min = p1_min;
-        }}}}}}}}}}}}}}}}}}
-    }
-
-    frontier.shrinkRetainingCapacity(1);
-
-    }}
-    // zig fmt: on
-
-    // DEBUG(.{n, seen.count()});
-
-    return p;
-}
-
-fn matches(actions: Actions, i: usize, frontier: []Actions) bool {
-    for (frontier, 0..) |f, j| {
-        // TODO: is skipping this redundant check worth it?
-        if (i == j) continue;
-        if (f.matches(actions)) return true;
-    }
-    return false;
-}
-
-test "transitions" {
-    if (!(pkmn.options.calc and pkmn.options.chance)) return error.SkipZigTest;
-
-    // const seed = 0x12345678; // FIXME
-    const seed = seed: {
-        var secret: [std.rand.DefaultCsprng.secret_seed_length]u8 = undefined;
-        std.crypto.random.bytes(&secret);
-        var csprng = std.rand.DefaultCsprng.init(secret);
-        const random = csprng.random();
-        break :seed random.int(u64);
-    };
-
-    var battle = Battle.init(
-        seed,
-        &.{.{ .species = .Charmander, .hp = 5, .level = 5, .stats = .{}, .moves = &.{.Scratch} }},
-        &.{.{ .species = .Squirtle, .hp = 4, .level = 5, .stats = .{}, .moves = &.{.Tackle} }},
-    );
-    try expectEqual(Result.Default, try battle.update(.{}, .{}, &NULL));
-
-    var r = try transitions(battle, move(1), move(1), .{}, seed, std.testing.allocator);
-    r.reduce();
-    if (r.p != 1 or r.q != 1) {
-        print("expected 1, found {d}/{d} (seed: {d})\n", .{ r.p, r.q, seed });
-        return error.TestExpectedEqual;
-    }
 }
 
 comptime {
