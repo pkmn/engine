@@ -300,7 +300,7 @@ pub const Rolls = struct {
         if (roll == 0) return roll;
 
         const base = summaries.get(player).base;
-        if (base == 0) return roll;
+        if (base == 0) return 39;
 
         const r = 216 + @as(u8, roll);
         // Closed form solution for max damage roll provided by Orion Taylor (orion#8038)!
