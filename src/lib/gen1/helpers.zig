@@ -299,7 +299,7 @@ pub const Rolls = struct {
     pub inline fn coalesce(player: Player, roll: u6, summaries: *calc.Summaries) !u6 {
         if (roll == 0) return roll;
 
-        const base = summaries.get(player).base;
+        const base = summaries.get(player).damage.base;
         if (base == 0) return 39;
 
         const r = 216 + @as(u8, roll);
@@ -389,7 +389,7 @@ test Rolls {
     try expectEqual(Rolls.Range{ .min = 1, .max = 40 }, Rolls.damage(actions.p2, .None));
     try expectEqual(Rolls.Range{ .min = 0, .max = 1 }, Rolls.damage(actions.p2, .false));
 
-    var summaries = calc.Summaries{ .p1 = .{ .base = 74, .damage = 69 } };
+    var summaries = calc.Summaries{ .p1 = .{ .damage = .{ .base = 74, .final = 69 } } };
     try expectEqual(@as(u6, 0), try Rolls.coalesce(.P1, 0, &summaries));
     try expectEqual(@as(u6, 25), try Rolls.coalesce(.P1, 22, &summaries));
     summaries.p1.damage = 74;

@@ -48,8 +48,16 @@ pub const Summaries = extern struct {
 };
 
 pub const Summary = extern struct {
-    base: u16 = 0,
-    damage: u16 = 0,
+    damage: Damage = .{},
+
+    const Damage = extern struct {
+        base: u16 = 0,
+        final: u16 = 0,
+
+        comptime {
+            assert(@sizeOf(Damage) == 4);
+        }
+    };
 
     comptime {
         assert(@sizeOf(Summary) == 4);
@@ -77,13 +85,13 @@ pub const Calc = struct {
     pub fn base(self: *Calc, player: Player, val: u16) void {
         if (!enabled) return;
 
-        self.summaries.get(player).base = val;
+        self.summaries.get(player).damage.base = val;
     }
 
-    pub fn damage(self: *Calc, player: Player, val: u16) void {
+    pub fn final(self: *Calc, player: Player, val: u16) void {
         if (!enabled) return;
 
-        self.summaries.get(player).damage = val;
+        self.summaries.get(player).damage.final = val;
     }
 };
 
@@ -99,7 +107,7 @@ const Null = struct {
         _ = .{ self, player, val };
     }
 
-    pub fn damage(self: Null, player: Player, val: u16) void {
+    pub fn final(self: Null, player: Player, val: u16) void {
         _ = .{ self, player, val };
     }
 };

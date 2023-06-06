@@ -1182,7 +1182,7 @@ fn randomizeDamage(battle: anytype, player: Player, options: anytype) !void {
     const random = try Rolls.damage(battle, player, options);
     options.calc.base(player, battle.last_damage);
     battle.last_damage = @intCast(u16, @as(u32, battle.last_damage) *% random / 255);
-    options.calc.damage(player, battle.last_damage);
+    options.calc.final(player, battle.last_damage);
 }
 
 fn specialDamage(battle: anytype, player: Player, move: Move.Data, options: anytype) !?Result {
