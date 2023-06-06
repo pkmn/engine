@@ -388,7 +388,8 @@ fn doTurn(
 
     residual = true;
     replace = battle.side(foe_player).stored().hp == 0;
-    if (try executeMove(
+    const calc = pkmn.options.calc and foe_choice.type == .Pass;
+    if (if (calc) null else try executeMove(
         battle,
         foe_player,
         foe_choice,
@@ -399,7 +400,7 @@ fn doTurn(
         options,
     )) |r| return r;
     if (!replace) {
-        if (foe_choice.type != .Switch) {
+        if (!calc and foe_choice.type != .Switch) {
             if (try checkFaint(battle, player, options)) |r| return r;
         }
         if (residual) try handleResidual(battle, foe_player, options);
