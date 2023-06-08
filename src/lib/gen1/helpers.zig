@@ -392,7 +392,7 @@ test Rolls {
     var summaries = calc.Summaries{ .p1 = .{ .damage = .{ .base = 74, .final = 69 } } };
     try expectEqual(@as(u6, 0), try Rolls.coalesce(.P1, 0, &summaries));
     try expectEqual(@as(u6, 25), try Rolls.coalesce(.P1, 22, &summaries));
-    summaries.p1.damage = 74;
+    summaries.p1.damage.final = 74;
     try expectEqual(@as(u6, 1), try Rolls.coalesce(.P1, 1, &summaries));
 
     actions = chance.Actions{ .p2 = .{ .hit = .true } };
