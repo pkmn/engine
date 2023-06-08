@@ -100,8 +100,16 @@ pub fn main() !void {
                         .{ "Pokemon", @sizeOf(pkmn.gen1.Pokemon) },
                     );
                     try w.print(
-                        "      \"{s}\": {d}\n",
+                        "      \"{s}\": {d},\n",
                         .{ "ActivePokemon", @sizeOf(pkmn.gen1.ActivePokemon) },
+                    );
+                    try w.print(
+                        "      \"{s}\": {d},\n",
+                        .{ "Actions", @sizeOf(pkmn.gen1.chance.Actions) },
+                    );
+                    try w.print(
+                        "      \"{s}\": {d}\n",
+                        .{ "Summaries", @sizeOf(pkmn.gen1.calc.Summaries) },
                     );
                 }
                 try w.writeAll("    },\n");
@@ -120,6 +128,10 @@ pub fn main() !void {
                     try print(w, "Boosts", pkmn.gen1.Boosts, true);
                     try w.writeAll(",\n");
                     try print(w, "Volatiles", pkmn.gen1.Volatiles, true);
+                    try w.writeAll(",\n");
+                    try print(w, "Action", pkmn.gen1.chance.Action, true);
+                    try w.writeAll(",\n");
+                    try print(w, "Damage", pkmn.gen1.calc.Summary.Damage, false);
                     try w.writeAll("\n    }\n");
                 }
                 try w.writeAll("  }\n");

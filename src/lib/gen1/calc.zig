@@ -50,7 +50,7 @@ pub const Summaries = extern struct {
 pub const Summary = extern struct {
     damage: Damage = .{},
 
-    const Damage = extern struct {
+    pub const Damage = extern struct {
         base: u16 = 0,
         final: u16 = 0,
 
