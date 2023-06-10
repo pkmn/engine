@@ -19,7 +19,7 @@ export fn napi_register_module_v1(env: c.napi_env, exports: c.napi_value) c.napi
     return exports;
 }
 
-fn options(env: c.napi_env) c.napi_value {
+pub fn options(env: c.napi_env) c.napi_value {
     var object = js.Object.init(env);
     const properties = [_]c.napi_property_descriptor{
         js.Property.init("showdown", .{ .value = js.Boolean.init(env, pkmn.options.showdown) }),
@@ -51,7 +51,7 @@ fn bind(env: c.napi_env, gen: anytype) c.napi_value {
     return object;
 }
 
-fn update(gen: anytype) c.napi_callback {
+pub fn update(gen: anytype) c.napi_callback {
     return struct {
         fn call(env: c.napi_env, info: c.napi_callback_info) callconv(.C) c.napi_value {
             var argc: usize = 4;
@@ -100,7 +100,7 @@ fn update(gen: anytype) c.napi_callback {
     }.call;
 }
 
-fn choices(gen: anytype) c.napi_callback {
+pub fn choices(gen: anytype) c.napi_callback {
     return struct {
         fn call(env: c.napi_env, info: c.napi_callback_info) callconv(.C) c.napi_value {
             var argc: usize = 4;

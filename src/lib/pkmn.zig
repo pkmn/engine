@@ -87,3 +87,13 @@ pub const gen1 = struct {
     /// Provides helpers for initializing Generation I Pokémon battles.
     pub const helpers = @import("gen1/helpers.zig");
 };
+
+// Internal APIs used by other pkmn libraries, not actually part of the public API.
+// NOTE: `pub usingnamespace struct { ... }` here results in a (false?) dependency loop
+pub const js = if (options.internal) struct {
+    pub usingnamespace @import("common/js.zig");
+} else struct {};
+pub const bindings = if (options.internal) struct {
+    pub const node = @import("binding/node.zig");
+    pub const wasm = @import("binding/wasm.zig");
+} else struct {};
