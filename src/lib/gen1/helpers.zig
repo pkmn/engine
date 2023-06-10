@@ -310,6 +310,31 @@ pub const Rolls = struct {
         return if (@field(action, "paralyzed") == .None) &BOOL_NONE else &BOOLS;
     }
 
+    const DURATION_NONE = [_]u1{0};
+    const DURATION_FORCED = [_]u1{1};
+    const DURATION = [_]u1{ 0, 1 };
+
+    pub inline fn duration(action: chance.Action, parent: Optional(bool)) []const u1 {
+        if (parent == .false) return &DURATION_NONE;
+        return if (@field(action, "duration") == 0) &DURATION_NONE else &DURATION;
+    }
+
+    pub inline fn sleep(action: chance.Action) []const u1 {
+        const turns = @field(action, "sleep");
+        return if (turns < 1 or turns >= 7) &DURATION_NONE else &DURATION;
+    }
+
+    pub inline fn disable(action: chance.Action, parent: u4) []const u1 {
+        const turns = @field(action, "disable");
+        return if (parent > 0 or turns < 1 or turns >= 8) &DURATION_NONE else &DURATION;
+    }
+
+    pub inline fn confusion(action: chance.Action, parent: u4) []const u1 {
+        const turns = @field(action, "confusion");
+        if (parent > 0 or turns < 1 or turns >= 5) return &DURATION_NONE;
+        return if (turns < 2) &DURATION_FORCED else &DURATION;
+    }
+
     const SLOT_NONE = [_]u4{0};
     // FIXME: depends on possible slots...
     const SLOT = [_]u4{ 1, 2, 3, 4 };
@@ -327,14 +352,6 @@ pub const Rolls = struct {
     pub inline fn distribution(action: chance.Action, parent: Optional(bool)) []const u4 {
         if (parent == .false) return &DISTRIBUTION_NONE;
         return if (@field(action, "distribution") == 0) &DISTRIBUTION_NONE else &DISTRIBUTION;
-    }
-
-    const DURATION_NONE = [_]u4{0};
-    const DURATION = [_]u4{ 0, 1 };
-
-    pub inline fn duration(action: chance.Action, parent: Optional(bool)) []const u4 {
-        if (parent == .false) return &DURATION_NONE;
-        return if (@field(action, "duration") == 0) &DURATION_NONE else &DURATION;
     }
 
     const PSYWAVE_NONE = [_]u8{0};
@@ -374,19 +391,7 @@ pub const Rolls = struct {
 };
 
 test Rolls {
-    var actions = chance.Actions{ .p2 = .{ .metronome = .Surf } };
-    try expectEqualSlices(Move, &.{.None}, Rolls.metronome(actions.p1));
-    try expectEqual(@intToEnum(Move, 24), Rolls.metronome(actions.p2)[23]);
-
-    actions = chance.Actions{ .p2 = .{ .psywave = 79 } };
-    try expectEqualSlices(u8, &.{0}, Rolls.psywave(actions.p1, .None));
-    try expectEqual(
-        @as(u8, 150),
-        Rolls.psywave(actions.p2, .None)[Rolls.psywave(actions.p2, .None).len - 1],
-    );
-    try expectEqualSlices(u8, &.{0}, Rolls.psywave(actions.p2, .false));
-
-    actions = chance.Actions{ .p1 = .{ .speed_tie = .P2 } };
+    var actions = chance.Actions{ .p1 = .{ .speed_tie = .P2 } };
     try expectEqualSlices(Optional(Player), &.{ .P1, .P2 }, Rolls.speedTie(actions.p1));
     try expectEqualSlices(Optional(Player), &.{.None}, Rolls.speedTie(actions.p2));
 
@@ -435,6 +440,26 @@ test Rolls {
     try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.paralyzed(actions.p2, .false));
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.paralyzed(actions.p2, .true));
 
+    actions = chance.Actions{ .p2 = .{ .duration = 3 } };
+    try expectEqualSlices(u1, &.{0}, Rolls.duration(actions.p1, .None));
+    try expectEqualSlices(u1, &.{ 0, 1 }, Rolls.duration(actions.p2, .None));
+    try expectEqualSlices(u1, &.{0}, Rolls.duration(actions.p2, .false));
+
+    try expectEqualSlices(u1, &.{0}, Rolls.sleep(.{ .sleep = 0 }));
+    try expectEqualSlices(u1, &.{0}, Rolls.sleep(.{ .sleep = 7 }));
+    try expectEqualSlices(u1, &.{ 0, 1 }, Rolls.sleep(.{ .sleep = 4 }));
+
+    try expectEqualSlices(u1, &.{0}, Rolls.disable(.{ .disable = 0 }, 0));
+    try expectEqualSlices(u1, &.{0}, Rolls.disable(.{ .disable = 8 }, 0));
+    try expectEqualSlices(u1, &.{0}, Rolls.disable(.{ .disable = 4 }, 1));
+    try expectEqualSlices(u1, &.{ 0, 1 }, Rolls.disable(.{ .disable = 4 }, 0));
+
+    try expectEqualSlices(u1, &.{0}, Rolls.confusion(.{ .confusion = 0 }, 0));
+    try expectEqualSlices(u1, &.{0}, Rolls.confusion(.{ .confusion = 5 }, 0));
+    try expectEqualSlices(u1, &.{0}, Rolls.confusion(.{ .confusion = 3 }, 1));
+    try expectEqualSlices(u1, &.{1}, Rolls.confusion(.{ .confusion = 1 }, 0));
+    try expectEqualSlices(u1, &.{ 0, 1 }, Rolls.confusion(.{ .confusion = 3 }, 0));
+
     actions = chance.Actions{ .p2 = .{ .move_slot = 3 } };
     try expectEqualSlices(u4, &.{0}, Rolls.moveSlot(actions.p1, .None));
     try expectEqualSlices(u4, &.{ 1, 2, 3, 4 }, Rolls.moveSlot(actions.p2, .None));
@@ -444,4 +469,16 @@ test Rolls {
     try expectEqualSlices(u4, &.{0}, Rolls.distribution(actions.p1, .None));
     try expectEqualSlices(u4, &.{ 2, 3, 4, 5 }, Rolls.distribution(actions.p2, .None));
     try expectEqualSlices(u4, &.{0}, Rolls.distribution(actions.p2, .false));
+
+    actions = chance.Actions{ .p2 = .{ .metronome = .Surf } };
+    try expectEqualSlices(Move, &.{.None}, Rolls.metronome(actions.p1));
+    try expectEqual(@intToEnum(Move, 24), Rolls.metronome(actions.p2)[23]);
+
+    actions = chance.Actions{ .p2 = .{ .psywave = 79 } };
+    try expectEqualSlices(u8, &.{0}, Rolls.psywave(actions.p1, .None));
+    try expectEqual(
+        @as(u8, 150),
+        Rolls.psywave(actions.p2, .None)[Rolls.psywave(actions.p2, .None).len - 1],
+    );
+    try expectEqualSlices(u8, &.{0}, Rolls.psywave(actions.p2, .false));
 }
