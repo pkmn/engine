@@ -523,10 +523,10 @@ fn beforeMove(
     if (Status.is(stored.status, .SLP)) {
         const before = stored.status;
         // Even if the EXT bit is set this will still correctly modify the sleep duration
-        stored.status -= 1;
+        if (options.calc.overridden(player, "sleep") == null) stored.status -= 1;
 
         const duration = Status.duration(stored.status);
-        // FIXME try options.chance.sleep(player, duration);
+        try options.chance.sleep(player, duration);
 
         if (duration == 0) {
             try log.curestatus(ident, before, .Message);
@@ -2320,8 +2320,8 @@ pub const Effects = struct {
             }
             // If checkHit in doMove didn't return true Pokémon Showdown wouldn't be in here
             if (!showdown and !try checkHit(battle, player, move, options)) return;
+            try options.chance.commit(player, true);
         }
-        // FIXME commit
 
         // Sleep Clause Mod
         if (showdown) {
