@@ -23,10 +23,11 @@ function load() {
   let pkmn: Bindings<false> | undefined = undefined;
   let showdown: Bindings<true> | undefined = undefined;
   try {
-    pkmn = require(path.join(ROOT, 'build', 'lib', 'pkmn.node')) as Bindings<false>;
+    pkmn = require(path.join(ROOT, 'build', 'lib', 'pkmn.node')).engine as Bindings<false>;
   } catch { }
   try {
-    showdown = require(path.join(ROOT, 'build', 'lib', 'pkmn-showdown.node')) as Bindings<true>;
+    showdown =
+      require(path.join(ROOT, 'build', 'lib', 'pkmn-showdown.node')).engine as Bindings<true>;
   } catch { }
   if (!pkmn && !showdown) {
     throw new Error('Could not find native addons - did you run `npx install-pkmn-engine`?');

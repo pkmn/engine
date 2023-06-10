@@ -336,10 +336,10 @@ const downloadImportLib = async () => {
         node = true;
         if (!options) {
           const addon = require(copy);
-          if (addon.options.showdown) opts.push('-Dshowdown');
-          if (addon.options.log) opts.push('-Dlog');
-          if (addon.options.chance) opts.push('-Dchance');
-          if (addon.options.calc) opts.push('-Dcalc');
+          if (addon.engine.options.showdown) opts.push('-Dshowdown');
+          if (addon.engine.options.log) opts.push('-Dlog');
+          if (addon.engine.options.chance) opts.push('-Dchance');
+          if (addon.engine.options.calc) opts.push('-Dcalc');
         }
       } else if (!options) {
         const addon = await WebAssembly.instantiate(fs.readFileSync(copy));
