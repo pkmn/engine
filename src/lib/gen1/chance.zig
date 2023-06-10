@@ -383,12 +383,12 @@ pub fn Chance(comptime Rational: type) type {
             var actions = self.actions.get(player);
             const n = self.actions.confusion;
             if (turns == 0) {
-                assert(n >= 2 and n <= 6);
-                if (n != 8) try self.probability.update(1, 7 - @as(u4, n));
+                assert(n >= 2 and n <= 5);
+                if (n != 5) try self.probability.update(1, 6 - @as(u4, n));
                 actions.disable = 0;
             } else {
-                assert(n >= 1 and n < 6);
-                if (n > 2) try self.probability.update(7 - @as(u4, n) - 1, 7 - @as(u4, n));
+                assert(n >= 1 and n < 5);
+                if (n > 2) try self.probability.update(6 - @as(u4, n) - 1, 6 - @as(u4, n));
                 actions.disable += 1;
             }
         }
