@@ -4,6 +4,7 @@ const assert = std.debug.assert;
 const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 
+const DEBUG = @import("../common/debug.zig").print;
 const options = @import("../common/options.zig");
 
 const Player = @import("../common/data.zig").Player;
@@ -38,6 +39,10 @@ pub const Actions = extern struct {
         self.p2.reset();
     }
 
+    pub inline fn eql(a: Actions, b: Actions) bool {
+        return @bitCast(u128, a) == @bitCast(u128, b);
+    }
+
     pub fn matches(a: Actions, b: Actions) bool {
         inline for (@typeInfo(Actions).Struct.fields) |player| {
             inline for (@typeInfo(Action).Struct.fields) |field| {
@@ -69,6 +74,12 @@ test Actions {
     const a: Actions = .{ .p1 = .{ .hit = .true, .critical_hit = .false, .damage = 5 } };
     const b: Actions = .{ .p1 = .{ .hit = .false, .critical_hit = .true, .damage = 6 } };
     const c: Actions = .{ .p1 = .{ .hit = .true } };
+
+    try expect(a.eql(a));
+    try expect(!a.eql(b));
+    try expect(!b.eql(a));
+    try expect(!a.eql(c));
+    try expect(!c.eql(a));
 
     try expect(a.matches(a));
     try expect(a.matches(b));

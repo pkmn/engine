@@ -9779,6 +9779,78 @@ test "transitions" {
     _ = try calc.transitions(battle, move(1), move(1), .{}, seed, std.testing.allocator);
 }
 
+test "TODO" {
+    const SLP = MAX;
+
+    var t = Test(
+    // zig fmt: off
+        if (showdown) .{
+            HIT, SLP,
+        } else .{
+            ~CRIT, HIT, SLP,
+        }
+    // zig fmt: on
+    ).init(
+        &.{.{ .species = .Parasect, .moves = &.{ .Spore, .Teleport } }},
+        &.{.{ .species = .Geodude, .moves = &.{.Teleport} }},
+    );
+    defer t.deinit();
+
+    try t.log.expected.move(P1.ident(1), Move.Spore, P2.ident(1), null);
+    t.expected.p2.get(1).status = Status.slp(7);
+    try t.log.expected.statusFrom(P2.ident(1), t.expected.p2.get(1).status, Move.Spore);
+    try t.log.expected.cant(P2.ident(1), .Sleep);
+    try t.log.expected.turn(2);
+
+    try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.expectProbability(765, 896); // (255/256) * (6/7)
+
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    t.expected.p2.get(1).status -= 1;
+    try t.log.expected.cant(P2.ident(1), .Sleep);
+    try t.log.expected.turn(3);
+    try expectEqual(Result.Default, try t.update(move(2), move(0)));
+    try t.expectProbability(5, 6);
+
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    t.expected.p2.get(1).status -= 1;
+    try t.log.expected.cant(P2.ident(1), .Sleep);
+    try t.log.expected.turn(4);
+    try expectEqual(Result.Default, try t.update(move(2), move(0)));
+    try t.expectProbability(4, 5);
+
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    t.expected.p2.get(1).status -= 1;
+    try t.log.expected.cant(P2.ident(1), .Sleep);
+    try t.log.expected.turn(5);
+    try expectEqual(Result.Default, try t.update(move(2), move(0)));
+    try t.expectProbability(3, 4);
+
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    t.expected.p2.get(1).status -= 1;
+    try t.log.expected.cant(P2.ident(1), .Sleep);
+    try t.log.expected.turn(6);
+    try expectEqual(Result.Default, try t.update(move(2), move(0)));
+    try t.expectProbability(2, 3);
+
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    t.expected.p2.get(1).status -= 1;
+    try t.log.expected.cant(P2.ident(1), .Sleep);
+    try t.log.expected.turn(7);
+    try expectEqual(Result.Default, try t.update(move(2), move(0)));
+    try t.expectProbability(1, 2);
+
+    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    t.expected.p2.get(1).status -= 1;
+    try t.log.expected.curestatus(P2.ident(1), t.expected.p2.get(1).status, .Message);
+    try t.log.expected.turn(8);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(0)));
+    try t.expectProbability(1, 1);
+
+    try t.verify();
+}
+
 fn Test(comptime rolls: anytype) type {
     return struct {
         const Self = @This();

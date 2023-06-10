@@ -311,7 +311,6 @@ pub const Rolls = struct {
     }
 
     const DURATION_NONE = [_]u1{0};
-    const DURATION_FORCED = [_]u1{1};
     const DURATION = [_]u1{ 0, 1 };
 
     pub inline fn duration(action: chance.Action, parent: Optional(bool)) []const u1 {
@@ -319,20 +318,27 @@ pub const Rolls = struct {
         return if (@field(action, "duration") == 0) &DURATION_NONE else &DURATION;
     }
 
-    pub inline fn sleep(action: chance.Action) []const u1 {
+    const SLEEP_NONE = [_]u3{0};
+
+    pub inline fn sleep(action: chance.Action) []const u3 {
         const turns = @field(action, "sleep");
-        return if (turns < 1 or turns >= 7) &DURATION_NONE else &DURATION;
+        return if (turns < 1 or turns >= 7) &SLEEP_NONE else &[_]u3{ 0, turns + 1 };
     }
 
-    pub inline fn disable(action: chance.Action, parent: u4) []const u1 {
+    const DISABLE_NONE = [_]u4{0};
+
+    pub inline fn disable(action: chance.Action, parent: u4) []const u4 {
         const turns = @field(action, "disable");
-        return if (parent > 0 or turns < 1 or turns >= 8) &DURATION_NONE else &DURATION;
+        return if (parent > 0 or turns < 1 or turns >= 8) &DISABLE_NONE else &[_]u4{ 0, turns + 1 };
     }
 
-    pub inline fn confusion(action: chance.Action, parent: u4) []const u1 {
+    const CONFUSION_NONE = [_]u3{0};
+    const CONFUSION_FORCED = [_]u3{1};
+
+    pub inline fn confusion(action: chance.Action, parent: u4) []const u3 {
         const turns = @field(action, "confusion");
-        if (parent > 0 or turns < 1 or turns >= 5) return &DURATION_NONE;
-        return if (turns < 2) &DURATION_FORCED else &DURATION;
+        if (parent > 0 or turns < 1 or turns >= 5) return &CONFUSION_NONE;
+        return if (turns < 2) &CONFUSION_FORCED else &[_]u3{ 0, turns + 1 };
     }
 
     const SLOT_NONE = [_]u4{0};
@@ -445,20 +451,20 @@ test Rolls {
     try expectEqualSlices(u1, &.{ 0, 1 }, Rolls.duration(actions.p2, .None));
     try expectEqualSlices(u1, &.{0}, Rolls.duration(actions.p2, .false));
 
-    try expectEqualSlices(u1, &.{0}, Rolls.sleep(.{ .sleep = 0 }));
-    try expectEqualSlices(u1, &.{0}, Rolls.sleep(.{ .sleep = 7 }));
-    try expectEqualSlices(u1, &.{ 0, 1 }, Rolls.sleep(.{ .sleep = 4 }));
+    try expectEqualSlices(u3, &.{0}, Rolls.sleep(.{ .sleep = 0 }));
+    try expectEqualSlices(u3, &.{0}, Rolls.sleep(.{ .sleep = 7 }));
+    try expectEqualSlices(u3, &.{ 0, 5 }, Rolls.sleep(.{ .sleep = 4 }));
 
-    try expectEqualSlices(u1, &.{0}, Rolls.disable(.{ .disable = 0 }, 0));
-    try expectEqualSlices(u1, &.{0}, Rolls.disable(.{ .disable = 8 }, 0));
-    try expectEqualSlices(u1, &.{0}, Rolls.disable(.{ .disable = 4 }, 1));
-    try expectEqualSlices(u1, &.{ 0, 1 }, Rolls.disable(.{ .disable = 4 }, 0));
+    try expectEqualSlices(u4, &.{0}, Rolls.disable(.{ .disable = 0 }, 0));
+    try expectEqualSlices(u4, &.{0}, Rolls.disable(.{ .disable = 8 }, 0));
+    try expectEqualSlices(u4, &.{0}, Rolls.disable(.{ .disable = 4 }, 1));
+    try expectEqualSlices(u4, &.{ 0, 5 }, Rolls.disable(.{ .disable = 4 }, 0));
 
-    try expectEqualSlices(u1, &.{0}, Rolls.confusion(.{ .confusion = 0 }, 0));
-    try expectEqualSlices(u1, &.{0}, Rolls.confusion(.{ .confusion = 5 }, 0));
-    try expectEqualSlices(u1, &.{0}, Rolls.confusion(.{ .confusion = 3 }, 1));
-    try expectEqualSlices(u1, &.{1}, Rolls.confusion(.{ .confusion = 1 }, 0));
-    try expectEqualSlices(u1, &.{ 0, 1 }, Rolls.confusion(.{ .confusion = 3 }, 0));
+    try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{ .confusion = 0 }, 0));
+    try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{ .confusion = 5 }, 0));
+    try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{ .confusion = 3 }, 1));
+    try expectEqualSlices(u3, &.{1}, Rolls.confusion(.{ .confusion = 1 }, 0));
+    try expectEqualSlices(u3, &.{ 0, 4 }, Rolls.confusion(.{ .confusion = 3 }, 0));
 
     actions = chance.Actions{ .p2 = .{ .move_slot = 3 } };
     try expectEqualSlices(u4, &.{0}, Rolls.moveSlot(actions.p1, .None));
