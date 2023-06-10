@@ -73,47 +73,49 @@ test Actions {
 
 /// Information about the RNG that was observed during a battle `update` for a single player.
 pub const Action = packed struct {
-    /// If not None, the Move to return for Rolls.metronome.
-    metronome: Move = .None,
-    /// If not 0, psywave - 1 should be returned as the damage roll for Rolls.psywave.
-    psywave: u8 = 0,
-
-    /// If not None, the Player to be returned by Rolls.speedTie.
-    speed_tie: Optional(Player) = .None,
     /// If not 0, the roll 216 + damage represents the roll to be returned Rolls.damage.
-    damage: u6 = 0,
+    damage: u8 = 0,
 
     /// If not None, the value to return for Rolls.hit.
     hit: Optional(bool) = .None,
-    /// If not 0, the move slot (1-4) to return in Rolls.moveSlot.
-    move_slot: u3 = 0,
-    /// If not 0, the value (2-5) to return for Rolls.distribution.
-    distribution: u3 = 0,
-
+    /// If not None, the value to be returned by Rolls.criticalHit.
+    critical_hit: Optional(bool) = .None,
     /// If not None, the value to be returned for
     /// Rolls.{confusionChance,secondaryChance,poisonChance}.
     secondary_chance: Optional(bool) = .None,
-    /// If not None, the value to be returned by Rolls.criticalHit.
-    critical_hit: Optional(bool) = .None,
-    /// If not None, the value to return for Rolls.confused.
-    confused: Optional(bool) = .None,
+    /// If not None, the Playr to be returned by Rolls.speedTie.
+    speed_tie: Optional(Player) = .None,
+
     /// If not None, the value to return for Rolls.paralyzed.
     paralyzed: Optional(bool) = .None,
-
-    // TODO
-    _: u4 = 0,
-    /// If not 0, the value to be returned by
-    /// Rolls.{sleepDuration,disableDuration,confusionDuration,attackingDuration}.
-    duration: u4 = 0,
-
     /// The number of turns a Pokémon has been observed to be sleeping.
-    sleep: u4 = 0,
+    sleep: u3 = 0,
+    /// The number of turns a Pokémon has been observed to be confused.
+    confusion: u3 = 0,
+
+    /// If not None, the value to return for Rolls.confused.
+    confused: Optional(bool) = .None,
+    /// The number of turns a Pokémon has been observed to be attacking with Bide/Thrashing moves.
+    attacking: u3 = 0,
+    /// The number of turns a Pokémon has been observed to be binding.
+    binding: u3 = 0,
+
+    /// If not 0, the value to be returned by  Rolls.distribution in the case of binding
+    /// moves or Rolls.{sleepDuration,disableDuration,confusionDuration,attackingDuration}.
+    duration: u4 = 0,
+    /// If not 0, the value (2-5) to return for Rolls.distribution.
+    distribution: u4 = 0,
+
+    /// If not 0, the move slot (1-4) to return in Rolls.moveSlot.
+    move_slot: u4 = 0,
     /// The number of turns a Pokémon has been observed to be disabled.
     disable: u4 = 0,
-    /// The number of turns a Pokémon has been observed to be confused.
-    confusion: u4 = 0,
-    /// The number of turns a Pokémon has been observed to be attacking.
-    attacking: u4 = 0,
+
+    /// If not 0, psywave - 1 should be returned as the damage roll for Rolls.psywave.
+    psywave: u8 = 0,
+
+    /// If not None, the Move to return for Rolls.metronome.
+    metronome: Move = .None,
 
     comptime {
         assert(@sizeOf(Action) == 8);
@@ -244,6 +246,14 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.p2.speed_tie = self.actions.p1.speed_tie;
         }
 
+        pub fn hit(self: *Self, ok: bool, accuracy: u8) void {
+            if (!enabled) return;
+
+            const p = if (ok) accuracy else @intCast(u8, 256 - @as(u9, accuracy));
+            self.pending.hit = ok;
+            self.pending.hit_probablity = p;
+        }
+
         pub fn criticalHit(self: *Self, player: Player, crit: bool, rate: u8) Error!void {
             if (!enabled) return;
 
@@ -268,12 +278,12 @@ pub fn Chance(comptime Rational: type) type {
             }
         }
 
-        pub fn hit(self: *Self, ok: bool, accuracy: u8) void {
+        pub fn secondaryChance(self: *Self, player: Player, proc: bool, rate: u8) Error!void {
             if (!enabled) return;
 
-            const p = if (ok) accuracy else @intCast(u8, 256 - @as(u9, accuracy));
-            self.pending.hit = ok;
-            self.pending.hit_probablity = p;
+            const n = if (proc) rate else @intCast(u8, 256 - @as(u9, rate));
+            try self.probability.update(n, 256);
+            self.actions.get(player).secondary_chance = if (proc) .true else .false;
         }
 
         pub fn confused(self: *Self, player: Player, cfz: bool) Error!void {
@@ -290,35 +300,6 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.get(player).paralyzed = if (par) .true else .false;
         }
 
-        pub fn secondaryChance(self: *Self, player: Player, proc: bool, rate: u8) Error!void {
-            if (!enabled) return;
-
-            const n = if (proc) rate else @intCast(u8, 256 - @as(u9, rate));
-            try self.probability.update(n, 256);
-            self.actions.get(player).secondary_chance = if (proc) .true else .false;
-        }
-
-        pub fn metronome(self: *Self, player: Player, move: Move) Error!void {
-            if (!enabled) return;
-
-            try self.probability.update(1, Move.size - 2);
-            self.actions.get(player).metronome = move;
-        }
-
-        pub fn psywave(self: *Self, player: Player, power: u8, max: u8) Error!void {
-            if (!enabled) return;
-
-            try self.probability.update(1, max);
-            self.actions.get(player).psywave = power + 1;
-        }
-
-        pub fn distribution(self: *Self, player: Player, n: u3) Error!void {
-            if (!enabled) return;
-
-            try self.probability.update(@as(u8, if (n > 3) 1 else 3), 8);
-            self.actions.get(player).distribution = n;
-        }
-
         pub fn moveSlot(self: *Self, player: Player, slot: u4, ms: []MoveSlot, n: u4) Error!void {
             if (!enabled) return;
 
@@ -333,6 +314,82 @@ pub fn Chance(comptime Rational: type) type {
 
             try self.probability.update(1, denominator);
             self.actions.get(player).move_slot = @intCast(u3, slot);
+        }
+
+        pub fn distribution(self: *Self, player: Player, n: u3) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(@as(u8, if (n > 3) 1 else 3), 8);
+            self.actions.get(player).distribution = n;
+        }
+
+        pub fn duration(self: *Self, comptime field: []const u8, player: Player, turns: u4) void {
+            if (!enabled) return;
+
+            self.actions.get(player).duration = turns;
+            @field(self.actions.get(player.foe()), field) = 1;
+        }
+
+        pub fn sleep(self: *Self, player: Player, turns: u4) Error!void {
+            if (!enabled) return;
+
+            var actions = self.actions.get(player);
+            const n = actions.sleep;
+            if (turns == 0) {
+                assert(n >= 1 and n <= 7);
+                if (n != 7) try self.probability.update(1, 8 - @as(u4, n));
+                actions.sleep = 0;
+            } else {
+                assert(n >= 1 and n < 7);
+                try self.probability.update(8 - @as(u4, n) - 1, 8 - @as(u4, n));
+                actions.sleep += 1;
+            }
+        }
+
+        pub fn disable(self: *Self, player: Player, turns: u4) Error!void {
+            if (!enabled) return;
+
+            var actions = self.actions.get(player);
+            const n = actions.disable;
+            if (turns == 0) {
+                assert(n >= 1 and n <= 8);
+                if (n != 8) try self.probability.update(1, 9 - @as(u4, n));
+                actions.disable = 0;
+            } else {
+                assert(n >= 1 and n < 8);
+                try self.probability.update(9 - @as(u4, n) - 1, 9 - @as(u4, n));
+                actions.disable += 1;
+            }
+        }
+
+        pub fn confusion(self: *Self, player: Player, turns: u4) Error!void {
+            if (!enabled) return;
+
+            var actions = self.actions.get(player);
+            const n = self.actions.confusion;
+            if (turns == 0) {
+                assert(n >= 2 and n <= 6);
+                if (n != 8) try self.probability.update(1, 7 - @as(u4, n));
+                actions.disable = 0;
+            } else {
+                assert(n >= 1 and n < 6);
+                if (n > 2) try self.probability.update(7 - @as(u4, n) - 1, 7 - @as(u4, n));
+                actions.disable += 1;
+            }
+        }
+
+        pub fn psywave(self: *Self, player: Player, power: u8, max: u8) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(1, max);
+            self.actions.get(player).psywave = power + 1;
+        }
+
+        pub fn metronome(self: *Self, player: Player, move: Move) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(1, Move.size - 2);
+            self.actions.get(player).metronome = move;
         }
     };
 }
@@ -354,6 +411,10 @@ const Null = struct {
         _ = .{ self, p1 };
     }
 
+    pub fn hit(self: Null, ok: bool, accuracy: u8) void {
+        _ = .{ self, ok, accuracy };
+    }
+
     pub fn criticalHit(self: Null, player: Player, crit: bool, rate: u8) Error!void {
         _ = .{ self, player, crit, rate };
     }
@@ -362,8 +423,8 @@ const Null = struct {
         _ = .{ self, player, roll };
     }
 
-    pub fn hit(self: Null, ok: bool, accuracy: u8) void {
-        _ = .{ self, ok, accuracy };
+    pub fn secondaryChance(self: Null, player: Player, proc: bool, rate: u8) Error!void {
+        _ = .{ self, player, proc, rate };
     }
 
     pub fn confused(self: Null, player: Player, ok: bool) Error!void {
@@ -374,23 +435,35 @@ const Null = struct {
         _ = .{ self, player, ok };
     }
 
-    pub fn secondaryChance(self: Null, player: Player, proc: bool, rate: u8) Error!void {
-        _ = .{ self, player, proc, rate };
-    }
-
-    pub fn metronome(self: Null, player: Player, move: Move) Error!void {
-        _ = .{ self, player, move };
-    }
-
-    pub fn psywave(self: Null, player: Player, power: u8, max: u8) Error!void {
-        _ = .{ self, player, power, max };
+    pub fn moveSlot(self: Null, player: Player, slot: u4, ms: []MoveSlot, n: u4) Error!void {
+        _ = .{ self, player, slot, ms, n };
     }
 
     pub fn distribution(self: Null, player: Player, n: u3) Error!void {
         _ = .{ self, player, n };
     }
 
-    pub fn moveSlot(self: Null, player: Player, slot: u4, ms: []MoveSlot, n: u4) Error!void {
-        _ = .{ self, player, slot, ms, n };
+    pub fn duration(self: Null, comptime field: []const u8, player: Player, turns: u4) void {
+        _ = .{ self, field, player, turns };
+    }
+
+    pub fn sleep(self: Null, player: Player, turns: u4) Error!void {
+        _ = .{ self, player, turns };
+    }
+
+    pub fn disable(self: Null, player: Player, turns: u4) Error!void {
+        _ = .{ self, player, turns };
+    }
+
+    pub fn confusion(self: Null, player: Player, turns: u4) Error!void {
+        _ = .{ self, player, turns };
+    }
+
+    pub fn psywave(self: Null, player: Player, power: u8, max: u8) Error!void {
+        _ = .{ self, player, power, max };
+    }
+
+    pub fn metronome(self: Null, player: Player, move: Move) Error!void {
+        _ = .{ self, player, move };
     }
 };

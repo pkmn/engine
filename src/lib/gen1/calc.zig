@@ -180,7 +180,7 @@ pub fn transitions(
 
         var p1_dmg = Rolls.damage(template.p1, p1_hit);
         while (p1_dmg.min < p1_dmg.max) : (p1_dmg.min += 1) { a.p1.damage = p1_dmg.min;
-            var p1_min: u6 = 0;
+            var p1_min: u8 = 0;
 
             var p2_dmg = Rolls.damage(template.p2, p2_hit);
             while (p2_dmg.min < p2_dmg.max) : (p2_dmg.min += 1) { a.p2.damage = p2_dmg.min;
@@ -208,8 +208,8 @@ pub fn transitions(
                     for (p1_dmg.min..p1_max + 1) |p1d| {
                         for (p2_dmg.min..p2_max + 1) |p2d| {
                             var acts = opts.chance.actions;
-                            acts.p1.damage = @intCast(u6, p1d);
-                            acts.p2.damage = @intCast(u6, p2d);
+                            acts.p1.damage = @intCast(u8, p1d);
+                            acts.p2.damage = @intCast(u8, p2d);
                             if ((try seen.getOrPut(acts)).found_existing) {
                                 print("already seen {} (seed: {d})\n", .{ acts, seed });
                                 return error.TestUnexpectedResult;

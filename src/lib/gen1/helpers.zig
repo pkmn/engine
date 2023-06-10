@@ -245,6 +245,111 @@ pub fn swtch(slot: u4) Choice {
 
 /// TODO
 pub const Rolls = struct {
+    const PLAYER_NONE = [_]Optional(Player){.None};
+    const PLAYERS = [_]Optional(Player){ .P1, .P2 };
+
+    /// TODO call on correct player
+    pub inline fn speedTie(action: chance.Action) []const Optional(Player) {
+        return if (@field(action, "speed_tie") == .None) &PLAYER_NONE else &PLAYERS;
+    }
+
+    const BOOL_NONE = [_]Optional(bool){.None};
+    const BOOLS = [_]Optional(bool){ .false, .true };
+
+    /// TODO
+    pub inline fn hit(action: chance.Action, parent: Optional(bool)) []const Optional(bool) {
+        if (parent == .true) return &BOOL_NONE;
+        return if (@field(action, "hit") == .None) &BOOL_NONE else &BOOLS;
+    }
+
+    /// TODO
+    pub inline fn criticalHit(
+        action: chance.Action,
+        parent: Optional(bool),
+    ) []const Optional(bool) {
+        if (parent == .false) return &BOOL_NONE;
+        return if (@field(action, "critical_hit") == .None) &BOOL_NONE else &BOOLS;
+    }
+
+    /// TODO
+    pub inline fn secondaryChance(
+        action: chance.Action,
+        parent: Optional(bool),
+    ) []const Optional(bool) {
+        if (parent == .false) return &BOOL_NONE;
+        return if (@field(action, "secondary_chance") == .None) &BOOL_NONE else &BOOLS;
+    }
+
+    pub const Range = struct { min: u8, max: u8 };
+    pub inline fn damage(action: chance.Action, parent: Optional(bool)) Range {
+        return if (parent == .false or @field(action, "damage") == 0)
+            .{ .min = 0, .max = 1 }
+        else
+            .{ .min = 1, .max = 40 };
+    }
+
+    pub inline fn coalesce(player: Player, roll: u8, summaries: *calc.Summaries) !u8 {
+        if (roll == 0) return roll;
+
+        const base = summaries.get(player).damage.base;
+        if (base == 0) return 39;
+
+        const r = 216 + roll;
+        // Closed form solution for max damage roll provided by Orion Taylor (orion#8038)!
+        return @min(255, r + ((254 - ((@as(u42, base) * r) % 255)) / base)) - 216;
+    }
+
+    /// TODO
+    pub inline fn confused(action: chance.Action) []const Optional(bool) {
+        return if (@field(action, "confused") == .None) &BOOL_NONE else &BOOLS;
+    }
+
+    /// TODO
+    pub inline fn paralyzed(action: chance.Action, parent: Optional(bool)) []const Optional(bool) {
+        if (parent == .true) return &BOOL_NONE;
+        return if (@field(action, "paralyzed") == .None) &BOOL_NONE else &BOOLS;
+    }
+
+    const SLOT_NONE = [_]u4{0};
+    // FIXME: depends on possible slots...
+    const SLOT = [_]u4{ 1, 2, 3, 4 };
+
+    /// TODO
+    pub inline fn moveSlot(action: chance.Action, parent: Optional(bool)) []const u4 {
+        if (parent == .false) return &SLOT_NONE;
+        return if (@field(action, "move_slot") == 0) &SLOT_NONE else &SLOT;
+    }
+
+    const DISTRIBUTION_NONE = [_]u4{0};
+    const DISTRIBUTION = [_]u4{ 2, 3, 4, 5 };
+
+    /// TODO
+    pub inline fn distribution(action: chance.Action, parent: Optional(bool)) []const u4 {
+        if (parent == .false) return &DISTRIBUTION_NONE;
+        return if (@field(action, "distribution") == 0) &DISTRIBUTION_NONE else &DISTRIBUTION;
+    }
+
+    const DURATION_NONE = [_]u4{0};
+    const DURATION = [_]u4{ 0, 1 };
+
+    pub inline fn duration(action: chance.Action, parent: Optional(bool)) []const u4 {
+        if (parent == .false) return &DURATION_NONE;
+        return if (@field(action, "duration") == 0) &DURATION_NONE else &DURATION;
+    }
+
+    const PSYWAVE_NONE = [_]u8{0};
+    const PSYWAVE = init: {
+        var rolls: [150]u8 = undefined;
+        for (0..150) |i| rolls[i] = i + 1;
+        break :init rolls;
+    };
+
+    /// TODO use break base on level
+    pub inline fn psywave(action: chance.Action, parent: Optional(bool)) []const u8 {
+        if (parent == .false) return &PSYWAVE_NONE;
+        return if (@field(action, "psywave") == 0) &PSYWAVE_NONE else &PSYWAVE;
+    }
+
     const MOVE_NONE = [_]Move{.None};
     const MOVES = init: {
         var moves: [Move.size - 2]Move = undefined;
@@ -266,105 +371,6 @@ pub const Rolls = struct {
     pub inline fn metronome(action: chance.Action) []const Move {
         return if (@field(action, "metronome") == .None) &MOVE_NONE else &MOVES;
     }
-
-    const PSYWAVE_NONE = [_]u8{0};
-    const PSYWAVE = init: {
-        var rolls: [150]u8 = undefined;
-        for (0..150) |i| rolls[i] = i + 1;
-        break :init rolls;
-    };
-
-    /// TODO use break base on level
-    pub inline fn psywave(action: chance.Action, parent: Optional(bool)) []const u8 {
-        if (parent == .false) return &PSYWAVE_NONE;
-        return if (@field(action, "psywave") == 0) &PSYWAVE_NONE else &PSYWAVE;
-    }
-
-    const PLAYER_NONE = [_]Optional(Player){.None};
-    const PLAYERS = [_]Optional(Player){ .P1, .P2 };
-
-    /// TODO call on correct player
-    pub inline fn speedTie(action: chance.Action) []const Optional(Player) {
-        return if (@field(action, "speed_tie") == .None) &PLAYER_NONE else &PLAYERS;
-    }
-
-    pub const Range = struct { min: u6, max: u6 };
-    pub inline fn damage(action: chance.Action, parent: Optional(bool)) Range {
-        return if (parent == .false or @field(action, "damage") == 0)
-            .{ .min = 0, .max = 1 }
-        else
-            .{ .min = 1, .max = 40 };
-    }
-
-    pub inline fn coalesce(player: Player, roll: u6, summaries: *calc.Summaries) !u6 {
-        if (roll == 0) return roll;
-
-        const base = summaries.get(player).damage.base;
-        if (base == 0) return 39;
-
-        const r = 216 + @as(u8, roll);
-        // Closed form solution for max damage roll provided by Orion Taylor (orion#8038)!
-        return @intCast(u6, @min(255, r + ((254 - ((@as(u32, base) * r) % 255)) / base)) - 216);
-    }
-
-    const BOOL_NONE = [_]Optional(bool){.None};
-    const BOOLS = [_]Optional(bool){ .false, .true };
-
-    /// TODO
-    pub inline fn hit(action: chance.Action, parent: Optional(bool)) []const Optional(bool) {
-        if (parent == .true) return &BOOL_NONE;
-        return if (@field(action, "hit") == .None) &BOOL_NONE else &BOOLS;
-    }
-
-    /// TODO
-    pub inline fn secondaryChance(
-        action: chance.Action,
-        parent: Optional(bool),
-    ) []const Optional(bool) {
-        if (parent == .false) return &BOOL_NONE;
-        return if (@field(action, "secondary_chance") == .None) &BOOL_NONE else &BOOLS;
-    }
-
-    /// TODO
-    pub inline fn criticalHit(
-        action: chance.Action,
-        parent: Optional(bool),
-    ) []const Optional(bool) {
-        if (parent == .false) return &BOOL_NONE;
-        return if (@field(action, "critical_hit") == .None) &BOOL_NONE else &BOOLS;
-    }
-
-    /// TODO
-    pub inline fn confused(action: chance.Action) []const Optional(bool) {
-        return if (@field(action, "confused") == .None) &BOOL_NONE else &BOOLS;
-    }
-
-    /// TODO
-    pub inline fn paralyzed(action: chance.Action, parent: Optional(bool)) []const Optional(bool) {
-        if (parent == .true) return &BOOL_NONE;
-        return if (@field(action, "paralyzed") == .None) &BOOL_NONE else &BOOLS;
-    }
-
-    const SLOT_NONE = [_]u3{0};
-    // FIXME: depends on possible slots...
-    const SLOT = [_]u3{ 1, 2, 3, 4 };
-
-    /// TODO
-    pub inline fn moveSlot(action: chance.Action, parent: Optional(bool)) []const u3 {
-        if (parent == .false) return &SLOT_NONE;
-        return if (@field(action, "move_slot") == 0) &SLOT_NONE else &SLOT;
-    }
-
-    const DISTRIBUTION_NONE = [_]u3{0};
-    const DISTRIBUTION = [_]u3{ 2, 3, 4, 5 };
-
-    /// TODO
-    pub inline fn distribution(action: chance.Action, parent: Optional(bool)) []const u3 {
-        if (parent == .false) return &DISTRIBUTION_NONE;
-        return if (@field(action, "distribution") == 0) &DISTRIBUTION_NONE else &DISTRIBUTION;
-    }
-
-    // FIXME duration
 };
 
 test Rolls {
@@ -390,10 +396,10 @@ test Rolls {
     try expectEqual(Rolls.Range{ .min = 0, .max = 1 }, Rolls.damage(actions.p2, .false));
 
     var summaries = calc.Summaries{ .p1 = .{ .damage = .{ .base = 74, .final = 69 } } };
-    try expectEqual(@as(u6, 0), try Rolls.coalesce(.P1, 0, &summaries));
-    try expectEqual(@as(u6, 25), try Rolls.coalesce(.P1, 22, &summaries));
+    try expectEqual(@as(u8, 0), try Rolls.coalesce(.P1, 0, &summaries));
+    try expectEqual(@as(u8, 25), try Rolls.coalesce(.P1, 22, &summaries));
     summaries.p1.damage.final = 74;
-    try expectEqual(@as(u6, 1), try Rolls.coalesce(.P1, 1, &summaries));
+    try expectEqual(@as(u8, 1), try Rolls.coalesce(.P1, 1, &summaries));
 
     actions = chance.Actions{ .p2 = .{ .hit = .true } };
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.hit(actions.p1, .None));
@@ -430,12 +436,12 @@ test Rolls {
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.paralyzed(actions.p2, .true));
 
     actions = chance.Actions{ .p2 = .{ .move_slot = 3 } };
-    try expectEqualSlices(u3, &.{0}, Rolls.moveSlot(actions.p1, .None));
-    try expectEqualSlices(u3, &.{ 1, 2, 3, 4 }, Rolls.moveSlot(actions.p2, .None));
-    try expectEqualSlices(u3, &.{0}, Rolls.moveSlot(actions.p2, .false));
+    try expectEqualSlices(u4, &.{0}, Rolls.moveSlot(actions.p1, .None));
+    try expectEqualSlices(u4, &.{ 1, 2, 3, 4 }, Rolls.moveSlot(actions.p2, .None));
+    try expectEqualSlices(u4, &.{0}, Rolls.moveSlot(actions.p2, .false));
 
     actions = chance.Actions{ .p2 = .{ .distribution = 3 } };
-    try expectEqualSlices(u3, &.{0}, Rolls.distribution(actions.p1, .None));
-    try expectEqualSlices(u3, &.{ 2, 3, 4, 5 }, Rolls.distribution(actions.p2, .None));
-    try expectEqualSlices(u3, &.{0}, Rolls.distribution(actions.p2, .false));
+    try expectEqualSlices(u4, &.{0}, Rolls.distribution(actions.p1, .None));
+    try expectEqualSlices(u4, &.{ 2, 3, 4, 5 }, Rolls.distribution(actions.p2, .None));
+    try expectEqualSlices(u4, &.{0}, Rolls.distribution(actions.p2, .false));
 }

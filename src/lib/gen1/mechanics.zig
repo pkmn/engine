@@ -521,11 +521,15 @@ fn beforeMove(
     var volatiles = &active.volatiles;
 
     if (Status.is(stored.status, .SLP)) {
-        const status = stored.status;
+        const before = stored.status;
         // Even if the EXT bit is set this will still correctly modify the sleep duration
         stored.status -= 1;
-        if (Status.duration(stored.status) == 0) {
-            try log.curestatus(ident, status, .Message);
+
+        const duration = Status.duration(stored.status);
+        // FIXME try options.chance.sleep(player, duration);
+
+        if (duration == 0) {
+            try log.curestatus(ident, before, .Message);
             stored.status = 0; // clears EXT if present
         } else {
             try log.cant(ident, .Sleep);
@@ -687,7 +691,7 @@ fn beforeMove(
         assert(volatiles.attacks > 0);
         assert(from != null);
         volatiles.attacks -= 1;
-        if (!showdown and handleThrashing(battle, active)) {
+        if (!showdown and handleThrashing(battle, active, player, options)) {
             try log.start(battle.active(player), .ConfusionSilent);
         }
         try log.move(ident, side.last_selected_move, battle.active(player.foe()), from);
@@ -695,7 +699,7 @@ fn beforeMove(
             // This shouldn't actually set last_used_move, but Pokémon Showdown sets last
             // used in useMove and doesn't have the notion of skipping canMove semantics
             side.last_used_move = side.last_selected_move;
-            if (handleThrashing(battle, active)) {
+            if (handleThrashing(battle, active, player, options)) {
                 try log.start(battle.active(player), .ConfusionSilent);
             }
         }
@@ -773,7 +777,7 @@ fn canMove(
     }
 
     if (move.effect == .Thrashing) {
-        Effects.thrashing(battle, player);
+        Effects.thrashing(battle, player, options);
     } else if (!showdown and move.effect == .Binding) {
         // Pokémon Showdown handles this after hit/miss checks and damage calculation
         try Effects.binding(battle, player, false, options);
@@ -1676,14 +1680,14 @@ inline fn buildRage(battle: anytype, who: Player, options: anytype) !void {
     }
 }
 
-fn handleThrashing(battle: anytype, active: *ActivePokemon) bool {
+fn handleThrashing(battle: anytype, active: *ActivePokemon, player: Player, options: anytype) bool {
     var volatiles = &active.volatiles;
     assert(volatiles.Thrashing);
     if (volatiles.attacks > 0) return false;
 
     volatiles.Thrashing = false;
     volatiles.Confusion = true;
-    volatiles.confusion = Rolls.confusionDuration(battle);
+    volatiles.confusion = Rolls.confusionDuration(battle, player, options);
     return true;
 }
 
@@ -1777,7 +1781,7 @@ pub const Effects = struct {
         side.active.volatiles.Bide = true;
         assert(!side.active.volatiles.Thrashing and !side.active.volatiles.Rage);
         side.active.volatiles.state = 0;
-        side.active.volatiles.attacks = Rolls.attackingDuration(battle);
+        side.active.volatiles.attacks = Rolls.attackingDuration(battle, player, options);
 
         try options.log.start(battle.active(player), .Bide);
     }
@@ -1850,7 +1854,7 @@ pub const Effects = struct {
 
         if (foe.active.volatiles.Confusion) return;
         foe.active.volatiles.Confusion = true;
-        foe.active.volatiles.confusion = Rolls.confusionDuration(battle);
+        foe.active.volatiles.confusion = Rolls.confusionDuration(battle, player, options);
 
         try options.log.start(battle.active(player.foe()), .Confusion);
     }
@@ -1907,7 +1911,7 @@ pub const Effects = struct {
 
         volatiles.disabled_move =
             @intCast(u3, try Rolls.moveSlot(battle, player, &foe.active.moves, n, options));
-        volatiles.disabled_duration = Rolls.disableDuration(battle);
+        volatiles.disabled_duration = Rolls.disableDuration(battle, player, options);
 
         const id = foe.active.move(volatiles.disabled_move).id;
         try options.log.startEffect(foe_ident, .Disable, id);
@@ -2148,8 +2152,10 @@ pub const Effects = struct {
         assert(!side.active.volatiles.MultiHit);
         side.active.volatiles.MultiHit = true;
 
-        side.active.volatiles.attacks =
-            if (move.effect == .MultiHit) try Rolls.distribution(battle, player, options) else 2;
+        side.active.volatiles.attacks = if (move.effect == .MultiHit)
+            try Rolls.distribution(battle, .MultiHit, player, options)
+        else
+            2;
     }
 
     fn paralyze(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
@@ -2325,7 +2331,7 @@ pub const Effects = struct {
         }
         foe.active.volatiles.Recharging = false;
 
-        foe_stored.status = Status.slp(Rolls.sleepDuration(battle));
+        foe_stored.status = Status.slp(Rolls.sleepDuration(battle, player, options));
         const last = battle.side(player).last_selected_move;
         try options.log.statusFrom(foe_ident, foe_stored.status, last);
     }
@@ -2374,13 +2380,13 @@ pub const Effects = struct {
         battle.last_damage = 0;
     }
 
-    fn thrashing(battle: anytype, player: Player) void {
+    fn thrashing(battle: anytype, player: Player, options: anytype) void {
         var volatiles = &battle.side(player).active.volatiles;
         assert(!volatiles.Thrashing);
         assert(!volatiles.Bide);
 
         volatiles.Thrashing = true;
-        volatiles.attacks = Rolls.attackingDuration(battle);
+        volatiles.attacks = Rolls.attackingDuration(battle, player, options);
     }
 
     fn transform(battle: anytype, player: Player, options: anytype) !void {
@@ -2424,7 +2430,8 @@ pub const Effects = struct {
             foe.active.volatiles.Recharging = false;
         } else if (foe.stored().hp == 0) return if (!rewrap) battle.rng.advance(1);
 
-        side.active.volatiles.attacks = try Rolls.distribution(battle, player, options) - 1;
+        side.active.volatiles.attacks =
+            try Rolls.distribution(battle, .Binding, player, options) - 1;
     }
 
     fn boost(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
@@ -2867,36 +2874,67 @@ pub const Rolls = struct {
         return power;
     }
 
-    // FIXME
-    inline fn sleepDuration(battle: anytype) u3 {
-        if (showdown) return @intCast(u3, battle.rng.range(u8, 1, 8));
-        while (true) {
-            const r = battle.rng.next() & 7;
-            if (r != 0) return @intCast(u3, r);
-        }
+    inline fn sleepDuration(battle: anytype, player: Player, options: anytype) u3 {
+        const duration = if (options.calc.overridden(player, "duration")) |val|
+            @intCast(u3, val)
+        else if (showdown)
+            @intCast(u3, battle.rng.range(u8, 1, 8))
+        else duration: {
+            while (true) {
+                const r = battle.rng.next() & 7;
+                if (r != 0) break :duration @intCast(u3, r);
+            }
+        };
+
+        options.chance.duration("sleep", player, duration);
+        return duration;
     }
 
-    // FIXME
-    inline fn disableDuration(battle: anytype) u4 {
-        if (showdown) return @intCast(u4, battle.rng.range(u8, 1, 9));
-        return @intCast(u4, (battle.rng.next() & 7) + 1);
-    }
-
-    // FIXME
-    inline fn confusionDuration(battle: anytype) u3 {
-        if (showdown) return @intCast(u3, battle.rng.range(u8, 2, 6));
-        return @intCast(u3, (battle.rng.next() & 3) + 2);
-    }
-
-    // FIXME
-    inline fn attackingDuration(battle: anytype) u3 {
-        if (showdown) return @intCast(u3, battle.rng.range(u4, 2, 4));
-        return @intCast(u3, (battle.rng.next() & 1) + 2);
-    }
-
-    inline fn distribution(battle: anytype, player: Player, options: anytype) !u3 {
-        const n = if (options.calc.overridden(player, "distribution")) |val|
+    inline fn disableDuration(battle: anytype, player: Player, options: anytype) u4 {
+        const duration = if (options.calc.overridden(player, "duration")) |val|
             val
+        else if (showdown)
+            @intCast(u4, battle.rng.range(u8, 1, 9))
+        else
+            @intCast(u4, (battle.rng.next() & 7) + 1);
+
+        options.chance.duration("disable", player, duration);
+        return duration;
+    }
+
+    inline fn confusionDuration(battle: anytype, player: Player, options: anytype) u3 {
+        const duration = if (options.calc.overridden(player, "duration")) |val|
+            @intCast(u3, val)
+        else if (showdown)
+            @intCast(u3, battle.rng.range(u8, 2, 6))
+        else
+            @intCast(u3, (battle.rng.next() & 3) + 2);
+
+        options.chance.duration("confusion", player, duration);
+        return duration;
+    }
+
+    inline fn attackingDuration(battle: anytype, player: Player, options: anytype) u3 {
+        const duration = if (options.calc.overridden(player, "duration")) |val|
+            @intCast(u3, val)
+        else if (showdown)
+            @intCast(u3, battle.rng.range(u4, 2, 4))
+        else
+            @intCast(u3, (battle.rng.next() & 1) + 2);
+
+        options.chance.duration("attacking", player, duration);
+        return duration;
+    }
+
+    inline fn distribution(
+        battle: anytype,
+        comptime effect: Move.Effect,
+        player: Player,
+        options: anytype,
+    ) !u3 {
+        const roll = if (effect == .Binding) "duration" else "distribution";
+        const n = if (options.calc.overridden(player, roll)) |val|
+            @intCast(u3, val)
         else if (showdown)
             DISTRIBUTION[battle.rng.range(u8, 0, DISTRIBUTION.len)]
         else n: {
@@ -2904,7 +2942,11 @@ pub const Rolls = struct {
             break :n @intCast(u3, (if (r < 2) r else battle.rng.next() & 3) + 2);
         };
 
-        try options.chance.distribution(player, n);
+        if (effect == .Binding) {
+            options.chance.duration("binding", player, n);
+        } else {
+            try options.chance.distribution(player, n);
+        }
         return n;
     }
 
