@@ -2,6 +2,7 @@ const std = @import("std");
 
 const assert = std.debug.assert;
 const expect = std.testing.expect;
+const expectEqual = std.testing.expectEqual;
 
 const options = @import("../common/options.zig");
 
@@ -30,6 +31,11 @@ pub const Actions = extern struct {
     /// Returns the `Action` for the given `player`.
     pub inline fn get(self: *Actions, player: Player) *Action {
         return if (player == .P1) &self.p1 else &self.p2;
+    }
+
+    pub inline fn reset(self: *Actions) void {
+        self.p1.reset();
+        self.p2.reset();
     }
 
     pub fn matches(a: Actions, b: Actions) bool {
@@ -88,28 +94,27 @@ pub const Action = packed struct {
 
     /// If not None, the value to return for Rolls.paralyzed.
     paralyzed: Optional(bool) = .None,
+    /// If not None, the value to return for Rolls.confused.
+    confused: Optional(bool) = .None,
+    /// If not 0, the value to be returned by  Rolls.distribution in the case of binding
+    /// moves or Rolls.{sleepDuration,disableDuration,confusionDuration,attackingDuration}.
+    duration: u4 = 0,
+
     /// The number of turns a Pokémon has been observed to be sleeping.
     sleep: u3 = 0,
     /// The number of turns a Pokémon has been observed to be confused.
     confusion: u3 = 0,
-
-    /// If not None, the value to return for Rolls.confused.
-    confused: Optional(bool) = .None,
-    /// The number of turns a Pokémon has been observed to be attacking with Bide/Thrashing moves.
+    /// The number of turns a Pokémon has been observed to be disabled.
+    disable: u4 = 0,
+    /// The number of turns a Pokémon has been observed to be attacking.
     attacking: u3 = 0,
     /// The number of turns a Pokémon has been observed to be binding.
     binding: u3 = 0,
 
-    /// If not 0, the value to be returned by  Rolls.distribution in the case of binding
-    /// moves or Rolls.{sleepDuration,disableDuration,confusionDuration,attackingDuration}.
-    duration: u4 = 0,
-    /// If not 0, the value (2-5) to return for Rolls.distribution.
-    distribution: u4 = 0,
-
     /// If not 0, the move slot (1-4) to return in Rolls.moveSlot.
     move_slot: u4 = 0,
-    /// The number of turns a Pokémon has been observed to be disabled.
-    disable: u4 = 0,
+    /// If not 0, the value (2-5) to return for Rolls.distribution.
+    distribution: u4 = 0,
 
     /// If not 0, psywave - 1 should be returned as the damage roll for Rolls.psywave.
     psywave: u8 = 0,
@@ -119,6 +124,10 @@ pub const Action = packed struct {
 
     comptime {
         assert(@sizeOf(Action) == 8);
+    }
+
+    pub inline fn reset(self: *Action) void {
+        self.* = @bitCast(Action, @bitCast(u64, self.*) & 0x000000FFFF000000);
     }
 
     pub fn format(
@@ -156,6 +165,13 @@ pub const Action = packed struct {
         try writer.writeByte(')');
     }
 };
+
+test Action {
+    var a = Action{ .hit = .true, .sleep = 3, .damage = 5 };
+    a.reset();
+
+    try expectEqual(Action{ .hit = .None, .sleep = 3, .damage = 0 }, a);
+}
 
 /// TODO
 pub fn Chance(comptime Rational: type) type {
@@ -200,8 +216,7 @@ pub fn Chance(comptime Rational: type) type {
 
         pub fn reset(self: *Self) void {
             self.probability.reset();
-            // FIXME: don't clear durations
-            self.actions = .{};
+            self.actions.reset();
             self.pending = .{};
         }
 

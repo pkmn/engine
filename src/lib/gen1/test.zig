@@ -9864,7 +9864,7 @@ fn Test(comptime rolls: anytype) type {
         pub fn update(self: *Self, c1: Choice, c2: Choice) !Result {
             if (self.battle.actual.turn == 0) try self.start();
 
-            self.options.chance = .{ .probability = .{} };
+            self.options.chance.reset();
             const result = if (pkmn.options.chance and pkmn.options.calc) result: {
                 // FIXME: uncomment once all RNG is accounted for
                 // const copy = self.battle.actual;
