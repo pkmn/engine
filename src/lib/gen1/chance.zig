@@ -107,7 +107,7 @@ pub const Action = packed struct {
     paralyzed: Optional(bool) = .None,
     /// If not None, the value to return for Rolls.confused.
     confused: Optional(bool) = .None,
-    /// If not 0, the value to be returned by  Rolls.distribution in the case of binding
+    /// If not 0, the value to be returned by Rolls.distribution in the case of binding
     /// moves or Rolls.{sleepDuration,disableDuration,confusionDuration,attackingDuration}.
     duration: u4 = 0,
 
@@ -124,8 +124,8 @@ pub const Action = packed struct {
 
     /// If not 0, the move slot (1-4) to return in Rolls.moveSlot.
     move_slot: u4 = 0,
-    /// If not 0, the value (2-5) to return for Rolls.distribution.
-    distribution: u4 = 0,
+    /// If not 0, the value (2-5) to return for Rolls.distribution for multi hit.
+    multi_hit: u4 = 0,
 
     /// If not 0, psywave - 1 should be returned as the damage roll for Rolls.psywave.
     psywave: u8 = 0,
@@ -342,11 +342,11 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.get(player).move_slot = @intCast(u3, slot);
         }
 
-        pub fn distribution(self: *Self, player: Player, n: u3) Error!void {
+        pub fn multiHit(self: *Self, player: Player, n: u3) Error!void {
             if (!enabled) return;
 
             try self.probability.update(@as(u8, if (n > 3) 1 else 3), 8);
-            self.actions.get(player).distribution = n;
+            self.actions.get(player).multi_hit = n;
         }
 
         pub fn duration(self: *Self, comptime field: []const u8, player: Player, turns: u4) void {
@@ -465,7 +465,7 @@ const Null = struct {
         _ = .{ self, player, slot, ms, n };
     }
 
-    pub fn distribution(self: Null, player: Player, n: u3) Error!void {
+    pub fn multiHit(self: Null, player: Player, n: u3) Error!void {
         _ = .{ self, player, n };
     }
 

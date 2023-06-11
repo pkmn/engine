@@ -351,13 +351,13 @@ pub const Rolls = struct {
         return if (@field(action, "move_slot") == 0) &SLOT_NONE else &SLOT;
     }
 
-    const DISTRIBUTION_NONE = [_]u4{0};
-    const DISTRIBUTION = [_]u4{ 2, 3, 4, 5 };
+    const MULTI_NONE = [_]u4{0};
+    const MULTI = [_]u4{ 2, 3, 4, 5 };
 
     /// TODO
-    pub inline fn distribution(action: chance.Action, parent: Optional(bool)) []const u4 {
-        if (parent == .false) return &DISTRIBUTION_NONE;
-        return if (@field(action, "distribution") == 0) &DISTRIBUTION_NONE else &DISTRIBUTION;
+    pub inline fn multiHit(action: chance.Action, parent: Optional(bool)) []const u4 {
+        if (parent == .false) return &MULTI_NONE;
+        return if (@field(action, "multi_hit") == 0) &MULTI_NONE else &MULTI;
     }
 
     const PSYWAVE_NONE = [_]u8{0};
@@ -471,10 +471,10 @@ test Rolls {
     try expectEqualSlices(u4, &.{ 1, 2, 3, 4 }, Rolls.moveSlot(actions.p2, .None));
     try expectEqualSlices(u4, &.{0}, Rolls.moveSlot(actions.p2, .false));
 
-    actions = chance.Actions{ .p2 = .{ .distribution = 3 } };
-    try expectEqualSlices(u4, &.{0}, Rolls.distribution(actions.p1, .None));
-    try expectEqualSlices(u4, &.{ 2, 3, 4, 5 }, Rolls.distribution(actions.p2, .None));
-    try expectEqualSlices(u4, &.{0}, Rolls.distribution(actions.p2, .false));
+    actions = chance.Actions{ .p2 = .{ .multi_hit = 3 } };
+    try expectEqualSlices(u4, &.{0}, Rolls.multiHit(actions.p1, .None));
+    try expectEqualSlices(u4, &.{ 2, 3, 4, 5 }, Rolls.multiHit(actions.p2, .None));
+    try expectEqualSlices(u4, &.{0}, Rolls.multiHit(actions.p2, .false));
 
     actions = chance.Actions{ .p2 = .{ .metronome = .Surf } };
     try expectEqualSlices(Move, &.{.None}, Rolls.metronome(actions.p1));

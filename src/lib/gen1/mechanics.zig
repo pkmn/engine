@@ -2932,7 +2932,7 @@ pub const Rolls = struct {
         player: Player,
         options: anytype,
     ) !u3 {
-        const roll = if (effect == .Binding) "duration" else "distribution";
+        const roll = if (effect == .Binding) "duration" else "multi_hit";
         const n = if (options.calc.overridden(player, roll)) |val|
             @intCast(u3, val)
         else if (showdown)
@@ -2945,7 +2945,7 @@ pub const Rolls = struct {
         if (effect == .Binding) {
             options.chance.duration("binding", player, n);
         } else {
-            try options.chance.distribution(player, n);
+            try options.chance.multiHit(player, n);
         }
         return n;
     }
