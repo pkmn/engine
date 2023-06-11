@@ -10,18 +10,27 @@ pub fn print(value: anytype) void {
 
     nosuspend {
         stderr.writeAll("\x1b[41m") catch return;
-        switch (@typeInfo(@TypeOf(value))) {
-            .Struct => |info| {
-                if (info.is_tuple) {
-                    inline for (info.fields, 0..) |f, i| {
-                        inspect(@field(value, f.name));
-                        if (i < info.fields.len - 1) stderr.writeAll(" ") catch return;
+        if (@TypeOf(@src()) == @TypeOf(value)) {
+            stderr.print("{s} ({s}:{d}:{d})", .{
+                value.fn_name,
+                value.file,
+                value.line,
+                value.column,
+            }) catch return;
+        } else {
+            switch (@typeInfo(@TypeOf(value))) {
+                .Struct => |info| {
+                    if (info.is_tuple) {
+                        inline for (info.fields, 0..) |f, i| {
+                            inspect(@field(value, f.name));
+                            if (i < info.fields.len - 1) stderr.writeAll(" ") catch return;
+                        }
+                    } else {
+                        inspect(value);
                     }
-                } else {
-                    inspect(value);
-                }
-            },
-            else => inspect(value),
+                },
+                else => inspect(value),
+            }
         }
         stderr.writeAll("\x1b[K\x1b[0m\n") catch return;
     }
