@@ -202,12 +202,6 @@ pub fn transitions(
                 if (opts.chance.actions.matches(template)) {
                     if (!opts.chance.actions.eql(a)) continue;
 
-                    // FIXME
-                    // if (!std.meta.eql(b.rng, battle.rng)) {
-                    //     print("{} != {} (seed: {d})\n", .{ b.rng, battle.rng, seed });
-                    //     return error.TestExpectedEqual;
-                    // }
-
                     for (p1_dmg.min..p1_max + 1) |p1d| {
                         for (p2_dmg.min..p2_max + 1) |p2d| {
                             var acts = opts.chance.actions;
