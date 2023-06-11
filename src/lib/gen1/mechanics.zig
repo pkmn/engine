@@ -526,7 +526,9 @@ fn beforeMove(
         if (options.calc.overridden(player, "sleep") == null) stored.status -= 1;
 
         const duration = Status.duration(stored.status);
-        try options.chance.sleep(player, duration);
+        if (!Status.is(stored.status, .EXT)) {
+            try options.chance.sleep(player, duration);
+        }
 
         if (duration == 0) {
             try log.curestatus(ident, before, .Message);
