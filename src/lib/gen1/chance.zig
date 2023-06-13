@@ -433,7 +433,7 @@ pub fn Chance(comptime Rational: type) type {
                 action.confusion = 0;
             } else {
                 assert(n >= 1 and n < 5);
-                if (n > 2) try self.probability.update(6 - @as(u4, n) - 1, 6 - @as(u4, n));
+                if (n > 1) try self.probability.update(6 - @as(u4, n) - 1, 6 - @as(u4, n));
                 action.confusion += 1;
             }
         }

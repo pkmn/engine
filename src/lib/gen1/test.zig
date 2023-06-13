@@ -2129,7 +2129,6 @@ test "Sleep effect" {
     try t.verify();
 }
 
-// FIXME
 // Move.{Supersonic,ConfuseRay}
 test "Confusion effect" {
     // Causes the target to become confused.
@@ -2156,6 +2155,7 @@ test "Confusion effect" {
 
     // Confusion is blocked by Substitute
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.expectProbability(1, 1);
     try expect(!t.actual.p2.active.volatiles.Confusion);
 
     try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
@@ -2165,6 +2165,7 @@ test "Confusion effect" {
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(2), move(1)));
+    try t.expectProbability(255, 256);
 
     try t.log.expected.move(P2.ident(1), Move.Agility, P2.ident(1), null);
     try t.log.expected.boost(P2.ident(1), .Speed, 2);
@@ -2173,6 +2174,7 @@ test "Confusion effect" {
     try t.log.expected.turn(4);
 
     try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    try t.expectProbability(255, 256);
     try expect(t.actual.p2.active.volatiles.Confusion);
 
     try t.log.expected.activate(P2.ident(1), .Confusion);
@@ -2184,6 +2186,7 @@ test "Confusion effect" {
 
     // Can't confuse a Pokémon that already has a confusion
     try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    try t.expectProbability(255, 512); // (1/2)
 
     try t.log.expected.activate(P2.ident(1), .Confusion);
     try t.log.expected.move(P2.ident(1), Move.Agility, P2.ident(1), null);
@@ -2195,6 +2198,7 @@ test "Confusion effect" {
 
     // Pokémon can still successfully move despite being confused
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    try t.expectProbability(765, 2048); // (3/4) * (1/2) * (255/256)
 
     try t.log.expected.end(P2.ident(1), .Confusion);
     try t.log.expected.move(P2.ident(1), Move.Agility, P2.ident(1), null);
@@ -2206,6 +2210,7 @@ test "Confusion effect" {
 
     // Pokémon snap out of confusion
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    try t.expectProbability(85, 256); // (1/3) * (255/256)
     try expect(!t.actual.p2.active.volatiles.Confusion);
 
     try t.verify();
@@ -2249,6 +2254,7 @@ test "ConfusionChance effect" {
 
     // ConfusionChance works through substitute if it doesn't break
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.expectProbability(448375, 218103808); // (255/256) * (211/256) * (1/39) * (25/256)
     try expect(t.actual.p2.active.volatiles.Confusion);
 
     try t.log.expected.activate(P2.ident(1), .Confusion);
@@ -2258,6 +2264,7 @@ test "ConfusionChance effect" {
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
+    try t.expectProbability(1, 2);
 
     try t.log.expected.end(P2.ident(1), .Confusion);
     try t.log.expected.move(P2.ident(1), Move.Substitute, P2.ident(1), null);
@@ -2268,6 +2275,7 @@ test "ConfusionChance effect" {
 
     // Can't confuse after breaking the substitute
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.expectProbability(17935, 3407872); // (1/4) * (255/256) * (211/256) * (1/39)
     try expect(!t.actual.p2.active.volatiles.Confusion);
 
     try t.log.expected.move(P2.ident(1), Move.Agility, P2.ident(1), null);
@@ -2278,6 +2286,7 @@ test "ConfusionChance effect" {
     try t.log.expected.turn(5);
 
     try expectEqual(Result.Default, try t.update(move(1), move(2)));
+    try t.expectProbability(4142985, 218103808); // (255/256) * (211/256) * (1/39) * (231/256)
     try expect(!t.actual.p2.active.volatiles.Confusion);
 
     try t.verify();
@@ -9787,73 +9796,88 @@ test "transitions" {
 }
 
 test "TODO" {
-    const SLP = MAX;
+    const CFZ = 3;
+    const CFZ_CAN = 0;
 
-    var t = Test(
-    // zig fmt: off
-        if (showdown) .{
-            HIT, SLP,
-        } else .{
-            ~CRIT, HIT, SLP,
-        }
-    // zig fmt: on
-    ).init(
-        &.{.{ .species = .Parasect, .moves = &.{ .Spore, .Teleport } }},
+    var t = Test(.{ HIT, CFZ, CFZ_CAN, CFZ_CAN, CFZ_CAN, CFZ_CAN }).init(
+        &.{.{ .species = .Parasect, .moves = &.{ .ConfuseRay, .Teleport } }},
         &.{.{ .species = .Geodude, .moves = &.{.Teleport} }},
     );
     defer t.deinit();
 
-    try t.log.expected.move(P1.ident(1), Move.Spore, P2.ident(1), null);
-    t.expected.p2.get(1).status = Status.slp(7);
-    try t.log.expected.statusFrom(P2.ident(1), t.expected.p2.get(1).status, Move.Spore);
-    try t.log.expected.cant(P2.ident(1), .Sleep);
+    try t.log.expected.move(P1.ident(1), Move.ConfuseRay, P2.ident(1), null);
+    try t.log.expected.start(P2.ident(1), .Confusion);
+    try t.log.expected.activate(P2.ident(1), .Confusion);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try t.expectProbability(765, 896); // (255/256) * (6/7)
+    // // try t.expectProbability(765, 896); // (255/256) * (6/7)
 
     try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
-    t.expected.p2.get(1).status -= 1;
-    try t.log.expected.cant(P2.ident(1), .Sleep);
+    try t.log.expected.activate(P2.ident(1), .Confusion);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
     try t.log.expected.turn(3);
-    try expectEqual(Result.Default, try t.update(move(2), move(0)));
-    try t.expectProbability(5, 6);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
 
     try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
-    t.expected.p2.get(1).status -= 1;
-    try t.log.expected.cant(P2.ident(1), .Sleep);
+    try t.log.expected.activate(P2.ident(1), .Confusion);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
     try t.log.expected.turn(4);
-    try expectEqual(Result.Default, try t.update(move(2), move(0)));
-    try t.expectProbability(4, 5);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
 
     try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
-    t.expected.p2.get(1).status -= 1;
-    try t.log.expected.cant(P2.ident(1), .Sleep);
+    try t.log.expected.activate(P2.ident(1), .Confusion);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
     try t.log.expected.turn(5);
-    try expectEqual(Result.Default, try t.update(move(2), move(0)));
-    try t.expectProbability(3, 4);
+
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
 
     try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
-    t.expected.p2.get(1).status -= 1;
-    try t.log.expected.cant(P2.ident(1), .Sleep);
+    try t.log.expected.end(P2.ident(1), .Confusion);
+    try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
     try t.log.expected.turn(6);
-    try expectEqual(Result.Default, try t.update(move(2), move(0)));
-    try t.expectProbability(2, 3);
 
-    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
-    t.expected.p2.get(1).status -= 1;
-    try t.log.expected.cant(P2.ident(1), .Sleep);
-    try t.log.expected.turn(7);
-    try expectEqual(Result.Default, try t.update(move(2), move(0)));
-    try t.expectProbability(1, 2);
-
-    try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
-    t.expected.p2.get(1).status -= 1;
-    try t.log.expected.curestatus(P2.ident(1), t.expected.p2.get(1).status, .Message);
-    try t.log.expected.turn(8);
-
-    try expectEqual(Result.Default, try t.update(move(2), move(0)));
+    try expectEqual(Result.Default, try t.update(move(2), move(1)));
     try t.expectProbability(1, 1);
+
+    // try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    // t.expected.p2.get(1).status -= 1;
+    // try t.log.expected.cant(P2.ident(1), .Sleep);
+    // try t.log.expected.turn(4);
+    // try expectEqual(Result.Default, try t.update(move(2), move(0)));
+    // try t.expectProbability(4, 5);
+
+    // try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    // t.expected.p2.get(1).status -= 1;
+    // try t.log.expected.cant(P2.ident(1), .Sleep);
+    // try t.log.expected.turn(5);
+    // try expectEqual(Result.Default, try t.update(move(2), move(0)));
+    // try t.expectProbability(3, 4);
+
+    // try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    // t.expected.p2.get(1).status -= 1;
+    // try t.log.expected.cant(P2.ident(1), .Sleep);
+    // try t.log.expected.turn(6);
+    // try expectEqual(Result.Default, try t.update(move(2), move(0)));
+    // try t.expectProbability(2, 3);
+
+    // try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    // t.expected.p2.get(1).status -= 1;
+    // try t.log.expected.cant(P2.ident(1), .Sleep);
+    // try t.log.expected.turn(7);
+    // try expectEqual(Result.Default, try t.update(move(2), move(0)));
+    // try t.expectProbability(1, 2);
+
+    // try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    // t.expected.p2.get(1).status -= 1;
+    // try t.log.expected.curestatus(P2.ident(1), t.expected.p2.get(1).status, .Message);
+    // try t.log.expected.turn(8);
+
+    // try expectEqual(Result.Default, try t.update(move(2), move(0)));
+    // try t.expectProbability(1, 1);
 
     try t.verify();
 }

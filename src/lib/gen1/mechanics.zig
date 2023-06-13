@@ -1880,8 +1880,8 @@ pub const Effects = struct {
                     return;
                 }
             }
+            try options.chance.commit(player, true);
         }
-        try options.chance.commit(player, true);
 
         if (foe.active.volatiles.Confusion) return;
         foe.active.volatiles.Confusion = true;
