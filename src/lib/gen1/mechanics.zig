@@ -569,12 +569,10 @@ fn beforeMove(
     }
 
     if (volatiles.disabled_duration > 0) {
-        volatiles.disabled_duration -= 1;
-
         if (options.calc.overridden(player, "disable") == null) {
             volatiles.disabled_duration -= 1;
         }
-        try options.chance.disable(player, volatiles.confusion);
+        try options.chance.disable(player, volatiles.disabled_duration);
 
         if (volatiles.disabled_duration == 0) {
             volatiles.disabled_move = 0;
@@ -1912,8 +1910,10 @@ pub const Effects = struct {
         const foe_ident = battle.active(player.foe());
 
         // Pokémon Showdown handles hit/miss earlier in doMove
-        if (!showdown and !try checkHit(battle, player, move, options)) return null;
-        try options.chance.commit(player, true);
+        if (!showdown) {
+            if (!try checkHit(battle, player, move, options)) return null;
+            try options.chance.commit(player, true);
+        }
 
         if (volatiles.disabled_move != 0) {
             try options.log.fail(foe_ident, .None);
@@ -2919,7 +2919,7 @@ pub const Rolls = struct {
             }
         };
 
-        options.chance.duration("sleep", player, duration);
+        options.chance.duration("sleep", player, duration, false);
         return duration;
     }
 
@@ -2931,7 +2931,7 @@ pub const Rolls = struct {
         else
             @intCast(u4, (battle.rng.next() & 7) + 1);
 
-        options.chance.duration("disable", player, duration);
+        options.chance.duration("disable", player, duration, false);
         return duration;
     }
 
@@ -2943,7 +2943,7 @@ pub const Rolls = struct {
         else
             @intCast(u3, (battle.rng.next() & 3) + 2);
 
-        options.chance.duration("confusion", player, duration);
+        options.chance.duration("confusion", player, duration, false);
         return duration;
     }
 
@@ -2955,7 +2955,7 @@ pub const Rolls = struct {
         else
             @intCast(u3, (battle.rng.next() & 1) + 2);
 
-        options.chance.duration("attacking", player, duration);
+        options.chance.duration("attacking", player, duration, false);
         return duration;
     }
 
@@ -2976,7 +2976,7 @@ pub const Rolls = struct {
         };
 
         if (effect == .Binding) {
-            options.chance.duration("binding", player, n);
+            options.chance.duration("binding", player, n, true);
         } else {
             try options.chance.multiHit(player, n);
         }

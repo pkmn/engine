@@ -295,6 +295,8 @@ pub fn Chance(comptime Rational: type) type {
             action.disable = 0;
             action.attacking = 0;
             action.binding = 0;
+
+            self.actions.get(player.foe()).binding = 0;
         }
 
         pub fn speedTie(self: *Self, p1: bool) Error!void {
@@ -382,12 +384,20 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.get(player).multi_hit = n;
         }
 
-        pub fn duration(self: *Self, comptime field: []const u8, player: Player, turns: u4) void {
+        pub fn duration(
+            self: *Self,
+            comptime field: []const u8,
+            player: Player,
+            turns: u4,
+            bind: bool,
+        ) void {
             if (!enabled) return;
 
             self.actions.get(player).duration = if (options.key) 1 else turns;
-            assert(@field(self.actions.get(player.foe()), field) == 0);
-            @field(self.actions.get(player.foe()), field) = 1;
+
+            var action = self.actions.get(if (bind) player else player.foe());
+            assert(@field(action, field) == 0);
+            @field(action, field) = 1;
         }
 
         pub fn sleep(self: *Self, player: Player, turns: u4) Error!void {
@@ -448,8 +458,21 @@ pub fn Chance(comptime Rational: type) type {
         pub fn binding(self: *Self, player: Player, turns: u4) Error!void {
             if (!enabled) return;
 
-            // FIXME
-            _ = .{ self, player, turns };
+            var action = self.actions.get(player);
+            const n = action.binding;
+
+            const p: u4 = if (n < 3) 3 else 1;
+            const q: u4 = if (n < 3) 8 - ((n - 1) * p) else 2;
+
+            if (turns == 0) {
+                assert(n >= 1 and n <= 4);
+                if (n != 4) try self.probability.update(p, q);
+                action.binding = 0;
+            } else {
+                assert(n >= 1 and n < 4);
+                try self.probability.update(q - p, q);
+                action.binding += 1;
+            }
         }
 
         pub fn psywave(self: *Self, player: Player, power: u8, max: u8) Error!void {
@@ -525,8 +548,14 @@ const Null = struct {
         _ = .{ self, player, n };
     }
 
-    pub fn duration(self: Null, comptime field: []const u8, player: Player, turns: u4) void {
-        _ = .{ self, field, player, turns };
+    pub fn duration(
+        self: Null,
+        comptime field: []const u8,
+        player: Player,
+        turns: u4,
+        bind: bool,
+    ) void {
+        _ = .{ self, field, player, turns, bind };
     }
 
     pub fn sleep(self: Null, player: Player, turns: u4) Error!void {
