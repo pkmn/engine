@@ -1,6 +1,7 @@
 const std = @import("std");
 
 const assert = std.debug.assert;
+
 const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 
@@ -20,9 +21,9 @@ const showdown = options.showdown;
 /// were observed during a battle `update`. This can additionally be provided as input to the
 /// `update` call to override the normal behavior of the RNG in order to force specific outcomes.
 pub const Actions = extern struct {
-    /// Information about the RNG activity for Player 1
+    /// Information about the RNG activity for Player 1.
     p1: Action = .{},
-    /// Information about the RNG activity for Player 2
+    /// Information about the RNG activity for Player 2.
     p2: Action = .{},
 
     comptime {
@@ -34,15 +35,20 @@ pub const Actions = extern struct {
         return if (player == .P1) &self.p1 else &self.p2;
     }
 
+    /// Perform a reset by clearing fields which should not persist across updates.
     pub inline fn reset(self: *Actions) void {
         self.p1.reset();
         self.p2.reset();
     }
 
+    /// Returns true if `a` is equal to `b`.
     pub inline fn eql(a: Actions, b: Actions) bool {
         return @bitCast(u128, a) == @bitCast(u128, b);
     }
 
+    /// Returns true if `a` has the same "shape" as `b`, where `Actions` are defined to have the
+    /// same shape if they have the same fields set (though those fields need not necessarily be set
+    /// to the same value).
     pub fn matches(a: Actions, b: Actions) bool {
         inline for (@typeInfo(Actions).Struct.fields) |player| {
             inline for (@typeInfo(Action).Struct.fields) |field| {
@@ -107,8 +113,8 @@ pub const Action = packed struct {
     paralyzed: Optional(bool) = .None,
     /// If not None, the value to return for Rolls.confused.
     confused: Optional(bool) = .None,
-    /// If not 0, the value to be returned by Rolls.distribution in the case of binding
-    /// moves or Rolls.{sleepDuration,disableDuration,confusionDuration,attackingDuration}.
+    /// If not 0, the value to be returned by Rolls.distribution in the case of binding moves
+    /// or Rolls.{sleepDuration,disableDuration,confusionDuration,attackingDuration} otherwise.
     duration: u4 = 0,
 
     /// The number of turns a Pokémon has been observed to be sleeping.
@@ -119,7 +125,7 @@ pub const Action = packed struct {
     disable: u4 = 0,
     /// The number of turns a Pokémon has been observed to be attacking.
     attacking: u3 = 0,
-    /// The number of turns a Pokémon has been observed to be binding.
+    /// The number of turns a Pokémon has been observed to be binding their opponent.
     binding: u3 = 0,
 
     /// If not 0, the move slot (1-4) to return in Rolls.moveSlot.
@@ -137,6 +143,7 @@ pub const Action = packed struct {
         assert(@sizeOf(Action) == 8);
     }
 
+    /// Perform a reset by clearing fields which should not persist across updates.
     pub inline fn reset(self: *Action) void {
         self.* = @bitCast(Action, @bitCast(u64, self.*) & 0x000000FFFF000000);
     }
@@ -189,13 +196,18 @@ pub fn Chance(comptime Rational: type) type {
     return struct {
         const Self = @This();
 
-        /// The probability of the actions taken by a hypothetical "chance player" occuring.
+        /// The probability of the actions taken by a hypothetical "chance player" occurring.
         probability: Rational,
         /// The actions taken by a hypothetical "chance player" that convey information about which
         /// RNG events were observed during a battle `update`.
         actions: Actions = .{},
 
-        // TODO
+        // Tracks the observed sleep durations for the Pokémon in both player's parties. Unlike
+        // other durations which are all tied to volatiles, sleep's counter persists through
+        // switching and so we must store it here. The indices of these arrays correspond to the
+        // `order` field of a Side. This information could be stored in actions but size is a
+        // concern so this is tracked separately as actions only purports to track RNG events
+        // observed during a single `update` (not across updates).
         sleeps: [2][6]u3 = .{ .{0} ** 6, .{0} ** 6 },
 
         // In many cases on both the cartridge and on Pokémon Showdown rolls are made even though
@@ -228,6 +240,7 @@ pub fn Chance(comptime Rational: type) type {
         /// Possible error returned by operations tracking chance probability.
         pub const Error = Rational.Error;
 
+        /// Convenience helper to clear fields which typically should be cleared between updates.
         pub fn reset(self: *Self) void {
             self.probability.reset();
             self.actions.reset();
@@ -491,6 +504,8 @@ pub fn Chance(comptime Rational: type) type {
     };
 }
 
+/// Null object pattern implementation of `Chance` which does nothing, though chance tracking
+/// should additionally be turned off entirely via `options.chance`.
 pub const NULL = Null{};
 
 const Null = struct {

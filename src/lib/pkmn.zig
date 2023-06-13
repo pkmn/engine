@@ -48,8 +48,9 @@ pub const protocol = if (options.internal) struct {
 
 pub usingnamespace @import("common/rational.zig");
 
-/// TODO
+/// Namespace for battled-related types.
 pub const battle = struct {
+    /// TODO
     pub fn Options(comptime Log: type, comptime Chance: type, comptime Calc: type) type {
         return struct {
             log: Log,
@@ -59,29 +60,40 @@ pub const battle = struct {
     }
 };
 
-/// Namespace for Generation I Pokémon
+/// Namespace for Generation I Pokémon.
 pub const gen1 = struct {
     pub usingnamespace @import("gen1/data.zig");
     /// TODO
     pub const Chance = @import("gen1/chance.zig").Chance;
-    /// TODO
+    /// Namespace for types associated with tracking Generation I Pokémon chance outcomes.
     pub const chance = struct {
-        /// TODO
+        /// Actions taken by a hypothetical "chance player" that convey
+        /// information about which RNG events were observed during a battle
+        /// `update`. This can additionally be provided as input to the `update`
+        /// call via the `Calc` when `options.calc` is enabled to override the
+        /// normal behavior of the RNG in order to force specific outcomes.
         pub const Actions = @import("gen1/chance.zig").Actions;
+        /// Information about the RNG that was observed during a battle `update`
+        /// for a single player.
         pub const Action = @import("gen1/chance.zig").Action;
-        /// TODO
+        /// Null object pattern implementation of `Chance` which does nothing,
+        /// though chance tracking should additionally be turned off entirely
+        /// via `options.chance`.
         pub const NULL = @import("gen1/chance.zig").NULL;
     };
     // TODO
     pub const Calc = @import("gen1/calc.zig").Calc;
-    /// TODO
+    /// Namespace for types associated with supported Generation I Pokémon damage calc features.
     pub const calc = if (options.internal) struct {
         pub usingnamespace @import("gen1/calc.zig");
     } else struct {
         /// TODO
         pub const Summaries = @import("gen1/calc.zig").Summaries;
-        pub const Summary = @import("gen1/calc.zig").Summary;
         /// TODO
+        pub const Summary = @import("gen1/calc.zig").Summary;
+        /// Null object pattern implementation of `Calc` which does nothing,
+        /// though damage calculator support should additionally be turned off
+        /// entirely via `options.calc`.
         pub const NULL = @import("gen1/calc.zig").NULL;
     };
     /// Provides helpers for initializing Generation I Pokémon battles.

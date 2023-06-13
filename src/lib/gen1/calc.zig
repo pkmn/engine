@@ -95,6 +95,8 @@ pub const Calc = struct {
     }
 };
 
+/// Null object pattern implementation of `Calc` which does nothing, though damage calculator
+/// support should additionally be turned off entirely via `options.calc`.
 pub const NULL = Null{};
 
 const Null = struct {
