@@ -1656,7 +1656,6 @@ test "BurnChance effect" {
     try t.verify();
 }
 
-// FIXME
 // Move.{IcePunch,IceBeam,Blizzard}: FreezeChance
 test "FreezeChance effect" {
     // Has a 10% chance to freeze the target.
@@ -1735,8 +1734,7 @@ test "FreezeChance effect" {
 
     // Can freeze Fire types
     try expectEqual(Result.Default, try t.update(swtch(2), move(2)));
-    // (229/256) * (209/256) * (1/39) * (26/256)
-    try t.expectProbability(47861, 25165824);
+    try t.expectProbability(47861, 25165824); // (229/256) * (209/256) * (1/39) * (26/256)
     try expectEqual(t.expected.p1.get(2).status, t.actual.p1.get(1).status);
 
     try t.log.expected.move(P2.ident(1), Move.ThunderWave, P1.ident(2), null);
@@ -1786,6 +1784,7 @@ test "FreezeChance effect" {
 
     // Fire Spin does not thaw frozen Pokémon
     try expectEqual(Result.Default, try t.update(swtch(3), move(3)));
+    try t.expectProbability(18601, 1277952); // (178/256) * (209/256) * (1/39)
     try expectEqual(t.expected.p1.get(2).status, t.actual.p1.get(1).status);
 
     try t.log.expected.move(P2.ident(1), Move.FireSpin, P1.ident(2), Move.FireSpin);
@@ -1795,6 +1794,7 @@ test "FreezeChance effect" {
     try t.log.expected.turn(8);
 
     try expectEqual(Result.Default, try t.update(forced, move(if (showdown) 3 else 0)));
+    try t.expectProbability(1, 1);
 
     try t.log.expected.move(P2.ident(1), Move.Flamethrower, P1.ident(2), null);
     try t.log.expected.resisted(P1.ident(2));
@@ -1809,6 +1809,7 @@ test "FreezeChance effect" {
 
     // Other Fire moves thaw frozen Pokémon
     try expectEqual(Result.Default, try t.update(forced, move(4)));
+    try t.expectProbability(17765, 218103808); // (255/256) * (209/256) * (1/39) * (1/256)
     try expectEqual(t.expected.p1.get(2).status, t.actual.p1.get(1).status);
 
     try t.log.expected.move(P2.ident(1), Move.Blizzard, P1.ident(2), null);
@@ -1821,6 +1822,7 @@ test "FreezeChance effect" {
     try t.log.expected.turn(10);
 
     try expectEqual(Result.Default, try t.update(move(3), move(2)));
+    try t.expectProbability(27, 256);
     try expectEqual(t.expected.p1.get(2).status, t.actual.p1.get(1).status);
 
     try t.log.expected.move(P2.ident(1), Move.Blizzard, P1.ident(2), null);
@@ -1831,6 +1833,7 @@ test "FreezeChance effect" {
 
     // Substitute blocks Freeze
     try expectEqual(Result.Default, try t.update(move(3), move(2)));
+    try t.expectProbability(47861, 2555904); // (229/256) * (209/256) * (1/39)
     try expectEqual(t.expected.p1.get(2).status, t.actual.p1.get(1).status);
 
     try t.verify();
