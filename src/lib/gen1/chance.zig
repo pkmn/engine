@@ -197,6 +197,9 @@ pub fn Chance(comptime Rational: type) type {
         /// RNG events were observed during a battle `update`.
         actions: Actions = .{},
 
+        // TODO
+        sleeps: [2][6]u3 = .{ .{0} ** 6, .{0} ** 6 },
+
         // In many cases on both the cartridge and on Pokémon Showdown rolls are made even though
         // later checks render their result irrelevant (missing when the target is actually immune,
         // rolling for damage when the move is later revealed to have missed, etc). We can't reorder
@@ -288,6 +291,14 @@ pub fn Chance(comptime Rational: type) type {
                     actions.binding = 0;
                 },
             }
+        }
+
+        pub fn switched(self: *Self, player: Player, in: u8, out: u8) void {
+            if (!enabled) return;
+
+            var actions = self.actions.get(player);
+            self.sleeps[@enumToInt(player)][out] = actions.sleep;
+            actions.sleep = @intCast(u3, self.sleeps[@enumToInt(player)][in]);
         }
 
         pub fn speedTie(self: *Self, p1: bool) Error!void {

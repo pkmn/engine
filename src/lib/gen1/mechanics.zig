@@ -286,6 +286,7 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, options: a
     foe.active.volatiles.Binding = false;
 
     try options.log.switched(battle.active(player), incoming);
+    options.chance.switched(player, side.order[0], out);
     options.chance.clearDurations(player, .switched);
 
     if (showdown and incoming.status == Status.TOX) {
