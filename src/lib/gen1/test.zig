@@ -2043,7 +2043,6 @@ test "ParalyzeChance effect" {
     try t.verify();
 }
 
-// FIXME
 // Move.{Sing,SleepPowder,Hypnosis,LovelyKiss,Spore}
 test "Sleep effect" {
     // Causes the target to fall asleep.
@@ -2075,6 +2074,7 @@ test "Sleep effect" {
 
     // Can wake up immediately but still lose their turn
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.expectProbability(255, 1792); // (255/256) * (1/7)
     try expectEqual(@as(u8, 0), t.actual.p2.get(1).status);
 
     try t.log.expected.move(P1.ident(1), Move.Spore, P2.ident(1), null);
@@ -2086,6 +2086,7 @@ test "Sleep effect" {
 
     // Can be put to sleep for multiple turns
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
+    try t.expectProbability(765, 896); // (255/256) * (6/7)
     try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
 
     try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
@@ -2100,6 +2101,7 @@ test "Sleep effect" {
 
     // Sleep Clause Mod prevents multiple Pokémon from being put to sleep
     try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+    try t.expectProbability(255, 256);
     try expectEqual(t.expected.p2.get(2).status, t.actual.p2.get(1).status);
 
     try t.log.expected.switched(P2.ident(1), t.expected.p2.get(1));
@@ -2109,6 +2111,7 @@ test "Sleep effect" {
 
     // Can't sleep someone already sleeping, turns only decrement while in battle
     try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
+    try t.expectProbability(1, 1);
     try expectEqual(t.expected.p2.get(1).status, t.actual.p2.get(1).status);
 
     try t.log.expected.move(P1.ident(1), Move.Cut, P2.ident(1), null);
