@@ -389,7 +389,7 @@ pub fn Chance(comptime Rational: type) type {
         pub fn duration(self: *Self, comptime field: []const u8, player: Player, turns: u4) void {
             if (!enabled) return;
 
-            self.actions.get(player).duration = turns;
+            self.actions.get(player).duration = if (options.key) 1 else turns;
             assert(@field(self.actions.get(player.foe()), field) == 0);
             @field(self.actions.get(player.foe()), field) = 1;
         }

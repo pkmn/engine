@@ -8,6 +8,7 @@ pub const Options = struct {
     calc: ?bool = null,
     advance: ?bool = null,
     ebc: ?bool = null,
+    key: ?bool = null,
     internal: ?bool = null,
 };
 
@@ -22,6 +23,7 @@ pub const calc = get("calc", false);
 
 pub const advance = get("advance", true);
 pub const ebc = get("ebc", true);
+pub const key = get("key", false);
 pub const internal = get("internal", false);
 
 fn get(comptime name: []const u8, default: bool) bool {
