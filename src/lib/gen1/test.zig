@@ -2117,6 +2117,7 @@ test "Sleep effect" {
 
     // Eventually wakes up
     try expectEqual(Result.Default, try t.update(move(2), forced));
+    try t.expectProbability(29161, 7667712); // (241/256) * (1/39) * (242/256) * (1/6)
     try expectEqual(@as(u8, 0), t.actual.p2.get(1).status);
 
     try t.verify();

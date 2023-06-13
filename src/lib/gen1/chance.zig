@@ -184,6 +184,8 @@ test Action {
     try expectEqual(Action{ .hit = .None, .sleep = 3, .damage = 0 }, a);
 }
 
+const Durations = union(enum) { other, switched, haze: bool };
+
 /// TODO
 pub fn Chance(comptime Rational: type) type {
     return struct {
@@ -258,10 +260,34 @@ pub fn Chance(comptime Rational: type) type {
             }
         }
 
-        pub fn clear(self: *Self) void {
+        pub fn clearPending(self: *Self) void {
             if (!enabled) return;
 
             self.pending = .{};
+        }
+
+        pub fn clearDurations(self: *Self, player: Player, kind: Durations) void {
+            if (!enabled) return;
+
+            var actions = self.actions.get(player);
+            switch (kind) {
+                .haze => |status| {
+                    if (status) actions.sleep = 0;
+                    actions.confusion = 0;
+                    actions.disable = 0;
+                },
+                .switched => {
+                    actions.sleep = 0;
+                    actions.confusion = 0;
+                    actions.disable = 0;
+                    actions.attacking = 0;
+                    actions.binding = 0;
+                },
+                .other => {
+                    actions.attacking = 0;
+                    actions.binding = 0;
+                },
+            }
         }
 
         pub fn speedTie(self: *Self, p1: bool) Error!void {
@@ -353,6 +379,7 @@ pub fn Chance(comptime Rational: type) type {
             if (!enabled) return;
 
             self.actions.get(player).duration = turns;
+            assert(@field(self.actions.get(player.foe()), field) == 0);
             @field(self.actions.get(player.foe()), field) = 1;
         }
 
@@ -392,16 +419,30 @@ pub fn Chance(comptime Rational: type) type {
             if (!enabled) return;
 
             var actions = self.actions.get(player);
-            const n = self.actions.confusion;
+            const n = actions.confusion;
             if (turns == 0) {
                 assert(n >= 2 and n <= 5);
                 if (n != 5) try self.probability.update(1, 6 - @as(u4, n));
-                actions.disable = 0;
+                actions.confusion = 0;
             } else {
                 assert(n >= 1 and n < 5);
                 if (n > 2) try self.probability.update(6 - @as(u4, n) - 1, 6 - @as(u4, n));
-                actions.disable += 1;
+                actions.confusion += 1;
             }
+        }
+
+        pub fn attacking(self: *Self, player: Player, turns: u4) Error!void {
+            if (!enabled) return;
+
+            // FIXME
+            _ = .{ self, player, turns };
+        }
+
+        pub fn binding(self: *Self, player: Player, turns: u4) Error!void {
+            if (!enabled) return;
+
+            // FIXME
+            _ = .{ self, player, turns };
         }
 
         pub fn psywave(self: *Self, player: Player, power: u8, max: u8) Error!void {
@@ -429,8 +470,12 @@ const Null = struct {
         _ = .{ self, player, ok };
     }
 
-    pub fn clear(self: Null) void {
+    pub fn clearPending(self: Null) void {
         _ = .{self};
+    }
+
+    pub fn clearDurations(self: Null, player: Player, kind: Durations) void {
+        _ = .{ self, player, kind };
     }
 
     pub fn speedTie(self: Null, p1: bool) Error!void {
@@ -482,6 +527,14 @@ const Null = struct {
     }
 
     pub fn confusion(self: Null, player: Player, turns: u4) Error!void {
+        _ = .{ self, player, turns };
+    }
+
+    pub fn attacking(self: Null, player: Player, turns: u4) Error!void {
+        _ = .{ self, player, turns };
+    }
+
+    pub fn binding(self: Null, player: Player, turns: u4) Error!void {
         _ = .{ self, player, turns };
     }
 

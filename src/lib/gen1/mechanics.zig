@@ -286,6 +286,7 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, options: a
     foe.active.volatiles.Binding = false;
 
     try options.log.switched(battle.active(player), incoming);
+    options.chance.clearDurations(player, .switched);
 
     if (showdown and incoming.status == Status.TOX) {
         incoming.status = Status.init(.PSN);
@@ -384,7 +385,7 @@ fn doTurn(
         if (try checkFaint(battle, player, options)) |r| return r;
     } else if (foe_choice.type == .Pass) return null;
 
-    options.chance.clear();
+    options.chance.clearPending();
 
     residual = true;
     replace = battle.side(foe_player).stored().hp == 0;
@@ -523,7 +524,9 @@ fn beforeMove(
     if (Status.is(stored.status, .SLP)) {
         const before = stored.status;
         // Even if the EXT bit is set this will still correctly modify the sleep duration
-        if (options.calc.overridden(player, "sleep") == null) stored.status -= 1;
+        if (options.calc.overridden(player, "sleep") == null) {
+            stored.status -= 1;
+        }
 
         const duration = Status.duration(stored.status);
         if (!Status.is(stored.status, .EXT)) {
@@ -567,6 +570,12 @@ fn beforeMove(
 
     if (volatiles.disabled_duration > 0) {
         volatiles.disabled_duration -= 1;
+
+        if (options.calc.overridden(player, "disable") == null) {
+            volatiles.disabled_duration -= 1;
+        }
+        try options.chance.disable(player, volatiles.confusion);
+
         if (volatiles.disabled_duration == 0) {
             volatiles.disabled_move = 0;
             try log.end(ident, .Disable);
@@ -585,7 +594,11 @@ fn beforeMove(
     if (volatiles.Confusion) {
         assert(volatiles.confusion > 0);
 
-        volatiles.confusion -= 1;
+        if (options.calc.overridden(player, "confusion") == null) {
+            volatiles.confusion -= 1;
+        }
+        try options.chance.confusion(player, volatiles.confusion);
+
         if (volatiles.confusion == 0) {
             volatiles.Confusion = false;
             try log.end(ident, .Confusion);
@@ -602,6 +615,7 @@ fn beforeMove(
                 volatiles.Charging = false;
                 volatiles.Binding = false;
                 volatiles.Invulnerable = false;
+                options.chance.clearDurations(player, .other);
                 {
                     // This feels (and is) disgusting but the cartridge literally just overwrites
                     // the opponent's defense with the user's defense and resets it after. As a
@@ -638,6 +652,7 @@ fn beforeMove(
         volatiles.Thrashing = false;
         volatiles.Charging = false;
         volatiles.Binding = false;
+        options.chance.clearDurations(player, .other);
         // GLITCH: Invulnerable is not cleared, resulting in permanent Fly/Dig invulnerability
         try log.cant(ident, .Paralysis);
         return .done;
@@ -657,7 +672,11 @@ fn beforeMove(
 
         assert(volatiles.attacks > 0);
 
-        volatiles.attacks -= 1;
+        if (options.calc.overridden(player, "attacking") == null) {
+            volatiles.attacks -= 1;
+        }
+        try options.chance.attacking(player, volatiles.attacks);
+
         if (volatiles.attacks != 0) {
             try log.activate(ident, .Bide);
             return .done;
@@ -692,7 +711,12 @@ fn beforeMove(
     if (volatiles.Thrashing) {
         assert(volatiles.attacks > 0);
         assert(from != null);
-        volatiles.attacks -= 1;
+
+        if (options.calc.overridden(player, "attacking") == null) {
+            volatiles.attacks -= 1;
+        }
+        try options.chance.attacking(player, volatiles.attacks);
+
         if (!showdown and handleThrashing(battle, active, player, options)) {
             try log.start(battle.active(player), .ConfusionSilent);
         }
@@ -710,7 +734,12 @@ fn beforeMove(
 
     if (volatiles.Binding) {
         assert(volatiles.attacks > 0);
-        volatiles.attacks -= 1;
+
+        if (options.calc.overridden(player, "binding") == null) {
+            volatiles.attacks -= 1;
+        }
+        try options.chance.binding(player, volatiles.attacks);
+
         try log.move(
             battle.active(player),
             side.last_selected_move,
@@ -1852,7 +1881,7 @@ pub const Effects = struct {
                 }
             }
         }
-        // FIXME commit
+        try options.chance.commit(player, true);
 
         if (foe.active.volatiles.Confusion) return;
         foe.active.volatiles.Confusion = true;
@@ -1884,7 +1913,7 @@ pub const Effects = struct {
 
         // Pokémon Showdown handles hit/miss earlier in doMove
         if (!showdown and !try checkHit(battle, player, move, options)) return null;
-        // FIXME commit
+        try options.chance.commit(player, true);
 
         if (volatiles.disabled_move != 0) {
             try options.log.fail(foe_ident, .None);
@@ -2024,7 +2053,7 @@ pub const Effects = struct {
                     s.stored().status = Status.init(.PSN);
                     try log.status(battle.active(p), s.stored().status, .None);
                 }
-                try clearVolatiles(battle, p, options);
+                try clearVolatiles(battle, p, p != player, options);
             }
         } else {
             if (Status.any(foe_stored.status)) {
@@ -2034,8 +2063,8 @@ pub const Effects = struct {
                 try log.curestatus(foe_ident, foe_stored.status, .Silent);
                 foe_stored.status = 0;
             }
-            try clearVolatiles(battle, player, options);
-            try clearVolatiles(battle, player.foe(), options);
+            try clearVolatiles(battle, player, false, options);
+            try clearVolatiles(battle, player.foe(), true, options);
         }
     }
 
@@ -2126,12 +2155,12 @@ pub const Effects = struct {
             if (!has_mimic) {
                 // Invulnerable foes or 1/256 miss can trigger |-miss| instead of |-fail|
                 if (!try checkHit(battle, player, move, options)) return;
-                // FIXME commit
+                try options.chance.commit(player, true);
                 return try options.log.fail(battle.active(player.foe()), .None);
             }
         }
         if (!try checkHit(battle, player, move, options)) return;
-        // FIXME commit
+        try options.chance.commit(player, true);
 
         const rslot = try Rolls.moveSlot(battle, player, &foe.active.moves, 0, options);
         side.active.move(oslot).id = foe.active.move(rslot).id;
@@ -2664,11 +2693,13 @@ inline fn isForced(active: ActivePokemon) bool {
         active.volatiles.Thrashing or active.volatiles.Charging;
 }
 
-fn clearVolatiles(battle: anytype, who: Player, options: anytype) !void {
+fn clearVolatiles(battle: anytype, who: Player, clear: bool, options: anytype) !void {
     var log = options.log;
     var side = battle.side(who);
     var volatiles = &side.active.volatiles;
     const ident = battle.active(who);
+
+    options.chance.clearDurations(who, .{ .haze = clear });
 
     if (volatiles.disabled_move != 0) {
         volatiles.disabled_move = 0;
