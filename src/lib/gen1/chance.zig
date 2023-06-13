@@ -184,8 +184,6 @@ test Action {
     try expectEqual(Action{ .hit = .None, .sleep = 3, .damage = 0 }, a);
 }
 
-const Durations = union(enum) { other, switched, haze: bool };
-
 /// TODO
 pub fn Chance(comptime Rational: type) type {
     return struct {
@@ -269,36 +267,34 @@ pub fn Chance(comptime Rational: type) type {
             self.pending = .{};
         }
 
-        pub fn clearDurations(self: *Self, player: Player, kind: Durations) void {
+        pub fn clearDurations(self: *Self, player: Player, haze: ?bool) void {
             if (!enabled) return;
 
-            var actions = self.actions.get(player);
-            switch (kind) {
-                .haze => |status| {
-                    if (status) actions.sleep = 0;
-                    actions.confusion = 0;
-                    actions.disable = 0;
-                },
-                .switched => {
-                    actions.sleep = 0;
-                    actions.confusion = 0;
-                    actions.disable = 0;
-                    actions.attacking = 0;
-                    actions.binding = 0;
-                },
-                .other => {
-                    actions.attacking = 0;
-                    actions.binding = 0;
-                },
+            var action = self.actions.get(player);
+            if (haze) |status| {
+                if (status) action.sleep = 0;
+                action.confusion = 0;
+                action.disable = 0;
+            } else {
+                action.attacking = 0;
+                action.binding = 0;
             }
         }
 
         pub fn switched(self: *Self, player: Player, in: u8, out: u8) void {
             if (!enabled) return;
 
-            var actions = self.actions.get(player);
-            self.sleeps[@enumToInt(player)][out] = actions.sleep;
-            actions.sleep = @intCast(u3, self.sleeps[@enumToInt(player)][in]);
+            assert(in >= 1 and in <= 6);
+            assert(out >= 1 and out <= 6);
+
+            var action = self.actions.get(player);
+            self.sleeps[@enumToInt(player)][out - 1] = action.sleep;
+            action.sleep = @intCast(u3, self.sleeps[@enumToInt(player)][in - 1]);
+
+            action.confusion = 0;
+            action.disable = 0;
+            action.attacking = 0;
+            action.binding = 0;
         }
 
         pub fn speedTie(self: *Self, p1: bool) Error!void {
@@ -397,48 +393,48 @@ pub fn Chance(comptime Rational: type) type {
         pub fn sleep(self: *Self, player: Player, turns: u4) Error!void {
             if (!enabled) return;
 
-            var actions = self.actions.get(player);
-            const n = actions.sleep;
+            var action = self.actions.get(player);
+            const n = action.sleep;
             if (turns == 0) {
                 assert(n >= 1 and n <= 7);
                 if (n != 7) try self.probability.update(1, 8 - @as(u4, n));
-                actions.sleep = 0;
+                action.sleep = 0;
             } else {
                 assert(n >= 1 and n < 7);
                 try self.probability.update(8 - @as(u4, n) - 1, 8 - @as(u4, n));
-                actions.sleep += 1;
+                action.sleep += 1;
             }
         }
 
         pub fn disable(self: *Self, player: Player, turns: u4) Error!void {
             if (!enabled) return;
 
-            var actions = self.actions.get(player);
-            const n = actions.disable;
+            var action = self.actions.get(player);
+            const n = action.disable;
             if (turns == 0) {
                 assert(n >= 1 and n <= 8);
                 if (n != 8) try self.probability.update(1, 9 - @as(u4, n));
-                actions.disable = 0;
+                action.disable = 0;
             } else {
                 assert(n >= 1 and n < 8);
                 try self.probability.update(9 - @as(u4, n) - 1, 9 - @as(u4, n));
-                actions.disable += 1;
+                action.disable += 1;
             }
         }
 
         pub fn confusion(self: *Self, player: Player, turns: u4) Error!void {
             if (!enabled) return;
 
-            var actions = self.actions.get(player);
-            const n = actions.confusion;
+            var action = self.actions.get(player);
+            const n = action.confusion;
             if (turns == 0) {
                 assert(n >= 2 and n <= 5);
                 if (n != 5) try self.probability.update(1, 6 - @as(u4, n));
-                actions.confusion = 0;
+                action.confusion = 0;
             } else {
                 assert(n >= 1 and n < 5);
                 if (n > 2) try self.probability.update(6 - @as(u4, n) - 1, 6 - @as(u4, n));
-                actions.confusion += 1;
+                action.confusion += 1;
             }
         }
 
@@ -485,8 +481,12 @@ const Null = struct {
         _ = .{self};
     }
 
-    pub fn clearDurations(self: Null, player: Player, kind: Durations) void {
-        _ = .{ self, player, kind };
+    pub fn clearDurations(self: Null, player: Player, haze: ?bool) void {
+        _ = .{ self, player, haze };
+    }
+
+    pub fn switched(self: Null, player: Player, in: u8, out: u8) void {
+        _ = .{ self, player, in, out };
     }
 
     pub fn speedTie(self: Null, p1: bool) Error!void {

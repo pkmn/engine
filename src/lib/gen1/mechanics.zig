@@ -287,7 +287,6 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, options: a
 
     try options.log.switched(battle.active(player), incoming);
     options.chance.switched(player, side.order[0], out);
-    options.chance.clearDurations(player, .switched);
 
     if (showdown and incoming.status == Status.TOX) {
         incoming.status = Status.init(.PSN);
@@ -616,7 +615,7 @@ fn beforeMove(
                 volatiles.Charging = false;
                 volatiles.Binding = false;
                 volatiles.Invulnerable = false;
-                options.chance.clearDurations(player, .other);
+                options.chance.clearDurations(player, null);
                 {
                     // This feels (and is) disgusting but the cartridge literally just overwrites
                     // the opponent's defense with the user's defense and resets it after. As a
@@ -653,7 +652,7 @@ fn beforeMove(
         volatiles.Thrashing = false;
         volatiles.Charging = false;
         volatiles.Binding = false;
-        options.chance.clearDurations(player, .other);
+        options.chance.clearDurations(player, null);
         // GLITCH: Invulnerable is not cleared, resulting in permanent Fly/Dig invulnerability
         try log.cant(ident, .Paralysis);
         return .done;
@@ -2700,7 +2699,7 @@ fn clearVolatiles(battle: anytype, who: Player, clear: bool, options: anytype) !
     var volatiles = &side.active.volatiles;
     const ident = battle.active(who);
 
-    options.chance.clearDurations(who, .{ .haze = clear });
+    options.chance.clearDurations(who, clear);
 
     if (volatiles.disabled_move != 0) {
         volatiles.disabled_move = 0;
