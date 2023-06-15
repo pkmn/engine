@@ -9792,59 +9792,6 @@ test "transitions" {
     _ = try calc.transitions(battle, move(1), move(1), .{}, seed, std.testing.allocator);
 }
 
-test "TODO" {
-    const WRAP = 3;
-
-    // var t = Test(.{ WRAP, ~CRIT, MIN_DMG, HIT }).init(
-    var t = Test(.{ WRAP, WRAP, ~CRIT, MIN_DMG, HIT }).init(
-        &.{.{ .species = .Parasect, .moves = &.{ .Wrap, .Teleport } }},
-        &.{.{ .species = .Jigglypuff, .moves = &.{.Teleport} }},
-    );
-    defer t.deinit();
-
-    try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(1), null);
-    t.expected.p2.get(1).hp -= 23;
-    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    try t.log.expected.cant(P2.ident(1), .Bound);
-    try t.log.expected.turn(2);
-
-    try expectEqual(Result.Default, try t.update(move(1), move(1)));
-
-    try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(1), Move.Wrap);
-    t.expected.p2.get(1).hp -= 23;
-    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    try t.log.expected.cant(P2.ident(1), .Bound);
-    try t.log.expected.turn(3);
-
-    try expectEqual(Result.Default, try t.update(forced, forced));
-
-    try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(1), Move.Wrap);
-    t.expected.p2.get(1).hp -= 23;
-    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    try t.log.expected.cant(P2.ident(1), .Bound);
-    try t.log.expected.turn(4);
-
-    try expectEqual(Result.Default, try t.update(forced, forced));
-
-    try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(1), Move.Wrap);
-    t.expected.p2.get(1).hp -= 23;
-    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    try t.log.expected.cant(P2.ident(1), .Bound);
-    try t.log.expected.turn(5);
-
-    try expectEqual(Result.Default, try t.update(forced, forced));
-
-    try t.log.expected.move(P1.ident(1), Move.Wrap, P2.ident(1), Move.Wrap);
-    t.expected.p2.get(1).hp -= 23;
-    try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
-    try t.log.expected.cant(P2.ident(1), .Bound);
-    try t.log.expected.turn(6);
-
-    try expectEqual(Result.Default, try t.update(forced, forced));
-
-    try t.verify();
-}
-
 fn Test(comptime rolls: anytype) type {
     return struct {
         const Self = @This();
