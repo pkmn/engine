@@ -188,6 +188,8 @@ pub fn build(b: *std.Build) !void {
         .strip = strip,
         .cmd = cmd,
     };
+
+    // TODO: tests can be run multiple times due to @imports
     const tests = TestStep.create(b, options, config);
 
     var exes = std.ArrayList(*std.Build.CompileStep).init(b.allocator);
