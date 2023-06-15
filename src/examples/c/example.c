@@ -86,8 +86,13 @@ int main(int argc, char **argv)
    // written to if -Dlog is enabled - NULL can be used to turn all of the
    // logging into no-ops
    uint8_t buf[PKMN_LOGS_SIZE];
-   // TODO
    pkmn_gen1_log_options log_options = {.buf = buf, .len = PKMN_LOGS_SIZE};
+
+   // Initialize the battle options with the log options (in this example
+   // the chance and calc features are not demonstrated and thus we simply
+   // pass NULL). If no optional features are desired (or if they weren't
+   // enabled at compile time) the options struct is unnecessary - we can
+   // simply pass NULL as the last argument to the update function
    pkmn_gen1_battle_options options;
    pkmn_gen1_battle_options_set(&options, &log_options, NULL, NULL);
 
@@ -99,9 +104,15 @@ int main(int argc, char **argv)
    // We're also taking advantage of the fact that the PKMN_RESULT_NONE is
    // guaranteed to be 0, so we don't actually need to check against it here
    while (!pkmn_result_type(result = pkmn_gen1_battle_update(&battle, c1, c2, &options))) {
+      // If -Dlog is enabled we would now do something with the data in `buf`
+      // before coming up with our next set of choices
       c1 = choose(&battle, &random, PKMN_PLAYER_P1, pkmn_result_p1(result), choices);
       c2 = choose(&battle, &random, PKMN_PLAYER_P2, pkmn_result_p2(result), choices);
-      // TODO
+      // We need to reset our options struct after each update, in this case
+      // to reset the log stream before it gets written to again. The middle
+      // two arguments (for log and chance, respectively) should almost always
+      // be NULL for resets, but the final argument may be used for calc
+      // overrides. If you have no battle options then this can be skipped.
       pkmn_gen1_battle_options_set(&options, NULL, NULL, NULL);
    }
    // The only error that can occur is if we didn't provide a large enough
