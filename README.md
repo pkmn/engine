@@ -222,7 +222,7 @@ var random = std.rand.DefaultPrng.init(seed).random();
 var choices: [pkmn.CHOICES_SIZE]pkmn.Choice = undefined;
 
 var battle = ...
-var options = pkmn.battle.Options(...);
+var options = pkmn.battle.options(...);
 
 var c1 = pkmn.Choice{};
 var c2 = pkmn.Choice{};

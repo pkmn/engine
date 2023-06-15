@@ -38,15 +38,7 @@ else
     std.math.ceilPowerOfTwo(usize, MAX_LOGS) catch unreachable;
 
 /// TODO
-pub const NULL = pkmn.battle.Options(
-    @TypeOf(protocol.NULL),
-    @TypeOf(chance.NULL),
-    @TypeOf(calc.NULL),
-){
-    .log = protocol.NULL,
-    .chance = chance.NULL,
-    .calc = calc.NULL,
-};
+pub const NULL = pkmn.battle.options(protocol.NULL, chance.NULL, calc.NULL);
 
 const Choice = data.Choice;
 const ID = data.ID;

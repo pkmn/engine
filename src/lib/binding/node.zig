@@ -91,15 +91,11 @@ fn update(gen: anytype) c.napi_callback {
                     var buf = @ptrCast([*]u8, data.?)[0..gen.LOGS_SIZE];
                     var stream = pkmn.protocol.ByteStream{ .buffer = buf };
                     // TODO: extract out
-                    var opts = pkmn.battle.Options(
-                        pkmn.protocol.FixedLog,
-                        @TypeOf(gen.chance.NULL),
-                        @TypeOf(gen.calc.NULL),
-                    ){
-                        .log = .{ .writer = stream.writer() },
-                        .chance = gen.chance.NULL,
-                        .calc = gen.calc.NULL,
-                    };
+                    var opts = pkmn.battle.options(
+                        pkmn.protocol.FixedLog{ .writer = stream.writer() },
+                        gen.chance.NULL,
+                        gen.calc.NULL,
+                    );
                     break :result battle.update(c1, c2, &opts);
                 },
             } catch unreachable;

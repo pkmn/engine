@@ -17,8 +17,6 @@ const print = std.debug.print;
 const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 
-const Options = pkmn.battle.Options;
-
 const enabled = pkmn.options.calc;
 
 const Player = common.Player;
@@ -142,15 +140,17 @@ pub fn transitions(
     var frontier = std.ArrayList(Actions).init(allocator);
     defer frontier.deinit();
 
-    const log = protocol.NULL;
-    var opts: Options(@TypeOf(log), Chance(Rational(u128)), Calc) =
-        .{ .log = log, .chance = .{ .probability = .{}, .actions = actions }, .calc = .{} };
+    var opts = pkmn.battle.options(
+        protocol.NULL,
+        Chance(Rational(u128)){ .probability = .{}, .actions = actions },
+        Calc{},
+    );
 
     var b = battle;
     _ = try b.update(c1, c2, &opts);
 
-    var p1 = battle.get(.P1);
-    var p2 = battle.get(.P2);
+    var p1 = b.side(.P1);
+    var p2 = b.side(.P2);
 
     var p: Rational(u128) = .{ .p = 0, .q = 1 };
     try frontier.append(opts.chance.actions);

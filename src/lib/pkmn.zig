@@ -48,7 +48,7 @@ pub const protocol = if (options.internal) struct {
 
 pub usingnamespace @import("common/rational.zig");
 
-/// Namespace for battled-related types.
+/// Namespace for cross-generation battle-related types.
 pub const battle = struct {
     /// TODO
     pub fn Options(comptime Log: type, comptime Chance: type, comptime Calc: type) type {
@@ -57,6 +57,15 @@ pub const battle = struct {
             chance: Chance,
             calc: Calc,
         };
+    }
+
+    /// TODO
+    pub fn options(
+        log: anytype,
+        chance: anytype,
+        calc: anytype,
+    ) battle.Options(@TypeOf(log), @TypeOf(chance), @TypeOf(calc)) {
+        return .{ .log = log, .chance = chance, .calc = calc };
     }
 };
 

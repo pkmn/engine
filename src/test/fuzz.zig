@@ -91,7 +91,8 @@ pub fn fuzz(allocator: std.mem.Allocator, seed: u64, duration: usize) !void {
 
         switch (gen) {
             1 => if (save) blk: {
-                const options = createOptions(log.?, pkmn.gen1.chance.NULL, pkmn.gen1.calc.NULL);
+                const options =
+                    pkmn.battle.options(log.?, pkmn.gen1.chance.NULL, pkmn.gen1.calc.NULL);
                 break :blk try run(&battle, &random, save, max, allocator, options);
             } else try run(&battle, &random, save, max, allocator, pkmn.gen1.NULL),
             else => unreachable,
@@ -141,18 +142,6 @@ fn run(
     }
 
     std.debug.assert(!showdown or result.type != .Error);
-}
-
-fn createOptions(
-    log: pkmn.protocol.Log(std.ArrayList(u8).Writer),
-    chance: anytype,
-    calc: anytype,
-) pkmn.battle.Options(@TypeOf(log), @TypeOf(chance), @TypeOf(calc)) {
-    return .{
-        .log = log,
-        .chance = chance,
-        .calc = calc,
-    };
 }
 
 fn errorAndExit(msg: []const u8, arg: []const u8, cmd: []const u8) noreturn {

@@ -56,20 +56,15 @@ pub fn main() !void {
     // written to if `-Dlog` is enabled - `pkmn.protocol.NULL` can be used to turn all of the
     // logging into no-ops. Here we are using the optimized `pkmn.protocol.ByteStream` which should
     // be more efficient than `pkmn.protocol.Log(std.io.FixedBufferStream([]u8).Writer)`, though
-    // that or a `Log` backed by some other `std.io.Writer` would also work.
+    // that or a `Log` backed by some other `std.io.Writer` would also work
     var buf: [pkmn.LOGS_SIZE]u8 = undefined;
-
-    // TODO
     var stream = pkmn.protocol.ByteStream{ .buffer = &buf };
-    var options = pkmn.battle.Options(
-        pkmn.protocol.FixedLog,
-        @TypeOf(pkmn.gen1.chance.NULL),
-        @TypeOf(pkmn.gen1.calc.NULL),
-    ){
-        .log = .{ .writer = stream.writer() },
-        .chance = pkmn.gen1.chance.NULL,
-        .calc = pkmn.gen1.calc.NULL,
-    };
+
+    var options = pkmn.battle.options(
+        pkmn.protocol.FixedLog{ .writer = stream.writer() },
+        pkmn.gen1.chance.NULL,
+        pkmn.gen1.calc.NULL,
+    );
 
     var c1 = pkmn.Choice{};
     var c2 = pkmn.Choice{};
