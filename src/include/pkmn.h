@@ -154,7 +154,7 @@ float64_t pkmn_rational_denominator(pkmn_rational *rational);
 #define PKMN_GEN1_BATTLE_OPTIONS_SIZE 128
 /** The size in bytes of Generation I chance actions. */
 #define PKMN_GEN1_CHANCE_ACTIONS_SIZE 16
-/** TODO: The size in bytes of a Generation I calc summaries. */
+/** The size in bytes of a Generation I calc summaries. */
 #define PKMN_GEN1_CALC_SUMMARIES_SIZE 8
 
 /** The minimum size in bytes required to hold the all Generation I choice options. */
@@ -177,26 +177,43 @@ extern const size_t PKMN_GEN1_LOGS_SIZE;
 PKMN_OPAQUE(PKMN_GEN1_BATTLE_SIZE) pkmn_gen1_battle;
 /** Generation I Pokémon Battle options (fully opaque - uses getters to access). */
 PKMN_OPAQUE(PKMN_GEN1_BATTLE_OPTIONS_SIZE) pkmn_gen1_battle_options;
-/** Generation I Pokémon chance actions (see TODO for details). */
+/** Generation I Pokémon chance actions (see src/lib/gen1/README.md#layout for details). */
 PKMN_OPAQUE(PKMN_GEN1_CHANCE_ACTIONS_SIZE) pkmn_gen1_chance_actions;
-/** Generation I Pokémon calc summaries (see TODO for details). */
+/** Generation I Pokémon calc summaries (see src/lib/gen1/README.md#layout for details). */
 PKMN_OPAQUE(PKMN_GEN1_CALC_SUMMARIES_SIZE) pkmn_gen1_calc_summaries;
 
-/** TODO */
+/**
+ * Provides a buffer buf of length len to store protocol message logs if
+ * protocol logging is enabled (see docs/PROTOCOL.md). This buffer should be
+ * reset by calling pkmn_gen1_battle_options_set with NULL provided as the
+ * second argument after each update.
+ */
 typedef struct {
   uint8_t *buf;
   size_t len;
 } pkmn_gen1_log_options;
-/** TODO */
+/**
+ * Provides the probability and chance actions necessary for tracking chance
+ * outcomes during a Generation I battle update if chance tracking is enabled.
+ */
 typedef struct {
   pkmn_rational probability;
   pkmn_gen1_chance_actions actions;
 } pkmn_gen1_chance_options;
-/** TODO */
+/**
+ * Overrides to apply to the normal behavior of the RNG during a Generation I
+ * battle `update` if damage calculation support is enabled.
+ */
 typedef struct {
   pkmn_gen1_chance_actions overrides;
 } pkmn_gen1_calc_options;
-/** TODO */
+/**
+ * Set or reset the Generation I battle options struct based on the log, chance,
+ * and calc options provided. This function should usually be called before each
+ * battle update first to initialize the battle options and then on subsequent
+ * calls to "reset" the same struct so that it can be reused. Resets are
+ * accomplished by passing NULL for any argument after the first.
+ */
 void pkmn_gen1_battle_options_set(
   pkmn_gen1_battle_options *options,
   const pkmn_gen1_log_options *log,
@@ -217,14 +234,17 @@ pkmn_rational* pkmn_gen1_battle_options_chance_probability(
 pkmn_gen1_chance_actions* pkmn_gen1_battle_options_chance_actions(
   const pkmn_gen1_battle_options *options);
 /**
- * Returns a pointer to TODO that occured during a Generation I battle update.
+ * Returns a pointer to information relevant to damage calculation that occured
+ * during a Generation I battle update.
  */
 pkmn_gen1_calc_summaries* pkmn_gen1_battle_options_calc_summaries(
   const pkmn_gen1_battle_options *options);
 
 /**
  * Returns the result of applying Player 1's choice c1 and Player 2's choice c2
- * to the Generation I battle. TODO
+ * to the Generation I battle. If the options argument is not NULL and the
+ * relevant additional features are enabled it will be used to track additional
+ * information about what happened during the update.
  */
 pkmn_result pkmn_gen1_battle_update(
   pkmn_gen1_battle *battle,
