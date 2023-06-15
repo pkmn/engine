@@ -467,7 +467,7 @@ pub fn Chance(comptime Rational: type) type {
         pub fn attacking(self: *Self, player: Player, turns: u4) Error!void {
             if (!enabled) return;
 
-            // FIXME
+            // TODO
             _ = .{ self, player, turns };
         }
 
@@ -544,11 +544,88 @@ test "Chance.hit" {
 }
 
 test "Chance.criticalHit" {
-    // TODO
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.criticalHit(.P1, true, 17);
+    if (showdown) {
+        try expectValue(Optional(bool).true, chance.actions.p1.critical_hit);
+        try expectProbability(&chance.probability, 17, 256);
+    } else {
+        try expectProbability(&chance.probability, 1, 1);
+        try expectValue(Optional(bool).None, chance.actions.p1.critical_hit);
+
+        try chance.commit(.P1, true);
+        try expectProbability(&chance.probability, 1, 1);
+        try expectValue(Optional(bool).None, chance.actions.p1.critical_hit);
+
+        chance.hit(true, 128);
+
+        try chance.commit(.P1, true);
+        try expectProbability(&chance.probability, 1, 2);
+        try expectValue(Optional(bool).None, chance.actions.p1.critical_hit);
+
+        chance.probability.reset();
+        try chance.damage(.P1, 217);
+
+        try chance.commit(.P1, false);
+        try expectProbability(&chance.probability, 1, 2);
+        try expectValue(Optional(bool).None, chance.actions.p1.critical_hit);
+
+        chance.probability.reset();
+
+        try chance.commit(.P1, true);
+        try expectProbability(&chance.probability, 17, 19968); // (1/2) * (17/256) * (1/39)
+        try expectValue(Optional(bool).true, chance.actions.p1.critical_hit);
+    }
+
+    chance.reset();
+
+    try chance.criticalHit(.P2, false, 5);
+    if (showdown) {
+        try expectProbability(&chance.probability, 251, 256);
+        try expectValue(Optional(bool).false, chance.actions.p2.critical_hit);
+    } else {
+        try expectProbability(&chance.probability, 1, 1);
+        try expectValue(Optional(bool).None, chance.actions.p1.critical_hit);
+
+        try chance.commit(.P1, true);
+        try expectProbability(&chance.probability, 1, 1);
+        try expectValue(Optional(bool).None, chance.actions.p1.critical_hit);
+
+        chance.hit(true, 128);
+
+        try chance.commit(.P1, true);
+        try expectProbability(&chance.probability, 1, 2);
+        try expectValue(Optional(bool).None, chance.actions.p1.critical_hit);
+
+        chance.probability.reset();
+        try chance.damage(.P1, 217);
+
+        try chance.commit(.P1, true);
+        try expectProbability(&chance.probability, 251, 19968); // (1/2) * (251/256) * (1/39)
+        try expectValue(Optional(bool).false, chance.actions.p1.critical_hit);
+    }
 }
 
 test "Chance.damage" {
-    // TODO
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.damage(.P1, 217);
+    if (showdown) {
+        try expectValue(@as(u8, 217), chance.actions.p1.damage);
+        try expectProbability(&chance.probability, 1, 39);
+    } else {
+        try expectProbability(&chance.probability, 1, 1);
+        try expectValue(@as(u8, 0), chance.actions.p1.damage);
+
+        try chance.commit(.P1, false);
+        try expectProbability(&chance.probability, 1, 1);
+        try expectValue(@as(u8, 0), chance.actions.p1.damage);
+
+        try chance.commit(.P1, true);
+        try expectProbability(&chance.probability, 1, 39);
+        try expectValue(@as(u8, 217), chance.actions.p1.damage);
+    }
 }
 
 test "Chance.secondaryChance" {
@@ -639,8 +716,7 @@ test "Chance.duration" {
 test "Chance.sleep" {
     var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
 
-    const ds = [_]u8{ 7, 6, 5, 4, 3, 2, 1 };
-    for (ds, 1..8) |d, i| {
+    for ([_]u8{ 7, 6, 5, 4, 3, 2, 1 }, 1..8) |d, i| {
         chance.actions.p1.sleep = @intCast(u3, i);
         try chance.sleep(.P1, 0);
         try expectProbability(&chance.probability, 1, d);
@@ -660,7 +736,27 @@ test "Chance.sleep" {
 }
 
 test "Chance.confusion" {
-    // TODO
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    for ([_]u8{ 1, 4, 3, 2, 1 }, 1..6) |d, i| {
+        if (i > 1) {
+            chance.actions.p2.confusion = @intCast(u3, i);
+            try chance.confusion(.P2, 0);
+            try expectProbability(&chance.probability, 1, d);
+            try expectValue(@as(u3, 0), chance.actions.p2.confusion);
+
+            chance.reset();
+        }
+
+        if (i < 5) {
+            chance.actions.p2.confusion = @intCast(u3, i);
+            try chance.confusion(.P2, 1);
+            try expectProbability(&chance.probability, if (d > 1) d - 1 else d, d);
+            try expectValue(@intCast(u3, i) + 1, chance.actions.p2.confusion);
+
+            chance.reset();
+        }
+    }
 }
 
 test "Chance.attacking" {
@@ -668,7 +764,28 @@ test "Chance.attacking" {
 }
 
 test "Chance.binding" {
-    // TODO
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    const ps = [_]u8{ 3, 3, 1, 1 };
+    const qs = [_]u8{ 8, 5, 2, 1 };
+
+    for (ps, qs, 1..5) |p, q, i| {
+        chance.actions.p1.binding = @intCast(u3, i);
+        try chance.binding(.P1, 0);
+        try expectProbability(&chance.probability, p, q);
+        try expectValue(@as(u3, 0), chance.actions.p1.binding);
+
+        chance.reset();
+
+        if (i < 4) {
+            chance.actions.p1.binding = @intCast(u3, i);
+            try chance.binding(.P1, 1);
+            try expectProbability(&chance.probability, q - p, q);
+            try expectValue(@intCast(u3, i) + 1, chance.actions.p1.binding);
+
+            chance.reset();
+        }
+    }
 }
 
 test "Chance.psywave" {
