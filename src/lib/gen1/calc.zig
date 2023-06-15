@@ -181,11 +181,13 @@ pub fn transitions(
         for (Rolls.criticalHit(template.p2, p2_hit)) |p2_crit| { a.p2.critical_hit = p2_crit;
 
         var p1_dmg = Rolls.damage(template.p1, p1_hit);
-        while (p1_dmg.min < p1_dmg.max) : (p1_dmg.min += 1) { a.p1.damage = p1_dmg.min;
+        while (p1_dmg.min < p1_dmg.max) : (p1_dmg.min += 1) {
+            a.p1.damage = @intCast(u8, p1_dmg.min);
             var p1_min: u8 = 0;
 
             var p2_dmg = Rolls.damage(template.p2, p2_hit);
-            while (p2_dmg.min < p2_dmg.max) : (p2_dmg.min += 1) { a.p2.damage = p2_dmg.min;
+            while (p2_dmg.min < p2_dmg.max) : (p2_dmg.min += 1) {
+                a.p2.damage = @intCast(u8, p2_dmg.min);
 
                 opts.calc = .{ .overrides = a };
                 opts.chance = .{ .probability = .{} };
@@ -195,17 +197,18 @@ pub fn transitions(
                 _ = try b.update(c1, c2, &opts);
                 stats.updates += 1;
 
-                // const p1_max = p1_dmg.min;
-                // const p2_max = p2_dmg.min;
+                // const p1_max = @intCast(u8, p1_dmg.min);
+                // const p2_max = @intCast(u8, p2_dmg.min);
                 const p1_max = if (p1_min != 0) p1_min
-                    else try Rolls.coalesce(.P1, p1_dmg.min, &opts.calc.summaries);
-                const p2_max = try Rolls.coalesce(.P2, p2_dmg.min, &opts.calc.summaries);
+                    else try Rolls.coalesce(.P1, @intCast(u8, p1_dmg.min), &opts.calc.summaries);
+                const p2_max =
+                    try Rolls.coalesce(.P2, @intCast(u8, p2_dmg.min), &opts.calc.summaries);
 
                 if (opts.chance.actions.matches(template)) {
                     if (!opts.chance.actions.eql(a)) continue;
 
-                    for (p1_dmg.min..p1_max + 1) |p1d| {
-                        for (p2_dmg.min..p2_max + 1) |p2d| {
+                    for (p1_dmg.min..@as(u9, p1_max) + 1) |p1d| {
+                        for (p2_dmg.min..@as(u9, p2_max) + 1) |p2d| {
                             var acts = opts.chance.actions;
                             acts.p1.damage = @intCast(u8, p1d);
                             acts.p2.damage = @intCast(u8, p2d);

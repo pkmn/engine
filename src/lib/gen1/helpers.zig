@@ -280,23 +280,22 @@ pub const Rolls = struct {
         return if (@field(action, "secondary_chance") == .None) &BOOL_NONE else &BOOLS;
     }
 
-    pub const Range = struct { min: u8, max: u8 };
+    pub const Range = struct { min: u9, max: u9 };
     pub inline fn damage(action: chance.Action, parent: Optional(bool)) Range {
         return if (parent == .false or @field(action, "damage") == 0)
             .{ .min = 0, .max = 1 }
         else
-            .{ .min = 1, .max = 40 };
+            .{ .min = 217, .max = 256 };
     }
 
     pub inline fn coalesce(player: Player, roll: u8, summaries: *calc.Summaries) !u8 {
         if (roll == 0) return roll;
 
         const base = summaries.get(player).damage.base;
-        if (base == 0) return 39;
+        if (base == 0) return 255;
 
-        const r = 216 + roll;
         // Closed form solution for max damage roll provided by Orion Taylor (orion#8038)!
-        return @min(255, r + ((254 - ((@as(u42, base) * r) % 255)) / base)) - 216;
+        return @min(255, roll + ((254 - ((@as(u32, base) * roll) % 255)) / base));
     }
 
     /// TODO

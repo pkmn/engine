@@ -77,8 +77,8 @@ pub const Actions = extern struct {
 };
 
 test Actions {
-    const a: Actions = .{ .p1 = .{ .hit = .true, .critical_hit = .false, .damage = 5 } };
-    const b: Actions = .{ .p1 = .{ .hit = .false, .critical_hit = .true, .damage = 6 } };
+    const a: Actions = .{ .p1 = .{ .hit = .true, .critical_hit = .false, .damage = 245 } };
+    const b: Actions = .{ .p1 = .{ .hit = .false, .critical_hit = .true, .damage = 246 } };
     const c: Actions = .{ .p1 = .{ .hit = .true } };
 
     try expect(a.eql(a));
@@ -96,7 +96,7 @@ test Actions {
 
 /// Information about the RNG that was observed during a battle `update` for a single player.
 pub const Action = packed struct {
-    /// If not 0, the roll 216 + damage represents the roll to be returned Rolls.damage.
+    /// If not 0, the roll to be returned Rolls.damage.
     damage: u8 = 0,
 
     /// If not None, the value to return for Rolls.hit.
@@ -185,7 +185,7 @@ pub const Action = packed struct {
 };
 
 test Action {
-    var a = Action{ .hit = .true, .sleep = 3, .damage = 5 };
+    var a = Action{ .hit = .true, .sleep = 3, .damage = 225 };
     a.reset();
 
     try expectEqual(Action{ .hit = .None, .sleep = 3, .damage = 0 }, a);
@@ -232,7 +232,7 @@ pub fn Chance(comptime Rational: type) type {
         } else struct {
             crit: bool = false,
             crit_probablity: u8 = 0,
-            damage_roll: u6 = 0,
+            damage_roll: u8 = 0,
             hit: bool = false,
             hit_probablity: u8 = 0,
         } = .{},
@@ -346,9 +346,9 @@ pub fn Chance(comptime Rational: type) type {
 
             if (showdown) {
                 try self.probability.update(1, 39);
-                self.actions.get(player).damage = @intCast(u6, roll - 216);
+                self.actions.get(player).damage = roll;
             } else {
-                self.pending.damage_roll = @intCast(u6, roll - 216);
+                self.pending.damage_roll = roll;
             }
         }
 

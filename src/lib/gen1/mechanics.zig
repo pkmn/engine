@@ -2770,7 +2770,7 @@ pub const Rolls = struct {
 
     inline fn damage(battle: anytype, player: anytype, options: anytype) !u8 {
         const roll = if (options.calc.overridden(player, "damage")) |val|
-            216 + @as(u8, val)
+            val
         else roll: {
             if (showdown) break :roll battle.rng.range(u8, 217, 256);
             while (true) {
