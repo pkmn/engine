@@ -47,6 +47,7 @@
 20. Implement **`transitions` function**
    - add `Rolls` helpers for new generation
    - include `transitions` function call in fuzz tests
+   - determine `MAX_FRONTIER_SIZE` and add constants to API
 21. **Add support to the JS driver for `calc` and `chance`**
    - update [`layout.json`](../src/data/layout.json) to include offsets required
 22. **[Benchmark](../src/test/benchmark.zig)** new generation

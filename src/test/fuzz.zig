@@ -137,7 +137,7 @@ fn run(
             });
         }
         if (pkmn.options.chance and pkmn.options.calc) {
-            // TODO: transitions function
+            // TODO: transitions function + MAX_FRONTIER_SIZE
         }
     }
 
