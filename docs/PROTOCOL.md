@@ -137,7 +137,7 @@ With `-Dlog` enabled, [messages](#messages) are written to the `Log` provided. T
 each message is an integer representing the `ArgType` of the message, followed by 0 or more bytes
 containing the payload of the message. Game objects such as moves, species, abilities, items, types,
 etc are written as their internal identifier which usually matches their public facing number, but
-in cases where these differ the [`ids.json`](src/pkg/data/ids.json) can  be used to decode them. A
+in cases where these differ the [`ids.json`](../src/pkg/data/ids.json) can  be used to decode them. A
 [`protocol.json`](../src/data/protocol.json) containing a human-readable lookup for the `ArgType`
 and various "[reason](#reason)" enums (see below) is generated from the library code and can be used
 for similar purposes.
