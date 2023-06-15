@@ -20,8 +20,9 @@ const enabled = options.chance;
 const showdown = options.showdown;
 
 /// Actions taken by a hypothetical "chance player" that convey information about which RNG events
-/// were observed during a battle `update`. This can additionally be provided as input to the
-/// `update` call to override the normal behavior of the RNG in order to force specific outcomes.
+/// were observed during a Generation I battle `update`. This can additionally be provided as input
+/// to the `update` call to override the normal behavior of the RNG in order to force specific
+/// outcomes.
 pub const Actions = extern struct {
     /// Information about the RNG activity for Player 1.
     p1: Action = .{},
@@ -96,7 +97,8 @@ test Actions {
     try expect(!c.matches(a));
 }
 
-/// Information about the RNG that was observed during a battle `update` for a single player.
+/// Information about the RNG that was observed during a Generation I battle `update` for a
+/// single player.
 pub const Action = packed struct {
     /// If not 0, the roll to be returned Rolls.damage.
     damage: u8 = 0,
@@ -120,14 +122,19 @@ pub const Action = packed struct {
     duration: u4 = 0,
 
     /// The number of turns a Pokémon has been observed to be sleeping.
+    /// When present as an override, 0 will force sleep to end and non-zero will extend.
     sleep: u3 = 0,
     /// The number of turns a Pokémon has been observed to be confused.
+    /// When present as an override, 0 will force confusion to end and non-zero will extend.
     confusion: u3 = 0,
     /// The number of turns a Pokémon has been observed to be disabled.
+    //// When present as an override, 0 will force disable to end and non-zero will extend.
     disable: u4 = 0,
     /// The number of turns a Pokémon has been observed to be attacking.
+    //// When present as an override, 0 will force attracking to end and non-zero will extend.
     attacking: u3 = 0,
     /// The number of turns a Pokémon has been observed to be binding their opponent.
+    /// When present as an override, 0 will force binding to end and non-zero will extend.
     binding: u3 = 0,
 
     /// If not 0, the move slot (1-4) to return in Rolls.moveSlot.
@@ -193,7 +200,8 @@ test Action {
     try expectEqual(Action{ .hit = .None, .sleep = 3, .damage = 0 }, a);
 }
 
-/// TODO
+/// Tracks chance actions and their associated probability during a Generation I battle update when
+/// `options.chance` is enabled.
 pub fn Chance(comptime Rational: type) type {
     return struct {
         const Self = @This();
@@ -820,8 +828,8 @@ pub fn expectValue(a: anytype, b: anytype) !void {
     try expectEqual(a, b);
 }
 
-/// Null object pattern implementation of `Chance` which does nothing, though chance tracking
-/// should additionally be turned off entirely via `options.chance`.
+/// Null object pattern implementation of Generation I `Chance` which does nothing, though chance
+/// tracking should additionally be turned off entirely via `options.chance`.
 pub const NULL = Null{};
 
 const Null = struct {

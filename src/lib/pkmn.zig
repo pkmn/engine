@@ -54,22 +54,24 @@ pub const battle = @import("common/battle.zig");
 /// Namespace for Generation I Pokémon.
 pub const gen1 = struct {
     pub usingnamespace @import("gen1/data.zig");
-    /// TODO
+    /// Tracks chance actions and their associated probability during a
+    /// Generation I battle update when `options.chance` is enabled.
     pub const Chance = @import("gen1/chance.zig").Chance;
     /// Namespace for types associated with tracking Generation I Pokémon chance outcomes.
     pub const chance = struct {
         /// Actions taken by a hypothetical "chance player" that convey
-        /// information about which RNG events were observed during a battle
-        /// `update`. This can additionally be provided as input to the `update`
-        /// call via the `Calc` when `options.calc` is enabled to override the
-        /// normal behavior of the RNG in order to force specific outcomes.
+        /// information about which RNG events were observed during a Generation
+        /// I battle `update`. This can additionally be provided as input to the
+        /// `update` call via the `Calc` when `options.calc` is enabled to
+        /// override the normal behavior of the RNG in order to force specific
+        /// outcomes.
         pub const Actions = @import("gen1/chance.zig").Actions;
-        /// Information about the RNG that was observed during a battle `update`
-        /// for a single player.
+        /// Information about the RNG that was observed during a Generation I
+        /// battle `update` for a single player.
         pub const Action = @import("gen1/chance.zig").Action;
-        /// Null object pattern implementation of `Chance` which does nothing,
-        /// though chance tracking should additionally be turned off entirely
-        /// via `options.chance`.
+        /// Null object pattern implementation of Generation I `Chance` which
+        /// does nothing, though chance tracking should additionally be turned
+        /// off entirely via `options.chance`.
         pub const NULL = @import("gen1/chance.zig").NULL;
     };
     // TODO
