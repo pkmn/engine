@@ -215,7 +215,7 @@ pub fn build(b: *std.Build) !void {
     var fuzz_config = tools;
     fuzz_config.general.strip = false;
     fuzz_config.tool.name = "fuzz";
-    const fuzz = tool(b, "src/test/benchmark.zig", fuzz_config);
+    const fuzz = tool(b, "src/test/fuzz.zig", fuzz_config);
 
     const serde = tool(b, "src/tools/serde.zig", tools);
     const protocol = tool(b, "src/tools/protocol.zig", tools);
