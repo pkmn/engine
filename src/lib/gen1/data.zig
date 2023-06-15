@@ -37,7 +37,7 @@ pub const LOGS_SIZE = if (builtin.mode == .ReleaseSmall)
 else
     std.math.ceilPowerOfTwo(usize, MAX_LOGS) catch unreachable;
 
-/// TODO
+///  Null object pattern implementation of pkmn.battle.Options for Generation I.
 pub const NULL = pkmn.battle.options(protocol.NULL, chance.NULL, calc.NULL);
 
 const Choice = data.Choice;
