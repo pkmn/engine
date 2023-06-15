@@ -74,17 +74,20 @@ pub const gen1 = struct {
         /// off entirely via `options.chance`.
         pub const NULL = @import("gen1/chance.zig").NULL;
     };
-    // TODO
+    /// Allows for forcing the value of specific RNG events during a Generation I battle `update`
+    /// via `overrides` and tracks `summaries` of information relevant to damage calculation.
     pub const Calc = @import("gen1/calc.zig").Calc;
     /// Namespace for types associated with supported Generation I Pokémon damage calc features.
     pub const calc = if (options.internal) struct {
         pub usingnamespace @import("gen1/calc.zig");
     } else struct {
-        /// TODO
+        /// Information relevant to damage calculation that occured during a Generation I
+        /// battle `update`.
         pub const Summaries = @import("gen1/calc.zig").Summaries;
-        /// TODO
+        /// Information relevant to damage calculation that occured during a Generation I
+        ///  battle `update` for a single player.
         pub const Summary = @import("gen1/calc.zig").Summary;
-        /// Null object pattern implementation of `Calc` which does nothing,
+        /// Null object pattern implementation of Generation I `Calc` which does nothing,
         /// though damage calculator support should additionally be turned off
         /// entirely via `options.calc`.
         pub const NULL = @import("gen1/calc.zig").NULL;

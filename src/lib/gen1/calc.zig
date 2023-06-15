@@ -31,25 +31,35 @@ const Chance = chance.Chance;
 
 const Rolls = helpers.Rolls;
 
+/// Information relevant to damage calculation that occured during a Generation I battle `update`.
 pub const Summaries = extern struct {
+    /// Relevant information for Player 1.
     p1: Summary = .{},
+    /// Relevant information for Player 2.
     p2: Summary = .{},
 
     comptime {
         assert(@sizeOf(Summaries) == 8);
     }
 
-    /// Returns the `Sumamary` for the given `player`.
+    /// Returns the `Summary` for the given `player`.
     pub inline fn get(self: *Summaries, player: Player) *Summary {
         return if (player == .P1) &self.p1 else &self.p2;
     }
 };
 
+/// Information relevant to damage calculation that occured during a Generation I battle `update`
+/// for a single player.
 pub const Summary = extern struct {
+    /// The computed raw damage values.
     damage: Damage = .{},
 
+    /// Intermediate raw damage values computed during a calculation.
     pub const Damage = extern struct {
+        /// The base computed damage before the damage roll is applied.
         base: u16 = 0,
+        /// The final computed damage that gets applied to the Pokémon. May exceed the target's HP
+        // (to determine the *actual* damage done compare the target's stored HP before and after).
         final: u16 = 0,
 
         comptime {
@@ -62,11 +72,12 @@ pub const Summary = extern struct {
     }
 };
 
-/// TODO
+/// Allows for forcing the value of specific RNG events during a Generation I battle `update` via
+/// `overrides` and tracks `summaries` of information relevant to damage calculation.
 pub const Calc = struct {
-    /// TODO
+    /// Overrides the normal behavior of the RNG during an `update` to force specific outcomes.
     overrides: Actions = .{},
-    /// TODO
+    /// Information relevant to damage calculation.
     summaries: Summaries = .{},
 
     pub fn overridden(self: Calc, player: Player, comptime field: []const u8) ?TypeOf(field) {
@@ -93,8 +104,8 @@ pub const Calc = struct {
     }
 };
 
-/// Null object pattern implementation of `Calc` which does nothing, though damage calculator
-/// support should additionally be turned off entirely via `options.calc`.
+/// Null object pattern implementation of Generation I `Calc` which does nothing, though damage
+/// calculator support should additionally be turned off entirely via `options.calc`.
 pub const NULL = Null{};
 
 const Null = struct {
