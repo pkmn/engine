@@ -2,6 +2,8 @@ const builtin = @import("builtin");
 const std = @import("std");
 const pkmn = @import("pkmn");
 
+pub const pkmn_options = pkmn.Options{ .internal = true };
+
 const Frame = struct {
     log: []u8 = &.{},
     state: []u8,
@@ -132,6 +134,9 @@ fn run(
                 .state = try allocator.dupe(u8, std.mem.toBytes(battle)[0..]),
                 .log = try buf.?.toOwnedSlice(),
             });
+        }
+        if (pkmn.options.chance and pkmn.options.calc) {
+            // TODO: transitions function
         }
     }
 

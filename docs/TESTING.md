@@ -5,14 +5,17 @@ In addition to [unit tests](#unit), the code in [`src/test`](../src/test) contai
 
 ## Unit
 
-Due to the `-Dshowdown` and `-Dlog` build options and the stochastic nature of Pokémon as a game,
-testing the pkmn engine requires a little extra work. Helper functions exist to remove the majority
-of the boilerplate from the library's unit tests:
+Due to the various build options (eg. `-Dshowdown` or `-Dlog`) and the stochastic nature of Pokémon
+as a game, testing the pkmn engine requires a little extra work. Helper functions exist to remove
+the majority of the boilerplate from the library's unit tests:
 
 - `Test`: the main helper type for testing, a test can be initialized with `Test(rolls).init(p1,
   p2)` (`Test.deinit()` should be `defer`-ed immediately after initialization to free resources),
   expected updates and logs can be tracked on the `expected` fields and finally the `actual` state
-  can be `verify`-ed at the end of the test.
+  can be `verify`-ed at the end of the test. `expectProbability` can be used to check probabilities
+  when `-Dchance` is enabled, and if `-Dcalc` is also enabled each update will be rerun on the
+  original state with the chance actions from the original update used as overrides to ensure all
+  RNG is accounted for.
 - `Battle.fixed`: under the hood, `Test` uses this helper to create a battle with a `FixedRNG` that
   returns a fixed sequence of results ("rolls") - this provides complete control over whether or not
   events should occur. One problem is that `-Dshowdown` Pokemon Showdown compatibility mode requires
@@ -145,18 +148,18 @@ used as the arbiter of correctness, but it is still possible that since Pokémon
 pkmn engine are both independent implementations of the actual Pokémon cartridge logic  despite
 being in agreement **they may both be incorrect** when it comes to the actual cartridge[^1].
 
+Most integration test failures result in new unit tests being added, though the failing logs are
+also saved as [fixtures](../src/test/regression/fixtures) which can then be replayed to protect
+against [regressions](../src/test/regression/). The integration test also supports being run in
+standalone mode for various durations, eg. `npm run integration -- --duration=15m` which can be
+useful for [fuzzing](#fuzz) purposes.
+
 [^1]: A stretch goal for the project is to be able to run integration tests against the actual
     cartridge code.
     [Examples](https://github.com/jsettlem/elo_world_pokemon_red/blob/master/battle_x_as_y.py) exist
     of scripting battles to run on the cartridge via an emulator, though the fact that integration
     testing the engine properly requires support for "link" battling and the ability to detect
     desyncs makes such a goal decidedly nontrivial.
-
-Most integration test failures result in new unit tests being added, though the failing logs are
-also saved as [fixtures](../src/test/regression/fixtures) which can then be replayed to protect
-against [regressions](../src/test/regression/). The integration test also supports being run in
-standalone mode for various durations, eg. `npm run integration -- --duration=15m` which can be
-useful for [fuzzing](#fuzz) purposes.
 
 ### Unimplementable
 
@@ -227,9 +230,9 @@ measures 3 different configurations:
   interface with JS at all. The benchmark runner invokes
   [`benchmark.zig`](../src/test/benchmark.zig) to directly run the benchmark and report the results.
 
-Both pkmn engine configurations are intended to be used `-Dshowdown` build option but with protocol
-message logging disabled. Both of the Pokémon Showdown configurations are run beforehand for a
-warmup period to ensure the measured duration is representative of the actual best case runtime.
+Both pkmn engine configurations are intended to be used `-Dshowdown` build option but with all other
+build options disabled. Both of the Pokémon Showdown configurations are run beforehand for a warmup
+period to ensure the measured duration is representative of the actual best case runtime.
 
 In order to ensure all configurations are testing the same thing, we need to ensure that the exact
 same battles are generated, the same sequence of moves are chosen, and the battle results are match.
@@ -419,14 +422,17 @@ reported, after outliers have been removed.
 
 ## Fuzz
 
-The [integration](#integration) tests and [benchmark](#benchmark) are also used for
-[fuzzing](https://en.wikipedia.org/wiki/Fuzzing). A [GitHub workflow](../.github/workflows/fuzz.yml)
-exists to run these tests on a schedule from random seeds for various durations to attempt to
-uncover latent bugs. The fuzz tests differ from the benchmark in that they run for predefined time
-durations as opposed to a given number of battles and enable the [unimplementable](#unimplementable)
-effects that are usually excluded in `-Dshowdown` compatibility mode. When run with the `-Dlog`
-flag, additional binary data will be dumped on crashes to allow for debugging with the help of
-[`fuzz.ts`](./fuzz.ts) and the [debug UI](https://pkmn.cc/debug.html) rendered by
-[`display.ts`](./display.ts). To run the fuzz tool locally use:
+The [integration](#integration) tests and a standalone [fuzz](../src/test/fuzz.zig) are also used
+for [fuzzing](https://en.wikipedia.org/wiki/Fuzzing). A [GitHub
+workflow](../.github/workflows/fuzz.yml) exists to run these tests on a schedule from random seeds
+for various durations to attempt to uncover latent bugs. The fuzz tests differ from the benchmark in
+that they run for predefined time durations as opposed to a given number of battles and enable the
+[unimplementable](#unimplementable) effects that are usually excluded in `-Dshowdown` compatibility
+mode. When run with the `-Dlog` flag, additional binary data will be dumped on crashes to allow for
+debugging with the help of [`fuzz.ts`](./fuzz.ts) and the [debug UI](https://pkmn.cc/debug.html)
+rendered by [`display.ts`](./display.ts). If `-Dchance` and `-Dcalc` are enabled the fuzz test will
+also ensure a `transitions` function can correctly detect all valid transitions without crashing.
+
+To run the fuzz tool locally use:
 
     $ npm run --silent fuzz  --  <pkmn|showdown> <GEN> <DURATION> <SEED?>
