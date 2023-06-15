@@ -2919,7 +2919,7 @@ pub const Rolls = struct {
             }
         };
 
-        options.chance.duration("sleep", player, duration, false);
+        options.chance.duration("sleep", player, duration);
         return duration;
     }
 
@@ -2931,7 +2931,7 @@ pub const Rolls = struct {
         else
             @intCast(u4, (battle.rng.next() & 7) + 1);
 
-        options.chance.duration("disable", player, duration, false);
+        options.chance.duration("disable", player, duration);
         return duration;
     }
 
@@ -2943,7 +2943,7 @@ pub const Rolls = struct {
         else
             @intCast(u3, (battle.rng.next() & 3) + 2);
 
-        options.chance.duration("confusion", player, duration, false);
+        options.chance.duration("confusion", player, duration);
         return duration;
     }
 
@@ -2955,7 +2955,7 @@ pub const Rolls = struct {
         else
             @intCast(u3, (battle.rng.next() & 1) + 2);
 
-        options.chance.duration("attacking", player, duration, false);
+        options.chance.duration("attacking", player, duration);
         return duration;
     }
 
@@ -2976,7 +2976,7 @@ pub const Rolls = struct {
         };
 
         if (effect == .Binding) {
-            options.chance.duration("binding", player, n, true);
+            options.chance.duration("binding", player, n);
         } else {
             try options.chance.multiHit(player, n);
         }

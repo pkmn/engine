@@ -1,12 +1,14 @@
 const std = @import("std");
 
 const assert = std.debug.assert;
+const print = std.debug.print;
 
 const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
 
 const DEBUG = @import("../common/debug.zig").print;
 const options = @import("../common/options.zig");
+const rational = @import("../common/rational.zig");
 
 const Player = @import("../common/data.zig").Player;
 const Optional = @import("../common/optional.zig").Optional;
@@ -374,7 +376,13 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.get(player).paralyzed = if (par) .true else .false;
         }
 
-        pub fn moveSlot(self: *Self, player: Player, slot: u4, ms: []MoveSlot, n: u4) Error!void {
+        pub fn moveSlot(
+            self: *Self,
+            player: Player,
+            slot: u4,
+            ms: []const MoveSlot,
+            n: u4,
+        ) Error!void {
             if (!enabled) return;
 
             const denominator = if (n != 0) n else denominator: {
@@ -386,7 +394,7 @@ pub fn Chance(comptime Rational: type) type {
                 unreachable;
             };
 
-            try self.probability.update(1, denominator);
+            if (denominator != 1) try self.probability.update(1, denominator);
             self.actions.get(player).move_slot = @intCast(u3, slot);
         }
 
@@ -397,17 +405,12 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.get(player).multi_hit = n;
         }
 
-        pub fn duration(
-            self: *Self,
-            comptime field: []const u8,
-            player: Player,
-            turns: u4,
-            bind: bool,
-        ) void {
+        pub fn duration(self: *Self, comptime field: []const u8, player: Player, turns: u4) void {
             if (!enabled) return;
 
             self.actions.get(player).duration = if (options.key) 1 else turns;
 
+            const bind = std.mem.eql(u8, field, "binding");
             var action = self.actions.get(if (bind) player else player.foe());
             assert(@field(action, field) == 0);
             @field(action, field) = 1;
@@ -504,6 +507,202 @@ pub fn Chance(comptime Rational: type) type {
     };
 }
 
+test "Chance.speedTie" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.speedTie(true);
+    try expectProbability(&chance.probability, 1, 2);
+    try expectValue(Optional(Player).P1, chance.actions.p1.speed_tie);
+    try expectValue(chance.actions.p1.speed_tie, chance.actions.p2.speed_tie);
+
+    chance.reset();
+
+    try chance.speedTie(false);
+    try expectProbability(&chance.probability, 1, 2);
+    try expectValue(Optional(Player).P2, chance.actions.p1.speed_tie);
+    try expectValue(chance.actions.p1.speed_tie, chance.actions.p2.speed_tie);
+}
+
+test "Chance.hit" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    chance.hit(true, 229);
+    try expectProbability(&chance.probability, 1, 1);
+    try expectValue(Optional(bool).None, chance.actions.p1.hit);
+    try chance.commit(.P1, true);
+    try expectValue(Optional(bool).true, chance.actions.p1.hit);
+    try expectProbability(&chance.probability, 229, 256);
+
+    chance.reset();
+
+    chance.hit(false, 255);
+    try expectProbability(&chance.probability, 1, 1);
+    try expectValue(Optional(bool).None, chance.actions.p2.hit);
+    try chance.commit(.P2, false);
+    try expectValue(Optional(bool).false, chance.actions.p2.hit);
+    try expectProbability(&chance.probability, 1, 256);
+}
+
+test "Chance.criticalHit" {
+    // TODO
+}
+
+test "Chance.damage" {
+    // TODO
+}
+
+test "Chance.secondaryChance" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.secondaryChance(.P1, true, 25);
+    try expectProbability(&chance.probability, 25, 256);
+    try expectValue(Optional(bool).true, chance.actions.p1.secondary_chance);
+
+    chance.reset();
+
+    try chance.secondaryChance(.P2, false, 77);
+    try expectProbability(&chance.probability, 179, 256);
+    try expectValue(Optional(bool).false, chance.actions.p2.secondary_chance);
+}
+
+test "Chance.confused" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.confused(.P1, false);
+    try expectProbability(&chance.probability, 1, 2);
+    try expectValue(Optional(bool).false, chance.actions.p1.confused);
+
+    chance.reset();
+
+    try chance.confused(.P2, true);
+    try expectProbability(&chance.probability, 1, 2);
+    try expectValue(Optional(bool).true, chance.actions.p2.confused);
+}
+
+test "Chance.paralyzed" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.paralyzed(.P1, false);
+    try expectProbability(&chance.probability, 3, 4);
+    try expectValue(Optional(bool).false, chance.actions.p1.paralyzed);
+
+    chance.reset();
+
+    try chance.paralyzed(.P2, true);
+    try expectProbability(&chance.probability, 1, 4);
+    try expectValue(Optional(bool).true, chance.actions.p2.paralyzed);
+}
+
+test "Chance.moveSlot" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+    var ms = [_]MoveSlot{ .{ .id = Move.Surf }, .{ .id = Move.Psychic }, .{ .id = Move.Recover } };
+
+    try chance.moveSlot(.P2, 2, &ms, 2);
+    try expectProbability(&chance.probability, 1, 2);
+    try expectValue(@as(u4, 2), chance.actions.p2.move_slot);
+
+    chance.reset();
+
+    try chance.moveSlot(.P1, 1, &ms, 0);
+    try expectProbability(&chance.probability, 1, 3);
+    try expectValue(@as(u4, 1), chance.actions.p1.move_slot);
+}
+
+test "Chance.multiHit" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.multiHit(.P1, 3);
+    try expectProbability(&chance.probability, 3, 8);
+    try expectValue(@as(u4, 3), chance.actions.p1.multi_hit);
+
+    chance.reset();
+
+    try chance.multiHit(.P2, 5);
+    try expectProbability(&chance.probability, 1, 8);
+    try expectValue(@as(u4, 5), chance.actions.p2.multi_hit);
+}
+
+test "Chance.duration" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    chance.duration("sleep", .P1, 2);
+    try expectValue(@as(u4, 2), chance.actions.p1.duration);
+    try expectValue(@as(u3, 1), chance.actions.p2.sleep);
+
+    chance.reset();
+
+    chance.duration("binding", .P2, 4);
+    try expectValue(@as(u4, 4), chance.actions.p2.duration);
+    try expectValue(@as(u3, 1), chance.actions.p2.binding);
+}
+
+test "Chance.sleep" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    const ds = [_]u8{ 7, 6, 5, 4, 3, 2, 1 };
+    for (ds, 1..8) |d, i| {
+        chance.actions.p1.sleep = @intCast(u3, i);
+        try chance.sleep(.P1, 0);
+        try expectProbability(&chance.probability, 1, d);
+        try expectValue(@as(u3, 0), chance.actions.p1.sleep);
+
+        chance.reset();
+
+        if (i < 7) {
+            chance.actions.p1.sleep = @intCast(u3, i);
+            try chance.sleep(.P1, 1);
+            try expectProbability(&chance.probability, d - 1, d);
+            try expectValue(@intCast(u3, i) + 1, chance.actions.p1.sleep);
+
+            chance.reset();
+        }
+    }
+}
+
+test "Chance.confusion" {
+    // TODO
+}
+
+test "Chance.attacking" {
+    // TODO
+}
+
+test "Chance.binding" {
+    // TODO
+}
+
+test "Chance.psywave" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.psywave(.P2, 100, 150);
+    try expectProbability(&chance.probability, 1, 150);
+    try expectValue(@as(u8, 101), chance.actions.p2.psywave);
+}
+
+test "Chance.metronome" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.metronome(.P1, Move.HornAttack);
+    try expectProbability(&chance.probability, 1, 163);
+    try expectValue(Move.HornAttack, chance.actions.p1.metronome);
+}
+
+pub fn expectProbability(r: anytype, p: u64, q: u64) !void {
+    if (!enabled) return;
+
+    r.reduce();
+    if (r.p != p or r.q != q) {
+        print("expected {d}/{d}, found {}\n", .{ p, q, r });
+        return error.TestExpectedEqual;
+    }
+}
+
+pub fn expectValue(a: anytype, b: anytype) !void {
+    if (!enabled) return;
+
+    try expectEqual(a, b);
+}
+
 /// Null object pattern implementation of `Chance` which does nothing, though chance tracking
 /// should additionally be turned off entirely via `options.chance`.
 pub const NULL = Null{};
@@ -555,7 +754,7 @@ const Null = struct {
         _ = .{ self, player, ok };
     }
 
-    pub fn moveSlot(self: Null, player: Player, slot: u4, ms: []MoveSlot, n: u4) Error!void {
+    pub fn moveSlot(self: Null, player: Player, slot: u4, ms: []const MoveSlot, n: u4) Error!void {
         _ = .{ self, player, slot, ms, n };
     }
 
@@ -563,14 +762,8 @@ const Null = struct {
         _ = .{ self, player, n };
     }
 
-    pub fn duration(
-        self: Null,
-        comptime field: []const u8,
-        player: Player,
-        turns: u4,
-        bind: bool,
-    ) void {
-        _ = .{ self, field, player, turns, bind };
+    pub fn duration(self: Null, comptime field: []const u8, player: Player, turns: u4) void {
+        _ = .{ self, field, player, turns };
     }
 
     pub fn sleep(self: Null, player: Player, turns: u4) Error!void {
