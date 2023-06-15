@@ -395,29 +395,37 @@ pub const Rolls = struct {
     }
 };
 
-test Rolls {
-    var actions = chance.Actions{ .p1 = .{ .speed_tie = .P2 } };
+test "Rolls.speedTie" {
+    const actions = chance.Actions{ .p1 = .{ .speed_tie = .P2 } };
     try expectEqualSlices(Optional(Player), &.{ .P1, .P2 }, Rolls.speedTie(actions.p1));
     try expectEqualSlices(Optional(Player), &.{.None}, Rolls.speedTie(actions.p2));
+}
 
-    actions = chance.Actions{ .p2 = .{ .damage = 5 } };
+test "Rolls.damage" {
+    const actions = chance.Actions{ .p2 = .{ .damage = 221 } };
     try expectEqual(Rolls.Range{ .min = 0, .max = 1 }, Rolls.damage(actions.p1, .None));
-    try expectEqual(Rolls.Range{ .min = 1, .max = 40 }, Rolls.damage(actions.p2, .None));
+    try expectEqual(Rolls.Range{ .min = 217, .max = 256 }, Rolls.damage(actions.p2, .None));
     try expectEqual(Rolls.Range{ .min = 0, .max = 1 }, Rolls.damage(actions.p2, .false));
+}
 
+test "Rolls.coalesce" {
     var summaries = calc.Summaries{ .p1 = .{ .damage = .{ .base = 74, .final = 69 } } };
     try expectEqual(@as(u8, 0), try Rolls.coalesce(.P1, 0, &summaries));
-    try expectEqual(@as(u8, 25), try Rolls.coalesce(.P1, 22, &summaries));
+    try expectEqual(@as(u8, 241), try Rolls.coalesce(.P1, 238, &summaries));
     summaries.p1.damage.final = 74;
-    try expectEqual(@as(u8, 1), try Rolls.coalesce(.P1, 1, &summaries));
+    try expectEqual(@as(u8, 217), try Rolls.coalesce(.P1, 217, &summaries));
+}
 
-    actions = chance.Actions{ .p2 = .{ .hit = .true } };
+test "Rolls.hit" {
+    const actions = chance.Actions{ .p2 = .{ .hit = .true } };
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.hit(actions.p1, .None));
     try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.hit(actions.p2, .None));
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.hit(actions.p2, .true));
     try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.hit(actions.p2, .false));
+}
 
-    actions = chance.Actions{ .p1 = .{ .secondary_chance = .true } };
+test "Rolls.secondaryChance" {
+    const actions = chance.Actions{ .p1 = .{ .secondary_chance = .true } };
     try expectEqualSlices(
         Optional(bool),
         &.{ .false, .true },
@@ -425,8 +433,10 @@ test Rolls {
     );
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.secondaryChance(actions.p1, .false));
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.secondaryChance(actions.p2, .None));
+}
 
-    actions = chance.Actions{ .p1 = .{ .critical_hit = .true } };
+test "Rolls.criticalHit" {
+    const actions = chance.Actions{ .p1 = .{ .critical_hit = .true } };
     try expectEqualSlices(
         Optional(bool),
         &.{ .false, .true },
@@ -434,52 +444,72 @@ test Rolls {
     );
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.criticalHit(actions.p1, .false));
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.criticalHit(actions.p2, .None));
+}
 
-    actions = chance.Actions{ .p2 = .{ .confused = .true } };
+test "Rolls.confused" {
+    const actions = chance.Actions{ .p2 = .{ .confused = .true } };
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.confused(actions.p1));
     try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.confused(actions.p2));
+}
 
-    actions = chance.Actions{ .p2 = .{ .paralyzed = .true } };
+test "Rolls.paralyzed" {
+    const actions = chance.Actions{ .p2 = .{ .paralyzed = .true } };
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.paralyzed(actions.p1, .None));
     try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.paralyzed(actions.p2, .None));
     try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.paralyzed(actions.p2, .false));
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.paralyzed(actions.p2, .true));
+}
 
-    actions = chance.Actions{ .p2 = .{ .duration = 3 } };
+test "Rolls.duration" {
+    const actions = chance.Actions{ .p2 = .{ .duration = 3 } };
     try expectEqualSlices(u1, &.{0}, Rolls.duration(actions.p1, .None));
     try expectEqualSlices(u1, &.{ 0, 1 }, Rolls.duration(actions.p2, .None));
     try expectEqualSlices(u1, &.{0}, Rolls.duration(actions.p2, .false));
+}
 
+test "Rolls.sleep" {
     try expectEqualSlices(u3, &.{0}, Rolls.sleep(.{ .sleep = 0 }));
     try expectEqualSlices(u3, &.{0}, Rolls.sleep(.{ .sleep = 7 }));
     try expectEqualSlices(u3, &.{ 0, 5 }, Rolls.sleep(.{ .sleep = 4 }));
+}
 
+test "Rolls.disable" {
     try expectEqualSlices(u4, &.{0}, Rolls.disable(.{ .disable = 0 }, 0));
     try expectEqualSlices(u4, &.{0}, Rolls.disable(.{ .disable = 8 }, 0));
     try expectEqualSlices(u4, &.{0}, Rolls.disable(.{ .disable = 4 }, 1));
     try expectEqualSlices(u4, &.{ 0, 5 }, Rolls.disable(.{ .disable = 4 }, 0));
+}
 
+test "Rolls.confusion" {
     try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{ .confusion = 0 }, 0));
     try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{ .confusion = 5 }, 0));
     try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{ .confusion = 3 }, 1));
     try expectEqualSlices(u3, &.{1}, Rolls.confusion(.{ .confusion = 1 }, 0));
     try expectEqualSlices(u3, &.{ 0, 4 }, Rolls.confusion(.{ .confusion = 3 }, 0));
+}
 
-    actions = chance.Actions{ .p2 = .{ .move_slot = 3 } };
+test "Rolls.moveSlot" {
+    const actions = chance.Actions{ .p2 = .{ .move_slot = 3 } };
     try expectEqualSlices(u4, &.{0}, Rolls.moveSlot(actions.p1, .None));
     try expectEqualSlices(u4, &.{ 1, 2, 3, 4 }, Rolls.moveSlot(actions.p2, .None));
     try expectEqualSlices(u4, &.{0}, Rolls.moveSlot(actions.p2, .false));
+}
 
-    actions = chance.Actions{ .p2 = .{ .multi_hit = 3 } };
+test "Rolls.multiHit" {
+    const actions = chance.Actions{ .p2 = .{ .multi_hit = 3 } };
     try expectEqualSlices(u4, &.{0}, Rolls.multiHit(actions.p1, .None));
     try expectEqualSlices(u4, &.{ 2, 3, 4, 5 }, Rolls.multiHit(actions.p2, .None));
     try expectEqualSlices(u4, &.{0}, Rolls.multiHit(actions.p2, .false));
+}
 
-    actions = chance.Actions{ .p2 = .{ .metronome = .Surf } };
+test "Rolls.metronome" {
+    const actions = chance.Actions{ .p2 = .{ .metronome = .Surf } };
     try expectEqualSlices(Move, &.{.None}, Rolls.metronome(actions.p1));
     try expectEqual(@intToEnum(Move, 24), Rolls.metronome(actions.p2)[23]);
+}
 
-    actions = chance.Actions{ .p2 = .{ .psywave = 79 } };
+test "Rolls.psywave" {
+    const actions = chance.Actions{ .p2 = .{ .psywave = 79 } };
     try expectEqualSlices(u8, &.{0}, Rolls.psywave(actions.p1, .None));
     try expectEqual(
         @as(u8, 150),
