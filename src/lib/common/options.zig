@@ -1,6 +1,7 @@
 const build_options = @import("build_options");
 const root = @import("root");
 
+/// Configures the behavior of the pkmn package.
 pub const Options = struct {
     showdown: ?bool = null,
     log: ?bool = null,

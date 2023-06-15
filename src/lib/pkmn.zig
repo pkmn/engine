@@ -1,4 +1,4 @@
-/// Configurated Options for the pkmn package.
+/// Configured Options for the pkmn package.
 pub const options = @import("common/options.zig");
 /// Configures the behavior of the pkmn package.
 pub const Options = options.Options;
@@ -49,25 +49,7 @@ pub const protocol = if (options.internal) struct {
 pub usingnamespace @import("common/rational.zig");
 
 /// Namespace for cross-generation battle-related types.
-pub const battle = struct {
-    /// TODO
-    pub fn Options(comptime Log: type, comptime Chance: type, comptime Calc: type) type {
-        return struct {
-            log: Log,
-            chance: Chance,
-            calc: Calc,
-        };
-    }
-
-    /// TODO
-    pub fn options(
-        log: anytype,
-        chance: anytype,
-        calc: anytype,
-    ) battle.Options(@TypeOf(log), @TypeOf(chance), @TypeOf(calc)) {
-        return .{ .log = log, .chance = chance, .calc = calc };
-    }
-};
+pub const battle = @import("common/battle.zig");
 
 /// Namespace for Generation I Pokémon.
 pub const gen1 = struct {
