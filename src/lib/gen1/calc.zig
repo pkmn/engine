@@ -149,6 +149,9 @@ pub fn transitions(
     var b = battle;
     _ = try b.update(c1, c2, &opts);
 
+    var p1 = battle.get(.P1);
+    var p2 = battle.get(.P2);
+
     var p: Rational(u128) = .{ .p = 0, .q = 1 };
     try frontier.append(opts.chance.actions);
 
@@ -169,8 +172,8 @@ pub fn transitions(
         for (Rolls.paralyzed(template.p2, p2_cfz)) |p2_par| { a.p2.paralyzed = p2_par;
         for (Rolls.hit(template.p1, p1_par)) |p1_hit| { a.p1.hit = p1_hit;
         for (Rolls.hit(template.p2, p2_par)) |p2_hit| { a.p2.hit = p2_hit;
-        for (Rolls.psywave(template.p1, p1_hit)) |p1_psywave| { a.p1.psywave = p1_psywave;
-        for (Rolls.psywave(template.p2, p2_hit)) |p2_psywave| { a.p2.psywave = p2_psywave;
+        for (Rolls.psywave(template.p1, p1, p1_hit)) |p1_psywave| { a.p1.psywave = p1_psywave;
+        for (Rolls.psywave(template.p2, p2, p2_hit)) |p2_psywave| { a.p2.psywave = p2_psywave;
         for (Rolls.moveSlot(template.p1, p1_hit)) |p1_slot| { a.p1.move_slot = p1_slot;
         for (Rolls.moveSlot(template.p2, p2_hit)) |p2_slot| { a.p2.move_slot = p2_slot;
         for (Rolls.multiHit(template.p1, p1_hit)) |p1_multi| { a.p1.multi_hit = p1_multi;
