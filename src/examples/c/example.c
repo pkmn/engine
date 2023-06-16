@@ -112,7 +112,7 @@ int main(int argc, char **argv)
       // to reset the log stream before it gets written to again. The middle
       // two arguments (for log and chance, respectively) should almost always
       // be NULL for resets, but the final argument may be used for calc
-      // overrides. If you have no battle options then this can be skipped.
+      // overrides. If you have no battle options then this can be skipped
       pkmn_gen1_battle_options_set(&options, NULL, NULL, NULL);
    }
    // The only error that can occur is if we didn't provide a large enough
