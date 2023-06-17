@@ -135,6 +135,14 @@ pub const Stats = struct {
     saved: usize = 0,
 };
 
+const Data = struct {
+    probability: Rational(u128),
+    base: struct {
+        p1: u16,
+        p2: u16,
+    },
+};
+
 pub fn transitions(
     battle: anytype,
     c1: Choice,
@@ -142,12 +150,14 @@ pub fn transitions(
     actions: Actions,
     seed: u64,
     allocator: std.mem.Allocator,
+    writer: anytype,
 ) !Stats {
     var stats: Stats = .{};
 
-    const Set = std.AutoHashMap(Actions, void);
-    var seen = Set.init(allocator);
+    var seen = std.AutoHashMap(Actions, void).init(allocator);
     defer seen.deinit();
+    var saved = std.AutoHashMap(Actions, Data).init(allocator);
+    defer saved.deinit();
     var frontier = std.ArrayList(Actions).init(allocator);
     defer frontier.deinit();
 
@@ -174,6 +184,11 @@ pub fn transitions(
     assert(frontier.items.len == 1);
     while (i < frontier.items.len) : (i += 1) {
         var template = frontier.items[i];
+
+        // try writer.print("\x1b[1m\x1b[4{d}m", .{(i % 6) + 1});
+        // try template.fmt(writer, true);
+        // try writer.writeAll("\x1b[0m\n");
+
         var a = Actions{ .p1 = .{ .metronome = p1_move }, .p2 = .{ .metronome = p2_move } };
 
         for (Rolls.speedTie(template.p1)) |tie| { a.p1.speed_tie = tie; a.p2.speed_tie = tie;
@@ -219,7 +234,16 @@ pub fn transitions(
                     try Rolls.coalesce(.P2, @intCast(u8, p2_dmg.min), &opts.calc.summaries);
 
                 if (opts.chance.actions.matches(template)) {
-                    if (!opts.chance.actions.eql(a)) continue;
+                    if (!opts.chance.actions.eql(a)) {
+                        // try writer.print("\x1b[2m\x1b[3{d}m", .{(i % 6) + 1});
+                        // try opts.chance.actions.fmt(writer, false);
+                        // try writer.writeAll("\x1b[0m\n");
+                        continue;
+                    }
+
+                    // try writer.print("\x1b[3{d}m", .{(i % 6) + 1});
+                    // try opts.chance.actions.fmt(writer, false);
+                    // try writer.writeAll("\x1b[0m\n");
 
                     for (p1_dmg.min..@as(u9, p1_max) + 1) |p1d| {
                         for (p2_dmg.min..@as(u9, p2_max) + 1) |p2d| {
@@ -236,14 +260,32 @@ pub fn transitions(
                     if (p1_max != p1_dmg.min) try q.update(p1_max - p1_dmg.min + 1, 1);
                     if (p2_max != p2_dmg.min) try q.update(p2_max - p2_dmg.min + 1, 1);
                     try p.add(q);
-                    stats.saved += 1;
+
+                    var v = try saved.getOrPut(opts.chance.actions);
+                    assert(!v.found_existing);
+                    v.value_ptr.* = .{ .probability = q.*, .base = .{
+                        .p1 = opts.calc.summaries.p1.damage.base,
+                        .p2 = opts.calc.summaries.p2.damage.base,
+                    } };
 
                     if (p.q < p.p) {
                         print("improper fraction {} (seed: {d})\n", .{ p, seed });
                         return error.TestUnexpectedResult;
                     }
                 } else if (!matches(opts.chance.actions, i, frontier.items)) {
+                    // try writer.writeAll("\x1b[2m\x1b[37m");
+                    // try opts.chance.actions.fmt(writer, false);
+                    // try writer.writeAll("\x1b[0m\n");
+
                     try frontier.append(opts.chance.actions);
+
+                    // try writer.print("\x1b[2m\x1b[4{d}m", .{(frontier.items.len % 6)});
+                    // try opts.chance.actions.fmt(writer, true);
+                    // try writer.writeAll("\x1b[0m\n");
+                } else {
+                    // try writer.writeAll("\x1b[2m\x1b[37m");
+                    // try opts.chance.actions.fmt(writer, false);
+                    // try writer.writeAll("\x1b[0m\n");
                 }
 
                 p1_min = p1_max;
@@ -264,6 +306,10 @@ pub fn transitions(
     // zig fmt: on
 
     stats.seen = seen.count();
+    stats.saved = saved.count();
+
+    try writer.print("{}\n", .{stats});
+    try display(saved, writer);
 
     p.reduce();
     if (p.p != 1 or p.q != 1) {
@@ -281,4 +327,11 @@ fn matches(actions: Actions, i: usize, frontier: []Actions) bool {
         if (f.matches(actions)) return true;
     }
     return false;
+}
+
+fn display(results: std.AutoHashMap(Actions, Data), writer: anytype) !void {
+    var it = results.iterator();
+    while  (it.next()) |entry| {
+        try writer.print("{} => {}\n",  .{entry.key_ptr.*,  entry.value_ptr.*.probability});
+    }
 }

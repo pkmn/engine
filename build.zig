@@ -219,6 +219,7 @@ pub fn build(b: *std.Build) !void {
 
     const serde = tool(b, "src/tools/serde.zig", tools);
     const protocol = tool(b, "src/tools/protocol.zig", tools);
+    const transitions = tool(b, "src/tools/transitions.zig", tools);
 
     const lint_exe =
         b.addExecutable(.{ .name = "lint", .root_source_file = .{ .path = "src/tools/lint.zig" } });
@@ -232,6 +233,7 @@ pub fn build(b: *std.Build) !void {
     b.step("serde", "Run serialization/deserialization tool").dependOn(&serde.step);
     b.step("test", "Run all tests").dependOn(&tests.step);
     b.step("tools", "Install tools").dependOn(&ToolsStep.create(b, &exes).step);
+    b.step("transitions", "Visualize transitions algorithm search").dependOn(&transitions.step);
 }
 
 fn maybeStrip(

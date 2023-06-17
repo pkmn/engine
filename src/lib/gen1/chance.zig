@@ -68,14 +68,17 @@ pub const Actions = extern struct {
         return true;
     }
 
-    pub fn format(
-        self: Actions,
-        comptime fmt: []const u8,
-        opts: std.fmt.FormatOptions,
-        writer: anytype,
-    ) !void {
-        _ = .{ fmt, opts };
-        try writer.print("<P1 = {s}, P2 = {s}>", .{ self.p1, self.p2 });
+    pub fn fmt(self: Actions, writer: anytype, shape: bool) !void {
+        try writer.writeAll("<P1 = ");
+        try self.p1.fmt(writer, shape);
+        try writer.writeAll(", P2 = ");
+        try self.p2.fmt(writer, shape);
+        try writer.writeAll(">");
+    }
+
+    pub fn format(a: Actions, comptime f: []const u8, o: std.fmt.FormatOptions, w: anytype) !void {
+        _ = .{ f, o };
+        try fmt(a, w, false);
     }
 };
 
@@ -157,13 +160,12 @@ pub const Action = packed struct {
         self.* = @bitCast(Action, @bitCast(u64, self.*) & 0x000000FFFF000000);
     }
 
-    pub fn format(
-        self: Action,
-        comptime fmt: []const u8,
-        opts: std.fmt.FormatOptions,
-        writer: anytype,
-    ) !void {
-        _ = .{ fmt, opts };
+    pub fn format(a: Action, comptime f: []const u8, o: std.fmt.FormatOptions, w: anytype) !void {
+        _ = .{ f, o };
+        try fmt(a, w, false);
+    }
+
+    pub fn fmt(self: Action, writer: anytype, shape: bool) !void {
         try writer.writeByte('(');
         var printed = false;
         inline for (@typeInfo(Action).Struct.fields) |field| {
@@ -171,7 +173,9 @@ pub const Action = packed struct {
             switch (@typeInfo(@TypeOf(val))) {
                 .Enum => if (val != .None) {
                     if (printed) try writer.writeAll(", ");
-                    if (@TypeOf(val) == Optional(bool)) {
+                    if (shape) {
+                        try writer.writeAll(field.name);
+                    } else if (@TypeOf(val) == Optional(bool)) {
                         try writer.print("{s}{s}", .{
                             if (val == .false) "!" else "",
                             field.name,
@@ -183,7 +187,11 @@ pub const Action = packed struct {
                 },
                 .Int => if (val != 0) {
                     if (printed) try writer.writeAll(", ");
-                    try writer.print("{s}:{d}", .{ field.name, val });
+                    if (shape) {
+                        try writer.writeAll(field.name);
+                    } else {
+                        try writer.print("{s}:{d}", .{ field.name, val });
+                    }
                     printed = true;
                 },
                 else => unreachable,
