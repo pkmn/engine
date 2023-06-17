@@ -135,14 +135,6 @@ pub const Stats = struct {
     saved: usize = 0,
 };
 
-const Data = struct {
-    probability: Rational(u128),
-    base: struct {
-        p1: u16,
-        p2: u16,
-    },
-};
-
 pub fn transitions(
     battle: anytype,
     c1: Choice,
@@ -156,8 +148,6 @@ pub fn transitions(
 
     var seen = std.AutoHashMap(Actions, void).init(allocator);
     defer seen.deinit();
-    var saved = std.AutoHashMap(Actions, Data).init(allocator);
-    defer saved.deinit();
     var frontier = std.ArrayList(Actions).init(allocator);
     defer frontier.deinit();
 
@@ -260,13 +250,7 @@ pub fn transitions(
                     if (p1_max != p1_dmg.min) try q.update(p1_max - p1_dmg.min + 1, 1);
                     if (p2_max != p2_dmg.min) try q.update(p2_max - p2_dmg.min + 1, 1);
                     try p.add(q);
-
-                    var v = try saved.getOrPut(opts.chance.actions);
-                    assert(!v.found_existing);
-                    v.value_ptr.* = .{ .probability = q.*, .base = .{
-                        .p1 = opts.calc.summaries.p1.damage.base,
-                        .p2 = opts.calc.summaries.p2.damage.base,
-                    } };
+                    stats.saved += 1;
 
                     if (p.q < p.p) {
                         print("improper fraction {} (seed: {d})\n", .{ p, seed });
@@ -306,10 +290,8 @@ pub fn transitions(
     // zig fmt: on
 
     stats.seen = seen.count();
-    stats.saved = saved.count();
 
     try writer.print("{}\n", .{stats});
-    try display(saved, writer);
 
     p.reduce();
     if (p.p != 1 or p.q != 1) {
@@ -327,11 +309,4 @@ fn matches(actions: Actions, i: usize, frontier: []Actions) bool {
         if (f.matches(actions)) return true;
     }
     return false;
-}
-
-fn display(results: std.AutoHashMap(Actions, Data), writer: anytype) !void {
-    var it = results.iterator();
-    while  (it.next()) |entry| {
-        try writer.print("{} => {}\n",  .{entry.key_ptr.*,  entry.value_ptr.*.probability});
-    }
 }
