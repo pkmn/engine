@@ -266,6 +266,10 @@ pub fn transitions(
                     // try writer.print("\x1b[2m\x1b[4{d}m", .{(frontier.items.len % 6)});
                     // try opts.chance.actions.fmt(writer, true);
                     // try writer.writeAll("\x1b[0m\n");
+
+                    p1_min = 255;
+                    p2_dmg.min = 255;
+                    continue;
                 } else {
                     // try writer.writeAll("\x1b[2m\x1b[37m");
                     // try opts.chance.actions.fmt(writer, false);
