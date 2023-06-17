@@ -182,7 +182,7 @@ pub fn Rational(comptime T: type) type {
             writer: anytype,
         ) !void {
             _ = .{ fmt, opts };
-            try writer.print("{d}/{d}>", .{ self.p, self.q });
+            try writer.print("{d}/{d}", .{ self.p, self.q });
         }
 
         inline fn multiplication(r: *Self, p: anytype, q: anytype) !void {
