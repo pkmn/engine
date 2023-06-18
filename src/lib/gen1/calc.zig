@@ -209,7 +209,7 @@ pub fn transitions(
                 a.p2.damage = @intCast(u8, p2_dmg.min);
 
                 opts.calc = .{ .overrides = a };
-                opts.chance = .{ .probability = .{} };
+                opts.chance = .{ .probability = .{}, .actions = actions };
                 const q = &opts.chance.probability;
 
                 b = battle;
@@ -218,9 +218,9 @@ pub fn transitions(
 
                 // const p1_max = @intCast(u8, p1_dmg.min);
                 // const p2_max = @intCast(u8, p2_dmg.min);
-                const p1_max = if (p1_min != 0) p1_min
+                var p1_max = if (p1_min != 0) p1_min
                     else try Rolls.coalesce(.P1, @intCast(u8, p1_dmg.min), &opts.calc.summaries);
-                const p2_max =
+                var p2_max =
                     try Rolls.coalesce(.P2, @intCast(u8, p2_dmg.min), &opts.calc.summaries);
 
                 if (opts.chance.actions.matches(template)) {
@@ -267,13 +267,75 @@ pub fn transitions(
                     // try opts.chance.actions.fmt(writer, true);
                     // try writer.writeAll("\x1b[0m\n");
 
-                    p1_min = 255;
-                    p2_dmg.min = 255;
-                    continue;
+                    p1_max = 255;
+                    p2_max = 255;
                 } else {
                     // try writer.writeAll("\x1b[2m\x1b[37m");
                     // try opts.chance.actions.fmt(writer, false);
                     // try writer.writeAll("\x1b[0m\n");
+
+                    if (p2_dmg.min == 217) {
+                        var original = opts.chance.actions;
+                        if (p1_dmg.min == 217) {
+                            opts.chance.actions.p1.damage = 255;
+                            opts.chance.actions.p2.damage = 255;
+                            opts.calc = .{ .overrides = opts.chance.actions };
+                            opts.chance = .{ .probability = .{}, .actions = actions };
+
+                            b = battle;
+                            _ = try b.update(c1, c2, &opts);
+                            stats.updates += 1;
+
+                            if (opts.chance.actions.matches(original)) {
+                                p1_min = 255;
+                                p2_dmg.min = 255;
+                                continue;
+                            }
+
+                            a = original;
+                            a.p1.damage = 255;
+                            opts.calc = .{ .overrides = a };
+                            opts.chance = .{ .probability = .{}, .actions = actions };
+
+                            b = battle;
+                            _ = try b.update(c1, c2, &opts);
+                            stats.updates += 1;
+
+                            if (opts.chance.actions.matches(original)) {
+                                p1_min = 255;
+                                p2_dmg.min = p2_max;
+                                continue;
+                            }
+
+                            opts.chance.actions = original;
+                        }
+
+                        opts.chance.actions.p2.damage = 255;
+                        opts.calc = .{ .overrides = opts.chance.actions };
+                        opts.chance = .{ .probability = .{}, .actions = actions };
+
+                        b = battle;
+                        _ = try b.update(c1, c2, &opts);
+                        stats.updates += 1;
+
+                        if (opts.chance.actions.matches(original)) {
+                            p2_max = 255;
+                        }
+                    } else if (p1_dmg.min == 217) {
+                        var original = opts.chance.actions;
+
+                        opts.chance.actions.p1.damage = 255;
+                        opts.calc = .{ .overrides = opts.chance.actions };
+                        opts.chance = .{ .probability = .{}, .actions = actions };
+
+                        b = battle;
+                        _ = try b.update(c1, c2, &opts);
+                        stats.updates += 1;
+
+                        if (opts.chance.actions.matches(original)) {
+                            p1_max = 255;
+                        }
+                    }
                 }
 
                 p1_min = p1_max;
@@ -306,7 +368,7 @@ pub fn transitions(
     return stats;
 }
 
-fn matches(actions: Actions, i: usize, frontier: []Actions) bool {
+inline fn matches(actions: Actions, i: usize, frontier: []Actions) bool {
     for (frontier, 0..) |f, j| {
         // TODO: is skipping this redundant check worth it?
         if (i == j) continue;
