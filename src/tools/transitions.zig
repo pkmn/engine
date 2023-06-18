@@ -26,10 +26,14 @@ pub fn main() !void {
     var battle = switch (gen) {
         1 => pkmn.gen1.helpers.Battle.init(
             seed,
-            // &.{.{ .species = .Charmander, .moves = &.{.BodySlam} }},
-            // &.{.{ .species = .Squirtle, .stats = .{}, .moves = &.{.Surf} }},
-            &.{.{ .species = .Charmander, .hp = 5, .level = 5, .stats = .{}, .moves = &.{.Scratch} }},
-            &.{.{ .species = .Squirtle, .hp = 4, .level = 5, .stats = .{}, .moves = &.{.Tackle} }},
+            &.{.{ .species = .Charmander, .moves = &.{.BodySlam} }},
+            &.{.{ .species = .Squirtle, .stats = .{}, .moves = &.{.Surf} }},
+            // &.{.{ .species = .Charmander, .hp = 5, .level = 5, .stats = .{}, .moves = &.{
+            //     .Scratch,
+            // } }},
+            // &.{.{ .species = .Squirtle, .hp = 4, .level = 5, .stats = .{}, .moves = &.{
+            //     .Tackle,
+            // } }},
         ),
         else => unreachable,
     };
