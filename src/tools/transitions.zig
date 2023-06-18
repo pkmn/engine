@@ -15,24 +15,42 @@ pub fn main() !void {
 
     const args = try std.process.argsAlloc(allocator);
     defer std.process.argsFree(allocator, args);
+    if (args.len < 2 or args.len > 3) usageAndExit(args[0]);
 
-    const seed = if (args.len > 1) try std.fmt.parseUnsigned(u64, args[1], 0) else 0x1234568;
+    const gen = std.fmt.parseUnsigned(u8, args[1], 10) catch
+        errorAndExit("gen", args[1], args[0]);
+    if (gen < 1 or gen > 9) errorAndExit("gen", args[1], args[0]);
 
-    var battle = pkmn.gen1.helpers.Battle.init(
-        seed,
-        // &.{.{ .species = .Charmander, .moves = &.{.BodySlam} }},
-        // &.{.{ .species = .Squirtle, .stats = .{}, .moves = &.{.Surf} }},
-        &.{.{ .species = .Charmander, .hp = 5, .level = 5, .stats = .{}, .moves = &.{.Scratch} }},
-        &.{.{ .species = .Squirtle, .hp = 4, .level = 5, .stats = .{}, .moves = &.{.Tackle} }},
-    );
-    _ = try battle.update(.{}, .{}, &pkmn.gen1.NULL);
+    const seed = if (args.len > 2) try std.fmt.parseUnsigned(u64, args[2], 0) else 0x1234568;
 
-    const out = std.io.getStdOut();
-    // var buf = std.io.bufferedWriter(out.writer());
-    // var w = buf.writer();
-    var w = out.writer();
+    var battle = switch (gen) {
+        1 => pkmn.gen1.helpers.Battle.init(
+            seed,
+            // &.{.{ .species = .Charmander, .moves = &.{.BodySlam} }},
+            // &.{.{ .species = .Squirtle, .stats = .{}, .moves = &.{.Surf} }},
+            &.{.{ .species = .Charmander, .hp = 5, .level = 5, .stats = .{}, .moves = &.{.Scratch} }},
+            &.{.{ .species = .Squirtle, .hp = 4, .level = 5, .stats = .{}, .moves = &.{.Tackle} }},
+        ),
+        else => unreachable,
+    };
+    var options = switch (gen) {
+        1 => pkmn.gen1.NULL,
+        else => unreachable,
+    };
+    _ = try battle.update(.{}, .{}, &options);
 
-    _ = try pkmn.gen1.calc.transitions(battle, move(1), move(1), .{}, seed, allocator, w);
+    const out = std.io.getStdOut().writer();
+    _ = try pkmn.gen1.calc.transitions(battle, move(1), move(1), .{}, seed, allocator, out);
+}
 
-    // try buf.flush();
+fn errorAndExit(msg: []const u8, arg: []const u8, cmd: []const u8) noreturn {
+    const err = std.io.getStdErr().writer();
+    err.print("Invalid {s}: {s}\n", .{ msg, arg }) catch {};
+    usageAndExit(cmd);
+}
+
+fn usageAndExit(cmd: []const u8) noreturn {
+    const err = std.io.getStdErr().writer();
+    err.print("Usage: {s} <GEN> <SEED?>\n", .{cmd}) catch {};
+    std.process.exit(1);
 }

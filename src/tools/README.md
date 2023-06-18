@@ -54,6 +54,7 @@ This directory contains miscellaneous scripts and tools useful for working on th
       $ zig build serde -- <GEN> <SEED?>
       $ npm run compile && node build/tools/serde 1
 
-- [`transitions.zig`](transitions.zig): TODO:
+- [`transitions.zig`](transitions.zig): Runs the specified generations's "transitions" function to
+  make it easier to debug or visualize:
 
-      $ zig build transitions -Dcalc -Dchance -- <SEED?> 2>/dev/null
+      $ zig build transitions -Dcalc -Dchance -- <GEN> <SEED?> 2>/dev/null
