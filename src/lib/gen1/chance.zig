@@ -174,7 +174,7 @@ pub const Action = packed struct {
                 .Enum => if (val != .None) {
                     if (printed) try writer.writeAll(", ");
                     if (shape) {
-                        try writer.writeAll(field.name);
+                        try writer.print("{s}:?", .{field.name});
                     } else if (@TypeOf(val) == Optional(bool)) {
                         try writer.print("{s}{s}", .{
                             if (val == .false) "!" else "",
@@ -188,7 +188,7 @@ pub const Action = packed struct {
                 .Int => if (val != 0) {
                     if (printed) try writer.writeAll(", ");
                     if (shape) {
-                        try writer.writeAll(field.name);
+                        try writer.print("{s}:?", .{field.name});
                     } else {
                         try writer.print("{s}:{d}", .{ field.name, val });
                     }
