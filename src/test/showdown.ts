@@ -39,7 +39,7 @@ export const ROLLS = {
     return (move: string, skip: string[] = []) => {
       const moves = all.filter(m => !skip.includes(m));
       const value = ranged(moves.indexOf(move) + 1, moves.length) - 1;
-      return {key: 'data/moves.ts:11935:23', value};
+      return {key: 'data/moves.ts:11937:23', value};
     };
   },
 };

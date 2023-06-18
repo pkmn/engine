@@ -8,8 +8,8 @@ default: check
 
 .PHONY: zig-build
 zig-build:
-	zig build -fsummary -Dlog -p build
-	zig build -fsummary -Dshowdown -Dlog -p build
+	zig build --summary all -Dlog -p build
+	zig build --summary all -Dshowdown -Dlog -p build
 
 .PHONY: js-build
 js-build: export DEBUG_PKMN_ENGINE=true
@@ -58,8 +58,8 @@ fix: zig-fix js-fix
 
 .PHONY: zig-test
 zig-test:
-	zig build -fsummary -Dlog test
-	zig build -fsummary -Dshowdown -Dlog test
+	zig build --summary all -Dlog test
+	zig build --summary all -Dshowdown -Dlog test
 
 .PHONY: js-test
 js-test: js-build
@@ -72,8 +72,8 @@ test: zig-test js-test
 zig-coverage:
 	rm -rf coverage/zig
 	mkdir -p coverage/zig
-	zig build -fsummary test -Dtest-coverage=coverage/zig/pkmn
-	zig build -fsummary -Dshowdown -Dlog test -Dtest-coverage=coverage/zig/pkmn-showdown
+	zig build --summary all test -Dtest-coverage=coverage/zig/pkmn
+	zig build --summary all -Dshowdown -Dlog test -Dtest-coverage=coverage/zig/pkmn-showdown
 	kcov --merge coverage/zig/merged coverage/zig/pkmn coverage/zig/pkmn-showdown
 
 .PHONY: js-coverage
@@ -100,7 +100,7 @@ js-example: src/examples/js/node_modules
 
 .PHONY: zig-example
 zig-example:
-	cd src/examples/zig; zig build -fsummary run -- 1234
+	cd src/examples/zig; zig build --summary all run -- 1234
 
 .PHONY: example
 example: c-example js-example zig-example
@@ -148,7 +148,7 @@ patch:
 
 .PHONY: t
 t:
-	zig build -fsummary test -Dlog -Dtest-file=src/lib/gen$(gen)/test.zig -Dtest-filter="$(filter)" $(opt)
+	zig build --summary all test -Dlog -Dtest-file=src/lib/gen$(gen)/test.zig -Dtest-filter="$(filter)" $(opt)
 
 .PHONY: it
 it:

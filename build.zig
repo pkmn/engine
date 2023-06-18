@@ -111,7 +111,7 @@ pub fn build(b: *std.Build) !void {
         const lib = b.addSharedLibrary(.{
             .name = name,
             .root_source_file = .{ .path = "src/lib/binding/c.zig" },
-            .version = try std.builtin.Version.parse(version),
+            .version = try std.SemanticVersion.parse(version),
             .optimize = optimize,
             .target = target,
         });
