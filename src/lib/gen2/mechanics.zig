@@ -34,11 +34,11 @@ const Species = data.Species;
 const Stats = data.Stats;
 const Status = data.Status;
 
-pub fn update(battle: anytype, c1: Choice, c2: Choice, log: anytype) !Result {
+pub fn update(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Result {
     _ = battle;
     _ = c1;
     _ = c2;
-    _ = log;
+    _ = options;
 
     return Result.Default;
 }

@@ -530,8 +530,7 @@ test "Rolls.confusion" {
     try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{ .confusion = 5 }, 0));
     try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{ .confusion = 3 }, 1));
     try expectEqualSlices(u3, &.{1}, Rolls.confusion(.{ .confusion = 1 }, 0));
-    try expectEqualSlices(u3, &.{ 0, 4
-     }, Rolls.confusion(.{ .confusion = 3 }, 0));
+    try expectEqualSlices(u3, &.{ 0, 4 }, Rolls.confusion(.{ .confusion = 3 }, 0));
 }
 
 test "Rolls.moveSlot" {

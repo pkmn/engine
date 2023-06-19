@@ -6,6 +6,7 @@ const common = @import("../common/data.zig");
 const DEBUG = @import("../common/debug.zig").print;
 const protocol = @import("../common/protocol.zig");
 const rational = @import("../common/rational.zig");
+const util = @import("../common/util.zig");
 
 const chance = @import("chance.zig");
 const data = @import("data.zig");
@@ -25,6 +26,9 @@ const Choice = common.Choice;
 
 const Rational = rational.Rational;
 
+const PointerType = util.PointerType;
+const FieldType = util.FieldType;
+
 const Actions = chance.Actions;
 const Action = chance.Action;
 const Chance = chance.Chance;
@@ -43,7 +47,8 @@ pub const Summaries = extern struct {
     }
 
     /// Returns the `Summary` for the given `player`.
-    pub inline fn get(self: *Summaries, player: Player) *Summary {
+    pub inline fn get(self: anytype, player: Player) PointerType(@TypeOf(self), Summary) {
+        assert(@typeInfo(@TypeOf(self)).Pointer.child == Summaries);
         return if (player == .P1) &self.p1 else &self.p2;
     }
 };
@@ -85,7 +90,11 @@ pub const Calc = struct {
     /// Information relevant to damage calculation.
     summaries: Summaries = .{},
 
-    pub fn overridden(self: Calc, player: Player, comptime field: []const u8) ?TypeOf(field) {
+    pub fn overridden(
+        self: Calc,
+        player: Player,
+        comptime field: []const u8,
+    ) ?FieldType(Action, field) {
         if (!enabled) return null;
 
         const val = @field(if (player == .P1) self.overrides.p1 else self.overrides.p2, field);
@@ -120,7 +129,11 @@ pub const Calc = struct {
 pub const NULL = Null{};
 
 const Null = struct {
-    pub fn overridden(self: Null, player: Player, comptime field: []const u8) ?TypeOf(field) {
+    pub fn overridden(
+        self: Null,
+        player: Player,
+        comptime field: []const u8,
+    ) ?FieldType(Action, field) {
         _ = .{ self, player };
         return null;
     }
@@ -137,11 +150,6 @@ const Null = struct {
         _ = .{ self, player };
     }
 };
-
-fn TypeOf(comptime field: []const u8) type {
-    for (@typeInfo(Action).Struct.fields) |f| if (std.mem.eql(u8, f.name, field)) return f.type;
-    unreachable;
-}
 
 pub const Stats = struct {
     frontier: usize = 0,

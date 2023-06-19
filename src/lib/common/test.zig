@@ -5,4 +5,5 @@ comptime {
     _ = @import("protocol.zig");
     _ = @import("rational.zig");
     _ = @import("rng.zig");
+    _ = @import("util.zig");
 }

@@ -5,6 +5,7 @@ const data = @import("../common/data.zig");
 const DEBUG = @import("../common/debug.zig").print;
 const options = @import("../common/options.zig");
 const rng = @import("../common/rng.zig");
+const util = @import("../common/util.zig");
 
 const items = @import("data/items.zig");
 const moves = @import("data/moves.zig");
@@ -36,7 +37,9 @@ const ID = data.ID;
 const Player = data.Player;
 const Result = data.Result;
 
-const showdown = options.showdown;
+const PointerType = util.PointerType;
+
+const showdown = pkmn.options.showdown;
 
 pub const PRNG = rng.PRNG(2);
 
@@ -49,20 +52,22 @@ pub fn Battle(comptime RNG: anytype) type {
         turn: u16 = 0,
         field: Field = .{},
 
-        pub inline fn side(self: *Self, player: Player) *Side {
+        pub inline fn side(self: anytype, player: Player) PointerType(@TypeOf(self), Side) {
+            assert(@typeInfo(@TypeOf(self)).Pointer.child == Self);
             return &self.sides[@intFromEnum(player)];
         }
 
-        pub inline fn foe(self: *Self, player: Player) *Side {
+        pub inline fn foe(self: anytype, player: Player) PointerType(@TypeOf(self), Side) {
+            assert(@typeInfo(@TypeOf(self)).Pointer.child == Self);
             return &self.sides[@intFromEnum(player.foe())];
         }
 
-        pub inline fn active(self: *Self, player: Player) ID {
+        pub inline fn active(self: *const Self, player: Player) ID {
             return player.ident(@intCast(u3, self.side(player).pokemon[0].position));
         }
 
-        pub fn update(self: *Self, c1: Choice, c2: Choice, log: anytype) !Result {
-            return mechanics.update(self, c1, c2, log);
+        pub fn update(self: *Self, c1: Choice, c2: Choice, options: anytype) !Result {
+            return mechanics.update(self, c1, c2, options);
         }
 
         pub fn choices(self: *Self, player: Player, request: Choice.Type, out: []Choice) u8 {
@@ -118,14 +123,16 @@ const Side = extern struct {
         assert(@sizeOf(Side) == 240);
     }
 
-    pub inline fn get(self: *const Side, slot: u8) *Pokemon {
+    pub inline fn get(self: anytype, slot: u8) PointerType(@TypeOf(self), Pokemon) {
+        assert(@typeInfo(@TypeOf(self)).Pointer.child == Side);
         assert(slot > 0 and slot <= 6);
         const id = self.pokemon[slot - 1].position;
         assert(id > 0 and id <= 6);
         return &self.pokemon[id - 1];
     }
 
-    pub inline fn stored(self: *Side) *Pokemon {
+    pub inline fn stored(self: anytype) PointerType(@TypeOf(self), Pokemon) {
+        assert(@typeInfo(@TypeOf(self)).Pointer.child == Side);
         return self.get(1);
     }
 };
@@ -145,7 +152,8 @@ const ActivePokemon = extern struct {
         assert(@sizeOf(ActivePokemon) == 44);
     }
 
-    pub inline fn move(self: *ActivePokemon, mslot: u8) *MoveSlot {
+    pub inline fn move(self: anytype, mslot: u8) PointerType(@TypeOf(self), MoveSlot) {
+        assert(@typeInfo(@TypeOf(self)).Pointer.child == Pokemon);
         assert(mslot > 0 and mslot <= 4);
         assert(self.moves[mslot - 1].id != .None);
         return &self.moves[mslot - 1];
@@ -169,7 +177,8 @@ const Pokemon = extern struct {
         assert(@sizeOf(Pokemon) == 32);
     }
 
-    pub inline fn move(self: *Pokemon, mslot: u8) *MoveSlot {
+    pub inline fn move(self: anytype, mslot: u8) PointerType(@TypeOf(self), MoveSlot) {
+        assert(@typeInfo(@TypeOf(self)).Pointer.child == Pokemon);
         assert(mslot > 0 and mslot <= 4);
         assert(self.moves[mslot - 1].id != .None);
         return &self.moves[mslot - 1];

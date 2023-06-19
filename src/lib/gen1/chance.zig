@@ -9,6 +9,7 @@ const expectEqual = std.testing.expectEqual;
 const DEBUG = @import("../common/debug.zig").print;
 const options = @import("../common/options.zig");
 const rational = @import("../common/rational.zig");
+const util = @import("../common/util.zig");
 
 const Player = @import("../common/data.zig").Player;
 const Optional = @import("../common/optional.zig").Optional;
@@ -34,7 +35,8 @@ pub const Actions = extern struct {
     }
 
     /// Returns the `Action` for the given `player`.
-    pub inline fn get(self: *Actions, player: Player) *Action {
+    pub inline fn get(self: anytype, player: Player) util.PointerType(@TypeOf(self), Action) {
+        assert(@typeInfo(@TypeOf(self)).Pointer.child == Actions);
         return if (player == .P1) &self.p1 else &self.p2;
     }
 
