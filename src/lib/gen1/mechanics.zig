@@ -1214,9 +1214,9 @@ fn adjustDamage(battle: anytype, player: Player) u16 {
 fn randomizeDamage(battle: anytype, player: Player, options: anytype) !void {
     if (battle.last_damage <= 1) return;
     const random = try Rolls.damage(battle, player, options);
-    options.calc.base(player, battle.last_damage);
+    options.calc.base(player.foe(), battle.last_damage);
     battle.last_damage = @intCast(u16, @as(u32, battle.last_damage) *% random / 255);
-    options.calc.final(player, battle.last_damage);
+    options.calc.final(player.foe(), battle.last_damage);
 }
 
 fn specialDamage(battle: anytype, player: Player, move: Move.Data, options: anytype) !?Result {
@@ -1320,6 +1320,7 @@ fn applyDamage(
             subbed.active.volatiles.Substitute = false;
             // battle.last_damage is not updated with the amount of HP the Substitute had
             try options.log.end(battle.active(sub_player), .Substitute);
+            options.calc.capped(target_player);
             return true;
         } else {
             // Safe to truncate since less than subbed.volatiles.substitute which is a u8
@@ -1548,6 +1549,7 @@ fn faint(battle: anytype, player: Player, done: bool, options: anytype) !?Result
     }
 
     try options.log.faint(battle.active(player), done);
+    options.calc.capped(player);
     return null;
 }
 

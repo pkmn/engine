@@ -311,14 +311,14 @@ pub const Rolls = struct {
 
     /// Returns the max damage roll which will produce the same damage as `roll`
     /// given the base damage in `summaries`.
-    pub inline fn coalesce(player: Player, roll: u8, summaries: *calc.Summaries) !u8 {
+    pub inline fn coalesce(player: Player, roll: u8, summaries: *calc.Summaries, cap: bool) !u8 {
         if (roll == 0) return roll;
 
-        const base = summaries.get(player).damage.base;
-        if (base == 0) return 255;
+        const dmg = summaries.get(player.foe()).damage;
+        if (dmg.base == 0 or (cap and dmg.capped)) return 255;
 
-        // Closed form solution for max damage roll provided by Orion Taylor (orion#8038)!
-        return @min(255, roll + ((254 - ((@as(u32, base) * roll) % 255)) / base));
+        // Closed form solution for max damage roll provided by Orion Taylor (taylorott)
+        return @min(255, roll + ((254 - ((@as(u32, dmg.base) * roll) % 255)) / dmg.base));
     }
 
     /// Returns a slice with the correct range of values for confusion given the `action` state.
@@ -451,11 +451,14 @@ test "Rolls.damage" {
 }
 
 test "Rolls.coalesce" {
-    var summaries = calc.Summaries{ .p1 = .{ .damage = .{ .base = 74, .final = 69 } } };
-    try expectEqual(@as(u8, 0), try Rolls.coalesce(.P1, 0, &summaries));
-    try expectEqual(@as(u8, 241), try Rolls.coalesce(.P1, 238, &summaries));
+    var summaries =
+        calc.Summaries{ .p1 = .{ .damage = .{ .base = 74, .final = 69, .capped = true } } };
+    try expectEqual(@as(u8, 0), try Rolls.coalesce(.P2, 0, &summaries, false));
+    try expectEqual(@as(u8, 241), try Rolls.coalesce(.P2, 238, &summaries, false));
+    try expectEqual(@as(u8, 255), try Rolls.coalesce(.P2, 238, &summaries, true));
     summaries.p1.damage.final = 74;
-    try expectEqual(@as(u8, 217), try Rolls.coalesce(.P1, 217, &summaries));
+    try expectEqual(@as(u8, 217), try Rolls.coalesce(.P2, 217, &summaries, false));
+    try expectEqual(@as(u8, 255), try Rolls.coalesce(.P2, 217, &summaries, true));
 }
 
 test "Rolls.hit" {
@@ -527,7 +530,8 @@ test "Rolls.confusion" {
     try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{ .confusion = 5 }, 0));
     try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{ .confusion = 3 }, 1));
     try expectEqualSlices(u3, &.{1}, Rolls.confusion(.{ .confusion = 1 }, 0));
-    try expectEqualSlices(u3, &.{ 0, 4 }, Rolls.confusion(.{ .confusion = 3 }, 0));
+    try expectEqualSlices(u3, &.{ 0, 4
+     }, Rolls.confusion(.{ .confusion = 3 }, 0));
 }
 
 test "Rolls.moveSlot" {

@@ -44,7 +44,9 @@ pub fn main() !void {
     _ = try battle.update(.{}, .{}, &options);
 
     const out = std.io.getStdOut().writer();
-    _ = try pkmn.gen1.calc.transitions(battle, move(1), move(1), .{}, seed, allocator, out);
+    const stats =
+        try pkmn.gen1.calc.transitions(battle, move(1), move(1), .{}, true, seed, allocator, out);
+    try out.print("{}\n", .{stats});
 }
 
 fn errorAndExit(msg: []const u8, arg: []const u8, cmd: []const u8) noreturn {

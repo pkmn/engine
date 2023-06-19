@@ -39,7 +39,7 @@ pub const Summaries = extern struct {
     p2: Summary = .{},
 
     comptime {
-        assert(@sizeOf(Summaries) == 8);
+        assert(@sizeOf(Summaries) == 12);
     }
 
     /// Returns the `Summary` for the given `player`.
@@ -61,14 +61,19 @@ pub const Summary = extern struct {
         /// The final computed damage that gets applied to the Pokémon. May exceed the target's HP
         // (to determine the *actual* damage done compare the target's stored HP before and after).
         final: u16 = 0,
+        /// Whether higher damage will saturate / result in the same outcome (e.g. additional damage
+        /// gets ignored due to it already breaking a Substitute or causing the target to faint).
+        capped: bool = false,
+
+        _: u8 = 0,
 
         comptime {
-            assert(@sizeOf(Damage) == 4);
+            assert(@sizeOf(Damage) == 6);
         }
     };
 
     comptime {
-        assert(@sizeOf(Summary) == 4);
+        assert(@sizeOf(Summary) == 6);
     }
 };
 
@@ -102,6 +107,12 @@ pub const Calc = struct {
 
         self.summaries.get(player).damage.final = val;
     }
+
+    pub fn capped(self: *Calc, player: Player) void {
+        if (!enabled) return;
+
+        self.summaries.get(player).damage.capped = true;
+    }
 };
 
 /// Null object pattern implementation of Generation I `Calc` which does nothing, though damage
@@ -120,6 +131,10 @@ const Null = struct {
 
     pub fn final(self: Null, player: Player, val: u16) void {
         _ = .{ self, player, val };
+    }
+
+    pub fn capped(self: Null, player: Player) void {
+        _ = .{ self, player };
     }
 };
 
@@ -140,10 +155,12 @@ pub fn transitions(
     c1: Choice,
     c2: Choice,
     actions: Actions,
+    cap: bool,
     seed: u64,
     allocator: std.mem.Allocator,
     writer: anytype,
 ) !Stats {
+    _ = writer;
     var stats: Stats = .{};
 
     var seen = std.AutoHashMap(Actions, void).init(allocator);
@@ -218,10 +235,10 @@ pub fn transitions(
 
                 // const p1_max = @intCast(u8, p1_dmg.min);
                 // const p2_max = @intCast(u8, p2_dmg.min);
-                var p1_max = if (p1_min != 0) p1_min
-                    else try Rolls.coalesce(.P1, @intCast(u8, p1_dmg.min), &opts.calc.summaries);
+                var p1_max = if (p1_min != 0) p1_min else
+                    try Rolls.coalesce(.P1, @intCast(u8, p1_dmg.min), &opts.calc.summaries, cap);
                 var p2_max =
-                    try Rolls.coalesce(.P2, @intCast(u8, p2_dmg.min), &opts.calc.summaries);
+                    try Rolls.coalesce(.P2, @intCast(u8, p2_dmg.min), &opts.calc.summaries, cap);
 
                 if (opts.chance.actions.matches(template)) {
                     if (!opts.chance.actions.eql(a)) {
@@ -356,8 +373,6 @@ pub fn transitions(
     // zig fmt: on
 
     stats.seen = seen.count();
-
-    try writer.print("{}\n", .{stats});
 
     p.reduce();
     if (p.p != 1 or p.q != 1) {

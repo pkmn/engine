@@ -9790,7 +9790,7 @@ test "transitions" {
     try expectEqual(Result.Default, try battle.update(.{}, .{}, &data.NULL));
 
     const w = std.io.null_writer;
-    _ = try calc.transitions(battle, move(1), move(1), .{}, seed, std.testing.allocator, w);
+    _ = try calc.transitions(battle, move(1), move(1), .{}, true, seed, std.testing.allocator, w);
 }
 
 fn Test(comptime rolls: anytype) type {
