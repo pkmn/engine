@@ -153,6 +153,8 @@ pub const Action = packed struct {
     /// If not None, the Move to return for Rolls.metronome.
     metronome: Move = .None,
 
+    pub const Field = std.meta.FieldEnum(Action);
+
     comptime {
         assert(@sizeOf(Action) == 8);
     }
@@ -423,15 +425,15 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.get(player).multi_hit = n;
         }
 
-        pub fn duration(self: *Self, comptime field: []const u8, player: Player, turns: u4) void {
+        pub fn duration(self: *Self, comptime field: Action.Field, player: Player, turns: u4) void {
             if (!enabled) return;
 
             self.actions.get(player).duration = if (options.key) 1 else turns;
 
-            const bind = std.mem.eql(u8, field, "binding");
+            const bind = field == .binding;
             var action = self.actions.get(if (bind) player else player.foe());
-            assert(@field(action, field) == 0);
-            @field(action, field) = 1;
+            assert(@field(action, @tagName(field)) == 0);
+            @field(action, @tagName(field)) = 1;
         }
 
         pub fn sleep(self: *Self, player: Player, turns: u4) Error!void {
@@ -720,13 +722,13 @@ test "Chance.multiHit" {
 test "Chance.duration" {
     var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
 
-    chance.duration("sleep", .P1, 2);
+    chance.duration(.sleep, .P1, 2);
     try expectValue(@as(u4, 2), chance.actions.p1.duration);
     try expectValue(@as(u3, 1), chance.actions.p2.sleep);
 
     chance.reset();
 
-    chance.duration("binding", .P2, 4);
+    chance.duration(.binding, .P2, 4);
     try expectValue(@as(u4, 4), chance.actions.p2.duration);
     try expectValue(@as(u3, 1), chance.actions.p2.binding);
 }
@@ -897,7 +899,7 @@ const Null = struct {
         _ = .{ self, player, n };
     }
 
-    pub fn duration(self: Null, comptime field: []const u8, player: Player, turns: u4) void {
+    pub fn duration(self: Null, comptime field: Action.Field, player: Player, turns: u4) void {
         _ = .{ self, field, player, turns };
     }
 

@@ -93,11 +93,12 @@ pub const Calc = struct {
     pub fn overridden(
         self: Calc,
         player: Player,
-        comptime field: []const u8,
-    ) ?FieldType(Action, field) {
+        comptime field: Action.Field,
+    ) ?std.meta.FieldType(Action, field) {
         if (!enabled) return null;
 
-        const val = @field(if (player == .P1) self.overrides.p1 else self.overrides.p2, field);
+        const overrides = if (player == .P1) self.overrides.p1 else self.overrides.p2;
+        const val = @field(overrides, @tagName(field));
         return if (switch (@typeInfo(@TypeOf(val))) {
             .Enum => val != .None,
             .Int => val != 0,
@@ -132,8 +133,8 @@ const Null = struct {
     pub fn overridden(
         self: Null,
         player: Player,
-        comptime field: []const u8,
-    ) ?FieldType(Action, field) {
+        comptime field: Action.Field,
+    ) ?std.meta.FieldType(Action, field) {
         _ = .{ self, player };
         return null;
     }

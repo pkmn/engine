@@ -524,7 +524,7 @@ fn beforeMove(
     if (Status.is(stored.status, .SLP)) {
         const before = stored.status;
         // Even if the EXT bit is set this will still correctly modify the sleep duration
-        if (options.calc.overridden(player, "sleep") == null) {
+        if (options.calc.overridden(player, .sleep) == null) {
             stored.status -= 1;
         }
 
@@ -569,7 +569,7 @@ fn beforeMove(
     }
 
     if (volatiles.disabled_duration > 0) {
-        if (options.calc.overridden(player, "disable") == null) {
+        if (options.calc.overridden(player, .disable) == null) {
             volatiles.disabled_duration -= 1;
         }
         try options.chance.disable(player, volatiles.disabled_duration);
@@ -592,7 +592,7 @@ fn beforeMove(
     if (volatiles.Confusion) {
         assert(volatiles.confusion > 0);
 
-        if (options.calc.overridden(player, "confusion") == null) {
+        if (options.calc.overridden(player, .confusion) == null) {
             volatiles.confusion -= 1;
         }
         try options.chance.confusion(player, volatiles.confusion);
@@ -670,7 +670,7 @@ fn beforeMove(
 
         assert(volatiles.attacks > 0);
 
-        if (options.calc.overridden(player, "attacking") == null) {
+        if (options.calc.overridden(player, .attacking) == null) {
             volatiles.attacks -= 1;
         }
         try options.chance.attacking(player, volatiles.attacks);
@@ -710,7 +710,7 @@ fn beforeMove(
         assert(volatiles.attacks > 0);
         assert(from != null);
 
-        if (options.calc.overridden(player, "attacking") == null) {
+        if (options.calc.overridden(player, .attacking) == null) {
             volatiles.attacks -= 1;
         }
         try options.chance.attacking(player, volatiles.attacks);
@@ -733,7 +733,7 @@ fn beforeMove(
     if (volatiles.Binding) {
         assert(volatiles.attacks > 0);
 
-        if (options.calc.overridden(player, "binding") == null) {
+        if (options.calc.overridden(player, .binding) == null) {
             volatiles.attacks -= 1;
         }
         try options.chance.binding(player, volatiles.attacks);
@@ -2747,7 +2747,7 @@ fn clearVolatiles(battle: anytype, who: Player, clear: bool, options: anytype) !
 
 pub const Rolls = struct {
     inline fn speedTie(battle: anytype, options: anytype) !bool {
-        const p1 = if (options.calc.overridden(.P1, "speed_tie")) |player|
+        const p1 = if (options.calc.overridden(.P1, .speed_tie)) |player|
             player == .P1
         else if (showdown)
             battle.rng.range(u8, 0, 2) == 0
@@ -2759,7 +2759,7 @@ pub const Rolls = struct {
     }
 
     inline fn criticalHit(battle: anytype, player: Player, rate: u8, options: anytype) !bool {
-        const crit = if (options.calc.overridden(player, "critical_hit")) |val|
+        const crit = if (options.calc.overridden(player, .critical_hit)) |val|
             val == .true
         else if (showdown)
             battle.rng.chance(u8, rate, 256)
@@ -2771,7 +2771,7 @@ pub const Rolls = struct {
     }
 
     inline fn damage(battle: anytype, player: anytype, options: anytype) !u8 {
-        const roll = if (options.calc.overridden(player, "damage")) |val|
+        const roll = if (options.calc.overridden(player, .damage)) |val|
             val
         else roll: {
             if (showdown) break :roll battle.rng.range(u8, 217, 256);
@@ -2786,7 +2786,7 @@ pub const Rolls = struct {
     }
 
     inline fn hit(battle: anytype, player: Player, accuracy: u8, options: anytype) bool {
-        const ok = if (options.calc.overridden(player, "hit")) |val|
+        const ok = if (options.calc.overridden(player, .hit)) |val|
             val == .true
         else if (showdown)
             battle.rng.chance(u8, accuracy, 256)
@@ -2798,7 +2798,7 @@ pub const Rolls = struct {
     }
 
     inline fn confused(battle: anytype, player: Player, options: anytype) !bool {
-        const cfz = if (options.calc.overridden(player, "confused")) |val|
+        const cfz = if (options.calc.overridden(player, .confused)) |val|
             val == .true
         else if (showdown)
             !battle.rng.chance(u8, 128, 256)
@@ -2810,7 +2810,7 @@ pub const Rolls = struct {
     }
 
     inline fn paralyzed(battle: anytype, player: Player, options: anytype) !bool {
-        const par = if (options.calc.overridden(player, "paralyzed")) |val|
+        const par = if (options.calc.overridden(player, .paralyzed)) |val|
             val == .true
         else if (showdown)
             battle.rng.chance(u8, 63, 256)
@@ -2822,7 +2822,7 @@ pub const Rolls = struct {
     }
 
     inline fn confusionChance(battle: anytype, player: Player, options: anytype) !bool {
-        const proc = if (options.calc.overridden(player, "secondary_chance")) |val|
+        const proc = if (options.calc.overridden(player, .secondary_chance)) |val|
             val == .true
         else if (showdown)
             battle.rng.chance(u8, 25, 256)
@@ -2836,7 +2836,7 @@ pub const Rolls = struct {
     inline fn secondaryChance(battle: anytype, player: Player, low: bool, options: anytype) !bool {
         const rate: u8 = if (low) 26 else 77;
 
-        const proc = if (options.calc.overridden(player, "secondary_chance")) |val|
+        const proc = if (options.calc.overridden(player, .secondary_chance)) |val|
             val == .true
         else if (showdown)
             battle.rng.chance(u8, rate, 256)
@@ -2850,7 +2850,7 @@ pub const Rolls = struct {
     inline fn poisonChance(battle: anytype, player: Player, low: bool, options: anytype) !bool {
         const rate: u8 = if (low) 52 else 103;
 
-        const proc = if (options.calc.overridden(player, "secondary_chance")) |val|
+        const proc = if (options.calc.overridden(player, .secondary_chance)) |val|
             val == .true
         else if (showdown)
             battle.rng.chance(u8, rate, 256)
@@ -2862,7 +2862,7 @@ pub const Rolls = struct {
     }
 
     inline fn unboost(battle: anytype, player: Player, options: anytype) !bool {
-        const proc = if (options.calc.overridden(player, "secondary_chance")) |val|
+        const proc = if (options.calc.overridden(player, .secondary_chance)) |val|
             val == .true
         else if (showdown)
             battle.rng.chance(u8, 85, 256)
@@ -2874,7 +2874,7 @@ pub const Rolls = struct {
     }
 
     inline fn metronome(battle: anytype, player: Player, options: anytype) !Move {
-        const move = if (options.calc.overridden(player, "metronome")) |val|
+        const move = if (options.calc.overridden(player, .metronome)) |val|
             val
         else if (showdown) move: {
             const r = battle.rng.range(u8, 0, @enumToInt(Move.Struggle) - 2);
@@ -2894,7 +2894,7 @@ pub const Rolls = struct {
     }
 
     inline fn psywave(battle: anytype, player: Player, max: u8, options: anytype) !u8 {
-        const power = if (options.calc.overridden(player, "psywave")) |val|
+        const power = if (options.calc.overridden(player, .psywave)) |val|
             val - 1
         else if (showdown)
             battle.rng.range(u8, 0, max)
@@ -2910,7 +2910,7 @@ pub const Rolls = struct {
     }
 
     inline fn sleepDuration(battle: anytype, player: Player, options: anytype) u3 {
-        const duration = if (options.calc.overridden(player, "duration")) |val|
+        const duration = if (options.calc.overridden(player, .duration)) |val|
             @intCast(u3, val)
         else if (showdown)
             @intCast(u3, battle.rng.range(u8, 1, 8))
@@ -2921,43 +2921,43 @@ pub const Rolls = struct {
             }
         };
 
-        options.chance.duration("sleep", player, duration);
+        options.chance.duration(.sleep, player, duration);
         return duration;
     }
 
     inline fn disableDuration(battle: anytype, player: Player, options: anytype) u4 {
-        const duration = if (options.calc.overridden(player, "duration")) |val|
+        const duration = if (options.calc.overridden(player, .duration)) |val|
             val
         else if (showdown)
             @intCast(u4, battle.rng.range(u8, 1, 9))
         else
             @intCast(u4, (battle.rng.next() & 7) + 1);
 
-        options.chance.duration("disable", player, duration);
+        options.chance.duration(.disable, player, duration);
         return duration;
     }
 
     inline fn confusionDuration(battle: anytype, player: Player, options: anytype) u3 {
-        const duration = if (options.calc.overridden(player, "duration")) |val|
+        const duration = if (options.calc.overridden(player, .duration)) |val|
             @intCast(u3, val)
         else if (showdown)
             @intCast(u3, battle.rng.range(u8, 2, 6))
         else
             @intCast(u3, (battle.rng.next() & 3) + 2);
 
-        options.chance.duration("confusion", player, duration);
+        options.chance.duration(.confusion, player, duration);
         return duration;
     }
 
     inline fn attackingDuration(battle: anytype, player: Player, options: anytype) u3 {
-        const duration = if (options.calc.overridden(player, "duration")) |val|
+        const duration = if (options.calc.overridden(player, .duration)) |val|
             @intCast(u3, val)
         else if (showdown)
             @intCast(u3, battle.rng.range(u4, 2, 4))
         else
             @intCast(u3, (battle.rng.next() & 1) + 2);
 
-        options.chance.duration("attacking", player, duration);
+        options.chance.duration(.attacking, player, duration);
         return duration;
     }
 
@@ -2967,7 +2967,7 @@ pub const Rolls = struct {
         player: Player,
         options: anytype,
     ) !u3 {
-        const roll = if (effect == .Binding) "duration" else "multi_hit";
+        const roll = if (effect == .Binding) .duration else .multi_hit;
         const n = if (options.calc.overridden(player, roll)) |val|
             @intCast(u3, val)
         else if (showdown)
@@ -2978,7 +2978,7 @@ pub const Rolls = struct {
         };
 
         if (effect == .Binding) {
-            options.chance.duration("binding", player, n);
+            options.chance.duration(.binding, player, n);
         } else {
             try options.chance.multiHit(player, n);
         }
@@ -2992,7 +2992,7 @@ pub const Rolls = struct {
         check_pp: u4,
         options: anytype,
     ) !u4 {
-        const slot = if (options.calc.overridden(player, "move_slot")) |val|
+        const slot = if (options.calc.overridden(player, .move_slot)) |val|
             val
         else slot: {
             if (showdown) {
