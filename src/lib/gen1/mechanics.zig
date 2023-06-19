@@ -2449,12 +2449,11 @@ pub const Effects = struct {
     fn unboost(battle: anytype, player: Player, move: Move.Data, log: anytype) !void {
         var foe = battle.foe(player);
         const foe_ident = battle.active(player.foe());
+        const secondary = move.effect.isStatDownChance();
 
-        if (foe.active.volatiles.Substitute) {
-            return if (!move.effect.isStatDownChance()) log.fail(foe_ident, .None);
-        }
+        if (foe.active.volatiles.Substitute) return if (!secondary) log.fail(foe_ident, .None);
 
-        if (move.effect.isStatDownChance()) {
+        if (secondary) {
             if (!Rolls.unboost(battle) or foe.active.volatiles.Invulnerable) return;
         } else if (!showdown and !try checkHit(battle, player, move, log)) {
             return; // checkHit already checks for Invulnerable
@@ -2462,11 +2461,12 @@ pub const Effects = struct {
 
         var stats = &foe.active.stats;
         var boosts = &foe.active.boosts;
+        const fail = showdown or !secondary;
 
         switch (move.effect) {
             .AttackDown1, .AttackDownChance => {
                 assert(boosts.atk >= -6 and boosts.atk <= 6);
-                if (boosts.atk == -6) return try log.fail(foe_ident, .None);
+                if (boosts.atk == -6) return if (fail) try log.fail(foe_ident, .None);
                 boosts.atk = @intCast(i4, @max(-6, @as(i8, boosts.atk) - 1));
                 if (stats.atk == 1) {
                     boosts.atk += 1;
@@ -2483,7 +2483,7 @@ pub const Effects = struct {
             },
             .DefenseDown1, .DefenseDown2, .DefenseDownChance => {
                 assert(boosts.def >= -6 and boosts.def <= 6);
-                if (boosts.def == -6) return try log.fail(foe_ident, .None);
+                if (boosts.def == -6) return if (fail) try log.fail(foe_ident, .None);
                 const n: u2 = if (move.effect == .DefenseDown2) 2 else 1;
                 boosts.def = @intCast(i4, @max(-6, @as(i8, boosts.def) - n));
                 if (stats.def == 1) {
@@ -2501,7 +2501,7 @@ pub const Effects = struct {
             },
             .SpeedDown1, .SpeedDownChance => {
                 assert(boosts.spe >= -6 and boosts.spe <= 6);
-                if (boosts.spe == -6) return try log.fail(foe_ident, .None);
+                if (boosts.spe == -6) return if (fail) try log.fail(foe_ident, .None);
                 boosts.spe = @intCast(i4, @max(-6, @as(i8, boosts.spe) - 1));
                 if (stats.spe == 1) {
                     boosts.spe += 1;
@@ -2519,7 +2519,7 @@ pub const Effects = struct {
             },
             .SpecialDownChance => {
                 assert(boosts.spc >= -6 and boosts.spc <= 6);
-                if (boosts.spc == -6) return try log.fail(foe_ident, .None);
+                if (boosts.spc == -6) return if (fail) try log.fail(foe_ident, .None);
                 boosts.spc = @intCast(i4, @max(-6, @as(i8, boosts.spc) - 1));
                 if (stats.spc == 1) {
                     boosts.spc += 1;
@@ -2539,7 +2539,7 @@ pub const Effects = struct {
             },
             .AccuracyDown1 => {
                 assert(boosts.accuracy >= -6 and boosts.accuracy <= 6);
-                if (boosts.accuracy == -6) return try log.fail(foe_ident, .None);
+                if (boosts.accuracy == -6) return if (fail) try log.fail(foe_ident, .None);
                 boosts.accuracy = @intCast(i4, @max(-6, @as(i8, boosts.accuracy) - 1));
                 try log.boost(foe_ident, .Accuracy, -1);
             },
