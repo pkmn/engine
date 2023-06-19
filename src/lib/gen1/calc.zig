@@ -169,7 +169,6 @@ pub fn transitions(
     allocator: std.mem.Allocator,
     writer: anytype,
 ) !Stats {
-    _ = writer;
     var stats: Stats = .{};
 
     var seen = std.AutoHashMap(Actions, void).init(allocator);
@@ -201,9 +200,7 @@ pub fn transitions(
     while (i < frontier.items.len) : (i += 1) {
         var template = frontier.items[i];
 
-        // try writer.print("\x1b[1m\x1b[4{d}m", .{(i % 6) + 1});
-        // try template.fmt(writer, true);
-        // try writer.writeAll("\x1b[0m\n");
+        try debug(writer, template, true, .{ .color = i, .bold = true, .background = true });
 
         var a = Actions{ .p1 = .{ .metronome = p1_move }, .p2 = .{ .metronome = p2_move } };
 
@@ -251,15 +248,11 @@ pub fn transitions(
 
                 if (opts.chance.actions.matches(template)) {
                     if (!opts.chance.actions.eql(a)) {
-                        // try writer.print("\x1b[2m\x1b[3{d}m", .{(i % 6) + 1});
-                        // try opts.chance.actions.fmt(writer, false);
-                        // try writer.writeAll("\x1b[0m\n");
+                        try debug(writer, opts.chance.actions, false, .{ .color = i, .dim = true });
                         continue;
                     }
 
-                    // try writer.print("\x1b[3{d}m", .{(i % 6) + 1});
-                    // try opts.chance.actions.fmt(writer, false);
-                    // try writer.writeAll("\x1b[0m\n");
+                    try debug(writer, opts.chance.actions, false, .{ .color = i });
 
                     for (p1_dmg.min..@as(u9, p1_max) + 1) |p1d| {
                         for (p2_dmg.min..@as(u9, p2_max) + 1) |p2d| {
@@ -283,22 +276,20 @@ pub fn transitions(
                         return error.TestUnexpectedResult;
                     }
                 } else if (!matches(opts.chance.actions, i, frontier.items)) {
-                    // try writer.writeAll("\x1b[2m\x1b[37m");
-                    // try opts.chance.actions.fmt(writer, false);
-                    // try writer.writeAll("\x1b[0m\n");
+                    try debug(writer, opts.chance.actions, false, .{ .dim = true });
 
                     try frontier.append(opts.chance.actions);
 
-                    // try writer.print("\x1b[2m\x1b[4{d}m", .{(frontier.items.len % 6)});
-                    // try opts.chance.actions.fmt(writer, true);
-                    // try writer.writeAll("\x1b[0m\n");
+                    try debug(writer, opts.chance.actions, true, .{
+                        .color = frontier.items.len,
+                        .dim = true,
+                        .background = true
+                    });
 
                     p1_max = 255;
                     p2_max = 255;
                 } else {
-                    // try writer.writeAll("\x1b[2m\x1b[37m");
-                    // try opts.chance.actions.fmt(writer, false);
-                    // try writer.writeAll("\x1b[0m\n");
+                    try debug(writer, opts.chance.actions, false, .{ .dim = true });
 
                     if (p2_dmg.min == 217) {
                         var original = opts.chance.actions;
@@ -399,4 +390,20 @@ inline fn matches(actions: Actions, i: usize, frontier: []Actions) bool {
         if (f.matches(actions)) return true;
     }
     return false;
+}
+
+const Style = struct {
+    color: ?usize = null,
+    bold: bool = false,
+    background: bool = false,
+    dim: bool = false,
+};
+
+fn debug(writer: anytype, actions: Actions, shape: bool, style: Style) !void {
+    // _ = .{ writer, actions, shape, style };
+    if (style.dim or style.bold) try writer.print("\x1b[{}m", .{@as(u8, if (style.dim) 2 else 1)});
+    const color: usize = if (style.color) |c| (c % 6) + 1 else 7;
+    try writer.print("\x1b[{d}{d}m", .{ @as(u8, if (style.background) 4 else 3), color });
+    try actions.fmt(writer, shape);
+    try writer.writeAll("\x1b[0m\n");
 }
