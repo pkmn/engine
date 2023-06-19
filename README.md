@@ -18,7 +18,7 @@ A minimal, complete, Pokémon battle simulation engine optimized for performance
 [designed](docs/DESIGN.md) for tooling, embedded systems, and [artificial
 intelligence](https://github.com/pkmn/0-ERROR) use cases. This engine aims to be a frame-accurate and
 [bug-for-bug compatible](http://www.catb.org/jargon/html/B/bug-for-bug-compatible.html)
-implementation of both Pokémon battles as defined by the original game code, and the [Pokémon
+implementation of both Pokémon battles as defined by the original game code and the [Pokémon
 Showdown](https://pokemonshowdown.com/)[^1] simulator which represents Pokémon battling as practically
 interpreted online.
 
@@ -88,7 +88,7 @@ adding the following to your `build.zig`:
 const std = @import("std");
 const pkmn = @import("lib/pkmn/build.zig");
 
-pub fn build(b: *std.build.Builder) void {
+pub fn build(b: *std.Build) void {
     ...
     exe.addModule("pkmn", pkmn.module(b, .{ .showdown = true, .log = true }));
     ...
