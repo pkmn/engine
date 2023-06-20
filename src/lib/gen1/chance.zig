@@ -257,6 +257,7 @@ pub fn Chance(comptime Rational: type) type {
             damage_roll: u8 = 0,
             hit: bool = false,
             hit_probablity: u8 = 0,
+            binding: u8 = 0,
         } = .{},
 
         /// Possible error returned by operations tracking chance probability.
@@ -285,6 +286,13 @@ pub fn Chance(comptime Rational: type) type {
             // to a damage roll is actually a no-op
             if (ok and self.pending.damage_roll > 0) {
                 assert(!self.pending.crit or self.pending.crit_probablity > 0);
+
+                if (self.pending.binding != 0) {
+                    assert(action.duration == 0);
+                    action.duration = @intCast(u4, self.pending.binding);
+                    assert(action.binding == 0);
+                    action.binding = 1;
+                }
 
                 if (self.pending.crit_probablity != 0) {
                     try self.probability.update(self.pending.crit_probablity, 256);
@@ -428,12 +436,15 @@ pub fn Chance(comptime Rational: type) type {
         pub fn duration(self: *Self, comptime field: Action.Field, player: Player, turns: u4) void {
             if (!enabled) return;
 
-            self.actions.get(player).duration = if (options.key) 1 else turns;
-
             const bind = field == .binding;
-            var action = self.actions.get(if (bind) player else player.foe());
-            assert(@field(action, @tagName(field)) == 0);
-            @field(action, @tagName(field)) = 1;
+            if (!showdown and bind) {
+                self.pending.binding = if (options.key) 1 else turns;
+            } else {
+                var action = self.actions.get(if (bind) player else player.foe());
+                assert(@field(action, @tagName(field)) == 0);
+                @field(action, @tagName(field)) = 1;
+                self.actions.get(player).duration = if (options.key) 1 else turns;
+            }
         }
 
         pub fn sleep(self: *Self, player: Player, turns: u4) Error!void {
@@ -497,6 +508,7 @@ pub fn Chance(comptime Rational: type) type {
             var action = self.actions.get(player);
             const n = action.binding;
 
+            assert(n > 0);
             const p: u4 = if (n < 3) 3 else 1;
             const q: u4 = if (n < 3) 8 - ((n - 1) * p) else 2;
 
@@ -729,6 +741,13 @@ test "Chance.duration" {
     chance.reset();
 
     chance.duration(.binding, .P2, 4);
+    if (!showdown) {
+        try expectValue(@as(u4, 0), chance.actions.p2.duration);
+        try expectValue(@as(u3, 0), chance.actions.p2.binding);
+
+        try chance.damage(.P2, 217);
+        try chance.commit(.P2, true);
+    }
     try expectValue(@as(u4, 4), chance.actions.p2.duration);
     try expectValue(@as(u3, 1), chance.actions.p2.binding);
 }
