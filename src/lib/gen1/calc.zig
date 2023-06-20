@@ -397,10 +397,10 @@ const Style = struct {
 };
 
 fn debug(writer: anytype, actions: Actions, shape: bool, style: Style) !void {
-    // _ = .{ writer, actions, shape, style };
-    if (style.dim or style.bold) try writer.print("\x1b[{}m", .{@as(u8, if (style.dim) 2 else 1)});
-    const color: usize = if (style.color) |c| (c % 6) + 1 else 7;
-    try writer.print("\x1b[{d}{d}m", .{ @as(u8, if (style.background) 4 else 3), color });
-    try actions.fmt(writer, shape);
-    try writer.writeAll("\x1b[0m\n");
+    _ = .{ writer, actions, shape, style };
+    // if (style.dim or style.bold) try writer.print("\x1b[{}m", .{@as(u8, if (style.dim) 2 else 1)});
+    // const color: usize = if (style.color) |c| (c % 6) + 1 else 7;
+    // try writer.print("\x1b[{d}{d}m", .{ @as(u8, if (style.background) 4 else 3), color });
+    // try actions.fmt(writer, shape);
+    // try writer.writeAll("\x1b[0m\n");
 }
