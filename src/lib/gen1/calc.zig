@@ -285,9 +285,6 @@ pub fn transitions(
                         .dim = true,
                         .background = true
                     });
-
-                    p1_max = 255;
-                    p2_max = 255;
                 } else {
                     try debug(writer, opts.chance.actions, false, .{ .dim = true });
 
