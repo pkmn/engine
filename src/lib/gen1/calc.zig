@@ -282,6 +282,7 @@ pub fn transitions(
                 }
 
                 try debug(writer, opts.chance.actions, false, .{ .dim = true });
+
                 if (!matches(opts.chance.actions, i, frontier.items)) {
                     try frontier.append(opts.chance.actions);
 
