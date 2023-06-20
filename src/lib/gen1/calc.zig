@@ -205,10 +205,22 @@ pub fn transitions(
         var a = Actions{ .p1 = .{ .metronome = p1_move }, .p2 = .{ .metronome = p2_move } };
 
         for (Rolls.speedTie(template.p1)) |tie| { a.p1.speed_tie = tie; a.p2.speed_tie = tie;
-        for (Rolls.confused(template.p1)) |p1_cfz| { a.p1.confused = p1_cfz;
-        for (Rolls.confused(template.p2)) |p2_cfz| { a.p2.confused = p2_cfz;
-        for (Rolls.paralyzed(template.p1, p1_cfz)) |p1_par| { a.p1.paralyzed = p1_par;
-        for (Rolls.paralyzed(template.p2, p2_cfz)) |p2_par| { a.p2.paralyzed = p2_par;
+        for (Rolls.sleep(template.p1)) |p1_slp| { a.p1.sleep = p1_slp;
+        for (Rolls.sleep(template.p2)) |p2_slp| { a.p2.sleep = p2_slp;
+        for (Rolls.disable(template.p1, p1_slp)) |p1_dis| { a.p1.disable = p1_dis;
+        for (Rolls.disable(template.p2, p2_slp)) |p2_dis| { a.p2.disable = p2_dis;
+        for (Rolls.confusion(template.p1, p1_slp)) |p1_cfz| { a.p1.confusion = p1_cfz;
+        for (Rolls.confusion(template.p2, p1_slp)) |p2_cfz| { a.p2.confusion = p2_cfz;
+        for (Rolls.confused(template.p1, p1_cfz)) |p1_cfzd| { a.p1.confused = p1_cfzd;
+        for (Rolls.confused(template.p2, p2_cfz)) |p2_cfzd| { a.p2.confused = p2_cfzd;
+        for (Rolls.paralyzed(template.p1, p1_cfzd)) |p1_par| { a.p1.paralyzed = p1_par;
+        for (Rolls.paralyzed(template.p2, p2_cfzd)) |p2_par| { a.p2.paralyzed = p2_par;
+        for (Rolls.attacking(template.p1, p1_par)) |p1_atk| { a.p1.attacking = p1_atk;
+        for (Rolls.attacking(template.p2, p2_par)) |p2_atk| { a.p2.attacking = p2_atk;
+        for (Rolls.binding(template.p1, p1_par)) |p1_bind| { a.p1.binding = p1_bind;
+        for (Rolls.binding(template.p2, p2_par)) |p2_bind| { a.p2.binding = p2_bind;
+        for (Rolls.duration(template.p1, p1_par)) |p1_dur| { a.p1.duration = p1_dur;
+        for (Rolls.duration(template.p2, p2_par)) |p2_dur| { a.p2.duration = p2_dur;
         for (Rolls.hit(template.p1, p1_par)) |p1_hit| { a.p1.hit = p1_hit;
         for (Rolls.hit(template.p2, p2_par)) |p2_hit| { a.p2.hit = p2_hit;
         for (Rolls.psywave(template.p1, p1, p1_hit)) |p1_psywave| { a.p1.psywave = p1_psywave;
@@ -363,7 +375,7 @@ pub fn transitions(
             assert(p1_min > 0 or p1_dmg.min == 0);
             p1_dmg.min = p1_min;
 
-        }}}}}}}}}}}}}}}}}}
+        }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
     }
 
     assert(frontier.items.len == i);

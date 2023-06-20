@@ -118,10 +118,10 @@ pub const Action = packed struct {
     /// If not None, the Playr to be returned by Rolls.speedTie.
     speed_tie: Optional(Player) = .None,
 
-    /// If not None, the value to return for Rolls.paralyzed.
-    paralyzed: Optional(bool) = .None,
     /// If not None, the value to return for Rolls.confused.
     confused: Optional(bool) = .None,
+    /// If not None, the value to return for Rolls.paralyzed.
+    paralyzed: Optional(bool) = .None,
     /// If not 0, the value to be returned by Rolls.distribution in the case of binding moves
     /// or Rolls.{sleepDuration,disableDuration,confusionDuration,attackingDuration} otherwise.
     duration: u4 = 0,

@@ -271,14 +271,14 @@ pub const Rolls = struct {
     const BOOLS = [_]Optional(bool){ .false, .true };
 
     /// Returns a slice with the correct range of values for hits given the `action` state
-    /// and the state of the `parent` (whether the player's Pokémon was paralyzed).
+    /// and the state of the `parent` (whether the player's Pokémon was fully paralyzed).
     pub inline fn hit(action: chance.Action, parent: Optional(bool)) []const Optional(bool) {
         if (parent == .true) return &BOOL_NONE;
         return if (@field(action, "hit") == .None) &BOOL_NONE else &BOOLS;
     }
 
     /// Returns a slice with the correct range of values for critical hits given the `action` state
-    /// and the state of the `parent` (whether the player's move hit).
+    /// and the state of the `parent` (whether the player's Pokémon's move hit).
     pub inline fn criticalHit(
         action: chance.Action,
         parent: Optional(bool),
@@ -288,7 +288,7 @@ pub const Rolls = struct {
     }
 
     /// Returns a slice with the correct range of values for secondary chances hits given the
-    /// `action` state and the state of the `parent` (whether the player's move hit).
+    /// `action` state and the state of the `parent` (whether the player's Pokémon's move hit).
     pub inline fn secondaryChance(
         action: chance.Action,
         parent: Optional(bool),
@@ -301,7 +301,7 @@ pub const Rolls = struct {
     pub const Range = struct { min: u9, max: u9 };
 
     /// Returns the range bounding damage rolls given the `action` state and the state of
-    /// the `parent` (whether the player's move hit).
+    /// the `parent` (whether the player's Pokémon's move hit).
     pub inline fn damage(action: chance.Action, parent: Optional(bool)) Range {
         return if (parent == .false or @field(action, "damage") == 0)
             .{ .min = 0, .max = 1 }
@@ -321,9 +321,10 @@ pub const Rolls = struct {
         return @min(255, roll + ((254 - ((@as(u32, dmg.base) * roll) % 255)) / dmg.base));
     }
 
-    /// Returns a slice with the correct range of values for confusion given the `action` state.
-    pub inline fn confused(action: chance.Action) []const Optional(bool) {
-        return if (@field(action, "confused") == .None) &BOOL_NONE else &BOOLS;
+    /// Returns a slice with the correct range of values for confused given the `action` state
+    /// and the state of the `parent` (the player's Pokémon's remaining confusion turns).
+    pub inline fn confused(action: chance.Action, parent: u4) []const Optional(bool) {
+        return if (parent == 0 or @field(action, "confused") == .None) &BOOL_NONE else &BOOLS;
     }
 
     /// Returns a slice with the correct range of values for paralysis given the `action` state
@@ -337,45 +338,59 @@ pub const Rolls = struct {
     const DURATION = [_]u1{ 0, 1 };
 
     /// Returns a slice with a range of values for duration given the `action` state
-    /// and the state of the `parent` (whether the player's move hit).
+    /// and the state of the `parent` (whether the player's Pokémon's move hit).
     pub inline fn duration(action: chance.Action, parent: Optional(bool)) []const u1 {
         if (parent == .false) return &DURATION_NONE;
         return if (@field(action, "duration") == 0) &DURATION_NONE else &DURATION;
     }
 
-    const SLEEP_NONE = [_]u3{0};
+    const U3_NONE = [_]u3{0};
+    const U3_FORCED = [_]u3{1};
 
     /// Returns a slice with a range of values for sleep given the `action` state.
     pub inline fn sleep(action: chance.Action) []const u3 {
         const turns = @field(action, "sleep");
-        return if (turns < 1 or turns >= 7) &SLEEP_NONE else &[_]u3{ 0, turns + 1 };
+        return if (turns < 1 or turns >= 7) &U3_NONE else &[_]u3{ 0, turns + 1 };
     }
 
     const DISABLE_NONE = [_]u4{0};
 
     /// Returns a slice with a range of values for disable given the `action` state
-    /// and the state of the `parent` (the player's remaining sleep turns).
+    /// and the state of the `parent` (the player's Pokémon's remaining sleep turns).
     pub inline fn disable(action: chance.Action, parent: u4) []const u4 {
         const turns = @field(action, "disable");
         return if (parent > 0 or turns < 1 or turns >= 8) &DISABLE_NONE else &[_]u4{ 0, turns + 1 };
     }
 
-    const CONFUSION_NONE = [_]u3{0};
-    const CONFUSION_FORCED = [_]u3{1};
-
     /// Returns a slice with a range of values for confusion given the `action` state
     /// and the state of the `parent` (the player's remaining sleep turns).
     pub inline fn confusion(action: chance.Action, parent: u4) []const u3 {
         const turns = @field(action, "confusion");
-        if (parent > 0 or turns < 1 or turns >= 5) return &CONFUSION_NONE;
-        return if (turns < 2) &CONFUSION_FORCED else &[_]u3{ 0, turns + 1 };
+        if (parent > 0 or turns < 1 or turns >= 5) return &U3_NONE;
+        return if (turns < 2) &U3_FORCED else &[_]u3{ 0, turns + 1 };
+    }
+
+    /// Returns a slice with a range of values for attacking given the `action` state
+    /// and the state of the `parent` (whether the player's Pokémon was fully paralyzed).
+    pub inline fn attacking(action: chance.Action, parent: Optional(bool)) []const u3 {
+        const turns = @field(action, "attacking");
+        if (parent == .true or turns < 1 or turns >= 3) return &U3_NONE;
+        return if (turns < 2) &U3_FORCED else &[_]u3{ 0, turns + 1 };
+    }
+
+    /// Returns a slice with a range of values for binding given the `action` state
+    /// and the state of the `parent` (whether the player's Pokémon was fully paralyzed).
+    pub inline fn binding(action: chance.Action, parent: Optional(bool)) []const u3 {
+        const turns = @field(action, "attacking");
+        _ = .{ turns, parent }; // TODO
+        return &U3_NONE;
     }
 
     const SLOT_NONE = [_]u4{0};
     const SLOT = [_]u4{ 1, 2, 3, 4 };
 
     /// Returns a slice with a range of values for move slots given the `action` state
-    /// and the state of the `parent` (whether the player's move hit).
+    /// and the state of the `parent` (whether the player's Pokémon's move hit).
     ///
     /// These slots may or **may not be valid** as slots may be unset / have 0 PP.
     pub inline fn moveSlot(action: chance.Action, parent: Optional(bool)) []const u4 {
@@ -387,7 +402,7 @@ pub const Rolls = struct {
     const MULTI = [_]u4{ 2, 3, 4, 5 };
 
     /// Returns a slice with the correct range of values for multi hit given the `action` state
-    /// and the state of the `parent` (whether the player's move hit).
+    /// and the state of the `parent` (whether the player's Pokémon's move hit).
     pub inline fn multiHit(action: chance.Action, parent: Optional(bool)) []const u4 {
         if (parent == .false) return &MULTI_NONE;
         return if (@field(action, "multi_hit") == 0) &MULTI_NONE else &MULTI;
@@ -401,7 +416,7 @@ pub const Rolls = struct {
     };
 
     /// Returns a slice with the correct range of values for psywave given the `action` state,
-    /// the `side`, and the state of the `parent` (whether the player's move hit).
+    /// the `side`, and the state of the `parent` (whether the player's Pokémon's move hit).
     pub inline fn psywave(
         action: chance.Action,
         side: *data.Side,
@@ -493,8 +508,9 @@ test "Rolls.criticalHit" {
 
 test "Rolls.confused" {
     const actions = chance.Actions{ .p2 = .{ .confused = .true } };
-    try expectEqualSlices(Optional(bool), &.{.None}, Rolls.confused(actions.p1));
-    try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.confused(actions.p2));
+    try expectEqualSlices(Optional(bool), &.{.None}, Rolls.confused(actions.p1, 1));
+    try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.confused(actions.p2, 1));
+    try expectEqualSlices(Optional(bool), &.{.None}, Rolls.confused(actions.p2, 0));
 }
 
 test "Rolls.paralyzed" {
@@ -531,6 +547,18 @@ test "Rolls.confusion" {
     try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{ .confusion = 3 }, 1));
     try expectEqualSlices(u3, &.{1}, Rolls.confusion(.{ .confusion = 1 }, 0));
     try expectEqualSlices(u3, &.{ 0, 4 }, Rolls.confusion(.{ .confusion = 3 }, 0));
+}
+
+test "Rolls.attacking" {
+    try expectEqualSlices(u3, &.{0}, Rolls.attacking(.{ .attacking = 0 }, .false));
+    try expectEqualSlices(u3, &.{0}, Rolls.attacking(.{ .attacking = 3 }, .false));
+    try expectEqualSlices(u3, &.{0}, Rolls.attacking(.{ .attacking = 2 }, .true));
+    try expectEqualSlices(u3, &.{1}, Rolls.attacking(.{ .attacking = 1 }, .false));
+    try expectEqualSlices(u3, &.{ 0, 3 }, Rolls.attacking(.{ .attacking = 2 }, .false));
+}
+
+test "Rolls.binding" {
+    // TODO
 }
 
 test "Rolls.moveSlot" {
