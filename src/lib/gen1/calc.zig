@@ -275,9 +275,14 @@ pub fn transitions(
                         print("improper fraction {} (seed: {d})\n", .{ p, seed });
                         return error.TestUnexpectedResult;
                     }
-                } else if (!matches(opts.chance.actions, i, frontier.items)) {
-                    try debug(writer, opts.chance.actions, false, .{ .dim = true });
 
+                    p1_min = p1_max;
+                    p2_dmg.min = p2_max;
+                    continue;
+                }
+
+                try debug(writer, opts.chance.actions, false, .{ .dim = true });
+                if (!matches(opts.chance.actions, i, frontier.items)) {
                     try frontier.append(opts.chance.actions);
 
                     try debug(writer, opts.chance.actions, true, .{
@@ -285,45 +290,12 @@ pub fn transitions(
                         .dim = true,
                         .background = true
                     });
-                } else {
-                    try debug(writer, opts.chance.actions, false, .{ .dim = true });
+                }
 
-                    if (p2_dmg.min == 217) {
-                        var original = opts.chance.actions;
-                        if (p1_dmg.min == 217) {
-                            opts.chance.actions.p1.damage = 255;
-                            opts.chance.actions.p2.damage = 255;
-                            opts.calc = .{ .overrides = opts.chance.actions };
-                            opts.chance = .{ .probability = .{}, .actions = actions };
-
-                            b = battle;
-                            _ = try b.update(c1, c2, &opts);
-                            stats.updates += 1;
-
-                            if (opts.chance.actions.matches(original)) {
-                                p1_min = 255;
-                                p2_dmg.min = 255;
-                                continue;
-                            }
-
-                            a = original;
-                            a.p1.damage = 255;
-                            opts.calc = .{ .overrides = a };
-                            opts.chance = .{ .probability = .{}, .actions = actions };
-
-                            b = battle;
-                            _ = try b.update(c1, c2, &opts);
-                            stats.updates += 1;
-
-                            if (opts.chance.actions.matches(original)) {
-                                p1_min = 255;
-                                p2_dmg.min = p2_max;
-                                continue;
-                            }
-
-                            opts.chance.actions = original;
-                        }
-
+                if (p2_dmg.min == 217) {
+                    var original = opts.chance.actions;
+                    if (p1_dmg.min == 217) {
+                        opts.chance.actions.p1.damage = 255;
                         opts.chance.actions.p2.damage = 255;
                         opts.calc = .{ .overrides = opts.chance.actions };
                         opts.chance = .{ .probability = .{}, .actions = actions };
@@ -333,13 +305,14 @@ pub fn transitions(
                         stats.updates += 1;
 
                         if (opts.chance.actions.matches(original)) {
-                            p2_max = 255;
+                            p1_min = 255;
+                            p2_dmg.min = 255;
+                            continue;
                         }
-                    } else if (p1_dmg.min == 217) {
-                        var original = opts.chance.actions;
 
-                        opts.chance.actions.p1.damage = 255;
-                        opts.calc = .{ .overrides = opts.chance.actions };
+                        a = original;
+                        a.p1.damage = 255;
+                        opts.calc = .{ .overrides = a };
                         opts.chance = .{ .probability = .{}, .actions = actions };
 
                         b = battle;
@@ -347,8 +320,38 @@ pub fn transitions(
                         stats.updates += 1;
 
                         if (opts.chance.actions.matches(original)) {
-                            p1_max = 255;
+                            p1_min = 255;
+                            p2_dmg.min = p2_max;
+                            continue;
                         }
+
+                        opts.chance.actions = original;
+                    }
+
+                    opts.chance.actions.p2.damage = 255;
+                    opts.calc = .{ .overrides = opts.chance.actions };
+                    opts.chance = .{ .probability = .{}, .actions = actions };
+
+                    b = battle;
+                    _ = try b.update(c1, c2, &opts);
+                    stats.updates += 1;
+
+                    if (opts.chance.actions.matches(original)) {
+                        p2_max = 255;
+                    }
+                } else if (p1_dmg.min == 217) {
+                    var original = opts.chance.actions;
+
+                    opts.chance.actions.p1.damage = 255;
+                    opts.calc = .{ .overrides = opts.chance.actions };
+                    opts.chance = .{ .probability = .{}, .actions = actions };
+
+                    b = battle;
+                    _ = try b.update(c1, c2, &opts);
+                    stats.updates += 1;
+
+                    if (opts.chance.actions.matches(original)) {
+                        p1_max = 255;
                     }
                 }
 
