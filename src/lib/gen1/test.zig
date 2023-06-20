@@ -1784,7 +1784,7 @@ test "FreezeChance effect" {
     try t.log.expected.turn(8);
 
     try expectEqual(Result.Default, try t.update(forced, move(if (showdown) 3 else 0)));
-    try t.expectProbability(1, 1);
+    try t.expectProbability(3, 8);
 
     try t.log.expected.move(P2.ident(1), Move.Flamethrower, P1.ident(2), null);
     try t.log.expected.resisted(P1.ident(2));
