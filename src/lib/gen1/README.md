@@ -497,7 +497,9 @@ the pkmn engine, but the following moves have their broken behavior preserved in
   damage grow unbounded. Additionally, if the opponent faints after Bide inflicts damage on Pokémon
   Showdown residual damage incorrectly still gets applied to Bide's user.
 - **Counter**: On Pokémon Showdown choices made while sleeping (which should not have been
-  registered) can erroneously cause Counter to trigger Desync Clause Mod behavior.
+  registered) can erroneously cause Counter to trigger Desync Clause Mod behavior. Additionally,
+  because Pokémon Showdown neglects to zero the last battle damage if a move misses due to immunity
+  or invulnerability Counter will occasionally work on Pokémon Showdown when it should fail.
 - **Leech Seed**: Leech Seed fails to heal its source side if a seeded target faints due to
   recoil/crash damage on Pokémon Showdown.
 - **Pay Day**: Pay Day should still scatter coins if it hits (but doesn't break) and opponent's

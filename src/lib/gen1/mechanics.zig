@@ -941,7 +941,7 @@ fn doMove(
         }
         if (move.effect == .JumpKick) {
             // Recoil is supposed to be damage/8 but damage will always be 0 here
-            assert(battle.last_damage == 0);
+            assert(showdown or battle.last_damage == 0);
             battle.last_damage = 1;
             _ = try applyDamage(battle, player, player.foe(), .None, log);
             if (showdown and side.stored().hp == 0) residual.* = false;
@@ -1400,7 +1400,7 @@ fn moveHit(battle: anytype, player: Player, move: Move.Data, immune: *bool, mist
     }
 
     if (!miss) return true;
-    battle.last_damage = 0;
+    if (!showdown or !foe.active.volatiles.Invulnerable) battle.last_damage = 0;
     side.active.volatiles.Binding = false;
     return false;
 }
