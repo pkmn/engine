@@ -332,6 +332,7 @@ fn tool(b: *std.Build, path: []const u8, config: ToolConfig) *std.Build.RunStep 
     exe.addModule("pkmn", module(b, config.options));
 
     exe.single_threaded = true;
+    exe.emit_asm = .emit;
     if (config.general.pic) exe.force_pic = config.general.pic;
     if (config.tool.tests) |ts| ts.step.dependOn(&exe.step);
     config.tool.exes.append(exe) catch @panic("OOM");
