@@ -381,9 +381,8 @@ pub const Rolls = struct {
     /// Returns a slice with a range of values for binding given the `action` state
     /// and the state of the `parent` (whether the player's Pokémon was fully paralyzed).
     pub inline fn binding(action: chance.Action, parent: Optional(bool)) []const u3 {
-        const turns = @field(action, "attacking");
-        _ = .{ turns, parent }; // TODO
-        return &U3_NONE;
+        const turns = @field(action, "binding");
+        return if (parent == .true or turns < 1 or turns >= 4) &U3_NONE else &[_]u3{ 0, turns + 1 };
     }
 
     const SLOT_NONE = [_]u4{0};
@@ -558,7 +557,10 @@ test "Rolls.attacking" {
 }
 
 test "Rolls.binding" {
-    // TODO
+    try expectEqualSlices(u3, &.{0}, Rolls.binding(.{ .binding = 0 }, .false));
+    try expectEqualSlices(u3, &.{0}, Rolls.binding(.{ .binding = 4 }, .false));
+    try expectEqualSlices(u3, &.{0}, Rolls.binding(.{ .binding = 2 }, .true));
+    try expectEqualSlices(u3, &.{ 0, 3 }, Rolls.binding(.{ .binding = 2 }, .false));
 }
 
 test "Rolls.moveSlot" {

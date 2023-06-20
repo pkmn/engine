@@ -498,8 +498,17 @@ pub fn Chance(comptime Rational: type) type {
         pub fn attacking(self: *Self, player: Player, turns: u4) Error!void {
             if (!enabled) return;
 
-            // TODO
-            _ = .{ self, player, turns };
+            var action = self.actions.get(player);
+            const n = action.attacking;
+            if (turns == 0) {
+                assert(n >= 2 and n <= 3);
+                if (n != 3) try self.probability.update(1, 4 - @as(u4, n));
+                action.attacking = 0;
+            } else {
+                assert(n >= 1 and n < 3);
+                if (n > 1) try self.probability.update(4 - @as(u4, n) - 1, 4 - @as(u4, n));
+                action.attacking += 1;
+            }
         }
 
         pub fn binding(self: *Self, player: Player, turns: u4) Error!void {
@@ -799,7 +808,27 @@ test "Chance.confusion" {
 }
 
 test "Chance.attacking" {
-    // TODO
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    for ([_]u8{ 1, 2, 1 }, 1..4) |d, i| {
+        if (i > 1) {
+            chance.actions.p2.attacking = @intCast(u3, i);
+            try chance.attacking(.P2, 0);
+            try expectProbability(&chance.probability, 1, d);
+            try expectValue(@as(u3, 0), chance.actions.p2.attacking);
+
+            chance.reset();
+        }
+
+        if (i < 3) {
+            chance.actions.p2.attacking = @intCast(u3, i);
+            try chance.attacking(.P2, 1);
+            try expectProbability(&chance.probability, if (d > 1) d - 1 else d, d);
+            try expectValue(@intCast(u3, i) + 1, chance.actions.p2.attacking);
+
+            chance.reset();
+        }
+    }
 }
 
 test "Chance.binding" {
