@@ -231,8 +231,13 @@ pub fn transitions(
             while (p2_dmg.min < p2_dmg.max) : (p2_dmg.min += 1) {
                 a.p2.damage = @intCast(u8, p2_dmg.min);
 
-                try update(&battle, c1, c2, &opts, &a, &actions, &stats);
+                opts.calc = .{ .overrides = a };
+                opts.chance = .{ .probability = .{}, .actions = actions };
                 const q = &opts.chance.probability;
+
+                b = battle;
+                _ = try b.update(c1, c2, &opts);
+                stats.updates += 1;
 
                 // const p1_max = @intCast(u8, p1_dmg.min);
                 // const p2_max = @intCast(u8, p2_dmg.min);
@@ -293,7 +298,13 @@ pub fn transitions(
                     if (p1_dmg.min == 217) {
                         opts.chance.actions.p1.damage = 255;
                         opts.chance.actions.p2.damage = 255;
-                        try update(&battle, c1, c2, &opts, &opts.chance.actions,&actions, &stats);
+                        opts.calc = .{ .overrides = opts.chance.actions };
+                        opts.chance = .{ .probability = .{}, .actions = actions };
+
+                        b = battle;
+                        _ = try b.update(c1, c2, &opts);
+                        stats.updates += 1;
+
                         if (opts.chance.actions.matches(original)) {
                             p1_min = 255;
                             p2_dmg.min = 255;
@@ -302,7 +313,13 @@ pub fn transitions(
 
                         a = original;
                         a.p1.damage = 255;
-                        try update(&battle, c1, c2, &opts, &a, &actions, &stats);
+                        opts.calc = .{ .overrides = a };
+                        opts.chance = .{ .probability = .{}, .actions = actions };
+
+                        b = battle;
+                        _ = try b.update(c1, c2, &opts);
+                        stats.updates += 1;
+
                         if (opts.chance.actions.matches(original)) {
                             p1_min = 255;
                             p2_dmg.min = p2_max;
@@ -313,14 +330,27 @@ pub fn transitions(
                     }
 
                     opts.chance.actions.p2.damage = 255;
-                    try update(&battle, c1, c2, &opts, &opts.chance.actions, &actions, &stats);
+                    opts.calc = .{ .overrides = opts.chance.actions };
+                    opts.chance = .{ .probability = .{}, .actions = actions };
+
+                    b = battle;
+                    _ = try b.update(c1, c2, &opts);
+                    stats.updates += 1;
+
                     if (opts.chance.actions.matches(original)) {
                         p2_max = 255;
                     }
                 } else if (p1_dmg.min == 217) {
                     var original = opts.chance.actions;
+
                     opts.chance.actions.p1.damage = 255;
-                    try update(&battle, c1, c2, &opts, &opts.chance.actions, &actions, &stats);
+                    opts.calc = .{ .overrides = opts.chance.actions };
+                    opts.chance = .{ .probability = .{}, .actions = actions };
+
+                    b = battle;
+                    _ = try b.update(c1, c2, &opts);
+                    stats.updates += 1;
+
                     if (opts.chance.actions.matches(original)) {
                         p1_max = 255;
                     }
@@ -361,23 +391,6 @@ inline fn matches(actions: Actions, i: usize, frontier: []Actions) bool {
         if (f.matches(actions)) return true;
     }
     return false;
-}
-
-inline fn update(
-    battle: anytype,
-    c1: Choice,
-    c2: Choice,
-    opts: anytype,
-    overrides: *const Actions,
-    actions: *const Actions,
-    stats: *Stats,
-) !void {
-    opts.calc = .{ .overrides = overrides.* };
-    opts.chance = .{ .probability = .{}, .actions = actions.* };
-
-    var b = battle.*;
-    _ = try b.update(c1, c2, opts);
-    stats.updates += 1;
 }
 
 const Style = struct {
