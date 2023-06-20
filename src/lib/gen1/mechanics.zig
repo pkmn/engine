@@ -983,7 +983,7 @@ fn doMove(
             if (!foe.active.volatiles.Substitute) try log.activate(foe_ident, .Mist);
             try log.fail(foe_ident, .None);
         } else {
-            if (showdown or !zero) try options.chance.commit(player, false);
+            if (showdown or !zero) try options.chance.commit(player, .miss);
             try log.lastmiss();
             try log.miss(battle.active(player));
         }
@@ -998,10 +998,12 @@ fn doMove(
             try buildRage(battle, player.foe(), options);
         } else if (showdown and move.effect == .Disable) {
             try buildRage(battle, player.foe(), options);
+        } else if (!showdown and immune and move.effect == .Binding) {
+            try options.chance.commit(player, .binding);
         }
         return null;
     } else {
-        try options.chance.commit(player, true);
+        try options.chance.commit(player, .hit);
     }
 
     // On the cartridge MultiHit doesn't get set up until after damage has been applied for the
@@ -1224,7 +1226,7 @@ fn specialDamage(battle: anytype, player: Player, move: Move.Data, options: anyt
     const foe = battle.foe(player);
 
     if (!try checkHit(battle, player, move, options)) return null;
-    try options.chance.commit(player, true);
+    try options.chance.commit(player, .hit);
 
     battle.last_damage = switch (side.last_selected_move) {
         .SuperFang => @max(foe.stored().hp / 2, 1),
@@ -1291,7 +1293,7 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, options: anyt
 
     // Pokémon Showdown calls checkHit before Counter
     if (!showdown and !try checkHit(battle, player, move, options)) return null;
-    try options.chance.commit(player, true);
+    try options.chance.commit(player, .hit);
 
     const sub = showdown and foe.active.volatiles.Substitute;
     _ = try applyDamage(battle, player.foe(), player.foe(), .None, options);
@@ -1396,7 +1398,7 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data, options: anytype) 
         try options.log.activate(foe_ident, .Mist);
         try options.log.fail(foe_ident, .None);
     } else {
-        try options.chance.commit(player, false);
+        try options.chance.commit(player, .miss);
         try options.log.lastmiss();
         try options.log.miss(battle.active(player));
     }
@@ -1880,7 +1882,7 @@ pub const Effects = struct {
                     return;
                 }
             }
-            try options.chance.commit(player, true);
+            try options.chance.commit(player, .hit);
         }
 
         if (foe.active.volatiles.Confusion) return;
@@ -1914,7 +1916,7 @@ pub const Effects = struct {
         // Pokémon Showdown handles hit/miss earlier in doMove
         if (!showdown) {
             if (!try checkHit(battle, player, move, options)) return null;
-            try options.chance.commit(player, true);
+            try options.chance.commit(player, .hit);
         }
 
         if (volatiles.disabled_move != 0) {
@@ -2115,7 +2117,7 @@ pub const Effects = struct {
             }
         }
 
-        try options.chance.commit(player, true);
+        try options.chance.commit(player, .hit);
         foe.active.volatiles.LeechSeed = true;
 
         try options.log.start(battle.active(player.foe()), .LeechSeed);
@@ -2157,12 +2159,12 @@ pub const Effects = struct {
             if (!has_mimic) {
                 // Invulnerable foes or 1/256 miss can trigger |-miss| instead of |-fail|
                 if (!try checkHit(battle, player, move, options)) return;
-                try options.chance.commit(player, true);
+                try options.chance.commit(player, .hit);
                 return try options.log.fail(battle.active(player.foe()), .None);
             }
         }
         if (!try checkHit(battle, player, move, options)) return;
-        try options.chance.commit(player, true);
+        try options.chance.commit(player, .hit);
 
         const rslot = try Rolls.moveSlot(battle, player, &foe.active.moves, 0, options);
         side.active.move(oslot).id = foe.active.move(rslot).id;
@@ -2215,7 +2217,7 @@ pub const Effects = struct {
             if (immune) return log.immune(foe_ident, .None);
             if (!try checkHit(battle, player, move, options)) return;
         }
-        try options.chance.commit(player, true);
+        try options.chance.commit(player, .hit);
 
         foe_stored.status = Status.init(.PAR);
         foe.active.stats.spe = @max(foe.active.stats.spe / 4, 1);
@@ -2283,7 +2285,7 @@ pub const Effects = struct {
 
         if (move.effect == .Poison) {
             if (!showdown and !try checkHit(battle, player, move, options)) return;
-            try options.chance.commit(player, true);
+            try options.chance.commit(player, .hit);
         } else {
             if (!try Rolls.poisonChance(battle, player, move.effect == .PoisonChance1, options)) {
                 return;
@@ -2353,7 +2355,7 @@ pub const Effects = struct {
             }
             // If checkHit in doMove didn't return true Pokémon Showdown wouldn't be in here
             if (!showdown and !try checkHit(battle, player, move, options)) return;
-            try options.chance.commit(player, true);
+            try options.chance.commit(player, .hit);
         }
 
         // Sleep Clause Mod
@@ -2408,7 +2410,7 @@ pub const Effects = struct {
         if (!showdown or battle.side(player).last_selected_move == .Teleport) return;
 
         // Whirlwind/Roar should not roll to hit/reset damage but Pokémon Showdown does anyway
-        if (try checkHit(battle, player, move, options)) try options.chance.commit(player, true);
+        if (try checkHit(battle, player, move, options)) try options.chance.commit(player, .hit);
 
         battle.last_damage = 0;
     }
@@ -2581,7 +2583,7 @@ pub const Effects = struct {
         } else {
             // checkHit already checks for Invulnerable
             if (!showdown and !try checkHit(battle, player, move, options)) return;
-            try options.chance.commit(player, true);
+            try options.chance.commit(player, .hit);
         }
 
         var stats = &foe.active.stats;
