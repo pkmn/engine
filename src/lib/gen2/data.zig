@@ -1,9 +1,10 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
+const pkmn = @import("../pkmn.zig");
+
 const data = @import("../common/data.zig");
 const DEBUG = @import("../common/debug.zig").print;
-const options = @import("../common/options.zig");
 const rng = @import("../common/rng.zig");
 const util = @import("../common/util.zig");
 
