@@ -1718,7 +1718,7 @@ fn handleThrashing(battle: anytype, active: *ActivePokemon, player: Player, opti
 
     volatiles.Thrashing = false;
     volatiles.Confusion = true;
-    volatiles.confusion = Rolls.confusionDuration(battle, player, options);
+    volatiles.confusion = Rolls.confusionDuration(battle, player, true, options);
     return true;
 }
 
@@ -1885,7 +1885,7 @@ pub const Effects = struct {
 
         if (foe.active.volatiles.Confusion) return;
         foe.active.volatiles.Confusion = true;
-        foe.active.volatiles.confusion = Rolls.confusionDuration(battle, player, options);
+        foe.active.volatiles.confusion = Rolls.confusionDuration(battle, player, false, options);
 
         try options.log.start(battle.active(player.foe()), .Confusion);
     }
@@ -2921,7 +2921,7 @@ pub const Rolls = struct {
             }
         };
 
-        options.chance.duration(.sleep, player, duration);
+        options.chance.duration(.sleep, player, player.foe(), duration);
         return duration;
     }
 
@@ -2933,11 +2933,11 @@ pub const Rolls = struct {
         else
             @intCast(u4, (battle.rng.next() & 7) + 1);
 
-        options.chance.duration(.disable, player, duration);
+        options.chance.duration(.disable, player, player.foe(), duration);
         return duration;
     }
 
-    inline fn confusionDuration(battle: anytype, player: Player, options: anytype) u3 {
+    inline fn confusionDuration(battle: anytype, player: Player, self: bool, options: anytype) u3 {
         const duration = if (options.calc.overridden(player, .duration)) |val|
             @intCast(u3, val)
         else if (showdown)
@@ -2945,7 +2945,7 @@ pub const Rolls = struct {
         else
             @intCast(u3, (battle.rng.next() & 3) + 2);
 
-        options.chance.duration(.confusion, player, duration);
+        options.chance.duration(.confusion, player, if (self) player else player.foe(), duration);
         return duration;
     }
 
@@ -2957,7 +2957,7 @@ pub const Rolls = struct {
         else
             @intCast(u3, (battle.rng.next() & 1) + 2);
 
-        options.chance.duration(.attacking, player, duration);
+        options.chance.duration(.attacking, player, player, duration);
         return duration;
     }
 
@@ -2978,7 +2978,7 @@ pub const Rolls = struct {
         };
 
         if (effect == .Binding) {
-            options.chance.duration(.binding, player, n);
+            options.chance.duration(.binding, player, player, n);
         } else {
             try options.chance.multiHit(player, n);
         }

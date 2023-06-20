@@ -433,14 +433,19 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.get(player).multi_hit = n;
         }
 
-        pub fn duration(self: *Self, comptime field: Action.Field, player: Player, turns: u4) void {
+        pub fn duration(
+            self: *Self,
+            comptime field: Action.Field,
+            player: Player,
+            target: Player,
+            turns: u4,
+        ) void {
             if (!enabled) return;
 
-            const bind = field == .binding;
-            if (!showdown and bind) {
+            if (!showdown and field == .binding) {
                 self.pending.binding = if (options.key) 1 else turns;
             } else {
-                var action = self.actions.get(if (bind) player else player.foe());
+                var action = self.actions.get(target);
                 assert(@field(action, @tagName(field)) == 0);
                 @field(action, @tagName(field)) = 1;
                 self.actions.get(player).duration = if (options.key) 1 else turns;
@@ -743,13 +748,13 @@ test "Chance.multiHit" {
 test "Chance.duration" {
     var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
 
-    chance.duration(.sleep, .P1, 2);
+    chance.duration(.sleep, .P1, .P2, 2);
     try expectValue(@as(u4, 2), chance.actions.p1.duration);
     try expectValue(@as(u3, 1), chance.actions.p2.sleep);
 
     chance.reset();
 
-    chance.duration(.binding, .P2, 4);
+    chance.duration(.binding, .P2, .P2, 4);
     if (!showdown) {
         try expectValue(@as(u4, 0), chance.actions.p2.duration);
         try expectValue(@as(u3, 0), chance.actions.p2.binding);
@@ -947,8 +952,14 @@ const Null = struct {
         _ = .{ self, player, n };
     }
 
-    pub fn duration(self: Null, comptime field: Action.Field, player: Player, turns: u4) void {
-        _ = .{ self, field, player, turns };
+    pub fn duration(
+        self: Null,
+        comptime field: Action.Field,
+        player: Player,
+        target: Player,
+        turns: u4,
+    ) void {
+        _ = .{ self, field, player, target, turns };
     }
 
     pub fn sleep(self: Null, player: Player, turns: u4) Error!void {

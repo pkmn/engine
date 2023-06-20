@@ -3412,7 +3412,7 @@ test "Thrashing effect" {
 
         // Thrashing locks user in for 3-4 turns
         try expectEqual(Result.Default, try t.update(move(1), move(2)));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(2319225, 109051904); // (255/256) ** 2 * (214/256) * (1/39)
         try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
         try expect(t.actual.p1.active.volatiles.Confusion);
         try expectEqual(@as(u3, 5), t.actual.p1.active.volatiles.confusion);
@@ -3433,7 +3433,7 @@ test "Thrashing effect" {
 
         // Thrashing locks you in whether you hit or not
         try expectEqual(Result.Default, try t.update(forced, move(1)));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(1, 131072); // (1/256) * (1/256)
         try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
         try expect(t.actual.p1.active.volatiles.Confusion);
         try expectEqual(@as(u3, 4), t.actual.p1.active.volatiles.confusion);
@@ -3456,7 +3456,8 @@ test "Thrashing effect" {
 
         // Thrashing confuses you even if already confused
         try expectEqual(Result.Default, try t.update(forced, forced));
-        try t.expectProbability(1, 1); // FIXME
+        // (3/4) * (1/2) ** 2 * (255/256) ** 2 * (214/256) * (231/256) * (1/39) ** 2
+        try t.expectProbability(535740975, 5806795784192);
         try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
         try expect(t.actual.p1.active.volatiles.Confusion);
         try expectEqual(@as(u3, 5), t.actual.p1.active.volatiles.confusion);
@@ -3475,7 +3476,7 @@ test "Thrashing effect" {
 
         // Thrashing doesn't confuse you if the user is prevented from moving
         try expectEqual(Result.Default, try t.update(move(2), forced));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(85, 1024); // (2/3) * (1/2) * (255/256) * (1/4)
         try expect(!t.actual.p2.active.volatiles.Confusion);
 
         n = t.battle.actual.choices(.P1, .Move, &choices);
@@ -3492,7 +3493,8 @@ test "Thrashing effect" {
         try t.log.expected.turn(6);
 
         try expectEqual(Result.Default, try t.update(move(2), move(1)));
-        try t.expectProbability(1, 1); // FIXME
+        // (1/2) ** 2 * (3/4) * (255/256) * (231/256) * (1/39)
+        try t.expectProbability(58905, 13631488);
 
         try t.verify();
     }
@@ -3518,7 +3520,7 @@ test "Thrashing effect" {
         try t.log.expected.turn(2);
 
         try expectEqual(Result.Default, try t.update(move(1), swtch(2)));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(1445, 65536); // (255/256) * (221/256) * (1/39)
 
         try t.log.expected.switched(P2.ident(3), t.expected.p2.get(3));
         try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(3), Move.Thrash);
@@ -3526,7 +3528,7 @@ test "Thrashing effect" {
         try t.log.expected.turn(3);
 
         try expectEqual(Result.Default, try t.update(forced, swtch(3)));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(1, 1);
 
         try t.log.expected.move(P2.ident(3), Move.Teleport, P2.ident(3), null);
         if (!showdown) try t.log.expected.start(P1.ident(1), .ConfusionSilent);
@@ -3536,7 +3538,7 @@ test "Thrashing effect" {
         try t.log.expected.turn(4);
 
         try expectEqual(Result.Default, try t.update(forced, move(1)));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(1, 2);
         try expect(t.actual.p1.active.volatiles.Confusion);
         try expectEqual(@as(u3, 5), t.actual.p1.active.volatiles.confusion);
 
@@ -5146,7 +5148,7 @@ test "Bide effect" {
         try t.log.expected.turn(2);
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(229, 256);
 
         var n = t.battle.actual.choices(.P1, .Move, &choices);
         try expectEqualSlices(Choice, &[_]Choice{ swtch(2), forced }, choices[0..n]);
@@ -5158,14 +5160,14 @@ test "Bide effect" {
         try t.log.expected.turn(3);
 
         try expectEqual(Result.Default, try t.update(forced, move(1)));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(229, 256);
 
         try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
         try t.log.expected.activate(P1.ident(1), .Bide);
         try t.log.expected.turn(4);
 
         try expectEqual(Result.Default, try t.update(forced, swtch(2)));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(1, 2);
 
         try t.log.expected.move(P2.ident(2), Move.Dig, .{}, null);
         try t.log.expected.laststill();
@@ -5176,7 +5178,7 @@ test "Bide effect" {
         try t.log.expected.turn(5);
 
         try expectEqual(Result.Default, try t.update(forced, move(1)));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(1, 1);
 
         n = t.battle.actual.choices(.P1, .Move, &choices);
         try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2) }, choices[0..n]);
@@ -5189,14 +5191,14 @@ test "Bide effect" {
         try t.log.expected.turn(6);
 
         try expectEqual(Result.Default, try t.update(move(1), forced));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(4165, 212992); // (255/256) * (196/256) * (1/39)
 
         try t.log.expected.switched(P2.ident(3), t.expected.p2.get(3));
         try t.log.expected.activate(P1.ident(1), .Bide);
         try t.log.expected.turn(7);
 
         try expectEqual(Result.Default, try t.update(forced, swtch(3)));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(1, 1);
 
         try t.log.expected.move(P2.ident(3), Move.NightShade, P1.ident(1), null);
         t.expected.p1.get(1).hp -= 100;
@@ -5205,7 +5207,7 @@ test "Bide effect" {
         try t.log.expected.turn(8);
 
         try expectEqual(Result.Default, try t.update(forced, move(1)));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(255, 512); // (255/256) * (1/2)
 
         try t.log.expected.move(P2.ident(3), Move.ConfuseRay, P1.ident(1), null);
         try t.log.expected.start(P1.ident(1), .Confusion);
@@ -5216,7 +5218,7 @@ test "Bide effect" {
         try t.log.expected.faint(P2.ident(3), true);
 
         try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(forced, move(2)));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(255, 512); // (255/256) * (1/2)
         try expectEqual(@as(u8, 14), t.actual.p1.get(1).move(1).pp);
 
         try t.verify();
@@ -5238,14 +5240,14 @@ test "Bide effect" {
         try t.log.expected.turn(2);
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(255, 256);
 
         try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
         try t.log.expected.activate(P2.ident(1), .Bide);
         try t.log.expected.turn(3);
 
         try expectEqual(Result.Default, try t.update(move(2), forced));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(1, 1);
 
         try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
         try t.log.expected.end(P2.ident(1), .Bide);
@@ -5253,7 +5255,7 @@ test "Bide effect" {
         try t.log.expected.turn(4);
 
         try expectEqual(Result.Default, try t.update(move(2), forced));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(1, 2);
         try t.verify();
     }
 }
@@ -5366,7 +5368,7 @@ test "Metronome effect" {
     try t.log.expected.turn(6);
 
     try expectEqual(Result.Default, try t.update(move(2), forced));
-    try t.expectProbability(1, 1); // FIXME
+    try t.expectProbability(1, 512); // (1/2) * (1/256)
 
     try t.log.expected.activate(P2.ident(1), .Confusion);
     try t.log.expected.move(P2.ident(1), Move.Metronome, P2.ident(1), null);
@@ -5381,7 +5383,8 @@ test "Metronome effect" {
     // Metronome -> Mimic only works on Pokémon Showdown if Mimic
     // is in the moveset and replaces *that* slot instead of Metronome
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try t.expectProbability(1, 1); // FIXME
+    // (1/2) ** 2 * (1/163) ** 2 * (255/256) * (140/256) * (1/3)
+    try t.expectProbability(2975, 1741225984);
 
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ move(1), move(3) }, choices[0..n]);
@@ -5407,7 +5410,13 @@ test "Metronome effect" {
     try t.log.expected.turn(8);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try t.expectProbability(1, 1); // FIXME
+    if (showdown) {
+        // (7/8) * (1/4) * (1/163) ** 2 * (255/256) ** 2 * (209/256) * (226/256) * (1/39) ** 2
+        try t.expectProbability(1194429775, 308561514380394496);
+    } else {
+        // (7/8) * (1/4) * (1/163) * (255/256) * (226/256) * (1/39)
+        try t.expectProbability(67235, 2221932544);
+    }
 
     n = t.battle.actual.choices(.P1, .Move, &choices);
     try expectEqualSlices(
@@ -5963,7 +5972,7 @@ test "Bide residual bug" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try t.expectProbability(1, 1); // FIXME
+    try t.expectProbability(6183, 8192); // (229/256) * (216/256)
 
     try t.log.expected.move(P1.ident(1), Move.Bide, P1.ident(1), null);
     try t.log.expected.start(P1.ident(1), .Bide);
@@ -5979,7 +5988,7 @@ test "Bide residual bug" {
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
-    try t.expectProbability(1, 1); // FIXME
+    try t.expectProbability(255, 256);
 
     try t.log.expected.activate(P1.ident(1), .Bide);
     t.expected.p1.get(1).hp -= 40;
@@ -5995,7 +6004,7 @@ test "Bide residual bug" {
 
     const choice = move(if (showdown) 2 else 0);
     try expectEqual(Result.Default, try t.update(choice, move(2)));
-    try t.expectProbability(1, 1); // FIXME
+    try t.expectProbability(255, 256);
 
     try t.log.expected.end(P1.ident(1), .Bide);
     t.expected.p2.get(1).hp = 0;
@@ -6007,7 +6016,7 @@ test "Bide residual bug" {
     try t.log.expected.faint(P2.ident(1), true);
 
     try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(choice, move(2)));
-    try t.expectProbability(1, 1); // FIXME
+    try t.expectProbability(1, 2);
     try t.verify();
 }
 
@@ -6188,7 +6197,7 @@ test "Disable + Bide bug" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try t.expectProbability(1, 1); // FIXME
+    try t.expectProbability(573, 1024); // (191/256) * (3/4)
     try expect(t.actual.p2.active.volatiles.Bide);
     try expectEqual(@as(u4, 3), t.actual.p2.active.volatiles.attacks);
 
@@ -6198,7 +6207,7 @@ test "Disable + Bide bug" {
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(2), forced));
-    try t.expectProbability(1, 1); // FIXME
+    try t.expectProbability(245, 1024); // (140/256) * (1/2) * (7/8)
     try expectEqual(@as(u4, 4), t.actual.p2.active.volatiles.disabled_duration);
     try expect(t.actual.p2.active.volatiles.Bide);
     try expectEqual(@as(u4, 3), t.actual.p2.active.volatiles.attacks);
@@ -6209,7 +6218,7 @@ test "Disable + Bide bug" {
 
     // Bide should not execute when Disabled
     try expectEqual(Result.Default, try t.update(move(3), forced));
-    try t.expectProbability(1, 1); // FIXME
+    try t.expectProbability(6, 7);
     try expectEqual(@as(u4, 3), t.actual.p2.active.volatiles.disabled_duration);
     try expect(t.actual.p2.active.volatiles.Bide);
     try expectEqual(@as(u4, 3), t.actual.p2.active.volatiles.attacks);
@@ -6220,7 +6229,7 @@ test "Disable + Bide bug" {
 
     // Disabled should trump paralysis
     try expectEqual(Result.Default, try t.update(move(3), forced));
-    try t.expectProbability(1, 1); // FIXME
+    try t.expectProbability(5, 6);
     try expectEqual(@as(u4, 2), t.actual.p2.active.volatiles.disabled_duration);
     try expect(t.actual.p2.active.volatiles.Bide);
     try expectEqual(@as(u4, 3), t.actual.p2.active.volatiles.attacks);
@@ -6321,7 +6330,7 @@ test "Bide + Substitute bug" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(2), move(1)));
-    try t.expectProbability(1, 1); // FIXME
+    try t.expectProbability(1, 1);
     try expectEqual(@as(u8, 71), t.actual.p1.active.volatiles.substitute);
 
     try t.log.expected.move(P1.ident(1), Move.SonicBoom, P2.ident(1), null);
@@ -6331,7 +6340,8 @@ test "Bide + Substitute bug" {
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(1), forced));
-    try t.expectProbability(1, 1); // FIXME
+
+    try t.expectProbability(229, 256);
     try expectEqual(@as(u8, 71), t.actual.p1.active.volatiles.substitute);
 
     try t.log.expected.move(P1.ident(1), Move.SonicBoom, P2.ident(1), null);
@@ -6342,7 +6352,7 @@ test "Bide + Substitute bug" {
     try t.log.expected.turn(4);
 
     try expectEqual(Result.Default, try t.update(move(1), forced));
-    try t.expectProbability(1, 1); // FIXME
+    try t.expectProbability(229, 512); // (229/256) * (1/2)
 
     try t.verify();
 }
@@ -7065,7 +7075,7 @@ test "Thrashing + Substitute bugs" {
         try t.log.expected.turn(2);
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(9095, 425984); // (255/256) * (214/256) * (1/39)
         try expectEqual(@as(u8, subhp), t.actual.p2.active.volatiles.substitute);
 
         var n = t.battle.actual.choices(.P1, .Move, &choices);
@@ -7078,7 +7088,7 @@ test "Thrashing + Substitute bugs" {
         try t.log.expected.turn(3);
 
         try expectEqual(Result.Default, try t.update(forced, move(2)));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(9095, 425984); // (255/256) * (214/256) * (1/39)
         try expectEqual(@as(u8, subhp), t.actual.p2.active.volatiles.substitute);
 
         try t.verify();
@@ -7104,7 +7114,7 @@ test "Thrashing + Substitute bugs" {
         try t.log.expected.turn(2);
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(9095, 425984); // (255/256) * (214/256) * (1/39)
 
         var n = t.battle.actual.choices(.P1, .Move, &choices);
         try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
@@ -7116,7 +7126,7 @@ test "Thrashing + Substitute bugs" {
         try t.log.expected.turn(3);
 
         try expectEqual(Result.Default, try t.update(forced, move(2)));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(9095, 425984); // (255/256) * (214/256) * (1/39)
 
         try t.verify();
     }
@@ -7142,7 +7152,7 @@ test "Thrashing speed tie bug" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try t.expectProbability(1, 1); // FIXME
+    try t.expectProbability(19635, 1703936); // (1/2) * (255/256) * (231/256) * (1/39)
 
     if (showdown) try t.log.expected.move(P2.ident(1), Move.Teleport, P2.ident(1), null);
     try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
@@ -7152,7 +7162,7 @@ test "Thrashing speed tie bug" {
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(forced, move(1)));
-    try t.expectProbability(1, 1); // FIXME
+    try t.expectProbability(19635, 1703936); // (1/2) * (255/256) * (231/256) * (1/39)
     try t.verify();
 }
 
@@ -7418,14 +7428,14 @@ test "Bide damage accumulation glitches" {
         try t.log.expected.turn(2);
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(1445, 65536); // (255/256) * (221/256) * (1/39)
 
         try t.log.expected.activate(P2.ident(1), .Bide);
         try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
         try t.log.expected.turn(3);
 
         try expectEqual(Result.Default, try t.update(move(2), forced));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(1, 1);
 
         try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
         try t.log.expected.end(P2.ident(1), .Bide);
@@ -7434,7 +7444,7 @@ test "Bide damage accumulation glitches" {
         try t.log.expected.turn(4);
 
         try expectEqual(Result.Default, try t.update(swtch(2), forced));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(1, 2);
 
         try t.verify();
     }
@@ -7461,7 +7471,7 @@ test "Bide damage accumulation glitches" {
         try t.log.expected.turn(2);
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(27, 32); // (216/256)
 
         try t.log.expected.move(P2.ident(1), Move.Bide, P2.ident(1), null);
         try t.log.expected.start(P2.ident(1), .Bide);
@@ -7473,7 +7483,7 @@ test "Bide damage accumulation glitches" {
         try t.log.expected.turn(3);
 
         try expectEqual(Result.Default, try t.update(move(2), move(2)));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(765, 32768); // (255/256) * (234/256) * (1/39)
 
         try t.log.expected.activate(P2.ident(1), .Bide);
         try t.log.expected.move(P1.ident(1), Move.TriAttack, P2.ident(1), null);
@@ -7487,14 +7497,14 @@ test "Bide damage accumulation glitches" {
 
         const result = if (showdown) Result{ .p1 = .Switch, .p2 = .Pass } else Result.Error;
         try expectEqual(result, try t.update(move(2), move(if (showdown) 2 else 0)));
-        try t.expectProbability(1, 1); // FIXME
+        try t.expectProbability(765, 32768); // (255/256) * (234/256) * (1/39)
 
         if (showdown) {
             try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
             try t.log.expected.turn(4);
 
             try expectEqual(Result.Default, try t.update(swtch(2), .{}));
-            try t.expectProbability(1, 1); // FIXME
+            try t.expectProbability(1, 1);
         }
 
         try t.verify();
@@ -9368,7 +9378,7 @@ test "Rage and Thrash / Petal Dance accuracy bug" {
 
     // 255 -> 168
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
-    try t.expectProbability(1, 1); // FIXME
+    try t.expectProbability(9095, 425984); // (255/256) * (214/256) * (1/39)
 
     try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
     try t.log.expected.resisted(P2.ident(1));
@@ -9380,7 +9390,7 @@ test "Rage and Thrash / Petal Dance accuracy bug" {
 
     // 168 -> 84
     try expectEqual(Result.Default, try t.update(forced, move(1)));
-    try t.expectProbability(1, 1); // FIXME
+    try t.expectProbability(749, 53248); // (168/256) * (214/256) * (1/39)
 
     try t.log.expected.move(P1.ident(1), Move.Thrash, P2.ident(1), Move.Thrash);
     try t.log.expected.lastmiss();
@@ -9391,7 +9401,7 @@ test "Rage and Thrash / Petal Dance accuracy bug" {
 
     // should miss!
     try expectEqual(Result.Default, try t.update(forced, move(1)));
-    try t.expectProbability(1, 1); // FIXME
+    try t.expectProbability(43, 128); // (1/2) * (172/256)
 
     try t.verify();
 }
