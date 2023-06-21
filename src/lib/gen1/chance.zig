@@ -278,7 +278,7 @@ pub fn Chance(comptime Rational: type) type {
             // We need to handle binding specially because we still need to commit it when attacking
             // into a Pokémon that is immune
             if (!showdown) {
-                if (self.pending.binding != 0) {
+                if (kind != .miss and self.pending.binding != 0) {
                     assert(action.duration == 0);
                     action.duration = @intCast(u4, self.pending.binding);
                     assert(action.binding == 0);

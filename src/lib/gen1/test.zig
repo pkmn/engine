@@ -4797,7 +4797,7 @@ test "Mimic effect" {
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(3)));
-    try t.expectProbability(1, 3);
+    try t.expectProbability(85, 256); // (255/256) * (1/3)
     try expectEqual(Move.Teleport, t.actual.p1.active.move(1).id);
     try expectEqual(pp - 1, t.actual.p1.active.move(1).pp);
 
