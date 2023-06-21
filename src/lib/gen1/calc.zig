@@ -176,9 +176,10 @@ pub fn transitions(
     var frontier = std.ArrayList(Actions).init(allocator);
     defer frontier.deinit();
 
+    // FIXME need state or way to avoid writing to state!
     var opts = pkmn.battle.options(
         protocol.NULL,
-        Chance(Rational(u128)){ .probability = .{}, .actions = actions }, // FIXME need sleeps!
+        Chance(Rational(u128)){ .probability = .{}, .actions = actions },
         Calc{},
     );
 

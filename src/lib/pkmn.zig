@@ -69,6 +69,8 @@ pub const gen1 = struct {
         /// Information about the RNG that was observed during a Generation I
         /// battle `update` for a single player.
         pub const Action = @import("gen1/chance.zig").Action;
+        /// TODO
+        pub const State = @import("gen1/chance.zig").State;
         /// Null object pattern implementation of Generation I `Chance` which
         /// does nothing, though chance tracking should additionally be turned
         /// off entirely via `options.chance`.

@@ -94,6 +94,7 @@ const pkmn_gen1_log_options = extern struct {
 const pkmn_gen1_chance_options = extern struct {
     probability: pkmn.Rational(f64),
     actions: pkmn.gen1.chance.Actions,
+    state: pkmn.gen1.chance.State,
 };
 
 const pkmn_gen1_calc_options = extern struct {
@@ -127,7 +128,11 @@ export fn pkmn_gen1_battle_options_set(
     }
     if (pkmn.options.chance) {
         if (chance) |c| {
-            options.chance = .{ .probability = c.probability, .actions = c.actions };
+            options.chance = .{
+                .probability = c.probability,
+                .actions = c.actions,
+                .state = c.state,
+            };
         } else {
             options.chance.reset();
         }
@@ -151,6 +156,12 @@ export fn pkmn_gen1_battle_options_chance_actions(
     options: *pkmn_gen1_battle_options,
 ) *pkmn.gen1.chance.Actions {
     return &options.chance.actions;
+}
+
+export fn pkmn_gen1_battle_options_chance_state(
+    options: *pkmn_gen1_battle_options,
+) *pkmn.gen1.chance.State {
+    return &options.chance.state;
 }
 
 export fn pkmn_gen1_battle_options_calc_summaries(
