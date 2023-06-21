@@ -3476,7 +3476,7 @@ test "Thrashing effect" {
 
         // Thrashing doesn't confuse you if the user is prevented from moving
         try expectEqual(Result.Default, try t.update(move(2), forced));
-        try t.expectProbability(85, 1024); // (2/3) * (1/2) * (255/256) * (1/4)
+        try t.expectProbability(255, 2048); // (1/2) * (255/256) * (1/4)
         try expect(!t.actual.p2.active.volatiles.Confusion);
 
         n = t.battle.actual.choices(.P1, .Move, &choices);
@@ -3493,8 +3493,8 @@ test "Thrashing effect" {
         try t.log.expected.turn(6);
 
         try expectEqual(Result.Default, try t.update(move(2), move(1)));
-        // (1/2) ** 2 * (3/4) * (255/256) * (231/256) * (1/39)
-        try t.expectProbability(58905, 13631488);
+        // (3/4) ** 2 * (1/2) * (255/256) * (231/256) * (1/39)
+        try t.expectProbability(176715, 27262976);
 
         try t.verify();
     }

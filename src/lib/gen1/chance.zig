@@ -456,7 +456,8 @@ pub fn Chance(comptime Rational: type) type {
                 self.pending.binding = if (options.key) 1 else turns;
             } else {
                 var action = self.actions.get(target);
-                assert(@field(action, @tagName(field)) == 0);
+                assert(@field(action, @tagName(field)) == 0 or
+                    (field == .confusion and player == target));
                 @field(action, @tagName(field)) = 1;
                 self.actions.get(player).duration = if (options.key) 1 else turns;
             }
