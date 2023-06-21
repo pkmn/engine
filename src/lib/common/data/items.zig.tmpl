@@ -24,18 +24,18 @@ pub const Item = enum({{{ Item.type }}}) {
     pub inline fn boost(item: Item) ?Type {
         assert(item != .None);
         if (item == .PolkadotBow) return .Normal;
-        return if (@enumToInt(item) <= {{{ Item.boosts }}}) @intToEnum(Type, @enumToInt(item) - 1) else null;
+        return if (@intFromEnum(item) <= {{{ Item.boosts }}}) @enumFromInt(Type, @intFromEnum(item) - 1) else null;
     }
 
     /// Whether or not this item is a Berry.
     pub inline fn berry(item: Item) bool {
         assert(item != .None);
-        return @enumToInt(item) > {{{ Item.effect }}} and @enumToInt(item) <= {{{ Item.berry }}};
+        return @intFromEnum(item) > {{{ Item.effect }}} and @intFromEnum(item) <= {{{ Item.berry }}};
     }
 
     /// Whether or not this item is Mail.
     pub inline fn mail(item: Item) bool {
         assert(item != .None);
-        return @enumToInt(item) > {{{ Item.present }}} and @enumToInt(item) <= {{{ Item.mail }}};
+        return @intFromEnum(item) > {{{ Item.present }}} and @intFromEnum(item) <= {{{ Item.mail }}};
     }
 };

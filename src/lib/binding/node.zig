@@ -104,8 +104,8 @@ fn choices(gen: anytype) c.napi_callback {
             var aligned = @alignCast(@alignOf(*gen.Battle(gen.PRNG)), data.?);
             var battle = @ptrCast(*gen.Battle(gen.PRNG), aligned);
 
-            const player = @intToEnum(pkmn.Player, Number.get(env, argv[1], u8));
-            const request = @intToEnum(pkmn.Choice.Type, Number.get(env, argv[2], u8));
+            const player = @enumFromInt(pkmn.Player, Number.get(env, argv[1], u8));
+            const request = @enumFromInt(pkmn.Choice.Type, Number.get(env, argv[2], u8));
 
             assert(c.napi_get_arraybuffer_info(env, argv[3], &data, &len) == c.napi_ok);
             assert(len == gen.CHOICES_SIZE);

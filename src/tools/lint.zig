@@ -14,7 +14,7 @@ pub fn main() !void {
     const build = try checkBuild(allocator);
     const format = try checkFormat(PATH, allocator);
     const lint = try lintDir(PATH, fs.cwd(), PATH, allocator);
-    std.process.exit(@boolToInt(build or format or lint));
+    std.process.exit(@intFromBool(build or format or lint));
 }
 
 fn checkBuild(allocator: Allocator) !bool {

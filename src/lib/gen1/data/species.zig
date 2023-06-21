@@ -1094,12 +1094,12 @@ pub const Species = enum(u8) {
     /// The Pokémon's critical hit rate=io out of 256.
     pub inline fn chance(id: Species) u8 {
         assert(id != .None);
-        return CHANCES[@enumToInt(id) - 1];
+        return CHANCES[@intFromEnum(id) - 1];
     }
 
     /// Returns the `Data` corresponding to the species.
     pub fn get(id: Species) Data {
         assert(id != .None);
-        return DATA[@enumToInt(id) - 1];
+        return DATA[@intFromEnum(id) - 1];
     }
 };

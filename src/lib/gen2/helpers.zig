@@ -158,11 +158,11 @@ pub const Pokemon = struct {
     }
 
     pub fn random(rand: *PSRNG, opt: Options) data.Pokemon {
-        const s = @intToEnum(Species, rand.range(u8, 1, Species.size + 1));
+        const s = @enumFromInt(Species, rand.range(u8, 1, Species.size + 1));
         const species = Species.get(s);
         const lvl = if (rand.chance(u8, 1, 20)) rand.range(u8, 1, 99 + 1) else 100;
         // Pokémon Showdown does not support most items without in-battle held item effects
-        const max_item = @enumToInt(if (showdown) Item.FlowerMail else Item.TM50);
+        const max_item = @intFromEnum(if (showdown) Item.FlowerMail else Item.TM50);
         const item = if (rand.chance(u8, 1, 10)) 0 else rand.range(u8, 1, max_item + 1);
 
         var stats: Stats(u16) = .{};
@@ -184,7 +184,7 @@ pub const Pokemon = struct {
         for (0..n) |i| {
             var m: Move = .None;
             sample: while (true) {
-                m = @intToEnum(Move, rand.range(u8, 1, 164 + 1));
+                m = @enumFromInt(Move, rand.range(u8, 1, 164 + 1));
                 for (0..i) |j| if (ms[j].id == m) continue :sample;
                 break;
             }

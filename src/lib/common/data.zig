@@ -10,7 +10,7 @@ pub const Player = enum(u1) {
 
     /// Returns a player's opponent.
     pub inline fn foe(self: Player) Player {
-        return @intToEnum(Player, ~@enumToInt(self));
+        return @enumFromInt(Player, ~@intFromEnum(self));
     }
 
     /// Return's an identifier for the player's Pokémon at the one-indexed `id`.

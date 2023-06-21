@@ -62,12 +62,12 @@ pub fn Battle(comptime RNG: anytype) type {
 
         /// Returns the `Side` for the given `player`.
         pub inline fn side(self: *Self, player: Player) *Side {
-            return &self.sides[@enumToInt(player)];
+            return &self.sides[@intFromEnum(player)];
         }
 
         /// Returns the `Side` of the opponent for the given `player`
         pub inline fn foe(self: *Self, player: Player) *Side {
-            return &self.sides[@enumToInt(player.foe())];
+            return &self.sides[@intFromEnum(player.foe())];
         }
 
         /// Returns an identifier for the active Pokémon of `player`.
@@ -243,13 +243,13 @@ pub const Status = enum(u8) {
     /// Whether or not the status `num` is the same as `status`.
     pub inline fn is(num: u8, status: Status) bool {
         if (status == .SLP) return Status.duration(num) > 0;
-        return ((num >> @intCast(u3, @enumToInt(status))) & 1) != 0;
+        return ((num >> @intCast(u3, @intFromEnum(status))) & 1) != 0;
     }
 
     /// Initializes a non-sleep `status`. Use `slp` or `slf` to initialize a sleep status.
     pub inline fn init(status: Status) u8 {
         assert(status != .SLP and status != .EXT);
-        return @as(u8, 1) << @intCast(u3, @enumToInt(status));
+        return @as(u8, 1) << @intCast(u3, @intFromEnum(status));
     }
 
     /// Initializes a non self-inflicted sleep status with duration `dur`.
@@ -413,7 +413,7 @@ pub fn Stats(comptime T: type) type {
         /// Computes the value of `stat` given a `base`, `dv`, stat `exp` and `level`.
         pub fn calc(comptime stat: []const u8, base: T, dv: u4, exp: u16, level: u8) T {
             assert(level > 0 and level <= 100);
-            const evs = @min(255, @floatToInt(u16, @ceil(@sqrt(@intToFloat(f32, exp)))));
+            const evs = @min(255, @intFromFloat(u16, @ceil(@sqrt(@floatFromInt(f32, exp)))));
             const core: u32 = (2 *% (@as(u32, base) +% dv)) +% (evs / 4);
             const factor: u32 = if (std.mem.eql(u8, stat, "hp")) level + 10 else 5;
             return @intCast(T, core *% @as(u32, level) / 100 +% factor);
@@ -465,7 +465,7 @@ test Boosts {
 pub const Move = moves.Move;
 
 test Move {
-    try expectEqual(2, @enumToInt(Move.KarateChop));
+    try expectEqual(2, @intFromEnum(Move.KarateChop));
     const move = Move.get(.Fissure);
     try expectEqual(Move.Effect.OHKO, move.effect);
     try expectEqual(@as(u8, 30), move.accuracy);
@@ -526,7 +526,7 @@ test Move {
 pub const Species = species.Species;
 
 test Species {
-    try expectEqual(2, @enumToInt(Species.Ivysaur));
+    try expectEqual(2, @intFromEnum(Species.Ivysaur));
     try expectEqual(@as(u8, 100), Species.get(.Mew).stats.def);
 }
 
@@ -543,9 +543,11 @@ pub const Effectiveness = enum(u8) {
     Super = 20,
 
     /// Used to determine the effectiness of a neutral damage hit.
-    pub const neutral: u16 = @enumToInt(Effectiveness.Neutral) * @enumToInt(Effectiveness.Neutral);
+    pub const neutral: u16 =
+        @intFromEnum(Effectiveness.Neutral) * @intFromEnum(Effectiveness.Neutral);
     /// Used to detect whether there is a mismatch in type effectivness (relevant for precedence).
-    pub const mismatch: u16 = @enumToInt(Effectiveness.Resisted) + @enumToInt(Effectiveness.Super);
+    pub const mismatch: u16 =
+        @intFromEnum(Effectiveness.Resisted) + @intFromEnum(Effectiveness.Super);
 
     comptime {
         assert(@sizeOf(Effectiveness) == 1);
@@ -553,8 +555,8 @@ pub const Effectiveness = enum(u8) {
 };
 
 test Types {
-    try expectEqual(14, @enumToInt(Type.Dragon));
-    try expectEqual(20, @enumToInt(Effectiveness.Super));
+    try expectEqual(14, @intFromEnum(Type.Dragon));
+    try expectEqual(20, @intFromEnum(Effectiveness.Super));
 
     try expect(!Type.Ghost.special());
     try expect(Type.Dragon.special());

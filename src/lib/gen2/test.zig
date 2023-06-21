@@ -68,7 +68,7 @@ const P1 = Player.P1;
 const P2 = Player.P2;
 
 var choices: [CHOICES_SIZE]Choice = undefined;
-const forced = move(@boolToInt(showdown));
+const forced = move(@intFromBool(showdown));
 
 // General
 
@@ -1389,9 +1389,9 @@ fn expectLog(expected: []const u8, actual: []const u8) !void {
 
 fn formatter(kind: protocol.Kind, byte: u8) []const u8 {
     return switch (kind) {
-        .Move => @tagName(@intToEnum(Move, byte)),
-        .Species => @tagName(@intToEnum(Species, byte)),
-        .Type => @tagName(@intToEnum(Type, byte)),
+        .Move => @tagName(@enumFromInt(Move, byte)),
+        .Species => @tagName(@enumFromInt(Species, byte)),
+        .Type => @tagName(@enumFromInt(Type, byte)),
         .Status => Status.name(byte),
     };
 }

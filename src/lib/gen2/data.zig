@@ -50,11 +50,11 @@ pub fn Battle(comptime RNG: anytype) type {
         field: Field = .{},
 
         pub inline fn side(self: *Self, player: Player) *Side {
-            return &self.sides[@enumToInt(player)];
+            return &self.sides[@intFromEnum(player)];
         }
 
         pub inline fn foe(self: *Self, player: Player) *Side {
-            return &self.sides[@enumToInt(player.foe())];
+            return &self.sides[@intFromEnum(player.foe())];
         }
 
         pub inline fn active(self: *Self, player: Player) ID {
@@ -208,8 +208,8 @@ const DVs = packed struct {
         const p = @intCast(u6, 1 + ((5 * @as(u8, (dvs.atk & 0b1000) | ((dvs.def & 0b1000)) >> 1 |
             ((dvs.spe & 0b1000)) >> 2 | ((dvs.spc & 0b1000)) >> 3) + (dvs.spc & 0b0011)) >> 1));
         var t = @as(u8, dvs.def & 0b0011) + (@as(u8, dvs.atk & 0b0011) << 2) + 1;
-        if (t >= @enumToInt(Type.@"???")) t = t + 1;
-        return DVs{ .gender = g, .pow = p, .type = @intToEnum(Type, t) };
+        if (t >= @intFromEnum(Type.@"???")) t = t + 1;
+        return DVs{ .gender = g, .pow = p, .type = @enumFromInt(Type, t) };
     }
 
     comptime {
@@ -327,7 +327,7 @@ pub fn Stats(comptime T: type) type {
 
         pub fn calc(comptime stat: []const u8, base: T, dv: u4, exp: u16, level: u8) T {
             assert(level > 0 and level <= 100);
-            const evs = @min(255, @floatToInt(u16, @ceil(@sqrt(@intToFloat(f32, exp)))));
+            const evs = @min(255, @intFromFloat(u16, @ceil(@sqrt(@floatFromInt(f32, exp)))));
             const core: u32 = (2 *% (@as(u32, base) +% dv)) +% (evs / 4);
             const factor: u32 = if (std.mem.eql(u8, stat, "hp")) level + 10 else 5;
             return @intCast(T, core *% @as(u32, level) / 100 +% factor);
@@ -390,7 +390,7 @@ test Item {
 pub const Move = moves.Move;
 
 test Move {
-    try expectEqual(251, @enumToInt(Move.BeatUp));
+    try expectEqual(251, @intFromEnum(Move.BeatUp));
     const move = Move.get(.DynamicPunch);
     try expectEqual(Move.Effect.ConfusionChance, move.effect);
     try expectEqual(@as(u8, 50), move.accuracy);
@@ -400,7 +400,7 @@ test Move {
 pub const Species = species.Species;
 
 test Species {
-    try expectEqual(152, @enumToInt(Species.Chikorita));
+    try expectEqual(152, @intFromEnum(Species.Chikorita));
     try expectEqual(@as(u8, 100), Species.get(.Celebi).stats.spd);
 }
 
@@ -409,7 +409,7 @@ pub const Types = types.Types;
 pub const Effectiveness = gen1.Effectiveness;
 
 test Types {
-    try expectEqual(13, @enumToInt(Type.Electric));
+    try expectEqual(13, @intFromEnum(Type.Electric));
 
     try expect(!Type.Steel.special());
     try expect(Type.Dark.special());

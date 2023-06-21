@@ -68,7 +68,7 @@ const P1 = Player.P1;
 const P2 = Player.P2;
 
 var choices: [CHOICES_SIZE]Choice = undefined;
-const forced = move(@boolToInt(showdown));
+const forced = move(@intFromBool(showdown));
 
 // General
 
@@ -9173,7 +9173,7 @@ test "Transform + Mirror Move/Metronome PP error" {
         try expectEqual(Result.Default, try t.update(swtch(2), .{}));
 
         n = t.battle.actual.choices(.P1, .Move, &choices);
-        try expectEqual(@as(u8, @boolToInt(showdown)), n);
+        try expectEqual(@as(u8, @intFromBool(showdown)), n);
         if (showdown) {
             try t.log.expected.move(P1.ident(1), Move.Struggle, P2.ident(1), null);
             t.expected.p2.get(1).hp -= 34;
@@ -9445,18 +9445,18 @@ fn expectLog(expected: []const u8, actual: []const u8) !void {
 
 fn formatter(kind: protocol.Kind, byte: u8) []const u8 {
     return switch (kind) {
-        .Move => @tagName(@intToEnum(Move, byte)),
-        .Species => @tagName(@intToEnum(Species, byte)),
-        .Type => @tagName(@intToEnum(Type, byte)),
+        .Move => @tagName(@enumFromInt(Move, byte)),
+        .Species => @tagName(@enumFromInt(Species, byte)),
+        .Type => @tagName(@enumFromInt(Type, byte)),
         .Status => Status.name(byte),
     };
 }
 
 fn metronome(comptime m: Move) U {
-    const param = @enumToInt(m);
+    const param = @intFromEnum(m);
     if (!showdown) return param;
-    const range: u64 = @enumToInt(Move.Struggle) - 2;
-    const mod = @as(u2, (if (param < @enumToInt(Move.Metronome) - 1) 1 else 2));
+    const range: u64 = @intFromEnum(Move.Struggle) - 2;
+    const mod = @as(u2, (if (param < @intFromEnum(Move.Metronome) - 1) 1 else 2));
     return comptime ranged((param - mod) + 1, range) - 1;
 }
 

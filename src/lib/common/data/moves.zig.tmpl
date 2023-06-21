@@ -51,6 +51,6 @@ pub const Move = enum({{{ Move.type }}}) {
     /// Returns the `Data` corresponding to the move.
     pub inline fn get(id: Move) Data {
         {{{ Move.assert }}}
-        return DATA[@enumToInt(id) - 1];
+        return DATA[@intFromEnum(id) - 1];
     }{{{ Move.ppFn }}}
 };

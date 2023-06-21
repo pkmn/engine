@@ -219,18 +219,18 @@ pub const Item = enum(u8) {
     pub inline fn boost(item: Item) ?Type {
         assert(item != .None);
         if (item == .PolkadotBow) return .Normal;
-        return if (@enumToInt(item) <= 18) @intToEnum(Type, @enumToInt(item) - 1) else null;
+        return if (@intFromEnum(item) <= 18) @enumFromInt(Type, @intFromEnum(item) - 1) else null;
     }
 
     /// Whether or not this item is a Berry.
     pub inline fn berry(item: Item) bool {
         assert(item != .None);
-        return @enumToInt(item) > 30 and @enumToInt(item) <= 40;
+        return @intFromEnum(item) > 30 and @intFromEnum(item) <= 40;
     }
 
     /// Whether or not this item is Mail.
     pub inline fn mail(item: Item) bool {
         assert(item != .None);
-        return @enumToInt(item) > 60 and @enumToInt(item) <= 70;
+        return @intFromEnum(item) > 60 and @intFromEnum(item) <= 70;
     }
 };

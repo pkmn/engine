@@ -210,7 +210,7 @@ fn dump() !void {
     } else {
         try w.writeIntNative(u64, last);
 
-        try w.writeByte(@boolToInt(pkmn.options.showdown));
+        try w.writeByte(@intFromBool(pkmn.options.showdown));
         try w.writeByte(gen);
         try w.writeAll(initial);
 

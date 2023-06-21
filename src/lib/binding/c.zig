@@ -19,13 +19,13 @@ export fn pkmn_choice_init(choice: u8, data: u8) u8 {
     assert(choice <= @typeInfo(pkmn.Choice.Type).Enum.fields.len);
     assert(data <= 6);
     return @bitCast(u8, pkmn.Choice{
-        .type = @intToEnum(pkmn.Choice.Type, choice),
+        .type = @enumFromInt(pkmn.Choice.Type, choice),
         .data = @intCast(u4, data),
     });
 }
 
 export fn pkmn_choice_type(choice: u8) u8 {
-    return @as(u8, @enumToInt(@bitCast(pkmn.Choice, choice).type));
+    return @as(u8, @intFromEnum(@bitCast(pkmn.Choice, choice).type));
 }
 
 export fn pkmn_choice_data(choice: u8) u8 {
@@ -33,17 +33,17 @@ export fn pkmn_choice_data(choice: u8) u8 {
 }
 
 export fn pkmn_result_type(result: u8) u8 {
-    return @enumToInt(@bitCast(pkmn.Result, result).type);
+    return @intFromEnum(@bitCast(pkmn.Result, result).type);
 }
 
 export fn pkmn_result_p1(result: u8) u8 {
     assert(!pkmn_error(result));
-    return @enumToInt(@bitCast(pkmn.Result, result).p1);
+    return @intFromEnum(@bitCast(pkmn.Result, result).p1);
 }
 
 export fn pkmn_result_p2(result: u8) u8 {
     assert(!pkmn_error(result));
-    return @enumToInt(@bitCast(pkmn.Result, result).p2);
+    return @intFromEnum(@bitCast(pkmn.Result, result).p2);
 }
 
 export fn pkmn_error(result: u8) bool {
@@ -91,8 +91,8 @@ export fn pkmn_gen1_battle_choices(
     assert(request <= @typeInfo(pkmn.Choice.Type).Enum.fields.len);
     assert(!pkmn.options.showdown or len > 0);
     return battle.choices(
-        @intToEnum(pkmn.Player, player),
-        @intToEnum(pkmn.Choice.Type, request),
+        @enumFromInt(pkmn.Player, player),
+        @enumFromInt(pkmn.Choice.Type, request),
         @ptrCast([]pkmn.Choice, out[0..len]),
     );
 }

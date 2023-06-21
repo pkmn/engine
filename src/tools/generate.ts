@@ -433,44 +433,44 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
         /// Whether this effect activates during the "begin" step of move execution.
         pub inline fn onBegin(effect: Effect) bool {
-            return @enumToInt(effect) > 0 and @enumToInt(effect) <= ${begin};
+            return @intFromEnum(effect) > 0 and @intFromEnum(effect) <= ${begin};
         }
 
         /// Whether this effect lowers stats.
         pub inline fn isStatDown(effect: Effect) bool {
-            return @enumToInt(effect) > ${begin} and @enumToInt(effect) <= ${sd};
+            return @intFromEnum(effect) > ${begin} and @intFromEnum(effect) <= ${sd};
         }
 
         /// Whether this effect activates during the "end" step of move execution.
         pub inline fn onEnd(effect: Effect) bool {
-            return @enumToInt(effect) > ${begin} and @enumToInt(effect) <= ${end};
+            return @intFromEnum(effect) > ${begin} and @intFromEnum(effect) <= ${end};
         }
 
         /// Whether this effect is considered to "always happen".
         pub inline fn alwaysHappens(effect: Effect) bool {
-            return @enumToInt(effect) > ${end} and @enumToInt(effect) <= ${ahs};
+            return @intFromEnum(effect) > ${end} and @intFromEnum(effect) <= ${ahs};
         }
 
         /// Whether this effect is handled specially by the engine.
         pub inline fn isSpecial(effect: Effect) bool {
             // NB: isSpecial includes isMulti up to Twineedle
-            return @enumToInt(effect) > ${end} and @enumToInt(effect) <= ${multi - 1};
+            return @intFromEnum(effect) > ${end} and @intFromEnum(effect) <= ${multi - 1};
         }
 
         /// Whether this effect is a multi-hit effect.
         pub inline fn isMulti(effect: Effect) bool {
-            return @enumToInt(effect) > ${special} and @enumToInt(effect) <= ${multi};
+            return @intFromEnum(effect) > ${special} and @intFromEnum(effect) <= ${multi};
         }
 
         /// Whether this effect is has chance of lowering stats.
         pub inline fn isStatDownChance(effect: Effect) bool {
-            return @enumToInt(effect) > ${multi} and @enumToInt(effect) <= ${sdc};
+            return @intFromEnum(effect) > ${multi} and @intFromEnum(effect) <= ${sdc};
         }
 
         /// Whether this effect has a secondary chance.
         pub inline fn isSecondaryChance(effect: Effect) bool {
             // NB: isSecondaryChance includes isStatDownChance as well as Twineedle
-            return (@enumToInt(effect) > ${multi - 1} and @enumToInt(effect) <= ${sec});
+            return (@intFromEnum(effect) > ${multi - 1} and @intFromEnum(effect) <= ${sec});
         }
     };\n`;
 
@@ -483,7 +483,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     /// Returns the base PP of the move.
     pub fn pp(id: Move) u8 {
         assert(id != .None);
-        return PP[@enumToInt(id) - 1];
+        return PP[@intFromEnum(id) - 1];
     }`;
     const SENTINEL =
       ',\n\n    // Sentinel used when Pokémon\'s turn should be skipped (e.g. bound)\n' +
@@ -566,7 +566,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     /// The Pokémon's critical hit rate=io out of 256.
     pub inline fn chance(id: Species) u8 {
         assert(id != .None);
-        return CHANCES[@enumToInt(id) - 1];
+        return CHANCES[@intFromEnum(id) - 1];
     }`;
     template('species', dirs.out, {
       gen: gen.num,
@@ -657,7 +657,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const precedenceFn =
     `/// The precedence order of type type.
     pub inline fn precedence(self: Type) u8 {
-        return PRECEDENCE[@enumToInt(self)];
+        return PRECEDENCE[@intFromEnum(self)];
     }`;
 
     template('types', dirs.out, {

@@ -153,7 +153,7 @@ pub const Pokemon = struct {
     }
 
     pub fn random(rand: *PSRNG, opt: Options) data.Pokemon {
-        const s = @intToEnum(Species, rand.range(u8, 1, Species.size + 1));
+        const s = @enumFromInt(Species, rand.range(u8, 1, Species.size + 1));
         const species = Species.get(s);
         const lvl = if (rand.chance(u8, 1, 20)) rand.range(u8, 1, 99 + 1) else 100;
         var stats: Stats(u16) = .{};
@@ -176,7 +176,7 @@ pub const Pokemon = struct {
         for (0..n) |i| {
             var m: Move = .None;
             sample: while (true) {
-                m = @intToEnum(Move, rand.range(u8, 1, Move.size - 1 + 1));
+                m = @enumFromInt(Move, rand.range(u8, 1, Move.size - 1 + 1));
                 if (opt.block and blocked(m)) continue :sample;
                 for (0..i) |j| if (ms[j].id == m) continue :sample;
                 break;

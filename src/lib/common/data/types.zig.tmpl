@@ -33,12 +33,12 @@ pub const Type = enum({{{ Type.type }}}) {
 
     /// Whether or not this type is considered to be special as opposed to physical.
     pub inline fn special(self: Type) bool {
-        return @enumToInt(self) >= @enumToInt(Type.Fire);
+        return @intFromEnum(self) >= @intFromEnum(Type.Fire);
     }
 
     /// The `Effectiveness` of type `t2` vs. type `t1`.
     pub inline fn effectiveness(t1: Type, t2: Type) Effectiveness {
-        return CHART[@enumToInt(t1)][@enumToInt(t2)];
+        return CHART[@intFromEnum(t1)][@intFromEnum(t2)];
     }
 
     {{{ Type.precedenceFn }}}

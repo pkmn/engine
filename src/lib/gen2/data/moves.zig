@@ -2779,6 +2779,6 @@ pub const Move = enum(u8) {
     /// Returns the `Data` corresponding to the move.
     pub inline fn get(id: Move) Data {
         assert(id != .None);
-        return DATA[@enumToInt(id) - 1];
+        return DATA[@intFromEnum(id) - 1];
     }
 };
