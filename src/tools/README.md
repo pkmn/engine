@@ -29,11 +29,11 @@ This directory contains miscellaneous scripts and tools useful for working on th
 
       $ zig build lint
 
-- [`protocol.zig`](protocol.zig): Print out offsets and constants required to properly encode and
+- [`dump.zig`](dump.zig): Print out offsets and constants required to properly encode and
   decode the pkmn [protocol](../../docs/PROTOCOL.md):
 
-      $ zig build protocol -- markdown > tmp/protocol.md
-      $ zig build protocol -- <protocol|layout> > src/data/<protocol|layout>.json
+      $ zig build dump -- markdown > tmp/protocol.md
+      $ zig build dump -- <protocol|layout> > src/data/<protocol|layout>.json
 
   Results can be found in [`protocol.json`](../data/protocol.json) /
   [`layout.json`](../data/layout.json).
