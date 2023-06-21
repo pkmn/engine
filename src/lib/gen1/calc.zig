@@ -178,12 +178,13 @@ pub fn transitions(
 
     var opts = pkmn.battle.options(
         protocol.NULL,
-        Chance(Rational(u128)){ .probability = .{}, .actions = actions },
+        Chance(Rational(u128)){ .probability = .{}, .actions = actions }, // FIXME need sleeps!
         Calc{},
     );
 
     var b = battle;
     _ = try b.update(c1, c2, &opts);
+    stats.updates += 1;
 
     var p1 = b.side(.P1);
     var p2 = b.side(.P2);

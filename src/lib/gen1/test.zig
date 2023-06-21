@@ -9958,8 +9958,9 @@ test "transitions" {
     );
     try expectEqual(Result.Default, try battle.update(.{}, .{}, &data.NULL));
 
-    const w = std.io.null_writer;
-    _ = try calc.transitions(battle, move(1), move(1), .{}, true, seed, std.testing.allocator, w);
+    const allocator = std.testing.allocator;
+    const writer = std.io.null_writer;
+    _ = try calc.transitions(battle, move(1), move(1), .{}, true, seed, allocator, writer);
 }
 
 fn Test(comptime rolls: anytype) type {
@@ -10045,20 +10046,28 @@ fn Test(comptime rolls: anytype) type {
             if (self.battle.actual.turn == 0) try self.start();
 
             self.options.chance.reset();
-            // FIXME: make call transitions and make sure sums to 1
             const result = if (pkmn.options.chance and pkmn.options.calc) result: {
-                // FIXME: uncomment once all RNG is accounted for
-                // const copy = self.battle.actual;
-                // const rand = copy.rng;
+                // var copy = self.battle.actual;
+                // var actions = self.options.chance.actions;
+
+                // Perfom the actual update
                 const actual = self.battle.actual.update(c1, c2, &self.options);
-                // const options = pkmn.battle.options(protocol.NULL, chance.NULL, Calc{
+
+                // Ensure we can generate all transitions from the same original state
+                // const allocator = std.testing.allocator;
+                // const writer = std.io.null_writer;
+                // _ = try calc.transitions(copy, c1, c2, actions, true, 0, allocator, writer);
+
+                // Demonstrate that we can produce the same state by forcing the RNG to behave the
+                // same as we observed
+                // var options = pkmn.battle.options(protocol.NULL, chance.NULL, Calc{
                 //     .overrides = self.options.chance.actions,
                 // });
-                // const forced = copy.update(c1, c2, &options);
-                // try expectEqual(actual, forced);
-                // // RNG should not have been updated at all because all rolls were overridden
-                // try expectEqual(rand, copy.rng);
-                // // Otherwise the actual battle should match a copy with the same forced RNG
+                // const overridden = copy.update(c1, c2, &options);
+                // try expectEqual(actual, overridden);
+
+                // // The actual battle excluding its RNG field should match a copy updated with
+                // // overridden RNG (the copy RNG may have advanced because of no-ops)
                 // copy.rng = self.battle.actual.rng;
                 // try expectEqual(copy, self.battle.actual);
                 break :result actual;
