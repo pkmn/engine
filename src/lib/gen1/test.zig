@@ -10047,8 +10047,8 @@ fn Test(comptime rolls: anytype) type {
 
             self.options.chance.reset();
             const result = if (pkmn.options.chance and pkmn.options.calc) result: {
-                // var copy = self.battle.actual;
-                // var actions = self.options.chance.actions;
+                var copy = self.battle.actual;
+                var actions = self.options.chance.actions;
 
                 // Perfom the actual update
                 const actual = self.battle.actual.update(c1, c2, &self.options);
@@ -10059,17 +10059,19 @@ fn Test(comptime rolls: anytype) type {
                 // _ = try calc.transitions(copy, c1, c2, actions, true, 0, allocator, writer);
 
                 // Demonstrate that we can produce the same state by forcing the RNG to behave the
-                // same as we observed
-                // var options = pkmn.battle.options(protocol.NULL, chance.NULL, Calc{
-                //     .overrides = self.options.chance.actions,
-                // });
-                // const overridden = copy.update(c1, c2, &options);
-                // try expectEqual(actual, overridden);
+                // same as we observed - however, we need to clear out the durations to ensure they
+                // dont get extended
+                var options = pkmn.battle.options(protocol.NULL, chance.NULL, Calc{ .overrides = .{
+                    .p1 = @bitCast(chance.Action, @bitCast(u64, actions.p1) & 0xFFFFFF0000FFFFFF),
+                    .p2 = @bitCast(chance.Action, @bitCast(u64, actions.p2) & 0xFFFFFF0000FFFFFF),
+                } });
+                const overridden = copy.update(c1, c2, &options);
+                try expectEqual(actual, overridden);
 
-                // // The actual battle excluding its RNG field should match a copy updated with
-                // // overridden RNG (the copy RNG may have advanced because of no-ops)
-                // copy.rng = self.battle.actual.rng;
-                // try expectEqual(copy, self.battle.actual);
+                // The actual battle excluding its RNG field should match a copy updated with
+                // overridden RNG (the copy RNG may have advanced because of no-ops)
+                copy.rng = self.battle.actual.rng;
+                try expectEqual(copy, self.battle.actual);
                 break :result actual;
             } else self.battle.actual.update(c1, c2, &self.options);
 
