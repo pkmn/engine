@@ -72,11 +72,11 @@ pub fn Rational(comptime T: type) type {
 
                     r.p *= switch (@typeInfo(@TypeOf(p))) {
                         .Float, .ComptimeFloat => p,
-                        else => @intToFloat(T, p),
+                        else => @floatFromInt(T, p),
                     };
                     r.q *= switch (@typeInfo(@TypeOf(q))) {
                         .Float, .ComptimeFloat => q,
-                        else => @intToFloat(T, q),
+                        else => @floatFromInt(T, q),
                     };
 
                     // We should always be dealing with whole numbers

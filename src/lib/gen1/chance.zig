@@ -61,7 +61,8 @@ pub const Actions = extern struct {
                 const b_val = @field(@field(b, player.name), field.name);
 
                 switch (@typeInfo(@TypeOf(a_val))) {
-                    .Enum => if ((@enumToInt(a_val) > 0) != (@enumToInt(b_val) > 0)) return false,
+                    .Enum => if ((@intFromEnum(a_val) > 0) != (@intFromEnum(b_val) > 0))
+                        return false,
                     .Int => if ((a_val > 0) != (b_val > 0)) return false,
                     else => unreachable,
                 }
@@ -341,8 +342,8 @@ pub fn Chance(comptime Rational: type) type {
             assert(out >= 1 and out <= 6);
 
             var action = self.actions.get(player);
-            self.sleeps[@enumToInt(player)][out - 1] = action.sleep;
-            action.sleep = @intCast(u3, self.sleeps[@enumToInt(player)][in - 1]);
+            self.sleeps[@intFromEnum(player)][out - 1] = action.sleep;
+            action.sleep = @intCast(u3, self.sleeps[@intFromEnum(player)][in - 1]);
 
             action.confusion = 0;
             action.disable = 0;

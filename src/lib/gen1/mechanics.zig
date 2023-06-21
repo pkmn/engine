@@ -2879,15 +2879,15 @@ pub const Rolls = struct {
         const move = if (options.calc.overridden(player, .metronome)) |val|
             val
         else if (showdown) move: {
-            const r = battle.rng.range(u8, 0, @enumToInt(Move.Struggle) - 2);
-            const mod = @as(u2, (if (r < @enumToInt(Move.Metronome) - 1) 1 else 2));
-            break :move @intToEnum(Move, r + mod);
+            const r = battle.rng.range(u8, 0, @intFromEnum(Move.Struggle) - 2);
+            const mod = @as(u2, (if (r < @intFromEnum(Move.Metronome) - 1) 1 else 2));
+            break :move @enumFromInt(Move, r + mod);
         } else move: {
             while (true) {
                 const r = battle.rng.next();
-                if (r == 0 or r == @enumToInt(Move.Metronome)) continue;
-                if (r >= @enumToInt(Move.Struggle)) continue;
-                break :move @intToEnum(Move, r);
+                if (r == 0 or r == @intFromEnum(Move.Metronome)) continue;
+                if (r >= @intFromEnum(Move.Struggle)) continue;
+                break :move @enumFromInt(Move, r);
             }
         };
 

@@ -179,7 +179,7 @@ fn dump() !void {
     } else {
         try w.writeIntNative(u64, last);
 
-        try w.writeByte(@boolToInt(showdown));
+        try w.writeByte(@intFromBool(showdown));
         try w.writeByte(gen);
         try w.writeAll(initial);
 

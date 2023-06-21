@@ -580,7 +580,7 @@ test "Rolls.multiHit" {
 test "Rolls.metronome" {
     const actions = chance.Actions{ .p2 = .{ .metronome = .Surf } };
     try expectEqualSlices(Move, &.{.None}, Rolls.metronome(actions.p1));
-    try expectEqual(@intToEnum(Move, 24), Rolls.metronome(actions.p2)[23]);
+    try expectEqual(@enumFromInt(Move, 24), Rolls.metronome(actions.p2)[23]);
 }
 
 test "Rolls.psywave" {
