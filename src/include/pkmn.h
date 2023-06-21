@@ -154,8 +154,6 @@ float64_t pkmn_rational_denominator(pkmn_rational *rational);
 #define PKMN_GEN1_BATTLE_OPTIONS_SIZE 128
 /** The size in bytes of Generation I chance actions. */
 #define PKMN_GEN1_CHANCE_ACTIONS_SIZE 16
-/** The size in bytes of Generation I chance state. */
-#define PKMN_GEN1_CHANCE_STATE_SIZE 12
 /** The size in bytes of a Generation I calc summaries. */
 #define PKMN_GEN1_CALC_SUMMARIES_SIZE 8
 
@@ -181,8 +179,6 @@ PKMN_OPAQUE(PKMN_GEN1_BATTLE_SIZE) pkmn_gen1_battle;
 PKMN_OPAQUE(PKMN_GEN1_BATTLE_OPTIONS_SIZE) pkmn_gen1_battle_options;
 /** Generation I Pokémon chance actions (see src/lib/gen1/README.md#layout for details). */
 PKMN_OPAQUE(PKMN_GEN1_CHANCE_ACTIONS_SIZE) pkmn_gen1_chance_actions;
-/** Generation I Pokémon chance state (see src/lib/gen1/README.md#layout for details). */
-PKMN_OPAQUE(PKMN_GEN1_CHANCE_STATE_SIZE) pkmn_gen1_chance_state;
 /** Generation I Pokémon calc summaries (see src/lib/gen1/README.md#layout for details). */
 PKMN_OPAQUE(PKMN_GEN1_CALC_SUMMARIES_SIZE) pkmn_gen1_calc_summaries;
 
@@ -197,13 +193,12 @@ typedef struct {
   size_t len;
 } pkmn_gen1_log_options;
 /**
- * Provides the probability, actions, and state necessary for tracking chance
+ * Provides the probability and chance actions necessary for tracking chance
  * outcomes during a Generation I battle update if chance tracking is enabled.
  */
 typedef struct {
   pkmn_rational probability;
   pkmn_gen1_chance_actions actions;
-  pkmn_gen1_chance_state state;
 } pkmn_gen1_chance_options;
 /**
  * Overrides to apply to the normal behavior of the RNG during a Generation I
@@ -237,12 +232,6 @@ pkmn_rational* pkmn_gen1_battle_options_chance_probability(
  * Generation I battle update.
  */
 pkmn_gen1_chance_actions* pkmn_gen1_battle_options_chance_actions(
-  const pkmn_gen1_battle_options *options);
-/**
- * Returns a pointer to additional saved state related to tracking the actions of
- * a hypothetical "chance player" during a Generation I battle update.
- */
-pkmn_gen1_chance_state* pkmn_gen1_battle_options_chance_state(
   const pkmn_gen1_battle_options *options);
 /**
  * Returns a pointer to information relevant to damage calculation that occured

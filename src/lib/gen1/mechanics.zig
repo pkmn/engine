@@ -62,7 +62,7 @@ const MAX_STAT_VALUE = 999;
 const DISTRIBUTION = [_]u3{ 2, 2, 2, 3, 3, 3, 4, 5 };
 
 pub fn update(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Result {
-    // DEBUG
+    // FIXME
     // std.debug.print("\n", .{});
     // DEBUG(battle.turn);
     // std.debug.print("// ", .{});

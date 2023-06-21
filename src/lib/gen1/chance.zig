@@ -214,21 +214,6 @@ test Action {
 
 pub const Commit = enum { hit, miss, binding };
 
-/// TODO
-pub const State = extern struct {
-    // Tracks the observed sleep durations for the Pokémon in both player's parties. Unlike
-    // other durations which are all tied to volatiles, sleep's counter persists through
-    // switching and so we must store it here. The indices of these arrays correspond to the
-    // `order` field of a Side. This information could be stored in actions but size is a
-    // concern so this is tracked separately as actions only purports to track RNG events
-    // observed during a single `update` (not across updates).
-    durations: [2][6]u8 = .{ .{0} ** 6, .{0} ** 6 },
-
-    comptime {
-        assert(@sizeOf(State) == 12);
-    }
-};
-
 /// Tracks chance actions and their associated probability during a Generation I battle update when
 /// `options.chance` is enabled.
 pub fn Chance(comptime Rational: type) type {
@@ -240,8 +225,14 @@ pub fn Chance(comptime Rational: type) type {
         /// The actions taken by a hypothetical "chance player" that convey information about which
         /// RNG events were observed during a battle `update`.
         actions: Actions = .{},
-        /// Additional state related to tracking the actions of a hypothetical "chance player".
-        state: State = .{},
+
+        // Tracks the observed sleep durations for the Pokémon in both player's parties. Unlike
+        // other durations which are all tied to volatiles, sleep's counter persists through
+        // switching and so we must store it here. The indices of these arrays correspond to the
+        // `order` field of a Side. This information could be stored in actions but size is a
+        // concern so this is tracked separately as actions only purports to track RNG events
+        // observed during a single `update` (not across updates).
+        sleeps: [2][6]u3 = .{ .{0} ** 6, .{0} ** 6 },
 
         // In many cases on both the cartridge and on Pokémon Showdown rolls are made even though
         // later checks render their result irrelevant (missing when the target is actually immune,
@@ -350,8 +341,8 @@ pub fn Chance(comptime Rational: type) type {
             assert(out >= 1 and out <= 6);
 
             var action = self.actions.get(player);
-            self.state.durations[@enumToInt(player)][out - 1] = action.sleep;
-            action.sleep = @intCast(u3, self.state.durations[@enumToInt(player)][in - 1]);
+            self.sleeps[@enumToInt(player)][out - 1] = action.sleep;
+            action.sleep = @intCast(u3, self.sleeps[@enumToInt(player)][in - 1]);
 
             action.confusion = 0;
             action.disable = 0;
