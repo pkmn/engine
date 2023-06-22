@@ -14,7 +14,6 @@ const data = @import("data.zig");
 const helpers = @import("helpers.zig");
 
 const assert = std.debug.assert;
-const print = std.debug.print;
 
 const expect = std.testing.expect;
 const expectEqual = std.testing.expectEqual;
@@ -178,17 +177,28 @@ pub const Stats = struct {
     saved: usize = 0,
 };
 
+pub const Options = struct {
+    actions: Actions = .{},
+    seed: ?u64 = null,
+    cap: bool = false,
+    metronome: bool = false,
+};
+
 pub fn transitions(
     battle: anytype,
     c1: Choice,
     c2: Choice,
-    actions: Actions,
-    cap: bool,
-    seed: u64,
     allocator: std.mem.Allocator,
     writer: anytype,
+    options: Options
 ) !Stats {
     var stats: Stats = .{};
+
+    var actions = options.actions;
+    var cap = options.cap;
+    if (!options.metronome) {
+        if (actions.p1.metronome != .None or actions.p2.metronome != .None) return stats;
+    }
 
     var seen = std.AutoHashMap(Actions, void).init(allocator);
     defer seen.deinit();
@@ -297,7 +307,7 @@ pub fn transitions(
                             acts.p1.damage = @intCast(u8, p1d);
                             acts.p2.damage = @intCast(u8, p2d);
                             if ((try seen.getOrPut(acts)).found_existing) {
-                                print("already seen {} (seed: {d})\n", .{ acts, seed });
+                                err("already seen {}", .{acts}, options.seed);
                                 return error.TestUnexpectedResult;
                             }
                         }
@@ -309,7 +319,7 @@ pub fn transitions(
                     stats.saved += 1;
 
                     if (p.q < p.p) {
-                        print("improper fraction {} (seed: {d})\n", .{ p, seed });
+                        err("improper fraction {}", .{p}, options.seed);
                         return error.TestUnexpectedResult;
                     }
 
@@ -351,7 +361,7 @@ pub fn transitions(
 
     p.reduce();
     if (p.p != 1 or p.q != 1) {
-        print("expected 1, found {} (seed: {d})\n", .{ p, seed });
+        err("expected 1, found {}", .{p}, options.seed);
         return error.TestExpectedEqual;
     }
 
@@ -407,6 +417,13 @@ inline fn convert(actions: Actions) Actions {
         }
     }
     return overrides;
+}
+
+fn err(comptime fmt: []const u8, v: anytype, seed: ?u64) void {
+    const w = std.io.getStdErr().writer();
+    w.print(fmt, v) catch return;
+    if (seed) |s| return w.print("{}\n", .{s}) catch return;
+    return w.writeByte('\n') catch return;
 }
 
 const Style = struct {

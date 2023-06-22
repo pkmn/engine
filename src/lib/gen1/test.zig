@@ -9960,7 +9960,10 @@ test "transitions" {
 
     const allocator = std.testing.allocator;
     const writer = std.io.null_writer;
-    _ = try calc.transitions(battle, move(1), move(1), .{}, true, seed, allocator, writer);
+    _ = try calc.transitions(battle, move(1), move(1), allocator, writer, .{
+        .seed = seed,
+        .cap = true,
+    });
 }
 
 fn Test(comptime rolls: anytype) type {
@@ -10056,7 +10059,10 @@ fn Test(comptime rolls: anytype) type {
                 // Ensure we can generate all transitions from the same original state
                 const allocator = std.testing.allocator;
                 const writer = std.io.null_writer;
-                _ = try calc.transitions(copy, c1, c2, actions, true, 0, allocator, writer);
+                _ = try calc.transitions(copy, c1, c2, allocator, writer, .{
+                    .actions = actions,
+                    .cap = true,
+                });
 
                 // Demonstrate that we can produce the same state by forcing the RNG to behave the
                 // same as we observed - however, we need to clear out the durations to ensure they

@@ -46,8 +46,10 @@ pub fn main() !void {
     _ = try battle.update(.{}, .{}, &options);
 
     const out = std.io.getStdOut().writer();
-    const stats =
-        try pkmn.gen1.calc.transitions(battle, move(1), move(1), .{}, true, seed, allocator, out);
+    const stats = try pkmn.gen1.calc.transitions(battle, move(1), move(1), allocator, out, .{
+        .cap = true,
+        .seed = seed,
+    });
     try out.print("{}\n", .{stats});
 }
 
