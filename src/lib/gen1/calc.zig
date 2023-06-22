@@ -235,20 +235,20 @@ pub fn transitions(
         var o = Actions{ .p1 = .{ .metronome = p1_move }, .p2 = .{ .metronome = p2_move } };
 
         for (Rolls.speedTie(template.p1)) |tie| { o.p1.speed_tie = tie; o.p2.speed_tie = tie;
-        for (Rolls.sleep(template.p1)) |p1_slp| { o.p1.sleep = p1_slp;
-        for (Rolls.sleep(template.p2)) |p2_slp| { o.p2.sleep = p2_slp;
-        for (Rolls.disable(template.p1, actions.p1, p1_slp)) |p1_disable| { o.p1.disable = p1_disable;
-        for (Rolls.disable(template.p2, actions.p2, p2_slp)) |p2_disable| { o.p2.disable = p2_disable;
-        for (Rolls.confusion(template.p1, p1_slp)) |p1_cfz| { o.p1.confusion = p1_cfz;
-        for (Rolls.confusion(template.p2, p1_slp)) |p2_cfz| { o.p2.confusion = p2_cfz;
+        for (Rolls.sleep(template.p1, actions.p1)) |p1_slp| { o.p1.sleep = p1_slp;
+        for (Rolls.sleep(template.p2, actions.p2)) |p2_slp| { o.p2.sleep = p2_slp;
+        for (Rolls.disable(template.p1, actions.p1, p1_slp)) |p1_dis| { o.p1.disable = p1_dis;
+        for (Rolls.disable(template.p2, actions.p2, p2_slp)) |p2_dis| { o.p2.disable = p2_dis;
+        for (Rolls.confusion(template.p1, actions.p1, p1_slp)) |p1_cfz| { o.p1.confusion = p1_cfz;
+        for (Rolls.confusion(template.p2, actions.p2, p1_slp)) |p2_cfz| { o.p2.confusion = p2_cfz;
         for (Rolls.confused(template.p1, p1_cfz)) |p1_cfzd| { o.p1.confused = p1_cfzd;
         for (Rolls.confused(template.p2, p2_cfz)) |p2_cfzd| { o.p2.confused = p2_cfzd;
         for (Rolls.paralyzed(template.p1, p1_cfzd)) |p1_par| { o.p1.paralyzed = p1_par;
         for (Rolls.paralyzed(template.p2, p2_cfzd)) |p2_par| { o.p2.paralyzed = p2_par;
-        for (Rolls.attacking(template.p1, p1_par)) |p1_atk| { o.p1.attacking = p1_atk;
-        for (Rolls.attacking(template.p2, p2_par)) |p2_atk| { o.p2.attacking = p2_atk;
-        for (Rolls.binding(template.p1, p1_par)) |p1_bind| { o.p1.binding = p1_bind;
-        for (Rolls.binding(template.p2, p2_par)) |p2_bind| { o.p2.binding = p2_bind;
+        for (Rolls.attacking(template.p1, actions.p1, p1_par)) |p1_atk| { o.p1.attacking = p1_atk;
+        for (Rolls.attacking(template.p2, actions.p2, p2_par)) |p2_atk| { o.p2.attacking = p2_atk;
+        for (Rolls.binding(template.p1, actions.p1, p1_par)) |p1_bind| { o.p1.binding = p1_bind;
+        for (Rolls.binding(template.p2, actions.p2, p2_par)) |p2_bind| { o.p2.binding = p2_bind;
         for (Rolls.duration(template.p1, p1_par)) |p1_dur| { o.p1.duration = p1_dur;
         for (Rolls.duration(template.p2, p2_par)) |p2_dur| { o.p2.duration = p2_dur;
         for (Rolls.hit(template.p1, p1_par)) |p1_hit| { o.p1.hit = p1_hit;
@@ -290,15 +290,13 @@ pub fn transitions(
                 // var p2_max =
                 //     try Rolls.coalesce(.P2, @intCast(u8, p2_dmg.min), &opts.calc.summaries, cap);
 
+                if (seen.get(opts.chance.actions) != null) {
+                    p1_min = p1_max;
+                    p2_dmg.min = p2_max;
+                    continue;
+                }
+
                 if (opts.chance.actions.matches(template)) {
-                    if (!applies(opts.chance.actions, o)) {
-                        try debug(writer, opts.chance.actions, false, .{ .color = i, .dim = true });
-
-                        p1_min = p1_max;
-                        p2_dmg.min = p2_max;
-                        continue;
-                    }
-
                     try debug(writer, opts.chance.actions, false, .{ .color = i });
 
                     for (p1_dmg.min..@as(u9, p1_max) + 1) |p1d| {
@@ -322,22 +320,18 @@ pub fn transitions(
                         err("improper fraction {}", .{p}, options.seed);
                         return error.TestUnexpectedResult;
                     }
+                } else {
+                    try debug(writer, opts.chance.actions, false, .{ .dim = true });
 
-                    p1_min = p1_max;
-                    p2_dmg.min = p2_max;
-                    continue;
-                }
+                    if (!matches(opts.chance.actions, i, frontier.items)) {
+                        try frontier.append(opts.chance.actions);
 
-                try debug(writer, opts.chance.actions, false, .{ .dim = true });
-
-                if (!matches(opts.chance.actions, i, frontier.items)) {
-                    try frontier.append(opts.chance.actions);
-
-                    try debug(writer, opts.chance.actions, true, .{
-                        .color = frontier.items.len - 1,
-                        .dim = true,
-                        .background = true
-                    });
+                        try debug(writer, opts.chance.actions, true, .{
+                            .color = frontier.items.len - 1,
+                            .dim = true,
+                            .background = true
+                        });
+                    }
                 }
 
                 p1_min = p1_max;
@@ -375,31 +369,6 @@ inline fn matches(actions: Actions, i: usize, frontier: []Actions) bool {
         if (f.matches(actions)) return true;
     }
     return false;
-}
-
-inline fn applies(actions: Actions, overrides: Actions) bool {
-    inline for (@typeInfo(Actions).Struct.fields) |player| {
-        const action = @field(actions, player.name);
-        const override = @field(overrides, player.name);
-        // If non-duration fields don't exactly match we can fail fast
-        if ((@bitCast(u64, action) & ~Action.DURATIONS) !=
-            (@bitCast(u64, override) & ~Action.DURATIONS)) return false;
-        // As an optimization, first we determine if duration fields are even
-        // set before doing  the more expensive comparisons
-        const a_set = (@bitCast(u64, action) & Action.DURATIONS) > 0;
-        const o_set = (@bitCast(u64, override) & Action.DURATIONS) > 0;
-        // If one is set but the other isn't we can fail fast
-        if (a_set != o_set) return false;
-        // If neither are set the comparison of non duration fields was enough
-        if (a_set) {
-            inline for (.{ "sleep", "confusion", "disable", "attacking", "binding" }) |field| {
-                if ((@field(override, field) == Action.EXTEND) != (@field(action, field) > 0)) {
-                    return false;
-                }
-            }
-        }
-    }
-    return true;
 }
 
 inline fn convert(actions: Actions) Actions {
