@@ -195,10 +195,22 @@ pub fn transitions(
     var frontier = std.ArrayList(Actions).init(allocator);
     defer frontier.deinit();
 
+    var overrides = actions;
+    if (overrides.p1.sleep > 0) overrides.p1.sleep = Action.EXTEND;
+    if (overrides.p1.confusion > 0) overrides.p1.confusion = Action.EXTEND;
+    if (overrides.p1.disable > 0) overrides.p1.disable = Action.EXTEND;
+    if (overrides.p1.attacking > 0) overrides.p1.attacking = Action.EXTEND;
+    if (overrides.p1.binding > 0) overrides.p1.binding = Action.EXTEND;
+    if (overrides.p2.sleep > 0) overrides.p2.sleep = Action.EXTEND;
+    if (overrides.p2.confusion > 0) overrides.p2.confusion = Action.EXTEND;
+    if (overrides.p2.disable > 0) overrides.p2.disable = Action.EXTEND;
+    if (overrides.p2.attacking > 0) overrides.p2.attacking = Action.EXTEND;
+    if (overrides.p2.binding > 0) overrides.p2.binding = Action.EXTEND;
+
     var opts = pkmn.battle.options(
         protocol.NULL,
         Chance(Rational(u128)){ .probability = .{}, .actions = actions },
-        Calc{ .overrides = actions },
+        Calc{ .overrides = overrides },
     );
 
     var b = battle;
@@ -281,7 +293,7 @@ pub fn transitions(
                     try Rolls.coalesce(.P2, @intCast(u8, p2_dmg.min), &opts.calc.summaries, cap);
 
                 if (opts.chance.actions.matches(template)) {
-                    if (!opts.chance.actions.eql(a)) {
+                    if (!opts.chance.actions.equals(a)) {
                         try debug(writer, opts.chance.actions, false, .{ .color = i, .dim = true });
 
                         p1_min = p1_max;
