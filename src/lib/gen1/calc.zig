@@ -4,6 +4,7 @@ const pkmn = @import("../pkmn.zig");
 
 const common = @import("../common/data.zig");
 const DEBUG = @import("../common/debug.zig").print;
+const optional = @import("../common/optional.zig");
 const protocol = @import("../common/protocol.zig");
 const rational = @import("../common/rational.zig");
 const util = @import("../common/util.zig");
@@ -23,6 +24,8 @@ const enabled = pkmn.options.calc;
 const Player = common.Player;
 const Result = common.Result;
 const Choice = common.Choice;
+
+const Optional = optional.Optional;
 
 const Rational = rational.Rational;
 
@@ -110,14 +113,11 @@ pub const Calc = struct {
         if (!enabled) return null;
 
         const overrides = if (player == .P1) self.overrides.p1 else self.overrides.p2;
-        // return switch (@enumFromInt(Optional(bool), @field(overrides, @tagName(field)))) {
-        //     .None => null,
-        //     .false => false,
-        //     .true => true,
-        // };
-        const val = @field(overrides, @tagName(field));
-        if (val == 0) return null;
-        return true;
+        return switch (@enumFromInt(Optional(bool), @field(overrides, @tagName(field)))) {
+            .None => null,
+            .false => false,
+            .true => true,
+        };
     }
 
     pub fn base(self: *Calc, player: Player, val: u16) void {

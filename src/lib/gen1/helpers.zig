@@ -256,6 +256,10 @@ pub fn swtch(slot: u4) Choice {
     return .{ .type = .Switch, .data = slot };
 }
 
+const NONE = @intFromEnum(Optional(bool).None);
+const FALSE = @intFromEnum(Optional(bool).false);
+const TRUE = @intFromEnum(Optional(bool).true);
+
 /// Helper functions that efficiently return valid ranges for various RNG events based on the
 /// state of an `Action` and other events to be used to construct a "transitions" function.
 pub const Rolls = struct {
@@ -344,45 +348,47 @@ pub const Rolls = struct {
         return if (@field(action, "duration") == 0) &DURATION_NONE else &DURATION;
     }
 
-    const U3_NONE = [_]u3{0};
-    const U3_FORCED = [_]u3{1};
+    const MODIFY_NONE = [_]u3{NONE};
+    const MODIFY_FORCED = [_]u3{TRUE};
+    const MODIFY = [_]u3{ FALSE, TRUE };
 
     /// Returns a slice with a range of values for sleep given the `action` state.
     pub inline fn sleep(action: chance.Action) []const u3 {
         const turns = @field(action, "sleep");
-        return if (turns < 1 or turns >= 7) &U3_NONE else &[_]u3{ 0, turns };
+        return if (turns < 1 or turns >= 7) &MODIFY_NONE else &MODIFY;
     }
 
-    const DISABLE_NONE = [_]u4{0};
+    const DISABLE_NONE = [_]u4{NONE};
+    const DISABLE = [_]u4{ FALSE, TRUE };
 
     /// Returns a slice with a range of values for disable given the `action` state
     /// and the state of the `parent` (the player's Pokémon's remaining sleep turns).
     pub inline fn disable(action: chance.Action, parent: u4) []const u4 {
         const turns = @field(action, "disable");
-        return if (parent > 0 or turns < 1 or turns >= 8) &DISABLE_NONE else &[_]u4{ 0, turns };
+        return if (parent > 0 or turns < 1 or turns >= 8) &DISABLE_NONE else &DISABLE;
     }
 
     /// Returns a slice with a range of values for confusion given the `action` state
     /// and the state of the `parent` (the player's remaining sleep turns).
     pub inline fn confusion(action: chance.Action, parent: u4) []const u3 {
         const turns = @field(action, "confusion");
-        if (parent > 0 or turns < 1 or turns >= 5) return &U3_NONE;
-        return if (turns < 2) &U3_FORCED else &[_]u3{ 0, turns };
+        if (parent > 0 or turns < 1 or turns >= 5) return &MODIFY_NONE;
+        return if (turns < 2) &MODIFY_FORCED else &MODIFY;
     }
 
     /// Returns a slice with a range of values for attacking given the `action` state
     /// and the state of the `parent` (whether the player's Pokémon was fully paralyzed).
     pub inline fn attacking(action: chance.Action, parent: Optional(bool)) []const u3 {
         const turns = @field(action, "attacking");
-        if (parent == .true or turns < 1 or turns >= 3) return &U3_NONE;
-        return if (turns < 2) &U3_FORCED else &[_]u3{ 0, turns };
+        if (parent == .true or turns < 1 or turns >= 3) return &MODIFY_NONE;
+        return if (turns < 2) &MODIFY_FORCED else &MODIFY;
     }
 
     /// Returns a slice with a range of values for binding given the `action` state
     /// and the state of the `parent` (whether the player's Pokémon was fully paralyzed).
     pub inline fn binding(action: chance.Action, parent: Optional(bool)) []const u3 {
         const turns = @field(action, "binding");
-        return if (parent == .true or turns < 1 or turns >= 4) &U3_NONE else &[_]u3{ 0, turns };
+        return if (parent == .true or turns < 1 or turns >= 4) &MODIFY_NONE else &MODIFY;
     }
 
     const SLOT_NONE = [_]u4{0};
@@ -530,37 +536,37 @@ test "Rolls.duration" {
 test "Rolls.sleep" {
     try expectEqualSlices(u3, &.{0}, Rolls.sleep(.{ .sleep = 0 }));
     try expectEqualSlices(u3, &.{0}, Rolls.sleep(.{ .sleep = 7 }));
-    try expectEqualSlices(u3, &.{ 0, 4 }, Rolls.sleep(.{ .sleep = 4 }));
+    try expectEqualSlices(u3, &.{ FALSE, TRUE }, Rolls.sleep(.{ .sleep = 4 }));
 }
 
 test "Rolls.disable" {
     try expectEqualSlices(u4, &.{0}, Rolls.disable(.{ .disable = 0 }, 0));
     try expectEqualSlices(u4, &.{0}, Rolls.disable(.{ .disable = 8 }, 0));
     try expectEqualSlices(u4, &.{0}, Rolls.disable(.{ .disable = 4 }, 1));
-    try expectEqualSlices(u4, &.{ 0, 4 }, Rolls.disable(.{ .disable = 4 }, 0));
+    try expectEqualSlices(u4, &.{ FALSE, TRUE }, Rolls.disable(.{ .disable = 4 }, 0));
 }
 
 test "Rolls.confusion" {
     try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{ .confusion = 0 }, 0));
     try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{ .confusion = 5 }, 0));
     try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{ .confusion = 3 }, 1));
-    try expectEqualSlices(u3, &.{1}, Rolls.confusion(.{ .confusion = 1 }, 0));
-    try expectEqualSlices(u3, &.{ 0, 3 }, Rolls.confusion(.{ .confusion = 3 }, 0));
+    try expectEqualSlices(u3, &.{3}, Rolls.confusion(.{ .confusion = 1 }, 0));
+    try expectEqualSlices(u3, &.{ FALSE, TRUE }, Rolls.confusion(.{ .confusion = 3 }, 0));
 }
 
 test "Rolls.attacking" {
     try expectEqualSlices(u3, &.{0}, Rolls.attacking(.{ .attacking = 0 }, .false));
     try expectEqualSlices(u3, &.{0}, Rolls.attacking(.{ .attacking = 3 }, .false));
     try expectEqualSlices(u3, &.{0}, Rolls.attacking(.{ .attacking = 2 }, .true));
-    try expectEqualSlices(u3, &.{1}, Rolls.attacking(.{ .attacking = 1 }, .false));
-    try expectEqualSlices(u3, &.{ 0, 2 }, Rolls.attacking(.{ .attacking = 2 }, .false));
+    try expectEqualSlices(u3, &.{3}, Rolls.attacking(.{ .attacking = 1 }, .false));
+    try expectEqualSlices(u3, &.{ FALSE, TRUE }, Rolls.attacking(.{ .attacking = 2 }, .false));
 }
 
 test "Rolls.binding" {
     try expectEqualSlices(u3, &.{0}, Rolls.binding(.{ .binding = 0 }, .false));
     try expectEqualSlices(u3, &.{0}, Rolls.binding(.{ .binding = 4 }, .false));
     try expectEqualSlices(u3, &.{0}, Rolls.binding(.{ .binding = 2 }, .true));
-    try expectEqualSlices(u3, &.{ 0, 2 }, Rolls.binding(.{ .binding = 2 }, .false));
+    try expectEqualSlices(u3, &.{ FALSE, TRUE }, Rolls.binding(.{ .binding = 2 }, .false));
 }
 
 test "Rolls.moveSlot" {
