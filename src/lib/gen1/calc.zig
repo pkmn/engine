@@ -283,14 +283,14 @@ pub fn transitions(
                 _ = try b.update(c1, c2, &opts);
                 stats.updates += 1;
 
-                // const p1_max = @intCast(u8, p1_dmg.min);
-                // const p2_max = @intCast(u8, p2_dmg.min);
-                // _ = cap;
+                const p1_max = @intCast(u8, p1_dmg.min);
+                const p2_max = @intCast(u8, p2_dmg.min);
+                _ = cap;
 
-                var p1_max = if (p1_min != 0) p1_min else
-                    try Rolls.coalesce(.P1, @intCast(u8, p1_dmg.min), &opts.calc.summaries, cap);
-                var p2_max =
-                    try Rolls.coalesce(.P2, @intCast(u8, p2_dmg.min), &opts.calc.summaries, cap);
+                // var p1_max = if (p1_min != 0) p1_min else
+                //     try Rolls.coalesce(.P1, @intCast(u8, p1_dmg.min), &opts.calc.summaries, cap);
+                // var p2_max =
+                //     try Rolls.coalesce(.P2, @intCast(u8, p2_dmg.min), &opts.calc.summaries, cap);
 
                 if (opts.chance.actions.matches(template)) {
                     if (!opts.chance.actions.equals(a)) {
