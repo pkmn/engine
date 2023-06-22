@@ -190,7 +190,7 @@ pub fn transitions(
     c2: Choice,
     allocator: std.mem.Allocator,
     writer: anytype,
-    options: Options
+    options: Options,
 ) !Stats {
     var stats: Stats = .{};
 
@@ -377,8 +377,6 @@ inline fn matches(actions: Actions, i: usize, frontier: []Actions) bool {
     return false;
 }
 
-const DURATIONS = .{ "sleep", "confusion", "disable", "attacking", "binding" };
-
 inline fn applies(actions: Actions, overrides: Actions) bool {
     inline for (@typeInfo(Actions).Struct.fields) |player| {
         const action = @field(actions, player.name);
@@ -394,7 +392,7 @@ inline fn applies(actions: Actions, overrides: Actions) bool {
         if (a_set != o_set) return false;
         // If neither are set the comparison of non duration fields was enough
         if (a_set) {
-            inline for (DURATIONS) |field| {
+            inline for (.{ "sleep", "confusion", "disable", "attacking", "binding" }) |field| {
                 if ((@field(override, field) == Action.EXTEND) != (@field(action, field) > 0)) {
                     return false;
                 }
@@ -410,11 +408,12 @@ inline fn convert(actions: Actions) Actions {
     // function only gets called once per call to transitions
     var overrides = actions;
     inline for (@typeInfo(Actions).Struct.fields) |player| {
-        inline for (DURATIONS) |field| {
-            if (@field(@field(overrides, player.name), field) > 0) {
-                @field(@field(overrides, player.name), field) = Action.EXTEND;
-            }
-        }
+        var o = &@field(overrides, player.name);
+        if (o.sleep > 0 and o.sleep < 7) o.sleep = Action.EXTEND;
+        if (o.disable > 0 and o.disable < 8) o.disable = Action.EXTEND;
+        if (o.confusion > 0 and o.confusion < 5) o.confusion = Action.EXTEND;
+        if (o.attacking > 0 and o.attacking < 3) o.attacking = Action.EXTEND;
+        if (o.binding > 0 and o.binding < 4) o.binding = Action.EXTEND;
     }
     return overrides;
 }
