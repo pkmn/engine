@@ -159,233 +159,6 @@ pub const Stats = struct {
     saved: usize = 0,
 };
 
-pub fn transitions2(
-    battle: anytype,
-    c1: Choice,
-    c2: Choice,
-    actions: Actions,
-    cap: bool,
-    seed: u64,
-    allocator: std.mem.Allocator,
-    writer: anytype,
-    optimized: *std.AutoHashMap(Actions, void),
-) !Stats {
-    var stats: Stats = .{};
-
-    var seen = std.AutoHashMap(Actions, void).init(allocator);
-    defer seen.deinit();
-    var frontier = std.ArrayList(Actions).init(allocator);
-    defer frontier.deinit();
-
-    var opts = pkmn.battle.options(
-        protocol.NULL,
-        Chance(Rational(u128)){ .probability = .{}, .actions = actions },
-        Calc{},
-    );
-
-    var b = battle;
-    _ = try b.update(c1, c2, &opts);
-    stats.updates += 1;
-
-    var p1 = b.side(.P1);
-    var p2 = b.side(.P2);
-
-    var p: Rational(u128) = .{ .p = 0, .q = 1 };
-    try frontier.append(opts.chance.actions);
-
-    // zig fmt: off
-    for (Rolls.metronome(frontier.items[0].p1)) |p1_move| {
-    for (Rolls.metronome(frontier.items[0].p2)) |p2_move| {
-
-    var i: usize = 0;
-    assert(frontier.items.len == 1);
-    while (i < frontier.items.len) : (i += 1) {
-        var template = frontier.items[i];
-
-        try debug(writer, template, true, .{ .color = i, .bold = true, .background = true });
-
-        var a = Actions{ .p1 = .{ .metronome = p1_move }, .p2 = .{ .metronome = p2_move } };
-
-        for (Rolls.speedTie(template.p1)) |tie| { a.p1.speed_tie = tie; a.p2.speed_tie = tie;
-        for (Rolls.sleep(template.p1)) |p1_slp| { a.p1.sleep = p1_slp;
-        for (Rolls.sleep(template.p2)) |p2_slp| { a.p2.sleep = p2_slp;
-        for (Rolls.disable(template.p1, p1_slp)) |p1_dis| { a.p1.disable = p1_dis;
-        for (Rolls.disable(template.p2, p2_slp)) |p2_dis| { a.p2.disable = p2_dis;
-        for (Rolls.confusion(template.p1, p1_slp)) |p1_cfz| { a.p1.confusion = p1_cfz;
-        for (Rolls.confusion(template.p2, p1_slp)) |p2_cfz| { a.p2.confusion = p2_cfz;
-        for (Rolls.confused(template.p1, p1_cfz)) |p1_cfzd| { a.p1.confused = p1_cfzd;
-        for (Rolls.confused(template.p2, p2_cfz)) |p2_cfzd| { a.p2.confused = p2_cfzd;
-        for (Rolls.paralyzed(template.p1, p1_cfzd)) |p1_par| { a.p1.paralyzed = p1_par;
-        for (Rolls.paralyzed(template.p2, p2_cfzd)) |p2_par| { a.p2.paralyzed = p2_par;
-        for (Rolls.attacking(template.p1, p1_par)) |p1_atk| { a.p1.attacking = p1_atk;
-        for (Rolls.attacking(template.p2, p2_par)) |p2_atk| { a.p2.attacking = p2_atk;
-        for (Rolls.binding(template.p1, p1_par)) |p1_bind| { a.p1.binding = p1_bind;
-        for (Rolls.binding(template.p2, p2_par)) |p2_bind| { a.p2.binding = p2_bind;
-        for (Rolls.duration(template.p1, p1_par)) |p1_dur| { a.p1.duration = p1_dur;
-        for (Rolls.duration(template.p2, p2_par)) |p2_dur| { a.p2.duration = p2_dur;
-        for (Rolls.hit(template.p1, p1_par)) |p1_hit| { a.p1.hit = p1_hit;
-        for (Rolls.hit(template.p2, p2_par)) |p2_hit| { a.p2.hit = p2_hit;
-        for (Rolls.psywave(template.p1, p1, p1_hit)) |p1_psywave| { a.p1.psywave = p1_psywave;
-        for (Rolls.psywave(template.p2, p2, p2_hit)) |p2_psywave| { a.p2.psywave = p2_psywave;
-        for (Rolls.moveSlot(template.p1, p1_hit)) |p1_slot| { a.p1.move_slot = p1_slot;
-        for (Rolls.moveSlot(template.p2, p2_hit)) |p2_slot| { a.p2.move_slot = p2_slot;
-        for (Rolls.multiHit(template.p1, p1_hit)) |p1_multi| { a.p1.multi_hit = p1_multi;
-        for (Rolls.multiHit(template.p2, p1_hit)) |p2_multi| { a.p2.multi_hit = p2_multi;
-        for (Rolls.secondaryChance(template.p1, p1_hit)) |p1_sec| { a.p1.secondary_chance = p1_sec;
-        for (Rolls.secondaryChance(template.p2, p2_hit)) |p2_sec| { a.p2.secondary_chance = p2_sec;
-        for (Rolls.criticalHit(template.p1, p1_hit)) |p1_crit| { a.p1.critical_hit = p1_crit;
-        for (Rolls.criticalHit(template.p2, p2_hit)) |p2_crit| { a.p2.critical_hit = p2_crit;
-
-        var p1_dmg = Rolls.damage(template.p1, p1_hit);
-        while (p1_dmg.min < p1_dmg.max) : (p1_dmg.min += 1) {
-            a.p1.damage = @intCast(u8, p1_dmg.min);
-            var p1_min: u8 = 0;
-
-            var p2_dmg = Rolls.damage(template.p2, p2_hit);
-            while (p2_dmg.min < p2_dmg.max) : (p2_dmg.min += 1) {
-                a.p2.damage = @intCast(u8, p2_dmg.min);
-
-                opts.calc = .{ .overrides = a };
-                opts.chance = .{ .probability = .{}, .actions = actions };
-                const q = &opts.chance.probability;
-
-                b = battle;
-                _ = try b.update(c1, c2, &opts);
-                stats.updates += 1;
-
-                var p1_max = if (p1_min != 0) p1_min else
-                    try Rolls.coalesce(.P1, @intCast(u8, p1_dmg.min), &opts.calc.summaries, cap);
-                var p2_max =
-                    try Rolls.coalesce(.P2, @intCast(u8, p2_dmg.min), &opts.calc.summaries, cap);
-
-                if (opts.chance.actions.matches(template)) {
-                    if (!opts.chance.actions.eql(a)) {
-                        try debug(writer, opts.chance.actions, false, .{ .color = i, .dim = true });
-
-                        p1_min = p1_max;
-                        p2_dmg.min = p2_max;
-                        continue;
-                    }
-
-                    try debug(writer, opts.chance.actions, false, .{ .color = i });
-
-                    for (p1_dmg.min..@as(u9, p1_max) + 1) |p1d| {
-                        for (p2_dmg.min..@as(u9, p2_max) + 1) |p2d| {
-                            var acts = opts.chance.actions;
-                            acts.p1.damage = @intCast(u8, p1d);
-                            acts.p2.damage = @intCast(u8, p2d);
-                            if ((try seen.getOrPut(acts)).found_existing) {
-                                print("already seen {} (seed: {d})\n", .{ acts, seed });
-                                return error.TestUnexpectedResult;
-                            }
-                            assert(!(try optimized.getOrPut(acts)).found_existing);
-                        }
-                    }
-
-                    if (p1_max != p1_dmg.min) try q.update(p1_max - p1_dmg.min + 1, 1);
-                    if (p2_max != p2_dmg.min) try q.update(p2_max - p2_dmg.min + 1, 1);
-                    try p.add(q);
-                    stats.saved += 1;
-
-                    if (p.q < p.p) {
-                        print("improper fraction {} (seed: {d})\n", .{ p, seed });
-                        return error.TestUnexpectedResult;
-                    }
-
-                    p1_min = p1_max;
-                    p2_dmg.min = p2_max;
-                    continue;
-                }
-
-                try debug(writer, opts.chance.actions, false, .{ .dim = true });
-
-                if (!matches(opts.chance.actions, i, frontier.items)) {
-                    try frontier.append(opts.chance.actions);
-
-                    try debug(writer, opts.chance.actions, true, .{
-                        .color = frontier.items.len,
-                        .dim = true,
-                        .background = true
-                    });
-                }
-
-                if (p2_dmg.min == 217) {
-                    var original = opts.chance.actions;
-                    if (p1_dmg.min == 217) {
-                        opts.chance.actions.p1.damage = 255;
-                        opts.chance.actions.p2.damage = 255;
-                        opts.calc = .{ .overrides = opts.chance.actions };
-                        opts.chance = .{ .probability = .{}, .actions = actions };
-
-                        b = battle;
-                        _ = try b.update(c1, c2, &opts);
-                        stats.updates += 1;
-
-                        if (opts.chance.actions.matches(original)) {
-                            p1_min = 255;
-                            p2_dmg.min = 255;
-                            continue;
-                        }
-
-                        a = original;
-                        a.p2.damage = 255;
-                        opts.calc = .{ .overrides = a };q
-                        opts.chance = .{ .probability = .{}, .actions = actions };
-
-                        b = battle;
-                        _ = try b.update(c1, c2, &opts);
-                        stats.updates += 1;
-
-                        if (opts.chance.actions.matches(original)) {
-                            p1_min = p1_max;
-                            p2_dmg.min = 255;
-                        }
-                    }
-                } else if (p1_dmg.min == 217) {
-                    var original = opts.chance.actions;
-
-                    opts.chance.actions.p2.damage = 255;
-                    opts.calc = .{ .overrides = opts.chance.actions };
-                    opts.chance = .{ .probability = .{}, .actions = actions };
-
-                    b = battle;
-                    _ = try b.update(c1, c2, &opts);
-                    stats.updates += 1;
-
-                    if (opts.chance.actions.matches(original)) {
-                        try writer.print("p2 skip #2: {} {} {}\n", .{p2_hit, p2_par, p2_dmg.min });
-                        p2_max = 255;
-                    }
-                }
-
-                p1_min = p1_max;
-                p2_dmg.min = p2_max;
-            }
-
-            assert(p1_min > 0 or p1_dmg.min == 0);
-            p1_dmg.min = p1_min;
-
-        }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
-    }
-
-    assert(frontier.items.len == i);
-    stats.frontier = @max(stats.frontier, i);
-    frontier.shrinkRetainingCapacity(1);
-
-    }}
-    // zig fmt: on
-
-    stats.seen = seen.count();
-
-    p.reduce();
-    if (p.p != 1 or p.q != 1) {
-        print("expected 1, found {} (seed: {d})\n", .{ p, seed });
-        return error.TestExpectedEqual;
-    }
-
-    return stats;
-}
-
 pub fn transitions(
     battle: anytype,
     c1: Choice,
@@ -395,7 +168,6 @@ pub fn transitions(
     seed: u64,
     allocator: std.mem.Allocator,
     writer: anytype,
-    optimized: *std.AutoHashMap(Actions, void),
 ) !Stats {
     var stats: Stats = .{};
 
@@ -480,14 +252,14 @@ pub fn transitions(
                 _ = try b.update(c1, c2, &opts);
                 stats.updates += 1;
 
-                // const p1_max = @intCast(u8, p1_dmg.min);
-                // const p2_max = @intCast(u8, p2_dmg.min);
-                // _ = cap;
+                const p1_max = @intCast(u8, p1_dmg.min);
+                const p2_max = @intCast(u8, p2_dmg.min);
+                _ = cap;
 
-                var p1_max = if (p1_min != 0) p1_min else
-                    try Rolls.coalesce(.P1, @intCast(u8, p1_dmg.min), &opts.calc.summaries, cap);
-                var p2_max =
-                    try Rolls.coalesce(.P2, @intCast(u8, p2_dmg.min), &opts.calc.summaries, cap);
+                // var p1_max = if (p1_min != 0) p1_min else
+                //     try Rolls.coalesce(.P1, @intCast(u8, p1_dmg.min), &opts.calc.summaries, cap);
+                // var p2_max =
+                //     try Rolls.coalesce(.P2, @intCast(u8, p2_dmg.min), &opts.calc.summaries, cap);
 
                 if (opts.chance.actions.matches(template)) {
                     if (!opts.chance.actions.eql(a)) {
@@ -498,9 +270,6 @@ pub fn transitions(
                         continue;
                     }
 
-if (optimized.get(opts.chance.actions) == null) {
-    try writer.writeAll("*** ");
-}
                     try debug(writer, opts.chance.actions, false, .{ .color = i });
 
                     for (p1_dmg.min..@as(u9, p1_max) + 1) |p1d| {
@@ -512,10 +281,6 @@ if (optimized.get(opts.chance.actions) == null) {
                                 print("already seen {} (seed: {d})\n", .{ acts, seed });
                                 return error.TestUnexpectedResult;
                             }
-                            // _ = optimized;
-                            // if (optimized.get(acts) == null) {
-                            //     DEBUG(opts.chance.actions);
-                            // }
                         }
                     }
 
@@ -545,6 +310,69 @@ if (optimized.get(opts.chance.actions) == null) {
                         .background = true
                     });
                 }
+
+                // if (p2_dmg.min == 217) {
+                //     var original = opts.chance.actions;
+                //     if (p1_dmg.min == 217) {
+                //         opts.chance.actions.p1.damage = 255;
+                //         opts.chance.actions.p2.damage = 255;
+                //         opts.calc = .{ .overrides = opts.chance.actions };
+                //         opts.chance = .{ .probability = .{}, .actions = actions };
+
+                //         b = battle;
+                //         _ = try b.update(c1, c2, &opts);
+                //         stats.updates += 1;
+
+                //         if (opts.chance.actions.matches(original)) {
+                //             p1_min = 255;
+                //             p2_dmg.min = 255;
+                //             continue;
+                //         }
+
+                //         a = original;
+                //         a.p1.damage = 255;
+                //         opts.calc = .{ .overrides = a };
+                //         opts.chance = .{ .probability = .{}, .actions = actions };
+
+                //         b = battle;
+                //         _ = try b.update(c1, c2, &opts);
+                //         stats.updates += 1;
+
+                //         if (opts.chance.actions.matches(original)) {
+                //             p1_min = 255;
+                //             p2_dmg.min = p2_max;
+                //             continue;
+                //         }
+
+                //         opts.chance.actions = original;
+                //     }
+
+                //     opts.chance.actions.p2.damage = 255;
+                //     opts.calc = .{ .overrides = opts.chance.actions };
+                //     opts.chance = .{ .probability = .{}, .actions = actions };
+
+                //     b = battle;
+                //     _ = try b.update(c1, c2, &opts);
+                //     stats.updates += 1;
+
+                //     if (opts.chance.actions.matches(original)) {
+                //         p2_max = 255;
+                //     }
+                // } else if (p1_dmg.min == 217) {
+                //     var original = opts.chance.actions;
+
+                //     opts.chance.actions.p1.damage = 255;
+                //     opts.calc = .{ .overrides = opts.chance.actions };
+                //     opts.chance = .{ .probability = .{}, .actions = actions };
+
+                //     b = battle;
+                //     _ = try b.update(c1, c2, &opts);
+                //     stats.updates += 1;
+
+                //     if (opts.chance.actions.matches(original)) {
+                //         p1_max = 255;
+                //     }
+                // }
 
                 p1_min = p1_max;
                 p2_dmg.min = p2_max;
@@ -592,13 +420,13 @@ const Style = struct {
 
 fn debug(writer: anytype, actions: Actions, shape: bool, style: Style) !void {
     _ = .{ writer, actions, shape, style };
-    const mod: usize = if (style.dim) 2 else 1;
-    const background: usize = if (style.background) 4 else 3;
-    const color: usize = if (style.color) |c| (c % 6) + 1 else 7;
-    if (style.dim or style.bold) try writer.print("\x1b[{d}m", .{mod});
-    try writer.print("\x1b[{d}{d}m", .{ background, color });
-    try actions.fmt(writer, shape);
-    try writer.writeAll("\x1b[0m\n");
+    // const mod: usize = if (style.dim) 2 else 1;
+    // const background: usize = if (style.background) 4 else 3;
+    // const color: usize = if (style.color) |c| (c % 6) + 1 else 7;
+    // if (style.dim or style.bold) try writer.print("\x1b[{d}m", .{mod});
+    // try writer.print("\x1b[{d}{d}m", .{ background, color });
+    // try actions.fmt(writer, shape);
+    // try writer.writeAll("\x1b[0m\n");
     // DEBUG
     // if (style.dim) try writer.writeAll("    ");
     // try actions.fmt(writer, shape);

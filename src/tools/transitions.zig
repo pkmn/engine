@@ -26,10 +26,8 @@ pub fn main() !void {
     var battle = switch (gen) {
         1 => pkmn.gen1.helpers.Battle.init(
             seed,
-            &.{.{ .species = .Charmander, .moves = &.{.BodySlam} }},
-            &.{.{ .species = .Squirtle, .stats = .{}, .moves = &.{.Surf} }},
-            // &.{.{ .species = .Tauros, .moves = &.{.HyperBeam} }},
-            // &.{.{ .species = .Tauros, .moves = &.{.HyperBeam} }},
+            &.{.{ .species = .Tauros, .moves = &.{.HyperBeam} }},
+            &.{.{ .species = .Tauros, .moves = &.{.HyperBeam} }},
             // &.{.{ .species = .Charmander, .hp = 5, .level = 5, .stats = .{}, .moves = &.{
             //     .Scratch,
             // } }},
@@ -46,16 +44,8 @@ pub fn main() !void {
     _ = try battle.update(.{}, .{}, &options);
 
     const out = std.io.getStdOut().writer();
-
-    var seen = std.AutoHashMap(pkmn.gen1.chance.Actions, void).init(allocator);
-    defer seen.deinit();
-
-    // var stats = try pkmn.gen1.calc.transitions2(battle, move(1), move(1), .{}, false, seed, allocator, std.io.null_writer, &seen);
-    // stats =
-    //     try pkmn.gen1.calc.transitions(battle, move(1), move(1), .{}, false, seed, allocator, out, &seen);
-
-    var stats = try pkmn.gen1.calc.transitions2(battle, move(1), move(1), .{}, false, seed, allocator, out, &seen);
-
+    const stats =
+        try pkmn.gen1.calc.transitions(battle, move(1), move(1), .{}, true, seed, allocator, out);
     try out.print("{}\n", .{stats});
 }
 
