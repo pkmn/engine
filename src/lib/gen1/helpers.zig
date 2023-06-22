@@ -339,7 +339,7 @@ pub const Rolls = struct {
     }
 
     const DURATION_NONE = [_]u1{0};
-    const DURATION = [_]u1{ 0, 1 };
+    const DURATION = [_]u1{1};
 
     /// Returns a slice with a range of values for duration given the `action` state
     /// and the state of the `parent` (whether the player's Pokémon's move hit).
@@ -529,7 +529,7 @@ test "Rolls.paralyzed" {
 test "Rolls.duration" {
     const actions = chance.Actions{ .p2 = .{ .duration = 3 } };
     try expectEqualSlices(u1, &.{0}, Rolls.duration(actions.p1, .None));
-    try expectEqualSlices(u1, &.{ 0, 1 }, Rolls.duration(actions.p2, .None));
+    try expectEqualSlices(u1, &.{1}, Rolls.duration(actions.p2, .None));
     try expectEqualSlices(u1, &.{0}, Rolls.duration(actions.p2, .false));
 }
 
