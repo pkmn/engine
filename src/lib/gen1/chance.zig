@@ -129,23 +129,23 @@ pub const Action = packed struct {
 
     /// The number of turns a Pokémon has been observed to be sleeping.
     /// When serving as an override this field may only be one of three values:
-    /// 0 is unset (do not override), 2 will force sleep to end, and 3 will extend.
+    /// 0 is unset (do not override), 1 will force sleep to end, and 2 will extend.
     sleep: u3 = 0,
     /// The number of turns a Pokémon has been observed to be confused.
     /// When serving as an override this field may only be one of three values:
-    /// 0 is unset (do not override), 2 will force confusion to end, and 3 will extend.
+    /// 0 is unset (do not override), 1 will force confusion to end, and 2 will extend.
     confusion: u3 = 0,
     /// The number of turns a Pokémon has been observed to be disabled.
     /// When serving as an override this field may only be one of three values:
-    /// 0 is unset (do not override), 2 will force disable to end, and 3 will extend.
+    /// 0 is unset (do not override), 1 will force disable to end, and 2 will extend.
     disable: u4 = 0,
     /// The number of turns a Pokémon has been observed to be attacking.
     /// When serving as an override this field may only be one of three values:
-    /// 0 is unset (do not override), 2 will force attacking to end, and 3 will extend.
+    /// 0 is unset (do not override), 1 will force attacking to end, and 2 will extend.
     attacking: u3 = 0,
     /// The number of turns a Pokémon has been observed to be binding their opponent.
     /// When serving as an override this field may only be one of three values:
-    /// 0 is unset (do not override), 2 will force binding to end, and 3 will extend.
+    /// 0 is unset (do not override), 1 will force binding to end, and 2 will extend.
     binding: u3 = 0,
 
     /// If not 0, the move slot (1-4) to return in Rolls.moveSlot. If present as an override,
@@ -160,7 +160,9 @@ pub const Action = packed struct {
     /// If not None, the Move to return for Rolls.metronome.
     metronome: Move = .None,
 
+    pub const END = @intFromEnum(Optional(bool).false);
     pub const EXTEND = @intFromEnum(Optional(bool).true);
+
     pub const DURATIONS: u64 = 0x000000FFFF000000;
 
     pub const Field = std.meta.FieldEnum(Action);

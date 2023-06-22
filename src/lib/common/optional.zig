@@ -18,7 +18,7 @@ pub fn Optional(comptime T: type) type {
         assert(!std.mem.eql(u8, field.name, "None"));
         enumFields[i] = .{
             .name = field.name,
-            .value = i + 1,
+            .value = i,
         };
     }
 
