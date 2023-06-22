@@ -382,12 +382,16 @@ pub const Rolls = struct {
     /// Returns a slice with a range of values for confusion given the `action` state
     /// and the state of the `parent` (the player's remaining sleep turns).
     pub inline fn confusion(action: Action, origin: Action, parent: u4) []const u3 {
-        const turns = @field(action, "confusion");
-        if (parent > 0 or turns < 1 or turns >= 5) return if (@field(origin, "confusion") > 0)
-            &MODIFY_END
-        else
-            &MODIFY_NONE;
-        return if (turns < 2) &MODIFY_EXTEND else &MODIFY;
+        // const turns = @field(action, "confusion");
+        // if (parent > 0 or turns < 1 or turns >= 5) return if (@field(origin, "confusion") > 0)
+        //     &MODIFY_END
+        // else
+        //     &MODIFY_NONE;
+        // return if (turns < 2) &MODIFY_EXTEND else &MODIFY;
+        if (parent > 0 or @field(action, "confusion") == 0) return &MODIFY_NONE;
+        const turns = @field(origin, "confusion");
+        if (turns < 2) return &MODIFY_EXTEND;
+        return if (turns >= 5) return &MODIFY_END else &MODIFY;
     }
 
     /// Returns a slice with a range of values for attacking given the `action` state
