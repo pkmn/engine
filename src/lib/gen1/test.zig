@@ -10054,9 +10054,9 @@ fn Test(comptime rolls: anytype) type {
                 const actual = self.battle.actual.update(c1, c2, &self.options);
 
                 // Ensure we can generate all transitions from the same original state
-                // const allocator = std.testing.allocator;
-                // const writer = std.io.null_writer;
-                // _ = try calc.transitions(copy, c1, c2, actions, true, 0, allocator, writer);
+                const allocator = std.testing.allocator;
+                const writer = std.io.null_writer;
+                _ = try calc.transitions(copy, c1, c2, actions, true, 0, allocator, writer);
 
                 // Demonstrate that we can produce the same state by forcing the RNG to behave the
                 // same as we observed - however, we need to clear out the durations to ensure they
