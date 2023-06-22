@@ -3006,9 +3006,15 @@ pub const Rolls = struct {
         check_pp: u4,
         options: anytype,
     ) !u4 {
-        const slot = if (options.calc.overridden(player, .move_slot)) |val|
-            val
-        else slot: {
+        const overridden = if (options.calc.overridden(player, .move_slot)) |val|
+            if (moves[val - 1].id != .None and (check_pp == 0 or moves[val - 1].pp > 0))
+                val
+            else
+                null
+        else
+            null;
+
+        const slot = overridden orelse slot: {
             if (showdown) {
                 if (check_pp == 0) {
                     var i: usize = moves.len;

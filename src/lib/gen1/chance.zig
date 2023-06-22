@@ -143,7 +143,8 @@ pub const Action = packed struct {
     /// When present as an override, 0 will force binding to end and non-zero will extend.
     binding: u3 = 0,
 
-    /// If not 0, the move slot (1-4) to return in Rolls.moveSlot.
+    /// If not 0, the move slot (1-4) to return in Rolls.moveSlot. If present as an override,
+    /// invalid values (eg. due to empty move slots or 0 PP) will be ignored.
     move_slot: u4 = 0,
     /// If not 0, the value (2-5) to return for Rolls.distribution for multi hit.
     multi_hit: u4 = 0,
