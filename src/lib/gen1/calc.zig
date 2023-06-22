@@ -334,7 +334,7 @@ pub fn transitions(
                     try frontier.append(opts.chance.actions);
 
                     try debug(writer, opts.chance.actions, true, .{
-                        .color = frontier.items.len,
+                        .color = frontier.items.len - 1,
                         .dim = true,
                         .background = true
                     });
