@@ -223,8 +223,8 @@ pub fn transitions(
         for (Rolls.speedTie(template.p1)) |tie| { a.p1.speed_tie = tie; a.p2.speed_tie = tie;
         for (Rolls.sleep(template.p1)) |p1_slp| { a.p1.sleep = p1_slp;
         for (Rolls.sleep(template.p2)) |p2_slp| { a.p2.sleep = p2_slp;
-        for (Rolls.disable(template.p1, p1_slp)) |p1_dis| { a.p1.disable = p1_dis;
-        for (Rolls.disable(template.p2, p2_slp)) |p2_dis| { a.p2.disable = p2_dis;
+        for (Rolls.disable(template.p1, p1_slp)) |p1_disable| { a.p1.disable = p1_disable;
+        for (Rolls.disable(template.p2, p2_slp)) |p2_disable| { a.p2.disable = p2_disable;
         for (Rolls.confusion(template.p1, p1_slp)) |p1_cfz| { a.p1.confusion = p1_cfz;
         for (Rolls.confusion(template.p2, p1_slp)) |p2_cfz| { a.p2.confusion = p2_cfz;
         for (Rolls.confused(template.p1, p1_cfz)) |p1_cfzd| { a.p1.confused = p1_cfzd;
