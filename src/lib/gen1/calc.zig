@@ -262,6 +262,9 @@ pub fn transitions(
                 if (opts.chance.actions.matches(template)) {
                     if (!opts.chance.actions.eql(a)) {
                         try debug(writer, opts.chance.actions, false, .{ .color = i, .dim = true });
+
+                        p1_min = p1_max;
+                        p2_dmg.min = p2_max;
                         continue;
                     }
 
