@@ -10057,9 +10057,11 @@ fn Test(comptime rolls: anytype) type {
                 const actual = self.battle.actual.update(c1, c2, &self.options);
 
                 // Ensure we can generate all transitions from the same original state
+                // (we must change the battle's RNG from a FixedRNG to a PRNG because
+                // the stransitions function relies on RNG for discovery of states)
                 const allocator = std.testing.allocator;
                 const writer = std.io.null_writer;
-                _ = try calc.transitions(copy, c1, c2, allocator, writer, .{
+                _ = try calc.transitions(unfix(copy), c1, c2, allocator, writer, .{
                     .actions = actions,
                     .cap = true,
                 });
@@ -10140,6 +10142,21 @@ fn metronome(comptime m: Move) U {
     const range: u64 = @intFromEnum(Move.Struggle) - 2;
     const mod = @as(u2, (if (param < @intFromEnum(Move.Metronome) - 1) 1 else 2));
     return comptime ranged((param - mod) + 1, range) - 1;
+}
+
+fn unfix(actual: anytype) data.Battle(data.PRNG) {
+    return .{
+        .sides = actual.sides,
+        .turn = actual.turn,
+        .last_damage = actual.last_damage,
+        .last_moves = actual.last_moves,
+        .rng = .{ .src = .{
+            .seed = if (showdown)
+                0x12345678
+            else
+                .{ 123, 234, 56, 78, 9, 101, 112, 131, 4, 151 },
+        } },
+    };
 }
 
 comptime {
