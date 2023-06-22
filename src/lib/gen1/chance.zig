@@ -128,19 +128,24 @@ pub const Action = packed struct {
     duration: u4 = 0,
 
     /// The number of turns a Pokémon has been observed to be sleeping.
-    /// When present as an override, 0 will force sleep to end and non-zero will extend.
+    /// When serving as an override this field may only be one of three values:
+    /// 0 is unset (do not override), 2 will force sleep to end, and 3 will extend.
     sleep: u3 = 0,
     /// The number of turns a Pokémon has been observed to be confused.
-    /// When present as an override, 0 will force confusion to end and non-zero will extend.
+    /// When serving as an override this field may only be one of three values:
+    /// 0 is unset (do not override), 2 will force confusion to end, and 3 will extend.
     confusion: u3 = 0,
     /// The number of turns a Pokémon has been observed to be disabled.
-    //// When present as an override, 0 will force disable to end and non-zero will extend.
+    /// When serving as an override this field may only be one of three values:
+    /// 0 is unset (do not override), 2 will force disable to end, and 3 will extend.
     disable: u4 = 0,
     /// The number of turns a Pokémon has been observed to be attacking.
-    //// When present as an override, 0 will force attracking to end and non-zero will extend.
+    /// When serving as an override this field may only be one of three values:
+    /// 0 is unset (do not override), 2 will force attacking to end, and 3 will extend.
     attacking: u3 = 0,
     /// The number of turns a Pokémon has been observed to be binding their opponent.
-    /// When present as an override, 0 will force binding to end and non-zero will extend.
+    /// When serving as an override this field may only be one of three values:
+    /// 0 is unset (do not override), 2 will force binding to end, and 3 will extend.
     binding: u3 = 0,
 
     /// If not 0, the move slot (1-4) to return in Rolls.moveSlot. If present as an override,

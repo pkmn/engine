@@ -110,9 +110,13 @@ pub const Calc = struct {
         if (!enabled) return null;
 
         const overrides = if (player == .P1) self.overrides.p1 else self.overrides.p2;
+        // return switch (@enumFromInt(Optional(bool), @field(overrides, @tagName(field)))) {
+        //     .None => null,
+        //     .false => false,
+        //     .true => true,
+        // };
         const val = @field(overrides, @tagName(field));
         if (val == 0) return null;
-        // TODO
         return true;
     }
 
