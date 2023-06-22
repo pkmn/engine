@@ -106,6 +106,16 @@ pub const Calc = struct {
         }) val else null;
     }
 
+    pub fn modify(self: Calc, player: Player, comptime field: Action.Field) ?bool {
+        if (!enabled) return null;
+
+        const overrides = if (player == .P1) self.overrides.p1 else self.overrides.p2;
+        const val = @field(overrides, @tagName(field));
+        if (val == 0) return null;
+        // TODO
+        return true;
+    }
+
     pub fn base(self: *Calc, player: Player, val: u16) void {
         if (!enabled) return;
 
@@ -136,6 +146,11 @@ const Null = struct {
         comptime field: Action.Field,
     ) ?std.meta.FieldType(Action, field) {
         _ = .{ self, player };
+        return null;
+    }
+
+    pub fn modify(self: Null, player: Player, comptime field: Action.Field) ?bool {
+        _ = .{ self, player, field };
         return null;
     }
 

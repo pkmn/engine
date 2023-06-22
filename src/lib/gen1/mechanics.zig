@@ -524,7 +524,9 @@ fn beforeMove(
     if (Status.is(stored.status, .SLP)) {
         const before = stored.status;
         // Even if the EXT bit is set this will still correctly modify the sleep duration
-        if (options.calc.overridden(player, .sleep) == null) {
+        if (options.calc.modify(player, .sleep)) |extend| {
+            if (!extend) stored.status = 0;
+        } else {
             stored.status -= 1;
         }
 
@@ -569,7 +571,9 @@ fn beforeMove(
     }
 
     if (volatiles.disabled_duration > 0) {
-        if (options.calc.overridden(player, .disable) == null) {
+        if (options.calc.modify(player, .disable)) |extend| {
+            if (!extend) volatiles.disabled_duration = 0;
+        } else {
             volatiles.disabled_duration -= 1;
         }
         try options.chance.disable(player, volatiles.disabled_duration);
@@ -592,7 +596,9 @@ fn beforeMove(
     if (volatiles.Confusion) {
         assert(volatiles.confusion > 0);
 
-        if (options.calc.overridden(player, .confusion) == null) {
+        if (options.calc.modify(player, .confusion)) |extend| {
+            if (!extend) volatiles.confusion = 0;
+        } else {
             volatiles.confusion -= 1;
         }
         try options.chance.confusion(player, volatiles.confusion);
@@ -670,7 +676,9 @@ fn beforeMove(
 
         assert(volatiles.attacks > 0);
 
-        if (options.calc.overridden(player, .attacking) == null) {
+        if (options.calc.modify(player, .attacking)) |extend| {
+            if (!extend) volatiles.attacks = 0;
+        } else {
             volatiles.attacks -= 1;
         }
         try options.chance.attacking(player, volatiles.attacks);
@@ -710,7 +718,9 @@ fn beforeMove(
         assert(volatiles.attacks > 0);
         assert(from != null);
 
-        if (options.calc.overridden(player, .attacking) == null) {
+        if (options.calc.modify(player, .attacking)) |extend| {
+            if (!extend) volatiles.attacks = 0;
+        } else {
             volatiles.attacks -= 1;
         }
         try options.chance.attacking(player, volatiles.attacks);
@@ -733,7 +743,9 @@ fn beforeMove(
     if (volatiles.Binding) {
         assert(volatiles.attacks > 0);
 
-        if (options.calc.overridden(player, .binding) == null) {
+        if (options.calc.modify(player, .binding)) |extend| {
+            if (!extend) volatiles.attacks = 0;
+        } else {
             volatiles.attacks -= 1;
         }
         try options.chance.binding(player, volatiles.attacks);
