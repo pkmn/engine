@@ -26,6 +26,8 @@ pub fn main() !void {
     var battle = switch (gen) {
         1 => pkmn.gen1.helpers.Battle.init(
             seed,
+            // &.{.{ .species = .Charmander, .moves = &.{.BodySlam} }},
+            // &.{.{ .species = .Squirtle, .stats = .{}, .moves = &.{.Surf} }},
             &.{.{ .species = .Tauros, .moves = &.{.HyperBeam} }},
             &.{.{ .species = .Tauros, .moves = &.{.HyperBeam} }},
             // &.{.{ .species = .Charmander, .hp = 5, .level = 5, .stats = .{}, .moves = &.{

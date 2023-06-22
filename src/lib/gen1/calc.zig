@@ -252,14 +252,14 @@ pub fn transitions(
                 _ = try b.update(c1, c2, &opts);
                 stats.updates += 1;
 
-                const p1_max = @intCast(u8, p1_dmg.min);
-                const p2_max = @intCast(u8, p2_dmg.min);
-                _ = cap;
+                // const p1_max = @intCast(u8, p1_dmg.min);
+                // const p2_max = @intCast(u8, p2_dmg.min);
+                // _ = cap;
 
-                // var p1_max = if (p1_min != 0) p1_min else
-                //     try Rolls.coalesce(.P1, @intCast(u8, p1_dmg.min), &opts.calc.summaries, cap);
-                // var p2_max =
-                //     try Rolls.coalesce(.P2, @intCast(u8, p2_dmg.min), &opts.calc.summaries, cap);
+                var p1_max = if (p1_min != 0) p1_min else
+                    try Rolls.coalesce(.P1, @intCast(u8, p1_dmg.min), &opts.calc.summaries, cap);
+                var p2_max =
+                    try Rolls.coalesce(.P2, @intCast(u8, p2_dmg.min), &opts.calc.summaries, cap);
 
                 if (opts.chance.actions.matches(template)) {
                     if (!opts.chance.actions.eql(a)) {
@@ -310,69 +310,6 @@ pub fn transitions(
                         .background = true
                     });
                 }
-
-                // if (p2_dmg.min == 217) {
-                //     var original = opts.chance.actions;
-                //     if (p1_dmg.min == 217) {
-                //         opts.chance.actions.p1.damage = 255;
-                //         opts.chance.actions.p2.damage = 255;
-                //         opts.calc = .{ .overrides = opts.chance.actions };
-                //         opts.chance = .{ .probability = .{}, .actions = actions };
-
-                //         b = battle;
-                //         _ = try b.update(c1, c2, &opts);
-                //         stats.updates += 1;
-
-                //         if (opts.chance.actions.matches(original)) {
-                //             p1_min = 255;
-                //             p2_dmg.min = 255;
-                //             continue;
-                //         }
-
-                //         a = original;
-                //         a.p1.damage = 255;
-                //         opts.calc = .{ .overrides = a };
-                //         opts.chance = .{ .probability = .{}, .actions = actions };
-
-                //         b = battle;
-                //         _ = try b.update(c1, c2, &opts);
-                //         stats.updates += 1;
-
-                //         if (opts.chance.actions.matches(original)) {
-                //             p1_min = 255;
-                //             p2_dmg.min = p2_max;
-                //             continue;
-                //         }
-
-                //         opts.chance.actions = original;
-                //     }
-
-                //     opts.chance.actions.p2.damage = 255;
-                //     opts.calc = .{ .overrides = opts.chance.actions };
-                //     opts.chance = .{ .probability = .{}, .actions = actions };
-
-                //     b = battle;
-                //     _ = try b.update(c1, c2, &opts);
-                //     stats.updates += 1;
-
-                //     if (opts.chance.actions.matches(original)) {
-                //         p2_max = 255;
-                //     }
-                // } else if (p1_dmg.min == 217) {
-                //     var original = opts.chance.actions;
-
-                //     opts.chance.actions.p1.damage = 255;
-                //     opts.calc = .{ .overrides = opts.chance.actions };
-                //     opts.chance = .{ .probability = .{}, .actions = actions };
-
-                //     b = battle;
-                //     _ = try b.update(c1, c2, &opts);
-                //     stats.updates += 1;
-
-                //     if (opts.chance.actions.matches(original)) {
-                //         p1_max = 255;
-                //     }
-                // }
 
                 p1_min = p1_max;
                 p2_dmg.min = p2_max;
