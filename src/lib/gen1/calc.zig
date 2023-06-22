@@ -179,7 +179,7 @@ pub fn transitions(
     var opts = pkmn.battle.options(
         protocol.NULL,
         Chance(Rational(u128)){ .probability = .{}, .actions = actions },
-        Calc{},
+        Calc{ .overrides = actions },
     );
 
     var b = battle;
