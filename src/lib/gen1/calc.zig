@@ -195,22 +195,10 @@ pub fn transitions(
     var frontier = std.ArrayList(Actions).init(allocator);
     defer frontier.deinit();
 
-    var overrides = actions;
-    if (overrides.p1.sleep > 0) overrides.p1.sleep = Action.EXTEND;
-    if (overrides.p1.confusion > 0) overrides.p1.confusion = Action.EXTEND;
-    if (overrides.p1.disable > 0) overrides.p1.disable = Action.EXTEND;
-    if (overrides.p1.attacking > 0) overrides.p1.attacking = Action.EXTEND;
-    if (overrides.p1.binding > 0) overrides.p1.binding = Action.EXTEND;
-    if (overrides.p2.sleep > 0) overrides.p2.sleep = Action.EXTEND;
-    if (overrides.p2.confusion > 0) overrides.p2.confusion = Action.EXTEND;
-    if (overrides.p2.disable > 0) overrides.p2.disable = Action.EXTEND;
-    if (overrides.p2.attacking > 0) overrides.p2.attacking = Action.EXTEND;
-    if (overrides.p2.binding > 0) overrides.p2.binding = Action.EXTEND;
-
     var opts = pkmn.battle.options(
         protocol.NULL,
         Chance(Rational(u128)){ .probability = .{}, .actions = actions },
-        Calc{ .overrides = overrides },
+        Calc{ .overrides = convert(actions) },
     );
 
     var b = battle;
@@ -293,7 +281,7 @@ pub fn transitions(
                 //     try Rolls.coalesce(.P2, @intCast(u8, p2_dmg.min), &opts.calc.summaries, cap);
 
                 if (opts.chance.actions.matches(template)) {
-                    if (!opts.chance.actions.equals(a)) {
+                    if (!applies(opts.chance.actions, a)) {
                         try debug(writer, opts.chance.actions, false, .{ .color = i, .dim = true });
 
                         p1_min = p1_max;
@@ -377,6 +365,48 @@ inline fn matches(actions: Actions, i: usize, frontier: []Actions) bool {
         if (f.matches(actions)) return true;
     }
     return false;
+}
+
+const DURATIONS = .{ "sleep", "confusion", "disable", "attacking", "binding" };
+
+inline fn applies(actions: Actions, overrides: Actions) bool {
+    inline for (@typeInfo(Actions).Struct.fields) |player| {
+        const action = @field(actions, player.name);
+        const override = @field(overrides, player.name);
+        // If non-duration fields don't exactly match we can fail fast
+        if ((@bitCast(u64, action) & ~Action.DURATIONS) !=
+            (@bitCast(u64, override) & ~Action.DURATIONS)) return false;
+        // As an optimization, first we determine if duration fields are even
+        // set before doing  the more expensive comparisons
+        const a_set = (@bitCast(u64, action) & Action.DURATIONS) > 0;
+        const o_set = (@bitCast(u64, override) & Action.DURATIONS) > 0;
+        // If one is set but the other isn't we can fail fast
+        if (a_set != o_set) return false;
+        // If neither are set the comparison of non duration fields was enough
+        if (a_set) {
+            inline for (DURATIONS) |field| {
+                if ((@field(override, field) == Action.EXTEND) != (@field(action, field) > 0)) {
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+inline fn convert(actions: Actions) Actions {
+    // We could add a check like above to determine whether the duration fields
+    // are set to know whether we can just immediately return actions but this
+    // function only gets called once per call to transitions
+    var overrides = actions;
+    inline for (@typeInfo(Actions).Struct.fields) |player| {
+        inline for (DURATIONS) |field| {
+            if (@field(@field(overrides, player.name), field) > 0) {
+                @field(@field(overrides, player.name), field) = Action.EXTEND;
+            }
+        }
+    }
+    return overrides;
 }
 
 const Style = struct {

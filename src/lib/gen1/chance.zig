@@ -71,22 +71,6 @@ pub const Actions = extern struct {
         return true;
     }
 
-    // TODO: better name
-    pub fn equals(a: Actions, o: Actions) bool {
-        inline for (@typeInfo(Actions).Struct.fields) |player| {
-            const action = @field(a, player.name);
-            const override = @field(o, player.name);
-            if ((@bitCast(u64, action) & 0xFFFFFF0000FFFFFF) !=
-                (@bitCast(u64, override) & 0xFFFFFF0000FFFFFF)) return false;
-            if ((override.sleep == Action.EXTEND) != (action.sleep > 0)) return false;
-            if ((override.confusion == Action.EXTEND) != (action.confusion > 0)) return false;
-            if ((override.disable == Action.EXTEND) != (action.disable > 0)) return false;
-            if ((override.attacking == Action.EXTEND) != (action.attacking > 0)) return false;
-            if ((override.binding == Action.EXTEND) != (action.binding > 0)) return false;
-        }
-        return true;
-    }
-
     pub fn fmt(self: Actions, writer: anytype, shape: bool) !void {
         try writer.writeAll("<P1 = ");
         try self.p1.fmt(writer, shape);
@@ -177,6 +161,7 @@ pub const Action = packed struct {
     metronome: Move = .None,
 
     pub const EXTEND = @intFromEnum(Optional(bool).true);
+    pub const DURATIONS: u64 = 0x000000FFFF000000;
 
     pub const Field = std.meta.FieldEnum(Action);
 
@@ -186,7 +171,7 @@ pub const Action = packed struct {
 
     /// Perform a reset by clearing fields which should not persist across updates.
     pub inline fn reset(self: *Action) void {
-        self.* = @bitCast(Action, @bitCast(u64, self.*) & 0x000000FFFF000000);
+        self.* = @bitCast(Action, @bitCast(u64, self.*) & DURATIONS);
     }
 
     pub fn format(a: Action, comptime f: []const u8, o: std.fmt.FormatOptions, w: anytype) !void {
