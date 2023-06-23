@@ -62,14 +62,14 @@
   },
   "publishConfig": {"access": "public"},
   "dependencies": {
-    "@pkmn/data": "^0.7.43",
+    "@pkmn/data": "^0.7.44",
     "@pkmn/protocol": "^0.6.12"
   },
   "devDependencies": {
     "@pkmn/eslint-config": "^3.2.0",
-    "@pkmn/img": "^0.2.11",
+    "@pkmn/img": "^0.2.12",
     "@pkmn/sets": "^5.0.4",
-    "@pkmn/sim": "0.7.43",
+    "@pkmn/sim": "0.7.44",
     "@types/html-minifier": "^4.0.2",
     "@types/jest": "^29.5.2",
     "@types/minimist": "^1.2.2",

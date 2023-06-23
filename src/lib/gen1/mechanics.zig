@@ -2091,7 +2091,9 @@ pub const Effects = struct {
 
         // GLITCH: HP recovery move failure glitches
         const delta = stored.stats.hp - stored.hp;
-        if (delta == 0 or delta & 255 == 255) return try options.log.fail(ident, .None);
+        if (delta == 0 or (delta & 255 == 255 and stored.hp % 256 != 0)) {
+            return try options.log.fail(ident, .None);
+        }
 
         const rest = side.last_selected_move == .Rest;
         if (rest) {
