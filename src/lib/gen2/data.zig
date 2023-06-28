@@ -64,7 +64,7 @@ pub fn Battle(comptime RNG: anytype) type {
         }
 
         pub inline fn active(self: *const Self, player: Player) ID {
-            return player.ident(@intCast(u3, self.side(player).pokemon[0].position));
+            return player.ident(@intCast(self.side(player).pokemon[0].position));
         }
 
         pub fn update(self: *Self, c1: Choice, c2: Choice, options: anytype) !Result {
@@ -215,11 +215,11 @@ const DVs = packed struct {
             0xFF => .Unknown,
             else => if ((@as(u8, dvs.atk) << 4 | dvs.spe) < ratio) Gender.Female else Gender.Male,
         };
-        const p = @intCast(u6, 1 + ((5 * @as(u8, (dvs.atk & 0b1000) | ((dvs.def & 0b1000)) >> 1 |
+        const p: u6 = @intCast(1 + ((5 * @as(u8, (dvs.atk & 0b1000) | ((dvs.def & 0b1000)) >> 1 |
             ((dvs.spe & 0b1000)) >> 2 | ((dvs.spc & 0b1000)) >> 3) + (dvs.spc & 0b0011)) >> 1));
         var t = @as(u8, dvs.def & 0b0011) + (@as(u8, dvs.atk & 0b0011) << 2) + 1;
         if (t >= @intFromEnum(Type.@"???")) t = t + 1;
-        return DVs{ .gender = g, .pow = p, .type = @enumFromInt(Type, t) };
+        return DVs{ .gender = g, .pow = p, .type = @enumFromInt(t) };
     }
 
     comptime {
@@ -337,10 +337,11 @@ pub fn Stats(comptime T: type) type {
 
         pub fn calc(comptime stat: []const u8, base: T, dv: u4, exp: u16, level: u8) T {
             assert(level > 0 and level <= 100);
-            const evs = @min(255, @intFromFloat(u16, @ceil(@sqrt(@floatFromInt(f32, exp)))));
+            const float: f32 = @floatFromInt(exp);
+            const evs: u16 = @min(255, @as(u16, @intFromFloat(@ceil(@sqrt(float)))));
             const core: u32 = (2 *% (@as(u32, base) +% dv)) +% (evs / 4);
             const factor: u32 = if (std.mem.eql(u8, stat, "hp")) level + 10 else 5;
-            return @intCast(T, core *% @as(u32, level) / 100 +% factor);
+            return @intCast(core *% @as(u32, level) / 100 +% factor);
         }
     };
 }

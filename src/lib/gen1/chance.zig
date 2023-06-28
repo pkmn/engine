@@ -48,7 +48,7 @@ pub const Actions = extern struct {
 
     /// Returns true if `a` is equal to `b`.
     pub inline fn eql(a: Actions, b: Actions) bool {
-        return @bitCast(u128, a) == @bitCast(u128, b);
+        return @as(u128, @bitCast(a)) == @as(u128, @bitCast(b));
     }
 
     /// Returns true if `a` has the same "shape" as `b`, where `Actions` are defined to have the
@@ -173,7 +173,7 @@ pub const Action = packed struct {
 
     /// Perform a reset by clearing fields which should not persist across updates.
     pub inline fn reset(self: *Action) void {
-        self.* = @bitCast(Action, @bitCast(u64, self.*) & DURATIONS);
+        self.* = @bitCast(@as(u64, @bitCast(self.*)) & DURATIONS);
     }
 
     pub fn format(a: Action, comptime f: []const u8, o: std.fmt.FormatOptions, w: anytype) !void {
@@ -292,7 +292,7 @@ pub fn Chance(comptime Rational: type) type {
             if (!showdown) {
                 if (kind != .miss and self.pending.binding != 0) {
                     assert(action.duration == 0);
-                    action.duration = @intCast(u4, self.pending.binding);
+                    action.duration = @intCast(self.pending.binding);
                     assert(action.binding == 0);
                     action.binding = 1;
                 }
@@ -354,7 +354,7 @@ pub fn Chance(comptime Rational: type) type {
 
             var action = self.actions.get(player);
             self.sleeps[@intFromEnum(player)][out - 1] = action.sleep;
-            action.sleep = @intCast(u3, self.sleeps[@intFromEnum(player)][in - 1]);
+            action.sleep = @intCast(self.sleeps[@intFromEnum(player)][in - 1]);
 
             action.confusion = 0;
             action.disable = 0;
@@ -375,7 +375,7 @@ pub fn Chance(comptime Rational: type) type {
         pub fn hit(self: *Self, ok: bool, accuracy: u8) void {
             if (!enabled) return;
 
-            const p = if (ok) accuracy else @intCast(u8, 256 - @as(u9, accuracy));
+            const p = if (ok) accuracy else @as(u8, @intCast(256 - @as(u9, accuracy)));
             self.pending.hit = ok;
             self.pending.hit_probablity = p;
         }
@@ -383,7 +383,7 @@ pub fn Chance(comptime Rational: type) type {
         pub fn criticalHit(self: *Self, player: Player, crit: bool, rate: u8) Error!void {
             if (!enabled) return;
 
-            const n = if (crit) rate else @intCast(u8, 256 - @as(u9, rate));
+            const n = if (crit) rate else @as(u8, @intCast(256 - @as(u9, rate)));
             if (showdown) {
                 try self.probability.update(n, 256);
                 self.actions.get(player).critical_hit = if (crit) .true else .false;
@@ -407,7 +407,7 @@ pub fn Chance(comptime Rational: type) type {
         pub fn secondaryChance(self: *Self, player: Player, proc: bool, rate: u8) Error!void {
             if (!enabled) return;
 
-            const n = if (proc) rate else @intCast(u8, 256 - @as(u9, rate));
+            const n = if (proc) rate else @as(u8, @intCast(256 - @as(u9, rate)));
             try self.probability.update(n, 256);
             self.actions.get(player).secondary_chance = if (proc) .true else .false;
         }
@@ -445,7 +445,7 @@ pub fn Chance(comptime Rational: type) type {
             };
 
             if (denominator != 1) try self.probability.update(1, denominator);
-            self.actions.get(player).move_slot = @intCast(u3, slot);
+            self.actions.get(player).move_slot = @intCast(slot);
         }
 
         pub fn multiHit(self: *Self, player: Player, n: u3) Error!void {
@@ -791,7 +791,7 @@ test "Chance.sleep" {
     var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
 
     for ([_]u8{ 7, 6, 5, 4, 3, 2, 1 }, 1..8) |d, i| {
-        chance.actions.p1.sleep = @intCast(u3, i);
+        chance.actions.p1.sleep = @intCast(i);
         try chance.sleep(.P1, 0);
         try expectProbability(&chance.probability, 1, d);
         try expectValue(@as(u3, 0), chance.actions.p1.sleep);
@@ -799,10 +799,10 @@ test "Chance.sleep" {
         chance.reset();
 
         if (i < 7) {
-            chance.actions.p1.sleep = @intCast(u3, i);
+            chance.actions.p1.sleep = @intCast(i);
             try chance.sleep(.P1, 1);
             try expectProbability(&chance.probability, d - 1, d);
-            try expectValue(@intCast(u3, i) + 1, chance.actions.p1.sleep);
+            try expectValue(@as(u3, @intCast(i)) + 1, chance.actions.p1.sleep);
 
             chance.reset();
         }
@@ -814,7 +814,7 @@ test "Chance.confusion" {
 
     for ([_]u8{ 1, 4, 3, 2, 1 }, 1..6) |d, i| {
         if (i > 1) {
-            chance.actions.p2.confusion = @intCast(u3, i);
+            chance.actions.p2.confusion = @intCast(i);
             try chance.confusion(.P2, 0);
             try expectProbability(&chance.probability, 1, d);
             try expectValue(@as(u3, 0), chance.actions.p2.confusion);
@@ -823,10 +823,10 @@ test "Chance.confusion" {
         }
 
         if (i < 5) {
-            chance.actions.p2.confusion = @intCast(u3, i);
+            chance.actions.p2.confusion = @intCast(i);
             try chance.confusion(.P2, 1);
             try expectProbability(&chance.probability, if (d > 1) d - 1 else d, d);
-            try expectValue(@intCast(u3, i) + 1, chance.actions.p2.confusion);
+            try expectValue(@as(u3, @intCast(i)) + 1, chance.actions.p2.confusion);
 
             chance.reset();
         }
@@ -838,7 +838,7 @@ test "Chance.attacking" {
 
     for ([_]u8{ 1, 2, 1 }, 1..4) |d, i| {
         if (i > 1) {
-            chance.actions.p2.attacking = @intCast(u3, i);
+            chance.actions.p2.attacking = @intCast(i);
             try chance.attacking(.P2, 0);
             try expectProbability(&chance.probability, 1, d);
             try expectValue(@as(u3, 0), chance.actions.p2.attacking);
@@ -847,10 +847,10 @@ test "Chance.attacking" {
         }
 
         if (i < 3) {
-            chance.actions.p2.attacking = @intCast(u3, i);
+            chance.actions.p2.attacking = @intCast(i);
             try chance.attacking(.P2, 1);
             try expectProbability(&chance.probability, if (d > 1) d - 1 else d, d);
-            try expectValue(@intCast(u3, i) + 1, chance.actions.p2.attacking);
+            try expectValue(@as(u3, @intCast(i)) + 1, chance.actions.p2.attacking);
 
             chance.reset();
         }
@@ -864,7 +864,7 @@ test "Chance.binding" {
     const qs = [_]u8{ 8, 5, 2, 1 };
 
     for (ps, qs, 1..5) |p, q, i| {
-        chance.actions.p1.binding = @intCast(u3, i);
+        chance.actions.p1.binding = @intCast(i);
         try chance.binding(.P1, 0);
         try expectProbability(&chance.probability, p, q);
         try expectValue(@as(u3, 0), chance.actions.p1.binding);
@@ -872,10 +872,10 @@ test "Chance.binding" {
         chance.reset();
 
         if (i < 4) {
-            chance.actions.p1.binding = @intCast(u3, i);
+            chance.actions.p1.binding = @intCast(i);
             try chance.binding(.P1, 1);
             try expectProbability(&chance.probability, q - p, q);
-            try expectValue(@intCast(u3, i) + 1, chance.actions.p1.binding);
+            try expectValue(@as(u3, @intCast(i)) + 1, chance.actions.p1.binding);
 
             chance.reset();
         }

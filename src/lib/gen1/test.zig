@@ -10070,8 +10070,8 @@ fn Test(comptime rolls: anytype) type {
                 // same as we observed - however, we need to clear out the durations to ensure they
                 // dont get extended
                 var options = pkmn.battle.options(protocol.NULL, chance.NULL, Calc{ .overrides = .{
-                    .p1 = @bitCast(chance.Action, @bitCast(u64, actions.p1) & 0xFFFFFF0000FFFFFF),
-                    .p2 = @bitCast(chance.Action, @bitCast(u64, actions.p2) & 0xFFFFFF0000FFFFFF),
+                    .p1 = @bitCast(@as(u64, @bitCast(actions.p1)) & 0xFFFFFF0000FFFFFF),
+                    .p2 = @bitCast(@as(u64, @bitCast(actions.p2)) & 0xFFFFFF0000FFFFFF),
                 } });
                 const overridden = copy.update(c1, c2, &options);
                 try expectEqual(actual, overridden);
@@ -10129,9 +10129,9 @@ fn expectLog(expected: []const u8, actual: []const u8) !void {
 
 fn formatter(kind: protocol.Kind, byte: u8) []const u8 {
     return switch (kind) {
-        .Move => @tagName(@enumFromInt(Move, byte)),
-        .Species => @tagName(@enumFromInt(Species, byte)),
-        .Type => @tagName(@enumFromInt(Type, byte)),
+        .Move => @tagName(@as(Move, @enumFromInt(byte))),
+        .Species => @tagName(@as(Species, @enumFromInt(byte))),
+        .Type => @tagName(@as(Type, @enumFromInt(byte))),
         .Status => Status.name(byte),
     };
 }

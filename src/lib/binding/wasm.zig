@@ -7,6 +7,6 @@ export const CHANCE = pkmn.options.chance;
 export const CALC = pkmn.options.calc;
 
 export const GEN1_CHOICES_SIZE =
-    std.math.ceilPowerOfTwo(u32, @intCast(u32, pkmn.gen1.CHOICES_SIZE)) catch unreachable;
+    std.math.ceilPowerOfTwo(u32, @as(u32, @intCast(pkmn.gen1.CHOICES_SIZE))) catch unreachable;
 export const GEN1_LOGS_SIZE =
-    std.math.ceilPowerOfTwo(u32, @intCast(u32, pkmn.gen1.LOGS_SIZE)) catch unreachable;
+    std.math.ceilPowerOfTwo(u32, @as(u32, @intCast(pkmn.gen1.LOGS_SIZE))) catch unreachable;

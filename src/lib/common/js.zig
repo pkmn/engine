@@ -55,25 +55,25 @@ pub const Number = struct {
                     .signed => {
                         var result: i32 = undefined;
                         assert(c.napi_get_value_int32(env, value, &result) == c.napi_ok);
-                        return if (info.bits == 32) result else @intCast(T, result);
+                        return if (info.bits == 32) result else @intCast(result);
                     },
                     .unsigned => {
                         var result: u32 = undefined;
                         assert(c.napi_get_value_uint32(env, value, &result) == c.napi_ok);
-                        return if (info.bits == 32) result else @intCast(T, result);
+                        return if (info.bits == 32) result else @intCast(result);
                     },
                 },
                 33...63 => {
                     var result: i64 = undefined;
                     assert(c.napi_get_value_int64(env, value, &result) == c.napi_ok);
-                    return @intCast(T, result);
+                    return @intCast(result);
                 },
                 else => {
                     var result: i64 = undefined;
                     assert(c.napi_get_value_int64(env, value, &result) == c.napi_ok);
                     return switch (info.signedness) {
-                        .signed => @as(T, value),
-                        .unsigned => if (0 <= value) @intCast(T, value) else unreachable,
+                        .signed => value,
+                        .unsigned => if (0 <= value) @intCast(value) else unreachable,
                     };
                 },
             },

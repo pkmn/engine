@@ -10,7 +10,7 @@ pub const Player = enum(u1) {
 
     /// Returns a player's opponent.
     pub inline fn foe(self: Player) Player {
-        return @enumFromInt(Player, ~@intFromEnum(self));
+        return @enumFromInt(~@intFromEnum(self));
     }
 
     /// Return's an identifier for the player's Pokémon at the one-indexed `id`.
@@ -22,8 +22,8 @@ pub const Player = enum(u1) {
 
 test Player {
     try expectEqual(Player.P2, Player.P1.foe());
-    try expectEqual(@as(u8, 0b0001), @bitCast(u8, Player.P1.ident(1)));
-    try expectEqual(@as(u8, 0b1101), @bitCast(u8, Player.P2.ident(5)));
+    try expectEqual(@as(u8, 0b0001), @as(u8, @bitCast(Player.P1.ident(1))));
+    try expectEqual(@as(u8, 0b1101), @as(u8, @bitCast(Player.P2.ident(5))));
 }
 
 /// An identifier for a specific Pokémon in battle.
@@ -40,18 +40,18 @@ pub const ID = packed struct {
 
     /// Converts the identifier into a number.
     pub inline fn int(self: ID) u4 {
-        return @intCast(u4, @bitCast(u8, self));
+        return @intCast(@as(u8, @bitCast(self)));
     }
 
     /// Decodes the identifier from a number.
     pub inline fn from(id: u4) ID {
-        return @bitCast(ID, @as(u8, id));
+        return @bitCast(@as(u8, id));
     }
 };
 
 test ID {
-    try expectEqual(@as(u8, 0b0001), @bitCast(u8, ID{ .player = .P1, .id = 1 }));
-    try expectEqual(@as(u8, 0b1101), @bitCast(u8, ID{ .player = .P2, .id = 5 }));
+    try expectEqual(@as(u8, 0b0001), @as(u8, @bitCast(ID{ .player = .P1, .id = 1 })));
+    try expectEqual(@as(u8, 0b1101), @as(u8, @bitCast(ID{ .player = .P2, .id = 5 })));
     const id = ID{ .player = .P2, .id = 4 };
     try expectEqual(id, ID.from(id.int()));
 }
@@ -84,8 +84,8 @@ test Choice {
     const p2: Choice = .{ .type = .Switch, .data = 5 };
     try expectEqual(5, p2.data);
     try expectEqual(Choice.Type.Move, p1.type);
-    try expectEqual(0b0001_0001, @bitCast(u8, p1));
-    try expectEqual(0b0001_0110, @bitCast(u8, p2));
+    try expectEqual(0b0001_0001, @as(u8, @bitCast(p1)));
+    try expectEqual(0b0001_0110, @as(u8, @bitCast(p2)));
 }
 
 /// The result of the battle - all results other than 'None' should be considered terminal.
@@ -124,6 +124,6 @@ pub const Result = packed struct {
 };
 
 test Result {
-    try expectEqual(0b0101_0000, @bitCast(u8, Result.Default));
-    try expectEqual(0b1000_0000, @bitCast(u8, Result{ .p2 = .Switch }));
+    try expectEqual(0b0101_0000, @as(u8, @bitCast(Result.Default)));
+    try expectEqual(0b1000_0000, @as(u8, @bitCast(Result{ .p2 = .Switch })));
 }

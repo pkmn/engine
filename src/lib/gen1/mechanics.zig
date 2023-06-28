@@ -186,11 +186,10 @@ fn selectMove(
             assert(choice.data == 0);
             // GLITCH: https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
             if (foe_choice.type == .Switch) {
-                const slot = if (player == .P1)
+                const last = side.active.move(if (player == .P1)
                     battle.last_moves.p1_index
                 else
-                    battle.last_moves.p2_index;
-                const last = side.active.move(@intCast(u4, slot));
+                    battle.last_moves.p2_index);
                 if (last.id == .Metronome) side.last_selected_move = last.id;
                 if (last.id == .MirrorMove) return Result.Error;
             }
@@ -244,9 +243,9 @@ fn saveMove(battle: anytype, player: Player, choice: ?Choice) void {
 
             side.last_selected_move = move.id;
             if (player == .P1) {
-                battle.last_moves.p1_index = @intCast(u3, c.data);
+                battle.last_moves.p1_index = @intCast(c.data);
             } else {
-                battle.last_moves.p2_index = @intCast(u3, c.data);
+                battle.last_moves.p2_index = @intCast(c.data);
             }
         }
     }
@@ -431,7 +430,7 @@ fn executeMove(
     var side = battle.side(player);
 
     if (choice.type == .Switch) {
-        try switchIn(battle, player, @intCast(u4, choice.data), false, options);
+        try switchIn(battle, player, choice.data, false, options);
         return null;
     }
 
@@ -447,7 +446,7 @@ fn executeMove(
     }
 
     assert(choice.type == .Move);
-    var mslot = @intCast(u4, choice.data);
+    var mslot: u4 = @intCast(choice.data);
     // Sadly, we can't even check `Move.get(side.last_selected_move).effect == .Binding` here
     // because Pokémon Showdown's Mirror Move implementation clobbers side.last_selected_move
     var auto = showdown and side.last_selected_move != .None;
@@ -456,7 +455,7 @@ fn executeMove(
     if (mslot == 0 and side.last_selected_move != .None and side.last_selected_move != .Struggle) {
         // choice.data == 0 only happens with Struggle on Pokémon Showdown
         assert(!showdown);
-        mslot = @intCast(u4, if (player == .P1)
+        mslot = @intCast(if (player == .P1)
             battle.last_moves.p1_index
         else
             battle.last_moves.p2_index);
@@ -480,7 +479,7 @@ fn executeMove(
     } else if (showdown and side.active.volatiles.Charging) {
         // Incorrect mslot with Pokémon Showdown choice semantics so we need to recover from index
         assert(mslot == 1);
-        mslot = @intCast(u4, if (player == .P1)
+        mslot = @intCast(if (player == .P1)
             battle.last_moves.p1_index
         else
             battle.last_moves.p2_index);
@@ -852,11 +851,11 @@ fn decrementPP(side: *Side, mslot: u4, auto: bool) void {
     if (volatiles.Bide) return;
 
     assert(active.move(mslot).pp > 0 or auto);
-    active.move(mslot).pp = @intCast(u6, active.move(mslot).pp) -% 1;
+    active.move(mslot).pp = @as(u6, @intCast(active.move(mslot).pp)) -% 1;
     if (volatiles.Transform) return;
 
     assert(side.stored().move(mslot).pp > 0 or auto);
-    side.stored().move(mslot).pp = @intCast(u6, side.stored().move(mslot).pp) -% 1;
+    side.stored().move(mslot).pp = @as(u6, @intCast(side.stored().move(mslot).pp)) -% 1;
     assert(active.move(mslot).pp == side.stored().move(mslot).pp);
 }
 
@@ -864,12 +863,12 @@ fn incrementPP(side: *Side, mslot: u4) void {
     var active = &side.active;
     const volatiles = &active.volatiles;
 
-    active.move(mslot).pp = @intCast(u6, active.move(mslot).pp) +% 1;
+    active.move(mslot).pp = @as(u6, @intCast(active.move(mslot).pp)) +% 1;
     // GLITCH: No check for Transform means an empty/incorrect stored slot can get incremented
     if (showdown and volatiles.Transform) return;
 
     assert(mslot > 0 and mslot <= 4);
-    side.stored().moves[mslot - 1].pp = @intCast(u6, side.stored().moves[mslot - 1].pp) +% 1;
+    side.stored().moves[mslot - 1].pp = @as(u6, @intCast(side.stored().moves[mslot - 1].pp)) +% 1;
 }
 
 // Pokémon Showdown does hit/multi/crit/damage instead of crit/damage/hit/multi
@@ -1123,7 +1122,7 @@ fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data, options: a
     rate = if (side.active.volatiles.FocusEnergy) rate / 2 else @min(rate * 2, 255);
     rate = if (move.effect == .HighCritical) @min(rate * 4, 255) else rate / 2;
 
-    return Rolls.criticalHit(battle, player, @intCast(u8, rate), options);
+    return Rolls.criticalHit(battle, player, @intCast(rate), options);
 }
 
 fn calcDamage(
@@ -1189,7 +1188,7 @@ fn calcDamage(
     d = @min(997, d);
     d += 2;
 
-    battle.last_damage = @intCast(u16, d);
+    battle.last_damage = @intCast(d);
 
     return true;
 }
@@ -1229,7 +1228,7 @@ fn randomizeDamage(battle: anytype, player: Player, options: anytype) !void {
     if (battle.last_damage <= 1) return;
     const random = try Rolls.damage(battle, player, options);
     options.calc.base(player.foe(), battle.last_damage);
-    battle.last_damage = @intCast(u16, @as(u32, battle.last_damage) *% random / 255);
+    battle.last_damage = @intCast(@as(u32, battle.last_damage) *% random / 255);
     options.calc.final(player.foe(), battle.last_damage);
 }
 
@@ -1247,7 +1246,7 @@ fn specialDamage(battle: anytype, player: Player, move: Move.Data, options: anyt
         .DragonRage => 40,
         // GLITCH: if power = 0 then a desync occurs (or a miss on Pokémon Showdown)
         .Psywave => power: {
-            const max = @intCast(u8, @as(u16, side.stored().level) * 3 / 2);
+            const max: u8 = @intCast(@as(u16, side.stored().level) * 3 / 2);
             // GLITCH: Psywave infinite glitch loop
             if (!showdown and max <= 1) return Result.Error;
             break :power try Rolls.psywave(battle, player, max, options);
@@ -1338,7 +1337,7 @@ fn applyDamage(
             return true;
         } else {
             // Safe to truncate since less than subbed.volatiles.substitute which is a u8
-            subbed.active.volatiles.substitute -= @intCast(u8, battle.last_damage);
+            subbed.active.volatiles.substitute -= @intCast(battle.last_damage);
             try options.log.activate(battle.active(sub_player), .Substitute);
             return false;
         }
@@ -1465,9 +1464,9 @@ fn moveHit(
         assert(!overwritten or (0 < state and state <= 255 and !side.active.volatiles.Bide));
 
         var accuracy = if (overwritten) state else @as(u16, Gen12.percent(move.accuracy));
-        var boost = BOOSTS[@intCast(u4, @as(i8, side.active.boosts.accuracy) + 6)];
+        var boost = BOOSTS[@as(u4, @intCast(@as(i8, side.active.boosts.accuracy) + 6))];
         accuracy = accuracy * boost[0] / boost[1];
-        boost = BOOSTS[@intCast(u4, @as(i8, -foe.active.boosts.evasion) + 6)];
+        boost = BOOSTS[@as(u4, @intCast(@as(i8, -foe.active.boosts.evasion) + 6))];
         accuracy = accuracy * boost[0] / boost[1];
         accuracy = @min(255, @max(1, accuracy));
 
@@ -1476,7 +1475,7 @@ fn moveHit(
         if (overwrite) side.active.volatiles.state = accuracy;
 
         // GLITCH: max accuracy is 255 so 1/256 chance of miss
-        break :miss !Rolls.hit(battle, player, @intCast(u8, accuracy), options);
+        break :miss !Rolls.hit(battle, player, @intCast(accuracy), options);
     };
 
     // Pokémon Showdown reports miss instead of fail for moves blocked by Mist that 1/256 miss
@@ -1648,7 +1647,7 @@ fn endTurn(battle: anytype, options: anytype) @TypeOf(options.log).Error!Result 
 
 fn checkEBC(battle: anytype) bool {
     for (battle.sides, 0..) |side, i| {
-        const foe = battle.sides[~@intCast(u1, i)];
+        const foe = battle.sides[~@as(u1, @intCast(i))];
 
         var foe_all_ghosts = true;
         var foe_all_transform = true;
@@ -1957,7 +1956,7 @@ pub const Effects = struct {
         }
 
         volatiles.disabled_move =
-            @intCast(u3, try Rolls.moveSlot(battle, player, &foe.active.moves, n, options));
+            @intCast(try Rolls.moveSlot(battle, player, &foe.active.moves, n, options));
         volatiles.disabled_duration = Rolls.disableDuration(battle, player, options);
 
         const id = foe.active.move(volatiles.disabled_move).id;
@@ -2060,7 +2059,7 @@ pub const Effects = struct {
         // Pokémon Showdown clears P1 then P2 instead of status -> side -> foe
         if (showdown) {
             for (&battle.sides, 0..) |*s, i| {
-                const p = @enumFromInt(Player, i);
+                const p: Player = @enumFromInt(i);
                 // Pokémon Showdown incorrectly does not prevent sleep/freeze from moving
                 if (p != player and Status.any(s.stored().status)) {
                     try log.curestatus(foe_ident, foe_stored.status, .Silent);
@@ -2164,7 +2163,7 @@ pub const Effects = struct {
             const has_mimic = has_mimic: {
                 for (side.active.moves, 0..) |m, i| {
                     if (m.id == .Mimic) {
-                        oslot = @intCast(u8, i + 1);
+                        oslot = @intCast(i + 1);
                         break :has_mimic true;
                     }
                 }
@@ -2329,9 +2328,9 @@ pub const Effects = struct {
         assert(showdown or battle.last_damage > 0);
         if (showdown and battle.last_damage == 0) return;
 
-        const damage = @intCast(i16, @max(battle.last_damage /
+        const damage: i16 = @intCast(@max(battle.last_damage /
             @as(u8, if (side.last_selected_move == .Struggle) 2 else 4), 1));
-        stored.hp = @intCast(u16, @max(@intCast(i16, stored.hp) - damage, 0));
+        stored.hp = @intCast(@max(@as(i16, @intCast(stored.hp)) - damage, 0));
 
         try options.log.damageOf(
             battle.active(player),
@@ -2398,7 +2397,7 @@ pub const Effects = struct {
 
         assert(side.stored().stats.hp <= 1023);
         // Will be 0 if HP is <= 3 meaning that the user gets a 1 HP Substitute for "free"
-        const hp = @intCast(u8, side.stored().stats.hp / 4);
+        const hp: u8 = @intCast(side.stored().stats.hp / 4);
         // Pokénon Showdown incorrectly checks for 1/4 HP based on `target.maxhp / 4` which returns
         // a floating point value and thus only correctly implements the Substitute 1/4 glitch when
         // the target's HP is exactly divisible by 4 (here we're using an inlined divCeil routine to
@@ -2496,7 +2495,7 @@ pub const Effects = struct {
                 assert(boosts.atk >= -6 and boosts.atk <= 6);
                 if (boosts.atk == 6) return try log.fail(ident, .None);
                 const n: u2 = if (move.effect == .AttackUp2) 2 else 1;
-                boosts.atk = @intCast(i4, @min(6, @as(i8, boosts.atk) + n));
+                boosts.atk = @as(i4, @intCast(@min(6, @as(i8, boosts.atk) + n)));
                 const reason = if (move.effect == .Rage) Boost.Rage else Boost.Attack;
                 if (stats.atk == MAX_STAT_VALUE) {
                     boosts.atk -= 1;
@@ -2507,7 +2506,7 @@ pub const Effects = struct {
                     }
                     return try log.fail(ident, .None);
                 }
-                var mod = BOOSTS[@intCast(u4, @as(i8, boosts.atk) + 6)];
+                var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.atk) + 6))];
                 const stat = unmodifiedStats(battle, side).atk;
                 stats.atk = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
                 try log.boost(ident, reason, n);
@@ -2518,7 +2517,7 @@ pub const Effects = struct {
                 assert(boosts.def >= -6 and boosts.def <= 6);
                 if (boosts.def == 6) return try log.fail(ident, .None);
                 const n: u2 = if (move.effect == .DefenseUp2) 2 else 1;
-                boosts.def = @intCast(i4, @min(6, @as(i8, boosts.def) + n));
+                boosts.def = @intCast(@min(6, @as(i8, boosts.def) + n));
                 if (stats.def == MAX_STAT_VALUE) {
                     boosts.def -= 1;
                     if (showdown) {
@@ -2527,7 +2526,7 @@ pub const Effects = struct {
                     }
                     return try log.fail(ident, .None);
                 }
-                var mod = BOOSTS[@intCast(u4, @as(i8, boosts.def) + 6)];
+                var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.def) + 6))];
                 const stat = unmodifiedStats(battle, side).def;
                 stats.def = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
                 try log.boost(ident, .Defense, n);
@@ -2535,7 +2534,7 @@ pub const Effects = struct {
             .SpeedUp2 => {
                 assert(boosts.spe >= -6 and boosts.spe <= 6);
                 if (boosts.spe == 6) return try log.fail(ident, .None);
-                boosts.spe = @intCast(i4, @min(6, @as(i8, boosts.spe) + 2));
+                boosts.spe = @intCast(@min(6, @as(i8, boosts.spe) + 2));
                 if (stats.spe == MAX_STAT_VALUE) {
                     boosts.spe -= 1;
                     if (showdown) {
@@ -2544,7 +2543,7 @@ pub const Effects = struct {
                     }
                     return try log.fail(ident, .None);
                 }
-                var mod = BOOSTS[@intCast(u4, @as(i8, boosts.spe) + 6)];
+                var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.spe) + 6))];
                 const stat = unmodifiedStats(battle, side).spe;
                 stats.spe = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
                 try log.boost(ident, .Speed, 2);
@@ -2553,7 +2552,7 @@ pub const Effects = struct {
                 assert(boosts.spc >= -6 and boosts.spc <= 6);
                 if (boosts.spc == 6) return try log.fail(ident, .None);
                 const n: u2 = if (move.effect == .SpecialUp2) 2 else 1;
-                boosts.spc = @intCast(i4, @min(6, @as(i8, boosts.spc) + n));
+                boosts.spc = @intCast(@min(6, @as(i8, boosts.spc) + n));
                 if (stats.spc == MAX_STAT_VALUE) {
                     boosts.spc -= 1;
                     if (showdown) {
@@ -2564,7 +2563,7 @@ pub const Effects = struct {
                     }
                     return try log.fail(ident, .None);
                 }
-                var mod = BOOSTS[@intCast(u4, @as(i8, boosts.spc) + 6)];
+                var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.spc) + 6))];
                 const stat = unmodifiedStats(battle, side).spc;
                 stats.spc = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
                 try log.boost(ident, .SpecialAttack, n);
@@ -2573,7 +2572,7 @@ pub const Effects = struct {
             .EvasionUp1 => {
                 assert(boosts.evasion >= -6 and boosts.evasion <= 6);
                 if (boosts.evasion == 6) return try log.fail(ident, .None);
-                boosts.evasion = @intCast(i4, @min(6, @as(i8, boosts.evasion) + 1));
+                boosts.evasion = @intCast(@min(6, @as(i8, boosts.evasion) + 1));
                 try log.boost(ident, .Evasion, 1);
             },
             else => unreachable,
@@ -2608,7 +2607,7 @@ pub const Effects = struct {
             .AttackDown1, .AttackDownChance => {
                 assert(boosts.atk >= -6 and boosts.atk <= 6);
                 if (boosts.atk == -6) return if (fail) try log.fail(foe_ident, .None);
-                boosts.atk = @intCast(i4, @max(-6, @as(i8, boosts.atk) - 1));
+                boosts.atk = @intCast(@max(-6, @as(i8, boosts.atk) - 1));
                 if (stats.atk == 1) {
                     boosts.atk += 1;
                     if (showdown) {
@@ -2617,7 +2616,7 @@ pub const Effects = struct {
                     }
                     return try log.fail(foe_ident, .None);
                 }
-                var mod = BOOSTS[@intCast(u4, @as(i8, boosts.atk) + 6)];
+                var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.atk) + 6))];
                 const stat = unmodifiedStats(battle, foe).atk;
                 stats.atk = @max(1, stat * mod[0] / mod[1]);
                 try log.boost(foe_ident, .Attack, -1);
@@ -2626,7 +2625,7 @@ pub const Effects = struct {
                 assert(boosts.def >= -6 and boosts.def <= 6);
                 if (boosts.def == -6) return if (fail) try log.fail(foe_ident, .None);
                 const n: u2 = if (move.effect == .DefenseDown2) 2 else 1;
-                boosts.def = @intCast(i4, @max(-6, @as(i8, boosts.def) - n));
+                boosts.def = @intCast(@max(-6, @as(i8, boosts.def) - n));
                 if (stats.def == 1) {
                     boosts.def += 1;
                     if (showdown) {
@@ -2635,7 +2634,7 @@ pub const Effects = struct {
                     }
                     return try log.fail(foe_ident, .None);
                 }
-                var mod = BOOSTS[@intCast(u4, @as(i8, boosts.def) + 6)];
+                var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.def) + 6))];
                 const stat = unmodifiedStats(battle, foe).def;
                 stats.def = @max(1, stat * mod[0] / mod[1]);
                 try log.boost(foe_ident, .Defense, -@as(i8, n));
@@ -2643,7 +2642,7 @@ pub const Effects = struct {
             .SpeedDown1, .SpeedDownChance => {
                 assert(boosts.spe >= -6 and boosts.spe <= 6);
                 if (boosts.spe == -6) return if (fail) try log.fail(foe_ident, .None);
-                boosts.spe = @intCast(i4, @max(-6, @as(i8, boosts.spe) - 1));
+                boosts.spe = @intCast(@max(-6, @as(i8, boosts.spe) - 1));
                 if (stats.spe == 1) {
                     boosts.spe += 1;
                     if (showdown) {
@@ -2652,7 +2651,7 @@ pub const Effects = struct {
                     }
                     return try log.fail(foe_ident, .None);
                 }
-                var mod = BOOSTS[@intCast(u4, @as(i8, boosts.spe) + 6)];
+                var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.spe) + 6))];
                 const stat = unmodifiedStats(battle, foe).spe;
                 stats.spe = @max(1, stat * mod[0] / mod[1]);
                 try log.boost(foe_ident, .Speed, -1);
@@ -2661,7 +2660,7 @@ pub const Effects = struct {
             .SpecialDownChance => {
                 assert(boosts.spc >= -6 and boosts.spc <= 6);
                 if (boosts.spc == -6) return if (fail) try log.fail(foe_ident, .None);
-                boosts.spc = @intCast(i4, @max(-6, @as(i8, boosts.spc) - 1));
+                boosts.spc = @intCast(@max(-6, @as(i8, boosts.spc) - 1));
                 if (stats.spc == 1) {
                     boosts.spc += 1;
                     if (showdown) {
@@ -2672,7 +2671,7 @@ pub const Effects = struct {
                     }
                     return try log.fail(foe_ident, .None);
                 }
-                var mod = BOOSTS[@intCast(u4, @as(i8, boosts.spc) + 6)];
+                var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.spc) + 6))];
                 const stat = unmodifiedStats(battle, foe).spc;
                 stats.spc = @max(1, stat * mod[0] / mod[1]);
                 try log.boost(foe_ident, .SpecialAttack, -1);
@@ -2681,7 +2680,7 @@ pub const Effects = struct {
             .AccuracyDown1 => {
                 assert(boosts.accuracy >= -6 and boosts.accuracy <= 6);
                 if (boosts.accuracy == -6) return if (fail) try log.fail(foe_ident, .None);
-                boosts.accuracy = @intCast(i4, @max(-6, @as(i8, boosts.accuracy) - 1));
+                boosts.accuracy = @intCast(@max(-6, @as(i8, boosts.accuracy) - 1));
                 try log.boost(foe_ident, .Accuracy, -1);
             },
             else => unreachable,
@@ -2890,18 +2889,18 @@ pub const Rolls = struct {
     }
 
     inline fn metronome(battle: anytype, player: Player, options: anytype) !Move {
-        const move = if (options.calc.overridden(player, .metronome)) |val|
+        const move: Move = if (options.calc.overridden(player, .metronome)) |val|
             val
         else if (showdown) move: {
             const r = battle.rng.range(u8, 0, @intFromEnum(Move.Struggle) - 2);
             const mod = @as(u2, (if (r < @intFromEnum(Move.Metronome) - 1) 1 else 2));
-            break :move @enumFromInt(Move, r + mod);
+            break :move @enumFromInt(r + mod);
         } else move: {
             while (true) {
                 const r = battle.rng.next();
                 if (r == 0 or r == @intFromEnum(Move.Metronome)) continue;
                 if (r >= @intFromEnum(Move.Struggle)) continue;
-                break :move @enumFromInt(Move, r);
+                break :move @enumFromInt(r);
             }
         };
 
@@ -2926,14 +2925,14 @@ pub const Rolls = struct {
     }
 
     inline fn sleepDuration(battle: anytype, player: Player, options: anytype) u3 {
-        const duration = if (options.calc.overridden(player, .duration)) |val|
-            @intCast(u3, val)
+        const duration: u3 = if (options.calc.overridden(player, .duration)) |val|
+            @intCast(val)
         else if (showdown)
-            @intCast(u3, battle.rng.range(u8, 1, 8))
+            @intCast(battle.rng.range(u8, 1, 8))
         else duration: {
             while (true) {
                 const r = battle.rng.next() & 7;
-                if (r != 0) break :duration @intCast(u3, r);
+                if (r != 0) break :duration @intCast(r);
             }
         };
 
@@ -2942,36 +2941,36 @@ pub const Rolls = struct {
     }
 
     inline fn disableDuration(battle: anytype, player: Player, options: anytype) u4 {
-        const duration = if (options.calc.overridden(player, .duration)) |val|
+        const duration: u4 = if (options.calc.overridden(player, .duration)) |val|
             val
         else if (showdown)
-            @intCast(u4, battle.rng.range(u8, 1, 9))
+            @intCast(battle.rng.range(u8, 1, 9))
         else
-            @intCast(u4, (battle.rng.next() & 7) + 1);
+            @intCast((battle.rng.next() & 7) + 1);
 
         options.chance.duration(.disable, player, player.foe(), duration);
         return duration;
     }
 
     inline fn confusionDuration(battle: anytype, player: Player, self: bool, options: anytype) u3 {
-        const duration = if (options.calc.overridden(player, .duration)) |val|
-            @intCast(u3, val)
+        const duration: u3 = if (options.calc.overridden(player, .duration)) |val|
+            @intCast(val)
         else if (showdown)
-            @intCast(u3, battle.rng.range(u8, 2, 6))
+            @intCast(battle.rng.range(u8, 2, 6))
         else
-            @intCast(u3, (battle.rng.next() & 3) + 2);
+            @intCast((battle.rng.next() & 3) + 2);
 
         options.chance.duration(.confusion, player, if (self) player else player.foe(), duration);
         return duration;
     }
 
     inline fn attackingDuration(battle: anytype, player: Player, options: anytype) u3 {
-        const duration = if (options.calc.overridden(player, .duration)) |val|
-            @intCast(u3, val)
+        const duration: u3 = if (options.calc.overridden(player, .duration)) |val|
+            @intCast(val)
         else if (showdown)
-            @intCast(u3, battle.rng.range(u4, 2, 4))
+            @intCast(battle.rng.range(u4, 2, 4))
         else
-            @intCast(u3, (battle.rng.next() & 1) + 2);
+            @intCast((battle.rng.next() & 1) + 2);
 
         options.chance.duration(.attacking, player, player, duration);
         return duration;
@@ -2984,13 +2983,13 @@ pub const Rolls = struct {
         options: anytype,
     ) !u3 {
         const roll = if (effect == .Binding) .duration else .multi_hit;
-        const n = if (options.calc.overridden(player, roll)) |val|
-            @intCast(u3, val)
+        const n: u3 = if (options.calc.overridden(player, roll)) |val|
+            @intCast(val)
         else if (showdown)
             DISTRIBUTION[battle.rng.range(u8, 0, DISTRIBUTION.len)]
         else n: {
             const r = (battle.rng.next() & 3);
-            break :n @intCast(u3, (if (r < 2) r else battle.rng.next() & 3) + 2);
+            break :n @intCast((if (r < 2) r else battle.rng.next() & 3) + 2);
         };
 
         if (effect == .Binding) {
@@ -3016,18 +3015,18 @@ pub const Rolls = struct {
         else
             null;
 
-        const slot = overridden orelse slot: {
+        const slot: u4 = overridden orelse slot: {
             if (showdown) {
                 if (check_pp == 0) {
                     var i: usize = moves.len;
                     while (i > 0) {
                         i -= 1;
                         if (moves[i].id != .None) {
-                            break :slot battle.rng.range(u4, 0, @intCast(u4, i + 1)) + 1;
+                            break :slot battle.rng.range(u4, 0, @as(u4, @intCast(i + 1))) + 1;
                         }
                     }
                 } else {
-                    var r = battle.rng.range(u4, 0, @intCast(u4, check_pp)) + 1;
+                    var r = battle.rng.range(u4, 0, check_pp) + 1;
                     var i: usize = 0;
                     while (i < moves.len and r > 0) : (i += 1) {
                         if (moves[i].pp > 0) {
@@ -3035,12 +3034,12 @@ pub const Rolls = struct {
                             if (r == 0) break;
                         }
                     }
-                    break :slot @intCast(u4, i + 1);
+                    break :slot @intCast(i + 1);
                 }
             }
 
             while (true) {
-                const r = @intCast(u4, battle.rng.next() & 3);
+                const r: u4 = @intCast(battle.rng.next() & 3);
                 if (moves[r].id != .None and (check_pp == 0 or moves[r].pp > 0)) break :slot r + 1;
             }
         };
@@ -3054,7 +3053,7 @@ test "RNG agreement" {
     if (!showdown) return;
     var expected: [256]u32 = undefined;
     for (0..expected.len) |i| {
-        expected[i] = @intCast(u32, i * 0x1000000);
+        expected[i] = @intCast(i * 0x1000000);
     }
 
     var spe = rng.FixedRNG(1, expected.len){ .rolls = expected };

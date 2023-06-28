@@ -141,7 +141,7 @@ pub const Pokemon = struct {
                 .id = m,
                 .pp_ups = 3,
                 // NB: PP can be at most 61 legally (though can overflow to 63)
-                .pp = @intCast(u8, @min(Move.pp(m) / 5 * 8, 61)),
+                .pp = @intCast(@min(Move.pp(m) / 5 * 8, 61)),
             };
         }
         pokemon.item = p.item;
@@ -158,7 +158,7 @@ pub const Pokemon = struct {
     }
 
     pub fn random(rand: *PSRNG, opt: Options) data.Pokemon {
-        const s = @enumFromInt(Species, rand.range(u8, 1, Species.size + 1));
+        const s: Species = @enumFromInt(rand.range(u8, 1, Species.size + 1));
         const species = Species.get(s);
         const lvl = if (rand.chance(u8, 1, 20)) rand.range(u8, 1, 99 + 1) else 100;
         // Pokémon Showdown does not support most items without in-battle held item effects
@@ -184,14 +184,14 @@ pub const Pokemon = struct {
         for (0..n) |i| {
             var m: Move = .None;
             sample: while (true) {
-                m = @enumFromInt(Move, rand.range(u8, 1, 164 + 1));
+                m = @enumFromInt(rand.range(u8, 1, 164 + 1));
                 for (0..i) |j| if (ms[j].id == m) continue :sample;
                 break;
             }
-            const pp_ups =
+            const pp_ups: u8 =
                 if (!opt.cleric and rand.chance(u8, 1, 10)) rand.range(u2, 0, 2 + 1) else 3;
             // NB: PP can be at most 61 legally (though can overflow to 63)
-            const max_pp = @intCast(u8, Move.pp(m) + @as(u8, pp_ups) * @min(Move.pp(m) / 5, 7));
+            const max_pp: u8 = @intCast(Move.pp(m) + pp_ups * @min(Move.pp(m) / 5, 7));
             ms[i] = .{
                 .id = m,
                 .pp_ups = pp_ups,

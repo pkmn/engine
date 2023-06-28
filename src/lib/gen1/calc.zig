@@ -112,7 +112,7 @@ pub const Calc = struct {
         if (!enabled) return null;
 
         const overrides = if (player == .P1) self.overrides.p1 else self.overrides.p2;
-        return switch (@enumFromInt(Optional(bool), @field(overrides, @tagName(field)))) {
+        return switch (@as(Optional(bool), @enumFromInt(@field(overrides, @tagName(field))))) {
             .None => null,
             .false => false,
             .true => true,
@@ -266,12 +266,12 @@ pub fn transitions(
 
         var p1_dmg = Rolls.damage(template.p1, p1_hit);
         while (p1_dmg.min < p1_dmg.max) : (p1_dmg.min += 1) {
-            o.p1.damage = @intCast(u8, p1_dmg.min);
+            o.p1.damage = @intCast(p1_dmg.min);
             var p1_min: u8 = 0;
 
             var p2_dmg = Rolls.damage(template.p2, p2_hit);
             while (p2_dmg.min < p2_dmg.max) : (p2_dmg.min += 1) {
-                o.p2.damage = @intCast(u8, p2_dmg.min);
+                o.p2.damage = @intCast(p2_dmg.min);
 
                 opts.calc = .{ .overrides = o };
                 opts.chance = .{ .probability = .{}, .actions = actions };
@@ -281,8 +281,8 @@ pub fn transitions(
                 _ = try b.update(c1, c2, &opts);
                 stats.updates += 1;
 
-                const p1_max = @intCast(u8, p1_dmg.min);
-                const p2_max = @intCast(u8, p2_dmg.min);
+                const p1_max: u8 = @intCast(p1_dmg.min);
+                const p2_max: u8 = @intCast(p2_dmg.min);
                 _ = cap;
 
                 // var p1_max = if (p1_min != 0) p1_min else
@@ -302,8 +302,8 @@ pub fn transitions(
                     for (p1_dmg.min..@as(u9, p1_max) + 1) |p1d| {
                         for (p2_dmg.min..@as(u9, p2_max) + 1) |p2d| {
                             var acts = opts.chance.actions;
-                            acts.p1.damage = @intCast(u8, p1d);
-                            acts.p2.damage = @intCast(u8, p2d);
+                            acts.p1.damage = @intCast(p1d);
+                            acts.p2.damage = @intCast(p2d);
                             if ((try seen.getOrPut(acts)).found_existing) {
                                 err("already seen {}", .{acts}, options.seed);
                                 return error.TestUnexpectedResult;

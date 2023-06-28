@@ -219,7 +219,7 @@ pub const Item = enum(u8) {
     pub inline fn boost(item: Item) ?Type {
         assert(item != .None);
         if (item == .PolkadotBow) return .Normal;
-        return if (@intFromEnum(item) <= 18) @enumFromInt(Type, @intFromEnum(item) - 1) else null;
+        return if (@intFromEnum(item) <= 18) @enumFromInt(@intFromEnum(item) - 1) else null;
     }
 
     /// Whether or not this item is a Berry.

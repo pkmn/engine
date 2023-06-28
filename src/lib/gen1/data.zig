@@ -83,7 +83,7 @@ pub fn Battle(comptime RNG: anytype) type {
 
         /// Returns an identifier for the active Pokémon of `player`.
         pub inline fn active(self: *const Self, player: Player) ID {
-            return player.ident(@intCast(u3, self.side(player).order[0]));
+            return player.ident(@intCast(self.side(player).order[0]));
         }
 
         /// Returns the result of applying Player 1's choice `c1` and Player 2's choice `c2` to the
@@ -259,13 +259,13 @@ pub const Status = enum(u8) {
     /// Whether or not the status `num` is the same as `status`.
     pub inline fn is(num: u8, status: Status) bool {
         if (status == .SLP) return Status.duration(num) > 0;
-        return ((num >> @intCast(u3, @intFromEnum(status))) & 1) != 0;
+        return ((num >> @intCast(@intFromEnum(status))) & 1) != 0;
     }
 
     /// Initializes a non-sleep `status`. Use `slp` or `slf` to initialize a sleep status.
     pub inline fn init(status: Status) u8 {
         assert(status != .SLP and status != .EXT);
-        return @as(u8, 1) << @intCast(u3, @intFromEnum(status));
+        return @as(u8, 1) << @intCast(@intFromEnum(status));
     }
 
     /// Initializes a non self-inflicted sleep status with duration `dur`.
@@ -282,7 +282,7 @@ pub const Status = enum(u8) {
 
     /// Returns the duration of a sleep status.
     pub inline fn duration(num: u8) u3 {
-        return @intCast(u3, num & SLP);
+        return @intCast(num & SLP);
     }
 
     /// Returns whether `num` reflects any status.
@@ -429,10 +429,11 @@ pub fn Stats(comptime T: type) type {
         /// Computes the value of `stat` given a `base`, `dv`, stat `exp` and `level`.
         pub fn calc(comptime stat: []const u8, base: T, dv: u4, exp: u16, level: u8) T {
             assert(level > 0 and level <= 100);
-            const evs = @min(255, @intFromFloat(u16, @ceil(@sqrt(@floatFromInt(f32, exp)))));
+            const float: f32 = @floatFromInt(exp);
+            const evs: u16 = @min(255, @as(u16, @intFromFloat(@ceil(@sqrt(float)))));
             const core: u32 = (2 *% (@as(u32, base) +% dv)) +% (evs / 4);
             const factor: u32 = if (std.mem.eql(u8, stat, "hp")) level + 10 else 5;
-            return @intCast(T, core *% @as(u32, level) / 100 +% factor);
+            return @intCast(core *% @as(u32, level) / 100 +% factor);
         }
     };
 }
