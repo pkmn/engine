@@ -24,11 +24,6 @@ This directory contains miscellaneous scripts and tools useful for working on th
   The `--force` flag can be used to ensure that the data is refetched from the source instead of
   from a local `.cache` directory.
 
-- [`lint.zig`](lint.zig): Implements a linter, combining `zig fmt --check` with a custom linter
-  that ensures the maximum line length is 100 characters:
-
-      $ zig build lint
-
 - [`dump.zig`](dump.zig): Print out offsets and constants required to properly encode and
   decode the pkmn [protocol](../../docs/PROTOCOL.md):
 
