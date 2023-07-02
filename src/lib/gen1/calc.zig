@@ -34,6 +34,8 @@ const FieldType = util.FieldType;
 const Actions = chance.Actions;
 const Action = chance.Action;
 const Chance = chance.Chance;
+const Durations = chance.Durations;
+const Duration = chance.Duration;
 
 const Rolls = helpers.Rolls;
 
@@ -84,11 +86,23 @@ pub const Summary = extern struct {
     }
 };
 
+/// TODO
+pub const Overrides = struct {
+    /// TODO
+    actions: Actions = .{},
+    /// TODO
+    durations: Durations = .{},
+
+    comptime {
+        assert(@sizeOf(Summary) == 20);
+    }
+};
+
 /// Allows for forcing the value of specific RNG events during a Generation I battle `update` via
 /// `overrides` and tracks `summaries` of information relevant to damage calculation.
 pub const Calc = struct {
     /// Overrides the normal behavior of the RNG during an `update` to force specific outcomes.
-    overrides: Actions = .{},
+    overrides: Overrides = .{},
     /// Information relevant to damage calculation.
     summaries: Summaries = .{},
 
@@ -108,7 +122,7 @@ pub const Calc = struct {
         }) val else null;
     }
 
-    pub fn modify(self: Calc, player: Player, comptime field: Action.Field) ?bool {
+    pub fn modify(self: Calc, player: Player, comptime field: Duration.Field) ?bool {
         if (!enabled) return null;
 
         const overrides = if (player == .P1) self.overrides.p1 else self.overrides.p2;
@@ -152,7 +166,7 @@ const Null = struct {
         return null;
     }
 
-    pub fn modify(self: Null, player: Player, comptime field: Action.Field) ?bool {
+    pub fn modify(self: Null, player: Player, comptime field: Duration.Field) ?bool {
         _ = .{ self, player, field };
         return null;
     }
