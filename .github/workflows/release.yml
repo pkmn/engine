@@ -1,7 +1,7 @@
 name: Release
-on:
-  schedule:
-    - cron: '0 2 * * *'
+# on:
+#   schedule:
+#     - cron: '0 2 * * *'
 jobs:
   test:
     uses: ./.github/workflows/test.yml

@@ -1,11 +1,11 @@
 name: Fuzz
-on:
-  schedule:
-    - cron: '36 */6 * * *'
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+# on:
+#   schedule:
+#     - cron: '36 */6 * * *'
+#   push:
+#     branches: [ main ]
+#   pull_request:
+#     branches: [ main ]
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
