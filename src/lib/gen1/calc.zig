@@ -74,7 +74,7 @@ pub const Summary = extern struct {
         /// gets ignored due to it already breaking a Substitute or causing the target to faint).
         capped: bool = false,
 
-        _: u8 = 0,
+        // NOTE: 15 bits padding
 
         comptime {
             assert(@sizeOf(Damage) == 6);
