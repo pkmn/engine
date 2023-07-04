@@ -896,6 +896,9 @@ fn doMove(
     var hits: u4 = 1;
     var effectiveness = Effectiveness.neutral;
 
+    // Due to control flow shenanigans we need to clear last_damage for Pokémon Showdown
+    if (showdown and !counter) battle.last_damage = 0;
+
     // The cartridge handles set damage moves in applyDamage but we short circuit to simplify things
     if (move.effect == .SuperFang or move.effect == .SpecialDamage) {
         return specialDamage(battle, player, move, options);
@@ -955,9 +958,6 @@ fn doMove(
             try randomizeDamage(battle, player, options);
         }
     }
-
-    // Due to control flow shenanigans we need to clear last_damage for Pokémon Showdown
-    if (showdown and skip) battle.last_damage = 0;
 
     var zero = battle.last_damage == 0;
     miss = if (showdown or skip)
