@@ -50,7 +50,7 @@ pub fn main() !void {
         .cap = true,
         .seed = seed,
     });
-    try out.print("{}\n", .{stats});
+    try out.print("{}\n", .{stats.?});
 }
 
 fn errorAndExit(msg: []const u8, arg: []const u8, cmd: []const u8) noreturn {

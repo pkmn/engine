@@ -94,7 +94,7 @@ const pkmn_gen1_chance_options = extern struct {
 };
 
 const pkmn_gen1_calc_options = extern struct {
-    overrides: pkmn.gen1.chance.Actions,
+    overrides: pkmn.gen1.calc.Overrides,
 };
 
 const pkmn_gen1_battle_options = struct {

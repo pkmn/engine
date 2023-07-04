@@ -69,6 +69,10 @@ pub const gen1 = struct {
         /// Information about the RNG that was observed during a Generation I
         /// battle `update` for a single player.
         pub const Action = @import("gen1/chance.zig").Action;
+        /// TODO
+        pub const Durations = @import("gen1/chance.zig").Durations;
+        /// TODO
+        pub const Duration = @import("gen1/chance.zig").Duration;
         /// Null object pattern implementation of Generation I `Chance` which
         /// does nothing, though chance tracking should additionally be turned
         /// off entirely via `options.chance`.
@@ -81,6 +85,8 @@ pub const gen1 = struct {
     pub const calc = if (options.internal) struct {
         pub usingnamespace @import("gen1/calc.zig");
     } else struct {
+        /// TODO
+        pub const Overrides = @import("gen1/calc.zig").Overrides;
         /// Information relevant to damage calculation that occured during a Generation I
         /// battle `update`.
         pub const Summaries = @import("gen1/calc.zig").Summaries;

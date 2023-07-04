@@ -241,24 +241,14 @@ pub const Durations = extern struct {
 /// deduplicate transitions with a primary key. TODO
 pub const Duration = packed struct {
     /// The number of turns a Pokémon has been observed to be sleeping.
-    /// When serving as an override this field may only be one of three values:
-    /// 0 is unset (do not override), 1 will force sleep to end, and 2 will extend.
     sleep: u3 = 0,
     /// The number of turns a Pokémon has been observed to be confused.
-    /// When serving as an override this field may only be one of three values:
-    /// 0 is unset (do not override), 1 will force confusion to end, and 2 will extend.
     confusion: u3 = 0,
     /// The number of turns a Pokémon has been observed to be disabled.
-    /// When serving as an override this field may only be one of three values:
-    /// 0 is unset (do not override), 1 will force disable to end, and 2 will extend.
     disable: u4 = 0,
     /// The number of turns a Pokémon has been observed to be attacking.
-    /// When serving as an override this field may only be one of three values:
-    /// 0 is unset (do not override), 1 will force attacking to end, and 2 will extend.
     attacking: u3 = 0,
     /// The number of turns a Pokémon has been observed to be binding their opponent.
-    /// When serving as an override this field may only be one of three values:
-    /// 0 is unset (do not override), 1 will force binding to end, and 2 will extend.
     binding: u3 = 0,
 
     pub const Field = std.meta.FieldEnum(Duration);
@@ -379,12 +369,12 @@ pub fn Chance(comptime Rational: type) type {
 
             var action = self.actions.get(player);
             if (haze) |status| {
-                if (status) action.sleep = 0;
-                action.confusion = 0;
-                action.disable = 0;
+                if (status) action.durations.sleep = 0;
+                action.durations.confusion = 0;
+                action.durations.disable = 0;
             } else {
-                action.attacking = 0;
-                action.binding = 0;
+                action.durations.attacking = 0;
+                action.durations.binding = 0;
             }
         }
 
@@ -395,15 +385,12 @@ pub fn Chance(comptime Rational: type) type {
             assert(out >= 1 and out <= 6);
 
             var action = self.actions.get(player);
-            self.sleeps[@intFromEnum(player)][out - 1] = action.sleep;
-            action.sleep = @intCast(self.sleeps[@intFromEnum(player)][in - 1]);
+            action.durations = .{};
 
-            action.confusion = 0;
-            action.disable = 0;
-            action.attacking = 0;
-            action.binding = 0;
+            self.sleeps[@intFromEnum(player)][out - 1] = action.durations.sleep;
+            action.durations.sleep = @intCast(self.sleeps[@intFromEnum(player)][in - 1]);
 
-            self.actions.get(player.foe()).binding = 0;
+            self.actions.get(player.foe()).durations.binding = 0;
         }
 
         pub fn speedTie(self: *Self, p1: bool) Error!void {

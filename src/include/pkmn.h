@@ -154,6 +154,8 @@ float64_t pkmn_rational_denominator(pkmn_rational *rational);
 #define PKMN_GEN1_BATTLE_OPTIONS_SIZE 128
 /** The size in bytes of Generation I chance actions. */
 #define PKMN_GEN1_CHANCE_ACTIONS_SIZE 16
+/** The size in bytes of a Generation I calc overrides. */
+#define PKMN_GEN1_CALC_OVERRIDES_SIZE 24
 /** The size in bytes of a Generation I calc summaries. */
 #define PKMN_GEN1_CALC_SUMMARIES_SIZE 8
 
@@ -179,6 +181,8 @@ PKMN_OPAQUE(PKMN_GEN1_BATTLE_SIZE) pkmn_gen1_battle;
 PKMN_OPAQUE(PKMN_GEN1_BATTLE_OPTIONS_SIZE) pkmn_gen1_battle_options;
 /** Generation I Pokémon chance actions (see src/lib/gen1/README.md#layout for details). */
 PKMN_OPAQUE(PKMN_GEN1_CHANCE_ACTIONS_SIZE) pkmn_gen1_chance_actions;
+/** Generation I Pokémon calc overrides (see src/lib/gen1/README.md#layout for details). */
+PKMN_OPAQUE(PKMN_GEN1_CALC_OVERRIDES_SIZE) pkmn_gen1_calc_overrides;
 /** Generation I Pokémon calc summaries (see src/lib/gen1/README.md#layout for details). */
 PKMN_OPAQUE(PKMN_GEN1_CALC_SUMMARIES_SIZE) pkmn_gen1_calc_summaries;
 
@@ -205,7 +209,7 @@ typedef struct {
  * battle `update` if damage calculation support is enabled.
  */
 typedef struct {
-  pkmn_gen1_chance_actions overrides;
+  pkmn_gen1_calc_overrides overrides;
 } pkmn_gen1_calc_options;
 /**
  * Set or reset the Generation I battle options struct based on the log, chance,

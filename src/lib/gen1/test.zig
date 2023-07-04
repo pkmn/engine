@@ -3760,7 +3760,7 @@ test "Disable effect" {
 
     t.actual.p2.active.volatiles.disabled_duration = 0;
     t.actual.p2.active.volatiles.disabled_move = 0;
-    t.options.chance.actions.p2.disable = 0;
+    t.options.chance.actions.p2.durations.disable = 0;
     t.actual.p2.active.move(2).pp = 1;
     t.actual.p2.get(1).move(2).pp = 1;
 
@@ -10068,12 +10068,13 @@ fn Test(comptime rolls: anytype) type {
                 // });
 
                 // Demonstrate that we can produce the same state by forcing the RNG to behave the
-                // same as we observed - however, we need to clear out the durations to ensure they
-                // dont get extended
-                var options = pkmn.battle.options(protocol.NULL, chance.NULL, Calc{ .overrides = .{
-                    .p1 = @bitCast(@as(u64, @bitCast(actions.p1)) & 0xFFFFFF0000FFFFFF),
-                    .p2 = @bitCast(@as(u64, @bitCast(actions.p2)) & 0xFFFFFF0000FFFFFF),
-                } });
+                // same as we observed - note that because we do not pass in a durations override
+                // mask none of the durations will be extended.
+                var options = pkmn.battle.options(
+                    protocol.NULL,
+                    chance.NULL,
+                    Calc{ .overrides = .{ .actions = actions } },
+                );
                 const overridden = copy.update(c1, c2, &options);
                 try expectEqual(actual, overridden);
 

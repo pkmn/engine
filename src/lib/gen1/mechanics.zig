@@ -3007,6 +3007,7 @@ pub const Rolls = struct {
         check_pp: u4,
         options: anytype,
     ) !u4 {
+        // TODO: consider throwing error instead of rerolling?
         const overridden = if (options.calc.overridden(player, .move_slot)) |val|
             if (moves[val - 1].id != .None and (check_pp == 0 or moves[val - 1].pp > 0))
                 val
