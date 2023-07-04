@@ -6,7 +6,7 @@
       "Pokemon": 24,
       "ActivePokemon": 32,
       "Actions": 16,
-      "Summaries": 8
+      "Summaries": 12
     },
     "offsets": {
       "Battle": {
@@ -14,7 +14,7 @@
         "turn": 368,
         "last_damage": 370,
         "last_moves": 372,
-        "rng": 373
+        "rng": 374
       },
       "Side": {
         "pokemon": 0,
@@ -89,22 +89,19 @@
         "critical_hit": 10,
         "secondary_chance": 12,
         "speed_tie": 14,
-        "paralyzed": 16,
-        "sleep": 18,
-        "confusion": 21,
-        "confused": 24,
-        "attacking": 26,
-        "binding": 29,
-        "duration": 32,
-        "distribution": 36,
+        "confused": 16,
+        "paralyzed": 18,
+        "duration": 20,
+        "durations": 24,
         "move_slot": 40,
-        "disable": 44,
+        "multi_hit": 44,
         "psywave": 48,
         "metronome": 56
       },
       "Damage": {
         "base": 0,
-        "final": 2
+        "final": 2,
+        "capped": 4
       }
     }
   }

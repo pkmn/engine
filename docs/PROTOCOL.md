@@ -757,8 +757,8 @@ the first two turns of the battle the Aerodactyl both use Leech Seed followed by
 then in the turn where the maximum single update output is to be reached, the faster Aerodactyl uses
 Metronome to proc a critical hit Fury Swipes that hits 5 times and the slower Aerodactyl uses
 Metronome to proc Mirror Move which then also procs a critical hit Fury Swipes that hits 5 times.
-The initial battle seed required to achieve this is output is $\{106, 161, 95, 184, 221, 10, 52, 25,
-156, 133\}$.
+The initial battle seed required to achieve this is output is $\{180, 137, 181, 165, 16, 97, 148,
+20, 25\}$.
 
 <details><summary>Details</summary>
 
@@ -802,16 +802,16 @@ In Pokémon Showdown there are several frame advances between each call (e.g. a 
 hit, an advance to re-target, etc) and setting up the RNG to accomplish arbitrary recursion is not
 feasible in practice. However, in Pokémon Red there is only an inconsequential (i.e. the value is
 ignored) critical hit roll for both Metronome and Mirror Move between each roll to determine which
-move to use and the seed can be used to set up 10 arbitrary values. Define $X$, $X'$, and $X''$ such
+move to use and the seed can be used to set up 9 arbitrary values. Define $X$, $X'$, and $X''$ such
 that $X' = 5X+1 \bmod 256$ and $X'' = 5X'+1 \bmod 256$. We want $X'' = 119$ as that will cause
 Metronome to use Mirror Move, so $X' = 126$ and $X = 25$.
 
-Thus we can start with a seed of $\{25, 126, 56, 25, 126, 56, 25, 126, 56, 25\}$ to achieve 10
-levels of recursive Metronome → Mirror Move calls from the output values. This is an **upper bound**
-(in reality it would be impossible to set up the rest of the battle, do 10 rounds of recursion, and
-still have optimal rolls on the other side to be able to obtain maximum log size) and only applies
-to a single player (as mentioned above the only way to have Mirror Move copy Metronome is if the
-opponent is locked into a charging move from a previous Metronome call).
+Thus we can start with a seed of $\{25, 126, 56, 25, 126, 56, 25, 126, 56\}$ to achieve 9 levels of
+recursive Metronome → Mirror Move calls from the output values. This is an **upper bound** (in
+reality it would be impossible to set up the rest of the battle, do 9 rounds of recursion, and still
+have optimal rolls on the other side to be able to obtain maximum log size) and only applies to a
+single player (as mentioned above the only way to have Mirror Move copy Metronome is if the opponent
+is locked into a charging move from a previous Metronome call).
 
 There are then two hypothetical scenarios we need to consider to determine upper bound on the
 maximum log size of a single update - one where a single player gets to benefit from the Metronome →
@@ -847,7 +847,7 @@ Move → multi-hit.
   - `|turn|`: 3 bytes
   - `0x00`: 1 byte (end of buffer)
 
-Z3 can be used to test out these scenarios - we can quickly see that despite 10 levels of recursive
+Z3 can be used to test out these scenarios - we can quickly see that despite 9 levels of recursive
 Metronome → Mirror Move being possible in a vacuum if we are able to control the initial seed, there
 is no way to achieve the first scenario after burning through the rolls on the first two turns of
 setup and if we need to be able to proc specific Metronome rolls after. For the second scenario we
@@ -860,56 +860,101 @@ only lose 6 bytes and thus arrive at 180 bytes for the maximum log size for Gene
 #!/usr/bin/env python
 from z3 import *
 
-# 100% (255) = 131 (SpikeCannon)
-# 85% (215) = 3, 4, 31, 42, 140 (DoubleSlap, CometPunch, FuryAttack, PinMissile, Barrage)
-# 80% (203) = 154 (Fury Swipes)
+for name, move, hit in [
+   ('Spike Cannon', 131, 255),
+   ('Double Slap', 3, 215),
+   ('Comet Punch', 4, 215),
+   ('Fury Attack', 31, 215),
+   ('Pin Missile', 42, 215),
+   ('Barrage', 140, 215),
+   ('Fury Swipes', 154, 203),
+]:
+  N = 5
+  for d1 in range(N):
+    for d2 in range(N):
+      for m1 in range(N):
+        for m2 in range(N):
+          total = 9 + 15 + d1 + d2 + m1 + m2
+          state = [BitVec('state%s' % (i + 1), 8) for i in range(total)]
 
-total = 10 + 14
-state = [BitVec('state%s' % (i + 1), 8) for i in range(total)]
+          s = Solver()
 
-s = Solver()
+          for i in range(total - 9):
+            s.add(state[i + 9] == state[i] * 5 + 1)
 
-for i in range(total - 10):
-  s.add(state[i + 10] == state[i] * 5 + 1)
+          # NOTE: first 9 states must all be < 253
+          s.assert_and_track(ULE(state[0] * 5 + 1, 228), 'Turn 1: P1 Leech Seed hit')
+          s.assert_and_track(ULE(state[1] * 5 + 1, 228), 'Turn 1: P2 Leech Seed hit')
 
-# NOTE: first 10 states must all be < 253
-s.assert_and_track(ULE(state[0] * 5 + 1, 228), 'Turn 1: P1 Leech Seed hit')
-s.assert_and_track(ULE(state[1] * 5 + 1, 228), 'Turn 1: P2 Leech Seed hit')
+          s.assert_and_track(ULT(state[2] * 5 + 1, 253), 'Turn 2: P1 Confuse Ray hit')
+          s.assert_and_track(And(ULT(state[3] * 5 + 1, 253), UGE(((state[3] * 5 + 1) & 3) + 2, 3)),
+                             'Turn 2: P2 confusion duration (any)')
+          s.assert_and_track(ULT(state[4] * 5 + 1, 128), 'Turn 2: P2 avoid confusion self-hit')
+          s.assert_and_track(ULT(state[5] * 5 + 1, 253), 'Turn 2: P2 Confuse Ray hit')
+          s.assert_and_track(ULT(state[6] * 5 + 1, 253), 'Turn 2: P1 confusion duration (any')
 
-s.assert_and_track(ULT(state[2] * 5 + 1, 253), 'Turn 2: P1 Confuse Ray hit')
-s.assert_and_track(And(ULT(state[3] * 5 + 1, 253), UGE(((state[3] * 5 + 1) & 3) + 2, 3)), 'Turn 2: P2 confusion duration (any)')
-s.assert_and_track(ULT(state[4] * 5 + 1, 128), 'Turn 2: P2 avoid confusion self-hit')
-s.assert_and_track(ULT(state[5] * 5 + 1, 253), 'Turn 2: P2 Confuse Ray hit')
-s.assert_and_track(ULT(state[6] * 5 + 1, 253), 'Turn 2: P1 confusion duration (any')
+          s.assert_and_track(ULT(state[7] * 5 + 1, 128), 'Turn 3: P1 avoid confusion self-hit')
+          s.assert_and_track(ULT(state[8] * 5 + 1, 253), 'Turn 3: P1 Metronome crit (any)')
 
-s.assert_and_track(ULT(state[7] * 5 + 1, 128), 'Turn 3: P1 avoid confusion self-hit')
-s.assert_and_track(ULT(state[8] * 5 + 1, 253), 'Turn 3: P1 Metronome crit (any)')
-s.assert_and_track(Or(state[9] * 5 + 1 == 154), 'Turn 3: P1 Metronome proc Fury Swipes')
-# ---
-s.assert_and_track(ULT(RotateLeft(state[10] * 5 + 1, 3), 65), 'Turn 3: P1 Fury Swipes crits')
-s.assert_and_track(UGE(RotateRight(state[11] * 5 + 1, 1), 217), 'Turn 3: P1 Fury Swipes damage roll')
-s.assert_and_track(ULE(state[12] * 5 + 1, 203), 'Turn 3: P1 Fury Swipes hit')
-s.assert_and_track(UGE((state[13] * 5 + 1) & 3, 2), 'Turn 3: P1 Fury Swipes first hitcount')
-s.assert_and_track(((state[14] * 5 + 1) & 3) + 2 == 5, 'Turn 3: P1 Fury Swipes max hitcount')
-s.assert_and_track(ULT(state[15] * 5 + 1, 128), 'Turn 3: P2 avoid confusion self-hit')
-s.assert_and_track(ULT(state[16] * 5 + 1, 255), 'Turn 3: P2 Metronome crit (any)')
-s.assert_and_track(Or(state[17] * 5 + 1 == 119), 'Turn 3: P2 Metronome proc MirrorMove')
-s.assert_and_track(ULT(state[18] * 5 + 1, 255), 'Turn 3: P2 MirrorMove crit (any)')
-s.assert_and_track(ULT(RotateLeft(state[19]  * 5 + 1, 3), 65), 'Turn 3: P2 Fury Swipes crits')
-s.assert_and_track(UGE(RotateRight(state[20] * 5 + 1, 1), 217), 'Turn 3: P2 Fury Swipes damage roll')
-s.assert_and_track(ULE(state[21] * 5 + 1, 203), 'Turn 3: P2 Fury Swipes hit')
-s.assert_and_track(UGE((state[22] * 5 + 1) & 3, 2), 'Turn 3: P2 Fury Swipes first hitcount')
-s.assert_and_track(((state[23] * 5 + 1) & 3) + 2 == 5, 'Turn 3: P2 Fury Swipes max hitcount')
+          i = 9
+          for m in range(m1):
+            s.assert_and_track(UGE(state[i] * 5 + 1, 163), f'Turn 3: P1 Metronome no-op {m}')
+            i += 1
+          s.assert_and_track(state[i] * 5 + 1 == move, f'Turn 3: P1 Metronome proc {name}')
+          i += 1
+          s.assert_and_track(ULT(RotateLeft(state[i] * 5 + 1, 3), 65), f'Turn 3: P1 {name} crits')
+          i += 1
+          for d in range(d1):
+            s.assert_and_track(ULT(RotateRight(state[i] * 5 + 1, 1), 217),
+                               f'Turn 3: P1 {name} damage roll no-op {d}')
+            i += 1
+          s.assert_and_track(UGE(RotateRight(state[i] * 5 + 1, 1), 217),
+                             f'Turn 3: P1 {name} damage roll')
+          i += 1
+          s.assert_and_track(ULE(state[i] * 5 + 1, hit), f'Turn 3: P1 {name} hit')
+          i += 1
+          s.assert_and_track(UGE((state[i] * 5 + 1) & 3, 2), f'Turn 3: P1 {name} first hitcount')
+          i += 1
+          s.assert_and_track(((state[i] * 5 + 1) & 3) + 2 == 5, f'Turn 3: P1 {name} max hitcount')
+          i += 1
+          s.assert_and_track(ULT(state[i] * 5 + 1, 128), 'Turn 3: P2 avoid confusion self-hit')
+          i += 1
+          s.assert_and_track(ULT(state[i] * 5 + 1, 255), 'Turn 3: P2 Metronome crit (any)')
+          i += 1
+          for m in range(m2):
+            s.assert_and_track(UGE(state[i] * 5 + 1, 163), f'Turn 3: P2 Metronome no-op {m}')
+            i += 1
+          s.assert_and_track(state[i] * 5 + 1 == 119, 'Turn 3: P2 Metronome proc MirrorMove')
+          i += 1
+          s.assert_and_track(ULT(state[i] * 5 + 1, 255), 'Turn 3: P2 MirrorMove crit (any)')
+          i += 1
+          s.assert_and_track(ULT(RotateLeft(state[i]  * 5 + 1, 3), 65), f'Turn 3: P2 {name} crits')
+          i += 1
+          for d in range(d2):
+            s.assert_and_track(ULT(RotateRight(state[i] * 5 + 1, 1), 217),
+                               f'Turn 3: P2 {name} damage roll no-op {d}')
+            i += 1
+          s.assert_and_track(UGE(RotateRight(state[i] * 5 + 1, 1), 217),
+                             f'Turn 3: P2 {name} damage roll')
+          i += 1
+          s.assert_and_track(ULE(state[i] * 5 + 1, hit), f'Turn 3: P2 {name} hit')
+          i += 1
+          s.assert_and_track(UGE((state[i] * 5 + 1) & 3, 2), f'Turn 3: P2 {name} first hitcount')
+          i += 1
+          s.assert_and_track(((state[i] * 5 + 1) & 3) + 2 == 5, f'Turn 3: P2 {name} max hitcount')
 
-if (s.check() != unsat):
-  m = s.model()
+          print(name, end = ': ')
+          if (s.check() != unsat):
+            m = s.model()
 
-  for i in range(9):
-    print(m[state[i]], end = ', ')
-  print(m[state[9]])
-else:
-    print(s.unsat_core())
-    exit(1)
+            for i in range(8):
+              print(m[state[i]], end = ', ')
+            print(m[state[8]])
+            exit(0)
+          else:
+              print(s.unsat_core())
+
+exit(1)
 ```
 
 </details>

@@ -9863,7 +9863,7 @@ test "MAX_LOGS" {
         &.{.{ .species = .Aerodactyl, .status = BRN, .moves = moves }},
         &.{.{ .species = .Aerodactyl, .status = BRN, .stats = stats, .moves = moves }},
     );
-    battle.rng = data.PRNG{ .src = .{ .seed = .{ 106, 161, 95, 184, 221, 10, 52, 25, 156, 133 } } };
+    battle.rng = data.PRNG{ .src = .{ .seed = .{ 180, 137, 181, 165, 16, 97, 148, 20, 25 } } };
     try expectEqual(Result.Default, try battle.update(.{}, .{}, &NULL));
 
     // P1 and P2 both use Leech Seed
@@ -9913,15 +9913,15 @@ test "MAX_LOGS" {
     try expected.move(P2.ident(1), Move.FurySwipes, P1.ident(1), Move.MirrorMove);
     try expected.crit(P1.ident(1));
     try expected.resisted(P1.ident(1));
-    p1.get(1).hp -= 18;
+    p1.get(1).hp -= 19;
     try expected.damage(P1.ident(1), p1.get(1), .None);
-    p1.get(1).hp -= 18;
+    p1.get(1).hp -= 19;
     try expected.damage(P1.ident(1), p1.get(1), .None);
-    p1.get(1).hp -= 18;
+    p1.get(1).hp -= 19;
     try expected.damage(P1.ident(1), p1.get(1), .None);
-    p1.get(1).hp -= 18;
+    p1.get(1).hp -= 19;
     try expected.damage(P1.ident(1), p1.get(1), .None);
-    p1.get(1).hp -= 18;
+    p1.get(1).hp -= 19;
     try expected.damage(P1.ident(1), p1.get(1), .None);
     try expected.hitcount(P1.ident(1), 5);
     p2.get(1).hp -= 22;

@@ -94,11 +94,9 @@ fn prng(rand: *PSRNG) data.PRNG {
                 rand.newSeed()
             else
                 .{
-                    rand.range(u8, 0, max), rand.range(u8, 0, max),
-                    rand.range(u8, 0, max), rand.range(u8, 0, max),
-                    rand.range(u8, 0, max), rand.range(u8, 0, max),
-                    rand.range(u8, 0, max), rand.range(u8, 0, max),
-                    rand.range(u8, 0, max), rand.range(u8, 0, max),
+                    rand.range(u8, 0, max), rand.range(u8, 0, max), rand.range(u8, 0, max),
+                    rand.range(u8, 0, max), rand.range(u8, 0, max), rand.range(u8, 0, max),
+                    rand.range(u8, 0, max), rand.range(u8, 0, max), rand.range(u8, 0, max),
                 },
         },
     };

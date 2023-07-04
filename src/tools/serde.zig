@@ -245,7 +245,7 @@ const GEN1: pkmn.gen1.Battle(pkmn.gen1.PRNG) = .{
     .last_damage = 84,
     .last_moves = .{ .p1_index = 2, .p2_index = 1, .p1_counterable = 1, .p2_counterable = 0 },
     .rng = .{ .src = if (pkmn.options.showdown) .{ .seed = 0x31415926 } else .{
-        .seed = .{ 114, 155, 42, 78, 253, 19, 117, 37, 253, 105 },
-        .index = 8,
+        .seed = .{ 114, 155, 42, 78, 253, 19, 117, 37, 253 },
+        .index = 7,
     } },
 };

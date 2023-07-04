@@ -220,16 +220,16 @@ pub const MoveSlot = extern struct {
 /// Details required to detect desyncs based on the move last selected/executed by players.
 pub const MoveDetails = packed struct {
     /// The move slot index of the last move selected in the battle menu by Player 1
-    p1_index: if (showdown) u8 else u3 = 0,
+    p1_index: if (showdown) u8 else u4 = 0,
     /// Whether the last move executed by Player 1 was counterable.
-    p1_counterable: if (showdown) u8 else u1 = 0,
+    p1_counterable: if (showdown) u8 else u4 = 0,
     /// The move slot index of the last move selected in the battle menu by Player 2
-    p2_index: if (showdown) u8 else u3 = 0,
+    p2_index: if (showdown) u8 else u4 = 0,
     /// Whether the last move executed by Player 2 was counterable.
-    p2_counterable: if (showdown) u8 else u1 = 0,
+    p2_counterable: if (showdown) u8 else u4 = 0,
 
     comptime {
-        assert(@sizeOf(MoveDetails) == if (showdown) 4 else 1);
+        assert(@sizeOf(MoveDetails) == if (showdown) 4 else 2);
     }
 };
 

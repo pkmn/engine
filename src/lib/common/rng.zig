@@ -72,11 +72,11 @@ test PSRNG {
 // https://pkmn.cc/pokered/engine/battle/core.asm#L6644-L6693
 // https://pkmn.cc/pokecrystal/engine/battle/core.asm#L6922-L6938
 pub const Gen12 = extern struct {
-    seed: [10]u8,
+    seed: [9]u8,
     index: u8 = 0,
 
     comptime {
-        assert(@sizeOf(Gen12) == 11);
+        assert(@sizeOf(Gen12) == 10);
     }
 
     pub fn percent(p: u8) u8 {
@@ -86,14 +86,14 @@ pub const Gen12 = extern struct {
     pub fn next(self: *Gen12) u8 {
         const val = 5 *% self.seed[self.index] +% 1;
         self.seed[self.index] = val;
-        self.index = (self.index + 1) % 10;
+        self.index = (self.index + 1) % 9;
         return val;
     }
 };
 
 test Gen12 {
-    const expected = [_]u8{ 6, 11, 16, 21, 26, 31, 36, 41, 46, 51, 31, 56, 81 };
-    var rng = Gen12{ .seed = .{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 } };
+    const expected = [_]u8{ 6, 11, 16, 21, 26, 31, 36, 41, 46, 31, 56, 81 };
+    var rng = Gen12{ .seed = .{ 1, 2, 3, 4, 5, 6, 7, 8, 9 } };
     for (expected) |e| {
         try expectEqual(e, rng.next());
     }

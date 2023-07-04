@@ -286,9 +286,9 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
   - the active Pokémon's level and current and max HP can always be referred to the `Pokemon`
     struct
 - **`Side`**: `ActivePokemon` + 6× `Pokemon` + active (`3`) + last used (`8`) + last selected
-  (`8`)
+  (`8`) + counterable (`1`) + last move index (`3`)
   - `order` does not need to be stored as the party can always be rearranged as switches occur
-- **`Battle`**: 6× `Side` + seed (10× `8` + `4`) + turn (`10`) + last damage (`10`)
+- **`Battle`**: 6× `Side` + seed (9× `8` + `4`) + turn (`10`) + last damage (`10`)
 - **`Type.CHART`**: attacking types (`15`) × defending types (`15`) × effectiveness (`2`)[^2]
 - **`Type.PRECEDENCE`**: 29× attacking type (`4`) + defending type (`4`) pairs
 - **`Moves.DATA`**: 165× base power (`6`) + effect (`7`) + accuracy (`4`) + type (`4`) + target
@@ -299,8 +299,8 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 | ----------------- | ----------- | ------------ | -------- |
 | `Pokemon`         | 192         | 147          | 30.6%    |
 | `ActivePokemon`   | 256         | 202          | 26.7%    |
-| `Side`            | 1472        | 1056         | 33.5%    |
-| `Battle`          | 3088        | 2216         | 33.7%    |
+| `Side`            | 1472        | 1107         | 33.0%    |
+| `Battle`          | 3088        | 2310         | 33.7%    |
 | `Type.CHART`      | 1800        | 450          | 300.0%   |
 | `Type.PRECEDENCE` | 232         | 232          | 0.0%     |
 | `Moves.DATA`      | 5280        | 3960         | 33.3%    |
@@ -348,8 +348,8 @@ data in the browser for ease of debugging.
 | 184     | 368     | [`sides[1]`](#side) | Player 2's side                                         |
 | 368     | 370     | `turn`              | The current turn number                                 |
 | 370     | 372     | `last_damage`       | The last damage dealt by either side                    |
-| 372     | 373-376 | `last_moves`        | The slot index of the last selected moves for each side |
-| 373-376 | 384     | `rng`               | The RNG state                                           |
+| 372     | 374-376 | `last_moves`        | The slot index of the last selected moves for each side |
+| 374-376 | 384     | `rng`               | The RNG state                                           |
 
 - the current `turn` is 2 bytes, written in native-endianness
 - `last_moves` layout depends on whether or not Pokémon Showdown compatibility mode is enabled
@@ -359,13 +359,13 @@ data in the browser for ease of debugging.
   - if `showdown` is enabled byte 372 is used to store the last selected move index of `side[0]` and
     byte 373 is used to store whether or not the side's last executed move would have been considered
     "counterable"; and bytes 374 and 375 store the same information for `side[1]`
-  - otherwise the first 3 bits of byte 372 stores the last selected move index of `side[0]` and the
-    next bit stores whether that side's last executed move would have been considered "counterable",
-    with the same information for `side[1]`'s being stored in the second 4 bits
+  - otherwise the first 4 bits of byte 372 stores the last selected move index of `side[0]` and the
+    next 4 bits store whether that side's last executed move would have been considered
+    "counterable", with the same information for `side[1]`'s being stored in the second byte
 - the `rng` depends on whether or not Pokémon Showdown compatibility mode is enabled (`-Dshowdown`):
   - if `showdown` is enabled, the RNG state begins on byte 376 and consists of a 64-bit seed,
     written in native-endianness
-  - otherwise the RNG state begins on byte 373 and consists of the 10 bytes of the seed followed by
+  - otherwise the RNG state begins on byte 374 and consists of the 9 bytes of the seed followed by
     the index pointing to which byte of the seed is currently being used
 
 ### `Side`
@@ -667,7 +667,7 @@ the pkmn engine aims to be as compatible with Pokémon Showdown as possible when
 compatibility mode, the implications of these differences are outlined below:
 
 - **RNG**: Pokémon Showdown uses the RNG from Generation V & VI in every generation, despite
-  the seeds and algorithm being different. Pokémon Red uses a simple 8-bit RNG with 10 distinct
+  the seeds and algorithm being different. Pokémon Red uses a simple 8-bit RNG with 9 distinct
   seeds generated when the link connection is established, whereas Pokémon Showdown uses a 64-bit
   RNG with a 32-bit output.
 - **Algorithm**: As detailed in the table below, the algorithm used by Pokémon Showdown in the
@@ -702,9 +702,9 @@ compatibility mode, the implications of these differences are outlined below:
   when they are not relevant:
   - Roar / Whirlwind roll to hit and can "miss" as opposed to simply failing
 
-Finally, the **initial 10-byte seed for link battles on Pokémon Red cannot include bytes larger than
+Finally, the **initial 9-byte seed for link battles on Pokémon Red cannot include bytes larger than
 the `SERIAL_PREAMBLE_BYTE`**, so must be in the range $\left[0, 252\right]$. This has implications
-on the first 10 random numbers generated during the battle and has [**non-trivial competitive
+on the first 9 random numbers generated during the battle and has [**non-trivial competitive
 implications**](https://www.smogon.com/forums/posts/9068411/show) (at the start of the battle move
 effects become more likely, the ["1/256-miss" glitch](https://glitchcity.wiki/1/256_miss_glitch)
 cannot happen, Player 1 is more likely to win speed ties, etc) that Pokémon Showdown cannot

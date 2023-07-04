@@ -87,7 +87,7 @@ export class Battle implements Gen1.Battle {
   }
 
   get prng(): readonly number[] {
-    const offset = OFFSETS.Battle.last_moves + (this.config.showdown ? 4 : 1);
+    const offset = OFFSETS.Battle.last_moves + (this.config.showdown ? 4 : 2);
     // Pokémon Showdown's PRNGSeed is always big-endian
     const seed: number[] = [0, 0, 0, 0];
     if (this.config.showdown) {
@@ -99,10 +99,10 @@ export class Battle implements Gen1.Battle {
       // Gen12RNG seed requires an index, but if we always rotate the seed based on the index when
       // reading we can avoid tracking the index as it will always be zero. NB: the exact bits of
       // the Battle will not roundtrip, but the *logical* Battle state will.
-      const index = this.data.getUint8(offset + 10);
-      for (let i = 0; i < 10; i++) {
+      const index = this.data.getUint8(offset + 9);
+      for (let i = 0; i < 9; i++) {
         const j = i - index;
-        seed[j < 0 ? j + 10 : j] = this.data.getUint8(offset + i);
+        seed[j < 0 ? j + 9 : j] = this.data.getUint8(offset + i);
       }
     }
     return seed;
@@ -147,18 +147,16 @@ export class Battle implements Gen1.Battle {
         lastMoves.push(+!!side.lastMoveCounterable);
         lastMoves.push((side.lastMoveIndex ?? 0));
       } else {
-        lastMoves.push((+!!side.lastMoveCounterable << 3) | (side.lastMoveIndex ?? 0));
+        lastMoves.push((+!!side.lastMoveCounterable << 4) | (side.lastMoveIndex ?? 0));
       }
     }
     data.setUint16(OFFSETS.Battle.turn, battle.turn, LE);
     data.setUint16(OFFSETS.Battle.last_damage, battle.lastDamage, LE);
+    data.setUint8(OFFSETS.Battle.last_moves, lastMoves[0]);
+    data.setUint8(OFFSETS.Battle.last_moves + 1, lastMoves[1]);
     if (options.showdown) {
-      data.setUint8(OFFSETS.Battle.last_moves, lastMoves[0]);
-      data.setUint8(OFFSETS.Battle.last_moves + 1, lastMoves[1]);
       data.setUint8(OFFSETS.Battle.last_moves + 2, lastMoves[2]);
       data.setUint8(OFFSETS.Battle.last_moves + 3, lastMoves[3]);
-    } else {
-      data.setUint8(OFFSETS.Battle.last_moves, (lastMoves[1] << 4) | lastMoves[0]);
     }
     encodePRNG(data, battle.prng);
     return new Battle(lookup, data, options);
@@ -234,8 +232,8 @@ export class Side implements Gen1.Side {
       const off = this.id === 'p1' ? 0 : 2;
       m = this.data.getUint8(OFFSETS.Battle.last_moves + off);
     } else {
-      m = this.data.getUint8(OFFSETS.Battle.last_moves);
-      m = (this.id === 'p1' ? m : (m >> 4)) & 0b111;
+      const off = this.id === 'p1' ? 0 : 1;
+      m = this.data.getUint8(OFFSETS.Battle.last_moves + off) & 0x0F;
     }
     return m === 0 ? undefined : m as 1 | 2 | 3 | 4;
   }
@@ -246,8 +244,8 @@ export class Side implements Gen1.Side {
       const off = this.id === 'p1' ? 1 : 3;
       m = this.data.getUint8(OFFSETS.Battle.last_moves + off);
     } else {
-      m = this.data.getUint8(OFFSETS.Battle.last_moves);
-      m = (this.id === 'p1' ? m : (m >> 4)) & 0b1000;
+      const off = this.id === 'p1' ? 0 : 1;
+      m = this.data.getUint8(OFFSETS.Battle.last_moves + off) & 0xF0;
     }
     return m !== 0;
   }
@@ -747,14 +745,14 @@ export class StoredPokemon {
 }
 
 function encodePRNG(data: DataView, seed: readonly number[]) {
-  const offset = OFFSETS.Battle.last_damage + 2 + (seed.length === 4 ? 4 : 1);
+  const offset = OFFSETS.Battle.last_damage + 2 + (seed.length === 4 ? 4 : 2);
   if (seed.length === 4) {
     data.setUint16(offset, seed[LE ? 3 : 0], LE);
     data.setUint16(offset + 2, seed[LE ? 2 : 1], LE);
     data.setUint16(offset + 4, seed[LE ? 1 : 2], LE);
     data.setUint16(offset + 6, seed[LE ? 0 : 3], LE);
   } else {
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 9; i++) {
       data.setUint8(offset + i, seed[i]);
     }
     // NB: ArrayBuffer is zero initialized already so we don't need to set the index to zero
