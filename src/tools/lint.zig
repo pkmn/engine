@@ -59,6 +59,7 @@ const Ignored = union(enum) { lines: []const u32, all };
 const ignore = std.ComptimeStringMap(Ignored, .{
     .{ "src/examples/zig/example.zig", .all },
     .{ "src/lib/gen2/test.zig", .all },
+    .{ "src/lib/gen1/calc.zig", .all },
 });
 
 // Windows has trouble with the symlink so we need to hardcode the logic to skip it

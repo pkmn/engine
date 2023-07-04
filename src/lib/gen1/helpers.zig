@@ -549,30 +549,60 @@ test "Rolls.disable" {
     try expectEqualSlices(u4, &.{0}, Rolls.disable(.{ .durations = .{ .disable = 0 } }, FIXME, 0));
     try expectEqualSlices(u4, &.{0}, Rolls.disable(.{ .durations = .{ .disable = 8 } }, FIXME, 0));
     try expectEqualSlices(u4, &.{0}, Rolls.disable(.{ .durations = .{ .disable = 4 } }, FIXME, 1));
-    try expectEqualSlices(u4, &.{ 0, 4 }, Rolls.disable(.{ .durations = .{ .disable = 4 } }, FIXME, 0));
+    try expectEqualSlices(u4, &.{ 0, 4 }, Rolls.disable(.{
+        .durations = .{ .disable = 4 },
+    }, FIXME, 0));
 }
 
 test "Rolls.confusion" {
-    try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{ .durations = .{ .confusion = 0 } }, FIXME, 0));
-    try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{ .durations = .{ .confusion = 5 } }, FIXME, 0));
-    try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{ .durations = .{ .confusion = 3 } }, FIXME, 1));
-    try expectEqualSlices(u3, &.{1}, Rolls.confusion(.{ .durations = .{ .confusion = 1 } }, FIXME, 0));
-    try expectEqualSlices(u3, &.{ 0, 3 }, Rolls.confusion(.{ .durations = .{ .confusion = 3 } }, FIXME, 0));
+    try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{
+        .durations = .{ .confusion = 0 },
+    }, FIXME, 0));
+    try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{
+        .durations = .{ .confusion = 5 },
+    }, FIXME, 0));
+    try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{
+        .durations = .{ .confusion = 3 },
+    }, FIXME, 1));
+    try expectEqualSlices(u3, &.{1}, Rolls.confusion(.{
+        .durations = .{ .confusion = 1 },
+    }, FIXME, 0));
+    try expectEqualSlices(u3, &.{ 0, 3 }, Rolls.confusion(.{
+        .durations = .{ .confusion = 3 },
+    }, FIXME, 0));
 }
 
 test "Rolls.attacking" {
-    try expectEqualSlices(u3, &.{0}, Rolls.attacking(.{ .durations = .{ .attacking = 0 } }, FIXME, .false));
-    try expectEqualSlices(u3, &.{0}, Rolls.attacking(.{ .durations = .{ .attacking = 3 } }, FIXME, .false));
-    try expectEqualSlices(u3, &.{0}, Rolls.attacking(.{ .durations = .{ .attacking = 2 } }, FIXME, .true));
-    try expectEqualSlices(u3, &.{1}, Rolls.attacking(.{ .durations = .{ .attacking = 1 } }, FIXME, .false));
-    try expectEqualSlices(u3, &.{ 0, 2 }, Rolls.attacking(.{ .durations = .{ .attacking = 2 } }, FIXME, .false));
+    try expectEqualSlices(u3, &.{0}, Rolls.attacking(.{
+        .durations = .{ .attacking = 0 },
+    }, FIXME, .false));
+    try expectEqualSlices(u3, &.{0}, Rolls.attacking(.{
+        .durations = .{ .attacking = 3 },
+    }, FIXME, .false));
+    try expectEqualSlices(u3, &.{0}, Rolls.attacking(.{
+        .durations = .{ .attacking = 2 },
+    }, FIXME, .true));
+    try expectEqualSlices(u3, &.{1}, Rolls.attacking(.{
+        .durations = .{ .attacking = 1 },
+    }, FIXME, .false));
+    try expectEqualSlices(u3, &.{ 0, 2 }, Rolls.attacking(.{
+        .durations = .{ .attacking = 2 },
+    }, FIXME, .false));
 }
 
 test "Rolls.binding" {
-    try expectEqualSlices(u3, &.{0}, Rolls.binding(.{ .durations = .{ .binding = 0 } }, FIXME, .false));
-    try expectEqualSlices(u3, &.{0}, Rolls.binding(.{ .durations = .{ .binding = 4 } }, FIXME, .false));
-    try expectEqualSlices(u3, &.{0}, Rolls.binding(.{ .durations = .{ .binding = 2 } }, FIXME, .true));
-    try expectEqualSlices(u3, &.{ 0, 2 }, Rolls.binding(.{ .durations = .{ .binding = 2 } }, FIXME, .false));
+    try expectEqualSlices(u3, &.{0}, Rolls.binding(.{
+        .durations = .{ .binding = 0 },
+    }, FIXME, .false));
+    try expectEqualSlices(u3, &.{0}, Rolls.binding(.{
+        .durations = .{ .binding = 4 },
+    }, FIXME, .false));
+    try expectEqualSlices(u3, &.{0}, Rolls.binding(.{
+        .durations = .{ .binding = 2 },
+    }, FIXME, .true));
+    try expectEqualSlices(u3, &.{ 0, 2 }, Rolls.binding(.{
+        .durations = .{ .binding = 2 },
+    }, FIXME, .false));
 }
 
 test "Rolls.moveSlot" {
