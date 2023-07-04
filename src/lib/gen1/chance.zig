@@ -385,9 +385,11 @@ pub fn Chance(comptime Rational: type) type {
             assert(out >= 1 and out <= 6);
 
             var action = self.actions.get(player);
+
+            const slp = action.durations.sleep;
             action.durations = .{};
 
-            self.sleeps[@intFromEnum(player)][out - 1] = action.durations.sleep;
+            self.sleeps[@intFromEnum(player)][out - 1] = slp;
             action.durations.sleep = @intCast(self.sleeps[@intFromEnum(player)][in - 1]);
 
             self.actions.get(player.foe()).durations.binding = 0;
