@@ -249,6 +249,10 @@ pub fn transitions(
     assert(frontier.items.len == 1);
     while (i < frontier.items.len) : (i += 1) {
         var template = frontier.items[i];
+        opts.calc.overrides.durations = .{
+            .p1 = template.p1.durations,
+            .p2 = template.p2.durations,
+        };
 
         try debug(writer, template, true, .{ .color = i, .bold = true, .background = true });
 
