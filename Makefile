@@ -36,7 +36,7 @@ generate:
 
 .PHONY: zig-lint
 zig-lint:
-	ziglint --exclude src/examples/zig/example.zig,src/lib/gen1/calc.zig
+	zig build lint
 
 .PHONY: js-lint
 js-lint: node_modules

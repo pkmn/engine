@@ -221,9 +221,15 @@ pub fn build(b: *std.Build) !void {
     const serde = tool(b, "src/tools/serde.zig", tools);
     const transitions = tool(b, "src/tools/transitions.zig", tools);
 
+    const lint_exe =
+        b.addExecutable(.{ .name = "lint", .root_source_file = .{ .path = "src/tools/lint.zig" } });
+    if (tests.build) tests.step.dependOn(&lint_exe.step);
+    const lint = b.addRunArtifact(lint_exe);
+
     b.step("benchmark", "Run benchmark code").dependOn(&benchmark.step);
     b.step("dump", "Run protocol dump tool").dependOn(&dump.step);
     b.step("fuzz", "Run fuzz tester").dependOn(&fuzz.step);
+    b.step("lint", "Lint source files").dependOn(&lint.step);
     b.step("serde", "Run serialization/deserialization tool").dependOn(&serde.step);
     b.step("test", "Run all tests").dependOn(&tests.step);
     b.step("tools", "Install tools").dependOn(&ToolsStep.create(b, &exes).step);
