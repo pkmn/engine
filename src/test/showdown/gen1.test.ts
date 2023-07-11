@@ -14,7 +14,7 @@ const startBattle = createStartBattle(gen);
 const {HIT, MISS, CRIT, NO_CRIT, MIN_DMG, MAX_DMG, TIE} = ROLLS.basic({
   hit: 'data/mods/gen1/scripts.ts:413:42',
   crit: 'data/mods/gen1/scripts.ts:812:27',
-  dmg: 'data/mods/gen1/scripts.ts:932:27',
+  dmg: 'data/mods/gen1/scripts.ts:933:27',
 });
 
 const SECONDARY = (value: number) => ({key: 'data/mods/gen1/scripts.ts:701:25', value});
