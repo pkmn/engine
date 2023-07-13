@@ -127,7 +127,7 @@ function residualEvent(this: Battle, eventid: string, relayVar?: any) {
     handlers.shift();
     const effect = handler.effect;
     if ((handler.effectHolder as Pokemon).fainted) continue;
-    if (handler.end && handler.state && handler.state.duration) {
+    if (handler.end && handler.state?.duration) {
       handler.state.duration--;
       if (!handler.state.duration) {
         const endCallArgs = handler.endCallArgs || [handler.effectHolder, effect.id];
