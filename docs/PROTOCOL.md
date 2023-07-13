@@ -16,7 +16,7 @@ Generally, this `Log` should be a
 allocated fixed-size array that gets `reset` after each `update` as the maximum number of bytes
 written by a single `update` call is bounded to a [relatively small number of bytes](#size) per
 generation, though since any `Writer` implementation is allowed this `Log` could instead write to
-standard output (note that in Zig the standard out writer is not buffered by default - you must use
+standard output (note that in Zig the standard out writer isn't buffered by default - you must use
 a [`BufferedWriter`](https://zig.news/kristoff/how-to-add-buffering-to-a-writer-reader-in-zig-7jd)
 wrapper to achieve reasonable performance).
 
@@ -24,11 +24,11 @@ The engine's wire protocol essentially amounts to a stripped down binary transla
 Showdown's simulator
 protocol](https://github.com/smogon/pokemon-showdown/blob/master/sim/SIM-PROTOCOL.md), with certain
 redundant messages (e.g. `|upkeep|` or `|`) removed, and others subtly tweaked (there is no
-`|split|` message - the "omniprescient" stream of information is always provided and other streams
+`|split|` message - the "omniscient" stream of information is always provided and other streams
 must be recreated by driver code). Like the rest of the pkmn engine, the protocol uses
 **native-endianness**. While the protocol may change slightly depending on the generation in question
 (e.g. a `Move` requires more than a single byte to encode after Generation I & II), any differences
-will called out below where applicable.
+are called out where applicable.
 
 [^1]: The `choices` method leaks information in certain cases where legal decisions would not be
 known to a user until after having already attempted a choice (e.g. that a Pokémon has been trapped
@@ -61,23 +61,23 @@ compatibility mode was enabled, a byte indicating the
 Following the header there maybe be any number of "frames", the last of which may be only partially
 complete:
 
-| Start | End   | Description                                                                                                               |
-| ----- | ----- | ------------------------------------------------------------------------------------------------------------------------- |
+| Start | End   | Description                                                                                                         |
+| ----- | ----- | ------------------------------------------------------------------------------------------------------------------- |
 | 0     | N     | $N$ bytes of log message protocol that are terminated by `0x00` or [EOF](https://en.wikipedia.org/wiki/End-of-file) |
-| N+1   | N+B+1 | The $B$ serialized bytes of the updated battle state as defined by its respective layout                                  |
-| N+B+2 | N+B+3 | The [result](#result) of updating the battle                                                                              |
-| N+B+3 | N+B+4 | The next [choice](#choice) for Player 1                                                                                   |
-| N+B+4 | N+B+5 | The next [choice](#choice) for Player 2                                                                                   |
+| N+1   | N+B+1 | The $B$ serialized bytes of the updated battle state as defined by its respective layout                            |
+| N+B+2 | N+B+3 | The [result](#result) of updating the battle                                                                        |
+| N+B+3 | N+B+4 | The next [choice](#choice) for Player 1                                                                             |
+| N+B+4 | N+B+5 | The next [choice](#choice) for Player 2                                                                             |
 
-It is important to note that by convention the debug logs start with the protocol logs that are
+It's important to note that by convention the debug logs start with the protocol logs that are
 produced **after** first battle update (i.e. both sides `|switch|`-ing in their first Pokémon) -
-**the initial battle state when no Pokémon are active and the inital required choices (pass from
-both sides) and result are not logged.**[^2]
+**the initial battle state when no Pokémon are active and the initial required choices (pass from
+both sides) and result aren't logged.**[^2]
 
 [^2]: In generations with [Team
-Preview](https://bulbapedia.bulbagarden.net/wiki/Appendix:Metagame_terminology#Team_Preview) it is
-likely that the convention around the intitial data frame will change and that a `0x00` dummy byte
-will be used for the pre-battle log, though given that the engine currently does not support these
+Preview](https://bulbapedia.bulbagarden.net/wiki/Appendix:Metagame_terminology#Team_Preview) it's
+likely that the convention around the initial data frame will change and that a `0x00` dummy byte
+will be used for the pre-battle log, though given that the engine currently doesn't support these
 later generations such changes are speculative.
 
 ### Choice
@@ -97,7 +97,7 @@ SIM-PROTOCOL](https://github.com/smogon/pokemon-showdown/blob/master/sim/SIM-PRO
 
 `switch` takes a 1-based Pokémon slot number of an eligible party member (which must be greater than
 1 as you can never switch in the active Pokémon) and `move` takes a 1-based move slot number, though
-is expected to be 0 in certain scenarios where the cartridge does not present an option to select a
+is expected to be 0 in certain scenarios where the cartridge doesn't present an option to select a
 move after signalling the intent to fight (e.g. during Wrap or Bide in Generation I)[^3]. Determining
 exactly which choice options are available is subtle and should be left to the engine - choices not
 present in the array filled in by `choices` are invalid and may corrupt the battle state or cause
@@ -108,7 +108,7 @@ compatibility mode as its choice selection behavior is different (i.e. incorrect
 
 ### Result
 
-Each battle update returns a result object that is made up of three things - a result type and a
+Each battle update returns a result object that's made up of three things - a result type and a
 choice type for either player. Any result other than `None` means that the battle is considered to
 be over and no further updates can be made and may result in crashes.
 
@@ -121,11 +121,11 @@ be over and no further updates can be made and may result in crashes.
 | `0x04` | Error            |
 
 `Error` can only be returned due to a desync/glitch, and since Pokémon Showdown mods its engine code
-to avoid these this value cannot be returned from an update in `-Dshowdown` mode. However, the
+to avoid these this value can't be returned from an update in `-Dshowdown` mode. However, the
 `libpkmn` C API will also set an update's result to `Error` if `-Dlog` protocol logging is enabled
 and the buffer it has been provided runs out of space regardless of which mode its in.
 
-The choice types included in the result match those described [above](#choices), though they are
+The choice types included in the result match those described [earlier](#choices), though they're
 more akin to what Pokémon Showdown calls a sides `requestType` which determines which [choice
 request](https://github.com/smogon/pokemon-showdown/blob/master/sim/SIM-PROTOCOL.md#choice-requests)
 the side gets. In the pkmn engine the choice type from a result for a given side should similarly be
@@ -147,8 +147,8 @@ read when the leading `ArgType` header byte of a message is expected. Note that 
 also appear internally within the payload of a message - only the `0x00` in the header of a message
 indicates the end. This `0x00` byte will be written even in places where the previous `ArgType`
 alone would be sufficient to indicate the end of parsing (e.g. after reading a `|win|` or `|turn|`
-message). Unlike the Pokémon Showdown simulator protocol, the pkmn engine's protocol does not
-produce a `|request|` message - as outlined above a driver should inspect the raw bytes of the
+message). Unlike the Pokémon Showdown simulator protocol, the pkmn engine's protocol doesn't
+produce a `|request|` message - as outlined earlier a driver should inspect the raw bytes of the
 `Battle` object in addition to the `Result` to determine enough about state to determine which
 choices are possible (taking into account privileged information depending on the side in question).
 
@@ -181,14 +181,14 @@ Pokémon Showdown's documentation:
 > switching, `|replace|` illusion dropping, `|drag|` phazing, and `|detailschange|` permanent
 > forme changes), and these all specify `DETAILS` for you to perform updates with.
 
-Identity works a little differently in the pkmn engine, given that nicknames are not part of the
+Identity works a little differently in the pkmn engine, given that nicknames aren't part of the
 engine. While the given player, position letter and identity of the Pokémon in question are all
 still encoded, the identity takes the form of a single bit-packed byte:
 
 - the most significant 3 bits are always `0`
-- the 4th most significant bit is `0` if the position is `a` and `1` if the position is `b` (only
+- the fourth most significant bit is `0` if the position is `a` and `1` if the position is `b` (only
   relevant in doubles battles)
-- the 5th most significant bit is `0` for player 1 and `1` for player 2.
+- the fifth most significant bit is `0` for player 1 and `1` for player 2.
 - the lowest 3 bits represent the slot (`1` through `6` inclusive) of the Pokémon's original
   location within the party (i.e. the order a player's team was initially in when the battle
   started, before any Pokémon were switched).
@@ -199,11 +199,11 @@ nicknames.
 
 ### `LastStill`/`LastMiss`
 
-Unfortunately, Pokémon Showdown's protocol does not allow for translating a single message at a time
+Unfortunately, Pokémon Showdown's protocol doesn't allow for translating a single message at a time
 in isolation. The `|move|` message can be modified by a message with the `LastStill` (`0x01`) or
 `LastMiss` (`0x02`) `ArgType`. In the Pokémon Showdown simulator the `attrLastMove` method is used
-to modify a batched `|move|` message before it is written with other messages as a single chunk, but
-the pkmn engine streams out writes immediately and does not perform batching, meaning code parsing
+to modify a batched `|move|` message before it's written with other messages as a single chunk, but
+the pkmn engine streams out writes immediately and doesn't perform batching, meaning code parsing
 the engine's protocol is required to do the batching instead.
 
 When interpreting a buffer written by the pkmn `Log`: if a `LastStill` (`0x01`) byte is encountered
@@ -227,7 +227,7 @@ and if there is a previous `|move|` message in the same buffer that occurred ear
 `Source` is the [`PokemonIdent`](#pokemonident) of the Pokémon that used the `Move` on the
 [`PokemonIdent`](#pokemonident) `Target` for `Reason`. If `Reason` is `0x02` then the next byte
 will indicate which `Move` the `|move|` is `[from]`. This message may be modified later on by a
-`LastStill` or `LastMiss` message in the same buffer (see above).
+`LastStill` or `LastMiss` message in the same buffer (preceding).
 
 <details><summary>Reason</summary>
 
@@ -262,7 +262,7 @@ with `Current HP`, `Max HP` and `Status`.
      0| 0x05          | Ident         | Reason        | Move?         |
       +---------------+---------------+---------------+---------------+
 
-The Pokémon identified by [`Ident`](#pokemonident) could not perform an action due to `Reason`. If
+The Pokémon identified by [`Ident`](#pokemonident) couldn't perform an action due to `Reason`. If
 the reason is `0x05` then the following byte indicates which `Move` the Pokémon was unable to
 perform.
 
@@ -300,7 +300,7 @@ The Pokémon identified by [`Ident`](#pokemonident) has fainted.
      0| 0x07          | Turn                          |
       +---------------+---------------+---------------+
 
-It is now turn `Turn`.
+It's now turn `Turn`.
 
 ### `|win` (`0x08`)
 
@@ -367,7 +367,7 @@ The Pokémon identified by [`Ident`](#pokemonident) has taken damage and now has
      8| [of]?         |
       +---------------+
 
-Equivalent to `|-damage|` above, but the Pokémon has healed damage instead. If `Reason` is `0x02`
+Equivalent to `|-damage|` (preceding), but the Pokémon has healed damage instead. If `Reason` is `0x02`
 then the damage was healed `[from]` a draining move indicated by the subsequent byte `[of]`.
 
 <details><summary>Reason</summary>
@@ -391,7 +391,7 @@ then the damage was healed `[from]` a draining move indicated by the subsequent 
       +---------------+
 
 The Pokémon identified by [`Ident`](#pokemonident) has been inflicted with `Status`. If `Reason` is
-`0x01` then the next byte will indicate which `Move` the `Status` is `[from]`.
+`0x01` then the next byte indicates which `Move` the `Status` is `[from]`.
 
 <details><summary>Reason</summary>
 
@@ -582,7 +582,7 @@ A field condition has activated.
 A volatile status from `Reason` has been inflicted on the Pokémon identified by
 [`Ident`](#pokemonident). If `Reason` is `0x09` then the following bytes indicates which `Types` the
 Pokémon has changed to and the target [`PokemonIdent`](#pokemonident) `[of]`. If `Reason` is `0x0A`
-or `0x0B` then the following byte indicates the `Move` which has been disabled/mimicked.
+or `0x0B` then the following byte indicates the `Move` which has been Disable-d/Mimic-ked.
 
 <details><summary>Reason</summary>
 
@@ -641,7 +641,7 @@ ended.
      0| 0x19          |
       +---------------+
 
-A OHKO move was used sucessfully.
+A OHKO move was used successfully.
 
 ### `|-crit|` (`0x1A`)
 
@@ -663,7 +663,7 @@ A move has dealt a critical hit against the Pokémon identified by [`Ident`](#po
      0| 0x1B          | Ident         |
       +---------------+---------------+
 
-A move was supereffective against the Pokémon identified by [`Ident`](#pokemonident).
+A move was super-effective against the Pokémon identified by [`Ident`](#pokemonident).
 
 ### `|-resisted|` (`0x1C`)
 
@@ -674,7 +674,7 @@ A move was supereffective against the Pokémon identified by [`Ident`](#pokemoni
      0| 0x1C          | Ident         |
       +---------------+---------------+
 
-A move was not very effective against the Pokémon identified by [`Ident`](#pokemonident).
+A move wasn't very effective against the Pokémon identified by [`Ident`](#pokemonident).
 
 ### `|-immune|` (`0x1D`)
 
@@ -709,10 +709,10 @@ identified by the `Target` [`PokemonIdent`](#pokemonident).
 
 ## Size
 
-As mentioned above, any `Writer` can be used to back the protocol `Log`, and as such something like
+As mentioned earlier, any `Writer` can be used to back the protocol `Log`, and as such something like
 an [`ArrayList.Writer`](https://ziglang.org/documentation/master/std/#root;ArrayList) can be used to
 support arbitrary amounts of data being written to the log each update. For performance reasons it
-is desirable to be able to preallocate a fixed size buffer for this, where the recommended size is
+is desirable to be able to pre-allocate a fixed size buffer for this, where the recommended size is
 determined by `pkmn.LOGS_SIZE` which is guaranteed to be able to handle at least `pkmn.MAX_LOGS`
 bytes (these constants are defined to be the maximum of all generations - each generation also has
 its own parallel constants that can be used instead, e.g. `pkmn.gen1.LOGS_SIZE`).
@@ -725,8 +725,7 @@ constraints:
   "Standard" restrictions for competitive formats - Species Clause, Cleric Clause, movepool legality
   and bans, etc.
 - **Cartridge**: Cartridge legality still enforces anything that can be legitimately obtained on the
-  cartridge and used in link battles, but does not enforce any of Pokémon Showdown's clauses or
-  mods.
+  cartridge and used in link battles, but doesn't enforce any of Pokémon Showdown's clauses or mods.
 - [**"Hackmons"**](https://www.smogon.com/articles/pure-hackmons-introduction): A step further than
   cartridge legality, removing restrictions on moves / items / abilities / types / stats / etc -
   anything which can be hacked into the game before the battle.
@@ -738,11 +737,11 @@ Furthermore, a **lax** vs. **strict** interpretation of the RNG can be applied -
 conceivable sequence of events should be considered or only those which can be obtained in practice
 via the actual RNG (on either the cartridge or Pokémon Showdown).
 
-In general, the constants will be defined such that they will be guaranteed to be sufficient under
+In general, the constants are be defined such that they're guaranteed to be sufficient under
 **cartridge constraints with a lax consideration of the RNG** (though taking a strict interpretation
 of the RNG is required in some cases to be able to conservatively set the upper bounds in specific
 scenarios). In practice, the constants will usually be defined to handle "hackmons" legality as that
-is what is useful for the engine's fuzz testing - see the precise definitions below for exact
+is what's useful for the engine's fuzz testing - see the precise definitions below for exact
 details. In most cases these scenarios have been derived with the [Z3 theorem
 prover](https://github.com/Z3Prover/z3).
 
@@ -765,10 +764,9 @@ The initial battle seed required to achieve this is output is $\{180, 137, 181, 
 In order to maximize log message size in Generation I several observations need to be made:
 
 - `|move`, `|switch|`, `|-damage|`, and `|-heal|` take up the most space in the log
-- `|switch|` will result in less bytes than `|move|` because it will not result in any additional
+- `|switch|` will result in less bytes than `|move|` because it won't result in any additional
   messages  whereas `|move|` can trigger many others, including `|-damage|` or `|-heal|`
-- `|move|` should `|-crit|` and either be `|-supereffective|` or `|-resisted|` in order to use up
-  more bytes
+- `|move|` should `|-crit|` and either be `|-supereffective|` or `|-resisted|` to use up more bytes
 - before a `|move|` a Pokémon can activate confusion, and after residual damage from a poison or
   burn status, Leech Seed can be triggered
 - neither Pokémon can `|faint|` at the end. While initially it might seem like having both
@@ -783,7 +781,7 @@ In order to maximize log message size in Generation I several observations need 
 
 The most important observation is that **Metronome and Mirror Move can be used in tandem to rack up
 arbitrary increases in log size via mutual recursion**. Metronome and Mirror Move handlers both
-contain checks to prevent infinite self-recursion, but do not check for each other, meaning a
+contain checks to prevent infinite self-recursion, but don't check for each other, meaning a
 Pokémon can use Metronome to proc Mirror Move to copy their opponent's Metronome to proc Mirror Move
 again etc. However, since Mirror Move works based on the `last_used_move` field and Metronome using
 a new move overwrites this field, Mirror Move copying an opponent's original Metronome will only
@@ -794,30 +792,30 @@ locked in by the previous turn's charging move used via Metronome).
 With true randomness it seems at face value that with the proper set up the chances of achieving
 Metronome → Mirror Move calls would be ${1 \over 163}^N$ (given Metronome can choose 1 out of 163
 moves), which while vanishingly small as $N$ increases is still possible. However, both Pokémon Red
-and Pokémon Showdown use *pseudo*-random number generators and thus in order to find our way out of
-this potential infinite recursion we must strictly consider what is actually possibly with the RNG,
-and not just what would be possible in theory.
+and Pokémon Showdown use *pseudo*-random number generators and thus to find the way out of this
+potential infinite recursion one must strictly consider what's actually possibly with the RNG, and
+not just what would be possible in theory.
 
 In Pokémon Showdown there are several frame advances between each call (e.g. a consequential roll to
-hit, an advance to re-target, etc) and setting up the RNG to accomplish arbitrary recursion is not
+hit, an advance to re-target, etc) and setting up the RNG to accomplish arbitrary recursion isn't
 feasible in practice. However, in Pokémon Red there is only an inconsequential (i.e. the value is
 ignored) critical hit roll for both Metronome and Mirror Move between each roll to determine which
 move to use and the seed can be used to set up 9 arbitrary values. Define $X$, $X'$, and $X''$ such
-that $X' = 5X+1 \bmod 256$ and $X'' = 5X'+1 \bmod 256$. We want $X'' = 119$ as that will cause
-Metronome to use Mirror Move, so $X' = 126$ and $X = 25$.
+that $X' = 5X+1 \bmod 256$ and $X'' = 5X'+1 \bmod 256$. $X'' = 119$ is required to cause Metronome
+to use Mirror Move, so $X' = 126$ and $X = 25$.
 
-Thus we can start with a seed of $\{25, 126, 56, 25, 126, 56, 25, 126, 56\}$ to achieve 9 levels of
+Thus starting with a seed of $\{25, 126, 56, 25, 126, 56, 25, 126, 56\}$ achieves 9 levels of
 recursive Metronome → Mirror Move calls from the output values. This is an **upper bound** (in
 reality it would be impossible to set up the rest of the battle, do 9 rounds of recursion, and still
 have optimal rolls on the other side to be able to obtain maximum log size) and only applies to a
-single player (as mentioned above the only way to have Mirror Move copy Metronome is if the opponent
-is locked into a charging move from a previous Metronome call).
+single player (as mentioned earlier the only way to have Mirror Move copy Metronome is if the
+opponent is locked into a charging move from a previous Metronome call).
 
-There are then two hypothetical scenarios we need to consider to determine upper bound on the
-maximum log size of a single update - one where a single player gets to benefit from the Metronome →
-Mirror Move → ... → Metronome → multi-hit move and the other side is locked into a charging move or
-one where both players simply call a multi-hit move through a single iteration of Metronome → Mirror
-Move → multi-hit.
+There are then two hypothetical scenarios that must be considered to determine the upper bound on
+the maximum log size of a single update - one where a single player gets to benefit from the
+Metronome → Mirror Move → ... → Metronome → multi-hit move and the other side is locked into a
+charging move or one where both players simply call a multi-hit move through a single iteration of
+Metronome → Mirror Move → multi-hit.
 
 - **Scenario 1:** recursion + charge move (188 bytes)
   - `|-activate|` confusion: 2×3 bytes
@@ -847,14 +845,14 @@ Move → multi-hit.
   - `|turn|`: 3 bytes
   - `0x00`: 1 byte (end of buffer)
 
-Z3 can be used to test out these scenarios - we can quickly see that despite 9 levels of recursive
-Metronome → Mirror Move being possible in a vacuum if we are able to control the initial seed, there
-is no way to achieve the first scenario after burning through the rolls on the first two turns of
-setup and if we need to be able to proc specific Metronome rolls after. For the second scenario we
-run into the problem of needing an extra turn of setup for Player 1 to be able to Mirror Move a
-multi-hit move which also takes us too far away from the initial seed to be able to set up the rest
-of the scenario. However, by slightly compromising and not requiring Player 1 to proc Mirror Move
-only lose 6 bytes and thus arrive at 180 bytes for the maximum log size for Generation I.
+Z3 can be used to test out these scenarios -  it can be shown that despite 9 levels of recursive
+Metronome → Mirror Move being possible in a vacuum from the initial seed, there is no way to achieve
+the first scenario after burning through the rolls on the first two turns of setup to be able to
+still proc specific Metronome rolls after. For the second scenario the problem is that there needs
+to be an extra turn of setup for Player 1 to be able to Mirror Move a multi-hit move which also
+takes too many rolls after the initial seed to be able to set up the rest of the scenario. However,
+by slightly compromising and not requiring Player 1 to proc Mirror Move only lose 6 bytes and thus
+arrive at 180 bytes for the maximum log size for Generation I.
 
 ```py
 #!/usr/bin/env python

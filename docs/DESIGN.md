@@ -11,7 +11,7 @@
 The pkmn engine is first and foremost designed for performance. The engine's most impactful design
 principle is that of **"no compromises"** when it comes to performance -
 ergonomics/simplicity/convenience are always trumped by performance, and the engine will never
-tradeoff performance for any other feature. This principle leads to the following:
+trade off performance for any other feature. This principle leads to the following:
 
 - the engine is much **more targeted in scope** than either the original game cartridge (which
   includes code for an entire RPG) or Pokémon Showdown (which supports a fully featured simulator in
@@ -26,22 +26,22 @@ tradeoff performance for any other feature. This principle leads to the followin
   - the is no input (choice) validation - the engine is expected to be wrapped by some form of
     driver code which either provides the input validation for the user or to be driven by code
     which can only provide valid input
-- [**data-oriented design**](https://github.com/dbartolini/data-oriented-design): in order to
-  minimize cache misses / improve data locality, extreme care is taken to [layout data
+- [**data-oriented design**](https://github.com/dbartolini/data-oriented-design): to minimize cache
+  misses / improve data locality, extreme care is taken to [layout data
   structures](http://www.catb.org/esr/structure-packing/) as efficiently as possible, and **pointers
   are eschewed** in favor of
   ['handles'](https://floooh.github.io/2018/06/17/handles-vs-pointers.html) which directly index
   into arrays.
 - **each Pokémon generation is implemented separately**, with code or data being shared only in
-  cases where there is no overhead. One generation of Pokémon should not have to pay the price of
+  cases where there is no overhead. One generation of Pokémon shouldn't have to pay the price of
   dealing with the complexities of other past or future generations. In the worst case, this results
   in some code duplication, but means that any given generation is easy to reason about and
   optimize. Despite this duplication, binary size is still kept down as **data is ruthlessly
   pruned** to contain only the bare minimum.
 - serialization either consists of simply treating structures as an array of bytes or, in the case
   of the log [protocol](PROTOCOL.md), writing bytes in the fastest way possible. As a result, the
-  engine's **protocol and API changes depending on the system**, as all integers will be written
-  using **native-endianness** as that is guaranteed to be the fastest to read and write on any
+  engine's **protocol and API changes depending on the system**, as all integers are be written
+  using **native-endianness** as that's guaranteed to be the fastest to read and write on any
   particular system.
 - **no strings** are used in the engine - strings are to be dealt with by higher levels (e.g. in
   driver code) and as a result the engine just has to deal with small and efficient primitive data
@@ -49,19 +49,19 @@ tradeoff performance for any other feature. This principle leads to the followin
   directly into arrays of data where necessary with no additional hashing or indirection required.
 - the engine **never dynamically allocates memory** - given the fact the engine only implements the
   existing Pokémon battle systems (which were designed to run on constrained hardware), the engine
-  can get away with requiring users to preallocate fixed size buffers and never needs to allocate
+  can get away with requiring users to pre-allocate fixed size buffers and never needs to allocate
   memory on demand.
-- data is structured such that in most cases **lookups are not required** (i.e. range checks are
+- data is structured such that in most cases **lookups aren't required** (i.e. range checks are
   used instead) or can be done with an efficient linear search. In extreme cases, [perfect
   hashing](https://en.wikipedia.org/wiki/Perfect_hash_function) is utilized to avoid ever having to
   probe.
 
 The biggest challenge resulting from the "no compromises" design principle is that **the engine must
 be compiled with specific flags to opt-in to certain behavior**. By default, the pkmn engine
-implements Pokémon as dictated by the games themselves. However, the online Pokémon battling
-playerbase has agreed to a certain number of small modifications in order to improve the competitive
-nature of the game, and these are implemented by the leading simulator, Pokémon Showdown. If
-**`-Dshowdown`** is enabled, the pkmn engine will be configured to:
+implements Pokémon as dictated by the games themselves. However, the online Pokémon battling player
+base has agreed to a certain number of small modifications to improve the competitive nature of the
+game, and these are implemented by the leading simulator, Pokémon Showdown. If **`-Dshowdown`** is
+enabled, the pkmn engine is configured to:
 
 - match Pokémon Showdown's **RNG semantics** instead of the cartridge's. Pokémon Showdown does
   **not** implement the correct pseudo-random number generator for each format (it implements the
@@ -114,7 +114,7 @@ most popular and influential simulator. Due to a variety of reasons, the pkmn en
 The battle engine from the original game code was written for limited, legacy, hardware while under
 time pressure and as one aspect in a complete role-playing game:
 
-- the [**GB Z80**](https://rgbds.gbdev.io/docs/v0.5.1/gbz80.7) hardware does not support
+- the [**GB Z80**](https://rgbds.gbdev.io/docs/v0.5.1/gbz80.7) hardware doesn't support
   multiply/divide instructions efficiently (and certainly doesn't support modern SIMD instructions)
 - the game code's battle engine includes many **features** that can be removed when only emulating
   the post-game "link" battle system utilized by competitive play
@@ -128,9 +128,9 @@ time pressure and as one aspect in a complete role-playing game:
   - running from battle
   - experience
 - the game's **data** was created organically and as a result is **laid out haphazardly** instead of
-  in terms of what is most efficient
+  in terms of what's most efficient
 
-By streamlining the existing code and updating it for a modern instruction set it is possible to
+By streamlining the existing code and updating it for a modern instruction set it's possible to
 both reduce complexity and increase performance.
 
 ## Pokémon Showdown!
@@ -149,7 +149,7 @@ hours):
   substantially more complicated as it contains branches and hooks for all other generations (and
   the simpler code for other generations must **pay the price for all of the modern generation
   code**). Furthermore, it becomes difficult to determine where exactly code for a specific older
-  generation lives, as the functionality may be inherited from newer generations (which is counter
+  generation lives, as the behavior may be inherited from newer generations (which is counter
   intuitive to how the game mechanics actually evolved).
 - Pokémon Showdown is built around a custom **generic event system** with an intricate bubbling and
   priority system. This system is very powerful, though event dispatch is expensive and the
@@ -160,40 +160,40 @@ hours):
   usually being 0 or 1 handler that actually needs to run).
 - Pokémon Showdown's most foundational type is an **`ID`** - a lower case string with special
   characters removed. While this is fairly convenient for developers who can easily tell at a glance
-  what object an `ID` is intended to reference, it is **inefficient** as it relies heavily on the
+  what object an `ID` is intended to reference, it's **inefficient** as it relies heavily on the
   assumption of the compiler performing string interning and uses up more memory than integers (JS
   numbers are technically all 8 bytes, but JS runtimes usually implement ['Smi' optimizations for 32
   bit integers](https://github.com/v8/v8/blob/a9e3d9c7/include/v8.h#L253)). More importantly,
   Pokémon Showdown **frequently calls `toID`** on strings to convert strings to an `ID` to the point
   where `toID` is Pokémon Showdown's hottest function. Pokémon Showdown should be
   able to leverage TypeScript's type checking to enable only calling `toID` on input and not
-  multiple times over the lifetime of the `ID` to minimize this cost, but this still does not fully
+  multiple times over the lifetime of the `ID` to minimize this cost, but this still doesn't fully
   mitigate the issue.
 - Pokémon Showdown's **data layer is fully featured** and designed to support a plethora of use
-  cases beyond what is specifically required for implementing a Pokémon battle. This data is useful
+  cases beyond what's specifically required for implementing a Pokémon battle. This data is useful
   for various additional tools and features, but the more **general API results in bloat** that
   hinders performance. In a similar vein, many of Pokémon Showdown's core classes are designed for
   convenience and for developer ergonomics as opposed to performance (e.g. no distinction between
   the `ActivePokémon`'s fields and a `Pokémon` in the party, resulting in redundant data being
   stored and filling up cache lines).
-- Pokémon Showdown does not pay close attention to
+- Pokémon Showdown doesn't pay close attention to
   [**monomorphism**](https://mrale.ph/blog/2015/01/11/whats-up-with-monomorphism.html) and
   frequently initializes key data objects inefficiently (e.g. the **`Object.assign(this, data)`
   pattern** used by its foundational types). Always ensuring object fields are initialized in the
   same order becomes even more difficult due to the raw size/number of fields involved (i.e. for
-  objects with only a few fields it is easier to ensure they are always initialized in the same
-  order, but many of Pokémon Showdown's game objects include 50-100 fields).
+  objects with only a few fields it's easier to ensure they're always initialized in the same order,
+  but many of Pokémon Showdown's game objects include 50-100 fields).
 - Most of Pokémon Showdown's core APIs involve **looking up keys in a map** (e.g. lookup by `ID`)
   which is inherently less efficient than directly indexing into an array. While both are ultimately
   $\Theta(1)$, the additional pointer chasing / redirection result in cache misses and poor
   performance.
 - Pokémon Showdown produces **text protocol logs in all cases**. While invaluable for debugging, the
   text logs are expensive to produce and parse, and importantly, are often wasted work for use cases
-  where they are simply ignored.
-- Pokémon Showdown is written in JavaScript/TypeScript which makes it **unergonomic to have
-  precisely laid out data structures with minimally sized fields** (as mentioned above, the minimum
-  data size of a number is going to be 4-8 bytes outside of making all the code manipulate an
-  `ArrayBuffer`), substantially larger than what is convenient to use in lower level languages.
+  where they're simply ignored.
+- Pokémon Showdown is written in JavaScript/TypeScript which makes it **non-ergonomic to have
+  precisely laid out data structures with minimally sized fields** (as mentioned earlier, the
+  minimum data size of a number is going to be 4-8 bytes outside of making all the code manipulate
+  an `ArrayBuffer`), substantially larger than what's convenient to use in lower level languages.
   While modern JavaScript engines like V8 and JSC are impressive, there is a limit to how much help
   they can provide when push comes to shove. Furthermore, Pokémon Showdown relies on a lot of
   **dynamic memory allocation** which is inherently slower than repurposing existing objects on the

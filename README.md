@@ -67,12 +67,12 @@ $ npm install @pkmn/engine
 ```
 
 The driver depends on being able to find compiled Node/WASM addons in
-`node_modules/@pkmn/engine/build/lib` in order to be useful. When you install the package a
-[`postinstall` lifecycle script](https://docs.npmjs.com/cli/v8/using-npm/scripts) will run
-[`install-pkmn-engine`](src/bin/install-pkmn-engine) which will check for a compatible `zig`
-compiler (see above regarding minimum version) and download one to
-`node_module/@pkmn/engine/build/bin` if it can't find one, as well as looking for (and downloading,
-if necessary) the required Node headers needed to successfully build the addons natively.
+`node_modules/@pkmn/engine/build/lib` to be useful. When you install the package a [`postinstall`
+lifecycle script](https://docs.npmjs.com/cli/v8/using-npm/scripts) runs
+[`install-pkmn-engine`](src/bin/install-pkmn-engine) which checks for a compatible `zig` compiler
+(see earlier regarding minimum version) and download one to `node_module/@pkmn/engine/build/bin` if
+it can't find one, as well as looking for (and downloading, if necessary) the required Node headers
+needed to successfully build the addons natively.
 
 **If you have configured `npm` to `--ignore-scripts` you must either run `npx install-pkmn-engine`
 directly or build the addons manually and place the artifacts in the expected paths.**
@@ -100,7 +100,7 @@ configuring whether or not Pokémon Showdown compatibility mode or protocol mess
 enabled. Alternatively, you may set options via a `pkmn_options` [root source file
 declaration](https://ziglang.org/documentation/master/#Root-Source-File). There are several
 undocumented internal options that can be tweaked as well via build or root options, though these
-options are not officially supported, affect correctness, and may change meaning or behavior without
+options aren't officially supported, affect correctness, and may change meaning or behavior without
 warning. Use at your own risk.
 
 ```zig
@@ -112,11 +112,11 @@ pub const pkmn_options = .{ .showdown = true, .log = true };
 For each Pokémon generation, the engine provides a battle structure with two functions - a function
 to `update` the battle's state based on both players' choices and a function that defines which
 `choices` are valid at that decision point (at the beginning of a battle both player's must "pass"
-as their first choice in order to switch in the first member of their party). If `-Dlog` protocol
-logging is enabled each update will produce logs which can be decoded into a buffer (`LOGS_SIZE`
-constants are provided to make it easy to allocate a buffer of the correct size). Each `update` will
-return a result to indicate either that the battle has terminated or which types of choices will be
-available for each player.
+as their first choice to switch in the first member of their party). If `-Dlog` protocol logging is
+enabled each update produces logs which can be decoded into a buffer (`LOGS_SIZE` constants are
+provided to make it easy to allocate a buffer of the correct size). Each `update` returns a result
+to indicate either that the battle has terminated or which types of choices are available for each
+player.
 
 Unlike [Pokémon Showdown's
 SIM-PROTOCOL](https://github.com/smogon/pokemon-showdown/blob/master/sim/SIM-PROTOCOL.md#choice-requests)
@@ -140,7 +140,7 @@ potential logs that may result.
 
 [`pkmn.h`](src/include/pkmn.h) exports the C API for `libpkmn`. Symbols are all prefixed with
 `pkmn_` to avoid name collisions. If `-Dlog` is enabled and logging throws an error then the error
-will be encoded in the `pkmn_result` and can be checked with `pkmn_error`.
+is encoded in the `pkmn_result` and can be checked with `pkmn_error`.
 
 ```c
 #include <pkmn.h>
@@ -161,7 +161,7 @@ if (pkmn_error(result)) exit(1);
 
 [(full code)](src/examples/c/example.c)
 
-The C API does not export any helpers for creating or accessing the opaque battle objects - it is
+The C API doesn't export any helpers for creating or accessing the opaque battle objects - it's
 instead intended to be used as the foundation for more ergonomic bindings in [other
 languages](#other) (the lack of namespaces and bit fields having an implementation-defined layout in
 C are the main contributing factors to the sparseness of what `libpkmn` chooses to expose).
@@ -196,18 +196,18 @@ console.log(result);
 
 [(full code)](src/examples/js/example.ts)
 
-By default, the `@pkmn/engine` package will compile the engine with `-Dshowdown`, though by running
+By default, the `@pkmn/engine` package compiles the engine with `-Dshowdown`, though by running
 `install-pkmn-engine` directly and passing in `--options` you can override this default and build
 different configurations of the extension for the driver to use. The driver can support
 configurations both with and without Pokémon Showdown compatibility simultaneously if present. On
-update, the post-install script will attempt to rebuild whichever extensions it finds with the same
+update, the post-install script attempts to rebuild whichever extensions it finds with the same
 configuration parameters that were originally used meaning updating to the newest version of the
 library should be seamless.
 
 Despite relying on the native engine code, the `@pkmn/engine` code is designed to also work in
 browsers which support [WebAssembly](https://webassembly.org/). Running `npm run start:web` from the
-[`examples`](src/examples/js) directory will start a server that can be used to demonstrate the
-engine running in the browser.
+[`examples`](src/examples/js) directory starts a server that can be used to demonstrate the engine
+running in the browser.
 
 ### Zig
 
@@ -240,7 +240,7 @@ std.debug.print("{}\n", .{result.type});
 
 The Zig package also supports some APIs which are difficult to expose elsewhere such as the
 `FixedRNG` which allows you to fully specify the exact RNG frames (which can be useful for ensuring
-certain outcomes/effects always occur) for a battle, though doing so will change the size of the
+certain outcomes/effects always occur) for a battle, though doing so changes the size of the
 `Battle` object.
 
 ### Other
@@ -251,7 +251,7 @@ simplify the process even further [`src/data`](src/data) contains JSON dumps of 
 data, structure sizes and offsets, and protocol information used by the reference driver code. The
 following is a list of known `libpkmn` bindings written by developers outside of the [pkmn
 organization](https://github.com/pkmn) that may be helpful (though note that these projects may not
-necessarily be up-to-date/complete/correct - inclusion in this list does not imply endorsement):
+necessarily be up-to-date/complete/correct - inclusion in this list doesn't imply endorsement):
 
 | Language   | License   | URL                                  |
 | ---------- | --------- | ------------------------------------ |
@@ -279,7 +279,7 @@ By default, `pkmn-debug` expects to read [binary debug protocol](docs/PROTOCOL.m
 $ <cmd> | pkmn-debug > index.html
 ```
 
-Alternatively, if a single filename argument is passed to the `pkmn-debug` it will read from that
+Alternatively, if a single filename argument is passed to the `pkmn-debug` it reads from that
 instead:
 
 ```sh
@@ -301,14 +301,14 @@ Currently, most of the foundational work from stage 0 is done:
   
 - [benchmark and integration testing](src/test) infrastructure
 - [documentation](docs) about design, research, methodology, etc
-- definition and implementation of the [protocol](docs/PROTOCOL.md) that will be used by the engine
+- definition and implementation of the [protocol](docs/PROTOCOL.md) that's used by the engine
 
-**Stage 1 is currently in progress** and will see the implementation of the actual Generation I & II
+**Stage 1 is currently in progress** and involves the implementation of the actual Generation I & II
 battle engines, followed by Generation III & IV in stage 2. The implementation of further Pokémon
-generations is in scope for the project but should not be considered as part of the immediate
-roadmap (i.e. exploring the options for broadening support for old generation APIs will be given
-higher priority than implementing more modern generations). Furthermore, implementation of modern
-generations is soft-blocked on the [availability of high quality
+generations is in scope for the project but shouldn't be considered as part of the immediate roadmap
+(i.e. exploring the options for broadening support for old generation APIs is given higher priority
+than implementing more modern generations). Furthermore, implementation of modern generations is
+soft-blocked on the [availability of high quality
 decompilations](https://github.com/orgs/pret/repositories) of the original games in question.
 
 Certain features will always be deemed **out of scope**:
@@ -326,10 +326,10 @@ The pkmn engine is distributed under the terms of the [MIT License](LICENSE).
 [^1]: In the case of Pokémon Showdown, only bugs which stem from a misimplementation of specific
   effects are reproduced in the engine, bugs which are the result of a misunderstanding of the
   fundamental mechanics of Pokémon or which simply arise due to specific Pokémon Showdown
-  implementation details that are not replicable without making the same (incorrect) architectural
-  choices are not. Furthermore, the "Pokémon Showdown" code referenced by this project includes
+  implementation details that aren't replicable without making the same (incorrect) architectural
+  choices aren't. Furthermore, the "Pokémon Showdown" code referenced by this project includes
   several [patches](docs/TESTING.md#patches) to improve accuracy and smooth over some of the more
   egregious implementation issues. In practical terms, the vast majority of games played out in the
-  pkmn engine's compatibility mode and on this patched Pokémon Showdown simulator will be the same,
-  it is only in a well defined and documented set of circumstances where the two implementations
+  pkmn engine's compatibility mode and on this patched Pokémon Showdown simulator is the same,
+  it's only in a well defined and documented set of circumstances where the two implementations
   diverge.

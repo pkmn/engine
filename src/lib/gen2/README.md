@@ -54,13 +54,12 @@ The following information is required to simulate a Generation II Pokémon battl
 |                                |                                   |                                       |
 | `active.last_used_move`        | `PlayerUsedMove`                  | `side.lastMove`                       |
 
-- Pokémon Showdown does not implement the correct Generation II RNG and as such its `seed` is
+- Pokémon Showdown doesn't implement the correct Generation II RNG and as such its `seed` is
   different
-- `battle.turn` only needs to be tracked in order to be compatible with the Pokémon Showdown
-  protocol
+- `battle.turn` only needs to be tracked to be compatible with the Pokémon Showdown protocol
 - Battle results (win, lose, draw) or request states are communicated via the return code of
   `Battle.update`
-- Nicknames (`BattleMonNick`/`pokemon.name`) are not handled by the pkmn engine as they are expected
+- Nicknames (`BattleMonNick`/`pokemon.name`) aren't handled by the pkmn engine as they're expected
   to be handled by driver code if required
 
 ==**TODO**==
@@ -77,9 +76,9 @@ between the data structure for the "active" Pokémon and its party members (see 
 
 ### `Pokemon` / `ActivePokemon`
 
-Similar to the cartridge, in order to save space different information is stored depending on
-whether a [Pokémon](https://pkmn.cc/bulba/Pok%c3%a9mon_data_structure_%28Generation_II%29) is
-actively participating in battle vs. is switched out (pret's [`battle_struct` vs.
+Similar to the cartridge, to save space different information is stored depending on whether a
+[Pokémon](https://pkmn.cc/bulba/Pok%c3%a9mon_data_structure_%28Generation_II%29) is actively
+participating in battle vs. is switched out (pret's [`battle_struct` vs.
 `party_struct`](https://pkmn.cc/pokecrystal/macros/ram.asm)). In Pokémon Showdown, all the Pokemon
 are represented by the same
 [`Pokemon`](https://github.com/smogon/pokemon-showdown/blob/master/sim/pokemon.ts) class, and static
@@ -93,14 +92,14 @@ A `MoveSlot` is a data-type for a `(move, current pp)` pair. A pared down versio
 Showdown's `Pokemon#moveSlot`, it also stores data from the cartridge's `battle_struct::Move` macro
 and can be used to replace the `PlayerMove*` data. Move PP is stored as a full byte instead of how
 the cartridge (`battle_struct::PP`) stores it (6 bits for current PP and the remaining 2 bits used
-to store the number of applied PP Ups). PP Up bits do not actually need to be stored on move slot
+to store the number of applied PP Ups). PP Up bits don't actually need to be stored on move slot
 as max PP is never relevant in Generation II (the Mystery Berry always increases PP from 0 -> 5).
 
 #### `Status`
 
 Bitfield representation of a Pokémon's major [status
-condition](https://pkmn.cc/bulba/Status_condition), mirroring how it is stored on the cartridge. A
-value of `0x00` means that the Pokémon is not affected by any major status, otherwise the lower 3
+condition](https://pkmn.cc/bulba/Status_condition), mirroring how it's stored on the cartridge. A
+value of `0x00` means that the Pokémon isn't affected by any major status, otherwise the lower 3
 bits represent the remaining duration for Sleep. Other status are denoted by the presence of
 individual bits - at most one status should be set at any given time.
 
@@ -161,7 +160,7 @@ boosts should always range from `-6`...`6` instead of `1`...`13` as on the cartr
 
 `Moves` serves as an identifier for a unique [Pokémon move](https://pkmn.cc/bulba/Move) that can be
 used to retrieve a `Move` with information regarding base power, accuracy and type. As covered
-above, PP information isn't strictly necessary in Generation I, but fits neatly into the 4 bits of
+earlier, PP information isn't strictly necessary in Generation I, but fits neatly into the 4 bits of
 padding after noticing that all PP values are multiples of 5. `Moves.None` exists as a special
 sentinel value to indicate `null`.
 
@@ -215,8 +214,8 @@ entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as foll
 | **wrap**       | 0...5   | 3    |     | **perish song**   | 0...4    | 3    |
 | **item**       | TODO    | 5?   |     | **gender**        | 0..1     | 1    |
 
-From this we can determine the minimum bits required to store each data structure to determine how
-much overhead the representations above have after taking into consideration [alignment &
+From this one can determine the minimum bits required to store each data structure to determine how
+much overhead the preceding representations have after taking into consideration [alignment &
 padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 [denormalization](https://en.wikipedia.org/wiki/Denormalization):
 

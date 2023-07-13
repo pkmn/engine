@@ -21,7 +21,7 @@ This directory contains miscellaneous scripts and tools useful for working on th
 
       $ npm run generate  -- tests <GEN>
 
-  The `--force` flag can be used to ensure that the data is refetched from the source instead of
+  The `--force` flag can be used to ensure that the data is re-fetched from the source instead of
   from a local `.cache` directory.
 
 - [`lint.zig`](lint.zig): Implements a linter, combining `zig fmt --check` with a custom linter
@@ -47,14 +47,14 @@ This directory contains miscellaneous scripts and tools useful for working on th
       $ npm run release
 
 - [`serde.zig`](serde.zig)/[`serde.ts`](serde.ts): Serializes/deserializes a randomly generated
-  `Battle` for the provided generation to stdout, optionally for a specific seed. `serde.ts` wraps
+  `Battle` for the provided generation to standard out, optionally for a specific seed. `serde.ts` wraps
   `serde.zig` and pretty prints the buffer so that it can be easily copied and pasted into JS
   source files for testing:
 
       $ zig build serde -- <GEN> <SEED?>
       $ npm run compile && node build/tools/serde 1
 
-- [`transitions.zig`](transitions.zig): Runs the specified generations's "transitions" function to
+- [`transitions.zig`](transitions.zig): Runs the specified generation's "transitions" function to
   make it easier to debug or visualize:
 
       $ zig build transitions -Dcalc -Dchance -- <GEN> <SEED?> 2>/dev/null

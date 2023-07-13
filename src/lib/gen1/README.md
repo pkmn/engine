@@ -9,8 +9,8 @@ following files:
   by the engine, described in detail [below](#data-structures)
 - [`helpers.zig`](helpers.zig): helpers used to construct complex data types with
   sensible defaults (internally used by tests and tools)
-- [`mechanics.zig`](mechanics.zig): code which manipulates the data structures in order to implement
-  the mechanics of the game
+- [`mechanics.zig`](mechanics.zig): code which manipulates the data structures to implement the
+  mechanics of the game
 - [`test.zig`](test.zig): unit tests for `mechanics.zig` (the code is also tested by [integration
   tests](../../../docs/TESTING.md) at a higher level)
 
@@ -59,39 +59,37 @@ The following information is required to simulate a Generation I Pokémon battle
 | `volatiles.substitute`                  | `PlayerSubstituteHP`               | `volatiles.substitute.hp`              |
 | `volatiles.disabled_{move,duration}`    | `PlayerDisabledMove{,Number}`      | `volatiles.disable.{move,time}`        |
 
-- Pokémon Showdown [does not implement the correct Generation I RNG](#rng) and as such its `seed` is
+- Pokémon Showdown [doesn't implement the correct Generation I RNG](#rng) and as such its `seed` is
   different
-- `battle.turn` only needs to be tracked in order to be compatible with the Pokémon Showdown
-  protocol
+- `battle.turn` only needs to be tracked to be compatible with the Pokémon Showdown protocol
 - Pokémon Showdown tracks several last used move variables (`Battle.lastMove`, `Side.lastMove`, and
   `Pokemon.lastMove`), none of which accurately match the `PlayerUsedMove` variable from the
-  cartridge (`Side.lastMove` should be what is used, but is used by Pokémon Showdown only for
-  Counter and is not set and cleared in the correct locations. `Pokemon.lastMove` matches
-  `PlayerUsedMove` more often so is what the engine attempts to model, despite the implications for
-  Counter)
-- `battle.last_moves` doesn't map precisely to cartridge concepts because it is used to track desyncs
-  which instead are represented on the cartridge as discrepancies between the two separate battle states
-  that exist in the link battle.
-- Pokémon Showdown does not implement the [partial-trapping move Mirror Move
+  cartridge (`Side.lastMove` should be what's used, but is used by Pokémon Showdown only for Counter
+  and isn't set and cleared in the correct locations. `Pokemon.lastMove` matches `PlayerUsedMove`
+  more often so is what the engine attempts to model, despite the implications for Counter)
+- `battle.last_moves` doesn't map precisely to cartridge concepts because it's used to track desyncs
+  which instead are represented on the cartridge as discrepancies between the two separate battle
+  states that exist in the link battle.
+- Pokémon Showdown doesn't implement the [partial-trapping move Mirror Move
   glitch](https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch) and as such
-  does not need to keep track of a player's last selected move index (`PlayerMoveListIndex`)
+  doesn't need to keep track of a player's last selected move index (`PlayerMoveListIndex`)
 - Battle results (win, lose, draw) and request states are communicated via the return value of
   `Battle.update`
-- Nicknames (`BattleMonNick`/`pokemon.name`) are not handled by the pkmn engine as they are expected
+- Nicknames (`BattleMonNick`/`pokemon.name`) aren't handled by the pkmn engine as they're expected
   to be handled by driver code if required
 - Pokémon Red's `LastSwitchInEnemyMonHP`, `InHandlePlayerMonFainted`, `PlayerNumHits`,
   `PlayerMonMinimized`, and `Move{DidntMiss,Missed}` are relevant for messaging/UI only
 - Pokémon Red's `TransformedEnemyMonOriginalDVs` is only relevant for the [Transform DV manipulation
   glitch](https://pkmn.cc/bulba/Transform_glitches#Transform_DV_manipulation_glitch)
-- Pokémon Red's `PlayerMove*` tracks information that is stored in the `Move` class
+- Pokémon Red's `PlayerMove*` tracks information that's stored in the `Move` class
 - Pokémon Red's `PlayerStatsToDouble`/`PlayerStatsToHalve` are constants which are always 0
-- pkmn does not store the DVs/stat experience of Pokémon as they are expected to already be
-  accounted for in the `Pokemon` `stats` and never need to be referenced in-battle (though a `DVs`
-  struct exists to simplify generating legal test data)
+- pkmn doesn't store the DVs/stat experience of Pokémon as they're expected to already be accounted
+  for in the `Pokemon` `stats` and never need to be referenced in-battle (though a `DVs` struct
+  exists to simplify generating legal test data)
 - Instead of storing unmodified stats like Pokémon Red or Pokémon Showdown, pkmn simply tracks the
   identity of the Pokémon that has been transformed into in the `active.volatiles.transform` field
 - pkmn uses `volatiles.state` for total accumulated damage for Bide but also for implementing
-  accuracy overwrite mechanics for certain moves (this glitch is present on the device but is not
+  accuracy overwrite mechanics for certain moves (this glitch is present on the device but isn't
   correctly implemented by Pokémon Showdown currently)
 
 ### `Battle` / `Side`
@@ -107,9 +105,9 @@ otherwise be the padding bytes of`Battle` (the `last_moves` field) instead of in
 
 ### `Pokemon` / `ActivePokemon`
 
-Similar to the cartridge, in order to save space different information is stored depending on
-whether a [Pokémon](https://pkmn.cc/bulba/Pok%c3%a9mon_data_structure_%28Generation_I%29) is
-actively participating in battle vs. is switched out (pret's [`battle_struct` vs.
+Similar to the cartridge, to save space different information is stored depending on whether a
+[Pokémon](https://pkmn.cc/bulba/Pok%c3%a9mon_data_structure_%28Generation_I%29) is actively
+participating in battle vs. is switched out (pret's [`battle_struct` vs.
 `party_struct`](https://pkmn.cc/pokered/macros/ram.asm)). In Pokémon Showdown, all the Pokémon in a
 battle are represented by the same
 [`Pokemon`](https://github.com/smogon/pokemon-showdown/blob/master/sim/pokemon.ts) class, and static
@@ -121,14 +119,14 @@ A `MoveSlot` is a data-type for a `(move, current pp)` pair. A pared down versio
 Showdown's `Pokemon.moveSlot`, it also stores data from the cartridge's `battle_struct::Move` macro
 and can be used to replace the `PlayerMove*` data. Move PP is stored as a full byte instead of how
 the cartridge (`battle_struct::PP`) stores it (6 bits for current PP and the remaining 2 bits used
-to store the number of applied PP Ups). PP Up bits do not actually need to be stored on move slot
+to store the number of applied PP Ups). PP Up bits don't actually need to be stored on move slot
 as max PP is never relevant in Generation I.
 
 #### `Status`
 
 Bitfield representation of a Pokémon's major [status
-condition](https://pkmn.cc/bulba/Status_condition), mirroring how it is stored on the cartridge. A
-value of `0x00` means that the Pokémon is not affected by any major status, otherwise the lower 3
+condition](https://pkmn.cc/bulba/Status_condition), mirroring how it's stored on the cartridge. A
+value of `0x00` means that the Pokémon isn't affected by any major status, otherwise the lower 3
 bits represent the remaining duration for Sleep. Other status are denoted by the presence of
 individual bits - at most one status should be set at any given time.
 
@@ -137,10 +135,10 @@ below), so the upper most bit of `Status` is instead used to track state require
 quirks:
 
   - when combined with a valid sleep duration (or 0), it indicates that the `SLP` status was
-    self-inflicted (required in order to implement Pokémon Showdown's "Sleep Clause Mod")
+    self-inflicted (required to implement Pokémon Showdown's "Sleep Clause Mod")
   - when combined with `PSN` it indicates that the Pokémon is actually badly poisoned (required in
     order to send the same incorrect protocol messages as Pokémon Showdown - the Toxic volatile
-    alone is not sufficient in compatibility mode because it gets lost on switch)
+    alone isn't sufficient in compatibility mode because it gets lost on switch)
 
 #### `Volatiles`
 
@@ -176,17 +174,16 @@ boolean flags that are cleared when the Pokémon faints or switches out:
 [Toxic](https://pkmn.cc/bulba/Toxic_(move)) (counter),
 [Transform](https://pkmn.cc/bulba/Transform_(move)) (identity), and
 [Disable](https://pkmn.cc/bulba/Disable_(move)) (move and duration), and multi-hit attacks all
-require additional information that is also stored in the `Volatiles` structure. `MultiHit` is not
-strictly required to be stored as it should always be 0 after updates barring errors, however it is
+require additional information that's also stored in the `Volatiles` structure. `MultiHit` isn't
+strictly required to be stored as it should always be 0 after updates barring errors, however it's
 convenient to maintain as it maps neatly to the cartridge and is effectively "free" space-wise due
 to padding.
 
 The `state` field of `Volatiles` is effectively treated as a union:
 
 - if `volatiles.Bide` is set, `volatiles.data.state` reflects the total accumulated Bide damage
-- otherwise, `volatiles.data.state` reflects the last computed move accuracy (required in order to
-  implement the [Rage and Thrash / Petal Dance accuracy
-  bug](https://www.youtube.com/watch?v=NC5gbJeExbs))
+- otherwise, `volatiles.data.state` reflects the last computed move accuracy (required to implement
+  the [Rage and Thrash / Petal Dance accuracy bug](https://www.youtube.com/watch?v=NC5gbJeExbs))
 
 #### `Stats` / `Boosts`
 
@@ -198,8 +195,8 @@ boosts should always range from `-6`...`6` instead of `1`...`13` as on the cartr
 
 `Move` serves as an identifier for a unique [Pokémon move](https://pkmn.cc/bulba/Move) that can be
 used to retrieve `Move.Data` with information regarding base power, accuracy, and type. As covered
-above, PP information isn't strictly necessary in Generation I so is dropped. `Move.None` exists as
-a special sentinel value to indicate `null`. Move PP data is only included for testing and is not
+earlier, PP information isn't strictly necessary in Generation I so is dropped. `Move.None` exists
+as a special sentinel value to indicate `null`. Move PP data is only included for testing and isn't
 necessary for the actual engine implementation.
 
 In order to workaround various [Pokémon Showdown bugs](#bugs) and to support its protocol in logs,
@@ -221,11 +218,11 @@ places to determine which protocol messages to print.
 ### `Species` / `Species.Data`
 
 `Species` just serves as an identifier for a unique [Pokémon
-species](https://pkmn.cc/bulba/Pokémon_species_data_structure_(Generation_I)) as the base stats
-of a species are already accounted for in the computed stats in the `Pokemon` structure and nothing
-in battle requires these to be recomputed. Similarly, Type is unnecessary to include as it is also
+species](https://pkmn.cc/bulba/Pokémon_species_data_structure_(Generation_I)) as the base stats of a
+species are already accounted for in the computed stats in the `Pokemon` structure and nothing in
+battle requires these to be recomputed. Similarly, Type is unnecessary to include as it's also
 already present in the `Pokemon` struct. `Species.None` exists as a special sentinel value to
-indicate `null`. `Species.Data` is only included for testing and is not necessary for the actual
+indicate `null`. `Species.Data` is only included for testing and isn't necessary for the actual
 engine implementation, outside of `Species.CHANCES` which is required as the base speed / 2 of the
 species is necessary for computing critical hit probability.
 
@@ -238,15 +235,15 @@ effectiveness - like the cartridge, effectiveness is stored as `0`, `5`, `10`, a
 (technically only a 2-bit value is required, but as with `Types` Zig only allows a minimum of a byte
 to be stored at each address of an array).
 
-The 'precedence' of the various type matchups matters beyond just the [dual-type damage
+The 'precedence' of the various type match-ups matters beyond just the [dual-type damage
 misinformation
 glitch](https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Dual-type_damage_misinformation) -
 type effectiveness modifiers are applied based on the (haphazard) ordering of the effectiveness
 table as opposed to first applying modifiers for a species's first type and then second type. The
-engine maintains a `Type.PRECEDENCE` table with just the matchups that are relevant in game (certain
-type combinations cannot crop up with the limited Generation I species pool and as such are pruned
-for efficiency) and only looks up precedence when necessary to minimize expensive searches. Pokémon
-Showdown does not implement type precedence.
+engine maintains a `Type.PRECEDENCE` table with just the match-ups that are relevant in game
+(certain type combinations can't crop up with the limited Generation I species pool and as such are
+pruned for efficiency) and only looks up precedence when necessary to minimize expensive searches.
+Pokémon Showdown doesn't implement type precedence.
 
 ## Information
 
@@ -272,8 +269,8 @@ entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as foll
 | **crit chance** | 7..65     | 6    |     | **transform**     | 0..15    | 4    |
 | **target**      | 0..4      | 3    |     |                   |          |      |
 
-From this we can determine the minimum bits[^1] required to store each data structure to determine
-how much overhead the representations above have after taking into consideration [alignment &
+From this one can determine the minimum bits[^1] required to store each data structure to determine
+how much overhead the preceding representations have after taking into consideration [alignment &
 padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 [denormalization](https://en.wikipedia.org/wiki/Denormalization):
 
@@ -287,7 +284,7 @@ padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
     struct
 - **`Side`**: `ActivePokemon` + 6× `Pokemon` + active (`3`) + last used (`8`) + last selected
   (`8`) + counterable (`1`) + last move index (`3`)
-  - `order` does not need to be stored as the party can always be rearranged as switches occur
+  - `order` doesn't need to be stored as the party can always be rearranged as switches occur
 - **`Battle`**: 6× `Side` + seed (9× `8` + `4`) + turn (`10`) + last damage (`10`)
 - **`Type.CHART`**: attacking types (`15`) × defending types (`15`) × effectiveness (`2`)[^2]
 - **`Type.PRECEDENCE`**: 29× attacking type (`4`) + defending type (`4`) pairs
@@ -313,25 +310,25 @@ consideration the worst case all Pokémon types are required and 48 moves. The `
 could be eliminated and instead the `Move` data actually required by each `Pokemon` could be placed
 beside the `MoveSlot`, though this is both less general and adds unnecessary complexity.
 
-[^1]: For data with lower cardinality it is possible to save memory by ordinalizing the values and
+[^1]: For data with lower cardinality it's possible to save memory by ordinalizing the values and
 turning them into indices into a lookup table (e.g. encode all possible move base powers in a lookup
 table and store the index into that table instead of the actual base power). While this approach may
 minimize the absolute memory used, performance is more likely to suffer as the goal is to minimize
-uncached memory lookups, not total memory usage.
+un-cached memory lookups, not total memory usage.
 
 [^2]: Instead of storing as a sparse multi-dimensional array the type chart could instead only
 [store values which are not normal
 effectiveness](https://github.com/pret/pokered/blob/master/data/types/type_matchups.asm) in 820 bits
 as 82× attacking type (`4`) + defending type (`4`) + non-Normal effectiveness (`2`). This would
 avoid having to do two memory lookups at the cost of a longer time scanning, but the second lookup
-should already be fast due to locality of reference meaning it will likely already be in the cache.
+should already be fast due to locality of reference meaning it's likely to already be in the cache.
 This approach would also render `Type.PRECEDENCE` unnecessary.
 
 ## Layout
 
 The precise layout of the engine's data structures is important to those implementing driver code,
 as clients must directly probe the engine's state through these structures (i.e. the pkmn engine
-does not produce an equivalent to Pokémon Showdown's `|request|` protocol message, this information
+doesn't produce an equivalent to Pokémon Showdown's `|request|` protocol message, this information
 must be gleaned through the `Battle` state). Useful size and offset information can be found in
 the [`layout.json`](../../data/layout.json) which exists to simplify writing driver code.
 
@@ -384,7 +381,7 @@ data in the browser for ease of debugging.
 | 183   | 184 | `last_used_move`           | The last move the player used           |
 
 - `order` is a 6 byte array where `order[i]` represents the "slot" of `pokemon[i]`, where the slot
-  is usually a unique value from 1-6 but can be 0 in situations where a player brings less than six
+  is usually a unique value from 1 to 6 but can be 0 in situations where a player brings less than six
   Pokémon to battle (note however that if `order[i]` is 0 than for all j > 0 `order[i+j]` **must**
   equal 0).
 
@@ -411,7 +408,7 @@ data in the browser for ease of debugging.
 | 28    | 29  | `moves[2].id`                      | The active Pokémon's third move                            |
 | 29    | 30  | `moves[2].pp`                      | The PP of the active Pokémon's third move                  |
 | 30    | 31  | `moves[3].id`                      | The active Pokémon's fourth move                           |
-| 31    | 32  | `moves[3].pp`                      | The PP of the active Pokémon's fourth moe                  |
+| 31    | 32  | `moves[3].pp`                      | The PP of the active Pokémon's fourth move                 |
 
 - the active Pokémon's `stats.hp` is always identical to the corresponding stored Pokémon's `stats.hp`
 - `boosts` and `types` includes bytes which store two 4-bit fields each
@@ -446,7 +443,7 @@ data in the browser for ease of debugging.
 | 40    | 48  | `substitute`        | The remaining HP of the Substitute                          |
 | 48    | 52  | `transform`         | The identity of whom the active Pokémon is transformed into |
 | 52    | 56  | `disabled_duration` | The remaining turns the move is disabled                    |
-| 56    | 59  | `disabled_move`     | The move slot (1-4) that is disabled                        |
+| 56    | 59  | `disabled_move`     | The move slot (1-4) that's disabled                        |
 | 59    | 64  | `toxic`             | The number of turns toxic damage has been accumulating      |
 
 ### `Pokemon`
@@ -480,31 +477,31 @@ Smogon](https://www.smogon.com/forums/posts/5933177/show):
 
 - moves on Pokémon Showdown can do 0 damage instead of failing or causing a [division-by-zero
   freeze](https://pkmn.cc/bulba-glitch-1#Division_by_0).
-- Pokémon Showdown does not implement type effectiveness precedence correctly.
+- Pokémon Showdown doesn't implement type effectiveness precedence correctly.
 - Pokémon Showdown checks for type and OHKO immunity before accuracy.
 - Confusion self-hits use the wrong damage formula resulting in off-by-one errors (and also fail to
-  account for an opponent's Reflect). Furthermore, the confusion self-hit damage will erroneously be
-  inflicted to the confused user's substitute if the confused user had been attempting to use a
+  account for an opponent's Reflect). Furthermore, the confusion self-hit damage erroneously gets
+  inflicted on the confused user's substitute if the confused user had been attempting to use a
   self-targeting move. Finally, Pokémon Showdown erroneously considers the *uncapped* self-hit
   damage for the purposes of tracking the battle's last damage.
 
-Beyond the general bugs listed above, several move effects are implemented incorrectly by Pokémon
-Showdown. Some of these moves are [too fundamentally broken to be implemented](#unimplementable) by
-the pkmn engine, but the following moves have their broken behavior preserved in `-Dshowdown` mode:
+Beyond these general bugs, several move effects are implemented incorrectly by Pokémon Showdown.
+Some of these moves are [too fundamentally broken to be implemented](#unimplementable) by the pkmn
+engine, but the following moves have their broken behavior preserved in `-Dshowdown` mode:
 
 - **Bide**: Bide's damage can overflow if OHKO moves are involved because OHKO moves work by setting
   the damage to 65535 - Pokémon Showdown doesn't implement this overflow and instead lets Bide's
   damage grow unbounded. Additionally, if the opponent faints after Bide inflicts damage on Pokémon
   Showdown residual damage incorrectly still gets applied to Bide's user.
-- **Counter**: On Pokémon Showdown choices made while sleeping (which should not have been
+- **Counter**: On Pokémon Showdown choices made while sleeping (which shouldn't have been
   registered) can erroneously cause Counter to trigger Desync Clause Mod behavior. Additionally,
   because Pokémon Showdown neglects to zero the last battle damage if a move misses due to immunity
-  or invulnerability Counter will occasionally work on Pokémon Showdown when it should fail.
+  or invulnerability Counter occasionally works on Pokémon Showdown when it should fail.
 - **Leech Seed**: Leech Seed fails to heal its source side if a seeded target faints due to
   recoil/crash damage on Pokémon Showdown.
 - **Pay Day**: Pay Day should still scatter coins if it hits (but doesn't break) and opponent's
   Substitute but doesn't on Pokémon Showdown.
-- **Flinch**: Flinching does not get cleared during move selection on Pokémon Showdown and is
+- **Flinch**: Flinching doesn't get cleared during move selection on Pokémon Showdown and is
   instead cleared in Pokémon Showdown's "residual" phase, meaning the flinch status gets erroneously
   preserved across fainting (as fainting triggers Pokémon Showdown's "instaswitch" behavior which
   skips end-of-turn residuals).
@@ -515,45 +512,45 @@ the pkmn engine, but the following moves have their broken behavior preserved in
   Petal Dance accuracy bug]( https://www.youtube.com/watch?v=NC5gbJeExbs) incorrectly, as the
   accuracy only gets written when the volatile is present which can lead to incorrect accuracy
   values on turns where Rage is used on the same turn as a move which modifies accuracy or evasion.
-- **Thrash** / **Petal Dance**: once a Pokémon is locked into a thrashing move they will lose all
-  speed ties on Pokémon Showdown (due to the fact that if they win the speed tie their action will
-  then get "changed" and inserted back into the queue after their opponent's action). Pokémon
-  Showdown also implements accuracy incorrectly, as covered above.
+- **Thrash** / **Petal Dance**: once a Pokémon is locked into a thrashing move they lose all speed
+  ties on Pokémon Showdown (due to the fact that if they win the speed tie their action then gets
+  "changed" and inserted back into the queue after their opponent's action). Pokémon Showdown also
+  implements accuracy incorrectly, as covered earlier.
 - **Freeze** / **Sleep**: Pokémon Showdown requires a move to be selected when a Pokémon is frozen
   or sleeping and uses that in the event that the status is removed while on the cartridge no
   selection is possible and no turn exists for the thawed/woken Pokémon to act except in the case of
   a Fire-type move thawing a slower Pokémon (which should result in the [Freeze top move selection
-  glitch](https://glitchcity.wiki/Freeze_top_move_selection_glitch), which is not implemented and
+  glitch](https://glitchcity.wiki/Freeze_top_move_selection_glitch), which isn't implemented and
   would also likely be incorrect if it were to be implemented due to how Pokémon Showdown
   incorrectly saves arbitrary moves with its choice selection semantics). Furthermore, thrashing
-  volatiles should not be cleared if the user misses a turn due to freeze / sleep.
+  volatiles shouldn't be cleared if the user misses a turn due to freeze / sleep.
 - **Hyper Beam**: due to improperly implemented selection mechanics, the [Hyper Beam
   automatic-selection glitch](https://glitchcity.wiki/Hyper_Beam_automatic_selection_glitch) does
   not exist on Pokémon Showdown. Additionally, Hyper Beam being able to cause [Freeze permanent
-  helplessness](https://pkmn.cc/bulba-glitch-1#Hyper_Beam_.2B_Freeze_permanent_helplessness) is not
+  helplessness](https://pkmn.cc/bulba-glitch-1#Hyper_Beam_.2B_Freeze_permanent_helplessness) isn't
   implement by Pokémon Showdown.
 - **Roar** / **Whirlwind**: these moves can miss on Pokémon Showdown (and advance the RNG when
-  checking) which is incorrect (these moves should always fail, but do not check accuracy or advance
+  checking) which is incorrect (these moves should always fail, but don't check accuracy or advance
   the RNG). More importantly, these moves should *not* cause the tracked last battle damage to be
   zeroed, but on Pokémon Showdown they do.
 - **Substitute**: in addition to the [Substitute + Confusion
   glitch](https://pkmn.cc/bulba-glitch-1#Substitute_.2B_Confusion_glitch) not being implemented
-  correctly (covered above), the [Substitute 1/4
+  correctly (covered earlier), the [Substitute 1/4
   glitch](https://glitchcity.wiki/Substitute_%C2%BC_HP_glitch) also fails in many cases due to
   Pokémon Showdown implementing the health check based on floating point division instead of integer
-  divison like on the cartridge (meaning the Substitute 1/4 glitch will only occur if the Pokémon's
+  division like on the cartridge (meaning the Substitute 1/4 glitch only occurs if the Pokémon's
   maximum HP is evenly divisible by 4). Substitute also incorrectly blocks Dream Eater on
-  Pokémon Showdown and will incorrectly still heal 1 HP for any draining moves if the attack does 0
+  Pokémon Showdown and incorrectly still heals 1 HP for any draining moves if the attack does 0
   damage. Finally, Pokémon Showdown uses a `subFainted` field to track whether a Substitute was
-  broken in order to know when to nullify a move's effect, only it doesn't get cleared at the end of
+  broken to know when to nullify a move's effect, only it doesn't get cleared at the end of
   the turn and can result in incorrect behavior on subsequent turns with the moves Mirror Move and
   Metronome that invoke `runMove` (which is where `subFainted` gets cleared) on the user but skips
   calling it for the eventual true target.
 
 In addition to numerous cases where Pokémon Showdown uses the wrong type of message (e.g. `|-fail`
-vs. `|-miss|` vs. `|-immune|`, e.g. in the case of Leech Seed) which are not documented here, Pokémon
-Showdown sometimes gets message ordering incorrect (which does not effect the outcome
-of the battle, only pedantic UI correctness):
+vs. `|-miss|` vs. `|-immune|`, e.g. in the case of Leech Seed) which aren't documented here, Pokémon
+Showdown sometimes gets message ordering incorrect (which doesn't effect the outcome of the battle,
+only pedantic UI correctness):
 
 - **Rage**: Rage should report the `|-boost|` before the Disable `|-miss|`, not after.
 - **Haze**: Haze clears the status/volatiles in an incorrect order.
@@ -566,21 +563,21 @@ Pokémon Showdown also implements a number of modifications to the cartridge (us
 called out in the `|rule|` section at the beginning of a battle's log):
 
 - **Sleep Clause Mod**: players are prevented from putting more than one of their opponent's Pokémon
-  to sleep at a time (usage of the move will fail).
+  to sleep at a time (usage of the move fails).
 - **Freeze Clause Mod**: players are prevented from freezing more than one of their opponent's
-  Pokémon at a time (usage of the move will fail).
-- **Desync Clause Mod**: If the usage of a move would cause a desync it instead causes a
-  failure. However, this mod does not trigger for [**division by
+  Pokémon at a time (usage of the move fails).
+- **Desync Clause Mod**: If the usage of a move would cause a desync it instead causes a failure.
+  However, this mod doesn't trigger for [**division by
   zero**](https://pkmn.cc/bulba/List_of_glitches_(Generation_I)#Division_by_0) - instead of failing,
   Pokémon Showdown silently patches the damage calculation to divide by 1 instead of 0. The
   definition of the Desync Clause Mod should be extended or the code should be changed to fail
   instead of succeeding in these cases.
 - **Endless Battle Clause**: Prematurely ends the battle in a tie after 1000 turns or in certain
-  situations where it is trivially detectable that no progress can be made.
+  situations where it's trivially detectable that no progress can be made.
 - **Switch Priority Clause Mod**: When both player switch out their Pokémon at the same time the
   faster Pokémon switches first. This mod is **not broadcast at the start of the battle in the
-  `|rule|` section** in Generation I (or II) as the actual order of switches here does not have
-  competitive implications like it does in Generation III, but it is still contrary to how the games
+  `|rule|` section** in Generation I (or II) as the actual order of switches here doesn't have
+  competitive implications like it does in Generation III, but it's still contrary to how the games
   work where the [host (Player 1)'s Pokemon would switch
   first](https://www.smogon.com/forums/posts/5989318/show).
 
@@ -622,35 +619,35 @@ the correct control flow):
   Pokémon using Rage/Bide or Thrashing/Charging moves being incorrectly forced to skip a turn when
   the Pokémon using the Binding move switches.
 - **Mimic**: Pokémon Showdown checks that the user of Mimic has Mimic in one of their move slots,
-  which means Mimic legally called via Metronome or Mirror Move will only work if the user also has
-  Mimic (and the moved mimicked by Mimic called via Metronome / Mirror Move will erroneously
-  override the Mimic move slot instead of the Metronome / Mirror Move move slot). Furthermore,
-  because Pokémon Showdown deducts PP based on a move's name instead of slot, if Mimic copies a move
-  the Pokémon already knows, PP deduction for using either the original move of the mimicked move
-  will instead deduct PP for whichever appears at the lower move slot index and the PP will be
-  allowed to go negative (effectively allowing for infinite PP use). Pokémon Showdown also doesn't
-  deduct PP from using Transform if it was copied by Mimic.
-- **Mirror Move**: As covered above, both Substitute and Binding moves misbehave when used via
-  Mirror Move (though Pokémon Showdown has its own weird behavior and does not implement the
-  [partial trapping move Mirror Move
+  which means Mimic legally called via Metronome or Mirror Move only works if the user also has
+  Mimic (and the moved mimicked by Mimic called via Metronome / Mirror Move erroneously overrides
+  the Mimic move slot instead of the Metronome / Mirror Move move slot). Furthermore, because
+  Pokémon Showdown deducts PP based on a move's name instead of slot, if Mimic copies a move the
+  Pokémon already knows, PP deduction for using either the original move of the mimicked move
+  instead deducts PP for whichever appears at the lower move slot index and the PP is allowed to go
+  negative (effectively allowing for infinite PP use). Pokémon Showdown also doesn't deduct PP from
+  using Transform if it was copied by Mimic.
+- **Mirror Move**: As covered earlier, both Substitute and Binding moves misbehave when used via
+  Mirror Move (though Pokémon Showdown has its own weird behavior and doesn't implement the [partial
+  trapping move Mirror Move
   glitch](https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch) that exists
   on the cartridge). Additionally, Pokémon Showdown sets the last used move every turn a Pokémon is
-  Thrashing instead of just on the turn it is actually selected meaning Mirror Move will sometimes
-  successfully mirror a Thrashing move when it should fail. Finally, if Mirror Move copies
-  Struggle it should not deduct PP but on Pokémon Showdown it does.
+  Thrashing instead of just on the turn it's actually selected meaning Mirror Move sometimes
+  successfully mirrors a Thrashing move when it should fail. Finally, if Mirror Move copies Struggle
+  it shouldn't deduct PP but on Pokémon Showdown it does.
 - **Metronome**: In addition to the issues with binding moves and Substitute, Metronome and Mirror
-  Move cannot mutually call each other more than 3 times in a row without causing the Pokémon
-  Showdown simulator to crash due to defensive safety checks that do not exist on the cartridge.
+  Move can't mutually call each other more than 3 times in a row without causing the Pokémon
+  Showdown simulator to crash due to defensive safety checks that don't exist on the cartridge.
 - **Transform**: Transform screws up the effect of Disable, because on Pokémon Showdown, Disable
   prevents moves of a given *name* from being used (e.g. "Water Gun") as opposed to moves in a
-  specific *slot* (e.g. the 2nd move slot), and a Pokémon's moves can change after Transform (this
-  is not an issue with Disable + Mimic because Mimic happens to replace the same slot). Transform
-  also has a bad interaction with Pokémon Showdown's buggy Haze implementation, as Haze on Pokémon
-  Showdown does not copy unmodified stats, leaving the Transformed Pokémon with incorrect stats.
-  Furthermore, transforming and then using Mirror Move / Metronome can result in [glitchy behavior
-  and
+  specific *slot* (e.g. the second move slot), and a Pokémon's moves can change after Transform
+  (this isn't an issue with Disable + Mimic because Mimic happens to replace the same slot).
+  Transform also has a bad interaction with Pokémon Showdown's buggy Haze implementation, as Haze on
+  Pokémon Showdown doesn't copy unmodified stats, leaving the Transformed Pokémon with incorrect
+  stats. Furthermore, transforming and then using Mirror Move / Metronome can result in [glitchy
+  behavior and
   softlocks](https://pkmn.cc/bulba/Transform_glitches#Transform_.2B_Mirror_Move.2FMetronome_PP_error)
-  which Pokémon Showdown does not implement.
+  which Pokémon Showdown doesn't implement.
 
 Importantly, Pokémon Showdown's **speed tie RNG mechanics are unimplementable** in the pkmn engine
 as they rely on internal implementation decisions made by Pokémon Showdown that are impossible to
@@ -661,8 +658,8 @@ below).
 
 **The pkmn engine aims to match the cartridge's RNG frame-accurately**, in that provided with the
 same initial seed and inputs it should produce the same battle playout as the Pokémon Red cartridge.
-**Pokémon Showdown does not correctly implement frame-accurate RNG in any generation**, and along
-with the [bugs](#bugs) discussed above this results in large differences in the codebase. Because
+**Pokémon Showdown doesn't correctly implement frame-accurate RNG in any generation**, and along
+with the [bugs](#bugs) discussed earlier this results in large differences in the codebase. Because
 the pkmn engine aims to be as compatible with Pokémon Showdown as possible when in `-Dshowdown`
 compatibility mode, the implications of these differences are outlined below:
 
@@ -680,15 +677,15 @@ compatibility mode, the implications of these differences are outlined below:
   sampling to ensure uniformity as is done on the cartridge. This means that certain values are
   fractionally more likely to be chosen than others, though this bias is usually quite small (e.g.
   in the case of Metronome instead of selecting moves with an equal $1\over163$ chance, Pokémon
-  Showdown will select some with a $1\over2^{32}$ greater chance than others).
+  Showdown selects some with a $1\over2^{32}$ greater chance than others).
 - **Order of operations**: RNG calls effectively introduce something similar to a ["memory
   barrier"](https://en.wikipedia.org/wiki/Memory_barrier) in that they must be sequenced correctly
   (though operations which occur between them may happen in any order). Pokémon Showdown violates
   this by introducing additional operations (see below) and changing up the order of existing
   operations (e.g. choosing to check for hit/miss, determine the number of hits for moves with
   multiple hits, determine if a move hit critically and then the damage instead of checking for
-  hit/miss and determining number of hits *after* the other two). While it is often desirable to
-  rearrange code for performance or to improve readability this can only be done if it does not
+  hit/miss and determining number of hits *after* the other two). While it's often desirable to
+  rearrange code for performance or to improve readability this can only be done if it doesn't
   affect accuracy.
 - **Speed-ties**: In addition to [breaking switch-in speed ties with an RNG
   call](https://www.smogon.com/forums/threads/adv-switch-priority.3622189/), speed ties in Pokémon
@@ -699,16 +696,16 @@ compatibility mode, the implications of these differences are outlined below:
   ties proves impossible, and thus the reference Pokémon Showdown implementation pkmn engine aims to
   match has been [patched](../../../docs/TESTING.md#patches) to change this behavior.
 - **Effects**: Pokémon Showdown occasionally incorrectly inserts RNG calls in move effect handlers
-  when they are not relevant:
+  when they're not relevant:
   - Roar / Whirlwind roll to hit and can "miss" as opposed to simply failing
 
-Finally, the **initial 9-byte seed for link battles on Pokémon Red cannot include bytes larger than
+Finally, the **initial 9-byte seed for link battles on Pokémon Red can't include bytes larger than
 the `SERIAL_PREAMBLE_BYTE`**, so must be in the range $\left[0, 252\right]$. This has implications
 on the first 9 random numbers generated during the battle and has [**non-trivial competitive
 implications**](https://www.smogon.com/forums/posts/9068411/show) (at the start of the battle move
 effects become more likely, the ["1/256-miss" glitch](https://glitchcity.wiki/1/256_miss_glitch)
-cannot happen, Player 1 is more likely to win speed ties, etc) that Pokémon Showdown cannot
-replicate due to everything described above.
+can't happen, Player 1 is more likely to win speed ties, etc) that Pokémon Showdown can't replicate
+due to everything described earlier.
 
 All of places in the link battle code where randomness is required are outlined below:
 
@@ -731,16 +728,16 @@ All of places in the link battle code where randomness is required are outlined 
 | **Bide** (duration)      | `Effects.bide`           | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 1\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[2, 4\right)$ turns</dd></dl>                                               |
 | **Disable** (move)       | `Effects.disable`        | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X \land 3$ is the index of a non-empty move slot</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, \|movesSlots\|\right)$</dd></dl>        |
 | **Disable** (duration)   | `Effects.disable`        | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 7\right) + 1$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[1, 9\right)$ turns</dd></dl>                                               |
-| **Metronome** (move)     | `metronome`              | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X$ matches the index of a move which is not Struggle or Metronome</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, \|validMoves\|\right)$, where $validMoves$ is ordered set of moves with  Struggle and Metronome removed <i>(indexes of moves > Metronome will be shifted down)</i></dd></dl> |
+| **Metronome** (move)     | `metronome`              | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X$ matches the index of a move which isn't Struggle or Metronome</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, \|validMoves\|\right)$, where $validMoves$ is ordered set of moves with  Struggle and Metronome removed <i>(indexes of moves > Metronome are shifted down)</i></dd></dl> |
 | **Mimic** (move)         | `Effects.mimic`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X \land 3$ is the index of a non-empty move slot</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, \|movesSlots\|\right)$</dd></dl>        |
 | **Psywave** (power)      | `specialDamage`          | <dl><dt>Pokémon Red</dt><dd>Continue generating until $X < {3\over2} \cdot level$</dd><dt>Pokémon Showdown</dt><dd>Generate $X \in \left[0, {3\over2} \cdot level\right)$</dd></dl>                       |
 | **Thrash** (rampage)     | `Effects.thrash`         | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 1\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[2, 4\right)$ turns</dd></dl>                                               |
 | **Thrash** (confusion)   | `beforeMove`             | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 2$ turns</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \left[2, 6\right)$ turns</dd></dl>                                               |
-| **Binding** (duration)   | `Effects.binding`        | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 1$ further turns if $\left(X \land 3\right) < 2$<br /> otherwise last for $\left(Y \land 3\right) + 1$ further turns (reroll)</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \{2, 2, 2, 3, 3, 3, 4, 5 \} - 1$ further turns</dd></dl> |
+| **Binding** (duration)   | `Effects.binding`        | <dl><dt>Pokémon Red</dt><dd>Last for $\left(X \land 3\right) + 1$ further turns if $\left(X \land 3\right) < 2$<br /> otherwise last for $\left(Y \land 3\right) + 1$ further turns (reroll)</dd><dt>Pokémon Showdown</dt><dd>Last for $X \in \{2, 2, 2, 3, 3, 3, 4, 5\} - 1$ further turns</dd></dl> |
 | **Multi-Hit** (hits)     | `Effects.multiHit`       | *Ibid.*                                                                                                                                                                                                   |
 | **Unboost** (chance)     | `Effects.unboost`        | Trigger if $X < 85$                                                                                                                                                                                       |
 
-*In the table above,* $X$ *is always in the range* $\left[0, 256\right)$ *for Pokémon Red and for
+*In the preceding table,* $X$ *is always in the range* $\left[0, 256\right)$ *for Pokémon Red and for
 Pokémon Showdown is always **scaled** from the 32-bit output range of the RNG to either be in that
 range or to whichever range is specified by the description.*
 
@@ -783,7 +780,8 @@ table provides a rough mapping between pkmn and Pokémon Red methods:
 | `handleResidual`          | `HandlePoisonBurnLeechSeed`                             |
 | `endTurn` / `checkEBC`    | -                                                       |
 
-Pokémon Red groups move effect handlers together into several groups, these have also been renamed for clarification in the pkmn engine:
+Pokémon Red groups move effect handlers together into several groups, these have also been renamed
+for clarification in the pkmn engine:
 
 | pkmn            | Pokémon Red (pret)        |
 | --------------- | ------------------------- |
@@ -799,7 +797,7 @@ The pkmn engine attempts to adhere to certain naming conventions:
 - **`p1`** & **`p2`** always correspond to the `Side` of `Player.P1` and `Player.P2` respectively
 - **`player`** is the executing turn `Player` (`hWhoseTurn`) and **`player.foe()`** is their
   opponent
-- if `player` (executing turn player) is present then **`side`** will always correspond to their
+- if `player` (executing turn player) is present then **`side`** always corresponds to their
   `Side` and **`foe`** the opposing `Side`, however `side` can refer to an arbitrary `Side` object
   if there is no `player` in scope (e.g. in helper functions)
 - **`target_player`** is a target `Player` whose corresponding `Side` is  **`target`**
