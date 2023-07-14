@@ -186,10 +186,7 @@ fn selectMove(
             assert(choice.data == 0);
             // GLITCH: https://glitchcity.wiki/Partial_trapping_move_Mirror_Move_link_battle_glitch
             if (foe_choice.type == .Switch) {
-                const last = side.active.move(if (player == .P1)
-                    battle.last_moves.p1_index
-                else
-                    battle.last_moves.p2_index);
+                const last = side.active.move(battle.lastMove(player).index);
                 if (last.id == .Metronome) side.last_selected_move = last.id;
                 if (last.id == .MirrorMove) return Result.Error;
             }
@@ -242,11 +239,7 @@ fn saveMove(battle: anytype, player: Player, choice: ?Choice) void {
             assert(showdown or move.pp != 0);
 
             side.last_selected_move = move.id;
-            if (player == .P1) {
-                battle.last_moves.p1_index = @intCast(c.data);
-            } else {
-                battle.last_moves.p2_index = @intCast(c.data);
-            }
+            battle.lastMove(player).index = @intCast(c.data);
         }
     }
 }
@@ -264,11 +257,7 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, options: a
     side.order[0] = side.order[slot - 1];
     side.order[slot - 1] = out;
 
-    if (player == .P1) {
-        battle.last_moves.p1_index = 1;
-    } else {
-        battle.last_moves.p2_index = 1;
-    }
+    battle.lastMove(player).index = 1;
 
     side.last_used_move = .None;
     foe.last_used_move = .None;
@@ -455,10 +444,7 @@ fn executeMove(
     if (mslot == 0 and side.last_selected_move != .None and side.last_selected_move != .Struggle) {
         // choice.data == 0 only happens with Struggle on Pokémon Showdown
         assert(!showdown);
-        mslot = @intCast(if (player == .P1)
-            battle.last_moves.p1_index
-        else
-            battle.last_moves.p2_index);
+        mslot = @intCast(battle.lastMove(player).index);
         const stored = side.stored();
         // GLITCH: Struggle bypass PP underflow via Hyper Beam / Trapping-switch auto selection
         auto = side.last_selected_move == .HyperBeam or side.active.volatiles.Bide or
@@ -479,10 +465,7 @@ fn executeMove(
     } else if (showdown and side.active.volatiles.Charging) {
         // Incorrect mslot with Pokémon Showdown choice semantics so we need to recover from index
         assert(mslot == 1);
-        mslot = @intCast(if (player == .P1)
-            battle.last_moves.p1_index
-        else
-            battle.last_moves.p2_index);
+        mslot = @intCast(battle.lastMove(player).index);
     }
 
     var skip_can = false;
@@ -834,11 +817,7 @@ fn setCounterable(battle: anytype, player: Player, side: *Side, move: Move.Data)
     // as the desync results from actually having two separate battle states that subtly disagree
     const counterable = side.last_selected_move != .Counter and move.bp > 0 and
         (move.type == .Normal or move.type == .Fighting);
-    if (player == .P1) {
-        battle.last_moves.p1_counterable = @intFromBool(counterable);
-    } else {
-        battle.last_moves.p2_counterable = @intFromBool(counterable);
-    }
+    battle.lastMove(player).counterable = @intFromBool(counterable);
 }
 
 fn decrementPP(side: *Side, mslot: u4, auto: bool) void {
@@ -1278,11 +1257,7 @@ fn counterDamage(battle: anytype, player: Player, move: Move.Data, options: anyt
     else
         foe.last_selected_move);
 
-    const used = (if (player.foe() == .P1)
-        battle.last_moves.p1_counterable
-    else
-        battle.last_moves.p2_counterable) != 0;
-
+    const used = battle.lastMove(player.foe()).counterable != 0;
     const selected = foe_last_selected_move.bp > 0 and
         foe.last_selected_move != .Counter and
         (foe_last_selected_move.type == .Normal or

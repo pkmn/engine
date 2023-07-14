@@ -65,7 +65,7 @@ pub fn Battle(comptime RNG: anytype) type {
         /// The last damage dealt by either side.
         last_damage: u16 = 0,
         /// Details about the last move selected/used by each player required to detect desyncs.
-        last_moves: MoveDetails = .{},
+        last_moves: [2]MoveDetails = [_]MoveDetails{.{}} ** 2,
         /// The pseudo random number generator.
         rng: RNG,
 
@@ -84,6 +84,15 @@ pub fn Battle(comptime RNG: anytype) type {
         /// Returns an identifier for the active Pokémon of `player`.
         pub inline fn active(self: *const Self, player: Player) ID {
             return player.ident(@intCast(self.side(player).order[0]));
+        }
+
+        /// Returns the `MoveDetails` for the given `player`.
+        pub inline fn lastMove(
+            self: anytype,
+            player: Player,
+        ) PointerType(@TypeOf(self), MoveDetails) {
+            assert(@typeInfo(@TypeOf(self)).Pointer.child == Self);
+            return &self.last_moves[@intFromEnum(player)];
         }
 
         /// Returns the result of applying Player 1's choice `c1` and Player 2's choice `c2` to the
@@ -219,17 +228,13 @@ pub const MoveSlot = extern struct {
 
 /// Details required to detect desyncs based on the move last selected/executed by players.
 pub const MoveDetails = packed struct {
-    /// The move slot index of the last move selected in the battle menu by Player 1
-    p1_index: if (showdown) u8 else u4 = 0,
-    /// Whether the last move executed by Player 1 was counterable.
-    p1_counterable: if (showdown) u8 else u4 = 0,
-    /// The move slot index of the last move selected in the battle menu by Player 2
-    p2_index: if (showdown) u8 else u4 = 0,
-    /// Whether the last move executed by Player 2 was counterable.
-    p2_counterable: if (showdown) u8 else u4 = 0,
+    /// The move slot index of the last move selected in the battle menu.
+    index: if (showdown) u8 else u4 = 0,
+    /// Whether the last move executed was counterable.
+    counterable: if (showdown) u8 else u4 = 0,
 
     comptime {
-        assert(@sizeOf(MoveDetails) == if (showdown) 4 else 2);
+        assert(@sizeOf(MoveDetails) == if (showdown) 2 else 1);
     }
 };
 
