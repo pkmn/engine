@@ -128,7 +128,7 @@ state or cause the engine to crash.**
 
 Battles may be played out from any point but to freshly initialize a battle which is yet to start
 the turn count and active Pokémon should be zeroed out (driver code should handle this for you).
-Most driver code should also provide helpers to make initialize a battle convenient - check the
+Most driver code should also provide helpers to make initializing battle convenient - check the
 respective documentation and examples for the bindings being used. The engine's [protocol
 documentation](docs/PROTOCOL.md) goes into greater detail on the specifics of updates and the
 potential logs that may result.
@@ -168,10 +168,10 @@ C are the main contributing factors to the sparseness of what `libpkmn` chooses 
 
 ### JavaScript / TypeScript
 
-`@pkmn/engine` depends on the [`@pkmn/data`](https://www.npmjs.com/package/@pkmn/data) which
+`@pkmn/engine` depends on the [`@pkmn/data`](https://www.npmjs.com/package/@pkmn/data) package which
 requires a `Dex` implementation to be provided as well. The `Battle.create` function can be used to
 initialize a `Battle` from the beginning, or `Battle.restore` can be used to re-instantiate a battle
-which is in already progress. If logging is enabled the output can be turned into Pokémon Showdown
+which is already in progress. If logging is enabled the output can be turned into Pokémon Showdown
 protocol via `Log.parse`.
 
 ```ts
@@ -305,7 +305,7 @@ Currently, most of the foundational work from stage 0 is done:
 
 **Stage 1 is currently in progress** and involves the implementation of the actual Generation I & II
 battle engines, followed by Generation III & IV in stage 2. The implementation of further Pokémon
-generations is in scope for the project but shouldn't be considered as part of the immediate roadmap
+generations is in scope for the project but shouldn't be considered part of the immediate roadmap
 (i.e. exploring the options for broadening support for old generation APIs is given higher priority
 than implementing more modern generations). Furthermore, implementation of modern generations is
 soft-blocked on the [availability of high quality
@@ -330,6 +330,6 @@ The pkmn engine is distributed under the terms of the [MIT License](LICENSE).
   choices aren't. Furthermore, the "Pokémon Showdown" code referenced by this project includes
   several [patches](docs/TESTING.md#patches) to improve accuracy and smooth over some of the more
   egregious implementation issues. In practical terms, the vast majority of games played out in the
-  pkmn engine's compatibility mode and on this patched Pokémon Showdown simulator is the same,
+  pkmn engine's compatibility mode and on this patched Pokémon Showdown simulator are the same,
   it's only in a well defined and documented set of circumstances where the two implementations
   diverge.
