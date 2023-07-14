@@ -358,7 +358,7 @@ const downloadImportLib = async () => {
   // either the default options or whatever was passed in
   if (!configs.size) {
     node = true;
-    const DEFAULT = ['-Dshowdown', '-Dlog', '-Dchance', '-Dcalc'];
+    const DEFAULT = ['-Dshowdown'];
     configs.set('node', {type: 'node', options: options || DEFAULT});
     configs.set('wasm', {type: 'wasm', options: options || DEFAULT});
   }
