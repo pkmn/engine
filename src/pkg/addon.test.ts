@@ -16,7 +16,7 @@ describe('AddOn', () => {
     expect(addon.supports(!showdown, !log)).toBe(false);
 
     expect(addon.supports(showdown)).toBe(true);
-    expect(addon.supports(showdown, log)).toBe(true);
-    expect(addon.supports(showdown, !log)).toBe(false);
+    expect(addon.supports(showdown, log)).toBe(false);
+    expect(addon.supports(showdown, !log)).toBe(true);
   });
 });
