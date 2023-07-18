@@ -1,5 +1,12 @@
 This directory contains miscellaneous scripts and tools useful for working on the pkmn engine:
 
+- [`copies.zig`](copies.zig): Analyze LLVM IR to detect large copies (defaulting to anything larger
+  than a pointer, but a larger threshold can be provided) with comptime-known size. The respective
+  binary must first be build with `-Demit-ll` to produce the input for the copies tool:
+
+      $ zig build -Demit-ll -Dstrip -Doptimize=ReleaseFast
+      $ zig build copies -- <THRESHOLD?> < pkmn.ll 2>&1 | sort -n -k 3
+
 - [`debug.ts`](debug.ts): Reads a dump of [binary debug protocol](../../docs/PROTOCOL.md#debugging)
   from [standard input](https://en.wikipedia.org/wiki/Standard_streams) and outputs the standalone
   [debug UI webpage](https://pkmn.cc/debug.html):
