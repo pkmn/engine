@@ -28,6 +28,8 @@ jobs:
       #   with:
       #     version: ${{matrix.zig}}
       - uses: AnnikaCodes/install-ziglint@v0.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - run: npm install
       - run: echo "${GITHUB_WORKSPACE}/build/bin/zig" >> $GITHUB_PATH
         if: ${{ matrix.zig == 'local' && matrix.os != 'windows-latest' }}
