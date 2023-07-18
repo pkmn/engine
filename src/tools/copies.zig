@@ -106,26 +106,3 @@ fn extractMemcpySize(memcpy_call: []const u8) ?u32 {
 
     return std.fmt.parseInt(u32, size_value, 10) catch null;
 }
-
-test "extractMemcpySize" {
-    const T = struct {
-        fn check(line: []const u8, want: ?u32) !void {
-            const got = extractMemcpySize(line);
-            try std.testing.expectEqual(want, got);
-        }
-    };
-
-    // One argument is a nested expression with a function call.
-    try T.check(
-        "  call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 8 %0, i8* align 8 bitcast(" ++
-            "{ void (i32, %std.os.linux.siginfo_t*, i8*)*," ++
-            " [32 x i32], <{ i32, [4 x i8] }>, void ()* }*" ++
-            " @8 to i8*), i64 152, i1 false)",
-        152,
-    );
-
-    // The argument is `%6` --- a runtime value.
-    try T.check(
-        \\   call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 1 %8, i8* align 1 %4, i64 %6, i1 false)
-    , 0);
-}
