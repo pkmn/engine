@@ -53,6 +53,11 @@ pub fn main() !void {
     }
 }
 
+fn cut(haystack: []const u8, needle: []const u8) ?struct { []const u8, []const u8 } {
+    const index = std.mem.indexOf(u8, haystack, needle) orelse return null;
+    return .{ haystack[0..index], haystack[index + needle.len ..] };
+}
+
 fn extractFuncName(define: []const u8, buf: []u8) ?[]const u8 {
     const func_name = (cut(define, "@") orelse return null)[1];
     var buf_count: usize = 0;
@@ -123,9 +128,4 @@ test "extractMemcpySize" {
     try T.check(
         \\   call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 1 %8, i8* align 1 %4, i64 %6, i1 false)
     , 0);
-}
-
-pub fn cut(haystack: []const u8, needle: []const u8) ?struct { []const u8, []const u8 } {
-    const index = std.mem.indexOf(u8, haystack, needle) orelse return null;
-    return .{ haystack[0..index], haystack[index + needle.len ..] };
 }
