@@ -14,7 +14,7 @@ zig-build:
 .PHONY: js-build
 js-build: export DEBUG_PKMN_ENGINE=true
 js-build: node_modules
-	node src/bin/install-pkmn-engine --options='-Dshowdown -Dlog -Dchance -Dcalc'
+	node src/bin/install-pkmn-engine --options='-Dshowdown'
 	npm run compile
 
 .PHONY: build
