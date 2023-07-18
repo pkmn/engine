@@ -2680,7 +2680,7 @@ fn statusModify(status: u8, stats: *Stats(u16)) void {
     }
 }
 
-inline fn isForced(active: ActivePokemon) bool {
+inline fn isForced(active: anytype) bool {
     return active.volatiles.Recharging or active.volatiles.Rage or
         active.volatiles.Thrashing or active.volatiles.Charging;
 }
@@ -3072,7 +3072,7 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
             const side = battle.side(player);
             const foe = battle.foe(player);
 
-            var active = side.active;
+            var active = &side.active;
             const stored = side.stored();
 
             // While players are not given any input options on the cartridge in these cases,
