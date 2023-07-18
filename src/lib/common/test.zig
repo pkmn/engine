@@ -1,5 +1,4 @@
 comptime {
-    _ = @import("battle.zig");
     _ = @import("data.zig");
     _ = @import("optional.zig");
     _ = @import("protocol.zig");
