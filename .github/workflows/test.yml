@@ -27,6 +27,7 @@ jobs:
       #   if: ${{ matrix.zig != 'local' }}
       #   with:
       #     version: ${{matrix.zig}}
+      - uses: AnnikaCodes/install-ziglint@v0.1
       - run: npm install
       - run: echo "${GITHUB_WORKSPACE}/build/bin/zig" >> $GITHUB_PATH
         if: ${{ matrix.zig == 'local' && matrix.os != 'windows-latest' }}
