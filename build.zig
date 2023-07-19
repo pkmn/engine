@@ -261,12 +261,6 @@ const Config = struct {
     cmd: ?[]const u8,
 };
 
-const TESTS = .{
-    "src/lib/common/test.zig",
-    "src/lib/gen1/test.zig",
-    "src/lib/gen2/test.zig",
-};
-
 const TestStep = struct {
     step: std.Build.Step,
     build: bool,
@@ -281,26 +275,27 @@ const TestStep = struct {
         const step = std.Build.Step.init(.{ .id = .custom, .name = "Run all tests", .owner = b });
         self.* = TestStep{ .step = step, .build = test_filter == null };
 
-        const paths: []const []const u8 =
-            if (test_file) |t| &.{t} else if (coverage != null) &.{"src/lib/test.zig"} else &TESTS;
-        for (paths) |path| {
-            const tests = b.addTest(.{
-                .name = std.fs.path.basename(std.fs.path.dirname(path).?),
-                .root_source_file = .{ .path = path },
-                .optimize = config.optimize,
-                .target = config.target,
-                .filter = test_filter,
-            });
-            tests.setMainPkgPath("./");
-            tests.addOptions("build_options", options);
-            tests.single_threaded = true;
-            maybeStrip(b, tests, &tests.step, config.strip, config.cmd);
-            if (config.pic) tests.force_pic = config.pic;
-            if (coverage) |c| {
-                tests.setExecCmd(&.{ "kcov", "--include-pattern=src/lib", c, null });
-            }
-            self.step.dependOn(&b.addRunArtifact(tests).step);
+        const path = test_file orelse "src/lib/test.zig";
+        const tests = b.addTest(.{
+            .name = b.fmt("{s}-{s}", .{
+                std.fs.path.basename(std.fs.path.dirname(path).?),
+                std.fs.path.stem(std.fs.path.basename(path)),
+            }),
+            .root_source_file = .{ .path = path },
+            .optimize = config.optimize,
+            .target = config.target,
+            .filter = test_filter,
+        });
+        tests.setMainPkgPath("./");
+        tests.addOptions("build_options", options);
+        tests.single_threaded = true;
+        maybeStrip(b, tests, &tests.step, config.strip, config.cmd);
+        if (config.pic) tests.force_pic = config.pic;
+        if (coverage) |c| {
+            tests.setExecCmd(&.{ "kcov", "--include-pattern=src/lib", c, null });
         }
+        self.step.dependOn(&b.addRunArtifact(tests).step);
+
         return self;
     }
 };
