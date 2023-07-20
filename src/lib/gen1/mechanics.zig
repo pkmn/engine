@@ -1332,7 +1332,7 @@ fn mirrorMove(
     auto: bool,
     residual: *bool,
     options: anytype,
-) !?Result {
+) anyerror!?Result {
     var side = battle.side(player);
     const foe = battle.foe(player);
 
@@ -1359,7 +1359,7 @@ fn metronome(
     auto: bool,
     residual: *bool,
     options: anytype,
-) !?Result {
+) anyerror!?Result {
     var side = battle.side(player);
 
     side.last_selected_move = try Rolls.metronome(battle, player, options);
