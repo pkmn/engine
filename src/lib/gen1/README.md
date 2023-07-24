@@ -6,7 +6,9 @@ document](../../../docs/DESIGN.md). The Generation I engine is implemented and t
 following files:
 
 - [`data.zig`](data.zig) ([`data`](data)): contains definitions of all of the data structures used
-  by the engine, described in detail [below](#data-structures)
+  to implement the core mechanics of the engine, described in detail [below](#data-structures)
+- [`chance.zig`](chance.zig): TODO
+- [`calc.zig`](calc.zig): TODO
 - [`helpers.zig`](helpers.zig): helpers used to construct complex data types with
   sensible defaults (internally used by tests and tools)
 - [`mechanics.zig`](mechanics.zig): code which manipulates the data structures to implement the
@@ -245,9 +247,17 @@ engine maintains a `Type.PRECEDENCE` table with just the match-ups that are rele
 pruned for efficiency) and only looks up precedence when necessary to minimize expensive searches.
 Pokémon Showdown doesn't implement type precedence.
 
+### `Chance` / `Actions` / `Action` / `Durations` / `Duration`
+
+TODO
+
+### `Calc` / `Overrides` / `Summaries` / `Summary`
+
+TODO
+
 ## Information
 
-The information of each field (in terms of [bits of
+The information of each field required for mechanics (in terms of [bits of
 entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))) is as follows:
 
 | Data            | Range     | Bits |     | Data              | Range    | Bits |
@@ -383,7 +393,7 @@ data in the browser for ease of debugging.
 - `order` is a 6 byte array where `order[i]` represents the "slot" of `pokemon[i]`, where the slot
   is usually a unique value from 1 to 6 but can be 0 in situations where a player brings less than six
   Pokémon to battle (note however that if `order[i]` is 0 than for all j > 0 `order[i+j]` **must**
-  equal 0).
+  equal 0)
 
 ### `ActivePokemon`
 
@@ -468,6 +478,76 @@ data in the browser for ease of debugging.
 | 21    | 22  | `species`       | The Pokémon's stored species               |
 | 22    | 23  | `type1`/`type2` | The Pokémon's stored types                 |
 | 23    | 24  | `level`         | The Pokémon's level                        |
+
+
+### `Action`
+
+`Actions` consist of an `Action` for Player 1 followed by an `Action` for Player 2.
+
+> **NOTE:** The offsets in the following table represent *bits* and **not** bytes.
+
+| Start | End | Data                     | Description                                                                     |
+| ----- | --- | ------------------------ | ------------------------------------------------------------------------------- |
+| 0     | 8   | `damage`                 | The roll to be returned damage (217-255).                                       |
+| 8     | 10  | `hit`                    | The roll to be returned for accuracy (1 for miss, 2 for hit).                   |
+| 10    | 12  | `critical_hit`           | The roll to be returned for critical hits (1 for no, 2 for yes).                |
+| 12    | 14  | `secondary_chance`       | The roll to be returned for secondary chance rolls (1 for no-proc, 2 for proc). |
+| 14    | 16  | `speed_tie`              | The player to return for speed ties (1 for Player 1, 2 for Player 2).           |
+| 16    | 18  | `confused`               | The roll to be returned for confusion self-hits (1 for no-proc, 2 for proc).    |
+| 18    | 20  | `paralyzed`              | The roll to be returned for full paralysis (1 for no-proc, 2 for proc).         |
+| 20    | 24  | `duration`               | The roll to be returned for the duration (including for binding moves).         |
+| 24    | 40  | [`durations`](#duration) | Values of various durations.                                                    |
+| 40    | 44  | `move_slot`              | The roll to be returned for the move slot (1-4, invalid values ignored).        |
+| 44    | 48  | `move_slot`              | The roll to be returned for a multi-hit move distribution (2-5).                |
+| 48    | 56  | `psywave`                | One greater than the roll to be returned for Psywave damage.                    |
+| 56    | 64  | `metronome`              | The move to return for Metronome.                                               |
+
+- for any field a value of 0 is considered to be unset
+- **both Player 1 and Player 2 must set the same value for `speed_tie`.**
+- `duration` determines the roll for any effect which lasts over multiple turns, whereas `durations` can either be used to
+  track how long these effects have lasted (for the purposes of computing probablities with `-Dchance`) or can be used to
+  [override](#overrides) (extend or end) the duration of specfic effects with `-Dcalc`.
+
+#### `Duration`
+
+> **NOTE:** The offsets in the following table represent *bits* and **not** bytes.
+
+| Start | End | Data        |
+| ----- | --- | ----------- |
+| 0     | 3   | `sleep`     |
+| 3     | 6   | `confusion` |
+| 4     | 10  | `disable`   |
+| 10    | 13  | `attacking` |
+| 13    | 16  | `binding`   |
+
+- the meaning of each field depends on the context in which `Duration` appears:
+  - within `Chance` `actions`, the durations tracked refer to the number of turns a Pokémon has been
+    observed to be under an effect
+  - within `Overrides` `actions`, the durations refer to the value the next `Chance` `actions`
+    should be made to take on
+  - within `Overrides` `durations`, the durations serve as a mask to determine to whether or not the
+    durations in `Overrides` `actions` should be considered to be set or not
+◊
+### `Overrides`
+
+| Start | End | Data                        | Description                                                                           |
+| ----- | --- | --------------------------- | ------------------------------------------------------------------------------------- |
+| 0     | 8   | [`action.p1`](#action)      | Rolls to force Player 1's RNG to return for specific events.                          |
+| 8     | 16  | [`action.p2`](#action)      | Rolls to force Player 2's RNG to return for specific events.                          |
+| 16    | 18  | [`durations.p1`](#duration) | Whether or not to modify Player 1's effect durations to match `actions.p1.durations`. |
+| 18    | 20  | [`durations.p2`](#duration) | Whether or not to modify Player 2's effect durations to match `actions.p1.durations`. |
+| 20    | 24  | -                           | *Zero padding*                                                                        |
+
+### `Summaries`
+
+| Start | End | Data               | Description                                                                     |
+| ----- | --- | ------------------ | ------------------------------------------------------------------------------- |
+| 0     | 2   | `p1.damage.base`   | Player 1's base computed damage before the damage roll is applied.              |
+| 2     | 4   | `p1.damage.final`  | Player 1's final computed damage that gets applied to the Pokémon.              |
+| 4     | 6   | `p1.damage.capped` | Whether higher damage from Player 1 will saturate / result in the same outcome. |
+| 6     | 8   | `p2.damage.base`   | Player 2's base computed damage before the damage roll is applied.              |
+| 8     | 10  | `p2.damage.final`  | Player 2's final computed damage that gets applied to the Pokémon.              |
+| 10    | 12  | `p2.damage.capped` | Whether higher damage from Player 2 will saturate / result in the same outcome. |
 
 ## Bugs
 

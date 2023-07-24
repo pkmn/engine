@@ -126,7 +126,7 @@ pub const Action = packed struct {
     /// If not None, the value to be returned for
     /// Rolls.{confusionChance,secondaryChance,poisonChance}.
     secondary_chance: Optional(bool) = .None,
-    /// If not None, the Playr to be returned by Rolls.speedTie.
+    /// If not None, the Player to be returned by Rolls.speedTie.
     speed_tie: Optional(Player) = .None,
 
     /// If not None, the value to return for Rolls.confused.
