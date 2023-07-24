@@ -2771,6 +2771,7 @@ pub const Rolls = struct {
             }
         };
 
+        assert(roll >= 217 and roll <= 255);
         try options.chance.damage(player, roll);
         return roll;
     }
@@ -2895,6 +2896,7 @@ pub const Rolls = struct {
             }
         };
 
+        assert(power < max);
         try options.chance.psywave(player, power, max);
         return power;
     }
@@ -2911,6 +2913,7 @@ pub const Rolls = struct {
             }
         };
 
+        assert(duration >= 1 and duration <= 7);
         options.chance.duration(.sleep, player, player.foe(), duration);
         return duration;
     }
@@ -2923,6 +2926,7 @@ pub const Rolls = struct {
         else
             @intCast((battle.rng.next() & 7) + 1);
 
+        assert(duration >= 1 and duration <= 8);
         options.chance.duration(.disable, player, player.foe(), duration);
         return duration;
     }
@@ -2935,6 +2939,7 @@ pub const Rolls = struct {
         else
             @intCast((battle.rng.next() & 3) + 2);
 
+        assert(duration >= 2 and duration <= 5);
         options.chance.duration(.confusion, player, if (self) player else player.foe(), duration);
         return duration;
     }
@@ -2947,6 +2952,7 @@ pub const Rolls = struct {
         else
             @intCast((battle.rng.next() & 1) + 2);
 
+        assert(duration >= 2 and duration <= 3);
         options.chance.duration(.attacking, player, player, duration);
         return duration;
     }
@@ -2967,6 +2973,7 @@ pub const Rolls = struct {
             break :n @intCast((if (r < 2) r else battle.rng.next() & 3) + 2);
         };
 
+        assert(n >= 2 and n <= 5);
         if (effect == .Binding) {
             options.chance.duration(.binding, player, player, n);
         } else {
