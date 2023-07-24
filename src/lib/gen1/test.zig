@@ -10058,7 +10058,7 @@ fn Test(comptime rolls: anytype) type {
 
                 // Ensure we can generate all transitions from the same original state
                 // (we must change the battle's RNG from a FixedRNG to a PRNG because
-                // the stransitions function relies on RNG for discovery of states)
+                // the transitions function relies on RNG for discovery of states)
                 // FIXME
                 // const allocator = std.testing.allocator;
                 // const writer = std.io.null_writer;
@@ -10156,7 +10156,7 @@ fn unfix(actual: anytype) data.Battle(data.PRNG) {
             .seed = if (showdown)
                 0x12345678
             else
-                .{ 123, 234, 56, 78, 9, 101, 112, 131, 4, 151 },
+                .{ 123, 234, 56, 78, 9, 101, 112, 131, 4 },
         } },
     };
 }
