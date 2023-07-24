@@ -350,47 +350,65 @@ pub const Rolls = struct {
     const U3_NONE = [_]u3{0};
     const U3_FORCED = [_]u3{1};
 
-    /// Returns a slice with a range of values for sleep given the `action` state.
+    /// Returns a slice with a range of values for sleep given the `action` and `origin` states.
     pub inline fn sleep(action: Action, origin: Action) []const u3 {
-        const turns = @field(action.durations, "sleep");
-        _ = origin;
-        return if (turns < 1 or turns >= 7) &U3_NONE else &[_]u3{ 0, turns };
+        const a = @field(action.durations, "sleep");
+        const o = @field(origin.durations, "sleep");
+        if (o == a) return if (o == 0) &U3_NONE else &[_]u3{o};
+        assert(a == 0 or a == o + 1);
+        return if (o >= 7) &U3_NONE else &[_]u3{ 0, o + 1 };
     }
 
     const DISABLE_NONE = [_]u4{0};
 
-    /// Returns a slice with a range of values for disable given the `action` state
+    /// Returns a slice with a range of values for disable given the `action` and `origin` states
     /// and the state of the `parent` (the player's Pokémon's remaining sleep turns).
     pub inline fn disable(action: Action, origin: Action, parent: u4) []const u4 {
-        const turns = @field(action.durations, "disable");
-        _ = origin;
-        return if (parent > 0 or turns < 1 or turns >= 8) &DISABLE_NONE else &[_]u4{ 0, turns };
+        if (parent > 0) return &DISABLE_NONE;
+        const a = @field(action.durations, "disable");
+        const o = @field(origin.durations, "disable");
+        if (o == a) return if (o == 0) &DISABLE_NONE else &[_]u4{o};
+        assert(a == 0 or a == o + 1);
+        return if (o >= 8) &DISABLE_NONE else &[_]u4{ 0, o + 1 };
     }
 
-    /// Returns a slice with a range of values for confusion given the `action` state
+    /// Returns a slice with a range of values for confusion given the `action` and `origin` states
     /// and the state of the `parent` (the player's remaining sleep turns).
     pub inline fn confusion(action: Action, origin: Action, parent: u4) []const u3 {
-        const turns = @field(action.durations, "confusion");
-        _ = origin;
-        if (parent > 0 or turns < 1 or turns >= 5) return &U3_NONE;
-        return if (turns < 2) &U3_FORCED else &[_]u3{ 0, turns };
+        if (parent > 0) return &U3_NONE;
+        const a = @field(action.durations, "confusion");
+        const o = @field(origin.durations, "confusion");
+        if (o == a) return if (o == 0) &U3_NONE else &[_]u3{o};
+        assert(a == 0 or a == o + 1);
+        return if (o >= 5) &U3_NONE else if (o < 2)
+            if (a == 0) &U3_NONE else &U3_FORCED
+        else
+            &[_]u3{ 0, o + 1 };
     }
 
-    /// Returns a slice with a range of values for attacking given the `action` state
+    /// Returns a slice with a range of values for attacking given the `action` and `origin` states
     /// and the state of the `parent` (whether the player's Pokémon was fully paralyzed).
     pub inline fn attacking(action: Action, origin: Action, parent: Optional(bool)) []const u3 {
-        const turns = @field(action.durations, "attacking");
-        _ = origin;
-        if (parent == .true or turns < 1 or turns >= 3) return &U3_NONE;
-        return if (turns < 2) &U3_FORCED else &[_]u3{ 0, turns };
+        if (parent == .true) return &U3_NONE;
+        const a = @field(action.durations, "attacking");
+        const o = @field(origin.durations, "attacking");
+        if (o == a) return if (o == 0) &U3_NONE else &[_]u3{o};
+        assert(a == 0 or a == o + 1);
+        return if (o >= 3) &U3_NONE else if (o < 2)
+            if (a == 0) &U3_NONE else &U3_FORCED
+        else
+            &[_]u3{ 0, o + 1 };
     }
 
-    /// Returns a slice with a range of values for binding given the `action` state
+    /// Returns a slice with a range of values for binding given the `action` and `origin` states
     /// and the state of the `parent` (whether the player's Pokémon was fully paralyzed).
     pub inline fn binding(action: Action, origin: Action, parent: Optional(bool)) []const u3 {
-        const turns = @field(action.durations, "binding");
-        _ = origin;
-        return if (parent == .true or turns < 1 or turns >= 4) &U3_NONE else &[_]u3{ 0, turns };
+        if (parent == .true) return &U3_NONE;
+        const a = @field(action.durations, "binding");
+        const o = @field(origin.durations, "binding");
+        if (o == a) return if (o == 0) &U3_NONE else &[_]u3{o};
+        assert(a == 0 or a == o + 1);
+        return if (o >= 4) &U3_NONE else &[_]u3{ 0, o + 1 };
     }
 
     const SLOT_NONE = [_]u4{0};
@@ -535,72 +553,207 @@ test "Rolls.duration" {
     try expectEqualSlices(u1, &.{0}, Rolls.duration(actions.p2, .false));
 }
 
-const FIXME: Action = .{};
-
 test "Rolls.sleep" {
-    try expectEqualSlices(u3, &.{0}, Rolls.sleep(.{ .durations = .{ .sleep = 0 } }, FIXME));
-    try expectEqualSlices(u3, &.{0}, Rolls.sleep(.{ .durations = .{ .sleep = 7 } }, FIXME));
-    try expectEqualSlices(u3, &.{ 0, 4 }, Rolls.sleep(.{ .durations = .{ .sleep = 4 } }, FIXME));
+    try expectEqualSlices(u3, &.{0}, Rolls.sleep(
+        .{ .durations = .{ .sleep = 0 } },
+        .{ .durations = .{ .sleep = 0 } },
+    ));
+    try expectEqualSlices(u3, &.{ 0, 1 }, Rolls.sleep(
+        .{ .durations = .{ .sleep = 1 } },
+        .{ .durations = .{ .sleep = 0 } },
+    ));
+    try expectEqualSlices(u3, &.{ 0, 2 }, Rolls.sleep(
+        .{ .durations = .{ .sleep = 0 } },
+        .{ .durations = .{ .sleep = 1 } },
+    ));
+    try expectEqualSlices(u3, &.{1}, Rolls.sleep(
+        .{ .durations = .{ .sleep = 1 } },
+        .{ .durations = .{ .sleep = 1 } },
+    ));
+    try expectEqualSlices(u3, &.{ 0, 3 }, Rolls.sleep(
+        .{ .durations = .{ .sleep = 0 } },
+        .{ .durations = .{ .sleep = 2 } },
+    ));
+    try expectEqualSlices(u3, &.{ 0, 7 }, Rolls.sleep(
+        .{ .durations = .{ .sleep = 7 } },
+        .{ .durations = .{ .sleep = 6 } },
+    ));
+    try expectEqualSlices(u3, &.{0}, Rolls.sleep(
+        .{ .durations = .{ .sleep = 0 } },
+        .{ .durations = .{ .sleep = 7 } },
+    ));
 }
 
 test "Rolls.disable" {
-    try expectEqualSlices(u4, &.{0}, Rolls.disable(.{ .durations = .{ .disable = 0 } }, FIXME, 0));
-    try expectEqualSlices(u4, &.{0}, Rolls.disable(.{ .durations = .{ .disable = 8 } }, FIXME, 0));
-    try expectEqualSlices(u4, &.{0}, Rolls.disable(.{ .durations = .{ .disable = 4 } }, FIXME, 1));
-    try expectEqualSlices(u4, &.{ 0, 4 }, Rolls.disable(.{
-        .durations = .{ .disable = 4 },
-    }, FIXME, 0));
+    try expectEqualSlices(u4, &.{0}, Rolls.disable(
+        .{ .durations = .{ .disable = 0 } },
+        .{ .durations = .{ .disable = 0 } },
+        0,
+    ));
+    try expectEqualSlices(u4, &.{ 0, 1 }, Rolls.disable(
+        .{ .durations = .{ .disable = 1 } },
+        .{ .durations = .{ .disable = 0 } },
+        0,
+    ));
+    try expectEqualSlices(u4, &.{ 0, 2 }, Rolls.disable(
+        .{ .durations = .{ .disable = 0 } },
+        .{ .durations = .{ .disable = 1 } },
+        0,
+    ));
+    try expectEqualSlices(u4, &.{1}, Rolls.disable(
+        .{ .durations = .{ .disable = 1 } },
+        .{ .durations = .{ .disable = 1 } },
+        0,
+    ));
+    try expectEqualSlices(u4, &.{ 0, 3 }, Rolls.disable(
+        .{ .durations = .{ .disable = 0 } },
+        .{ .durations = .{ .disable = 2 } },
+        0,
+    ));
+    try expectEqualSlices(u4, &.{0}, Rolls.disable(
+        .{ .durations = .{ .disable = 0 } },
+        .{ .durations = .{ .disable = 2 } },
+        1,
+    ));
+    try expectEqualSlices(u4, &.{ 0, 8 }, Rolls.disable(
+        .{ .durations = .{ .disable = 8 } },
+        .{ .durations = .{ .disable = 7 } },
+        0,
+    ));
+    try expectEqualSlices(u4, &.{0}, Rolls.disable(
+        .{ .durations = .{ .disable = 0 } },
+        .{ .durations = .{ .disable = 8 } },
+        0,
+    ));
 }
 
 test "Rolls.confusion" {
-    try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{
-        .durations = .{ .confusion = 0 },
-    }, FIXME, 0));
-    try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{
-        .durations = .{ .confusion = 5 },
-    }, FIXME, 0));
-    try expectEqualSlices(u3, &.{0}, Rolls.confusion(.{
-        .durations = .{ .confusion = 3 },
-    }, FIXME, 1));
-    try expectEqualSlices(u3, &.{1}, Rolls.confusion(.{
-        .durations = .{ .confusion = 1 },
-    }, FIXME, 0));
-    try expectEqualSlices(u3, &.{ 0, 3 }, Rolls.confusion(.{
-        .durations = .{ .confusion = 3 },
-    }, FIXME, 0));
+    try expectEqualSlices(u3, &.{0}, Rolls.confusion(
+        .{ .durations = .{ .confusion = 0 } },
+        .{ .durations = .{ .confusion = 0 } },
+        0,
+    ));
+    try expectEqualSlices(u3, &.{1}, Rolls.confusion(
+        .{ .durations = .{ .confusion = 1 } },
+        .{ .durations = .{ .confusion = 0 } },
+        0,
+    ));
+    try expectEqualSlices(u3, &.{0}, Rolls.confusion(
+        .{ .durations = .{ .confusion = 0 } },
+        .{ .durations = .{ .confusion = 1 } },
+        0,
+    ));
+    try expectEqualSlices(u3, &.{1}, Rolls.confusion(
+        .{ .durations = .{ .confusion = 1 } },
+        .{ .durations = .{ .confusion = 1 } },
+        0,
+    ));
+    try expectEqualSlices(u3, &.{ 0, 3 }, Rolls.confusion(
+        .{ .durations = .{ .confusion = 0 } },
+        .{ .durations = .{ .confusion = 2 } },
+        0,
+    ));
+    try expectEqualSlices(u3, &.{0}, Rolls.confusion(
+        .{ .durations = .{ .confusion = 0 } },
+        .{ .durations = .{ .confusion = 2 } },
+        1,
+    ));
+    try expectEqualSlices(u3, &.{ 0, 5 }, Rolls.confusion(
+        .{ .durations = .{ .confusion = 5 } },
+        .{ .durations = .{ .confusion = 4 } },
+        0,
+    ));
+    try expectEqualSlices(u3, &.{0}, Rolls.confusion(
+        .{ .durations = .{ .confusion = 0 } },
+        .{ .durations = .{ .confusion = 5 } },
+        0,
+    ));
 }
 
 test "Rolls.attacking" {
-    try expectEqualSlices(u3, &.{0}, Rolls.attacking(.{
-        .durations = .{ .attacking = 0 },
-    }, FIXME, .false));
-    try expectEqualSlices(u3, &.{0}, Rolls.attacking(.{
-        .durations = .{ .attacking = 3 },
-    }, FIXME, .false));
-    try expectEqualSlices(u3, &.{0}, Rolls.attacking(.{
-        .durations = .{ .attacking = 2 },
-    }, FIXME, .true));
-    try expectEqualSlices(u3, &.{1}, Rolls.attacking(.{
-        .durations = .{ .attacking = 1 },
-    }, FIXME, .false));
-    try expectEqualSlices(u3, &.{ 0, 2 }, Rolls.attacking(.{
-        .durations = .{ .attacking = 2 },
-    }, FIXME, .false));
+    try expectEqualSlices(u3, &.{0}, Rolls.attacking(
+        .{ .durations = .{ .attacking = 0 } },
+        .{ .durations = .{ .attacking = 0 } },
+        .false,
+    ));
+    try expectEqualSlices(u3, &.{1}, Rolls.attacking(
+        .{ .durations = .{ .attacking = 1 } },
+        .{ .durations = .{ .attacking = 0 } },
+        .false,
+    ));
+    try expectEqualSlices(u3, &.{0}, Rolls.attacking(
+        .{ .durations = .{ .attacking = 0 } },
+        .{ .durations = .{ .attacking = 1 } },
+        .false,
+    ));
+    try expectEqualSlices(u3, &.{1}, Rolls.attacking(
+        .{ .durations = .{ .attacking = 1 } },
+        .{ .durations = .{ .attacking = 1 } },
+        .false,
+    ));
+    try expectEqualSlices(u3, &.{ 0, 3 }, Rolls.attacking(
+        .{ .durations = .{ .attacking = 0 } },
+        .{ .durations = .{ .attacking = 2 } },
+        .false,
+    ));
+    try expectEqualSlices(u3, &.{0}, Rolls.attacking(
+        .{ .durations = .{ .attacking = 0 } },
+        .{ .durations = .{ .attacking = 2 } },
+        .true,
+    ));
+    try expectEqualSlices(u3, &.{ 0, 3 }, Rolls.attacking(
+        .{ .durations = .{ .attacking = 3 } },
+        .{ .durations = .{ .attacking = 2 } },
+        .false,
+    ));
+    try expectEqualSlices(u3, &.{0}, Rolls.attacking(
+        .{ .durations = .{ .attacking = 0 } },
+        .{ .durations = .{ .attacking = 3 } },
+        .false,
+    ));
 }
 
 test "Rolls.binding" {
-    try expectEqualSlices(u3, &.{0}, Rolls.binding(.{
-        .durations = .{ .binding = 0 },
-    }, FIXME, .false));
-    try expectEqualSlices(u3, &.{0}, Rolls.binding(.{
-        .durations = .{ .binding = 4 },
-    }, FIXME, .false));
-    try expectEqualSlices(u3, &.{0}, Rolls.binding(.{
-        .durations = .{ .binding = 2 },
-    }, FIXME, .true));
-    try expectEqualSlices(u3, &.{ 0, 2 }, Rolls.binding(.{
-        .durations = .{ .binding = 2 },
-    }, FIXME, .false));
+    try expectEqualSlices(u3, &.{0}, Rolls.binding(
+        .{ .durations = .{ .binding = 0 } },
+        .{ .durations = .{ .binding = 0 } },
+        .false,
+    ));
+    try expectEqualSlices(u3, &.{ 0, 1 }, Rolls.binding(
+        .{ .durations = .{ .binding = 1 } },
+        .{ .durations = .{ .binding = 0 } },
+        .false,
+    ));
+    try expectEqualSlices(u3, &.{ 0, 2 }, Rolls.binding(
+        .{ .durations = .{ .binding = 0 } },
+        .{ .durations = .{ .binding = 1 } },
+        .false,
+    ));
+    try expectEqualSlices(u3, &.{1}, Rolls.binding(
+        .{ .durations = .{ .binding = 1 } },
+        .{ .durations = .{ .binding = 1 } },
+        .false,
+    ));
+    try expectEqualSlices(u3, &.{ 0, 3 }, Rolls.binding(
+        .{ .durations = .{ .binding = 0 } },
+        .{ .durations = .{ .binding = 2 } },
+        .false,
+    ));
+    try expectEqualSlices(u3, &.{0}, Rolls.binding(
+        .{ .durations = .{ .binding = 0 } },
+        .{ .durations = .{ .binding = 2 } },
+        .true,
+    ));
+    try expectEqualSlices(u3, &.{ 0, 4 }, Rolls.binding(
+        .{ .durations = .{ .binding = 4 } },
+        .{ .durations = .{ .binding = 3 } },
+        .false,
+    ));
+    try expectEqualSlices(u3, &.{0}, Rolls.binding(
+        .{ .durations = .{ .binding = 0 } },
+        .{ .durations = .{ .binding = 4 } },
+        .false,
+    ));
 }
 
 test "Rolls.moveSlot" {
