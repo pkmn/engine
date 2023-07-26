@@ -181,9 +181,9 @@ pub const Action = packed struct {
                     if (v != 0) {
                         if (printed) try writer.writeAll(", ");
                         if (shape) {
-                            try writer.print("{s}:?", .{field.name});
+                            try writer.print("{s}:?", .{f.name});
                         } else {
-                            try writer.print("{s}:{d}", .{ field.name, v });
+                            try writer.print("{s}:{d}", .{ f.name, v });
                         }
                         printed = true;
                     }
