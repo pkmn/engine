@@ -219,12 +219,12 @@ pub fn build(b: *std.Build) !void {
     fuzz_config.tool.name = "fuzz";
     const fuzz = tool(b, "src/test/fuzz.zig", fuzz_config);
 
-    const copies = tool(b, "src/tools/copies.zig", tools);
+    const analyze = tool(b, "src/tools/analyze.zig", tools);
     const dump = tool(b, "src/tools/dump.zig", tools);
     const serde = tool(b, "src/tools/serde.zig", tools);
     const transitions = tool(b, "src/tools/transitions.zig", tools);
 
-    b.step("copies", "Run copy detector").dependOn(&copies.step);
+    b.step("analyze", "Run LLVM analysis tool").dependOn(&analyze.step);
     b.step("benchmark", "Run benchmark code").dependOn(&benchmark.step);
     b.step("dump", "Run protocol dump tool").dependOn(&dump.step);
     b.step("fuzz", "Run fuzz tester").dependOn(&fuzz.step);
