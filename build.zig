@@ -146,8 +146,8 @@ pub fn build(b: *std.Build) !void {
         lib.bundle_compiler_rt = true;
         maybeStrip(b, lib, b.getInstallStep(), strip, cmd);
         if (pic) lib.force_pic = pic;
-        if (emit_asm) lib.emit_asm = .emit;
-        if (emit_ll) lib.emit_llvm_ir = .emit;
+        if (emit_asm) lib.emit_asm = .{ .emit_to = b.fmt("{s}.S", .{name}) };
+        if (emit_ll) lib.emit_llvm_ir = .{ .emit_to = b.fmt("{s}.ll", .{name}) };
         b.installArtifact(lib);
         c = true;
     }
