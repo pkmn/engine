@@ -1,11 +1,21 @@
 This directory contains miscellaneous scripts and tools useful for working on the pkmn engine:
 
-- [`analyze.zig`](analyze.zig): Analyze LLVM IR to detect large copies (defaulting to anything
-  larger than a pointer, but a larger threshold can be provided) with comptime-known size. The
-  respective binary must first be build with `-Demit-ll` to produce the input for the tool:
+- [`analyze.zig`](analyze.zig): Analyze LLVM IR to find potential performance issues. To produce
+  the LLVM IR used as input for the tool, use the `-Demit-ll` option when building:
 
       $ zig build -Demit-ll -Dstrip -Doptimize=ReleaseFast
-      $ zig build analyze -- <THRESHOLD?> < pkmn.ll 2>&1 | sort -n -k 3
+
+  To detect large copies (defaulting to anything larger than a pointer, but a larger threshold can
+  be provided) with comptime-known size:
+
+      $ zig build analyze -- copies <THRESHOLD?> < pkmn.ll 2>&1 | sort -n -k 3
+
+  To print every function name (first column), number of times it was monomorphized (second column)
+  and the total size of all monorphizations (third column):
+
+  $ zig build analyze -- sizes < pkmn.ll \
+      | awk '{a[$1] += $2; b[$1] += 1} END {for (i in a) print i, b[i], a[i]}' \
+      | sort -n -k 3
 
 - [`debug.ts`](debug.ts): Reads a dump of [binary debug protocol](../../docs/PROTOCOL.md#debugging)
   from [standard input](https://en.wikipedia.org/wiki/Standard_streams) and outputs the standalone

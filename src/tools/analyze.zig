@@ -4,49 +4,71 @@
 const std = @import("std");
 const assert = std.debug.assert;
 
-const log = std.log;
-pub const log_level: std.log.Level = .debug;
+const Tool = union(enum) { copies: usize, sizes };
 
 pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
 
-    var threshold: usize = 8;
+    var tool: Tool = undefined;
     const args = try std.process.argsAlloc(allocator);
     defer std.process.argsFree(allocator, args);
+    if (args.len < 2) usageAndExit(args[0]);
 
-    if (args.len > 1) threshold = try std.fmt.parseUnsigned(usize, args[1], 10);
+    if (std.mem.eql(u8, args[1], "copies")) {
+        if (args.len != 2) {
+            errorAndExit("copies only expects one optional argument", "", args[0]);
+        }
+        const threshold = if (args.len == 3) try std.fmt.parseUnsigned(usize, args[1], 10) else 8;
+        tool = .{ .copies = threshold };
+    } else if (std.mem.eql(u8, args[1], "sizes")) {
+        if (args.len != 2) {
+            errorAndExit("sizes does not take any further arguments", "", args[0]);
+        }
+        tool = .sizes;
+    } else {
+        usageAndExit(args[0]);
+    }
 
     var line_buffer = try allocator.alloc(u8, 1024 * 1024);
-    var func_buf = try allocator.alloc(u8, 4096);
+    var function_buf = try allocator.alloc(u8, 4096);
 
     const stdin = std.io.getStdIn();
-    var buf_reader = std.io.bufferedReader(stdin.reader());
-    var in_stream = buf_reader.reader();
+    var reader = std.io.bufferedReader(stdin.reader());
+    var in = reader.reader();
 
-    var func_current: ?[]const u8 = null;
-    while (try in_stream.readUntilDelimiterOrEof(line_buffer, '\n')) |line| {
+    const stdout = std.io.getStdOut();
+    var writer = std.io.bufferedWriter(stdout.writer());
+    defer writer.flush() catch {};
+    var out = writer.writer();
+
+    var current_function: ?[]const u8 = null;
+    var current_function_size: usize = 0;
+    while (try in.readUntilDelimiterOrEof(line_buffer, '\n')) |line| {
         if (std.mem.startsWith(u8, line, "define ")) {
-            func_current = extractFuncName(line, func_buf) orelse {
-                log.err("can't parse line={s}", .{line});
-                return error.BadDefine;
-            };
+            current_function = extractFunctionName(line, function_buf) orelse
+                errorAndExit("can't define parse line=", line, args[0]);
             continue;
         }
 
-        if (func_current) |func| {
+        if (current_function) |function| {
             if (std.mem.eql(u8, line, "}")) {
-                func_current = null;
+                if (tool == .sizes) {
+                    try out.print("{s} {}\n", .{ function, current_function_size });
+                }
+                current_function = null;
+                current_function_size = 0;
                 continue;
             }
-            if (cut(line, "@llvm.memcpy")) |c| {
-                const size = extractMemcpySize(c[1]) orelse {
-                    log.err("can't parse line={s}", .{line});
-                    return error.BadMemcpy;
-                };
-                if (size > threshold) {
-                    log.warn("{s}: {} bytes memcpy", .{ func, size });
+            current_function_size += 1;
+            if (tool == .copies) {
+                if (cut(line, "@llvm.memcpy")) |c| {
+                    const size = extractMemcpySize(c[1]) orelse
+                        errorAndExit("can't memcpy parse line=", line, args[0]);
+                    if (size > tool.copies) {
+                        try out.print("{s}: {} bytes memcpy\n", .{ function, size });
+                    }
                 }
             }
         }
@@ -58,11 +80,11 @@ fn cut(haystack: []const u8, needle: []const u8) ?struct { []const u8, []const u
     return .{ haystack[0..index], haystack[index + needle.len ..] };
 }
 
-fn extractFuncName(define: []const u8, buf: []u8) ?[]const u8 {
-    const func_name = (cut(define, "@") orelse return null)[1];
+fn extractFunctionName(define: []const u8, buf: []u8) ?[]const u8 {
+    const function_name = (cut(define, "@") orelse return null)[1];
     var buf_count: usize = 0;
     var level: u32 = 0;
-    for (func_name) |c| {
+    for (function_name) |c| {
         switch (c) {
             '(' => level += 1,
             ')' => level -= 1,
@@ -105,4 +127,16 @@ fn extractMemcpySize(memcpy_call: []const u8) ?u32 {
     if (std.mem.startsWith(u8, size_value, "%")) return 0;
 
     return std.fmt.parseInt(u32, size_value, 10) catch null;
+}
+
+fn errorAndExit(msg: []const u8, arg: []const u8, cmd: []const u8) noreturn {
+    const err = std.io.getStdErr().writer();
+    err.print("{s}{s}\n", .{ msg, arg }) catch {};
+    usageAndExit(cmd);
+}
+
+fn usageAndExit(cmd: []const u8) noreturn {
+    const err = std.io.getStdErr().writer();
+    err.print("Usage: {s} <copies|size>\n", .{cmd}) catch {};
+    std.process.exit(1);
 }
