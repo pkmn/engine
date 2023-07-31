@@ -8,12 +8,12 @@ This directory contains miscellaneous scripts and tools useful for working on th
   To detect large copies (defaulting to anything larger than a pointer, but a larger threshold can
   be provided) with comptime-known size:
 
-      $ zig build analyze -- copies <THRESHOLD?> < pkmn.ll 2>&1 | sort -n -k 3
+      $ zig build analyze -- copies <THRESHOLD?> < zig-out/pkmn.ll 2>&1 | sort -n -k 3
 
   To print every function name (first column), number of times it was monomorphized (second column)
   and the total size of all monorphizations (third column):
 
-  $ zig build analyze -- sizes < pkmn.ll \
+  $ zig build analyze -- sizes < zig-out/pkmn.ll \
       | awk '{a[$1] += $2; b[$1] += 1} END {for (i in a) print i, b[i], a[i]}' \
       | sort -n -k 3
 

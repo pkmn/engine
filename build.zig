@@ -66,16 +66,16 @@ pub fn build(b: *std.Build) !void {
         const addon = b.fmt("{s}.node", .{name});
         const lib = b.addSharedLibrary(.{
             .name = addon,
+            .main_pkg_path = .{ .path = "." },
             .root_source_file = .{ .path = "src/lib/binding/node.zig" },
             .optimize = optimize,
             .target = target,
         });
         lib.addOptions("build_options", options);
-        lib.setMainPkgPath("./");
-        lib.addSystemIncludePath(headers);
+        lib.addSystemIncludePath(.{ .path = headers });
         lib.linkLibC();
         if (node_import_lib) |il| {
-            lib.addObjectFile(il);
+            lib.addObjectFile(.{ .path = il });
         } else if ((try std.zig.system.NativeTargetInfo.detect(target)).target.os.tag == .windows) {
             try std.io.getStdErr().writeAll("Must provide --node-import-library path on Windows\n");
             std.process.exit(1);
@@ -95,6 +95,7 @@ pub fn build(b: *std.Build) !void {
     } else if (wasm) {
         const lib = b.addSharedLibrary(.{
             .name = name,
+            .main_pkg_path = .{ .path = "." },
             .root_source_file = .{ .path = "src/lib/binding/wasm.zig" },
             .optimize = switch (optimize) {
                 .ReleaseFast, .ReleaseSafe => .ReleaseSmall,
@@ -103,7 +104,6 @@ pub fn build(b: *std.Build) !void {
             .target = .{ .cpu_arch = .wasm32, .os_tag = .freestanding },
         });
         lib.addOptions("build_options", options);
-        lib.setMainPkgPath("./");
         lib.stack_size = wasm_stack_size;
         lib.rdynamic = true;
         lib.strip = strip;
@@ -121,14 +121,14 @@ pub fn build(b: *std.Build) !void {
     } else if (dynamic) {
         const lib = b.addSharedLibrary(.{
             .name = name,
+            .main_pkg_path = .{ .path = "." },
             .root_source_file = .{ .path = "src/lib/binding/c.zig" },
             .version = try std.SemanticVersion.parse(version),
             .optimize = optimize,
             .target = target,
         });
         lib.addOptions("build_options", options);
-        lib.setMainPkgPath("./");
-        lib.addIncludePath("src/include");
+        lib.addIncludePath(.{ .path = "src/include" });
         maybeStrip(b, lib, b.getInstallStep(), strip, cmd);
         if (pic) lib.force_pic = pic;
         b.installArtifact(lib);
@@ -136,18 +136,30 @@ pub fn build(b: *std.Build) !void {
     } else {
         const lib = b.addStaticLibrary(.{
             .name = name,
+            .main_pkg_path = .{ .path = "." },
             .root_source_file = .{ .path = "src/lib/binding/c.zig" },
             .optimize = optimize,
             .target = target,
         });
         lib.addOptions("build_options", options);
-        lib.setMainPkgPath("./");
-        lib.addIncludePath("src/include");
+        lib.addIncludePath(.{ .path = "src/include" });
         lib.bundle_compiler_rt = true;
         maybeStrip(b, lib, b.getInstallStep(), strip, cmd);
         if (pic) lib.force_pic = pic;
-        if (emit_asm) lib.emit_asm = .{ .emit_to = b.fmt("{s}.S", .{name}) };
-        if (emit_ll) lib.emit_llvm_ir = .{ .emit_to = b.fmt("{s}.ll", .{name}) };
+        if (emit_asm) {
+            b.getInstallStep().dependOn(&b.addInstallFileWithDir(
+                lib.getEmittedAsm(),
+                .prefix,
+                b.fmt("{s}.s", .{name}),
+            ).step);
+        }
+        if (emit_ll) {
+            b.getInstallStep().dependOn(&b.addInstallFileWithDir(
+                lib.getEmittedLlvmIr(),
+                .prefix,
+                b.fmt("{s}.ll", .{name}),
+            ).step);
+        }
         b.installArtifact(lib);
         c = true;
     }
@@ -281,12 +293,12 @@ const TestStep = struct {
                 std.fs.path.basename(std.fs.path.dirname(path).?),
                 std.fs.path.stem(std.fs.path.basename(path)),
             }),
+            .main_pkg_path = .{ .path = "." },
             .root_source_file = .{ .path = path },
             .optimize = config.optimize,
             .target = config.target,
             .filter = test_filter,
         });
-        tests.setMainPkgPath("./");
         tests.addOptions("build_options", options);
         tests.single_threaded = true;
         maybeStrip(b, tests, &tests.step, config.strip, config.cmd);
@@ -343,7 +355,7 @@ const ToolsStep = struct {
         const self = b.allocator.create(ToolsStep) catch @panic("OOM");
         const step = std.Build.Step.init(.{ .id = .custom, .name = "Install tools", .owner = b });
         self.* = ToolsStep{ .step = step };
-        for (exes.items) |t| self.step.dependOn(&b.addInstallArtifact(t).step);
+        for (exes.items) |t| self.step.dependOn(&b.addInstallArtifact(t, .{}).step);
         return self;
     }
 };

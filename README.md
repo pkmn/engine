@@ -58,7 +58,7 @@ $ zig build --prefix /usr/local -Doptimize=ReleaseFast
 
 The Zig website has [installation instructions](https://ziglang.org/learn/getting-started/) which
 walk through how to install Zig on each platform - the engine code should work on Zig v0.11.0 dev
-build 4282 or greater, though tracks Zig's master branch so this may change in the future if
+build 4332 or greater, though tracks Zig's master branch so this may change in the future if
 breaking language changes are introduced:
 
 `libpkmn` can be built with `-Dshowdown` to instead produce the Pokémon Showdown compatible
