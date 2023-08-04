@@ -16,26 +16,22 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         options: ['', '-Dlog -Dchance -Dcalc', '-Dshowdown', '-Dshowdown -Dlog -Dchance -Dcalc']
-        zig: [local] # master
+        zig: [0.11.0, master]
     runs-on: ${{matrix.os}}
     steps:
       - run: exit 0
-        if: ${{ github.event_name == 'workflow_call' && matrix.zig != 'local' }} # master
+        if: ${{ github.event_name == 'workflow_call' && matrix.zig != 'master' }}
       - uses: actions/checkout@v3
       - run: git config core.symlinks true
-      # NOTE: we rely on npm postinstall-ed zig for local zig
-      # - uses: goto-bus-stop/setup-zig@v2
-      #   if: ${{ matrix.zig != 'local' }}
-      #   with:
-      #     version: ${{matrix.zig}}
+      # NOTE: we rely on npm postinstall-ed zig for v0.11.0
+      - uses: goto-bus-stop/setup-zig@v2
+        if: ${{ matrix.zig == 'master' }}
       - uses: AnnikaCodes/install-ziglint@v0.1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
       - run: npm install
       - run: echo "${GITHUB_WORKSPACE}/build/bin/zig" >> $GITHUB_PATH
-        if: ${{ matrix.zig == 'local' && matrix.os != 'windows-latest' }}
+        if: ${{ matrix.zig != 'master' && matrix.os != 'windows-latest' }}
       - run: echo "${env:GITHUB_WORKSPACE}/build/bin/zig" >> $env:GITHUB_PATH
-        if: ${{ matrix.zig == 'local' && matrix.os == 'windows-latest' }}
+        if: ${{ matrix.zig != 'master' && matrix.os == 'windows-latest' }}
       - run: zig build -j1 test ${{matrix.options}}
       - run: zig build -j1 test ${{matrix.options}} -Doptimize=ReleaseFast
       - run: npm run compile
