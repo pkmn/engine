@@ -233,8 +233,12 @@ pub fn build(b: *std.Build) !void {
 
     const analyze = tool(b, "src/tools/analyze.zig", tools);
     const dump = tool(b, "src/tools/dump.zig", tools);
-    const serde = tool(b, "src/tools/serde.zig", tools);
     const transitions = tool(b, "src/tools/transitions.zig", tools);
+
+    // FIXME: serde randomly fails to build in recent Windows release configurations...
+    var hack = tools;
+    if (builtin.os.tag == .windows and optimize != .Debug) hack.tool.tests = null;
+    const serde = tool(b, "src/tools/serde.zig", hack);
 
     b.step("analyze", "Run LLVM analysis tool").dependOn(&analyze.step);
     b.step("benchmark", "Run benchmark code").dependOn(&benchmark.step);
