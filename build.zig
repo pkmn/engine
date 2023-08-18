@@ -235,9 +235,9 @@ pub fn build(b: *std.Build) !void {
     const dump = tool(b, "src/tools/dump.zig", tools);
     const transitions = tool(b, "src/tools/transitions.zig", tools);
 
-    // FIXME: serde randomly fails to build in recent Windows release configurations...
+    // FIXME: serde randomly fails to build in some release configurations
     var hack = tools;
-    if (builtin.os.tag == .windows and optimize != .Debug) hack.tool.tests = null;
+    if (optimize != .Debug) hack.tool.tests = null;
     const serde = tool(b, "src/tools/serde.zig", hack);
 
     b.step("analyze", "Run LLVM analysis tool").dependOn(&analyze.step);
