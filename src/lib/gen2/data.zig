@@ -82,7 +82,7 @@ test Battle {
     try expectEqual(496, @sizeOf(Battle(PRNG)));
 }
 
-const Field = packed struct {
+pub const Field = packed struct {
     weather: Weather = .None,
     weather_duration: u4 = 0,
 
@@ -91,19 +91,21 @@ const Field = packed struct {
     }
 };
 
-const Weather = enum(u4) {
+pub const Weather = enum(u4) {
     None,
     Rain,
     Sun,
     Sandstorm,
 };
 
-const Side = extern struct {
+pub const Side = extern struct {
     pokemon: [6]Pokemon = [_]Pokemon{.{}} ** 6,
     active: ActivePokemon = .{},
-    conditions: Conditions,
-    last_used_move: Move = .None,
-    _: u8 = 0,
+    conditions: Conditions = .{},
+    // NB: wLastPlayerMove
+    last_move: Move = .None,
+    // NB: wLastPlayerCounterMove / wLastEnemyCounterMove
+    last_counter_move: Move = .None,
 
     const Conditions = packed struct {
         Spikes: bool = false,
@@ -139,15 +141,14 @@ const Side = extern struct {
 };
 
 // NOTE: DVs (Gender & Hidden Power) and Happiness are stored only in Pokemon
-const ActivePokemon = extern struct {
+pub const ActivePokemon = extern struct {
     volatiles: Volatile align(4) = .{},
     stats: Stats(u16) = .{},
     moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
     boosts: Boosts = .{},
     species: Species = .None,
     item: Item = .None,
-    last_move: Move = .None,
-    _: u8 = 0,
+    types: Types = .{},
 
     comptime {
         assert(@sizeOf(ActivePokemon) == 44);
@@ -161,7 +162,7 @@ const ActivePokemon = extern struct {
     }
 };
 
-const Pokemon = extern struct {
+pub const Pokemon = extern struct {
     stats: Stats(u16) = .{},
     moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
     types: Types = .{},
@@ -192,7 +193,7 @@ pub const Gender = enum(u2) {
     Unknown,
 };
 
-const DVs = packed struct {
+pub const DVs = packed struct {
     gender: Gender = .Male,
     pow: u6 = 40,
     type: Type = .Dark,
@@ -248,7 +249,7 @@ test DVs {
     try expectEqual(Gender.Female, dvs.gender);
 }
 
-const MoveSlot = packed struct {
+pub const MoveSlot = packed struct {
     id: Move = .None,
     pp_ups: u2 = 3,
     pp: u6 = 0,
@@ -260,7 +261,7 @@ const MoveSlot = packed struct {
 
 pub const Status = gen1.Status;
 
-const Volatile = packed struct {
+pub const Volatile = packed struct {
     Bide: bool = false,
     Thrashing: bool = false,
     Flinch: bool = false,

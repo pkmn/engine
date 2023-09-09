@@ -48,7 +48,7 @@ pub const Battle = struct {
         comptime rolls: anytype,
         p1: []const Pokemon,
         p2: []const Pokemon,
-    ) data.Battle(rng.FixedRNG(1, rolls.len)) {
+    ) data.Battle(rng.FixedRNG(2, rolls.len)) {
         return .{
             .rng = .{ .rolls = rolls },
             .sides = .{ Side.init(p1), Side.init(p2) },
@@ -87,7 +87,7 @@ pub const Side = struct {
 
         for (0..ps.len) |i| {
             side.pokemon[i] = Pokemon.init(ps[i]);
-            // FIXME side.order[i] = i + 1;
+            side.pokemon[i].position = @as(u4, @intCast(i)) + 1;
         }
         return side;
     }
@@ -98,7 +98,7 @@ pub const Side = struct {
 
         for (0..n) |i| {
             side.pokemon[i] = Pokemon.random(rand, opt);
-            side.pokemon[i].position = i + 1;
+            side.pokemon[i].position = @as(u4, @intCast(i)) + 1;
         }
 
         return side;
@@ -139,7 +139,7 @@ pub const Pokemon = struct {
                 .id = m,
                 .pp_ups = 3,
                 // NB: PP can be at most 61 legally (though can overflow to 63)
-                .pp = @intCast(@min(Move.pp(m) / 5 * 8, 61)),
+                .pp = @intCast(@min(Move.get(m).pp / 5 * 8, 61)),
             };
         }
         pokemon.item = p.item;
@@ -151,7 +151,7 @@ pub const Pokemon = struct {
         pokemon.status = p.status;
         pokemon.types = species.types;
         pokemon.level = p.level;
-        pokemon.dvs = DVs.from(p.dvs);
+        pokemon.dvs = DVs.from(p.species, p.dvs);
         return pokemon;
     }
 
@@ -189,7 +189,8 @@ pub const Pokemon = struct {
             const pp_ups: u8 =
                 if (!opt.cleric and rand.chance(u8, 1, 10)) rand.range(u2, 0, 2 + 1) else 3;
             // NB: PP can be at most 61 legally (though can overflow to 63)
-            const max_pp: u8 = @intCast(Move.pp(m) + pp_ups * @min(Move.pp(m) / 5, 7));
+            var base = Move.get(m).pp;
+            const max_pp: u8 = @intCast(base + pp_ups * @min(base / 5, 7));
             ms[i] = .{
                 .id = m,
                 .pp_ups = pp_ups,
@@ -199,7 +200,7 @@ pub const Pokemon = struct {
         return .{
             .species = s,
             .types = species.types,
-            .dvs = DVs.from(dvs),
+            .dvs = DVs.from(s, dvs),
             .level = lvl,
             .stats = stats,
             .hp = if (opt.cleric) stats.hp else rand.range(u16, 0, stats.hp + 1),

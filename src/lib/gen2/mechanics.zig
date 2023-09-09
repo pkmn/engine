@@ -36,12 +36,95 @@ const Stats = data.Stats;
 const Status = data.Status;
 
 pub fn update(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Result {
-    _ = battle;
-    _ = c1;
-    _ = c2;
-    _ = options;
+    assert(c1.type != .Pass or c2.type != .Pass or battle.turn == 0);
+    if (battle.turn == 0) return start(battle, options);
+
+    // TODO
 
     return Result.Default;
+}
+
+fn start(battle: anytype, options: anytype) !Result {
+    const p1 = battle.side(.P1);
+    const p2 = battle.side(.P2);
+
+    var p1_slot = findFirstAlive(p1);
+    assert(!showdown or p1_slot == 1);
+    if (p1_slot == 0) return if (findFirstAlive(p2) == 0) Result.Tie else Result.Lose;
+
+    var p2_slot = findFirstAlive(p2);
+    assert(!showdown or p2_slot == 1);
+    if (p2_slot == 0) return Result.Win;
+
+    try switchIn(battle, .P1, p1_slot, true, options);
+    try switchIn(battle, .P2, p2_slot, true, options);
+
+    return endTurn(battle, options);
+}
+
+fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, options: anytype) !void {
+    var side = battle.side(player);
+    var foe = battle.foe(player);
+
+    var active = &side.active;
+    const incoming = side.get(slot);
+
+    assert(incoming.hp != 0);
+    assert(slot != 1 or initial);
+
+    const out = side.pokemon[0].position;
+    side.pokemon[0].position = side.pokemon[slot - 1].position;
+    side.pokemon[slot - 1].position = out;
+
+    side.last_move = .None;
+
+    side.last_counter_move = .None;
+    foe.last_counter_move = .None;
+
+    active.stats = incoming.stats;
+    active.species = incoming.species;
+    active.types = incoming.types;
+    active.boosts = .{};
+    active.volatiles = .{};
+    active.moves = incoming.moves;
+
+    statusModify(incoming.status, &active.stats);
+
+    try options.log.switched(battle.active(player), incoming);
+    // TODO: options.chance.switched(player, side.order[0], out);
+
+    if (side.conditions.Spikes and !active.types.includes(.Flying)) {
+        incoming.hp -|= @max(incoming.stats.hp / 8, 1);
+        try options.log.damage(battle.active(player), incoming, .Spikes);
+    }
+}
+
+fn findFirstAlive(side: *const Side) u8 {
+    for (side.pokemon, 0..) |pokemon, i| if (pokemon.hp > 0) return side.pokemon[i].position;
+    return 0;
+}
+
+fn endTurn(battle: anytype, options: anytype) @TypeOf(options.log).Error!Result {
+    battle.turn += 1;
+
+    if (showdown and battle.turn >= 1000) {
+        try options.log.tie();
+        return Result.Tie;
+    } else if (battle.turn >= 65535) {
+        return Result.Error;
+    }
+
+    try options.log.turn(battle.turn);
+
+    return Result.Default;
+}
+
+fn statusModify(status: u8, stats: *Stats(u16)) void {
+    if (Status.is(status, .PAR)) {
+        stats.spe = @max(stats.spe / 4, 1);
+    } else if (Status.is(status, .BRN)) {
+        stats.atk = @max(stats.atk / 2, 1);
+    }
 }
 
 inline fn isForced(active: anytype) bool {

@@ -172,8 +172,8 @@ test "switching (order)" {
     var expected = FixedLog{ .writer = expected_stream.writer() };
     var actual = FixedLog{ .writer = actual_stream.writer() };
 
-    try expected.switched(P1.ident(3), p1.pokemon[2]);
-    try expected.switched(P2.ident(2), p2.pokemon[1]);
+    try expected.switched(P1.ident(3), &p1.pokemon[2]);
+    try expected.switched(P2.ident(2), &p2.pokemon[1]);
     try expected.turn(7);
 
     var options = pkmn.battle.options(actual, chance.NULL, calc.NULL);
@@ -10108,6 +10108,7 @@ fn Test(comptime rolls: anytype) type {
         fn validate(self: *Self) !void {
             if (log) {
                 try protocol.expectLog(
+                    1,
                     formatter,
                     self.buf.expected.items,
                     self.buf.actual.items,
@@ -10126,7 +10127,7 @@ fn Test(comptime rolls: anytype) type {
 }
 
 fn expectLog(expected: []const u8, actual: []const u8) !void {
-    return protocol.expectLog(formatter, expected, actual, 0);
+    return protocol.expectLog(1, formatter, expected, actual, 0);
 }
 
 fn formatter(kind: protocol.Kind, byte: u8) []const u8 {

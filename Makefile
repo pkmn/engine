@@ -135,7 +135,7 @@ release:
 	npm run release -- --prod
 
 , := ,
-gen := $(or $(gen),1)
+gen := $(or $(gen),2)
 seed := $(or $(seed),1$(,)2$(,)3$(,)4)
 opt := $(if $(filter true,$(showdown)),-Dshowdown,)
 

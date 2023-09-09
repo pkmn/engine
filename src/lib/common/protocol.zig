@@ -136,6 +136,8 @@ pub const Damage = enum(u8) {
     Confusion,
     LeechSeed,
     RecoilOf,
+
+    Spikes,
 };
 
 pub const Status = enum(u8) {
@@ -264,7 +266,15 @@ pub fn Log(comptime Writer: type) type {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{ @intFromEnum(ArgType.Switch), @as(u8, @bitCast(ident)) });
-            try self.writer.writeAll(&.{ @intFromEnum(pokemon.species), pokemon.level });
+            if (@hasField(@TypeOf(pokemon.*), "dvs")) {
+                try self.writer.writeAll(&.{
+                    @intFromEnum(pokemon.species),
+                    @intFromEnum(pokemon.dvs.gender),
+                    pokemon.level,
+                });
+            } else {
+                try self.writer.writeAll(&.{ @intFromEnum(pokemon.species), pokemon.level });
+            }
             try self.writer.writeIntNative(u16, pokemon.hp);
             try self.writer.writeIntNative(u16, pokemon.stats.hp);
             try self.writer.writeAll(&.{pokemon.status});
@@ -648,7 +658,13 @@ pub const ByteStream = struct {
 pub const Kind = enum { Move, Species, Type, Status };
 pub const Formatter = fn (Kind, u8) []const u8;
 
-pub fn format(comptime formatter: Formatter, a: []const u8, b: ?[]const u8, color: bool) void {
+pub fn format(
+    comptime gen: u8,
+    comptime formatter: Formatter,
+    a: []const u8,
+    b: ?[]const u8,
+    color: bool,
+) void {
     print("\n", .{});
 
     var i: usize = 0;
@@ -712,6 +728,14 @@ pub fn format(comptime formatter: Formatter, a: []const u8, b: ?[]const u8, colo
                 const id = ID.from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {s}", .{formatter(.Species, a[i])}, a, b, &i, 1, color);
+                if (gen > 1) {
+                    if (a[i] == N(gen2.Gender.Unknown)) {
+                        i += 1;
+                    } else {
+                        var gender = if (a[i] == N(gen2.Gender.Male)) "M" else "F";
+                        printc(", {s}", .{gender}, a, b, &i, 1, color);
+                    }
+                }
                 printc(" L{d}", .{a[i]}, a, b, &i, 1, color);
                 switch (endian) {
                     .Big => {
@@ -896,6 +920,7 @@ fn printc(
 }
 
 pub fn expectLog(
+    comptime gen: u8,
     comptime formatter: Formatter,
     expected: []const u8,
     actual: []const u8,
@@ -915,8 +940,8 @@ pub fn expectLog(
 
     expectEqualBytes(expected, actual, offset) catch |err| switch (err) {
         error.TestExpectedEqual => {
-            format(formatter, expected, null, color);
-            format(formatter, actual, expected, color);
+            format(gen, formatter, expected, null, color);
+            format(gen, formatter, actual, expected, color);
             return err;
         },
         else => return err,
@@ -956,6 +981,11 @@ const gen1 = struct {
     pub const helpers = @import("../gen1/helpers.zig");
 };
 
+const gen2 = struct {
+    pub usingnamespace @import("../gen2/data.zig");
+    pub const helpers = @import("../gen2/helpers.zig");
+};
+
 var buf: [gen1.LOGS_SIZE]u8 = undefined;
 var stream = ByteStream{ .buffer = &buf };
 var log: FixedLog = .{ .writer = stream.writer() };
@@ -964,15 +994,28 @@ const M = gen1.Move;
 const S = gen1.Species;
 
 fn expectLog1(expected: []const u8, actual: []const u8) !void {
-    return expectLog(gen1Formatter, expected, actual, 0);
+    return expectLog(1, gen1Formatter, expected, actual, 0);
+}
+
+fn expectLog2(expected: []const u8, actual: []const u8) !void {
+    return expectLog(2, gen2Formatter, expected, actual, 0);
 }
 
 fn gen1Formatter(kind: Kind, byte: u8) []const u8 {
     return switch (kind) {
-        .Move => @tagName(@as(M, @enumFromInt(byte))),
-        .Species => @tagName(@as(S, @enumFromInt(byte))),
+        .Move => @tagName(@as(gen1.Move, @enumFromInt(byte))),
+        .Species => @tagName(@as(gen1.Species, @enumFromInt(byte))),
         .Type => @tagName(@as(gen1.Type, @enumFromInt(byte))),
         .Status => gen1.Status.name(byte),
+    };
+}
+
+fn gen2Formatter(kind: Kind, byte: u8) []const u8 {
+    return switch (kind) {
+        .Move => @tagName(@as(gen2.Move, @enumFromInt(byte))),
+        .Species => @tagName(@as(gen2.Species, @enumFromInt(byte))),
+        .Type => @tagName(@as(gen2.Type, @enumFromInt(byte))),
+        .Status => gen2.Status.name(byte),
     };
 }
 
@@ -1056,6 +1099,25 @@ test "|switch|" {
         .Little => &.{ N(ArgType.Switch), 0b1011, N(S.Snorlax), 100, 144, 1, 144, 1, 0 },
     };
     try expectLog1(expected, buf[0..9]);
+    stream.reset();
+
+    var blissey = gen2.helpers.Pokemon.init(.{ .species = .Blissey, .moves = &.{.Splash} });
+    blissey.level = 91;
+    blissey.hp = 200;
+    blissey.stats.hp = 400;
+    blissey.status = gen2.Status.init(.PAR);
+    try log.switched(p2.ident(3), &blissey);
+    expected = &(.{
+        N(ArgType.Switch),
+        0b1011,
+        N(gen2.Species.Blissey),
+        N(gen2.Gender.Female),
+        91,
+    } ++ switch (endian) {
+        .Big => .{ 0, 200, 1, 144, par },
+        .Little => .{ 200, 0, 144, 1, par },
+    });
+    try expectLog2(expected, buf[0..10]);
     stream.reset();
 }
 
