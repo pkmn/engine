@@ -659,7 +659,7 @@ pub const Kind = enum { Move, Species, Type, Status };
 pub const Formatter = fn (Kind, u8) []const u8;
 
 pub fn format(
-    comptime gen: u8,
+    comptime gen: comptime_int,
     comptime formatter: Formatter,
     a: []const u8,
     b: ?[]const u8,
@@ -920,7 +920,7 @@ fn printc(
 }
 
 pub fn expectLog(
-    comptime gen: u8,
+    comptime gen: comptime_int,
     comptime formatter: Formatter,
     expected: []const u8,
     actual: []const u8,

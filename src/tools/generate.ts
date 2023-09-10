@@ -803,6 +803,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       const chance = move.secondary?.chance
         ? `${move.secondary.chance / 10}, // * 10 = ${move.secondary.chance}`
         : '';
+      const priority = move.priority ? move.priority + 1 : undefined;
       const acc = move.accuracy === true ? 100 : move.accuracy;
       MOVES.push(`// ${name}\n` +
         '        .{\n' +
@@ -813,6 +814,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .accuracy = ${acc},\n` +
         `            .target = .${TARGETS[move.target]},\n` +
         (chance ? `            .chance = ${chance}\n` : '') +
+        (priority !== undefined ? `            .priority = ${priority},\n` : '') +
         '        }');
       DATA[1].moves[move.name] = move.pp;
     }
@@ -833,9 +835,11 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         target: Target,
         /// The chance of the move's secondary effect occurring.
         chance: u8 = 0,
+        /// The priority of the move
+        priority: u8 = 1,
 
         comptime {
-            assert(@sizeOf(Data) == 7);
+            assert(@sizeOf(Data) == 8);
         }
     };`;
 
@@ -860,7 +864,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         size: 1,
         Data,
         data: MOVES.join(',\n        '),
-        dataSize: MOVES.length * 7,
+        dataSize: MOVES.length * 8,
         assert: 'assert(id != .None);',
         Effect,
         targetType: 'u8',

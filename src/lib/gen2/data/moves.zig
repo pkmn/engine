@@ -279,9 +279,11 @@ pub const Move = enum(u8) {
         target: Target,
         /// The chance of the move's secondary effect occurring.
         chance: u8 = 0,
+        /// The priority of the move
+        priority: u8 = 1,
 
         comptime {
-            assert(@sizeOf(Data) == 7);
+            assert(@sizeOf(Data) == 8);
         }
     };
 
@@ -450,6 +452,7 @@ pub const Move = enum(u8) {
             .pp = 20,
             .accuracy = 100,
             .target = .Other,
+            .priority = 0,
         },
         // Fly
         .{
@@ -709,6 +712,7 @@ pub const Move = enum(u8) {
             .pp = 20,
             .accuracy = 100,
             .target = .Other,
+            .priority = 0,
         },
         // Sing
         .{
@@ -916,6 +920,7 @@ pub const Move = enum(u8) {
             .pp = 20,
             .accuracy = 100,
             .target = .Depends,
+            .priority = 0,
         },
         // SeismicToss
         .{
@@ -1191,6 +1196,7 @@ pub const Move = enum(u8) {
             .pp = 30,
             .accuracy = 100,
             .target = .Other,
+            .priority = 2,
         },
         // Rage
         .{
@@ -1962,6 +1968,7 @@ pub const Move = enum(u8) {
             .pp = 10,
             .accuracy = 100,
             .target = .Self,
+            .priority = 3,
         },
         // MachPunch
         .{
@@ -1971,6 +1978,7 @@ pub const Move = enum(u8) {
             .pp = 30,
             .accuracy = 100,
             .target = .Other,
+            .priority = 2,
         },
         // ScaryFace
         .{
@@ -2102,6 +2110,7 @@ pub const Move = enum(u8) {
             .pp = 5,
             .accuracy = 100,
             .target = .Self,
+            .priority = 3,
         },
         // BoneRush
         .{
@@ -2156,6 +2165,7 @@ pub const Move = enum(u8) {
             .pp = 10,
             .accuracy = 100,
             .target = .Self,
+            .priority = 3,
         },
         // Charm
         .{
@@ -2433,6 +2443,7 @@ pub const Move = enum(u8) {
             .pp = 10,
             .accuracy = 100,
             .target = .Other,
+            .priority = 0,
         },
         // MorningSun
         .{
@@ -2525,6 +2536,7 @@ pub const Move = enum(u8) {
             .pp = 20,
             .accuracy = 100,
             .target = .Depends,
+            .priority = 0,
         },
         // PsychUp
         .{
@@ -2543,6 +2555,7 @@ pub const Move = enum(u8) {
             .pp = 5,
             .accuracy = 100,
             .target = .Other,
+            .priority = 2,
         },
         // AncientPower
         .{
@@ -2770,7 +2783,7 @@ pub const Move = enum(u8) {
 
     comptime {
         assert(@sizeOf(Move) == 1);
-        assert(@sizeOf(@TypeOf(DATA)) == 1757);
+        assert(@sizeOf(@TypeOf(DATA)) == 2008);
     }
 
     /// The number of Pokémon moves in this generation.

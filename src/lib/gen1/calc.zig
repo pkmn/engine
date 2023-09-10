@@ -29,7 +29,6 @@ const Optional = optional.Optional;
 const Rational = rational.Rational;
 
 const PointerType = util.PointerType;
-const FieldType = util.FieldType;
 
 const Actions = chance.Actions;
 const Action = chance.Action;

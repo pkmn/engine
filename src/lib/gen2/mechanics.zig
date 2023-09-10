@@ -119,12 +119,79 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, options: a
 }
 
 fn turnOrder(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Player {
-    _ = battle;
-    _ = c1;
-    _ = c2;
-    _ = options;
+    assert(c1.type != .Pass or c2.type != .Pass);
 
-    return .P1;
+    if (c1.type == .Pass) return .P2;
+    if (c2.type == .Pass) return .P1;
+
+    // Pokémon Showdown always rolls for Quick Claw every turn, even if no Pokémon hold Quick Claw
+    const qkc = showdown and try Rolls.quickClaw(battle, .P1, options);
+
+    if ((c1.type == .Switch) != (c2.type == .Switch)) return if (c1.type == .Switch) .P1 else .P2;
+
+    // https://www.smogon.com/forums/threads/adv-switch-priority.3622189/
+    // > In Gen 1 it's irrelevant [which player switches first] because switches happen instantly on
+    // > your own screen without waiting for the other player's choice (and their choice will appear
+    // > to happen first for them too, unless they attacked in which case your switch happens first)
+    // A cartridge-compatible implemention must not advance the RNG so we simply default to P1
+    const double_switch = c1.type == .Switch and c2.type == .Switch;
+    if (!showdown and double_switch) return .P1;
+
+    const m1 = .Pound; // TODO battle.side(.P1).last_selected_move;
+    const m2 = .Pound; // TODO battle.side(.P2).last_selected_move;
+    if (!showdown or !double_switch) {
+        const pri1 = Move.get(m1).priority;
+        const pri2 = Move.get(m2).priority;
+        if (pri1 != pri2) return if (pri1 > pri2) .P1 else .P2;
+
+        const qkc1 = battle.side(.P1).active.item == .QuickClaw;
+        const qkc2 = battle.side(.P2).active.item == .QuickClaw;
+        if (!showdown and qkc1 and qkc2) {
+            // If both Pokémon have Quick Claw the cartridge checks them in order and exits early if
+            // the first one procs, meaning the host has a slightly higher chance of going first
+            if (try Rolls.quickClaw(battle, .P1, options)) return .P1;
+            if (try Rolls.quickClaw(battle, .P2, options)) return .P2;
+        } else if (qkc1) {
+            const proc = if (showdown) qkc else try Rolls.quickClaw(battle, .P1, options);
+            if (proc) return .P1;
+        } else if (qkc2) {
+            const proc = if (showdown) qkc else try Rolls.quickClaw(battle, .P2, options);
+            if (proc) return .P2;
+        }
+    }
+
+    const spe1 = battle.side(.P1).active.stats.spe;
+    const spe2 = battle.side(.P2).active.stats.spe;
+    if (spe1 == spe2) {
+        // Pokémon Showdown's beforeTurnCallback shenanigans
+        if (showdown and !double_switch and hasCallback(m1) and hasCallback(m2)) {
+            battle.rng.advance(1);
+        }
+
+        const p1 = try Rolls.speedTie(battle, options);
+        if (!showdown) return if (p1) .P1 else .P2;
+
+        // Pokémon Showdown's "lockedmove" volatile's onBeforeTurn uses BattleQueue#changeAction,
+        // meaning that if a side is locked into a thrashing move and wins the speed tie, it
+        // actually uses its priority to simply insert its actual changed action into the queue,
+        // causing it to then execute *after* the side which should go second...
+        const t1 = battle.side(.P1).active.volatiles.Thrashing;
+        const t2 = battle.side(.P2).active.volatiles.Thrashing;
+        // If *both* sides are thrashing it really should be another speed tie, but we've patched
+        // that out and enforce host ordering of events, so P1 just goes first regardless of who
+        // won the original coin flip
+        if (t1 and t2) return .P1;
+        return if (p1) if (t1 and !t2) .P2 else .P1 else if (t2 and !t1) .P1 else .P2;
+    }
+
+    return if (spe1 > spe2) .P1 else .P2;
+}
+
+fn hasCallback(m: Move) bool {
+    return switch (m) {
+        .Counter, .MirrorCoat, .Pursuit => true,
+        else => false,
+    };
 }
 
 fn doTurn(
@@ -146,7 +213,7 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, options: anytype
         return null;
     }
 
-    @panic("unimplemented");
+    @panic("TODO");
 }
 
 fn endTurn(battle: anytype, options: anytype) @TypeOf(options.log).Error!Result {
@@ -177,6 +244,48 @@ inline fn isForced(active: anytype) bool {
         active.volatiles.Thrashing or active.volatiles.Charging or
         active.volatiles.Underground or active.volatiles.Flying or
         active.volatiles.Rollout;
+}
+
+pub const Rolls = struct {
+    inline fn speedTie(battle: anytype, options: anytype) !bool {
+        const p1 = if (options.calc.overridden(.P1, .speed_tie)) |player|
+            player == .P1
+        else if (showdown)
+            battle.rng.range(u8, 0, 2) == 0
+        else
+            battle.rng.next() < Gen12.percent(50) + 1;
+
+        try options.chance.speedTie(p1);
+        return p1;
+    }
+
+    inline fn quickClaw(battle: anytype, player: Player, options: anytype) !bool {
+        const qkc = if (options.calc.overridden(player, .quick_claw)) |val|
+            val == .true
+        else if (showdown)
+            battle.rng.chance(u8, 60, 256)
+        else
+            battle.rng.next() < 60;
+
+        try options.chance.quickClaw(player, qkc);
+        return qkc;
+    }
+};
+
+test "RNG agreement" {
+    if (!showdown) return;
+    var expected: [256]u32 = undefined;
+    for (0..expected.len) |i| {
+        expected[i] = @intCast(i * 0x1000000);
+    }
+
+    var spe = rng.FixedRNG(2, expected.len){ .rolls = expected };
+    var qkc = rng.FixedRNG(2, expected.len){ .rolls = expected };
+
+    for (0..expected.len) |i| {
+        try expectEqual(spe.range(u8, 0, 2) == 0, i < Gen12.percent(50) + 1);
+        try expectEqual(qkc.chance(u8, 60, 256), i < 60);
+    }
 }
 
 pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Choice) u8 {
