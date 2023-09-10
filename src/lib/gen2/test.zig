@@ -1516,8 +1516,7 @@ fn Test(comptime rolls: anytype) type {
         fn validate(self: *Self) !void {
             if (log) {
                 try protocol.expectLog(
-                    2,
-                    formatter,
+                    data,
                     self.buf.expected.items,
                     self.buf.actual.items,
                     self.offset,
@@ -1535,16 +1534,7 @@ fn Test(comptime rolls: anytype) type {
 }
 
 fn expectLog(expected: []const u8, actual: []const u8) !void {
-    return protocol.expectLog(2, formatter, expected, actual, 0);
-}
-
-fn formatter(kind: protocol.Kind, byte: u8) []const u8 {
-    return switch (kind) {
-        .Move => @tagName(@as(Move, @enumFromInt(byte))),
-        .Species => @tagName(@as(Species, @enumFromInt(byte))),
-        .Type => @tagName(@as(Type, @enumFromInt(byte))),
-        .Status => Status.name(byte),
-    };
+    return protocol.expectLog(data, expected, actual, 0);
 }
 
 comptime {

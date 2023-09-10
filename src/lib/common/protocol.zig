@@ -656,11 +656,9 @@ pub const ByteStream = struct {
 };
 
 pub const Kind = enum { Move, Species, Type, Status };
-pub const Formatter = fn (Kind, u8) []const u8;
 
 pub fn format(
-    comptime gen: comptime_int,
-    comptime formatter: Formatter,
+    comptime gen: anytype,
     a: []const u8,
     b: ?[]const u8,
     color: bool,
@@ -717,22 +715,24 @@ pub fn format(
             .Move => {
                 const source = ID.from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(source.player), source.id }, a, b, &i, 1, color);
-                printc(" {s}", .{formatter(.Move, a[i])}, a, b, &i, 1, color);
+                printc(" {s}", .{formatter(gen, .Move, a[i])}, a, b, &i, 1, color);
                 const target = ID.from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(target.player), target.id }, a, b, &i, 1, color);
                 const reason: Move = @enumFromInt(a[i]);
                 printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
-                if (reason == .From) printc(" {s}", .{formatter(.Move, a[i])}, a, b, &i, 1, color);
+                if (reason == .From) {
+                    printc(" {s}", .{formatter(gen, .Move, a[i])}, a, b, &i, 1, color);
+                }
             },
             .Switch => {
                 const id = ID.from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
-                printc(" {s}", .{formatter(.Species, a[i])}, a, b, &i, 1, color);
-                if (gen > 1) {
-                    if (a[i] == N(gen2.Gender.Unknown)) {
+                printc(" {s}", .{formatter(gen, .Species, a[i])}, a, b, &i, 1, color);
+                if (@hasDecl(gen, "Gender")) {
+                    if (a[i] == N(gen.Gender.Unknown)) {
                         i += 1;
                     } else {
-                        var gender = if (a[i] == N(gen2.Gender.Male)) "M" else "F";
+                        var gender = if (a[i] == N(gen.Gender.Male)) "M" else "F";
                         printc(", {s}", .{gender}, a, b, &i, 1, color);
                     }
                 }
@@ -751,7 +751,7 @@ pub fn format(
                         printc("/{d}", .{hp}, a, b, &i, 2, color);
                     },
                 }
-                printc(" {s}", .{formatter(.Status, a[i])}, a, b, &i, 1, color);
+                printc(" {s}", .{formatter(gen, .Status, a[i])}, a, b, &i, 1, color);
             },
             .Cant => {
                 const id = ID.from(@intCast(a[i]));
@@ -759,7 +759,7 @@ pub fn format(
                 const reason: Cant = @enumFromInt(a[i]);
                 printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
                 if (reason == .Disable) {
-                    printc(" {s}", .{formatter(.Move, a[i])}, a, b, &i, 1, color);
+                    printc(" {s}", .{formatter(gen, .Move, a[i])}, a, b, &i, 1, color);
                 }
             },
             .Faint,
@@ -799,7 +799,7 @@ pub fn format(
                         printc("/{d}", .{hp}, a, b, &i, 2, color);
                     },
                 }
-                printc(" {s}", .{formatter(.Status, a[i])}, a, b, &i, 1, color);
+                printc(" {s}", .{formatter(gen, .Status, a[i])}, a, b, &i, 1, color);
                 if (arg == .Damage) {
                     const reason: Damage = @enumFromInt(a[i]);
                     printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
@@ -819,15 +819,17 @@ pub fn format(
             .Status => {
                 const id = ID.from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
-                printc(" {s}", .{formatter(.Status, a[i])}, a, b, &i, 1, color);
+                printc(" {s}", .{formatter(gen, .Status, a[i])}, a, b, &i, 1, color);
                 const reason: Status = @enumFromInt(a[i]);
                 printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
-                if (reason == .From) printc(" {s}", .{formatter(.Move, a[i])}, a, b, &i, 1, color);
+                if (reason == .From) {
+                    printc(" {s}", .{formatter(gen, .Move, a[i])}, a, b, &i, 1, color);
+                }
             },
             .CureStatus => {
                 const id = ID.from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
-                printc(" {s}", .{formatter(.Status, a[i])}, a, b, &i, 1, color);
+                printc(" {s}", .{formatter(gen, .Status, a[i])}, a, b, &i, 1, color);
                 const reason: CureStatus = @enumFromInt(a[i]);
                 printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
             },
@@ -850,7 +852,7 @@ pub fn format(
             .Prepare => {
                 const id = ID.from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
-                printc(" {s}", .{formatter(.Move, a[i])}, a, b, &i, 1, color);
+                printc(" {s}", .{formatter(gen, .Move, a[i])}, a, b, &i, 1, color);
             },
             .Activate => {
                 const id = ID.from(@intCast(a[i]));
@@ -865,12 +867,12 @@ pub fn format(
                 if (@as(Start, @enumFromInt(reason)) == .TypeChange) {
                     const types = @as(gen1.Types, @bitCast(a[i]));
                     const args = .{
-                        formatter(.Type, @intFromEnum(types.type1)),
-                        formatter(.Type, @intFromEnum(types.type2)),
+                        formatter(gen, .Type, @intFromEnum(types.type1)),
+                        formatter(gen, .Type, @intFromEnum(types.type2)),
                     };
                     printc(" {s}/{s}", args, a, b, &i, 1, color);
                 } else if (reason >= @intFromEnum(Start.Disable)) {
-                    printc(" {s}", .{formatter(.Move, a[i])}, a, b, &i, 1, color);
+                    printc(" {s}", .{formatter(gen, .Move, a[i])}, a, b, &i, 1, color);
                 }
             },
             .End => {
@@ -920,8 +922,7 @@ fn printc(
 }
 
 pub fn expectLog(
-    comptime gen: comptime_int,
-    comptime formatter: Formatter,
+    comptime gen: anytype,
     expected: []const u8,
     actual: []const u8,
     offset: usize,
@@ -940,8 +941,8 @@ pub fn expectLog(
 
     expectEqualBytes(expected, actual, offset) catch |err| switch (err) {
         error.TestExpectedEqual => {
-            format(gen, formatter, expected, null, color);
-            format(gen, formatter, actual, expected, color);
+            format(gen, expected, null, color);
+            format(gen, actual, expected, color);
             return err;
         },
         else => return err,
@@ -994,28 +995,19 @@ const M = gen1.Move;
 const S = gen1.Species;
 
 fn expectLog1(expected: []const u8, actual: []const u8) !void {
-    return expectLog(1, gen1Formatter, expected, actual, 0);
+    return expectLog(gen1, expected, actual, 0);
 }
 
 fn expectLog2(expected: []const u8, actual: []const u8) !void {
-    return expectLog(2, gen2Formatter, expected, actual, 0);
+    return expectLog(gen2, expected, actual, 0);
 }
 
-fn gen1Formatter(kind: Kind, byte: u8) []const u8 {
+fn formatter(comptime gen: anytype, kind: Kind, byte: u8) []const u8 {
     return switch (kind) {
-        .Move => @tagName(@as(gen1.Move, @enumFromInt(byte))),
-        .Species => @tagName(@as(gen1.Species, @enumFromInt(byte))),
-        .Type => @tagName(@as(gen1.Type, @enumFromInt(byte))),
-        .Status => gen1.Status.name(byte),
-    };
-}
-
-fn gen2Formatter(kind: Kind, byte: u8) []const u8 {
-    return switch (kind) {
-        .Move => @tagName(@as(gen2.Move, @enumFromInt(byte))),
-        .Species => @tagName(@as(gen2.Species, @enumFromInt(byte))),
-        .Type => @tagName(@as(gen2.Type, @enumFromInt(byte))),
-        .Status => gen2.Status.name(byte),
+        .Move => @tagName(@as(gen.Move, @enumFromInt(byte))),
+        .Species => @tagName(@as(gen.Species, @enumFromInt(byte))),
+        .Type => @tagName(@as(gen.Type, @enumFromInt(byte))),
+        .Status => gen.Status.name(byte),
     };
 }
 
