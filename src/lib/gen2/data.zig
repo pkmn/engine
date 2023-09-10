@@ -148,7 +148,7 @@ pub const Side = extern struct {
 
 // NOTE: DVs (Gender & Hidden Power) and Happiness are stored only in Pokemon
 pub const ActivePokemon = extern struct {
-    volatiles: Volatile align(4) = .{},
+    volatiles: Volatiles align(4) = .{},
     stats: Stats(u16) = .{},
     moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
     boosts: Boosts = .{},
@@ -267,7 +267,7 @@ pub const MoveSlot = packed struct {
 
 pub const Status = gen1.Status;
 
-pub const Volatile = packed struct {
+pub const Volatiles = packed struct {
     Bide: bool = false,
     Thrashing: bool = false,
     Flinch: bool = false,
@@ -329,7 +329,7 @@ pub const Volatile = packed struct {
     };
 
     comptime {
-        assert(@sizeOf(Volatile) == 16);
+        assert(@sizeOf(Volatiles) == 16);
     }
 };
 
