@@ -44,6 +44,7 @@ const Species = data.Species;
 const Status = data.Status;
 const Type = data.Type;
 const Types = data.Types;
+const NULL = data.NULL;
 
 const Battle = helpers.Battle;
 const EXP = helpers.EXP;
@@ -108,21 +109,83 @@ test "start (all fainted)" {
     if (showdown) return error.SkipZigTest;
     // Win
     {
-        // TODO
+        var t = Test(.{}).init(
+            &.{.{ .species = .Bulbasaur, .moves = &.{.Tackle} }},
+            &.{.{ .species = .Charmander, .hp = 0, .moves = &.{.Scratch} }},
+        );
+        defer t.deinit();
+
+        try expectEqual(Result.Win, try t.battle.actual.update(.{}, .{}, &t.options));
+        try t.verify();
     }
     // Lose
     {
-        // TODO
+        var t = Test(.{}).init(
+            &.{.{ .species = .Bulbasaur, .hp = 0, .moves = &.{.Tackle} }},
+            &.{.{ .species = .Charmander, .moves = &.{.Scratch} }},
+        );
+        defer t.deinit();
+
+        try expectEqual(Result.Lose, try t.battle.actual.update(.{}, .{}, &t.options));
+        try t.verify();
     }
     // Tie
     {
-        // TODO
+        var t = Test(.{}).init(
+            &.{.{ .species = .Bulbasaur, .hp = 0, .moves = &.{.Tackle} }},
+            &.{.{ .species = .Charmander, .hp = 0, .moves = &.{.Scratch} }},
+        );
+        defer t.deinit();
+
+        try expectEqual(Result.Tie, try t.battle.actual.update(.{}, .{}, &t.options));
+        try t.verify();
     }
-    return error.SkipZigTest;
 }
 
 test "switching (order)" {
-    return error.SkipZigTest;
+    var battle = Battle.init(
+        0x12345678,
+        &[_]Pokemon{.{ .species = .Abra, .moves = &.{.Teleport} }} ** 6,
+        &[_]Pokemon{.{ .species = .Gastly, .moves = &.{.Lick} }} ** 6,
+    );
+    battle.turn = 1;
+    const p1 = battle.side(.P1);
+    const p2 = battle.side(.P2);
+
+
+    try expectEqual(Result.Default, try battle.update(swtch(3), swtch(2), &NULL));
+    try expectOrder(p1, &.{ 3, 2, 1, 4, 5, 6 }, p2, &.{ 2, 1, 3, 4, 5, 6 });
+    try expectEqual(Result.Default, try battle.update(swtch(5), swtch(5), &NULL));
+    try expectOrder(p1, &.{ 5, 2, 1, 4, 3, 6 }, p2, &.{ 5, 1, 3, 4, 2, 6 });
+    try expectEqual(Result.Default, try battle.update(swtch(6), swtch(3), &NULL));
+    try expectOrder(p1, &.{ 6, 2, 1, 4, 3, 5 }, p2, &.{ 3, 1, 5, 4, 2, 6 });
+    try expectEqual(Result.Default, try battle.update(swtch(3), swtch(3), &NULL));
+    try expectOrder(p1, &.{ 1, 2, 6, 4, 3, 5 }, p2, &.{ 5, 1, 3, 4, 2, 6 });
+    try expectEqual(Result.Default, try battle.update(swtch(2), swtch(4), &NULL));
+    try expectOrder(p1, &.{ 2, 1, 6, 4, 3, 5 }, p2, &.{ 4, 1, 3, 5, 2, 6 });
+
+    var expected_buf: [24]u8 = undefined;
+    var actual_buf: [24]u8 = undefined;
+
+    var expected_stream = ByteStream{ .buffer = &expected_buf };
+    var actual_stream = ByteStream{ .buffer = &actual_buf };
+
+    var expected = FixedLog{ .writer = expected_stream.writer() };
+    var actual = FixedLog{ .writer = actual_stream.writer() };
+
+    try expected.switched(P1.ident(3), &p1.pokemon[2]);
+    try expected.switched(P2.ident(2), &p2.pokemon[1]);
+    try expected.turn(7);
+
+    var options = pkmn.battle.options(actual, chance.NULL, calc.NULL);
+    try expectEqual(Result.Default, try battle.update(swtch(5), swtch(5), &options));
+    try expectOrder(p1, &.{ 3, 1, 6, 4, 2, 5 }, p2, &.{ 2, 1, 3, 5, 4, 6 });
+    try expectLog(&expected_buf, &actual_buf);
+}
+
+fn expectOrder(p1: anytype, o1: []const u8, p2: anytype, o2: []const u8) !void {
+    for (o1, 0..) |o, i| try expectEqual(o, p1.pokemon[i].position);
+    for (o2, 0..) |o, i| try expectEqual(o, p2.pokemon[i].position);
 }
 
 test "switching (reset)" {

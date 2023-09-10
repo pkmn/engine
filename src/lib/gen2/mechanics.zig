@@ -39,9 +39,13 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Result
     assert(c1.type != .Pass or c2.type != .Pass or battle.turn == 0);
     if (battle.turn == 0) return start(battle, options);
 
-    // TODO
+    if (try turnOrder(battle, c1, c2, options) == .P1) {
+        if (try doTurn(battle, .P1, c1, .P2, c2, options)) |r| return r;
+    } else {
+        if (try doTurn(battle, .P2, c2, .P1, c1, options)) |r| return r;
+    }
 
-    return Result.Default;
+    return endTurn(battle, options);
 }
 
 fn start(battle: anytype, options: anytype) !Result {
@@ -60,6 +64,21 @@ fn start(battle: anytype, options: anytype) !Result {
     try switchIn(battle, .P2, p2_slot, true, options);
 
     return endTurn(battle, options);
+}
+
+fn findFirstAlive(side: *const Side) u8 {
+    for (side.pokemon, 0..) |pokemon, i| if (pokemon.hp > 0) return side.pokemon[i].position;
+    return 0;
+}
+
+fn selectMove(battle: anytype) ?Result {
+    _ = battle;
+    return null;
+}
+
+fn saveMove(battle: anytype) void {
+    _ = battle;
+    return null;
 }
 
 fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, options: anytype) !void {
@@ -99,9 +118,35 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, options: a
     }
 }
 
-fn findFirstAlive(side: *const Side) u8 {
-    for (side.pokemon, 0..) |pokemon, i| if (pokemon.hp > 0) return side.pokemon[i].position;
-    return 0;
+fn turnOrder(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Player {
+    _ = battle;
+    _ = c1;
+    _ = c2;
+    _ = options;
+
+    return .P1;
+}
+
+fn doTurn(
+    battle: anytype,
+    player: Player,
+    player_choice: Choice,
+    foe_player: Player,
+    foe_choice: Choice,
+    options: anytype,
+) !?Result {
+    if (try executeMove(battle, player, player_choice, options)) |r| return r;
+    if (try executeMove(battle, foe_player, foe_choice, options)) |r| return r;
+    return null;
+}
+
+fn executeMove(battle: anytype, player: Player, choice: Choice, options: anytype) !?Result {
+    if (choice.type == .Switch) {
+        try switchIn(battle, player, choice.data, false, options);
+        return null;
+    }
+
+    @panic("unimplemented");
 }
 
 fn endTurn(battle: anytype, options: anytype) @TypeOf(options.log).Error!Result {

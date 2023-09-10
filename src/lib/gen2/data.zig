@@ -5,6 +5,7 @@ const pkmn = @import("../pkmn.zig");
 
 const data = @import("../common/data.zig");
 const DEBUG = @import("../common/debug.zig").print;
+const protocol = @import("../common/protocol.zig");
 const rng = @import("../common/rng.zig");
 const util = @import("../common/util.zig");
 
@@ -15,6 +16,8 @@ const types = @import("data/types.zig");
 
 const gen1 = @import("../gen1/data.zig");
 
+const calc = @import("calc.zig");
+const chance = @import("chance.zig");
 const mechanics = @import("mechanics.zig");
 
 const assert = std.debug.assert;
@@ -32,6 +35,9 @@ pub const LOGS_SIZE = if (builtin.mode == .ReleaseSmall)
     MAX_LOGS
 else
     std.math.ceilPowerOfTwo(usize, MAX_LOGS) catch unreachable;
+
+///  Null object pattern implementation of pkmn.battle.Options for Generation II.
+pub const NULL = pkmn.battle.options(protocol.NULL, chance.NULL, calc.NULL);
 
 const Choice = data.Choice;
 const ID = data.ID;

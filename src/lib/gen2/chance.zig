@@ -24,5 +24,16 @@ pub fn Chance(comptime Rational: type) type {
         /// The actions taken by a hypothetical "chance player" that convey information about which
         /// RNG events were observed during a battle `update`.
         actions: Actions = .{},
+
+        /// Possible error returned by operations tracking chance probability.
+        pub const Error = Rational.Error;
     };
 }
+
+/// Null object pattern implementation of Generation II `Chance` which does nothing, though chance
+/// tracking should additionally be turned off entirely via `options.chance`.
+pub const NULL = Null{};
+
+const Null = struct {
+    pub const Error = error{};
+};
