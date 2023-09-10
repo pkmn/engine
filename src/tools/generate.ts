@@ -803,7 +803,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       const chance = move.secondary?.chance
         ? `${move.secondary.chance / 10}, // * 10 = ${move.secondary.chance}`
         : '';
-      const priority = move.priority ? move.priority + 1 : undefined;
       const acc = move.accuracy === true ? 100 : move.accuracy;
       MOVES.push(`// ${name}\n` +
         '        .{\n' +
@@ -814,7 +813,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .accuracy = ${acc},\n` +
         `            .target = .${TARGETS[move.target]},\n` +
         (chance ? `            .chance = ${chance}\n` : '') +
-        (priority !== undefined ? `            .priority = ${priority},\n` : '') +
+        (move.priority ? `            .priority = ${move.priority},\n` : '') +
         '        }');
       DATA[1].moves[move.name] = move.pp;
     }
@@ -836,7 +835,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         /// The chance of the move's secondary effect occurring.
         chance: u8 = 0,
         /// The priority of the move
-        priority: u8 = 1,
+        priority: i8 = 0,
 
         comptime {
             assert(@sizeOf(Data) == 8);

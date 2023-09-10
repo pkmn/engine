@@ -280,7 +280,7 @@ pub const Move = enum(u8) {
         /// The chance of the move's secondary effect occurring.
         chance: u8 = 0,
         /// The priority of the move
-        priority: u8 = 1,
+        priority: i8 = 0,
 
         comptime {
             assert(@sizeOf(Data) == 8);
@@ -452,7 +452,7 @@ pub const Move = enum(u8) {
             .pp = 20,
             .accuracy = 100,
             .target = .Other,
-            .priority = 0,
+            .priority = -1,
         },
         // Fly
         .{
@@ -712,7 +712,7 @@ pub const Move = enum(u8) {
             .pp = 20,
             .accuracy = 100,
             .target = .Other,
-            .priority = 0,
+            .priority = -1,
         },
         // Sing
         .{
@@ -920,7 +920,7 @@ pub const Move = enum(u8) {
             .pp = 20,
             .accuracy = 100,
             .target = .Depends,
-            .priority = 0,
+            .priority = -1,
         },
         // SeismicToss
         .{
@@ -1196,7 +1196,7 @@ pub const Move = enum(u8) {
             .pp = 30,
             .accuracy = 100,
             .target = .Other,
-            .priority = 2,
+            .priority = 1,
         },
         // Rage
         .{
@@ -1968,7 +1968,7 @@ pub const Move = enum(u8) {
             .pp = 10,
             .accuracy = 100,
             .target = .Self,
-            .priority = 3,
+            .priority = 2,
         },
         // MachPunch
         .{
@@ -1978,7 +1978,7 @@ pub const Move = enum(u8) {
             .pp = 30,
             .accuracy = 100,
             .target = .Other,
-            .priority = 2,
+            .priority = 1,
         },
         // ScaryFace
         .{
@@ -2110,7 +2110,7 @@ pub const Move = enum(u8) {
             .pp = 5,
             .accuracy = 100,
             .target = .Self,
-            .priority = 3,
+            .priority = 2,
         },
         // BoneRush
         .{
@@ -2165,7 +2165,7 @@ pub const Move = enum(u8) {
             .pp = 10,
             .accuracy = 100,
             .target = .Self,
-            .priority = 3,
+            .priority = 2,
         },
         // Charm
         .{
@@ -2443,7 +2443,7 @@ pub const Move = enum(u8) {
             .pp = 10,
             .accuracy = 100,
             .target = .Other,
-            .priority = 0,
+            .priority = -1,
         },
         // MorningSun
         .{
@@ -2536,7 +2536,7 @@ pub const Move = enum(u8) {
             .pp = 20,
             .accuracy = 100,
             .target = .Depends,
-            .priority = 0,
+            .priority = -1,
         },
         // PsychUp
         .{
@@ -2555,7 +2555,7 @@ pub const Move = enum(u8) {
             .pp = 5,
             .accuracy = 100,
             .target = .Other,
-            .priority = 2,
+            .priority = 1,
         },
         // AncientPower
         .{
