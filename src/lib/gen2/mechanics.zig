@@ -142,8 +142,8 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Player 
         const pri2 = Move.get(m2).priority;
         if (pri1 != pri2) return if (pri1 > pri2) .P1 else .P2;
 
-        const qkc1 = battle.side(.P1).active.item == .QuickClaw;
-        const qkc2 = battle.side(.P2).active.item == .QuickClaw;
+        const qkc1 = battle.side(.P1).stored().item == .QuickClaw;
+        const qkc2 = battle.side(.P2).stored().item == .QuickClaw;
         if (!showdown and qkc1 and qkc2) {
             // If both Pokémon have Quick Claw the cartridge checks them in order and exits early if
             // the first one procs, meaning the host has a slightly higher chance of going first

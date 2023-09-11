@@ -160,7 +160,8 @@ pub const ActivePokemon = extern struct {
     boosts: Boosts = .{},
     types: Types = .{},
     species: Species = .None,
-    item: Item = .None,
+
+    _: u8 = 0,
 
     comptime {
         assert(@sizeOf(ActivePokemon) == 44);
