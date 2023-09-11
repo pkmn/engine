@@ -219,6 +219,81 @@ much overhead the preceding representations have after taking into consideration
 padding](https://en.wikipedia.org/wiki/Data_structure_alignment) and
 [denormalization](https://en.wikipedia.org/wiki/Denormalization):
 
+## Details
+
+| pkmn                      | Pokémon Crystal (pret)                            |
+| ------------------------- | ------------------------------------------------- |
+| `start`                   | `DoBattle`                                        |
+| `update`                  | `BattleTurn`                                      |
+| `selectMove` / `saveMove` | `CheckPlayerLockedIn` / `ParsePlayerAction`       |
+| `switchIn`                | `SwitchPlayerMon` / `SendOutPlayerMon`            |
+| `turnOrder`               | `DetermineMoveOrder`                              |
+| `doTurn`                  | `DoTurn`                                          |
+| `executeMove`             | `DoMove`                                          |
+| `beforeMove`              | `CheckTurn`                                       |
+| `canMove`                 |                                                   |
+| `decrementPP`             |                                                   |
+| `doMove`                  |                                                   |
+| `checkCriticalHit`        | `BattleCommand_Critical`                          |
+| `calcDamage`              | `BattleCommand_DamageCalc` / `PlayerAttackDamage` |
+| `adjustDamage`            | `BattleCommand_Stab`                              |
+| `randomizeDamage`         | `BattleCommand_DamageVariation`                   |
+| `specialDamage`           | `BattleCommand_ConstantDamage`                    |
+| `applyDamage`             | `BattleCommand_ApplyDamage`                       |
+| `checkHit`                | `BattleCommand_CheckHit`                          |
+| `checkFaint`              | `CheckFaint`                                      |
+| `handleResidual`          | `ResidualDamage`                                  |
+| `endTurn`                 | `EndTurn`                                         |
+
+DoBattle
+BattleTurn
+- HandleBerserkGene
+- CheckPlayerLockedIn
+- BattleMenu
+- ParsePlayerAction
+- DetermineMoveOrder
+  - CompareMovePriority
+  - GetMovePriority
+- Battle_*
+  - Handle*Switch
+    - SwitchPlayerMon
+      - BreakAttraction
+      - SendOutPlayerMon
+    - SpikesDamage
+  - *Turn_EndOpponentProtectEndureDestinyBond
+    - EndUserDestinyBond
+    - Do*Turn
+    - EndOpponentProtectEndureDestinyBond
+  - ResidualDamage
+  - CheckFaint_*
+  - HandleBetweenTurnEffects
+    - HandleFutureSight
+    - HandleWeather
+    - HandleWrap
+    - HandlePerishSong
+    - HandleLeftovers
+    - HandleMysteryBerry
+    - HandleDefrost
+    - HandleSafeguard
+    - HandleScreens
+    - HandleStatBoostingHeldItems
+    - HandleHealingItems
+    - HandleEncore
+
+DoTurn
+DoMove = executeMove
+CheckTurn = beforeMove
+BattleCommand_Critical = checkCriticalHit
+BattleCommand_Stab = adjustDamage
+BattleCommand_DamageVariation = randomizeDamage
+BattleCommand_CheckHit = checkHit
+BattleCommand_ApplyDamage = applyDamage
+BattleCommand_CheckFaint
+BattleCommand_BuildOpponentRage = buildRage
+BattleCommand_DamageCalc (PlayerAttackDamage / EnemyAttackDamage) = calcDamage
+BattleCommand_ConstantDamage = specialDamage
+DoEnemyDamage / DoPlayerDamage / DoSubstituteDamage
+
 ==**TODO**==
 
 ## Protocol
