@@ -95,10 +95,8 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, options: a
     side.pokemon[0].position = side.pokemon[slot - 1].position;
     side.pokemon[slot - 1].position = out;
 
-    side.last_move = .None;
-
-    side.last_counter_move = .None;
-    foe.last_counter_move = .None;
+    side.last_used_move = .None;
+    foe.active.volatiles.dirty = true;
 
     active.stats = incoming.stats;
     active.species = incoming.species;
@@ -137,8 +135,8 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Player 
     const double_switch = c1.type == .Switch and c2.type == .Switch;
     if (!showdown and double_switch) return .P1;
 
-    const m1 = .Pound; // TODO battle.side(.P1).last_selected_move;
-    const m2 = .Pound; // TODO battle.side(.P2).last_selected_move;
+    const m1 = battle.side(.P1).last_selected_move;
+    const m2 = battle.side(.P2).last_selected_move;
     if (!showdown or !double_switch) {
         const pri1 = Move.get(m1).priority;
         const pri2 = Move.get(m2).priority;

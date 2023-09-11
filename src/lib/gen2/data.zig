@@ -108,10 +108,10 @@ pub const Side = extern struct {
     pokemon: [6]Pokemon = [_]Pokemon{.{}} ** 6,
     active: ActivePokemon = .{},
     conditions: Conditions = .{},
-    // NB: wLastPlayerMove
-    last_move: Move = .None,
-    // NB: wLastPlayerCounterMove / wLastEnemyCounterMove
-    last_counter_move: Move = .None,
+    // NB: wCurPlayerMove / wCurEnemyMove
+    last_selected_move: Move = .None,
+    // NB: wLastPlayerCounterMove / wLastEnemyCounterMove (wLastPlayerMove / wLastEnemyMove)
+    last_used_move: Move = .None,
 
     const Conditions = packed struct {
         Spikes: bool = false,
@@ -144,6 +144,12 @@ pub const Side = extern struct {
         assert(@typeInfo(@TypeOf(self)).Pointer.child == Side);
         return self.get(1);
     }
+
+    pub inline fn lastMove(self: anytype, encore: bool) Move {
+        assert(self.last_used_move != .None or !self.active.volatiles.dirty);
+        if (encore) return self.last_used_move;
+        return if (self.active.volatiles.dirty) .None else self.last_used_move;
+    }
 };
 
 // NOTE: DVs (Gender & Hidden Power) and Happiness are stored only in Pokemon
@@ -152,9 +158,9 @@ pub const ActivePokemon = extern struct {
     stats: Stats(u16) = .{},
     moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
     boosts: Boosts = .{},
+    types: Types = .{},
     species: Species = .None,
     item: Item = .None,
-    types: Types = .{},
 
     comptime {
         assert(@sizeOf(ActivePokemon) == 44);
@@ -301,8 +307,9 @@ pub const Volatiles = packed struct {
     trapped: bool = false,
     switched: bool = false,
     switching: bool = false,
+    dirty: bool = false,
 
-    _: u5 = 0,
+    _: u4 = 0,
 
     bind: u4 = 0,
     future_sight: FutureSight = .{},
