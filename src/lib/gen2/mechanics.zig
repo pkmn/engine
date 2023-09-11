@@ -123,6 +123,7 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Player 
     if (c2.type == .Pass) return .P1;
 
     // Pokémon Showdown always rolls for Quick Claw every turn, even if no Pokémon hold Quick Claw
+    // TODO: add to pending and only commit roll on Pokémon Showdown if roll is used
     const qkc = showdown and try Rolls.quickClaw(battle, .P1, options);
 
     if ((c1.type == .Switch) != (c2.type == .Switch)) return if (c1.type == .Switch) .P1 else .P2;
