@@ -1547,19 +1547,17 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
     const brn = Status.is(stored.status, .BRN);
     if (brn or Status.is(stored.status, .PSN)) blk: {
         var damage = @max(stored.stats.hp / 16, 1);
-
         if (volatiles.Toxic) {
             volatiles.toxic += 1;
             damage *= volatiles.toxic;
         }
+        damage = @min(damage, stored.hp);
 
-        const amount = @min(damage, stored.hp);
-        if (showdown and amount == 0) break :blk;
-
-        stored.hp -= amount;
-
-        // Pokémon Showdown uses damageOf here but its not relevant in Generation I
-        try options.log.damage(ident, stored, if (brn) Damage.Burn else Damage.Poison);
+        if (!showdown or damage > 0) {
+            stored.hp -= damage;
+            // Pokémon Showdown uses damageOf here but its not relevant in Generation I
+            try options.log.damage(ident, stored, if (brn) Damage.Burn else Damage.Poison);
+        }
     }
 
     if (volatiles.LeechSeed) {

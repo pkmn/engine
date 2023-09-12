@@ -328,6 +328,77 @@ fn doMove(battle: anytype, player: Player, options: anytype, mslot: u4) !?Result
     return null;
 }
 
+fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
+    var side = battle.side(player);
+    var stored = side.stored();
+    const ident = battle.active(player);
+    var volatiles = &side.active.volatiles;
+
+    // TODO if (stored.hp == 0) return;
+    assert(stored.hp > 0);
+
+    const brn = Status.is(stored.status, .BRN);
+    if (brn or Status.is(stored.status, .PSN)) blk: {
+        var damage: u16 = undefined;
+        if (volatiles.Toxic) {
+            volatiles.toxic += 1;
+            damage = @max(stored.stats.hp / 16, 1) * volatiles.toxic;
+        } else {
+            damage = @max(stored.stats.hp / 8, 1);
+        }
+        damage = @min(damage, stored.hp);
+
+        if (!showdown or damage > 0) {
+            stored.hp -= damage;
+            // Pokémon Showdown uses damageOf here but its not relevant in Generation II
+            try options.log.damage(ident, stored, if (brn) Damage.Burn else Damage.Poison);
+            if (stored.hp == 0) return;
+        }
+    }
+
+    if (volatiles.LeechSeed) {
+        var foe = battle.foe(player);
+        var foe_stored = foe.stored();
+        const foe_ident = battle.active(player.foe());
+
+        // if (foe_stored.hp == 0) {
+        //     assert(showdown);
+        //     return;
+        // }
+
+        var damage = @min(@max(stored.stats.hp / 8, 1), stored.hp);
+        stored.hp -= damage;
+        // As above, Pokémon Showdown uses damageOf but its not relevant
+        if (damage > 0) try options.log.damage(ident, stored, .LeechSeed);
+
+        const before = foe_stored.hp;
+        foe_stored.hp = @min(foe_stored.hp + damage, foe_stored.stats.hp);
+        // Pokémon Showdown uses the less specific heal here instead of drain... because reasons?
+        if (foe_stored.hp > before) try options.log.heal(foe_ident, foe_stored, .Silent);
+        if (stored.hp == 0) return;
+    }
+
+    if (volatiles.Nightmare) {
+        damage = @min(@max(stored.stats.hp / 4, 1), stored.hp);
+        if (!showdown or damage > 0) {
+            stored.hp -= damage;
+            // ibid
+            try options.log.damage(ident, stored, Damage.Nightmare);
+            if (stored.hp == 0) return;
+        }
+    }
+
+    if (volatiles.Curse) {
+        damage = @min(@max(stored.stats.hp / 4, 1), stored.hp);
+        if (!showdown or damage > 0) {
+            stored.hp -= damage;
+            // ibid
+            try options.log.damage(ident, stored, Damage.Curse);
+            if (stored.hp == 0) return;
+        }
+    }
+}
+
 fn endTurn(battle: anytype, options: anytype) @TypeOf(options.log).Error!Result {
     battle.turn += 1;
 
@@ -344,7 +415,19 @@ fn endTurn(battle: anytype, options: anytype) @TypeOf(options.log).Error!Result 
 }
 
 pub const Effects = struct {
-    fn teleport(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
+    fn protect(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
+        // TODO or if we didn't go first
+        if (volatiles.Substitute) return try options.log.fail(battle.active(player), .None);
+
+        // TODO
+
+        if (move.effect == .Endure) {
+            volatiles.Endure = true;
+        } else {
+            volatiles.Protect = true;
+        }
+        try options.log.singleturn(battle.active(player), move.id);
+
         _ = battle;
         _ = player;
         _ = move;
