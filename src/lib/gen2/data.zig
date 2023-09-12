@@ -108,8 +108,8 @@ pub const Side = extern struct {
     pokemon: [6]Pokemon = [_]Pokemon{.{}} ** 6,
     active: ActivePokemon = .{},
     conditions: Conditions = .{},
-    // NB: wCurPlayerMove / wCurEnemyMove
-    last_selected_move: Move = .None,
+    // NB: wCurPlayerMove / wCurEnemyMove (?)
+    _: u8 = 0,
     // NB: wLastPlayerCounterMove / wLastEnemyCounterMove (wLastPlayerMove / wLastEnemyMove)
     last_used_move: Move = .None,
 
@@ -150,6 +150,13 @@ pub const Side = extern struct {
         if (encore) return self.last_used_move;
         return if (self.active.volatiles.dirty) .None else self.last_used_move;
     }
+
+    // TODO
+    // pub inline fn useMove(self: anytype) void {
+    //     assert(side.last_selected_move != .None);
+    //     self.last_used_move = side.last_selected_move;
+    //     self.active.volatiles.dirty = false;
+    // }
 };
 
 // NOTE: DVs (Gender & Hidden Power) and Happiness are stored only in Pokemon
@@ -321,10 +328,11 @@ pub const Volatiles = packed struct {
     toxic: u8 = 0,
     confusion: u4 = 0,
     encore: u4 = 0,
+    // TODO merge with attacks (ie rollout/thrashing)? need to be zeroed at same time
     fury_cutter: u4 = 0,
     perish_song: u4 = 0,
     protect: u4 = 0,
-    rollout: u4 = 0,
+    attacks: u4 = 0, // bide/thrashing/rollout turns
 
     const Disabled = packed struct {
         move: u4 = 0,

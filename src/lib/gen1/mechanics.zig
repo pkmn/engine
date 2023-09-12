@@ -214,12 +214,9 @@ fn selectMove(
             }
             break :ok true;
         };
-
         assert(struggle);
-        saveMove(battle, player, choice);
-    } else {
-        saveMove(battle, player, choice);
     }
+    saveMove(battle, player, choice);
 
     return null;
 }

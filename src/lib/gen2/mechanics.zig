@@ -71,9 +71,68 @@ fn findFirstAlive(side: *const Side) u8 {
     return 0;
 }
 
-fn selectMove(battle: anytype) ?Result {
-    _ = battle;
-    return null;
+fn selectMove(battle: anytype, player: Player, choice: Choice) void {
+    if (choice.type == .Pass) return; // FIXME BATON PASS
+
+    var side = battle.side(player);
+    var volatiles = &side.active.volatiles;
+
+    // pre-battle menu
+    const forced = forced: {
+        if (volatiles.Recharging) break :forced true;
+        // Pokémon Showdown removes Flinch at the end-of-turn in its residual handler
+        if (!showdown) {
+            volatiles.Flinch = false;
+            battle.foe(player).active.volatiles.Flinch = false;
+        }
+        break :forced (volatiles.Thrashing or volatiles.Charging or volatiles.Rollout);
+    };
+
+    // battle menu
+    if (choice.type == .Switch) return;
+    assert(choice.type == .Move and (!forced or choice.data == @intFromBool(showdown)));
+
+    done: {
+        if (forced) break :done;
+        // pre-move select
+        if (volatiles.Encore) {
+            // TODO wCurPlayerMove = side.lastMove(true);
+            // assert(wCurPlayerMove != .None);
+            volatiles.Bide = false; // FIXME wPlayerCharging vs. SUBSTATUS_BIDE?
+            const effect = Move.get(.Pound).effect; // TODO
+            if (effect != .FuryCutter) volatiles.fury_cutter = false;
+            if (effect != .Rage) {
+                volatiles.Rage = false;
+                volatiles.rage = 0;
+            }
+            if (effect != .Protect and effect != .Endure) volatiles.protect = 0;
+            return;
+        }
+        if (volatiles.Bide) break :done;
+        // move select
+        if (choice.data == 0) {
+            const struggle = ok: {
+                for (side.active.moves, 0..) |move, i| {
+                    if (move.pp > 0 and volatiles.disabled_move != i + 1) break :ok false;
+                }
+                break :ok true;
+            };
+            assert(struggle);
+            // TODO wCurPlayerMove = .Struggle;
+        } else {
+            assert(showdown or side.active.volatiles.disabled_move != choice.data);
+            const move = side.active.move(choice.data);
+            // You cannot *select* a move with 0 PP
+            assert(move.pp != 0);
+            // TODO wCurPlayerMove = move.id;
+            // battle.lastMove(player).index = @intCast(c.data);
+        }
+    }
+
+    volatiles.Rage = false;
+    volatiles.rage = 0;
+    volatiles.fury_cutter = 0;
+    volatiles.protect = 0;
 }
 
 fn saveMove(battle: anytype) void {
@@ -98,12 +157,12 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, options: a
     side.last_used_move = .None;
     foe.active.volatiles.dirty = true;
 
-    active.stats = incoming.stats;
-    active.species = incoming.species;
-    active.types = incoming.types;
-    active.boosts = .{};
     active.volatiles = .{};
+    active.stats = incoming.stats;
     active.moves = incoming.moves;
+    active.boosts = .{};
+    active.types = incoming.types;
+    active.species = incoming.species;
 
     statusModify(incoming.status, &active.stats);
 
@@ -136,8 +195,8 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Player 
     const double_switch = c1.type == .Switch and c2.type == .Switch;
     if (!showdown and double_switch) return .P1;
 
-    const m1 = battle.side(.P1).last_selected_move;
-    const m2 = battle.side(.P2).last_selected_move;
+    const m1 = .Pound; // TODO battle.side(.P1).last_selected_move;
+    const m2 = .Pound; // TODO battle.side(.P2).last_selected_move;
     if (!showdown or !double_switch) {
         const pri1 = Move.get(m1).priority;
         const pri2 = Move.get(m2).priority;
@@ -201,8 +260,23 @@ fn doTurn(
     foe_choice: Choice,
     options: anytype,
 ) !?Result {
+    assert(player_choice.type != .Pass);
+
+    const volatiles = &battle.side(player).active.volatiles;
+    const foe_volatiles = &battle.foe(player).active.volatiles;
+
+    volatiles.DestinyBond = false;
     if (try executeMove(battle, player, player_choice, options)) |r| return r;
+    foe_volatiles.Protect = false;
+    foe_volatiles.Endure = false;
+    foe_volatiles.DestinyBond = false;
+
+    // foe_volatiles.DestinyBond = false;
     if (try executeMove(battle, foe_player, foe_choice, options)) |r| return r;
+    volatiles.Protect = false;
+    volatiles.Endure = false;
+    volatiles.DestinyBond = false;
+
     return null;
 }
 
@@ -212,7 +286,46 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, options: anytype
         return null;
     }
 
-    @panic("TODO");
+    assert(choice.type == .Move);
+    var mslot: u4 = @intCast(choice.data);
+
+    // const move = Move.get(side.last_selected_move);
+
+    // CheckTurn
+
+    return doMove(battle, player, options, mslot);
+}
+
+fn decrementPP(side: *Side, mslot: u4) void {
+    var active = &side.active;
+    const volatiles = &active.volatiles;
+
+    // TODO assert(side.last_selected_move != .Struggle);
+    assert(!volatiles.Charging and !volatiles.BeatUp and !volatiles.Thrashing and !volatiles.Bide);
+
+    assert(active.move(mslot).pp > 0);
+    active.move(mslot).pp = @as(u6, @intCast(active.move(mslot).pp)) -% 1;
+    if (volatiles.Transform) return;
+
+    // FIXME mimic
+
+    assert(side.stored().move(mslot).pp > 0);
+    side.stored().move(mslot).pp = @as(u6, @intCast(side.stored().move(mslot).pp)) -% 1;
+    assert(active.move(mslot).pp == side.stored().move(mslot).pp);
+}
+
+fn doMove(battle: anytype, player: Player, options: anytype, mslot: u4) !?Result {
+    _ = options;
+    var side = battle.side(player);
+    const move = Move.get(.Teleport); // side.last_selected_move
+    switch (move.effect) {
+        .Teleport => {
+            // side.useMove();
+            decrementPP(side, mslot);
+        },
+        else => @panic("TODO"),
+    }
+    return null;
 }
 
 fn endTurn(battle: anytype, options: anytype) @TypeOf(options.log).Error!Result {
@@ -230,6 +343,15 @@ fn endTurn(battle: anytype, options: anytype) @TypeOf(options.log).Error!Result 
     return Result.Default;
 }
 
+pub const Effects = struct {
+    fn teleport(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
+        _ = battle;
+        _ = player;
+        _ = move;
+        _ = options;
+    }
+};
+
 fn statusModify(status: u8, stats: *Stats(u16)) void {
     if (Status.is(status, .PAR)) {
         stats.spe = @max(stats.spe / 4, 1);
@@ -241,6 +363,7 @@ fn statusModify(status: u8, stats: *Stats(u16)) void {
 inline fn isForced(active: anytype) bool {
     return active.volatiles.Recharging or active.volatiles.Rage or
         active.volatiles.Thrashing or active.volatiles.Charging or
+        // FIXME TODO Underground or Flying?
         active.volatiles.Underground or active.volatiles.Flying or
         active.volatiles.Rollout;
 }
