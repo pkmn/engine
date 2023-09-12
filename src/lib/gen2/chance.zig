@@ -120,6 +120,10 @@ pub const NULL = Null{};
 const Null = struct {
     pub const Error = error{};
 
+    pub fn switched(self: Null, player: Player, in: u8, out: u8) void {
+        _ = .{ self, player, in, out };
+    }
+
     pub fn speedTie(self: Null, p1: bool) Error!void {
         _ = .{ self, p1 };
     }

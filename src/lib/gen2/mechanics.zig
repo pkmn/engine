@@ -135,11 +135,6 @@ fn selectMove(battle: anytype, player: Player, choice: Choice) void {
     volatiles.protect = 0;
 }
 
-fn saveMove(battle: anytype) void {
-    _ = battle;
-    return null;
-}
-
 fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, options: anytype) !void {
     var side = battle.side(player);
     var foe = battle.foe(player);
@@ -167,7 +162,7 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, options: a
     statusModify(incoming.status, &active.stats);
 
     try options.log.switched(battle.active(player), incoming);
-    // TODO: options.chance.switched(player, side.order[0], out);
+    options.chance.switched(player, side.pokemon[0].position, out);
 
     if (side.conditions.Spikes and !active.types.includes(.Flying)) {
         incoming.hp -|= @max(incoming.stats.hp / 8, 1);
@@ -296,6 +291,19 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, options: anytype
     return doMove(battle, player, options, mslot);
 }
 
+fn beforeMove(battle: anytype, player: Player, options: anytype) !void {
+    _ = battle;
+    _ = player;
+    _ = options;
+}
+
+fn canMove(battle: anytype, player: Player, options: anytype) !bool {
+    _ = battle;
+    _ = player;
+    _ = options;
+    return false;
+}
+
 fn decrementPP(side: *Side, mslot: u4) void {
     var active = &side.active;
     const volatiles = &active.volatiles;
@@ -328,6 +336,96 @@ fn doMove(battle: anytype, player: Player, options: anytype, mslot: u4) !?Result
     return null;
 }
 
+fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data, options: anytype) !bool {
+    _ = battle;
+    _ = player;
+    _ = move;
+    _ = options;
+    return false;
+}
+
+fn calcDamage(
+    battle: anytype,
+    player: Player,
+    target_player: Player,
+    m: ?Move.Data,
+    crit: bool,
+) u16 {
+    _ = battle;
+    _ = player;
+    _ = target_player;
+    _ = m;
+    _ = crit;
+    return 0;
+}
+
+fn adjustDamage(battle: anytype, player: Player) u16 {
+    _ = battle;
+    _ = player;
+    return 0;
+}
+
+fn randomizeDamage(battle: anytype, player: Player, options: anytype) !u16 {
+    _ = battle;
+    _ = player;
+    _ = options;
+    return 0;
+}
+
+fn applyDamage(
+    battle: anytype,
+    player: Player,
+    options: anytype,
+) !bool {
+    _ = battle;
+    _ = player;
+    _ = options;
+    return false;
+}
+
+fn checkHit(battle: anytype, player: Player, move: Move.Data, options: anytype) !bool {
+    if (moveHit(battle, player, move, options)) return true;
+
+    try options.chance.commit(player, .miss);
+    try options.log.lastmiss();
+    try options.log.miss(battle.active(player));
+
+    return false;
+}
+
+fn moveHit(
+    battle: anytype,
+    player: Player,
+    move: Move.Data,
+    options: anytype,
+) bool {
+    var side = battle.side(player);
+    const foe = battle.foe(player);
+    _ = move;
+    _ = side;
+    _ = foe;
+    _ = options;
+    return false;
+}
+
+fn checkFaint(
+    battle: anytype,
+    player: Player,
+    options: anytype,
+) @TypeOf(options.log).Error!?Result {
+    _ = battle;
+    _ = player;
+    return null;
+}
+
+fn faint(battle: anytype, player: Player, done: bool, options: anytype) !?Result {
+    _ = battle;
+    _ = player;
+    _ = done;
+    _ = options;
+    return null;
+}
+
 fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
     var side = battle.side(player);
     var stored = side.stored();
@@ -338,7 +436,7 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
     assert(stored.hp > 0);
 
     const brn = Status.is(stored.status, .BRN);
-    if (brn or Status.is(stored.status, .PSN)) blk: {
+    if (brn or Status.is(stored.status, .PSN)) {
         var damage: u16 = undefined;
         if (volatiles.Toxic) {
             volatiles.toxic += 1;
@@ -366,7 +464,7 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
         //     return;
         // }
 
-        var damage = @min(@max(stored.stats.hp / 8, 1), stored.hp);
+        const damage = @min(@max(stored.stats.hp / 8, 1), stored.hp);
         stored.hp -= damage;
         // As above, Pokémon Showdown uses damageOf but its not relevant
         if (damage > 0) try options.log.damage(ident, stored, .LeechSeed);
@@ -379,7 +477,7 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
     }
 
     if (volatiles.Nightmare) {
-        damage = @min(@max(stored.stats.hp / 4, 1), stored.hp);
+        const damage = @min(@max(stored.stats.hp / 4, 1), stored.hp);
         if (!showdown or damage > 0) {
             stored.hp -= damage;
             // ibid
@@ -389,7 +487,7 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
     }
 
     if (volatiles.Curse) {
-        damage = @min(@max(stored.stats.hp / 4, 1), stored.hp);
+        const damage = @min(@max(stored.stats.hp / 4, 1), stored.hp);
         if (!showdown or damage > 0) {
             stored.hp -= damage;
             // ibid
@@ -416,6 +514,9 @@ fn endTurn(battle: anytype, options: anytype) @TypeOf(options.log).Error!Result 
 
 pub const Effects = struct {
     fn protect(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
+        var side = battle.side(player);
+        var volatiles = &side.active.volatiles;
+
         // TODO or if we didn't go first
         if (volatiles.Substitute) return try options.log.fail(battle.active(player), .None);
 
@@ -427,11 +528,6 @@ pub const Effects = struct {
             volatiles.Protect = true;
         }
         try options.log.singleturn(battle.active(player), move.id);
-
-        _ = battle;
-        _ = player;
-        _ = move;
-        _ = options;
     }
 };
 

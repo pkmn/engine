@@ -1545,7 +1545,7 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
     var volatiles = &side.active.volatiles;
 
     const brn = Status.is(stored.status, .BRN);
-    if (brn or Status.is(stored.status, .PSN)) blk: {
+    if (brn or Status.is(stored.status, .PSN)) {
         var damage = @max(stored.stats.hp / 16, 1);
         if (volatiles.Toxic) {
             volatiles.toxic += 1;
