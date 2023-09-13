@@ -1435,7 +1435,7 @@ fn moveHit(
         const overwritten = overwrite and state > 0;
         assert(!overwritten or (0 < state and state <= 255 and !side.active.volatiles.Bide));
 
-        var accuracy = if (overwritten) state else @as(u16, Gen12.percent(move.accuracy));
+        var accuracy = if (overwritten) state else @as(u16, move.accuracy);
         var boost = BOOSTS[@as(u4, @intCast(@as(i8, side.active.boosts.accuracy) + 6))];
         accuracy = accuracy * boost[0] / boost[1];
         boost = BOOSTS[@as(u4, @intCast(@as(i8, -foe.active.boosts.evasion) + 6))];

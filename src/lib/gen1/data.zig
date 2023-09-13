@@ -490,7 +490,7 @@ test Move {
     try expectEqual(2, @intFromEnum(Move.KarateChop));
     const move = Move.get(.Fissure);
     try expectEqual(Move.Effect.OHKO, move.effect);
-    try expectEqual(@as(u8, 30), move.accuracy);
+    try expectEqual(rng.Gen12.percent(30), move.accuracy);
     try expectEqual(Type.Ground, move.type);
 
     try expect(!Move.Effect.onBegin(.None));
