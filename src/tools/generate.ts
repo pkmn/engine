@@ -474,17 +474,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
     };\n`;
 
-    const ppData = `
-    const PP = [_]u8{
-        ${PP.join('\n        ')},
-    };\n`;
-    const ppFn = `
-
-    /// Returns the base PP of the move.
-    pub fn pp(id: Move) u8 {
-        assert(id != .None);
-        return PP[@intFromEnum(id) - 1];
-    }`;
     const SENTINEL =
       ',\n\n    // Sentinel used when Pokémon\'s turn should be skipped (e.g. bound)\n' +
       '    SKIP_TURN = 0xFF';
@@ -505,8 +494,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         Effect,
         targetType: 'u4',
         assert: 'assert(id != .None and id != .SKIP_TURN);',
-        ppData,
-        ppFn,
+        ppData: PP.join('\n        '),
       },
     });
 
@@ -797,6 +785,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       return `${nameToEnum(move.name)} ${constToEffectEnum(effect)}`;
     });
     const MOVES: string[] = [];
+    const PP: string[] = [];
     const EFFECTS = new Set<string>();
     for (const m of moves) {
       const [name, effect] = m.split(' ');
@@ -809,12 +798,12 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .effect = .${effect},\n` +
         `            .bp = ${move.basePower},\n` +
         `            .type = .${move.type === '???' ? '@"???"' : move.type},\n` +
-        `            .pp = ${move.pp},\n` +
         `            .accuracy = Gen12.percent(${acc}),\n` +
         `            .target = .${TARGETS[move.target]},\n` +
         (chance ? `            .chance = ${chance}\n` : '') +
         (move.priority ? `            .priority = ${move.priority},\n` : '') +
         '        }');
+      PP.push(`${move.pp}, // ${name}`);
       DATA[1].moves[move.name] = move.pp;
     }
     // pp/accuracy/target/chance could all be u4, but packed struct needs to be power of 2
@@ -826,8 +815,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         bp: u8,
         /// The move's type.
         type: Type,
-        /// The move's base PP.
-        pp: u8,
         /// The move's accuracy percentage.
         accuracy: u8,
         /// The move's targeting behavior.
@@ -836,6 +823,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         chance: u8 = 0,
         /// The priority of the move
         priority: i8 = 0,
+
+        _: u8 = 0, // TODO
 
         comptime {
             assert(@sizeOf(Data) == 8);
@@ -874,6 +863,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         assert: 'assert(id != .None);',
         Effect,
         targetType: 'u8',
+        ppData: PP.join('\n        '),
       },
     });
 

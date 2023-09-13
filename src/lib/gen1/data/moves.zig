@@ -1831,7 +1831,7 @@ pub const Move = enum(u8) {
         10, // SuperFang
         20, // Slash
         10, // Substitute
-        10, // Struggle,
+        10, // Struggle
     };
 
     comptime {

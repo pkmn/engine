@@ -139,7 +139,7 @@ pub const Pokemon = struct {
                 .id = m,
                 .pp_ups = 3,
                 // NB: PP can be at most 61 legally (though can overflow to 63)
-                .pp = @intCast(@min(Move.get(m).pp / 5 * 8, 61)),
+                .pp = @intCast(@min(Move.pp(m) / 5 * 8, 61)),
             };
         }
         pokemon.item = p.item;
@@ -189,8 +189,7 @@ pub const Pokemon = struct {
             const pp_ups: u8 =
                 if (!opt.cleric and rand.chance(u8, 1, 10)) rand.range(u2, 0, 2 + 1) else 3;
             // NB: PP can be at most 61 legally (though can overflow to 63)
-            var base = Move.get(m).pp;
-            const max_pp: u8 = @intCast(base + pp_ups * @min(base / 5, 7));
+            const max_pp: u8 = @intCast(Move.pp(m) + pp_ups * @min(Move.pp(m) / 5, 7));
             ms[i] = .{
                 .id = m,
                 .pp_ups = pp_ups,

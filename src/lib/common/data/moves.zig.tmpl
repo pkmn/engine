@@ -39,7 +39,11 @@ pub const Move = enum({{{ Move.type }}}) {
         FoeSide,
         RandomFoe,
     };
-{{{ Move.ppData }}}
+
+    const PP = [_]u8{
+        {{{ Move.ppData }}},
+    };
+
     comptime {
         assert(@sizeOf(Move) == {{{ Move.size }}});
         assert(@sizeOf(@TypeOf(DATA)) == {{{ Move.dataSize }}});
@@ -52,5 +56,11 @@ pub const Move = enum({{{ Move.type }}}) {
     pub inline fn get(id: Move) Data {
         {{{ Move.assert }}}
         return DATA[@intFromEnum(id) - 1];
-    }{{{ Move.ppFn }}}
+    }
+
+    /// Returns the base PP of the move.
+    pub fn pp(id: Move) u8 {
+        assert(id != .None);
+        return PP[@intFromEnum(id) - 1];
+    }
 };

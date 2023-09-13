@@ -434,7 +434,7 @@ test Move {
     try expectEqual(Move.Effect.ConfusionChance, move.effect);
     try expectEqual(rng.Gen12.percent(50), move.accuracy);
     try expectEqual(rng.Gen12.percent(100), move.chance);
-    try expectEqual(@as(u8, 5), move.pp);
+    try expectEqual(@as(u8, 5), Move.pp(.DynamicPunch));
     try expectEqual(@as(i8, -1), Move.get(.Counter).priority);
     try expect(!move.effect.isHighCritical());
     try expect(Move.get(.KarateChop).effect.isHighCritical());
