@@ -59,6 +59,9 @@ pub fn Battle(comptime RNG: anytype) type {
         turn: u16 = 0,
         field: Field = .{},
 
+        _1: u8 = 0,
+        _2: if (!showdown) u16 else u32 = 0,
+
         pub inline fn side(self: anytype, player: Player) PointerType(@TypeOf(self), Side) {
             assert(@typeInfo(@TypeOf(self)).Pointer.child == Self);
             return &self.sides[@intFromEnum(player)];
@@ -83,9 +86,8 @@ pub fn Battle(comptime RNG: anytype) type {
     };
 }
 
-// TODO
 test Battle {
-    try expectEqual(496, @sizeOf(Battle(PRNG)));
+    try expectEqual(512, @sizeOf(Battle(PRNG)));
 }
 
 pub const Field = packed struct {
@@ -106,10 +108,12 @@ pub const Weather = enum(u4) {
 
 pub const Side = extern struct {
     pokemon: [6]Pokemon = [_]Pokemon{.{}} ** 6,
-    active: ActivePokemon = .{},
+    active: ActivePokemon align(8) = .{},
     conditions: Conditions = .{},
+    _1: u32 = 0,
+    _2: u16 = 0,
     // NB: wCurPlayerMove / wCurEnemyMove (?)
-    _: u8 = 0,
+    _3: u8 = 0,
     // NB: wLastPlayerCounterMove / wLastEnemyCounterMove (wLastPlayerMove / wLastEnemyMove)
     last_used_move: Move = .None,
 
@@ -123,13 +127,20 @@ pub const Side = extern struct {
         light_screen: u4 = 0,
         reflect: u4 = 0,
 
+        future_sight: FutureSight = .{},
+
+        const FutureSight = packed struct {
+            damage: u12 = 0,
+            count: u4 = 0,
+        };
+
         comptime {
-            assert(@sizeOf(Conditions) == 2);
+            assert(@sizeOf(Conditions) == 4);
         }
     };
 
     comptime {
-        assert(@sizeOf(Side) == 240);
+        assert(@sizeOf(Side) == 248);
     }
 
     pub inline fn get(self: anytype, slot: u8) PointerType(@TypeOf(self), Pokemon) {
@@ -299,7 +310,7 @@ pub const Volatiles = packed struct {
     Transform: bool = false,
 
     Nightmare: bool = false,
-    Cure: bool = false,
+    Curse: bool = false,
     Protect: bool = false,
     Foresight: bool = false,
     PerishSong: bool = false,
@@ -317,10 +328,9 @@ pub const Volatiles = packed struct {
     switching: bool = false,
     dirty: bool = false,
 
-    _: u4 = 0,
+    _: u20 = 0,
 
     bind: u4 = 0,
-    future_sight: FutureSight = .{},
     bide: u16 = 0,
     disabled: Disabled = .{},
     rage: u8 = 0,
@@ -337,11 +347,6 @@ pub const Volatiles = packed struct {
     const Disabled = packed struct {
         move: u4 = 0,
         duration: u4 = 0,
-    };
-
-    const FutureSight = packed struct {
-        damage: u12 = 0,
-        count: u4 = 0,
     };
 
     comptime {

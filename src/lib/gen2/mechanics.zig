@@ -497,6 +497,18 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
     }
 }
 
+fn betweenTurn(battle: anytype, options: anytype) !void {
+    var p1 = battle.side(.P1);
+    var p2 = battle.side(.P2);
+
+    _ = p1;
+    _ = p2;
+    _ = options;
+
+    // TODO checkFaintThen(p1, p2);
+
+}
+
 fn endTurn(battle: anytype, options: anytype) @TypeOf(options.log).Error!Result {
     battle.turn += 1;
 
