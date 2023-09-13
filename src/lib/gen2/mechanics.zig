@@ -35,6 +35,54 @@ const Species = data.Species;
 const Stats = data.Stats;
 const Status = data.Status;
 
+// zig fmt: off
+const STAT_BOOSTS = &[_][2]u8{
+    .{ 25, 100 }, // -6
+    .{ 28, 100 }, // -5
+    .{ 33, 100 }, // -4
+    .{ 40, 100 }, // -3
+    .{ 50, 100 }, // -2
+    .{ 66, 100 }, // -1
+    .{   1,  1 }, //  0
+    .{ 15,  10 }, // +1
+    .{  2,   1 }, // +2
+    .{ 25,  10 }, // +3
+    .{  3,   1 }, // +4
+    .{ 35,  10 }, // +5
+    .{  4,   1 }, // +6
+};
+
+const ACCURACY_BOOSTS = &[_][2]u8{
+    .{  33, 100 }, // -6
+    .{  36, 100 }, // -5
+    .{  43, 100 }, // -4
+    .{  50, 100 }, // -3
+    .{  60, 100 }, // -2
+    .{  75, 100 }, // -1
+    .{   1,   1 }, //  0
+    .{ 133, 100 }, // +1
+    .{ 166, 100 }, // +2
+    .{   2,   1 }, // +3
+    .{ 233, 100 }, // +4
+    .{ 133,  50 }, // +5
+    .{   3,   1 }, // +6
+};
+
+const CRITICAL_HITS = &[_]u8{
+    256 / 15, //  0
+    256 / 8,  // +1
+    256 / 4,  // +2
+    256 / 3,  // +3
+    256 / 2,  // +4
+    256 / 2,  // +5
+    256 / 2, // +6
+};
+// zig fmt: on
+
+const MAX_STAT_VALUE = 999;
+
+const DISTRIBUTION = [_]u3{ 2, 2, 2, 3, 3, 3, 4, 5 };
+
 pub fn update(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Result {
     assert(c1.type != .Pass or c2.type != .Pass or battle.turn == 0);
     if (battle.turn == 0) return start(battle, options);
