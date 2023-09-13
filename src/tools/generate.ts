@@ -769,6 +769,14 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     // Moves
     const HIGH_CRIT = // NOTE: RAZOR_WIND is also high critical hit ratio...
       ['KARATE_CHOP', 'RAZOR_LEAF', 'CRABHAMMER', 'SLASH', 'AEROBLAST', 'CROSS_CHOP'];
+    const CONTINUOUS = [
+      'razorwind', 'skyattack', 'skullbash', 'solarbeam', 'fly',
+      'rollout', 'bide', 'thrash', 'petaldance', 'outrage',
+    ];
+    const NO_METRONOME = [
+      'metronome', 'struggle', 'sketch', 'mimic', 'counter', 'mirrorcoat',
+      'protect', 'detect', 'endure', 'destinybond', 'sleeptalk', 'thief',
+    ];
     url = `${pret}/data/moves/moves.asm`;
     const moves = await getOrUpdate('moves', dirs.cache, url, update, (line, _, i) => {
       const match = /move (\w+),\W+(\w+),/.exec(line);
@@ -789,6 +797,10 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       const move = gen.moves.get(name)!;
       const chance = move.secondary?.chance ? `Gen12.percent(${move.secondary.chance}),` : '';
       const acc = move.accuracy === true ? 100 : move.accuracy;
+      const flags = NO_METRONOME.includes(move.id)
+        ? '.{ .metronome = false }'
+        : CONTINUOUS.includes(move.id)
+          ? '.{ .continuous = true }' : '';
       MOVES.push(`// ${name}\n` +
         '        .{\n' +
         `            .effect = .${effect},\n` +
@@ -798,6 +810,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .target = .${TARGETS[move.target]},\n` +
         (chance ? `            .chance = ${chance}\n` : '') +
         (move.priority ? `            .priority = ${move.priority},\n` : '') +
+        (flags ? `            .flags = ${flags},\n` : '') +
         '        }');
       PP.push(`${move.pp}, // ${name}`);
       DATA[1].moves[move.name] = move.pp;
@@ -817,10 +830,20 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         target: Target,
         /// The chance of the move's secondary effect occurring.
         chance: u8 = 0,
-        /// The priority of the move
+        /// The priority of the move.
         priority: i8 = 0,
+        /// Miscellaneous flags.
+        flags: Flags = .{},
 
-        _: u8 = 0, // TODO
+        /// Miscellaneous move related flags.
+        const Flags = packed struct(u8) {
+            /// Whether this move can be called via Metronome.
+            metronome: bool = true,
+            /// Whether this move is considered to be "continuous".
+            continuous: bool = false,
+
+            _: u6 = 0,
+        };
 
         comptime {
             assert(@sizeOf(Data) == 8);
