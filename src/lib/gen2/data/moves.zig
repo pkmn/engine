@@ -2788,7 +2788,7 @@ pub const Move = enum(u8) {
         15, // FutureSight
         15, // RockSmash
         15, // Whirlpool
-        10, // BeatUp
+        10, // BeatUp,
     };
 
     comptime {

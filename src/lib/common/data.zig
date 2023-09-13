@@ -27,16 +27,12 @@ test Player {
 }
 
 /// An identifier for a specific Pokémon in battle.
-pub const ID = packed struct {
+pub const ID = packed struct(u8) {
     /// The one-indexed team slot of the Pokémon
     id: u3 = 0,
     /// The Pokémon's trainer.
     player: Player = .P1,
     _: u4 = 0,
-
-    comptime {
-        assert(@sizeOf(ID) == 1);
-    }
 
     /// Converts the identifier into a number.
     pub inline fn int(self: ID) u4 {
@@ -57,7 +53,7 @@ test ID {
 }
 
 /// A choice made by a player during battle.
-pub const Choice = packed struct {
+pub const Choice = packed struct(u8) {
     /// The choice type.
     type: Choice.Type = .Pass,
     /// The choice data:
@@ -73,10 +69,6 @@ pub const Choice = packed struct {
         Move,
         Switch,
     };
-
-    comptime {
-        assert(@sizeOf(Choice) == 1);
-    }
 };
 
 test Choice {
@@ -89,7 +81,7 @@ test Choice {
 }
 
 /// The result of the battle - all results other than 'None' should be considered terminal.
-pub const Result = packed struct {
+pub const Result = packed struct(u8) {
     /// The type of result from the perspective of Player 1.
     /// `Error` is not possible when in Pokémon Showdown compatibility mode.
     type: Result.Type = .None,
@@ -117,10 +109,6 @@ pub const Result = packed struct {
     pub const Error: Result = .{ .type = .Error };
     /// The default result.
     pub const Default: Result = .{ .p1 = .Move, .p2 = .Move };
-
-    comptime {
-        assert(@sizeOf(Result) == 1);
-    }
 };
 
 test Result {

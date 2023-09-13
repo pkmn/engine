@@ -90,13 +90,9 @@ test Battle {
     try expectEqual(512, @sizeOf(Battle(PRNG)));
 }
 
-pub const Field = packed struct {
+pub const Field = packed struct(u8) {
     weather: Weather = .None,
     weather_duration: u4 = 0,
-
-    comptime {
-        assert(@sizeOf(Field) == 1);
-    }
 };
 
 pub const Weather = enum(u4) {
@@ -117,7 +113,7 @@ pub const Side = extern struct {
     // NB: wLastPlayerCounterMove / wLastEnemyCounterMove (wLastPlayerMove / wLastEnemyMove)
     last_used_move: Move = .None,
 
-    const Conditions = packed struct {
+    const Conditions = packed struct(u32) {
         Spikes: bool = false,
         Safeguard: bool = false,
         LightScreen: bool = false,
@@ -129,14 +125,10 @@ pub const Side = extern struct {
 
         future_sight: FutureSight = .{},
 
-        const FutureSight = packed struct {
+        const FutureSight = packed struct(u16) {
             damage: u12 = 0,
             count: u4 = 0,
         };
-
-        comptime {
-            assert(@sizeOf(Conditions) == 4);
-        }
     };
 
     comptime {
@@ -224,7 +216,7 @@ pub const Gender = enum(u2) {
     Unknown,
 };
 
-pub const DVs = packed struct {
+pub const DVs = packed struct(u16) {
     gender: Gender = .Male,
     pow: u6 = 40,
     type: Type = .Dark,
@@ -253,10 +245,6 @@ pub const DVs = packed struct {
         if (t >= @intFromEnum(Type.@"???")) t = t + 1;
         return DVs{ .gender = g, .pow = p, .type = @enumFromInt(t) };
     }
-
-    comptime {
-        assert(@sizeOf(DVs) == 2);
-    }
 };
 
 test DVs {
@@ -280,10 +268,12 @@ test DVs {
     try expectEqual(Gender.Female, dvs.gender);
 }
 
-pub const MoveSlot = packed struct {
+/// Representation of a Generation II Pokémon's move slot in a battle.
+pub const MoveSlot = extern struct {
+    /// The identifier for the move.
     id: Move = .None,
-    pp_ups: u2 = 3,
-    pp: u6 = 0,
+    /// The remaining PP of the move.
+    pp: u8 = 0,
 
     comptime {
         assert(@sizeOf(MoveSlot) == 2);
@@ -292,7 +282,7 @@ pub const MoveSlot = packed struct {
 
 pub const Status = gen1.Status;
 
-pub const Volatiles = packed struct {
+pub const Volatiles = packed struct(u128) {
     Bide: bool = false,
     Thrashing: bool = false,
     Flinch: bool = false,
@@ -344,14 +334,10 @@ pub const Volatiles = packed struct {
     protect: u4 = 0,
     attacks: u4 = 0, // bide/thrashing/rollout turns
 
-    const Disabled = packed struct {
+    const Disabled = packed struct(u8) {
         move: u4 = 0,
         duration: u4 = 0,
     };
-
-    comptime {
-        assert(@sizeOf(Volatiles) == 16);
-    }
 };
 
 pub fn Stats(comptime T: type) type {
@@ -386,7 +372,7 @@ test Stats {
     try expectEqual(@as(u16, 279), Stats(u16).calc("spe", base.spe, 15, 63001, 100));
 }
 
-pub const Boosts = packed struct {
+pub const Boosts = packed struct(u32) {
     atk: i4 = 0,
     def: i4 = 0,
     spe: i4 = 0,

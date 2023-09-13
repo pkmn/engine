@@ -115,7 +115,7 @@ test Actions {
 
 /// Information about the RNG that was observed during a Generation I battle `update` for a
 /// single player.
-pub const Action = packed struct {
+pub const Action = packed struct(u64) {
     /// If not 0, the roll to be returned Rolls.damage.
     damage: u8 = 0,
 
@@ -155,10 +155,6 @@ pub const Action = packed struct {
     pub const DURATIONS: u64 = 0x000000FFFF000000;
 
     pub const Field = std.meta.FieldEnum(Action);
-
-    comptime {
-        assert(@sizeOf(Action) == 8);
-    }
 
     /// Perform a reset by clearing fields which should not persist across updates.
     pub inline fn reset(self: *Action) void {
@@ -239,7 +235,7 @@ pub const Durations = extern struct {
 
 /// Observed values for various durations that need to be tracked in order to properly
 /// deduplicate transitions with a primary key. TODO
-pub const Duration = packed struct {
+pub const Duration = packed struct(u16) {
     /// The number of turns a Pokémon has been observed to be sleeping.
     sleep: u3 = 0,
     /// The number of turns a Pokémon has been observed to be confused.
@@ -252,10 +248,6 @@ pub const Duration = packed struct {
     binding: u3 = 0,
 
     pub const Field = std.meta.FieldEnum(Duration);
-
-    comptime {
-        assert(@sizeOf(Duration) == 2);
-    }
 };
 
 pub const Commit = enum { hit, miss, binding };

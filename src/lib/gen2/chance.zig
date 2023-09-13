@@ -35,7 +35,7 @@ pub const Actions = extern struct {
 
 /// Information about the RNG that was observed during a Generation II battle `update` for a
 /// single player.
-pub const Action = packed struct {
+pub const Action = packed struct(u8) {
     /// If not None, the value to be returned for TODO
     quick_claw: Optional(bool) = .None,
     /// If not None, the Player to be returned by Rolls.speedTie.
@@ -43,10 +43,6 @@ pub const Action = packed struct {
     _: u4 = 0,
 
     pub const Field = std.meta.FieldEnum(Action);
-
-    comptime {
-        assert(@sizeOf(Action) == 1);
-    }
 
     /// Perform a reset by clearing fields which should not persist across updates.
     pub inline fn reset(self: *Action) void {

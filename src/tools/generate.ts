@@ -381,7 +381,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       DATA[0].moves[move.name] = move.pp;
     }
     let Data = `/// Data associated with a Pokémon move.
-    pub const Data = packed struct {
+    pub const Data = packed struct(u32) {
         effect: Effect,
         /// The move's base PP.
         bp: u8,
@@ -391,10 +391,6 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         type: Type,
         /// The move's targeting behavior.
         target: Target,
-
-        comptime {
-            assert(@sizeOf(Data) == 4);
-        }
     };`;
 
     const begin = EFFECTS.onBegin.size;

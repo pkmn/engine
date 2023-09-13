@@ -214,7 +214,7 @@ pub const Pokemon = extern struct {
     }
 };
 
-/// Representation of a Generation I & II Pokémon's move slot in a battle.
+/// Representation of a Generation I Pokémon's move slot in a battle.
 pub const MoveSlot = extern struct {
     /// The identifier for the move.
     id: Move = .None,
@@ -222,20 +222,16 @@ pub const MoveSlot = extern struct {
     pp: u8 = 0,
 
     comptime {
-        assert(@sizeOf(MoveSlot) == @sizeOf(u16));
+        assert(@sizeOf(MoveSlot) == 2);
     }
 };
 
 /// Details required to detect desyncs based on the move last selected/executed by players.
-pub const MoveDetails = packed struct {
+pub const MoveDetails = packed struct(if (showdown) u16 else u8) {
     /// The move slot index of the last move selected in the battle menu.
     index: if (showdown) u8 else u4 = 0,
     /// Whether the last move executed was counterable.
     counterable: if (showdown) u8 else u4 = 0,
-
-    comptime {
-        assert(@sizeOf(MoveDetails) == if (showdown) 2 else 1);
-    }
 };
 
 /// Bitfield representation of a Generation I & II Pokémon's major status condition.
@@ -329,7 +325,7 @@ test Status {
 }
 
 /// Bitfield representation of volatile statuses and associated data in Generation I.
-pub const Volatiles = packed struct {
+pub const Volatiles = packed struct(u64) {
     /// Whether the "Bide" volatile status is present.
     Bide: bool = false,
     /// Whether the "Thrashing" volatile status is present.
@@ -387,10 +383,6 @@ pub const Volatiles = packed struct {
     disabled_move: u3 = 0,
     /// The number of turns toxic damage has been accumulating.
     toxic: u5 = 0,
-
-    comptime {
-        assert(@sizeOf(Volatiles) == 8);
-    }
 };
 
 test Volatiles {
@@ -456,7 +448,7 @@ test Stats {
 }
 
 /// Representation of a Pokémon's boosts in Generation I.
-pub const Boosts = packed struct {
+pub const Boosts = packed struct(u32) {
     /// A Pokémon's Attack boosts.
     atk: i4 = 0,
     /// A Pokémon's Defense boosts.
@@ -471,10 +463,6 @@ pub const Boosts = packed struct {
     evasion: i4 = 0,
 
     _: u8 = 0,
-
-    comptime {
-        assert(@sizeOf(Boosts) == 4);
-    }
 };
 
 test Boosts {

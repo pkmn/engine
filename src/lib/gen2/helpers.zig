@@ -135,12 +135,9 @@ pub const Pokemon = struct {
         }
         assert(p.moves.len > 0 and p.moves.len <= 4);
         for (p.moves, 0..) |m, j| {
-            pokemon.moves[j] = .{
-                .id = m,
-                .pp_ups = 3,
-                // NB: PP can be at most 61 legally (though can overflow to 63)
-                .pp = @intCast(@min(Move.pp(m) / 5 * 8, 61)),
-            };
+            pokemon.moves[j].id = m;
+            // NB: PP can be at most 61 legally (though can overflow to 63)
+            pokemon.moves[j].pp = @intCast(@min(Move.pp(m) / 5 * 8, 61));
         }
         pokemon.item = p.item;
         if (p.hp) |hp| {
@@ -192,7 +189,6 @@ pub const Pokemon = struct {
             const max_pp: u8 = @intCast(Move.pp(m) + pp_ups * @min(Move.pp(m) / 5, 7));
             ms[i] = .{
                 .id = m,
-                .pp_ups = pp_ups,
                 .pp = if (opt.cleric) max_pp else rand.range(u8, 0, max_pp + 1),
             };
         }

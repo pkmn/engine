@@ -183,7 +183,7 @@ pub const Move = enum(u8) {
     SKIP_TURN = 0xFF,
 
     /// Data associated with a Pokémon move.
-    pub const Data = packed struct {
+    pub const Data = packed struct(u32) {
         effect: Effect,
         /// The move's base PP.
         bp: u8,
@@ -193,10 +193,6 @@ pub const Move = enum(u8) {
         type: Type,
         /// The move's targeting behavior.
         target: Target,
-
-        comptime {
-            assert(@sizeOf(Data) == 4);
-        }
     };
 
     const DATA = [_]Data{
@@ -1831,7 +1827,7 @@ pub const Move = enum(u8) {
         10, // SuperFang
         20, // Slash
         10, // Substitute
-        10, // Struggle
+        10, // Struggle,
     };
 
     comptime {
