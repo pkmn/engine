@@ -2758,6 +2758,11 @@ pub const Move = enum(u8) {
         comptime {
             assert(@sizeOf(Effect) == 1);
         }
+
+        /// Whether this effect has a high critical rate.
+        pub inline fn isHighCritical(effect: Effect) bool {
+            return effect == .HighCritical or effect == .RazorWind;
+        }
     };
 
     const Target = enum(u8) {

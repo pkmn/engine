@@ -851,6 +851,11 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         comptime {
             assert(@sizeOf(Effect) == 1);
         }
+
+        /// Whether this effect has a high critical rate.
+        pub inline fn isHighCritical(effect: Effect) bool {
+            return effect == .HighCritical or effect == .RazorWind;
+        }
     };\n`;
 
     template('moves', dirs.out, {

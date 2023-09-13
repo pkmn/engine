@@ -435,6 +435,9 @@ test Move {
     try expectEqual(@as(u8, 50), move.accuracy);
     try expectEqual(@as(u8, 5), move.pp);
     try expectEqual(@as(i8, -1), Move.get(.Counter).priority);
+    try expect(!move.effect.isHighCritical());
+    try expect(Move.get(.KarateChop).effect.isHighCritical());
+    try expect(Move.get(.RazorWind).effect.isHighCritical());
 }
 
 pub const Species = species.Species;
