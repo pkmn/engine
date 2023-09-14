@@ -648,10 +648,10 @@ describe('Gen 1', () => {
     // Switch (boosted)
     {
       const battle = startBattle([HIT, NO_CRIT, MAX_DMG], [
-        {species: 'Farfetch’d', evs, moves: ['Agility', 'Teleport']},
+        {species: 'Farfetch’d', evs, moves: ['Agility', 'Splash']},
         {species: 'Cubone', evs, moves: ['Bone Club']},
       ], [
-        {species: 'Charmeleon', evs, moves: ['Teleport', 'Explosion']},
+        {species: 'Charmeleon', evs, moves: ['Splash', 'Explosion']},
         {species: 'Pikachu', evs, moves: ['Surf']},
       ]);
 
@@ -663,11 +663,13 @@ describe('Gen 1', () => {
       battle.makeChoices('switch 2', 'switch 2');
 
       verify(battle, [
-        '|move|p2a: Charmeleon|Teleport|p2a: Charmeleon',
+        '|move|p2a: Charmeleon|Splash|p2a: Charmeleon',
+        '|-nothing',
         '|move|p1a: Farfetch’d|Agility|p1a: Farfetch’d',
         '|-boost|p1a: Farfetch’d|spe|2',
         '|turn|2',
-        '|move|p1a: Farfetch’d|Teleport|p1a: Farfetch’d',
+        '|move|p1a: Farfetch’d|Splash|p1a: Farfetch’d',
+        '|-nothing',
         '|move|p2a: Charmeleon|Explosion|p1a: Farfetch’d',
         '|-damage|p1a: Farfetch’d|0 fnt',
         '|faint|p1a: Farfetch’d',
@@ -680,10 +682,10 @@ describe('Gen 1', () => {
     // Switch (paralyzed)
     {
       const battle = startBattle([HIT, PAR_CAN, HIT, NO_CRIT, MAX_DMG], [
-        {species: 'Farfetch’d', evs, moves: ['Thunder Wave', 'Teleport']},
+        {species: 'Farfetch’d', evs, moves: ['Thunder Wave', 'Splash']},
         {species: 'Cubone', evs, moves: ['Bone Club']},
       ], [
-        {species: 'Charmeleon', evs, moves: ['Teleport', 'Explosion']},
+        {species: 'Charmeleon', evs, moves: ['Splash', 'Explosion']},
         {species: 'Pikachu', evs, moves: ['Surf']},
       ]);
 
@@ -697,11 +699,13 @@ describe('Gen 1', () => {
       battle.makeChoices('switch 2', 'switch 2');
 
       verify(battle, [
-        '|move|p2a: Charmeleon|Teleport|p2a: Charmeleon',
+        '|move|p2a: Charmeleon|Splash|p2a: Charmeleon',
+        '|-nothing',
         '|move|p1a: Farfetch’d|Thunder Wave|p2a: Charmeleon',
         '|-status|p2a: Charmeleon|par',
         '|turn|2',
-        '|move|p1a: Farfetch’d|Teleport|p1a: Farfetch’d',
+        '|move|p1a: Farfetch’d|Splash|p1a: Farfetch’d',
+        '|-nothing',
         '|move|p2a: Charmeleon|Explosion|p1a: Farfetch’d',
         '|-damage|p1a: Farfetch’d|0 fnt',
         '|faint|p1a: Farfetch’d',
@@ -905,7 +909,7 @@ describe('Gen 1', () => {
     const battle = startBattle([HIT, hit3, NO_CRIT, MAX_DMG, HIT, hit5, NO_CRIT, MAX_DMG], [
       {species: 'Kangaskhan', evs, moves: ['Comet Punch']},
     ], [
-      {species: 'Slowpoke', evs, moves: ['Substitute', 'Teleport']},
+      {species: 'Slowpoke', evs, moves: ['Substitute', 'Splash']},
     ]);
 
     let p2hp = battle.p2.pokemon[0].hp;
@@ -936,7 +940,8 @@ describe('Gen 1', () => {
       '|-activate|p2a: Slowpoke|Substitute|[damage]',
       '|-end|p2a: Slowpoke|Substitute',
       '|-hitcount|p2a: Slowpoke|4',
-      '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
+      '|move|p2a: Slowpoke|Splash|p2a: Slowpoke',
+      '|-nothing',
       '|turn|3',
     ]);
   });
@@ -945,7 +950,7 @@ describe('Gen 1', () => {
     const battle = startBattle([HIT, NO_CRIT, MAX_DMG, HIT, NO_CRIT, MAX_DMG], [
       {species: 'Marowak', evs, moves: ['Bonemerang']},
     ], [
-      {species: 'Slowpoke', level: 80, evs, moves: ['Substitute', 'Teleport']},
+      {species: 'Slowpoke', level: 80, evs, moves: ['Substitute', 'Splash']},
     ]);
 
     let p2hp = battle.p2.pokemon[0].hp;
@@ -969,7 +974,8 @@ describe('Gen 1', () => {
       '|move|p1a: Marowak|Bonemerang|p2a: Slowpoke',
       '|-end|p2a: Slowpoke|Substitute',
       '|-hitcount|p2a: Slowpoke|1',
-      '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
+      '|move|p2a: Slowpoke|Splash|p2a: Slowpoke',
+      '|-nothing',
       '|turn|3',
     ]);
   });
@@ -985,7 +991,7 @@ describe('Gen 1', () => {
     ], [
       {species: 'Beedrill', evs, moves: ['Twineedle']},
     ], [
-      {species: 'Voltorb', evs, moves: ['Substitute', 'Teleport']},
+      {species: 'Voltorb', evs, moves: ['Substitute', 'Splash']},
       {species: 'Weezing', evs, moves: ['Explosion']},
     ]);
 
@@ -1020,13 +1026,15 @@ describe('Gen 1', () => {
       '|-end|p2a: Voltorb|Substitute',
       '|-hitcount|p2a: Voltorb|1',
       '|turn|2',
-      '|move|p2a: Voltorb|Teleport|p2a: Voltorb',
+      '|move|p2a: Voltorb|Splash|p2a: Voltorb',
+      '|-nothing',
       '|move|p1a: Beedrill|Twineedle|p2a: Voltorb',
       '|-damage|p2a: Voltorb|177/283',
       '|-damage|p2a: Voltorb|141/283',
       '|-hitcount|p2a: Voltorb|2',
       '|turn|3',
-      '|move|p2a: Voltorb|Teleport|p2a: Voltorb',
+      '|move|p2a: Voltorb|Splash|p2a: Voltorb',
+      '|-nothing',
       '|move|p1a: Beedrill|Twineedle|p2a: Voltorb',
       '|-damage|p2a: Voltorb|105/283',
       '|-damage|p2a: Voltorb|69/283',
@@ -1047,10 +1055,10 @@ describe('Gen 1', () => {
     {
       const battle = startBattle([HIT, HIT, HIT, HIT], [
         {species: 'Jolteon', evs, moves: ['Toxic', 'Substitute']},
-        {species: 'Abra', evs, moves: ['Teleport']},
+        {species: 'Abra', evs, moves: ['Splash']},
       ], [
-        {species: 'Venomoth', evs, moves: ['Teleport', 'Toxic']},
-        {species: 'Drowzee', evs, moves: ['Poison Gas', 'Teleport']},
+        {species: 'Venomoth', evs, moves: ['Splash', 'Toxic']},
+        {species: 'Drowzee', evs, moves: ['Poison Gas', 'Splash']},
       ]);
 
       let jolteon = battle.p1.pokemon[0].hp;
@@ -1087,7 +1095,8 @@ describe('Gen 1', () => {
       verify(battle, [
         '|move|p1a: Jolteon|Toxic|p2a: Venomoth',
         '|-immune|p2a: Venomoth',
-        '|move|p2a: Venomoth|Teleport|p2a: Venomoth',
+        '|move|p2a: Venomoth|Splash|p2a: Venomoth',
+        '|-nothing',
         '|turn|2',
         '|move|p1a: Jolteon|Substitute|p1a: Jolteon',
         '|-start|p1a: Jolteon|Substitute',
@@ -1104,14 +1113,18 @@ describe('Gen 1', () => {
         '|-status|p1a: Abra|psn',
         '|-damage|p2a: Drowzee|303/323 tox|[from] psn',
         '|turn|5',
-        '|move|p1a: Abra|Teleport|p1a: Abra',
+        '|move|p1a: Abra|Splash|p1a: Abra',
+        '|-nothing',
         '|-damage|p1a: Abra|238/253 psn|[from] psn',
-        '|move|p2a: Drowzee|Teleport|p2a: Drowzee',
+        '|move|p2a: Drowzee|Splash|p2a: Drowzee',
+        '|-nothing',
         '|-damage|p2a: Drowzee|263/323 tox|[from] psn',
         '|turn|6',
-        '|move|p1a: Abra|Teleport|p1a: Abra',
+        '|move|p1a: Abra|Splash|p1a: Abra',
+        '|-nothing',
         '|-damage|p1a: Abra|223/253 psn|[from] psn',
-        '|move|p2a: Drowzee|Teleport|p2a: Drowzee',
+        '|move|p2a: Drowzee|Splash|p2a: Drowzee',
+        '|-nothing',
         '|-damage|p2a: Drowzee|203/323 tox|[from] psn',
         '|turn|7',
       ]);
@@ -1675,7 +1688,7 @@ describe('Gen 1', () => {
       HIT, NO_CRIT, MAX_DMG,
       HIT, NO_CRIT, MAX_DMG, no_proc,
     ], [
-      {species: 'Venomoth', evs, moves: ['Psybeam', 'Teleport']},
+      {species: 'Venomoth', evs, moves: ['Psybeam', 'Splash']},
     ], [
       {species: 'Jolteon', evs, moves: ['Substitute', 'Agility']},
     ]);
@@ -1708,7 +1721,8 @@ describe('Gen 1', () => {
       '|-activate|p2a: Jolteon|confusion',
       '|move|p2a: Jolteon|Agility|p2a: Jolteon',
       '|-boost|p2a: Jolteon|spe|2',
-      '|move|p1a: Venomoth|Teleport|p1a: Venomoth',
+      '|move|p1a: Venomoth|Splash|p1a: Venomoth',
+      '|-nothing',
       '|turn|3',
       '|-end|p2a: Jolteon|confusion',
       '|move|p2a: Jolteon|Substitute|p2a: Jolteon',
@@ -2135,8 +2149,8 @@ describe('Gen 1', () => {
         {species: 'Seadra', evs, moves: ['Toxic']},
         {species: 'Ninetales', evs, moves: ['Dig']},
       ], [
-        {species: 'Shellder', evs, moves: ['Teleport']},
-        {species: 'Arcanine', evs, moves: ['Teleport']},
+        {species: 'Shellder', evs, moves: ['Splash']},
+        {species: 'Arcanine', evs, moves: ['Splash']},
       ]);
 
       battle.p2.pokemon[0].hp = 31;
@@ -2160,7 +2174,8 @@ describe('Gen 1', () => {
       verify(battle, [
         '|move|p1a: Seadra|Toxic|p2a: Shellder',
         '|-status|p2a: Shellder|tox',
-        '|move|p2a: Shellder|Teleport|p2a: Shellder',
+        '|move|p2a: Shellder|Splash|p2a: Shellder',
+        '|-nothing',
         '|-damage|p2a: Shellder|15/263 tox|[from] psn',
         '|turn|2',
         '|switch|p1a: Ninetales|Ninetales|349/349',
@@ -2168,7 +2183,8 @@ describe('Gen 1', () => {
         '|turn|3',
         '|move|p1a: Ninetales|Dig||[still]',
         '|-prepare|p1a: Ninetales|Dig',
-        '|move|p2a: Arcanine|Teleport|p2a: Arcanine',
+        '|move|p2a: Arcanine|Splash|p2a: Arcanine',
+        '|-nothing',
         '|turn|4',
         '|switch|p2a: Shellder|Shellder|15/263 tox',
         '|-status|p2a: Shellder|psn|[silent]',
@@ -2179,7 +2195,8 @@ describe('Gen 1', () => {
         '|move|p1a: Ninetales|Dig|p2a: Arcanine|[from]Dig',
         '|-supereffective|p2a: Arcanine',
         '|-damage|p2a: Arcanine|242/383',
-        '|move|p2a: Arcanine|Teleport|p2a: Arcanine',
+        '|move|p2a: Arcanine|Splash|p2a: Arcanine',
+        '|-nothing',
         '|turn|6',
       ]);
     }
@@ -2236,7 +2253,7 @@ describe('Gen 1', () => {
     ], [
       {species: 'Cloyster', evs, moves: ['Clamp', 'Surf']},
       {species: 'Tangela', evs, moves: ['Bind', 'Stun Spore']},
-      {species: 'Gengar', evs, moves: ['Teleport', 'Night Shade']},
+      {species: 'Gengar', evs, moves: ['Splash', 'Night Shade']},
     ]);
 
     let cloyster = battle.p2.pokemon[0].hp;
@@ -2322,7 +2339,8 @@ describe('Gen 1', () => {
       '|cant|p2a: Gengar|partiallytrapped',
       '|cant|p1a: Dragonite|par',
       '|turn|8',
-      '|move|p2a: Gengar|Teleport|p2a: Gengar',
+      '|move|p2a: Gengar|Splash|p2a: Gengar',
+      '|-nothing',
       '|move|p1a: Dragonite|Wrap|p2a: Gengar',
       '|-damage|p2a: Gengar|323/323',
       '|turn|9',
@@ -2387,8 +2405,8 @@ describe('Gen 1', () => {
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MAX_DMG, HIT, NO_CRIT, MIN_DMG,
     ], [
-      {species: 'Slowpoke', evs, moves: ['Teleport']},
-      {species: 'Rhydon', evs, moves: ['Take Down', 'Teleport']},
+      {species: 'Slowpoke', evs, moves: ['Splash']},
+      {species: 'Rhydon', evs, moves: ['Take Down', 'Splash']},
     ], [
       {species: 'Tauros', evs, moves: ['Double Edge', 'Substitute']},
     ]);
@@ -2432,7 +2450,8 @@ describe('Gen 1', () => {
       '|-resisted|p1a: Rhydon',
       '|-damage|p1a: Rhydon|365/413',
       '|-damage|p2a: Tauros|252/353|[from] Recoil|[of] p1a: Rhydon',
-      '|move|p1a: Rhydon|Teleport|p1a: Rhydon',
+      '|move|p1a: Rhydon|Splash|p1a: Rhydon',
+      '|-nothing',
       '|turn|4',
     ]);
   });
@@ -2441,10 +2460,10 @@ describe('Gen 1', () => {
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
     ], [
-      {species: 'Abra', evs, moves: ['Substitute', 'Teleport']},
+      {species: 'Abra', evs, moves: ['Substitute', 'Splash']},
       {species: 'Golem', evs, moves: ['Harden']},
     ], [
-      {species: 'Arcanine', evs, moves: ['Teleport']},
+      {species: 'Arcanine', evs, moves: ['Splash']},
     ]);
 
     battle.p1.pokemon[0].hp = 64;
@@ -2476,14 +2495,16 @@ describe('Gen 1', () => {
     expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 8);
 
     verify(battle, [
-      '|move|p2a: Arcanine|Teleport|p2a: Arcanine',
+      '|move|p2a: Arcanine|Splash|p2a: Arcanine',
+      '|-nothing',
       '|move|p1a: Abra|Substitute|p1a: Abra',
       '|-start|p1a: Abra|Substitute',
       '|-damage|p1a: Abra|1/253',
       '|turn|2',
       '|move|p2a: Arcanine|Struggle|p1a: Abra',
       '|-end|p1a: Abra|Substitute',
-      '|move|p1a: Abra|Teleport|p1a: Abra',
+      '|move|p1a: Abra|Splash|p1a: Abra',
+      '|-nothing',
       '|turn|3',
       '|move|p2a: Arcanine|Struggle|p1a: Abra',
       '|-damage|p1a: Abra|0 fnt',
@@ -2606,7 +2627,7 @@ describe('Gen 1', () => {
       ], [
         {species: 'Scyther', evs, moves: ['Cut']},
         {species: 'Goldeen', evs, moves: ['Water Gun']},
-        {species: 'Gastly', evs, moves: ['Teleport']},
+        {species: 'Gastly', evs, moves: ['Splash']},
       ]);
 
       let goldeen = battle.p2.pokemon[1].hp;
@@ -2631,7 +2652,8 @@ describe('Gen 1', () => {
         '|move|p1a: Mankey|Thrash|p2a: Gastly|[from]Thrash',
         '|-immune|p2a: Gastly',
         '|turn|3',
-        '|move|p2a: Gastly|Teleport|p2a: Gastly',
+        '|move|p2a: Gastly|Splash|p2a: Gastly',
+        '|-nothing',
         '|move|p1a: Mankey|Thrash|p2a: Gastly|[from]Thrash',
         '|-start|p1a: Mankey|confusion|[silent]',
         '|-immune|p2a: Gastly',
@@ -2926,8 +2948,8 @@ describe('Gen 1', () => {
       {species: 'Tauros', evs, moves: ['Hyper Beam', 'Body Slam']},
       {species: 'Exeggutor', evs, moves: ['Sleep Powder']},
     ], [
-      {species: 'Jolteon', evs, moves: ['Substitute', 'Teleport']},
-      {species: 'Chansey', evs, moves: ['Teleport', 'Soft-Boiled']},
+      {species: 'Jolteon', evs, moves: ['Substitute', 'Splash']},
+      {species: 'Chansey', evs, moves: ['Splash', 'Soft-Boiled']},
     ]);
 
     battle.p2.pokemon[0].hp = 100;
@@ -2979,7 +3001,8 @@ describe('Gen 1', () => {
       '|move|p1a: Tauros|Hyper Beam|p2a: Jolteon',
       '|-end|p2a: Jolteon|Substitute',
       '|turn|2',
-      '|move|p2a: Jolteon|Teleport|p2a: Jolteon',
+      '|move|p2a: Jolteon|Splash|p2a: Jolteon',
+      '|-nothing',
       '|move|p1a: Tauros|Hyper Beam|p2a: Jolteon',
       '|-damage|p2a: Jolteon|0 fnt',
       '|faint|p2a: Jolteon',
@@ -2988,10 +3011,12 @@ describe('Gen 1', () => {
       '|move|p1a: Tauros|Hyper Beam|p2a: Chansey',
       '|-damage|p2a: Chansey|261/703',
       '|-mustrecharge|p1a: Tauros',
-      '|move|p2a: Chansey|Teleport|p2a: Chansey',
+      '|move|p2a: Chansey|Splash|p2a: Chansey',
+      '|-nothing',
       '|turn|4',
       '|cant|p1a: Tauros|recharge',
-      '|move|p2a: Chansey|Teleport|p2a: Chansey',
+      '|move|p2a: Chansey|Splash|p2a: Chansey',
+      '|-nothing',
       '|turn|5',
     ]);
   });
@@ -3181,7 +3206,7 @@ describe('Gen 1', () => {
       {species: 'Porygon', evs, moves: ['Thunder Wave', 'Tackle', 'Rest']},
       {species: 'Dragonair', evs, moves: ['Slam']},
     ], [
-      {species: 'Chansey', evs, moves: ['Rest', 'Teleport']},
+      {species: 'Chansey', evs, moves: ['Rest', 'Splash']},
       {species: 'Jynx', evs, moves: ['Hypnosis']},
     ]);
 
@@ -3240,7 +3265,7 @@ describe('Gen 1', () => {
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
     ], [
-      {species: 'Slowpoke', evs, moves: ['Teleport']},
+      {species: 'Slowpoke', evs, moves: ['Splash']},
       {species: 'Butterfree', evs, moves: ['Mega Drain']},
     ], [
       {species: 'Parasect', evs, moves: ['Leech Life']},
@@ -3288,9 +3313,9 @@ describe('Gen 1', () => {
       const battle = startBattle([
         HIT, SLP(5), HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, SLP(5),
       ], [
-        {species: 'Hypno', evs, moves: ['Dream Eater', 'Hypnosis', 'Teleport']},
+        {species: 'Hypno', evs, moves: ['Dream Eater', 'Hypnosis', 'Splash']},
       ], [
-        {species: 'Wigglytuff', evs, moves: ['Teleport']},
+        {species: 'Wigglytuff', evs, moves: ['Splash']},
         {species: 'Gengar', evs, moves: ['Substitute', 'Rest']},
       ]);
 
@@ -3329,7 +3354,8 @@ describe('Gen 1', () => {
       verify(battle, [
         '|move|p1a: Hypno|Dream Eater|p2a: Wigglytuff',
         '|-immune|p2a: Wigglytuff',
-        '|move|p2a: Wigglytuff|Teleport|p2a: Wigglytuff',
+        '|move|p2a: Wigglytuff|Splash|p2a: Wigglytuff',
+        '|-nothing',
         '|turn|2',
         '|move|p1a: Hypno|Hypnosis|p2a: Wigglytuff',
         '|-status|p2a: Wigglytuff|slp|[from] move: Hypnosis',
@@ -3349,7 +3375,8 @@ describe('Gen 1', () => {
         '|move|p2a: Gengar|Substitute|p2a: Gengar',
         '|-start|p2a: Gengar|Substitute',
         '|-damage|p2a: Gengar|243/323',
-        '|move|p1a: Hypno|Teleport|p1a: Hypno',
+        '|move|p1a: Hypno|Splash|p1a: Hypno',
+        '|-nothing',
         '|turn|6',
         '|move|p2a: Gengar|Rest|p2a: Gengar',
         '|-status|p2a: Gengar|slp|[from] move: Rest',
@@ -3383,10 +3410,10 @@ describe('Gen 1', () => {
   test('LeechSeed effect', () => {
     const battle = startBattle([MISS, HIT, HIT, HIT, HIT], [
       {species: 'Venusaur', evs, moves: ['Leech Seed']},
-      {species: 'Exeggutor', evs, moves: ['Leech Seed', 'Teleport']},
+      {species: 'Exeggutor', evs, moves: ['Leech Seed', 'Splash']},
     ], [
       {species: 'Gengar', evs, moves: ['Leech Seed', 'Substitute', 'Night Shade']},
-      {species: 'Slowbro', evs, moves: ['Teleport']},
+      {species: 'Slowbro', evs, moves: ['Splash']},
     ]);
 
     battle.p2.pokemon[1].hp = 1;
@@ -3450,8 +3477,10 @@ describe('Gen 1', () => {
       '|move|p1a: Exeggutor|Leech Seed|p2a: Slowbro',
       '|-start|p2a: Slowbro|move: Leech Seed',
       '|turn|6',
-      '|move|p1a: Exeggutor|Teleport|p1a: Exeggutor',
-      '|move|p2a: Slowbro|Teleport|p2a: Slowbro',
+      '|move|p1a: Exeggutor|Splash|p1a: Exeggutor',
+      '|-nothing',
+      '|move|p2a: Slowbro|Splash|p2a: Slowbro',
+      '|-nothing',
       '|-damage|p2a: Slowbro|0 fnt|[from] Leech Seed|[of] p1a: Exeggutor',
       '|-heal|p1a: Exeggutor|337/393|[silent]',
       '|faint|p2a: Slowbro',
@@ -3464,7 +3493,7 @@ describe('Gen 1', () => {
     ], [
       {species: 'Meowth', evs, moves: ['Pay Day']},
     ], [
-      {species: 'Slowpoke', evs, moves: ['Substitute', 'Teleport']},
+      {species: 'Slowpoke', evs, moves: ['Substitute', 'Splash']},
     ]);
 
     const p2hp = battle.p2.pokemon[0].hp;
@@ -3490,12 +3519,14 @@ describe('Gen 1', () => {
       '|turn|2',
       '|move|p1a: Meowth|Pay Day|p2a: Slowpoke',
       '|-activate|p2a: Slowpoke|Substitute|[damage]',
-      '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
+      '|move|p2a: Slowpoke|Splash|p2a: Slowpoke',
+      '|-nothing',
       '|turn|3',
       '|move|p1a: Meowth|Pay Day|p2a: Slowpoke',
       '|-crit|p2a: Slowpoke',
       '|-end|p2a: Slowpoke|Substitute',
-      '|move|p2a: Slowpoke|Teleport|p2a: Slowpoke',
+      '|move|p2a: Slowpoke|Splash|p2a: Slowpoke',
+      '|-nothing',
       '|turn|4',
     ]);
   });
@@ -3593,9 +3624,9 @@ describe('Gen 1', () => {
   test('Mimic effect', () => {
     const battle = startBattle([HIT, MIMIC(3, 3)], [
       {species: 'Mr. Mime', evs, moves: ['Mimic']},
-      {species: 'Abra', evs, moves: ['Teleport']},
+      {species: 'Abra', evs, moves: ['Splash']},
     ], [
-      {species: 'Jigglypuff', evs, moves: ['Blizzard', 'Thunderbolt', 'Teleport']},
+      {species: 'Jigglypuff', evs, moves: ['Blizzard', 'Thunderbolt', 'Splash']},
     ]);
 
     let pp = battle.p1.pokemon[0].moveSlots[0].pp;
@@ -3604,11 +3635,11 @@ describe('Gen 1', () => {
     expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp);
 
     battle.makeChoices('move 1', 'move 3');
-    expect(battle.p1.pokemon[0].moveSlots[0].move).toBe('Teleport');
+    expect(battle.p1.pokemon[0].moveSlots[0].move).toBe('Splash');
     expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
 
     battle.makeChoices('move 1', 'move 3');
-    expect(battle.p1.pokemon[0].moveSlots[0].move).toBe('Teleport');
+    expect(battle.p1.pokemon[0].moveSlots[0].move).toBe('Splash');
     expect(battle.p1.pokemon[0].moveSlots[0].pp).toBe(pp -= 1);
 
     battle.makeChoices('switch 2', 'move 3');
@@ -3619,17 +3650,22 @@ describe('Gen 1', () => {
 
     verify(battle, [
       '|move|p1a: Mr. Mime|Mimic|p2a: Jigglypuff',
-      '|-start|p1a: Mr. Mime|Mimic|Teleport',
-      '|move|p2a: Jigglypuff|Teleport|p2a: Jigglypuff',
+      '|-start|p1a: Mr. Mime|Mimic|Splash',
+      '|move|p2a: Jigglypuff|Splash|p2a: Jigglypuff',
+      '|-nothing',
       '|turn|2',
-      '|move|p1a: Mr. Mime|Teleport|p1a: Mr. Mime',
-      '|move|p2a: Jigglypuff|Teleport|p2a: Jigglypuff',
+      '|move|p1a: Mr. Mime|Splash|p1a: Mr. Mime',
+      '|-nothing',
+      '|move|p2a: Jigglypuff|Splash|p2a: Jigglypuff',
+      '|-nothing',
       '|turn|3',
       '|switch|p1a: Abra|Abra|253/253',
-      '|move|p2a: Jigglypuff|Teleport|p2a: Jigglypuff',
+      '|move|p2a: Jigglypuff|Splash|p2a: Jigglypuff',
+      '|-nothing',
       '|turn|4',
       '|switch|p1a: Mr. Mime|Mr. Mime|283/283',
-      '|move|p2a: Jigglypuff|Teleport|p2a: Jigglypuff',
+      '|move|p2a: Jigglypuff|Splash|p2a: Jigglypuff',
+      '|-nothing',
       '|turn|5',
     ]);
   });
@@ -3638,7 +3674,7 @@ describe('Gen 1', () => {
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, HIT, CRIT, MIN_DMG,
     ], [
-      {species: 'Chansey', evs, moves: ['Light Screen', 'Teleport']},
+      {species: 'Chansey', evs, moves: ['Light Screen', 'Splash']},
     ], [
       {species: 'Vaporeon', evs, moves: ['Water Gun', 'Haze']},
     ]);
@@ -3670,18 +3706,21 @@ describe('Gen 1', () => {
       '|turn|2',
       '|move|p2a: Vaporeon|Water Gun|p1a: Chansey',
       '|-damage|p1a: Chansey|635/703',
-      '|move|p1a: Chansey|Teleport|p1a: Chansey',
+      '|move|p1a: Chansey|Splash|p1a: Chansey',
+      '|-nothing',
       '|turn|3',
       '|move|p2a: Vaporeon|Water Gun|p1a: Chansey',
       '|-crit|p1a: Chansey',
       '|-damage|p1a: Chansey|548/703',
-      '|move|p1a: Chansey|Teleport|p1a: Chansey',
+      '|move|p1a: Chansey|Splash|p1a: Chansey',
+      '|-nothing',
       '|turn|4',
       '|move|p2a: Vaporeon|Haze|p2a: Vaporeon',
       '|-activate|p2a: Vaporeon|move: Haze',
       '|-clearallboost|[silent]',
       '|-end|p1a: Chansey|Light Screen|[silent]',
-      '|move|p1a: Chansey|Teleport|p1a: Chansey',
+      '|move|p1a: Chansey|Splash|p1a: Chansey',
+      '|-nothing',
       '|turn|5',
     ]);
   });
@@ -3690,7 +3729,7 @@ describe('Gen 1', () => {
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, HIT, CRIT, MIN_DMG,
     ], [
-      {species: 'Chansey', evs, moves: ['Reflect', 'Teleport']},
+      {species: 'Chansey', evs, moves: ['Reflect', 'Splash']},
     ], [
       {species: 'Vaporeon', evs, moves: ['Tackle', 'Haze']},
     ]);
@@ -3722,18 +3761,21 @@ describe('Gen 1', () => {
       '|turn|2',
       '|move|p2a: Vaporeon|Tackle|p1a: Chansey',
       '|-damage|p1a: Chansey|621/703',
-      '|move|p1a: Chansey|Teleport|p1a: Chansey',
+      '|move|p1a: Chansey|Splash|p1a: Chansey',
+      '|-nothing',
       '|turn|3',
       '|move|p2a: Vaporeon|Tackle|p1a: Chansey',
       '|-crit|p1a: Chansey',
       '|-damage|p1a: Chansey|517/703',
-      '|move|p1a: Chansey|Teleport|p1a: Chansey',
+      '|move|p1a: Chansey|Splash|p1a: Chansey',
+      '|-nothing',
       '|turn|4',
       '|move|p2a: Vaporeon|Haze|p2a: Vaporeon',
       '|-activate|p2a: Vaporeon|move: Haze',
       '|-clearallboost|[silent]',
       '|-end|p1a: Chansey|Reflect|[silent]',
-      '|move|p1a: Chansey|Teleport|p1a: Chansey',
+      '|move|p1a: Chansey|Splash|p1a: Chansey',
+      '|-nothing',
       '|turn|5',
     ]);
   });
@@ -3749,7 +3791,7 @@ describe('Gen 1', () => {
     ], [
       {species: 'Golbat', evs, moves: ['Toxic', 'Agility', 'Confuse Ray', 'Metronome']},
     ], [
-      {species: 'Exeggutor', evs, moves: ['Leech Seed', 'Stun Spore', 'Double Team', 'Teleport']},
+      {species: 'Exeggutor', evs, moves: ['Leech Seed', 'Stun Spore', 'Double Team', 'Splash']},
     ]);
 
     let p1hp = battle.p1.pokemon[0].hp;
@@ -3821,7 +3863,8 @@ describe('Gen 1', () => {
       '|-heal|p2a: Exeggutor|293/393 tox|[silent]',
       '|turn|4',
       '|-activate|p2a: Exeggutor|confusion',
-      '|move|p2a: Exeggutor|Teleport|p2a: Exeggutor',
+      '|move|p2a: Exeggutor|Splash|p2a: Exeggutor',
+      '|-nothing',
       '|-damage|p2a: Exeggutor|197/393 tox|[from] psn',
       '|move|p1a: Golbat|Metronome|p1a: Golbat',
       '|move|p1a: Golbat|Haze|p1a: Golbat|[from]Metronome',
@@ -3837,12 +3880,14 @@ describe('Gen 1', () => {
       '|-supereffective|p2a: Exeggutor',
       '|-damage|p2a: Exeggutor|155/393',
       '|-status|p2a: Exeggutor|brn',
-      '|move|p2a: Exeggutor|Teleport|p2a: Exeggutor',
+      '|move|p2a: Exeggutor|Splash|p2a: Exeggutor',
+      '|-nothing',
       '|-damage|p2a: Exeggutor|131/393 brn|[from] brn',
       '|turn|6',
       '|move|p1a: Golbat|Agility|p1a: Golbat',
       '|-boost|p1a: Golbat|spe|2',
-      '|move|p2a: Exeggutor|Teleport|p2a: Exeggutor',
+      '|move|p2a: Exeggutor|Splash|p2a: Exeggutor',
+      '|-nothing',
       '|-damage|p2a: Exeggutor|107/393 brn|[from] brn',
       '|turn|7',
     ]);
@@ -3853,7 +3898,7 @@ describe('Gen 1', () => {
       const battle = startBattle([
         BIDE(3), HIT, HIT, HIT, NO_CRIT, MIN_DMG, BIDE(3), HIT, HIT, CFZ(3), CFZ_CAN,
       ], [
-        {species: 'Chansey', evs, moves: ['Bide', 'Teleport']},
+        {species: 'Chansey', evs, moves: ['Bide', 'Splash']},
         {species: 'Onix', evs, moves: ['Bide']},
       ], [
         {species: 'Magnemite', evs, moves: ['Sonic Boom']},
@@ -3934,7 +3979,7 @@ describe('Gen 1', () => {
     // failure
     {
       const battle = startBattle([HIT, BIDE(2)], [
-        {species: 'Wartortle', evs, moves: ['Seismic Toss', 'Teleport']},
+        {species: 'Wartortle', evs, moves: ['Seismic Toss', 'Splash']},
       ], [
         {species: 'Pinsir', level: 50, evs, moves: ['Bide']},
       ]);
@@ -3956,10 +4001,12 @@ describe('Gen 1', () => {
         '|move|p2a: Pinsir|Bide|p2a: Pinsir',
         '|-start|p2a: Pinsir|Bide',
         '|turn|2',
-        '|move|p1a: Wartortle|Teleport|p1a: Wartortle',
+        '|move|p1a: Wartortle|Splash|p1a: Wartortle',
+        '|-nothing',
         '|-activate|p2a: Pinsir|Bide',
         '|turn|3',
-        '|move|p1a: Wartortle|Teleport|p1a: Wartortle',
+        '|move|p1a: Wartortle|Splash|p1a: Wartortle',
+        '|-nothing',
         '|-end|p2a: Pinsir|Bide',
         '|-fail|p2a: Pinsir',
         '|turn|4',
@@ -3978,7 +4025,7 @@ describe('Gen 1', () => {
       METRONOME('Rage'), HIT, NO_CRIT, MIN_DMG,
       METRONOME('Quick Attack'), HIT, NO_CRIT, MIN_DMG,
     ], [
-      {species: 'Clefable', evs, moves: ['Metronome', 'Teleport']},
+      {species: 'Clefable', evs, moves: ['Metronome', 'Splash']},
     ], [
       {species: 'Primeape', evs, moves: ['Metronome', 'Mimic', 'Fury Swipes']},
     ]);
@@ -4027,24 +4074,27 @@ describe('Gen 1', () => {
       '|move|p2a: Primeape|Metronome|p2a: Primeape',
       '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from]Metronome',
       '|-damage|p1a: Clefable|324/393',
-      '|move|p1a: Clefable|Teleport|p1a: Clefable',
+      '|move|p1a: Clefable|Splash|p1a: Clefable',
+      '|-nothing',
       '|turn|4',
       '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from]Petal Dance|[miss]',
       '|-miss|p2a: Primeape',
-      '|move|p1a: Clefable|Teleport|p1a: Clefable',
+      '|move|p1a: Clefable|Splash|p1a: Clefable',
+      '|-nothing',
       '|turn|5',
       '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from]Petal Dance|[miss]',
       '|-start|p2a: Primeape|confusion|[silent]',
       '|-miss|p2a: Primeape',
-      '|move|p1a: Clefable|Teleport|p1a: Clefable',
+      '|move|p1a: Clefable|Splash|p1a: Clefable',
+      '|-nothing',
       '|turn|6',
       '|-activate|p2a: Primeape|confusion',
       '|move|p2a: Primeape|Metronome|p2a: Primeape',
       '|move|p2a: Primeape|Mimic|p1a: Clefable|[from]Metronome',
-      '|-start|p2a: Primeape|Mimic|Teleport',
+      '|-start|p2a: Primeape|Mimic|Splash',
       '|move|p1a: Clefable|Metronome|p1a: Clefable',
       '|move|p1a: Clefable|Disable|p2a: Primeape|[from]Metronome',
-      '|-start|p2a: Primeape|Disable|Teleport',
+      '|-start|p2a: Primeape|Disable|Splash',
       '|turn|7',
       '|-end|p2a: Primeape|confusion',
       '|move|p2a: Primeape|Metronome|p2a: Primeape',
@@ -4184,7 +4234,7 @@ describe('Gen 1', () => {
       {species: 'Electrode', level: 80, evs, moves: ['Explosion', 'Toxic']},
       {species: 'Onix', evs, moves: ['Self-Destruct']},
     ], [
-      {species: 'Chansey', evs, moves: ['Substitute', 'Teleport']},
+      {species: 'Chansey', evs, moves: ['Substitute', 'Splash']},
       {species: 'Gengar', evs, moves: ['Night Shade']},
     ]);
 
@@ -4222,7 +4272,8 @@ describe('Gen 1', () => {
       '|turn|2',
       '|move|p1a: Electrode|Explosion|p2a: Chansey',
       '|-end|p2a: Chansey|Substitute',
-      '|move|p2a: Chansey|Teleport|p2a: Chansey',
+      '|move|p2a: Chansey|Splash|p2a: Chansey',
+      '|-nothing',
       '|-damage|p2a: Chansey|399/703 tox|[from] psn',
       '|turn|3',
       '|move|p1a: Electrode|Explosion|p2a: Chansey',
@@ -4370,7 +4421,7 @@ describe('Gen 1', () => {
     const battle = startBattle([], [
       {species: 'Porygon', evs, moves: ['Conversion']},
     ], [
-      {species: 'Slowbro', evs, moves: ['Teleport']},
+      {species: 'Slowbro', evs, moves: ['Splash']},
     ]);
 
     battle.makeChoices('move 1', 'move 1');
@@ -4378,14 +4429,15 @@ describe('Gen 1', () => {
     verify(battle, [
       '|move|p1a: Porygon|Conversion|p2a: Slowbro',
       '|-start|p1a: Porygon|typechange|Water/Psychic|[from] move: Conversion|[of] p2a: Slowbro',
-      '|move|p2a: Slowbro|Teleport|p2a: Slowbro',
+      '|move|p2a: Slowbro|Splash|p2a: Slowbro',
+      '|-nothing',
       '|turn|2',
     ]);
   });
 
   test('Substitute effect', () => {
     const battle = startBattle([HIT, HIT, NO_CRIT, MIN_DMG, HIT, HIT], [
-      {species: 'Mewtwo', evs, moves: ['Substitute', 'Teleport']},
+      {species: 'Mewtwo', evs, moves: ['Substitute', 'Splash']},
       {species: 'Abra', level: 2, moves: ['Substitute']},
     ], [
       {species: 'Electabuzz', moves: ['Flash', 'Strength']},
@@ -4538,7 +4590,7 @@ describe('Gen 1', () => {
   test('Flinch persistence bug', () => {
     const proc = SECONDARY(ranged(77, 256) - 1);
     const battle = startBattle([HIT, HIT, NO_CRIT, MIN_DMG, proc], [
-      {species: 'Persian', evs, moves: ['Poison Powder', 'Teleport']},
+      {species: 'Persian', evs, moves: ['Poison Powder', 'Splash']},
     ], [
       {species: 'Arcanine', evs, moves: ['Rolling Kick']},
       {species: 'Squirtle', evs, moves: ['Water Gun']},
@@ -4577,9 +4629,9 @@ describe('Gen 1', () => {
   test('Disable + Transform bug', () => {
     {
       const battle = startBattle([HIT, DISABLE_MOVE(2), DISABLE_DURATION(5)], [
-        {species: 'Voltorb', evs, moves: ['Disable', 'Teleport']},
+        {species: 'Voltorb', evs, moves: ['Disable', 'Splash']},
       ], [
-        {species: 'Goldeen', evs, moves: ['Transform', 'Water Gun', 'Teleport', 'Haze']},
+        {species: 'Goldeen', evs, moves: ['Transform', 'Water Gun', 'Splash', 'Haze']},
       ]);
 
       battle.makeChoices('move 1', 'move 1');
@@ -4598,20 +4650,20 @@ describe('Gen 1', () => {
     }
     {
       const battle = startBattle([HIT, DISABLE_MOVE(2), DISABLE_DURATION(5)], [
-        {species: 'Voltorb', evs, moves: ['Disable', 'Water Gun', 'Teleport']},
+        {species: 'Voltorb', evs, moves: ['Disable', 'Water Gun', 'Splash']},
       ], [
-        {species: 'Goldeen', evs, moves: ['Transform', 'Teleport', 'Water Gun', 'Haze']},
+        {species: 'Goldeen', evs, moves: ['Transform', 'Splash', 'Water Gun', 'Haze']},
       ]);
 
       battle.makeChoices('move 1', 'move 1');
 
-      // Pokémon Showdown thinks "Teleport" was disabled instead of move slot 2
+      // Pokémon Showdown thinks "Splash" was disabled instead of move slot 2
       // expect(choices(battle, 'p2')).toEqual(['move 1', 'move 3']);
       expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
 
       verify(battle, [
         '|move|p1a: Voltorb|Disable|p2a: Goldeen',
-        '|-start|p2a: Goldeen|Disable|Teleport',
+        '|-start|p2a: Goldeen|Disable|Splash',
         '|move|p2a: Goldeen|Transform|p1a: Voltorb',
         '|-transform|p2a: Goldeen|p1a: Voltorb',
         '|turn|2',
@@ -4624,7 +4676,7 @@ describe('Gen 1', () => {
     const battle = startBattle([
       HIT, PAR_CAN, BIDE(3), HIT, DISABLE_MOVE(1, 2), DISABLE_DURATION(5),
     ], [
-      {species: 'Voltorb', evs, moves: ['Glare', 'Disable', 'Teleport']},
+      {species: 'Voltorb', evs, moves: ['Glare', 'Disable', 'Splash']},
     ], [
       {species: 'Golem', evs, moves: ['Bide', 'Flash']},
     ]);
@@ -4657,10 +4709,12 @@ describe('Gen 1', () => {
       '|-start|p2a: Golem|Disable|Bide',
       '|cant|p2a: Golem|Disable|Bide',
       '|turn|3',
-      '|move|p1a: Voltorb|Teleport|p1a: Voltorb',
+      '|move|p1a: Voltorb|Splash|p1a: Voltorb',
+      '|-nothing',
       '|cant|p2a: Golem|Disable|Bide',
       '|turn|4',
-      '|move|p1a: Voltorb|Teleport|p1a: Voltorb',
+      '|move|p1a: Voltorb|Splash|p1a: Voltorb',
+      '|-nothing',
       '|cant|p2a: Golem|Disable|Bide',
       '|turn|5',
     ]);
@@ -4671,7 +4725,7 @@ describe('Gen 1', () => {
     const battle = startBattle([HIT, SLP(1), HIT, NO_CRIT, MIN_DMG], [
       {species: 'Venusaur', evs, moves: ['Solar Beam', 'Tackle']},
     ], [
-      {species: 'Snorlax', evs, moves: ['Lovely Kiss', 'Teleport']},
+      {species: 'Snorlax', evs, moves: ['Lovely Kiss', 'Splash']},
     ]);
 
     const p2hp = battle.p2.pokemon[0].hp;
@@ -4695,11 +4749,13 @@ describe('Gen 1', () => {
       '|-status|p1a: Venusaur|slp|[from] move: Lovely Kiss',
       '|turn|2',
       '|-curestatus|p1a: Venusaur|slp|[msg]',
-      '|move|p2a: Snorlax|Teleport|p2a: Snorlax',
+      '|move|p2a: Snorlax|Splash|p2a: Snorlax',
+      '|-nothing',
       '|turn|3',
       '|move|p1a: Venusaur|Solar Beam|p2a: Snorlax|[from]Solar Beam',
       '|-damage|p2a: Snorlax|355/523',
-      '|move|p2a: Snorlax|Teleport|p2a: Snorlax',
+      '|move|p2a: Snorlax|Splash|p2a: Snorlax',
+      '|-nothing',
       '|turn|4',
     ]);
   });
@@ -4731,7 +4787,7 @@ describe('Gen 1', () => {
     const battle = startBattle([BIDE(2), HIT, HIT], [
       {species: 'Voltorb', evs, moves: ['Sonic Boom', 'Substitute']},
     ], [
-      {species: 'Chansey', evs, moves: ['Bide', 'Teleport']},
+      {species: 'Chansey', evs, moves: ['Bide', 'Splash']},
     ]);
 
     let p1hp = battle.p1.pokemon[0].hp;
@@ -4909,7 +4965,7 @@ describe('Gen 1', () => {
       const battle = startBattle([HIT, METRONOME('Counter'), HIT, HIT], [
         {species: 'Snorlax', evs, moves: ['Seismic Toss']},
       ], [
-        {species: 'Chansey', evs, moves: ['Teleport', 'Metronome']},
+        {species: 'Chansey', evs, moves: ['Splash', 'Metronome']},
       ]);
 
       const p1hp = battle.p1.pokemon[0].hp;
@@ -4923,7 +4979,8 @@ describe('Gen 1', () => {
       expect(battle.p2.pokemon[0].hp).toBe(p2hp -= 100);
 
       verify(battle, [
-        '|move|p2a: Chansey|Teleport|p2a: Chansey',
+        '|move|p2a: Chansey|Splash|p2a: Chansey',
+        '|-nothing',
         '|move|p1a: Snorlax|Seismic Toss|p2a: Chansey',
         '|-damage|p2a: Chansey|603/703',
         '|turn|2',
@@ -5068,7 +5125,7 @@ describe('Gen 1', () => {
     const battle = startBattle([HIT, NO_CRIT, MAX_DMG], [
       {species: 'Abra', evs, moves: ['Hyper Beam']},
     ], [
-      {species: 'Jolteon', evs, moves: ['Substitute', 'Teleport']},
+      {species: 'Jolteon', evs, moves: ['Substitute', 'Splash']},
     ]);
 
     let p2hp = battle.p2.pokemon[0].hp;
@@ -5090,7 +5147,8 @@ describe('Gen 1', () => {
       '|-activate|p2a: Jolteon|Substitute|[damage]',
       '|-mustrecharge|p1a: Abra',
       '|turn|2',
-      '|move|p2a: Jolteon|Teleport|p2a: Jolteon',
+      '|move|p2a: Jolteon|Splash|p2a: Jolteon',
+      '|-nothing',
       '|cant|p1a: Abra|recharge',
       '|turn|3',
     ]);
@@ -5100,10 +5158,10 @@ describe('Gen 1', () => {
     // Mimic first
     {
       const battle = startBattle([HIT, MIMIC(2, 2)], [
-        {species: 'Gengar', evs, moves: ['Teleport', 'Mega Kick']},
+        {species: 'Gengar', evs, moves: ['Splash', 'Mega Kick']},
       ], [
-        {species: 'Gengar', level: 99, evs, moves: ['Mimic', 'Mega Kick', 'Teleport']},
-        {species: 'Clefable', evs, moves: ['Teleport']},
+        {species: 'Gengar', level: 99, evs, moves: ['Mimic', 'Mega Kick', 'Splash']},
+        {species: 'Clefable', evs, moves: ['Splash']},
       ]);
 
       battle.makeChoices('move 1', 'move 1');
@@ -5131,10 +5189,10 @@ describe('Gen 1', () => {
     // Mimicked move first
     {
       const battle = startBattle([HIT, MIMIC(2, 2)], [
-        {species: 'Gengar', evs, moves: ['Teleport', 'Mega Kick']},
+        {species: 'Gengar', evs, moves: ['Splash', 'Mega Kick']},
       ], [
-        {species: 'Gengar', level: 99, evs, moves: ['Mega Kick', 'Mimic', 'Teleport']},
-        {species: 'Clefable', evs, moves: ['Teleport']},
+        {species: 'Gengar', level: 99, evs, moves: ['Mega Kick', 'Mimic', 'Splash']},
+        {species: 'Clefable', evs, moves: ['Splash']},
       ]);
 
       battle.makeChoices('move 1', 'move 2');
@@ -5198,7 +5256,7 @@ describe('Gen 1', () => {
   test('Mirror Move recharge bug', () => {
     const battle = startBattle([HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MAX_DMG], [
       {species: 'Kadabra', evs, moves: ['Hyper Beam']},
-      {species: 'Haunter', evs, moves: ['Teleport']},
+      {species: 'Haunter', evs, moves: ['Splash']},
     ], [
       {species: 'Pidgeot', evs, moves: ['Mirror Move', 'Gust']},
     ]);
@@ -5229,9 +5287,11 @@ describe('Gen 1', () => {
       '|faint|p1a: Kadabra',
       '|switch|p1a: Haunter|Haunter|293/293',
       '|turn|2',
-      '|move|p1a: Haunter|Teleport|p1a: Haunter',
+      '|move|p1a: Haunter|Splash|p1a: Haunter',
+      '|-nothing',
       '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
-      '|move|p2a: Pidgeot|Teleport|p2a: Pidgeot|[from]Mirror Move',
+      '|move|p2a: Pidgeot|Splash|p2a: Pidgeot|[from]Mirror Move',
+      '|-nothing',
       '|turn|3',
     ]);
   });
@@ -5326,7 +5386,7 @@ describe('Gen 1', () => {
       const battle = startBattle([THRASH(3), HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG], [
         {species: 'Nidoking', level: 50, evs, moves: ['Thrash', 'Thunder Wave']},
       ], [
-        {species: 'Vileplume', evs, moves: ['Substitute', 'Teleport']},
+        {species: 'Vileplume', evs, moves: ['Substitute', 'Splash']},
       ]);
 
       let p2hp = battle.p2.pokemon[0].hp;
@@ -5348,7 +5408,8 @@ describe('Gen 1', () => {
         '|move|p1a: Nidoking|Thrash|p2a: Vileplume',
         '|-activate|p2a: Vileplume|Substitute|[damage]',
         '|turn|2',
-        '|move|p2a: Vileplume|Teleport|p2a: Vileplume',
+        '|move|p2a: Vileplume|Splash|p2a: Vileplume',
+        '|-nothing',
         '|move|p1a: Nidoking|Thrash|p2a: Vileplume|[from]Thrash',
         '|-activate|p2a: Vileplume|Substitute|[damage]',
         '|turn|3',
@@ -5360,7 +5421,7 @@ describe('Gen 1', () => {
       const battle = startBattle([THRASH(3), HIT, NO_CRIT, MAX_DMG, HIT, NO_CRIT, MIN_DMG], [
         {species: 'Nidoking', evs, moves: ['Thrash', 'Thunder Wave']},
       ], [
-        {species: 'Abra', evs, moves: ['Substitute', 'Teleport']},
+        {species: 'Abra', evs, moves: ['Substitute', 'Splash']},
       ]);
 
       let p2hp = battle.p2.pokemon[0].hp;
@@ -5380,7 +5441,8 @@ describe('Gen 1', () => {
         '|move|p1a: Nidoking|Thrash|p2a: Abra',
         '|-end|p2a: Abra|Substitute',
         '|turn|2',
-        '|move|p2a: Abra|Teleport|p2a: Abra',
+        '|move|p2a: Abra|Splash|p2a: Abra',
+        '|-nothing',
         '|move|p1a: Nidoking|Thrash|p2a: Abra|[from]Thrash',
         '|-damage|p2a: Abra|48/253',
         '|turn|3',
@@ -5394,7 +5456,7 @@ describe('Gen 1', () => {
     ], [
       {species: 'Dratini', evs, moves: ['Thrash']},
     ], [
-      {species: 'Vileplume', evs, moves: ['Teleport']},
+      {species: 'Vileplume', evs, moves: ['Splash']},
     ]);
 
     let p2hp = battle.p2.pokemon[0].hp;
@@ -5409,9 +5471,11 @@ describe('Gen 1', () => {
     verify(battle, [
       '|move|p1a: Dratini|Thrash|p2a: Vileplume',
       '|-damage|p2a: Vileplume|298/353',
-      '|move|p2a: Vileplume|Teleport|p2a: Vileplume',
+      '|move|p2a: Vileplume|Splash|p2a: Vileplume',
+      '|-nothing',
       '|turn|2',
-      '|move|p2a: Vileplume|Teleport|p2a: Vileplume',
+      '|move|p2a: Vileplume|Splash|p2a: Vileplume',
+      '|-nothing',
       '|move|p1a: Dratini|Thrash|p2a: Vileplume|[from]Thrash',
       '|-damage|p2a: Vileplume|243/353',
       '|turn|3',
@@ -5425,9 +5489,9 @@ describe('Gen 1', () => {
       HIT, HIT, PAR_CAN, SLP(5), HIT, HIT, HIT, HIT, NO_CRIT,
       MIN_DMG, hi_proc, PAR_CAN, SLP(5), HIT, PAR_CAN, HIT, PAR_CAN,
     ], [
-      {species: 'Jolteon', evs, moves: ['String Shot', 'Thunder Wave', 'Lick', 'Teleport']},
+      {species: 'Jolteon', evs, moves: ['String Shot', 'Thunder Wave', 'Lick', 'Splash']},
     ], [
-      {species: 'Omanyte', evs, level: 51, moves: ['Teleport', 'Rest']},
+      {species: 'Omanyte', evs, level: 51, moves: ['Splash', 'Rest']},
     ]);
 
     const p2hp = battle.p2.pokemon[0].hp;
@@ -5478,7 +5542,8 @@ describe('Gen 1', () => {
     verify(battle, [
       '|move|p1a: Jolteon|String Shot|p2a: Omanyte',
       '|-unboost|p2a: Omanyte|spe|1',
-      '|move|p2a: Omanyte|Teleport|p2a: Omanyte',
+      '|move|p2a: Omanyte|Splash|p2a: Omanyte',
+      '|-nothing',
       '|turn|2',
       '|move|p1a: Jolteon|Thunder Wave|p2a: Omanyte',
       '|-status|p2a: Omanyte|par',
@@ -5496,7 +5561,8 @@ describe('Gen 1', () => {
       '|turn|5',
       '|move|p1a: Jolteon|String Shot|p2a: Omanyte',
       '|-unboost|p2a: Omanyte|spe|1',
-      '|move|p2a: Omanyte|Teleport|p2a: Omanyte',
+      '|move|p2a: Omanyte|Splash|p2a: Omanyte',
+      '|-nothing',
       '|turn|6',
       '|move|p1a: Jolteon|Lick|p2a: Omanyte',
       '|-damage|p2a: Omanyte|122/144',
@@ -5505,21 +5571,25 @@ describe('Gen 1', () => {
       '|-status|p2a: Omanyte|slp|[from] move: Rest',
       '|-heal|p2a: Omanyte|144/144 slp|[silent]',
       '|turn|7',
-      '|move|p1a: Jolteon|Teleport|p1a: Jolteon',
+      '|move|p1a: Jolteon|Splash|p1a: Jolteon',
+      '|-nothing',
       '|cant|p2a: Omanyte|slp',
       '|turn|8',
-      '|move|p1a: Jolteon|Teleport|p1a: Jolteon',
+      '|move|p1a: Jolteon|Splash|p1a: Jolteon',
+      '|-nothing',
       '|-curestatus|p2a: Omanyte|slp|[msg]',
       '|turn|9',
       '|move|p1a: Jolteon|Thunder Wave|p2a: Omanyte',
       '|-status|p2a: Omanyte|par',
-      '|move|p2a: Omanyte|Teleport|p2a: Omanyte',
+      '|move|p2a: Omanyte|Splash|p2a: Omanyte',
+      '|-nothing',
       '|turn|10',
       '|move|p1a: Jolteon|String Shot|p2a: Omanyte',
       '|-unboost|p2a: Omanyte|spe|1',
       '|-boost|p2a: Omanyte|spe|1',
       '|-fail|p2a: Omanyte',
-      '|move|p2a: Omanyte|Teleport|p2a: Omanyte',
+      '|move|p2a: Omanyte|Splash|p2a: Omanyte',
+      '|-nothing',
       '|turn|11',
     ]);
   });
@@ -5591,7 +5661,7 @@ describe('Gen 1', () => {
     // Non-damaging move/action damage accumulation
     {
       const battle = startBattle([BIDE(2), HIT, NO_CRIT, MIN_DMG], [
-        {species: 'Poliwrath', level: 40, evs, moves: ['Surf', 'Teleport']},
+        {species: 'Poliwrath', level: 40, evs, moves: ['Surf', 'Splash']},
         {species: 'Snorlax', level: 80, evs, moves: ['Rest']},
       ], [
         {species: 'Chansey', level: 80, evs, moves: ['Bide']},
@@ -5617,7 +5687,8 @@ describe('Gen 1', () => {
         '|-damage|p2a: Chansey|546/564',
         '|turn|2',
         '|-activate|p2a: Chansey|Bide',
-        '|move|p1a: Poliwrath|Teleport|p1a: Poliwrath',
+        '|move|p1a: Poliwrath|Splash|p1a: Poliwrath',
+        '|-nothing',
         '|turn|3',
         '|switch|p1a: Snorlax|Snorlax, L80|420/420',
         '|-end|p2a: Chansey|Bide',
@@ -5630,7 +5701,7 @@ describe('Gen 1', () => {
       const battle = startBattle([
         HIT, BIDE(2), HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG,
       ], [
-        {species: 'Wigglytuff', evs, moves: ['Teleport', 'Tri Attack']},
+        {species: 'Wigglytuff', evs, moves: ['Splash', 'Tri Attack']},
         {species: 'Snorlax', evs, moves: ['Defense Curl']},
       ], [
         {species: 'Chansey', evs, moves: ['Toxic', 'Bide']},
@@ -5658,7 +5729,8 @@ describe('Gen 1', () => {
       verify(battle, [
         '|move|p2a: Chansey|Toxic|p1a: Wigglytuff',
         '|-status|p1a: Wigglytuff|tox',
-        '|move|p1a: Wigglytuff|Teleport|p1a: Wigglytuff',
+        '|move|p1a: Wigglytuff|Splash|p1a: Wigglytuff',
+        '|-nothing',
         '|-damage|p1a: Wigglytuff|149/483 tox|[from] psn',
         '|turn|2',
         '|move|p2a: Chansey|Bide|p2a: Chansey',
@@ -5771,7 +5843,7 @@ describe('Gen 1', () => {
       HIT, NO_CRIT, MIN_DMG, FRZ, HIT, NO_CRIT, MIN_DMG,
       HIT, NO_CRIT, MIN_DMG, NO_BRN,
     ], [
-      {species: 'Slowbro', evs, moves: ['Psychic', 'Amnesia', 'Teleport']},
+      {species: 'Slowbro', evs, moves: ['Psychic', 'Amnesia', 'Splash']},
       {species: 'Spearow', level: 8, evs, moves: ['Peck']},
     ], [
       {species: 'Mew', evs, moves: ['Blizzard', 'Fire Blast']},
@@ -5817,7 +5889,8 @@ describe('Gen 1', () => {
       '|-resisted|p1a: Slowbro',
       '|-damage|p1a: Slowbro|293/393 frz',
       '|-curestatus|p1a: Slowbro|frz|[msg]',
-      '|move|p1a: Slowbro|Teleport|p1a: Slowbro',
+      '|move|p1a: Slowbro|Splash|p1a: Slowbro',
+      '|-nothing',
       '|turn|4',
     ]);
   });
@@ -5825,9 +5898,9 @@ describe('Gen 1', () => {
   test('Toxic counter glitches', () => {
     const BRN = SECONDARY(ranged(77, 256) - 1);
     const battle = startBattle([HIT, SLP(5), HIT, HIT, NO_CRIT, MIN_DMG, BRN], [
-      {species: 'Venusaur', evs, moves: ['Toxic', 'Leech Seed', 'Teleport', 'Fire Blast']},
+      {species: 'Venusaur', evs, moves: ['Toxic', 'Leech Seed', 'Splash', 'Fire Blast']},
     ], [
-      {species: 'Clefable', evs, moves: ['Teleport', 'Rest']},
+      {species: 'Clefable', evs, moves: ['Splash', 'Rest']},
     ]);
 
     battle.p2.pokemon[0].hp = 392;
@@ -5848,7 +5921,8 @@ describe('Gen 1', () => {
       '|-status|p2a: Clefable|slp|[from] move: Rest',
       '|-heal|p2a: Clefable|393/393 slp|[silent]',
       '|turn|2',
-      '|move|p1a: Venusaur|Teleport|p1a: Venusaur',
+      '|move|p1a: Venusaur|Splash|p1a: Venusaur',
+      '|-nothing',
       '|cant|p2a: Clefable|slp',
       '|turn|3',
       '|move|p1a: Venusaur|Leech Seed|p2a: Clefable',
@@ -5859,7 +5933,8 @@ describe('Gen 1', () => {
       '|move|p1a: Venusaur|Fire Blast|p2a: Clefable',
       '|-damage|p2a: Clefable|273/393',
       '|-status|p2a: Clefable|brn',
-      '|move|p2a: Clefable|Teleport|p2a: Clefable',
+      '|move|p2a: Clefable|Splash|p2a: Clefable',
+      '|-nothing',
       '|-damage|p2a: Clefable|225/393 brn|[from] brn',
       '|-damage|p2a: Clefable|153/393 brn|[from] Leech Seed|[of] p1a: Venusaur',
       '|turn|5',
@@ -5873,7 +5948,7 @@ describe('Gen 1', () => {
         {species: 'Ivysaur', evs, moves: ['Toxic', 'Leech Seed']},
         {species: 'Nidoran-M', evs, moves: ['Horn Attack']},
       ], [
-        {species: 'Wigglytuff', evs, moves: ['Teleport', 'Double Edge']},
+        {species: 'Wigglytuff', evs, moves: ['Splash', 'Double Edge']},
         {species: 'Nidoran-F', evs, moves: ['Double Kick']},
       ]);
 
@@ -5892,7 +5967,8 @@ describe('Gen 1', () => {
       verify(battle, [
         '|move|p1a: Ivysaur|Toxic|p2a: Wigglytuff',
         '|-status|p2a: Wigglytuff|tox',
-        '|move|p2a: Wigglytuff|Teleport|p2a: Wigglytuff',
+        '|move|p2a: Wigglytuff|Splash|p2a: Wigglytuff',
+        '|-nothing',
         '|-damage|p2a: Wigglytuff|30/483 tox|[from] psn',
         '|turn|2',
         '|move|p1a: Ivysaur|Leech Seed|p2a: Wigglytuff',
@@ -5909,7 +5985,7 @@ describe('Gen 1', () => {
         {species: 'Ivysaur', evs, moves: ['Toxic', 'Leech Seed']},
         {species: 'Nidoran-M', evs, moves: ['Horn Attack']},
       ], [
-        {species: 'Wigglytuff', evs, moves: ['Teleport', 'Jump Kick']},
+        {species: 'Wigglytuff', evs, moves: ['Splash', 'Jump Kick']},
         {species: 'Nidoran-F', evs, moves: ['Double Kick']},
       ]);
 
@@ -5928,7 +6004,8 @@ describe('Gen 1', () => {
       verify(battle, [
         '|move|p1a: Ivysaur|Toxic|p2a: Wigglytuff',
         '|-status|p2a: Wigglytuff|tox',
-        '|move|p2a: Wigglytuff|Teleport|p2a: Wigglytuff',
+        '|move|p2a: Wigglytuff|Splash|p2a: Wigglytuff',
+        '|-nothing',
         '|-damage|p2a: Wigglytuff|1/483 tox|[from] psn',
         '|turn|2',
         '|move|p1a: Ivysaur|Leech Seed|p2a: Wigglytuff',
@@ -5945,7 +6022,7 @@ describe('Gen 1', () => {
         {species: 'Ivysaur', evs, moves: ['Toxic', 'Leech Seed']},
         {species: 'Nidoran-M', evs, moves: ['Horn Attack']},
       ], [
-        {species: 'Wigglytuff', evs, moves: ['Teleport', 'Double Edge']},
+        {species: 'Wigglytuff', evs, moves: ['Splash', 'Double Edge']},
         {species: 'Nidoran-F', evs, moves: ['Double Kick']},
       ]);
 
@@ -5964,12 +6041,14 @@ describe('Gen 1', () => {
       verify(battle, [
         '|move|p1a: Ivysaur|Toxic|p2a: Wigglytuff',
         '|-status|p2a: Wigglytuff|tox',
-        '|move|p2a: Wigglytuff|Teleport|p2a: Wigglytuff',
+        '|move|p2a: Wigglytuff|Splash|p2a: Wigglytuff',
+        '|-nothing',
         '|-damage|p2a: Wigglytuff|30/483 tox|[from] psn',
         '|turn|2',
         '|move|p1a: Ivysaur|Leech Seed|p2a: Wigglytuff',
         '|-start|p2a: Wigglytuff|move: Leech Seed',
-        '|move|p2a: Wigglytuff|Teleport|p2a: Wigglytuff',
+        '|move|p2a: Wigglytuff|Splash|p2a: Wigglytuff',
+        '|-nothing',
         '|-damage|p2a: Wigglytuff|0 fnt|[from] psn',
         '|-heal|p1a: Ivysaur|91/323|[silent]',
         '|faint|p2a: Wigglytuff',
@@ -5981,7 +6060,7 @@ describe('Gen 1', () => {
         {species: 'Ivysaur', evs, moves: ['Confuse Ray', 'Leech Seed']},
         {species: 'Nidoran-M', evs, moves: ['Horn Attack']},
       ], [
-        {species: 'Wigglytuff', evs, moves: ['Teleport', 'Double Edge']},
+        {species: 'Wigglytuff', evs, moves: ['Splash', 'Double Edge']},
         {species: 'Nidoran-F', evs, moves: ['Double Kick']},
       ]);
 
@@ -6018,7 +6097,7 @@ describe('Gen 1', () => {
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, FRZ,
       HIT, NO_CRIT, MIN_DMG, NO_BRN, HIT, NO_CRIT, MIN_DMG,
     ], [
-      {species: 'Hypno', level: 50, evs, moves: ['Teleport', 'Ice Punch', 'Fire Punch']},
+      {species: 'Hypno', level: 50, evs, moves: ['Splash', 'Ice Punch', 'Fire Punch']},
     ], [
       {species: 'Bulbasaur', level: 6, evs, moves: ['Vine Whip']},
       {species: 'Poliwrath', level: 40, evs, moves: ['Surf', 'Water Gun']},
@@ -6047,7 +6126,8 @@ describe('Gen 1', () => {
     expect(choices(battle, 'p2')).toEqual(['switch 2', 'move 1', 'move 2']);
 
     verify(battle, [
-      '|move|p1a: Hypno|Teleport|p1a: Hypno',
+      '|move|p1a: Hypno|Splash|p1a: Hypno',
+      '|-nothing',
       '|move|p2a: Bulbasaur|Vine Whip|p1a: Hypno',
       '|-damage|p1a: Hypno|189/191',
       '|turn|2',
@@ -6295,7 +6375,7 @@ describe('Gen 1', () => {
     const battle = startBattle([
       HIT, HIT, NO_CRIT, MIN_DMG, SLP(2), HIT, NO_CRIT, MIN_DMG, BRN, MISS,
     ], [
-      {species: 'Hypno', evs, moves: ['Toxic', 'Hypnosis', 'Teleport', 'Fire Punch']},
+      {species: 'Hypno', evs, moves: ['Toxic', 'Hypnosis', 'Splash', 'Fire Punch']},
     ], [
       {species: 'Snorlax', evs, moves: ['Hyper Beam']},
     ]);
@@ -6333,7 +6413,8 @@ describe('Gen 1', () => {
       '|-status|p2a: Snorlax|slp|[from] move: Hypnosis',
       '|cant|p2a: Snorlax|slp',
       '|turn|3',
-      '|move|p1a: Hypno|Teleport|p1a: Hypno',
+      '|move|p1a: Hypno|Splash|p1a: Hypno',
+      '|-nothing',
       '|-curestatus|p2a: Snorlax|slp|[msg]',
       '|turn|4',
       '|move|p1a: Hypno|Fire Punch|p2a: Snorlax',
@@ -6736,8 +6817,8 @@ describe('Gen 1', () => {
       {species: 'Victreebel', evs, moves: ['Wrap', 'Vine Whip']},
       {species: 'Seel', evs, moves: ['Bubble']},
     ], [
-      {species: 'Kadabra', evs, moves: ['Teleport']},
-      {species: 'Mr. Mime', evs, moves: ['Teleport']},
+      {species: 'Kadabra', evs, moves: ['Splash']},
+      {species: 'Mr. Mime', evs, moves: ['Splash']},
     ], b => {
       b.p1.pokemon[0].moveSlots[0].pp = 1;
     });
@@ -6759,7 +6840,8 @@ describe('Gen 1', () => {
       '|switch|p1a: Victreebel|Victreebel|363/363',
       '|switch|p2a: Kadabra|Kadabra|283/283',
       '|turn|1',
-      '|move|p2a: Kadabra|Teleport|p2a: Kadabra',
+      '|move|p2a: Kadabra|Splash|p2a: Kadabra',
+      '|-nothing',
       '|move|p1a: Victreebel|Wrap|p2a: Kadabra',
       '|-damage|p2a: Kadabra|261/283',
       '|turn|2',
@@ -6863,7 +6945,7 @@ describe('Gen 1', () => {
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, HIT, NO_CRIT, MIN_DMG, HIT, CRIT, MAX_DMG,
     ], [
-      {species: 'Jigglypuff', evs, moves: ['Teleport', 'Tackle']},
+      {species: 'Jigglypuff', evs, moves: ['Splash', 'Tackle']},
     ], [
       {species: 'Electabuzz', evs, moves: ['Substitute', 'Rage']},
     ]);
@@ -6891,7 +6973,8 @@ describe('Gen 1', () => {
       '|move|p2a: Electabuzz|Substitute|p2a: Electabuzz',
       '|-start|p2a: Electabuzz|Substitute',
       '|-damage|p2a: Electabuzz|250/333',
-      '|move|p1a: Jigglypuff|Teleport|p1a: Jigglypuff',
+      '|move|p1a: Jigglypuff|Splash|p1a: Jigglypuff',
+      '|-nothing',
       '|turn|2',
       '|move|p2a: Electabuzz|Rage|p1a: Jigglypuff',
       '|-damage|p1a: Jigglypuff|405/433',

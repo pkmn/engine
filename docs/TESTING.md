@@ -104,7 +104,7 @@ The following guidelines should be taken into consideration when adding new unit
    Pass), prefer to test just the "base" functionality in the complex effect's test case and its
    various interactions with other effects in the test case demonstrating the other effect's
    behavior.
-10. Avoid unnecessary rolls and log messages. Fall back on moves like Teleport where reasonable  and
+10. Avoid unnecessary rolls and log messages. Fall back on moves like Splash where reasonable and
     avoid test setups involving speed ties unless speed ties are specifically being tested.
 11. Avoid performing artificial alterations of the battle state mid-test unless required. Tests
     which require status should acquire it as part of the test (Pokémon Showdown's cleric clause
