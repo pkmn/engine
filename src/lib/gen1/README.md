@@ -612,7 +612,8 @@ engine, but the following moves have their broken behavior preserved in `-Dshowd
 - **Roar** / **Whirlwind**: these moves can miss on Pokémon Showdown (and advance the RNG when
   checking) which is incorrect (these moves should always fail, but don't check accuracy or advance
   the RNG). More importantly, these moves should *not* cause the tracked last battle damage to be
-  zeroed, but on Pokémon Showdown they do.
+  zeroed, but on Pokémon Showdown they do. These should also `|-fail|...|[still]` instead of doing
+  nothing.
 - **Substitute**: in addition to the [Substitute + Confusion
   glitch](https://pkmn.cc/bulba-glitch-1#Substitute_.2B_Confusion_glitch) not being implemented
   correctly (covered earlier), the [Substitute 1/4
@@ -634,6 +635,7 @@ only pedantic UI correctness):
 
 - **Rage**: Rage should report the `|-boost|` before the Disable `|-miss|`, not after.
 - **Haze**: Haze clears the status/volatiles in an incorrect order.
+- **Teleport**: Teleport should `|-fail|...|[still]` instead of doing nothing.
 - **Twineedle**: the `|-hitcount|` ("Hit 2 times") should come before the `|-status|` message, not
   after.
 - **Thrash** / **Petal Dance**: confusion should silently get applied before the `|move|` message,

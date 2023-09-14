@@ -2390,12 +2390,17 @@ pub const Effects = struct {
     }
 
     fn switchAndTeleport(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
-        if (!showdown or battle.side(player).last_selected_move == .Teleport) return;
-
         // Whirlwind/Roar should not roll to hit/reset damage but Pokémon Showdown does anyway
-        if (try checkHit(battle, player, move, options)) try options.chance.commit(player, .hit);
-
-        battle.last_damage = 0;
+        if (showdown) {
+            if (battle.side(player).last_selected_move == .Teleport) return;
+            if (try checkHit(battle, player, move, options)) {
+                try options.chance.commit(player, .hit);
+            }
+            battle.last_damage = 0;
+        } else {
+            try options.log.fail(battle.active(player), .None);
+            try options.log.laststill();
+        }
     }
 
     fn thrashing(battle: anytype, player: Player, options: anytype) void {

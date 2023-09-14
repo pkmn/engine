@@ -2953,17 +2953,32 @@ test "SwitchAndTeleport effect" {
     defer t.deinit();
 
     try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    if (!showdown) {
+        try t.log.expected.fail(P1.ident(1), .None);
+        try t.log.expected.laststill();
+    }
     try t.log.expected.move(P2.ident(1), Move.Whirlwind, P1.ident(1), null);
+    if (!showdown) {
+        try t.log.expected.fail(P2.ident(1), .None);
+        try t.log.expected.laststill();
+    }
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
     try if (showdown) t.expectProbability(27, 32) else t.expectProbability(1, 1);
 
     try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
+    if (!showdown) {
+        try t.log.expected.fail(P1.ident(1), .None);
+        try t.log.expected.laststill();
+    }
     try t.log.expected.move(P2.ident(1), Move.Whirlwind, P1.ident(1), null);
     if (showdown) {
         try t.log.expected.lastmiss();
         try t.log.expected.miss(P2.ident(1));
+    } else {
+        try t.log.expected.fail(P2.ident(1), .None);
+        try t.log.expected.laststill();
     }
     try t.log.expected.turn(3);
 
@@ -4158,6 +4173,10 @@ test "Counter effect" {
     try t.expectProbability(255, 256);
 
     try t.log.expected.move(P1.ident(2), Move.Teleport, P1.ident(2), null);
+    if (!showdown) {
+        try t.log.expected.fail(P1.ident(2), .None);
+        try t.log.expected.laststill();
+    }
     try t.log.expected.move(P2.ident(1), Move.Counter, P1.ident(2), null);
     try t.log.expected.fail(P2.ident(1), .None);
     try t.log.expected.turn(8);
