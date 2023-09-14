@@ -631,6 +631,19 @@ pub const Rolls = struct {
         try options.chance.quickClaw(player, qkc);
         return qkc;
     }
+
+    const METRONOME = init: {
+        var num = 0;
+        var moves: [238]Move = undefined;
+        for (1..Move.size) |i| {
+            if (Move.get(@enumFromInt(i)).flags.metronome) {
+                moves[num] = @enumFromInt(i);
+                num += 1;
+            }
+        }
+        assert(num == moves.len);
+        break :init moves;
+    };
 };
 
 test "RNG agreement" {
