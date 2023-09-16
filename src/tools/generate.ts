@@ -374,7 +374,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .effect = .${effect},\n` +
         `            .bp = ${bp},\n` +
         `            .type = .${move.type === '???' ? 'Normal' : move.type},\n` +
-        `            .accuracy = Gen12.percent(${accuracy}),\n` +
+        `            .accuracy = percent(${accuracy}),\n` +
         `            .target = .${TARGETS[move.target]},\n` +
         '        }');
       PP.push(`${move.pp}, // ${name}`);
@@ -478,7 +478,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       gen: gen.num,
       roman: 'I',
       import: '\nconst rng = @import("../../common/rng.zig");',
-      percent: '\nconst Gen12 = rng.Gen12;',
+      percent: '\nconst percent = rng.Gen12.percent;',
       Move: {
         type: 'u8',
         values: moves.map(m => m.split(' ')[0]).join(',\n    ') + SENTINEL,
@@ -795,7 +795,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       const [name, effect] = m.split(' ');
       if (effect !== 'None') EFFECTS.add(effect);
       const move = gen.moves.get(name)!;
-      const chance = move.secondary?.chance ? `Gen12.percent(${move.secondary.chance}),` : '';
+      const chance = move.secondary?.chance ? `percent(${move.secondary.chance}),` : '';
       const acc = move.accuracy === true ? 100 : move.accuracy;
       const flags = NO_METRONOME.includes(move.id)
         ? '.{ .metronome = false }'
@@ -806,7 +806,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .effect = .${effect},\n` +
         `            .bp = ${move.basePower},\n` +
         `            .type = .${move.type === '???' ? '@"???"' : move.type},\n` +
-        `            .accuracy = Gen12.percent(${acc}),\n` +
+        `            .accuracy = percent(${acc}),\n` +
         `            .target = .${TARGETS[move.target]},\n` +
         (chance ? `            .chance = ${chance}\n` : '') +
         (move.priority ? `            .priority = ${move.priority},\n` : '') +
@@ -870,7 +870,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       gen: gen.num,
       roman: 'II',
       import: '\nconst rng = @import("../../common/rng.zig");',
-      percent: '\nconst Gen12 = rng.Gen12;',
+      percent: '\nconst percent = rng.Gen12.percent;',
       Move: {
         type: 'u8',
         values: moves.map(m => m.split(' ')[0]).join(',\n    '),
