@@ -70,12 +70,12 @@ const ACCURACY_BOOSTS = &[_][2]u8{
 
 const CRITICAL_HITS = &[_]u8{
     256 / 15, //  0
-    256 / 8,  // +1
-    256 / 4,  // +2
-    256 / 3,  // +3
-    256 / 2,  // +4
-    256 / 2,  // +5
-    256 / 2, // +6
+    256 /  8, // +1
+    256 /  4, // +2
+    256 /  3, // +3
+    256 /  2, // +4
+    256 /  2, // +5
+    256 /  2, // +6
 };
 // zig fmt: on
 
@@ -385,11 +385,20 @@ fn doMove(battle: anytype, player: Player, options: anytype, mslot: u4) !?Result
 }
 
 fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data, options: anytype) !bool {
-    _ = battle;
-    _ = player;
-    _ = move;
-    _ = options;
-    return false;
+    if (move.bp == 0) return false;
+
+    const side = battle.side(player);
+    const pokemon = side.stored();
+
+    var stage: u8 =
+        if ((pokemon.species == .Chansey and pokemon.item == .LuckyPunch) or
+        (pokemon.species == .Farfetchd and pokemon.item == .Stick)) 2 else 0;
+    if (side.active.volatiles.FocusEnergy) stage += 1;
+    if (move.effect.isHighCritical()) stage += 2;
+    if (pokemon.item == .ScopeLens) stage += 1;
+    assert(stage <= 5);
+
+    return Rolls.criticalHit(battle, player, CRITICAL_HITS[stage], options);
 }
 
 fn calcDamage(
@@ -630,6 +639,18 @@ pub const Rolls = struct {
 
         try options.chance.quickClaw(player, qkc);
         return qkc;
+    }
+
+    inline fn criticalHit(battle: anytype, player: Player, rate: u8, options: anytype) !bool {
+        const crit = if (options.calc.overridden(player, .critical_hit)) |val|
+            val == .true
+        else if (showdown)
+            battle.rng.chance(u8, rate, 256)
+        else
+            battle.rng.next() < rate;
+
+        try options.chance.criticalHit(player, crit, rate);
+        return crit;
     }
 
     const METRONOME = init: {

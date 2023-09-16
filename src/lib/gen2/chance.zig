@@ -40,7 +40,9 @@ pub const Action = packed struct(u8) {
     quick_claw: Optional(bool) = .None,
     /// If not None, the Player to be returned by Rolls.speedTie.
     speed_tie: Optional(Player) = .None,
-    _: u4 = 0,
+    /// If not None, the value to be returned by Rolls.criticalHit.
+    critical_hit: Optional(bool) = .None,
+    _: u2 = 0,
 
     pub const Field = std.meta.FieldEnum(Action);
 
@@ -100,6 +102,14 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.p2.speed_tie = self.actions.p1.speed_tie;
         }
 
+        pub fn criticalHit(self: *Self, player: Player, crit: bool, rate: u8) Error!void {
+            if (!enabled) return;
+
+            const n = if (crit) rate else @as(u8, @intCast(256 - @as(u9, rate)));
+            try self.probability.update(n, 256);
+            self.actions.get(player).critical_hit = if (crit) .true else .false;
+        }
+
         pub fn quickClaw(self: *Self, player: Player, proc: bool) Error!void {
             if (!enabled) return;
 
@@ -126,5 +136,9 @@ const Null = struct {
 
     pub fn quickClaw(self: Null, player: Player, proc: bool) Error!void {
         _ = .{ self, player, proc };
+    }
+
+    pub fn criticalHit(self: Null, player: Player, crit: bool, rate: u8) Error!void {
+        _ = .{ self, player, crit, rate };
     }
 };
