@@ -290,8 +290,12 @@ pub const Move = enum(u8) {
             metronome: bool = true,
             /// Whether this move is considered to be "continuous".
             continuous: bool = false,
+            /// Whether this move can hit a flying target.
+            flying: bool = false,
+            /// Whether this move can hit an underground target.
+            underground: bool = false,
 
-            _: u6 = 0,
+            _: u4 = 0,
         };
 
         comptime {
@@ -431,6 +435,7 @@ pub const Move = enum(u8) {
             .type = .Flying,
             .accuracy = percent(100),
             .target = .Any,
+            .flags = .{ .flying = true },
         },
         // WingAttack
         .{
@@ -448,6 +453,7 @@ pub const Move = enum(u8) {
             .accuracy = percent(100),
             .target = .Other,
             .priority = -1,
+            .flags = .{ .flying = true },
         },
         // Fly
         .{
@@ -1026,6 +1032,7 @@ pub const Move = enum(u8) {
             .accuracy = percent(70),
             .target = .Other,
             .chance = percent(30),
+            .flags = .{ .flying = true },
         },
         // RockThrow
         .{
@@ -1042,6 +1049,7 @@ pub const Move = enum(u8) {
             .type = .Ground,
             .accuracy = percent(100),
             .target = .AllOthers,
+            .flags = .{ .underground = true },
         },
         // Fissure
         .{
@@ -1050,6 +1058,7 @@ pub const Move = enum(u8) {
             .type = .Ground,
             .accuracy = percent(30),
             .target = .Other,
+            .flags = .{ .underground = true },
         },
         // Dig
         .{
@@ -2151,6 +2160,7 @@ pub const Move = enum(u8) {
             .type = .Ground,
             .accuracy = percent(100),
             .target = .AllOthers,
+            .flags = .{ .underground = true },
         },
         // DynamicPunch
         .{
@@ -2293,6 +2303,7 @@ pub const Move = enum(u8) {
             .accuracy = percent(100),
             .target = .Foes,
             .chance = percent(20),
+            .flags = .{ .flying = true },
         },
         // RainDance
         .{

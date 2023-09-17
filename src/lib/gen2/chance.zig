@@ -39,13 +39,14 @@ pub const Action = packed struct(u16) {
     /// If not 0, the roll to be returned Rolls.damage.
     damage: u8 = 0,
 
+    /// If not None, the value to return for Rolls.hit.
+    hit: Optional(bool) = .None,
     /// If not None, the value to be returned for TODO
     quick_claw: Optional(bool) = .None,
     /// If not None, the Player to be returned by Rolls.speedTie.
     speed_tie: Optional(Player) = .None,
     /// If not None, the value to be returned by Rolls.criticalHit.
     critical_hit: Optional(bool) = .None,
-    _: u2 = 0,
 
     pub const Field = std.meta.FieldEnum(Action);
 
@@ -126,6 +127,14 @@ pub fn Chance(comptime Rational: type) type {
             try self.probability.update(1, 39);
             self.actions.get(player).damage = roll;
         }
+
+        pub fn hit(self: *Self, player: Player, ok: bool, accuracy: u8) Error!void {
+            if (!enabled) return;
+
+            const p = if (ok) accuracy else @as(u8, @intCast(256 - @as(u9, accuracy)));
+            try self.probability.update(p, 256);
+            self.actions.get(player).hit = if (ok) .true else .false;
+        }
     };
 }
 
@@ -154,5 +163,9 @@ const Null = struct {
 
     pub fn damage(self: Null, player: Player, roll: u8) Error!void {
         _ = .{ self, player, roll };
+    }
+
+    pub fn hit(self: Null, player: Player, ok: bool, accuracy: u8) Error!void {
+        _ = .{ self, player, ok, accuracy };
     }
 };

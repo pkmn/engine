@@ -777,6 +777,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       'metronome', 'struggle', 'sketch', 'mimic', 'counter', 'mirrorcoat',
       'protect', 'detect', 'endure', 'destinybond', 'sleeptalk', 'thief',
     ];
+    const FLYING = ['gust', 'whirlwind', 'thunder', 'twister'];
+    const UNDERGROUND = ['earthquake', 'fissure', 'magnitude'];
     url = `${pret}/data/moves/moves.asm`;
     const moves = await getOrUpdate('moves', dirs.cache, url, update, (line, _, i) => {
       const match = /move (\w+),\W+(\w+),/.exec(line);
@@ -797,10 +799,11 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       const move = gen.moves.get(name)!;
       const chance = move.secondary?.chance ? `percent(${move.secondary.chance}),` : '';
       const acc = move.accuracy === true ? 100 : move.accuracy;
-      const flags = NO_METRONOME.includes(move.id)
-        ? '.{ .metronome = false }'
-        : CONTINUOUS.includes(move.id)
-          ? '.{ .continuous = true }' : '';
+      const flags =
+        NO_METRONOME.includes(move.id) ? '.{ .metronome = false }'
+        : CONTINUOUS.includes(move.id) ? '.{ .continuous = true }'
+        : FLYING.includes(move.id) ? '.{ .flying = true }'
+        : UNDERGROUND.includes(move.id) ? '.{ .underground = true }' : '';
       MOVES.push(`// ${name}\n` +
         '        .{\n' +
         `            .effect = .${effect},\n` +
@@ -815,7 +818,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       PP.push(`${move.pp}, // ${name}`);
       DATA[1].moves[move.name] = move.pp;
     }
-    // pp/accuracy/target/chance could all be u4, but packed struct needs to be power of 2
+    // accuracy/target/chance/priority could all be u4, but packed struct needs to be power of 2
     let Data = `/// Data associated with a Pokémon move.
     pub const Data = extern struct {
         /// The move's effect.
@@ -841,8 +844,12 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
             metronome: bool = true,
             /// Whether this move is considered to be "continuous".
             continuous: bool = false,
+            /// Whether this move can hit a flying target.
+            flying: bool = false,
+            /// Whether this move can hit an underground target.
+            underground: bool = false,
 
-            _: u6 = 0,
+            _: u4 = 0,
         };
 
         comptime {

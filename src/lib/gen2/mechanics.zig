@@ -499,19 +499,50 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data, options: anytype) 
     return false;
 }
 
+// TODO: set damage = 0 if missed and not (High) Jump Kick
 fn moveHit(
     battle: anytype,
     player: Player,
     move: Move.Data,
     options: anytype,
-) bool {
-    var side = battle.side(player);
+) !bool {
+    const side = battle.side(player);
     const foe = battle.foe(player);
-    _ = move;
-    _ = side;
-    _ = foe;
-    _ = options;
-    return false;
+
+    if (move.effect == .DreamEater and !Status.is(foe.stored().status, .SLP)) return false;
+    if (foe.active.volatiles.Protect) return false;
+    const drain = move.effect == .DrainHP or move.effect == .DreamEater;
+    if (drain and foe.active.volatiles.Substitute) return false;
+    if (side.active.volatiles.LockOn) {
+        return !(foe.active.volatiles.Flying and move.flags.undeground);
+    }
+    assert(!(foe.active.volatiles.Flying and foe.active.volatiles.Underground));
+    if (foe.active.volatiles.Flying) {
+        if (!move.flags.flying) return false;
+    } else if (foe.active.volatiles.Underground) {
+        if (!move.flags.underground) return false;
+    }
+    if (move.effect == .Thunder and battle.field.weather == .Rain) return true;
+    if (move.effect == .AlwaysHit) return true;
+
+    var accuracy: u16 = move.accuracy;
+    if (foe.active.boosts.evasion <= side.active.boosts.accuracy or
+        !foe.active.volatiles.Foresight)
+    {
+        var boost = ACCURACY_BOOSTS[@as(u4, @intCast(@as(i8, side.active.boosts.accuracy) + 6))];
+        accuracy = accuracy * boost[0] / boost[1];
+        boost = ACCURACY_BOOSTS[@as(u4, @intCast(@as(i8, -foe.active.boosts.evasion) + 6))];
+        accuracy = accuracy * boost[0] / boost[1];
+        accuracy = @min(255, @max(1, accuracy));
+    }
+
+    if (foe.stored().item == .BrightPowder) {
+        accuracy = @min(0, accuracy -% 20);
+    }
+
+    // The accuracy roll is skipped entirely if maxed
+    if (accuracy == 255) return true;
+    return !try Rolls.hit(battle, player, @intCast(accuracy), options);
 }
 
 fn checkFaint(
@@ -716,6 +747,18 @@ pub const Rolls = struct {
         assert(roll >= 217 and roll <= 255);
         try options.chance.damage(player, roll);
         return roll;
+    }
+
+    inline fn hit(battle: anytype, player: Player, accuracy: u8, options: anytype) !bool {
+        const ok = if (options.calc.overridden(player, .hit)) |val|
+            val == .true
+        else if (showdown)
+            battle.rng.chance(u8, accuracy, 256)
+        else
+            battle.rng.next() < accuracy;
+
+        try options.chance.hit(player, ok, accuracy);
+        return ok;
     }
 
     const METRONOME = init: {
