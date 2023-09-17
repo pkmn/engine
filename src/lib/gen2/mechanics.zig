@@ -76,8 +76,6 @@ const CRITICAL_HITS = &[_]u8{
     256 /  4, // +2
     256 /  3, // +3
     256 /  2, // +4
-    256 /  2, // +5
-    256 /  2, // +6
 };
 // zig fmt: on
 
@@ -395,10 +393,12 @@ fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data, options: a
     var stage: u8 =
         if ((pokemon.species == .Chansey and pokemon.item == .LuckyPunch) or
         (pokemon.species == .Farfetchd and pokemon.item == .Stick)) 2 else 0;
-    if (side.active.volatiles.FocusEnergy) stage += 1;
-    if (move.effect.isHighCritical()) stage += 2;
-    if (pokemon.item == .ScopeLens) stage += 1;
-    assert(stage <= 5);
+    if (stage == 0) {
+        if (side.active.volatiles.FocusEnergy) stage += 1;
+        if (move.effect.isHighCritical()) stage += 2;
+        if (pokemon.item == .ScopeLens) stage += 1;
+    }
+    assert(stage <= 4);
 
     return Rolls.criticalHit(battle, player, CRITICAL_HITS[stage], options);
 }
