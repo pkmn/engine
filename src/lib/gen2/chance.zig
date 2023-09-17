@@ -35,7 +35,10 @@ pub const Actions = extern struct {
 
 /// Information about the RNG that was observed during a Generation II battle `update` for a
 /// single player.
-pub const Action = packed struct(u8) {
+pub const Action = packed struct(u16) {
+    /// If not 0, the roll to be returned Rolls.damage.
+    damage: u8 = 0,
+
     /// If not None, the value to be returned for TODO
     quick_claw: Optional(bool) = .None,
     /// If not None, the Player to be returned by Rolls.speedTie.
@@ -102,6 +105,13 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.p2.speed_tie = self.actions.p1.speed_tie;
         }
 
+        pub fn quickClaw(self: *Self, player: Player, proc: bool) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(@as(u8, if (proc) 60 else 196), 256);
+            self.actions.get(player).quick_claw = if (proc) .true else .false;
+        }
+
         pub fn criticalHit(self: *Self, player: Player, crit: bool, rate: u8) Error!void {
             if (!enabled) return;
 
@@ -110,11 +120,11 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.get(player).critical_hit = if (crit) .true else .false;
         }
 
-        pub fn quickClaw(self: *Self, player: Player, proc: bool) Error!void {
+        pub fn damage(self: *Self, player: Player, roll: u8) Error!void {
             if (!enabled) return;
 
-            try self.probability.update(@as(u8, if (proc) 60 else 196), 256);
-            self.actions.get(player).quick_claw = if (proc) .true else .false;
+            try self.probability.update(1, 39);
+            self.actions.get(player).damage = roll;
         }
     };
 }
@@ -140,5 +150,9 @@ const Null = struct {
 
     pub fn criticalHit(self: Null, player: Player, crit: bool, rate: u8) Error!void {
         _ = .{ self, player, crit, rate };
+    }
+
+    pub fn damage(self: Null, player: Player, roll: u8) Error!void {
+        _ = .{ self, player, roll };
     }
 };

@@ -469,11 +469,13 @@ fn adjustDamage(battle: anytype, player: Player, m: Move, damage: u16, effective
     return d;
 }
 
-fn randomizeDamage(battle: anytype, player: Player, options: anytype) !u16 {
-    _ = battle;
-    _ = player;
-    _ = options;
-    return 0;
+fn randomizeDamage(battle: anytype, player: Player, damage: u16, options: anytype) !u16 {
+    if (damage <= 1) return;
+    const random = try Rolls.damage(battle, player, options);
+    options.calc.base(player.foe(), damage);
+    damage = @intCast(@as(u32, damage) *% random / 255);
+    options.calc.final(player.foe(), damage);
+    return damage;
 }
 
 fn applyDamage(
@@ -698,6 +700,22 @@ pub const Rolls = struct {
 
         try options.chance.criticalHit(player, crit, rate);
         return crit;
+    }
+
+    inline fn damage(battle: anytype, player: anytype, options: anytype) !u8 {
+        const roll = if (options.calc.overridden(player, .damage)) |val|
+            val
+        else roll: {
+            if (showdown) break :roll battle.rng.range(u8, 217, 256);
+            while (true) {
+                const r = std.math.rotr(u8, battle.rng.next(), 1);
+                if (r >= 217) break :roll r;
+            }
+        };
+
+        assert(roll >= 217 and roll <= 255);
+        try options.chance.damage(player, roll);
+        return roll;
     }
 
     const METRONOME = init: {
