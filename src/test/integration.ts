@@ -520,7 +520,7 @@ function validate(prng: PRNG, moves: Set<ID>, used: RunnerOptions['usage']) {
 }
 
 const METRONOME = [
-  ...BINDING, 'mirrormove', 'transform', 'disable', 'mimic', 'substitute', 'haze',
+  ...BINDING, 'mirrormove', 'transform', 'disable', 'mimic', 'substitute', 'haze', 'bide',
 ];
 
 // Mimic is so borked that we need to both ensure that if it appears in a move

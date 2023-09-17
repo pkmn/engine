@@ -62,10 +62,6 @@ const MAX_STAT_VALUE = 999;
 const DISTRIBUTION = [_]u3{ 2, 2, 2, 3, 3, 3, 4, 5 };
 
 pub fn update(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Result {
-    // FIXME
-    // std.debug.print("\n", .{});
-    // DEBUG(battle.turn);
-    // std.debug.print("// ", .{});
     assert(c1.type != .Pass or c2.type != .Pass or battle.turn == 0);
     if (battle.turn == 0) return start(battle, options);
 
