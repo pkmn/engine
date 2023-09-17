@@ -34,6 +34,8 @@ const Side = data.Side;
 const Species = data.Species;
 const Stats = data.Stats;
 const Status = data.Status;
+const Type = data.Type;
+const Types = data.Types;
 
 // zig fmt: off
 const STAT_BOOSTS = &[_][2]u8{
@@ -415,11 +417,56 @@ fn calcDamage(
     _ = crit;
     return 0;
 }
+const FORESIGHT: Types = .{ .type1 = .Normal, .type2 = .Fighting };
 
-fn adjustDamage(battle: anytype, player: Player) u16 {
-    _ = battle;
-    _ = player;
-    return 0;
+fn adjustDamage(battle: anytype, player: Player, m: Move, damage: u16, effectiveness: *u16) u16 {
+    if (m == .Struggle) return;
+
+    const side = battle.side(player);
+    const foe = battle.foe(player);
+    const types = foe.active.types;
+    const move = Move.get(side.m);
+
+    var d = damage;
+    if ((move.type == .Water and battle.field.weather == .Rain) or
+        (move.type == .Fire and battle.field.weather == .Sun))
+    {
+        d = d *% @intFromEnum(Effectiveness.Super) / 10;
+    } else if ((move.type == .Water and battle.field.weather == .Sun) or
+        ((move.type == .Fire or m == .SolarBeam) and battle.field.weather == .Rain))
+    {
+        d = d *% @intFromEnum(Effectiveness.Resisted) / 10;
+    }
+
+    if (side.active.types.includes(move.type)) d +%= d / 2;
+
+    const neutral = @intFromEnum(Effectiveness.Neutral);
+    const foresight = foe.active.volatiles.Foresight and FORESIGHT.includes(move.type);
+    const eff1: u16 = if (foresight and types.type1 == .Ghost)
+        10
+    else
+        @intFromEnum(move.type.effectiveness(types.type1));
+    const eff2: u16 = if (foresight and types.type2 == .Ghost)
+        10
+    else
+        @intFromEnum(move.type.effectiveness(types.type2));
+
+    // Type effectiveness matchup precedence only matters with (NVE, SE)
+    if (!showdown and (eff1 + eff2) == Effectiveness.mismatch and
+        Type.precedence(move.type, types.type1) > Type.precedence(move.type, types.type2))
+    {
+        assert(eff2 != neutral);
+        d = d *% eff2 / 10;
+        assert(types.type1 != types.type2);
+        assert(eff1 != neutral);
+        d = d *% eff1 / 10;
+    } else {
+        if (eff1 != neutral) d = d *% eff1 / 10;
+        if (types.type1 != types.type2 and eff2 != neutral) d = d *% eff2 / 10;
+    }
+
+    effectiveness.* = if (types.type1 == types.type2) eff1 * neutral else eff1 * eff2;
+    return d;
 }
 
 fn randomizeDamage(battle: anytype, player: Player, options: anytype) !u16 {
