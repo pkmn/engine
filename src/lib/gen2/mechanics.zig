@@ -844,8 +844,6 @@ fn statusModify(status: u8, stats: *Stats(u16)) void {
 inline fn isForced(active: anytype) bool {
     return active.volatiles.Recharging or active.volatiles.Rage or
         active.volatiles.Thrashing or active.volatiles.Charging or
-        // FIXME TODO Underground or Flying?
-        active.volatiles.Underground or active.volatiles.Flying or
         active.volatiles.Rollout;
 }
 
