@@ -224,7 +224,7 @@ pub const DVs = packed struct(u16) {
     pub fn init(g: Gender, p: u6, t: Type) DVs {
         assert(p >= 1 and p <= 40);
         assert(t != .Normal and t != .@"???");
-        return DVs{ .gender = g, .pow = p, .type = t };
+        return .{ .gender = g, .pow = p, .type = t };
     }
 
     pub inline fn power(dvs: DVs) u8 {
@@ -243,7 +243,7 @@ pub const DVs = packed struct(u16) {
             ((dvs.spe & 0b1000)) >> 2 | ((dvs.spc & 0b1000)) >> 3) + (dvs.spc & 0b0011)) >> 1));
         var t = @as(u8, dvs.def & 0b0011) + (@as(u8, dvs.atk & 0b0011) << 2) + 1;
         if (t >= @intFromEnum(Type.@"???")) t = t + 1;
-        return DVs{ .gender = g, .pow = p, .type = @enumFromInt(t) };
+        return .{ .gender = g, .pow = p, .type = @enumFromInt(t) };
     }
 };
 
@@ -388,7 +388,7 @@ pub const Boosts = packed struct(u32) {
 };
 
 test Boosts {
-    const boosts = Boosts{ .spd = -6 };
+    const boosts: Boosts = .{ .spd = -6 };
     try expectEqual(0, boosts.atk);
     try expectEqual(-6, boosts.spd);
 }

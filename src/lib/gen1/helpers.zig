@@ -478,13 +478,13 @@ pub const Rolls = struct {
 };
 
 test "Rolls.speedTie" {
-    const actions = Actions{ .p1 = .{ .speed_tie = .P2 } };
+    const actions: Actions = .{ .p1 = .{ .speed_tie = .P2 } };
     try expectEqualSlices(Optional(Player), &.{ .P1, .P2 }, Rolls.speedTie(actions.p1));
     try expectEqualSlices(Optional(Player), &.{.None}, Rolls.speedTie(actions.p2));
 }
 
 test "Rolls.damage" {
-    const actions = Actions{ .p2 = .{ .damage = 221 } };
+    const actions: Actions = .{ .p2 = .{ .damage = 221 } };
     try expectEqual(Rolls.Range{ .min = 0, .max = 1 }, Rolls.damage(actions.p1, .None));
     try expectEqual(Rolls.Range{ .min = 217, .max = 256 }, Rolls.damage(actions.p2, .None));
     try expectEqual(Rolls.Range{ .min = 0, .max = 1 }, Rolls.damage(actions.p2, .false));
@@ -502,7 +502,7 @@ test "Rolls.coalesce" {
 }
 
 test "Rolls.hit" {
-    const actions = Actions{ .p2 = .{ .hit = .true } };
+    const actions: Actions = .{ .p2 = .{ .hit = .true } };
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.hit(actions.p1, .None));
     try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.hit(actions.p2, .None));
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.hit(actions.p2, .true));
@@ -510,7 +510,7 @@ test "Rolls.hit" {
 }
 
 test "Rolls.secondaryChance" {
-    const actions = Actions{ .p1 = .{ .secondary_chance = .true } };
+    const actions: Actions = .{ .p1 = .{ .secondary_chance = .true } };
     try expectEqualSlices(
         Optional(bool),
         &.{ .false, .true },
@@ -521,7 +521,7 @@ test "Rolls.secondaryChance" {
 }
 
 test "Rolls.criticalHit" {
-    const actions = Actions{ .p1 = .{ .critical_hit = .true } };
+    const actions: Actions = .{ .p1 = .{ .critical_hit = .true } };
     try expectEqualSlices(
         Optional(bool),
         &.{ .false, .true },
@@ -532,14 +532,14 @@ test "Rolls.criticalHit" {
 }
 
 test "Rolls.confused" {
-    const actions = Actions{ .p2 = .{ .confused = .true } };
+    const actions: Actions = .{ .p2 = .{ .confused = .true } };
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.confused(actions.p1, 1));
     try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.confused(actions.p2, 1));
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.confused(actions.p2, 0));
 }
 
 test "Rolls.paralyzed" {
-    const actions = Actions{ .p2 = .{ .paralyzed = .true } };
+    const actions: Actions = .{ .p2 = .{ .paralyzed = .true } };
     try expectEqualSlices(Optional(bool), &.{.None}, Rolls.paralyzed(actions.p1, .None));
     try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.paralyzed(actions.p2, .None));
     try expectEqualSlices(Optional(bool), &.{ .false, .true }, Rolls.paralyzed(actions.p2, .false));
@@ -547,7 +547,7 @@ test "Rolls.paralyzed" {
 }
 
 test "Rolls.duration" {
-    const actions = Actions{ .p2 = .{ .duration = 3 } };
+    const actions: Actions = .{ .p2 = .{ .duration = 3 } };
     try expectEqualSlices(u1, &.{0}, Rolls.duration(actions.p1, .None));
     try expectEqualSlices(u1, &.{1}, Rolls.duration(actions.p2, .None));
     try expectEqualSlices(u1, &.{0}, Rolls.duration(actions.p2, .false));
@@ -757,27 +757,27 @@ test "Rolls.binding" {
 }
 
 test "Rolls.moveSlot" {
-    const actions = Actions{ .p2 = .{ .move_slot = 3 } };
+    const actions: Actions = .{ .p2 = .{ .move_slot = 3 } };
     try expectEqualSlices(u4, &.{0}, Rolls.moveSlot(actions.p1, .None));
     try expectEqualSlices(u4, &.{ 1, 2, 3, 4 }, Rolls.moveSlot(actions.p2, .None));
     try expectEqualSlices(u4, &.{0}, Rolls.moveSlot(actions.p2, .false));
 }
 
 test "Rolls.multiHit" {
-    const actions = Actions{ .p2 = .{ .multi_hit = 3 } };
+    const actions: Actions = .{ .p2 = .{ .multi_hit = 3 } };
     try expectEqualSlices(u4, &.{0}, Rolls.multiHit(actions.p1, .None));
     try expectEqualSlices(u4, &.{ 2, 3, 4, 5 }, Rolls.multiHit(actions.p2, .None));
     try expectEqualSlices(u4, &.{0}, Rolls.multiHit(actions.p2, .false));
 }
 
 test "Rolls.metronome" {
-    const actions = Actions{ .p2 = .{ .metronome = .Surf } };
+    const actions: Actions = .{ .p2 = .{ .metronome = .Surf } };
     try expectEqualSlices(Move, &.{.None}, Rolls.metronome(actions.p1));
     try expectEqual(@as(Move, @enumFromInt(24)), Rolls.metronome(actions.p2)[23]);
 }
 
 test "Rolls.psywave" {
-    const actions = Actions{ .p2 = .{ .psywave = 79 } };
+    const actions: Actions = .{ .p2 = .{ .psywave = 79 } };
     var side = Side.init(&[_]Pokemon{.{
         .species = .Bulbasaur,
         .level = 100,

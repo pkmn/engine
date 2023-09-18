@@ -157,7 +157,7 @@ pub const Calc = struct {
 
 /// Null object pattern implementation of Generation I `Calc` which does nothing, though damage
 /// calculator support should additionally be turned off entirely via `options.calc`.
-pub const NULL = Null{};
+pub const NULL: Null = .{};
 
 const Null = struct {
     pub fn overridden(
@@ -255,7 +255,7 @@ pub fn transitions(
 
         try debug(writer, template, true, .{ .color = i, .bold = true, .background = true });
 
-        var a = Actions{ .p1 = .{ .metronome = p1_move }, .p2 = .{ .metronome = p2_move } };
+        var a: Actions = .{ .p1 = .{ .metronome = p1_move }, .p2 = .{ .metronome = p2_move } };
 
         for (Rolls.speedTie(template.p1)) |tie| { a.p1.speed_tie = tie; a.p2.speed_tie = tie;
         for (Rolls.sleep(template.p1, actions.p1)) |p1_slp| { a.p1.durations.sleep = p1_slp;

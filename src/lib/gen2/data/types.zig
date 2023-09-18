@@ -33,7 +33,7 @@ pub const Type = enum(u8) {
     Dragon,
     Dark,
 
-    const CHART = [18][18]Effectiveness{
+    const CHART: [18][18]Effectiveness = .{
         [_]Effectiveness{ N, N, N, N, N, R, N, I, R, N, N, N, N, N, N, N, N, N }, // Normal
         [_]Effectiveness{ S, N, R, R, N, S, R, I, S, N, N, N, N, N, R, S, N, S }, // Fighting
         [_]Effectiveness{ N, S, N, N, N, R, S, N, R, N, N, N, S, R, N, N, N, N }, // Flying

@@ -16,7 +16,7 @@ const I = Effectiveness.Immune;
 pub const Type = enum({{{ Type.type }}}) {
     {{{ Type.values }}},
 
-    const CHART = [{{{ Type.num }}}][{{{ Type.num }}}]Effectiveness{
+    const CHART: [{{{ Type.num }}}][{{{ Type.num }}}]Effectiveness = .{
         {{{ Type.chart }}}
     };
 

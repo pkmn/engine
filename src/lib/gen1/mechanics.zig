@@ -1492,8 +1492,8 @@ fn checkFaint(
     }
 
     const foe_choice: Choice.Type = if (foe_fainted) .Switch else .Pass;
-    if (player == .P1) return Result{ .p1 = .Switch, .p2 = foe_choice };
-    return Result{ .p1 = foe_choice, .p2 = .Switch };
+    if (player == .P1) return .{ .p1 = .Switch, .p2 = foe_choice };
+    return .{ .p1 = foe_choice, .p2 = .Switch };
 }
 
 fn faint(battle: anytype, player: Player, done: bool, options: anytype) !?Result {

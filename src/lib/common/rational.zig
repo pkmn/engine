@@ -275,7 +275,7 @@ pub const BigRational = struct {
     /// Create a new BigRational wrapper.  A small amount of memory will be allocated on
     /// initialization. Not default initialized to 1 - you must explicitly `reset` first.
     pub fn init(alloc: std.mem.Allocator) !BigRational {
-        return BigRational{ .val = try std.math.big.Rational.init(alloc) };
+        return .{ .val = try std.math.big.Rational.init(alloc) };
     }
 
     /// Frees all memory associated with a rational.

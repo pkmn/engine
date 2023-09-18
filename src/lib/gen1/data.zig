@@ -386,7 +386,7 @@ pub const Volatiles = packed struct(u64) {
 };
 
 test Volatiles {
-    var volatiles = Volatiles{};
+    var volatiles: Volatiles = .{};
     volatiles.Confusion = true;
     volatiles.confusion = 2;
     volatiles.Thrashing = true;
@@ -466,7 +466,7 @@ pub const Boosts = packed struct(u32) {
 };
 
 test Boosts {
-    const boosts = Boosts{ .spc = -6 };
+    const boosts: Boosts = .{ .spc = -6 };
     try expectEqual(0, boosts.atk);
     try expectEqual(-6, boosts.spc);
 }
@@ -616,16 +616,16 @@ pub const DVs = struct {
 };
 
 test DVs {
-    var dvs = DVs{ .spc = 15, .spe = 15 };
+    var dvs: DVs = .{ .spc = 15, .spe = 15 };
     try expectEqual(@as(u4, 15), dvs.hp());
-    dvs = DVs{
+    dvs = .{
         .atk = 5,
         .def = 15,
         .spe = 13,
         .spc = 13,
     };
     try expectEqual(@as(u4, 15), dvs.hp());
-    dvs = DVs{
+    dvs = .{
         .def = 3,
         .spe = 10,
         .spc = 11,

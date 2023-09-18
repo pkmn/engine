@@ -988,7 +988,7 @@ const gen2 = struct {
 };
 
 var buf: [gen1.LOGS_SIZE]u8 = undefined;
-var stream = ByteStream{ .buffer = &buf };
+var stream: ByteStream = .{ .buffer = &buf };
 var log: FixedLog = .{ .writer = stream.writer() };
 
 const M = gen1.Move;

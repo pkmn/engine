@@ -192,7 +192,7 @@ pub const Action = packed struct(u64) {
 };
 
 test Action {
-    var a = Action{ .hit = .true, .durations = .{ .sleep = 3 }, .damage = 225 };
+    var a: Action = .{ .hit = .true, .durations = .{ .sleep = 3 }, .damage = 225 };
     a.reset();
 
     try expectEqual(Action{ .hit = .None, .durations = .{ .sleep = 3 }, .damage = 0 }, a);
@@ -501,7 +501,7 @@ pub fn expectValue(a: anytype, b: anytype) !void {
 
 /// Null object pattern implementation of Generation II `Chance` which does nothing, though chance
 /// tracking should additionally be turned off entirely via `options.chance`.
-pub const NULL = Null{};
+pub const NULL: Null = .{};
 
 const Null = struct {
     pub const Error = error{};

@@ -289,7 +289,7 @@ const TestStep = struct {
 
         const self = b.allocator.create(TestStep) catch @panic("OOM");
         const step = std.Build.Step.init(.{ .id = .custom, .name = "Run all tests", .owner = b });
-        self.* = TestStep{ .step = step, .build = test_filter == null };
+        self.* = .{ .step = step, .build = test_filter == null };
 
         const path = test_file orelse "src/lib/test.zig";
         const tests = b.addTest(.{
@@ -358,7 +358,7 @@ const ToolsStep = struct {
     pub fn create(b: *std.Build, exes: *std.ArrayList(*std.Build.CompileStep)) *ToolsStep {
         const self = b.allocator.create(ToolsStep) catch @panic("OOM");
         const step = std.Build.Step.init(.{ .id = .custom, .name = "Install tools", .owner = b });
-        self.* = ToolsStep{ .step = step };
+        self.* = .{ .step = step };
         for (exes.items) |t| self.step.dependOn(&b.addInstallArtifact(t, .{}).step);
         return self;
     }

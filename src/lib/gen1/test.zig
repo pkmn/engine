@@ -166,11 +166,11 @@ test "switching (order)" {
     var expected_buf: [22]u8 = undefined;
     var actual_buf: [22]u8 = undefined;
 
-    var expected_stream = ByteStream{ .buffer = &expected_buf };
-    var actual_stream = ByteStream{ .buffer = &actual_buf };
+    var expected_stream: ByteStream = .{ .buffer = &expected_buf };
+    var actual_stream: ByteStream = .{ .buffer = &actual_buf };
 
-    var expected = FixedLog{ .writer = expected_stream.writer() };
-    var actual = FixedLog{ .writer = actual_stream.writer() };
+    var expected: FixedLog = .{ .writer = expected_stream.writer() };
+    var actual: FixedLog = .{ .writer = actual_stream.writer() };
 
     try expected.switched(P1.ident(3), &p1.pokemon[2]);
     try expected.switched(P2.ident(2), &p2.pokemon[1]);
@@ -994,11 +994,11 @@ test "end turn (turn limit)" {
     var expected_buf: [size]u8 = undefined;
     var actual_buf: [size]u8 = undefined;
 
-    var expected_stream = ByteStream{ .buffer = &expected_buf };
-    var actual_stream = ByteStream{ .buffer = &actual_buf };
+    var expected_stream: ByteStream = .{ .buffer = &expected_buf };
+    var actual_stream: ByteStream = .{ .buffer = &actual_buf };
 
-    var expected = FixedLog{ .writer = expected_stream.writer() };
-    var actual = FixedLog{ .writer = actual_stream.writer() };
+    var expected: FixedLog = .{ .writer = expected_stream.writer() };
+    var actual: FixedLog = .{ .writer = actual_stream.writer() };
 
     const slot = if (showdown) 2 else 1;
     try expected.switched(P1.ident(slot), t.expected.p1.get(slot));
@@ -6594,7 +6594,7 @@ test "Counter + sleep = Desync Clause Mod bug" {
 
     // Choice made while sleeping should not have been saved (and lead to a desync) as
     // on the cartridge no opportunity is given for choosing a move while sleeping
-    const result = if (showdown) Result.Default else Result{ .p1 = .Switch, .p2 = .Pass };
+    const result = if (showdown) Result.Default else .{ .p1 = .Switch, .p2 = .Pass };
     try expectEqual(result, try t.update(move(if (showdown) 2 else 0), move(3)));
     // (6/7) * (255/256)
     try if (showdown) t.expectProbability(6, 7) else t.expectProbability(765, 896);
@@ -7594,7 +7594,7 @@ test "Bide damage accumulation glitches" {
 
         _ = t.battle.actual.choices(.P2, .Move, &choices);
 
-        const result = if (showdown) Result{ .p1 = .Switch, .p2 = .Pass } else Result.Error;
+        const result = if (showdown) .{ .p1 = .Switch, .p2 = .Pass } else Result.Error;
         try expectEqual(result, try t.update(move(2), move(if (showdown) 2 else 0)));
         try t.expectProbability(765, 32768); // (255/256) * (234/256) * (1/39)
 
@@ -9990,11 +9990,11 @@ test "MAX_LOGS" {
     var expected_buf: [data.MAX_LOGS]u8 = undefined;
     var actual_buf: [data.MAX_LOGS]u8 = undefined;
 
-    var expected_stream = ByteStream{ .buffer = &expected_buf };
-    var actual_stream = ByteStream{ .buffer = &actual_buf };
+    var expected_stream: ByteStream = .{ .buffer = &expected_buf };
+    var actual_stream: ByteStream = .{ .buffer = &actual_buf };
 
-    var expected = FixedLog{ .writer = expected_stream.writer() };
-    var actual = FixedLog{ .writer = actual_stream.writer() };
+    var expected: FixedLog = .{ .writer = expected_stream.writer() };
+    var actual: FixedLog = .{ .writer = actual_stream.writer() };
 
     try expected.activate(P1.ident(1), .Confusion);
     try expected.move(P1.ident(1), Move.Metronome, P1.ident(1), null);
@@ -10137,11 +10137,11 @@ fn Test(comptime rolls: anytype) type {
             var expected_buf: [22]u8 = undefined;
             var actual_buf: [22]u8 = undefined;
 
-            var expected_stream = ByteStream{ .buffer = &expected_buf };
-            var actual_stream = ByteStream{ .buffer = &actual_buf };
+            var expected_stream: ByteStream = .{ .buffer = &expected_buf };
+            var actual_stream: ByteStream = .{ .buffer = &actual_buf };
 
-            var expected = FixedLog{ .writer = expected_stream.writer() };
-            var actual = FixedLog{ .writer = actual_stream.writer() };
+            var expected: FixedLog = .{ .writer = expected_stream.writer() };
+            var actual: FixedLog = .{ .writer = actual_stream.writer() };
 
             try expected.switched(P1.ident(1), self.actual.p1.get(1));
             try expected.switched(P2.ident(1), self.actual.p2.get(1));

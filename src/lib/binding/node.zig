@@ -88,7 +88,7 @@ fn update(gen: anytype) c.napi_callback {
                     assert(data != null);
 
                     var buf = @as([*]u8, @ptrCast(data.?))[0..gen.LOGS_SIZE];
-                    var stream = pkmn.protocol.ByteStream{ .buffer = buf };
+                    var stream: pkmn.protocol.ByteStream = .{ .buffer = buf };
                     // TODO: extract out
                     var opts = pkmn.battle.options(
                         pkmn.protocol.FixedLog{ .writer = stream.writer() },
