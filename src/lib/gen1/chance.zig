@@ -832,6 +832,10 @@ test "Chance.sleep" {
     }
 }
 
+test "Chance.disable" {
+    return error.SkipZigTest; // TODO
+}
+
 test "Chance.confusion" {
     var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
 

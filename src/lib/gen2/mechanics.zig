@@ -369,9 +369,9 @@ fn beforeMove(battle: anytype, player: Player, options: anytype) !void {
         // }
 
         const duration = Status.duration(stored.status);
-        // if (!Status.is(stored.status, .EXT)) {
-        //     try options.chance.sleep(player, duration);
-        // }
+        if (!Status.is(stored.status, .EXT)) {
+            try options.chance.sleep(player, duration);
+        }
 
         if (duration == 0) {
             try log.curestatus(ident, before, .Message);
@@ -390,6 +390,54 @@ fn beforeMove(battle: anytype, player: Player, options: anytype) !void {
         try log.cant(ident, .Freeze);
         cantMove(volatiles);
         return .done;
+    }
+
+    if (volatiles.Flinch) {
+        // Pokémon Showdown doesn't clear Flinch until its imaginary "residual" phase, meaning
+        // Pokémon can sometimes flinch multiple times from the same original hit
+        // if (!showdown) volatiles.Flinch = false;
+        volatiles.Flinch = false;
+        cantMove(volatiles);
+        try log.cant(ident, .Flinch);
+        return .done;
+    }
+
+    if (volatiles.disabled_duration > 0) {
+        // if (options.calc.modify(player, .disable)) |extend| {
+        //     if (!extend) volatiles.disabled_duration = 0;
+        // } else {
+        volatiles.disabled_duration -= 1;
+        // }
+        try options.chance.disable(player, volatiles.disabled_duration);
+
+        if (volatiles.disabled_duration == 0) {
+            volatiles.disabled_move = 0;
+            try log.end(ident, .Disable);
+        }
+    }
+
+    if (volatiles.Confusion) {
+        assert(volatiles.confusion > 0);
+
+        // if (options.calc.modify(player, .confusion)) |extend| {
+        //     if (!extend) volatiles.confusion = 0;
+        // } else {
+        volatiles.confusion -= 1;
+        // }
+        try options.chance.confusion(player, volatiles.confusion);
+
+        if (volatiles.confusion == 0) {
+            volatiles.Confusion = false;
+            try log.end(ident, .Confusion);
+        } else {
+            try log.activate(ident, .Confusion);
+
+            if (try Rolls.confused(battle, player, options)) {
+                cantMove(volatiles);
+                // TODO
+                return .done;
+            }
+        }
     }
 }
 
@@ -551,7 +599,7 @@ fn applyDamage(
 fn checkHit(battle: anytype, player: Player, move: Move.Data, options: anytype) !bool {
     if (moveHit(battle, player, move, options)) return true;
 
-    try options.chance.commit(player, .miss);
+    // try options.chance.commit(player, .miss);
     try options.log.lastmiss();
     try options.log.miss(battle.active(player));
 
@@ -818,6 +866,18 @@ pub const Rolls = struct {
 
         try options.chance.hit(player, ok, accuracy);
         return ok;
+    }
+
+    inline fn confused(battle: anytype, player: Player, options: anytype) !bool {
+        const cfz = if (options.calc.overridden(player, .confused)) |val|
+            val == .true
+        else if (showdown)
+            !battle.rng.chance(u8, 128, 256)
+        else
+            battle.rng.next() >= Gen12.percent(50) + 1;
+
+        try options.chance.confused(player, cfz);
+        return cfz;
     }
 
     const METRONOME = init: {
