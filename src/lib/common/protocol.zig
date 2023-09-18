@@ -182,6 +182,8 @@ pub const Activate = enum(u8) {
     Struggle,
     Substitute,
     Splash,
+
+    Attract,
 };
 
 pub const Start = enum(u8) {

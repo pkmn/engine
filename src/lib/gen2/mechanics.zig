@@ -341,7 +341,7 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, options: anytype
     return doMove(battle, player, options, mslot);
 }
 
-fn beforeMove(battle: anytype, player: Player, options: anytype) !void {
+fn beforeMove(battle: anytype, player: Player, options: anytype) !bool {
     var log = options.log;
     var side = battle.side(player);
     // const foe = battle.foe(player);
@@ -356,7 +356,7 @@ fn beforeMove(battle: anytype, player: Player, options: anytype) !void {
         volatiles.Recharging = false;
         cantMove(volatiles);
         try log.cant(ident, .Recharge);
-        return .done;
+        return false;
     }
 
     if (Status.is(stored.status, .SLP)) slp: {
@@ -382,14 +382,14 @@ fn beforeMove(battle: anytype, player: Player, options: anytype) !void {
             try log.cant(ident, .Sleep);
             if (move == .Snore or move == .SleepTalk) break :slp;
             cantMove(volatiles);
-            return .done;
+            return false;
         }
     }
 
     if (Status.is(stored.status, .FRZ) and !(move == .FlameWheel or move == .SacredFire)) {
-        try log.cant(ident, .Freeze);
         cantMove(volatiles);
-        return .done;
+        try log.cant(ident, .Freeze);
+        return false;
     }
 
     if (volatiles.Flinch) {
@@ -399,7 +399,7 @@ fn beforeMove(battle: anytype, player: Player, options: anytype) !void {
         volatiles.Flinch = false;
         cantMove(volatiles);
         try log.cant(ident, .Flinch);
-        return .done;
+        return false;
     }
 
     if (volatiles.disabled_duration > 0) {
@@ -433,12 +433,58 @@ fn beforeMove(battle: anytype, player: Player, options: anytype) !void {
             try log.activate(ident, .Confusion);
 
             if (try Rolls.confused(battle, player, options)) {
-                cantMove(volatiles);
-                // TODO
-                return .done;
+                // TODO: see if gets merged?
+                // volatiles.BeatUp = false;
+                // volatiles.Flinch = false;
+                // cantMove(volatiles);
+
+                volatiles.Bide = false;
+                volatiles.Thrashing = false;
+                volatiles.BeatUp = false;
+                volatiles.Flinch = false;
+                volatiles.Charging = false;
+                volatiles.Underground = false;
+                volatiles.Flying = false;
+
+                volatiles.Rollout = false;
+
+                volatiles.fury_cutter = 0;
+
+                // TODO HitConfusion
+
+                return false;
             }
         }
     }
+
+    if (volatiles.Attract) {
+        try log.activate(ident, .Attract);
+
+        if (try Rolls.attract(battle, player, options)) {
+            cantMove(volatiles);
+            try log.cant(ident, .Attract);
+            return false;
+        }
+    }
+
+    if (side.active.volatiles.disabled_move != 0) {
+        // A Pokémon that transforms after being disabled may end up with less move slots
+        const m = side.active.moves[side.active.volatiles.disabled_move - 1].id;
+        if (m != .None and m == move) {
+            side.active.volatiles.Charging = false;
+            cantMove(volatiles);
+            try options.log.disabled(ident, move);
+            return false;
+        }
+    }
+
+    if (Status.is(stored.status, .PAR) and try Rolls.paralyzed(battle, player, options)) {
+        cantMove(volatiles);
+        try log.cant(ident, .Paralysis);
+        return false;
+    }
+
+    return true;
 }
 
 fn cantMove(volatiles: *Volatiles) void {
@@ -880,6 +926,18 @@ pub const Rolls = struct {
         return cfz;
     }
 
+    inline fn attract(battle: anytype, player: Player, options: anytype) !bool {
+        const cant = if (options.calc.overridden(player, .attract)) |val|
+            val == .true
+        else if (showdown)
+            battle.rng.chance(u8, 1, 2)
+        else
+            battle.rng.next() > Gen12.percent(50) + 1;
+
+        try options.chance.attract(player, cant);
+        return cant;
+    }
+
     const METRONOME = init: {
         var num = 0;
         var moves: [238]Move = undefined;
@@ -903,10 +961,14 @@ test "RNG agreement" {
 
     var spe = rng.FixedRNG(2, expected.len){ .rolls = expected };
     var qkc = rng.FixedRNG(2, expected.len){ .rolls = expected };
+    var cfz = rng.FixedRNG(2, expected.len){ .rolls = expected };
+    var atr = rng.FixedRNG(2, expected.len){ .rolls = expected };
 
     for (0..expected.len) |i| {
         try expectEqual(spe.range(u8, 0, 2) == 0, i < Gen12.percent(50) + 1);
         try expectEqual(qkc.chance(u8, 60, 256), i < 60);
+        try expectEqual(!cfz.chance(u8, 128, 256), i >= Gen12.percent(50) + 1);
+        try expectEqual(atr.chance(u8, 1, 2), i < Gen12.percent(50) + 1);
     }
 }
 

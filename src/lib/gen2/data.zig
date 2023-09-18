@@ -285,11 +285,13 @@ pub const Status = gen1.Status;
 pub const Volatiles = packed struct(u128) {
     Bide: bool = false,
     Thrashing: bool = false,
+    BeatUp: bool = false,
     Flinch: bool = false,
     Charging: bool = false,
     Underground: bool = false,
     Flying: bool = false,
     Confusion: bool = false,
+
     Mist: bool = false,
     FocusEnergy: bool = false,
     Substitute: bool = false,
@@ -307,11 +309,11 @@ pub const Volatiles = packed struct(u128) {
     Endure: bool = false,
     Rollout: bool = false,
     Attract: bool = false,
+
     DefenseCurl: bool = false,
     Encore: bool = false,
     LockOn: bool = false,
     DestinyBond: bool = false,
-    BeatUp: bool = false,
 
     trapped: bool = false,
     switched: bool = false,

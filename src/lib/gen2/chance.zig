@@ -123,8 +123,10 @@ pub const Action = packed struct(u64) {
 
     /// If not None, the value to return for Rolls.confused.
     confused: Optional(bool) = .None,
+    /// If not None, the value to return for Rolls.attract.
+    attract: Optional(bool) = .None,
 
-    _: u30 = 0,
+    _: u28 = 0,
 
     /// Observed values of various durations. Does not influence future RNG calls. TODO
     durations: Duration = .{},
@@ -303,6 +305,13 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.get(player).confused = if (cfz) .true else .false;
         }
 
+        pub fn attract(self: *Self, player: Player, cant: bool) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(1, 2);
+            self.actions.get(player).attract = if (cant) .true else .false;
+        }
+
         pub fn sleep(self: *Self, player: Player, turns: u4) Error!void {
             if (!enabled) return;
 
@@ -431,6 +440,20 @@ test "Chance.confused" {
     try chance.confused(.P2, true);
     try expectProbability(&chance.probability, 1, 2);
     try expectValue(Optional(bool).true, chance.actions.p2.confused);
+}
+
+test "Chance.attract" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.attract(.P1, false);
+    try expectProbability(&chance.probability, 1, 2);
+    try expectValue(Optional(bool).false, chance.actions.p1.attract);
+
+    chance.reset();
+
+    try chance.attract(.P2, true);
+    try expectProbability(&chance.probability, 1, 2);
+    try expectValue(Optional(bool).true, chance.actions.p2.attract);
 }
 
 test "Chance.sleep" {
