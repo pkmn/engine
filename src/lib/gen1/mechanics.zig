@@ -3035,11 +3035,11 @@ test "RNG agreement" {
         expected[i] = @intCast(i * 0x1000000);
     }
 
-    var spe = rng.FixedRNG(1, expected.len){ .rolls = expected };
-    var cfz = rng.FixedRNG(1, expected.len){ .rolls = expected };
-    var par = rng.FixedRNG(1, expected.len){ .rolls = expected };
-    var brn = rng.FixedRNG(1, expected.len){ .rolls = expected };
-    var eff = rng.FixedRNG(1, expected.len){ .rolls = expected };
+    var spe: rng.FixedRNG(1, expected.len) = .{ .rolls = expected };
+    var cfz: rng.FixedRNG(1, expected.len) = .{ .rolls = expected };
+    var par: rng.FixedRNG(1, expected.len) = .{ .rolls = expected };
+    var brn: rng.FixedRNG(1, expected.len) = .{ .rolls = expected };
+    var eff: rng.FixedRNG(1, expected.len) = .{ .rolls = expected };
 
     for (0..expected.len) |i| {
         try expectEqual(spe.range(u8, 0, 2) == 0, i < Gen12.percent(50) + 1);
