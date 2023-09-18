@@ -20,6 +20,7 @@ const Result = common.Result;
 
 const showdown = pkmn.options.showdown;
 
+const Cant = protocol.Cant;
 const Damage = protocol.Damage;
 const Heal = protocol.Heal;
 
@@ -36,6 +37,7 @@ const Stats = data.Stats;
 const Status = data.Status;
 const Type = data.Type;
 const Types = data.Types;
+const Volatiles = data.Volatiles;
 
 // zig fmt: off
 const STAT_BOOSTS = &[_][2]u8{
@@ -340,9 +342,66 @@ fn executeMove(battle: anytype, player: Player, choice: Choice, options: anytype
 }
 
 fn beforeMove(battle: anytype, player: Player, options: anytype) !void {
-    _ = battle;
-    _ = player;
-    _ = options;
+    var log = options.log;
+    var side = battle.side(player);
+    // const foe = battle.foe(player);
+    var active = &side.active;
+    var stored = side.stored();
+    const ident = battle.active(player);
+    var volatiles = &active.volatiles;
+
+    const move = Move.Pound; // TODO
+
+    if (volatiles.Recharging) {
+        volatiles.Recharging = false;
+        cantMove(volatiles);
+        try log.cant(ident, .Recharge);
+        return .done;
+    }
+
+    if (Status.is(stored.status, .SLP)) slp: {
+        const before = stored.status;
+        // Even if the EXT bit is set this will still correctly modify the sleep duration
+        // if (options.calc.modify(player, .sleep)) |extend| {
+        //     if (!extend) stored.status = 0;
+        // } else {
+        stored.status -= 1;
+        // }
+
+        const duration = Status.duration(stored.status);
+        // if (!Status.is(stored.status, .EXT)) {
+        //     try options.chance.sleep(player, duration);
+        // }
+
+        if (duration == 0) {
+            try log.curestatus(ident, before, .Message);
+            stored.status = 0; // clears EXT if present
+            cantMove(volatiles);
+            volatiles.Nightmare = false;
+        } else {
+            try log.cant(ident, .Sleep);
+            if (move == .Snore or move == .SleepTalk) break :slp;
+            cantMove(volatiles);
+            return .done;
+        }
+    }
+
+    if (Status.is(stored.status, .FRZ) and !(move == .FlameWheel or move == .SacredFire)) {
+        try log.cant(ident, .Freeze);
+        cantMove(volatiles);
+        return .done;
+    }
+}
+
+fn cantMove(volatiles: *Volatiles) void {
+    volatiles.Bide = false;
+    volatiles.Thrashing = false;
+    volatiles.Charging = false;
+    volatiles.Underground = false;
+    volatiles.Flying = false;
+    volatiles.Rollout = false;
+
+    volatiles.fury_cutter = 0;
 }
 
 fn canMove(battle: anytype, player: Player, options: anytype) !bool {
