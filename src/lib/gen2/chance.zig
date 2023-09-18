@@ -329,7 +329,7 @@ pub fn Chance(comptime Rational: type) type {
                 if (n != 9) try self.probability.update(1, 10 - @as(u4, n));
                 durations.disable = 0;
             } else {
-                assert(n >= 3 and n < 9);
+                assert(n >= 1 and n < 9);
                 try self.probability.update(10 - @as(u4, n) - 3, 10 - @as(u4, n));
                 durations.disable += 1;
             }

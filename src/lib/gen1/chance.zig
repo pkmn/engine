@@ -833,7 +833,25 @@ test "Chance.sleep" {
 }
 
 test "Chance.disable" {
-    return error.SkipZigTest; // TODO
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    for ([_]u8{ 8, 7, 6, 5, 4, 3, 2, 1 }, 1..9) |d, i| {
+        chance.actions.p1.durations.disable = @intCast(i);
+        try chance.disable(.P1, 0);
+        try expectProbability(&chance.probability, 1, d);
+        try expectValue(@as(u4, 0), chance.actions.p1.durations.disable);
+
+        chance.reset();
+
+        if (i < 8) {
+            chance.actions.p1.durations.disable = @intCast(i);
+            try chance.disable(.P1, 1);
+            try expectProbability(&chance.probability, d - 1, d);
+            try expectValue(@as(u4, @intCast(i)) + 1, chance.actions.p1.durations.disable);
+
+            chance.reset();
+        }
+    }
 }
 
 test "Chance.confusion" {
