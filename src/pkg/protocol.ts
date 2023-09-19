@@ -126,6 +126,8 @@ export class Log {
 type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 type Decoder = (this: Log, offset: number, data: DataView) => {offset: number; line: ParsedLine};
 
+const GENDERS: GenderName[] = ['M', 'F', 'N'];
+
 const CANT = new Array<Protocol.Reason>(PROTOCOL.Cant.length);
 CANT[PROTOCOL.Cant.Sleep] = 'slp';
 CANT[PROTOCOL.Cant.Freeze] = 'frz';
@@ -160,39 +162,57 @@ FAIL[PROTOCOL.Fail.Freeze] = 'frz';
 FAIL[PROTOCOL.Fail.Paralysis] = 'par';
 FAIL[PROTOCOL.Fail.Toxic] = 'tox';
 
-const ACTIVATE = new Array(PROTOCOL.Activate.length);
-ACTIVATE[PROTOCOL.Activate.Bide] = 'Bide' as Protocol.MoveName;
-ACTIVATE[PROTOCOL.Activate.Confusion] = 'confusion' as Protocol.EffectName;
-ACTIVATE[PROTOCOL.Activate.Haze] = 'move: Haze' as Protocol.EffectName;
-ACTIVATE[PROTOCOL.Activate.Mist] = 'move: Mist' as Protocol.EffectName;
-ACTIVATE[PROTOCOL.Activate.Struggle] = 'move: Struggle' as Protocol.EffectName;
-ACTIVATE[PROTOCOL.Activate.Substitute] = 'Substitute' as Protocol.MoveName;
-ACTIVATE [PROTOCOL.Activate.Splash] = 'move: Splash' as Protocol.EffectName;
+const ACTIVATE = [new Array(PROTOCOL.Activate.length)];
+ACTIVATE[0][PROTOCOL.Activate.Bide] = 'Bide' as Protocol.MoveName;
+ACTIVATE[0][PROTOCOL.Activate.Confusion] = 'confusion' as Protocol.EffectName;
+ACTIVATE[0][PROTOCOL.Activate.Haze] = 'move: Haze' as Protocol.EffectName;
+ACTIVATE[0][PROTOCOL.Activate.Mist] = 'move: Mist' as Protocol.EffectName;
+ACTIVATE[0][PROTOCOL.Activate.Struggle] = 'move: Struggle' as Protocol.EffectName;
+ACTIVATE[0][PROTOCOL.Activate.Substitute] = 'Substitute' as Protocol.MoveName;
+ACTIVATE[0][PROTOCOL.Activate.Splash] = 'move: Splash' as Protocol.EffectName;
 
-const START = new Array(PROTOCOL.Start.length);
-START[PROTOCOL.Start.Bide] = 'Bide' as Protocol.MoveName;
-START[PROTOCOL.Start.Confusion] = 'confusion' as Protocol.EffectName;
-START[PROTOCOL.Start.ConfusionSilent] = 'confusion' as Protocol.EffectName;
-START[PROTOCOL.Start.FocusEnergy] = 'move: Focus Energy' as Protocol.EffectName;
-START[PROTOCOL.Start.LeechSeed] = 'move: Leech Seed' as Protocol.EffectName;
-START[PROTOCOL.Start.LightScreen] = 'Light Screen' as Protocol.MoveName;
-START[PROTOCOL.Start.Mist] = 'Mist' as Protocol.MoveName;
-START[PROTOCOL.Start.Reflect] = 'Reflect' as Protocol.MoveName;
-START[PROTOCOL.Start.Substitute] = 'Substitute' as Protocol.MoveName;
+ACTIVATE[1] = ACTIVATE[0].slice(0);
+ACTIVATE[1][PROTOCOL.Activate.Bide] = 'move: Bide' as Protocol.EffectName;
 
-const END = new Array(PROTOCOL.End.length);
-END[PROTOCOL.End.Disable] = 'Disable' as Protocol.MoveName;
-END[PROTOCOL.End.Confusion] = 'confusion' as Protocol.EffectName;
-END[PROTOCOL.End.Bide] = 'Bide' as Protocol.MoveName;
-END[PROTOCOL.End.Substitute] = 'Substitute' as Protocol.MoveName;
-END[PROTOCOL.End.DisableSilent] = 'Disable' as Protocol.MoveName;
-END[PROTOCOL.End.ConfusionSilent] = 'confusion' as Protocol.EffectName;
-END[PROTOCOL.End.Mist] = 'Mist' as ID;
-END[PROTOCOL.End.FocusEnergy] = 'move: Focus Energy' as ID;
-END[PROTOCOL.End.LeechSeed] = 'move: Leech Seed' as ID;
-END[PROTOCOL.End.Toxic] = 'Toxic counter' as Protocol.EffectName;
-END[PROTOCOL.End.LightScreen] = 'Light Screen' as ID;
-END[PROTOCOL.End.Reflect] = 'Reflect' as ID;
+const START = [new Array(PROTOCOL.Start.length)];
+START[0][PROTOCOL.Start.Bide] = 'Bide' as Protocol.MoveName;
+START[0][PROTOCOL.Start.Confusion] = 'confusion' as Protocol.EffectName;
+START[0][PROTOCOL.Start.ConfusionSilent] = 'confusion' as Protocol.EffectName;
+START[0][PROTOCOL.Start.FocusEnergy] = 'move: Focus Energy' as Protocol.EffectName;
+START[0][PROTOCOL.Start.LeechSeed] = 'move: Leech Seed' as Protocol.EffectName;
+START[0][PROTOCOL.Start.LightScreen] = 'Light Screen' as Protocol.MoveName;
+START[0][PROTOCOL.Start.Mist] = 'Mist' as Protocol.MoveName;
+START[0][PROTOCOL.Start.Reflect] = 'Reflect' as Protocol.MoveName;
+START[0][PROTOCOL.Start.Substitute] = 'Substitute' as Protocol.MoveName;
+
+START[1] = START[0].slice(0);
+START[1][PROTOCOL.Start.Bide] = 'move: Bide' as Protocol.EffectName;
+
+const END = [new Array(PROTOCOL.End.length)];
+END[0][PROTOCOL.End.Disable] = 'Disable' as Protocol.MoveName;
+END[0][PROTOCOL.End.Confusion] = 'confusion' as Protocol.EffectName;
+END[0][PROTOCOL.End.Bide] = 'Bide' as Protocol.MoveName;
+END[0][PROTOCOL.End.Substitute] = 'Substitute' as Protocol.MoveName;
+END[0][PROTOCOL.End.DisableSilent] = 'Disable' as Protocol.MoveName;
+END[0][PROTOCOL.End.ConfusionSilent] = 'confusion' as Protocol.EffectName;
+END[0][PROTOCOL.End.Mist] = 'Mist' as ID;
+END[0][PROTOCOL.End.FocusEnergy] = 'move: Focus Energy' as ID;
+END[0][PROTOCOL.End.LeechSeed] = 'move: Leech Seed' as ID;
+END[0][PROTOCOL.End.Toxic] = 'Toxic counter' as Protocol.EffectName;
+END[0][PROTOCOL.End.LightScreen] = 'Light Screen' as ID;
+END[0][PROTOCOL.End.Reflect] = 'Reflect' as ID;
+END[0][PROTOCOL.End.BideSilent] = 'move: Bide' as ID;
+
+END[1] = END[0].slice(0);
+END[1][PROTOCOL.End.Disable] = 'move: Disable' as Protocol.EffectName;
+END[1][PROTOCOL.End.Bide] = 'move: Bide' as Protocol.EffectName;
+END[1][PROTOCOL.End.LeechSeed] = 'Leech Seed' as Protocol.MoveName;
+
+const SIDE = new Array(PROTOCOL.Side.length);
+SIDE[PROTOCOL.Side.Safeguard] = 'Safeguard' as Protocol.MoveName;
+SIDE[PROTOCOL.Side.Reflect] = 'Reflect' as Protocol.MoveName;
+SIDE[PROTOCOL.Side.LightScreen] = 'move: Light Screen' as Protocol.MoveName;
+SIDE[PROTOCOL.Side.Spikes] = 'Spikes' as Protocol.MoveName;
 
 const DECODERS = new Array<Decoder>(ArgType.length);
 DECODERS[ArgType.Move] = function (offset, data) {
@@ -213,7 +233,7 @@ DECODERS[ArgType.Move] = function (offset, data) {
 DECODERS[ArgType.Switch] = function (offset, data) {
   const ident = decodeIdent(this.info, data.getUint8(offset++));
   const details = decodeDetails(offset, data, this.gen, this.lookup);
-  offset += 2;
+  offset += this.gen.num > 1 ? 3 : 2;
   const hpStatus = decodeHPStatus(offset, data);
   offset += 5;
   const args = ['switch', ident, details, hpStatus] as Protocol.Args['|switch|'];
@@ -361,9 +381,10 @@ DECODERS[ArgType.Activate] = function (offset, data) {
   const ident = decodeIdent(this.info, data.getUint8(offset++));
   const reason = data.getUint8(offset++);
   const type = reason === PROTOCOL.Activate.Mist ? '-block' : '-activate';
+  const activate = ACTIVATE[this.gen.num - 1];
   const args = reason === PROTOCOL.Activate.Splash
-    ? [type, '', ACTIVATE[reason]] as Protocol.Args['|-activate|']
-    : [type, ident, ACTIVATE[reason], ''] as Protocol.Args['|-activate|' | '|-block|'];
+    ? [type, '', activate[reason]] as Protocol.Args['|-activate|']
+    : [type, ident, activate[reason], ''] as Protocol.Args['|-activate|' | '|-block|'];
   const kwArgs = reason === PROTOCOL.Activate.Substitute ? {damage: true} as const : {};
   return {offset, line: {args, kwArgs}};
 };
@@ -378,7 +399,7 @@ DECODERS[ArgType.Start] = function (offset, data) {
   let args: Protocol.Args['|-start|'];
   const kwArgs = {} as Writeable<Protocol.BattleArgsKWArgs['|-start|']>;
   if (reason < PROTOCOL.Start.TypeChange) {
-    args = ['-start', ident, START[reason]];
+    args = ['-start', ident, START[this.gen.num - 1][reason]];
     if (reason === PROTOCOL.Start.ConfusionSilent) kwArgs.silent = true;
   } else if (reason === PROTOCOL.Start.TypeChange) {
     const types = decodeTypes(this.lookup, data.getUint8(offset++));
@@ -396,7 +417,7 @@ DECODERS[ArgType.Start] = function (offset, data) {
 DECODERS[ArgType.End] = function (offset, data) {
   const ident = decodeIdent(this.info, data.getUint8(offset++));
   const reason = data.getUint8(offset++);
-  const args = ['-end', ident, END[reason]] as Protocol.Args['|-end|'];
+  const args = ['-end', ident, END[this.gen.num - 1][reason]] as Protocol.Args['|-end|'];
   const kwArgs = reason >= PROTOCOL.End.DisableSilent ? {silent: true} as const : {};
   return {offset, line: {args, kwArgs}};
 };
@@ -443,8 +464,12 @@ function decodeDetails(
   lookup: Lookup,
 ): Protocol.PokemonDetails {
   const species = gen.species.get(lookup.speciesByNum(data.getUint8(offset++)))!.name;
+  const gender = gen.num > 1 ? GENDERS[data.getUint8(offset++)] : 'N';
   const level = data.getUint8(offset);
-  return (level === 100 ? species : `${species}, L${level}`) as Protocol.PokemonDetails;
+
+  const mf = gender === 'N' ? '' : `, ${gender}`;
+  const lvl = level === 100 ? '' : `, L${level}`;
+  return `${species}${mf}${lvl}` as Protocol.PokemonDetails;
 }
 
 function decodeHPStatus(offset: number, data: DataView): Protocol.PokemonHPStatus {

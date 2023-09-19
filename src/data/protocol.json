@@ -170,7 +170,8 @@
     "LeechSeed",
     "Toxic",
     "LightScreen",
-    "Reflect"
+    "Reflect",
+    "BideSilent"
   ],
   "Immune": [
     "None",
@@ -184,13 +185,7 @@
     "None",
     "Silent"
   ],
-  "SideStart": [
-    "Safeguard",
-    "Reflect",
-    "LightScreen",
-    "Spikes"
-  ],
-  "SideEnd": [
+  "Side": [
     "Safeguard",
     "Reflect",
     "LightScreen",

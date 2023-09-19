@@ -445,7 +445,7 @@ fn beforeMove(battle: anytype, player: Player, options: anytype) !bool {
     }
 
     if (volatiles.Attract) {
-        try log.activate(ident, .Attract);
+        try log.atrract(ident, .Attract);
 
         if (try Rolls.attract(battle, player, options)) {
             cantMove(volatiles);

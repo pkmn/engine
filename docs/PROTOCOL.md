@@ -356,19 +356,20 @@ The battle has ended in a tie.
       +---------------+
 
 The Pokémon identified by [`Ident`](#pokemonident) has taken damage and now has the `Current HP`,
-`Max HP` and `Status`. If `Reason` is in `0x04` then the following byte indicates the
+`Max HP` and `Status`. If `Reason` is in `0x05` then the following byte indicates the
 [`PokemonIdent`](#pokemonident) is the source `[of]` the damage.
 
 <details><summary>Reason</summary>
 
-| Raw    | Description    | `[of]`? |
-| ------ | -------------- | ------- |
-| `0x00` | None           | No      |
-| `0x01` | `psn`          | No      |
-| `0x02` | `brn`          | No      |
-| `0x03` | `confusion`    | No      |
-| `0x04` | `Leech Seed`   | No      |
-| `0x05` | `Recoil\|[of]` | Yes     |
+| Raw    | Description     | `[of]`? |
+| ------ | --------------- | ------- |
+| `0x00` | None            | No      |
+| `0x01` | `psn`           | No      |
+| `0x02` | `brn`           | No      |
+| `0x03` | `confusion`     | No      |
+| `0x04` | `Leech Seed`    | No      |
+| `0x05` | `Recoil\|[of]`  | Yes     |
+| `0x06` | `[from] Spikes` | No      |
 
 </details>
 
@@ -385,8 +386,8 @@ The Pokémon identified by [`Ident`](#pokemonident) has taken damage and now has
      8| [of]?         |
       +---------------+
 
-Equivalent to `|-damage|` (preceding), but the Pokémon has healed damage instead. If `Reason` is `0x02`
-then the damage was healed `[from]` a draining move indicated by the subsequent byte `[of]`.
+Equivalent to `|-damage|` (preceding), but the Pokémon has healed damage instead. If `Reason` is
+`0x02` then the damage was healed `[from]` a draining move indicated by the subsequent byte `[of]`.
 
 <details><summary>Reason</summary>
 
@@ -395,6 +396,7 @@ then the damage was healed `[from]` a draining move indicated by the subsequent 
 | `0x00` | None                   | No      |
 | `0x01` | `\|[silent]`           | No      |
 | `0x02` | `\|[from] drain\|[of]` | Yes     |
+| `0x03` | `\|[from] Leftovers`   | No      |
 </details>
 
 ### `|-status|` (`0x0C`)
@@ -606,7 +608,7 @@ or `0x0B` then the following byte indicates the `Move` which has been Disable-d/
 
 | Raw    | Description                                      | Move/Types? | `[of]`? |
 | ------ | ------------------------------------------------ | ----------- | ------- |
-| `0x00` | `Bide`                                           | No          | No      |
+| `0x00` | `Bide`\*                                         | No          | No      |
 | `0x01` | `confusion`                                      | No          | No      |
 | `0x02` | `confusion\|[silent]`                            | No          | No      |
 | `0x03` | `move: Focus Energy`                             | No          | No      |
@@ -618,6 +620,8 @@ or `0x0B` then the following byte indicates the `Move` which has been Disable-d/
 | `0x09` | `typechange\|...\|[from] move: Conversion\|[of]` | Yes         | Yes     |
 | `0x0A` | `Disable\|`                                      | Yes         | No      |
 | `0x0B` | `Mimic\|`                                        | Yes         | No      |
+
+\**`0x00` corresponds to `move: Bide` in Generation II.*
 </details>
 
 ### `|-end|` (`0x18`)
@@ -632,13 +636,15 @@ or `0x0B` then the following byte indicates the `Move` which has been Disable-d/
 A volatile status from `Reason` inflicted on the Pokémon identified by [`Ident`](#pokemonident) has
 ended.
 
+FIXME leechseed From Of
+
 <details><summary>Reason</summary>
 
 | Raw    | Description               |
 | ------ | ------------------------- |
-| `0x00` | `Disable`                 |
+| `0x00` | `Disable`\*               |
 | `0x01` | `confusion`               |
-| `0x02` | `Bide`                    |
+| `0x02` | `Bide`\*                  |
 | `0x03` | `Substitute`              |
 | `0x04` | `Disable\|[silent]`       |
 | `0x05` | `confusion\|[silent]`     |
@@ -648,6 +654,9 @@ ended.
 | `0x09` | `Toxic counter\|[silent]` |
 | `0x0A` | `lightscreen\|[silent]`   |
 | `0x0B` | `reflect\|[silent]`       |
+| `0x0C` | `move: Bide\|[silent]`    |
+
+\**`0x00` corresponds to `move: Disable` and `0x02`  to `move: Bide` in Generation II.*
 </details>
 
 ### `|-ohko|` (`0x19`)
@@ -844,12 +853,12 @@ A side condition from `Reason` started on the side belonging to `Player`.
 
 <details><summary>Reason</summary>
 
-| Raw    | Description       |
-| ------ | ----------------- |
-| `0x00` | `Safeguard`       |
-| `0x01` | `move: Safeguard` |
-| `0x02` | `Reflect`         |
-| `0x03` | `Spikes`          |
+| Raw    | Description          |
+| ------ | -------------------- |
+| `0x00` | `Safeguard`          |
+| `0x01` | `move: Light Screen` |
+| `0x02` | `Reflect`            |
+| `0x03` | `Spikes`             |
 </details>
 
 ### `|-sideend|` (`0x27`)

@@ -134,6 +134,9 @@
         "@typescript-eslint/no-redundant-type-constituents": "off"
       }
     }, {
+      "files": ["src/pkg/protocol.test.ts"],
+      "rules": {"jest/no-standalone-expect": "off", "jest/no-conditional-expect": "off"}
+    }, {
       "files": ["src/test/*.test.ts", "src/test/regression/*.test.ts"],
       "rules": {"jest/no-standalone-expect": "off"}
     }, {

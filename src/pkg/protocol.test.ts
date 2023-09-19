@@ -29,7 +29,7 @@ const parse = (chunk: string) =>
   Array.from(Protocol.parse(chunk)).map(({args, kwArgs}) => ({args, kwArgs}));
 
 for (const gen of new Generations(Dex as any)) {
-  if (gen.num > 1) break;
+  if (gen.num > 2) break;
 
   describe(`Gen ${gen.num}`, () => {
     const log = new Log(gen, Lookup.get(gen), new Info(gen, INFO));
@@ -51,16 +51,33 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('|switch|', () => {
-      const start = [ArgType.Switch, 0b1011, gen.species.get('Snorlax')!.num];
-      let hp = LE ? [200, 0, 144, 1] : [0, 200, 1, 144];
-      expect(Array.from(log.parse(Data.view([...start, 91, ...hp, 0b1000000]))))
-        .toEqual(parse('|switch|p2a: Kabigon|Snorlax, L91|200/400 par'));
-      hp = LE ? [0, 0, 144, 1] : [0, 0, 1, 144];
-      expect(Array.from(log.parse(Data.view([...start, 100, ...hp, 0]))))
-        .toEqual(parse('|switch|p2a: Kabigon|Snorlax|0 fnt'));
-      hp = LE ? [144, 1, 144, 1] : [1, 144, 1, 144];
-      expect(Array.from(log.parse(Data.view([...start, 100, ...hp, 0]))))
-        .toEqual(parse('|switch|p2a: Kabigon|Snorlax|400/400'));
+      if (gen.num === 1) {
+        const start = [ArgType.Switch, 0b1011, gen.species.get('Snorlax')!.num];
+        let hp = LE ? [200, 0, 144, 1] : [0, 200, 1, 144];
+        expect(Array.from(log.parse(Data.view([...start, 91, ...hp, 0b1000000]))))
+          .toEqual(parse('|switch|p2a: Kabigon|Snorlax, L91|200/400 par'));
+        hp = LE ? [0, 0, 144, 1] : [0, 0, 1, 144];
+        expect(Array.from(log.parse(Data.view([...start, 100, ...hp, 0]))))
+          .toEqual(parse('|switch|p2a: Kabigon|Snorlax|0 fnt'));
+        hp = LE ? [144, 1, 144, 1] : [1, 144, 1, 144];
+        expect(Array.from(log.parse(Data.view([...start, 100, ...hp, 0]))))
+          .toEqual(parse('|switch|p2a: Kabigon|Snorlax|400/400'));
+      } else {
+        let start = [ArgType.Switch, 0b1011, gen.species.get('Snorlax')!.num, 0];
+        let hp = LE ? [200, 0, 144, 1] : [0, 200, 1, 144];
+        expect(Array.from(log.parse(Data.view([...start, 91, ...hp, 0b1000000]))))
+          .toEqual(parse('|switch|p2a: Kabigon|Snorlax, M, L91|200/400 par'));
+        hp = LE ? [0, 0, 144, 1] : [0, 0, 1, 144];
+        expect(Array.from(log.parse(Data.view([...start, 100, ...hp, 0]))))
+          .toEqual(parse('|switch|p2a: Kabigon|Snorlax, M|0 fnt'));
+        hp = LE ? [144, 1, 144, 1] : [1, 144, 1, 144];
+        expect(Array.from(log.parse(Data.view([...start, 100, ...hp, 0]))))
+          .toEqual(parse('|switch|p2a: Kabigon|Snorlax, M|400/400'));
+        start = [ArgType.Switch, 0b1011, gen.species.get('Blissey')!.num, 1];
+        hp = LE ? [200, 0, 144, 1] : [0, 200, 1, 144];
+        expect(Array.from(log.parse(Data.view([...start, 91, ...hp, 0b1000000]))))
+          .toEqual(parse('|switch|p2a: Kabigon|Blissey, F, L91|200/400 par'));
+      }
     });
 
     test('|cant|', () => {
@@ -152,7 +169,11 @@ for (const gen of new Generations(Dex as any)) {
 
     test('|-clearallboost|', () => {
       const data = Data.view([ArgType.ClearAllBoost]);
-      expect(Array.from(log.parse(data))).toEqual(parse('|-clearallboost|[silent]'));
+      if (gen.num === 1) {
+        expect(Array.from(log.parse(data))).toEqual(parse('|-clearallboost|[silent]'));
+      } else {
+        expect(Array.from(log.parse(data))).toEqual(parse('|-clearallboost'));
+      }
     });
 
     test('|-fail|', () => {
@@ -212,9 +233,9 @@ for (const gen of new Generations(Dex as any)) {
       expect(Array.from(
         log.parse(Data.view([ArgType.Start, 0b0010, PROTOCOL.Start.ConfusionSilent]))
       )).toEqual(parse('|-start|p1a: Hitokage|confusion|[silent]'));
+      const FIRE = gen.num === 1 ? 0b1000_1000 : 0b1010_1010;
       expect(Array.from(log.parse(Data.view([
-        ArgType.Start, 0b1110, PROTOCOL.Start.TypeChange, 0b1000_1000, 0b1101,
-      ])))).toEqual(parse(
+        ArgType.Start, 0b1110, PROTOCOL.Start.TypeChange, FIRE, 0b1101])))).toEqual(parse(
         '|-start|p2a: Fuudin|typechange|Fire|[from] move: Conversion|[of] p2a: Sutaamii'
       ));
       expect(Array.from(log.parse(Data.view([

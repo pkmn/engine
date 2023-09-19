@@ -224,6 +224,8 @@ pub const End = enum(u8) {
     Toxic,
     LightScreen,
     Reflect,
+
+    BideSilent,
 };
 
 pub const Immune = enum(u8) {
@@ -241,18 +243,10 @@ pub const SetHP = enum(u8) {
     Silent,
 };
 
-pub const SideStart = enum(u8) {
+pub const Side = enum(u8) {
     Safeguard,
     Reflect,
     LightScreen,
-    Spikes,
-};
-
-pub const SideEnd = enum(u8) {
-    Safeguard,
-    Reflect,
-    LightScreen,
-
     Spikes,
 };
 
@@ -701,7 +695,7 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn sidestart(self: Self, player: Player, reason: SideStart) Error!void {
+        pub fn sidestart(self: Self, player: Player, reason: Side) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
@@ -711,10 +705,10 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn sideend(self: Self, player: Player, reason: SideEnd) Error!void {
+        pub fn sideend(self: Self, player: Player, reason: Side) Error!void {
             if (!enabled) return;
 
-            assert(@intFromEnum(reason) != @intFromEnum(SideEnd.Spikes));
+            assert(@intFromEnum(reason) != @intFromEnum(Side.Spikes));
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.SideEnd),
                 @intFromEnum(player),
@@ -728,7 +722,7 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.SideEnd),
                 @intFromEnum(player),
-                @intFromEnum(SideEnd.Spikes),
+                @intFromEnum(Side.Spikes),
                 @intFromEnum(m),
                 @as(u8, @bitCast(source)),
             });
@@ -1107,12 +1101,12 @@ pub fn format(
             .SideStart => {
                 const id = ID.from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
-                printc(" {s}", .{@tagName(@as(SideStart, @enumFromInt(a[i])))}, a, b, &i, 1, color);
+                printc(" {s}", .{@tagName(@as(Side, @enumFromInt(a[i])))}, a, b, &i, 1, color);
             },
             .SideEnd => {
                 var id = ID.from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
-                const reason: SideEnd = @enumFromInt(a[i]);
+                const reason: Side = @enumFromInt(a[i]);
                 printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
                 if (reason == .Spikes) {
                     printc(" {s}", .{formatter(gen, .Move, a[i])}, a, b, &i, 1, color);
@@ -1739,20 +1733,20 @@ test "|-copyboost|" {
 
 test "|-sidestart|" {
     try log.sidestart(.P2, .Reflect);
-    try expectLog2(&.{ N(ArgType.SideStart), 1, N(SideStart.Reflect) }, buf[0..3]);
+    try expectLog2(&.{ N(ArgType.SideStart), 1, N(Side.Reflect) }, buf[0..3]);
     stream.reset();
 }
 
 test "|-sideend|" {
     try log.sideend(.P2, .LightScreen);
-    try expectLog2(&.{ N(ArgType.SideEnd), 1, N(SideEnd.LightScreen) }, buf[0..3]);
+    try expectLog2(&.{ N(ArgType.SideEnd), 1, N(Side.LightScreen) }, buf[0..3]);
     stream.reset();
 
     try log.spikesend(.P1, M2.RapidSpin, p1.ident(3));
     try expectLog2(&.{
         N(ArgType.SideEnd),
         0,
-        N(SideEnd.Spikes),
+        N(Side.Spikes),
         N(M2.RapidSpin),
         0b0011,
     }, buf[0..5]);
