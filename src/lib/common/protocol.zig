@@ -231,6 +231,16 @@ pub const Immune = enum(u8) {
     OHKO,
 };
 
+pub const EndItem = enum(u8) {
+    None,
+    Eat,
+};
+
+pub const SetHP = enum(u8) {
+    Message,
+    Silent,
+};
+
 pub const SideStart = enum(u8) {
     Safeguard,
     Reflect,
@@ -244,6 +254,11 @@ pub const SideEnd = enum(u8) {
     LightScreen,
 
     Spikes,
+};
+
+pub const Weather = enum(u8) {
+    None,
+    Upkeep,
 };
 
 /// Null object pattern implementation of `Log` backed by a `std.io.null_writer`.
@@ -285,9 +300,13 @@ pub fn Log(comptime Writer: type) type {
         }
 
         pub fn switched(self: Self, ident: ID, pokemon: anytype) Error!void {
+            return switchDrag(self, .Switch, ident, pokemon);
+        }
+
+        fn switchDrag(self: Self, arg: ArgType, ident: ID, pokemon: anytype) Error!void {
             if (!enabled) return;
 
-            try self.writer.writeAll(&.{ @intFromEnum(ArgType.Switch), @as(u8, @bitCast(ident)) });
+            try self.writer.writeAll(&.{ @intFromEnum(arg), @as(u8, @bitCast(ident)) });
             if (@hasField(@TypeOf(pokemon.*), "dvs")) {
                 try self.writer.writeAll(&.{
                     @intFromEnum(pokemon.species),
@@ -617,6 +636,73 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
+        pub fn drag(self: Self, ident: ID, pokemon: anytype) Error!void {
+            return switchDrag(self, .Drag, ident, pokemon);
+        }
+
+        pub fn item(self: Self, ident: ID, i: anytype, source: ID) Error!void {
+            if (!enabled) return;
+
+            try self.writer.writeAll(&.{
+                @intFromEnum(ArgType.Item),
+                @as(u8, @bitCast(ident)),
+                @intFromEnum(i),
+                @as(u8, @bitCast(source)),
+            });
+        }
+
+        pub fn enditem(self: Self, ident: ID, i: anytype, reason: EndItem) Error!void {
+            if (!enabled) return;
+
+            try self.writer.writeAll(&.{
+                @intFromEnum(ArgType.EndItem),
+                @as(u8, @bitCast(ident)),
+                @intFromEnum(i),
+                @intFromEnum(reason),
+            });
+        }
+
+        pub fn cureteam(self: Self, source: ID) Error!void {
+            if (!enabled) return;
+
+            try self.writer.writeAll(&.{
+                @intFromEnum(ArgType.CureTeam),
+                @as(u8, @bitCast(source)),
+            });
+        }
+
+        pub fn sethp(self: Self, ident: ID, pokemon: anytype, reason: SetHP) Error!void {
+            if (!enabled) return;
+
+            try self.writer.writeAll(&.{ @intFromEnum(ArgType.SetHP), @as(u8, @bitCast(ident)) });
+            try self.writer.writeIntNative(u16, pokemon.hp);
+            try self.writer.writeIntNative(u16, pokemon.stats.hp);
+            try self.writer.writeAll(&.{pokemon.status});
+            try self.writer.writeByte(@intFromEnum(reason));
+        }
+
+        pub fn setboost(self: Self, ident: ID, reason: Boost, num: i8) Error!void {
+            if (!enabled) return;
+
+            assert(reason != .Rage);
+            try self.writer.writeAll(&.{
+                @intFromEnum(ArgType.SetBoost),
+                @as(u8, @bitCast(ident)),
+                @intFromEnum(reason),
+                @as(u8, @intCast(num + 6)),
+            });
+        }
+
+        pub fn copyboost(self: Self, source: ID, target: ID) Error!void {
+            if (!enabled) return;
+
+            try self.writer.writeAll(&.{
+                @intFromEnum(ArgType.CopyBoost),
+                @as(u8, @bitCast(source)),
+                @as(u8, @bitCast(target)),
+            });
+        }
+
         pub fn sidestart(self: Self, ident: ID, reason: SideStart) Error!void {
             if (!enabled) return;
 
@@ -638,22 +724,44 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn sideendFromOf(
-            self: Self,
-            ident: ID,
-            reason: SideEnd,
-            m: anytype,
-            source: ID,
-        ) Error!void {
+        pub fn spikes(self: Self, ident: ID, m: anytype, source: ID) Error!void {
             if (!enabled) return;
 
-            assert(@intFromEnum(reason) == @intFromEnum(SideEnd.Spikes));
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.SideEnd),
                 @as(u8, @bitCast(ident)),
-                @intFromEnum(reason),
+                @intFromEnum(SideEnd.Spikes),
                 @intFromEnum(m),
                 @as(u8, @bitCast(source)),
+            });
+        }
+
+        pub fn singlemove(self: Self, ident: ID, m: anytype) Error!void {
+            return single(self, .SingleMove, ident, m);
+        }
+
+        pub fn singleturn(self: Self, ident: ID, m: anytype) Error!void {
+            return single(self, .SingleTurn, ident, m);
+        }
+
+        fn single(self: Self, arg: ArgType, ident: ID, m: anytype) Error!void {
+            if (!enabled) return;
+
+            try self.writer.writeAll(&.{
+                @intFromEnum(arg),
+                @as(u8, @bitCast(ident)),
+                @intFromEnum(m),
+            });
+        }
+
+        pub fn weather(self: Self, w: anytype, reason: Weather) Error!void {
+            if (!enabled) return;
+
+            assert(!(w == .None and reason == .Upkeep));
+            try self.writer.writeAll(&.{
+                @intFromEnum(ArgType.Weather),
+                @intFromEnum(w),
+                @intFromEnum(reason),
             });
         }
 
@@ -717,7 +825,7 @@ pub const ByteStream = struct {
     }
 };
 
-pub const Kind = enum { Move, Species, Type, Status };
+pub const Kind = enum { Move, Species, Type, Status, Item, Weather };
 
 pub fn format(
     comptime gen: anytype,
@@ -762,8 +870,18 @@ pub fn format(
             .Resisted => "|-resisted|",
             .Immune => "|-immune|",
             .Transform => "|-transform|",
+            .Drag => "|drag|",
+            .Item => "|-item|",
+            .EndItem => "|-enditem|",
+            .CureTeam => "|-cureteam|",
+            .SetHP => "|-sethp|",
+            .SetBoost => "|-setboost|",
+            .CopyBoost => "|-copyboost|",
             .SideStart => "|-sidestart|",
             .SideEnd => "|-sideend|",
+            .SingleMove => "|-singlemove|",
+            .SingleTurn => "|-singleturn|",
+            .Weather => "|-weather|",
             else => unreachable,
         };
         printc("{s}", .{name}, a, b, &i, 1, color);
@@ -788,7 +906,7 @@ pub fn format(
                     printc(" {s}", .{formatter(gen, .Move, a[i])}, a, b, &i, 1, color);
                 }
             },
-            .Switch => {
+            .Switch, .Drag => {
                 const id = ID.from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {s}", .{formatter(gen, .Species, a[i])}, a, b, &i, 1, color);
@@ -832,6 +950,7 @@ pub fn format(
             .Crit,
             .SuperEffective,
             .Resisted,
+            .CureTeam,
             => {
                 const id = ID.from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
@@ -897,7 +1016,7 @@ pub fn format(
                 const reason: CureStatus = @enumFromInt(a[i]);
                 printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
             },
-            .Boost => {
+            .Boost, .SetBoost => {
                 const id = ID.from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {s}", .{@tagName(@as(Boost, @enumFromInt(a[i])))}, a, b, &i, 1, color);
@@ -913,7 +1032,7 @@ pub fn format(
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {d}", .{a[i]}, a, b, &i, 1, color);
             },
-            .Prepare => {
+            .Prepare, .SingleMove, .SingleTurn => {
                 const id = ID.from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {s}", .{formatter(gen, .Move, a[i])}, a, b, &i, 1, color);
@@ -949,11 +1068,43 @@ pub fn format(
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {s}", .{@tagName(@as(Immune, @enumFromInt(a[i])))}, a, b, &i, 1, color);
             },
-            .Transform => {
+            .Transform, .CopyBoost => {
                 const source = ID.from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(source.player), source.id }, a, b, &i, 1, color);
                 const target = ID.from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(target.player), target.id }, a, b, &i, 1, color);
+            },
+            .Item, .EndItem => {
+                var id = ID.from(@intCast(a[i]));
+                printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
+                printc(" {s}", .{formatter(gen, .Item, a[i])}, a, b, &i, 1, color);
+                if (arg == .Item) {
+                    id = ID.from(@intCast(a[i]));
+                    printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
+                } else {
+                    const reason: EndItem = @enumFromInt(a[i]);
+                    printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
+                }
+            },
+            .SetHP => {
+                const id = ID.from(@intCast(a[i]));
+                printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
+                switch (endian) {
+                    .Big => {
+                        var hp = @as(u16, a[i]) << 8 | @as(u16, a[i + 1]);
+                        printc(" {d}", .{hp}, a, b, &i, 2, color);
+                        hp = @as(u16, a[i]) << 8 | @as(u16, a[i + 1]);
+                        printc("/{d}", .{hp}, a, b, &i, 2, color);
+                    },
+                    .Little => {
+                        var hp = @as(u16, a[i + 1]) << 8 | @as(u16, a[i]);
+                        printc(" {d}", .{hp}, a, b, &i, 2, color);
+                        hp = @as(u16, a[i + 1]) << 8 | @as(u16, a[i]);
+                        printc("/{d}", .{hp}, a, b, &i, 2, color);
+                    },
+                }
+                printc(" {s}", .{formatter(gen, .Status, a[i])}, a, b, &i, 1, color);
+                printc(" {s}", .{@tagName(@as(SetHP, @enumFromInt(a[i])))}, a, b, &i, 1, color);
             },
             .SideStart => {
                 const id = ID.from(@intCast(a[i]));
@@ -970,6 +1121,10 @@ pub fn format(
                     id = ID.from(@intCast(a[i]));
                     printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 }
+            },
+            .Weather => {
+                printc(" {s}", .{formatter(gen, .Weather, a[i])}, a, b, &i, 1, color);
+                printc(" {s}", .{@tagName(@as(Weather, @enumFromInt(a[i])))}, a, b, &i, 1, color);
             },
             else => unreachable,
         }
@@ -1071,8 +1226,13 @@ var buf: [gen1.LOGS_SIZE]u8 = undefined;
 var stream: ByteStream = .{ .buffer = &buf };
 var log: FixedLog = .{ .writer = stream.writer() };
 
-const M = gen1.Move;
-const S = gen1.Species;
+const M1 = gen1.Move;
+const S1 = gen1.Species;
+
+const M2 = gen2.Move;
+const S2 = gen2.Species;
+const I2 = gen2.Item;
+const W2 = gen2.Weather;
 
 fn expectLog1(expected: []const u8, actual: []const u8) !void {
     return expectLog(gen1, expected, actual, 0);
@@ -1088,32 +1248,40 @@ fn formatter(comptime gen: anytype, kind: Kind, byte: u8) []const u8 {
         .Species => @tagName(@as(gen.Species, @enumFromInt(byte))),
         .Type => @tagName(@as(gen.Type, @enumFromInt(byte))),
         .Status => gen.Status.name(byte),
+        .Item => if (@hasDecl(gen, "Item"))
+            @tagName(@as(gen.Item, @enumFromInt(byte)))
+        else
+            unreachable,
+        .Weather => if (@hasDecl(gen, "Weather"))
+            @tagName(@as(gen.Weather, @enumFromInt(byte)))
+        else
+            unreachable,
     };
 }
 
 test "|move|" {
-    try log.move(p2.ident(4), M.Thunderbolt, p1.ident(5), null);
+    try log.move(p2.ident(4), M1.Thunderbolt, p1.ident(5), null);
     try expectLog1(
-        &.{ N(ArgType.Move), 0b1100, N(M.Thunderbolt), 0b0101, N(Move.None) },
+        &.{ N(ArgType.Move), 0b1100, N(M1.Thunderbolt), 0b0101, N(Move.None) },
         buf[0..5],
     );
     stream.reset();
 
-    try log.move(p2.ident(4), M.Wrap, p1.ident(5), M.Wrap);
-    const wrap = N(M.Wrap);
+    try log.move(p2.ident(4), M1.Wrap, p1.ident(5), M1.Wrap);
+    const wrap = N(M1.Wrap);
     try expectLog1(
         &.{ N(ArgType.Move), 0b1100, wrap, 0b0101, N(Move.From), wrap },
         buf[0..6],
     );
     stream.reset();
 
-    try log.move(p2.ident(4), M.SkullBash, .{}, null);
+    try log.move(p2.ident(4), M1.SkullBash, .{}, null);
     try log.laststill();
     try expectLog1(
         &.{
             N(ArgType.Move),
             0b1100,
-            N(M.SkullBash),
+            N(M1.SkullBash),
             0,
             N(Move.None),
             N(ArgType.LastStill),
@@ -1122,13 +1290,13 @@ test "|move|" {
     );
     stream.reset();
 
-    try log.move(p2.ident(4), M.Tackle, p1.ident(5), null);
+    try log.move(p2.ident(4), M1.Tackle, p1.ident(5), null);
     try log.lastmiss();
     try expectLog1(
         &.{
             N(ArgType.Move),
             0b1100,
-            N(M.Tackle),
+            N(M1.Tackle),
             0b0101,
             N(Move.None),
             N(ArgType.LastMiss),
@@ -1147,8 +1315,8 @@ test "|switch|" {
     try log.switched(p2.ident(3), &snorlax);
     const par = 0b1000000;
     var expected: []const u8 = switch (endian) {
-        .Big => &.{ N(ArgType.Switch), 0b1011, N(S.Snorlax), 91, 0, 200, 1, 144, par },
-        .Little => &.{ N(ArgType.Switch), 0b1011, N(S.Snorlax), 91, 200, 0, 144, 1, par },
+        .Big => &.{ N(ArgType.Switch), 0b1011, N(S1.Snorlax), 91, 0, 200, 1, 144, par },
+        .Little => &.{ N(ArgType.Switch), 0b1011, N(S1.Snorlax), 91, 200, 0, 144, 1, par },
     };
     try expectLog1(expected, buf[0..9]);
     stream.reset();
@@ -1158,8 +1326,8 @@ test "|switch|" {
     snorlax.status = 0;
     try log.switched(p2.ident(3), &snorlax);
     expected = switch (endian) {
-        .Big => &.{ N(ArgType.Switch), 0b1011, N(S.Snorlax), 100, 0, 0, 1, 144, 0 },
-        .Little => &.{ N(ArgType.Switch), 0b1011, N(S.Snorlax), 100, 0, 0, 144, 1, 0 },
+        .Big => &.{ N(ArgType.Switch), 0b1011, N(S1.Snorlax), 100, 0, 0, 1, 144, 0 },
+        .Little => &.{ N(ArgType.Switch), 0b1011, N(S1.Snorlax), 100, 0, 0, 144, 1, 0 },
     };
     try expectLog1(expected, buf[0..9]);
     stream.reset();
@@ -1167,8 +1335,8 @@ test "|switch|" {
     snorlax.hp = 400;
     try log.switched(p2.ident(3), &snorlax);
     expected = switch (endian) {
-        .Big => &.{ N(ArgType.Switch), 0b1011, N(S.Snorlax), 100, 1, 144, 1, 144, 0 },
-        .Little => &.{ N(ArgType.Switch), 0b1011, N(S.Snorlax), 100, 144, 1, 144, 1, 0 },
+        .Big => &.{ N(ArgType.Switch), 0b1011, N(S1.Snorlax), 100, 1, 144, 1, 144, 0 },
+        .Little => &.{ N(ArgType.Switch), 0b1011, N(S1.Snorlax), 100, 144, 1, 144, 1, 0 },
     };
     try expectLog1(expected, buf[0..9]);
     stream.reset();
@@ -1182,7 +1350,7 @@ test "|switch|" {
     expected = &(.{
         N(ArgType.Switch),
         0b1011,
-        N(gen2.Species.Blissey),
+        N(S2.Blissey),
         N(gen2.Gender.Female),
         91,
     } ++ switch (endian) {
@@ -1198,8 +1366,8 @@ test "|cant|" {
     try expectLog1(&.{ N(ArgType.Cant), 0b1110, N(Cant.Bound) }, buf[0..3]);
     stream.reset();
 
-    try log.disabled(p1.ident(2), M.Earthquake);
-    try expectLog1(&.{ N(ArgType.Cant), 2, N(Cant.Disable), N(M.Earthquake) }, buf[0..4]);
+    try log.disabled(p1.ident(2), M1.Earthquake);
+    try expectLog1(&.{ N(ArgType.Cant), 2, N(Cant.Disable), N(M1.Earthquake) }, buf[0..4]);
     stream.reset();
 }
 
@@ -1309,9 +1477,9 @@ test "|-status|" {
     try expectLog1(&.{ N(ArgType.Status), 0b1010, 0b1000, N(Status.Silent) }, buf[0..4]);
     stream.reset();
 
-    try log.statusFrom(p1.ident(1), gen1.Status.init(.PAR), M.BodySlam);
+    try log.statusFrom(p1.ident(1), gen1.Status.init(.PAR), M1.BodySlam);
     try expectLog1(
-        &.{ N(ArgType.Status), 0b0001, 0b1000000, N(Status.From), N(M.BodySlam) },
+        &.{ N(ArgType.Status), 0b0001, 0b1000000, N(Status.From), N(M1.BodySlam) },
         buf[0..5],
     );
     stream.reset();
@@ -1382,8 +1550,8 @@ test "|-hitcount|" {
 }
 
 test "|-prepare|" {
-    try log.prepare(p2.ident(2), M.Dig);
-    try expectLog1(&.{ N(ArgType.Prepare), 0b1010, N(M.Dig) }, buf[0..3]);
+    try log.prepare(p2.ident(2), M1.Dig);
+    try expectLog1(&.{ N(ArgType.Prepare), 0b1010, N(M1.Dig) }, buf[0..3]);
     stream.reset();
 }
 
@@ -1440,12 +1608,12 @@ test "|-start|" {
     );
     stream.reset();
 
-    try log.startEffect(p1.ident(2), .Disable, M.Surf);
-    try expectLog1(&.{ N(ArgType.Start), 0b0010, N(Start.Disable), N(M.Surf) }, buf[0..4]);
+    try log.startEffect(p1.ident(2), .Disable, M1.Surf);
+    try expectLog1(&.{ N(ArgType.Start), 0b0010, N(Start.Disable), N(M1.Surf) }, buf[0..4]);
     stream.reset();
 
-    try log.startEffect(p1.ident(2), .Mimic, M.Surf);
-    try expectLog1(&.{ N(ArgType.Start), 0b0010, N(Start.Mimic), N(M.Surf) }, buf[0..4]);
+    try log.startEffect(p1.ident(2), .Mimic, M1.Surf);
+    try expectLog1(&.{ N(ArgType.Start), 0b0010, N(Start.Mimic), N(M1.Surf) }, buf[0..4]);
     stream.reset();
 }
 
@@ -1464,21 +1632,25 @@ test "|-ohko|" {
     try expectLog1(&.{N(ArgType.OHKO)}, buf[0..1]);
     stream.reset();
 }
+
 test "|-crit|" {
     try log.crit(p2.ident(5));
     try expectLog1(&.{ N(ArgType.Crit), 0b1101 }, buf[0..2]);
     stream.reset();
 }
+
 test "|-supereffective|" {
     try log.supereffective(p1.ident(1));
     try expectLog1(&.{ N(ArgType.SuperEffective), 0b0001 }, buf[0..2]);
     stream.reset();
 }
+
 test "|-resisted|" {
     try log.resisted(p2.ident(2));
     try expectLog1(&.{ N(ArgType.Resisted), 0b1010 }, buf[0..2]);
     stream.reset();
 }
+
 test "|-immune|" {
     try log.immune(p1.ident(3), .None);
     try expectLog1(&.{ N(ArgType.Immune), 0b0011, N(Immune.None) }, buf[0..3]);
@@ -1488,28 +1660,125 @@ test "|-immune|" {
     try expectLog1(&.{ N(ArgType.Immune), 0b1010, N(Immune.OHKO) }, buf[0..3]);
     stream.reset();
 }
+
 test "|-transform|" {
     try log.transform(p2.ident(4), p1.ident(5));
     try expectLog1(&.{ N(ArgType.Transform), 0b1100, 0b0101 }, buf[0..3]);
     stream.reset();
 }
+
+test "|drag|" {
+    var blissey = gen2.helpers.Pokemon.init(.{ .species = .Blissey, .moves = &.{.Splash} });
+    blissey.level = 91;
+    blissey.hp = 200;
+    blissey.stats.hp = 400;
+    blissey.status = gen2.Status.init(.PAR);
+    try log.drag(p2.ident(3), &blissey);
+    const par = 0b1000000;
+    const expected = &(.{
+        N(ArgType.Drag),
+        0b1011,
+        N(S2.Blissey),
+        N(gen2.Gender.Female),
+        91,
+    } ++ switch (endian) {
+        .Big => .{ 0, 200, 1, 144, par },
+        .Little => .{ 200, 0, 144, 1, par },
+    });
+    try expectLog2(expected, buf[0..10]);
+    stream.reset();
+}
+
+test "|-item|" {
+    try log.item(p2.ident(2), I2.GoldBerry, p1.ident(4));
+    try expectLog2(&.{ N(ArgType.Item), 0b1010, N(I2.GoldBerry), 0b0100 }, buf[0..4]);
+    stream.reset();
+}
+
+test "|-enditem|" {
+    try log.enditem(p1.ident(1), I2.BerserkGene, .None);
+    try expectLog2(&.{ N(ArgType.EndItem), 0b0001, N(I2.BerserkGene), N(EndItem.None) }, buf[0..4]);
+    stream.reset();
+
+    try log.enditem(p2.ident(4), I2.PRZCureBerry, .Eat);
+    try expectLog2(&.{ N(ArgType.EndItem), 0b1100, N(I2.PRZCureBerry), N(EndItem.Eat) }, buf[0..4]);
+    stream.reset();
+}
+
+test "|-cureteam|" {
+    try log.cureteam(p2.ident(5));
+    try expectLog2(&.{ N(ArgType.CureTeam), 0b1101 }, buf[0..2]);
+    stream.reset();
+}
+
+test "|-sethp|" {
+    var blissey = gen2.helpers.Pokemon.init(.{ .species = .Blissey, .moves = &.{.PainSplit} });
+    blissey.hp = 612;
+    try log.sethp(p2.ident(2), &blissey, .Silent);
+    var expected: []const u8 = switch (endian) {
+        .Big => &.{ N(ArgType.SetHP), 0b1010, 2, 100, 2, 201, 0, N(SetHP.Silent) },
+        .Little => &.{ N(ArgType.SetHP), 0b1010, 100, 2, 201, 2, 0, N(SetHP.Silent) },
+    };
+    try expectLog2(expected, buf[0..8]);
+    stream.reset();
+}
+
+test "|-setboost|" {
+    try log.setboost(p2.ident(6), .Attack, 6);
+    try expectLog2(&.{ N(ArgType.SetBoost), 0b1110, N(Boost.Attack), 12 }, buf[0..4]);
+    stream.reset();
+
+    try log.setboost(p2.ident(3), .SpecialDefense, -3);
+    try expectLog2(&.{ N(ArgType.SetBoost), 0b1011, N(Boost.SpecialDefense), 3 }, buf[0..4]);
+    stream.reset();
+}
+
+test "|-copyboost|" {
+    try log.copyboost(p2.ident(3), p1.ident(6));
+    try expectLog2(&.{ N(ArgType.CopyBoost), 0b1011, 0b0110 }, buf[0..3]);
+    stream.reset();
+}
+
 test "|-sidestart|" {
     try log.sidestart(p2.ident(6), .Reflect);
     try expectLog2(&.{ N(ArgType.SideStart), 0b1110, N(SideStart.Reflect) }, buf[0..3]);
     stream.reset();
 }
+
 test "|-sideend|" {
     try log.sideend(p2.ident(6), .LightScreen);
     try expectLog2(&.{ N(ArgType.SideEnd), 0b1110, N(SideEnd.LightScreen) }, buf[0..3]);
     stream.reset();
 
-    try log.sideendFromOf(p1.ident(2), .Spikes, gen2.Move.RapidSpin, p1.ident(3));
+    try log.spikes(p1.ident(2), M2.RapidSpin, p1.ident(3));
     try expectLog2(&.{
         N(ArgType.SideEnd),
         0b0010,
         N(SideEnd.Spikes),
-        N(gen2.Move.RapidSpin),
+        N(M2.RapidSpin),
         0b0011,
     }, buf[0..5]);
+    stream.reset();
+}
+
+test "|-singlemove|" {
+    try log.singlemove(p2.ident(2), M2.DestinyBond);
+    try expectLog2(&.{ N(ArgType.SingleMove), 0b1010, N(M2.DestinyBond) }, buf[0..3]);
+    stream.reset();
+}
+
+test "|-singleturn|" {
+    try log.singleturn(p1.ident(3), M2.Protect);
+    try expectLog2(&.{ N(ArgType.SingleTurn), 0b0011, N(M2.Protect) }, buf[0..3]);
+    stream.reset();
+}
+
+test "|-weather|" {
+    try log.weather(W2.Rain, .Upkeep);
+    try expectLog2(&.{ N(ArgType.Weather), N(W2.Rain), N(Weather.Upkeep) }, buf[0..3]);
+    stream.reset();
+
+    try log.weather(W2.None, .None);
+    try expectLog2(&.{ N(ArgType.Weather), N(W2.None), N(Weather.None) }, buf[0..3]);
     stream.reset();
 }

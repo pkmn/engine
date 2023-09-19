@@ -176,6 +176,14 @@
     "None",
     "OHKO"
   ],
+  "EndItem": [
+    "None",
+    "Eat"
+  ],
+  "SetHP": [
+    "Message",
+    "Silent"
+  ],
   "SideStart": [
     "Safeguard",
     "Reflect",
@@ -187,5 +195,9 @@
     "Reflect",
     "LightScreen",
     "Spikes"
+  ],
+  "Weather": [
+    "None",
+    "Upkeep"
   ]
 }
