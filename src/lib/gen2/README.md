@@ -36,21 +36,21 @@ The following information is required to simulate a Generation II Pokémon battl
 | `active.switching`             | `PlayerIsSwitching`               | `pokemon.switchFlag`                  |
 | `active.boosts`                | `PlayerStatLevels`                | `pokemon.boosts`                      |
 | `active.volatiles`             | `PlayerBattleStatus{1,2,3}`       | `pokemon.volatiles`                   |
-| `volatiles.data.bide`          | `PlayerDamageTaken`               | `volatiles.bide.totalDamage`          |
-| `volatiles.data.substitute`    | `PlayerSubstituteHP`              | `volatiles.substitute.hp`             |
-| `volatiles.data.rollout`       | `PlayerRolloutCount`              | `volatiles.rollout.hitCount`          |
-| `volatiles.data.confusion`     | `PlayerConfuseCount`              | `volatiles.confusion.duration`        |
-| `volatiles.data.toxic`         | `PlayerToxicCount`                | `volatiles.residualdmg.counter`       |
-| `volatiles.data.disabled`      | `PlayerDisableCount`              | `moveSlots.disabled`                  |
-| `volatiles.data.encore`        | `PlayerEncoreCount`               | `volatiles.encore.duration`           |
-| `volatiles.data.perish_song`   | `PlayerPerishCount`               | `volatiles.perishsong.duration`       |
-| `volatiles.data.fury_cutter`   | `PlayerFuryCutterCount`           | `volatiles.furycutter.multiplier`     |
-| `volatiles.data.protect`       | `PlayerProtectCount`              | `volatiles.stall.counter`             |
-| `volatiles.data.future_sight`  | `PlayerFutureSight{Damage,Count}` | `slotConditions[i].futuremove`        |
-| `volatiles.data.rage`          | `PlayerRageCounter`               | **BUG**                               |
-| `volatiles.data.bind`          | `PlayerWrapCount`                 | `volatiles.partiallytrapped.duration` |
+| `volatiles.bide`               | `PlayerDamageTaken`               | `volatiles.bide.totalDamage`          |
+| `volatiles.substitute`         | `PlayerSubstituteHP`              | `volatiles.substitute.hp`             |
+| `volatiles.rollout`            | `PlayerRolloutCount`              | `volatiles.rollout.hitCount`          |
+| `volatiles.confusion`          | `PlayerConfuseCount`              | `volatiles.confusion.duration`        |
+| `volatiles.toxic`              | `PlayerToxicCount`                | `volatiles.residualdmg.counter`       |
+| `volatiles.disabled`           | `PlayerDisableCount`              | `moveSlots.disabled`                  |
+| `volatiles.encore`             | `PlayerEncoreCount`               | `volatiles.encore.duration`           |
+| `volatiles.perish_song`        | `PlayerPerishCount`               | `volatiles.perishsong.duration`       |
+| `volatiles.fury_cutter`        | `PlayerFuryCutterCount`           | `volatiles.furycutter.multiplier`     |
+| `volatiles.protect`            | `PlayerProtectCount`              | `volatiles.stall.counter`             |
+| `volatiles.future_sight`       | `PlayerFutureSight{Damage,Count}` | `slotConditions[i].futuremove`        |
+| `volatiles.rage`               | `PlayerRageCounter`               | **BUG**                               |
+| `volatiles.bind`               | `PlayerWrapCount`                 | `volatiles.partiallytrapped.duration` |
 |                                | `PlayerCharging`                  |                                       |
-|                                | `PlayerJustGotFrozen`             |                                       |
+| `volatiles.frozen`             | `PlayerJustGotFrozen`             | `volatiles.frozen`                    |
 |                                |                                   |                                       |
 | `active.last_used_move`        | `PlayerUsedMove`                  | `side.lastMove`                       |
 

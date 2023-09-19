@@ -839,13 +839,13 @@ fn betweenTurn(battle: anytype, mslot: u4, options: anytype) !void {
 
     // Defrost
     inline for (players) |player| {
-        var stored = battle.side(player).stored();
-        const just_frozen = false; // FIXME TODO
-        if (Status.is(stored.status, .FRZ) and !just_frozen and
+        var side = battle.side(player);
+        if (Status.is(side.stored().status, .FRZ) and
+            !side.active.volatiles.frozen and
             try Rolls.defrost(battle, player, options))
         {
-            try options.log.curestatus(battle.active(player), stored.status, .Message);
-            stored.status = 0;
+            try options.log.curestatus(battle.active(player), side.stored().status, .Message);
+            side.stored().status = 0;
         }
     }
 
