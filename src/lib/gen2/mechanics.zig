@@ -433,22 +433,9 @@ fn beforeMove(battle: anytype, player: Player, options: anytype) !bool {
             try log.activate(ident, .Confusion);
 
             if (try Rolls.confused(battle, player, options)) {
-                // TODO: see if gets merged?
-                // volatiles.BeatUp = false;
-                // volatiles.Flinch = false;
-                // cantMove(volatiles);
-
-                volatiles.Bide = false;
-                volatiles.Thrashing = false;
                 volatiles.BeatUp = false;
                 volatiles.Flinch = false;
-                volatiles.Charging = false;
-                volatiles.Underground = false;
-                volatiles.Flying = false;
-
-                volatiles.Rollout = false;
-
-                volatiles.fury_cutter = 0;
+                cantMove(volatiles);
 
                 // TODO HitConfusion
 
