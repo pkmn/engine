@@ -127,6 +127,8 @@ pub const Heal = enum(u8) {
     None,
     Silent,
     Drain,
+
+    Leftovers,
 };
 
 pub const Damage = enum(u8) {
@@ -209,6 +211,9 @@ pub const End = enum(u8) {
     Bide,
     Substitute,
 
+    FutureSight,
+    Encore,
+
     // Silent
     DisableSilent,
     ConfusionSilent,
@@ -224,6 +229,21 @@ pub const End = enum(u8) {
 pub const Immune = enum(u8) {
     None,
     OHKO,
+};
+
+pub const SideStart = enum(u8) {
+    Safeguard,
+    Reflect,
+    LightScreen,
+    Spikes,
+};
+
+pub const SideEnd = enum(u8) {
+    Safeguard,
+    Reflect,
+    LightScreen,
+
+    Spikes,
 };
 
 /// Null object pattern implementation of `Log` backed by a `std.io.null_writer`.
@@ -597,6 +617,46 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
+        pub fn sidestart(self: Self, ident: ID, reason: SideStart) Error!void {
+            if (!enabled) return;
+
+            try self.writer.writeAll(&.{
+                @intFromEnum(ArgType.SideStart),
+                @as(u8, @bitCast(ident)),
+                @intFromEnum(reason),
+            });
+        }
+
+        pub fn sideend(self: Self, ident: ID, reason: SideEnd) Error!void {
+            if (!enabled) return;
+
+            assert(@intFromEnum(reason) != @intFromEnum(SideEnd.Spikes));
+            try self.writer.writeAll(&.{
+                @intFromEnum(ArgType.SideEnd),
+                @as(u8, @bitCast(ident)),
+                @intFromEnum(reason),
+            });
+        }
+
+        pub fn sideendFromOf(
+            self: Self,
+            ident: ID,
+            reason: SideEnd,
+            m: anytype,
+            source: ID,
+        ) Error!void {
+            if (!enabled) return;
+
+            assert(@intFromEnum(reason) == @intFromEnum(SideEnd.Spikes));
+            try self.writer.writeAll(&.{
+                @intFromEnum(ArgType.SideEnd),
+                @as(u8, @bitCast(ident)),
+                @intFromEnum(reason),
+                @intFromEnum(m),
+                @as(u8, @bitCast(source)),
+            });
+        }
+
         pub fn laststill(self: Self) Error!void {
             if (!enabled) return;
 
@@ -702,6 +762,8 @@ pub fn format(
             .Resisted => "|-resisted|",
             .Immune => "|-immune|",
             .Transform => "|-transform|",
+            .SideStart => "|-sidestart|",
+            .SideEnd => "|-sideend|",
             else => unreachable,
         };
         printc("{s}", .{name}, a, b, &i, 1, color);
@@ -892,6 +954,22 @@ pub fn format(
                 printc(" {s}({d})", .{ @tagName(source.player), source.id }, a, b, &i, 1, color);
                 const target = ID.from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(target.player), target.id }, a, b, &i, 1, color);
+            },
+            .SideStart => {
+                const id = ID.from(@intCast(a[i]));
+                printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
+                printc(" {s}", .{@tagName(@as(SideStart, @enumFromInt(a[i])))}, a, b, &i, 1, color);
+            },
+            .SideEnd => {
+                var id = ID.from(@intCast(a[i]));
+                printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
+                const reason: SideEnd = @enumFromInt(a[i]);
+                printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
+                if (reason == .Spikes) {
+                    printc(" {s}", .{formatter(gen, .Move, a[i])}, a, b, &i, 1, color);
+                    id = ID.from(@intCast(a[i]));
+                    printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
+                }
             },
             else => unreachable,
         }
@@ -1413,5 +1491,25 @@ test "|-immune|" {
 test "|-transform|" {
     try log.transform(p2.ident(4), p1.ident(5));
     try expectLog1(&.{ N(ArgType.Transform), 0b1100, 0b0101 }, buf[0..3]);
+    stream.reset();
+}
+test "|-sidestart|" {
+    try log.sidestart(p2.ident(6), .Reflect);
+    try expectLog2(&.{ N(ArgType.SideStart), 0b1110, N(SideStart.Reflect) }, buf[0..3]);
+    stream.reset();
+}
+test "|-sideend|" {
+    try log.sideend(p2.ident(6), .LightScreen);
+    try expectLog2(&.{ N(ArgType.SideEnd), 0b1110, N(SideEnd.LightScreen) }, buf[0..3]);
+    stream.reset();
+
+    try log.sideendFromOf(p1.ident(2), .Spikes, gen2.Move.RapidSpin, p1.ident(3));
+    try expectLog2(&.{
+        N(ArgType.SideEnd),
+        0b0010,
+        N(SideEnd.Spikes),
+        N(gen2.Move.RapidSpin),
+        0b0011,
+    }, buf[0..5]);
     stream.reset();
 }

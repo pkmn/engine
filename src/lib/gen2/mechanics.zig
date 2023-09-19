@@ -787,16 +787,126 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
     }
 }
 
-fn betweenTurn(battle: anytype, options: anytype) !void {
-    var p1 = battle.side(.P1);
-    var p2 = battle.side(.P2);
-
-    _ = p1;
-    _ = p2;
-    _ = options;
+fn betweenTurn(battle: anytype, mslot: u4, options: anytype) !void {
+    const players = std.enums.values(Player);
 
     // TODO checkFaintThen(p1, p2);
 
+    // Future Sight
+    inline for (players) |player| {
+        var side = battle.side(player);
+        if (side.conditions.future_sight.count > 0) {
+            side.conditions.future_sight.count -= 1;
+            assert(side.conditions.future_sight.count != 0);
+            if (side.conditions.future_sight.count == 1) {
+                try options.log.end(battle.active(player), .FutureSight);
+                // TODO doMove
+
+            }
+        }
+    }
+    // TODO checkFaintThen(p1, p2);
+
+    // Weather
+    inline for (players) |player| {
+        var side = battle.side(player);
+        _ = side; // TODO
+
+    }
+    // TODO checkFaintThen(p1, p2);
+
+    // Binding
+    inline for (players) |player| {
+        var side = battle.side(player);
+        _ = side; // TODO
+
+    }
+    // TODO checkFaintThen(p1, p2);
+
+    // Perish Song
+    inline for (players) |player| {
+        var side = battle.side(player);
+        _ = side; // TODO
+
+    }
+    // TODO checkFaintThen(p1, p2);
+
+    // Leftovers
+    inline for (players) |player| {
+        var stored = battle.side(player).stored();
+        if (stored.item == .Leftovers) {
+            const before = stored.hp;
+            const heal = @min(@max(stored.stats.hp / 16, 1), stored.hp);
+            stored.hp = @min(stored.hp + heal, stored.stats.hp);
+            if (stored.hp > before) try options.log.heal(battle.active(player), stored, .Leftovers);
+        }
+    }
+
+    // Mystery Berry
+    inline for (players) |player| {
+        var stored = battle.side(player).stored();
+        if (stored.item == .MysteryBerry) {
+            // TODO stored and active moves, transform, etc
+        }
+    }
+
+    // Defrost
+    inline for (players) |player| {
+        var stored = battle.side(player).stored();
+        const just_frozen = false; // FIXME TODO
+        if (Status.is(stored.status, .FRZ) and !just_frozen and
+            try Rolls.defrost(battle, player, options))
+        {
+            try options.log.curestatus(battle.active(player), stored.status, .Message);
+            stored.status = 0;
+        }
+    }
+
+    // Safeguard
+    inline for (players) |player| {
+        var side = battle.side(player);
+        if (side.conditions.Safeguard) {
+            assert(side.conditions.safeguard > 0);
+            side.conditions.safeguard -= 1;
+
+            if (side.conditions.safeguard == 0) {
+                side.conditions.Safeguard = false;
+                try options.log.sideend(battle.active(player), .Safeguard);
+            }
+        }
+    }
+
+    // Reflect / Light Screen
+    inline for (players) |player| {
+        var side = battle.side(player);
+        _ = side; // TODO
+    }
+
+    // Stat boosting items
+    inline for (players) |player| {
+        var side = battle.side(player);
+        _ = side; // TODO
+    }
+
+    // Healing items
+    inline for (players) |player| {
+        var side = battle.side(player);
+        _ = side; // TODO
+    }
+
+    // Encore
+    inline for (players) |player| {
+        var side = battle.side(player);
+        if (side.active.volatiles.Encore) {
+            assert(side.active.volatiles.encore > 0);
+            side.active.volatiles.encore -= 1;
+
+            if (side.active.volatiles.encore == 0 or side.active.moves(mslot).pp == 0) {
+                side.active.volatiles.Encore = false;
+                try options.log.end(battle.active(player), .Encore);
+            }
+        }
+    }
 }
 
 fn endTurn(battle: anytype, options: anytype) @TypeOf(options.log).Error!Result {
@@ -936,6 +1046,18 @@ pub const Rolls = struct {
         return cant;
     }
 
+    inline fn defrost(battle: anytype, player: Player, options: anytype) !bool {
+        const thaw = if (options.calc.overridden(player, .defrost)) |val|
+            val == .true
+        else if (showdown)
+            battle.rng.chance(u8, 25, 256)
+        else
+            battle.rng.next() < Gen12.percent(10);
+
+        try options.chance.defrost(player, thaw);
+        return thaw;
+    }
+
     const METRONOME = init: {
         var num = 0;
         var moves: [238]Move = undefined;
@@ -961,12 +1083,14 @@ test "RNG agreement" {
     var qkc: rng.FixedRNG(2, expected.len) = .{ .rolls = expected };
     var cfz: rng.FixedRNG(2, expected.len) = .{ .rolls = expected };
     var atr: rng.FixedRNG(2, expected.len) = .{ .rolls = expected };
+    var frz: rng.FixedRNG(2, expected.len) = .{ .rolls = expected };
 
     for (0..expected.len) |i| {
         try expectEqual(spe.range(u8, 0, 2) == 0, i < Gen12.percent(50) + 1);
         try expectEqual(qkc.chance(u8, 60, 256), i < 60);
         try expectEqual(!cfz.chance(u8, 128, 256), i >= Gen12.percent(50) + 1);
         try expectEqual(atr.chance(u8, 1, 2), i < Gen12.percent(50) + 1);
+        try expectEqual(frz.chance(u8, 25, 256), i < Gen12.percent(10));
     }
 }
 

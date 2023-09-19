@@ -125,8 +125,10 @@ pub const Action = packed struct(u64) {
     confused: Optional(bool) = .None,
     /// If not None, the value to return for Rolls.attract.
     attract: Optional(bool) = .None,
+    /// If not None, the value to return for Rolls.defrost.
+    defrost: Optional(bool) = .None,
 
-    _: u28 = 0,
+    _: u26 = 0,
 
     /// Observed values of various durations. Does not influence future RNG calls. TODO
     durations: Duration = .{},
@@ -312,6 +314,13 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.get(player).attract = if (cant) .true else .false;
         }
 
+        pub fn defrost(self: *Self, player: Player, thaw: bool) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(@as(u8, if (thaw) 25 else 231), 256);
+            self.actions.get(player).defrost = if (thaw) .true else .false;
+        }
+
         pub fn sleep(self: *Self, player: Player, turns: u4) Error!void {
             if (!enabled) return;
 
@@ -456,6 +465,20 @@ test "Chance.attract" {
     try expectValue(Optional(bool).true, chance.actions.p2.attract);
 }
 
+test "Chance.defrost" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.defrost(.P1, false);
+    try expectProbability(&chance.probability, 231, 256);
+    try expectValue(Optional(bool).false, chance.actions.p1.defrost);
+
+    chance.reset();
+
+    try chance.defrost(.P2, true);
+    try expectProbability(&chance.probability, 25, 256);
+    try expectValue(Optional(bool).true, chance.actions.p2.defrost);
+}
+
 test "Chance.sleep" {
     var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
 
@@ -555,6 +578,14 @@ const Null = struct {
 
     pub fn confused(self: Null, player: Player, ok: bool) Error!void {
         _ = .{ self, player, ok };
+    }
+
+    pub fn attract(self: Null, player: Player, cant: bool) Error!void {
+        _ = .{ self, player, cant };
+    }
+
+    pub fn defrost(self: Null, player: Player, thaw: bool) Error!void {
+        _ = .{ self, player, thaw };
     }
 
     pub fn sleep(self: Null, player: Player, turns: u4) Error!void {

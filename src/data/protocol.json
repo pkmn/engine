@@ -70,7 +70,8 @@
     "Burst",
     "ClearPositiveBoost",
     "CanDynamax",
-    "SwapSideConditions"
+    "SwapSideConditions",
+    "Terastallize"
   ],
   "Move": [
     "None",
@@ -89,7 +90,8 @@
   "Heal": [
     "None",
     "Silent",
-    "Drain"
+    "Drain",
+    "Leftovers"
   ],
   "Damage": [
     "None",
@@ -97,7 +99,8 @@
     "Burn",
     "Confusion",
     "LeechSeed",
-    "RecoilOf"
+    "RecoilOf",
+    "Spikes"
   ],
   "Status": [
     "None",
@@ -136,7 +139,8 @@
     "Mist",
     "Struggle",
     "Substitute",
-    "Splash"
+    "Splash",
+    "Attract"
   ],
   "Start": [
     "Bide",
@@ -157,6 +161,8 @@
     "Confusion",
     "Bide",
     "Substitute",
+    "FutureSight",
+    "Encore",
     "DisableSilent",
     "ConfusionSilent",
     "Mist",
@@ -169,5 +175,17 @@
   "Immune": [
     "None",
     "OHKO"
+  ],
+  "SideStart": [
+    "Safeguard",
+    "Reflect",
+    "LightScreen",
+    "Spikes"
+  ],
+  "SideEnd": [
+    "Safeguard",
+    "Reflect",
+    "LightScreen",
+    "Spikes"
   ]
 }
