@@ -181,7 +181,7 @@
     "Eat"
   ],
   "SetHP": [
-    "Message",
+    "None",
     "Silent"
   ],
   "SideStart": [

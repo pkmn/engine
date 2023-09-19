@@ -239,6 +239,8 @@ will indicate which `Move` the `|move|` is `[from]`. This message may be modifie
 
 ### `|switch|` (`0x04`)
 
+### Gen I
+
     Byte/     0       |       1       |       2       |       3       |
        /              |               |               |               |
       |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
@@ -252,6 +254,22 @@ will indicate which `Move` the `|move|` is `[from]`. This message may be modifie
 
 The Pokémon identified by [`Ident`](#pokemonident) has switched in and is a level `Level` `Species`
 with `Current HP`, `Max HP` and `Status`.
+
+#### Gen II
+
+    Byte/     0       |       1       |       2       |       3       |
+       /              |               |               |               |
+      |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
+      +---------------+---------------+---------------+---------------+
+     0| 0x04          | Ident         | Species       | Gender        |
+      +---------------+---------------+---------------+---------------+
+     4| Level         | Current HP                    | Max HP ->     |
+      +---------------+---------------+---------------+---------------+
+     8| <- Max HP     | Status        |
+      +---------------+---------------+
+
+The Pokémon identified by [`Ident`](#pokemonident) has switched in and is a `Gender` level `Level`
+`Species` with `Current HP`, `Max HP` and `Status`.
 
 ### `|cant|` (`0x05`)
 
@@ -302,7 +320,7 @@ The Pokémon identified by [`Ident`](#pokemonident) has fainted.
 
 It's now turn `Turn`.
 
-### `|win` (`0x08`)
+### `|win|` (`0x08`)
 
     Byte/     0       |       1       |
        /              |               |
@@ -706,6 +724,200 @@ The Pokémon identified by [`Ident`](#pokemonident) is immune to a move.
 
 `Source` is the [`PokemonIdent`](#pokemonident) of the Pokémon that transformed into the Pokémon
 identified by the `Target` [`PokemonIdent`](#pokemonident).
+
+### `|drag|` (`0x1F`)
+
+    Byte/     0       |       1       |       2       |       3       |
+       /              |               |               |               |
+      |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
+      +---------------+---------------+---------------+---------------+
+     0| 0x1F          | Ident         | Species       | Gender        |
+      +---------------+---------------+---------------+---------------+
+     4| Level         | Current HP                    | Max HP ->     |
+      +---------------+---------------+---------------+---------------+
+     8| <- Max HP     | Status        |
+      +---------------+---------------+
+
+The Pokémon identified by [`Ident`](#pokemonident) has been dragged in and is a `Gender` level
+`Level` `Species` with `Current HP`, `Max HP` and `Status`.
+
+### `|-item|` (`0x20`)
+
+    Byte/     0       |       1       |       2       |       3       |
+       /              |               |               |               |
+      |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
+      +---------------+---------------+---------------+---------------+
+     0| 0x20          | Target        | Item          | Source        |
+      +---------------+---------------+---------------+---------------+
+
+`Target` is the [`PokemonIdent`](#pokemonident) of the Pokémon that has had their `Item` changed or
+revealed `[from] move: Thief` of the `Source` [`PokemonIdent`](#pokemonident).
+
+### `|-enditem|` (`0x21`)
+
+    Byte/     0       |       1       |       2       |       3       |
+       /              |               |               |               |
+      |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
+      +---------------+---------------+---------------+---------------+
+     0| 0x21          | Target        | Item          | Reason        |
+      +---------------+---------------+---------------+---------------+
+
+The `Item` held by the Pokémon identified by [`Ident`](#pokemonident) has been lost or destroyed
+due to `Reason`.
+
+<details><summary>Reason</summary>
+
+| Raw    | Description |
+| ------ | ----------- |
+| `0x00` | None        |
+| `0x01` | `\|[eat]`   |
+</details>
+
+### `|-cureteam|` (`0x22`)
+
+    Byte/     0       |       1       |
+       /              |               |
+      |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
+      +---------------+---------------+
+     0| 0x22          | Ident         |
+      +---------------+---------------+
+
+The Pokémon identified by [`Ident`](#pokemonident) cured its team of status effects `[from] move:
+Heal Bell`.
+
+### `|-sethp|` (`0x23`)
+
+    Byte/     0       |       1       |       2       |       3       |
+       /              |               |               |               |
+      |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
+      +---------------+---------------+---------------+---------------+
+     0| 0x23          | Ident         | Current HP                    |
+      +---------------+---------------+---------------+---------------+
+     4| Max HP                        | Status        | Reason        |
+      +---------------+---------------+---------------+---------------+
+
+The Pokémon identified by [`Ident`](#pokemonident) had their HP changed to `Current HP`, `Max HP`
+and `Status`.
+
+<details><summary>Reason</summary>
+
+| Raw    | Description  |
+| ------ | ------------ |
+| `0x00` | None         |
+| `0x01` | `\|[silent]` |
+</details>
+
+### `|-setboost|` (`0x24`)
+
+    Byte/     0       |       1       |       2       |
+       /              |               |               |
+      |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
+      +---------------+---------------+---------------+
+     0| 0x24          | Ident         | Num           |
+      +---------------+---------------+---------------+
+
+The Pokémon identified by [`Ident`](#pokemonident) has been boosted *to* (as opposed to by)
+`Num` - 6 in Attack due to Belly Drum.
+
+### `|-copyboost|` (`0x25`)
+
+    Byte/     0       |       1       |       2       |
+       /              |               |               |
+      |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
+      +---------------+---------------+---------------+
+     0| 0x25          | Source        | Target        |
+      +---------------+---------------+---------------+
+
+`Source` is the [`PokemonIdent`](#pokemonident) of the Pokémon that copies the boosts of the Pokémon
+identified by the `Target` [`PokemonIdent`](#pokemonident).
+
+### `|-sidestart|` (`0x26`)
+
+    Byte/     0       |       1       |       2       |
+       /              |               |               |
+      |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
+      +---------------+---------------+---------------+
+     0| 0x26          | Player        | Reason        |
+      +---------------+---------------+---------------+
+
+A side condition from `Reason` started on the side belonging to `Player`.
+
+<details><summary>Reason</summary>
+
+| Raw    | Description       |
+| ------ | ----------------- |
+| `0x00` | `Safeguard`       |
+| `0x01` | `move: Safeguard` |
+| `0x02` | `Reflect`         |
+| `0x03` | `Spikes`          |
+</details>
+
+### `|-sideend|` (`0x27`)
+
+    Byte/     0       |       1       |       2       |       3       |
+       /              |               |               |               |
+      |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
+      +---------------+---------------+---------------+---------------+
+     0| 0x27          | Player        | Reason        | [of]?         |
+      +---------------+---------------+---------------+---------------+
+
+A side condition from `Reason` ended on the side belonging to `Player`. `Reason` is the same as
+`|-sidestart|`, but if `Reason` is `0x03` then the following byte indicates the
+[`PokemonIdent`](#pokemonident) is the source `[of]` the spikes being removed `[from] move: Rapid
+Spin`.
+
+### `|-singlemove|` (`0x28`)
+
+    Byte/     0       |       1       |       2       |
+       /              |               |               |
+      |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
+      +---------------+---------------+---------------+
+     0| 0x28          | Ident         | Move          |
+      +---------------+---------------+---------------+
+
+The Pokémon identified by [`Ident`](#pokemonident) used `Move` which caused a temporary effect
+lasting the duration of the move.
+
+### `|-singleturn|` (`0x29`)
+
+    Byte/     0       |       1       |       2       |
+       /              |               |               |
+      |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
+      +---------------+---------------+---------------+
+     0| 0x29          | Ident         | Move          |
+      +---------------+---------------+---------------+
+
+The Pokémon identified by [`Ident`](#pokemonident) used `Move` which caused a temporary effect
+lasting the duration of the turn.
+
+### `|-weather|` (`0x2A`)
+
+    Byte/     0       |       1       |       2       |
+       /              |               |               |
+      |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
+      +---------------+---------------+---------------+
+     0| 0x2A          | Weather       | Reason        |
+      +---------------+---------------+---------------+
+
+`Weather` is currently in effect on the field, possibly active previously an still in effect if
+`Reason` is `0x01`.
+
+<details><summary>Weather</summary>
+
+| Raw    | Description |
+| ------ | ----------- |
+| `0x00` | None        |
+| `0x01` | Rain        |
+| `0x02` | Sun         |
+| `0x03` | Sandstorm   |
+</details>
+<details><summary>Reason</summary>
+
+| Raw    | Description  |
+| ------ | ------------ |
+| `0x00` | None         |
+| `0x01` | `\|[upkeep]` |
+</details>
 
 ## Size
 

@@ -237,7 +237,7 @@ pub const EndItem = enum(u8) {
 };
 
 pub const SetHP = enum(u8) {
-    Message,
+    None,
     Silent,
 };
 
@@ -640,12 +640,12 @@ pub fn Log(comptime Writer: type) type {
             return switchDrag(self, .Drag, ident, pokemon);
         }
 
-        pub fn item(self: Self, ident: ID, i: anytype, source: ID) Error!void {
+        pub fn item(self: Self, target: ID, i: anytype, source: ID) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Item),
-                @as(u8, @bitCast(ident)),
+                @as(u8, @bitCast(target)),
                 @intFromEnum(i),
                 @as(u8, @bitCast(source)),
             });
@@ -681,14 +681,12 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeByte(@intFromEnum(reason));
         }
 
-        pub fn setboost(self: Self, ident: ID, reason: Boost, num: i8) Error!void {
+        pub fn setboost(self: Self, ident: ID, num: i8) Error!void {
             if (!enabled) return;
 
-            assert(reason != .Rage);
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.SetBoost),
                 @as(u8, @bitCast(ident)),
-                @intFromEnum(reason),
                 @as(u8, @intCast(num + 6)),
             });
         }
@@ -703,33 +701,33 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn sidestart(self: Self, ident: ID, reason: SideStart) Error!void {
+        pub fn sidestart(self: Self, player: Player, reason: SideStart) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.SideStart),
-                @as(u8, @bitCast(ident)),
+                @intFromEnum(player),
                 @intFromEnum(reason),
             });
         }
 
-        pub fn sideend(self: Self, ident: ID, reason: SideEnd) Error!void {
+        pub fn sideend(self: Self, player: Player, reason: SideEnd) Error!void {
             if (!enabled) return;
 
             assert(@intFromEnum(reason) != @intFromEnum(SideEnd.Spikes));
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.SideEnd),
-                @as(u8, @bitCast(ident)),
+                @intFromEnum(player),
                 @intFromEnum(reason),
             });
         }
 
-        pub fn spikes(self: Self, ident: ID, m: anytype, source: ID) Error!void {
+        pub fn spikesend(self: Self, player: Player, m: anytype, source: ID) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.SideEnd),
-                @as(u8, @bitCast(ident)),
+                @intFromEnum(player),
                 @intFromEnum(SideEnd.Spikes),
                 @intFromEnum(m),
                 @as(u8, @bitCast(source)),
@@ -1016,7 +1014,7 @@ pub fn format(
                 const reason: CureStatus = @enumFromInt(a[i]);
                 printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
             },
-            .Boost, .SetBoost => {
+            .Boost => {
                 const id = ID.from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {s}", .{@tagName(@as(Boost, @enumFromInt(a[i])))}, a, b, &i, 1, color);
@@ -1027,7 +1025,7 @@ pub fn format(
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {s}", .{@tagName(@as(Fail, @enumFromInt(a[i])))}, a, b, &i, 1, color);
             },
-            .HitCount => {
+            .HitCount, .SetBoost => {
                 const id = ID.from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {d}", .{a[i]}, a, b, &i, 1, color);
@@ -1724,12 +1722,12 @@ test "|-sethp|" {
 }
 
 test "|-setboost|" {
-    try log.setboost(p2.ident(6), .Attack, 6);
-    try expectLog2(&.{ N(ArgType.SetBoost), 0b1110, N(Boost.Attack), 12 }, buf[0..4]);
+    try log.setboost(p2.ident(6), 6);
+    try expectLog2(&.{ N(ArgType.SetBoost), 0b1110, 12 }, buf[0..3]);
     stream.reset();
 
-    try log.setboost(p2.ident(3), .SpecialDefense, -3);
-    try expectLog2(&.{ N(ArgType.SetBoost), 0b1011, N(Boost.SpecialDefense), 3 }, buf[0..4]);
+    try log.setboost(p2.ident(3), 2);
+    try expectLog2(&.{ N(ArgType.SetBoost), 0b1011, 8 }, buf[0..3]);
     stream.reset();
 }
 
@@ -1740,20 +1738,20 @@ test "|-copyboost|" {
 }
 
 test "|-sidestart|" {
-    try log.sidestart(p2.ident(6), .Reflect);
-    try expectLog2(&.{ N(ArgType.SideStart), 0b1110, N(SideStart.Reflect) }, buf[0..3]);
+    try log.sidestart(.P2, .Reflect);
+    try expectLog2(&.{ N(ArgType.SideStart), 1, N(SideStart.Reflect) }, buf[0..3]);
     stream.reset();
 }
 
 test "|-sideend|" {
-    try log.sideend(p2.ident(6), .LightScreen);
-    try expectLog2(&.{ N(ArgType.SideEnd), 0b1110, N(SideEnd.LightScreen) }, buf[0..3]);
+    try log.sideend(.P2, .LightScreen);
+    try expectLog2(&.{ N(ArgType.SideEnd), 1, N(SideEnd.LightScreen) }, buf[0..3]);
     stream.reset();
 
-    try log.spikes(p1.ident(2), M2.RapidSpin, p1.ident(3));
+    try log.spikesend(.P1, M2.RapidSpin, p1.ident(3));
     try expectLog2(&.{
         N(ArgType.SideEnd),
-        0b0010,
+        0,
         N(SideEnd.Spikes),
         N(M2.RapidSpin),
         0b0011,
