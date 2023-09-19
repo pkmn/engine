@@ -6594,7 +6594,7 @@ test "Counter + sleep = Desync Clause Mod bug" {
 
     // Choice made while sleeping should not have been saved (and lead to a desync) as
     // on the cartridge no opportunity is given for choosing a move while sleeping
-    const result = if (showdown) Result.Default else .{ .p1 = .Switch, .p2 = .Pass };
+    const result = if (showdown) Result.Default else Result{ .p1 = .Switch, .p2 = .Pass };
     try expectEqual(result, try t.update(move(if (showdown) 2 else 0), move(3)));
     // (6/7) * (255/256)
     try if (showdown) t.expectProbability(6, 7) else t.expectProbability(765, 896);
@@ -7594,7 +7594,7 @@ test "Bide damage accumulation glitches" {
 
         _ = t.battle.actual.choices(.P2, .Move, &choices);
 
-        const result = if (showdown) .{ .p1 = .Switch, .p2 = .Pass } else Result.Error;
+        const result = if (showdown) Result{ .p1 = .Switch, .p2 = .Pass } else Result.Error;
         try expectEqual(result, try t.update(move(2), move(if (showdown) 2 else 0)));
         try t.expectProbability(765, 32768); // (255/256) * (234/256) * (1/39)
 
