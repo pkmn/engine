@@ -51,6 +51,7 @@ const showdown = pkmn.options.showdown;
 pub const PRNG = rng.PRNG(2);
 
 pub fn Battle(comptime RNG: anytype) type {
+    const padding = if (!showdown) 3 else 5;
     return extern struct {
         const Self = @This();
 
@@ -59,8 +60,7 @@ pub fn Battle(comptime RNG: anytype) type {
         turn: u16 = 0,
         field: Field = .{},
 
-        _1: u8 = 0,
-        _2: if (!showdown) u16 else u32 = 0,
+        _: [padding]u8 = .{0} ** padding,
 
         pub inline fn side(self: anytype, player: Player) PointerType(@TypeOf(self), Side) {
             assert(@typeInfo(@TypeOf(self)).Pointer.child == Self);
@@ -106,12 +106,10 @@ pub const Side = extern struct {
     pokemon: [6]Pokemon = [_]Pokemon{.{}} ** 6,
     active: ActivePokemon align(8) = .{},
     conditions: Conditions = .{},
-    _1: u32 = 0,
-    _2: u16 = 0,
-    // NB: wCurPlayerMove / wCurEnemyMove (?)
-    _3: u8 = 0,
     // NB: wLastPlayerCounterMove / wLastEnemyCounterMove (wLastPlayerMove / wLastEnemyMove)
     last_used_move: Move = .None,
+
+    _: [7]u8 = .{0} ** 7,
 
     const Conditions = packed struct(u32) {
         Spikes: bool = false,

@@ -774,7 +774,7 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
     }
 }
 
-fn betweenTurn(battle: anytype, mslot: u4, options: anytype) !void {
+fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
     const players = std.enums.values(Player);
 
     // TODO checkFaintThen(p1, p2);
