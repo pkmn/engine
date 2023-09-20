@@ -121,6 +121,8 @@ pub const Cant = enum(u8) {
     Disable,
     Recharge,
     PP,
+
+    Attract,
 };
 
 pub const Heal = enum(u8) {
@@ -139,6 +141,11 @@ pub const Damage = enum(u8) {
     LeechSeed,
     RecoilOf,
 
+    Bind,
+    Wrap,
+    FireSpin,
+    Clamp,
+    Whirlpool,
     Spikes,
 };
 
@@ -186,6 +193,14 @@ pub const Activate = enum(u8) {
     Splash,
 
     Attract,
+    LockOn,
+    Bind,
+    Wrap,
+    FireSpin,
+    Clamp,
+    Whirlpool,
+
+    BeatUp, // FIXME of
 };
 
 pub const Start = enum(u8) {
@@ -203,6 +218,18 @@ pub const Start = enum(u8) {
 
     Disable,
     Mimic,
+
+    Nightmare,
+    Curse,
+    Foresight,
+    Encore,
+    FutureSight,
+
+    PerishSong3Silent,
+    PerishSong3,
+    PerishSong2,
+    PerishSong1,
+    PerishSong0,
 };
 
 pub const End = enum(u8) {
@@ -211,20 +238,26 @@ pub const End = enum(u8) {
     Bide,
     Substitute,
 
-    FutureSight,
+    Nightmare,
+    Curse,
+    Foresight,
     Encore,
+    FutureSight,
+    LeechSeed,
+    Bind,
+    Wrap,
+    FireSpin,
+    Clamp,
+    Whirlpool,
 
-    // Silent
     DisableSilent,
     ConfusionSilent,
-
-    Mist,
-    FocusEnergy,
-    LeechSeed,
-    Toxic,
-    LightScreen,
-    Reflect,
-
+    MistSilent,
+    FocusEnergySilent,
+    LeechSeedSilent,
+    ToxicSilent,
+    LightScreenSilent,
+    ReflectSilent,
     BideSilent,
 };
 

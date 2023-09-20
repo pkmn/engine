@@ -2701,15 +2701,15 @@ fn clearVolatiles(battle: anytype, who: Player, clear: bool, options: anytype) !
     }
     if (volatiles.Mist) {
         volatiles.Mist = false;
-        try log.end(ident, .Mist);
+        try log.end(ident, .MistSilent);
     }
     if (volatiles.FocusEnergy) {
         volatiles.FocusEnergy = false;
-        try log.end(ident, .FocusEnergy);
+        try log.end(ident, .FocusEnergySilent);
     }
     if (volatiles.LeechSeed) {
         volatiles.LeechSeed = false;
-        try log.end(ident, .LeechSeed);
+        try log.end(ident, .LeechSeedSilent);
     }
     if (!showdown and volatiles.Toxic) {
         volatiles.Toxic = false;
@@ -2717,17 +2717,17 @@ fn clearVolatiles(battle: anytype, who: Player, clear: bool, options: anytype) !
     }
     if (volatiles.LightScreen) {
         volatiles.LightScreen = false;
-        try log.end(ident, .LightScreen);
+        try log.end(ident, .LightScreenSilent);
     }
     if (volatiles.Reflect) {
         volatiles.Reflect = false;
-        try log.end(ident, .Reflect);
+        try log.end(ident, .ReflectSilent);
     }
     if (showdown and volatiles.Toxic) {
         volatiles.Toxic = false;
         // Pokémon Showdown erroneously clears the toxic counter
         volatiles.toxic = 0;
-        try log.end(ident, .Toxic);
+        try log.end(ident, .ToxicSilent);
     }
 }
 

@@ -85,7 +85,8 @@
     "Flinch",
     "Disable",
     "Recharge",
-    "PP"
+    "PP",
+    "Attract"
   ],
   "Heal": [
     "None",
@@ -100,6 +101,11 @@
     "Confusion",
     "LeechSeed",
     "RecoilOf",
+    "Bind",
+    "Wrap",
+    "FireSpin",
+    "Clamp",
+    "Whirlpool",
     "Spikes"
   ],
   "Status": [
@@ -140,7 +146,14 @@
     "Struggle",
     "Substitute",
     "Splash",
-    "Attract"
+    "Attract",
+    "LockOn",
+    "Bind",
+    "Wrap",
+    "FireSpin",
+    "Clamp",
+    "Whirlpool",
+    "BeatUp"
   ],
   "Start": [
     "Bide",
@@ -154,23 +167,42 @@
     "Substitute",
     "TypeChange",
     "Disable",
-    "Mimic"
+    "Mimic",
+    "Nightmare",
+    "Curse",
+    "Foresight",
+    "Encore",
+    "FutureSight",
+    "PerishSong3Silent",
+    "PerishSong3",
+    "PerishSong2",
+    "PerishSong1",
+    "PerishSong0"
   ],
   "End": [
     "Disable",
     "Confusion",
     "Bide",
     "Substitute",
-    "FutureSight",
+    "Nightmare",
+    "Curse",
+    "Foresight",
     "Encore",
+    "FutureSight",
+    "LeechSeed",
+    "Bind",
+    "Wrap",
+    "FireSpin",
+    "Clamp",
+    "Whirlpool",
     "DisableSilent",
     "ConfusionSilent",
-    "Mist",
-    "FocusEnergy",
-    "LeechSeed",
-    "Toxic",
-    "LightScreen",
-    "Reflect",
+    "MistSilent",
+    "FocusEnergySilent",
+    "LeechSeedSilent",
+    "ToxicSilent",
+    "LightScreenSilent",
+    "ReflectSilent",
     "BideSilent"
   ],
   "Immune": [

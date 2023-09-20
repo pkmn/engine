@@ -265,11 +265,20 @@ with `Current HP`, `Max HP` and `Status`.
       +---------------+---------------+---------------+---------------+
      4| Level         | Current HP                    | Max HP ->     |
       +---------------+---------------+---------------+---------------+
-     8| <- Max HP     | Status        |
-      +---------------+---------------+
+     8| <- Max HP     | Status        | Reason        |
+      +---------------+---------------+---------------+
 
-The Pokémon identified by [`Ident`](#pokemonident) has switched in and is a `Gender` level `Level`
-`Species` with `Current HP`, `Max HP` and `Status`.
+The Pokémon identified by [`Ident`](#pokemonident) has switched in due to `Reason` and is a `Gender`
+level `Level` `Species` with `Current HP`, `Max HP` and `Status`.
+
+<details><summary>Reason</summary>
+
+| Raw    | Description           |
+| ------ | --------------------- |
+| `0x00` | None                  |
+| `0x01` | `\|[from] Baton Pass` |
+</details>
+
 
 ### `|cant|` (`0x05`)
 
@@ -760,7 +769,7 @@ The Pokémon identified by [`Ident`](#pokemonident) has been dragged in and is a
       +---------------+---------------+---------------+---------------+
 
 `Target` is the [`PokemonIdent`](#pokemonident) of the Pokémon that has had their `Item` changed or
-revealed `[from] move: Thief` of the `Source` [`PokemonIdent`](#pokemonident).
+revealed `[from] move: Thief` `[of]` the `Source` [`PokemonIdent`](#pokemonident).
 
 ### `|-enditem|` (`0x21`)
 
@@ -810,10 +819,10 @@ and `Status`.
 
 <details><summary>Reason</summary>
 
-| Raw    | Description  |
-| ------ | ------------ |
-| `0x00` | None         |
-| `0x01` | `\|[silent]` |
+| Raw    | Description                         |
+| ------ | ----------------------------------- |
+| `0x00` | `[from] move: Pain Split`           |
+| `0x01` | `[from] move: Pain Split\|[silent]` |
 </details>
 
 ### `|-setboost|` (`0x24`)
@@ -826,7 +835,7 @@ and `Status`.
       +---------------+---------------+---------------+
 
 The Pokémon identified by [`Ident`](#pokemonident) has been boosted *to* (as opposed to by)
-`Num` - 6 in Attack due to Belly Drum.
+`Num` - 6 in Attack `[from] move: Belly Drum`.
 
 ### `|-copyboost|` (`0x25`)
 

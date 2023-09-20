@@ -229,7 +229,9 @@ for (const gen of new Generations(Dex as any)) {
 
     test('|-start|', () => {
       expect(Array.from(log.parse(Data.view([ArgType.Start, 0b1110, PROTOCOL.Start.Bide]))))
-        .toEqual(parse('|-start|p2a: Fuudin|Bide'));
+        .toEqual(parse(gen.num === 1
+          ? '|-start|p2a: Fuudin|Bide'
+          : '|-start|p2a: Fuudin|move: Bide'));
       expect(Array.from(
         log.parse(Data.view([ArgType.Start, 0b0010, PROTOCOL.Start.ConfusionSilent]))
       )).toEqual(parse('|-start|p1a: Hitokage|confusion|[silent]'));
@@ -254,7 +256,7 @@ for (const gen of new Generations(Dex as any)) {
 
     test('|-end|', () => {
       expect(Array.from(log.parse(Data.view([ArgType.End, 0b1110, PROTOCOL.End.Bide]))))
-        .toEqual(parse('|-end|p2a: Fuudin|Bide'));
+        .toEqual(parse(gen.num === 1 ? '|-end|p2a: Fuudin|Bide' : '|-end|p2a: Fuudin|move: Bide'));
       expect(Array.from(log.parse(Data.view([ArgType.End, 0b0010, PROTOCOL.End.ConfusionSilent]))))
         .toEqual(parse('|-end|p1a: Hitokage|confusion|[silent]'));
     });

@@ -1166,7 +1166,7 @@ test "FocusEnergy effect" {
     try t.log.expected.move(P2.ident(1), Move.Haze, P2.ident(1), null);
     try t.log.expected.activate(P2.ident(1), .Haze);
     try t.log.expected.clearallboost();
-    try t.log.expected.end(P1.ident(1), .FocusEnergy);
+    try t.log.expected.end(P1.ident(1), .FocusEnergySilent);
     try t.log.expected.turn(3);
 
     // No crit after Focus Energy (https://pkmn.cc/bulba-glitch-1#Critical_hit_ratio_error)
@@ -3926,7 +3926,7 @@ test "Mist effect" {
     try t.log.expected.move(P2.ident(1), Move.Haze, P2.ident(1), null);
     try t.log.expected.activate(P2.ident(1), .Haze);
     try t.log.expected.clearallboost();
-    try t.log.expected.end(P1.ident(1), .Mist);
+    try t.log.expected.end(P1.ident(1), .MistSilent);
     try t.log.expected.turn(4);
 
     try expectEqual(Result.Default, try t.update(move(2), move(3)));
@@ -4936,7 +4936,7 @@ test "LightScreen effect" {
     try t.log.expected.move(P2.ident(1), Move.Haze, P2.ident(1), null);
     try t.log.expected.activate(P2.ident(1), .Haze);
     try t.log.expected.clearallboost();
-    try t.log.expected.end(P1.ident(1), .LightScreen);
+    try t.log.expected.end(P1.ident(1), .LightScreenSilent);
     try t.log.expected.move(P1.ident(1), Move.Splash, P1.ident(1), null);
     try t.log.expected.activate(P1.ident(1), .Splash);
     try t.log.expected.turn(5);
@@ -5000,7 +5000,7 @@ test "Reflect effect" {
     try t.log.expected.move(P2.ident(1), Move.Haze, P2.ident(1), null);
     try t.log.expected.activate(P2.ident(1), .Haze);
     try t.log.expected.clearallboost();
-    try t.log.expected.end(P1.ident(1), .Reflect);
+    try t.log.expected.end(P1.ident(1), .ReflectSilent);
     try t.log.expected.move(P1.ident(1), Move.Splash, P1.ident(1), null);
     try t.log.expected.activate(P1.ident(1), .Splash);
     try t.log.expected.turn(5);
@@ -5113,15 +5113,15 @@ test "Haze effect" {
     try t.log.expected.activate(P1.ident(1), .Haze);
     try t.log.expected.clearallboost();
     if (showdown) {
-        try t.log.expected.end(P1.ident(1), .LeechSeed);
+        try t.log.expected.end(P1.ident(1), .LeechSeedSilent);
         try t.log.expected.curestatus(P2.ident(1), t.expected.p2.get(1).status, .Silent);
     } else {
         try t.log.expected.curestatus(P2.ident(1), t.expected.p2.get(1).status, .Silent);
-        try t.log.expected.end(P1.ident(1), .LeechSeed);
+        try t.log.expected.end(P1.ident(1), .LeechSeedSilent);
     }
     t.expected.p2.get(1).status = 0;
     try t.log.expected.end(P2.ident(1), .ConfusionSilent);
-    if (showdown) try t.log.expected.end(P2.ident(1), .Toxic);
+    if (showdown) try t.log.expected.end(P2.ident(1), .ToxicSilent);
     try t.log.expected.turn(5);
 
     try expectEqual(Result.Default, try t.update(move(4), move(4)));
