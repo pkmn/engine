@@ -19,7 +19,7 @@ for (const gen of new Generations(Dex as any)) {
     });
 
     test('Lookup.type', () => {
-      expect(lookup.typeByName('Rock')).toBe(5);
+      expect(lookup.typeByName('Rock')).toBe(gen.num === 1 ? 5 : 1);
       expect(lookup.typeByNum(14)).toBe(gen.num === 1 ? 'Dragon' : 'Psychic');
     });
 

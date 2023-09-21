@@ -11,15 +11,15 @@ const Type = data.Type;
 /// Representation of a held item in Generation II Pokémon.
 pub const Item = enum(u8) {
     None,
+    SoftSand, // Ground
+    HardStone, // Rock
+    MetalCoat, // Steel
     PinkBow, // Normal
     BlackBelt, // Fighting
     SharpBeak, // Flying
     PoisonBarb, // Poison
-    SoftSand, // Ground
-    HardStone, // Rock
     SilverPowder, // Bug
     SpellTag, // Ghost
-    MetalCoat, // Steel
     PolkadotBow, // ??? (Normal)
     Charcoal, // Fire
     MysticWater, // Water

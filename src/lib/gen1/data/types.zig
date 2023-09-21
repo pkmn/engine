@@ -99,7 +99,7 @@ pub const Type = enum(u4) {
         return CHART[@intFromEnum(t1)][@intFromEnum(t2)];
     }
 
-    /// The precedence order of type `t2` vs. type  `t1`.
+    /// The precedence order of Type `t2` vs. Type `t1`.
     pub fn precedence(t1: Type, t2: Type) u8 {
         for (PRECEDENCE, 0..) |matchup, i| {
             if (matchup.type1 == t1 and matchup.type2 == t2) return @intCast(i);

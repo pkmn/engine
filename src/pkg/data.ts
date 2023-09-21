@@ -11,8 +11,8 @@ export const LE = (() => {
 })();
 
 export type IDs = [
-  { types: TypeName[] },
-  { items: ID[]; types: TypeName[] },
+  { types: Exclude<TypeName, 'Dark' | 'Steel' | 'Fairy'>[] },
+  { items: ID[]; types: Exclude<TypeName, 'Fairy'>[] },
 ];
 
 export const IDS = idsJSON as IDs;

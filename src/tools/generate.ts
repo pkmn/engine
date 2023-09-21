@@ -23,12 +23,12 @@ const IDS: IDs =
   types: [
     'Normal', 'Fighting', 'Flying', 'Poison', 'Ground', 'Rock', 'Bug', 'Ghost',
     'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Ice', 'Dragon',
-  ] as TypeName[],
+  ] as Exclude<TypeName, 'Dark' | 'Steel' | 'Fairy'>[],
 }, {
   types: [
-    'Normal', 'Fighting', 'Flying', 'Poison', 'Ground', 'Rock', 'Bug', 'Ghost', 'Steel',
+    'Ground', 'Rock', 'Steel', 'Normal', 'Fighting', 'Flying', 'Poison', 'Bug', 'Ghost',
     '???', 'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Ice', 'Dragon', 'Dark',
-  ] as TypeName[],
+  ] as Exclude<TypeName, 'Fairy'>[],
   items: [],
 }];
 const DATA: [{
@@ -61,6 +61,19 @@ const TYPE_PRECEDENCE = [
   '???', 'Normal', 'Fire', 'Water', 'Electric', 'Grass', 'Ice', 'Fighting', 'Poison',
   'Ground', 'Flying', 'Psychic', 'Bug', 'Rock', 'Ghost', 'Dragon', 'Dark', 'Steel',
 ];
+
+// https://pkmn.cc/pokecrystal/engine/battle/hidden_power.asm
+const HIDDEN_POWER = [
+  'Normal', 'Fighting', 'Flying', 'Poison', 'Ground', 'Rock', 'Bug', 'Ghost', 'Steel',
+  '???', 'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Ice', 'Dragon', 'Dark',
+];
+
+// https://pkmn.cc/pokecrystal/constants/type_constants.asm
+const TYPE_INDEXES = {
+  Normal: 0, Fighting: 1, Flying: 2, Poison: 3, Ground: 4, Rock: 5, Bug: 7, Ghost: 8, Steel: 9,
+  '???': 19, Fire: 20, Water: 21, Grass: 22, Electric: 23, Psychic: 24, Ice: 25, Dragon: 26,
+  Dark: 27,
+};
 
 const NAMES: { [constant: string]: string } = {
   // Items
@@ -601,7 +614,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     }
 
     const precedenceFn =
-    `/// The precedence order of type \`t2\` vs. type  \`t1\`.
+    `/// The precedence order of Type \`t2\` vs. Type \`t1\`.
     pub fn precedence(t1: Type, t2: Type) u8 {
         for (PRECEDENCE, 0..) |matchup, i| {
             if (matchup.type1 == t1 and matchup.type2 == t2) return @intCast(i);
@@ -636,14 +649,38 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const types = IDS[1].types;
 
     const precedence = [];
+    const indexes = [];
+    const hiddenPower = [];
     for (const type of types) {
       precedence.push(`        ${TYPE_PRECEDENCE.indexOf(type)}, // ${type}`);
+      indexes.push(`        ${TYPE_INDEXES[type]}, // ${type}`);
+    }
+    for (const type of HIDDEN_POWER) {
+      if (type === 'Normal' || type === '???') continue;
+      hiddenPower.push(`        ${types.indexOf(type as any)}, // ${type}`);
     }
 
     const precedenceFn =
-    `/// The precedence order of type type.
+    `/// The precedence order of Type \`type\`.
     pub inline fn precedence(self: Type) u8 {
         return PRECEDENCE[@intFromEnum(self)];
+    }`;
+
+    const extraFns = `
+    /// The internal index of this Type used by Present.
+    pub inline fn present(self: Type) u8 {
+        return INDEXES[@intFromEnum(self)];
+    }
+
+    /// The Type corresponding to a Hidden Power \`index\`.
+    pub inline fn hiddenPower(index: u8) Type {
+        return @enumFromInt(HIDDEN_POWER[index]);
+    }`;
+
+    const sandstormFn = `\n
+    /// Whether this typing is immune to damage from Sandstorm.
+    pub inline fn sandstormImmune(self: Types) u8 {
+        return self.type1 <= @intFromEnum(Type.Steel) or self.type2 <= @intFromEnum(Type.Steel);
     }`;
 
     template('types', dirs.out, {
@@ -658,10 +695,16 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         precedence: `const PRECEDENCE = [_]u8{\n${precedence.join('\n')}\n    };`,
         precedenceSize: precedence.length,
         precedenceFn,
+        extra: `\n\n    const INDEXES = [_]u8{\n${indexes.join('\n')}\n    };` +
+        `\n\n    const HIDDEN_POWER = [_]u8{\n${hiddenPower.join('\n')}\n    };`,
+        extraSizes: `\n        assert(@sizeOf(@TypeOf(INDEXES)) == ${indexes.length});` +
+          `\n        assert(@sizeOf(@TypeOf(HIDDEN_POWER)) == ${hiddenPower.length});`,
+        extraFns,
       },
       Types: {
         qualifier: 'extern',
         size: 2,
+        extraFns: sandstormFn,
       },
     });
 

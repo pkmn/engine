@@ -14,15 +14,15 @@ const I = Effectiveness.Immune;
 
 /// Representation of a Generation II type in Pokémon.
 pub const Type = enum(u8) {
+    Ground,
+    Rock,
+    Steel,
     Normal,
     Fighting,
     Flying,
     Poison,
-    Ground,
-    Rock,
     Bug,
     Ghost,
-    Steel,
     @"???",
     Fire,
     Water,
@@ -34,36 +34,36 @@ pub const Type = enum(u8) {
     Dark,
 
     const CHART: [18][18]Effectiveness = .{
-        [_]Effectiveness{ N, N, N, N, N, R, N, I, R, N, N, N, N, N, N, N, N, N }, // Normal
-        [_]Effectiveness{ S, N, R, R, N, S, R, I, S, N, N, N, N, N, R, S, N, S }, // Fighting
-        [_]Effectiveness{ N, S, N, N, N, R, S, N, R, N, N, N, S, R, N, N, N, N }, // Flying
-        [_]Effectiveness{ N, N, N, R, R, R, N, R, I, N, N, N, S, N, N, N, N, N }, // Poison
-        [_]Effectiveness{ N, N, I, S, N, S, R, N, S, N, S, N, R, S, N, N, N, N }, // Ground
-        [_]Effectiveness{ N, R, S, N, R, N, S, N, R, N, S, N, N, N, N, S, N, N }, // Rock
-        [_]Effectiveness{ N, R, R, R, N, N, N, R, R, N, R, N, S, N, S, N, N, S }, // Bug
-        [_]Effectiveness{ I, N, N, N, N, N, N, S, R, N, N, N, N, N, S, N, N, R }, // Ghost
-        [_]Effectiveness{ N, N, N, N, N, S, N, N, R, N, R, R, N, R, N, S, N, N }, // Steel
+        [_]Effectiveness{ N, S, S, N, N, I, S, R, N, N, S, N, R, S, N, N, N, N }, // Ground
+        [_]Effectiveness{ R, N, R, N, R, S, N, S, N, N, S, N, N, N, N, S, N, N }, // Rock
+        [_]Effectiveness{ N, S, R, N, N, N, N, N, N, N, R, R, N, R, N, S, N, N }, // Steel
+        [_]Effectiveness{ N, R, R, N, N, N, N, N, I, N, N, N, N, N, N, N, N, N }, // Normal
+        [_]Effectiveness{ N, S, S, S, N, R, R, R, I, N, N, N, N, N, R, S, N, S }, // Fighting
+        [_]Effectiveness{ N, R, R, N, S, N, N, S, N, N, N, N, S, R, N, N, N, N }, // Flying
+        [_]Effectiveness{ R, R, I, N, N, N, R, N, R, N, N, N, S, N, N, N, N, N }, // Poison
+        [_]Effectiveness{ N, N, R, N, R, R, R, N, R, N, R, N, S, N, S, N, N, S }, // Bug
+        [_]Effectiveness{ N, N, R, I, N, N, N, N, S, N, N, N, N, N, S, N, N, R }, // Ghost
         [_]Effectiveness{ N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N }, // ???
-        [_]Effectiveness{ N, N, N, N, N, R, S, N, S, N, R, R, S, N, N, S, R, N }, // Fire
-        [_]Effectiveness{ N, N, N, N, S, S, N, N, N, N, S, R, R, N, N, N, R, N }, // Water
-        [_]Effectiveness{ N, N, R, R, S, S, R, N, R, N, R, S, R, N, N, N, R, N }, // Grass
-        [_]Effectiveness{ N, N, S, N, I, N, N, N, N, N, N, S, R, R, N, N, R, N }, // Electric
-        [_]Effectiveness{ N, S, N, S, N, N, N, N, R, N, N, N, N, N, R, N, N, I }, // Psychic
-        [_]Effectiveness{ N, N, S, N, S, N, N, N, R, N, R, R, S, N, N, R, S, N }, // Ice
-        [_]Effectiveness{ N, N, N, N, N, N, N, N, R, N, N, N, N, N, N, N, S, N }, // Dragon
-        [_]Effectiveness{ N, R, N, N, N, N, N, S, R, N, N, N, N, N, S, N, N, R }, // Dark
+        [_]Effectiveness{ N, R, S, N, N, N, N, S, N, N, R, R, S, N, N, S, R, N }, // Fire
+        [_]Effectiveness{ S, S, N, N, N, N, N, N, N, N, S, R, R, N, N, N, R, N }, // Water
+        [_]Effectiveness{ S, S, R, N, N, R, R, R, N, N, R, S, R, N, N, N, R, N }, // Grass
+        [_]Effectiveness{ I, N, N, N, N, S, N, N, N, N, N, S, R, R, N, N, R, N }, // Electric
+        [_]Effectiveness{ N, N, R, N, S, N, S, N, N, N, N, N, N, N, R, N, N, I }, // Psychic
+        [_]Effectiveness{ S, N, R, N, N, S, N, N, N, N, R, R, S, N, N, R, S, N }, // Ice
+        [_]Effectiveness{ N, N, R, N, N, N, N, N, N, N, N, N, N, N, N, N, S, N }, // Dragon
+        [_]Effectiveness{ N, N, R, N, R, N, N, N, S, N, N, N, N, N, S, N, N, R }, // Dark
     };
 
     const PRECEDENCE = [_]u8{
+        9, // Ground
+        13, // Rock
+        17, // Steel
         1, // Normal
         7, // Fighting
         10, // Flying
         8, // Poison
-        9, // Ground
-        13, // Rock
         12, // Bug
         14, // Ghost
-        17, // Steel
         0, // ???
         2, // Fire
         3, // Water
@@ -75,10 +75,52 @@ pub const Type = enum(u8) {
         16, // Dark
     };
 
+    const INDEXES = [_]u8{
+        4, // Ground
+        5, // Rock
+        9, // Steel
+        0, // Normal
+        1, // Fighting
+        2, // Flying
+        3, // Poison
+        7, // Bug
+        8, // Ghost
+        19, // ???
+        20, // Fire
+        21, // Water
+        22, // Grass
+        23, // Electric
+        24, // Psychic
+        25, // Ice
+        26, // Dragon
+        27, // Dark
+    };
+
+    const HIDDEN_POWER = [_]u8{
+        4, // Fighting
+        5, // Flying
+        6, // Poison
+        0, // Ground
+        1, // Rock
+        7, // Bug
+        8, // Ghost
+        2, // Steel
+        10, // Fire
+        11, // Water
+        12, // Grass
+        13, // Electric
+        14, // Psychic
+        15, // Ice
+        16, // Dragon
+        17, // Dark
+    };
+
     comptime {
         assert(@bitSizeOf(Type) == 8);
         assert(@sizeOf(@TypeOf(CHART)) == 324);
         assert(@sizeOf(@TypeOf(PRECEDENCE)) == 18);
+        assert(@sizeOf(@TypeOf(INDEXES)) == 18);
+        assert(@sizeOf(@TypeOf(HIDDEN_POWER)) == 16);
     }
 
     /// The number of types in this generation.
@@ -94,9 +136,18 @@ pub const Type = enum(u8) {
         return CHART[@intFromEnum(t1)][@intFromEnum(t2)];
     }
 
-    /// The precedence order of type type.
+    /// The precedence order of Type `type`.
     pub inline fn precedence(self: Type) u8 {
         return PRECEDENCE[@intFromEnum(self)];
+    }
+    /// The internal index of this Type used by Present.
+    pub inline fn present(self: Type) u8 {
+        return INDEXES[@intFromEnum(self)];
+    }
+
+    /// The Type corresponding to a Hidden Power `index`.
+    pub inline fn hiddenPower(index: u8) Type {
+        return @enumFromInt(HIDDEN_POWER[index]);
     }
 };
 
@@ -119,5 +170,10 @@ pub const Types = extern struct {
     /// Whether this typing includes type `t`.
     pub inline fn includes(self: Types, t: Type) bool {
         return self.type1 == t or self.type2 == t;
+    }
+
+    /// Whether this typing is immune to damage from Sandstorm.
+    pub inline fn sandstormImmune(self: Types) u8 {
+        return self.type1 <= @intFromEnum(Type.Steel) or self.type2 <= @intFromEnum(Type.Steel);
     }
 };

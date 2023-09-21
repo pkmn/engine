@@ -20,12 +20,12 @@ pub const Type = enum({{{ Type.type }}}) {
         {{{ Type.chart }}}
     };
 
-    {{{ Type.precedence }}}
+    {{{ Type.precedence }}}{{{ Type.extra }}}
 
     comptime {
         assert(@bitSizeOf(Type) == {{{ Type.bitSize }}});
         assert(@sizeOf(@TypeOf(CHART)) == {{{ Type.chartSize }}});
-        assert(@sizeOf(@TypeOf(PRECEDENCE)) == {{{ Type.precedenceSize }}});
+        assert(@sizeOf(@TypeOf(PRECEDENCE)) == {{{ Type.precedenceSize }}});{{{ Type.extraSizes }}}
     }
 
     /// The number of types in this generation.
@@ -41,7 +41,7 @@ pub const Type = enum({{{ Type.type }}}) {
         return CHART[@intFromEnum(t1)][@intFromEnum(t2)];
     }
 
-    {{{ Type.precedenceFn }}}
+    {{{ Type.precedenceFn }}}{{{ Type.extraFns }}}
 };
 
 /// Representation of a Pokémon's typing.
@@ -63,5 +63,5 @@ pub const Types = {{{ Types.qualifier }}} struct {
     /// Whether this typing includes type `t`.
     pub inline fn includes(self: Types, t: Type) bool {
         return self.type1 == t or self.type2 == t;
-    }
+    }{{{ Types.extraFns }}}
 };

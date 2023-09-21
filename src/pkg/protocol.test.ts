@@ -240,8 +240,9 @@ for (const gen of new Generations(Dex as any)) {
         ArgType.Start, 0b1110, PROTOCOL.Start.TypeChange, FIRE, 0b1101])))).toEqual(parse(
         '|-start|p2a: Fuudin|typechange|Fire|[from] move: Conversion|[of] p2a: Sutaamii'
       ));
+      const BUG_POISON = gen.num === 1 ? 0b0011_0110 : 0b0110_0111;
       expect(Array.from(log.parse(Data.view([
-        ArgType.Start, 0b0010, PROTOCOL.Start.TypeChange, 0b0011_0110, 0b1100,
+        ArgType.Start, 0b0010, PROTOCOL.Start.TypeChange, BUG_POISON, 0b1100,
       ])))).toEqual(parse(
         '|-start|p1a: Hitokage|typechange|Bug/Poison|[from] move: Conversion|[of] p2a: Nasshii'
       ));
