@@ -131,6 +131,9 @@ pub const Heal = enum(u8) {
     Drain,
 
     Leftovers,
+    Berry,
+    BerryJuice,
+    GoldBerry,
 };
 
 pub const Damage = enum(u8) {

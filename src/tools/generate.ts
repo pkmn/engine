@@ -700,7 +700,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         continue;
       }
       const s = `${name}, // ${held}`;
-      if (name.endsWith('Berry')) {
+      if (name.endsWith('Berry') || held === 'Berry') {
         berries.push(s);
       } else if (held.endsWith('Boost')) {
         boosts.push([name, gen.types.get(held.slice(0, -5))!.name]);
@@ -721,15 +721,21 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
       }
     }
-    const offset = {effect: 0, berry: 0, present: 0, mail: 0};
+    const offset = {effect: 0, present: 0, mail: 0};
     for (const s of effects) {
       values.push(s);
     }
     offset.effect = values.length;
-    for (const s of berries) {
-      values.push(s);
+    const ORDER = [
+      'Berry', 'BerryJuice', 'GoldBerry', 'MintBerry', 'PSNCureBerry', 'PRZCureBerry',
+      'IceBerry', 'BurntBerry', 'MiracleBerry', 'BitterBerry', 'MysteryBerry',
+    ];
+    if (berries.length !== ORDER.length) {
+      throw new Error(`Berries: ${berries.length} != ${ORDER.length}`);
     }
-    offset.berry = values.length;
+    for (const s of ORDER) {
+      values.push(berries.find(b => b.startsWith(`${s},`))!);
+    }
     for (const s of nothing.present) {
       values.push(s);
     }

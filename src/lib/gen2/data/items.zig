@@ -36,21 +36,21 @@ pub const Item = enum(u8) {
     Stick,
     ThickClub,
     FocusBand, // FocusBand
-    BerryJuice, // Berry
     ScopeLens, // CriticalUp
     Leftovers, // Leftovers
     BerserkGene,
     LightBall,
+    Berry, // Berry
+    BerryJuice, // Berry
+    GoldBerry, // Berry
+    MintBerry, // HealSleep
     PSNCureBerry, // HealPoison
     PRZCureBerry, // HealParalyze
-    BurntBerry, // HealFreeze
     IceBerry, // HealBurn
-    BitterBerry, // HealConfusion
-    MintBerry, // HealSleep
+    BurntBerry, // HealFreeze
     MiracleBerry, // HealStatus
+    BitterBerry, // HealConfusion
     MysteryBerry, // RestorePP
-    Berry, // Berry
-    GoldBerry, // Berry
     MasterBall,
     UltraBall,
     GreatBall,
@@ -222,14 +222,8 @@ pub const Item = enum(u8) {
         return if (@intFromEnum(item) <= 18) @enumFromInt(@intFromEnum(item) - 1) else null;
     }
 
-    /// Whether or not this item is a Berry.
-    pub inline fn berry(item: Item) bool {
-        assert(item != .None);
-        return @intFromEnum(item) > 30 and @intFromEnum(item) <= 40;
-    }
-
     /// Whether or not this item is Mail.
-    pub inline fn mail(item: Item) bool {
+    pub inline fn isMail(item: Item) bool {
         assert(item != .None);
         return @intFromEnum(item) > 60 and @intFromEnum(item) <= 70;
     }

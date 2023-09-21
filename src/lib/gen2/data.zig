@@ -402,15 +402,10 @@ test Item {
     try expectEqual(Type.Normal, Item.boost(.PolkadotBow).?);
     try expectEqual(Type.Dark, Item.boost(.BlackGlasses).?);
 
-    try expect(!Item.mail(.UpGrade));
-    try expect(Item.mail(.FlowerMail));
-    try expect(Item.mail(.MirageMail));
-    try expect(!Item.mail(.TownMap));
-
-    try expect(!Item.berry(.LightBall));
-    try expect(Item.berry(.PSNCureBerry));
-    try expect(Item.berry(.GoldBerry));
-    try expect(!Item.berry(.MasterBall));
+    try expect(!Item.isMail(.UpGrade));
+    try expect(Item.isMail(.FlowerMail));
+    try expect(Item.isMail(.MirageMail));
+    try expect(!Item.isMail(.TownMap));
 }
 
 pub const Move = moves.Move;

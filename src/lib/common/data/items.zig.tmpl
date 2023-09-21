@@ -27,14 +27,8 @@ pub const Item = enum({{{ Item.type }}}) {
         return if (@intFromEnum(item) <= {{{ Item.boosts }}}) @enumFromInt(@intFromEnum(item) - 1) else null;
     }
 
-    /// Whether or not this item is a Berry.
-    pub inline fn berry(item: Item) bool {
-        assert(item != .None);
-        return @intFromEnum(item) > {{{ Item.effect }}} and @intFromEnum(item) <= {{{ Item.berry }}};
-    }
-
     /// Whether or not this item is Mail.
-    pub inline fn mail(item: Item) bool {
+    pub inline fn isMail(item: Item) bool {
         assert(item != .None);
         return @intFromEnum(item) > {{{ Item.present }}} and @intFromEnum(item) <= {{{ Item.mail }}};
     }

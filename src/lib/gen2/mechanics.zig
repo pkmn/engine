@@ -28,6 +28,7 @@ const Gen12 = rng.Gen12;
 
 const ActivePokemon = data.ActivePokemon;
 const Effectiveness = data.Effectiveness;
+const Item = data.Item;
 const Move = data.Move;
 const MoveSlot = data.MoveSlot;
 const Pokemon = data.Pokemon;
@@ -849,36 +850,86 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
         }
     }
 
-    // Safeguard
-    inline for (players) |player| {
-        var side = battle.side(player);
-        if (side.conditions.Safeguard) {
-            assert(side.conditions.safeguard > 0);
-            side.conditions.safeguard -= 1;
-
-            if (side.conditions.safeguard == 0) {
-                side.conditions.Safeguard = false;
-                try options.log.sideend(battle.active(player), .Safeguard);
-            }
+    // Side Conditions
+    if (showdown) {
+        inline for (players) |player| {
+            updateSideCondition(battle, player, "Reflect", "reflect");
         }
-    }
+        inline for (players) |player| {
+            updateSideCondition(battle, player, "LightScreen", "light_screen");
+        }
+        inline for (players) |player| {
+            updateSideCondition(battle, player, "Safeguard", "safeguard");
+        }
+    } else {
+        inline for (players) |player| {
+            updateSideCondition(battle, player, "Safeguard", "safeguard");
+        }
 
-    // Reflect / Light Screen
-    inline for (players) |player| {
-        var side = battle.side(player);
-        _ = side; // TODO
-    }
-
-    // Stat boosting items
-    inline for (players) |player| {
-        var side = battle.side(player);
-        _ = side; // TODO
+        inline for (players) |player| {
+            updateSideCondition(battle, player, "LightScreen", "light_screen");
+            updateSideCondition(battle, player, "Reflect", "reflect");
+        }
     }
 
     // Healing items
     inline for (players) |player| {
         var side = battle.side(player);
-        _ = side; // TODO
+        var stored = side.stored();
+        const ident = battle.active(player);
+
+        const num = @intFromEnum(stored.item);
+        if (num > @intFromEnum(Item.Berry)) {
+            if (num <= @intFromEnum(Item.GoldBerry)) {
+                const proc = if (showdown)
+                    stored.hp <= stored.stats.hp
+                else
+                    stored.hp < stored.stats.hp;
+                if (proc) {
+                    assert(stored.hp != 0);
+                    try options.log.enditem(ident, stored.item, .Eat);
+                    stored.item = .None;
+
+                    const offset = num - @intFromEnum(Item.Berry);
+                    assert(offset < 3);
+                    stored.hp = @min(stored.hp + ((offset + 1) * 10), stored.stats.hp);
+                    const reason: Heal = @enumFromInt(@intFromEnum(Heal.Berry) + offset);
+                    try options.log.heal(ident, stored, reason);
+                }
+            } else if (num < @intFromEnum(Item.BitterBerry)) {
+                const proc = if (stored.item == .MiracleBerry)
+                    Status.any(stored.status)
+                else
+                    Status.is(stored.status, @enumFromInt(num - @intFromEnum(Item.MintBerry) + 2));
+
+                if (proc) {
+                    assert(Status.any(stored.status));
+                    try options.log.enditem(ident, stored.item, .Eat);
+                    stored.item = .None;
+
+                    // FIXME wtf?
+                    // side.active.volatiles.Toxic = false;
+                    // side.active.volatiles.NightMare = false;
+                    if (stored.item == .MiracleBerry) {
+                        side.active.volatiles.Confusion = false;
+                        try options.log.end(ident, .Confusion);
+                    }
+                    stored.status = 0;
+
+                    // FIXME recalc stats
+
+                    try options.log.curestatus(ident, stored.status, .Message);
+                }
+            } else if (num == @intFromEnum(Item.BitterBerry)) {
+                if (side.active.volatiles.Confusion) {
+                    try options.log.enditem(ident, stored.item, .Eat);
+                    stored.item = .None;
+
+                    side.active.volatiles.Confusion = false;
+                    try options.log.end(ident, .Confusion);
+                }
+            }
+        }
     }
 
     // Encore
@@ -892,6 +943,25 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
                 side.active.volatiles.Encore = false;
                 try options.log.end(battle.active(player), .Encore);
             }
+        }
+    }
+}
+
+inline fn updateSideCondition(
+    battle: anytype,
+    player: Player,
+    comptime key: []const u8,
+    comptime value: []const u8,
+    options: anytype,
+) !void {
+    var side = battle.side(player);
+    if (@field(side.conditions, key)) {
+        assert(@field(side.conditions, value) > 0);
+        @field(side.conditions, value) -= 1;
+
+        if (@field(side.conditions, value) == 0) {
+            @field(side.conditions, key) = false;
+            try options.log.sideend(battle.active(player), @field(protocol.Side, key));
         }
     }
 }
