@@ -32,8 +32,6 @@ The following information is required to simulate a Generation II Pokémon battl
 | `pokemon.species`              | `party_struct.Species`            | `pokemon.baseSpecies`                 |
 | `active.species`               | `battle_struct.Species`           | `pokemon.species`                     |
 | `active.stats`                 | `TODO modified`                   | `pokemon.storedStats`                 |
-| `active.trapped FIXME`         | `PlayerTrappingMove`              | `pokemon.trapped`                     |
-| `active.switching`             | `PlayerIsSwitching`               | `pokemon.switchFlag`                  |
 | `active.boosts`                | `PlayerStatLevels`                | `pokemon.boosts`                      |
 | `active.volatiles`             | `PlayerBattleStatus{1,2,3}`       | `pokemon.volatiles`                   |
 | `volatiles.bide`               | `PlayerDamageTaken`               | `volatiles.bide.totalDamage`          |
@@ -49,7 +47,11 @@ The following information is required to simulate a Generation II Pokémon battl
 | `volatiles.future_sight`       | `PlayerFutureSight{Damage,Count}` | `slotConditions[i].futuremove`        |
 | `volatiles.rage`               | `PlayerRageCounter`               | **BUG**                               |
 | `volatiles.bind`               | `PlayerWrapCount`                 | `volatiles.partiallytrapped.duration` |
+| `volatiles.bind_reason`        | `PlayerTrappingMove`              | `volatiles.effectState.sourceEffect`  |
 |                                | `PlayerCharging`                  |                                       |
+| `volatiles.trapped FIXME`      | `FIXME`                           | `pokemon.trapped`                     |
+| `volatiles.switched`           | `TODO`                            | `pokemon.switchFlag`                  |
+| `volatiles.switching`          | `PlayerIsSwitching`               | `pokemon.switchFlag`                  |
 | `volatiles.frozen`             | `PlayerJustGotFrozen`             | `volatiles.frozen`                    |
 |                                |                                   |                                       |
 | `active.last_used_move`        | `PlayerUsedMove`                  | `side.lastMove`                       |

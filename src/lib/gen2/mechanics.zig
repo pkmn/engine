@@ -20,9 +20,12 @@ const Result = common.Result;
 
 const showdown = pkmn.options.showdown;
 
+const Activate = protocol.Activate;
 const Cant = protocol.Cant;
 const Damage = protocol.Damage;
+const End = protocol.End;
 const Heal = protocol.Heal;
+const Start = protocol.Start;
 
 const Gen12 = rng.Gen12;
 
@@ -783,13 +786,14 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
     // Future Sight
     inline for (players) |player| {
         var side = battle.side(player);
-        if (side.conditions.future_sight.count > 0) {
-            side.conditions.future_sight.count -= 1;
-            assert(side.conditions.future_sight.count != 0);
-            if (side.conditions.future_sight.count == 1) {
+        var future_sight = &side.conditions.future_sight;
+
+        if (future_sight.count > 0) {
+            future_sight.count -= 1;
+            assert(future_sight.count != 0);
+            if (future_sight.count == 1) {
                 try options.log.end(battle.active(player), .FutureSight);
                 // TODO doMove
-
             }
         }
     }
@@ -798,8 +802,22 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
     // Weather
     inline for (players) |player| {
         var side = battle.side(player);
-        _ = side; // TODO
+        var volatiles = &side.active.volatiles;
 
+        if (volatiles.bind > 0 and !volatiles.Substitute) {
+            volatiles.bind -= 1;
+            if (volatiles.bind == 0) {
+                const reason = @intFromEnum(End.Bind) + volatiles.bind_reason - 1;
+                try options.log.end(battle.active(player), @enumFromInt(reason));
+            } else {
+                var reason = @intFromEnum(Activate.Bind) + volatiles.bind_reason - 1;
+                try options.log.activate(battle.active(player), @enumFromInt(reason));
+
+                reason = @intFromEnum(Activate.Damage) + volatiles.bind_reason - 1;
+                side.stored().hp -= @min(@max(side.stored().stats.hp / 16, 1), side.stored().hp);
+                try options.log.damage(battle.active(player), side.stored(), reason);
+            }
+        }
     }
     // TODO checkFaintThen(p1, p2);
 
@@ -814,14 +832,28 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
     // Perish Song
     inline for (players) |player| {
         var side = battle.side(player);
-        _ = side; // TODO
+        var volatiles = &side.active.volatiles;
 
+        if (volatiles.PerishSong) {
+            assert(volatiles.perish_song > 0);
+            volatiles.perish_song -= 1;
+
+            assert(volatiles.perish_song < 3);
+            const reason = @intFromEnum(Start.PerishSong0) + volatiles.perish_song;
+            try options.log.start(battle.active(player), reason);
+
+            if (volatiles.perish_song == 0) {
+                volatiles.PerishSong = false;
+                side.stored().hp = 0;
+            }
+        }
     }
     // TODO checkFaintThen(p1, p2);
 
     // Leftovers
     inline for (players) |player| {
         var stored = battle.side(player).stored();
+
         if (stored.item == .Leftovers) {
             const before = stored.hp;
             const heal = @min(@max(stored.stats.hp / 16, 1), stored.hp);
@@ -833,6 +865,7 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
     // Mystery Berry
     inline for (players) |player| {
         var stored = battle.side(player).stored();
+
         if (stored.item == .MysteryBerry) {
             // TODO stored and active moves, transform, etc
         }
@@ -841,6 +874,7 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
     // Defrost
     inline for (players) |player| {
         var side = battle.side(player);
+
         if (Status.is(side.stored().status, .FRZ) and
             !side.active.volatiles.frozen and
             try Rolls.defrost(battle, player, options))
@@ -935,12 +969,14 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
     // Encore
     inline for (players) |player| {
         var side = battle.side(player);
-        if (side.active.volatiles.Encore) {
-            assert(side.active.volatiles.encore > 0);
-            side.active.volatiles.encore -= 1;
+        var volatiles = &side.active.volatiles;
 
-            if (side.active.volatiles.encore == 0 or side.active.moves(mslot).pp == 0) {
-                side.active.volatiles.Encore = false;
+        if (volatiles.Encore) {
+            assert(volatiles.encore > 0);
+            volatiles.encore -= 1;
+
+            if (volatiles.encore == 0 or side.active.moves(mslot).pp == 0) {
+                volatiles.Encore = false;
                 try options.log.end(battle.active(player), .Encore);
             }
         }

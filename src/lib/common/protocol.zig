@@ -228,11 +228,11 @@ pub const Start = enum(u8) {
     Encore,
     FutureSight,
 
-    PerishSong3Silent,
-    PerishSong3,
-    PerishSong2,
-    PerishSong1,
     PerishSong0,
+    PerishSong1,
+    PerishSong2,
+    PerishSong3,
+    PerishSong3Silent,
 };
 
 pub const End = enum(u8) {
