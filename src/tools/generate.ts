@@ -785,6 +785,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     ];
     const FLYING = ['gust', 'whirlwind', 'thunder', 'twister'];
     const UNDERGROUND = ['earthquake', 'fissure', 'magnitude'];
+    const BINDING = ['bind', 'wrap', 'firespin', 'clamp', 'whirlpool'];
     url = `${pret}/data/moves/moves.asm`;
     const moves = await getOrUpdate('moves', dirs.cache, url, update, (line, _, i) => {
       const match = /move (\w+),\W+(\w+),/.exec(line);
@@ -805,11 +806,12 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       const move = gen.moves.get(name)!;
       const chance = move.secondary?.chance ? `percent(${move.secondary.chance}),` : '';
       const acc = move.accuracy === true ? 100 : move.accuracy;
-      const flags =
+      const extra =
         NO_METRONOME.includes(move.id) ? '.{ .metronome = false }'
         : CONTINUOUS.includes(move.id) ? '.{ .continuous = true }'
         : FLYING.includes(move.id) ? '.{ .flying = true }'
-        : UNDERGROUND.includes(move.id) ? '.{ .underground = true }' : '';
+        : UNDERGROUND.includes(move.id) ? '.{ .underground = true }'
+        : BINDING.includes(move.id) ? `.{ .protocol = ${BINDING.indexOf(move.id) + 1} }` : '';
       MOVES.push(`// ${name}\n` +
         '        .{\n' +
         `            .effect = .${effect},\n` +
@@ -819,7 +821,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         `            .target = .${TARGETS[move.target]},\n` +
         (chance ? `            .chance = ${chance}\n` : '') +
         (move.priority ? `            .priority = ${move.priority},\n` : '') +
-        (flags ? `            .flags = ${flags},\n` : '') +
+        (extra ? `            .extra = ${extra},\n` : '') +
         '        }');
       PP.push(`${move.pp}, // ${name}`);
       DATA[1].moves[move.name] = move.pp;
@@ -841,11 +843,11 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         chance: u8 = 0,
         /// The priority of the move.
         priority: i8 = 0,
-        /// Miscellaneous flags.
-        flags: Flags = .{},
+        /// Miscellaneous extra data/flags.
+        extra: Extra = .{},
 
-        /// Miscellaneous move related flags.
-        const Flags = packed struct(u8) {
+        /// Miscellaneous extra move related data/flags.
+        const Extra = packed struct(u8) {
             /// Whether this move can be called via Metronome.
             metronome: bool = true,
             /// Whether this move is considered to be "continuous".
@@ -854,8 +856,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
             flying: bool = false,
             /// Whether this move can hit an underground target.
             underground: bool = false,
-
-            _: u4 = 0,
+            /// Protocol reason offset associated with this move.
+            protocol: u4 = 0,
         };
 
         comptime {

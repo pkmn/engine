@@ -658,13 +658,13 @@ fn moveHit(
     const drain = move.effect == .DrainHP or move.effect == .DreamEater;
     if (drain and foe.active.volatiles.Substitute) return false;
     if (side.active.volatiles.LockOn) {
-        return !(foe.active.volatiles.Flying and move.flags.undeground);
+        return !(foe.active.volatiles.Flying and move.extra.undeground);
     }
     assert(!(foe.active.volatiles.Flying and foe.active.volatiles.Underground));
     if (foe.active.volatiles.Flying) {
-        if (!move.flags.flying) return false;
+        if (!move.extra.flying) return false;
     } else if (foe.active.volatiles.Underground) {
-        if (!move.flags.underground) return false;
+        if (!move.extra.underground) return false;
     }
     if (move.effect == .Thunder and battle.field.weather == .Rain) return true;
     if (move.effect == .AlwaysHit) return true;
@@ -1144,7 +1144,7 @@ pub const Rolls = struct {
         var num = 0;
         var moves: [238]Move = undefined;
         for (1..Move.size) |i| {
-            if (Move.get(@enumFromInt(i)).flags.metronome) {
+            if (Move.get(@enumFromInt(i)).extra.metronome) {
                 moves[num] = @enumFromInt(i);
                 num += 1;
             }

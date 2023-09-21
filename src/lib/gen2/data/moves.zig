@@ -281,11 +281,11 @@ pub const Move = enum(u8) {
         chance: u8 = 0,
         /// The priority of the move.
         priority: i8 = 0,
-        /// Miscellaneous flags.
-        flags: Flags = .{},
+        /// Miscellaneous extra data/flags.
+        extra: Extra = .{},
 
-        /// Miscellaneous move related flags.
-        const Flags = packed struct(u8) {
+        /// Miscellaneous extra move related data/flags.
+        const Extra = packed struct(u8) {
             /// Whether this move can be called via Metronome.
             metronome: bool = true,
             /// Whether this move is considered to be "continuous".
@@ -294,8 +294,8 @@ pub const Move = enum(u8) {
             flying: bool = false,
             /// Whether this move can hit an underground target.
             underground: bool = false,
-
-            _: u4 = 0,
+            /// Protocol reason offset associated with this move.
+            protocol: u4 = 0,
         };
 
         comptime {
@@ -410,7 +410,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .accuracy = percent(75),
             .target = .Foes,
-            .flags = .{ .continuous = true },
+            .extra = .{ .continuous = true },
         },
         // SwordsDance
         .{
@@ -435,7 +435,7 @@ pub const Move = enum(u8) {
             .type = .Flying,
             .accuracy = percent(100),
             .target = .Any,
-            .flags = .{ .flying = true },
+            .extra = .{ .flying = true },
         },
         // WingAttack
         .{
@@ -453,7 +453,7 @@ pub const Move = enum(u8) {
             .accuracy = percent(100),
             .target = .Other,
             .priority = -1,
-            .flags = .{ .flying = true },
+            .extra = .{ .flying = true },
         },
         // Fly
         .{
@@ -462,7 +462,7 @@ pub const Move = enum(u8) {
             .type = .Flying,
             .accuracy = percent(95),
             .target = .Any,
-            .flags = .{ .continuous = true },
+            .extra = .{ .continuous = true },
         },
         // Bind
         .{
@@ -471,6 +471,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .accuracy = percent(75),
             .target = .Other,
+            .extra = .{ .protocol = 1 },
         },
         // Slam
         .{
@@ -595,6 +596,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .accuracy = percent(85),
             .target = .Other,
+            .extra = .{ .protocol = 2 },
         },
         // TakeDown
         .{
@@ -611,7 +613,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .accuracy = percent(100),
             .target = .RandomFoe,
-            .flags = .{ .continuous = true },
+            .extra = .{ .continuous = true },
         },
         // DoubleEdge
         .{
@@ -874,7 +876,7 @@ pub const Move = enum(u8) {
             .accuracy = percent(100),
             .target = .Depends,
             .priority = -1,
-            .flags = .{ .metronome = false },
+            .extra = .{ .metronome = false },
         },
         // SeismicToss
         .{
@@ -939,7 +941,7 @@ pub const Move = enum(u8) {
             .type = .Grass,
             .accuracy = percent(100),
             .target = .Other,
-            .flags = .{ .continuous = true },
+            .extra = .{ .continuous = true },
         },
         // PoisonPowder
         .{
@@ -972,7 +974,7 @@ pub const Move = enum(u8) {
             .type = .Grass,
             .accuracy = percent(100),
             .target = .RandomFoe,
-            .flags = .{ .continuous = true },
+            .extra = .{ .continuous = true },
         },
         // StringShot
         .{
@@ -997,6 +999,7 @@ pub const Move = enum(u8) {
             .type = .Fire,
             .accuracy = percent(70),
             .target = .Other,
+            .extra = .{ .protocol = 3 },
         },
         // ThunderShock
         .{
@@ -1032,7 +1035,7 @@ pub const Move = enum(u8) {
             .accuracy = percent(70),
             .target = .Other,
             .chance = percent(30),
-            .flags = .{ .flying = true },
+            .extra = .{ .flying = true },
         },
         // RockThrow
         .{
@@ -1049,7 +1052,7 @@ pub const Move = enum(u8) {
             .type = .Ground,
             .accuracy = percent(100),
             .target = .AllOthers,
-            .flags = .{ .underground = true },
+            .extra = .{ .underground = true },
         },
         // Fissure
         .{
@@ -1058,7 +1061,7 @@ pub const Move = enum(u8) {
             .type = .Ground,
             .accuracy = percent(30),
             .target = .Other,
-            .flags = .{ .underground = true },
+            .extra = .{ .underground = true },
         },
         // Dig
         .{
@@ -1158,7 +1161,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .accuracy = percent(100),
             .target = .Other,
-            .flags = .{ .metronome = false },
+            .extra = .{ .metronome = false },
         },
         // Screech
         .{
@@ -1279,7 +1282,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .accuracy = percent(100),
             .target = .Self,
-            .flags = .{ .continuous = true },
+            .extra = .{ .continuous = true },
         },
         // Metronome
         .{
@@ -1288,7 +1291,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .accuracy = percent(100),
             .target = .Self,
-            .flags = .{ .metronome = false },
+            .extra = .{ .metronome = false },
         },
         // MirrorMove
         .{
@@ -1374,6 +1377,7 @@ pub const Move = enum(u8) {
             .type = .Water,
             .accuracy = percent(75),
             .target = .Other,
+            .extra = .{ .protocol = 4 },
         },
         // Swift
         .{
@@ -1390,7 +1394,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .accuracy = percent(100),
             .target = .Other,
-            .flags = .{ .continuous = true },
+            .extra = .{ .continuous = true },
         },
         // SpikeCannon
         .{
@@ -1496,7 +1500,7 @@ pub const Move = enum(u8) {
             .type = .Flying,
             .accuracy = percent(90),
             .target = .Any,
-            .flags = .{ .continuous = true },
+            .extra = .{ .continuous = true },
         },
         // Transform
         .{
@@ -1678,7 +1682,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .accuracy = percent(100),
             .target = .RandomFoe,
-            .flags = .{ .metronome = false },
+            .extra = .{ .metronome = false },
         },
         // Sketch
         .{
@@ -1687,7 +1691,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .accuracy = percent(100),
             .target = .Other,
-            .flags = .{ .metronome = false },
+            .extra = .{ .metronome = false },
         },
         // TripleKick
         .{
@@ -1705,7 +1709,7 @@ pub const Move = enum(u8) {
             .accuracy = percent(100),
             .target = .Other,
             .chance = percent(100),
-            .flags = .{ .metronome = false },
+            .extra = .{ .metronome = false },
         },
         // SpiderWeb
         .{
@@ -1822,7 +1826,7 @@ pub const Move = enum(u8) {
             .accuracy = percent(100),
             .target = .Self,
             .priority = 2,
-            .flags = .{ .metronome = false },
+            .extra = .{ .metronome = false },
         },
         // MachPunch
         .{
@@ -1924,7 +1928,7 @@ pub const Move = enum(u8) {
             .type = .Ghost,
             .accuracy = percent(100),
             .target = .Self,
-            .flags = .{ .metronome = false },
+            .extra = .{ .metronome = false },
         },
         // PerishSong
         .{
@@ -1951,7 +1955,7 @@ pub const Move = enum(u8) {
             .accuracy = percent(100),
             .target = .Self,
             .priority = 2,
-            .flags = .{ .metronome = false },
+            .extra = .{ .metronome = false },
         },
         // BoneRush
         .{
@@ -1976,7 +1980,7 @@ pub const Move = enum(u8) {
             .type = .Dragon,
             .accuracy = percent(100),
             .target = .RandomFoe,
-            .flags = .{ .continuous = true },
+            .extra = .{ .continuous = true },
         },
         // Sandstorm
         .{
@@ -2002,7 +2006,7 @@ pub const Move = enum(u8) {
             .accuracy = percent(100),
             .target = .Self,
             .priority = 2,
-            .flags = .{ .metronome = false },
+            .extra = .{ .metronome = false },
         },
         // Charm
         .{
@@ -2019,7 +2023,7 @@ pub const Move = enum(u8) {
             .type = .Rock,
             .accuracy = percent(90),
             .target = .Other,
-            .flags = .{ .continuous = true },
+            .extra = .{ .continuous = true },
         },
         // FalseSwipe
         .{
@@ -2094,7 +2098,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .accuracy = percent(100),
             .target = .Self,
-            .flags = .{ .metronome = false },
+            .extra = .{ .metronome = false },
         },
         // HealBell
         .{
@@ -2160,7 +2164,7 @@ pub const Move = enum(u8) {
             .type = .Ground,
             .accuracy = percent(100),
             .target = .AllOthers,
-            .flags = .{ .underground = true },
+            .extra = .{ .underground = true },
         },
         // DynamicPunch
         .{
@@ -2303,7 +2307,7 @@ pub const Move = enum(u8) {
             .accuracy = percent(100),
             .target = .Foes,
             .chance = percent(20),
-            .flags = .{ .flying = true },
+            .extra = .{ .flying = true },
         },
         // RainDance
         .{
@@ -2338,7 +2342,7 @@ pub const Move = enum(u8) {
             .accuracy = percent(100),
             .target = .Depends,
             .priority = -1,
-            .flags = .{ .metronome = false },
+            .extra = .{ .metronome = false },
         },
         // PsychUp
         .{
@@ -2399,6 +2403,7 @@ pub const Move = enum(u8) {
             .type = .Water,
             .accuracy = percent(70),
             .target = .Other,
+            .extra = .{ .protocol = 5 },
         },
         // BeatUp
         .{
