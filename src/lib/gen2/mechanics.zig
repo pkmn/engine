@@ -726,12 +726,10 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
             damage = @max(stored.stats.hp / 8, 1);
         }
 
-        if (!showdown or damage > 0) {
-            stored.hp -|= damage;
-            // Pokémon Showdown uses damageOf here but its not relevant in Generation II
-            try options.log.damage(ident, stored, if (brn) Damage.Burn else Damage.Poison);
-            if (stored.hp == 0) return;
-        }
+        stored.hp -|= damage;
+        // Pokémon Showdown uses damageOf here but its not relevant in Generation II
+        try options.log.damage(ident, stored, if (brn) Damage.Burn else Damage.Poison);
+        if (stored.hp == 0) return;
     }
 
     if (volatiles.LeechSeed) {
@@ -747,7 +745,7 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
         const damage = @max(stored.stats.hp / 8, 1);
         stored.hp -|= damage;
         // As above, Pokémon Showdown uses damageOf but its not relevant
-        if (damage > 0) try options.log.damage(ident, stored, .LeechSeed);
+        try options.log.damage(ident, stored, .LeechSeed);
 
         const before = foe_stored.hp;
         foe_stored.hp = @min(foe_stored.hp + damage, foe_stored.stats.hp);
@@ -757,23 +755,17 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
     }
 
     if (volatiles.Nightmare) {
-        const damage = @max(stored.stats.hp / 4, 1);
-        if (!showdown or damage > 0) {
-            stored.hp -|= damage;
-            // ibid
-            try options.log.damage(ident, stored, Damage.Nightmare);
-            if (stored.hp == 0) return;
-        }
+        stored.hp -= @max(stored.stats.hp / 4, 1);
+        // ibid
+        try options.log.damage(ident, stored, Damage.Nightmare);
+        if (stored.hp == 0) return;
     }
 
     if (volatiles.Curse) {
-        const damage = @max(stored.stats.hp / 4, 1);
-        if (!showdown or damage > 0) {
-            stored.hp -|= damage;
-            // ibid
-            try options.log.damage(ident, stored, Damage.Curse);
-            if (stored.hp == 0) return;
-        }
+        stored.hp -= @max(stored.stats.hp / 4, 1);
+        // ibid
+        try options.log.damage(ident, stored, Damage.Curse);
+        if (stored.hp == 0) return;
     }
 }
 
@@ -801,6 +793,13 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
     // Weather
     inline for (players) |player| {
         var side = battle.side(player);
+        _ = side; // TODO
+    }
+    // TODO checkFaintThen(p1, p2);
+
+    // Binding
+    inline for (players) |player| {
+        var side = battle.side(player);
         var volatiles = &side.active.volatiles;
 
         if (volatiles.bind > 0 and !volatiles.Substitute) {
@@ -817,14 +816,6 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
                 try options.log.damage(battle.active(player), side.stored(), reason);
             }
         }
-    }
-    // TODO checkFaintThen(p1, p2);
-
-    // Binding
-    inline for (players) |player| {
-        var side = battle.side(player);
-        _ = side; // TODO
-
     }
     // TODO checkFaintThen(p1, p2);
 
