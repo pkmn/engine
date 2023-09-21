@@ -681,7 +681,7 @@ fn moveHit(
     }
 
     if (foe.stored().item == .BrightPowder) {
-        accuracy = @min(0, accuracy -% 20);
+        accuracy -|= 20;
     }
 
     // The accuracy roll is skipped entirely if maxed
@@ -725,10 +725,9 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
         } else {
             damage = @max(stored.stats.hp / 8, 1);
         }
-        damage = @min(damage, stored.hp);
 
         if (!showdown or damage > 0) {
-            stored.hp -= damage;
+            stored.hp -|= damage;
             // Pokémon Showdown uses damageOf here but its not relevant in Generation II
             try options.log.damage(ident, stored, if (brn) Damage.Burn else Damage.Poison);
             if (stored.hp == 0) return;
@@ -745,8 +744,8 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
         //     return;
         // }
 
-        const damage = @min(@max(stored.stats.hp / 8, 1), stored.hp);
-        stored.hp -= damage;
+        const damage = @max(stored.stats.hp / 8, 1);
+        stored.hp -|= damage;
         // As above, Pokémon Showdown uses damageOf but its not relevant
         if (damage > 0) try options.log.damage(ident, stored, .LeechSeed);
 
@@ -758,9 +757,9 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
     }
 
     if (volatiles.Nightmare) {
-        const damage = @min(@max(stored.stats.hp / 4, 1), stored.hp);
+        const damage = @max(stored.stats.hp / 4, 1);
         if (!showdown or damage > 0) {
-            stored.hp -= damage;
+            stored.hp -|= damage;
             // ibid
             try options.log.damage(ident, stored, Damage.Nightmare);
             if (stored.hp == 0) return;
@@ -768,9 +767,9 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
     }
 
     if (volatiles.Curse) {
-        const damage = @min(@max(stored.stats.hp / 4, 1), stored.hp);
+        const damage = @max(stored.stats.hp / 4, 1);
         if (!showdown or damage > 0) {
-            stored.hp -= damage;
+            stored.hp -|= damage;
             // ibid
             try options.log.damage(ident, stored, Damage.Curse);
             if (stored.hp == 0) return;
@@ -814,7 +813,7 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
                 try options.log.activate(battle.active(player), @enumFromInt(reason));
 
                 reason = @intFromEnum(Activate.Damage) + volatiles.bind_reason - 1;
-                side.stored().hp -= @min(@max(side.stored().stats.hp / 16, 1), side.stored().hp);
+                side.stored().hp -|= @max(side.stored().stats.hp / 16, 1);
                 try options.log.damage(battle.active(player), side.stored(), reason);
             }
         }
@@ -856,8 +855,7 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
 
         if (stored.item == .Leftovers) {
             const before = stored.hp;
-            const heal = @min(@max(stored.stats.hp / 16, 1), stored.hp);
-            stored.hp = @min(stored.hp + heal, stored.stats.hp);
+            stored.hp = @min(stored.hp + @max(stored.stats.hp / 16, 1), stored.stats.hp);
             if (stored.hp > before) try options.log.heal(battle.active(player), stored, .Leftovers);
         }
     }

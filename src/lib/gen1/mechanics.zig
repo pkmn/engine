@@ -1547,10 +1547,9 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
             volatiles.toxic += 1;
             damage *= volatiles.toxic;
         }
-        damage = @min(damage, stored.hp);
 
         if (!showdown or damage > 0) {
-            stored.hp -= damage;
+            stored.hp -|= damage;
             // Pokémon Showdown uses damageOf here but its not relevant in Generation I
             try options.log.damage(ident, stored, if (brn) Damage.Burn else Damage.Poison);
         }
@@ -1576,7 +1575,6 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
 
         const amount = @min(damage, stored.hp);
         stored.hp -= amount;
-
         // As above, Pokémon Showdown uses damageOf but its not relevant
         if (amount > 0) try options.log.damage(ident, stored, .LeechSeed);
 
