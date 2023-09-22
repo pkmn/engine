@@ -791,11 +791,28 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
     // TODO checkFaintThen(p1, p2);
 
     // Weather
-    inline for (players) |player| {
-        var side = battle.side(player);
-        _ = side; // TODO
+    if (battle.field.weather != .None) {
+        assert(battle.field.weather_duration > 0);
+        battle.field.weather_duration -= 1;
+
+        if (battle.field.weather_duration == 0) {
+            battle.field.weather = .None;
+            try options.log.weather(battle.field.weather, .None);
+        } else {
+            try options.log.weather(battle.field.weather, .Upkeep);
+            if (battle.field.weather == .Sandstorm) {
+                inline for (players) |player| {
+                    var side = battle.side(player);
+                    const active = side.active;
+                    if (!(active.volatiles.underground or active.types.sandstormImmune())) {
+                        side.stored().hp -|= @max(side.stored().stats.hp / 8, 1);
+                        try options.log.damage(battle.active(player), side.stored(), .Sandstorm);
+                    }
+                }
+                // TODO checkFaintThen(p1, p2);
+            }
+        }
     }
-    // TODO checkFaintThen(p1, p2);
 
     // Binding
     inline for (players) |player| {
