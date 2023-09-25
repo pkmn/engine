@@ -650,14 +650,24 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
     const precedence = [];
     const indexes = [];
-    const hiddenPower = [];
     for (const type of types) {
       precedence.push(`        ${TYPE_PRECEDENCE.indexOf(type)}, // ${type}`);
       indexes.push(`        ${TYPE_INDEXES[type]}, // ${type}`);
     }
+    const conversion2 = [];
+    for (const type in TYPE_INDEXES) {
+      if (TYPE_INDEXES[type as keyof typeof TYPE_INDEXES] > 10) break;
+      if (conversion2.length === 6) conversion2.push('        .@"???", // placeholder');
+      conversion2.push(`        .${type},`);
+    }
+    const hiddenPower = [];
     for (const type of HIDDEN_POWER) {
       if (type === 'Normal' || type === '???') continue;
-      hiddenPower.push(`        ${types.indexOf(type as any)}, // ${type}`);
+      hiddenPower.push(`        .${type},`);
+    }
+    const showdown = [];
+    for (const type of gen.types) {
+      showdown.push(`        .${type.name === '???' ? '@"???"' : type.name},`);
     }
 
     const precedenceFn =
@@ -667,14 +677,23 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     }`;
 
     const extraFns = `
+
     /// The internal index of this Type used by Present.
     pub inline fn present(self: Type) u8 {
         return INDEXES[@intFromEnum(self)];
     }
 
+    /// The Type corresponding to a random roll of \`num\` for Conversion 2.
+    pub inline fn conversion2(num: u8) Type {
+        assert(num != 6);
+        assert(num < 10 or num >= 20);
+        assert(num <= 27);
+        return if (num < 10) CONVERSION2[num] else @enumFromInt(num - 10);
+    }
+
     /// The Type corresponding to a Hidden Power \`index\`.
     pub inline fn hiddenPower(index: u8) Type {
-        return @enumFromInt(HIDDEN_POWER[index]);
+        return HIDDEN_POWER[index];
     }`;
 
     const sandstormFn = `\n
@@ -696,9 +715,14 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         precedenceSize: precedence.length,
         precedenceFn,
         extra: `\n\n    const INDEXES = [_]u8{\n${indexes.join('\n')}\n    };` +
-        `\n\n    const HIDDEN_POWER = [_]u8{\n${hiddenPower.join('\n')}\n    };`,
+        `\n\n    const CONVERSION2 = [_]Type{\n${conversion2.join('\n')}\n    };` +
+        `\n\n    const HIDDEN_POWER = [_]Type{\n${hiddenPower.join('\n')}\n    };` +
+        '\n\n    /// Order of Pokémon Showdown\'s types.\n' +
+        `    pub const SHOWDOWN = [_]Type{\n${showdown.join('\n')}\n    };`,
         extraSizes: `\n        assert(@sizeOf(@TypeOf(INDEXES)) == ${indexes.length});` +
-          `\n        assert(@sizeOf(@TypeOf(HIDDEN_POWER)) == ${hiddenPower.length});`,
+        `\n        assert(@sizeOf(@TypeOf(CONVERSION2)) == ${conversion2.length});` +
+          `\n        assert(@sizeOf(@TypeOf(HIDDEN_POWER)) == ${hiddenPower.length});` +
+          `\n        assert(@sizeOf(@TypeOf(SHOWDOWN)) == ${showdown.length});`,
         extraFns,
       },
       Types: {

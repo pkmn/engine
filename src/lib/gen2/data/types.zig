@@ -96,23 +96,58 @@ pub const Type = enum(u8) {
         27, // Dark
     };
 
-    const HIDDEN_POWER = [_]u8{
-        4, // Fighting
-        5, // Flying
-        6, // Poison
-        0, // Ground
-        1, // Rock
-        7, // Bug
-        8, // Ghost
-        2, // Steel
-        10, // Fire
-        11, // Water
-        12, // Grass
-        13, // Electric
-        14, // Psychic
-        15, // Ice
-        16, // Dragon
-        17, // Dark
+    const CONVERSION2 = [_]Type{
+        .Normal,
+        .Fighting,
+        .Flying,
+        .Poison,
+        .Ground,
+        .Rock,
+        .@"???", // placeholder
+        .Bug,
+        .Ghost,
+        .Steel,
+    };
+
+    const HIDDEN_POWER = [_]Type{
+        .Fighting,
+        .Flying,
+        .Poison,
+        .Ground,
+        .Rock,
+        .Bug,
+        .Ghost,
+        .Steel,
+        .Fire,
+        .Water,
+        .Grass,
+        .Electric,
+        .Psychic,
+        .Ice,
+        .Dragon,
+        .Dark,
+    };
+
+    /// Order of Pokémon Showdown's types.
+    pub const SHOWDOWN = [_]Type{
+        .Fire,
+        .Ice,
+        .Steel,
+        .Electric,
+        .Ghost,
+        .Grass,
+        .Dark,
+        .Bug,
+        .Dragon,
+        .Fighting,
+        .Flying,
+        .Ground,
+        .Normal,
+        .Poison,
+        .Psychic,
+        .Rock,
+        .Water,
+        .@"???",
     };
 
     comptime {
@@ -120,7 +155,9 @@ pub const Type = enum(u8) {
         assert(@sizeOf(@TypeOf(CHART)) == 324);
         assert(@sizeOf(@TypeOf(PRECEDENCE)) == 18);
         assert(@sizeOf(@TypeOf(INDEXES)) == 18);
+        assert(@sizeOf(@TypeOf(CONVERSION2)) == 10);
         assert(@sizeOf(@TypeOf(HIDDEN_POWER)) == 16);
+        assert(@sizeOf(@TypeOf(SHOWDOWN)) == 18);
     }
 
     /// The number of types in this generation.
@@ -140,14 +177,23 @@ pub const Type = enum(u8) {
     pub inline fn precedence(self: Type) u8 {
         return PRECEDENCE[@intFromEnum(self)];
     }
+
     /// The internal index of this Type used by Present.
     pub inline fn present(self: Type) u8 {
         return INDEXES[@intFromEnum(self)];
     }
 
+    /// The Type corresponding to a random roll of `num` for Conversion 2.
+    pub inline fn conversion2(num: u8) Type {
+        assert(num != 6);
+        assert(num < 10 or num >= 20);
+        assert(num <= 27);
+        return if (num < 10) CONVERSION2[num] else @enumFromInt(num - 10);
+    }
+
     /// The Type corresponding to a Hidden Power `index`.
     pub inline fn hiddenPower(index: u8) Type {
-        return @enumFromInt(HIDDEN_POWER[index]);
+        return HIDDEN_POWER[index];
     }
 };
 
