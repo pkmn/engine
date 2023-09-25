@@ -1145,6 +1145,18 @@ pub const Rolls = struct {
         return cant;
     }
 
+    inline fn paralyzed(battle: anytype, player: Player, options: anytype) !bool {
+        const par = if (options.calc.overridden(player, .paralyzed)) |val|
+            val == .true
+        else if (showdown)
+            battle.rng.chance(u8, 63, 256)
+        else
+            battle.rng.next() < Gen12.percent(25);
+
+        try options.chance.paralyzed(player, par);
+        return par;
+    }
+
     inline fn defrost(battle: anytype, player: Player, options: anytype) !bool {
         const thaw = if (options.calc.overridden(player, .defrost)) |val|
             val == .true

@@ -125,10 +125,12 @@ pub const Action = packed struct(u64) {
     confused: Optional(bool) = .None,
     /// If not None, the value to return for Rolls.attract.
     attract: Optional(bool) = .None,
+    /// If not None, the value to return for Rolls.paralyzed.
+    paralyzed: Optional(bool) = .None,
     /// If not None, the value to return for Rolls.defrost.
     defrost: Optional(bool) = .None,
 
-    _: u26 = 0,
+    _: u24 = 0,
 
     /// Observed values of various durations. Does not influence future RNG calls. TODO
     durations: Duration = .{},
@@ -314,6 +316,13 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.get(player).attract = if (cant) .true else .false;
         }
 
+        pub fn paralyzed(self: *Self, player: Player, par: bool) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(@as(u8, if (par) 1 else 3), 4);
+            self.actions.get(player).paralyzed = if (par) .true else .false;
+        }
+
         pub fn defrost(self: *Self, player: Player, thaw: bool) Error!void {
             if (!enabled) return;
 
@@ -463,6 +472,20 @@ test "Chance.attract" {
     try chance.attract(.P2, true);
     try expectProbability(&chance.probability, 1, 2);
     try expectValue(Optional(bool).true, chance.actions.p2.attract);
+}
+
+test "Chance.paralyzed" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.paralyzed(.P1, false);
+    try expectProbability(&chance.probability, 3, 4);
+    try expectValue(Optional(bool).false, chance.actions.p1.paralyzed);
+
+    chance.reset();
+
+    try chance.paralyzed(.P2, true);
+    try expectProbability(&chance.probability, 1, 4);
+    try expectValue(Optional(bool).true, chance.actions.p2.paralyzed);
 }
 
 test "Chance.defrost" {
