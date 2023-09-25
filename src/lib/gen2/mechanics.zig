@@ -561,6 +561,7 @@ fn calcDamage(
     _ = crit;
     return 0;
 }
+
 const FORESIGHT: Types = .{ .type1 = .Normal, .type2 = .Fighting };
 
 fn adjustDamage(battle: anytype, player: Player, m: Move, damage: u16, effectiveness: *u16) u16 {
@@ -1081,6 +1082,18 @@ pub const Rolls = struct {
         return qkc;
     }
 
+    inline fn hit(battle: anytype, player: Player, accuracy: u8, options: anytype) !bool {
+        const ok = if (options.calc.overridden(player, .hit)) |val|
+            val == .true
+        else if (showdown)
+            battle.rng.chance(u8, accuracy, 256)
+        else
+            battle.rng.next() < accuracy;
+
+        try options.chance.hit(player, ok, accuracy);
+        return ok;
+    }
+
     inline fn criticalHit(battle: anytype, player: Player, rate: u8, options: anytype) !bool {
         const crit = if (options.calc.overridden(player, .critical_hit)) |val|
             val == .true
@@ -1107,18 +1120,6 @@ pub const Rolls = struct {
         assert(roll >= 217 and roll <= 255);
         try options.chance.damage(player, roll);
         return roll;
-    }
-
-    inline fn hit(battle: anytype, player: Player, accuracy: u8, options: anytype) !bool {
-        const ok = if (options.calc.overridden(player, .hit)) |val|
-            val == .true
-        else if (showdown)
-            battle.rng.chance(u8, accuracy, 256)
-        else
-            battle.rng.next() < accuracy;
-
-        try options.chance.hit(player, ok, accuracy);
-        return ok;
     }
 
     inline fn confused(battle: anytype, player: Player, options: anytype) !bool {
@@ -1169,6 +1170,162 @@ pub const Rolls = struct {
         return thaw;
     }
 
+    inline fn secondaryChance(battle: anytype, player: Player, rate: u8, options: anytype) !bool {
+        // GLITCH: 100% secondary chance will still fail 1/256 of the time
+        const proc = if (options.calc.overridden(player, .secondary_chance)) |val|
+            val == .true
+        else if (showdown)
+            battle.rng.chance(u8, rate, 256)
+        else
+            battle.rng.next() < rate;
+
+        try options.chance.secondaryChance(player, proc, rate);
+        return proc;
+    }
+
+    inline fn focusBand(battle: anytype, player: Player, options: anytype) !bool {
+        // FIXME
+        const proc = if (options.calc.overridden(player, .focus_band)) |val|
+            val == .true
+        else if (showdown)
+            battle.rng.chance(u8, 30, 256)
+        else
+            battle.rng.next() <= 30;
+
+        try options.chance.focusBand(player, proc);
+        return proc;
+    }
+
+    inline fn psywave(battle: anytype, player: Player, max: u8, options: anytype) !u8 {
+        const power = if (options.calc.overridden(player, .psywave)) |val|
+            val - 1
+        else if (showdown)
+            battle.rng.range(u8, 0, max)
+        else power: {
+            while (true) {
+                const r = battle.rng.next();
+                if (r < max) break :power r;
+            }
+        };
+
+        assert(power < max);
+        try options.chance.psywave(player, power, max);
+        return power;
+    }
+
+    inline fn sleepDuration(battle: anytype, player: Player, options: anytype) u3 {
+        // FIXME
+        const duration: u3 = if (options.calc.overridden(player, .duration)) |val|
+            @intCast(val)
+        else if (showdown)
+            @intCast(battle.rng.range(u8, 1, 8))
+        else duration: {
+            while (true) {
+                const r = battle.rng.next() & 7;
+                if (r != 0) break :duration @intCast(r);
+            }
+        };
+
+        assert(duration >= 1 and duration <= 7);
+        options.chance.duration(.sleep, player, player.foe(), duration);
+        return duration;
+    }
+
+    inline fn triAttack(battle: anytype, player: Player, options: anytype) !u8 {
+        const which: TriAttack = if (options.calc.overridden(player, .tri_attack)) |val|
+            val
+        else if (showdown)
+            @enumFromInt(battle.rng.range(u8, 0, 2))
+        else
+            // FIXME swap the upper 4 bits in register r8 and the lower 4 ones.
+            @enumFromInt((battle.rng.next() & 3) - 1);
+
+        try options.chance.triAttack(player, which);
+        return which.status();
+    }
+
+    inline fn present(battle: anytype, player: Player, options: anytype) !u8 {
+        const power = if (options.calc.overridden(player, .present)) |val|
+            val * 40
+        else if (showdown) power: {
+            const r = battle.rng.range(u8, 0, 10);
+            if (r < 2) break :power 0;
+            if (r < 6) break :power 40;
+            if (r < 9) break :power 80;
+            break :power 120;
+        } else power: {
+            const r = battle.rng.next();
+            if (r <= Gen12.percent(40)) break :power 40;
+            if (r <= Gen12.percent(70) + 1) break :power 80;
+            if (r <= Gen12.percent(80)) break :power 120;
+            break :power 0;
+        };
+        try options.chance.present(player, power);
+        return power;
+    }
+
+    inline fn spite(battle: anytype, player: Player, options: anytype) !u8 {
+        const pp = if (options.calc.overridden(player, .spite)) |val|
+            val
+        else if (showdown)
+            battle.rng.range(u8, 2, 6)
+        else
+            (battle.rng.next() & 3) + 2;
+
+        try options.chance.spite(player, pp);
+        return pp;
+    }
+
+    const CONVERSION2: [Type.size]Type = [_]Type{.{}} ** Type.size;
+
+    inline fn conversion2(battle: anytype, player: Player, mtype: Type, options: anytype) !Type {
+        assert(mtype != .@"???");
+        const ty = if (options.calc.overridden(player, .conversion2)) |val|
+            val
+        else if (showdown) ty: {
+            var i: u8 = 0;
+            for (Type.SHOWDOWN) |t| {
+                if (@intFromEnum(mtype.effectiveness(t)) < @intFromEnum(Effectiveness.Neutral)) {
+                    CONVERSION2[i] = t;
+                    i += 1;
+                }
+            }
+            assert(i > 0 and i <= CONVERSION2.len);
+            break :ty CONVERSION2[battle.rng.range(u8, 0, i)];
+        } else ty: {
+            while (true) {
+                // FIXME MASK bits
+                const r = battle.rng.next();
+                if (r == 6) continue; // BIRD
+                if (r > 9 and r < 20) continue; // UNUSED_TYPES
+                if (r > 27) continue; // TYPES_END
+
+                const t = Types.conversion2(r);
+                if (@intFromEnum(mtype.effectiveness(t)) < @intFromEnum(Effectiveness.Neutral)) {
+                    break :ty t;
+                }
+            }
+        };
+
+        try options.chance.conversion2(player, ty);
+        return ty;
+    }
+
+    // TODO thrashingDuration
+    // TODO confusionDuraiton (from thrash vs. from move)
+    // TODO forceSwitch
+    // TODO tripleKick
+    // TODO kingsRock
+    // TODO bindingDuration
+    // TODO bideDuration
+    // TODO conversion moveSlot
+    // TODO disable duration
+    // TODO encore duration
+    // TODO magnitude
+    // TODO metronome
+    // TODO protect
+    // TODO sleeptalk move slot
+
     const METRONOME = init: {
         var num = 0;
         var moves: [238]Move = undefined;
@@ -1182,6 +1339,22 @@ pub const Rolls = struct {
         break :init moves;
     };
 };
+
+pub const TriAttack = enum(u2) {
+    PAR,
+    FRZ,
+    BRN,
+
+    pub inline fn status(self: TriAttack) u8 {
+        return Status.init(@enumFromInt(6 - @as(u8, @intFromEnum(self))));
+    }
+};
+
+test TriAttack {
+    try expectEqual(Status.init(.PAR), TriAttack.PAR.status());
+    try expectEqual(Status.init(.FRZ), TriAttack.FRZ.status());
+    try expectEqual(Status.init(.BRN), TriAttack.BRN.status());
+}
 
 test "RNG agreement" {
     if (!showdown) return;
