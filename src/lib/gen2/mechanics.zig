@@ -1278,22 +1278,22 @@ pub const Rolls = struct {
         return pp;
     }
 
-    const CONVERSION2: [Type.size]Type = [_]Type{.{}} ** Type.size;
+    const CONVERSION_2: [Type.size]Type = [_]Type{.{}} ** Type.size;
 
     inline fn conversion2(battle: anytype, player: Player, mtype: Type, options: anytype) !Type {
         assert(mtype != .@"???");
-        const ty = if (options.calc.overridden(player, .conversion2)) |val|
+        const ty = if (options.calc.overridden(player, .conversion_2)) |val|
             val
         else if (showdown) ty: {
             var i: u8 = 0;
             for (Type.SHOWDOWN) |t| {
                 if (@intFromEnum(mtype.effectiveness(t)) < @intFromEnum(Effectiveness.Neutral)) {
-                    CONVERSION2[i] = t;
+                    CONVERSION_2[i] = t;
                     i += 1;
                 }
             }
-            assert(i > 0 and i <= CONVERSION2.len);
-            break :ty CONVERSION2[battle.rng.range(u8, 0, i)];
+            assert(i > 0 and i <= CONVERSION_2.len);
+            break :ty CONVERSION_2[battle.rng.range(u8, 0, i)];
         } else ty: {
             while (true) {
                 // FIXME MASK bits

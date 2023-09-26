@@ -96,7 +96,7 @@ pub const Type = enum(u8) {
         27, // Dark
     };
 
-    const CONVERSION2 = [_]Type{
+    const CONVERSION_2 = [_]Type{
         .Normal,
         .Fighting,
         .Flying,
@@ -155,7 +155,7 @@ pub const Type = enum(u8) {
         assert(@sizeOf(@TypeOf(CHART)) == 324);
         assert(@sizeOf(@TypeOf(PRECEDENCE)) == 18);
         assert(@sizeOf(@TypeOf(INDEXES)) == 18);
-        assert(@sizeOf(@TypeOf(CONVERSION2)) == 10);
+        assert(@sizeOf(@TypeOf(CONVERSION_2)) == 10);
         assert(@sizeOf(@TypeOf(HIDDEN_POWER)) == 16);
         assert(@sizeOf(@TypeOf(SHOWDOWN)) == 18);
     }
@@ -188,7 +188,7 @@ pub const Type = enum(u8) {
         assert(num != 6);
         assert(num < 10 or num >= 20);
         assert(num <= 27);
-        return if (num < 10) CONVERSION2[num] else @enumFromInt(num - 10);
+        return if (num < 10) CONVERSION_2[num] else @enumFromInt(num - 10);
     }
 
     /// The Type corresponding to a Hidden Power `index`.

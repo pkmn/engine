@@ -688,7 +688,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         assert(num != 6);
         assert(num < 10 or num >= 20);
         assert(num <= 27);
-        return if (num < 10) CONVERSION2[num] else @enumFromInt(num - 10);
+        return if (num < 10) CONVERSION_2[num] else @enumFromInt(num - 10);
     }
 
     /// The Type corresponding to a Hidden Power \`index\`.
@@ -715,12 +715,12 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         precedenceSize: precedence.length,
         precedenceFn,
         extra: `\n\n    const INDEXES = [_]u8{\n${indexes.join('\n')}\n    };` +
-        `\n\n    const CONVERSION2 = [_]Type{\n${conversion2.join('\n')}\n    };` +
+        `\n\n    const CONVERSION_2 = [_]Type{\n${conversion2.join('\n')}\n    };` +
         `\n\n    const HIDDEN_POWER = [_]Type{\n${hiddenPower.join('\n')}\n    };` +
         '\n\n    /// Order of Pokémon Showdown\'s types.\n' +
         `    pub const SHOWDOWN = [_]Type{\n${showdown.join('\n')}\n    };`,
         extraSizes: `\n        assert(@sizeOf(@TypeOf(INDEXES)) == ${indexes.length});` +
-        `\n        assert(@sizeOf(@TypeOf(CONVERSION2)) == ${conversion2.length});` +
+        `\n        assert(@sizeOf(@TypeOf(CONVERSION_2)) == ${conversion2.length});` +
           `\n        assert(@sizeOf(@TypeOf(HIDDEN_POWER)) == ${hiddenPower.length});` +
           `\n        assert(@sizeOf(@TypeOf(SHOWDOWN)) == ${showdown.length});`,
         extraFns,
