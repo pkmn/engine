@@ -144,20 +144,27 @@ pub const Action = packed struct(u128) {
     secondary_chance: Optional(bool) = .None,
     /// If not None, the value to be returned for Rolls.focusBand.
     focus_band: Optional(bool) = .None,
+    /// If not None, the value to be returned for Rolls.kingsRock.
+    kings_rock: Optional(bool) = .None,
     /// If not None, the value to return for Rolls.triAttack.
     tri_attack: Optional(TriAttack) = .None,
-    /// If not 0, TODO
-    duration: u4 = 0,
+
+    /// If not 0, (present - 1) * 40 should be returned as the base power for Rolls.present.
+    present: u3 = 0,
+    /// If not 0, magnitude + 3 should be returned as the number for Rolls.magnitude.
+    magnitude: u3 = 0,
+    /// If not 0, the value to return for Rolls.tripleKick.
+    triple_kick: u2 = 0,
 
     /// If not 0,  the amount of PP to deduct for Rolls.spite.
     spite: u3 = 0,
-    /// If not 0, (present - 1) * 40 should be returned as the base power for Rolls.present.
-    present: u3 = 0,
-
     /// If not None, the value to return for Rolls.conversion2.
     conversion_2: Optional(Type) = .None,
 
-    _: u59 = 0,
+    /// If not 0, TODO
+    duration: u4 = 0,
+
+    _: u52 = 0,
 
     /// If not 0, psywave - 1 should be returned as the damage roll for Rolls.psywave.
     psywave: u8 = 0,
@@ -375,6 +382,13 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.get(player).focus_band = if (proc) .true else .false;
         }
 
+        pub fn kingsRock(self: *Self, player: Player, proc: bool) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(@as(u8, if (proc) 30 else 226), 256);
+            self.actions.get(player).kings_rock = if (proc) .true else .false;
+        }
+
         pub fn duration(
             self: *Self,
             comptime field: Duration.Field,
@@ -446,28 +460,34 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.get(player).tri_attack = @enumFromInt(@intFromEnum(status) + 1);
         }
 
+        const PRESENT: [4]u8 = if (showdown) .{ 2, 4, 3, 1 } else .{ 51, 103, 77, 25 };
+
         pub fn present(self: *Self, player: Player, power: u8) Error!void {
             if (!enabled) return;
 
-            if (showdown) {
-                try switch (power) {
-                    0 => self.probability.update(1, 5),
-                    40 => self.probability.update(2, 5),
-                    80 => self.probability.update(3, 10),
-                    120 => self.probability.update(1, 10),
-                    else => unreachable,
-                };
-            } else {
-                try switch (power) {
-                    0 => self.probability.update(51, 256),
-                    40 => self.probability.update(103, 256),
-                    80 => self.probability.update(77, 256),
-                    120 => self.probability.update(25, 256),
-                    else => unreachable,
-                };
-            }
+            const index = power / 40;
+            try self.probability.update(PRESENT[index], if (showdown) 10 else 256);
+            self.actions.get(player).present = @intCast(index + 1);
+        }
 
-            self.actions.get(player).present = @intCast((power / 40) + 1);
+        const MAGNITUDE: [7]u8 = if (showdown)
+            .{ 5, 10, 20, 30, 20, 10, 5 }
+        else
+            .{ 14, 26, 50, 77, 51, 25, 13 };
+
+        pub fn magnitude(self: *Self, player: Player, num: u8) Error!void {
+            if (!enabled) return;
+
+            const index = num - 4;
+            try self.probability.update(MAGNITUDE[index], if (showdown) 100 else 256);
+            self.actions.get(player).magnitude = @intCast(index + 1);
+        }
+
+        pub fn tripleKick(self: *Self, player: Player, hits: u2) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(1, 3);
+            self.actions.get(player).triple_kick = hits;
         }
 
         pub fn spite(self: *Self, player: Player, pp: u3) Error!void {
@@ -656,6 +676,20 @@ test "Chance.focusBand" {
     try expectValue(Optional(bool).true, chance.actions.p2.focus_band);
 }
 
+test "Chance.kingsRock" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.kingsRock(.P1, false);
+    try expectProbability(&chance.probability, 113, 128);
+    try expectValue(Optional(bool).false, chance.actions.p1.kings_rock);
+
+    chance.reset();
+
+    try chance.kingsRock(.P2, true);
+    try expectProbability(&chance.probability, 15, 128);
+    try expectValue(Optional(bool).true, chance.actions.p2.kings_rock);
+}
+
 test "Chance.duration" {
     var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
 
@@ -748,6 +782,36 @@ test "Chance.present" {
         try expectProbability(&chance.probability, 51, 256);
     }
     try expectValue(@as(u3, 1), chance.actions.p1.present);
+}
+
+test "Chance.magnitude" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.magnitude(.P2, 10);
+    if (showdown) {
+        try expectProbability(&chance.probability, 1, 20);
+    } else {
+        try expectProbability(&chance.probability, 13, 256);
+    }
+    try expectValue(@as(u3, 7), chance.actions.p2.magnitude);
+
+    chance.reset();
+
+    try chance.magnitude(.P1, 8);
+    if (showdown) {
+        try expectProbability(&chance.probability, 1, 5);
+    } else {
+        try expectProbability(&chance.probability, 51, 256);
+    }
+    try expectValue(@as(u3, 5), chance.actions.p1.magnitude);
+}
+
+test "Chance.tripleKick" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.tripleKick(.P1, 2);
+    try expectProbability(&chance.probability, 1, 3);
+    try expectValue(@as(u2, 2), chance.actions.p1.triple_kick);
 }
 
 test "Chance.spite" {
@@ -880,6 +944,10 @@ const Null = struct {
 
     pub fn present(self: Null, player: Player, power: u8) Error!void {
         _ = .{ self, player, power };
+    }
+
+    pub fn magnitude(self: Null, player: Player, num: u8) Error!void {
+        _ = .{ self, player, num };
     }
 
     pub fn spite(self: Null, player: Player, pp: u3) Error!void {

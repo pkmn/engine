@@ -1043,6 +1043,8 @@ pub const Effects = struct {
         }
         try options.log.singleturn(battle.active(player), move.id);
     }
+
+    const MAGNITUDE_POWER = [_]u8{ 10, 30, 50, 70, 90, 110, 150 };
 };
 
 fn statusModify(status: u8, stats: *Stats(u16)) void {
@@ -1197,6 +1199,18 @@ pub const Rolls = struct {
         return proc;
     }
 
+    inline fn kingsRock(battle: anytype, player: Player, options: anytype) !bool {
+        const proc = if (options.calc.overridden(player, .kings_rock)) |val|
+            val == .true
+        else if (showdown)
+            battle.rng.chance(u8, 30, 256)
+        else
+            battle.rng.next() < 30;
+
+        try options.chance.kingsRock(player, proc);
+        return proc;
+    }
+
     inline fn sleepDuration(battle: anytype, player: Player, options: anytype) u3 {
         const duration: u3 = if (options.calc.overridden(player, .duration)) |val|
             @intCast(val)
@@ -1252,6 +1266,51 @@ pub const Rolls = struct {
         return power;
     }
 
+    inline fn magnitude(battle: anytype, player: Player, options: anytype) !u8 {
+        const num = if (options.calc.overridden(player, .magnitude)) |val|
+            val + 3
+        else if (showdown) num: {
+            const r = battle.rng.range(u8, 0, 100);
+            if (r < 5) break :num 4;
+            if (r < 15) break :num 5;
+            if (r < 35) break :num 6;
+            if (r < 65) break :num 7;
+            if (r < 85) break :num 8;
+            if (r < 95) break :num 9;
+            break :num 10;
+        } else num: {
+            const r = battle.rng.next();
+            if (r <= Gen12.percent(5) + 1) break :num 4;
+            if (r <= Gen12.percent(15)) break :num 5;
+            if (r <= Gen12.percent(35)) break :num 6;
+            if (r <= Gen12.percent(65) + 1) break :num 7;
+            if (r <= Gen12.percent(85) + 1) break :num 8;
+            if (r <= Gen12.percent(95)) break :num 9;
+            break :num 10;
+        };
+
+        assert(num >= 4 and num <= 10);
+        try options.chance.magnitude(player, num);
+        return num;
+    }
+
+    inline fn tripleKick(battle: anytype, player: Player, options: anytype) !u8 {
+        const hits = if (options.calc.overridden(player, .triple_kick)) |val|
+            val
+        else if (showdown)
+            battle.rng.range(u8, 1, 4)
+        else power: {
+            while (true) {
+                const r = battle.rng.next() & 3;
+                if (r != 0) break :power r - 1;
+            }
+        };
+
+        assert(hits >= 1 and hits <= 3);
+        try options.chance.tripleKick(player, hits);
+        return hits;
+    }
+
     inline fn spite(battle: anytype, player: Player, options: anytype) !u8 {
         const pp = if (options.calc.overridden(player, .spite)) |val|
             val + 1
@@ -1305,14 +1364,11 @@ pub const Rolls = struct {
     // TODO thrashingDuration
     // TODO confusionDuraiton (from thrash vs. from move)
     // TODO forceSwitch
-    // TODO tripleKick
-    // TODO kingsRock
     // TODO bindingDuration
     // TODO bideDuration
     // TODO conversion moveSlot
     // TODO disable duration
     // TODO encore duration
-    // TODO magnitude
     // TODO metronome
     // TODO protect
     // TODO sleeptalk move slot
@@ -1372,23 +1428,42 @@ test "RNG agreement" {
     }
 }
 
-test "Present probabilities" {
+test "Roll probabilities" {
     if (showdown) return;
 
     var present = [4]u8{ 0, 0, 0, 0 };
+    var magnitude = [7]u8{ 0, 0, 0, 0, 0, 0, 0 };
     for (0..256) |i| {
-        if (i <= Gen12.percent(40)) {
-            present[1] += 1;
-        } else if (i <= Gen12.percent(70) + 1) {
-            present[2] += 1;
-        } else if (i <= Gen12.percent(80)) {
-            present[3] += 1;
-        } else {
-            present[0] += 1;
-        }
+        present[
+            if (i <= Gen12.percent(40))
+                1
+            else if (i <= Gen12.percent(70) + 1)
+                2
+            else if (i <= Gen12.percent(80))
+                3
+            else
+                0
+        ] += 1;
+        magnitude[
+            if (i <= Gen12.percent(5) + 1)
+                0
+            else if (i <= Gen12.percent(15) + 1)
+                1
+            else if (i <= Gen12.percent(35))
+                2
+            else if (i <= Gen12.percent(65) + 1)
+                3
+            else if (i <= Gen12.percent(85) + 1)
+                4
+            else if (i <= Gen12.percent(95))
+                5
+            else
+                6
+        ] += 1;
     }
 
     try expectEqualSlices(u8, &.{ 51, 103, 77, 25 }, &present);
+    try expectEqualSlices(u8, &.{ 14, 26, 50, 77, 51, 25, 13 }, &magnitude);
 }
 
 pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Choice) u8 {
