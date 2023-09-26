@@ -1214,21 +1214,20 @@ pub const Rolls = struct {
     }
 
     inline fn sleepDuration(battle: anytype, player: Player, options: anytype) u3 {
-        // FIXME
         const duration: u3 = if (options.calc.overridden(player, .duration)) |val|
             @intCast(val)
         else if (showdown)
-            @intCast(battle.rng.range(u8, 1, 8))
+            @intCast(battle.rng.range(u8, 1, 7))
         else duration: {
             while (true) {
                 const r = battle.rng.next() & 7;
-                if (r != 0) break :duration @intCast(r);
+                if (r != 0 and r != 7) break :duration @intCast(r);
             }
         };
 
-        assert(duration >= 1 and duration <= 7);
+        assert(duration >= 1 and duration <= 6);
         options.chance.duration(.sleep, player, player.foe(), duration);
-        return duration;
+        return duration + 1;
     }
 
     inline fn triAttack(battle: anytype, player: Player, options: anytype) !u8 {
@@ -1236,9 +1235,12 @@ pub const Rolls = struct {
             val
         else if (showdown)
             @enumFromInt(battle.rng.range(u8, 0, 2))
-        else
-            // FIXME swap the upper 4 bits in register r8 and the lower 4 ones.
-            @enumFromInt((battle.rng.next() & 3) - 1);
+        else loop: {
+            while (true) {
+                const r = std.math.rotr(u8, std.battle.rng.next(), 4) & 3;
+                if (r != 0) break :loop @intCast(r - 1);
+            }
+        };
 
         try options.chance.triAttack(player, which);
         return which.status();
