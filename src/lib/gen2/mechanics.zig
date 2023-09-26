@@ -12,6 +12,7 @@ const data = @import("data.zig");
 const assert = std.debug.assert;
 
 const expectEqual = std.testing.expectEqual;
+const expectEqualSlices = std.testing.expectEqualSlices;
 
 const Choice = common.Choice;
 const ID = common.ID;
@@ -39,6 +40,7 @@ const Side = data.Side;
 const Species = data.Species;
 const Stats = data.Stats;
 const Status = data.Status;
+const TriAttack = data.TriAttack;
 const Type = data.Type;
 const Types = data.Types;
 const Volatiles = data.Volatiles;
@@ -1184,33 +1186,15 @@ pub const Rolls = struct {
     }
 
     inline fn focusBand(battle: anytype, player: Player, options: anytype) !bool {
-        // FIXME
         const proc = if (options.calc.overridden(player, .focus_band)) |val|
             val == .true
         else if (showdown)
             battle.rng.chance(u8, 30, 256)
         else
-            battle.rng.next() <= 30;
+            battle.rng.next() < 30;
 
         try options.chance.focusBand(player, proc);
         return proc;
-    }
-
-    inline fn psywave(battle: anytype, player: Player, max: u8, options: anytype) !u8 {
-        const power = if (options.calc.overridden(player, .psywave)) |val|
-            val - 1
-        else if (showdown)
-            battle.rng.range(u8, 0, max)
-        else power: {
-            while (true) {
-                const r = battle.rng.next();
-                if (r < max) break :power r;
-            }
-        };
-
-        assert(power < max);
-        try options.chance.psywave(player, power, max);
-        return power;
     }
 
     inline fn sleepDuration(battle: anytype, player: Player, options: anytype) u3 {
@@ -1231,7 +1215,7 @@ pub const Rolls = struct {
     }
 
     inline fn triAttack(battle: anytype, player: Player, options: anytype) !u8 {
-        const which: TriAttack = if (options.calc.overridden(player, .tri_attack)) |val|
+        const status: TriAttack = if (options.calc.overridden(player, .tri_attack)) |val|
             val
         else if (showdown)
             @enumFromInt(battle.rng.range(u8, 0, 2))
@@ -1242,13 +1226,13 @@ pub const Rolls = struct {
             }
         };
 
-        try options.chance.triAttack(player, which);
-        return which.status();
+        try options.chance.triAttack(player, status);
+        return status.status();
     }
 
     inline fn present(battle: anytype, player: Player, options: anytype) !u8 {
         const power = if (options.calc.overridden(player, .present)) |val|
-            val * 40
+            (val - 1) * 40
         else if (showdown) power: {
             const r = battle.rng.range(u8, 0, 10);
             if (r < 2) break :power 0;
@@ -1262,54 +1246,59 @@ pub const Rolls = struct {
             if (r <= Gen12.percent(80)) break :power 120;
             break :power 0;
         };
+
+        assert(power <= 120);
         try options.chance.present(player, power);
         return power;
     }
 
     inline fn spite(battle: anytype, player: Player, options: anytype) !u8 {
         const pp = if (options.calc.overridden(player, .spite)) |val|
-            val
+            val + 1
         else if (showdown)
             battle.rng.range(u8, 2, 6)
         else
             (battle.rng.next() & 3) + 2;
 
+        assert(pp >= 2 and pp <= 5);
         try options.chance.spite(player, pp);
         return pp;
     }
 
-    const CONVERSION_2: [Type.size]Type = [_]Type{.{}} ** Type.size;
+    // Conversion 2 can at most choose between 7 types (vs. a Grass-type attack)
+    const CONVERSION_2: [7]Type = [_]Type{.{}} ** 7;
 
     inline fn conversion2(battle: anytype, player: Player, mtype: Type, options: anytype) !Type {
+        var i: u8 = 0;
+        const neutral = @intFromEnum(Effectiveness.Neutral);
         assert(mtype != .@"???");
-        const ty = if (options.calc.overridden(player, .conversion_2)) |val|
-            val
+        const ty: Type = if (options.calc.overridden(player, .conversion_2)) |val|
+            @enumFromInt(@intFromEnum(val) - 1)
         else if (showdown) ty: {
-            var i: u8 = 0;
             for (Type.SHOWDOWN) |t| {
-                if (@intFromEnum(mtype.effectiveness(t)) < @intFromEnum(Effectiveness.Neutral)) {
+                if (@intFromEnum(mtype.effectiveness(t)) < neutral) {
                     CONVERSION_2[i] = t;
                     i += 1;
                 }
             }
-            assert(i > 0 and i <= CONVERSION_2.len);
+            assert(i > 0 and i <= 7);
             break :ty CONVERSION_2[battle.rng.range(u8, 0, i)];
         } else ty: {
             while (true) {
-                // FIXME MASK bits
-                const r = battle.rng.next();
+                const r = battle.rng.next() & 0b11111;
                 if (r == 6) continue; // BIRD
                 if (r > 9 and r < 20) continue; // UNUSED_TYPES
                 if (r > 27) continue; // TYPES_END
 
                 const t = Types.conversion2(r);
-                if (@intFromEnum(mtype.effectiveness(t)) < @intFromEnum(Effectiveness.Neutral)) {
+                if (@intFromEnum(mtype.effectiveness(t)) < neutral) {
                     break :ty t;
                 }
             }
         };
 
-        try options.chance.conversion2(player, ty);
+        assert(ty != .@"???");
+        try options.chance.conversion2(player, ty, mtype, i);
         return ty;
     }
 
@@ -1328,6 +1317,23 @@ pub const Rolls = struct {
     // TODO protect
     // TODO sleeptalk move slot
 
+    inline fn psywave(battle: anytype, player: Player, max: u8, options: anytype) !u8 {
+        const power = if (options.calc.overridden(player, .psywave)) |val|
+            val - 1
+        else if (showdown)
+            battle.rng.range(u8, 0, max)
+        else power: {
+            while (true) {
+                const r = battle.rng.next();
+                if (r < max) break :power r;
+            }
+        };
+
+        assert(power < max);
+        try options.chance.psywave(player, power, max);
+        return power;
+    }
+
     const METRONOME = init: {
         var num = 0;
         var moves: [238]Move = undefined;
@@ -1342,22 +1348,6 @@ pub const Rolls = struct {
     };
 };
 
-pub const TriAttack = enum(u2) {
-    PAR,
-    FRZ,
-    BRN,
-
-    pub inline fn status(self: TriAttack) u8 {
-        return Status.init(@enumFromInt(6 - @as(u8, @intFromEnum(self))));
-    }
-};
-
-test TriAttack {
-    try expectEqual(Status.init(.PAR), TriAttack.PAR.status());
-    try expectEqual(Status.init(.FRZ), TriAttack.FRZ.status());
-    try expectEqual(Status.init(.BRN), TriAttack.BRN.status());
-}
-
 test "RNG agreement" {
     if (!showdown) return;
     var expected: [256]u32 = undefined;
@@ -1370,6 +1360,7 @@ test "RNG agreement" {
     var cfz: rng.FixedRNG(2, expected.len) = .{ .rolls = expected };
     var atr: rng.FixedRNG(2, expected.len) = .{ .rolls = expected };
     var frz: rng.FixedRNG(2, expected.len) = .{ .rolls = expected };
+    var fcb: rng.FixedRNG(2, expected.len) = .{ .rolls = expected };
 
     for (0..expected.len) |i| {
         try expectEqual(spe.range(u8, 0, 2) == 0, i < Gen12.percent(50) + 1);
@@ -1377,7 +1368,27 @@ test "RNG agreement" {
         try expectEqual(!cfz.chance(u8, 128, 256), i >= Gen12.percent(50) + 1);
         try expectEqual(atr.chance(u8, 1, 2), i < Gen12.percent(50) + 1);
         try expectEqual(frz.chance(u8, 25, 256), i < Gen12.percent(10));
+        try expectEqual(fcb.chance(u8, 30, 256), !(30 <= i));
     }
+}
+
+test "Present probabilities" {
+    if (showdown) return;
+
+    var present = [4]u8{ 0, 0, 0, 0 };
+    for (0..256) |i| {
+        if (i <= Gen12.percent(40)) {
+            present[1] += 1;
+        } else if (i <= Gen12.percent(70) + 1) {
+            present[2] += 1;
+        } else if (i <= Gen12.percent(80)) {
+            present[3] += 1;
+        } else {
+            present[0] += 1;
+        }
+    }
+
+    try expectEqualSlices(u8, &.{ 51, 103, 77, 25 }, &present);
 }
 
 pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Choice) u8 {

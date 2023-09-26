@@ -279,6 +279,24 @@ pub const MoveSlot = extern struct {
 
 pub const Status = gen1.Status;
 
+/// TODO
+pub const TriAttack = enum(u2) {
+    PAR,
+    FRZ,
+    BRN,
+
+    /// TODO
+    pub inline fn status(self: TriAttack) u8 {
+        return Status.init(@enumFromInt(6 - @as(u8, @intFromEnum(self))));
+    }
+};
+
+test TriAttack {
+    try expectEqual(Status.init(.PAR), TriAttack.PAR.status());
+    try expectEqual(Status.init(.FRZ), TriAttack.FRZ.status());
+    try expectEqual(Status.init(.BRN), TriAttack.BRN.status());
+}
+
 pub const Volatiles = packed struct(u128) {
     Bide: bool = false,
     Thrashing: bool = false,

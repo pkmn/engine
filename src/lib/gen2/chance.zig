@@ -8,12 +8,22 @@ const expectEqual = std.testing.expectEqual;
 
 const options = @import("../common/options.zig");
 const rational = @import("../common/rational.zig");
+const rng = @import("../common/rng.zig");
 const util = @import("../common/util.zig");
 
 const Player = @import("../common/data.zig").Player;
 const Optional = @import("../common/optional.zig").Optional;
 
+const data = @import("./data.zig");
+
 const enabled = options.chance;
+const showdown = options.showdown;
+
+const Gen12 = rng.Gen12;
+
+const Type = data.Type;
+const Effectiveness = data.Effectiveness;
+const TriAttack = data.TriAttack;
 
 /// Actions taken by a hypothetical "chance player" that convey information about which RNG events
 /// were observed during a Generation II battle `update`. This can additionally be provided as input
@@ -108,16 +118,16 @@ test Actions {
 
 /// Information about the RNG that was observed during a Generation II battle `update` for a
 /// single player.
-pub const Action = packed struct(u64) {
+pub const Action = packed struct(u128) {
     /// If not 0, the roll to be returned Rolls.damage.
     damage: u8 = 0,
 
-    /// If not None, the value to return for Rolls.hit.
-    hit: Optional(bool) = .None,
-    /// If not None, the value to be returned for TODO
-    quick_claw: Optional(bool) = .None,
     /// If not None, the Player to be returned by Rolls.speedTie.
     speed_tie: Optional(Player) = .None,
+    /// If not None, the value to be returned for Rolls.quickClaw.
+    quick_claw: Optional(bool) = .None,
+    /// If not None, the value to return for Rolls.hit.
+    hit: Optional(bool) = .None,
     /// If not None, the value to be returned by Rolls.criticalHit.
     critical_hit: Optional(bool) = .None,
 
@@ -130,18 +140,38 @@ pub const Action = packed struct(u64) {
     /// If not None, the value to return for Rolls.defrost.
     defrost: Optional(bool) = .None,
 
-    _: u24 = 0,
+    /// If not None, the value to be returned for Rolls.secondaryChance.
+    secondary_chance: Optional(bool) = .None,
+    /// If not None, the value to be returned for Rolls.focusBand.
+    focus_band: Optional(bool) = .None,
+    /// If not None, the value to return for Rolls.triAttack.
+    tri_attack: Optional(TriAttack) = .None,
+    /// If not 0, TODO
+    duration: u4 = 0,
+
+    /// If not 0,  the amount of PP to deduct for Rolls.spite.
+    spite: u3 = 0,
+    /// If not 0, (present - 1) * 40 should be returned as the base power for Rolls.present.
+    present: u3 = 0,
+
+    /// If not None, the value to return for Rolls.conversion2.
+    conversion_2: Optional(Type) = .None,
+
+    _: u59 = 0,
+
+    /// If not 0, psywave - 1 should be returned as the damage roll for Rolls.psywave.
+    psywave: u8 = 0,
 
     /// Observed values of various durations. Does not influence future RNG calls. TODO
     durations: Duration = .{},
 
-    pub const DURATIONS: u64 = 0xFFFF000000000000;
+    pub const DURATIONS: u128 = 0xFFFF000000000000_0000000000000000;
 
     pub const Field = std.meta.FieldEnum(Action);
 
     /// Perform a reset by clearing fields which should not persist across updates.
     pub inline fn reset(self: *Action) void {
-        self.* = @bitCast(@as(u64, @bitCast(self.*)) & DURATIONS);
+        self.* = @bitCast(@as(u128, @bitCast(self.*)) & DURATIONS);
     }
 
     pub fn format(a: Action, comptime f: []const u8, o: std.fmt.FormatOptions, w: anytype) !void {
@@ -330,6 +360,37 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.get(player).defrost = if (thaw) .true else .false;
         }
 
+        pub fn secondaryChance(self: *Self, player: Player, proc: bool, rate: u8) Error!void {
+            if (!enabled) return;
+
+            const n = if (proc) rate else @as(u8, @intCast(256 - @as(u9, rate)));
+            try self.probability.update(n, 256);
+            self.actions.get(player).secondary_chance = if (proc) .true else .false;
+        }
+
+        pub fn focusBand(self: *Self, player: Player, proc: bool) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(@as(u8, if (proc) 30 else 226), 256);
+            self.actions.get(player).focus_band = if (proc) .true else .false;
+        }
+
+        pub fn duration(
+            self: *Self,
+            comptime field: Duration.Field,
+            player: Player,
+            target: Player,
+            turns: u4,
+        ) void {
+            if (!enabled) return;
+
+            var durations = &self.actions.get(target).durations;
+            assert(@field(durations, @tagName(field)) == 0 or
+                (field == .confusion and player == target));
+            @field(durations, @tagName(field)) = 1;
+            self.actions.get(player).duration = if (options.key) 1 else turns;
+        }
+
         pub fn sleep(self: *Self, player: Player, turns: u4) Error!void {
             if (!enabled) return;
 
@@ -376,6 +437,71 @@ pub fn Chance(comptime Rational: type) type {
                 if (n > 1) try self.probability.update(6 - @as(u4, n) - 1, 6 - @as(u4, n));
                 durations.confusion += 1;
             }
+        }
+
+        pub fn triAttack(self: *Self, player: Player, status: TriAttack) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(1, 3);
+            self.actions.get(player).tri_attack = @enumFromInt(@intFromEnum(status) + 1);
+        }
+
+        pub fn present(self: *Self, player: Player, power: u8) Error!void {
+            if (!enabled) return;
+
+            if (showdown) {
+                try switch (power) {
+                    0 => self.probability.update(1, 5),
+                    40 => self.probability.update(2, 5),
+                    80 => self.probability.update(3, 10),
+                    120 => self.probability.update(1, 10),
+                    else => unreachable,
+                };
+            } else {
+                try switch (power) {
+                    0 => self.probability.update(51, 256),
+                    40 => self.probability.update(103, 256),
+                    80 => self.probability.update(77, 256),
+                    120 => self.probability.update(25, 256),
+                    else => unreachable,
+                };
+            }
+
+            self.actions.get(player).present = @intCast((power / 40) + 1);
+        }
+
+        pub fn spite(self: *Self, player: Player, pp: u3) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(1, 4);
+            self.actions.get(player).spite = pp;
+        }
+
+        pub fn psywave(self: *Self, player: Player, power: u8, max: u8) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(1, max);
+            self.actions.get(player).psywave = power + 1;
+        }
+
+        pub fn conversion2(self: *Self, player: Player, ty: Type, mtype: Type, num: u8) Error!void {
+            if (!enabled) return;
+
+            assert(showdown or num == 0);
+            const n = if (num != 0)
+                num
+            else n: {
+                const neutral = @intFromEnum(Effectiveness.Neutral);
+                var i: u8 = 0;
+                for (0..Type.size) |t| {
+                    if (@intFromEnum(mtype.effectiveness(@enumFromInt(t))) < neutral) i += 1;
+                }
+                assert(i > 0 and i <= 7);
+                break :n i;
+            };
+
+            try self.probability.update(1, n);
+            self.actions.get(player).conversion_2 = @enumFromInt(@intFromEnum(ty) + 1);
         }
     };
 }
@@ -502,6 +628,42 @@ test "Chance.defrost" {
     try expectValue(Optional(bool).true, chance.actions.p2.defrost);
 }
 
+test "Chance.secondaryChance" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.secondaryChance(.P1, true, 25);
+    try expectProbability(&chance.probability, 25, 256);
+    try expectValue(Optional(bool).true, chance.actions.p1.secondary_chance);
+
+    chance.reset();
+
+    try chance.secondaryChance(.P2, false, 77);
+    try expectProbability(&chance.probability, 179, 256);
+    try expectValue(Optional(bool).false, chance.actions.p2.secondary_chance);
+}
+
+test "Chance.focusBand" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.focusBand(.P1, false);
+    try expectProbability(&chance.probability, 113, 128);
+    try expectValue(Optional(bool).false, chance.actions.p1.focus_band);
+
+    chance.reset();
+
+    try chance.focusBand(.P2, true);
+    try expectProbability(&chance.probability, 15, 128);
+    try expectValue(Optional(bool).true, chance.actions.p2.focus_band);
+}
+
+test "Chance.duration" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    chance.duration(.sleep, .P1, .P2, 2);
+    try expectValue(@as(u4, 2), chance.actions.p1.duration);
+    try expectValue(@as(u3, 1), chance.actions.p2.durations.sleep);
+}
+
 test "Chance.sleep" {
     var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
 
@@ -550,6 +712,77 @@ test "Chance.confusion" {
             chance.reset();
         }
     }
+}
+
+test "Chance.triAttack" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.triAttack(.P1, .BRN);
+    try expectProbability(&chance.probability, 1, 3);
+    try expectValue(Optional(TriAttack).BRN, chance.actions.p1.tri_attack);
+
+    chance.reset();
+
+    try chance.triAttack(.P2, .FRZ);
+    try expectProbability(&chance.probability, 1, 3);
+    try expectValue(Optional(TriAttack).FRZ, chance.actions.p2.tri_attack);
+}
+
+test "Chance.present" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.present(.P2, 120);
+    if (showdown) {
+        try expectProbability(&chance.probability, 1, 10);
+    } else {
+        try expectProbability(&chance.probability, 25, 256);
+    }
+    try expectValue(@as(u3, 4), chance.actions.p2.present);
+
+    chance.reset();
+
+    try chance.present(.P1, 0);
+    if (showdown) {
+        try expectProbability(&chance.probability, 1, 5);
+    } else {
+        try expectProbability(&chance.probability, 51, 256);
+    }
+    try expectValue(@as(u3, 1), chance.actions.p1.present);
+}
+
+test "Chance.spite" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.spite(.P1, 3);
+    try expectProbability(&chance.probability, 1, 4);
+    try expectValue(@as(u3, 3), chance.actions.p1.spite);
+}
+
+test "Chance.conversion2" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    if (showdown) {
+        try chance.conversion2(.P1, .Normal, .Ghost, 3);
+        try expectProbability(&chance.probability, 1, 3);
+        try expectValue(Optional(Type).Normal, chance.actions.p1.conversion_2);
+    } else {
+        try chance.conversion2(.P2, .Normal, .Ghost, 0);
+        try expectProbability(&chance.probability, 1, 3);
+        try expectValue(Optional(Type).Normal, chance.actions.p2.conversion_2);
+    }
+    chance.reset();
+
+    try chance.conversion2(.P2, .Fire, .Bug, 0);
+    try expectProbability(&chance.probability, 1, 6);
+    try expectValue(Optional(Type).Fire, chance.actions.p2.conversion_2);
+}
+
+test "Chance.psywave" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.psywave(.P2, 100, 150);
+    try expectProbability(&chance.probability, 1, 150);
+    try expectValue(@as(u8, 101), chance.actions.p2.psywave);
 }
 
 pub fn expectProbability(r: anytype, p: u64, q: u64) !void {
@@ -611,6 +844,24 @@ const Null = struct {
         _ = .{ self, player, thaw };
     }
 
+    pub fn secondaryChance(self: Null, player: Player, proc: bool, rate: u8) Error!void {
+        _ = .{ self, player, proc, rate };
+    }
+
+    pub fn focusBand(self: Null, player: Player, proc: bool) Error!void {
+        _ = .{ self, player, proc };
+    }
+
+    pub fn duration(
+        self: Null,
+        comptime field: Duration.Field,
+        player: Player,
+        target: Player,
+        turns: u4,
+    ) void {
+        _ = .{ self, field, player, target, turns };
+    }
+
     pub fn sleep(self: Null, player: Player, turns: u4) Error!void {
         _ = .{ self, player, turns };
     }
@@ -621,5 +872,25 @@ const Null = struct {
 
     pub fn confusion(self: Null, player: Player, turns: u4) Error!void {
         _ = .{ self, player, turns };
+    }
+
+    pub fn triAttack(self: Null, player: Player, status: TriAttack) Error!void {
+        _ = .{ self, player, status };
+    }
+
+    pub fn present(self: Null, player: Player, power: u8) Error!void {
+        _ = .{ self, player, power };
+    }
+
+    pub fn spite(self: Null, player: Player, pp: u3) Error!void {
+        _ = .{ self, player, pp };
+    }
+
+    pub fn conversion2(self: Null, player: Player, ty: Type, mtype: Type, num: u8) Error!void {
+        _ = .{ self, player, ty, mtype, num };
+    }
+
+    pub fn psywave(self: Null, player: Player, power: u8, max: u8) Error!void {
+        _ = .{ self, player, power, max };
     }
 };

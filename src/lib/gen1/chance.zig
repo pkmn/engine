@@ -998,16 +998,16 @@ const Null = struct {
         _ = .{ self, player, roll };
     }
 
-    pub fn secondaryChance(self: Null, player: Player, proc: bool, rate: u8) Error!void {
-        _ = .{ self, player, proc, rate };
-    }
-
     pub fn confused(self: Null, player: Player, ok: bool) Error!void {
         _ = .{ self, player, ok };
     }
 
     pub fn paralyzed(self: Null, player: Player, ok: bool) Error!void {
         _ = .{ self, player, ok };
+    }
+
+    pub fn secondaryChance(self: Null, player: Player, proc: bool, rate: u8) Error!void {
+        _ = .{ self, player, proc, rate };
     }
 
     pub fn moveSlot(self: Null, player: Player, slot: u4, ms: []const MoveSlot, n: u4) Error!void {
