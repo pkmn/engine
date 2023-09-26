@@ -14,17 +14,20 @@ pub fn Optional(comptime T: type) type {
     var decls = [_]std.builtin.Type.Declaration{};
 
     enumFields[0] = .{ .name = "None", .value = 0 };
-    inline for (fields, 1..) |field, i| {
+
+    var i: usize = 0;
+    inline for (fields) |field| {
         assert(!std.mem.eql(u8, field.name, "None"));
-        enumFields[i] = .{
+        enumFields[i + 1] = .{
             .name = field.name,
-            .value = i,
+            .value = i + 1,
         };
+        i += 1;
     }
 
     return @Type(.{
         .Enum = .{
-            .tag_type = std.math.IntFittingRange(0, fields.len + 1),
+            .tag_type = std.math.IntFittingRange(0, i),
             .fields = &enumFields,
             .decls = &decls,
             .is_exhaustive = true,
@@ -57,4 +60,10 @@ test Optional {
     try expect(q == .None);
     try expect(q != .P1);
     try expect(q != .P2);
+
+    const Three = enum(u2) { A, B, C };
+    try expect(@bitSizeOf(Optional(Three)) == 2);
+
+    const Four = enum(u2) { A, B, C, D };
+    try expect(@bitSizeOf(Optional(Four)) == 3);
 }
