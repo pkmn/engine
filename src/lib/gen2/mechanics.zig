@@ -1359,6 +1359,25 @@ pub const Rolls = struct {
         return ty;
     }
 
+    inline fn protect(battle: anytype, player: Player, count: u8, options: anytype) !bool {
+        assert(count <= 255);
+        const num = 255 >> count;
+
+        const ok = if (options.calc.overridden(player, .protect)) |val|
+            val
+        else if (showdown)
+            battle.rng.chance(u8, num, 255)
+        else protected: {
+            while (true) {
+                const r = battle.rng.next();
+                if (r != 0) break :protected !(num <= r - 1);
+            }
+        };
+
+        try options.chance.protect(player, num, ok);
+        return ok;
+    }
+
     // TODO thrashingDuration
     // TODO confusionDuraiton (from thrash vs. from move)
     // TODO forceSwitch
@@ -1368,7 +1387,6 @@ pub const Rolls = struct {
     // TODO disable duration
     // TODO encore duration
     // TODO metronome
-    // TODO protect
     // TODO sleeptalk move slot
 
     inline fn psywave(battle: anytype, player: Player, max: u8, options: anytype) !u8 {

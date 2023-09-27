@@ -161,10 +161,12 @@ pub const Action = packed struct(u128) {
     /// If not None, the value to return for Rolls.conversion2.
     conversion_2: Optional(Type) = .None,
 
+    /// If not None, the value to be returned for Rolls.protect.
+    protect: Optional(bool) = .None,
     /// If not 0, TODO
     duration: u4 = 0,
 
-    _: u52 = 0,
+    _: u50 = 0,
 
     /// If not 0, psywave - 1 should be returned as the damage roll for Rolls.psywave.
     psywave: u8 = 0,
@@ -389,6 +391,84 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.get(player).kings_rock = if (proc) .true else .false;
         }
 
+        pub fn triAttack(self: *Self, player: Player, status: TriAttack) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(1, 3);
+            self.actions.get(player).tri_attack = @enumFromInt(@intFromEnum(status) + 1);
+        }
+
+        const PRESENT: [4]u8 = if (showdown) .{ 2, 4, 3, 1 } else .{ 51, 103, 77, 25 };
+
+        pub fn present(self: *Self, player: Player, power: u8) Error!void {
+            if (!enabled) return;
+
+            const index = power / 40;
+            try self.probability.update(PRESENT[index], if (showdown) 10 else 256);
+            self.actions.get(player).present = @intCast(index + 1);
+        }
+
+        const MAGNITUDE: [7]u8 = if (showdown)
+            .{ 5, 10, 20, 30, 20, 10, 5 }
+        else
+            .{ 14, 26, 50, 77, 51, 25, 13 };
+
+        pub fn magnitude(self: *Self, player: Player, num: u8) Error!void {
+            if (!enabled) return;
+
+            const index = num - 4;
+            try self.probability.update(MAGNITUDE[index], if (showdown) 100 else 256);
+            self.actions.get(player).magnitude = @intCast(index + 1);
+        }
+
+        pub fn tripleKick(self: *Self, player: Player, hits: u2) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(1, 3);
+            self.actions.get(player).triple_kick = hits;
+        }
+
+        pub fn spite(self: *Self, player: Player, pp: u3) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(1, 4);
+            self.actions.get(player).spite = pp;
+        }
+
+        pub fn conversion2(self: *Self, player: Player, ty: Type, mtype: Type, num: u8) Error!void {
+            if (!enabled) return;
+
+            assert(showdown or num == 0);
+            const n = if (num != 0)
+                num
+            else n: {
+                const neutral = @intFromEnum(Effectiveness.Neutral);
+                var i: u8 = 0;
+                for (0..Type.size) |t| {
+                    if (@intFromEnum(mtype.effectiveness(@enumFromInt(t))) < neutral) i += 1;
+                }
+                assert(i > 0 and i <= 7);
+                break :n i;
+            };
+
+            try self.probability.update(1, n);
+            self.actions.get(player).conversion_2 = @enumFromInt(@intFromEnum(ty) + 1);
+        }
+
+        pub fn protect(self: *Self, player: Player, num: u8, ok: bool) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(@as(u8, if (ok) num + 1 else 255 - num - 1), 255);
+            self.actions.get(player).protect = if (ok) .true else .false;
+        }
+
+        pub fn psywave(self: *Self, player: Player, power: u8, max: u8) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(1, max);
+            self.actions.get(player).psywave = power + 1;
+        }
+
         pub fn duration(
             self: *Self,
             comptime field: Duration.Field,
@@ -451,77 +531,6 @@ pub fn Chance(comptime Rational: type) type {
                 if (n > 1) try self.probability.update(6 - @as(u4, n) - 1, 6 - @as(u4, n));
                 durations.confusion += 1;
             }
-        }
-
-        pub fn triAttack(self: *Self, player: Player, status: TriAttack) Error!void {
-            if (!enabled) return;
-
-            try self.probability.update(1, 3);
-            self.actions.get(player).tri_attack = @enumFromInt(@intFromEnum(status) + 1);
-        }
-
-        const PRESENT: [4]u8 = if (showdown) .{ 2, 4, 3, 1 } else .{ 51, 103, 77, 25 };
-
-        pub fn present(self: *Self, player: Player, power: u8) Error!void {
-            if (!enabled) return;
-
-            const index = power / 40;
-            try self.probability.update(PRESENT[index], if (showdown) 10 else 256);
-            self.actions.get(player).present = @intCast(index + 1);
-        }
-
-        const MAGNITUDE: [7]u8 = if (showdown)
-            .{ 5, 10, 20, 30, 20, 10, 5 }
-        else
-            .{ 14, 26, 50, 77, 51, 25, 13 };
-
-        pub fn magnitude(self: *Self, player: Player, num: u8) Error!void {
-            if (!enabled) return;
-
-            const index = num - 4;
-            try self.probability.update(MAGNITUDE[index], if (showdown) 100 else 256);
-            self.actions.get(player).magnitude = @intCast(index + 1);
-        }
-
-        pub fn tripleKick(self: *Self, player: Player, hits: u2) Error!void {
-            if (!enabled) return;
-
-            try self.probability.update(1, 3);
-            self.actions.get(player).triple_kick = hits;
-        }
-
-        pub fn spite(self: *Self, player: Player, pp: u3) Error!void {
-            if (!enabled) return;
-
-            try self.probability.update(1, 4);
-            self.actions.get(player).spite = pp;
-        }
-
-        pub fn psywave(self: *Self, player: Player, power: u8, max: u8) Error!void {
-            if (!enabled) return;
-
-            try self.probability.update(1, max);
-            self.actions.get(player).psywave = power + 1;
-        }
-
-        pub fn conversion2(self: *Self, player: Player, ty: Type, mtype: Type, num: u8) Error!void {
-            if (!enabled) return;
-
-            assert(showdown or num == 0);
-            const n = if (num != 0)
-                num
-            else n: {
-                const neutral = @intFromEnum(Effectiveness.Neutral);
-                var i: u8 = 0;
-                for (0..Type.size) |t| {
-                    if (@intFromEnum(mtype.effectiveness(@enumFromInt(t))) < neutral) i += 1;
-                }
-                assert(i > 0 and i <= 7);
-                break :n i;
-            };
-
-            try self.probability.update(1, n);
-            self.actions.get(player).conversion_2 = @enumFromInt(@intFromEnum(ty) + 1);
         }
     };
 }
@@ -690,64 +699,6 @@ test "Chance.kingsRock" {
     try expectValue(Optional(bool).true, chance.actions.p2.kings_rock);
 }
 
-test "Chance.duration" {
-    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
-
-    chance.duration(.sleep, .P1, .P2, 2);
-    try expectValue(@as(u4, 2), chance.actions.p1.duration);
-    try expectValue(@as(u3, 1), chance.actions.p2.durations.sleep);
-}
-
-test "Chance.sleep" {
-    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
-
-    for ([_]u8{ 6, 5, 4, 3, 2, 1 }, 1..7) |d, i| {
-        chance.actions.p1.durations.sleep = @intCast(i);
-        try chance.sleep(.P1, 0);
-        try expectProbability(&chance.probability, 1, d);
-        try expectValue(@as(u3, 0), chance.actions.p1.durations.sleep);
-
-        chance.reset();
-
-        if (i < 6) {
-            chance.actions.p1.durations.sleep = @intCast(i);
-            try chance.sleep(.P1, 1);
-            try expectProbability(&chance.probability, d - 1, d);
-            try expectValue(@as(u3, @intCast(i)) + 1, chance.actions.p1.durations.sleep);
-
-            chance.reset();
-        }
-    }
-}
-
-test "Chance.disable" {
-    return error.SkipZigTest; // TODO
-}
-
-test "Chance.confusion" {
-    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
-
-    for ([_]u8{ 1, 4, 3, 2, 1 }, 1..6) |d, i| {
-        if (i > 1) {
-            chance.actions.p2.durations.confusion = @intCast(i);
-            try chance.confusion(.P2, 0);
-            try expectProbability(&chance.probability, 1, d);
-            try expectValue(@as(u3, 0), chance.actions.p2.durations.confusion);
-
-            chance.reset();
-        }
-
-        if (i < 5) {
-            chance.actions.p2.durations.confusion = @intCast(i);
-            try chance.confusion(.P2, 1);
-            try expectProbability(&chance.probability, if (d > 1) d - 1 else d, d);
-            try expectValue(@as(u3, @intCast(i)) + 1, chance.actions.p2.durations.confusion);
-
-            chance.reset();
-        }
-    }
-}
-
 test "Chance.triAttack" {
     var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
 
@@ -849,6 +800,78 @@ test "Chance.psywave" {
     try expectValue(@as(u8, 101), chance.actions.p2.psywave);
 }
 
+test "Chance.protect" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.protect(.P1, 15, false);
+    try expectProbability(&chance.probability, 239, 255);
+    try expectValue(Optional(bool).false, chance.actions.p1.protect);
+
+    chance.reset();
+
+    try chance.protect(.P2, 63, true);
+    try expectProbability(&chance.probability, 64, 255);
+    try expectValue(Optional(bool).true, chance.actions.p2.protect);
+}
+
+test "Chance.duration" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    chance.duration(.sleep, .P1, .P2, 2);
+    try expectValue(@as(u4, 2), chance.actions.p1.duration);
+    try expectValue(@as(u3, 1), chance.actions.p2.durations.sleep);
+}
+
+test "Chance.sleep" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    for ([_]u8{ 6, 5, 4, 3, 2, 1 }, 1..7) |d, i| {
+        chance.actions.p1.durations.sleep = @intCast(i);
+        try chance.sleep(.P1, 0);
+        try expectProbability(&chance.probability, 1, d);
+        try expectValue(@as(u3, 0), chance.actions.p1.durations.sleep);
+
+        chance.reset();
+
+        if (i < 6) {
+            chance.actions.p1.durations.sleep = @intCast(i);
+            try chance.sleep(.P1, 1);
+            try expectProbability(&chance.probability, d - 1, d);
+            try expectValue(@as(u3, @intCast(i)) + 1, chance.actions.p1.durations.sleep);
+
+            chance.reset();
+        }
+    }
+}
+
+test "Chance.disable" {
+    return error.SkipZigTest; // TODO
+}
+
+test "Chance.confusion" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    for ([_]u8{ 1, 4, 3, 2, 1 }, 1..6) |d, i| {
+        if (i > 1) {
+            chance.actions.p2.durations.confusion = @intCast(i);
+            try chance.confusion(.P2, 0);
+            try expectProbability(&chance.probability, 1, d);
+            try expectValue(@as(u3, 0), chance.actions.p2.durations.confusion);
+
+            chance.reset();
+        }
+
+        if (i < 5) {
+            chance.actions.p2.durations.confusion = @intCast(i);
+            try chance.confusion(.P2, 1);
+            try expectProbability(&chance.probability, if (d > 1) d - 1 else d, d);
+            try expectValue(@as(u3, @intCast(i)) + 1, chance.actions.p2.durations.confusion);
+
+            chance.reset();
+        }
+    }
+}
+
 pub fn expectProbability(r: anytype, p: u64, q: u64) !void {
     if (!enabled) return;
 
@@ -916,28 +939,6 @@ const Null = struct {
         _ = .{ self, player, proc };
     }
 
-    pub fn duration(
-        self: Null,
-        comptime field: Duration.Field,
-        player: Player,
-        target: Player,
-        turns: u4,
-    ) void {
-        _ = .{ self, field, player, target, turns };
-    }
-
-    pub fn sleep(self: Null, player: Player, turns: u4) Error!void {
-        _ = .{ self, player, turns };
-    }
-
-    pub fn disable(self: Null, player: Player, turns: u4) Error!void {
-        _ = .{ self, player, turns };
-    }
-
-    pub fn confusion(self: Null, player: Player, turns: u4) Error!void {
-        _ = .{ self, player, turns };
-    }
-
     pub fn triAttack(self: Null, player: Player, status: TriAttack) Error!void {
         _ = .{ self, player, status };
     }
@@ -958,7 +959,33 @@ const Null = struct {
         _ = .{ self, player, ty, mtype, num };
     }
 
+    pub fn protect(self: Null, player: Player, num: u8, ok: bool) Error!void {
+        _ = .{ self, player, num, ok };
+    }
+
     pub fn psywave(self: Null, player: Player, power: u8, max: u8) Error!void {
         _ = .{ self, player, power, max };
+    }
+
+    pub fn duration(
+        self: Null,
+        comptime field: Duration.Field,
+        player: Player,
+        target: Player,
+        turns: u4,
+    ) void {
+        _ = .{ self, field, player, target, turns };
+    }
+
+    pub fn sleep(self: Null, player: Player, turns: u4) Error!void {
+        _ = .{ self, player, turns };
+    }
+
+    pub fn disable(self: Null, player: Player, turns: u4) Error!void {
+        _ = .{ self, player, turns };
+    }
+
+    pub fn confusion(self: Null, player: Player, turns: u4) Error!void {
+        _ = .{ self, player, turns };
     }
 };
