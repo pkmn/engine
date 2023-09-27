@@ -59,8 +59,6 @@ const BOOSTS = &[_][2]u8{
 
 const MAX_STAT_VALUE = 999;
 
-const DISTRIBUTION = [_]u3{ 2, 2, 2, 3, 3, 3, 4, 5 };
-
 pub fn update(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Result {
     assert(c1.type != .Pass or c2.type != .Pass or battle.turn == 0);
     if (battle.turn == 0) return start(battle, options);
@@ -2952,6 +2950,8 @@ pub const Rolls = struct {
         options.chance.duration(.attacking, player, player, duration);
         return duration;
     }
+
+    const DISTRIBUTION = [_]u3{ 2, 2, 2, 3, 3, 3, 4, 5 };
 
     inline fn distribution(
         battle: anytype,
