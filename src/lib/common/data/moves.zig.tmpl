@@ -51,6 +51,8 @@ pub const Move = enum({{{ Move.type }}}) {
 
     /// The number of Pokémon moves in this generation.
     pub const size = {{{ Move.num }}};
+    /// The number of Pokémon moves that can be called by Metronome in this generation.
+    pub const metronome_size = {{{ Move.metronomeNum }}};
 
     /// Returns the `Data` corresponding to the move.
     pub inline fn get(id: Move) Data {

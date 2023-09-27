@@ -14,11 +14,13 @@ const util = @import("../common/util.zig");
 const Player = @import("../common/data.zig").Player;
 const Optional = @import("../common/optional.zig").Optional;
 
-const Move = @import("data.zig").Move;
-const MoveSlot = @import("data.zig").MoveSlot;
+const data = @import("./data.zig");
 
 const enabled = options.chance;
 const showdown = options.showdown;
+
+const Move = data.Move;
+const MoveSlot = data.MoveSlot;
 
 /// Actions taken by a hypothetical "chance player" that convey information about which RNG events
 /// were observed during a Generation I battle `update`. This can additionally be provided as input
@@ -593,7 +595,7 @@ pub fn Chance(comptime Rational: type) type {
         pub fn metronome(self: *Self, player: Player, move: Move) Error!void {
             if (!enabled) return;
 
-            try self.probability.update(1, Move.size - 2);
+            try self.probability.update(1, Move.metronome_size);
             self.actions.get(player).metronome = move;
         }
     };

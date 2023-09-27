@@ -2846,6 +2846,8 @@ pub const Move = enum(u8) {
 
     /// The number of Pokémon moves in this generation.
     pub const size = 251;
+    /// The number of Pokémon moves that can be called by Metronome in this generation.
+    pub const metronome_size = 239;
 
     /// Returns the `Data` corresponding to the move.
     pub inline fn get(id: Move) Data {

@@ -21,6 +21,7 @@ const showdown = options.showdown;
 
 const Gen12 = rng.Gen12;
 
+const Move = data.Move;
 const Type = data.Type;
 const Effectiveness = data.Effectiveness;
 const TriAttack = data.TriAttack;
@@ -166,10 +167,13 @@ pub const Action = packed struct(u128) {
     /// If not 0, TODO
     duration: u4 = 0,
 
-    _: u50 = 0,
+    _: u42 = 0,
 
     /// If not 0, psywave - 1 should be returned as the damage roll for Rolls.psywave.
     psywave: u8 = 0,
+
+    /// If not None, the Move to return for Rolls.metronome.
+    metronome: Move = .None,
 
     /// Observed values of various durations. Does not influence future RNG calls. TODO
     durations: Duration = .{},
@@ -467,6 +471,13 @@ pub fn Chance(comptime Rational: type) type {
 
             try self.probability.update(1, max);
             self.actions.get(player).psywave = power + 1;
+        }
+
+        pub fn metronome(self: *Self, player: Player, move: Move, n: u2) Error!void {
+            if (!enabled) return;
+
+            try self.probability.update(1, Move.metronome_size - @as(u8, n));
+            self.actions.get(player).metronome = move;
         }
 
         pub fn duration(
@@ -800,6 +811,14 @@ test "Chance.psywave" {
     try expectValue(@as(u8, 101), chance.actions.p2.psywave);
 }
 
+test "Chance.metronome" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.metronome(.P1, Move.HornAttack, 1);
+    try expectProbability(&chance.probability, 1, 238);
+    try expectValue(Move.HornAttack, chance.actions.p1.metronome);
+}
+
 test "Chance.protect" {
     var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
 
@@ -965,6 +984,10 @@ const Null = struct {
 
     pub fn psywave(self: Null, player: Player, power: u8, max: u8) Error!void {
         _ = .{ self, player, power, max };
+    }
+
+    pub fn metronome(self: Null, player: Player, move: Move, n: u2) Error!void {
+        _ = .{ self, player, move, n };
     }
 
     pub fn duration(

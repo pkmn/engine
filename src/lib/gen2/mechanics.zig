@@ -1410,8 +1410,8 @@ pub const Rolls = struct {
 
     const METRONOME = init: {
         var num = 0;
-        var moves: [238]Move = undefined;
-        for (1..Move.size) |i| {
+        var moves: [Move.metronome_size]Move = undefined;
+        for (1..Move.size + 1) |i| {
             if (Move.get(@enumFromInt(i)).extra.metronome) {
                 moves[num] = @enumFromInt(i);
                 num += 1;
@@ -1420,6 +1420,39 @@ pub const Rolls = struct {
         assert(num == moves.len);
         break :init moves;
     };
+
+    inline fn metronome(battle: anytype, player: Player, options: anytype) !Move {
+        const moves = battle.get(player).active.moves;
+        var n: u2 = 0;
+        for (moves) |m| {
+            if (m == .None) break;
+            if (Move.get(m).metronome) n += 1;
+        }
+
+        const move: Move = if (options.calc.overridden(player, .metronome)) |val|
+            val
+        else if (showdown) move: {
+            var r = battle.rng.range(u8, 0, METRONOME.len - n);
+            for (moves) |m| {
+                if (m == .None or @intFromEnum(m) > @intFromEnum(METRONOME[r])) break;
+                if (Move.get(m).metronome) r -= 1;
+            }
+            break :move METRONOME[r];
+        } else move: {
+            outer: while (true) {
+                const r = battle.rng.next();
+                if (r == 0 or r >= Move.size) continue;
+                const selected: Move = @enumFromInt(r);
+                if (!Move.get(selected).extra.metronome) continue;
+                for (moves) |m| if (m.id == selected) continue :outer;
+                break :move selected;
+            }
+        };
+
+        assert(Move.get(move).metronome);
+        try options.chance.metronome(player, move, n);
+        return move;
+    }
 };
 
 test "RNG agreement" {
