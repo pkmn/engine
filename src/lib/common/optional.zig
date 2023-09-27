@@ -15,19 +15,17 @@ pub fn Optional(comptime T: type) type {
 
     enumFields[0] = .{ .name = "None", .value = 0 };
 
-    var i: usize = 0;
-    inline for (fields) |field| {
+    inline for (fields, 1..) |field, i| {
         assert(!std.mem.eql(u8, field.name, "None"));
-        enumFields[i + 1] = .{
+        enumFields[i] = .{
             .name = field.name,
-            .value = i + 1,
+            .value = i,
         };
-        i += 1;
     }
 
     return @Type(.{
         .Enum = .{
-            .tag_type = std.math.IntFittingRange(0, i),
+            .tag_type = std.math.IntFittingRange(0, fields.len),
             .fields = &enumFields,
             .decls = &decls,
             .is_exhaustive = true,
