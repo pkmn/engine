@@ -487,6 +487,19 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       ',\n\n    // Sentinel used when Pokémon\'s turn should be skipped (e.g. bound)\n' +
       '    SKIP_TURN = 0xFF';
 
+    const metronome = `init: {
+        var num = 0;
+        var moves: [${moves.length - 2}]Move = undefined;
+        for (1..Move.size) |i| {
+            if (i != @intFromEnum(Move.Metronome)) {
+                moves[num] = @enumFromInt(i);
+                num += 1;
+            }
+        }
+        assert(num == moves.len);
+        break :init moves;
+    };`;
+
     template('moves', dirs.out, {
       gen: gen.num,
       roman: 'I',
@@ -496,7 +509,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         type: 'u8',
         values: moves.map(m => m.split(' ')[0]).join(',\n    ') + SENTINEL,
         num: moves.length,
-        metronomeNum: moves.length - 2,
+        metronome,
         size: 1,
         Data,
         data: MOVES.join(',\n        '),
@@ -949,6 +962,19 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
     };\n`;
 
+    const metronome = `init: {
+        var num = 0;
+        var moves: [${moves.length - NO_METRONOME.length}]Move = undefined;
+        for (1..Move.size + 1) |i| {
+            if (Move.get(@enumFromInt(i)).extra.metronome) {
+                moves[num] = @enumFromInt(i);
+                num += 1;
+            }
+        }
+        assert(num == moves.len);
+        break :init moves;
+      };`;
+
     template('moves', dirs.out, {
       gen: gen.num,
       roman: 'II',
@@ -958,7 +984,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         type: 'u8',
         values: moves.map(m => m.split(' ')[0]).join(',\n    '),
         num: moves.length,
-        metronomeNum: moves.length - NO_METRONOME.length,
+        metronome,
         size: 1,
         Data,
         data: MOVES.join(',\n        '),

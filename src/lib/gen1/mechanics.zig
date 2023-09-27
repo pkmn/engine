@@ -2861,11 +2861,9 @@ pub const Rolls = struct {
     inline fn metronome(battle: anytype, player: Player, options: anytype) !Move {
         const move: Move = if (options.calc.overridden(player, .metronome)) |val|
             val
-        else if (showdown) move: {
-            const r = battle.rng.range(u8, 0, @intFromEnum(Move.Struggle) - 2);
-            const mod = @as(u2, (if (r < @intFromEnum(Move.Metronome) - 1) 1 else 2));
-            break :move @enumFromInt(r + mod);
-        } else move: {
+        else if (showdown)
+            Move.METRONOME[battle.rng.range(u8, 0, Move.METRONOME.len)]
+        else move: {
             while (true) {
                 const r = battle.rng.next();
                 if (r == 0 or r == @intFromEnum(Move.Metronome)) continue;

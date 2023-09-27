@@ -455,25 +455,10 @@ pub const Rolls = struct {
     }
 
     const MOVE_NONE = [_]Move{.None};
-    const MOVES = init: {
-        var moves: [Move.size - 2]Move = undefined;
-        var i: usize = 0;
-        for (@typeInfo(Move).Enum.fields) |f| {
-            if (!(std.mem.eql(u8, f.name, "None") or
-                std.mem.eql(u8, f.name, "Metronome") or
-                std.mem.eql(u8, f.name, "Struggle") or
-                std.mem.eql(u8, f.name, "SKIP_TURN")))
-            {
-                moves[i] = @field(Move, f.name);
-                i += 1;
-            }
-        }
-        break :init moves;
-    };
 
     /// Returns a slice with the correct range of values for metronome given the `action` state.
     pub inline fn metronome(action: Action) []const Move {
-        return if (@field(action, "metronome") == .None) &MOVE_NONE else &MOVES;
+        return if (@field(action, "metronome") == .None) &MOVE_NONE else &Move.METRONOME;
     }
 };
 

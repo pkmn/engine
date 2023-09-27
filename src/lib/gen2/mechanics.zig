@@ -1406,46 +1406,38 @@ pub const Rolls = struct {
         return power;
     }
 
-    const DISTRIBUTION = [_]u3{ 2, 2, 2, 3, 3, 3, 4, 5 };
-
-    const METRONOME = init: {
-        var num = 0;
-        var moves: [Move.metronome_size]Move = undefined;
-        for (1..Move.size + 1) |i| {
-            if (Move.get(@enumFromInt(i)).extra.metronome) {
-                moves[num] = @enumFromInt(i);
-                num += 1;
-            }
-        }
-        assert(num == moves.len);
-        break :init moves;
-    };
-
     inline fn metronome(battle: anytype, player: Player, options: anytype) !Move {
         const moves = battle.get(player).active.moves;
+
         var n: u2 = 0;
         for (moves) |m| {
             if (m == .None) break;
             if (Move.get(m).metronome) n += 1;
         }
 
-        const move: Move = if (options.calc.overridden(player, .metronome)) |val|
-            val
-        else if (showdown) move: {
-            var r = battle.rng.range(u8, 0, METRONOME.len - n);
-            for (moves) |m| {
-                if (m == .None or @intFromEnum(m) > @intFromEnum(METRONOME[r])) break;
-                if (Move.get(m).metronome) r -= 1;
-            }
-            break :move METRONOME[r];
-        } else move: {
-            outer: while (true) {
-                const r = battle.rng.next();
-                if (r == 0 or r >= Move.size) continue;
-                const selected: Move = @enumFromInt(r);
-                if (!Move.get(selected).extra.metronome) continue;
-                for (moves) |m| if (m.id == selected) continue :outer;
-                break :move selected;
+        // TODO: consider throwing error instead of rerolling?
+        const overridden = if (options.calc.overridden(player, .metronome)) |val| val: {
+            for (moves) |m| if (m.id == val) break :val null;
+            break :val val;
+        } else null;
+
+        const move: Move = overridden orelse move: {
+            if (showdown) {
+                var r = battle.rng.range(u8, 0, Move.METRONOME.len - n);
+                for (moves) |m| {
+                    if (m == .None or @intFromEnum(m) > @intFromEnum(Move.METRONOME[r])) break;
+                    if (Move.get(m).metronome) r -= 1;
+                }
+                break :move Move.METRONOME[r];
+            } else {
+                outer: while (true) {
+                    const r = battle.rng.next();
+                    if (r == 0 or r >= Move.size) continue;
+                    const selected: Move = @enumFromInt(r);
+                    if (!Move.get(selected).extra.metronome) continue;
+                    for (moves) |m| if (m.id == selected) continue :outer;
+                    break :move selected;
+                }
             }
         };
 

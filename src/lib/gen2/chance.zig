@@ -476,7 +476,7 @@ pub fn Chance(comptime Rational: type) type {
         pub fn metronome(self: *Self, player: Player, move: Move, n: u2) Error!void {
             if (!enabled) return;
 
-            try self.probability.update(1, Move.metronome_size - @as(u8, n));
+            try self.probability.update(1, Move.METRONOME.len - @as(u8, n));
             self.actions.get(player).metronome = move;
         }
 
