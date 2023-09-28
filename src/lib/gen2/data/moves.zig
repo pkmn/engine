@@ -2859,7 +2859,7 @@ pub const Move = enum(u8) {
         }
         assert(num == moves.len);
         break :init moves;
-      };
+    };
 
     /// Returns the `Data` corresponding to the move.
     pub inline fn get(id: Move) Data {

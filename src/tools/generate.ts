@@ -973,7 +973,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
         assert(num == moves.len);
         break :init moves;
-      };`;
+    };`;
 
     template('moves', dirs.out, {
       gen: gen.num,
