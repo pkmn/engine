@@ -539,19 +539,20 @@ pub fn Chance(comptime Rational: type) type {
             }
         }
 
-        // FIXME thrash
         pub fn confusion(self: *Self, player: Player, turns: u4) Error!void {
             if (!enabled) return;
 
             var durations = &self.actions.get(player).durations;
             const n = durations.confusion;
+            const hi: u8 = if (durations.thrash) 3 else 5;
+            const p = hi + 1;
             if (turns == 0) {
-                assert(n >= 2 and n <= 5);
-                if (n != 5) try self.probability.update(1, 6 - @as(u4, n));
+                assert(n >= 2 and n <= hi);
+                if (n != hi) try self.probability.update(1, p - @as(u4, n));
                 durations.confusion = 0;
             } else {
-                assert(n >= 1 and n < 5);
-                if (n > 1) try self.probability.update(6 - @as(u4, n) - 1, 6 - @as(u4, n));
+                assert(n >= 1 and n < hi);
+                if (n > 1) try self.probability.update(p - @as(u4, n) - 1, p - @as(u4, n));
                 durations.confusion += 1;
             }
         }
@@ -954,16 +955,17 @@ test "Chance.sleep" {
     }
 }
 
-// FIXME thrash
 test "Chance.confusion" {
     var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
 
+    chance.actions.p2.durations.thrash = false;
     for ([_]u8{ 1, 4, 3, 2, 1 }, 1..6) |d, i| {
         if (i > 1) {
             chance.actions.p2.durations.confusion = @intCast(i);
             try chance.confusion(.P2, 0);
             try expectProbability(&chance.probability, 1, d);
             try expectValue(@as(u3, 0), chance.actions.p2.durations.confusion);
+            try expectValue(false, chance.actions.p2.durations.thrash);
 
             chance.reset();
         }
@@ -973,6 +975,32 @@ test "Chance.confusion" {
             try chance.confusion(.P2, 1);
             try expectProbability(&chance.probability, if (d > 1) d - 1 else d, d);
             try expectValue(@as(u3, @intCast(i)) + 1, chance.actions.p2.durations.confusion);
+            try expectValue(false, chance.actions.p2.durations.thrash);
+
+            chance.reset();
+        }
+    }
+
+    chance.reset();
+
+    chance.actions.p2.durations.thrash = true;
+    for ([_]u8{ 1, 2, 1 }, 1..4) |d, i| {
+        if (i > 1) {
+            chance.actions.p2.durations.confusion = @intCast(i);
+            try chance.confusion(.P2, 0);
+            try expectProbability(&chance.probability, 1, d);
+            try expectValue(@as(u3, 0), chance.actions.p2.durations.confusion);
+            try expectValue(true, chance.actions.p2.durations.thrash);
+
+            chance.reset();
+        }
+
+        if (i < 3) {
+            chance.actions.p2.durations.confusion = @intCast(i);
+            try chance.confusion(.P2, 1);
+            try expectProbability(&chance.probability, if (d > 1) d - 1 else d, d);
+            try expectValue(@as(u3, @intCast(i)) + 1, chance.actions.p2.durations.confusion);
+            try expectValue(true, chance.actions.p2.durations.thrash);
 
             chance.reset();
         }
