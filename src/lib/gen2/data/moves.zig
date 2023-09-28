@@ -288,6 +288,8 @@ pub const Move = enum(u8) {
         const Extra = packed struct(u8) {
             /// Whether this move can be called via Metronome.
             metronome: bool = true,
+            /// Whether this move can be called via Sleep Talk.
+            sleep_talk: bool = true,
             /// Whether this move is considered to be "continuous".
             continuous: bool = false,
             /// Whether this move can hit a flying target.
@@ -295,7 +297,7 @@ pub const Move = enum(u8) {
             /// Whether this move can hit an underground target.
             underground: bool = false,
             /// Protocol reason offset associated with this move.
-            protocol: u4 = 0,
+            protocol: u3 = 0,
         };
 
         comptime {
@@ -410,7 +412,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .accuracy = percent(75),
             .target = .Foes,
-            .extra = .{ .continuous = true },
+            .extra = .{ .sleep_talk = false, .continuous = true },
         },
         // SwordsDance
         .{
@@ -462,7 +464,7 @@ pub const Move = enum(u8) {
             .type = .Flying,
             .accuracy = percent(95),
             .target = .Any,
-            .extra = .{ .continuous = true },
+            .extra = .{ .sleep_talk = false, .continuous = true },
         },
         // Bind
         .{
@@ -941,7 +943,7 @@ pub const Move = enum(u8) {
             .type = .Grass,
             .accuracy = percent(100),
             .target = .Other,
-            .extra = .{ .continuous = true },
+            .extra = .{ .sleep_talk = false, .continuous = true },
         },
         // PoisonPowder
         .{
@@ -1070,6 +1072,7 @@ pub const Move = enum(u8) {
             .type = .Ground,
             .accuracy = percent(100),
             .target = .Other,
+            .extra = .{ .sleep_talk = false },
         },
         // Toxic
         .{
@@ -1282,7 +1285,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .accuracy = percent(100),
             .target = .Self,
-            .extra = .{ .continuous = true },
+            .extra = .{ .sleep_talk = false, .continuous = true },
         },
         // Metronome
         .{
@@ -1394,7 +1397,7 @@ pub const Move = enum(u8) {
             .type = .Normal,
             .accuracy = percent(100),
             .target = .Other,
-            .extra = .{ .continuous = true },
+            .extra = .{ .sleep_talk = false, .continuous = true },
         },
         // SpikeCannon
         .{
@@ -1500,7 +1503,7 @@ pub const Move = enum(u8) {
             .type = .Flying,
             .accuracy = percent(90),
             .target = .Any,
-            .extra = .{ .continuous = true },
+            .extra = .{ .sleep_talk = false, .continuous = true },
         },
         // Transform
         .{

@@ -3006,10 +3006,9 @@ pub const Rolls = struct {
                     while (i < moves.len and r > 0) : (i += 1) {
                         if (moves[i].pp > 0) {
                             r -= 1;
-                            if (r == 0) break;
+                            if (r == 0) break :slot @intCast(i + 1);
                         }
                     }
-                    break :slot @intCast(i + 1);
                 }
             }
 

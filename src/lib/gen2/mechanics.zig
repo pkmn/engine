@@ -1062,6 +1062,34 @@ pub const Effects = struct {
         try Rolls.forceSwitch(battle, player, SLOTS[0..i], n, options);
     }
 
+    fn conversion(battle: anytype, player: Player, options: anytype) !void {
+        const side = battle.side(player);
+
+        var n: u4 = 0;
+        for (side.active.moves) |m| {
+            if (convertible(side.active, m)) n += 1;
+        }
+        if (n == 0) return try options.log.fail(battle.active(player), .None);
+
+        try Rolls.conversion(battle, player, n, options);
+    }
+
+    fn sleepTalk(battle: anytype, player: Player, mslot: u4, options: anytype) !void {
+        const side = battle.side(player);
+
+        if (!Status.is(side.stored().status, .SLP)) {
+            return if (!showdown) try options.log.fail(battle.active(player), .None);
+        }
+
+        var n: u4 = 0;
+        for (side.active.moves, 0..) |m, i| {
+            if (mslot - 1 != i and Move.get(m).extra.sleep_talk) n += 1;
+        }
+        if (n == 0) return try options.log.fail(battle.active(player), .None);
+
+        try Rolls.sleepTalk(battle, player, n, mslot, options);
+    }
+
     const MAGNITUDE_POWER = [_]u8{ 10, 30, 50, 70, 90, 110, 150 };
 };
 
@@ -1077,6 +1105,12 @@ inline fn isForced(active: anytype) bool {
     return active.volatiles.Recharging or active.volatiles.Rage or
         active.volatiles.Thrashing or active.volatiles.Charging or
         active.volatiles.Rollout;
+}
+
+inline fn convertible(active: *const ActivePokemon, m: Move) bool {
+    if (m == .None) return false;
+    const t = Move.get(m).type;
+    return t != .@"???" and !active.types.includes(t);
 }
 
 pub const Rolls = struct {
@@ -1376,24 +1410,74 @@ pub const Rolls = struct {
         return ok;
     }
 
-    fn conversion(battle: anytype, player: Player, options: anytype) !u4 {
-        _ = battle;
+    fn conversion(battle: anytype, player: Player, n: u4, options: anytype) !u4 {
+        assert(n > 0);
 
-        const n: u4 = 0;
-        const slot: u4 = 0;
+        const active = battle.side(player).active;
+        const moves = active.moves;
+
+        // TODO: consider throwing error instead of rerolling?
+        const overridden = if (options.calc.overridden(player, .move_slot)) |val|
+            if (convertible(active, active.moves[val - 1])) val else null
+        else
+            null;
+
+        const slot: u4 = overridden orelse slot: {
+            if (showdown) {
+                var r = battle.rng.range(u4, 0, n) + 1;
+                var i: usize = 0;
+                while (i < moves.len and r > 0) : (i += 1) {
+                    if (convertible(active, moves[i])) {
+                        r -= 1;
+                        if (r == 0) break :slot @intCast(i + 1);
+                    }
+                }
+                break :slot @intCast(i + 1);
+            } else {
+                while (true) {
+                    const r: u4 = @intCast(battle.rng.next() & 3);
+                    if (convertible(active.moves[r])) break :slot @intCast(r + 1);
+                }
+            }
+        };
 
         assert(n >= 1 and n <= 4);
         assert(slot >= 1 and slot <= 4);
-
         try options.chance.moveSlot(player, slot, n);
         return slot;
     }
 
-    fn sleepTalk(battle: anytype, player: Player, options: anytype) !u4 {
-        _ = battle;
+    fn sleepTalk(battle: anytype, player: Player, n: u4, mslot: u4, options: anytype) !u4 {
+        assert(n > 0);
 
-        const n: u4 = 0;
-        const slot: u4 = 0;
+        const active = battle.side(player).active;
+        const moves = active.moves;
+
+        // TODO: consider throwing error instead of rerolling?
+        const overridden = if (options.calc.overridden(player, .move_slot)) |val|
+            if (val != mslot and Move.get(moves[val - 1]).extra.sleep_talk) val else null
+        else
+            null;
+
+        const slot: u4 = overridden orelse slot: {
+            if (showdown) {
+                var r = battle.rng.range(u4, 0, n) + 1;
+                var i: usize = 0;
+                while (i < moves.len and r > 0) : (i += 1) {
+                    if (i + 1 != mslot and Move.get(moves[i]).extra.sleep_talk) {
+                        r -= 1;
+                        if (r == 0) break :slot @intCast(i + 1);
+                    }
+                }
+                break :slot @intCast(i + 1);
+            } else {
+                while (true) {
+                    const r: u4 = @intCast(battle.rng.next() & 3);
+                    if (r + 1 == mslot or !Move.get(moves[r]).extra.sleep_talk) continue;
+                    break :slot @intCast(r + 1);
+                }
+            }
+        };
 
         assert(n >= 1 and n <= 4);
         assert(slot >= 1 and slot <= 4);

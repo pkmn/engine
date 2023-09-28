@@ -108,7 +108,7 @@ const NAMES: { [constant: string]: string } = {
   THRASH_PETAL_DANCE_EFFECT: 'Thrashing', EFFECT_SELFDESTRUCT: 'Explode',
   EFFECT_SP_ATK_UP: 'SpAtkUp1', EFFECT_SP_DEF_DOWN_HIT: 'SpDefDownChance',
   EFFECT_SPEED_DOWN: 'SpeedDown1', EFFECT_SPEED_DOWN_HIT: 'SpeedDownChance',
-  EFFECT_TRAP_TARGET: 'Binding', EFFECT_RESET_STATS: 'Haze',
+  EFFECT_TRAP_TARGET: 'Binding', EFFECT_RESET_STATS: 'Haze', EFFECT_FLY: 'FlyDig',
 };
 
 const STAT_DOWN = [
@@ -864,6 +864,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       'metronome', 'struggle', 'sketch', 'mimic', 'counter', 'mirrorcoat',
       'protect', 'detect', 'endure', 'destinybond', 'sleeptalk', 'thief',
     ];
+    const NO_SLEEP_TALK =
+      ['skullbash', 'razorwind', 'skyattack', 'solarbeam', 'fly', 'dig', 'bide'];
     const FLYING = ['gust', 'whirlwind', 'thunder', 'twister'];
     const UNDERGROUND = ['earthquake', 'fissure', 'magnitude'];
     const BINDING = ['bind', 'wrap', 'firespin', 'clamp', 'whirlpool'];
@@ -889,7 +891,10 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
       const acc = move.accuracy === true ? 100 : move.accuracy;
       const extra =
         NO_METRONOME.includes(move.id) ? '.{ .metronome = false }'
+        : CONTINUOUS.includes(move.id) &&
+          NO_SLEEP_TALK.includes(move.id) ? '.{ .sleep_talk = false, .continuous = true }'
         : CONTINUOUS.includes(move.id) ? '.{ .continuous = true }'
+        : NO_SLEEP_TALK.includes(move.id) ? '.{ .sleep_talk = false }'
         : FLYING.includes(move.id) ? '.{ .flying = true }'
         : UNDERGROUND.includes(move.id) ? '.{ .underground = true }'
         : BINDING.includes(move.id) ? `.{ .protocol = ${BINDING.indexOf(move.id) + 1} }` : '';
@@ -931,6 +936,8 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         const Extra = packed struct(u8) {
             /// Whether this move can be called via Metronome.
             metronome: bool = true,
+            /// Whether this move can be called via Sleep Talk.
+            sleep_talk: bool = true,
             /// Whether this move is considered to be "continuous".
             continuous: bool = false,
             /// Whether this move can hit a flying target.
@@ -938,7 +945,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
             /// Whether this move can hit an underground target.
             underground: bool = false,
             /// Protocol reason offset associated with this move.
-            protocol: u4 = 0,
+            protocol: u3 = 0,
         };
 
         comptime {
