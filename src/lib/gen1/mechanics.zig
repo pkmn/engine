@@ -2897,7 +2897,7 @@ pub const Rolls = struct {
         const duration: u3 = if (options.calc.overridden(player, .duration)) |val|
             @intCast(val)
         else if (showdown)
-            @intCast(battle.rng.range(u8, 1, 8))
+            battle.rng.range(u3, 1, 8)
         else duration: {
             while (true) {
                 const r = battle.rng.next() & 7;
@@ -2914,7 +2914,7 @@ pub const Rolls = struct {
         const duration: u4 = if (options.calc.overridden(player, .duration)) |val|
             val
         else if (showdown)
-            @intCast(battle.rng.range(u8, 1, 9))
+            battle.rng.range(u4, 1, 9)
         else
             @intCast((battle.rng.next() & 7) + 1);
 
@@ -2927,7 +2927,7 @@ pub const Rolls = struct {
         const duration: u3 = if (options.calc.overridden(player, .duration)) |val|
             @intCast(val)
         else if (showdown)
-            @intCast(battle.rng.range(u8, 2, 6))
+            battle.rng.range(u3, 2, 6)
         else
             @intCast((battle.rng.next() & 3) + 2);
 
@@ -2940,7 +2940,7 @@ pub const Rolls = struct {
         const duration: u3 = if (options.calc.overridden(player, .duration)) |val|
             @intCast(val)
         else if (showdown)
-            @intCast(battle.rng.range(u4, 2, 4))
+            battle.rng.range(u3, 2, 4)
         else
             @intCast((battle.rng.next() & 1) + 2);
 
@@ -2961,7 +2961,7 @@ pub const Rolls = struct {
         const n: u3 = if (options.calc.overridden(player, roll)) |val|
             @intCast(val)
         else if (showdown)
-            DISTRIBUTION[battle.rng.range(u8, 0, DISTRIBUTION.len)]
+            DISTRIBUTION[battle.rng.range(u3, 0, DISTRIBUTION.len)]
         else n: {
             const r = (battle.rng.next() & 3);
             break :n @intCast((if (r < 2) r else battle.rng.next() & 3) + 2);

@@ -1210,7 +1210,7 @@ pub const Rolls = struct {
         const n: u3 = if (options.calc.overridden(player, .multi_hit)) |val|
             @intCast(val)
         else if (showdown)
-            DISTRIBUTION[battle.rng.range(u8, 0, DISTRIBUTION.len)]
+            DISTRIBUTION[battle.rng.range(u3, 0, DISTRIBUTION.len)]
         else n: {
             const r = (battle.rng.next() & 3);
             break :n @intCast((if (r < 2) r else battle.rng.next() & 3) + 2);
@@ -1280,7 +1280,7 @@ pub const Rolls = struct {
         else loop: {
             while (true) {
                 const r = std.math.rotr(u8, std.battle.rng.next(), 4) & 3;
-                if (r != 0) break :loop @intCast(r - 1);
+                if (r != 0) break :loop @enumFromInt(r - 1);
             }
         };
 
@@ -1338,11 +1338,11 @@ pub const Rolls = struct {
         return num;
     }
 
-    inline fn tripleKick(battle: anytype, player: Player, options: anytype) !u8 {
+    inline fn tripleKick(battle: anytype, player: Player, options: anytype) !u2 {
         const hits = if (options.calc.overridden(player, .triple_kick)) |val|
             val
         else if (showdown)
-            battle.rng.range(u8, 1, 4)
+            battle.rng.range(u2, 1, 4)
         else power: {
             while (true) {
                 const r = battle.rng.next() & 3;
@@ -1354,8 +1354,6 @@ pub const Rolls = struct {
         try options.chance.tripleKick(player, hits);
         return hits;
     }
-
-    // FIXME TODO forceSwitch
 
     inline fn spite(battle: anytype, player: Player, options: anytype) !u8 {
         const pp = if (options.calc.overridden(player, .spite)) |val|
@@ -1483,11 +1481,11 @@ pub const Rolls = struct {
         return move;
     }
 
-    inline fn sleepDuration(battle: anytype, player: Player, options: anytype) u8 {
+    inline fn sleepDuration(battle: anytype, player: Player, options: anytype) u3 {
         const duration: u3 = if (options.calc.overridden(player, .duration)) |val|
             @intCast(val)
         else if (showdown)
-            @intCast(battle.rng.range(u8, 1, 7))
+            battle.rng.range(u3, 1, 7)
         else duration: {
             while (true) {
                 const r = battle.rng.next() & 7;
@@ -1500,12 +1498,12 @@ pub const Rolls = struct {
         return duration + 1;
     }
 
-    inline fn confusionDuration(battle: anytype, player: Player, self: bool, options: anytype) u8 {
+    inline fn confusionDuration(battle: anytype, player: Player, self: bool, options: anytype) u3 {
         const duration: u3 = if (options.calc.overridden(player, .duration)) |val|
             @intCast(val)
         else if (showdown)
             // Pokémon Showdown incorrectly uses the same duration for self-confusion
-            @intCast(battle.rng.range(u8, 2, 6))
+            battle.rng.range(u3, 2, 6)
         else
             @intCast((battle.rng.next() & if (self) 1 else 3) + 2);
 
@@ -1519,7 +1517,7 @@ pub const Rolls = struct {
             @intCast(val)
         else if (showdown)
             // Pokémon Showdown incorrectly inherits Generation III's Disable duration
-            @intCast(battle.rng.range(u8, 2, 6))
+            battle.rng.range(u4, 2, 6)
         else duration: {
             while (true) {
                 const r = battle.rng.next() & 7;
@@ -1532,11 +1530,11 @@ pub const Rolls = struct {
         return duration;
     }
 
-    inline fn attackingDuration(battle: anytype, player: Player, options: anytype) u4 {
-        const duration: u4 = if (options.calc.overridden(player, .duration)) |val|
+    inline fn attackingDuration(battle: anytype, player: Player, options: anytype) u3 {
+        const duration: u3 = if (options.calc.overridden(player, .duration)) |val|
             @intCast(val)
         else if (showdown)
-            @intCast(battle.rng.range(u4, 2, 4))
+            battle.rng.range(u3, 2, 4)
         else
             @intCast((battle.rng.next() & 1) + 2); // BUG: thrash is + 1 not +2
 
@@ -1545,12 +1543,12 @@ pub const Rolls = struct {
         return duration;
     }
 
-    inline fn bindingDuration(battle: anytype, player: Player, options: anytype) u4 {
+    inline fn bindingDuration(battle: anytype, player: Player, options: anytype) u3 {
         const duration: u3 = (if (options.calc.overridden(player, .duration)) |val|
             @intCast(val)
         else if (showdown)
             // TODO: PS does range(3, 6) here which after subtracting 1 is actually 2-4 not 2-5!
-            @intCast(battle.rng.range(u8, 2, 5))
+            battle.rng.range(u3, 2, 5)
         else
             @intCast(battle.rng.next() & 3 + 2));
 
@@ -1560,11 +1558,11 @@ pub const Rolls = struct {
     }
 
     // TODO: consider sharing implementation with bindingDuration
-    inline fn encoreDuration(battle: anytype, player: Player, options: anytype) u4 {
+    inline fn encoreDuration(battle: anytype, player: Player, options: anytype) u3 {
         const duration: u3 = (if (options.calc.overridden(player, .duration)) |val|
             @intCast(val)
         else if (showdown)
-            @intCast(battle.rng.range(u8, 2, 6))
+            battle.rng.range(u3, 2, 6)
         else
             @intCast(battle.rng.next() & 3 + 2));
 
