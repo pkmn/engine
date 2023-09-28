@@ -515,15 +515,407 @@ fn decrementPP(side: *Side, mslot: u4) void {
 }
 
 fn doMove(battle: anytype, player: Player, options: anytype, mslot: u4) !?Result {
-    _ = options;
     var side = battle.side(player);
     const move = Move.get(.Teleport); // side.last_selected_move
+    _ = .{ side, mslot };
+
     switch (move.effect) {
-        .Teleport => {
-            // side.useMove();
-            decrementPP(side, mslot);
+        .None => {
+            // TODO
         },
-        else => @panic("TODO"),
+        .AccuracyDown1 => {
+            // TODO
+        },
+        .AccuracyDownChance => {
+            // TODO
+        },
+        .AllStatUpChance => {
+            // TODO
+        },
+        .AlwaysHit => {
+            try Effects.alwaysHit(battle, player, options); // TODO
+        },
+        .AttackDown1 => {
+            // TODO
+        },
+        .AttackDown2 => {
+            // TODO
+        },
+        .AttackDownChance => {
+            // TODO
+        },
+        .AttackUp1 => {
+            // TODO
+        },
+        .AttackUp2 => {
+            // TODO
+        },
+        .AttackUpChance => {
+            // TODO
+        },
+        .Attract => {
+            try Effects.attract(battle, player, options); // TODO
+        },
+        .BatonPass => {
+            try Effects.batonPass(battle, player, options); // TODO
+        },
+        .BeatUp => {
+            try Effects.beatUp(battle, player, options); // TODO
+        },
+        .BellyDrum => {
+            try Effects.bellyDrum(battle, player, options); // TODO
+        },
+        .Bide => {
+            try Effects.bide(battle, player, options); // TODO
+        },
+        .Binding => {
+            try Effects.binding(battle, player, options); // TODO
+        },
+        .BurnChance => {
+            try Effects.burnChance(battle, player, move, options); // TODO
+        },
+        .Confusion, .ConfusionChance => {
+            try Effects.confusion(battle, player, move, options); // TODO
+        },
+        .Conversion => {
+            try Effects.conversion(battle, player, options); // TODO
+        },
+        .Conversion2 => {
+            try Effects.conversion2(battle, player, options); // TODO
+        },
+        .Counter => {
+            try Effects.counter(battle, player, move, options); // TODO
+        },
+        .Curse => {
+            try Effects.curse(battle, player, options); // TODO
+        },
+        .DefenseCurl => {
+            try Effects.defenseCurl(battle, player, options); // TODO
+        },
+        .DefenseDown1 => {
+            // TODO
+        },
+        .DefenseDown2 => {
+            // TODO
+        },
+        .DefenseDownChance => {
+            // TODO
+        },
+        .DefenseUp1 => {
+            // TODO
+        },
+        .DefenseUp2 => {
+            // TODO
+        },
+        .DefenseUpChance => {
+            // TODO
+        },
+        .DestinyBond => {
+            try Effects.destinyBond(battle, player, options); // TODO
+        },
+        .Disable => {
+            try Effects.disable(battle, player, move, options); // TODO
+        },
+        .DoubleHit => {
+            try Effects.doubleHit(battle, player, options); // TODO
+        },
+        .DrainHP, .DreamEater => {
+            try Effects.drainHP(battle, player, options); // TODO
+        },
+        .Earthquake => {
+            try Effects.earthquake(battle, player, options); // TODO
+        },
+        .Encore => {
+            try Effects.encore(battle, player, options); // TODO
+        },
+        .Endure => {
+            try Effects.endure(battle, player, options); // TODO
+        },
+        .EvasionDown1 => {
+            // TODO
+        },
+        .EvasionUp1 => {
+            // TODO
+        },
+        .Explode => {
+            try Effects.explode(battle, player, options); // TODO
+        },
+        .FalseSwipe => {
+            try Effects.encore(battle, player, options); // TODO
+        },
+        .FixedDamage => {
+            try Effects.fixedDamage(battle, player, options); // TODO
+        },
+        .FlameWheel => {
+            try Effects.flameWheel(battle, player, options); // TODO
+        },
+        .FlinchChance => {
+            try Effects.flinchChance(battle, player, move, options); // TODO
+        },
+        .FlyDig => {
+            try Effects.flyDig(battle, player, move, options); // TODO
+        },
+        .FocusEnergy => {
+            try Effects.focusEnergy(battle, player, options); // TODO
+        },
+        .ForceSwitch => {
+            try Effects.forceSwitch(battle, player, options); // TODO
+        },
+        .Foresight => {
+            try Effects.foreSight(battle, player, options); // TODO
+        },
+        .FreezeChance => {
+            try Effects.freezeChance(battle, player, move, options); // TODO
+        },
+        .Frustration => {
+            // TODO
+        },
+        .FuryCutter => {
+            try Effects.furyCutter(battle, player, options); // TODO
+        },
+        .FutureSight => {
+            try Effects.futureSight(battle, player, options); // TODO
+        },
+        .Gust => {
+            try Effects.gust(battle, player, options); // TODO
+        },
+        .Haze => {
+            try Effects.haze(battle, player, options); // TODO
+        },
+        .Heal => {
+            try Effects.heal(battle, player, options); // TODO
+        },
+        .HealBell => {
+            try Effects.healBell(battle, player, options); // TODO
+        },
+        .HiddenPower => {
+            try Effects.hiddenPower(battle, player, options); // TODO
+        },
+        .HighCritical => {
+            // TODO
+        },
+        .HyperBeam => {
+            try Effects.hyperBeam(battle, player, options); // TODO
+        },
+        .JumpKick => {
+            try Effects.jumpKick(battle, player, options); // TODO
+        },
+        .LeechSeed => {
+            try Effects.leechSeed(battle, player, options); // TODO
+        },
+        .LevelDamage => {
+            try Effects.levelDamage(battle, player, options); // TODO
+        },
+        .LightScreen => {
+            try Effects.lightScreen(battle, player, options); // TODO
+        },
+        .LockOn => {
+            try Effects.lockOn(battle, player, options); // TODO
+        },
+        .Magnitude => {
+            try Effects.magnitude(battle, player, options); // TODO
+        },
+        .MeanLook => {
+            try Effects.meanLook(battle, player, options); // TODO
+        },
+        .Metronome => {
+            try Effects.metronome(battle, player, options); // TODO
+        },
+        .Mimic => {
+            try Effects.mimic(battle, player, options); // TODO
+        },
+        .MirrorCoat => {
+            try Effects.mirrorCoat(battle, player, options); // TODO
+        },
+        .MirrorMove => {
+            try Effects.mirrorMove(battle, player, options); // TODO
+        },
+        .Mist => {
+            try Effects.mist(battle, player, options); // TODO
+        },
+        .Moonlight, .MorningSun => {
+            try Effects.weatherHeal(battle, player, options); // TODO
+        },
+        .MultiHit => {
+            try Effects.multiHit(battle, player, options); // TODO
+        },
+        .Nightmare => {
+            try Effects.nightmare(battle, player, options); // TODO
+        },
+        .OHKO => {
+            try Effects.ohko(battle, player, options); // TODO
+        },
+        .PainSplit => {
+            try Effects.painSplit(battle, player, options); // TODO
+        },
+        .Paralyze => {
+            try Effects.paralyze(battle, player, options); // TODO
+        },
+        .ParalyzeChance => {
+            try Effects.paralyzeChance(battle, player, options); // TODO
+        },
+        .PayDay => {
+            try Effects.payDay(battle, player, options); // TODO
+        },
+        .PerishSong => {
+            try Effects.perishSong(battle, player, options); // TODO
+        },
+        .Poison, .PoisonChance => {
+            try Effects.poison(battle, player, move, options); // TODO
+        },
+        .Present => {
+            try Effects.present(battle, player, options); // TODO
+        },
+        .Priority => {
+            // TODO
+        },
+        .Protect => {
+            try Effects.protect(battle, player, move, options); // TODO
+        },
+        .PsychUp => {
+            try Effects.psychUp(battle, player, options); // TODO
+        },
+        .Psywave => {
+            try Effects.psywave(battle, player, options); // TODO
+        },
+        .Pursuit => {
+            try Effects.pursuit(battle, player, options); // TODO
+        },
+        .Rage => {
+            try Effects.rage(battle, player, options); // TODO
+        },
+        .RainDance => {
+            try Effects.rainDance(battle, player, options); // TODO
+        },
+        .RapidSpin => {
+            try Effects.rapidSpin(battle, player, options); // TODO
+        },
+        .RazorWind => {
+            try Effects.razorWind(battle, player, options); // TODO
+        },
+        .Recoil => {
+            try Effects.recoil(battle, player, options); // TODO
+        },
+        .Reflect => {
+            try Effects.reflect(battle, player, options); // TODO
+        },
+        .Return => {
+            // TODO
+        },
+        .Reversal => {
+            try Effects.reversal(battle, player, options); // TODO
+        },
+        .Rollout => {
+            try Effects.rollout(battle, player, options); // TODO
+        },
+        .SacredFire => {
+            try Effects.sacredFire(battle, player, options); // TODO
+        },
+        .Safeguard => {
+            try Effects.safeguard(battle, player, options); // TODO
+        },
+        .Sandstorm => {
+            try Effects.sandstorm(battle, player, options); // TODO
+        },
+        .Sketch => {
+            try Effects.sketch(battle, player, options); // TODO
+        },
+        .SkullBash => {
+            try Effects.skullBash(battle, player, options); // TODO
+        },
+        .SkyAttack => {
+            try Effects.skyAttack(battle, player, options); // TODO
+        },
+        .Sleep => {
+            try Effects.sleep(battle, player, options); // TODO
+        },
+        .SleepTalk => {
+            try Effects.sleepTalk(battle, player, options); // TODO
+        },
+        .Snore => {
+            try Effects.snore(battle, player, options); // TODO
+        },
+        .Solarbeam => {
+            try Effects.solarBeam(battle, player, options); // TODO
+        },
+        .SpAtkUp1 => {
+            // TODO
+        },
+        .SpDefDownChance => {
+            // TODO
+        },
+        .SpDefUp2 => {
+            // TODO
+        },
+        .SpeedDown1 => {
+            // TODO
+        },
+        .SpeedDown2 => {
+            // TODO
+        },
+        .SpeedDownChance => {
+            // TODO
+        },
+        .SpeedUp2 => {
+            // TODO
+        },
+        .Spikes => {
+            try Effects.spikes(battle, player, options); // TODO
+        },
+        .Spite => {
+            try Effects.spite(battle, player, options); // TODO
+        },
+        .Splash => {
+            try Effects.splash(battle, player, options); // TODO
+        },
+        .Stomp => {
+            try Effects.stomp(battle, player, options); // TODO
+        },
+        .Substitute => {
+            try Effects.substitute(battle, player, options); // TODO
+        },
+        .SunnyDay => {
+            try Effects.sunnyDay(battle, player, options); // TODO
+        },
+        .SuperFang => {
+            try Effects.superFang(battle, player, options); // TODO
+        },
+        .Swagger => {
+            try Effects.swagger(battle, player, options); // TODO
+        },
+        .Synthesis => {
+            try Effects.synthesis(battle, player, options); // TODO
+        },
+        .Teleport => {
+            try Effects.teleport(battle, player, options); // TODO
+        },
+        .Thief => {
+            try Effects.thief(battle, player, options); // TODO
+        },
+        .Thrashing => {
+            try Effects.thrashing(battle, player, options); // TODO
+        },
+        .Thunder => {
+            try Effects.thunder(battle, player, options); // TODO
+        },
+        .Toxic => {
+            try Effects.toxic(battle, player, options); // TODO
+        },
+        .Transform => {
+            try Effects.transform(battle, player, options); // TODO
+        },
+        .TriAttack => {
+            try Effects.triAttack(battle, player, options); // TODO
+        },
+        .TripleKick => {
+            try Effects.tripleKick(battle, player, options); // TODO
+        },
+        .Twineedle => {
+            try Effects.twineedle(battle, player, options); // TODO
+        },
+        .Twister => {
+            try Effects.twister(battle, player, options); // TODO
+        },
     }
     return null;
 }
@@ -1025,21 +1417,120 @@ fn endTurn(battle: anytype, options: anytype) @TypeOf(options.log).Error!Result 
 }
 
 pub const Effects = struct {
-    fn protect(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
-        var side = battle.side(player);
-        var volatiles = &side.active.volatiles;
+    fn alwaysHit(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
 
-        // TODO or if we didn't go first
-        if (volatiles.Substitute) return try options.log.fail(battle.active(player), .None);
+    fn attract(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
 
-        // TODO
+    fn batonPass(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
 
-        if (move.effect == .Endure) {
-            volatiles.Endure = true;
-        } else {
-            volatiles.Protect = true;
+    fn beatUp(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn bellyDrum(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn bide(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn binding(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn burnChance(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
+        _ = .{ battle, player, move, options }; // TODO
+    }
+
+    fn confusion(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
+        _ = .{ battle, player, move, options }; // TODO
+    }
+
+    fn conversion(battle: anytype, player: Player, options: anytype) !void {
+        const side = battle.side(player);
+
+        var n: u4 = 0;
+        for (side.active.moves) |m| {
+            if (convertible(side.active, m)) n += 1;
         }
-        try options.log.singleturn(battle.active(player), move.id);
+        if (n == 0) return try options.log.fail(battle.active(player), .None);
+
+        try Rolls.conversion(battle, player, n, options);
+    }
+
+    fn counter(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
+        _ = .{ battle, player, move, options }; // TODO
+    }
+
+    fn curse(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn defenseCurl(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn destinyBond(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn disable(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
+        _ = .{ battle, player, move, options }; // TODO
+    }
+
+    fn doubleHit(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn draginHP(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn earthquake(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn encore(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn endure(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn explode(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn falseSwipe(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn fixedDamage(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn flameWheel(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn flinchChance(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
+        _ = .{ battle, player, move, options }; // TODO
+    }
+
+    fn flyDig(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
+        _ = .{ battle, player, move, options }; // TODO
+    }
+
+    fn focusEnergy(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
     }
 
     const SLOTS: [5]u3 = .{ 0, 0, 0, 0, 0 };
@@ -1062,16 +1553,227 @@ pub const Effects = struct {
         try Rolls.forceSwitch(battle, player, SLOTS[0..i], n, options);
     }
 
-    fn conversion(battle: anytype, player: Player, options: anytype) !void {
-        const side = battle.side(player);
+    fn foresight(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
 
-        var n: u4 = 0;
-        for (side.active.moves) |m| {
-            if (convertible(side.active, m)) n += 1;
+    fn freezeChance(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
+        _ = .{ battle, player, move, options }; // TODO
+    }
+
+    fn furyCutter(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn futureSight(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn gust(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn haze(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn heal(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn healBell(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn hiddenPower(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn hyperBeam(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn jumpKick(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn leechSeed(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn levelDamage(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn lightScreen(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn lockOn(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    const MAGNITUDE_POWER = [_]u8{ 10, 30, 50, 70, 90, 110, 150 };
+
+    fn magnitude(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn meanLook(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn metronome(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn mimic(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn mirrorCoat(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn mirrorMove(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn mist(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn weatheHeal(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn multiHit(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn nightmare(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn ohko(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn painSplit(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn paralyze(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn paralyzeChance(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn payDay(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn perishSong(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn poison(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
+        _ = .{ battle, player, move, options }; // TODO
+    }
+
+    fn present(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn protect(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
+        var side = battle.side(player);
+        var volatiles = &side.active.volatiles;
+
+        // TODO or if we didn't go first
+        if (volatiles.Substitute) return try options.log.fail(battle.active(player), .None);
+
+        // TODO
+
+        if (move.effect == .Endure) {
+            volatiles.Endure = true;
+        } else {
+            volatiles.Protect = true;
         }
-        if (n == 0) return try options.log.fail(battle.active(player), .None);
+        try options.log.singleturn(battle.active(player), move.id);
+    }
 
-        try Rolls.conversion(battle, player, n, options);
+    fn psychUp(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn psywave(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn pursuit(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn rage(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn rainDance(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn rapidSpin(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn razorWind(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn recoil(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn reflect(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn reversal(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn rollout(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn sacredFire(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn safeguard(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn sandstorm(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn sketch(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn skullbash(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn skyAttack(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn sleep(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
     }
 
     fn sleepTalk(battle: anytype, player: Player, mslot: u4, options: anytype) !void {
@@ -1090,7 +1792,93 @@ pub const Effects = struct {
         try Rolls.sleepTalk(battle, player, n, mslot, options);
     }
 
-    const MAGNITUDE_POWER = [_]u8{ 10, 30, 50, 70, 90, 110, 150 };
+    fn snore(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn spikes(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn spite(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn splash(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn stomp(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn substitute(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn sunnyDay(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn superFang(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn swagger(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn synthesis(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn teleport(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn thief(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn thrashing(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn thunder(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn toxic(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn tranform(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn triAttack(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn tripleKick(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn twineedle(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn twister(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn boost(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
+        _ = .{ battle, player, move, options }; // TODO
+    }
+
+    fn unboost(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
+        _ = .{ battle, player, move, options }; // TODO
+    }
 };
 
 fn statusModify(status: u8, stats: *Stats(u16)) void {

@@ -459,7 +459,7 @@ pub const Move = enum(u8) {
         },
         // Fly
         .{
-            .effect = .Fly,
+            .effect = .FlyDig,
             .bp = 70,
             .type = .Flying,
             .accuracy = percent(95),
@@ -1067,7 +1067,7 @@ pub const Move = enum(u8) {
         },
         // Dig
         .{
-            .effect = .Fly,
+            .effect = .FlyDig,
             .bp = 60,
             .type = .Ground,
             .accuracy = percent(100),
@@ -2466,7 +2466,7 @@ pub const Move = enum(u8) {
         FixedDamage,
         FlameWheel,
         FlinchChance,
-        Fly,
+        FlyDig,
         FocusEnergy,
         ForceSwitch,
         Foresight,
