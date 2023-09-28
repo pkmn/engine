@@ -516,22 +516,6 @@ pub fn Chance(comptime Rational: type) type {
             }
         }
 
-        pub fn disable(self: *Self, player: Player, turns: u4) Error!void {
-            if (!enabled) return;
-
-            var durations = &self.actions.get(player).durations;
-            const n = durations.disable;
-            if (turns == 0) {
-                assert(n >= 1 and n <= 8);
-                if (n != 8) try self.probability.update(1, 9 - @as(u4, n));
-                durations.disable = 0;
-            } else {
-                assert(n >= 1 and n < 8);
-                try self.probability.update(9 - @as(u4, n) - 1, 9 - @as(u4, n));
-                durations.disable += 1;
-            }
-        }
-
         pub fn confusion(self: *Self, player: Player, turns: u4) Error!void {
             if (!enabled) return;
 
@@ -545,6 +529,22 @@ pub fn Chance(comptime Rational: type) type {
                 assert(n >= 1 and n < 5);
                 if (n > 1) try self.probability.update(6 - @as(u4, n) - 1, 6 - @as(u4, n));
                 durations.confusion += 1;
+            }
+        }
+
+        pub fn disable(self: *Self, player: Player, turns: u4) Error!void {
+            if (!enabled) return;
+
+            var durations = &self.actions.get(player).durations;
+            const n = durations.disable;
+            if (turns == 0) {
+                assert(n >= 1 and n <= 8);
+                if (n != 8) try self.probability.update(1, 9 - @as(u4, n));
+                durations.disable = 0;
+            } else {
+                assert(n >= 1 and n < 8);
+                try self.probability.update(9 - @as(u4, n) - 1, 9 - @as(u4, n));
+                durations.disable += 1;
             }
         }
 
@@ -834,28 +834,6 @@ test "Chance.sleep" {
     }
 }
 
-test "Chance.disable" {
-    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
-
-    for ([_]u8{ 8, 7, 6, 5, 4, 3, 2, 1 }, 1..9) |d, i| {
-        chance.actions.p1.durations.disable = @intCast(i);
-        try chance.disable(.P1, 0);
-        try expectProbability(&chance.probability, 1, d);
-        try expectValue(@as(u4, 0), chance.actions.p1.durations.disable);
-
-        chance.reset();
-
-        if (i < 8) {
-            chance.actions.p1.durations.disable = @intCast(i);
-            try chance.disable(.P1, 1);
-            try expectProbability(&chance.probability, d - 1, d);
-            try expectValue(@as(u4, @intCast(i)) + 1, chance.actions.p1.durations.disable);
-
-            chance.reset();
-        }
-    }
-}
-
 test "Chance.confusion" {
     var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
 
@@ -874,6 +852,28 @@ test "Chance.confusion" {
             try chance.confusion(.P2, 1);
             try expectProbability(&chance.probability, if (d > 1) d - 1 else d, d);
             try expectValue(@as(u3, @intCast(i)) + 1, chance.actions.p2.durations.confusion);
+
+            chance.reset();
+        }
+    }
+}
+
+test "Chance.disable" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    for ([_]u8{ 8, 7, 6, 5, 4, 3, 2, 1 }, 1..9) |d, i| {
+        chance.actions.p1.durations.disable = @intCast(i);
+        try chance.disable(.P1, 0);
+        try expectProbability(&chance.probability, 1, d);
+        try expectValue(@as(u4, 0), chance.actions.p1.durations.disable);
+
+        chance.reset();
+
+        if (i < 8) {
+            chance.actions.p1.durations.disable = @intCast(i);
+            try chance.disable(.P1, 1);
+            try expectProbability(&chance.probability, d - 1, d);
+            try expectValue(@as(u4, @intCast(i)) + 1, chance.actions.p1.durations.disable);
 
             chance.reset();
         }

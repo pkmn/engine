@@ -1185,45 +1185,91 @@ pub const Rolls = struct {
         return proc;
     }
 
-    inline fn focusBand(battle: anytype, player: Player, options: anytype) !bool {
-        const proc = if (options.calc.overridden(player, .focus_band)) |val|
+    inline fn item(battle: anytype, player: Player, options: anytype, effect: Item) !bool {
+        assert(effect == .FocusBand or effect == .KingsRock);
+        const roll = if (effect == .FocusBand) .focus_band else .kings_rock;
+
+        const proc = if (options.calc.overridden(player, roll)) |val|
             val == .true
         else if (showdown)
             battle.rng.chance(u8, 30, 256)
         else
             battle.rng.next() < 30;
 
-        try options.chance.focusBand(player, proc);
+        if (effect == .FocusBand) {
+            try options.chance.focusBand(player, proc);
+        } else {
+            try options.chance.kingsRock(player, proc);
+        }
         return proc;
     }
 
-    inline fn kingsRock(battle: anytype, player: Player, options: anytype) !bool {
-        const proc = if (options.calc.overridden(player, .kings_rock)) |val|
-            val == .true
-        else if (showdown)
-            battle.rng.chance(u8, 30, 256)
-        else
-            battle.rng.next() < 30;
+    const DISTRIBUTION = [_]u3{ 2, 2, 2, 3, 3, 3, 4, 5 };
 
-        try options.chance.kingsRock(player, proc);
-        return proc;
-    }
-
-    inline fn sleepDuration(battle: anytype, player: Player, options: anytype) u3 {
-        const duration: u3 = if (options.calc.overridden(player, .duration)) |val|
+    inline fn multiHit(battle: anytype, player: Player, options: anytype) !u3 {
+        const n: u3 = if (options.calc.overridden(player, .multi_hit)) |val|
             @intCast(val)
         else if (showdown)
-            @intCast(battle.rng.range(u8, 1, 7))
-        else duration: {
+            DISTRIBUTION[battle.rng.range(u8, 0, DISTRIBUTION.len)]
+        else n: {
+            const r = (battle.rng.next() & 3);
+            break :n @intCast((if (r < 2) r else battle.rng.next() & 3) + 2);
+        };
+
+        assert(n >= 2 and n <= 5);
+        try options.chance.multiHit(player, n);
+        return n;
+    }
+
+    // FIXME TODO sleep talk
+    // TODO conversion move slot
+    fn moveSlot(
+        battle: anytype,
+        player: Player,
+        moves: []MoveSlot,
+        check_pp: u4,
+        options: anytype,
+    ) !u4 {
+        // TODO: consider throwing error instead of rerolling?
+        const overridden = if (options.calc.overridden(player, .move_slot)) |val|
+            if (moves[val - 1].id != .None and (check_pp == 0 or moves[val - 1].pp > 0))
+                val
+            else
+                null
+        else
+            null;
+
+        const slot: u4 = overridden orelse slot: {
+            if (showdown) {
+                if (check_pp == 0) {
+                    var i: usize = moves.len;
+                    while (i > 0) {
+                        i -= 1;
+                        if (moves[i].id != .None) {
+                            break :slot battle.rng.range(u4, 0, @as(u4, @intCast(i + 1))) + 1;
+                        }
+                    }
+                } else {
+                    var r = battle.rng.range(u4, 0, check_pp) + 1;
+                    var i: usize = 0;
+                    while (i < moves.len and r > 0) : (i += 1) {
+                        if (moves[i].pp > 0) {
+                            r -= 1;
+                            if (r == 0) break;
+                        }
+                    }
+                    break :slot @intCast(i + 1);
+                }
+            }
+
             while (true) {
-                const r = battle.rng.next() & 7;
-                if (r != 0 and r != 7) break :duration @intCast(r);
+                const r: u4 = @intCast(battle.rng.next() & 3);
+                if (moves[r].id != .None and (check_pp == 0 or moves[r].pp > 0)) break :slot r + 1;
             }
         };
 
-        assert(duration >= 1 and duration <= 6);
-        options.chance.duration(.sleep, player, player.foe(), duration);
-        return duration + 1;
+        try options.chance.moveSlot(player, slot, moves, check_pp);
+        return slot;
     }
 
     inline fn triAttack(battle: anytype, player: Player, options: anytype) !u8 {
@@ -1309,6 +1355,8 @@ pub const Rolls = struct {
         return hits;
     }
 
+    // FIXME TODO forceSwitch
+
     inline fn spite(battle: anytype, player: Player, options: anytype) !u8 {
         const pp = if (options.calc.overridden(player, .spite)) |val|
             val + 1
@@ -1378,17 +1426,6 @@ pub const Rolls = struct {
         return ok;
     }
 
-    // TODO thrashingDuration
-    // TODO confusionDuraiton (from thrash vs. from move)
-    // TODO forceSwitch
-    // TODO bindingDuration
-    // TODO bideDuration
-    // TODO conversion moveSlot
-    // TODO disable duration
-    // TODO encore duration
-    // TODO metronome
-    // TODO sleeptalk move slot
-
     inline fn psywave(battle: anytype, player: Player, max: u8, options: anytype) !u8 {
         const power = if (options.calc.overridden(player, .psywave)) |val|
             val - 1
@@ -1444,6 +1481,96 @@ pub const Rolls = struct {
         assert(Move.get(move).metronome);
         try options.chance.metronome(player, move, n);
         return move;
+    }
+
+    inline fn sleepDuration(battle: anytype, player: Player, options: anytype) u8 {
+        const duration: u3 = if (options.calc.overridden(player, .duration)) |val|
+            @intCast(val)
+        else if (showdown)
+            @intCast(battle.rng.range(u8, 1, 7))
+        else duration: {
+            while (true) {
+                const r = battle.rng.next() & 7;
+                if (r != 0 and r != 7) break :duration @intCast(r);
+            }
+        };
+
+        assert(duration >= 1 and duration <= 6);
+        options.chance.duration(.sleep, player, player.foe(), duration);
+        return duration + 1;
+    }
+
+    inline fn confusionDuration(battle: anytype, player: Player, self: bool, options: anytype) u8 {
+        const duration: u3 = if (options.calc.overridden(player, .duration)) |val|
+            @intCast(val)
+        else if (showdown)
+            // Pokémon Showdown incorrectly uses the same duration for self-confusion
+            @intCast(battle.rng.range(u8, 2, 6))
+        else
+            @intCast((battle.rng.next() & if (self) 1 else 3) + 2);
+
+        assert(duration >= 2 and duration <= if (!showdown and self) 3 else 5);
+        options.chance.duration(.confusion, player, if (self) player else player.foe(), duration);
+        return duration;
+    }
+
+    inline fn disableDuration(battle: anytype, player: Player, options: anytype) u4 {
+        const duration: u4 = if (options.calc.overridden(player, .duration)) |val|
+            @intCast(val)
+        else if (showdown)
+            // Pokémon Showdown incorrectly inherits Generation III's Disable duration
+            @intCast(battle.rng.range(u8, 2, 6))
+        else duration: {
+            while (true) {
+                const r = battle.rng.next() & 7;
+                if (r != 0) break :duration @intCast(r + 1);
+            }
+        };
+
+        assert(duration >= 2 and duration <= (if (showdown) 5 else 7));
+        options.chance.duration(.disable, player, player.foe(), duration);
+        return duration;
+    }
+
+    inline fn attackingDuration(battle: anytype, player: Player, options: anytype) u4 {
+        const duration: u4 = if (options.calc.overridden(player, .duration)) |val|
+            @intCast(val)
+        else if (showdown)
+            @intCast(battle.rng.range(u4, 2, 4))
+        else
+            @intCast((battle.rng.next() & 1) + 2); // BUG: thrash is + 1 not +2
+
+        assert(duration >= 2 and duration <= 3);
+        options.chance.duration(.attacking, player, player, duration);
+        return duration;
+    }
+
+    inline fn bindingDuration(battle: anytype, player: Player, options: anytype) u4 {
+        const duration: u3 = (if (options.calc.overridden(player, .duration)) |val|
+            @intCast(val)
+        else if (showdown)
+            // TODO: PS does range(3, 6) here which after subtracting 1 is actually 2-4 not 2-5!
+            @intCast(battle.rng.range(u8, 2, 5))
+        else
+            @intCast(battle.rng.next() & 3 + 2));
+
+        assert(duration >= 2 and duration <= 5);
+        options.chance.duration(.binding, player, player.foe(), duration);
+        return duration + 1;
+    }
+
+    // TODO: consider sharing implementation with bindingDuration
+    inline fn encoreDuration(battle: anytype, player: Player, options: anytype) u4 {
+        const duration: u3 = (if (options.calc.overridden(player, .duration)) |val|
+            @intCast(val)
+        else if (showdown)
+            @intCast(battle.rng.range(u8, 2, 6))
+        else
+            @intCast(battle.rng.next() & 3 + 2));
+
+        assert(duration >= 2 and duration <= 5);
+        options.chance.duration(.encore, player, player.foe(), duration);
+        return duration + 1;
     }
 };
 
