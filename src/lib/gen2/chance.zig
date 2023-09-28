@@ -562,13 +562,15 @@ pub fn Chance(comptime Rational: type) type {
 
             var durations = &self.actions.get(player).durations;
             const n = durations.disable;
+            const hi = if (showdown) 5 else 8;
+            const p = hi + 1;
             if (turns == 0) {
-                assert(n >= 3 and n <= 9);
-                if (n != 9) try self.probability.update(1, 10 - @as(u4, n));
+                assert(n >= 2 and n <= hi);
+                if (n != hi) try self.probability.update(1, p - n);
                 durations.disable = 0;
             } else {
-                assert(n >= 1 and n < 9);
-                try self.probability.update(10 - @as(u4, n) - 3, 10 - @as(u4, n));
+                assert(n >= 1 and n < hi);
+                if (n > 1) try self.probability.update(p - n - 1, p - n);
                 durations.disable += 1;
             }
         }
@@ -1008,7 +1010,48 @@ test "Chance.confusion" {
 }
 
 test "Chance.disable" {
-    return error.SkipZigTest; // TODO
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+    if (showdown) {
+        for ([_]u8{ 1, 4, 3, 2, 1 }, 1..6) |d, i| {
+            if (i > 1) {
+                chance.actions.p2.durations.disable = @intCast(i);
+                try chance.disable(.P2, 0);
+                try expectProbability(&chance.probability, 1, d);
+                try expectValue(@as(u4, 0), chance.actions.p2.durations.disable);
+
+                chance.reset();
+            }
+
+            if (i < 5) {
+                chance.actions.p2.durations.disable = @intCast(i);
+                try chance.disable(.P2, 1);
+                try expectProbability(&chance.probability, if (d > 1) d - 1 else d, d);
+                try expectValue(@as(u4, @intCast(i)) + 1, chance.actions.p2.durations.disable);
+
+                chance.reset();
+            }
+        }
+    } else {
+        for ([_]u8{ 1, 7, 6, 5, 4, 3, 2, 1 }, 1..9) |d, i| {
+            if (i > 1) {
+                chance.actions.p2.durations.disable = @intCast(i);
+                try chance.disable(.P2, 0);
+                try expectProbability(&chance.probability, 1, d);
+                try expectValue(@as(u4, 0), chance.actions.p2.durations.disable);
+
+                chance.reset();
+            }
+
+            if (i < 8) {
+                chance.actions.p2.durations.disable = @intCast(i);
+                try chance.disable(.P2, 1);
+                try expectProbability(&chance.probability, if (d > 1) d - 1 else d, d);
+                try expectValue(@as(u4, @intCast(i)) + 1, chance.actions.p2.durations.disable);
+
+                chance.reset();
+            }
+        }
+    }
 }
 
 test "Chance.attacking" {
