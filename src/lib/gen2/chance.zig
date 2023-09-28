@@ -172,19 +172,25 @@ pub const Action = packed struct(u128) {
 
     /// If not None, the value to be returned for Rolls.protect.
     protect: Optional(bool) = .None,
-    /// If not 0, the value to by one of the Rolls.*Duration rolls.
-    duration: u4 = 0,
+    /// If not 0, the move slot (1-4) to return in Rolls.moveSlot. If present as an override,
+    /// invalid values (eg. due to empty move slots or 0 PP) will be ignored.
+    move_slot: u3 = 0,
+    /// If not 0, the party slot (1-6) to return in Rolls.forceSwitch. If present as an override,
+    /// invalid values (eg. due to empty party slots or fainted members) will be ignored.
+    force_switch: u3 = 0,
 
     /// If not 0, the value (2-5) to return for Rolls.distribution for multi hit.
     multi_hit: u4 = 0,
-
-    _: u22 = 0,
+    /// If not 0, the value to by one of the Rolls.*Duration rolls.
+    duration: u4 = 0,
 
     /// If not 0, psywave - 1 should be returned as the damage roll for Rolls.psywave.
     psywave: u8 = 0,
 
     /// If not None, the Move to return for Rolls.metronome.
     metronome: Move = .None,
+
+    _: u16 = 0,
 
     /// Observed values of various durations. Does not influence future RNG calls. TODO
     durations: Duration = .{},
@@ -483,6 +489,20 @@ pub fn Chance(comptime Rational: type) type {
 
             try self.probability.update(@as(u8, if (ok) num + 1 else 255 - num - 1), 255);
             self.actions.get(player).protect = if (ok) .true else .false;
+        }
+
+        pub fn moveSlot(self: *Self, player: Player, slot: u3, n: u3) Error!void {
+            if (!enabled) return;
+
+            if (n != 1) try self.probability.update(1, n);
+            self.actions.get(player).move_slot = @intCast(slot);
+        }
+
+        pub fn forceSwitch(self: *Self, player: Player, slot: u3, n: u3) Error!void {
+            if (!enabled) return;
+
+            if (n != 1) try self.probability.update(1, n);
+            self.actions.get(player).force_switch = @intCast(slot);
         }
 
         pub fn psywave(self: *Self, player: Player, power: u8, max: u8) Error!void {
@@ -913,6 +933,46 @@ test "Chance.protect" {
     try expectValue(Optional(bool).true, chance.actions.p2.protect);
 }
 
+test "Chance.moveSlot" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.moveSlot(.P2, 2, 2);
+    try expectProbability(&chance.probability, 1, 2);
+    try expectValue(@as(u4, 2), chance.actions.p2.move_slot);
+
+    chance.reset();
+
+    try chance.moveSlot(.P1, 1, 3);
+    try expectProbability(&chance.probability, 1, 3);
+    try expectValue(@as(u4, 1), chance.actions.p1.move_slot);
+
+    chance.reset();
+
+    try chance.moveSlot(.P1, 4, 1);
+    try expectProbability(&chance.probability, 1, 1);
+    try expectValue(@as(u4, 4), chance.actions.p1.move_slot);
+}
+
+test "Chance.forceSwitch" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    try chance.forceSwitch(.P2, 2, 2);
+    try expectProbability(&chance.probability, 1, 2);
+    try expectValue(@as(u4, 2), chance.actions.p2.force_switch);
+
+    chance.reset();
+
+    try chance.forceSwitch(.P1, 1, 3);
+    try expectProbability(&chance.probability, 1, 3);
+    try expectValue(@as(u4, 1), chance.actions.p1.force_switch);
+
+    chance.reset();
+
+    try chance.forceSwitch(.P1, 4, 1);
+    try expectProbability(&chance.probability, 1, 1);
+    try expectValue(@as(u4, 4), chance.actions.p1.force_switch);
+}
+
 test "Chance.multiHit" {
     var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
 
@@ -1217,16 +1277,24 @@ const Null = struct {
         _ = .{ self, player, num, ok };
     }
 
+    pub fn moveSlot(self: Null, player: Player, n: u3) Error!void {
+        _ = .{ self, player, n };
+    }
+
+    pub fn forceSwitch(self: Null, player: Player, n: u3) Error!void {
+        _ = .{ self, player, n };
+    }
+
+    pub fn multiHit(self: Null, player: Player, n: u3) Error!void {
+        _ = .{ self, player, n };
+    }
+
     pub fn psywave(self: Null, player: Player, power: u8, max: u8) Error!void {
         _ = .{ self, player, power, max };
     }
 
     pub fn metronome(self: Null, player: Player, move: Move, n: u2) Error!void {
         _ = .{ self, player, move, n };
-    }
-
-    pub fn multiHit(self: Null, player: Player, n: u3) Error!void {
-        _ = .{ self, player, n };
     }
 
     pub fn duration(

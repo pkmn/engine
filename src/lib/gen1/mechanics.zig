@@ -7,8 +7,6 @@ const DEBUG = @import("../common/debug.zig").print;
 const protocol = @import("../common/protocol.zig");
 const rng = @import("../common/rng.zig");
 
-const Action = @import("chance.zig").Action;
-
 const data = @import("data.zig");
 
 const assert = std.debug.assert;

@@ -1042,6 +1042,26 @@ pub const Effects = struct {
         try options.log.singleturn(battle.active(player), move.id);
     }
 
+    const SLOTS: [5]u3 = .{ 0, 0, 0, 0, 0 };
+
+    fn forceSwitch(battle: anytype, player: Player, options: anytype) !void {
+        const foe = battle.foe(player);
+
+        var n: u3 = 0;
+        var i: u3 = 0;
+        for (foe.pokemon, 0..) |pokemon, j| {
+            if (pokemon.species == .None) break;
+            n += 1;
+            if (pokemon.position == 1) continue;
+            if (pokemon.hp > 0) {
+                SLOTS[i] = foe.pokemon[j].position;
+                i += 1;
+            }
+        }
+
+        try Rolls.forceSwitch(battle, player, SLOTS[0..i], n, options);
+    }
+
     const MAGNITUDE_POWER = [_]u8{ 10, 30, 50, 70, 90, 110, 150 };
 };
 
@@ -1204,74 +1224,6 @@ pub const Rolls = struct {
         return proc;
     }
 
-    const DISTRIBUTION = [_]u3{ 2, 2, 2, 3, 3, 3, 4, 5 };
-
-    inline fn multiHit(battle: anytype, player: Player, options: anytype) !u3 {
-        const n: u3 = if (options.calc.overridden(player, .multi_hit)) |val|
-            @intCast(val)
-        else if (showdown)
-            DISTRIBUTION[battle.rng.range(u3, 0, DISTRIBUTION.len)]
-        else n: {
-            const r = (battle.rng.next() & 3);
-            break :n @intCast((if (r < 2) r else battle.rng.next() & 3) + 2);
-        };
-
-        assert(n >= 2 and n <= 5);
-        try options.chance.multiHit(player, n);
-        return n;
-    }
-
-    // FIXME TODO sleep talk
-    // TODO conversion move slot
-    fn moveSlot(
-        battle: anytype,
-        player: Player,
-        moves: []MoveSlot,
-        check_pp: u4,
-        options: anytype,
-    ) !u4 {
-        // TODO: consider throwing error instead of rerolling?
-        const overridden = if (options.calc.overridden(player, .move_slot)) |val|
-            if (moves[val - 1].id != .None and (check_pp == 0 or moves[val - 1].pp > 0))
-                val
-            else
-                null
-        else
-            null;
-
-        const slot: u4 = overridden orelse slot: {
-            if (showdown) {
-                if (check_pp == 0) {
-                    var i: usize = moves.len;
-                    while (i > 0) {
-                        i -= 1;
-                        if (moves[i].id != .None) {
-                            break :slot battle.rng.range(u4, 0, @as(u4, @intCast(i + 1))) + 1;
-                        }
-                    }
-                } else {
-                    var r = battle.rng.range(u4, 0, check_pp) + 1;
-                    var i: usize = 0;
-                    while (i < moves.len and r > 0) : (i += 1) {
-                        if (moves[i].pp > 0) {
-                            r -= 1;
-                            if (r == 0) break;
-                        }
-                    }
-                    break :slot @intCast(i + 1);
-                }
-            }
-
-            while (true) {
-                const r: u4 = @intCast(battle.rng.next() & 3);
-                if (moves[r].id != .None and (check_pp == 0 or moves[r].pp > 0)) break :slot r + 1;
-            }
-        };
-
-        try options.chance.moveSlot(player, slot, moves, check_pp);
-        return slot;
-    }
-
     inline fn triAttack(battle: anytype, player: Player, options: anytype) !u8 {
         const status: TriAttack = if (options.calc.overridden(player, .tri_attack)) |val|
             val
@@ -1422,6 +1374,135 @@ pub const Rolls = struct {
 
         try options.chance.protect(player, num, ok);
         return ok;
+    }
+
+    fn conversion(battle: anytype, player: Player, options: anytype) !u4 {
+        _ = battle;
+
+        const n: u4 = 0;
+        const slot: u4 = 0;
+
+        assert(n >= 1 and n <= 4);
+        assert(slot >= 1 and slot <= 4);
+
+        try options.chance.moveSlot(player, slot, n);
+        return slot;
+    }
+
+    fn sleepTalk(battle: anytype, player: Player, options: anytype) !u4 {
+        _ = battle;
+
+        const n: u4 = 0;
+        const slot: u4 = 0;
+
+        assert(n >= 1 and n <= 4);
+        assert(slot >= 1 and slot <= 4);
+        try options.chance.moveSlot(player, slot, n);
+        return slot;
+    }
+
+    // FIXME TODO sleep talk
+    // TODO conversion move slot
+    fn moveSlot(
+        battle: anytype,
+        player: Player,
+        moves: []MoveSlot,
+        check_pp: u4,
+        options: anytype,
+    ) !u4 {
+        // TODO: consider throwing error instead of rerolling?
+        const overridden = if (options.calc.overridden(player, .move_slot)) |val|
+            if (moves[val - 1].id != .None and (check_pp == 0 or moves[val - 1].pp > 0))
+                val
+            else
+                null
+        else
+            null;
+
+        const slot: u4 = overridden orelse slot: {
+            if (showdown) {
+                if (check_pp == 0) {
+                    var i: usize = moves.len;
+                    while (i > 0) {
+                        i -= 1;
+                        if (moves[i].id != .None) {
+                            break :slot battle.rng.range(u4, 0, @as(u4, @intCast(i + 1))) + 1;
+                        }
+                    }
+                } else {
+                    var r = battle.rng.range(u4, 0, check_pp) + 1;
+                    var i: usize = 0;
+                    while (i < moves.len and r > 0) : (i += 1) {
+                        if (moves[i].pp > 0) {
+                            r -= 1;
+                            if (r == 0) break;
+                        }
+                    }
+                    break :slot @intCast(i + 1);
+                }
+            }
+
+            while (true) {
+                const r: u4 = @intCast(battle.rng.next() & 3);
+                if (moves[r].id != .None and (check_pp == 0 or moves[r].pp > 0)) break :slot r + 1;
+            }
+        };
+
+        try options.chance.moveSlot(player, slot, moves, check_pp);
+        return slot;
+    }
+
+    inline fn forceSwitch(
+        battle: anytype,
+        player: Player,
+        slots: []u3,
+        n: u3,
+        options: anytype,
+    ) !u3 {
+        const foe = battle.foe(player);
+
+        assert(slots.len < 5);
+        assert(n > 0 and n <= 6);
+
+        // TODO: consider throwing error instead of rerolling?
+        const overridden = if (options.calc.overridden(player, .force_switch)) |val| val: {
+            for (slots) |slot| if (slot == val) break :val if (foe.get(slot).hp > 0) val else null;
+            break :val null;
+        } else null;
+
+        const slot: u3 = overridden orelse slot: {
+            if (showdown) {
+                break :slot slots[battle.rng.range(u3, 0, slots.len)];
+            } else {
+                while (true) {
+                    const r = battle.rng.next() & 7;
+                    if (r > n or r == 1) continue;
+                    if (foe.get(r).hp > 0) break :slot r;
+                }
+            }
+        };
+
+        assert(n >= 1 and n <= 6);
+        assert(slot >= 1 and slot <= 6);
+        try options.chance.forceSwitch(player, slot, slots.len);
+        return slot;
+    }
+
+    const DISTRIBUTION = [_]u3{ 2, 2, 2, 3, 3, 3, 4, 5 };
+
+    inline fn multiHit(battle: anytype, player: Player, options: anytype) !u3 {
+        const n: u3 = if (options.calc.overridden(player, .multi_hit)) |val|
+            @intCast(val)
+        else if (showdown)
+            DISTRIBUTION[battle.rng.range(u3, 0, DISTRIBUTION.len)]
+        else n: {
+            const r = (battle.rng.next() & 3);
+            break :n @intCast((if (r < 2) r else battle.rng.next() & 3) + 2);
+        };
+
+        assert(n >= 2 and n <= 5);
+        try options.chance.multiHit(player, n);
+        return n;
     }
 
     inline fn psywave(battle: anytype, player: Player, max: u8, options: anytype) !u8 {
