@@ -1277,12 +1277,12 @@ const Null = struct {
         _ = .{ self, player, num, ok };
     }
 
-    pub fn moveSlot(self: Null, player: Player, n: u3) Error!void {
-        _ = .{ self, player, n };
+    pub fn moveSlot(self: Null, player: Player, slot: u3, n: u3) Error!void {
+        _ = .{ self, player, slot, n };
     }
 
-    pub fn forceSwitch(self: Null, player: Player, n: u3) Error!void {
-        _ = .{ self, player, n };
+    pub fn forceSwitch(self: Null, player: Player, slot: u3, n: u3) Error!void {
+        _ = .{ self, player, slot, n };
     }
 
     pub fn multiHit(self: Null, player: Player, n: u3) Error!void {

@@ -222,6 +222,7 @@ pub const Start = enum(u8) {
     Disable,
     Mimic,
 
+    Attract,
     Nightmare,
     Curse,
     Foresight,

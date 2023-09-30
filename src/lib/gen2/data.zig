@@ -338,9 +338,8 @@ pub const Volatiles = packed struct(u128) {
     frozen: bool = false,
     _: u15 = 0,
 
-    bind_reason: u4 = 0,
-    bind: u4 = 0,
     bide: u16 = 0,
+    bind: Bind = .{},
     disabled: Disabled = .{},
     rage: u8 = 0,
     substitute: u8 = 0,
@@ -352,6 +351,11 @@ pub const Volatiles = packed struct(u128) {
     perish_song: u4 = 0,
     protect: u4 = 0,
     attacks: u4 = 0, // bide/thrashing/rollout turns
+
+    const Bind = packed struct(u8) {
+        duration: u4 = 0,
+        reason: u4 = 0,
+    };
 
     const Disabled = packed struct(u8) {
         move: u4 = 0,

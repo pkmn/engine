@@ -315,13 +315,13 @@ fn doTurn(
     const foe_volatiles = &battle.foe(player).active.volatiles;
 
     volatiles.DestinyBond = false;
-    if (try executeMove(battle, player, player_choice, options)) |r| return r;
+    if (try executeMove(battle, player, player_choice, true, options)) |r| return r;
     foe_volatiles.Protect = false;
     foe_volatiles.Endure = false;
     foe_volatiles.DestinyBond = false;
 
     // foe_volatiles.DestinyBond = false;
-    if (try executeMove(battle, foe_player, foe_choice, options)) |r| return r;
+    if (try executeMove(battle, foe_player, foe_choice, false, options)) |r| return r;
     volatiles.Protect = false;
     volatiles.Endure = false;
     volatiles.DestinyBond = false;
@@ -329,20 +329,26 @@ fn doTurn(
     return null;
 }
 
-fn executeMove(battle: anytype, player: Player, choice: Choice, options: anytype) !?Result {
+fn executeMove(
+    battle: anytype,
+    player: Player,
+    choice: Choice,
+    first: bool,
+    options: anytype,
+) !?Result {
     if (choice.type == .Switch) {
         try switchIn(battle, player, choice.data, false, options);
         return null;
     }
 
     assert(choice.type == .Move);
-    var mslot: u4 = @intCast(choice.data);
+    var mslot: u3 = @intCast(choice.data);
 
     // const move = Move.get(side.last_selected_move);
 
     // CheckTurn
 
-    return doMove(battle, player, options, mslot);
+    return doMove(battle, player, mslot, first, options);
 }
 
 fn beforeMove(battle: anytype, player: Player, options: anytype) !bool {
@@ -496,7 +502,7 @@ fn canMove(battle: anytype, player: Player, options: anytype) !bool {
     return false;
 }
 
-fn decrementPP(side: *Side, mslot: u4) void {
+fn decrementPP(side: *Side, mslot: u3) void {
     var active = &side.active;
     const volatiles = &active.volatiles;
 
@@ -514,15 +520,16 @@ fn decrementPP(side: *Side, mslot: u4) void {
     assert(active.move(mslot).pp == side.stored().move(mslot).pp);
 }
 
-fn doMove(battle: anytype, player: Player, options: anytype, mslot: u4) !?Result {
+fn doMove(battle: anytype, player: Player, mslot: u3, first: bool, options: anytype) !?Result {
     var side = battle.side(player);
-    const move = Move.get(.Teleport); // side.last_selected_move
+    var move = Move.get(.Teleport); // side.last_selected_move
     _ = .{ side, mslot };
 
     switch (move.effect) {
-        .None, .HighCritical, .AlwaysHit, .Priority, .Gust, .TriAttack => {
+        .None, .HighCritical, .AlwaysHit, .Priority, .Gust, .TriAttack, .Earthquake => {
             // TODO Gust skips kingsrock and does double fly damage
             // TODO triattack does own effect instead of kingsrock
+            // TODO double damage for earthquake
         },
         .Attract => {
             try Effects.attract(battle, player, options); // TODO
@@ -567,25 +574,23 @@ fn doMove(battle: anytype, player: Player, options: anytype, mslot: u4) !?Result
             try Effects.destinyBond(battle, player, options); // TODO
         },
         .Disable => {
-            try Effects.disable(battle, player, move, options); // TODO
+            try Effects.disable(battle, player, options); // TODO
         },
         .DrainHP, .DreamEater => {
             try Effects.drainHP(battle, player, options); // TODO
         },
-        .Earthquake => {
-            try Effects.earthquake(battle, player, options); // TODO
-        },
         .Encore => {
-            try Effects.encore(battle, player, options); // TODO
+            try Effects.encore(battle, player, first, options); // TODO
         },
         .Endure => {
-            try Effects.endure(battle, player, options); // TODO
+            try Effects.protect(battle, player, Move.Endure, first, options); // TODO
         },
         .Explode => {
             try Effects.explode(battle, player, options); // TODO
         },
         .FalseSwipe => {
-            try Effects.encore(battle, player, options); // TODO
+            var damage: u16 = 0; // TODO
+            damage = try Effects.falseSwipe(battle, player, damage);
         },
         .FixedDamage, .Psywave, .SuperFang => {
             try Effects.fixedDamage(battle, player, move, options); // TODO
@@ -606,7 +611,7 @@ fn doMove(battle: anytype, player: Player, options: anytype, mslot: u4) !?Result
             try Effects.forceSwitch(battle, player, options); // TODO
         },
         .Foresight => {
-            try Effects.foreSight(battle, player, options); // TODO
+            try Effects.foresight(battle, player, options); // TODO
         },
         .FreezeChance => {
             try Effects.freezeChance(battle, player, move, options); // TODO
@@ -618,7 +623,8 @@ fn doMove(battle: anytype, player: Player, options: anytype, mslot: u4) !?Result
             try Effects.futureSight(battle, player, options); // TODO
         },
         .Return, .Frustration => {
-            try Effects.happiness(battle, player, move, options); // TODO
+            const bp = try Effects.happiness(battle, player, move); // TODO
+            _ = bp;
         },
         .Haze => {
             try Effects.haze(battle, player, options); // TODO
@@ -705,7 +711,7 @@ fn doMove(battle: anytype, player: Player, options: anytype, mslot: u4) !?Result
             try Effects.present(battle, player, options); // TODO
         },
         .Protect => {
-            try Effects.protect(battle, player, move, options); // TODO
+            try Effects.protect(battle, player, Move.Protect, first, options); // TODO Detect?
         },
         .PsychUp => {
             try Effects.psychUp(battle, player, options); // TODO
@@ -717,7 +723,7 @@ fn doMove(battle: anytype, player: Player, options: anytype, mslot: u4) !?Result
             try Effects.rage(battle, player, options); // TODO
         },
         .RainDance => {
-            try Effects.rainDance(battle, player, options); // TODO
+            try Effects.rainDance(battle, player, options); // TODOq
         },
         .RapidSpin => {
             try Effects.rapidSpin(battle, player, options); // TODO
@@ -756,7 +762,7 @@ fn doMove(battle: anytype, player: Player, options: anytype, mslot: u4) !?Result
             try Effects.sleep(battle, player, options); // TODO
         },
         .SleepTalk => {
-            try Effects.sleepTalk(battle, player, options); // TODO
+            try Effects.sleepTalk(battle, player, mslot, options); // TODO
         },
         .Snore => {
             try Effects.snore(battle, player, options); // TODO
@@ -815,7 +821,7 @@ fn doMove(battle: anytype, player: Player, options: anytype, mslot: u4) !?Result
         .SpDefUp2,
         .SpeedUp2 => {
         // zig fmt: on
-            try Effects.boost(battle, player, options); // TODO
+            try Effects.boost(battle, player, move, options); // TODO
         },
         // zig fmt: off
         .AccuracyDown1, .AccuracyDownChance,
@@ -825,7 +831,7 @@ fn doMove(battle: anytype, player: Player, options: anytype, mslot: u4) !?Result
         .SpDefDownChance,
         .SpeedDown1, .SpeedDown2, .SpeedDownChance => {
         // zig fmt: on
-            try Effects.unboost(battle, player, options); // TODO
+            try Effects.unboost(battle, player, move, options); // TODO
         },
     }
     return null;
@@ -1073,7 +1079,7 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
     }
 }
 
-fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
+fn betweenTurns(battle: anytype, mslot: u3, options: anytype) !void {
     const players = std.enums.values(Player);
 
     // TODO checkFaintThen(p1, p2);
@@ -1333,7 +1339,20 @@ pub const Effects = struct {
     }
 
     fn attract(battle: anytype, player: Player, options: anytype) !void {
-        _ = .{ battle, player, options }; // TODO
+        const side = battle.side(player);
+        var foe = battle.foe(player);
+
+        const gender: u8 = @intFromEnum(side.stored().dvs.gender);
+        const foe_gender: u8 = @intFromEnum(foe.stored().dvs.gender);
+        if (gender + foe_gender != 1) {
+            return try options.log.immune(battle.active(player.foe()), .None);
+        } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
+            try options.log.lastmiss();
+            return try options.log.miss(battle.active(player));
+        }
+
+        foe.active.volatiles.Attract = true;
+        try options.log.start(battle.active(player.foe()), .Attract);
     }
 
     fn batonPass(battle: anytype, player: Player, options: anytype) !void {
@@ -1365,15 +1384,28 @@ pub const Effects = struct {
     }
 
     fn conversion(battle: anytype, player: Player, options: anytype) !void {
-        const side = battle.side(player);
+        var side = battle.side(player);
 
-        var n: u4 = 0;
+        var n: u3 = 0;
         for (side.active.moves) |m| {
-            if (convertible(side.active, m)) n += 1;
+            if (convertible(side.active, m.id)) n += 1;
         }
         if (n == 0) return try options.log.fail(battle.active(player), .None);
 
-        try Rolls.conversion(battle, player, n, options);
+        side.active.types.type1 = try Rolls.conversion(battle, player, n, options);
+        side.active.types.type2 = side.active.types.type1;
+    }
+
+    fn conversion2(battle: anytype, player: Player, options: anytype) !void {
+        var side = battle.side(player);
+
+        const last = battle.foe(player).lastMove(false);
+        if (last == .None) return try options.log.fail(battle.active(player), .None);
+        const move = Move.get(last);
+        if (move.type == .@"???") return try options.log.fail(battle.active(player), .None);
+
+        side.active.types.type1 = try Rolls.conversion2(battle, player, move.type, options);
+        side.active.types.type2 = side.active.types.type1;
     }
 
     fn counter(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
@@ -1389,43 +1421,85 @@ pub const Effects = struct {
     }
 
     fn destinyBond(battle: anytype, player: Player, options: anytype) !void {
-        _ = .{ battle, player, options }; // TODO
+        battle.side(player).active.volatiles.DestinyBond = true;
+        try options.log.singlemove(battle.active(player), Move.DestinyBond);
     }
 
-    fn disable(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
-        _ = .{ battle, player, move, options }; // TODO
+    fn disable(battle: anytype, player: Player, options: anytype) !void {
+        var foe = battle.foe(player);
+        var volatiles = &foe.active.volatiles;
+        const foe_ident = battle.active(player.foe());
+
+        if (volatiles.disabled.move != 0) return try options.log.fail(foe_ident, .None);
+
+        const last = battle.foe(player).lastMove(false);
+        if (last == .None or last == .Struggle) return try options.log.fail(foe_ident, .None);
+
+        var slot: u3 = 0;
+        for (foe.active.moves) |m| {
+            assert(m.id != .None);
+            slot += 1;
+            if (m.id == last) break;
+        }
+        const move = foe.active.move(slot);
+        if (move.pp == 0) return try options.log.fail(foe_ident, .None);
+
+        volatiles.disabled.move = slot;
+        volatiles.disabled.duration = Rolls.disableDuration(battle, player, options);
+
+        try options.log.startEffect(foe_ident, .Disable, move.id);
     }
 
     fn doubleHit(battle: anytype, player: Player, options: anytype) !void {
         _ = .{ battle, player, options }; // TODO
     }
 
-    fn draginHP(battle: anytype, player: Player, options: anytype) !void {
+    fn drainHP(battle: anytype, player: Player, options: anytype) !void {
         _ = .{ battle, player, options }; // TODO
     }
 
-    fn earthquake(battle: anytype, player: Player, options: anytype) !void {
-        _ = .{ battle, player, options }; // TODO
-    }
+    fn encore(battle: anytype, player: Player, first: bool, options: anytype) !void {
+        var foe = battle.foe(player);
+        var volatiles = &foe.active.volatiles;
+        const foe_ident = battle.active(player.foe());
 
-    fn encore(battle: anytype, player: Player, options: anytype) !void {
-        _ = .{ battle, player, options }; // TODO
-    }
+        const last = battle.foe(player).lastMove(true);
+        const failed = volatiles.Encore or
+            (last == .None or last == .Struggle or
+            last == .Encore or .last == .MirrorMove);
+        if (failed) return try options.log.fail(foe_ident, .None);
 
-    fn endure(battle: anytype, player: Player, options: anytype) !void {
-        _ = .{ battle, player, options }; // TODO
+        var slot: u3 = 0;
+        for (foe.active.moves) |m| {
+            assert(m.id != .None);
+            slot += 1;
+            if (m.id == last) break;
+        }
+        const move = foe.active.move(slot);
+        if (move.pp == 0) return try options.log.fail(foe_ident, .None);
+
+        volatiles.Encore = true;
+        volatiles.encore = Rolls.encoreDuration(battle, player, options);
+
+        // TODO ???
+        _ = first;
+
+        try options.log.startEffect(foe_ident, .Encore, move.id);
     }
 
     fn explode(battle: anytype, player: Player, options: anytype) !void {
         _ = .{ battle, player, options }; // TODO
     }
 
-    fn falseSwipe(battle: anytype, player: Player, options: anytype) !void {
-        _ = .{ battle, player, options }; // TODO
+    fn falseSwipe(battle: anytype, player: Player, damage: u16) !u16 {
+        const foe = battle.foe(player);
+        assert(foe.stored().hp > 0);
+        // FIXME crit?
+        return if (damage > foe.stored().hp) foe.stored().hp - 1 else damage;
     }
 
-    fn fixedDamage(battle: anytype, player: Player, options: anytype) !void {
-        _ = .{ battle, player, options }; // TODO
+    fn fixedDamage(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
+        _ = .{ battle, player, move, options }; // TODO
     }
 
     fn flameWheel(battle: anytype, player: Player, options: anytype) !void {
@@ -1441,10 +1515,17 @@ pub const Effects = struct {
     }
 
     fn focusEnergy(battle: anytype, player: Player, options: anytype) !void {
-        _ = .{ battle, player, options }; // TODO
+        var side = battle.side(player);
+
+        if (side.active.volatiles.FocusEnergy) {
+            return if (!showdown) try options.log.fail(battle.active(player), .None);
+        }
+
+        side.active.volatiles.FocusEnergy = true;
+        try options.log.start(battle.active(player), .FocusEnergy);
     }
 
-    const SLOTS: [5]u3 = .{ 0, 0, 0, 0, 0 };
+    var SLOTS: [5]u3 = .{ 0, 0, 0, 0, 0 };
 
     fn forceSwitch(battle: anytype, player: Player, options: anytype) !void {
         const foe = battle.foe(player);
@@ -1456,16 +1537,28 @@ pub const Effects = struct {
             n += 1;
             if (pokemon.position == 1) continue;
             if (pokemon.hp > 0) {
-                SLOTS[i] = foe.pokemon[j].position;
+                SLOTS[i] = @intCast(foe.pokemon[j].position);
                 i += 1;
             }
         }
 
-        try Rolls.forceSwitch(battle, player, SLOTS[0..i], n, options);
+        if (n == 0) try options.log.fail(battle.active(player), .None);
+
+        _ = try Rolls.forceSwitch(battle, player, SLOTS[0..i], n, options); // TODO
     }
 
     fn foresight(battle: anytype, player: Player, options: anytype) !void {
-        _ = .{ battle, player, options }; // TODO
+        var foe = battle.foe(player);
+
+        if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
+            try options.log.lastmiss();
+            return try options.log.miss(battle.active(player));
+        } else if (foe.active.volatiles.Foresight) {
+            return try options.log.fail(battle.active(player), .None);
+        }
+
+        foe.active.volatiles.Foresight = true;
+        try options.log.start(battle.active(player.foe()), .FocusEnergy);
     }
 
     fn freezeChance(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
@@ -1480,8 +1573,9 @@ pub const Effects = struct {
         _ = .{ battle, player, options }; // TODO
     }
 
-    fn happiness(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
-        _ = .{ battle, player, move, options }; // TODO
+    fn happiness(battle: anytype, player: Player, move: Move.Data) !u8 {
+        const val = battle.side(player).stored().happiness;
+        return ((if (move.effect == .Frustration) 255 - val else val) * 10) / 25;
     }
 
     fn haze(battle: anytype, player: Player, options: anytype) !void {
@@ -1550,7 +1644,7 @@ pub const Effects = struct {
         _ = .{ battle, player, options }; // TODO
     }
 
-    fn weatheHeal(battle: anytype, player: Player, options: anytype) !void {
+    fn weatherHeal(battle: anytype, player: Player, options: anytype) !void {
         _ = .{ battle, player, options }; // TODO
     }
 
@@ -1595,21 +1689,27 @@ pub const Effects = struct {
         _ = .{ battle, player, options }; // TODO
     }
 
-    fn protect(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
+    fn protect(
+        battle: anytype,
+        player: Player,
+        move: Move,
+        first: bool,
+        options: anytype,
+    ) !void {
         var side = battle.side(player);
         var volatiles = &side.active.volatiles;
 
-        // TODO or if we didn't go first
-        if (volatiles.Substitute) return try options.log.fail(battle.active(player), .None);
+        const failed = !first or volatiles.Substitute or
+            !try Rolls.protect(battle, player, volatiles.protect, options);
+        if (failed) return try options.log.fail(battle.active(player), .None);
 
-        // TODO
-
-        if (move.effect == .Endure) {
+        volatiles.protect = @max(8, volatiles.protect + 1);
+        if (move == .Endure) {
             volatiles.Endure = true;
         } else {
             volatiles.Protect = true;
         }
-        try options.log.singleturn(battle.active(player), move.id);
+        try options.log.singleturn(battle.active(player), move);
     }
 
     fn psychUp(battle: anytype, player: Player, options: anytype) !void {
@@ -1668,7 +1768,7 @@ pub const Effects = struct {
         _ = .{ battle, player, options }; // TODO
     }
 
-    fn skullbash(battle: anytype, player: Player, options: anytype) !void {
+    fn skullBash(battle: anytype, player: Player, options: anytype) !void {
         _ = .{ battle, player, options }; // TODO
     }
 
@@ -1680,23 +1780,27 @@ pub const Effects = struct {
         _ = .{ battle, player, options }; // TODO
     }
 
-    fn sleepTalk(battle: anytype, player: Player, mslot: u4, options: anytype) !void {
+    fn sleepTalk(battle: anytype, player: Player, mslot: u3, options: anytype) !void {
         const side = battle.side(player);
 
         if (!Status.is(side.stored().status, .SLP)) {
             return if (!showdown) try options.log.fail(battle.active(player), .None);
         }
 
-        var n: u4 = 0;
+        var n: u3 = 0;
         for (side.active.moves, 0..) |m, i| {
-            if (mslot - 1 != i and Move.get(m).extra.sleep_talk) n += 1;
+            if (mslot - 1 != i and Move.get(m.id).extra.sleep_talk) n += 1;
         }
         if (n == 0) return try options.log.fail(battle.active(player), .None);
 
-        try Rolls.sleepTalk(battle, player, n, mslot, options);
+        _ = try Rolls.sleepTalk(battle, player, n, mslot, options); // TODO
     }
 
     fn snore(battle: anytype, player: Player, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+    }
+
+    fn solarBeam(battle: anytype, player: Player, options: anytype) !void {
         _ = .{ battle, player, options }; // TODO
     }
 
@@ -1748,7 +1852,7 @@ pub const Effects = struct {
         _ = .{ battle, player, options }; // TODO
     }
 
-    fn tranform(battle: anytype, player: Player, options: anytype) !void {
+    fn transform(battle: anytype, player: Player, options: anytype) !void {
         _ = .{ battle, player, options }; // TODO
     }
 
@@ -2031,7 +2135,7 @@ pub const Rolls = struct {
     }
 
     // Conversion 2 can at most choose between 7 types (vs. a Grass-type attack)
-    const CONVERSION_2: [7]Type = [_]Type{.{}} ** 7;
+    var CONVERSION_2: [7]Type = [_]Type{.@"???"} ** 7;
 
     inline fn conversion2(battle: anytype, player: Player, mtype: Type, options: anytype) !Type {
         var i: u8 = 0;
@@ -2055,7 +2159,7 @@ pub const Rolls = struct {
                 if (r > 9 and r < 20) continue; // UNUSED_TYPES
                 if (r > 27) continue; // TYPES_END
 
-                const t = Types.conversion2(r);
+                const t = Type.conversion2(r);
                 if (@intFromEnum(mtype.effectiveness(t)) < neutral) {
                     break :ty t;
                 }
@@ -2068,11 +2172,11 @@ pub const Rolls = struct {
     }
 
     inline fn protect(battle: anytype, player: Player, count: u8, options: anytype) !bool {
-        assert(count <= 255);
-        const num = 255 >> count;
+        assert(count <= 8);
+        const num = if (count == 8) 0 else @as(u8, 255) >> @intCast(count);
 
         const ok = if (options.calc.overridden(player, .protect)) |val|
-            val
+            val == .true
         else if (showdown)
             battle.rng.chance(u8, num, 255)
         else protected: {
@@ -2086,7 +2190,7 @@ pub const Rolls = struct {
         return ok;
     }
 
-    fn conversion(battle: anytype, player: Player, n: u4, options: anytype) !u4 {
+    fn conversion(battle: anytype, player: Player, n: u3, options: anytype) !Type {
         assert(n > 0);
 
         const active = battle.side(player).active;
@@ -2094,16 +2198,16 @@ pub const Rolls = struct {
 
         // TODO: consider throwing error instead of rerolling?
         const overridden = if (options.calc.overridden(player, .move_slot)) |val|
-            if (convertible(active, active.moves[val - 1])) val else null
+            if (convertible(active, moves[val - 1].id)) val else null
         else
             null;
 
-        const slot: u4 = overridden orelse slot: {
+        const slot: u3 = overridden orelse slot: {
             if (showdown) {
-                var r = battle.rng.range(u4, 0, n) + 1;
+                var r = battle.rng.range(u3, 0, n) + 1;
                 var i: usize = 0;
                 while (i < moves.len and r > 0) : (i += 1) {
-                    if (convertible(active, moves[i])) {
+                    if (convertible(active, moves[i].id)) {
                         r -= 1;
                         if (r == 0) break :slot @intCast(i + 1);
                     }
@@ -2111,8 +2215,8 @@ pub const Rolls = struct {
                 break :slot @intCast(i + 1);
             } else {
                 while (true) {
-                    const r: u4 = @intCast(battle.rng.next() & 3);
-                    if (convertible(active.moves[r])) break :slot @intCast(r + 1);
+                    const r: u3 = @intCast(battle.rng.next() & 3);
+                    if (convertible(active, moves[r].id)) break :slot @intCast(r + 1);
                 }
             }
         };
@@ -2120,10 +2224,10 @@ pub const Rolls = struct {
         assert(n >= 1 and n <= 4);
         assert(slot >= 1 and slot <= 4);
         try options.chance.moveSlot(player, slot, n);
-        return slot;
+        return Move.get(active.move(slot).id).type;
     }
 
-    fn sleepTalk(battle: anytype, player: Player, n: u4, mslot: u4, options: anytype) !u4 {
+    fn sleepTalk(battle: anytype, player: Player, n: u3, mslot: u3, options: anytype) !u3 {
         assert(n > 0);
 
         const active = battle.side(player).active;
@@ -2131,16 +2235,16 @@ pub const Rolls = struct {
 
         // TODO: consider throwing error instead of rerolling?
         const overridden = if (options.calc.overridden(player, .move_slot)) |val|
-            if (val != mslot and Move.get(moves[val - 1]).extra.sleep_talk) val else null
+            if (val != mslot and Move.get(moves[val - 1].id).extra.sleep_talk) val else null
         else
             null;
 
-        const slot: u4 = overridden orelse slot: {
+        const slot: u3 = overridden orelse slot: {
             if (showdown) {
-                var r = battle.rng.range(u4, 0, n) + 1;
+                var r = battle.rng.range(u3, 0, n) + 1;
                 var i: usize = 0;
                 while (i < moves.len and r > 0) : (i += 1) {
-                    if (i + 1 != mslot and Move.get(moves[i]).extra.sleep_talk) {
+                    if (i + 1 != mslot and Move.get(moves[i].id).extra.sleep_talk) {
                         r -= 1;
                         if (r == 0) break :slot @intCast(i + 1);
                     }
@@ -2148,8 +2252,8 @@ pub const Rolls = struct {
                 break :slot @intCast(i + 1);
             } else {
                 while (true) {
-                    const r: u4 = @intCast(battle.rng.next() & 3);
-                    if (r + 1 == mslot or !Move.get(moves[r]).extra.sleep_talk) continue;
+                    const r: u3 = @intCast(battle.rng.next() & 3);
+                    if (r + 1 == mslot or !Move.get(moves[r].id).extra.sleep_talk) continue;
                     break :slot @intCast(r + 1);
                 }
             }
@@ -2158,57 +2262,6 @@ pub const Rolls = struct {
         assert(n >= 1 and n <= 4);
         assert(slot >= 1 and slot <= 4);
         try options.chance.moveSlot(player, slot, n);
-        return slot;
-    }
-
-    // FIXME TODO sleep talk
-    // TODO conversion move slot
-    fn moveSlot(
-        battle: anytype,
-        player: Player,
-        moves: []MoveSlot,
-        check_pp: u4,
-        options: anytype,
-    ) !u4 {
-        // TODO: consider throwing error instead of rerolling?
-        const overridden = if (options.calc.overridden(player, .move_slot)) |val|
-            if (moves[val - 1].id != .None and (check_pp == 0 or moves[val - 1].pp > 0))
-                val
-            else
-                null
-        else
-            null;
-
-        const slot: u4 = overridden orelse slot: {
-            if (showdown) {
-                if (check_pp == 0) {
-                    var i: usize = moves.len;
-                    while (i > 0) {
-                        i -= 1;
-                        if (moves[i].id != .None) {
-                            break :slot battle.rng.range(u4, 0, @as(u4, @intCast(i + 1))) + 1;
-                        }
-                    }
-                } else {
-                    var r = battle.rng.range(u4, 0, check_pp) + 1;
-                    var i: usize = 0;
-                    while (i < moves.len and r > 0) : (i += 1) {
-                        if (moves[i].pp > 0) {
-                            r -= 1;
-                            if (r == 0) break;
-                        }
-                    }
-                    break :slot @intCast(i + 1);
-                }
-            }
-
-            while (true) {
-                const r: u4 = @intCast(battle.rng.next() & 3);
-                if (moves[r].id != .None and (check_pp == 0 or moves[r].pp > 0)) break :slot r + 1;
-            }
-        };
-
-        try options.chance.moveSlot(player, slot, moves, check_pp);
         return slot;
     }
 
@@ -2232,19 +2285,19 @@ pub const Rolls = struct {
 
         const slot: u3 = overridden orelse slot: {
             if (showdown) {
-                break :slot slots[battle.rng.range(u3, 0, slots.len)];
+                break :slot slots[battle.rng.range(u3, 0, @as(u3, @intCast(slots.len)))];
             } else {
                 while (true) {
                     const r = battle.rng.next() & 7;
                     if (r > n or r == 1) continue;
-                    if (foe.get(r).hp > 0) break :slot r;
+                    if (foe.get(r).hp > 0) break :slot @intCast(r);
                 }
             }
         };
 
         assert(n >= 1 and n <= 6);
         assert(slot >= 1 and slot <= 6);
-        try options.chance.forceSwitch(player, slot, slots.len);
+        try options.chance.forceSwitch(player, slot, n);
         return slot;
     }
 
