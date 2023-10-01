@@ -164,6 +164,8 @@ TODO
 - [the ultimate POKéMON
   CENTER](https://web.archive.org/web/20170622160244/http:/upcarchive.playker.info/0/upokecenter/content/pokemon-ruby-version-sapphire-version-and-emerald-version-timing-notes.html)
   \- Peter O
+- [Gen II Move effect handling flow](https://gist.github.com/scheibo/700be8fbfe7349f564b35dba376f0ef3)
+- [Pokémon Showdown protocol by Generation](https://gist.github.com/scheibo/f36e17700a2a7bcca7b86a4350843159)
 
 ### Benchmarks
 
