@@ -345,10 +345,10 @@ type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 //   - The engine sometimes sends out the `|-status|...|psn|[silent]` message in
 //     the wrong order relative to the `|switch|` message - we can detect those
 //     situations and simply swap the messages
-//   - The engine cannot infer `[from]` on `|move|` for Bide/Rage and so if we
-//     see that the engine's output is missing it we also need to remove it from
-//     Pokémon Showdown's (we can't just always indiscriminately remove it
-//     because we want to ensure that it matches when present)
+//   - The engine only adds `[from]` on `|move|` for Metronome/Mirror Move and
+//     so we also need to remove it from Pokémon Showdown's (we can't just
+//     always indiscriminately remove it because we want to ensure that it
+//     matches when present)
 //   - Pokémon Showdown includes `[of]` on `|-damage|` and `|heal|` messages for
 //     status damage but the engine doesn't keep track of this as its redundant
 //     information that requires additional state to support
@@ -371,7 +371,7 @@ function compare(chunk: string, actual: engine.ParsedLine[]) {
     case 'move': {
       const keys = kwArgs as Protocol.KWArgs['|move|'];
       if (keys.from && !(actual[i].kwArgs as Protocol.KWArgs['|move|']).from &&
-        ['Bide', 'Rage'].includes(args[2])) {
+        !['Metronome', 'Mirror Move'].includes(args[2])) {
         delete (kw as any).from;
       }
       break;

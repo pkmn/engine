@@ -306,7 +306,20 @@ pub fn Log(comptime Writer: type) type {
 
         pub const Error = Writer.Error;
 
-        pub fn move(self: Self, source: ID, m: anytype, target: ID, from: anytype) Error!void {
+        pub fn move(self: Self, source: ID, m: anytype, target: ID) Error!void {
+            if (!enabled) return;
+
+            assert(m != .None);
+            try self.writer.writeAll(&.{
+                @intFromEnum(ArgType.Move),
+                @as(u8, @bitCast(source)),
+                @intFromEnum(m),
+                @as(u8, @bitCast(target)),
+                @intFromEnum(Move.None),
+            });
+        }
+
+        pub fn moveFrom(self: Self, source: ID, m: anytype, target: ID, from: anytype) Error!void {
             if (!enabled) return;
 
             assert(m != .None);
@@ -316,18 +329,10 @@ pub fn Log(comptime Writer: type) type {
                 @intFromEnum(m),
                 @as(u8, @bitCast(target)),
             });
-            const none = &[_]u8{@intFromEnum(Move.None)};
-            try self.writer.writeAll(switch (@typeInfo(@TypeOf(from))) {
-                .Null => none,
-                .Optional => if (from) |f| blk: {
-                    assert(@intFromEnum(f) != 0);
-                    break :blk &[_]u8{ @intFromEnum(Move.From), @intFromEnum(f) };
-                } else none,
-                else => blk: {
-                    assert(@intFromEnum(from) != 0);
-                    break :blk &[_]u8{ @intFromEnum(Move.From), @intFromEnum(from) };
-                },
-            });
+            try self.writer.writeAll(if (@intFromEnum(from) == 0)
+                &.{@intFromEnum(Move.None)}
+            else
+                &.{ @intFromEnum(Move.From), @intFromEnum(from) });
         }
 
         pub fn switched(self: Self, ident: ID, pokemon: anytype) Error!void {
@@ -1289,22 +1294,21 @@ fn formatter(comptime gen: anytype, kind: Kind, byte: u8) []const u8 {
 }
 
 test "|move|" {
-    try log.move(p2.ident(4), M1.Thunderbolt, p1.ident(5), null);
+    try log.move(p2.ident(4), M1.Thunderbolt, p1.ident(5));
     try expectLog1(
         &.{ N(ArgType.Move), 0b1100, N(M1.Thunderbolt), 0b0101, N(Move.None) },
         buf[0..5],
     );
     stream.reset();
 
-    try log.move(p2.ident(4), M1.Wrap, p1.ident(5), M1.Wrap);
-    const wrap = N(M1.Wrap);
+    try log.moveFrom(p2.ident(4), M1.Pound, p1.ident(5), M1.Metronome);
     try expectLog1(
-        &.{ N(ArgType.Move), 0b1100, wrap, 0b0101, N(Move.From), wrap },
+        &.{ N(ArgType.Move), 0b1100, N(M1.Pound), 0b0101, N(Move.From), N(M1.Metronome) },
         buf[0..6],
     );
     stream.reset();
 
-    try log.move(p2.ident(4), M1.SkullBash, .{}, null);
+    try log.move(p2.ident(4), M1.SkullBash, .{});
     try log.laststill();
     try expectLog1(
         &.{
@@ -1319,7 +1323,7 @@ test "|move|" {
     );
     stream.reset();
 
-    try log.move(p2.ident(4), M1.Tackle, p1.ident(5), null);
+    try log.move(p2.ident(4), M1.Tackle, p1.ident(5));
     try log.lastmiss();
     try expectLog1(
         &.{

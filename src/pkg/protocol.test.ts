@@ -40,8 +40,8 @@ for (const gen of new Generations(Dex as any)) {
         [ArgType.Move, 0b1100, move('Thunderbolt'), 0b0101, PROTOCOL.Move.None]
       )))).toEqual(parse('|move|p2a: Nasshii|Thunderbolt|p1a: Koratta'));
       expect(Array.from(log.parse(Data.view(
-        [ArgType.Move, 0b1100, move('Wrap'), 0b0101, PROTOCOL.Move.From, move('Wrap')]
-      )))).toEqual(parse('|move|p2a: Nasshii|Wrap|p1a: Koratta|[from]Wrap'));
+        [ArgType.Move, 0b1100, move('Pound'), 0b0101, PROTOCOL.Move.From, move('Metronome')]
+      )))).toEqual(parse('|move|p2a: Nasshii|Pound|p1a: Koratta|[from]Metronome'));
       expect(Array.from(log.parse(Data.view(
         [ArgType.Move, 0b1100, move('Skull Bash'), 0, PROTOCOL.Move.None, ArgType.LastStill]
       )))).toEqual(parse('|move|p2a: Nasshii|Skull Bash||[still]'));
