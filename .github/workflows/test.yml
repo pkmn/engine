@@ -27,6 +27,8 @@ jobs:
       - uses: goto-bus-stop/setup-zig@v2
         if: ${{ matrix.zig == 'master' }}
       - uses: AnnikaCodes/install-ziglint@v0.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - run: npm install
       - run: echo "${GITHUB_WORKSPACE}/build/bin/zig" >> $GITHUB_PATH
         if: ${{ matrix.zig != 'master' && matrix.os != 'windows-latest' }}
