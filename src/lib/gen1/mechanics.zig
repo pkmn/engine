@@ -754,10 +754,6 @@ fn canMove(
     const player_ident = battle.active(player);
     const move = Move.get(side.last_selected_move);
 
-    const foe_last = battle.foe(player).last_used_move;
-    const special = from != null and (from.? == .Metronome and
-        (from.? == .MirrorMove and !(foe_last == .None or foe_last == .MirrorMove)));
-
     var skip = skip_pp;
     if (side.active.volatiles.Charging) {
         side.active.volatiles.Charging = false;
@@ -769,7 +765,7 @@ fn canMove(
         return false;
     }
 
-    if (!showdown or !special) side.last_used_move = side.last_selected_move;
+    side.last_used_move = side.last_selected_move;
     if (!skip) decrementPP(side, mslot, auto);
 
     const target = if (move.target == .Self) player else player.foe();
