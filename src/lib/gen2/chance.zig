@@ -151,10 +151,10 @@ pub const Action = packed struct(u128) {
 
     /// If not None, the value to be returned for Rolls.secondaryChance.
     secondary_chance: Optional(bool) = .None,
-    /// If not None, the value to be returned for Rolls.focusBand.
-    focus_band: Optional(bool) = .None,
-    /// If not None, the value to be returned for Rolls.kingsRock.
-    kings_rock: Optional(bool) = .None,
+    /// If not None, the value to be returned for Rolls.item (Focus Band / King's Rock).
+    item: Optional(bool) = .None,
+    /// If not None, the value to be returned for Rolls.protect.
+    protect: Optional(bool) = .None,
     /// If not None, the value to return for Rolls.triAttack.
     tri_attack: Optional(TriAttack) = .None,
 
@@ -170,14 +170,12 @@ pub const Action = packed struct(u128) {
     /// If not None, the value to return for Rolls.conversion2.
     conversion_2: Optional(Type) = .None,
 
-    /// If not None, the value to be returned for Rolls.protect.
-    protect: Optional(bool) = .None,
     /// If not 0, the move slot (1-4) to return in Rolls.moveSlot. If present as an override,
     /// invalid values (eg. due to empty move slots or 0 PP) will be ignored.
-    move_slot: u3 = 0,
+    move_slot: u4 = 0,
     /// If not 0, the party slot (1-6) to return in Rolls.forceSwitch. If present as an override,
     /// invalid values (eg. due to empty party slots or fainted members) will be ignored.
-    force_switch: u3 = 0,
+    force_switch: u4 = 0,
 
     /// If not 0, the value (2-5) to return for Rolls.distribution for multi hit.
     multi_hit: u4 = 0,
@@ -406,18 +404,18 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.get(player).secondary_chance = if (proc) .true else .false;
         }
 
-        pub fn focusBand(self: *Self, player: Player, proc: bool) Error!void {
+        pub fn item(self: *Self, player: Player, proc: bool) Error!void {
             if (!enabled) return;
 
             try self.probability.update(@as(u8, if (proc) 30 else 226), 256);
-            self.actions.get(player).focus_band = if (proc) .true else .false;
+            self.actions.get(player).item = if (proc) .true else .false;
         }
 
-        pub fn kingsRock(self: *Self, player: Player, proc: bool) Error!void {
+        pub fn protect(self: *Self, player: Player, num: u8, ok: bool) Error!void {
             if (!enabled) return;
 
-            try self.probability.update(@as(u8, if (proc) 30 else 226), 256);
-            self.actions.get(player).kings_rock = if (proc) .true else .false;
+            try self.probability.update(@as(u8, if (ok) num + 1 else 255 - num - 1), 255);
+            self.actions.get(player).protect = if (ok) .true else .false;
         }
 
         pub fn triAttack(self: *Self, player: Player, status: TriAttack) Error!void {
@@ -484,21 +482,14 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.get(player).conversion_2 = @enumFromInt(@intFromEnum(ty) + 1);
         }
 
-        pub fn protect(self: *Self, player: Player, num: u8, ok: bool) Error!void {
-            if (!enabled) return;
-
-            try self.probability.update(@as(u8, if (ok) num + 1 else 255 - num - 1), 255);
-            self.actions.get(player).protect = if (ok) .true else .false;
-        }
-
-        pub fn moveSlot(self: *Self, player: Player, slot: u3, n: u3) Error!void {
+        pub fn moveSlot(self: *Self, player: Player, slot: u4, n: u4) Error!void {
             if (!enabled) return;
 
             if (n != 1) try self.probability.update(1, n);
             self.actions.get(player).move_slot = @intCast(slot);
         }
 
-        pub fn forceSwitch(self: *Self, player: Player, slot: u3, n: u3) Error!void {
+        pub fn forceSwitch(self: *Self, player: Player, slot: u4, n: u4) Error!void {
             if (!enabled) return;
 
             if (n != 1) try self.probability.update(1, n);
@@ -782,32 +773,32 @@ test "Chance.secondaryChance" {
     try expectValue(Optional(bool).false, chance.actions.p2.secondary_chance);
 }
 
-test "Chance.focusBand" {
+test "Chance.item" {
     var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
 
-    try chance.focusBand(.P1, false);
+    try chance.item(.P1, false);
     try expectProbability(&chance.probability, 113, 128);
-    try expectValue(Optional(bool).false, chance.actions.p1.focus_band);
+    try expectValue(Optional(bool).false, chance.actions.p1.item);
 
     chance.reset();
 
-    try chance.focusBand(.P2, true);
+    try chance.item(.P2, true);
     try expectProbability(&chance.probability, 15, 128);
-    try expectValue(Optional(bool).true, chance.actions.p2.focus_band);
+    try expectValue(Optional(bool).true, chance.actions.p2.item);
 }
 
-test "Chance.kingsRock" {
+test "Chance.protect" {
     var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
 
-    try chance.kingsRock(.P1, false);
-    try expectProbability(&chance.probability, 113, 128);
-    try expectValue(Optional(bool).false, chance.actions.p1.kings_rock);
+    try chance.protect(.P1, 15, false);
+    try expectProbability(&chance.probability, 239, 255);
+    try expectValue(Optional(bool).false, chance.actions.p1.protect);
 
     chance.reset();
 
-    try chance.kingsRock(.P2, true);
-    try expectProbability(&chance.probability, 15, 128);
-    try expectValue(Optional(bool).true, chance.actions.p2.kings_rock);
+    try chance.protect(.P2, 63, true);
+    try expectProbability(&chance.probability, 64, 255);
+    try expectValue(Optional(bool).true, chance.actions.p2.protect);
 }
 
 test "Chance.triAttack" {
@@ -917,20 +908,6 @@ test "Chance.metronome" {
     try chance.metronome(.P1, Move.HornAttack, 1);
     try expectProbability(&chance.probability, 1, 238);
     try expectValue(Move.HornAttack, chance.actions.p1.metronome);
-}
-
-test "Chance.protect" {
-    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
-
-    try chance.protect(.P1, 15, false);
-    try expectProbability(&chance.probability, 239, 255);
-    try expectValue(Optional(bool).false, chance.actions.p1.protect);
-
-    chance.reset();
-
-    try chance.protect(.P2, 63, true);
-    try expectProbability(&chance.probability, 64, 255);
-    try expectValue(Optional(bool).true, chance.actions.p2.protect);
 }
 
 test "Chance.moveSlot" {
@@ -1249,8 +1226,12 @@ const Null = struct {
         _ = .{ self, player, proc, rate };
     }
 
-    pub fn focusBand(self: Null, player: Player, proc: bool) Error!void {
+    pub fn item(self: Null, player: Player, proc: bool) Error!void {
         _ = .{ self, player, proc };
+    }
+
+    pub fn protect(self: Null, player: Player, num: u8, ok: bool) Error!void {
+        _ = .{ self, player, num, ok };
     }
 
     pub fn triAttack(self: Null, player: Player, status: TriAttack) Error!void {
@@ -1273,15 +1254,11 @@ const Null = struct {
         _ = .{ self, player, ty, mtype, num };
     }
 
-    pub fn protect(self: Null, player: Player, num: u8, ok: bool) Error!void {
-        _ = .{ self, player, num, ok };
-    }
-
-    pub fn moveSlot(self: Null, player: Player, slot: u3, n: u3) Error!void {
+    pub fn moveSlot(self: Null, player: Player, slot: u4, n: u4) Error!void {
         _ = .{ self, player, slot, n };
     }
 
-    pub fn forceSwitch(self: Null, player: Player, slot: u3, n: u3) Error!void {
+    pub fn forceSwitch(self: Null, player: Player, slot: u4, n: u4) Error!void {
         _ = .{ self, player, slot, n };
     }
 

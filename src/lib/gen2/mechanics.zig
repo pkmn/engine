@@ -1525,13 +1525,13 @@ pub const Effects = struct {
         try options.log.start(battle.active(player), .FocusEnergy);
     }
 
-    var SLOTS: [5]u3 = .{ 0, 0, 0, 0, 0 };
+    var SLOTS: [5]u4 = .{ 0, 0, 0, 0, 0 };
 
     fn forceSwitch(battle: anytype, player: Player, options: anytype) !void {
         const foe = battle.foe(player);
 
-        var n: u3 = 0;
-        var i: u3 = 0;
+        var n: u4 = 0;
+        var i: u4 = 0;
         for (foe.pokemon, 0..) |pokemon, j| {
             if (pokemon.species == .None) break;
             n += 1;
@@ -2019,22 +2019,15 @@ pub const Rolls = struct {
         return proc;
     }
 
-    inline fn item(battle: anytype, player: Player, options: anytype, effect: Item) !bool {
-        assert(effect == .FocusBand or effect == .KingsRock);
-        const roll = if (effect == .FocusBand) .focus_band else .kings_rock;
-
-        const proc = if (options.calc.overridden(player, roll)) |val|
+    inline fn item(battle: anytype, player: Player, options: anytype) !bool {
+        const proc = if (options.calc.overridden(player, .item)) |val|
             val == .true
         else if (showdown)
             battle.rng.chance(u8, 30, 256)
         else
             battle.rng.next() < 30;
 
-        if (effect == .FocusBand) {
-            try options.chance.focusBand(player, proc);
-        } else {
-            try options.chance.kingsRock(player, proc);
-        }
+        try options.chance.item(player, proc);
         return proc;
     }
 
@@ -2190,7 +2183,7 @@ pub const Rolls = struct {
         return ok;
     }
 
-    fn conversion(battle: anytype, player: Player, n: u3, options: anytype) !Type {
+    fn conversion(battle: anytype, player: Player, n: u4, options: anytype) !Type {
         assert(n > 0);
 
         const active = battle.side(player).active;
@@ -2202,9 +2195,9 @@ pub const Rolls = struct {
         else
             null;
 
-        const slot: u3 = overridden orelse slot: {
+        const slot: u4 = overridden orelse slot: {
             if (showdown) {
-                var r = battle.rng.range(u3, 0, n) + 1;
+                var r = battle.rng.range(u4, 0, n) + 1;
                 var i: usize = 0;
                 while (i < moves.len and r > 0) : (i += 1) {
                     if (convertible(active, moves[i].id)) {
@@ -2215,7 +2208,7 @@ pub const Rolls = struct {
                 break :slot @intCast(i + 1);
             } else {
                 while (true) {
-                    const r: u3 = @intCast(battle.rng.next() & 3);
+                    const r: u4 = @intCast(battle.rng.next() & 3);
                     if (convertible(active, moves[r].id)) break :slot @intCast(r + 1);
                 }
             }
@@ -2227,7 +2220,7 @@ pub const Rolls = struct {
         return Move.get(active.move(slot).id).type;
     }
 
-    fn sleepTalk(battle: anytype, player: Player, n: u3, mslot: u3, options: anytype) !u3 {
+    fn sleepTalk(battle: anytype, player: Player, n: u4, mslot: u4, options: anytype) !u4 {
         assert(n > 0);
 
         const active = battle.side(player).active;
@@ -2239,9 +2232,9 @@ pub const Rolls = struct {
         else
             null;
 
-        const slot: u3 = overridden orelse slot: {
+        const slot: u4 = overridden orelse slot: {
             if (showdown) {
-                var r = battle.rng.range(u3, 0, n) + 1;
+                var r = battle.rng.range(u4, 0, n) + 1;
                 var i: usize = 0;
                 while (i < moves.len and r > 0) : (i += 1) {
                     if (i + 1 != mslot and Move.get(moves[i].id).extra.sleep_talk) {
@@ -2252,7 +2245,7 @@ pub const Rolls = struct {
                 break :slot @intCast(i + 1);
             } else {
                 while (true) {
-                    const r: u3 = @intCast(battle.rng.next() & 3);
+                    const r: u4 = @intCast(battle.rng.next() & 3);
                     if (r + 1 == mslot or !Move.get(moves[r].id).extra.sleep_talk) continue;
                     break :slot @intCast(r + 1);
                 }
@@ -2268,10 +2261,10 @@ pub const Rolls = struct {
     inline fn forceSwitch(
         battle: anytype,
         player: Player,
-        slots: []u3,
-        n: u3,
+        slots: []u4,
+        n: u4,
         options: anytype,
-    ) !u3 {
+    ) !u4 {
         const foe = battle.foe(player);
 
         assert(slots.len < 5);
@@ -2283,9 +2276,9 @@ pub const Rolls = struct {
             break :val null;
         } else null;
 
-        const slot: u3 = overridden orelse slot: {
+        const slot: u4 = overridden orelse slot: {
             if (showdown) {
-                break :slot slots[battle.rng.range(u3, 0, @as(u3, @intCast(slots.len)))];
+                break :slot slots[battle.rng.range(u4, 0, @as(u4, @intCast(slots.len)))];
             } else {
                 while (true) {
                     const r = battle.rng.next() & 7;
