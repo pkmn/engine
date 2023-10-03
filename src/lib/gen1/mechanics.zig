@@ -63,11 +63,9 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Result
 
     var s1 = false;
     var s2 = false;
-    var f1 = false;
-    var f2 = false;
 
-    if (selectMove(battle, .P1, c1, c2, &s1, &f1)) |r| return r;
-    if (selectMove(battle, .P2, c2, c1, &s2, &f2)) |r| return r;
+    if (selectMove(battle, .P1, c1, c2, &s1)) |r| return r;
+    if (selectMove(battle, .P2, c2, c1, &s2)) |r| return r;
 
     var p1 = battle.side(.P1);
     var p2 = battle.side(.P2);
@@ -76,9 +74,9 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Result
     var r2 = showdown and p2.active.volatiles.Binding and c1.type == .Switch;
 
     if (try turnOrder(battle, c1, c2, options) == .P1) {
-        if (try doTurn(battle, .P1, c1, r1, s1, f1, .P2, c2, r2, s2, f2, options)) |r| return r;
+        if (try doTurn(battle, .P1, c1, r1, s1, .P2, c2, r2, s2, options)) |r| return r;
     } else {
-        if (try doTurn(battle, .P2, c2, r2, s2, f2, .P1, c1, r1, s1, f1, options)) |r| return r;
+        if (try doTurn(battle, .P2, c2, r2, s2, .P1, c1, r1, s1, options)) |r| return r;
     }
 
     if (p1.active.volatiles.attacks == 0) p1.active.volatiles.Binding = false;
@@ -116,7 +114,6 @@ fn selectMove(
     choice: Choice,
     foe_choice: Choice,
     skip_turn: *bool,
-    forced: *bool,
 ) ?Result {
     if (choice.type == .Pass) return null;
 
@@ -133,7 +130,6 @@ fn selectMove(
         return null;
     }
     if (volatiles.Rage) {
-        forced.* = true;
         if (showdown) {
             if (battle.foe(player).active.volatiles.Binding) skip_turn.* = true;
             saveMove(battle, player, null);
@@ -143,7 +139,6 @@ fn selectMove(
     // Pokémon Showdown removes Flinch at the end-of-turn in its residual handler
     if (!showdown) volatiles.Flinch = false;
     if (volatiles.Thrashing or volatiles.Charging) {
-        forced.* = true;
         if (showdown) {
             if (battle.foe(player).active.volatiles.Binding) skip_turn.* = true;
             saveMove(battle, player, null);
@@ -164,9 +159,7 @@ fn selectMove(
         return null;
     }
     if (volatiles.Binding) {
-        forced.* = true;
         if (showdown) {
-            if (foe_choice.type == .Switch) forced.* = false;
             // Pokémon Showdown overwrites Mirror Move with whatever was selected - really this
             // should set side.last_selected_move = last.id to reuse Mirror Move and fail in order
             // to satisfy the conditions of the Desync Clause Mod. However, because Binding is still
@@ -332,12 +325,10 @@ fn doTurn(
     player_choice: Choice,
     player_rewrap: bool,
     player_skip: bool,
-    player_forced: bool,
     foe_player: Player,
     foe_choice: Choice,
     foe_rewrap: bool,
     foe_skip: bool,
-    foe_forced: bool,
     options: anytype,
 ) !?Result {
     assert(player_choice.type != .Pass);
@@ -350,7 +341,6 @@ fn doTurn(
         player_choice,
         player_rewrap,
         player_skip,
-        player_forced,
         &residual,
         options,
     )) |r| return r;
@@ -373,7 +363,6 @@ fn doTurn(
         foe_choice,
         foe_rewrap,
         foe_skip,
-        foe_forced,
         &residual,
         options,
     )) |r| return r;
@@ -401,7 +390,6 @@ fn executeMove(
     choice: Choice,
     rewrap: bool,
     skip: bool,
-    forced: bool,
     residual: *bool,
     options: anytype,
 ) !?Result {
@@ -436,7 +424,9 @@ fn executeMove(
         mslot = @intCast(battle.lastMove(player).index);
         const stored = side.stored();
         // GLITCH: Struggle bypass PP underflow via Hyper Beam / Trapping-switch auto selection
-        auto = forced or side.last_selected_move == .HyperBeam or side.active.volatiles.Bide or
+        auto = isForced(&side.active) or
+            side.active.volatiles.Binding or side.active.volatiles.Bide or
+            side.last_selected_move == .HyperBeam or
             Status.is(stored.status, .FRZ) or Status.is(stored.status, .SLP);
         // If it wasn't Hyper Beam or the continuation of a move effect then we must have just
         // thawed, in which case we will desync unless the last_selected_move happened to be at
