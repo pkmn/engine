@@ -944,11 +944,11 @@ fn applyDamage(
 }
 
 fn checkHit(battle: anytype, player: Player, move: Move.Data, options: anytype) !bool {
-    if (moveHit(battle, player, move, options)) return true;
+    if (try moveHit(battle, player, move, options)) return true;
 
     // try options.chance.commit(player, .miss);
-    try options.log.lastmiss();
-    try options.log.miss(battle.active(player));
+    // try options.log.lastmiss();
+    // try options.log.miss(battle.active(player));
 
     return false;
 }
@@ -1331,6 +1331,32 @@ fn endTurn(battle: anytype, options: anytype) @TypeOf(options.log).Error!Result 
     try options.log.turn(battle.turn);
 
     return Result.Default;
+}
+
+fn buildRage(battle: anytype, player: Player, options: anytype) !void {
+    var foe = battle.foe(player);
+    if (foe.active.volatiles.Rage) {
+        if (showdown) {
+            // TODO if showdown boost
+            if (foe.active.boosts.atk < 6) {
+                try Effects.boost(battle, player, Move.get(.Rage), options);
+            }
+        } else {
+            foe.active.volatiles.rage +|= 1;
+            try options.log.activate(battle.active(player, .Rage));
+        }
+    }
+}
+
+fn kingsRock(battle: anytype, player: Player, options: anytype) !void {
+    var foe = battle.foe(player);
+    const flinch = battle.side(player).stored().item == .KingsRock and
+        !foe.active.volatiles.Substitute and
+        try options.chance.item(battle, player, options);
+    if (flinch) {
+        foe.active.volatiles.Recharge = false;
+        foe.active.volatiles.Flinch = true;
+    }
 }
 
 pub const Effects = struct {

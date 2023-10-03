@@ -195,6 +195,8 @@ pub const Activate = enum(u8) {
     Substitute,
     Splash,
 
+    Rage, // TODO
+
     Attract,
     LockOn,
     Bind,
