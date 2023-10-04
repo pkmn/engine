@@ -39,7 +39,7 @@ The following information is required to simulate a Generation II Pokémon battl
 | `volatiles.rollout`            | `PlayerRolloutCount`              | `volatiles.rollout.hitCount`          |
 | `volatiles.confusion`          | `PlayerConfuseCount`              | `volatiles.confusion.duration`        |
 | `volatiles.toxic`              | `PlayerToxicCount`                | `volatiles.residualdmg.counter`       |
-| `volatiles.disabled`           | `PlayerDisableCount`              | `moveSlots.disabled`                  |
+| `volatiles.disable`            | `PlayerDisableCount`              | `moveSlots.disabled`                  |
 | `volatiles.encore`             | `PlayerEncoreCount`               | `volatiles.encore.duration`           |
 | `volatiles.perish_song`        | `PlayerPerishCount`               | `volatiles.perishsong.duration`       |
 | `volatiles.fury_cutter`        | `PlayerFuryCutterCount`           | `volatiles.furycutter.multiplier`     |

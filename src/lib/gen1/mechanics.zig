@@ -13,12 +13,12 @@ const assert = std.debug.assert;
 
 const expectEqual = std.testing.expectEqual;
 
+const showdown = pkmn.options.showdown;
+
 const Choice = common.Choice;
 const ID = common.ID;
 const Player = common.Player;
 const Result = common.Result;
-
-const showdown = pkmn.options.showdown;
 
 const Boost = protocol.Boost;
 const Damage = protocol.Damage;

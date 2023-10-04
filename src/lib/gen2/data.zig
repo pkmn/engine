@@ -340,7 +340,7 @@ pub const Volatiles = packed struct(u128) {
 
     bide: u16 = 0,
     bind: Bind = .{},
-    disabled: Disabled = .{},
+    disable: Disable = .{},
     rage: u8 = 0,
     substitute: u8 = 0,
     toxic: u8 = 0,
@@ -357,7 +357,7 @@ pub const Volatiles = packed struct(u128) {
         reason: u4 = 0,
     };
 
-    const Disabled = packed struct(u8) {
+    const Disable = packed struct(u8) {
         move: u4 = 0,
         duration: u4 = 0,
     };

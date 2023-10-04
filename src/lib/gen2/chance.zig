@@ -1218,6 +1218,10 @@ const Null = struct {
         _ = .{ self, player, cant };
     }
 
+    pub fn paralyzed(self: Null, player: Player, par: bool) Error!void {
+        _ = .{ self, player, par };
+    }
+
     pub fn defrost(self: Null, player: Player, thaw: bool) Error!void {
         _ = .{ self, player, thaw };
     }
