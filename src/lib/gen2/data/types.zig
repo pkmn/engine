@@ -219,7 +219,8 @@ pub const Types = extern struct {
     }
 
     /// Whether this typing is immune to damage from Sandstorm.
-    pub inline fn sandstormImmune(self: Types) u8 {
-        return self.type1 <= @intFromEnum(Type.Steel) or self.type2 <= @intFromEnum(Type.Steel);
+    pub inline fn sandstormImmune(self: Types) bool {
+        return @intFromEnum(self.type1) <= @intFromEnum(Type.Steel) or
+            @intFromEnum(self.type2) <= @intFromEnum(Type.Steel);
     }
 };

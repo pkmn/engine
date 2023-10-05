@@ -150,6 +150,10 @@ pub const Damage = enum(u8) {
     Clamp,
     Whirlpool,
     Spikes,
+
+    Nightmare,
+    Curse,
+    Sandstorm,
 };
 
 pub const Status = enum(u8) {

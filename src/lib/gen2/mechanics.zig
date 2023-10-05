@@ -348,6 +348,12 @@ fn doTurn(
     volatiles.Endure = false;
     volatiles.DestinyBond = false;
 
+    // FIXME
+    try handleResidual(battle, player, options);
+
+    // FIXME
+    try betweenTurns(battle, 0, options);
+
     return null;
 }
 
@@ -833,20 +839,20 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
     if (volatiles.Nightmare) {
         stored.hp -= @max(stored.stats.hp / 4, 1);
         // ibid
-        try options.log.damage(ident, stored, Damage.Nightmare);
+        try options.log.damage(ident, stored, .Nightmare);
         if (stored.hp == 0) return;
     }
 
     if (volatiles.Curse) {
         stored.hp -= @max(stored.stats.hp / 4, 1);
         // ibid
-        try options.log.damage(ident, stored, Damage.Curse);
+        try options.log.damage(ident, stored, .Curse);
         if (stored.hp == 0) return;
     }
 }
 
 fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
-    const players = std.enums.values(Player);
+    const players = comptime std.enums.values(Player);
 
     // TODO checkFaintThen(p1, p2);
 
@@ -880,7 +886,7 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
                 inline for (players) |player| {
                     var side = battle.side(player);
                     const active = side.active;
-                    if (!(active.volatiles.underground or active.types.sandstormImmune())) {
+                    if (!(active.volatiles.Underground or active.types.sandstormImmune())) {
                         side.stored().hp -|= @max(side.stored().stats.hp / 8, 1);
                         try options.log.damage(battle.active(player), side.stored(), .Sandstorm);
                     }
@@ -895,18 +901,18 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
         var side = battle.side(player);
         var volatiles = &side.active.volatiles;
 
-        if (volatiles.bind > 0 and !volatiles.Substitute) {
-            volatiles.bind -= 1;
-            if (volatiles.bind == 0) {
-                const reason = @intFromEnum(End.Bind) + volatiles.bind_reason - 1;
+        if (volatiles.bind.duration > 0 and !volatiles.Substitute) {
+            volatiles.bind.duration -= 1;
+            if (volatiles.bind.duration == 0) {
+                const reason = @intFromEnum(End.Bind) + volatiles.bind.reason - 1;
                 try options.log.end(battle.active(player), @enumFromInt(reason));
             } else {
-                var reason = @intFromEnum(Activate.Bind) + volatiles.bind_reason - 1;
+                var reason = @intFromEnum(Activate.Bind) + volatiles.bind.reason - 1;
                 try options.log.activate(battle.active(player), @enumFromInt(reason));
 
-                reason = @intFromEnum(Activate.Damage) + volatiles.bind_reason - 1;
+                reason = @intFromEnum(Damage.Bind) + volatiles.bind.reason - 1;
                 side.stored().hp -|= @max(side.stored().stats.hp / 16, 1);
-                try options.log.damage(battle.active(player), side.stored(), reason);
+                try options.log.damage(battle.active(player), side.stored(), @enumFromInt(reason));
             }
         }
     }
@@ -923,7 +929,7 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
 
             assert(volatiles.perish_song < 3);
             const reason = @intFromEnum(Start.PerishSong0) + volatiles.perish_song;
-            try options.log.start(battle.active(player), reason);
+            try options.log.start(battle.active(player), @enumFromInt(reason));
 
             if (volatiles.perish_song == 0) {
                 volatiles.PerishSong = false;
@@ -969,22 +975,21 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
     // Side Conditions
     if (showdown) {
         inline for (players) |player| {
-            updateSideCondition(battle, player, "Reflect", "reflect");
+            try updateSideCondition(battle, player, "Reflect", "reflect", options);
         }
         inline for (players) |player| {
-            updateSideCondition(battle, player, "LightScreen", "light_screen");
+            try updateSideCondition(battle, player, "LightScreen", "light_screen", options);
         }
         inline for (players) |player| {
-            updateSideCondition(battle, player, "Safeguard", "safeguard");
+            try updateSideCondition(battle, player, "Safeguard", "safeguard", options);
         }
     } else {
         inline for (players) |player| {
-            updateSideCondition(battle, player, "Safeguard", "safeguard");
+            try updateSideCondition(battle, player, "Safeguard", "safeguard", options);
         }
-
         inline for (players) |player| {
-            updateSideCondition(battle, player, "LightScreen", "light_screen");
-            updateSideCondition(battle, player, "Reflect", "reflect");
+            try updateSideCondition(battle, player, "LightScreen", "light_screen", options);
+            try updateSideCondition(battle, player, "Reflect", "reflect", options);
         }
     }
 
@@ -1057,7 +1062,7 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
             assert(volatiles.encore > 0);
             volatiles.encore -= 1;
 
-            if (volatiles.encore == 0 or side.active.moves(mslot).pp == 0) {
+            if (volatiles.encore == 0 or side.active.move(mslot).pp == 0) {
                 volatiles.Encore = false;
                 try options.log.end(battle.active(player), .Encore);
             }
@@ -1079,7 +1084,7 @@ inline fn updateSideCondition(
 
         if (@field(side.conditions, value) == 0) {
             @field(side.conditions, key) = false;
-            try options.log.sideend(battle.active(player), @field(protocol.Side, key));
+            try options.log.sideend(player, @field(protocol.Side, key));
         }
     }
 }
@@ -1820,7 +1825,7 @@ pub const Rolls = struct {
         return par;
     }
 
-    inline fn defrost(battle: anytype, player: Player, options: anytype) !void {
+    inline fn defrost(battle: anytype, player: Player, options: anytype) !bool {
         const thaw = if (options.calc.overridden(player, .defrost)) |val|
             val == .true
         else if (showdown)
