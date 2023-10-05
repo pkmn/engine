@@ -111,9 +111,6 @@ const State = struct {
     }
 };
 
-const Command: type =
-    fn (battle: anytype, player: Player, state: *State, options: anytype) anyerror!void;
-
 pub fn update(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Result {
     assert(c1.type != .Pass or c2.type != .Pass or battle.turn == 0);
     if (battle.turn == 0) return start(battle, options);
@@ -518,7 +515,7 @@ fn cantMove(volatiles: *align(8) Volatiles) void {
     volatiles.fury_cutter = 0;
 }
 
-fn canMove(battle: anytype, player: Player, options: anytype) !bool {
+fn canMove(battle: anytype, player: Player, options: anytype) !void {
     _ = battle;
     _ = player;
     _ = options;
@@ -543,323 +540,56 @@ fn decrementPP(side: *Side, mslot: u3) void {
     assert(active.move(mslot).pp == side.stored().move(mslot).pp);
 }
 
-fn doMove(battle: anytype, player: Player, state: *State, options: anytype) !?Result {
-    // var side = battle.side(player);
-    const move = Move.get(state.move);
+const Command: type =
+    fn (battle: anytype, player: Player, state: *State, options: anytype) anyerror!void;
 
-    switch (move.effect) {
-        .None, .HighCritical, .AlwaysHit, .Priority, .Gust, .TriAttack, .Earthquake => {
-            // TODO Gust skips kingsrock and does double fly damage
-            // TODO triattack does own effect instead of kingsrock
-            // TODO double damage for earthquake
-        },
-        .Attract => {
-            _ = try Effects.attract(battle, player, state, options); // TODO
-        },
-        .BatonPass => {
-            _ = try Effects.batonPass(battle, player, state, options); // TODO
-        },
-        .BeatUp => {
-            _ = try Effects.beatUp(battle, player, state, options); // TODO
-        },
-        .BellyDrum => {
-            _ = try Effects.bellyDrum(battle, player, state, options); // TODO
-        },
-        .Bide => {
-            _ = try Effects.bide(battle, player, state, options); // TODO
-        },
-        .Binding => {
-            _ = try Effects.binding(battle, player, state, options); // TODO
-        },
-        .BurnChance => {
-            _ = try Effects.burnChance(battle, player, state, options); // TODO
-        },
-        .Confusion, .ConfusionChance => {
-            _ = try Effects.confusion(battle, player, state, options); // TODO
-        },
-        .Conversion => {
-            _ = try Effects.conversion(battle, player, state, options); // TODO
-        },
-        .Conversion2 => {
-            _ = try Effects.conversion2(battle, player, state, options); // TODO
-        },
-        .Counter => {
-            _ = try Effects.counter(battle, player, state, options); // TODO
-        },
-        .Curse => {
-            _ = try Effects.curse(battle, player, state, options); // TODO
-        },
-        .DefenseCurl => {
-            _ = try Effects.defenseCurl(battle, player, state, options); // TODO
-        },
-        .DestinyBond => {
-            _ = try Effects.destinyBond(battle, player, state, options); // TODO
-        },
-        .Disable => {
-            _ = try Effects.disable(battle, player, state, options); // TODO
-        },
-        .DrainHP, .DreamEater => {
-            _ = try Effects.drainHP(battle, player, state, options); // TODO
-        },
-        .Encore => {
-            _ = try Effects.encore(battle, player, state, options); // TODO
-        },
-        .Endure => {
-            _ = try Effects.protect(battle, player, state, options); // TODO
-        },
-        .Explode => {
-            _ = try Effects.explode(battle, player, state, options); // TODO
-        },
-        .FalseSwipe => {
-            _ = try Effects.falseSwipe(battle, player, state, options); // TODO
-        },
-        .FixedDamage, .Psywave, .SuperFang => {
-            _ = try Effects.fixedDamage(battle, player, state, options); // TODO
-        },
-        .FlameWheel => {
-            _ = try Effects.flameWheel(battle, player, state, options); // TODO
-        },
-        .FlinchChance => {
-            _ = try Effects.flinchChance(battle, player, state, options); // TODO
-        },
-        .FlyDig => {
-            _ = try Effects.flyDig(battle, player, state, options); // TODO
-        },
-        .FocusEnergy => {
-            _ = try Effects.focusEnergy(battle, player, state, options); // TODO
-        },
-        .ForceSwitch => {
-            _ = try Effects.forceSwitch(battle, player, state, options); // TODO
-        },
-        .Foresight => {
-            _ = try Effects.foresight(battle, player, state, options); // TODO
-        },
-        .FreezeChance => {
-            _ = try Effects.freezeChance(battle, player, state, options); // TODO
-        },
-        .FuryCutter => {
-            _ = try Effects.furyCutter(battle, player, state, options); // TODO
-        },
-        .FutureSight => {
-            _ = try Effects.futureSight(battle, player, state, options); // TODO
-        },
-        .Return, .Frustration => {
-            _ = try Effects.happiness(battle, player, state, options); // TODO
-        },
-        .Haze => {
-            _ = try Effects.haze(battle, player, state, options); // TODO
-        },
-        .Heal => {
-            _ = try Effects.heal(battle, player, state, options); // TODO
-        },
-        .HealBell => {
-            _ = try Effects.healBell(battle, player, state, options); // TODO
-        },
-        .HiddenPower => {
-            _ = try Effects.hiddenPower(battle, player, state, options); // TODO
-        },
-        .HyperBeam => {
-            _ = try Effects.hyperBeam(battle, player, state, options); // TODO
-        },
-        .JumpKick => {
-            _ = try Effects.jumpKick(battle, player, state, options); // TODO
-        },
-        .LeechSeed => {
-            _ = try Effects.leechSeed(battle, player, state, options); // TODO
-        },
-        .LevelDamage => {
-            _ = try Effects.levelDamage(battle, player, state, options); // TODO
-        },
-        .LightScreen, .Reflect => {
-            _ = try Effects.screens(battle, player, state, options); // TODO
-        },
-        .LockOn => {
-            _ = try Effects.lockOn(battle, player, state, options); // TODO
-        },
-        .Magnitude => {
-            _ = try Effects.magnitude(battle, player, state, options); // TODO
-        },
-        .MeanLook => {
-            _ = try Effects.meanLook(battle, player, state, options); // TODO
-        },
-        .Metronome => {
-            _ = try Effects.metronome(battle, player, state, options); // TODO
-        },
-        .Mimic => {
-            _ = try Effects.mimic(battle, player, state, options); // TODO
-        },
-        .MirrorCoat => {
-            _ = try Effects.mirrorCoat(battle, player, state, options); // TODO
-        },
-        .MirrorMove => {
-            _ = try Effects.mirrorMove(battle, player, state, options); // TODO
-        },
-        .Mist => {
-            _ = try Effects.mist(battle, player, state, options); // TODO
-        },
-        .Moonlight, .MorningSun => {
-            _ = try Effects.weatherHeal(battle, player, state, options); // TODO
-        },
-        .MultiHit, .DoubleHit, .Twineedle => {
-            _ = try Effects.multiHit(battle, player, state, options); // TODO
-        },
-        .Nightmare => {
-            _ = try Effects.nightmare(battle, player, state, options); // TODO
-        },
-        .OHKO => {
-            _ = try Effects.ohko(battle, player, state, options); // TODO
-        },
-        .PainSplit => {
-            _ = try Effects.painSplit(battle, player, state, options); // TODO
-        },
-        .Paralyze => {
-            _ = try Effects.paralyze(battle, player, state, options); // TODO
-        },
-        .ParalyzeChance, .Thunder => {
-            _ = try Effects.paralyzeChance(battle, player, state, options); // TODO
-        },
-        .PayDay => {
-            _ = try Effects.payDay(battle, player, state, options); // TODO
-        },
-        .PerishSong => {
-            _ = try Effects.perishSong(battle, player, state, options); // TODO
-        },
-        .Poison, .PoisonChance, .Toxic => {
-            _ = try Effects.poison(battle, player, state, options); // TODO
-        },
-        .Present => {
-            _ = try Effects.present(battle, player, state, options); // TODO
-        },
-        .Protect => {
-            _ = try Effects.protect(battle, player, state, options); // TODO Detect?
-        },
-        .PsychUp => {
-            _ = try Effects.psychUp(battle, player, state, options); // TODO
-        },
-        .Pursuit => {
-            _ = try Effects.pursuit(battle, player, state, options); // TODO
-        },
-        .Rage => {
-            _ = try Effects.rage(battle, player, state, options); // TODO
-        },
-        .RainDance => {
-            _ = try Effects.rainDance(battle, player, state, options); // TODOq
-        },
-        .RapidSpin => {
-            _ = try Effects.rapidSpin(battle, player, state, options); // TODO
-        },
-        .RazorWind => {
-            _ = try Effects.razorWind(battle, player, state, options); // TODO
-        },
-        .Recoil => {
-            _ = try Effects.recoil(battle, player, state, options); // TODO
-        },
-        .Reversal => {
-            _ = try Effects.reversal(battle, player, state, options); // TODO
-        },
-        .Rollout => {
-            _ = try Effects.rollout(battle, player, state, options); // TODO
-        },
-        .SacredFire => {
-            _ = try Effects.sacredFire(battle, player, state, options); // TODO
-        },
-        .Safeguard => {
-            _ = try Effects.safeguard(battle, player, state, options); // TODO
-        },
-        .Sandstorm => {
-            _ = try Effects.sandstorm(battle, player, state, options); // TODO
-        },
-        .Sketch => {
-            _ = try Effects.sketch(battle, player, state, options); // TODO
-        },
-        .SkullBash => {
-            _ = try Effects.skullBash(battle, player, state, options); // TODO
-        },
-        .SkyAttack => {
-            _ = try Effects.skyAttack(battle, player, state, options); // TODO
-        },
-        .Sleep => {
-            _ = try Effects.sleep(battle, player, state, options); // TODO
-        },
-        .SleepTalk => {
-            _ = try Effects.sleepTalk(battle, player, state, options); // TODO
-        },
-        .Snore => {
-            _ = try Effects.snore(battle, player, state, options); // TODO
-        },
-        .Solarbeam => {
-            _ = try Effects.solarBeam(battle, player, state, options); // TODO
-        },
-        .Spikes => {
-            _ = try Effects.spikes(battle, player, state, options); // TODO
-        },
-        .Spite => {
-            _ = try Effects.spite(battle, player, state, options); // TODO
-        },
-        .Splash => {
-            _ = try Effects.splash(battle, player, state, options); // TODO
-        },
-        .Stomp => {
-            _ = try Effects.stomp(battle, player, state, options); // TODO
-        },
-        .Substitute => {
-            _ = try Effects.substitute(battle, player, state, options); // TODO
-        },
-        .SunnyDay => {
-            _ = try Effects.sunnyDay(battle, player, state, options); // TODO
-        },
-        .Swagger => {
-            _ = try Effects.swagger(battle, player, state, options); // TODO
-        },
-        .Synthesis => {
-            _ = try Effects.synthesis(battle, player, state, options); // TODO
-        },
-        .Teleport => {
-            _ = try Effects.teleport(battle, player, state, options); // TODO
-        },
-        .Thief => {
-            _ = try Effects.thief(battle, player, state, options); // TODO
-        },
-        .Thrashing => {
-            _ = try Effects.thrashing(battle, player, state, options); // TODO
-        },
-        .Transform => {
-            _ = try Effects.transform(battle, player, state, options); // TODO
-        },
-        .TripleKick => {
-            _ = try Effects.tripleKick(battle, player, state, options); // TODO
-        },
-        .Twister => {
-            _ = try Effects.twister(battle, player, state, options); // TODO
-        },
-        // zig fmt: off
-        .AllStatUpChance,
-        .AttackUp1, .AttackUp2, .AttackUpChance,
-        .DefenseUp1, .DefenseUp2, .DefenseUpChance,
-        .EvasionUp1,
-        .SpAtkUp1,
-        .SpDefUp2,
-        .SpeedUp2 => {
-        // zig fmt: on
-            _ = try Effects.boost(battle, player, state, options); // TODO
-        },
-        // zig fmt: off
-        .AccuracyDown1, .AccuracyDownChance,
-        .AttackDown1, .AttackDown2, .AttackDownChance,
-        .DefenseDown1, .DefenseDown2, .DefenseDownChance,
-        .EvasionDown1,
-        .SpDefDownChance,
-        .SpeedDown1, .SpeedDown2, .SpeedDownChance => {
-        // zig fmt: on
-            _ = try Effects.unboost(battle, player, state, options); // TODO
-        },
-    }
+// zig fmt: off
+// const COMMANDS = [_][]Command{
+//     // None
+//     (if (showdown) &[_]Command{
+//         // checkHit, checkCriticalHit, calcDamage, adjustDamage, randomizeDamage,
+//         // applyDamage, buildRage, kingsRock,
+//     } else &[_]Command{
+//         // checkCriticalHit, calcDamage, adjustDamage, randomizeDamage,
+//         // checkHit, applyDamage, buildRage, kingsRock,
+//     }),
+// };
+// zig fmt: on
+
+fn doMove(battle: anytype, player: Player, state: *State, options: anytype) !?Result {
+    // FIXME
+    // const commands = COMMANDS[@intFromEnum(Move.get(state.move).effect)];
+    // for (commands) |command| {
+    //     if (!try command(battle, player, state, options)) return null;
+    // }
+    // return null;
+    try checkCriticalHit(battle, player, state, options);
+    try calcDamage(battle, player, state, options);
+    try adjustDamage(battle, player, state, options);
+    try randomizeDamage(battle, player, state, options);
+    try applyDamage(battle, player, state, options);
+    try buildRage(battle, player, state, options);
+    try kingsRock(battle, player, state, options);
+
+    try Effects.attract(battle, player, state, options);
+    try Effects.conversion(battle, player, state, options);
+    try Effects.conversion2(battle, player, state, options);
+    try Effects.destinyBond(battle, player, state, options);
+    try Effects.disable(battle, player, state, options);
+    try Effects.encore(battle, player, state, options);
+    try Effects.falseSwipe(battle, player, state, options);
+    try Effects.focusEnergy(battle, player, state, options);
+    try Effects.forceSwitch(battle, player, state, options);
+    try Effects.foresight(battle, player, state, options);
+    try Effects.happiness(battle, player, state, options);
+    try Effects.protect(battle, player, state, options);
+
     return null;
 }
 
-fn checkCriticalHit(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+fn checkCriticalHit(battle: anytype, player: Player, state: *State, options: anytype) !void {
     const move = Move.get(state.move);
-    if (move.bp == 0) return false;
+    if (move.bp == 0) return;
 
     const side = battle.side(player);
     const pokemon = side.stored();
@@ -874,28 +604,25 @@ fn checkCriticalHit(battle: anytype, player: Player, state: *State, options: any
     }
     assert(stage <= 4);
 
-    return Rolls.criticalHit(battle, player, CRITICAL_HITS[stage], options);
+    state.crit = try Rolls.criticalHit(battle, player, CRITICAL_HITS[stage], options);
 }
 
 fn calcDamage(
     battle: anytype,
     player: Player,
-    target_player: Player,
-    m: ?Move.Data,
-    crit: bool,
-) u16 {
+    state: *State,
+    options: anytype,
+) !void {
     _ = battle;
     _ = player;
-    _ = target_player;
-    _ = m;
-    _ = crit;
-    return 0;
+    _ = state;
+    _ = options;
 }
 
 const FORESIGHT: Types = .{ .type1 = .Normal, .type2 = .Fighting };
 
-fn adjustDamage(battle: anytype, player: Player, state: *State, _: anytype) !bool {
-    if (state.move == .Struggle) return true;
+fn adjustDamage(battle: anytype, player: Player, state: *State, _: anytype) !void {
+    if (state.move == .Struggle) return;
 
     const side = battle.side(player);
     const foe = battle.foe(player);
@@ -908,7 +635,7 @@ fn adjustDamage(battle: anytype, player: Player, state: *State, _: anytype) !boo
     {
         d = d *% @intFromEnum(Effectiveness.Super) / 10;
     } else if ((move.type == .Water and battle.field.weather == .Sun) or
-        ((move.type == .Fire or state.m == .SolarBeam) and battle.field.weather == .Rain))
+        ((move.type == .Fire or state.move == .SolarBeam) and battle.field.weather == .Rain))
     {
         d = d *% @intFromEnum(Effectiveness.Resisted) / 10;
     }
@@ -928,7 +655,7 @@ fn adjustDamage(battle: anytype, player: Player, state: *State, _: anytype) !boo
 
     // Type effectiveness matchup precedence only matters with (NVE, SE)
     if (!showdown and (eff1 + eff2) == Effectiveness.mismatch and
-        Type.precedence(move.type, types.type1) > Type.precedence(move.type, types.type2))
+        types.type1.precedence() > types.type2.precedence())
     {
         assert(eff2 != neutral);
         d = d *% eff2 / 10;
@@ -942,16 +669,14 @@ fn adjustDamage(battle: anytype, player: Player, state: *State, _: anytype) !boo
 
     state.effectiveness = if (types.type1 == types.type2) eff1 * neutral else eff1 * eff2;
     state.damage = d;
-    return true;
 }
 
-fn randomizeDamage(battle: anytype, player: Player, state: *State, options: anytype) !bool {
-    if (state.damage <= 1) return true;
+fn randomizeDamage(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    if (state.damage <= 1) return;
     const random = try Rolls.damage(battle, player, options);
     options.calc.base(player.foe(), state.damage);
     state.damage = @intCast(@as(u32, state.damage) *% random / 255);
     options.calc.final(player.foe(), state.damage);
-    return true;
 }
 
 fn applyDamage(
@@ -959,12 +684,11 @@ fn applyDamage(
     player: Player,
     state: *State,
     options: anytype,
-) !bool {
+) !void {
     _ = battle;
     _ = player;
     _ = state;
     _ = options;
-    return false;
 }
 
 // TODO: set damage = 0 if missed and not (High) Jump Kick
@@ -973,7 +697,7 @@ fn checkHit(
     player: Player,
     state: *State,
     options: anytype,
-) !bool {
+) !void {
     const side = battle.side(player);
     const foe = battle.foe(player);
 
@@ -981,40 +705,40 @@ fn checkHit(
 
     if (move.effect == .DreamEater and !Status.is(foe.stored().status, .SLP)) {
         state.miss = true;
-        return true;
+        return;
     }
     if (foe.active.volatiles.Protect) {
         state.miss = true;
-        return true;
+        return;
     }
     const drain = move.effect == .DrainHP or move.effect == .DreamEater;
     if (drain and foe.active.volatiles.Substitute) {
         state.miss = true;
-        return true;
+        return;
     }
     if (side.active.volatiles.LockOn) {
         state.miss = !(foe.active.volatiles.Flying and move.extra.undeground);
-        return true;
+        return;
     }
     assert(!(foe.active.volatiles.Flying and foe.active.volatiles.Underground));
     if (foe.active.volatiles.Flying) {
         if (!move.extra.flying) {
             state.miss = true;
-            return true;
+            return;
         }
     } else if (foe.active.volatiles.Underground) {
         if (!move.extra.underground) {
             state.miss = true;
-            return true;
+            return;
         }
     }
     if (move.effect == .Thunder and battle.field.weather == .Rain) {
         state.miss = false;
-        return true;
+        return;
     }
     if (move.effect == .AlwaysHit) {
         state.miss = false;
-        return true;
+        return;
     }
 
     var accuracy: u16 = move.accuracy;
@@ -1037,7 +761,6 @@ fn checkHit(
         false
     else
         !try Rolls.hit(battle, player, @intCast(accuracy), options);
-    return true;
 }
 
 fn checkFaint(
@@ -1060,7 +783,7 @@ fn faint(battle: anytype, player: Player, done: bool, options: anytype) !?Result
     return null;
 }
 
-fn handleResidual(battle: anytype, player: Player, options: anytype) !bool {
+fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
     var side = battle.side(player);
     var stored = side.stored();
     const ident = battle.active(player);
@@ -1376,40 +1099,38 @@ fn endTurn(battle: anytype, options: anytype) @TypeOf(options.log).Error!Result 
     return Result.Default;
 }
 
-fn buildRage(battle: anytype, player: Player, _: *State, options: anytype) !void {
+fn buildRage(battle: anytype, player: Player, state: *State, options: anytype) !void {
     var foe = battle.foe(player);
     if (foe.active.volatiles.Rage) {
         if (showdown) {
             // TODO if showdown boost
             if (foe.active.boosts.atk < 6) {
-                _ = try Effects.boost(battle, player, Move.get(.Rage), options);
+                try Effects.boost(battle, player, state, options);
             }
         } else {
             foe.active.volatiles.rage +|= 1;
-            try options.log.activate(battle.active(player, .Rage));
+            try options.log.activate(battle.active(player), .Rage);
         }
     }
-    return true;
 }
 
-fn kingsRock(battle: anytype, player: Player, _: *State, options: anytype) !bool {
+fn kingsRock(battle: anytype, player: Player, _: *State, options: anytype) !void {
     var foe = battle.foe(player);
     const flinch = battle.side(player).stored().item == .KingsRock and
         !foe.active.volatiles.Substitute and
-        try options.chance.item(battle, player, options);
+        try Rolls.item(battle, player, options);
     if (flinch) {
-        foe.active.volatiles.Recharge = false;
+        foe.active.volatiles.Recharging = false;
         foe.active.volatiles.Flinch = true;
     }
-    return true;
 }
 
 pub const Effects = struct {
-    fn alwaysHit(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn alwaysHit(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn attract(battle: anytype, player: Player, _: *State, options: anytype) !bool {
+    fn attract(battle: anytype, player: Player, _: *State, options: anytype) !void {
         const side = battle.side(player);
         var foe = battle.foe(player);
 
@@ -1417,54 +1138,46 @@ pub const Effects = struct {
         const foe_gender: u8 = @intFromEnum(foe.stored().dvs.gender);
         if (gender + foe_gender != 1) {
             try options.log.immune(battle.active(player.foe()), .None);
-            return true; // TODO
+            return;
         } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
             try options.log.lastmiss();
             try options.log.miss(battle.active(player));
-            return true; // TODO
+            return;
         }
 
         foe.active.volatiles.Attract = true;
         try options.log.start(battle.active(player.foe()), .Attract);
-        return true;
     }
 
-    fn batonPass(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn batonPass(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn beatUp(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn beatUp(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn bellyDrum(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn bellyDrum(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn bide(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn bide(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn binding(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn binding(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn burnChance(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn burnChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn confusion(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn confusion(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn conversion(battle: anytype, player: Player, _: *State, options: anytype) !bool {
+    fn conversion(battle: anytype, player: Player, _: *State, options: anytype) !void {
         var side = battle.side(player);
 
         var n: u3 = 0;
@@ -1473,68 +1186,62 @@ pub const Effects = struct {
         }
         if (n == 0) {
             try options.log.fail(battle.active(player), .None);
-            return true; // TODO
+            return;
         }
 
         side.active.types.type1 = try Rolls.conversion(battle, player, n, options);
         side.active.types.type2 = side.active.types.type1;
-        return true;
     }
 
-    fn conversion2(battle: anytype, player: Player, _: *State, options: anytype) !bool {
+    fn conversion2(battle: anytype, player: Player, _: *State, options: anytype) !void {
         var side = battle.side(player);
 
         const last = battle.foe(player).lastMove(false);
         if (last == .None) {
             try options.log.fail(battle.active(player), .None);
-            return true; // TODO
+            return;
         }
         const move = Move.get(last);
         if (move.type == .@"???") {
             try options.log.fail(battle.active(player), .None);
-            return true; // TODO
+            return;
         }
 
         side.active.types.type1 = try Rolls.conversion2(battle, player, move.type, options);
         side.active.types.type2 = side.active.types.type1;
-        return true;
     }
 
-    fn counter(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn counter(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn curse(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn curse(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn defenseCurl(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn defenseCurl(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn destinyBond(battle: anytype, player: Player, _: *State, options: anytype) !bool {
+    fn destinyBond(battle: anytype, player: Player, _: *State, options: anytype) !void {
         battle.side(player).active.volatiles.DestinyBond = true;
         try options.log.singlemove(battle.active(player), Move.DestinyBond);
-        return true;
     }
 
-    fn disable(battle: anytype, player: Player, _: *State, options: anytype) !bool {
+    fn disable(battle: anytype, player: Player, _: *State, options: anytype) !void {
         var foe = battle.foe(player);
         var volatiles = &foe.active.volatiles;
         const foe_ident = battle.active(player.foe());
 
         if (volatiles.disable.move != 0) {
             try options.log.fail(foe_ident, .None);
-            return true; // TODO
+            return;
         }
 
         const last = battle.foe(player).lastMove(false);
         if (last == .None or last == .Struggle) {
             try options.log.fail(foe_ident, .None);
-            return true; // TODO
+            return;
         }
 
         var slot: u3 = 0;
@@ -1546,27 +1253,24 @@ pub const Effects = struct {
         const move = foe.active.move(slot);
         if (move.pp == 0) {
             try options.log.fail(foe_ident, .None);
-            return true; // TODO
+            return;
         }
 
         volatiles.disable.move = slot;
         volatiles.disable.duration = Rolls.disableDuration(battle, player, options);
 
         try options.log.startEffect(foe_ident, .Disable, move.id);
-        return true;
     }
 
-    fn doubleHit(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn doubleHit(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn drainHP(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn drainHP(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn encore(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn encore(battle: anytype, player: Player, state: *State, options: anytype) !void {
         var foe = battle.foe(player);
         var volatiles = &foe.active.volatiles;
         const foe_ident = battle.active(player.foe());
@@ -1577,7 +1281,7 @@ pub const Effects = struct {
             last == .Encore or .last == .MirrorMove);
         if (failed) {
             try options.log.fail(foe_ident, .None);
-            return true; // TODO
+            return;
         }
 
         var slot: u3 = 0;
@@ -1589,7 +1293,7 @@ pub const Effects = struct {
         const move = foe.active.move(slot);
         if (move.pp == 0) {
             try options.log.fail(foe_ident, .None);
-            return true; // TODO
+            return;
         }
 
         volatiles.Encore = true;
@@ -1599,58 +1303,50 @@ pub const Effects = struct {
         _ = state;
 
         try options.log.startEffect(foe_ident, .Encore, move.id);
-        return true;
     }
 
-    fn explode(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn explode(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn falseSwipe(battle: anytype, player: Player, state: *State, _: anytype) !bool {
+    fn falseSwipe(battle: anytype, player: Player, state: *State, _: anytype) !void {
         const foe = battle.foe(player);
         assert(foe.stored().hp > 0);
         // FIXME crit?
         if (state.damage > foe.stored().hp) state.damage = foe.stored().hp - 1;
-        return true;
     }
 
-    fn fixedDamage(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn fixedDamage(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn flameWheel(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn flameWheel(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn flinchChance(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn flinchChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn flyDig(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn flyDig(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn focusEnergy(battle: anytype, player: Player, _: *State, options: anytype) !bool {
+    fn focusEnergy(battle: anytype, player: Player, _: *State, options: anytype) !void {
         var side = battle.side(player);
 
         if (side.active.volatiles.FocusEnergy) {
             if (!showdown) try options.log.fail(battle.active(player), .None);
-            return true; // TODO
+            return;
         }
 
         side.active.volatiles.FocusEnergy = true;
         try options.log.start(battle.active(player), .FocusEnergy);
-        return true;
     }
 
     var SLOTS: [5]u4 = .{ 0, 0, 0, 0, 0 };
 
-    fn forceSwitch(battle: anytype, player: Player, _: *State, options: anytype) !bool {
+    fn forceSwitch(battle: anytype, player: Player, _: *State, options: anytype) !void {
         const foe = battle.foe(player);
 
         var n: u4 = 0;
@@ -1667,191 +1363,158 @@ pub const Effects = struct {
 
         if (n == 0) {
             try options.log.fail(battle.active(player), .None);
-            return true; // TODO
+            return;
         }
 
         _ = try Rolls.forceSwitch(battle, player, SLOTS[0..i], n, options); // TODO
-        return true;
     }
 
-    fn foresight(battle: anytype, player: Player, _: *State, options: anytype) !bool {
+    fn foresight(battle: anytype, player: Player, _: *State, options: anytype) !void {
         var foe = battle.foe(player);
 
         if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
             try options.log.lastmiss();
             try options.log.miss(battle.active(player));
-            return true; // TODO
+            return;
         } else if (foe.active.volatiles.Foresight) {
             try options.log.fail(battle.active(player), .None);
-            return true; // TODO
+            return;
         }
 
         foe.active.volatiles.Foresight = true;
         try options.log.start(battle.active(player.foe()), .FocusEnergy);
-        return true;
     }
 
-    fn freezeChance(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn freezeChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn furyCutter(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn furyCutter(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn futureSight(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn futureSight(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn happiness(battle: anytype, player: Player, state: *State, _: anytype) !bool {
+    fn happiness(battle: anytype, player: Player, state: *State, _: anytype) !void {
         const val = battle.side(player).stored().happiness;
         const frustration = Move.get(state.move).effect == .Frustration;
         state.bp = ((if (frustration) 255 - val else val) * 10) / 25;
-        return true;
     }
 
-    fn haze(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn haze(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn heal(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn heal(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn healBell(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn healBell(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn hiddenPower(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn hiddenPower(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn hyperBeam(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn hyperBeam(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn jumpKick(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn jumpKick(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn leechSeed(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn leechSeed(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn levelDamage(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn levelDamage(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn lockOn(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn lockOn(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
     const MAGNITUDE_POWER = [_]u8{ 10, 30, 50, 70, 90, 110, 150 };
 
-    fn magnitude(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn magnitude(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn meanLook(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn meanLook(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn metronome(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn metronome(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn mimic(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn mimic(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn mirrorCoat(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn mirrorCoat(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn mirrorMove(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn mirrorMove(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn mist(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn mist(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn weatherHeal(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn weatherHeal(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn multiHit(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn multiHit(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn nightmare(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn nightmare(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn ohko(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn ohko(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn painSplit(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn painSplit(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn paralyze(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn paralyze(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn paralyzeChance(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn paralyzeChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
         // TODO: Thunder does acc/checkHit/effectChance before stab + damage variation
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn payDay(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn payDay(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn perishSong(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn perishSong(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn poison(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn poison(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn present(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn present(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn protect(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn protect(battle: anytype, player: Player, state: *State, options: anytype) !void {
         var side = battle.side(player);
         var volatiles = &side.active.volatiles;
 
@@ -1859,7 +1522,7 @@ pub const Effects = struct {
             !try Rolls.protect(battle, player, volatiles.protect, options);
         if (failed) {
             try options.log.fail(battle.active(player), .None);
-            return true; // TODO
+            return;
         }
 
         volatiles.protect = @max(8, volatiles.protect + 1);
@@ -1869,100 +1532,82 @@ pub const Effects = struct {
             volatiles.Protect = true;
         }
         try options.log.singleturn(battle.active(player), state.move);
-        return true;
     }
 
-    fn psychUp(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn psychUp(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn pursuit(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn pursuit(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn rage(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn rage(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn rainDance(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn rainDance(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn rapidSpin(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn rapidSpin(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn razorWind(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn razorWind(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn recoil(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn recoil(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn reversal(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn reversal(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn rollout(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn rollout(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn sacredFire(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn sacredFire(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn safeguard(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn safeguard(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn sandstorm(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn sandstorm(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn screens(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn screens(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn sketch(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn sketch(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn skullBash(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn skullBash(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn skyAttack(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn skyAttack(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn sleep(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn sleep(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn sleepTalk(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn sleepTalk(battle: anytype, player: Player, state: *State, options: anytype) !void {
         const side = battle.side(player);
 
         if (!Status.is(side.stored().status, .SLP)) {
             if (!showdown) try options.log.fail(battle.active(player), .None);
-            return true; // TODO
+            return;
         }
 
         var n: u3 = 0;
@@ -1971,106 +1616,86 @@ pub const Effects = struct {
         }
         if (n == 0) {
             try options.log.fail(battle.active(player), .None);
-            return true; // TODO
+            return;
         }
 
         _ = try Rolls.sleepTalk(battle, player, n, state.mslot, options); // TODO
-        return true;
     }
 
-    fn snore(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn snore(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn solarBeam(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn solarBeam(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn spikes(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn spikes(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn spite(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn spite(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn splash(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn splash(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn stomp(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn stomp(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn substitute(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn substitute(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn sunnyDay(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn sunnyDay(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn swagger(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn swagger(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn synthesis(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn synthesis(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn teleport(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn teleport(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn thief(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn thief(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn thrashing(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn thrashing(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn toxic(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn toxic(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn transform(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn transform(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn tripleKick(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn tripleKick(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn twister(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn twister(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn boost(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn boost(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 
-    fn unboost(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    fn unboost(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
-        return true;
     }
 };
 
@@ -2195,7 +1820,7 @@ pub const Rolls = struct {
         return par;
     }
 
-    inline fn defrost(battle: anytype, player: Player, options: anytype) !bool {
+    inline fn defrost(battle: anytype, player: Player, options: anytype) !void {
         const thaw = if (options.calc.overridden(player, .defrost)) |val|
             val == .true
         else if (showdown)
