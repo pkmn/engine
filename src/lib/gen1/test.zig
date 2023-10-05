@@ -2788,7 +2788,7 @@ test "Charge effect" {
     try expectEqual(Result.Default, try t.update(move(2), move(3)));
     try t.expectProbability(35, 128); // (140/256) * (1/2)
     try expectEqual(pp - 1, t.actual.p1.active.move(2).pp);
-    try expectEqual(@as(u4, 2), t.actual.p1.active.volatiles.disabled_move);
+    try expectEqual(@as(u4, 2), t.actual.p1.active.volatiles.disable_move);
 
     n = t.battle.actual.choices(.P1, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
@@ -3768,7 +3768,7 @@ test "Disable effect" {
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
     // (140/256) * (255/256) * (1/4) * (1/8) * (224/256) * (1/39)
     try t.expectProbability(20825, 54525952);
-    try expectEqual(@as(u4, 0), t.actual.p2.active.volatiles.disabled_move);
+    try expectEqual(@as(u4, 0), t.actual.p2.active.volatiles.disable_move);
 
     var n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(
@@ -3796,8 +3796,8 @@ test "Disable effect" {
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(4) }, choices[0..n]);
 
-    t.actual.p2.active.volatiles.disabled_duration = 0;
-    t.actual.p2.active.volatiles.disabled_move = 0;
+    t.actual.p2.active.volatiles.disable_duration = 0;
+    t.actual.p2.active.volatiles.disable_move = 0;
     t.options.chance.actions.p2.durations.disable = 0;
     t.actual.p2.active.move(2).pp = 1;
     t.actual.p2.get(1).move(2).pp = 1;
@@ -3810,7 +3810,7 @@ test "Disable effect" {
     // Can be disabled for many turns
     try expectEqual(Result.Default, try t.update(move(1), move(4)));
     try t.expectProbability(245, 2048); // (140/256) * (1/4) * (7/8)
-    try expectEqual(@as(u4, 4), t.actual.p2.active.volatiles.disabled_duration);
+    try expectEqual(@as(u4, 4), t.actual.p2.active.volatiles.disable_duration);
 
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2), move(3) }, choices[0..n]);
@@ -3826,7 +3826,7 @@ test "Disable effect" {
     // Disable fails if a move is already disabled
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
     try t.expectProbability(8925, 851968); // (140/256) * (255/256) * (6/7) * (224/256) * (1/39)
-    try expectEqual(@as(u4, 3), t.actual.p2.active.volatiles.disabled_duration);
+    try expectEqual(@as(u4, 3), t.actual.p2.active.volatiles.disable_duration);
 
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2), move(3) }, choices[0..n]);
@@ -3844,7 +3844,7 @@ test "Disable effect" {
     // Haze clears disable
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
     try t.expectProbability(45475, 2555904); //  (255/256) * (214/256) * (1/39) * (5/6)
-    try expectEqual(@as(u4, 0), t.actual.p2.active.volatiles.disabled_move);
+    try expectEqual(@as(u4, 0), t.actual.p2.active.volatiles.disable_move);
 
     n = t.battle.actual.choices(.P2, .Move, &choices);
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(3), move(4) }, choices[0..n]);
@@ -6282,7 +6282,7 @@ test "Disable + Bide bug" {
 
     try expectEqual(Result.Default, try t.update(move(2), forced));
     try t.expectProbability(245, 1024); // (140/256) * (1/2) * (7/8)
-    try expectEqual(@as(u4, 4), t.actual.p2.active.volatiles.disabled_duration);
+    try expectEqual(@as(u4, 4), t.actual.p2.active.volatiles.disable_duration);
     try expect(t.actual.p2.active.volatiles.Bide);
     try expectEqual(@as(u4, 3), t.actual.p2.active.volatiles.attacks);
 
@@ -6294,7 +6294,7 @@ test "Disable + Bide bug" {
     // Bide should not execute when Disabled
     try expectEqual(Result.Default, try t.update(move(3), forced));
     try t.expectProbability(6, 7);
-    try expectEqual(@as(u4, 3), t.actual.p2.active.volatiles.disabled_duration);
+    try expectEqual(@as(u4, 3), t.actual.p2.active.volatiles.disable_duration);
     try expect(t.actual.p2.active.volatiles.Bide);
     try expectEqual(@as(u4, 3), t.actual.p2.active.volatiles.attacks);
 
@@ -6306,7 +6306,7 @@ test "Disable + Bide bug" {
     // Disabled should trump paralysis
     try expectEqual(Result.Default, try t.update(move(3), forced));
     try t.expectProbability(5, 6);
-    try expectEqual(@as(u4, 2), t.actual.p2.active.volatiles.disabled_duration);
+    try expectEqual(@as(u4, 2), t.actual.p2.active.volatiles.disable_duration);
     try expect(t.actual.p2.active.volatiles.Bide);
     try expectEqual(@as(u4, 3), t.actual.p2.active.volatiles.attacks);
 

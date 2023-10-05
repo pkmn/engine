@@ -79,8 +79,8 @@
         "state": 24,
         "substitute": 40,
         "transform": 48,
-        "disabled_duration": 52,
-        "disabled_move": 56,
+        "disable_duration": 52,
+        "disable_move": 56,
         "toxic": 59
       },
       "Action": {

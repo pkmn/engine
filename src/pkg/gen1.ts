@@ -418,11 +418,11 @@ export class Pokemon implements Gen1.Pokemon {
     const pp = this.data.getUint8(off + ((slot << 1) - 1));
     const byte = this.data.getUint8(this.offset.active +
       OFFSETS.ActivePokemon.volatiles +
-      (OFFSETS.Volatiles.disabled_move >> 3));
+      (OFFSETS.Volatiles.disable_move >> 3));
     const disabled = ((byte & 0b111) === slot)
       ? this.data.getUint8(this.offset.active +
       OFFSETS.ActivePokemon.volatiles +
-      (OFFSETS.Volatiles.disabled_duration >> 3)) >> 4
+      (OFFSETS.Volatiles.disable_duration >> 3)) >> 4
       : undefined;
     return {id, pp, disabled};
   }

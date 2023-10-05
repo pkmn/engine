@@ -195,7 +195,7 @@ fn selectMove(
     if (choice.data == 0) {
         const struggle = ok: {
             for (side.active.moves, 0..) |move, i| {
-                if (move.pp > 0 and volatiles.disabled_move != i + 1) break :ok false;
+                if (move.pp > 0 and volatiles.disable_move != i + 1) break :ok false;
             }
             break :ok true;
         };
@@ -214,7 +214,7 @@ fn saveMove(battle: anytype, player: Player, choice: ?Choice) void {
         if (c.data == 0) {
             side.last_selected_move = .Struggle;
         } else {
-            assert(showdown or side.active.volatiles.disabled_move != c.data);
+            assert(showdown or side.active.volatiles.disable_move != c.data);
             const move = side.active.move(c.data);
             // You cannot *select* a move with 0 PP (except on Pokémon Showdown where that is
             // sometimes required...), but a 0 PP move can be used automatically
@@ -530,16 +530,16 @@ fn beforeMove(
         return .done;
     }
 
-    if (volatiles.disabled_duration > 0) {
+    if (volatiles.disable_duration > 0) {
         if (options.calc.modify(player, .disable)) |extend| {
-            if (!extend) volatiles.disabled_duration = 0;
+            if (!extend) volatiles.disable_duration = 0;
         } else {
-            volatiles.disabled_duration -= 1;
+            volatiles.disable_duration -= 1;
         }
-        try options.chance.disable(player, volatiles.disabled_duration);
+        try options.chance.disable(player, volatiles.disable_duration);
 
-        if (volatiles.disabled_duration == 0) {
-            volatiles.disabled_move = 0;
+        if (volatiles.disable_duration == 0) {
+            volatiles.disable_move = 0;
             try log.end(ident, .Disable);
         }
     }
@@ -1634,9 +1634,9 @@ fn checkEBC(battle: anytype) bool {
 }
 
 fn disabled(side: *Side, ident: ID, options: anytype) !bool {
-    if (side.active.volatiles.disabled_move != 0) {
+    if (side.active.volatiles.disable_move != 0) {
         // A Pokémon that transforms after being disabled may end up with less move slots
-        const m = side.active.moves[side.active.volatiles.disabled_move - 1].id;
+        const m = side.active.moves[side.active.volatiles.disable_move - 1].id;
         // side.last_selected_move can be Struggle here on Pokemon Showdown we need an extra check
         const last = if (showdown and m == .Bide and side.active.volatiles.Bide)
             m
@@ -1864,7 +1864,7 @@ pub const Effects = struct {
             try options.chance.commit(player, .hit);
         }
 
-        if (volatiles.disabled_move != 0) {
+        if (volatiles.disable_move != 0) {
             try options.log.fail(foe_ident, .None);
             return null;
         }
@@ -1889,11 +1889,11 @@ pub const Effects = struct {
             return Result.Error;
         }
 
-        volatiles.disabled_move =
+        volatiles.disable_move =
             @intCast(try Rolls.moveSlot(battle, player, &foe.active.moves, n, options));
-        volatiles.disabled_duration = Rolls.disableDuration(battle, player, options);
+        volatiles.disable_duration = Rolls.disableDuration(battle, player, options);
 
-        const id = foe.active.move(volatiles.disabled_move).id;
+        const id = foe.active.move(volatiles.disable_move).id;
         try options.log.startEffect(foe_ident, .Disable, id);
         return null;
     }
@@ -2657,9 +2657,9 @@ fn clearVolatiles(battle: anytype, who: Player, clear: bool, options: anytype) !
 
     options.chance.clearDurations(who, clear);
 
-    if (volatiles.disabled_move != 0) {
-        volatiles.disabled_move = 0;
-        volatiles.disabled_duration = 0;
+    if (volatiles.disable_move != 0) {
+        volatiles.disable_move = 0;
+        volatiles.disable_duration = 0;
         try log.end(ident, .DisableSilent);
     }
     if (volatiles.Confusion) {
@@ -3096,7 +3096,7 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
                     if (m.id == if (active.volatiles.Bide) .Bide else side.last_selected_move) {
                         // Pokémon Showdown displays Struggle if limited to Bide but unable to pick
                         const struggle =
-                            m.id == .Bide and (m.pp == 0 or active.volatiles.disabled_move == slot);
+                            m.id == .Bide and (m.pp == 0 or active.volatiles.disable_move == slot);
                         const s = if (struggle) 0 else slot;
                         out[n] = .{ .type = .Move, .data = s };
                         n += 1;
@@ -3111,7 +3111,7 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
                 const m = active.moves[slot - 1];
                 if (m.id == .None) break;
                 if (m.pp == 0) continue;
-                if (active.volatiles.disabled_move == slot) continue;
+                if (active.volatiles.disable_move == slot) continue;
                 out[n] = .{ .type = .Move, .data = slot };
                 n += 1;
             }

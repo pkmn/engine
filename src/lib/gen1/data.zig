@@ -378,9 +378,9 @@ pub const Volatiles = packed struct(u64) {
     /// The identity of whom the active Pokémon is transformed into.
     transform: u4 = 0,
     /// The remaining turns the move is disabled.
-    disabled_duration: u4 = 0,
+    disable_duration: u4 = 0,
     /// The move slot (1-4) that is disabled.
-    disabled_move: u3 = 0,
+    disable_move: u3 = 0,
     /// The number of turns toxic damage has been accumulating.
     toxic: u5 = 0,
 };
@@ -395,8 +395,8 @@ test Volatiles {
     volatiles.Substitute = true;
     volatiles.substitute = 42;
     volatiles.toxic = 4;
-    volatiles.disabled_move = 2;
-    volatiles.disabled_duration = 4;
+    volatiles.disable_move = 2;
+    volatiles.disable_duration = 4;
 
     try expect(volatiles.Confusion);
     try expect(volatiles.Thrashing);
@@ -407,8 +407,8 @@ test Volatiles {
 
     try expectEqual(@as(u16, 235), volatiles.state);
     try expectEqual(@as(u8, 42), volatiles.substitute);
-    try expectEqual(@as(u4, 2), volatiles.disabled_move);
-    try expectEqual(@as(u4, 4), volatiles.disabled_duration);
+    try expectEqual(@as(u4, 2), volatiles.disable_move);
+    try expectEqual(@as(u4, 4), volatiles.disable_duration);
     try expectEqual(@as(u4, 2), volatiles.confusion);
     try expectEqual(@as(u5, 4), volatiles.toxic);
     try expectEqual(@as(u4, 3), volatiles.attacks);

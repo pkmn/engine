@@ -427,34 +427,34 @@ data in the browser for ease of debugging.
 
 > **NOTE:** The offsets in the following table represent *bits* and **not** bytes.
 
-| Start | End | Data                | Description                                                 |
-| ----- | --- | ------------------- | ----------------------------------------------------------- |
-| 0     | 1   | `Bide`              | Whether the "Bide" volatile status is present               |
-| 1     | 2   | `Thrashing`         | Whether the "Thrashing" volatile status is present          |
-| 2     | 3   | `MultiHit`          | Whether the "MultiHit" volatile status is present           |
-| 3     | 4   | `Flinch`            | Whether the "Flinch" volatile status is present             |
-| 4     | 5   | `Charging`          | Whether the "Charging" volatile status is present           |
-| 5     | 6   | `Binding`           | Whether the "Binding" volatile status is present            |
-| 6     | 7   | `Invulnerable`      | Whether the "Invulnerable" volatile status is present       |
-| 7     | 8   | `Confusion`         | Whether the "Confusion" volatile status is present          |
-| 8     | 9   | `Mist`              | Whether the "Mist" volatile status is present               |
-| 9     | 10  | `FocusEnergy`       | Whether the "FocusEnergy" volatile status is present        |
-| 10    | 11  | `Substitute`        | Whether the "Substitute" volatile status is present         |
-| 11    | 12  | `Recharging`        | Whether the "Recharging" volatile status is present         |
-| 12    | 13  | `Rage`              | Whether the "Rage" volatile status is present               |
-| 13    | 14  | `LeechSeed`         | Whether the "LeechSeed" volatile status is present          |
-| 14    | 15  | `Toxic`             | Whether the "Toxic" volatile status is present              |
-| 15    | 16  | `LightScreen`       | Whether the "LightScreen" volatile status is present        |
-| 16    | 17  | `Reflect`           | Whether the "Reflect" volatile status is present            |
-| 17    | 18  | `Transform`         | Whether the "Transform" volatile status is present          |
-| 18    | 21  | `confusion`         | The remaining turns of confusion                            |
-| 21    | 24  | `attacks`           | The number of attacks remaining                             |
-| 24    | 40  | `state`             | A union of either: <ul><li>the total accumulated damage from Bide</li><li>the overwritten accuracy of certain moves</li></ul> |
-| 40    | 48  | `substitute`        | The remaining HP of the Substitute                          |
-| 48    | 52  | `transform`         | The identity of whom the active Pokémon is transformed into |
-| 52    | 56  | `disabled_duration` | The remaining turns the move is disabled                    |
-| 56    | 59  | `disabled_move`     | The move slot (1-4) that's disabled                        |
-| 59    | 64  | `toxic`             | The number of turns toxic damage has been accumulating      |
+| Start | End | Data               | Description                                                 |
+| ----- | --- | -------------------| ----------------------------------------------------------- |
+| 0     | 1   | `Bide`             | Whether the "Bide" volatile status is present               |
+| 1     | 2   | `Thrashing`        | Whether the "Thrashing" volatile status is present          |
+| 2     | 3   | `MultiHit`         | Whether the "MultiHit" volatile status is present           |
+| 3     | 4   | `Flinch`           | Whether the "Flinch" volatile status is present             |
+| 4     | 5   | `Charging`         | Whether the "Charging" volatile status is present           |
+| 5     | 6   | `Binding`          | Whether the "Binding" volatile status is present            |
+| 6     | 7   | `Invulnerable`     | Whether the "Invulnerable" volatile status is present       |
+| 7     | 8   | `Confusion`        | Whether the "Confusion" volatile status is present          |
+| 8     | 9   | `Mist`             | Whether the "Mist" volatile status is present               |
+| 9     | 10  | `FocusEnergy`      | Whether the "FocusEnergy" volatile status is present        |
+| 10    | 11  | `Substitute`       | Whether the "Substitute" volatile status is present         |
+| 11    | 12  | `Recharging`       | Whether the "Recharging" volatile status is present         |
+| 12    | 13  | `Rage`             | Whether the "Rage" volatile status is present               |
+| 13    | 14  | `LeechSeed`        | Whether the "LeechSeed" volatile status is present          |
+| 14    | 15  | `Toxic`            | Whether the "Toxic" volatile status is present              |
+| 15    | 16  | `LightScreen`      | Whether the "LightScreen" volatile status is present        |
+| 16    | 17  | `Reflect`          | Whether the "Reflect" volatile status is present            |
+| 17    | 18  | `Transform`        | Whether the "Transform" volatile status is present          |
+| 18    | 21  | `confusion`        | The remaining turns of confusion                            |
+| 21    | 24  | `attacks`          | The number of attacks remaining                             |
+| 24    | 40  | `state`            | A union of either: <ul><li>the total accumulated damage from Bide</li><li>the overwritten accuracy of certain moves</li></ul> |
+| 40    | 48  | `substitute`       | The remaining HP of the Substitute                          |
+| 48    | 52  | `transform`        | The identity of whom the active Pokémon is transformed into |
+| 52    | 56  | `disable_duration` | The remaining turns the move is disabled                    |
+| 56    | 59  | `disable_move`     | The move slot (1-4) that's disabled                         |
+| 59    | 64  | `toxic`            | The number of turns toxic damage has been accumulating      |
 
 ### `Pokemon`
 
