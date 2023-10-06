@@ -14,6 +14,7 @@ const assert = std.debug.assert;
 
 const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
+const expectEqualStrings = std.testing.expectEqualStrings;
 
 const showdown = pkmn.options.showdown;
 
@@ -2350,6 +2351,28 @@ test "Roll probabilities" {
 
     try expectEqualSlices(u8, &.{ 51, 103, 77, 25 }, &present);
     try expectEqualSlices(u8, &.{ 14, 26, 50, 77, 51, 25, 13 }, &magnitude);
+}
+
+test "Reasons" {
+    const moves = [_]Move{ .Bind, .Wrap, .FireSpin, .Clamp, .Whirlpool };
+    for (moves) |move| {
+        const reason = Move.get(move).extra.protocol - 1;
+
+        const activate: Activate = @enumFromInt(@intFromEnum(Activate.Bind) + reason);
+        try expectEqualStrings(@tagName(move), @tagName(activate));
+
+        const damage: Damage = @enumFromInt(@intFromEnum(Damage.Bind) + reason);
+        try expectEqualStrings(@tagName(move), @tagName(damage));
+
+        const end: End = @enumFromInt(@intFromEnum(End.Bind) + reason);
+        try expectEqualStrings(@tagName(move), @tagName(end));
+    }
+
+    const perish_song = [_]Start{ .PerishSong0, .PerishSong1, .PerishSong2, .PerishSong3 };
+    for (perish_song, 0..) |ps, i| {
+        const reason: Start = @enumFromInt(@intFromEnum(Start.PerishSong0) + i);
+        try expectEqualStrings(@tagName(ps), @tagName(reason));
+    }
 }
 
 pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Choice) u8 {
