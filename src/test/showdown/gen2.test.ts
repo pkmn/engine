@@ -6391,7 +6391,7 @@ describe('Gen 2', () => {
   });
 
   test('Conversion2 effect', () => {
-    const proc = {key: 'data/moves.ts:2809:28', value: MAX};
+    const proc = {key: 'data/moves.ts:2819:28', value: MAX};
     const battle = startBattle([QKC, proc, QKC], [
       {species: 'Porygon2', evs, moves: ['Conversion2']},
     ], [
@@ -8123,7 +8123,7 @@ describe('Gen 2', () => {
   });
 
   test('Present effect', () => {
-    const present = {key: 'data/moves.ts:14137:22', value: ranged(1, 10) - 1};
+    const present = {key: 'data/moves.ts:14189:22', value: ranged(1, 10) - 1};
     const present40 = {...present, value: ranged(6, 10) - 1};
     const present120 = {...present, value: ranged(10, 10) - 1};
     const battle = startBattle([
@@ -8330,7 +8330,7 @@ describe('Gen 2', () => {
   });
 
   test('Magnitude effect', () => {
-    const mag8 = {key: 'data/moves.ts:11029:19', value: ranged(85, 100) - 1};
+    const mag8 = {key: 'data/moves.ts:11063:19', value: ranged(85, 100) - 1};
     const mag5 = {...mag8, value: ranged(15, 100) - 1};
     const battle = startBattle([
       QKC, mag8, NO_CRIT, MIN_DMG, QKC, mag5, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
