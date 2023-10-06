@@ -99,51 +99,60 @@ if (argv.prod) {
   version = `${version}-dev+${HEAD}`;
 }
 
-for (const {triple, mcpu} of TARGETS) {
-  for (const showdown of ['true', 'false']) {
-    sh('zig', [
-      'build',
-      '-Doptimize=ReleaseFast',
-      '-Dstrip',
-      `-Dtarget=${triple}`,
-      `-Dcpu=${mcpu}`,
-      `-Dshowdown=${showdown}`,
-      '-Dlog',
-      '-Dchance',
-      '-Dcalc',
-      '-p',
-      `release/${triple}`,
-    ]);
+const build = () => {
+  for (const {triple, mcpu} of TARGETS) {
+    for (const showdown of ['true', 'false']) {
+      sh('zig', [
+        'build',
+        '-Doptimize=ReleaseFast',
+        '-Dstrip',
+        `-Dtarget=${triple}`,
+        `-Dcpu=${mcpu}`,
+        `-Dshowdown=${showdown}`,
+        '-Dlog',
+        '-Dchance',
+        '-Dcalc',
+        '-p',
+        `release/${triple}`,
+      ]);
+    }
+    let archive: string;
+    if (triple.includes('windows')) {
+      archive = `libpkmn-${triple}-${version}.zip`;
+      sh('7z', ['a', archive, `${triple}/`], {cwd: release});
+    } else {
+      archive = `libpkmn-${triple}-${version}.tar.xz`;
+      const options = {cwd: release, env: {XZ_OPT: '-9'}};
+      // --sort=name fails on macOS because not GNU...
+      sh('tar', ['cJf', `libpkmn-${triple}-${version}.tar.xz`, `${triple}/`], options);
+    }
+    console.log(`rm -rf ${path.join(relative, triple)}`);
+    fs.rmSync(path.join(release, triple), {force: argv.dryRun, recursive: true});
+    if (argv.prod) sh(`echo | minisign -Sm ${archive}`, undefined, {cwd: release, stdio: 'ignore'});
   }
-  let archive: string;
-  if (triple.includes('windows')) {
-    archive = `libpkmn-${triple}-${version}.zip`;
-    sh('7z', ['a', archive, `${triple}/`], {cwd: release});
-  } else {
-    archive = `libpkmn-${triple}-${version}.tar.xz`;
-    const options = {cwd: release, env: {XZ_OPT: '-9'}};
-    // --sort=name fails on macOS because not GNU...
-    sh('tar', ['cJf', `libpkmn-${triple}-${version}.tar.xz`, `${triple}/`], options);
-  }
-  console.log(`rm -rf ${path.join(relative, triple)}`);
-  fs.rmSync(path.join(release, triple), {force: argv.dryRun, recursive: true});
-  if (argv.prod) sh(`echo | minisign -Sm ${archive}`, undefined, {cwd: release, stdio: 'ignore'});
-}
+  sh('npm', ['run', 'build']);
+};
 
 const next = version.replace('+', '.');
-sh('npm', ['run', 'build']);
 if (argv.prod) {
+  build();
   sh('npm', ['publish']);
   sh('git', ['tag', `v${version}`]);
   sh('git', ['push', '--tags', 'origin', 'main']);
 } else {
-  const old = sh('npm', ['info', '@pkmn/engine@dev', 'version']).trim();
+  const info = JSON.parse(sh('npm', ['show', '--json', '@pkmn/engine@dev'], {bypass: true}));
+  const old = info.version;
   if (old === next) {
     console.log(`Version v${version} already exists, exiting as there is nothing to do`);
     process.exit(0);
   }
-  sh('npm', ['deprecate', `@pkmn/engine@${old}`,
-    'This dev version has been deprecated automatically as a newer version exists.']);
+  if (info.deprecated) {
+    console.log(`Version v${old} is already deprecated.`);
+  } else {
+    sh('npm', ['deprecate', `@pkmn/engine@${old}`,
+      'This dev version has been deprecated automatically as a newer version exists.']);
+  }
+  build();
   fs.copyFileSync(path.join(ROOT, 'package.json'), path.join(tmp, 'package.json'));
   try {
     json.version = next;
