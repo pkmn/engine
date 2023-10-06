@@ -529,22 +529,28 @@ fn canMove(battle: anytype, player: Player, options: anytype) !void {
     return false;
 }
 
-fn decrementPP(side: *Side, mslot: u3) void {
+fn decrementPP(side: *Side, move: Move, mslot: u4) bool {
     var active = &side.active;
     const volatiles = &active.volatiles;
 
-    // TODO assert(side.last_selected_move != .Struggle);
+    assert(move != .Struggle);
     assert(!volatiles.Charging and !volatiles.BeatUp and !volatiles.Thrashing and !volatiles.Bide);
 
-    assert(active.move(mslot).pp > 0);
-    active.move(mslot).pp = @as(u6, @intCast(active.move(mslot).pp)) -% 1;
-    if (volatiles.Transform) return;
+    var move_slot = active.move(mslot);
+    if (move_slot.pp == 0) return false;
 
-    // FIXME mimic
+    move_slot.pp = @as(u6, @intCast(move_slot.pp)) -% 1;
+    if (volatiles.Transform) return true;
 
-    assert(side.stored().move(mslot).pp > 0);
-    side.stored().move(mslot).pp = @as(u6, @intCast(side.stored().move(mslot).pp)) -% 1;
+    move_slot = side.stored().move(mslot);
+    assert(move_slot.pp > 0);
+
+    if (move_slot.id == .Mimic and move != .Mimic) return true;
+
+    move_slot.pp = @as(u6, @intCast(move_slot.pp)) -% 1;
     assert(active.move(mslot).pp == side.stored().move(mslot).pp);
+
+    return true;
 }
 
 const Command: type =

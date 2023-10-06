@@ -790,12 +790,14 @@ fn decrementPP(side: *Side, mslot: u4, auto: bool) void {
     assert(!volatiles.Rage and !volatiles.Thrashing and !volatiles.MultiHit);
     if (volatiles.Bide) return;
 
-    assert(active.move(mslot).pp > 0 or auto);
-    active.move(mslot).pp = @as(u6, @intCast(active.move(mslot).pp)) -% 1;
+    var move_slot = active.move(mslot);
+    assert(move_slot.pp > 0 or auto);
+    move_slot.pp = @as(u6, @intCast(move_slot.pp)) -% 1;
     if (volatiles.Transform) return;
 
-    assert(side.stored().move(mslot).pp > 0 or auto);
-    side.stored().move(mslot).pp = @as(u6, @intCast(side.stored().move(mslot).pp)) -% 1;
+    move_slot = side.stored().move(mslot);
+    assert(move_slot.pp > 0 or auto);
+    move_slot.pp = @as(u6, @intCast(move_slot.pp)) -% 1;
     assert(active.move(mslot).pp == side.stored().move(mslot).pp);
 }
 
