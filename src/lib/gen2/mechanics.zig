@@ -1544,8 +1544,19 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn weatherHeal(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    fn weatherHeal(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        var stored = battle.side(player).stored();
+        const ident = battle.active(player);
+
+        if (stored.hp == stored.stats.hp) return try options.log.fail(ident.None);
+
+        stored.hp = switch (battle.field.weather) {
+            .Sun => stored.stats.hp,
+            .None => @min(stored.stats.hp, stored.hp + (stored.stats.hp / 2)),
+            else => @min(stored.stats.hp, stored.hp + (stored.stats.hp / 4)),
+        };
+
+        try options.log.heal(ident, stored, Heal.None);
     }
 
     fn multiHit(battle: anytype, player: Player, state: *State, options: anytype) !void {
