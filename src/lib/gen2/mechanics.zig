@@ -1758,7 +1758,7 @@ pub const Rolls = struct {
         return crit;
     }
 
-    inline fn damage(battle: anytype, player: anytype, options: anytype) !u8 {
+    inline fn damage(battle: anytype, player: Player, options: anytype) !u8 {
         const roll = if (options.calc.overridden(player, .damage)) |val|
             val
         else roll: {
