@@ -342,20 +342,23 @@ fn doTurn(
     foe_volatiles.Protect = false;
     foe_volatiles.Endure = false;
     foe_volatiles.DestinyBond = false;
+    if (try checkFaint(battle, foe_player, options)) |r| return r;
+    if (try handleResidual(battle, player, options)) {
+        if (try checkFaint(battle, player, options)) |r| return r;
+    }
 
     // foe_volatiles.DestinyBond = false;
     if (try executeMove(battle, foe_player, foe_choice, false, options)) |r| return r;
     volatiles.Protect = false;
     volatiles.Endure = false;
     volatiles.DestinyBond = false;
+    if (try checkFaint(battle, player, options)) |r| return r;
+    if (try handleResidual(battle, foe_player, options)) {
+        if (try checkFaint(battle, foe_player, options)) |r| return r;
+    }
 
     // FIXME
-    try handleResidual(battle, player, options);
-
-    // FIXME
-    try betweenTurns(battle, 0, options);
-
-    return null;
+    return betweenTurns(battle, 0, options);
 }
 
 fn executeMove(
@@ -758,24 +761,64 @@ fn checkHit(
 fn checkFaint(
     battle: anytype,
     player: Player,
-    state: *State,
     options: anytype,
 ) @TypeOf(options.log).Error!?Result {
-    _ = battle;
-    _ = player;
-    _ = state;
-    return null;
+    const side = battle.side(player);
+    const foe = battle.foe(player);
+
+    const player_fainted = side.stored().hp == 0;
+    const foe_fainted = foe.stored().hp == 0;
+    if (!(player_fainted or foe_fainted)) return null;
+
+    const player_out = player_fainted and findFirstAlive(side) == 0;
+    const foe_out = foe_fainted and findFirstAlive(foe) == 0;
+    const more = player_out or foe_out;
+
+    if (player_fainted) try faint(battle, player, !(more or foe_fainted), options);
+    if (foe_fainted) try faint(battle, player.foe(), !more, options);
+
+    if (player_out and foe_out) {
+        try options.log.tie();
+        return Result.Tie;
+    } else if (player_out) {
+        try options.log.win(player.foe());
+        return if (player == .P1) Result.Lose else Result.Win;
+    } else if (foe_out) {
+        try options.log.win(player);
+        return if (player == .P1) Result.Win else Result.Lose;
+    }
+
+    const foe_choice: Choice.Type = if (foe_fainted) .Switch else .Pass;
+    if (player == .P1) return .{ .p1 = .Switch, .p2 = foe_choice };
+    return .{ .p1 = foe_choice, .p2 = .Switch };
 }
 
-fn faint(battle: anytype, player: Player, done: bool, options: anytype) !?Result {
-    _ = battle;
-    _ = player;
-    _ = done;
-    _ = options;
-    return null;
+fn faint(battle: anytype, player: Player, done: bool, options: anytype) !void {
+    var side = battle.side(player);
+    var foe = battle.foe(player);
+    assert(side.stored().hp == 0);
+
+    var foe_volatiles = &foe.active.volatiles;
+    foe_volatiles.BeatUp = false;
+
+    // We always need to clear status for Pokémon Showdown's Sleep/Freeze Clause Mod
+    const status = side.stored().status;
+
+    side.stored().status = 0;
+    // This shouldn't matter, but Pokémon Showdown decides double switching priority based on speed,
+    // and resets a Pokémon's stats when it faints... only it still factors in paralysis -_-
+    if (showdown) {
+        side.active.stats.spe = if (Status.is(status, .PAR))
+            @max(side.stored().stats.spe / 4, 1)
+        else
+            side.stored().stats.spe;
+    }
+
+    try options.log.faint(battle.active(player), done);
+    options.calc.capped(player);
 }
 
-fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
+fn handleResidual(battle: anytype, player: Player, options: anytype) !bool {
     var side = battle.side(player);
     var stored = side.stored();
     const ident = battle.active(player);
@@ -797,7 +840,7 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
         stored.hp -|= damage;
         // Pokémon Showdown uses damageOf here but its not relevant in Generation II
         try options.log.damage(ident, stored, if (brn) Damage.Burn else Damage.Poison);
-        if (stored.hp == 0) return;
+        if (stored.hp == 0) return true;
     }
 
     if (volatiles.LeechSeed) {
@@ -819,28 +862,30 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
         foe_stored.hp = @min(foe_stored.hp + damage, foe_stored.stats.hp);
         // Pokémon Showdown uses the less specific heal here instead of drain... because reasons?
         if (foe_stored.hp > before) try options.log.heal(foe_ident, foe_stored, .Silent);
-        if (stored.hp == 0) return;
+        if (stored.hp == 0) return true;
     }
 
     if (volatiles.Nightmare) {
         stored.hp -= @max(stored.stats.hp / 4, 1);
         // ibid
         try options.log.damage(ident, stored, .Nightmare);
-        if (stored.hp == 0) return;
+        if (stored.hp == 0) return true;
     }
 
     if (volatiles.Curse) {
         stored.hp -= @max(stored.stats.hp / 4, 1);
         // ibid
         try options.log.damage(ident, stored, .Curse);
-        if (stored.hp == 0) return;
+        if (stored.hp == 0) return true;
     }
+
+    return false;
 }
 
-fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
+fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
     const players = comptime std.enums.values(Player);
 
-    // TODO checkFaintThen(p1, p2);
+    if (try checkFaint(battle, .P1, options)) |r| return r;
 
     // Future Sight
     inline for (players) |player| {
@@ -856,7 +901,7 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
             }
         }
     }
-    // TODO checkFaintThen(p1, p2);
+    if (try checkFaint(battle, .P1, options)) |r| return r;
 
     // Weather
     if (battle.field.weather != .None) {
@@ -877,7 +922,7 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
                         try options.log.damage(battle.active(player), side.stored(), .Sandstorm);
                     }
                 }
-                // TODO checkFaintThen(p1, p2);
+                if (try checkFaint(battle, .P1, options)) |r| return r;
             }
         }
     }
@@ -902,7 +947,7 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
             }
         }
     }
-    // TODO checkFaintThen(p1, p2);
+    if (try checkFaint(battle, .P1, options)) |r| return r;
 
     // Perish Song
     inline for (players) |player| {
@@ -923,7 +968,7 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
             }
         }
     }
-    // TODO checkFaintThen(p1, p2);
+    if (try checkFaint(battle, .P1, options)) |r| return r;
 
     // Leftovers
     inline for (players) |player| {
@@ -1054,6 +1099,8 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !void {
             }
         }
     }
+
+    return null;
 }
 
 inline fn updateSideCondition(

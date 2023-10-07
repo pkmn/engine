@@ -1440,9 +1440,8 @@ fn checkFaint(
     const foe_fainted = foe.stored().hp == 0;
 
     const player_out = findFirstAlive(side) == 0;
-    const foe_out = findFirstAlive(foe) == 0;
-    const tie = player_out and foe_out;
-    const more = tie or player_out or foe_out;
+    const foe_out = foe_fainted and findFirstAlive(foe) == 0;
+    const more = player_out or foe_out;
 
     if (try faint(battle, player, !(more or foe_fainted), options)) |r| return r;
     if (foe_fainted) if (try faint(battle, player.foe(), !more, options)) |r| return r;
@@ -1450,7 +1449,7 @@ fn checkFaint(
     assert(!side.active.volatiles.MultiHit);
     assert(!foe.active.volatiles.MultiHit);
 
-    if (tie) {
+    if (player_out and foe_out) {
         try options.log.tie();
         return Result.Tie;
     } else if (player_out) {
