@@ -1631,7 +1631,28 @@ pub const Effects = struct {
     }
 
     fn reversal(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+        const stored = battle.side(player).stored;
+
+        // Pokémon Showdown Gen II implementation incorrectly inherits Gen IV's table instead
+        state.bp = if (showdown) power: {
+            const x = @max(1, stored.hp * 64 / stored.stats.hp);
+            if (x < 2) break :power 200;
+            if (x < 6) break :power 150;
+            if (x < 13) break :power 100;
+            if (x < 22) break :power 80;
+            if (x < 43) break :power 40;
+            break :power 20;
+        } else power: {
+            const x = @max(1, stored.hp * 48 / stored.stats.hp);
+            if (x < 1) break :power 200;
+            if (x < 4) break :power 150;
+            if (x < 9) break :power 100;
+            if (x < 16) break :power 80;
+            if (x < 32) break :power 40;
+            break :power 20;
+        };
+
+        try calcDamage(battle, player, state, options);
     }
 
     fn rollout(battle: anytype, player: Player, state: *State, options: anytype) !void {
