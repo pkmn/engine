@@ -1280,6 +1280,14 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
+    fn defrost(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        var side = battle.side(player);
+        assert(side.stored().status.is(.FRZ));
+
+        try options.log.curestatus(battle.active(player), side.stored().status, .Message);
+        side.stored().status = 0;
+    }
+
     fn destinyBond(battle: anytype, player: Player, _: *State, options: anytype) !void {
         battle.side(player).active.volatiles.DestinyBond = true;
         try options.log.singlemove(battle.active(player), Move.DestinyBond);
