@@ -561,6 +561,7 @@ fn doMove(battle: anytype, player: Player, state: *State, options: anytype) !?Re
     try applyDamage(battle, player, state, options);
     try buildRage(battle, player, state, options);
     try kingsRock(battle, player, state, options);
+    _ = try destinyBond(battle, player, state, options);
 
     try Effects.attract(battle, player, state, options);
     try Effects.conversion(battle, player, state, options);
@@ -1113,6 +1114,17 @@ fn kingsRock(battle: anytype, player: Player, _: *State, options: anytype) !void
         foe.active.volatiles.Recharging = false;
         foe.active.volatiles.Flinch = true;
     }
+}
+
+fn destinyBond(battle: anytype, player: Player, _: *State, options: anytype) !bool {
+    const foe = battle.foe(player);
+    if (foe.stored().hp > 0) return false;
+
+    if (foe.active.volatiles.DestinyBond) {
+        battle.side(player).stored().hp = 0;
+        try options.log.activate(battle.active(player.foe()), .DestinyBond);
+    }
+    return true;
 }
 
 pub const Effects = struct {

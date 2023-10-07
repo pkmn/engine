@@ -209,6 +209,8 @@ pub const Activate = enum(u8) {
     Clamp,
     Whirlpool,
 
+    DestinyBond,
+
     BeatUp, // FIXME of
 };
 
