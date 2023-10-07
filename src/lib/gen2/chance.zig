@@ -182,7 +182,7 @@ pub const Action = packed struct(u128) {
     /// If not 0, the value to by one of the Rolls.*Duration rolls.
     duration: u4 = 0,
 
-    /// If not 0, psywave - 1 should be returned as the damage roll for Rolls.psywave.
+    /// If not 0, psywave should be returned as the damage roll for Rolls.psywave.
     psywave: u8 = 0,
 
     /// If not None, the Move to return for Rolls.metronome.
@@ -500,7 +500,7 @@ pub fn Chance(comptime Rational: type) type {
             if (!enabled) return;
 
             try self.probability.update(1, max);
-            self.actions.get(player).psywave = power + 1;
+            self.actions.get(player).psywave = power;
         }
 
         pub fn metronome(self: *Self, player: Player, move: Move, n: u2) Error!void {
@@ -899,7 +899,7 @@ test "Chance.psywave" {
 
     try chance.psywave(.P2, 100, 150);
     try expectProbability(&chance.probability, 1, 150);
-    try expectValue(@as(u8, 101), chance.actions.p2.psywave);
+    try expectValue(@as(u8, 100), chance.actions.p2.psywave);
 }
 
 test "Chance.metronome" {

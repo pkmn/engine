@@ -563,6 +563,7 @@ fn doMove(battle: anytype, player: Player, state: *State, options: anytype) !?Re
     try randomizeDamage(battle, player, state, options);
     try applyDamage(battle, player, state, options);
     try buildRage(battle, player, state, options);
+    try rageDamage(battle, player, state, options);
     try kingsRock(battle, player, state, options);
     _ = try destinyBond(battle, player, state, options);
 
@@ -578,6 +579,7 @@ fn doMove(battle: anytype, player: Player, state: *State, options: anytype) !?Re
     try Effects.foresight(battle, player, state, options);
     try Effects.happiness(battle, player, state, options);
     try Effects.protect(battle, player, state, options);
+    try Effects.rage(battle, player, state, options);
 
     return null;
 }
@@ -1152,6 +1154,12 @@ fn buildRage(battle: anytype, player: Player, state: *State, options: anytype) !
     }
 }
 
+fn rageDamage(battle: anytype, player: Player, state: *State, _: anytype) !void {
+    const volatiles = battle.side(player).active.volatiles;
+    assert(volatiles.Rage);
+    state.damage *|= (volatiles.rage +| 1);
+}
+
 fn kingsRock(battle: anytype, player: Player, _: *State, options: anytype) !void {
     var foe = battle.foe(player);
     const flinch = battle.side(player).stored().item == .KingsRock and
@@ -1366,7 +1374,21 @@ pub const Effects = struct {
     }
 
     fn fixedDamage(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+        const side = battle.side(player);
+        const foe = battle.foe(player);
+
+        state.damage = switch (Move.get(state.move).effect) {
+            .SuperFang => @max(foe.stored().hp / 2, 1),
+            .LevelDamage => side.stored().level,
+            .FixedDamage => if (state.move == .SonicBoom) 20 else 40,
+            .Psywave => try Rolls.psywave(
+                battle,
+                player,
+                @intCast(@as(u16, side.stored().level) * 3 / 2),
+                options,
+            ),
+            else => unreachable,
+        };
     }
 
     fn flameWheel(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -1480,10 +1502,6 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn levelDamage(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
-    }
-
     fn lockOn(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
@@ -1591,8 +1609,9 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn rage(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    fn rage(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        battle.side(player).active.volatiles.Rage = true;
+        try options.log.singlemove(battle.active(player), Move.Rage);
     }
 
     fn rainDance(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -2188,17 +2207,17 @@ pub const Rolls = struct {
 
     inline fn psywave(battle: anytype, player: Player, max: u8, options: anytype) !u8 {
         const power = if (options.calc.overridden(player, .psywave)) |val|
-            val - 1
+            val
         else if (showdown)
-            battle.rng.range(u8, 0, max)
+            battle.rng.range(u8, 1, max)
         else power: {
             while (true) {
                 const r = battle.rng.next();
-                if (r < max) break :power r;
+                if (r != 0 and r < max) break :power r;
             }
         };
 
-        assert(power < max);
+        assert(power != 0 and power < max);
         try options.chance.psywave(player, power, max);
         return power;
     }
