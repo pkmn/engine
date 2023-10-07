@@ -553,29 +553,7 @@ fn decrementPP(side: *Side, move: Move, mslot: u4) bool {
     return true;
 }
 
-const Command: type =
-    fn (battle: anytype, player: Player, state: *State, options: anytype) anyerror!void;
-
-// zig fmt: off
-// const COMMANDS = [_][]Command{
-//     // None
-//     (if (showdown) &[_]Command{
-//         // checkHit, checkCriticalHit, calcDamage, adjustDamage, randomizeDamage,
-//         // applyDamage, buildRage, kingsRock,
-//     } else &[_]Command{
-//         // checkCriticalHit, calcDamage, adjustDamage, randomizeDamage,
-//         // checkHit, applyDamage, buildRage, kingsRock,
-//     }),
-// };
-// zig fmt: on
-
 fn doMove(battle: anytype, player: Player, state: *State, options: anytype) !?Result {
-    // FIXME
-    // const commands = COMMANDS[@intFromEnum(Move.get(state.move).effect)];
-    // for (commands) |command| {
-    //     if (!try command(battle, player, state, options)) return null;
-    // }
-    // return null;
     try checkCriticalHit(battle, player, state, options);
     try calcDamage(battle, player, state, options);
     try adjustDamage(battle, player, state, options);
