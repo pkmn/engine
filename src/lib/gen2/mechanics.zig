@@ -339,6 +339,7 @@ fn doTurn(
     const foe_volatiles = &battle.foe(player).active.volatiles;
 
     // Technically this happens at the very beginning of update but its unused until now
+    // TODO: move into state and pass into betweenTurns
     volatiles.frozen = false;
     foe_volatiles.frozen = false;
 
@@ -384,6 +385,7 @@ fn executeMove(
 
     if (!try beforeMove(battle, player, move, options)) return null;
 
+    // FIXME: need damage from doTurn
     var state: State = .{ .move = move, .mslot = mslot, .first = first };
     return doMove(battle, player, &state, options);
 }
