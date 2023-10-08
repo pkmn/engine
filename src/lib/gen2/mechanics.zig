@@ -338,6 +338,10 @@ fn doTurn(
     const volatiles = &battle.side(player).active.volatiles;
     const foe_volatiles = &battle.foe(player).active.volatiles;
 
+    // Technically this happens at the very beginning of update but its unused until now
+    volatiles.frozen = false;
+    foe_volatiles.frozen = false;
+
     volatiles.DestinyBond = false;
     if (try executeMove(battle, player, player_choice, true, options)) |r| return r;
     foe_volatiles.Protect = false;
@@ -1503,7 +1507,33 @@ pub const Effects = struct {
     }
 
     fn freezeChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+        var foe = battle.foe(player);
+        var foe_stored = foe.stored();
+        const foe_ident = battle.active(player.foe());
+
+        if (foe.active.volatiles.Substitute) return;
+
+        const move = Move.get(state.move);
+        if (Status.any(foe_stored.status)) {
+            return if (showdown and !foe.active.types.includes(move.type)) battle.rng.advance(1);
+        }
+
+        // No need to check for immunity because nothing is immune to Ice-type
+        assert(!state.immune());
+        if (battle.field.weather == .Sun) return;
+        if (foe.active.types.includes(move.type)) return;
+        if (!state.proc or foe.condition.Safeguard) return;
+        // Freeze Clause Mod
+        if (showdown) for (foe.pokemon) |p| if (Status.is(p.status, .FRZ)) return;
+
+        foe_stored.status = Status.init(.FRZ);
+
+        try options.log.status(foe_ident, foe_stored.status, .None);
+
+        // TODO: check for status berry
+
+        foe.active.volatiles.Recharging = false;
+        foe.active.volatiles.frozen = true;
     }
 
     fn furyCutter(battle: anytype, player: Player, state: *State, options: anytype) !void {
