@@ -1594,7 +1594,57 @@ pub const Effects = struct {
     }
 
     fn poison(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+        var foe = battle.foe(player);
+        var foe_stored = foe.stored();
+        const foe_ident = battle.active(player.foe());
+
+        if (state.immune() or foe.active.types.includes(.Poison)) {
+            return options.log.immune(foe_ident, .None);
+        } else if (Status.any(foe_stored.status)) {
+            // Pokémon Showdown considers Toxic to be a status even in Generation II and so
+            // will not include a fail reason for Toxic vs. Poison or vice-versa...
+            return options.log.fail(foe_ident, if (Status.is(foe_stored.status, .PSN))
+                if (!showdown)
+                    .Poison
+                else if (toxic == (foe_stored.status == Status.TOX))
+                    if (toxic) .Toxic else .Poison
+                else
+                    .None
+            else
+                .None);
+        } else if (foe.active.volatiles.Substitute) {
+            return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
+        } else if (state.miss) {
+            try options.log.lastmiss();
+            try options.log.miss(battle.active(player));
+        }
+
+        foe_stored.status = Status.init(.PSN);
+        if (state.move == .Toxic) {
+            if (showdown) foe_stored.status = Status.TOX;
+            foe.active.volatiles.Toxic = true;
+            foe.active.volatiles.toxic = 0;
+        }
+
+        try options.log.status(foe_ident, foe_stored.status, .None);
+
+        // TODO: check for status berry
+    }
+
+    fn poisonChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
+        var foe = battle.foe(player);
+        var foe_stored = foe.stored();
+
+        if (foe.active.volatiles.Substitute) return;
+        if (Status.any(foe_stored.status)) return if (showdown) battle.rng.advance(1);
+        if (state.immune() or foe.active.types.includes(.Poison)) return;
+        if (!state.proc or foe.condition.Safeguard) return;
+
+        foe_stored.status = Status.init(.PSN);
+
+        try options.log.status(battle.active(player.foe()), foe_stored.status, .None);
+
+        // TODO: check for status berry
     }
 
     fn present(battle: anytype, player: Player, state: *State, options: anytype) !void {
