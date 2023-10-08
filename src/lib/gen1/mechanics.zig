@@ -1900,8 +1900,7 @@ pub const Effects = struct {
     }
 
     fn drainHP(battle: anytype, player: Player, options: anytype) !void {
-        var side = battle.side(player);
-        var stored = side.stored();
+        var stored = battle.side(player).stored();
 
         if (battle.last_damage == 0) {
             assert(showdown);
