@@ -8,9 +8,9 @@ const protocol = @import("../common/protocol.zig");
 const rng = @import("../common/rng.zig");
 const util = @import("../common/util.zig");
 
-const moves = @import("data/moves.zig");
-const species = @import("data/species.zig");
-const types = @import("data/types.zig");
+const moves = @import("data/moves.generated.zig");
+const species = @import("data/species.generated.zig");
+const types = @import("data/types.generated.zig");
 
 const calc = @import("calc.zig");
 const chance = @import("chance.zig");
