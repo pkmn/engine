@@ -3,6 +3,7 @@
 *.zig text=auto eol=lf
 
 # GitHub
-*.generated.zig linguist-generated
 src/data/* linguist-generated
+src/lib/gen1/data/* linguist-generated
+src/lib/gen2/data/* linguist-generated
 src/pkg/data/* linguist-generated

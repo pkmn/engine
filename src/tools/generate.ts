@@ -197,7 +197,7 @@ const mkdir = (dir: string) => {
 
 const template = (file: string, dir: string, data: any, tmpl?: string) => {
   fs.writeFileSync(
-    path.join(dir, `${file}.generated.zig`),
+    path.join(dir, `${file}.zig`),
     mustache.render(
       fs.readFileSync(path.join(TEMPLATES, `${tmpl || file}.zig.tmpl`), 'utf8'),
       data
