@@ -1238,11 +1238,9 @@ pub const Effects = struct {
         var foe_stored = foe.stored();
 
         if (foe.active.volatiles.Substitute) return;
-
-        const move = Move.get(state.move);
         if (Status.any(foe_stored.status)) {
             if (Status.is(foe_stored.status, .FRZ)) {
-                assert(move.type == .Fire);
+                assert(Move.get(state.move).type == .Fire);
                 try options.log.curestatus(
                     battle.active(player.foe()),
                     foe_stored.status,
@@ -1252,16 +1250,14 @@ pub const Effects = struct {
             }
             return;
         }
-
-        if (!state.proc or foe.condition.Safeguard) return;
-
+        if (!state.proc) return;
+        if (foe.condition.Safeguard) return;
         // No need to check for immunity because nothing is immune to Fire-type
         assert(!state.immune());
-        if (foe.active.types.includes(move.type)) return;
+        if (foe.active.types.includes(Move.get(state.move).type)) return;
 
         foe_stored.status = Status.init(.BRN);
         foe.active.stats.atk = @max(foe.active.stats.atk / 2, 1);
-
         try options.log.status(battle.active(player.foe()), foe_stored.status, .None);
 
         // TODO: check for status berry
@@ -1514,22 +1510,18 @@ pub const Effects = struct {
         const foe_ident = battle.active(player.foe());
 
         if (foe.active.volatiles.Substitute) return;
-
-        const move = Move.get(state.move);
-        if (Status.any(foe_stored.status)) {
-            return if (showdown and !foe.active.types.includes(move.type)) battle.rng.advance(1);
-        }
+        if (Status.any(foe_stored.status)) return;
 
         // No need to check for immunity because nothing is immune to Ice-type
         assert(!state.immune());
         if (battle.field.weather == .Sun) return;
-        if (foe.active.types.includes(move.type)) return;
-        if (!state.proc or foe.condition.Safeguard) return;
+        if (foe.active.types.includes(Move.get(state.move).type)) return;
+        if (!state.proc) return;
+        if (foe.condition.Safeguard) return;
         // Freeze Clause Mod
         if (showdown) for (foe.pokemon) |p| if (Status.is(p.status, .FRZ)) return;
 
         foe_stored.status = Status.init(.FRZ);
-
         try options.log.status(foe_ident, foe_stored.status, .None);
 
         // TODO: check for status berry
@@ -1650,8 +1642,20 @@ pub const Effects = struct {
     }
 
     fn paralyzeChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        // TODO: Thunder does acc/checkHit/effectChance before stab + damage variation
-        _ = .{ battle, player, state, options }; // TODO
+        var foe = battle.foe(player);
+        var foe_stored = foe.stored();
+
+        if (foe.active.volatiles.Substitute) return;
+        if (Status.any(foe_stored.status)) return;
+        if (state.immune()) return;
+        if (!state.proc) return;
+        if (foe.condition.Safeguard) return;
+
+        foe_stored.status = Status.init(.PAR);
+        foe.active.stats.spe = @max(foe.active.stats.spe / 4, 1);
+        try options.log.status(battle.active(player.foe()), foe_stored.status, .None);
+
+        // TODO: check for status berry
     }
 
     fn payDay(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -1707,10 +1711,10 @@ pub const Effects = struct {
         if (foe.active.volatiles.Substitute) return;
         if (Status.any(foe_stored.status)) return if (showdown) battle.rng.advance(1);
         if (state.immune() or foe.active.types.includes(.Poison)) return;
-        if (!state.proc or foe.condition.Safeguard) return;
+        if (!state.proc) return;
+        if (foe.condition.Safeguard) return;
 
         foe_stored.status = Status.init(.PSN);
-
         try options.log.status(battle.active(player.foe()), foe_stored.status, .None);
 
         // TODO: check for status berry
