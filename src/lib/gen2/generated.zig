@@ -28,7 +28,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
     _ = .{ battle, player, options };
 
     switch (Move.get(state.move).effect) {
-        .HighCritical => {}, // TODO
         .MultiHit => {}, // TODO
         .PayDay => {}, // TODO
         .BurnChance => {}, // TODO
@@ -36,7 +35,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .ParalyzeChance => {}, // TODO
         .OHKO => {}, // TODO
         .RazorWind => {}, // TODO
-        .AttackUp2 => {}, // TODO
         .Gust => {}, // TODO
         .ForceSwitch => {}, // TODO
         .FlyDig => {}, // TODO
@@ -45,48 +43,33 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .DoubleHit => {}, // TODO
         .JumpKick => {}, // TODO
         .FlinchChance => {}, // TODO
-        .AccuracyDown1 => {}, // TODO
         .Recoil => {}, // TODO
         .Thrashing => {}, // TODO
-        .DefenseDown1 => {}, // TODO
         .PoisonChance => {}, // TODO
         .Twineedle => {}, // TODO
-        .AttackDown1 => {}, // TODO
         .Sleep => {}, // TODO
         .Confusion => {}, // TODO
         .FixedDamage => {}, // TODO
         .Disable => {}, // TODO
-        .DefenseDownChance => {}, // TODO
         .Mist => {}, // TODO
         .ConfusionChance => {}, // TODO
-        .SpeedDownChance => {}, // TODO
-        .AttackDownChance => {}, // TODO
         .HyperBeam => {}, // TODO
         .Counter => {}, // TODO
         .LevelDamage => {}, // TODO
         .DrainHP => {}, // TODO
         .LeechSeed => {}, // TODO
-        .SpAtkUp1 => {}, // TODO
         .Solarbeam => {}, // TODO
         .Poison => {}, // TODO
         .Paralyze => {}, // TODO
-        .SpeedDown1 => {}, // TODO
         .Thunder => {}, // TODO
         .Earthquake => {}, // TODO
         .Toxic => {}, // TODO
-        .SpDefDownChance => {}, // TODO
-        .AttackUp1 => {}, // TODO
-        .SpeedUp2 => {}, // TODO
         .Priority => {}, // TODO
         .Rage => {}, // TODO
         .Teleport => {}, // TODO
         .Mimic => {}, // TODO
-        .DefenseDown2 => {}, // TODO
-        .EvasionUp1 => {}, // TODO
         .Heal => {}, // TODO
-        .DefenseUp1 => {}, // TODO
         .DefenseCurl => {}, // TODO
-        .DefenseUp2 => {}, // TODO
         .LightScreen => {}, // TODO
         .Haze => {}, // TODO
         .Reflect => {}, // TODO
@@ -97,7 +80,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .Explode => {}, // TODO
         .AlwaysHit => {}, // TODO
         .SkullBash => {}, // TODO
-        .SpDefUp2 => {}, // TODO
         .DreamEater => {}, // TODO
         .SkyAttack => {}, // TODO
         .Transform => {}, // TODO
@@ -118,23 +100,19 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .Curse => {}, // TODO
         .Reversal => {}, // TODO
         .Conversion2 => {}, // TODO
-        .SpeedDown2 => {}, // TODO
         .Spite => {}, // TODO
         .Protect => {}, // TODO
         .BellyDrum => {}, // TODO
-        .AccuracyDownChance => {}, // TODO
         .Spikes => {}, // TODO
         .Foresight => {}, // TODO
         .DestinyBond => {}, // TODO
         .PerishSong => {}, // TODO
         .Sandstorm => {}, // TODO
         .Endure => {}, // TODO
-        .AttackDown2 => {}, // TODO
         .Rollout => {}, // TODO
         .FalseSwipe => {}, // TODO
         .Swagger => {}, // TODO
         .FuryCutter => {}, // TODO
-        .DefenseUpChance => {}, // TODO
         .Attract => {}, // TODO
         .SleepTalk => {}, // TODO
         .HealBell => {}, // TODO
@@ -149,8 +127,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .Encore => {}, // TODO
         .Pursuit => {}, // TODO
         .RapidSpin => {}, // TODO
-        .EvasionDown1 => {}, // TODO
-        .AttackUpChance => {}, // TODO
         .MorningSun => {}, // TODO
         .Synthesis => {}, // TODO
         .Moonlight => {}, // TODO
@@ -163,7 +139,16 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .AllStatUpChance => {}, // TODO
         .FutureSight => {}, // TODO
         .BeatUp => {}, // TODO
-        .None => {}, // TODO
+        // zig fmt: off
+        .AttackUp1, .AttackUp2, .AttackUpChance, .DefenseUp1, .DefenseUp2,
+        .DefenseUpChance, .EvasionUp1, .SpAtkUp1, .SpDefUp2, .SpeedUp2 => {}, // TODO
+        // zig fmt: on
+        // zig fmt: off
+        .AccuracyDown1, .AccuracyDownChance, .AttackDown1, .AttackDown2,
+        .AttackDownChance, .DefenseDown1, .DefenseDown2, .DefenseDownChance,
+        .EvasionDown1, .SpDefDownChance, .SpeedDown1, .SpeedDown2, .SpeedDownChance => {}, // TODO
+        // zig fmt: on
+        .HighCritical, .None => {}, // TODO
     }
 
     return null;
