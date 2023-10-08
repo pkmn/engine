@@ -24,6 +24,7 @@ const Player = common.Player;
 const Result = common.Result;
 
 const Activate = protocol.Activate;
+const Boost = protocol.Boost;
 const Cant = protocol.Cant;
 const Damage = protocol.Damage;
 const End = protocol.End;
@@ -102,7 +103,7 @@ const State = struct {
     first: bool = false, // wEnemyGoesFirst
     miss: bool = false, // wAttackMissed
     crit: bool = false, // wCriticalHit (NB: used on device for OHKO as well)
-    proc: bool = false, // wEffectFailed
+    proc: bool = true, // wEffectFailed
 
     comptime {
         assert(@sizeOf(State) == 12);
@@ -1946,13 +1947,223 @@ pub const Effects = struct {
     }
 
     fn boost(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+        var log = options.log;
+        var side = battle.side(player);
+        const ident = battle.active(player);
+
+        if (state.miss or !state.proc) return try log.fail(ident, .None);
+
+        var stats = &side.active.stats;
+        var boosts = &side.active.boosts;
+
+        const move = Move.get(state.move);
+        switch (move.effect) {
+            .AttackUp1, .AttackUp2, .Rage => {
+                assert(boosts.atk >= -6 and boosts.atk <= 6);
+                if (boosts.atk == 6 or stats.atk == MAX_STAT_VALUE) {
+                    state.miss = true;
+                    return try log.fail(ident, .None);
+                }
+                const n: u2 = if (move.effect == .AttackUp2) 2 else 1;
+                boosts.atk = @as(i4, @intCast(@min(6, @as(i8, boosts.atk) + n)));
+                const reason = if (showdown and move.effect == .Rage) Boost.Rage else Boost.Attack;
+                var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.atk) + 6))];
+                const stat = unmodifiedStats(battle, side).atk;
+                stats.atk = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
+                try log.boost(ident, reason, n);
+            },
+            .DefenseUp1, .DefenseUp2 => {
+                assert(boosts.def >= -6 and boosts.def <= 6);
+                if (boosts.def == 6 or stats.def == MAX_STAT_VALUE) {
+                    state.miss = true;
+                    return try log.fail(ident, .None);
+                }
+                const n: u2 = if (move.effect == .DefenseUp2) 2 else 1;
+                boosts.def = @intCast(@min(6, @as(i8, boosts.def) + n));
+                var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.def) + 6))];
+                const stat = unmodifiedStats(battle, side).def;
+                stats.def = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
+                try log.boost(ident, .Defense, n);
+            },
+            .SpeedUp2 => {
+                assert(boosts.spe >= -6 and boosts.spe <= 6);
+                if (boosts.spe == 6 or stats.spe == MAX_STAT_VALUE) {
+                    state.miss = true;
+                    return try log.fail(ident, .None);
+                }
+                boosts.spe = @intCast(@min(6, @as(i8, boosts.spe) + 2));
+                var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.spe) + 6))];
+                const stat = unmodifiedStats(battle, side).spe;
+                stats.spe = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
+                try log.boost(ident, .Speed, 2);
+            },
+            .SpAtkUp1 => {
+                assert(boosts.spa >= -6 and boosts.spa <= 6);
+                if (boosts.spa == 6 or stats.spa == MAX_STAT_VALUE) {
+                    state.miss = true;
+                    return try log.fail(ident, .None);
+                }
+                boosts.spa = @intCast(@min(6, @as(i8, boosts.spa) + 1));
+                var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.spa) + 6))];
+                const stat = unmodifiedStats(battle, side).spa;
+                stats.spa = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
+                try log.boost(ident, .SpecialAttack, 1);
+            },
+            .SpDefUp2 => {
+                assert(boosts.spd >= -6 and boosts.spd <= 6);
+                if (boosts.spd == 6 or stats.spd == MAX_STAT_VALUE) {
+                    state.miss = true;
+                    return try log.fail(ident, .None);
+                }
+                boosts.spd = @intCast(@min(6, @as(i8, boosts.spd) + 2));
+                var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.spd) + 6))];
+                const stat = unmodifiedStats(battle, side).spd;
+                stats.spd = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
+                try log.boost(ident, .SpecialDefense, 2);
+            },
+            .EvasionUp1 => {
+                assert(boosts.evasion >= -6 and boosts.evasion <= 6);
+                if (boosts.evasion == 6) {
+                    state.miss = true;
+                    return try log.fail(ident, .None);
+                }
+                boosts.evasion = @intCast(@min(6, @as(i8, boosts.evasion) + 1));
+                try log.boost(ident, .Evasion, 1);
+            },
+            else => unreachable,
+        }
+
+        statusModify(side.stored().status, stats);
     }
 
     fn unboost(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+        var log = options.log;
+        var foe = battle.foe(player);
+        const foe_ident = battle.active(player.foe());
+
+        if (foe.active.volatiles.Mist) {
+            state.miss = true;
+            try log.activate(foe_ident, .Mist);
+            return try log.fail(foe_ident, .None);
+        }
+
+        const fail = foe.active.volatiles.Substitute or state.miss or !state.proc;
+
+        var stats = &foe.active.stats;
+        var boosts = &foe.active.boosts;
+
+        const move = Move.get(state.move);
+        switch (move.effect) {
+            .AttackDown1, .AttackDown2, .AttackDownChance => {
+                assert(boosts.atk >= -6 and boosts.atk <= 6);
+                if (fail or boosts.atk) {
+                    state.miss = true;
+                    return if (move.effect != .AttackDownChance) try log.fail(foe_ident, .None);
+                } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
+                    state.miss = true;
+                    try options.log.lastmiss();
+                    try options.log.miss(battle.active(player));
+                    return;
+                } else if (stats.atk == 1) {
+                    state.miss = true;
+                    return if (move.effect != .AttackDownChance) try log.fail(foe_ident, .None);
+                }
+                const n: u2 = if (move.effect == .AttackDown2) 2 else 1;
+                boosts.atk = @intCast(@max(-6, @as(i8, boosts.atk) - n));
+                var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.atk) + 6))];
+                const stat = unmodifiedStats(battle, foe).atk;
+                stats.atk = @max(1, stat * mod[0] / mod[1]);
+                try log.boost(foe_ident, .Attack, -@as(i8, n));
+            },
+            .DefenseDown1, .DefenseDown2, .DefenseDownChance => {
+                assert(boosts.def >= -6 and boosts.def <= 6);
+                if (fail or boosts.def) {
+                    state.miss = true;
+                    return if (move.effect != .DefenseDownChance) try log.fail(foe_ident, .None);
+                } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
+                    state.miss = true;
+                    try options.log.lastmiss();
+                    try options.log.miss(battle.active(player));
+                    return;
+                } else if (stats.def == 1) {
+                    state.miss = true;
+                    return if (move.effect != .DefenseDownChance) try log.fail(foe_ident, .None);
+                }
+                const n: u2 = if (move.effect == .DefenseDown2) 2 else 1;
+                boosts.def = @intCast(@max(-6, @as(i8, boosts.def) - n));
+                var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.def) + 6))];
+                const stat = unmodifiedStats(battle, foe).def;
+                stats.def = @max(1, stat * mod[0] / mod[1]);
+                try log.boost(foe_ident, .Defense, -@as(i8, n));
+            },
+            .SpeedDown1, .SpeedDown2, .SpeedDownChance => {
+                assert(boosts.spe >= -6 and boosts.spe <= 6);
+                if (fail or boosts.spe) {
+                    state.miss = true;
+                    return if (move.effect != .SpeedDownChance) try log.fail(foe_ident, .None);
+                } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
+                    state.miss = true;
+                    try options.log.lastmiss();
+                    try options.log.miss(battle.active(player));
+                    return;
+                } else if (stats.spe == 1) {
+                    state.miss = true;
+                    return if (move.effect != .SpeedDownChance) try log.fail(foe_ident, .None);
+                }
+                const n: u2 = if (move.effect == .SpeedDown2) 2 else 1;
+                boosts.spe = @intCast(@max(-6, @as(i8, boosts.spe) - 1));
+                var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.spe) + 6))];
+                const stat = unmodifiedStats(battle, foe).spe;
+                stats.spe = @max(1, stat * mod[0] / mod[1]);
+                try log.boost(foe_ident, .Speed, -@as(i8, n));
+                assert(boosts.spe >= -6);
+            },
+            .SpDefDownChance => {
+                assert(boosts.spd >= -6 and boosts.spd <= 6);
+                if (fail or boosts.spd) {
+                    state.miss = true;
+                    return;
+                } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
+                    state.miss = true;
+                    try options.log.lastmiss();
+                    try options.log.miss(battle.active(player));
+                    return;
+                } else if (stats.spd == 1) {
+                    state.miss = true;
+                    return;
+                }
+                boosts.spd = @intCast(@max(-6, @as(i8, boosts.spd) - 1));
+                var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.spd) + 6))];
+                const stat = unmodifiedStats(battle, foe).spd;
+                stats.spd = @max(1, stat * mod[0] / mod[1]);
+                try log.boost(foe_ident, .SpecialDefense, -1);
+            },
+            .AccuracyDown1, .AccuracyDownChance => {
+                assert(boosts.accuracy >= -6 and boosts.accuracy <= 6);
+                if (fail or boosts.accuracy == -6) {
+                    state.miss = true;
+                    return if (move.effect != .AccuracyDownChance) try log.fail(foe_ident, .None);
+                } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
+                    state.miss = true;
+                    try options.log.lastmiss();
+                    try options.log.miss(battle.active(player));
+                    return;
+                }
+                boosts.accuracy = @intCast(@max(-6, @as(i8, boosts.accuracy) - 1));
+                try log.boost(foe_ident, .Accuracy, -1);
+            },
+            else => unreachable,
+        }
+
+        statusModify(foe.stored().status, stats);
     }
 };
+
+fn unmodifiedStats(battle: anytype, side: *Side) *Stats(u16) {
+    if (!side.active.volatiles.Transform) return &side.stored().stats;
+    const id = ID.from(side.active.volatiles.transform);
+    return &battle.side(id.player).pokemon[id.id - 1].stats;
+}
 
 fn statusModify(status: u8, stats: *Stats(u16)) void {
     if (Status.is(status, .PAR)) {
