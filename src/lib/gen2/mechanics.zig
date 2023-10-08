@@ -1708,7 +1708,30 @@ pub const Effects = struct {
     }
 
     fn sleep(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+        var foe = battle.foe(player);
+        var foe_stored = foe.stored();
+        const foe_ident = battle.active(player.foe());
+
+        if (Status.any(foe_stored.status)) {
+            return options.log.fail(
+                foe_ident,
+                if (Status.is(foe_stored.status, .SLP)) .Sleep else .None,
+            );
+        }
+
+        if (foe.active.volatiles.Substitute) {
+            return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
+        }
+
+        // Sleep Clause Mod
+        if (showdown) {
+            for (foe.pokemon) |p| {
+                if (Status.is(p.status, .SLP) and !Status.is(p.status, .EXT)) return;
+            }
+        }
+
+        foe_stored.status = Status.slp(Rolls.sleepDuration(battle, player, options));
+        try options.log.statusFrom(foe_ident, foe_stored.status, state.move);
     }
 
     fn sleepTalk(battle: anytype, player: Player, state: *State, options: anytype) !void {

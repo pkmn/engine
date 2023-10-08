@@ -196,7 +196,7 @@ pub const Activate = enum(u8) {
     Haze,
     Mist,
     Struggle,
-    Substitute,
+    Substitute, // FIXME SubstituteDamage
     Splash,
 
     Rage, // TODO
@@ -208,6 +208,7 @@ pub const Activate = enum(u8) {
     FireSpin,
     Clamp,
     Whirlpool,
+    SubstituteBlock,
 
     DestinyBond,
 
@@ -572,10 +573,23 @@ pub fn Log(comptime Writer: type) type {
         pub fn activate(self: Self, ident: ID, reason: Activate) Error!void {
             if (!enabled) return;
 
+            assert(reason != .SubstituteBlock); // TODO
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Activate),
                 @as(u8, @bitCast(ident)),
                 @intFromEnum(reason),
+            });
+        }
+
+        pub fn activateMove(self: Self, ident: ID, reason: Activate, m: anytype) Error!void {
+            if (!enabled) return;
+
+            assert(reason == .SubstituteBlock); // TODO
+            try self.writer.writeAll(&.{
+                @intFromEnum(ArgType.Activate),
+                @as(u8, @bitCast(ident)),
+                @intFromEnum(reason),
+                @intFromEnum(m),
             });
         }
 
