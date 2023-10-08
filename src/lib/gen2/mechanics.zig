@@ -94,17 +94,18 @@ const CRITICAL_HITS = &[_]u8{
 const MAX_STAT_VALUE = 999;
 
 const State = struct {
-    damage: u16 = 0,
-    effectiveness: u16 = Effectiveness.neutral,
-    bp: u8 = 0,
-    move: Move = .None,
-    mslot: u4 = 0,
-    first: bool = false,
-    miss: bool = false,
-    crit: bool = false,
+    damage: u16 = 0, // wCurDamage
+    effectiveness: u16 = Effectiveness.neutral, // wTypeModifier
+    bp: u8 = 0, // wPlayerMoveStructPower
+    move: Move = .None, // wCurPlayerMove
+    mslot: u4 = 0, // wCurMoveNum
+    first: bool = false, // wEnemyGoesFirst
+    miss: bool = false, // wAttackMissed
+    crit: bool = false, // wCriticalHit (NB: used on device for OHKO as well)
+    proc: bool = false, // wEffectFailed
 
     comptime {
-        assert(@sizeOf(State) == 10);
+        assert(@sizeOf(State) == 12);
     }
 
     inline fn immune(self: *State) bool {
