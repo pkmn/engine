@@ -576,18 +576,31 @@ fn doMove(battle: anytype, player: Player, state: *State, options: anytype) !?Re
     _ = try destinyBond(battle, player, state, options);
 
     try Effects.attract(battle, player, state, options);
+    try Effects.boost(battle, player, state, options);
+    try Effects.burnChance(battle, player, state, options);
     try Effects.conversion(battle, player, state, options);
     try Effects.conversion2(battle, player, state, options);
+    try Effects.defrost(battle, player, state, options);
     try Effects.destinyBond(battle, player, state, options);
     try Effects.disable(battle, player, state, options);
+    try Effects.drainHP(battle, player, state, options);
     try Effects.encore(battle, player, state, options);
     try Effects.falseSwipe(battle, player, state, options);
+    try Effects.fixedDamage(battle, player, state, options);
     try Effects.focusEnergy(battle, player, state, options);
     try Effects.forceSwitch(battle, player, state, options);
     try Effects.foresight(battle, player, state, options);
+    try Effects.freezeChance(battle, player, state, options);
     try Effects.happiness(battle, player, state, options);
+    try Effects.paralyzeChance(battle, player, state, options);
+    try Effects.poison(battle, player, state, options);
+    try Effects.poisonChance(battle, player, state, options);
     try Effects.protect(battle, player, state, options);
     try Effects.rage(battle, player, state, options);
+    try Effects.reversal(battle, player, state, options);
+    try Effects.sleep(battle, player, state, options);
+    try Effects.unboost(battle, player, state, options);
+    try Effects.weatherHeal(battle, player, state, options);
 
     return null;
 }
@@ -1252,7 +1265,7 @@ pub const Effects = struct {
             return;
         }
         if (!state.proc) return;
-        if (foe.condition.Safeguard) return;
+        if (foe.conditions.Safeguard) return;
         // No need to check for immunity because nothing is immune to Fire-type
         assert(!state.immune());
         if (foe.active.types.includes(Move.get(state.move).type)) return;
@@ -1316,7 +1329,7 @@ pub const Effects = struct {
 
     fn defrost(battle: anytype, player: Player, _: *State, options: anytype) !void {
         var side = battle.side(player);
-        assert(side.stored().status.is(.FRZ));
+        assert(Status.is(side.stored().status, .FRZ));
 
         try options.log.curestatus(battle.active(player), side.stored().status, .Message);
         side.stored().status = 0;
@@ -1518,7 +1531,7 @@ pub const Effects = struct {
         if (battle.field.weather == .Sun) return;
         if (foe.active.types.includes(Move.get(state.move).type)) return;
         if (!state.proc) return;
-        if (foe.condition.Safeguard) return;
+        if (foe.conditions.Safeguard) return;
         // Freeze Clause Mod
         if (showdown) for (foe.pokemon) |p| if (Status.is(p.status, .FRZ)) return;
 
@@ -1611,7 +1624,7 @@ pub const Effects = struct {
         var stored = battle.side(player).stored();
         const ident = battle.active(player);
 
-        if (stored.hp == stored.stats.hp) return try options.log.fail(ident.None);
+        if (stored.hp == stored.stats.hp) return try options.log.fail(ident, .None);
 
         stored.hp = switch (battle.field.weather) {
             .Sun => stored.stats.hp,
@@ -1650,7 +1663,7 @@ pub const Effects = struct {
         if (Status.any(foe_stored.status)) return;
         if (state.immune()) return;
         if (!state.proc) return;
-        if (foe.condition.Safeguard) return;
+        if (foe.conditions.Safeguard) return;
 
         foe_stored.status = Status.init(.PAR);
         foe.active.stats.spe = @max(foe.active.stats.spe / 4, 1);
@@ -1672,6 +1685,7 @@ pub const Effects = struct {
         var foe_stored = foe.stored();
         const foe_ident = battle.active(player.foe());
 
+        const toxic = state.move == .Toxic;
         if (state.immune() or foe.active.types.includes(.Poison)) {
             return options.log.immune(foe_ident, .None);
         } else if (Status.any(foe_stored.status)) {
@@ -1694,7 +1708,7 @@ pub const Effects = struct {
         }
 
         foe_stored.status = Status.init(.PSN);
-        if (state.move == .Toxic) {
+        if (toxic) {
             if (showdown) foe_stored.status = Status.TOX;
             foe.active.volatiles.Toxic = true;
             foe.active.volatiles.toxic = 0;
@@ -1713,7 +1727,7 @@ pub const Effects = struct {
         if (Status.any(foe_stored.status)) return if (showdown) battle.rng.advance(1);
         if (state.immune() or foe.active.types.includes(.Poison)) return;
         if (!state.proc) return;
-        if (foe.condition.Safeguard) return;
+        if (foe.conditions.Safeguard) return;
 
         foe_stored.status = Status.init(.PSN);
         try options.log.status(battle.active(player.foe()), foe_stored.status, .None);
@@ -1775,7 +1789,7 @@ pub const Effects = struct {
     }
 
     fn reversal(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        const stored = battle.side(player).stored;
+        const stored = battle.side(player).stored();
 
         // Pokémon Showdown Gen II implementation incorrectly inherits Gen IV's table instead
         state.bp = if (showdown) power: {
@@ -1930,10 +1944,6 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn toxic(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
-    }
-
     fn transform(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
@@ -2056,7 +2066,7 @@ pub const Effects = struct {
         switch (move.effect) {
             .AttackDown1, .AttackDown2, .AttackDownChance => {
                 assert(boosts.atk >= -6 and boosts.atk <= 6);
-                if (fail or boosts.atk) {
+                if (fail or boosts.atk == -6) {
                     state.miss = true;
                     return if (move.effect != .AttackDownChance) try log.fail(foe_ident, .None);
                 } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
@@ -2077,7 +2087,7 @@ pub const Effects = struct {
             },
             .DefenseDown1, .DefenseDown2, .DefenseDownChance => {
                 assert(boosts.def >= -6 and boosts.def <= 6);
-                if (fail or boosts.def) {
+                if (fail or boosts.def == -6) {
                     state.miss = true;
                     return if (move.effect != .DefenseDownChance) try log.fail(foe_ident, .None);
                 } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
@@ -2098,7 +2108,7 @@ pub const Effects = struct {
             },
             .SpeedDown1, .SpeedDown2, .SpeedDownChance => {
                 assert(boosts.spe >= -6 and boosts.spe <= 6);
-                if (fail or boosts.spe) {
+                if (fail or boosts.spe == -6) {
                     state.miss = true;
                     return if (move.effect != .SpeedDownChance) try log.fail(foe_ident, .None);
                 } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
@@ -2120,7 +2130,7 @@ pub const Effects = struct {
             },
             .SpDefDownChance => {
                 assert(boosts.spd >= -6 and boosts.spd <= 6);
-                if (fail or boosts.spd) {
+                if (fail or boosts.spd == -6) {
                     state.miss = true;
                     return;
                 } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
