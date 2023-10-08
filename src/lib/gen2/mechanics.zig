@@ -9,6 +9,7 @@ const rng = @import("../common/rng.zig");
 const util = @import("../common/util.zig");
 
 const data = @import("data.zig");
+const generated = @import("generated.zig");
 
 const assert = std.debug.assert;
 
@@ -94,7 +95,7 @@ const CRITICAL_HITS = &[_]u8{
 
 const MAX_STAT_VALUE = 999;
 
-const State = struct {
+pub const State = struct {
     damage: u16 = 0, // wCurDamage
     effectiveness: u16 = Effectiveness.neutral, // wTypeModifier
     bp: u8 = 0, // wPlayerMoveStructPower
@@ -388,7 +389,8 @@ fn executeMove(
 
     // FIXME: need damage from doTurn
     var state: State = .{ .move = move, .mslot = mslot, .first = first };
-    return doMove(battle, player, &state, options);
+    _ = try TODO(battle, player, &state, options);
+    return generated.doMove(battle, player, &state, options);
 }
 
 fn beforeMove(battle: anytype, player: Player, move: Move, options: anytype) !bool {
@@ -540,7 +542,7 @@ fn canMove(battle: anytype, player: Player, options: anytype) !void {
     return false;
 }
 
-fn decrementPP(side: *Side, move: Move, mslot: u4) bool {
+pub fn decrementPP(side: *Side, move: Move, mslot: u4) bool {
     var active = &side.active;
     const volatiles = &active.volatiles;
 
@@ -564,7 +566,8 @@ fn decrementPP(side: *Side, move: Move, mslot: u4) bool {
     return true;
 }
 
-fn doMove(battle: anytype, player: Player, state: *State, options: anytype) !?Result {
+fn TODO(battle: anytype, player: Player, state: *State, options: anytype) !?Result {
+    try checkHit(battle, player, state, options);
     try checkCriticalHit(battle, player, state, options);
     try calcDamage(battle, player, state, options);
     try adjustDamage(battle, player, state, options);
@@ -605,7 +608,7 @@ fn doMove(battle: anytype, player: Player, state: *State, options: anytype) !?Re
     return null;
 }
 
-fn checkCriticalHit(battle: anytype, player: Player, state: *State, options: anytype) !void {
+pub fn checkCriticalHit(battle: anytype, player: Player, state: *State, options: anytype) !void {
     const move = Move.get(state.move);
     if (move.bp == 0) return;
 
@@ -625,7 +628,7 @@ fn checkCriticalHit(battle: anytype, player: Player, state: *State, options: any
     state.crit = try Rolls.criticalHit(battle, player, CRITICAL_HITS[stage], options);
 }
 
-fn calcDamage(
+pub fn calcDamage(
     battle: anytype,
     player: Player,
     state: *State,
@@ -639,7 +642,7 @@ fn calcDamage(
 
 const FORESIGHT: Types = .{ .type1 = .Normal, .type2 = .Fighting };
 
-fn adjustDamage(battle: anytype, player: Player, state: *State, _: anytype) !void {
+pub fn adjustDamage(battle: anytype, player: Player, state: *State, _: anytype) !void {
     if (state.move == .Struggle) return;
 
     const side = battle.side(player);
@@ -689,7 +692,7 @@ fn adjustDamage(battle: anytype, player: Player, state: *State, _: anytype) !voi
     state.damage = d;
 }
 
-fn randomizeDamage(battle: anytype, player: Player, state: *State, options: anytype) !void {
+pub fn randomizeDamage(battle: anytype, player: Player, state: *State, options: anytype) !void {
     if (state.damage <= 1) return;
     const random = try Rolls.damage(battle, player, options);
     options.calc.base(player.foe(), state.damage);
@@ -697,7 +700,7 @@ fn randomizeDamage(battle: anytype, player: Player, state: *State, options: anyt
     options.calc.final(player.foe(), state.damage);
 }
 
-fn applyDamage(
+pub fn applyDamage(
     battle: anytype,
     player: Player,
     state: *State,
@@ -710,7 +713,7 @@ fn applyDamage(
 }
 
 // TODO: set damage = 0 if missed and not (High) Jump Kick
-fn checkHit(
+pub fn checkHit(
     battle: anytype,
     player: Player,
     state: *State,
@@ -735,7 +738,7 @@ fn checkHit(
         return;
     }
     if (side.active.volatiles.LockOn) {
-        state.miss = !(foe.active.volatiles.Flying and move.extra.undeground);
+        state.miss = !(foe.active.volatiles.Flying and move.extra.underground);
         return;
     }
     assert(!(foe.active.volatiles.Flying and foe.active.volatiles.Underground));
@@ -1160,7 +1163,7 @@ fn endTurn(battle: anytype, options: anytype) @TypeOf(options.log).Error!Result 
     return Result.Default;
 }
 
-fn buildRage(battle: anytype, player: Player, state: *State, options: anytype) !void {
+pub fn buildRage(battle: anytype, player: Player, state: *State, options: anytype) !void {
     var foe = battle.foe(player);
     if (foe.active.volatiles.Rage) {
         if (showdown) {
@@ -1175,13 +1178,13 @@ fn buildRage(battle: anytype, player: Player, state: *State, options: anytype) !
     }
 }
 
-fn rageDamage(battle: anytype, player: Player, state: *State, _: anytype) !void {
+pub fn rageDamage(battle: anytype, player: Player, state: *State, _: anytype) !void {
     const volatiles = battle.side(player).active.volatiles;
     assert(volatiles.Rage);
     state.damage *|= (volatiles.rage +| 1);
 }
 
-fn kingsRock(battle: anytype, player: Player, _: *State, options: anytype) !void {
+pub fn kingsRock(battle: anytype, player: Player, _: *State, options: anytype) !void {
     var foe = battle.foe(player);
     const flinch = battle.side(player).stored().item == .KingsRock and
         !foe.active.volatiles.Substitute and
@@ -1192,7 +1195,7 @@ fn kingsRock(battle: anytype, player: Player, _: *State, options: anytype) !void
     }
 }
 
-fn destinyBond(battle: anytype, player: Player, _: *State, options: anytype) !bool {
+pub fn destinyBond(battle: anytype, player: Player, _: *State, options: anytype) !bool {
     const foe = battle.foe(player);
     if (foe.stored().hp > 0) return false;
 
@@ -1204,11 +1207,11 @@ fn destinyBond(battle: anytype, player: Player, _: *State, options: anytype) !bo
 }
 
 pub const Effects = struct {
-    fn alwaysHit(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn alwaysHit(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn attract(battle: anytype, player: Player, _: *State, options: anytype) !void {
+    pub fn attract(battle: anytype, player: Player, _: *State, options: anytype) !void {
         const side = battle.side(player);
         var foe = battle.foe(player);
 
@@ -1227,27 +1230,27 @@ pub const Effects = struct {
         try options.log.start(battle.active(player.foe()), .Attract);
     }
 
-    fn batonPass(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn batonPass(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn beatUp(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn beatUp(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn bellyDrum(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn bellyDrum(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn bide(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn bide(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn binding(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn binding(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn burnChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn burnChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
 
@@ -1277,11 +1280,11 @@ pub const Effects = struct {
         // TODO: check for status berry
     }
 
-    fn confusion(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn confusion(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn conversion(battle: anytype, player: Player, _: *State, options: anytype) !void {
+    pub fn conversion(battle: anytype, player: Player, _: *State, options: anytype) !void {
         var side = battle.side(player);
 
         var n: u3 = 0;
@@ -1297,7 +1300,7 @@ pub const Effects = struct {
         side.active.types.type2 = side.active.types.type1;
     }
 
-    fn conversion2(battle: anytype, player: Player, _: *State, options: anytype) !void {
+    pub fn conversion2(battle: anytype, player: Player, _: *State, options: anytype) !void {
         var side = battle.side(player);
 
         const last = battle.foe(player).lastMove(false);
@@ -1315,19 +1318,19 @@ pub const Effects = struct {
         side.active.types.type2 = side.active.types.type1;
     }
 
-    fn counter(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn counter(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn curse(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn curse(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn defenseCurl(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn defenseCurl(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn defrost(battle: anytype, player: Player, _: *State, options: anytype) !void {
+    pub fn defrost(battle: anytype, player: Player, _: *State, options: anytype) !void {
         var side = battle.side(player);
         assert(Status.is(side.stored().status, .FRZ));
 
@@ -1335,12 +1338,12 @@ pub const Effects = struct {
         side.stored().status = 0;
     }
 
-    fn destinyBond(battle: anytype, player: Player, _: *State, options: anytype) !void {
+    pub fn destinyBond(battle: anytype, player: Player, _: *State, options: anytype) !void {
         battle.side(player).active.volatiles.DestinyBond = true;
         try options.log.singlemove(battle.active(player), Move.DestinyBond);
     }
 
-    fn disable(battle: anytype, player: Player, _: *State, options: anytype) !void {
+    pub fn disable(battle: anytype, player: Player, _: *State, options: anytype) !void {
         var foe = battle.foe(player);
         var volatiles = &foe.active.volatiles;
         const foe_ident = battle.active(player.foe());
@@ -1374,11 +1377,11 @@ pub const Effects = struct {
         try options.log.startEffect(foe_ident, .Disable, move.id);
     }
 
-    fn doubleHit(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn doubleHit(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn drainHP(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn drainHP(battle: anytype, player: Player, state: *State, options: anytype) !void {
         var stored = battle.side(player).stored();
 
         assert(state.damage != 0);
@@ -1389,7 +1392,7 @@ pub const Effects = struct {
         try options.log.drain(battle.active(player), stored, battle.active(player.foe()));
     }
 
-    fn encore(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn encore(battle: anytype, player: Player, state: *State, options: anytype) !void {
         var foe = battle.foe(player);
         var volatiles = &foe.active.volatiles;
         const foe_ident = battle.active(player.foe());
@@ -1424,18 +1427,18 @@ pub const Effects = struct {
         try options.log.startEffect(foe_ident, .Encore, move.id);
     }
 
-    fn explode(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn explode(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn falseSwipe(battle: anytype, player: Player, state: *State, _: anytype) !void {
+    pub fn falseSwipe(battle: anytype, player: Player, state: *State, _: anytype) !void {
         const foe = battle.foe(player);
         assert(foe.stored().hp > 0);
         // FIXME crit?
         if (state.damage > foe.stored().hp) state.damage = foe.stored().hp - 1;
     }
 
-    fn fixedDamage(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn fixedDamage(battle: anytype, player: Player, state: *State, options: anytype) !void {
         const side = battle.side(player);
         const foe = battle.foe(player);
 
@@ -1453,19 +1456,19 @@ pub const Effects = struct {
         };
     }
 
-    fn flameWheel(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn flameWheel(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn flinchChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn flinchChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn flyDig(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn flyDig(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn focusEnergy(battle: anytype, player: Player, _: *State, options: anytype) !void {
+    pub fn focusEnergy(battle: anytype, player: Player, _: *State, options: anytype) !void {
         var side = battle.side(player);
 
         if (side.active.volatiles.FocusEnergy) {
@@ -1479,7 +1482,7 @@ pub const Effects = struct {
 
     var SLOTS: [5]u4 = .{ 0, 0, 0, 0, 0 };
 
-    fn forceSwitch(battle: anytype, player: Player, _: *State, options: anytype) !void {
+    pub fn forceSwitch(battle: anytype, player: Player, _: *State, options: anytype) !void {
         const foe = battle.foe(player);
 
         var n: u4 = 0;
@@ -1502,7 +1505,7 @@ pub const Effects = struct {
         _ = try Rolls.forceSwitch(battle, player, SLOTS[0..i], n, options); // TODO
     }
 
-    fn foresight(battle: anytype, player: Player, _: *State, options: anytype) !void {
+    pub fn foresight(battle: anytype, player: Player, _: *State, options: anytype) !void {
         var foe = battle.foe(player);
 
         if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
@@ -1518,7 +1521,7 @@ pub const Effects = struct {
         try options.log.start(battle.active(player.foe()), .FocusEnergy);
     }
 
-    fn freezeChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn freezeChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
         const foe_ident = battle.active(player.foe());
@@ -1544,83 +1547,83 @@ pub const Effects = struct {
         foe.active.volatiles.frozen = true;
     }
 
-    fn furyCutter(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn furyCutter(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn futureSight(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn futureSight(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn happiness(battle: anytype, player: Player, state: *State, _: anytype) !void {
+    pub fn happiness(battle: anytype, player: Player, state: *State, _: anytype) !void {
         const val = battle.side(player).stored().happiness;
         const frustration = Move.get(state.move).effect == .Frustration;
         state.bp = ((if (frustration) 255 - val else val) * 10) / 25;
     }
 
-    fn haze(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn haze(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn heal(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn heal(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn healBell(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn healBell(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn hiddenPower(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn hiddenPower(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn hyperBeam(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn hyperBeam(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn jumpKick(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn jumpKick(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn leechSeed(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn leechSeed(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn lockOn(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn lockOn(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
     const MAGNITUDE_POWER = [_]u8{ 10, 30, 50, 70, 90, 110, 150 };
 
-    fn magnitude(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn magnitude(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn meanLook(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn meanLook(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn metronome(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn metronome(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn mimic(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn mimic(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn mirrorCoat(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn mirrorCoat(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn mirrorMove(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn mirrorMove(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn mist(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn mist(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn weatherHeal(battle: anytype, player: Player, _: *State, options: anytype) !void {
+    pub fn weatherHeal(battle: anytype, player: Player, _: *State, options: anytype) !void {
         var stored = battle.side(player).stored();
         const ident = battle.active(player);
 
@@ -1635,27 +1638,27 @@ pub const Effects = struct {
         try options.log.heal(ident, stored, Heal.None);
     }
 
-    fn multiHit(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn multiHit(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn nightmare(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn nightmare(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn ohko(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn ohko(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn painSplit(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn painSplit(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn paralyze(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn paralyze(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn paralyzeChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn paralyzeChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
 
@@ -1672,15 +1675,15 @@ pub const Effects = struct {
         // TODO: check for status berry
     }
 
-    fn payDay(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn payDay(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn perishSong(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn perishSong(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn poison(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn poison(battle: anytype, player: Player, state: *State, options: anytype) !void {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
         const foe_ident = battle.active(player.foe());
@@ -1719,7 +1722,7 @@ pub const Effects = struct {
         // TODO: check for status berry
     }
 
-    fn poisonChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn poisonChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
 
@@ -1735,11 +1738,11 @@ pub const Effects = struct {
         // TODO: check for status berry
     }
 
-    fn present(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn present(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn protect(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn protect(battle: anytype, player: Player, state: *State, options: anytype) !void {
         var side = battle.side(player);
         var volatiles = &side.active.volatiles;
 
@@ -1759,36 +1762,36 @@ pub const Effects = struct {
         try options.log.singleturn(battle.active(player), state.move);
     }
 
-    fn psychUp(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn psychUp(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn pursuit(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn pursuit(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn rage(battle: anytype, player: Player, _: *State, options: anytype) !void {
+    pub fn rage(battle: anytype, player: Player, _: *State, options: anytype) !void {
         battle.side(player).active.volatiles.Rage = true;
         try options.log.singlemove(battle.active(player), Move.Rage);
     }
 
-    fn rainDance(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn rainDance(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn rapidSpin(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn rapidSpin(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn razorWind(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn razorWind(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn recoil(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn recoil(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn reversal(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn reversal(battle: anytype, player: Player, state: *State, options: anytype) !void {
         const stored = battle.side(player).stored();
 
         // Pokémon Showdown Gen II implementation incorrectly inherits Gen IV's table instead
@@ -1813,39 +1816,39 @@ pub const Effects = struct {
         try calcDamage(battle, player, state, options);
     }
 
-    fn rollout(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn rollout(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn sacredFire(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn sacredFire(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn safeguard(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn safeguard(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn sandstorm(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn sandstorm(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn screens(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn screens(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn sketch(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn sketch(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn skullBash(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn skullBash(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn skyAttack(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn skyAttack(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn sleep(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn sleep(battle: anytype, player: Player, state: *State, options: anytype) !void {
         var foe = battle.foe(player);
         var foe_stored = foe.stored();
         const foe_ident = battle.active(player.foe());
@@ -1872,7 +1875,7 @@ pub const Effects = struct {
         try options.log.statusFrom(foe_ident, foe_stored.status, state.move);
     }
 
-    fn sleepTalk(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn sleepTalk(battle: anytype, player: Player, state: *State, options: anytype) !void {
         const side = battle.side(player);
 
         if (!Status.is(side.stored().status, .SLP)) {
@@ -1892,67 +1895,67 @@ pub const Effects = struct {
         _ = try Rolls.sleepTalk(battle, player, n, state.mslot, options); // TODO
     }
 
-    fn snore(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn snore(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn solarBeam(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn solarBeam(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn spikes(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn spikes(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn spite(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn spite(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn splash(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn splash(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn stomp(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn stomp(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn substitute(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn substitute(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn sunnyDay(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn sunnyDay(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn swagger(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn swagger(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn synthesis(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn synthesis(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn teleport(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn teleport(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn thief(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn thief(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn thrashing(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn thrashing(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn transform(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn transform(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn tripleKick(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn tripleKick(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    fn twister(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn twister(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
@@ -1960,7 +1963,7 @@ pub const Effects = struct {
     const ALL_STAT_UP_REASONS =
         [_]Boost{ .Attack, .Defense, .Speed, .SpecialAttack, .SpecialDefense };
 
-    fn boost(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn boost(battle: anytype, player: Player, state: *State, options: anytype) !void {
         var log = options.log;
         var side = battle.side(player);
         const ident = battle.active(player);
@@ -2065,7 +2068,7 @@ pub const Effects = struct {
         statusModify(side.stored().status, stats);
     }
 
-    fn unboost(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    pub fn unboost(battle: anytype, player: Player, state: *State, options: anytype) !void {
         var log = options.log;
         var foe = battle.foe(player);
         const foe_ident = battle.active(player.foe());
