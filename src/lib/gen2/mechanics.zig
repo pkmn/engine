@@ -1228,7 +1228,37 @@ pub const Effects = struct {
     }
 
     fn burnChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+        var foe = battle.foe(player);
+        var foe_stored = foe.stored();
+
+        if (foe.active.volatiles.Substitute) return;
+
+        const move = Move.get(state.move);
+        if (Status.any(foe_stored.status)) {
+            if (Status.is(foe_stored.status, .FRZ)) {
+                assert(move.type == .Fire);
+                try options.log.curestatus(
+                    battle.active(player.foe()),
+                    foe_stored.status,
+                    .Message,
+                );
+                foe_stored.status = 0;
+            }
+            return;
+        }
+
+        if (!state.proc or foe.condition.Safeguard) return;
+
+        // No need to check for immunity because nothing is immune to Fire-type
+        assert(!state.immune());
+        if (foe.active.types.includes(move.type)) return;
+
+        foe_stored.status = Status.init(.BRN);
+        foe.active.stats.atk = @max(foe.active.stats.atk / 2, 1);
+
+        try options.log.status(battle.active(player.foe()), foe_stored.status, .None);
+
+        // TODO: check for status berry
     }
 
     fn confusion(battle: anytype, player: Player, state: *State, options: anytype) !void {
