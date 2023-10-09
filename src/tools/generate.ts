@@ -447,8 +447,9 @@ const doMoveFns = async (
   write('var side = battle.side(player);');
   write('var volatiles = &side.active.volatiles;\n');
   write('const ident = battle.active(player);');
-  write('const foe_ident = battle.active(player.foe());');
-  write('switch (Move.get(state.move).effect) {');
+  write('const foe_ident = battle.active(player.foe());\n');
+  write('const effect = Move.get(state.move).effect;');
+  write('switch (effect) {');
   indent++;
 
   const GROUPED = [
@@ -541,8 +542,10 @@ const doMoveFns = async (
     indent--;
   };
 
-  const boosts = [];
-  const unboosts = [];
+  const boosts: string[] = [];
+  const boostChances: string[] = [];
+  const unboosts: string[] = [];
+  const unboostChances: string[] = [];
   outer: for (const name of ['None', ...names]) {
     for (const group of GROUPED) {
       if (group.includes(name)) {
@@ -563,10 +566,10 @@ const doMoveFns = async (
       }
     }
     if (BOOST.test(name)) {
-      boosts.push(name);
+      (name.endsWith('Chance') ? boostChances : boosts).push(name);
       continue;
     } else if (UNBOOST.test(name)) {
-      unboosts.push(name);
+      (name.endsWith('Chance') ? unboostChances : unboosts).push(name);
       continue;
     }
 
@@ -575,21 +578,40 @@ const doMoveFns = async (
     write('},');
   }
 
-  for (const array of [boosts, unboosts]) {
+  for (const array of [boosts, boostChances, unboosts, unboostChances]) {
     const enums = array.sort().map(e => `.${e}`);
-    write('// zig fmt: off');
-    const boost = array === boosts;
-    const k = boost ? 2 : 3;
+    const k = array === boostChances ? 1 : 2;
+    if (k > 1) write('// zig fmt: off');
     for (const {chunk, done} of chunks(enums, Math.ceil(enums.length / k))) {
       const end = done ? ' => {' : ',';
       write(`${chunk.join(', ')}${end}`);
     }
-    write('// zig fmt: on');
+    if (k > 1) write('// zig fmt: on');
     indent++;
     SNIPPETS.usedmovetext();
     SNIPPETS.doturn();
-    if (!boost) write('try checkHit(battle, player, state, options);');
-    write(`try Effects.${boost ? 'boost' : 'unboost'}(battle, player, state, options);`);
+    if (array === boostChances || array === unboostChances) {
+      write('try checkCriticalHit(battle, player, state, options);');
+      write('// TODO damagestats');
+      write('// TODO damagecalc');
+      write('try adjustDamage(battle, player, state, options);');
+      write('try randomizeDamage(battle, player, state, options);');
+    }
+    if (array !== boosts) write('try checkHit(battle, player, state, options);');
+    if (array === boostChances || array === unboostChances) {
+      write('// TODO effectchance');
+      write('// TODO failuretxt');
+      write('try applyDamage(battle, player, state, options);');
+      SNIPPETS.criticaltext();
+      SNIPPETS.supereffectivetext();
+      SNIPPETS.checkfaint();
+      write('try buildRage(battle, player, state, options);');
+    }
+    if (array === unboostChances) {
+      write('// TODO if (effect == .DefenseDownChance) effectchance');
+    }
+    const fn = array === boosts || array === boostChances ? 'boost' : 'unboost';
+    write(`try Effects.${fn}(battle, player, state, options);`);
     indent--;
     write('},');
   }
