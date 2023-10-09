@@ -518,11 +518,10 @@ const doMoveFns = async (
     confuse: 'Effects.confusion', constantdamage: 'Effects.fixedDamage',
     confusetarget: 'Effects.confusionChance', selfdestruct: 'Effects.explode',
     rechargenextturn: 'Effects.hyperBeam', draintarget: 'Effects.drainHP',
-    skipsuncharge: 'Effects.solarBeam', curl: 'Effects.defenseCurl',
-    defenseup: 'Effects.boost', screen: 'Effects.screens', tristatuschance: 'Effects.triAttack',
+    skipsuncharge: 'Effects.solarBeam', defenseup: 'Effects.boost', screen: 'Effects.screens',
+    tristatuschance: 'Effects.triAttack', allstatsup: 'Effects.allStatUpChance',
     defrost: 'Effects.defrost', happinesspower: 'Effects.happiness', startrain: 'Effects.rainDance',
     clearhazards: 'Effects.rapidSpin', healnite: 'Effects.weatherHeal',
-    allstatsup: 'Effects.allStatUpChance',
   };
 
   const BOOST = /[^th]Up[12]?(?:Chance)?$/;
@@ -568,7 +567,7 @@ const doMoveFns = async (
         continue outer;
       }
     }
-    if (BOOST.test(name)) {
+    if (BOOST.test(name) || name === 'DefenseCurl') {
       (name.endsWith('Chance') ? boostChances : boosts).push(name);
       continue;
     } else if (UNBOOST.test(name)) {
@@ -615,6 +614,9 @@ const doMoveFns = async (
     }
     const fn = array === boosts || array === boostChances ? 'boost' : 'unboost';
     write(`try Effects.${fn}(battle, player, state, options);`);
+    if (array === boosts) {
+      write('if (effect == .DefenseCurl) try Effects.defenseCurl(battle, player, state, options);');
+    }
     indent--;
     write('},');
   }

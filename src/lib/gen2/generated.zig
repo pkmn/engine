@@ -1020,18 +1020,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
 
             try Effects.heal(battle, player, state, options);
         },
-        .DefenseCurl => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
-            try Effects.boost(battle, player, state, options);
-            try Effects.defenseCurl(battle, player, state, options);
-        },
         .Haze => {
             // usedmovetext
             try log.move(ident, state.move, foe_ident); // FIXME self? from?
@@ -2206,7 +2194,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         // zig fmt: off
-        .AttackUp1, .AttackUp2, .DefenseUp1, .DefenseUp2,
+        .AttackUp1, .AttackUp2, .DefenseCurl, .DefenseUp1, .DefenseUp2,
         .EvasionUp1, .SpAtkUp1, .SpDefUp2, .SpeedUp2 => {
         // zig fmt: on
             // usedmovetext
@@ -2218,6 +2206,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.boost(battle, player, state, options);
+            if (effect == .DefenseCurl) try Effects.defenseCurl(battle, player, state, options);
         },
         .AttackUpChance, .DefenseUpChance => {
             // usedmovetext
