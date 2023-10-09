@@ -1135,12 +1135,6 @@ pub fn buildRage(battle: anytype, player: Player, state: *State, options: anytyp
     }
 }
 
-pub fn rageDamage(battle: anytype, player: Player, state: *State, _: anytype) !void {
-    const volatiles = battle.side(player).active.volatiles;
-    assert(volatiles.Rage);
-    state.damage *|= (volatiles.rage +| 1);
-}
-
 pub fn kingsRock(battle: anytype, player: Player, _: *State, options: anytype) !void {
     var foe = battle.foe(player);
     const flinch = battle.side(player).stored().item == .KingsRock and
