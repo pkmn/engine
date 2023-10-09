@@ -18,6 +18,8 @@ const Move = data.Move;
 const Effects = mechanics.Effects;
 const State = mechanics.State;
 
+const canMove = mechanics.canMove;
+const canCharge = mechanics.canCharge;
 const decrementPP = mechanics.decrementPP;
 const checkHit = mechanics.checkHit;
 const checkCriticalHit = mechanics.checkCriticalHit;
@@ -42,14 +44,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
     const effect = Move.get(state.move).effect;
     switch (effect) {
         .AlwaysHit, .HighCritical, .Priority, .JumpKick, .None => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -63,14 +58,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .DoubleHit, .MultiHit => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             // TODO startloop
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
@@ -87,14 +75,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .PayDay => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -109,14 +90,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .BurnChance => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -131,14 +105,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.burnChance(battle, player, state, options);
         },
         .FreezeChance => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -153,14 +120,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.freezeChance(battle, player, state, options);
         },
         .ParalyzeChance => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -175,14 +135,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.paralyzeChance(battle, player, state, options);
         },
         .OHKO => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try Effects.ohko(battle, player, state, options);
             // TODO failuretext
@@ -192,16 +145,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try buildRage(battle, player, state, options);
         },
         .RazorWind => {
-            // TODO checkcharge
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
-            // TODO charge
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            _ = try canCharge(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -215,14 +159,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .Gust => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -236,28 +173,12 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try buildRage(battle, player, state, options);
         },
         .ForceSwitch => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try Effects.forceSwitch(battle, player, state, options);
         },
         .FlyDig => {
-            // TODO checkcharge
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
-            // TODO charge
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            _ = try canCharge(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -271,14 +192,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .Binding => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
@@ -293,14 +207,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.binding(battle, player, state, options);
         },
         .Stomp => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -316,14 +223,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.flinchChance(battle, player, state, options);
         },
         .FlinchChance => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -338,14 +238,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.flinchChance(battle, player, state, options);
         },
         .Recoil => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -366,7 +259,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
             // TODO rampage
             // usedmovetext
             try log.move(ident, state.move, foe_ident); // FIXME self? from?
@@ -384,14 +276,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .PoisonChance => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -406,14 +291,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.poisonChance(battle, player, state, options);
         },
         .Twineedle => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             // TODO startloop
             try checkHit(battle, player, state, options);
             // TODO effectchance
@@ -432,40 +310,19 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.poisonChance(battle, player, state, options);
         },
         .Sleep => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO checksafeguard
             try Effects.sleep(battle, player, state, options);
         },
         .Confusion => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO checksafeguard
             try Effects.confusion(battle, player, state, options);
         },
         .SuperFang, .LevelDamage, .Psywave, .FixedDamage => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.fixedDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO resettypematchup
@@ -476,37 +333,16 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .Disable => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try Effects.disable(battle, player, state, options);
         },
         .Mist => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.mist(battle, player, state, options);
         },
         .ConfusionChance => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -521,14 +357,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.confusionChance(battle, player, state, options);
         },
         .HyperBeam => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -542,14 +371,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try buildRage(battle, player, state, options);
         },
         .Counter => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.counter(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
@@ -558,14 +380,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .DreamEater, .DrainHP => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -580,29 +395,12 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (state.move != .DreamEater) try kingsRock(battle, player, state, options);
         },
         .LeechSeed => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try Effects.leechSeed(battle, player, state, options);
         },
         .Solarbeam => {
-            // TODO checkcharge
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
-            try Effects.solarBeam(battle, player, state, options);
-            // TODO charge
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            _ = try canCharge(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -616,42 +414,21 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .Toxic, .Poison => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             // TODO checksafeguard
             try Effects.poison(battle, player, state, options);
         },
         .Paralyze => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO checksafeguard
             try Effects.paralyze(battle, player, state, options);
         },
         .Thunder => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             // TODO thunderaccuracy
@@ -667,14 +444,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.paralyzeChance(battle, player, state, options);
         },
         .Earthquake => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -689,14 +459,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try buildRage(battle, player, state, options);
         },
         .Rage => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -715,70 +478,28 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .Teleport => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.teleport(battle, player, state, options);
         },
         .Mimic => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try Effects.mimic(battle, player, state, options);
         },
         .Heal => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.heal(battle, player, state, options);
         },
         .Haze => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.haze(battle, player, state, options);
         },
         .LightScreen, .Reflect => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.screens(battle, player, state, options);
         },
         .FocusEnergy => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.focusEnergy(battle, player, state, options);
         },
         .Bide => {
@@ -788,7 +509,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
             // usedmovetext
             try log.move(ident, state.move, foe_ident); // FIXME self? from?
             // TODO unleashenergy
@@ -801,36 +521,15 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .Metronome => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.metronome(battle, player, state, options);
         },
         .MirrorMove => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.mirrorMove(battle, player, state, options);
         },
         .Explode => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -845,16 +544,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .SkullBash => {
-            // TODO checkcharge
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
-            // TODO charge
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            _ = try canCharge(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -870,16 +560,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.boost(battle, player, state, options);
         },
         .SkyAttack => {
-            // TODO checkcharge
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
-            // TODO charge
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            _ = try canCharge(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -895,47 +576,19 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .Transform => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.transform(battle, player, state, options);
         },
         .Splash => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.splash(battle, player, state, options);
         },
         .Conversion => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.conversion(battle, player, state, options);
         },
         .TriAttack => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -949,36 +602,15 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.triAttack(battle, player, state, options);
         },
         .Substitute => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.substitute(battle, player, state, options);
         },
         .Sketch => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.sketch(battle, player, state, options);
         },
         .TripleKick => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             // TODO startloop
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
@@ -997,14 +629,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .Thief => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -1020,48 +645,20 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .MeanLook => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.meanLook(battle, player, state, options);
         },
         .LockOn => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try Effects.lockOn(battle, player, state, options);
         },
         .Nightmare => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.nightmare(battle, player, state, options);
         },
         .Snore => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -1078,25 +675,11 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .Curse => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.curse(battle, player, state, options);
         },
         .Reversal => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.reversal(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -1108,105 +691,42 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .Conversion2 => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try Effects.conversion2(battle, player, state, options);
         },
         .Spite => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try Effects.spite(battle, player, state, options);
         },
         .Endure, .Protect => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.protect(battle, player, state, options);
         },
         .BellyDrum => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.bellyDrum(battle, player, state, options);
         },
         .Spikes => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.spikes(battle, player, state, options);
         },
         .Foresight => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try Effects.foresight(battle, player, state, options);
         },
         .DestinyBond => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.destinyBond(battle, player, state, options);
         },
         .PerishSong => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.perishSong(battle, player, state, options);
         },
         .Sandstorm => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.sandstorm(battle, player, state, options);
         },
         .Rollout => {
@@ -1216,7 +736,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
             // usedmovetext
             try log.move(ident, state.move, foe_ident); // FIXME self? from?
             try checkCriticalHit(battle, player, state, options);
@@ -1233,14 +752,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .FalseSwipe => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -1255,14 +767,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .Swagger => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO switchturn
             // TODO attackup2
@@ -1273,14 +778,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.confusionChance(battle, player, state, options);
         },
         .FuryCutter => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -1295,48 +793,20 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .Attract => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try Effects.attract(battle, player, state, options);
         },
         .SleepTalk => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.sleepTalk(battle, player, state, options);
         },
         .HealBell => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.healBell(battle, player, state, options);
         },
         .Frustration, .Return => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try Effects.happiness(battle, player, state, options);
             try calcDamage(battle, player, state, options);
@@ -1351,14 +821,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .Present => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try Effects.present(battle, player, state, options);
@@ -1374,37 +837,16 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .Safeguard => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.safeguard(battle, player, state, options);
         },
         .PainSplit => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try Effects.painSplit(battle, player, state, options);
         },
         .FlameWheel, .SacredFire => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -1420,14 +862,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.burnChance(battle, player, state, options);
         },
         .Magnitude => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             // TODO getmagnitude
             try calcDamage(battle, player, state, options);
@@ -1443,37 +878,16 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .BatonPass => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.batonPass(battle, player, state, options);
         },
         .Encore => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try Effects.encore(battle, player, state, options);
         },
         .Pursuit => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -1488,14 +902,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .RapidSpin => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -1510,25 +917,11 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .MorningSun, .Synthesis, .Moonlight => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.weatherHeal(battle, player, state, options);
         },
         .HiddenPower => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try Effects.hiddenPower(battle, player, state, options);
             try calcDamage(battle, player, state, options);
@@ -1543,14 +936,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .Twister => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -1566,36 +952,15 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.flinchChance(battle, player, state, options);
         },
         .RainDance => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.rainDance(battle, player, state, options);
         },
         .SunnyDay => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.sunnyDay(battle, player, state, options);
         },
         .MirrorCoat => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.mirrorCoat(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
@@ -1604,25 +969,11 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .PsychUp => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.psychUp(battle, player, state, options);
         },
         .AllStatUpChance => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -1638,14 +989,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         },
         .FutureSight => {
             // TODO checkfuturesight
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try Effects.futureSight(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
@@ -1656,14 +1000,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try buildRage(battle, player, state, options);
         },
         .BeatUp => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             // TODO startloop
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
@@ -1683,26 +1020,12 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .AttackUp1, .AttackUp2, .DefenseCurl, .DefenseUp1, .DefenseUp2,
         .EvasionUp1, .SpAtkUp1, .SpDefUp2, .SpeedUp2 => {
         // zig fmt: on
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try Effects.boost(battle, player, state, options);
             if (effect == .DefenseCurl) try Effects.defenseCurl(battle, player, state, options);
         },
         .AttackUpChance, .DefenseUpChance => {
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -1720,14 +1043,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .AccuracyDown1, .AttackDown1, .AttackDown2, .DefenseDown1,
         .DefenseDown2, .EvasionDown1, .SpeedDown1, .SpeedDown2 => {
         // zig fmt: on
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try Effects.unboost(battle, player, state, options);
         },
@@ -1735,14 +1051,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .AccuracyDownChance, .AttackDownChance, .DefenseDownChance,
         .SpDefDownChance, .SpeedDownChance => {
         // zig fmt: on
-            // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // doturn
-            const charging = false; // TODO
-            const skip_pp = charging or state.move == .Struggle or
-                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
-
+            _ = try canMove(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);

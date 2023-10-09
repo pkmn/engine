@@ -100,6 +100,7 @@ pub const State = struct {
     effectiveness: u16 = Effectiveness.neutral, // wTypeModifier
     bp: u8 = 0, // wPlayerMoveStructPower
     move: Move = .None, // wCurPlayerMove
+    from: Move = .None,
     mslot: u4 = 0, // wCurMoveNum
     first: bool = false, // wEnemyGoesFirst
     miss: bool = false, // wAttackMissed
@@ -534,11 +535,29 @@ fn cantMove(volatiles: *align(8) Volatiles) void {
     volatiles.fury_cutter = 0;
 }
 
-fn canMove(battle: anytype, player: Player, options: anytype) !void {
+pub fn canMove(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+    var side = battle.side(player);
+    var volatiles = &side.active.volatiles;
+
+    // FIXME: pass in target to avoid lookup?
+    const target = if (Move.get(state.move).target == .Self) player else player.foe();
+    try options.log.moveFrom(battle.active(player), state.move, battle.active(target), state.from);
+
+    const charging = false; // TODO charging uses doUse
+    const skip_pp = charging or state.move == .Struggle or
+        (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+    if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
+    return true;
+}
+
+pub fn canCharge(battle: anytype, player: Player, state: *State, options: anytype) !bool {
     _ = battle;
     _ = player;
+    _ = state;
     _ = options;
-    return false;
+    // TODO skipsuncharge account for SolarBeam
+    return true;
 }
 
 pub fn decrementPP(side: *Side, move: Move, mslot: u4) bool {

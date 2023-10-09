@@ -417,7 +417,16 @@ const doMoveFns = async (
   const BASE_POWER_CALLBACK = ['Return', 'Frustration', 'Present', 'Magnitude'];
 
   for (const [effect, commands] of effects.entries()) {
-    let index = commands.indexOf('damagestats');
+    let index = commands.indexOf('usedmovetext');
+    if (commands[index + 1] === 'doturn') {
+      commands.splice(index, 1);
+      commands[index] = 'canmove';
+    } else if (commands[index - 1] === 'charge') {
+      commands.splice(0, index);
+      commands[0] = 'cancharge';
+    }
+
+    index = commands.indexOf('damagestats');
     if (index === -1) {
       index = commands.indexOf('damagecalc');
       if (index !== -1) {
@@ -445,8 +454,7 @@ const doMoveFns = async (
 
     index = commands.indexOf('criticaltext');
     if (index === -1) {
-      index = commands.indexOf('supereffectivetext');
-      if (index !== -1) {
+      if (commands.includes('supereffectivetext')) {
         throw new Error(`Unexpected supereffectivetext command found in ${effect}`);
       }
     } else {
@@ -479,8 +487,9 @@ const doMoveFns = async (
   write('const Effects = mechanics.Effects;\nconst State = mechanics.State;\n');
 
   const IMPORTS = [
-    'decrementPP', 'checkHit', 'checkCriticalHit', 'calcDamage', 'adjustDamage',
-    'randomizeDamage', 'applyDamage', 'TODOcritsuper', 'buildRage', 'kingsRock', 'destinyBond',
+    'canMove', 'canCharge', 'decrementPP', 'checkHit', 'checkCriticalHit', 'calcDamage',
+    'adjustDamage', 'randomizeDamage', 'applyDamage', 'TODOcritsuper', 'buildRage', 'kingsRock',
+    'destinyBond',
   ];
   for (const command of IMPORTS) {
     write(`const ${command} = mechanics.${command};`);
@@ -512,8 +521,9 @@ const doMoveFns = async (
     ['FlameWheel', 'SacredFire'],
   ];
 
-  // TODO: promote common (doturn) to functions
   const SNIPPETS: {[command: string]: (effect?: string) => void} = {
+    canmove: () => write('_ = try canMove(battle, player, state, options);'),
+    cancharge: () => write('_ = try canCharge(battle, player, state, options);'),
     usedmovetext: () => block([
       '// usedmovetext',
       'try log.move(ident, state.move, foe_ident); // FIXME self? from?',
@@ -524,7 +534,6 @@ const doMoveFns = async (
       'const skip_pp = charging or state.move == .Struggle or',
       '    (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);',
       'if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return',
-      '',
     ]),
     checkfaint: () => write('_ = try destinyBond(battle, player, state, options);'),
     ragedamage: () => block([
@@ -623,8 +632,7 @@ const doMoveFns = async (
     }
     if (k > 1) write('// zig fmt: on');
     indent++;
-    SNIPPETS.usedmovetext();
-    SNIPPETS.doturn();
+    write('_ = try canMove(battle, player, state, options);');
     if (array === boostChances || array === unboostChances) {
       write('try checkCriticalHit(battle, player, state, options);');
       write('try calcDamage(battle, player, state, options);');
