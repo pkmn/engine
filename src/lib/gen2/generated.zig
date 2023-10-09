@@ -1112,17 +1112,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
-        .MorningSun => {
-            // TODO usedmovetext
-            // TODO doturn
-            // TODO healmorn
-        },
-        .Synthesis => {
-            // TODO usedmovetext
-            // TODO doturn
-            // TODO healday
-        },
-        .Moonlight => {
+        .MorningSun, .Synthesis, .Moonlight => {
             // TODO usedmovetext
             // TODO doturn
             // TODO healnite

@@ -425,7 +425,8 @@ const doMoveFns = async (
     {effects: ['AlwaysHit', 'HighCritical', 'Priority', 'JumpKick', 'None'], fn: 'none'},
     {effects: ['LightScreen', 'Reflect'], fn: 'screens'},
     {effects: ['SuperFang', 'LevelDamage', 'Psywave', 'FixedDamage'], fn: 'fixedDamage'},
-    {effects: ['DoubleHit', 'MultiHit'], key: 'Multi', fn: 'none'},
+    {effects: ['DoubleHit', 'MultiHit'], fn: 'none'},
+    {effects: ['MorningSun', 'Synthesis', 'Moonlight'], fn: 'weatherHeal'},
   ];
 
   const FNS: {[command: string]: string} = {
