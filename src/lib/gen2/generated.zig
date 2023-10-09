@@ -79,7 +79,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO payday
+            try Effects.payDay(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -100,7 +100,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO supereffectivetext
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
-            // TODO burntarget
+            try Effects.burnChance(battle, player, state, options);
         },
         .FreezeChance => {
             // TODO usedmovetext
@@ -118,7 +118,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO supereffectivetext
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
-            // TODO freezetarget
+            try Effects.freezeChance(battle, player, state, options);
         },
         .ParalyzeChance => {
             // TODO usedmovetext
@@ -136,13 +136,13 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO supereffectivetext
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
-            // TODO paralyzetarget
+            try Effects.paralyzeChance(battle, player, state, options);
         },
         .OHKO => {
             // TODO usedmovetext
             // TODO doturn
             try adjustDamage(battle, player, state, options);
-            // TODO ohko
+            try Effects.ohko(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
             // TODO criticaltext
@@ -227,7 +227,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO supereffectivetext
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
-            // TODO traptarget
+            try Effects.binding(battle, player, state, options);
         },
         .Stomp => {
             // TODO usedmovetext
@@ -246,7 +246,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO supereffectivetext
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
-            // TODO flinchtarget
+            try Effects.flinchChance(battle, player, state, options);
         },
         .FlinchChance => {
             // TODO usedmovetext
@@ -264,7 +264,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO supereffectivetext
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
-            // TODO flinchtarget
+            try Effects.flinchChance(battle, player, state, options);
         },
         .Recoil => {
             // TODO usedmovetext
@@ -279,7 +279,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO recoil
+            try Effects.recoil(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -320,7 +320,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO supereffectivetext
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
-            // TODO poisontarget
+            try Effects.poisonChance(battle, player, state, options);
         },
         .Twineedle => {
             // TODO usedmovetext
@@ -343,26 +343,26 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try buildRage(battle, player, state, options);
             // TODO endloop
             try kingsRock(battle, player, state, options);
-            // TODO poisontarget
+            try Effects.poisonChance(battle, player, state, options);
         },
         .Sleep => {
             // TODO usedmovetext
             // TODO doturn
             try checkHit(battle, player, state, options);
             // TODO checksafeguard
-            // TODO sleeptarget
+            try Effects.sleep(battle, player, state, options);
         },
         .Confusion => {
             // TODO usedmovetext
             // TODO doturn
             try checkHit(battle, player, state, options);
             // TODO checksafeguard
-            // TODO confuse
+            try Effects.confusion(battle, player, state, options);
         },
         .SuperFang, .LevelDamage, .Psywave, .FixedDamage => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO constantdamage
+            try Effects.fixedDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO resettypematchup
             // TODO failuretext
@@ -375,12 +375,12 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO usedmovetext
             // TODO doturn
             try checkHit(battle, player, state, options);
-            // TODO disable
+            try Effects.disable(battle, player, state, options);
         },
         .Mist => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO mist
+            try Effects.mist(battle, player, state, options);
         },
         .ConfusionChance => {
             // TODO usedmovetext
@@ -398,7 +398,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO supereffectivetext
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
-            // TODO confusetarget
+            try Effects.confusionChance(battle, player, state, options);
         },
         .HyperBeam => {
             // TODO usedmovetext
@@ -413,21 +413,21 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO rechargenextturn
+            try Effects.hyperBeam(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
         },
         .Counter => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO counter
+            try Effects.counter(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
-        .DrainHP => {
+        .DreamEater, .DrainHP => {
             // TODO usedmovetext
             // TODO doturn
             try checkCriticalHit(battle, player, state, options);
@@ -440,7 +440,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO draintarget
+            try Effects.drainHP(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -449,12 +449,12 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO usedmovetext
             // TODO doturn
             try checkHit(battle, player, state, options);
-            // TODO leechseed
+            try Effects.leechSeed(battle, player, state, options);
         },
         .Solarbeam => {
             // TODO checkcharge
             // TODO doturn
-            // TODO skipsuncharge
+            try Effects.solarBeam(battle, player, state, options);
             // TODO charge
             // TODO usedmovetext
             try checkCriticalHit(battle, player, state, options);
@@ -477,7 +477,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             // TODO checksafeguard
-            // TODO poison
+            try Effects.poison(battle, player, state, options);
         },
         .Paralyze => {
             // TODO usedmovetext
@@ -485,7 +485,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try adjustDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO checksafeguard
-            // TODO paralyze
+            try Effects.paralyze(battle, player, state, options);
         },
         .Thunder => {
             // TODO usedmovetext
@@ -504,7 +504,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO supereffectivetext
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
-            // TODO paralyzetarget
+            try Effects.paralyzeChance(battle, player, state, options);
         },
         .Earthquake => {
             // TODO usedmovetext
@@ -535,7 +535,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try rageDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             // TODO failuretext
-            // TODO rage
+            try Effects.rage(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
@@ -546,42 +546,39 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .Teleport => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO teleport
+            try Effects.teleport(battle, player, state, options);
         },
         .Mimic => {
             // TODO usedmovetext
             // TODO doturn
             try checkHit(battle, player, state, options);
-            // TODO mimic
+            try Effects.mimic(battle, player, state, options);
         },
         .Heal => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO heal
+            try Effects.heal(battle, player, state, options);
         },
         .DefenseCurl => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO defenseup
-            // TODO curl
-            // TODO statupanim
-            // TODO statupmessage
-            // TODO statupfailtext
+            try Effects.boost(battle, player, state, options);
+            try Effects.defenseCurl(battle, player, state, options);
         },
         .Haze => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO resetstats
+            try Effects.haze(battle, player, state, options);
         },
         .LightScreen, .Reflect => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO screen
+            try Effects.screens(battle, player, state, options);
         },
         .FocusEnergy => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO focusenergy
+            try Effects.focusEnergy(battle, player, state, options);
         },
         .Bide => {
             // TODO storeenergy
@@ -599,12 +596,12 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .Metronome => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO metronome
+            try Effects.metronome(battle, player, state, options);
         },
         .MirrorMove => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO mirrormove
+            try Effects.mirrorMove(battle, player, state, options);
         },
         .Explode => {
             // TODO usedmovetext
@@ -615,7 +612,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO selfdestruct
+            try Effects.explode(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
             // TODO criticaltext
@@ -643,25 +640,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
             // TODO endturn
-            // TODO defenseup
-            // TODO statupmessage
-        },
-        .DreamEater => {
-            // TODO usedmovetext
-            // TODO doturn
-            try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            // TODO failuretext
-            try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
-            // TODO eatdream
-            _ = try destinyBond(battle, player, state, options);
-            try buildRage(battle, player, state, options);
+            try Effects.boost(battle, player, state, options);
         },
         .SkyAttack => {
             // TODO checkcharge
@@ -681,7 +660,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO supereffectivetext
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
-            // TODO flinchtarget
+            try Effects.flinchChance(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .Transform => {
@@ -801,7 +780,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO defrost
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
-            // TODO burntarget
+            try Effects.burnChance(battle, player, state, options);
         },
         .Snore => {
             // TODO usedmovetext
@@ -820,7 +799,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO supereffectivetext
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
-            // TODO flinchtarget
+            try Effects.flinchChance(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .Curse => {
@@ -831,7 +810,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .Reversal => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO constantdamage
+            try Effects.fixedDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO failuretext
@@ -938,12 +917,10 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO switchturn
             // TODO attackup2
             // TODO switchturn
-            // TODO statupanim
             // TODO failuretext
             // TODO switchturn
-            // TODO statupmessage
             // TODO switchturn
-            // TODO confusetarget
+            try Effects.confusionChance(battle, player, state, options);
         },
         .FuryCutter => {
             // TODO usedmovetext
@@ -1044,7 +1021,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO defrost
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
-            // TODO burntarget
+            try Effects.burnChance(battle, player, state, options);
         },
         .Magnitude => {
             // TODO usedmovetext
@@ -1151,7 +1128,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO supereffectivetext
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
-            // TODO flinchtarget
+            try Effects.flinchChance(battle, player, state, options);
         },
         .RainDance => {
             // TODO usedmovetext

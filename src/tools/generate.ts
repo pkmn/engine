@@ -376,6 +376,7 @@ const doMoveFns = async (
 
   const SKIP = new Set([
     'checkobedience', 'lowersub', 'raisesub', 'moveanim', 'moveanimnosub', 'endmove',
+    'statupanim', 'statupmessage', 'statupfailtext',
   ]);
   const effects = new Map<string, string[]>();
   let last = '';
@@ -420,19 +421,34 @@ const doMoveFns = async (
   indent++;
 
   const GROUPED = [
-    {effects: ['Frustration', 'Return'], fn: 'happiness'},
-    {effects: ['Toxic', 'Poison'], fn: 'poison'},
-    {effects: ['AlwaysHit', 'HighCritical', 'Priority', 'JumpKick', 'None'], fn: 'none'},
-    {effects: ['LightScreen', 'Reflect'], fn: 'screens'},
-    {effects: ['SuperFang', 'LevelDamage', 'Psywave', 'FixedDamage'], fn: 'fixedDamage'},
-    {effects: ['DoubleHit', 'MultiHit'], fn: 'none'},
-    {effects: ['MorningSun', 'Synthesis', 'Moonlight'], fn: 'weatherHeal'},
+    ['Frustration', 'Return'],
+    ['Toxic', 'Poison'],
+    ['AlwaysHit', 'HighCritical', 'Priority', 'JumpKick', 'None'],
+    ['LightScreen', 'Reflect'],
+    ['SuperFang', 'LevelDamage', 'Psywave', 'FixedDamage'],
+    ['DoubleHit', 'MultiHit'],
+    ['MorningSun', 'Synthesis', 'Moonlight'],
+    ['DreamEater', 'DrainHP'],
   ];
 
   const FNS: {[command: string]: string} = {
     checkhit: 'checkHit', critical: 'checkCriticalHit', stab: 'adjustDamage',
     damagevariation: 'randomizeDamage', applydamage: 'applyDamage', buildopponentrage: 'buildRage',
     kingsrock: 'kingsRock', checkfaint: 'destinyBond', ragedamage: 'rageDamage',
+    payday: 'Effects.payDay', burntarget: 'Effects.burnChance', poison: 'Effects.poison',
+    freezetarget: 'Effects.freezeChance', paralyzetarget: 'Effects.paralyzeChance',
+    ohko: 'Effects.ohko', traptarget: 'Effects.binding', flinchtarget: 'Effects.flinchChance',
+    recoil: 'Effects.recoil', poisontarget: 'Effects.poisonChance', sleeptarget: 'Effects.sleep',
+    confuse: 'Effects.confusion', constantdamage: 'Effects.fixedDamage', disable: 'Effects.disable',
+    mist: 'Effects.mist', confusetarget: 'Effects.confusionChance', counter: 'Effects.counter',
+    rechargenextturn: 'Effects.hyperBeam', draintarget: 'Effects.drainHP',
+    leechseed: 'Effects.leechSeed', skipsuncharge: 'Effects.solarBeam', rage: 'Effects.rage',
+    paralyze: 'Effects.paralyze', teleport: 'Effects.teleport', mimic: 'Effects.mimic',
+    heal: 'Effects.heal', curl: 'Effects.defenseCurl', resetstats: 'Effects.haze',
+    defenseup: 'Effects.boost', screen: 'Effects.screens', focusenergy: 'Effects.focusEnergy',
+    metronome: 'Effects.metronome', mirrormove: 'Effects.mirrorMove',
+    selfdestruct: 'Effects.explode',
+
   };
   const BOOLS = new Set<string>(['checkfaint']);
 
@@ -440,9 +456,9 @@ const doMoveFns = async (
   const unboosts = [];
   outer: for (const name of ['None', ...names]) {
     for (const group of GROUPED) {
-      if (group.effects.includes(name)) {
-        if (group.effects[group.effects.length - 1] !== name) continue outer;
-        write(`${group.effects.map(e => `.${e}`).join(', ')} => {`);
+      if (group.includes(name)) {
+        if (group[group.length - 1] !== name) continue outer;
+        write(`${group.map(e => `.${e}`).join(', ')} => {`);
         indent++;
         for (const command of effects.get(name)!) {
           if (FNS[command]) {
