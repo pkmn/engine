@@ -347,21 +347,27 @@ const itemTests = (gen: Generation, items: string[]) => {
   console.log(buf.join('\n'));
 };
 
+const EFFECT_MAPPING: {[name: string]: string} = {
+  NormalHit: 'None', DoSleep: 'Sleep', PoisonHit: 'PoisonChance', LeechHit: 'DrainHP',
+  BurnHit: 'BurnChance', FreezeHit: 'FreezeChance', ParalyzeHit: 'ParalyzeChance', Fly: 'FlyDig',
+  Selfdestruct: 'Explode', ResetStats: 'Haze', Rampage: 'Thrashing', StaticDamage: 'FixedDamage',
+  PoisonMultiHit: 'Twineedle', FlinchHit: 'FlinchChance', OHKOHit: 'OHKO', TrapTarget: 'Binding',
+  RecoilHit: 'Recoil', DoConfuse: 'Confusion', ConfuseHit: 'ConfusionChance', DoPoison: 'Poison',
+  DoParalyze: 'Paralyze',
+};
+
+function* chunks(xs: string[], n: number) {
+  for (let i = 0; i * n < xs.length; i++) {
+    const limit = Math.min((i + 1) * n, xs.length);
+    yield {chunk: xs.slice(i * n, limit), done: limit === xs.length};
+  }
+}
+
 const doMoveFns = async (
   gen: Generation, dirs: { out: string; cache: string },
   update: boolean, pret: string, names: Set<string>,
 ) => {
   if (gen.num !== 2) throw new Error(`Unexpected generation ${gen.num}`);
-
-  const EFFECT_MAPPING: {[name: string]: string} = {
-    NormalHit: 'None', DoSleep: 'Sleep', PoisonHit: 'PoisonChance', LeechHit: 'DrainHP',
-    BurnHit: 'BurnChance', FreezeHit: 'FreezeChance', ParalyzeHit: 'ParalyzeChance',
-    Selfdestruct: 'Explode', ResetStats: 'Haze', Rampage: 'Thrashing',
-    PoisonMultiHit: 'Twineedle', FlinchHit: 'FlinchChance', OHKOHit: 'OHKO',
-    RecoilHit: 'Recoil', DoConfuse: 'Confusion', ConfuseHit: 'ConfusionChance',
-    DoPoison: 'Poison', DoParalyze: 'Paralyze', Fly: 'FlyDig', TrapTarget: 'Binding',
-    StaticDamage: 'FixedDamage',
-  };
 
   const url = `${pret}/data/moves/effects.asm`;
   const MATCH = /^(?:(?:([A-Z][A-Za-z]+\d?):)|(?:(\t[a-z\d]+)(?: ;.*)?))$/;
@@ -504,14 +510,10 @@ const doMoveFns = async (
   for (const group of [boosts, unboosts]) {
     const enums = group.sort().map(e => `.${e}`);
     write('// zig fmt: off');
-    if (group === boosts) {
-      write(`${enums.slice(0, Math.floor(enums.length / 2)).join(', ')},`);
-      write(`${enums.slice(Math.floor(enums.length / 2)).join(', ')} => {}, // TODO`);
-    } else {
-      const limit = Math.floor(enums.length / 3);
-      write(`${enums.slice(0, limit).join(', ')},`);
-      write(`${enums.slice(limit, 2 * limit).join(', ')},`);
-      write(`${enums.slice(2 * limit).join(', ')} => {}, // TODO`);
+    const k = group === boosts ? 2 : 3;
+    for (const {chunk, done} of chunks(enums, Math.ceil(enums.length / k))) {
+      const end = done ? ' => {}, // TODO' : ',';
+      write(`${chunk.join(', ')}${end}`);
     }
     write('// zig fmt: on');
   }

@@ -1168,13 +1168,13 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         // zig fmt: off
-        .AllStatUpChance, .AttackUp1, .AttackUp2, .AttackUpChance, .DefenseUp1,
-        .DefenseUp2, .DefenseUpChance, .EvasionUp1, .SpAtkUp1, .SpDefUp2, .SpeedUp2 => {}, // TODO
+        .AllStatUpChance, .AttackUp1, .AttackUp2, .AttackUpChance, .DefenseUp1, .DefenseUp2,
+        .DefenseUpChance, .EvasionUp1, .SpAtkUp1, .SpDefUp2, .SpeedUp2 => {}, // TODO
         // zig fmt: on
         // zig fmt: off
-        .AccuracyDown1, .AccuracyDownChance, .AttackDown1, .AttackDown2,
-        .AttackDownChance, .DefenseDown1, .DefenseDown2, .DefenseDownChance,
-        .EvasionDown1, .SpDefDownChance, .SpeedDown1, .SpeedDown2, .SpeedDownChance => {}, // TODO
+        .AccuracyDown1, .AccuracyDownChance, .AttackDown1, .AttackDown2, .AttackDownChance,
+        .DefenseDown1, .DefenseDown2, .DefenseDownChance, .EvasionDown1, .SpDefDownChance,
+        .SpeedDown1, .SpeedDown2, .SpeedDownChance => {}, // TODO
         // zig fmt: on
     }
 
