@@ -414,6 +414,28 @@ const doMoveFns = async (
     }
   }
 
+  const BASE_POWER_CALLBACK = ['Return', 'Frustration', 'Present', 'Magnitude'];
+
+  for (const [effect, commands] of effects.entries()) {
+    let index = commands.indexOf('damagestats');
+    if (index === -1) {
+      index = commands.indexOf('damagecalc');
+      if (index !== -1) {
+        if (effect === 'BeatUp') {
+          commands.splice(index, 1);
+        } else if (effect !== 'HiddenPower') {
+          throw new Error(`Unexpected damagecalc command found in ${effect}`);
+        }
+      }
+    } else {
+      if (commands[index + 1] !== 'damagecalc' && !BASE_POWER_CALLBACK.includes(effect)) {
+        throw new Error(`Unexpected ordering of damage calc commands found in ${effect}`);
+      } else {
+        commands.splice(index, 1);
+      }
+    }
+  }
+
   let indent = 0;
   const buf: string[] = [];
   const write = (s: string) => buf.push(' '.repeat(indent * 4) + s);
@@ -509,18 +531,19 @@ const doMoveFns = async (
 
   const FNS: {[command: string]: string} = {
     checkhit: 'checkHit', critical: 'checkCriticalHit', stab: 'adjustDamage',
-    damagevariation: 'randomizeDamage', applydamage: 'applyDamage', buildopponentrage: 'buildRage',
-    burntarget: 'Effects.burnChance', freezetarget: 'Effects.freezeChance',
-    ohko: 'Effects.ohko', startsun: 'Effects.sunnyDay', startsandstorm: 'Effects.sandstorm',
-    paralyzetarget: 'Effects.paralyzeChance', arenatrap: 'Effects.meanLook',
-    traptarget: 'Effects.binding', flinchtarget: 'Effects.flinchChance',
-    poisontarget: 'Effects.poisonChance', sleeptarget: 'Effects.sleep', resetstats: 'Effects.haze',
-    confuse: 'Effects.confusion', constantdamage: 'Effects.fixedDamage',
-    confusetarget: 'Effects.confusionChance', selfdestruct: 'Effects.explode',
-    rechargenextturn: 'Effects.hyperBeam', draintarget: 'Effects.drainHP',
-    skipsuncharge: 'Effects.solarBeam', defenseup: 'Effects.boost', screen: 'Effects.screens',
-    tristatuschance: 'Effects.triAttack', allstatsup: 'Effects.allStatUpChance',
-    defrost: 'Effects.defrost', happinesspower: 'Effects.happiness', startrain: 'Effects.rainDance',
+    damagecalc: 'calcDamage', damagevariation: 'randomizeDamage', applydamage: 'applyDamage',
+    buildopponentrage: 'buildRage', burntarget: 'Effects.burnChance',
+    freezetarget: 'Effects.freezeChance', ohko: 'Effects.ohko', startsun: 'Effects.sunnyDay',
+    startsandstorm: 'Effects.sandstorm', paralyzetarget: 'Effects.paralyzeChance',
+    arenatrap: 'Effects.meanLook', traptarget: 'Effects.binding',
+    flinchtarget: 'Effects.flinchChance', poisontarget: 'Effects.poisonChance',
+    sleeptarget: 'Effects.sleep', resetstats: 'Effects.haze', confuse: 'Effects.confusion',
+    constantdamage: 'Effects.fixedDamage', confusetarget: 'Effects.confusionChance',
+    selfdestruct: 'Effects.explode', rechargenextturn: 'Effects.hyperBeam',
+    draintarget: 'Effects.drainHP', skipsuncharge: 'Effects.solarBeam',
+    defenseup: 'Effects.boost', screen: 'Effects.screens', tristatuschance: 'Effects.triAttack',
+    allstatsup: 'Effects.allStatUpChance', defrost: 'Effects.defrost',
+    happinesspower: 'Effects.happiness', startrain: 'Effects.rainDance',
     clearhazards: 'Effects.rapidSpin', healnite: 'Effects.weatherHeal',
   };
 
@@ -594,8 +617,7 @@ const doMoveFns = async (
     SNIPPETS.doturn();
     if (array === boostChances || array === unboostChances) {
       write('try checkCriticalHit(battle, player, state, options);');
-      write('// TODO damagestats');
-      write('// TODO damagecalc');
+      write('try calcDamage(battle, player, state, options);');
       write('try adjustDamage(battle, player, state, options);');
       write('try randomizeDamage(battle, player, state, options);');
     }

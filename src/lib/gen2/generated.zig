@@ -50,8 +50,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -85,8 +84,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO startloop
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage
@@ -112,8 +110,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -146,8 +143,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -180,8 +176,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -214,8 +209,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -278,8 +272,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // usedmovetext
             try log.move(ident, state.move, foe_ident); // FIXME self? from?
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -311,8 +304,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             // TODO doubleflyingdamage
@@ -358,8 +350,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // usedmovetext
             try log.move(ident, state.move, foe_ident); // FIXME self? from?
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -392,8 +383,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
 
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage
@@ -425,8 +415,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             // TODO doubleminimizedamage
@@ -460,8 +449,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -494,8 +482,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -531,8 +518,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try log.move(ident, state.move, foe_ident); // FIXME self? from?
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage
@@ -564,8 +550,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -601,8 +586,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO effectchance
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage
@@ -696,8 +680,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -730,8 +713,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -779,8 +761,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -828,8 +809,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // usedmovetext
             try log.move(ident, state.move, foe_ident); // FIXME self? from?
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -889,8 +869,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             // TODO thunderaccuracy
             try checkHit(battle, player, state, options);
             // TODO effectchance
@@ -924,8 +903,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             // TODO doubleundergrounddamage
@@ -958,8 +936,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // ragedamage
@@ -1104,8 +1081,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -1140,8 +1116,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // usedmovetext
             try log.move(ident, state.move, foe_ident); // FIXME self? from?
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -1177,8 +1152,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // usedmovetext
             try log.move(ident, state.move, foe_ident); // FIXME self? from?
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -1245,8 +1219,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -1302,8 +1275,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO startloop
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try Effects.tripleKick(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
@@ -1331,8 +1303,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -1400,8 +1371,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -1577,8 +1547,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // usedmovetext
             try log.move(ident, state.move, foe_ident); // FIXME self? from?
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO rolloutpower
@@ -1611,8 +1580,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try Effects.falseSwipe(battle, player, state, options);
@@ -1663,8 +1631,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try Effects.furyCutter(battle, player, state, options);
@@ -1731,9 +1698,8 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
             try Effects.happiness(battle, player, state, options);
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -1766,9 +1732,8 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
 
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
             try Effects.present(battle, player, state, options);
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage
@@ -1823,8 +1788,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -1858,9 +1822,8 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
             // TODO getmagnitude
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -1916,8 +1879,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try Effects.pursuit(battle, player, state, options);
@@ -1950,8 +1912,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -1996,7 +1957,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
 
             try checkCriticalHit(battle, player, state, options);
             try Effects.hiddenPower(battle, player, state, options);
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -2028,8 +1989,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             // TODO doubleflyingdamage
@@ -2112,8 +2072,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -2146,8 +2105,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try Effects.futureSight(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -2169,7 +2127,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try Effects.beatUp(battle, player, state, options);
-            // TODO damagecalc
             try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage
             // TODO failuretext
@@ -2218,8 +2175,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -2270,8 +2226,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
+            try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
