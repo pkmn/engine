@@ -460,39 +460,7 @@ const doMoveFns = async (
   const BOOST = /[^th]Up[12]?(?:Chance)?$/;
   const UNBOOST = /Down[12]?(?:Chance)?$/;
 
-  const boosts = [];
-  const unboosts = [];
-  outer: for (const name of ['None', ...names]) {
-    for (const group of GROUPED) {
-      if (group.includes(name)) {
-        if (group[group.length - 1] !== name) continue outer;
-        write(`${group.map(e => `.${e}`).join(', ')} => {`);
-        indent++;
-        for (const command of effects.get(name)!) {
-          const fn = FNS[command] ?? (command === name.toLowerCase()
-            ? `Effects.${name[0].toLowerCase()}${name.slice(1)}`
-            : undefined);
-          if (fn) {
-            const start = BOOLS.has(command) ? '_ = ' : '';
-            write(`${start}try ${fn}(battle, player, state, options);`);
-          } else {
-            write(`// TODO ${command}`);
-          }
-        }
-        indent--;
-        write('},');
-        continue outer;
-      }
-    }
-    if (BOOST.test(name) || name === 'AllStatUpChance') {
-      boosts.push(name);
-      continue;
-    } else if (UNBOOST.test(name)) {
-      unboosts.push(name);
-      continue;
-    }
-
-    write(`.${name} => {`);
+  const writeCommands = (name: string) => {
     indent++;
     for (const command of effects.get(name)!) {
       const fn = FNS[command] ?? (command === name.toLowerCase()
@@ -506,6 +474,30 @@ const doMoveFns = async (
       }
     }
     indent--;
+  };
+
+  const boosts = [];
+  const unboosts = [];
+  outer: for (const name of ['None', ...names]) {
+    for (const group of GROUPED) {
+      if (group.includes(name)) {
+        if (group[group.length - 1] !== name) continue outer;
+        write(`${group.map(e => `.${e}`).join(', ')} => {`);
+        writeCommands(name);
+        write('},');
+        continue outer;
+      }
+    }
+    if (BOOST.test(name) || name === 'AllStatUpChance') {
+      boosts.push(name);
+      continue;
+    } else if (UNBOOST.test(name)) {
+      unboosts.push(name);
+      continue;
+    }
+
+    write(`.${name} => {`);
+    writeCommands(name);
     write('},');
   }
 
