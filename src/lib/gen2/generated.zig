@@ -1195,7 +1195,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO damagestats
             // TODO damagecalc
             // TODO futuresight
-            // TODO damagevariation ; skip here if last turn
+            // TODO damagevariation
             // TODO checkhit
             // TODO failuretext
             // TODO applydamage

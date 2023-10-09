@@ -364,21 +364,14 @@ const doMoveFns = async (
   };
 
   const url = `${pret}/data/moves/effects.asm`;
-  const EFFECT = /^([A-Z][A-Za-z]+\d?):$/;
-  const COMMAND = /\t([a-z]+)(?: ;.*)?/;
+  const MATCH = /^(?:(?:([A-Z][A-Za-z]+\d?):)|(?:(\t[a-z\d]+)(?: ;.*)?))$/;
   const raw = await getOrUpdate('effects', dirs.cache, url, update, (line, last) => {
     if (!last) return undefined;
-    if ((EFFECT.test(last))) {
-      if (EFFECT.test(line)) {
-        return undefined;
-      } else {
-        return last;
-      }
-    } else if ((COMMAND.test(last))) {
-      return last;
-    } else {
-      return undefined;
+    const m = MATCH.exec(last);
+    if (m && (!last.endsWith(':') || !(MATCH.test(line) && line.endsWith(':')))) {
+      return m[1] ?? m[2];
     }
+    return undefined;
   });
 
   const SKIP = new Set([
@@ -392,8 +385,7 @@ const doMoveFns = async (
       if (SKIP.has(command)) continue;
       effects.get(last)?.push(command);
     } else {
-      last = line.slice(0, line.length - 1);
-      last = EFFECT_MAPPING[last] || last;
+      last = EFFECT_MAPPING[line] || line;
       effects.set(last, []);
     }
   }
@@ -460,7 +452,6 @@ const doMoveFns = async (
       continue;
     }
 
-    if (!effects.has(name)) { console.debug(name); continue; }
     write(`.${name} => {`);
     indent++;
     for (const command of effects.get(name)!) {
