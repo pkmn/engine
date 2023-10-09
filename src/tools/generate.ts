@@ -502,12 +502,15 @@ const doMoveFns = async (
       'state.damage *|= (volatiles.rage +| 1);',
       '',
     ]),
+    kingsrock: n => n === 'DrainHP'
+      ? write('if (state.move != .DreamEater) try kingsRock(battle, player, state, options);')
+      : write('try kingsRock(battle, player, state, options);'),
   };
 
   const FNS: {[command: string]: string} = {
     checkhit: 'checkHit', critical: 'checkCriticalHit', stab: 'adjustDamage',
     damagevariation: 'randomizeDamage', applydamage: 'applyDamage', buildopponentrage: 'buildRage',
-    kingsrock: 'kingsRock', burntarget: 'Effects.burnChance', freezetarget: 'Effects.freezeChance',
+    burntarget: 'Effects.burnChance', freezetarget: 'Effects.freezeChance',
     ohko: 'Effects.ohko', startsun: 'Effects.sunnyDay', startsandstorm: 'Effects.sandstorm',
     paralyzetarget: 'Effects.paralyzeChance', arenatrap: 'Effects.meanLook',
     traptarget: 'Effects.binding', flinchtarget: 'Effects.flinchChance',
@@ -552,7 +555,7 @@ const doMoveFns = async (
         const canonical = group[group.length - 1];
         if (canonical !== name) {
           const commands = effects.get(name);
-          // FIXME: DreamEater doesn't proc kingsrock
+          // DreamEater can't proc King's Rock
           const n = name === 'DreamEater' ? 2 : 1;
           if (commands && levenshtein(commands, effects.get(canonical)!) > n) {
             throw new Error(`Invalid grouping of effects: '${name}' and '${canonical}'`);

@@ -801,7 +801,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.drainHP(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            if (state.move != .DreamEater) try kingsRock(battle, player, state, options);
         },
         .LeechSeed => {
             // usedmovetext
