@@ -12,11 +12,13 @@ const assert = std.debug.assert;
 const Player = common.Player;
 const Result = common.Result;
 
+const Effectiveness = data.MEffectivenessove;
 const Move = data.Move;
 
 const Effects = mechanics.Effects;
 const State = mechanics.State;
 
+const decrementPP = mechanics.decrementPP;
 const checkHit = mechanics.checkHit;
 const checkCriticalHit = mechanics.checkCriticalHit;
 const calcDamage = mechanics.calcDamage;
@@ -28,12 +30,23 @@ const kingsRock = mechanics.kingsRock;
 const destinyBond = mechanics.destinyBond;
 
 pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) !?Result {
-    _ = .{ battle, player, options };
+    var log = options.log;
 
+    var side = battle.side(player);
+    var volatiles = &side.active.volatiles;
+
+    const ident = battle.active(player);
+    const foe_ident = battle.active(player.foe());
     switch (Move.get(state.move).effect) {
         .AlwaysHit, .HighCritical, .Priority, .JumpKick, .None => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -42,15 +55,31 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .DoubleHit, .MultiHit => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             // TODO startloop
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
@@ -61,7 +90,9 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO clearmissdamage
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
             // TODO cleartext
             // TODO supereffectivelooptext
             _ = try destinyBond(battle, player, state, options);
@@ -70,8 +101,14 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .PayDay => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -80,16 +117,32 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             try Effects.payDay(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .BurnChance => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -99,15 +152,31 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.burnChance(battle, player, state, options);
         },
         .FreezeChance => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -117,15 +186,31 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.freezeChance(battle, player, state, options);
         },
         .ParalyzeChance => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -135,29 +220,61 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.paralyzeChance(battle, player, state, options);
         },
         .OHKO => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try adjustDamage(battle, player, state, options);
             try Effects.ohko(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
         },
         .RazorWind => {
             // TODO checkcharge
-            // TODO doturn
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             // TODO charge
-            // TODO usedmovetext
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -166,15 +283,31 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .Gust => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -184,22 +317,44 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
         },
         .ForceSwitch => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkHit(battle, player, state, options);
             try Effects.forceSwitch(battle, player, state, options);
         },
         .FlyDig => {
             // TODO checkcharge
-            // TODO doturn
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             // TODO charge
-            // TODO usedmovetext
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -208,15 +363,31 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .Binding => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -226,15 +397,31 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO clearmissdamage
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.binding(battle, player, state, options);
         },
         .Stomp => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -245,15 +432,31 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.flinchChance(battle, player, state, options);
         },
         .FlinchChance => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -263,15 +466,31 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.flinchChance(battle, player, state, options);
         },
         .Recoil => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -280,8 +499,18 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             try Effects.recoil(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
@@ -289,9 +518,15 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         },
         .Thrashing => {
             // TODO checkrampage
-            // TODO doturn
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             // TODO rampage
-            // TODO usedmovetext
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -301,15 +536,31 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO clearmissdamage
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .PoisonChance => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -319,15 +570,31 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.poisonChance(battle, player, state, options);
         },
         .Twineedle => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             // TODO startloop
             try checkHit(battle, player, state, options);
             // TODO effectchance
@@ -339,7 +606,9 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO clearmissdamage
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
             // TODO cleartext
             // TODO supereffectivelooptext
             _ = try destinyBond(battle, player, state, options);
@@ -349,22 +618,40 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.poisonChance(battle, player, state, options);
         },
         .Sleep => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkHit(battle, player, state, options);
             // TODO checksafeguard
             try Effects.sleep(battle, player, state, options);
         },
         .Confusion => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkHit(battle, player, state, options);
             // TODO checksafeguard
             try Effects.confusion(battle, player, state, options);
         },
         .SuperFang, .LevelDamage, .Psywave, .FixedDamage => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.fixedDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO resettypematchup
@@ -375,19 +662,37 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .Disable => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkHit(battle, player, state, options);
             try Effects.disable(battle, player, state, options);
         },
         .Mist => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.mist(battle, player, state, options);
         },
         .ConfusionChance => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -397,15 +702,31 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.confusionChance(battle, player, state, options);
         },
         .HyperBeam => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -414,15 +735,31 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             try Effects.hyperBeam(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
         },
         .Counter => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.counter(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
@@ -431,8 +768,14 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .DreamEater, .DrainHP => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -441,25 +784,47 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             try Effects.drainHP(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .LeechSeed => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkHit(battle, player, state, options);
             try Effects.leechSeed(battle, player, state, options);
         },
         .Solarbeam => {
             // TODO checkcharge
-            // TODO doturn
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.solarBeam(battle, player, state, options);
             // TODO charge
-            // TODO usedmovetext
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -468,31 +833,59 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .Toxic, .Poison => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkHit(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             // TODO checksafeguard
             try Effects.poison(battle, player, state, options);
         },
         .Paralyze => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try adjustDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO checksafeguard
             try Effects.paralyze(battle, player, state, options);
         },
         .Thunder => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -503,15 +896,31 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.paralyzeChance(battle, player, state, options);
         },
         .Earthquake => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -522,21 +931,36 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
         },
         .Rage => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
             try adjustDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-
-            const volatiles = battle.side(player).active.volatiles;
+            // ragedamage
             assert(volatiles.Rage);
             state.damage *|= (volatiles.rage +| 1);
 
@@ -544,53 +968,111 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO failuretext
             try Effects.rage(battle, player, state, options);
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .Teleport => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.teleport(battle, player, state, options);
         },
         .Mimic => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkHit(battle, player, state, options);
             try Effects.mimic(battle, player, state, options);
         },
         .Heal => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.heal(battle, player, state, options);
         },
         .DefenseCurl => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.boost(battle, player, state, options);
             try Effects.defenseCurl(battle, player, state, options);
         },
         .Haze => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.haze(battle, player, state, options);
         },
         .LightScreen, .Reflect => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.screens(battle, player, state, options);
         },
         .FocusEnergy => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.focusEnergy(battle, player, state, options);
         },
         .Bide => {
             // TODO storeenergy
-            // TODO doturn
-            // TODO usedmovetext
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
             // TODO unleashenergy
             // TODO resettypematchup
             try checkHit(battle, player, state, options);
@@ -601,18 +1083,36 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .Metronome => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.metronome(battle, player, state, options);
         },
         .MirrorMove => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.mirrorMove(battle, player, state, options);
         },
         .Explode => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -622,17 +1122,33 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.explode(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .SkullBash => {
             // TODO checkcharge
-            // TODO doturn
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             // TODO charge
-            // TODO usedmovetext
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -641,8 +1157,18 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -651,9 +1177,15 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         },
         .SkyAttack => {
             // TODO checkcharge
-            // TODO doturn
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             // TODO charge
-            // TODO usedmovetext
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -663,31 +1195,65 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.flinchChance(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .Transform => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.transform(battle, player, state, options);
         },
         .Splash => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.splash(battle, player, state, options);
         },
         .Conversion => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.conversion(battle, player, state, options);
         },
         .TriAttack => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -696,25 +1262,53 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.triAttack(battle, player, state, options);
         },
         .Substitute => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.substitute(battle, player, state, options);
         },
         .Sketch => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.sketch(battle, player, state, options);
         },
         .TripleKick => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             // TODO startloop
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
@@ -726,7 +1320,9 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO clearmissdamage
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
             // TODO cleartext
             // TODO supereffectivelooptext
             _ = try destinyBond(battle, player, state, options);
@@ -736,8 +1332,14 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .Thief => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -747,32 +1349,66 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             try Effects.thief(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .MeanLook => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.meanLook(battle, player, state, options);
         },
         .LockOn => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkHit(battle, player, state, options);
             try Effects.lockOn(battle, player, state, options);
         },
         .Nightmare => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.nightmare(battle, player, state, options);
         },
         .Snore => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -783,83 +1419,173 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.snore(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.flinchChance(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .Curse => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.curse(battle, player, state, options);
         },
         .Reversal => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.fixedDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO supereffectivetext
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .Conversion2 => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkHit(battle, player, state, options);
             try Effects.conversion2(battle, player, state, options);
         },
         .Spite => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkHit(battle, player, state, options);
             try Effects.spite(battle, player, state, options);
         },
         .Endure, .Protect => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.protect(battle, player, state, options);
         },
         .BellyDrum => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.bellyDrum(battle, player, state, options);
         },
         .Spikes => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.spikes(battle, player, state, options);
         },
         .Foresight => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkHit(battle, player, state, options);
             try Effects.foresight(battle, player, state, options);
         },
         .DestinyBond => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.destinyBond(battle, player, state, options);
         },
         .PerishSong => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.perishSong(battle, player, state, options);
         },
         .Sandstorm => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.sandstorm(battle, player, state, options);
         },
         .Rollout => {
             // TODO checkcurl
-            // TODO doturn
-            // TODO usedmovetext
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -869,15 +1595,31 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .FalseSwipe => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -887,15 +1629,31 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .Swagger => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkHit(battle, player, state, options);
             // TODO switchturn
             // TODO attackup2
@@ -906,8 +1664,14 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.confusionChance(battle, player, state, options);
         },
         .FuryCutter => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -917,31 +1681,65 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .Attract => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkHit(battle, player, state, options);
             try Effects.attract(battle, player, state, options);
         },
         .SleepTalk => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.sleepTalk(battle, player, state, options);
         },
         .HealBell => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.healBell(battle, player, state, options);
         },
         .Frustration, .Return => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             try Effects.happiness(battle, player, state, options);
@@ -951,15 +1749,31 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .Present => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -970,26 +1784,54 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO clearmissdamage
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .Safeguard => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.safeguard(battle, player, state, options);
         },
         .PainSplit => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkHit(battle, player, state, options);
             try Effects.painSplit(battle, player, state, options);
         },
         .FlameWheel, .SacredFire => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -999,16 +1841,32 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             try Effects.defrost(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.burnChance(battle, player, state, options);
         },
         .Magnitude => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO getmagnitude
@@ -1019,26 +1877,54 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO doubleundergrounddamage
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .BatonPass => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.batonPass(battle, player, state, options);
         },
         .Encore => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkHit(battle, player, state, options);
             try Effects.encore(battle, player, state, options);
         },
         .Pursuit => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -1048,15 +1934,31 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .RapidSpin => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -1065,21 +1967,43 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             try Effects.rapidSpin(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .MorningSun, .Synthesis, .Moonlight => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.weatherHeal(battle, player, state, options);
         },
         .HiddenPower => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             try Effects.hiddenPower(battle, player, state, options);
             // TODO damagecalc
@@ -1088,15 +2012,31 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
         .Twister => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
@@ -1107,25 +2047,53 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.flinchChance(battle, player, state, options);
         },
         .RainDance => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.rainDance(battle, player, state, options);
         },
         .SunnyDay => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.sunnyDay(battle, player, state, options);
         },
         .MirrorCoat => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.mirrorCoat(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
@@ -1134,14 +2102,26 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         .PsychUp => {
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             try Effects.psychUp(battle, player, state, options);
         },
         .FutureSight => {
             // TODO checkfuturesight
-            // TODO usedmovetext
-            // TODO doturn
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             // TODO damagestats
             // TODO damagecalc
             try Effects.futureSight(battle, player, state, options);
@@ -1153,9 +2133,15 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try buildRage(battle, player, state, options);
         },
         .BeatUp => {
-            // TODO usedmovetext
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
             // TODO movedelay
-            // TODO doturn
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
             // TODO startloop
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
@@ -1165,9 +2151,19 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO clearmissdamage
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // TODO criticaltext
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
             // TODO cleartext
-            // TODO supereffectivetext
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             // TODO endloop
