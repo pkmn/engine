@@ -399,7 +399,7 @@ const doMoveFns = async (
 
   const SKIP = new Set([
     'checkobedience', 'lowersub', 'raisesub', 'moveanim', 'moveanimnosub', 'endmove',
-    'statupanim', 'statupmessage', 'statupfailtext',
+    'statupanim', 'statupmessage', 'statupfailtext', 'movedelay',
   ]);
   const effects = new Map<string, string[]>();
   let last = '';

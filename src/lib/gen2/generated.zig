@@ -2171,7 +2171,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .BeatUp => {
             // usedmovetext
             try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // TODO movedelay
             // doturn
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
