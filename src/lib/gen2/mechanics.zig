@@ -110,7 +110,7 @@ pub const State = struct {
         assert(@sizeOf(State) == 12);
     }
 
-    pub inline fn immune(self: *State) bool {
+    inline fn immune(self: *State) bool {
         return self.effectiveness == 0;
     }
 };
@@ -799,6 +799,18 @@ fn faint(battle: anytype, player: Player, done: bool, options: anytype) !void {
 
     try options.log.faint(battle.active(player), done);
     options.calc.capped(player);
+}
+
+pub fn TODOcritsuper(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    const foe_ident = battle.active(player.foe());
+    if (state.crit) try options.log.crit(foe_ident);
+    if (!state.immune()) {
+        if (state.effectiveness > Effectiveness.neutral) {
+            try options.log.supereffective(foe_ident);
+        } else if (state.effectiveness < Effectiveness.neutral) {
+            try options.log.resisted(foe_ident);
+        }
+    }
 }
 
 fn handleResidual(battle: anytype, player: Player, options: anytype) !bool {

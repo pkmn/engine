@@ -25,6 +25,7 @@ const calcDamage = mechanics.calcDamage;
 const adjustDamage = mechanics.adjustDamage;
 const randomizeDamage = mechanics.randomizeDamage;
 const applyDamage = mechanics.applyDamage;
+const TODOcritsuper = mechanics.TODOcritsuper;
 const buildRage = mechanics.buildRage;
 const kingsRock = mechanics.kingsRock;
 const destinyBond = mechanics.destinyBond;
@@ -56,18 +57,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -90,11 +80,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO clearmissdamage
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // TODO cleartext
-            // TODO supereffectivelooptext
+            // TODO critsupereffectivelooptext
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             // TODO endloop
@@ -116,18 +102,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             try Effects.payDay(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
@@ -150,18 +125,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.burnChance(battle, player, state, options);
@@ -183,18 +147,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.freezeChance(battle, player, state, options);
@@ -216,18 +169,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.paralyzeChance(battle, player, state, options);
@@ -245,18 +187,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.ohko(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
         },
@@ -278,18 +209,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -311,18 +231,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
         },
@@ -356,18 +265,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -389,18 +287,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO clearmissdamage
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.binding(battle, player, state, options);
@@ -423,18 +310,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.flinchChance(battle, player, state, options);
@@ -456,18 +332,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.flinchChance(battle, player, state, options);
@@ -488,18 +353,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             try Effects.recoil(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
@@ -524,18 +378,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO clearmissdamage
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -557,18 +400,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.poisonChance(battle, player, state, options);
@@ -592,11 +424,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO clearmissdamage
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // TODO cleartext
-            // TODO supereffectivelooptext
+            // TODO critsupereffectivelooptext
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             // TODO endloop
@@ -687,18 +515,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.confusionChance(battle, player, state, options);
@@ -719,18 +536,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             try Effects.hyperBeam(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
@@ -767,18 +573,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             try Effects.drainHP(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
@@ -815,18 +610,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -877,18 +661,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.paralyzeChance(battle, player, state, options);
@@ -911,18 +684,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
         },
@@ -947,18 +709,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO failuretext
             try Effects.rage(battle, player, state, options);
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -1088,18 +839,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.explode(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -1122,18 +862,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -1159,18 +888,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.flinchChance(battle, player, state, options);
@@ -1225,18 +943,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.triAttack(battle, player, state, options);
@@ -1282,11 +989,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO clearmissdamage
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // TODO cleartext
-            // TODO supereffectivelooptext
+            // TODO critsupereffectivelooptext
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             // TODO kickcounter
@@ -1310,18 +1013,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             try Effects.thief(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
@@ -1379,18 +1071,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.snore(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.flinchChance(battle, player, state, options);
@@ -1416,20 +1097,12 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
-            try Effects.fixedDamage(battle, player, state, options);
+            try Effects.reversal(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            // TODO reversalsupereffectivetext
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -1554,18 +1227,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -1587,18 +1249,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -1638,18 +1289,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -1705,18 +1345,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -1739,18 +1368,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO clearmissdamage
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -1795,18 +1413,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             try Effects.defrost(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
@@ -1830,18 +1437,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO doubleundergrounddamage
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -1886,18 +1482,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -1918,18 +1503,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             try Effects.rapidSpin(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
@@ -1963,18 +1537,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -1997,18 +1560,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.flinchChance(battle, player, state, options);
@@ -2079,18 +1631,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.allStatUpChance(battle, player, state, options);
@@ -2131,19 +1672,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO clearmissdamage
             // TODO failuretext
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // TODO cleartext
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             // TODO endloop
@@ -2182,18 +1711,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretxt
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.boost(battle, player, state, options);
@@ -2233,18 +1751,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             // TODO failuretxt
             try applyDamage(battle, player, state, options);
-
-            // criticaltext
-            if (state.crit) try log.crit(foe_ident);
-            // supereffectivetext
-            if (!state.immune()) {
-                if (state.effectiveness > Effectiveness.neutral) {
-                    try log.supereffective(foe_ident);
-                } else if (state.effectiveness < Effectiveness.neutral) {
-                    try log.resisted(foe_ident);
-                }
-            }
-
+            try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             // TODO if (effect == .DefenseDownChance) effectchance

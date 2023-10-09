@@ -399,7 +399,7 @@ const doMoveFns = async (
 
   const SKIP = new Set([
     'checkobedience', 'lowersub', 'raisesub', 'moveanim', 'moveanimnosub', 'endmove',
-    'statupanim', 'statupmessage', 'statupfailtext', 'movedelay',
+    'statupanim', 'statupmessage', 'statupfailtext', 'movedelay', 'cleartext',
   ]);
   const effects = new Map<string, string[]>();
   let last = '';
@@ -434,6 +434,31 @@ const doMoveFns = async (
         commands.splice(index, 1);
       }
     }
+
+    if (effect === 'Reversal') {
+      index = commands.indexOf('constantdamage');
+      commands[index] = 'reversal';
+      index = commands.indexOf('supereffectivetext');
+      commands[index] = 'reversalsupereffectivetext';
+      continue;
+    }
+
+    index = commands.indexOf('criticaltext');
+    if (index === -1) {
+      index = commands.indexOf('supereffectivetext');
+      if (index !== -1) {
+        throw new Error(`Unexpected supereffectivetext command found in ${effect}`);
+      }
+    } else {
+      if (!/supereffective(?:loop)?text/.test(commands[index + 1])) {
+        throw new Error(`Unexpected ordering of post-hit commands found in ${effect}`);
+      } else {
+        commands.splice(index, 1);
+        commands[index] = commands[index].includes('loop')
+          ? 'critsupereffectivelooptext'
+          : 'critsupereffectivetext';
+      }
+    }
   }
 
   let indent = 0;
@@ -455,7 +480,7 @@ const doMoveFns = async (
 
   const IMPORTS = [
     'decrementPP', 'checkHit', 'checkCriticalHit', 'calcDamage', 'adjustDamage',
-    'randomizeDamage', 'applyDamage', 'buildRage', 'kingsRock', 'destinyBond',
+    'randomizeDamage', 'applyDamage', 'TODOcritsuper', 'buildRage', 'kingsRock', 'destinyBond',
   ];
   for (const command of IMPORTS) {
     write(`const ${command} = mechanics.${command};`);
@@ -487,7 +512,7 @@ const doMoveFns = async (
     ['FlameWheel', 'SacredFire'],
   ];
 
-  // TODO: promote common (doturn/supereffectivetext) to functions
+  // TODO: promote common (doturn) to functions
   const SNIPPETS: {[command: string]: (effect?: string) => void} = {
     usedmovetext: () => block([
       '// usedmovetext',
@@ -499,22 +524,6 @@ const doMoveFns = async (
       'const skip_pp = charging or state.move == .Struggle or',
       '    (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);',
       'if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return',
-      '',
-    ]),
-    criticaltext: () => block([
-      '',
-      '// criticaltext',
-      'if (state.crit) try log.crit(foe_ident);',
-    ]),
-    supereffectivetext: () => block([
-      '// supereffectivetext',
-      'if (!state.immune()) {',
-      '    if (state.effectiveness > Effectiveness.neutral) {',
-      '        try log.supereffective(foe_ident);',
-      '    } else if (state.effectiveness < Effectiveness.neutral) {',
-      '        try log.resisted(foe_ident);',
-      '    }',
-      '}',
       '',
     ]),
     checkfaint: () => write('_ = try destinyBond(battle, player, state, options);'),
@@ -530,6 +539,7 @@ const doMoveFns = async (
   };
 
   const FNS: {[command: string]: string} = {
+    critsupereffectivetext: 'TODOcritsuper',
     checkhit: 'checkHit', critical: 'checkCriticalHit', stab: 'adjustDamage',
     damagecalc: 'calcDamage', damagevariation: 'randomizeDamage', applydamage: 'applyDamage',
     buildopponentrage: 'buildRage', burntarget: 'Effects.burnChance',
@@ -626,8 +636,7 @@ const doMoveFns = async (
       write('// TODO effectchance');
       write('// TODO failuretxt');
       write('try applyDamage(battle, player, state, options);');
-      SNIPPETS.criticaltext();
-      SNIPPETS.supereffectivetext();
+      write('try TODOcritsuper(battle, player, state, options);');
       SNIPPETS.checkfaint();
       write('try buildRage(battle, player, state, options);');
     }
